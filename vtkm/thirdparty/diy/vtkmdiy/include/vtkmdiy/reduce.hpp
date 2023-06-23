@@ -138,7 +138,7 @@ void reduce(Master&                    master,        //!< master object
       }
     }
     master.set_expected(expected);
-    master.flush();
+    master.flush(false);
   }
   // final round
   log->debug("Round {}", round);

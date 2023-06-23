@@ -35,8 +35,6 @@ protected:
 public:
   ColorBarAnnotation();
 
-  virtual ~ColorBarAnnotation();
-
   VTKM_CONT
   void SetColorTable(const vtkm::cont::ColorTable& colorTable) { this->ColorTable = colorTable; }
 
@@ -56,9 +54,9 @@ public:
   VTKM_CONT
   void SetPosition(const vtkm::Bounds& position);
 
-  virtual void Render(const vtkm::rendering::Camera& camera,
-                      const vtkm::rendering::WorldAnnotator& worldAnnotator,
-                      vtkm::rendering::Canvas& canvas);
+  void Render(const vtkm::rendering::Camera& camera,
+              const vtkm::rendering::WorldAnnotator& worldAnnotator,
+              vtkm::rendering::Canvas& canvas);
 };
 }
 } //namespace vtkm::rendering

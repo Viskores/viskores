@@ -29,7 +29,7 @@ class VTKM_RENDERING_EXPORT Scene
 public:
   Scene();
 
-  void AddActor(const vtkm::rendering::Actor& actor);
+  void AddActor(vtkm::rendering::Actor actor);
 
   const vtkm::rendering::Actor& GetActor(vtkm::IdComponent index) const;
 

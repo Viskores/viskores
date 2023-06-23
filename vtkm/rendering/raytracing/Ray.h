@@ -69,7 +69,6 @@ public:
   vtkm::cont::ArrayHandle<Precision> IntersectionY;
   vtkm::cont::ArrayHandle<Precision> IntersectionZ;
 
-
   vtkm::cont::ArrayHandle<Precision> OriginX; //ray Origin
   vtkm::cont::ArrayHandle<Precision> OriginY;
   vtkm::cont::ArrayHandle<Precision> OriginZ;
@@ -117,40 +116,26 @@ public:
     DebugHeight = -1;
   }
 
-
-  struct EnableIntersectionDataFunctor
-  {
-    template <typename Device>
-    VTKM_CONT bool operator()(Device, Ray<Precision>* self)
-    {
-      VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-      self->EnableIntersectionData(Device());
-      return true;
-    }
-  };
-
-  void EnableIntersectionData() { vtkm::cont::TryExecute(EnableIntersectionDataFunctor(), this); }
-
-  template <typename Device>
-  void EnableIntersectionData(Device)
+  void EnableIntersectionData()
   {
     if (IntersectionDataEnabled)
     {
       return;
     }
 
-    vtkm::cont::Token token;
     IntersectionDataEnabled = true;
-    IntersectionX.PrepareForOutput(NumRays, Device(), token);
-    IntersectionY.PrepareForOutput(NumRays, Device(), token);
-    IntersectionZ.PrepareForOutput(NumRays, Device(), token);
-    U.PrepareForOutput(NumRays, Device(), token);
-    V.PrepareForOutput(NumRays, Device(), token);
-    Scalar.PrepareForOutput(NumRays, Device(), token);
 
-    NormalX.PrepareForOutput(NumRays, Device(), token);
-    NormalY.PrepareForOutput(NumRays, Device(), token);
-    NormalZ.PrepareForOutput(NumRays, Device(), token);
+    IntersectionX.Allocate(NumRays);
+    IntersectionY.Allocate(NumRays);
+    IntersectionZ.Allocate(NumRays);
+
+    U.Allocate(NumRays);
+    V.Allocate(NumRays);
+    Scalar.Allocate(NumRays);
+
+    NormalX.Allocate(NumRays);
+    NormalY.Allocate(NumRays);
+    NormalZ.Allocate(NumRays);
   }
 
   void DisableIntersectionData()
@@ -173,90 +158,9 @@ public:
     NormalZ.ReleaseResources();
   }
 
-  template <typename Device>
-  VTKM_CONT Ray(const vtkm::Int32 size, Device, bool enableIntersectionData = false)
-  {
-    NumRays = size;
-    IntersectionDataEnabled = enableIntersectionData;
-
-    ChannelBuffer<Precision> buffer;
-    this->Buffers.push_back(buffer);
-
-    DebugWidth = -1;
-    DebugHeight = -1;
-
-    this->Resize(size, Device());
-  }
-
-  struct ResizeFunctor
-  {
-    template <typename Device>
-    VTKM_CONT bool operator()(Device, Ray<Precision>* self, const vtkm::Int32 size)
-    {
-      VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-      self->Resize(size, Device());
-      return true;
-    }
-  };
-
-  VTKM_CONT void Resize(const vtkm::Int32 size) { vtkm::cont::TryExecute(ResizeFunctor(), size); }
-
-  template <typename Device>
-  VTKM_CONT void Resize(const vtkm::Int32 size, Device)
-  {
-    NumRays = size;
-    vtkm::cont::Token token;
-
-    if (IntersectionDataEnabled)
-    {
-      IntersectionX.PrepareForOutput(NumRays, Device(), token);
-      IntersectionY.PrepareForOutput(NumRays, Device(), token);
-      IntersectionZ.PrepareForOutput(NumRays, Device(), token);
-
-      U.PrepareForOutput(NumRays, Device(), token);
-      V.PrepareForOutput(NumRays, Device(), token);
-
-      Scalar.PrepareForOutput(NumRays, Device(), token);
-
-      NormalX.PrepareForOutput(NumRays, Device(), token);
-      NormalY.PrepareForOutput(NumRays, Device(), token);
-      NormalZ.PrepareForOutput(NumRays, Device(), token);
-    }
-
-    OriginX.PrepareForOutput(NumRays, Device(), token);
-    OriginY.PrepareForOutput(NumRays, Device(), token);
-    OriginZ.PrepareForOutput(NumRays, Device(), token);
-
-    DirX.PrepareForOutput(NumRays, Device(), token);
-    DirY.PrepareForOutput(NumRays, Device(), token);
-    DirZ.PrepareForOutput(NumRays, Device(), token);
-
-    Distance.PrepareForOutput(NumRays, Device(), token);
-
-    MinDistance.PrepareForOutput(NumRays, Device(), token);
-    MaxDistance.PrepareForOutput(NumRays, Device(), token);
-    Status.PrepareForOutput(NumRays, Device(), token);
-
-    HitIdx.PrepareForOutput(NumRays, Device(), token);
-    PixelIdx.PrepareForOutput(NumRays, Device(), token);
-
-    Intersection =
-      vtkm::cont::make_ArrayHandleCompositeVector(IntersectionX, IntersectionY, IntersectionZ);
-    Normal = vtkm::cont::make_ArrayHandleCompositeVector(NormalX, NormalY, NormalZ);
-    Origin = vtkm::cont::make_ArrayHandleCompositeVector(OriginX, OriginY, OriginZ);
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(DirX, DirY, DirZ);
-
-    const size_t numBuffers = this->Buffers.size();
-    for (size_t i = 0; i < numBuffers; ++i)
-    {
-      this->Buffers[i].Resize(NumRays, Device());
-    }
-  }
-
   VTKM_CONT
   void AddBuffer(const vtkm::Int32 numChannels, const std::string name)
   {
-
     ChannelBuffer<Precision> buffer(numChannels, this->NumRays);
     buffer.SetName(name);
     this->Buffers.push_back(buffer);
@@ -265,41 +169,24 @@ public:
   VTKM_CONT
   bool HasBuffer(const std::string name)
   {
-    size_t numBuffers = this->Buffers.size();
-    bool found = false;
-    for (size_t i = 0; i < numBuffers; ++i)
+    for (const auto& buffer : this->Buffers)
     {
-      if (this->Buffers[i].GetName() == name)
-      {
-        found = true;
-        break;
-      }
+      if (buffer.GetName() == name)
+        return true;
     }
-    return found;
+    return false;
   }
 
   VTKM_CONT
   ChannelBuffer<Precision>& GetBuffer(const std::string name)
   {
-    const size_t numBuffers = this->Buffers.size();
-    bool found = false;
-    size_t index = 0;
-    for (size_t i = 0; i < numBuffers; ++i)
+    for (auto&& buffer : this->Buffers)
     {
-      if (this->Buffers[i].GetName() == name)
-      {
-        found = true;
-        index = i;
-      }
+      if (buffer.GetName() == name)
+        return buffer;
     }
-    if (found)
-    {
-      return this->Buffers.at(index);
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadValue("No channel buffer with requested name: " + name);
-    }
+
+    throw vtkm::cont::ErrorBadValue("No channel buffer with requested name: " + name);
   }
 
   void PrintRay(vtkm::Id pixelId)

@@ -1,22 +1,30 @@
 #ifndef VTKMDIY_SERIALIZATION_HPP
 #define VTKMDIY_SERIALIZATION_HPP
 
-#include <vector>
-#include <valarray>
+#include <cassert>
+#include <fstream>
+#include <functional>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
-#include <fstream>
-
 #include <tuple>
+#include <type_traits>              // this is used for a safety check for default serialization
 #include <unordered_map>
 #include <unordered_set>
-#include <type_traits>              // this is used for a safety check for default serialization
-
-#include <cassert>
+#include <valarray>
+#include <vector>
 
 namespace diy
 {
+  struct BinaryBlob
+  {
+      using Deleter = std::function<void(const char[])>;
+      using Pointer = std::unique_ptr<const char[], Deleter>;
+      Pointer   pointer;
+      size_t    size;
+  };
+
   //! A serialization buffer. \ingroup Serialization
   struct BinaryBuffer
   {
@@ -25,10 +33,18 @@ namespace diy
     virtual inline void append_binary(const char* x, size_t count)  =0;   //!< append `count` bytes from `x` to end of buffer
     virtual void        load_binary(char* x, size_t count)          =0;   //!< copy `count` bytes into `x` from the buffer
     virtual void        load_binary_back(char* x, size_t count)     =0;   //!< copy `count` bytes into `x` from the back of the buffer
+    virtual char*       grow(size_t count)                          =0;   //!< allocate enough space for `count` bytes and return the pointer to the beginning
+    virtual char*       advance(size_t count)                       =0;   //!< advance buffer position by `count` bytes and return the pointer to the beginning
+
+    virtual void        save_binary_blob(const char*, size_t)       =0;
+    virtual void        save_binary_blob(const char*, size_t, BinaryBlob::Deleter) = 0;
+    virtual BinaryBlob  load_binary_blob()                          =0;
   };
 
   struct MemoryBuffer: public BinaryBuffer
   {
+    using Blob = BinaryBlob;
+
                         MemoryBuffer(size_t position_ = 0):
                           position(position_)                       {}
 
@@ -41,12 +57,19 @@ namespace diy
     virtual inline void append_binary(const char* x, size_t count) override; //!< append `count` bytes from `x` to end of buffer
     virtual inline void load_binary(char* x, size_t count) override;         //!< copy `count` bytes into `x` from the buffer
     virtual inline void load_binary_back(char* x, size_t count) override;    //!< copy `count` bytes into `x` from the back of the buffer
+    virtual inline char* grow(size_t count) override;                        //!< allocate enough space for `count` bytes and return the pointer to the beginning
+    virtual inline char* advance(size_t count) override;                     //!< advance buffer position by `count` bytes and return the pointer to the beginning
+
+    virtual inline void save_binary_blob(const char* x, size_t count) override;
+    virtual inline void save_binary_blob(const char* x, size_t count, Blob::Deleter deleter) override;
+    virtual inline Blob load_binary_blob() override;
+    size_t              nblobs() const                              { return blobs.size(); }
 
     void                clear()                                     { buffer.clear(); reset(); }
     void                wipe()                                      { std::vector<char>().swap(buffer); reset(); }
     void                reset()                                     { position = 0; }
     void                skip(size_t s)                              { position += s; }
-    void                swap(MemoryBuffer& o)                       { std::swap(position, o.position); buffer.swap(o.buffer); }
+    void                swap(MemoryBuffer& o)                       { std::swap(position, o.position); buffer.swap(o.buffer); std::swap(blob_position, o.blob_position); blobs.swap(o.blobs); }
     bool                empty() const                               { return buffer.empty(); }
     size_t              size() const                                { return buffer.size(); }
     void                reserve(size_t s)                           { buffer.reserve(s); }
@@ -71,6 +94,9 @@ namespace diy
 
     size_t              position;
     std::vector<char>   buffer;
+
+    size_t              blob_position = 0;
+    std::vector<Blob>   blobs;
   };
 
   namespace detail
@@ -140,7 +166,7 @@ namespace diy
   template<class T>
   void                  load_back(BinaryBuffer& bb, T& x)           { bb.load_binary_back((char*) &x, sizeof(T)); }
 
-  //@}
+  //!@}
 
 
   namespace detail
@@ -444,17 +470,7 @@ void
 diy::MemoryBuffer::
 save_binary(const char* x, size_t count)
 {
-  if (position + count > buffer.capacity())
-  {
-    double newsize = static_cast<double>(position + count) * growth_multiplier();  // if we have to grow, grow geometrically
-    buffer.reserve(static_cast<size_t>(newsize));
-  }
-
-  if (position + count > buffer.size())
-    buffer.resize(position + count);
-
-  std::copy_n(x, count, &buffer[position]);
-  position += count;
+  std::copy_n(x, count, grow(count));
 }
 
 void
@@ -507,6 +523,58 @@ load_binary_back(char* x, size_t count)
 {
   std::copy_n(&buffer[buffer.size() - count], count, x);
   buffer.resize(buffer.size() - count);
+}
+
+char*
+diy::MemoryBuffer::
+grow(size_t count)
+{
+  if (position + count > buffer.capacity())
+  {
+    double newsize = static_cast<double>(position + count) * growth_multiplier();  // if we have to grow, grow geometrically
+    buffer.reserve(static_cast<size_t>(newsize));
+  }
+
+  if (position + count > buffer.size())
+    buffer.resize(position + count);
+
+  char* destination = &buffer[position];
+
+  position += count;
+
+  return destination;
+}
+
+char*
+diy::MemoryBuffer::
+advance(size_t count)
+{
+    char* origin = &buffer[position];
+    position += count;
+    return origin;
+}
+
+
+void
+diy::MemoryBuffer::
+save_binary_blob(const char* x, size_t count)
+{
+    // empty deleter means we don't take ownership
+    save_binary_blob(x, count, [](const char[]) {});
+}
+
+void
+diy::MemoryBuffer::
+save_binary_blob(const char* x, size_t count, Blob::Deleter deleter)
+{
+    blobs.emplace_back(Blob { Blob::Pointer {x, deleter}, count });
+}
+
+diy::MemoryBuffer::Blob
+diy::MemoryBuffer::
+load_binary_blob()
+{
+    return std::move(blobs[blob_position++]);
 }
 
 void

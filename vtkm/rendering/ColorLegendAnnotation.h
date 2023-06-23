@@ -34,7 +34,6 @@ private:
 
 public:
   ColorLegendAnnotation();
-  ~ColorLegendAnnotation();
   ColorLegendAnnotation(const ColorLegendAnnotation&) = delete;
   ColorLegendAnnotation& operator=(const ColorLegendAnnotation&) = delete;
 
@@ -46,13 +45,13 @@ public:
   void SetLabelFontScale(vtkm::Float32 s)
   {
     this->FontScale = s;
-    for (unsigned int i = 0; i < this->Annot.size(); i++)
-      this->Annot[i]->SetScale(s);
+    for (auto& annot : this->Annot)
+      annot->SetScale(s);
   }
 
-  virtual void Render(const vtkm::rendering::Camera&,
-                      const vtkm::rendering::WorldAnnotator& annotator,
-                      vtkm::rendering::Canvas& canvas);
+  void Render(const vtkm::rendering::Camera&,
+              const vtkm::rendering::WorldAnnotator& annotator,
+              vtkm::rendering::Canvas& canvas);
 };
 }
 } //namespace vtkm::rendering

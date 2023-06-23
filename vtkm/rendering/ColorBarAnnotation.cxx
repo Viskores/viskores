@@ -20,11 +20,8 @@ ColorBarAnnotation::ColorBarAnnotation()
   : ColorTable(vtkm::ColorSpace::Lab)
   , Position(vtkm::Range(-0.88, +0.88), vtkm::Range(+0.87, +0.92), vtkm::Range(0, 0))
   , Horizontal(true)
-  , FieldName("")
 {
 }
-
-ColorBarAnnotation::~ColorBarAnnotation() {}
 
 void ColorBarAnnotation::SetFieldName(const std::string& fieldName)
 {
@@ -83,7 +80,7 @@ void ColorBarAnnotation::Render(const vtkm::rendering::Camera& camera,
   this->Axis.SetMinorTickSize(0, 0, 0); // no minor ticks
   this->Axis.Render(camera, worldAnnotator, canvas);
 
-  if (FieldName != "")
+  if (!FieldName.empty())
   {
     vtkm::Vec2f_32 labelPos;
     if (Horizontal)

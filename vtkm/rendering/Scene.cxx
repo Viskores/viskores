@@ -27,9 +27,9 @@ Scene::Scene()
 {
 }
 
-void Scene::AddActor(const vtkm::rendering::Actor& actor)
+void Scene::AddActor(vtkm::rendering::Actor actor)
 {
-  this->Internals->Actors.push_back(actor);
+  this->Internals->Actors.push_back(std::move(actor));
 }
 
 const vtkm::rendering::Actor& Scene::GetActor(vtkm::IdComponent index) const
@@ -46,9 +46,8 @@ void Scene::Render(vtkm::rendering::Mapper& mapper,
                    vtkm::rendering::Canvas& canvas,
                    const vtkm::rendering::Camera& camera) const
 {
-  for (vtkm::IdComponent actorIndex = 0; actorIndex < this->GetNumberOfActors(); actorIndex++)
+  for (const auto& actor : this->Internals->Actors)
   {
-    const vtkm::rendering::Actor& actor = this->GetActor(actorIndex);
     actor.Render(mapper, canvas, camera);
   }
 }
@@ -56,10 +55,9 @@ void Scene::Render(vtkm::rendering::Mapper& mapper,
 vtkm::Bounds Scene::GetSpatialBounds() const
 {
   vtkm::Bounds bounds;
-  for (vtkm::IdComponent actorIndex = 0; actorIndex < this->GetNumberOfActors(); actorIndex++)
+  for (const auto& actor : this->Internals->Actors)
   {
-    // accumulate all Actors' spatial bounds into the scene spatial bounds
-    bounds.Include(this->GetActor(actorIndex).GetSpatialBounds());
+    bounds.Include(actor.GetSpatialBounds());
   }
 
   return bounds;

@@ -136,6 +136,7 @@ private:
   static UncertainCellSetStructured MakeCellSetStructured(
     const vtkm::Id3& inputPointDims,
     const vtkm::Id3& inputOffsets,
+    const vtkm::Id3& inputGlobalPointDims,
     vtkm::IdComponent forcedDimensionality = 0)
   {
     // when the point dimension for a given axis is 1 we
@@ -146,12 +147,22 @@ private:
     vtkm::IdComponent dimensionality = forcedDimensionality;
     vtkm::Id3 dimensions = inputPointDims;
     vtkm::Id3 offset = inputOffsets;
+    vtkm::Id3 globalDimensions = inputGlobalPointDims;
     for (int i = 0; i < 3 && (forcedDimensionality == 0); ++i)
     {
       if (inputPointDims[i] > 1)
       {
         dimensions[dimensionality] = inputPointDims[i];
         offset[dimensionality] = inputOffsets[i];
+        // TODO/FIXME: This may not be the correct way to handle global point dims.
+        // E.g., if we preserve the input global point dims (default) then they may
+        // have a higher dimensionility than the returned data set. In that case,
+        // the approach here will result in an incorrect value for GlobalPointDimensions.
+        // This is the simplest approach, which should work in most use cases for this
+        // filter, but if this choice causes further problems down the way, we may need
+        // to rethink it.
+        globalDimensions[dimensionality] = inputGlobalPointDims[i];
+
         ++dimensionality;
       }
     }
@@ -163,6 +174,7 @@ private:
         vtkm::cont::CellSetStructured<1> outCs;
         outCs.SetPointDimensions(dimensions[0]);
         outCs.SetGlobalPointIndexStart(offset[0]);
+        outCs.SetGlobalPointDimensions(globalDimensions[0]);
         return outCs;
       }
       case 2:
@@ -170,6 +182,7 @@ private:
         vtkm::cont::CellSetStructured<2> outCs;
         outCs.SetPointDimensions(vtkm::Id2(dimensions[0], dimensions[1]));
         outCs.SetGlobalPointIndexStart(vtkm::Id2(offset[0], offset[1]));
+        outCs.SetGlobalPointDimensions(vtkm::Id2(globalDimensions[0], globalDimensions[1]));
         return outCs;
       }
       case 3:
@@ -177,6 +190,7 @@ private:
         vtkm::cont::CellSetStructured<3> outCs;
         outCs.SetPointDimensions(dimensions);
         outCs.SetGlobalPointIndexStart(offset);
+        outCs.SetGlobalPointDimensions(globalDimensions);
         return outCs;
       }
       default:
@@ -193,9 +207,11 @@ public:
   {
     vtkm::Id pdims = cellset.GetPointDimensions();
     vtkm::Id offsets = cellset.GetGlobalPointIndexStart();
+    vtkm::Id gpdims = cellset.GetGlobalPointDimensions();
     return this->Compute(1,
                          vtkm::Id3{ pdims, 1, 1 },
                          vtkm::Id3{ offsets, 0, 0 },
+                         vtkm::Id3{ gpdims, 1, 1 },
                          voi,
                          sampleRate,
                          includeBoundary,
@@ -210,9 +226,11 @@ public:
   {
     vtkm::Id2 pdims = cellset.GetPointDimensions();
     vtkm::Id2 offsets = cellset.GetGlobalPointIndexStart();
+    vtkm::Id2 gpdims = cellset.GetGlobalPointDimensions();
     return this->Compute(2,
                          vtkm::Id3{ pdims[0], pdims[1], 1 },
                          vtkm::Id3{ offsets[0], offsets[1], 0 },
+                         vtkm::Id3{ gpdims[0], gpdims[1], 1 },
                          voi,
                          sampleRate,
                          includeBoundary,
@@ -227,12 +245,15 @@ public:
   {
     vtkm::Id3 pdims = cellset.GetPointDimensions();
     vtkm::Id3 offsets = cellset.GetGlobalPointIndexStart();
-    return this->Compute(3, pdims, offsets, voi, sampleRate, includeBoundary, includeOffset);
+    vtkm::Id3 gpdims = cellset.GetGlobalPointDimensions();
+    return this->Compute(
+      3, pdims, offsets, gpdims, voi, sampleRate, includeBoundary, includeOffset);
   }
 
   UncertainCellSetStructured Compute(const int dimensionality,
                                      const vtkm::Id3& ptdim,
                                      const vtkm::Id3& offsets,
+                                     const vtkm::Id3& gpdims,
                                      const vtkm::RangeId3& voi,
                                      const vtkm::Id3& sampleRate,
                                      bool includeBoundary,
@@ -241,6 +262,7 @@ public:
     // Verify input parameters
     vtkm::Id3 offset_vec(0, 0, 0);
     vtkm::Id3 globalOffset(0, 0, 0);
+    vtkm::Id3 globalPointDimensions = gpdims;
 
     this->InputDimensions = ptdim;
     this->InputDimensionality = dimensionality;
@@ -315,7 +337,7 @@ public:
     if (!this->VOI.IsNonEmpty())
     {
       vtkm::Id3 empty = { 0, 0, 0 };
-      return MakeCellSetStructured(empty, empty, dimensionality);
+      return MakeCellSetStructured(empty, empty, globalPointDimensions, dimensionality);
     }
     if (!includeOffset)
     {
@@ -354,9 +376,15 @@ public:
         MakeAxisIndexArrayCells(vtkm::Max(vtkm::Id(1), this->OutputDimensions[2] - 1),
                                 this->VOI.Z.Min,
                                 this->SampleRate[2]));
+
+      // compute global point origin
+      for (int i = 0; i < dimensionality; ++i)
+      {
+        globalOffset[i] = offsets[i] + this->VOI[i].Min;
+      }
     }
 
-    return MakeCellSetStructured(this->OutputDimensions, globalOffset);
+    return MakeCellSetStructured(this->OutputDimensions, globalOffset, globalPointDimensions);
   }
 
 

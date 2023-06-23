@@ -240,6 +240,11 @@ void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::CopyDeviceToD
                                  cudaMemcpyDeviceToDevice,
                                  cudaStreamPerThread));
 }
+
+void DeviceAdapterMemoryManager<vtkm::cont::DeviceAdapterTagCuda>::DeleteRawPointer(void* mem) const
+{
+  CudaDelete(mem);
+};
 }
 }
 } // namespace vtkm::cont::internal

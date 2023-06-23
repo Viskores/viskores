@@ -86,6 +86,7 @@ set(headers
   DeviceAdapterAlgorithm.h
   DeviceAdapterList.h
   DeviceAdapterTag.h
+  DIYMemoryManagement.h
   EnvironmentTracker.h
   Error.h
   ErrorBadAllocation.h
@@ -154,6 +155,7 @@ set(sources
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
   DeviceAdapterTag.cxx
+  DIYMemoryManagement.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx
@@ -260,6 +262,14 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/DefaultTypes.h.in
 vtkm_install_headers(vtkm/cont
   ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/DefaultTypes.h
   )
+
+#-----------------------------------------------------------------------------
+# Some operations are pre-compiled for many different types. Improve parallel
+# compiles by breaking them up into smaller units.
+vtkm_add_instantiations(array_range_instantiations
+  INSTANTIATIONS_FILE ArrayRangeComputeTemplate.h
+  )
+list(APPEND device_sources ${array_range_instantiations})
 
 #-----------------------------------------------------------------------------
 vtkm_library( NAME vtkm_cont

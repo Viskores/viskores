@@ -17,8 +17,11 @@
 #include <vtkm/Math.h>
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
 
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
+#include <vtkm/cont/Invoker.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -178,7 +181,34 @@ struct ScatterUniformNeighbor : public vtkm::worklet::WorkletPointNeighborhood
 
   using ScatterType = vtkm::worklet::ScatterUniform<3>;
 };
-}
+
+// An example of using WorkletPointNeighborhood to iterate over a structured 3D cell
+// domain rather than look at an actual neighborhood. It reduces a domain by subsampling
+// every other item in the input field.
+struct Subsample : public vtkm::worklet::WorkletPointNeighborhood
+{
+  using ControlSignature =
+    void(WholeCellSetIn<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell> inputTopology,
+         WholeArrayIn inputField,
+         CellSetIn outputTopology,
+         FieldOut sampledField);
+  using ExecutionSignature = void(_1, _2, Boundary, _4);
+  using InputDomain = _3;
+
+  template <typename InFieldPortal, typename T>
+  VTKM_EXEC void operator()(const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                                                     vtkm::TopologyElementTagCell,
+                                                                     3>& inputTopology,
+                            const InFieldPortal& inFieldPortal,
+                            const vtkm::exec::BoundaryState& boundary,
+                            T& sample) const
+  {
+    sample =
+      inFieldPortal.Get(inputTopology.LogicalToFlatVisitIndex(2 * boundary.GetCenterIndex()));
+  }
+};
+
+} // namespace test_pointneighborhood
 
 namespace
 {
@@ -186,6 +216,7 @@ namespace
 static void TestMaxNeighborValue();
 static void TestScatterIdentityNeighbor();
 static void TestScatterUnfiormNeighbor();
+static void TestIndexing();
 
 void TestWorkletPointNeighborhood(vtkm::cont::DeviceAdapterId id)
 {
@@ -195,6 +226,7 @@ void TestWorkletPointNeighborhood(vtkm::cont::DeviceAdapterId id)
   TestMaxNeighborValue();
   TestScatterIdentityNeighbor();
   TestScatterUnfiormNeighbor();
+  TestIndexing();
 }
 
 static void TestMaxNeighborValue()
@@ -274,6 +306,44 @@ static void TestScatterUnfiormNeighbor()
 
   vtkm::cont::DataSet dataSet2D = testDataSet.Make2DUniformDataSet0();
   dispatcher.Invoke(dataSet2D.GetCellSet(), dataSet2D.GetCoordinateSystem());
+}
+
+static void TestIndexing()
+{
+  std::cout << "Testing using PointNeighborhood for 3D indexing." << std::endl;
+
+  constexpr vtkm::Id outDim = 4;
+  constexpr vtkm::Id inDim = outDim * 2;
+
+  vtkm::cont::CellSetStructured<3> inCellSet;
+  inCellSet.SetPointDimensions({ inDim });
+  vtkm::cont::CellSetStructured<3> outCellSet;
+  outCellSet.SetPointDimensions({ outDim });
+
+  vtkm::cont::ArrayHandleUniformPointCoordinates inField(vtkm::Id3{ inDim });
+
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> outField;
+
+  vtkm::cont::Invoker invoke;
+  invoke(::test_pointneighborhood::Subsample{}, inCellSet, inField, outCellSet, outField);
+
+  VTKM_TEST_ASSERT(outField.GetNumberOfValues() == (outDim * outDim * outDim));
+
+  vtkm::Id flatIndex = 0;
+  vtkm::Id3 IJK;
+  auto outFieldPortal = outField.WritePortal();
+  for (IJK[2] = 0; IJK[2] < outDim; ++IJK[2])
+  {
+    for (IJK[1] = 0; IJK[1] < outDim; ++IJK[1])
+    {
+      for (IJK[0] = 0; IJK[0] < outDim; ++IJK[0])
+      {
+        vtkm::Vec3f computed = outFieldPortal.Get(flatIndex);
+        VTKM_TEST_ASSERT(test_equal(computed, 2 * IJK));
+        ++flatIndex;
+      }
+    }
+  }
 }
 
 } // anonymous namespace

@@ -78,15 +78,17 @@ void TestWithExplicitData()
                      "Wrong point field data");
   }
 
-  const auto& connectivityArray =
-    output.GetCellSet().AsCellSet<vtkm::cont::CellSetExplicit<>>().GetConnectivityArray(
-      vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-  auto connectivityArrayPortal = connectivityArray.ReadPortal();
-
-  for (vtkm::IdComponent i = 0; i < connectivityArray.GetNumberOfValues(); i++)
   {
-    VTKM_TEST_ASSERT(test_equal(connectivityArrayPortal.Get(i), expectedConnectivityArray[i]),
-                     "Wrong connectivity array value");
+    const auto connectivityArray =
+      output.GetCellSet().AsCellSet<vtkm::cont::CellSetExplicit<>>().GetConnectivityArray(
+        vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+    auto connectivityArrayPortal = connectivityArray.ReadPortal();
+
+    for (vtkm::IdComponent i = 0; i < connectivityArray.GetNumberOfValues(); i++)
+    {
+      VTKM_TEST_ASSERT(test_equal(connectivityArrayPortal.Get(i), expectedConnectivityArray[i]),
+                       "Wrong connectivity array value");
+    }
   }
 
   auto newCoords = output.GetCoordinateSystem().GetDataAsMultiplexer();

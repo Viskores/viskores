@@ -230,11 +230,11 @@ public:
 
   static FirstArrayType GetFirstArray(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return { FirstArrayBuffers(buffers) };
+    return FirstArrayType(FirstArrayBuffers(buffers));
   }
   static SecondArrayType GetSecondArray(const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
-    return { SecondArrayBuffers(buffers) };
+    return SecondArrayType(SecondArrayBuffers(buffers));
   }
 };
 } // namespace internal

@@ -37,7 +37,7 @@ View::View(const vtkm::rendering::Scene& scene,
            const vtkm::rendering::Canvas& canvas,
            const vtkm::rendering::Color& backgroundColor,
            const vtkm::rendering::Color& foregroundColor)
-  : Internal(std::make_shared<InternalData>())
+  : Internal(std::make_unique<InternalData>())
 {
   this->Internal->Scene = scene;
   this->Internal->MapperPointer = mapper.NewCopy();
@@ -65,7 +65,7 @@ View::View(const vtkm::rendering::Scene& scene,
            const vtkm::rendering::Camera& camera,
            const vtkm::rendering::Color& backgroundColor,
            const vtkm::rendering::Color& foregroundColor)
-  : Internal(std::make_shared<InternalData>())
+  : Internal(std::make_unique<InternalData>())
 {
   this->Internal->Scene = scene;
   this->Internal->MapperPointer = mapper.NewCopy();
@@ -77,7 +77,7 @@ View::View(const vtkm::rendering::Scene& scene,
   this->AxisColor = foregroundColor;
 }
 
-View::~View() {}
+View::~View() = default;
 
 const vtkm::rendering::Scene& View::GetScene() const
 {

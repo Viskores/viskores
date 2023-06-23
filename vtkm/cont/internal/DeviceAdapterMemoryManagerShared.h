@@ -50,6 +50,8 @@ public:
   VTKM_CONT virtual void CopyDeviceToDevice(
     const vtkm::cont::internal::BufferInfo& src,
     const vtkm::cont::internal::BufferInfo& dest) const override;
+
+  VTKM_CONT virtual void DeleteRawPointer(void* mem) const override;
 };
 }
 }

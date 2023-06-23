@@ -1,8 +1,9 @@
 #ifndef VTKMDIY_MPI_NO_MPI_HPP
 #define VTKMDIY_MPI_NO_MPI_HPP
 
+#include <cassert> // std::assert
+#include <cstdint> // uintptr_t
 #include <stdexcept> // std::runtime_error
-
 
 static const int MPI_SUCCESS = 0;
 static const int MPI_ANY_SOURCE = -1;
@@ -75,7 +76,39 @@ static const int MPI_MODE_APPEND          = 128;
 static const int MPI_MODE_SEQUENTIAL      = 256;
 
 /* define window type */
-using MPI_Win = void*;
+struct MPI_Win {
+       MPI_Win(): data_(0) {}
+       MPI_Win(void* data, bool owned = false): data_(uintptr_t(data) | (owned ? 0x1 : 0x0))
+       {
+              // We assume that pointers have at least some higher-byte alignment.
+              assert(!(uintptr_t(data) & 0x1));
+       }
+       void* data() const { return (void*)(data_ & ~0x1); }
+       bool owned() const { return data_ & 0x1; }
+
+       // We cannot copy owned windows.
+       MPI_Win(MPI_Win const&) = delete;
+       MPI_Win& operator=(MPI_Win const&) = delete;
+
+       // We cannot move owned windows (we don't know how to delete them in general).
+       MPI_Win(MPI_Win&& rhs): data_(rhs.data_)
+       {
+              rhs.data_ = 0;
+       }
+       MPI_Win& operator=(MPI_Win&& rhs)
+       {
+              if (this == &rhs)
+                     return *this;
+
+              data_ = rhs.data_;
+              rhs.data_ = 0;
+
+              return *this;
+       }
+private:
+       uintptr_t data_;
+};
+#define MPI_WIN_NULL MPI_Win()
 
 /* window fence assertions */
 static const int MPI_MODE_NOSTORE       = 1;

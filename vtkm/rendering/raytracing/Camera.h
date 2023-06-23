@@ -12,7 +12,6 @@
 
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/rendering/Camera.h>
-#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 
 namespace vtkm
@@ -24,54 +23,34 @@ namespace raytracing
 
 class VTKM_RENDERING_EXPORT Camera
 {
-
 private:
-  struct PixelDataFunctor;
-  vtkm::Int32 Height;
-  vtkm::Int32 Width;
-  vtkm::Int32 SubsetWidth;
-  vtkm::Int32 SubsetHeight;
-  vtkm::Int32 SubsetMinX;
-  vtkm::Int32 SubsetMinY;
-  vtkm::Float32 FovX;
-  vtkm::Float32 FovY;
-  vtkm::Float32 Zoom;
-  bool IsViewDirty;
+  vtkm::Int32 Height = 500;
+  vtkm::Int32 Width = 500;
+  vtkm::Int32 SubsetWidth = 500;
+  vtkm::Int32 SubsetHeight = 500;
+  vtkm::Int32 SubsetMinX = 0;
+  vtkm::Int32 SubsetMinY = 0;
+  vtkm::Float32 FovX = 30.f;
+  vtkm::Float32 FovY = 30.f;
+  vtkm::Float32 Zoom = 1.f;
+  bool IsViewDirty = true;
 
-  vtkm::Vec3f_32 Look;
-  vtkm::Vec3f_32 Up;
-  vtkm::Vec3f_32 LookAt;
-  vtkm::Vec3f_32 Position;
+  vtkm::Vec3f_32 Look{ 0.f, 0.f, -1.f };
+  vtkm::Vec3f_32 Up{ 0.f, 1.f, 0.f };
+  vtkm::Vec3f_32 LookAt{ 0.f, 0.f, -1.f };
+  vtkm::Vec3f_32 Position{ 0.f, 0.f, 0.f };
   vtkm::rendering::Camera CameraView;
   vtkm::Matrix<vtkm::Float32, 4, 4> ViewProjectionMat;
 
 public:
   VTKM_CONT
-  Camera();
-
-  VTKM_CONT
-  ~Camera();
-
-  // cuda does not compile if this is private
-  class PerspectiveRayGen;
-  class Ortho2DRayGen;
-
   std::string ToString();
 
   VTKM_CONT
-  void SetParameters(const vtkm::rendering::Camera& camera,
-                     const vtkm::Int32 width,
-                     const vtkm::Int32 height);
-
-  VTKM_CONT
-  void SetParameters(const vtkm::rendering::Camera& camera,
-                     vtkm::rendering::CanvasRayTracer& canvas);
+  void SetParameters(const vtkm::rendering::Camera& camera, vtkm::Int32 width, vtkm::Int32 height);
 
   VTKM_CONT
   void SetHeight(const vtkm::Int32& height);
-
-  VTKM_CONT
-  void WriteSettingsToLog();
 
   VTKM_CONT
   vtkm::Int32 GetHeight() const;
@@ -125,10 +104,10 @@ public:
   bool GetIsViewDirty() const;
 
   VTKM_CONT
-  void CreateRays(Ray<vtkm::Float32>& rays, vtkm::Bounds bounds);
+  void CreateRays(Ray<vtkm::Float32>& rays, const vtkm::Bounds& bounds);
 
   VTKM_CONT
-  void CreateRays(Ray<vtkm::Float64>& rays, vtkm::Bounds bounds);
+  void CreateRays(Ray<vtkm::Float64>& rays, const vtkm::Bounds& bounds);
 
   VTKM_CONT
   void GetPixelData(const vtkm::cont::CoordinateSystem& coords,
@@ -136,7 +115,7 @@ public:
                     vtkm::Float32& aveRayDistance);
 
   template <typename Precision>
-  VTKM_CONT void CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds boundingBox);
+  VTKM_CONT void CreateRaysImpl(Ray<Precision>& rays, const vtkm::Bounds& boundingBox);
 
   void CreateDebugRay(vtkm::Vec2i_32 pixel, Ray<vtkm::Float32>& rays);
 
@@ -146,9 +125,13 @@ public:
 
 private:
   template <typename Precision>
-  void CreateDebugRayImp(vtkm::Vec2i_32 pixel, Ray<Precision>& rays);
+  VTKM_CONT void CreateDebugRayImp(vtkm::Vec2i_32 pixel, Ray<Precision>& rays);
+
   VTKM_CONT
   void FindSubset(const vtkm::Bounds& bounds);
+
+  VTKM_CONT
+  void WriteSettingsToLog();
 
   template <typename Precision>
   VTKM_CONT void UpdateDimensions(Ray<Precision>& rays,

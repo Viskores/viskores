@@ -30,8 +30,6 @@ public:
                           const vtkm::Vec3f_32& position,
                           vtkm::Float32 angleDegrees = 0);
 
-  ~TextAnnotationBillboard();
-
   void SetPosition(const vtkm::Vec3f_32& position);
 
   void SetPosition(vtkm::Float32 posx, vtkm::Float32 posy, vtkm::Float32 posz);
