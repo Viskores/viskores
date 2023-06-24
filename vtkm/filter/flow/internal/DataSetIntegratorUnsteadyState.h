@@ -128,7 +128,7 @@ public:
                                  vtkm::FloatDefault stepSize)
   {
     auto copyFlag = (this->CopySeedArray ? vtkm::CopyFlag::On : vtkm::CopyFlag::Off);
-    auto seedArray = vtkm::cont::make_ArrayHandle(block.V, copyFlag);
+    auto seedArray = vtkm::cont::make_ArrayHandle(block.Particles, copyFlag);
 
     using AdvectionHelper =
       detail::AdvectHelperUnsteadyState<ParticleType, FieldType, TerminationType, AnalysisType>;

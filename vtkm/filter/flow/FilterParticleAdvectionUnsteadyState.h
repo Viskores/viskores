@@ -102,7 +102,7 @@ private:
                        analysis);
     }
     vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(
-      boundsMap, dsi, this->UseThreadedAlgorithm);
+      boundsMap, dsi, this->UseThreadedAlgorithm, this->UseAsynchronousCommunication);
 
     vtkm::cont::ArrayHandle<ParticleType> particles;
     this->Seeds.AsArrayHandle(particles);

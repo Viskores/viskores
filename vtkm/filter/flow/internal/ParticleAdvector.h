@@ -37,8 +37,8 @@ public:
                    const bool& useAsyncComm)
     : Blocks(blocks)
     , BoundsMap(bm)
-    , UseAsynchronousCommunication(useAsyncComm)
     , UseThreadedAlgorithm(useThreaded)
+    , UseAsynchronousCommunication(useAsyncComm)
   {
   }
 
@@ -62,15 +62,15 @@ private:
   vtkm::cont::PartitionedDataSet RunAlgo(const vtkm::cont::ArrayHandle<ParticleType>& seeds,
                                          vtkm::FloatDefault stepSize)
   {
-    AlgorithmType algo(this->BoundsMap, this->Blocks);
+    AlgorithmType algo(this->BoundsMap, this->Blocks, this->UseAsynchronousCommunication);
     algo.Execute(seeds, stepSize);
     return algo.GetOutput();
   }
 
-  vtkm::filter::flow::internal::BoundsMap BoundsMap;
-  bool UseAsynchronousCommunication = true;
   std::vector<DSIType> Blocks;
+  vtkm::filter::flow::internal::BoundsMap BoundsMap;
   bool UseThreadedAlgorithm;
+  bool UseAsynchronousCommunication = true;
 };
 
 }

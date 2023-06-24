@@ -37,7 +37,7 @@ public:
   AdvectAlgorithmThreaded(const vtkm::filter::flow::internal::BoundsMap& bm,
                           std::vector<DSIType>& blocks,
                           bool useAsyncComm)
-    : AdvectAlgorithm<DSIType>(bm, blocks)
+    : AdvectAlgorithm<DSIType>(bm, blocks, useAsyncComm)
     , Done(false)
     , WorkerActivate(false)
   {
