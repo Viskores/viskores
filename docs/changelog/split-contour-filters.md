@@ -8,4 +8,7 @@ Although `Contour` is still the preferred option for most cases because it selec
 
 Deprecate functions `GetComputeFastNormalsForStructured`, `SetComputeFastNormalsForStructured`, `GetComputeFastNormalsForUnstructured` and `GetComputeFastNormalsForUnstructured`, to use the more general `GetComputeFastNormals` and `SetComputeFastNormals` instead.
 
- By default, for the `Contour` filter, `GenerateNormals` is now `true`, and `ComputeFastNormals` is `false`.
+By default, for the `Contour` filter, `GenerateNormals` is now `true`, and `ComputeFastNormals` is `false`.
+
+The marching cubes version of contour still has several possible compile paths, so it can still take a bit to compile. To help manage the compile time further, the contour filter compilation is broken up even further using the instantiation build capabilities.
+

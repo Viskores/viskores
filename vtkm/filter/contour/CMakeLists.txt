@@ -34,6 +34,9 @@ set(contour_sources
   Contour.cxx
 )
 
+vtkm_add_instantiations(contour_instantiations INSTANTIATIONS_FILE worklet/ContourMarchingCells.h)
+list(APPEND contour_sources_device ${contour_instantiations})
+
 set_source_files_properties(Contour.cxx PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
 
 vtkm_library(
