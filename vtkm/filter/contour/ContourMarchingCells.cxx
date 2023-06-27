@@ -59,12 +59,11 @@ vtkm::cont::DataSet ContourMarchingCells::DoExecute(const vtkm::cont::DataSet& i
 
     if (this->GenerateNormals && !this->GetComputeFastNormals())
     {
-      outputCells =
-        worklet.Run(ivalues, inputCells, inputCoords.GetData(), concrete, vertices, normals);
+      outputCells = worklet.Run(ivalues, inputCells, inputCoords, concrete, vertices, normals);
     }
     else
     {
-      outputCells = worklet.Run(ivalues, inputCells, inputCoords.GetData(), concrete, vertices);
+      outputCells = worklet.Run(ivalues, inputCells, inputCoords, concrete, vertices);
     }
   };
 

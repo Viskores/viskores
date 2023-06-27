@@ -30,6 +30,7 @@
 #include <vtkm/worklet/ScatterPermutation.h>
 
 #include <vtkm/filter/contour/worklet/contour/CommonState.h>
+#include <vtkm/filter/contour/worklet/contour/FieldPropagation.h>
 #include <vtkm/filter/contour/worklet/contour/MarchingCellTables.h>
 #include <vtkm/filter/vector_analysis/worklet/gradient/PointGradient.h>
 #include <vtkm/filter/vector_analysis/worklet/gradient/StructuredPointGradient.h>
@@ -594,18 +595,14 @@ struct GenerateNormals
 template <typename CellSetType,
           typename CoordinateSystem,
           typename ValueType,
-          typename StorageTagField,
-          typename StorageTagVertices,
-          typename StorageTagNormals,
-          typename CoordinateType,
-          typename NormalType>
+          typename StorageTagField>
 vtkm::cont::CellSetSingleType<> execute(
   const CellSetType& cells,
   const CoordinateSystem& coordinateSystem,
   const std::vector<ValueType>& isovalues,
   const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& inputField,
-  vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices>& vertices,
-  vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& normals,
   vtkm::worklet::contour::CommonState& sharedState)
 {
   using vtkm::worklet::contour::MapPointField;
