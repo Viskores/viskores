@@ -48,8 +48,7 @@ public:
 
   void Go() override
   {
-    vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
-    this->ComputeTotalNumParticles(nLocal);
+    this->ComputeTotalNumParticles();
 
     std::vector<std::thread> workerThreads;
     workerThreads.emplace_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
@@ -124,7 +123,7 @@ protected:
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfoType bb =
           DSIHelperInfo<ParticleType>(v, this->BoundsMap, this->ParticleBlockIDsMap);
-        block.Advect(bb, this->StepSize, this->NumberOfSteps);
+        block.Advect(bb, this->StepSize, this->MaxNumberOfSteps);
         this->UpdateWorkerResult(blockId, bb);
       }
       else

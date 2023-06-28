@@ -40,11 +40,11 @@ public:
   {
   }
 
-  void Execute(vtkm::Id numSteps,
+  void Execute(vtkm::Id maxNumSteps,
                vtkm::FloatDefault stepSize,
                const vtkm::cont::ArrayHandle<ParticleType>& seeds)
   {
-    this->SetNumberOfSteps(numSteps);
+    this->SetMaxNumberOfSteps(maxNumSteps);
     this->SetStepSize(stepSize);
     this->SetSeeds(seeds);
     this->Go();
@@ -65,7 +65,7 @@ public:
   }
 
   void SetStepSize(vtkm::FloatDefault stepSize) { this->StepSize = stepSize; }
-  void SetNumberOfSteps(vtkm::Id numSteps) { this->NumberOfSteps = numSteps; }
+  void SetMaxNumberOfSteps(vtkm::Id numSteps) { this->MaxNumberOfSteps = numSteps; }
   void SetSeeds(const vtkm::cont::ArrayHandle<ParticleType>& seeds)
   {
     this->ClearParticles();
@@ -100,8 +100,7 @@ public:
     vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
       this->Comm, this->UseAsynchronousCommunication, this->BoundsMap, 1, 128);
 
-    vtkm::Id nLocal = static_cast<vtkm::Id>(this->Active.size() + this->Inactive.size());
-    this->ComputeTotalNumParticles(nLocal);
+    this->ComputeTotalNumParticles();
 
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
@@ -113,7 +112,7 @@ public:
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfoType bb =
           DSIHelperInfo<ParticleType>(v, this->BoundsMap, this->ParticleBlockIDsMap);
-        block.Advect(bb, this->StepSize, this->NumberOfSteps);
+        block.Advect(bb, this->StepSize, this->MaxNumberOfSteps);
         numTerm = this->UpdateResult(bb.Get<DSIHelperInfo<ParticleType>>());
       }
 
@@ -133,14 +132,17 @@ public:
     this->ParticleBlockIDsMap.clear();
   }
 
-  void ComputeTotalNumParticles(const vtkm::Id& numLocal)
+  void ComputeTotalNumParticles()
   {
-    long long total = static_cast<long long>(numLocal);
+    vtkm::Id numLocal = static_cast<vtkm::Id>(this->Inactive.size());
+    for (const auto& it : this->Active)
+      numLocal += it.second.size();
+
 #ifdef VTKM_ENABLE_MPI
-    MPI_Comm mpiComm = vtkmdiy::mpi::mpi_cast(this->Comm.handle());
-    MPI_Allreduce(MPI_IN_PLACE, &total, 1, MPI_LONG_LONG, MPI_SUM, mpiComm);
+    vtkmdiy::mpi::all_reduce(this->Comm, numLocal, this->TotalNumParticles, std::plus<vtkm::Id>{});
+#else
+    this->TotalNumParticles = numLocal;
 #endif
-    this->TotalNumParticles = static_cast<vtkm::Id>(total);
   }
 
   DataSetIntegrator<DSIType>& GetDataSet(vtkm::Id id)
@@ -161,35 +163,56 @@ public:
     auto bit = blockIds.begin();
     while (pit != particles.end() && bit != blockIds.end())
     {
+      vtkm::Id blockId0 = (*bit)[0];
       this->ParticleBlockIDsMap[pit->GetID()] = *bit;
+      if (this->Active.find(blockId0) == this->Active.end())
+        this->Active[blockId0] = { *pit };
+      else
+        this->Active[blockId0].emplace_back(*pit);
       pit++;
       bit++;
     }
-
-    //Update Active
-    this->Active.insert(this->Active.end(), particles.begin(), particles.end());
   }
 
   virtual bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId)
   {
-    //DRP:  particles = std::move(this->Active2[blockId]);
     particles.clear();
     blockId = -1;
     if (this->Active.empty())
       return false;
 
-    blockId = this->ParticleBlockIDsMap[this->Active.front().GetID()][0];
-    auto it = this->Active.begin();
-    while (it != this->Active.end())
+    //If only one, return it.
+    if (this->Active.size() == 1)
     {
-      auto p = *it;
-      if (blockId == this->ParticleBlockIDsMap[p.GetID()][0])
+      blockId = this->Active.begin()->first;
+      particles = std::move(this->Active.begin()->second);
+      this->Active.clear();
+    }
+    else
+    {
+      //Find the blockId with the most particles.
+      std::size_t maxNum = 0;
+      auto maxIt = this->Active.end();
+      for (auto it = this->Active.begin(); it != this->Active.end(); it++)
       {
-        particles.emplace_back(p);
-        it = this->Active.erase(it);
+        auto sz = it->second.size();
+        if (sz > maxNum)
+        {
+          maxNum = sz;
+          maxIt = it;
+        }
       }
-      else
-        it++;
+
+      if (maxNum == 0)
+      {
+        this->Active.clear();
+        return false;
+      }
+
+      VTKM_ASSERT(maxIt != this->Active.end());
+      blockId = maxIt->first;
+      particles = std::move(maxIt->second);
+      this->Active.erase(maxIt);
     }
 
     return !particles.empty();
@@ -291,22 +314,27 @@ public:
   virtual void UpdateActive(const std::vector<ParticleType>& particles,
                             const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMap)
   {
-    this->Update(this->Active, particles, idsMap);
+    VTKM_ASSERT(particles.size() == idsMap.size());
+
+    for (auto pit = particles.begin(); pit != particles.end(); pit++)
+    {
+      vtkm::Id particleID = pit->GetID();
+      const auto& it = idsMap.find(particleID);
+      VTKM_ASSERT(it != idsMap.end() && !it->second.empty());
+      vtkm::Id blockId = it->second[0];
+      this->Active[blockId].emplace_back(*pit);
+    }
+
+    for (const auto& it : idsMap)
+      this->ParticleBlockIDsMap[it.first] = it.second;
   }
 
   virtual void UpdateInactive(const std::vector<ParticleType>& particles,
                               const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMap)
   {
-    this->Update(this->Inactive, particles, idsMap);
-  }
-
-  void Update(std::vector<ParticleType>& arr,
-              const std::vector<ParticleType>& particles,
-              const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMap)
-  {
     VTKM_ASSERT(particles.size() == idsMap.size());
 
-    arr.insert(arr.end(), particles.begin(), particles.end());
+    this->Inactive.insert(this->Inactive.end(), particles.begin(), particles.end());
     for (const auto& it : idsMap)
       this->ParticleBlockIDsMap[it.first] = it.second;
   }
@@ -353,12 +381,13 @@ public:
   }
 
   //Member data
-  std::vector<ParticleType> Active;
+  // {blockId, std::vector of particles}
+  std::unordered_map<vtkm::Id, std::vector<ParticleType>> Active;
   std::vector<DSIType> Blocks;
   vtkm::filter::flow::internal::BoundsMap BoundsMap;
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   std::vector<ParticleType> Inactive;
-  vtkm::Id NumberOfSteps;
+  vtkm::Id MaxNumberOfSteps;
   vtkm::Id NumRanks;
   //{particleId : {block IDs}}
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
