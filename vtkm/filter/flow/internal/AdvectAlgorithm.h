@@ -387,7 +387,7 @@ public:
   vtkm::filter::flow::internal::BoundsMap BoundsMap;
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   std::vector<ParticleType> Inactive;
-  vtkm::Id MaxNumberOfSteps;
+  vtkm::Id MaxNumberOfSteps = 0;
   vtkm::Id NumRanks;
   //{particleId : {block IDs}}
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
