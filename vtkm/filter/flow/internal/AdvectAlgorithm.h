@@ -209,7 +209,6 @@ public:
         return false;
       }
 
-      VTKM_ASSERT(maxIt != this->Active.end());
       blockId = maxIt->first;
       particles = std::move(maxIt->second);
       this->Active.erase(maxIt);
