@@ -4,6 +4,8 @@ GROUPS
   Filters
 DEPENDS
   vtkm_filter_core
+  vtkm_filter_density_estimate
+  vtkm_filter_entity_extraction
 PRIVATE_DEPENDS
   vtkm_worklet
 TEST_DEPENDS

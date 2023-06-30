@@ -9,10 +9,13 @@
 ##============================================================================
 set(resampling_headers
   Probe.h
+  HistSampling.h
   )
 
 set(resampling_sources
-  Probe.cxx)
+  Probe.cxx
+  HistSampling.cxx
+  )
 
 vtkm_library(
   NAME vtkm_filter_resampling
