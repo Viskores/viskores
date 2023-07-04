@@ -452,8 +452,12 @@ private:
                                       cellSet.GetIndices(originCells[myIndex]),
                                       myFace);
       bool foundPair = false;
-      for (vtkm::IdComponent otherIndex = myIndex + 1; otherIndex < numCellsOnHash; otherIndex++)
+      for (vtkm::IdComponent otherIndex = 0; otherIndex < numCellsOnHash; otherIndex++)
       {
+        if (otherIndex == myIndex)
+        {
+          continue;
+        }
         vtkm::Id3 otherFace;
         vtkm::exec::CellFaceCanonicalId(originFaces[otherIndex],
                                         cellSet.GetCellShape(originCells[otherIndex]),
