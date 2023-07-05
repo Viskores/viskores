@@ -23,7 +23,7 @@
 
 #include <vtkmstd/integer_sequence.h>
 
-
+#include <array>
 #include <numeric>
 #include <type_traits>
 #include <utility>

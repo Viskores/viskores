@@ -484,6 +484,13 @@ struct ArrayExtractComponentImpl<vtkm::cont::StorageTagCartesianProduct<STs...>>
   }
 };
 
+template <typename T, typename S>
+vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeGeneric(
+  const vtkm::cont::ArrayHandle<T, S>& input,
+  const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+  bool computeFiniteRange,
+  vtkm::cont::DeviceAdapterId device);
+
 template <typename S>
 struct ArrayRangeComputeImpl;
 
@@ -494,63 +501,43 @@ struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagCartesianPro
   VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>,
                                   vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>& input_,
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool computeFiniteRange,
     vtkm::cont::DeviceAdapterId device) const
   {
+    if (maskArray.GetNumberOfValues() != 0)
+    {
+      return vtkm::cont::internal::ArrayRangeComputeGeneric(
+        input_, maskArray, computeFiniteRange, device);
+    }
+
+    const auto& input =
+      static_cast<const vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T, ST1>,
+                                                                vtkm::cont::ArrayHandle<T, ST2>,
+                                                                vtkm::cont::ArrayHandle<T, ST3>>&>(
+        input_);
+
+    vtkm::cont::ArrayHandle<vtkm::Range> ranges[3];
+    ranges[0] = vtkm::cont::internal::ArrayRangeComputeImpl<ST1>{}(
+      input.GetFirstArray(), maskArray, computeFiniteRange, device);
+    ranges[1] = vtkm::cont::internal::ArrayRangeComputeImpl<ST2>{}(
+      input.GetSecondArray(), maskArray, computeFiniteRange, device);
+    ranges[2] = vtkm::cont::internal::ArrayRangeComputeImpl<ST3>{}(
+      input.GetThirdArray(), maskArray, computeFiniteRange, device);
+
+    auto numComponents =
+      ranges[0].GetNumberOfValues() + ranges[1].GetNumberOfValues() + ranges[2].GetNumberOfValues();
     vtkm::cont::ArrayHandle<vtkm::Range> result;
-    result.Allocate(3);
+    result.Allocate(numComponents);
     auto resultPortal = result.WritePortal();
-
-    const vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T, ST1>,
-                                                  vtkm::cont::ArrayHandle<T, ST2>,
-                                                  vtkm::cont::ArrayHandle<T, ST3>>& input = input_;
-    vtkm::cont::ArrayHandle<vtkm::Range> componentRangeArray;
-
-    vtkm::IdComponent index = 0;
-    vtkm::cont::ArrayHandle<T, ST1> firstArray = input.GetFirstArray();
-    componentRangeArray = vtkm::cont::internal::ArrayRangeComputeImpl<ST1>{}(firstArray, device);
-    vtkm::Id numSubComponents = componentRangeArray.GetNumberOfValues();
-    if (numSubComponents > 1)
+    for (vtkm::Id i = 0, index = 0; i < 3; ++i)
     {
-      result.Allocate(result.GetNumberOfValues() + numSubComponents - 1, vtkm::CopyFlag::On);
-      resultPortal = result.WritePortal();
+      auto rangePortal = ranges[i].ReadPortal();
+      for (vtkm::Id j = 0; j < rangePortal.GetNumberOfValues(); ++j, ++index)
+      {
+        resultPortal.Set(index, rangePortal.Get(j));
+      }
     }
-    auto componentRangePortal = componentRangeArray.ReadPortal();
-    for (vtkm::IdComponent subComponent = 0; subComponent < numSubComponents; ++subComponent)
-    {
-      resultPortal.Set(index, componentRangePortal.Get(subComponent));
-      ++index;
-    }
-
-    vtkm::cont::ArrayHandle<T, ST2> secondArray = input.GetSecondArray();
-    componentRangeArray = vtkm::cont::internal::ArrayRangeComputeImpl<ST2>{}(secondArray, device);
-    numSubComponents = componentRangeArray.GetNumberOfValues();
-    if (numSubComponents > 1)
-    {
-      result.Allocate(result.GetNumberOfValues() + numSubComponents - 1, vtkm::CopyFlag::On);
-      resultPortal = result.WritePortal();
-    }
-    componentRangePortal = componentRangeArray.ReadPortal();
-    for (vtkm::IdComponent subComponent = 0; subComponent < numSubComponents; ++subComponent)
-    {
-      resultPortal.Set(index, componentRangePortal.Get(subComponent));
-      ++index;
-    }
-
-    vtkm::cont::ArrayHandle<T, ST3> thirdArray = input.GetThirdArray();
-    componentRangeArray = vtkm::cont::internal::ArrayRangeComputeImpl<ST3>{}(thirdArray, device);
-    numSubComponents = componentRangeArray.GetNumberOfValues();
-    if (numSubComponents > 1)
-    {
-      result.Allocate(result.GetNumberOfValues() + numSubComponents - 1, vtkm::CopyFlag::On);
-      resultPortal = result.WritePortal();
-    }
-    componentRangePortal = componentRangeArray.ReadPortal();
-    for (vtkm::IdComponent subComponent = 0; subComponent < numSubComponents; ++subComponent)
-    {
-      resultPortal.Set(index, componentRangePortal.Get(subComponent));
-      ++index;
-    }
-
     return result;
   }
 };

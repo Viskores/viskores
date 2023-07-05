@@ -12,8 +12,11 @@
 
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
+#include <vtkm/cont/internal/ArrayRangeComputeUtils.h>
+
 #include <vtkm/Range.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/VecFlat.h>
 #include <vtkm/VecTraits.h>
 
 namespace vtkm
@@ -156,33 +159,45 @@ struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagCounting>
   template <typename T>
   VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
     const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagCounting>& input,
-    vtkm::cont::DeviceAdapterId) const
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool vtkmNotUsed(computeFiniteRange), // assume array produces only finite values
+    vtkm::cont::DeviceAdapterId device) const
   {
-    using Traits = vtkm::VecTraits<T>;
+    using Traits = vtkm::VecTraits<vtkm::VecFlat<T>>;
     vtkm::cont::ArrayHandle<vtkm::Range> result;
     result.Allocate(Traits::NUM_COMPONENTS);
+
+    if (input.GetNumberOfValues() <= 0)
+    {
+      result.Fill(vtkm::Range{});
+      return result;
+    }
+
+    vtkm::Id2 firstAndLast{ 0, input.GetNumberOfValues() - 1 };
+    if (maskArray.GetNumberOfValues() > 0)
+    {
+      firstAndLast = GetFirstAndLastUnmaskedIndices(maskArray, device);
+    }
+
+    if (firstAndLast[1] < firstAndLast[0])
+    {
+      result.Fill(vtkm::Range{});
+      return result;
+    }
+
     auto portal = result.WritePortal();
-    if (portal.GetNumberOfValues() > 0)
+    // assume the values to be finite
+    auto first = make_VecFlat(input.ReadPortal().Get(firstAndLast[0]));
+    auto last = make_VecFlat(input.ReadPortal().Get(firstAndLast[1]));
+    for (vtkm::IdComponent cIndex = 0; cIndex < Traits::NUM_COMPONENTS; ++cIndex)
     {
-      T first = input.ReadPortal().Get(0);
-      T last = input.ReadPortal().Get(input.GetNumberOfValues() - 1);
-      for (vtkm::IdComponent cIndex = 0; cIndex < Traits::NUM_COMPONENTS; ++cIndex)
-      {
-        auto firstComponent = Traits::GetComponent(first, cIndex);
-        auto lastComponent = Traits::GetComponent(last, cIndex);
-        portal.Set(cIndex,
-                   vtkm::Range(vtkm::Min(firstComponent, lastComponent),
-                               vtkm::Max(firstComponent, lastComponent)));
-      }
+      auto firstComponent = Traits::GetComponent(first, cIndex);
+      auto lastComponent = Traits::GetComponent(last, cIndex);
+      portal.Set(cIndex,
+                 vtkm::Range(vtkm::Min(firstComponent, lastComponent),
+                             vtkm::Max(firstComponent, lastComponent)));
     }
-    else
-    {
-      // Array is empty
-      for (vtkm::IdComponent cIndex = 0; cIndex < Traits::NUM_COMPONENTS; ++cIndex)
-      {
-        portal.Set(cIndex, vtkm::Range{});
-      }
-    }
+
     return result;
   }
 };

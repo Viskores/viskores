@@ -13,7 +13,10 @@
 #include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ArrayHandleStride.h>
+#include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
+
+#include <vtkm/cont/internal/ArrayRangeComputeUtils.h>
 
 #include <vtkm/internal/ArrayPortalValueReference.h>
 
@@ -645,6 +648,110 @@ struct ArrayExtractComponentImpl<vtkm::cont::internal::StorageTagRecombineVec>
       array.GetComponentArray(componentIndex / subComponents),
       componentIndex % subComponents,
       allowCopy);
+  }
+};
+
+//-------------------------------------------------------------------------------------------------
+template <typename S>
+struct ArrayRangeComputeImpl;
+
+template <typename S>
+struct ArrayRangeComputeMagnitudeImpl;
+
+template <typename T, typename S>
+inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImplCaller(
+  const vtkm::cont::ArrayHandle<T, S>& input,
+  const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+  bool computeFiniteRange,
+  vtkm::cont::DeviceAdapterId device)
+{
+  return vtkm::cont::internal::ArrayRangeComputeImpl<S>{}(
+    input, maskArray, computeFiniteRange, device);
+}
+
+template <typename T, typename S>
+inline vtkm::Range ArrayRangeComputeMagnitudeImplCaller(
+  const vtkm::cont::ArrayHandle<T, S>& input,
+  const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+  bool computeFiniteRange,
+  vtkm::cont::DeviceAdapterId device)
+{
+  return vtkm::cont::internal::ArrayRangeComputeMagnitudeImpl<S>{}(
+    input, maskArray, computeFiniteRange, device);
+}
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::internal::StorageTagRecombineVec>
+{
+  template <typename RecombineVecType>
+  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
+    const vtkm::cont::ArrayHandle<RecombineVecType, vtkm::cont::internal::StorageTagRecombineVec>&
+      input_,
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool computeFiniteRange,
+    vtkm::cont::DeviceAdapterId device) const
+  {
+    auto input =
+      static_cast<vtkm::cont::ArrayHandleRecombineVec<typename RecombineVecType::ComponentType>>(
+        input_);
+
+    vtkm::cont::ArrayHandle<vtkm::Range> result;
+    result.Allocate(input.GetNumberOfComponents());
+
+    if (input.GetNumberOfValues() < 1)
+    {
+      result.Fill(vtkm::Range{});
+      return result;
+    }
+
+    auto resultPortal = result.WritePortal();
+    for (vtkm::IdComponent i = 0; i < input.GetNumberOfComponents(); ++i)
+    {
+      auto rangeAH = ArrayRangeComputeImplCaller(
+        input.GetComponentArray(i), maskArray, computeFiniteRange, device);
+      resultPortal.Set(i, rangeAH.ReadPortal().Get(0));
+    }
+
+    return result;
+  }
+};
+
+template <typename ArrayHandleType>
+struct ArrayValueIsNested;
+
+template <typename RecombineVecType>
+struct ArrayValueIsNested<
+  vtkm::cont::ArrayHandle<RecombineVecType, vtkm::cont::internal::StorageTagRecombineVec>>
+{
+  static constexpr bool Value = false;
+};
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeMagnitudeImpl<vtkm::cont::internal::StorageTagRecombineVec>
+{
+  template <typename RecombineVecType>
+  VTKM_CONT vtkm::Range operator()(
+    const vtkm::cont::ArrayHandle<RecombineVecType, vtkm::cont::internal::StorageTagRecombineVec>&
+      input_,
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool computeFiniteRange,
+    vtkm::cont::DeviceAdapterId device) const
+  {
+    auto input =
+      static_cast<vtkm::cont::ArrayHandleRecombineVec<typename RecombineVecType::ComponentType>>(
+        input_);
+
+    if (input.GetNumberOfValues() < 1)
+    {
+      return vtkm::Range{};
+    }
+    if (input.GetNumberOfComponents() == 1)
+    {
+      return ArrayRangeComputeMagnitudeImplCaller(
+        input.GetComponentArray(0), maskArray, computeFiniteRange, device);
+    }
+
+    return ArrayRangeComputeMagnitudeGeneric(input_, maskArray, computeFiniteRange, device);
   }
 };
 

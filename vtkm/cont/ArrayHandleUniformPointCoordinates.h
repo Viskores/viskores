@@ -88,6 +88,8 @@ struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagUniformPoint
 {
   VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
     const vtkm::cont::ArrayHandleUniformPointCoordinates& input,
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool computeFiniteRange,
     vtkm::cont::DeviceAdapterId device) const;
 };
 
