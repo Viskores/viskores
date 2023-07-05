@@ -34,7 +34,7 @@ RUN mkdir /opt/cmake/ && \
 ENV PATH "${PATH}:/opt/cmake/bin"
 
 # Build and install Kokkos
-ARG KOKKOS_VERSION=3.7.01
+ARG KOKKOS_VERSION=4.1.00
 RUN mkdir -p /opt/kokkos/build && \
     cd /opt/kokkos/build && \
     curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz > kokkos-$KOKKOS_VERSION.tar.gz && \

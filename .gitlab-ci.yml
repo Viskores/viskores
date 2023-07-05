@@ -53,7 +53,7 @@
     - .docker_image
 
 .ubuntu2004_kokkos: &ubuntu2004_kokkos
-  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20230125"
+  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20230705"
   extends:
     - .docker_image
 
