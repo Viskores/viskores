@@ -92,8 +92,8 @@ public:
     this->TermID.emplace_back(pID);
   }
 
-  const vtkm::filter::flow::internal::BoundsMap BoundsMap;
-  const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
+  vtkm::filter::flow::internal::BoundsMap BoundsMap;
+  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
 
   ParticleBlockIds InBounds;
   ParticleBlockIds OutOfBounds;
