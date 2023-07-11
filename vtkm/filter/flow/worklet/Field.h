@@ -237,6 +237,4 @@ private:
 }
 } //vtkm::worklet::flow
 
-#include <vtkm/filter/flow/worklet/XGCField.h>
-
 #endif //vtkm_filter_flow_worklet_Field_h

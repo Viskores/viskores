@@ -26,9 +26,6 @@ set(headers
   StreamSurface.h
   TemporalGridEvaluators.h
   Termination.h
-  XGCHelper.h
-  XGCField.h
-  XGCPoincare.h
   )
 
 #-----------------------------------------------------------------------------

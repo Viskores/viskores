@@ -407,6 +407,4 @@ private:
 } // namespace worklet
 } // namespace vtkm
 
-#include <vtkm/filter/flow/worklet/XGCPoincare.h>
-
 #endif //vtkm_worklet_particleadvection_analysis

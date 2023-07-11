@@ -21,7 +21,6 @@ set(flow_headers
   Streamline.h
   StreamSurface.h
   WarpXStreamline.h
-  XGCPoincare.h
   )
 
 set(flow_sources
@@ -42,7 +41,6 @@ set(flow_device_sources
   PathParticle.cxx
   Streamline.cxx
   WarpXStreamline.cxx
-  XGCPoincare.cxx
   )
 
 vtkm_library(
