@@ -97,13 +97,11 @@ public:
   Particle(const vtkm::Vec3f& p,
            const vtkm::Id& id,
            const vtkm::Id& numSteps = 0,
-           const vtkm::Id& numPunctures = 0,
            const vtkm::ParticleStatus& status = vtkm::ParticleStatus(),
            const vtkm::FloatDefault& time = 0)
     : Position(p)
     , ID(id)
     , NumSteps(numSteps)
-    , NumPunctures(numPunctures)
     , Status(status)
     , Time(time)
   {
@@ -114,7 +112,6 @@ public:
     : Position(p.Position)
     , ID(p.ID)
     , NumSteps(p.NumSteps)
-    , NumPunctures(p.NumPunctures)
     , Status(p.Status)
     , Time(p.Time)
   {
@@ -136,9 +133,6 @@ public:
 
   VTKM_EXEC_CONT vtkm::Id GetNumberOfSteps() const { return this->NumSteps; }
   VTKM_EXEC_CONT void SetNumberOfSteps(vtkm::Id numSteps) { this->NumSteps = numSteps; }
-
-  VTKM_EXEC_CONT vtkm::Id GetNumberOfPunctures() const { return this->NumPunctures; }
-  VTKM_EXEC_CONT void SetNumberOfPunctures(vtkm::Id punctures) { this->NumPunctures = punctures; }
 
   VTKM_EXEC_CONT vtkm::ParticleStatus GetStatus() const { return this->Status; }
   VTKM_EXEC_CONT vtkm::ParticleStatus& GetStatus() { return this->Status; }
@@ -175,7 +169,6 @@ private:
   vtkm::Vec3f Position;
   vtkm::Id ID = -1;
   vtkm::Id NumSteps = 0;
-  vtkm::Id NumPunctures = 0;
   vtkm::ParticleStatus Status;
   vtkm::FloatDefault Time = 0;
 
@@ -185,7 +178,6 @@ public:
     constexpr std::size_t sz = sizeof(vtkm::Vec3f) // Pos
       + sizeof(vtkm::Id)                           // ID
       + sizeof(vtkm::Id)                           // NumSteps
-      + sizeof(vtkm::Id)                           // NumPunctures
       + sizeof(vtkm::UInt8)                        // Status
       + sizeof(vtkm::FloatDefault);                // Time
 
