@@ -9,6 +9,8 @@
 
 
 
+
+
 *.cmake          whitespace=tab-in-indent
 *.md             whitespace=tab-in-indent whitespace=-blank-at-eol conflict-marker-size=79 -whitespace
 *.md.tmpl        whitespace=tab-in-indent whitespace=-blank-at-eol conflict-marker-size=79 -whitespace

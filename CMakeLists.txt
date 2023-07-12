@@ -119,6 +119,14 @@ mark_as_advanced(VTKm_ENABLE_TESTING_LIBRARY)
 cmake_dependent_option(VTKm_ENABLE_ANARI "Enable ANARI interop support"
   OFF "VTKm_ENABLE_RENDERING" OFF)
 
+# If you are building Doxygen, you also have the option to build the User's Guide with Sphinx
+cmake_dependent_option(VTKm_ENABLE_USERS_GUIDE
+  "Build User's Guide with Sphinx"
+  ON
+  "VTKm_ENABLE_DOCUMENTATION"
+  OFF
+  )
+
 # We may want to make finer controls on whether libraries/modules get built.
 # VTK uses the concept of groups for its modules
 vtkm_option(VTKm_BUILD_ALL_LIBRARIES
@@ -309,28 +317,6 @@ check_type_size(long VTKm_SIZE_LONG BUILTIN_TYPES_ONLY)
 check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 
 #-----------------------------------------------------------------------------
-# Add subdirectories
-add_subdirectory(vtkmstd)
-
-#-----------------------------------------------------------------------------
-# Process modules
-vtkm_modules_scan(
-  SCAN_DIRECTORIES vtkm benchmarking
-  PROVIDED_MODULES all_modules
-  )
-vtkm_modules_build(
-  PROVIDED_MODULES ${all_modules}
-  WANT_BY_DEFAULT ${VTKm_BUILD_ALL_LIBRARIES}
-  WANT_BY_DEFAULT_REASON "VTKm_BUILD_ALL_LIBRARIES is `${VTKm_BUILD_ALL_LIBRARIES}`"
-  )
-
-#-----------------------------------------------------------------------------
-# Build documentation
-if (VTKm_ENABLE_DOCUMENTATION)
-  include(VTKmBuildDocumentation)
-endif()
-
-#-----------------------------------------------------------------------------
 # Ready files for find_package
 include(CMakePackageConfigHelpers)
 
@@ -350,6 +336,28 @@ write_basic_package_version_file(
   ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
+
+#-----------------------------------------------------------------------------
+# Add subdirectories
+add_subdirectory(vtkmstd)
+
+#-----------------------------------------------------------------------------
+# Process modules
+vtkm_modules_scan(
+  SCAN_DIRECTORIES vtkm benchmarking docs
+  PROVIDED_MODULES all_modules
+  )
+vtkm_modules_build(
+  PROVIDED_MODULES ${all_modules}
+  WANT_BY_DEFAULT ${VTKm_BUILD_ALL_LIBRARIES}
+  WANT_BY_DEFAULT_REASON "VTKm_BUILD_ALL_LIBRARIES is `${VTKm_BUILD_ALL_LIBRARIES}`"
+  )
+
+#-----------------------------------------------------------------------------
+# Build documentation
+if (VTKm_ENABLE_DOCUMENTATION)
+  include(VTKmBuildDocumentation)
+endif()
 
 #-----------------------------------------------------------------------------
 # Create makefile/package files for projects not using CMake

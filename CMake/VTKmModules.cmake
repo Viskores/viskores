@@ -221,7 +221,7 @@ function(_vtkm_module_parse_module_file module_file name_var)
 
   # Parse module file as arguments to a function
   set(options NO_TESTING)
-  set(oneValueArgs NAME)
+  set(oneValueArgs NAME TESTING_DIR)
   set(multiValueArgs
     GROUPS DEPENDS PRIVATE_DEPENDS OPTIONAL_DEPENDS TEST_DEPENDS TEST_OPTIONAL_DEPENDS)
   cmake_parse_arguments(_vtkm_module
@@ -592,10 +592,16 @@ function(_vtkm_modules_try_build_tests target_module)
     endif()
   endforeach()
 
+  vtkm_module_get_property(testing_subdir ${target_module} TESTING_DIR)
+  if(NOT testing_subdir)
+    set(testing_subdir "testing")
+  endif()
+
   vtkm_module_get_property(src_directory ${target_module} DIRECTORY)
   file(RELATIVE_PATH rel_directory "${VTKm_SOURCE_DIR}" "${src_directory}")
   set(vtkm_module_current_test ${target_module})
-  add_subdirectory("${src_directory}/testing" "${VTKm_BINARY_DIR}/${rel_directory}/testing")
+  add_subdirectory("${src_directory}/${testing_subdir}"
+    "${VTKm_BINARY_DIR}/${rel_directory}/${testing_subdir}")
   set(vtkm_module_current_test)
 endfunction()
 

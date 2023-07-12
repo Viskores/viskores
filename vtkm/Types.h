@@ -151,16 +151,42 @@ namespace vtkm
 //*****************************************************************************
 // Typedefs for basic types.
 //*****************************************************************************
+
+/// Base type to use for 32-bit floating-point numbers.
+///
 using Float32 = float;
+
+/// Base type to use for 64-bit floating-point numbers.
+///
 using Float64 = double;
+
+/// Base type to use for 8-bit signed integer numbers.
+///
 using Int8 = int8_t;
+
+/// Base type to use for 8-bit unsigned integer numbers.
+///
 using UInt8 = uint8_t;
+
+/// Base type to use for 16-bit signed integer numbers.
+///
 using Int16 = int16_t;
+
+/// Base type to use for 16-bit unsigned integer numbers.
+///
 using UInt16 = uint16_t;
+
+/// Base type to use for 32-bit signed integer numbers.
+///
 using Int32 = int32_t;
+
+/// Base type to use for 32-bit unsigned integer numbers.
+///
 using UInt32 = uint32_t;
 
-/// Represents a component ID (index of component in a vector). The number
+/// \brief Base type to use to index small lists.
+///
+/// This type represents a component ID (index of component in a vector). The number
 /// of components, being a value fixed at compile time, is generally assumed
 /// to be quite small. However, we are currently using a 32-bit width
 /// integer because modern processors tend to access them more efficiently
@@ -172,19 +198,31 @@ using IdComponent = vtkm::Int32;
 using WordTypeDefault = vtkm::UInt32;
 
 //In this order so that we exactly match the logic that exists in VTK
-#if VTKM_SIZE_LONG_LONG == 8
+#if (VTKM_SIZE_LONG_LONG == 8) || defined(VTKM_DOXYGEN_ONLY)
+/// Base type to use for 64-bit signed integer numbers.
+///
 using Int64 = signed long long;
+/// Base type to use for 64-bit signed integer numbers.
+///
 using UInt64 = unsigned long long;
 #define VTKM_UNUSED_INT_TYPE long
 #elif VTKM_SIZE_LONG == 8
+/// Base type to use for 64-bit signed integer numbers.
+///
 using Int64 = signed long;
+/// Base type to use for 64-bit unsigned integer numbers.
+///
 using UInt64 = unsigned long;
 #define VTKM_UNUSED_INT_TYPE long long
 #else
 #error Could not find a 64-bit integer.
 #endif
 
-/// Represents an ID (index into arrays).
+/// \brief Base type to use to index arrays.
+///
+/// This type represents an ID (index into arrays). It should be used whenever
+/// indexing data that could grow arbitrarily large.
+///
 #ifdef VTKM_USE_64BIT_IDS
 using Id = vtkm::Int64;
 #else
