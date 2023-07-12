@@ -51,7 +51,10 @@ public:
   ParticleType GetParticle(const vtkm::Id& idx) { return this->Particles.Get(idx); }
 
   VTKM_EXEC
-  void PreStepUpdate(const vtkm::Id& vtkmNotUsed(idx)) {}
+  void PreStepUpdate(const vtkm::Id& idx, const ParticleType& particle)
+  {
+    this->Analysis.PreStepAnalyze(idx, particle);
+  }
 
   VTKM_EXEC
   void StepUpdate(const vtkm::Id& idx,

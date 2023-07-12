@@ -64,7 +64,7 @@ public:
     // 1. you could have success AND at temporal boundary.
     // 2. could you have success AND at spatial?
     // 3. all three?
-    integralCurve.PreStepUpdate(idx);
+    integralCurve.PreStepUpdate(idx, particle);
     do
     {
       particle = integralCurve.GetParticle(idx);

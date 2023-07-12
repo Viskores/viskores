@@ -35,6 +35,12 @@ public:
   VTKM_EXEC_CONT
   NoAnalysisExec() {}
 
+  VTKM_EXEC void PreStepAnalyze(const vtkm::Id index, const ParticleType& particle)
+  {
+    (void)index;
+    (void)particle;
+  }
+
   //template <typename ParticleType>
   VTKM_EXEC void Analyze(const vtkm::Id index,
                          const ParticleType& oldParticle,
@@ -147,21 +153,26 @@ public:
     Validity = validity.PrepareForInPlace(device, token);
   }
 
+  VTKM_EXEC void PreStepAnalyze(const vtkm::Id index, const ParticleType& particle)
+  {
+    vtkm::Id streamLength = this->StreamLengths.Get(index);
+    if (streamLength == 0)
+    {
+      this->StreamLengths.Set(index, 1);
+      vtkm::Id loc = index * MaxSteps;
+      this->Streams.Set(loc, particle.GetPosition());
+      this->Validity.Set(loc, 1);
+    }
+  }
+
   //template <typename ParticleType>
   VTKM_EXEC void Analyze(const vtkm::Id index,
                          const ParticleType& oldParticle,
                          const ParticleType& newParticle)
   {
-    vtkm::Id loc = index * MaxSteps;
+    (void)oldParticle;
     vtkm::Id streamLength = this->StreamLengths.Get(index);
-    if (streamLength == 0)
-    {
-      this->StreamLengths.Set(index, 1);
-      this->Streams.Set(loc, oldParticle.GetPosition());
-      this->Validity.Set(loc, 1);
-      ++streamLength;
-    }
-    loc += streamLength;
+    vtkm::Id loc = index * MaxSteps + streamLength;
     this->StreamLengths.Set(index, ++streamLength);
     this->Streams.Set(loc, newParticle.GetPosition());
     this->Validity.Set(loc, 1);
@@ -317,9 +328,6 @@ public:
 
     this->PolyLines.Fill(this->Streams.GetNumberOfValues(), cellTypes, connectivity, offsets);
     this->Particles = particles;
-    //this->Validity.ReleaseResources();
-    //this->InitialLengths.ReleaseResources();
-    //this->StreamLengths.ReleaseResources();
   }
 
 
