@@ -12,6 +12,7 @@
 #define vtk_m_filter_flow_FilterParticleAdvection_h
 
 #include <vtkm/Particle.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
@@ -86,7 +87,6 @@ public:
 
 protected:
   VTKM_CONT virtual void ValidateOptions() const;
-
 
   bool BlockIdsSet = false;
   std::vector<vtkm::Id> BlockIds;
