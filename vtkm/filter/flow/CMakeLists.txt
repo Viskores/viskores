@@ -29,6 +29,7 @@ set(flow_sources
   )
 
 set(flow_device_sources
+  worklet/Analysis.cxx
   Lagrangian.cxx
   LagrangianStructures.cxx
   FilterParticleAdvectionSteadyState.cxx
