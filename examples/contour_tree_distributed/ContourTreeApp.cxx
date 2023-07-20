@@ -440,6 +440,7 @@ int main(int argc, char* argv[])
     return 255;
   }
 
+
   VTKM_LOG_S(exampleLogLevel,
              std::endl
                << "    ------------ Settings -----------" << std::endl
@@ -659,14 +660,37 @@ int main(int argc, char* argv[])
         for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
         {
           auto ds = bd_result.GetPartition(ds_no);
-          std::string branchDecompositionFileName = std::string("BranchDecomposition_Rank_") +
+          std::string branchDecompositionIntermediateFileName =
+            std::string("BranchDecompositionIntermediate_Rank_") +
             std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
             std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
 
-          std::ofstream treeStream(branchDecompositionFileName.c_str());
-          treeStream
+          std::ofstream treeStreamIntermediate(branchDecompositionIntermediateFileName.c_str());
+
+          treeStreamIntermediate
             << vtkm::filter::scalar_topology::HierarchicalVolumetricBranchDecomposer::PrintBranches(
                  ds);
+
+          std::string branchDecompositionFileName = std::string("BranchDecomposition_Rank_") +
+            std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+            std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
+          std::ofstream treeStream(branchDecompositionFileName.c_str());
+
+          auto upperEndGRId = ds.GetField("UpperEndGlobalRegularIds")
+                                .GetData()
+                                .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                .ReadPortal();
+          auto lowerEndGRId = ds.GetField("LowerEndGlobalRegularIds")
+                                .GetData()
+                                .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                .ReadPortal();
+          vtkm::Id nBranches = upperEndGRId.GetNumberOfValues();
+
+          for (vtkm::Id branch = 0; branch < nBranches; ++branch)
+          {
+            treeStream << std::setw(12) << upperEndGRId.Get(branch) << std::setw(14)
+                       << lowerEndGRId.Get(branch) << std::endl;
+          }
         }
       }
       else

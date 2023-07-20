@@ -24,7 +24,7 @@ if [ -t 1 ]; then
 fi
 
 echo "Removing previously generated files"
-rm *.log *.dat
+rm -f *.log *.dat
 
 echo "Copying target file "$1 "into current directory"
 filename=${1##*/}
@@ -42,16 +42,32 @@ n_parts=$(($2*$2))
 mpirun -np 2 --oversubscribe ./ContourTree_Distributed --vtkm-device Any --preSplitFiles --saveOutputData --augmentHierarchicalTree --computeVolumeBranchDecomposition --numBlocks=${n_parts} ${fileroot}_part_%d_of_${n_parts}.txt
 rm ${fileroot}_part_*_of_${n_parts}.txt
 
-echo "Compiling Outputs"
-sort -u BranchDecomposition_Rank_*.txt > outsort${fileroot}_$2x$2.txt
-cat outsort${fileroot}_$2x$2.txt | ./BranchCompiler | sort > bcompile${fileroot}_$2x$2.txt
-rm BranchDecomposition_Rank_*.txt outsort${fileroot}_$2x$2.txt
+# ground result
+sort -u ${GTCT_DIR}/branch_decomposition_volume_hybrid_${fileroot}.txt > sorted_ground${fileroot}_$2x$2.txt
 
-echo "Diffing"
-echo diff bcompile${fileroot}_$2x$2.txt ${GTCT_DIR}/branch_decomposition_volume_hybrid_${fileroot}.txt
-diff bcompile${fileroot}_$2x$2.txt ${GTCT_DIR}/branch_decomposition_volume_hybrid_${fileroot}.txt
+echo "Handling BranchDecomposition Outputs"
+sort -u BranchDecomposition_Rank_*.txt > sorted_branch_decomposition${fileroot}_$2x$2.txt
+rm BranchDecomposition_Rank_*.txt
 
-if test $? -eq 0; then echo "${GREEN}Pass${NC}"; rm bcompile${fileroot}_$2x$2.txt; else echo "${RED}FAIL${NC}"; fi;
+diff sorted_branch_decomposition${fileroot}_$2x$2.txt sorted_ground${fileroot}_$2x$2.txt
+diff1=$?
+if test $diff1 -eq 0; then echo "${GREEN}Pass${NC}"; rm sorted_branch_decomposition${fileroot}_$2x$2.txt; else echo "${RED}FAIL${NC}"; fi;
+
+echo "Handling Intermediate BranchDecomposition Outputs"
+sort -u BranchDecompositionIntermediate_Rank_*.txt | ./BranchCompiler | sort -u > sorted_branch_decomposition_intermediate${fileroot}_$2x$2.txt
+rm BranchDecompositionIntermediate_Rank_*.txt
+
+echo diff sorted_branch_decomposition_intermediate${fileroot}_$2x$2.txt ${GTCT_DIR}/branch_decomposition_volume_hybrid_${fileroot}.txt
+diff sorted_branch_decomposition_intermediate${fileroot}_$2x$2.txt sorted_ground${fileroot}_$2x$2.txt
+diff2=$?
+
+if test $diff2 -eq 0; then echo "Intermediate:${GREEN}Pass${NC}"; rm sorted_branch_decomposition_intermediate${fileroot}_$2x$2.txt; else echo "Intermediate:${RED}FAIL${NC}"; fi;
+
+if [ $diff1 -eq 0 ] && [ $diff2 -eq 0 ]
+then
+   rm sorted_ground${fileroot}_$2x$2.txt
+   rm *.log
+fi
 
 # echo "Generating Dot files"
 # ./makedot.sh

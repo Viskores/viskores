@@ -58,6 +58,8 @@ using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeFil
 using vtkm::filter::testing::contourtree_uniform_distributed::
   TestContourTreeUniformDistributed5x6x7;
 using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
+using vtkm::filter::testing::contourtree_uniform_distributed::
+  TestContourTreeUniformDistributedBranchDecomposition8x9;
 
 class TestContourTreeUniformDistributedFilter
 {
@@ -70,6 +72,12 @@ public:
     TestContourTreeUniformDistributed8x9(4);
     TestContourTreeUniformDistributed8x9(8);
     TestContourTreeUniformDistributed8x9(16);
+
+    TestContourTreeUniformDistributedBranchDecomposition8x9(2);
+    TestContourTreeUniformDistributedBranchDecomposition8x9(4);
+    TestContourTreeUniformDistributedBranchDecomposition8x9(8);
+    TestContourTreeUniformDistributedBranchDecomposition8x9(16);
+
     TestContourTreeUniformDistributed5x6x7(2, false);
     TestContourTreeUniformDistributed5x6x7(4, false);
     TestContourTreeUniformDistributed5x6x7(8, false);

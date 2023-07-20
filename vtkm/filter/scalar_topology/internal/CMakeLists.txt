@@ -12,6 +12,7 @@ set(headers
   BranchDecompositionBlock.h
   ComputeBlockIndices.h
   ComputeDistributedBranchDecompositionFunctor.h
+  ExchangeBranchEndsFunctor.h
   )
 #-----------------------------------------------------------------------------
 
