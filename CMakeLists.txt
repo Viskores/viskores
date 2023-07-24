@@ -467,11 +467,14 @@ if (VTKm_ENABLE_TESTING)
   add_test(NAME SystemInformation
     COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmSystemInformation.cmake"
     )
-  add_test(NAME CopyrightStatement
-    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckCopyright.cmake"
-    )
-  # increase timeout since on some machines CopyrightStatement test takes a long time.
-  set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
+  if(NOT WIN32)
+    # Test takes too long on windows
+    add_test(NAME CopyrightStatement
+      COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckCopyright.cmake"
+      )
+    # increase timeout since on some machines CopyrightStatement test takes a long time.
+    set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
+  endif()
 
   # Setup the infrastructure to allow VTK-m to run tests against a temporary
   # installed version of VTK-m.

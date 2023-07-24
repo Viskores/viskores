@@ -22,8 +22,15 @@ set(FILES_TO_CHECK
   *.cmake
   *.h
   *.h.in
+  *.hxx
   *.cxx
   *.cu
+  *.py
+  *.sh
+  *.ps1
+  Dockerfile
+  *.yaml
+  *.yml
   )
 
 set(EXCEPTIONS
@@ -150,21 +157,19 @@ endfunction(missing_copyright)
 
 # Get an appropriate beginning line comment for the given filename.
 function(get_comment_prefix var filename)
-  get_filename_component(base "${filename}" NAME_WE)
-  get_filename_component(extension "${filename}" EXT)
-  if (extension STREQUAL ".cmake")
+  get_filename_component(name "${filename}" NAME)
+  if(name MATCHES "\\.(cmake|py|sh|ps1|yaml|yml)$"
+    OR name STREQUAL "CMakeLists.txt"
+    OR name STREQUAL "Dockerfile"
+    )
     set(${var} "##" PARENT_SCOPE)
-  elseif (base STREQUAL "CMakeLists" AND extension STREQUAL ".txt")
-    set(${var} "##" PARENT_SCOPE)
-  elseif (extension STREQUAL ".txt")
+  elseif (name MATCHES "\\.(h|h\\.in|hxx|cxx|cu)$")
+    set(${var} "//" PARENT_SCOPE)
+  elseif (name MATCHES "\\.txt$")
     set(${var} "" PARENT_SCOPE)
-  elseif (extension STREQUAL ".h" OR extension STREQUAL ".h.in" OR extension STREQUAL ".cxx" OR extension STREQUAL ".cu")
-    set(${var} "//" PARENT_SCOPE)
-  elseif (extension STREQUAL ".worklet")
-    set(${var} "//" PARENT_SCOPE)
-  else (extension STREQUAL ".cmake")
-    message(SEND_ERROR "Could not identify file type of ${filename}.")
-  endif (extension STREQUAL ".cmake")
+  else ()
+    message(FATAL_ERROR "Could not identify file type of `${name}`.")
+  endif ()
 endfunction(get_comment_prefix)
 
 # Check the given file for the appropriate copyright statement.

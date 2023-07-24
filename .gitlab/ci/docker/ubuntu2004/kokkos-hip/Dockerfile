@@ -1,3 +1,15 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
 FROM rocm/dev-ubuntu-20.04
 LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@kitware.com>"
 
