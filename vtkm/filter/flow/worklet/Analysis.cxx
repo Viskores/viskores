@@ -9,6 +9,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //
 //=============================================================================
+#define vtk_m_filter_flow_worklet_Analysis_cxx
 
 #include <vtkm/filter/flow/worklet/Analysis.h>
 
@@ -220,8 +221,11 @@ VTKM_CONT bool StreamlineAnalysis<ParticleType>::MakeDataSet(
   return true;
 }
 
+template class VTKM_ALWAYS_EXPORT NoAnalysis<vtkm::Particle>;
+template class VTKM_ALWAYS_EXPORT NoAnalysis<vtkm::ChargedParticle>;
+template class VTKM_ALWAYS_EXPORT StreamlineAnalysis<vtkm::Particle>;
+template class VTKM_ALWAYS_EXPORT StreamlineAnalysis<vtkm::ChargedParticle>;
+
 } // namespace flow
 } // namespace worklet
 } // namespace vtkm
-
-#include <vtkm/filter/flow/worklet/Analysis.inl>

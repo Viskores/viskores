@@ -13,6 +13,7 @@
 #ifndef vtkm_worklet_particleadvection_analysis
 #define vtkm_worklet_particleadvection_analysis
 
+#include <vtkm/Particle.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
@@ -26,7 +27,7 @@ namespace flow
 {
 
 template <typename ParticleType>
-class NoAnalysisExec
+class VTKM_ALWAYS_EXPORT NoAnalysisExec
 {
 public:
   VTKM_EXEC_CONT
@@ -51,7 +52,7 @@ public:
 };
 
 template <typename ParticleType>
-class NoAnalysis : public vtkm::cont::ExecutionObjectBase
+class VTKM_ALWAYS_EXPORT NoAnalysis : public vtkm::cont::ExecutionObjectBase
 {
 public:
   // Intended to store advected particles after Finalize
@@ -95,7 +96,7 @@ public:
 };
 
 template <typename ParticleType>
-class StreamlineAnalysisExec
+class VTKM_ALWAYS_EXPORT StreamlineAnalysisExec
 {
 public:
   VTKM_EXEC_CONT
@@ -161,7 +162,7 @@ private:
 };
 
 template <typename ParticleType>
-class StreamlineAnalysis : public vtkm::cont::ExecutionObjectBase
+class VTKM_ALWAYS_EXPORT StreamlineAnalysis : public vtkm::cont::ExecutionObjectBase
 {
 public:
   // Intended to store advected particles after Finalize
@@ -231,7 +232,14 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> Validity;
 };
 
-} // namespace particleadvection
+#ifndef vtk_m_filter_flow_worklet_Analysis_cxx
+extern template class VTKM_ALWAYS_EXPORT NoAnalysis<vtkm::Particle>;
+extern template class VTKM_ALWAYS_EXPORT NoAnalysis<vtkm::ChargedParticle>;
+extern template class VTKM_ALWAYS_EXPORT StreamlineAnalysis<vtkm::Particle>;
+extern template class VTKM_ALWAYS_EXPORT StreamlineAnalysis<vtkm::ChargedParticle>;
+#endif //!vtk_m_filter_flow_worklet_Analysis_cxx
+
+} // namespace flow
 } // namespace worklet
 } // namespace vtkm
 
