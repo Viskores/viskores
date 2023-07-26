@@ -28,7 +28,7 @@ namespace flow
 {
 
 template <typename ParticleType>
-class VTKM_ALWAYS_EXPORT NoAnalysisExec
+class VTKM_FILTER_FLOW_TEMPLATE_EXPORT NoAnalysisExec
 {
 public:
   VTKM_EXEC_CONT
@@ -53,7 +53,7 @@ public:
 };
 
 template <typename ParticleType>
-class VTKM_ALWAYS_EXPORT NoAnalysis : public vtkm::cont::ExecutionObjectBase
+class VTKM_FILTER_FLOW_TEMPLATE_EXPORT NoAnalysis : public vtkm::cont::ExecutionObjectBase
 {
 public:
   // Intended to store advected particles after Finalize
@@ -97,7 +97,7 @@ public:
 };
 
 template <typename ParticleType>
-class VTKM_ALWAYS_EXPORT StreamlineAnalysisExec
+class VTKM_FILTER_FLOW_TEMPLATE_EXPORT StreamlineAnalysisExec
 {
 public:
   VTKM_EXEC_CONT
@@ -163,7 +163,7 @@ private:
 };
 
 template <typename ParticleType>
-class VTKM_ALWAYS_EXPORT StreamlineAnalysis : public vtkm::cont::ExecutionObjectBase
+class VTKM_FILTER_FLOW_TEMPLATE_EXPORT StreamlineAnalysis : public vtkm::cont::ExecutionObjectBase
 {
 public:
   // Intended to store advected particles after Finalize
