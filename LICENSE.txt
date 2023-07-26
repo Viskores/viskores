@@ -52,6 +52,7 @@ CMake/FindTBB.cmake
 Utilities
 vtkm/cont/tbb/internal/parallel_sort.h
 vtkm/cont/tbb/internal/parallel_radix_sort_tbb.h
+vtkm/cont/tbb/internal/ParallelSortTBB.hxx
 vtkm/cont/tbb/internal/kxsort.h
 vtkm/thirdparty
 version.txt
