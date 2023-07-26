@@ -221,10 +221,10 @@ VTKM_CONT bool StreamlineAnalysis<ParticleType>::MakeDataSet(
   return true;
 }
 
-template class VTKM_ALWAYS_EXPORT NoAnalysis<vtkm::Particle>;
-template class VTKM_ALWAYS_EXPORT NoAnalysis<vtkm::ChargedParticle>;
-template class VTKM_ALWAYS_EXPORT StreamlineAnalysis<vtkm::Particle>;
-template class VTKM_ALWAYS_EXPORT StreamlineAnalysis<vtkm::ChargedParticle>;
+template class VTKM_FILTER_FLOW_TEMPLATE_EXPORT NoAnalysis<vtkm::Particle>;
+template class VTKM_FILTER_FLOW_TEMPLATE_EXPORT NoAnalysis<vtkm::ChargedParticle>;
+template class VTKM_FILTER_FLOW_TEMPLATE_EXPORT StreamlineAnalysis<vtkm::Particle>;
+template class VTKM_FILTER_FLOW_TEMPLATE_EXPORT StreamlineAnalysis<vtkm::ChargedParticle>;
 
 } // namespace flow
 } // namespace worklet

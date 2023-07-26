@@ -18,6 +18,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
 {
@@ -233,10 +234,10 @@ private:
 };
 
 #ifndef vtk_m_filter_flow_worklet_Analysis_cxx
-extern template class VTKM_ALWAYS_EXPORT NoAnalysis<vtkm::Particle>;
-extern template class VTKM_ALWAYS_EXPORT NoAnalysis<vtkm::ChargedParticle>;
-extern template class VTKM_ALWAYS_EXPORT StreamlineAnalysis<vtkm::Particle>;
-extern template class VTKM_ALWAYS_EXPORT StreamlineAnalysis<vtkm::ChargedParticle>;
+extern template class VTKM_FILTER_FLOW_TEMPLATE_EXPORT NoAnalysis<vtkm::Particle>;
+extern template class VTKM_FILTER_FLOW_TEMPLATE_EXPORT NoAnalysis<vtkm::ChargedParticle>;
+extern template class VTKM_FILTER_FLOW_TEMPLATE_EXPORT StreamlineAnalysis<vtkm::Particle>;
+extern template class VTKM_FILTER_FLOW_TEMPLATE_EXPORT StreamlineAnalysis<vtkm::ChargedParticle>;
 #endif //!vtk_m_filter_flow_worklet_Analysis_cxx
 
 } // namespace flow
