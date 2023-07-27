@@ -50,11 +50,17 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
+#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/scalar_topology/ContourTreeUniformAugmented.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ProcessContourTree.h>
+
+
+#ifdef VTKM_ENABLE_MPI
+#include "TestingContourTreeUniformDistributedFilter.h"
+#include <mpi.h>
+#endif
 
 namespace
 {
@@ -67,6 +73,258 @@ using vtkm::cont::testing::MakeTestDataSet;
 class TestContourTreeUniformAugmented
 {
 private:
+#ifdef VTKM_ENABLE_MPI
+  void ShiftLogicalOriginToZero(vtkm::cont::PartitionedDataSet& pds) const
+  {
+    // Shift the logical origin (minimum of LocalPointIndexStart) to zero
+    // along each dimension
+
+    // Compute minimum global point index start for all data sets on this MPI rank
+    std::vector<vtkm::Id> minimumGlobalPointIndexStartThisRank;
+    using ds_const_iterator = vtkm::cont::PartitionedDataSet::const_iterator;
+    for (ds_const_iterator ds_it = pds.cbegin(); ds_it != pds.cend(); ++ds_it)
+    {
+      ds_it->GetCellSet().CastAndCallForTypes<vtkm::cont::CellSetListStructured>(
+        [&minimumGlobalPointIndexStartThisRank](const auto& css) {
+          minimumGlobalPointIndexStartThisRank.resize(css.Dimension,
+                                                      std::numeric_limits<vtkm::Id>::max());
+          for (vtkm::IdComponent d = 0; d < css.Dimension; ++d)
+          {
+            minimumGlobalPointIndexStartThisRank[d] =
+              std::min(minimumGlobalPointIndexStartThisRank[d], css.GetGlobalPointIndexStart()[d]);
+          }
+        });
+    }
+
+    // Perform global reduction to find GlobalPointDimensions across all ranks
+    std::vector<vtkm::Id> minimumGlobalPointIndexStart;
+    auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+    vtkmdiy::mpi::all_reduce(comm,
+                             minimumGlobalPointIndexStartThisRank,
+                             minimumGlobalPointIndexStart,
+                             vtkmdiy::mpi::minimum<vtkm::Id>{});
+
+    // Shift all cell sets so that minimum global point index start
+    // along each dimension is zero
+    using ds_iterator = vtkm::cont::PartitionedDataSet::iterator;
+    for (ds_iterator ds_it = pds.begin(); ds_it != pds.end(); ++ds_it)
+    {
+      // This does not work, i.e., it does not really change the cell set for the DataSet
+      ds_it->GetCellSet().CastAndCallForTypes<vtkm::cont::CellSetListStructured>(
+        [&minimumGlobalPointIndexStart, &ds_it](auto& css) {
+          auto pointIndexStart = css.GetGlobalPointIndexStart();
+          typename std::remove_reference_t<decltype(css)>::SchedulingRangeType
+            shiftedPointIndexStart;
+          for (vtkm::IdComponent d = 0; d < css.Dimension; ++d)
+          {
+            shiftedPointIndexStart[d] = pointIndexStart[d] - minimumGlobalPointIndexStart[d];
+          }
+          css.SetGlobalPointIndexStart(shiftedPointIndexStart);
+          // Why is the following necessary? Shouldn't it be sufficient to update the
+          // CellSet through the reference?
+          ds_it->SetCellSet(css);
+        });
+    }
+  }
+
+  void ComputeGlobalPointSize(vtkm::cont::PartitionedDataSet& pds) const
+  {
+    // Compute GlobalPointDimensions as maximum of GlobalPointIndexStart + PointDimensions
+    // for each dimension across all blocks
+
+    // Compute GlobalPointDimensions for all data sets on this MPI rank
+    std::vector<vtkm::Id> globalPointDimensionsThisRank;
+    using ds_const_iterator = vtkm::cont::PartitionedDataSet::const_iterator;
+    for (ds_const_iterator ds_it = pds.cbegin(); ds_it != pds.cend(); ++ds_it)
+    {
+      ds_it->GetCellSet().CastAndCallForTypes<vtkm::cont::CellSetListStructured>(
+        [&globalPointDimensionsThisRank](const auto& css) {
+          globalPointDimensionsThisRank.resize(css.Dimension, -1);
+          for (vtkm::IdComponent d = 0; d < css.Dimension; ++d)
+          {
+            globalPointDimensionsThisRank[d] =
+              std::max(globalPointDimensionsThisRank[d],
+                       css.GetGlobalPointIndexStart()[d] + css.GetPointDimensions()[d]);
+          }
+        });
+    }
+
+    // Perform global reduction to find GlobalPointDimensions across all ranks
+    std::vector<vtkm::Id> globalPointDimensions;
+    auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+    vtkmdiy::mpi::all_reduce(comm,
+                             globalPointDimensionsThisRank,
+                             globalPointDimensions,
+                             vtkmdiy::mpi::maximum<vtkm::Id>{});
+
+    // Set this information in all cell sets
+    using ds_iterator = vtkm::cont::PartitionedDataSet::iterator;
+    for (ds_iterator ds_it = pds.begin(); ds_it != pds.end(); ++ds_it)
+    {
+      // This does not work, i.e., it does not really change the cell set for the DataSet
+      ds_it->GetCellSet().CastAndCallForTypes<vtkm::cont::CellSetListStructured>(
+        [&globalPointDimensions, &ds_it](auto& css) {
+          typename std::remove_reference_t<decltype(css)>::SchedulingRangeType gpd;
+          for (vtkm::IdComponent d = 0; d < css.Dimension; ++d)
+          {
+            gpd[d] = globalPointDimensions[d];
+          }
+          css.SetGlobalPointDimensions(gpd);
+          // Why is the following necessary? Shouldn't it be sufficient to update the
+          // CellSet through the reference?
+          ds_it->SetCellSet(css);
+        });
+    }
+  }
+
+  void GetPartitionedDataSet(const vtkm::cont::DataSet& ds,
+                             const std::string& fieldName,
+                             const int numberOfBlocks,
+                             const int rank,
+                             const int numberOfRanks,
+                             vtkm::cont::PartitionedDataSet& pds) const
+  {
+    // Get dimensions of data set
+    vtkm::Id3 globalSize;
+    vtkm::cont::CastAndCall(
+      ds.GetCellSet(), vtkm::worklet::contourtree_augmented::GetPointDimensions(), globalSize);
+
+    // Determine split
+    vtkm::Id3 blocksPerAxis =
+      vtkm::filter::testing::contourtree_uniform_distributed::ComputeNumberOfBlocksPerAxis(
+        globalSize, numberOfBlocks);
+    vtkm::Id blocksPerRank = numberOfBlocks / numberOfRanks;
+    vtkm::Id numRanksWithExtraBlock = numberOfBlocks % numberOfRanks;
+    vtkm::Id blocksOnThisRank, startBlockNo;
+
+    if (rank < numRanksWithExtraBlock)
+    {
+      blocksOnThisRank = blocksPerRank + 1;
+      startBlockNo = (blocksPerRank + 1) * rank;
+    }
+    else
+    {
+      blocksOnThisRank = blocksPerRank;
+      startBlockNo = numRanksWithExtraBlock * (blocksPerRank + 1) +
+        (rank - numRanksWithExtraBlock) * blocksPerRank;
+    }
+
+    // Created partitioned (split) data set
+    //vtkm::cont::PartitionedDataSet pds;
+    vtkm::cont::ArrayHandle<vtkm::Id3> localBlockIndices;
+
+    localBlockIndices.Allocate(blocksOnThisRank);
+
+    auto localBlockIndicesPortal = localBlockIndices.WritePortal();
+
+    for (vtkm::Id blockNo = 0; blockNo < blocksOnThisRank; ++blockNo)
+    {
+      vtkm::Id3 blockOrigin, blockSize, blockIndex;
+      std::tie(blockIndex, blockOrigin, blockSize) =
+        vtkm::filter::testing::contourtree_uniform_distributed::ComputeBlockExtents(
+          globalSize, blocksPerAxis, startBlockNo + blockNo);
+      pds.AppendPartition(vtkm::filter::testing::contourtree_uniform_distributed::CreateSubDataSet(
+        ds, blockOrigin, blockSize, fieldName));
+      localBlockIndicesPortal.Set(blockNo, blockIndex);
+    }
+  }
+#endif
+
+  template <typename DataValueType>
+  void analysis(vtkm::filter::scalar_topology::ContourTreeAugmented& filter,
+                bool dataFieldIsSorted,
+                const vtkm::cont::UnknownArrayHandle& arr,
+                const vtkm::Id& levels,
+                std::vector<DataValueType>& isoValues) const
+  {
+    namespace caugmented_ns = vtkm::worklet::contourtree_augmented;
+
+    DataValueType eps = 0.00001f;  // Distance away from critical point
+    vtkm::Id numComp = levels + 1; // Number of components the tree should be simplified to
+    bool usePersistenceSorter = true;
+
+    // Compute the branch decomposition
+    // Compute the volume for each hyperarc and superarc
+    caugmented_ns::IdArrayType superarcIntrinsicWeight;
+    caugmented_ns::IdArrayType superarcDependentWeight;
+    caugmented_ns::IdArrayType supernodeTransferWeight;
+    caugmented_ns::IdArrayType hyperarcDependentWeight;
+
+    caugmented_ns::ProcessContourTree::ComputeVolumeWeightsSerial(
+      filter.GetContourTree(),
+      filter.GetNumIterations(),
+      superarcIntrinsicWeight,  // (output)
+      superarcDependentWeight,  // (output)
+      supernodeTransferWeight,  // (output)
+      hyperarcDependentWeight); // (output)
+
+    // Compute the branch decomposition by volume
+    caugmented_ns::IdArrayType whichBranch;
+    caugmented_ns::IdArrayType branchMinimum;
+    caugmented_ns::IdArrayType branchMaximum;
+    caugmented_ns::IdArrayType branchSaddle;
+    caugmented_ns::IdArrayType branchParent;
+
+#ifdef DEBUG
+    PrintArrayHandle(superarcIntrinsicWeight, "superarcIntrinsicWeight");
+    PrintArrayHandle(superarcDependentWeight, "superarcDependentWeight");
+    PrintArrayHandle(supernodeTransferWeight, "superarcDependentWeight");
+    PrintArrayHandle(hyperarcDependentWeight, "hyperarcDependentWeight");
+#endif // DEBUG
+
+
+    caugmented_ns::ProcessContourTree::ComputeVolumeBranchDecompositionSerial(
+      filter.GetContourTree(),
+      superarcDependentWeight,
+      superarcIntrinsicWeight,
+      whichBranch,   // (output)
+      branchMinimum, // (output)
+      branchMaximum, // (output)
+      branchSaddle,  // (output)
+      branchParent); // (output)
+
+    // Create explicit representation of the branch decompostion from the array representation
+    using ValueArray = vtkm::cont::ArrayHandle<DataValueType>;
+    ValueArray dataField;
+
+    arr.AsArrayHandle(dataField);
+
+    using BranchType =
+      vtkm::worklet::contourtree_augmented::process_contourtree_inc::Branch<DataValueType>;
+
+    BranchType* branchDecompositionRoot =
+      caugmented_ns::ProcessContourTree::ComputeBranchDecomposition<DataValueType>(
+        filter.GetContourTree().Superparents,
+        filter.GetContourTree().Supernodes,
+        whichBranch,
+        branchMinimum,
+        branchMaximum,
+        branchSaddle,
+        branchParent,
+        filter.GetSortOrder(),
+        dataField,
+        dataFieldIsSorted);
+
+    // Simplify the contour tree of the branch decompostion
+    branchDecompositionRoot->SimplifyToSize(numComp, usePersistenceSorter);
+
+    int contourType = 0;
+
+    branchDecompositionRoot->GetRelevantValues(contourType, eps, isoValues);
+
+    // Print the compute iso values
+    std::sort(isoValues.begin(), isoValues.end());
+
+    // Unique isovalues
+    auto it = std::unique(isoValues.begin(), isoValues.end());
+    isoValues.resize(std::distance(isoValues.begin(), it));
+
+    if (branchDecompositionRoot)
+    {
+      delete branchDecompositionRoot;
+    }
+  }
+
   //
   //  Internal helper function to execute the contour tree and save repeat code in tests
   //
@@ -437,6 +695,79 @@ public:
                      "Wrong result for ContourTree filter");
   }
 
+  void TestAnalysis() const
+  {
+    std::cout << "Testing ContourTree_Augmented With Analysis" << std::endl;
+
+    using ValueType = vtkm::Float32;
+    vtkm::cont::DataSet ds = MakeTestDataSet().Make3DUniformDataSet1();
+
+    std::string fieldName = "pointvar";
+    bool useMarchingCubes = false;
+    bool computeRegularStructure = true;
+    vtkm::filter::scalar_topology::ContourTreeAugmented filter(useMarchingCubes,
+                                                               computeRegularStructure);
+    filter.SetActiveField(fieldName);
+
+#ifdef VTKM_ENABLE_MPI
+    vtkm::cont::PartitionedDataSet pds;
+    int mpiRank = 0;
+    int mpiSize = 1;
+
+    MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
+    MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
+    GetPartitionedDataSet(ds, fieldName, mpiSize, mpiRank, mpiSize, pds);
+    ShiftLogicalOriginToZero(pds);
+    ComputeGlobalPointSize(pds);
+    auto result = filter.Execute(pds);
+#else
+    filter.Execute(ds);
+#endif
+
+    // Compute the saddle peaks to make sure the contour tree is correct
+    vtkm::worklet::contourtree_augmented::EdgePairArray saddlePeak;
+    vtkm::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
+      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+
+    // Print the contour tree we computed
+    std::cout << "Computed Contour Tree" << std::endl;
+    vtkm::worklet::contourtree_augmented::PrintEdgePairArrayColumnLayout(saddlePeak);
+
+    // Do Analysis.
+    bool dataFieldIsSorted = false;
+    std::vector<ValueType> isoValues;
+
+#ifdef VTKM_ENABLE_MPI
+    if (mpiRank != 0)
+      return;
+
+    if (mpiSize == 1)
+    {
+      analysis<ValueType>(filter,
+                          dataFieldIsSorted,
+                          pds.GetPartitions()[0].GetField(fieldName).GetData(),
+                          3,
+                          isoValues);
+    }
+    else
+    {
+      dataFieldIsSorted = true;
+      analysis<ValueType>(
+        filter, dataFieldIsSorted, result.GetPartitions()[0].GetField(0).GetData(), 3, isoValues);
+    }
+#else
+    analysis<ValueType>(filter, dataFieldIsSorted, ds.GetField(fieldName).GetData(), 3, isoValues);
+#endif
+
+    std::ostringstream os;
+
+    os << "[" << isoValues[0] << "," << isoValues[1] << "," << isoValues[2] << "]";
+    std::cout << "COMPUTED_ISOVALUES:" << os.str() << std::endl;
+    std::cout << "EXPECTED ISOVALUES:"
+              << "[40,75,87]" << std::endl;
+    VTKM_TEST_ASSERT(os.str() == "[40,75,87]");
+  }
+
   void operator()() const
   {
     // Test 2D Freudenthal with augmentation
@@ -480,6 +811,9 @@ public:
     this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(0);
     // Make sure the contour tree does not change when we use boundary augmentation
     this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(2);
+
+    // Test Analysis
+    this->TestAnalysis();
   }
 };
 }

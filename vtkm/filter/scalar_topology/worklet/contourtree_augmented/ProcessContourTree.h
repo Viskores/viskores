@@ -436,7 +436,7 @@ public:
     vtkm::cont::ArrayHandle<EdgePair> superarcList;
     vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<EdgePair>(EdgePair(-1, -1), nSuperarcs),
                           superarcList);
-    auto superarcListPortal = superarcList.WritePortal();
+    auto superarcListWritePortal = superarcList.WritePortal();
     vtkm::Id totalVolume = contourTree.Nodes.GetNumberOfValues();
 #ifdef DEBUG_PRINT
     std::cout << "Total Volume: " << totalVolume << std::endl;
@@ -449,8 +449,8 @@ public:
     { // per superarc
       if (IsAscending(superarcsPortal.Get(superarc)))
       { // ascending superarc
-        superarcListPortal.Set(superarc,
-                               EdgePair(superarc, MaskedIndex(superarcsPortal.Get(superarc))));
+        superarcListWritePortal.Set(superarc,
+                                    EdgePair(superarc, MaskedIndex(superarcsPortal.Get(superarc))));
         upWeightPortal.Set(superarc, superarcDependentWeightPortal.Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
@@ -460,8 +460,8 @@ public:
       } // ascending superarc
       else
       { // descending superarc
-        superarcListPortal.Set(superarc,
-                               EdgePair(MaskedIndex(superarcsPortal.Get(superarc)), superarc));
+        superarcListWritePortal.Set(superarc,
+                                    EdgePair(MaskedIndex(superarcsPortal.Get(superarc)), superarc));
         downWeightPortal.Set(superarc, superarcDependentWeightPortal.Get(superarc));
         // at the inner end, dependent weight is the total in the subtree.  Then there are vertices along the edge itself (intrinsic weight), including the supernode at the outer end
         // So, to get the "dependent" weight in the other direction, we start with totalVolume - dependent, then subtract (intrinsic - 1)
@@ -493,17 +493,21 @@ public:
       superarcSorter,
       process_contourtree_inc_ns::SuperArcVolumetricComparator(upWeight, superarcList, false));
 
+    // Initialize after in-place sort algorithm. (Kokkos)
+    auto superarcSorterReadPortal = superarcSorter.ReadPortal();
+
     // II B 2.  Per segment, best superarc writes to the best upward array
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
     { // per superarc
-      vtkm::Id superarcID = superarcSorterPortal.Get(superarc);
-      const EdgePair& edge = superarcListPortal.Get(superarcID);
+      vtkm::Id superarcID = superarcSorterReadPortal.Get(superarc);
+      const EdgePair& edge = superarcListWritePortal.Get(superarcID);
       // if it's the last one
       if (superarc == nSuperarcs - 1)
         bestDownwardPortal.Set(edge.second, edge.first);
       else
       { // not the last one
-        const EdgePair& nextEdge = superarcListPortal.Get(superarcSorterPortal.Get(superarc + 1));
+        const EdgePair& nextEdge =
+          superarcListWritePortal.Get(superarcSorterReadPortal.Get(superarc + 1));
         // if the next edge belongs to another, we're the highest
         if (nextEdge.second != edge.second)
           bestDownwardPortal.Set(edge.second, edge.first);
@@ -515,17 +519,21 @@ public:
       superarcSorter,
       process_contourtree_inc_ns::SuperArcVolumetricComparator(downWeight, superarcList, true));
 
+    // Re-initialize after in-place sort algorithm. (Kokkos)
+    superarcSorterReadPortal = superarcSorter.ReadPortal();
+
     // II B 2.  Per segment, best superarc writes to the best upward array
     for (vtkm::Id superarc = 0; superarc < nSuperarcs; superarc++)
     { // per superarc
-      vtkm::Id superarcID = superarcSorterPortal.Get(superarc);
-      const EdgePair& edge = superarcListPortal.Get(superarcID);
+      vtkm::Id superarcID = superarcSorterReadPortal.Get(superarc);
+      const EdgePair& edge = superarcListWritePortal.Get(superarcID);
       // if it's the last one
       if (superarc == nSuperarcs - 1)
         bestUpwardPortal.Set(edge.first, edge.second);
       else
       { // not the last one
-        const EdgePair& nextEdge = superarcListPortal.Get(superarcSorterPortal.Get(superarc + 1));
+        const EdgePair& nextEdge =
+          superarcListWritePortal.Get(superarcSorterReadPortal.Get(superarc + 1));
         // if the next edge belongs to another, we're the highest
         if (nextEdge.first != edge.first)
           bestUpwardPortal.Set(edge.first, edge.second);
