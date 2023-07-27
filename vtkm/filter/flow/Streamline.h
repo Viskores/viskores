@@ -38,11 +38,14 @@ struct FlowTraits<Streamline>
   using FieldType = vtkm::worklet::flow::VelocityField<ArrayType>;
 };
 
-/// \brief Advect particles in a vector field.
-
-/// Takes as input a vector field and seed locations and generates the
-/// end points for each seed through the vector field.
-
+/// \brief Advect particles in a vector field and display the path they take.
+///
+/// This filter takes as input a velocity vector field and seed locations. It then traces the
+/// path each seed point would take if moving at the velocity specified by the field.
+/// Mathematically, this is the curve that is tangent to the velocity field everywhere.
+///
+/// The output of this filter is a `vtkm::cont::DataSet` containing a collection of poly-lines
+/// representing the paths the seed particles take.
 class VTKM_FILTER_FLOW_EXPORT Streamline
   : public vtkm::filter::flow::FilterParticleAdvectionSteadyState<Streamline>
 {

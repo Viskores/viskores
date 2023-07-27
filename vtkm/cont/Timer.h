@@ -50,30 +50,54 @@ public:
 
   VTKM_CONT ~Timer();
 
-  /// Resets the timer.
+  /// @brief Restores the initial state of the :class:`vtkm::cont::Timer`.
+  ///
+  /// All previous recorded time is erased. `Reset()` optionally takes a device
+  /// adapter tag or id that specifies on which device to time and synchronize.
   VTKM_CONT void Reset();
 
   /// Resets the timer and changes the device to time on.
   VTKM_CONT void Reset(vtkm::cont::DeviceAdapterId device);
 
+  /// @brief Causes the `Timer` to begin timing.
+  ///
+  /// The elapsed time will record an interval beginning when this method is called.
   VTKM_CONT void Start();
 
+  /// @brief Causes the `Timer()` to finish timing.
+  ///
+  /// The elapsed time will record an interval ending when this method is called.
+  /// It is invalid to stop the timer if `Started()` is not true.
   VTKM_CONT void Stop();
 
+  /// @brief Returns true if `Start()` has been called.
+  ///
+  /// It is invalid to try to get the elapsed time if `Started()` is not true.
   VTKM_CONT bool Started() const;
 
+  /// @brief Returns true if `Timer::Stop()` has been called.
+  ///
+  /// If `Stopped()` is true, then the elapsed time will no longer increase.
+  /// If `Stopped()` is false and `Started()` is true, then the timer is still running.
   VTKM_CONT bool Stopped() const;
 
   /// Used to check if Timer has finished the synchronization to get the result from the device.
   VTKM_CONT bool Ready() const;
 
-  /// Get the elapsed time measured by the given device adapter. If no device is
-  /// specified, the max time of all device measurements will be returned.
+  /// @brief Returns the amount of time that has elapsed between calling `Start()` and `Stop()`.
+  ///
+  /// If `Stop()` was not called, then the amount of time between calling `Start()` and
+  /// `GetElapsedTime()` is returned. `GetElapsedTime()` can optionally take a device
+  /// adapter tag or id to specify for which device to return the elapsed time. Returns the
+  /// device for which this timer is synchronized. If the device adapter has the same
+  /// id as `vtkm::cont::DeviceAdapterTagAny`, then the timer will synchronize all devices.
   VTKM_CONT
   vtkm::Float64 GetElapsedTime() const;
 
-  /// Returns the device for which this timer is synchronized. If the device adapter has the same
-  /// id as `DeviceAdapterTagAny`, then the timer will synchronize all devices.
+  /// @brief Returns the id of the device adapter for which this timer is synchronized.
+  ///
+  /// If the device adapter has the same id as `vtkm::cont::DeviceAdapterTagAny`
+  /// (the default), then the timer will synchronize on all devices.
   VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const { return this->Device; }
 
   /// Synchronize the device(s) that this timer is monitoring without starting or stopping the

@@ -19,6 +19,9 @@ namespace vtkm
 namespace rendering
 {
 
+/// @brief A view for a 1D data set.
+///
+/// 1D data are rendered as an X-Y plot with the values shone on the Y axis.
 class VTKM_RENDERING_EXPORT View1D : public vtkm::rendering::View
 {
 public:
@@ -44,12 +47,14 @@ public:
   void DisableLegend();
   void SetLegendLabelColor(vtkm::rendering::Color c) { this->Legend.SetLabelColor(c); }
 
+  /// @brief Specify whether log scaling should be used on the X axis.
   void SetLogX(bool l)
   {
     this->GetMapper().SetLogarithmX(l);
     this->LogX = l;
   }
 
+  /// @brief Specify whether log scaling should be used on the Y axis.
   void SetLogY(bool l)
   {
     this->GetMapper().SetLogarithmY(l);

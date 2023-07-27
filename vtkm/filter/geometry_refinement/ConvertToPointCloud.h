@@ -21,7 +21,7 @@ namespace filter
 namespace geometry_refinement
 {
 
-/// \brief Convert a `DataSet` to a point cloud.
+/// @brief Convert a `DataSet` to a point cloud.
 ///
 /// A point cloud in VTK-m is represented as a data set with "vertex" shape cells.
 /// This filter replaces the `CellSet` in a `DataSet` with a `CellSet` of only
@@ -40,7 +40,6 @@ class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT ConvertToPointCloud : public vtkm::
   bool AssociateFieldsWithCells = false;
 
 public:
-  ///@{
   /// By default, all the input point fields are kept as point fields in the output.
   /// However, the output has exactly one cell per point and it might be easier to
   /// treat the fields as cell fields. When this flag is turned on, the point field
@@ -50,8 +49,8 @@ public:
   /// fields. It is not valid to set a cell field as the point coordinates.
   ///
   VTKM_CONT void SetAssociateFieldsWithCells(bool flag) { this->AssociateFieldsWithCells = flag; }
+  /// @copydoc SetAssociateFieldsWithCells
   VTKM_CONT bool GetAssociateFieldsWithCells() const { return this->AssociateFieldsWithCells; }
-  ///@}
 
 protected:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;

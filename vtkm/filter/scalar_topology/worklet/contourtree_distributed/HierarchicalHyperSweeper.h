@@ -136,7 +136,6 @@ public:
   /// Constructor
   /// @param[in] blockId  The Id of the base block (used for debug output)
   /// @param[in] hierarchicalTree the tree that to hypersweeps over
-  /// @param[in] baseBlock the underlying mesh base block type
   /// @param[in] intrinsicValues array of values of intrinisic nodes are just being stored here but not modified
   /// @param[in] dependentValues array of values being operated over (same size as supernode set)
   HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>(

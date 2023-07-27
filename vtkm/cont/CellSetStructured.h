@@ -23,6 +23,12 @@ namespace vtkm
 namespace cont
 {
 
+/// @brief Defines a 1-, 2-, or 3-dimensional structured grid of points.
+///
+/// The structured cells form lines, quadrilaterals, or hexahedra for 1-, 2-, or 3-dimensions,
+/// respectively, to connect th epoints.
+/// The topology is specified by simply providing the dimensions, which is the number of points
+/// in the i, j, and k directions of the grid of points.
 template <vtkm::IdComponent DIMENSION>
 class VTKM_ALWAYS_EXPORT CellSetStructured final : public CellSet
 {
@@ -35,8 +41,10 @@ public:
 
   using SchedulingRangeType = typename InternalsType::SchedulingRangeType;
 
+  /// @brief Get the number of cells in the topology.
   vtkm::Id GetNumberOfCells() const override { return this->Structure.GetNumberOfCells(); }
 
+  /// @brief Get the number of points in the topology.
   vtkm::Id GetNumberOfPoints() const override { return this->Structure.GetNumberOfPoints(); }
 
   vtkm::Id GetNumberOfFaces() const override { return -1; }
@@ -46,6 +54,7 @@ public:
   // Since the entire topology is defined by by three integers, nothing to do here.
   void ReleaseResourcesExecution() override {}
 
+  /// @brief Set the dimensions of the structured array of points.
   void SetPointDimensions(SchedulingRangeType dimensions)
   {
     this->Structure.SetPointDimensions(dimensions);
@@ -61,6 +70,7 @@ public:
     this->Structure.SetGlobalPointIndexStart(start);
   }
 
+  /// Get the dimensions of the points.
   SchedulingRangeType GetPointDimensions() const { return this->Structure.GetPointDimensions(); }
 
   SchedulingRangeType GetGlobalPointDimensions() const

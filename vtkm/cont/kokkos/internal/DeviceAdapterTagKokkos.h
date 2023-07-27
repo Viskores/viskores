@@ -12,6 +12,14 @@
 
 #include <vtkm/cont/DeviceAdapterTag.h>
 
+/// @struct vtkm::cont::DeviceAdapterTagKokkos
+/// @brief Tag for a device adapter that uses the Kokkos library to run algorithms in parallel.
+///
+/// For this device to work, VTK-m must be configured to use Kokkos and the executable
+/// must be linked to the Kokkos libraries. VTK-m will use the default execution space
+/// of the provided kokkos library build. This tag is defined in
+/// `vtkm/cont/kokkos/DeviceAdapterKokkos.h`.
+
 //We always create the kokkos tag when included, but we only mark it as
 //a valid tag when VTKM_ENABLE_KOKKOS is true. This is for easier development
 //of multi-backend systems

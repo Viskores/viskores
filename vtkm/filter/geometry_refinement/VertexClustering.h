@@ -20,11 +20,11 @@ namespace filter
 {
 namespace geometry_refinement
 {
-/// \brief Reduce the number of triangles in a mesh
+/// \brief Reduce the number of triangles in a mesh.
 ///
-/// VertexClustering is a filter to reduce the number of triangles in a
+/// `VertexClustering` is a filter to reduce the number of triangles in a
 /// triangle mesh, forming a good approximation to the original geometry. The
-/// input must be a dataset that only contains triangles.
+/// input must be a `vtkm::cont::DataSet` that contains only triangles.
 ///
 /// The general approach of the algorithm is to cluster vertices in a uniform
 /// binning of space, accumulating to an average point within each bin. In
@@ -45,17 +45,17 @@ namespace geometry_refinement
 /// doesn't increase the computation or memory of the algorithm and will produce
 /// significantly better results.
 ///
-/// @warning
-/// This filter currently doesn't propagate cell or point fields
-
 class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT VertexClustering : public vtkm::filter::Filter
 {
 public:
-  VTKM_CONT
-  void SetNumberOfDivisions(const vtkm::Id3& num) { this->NumberOfDivisions = num; }
+  /// @brief Specifies the dimensions of the uniform grid that establishes the bins used for clustering.
+  ///
+  /// Setting smaller numbers of dimensions produces a smaller output, but with a coarser
+  /// representation of the surface.
+  VTKM_CONT void SetNumberOfDivisions(const vtkm::Id3& num) { this->NumberOfDivisions = num; }
 
-  VTKM_CONT
-  const vtkm::Id3& GetNumberOfDivisions() const { return this->NumberOfDivisions; }
+  /// @copydoc SetNumberOfDivisions
+  VTKM_CONT const vtkm::Id3& GetNumberOfDivisions() const { return this->NumberOfDivisions; }
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;

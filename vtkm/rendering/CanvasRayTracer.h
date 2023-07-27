@@ -20,9 +20,12 @@ namespace vtkm
 namespace rendering
 {
 
+/// Represents the image space that is the target of rendering using the internal ray
+/// tracing code.
 class VTKM_RENDERING_EXPORT CanvasRayTracer : public Canvas
 {
 public:
+  /// Construct a canvas of a given width and height.
   CanvasRayTracer(vtkm::Id width = 1024, vtkm::Id height = 1024);
 
   ~CanvasRayTracer();

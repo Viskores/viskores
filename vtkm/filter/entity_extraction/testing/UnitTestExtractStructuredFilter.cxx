@@ -376,6 +376,8 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 16.0f, "Wrong cell field data");
   }
 
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+  // This test repeates TestUniform3D7 but uses deprecated behavior.
   static void TestUniform3D8()
   {
     std::cout << "Testing extract structured uniform" << std::endl;
@@ -414,6 +416,7 @@ public:
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 16.0f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(3) == 31.0f, "Wrong cell field data");
   }
+  VTKM_DEPRECATED_SUPPRESS_END
 
   static void TestRectilinear2D()
   {

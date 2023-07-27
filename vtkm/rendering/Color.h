@@ -19,35 +19,46 @@ namespace vtkm
 namespace rendering
 {
 
-/// \brief It's a color!
+/// @brief Representation of a color.
 ///
-/// This class provides the basic representation of a color. This class was
-/// Ported from EAVL. Originally created by Jeremy Meredith, Dave Pugmire,
-/// and Sean Ahern.
+/// The color is defined as red, green, and blue intensities as well as
+/// an alpha representation of transparency (RGBA). The class provides
+/// mechanisms to retrieve the color as 8-bit integers or floating point
+/// values in the range [0, 1].
 ///
 class Color
 {
 public:
   vtkm::Vec4f_32 Components;
 
+  /// @brief Create a black color.
   VTKM_EXEC_CONT
   Color()
     : Components(0, 0, 0, 1)
   {
   }
 
+  /// @brief Create a color with specified RGBA values.
+  ///
+  /// The values are floating point and in the range [0, 1].
   VTKM_EXEC_CONT
   Color(vtkm::Float32 r_, vtkm::Float32 g_, vtkm::Float32 b_, vtkm::Float32 a_ = 1.f)
     : Components(r_, g_, b_, a_)
   {
   }
 
+  /// @brief Create a color with specified RGBA values.
+  ///
+  /// The values are floating point and in the range [0, 1].
   VTKM_EXEC_CONT
   Color(const vtkm::Vec4f_32& components)
     : Components(components)
   {
   }
 
+  /// @brief Set the color value from 8 bit RGBA components.
+  ///
+  /// The components are packed together into a 32-bit (4-byte) values.
   VTKM_EXEC_CONT
   void SetComponentFromByte(vtkm::Int32 i, vtkm::UInt8 v)
   {

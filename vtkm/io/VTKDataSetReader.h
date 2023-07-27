@@ -17,10 +17,16 @@ namespace vtkm
 namespace io
 {
 
+/// @brief Reads a legacy VTK file.
+///
+/// By convention, legacy VTK files have a `.vtk` extension.
+/// This class should be constructed with a filename, and the data
+/// read with `ReadDataSet`.
 class VTKM_IO_EXPORT VTKDataSetReader : public VTKDataSetReaderBase
 {
 public:
   VTKM_CONT VTKDataSetReader(const char* fileName);
+  /// @brief Construct a reader to load data from the given file.
   VTKM_CONT VTKDataSetReader(const std::string& fileName);
   VTKM_CONT ~VTKDataSetReader() override;
 
@@ -35,6 +41,7 @@ private:
 
   std::unique_ptr<VTKDataSetReaderBase> Reader;
 };
+
 }
 } // vtkm::io
 

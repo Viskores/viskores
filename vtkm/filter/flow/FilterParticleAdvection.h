@@ -35,18 +35,32 @@ public:
   VTKM_CONT
   bool CanThread() const override { return false; }
 
-  VTKM_CONT
-  void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
+  /// @brief Specifies the step size used for the numerical integrator.
+  ///
+  /// The numerical integrators operate by advancing each particle by a finite amount.
+  /// This parameter defines the distance to advance each time. Smaller values are
+  /// more accurate but take longer to integrate. An appropriate step size is usually
+  /// around the size of each cell.
+  VTKM_CONT void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
 
-  VTKM_CONT
-  void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
+  /// @brief Specifies the maximum number of integration steps for each particle.
+  ///
+  /// Some particle paths may loop and continue indefinitely. This parameter sets an upper
+  /// limit on the total length of advection.
+  VTKM_CONT void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
+  /// @brief Specify the seed locations for the particle advection.
+  ///
+  /// Each seed represents one particle that is advected by the vector field.
+  /// The particles are represented by a `vtkm::Particle` object or similar
+  /// type of object (such as `vtkm::ChargedParticle`).
   template <typename ParticleType>
   VTKM_CONT void SetSeeds(vtkm::cont::ArrayHandle<ParticleType>& seeds)
   {
     this->Seeds = seeds;
   }
 
+  /// @copydoc SetSeeds
   template <typename ParticleType>
   VTKM_CONT void SetSeeds(const std::vector<ParticleType>& seeds,
                           vtkm::CopyFlag copyFlag = vtkm::CopyFlag::On)

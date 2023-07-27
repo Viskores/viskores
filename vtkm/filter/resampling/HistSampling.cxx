@@ -26,22 +26,22 @@ namespace resampling
 {
 namespace
 {
-vtkm::cont::ArrayHandle<vtkm::FloatDefault> CalculatPdf(vtkm::Id TotalPoints,
-                                                        vtkm::FloatDefault SamplePercent,
-                                                        vtkm::cont::ArrayHandle<vtkm::Id> BinCount)
+vtkm::cont::ArrayHandle<vtkm::FloatDefault> CalculatPdf(vtkm::Id totalPoints,
+                                                        vtkm::FloatDefault sampleFraction,
+                                                        vtkm::cont::ArrayHandle<vtkm::Id> binCount)
 {
-  vtkm::Id NumBins = BinCount.GetNumberOfValues();
+  vtkm::Id NumBins = binCount.GetNumberOfValues();
   vtkm::cont::ArrayHandleIndex indexArray(NumBins);
   vtkm::cont::ArrayHandle<vtkm::Id> BinIndices;
   vtkm::cont::Algorithm::Copy(indexArray, BinIndices);
-  vtkm::cont::Algorithm::SortByKey(BinCount, BinIndices);
+  vtkm::cont::Algorithm::SortByKey(binCount, BinIndices);
 
-  vtkm::FloatDefault remainingSamples = SamplePercent * TotalPoints;
+  vtkm::FloatDefault remainingSamples = sampleFraction * totalPoints;
   vtkm::FloatDefault remainingBins = static_cast<vtkm::FloatDefault>(NumBins);
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> targetSamples;
   targetSamples.Allocate(NumBins);
 
-  auto binCountPortal = BinCount.ReadPortal();
+  auto binCountPortal = binCount.ReadPortal();
   auto targetWritePortal = targetSamples.WritePortal();
 
   for (int i = 0; i < NumBins; ++i)
@@ -61,7 +61,7 @@ vtkm::cont::ArrayHandle<vtkm::FloatDefault> CalculatPdf(vtkm::Id TotalPoints,
   invoker(vtkm::worklet::AcceptanceProbsWorklet{},
           targetSamples,
           BinIndices,
-          BinCount,
+          binCount,
           acceptanceProbsVec);
   return acceptanceProbsVec;
 }
@@ -78,10 +78,10 @@ vtkm::cont::DataSet HistSampling::DoExecute(const vtkm::cont::DataSet& input)
   vtkm::cont::ArrayHandle<vtkm::Id> binCountArray;
   vtkm::cont::ArrayCopyShallowIfPossible(
     histogramOutput.GetField(histogram.GetOutputFieldName()).GetData(), binCountArray);
-  vtkm::Id TotalPoints = input.GetNumberOfPoints();
+  vtkm::Id totalPoints = input.GetNumberOfPoints();
   //computing pdf
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> probArray;
-  probArray = CalculatPdf(TotalPoints, this->SamplePercent, binCountArray);
+  probArray = CalculatPdf(totalPoints, this->SampleFraction, binCountArray);
   // use the acceptance probabilities and random array to create 0-1 array
   // generating random array between 0 to 1
   vtkm::cont::ArrayHandle<vtkm::Int8> outputArray;

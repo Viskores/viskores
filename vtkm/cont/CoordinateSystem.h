@@ -22,6 +22,11 @@ namespace vtkm
 namespace cont
 {
 
+/// @brief Manages a coordinate system for a `DataSet`.
+///
+/// A coordinate system is really a field with a special meaning, so `CoordinateSystem`
+/// class inherits from the `Field` class. `CoordinateSystem` constrains the field to
+/// be associated with points and typically has 3D floating point vectors for values.
 class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
   using Superclass = vtkm::cont::Field;

@@ -35,8 +35,10 @@ class VTKM_ALWAYS_EXPORT Error : public std::exception
 public:
 //See note about GetMessage macro below.
 #ifndef GetMessage
+  /// @brief Returns a message describing what caused the error.
   const std::string& GetMessage() const { return this->Message; }
 #endif
+  /// @brief Provides a stack trace to the location where this error was thrown.
   const std::string& GetStackTrace() const { return this->StackTrace; }
 
 //GetMessage is a macro defined by <windows.h> to redirrect to
@@ -47,7 +49,9 @@ public:
   const std::string& GetMessageW() const { return this->Message; }
 #endif
 
-  // For std::exception compatibility:
+  /// @brief Returns the message for the error and the stack trace for it.
+  ///
+  /// This method is provided for `std::exception` compatibility.
   const char* what() const noexcept override { return this->What.c_str(); }
 
   /// Returns true if this exception is device independent. For exceptions that

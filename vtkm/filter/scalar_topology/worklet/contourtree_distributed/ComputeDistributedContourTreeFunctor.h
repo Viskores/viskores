@@ -80,11 +80,12 @@ class ComputeDistributedContourTreeFunctor
 {
 public:
   /// Create the functor
-  /// @param[in] globalSize  Global extends of the input mesh (i.e., number of mesh points in each dimension)
+  /// @param[in] globalSize  Global extents of the input mesh (i.e., number of mesh points in each dimension).
+  /// @param[in] useBoundaryExtremaOnly Use boundary extrema only (instead of the full boundary) during the fan in.
   /// @param[in] timingsLogLevel Set the vtkm::cont:LogLevel to be used to record timings information
-  ///                            specific to the computation of the hierachical contour tree
+  ///                            specific to the computation of the hierachical contour tree.
   /// @param[in] treeLogLevel Set the vtkm::cont:LogLevel to be used to record metadata information
-  ///                         about the various trees computed as part of the hierarchical contour tree compute
+  ///                         about the various trees computed as part of the hierarchical contour tree compute.
   ComputeDistributedContourTreeFunctor(
     vtkm::Id3 globalSize,
     bool useBoundaryExtremaOnly,

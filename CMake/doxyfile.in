@@ -132,6 +132,7 @@ INPUT                  = @VTKm_SOURCE_DIR@/README.md
 INPUT                  += @VTKm_SOURCE_DIR@/CONTRIBUTING.md
 INPUT                  += @VTKm_SOURCE_DIR@/docs/CodingConventions.md
 INPUT                  += @VTKm_SOURCE_DIR@/vtkm
+INPUT                  += @VTKm_BINARY_DIR@/include
 
 USE_MDFILE_AS_MAINPAGE = README.md
 
@@ -328,13 +329,16 @@ PERLMOD_MAKEVAR_PREFIX =
 
 ENABLE_PREPROCESSING   = YES
 
-MACRO_EXPANSION        = NO
+# Turning macro expansion on is required to work around issue with breathe
+# (for Sphinx documentation) parsing function modifiers.
+# https://github.com/breathe-doc/breathe/issues/905
+MACRO_EXPANSION        = YES
 
 EXPAND_ONLY_PREDEF     = NO
 
 SEARCH_INCLUDES        = YES
 
-INCLUDE_PATH           = @VTKm_SOURCE_DIR@ @VTKm_BINARY_DIR@
+INCLUDE_PATH           = @VTKm_SOURCE_DIR@ @VTKm_BINARY_DIR@/include
 
 INCLUDE_FILE_PATTERNS  =
 

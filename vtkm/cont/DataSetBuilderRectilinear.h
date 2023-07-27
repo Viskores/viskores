@@ -49,7 +49,15 @@ public:
   VTKM_CONT
   DataSetBuilderRectilinear();
 
-  //1D grids.
+  /// @brief Create a 1D retilinear `DataSet`.
+  ///
+  /// A rectilinear grid is specified with a scalar array for the point coordinates
+  /// in the x direction.
+  /// In this form, the coordinate array is specified with `std::vector`.
+  /// The data is copied from the `std::vector`.
+  ///
+  /// @param[in] xvals An array of coordinates to use along the x dimension.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const std::vector<T>& xvals,
                                               const std::string& coordNm = "coords")
@@ -58,6 +66,16 @@ public:
     return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm);
   }
 
+  /// @brief Create a 1D retilinear `DataSet`.
+  ///
+  /// A rectilinear grid is specified with a scalar array for the point coordinates
+  /// in the x direction.
+  /// In this form, the coordinate array is specified with a standard C array.
+  /// The data is copied from the array.
+  ///
+  /// @param[in] nx The size of the grid in the x direction (and length of the @a xvals array).
+  /// @param[in] xvals An array of coordinates to use along the x dimension.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(vtkm::Id nx,
                                               T* xvals,
@@ -67,6 +85,16 @@ public:
     return DataSetBuilderRectilinear::BuildDataSet(nx, 1, 1, xvals, &yvals, &zvals, coordNm);
   }
 
+  /// @brief Create a 1D retilinear `DataSet`.
+  ///
+  /// A rectilinear grid is specified with a scalar array for the point coordinates
+  /// in the x direction.
+  /// In this form, the coordinate array is specified with `vtkm::cont::ArrayHandle`.
+  /// The `ArrayHandle` is shared with the `DataSet`, so changing the `ArrayHandle`
+  /// changes the `DataSet`.
+  ///
+  /// @param[in] xvals An array of coordinates to use along the x dimension.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const vtkm::cont::ArrayHandle<T>& xvals,
                                               const std::string& coordNm = "coords")
@@ -79,7 +107,16 @@ public:
     return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm);
   }
 
-  //2D grids.
+  /// @brief Create a 2D retilinear `DataSet`.
+  ///
+  /// A rectilinear grid is specified with separate arrays for the point coordinates
+  /// in the x and y directions.
+  /// In this form, the coordinate arrays are specified with `std::vector`.
+  /// The data is copied from the `std::vector`s.
+  ///
+  /// @param[in] xvals An array of coordinates to use along the x dimension.
+  /// @param[in] yvals An array of coordinates to use along the x dimension.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const std::vector<T>& xvals,
                                               const std::vector<T>& yvals,
@@ -89,6 +126,18 @@ public:
     return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm);
   }
 
+  /// @brief Create a 2D retilinear `DataSet`.
+  ///
+  /// A rectilinear grid is specified with separate arrays for the point coordinates
+  /// in the x and y directions.
+  /// In this form, the coordinate arrays are specified with standard C arrays.
+  /// The data is copied from the arrays.
+  ///
+  /// @param[in] nx The size of the grid in the x direction (and length of the @a xvals array).
+  /// @param[in] ny The size of the grid in the x direction (and length of the @a yvals array).
+  /// @param[in] xvals An array of coordinates to use along the x dimension.
+  /// @param[in] yvals An array of coordinates to use along the x dimension.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(vtkm::Id nx,
                                               vtkm::Id ny,
@@ -100,6 +149,17 @@ public:
     return DataSetBuilderRectilinear::BuildDataSet(nx, ny, 1, xvals, yvals, &zvals, coordNm);
   }
 
+  /// @brief Create a 2D retilinear `DataSet`.
+  ///
+  /// A rectilinear grid is specified with separate arrays for the point coordinates
+  /// in the x and y directions.
+  /// In this form, the coordinate arrays are specified with `vtkm::cont::ArrayHandle`.
+  /// The `ArrayHandle`s are shared with the `DataSet`, so changing the `ArrayHandle`s
+  /// changes the `DataSet`.
+  ///
+  /// @param[in] xvals An array of coordinates to use along the x dimension.
+  /// @param[in] yvals An array of coordinates to use along the x dimension.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const vtkm::cont::ArrayHandle<T>& xvals,
                                               const vtkm::cont::ArrayHandle<T>& yvals,
@@ -111,7 +171,20 @@ public:
     return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm);
   }
 
-  //3D grids.
+  /// @brief Create a 3D retilinear `DataSet`.
+  ///
+  /// A rectilinear grid is specified with separate arrays for the point coordinates
+  /// in the x, y, and z directions.
+  /// In this form, the coordinate arrays are specified with standard C arrays.
+  /// The data is copied from the arrays.
+  ///
+  /// @param[in] nx The size of the grid in the x direction (and length of the @a xvals array).
+  /// @param[in] ny The size of the grid in the x direction (and length of the @a yvals array).
+  /// @param[in] nz The size of the grid in the x direction (and length of the @a zvals array).
+  /// @param[in] xvals An array of coordinates to use along the x dimension.
+  /// @param[in] yvals An array of coordinates to use along the x dimension.
+  /// @param[in] zvals An array of coordinates to use along the x dimension.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(vtkm::Id nx,
                                               vtkm::Id ny,
@@ -124,6 +197,17 @@ public:
     return DataSetBuilderRectilinear::BuildDataSet(nx, ny, nz, xvals, yvals, zvals, coordNm);
   }
 
+  /// @brief Create a 3D retilinear `DataSet`.
+  ///
+  /// A rectilinear grid is specified with separate arrays for the point coordinates
+  /// in the x, y, and z directions.
+  /// In this form, the coordinate arrays are specified with `std::vector`.
+  /// The data is copied from the `std::vector`s.
+  ///
+  /// @param[in] xvals An array of coordinates to use along the x dimension.
+  /// @param[in] yvals An array of coordinates to use along the x dimension.
+  /// @param[in] zvals An array of coordinates to use along the x dimension.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const std::vector<T>& xvals,
                                               const std::vector<T>& yvals,
@@ -133,6 +217,18 @@ public:
     return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm);
   }
 
+  /// @brief Create a 3D retilinear `DataSet`.
+  ///
+  /// A rectilinear grid is specified with separate arrays for the point coordinates
+  /// in the x, y, and z directions.
+  /// In this form, the coordinate arrays are specified with `vtkm::cont::ArrayHandle`.
+  /// The `ArrayHandle`s are shared with the `DataSet`, so changing the `ArrayHandle`s
+  /// changes the `DataSet`.
+  ///
+  /// @param[in] xvals An array of coordinates to use along the x dimension.
+  /// @param[in] yvals An array of coordinates to use along the x dimension.
+  /// @param[in] zvals An array of coordinates to use along the x dimension.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const vtkm::cont::ArrayHandle<T>& xvals,
                                               const vtkm::cont::ArrayHandle<T>& yvals,
