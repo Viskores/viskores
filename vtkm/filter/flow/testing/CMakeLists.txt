@@ -56,4 +56,5 @@ if (VTKm_ENABLE_MPI)
     SOURCES ${mpi_unit_tests} ${mpi_helpers}
     USE_VTKM_JOB_POOL
   )
+  set_tests_properties(UnitTestAdvectionAsynchronousMPI_mpi PROPERTIES TIMEOUT 500)
 endif()

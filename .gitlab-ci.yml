@@ -75,7 +75,7 @@
     - .docker_image
 
 .opensuse: &opensuse
-  image: "kitware/vtkm:ci-opensuse-20230619"
+  image: "kitware/vtkm:ci-opensuse-20231117"
   extends:
     - .docker_image
 
