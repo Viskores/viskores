@@ -143,7 +143,6 @@ protected:
   bool CopySeedArray = false;
 };
 
-//template <typename Derived, typename ParticleType, typename AnalysisType>
 template <typename Derived, typename ParticleType>
 VTKM_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyParticles(
   const vtkm::cont::ArrayHandle<ParticleType>& particles,
