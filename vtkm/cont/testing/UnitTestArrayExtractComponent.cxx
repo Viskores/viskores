@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleExtractComponent.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
@@ -280,6 +281,12 @@ void DoTest()
   {
     std::cout << "ArrayHandleIndex (expect warning)" << std::endl;
     vtkm::cont::ArrayHandleIndex array(ARRAY_SIZE);
+    CheckInputArray(array, vtkm::CopyFlag::On);
+  }
+
+  {
+    std::cout << "ArrayHandleConstant" << std::endl;
+    vtkm::cont::ArrayHandleConstant<vtkm::Vec3f> array(TestValue(0, vtkm::Vec3f{}), ARRAY_SIZE);
     CheckInputArray(array, vtkm::CopyFlag::On);
   }
 

@@ -11,7 +11,6 @@
 #define vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 
 #include <vtkm/Range.h>
-#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
 
@@ -68,8 +67,14 @@ public:
   VTKM_CONT vtkm::Vec3f GetSpacing() const;
 };
 
+template <typename T>
+class ArrayHandleStride;
+
 namespace internal
 {
+
+template <typename S>
+struct ArrayExtractComponentImpl;
 
 template <>
 struct VTKM_CONT_EXPORT ArrayExtractComponentImpl<vtkm::cont::StorageTagUniformPoints>

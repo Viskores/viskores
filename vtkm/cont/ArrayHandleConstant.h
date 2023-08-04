@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_ArrayHandleConstant_h
 #define vtk_m_cont_ArrayHandleConstant_h
 
+#include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
 #include <vtkm/cont/internal/ArrayRangeComputeUtils.h>
@@ -99,6 +100,33 @@ vtkm::cont::ArrayHandleConstant<T> make_ArrayHandleConstant(T value, vtkm::Id nu
 
 namespace internal
 {
+
+template <>
+struct VTKM_CONT_EXPORT ArrayExtractComponentImpl<vtkm::cont::StorageTagConstant>
+{
+  template <typename T>
+  VTKM_CONT auto operator()(const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagConstant>& src,
+                            vtkm::IdComponent componentIndex,
+                            vtkm::CopyFlag allowCopy) const
+  {
+    if (allowCopy != vtkm::CopyFlag::On)
+    {
+      throw vtkm::cont::ErrorBadValue(
+        "Cannot extract component of ArrayHandleConstant without copying. "
+        "(However, the whole array does not need to be copied.)");
+    }
+
+    vtkm::cont::ArrayHandleConstant<T> srcArray = src;
+
+    vtkm::VecFlat<T> vecValue{ srcArray.GetValue() };
+
+    // Make a basic array with one entry (the constant value).
+    auto basicArray = vtkm::cont::make_ArrayHandle({ vecValue[componentIndex] });
+
+    // Set up a modulo = 1 so all indices go to this one value.
+    return vtkm::cont::make_ArrayHandleStride(basicArray, src.GetNumberOfValues(), 1, 0, 1, 1);
+  }
+};
 
 template <typename S>
 struct ArrayRangeComputeImpl;
