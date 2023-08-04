@@ -73,15 +73,106 @@ public:
                                                                  index + this->Offset);
   }
 
-  template <typename T, vtkm::IdComponent N>
-  VTKM_EXEC_CONT VecFromPortal& operator=(const vtkm::Vec<T, N>& src)
+  // Only works with Vec-like objects with operator[] and GetNumberofComponents
+  template <typename OtherVecType>
+  VTKM_EXEC_CONT VecFromPortal& operator=(const OtherVecType& src)
   {
-    vtkm::IdComponent numComponents = vtkm::Min(N, this->NumComponents);
+    vtkm::IdComponent numComponents = vtkm::Min(src.GetNumberOfComponents(), this->NumComponents);
     for (vtkm::IdComponent index = 0; index < numComponents; ++index)
     {
       this->Portal.Set(index + this->Offset, src[index]);
     }
     return *this;
+  }
+
+  // Only works with Vec-like objects with operator[] and GetNumberofComponents
+  template <typename OtherVecType>
+  VTKM_EXEC_CONT VecFromPortal& operator+=(const OtherVecType& other)
+  {
+    vtkm::IdComponent numComponents = vtkm::Min(other.GetNumberOfComponents(), this->NumComponents);
+    for (vtkm::IdComponent index = 0; index < numComponents; ++index)
+    {
+      (*this)[index] += other[index];
+    }
+    return *this;
+  }
+
+  // Only works with Vec-like objects with operator[] and GetNumberofComponents
+  template <typename OtherVecType>
+  VTKM_EXEC_CONT VecFromPortal& operator-=(const OtherVecType& other)
+  {
+    vtkm::IdComponent numComponents = vtkm::Min(other.GetNumberOfComponents(), this->NumComponents);
+    for (vtkm::IdComponent index = 0; index < numComponents; ++index)
+    {
+      (*this)[index] -= other[index];
+    }
+    return *this;
+  }
+
+private:
+  template <typename OtherVecType>
+  VTKM_EXEC_CONT void Multiply(const OtherVecType& other, vtkm::TypeTraitsVectorTag)
+  {
+    vtkm::IdComponent numComponents = vtkm::Min(other.GetNumberOfComponents(), this->NumComponents);
+    for (vtkm::IdComponent index = 0; index < numComponents; ++index)
+    {
+      (*this)[index] *= other[index];
+    }
+  }
+
+  template <typename ScalarType>
+  VTKM_EXEC_CONT void Multiply(ScalarType other, vtkm::TypeTraitsScalarTag)
+  {
+    for (vtkm::IdComponent index = 0; index < this->NumComponents; ++index)
+    {
+      (*this)[index] *= other;
+    }
+  }
+
+public:
+  // Only works with Vec-like objects with operator[] and GetNumberofComponents
+  template <typename OtherVecType>
+  VTKM_EXEC_CONT VecFromPortal& operator*=(const OtherVecType& other)
+  {
+    this->Multiply(other, typename vtkm::TypeTraits<OtherVecType>::DimensionalityTag{});
+    return *this;
+  }
+
+  // Only works with Vec-like objects with operator[] and GetNumberofComponents
+  template <typename OtherVecType>
+  VTKM_EXEC_CONT VecFromPortal& operator/=(const OtherVecType& other)
+  {
+    vtkm::IdComponent numComponents = vtkm::Min(other.GetNumberOfComponents(), this->NumComponents);
+    for (vtkm::IdComponent index = 0; index < numComponents; ++index)
+    {
+      (*this)[index] /= other[index];
+    }
+    return *this;
+  }
+
+  // Only works with Vec-like objects with operator[] and GetNumberofComponents
+  template <typename OtherVecType>
+  VTKM_EXEC_CONT bool operator==(const OtherVecType& other)
+  {
+    if (this->NumComponents != other.GetNumberOfComponents())
+    {
+      return false;
+    }
+    for (vtkm::IdComponent index = 0; index < this->NumComponents; ++index)
+    {
+      if (this->Portal.Get(index + this->Offset) != other[index])
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Only works with Vec-like objects with operator[] and GetNumberofComponents
+  template <typename OtherVecType>
+  VTKM_EXEC_CONT bool operator!=(const OtherVecType& other)
+  {
+    return !(*this == other);
   }
 
   VTKM_EXEC_CONT const PortalType& GetPortal() const { return this->Portal; }
