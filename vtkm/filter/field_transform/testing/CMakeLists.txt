@@ -14,8 +14,7 @@ set(unit_tests
   UnitTestGenerateIds.cxx
   UnitTestPointElevationFilter.cxx
   UnitTestPointTransform.cxx
-  UnitTestWarpScalarFilter.cxx
-  UnitTestWarpVectorFilter.cxx
+  UnitTestWarpFilter.cxx
   UnitTestLogValues.cxx
   UnitTestCompositeVectors.cxx
   )
