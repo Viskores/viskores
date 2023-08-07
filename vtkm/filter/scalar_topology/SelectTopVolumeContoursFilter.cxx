@@ -116,6 +116,14 @@ VTKM_CONT vtkm::cont::PartitionedDataSet SelectTopVolumeContoursFilter::DoExecut
       auto branchRootGRId =
         ds.GetField("BranchRootGRId").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
 
+      auto upperEndGRId = ds.GetField("UpperEndGlobalRegularIds")
+                            .GetData()
+                            .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+
+      auto lowerEndGRId = ds.GetField("LowerEndGlobalRegularIds")
+                            .GetData()
+                            .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+
       vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id>(
         branchRootGRId, topVolumeBranch, b->TopVolumeBranchRootGRId);
 
@@ -127,6 +135,12 @@ VTKM_CONT vtkm::cont::PartitionedDataSet SelectTopVolumeContoursFilter::DoExecut
 
       vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id>(
         b->BranchSaddleEpsilon, topVolumeBranch, b->TopVolumeBranchSaddleEpsilon);
+
+      vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id>(
+        upperEndGRId, topVolumeBranch, b->TopVolumeBranchUpperEndGRId);
+
+      vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id>(
+        lowerEndGRId, topVolumeBranch, b->TopVolumeBranchLowerEndGRId);
 
       auto resolveArray = [&](const auto& inArray) {
         using InArrayHandleType = std::decay_t<decltype(inArray)>;
@@ -153,6 +167,14 @@ VTKM_CONT vtkm::cont::PartitionedDataSet SelectTopVolumeContoursFilter::DoExecut
 
   branch_top_volume_master.foreach (
     [&](SelectTopVolumeContoursBlock* b, const vtkmdiy::Master::ProxyWithLink&) {
+      vtkm::cont::Field TopVolBranchUpperEndField("TopVolumeBranchUpperEnd",
+                                                  vtkm::cont::Field::Association::WholeDataSet,
+                                                  b->TopVolumeBranchUpperEndGRId);
+      outputDataSets[b->LocalBlockNo].AddField(TopVolBranchUpperEndField);
+      vtkm::cont::Field TopVolBranchLowerEndField("TopVolumeBranchLowerEnd",
+                                                  vtkm::cont::Field::Association::WholeDataSet,
+                                                  b->TopVolumeBranchLowerEndGRId);
+      outputDataSets[b->LocalBlockNo].AddField(TopVolBranchLowerEndField);
       vtkm::cont::Field TopVolBranchGRIdField("TopVolumeBranchGlobalRegularIds",
                                               vtkm::cont::Field::Association::WholeDataSet,
                                               b->TopVolumeBranchRootGRId);

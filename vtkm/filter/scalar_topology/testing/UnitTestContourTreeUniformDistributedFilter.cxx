@@ -55,6 +55,7 @@
 namespace
 {
 using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeFile;
+using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreePresimplification;
 using vtkm::filter::testing::contourtree_uniform_distributed::
   TestContourTreeUniformDistributed5x6x7;
 using vtkm::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
@@ -130,6 +131,94 @@ public:
                         true,
                         false,
                         false);
+
+    // tests for contour tree presimplification on 2D vanc dataset
+    TestContourTreePresimplification(
+      "vanc", // dataset name
+      "var",  // field name
+      vtkm::cont::testing::Testing::RegressionImagePath(
+        "vanc.presimplification.ct_txt"), // ground truth file name
+      2,                                  // nBlocks
+      vtkm::cont::DataSet(),              // empty, just to satisfy the function input format
+      vtkm::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"), // dataset file path
+      1                                                               // presimplifyThreshold
+    );
+    TestContourTreePresimplification(
+      "vanc",
+      "var",
+      vtkm::cont::testing::Testing::RegressionImagePath("vanc.presimplification.ct_txt"),
+      4,
+      vtkm::cont::DataSet(),
+      vtkm::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"),
+      1);
+    TestContourTreePresimplification(
+      "vanc",
+      "var",
+      vtkm::cont::testing::Testing::RegressionImagePath("vanc.presimplification.ct_txt"),
+      2,
+      vtkm::cont::DataSet(),
+      vtkm::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"),
+      4);
+    TestContourTreePresimplification(
+      "vanc",
+      "var",
+      vtkm::cont::testing::Testing::RegressionImagePath("vanc.presimplification.ct_txt"),
+      4,
+      vtkm::cont::DataSet(),
+      vtkm::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"),
+      4);
+
+    // test for contour tree presimplification on 3D 5x6x7 dataset
+    TestContourTreePresimplification(
+      "5x6x7",    // dataset name
+      "pointvar", // field name
+      vtkm::cont::testing::Testing::RegressionImagePath(
+        "5x6x7.presimplification.ct_txt"),                            // ground truth file name
+      2,                                                              // nBlocks
+      vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet4(), // dataset preset,
+      "", // empty dataset filename, just to satisfy the function format
+      2   // presimplifyThreshold
+    );
+    TestContourTreePresimplification(
+      "5x6x7",
+      "pointvar",
+      vtkm::cont::testing::Testing::RegressionImagePath("5x6x7.presimplification.ct_txt"),
+      4,
+      vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet4(),
+      "",
+      2);
+    TestContourTreePresimplification(
+      "5x6x7",
+      "pointvar",
+      vtkm::cont::testing::Testing::RegressionImagePath("5x6x7.presimplification.ct_txt"),
+      8,
+      vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet4(),
+      "",
+      2);
+    TestContourTreePresimplification(
+      "5x6x7",
+      "pointvar",
+      vtkm::cont::testing::Testing::RegressionImagePath("5x6x7.presimplification.ct_txt"),
+      2,
+      vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet4(),
+      "",
+      4);
+    TestContourTreePresimplification(
+      "5x6x7",
+      "pointvar",
+      vtkm::cont::testing::Testing::RegressionImagePath("5x6x7.presimplification.ct_txt"),
+      4,
+      vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet4(),
+      "",
+      4);
+    TestContourTreePresimplification(
+      "5x6x7",
+      "pointvar",
+      vtkm::cont::testing::Testing::RegressionImagePath("5x6x7.presimplification.ct_txt"),
+      8,
+      vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet4(),
+      "",
+      4);
   }
 };
 }

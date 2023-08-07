@@ -231,6 +231,37 @@ inline std::vector<vtkm::worklet::contourtree_distributed::Edge> ReadGroundTruth
   return result;
 }
 
+inline void ReadGroundTruthBranchVolume(std::string filename,
+                                        std::vector<vtkm::Id>& branchDirections,
+                                        std::vector<vtkm::Id>& branchInnerEnds,
+                                        std::vector<vtkm::Id>& branchVolumes)
+{
+  std::ifstream ct_file(filename);
+  if (!ct_file.is_open())
+  {
+    throw vtkm::io::ErrorIO("Unable to open ground truth data file: " + filename);
+  }
+  // read the branch information line by line
+  vtkm::Id branchDirection;
+  while (ct_file >> branchDirection)
+  {
+    branchDirections.push_back(branchDirection);
+    vtkm::Id branchInnerEnd, branchVolume;
+    if (branchDirection != 0)
+    {
+      ct_file >> branchInnerEnd >> branchVolume;
+      branchInnerEnds.push_back(branchInnerEnd);
+      branchVolumes.push_back(branchVolume);
+    }
+    else
+    {
+      vtkm::Id branchLowerEnd, branchUpperEnd;
+      ct_file >> branchLowerEnd >> branchUpperEnd >> branchVolume;
+      // we do not store the main branch in the current check
+    }
+  }
+}
+
 inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   const vtkm::cont::DataSet& ds,
   std::string fieldName,
@@ -241,7 +272,8 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   bool augmentHierarchicalTree,
   bool computeHierarchicalVolumetricBranchDecomposition,
   vtkm::Id3& globalSize,
-  bool passBlockIndices = true)
+  bool passBlockIndices = true,
+  const vtkm::Id presimplifyThreshold = 0)
 {
   // Get dimensions of data set
   vtkm::cont::CastAndCall(
@@ -293,6 +325,10 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   filter.SetUseBoundaryExtremaOnly(true);
   filter.SetAugmentHierarchicalTree(augmentHierarchicalTree);
   filter.SetActiveField(fieldName);
+  if (presimplifyThreshold > 0)
+  {
+    filter.SetPresimplifyThreshold(presimplifyThreshold);
+  }
   auto result = filter.Execute(pds);
 
   if (computeHierarchicalVolumetricBranchDecomposition)
@@ -875,6 +911,227 @@ inline void TestContourTreeFile(std::string ds_filename,
       VTKM_TEST_ASSERT(treeCompiler.superarcs == groundTruthSuperarcs,
                        "Test failed for data set " + ds_filename);
     }
+  }
+}
+
+// Routine to verify the branch decomposition results from presimplification.
+inline void VerifyContourTreePresimplificationOutput(std::string datasetName,
+                                                     vtkm::cont::PartitionedDataSet& tp_result,
+                                                     std::vector<vtkm::Id>& gtBranchDirections,
+                                                     std::vector<vtkm::Id>& gtBranchInnerEnds,
+                                                     std::vector<vtkm::Id>& gtBranchVolumes,
+                                                     int rank = 0,
+                                                     const vtkm::Id presimplifyThreshold = 1)
+{
+  if (rank == 0)
+  {
+    // the top branches by volume are consistent across all blocks
+    auto tp_ds = tp_result.GetPartition(0);
+    auto topVolBranchUpperEndGRIds = tp_ds.GetField("TopVolumeBranchUpperEnd")
+                                       .GetData()
+                                       .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                       .ReadPortal();
+    auto topVolBranchLowerEndGRIds = tp_ds.GetField("TopVolumeBranchLowerEnd")
+                                       .GetData()
+                                       .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                       .ReadPortal();
+    auto topVolBranchVolume = tp_ds.GetField("TopVolumeBranchVolume")
+                                .GetData()
+                                .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                .ReadPortal();
+    auto topVolBranchSaddleEpsilon = tp_ds.GetField("TopVolumeBranchSaddleEpsilon")
+                                       .GetData()
+                                       .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                       .ReadPortal();
+    vtkm::Id nSelectedBranches = topVolBranchUpperEndGRIds.GetNumberOfValues();
+    std::vector<vtkm::Id> gtSortedOrder, sortedOrder;
+    std::vector<vtkm::Id> topVolBranchInnerEnds;
+    for (vtkm::Id branch = 0; branch < nSelectedBranches; branch++)
+    {
+      if (topVolBranchVolume.Get(branch) > presimplifyThreshold)
+      {
+        sortedOrder.push_back(branch);
+      }
+      if (topVolBranchSaddleEpsilon.Get(branch) < 0)
+        topVolBranchInnerEnds.push_back(topVolBranchUpperEndGRIds.Get(branch));
+      else
+        topVolBranchInnerEnds.push_back(topVolBranchLowerEndGRIds.Get(branch));
+    }
+    for (size_t branch = 0; branch < gtBranchVolumes.size(); branch++)
+    {
+      if (gtBranchVolumes.at(branch) > presimplifyThreshold)
+        gtSortedOrder.push_back(branch);
+    }
+    VTKM_TEST_ASSERT(sortedOrder.size() == gtSortedOrder.size(),
+                     "Test failed: number of branches does not match for data set " + datasetName);
+    std::sort(sortedOrder.begin(),
+              sortedOrder.end(),
+              [topVolBranchInnerEnds, topVolBranchVolume, topVolBranchSaddleEpsilon](
+                const vtkm::Id& lhs, const vtkm::Id& rhs) {
+                if (topVolBranchInnerEnds.at(lhs) < topVolBranchInnerEnds.at(rhs))
+                  return true;
+                if (topVolBranchInnerEnds.at(lhs) > topVolBranchInnerEnds.at(rhs))
+                  return false;
+                if (topVolBranchVolume.Get(lhs) < topVolBranchVolume.Get(rhs))
+                  return true;
+                if (topVolBranchVolume.Get(lhs) > topVolBranchVolume.Get(rhs))
+                  return false;
+                return (topVolBranchSaddleEpsilon.Get(lhs) < topVolBranchSaddleEpsilon.Get(rhs));
+              });
+    std::sort(gtSortedOrder.begin(),
+              gtSortedOrder.end(),
+              [gtBranchInnerEnds, gtBranchVolumes, gtBranchDirections](const vtkm::Id& lhs,
+                                                                       const vtkm::Id& rhs) {
+                if (gtBranchInnerEnds.at(lhs) < gtBranchInnerEnds.at(rhs))
+                  return true;
+                if (gtBranchInnerEnds.at(lhs) > gtBranchInnerEnds.at(rhs))
+                  return false;
+                if (gtBranchVolumes.at(lhs) < gtBranchVolumes.at(rhs))
+                  return true;
+                if (gtBranchVolumes.at(lhs) > gtBranchVolumes.at(rhs))
+                  return false;
+                return (gtBranchDirections.at(lhs) < gtBranchDirections.at(rhs));
+              });
+
+    for (size_t branch = 0; branch < sortedOrder.size(); branch++)
+    {
+      VTKM_TEST_ASSERT(topVolBranchInnerEnds.at(sortedOrder.at(branch)) ==
+                         gtBranchInnerEnds.at(gtSortedOrder.at(branch)),
+                       "Test failed: branch inner end does not match for data set " + datasetName);
+
+      VTKM_TEST_ASSERT(topVolBranchVolume.Get(sortedOrder.at(branch)) ==
+                         gtBranchVolumes.at(gtSortedOrder.at(branch)),
+                       "Test failed: branch volume does not match for data set " + datasetName);
+
+      VTKM_TEST_ASSERT(topVolBranchSaddleEpsilon.Get(sortedOrder.at(branch)) ==
+                         gtBranchDirections.at(gtSortedOrder.at(branch)),
+                       "Test failed: branch direction does not match for data set " + datasetName);
+    }
+  }
+}
+
+// routine to run distributed contour tree and presimplification
+inline void RunContourTreePresimplification(std::string fieldName,
+                                            vtkm::cont::DataSet& ds,
+                                            vtkm::cont::PartitionedDataSet& tp_result,
+                                            int nBlocks,
+                                            bool marchingCubes = false,
+                                            int rank = 0,
+                                            int size = 1,
+                                            bool passBlockIndices = true,
+                                            const vtkm::Id presimplifyThreshold = 1)
+{
+  vtkm::Id3 globalSize;
+
+  vtkm::cont::PartitionedDataSet result = RunContourTreeDUniformDistributed(ds,
+                                                                            fieldName,
+                                                                            marchingCubes,
+                                                                            nBlocks,
+                                                                            rank,
+                                                                            size,
+                                                                            true,
+                                                                            true,
+                                                                            globalSize,
+                                                                            passBlockIndices,
+                                                                            presimplifyThreshold);
+
+  // Compute branch decomposition
+  vtkm::cont::PartitionedDataSet bd_result;
+
+  vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter;
+  bd_result = bd_filter.Execute(result);
+
+  // Compute SelectTopVolumeContours
+  vtkm::filter::scalar_topology::SelectTopVolumeContoursFilter tp_filter;
+
+  // numBranches needs to be large enough to include all branches
+  // numBranches < numSuperarcs < globalSize
+  tp_filter.SetSavedBranches(globalSize[0] * globalSize[1] *
+                             (globalSize[2] > 1 ? globalSize[2] : 1));
+  tp_result = tp_filter.Execute(bd_result);
+}
+
+// routine to test contour tree presimplification
+inline void TestContourTreePresimplification(
+  std::string datasetName,
+  std::string fieldName,
+  std::string gtbr_filename,
+  int nBlocks,
+  vtkm::cont::DataSet input_ds, // dataset if we pre-load the dataset
+  std::string ds_filename = "", // dataset file name if we load data from file
+  const vtkm::Id presimplifyThreshold = 1,
+  bool marchingCubes = false,
+  int rank = 0,
+  int size = 1,
+  bool passBlockIndices = true)
+{
+  if (rank == 0)
+  {
+    std::cout << "Testing ContourTreeUniformDistributed with "
+              << (marchingCubes ? "marching cubes" : "Freudenthal") << " mesh connectivity on \""
+              << datasetName << "\" divided into " << nBlocks
+              << " blocks. Using presimplification threshold = " << presimplifyThreshold
+              << std::endl;
+  }
+
+  // data set should either be loaded from file or passed as input.
+  // if we get a ds_filename, we load the dataset from file, which means that input_ds becomes useless.
+  // if the ds_filename is empty, we use input_ds.
+  // TODO/FIXME: is there a better way to do this?
+  vtkm::cont::DataSet ds;
+  if (!ds_filename.empty())
+  {
+    if (rank == 0)
+      std::cout << "Loading data from " << ds_filename << std::endl;
+    vtkm::io::VTKDataSetReader reader(ds_filename);
+    try
+    {
+      ds = reader.ReadDataSet();
+    }
+    catch (vtkm::io::ErrorIO& e)
+    {
+      std::string message("Error reading: ");
+      message += ds_filename;
+      message += ", ";
+      message += e.GetMessage();
+
+      VTKM_TEST_FAIL(message.c_str());
+    }
+  }
+  else
+    ds = input_ds;
+
+  // get the output of contour tree + presimplification
+  vtkm::cont::PartitionedDataSet tp_result;
+  RunContourTreePresimplification(fieldName,
+                                  ds,
+                                  tp_result,
+                                  nBlocks,
+                                  marchingCubes,
+                                  rank,
+                                  size,
+                                  passBlockIndices,
+                                  presimplifyThreshold);
+
+  // get the ground truth from file
+  if (rank == 0)
+  {
+    std::vector<vtkm::Id> gtBranchDirections;
+    std::vector<vtkm::Id> gtBranchInnerEnds;
+    std::vector<vtkm::Id> gtBranchVolumes;
+
+    // load the ground truth branch decomposition by volume from file
+    ReadGroundTruthBranchVolume(
+      gtbr_filename, gtBranchDirections, gtBranchInnerEnds, gtBranchVolumes);
+
+    // verify the contour tree presimplification output with ground truth
+    VerifyContourTreePresimplificationOutput(datasetName,
+                                             tp_result,
+                                             gtBranchDirections,
+                                             gtBranchInnerEnds,
+                                             gtBranchVolumes,
+                                             rank,
+                                             presimplifyThreshold);
   }
 }
 

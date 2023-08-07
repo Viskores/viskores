@@ -229,33 +229,32 @@ private:
     if (this->MeshGlobalSize[2] > 1) // 3D
     {
       // convert from global ID to global coords
-      vtkm::Id globalSliceSize = this->MeshGlobalSize[0] * this->MeshGlobalSize[1];
-      vtkm::Id globalSlice = globalId / globalSliceSize;
-      vtkm::Id globalRow = globalId / this->MeshGlobalSize[0];
-      vtkm::Id globalCol = globalId % this->MeshGlobalSize[0];
+      vtkm::Id3 pos{ globalId % this->MeshGlobalSize[0],
+                     (globalId / this->MeshGlobalSize[0]) % this->MeshGlobalSize[1],
+                     globalId / (this->MeshGlobalSize[0] * this->MeshGlobalSize[1]) };
 
       // test validity
-      if (globalSlice < this->MeshBlockOrigin[2])
+      if (pos[2] < this->MeshBlockOrigin[2])
       {
         return false;
       }
-      if (globalSlice >= this->MeshBlockOrigin[2] + this->MeshBlockSize[2])
+      if (pos[2] >= this->MeshBlockOrigin[2] + this->MeshBlockSize[2])
       {
         return false;
       }
-      if (globalRow < this->MeshBlockOrigin[1])
+      if (pos[1] < this->MeshBlockOrigin[1])
       {
         return false;
       }
-      if (globalRow >= this->MeshBlockOrigin[1] + this->MeshBlockSize[1])
+      if (pos[1] >= this->MeshBlockOrigin[1] + this->MeshBlockSize[1])
       {
         return false;
       }
-      if (globalCol < this->MeshBlockOrigin[0])
+      if (pos[0] < this->MeshBlockOrigin[0])
       {
         return false;
       }
-      if (globalCol >= this->MeshBlockOrigin[0] + this->MeshBlockSize[0])
+      if (pos[0] >= this->MeshBlockOrigin[0] + this->MeshBlockSize[0])
       {
         return false;
       }
@@ -265,23 +264,22 @@ private:
     else // 2D mesh
     {
       // convert from global ID to global coords
-      vtkm::Id globalRow = globalId / this->MeshGlobalSize[0];
-      vtkm::Id globalCol = globalId % this->MeshGlobalSize[0];
+      vtkm::Id2 pos{ globalId % this->MeshGlobalSize[0], globalId / this->MeshGlobalSize[0] };
 
       // test validity
-      if (globalRow < this->MeshBlockOrigin[1])
+      if (pos[1] < this->MeshBlockOrigin[1])
       {
         return false;
       }
-      if (globalRow >= this->MeshBlockOrigin[1] + this->MeshBlockSize[1])
+      if (pos[1] >= this->MeshBlockOrigin[1] + this->MeshBlockSize[1])
       {
         return false;
       }
-      if (globalCol < this->MeshBlockOrigin[0])
+      if (pos[0] < this->MeshBlockOrigin[0])
       {
         return false;
       }
-      if (globalCol >= this->MeshBlockOrigin[0] + this->MeshBlockSize[0])
+      if (pos[0] >= this->MeshBlockOrigin[0] + this->MeshBlockSize[0])
       {
         return false;
       }

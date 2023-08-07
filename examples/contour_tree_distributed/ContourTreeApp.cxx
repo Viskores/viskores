@@ -220,6 +220,12 @@ int main(int argc, char* argv[])
     }
   }
 
+  vtkm::Id presimplifyThreshold = 0; // Do not presimplify the hierachical contour tree
+  if (parser.hasOption("--presimplifyThreshold"))
+  {
+    presimplifyThreshold = std::stoi(parser.getOption("--presimplifyThreshold"));
+  }
+
   bool useBoundaryExtremaOnly = true;
   if (parser.hasOption("--useFullBoundary"))
   {
@@ -368,6 +374,10 @@ int main(int argc, char* argv[])
       std::cout
         << "--eps=<float>   Floating point offset awary from the critical point. (default=0.00001)"
         << std::endl;
+      std::cout << "--presimplifyThreshold   Integer volume threshold for presimplifying the tree"
+                << std::endl;
+      std::cout << "                 Default value is 0, indicating no presimplification"
+                << std::endl;
       std::cout << "--preSplitFiles  Input data is already pre-split into blocks." << std::endl;
       std::cout << "--saveDot        Save DOT files of the distributed contour tree " << std::endl
                 << "                 computation (Default=False). " << std::endl;
@@ -411,6 +421,7 @@ int main(int argc, char* argv[])
                  << "    augmentHierarchicalTree=" << augmentHierarchicalTree << std::endl
                  << "    computeVolumetricBranchDecomposition="
                  << computeHierarchicalVolumetricBranchDecomposition << std::endl
+                 << "    presimplifyThreshold=" << presimplifyThreshold << std::endl
                  << "    saveOutputData=" << saveOutputData << std::endl
                  << "    forwardSummary=" << forwardSummary << std::endl
                  << "    nblocks=" << numBlocks << std::endl
@@ -648,6 +659,10 @@ int main(int argc, char* argv[])
   filter.SetUseBoundaryExtremaOnly(useBoundaryExtremaOnly);
   filter.SetUseMarchingCubes(useMarchingCubes);
   filter.SetAugmentHierarchicalTree(augmentHierarchicalTree);
+  if (presimplifyThreshold > 0)
+  {
+    filter.SetPresimplifyThreshold(presimplifyThreshold);
+  }
   filter.SetSaveDotFiles(saveDotFiles);
   filter.SetActiveField("values");
 

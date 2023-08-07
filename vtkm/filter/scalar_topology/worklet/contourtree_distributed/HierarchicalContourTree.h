@@ -1054,6 +1054,13 @@ void HierarchicalContourTree<FieldType>::AddToVTKMDataSet(vtkm::cont::DataSet& d
   ds.AddField(firstSupernodePerIterationOffsetsField);
   // TODO/FIXME: It seems we may only need the counts for the first iteration, so check, which
   // information we actually need.
+  // Add the number of rounds as an array of length 1
+  vtkm::cont::ArrayHandle<vtkm::Id> tempNumRounds;
+  tempNumRounds.Allocate(1);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(0, this->NumRounds, tempNumRounds);
+  vtkm::cont::Field numRoundsField(
+    "NumRounds", vtkm::cont::Field::Association::WholeDataSet, tempNumRounds);
+  ds.AddField(numRoundsField);
 }
 
 } // namespace contourtree_distributed

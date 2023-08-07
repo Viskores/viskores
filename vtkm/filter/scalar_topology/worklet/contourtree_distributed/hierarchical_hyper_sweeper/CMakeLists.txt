@@ -17,6 +17,8 @@ set(headers
   TransferTargetComperator.h
   TransferWeightsUpdateRHEWorklet.h
   TransferWeightsUpdateLHEWorklet.h
+  TransferWeightsUpdateRHEWorkletRound2.h
+  TransferWeightsUpdateLHEWorkletRound2.h
 )
 
 vtkm_declare_headers(${headers})

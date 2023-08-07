@@ -38,63 +38,67 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_SelectTopVolumeContoursBlock_h
-#define vtk_m_filter_scalar_topology_internal_SelectTopVolumeContoursBlock_h
+#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_augmenter_create_auperarcs_update_first_supernode_per_iteration_worklet_h
+#define vtk_m_worklet_contourtree_distributed_hierarchical_augmenter_create_auperarcs_update_first_supernode_per_iteration_worklet_h
 
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
-namespace filter
+namespace worklet
 {
-namespace scalar_topology
+namespace contourtree_distributed
 {
-namespace internal
+namespace hierarchical_augmenter
 {
 
-struct SelectTopVolumeContoursBlock
+/// Worklet used in HierarchicalAugmenter::UpdateHyperstructure to set the hyperarcs and hypernodes
+class CreateSuperarcsUpdateFirstSupernodePerIterationWorklet : public vtkm::worklet::WorkletMapField
 {
-  SelectTopVolumeContoursBlock(vtkm::Id localBlockNo, int globalBlockId);
+public:
+  /// Control signature for the worklet
+  using ControlSignature = void(FieldIn indexArray,
+                                WholeArrayInOut augmentedTreeFirstSupernodePerIteration);
+  using ExecutionSignature = void(_1, _2);
+  using InputDomain = _1;
 
-  void SortBranchByVolume(const vtkm::cont::DataSet& hierarchicalTreeDataSet,
-                          const vtkm::Id totalVolume);
+  // Default Constructor
+  VTKM_EXEC_CONT
+  CreateSuperarcsUpdateFirstSupernodePerIterationWorklet() {}
 
-  // Block metadata
-  vtkm::Id LocalBlockNo;
-  int GlobalBlockId; // TODO/FIXME: Check whether really needed. Possibly only during debugging
+  template <typename InOutFieldPortalType>
+  VTKM_EXEC void operator()(
+    const vtkm::Id& iteration,
+    const InOutFieldPortalType& augmentedTreeFirstSupernodePerIterationPortal) const
+  { // operator()()
+    if (augmentedTreeFirstSupernodePerIterationPortal.Get(iteration) == 0)
+    {
+      augmentedTreeFirstSupernodePerIterationPortal.Set(
+        iteration, augmentedTreeFirstSupernodePerIterationPortal.Get(iteration + 1));
+    }
 
-  vtkm::worklet::contourtree_augmented::IdArrayType BranchVolume;
-  vtkm::worklet::contourtree_augmented::IdArrayType BranchSaddleEpsilon;
-  vtkm::worklet::contourtree_augmented::IdArrayType SortedBranchByVolume;
-  vtkm::cont::UnknownArrayHandle BranchSaddleIsoValue;
+    /*
+    for (indexType iteration = 1; iteration < augmentedTree->nIterations[roundNo]; ++iteration)
+    {
+      if (augmentedTree->firstSupernodePerIteration[roundNo][iteration] == 0)
+      {
+        augmentedTree->firstSupernodePerIteration[roundNo][iteration] =
+          augmentedTree->firstSupernodePerIteration[roundNo][iteration+1];
+      }
+    }
+    */
+  } // operator()()
+};  // CreateSuperarcsUpdateFirstSupernodePerIterationWorklet
 
-  // Output Datasets.
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchRootGRId;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchVolume;
-  vtkm::cont::UnknownArrayHandle TopVolumeBranchSaddleIsoValue;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchSaddleEpsilon;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchUpperEndGRId;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchLowerEndGRId;
-
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b) { delete static_cast<SelectTopVolumeContoursBlock*>(b); }
-};
-
-} // namespace internal
-} // namespace scalar_topology
-} // namespace filter
+} // namespace hierarchical_augmenter
+} // namespace contourtree_distributed
+} // namespace worklet
 } // namespace vtkm
+
 #endif

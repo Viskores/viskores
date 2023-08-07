@@ -506,12 +506,19 @@ inline void HierarchicalVolumetricBranchDecomposer::CollapseBranches(
     vtkm::worklet::contourtree_distributed::FindSuperArcBetweenNodes findSuperArcBetweenNodes{
       hierarchicalTreeSuperarcs
     };
+    // Get the number of rounds
+    auto numRoundsArray = hierarchicalTreeDataSet.GetField("NumRounds")
+                            .GetData()
+                            .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>();
+    vtkm::Id numRounds = vtkm::cont::ArrayGetValue(0, numRoundsArray);
 
     using vtkm::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::
       CollapseBranchesWorklet;
-    this->Invoke(CollapseBranchesWorklet{},         // the worklet
+    CollapseBranchesWorklet collapseBranchesWorklet(numRounds);
+    this->Invoke(collapseBranchesWorklet,           // the worklet
                  this->BestUpSupernode,             // input
                  this->BestDownSupernode,           // input
+                 hierarchicalTreeSuperarcs,         // input
                  findRegularByGlobal,               // input ExecutionObject
                  findSuperArcBetweenNodes,          // input ExecutionObject
                  hierarchicalTreeRegular2Supernode, // input

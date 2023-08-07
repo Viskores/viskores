@@ -72,8 +72,8 @@ namespace contourtree_augmented
 {
 
 // local constants to allow changing the spacing as needed
-constexpr int PRINT_WIDTH = 14;
-constexpr int PREFIX_WIDTH = 30;
+constexpr int PRINT_WIDTH = 18;
+constexpr int PREFIX_WIDTH = 36;
 
 template <typename T, typename StorageType>
 void PrintValues(std::string label,

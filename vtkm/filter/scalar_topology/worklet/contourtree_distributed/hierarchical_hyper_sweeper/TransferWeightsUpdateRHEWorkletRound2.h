@@ -50,8 +50,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_transfer_weights_update_rhe_worklet_h
-#define vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_transfer_weights_update_rhe_worklet_h
+#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_transfer_weights_update_rhe_worklet_round2_h
+#define vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_transfer_weights_update_rhe_worklet_round2_h
 
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -68,19 +68,20 @@ namespace hierarchical_hyper_sweeper
 /// Worklet used in HierarchicalHyperSweeper.TransferWeights(...) to implement
 /// step 7a. Find the RHE of each group and transfer the prefix sum weight.
 /// Note that we do not compute the transfer weight separately, we add it in place instead
-class TransferWeightsUpdateRHEWorklet : public vtkm::worklet::WorkletMapField
+class TransferWeightsUpdateRHEWorkletRound2 : public vtkm::worklet::WorkletMapField
 {
 public:
   using ControlSignature =
     void(FieldIn supernodeIndex, // input counting array [firstSupernode, lastSupernode)
          WholeArrayIn sortedTransferTarget,
          FieldIn valuePrefixSumView, // input view of valuePrefixSum[firstSupernode, lastSupernode)
+         WholeArrayInOut intrinsicValuesPortal,
          WholeArrayInOut dependentValuesPortal);
-  using ExecutionSignature = void(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
   // Default Constructor
   VTKM_EXEC_CONT
-  TransferWeightsUpdateRHEWorklet(const vtkm::Id& lastSupernode)
+  TransferWeightsUpdateRHEWorkletRound2(const vtkm::Id& lastSupernode)
     : LastSupernode(lastSupernode)
   {
   }
@@ -89,6 +90,7 @@ public:
   VTKM_EXEC void operator()(const vtkm::Id& supernode,
                             const InPortalType& sortedTransferTargetPortal,
                             const vtkm::Id& valuePrefixSum, // same as valuePrefixSum[supernode]
+                            OutPortalType& intrinsicValuesPortal,
                             OutPortalType& dependentValuesPortal) const
   {
     // per supernode
@@ -106,38 +108,42 @@ public:
         vtkm::Id superarcOrNodeId =
           vtkm::worklet::contourtree_augmented::MaskedIndex(transferTarget);
         // we ignore attachment points
-        if (superarcTransfer)
+        if (!superarcTransfer)
         {
           return;
         }
-        auto originalValue = dependentValuesPortal.Get(superarcOrNodeId);
-        dependentValuesPortal.Set(superarcOrNodeId, originalValue + valuePrefixSum);
+        // we modify both intrinsic and dependent values
+        auto originalIntrinsicValue = intrinsicValuesPortal.Get(superarcOrNodeId);
+        intrinsicValuesPortal.Set(superarcOrNodeId, originalIntrinsicValue + valuePrefixSum);
+        auto originalDependentValue = dependentValuesPortal.Get(superarcOrNodeId);
+        dependentValuesPortal.Set(superarcOrNodeId, originalDependentValue + valuePrefixSum);
       } // RHE of segment
     }
 
     // In serial this worklet implements the following operation
     /*
-      for (vtkm::Id supernode = firstSupernode; supernode < lastSupernode; supernode++)
-      { // per supernode
-        // ignore any that point at NO_SUCH_ELEMENT
-        if (noSuchElement(sortedTransferTarget[supernode]))
+    for (indexType supernode = firstSupernode; supernode < lastSupernode; supernode++)
+    { // per supernode
+      // ignore any that point at NO_SUCH_ELEMENT
+      if (noSuchElement(sortedTransferTarget[supernode]))
+        continue;
+
+      // the RHE of each segment transfers its weight (including all irrelevant prefixes)
+      if ((supernode == lastSupernode - 1) || (sortedTransferTarget[supernode] != sortedTransferTarget[supernode+1]))
+      { // RHE of segment
+        // we need to separate out the flag for attachment points
+        bool superarcTransfer = transferToSuperarc(sortedTransferTarget[supernode]);
+        indexType superarcOrNodeID = maskedIndex(sortedTransferTarget[supernode]);
+        // ignore the transfers for non-attachment points
+        if (!superarcTransfer)
           continue;
 
-        if ((supernode == lastSupernode - 1) || (sortedTransferTarget[supernode] != sortedTransferTarget[supernode+1]))
-        { // RHE of segment
-            // WARNING 11/07/2023
-            // we need to separate out the flag for attachment points
-            bool superarcTransfer = transferToSuperarc(sortedTransferTarget[supernode]);
-            indexType superarcOrNodeID = maskedIndex(sortedTransferTarget[supernode]);
+        // we modify both intrinsic and dependent values
+        intrinsicValues[superarcOrNodeID] += valuePrefixSum[supernode];
+        dependentValues[superarcOrNodeID] += valuePrefixSum[supernode];
+      } // RHE of segment
 
-            // we ignore attachment points
-            if (superarcTransfer)
-               continue;
-
-            // transfer as dependent weight
-            dependentValues[superarcOrNodeID] += valuePrefixSum[supernode];
-        } // RHE of segment
-      } // per supernode
+    } // per supernode
     */
   } // operator()()
 
