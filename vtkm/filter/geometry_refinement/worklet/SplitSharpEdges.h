@@ -89,7 +89,6 @@ VTKM_EXEC int FindNeighborCellInLocalIndex(const vtkm::Id2& eOI,
 {
   int neighboringCellIndex = -1;
   vtkm::IdComponent numberOfIncidentCells = incidentCells.GetNumberOfComponents();
-  size_t neighboringCellsCount = 0;
   for (vtkm::IdComponent incidentCellIndex = 0; incidentCellIndex < numberOfIncidentCells;
        incidentCellIndex++)
   {
@@ -122,7 +121,6 @@ VTKM_EXEC int FindNeighborCellInLocalIndex(const vtkm::Id2& eOI,
           (canonicalEdgeId[0] == eOI[1] && canonicalEdgeId[1] == eOI[0]))
       {
         neighboringCellIndex = incidentCellIndex;
-        neighboringCellsCount++;
         break;
       }
     }
