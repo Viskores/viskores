@@ -1138,11 +1138,17 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
   // ******** 3. Augment the hierarchical tree if requested ********
   if (this->AugmentHierarchicalTree)
   {
-    master.foreach (
-      [](DistributedContourTreeBlockData* blockData, const vtkmdiy::Master::ProxyWithLink&) {
-        blockData->HierarchicalAugmenter.Initialize(
-          blockData->GlobalBlockId, &blockData->HierarchicalTree, &blockData->AugmentedTree);
-      });
+    master.foreach ([globalPointDimensions](DistributedContourTreeBlockData* blockData,
+                                            const vtkmdiy::Master::ProxyWithLink&) {
+      blockData->HierarchicalAugmenter.Initialize(
+        blockData->GlobalBlockId,
+        &blockData->HierarchicalTree,
+        &blockData->AugmentedTree,
+        blockData->BlockOrigin, // Origin of the data block
+        blockData->BlockSize,   // Extends of the data block
+        globalPointDimensions   // global point dimensions
+      );
+    });
 
     timingsStream << "    " << std::setw(38) << std::left << "Initalize Hierarchical Trees"
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;

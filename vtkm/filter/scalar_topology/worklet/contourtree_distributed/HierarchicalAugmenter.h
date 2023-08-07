@@ -127,6 +127,11 @@ template <typename FieldType>
 class HierarchicalAugmenter
 { // class HierarchicalAugmenter
 public:
+  /// base mesh variable needs to determine whether a vertex is inside or outside of the block
+  vtkm::Id3 MeshBlockOrigin;
+  vtkm::Id3 MeshBlockSize;
+  vtkm::Id3 MeshGlobalSize;
+
   /// the tree that it hypersweeps over
   vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>* BaseTree;
   /// the tree that it is building
@@ -198,7 +203,10 @@ public:
   void Initialize(
     vtkm::Id blockId,
     vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>* inBaseTree,
-    vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>* inAugmentedTree);
+    vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>* inAugmentedTree,
+    vtkm::Id3 meshBlockOrigin,
+    vtkm::Id3 meshBockSize,
+    vtkm::Id3 meshGlobalSize);
 
   /// routine to prepare the set of attachment points to transfer
   void PrepareOutAttachmentPoints(vtkm::Id round);
@@ -249,12 +257,18 @@ template <typename FieldType>
 void HierarchicalAugmenter<FieldType>::Initialize(
   vtkm::Id blockId,
   vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>* baseTree,
-  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>* augmentedTree)
+  vtkm::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>* augmentedTree,
+  vtkm::Id3 meshBlockOrigin,
+  vtkm::Id3 meshBockSize,
+  vtkm::Id3 meshGlobalSize)
 { // Initialize()
   // copy the parameters for use
   this->BlockId = blockId;
   this->BaseTree = baseTree;
   this->AugmentedTree = augmentedTree;
+  this->MeshBlockOrigin = meshBlockOrigin;
+  this->MeshBlockSize = meshBockSize;
+  this->MeshGlobalSize = meshGlobalSize;
 
   // now construct a list of all attachment points on the block
   // to do this, we construct an index array with all supernode ID's that satisfy:
@@ -728,12 +742,13 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
     vtkm::worklet::contourtree_augmented::IdArrayType tempRegularNodesNeeded;
     // create the worklet
     vtkm::worklet::contourtree_distributed::hierarchical_augmenter::
-      FindSuperparentForNecessaryNodesWorklet findSuperparentForNecessaryNodesWorklet;
+      FindSuperparentForNecessaryNodesWorklet findSuperparentForNecessaryNodesWorklet(
+        this->MeshBlockOrigin, this->MeshBlockSize, this->MeshGlobalSize);
     // Get a FindRegularByGlobal and FindSuperArcForUnknownNode execution object for our worklet
     auto findRegularByGlobal = this->AugmentedTree->GetFindRegularByGlobal();
     auto findSuperArcForUnknownNode = this->AugmentedTree->GetFindSuperArcForUnknownNode();
 
-    // excute the worklet
+    // execute the worklet
     this->Invoke(findSuperparentForNecessaryNodesWorklet, // the worklet to call
                  // inputs
                  this->BaseTree->RegularNodeGlobalIds, // input domain
@@ -830,6 +845,12 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
                  augmentedTreeRegularNodeSortOrderView     // output
     );
   }
+
+
+  // Reset the number of regular nodes in round 0
+  vtkm::Id regularNodesInRound0 =
+    numTotalRegular - this->AugmentedTree->NumRegularNodesInRound.ReadPortal().Get(1);
+  this->AugmentedTree->NumRegularNodesInRound.WritePortal().Set(0, regularNodesInRound0);
 
   //  Finally, we resort the regular node sort order
   {
