@@ -1,30 +1,30 @@
 # Ad-hoc build that runs in macos machines
-build:macos_xcode13:
+build:macos_xcode14:
   extends:
-    - .macos_xcode13
+    - .macos_xcode14
     - .macos_build_tags
     - .cmake_build_macos
     - .run_automatically
 
-test:macos_xcode13:
+test:macos_xcode14:
   extends:
-    - .macos_xcode13
+    - .macos_xcode14
     - .macos_build_tags
     - .cmake_test_macos
     - .run_automatically
   needs:
-    - build:macos_xcode13
+    - build:macos_xcode14
   dependencies:
-    - build:macos_xcode13
+    - build:macos_xcode14
 
-.macos_xcode13:
+.macos_xcode14:
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: Ninja
 
     CC: gcc
     CXX: g++
-    DEVELOPER_DIR: "/Applications/Xcode-13.3.app/Contents/Developer"
+    DEVELOPER_DIR: "/Applications/Xcode-14.2.app/Contents/Developer"
     GIT_CLONE_PATH: "$CI_BUILDS_DIR/vtk-m-ci"
     VTKM_SETTINGS: "64bit_floats+shared+ccache"
 
@@ -83,5 +83,5 @@ test:macos_xcode13:
   tags:
     - vtk-m
     - macos-x86_64
-    - xcode-13.3
+    - xcode-14.2
     - nonconcurrent
