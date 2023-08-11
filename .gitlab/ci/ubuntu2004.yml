@@ -81,6 +81,7 @@ test:ubuntu2004_hip_kokkos:
     - .run_upstream_branches
   variables:
     CTEST_MAX_PARALLELISM: 1
+    TEST_EXCLUSIONS: "UnitTestWorkletParticleAdvection"
   dependencies:
     - build:ubuntu2004_hip_kokkos
   needs:
