@@ -466,14 +466,14 @@ void TestLookupTable()
   const bool ran = vtkm::cont::ColorTableMap(field, samples, colors);
   VTKM_TEST_ASSERT(ran, "color table failed to execute");
 
-  //values confirmed with ParaView 5.4
+  //values confirmed with ParaView 5.11
   CheckColors(colors,
               { { 0, 0, 255 },
                 { 59, 76, 192 },
-                { 122, 157, 248 },
-                { 191, 211, 246 },
-                { 241, 204, 184 },
-                { 238, 134, 105 },
+                { 124, 159, 249 },
+                { 192, 212, 245 },
+                { 242, 203, 183 },
+                { 238, 133, 104 },
                 { 180, 4, 38 },
                 { 255, 0, 0 } });
 }
