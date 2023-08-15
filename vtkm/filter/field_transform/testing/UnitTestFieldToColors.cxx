@@ -42,10 +42,10 @@ void TestFieldToColors()
   vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> resultRGBAHandle;
   Result.GetData().AsArrayHandle(resultRGBAHandle);
 
-  //values confirmed with ParaView 5.4
+  //values confirmed with ParaView 5.11
   const vtkm::Vec4ui_8 correct_diverging_rgba_values[nvals] = {
-    { 0, 0, 255, 255 },     { 59, 76, 192, 255 },   { 122, 157, 248, 255 }, { 191, 211, 246, 255 },
-    { 241, 204, 184, 255 }, { 238, 134, 105, 255 }, { 180, 4, 38, 255 },    { 255, 0, 0, 255 }
+    { 0, 0, 255, 255 },     { 59, 76, 192, 255 },   { 124, 159, 249, 255 }, { 192, 212, 245, 255 },
+    { 242, 203, 183, 255 }, { 238, 133, 104, 255 }, { 180, 4, 38, 255 },    { 255, 0, 0, 255 }
   };
   auto portalRGBA = resultRGBAHandle.ReadPortal();
   for (std::size_t i = 0; i < nvals; ++i)
@@ -63,10 +63,10 @@ void TestFieldToColors()
   vtkm::cont::ArrayHandle<vtkm::Vec3ui_8> resultRGBHandle;
   Result.GetData().AsArrayHandle(resultRGBHandle);
 
-  //values confirmed with ParaView 5.4
+  //values confirmed with ParaView 5.11
   const vtkm::Vec3ui_8 correct_diverging_rgb_values[nvals] = { { 0, 0, 255 },     { 59, 76, 192 },
-                                                               { 122, 157, 248 }, { 191, 211, 246 },
-                                                               { 241, 204, 184 }, { 238, 134, 105 },
+                                                               { 124, 159, 249 }, { 192, 212, 245 },
+                                                               { 242, 203, 183 }, { 238, 133, 104 },
                                                                { 180, 4, 38 },    { 255, 0, 0 } };
   auto portalRGB = resultRGBHandle.ReadPortal();
   for (std::size_t i = 0; i < nvals; ++i)
