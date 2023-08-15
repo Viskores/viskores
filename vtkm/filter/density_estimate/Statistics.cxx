@@ -195,17 +195,16 @@ VTKM_CONT vtkm::cont::PartitionedDataSet Statistics::DoExecutePartitions(
   // containing the local statistics. It will iterate through each partition in the input and call the
   // DoExecute function. This is the same behavior as if we did not implement `DoExecutePartitions`.
   // It has the added benefit of optimizations for concurrently executing small blocks.
-  vtkm::cont::PartitionedDataSet localOutput = this->FilterField::DoExecutePartitions(input);
+  vtkm::cont::PartitionedDataSet output = this->FilterField::DoExecutePartitions(input);
   vtkm::Id numPartitions = input.GetNumberOfPartitions();
   DistributedStatistics helper(numPartitions);
   for (vtkm::Id i = 0; i < numPartitions; ++i)
   {
-    const vtkm::cont::DataSet& localDS = localOutput.GetPartition(i);
+    const vtkm::cont::DataSet& localDS = output.GetPartition(i);
     StatValueType localStatisticsValues = GetStatValueFromDataSet(localDS);
     helper.SetLocalStatistics(i, localStatisticsValues);
   }
   StatValueType result = helper.ReduceStatisticsDiy();
-  vtkm::cont::PartitionedDataSet output;
   SaveIntoDataSet<vtkm::cont::PartitionedDataSet>(
     result, output, vtkm::cont::Field::Association::Global);
   return output;

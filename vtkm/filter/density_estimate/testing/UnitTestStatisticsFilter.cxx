@@ -16,8 +16,9 @@
 
 namespace
 {
+
 template <typename DataSetType>
-vtkm::FloatDefault getStatsFromDataSet(const DataSetType& dataset, const std::string statName)
+vtkm::FloatDefault getStatsFromDataSet(const DataSetType& dataset, const std::string& statName)
 {
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> array;
   dataset.GetField(statName).GetData().AsArrayHandle(array);
@@ -28,6 +29,7 @@ vtkm::FloatDefault getStatsFromDataSet(const DataSetType& dataset, const std::st
 
 void TestStatisticsPartial()
 {
+  std::cout << "Test statistics for single vtkm::cont::DataSet" << std::endl;
   vtkm::cont::DataSet dataSet;
   constexpr vtkm::FloatDefault N = 1000;
   auto scalarArrayCounting =
@@ -79,6 +81,8 @@ void TestStatisticsPartial()
 
 void TestStatisticsPartition()
 {
+  std::cout << "Test statistics for vtkm::cont::PartitionedDataSet" << std::endl;
+
   std::vector<vtkm::cont::DataSet> dataSetList;
   constexpr vtkm::FloatDefault N = 1000;
 
@@ -108,6 +112,8 @@ void TestStatisticsPartition()
   using AsscoType = vtkm::cont::Field::Association;
   statisticsFilter.SetActiveField("scalarField", AsscoType::Points);
   vtkm::cont::PartitionedDataSet outputPDS = statisticsFilter.Execute(pds);
+
+  std::cout << "  Check aggregate statistics" << std::endl;
 
   vtkm::FloatDefault NValueFromFilter = getStatsFromDataSet(outputPDS, "N");
   VTKM_TEST_ASSERT(test_equal(NValueFromFilter, N));
@@ -142,14 +148,45 @@ void TestStatisticsPartition()
 
   vtkm::FloatDefault PopulationVariance = getStatsFromDataSet(outputPDS, "PopulationVariance");
   VTKM_TEST_ASSERT(test_equal(PopulationVariance, 83333.3));
+
+  vtkm::Id numOutPartitions = outputPDS.GetNumberOfPartitions();
+  VTKM_TEST_ASSERT(pds.GetNumberOfPartitions() == numOutPartitions);
+
+  for (vtkm::Id partitionId = 0; partitionId < numOutPartitions; ++partitionId)
+  {
+    std::cout << "  Check partition " << partitionId << std::endl;
+    // Assume stats for a single `DataSet` is working.
+    vtkm::cont::DataSet inPartition = pds.GetPartition(partitionId);
+    vtkm::cont::DataSet inStats = statisticsFilter.Execute(inPartition);
+    vtkm::cont::DataSet outStats = outputPDS.GetPartition(partitionId);
+
+    auto checkStats = [&](const std::string& statName) {
+      vtkm::FloatDefault inStat = getStatsFromDataSet(inStats, statName);
+      vtkm::FloatDefault outStat = getStatsFromDataSet(outStats, statName);
+      VTKM_TEST_ASSERT(test_equal(inStat, outStat));
+    };
+
+    checkStats("N");
+    checkStats("Min");
+    checkStats("Max");
+    checkStats("Sum");
+    checkStats("Mean");
+    checkStats("SampleVariance");
+    checkStats("SampleStddev");
+    checkStats("Skewness");
+    checkStats("Kurtosis");
+    checkStats("PopulationStddev");
+    checkStats("PopulationVariance");
+  }
 }
 
 void TestStatistics()
 {
   TestStatisticsPartial();
   TestStatisticsPartition();
-} // TestFieldStatistics
 }
+
+} // anonymous namespace
 
 int UnitTestStatisticsFilter(int argc, char* argv[])
 {
