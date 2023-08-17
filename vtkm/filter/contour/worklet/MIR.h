@@ -2304,51 +2304,6 @@ public:
     totalErrorOut = TEO(totalError);
   }
 };
-struct CheckFor2D : public vtkm::worklet::WorkletVisitCellsWithPoints
-{
-  using ControlSignature = void(CellSetIn,
-                                FieldOutCell is2D,
-                                FieldOutCell is3D,
-                                FieldOutCell isOther);
-  using ExecutionSignature = void(CellShape, _2, _3, _4);
-  using InputDomain = _1;
-  template <typename OO, typename OP, typename OQ, typename SHAPE>
-  VTKM_EXEC void operator()(const SHAPE shape, OO& is2D, OP& is3D, OQ& isOther) const
-  {
-    is2D = vtkm::Id(0);
-    is3D = vtkm::Id(0);
-
-    if (shape.Id == vtkm::CellShapeIdToTag<vtkm::CELL_SHAPE_TRIANGLE>::Tag().Id ||
-        shape.Id == vtkm::CellShapeIdToTag<vtkm::CELL_SHAPE_POLYGON>::Tag().Id ||
-        shape.Id == vtkm::CellShapeIdToTag<vtkm::CELL_SHAPE_QUAD>::Tag().Id ||
-        shape.Id == vtkm::Id(6) // Tri strip?
-        || shape.Id == vtkm::Id(8) /* Pixel? */)
-    {
-      is2D = vtkm::Id(1);
-    }
-    else if (shape.Id == vtkm::Id(0) /*Empty*/
-             || shape.Id == vtkm::CellShapeIdToTag<vtkm::CELL_SHAPE_LINE>::Tag().Id ||
-             shape.Id == vtkm::CellShapeIdToTag<vtkm::CELL_SHAPE_POLY_LINE>::Tag().Id ||
-             shape.Id == vtkm::CellShapeIdToTag<vtkm::CELL_SHAPE_VERTEX>::Tag().Id ||
-             shape.Id == vtkm::Id(2) /* Poly Vertex? */)
-    {
-      isOther = vtkm::Id(1);
-    }
-    else if (shape.Id == vtkm::CellShapeIdToTag<vtkm::CELL_SHAPE_TETRA>::Tag().Id ||
-             shape.Id == vtkm::CellShapeIdToTag<vtkm::CELL_SHAPE_HEXAHEDRON>::Tag().Id ||
-             shape.Id == vtkm::CellShapeIdToTag<vtkm::CELL_SHAPE_WEDGE>::Tag().Id ||
-             shape.Id == vtkm::CellShapeIdToTag<vtkm::CELL_SHAPE_PYRAMID>::Tag().Id ||
-             shape.Id == vtkm::Id(11) /* Voxel? */)
-    {
-      is3D = vtkm::Id(1);
-    }
-    else
-    {
-      // Truly is other
-      isOther = vtkm::Id(1);
-    }
-  }
-};
 
 struct ConstructCellWeightList : public vtkm::worklet::WorkletMapField
 {
