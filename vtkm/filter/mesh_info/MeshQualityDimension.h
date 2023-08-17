@@ -30,6 +30,9 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Compute for each cell a metric specifically designed for Sandia's Pronto code.
+///
+/// This only produces values for hexahedra.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityDimension : public vtkm::filter::Filter
 {
 public:

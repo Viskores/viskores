@@ -30,6 +30,16 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Compute the skew of each cell.
+///
+/// The skew is computed as the dot product between unit vectors in the principal directions.
+/// (For 3D objects, the skew is taken as the maximum of all planes.)
+///
+/// This only produces values for quadrilaterals and hexahedra.
+///
+/// Good quality cells will have a skew in the range [0, 0.5]. A unit square or cube will
+/// have a skew of 0. Poor quality cells can have a skew up to 1 although a malformed cell
+/// might have its skew be infinite.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualitySkew : public vtkm::filter::Filter
 {
 public:

@@ -30,6 +30,14 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Computes the minimum angle within each cell in degrees.
+///
+/// This only produces values for triangles and quadrilaterals.
+///
+/// For a good quality triangle, this value should be in the range [30, 60]. Poorer quality
+/// triangles can have a value as low as 0. For a good quality quadrilateral, this value
+/// should be in the range [45, 90]. Poorer quality quadrilaterals  can have a value as low
+/// as 0.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityMinAngle : public vtkm::filter::Filter
 {
 public:

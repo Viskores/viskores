@@ -30,6 +30,13 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief For each cell, compute the normalized root-mean-square of the edge lengths.
+///
+/// This only produces values for tetrahedra.
+///
+/// The root-mean-square edge length is normalized to the volume such that the value is
+/// 1 for an equilateral tetrahedron. The acceptable range for good quality meshes is
+/// considered to be [1, 3]. The normal range of values is [1, FLOAT_MAX].
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityAspectGamma : public vtkm::filter::Filter
 {
 public:

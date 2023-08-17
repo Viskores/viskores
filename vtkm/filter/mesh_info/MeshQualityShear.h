@@ -30,6 +30,13 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Compute the shear of each cell.
+///
+/// The shear of a cell is computed by taking the minimum of the Jacobian at each corner
+/// divided by the length of the corner's adjacent edges.
+///
+/// This only produces values for quadrilaterals and hexahedra. Good quality cells will
+/// have values in the range [0.3, 1]. Poorer quality cells can have values as low as 0.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityShear : public vtkm::filter::Filter
 {
 public:

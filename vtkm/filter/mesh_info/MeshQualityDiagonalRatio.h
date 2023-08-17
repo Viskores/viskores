@@ -30,6 +30,12 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Compute for each cell the ratio of the maximum diagonal to the minimum diagonal.
+///
+/// This only produces values for quadrilaterals and hexahedra.
+///
+/// An acceptable range for a good quality cell is [0.65, 1]. The normal range is [0, 1], but
+/// a degenerate cell with no size will have the value of infinity.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityDiagonalRatio : public vtkm::filter::Filter
 {
 public:

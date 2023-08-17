@@ -55,6 +55,7 @@ namespace
 //Names of the available cell metrics, for use in
 //the output dataset fields
 const std::map<CellMetric, std::string> MetricNames = {
+  { CellMetric::None, "-empty-metric-" },
   { CellMetric::Area, "area" },
   { CellMetric::AspectGamma, "aspectGamma" },
   { CellMetric::AspectRatio, "aspectRatio" },
@@ -80,11 +81,28 @@ const std::map<CellMetric, std::string> MetricNames = {
 };
 } // anonymous namespace
 
+VTKM_CONT MeshQuality::MeshQuality()
+{
+  this->SetUseCoordinateSystemAsField(true);
+  this->SetOutputFieldName(MetricNames.at(this->MyMetric));
+}
+
 VTKM_CONT MeshQuality::MeshQuality(CellMetric metric)
   : MyMetric(metric)
 {
   this->SetUseCoordinateSystemAsField(true);
   this->SetOutputFieldName(MetricNames.at(this->MyMetric));
+}
+
+VTKM_CONT void MeshQuality::SetMetric(CellMetric metric)
+{
+  this->MyMetric = metric;
+  this->SetOutputFieldName(this->GetMetricName());
+}
+
+VTKM_CONT std::string MeshQuality::GetMetricName() const
+{
+  return MetricNames.at(this->MyMetric);
 }
 
 VTKM_CONT vtkm::cont::DataSet MeshQuality::DoExecute(const vtkm::cont::DataSet& input)

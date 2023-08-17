@@ -30,6 +30,9 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Compute for each cell the minimum determinant of the Jacobian matrix, over corners and cell center.
+///
+/// This only produces values for quadrilaterals, tetrahedra, and hexahedra.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityJacobian : public vtkm::filter::Filter
 {
 public:

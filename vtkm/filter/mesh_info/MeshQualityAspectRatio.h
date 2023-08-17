@@ -30,6 +30,13 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Compute for each cell the ratio of its longest edge to its circumradius.
+///
+/// This only produces values for triangles, quadrilaterals, tetrahedra, and hexahedra.
+///
+/// An acceptable range of this mesh for a good quality polygon is [1, 1.3], and the acceptable
+/// range for a good quality polyhedron is [1, 3]. Normal values for any cell type have
+/// the range [1, FLOAT_MAX].
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityAspectRatio : public vtkm::filter::Filter
 {
 public:

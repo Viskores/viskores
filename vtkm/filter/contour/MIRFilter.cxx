@@ -77,8 +77,7 @@ VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(const vtkm::cont::DataSet& in
   const vtkm::cont::CoordinateSystem inputCoords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> avgSizeTot;
-  vtkm::filter::mesh_info::CellMeasures getSize(
-    vtkm::filter::mesh_info::IntegrationType::AllMeasures);
+  vtkm::filter::mesh_info::CellMeasures getSize;
   getSize.SetCellMeasureName("size");
   vtkm::cont::ArrayCopyShallowIfPossible(getSize.Execute(input).GetCellField("size").GetData(),
                                          avgSizeTot);
