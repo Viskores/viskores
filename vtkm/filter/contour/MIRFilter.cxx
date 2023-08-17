@@ -21,18 +21,13 @@
 #include <vtkm/filter/contour/MIRFilter.h>
 #include <vtkm/filter/contour/worklet/MIR.h>
 
-#include <vtkm/filter/mesh_info/MeshQuality.h>
+#include <vtkm/filter/mesh_info/CellMeasures.h>
 
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/ScatterCounting.h>
 
 namespace vtkm
 {
-/*
-    Todos:
-        Enable some sort of cell culling, so if a cell doesn't have any work to do, it doesn't get called in future invocations of MIR
-
- */
 namespace filter
 {
 namespace contour
@@ -79,37 +74,13 @@ VTKM_CONT bool MIRFilter::DoMapField(
 //-----------------------------------------------------------------------------
 VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(const vtkm::cont::DataSet& input)
 {
-  vtkm::worklet::CheckFor2D cellCheck;
-  vtkm::cont::ArrayHandle<vtkm::Id> count2D, count3D, countBad;
-  this->Invoke(cellCheck, input.GetCellSet(), count2D, count3D, countBad);
-  vtkm::Id c2 = vtkm::cont::Algorithm::Reduce(count2D, vtkm::Id(0));
-  vtkm::Id c3 = vtkm::cont::Algorithm::Reduce(count3D, vtkm::Id(0));
-  vtkm::Id cB = vtkm::cont::Algorithm::Reduce(countBad, vtkm::Id(0));
-  if (cB > vtkm::Id(0))
-  {
-    VTKM_LOG_S(
-      vtkm::cont::LogLevel::Fatal,
-      "Bad cell found in MIR filter input! Strictly only 2D -xor- 3D cell sets are permitted!");
-  }
-  if (c2 > vtkm::Id(0) && c3 > vtkm::Id(0))
-  {
-    VTKM_LOG_S(
-      vtkm::cont::LogLevel::Fatal,
-      "Bad cell mix found in MIR filter input! Input is not allowed to have both 2D and 3D cells.");
-  }
-  if (c2 == vtkm::Id(0) && c3 == vtkm::Id(0))
-  {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Fatal,
-               "No cells found for MIR filter! Please don't call me with nothing!");
-  }
-
   const vtkm::cont::CoordinateSystem inputCoords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> avgSizeTot;
-  vtkm::filter::mesh_info::MeshQuality getVol(c3 > 0 ? vtkm::filter::mesh_info::CellMetric::Volume
-                                                     : vtkm::filter::mesh_info::CellMetric::Area);
-  getVol.SetOutputFieldName("size");
-  vtkm::cont::ArrayCopyShallowIfPossible(getVol.Execute(input).GetCellField("size").GetData(),
+  vtkm::filter::mesh_info::CellMeasures getSize(
+    vtkm::filter::mesh_info::IntegrationType::AllMeasures);
+  getSize.SetCellMeasureName("size");
+  vtkm::cont::ArrayCopyShallowIfPossible(getSize.Execute(input).GetCellField("size").GetData(),
                                          avgSizeTot);
   // First, load up all fields...
   vtkm::cont::Field or_pos = input.GetField(this->pos_name);
@@ -275,7 +246,7 @@ VTKM_CONT vtkm::cont::DataSet MIRFilter::DoExecute(const vtkm::cont::DataSet& in
 
     // Hacking workaround to not clone an entire dataset.
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> avgSize;
-    vtkm::cont::ArrayCopyShallowIfPossible(getVol.Execute(saved).GetCellField("size").GetData(),
+    vtkm::cont::ArrayCopyShallowIfPossible(getSize.Execute(saved).GetCellField("size").GetData(),
                                            avgSize);
 
     vtkm::worklet::CalcError_C calcErrC;
