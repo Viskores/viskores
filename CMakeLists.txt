@@ -126,6 +126,15 @@ cmake_dependent_option(VTKm_ENABLE_USERS_GUIDE
   "VTKm_ENABLE_DOCUMENTATION"
   OFF
   )
+# If you are building the User's Guide, you may only need the XML output from Doxygen, which
+# is much faster than generating the HTML. Thus, give the option to turn on/off the HTML output.
+cmake_dependent_option(VTKm_Doxygen_HTML_output
+  "Build HTML output"
+  ON
+  "VTKm_ENABLE_USERS_GUIDE"
+  ON
+  )
+mark_as_advanced(VTKm_Doxygen_HTML_output)
 
 # We may want to make finer controls on whether libraries/modules get built.
 # VTK uses the concept of groups for its modules

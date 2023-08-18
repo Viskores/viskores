@@ -202,7 +202,7 @@ IGNORE_PREFIX          =
 # configuration options related to the HTML output
 #---------------------------------------------------------------------------
 
-GENERATE_HTML          = YES
+GENERATE_HTML          = @VTKm_Doxygen_HTML_output@
 
 HTML_OUTPUT            = html
 
@@ -294,7 +294,7 @@ MAN_LINKS              = NO
 # configuration options related to the XML output
 #---------------------------------------------------------------------------
 
-GENERATE_XML           = YES
+GENERATE_XML           = @VTKm_ENABLE_USERS_GUIDE@
 
 XML_OUTPUT             = xml
 
