@@ -1,35 +1,14 @@
-build:ubuntu2004_gcc9:
-  tags:
-    - build
-    - vtkm
-    - docker
-    - linux-x86_64
-  extends:
-    - .ubuntu2004
-    - .cmake_build_linux
-    - .run_automatically
-  variables:
-    CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5+min_build"
-
-test:ubuntu2004_gcc9:
-  tags:
-    - test
-    - vtkm
-    - docker
-    - linux-x86_64
-  extends:
-    - .ubuntu2004
-    - .cmake_test_linux
-    - .run_automatically
-  variables:
-    #Restrict OpenMP number of threads since multiple test stages
-    #execute on the same hardware concurrently
-    OMP_NUM_THREADS: 4
-  dependencies:
-    - build:ubuntu2004_gcc9
-  needs:
-    - build:ubuntu2004_gcc9
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
 
 build:ubuntu2004_kokkos:
   tags:
@@ -62,7 +41,6 @@ test:ubuntu2004_kokkos:
 
 build:ubuntu2004_hip_kokkos:
   tags:
-    - build
     - vtkm
     - docker
     - linux-x86_64
@@ -93,7 +71,6 @@ build:ubuntu2004_hip_kokkos:
 
 test:ubuntu2004_hip_kokkos:
   tags:
-    - build
     - vtkm
     - docker
     - linux-x86_64
@@ -104,6 +81,7 @@ test:ubuntu2004_hip_kokkos:
     - .run_upstream_branches
   variables:
     CTEST_MAX_PARALLELISM: 1
+    TEST_EXCLUSIONS: "UnitTestWorkletParticleAdvection"
   dependencies:
     - build:ubuntu2004_hip_kokkos
   needs:

@@ -10,15 +10,11 @@
 #include <vtkm/rendering/raytracing/ScalarRenderer.h>
 
 #include <iostream>
-#include <math.h>
-#include <stdio.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -39,10 +35,10 @@ public:
   {
   private:
     vtkm::Vec3f_32 LightPosition;
-    vtkm::Vec3f_32 LightAmbient;
-    vtkm::Vec3f_32 LightDiffuse;
-    vtkm::Vec3f_32 LightSpecular;
-    vtkm::Float32 SpecularExponent;
+    vtkm::Vec3f_32 LightAmbient{ .5f, .5f, .5f };
+    vtkm::Vec3f_32 LightDiffuse{ .7f, .7f, .7f };
+    vtkm::Vec3f_32 LightSpecular{ .7f, .7f, .7f };
+    vtkm::Float32 SpecularExponent = 20.f;
     vtkm::Vec3f_32 CameraPosition;
     vtkm::Vec3f_32 LookAt;
     Precision MissScalar;
@@ -58,31 +54,16 @@ public:
       , LookAt(lookAt)
       , MissScalar(missScalar)
     {
-      //Set up some default lighting parameters for now
-      LightAmbient[0] = .5f;
-      LightAmbient[1] = .5f;
-      LightAmbient[2] = .5f;
-      LightDiffuse[0] = .7f;
-      LightDiffuse[1] = .7f;
-      LightDiffuse[2] = .7f;
-      LightSpecular[0] = .7f;
-      LightSpecular[1] = .7f;
-      LightSpecular[2] = .7f;
-      SpecularExponent = 20.f;
     }
 
     using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldOut);
     using ExecutionSignature = void(_1, _2, _3, _4);
-    //using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
 
-    //template <typename ShadePortalType, typename Precision>
     VTKM_EXEC void operator()(const vtkm::Id& hitIdx,
                               const vtkm::Vec<Precision, 3>& normal,
                               const vtkm::Vec<Precision, 3>& intersection,
-                              Precision& output) const //,
-    //                              const vtkm::Id& idx) const
+                              Precision& output) const
     {
-
       if (hitIdx < 0)
       {
         output = MissScalar;
@@ -145,7 +126,6 @@ public:
 
   }; //class Shade
 
-  //template <typename Precision>
   VTKM_CONT void run(Ray<Precision>& rays,
                      const vtkm::rendering::raytracing::Camera& camera,
                      const Precision missScalar,
@@ -173,7 +153,7 @@ private:
 
 public:
   VTKM_CONT
-  FilterDepth(const Precision missScalar)
+  explicit FilterDepth(const Precision missScalar)
     : MissScalar(missScalar)
   {
   }
@@ -201,7 +181,7 @@ private:
 
 public:
   VTKM_CONT
-  WriteBuffer(const Precision missScalar)
+  explicit WriteBuffer(const Precision missScalar)
     : MissScalar(missScalar)
   {
   }
@@ -227,9 +207,6 @@ template <typename Precision>
 class WriteDepthBuffer : public vtkm::worklet::WorkletMapField
 {
 public:
-  VTKM_CONT
-  WriteDepthBuffer() {}
-
   typedef void ControlSignature(FieldIn, FieldOut);
 
   typedef void ExecutionSignature(_1, _2);
@@ -237,22 +214,14 @@ public:
 }; //class WriteDepthBuffer
 } // namespace detail
 
-ScalarRenderer::ScalarRenderer()
-  : IntersectorValid(false)
+void ScalarRenderer::SetShapeIntersector(std::unique_ptr<ShapeIntersector>&& intersector)
 {
-}
-
-ScalarRenderer::~ScalarRenderer() {}
-
-void ScalarRenderer::SetShapeIntersector(std::shared_ptr<ShapeIntersector> intersector)
-{
-  Intersector = intersector;
-  IntersectorValid = true;
+  Intersector = std::move(intersector);
 }
 
 void ScalarRenderer::AddField(const vtkm::cont::Field& scalarField)
 {
-  vtkm::cont::ArrayHandle<vtkm::Range> ranges = scalarField.GetRange();
+  const auto& ranges = scalarField.GetRange();
   if (ranges.GetNumberOfValues() != 1)
   {
     throw vtkm::cont::ErrorBadValue("ScalarRenderer(AddField): field must be a scalar");
@@ -295,7 +264,7 @@ void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays,
   {
     throw vtkm::cont::ErrorBadValue("ScalarRenderer: no fields added");
   }
-  if (!IntersectorValid)
+  if (!Intersector)
   {
     throw vtkm::cont::ErrorBadValue("ScalarRenderer: intersector never set");
   }
@@ -316,8 +285,6 @@ void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays,
     AddBuffer(rays, missScalar, Fields[f].GetName());
   }
 
-
-
   const vtkm::Int32 numChannels = 1;
   ChannelBuffer<Precision> buffer(numChannels, rays.NumRays);
   detail::SurfaceShade<Precision> surfaceShade;
@@ -325,24 +292,20 @@ void ScalarRenderer::RenderOnDevice(Ray<Precision>& rays,
   buffer.SetName("shading");
   rays.Buffers.push_back(buffer);
 
-
-  vtkm::worklet::DispatcherMapField<detail::FilterDepth<Precision>>(
-    detail::FilterDepth<Precision>(missScalar))
-    .Invoke(rays.HitIdx, rays.Distance);
+  this->Invoke(detail::FilterDepth<Precision>{ missScalar }, rays.HitIdx, rays.Distance);
 
   time = renderTimer.GetElapsedTime();
   logger->CloseLogEntry(time);
 } // RenderOnDevice
 
 template <typename Precision>
-void ScalarRenderer::AddBuffer(Ray<Precision>& rays, Precision missScalar, const std::string name)
+void ScalarRenderer::AddBuffer(Ray<Precision>& rays, Precision missScalar, const std::string& name)
 {
   const vtkm::Int32 numChannels = 1;
   ChannelBuffer<Precision> buffer(numChannels, rays.NumRays);
 
-  vtkm::worklet::DispatcherMapField<detail::WriteBuffer<Precision>>(
-    detail::WriteBuffer<Precision>(missScalar))
-    .Invoke(rays.HitIdx, rays.Scalar, buffer.Buffer);
+  this->Invoke(
+    detail::WriteBuffer<Precision>{ missScalar }, rays.HitIdx, rays.Scalar, buffer.Buffer);
 
   buffer.SetName(name);
   rays.Buffers.push_back(buffer);
@@ -354,9 +317,7 @@ void ScalarRenderer::AddDepthBuffer(Ray<Precision>& rays)
   const vtkm::Int32 numChannels = 1;
   ChannelBuffer<Precision> buffer(numChannels, rays.NumRays);
 
-  vtkm::worklet::DispatcherMapField<detail::WriteDepthBuffer<Precision>>(
-    detail::WriteDepthBuffer<Precision>())
-    .Invoke(rays.Depth, buffer.Buffer);
+  this->Invoke(detail::WriteDepthBuffer<Precision>{}, rays.Depth, buffer.Buffer);
 
   buffer.SetName("depth");
   rays.Buffers.push_back(buffer);

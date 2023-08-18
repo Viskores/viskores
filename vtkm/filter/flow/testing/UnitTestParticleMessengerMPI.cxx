@@ -27,11 +27,12 @@ class TestMessenger : public vtkm::filter::flow::internal::ParticleMessenger<vtk
 {
 public:
   TestMessenger(vtkmdiy::mpi::communicator& comm,
+                bool useAsyncComm,
                 const vtkm::filter::flow::internal::BoundsMap& bm,
                 int msgSz = 1,
                 int numParticles = 1,
                 int numBlockIds = 1)
-    : ParticleMessenger(comm, bm, msgSz, numParticles, numBlockIds)
+    : ParticleMessenger(comm, useAsyncComm, bm, msgSz, numParticles, numBlockIds)
   {
   }
 
@@ -127,7 +128,8 @@ void TestParticleMessenger()
   int maxMsgSz = 100;
   int maxNumParticles = 128;
   int maxNumBlockIds = 5 * comm.size();
-  TestMessenger messenger(comm, boundsMap, maxMsgSz / 2, maxNumParticles / 2, maxNumBlockIds / 2);
+  TestMessenger messenger(
+    comm, true, boundsMap, maxMsgSz / 2, maxNumParticles / 2, maxNumBlockIds / 2);
 
   //create some data.
   std::vector<std::vector<vtkm::Particle>> particles(comm.size());
@@ -254,7 +256,7 @@ void TestBufferSizes()
     for (const auto& numP : numPs)
       for (const auto& nBids : numBids)
       {
-        TestMessenger messenger(comm, boundsMap);
+        TestMessenger messenger(comm, true, boundsMap);
 
         std::size_t pSize, mSize;
         messenger.GetBufferSizes(numP, nBids, mSz, pSize, mSize);

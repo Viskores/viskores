@@ -18,6 +18,7 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleReverse.h>
+#include <vtkm/cont/ArrayHandleRuntimeVec.h>
 #include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/ErrorBadType.h>
@@ -45,12 +46,16 @@ struct AllVecImpl<N, vtkm::List<Scalars...>>
 template <vtkm::IdComponent N>
 using AllVec = typename AllVecImpl<N, vtkm::TypeListBaseC>::type;
 
+template <typename T>
+using IsBasicStorage = std::is_same<vtkm::cont::StorageTagBasic, T>;
+template <typename List>
+using RemoveBasicStorage = vtkm::ListRemoveIf<List, IsBasicStorage>;
+
 using UnknownSerializationTypes =
   vtkm::ListAppend<vtkm::TypeListBaseC, AllVec<2>, AllVec<3>, AllVec<4>>;
-using UnknownSerializationStorage =
-  vtkm::ListAppend<VTKM_DEFAULT_STORAGE_LIST,
-                   vtkm::List<vtkm::cont::StorageTagBasic,
-                              vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
+using UnknownSerializationSpecializedStorage =
+  vtkm::ListAppend<RemoveBasicStorage<VTKM_DEFAULT_STORAGE_LIST>,
+                   vtkm::List<vtkm::cont::StorageTagCartesianProduct<vtkm::cont::StorageTagBasic,
                                                                      vtkm::cont::StorageTagBasic,
                                                                      vtkm::cont::StorageTagBasic>,
                               vtkm::cont::StorageTagConstant,
@@ -172,6 +177,16 @@ VTKM_CONT bool UnknownArrayHandle::IsValid() const
 
 VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstance() const
 {
+  if (this->IsStorageType<vtkm::cont::StorageTagRuntimeVec>())
+  {
+    // Special case for `ArrayHandleRuntimeVec`, which (1) can be used in place of
+    // a basic array in `UnknownArrayHandle` and (2) needs a special construction to
+    // capture the correct number of components. Also note that we are allowing this
+    // special case to be implemented in `NewInstanceBasic` because it has a better
+    // fallback (throw an exception rather than create a potentially incompatible
+    // with the wrong number of components).
+    return this->NewInstanceBasic();
+  }
   UnknownArrayHandle newArray;
   if (this->Container)
   {
@@ -183,6 +198,25 @@ VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstance() const
 VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceBasic() const
 {
   UnknownArrayHandle newArray;
+  if (this->IsStorageType<vtkm::cont::StorageTagRuntimeVec>())
+  {
+    // Special case for `ArrayHandleRuntimeVec`, which (1) can be used in place of
+    // a basic array in `UnknownArrayHandle` and (2) needs a special construction to
+    // capture the correct number of components.
+    auto runtimeVecArrayCreator = [&](auto exampleComponent) {
+      using ComponentType = decltype(exampleComponent);
+      if (this->IsBaseComponentType<ComponentType>())
+      {
+        newArray =
+          vtkm::cont::make_ArrayHandleRuntimeVec<ComponentType>(this->GetNumberOfComponentsFlat());
+      }
+    };
+    vtkm::ListForEach(runtimeVecArrayCreator, vtkm::TypeListBaseC{});
+    if (newArray.IsValid())
+    {
+      return newArray;
+    }
+  }
   if (this->Container)
   {
     newArray.Container = this->Container->NewInstanceBasic();
@@ -192,6 +226,14 @@ VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceBasic() const
 
 VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceFloatBasic() const
 {
+  if (this->IsStorageType<vtkm::cont::StorageTagRuntimeVec>())
+  {
+    // Special case for `ArrayHandleRuntimeVec`, which (1) can be used in place of
+    // a basic array in `UnknownArrayHandle` and (2) needs a special construction to
+    // capture the correct number of components.
+    return vtkm::cont::make_ArrayHandleRuntimeVec<vtkm::FloatDefault>(
+      this->GetNumberOfComponentsFlat());
+  }
   UnknownArrayHandle newArray;
   if (this->Container)
   {
@@ -265,7 +307,7 @@ vtkm::IdComponent UnknownArrayHandle::GetNumberOfComponents() const
 {
   if (this->Container)
   {
-    return this->Container->NumberOfComponents();
+    return this->Container->NumberOfComponents(this->Container->ArrayHandlePointer);
   }
   else
   {
@@ -277,7 +319,7 @@ VTKM_CONT vtkm::IdComponent UnknownArrayHandle::GetNumberOfComponentsFlat() cons
 {
   if (this->Container)
   {
-    return this->Container->NumberOfComponentsFlat();
+    return this->Container->NumberOfComponentsFlat(this->Container->ArrayHandlePointer);
   }
   else
   {
@@ -432,30 +474,82 @@ std::string SerializableTypeString<vtkm::cont::UnknownArrayHandle>::Get()
 }
 } // namespace vtkm::cont
 
-namespace mangled_diy_namespace
+namespace
 {
 
-void Serialization<vtkm::cont::UnknownArrayHandle>::save(BinaryBuffer& bb,
-                                                         const vtkm::cont::UnknownArrayHandle& obj)
+enum struct SerializedArrayType : vtkm::UInt8
+{
+  BasicArray = 0,
+  SpecializedStorage
+};
+
+struct SaveBasicArray
+{
+  template <typename ComponentType>
+  VTKM_CONT void operator()(ComponentType,
+                            mangled_diy_namespace::BinaryBuffer& bb,
+                            const vtkm::cont::UnknownArrayHandle& obj,
+                            bool& saved)
+  {
+    // Basic arrays and arrays with compatible layouts can be loaed/saved as an
+    // ArrayHandleRuntimeVec. Thus, we can load/save them all with one routine.
+    using ArrayType = vtkm::cont::ArrayHandleRuntimeVec<ComponentType>;
+    if (!saved && obj.CanConvert<ArrayType>())
+    {
+      ArrayType array = obj.AsArrayHandle<ArrayType>();
+      vtkmdiy::save(bb, SerializedArrayType::BasicArray);
+      vtkmdiy::save(bb, vtkm::cont::TypeToString<ComponentType>());
+      vtkmdiy::save(bb, array);
+      saved = true;
+    }
+  }
+};
+
+struct LoadBasicArray
+{
+  template <typename ComponentType>
+  VTKM_CONT void operator()(ComponentType,
+                            mangled_diy_namespace::BinaryBuffer& bb,
+                            vtkm::cont::UnknownArrayHandle& obj,
+                            const std::string& componentTypeString,
+                            bool& loaded)
+  {
+    if (!loaded && (componentTypeString == vtkm::cont::TypeToString<ComponentType>()))
+    {
+      vtkm::cont::ArrayHandleRuntimeVec<ComponentType> array;
+      vtkmdiy::load(bb, array);
+      obj = array;
+      loaded = true;
+    }
+  }
+};
+
+VTKM_CONT void SaveSpecializedArray(mangled_diy_namespace::BinaryBuffer& bb,
+                                    const vtkm::cont::UnknownArrayHandle& obj)
 {
   vtkm::IdComponent numComponents = obj.GetNumberOfComponents();
   switch (numComponents)
   {
     case 1:
+      vtkmdiy::save(bb, SerializedArrayType::SpecializedStorage);
       vtkmdiy::save(bb, numComponents);
-      vtkmdiy::save(bb, obj.ResetTypes<vtkm::TypeListBaseC, UnknownSerializationStorage>());
+      vtkmdiy::save(bb,
+                    obj.ResetTypes<vtkm::TypeListBaseC, UnknownSerializationSpecializedStorage>());
       break;
     case 2:
+      vtkmdiy::save(bb, SerializedArrayType::SpecializedStorage);
       vtkmdiy::save(bb, numComponents);
-      vtkmdiy::save(bb, obj.ResetTypes<AllVec<2>, UnknownSerializationStorage>());
+      vtkmdiy::save(bb, obj.ResetTypes<AllVec<2>, UnknownSerializationSpecializedStorage>());
       break;
     case 3:
+      vtkmdiy::save(bb, SerializedArrayType::SpecializedStorage);
       vtkmdiy::save(bb, numComponents);
-      vtkmdiy::save(bb, obj.ResetTypes<AllVec<3>, UnknownSerializationStorage>());
+      vtkmdiy::save(bb, obj.ResetTypes<AllVec<3>, UnknownSerializationSpecializedStorage>());
       break;
     case 4:
+      vtkmdiy::save(bb, SerializedArrayType::SpecializedStorage);
       vtkmdiy::save(bb, numComponents);
-      vtkmdiy::save(bb, obj.ResetTypes<AllVec<4>, UnknownSerializationStorage>());
+      vtkmdiy::save(bb, obj.ResetTypes<AllVec<4>, UnknownSerializationSpecializedStorage>());
       break;
     default:
       throw vtkm::cont::ErrorBadType(
@@ -465,16 +559,17 @@ void Serialization<vtkm::cont::UnknownArrayHandle>::save(BinaryBuffer& bb,
   }
 }
 
-void Serialization<vtkm::cont::UnknownArrayHandle>::load(BinaryBuffer& bb,
-                                                         vtkm::cont::UnknownArrayHandle& obj)
+VTKM_CONT void LoadSpecializedArray(mangled_diy_namespace::BinaryBuffer& bb,
+                                    vtkm::cont::UnknownArrayHandle& obj)
 {
   vtkm::IdComponent numComponents;
   vtkmdiy::load(bb, numComponents);
 
-  vtkm::cont::UncertainArrayHandle<vtkm::TypeListBaseC, UnknownSerializationStorage> array1;
-  vtkm::cont::UncertainArrayHandle<AllVec<2>, UnknownSerializationStorage> array2;
-  vtkm::cont::UncertainArrayHandle<AllVec<3>, UnknownSerializationStorage> array3;
-  vtkm::cont::UncertainArrayHandle<AllVec<4>, UnknownSerializationStorage> array4;
+  vtkm::cont::UncertainArrayHandle<vtkm::TypeListBaseC, UnknownSerializationSpecializedStorage>
+    array1;
+  vtkm::cont::UncertainArrayHandle<AllVec<2>, UnknownSerializationSpecializedStorage> array2;
+  vtkm::cont::UncertainArrayHandle<AllVec<3>, UnknownSerializationSpecializedStorage> array3;
+  vtkm::cont::UncertainArrayHandle<AllVec<4>, UnknownSerializationSpecializedStorage> array4;
 
   switch (numComponents)
   {
@@ -496,6 +591,55 @@ void Serialization<vtkm::cont::UnknownArrayHandle>::load(BinaryBuffer& bb,
       break;
     default:
       throw vtkm::cont::ErrorInternal("Unexpected component size when loading UnknownArrayHandle.");
+  }
+}
+
+} // anonymous namespace
+
+namespace mangled_diy_namespace
+{
+
+void Serialization<vtkm::cont::UnknownArrayHandle>::save(BinaryBuffer& bb,
+                                                         const vtkm::cont::UnknownArrayHandle& obj)
+{
+  bool saved = false;
+
+  // First, try serializing basic arrays (which we can do for any Vec size).
+  vtkm::ListForEach(SaveBasicArray{}, vtkm::TypeListBaseC{}, bb, obj, saved);
+
+  // If that did not work, try one of the specialized arrays.
+  if (!saved)
+  {
+    SaveSpecializedArray(bb, obj);
+  }
+}
+
+void Serialization<vtkm::cont::UnknownArrayHandle>::load(BinaryBuffer& bb,
+                                                         vtkm::cont::UnknownArrayHandle& obj)
+{
+  SerializedArrayType arrayType;
+  vtkmdiy::load(bb, arrayType);
+
+  switch (arrayType)
+  {
+    case SerializedArrayType::BasicArray:
+    {
+      std::string componentTypeString;
+      vtkmdiy::load(bb, componentTypeString);
+      bool loaded = false;
+      vtkm::ListForEach(
+        LoadBasicArray{}, vtkm::TypeListBaseC{}, bb, obj, componentTypeString, loaded);
+      if (!loaded)
+      {
+        throw vtkm::cont::ErrorInternal("Failed to load basic array. Unexpected buffer values.");
+      }
+      break;
+    }
+    case SerializedArrayType::SpecializedStorage:
+      LoadSpecializedArray(bb, obj);
+      break;
+    default:
+      throw vtkm::cont::ErrorInternal("Got inappropriate enumeration value for loading array.");
   }
 }
 

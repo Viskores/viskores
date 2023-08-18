@@ -78,6 +78,14 @@ public:
   VTKM_CONT
   void SetIncludeBoundary(bool value) { this->IncludeBoundary = value; }
 
+  /// Set if VOI is specified in global (rather than in local) point indices
+  /// (NOTE: Depracted this method since this does not seem to work as
+  /// expected and there are no tests for it. Furthermore, neither VTK-m nor
+  /// VTK-h/Ascent seem to use this method. If your are using this method
+  /// somewhere else and think it should remain, please open a merge request to
+  /// "de-deprecate" it and add a test and documentation of the expected
+  /// behavior.)
+  VTKM_DEPRECATED(2.1)
   VTKM_CONT
   void SetIncludeOffset(bool value) { this->IncludeOffset = value; }
 

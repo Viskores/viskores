@@ -105,7 +105,10 @@ void TestDataSet_Explicit()
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(subset, dataSet.GetField("pointvar"), result);
+  dispatcher.Invoke(
+    subset,
+    dataSet.GetField("pointvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>(),
+    result);
 
   //iterate same cell 4 times
   vtkm::Float32 expected[4] = { 30.1667f, 30.1667f, 30.1667f, 30.1667f };
@@ -139,7 +142,10 @@ void TestDataSet_Structured2D()
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(subset, dataSet.GetField("pointvar"), result);
+  dispatcher.Invoke(
+    subset,
+    dataSet.GetField("pointvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>(),
+    result);
 
   vtkm::Float32 expected[4] = { 40.1f, 40.1f, 40.1f, 40.1f };
   auto resultPortal = result.ReadPortal();
@@ -172,7 +178,10 @@ void TestDataSet_Structured3D()
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(subset, dataSet.GetField("pointvar"), result);
+  dispatcher.Invoke(
+    subset,
+    dataSet.GetField("pointvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>(),
+    result);
 
   vtkm::Float32 expected[4] = { 70.2125f, 70.2125f, 70.2125f, 70.2125f };
   auto resultPortal = result.ReadPortal();

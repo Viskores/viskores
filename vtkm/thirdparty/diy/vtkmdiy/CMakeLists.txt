@@ -33,6 +33,13 @@ macro (diy_dependent_option variable)
   endif ()
 endmacro ()
 
+set                         (compiler_supports_sanitizers OFF)
+if                          (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR
+                             CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR
+                             CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set                     (compiler_supports_sanitizers ON)
+endif                       ()
+
 diy_option                  (threads             "Build DIY with threading"                                  ON)
 diy_option                  (log                 "Build DIY with logging"                                    OFF)
 diy_option                  (profile             "Build DIY with profiling"                                  OFF)
@@ -44,6 +51,8 @@ diy_dependent_option        (BUILD_SHARED_LIBS   "Create shared libraries if on"
 diy_dependent_option        (build_diy_nompi_lib "Also build the nompi version of diy::mpi"                  OFF "mpi;build_diy_mpi_lib" OFF)
 diy_option                  (build_examples      "Build DIY examples"                                        ON)
 diy_option                  (build_tests         "Build DIY tests"                                           ON)
+diy_option                  (python              "Build Python bindings"                                     OFF)
+cmake_dependent_option      (enable_sanitizers   "Build DIY with sanitizer support"                          OFF "compiler_supports_sanitizers" OFF)
 
 # Default to Release
 if                          (NOT CMAKE_BUILD_TYPE)
@@ -64,9 +73,8 @@ endif                       ()
 
 # Logging
 if                          (log)
-    list (APPEND diy_definitions "-DVTKMDIY_USE_SPDLOG")
-    find_path               (SPDLOG_INCLUDE_DIR     spdlog/spdlog.h)
-    list (APPEND diy_include_thirdparty_directories $<BUILD_INTERFACE:${SPDLOG_INCLUDE_DIR}>)
+    list (APPEND diy_definitions "-DVTMDIY_USE_SPDLOG")
+    find_package            (spdlog REQUIRED)
 endif()
 
 # Profiling
@@ -113,9 +121,19 @@ endif()
 if (NOT DEFINED diy_export_name)
     set(diy_export_name "diy_targets")
 endif()
+if (NOT DEFINED diy_development_component)
+    set(diy_development_component "development")
+endif()
+if (NOT DEFINED diy_runtime_component)
+    set(diy_runtime_component "runtime")
+endif()
 
-set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+if  (NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+    set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+endif()
+if  (NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+endif()
 
 # for diy_developer_flags
 include(DIYCompilerFlags)
@@ -152,6 +170,9 @@ function(add_diy_mpi_library use_mpi)
     target_include_directories(${lib_name} SYSTEM PRIVATE ${diy_include_directories}) # for mpitypes.hpp
     target_include_directories(${lib_name} SYSTEM PRIVATE ${diy_include_thirdparty_directories})
     target_link_libraries(${lib_name} PRIVATE diy_developer_flags)
+    if (log)
+        target_link_libraries(${lib_name} PUBLIC spdlog::spdlog_header_only)
+    endif ()
     if (use_mpi AND TARGET MPI::MPI_CXX)
         target_link_libraries(${lib_name} PRIVATE MPI::MPI_CXX)
     endif()
@@ -195,6 +216,9 @@ target_include_directories(${diy_prefix} SYSTEM INTERFACE ${diy_include_thirdpar
 if (diy_include_directories)
     target_include_directories(${diy_prefix} SYSTEM INTERFACE ${diy_include_directories})
 endif()
+if (log)
+    target_link_libraries(${diy_prefix} INTERFACE spdlog::spdlog_header_only)
+endif ()
 target_link_libraries(${diy_prefix} INTERFACE ${diy_libraries})
 if (NOT build_diy_mpi_lib)
     if (mpi)
@@ -224,6 +248,16 @@ elseif (${diy_prefix}mpi_nompi IN_LIST diy_targets)
 endif()
 list(APPEND libraries diy_developer_flags)
 
+# Sanitizers
+if                          (enable_sanitizers)
+    set(sanitizer           "address" CACHE STRING "The sanitizer to use")
+
+    string                  (APPEND CMAKE_CXX_FLAGS " -fsanitize=${sanitizer}")
+    string                  (APPEND CMAKE_C_FLAGS " -fsanitize=${sanitizer}")
+    string                  (APPEND CMAKE_EXE_LINKER_FLAGS " -fsanitize=${sanitizer}")
+    string                  (APPEND CMAKE_SHARED_LINKER_FLAGS " -fsanitize=${sanitizer}")
+endif                       ()
+
 # enable testing and CDash dashboard submission
 enable_testing              ()
 include                     (CTest)
@@ -245,20 +279,28 @@ configure_package_config_file(
 
 # install targets
 if (NOT DEFINED diy_install_only_libraries) # defined by parent project if building for binary distribution
-    install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/${diy_prefix} DESTINATION ${diy_install_include_dir})
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/${diy_prefix}
+        DESTINATION ${diy_install_include_dir}
+        COMPONENT ${diy_development_component})
 
     if (build_diy_mpi_lib)
-        install(FILES ${PROJECT_BINARY_DIR}/include/${diy_prefix}/mpi/mpitypes.hpp DESTINATION ${diy_install_include_dir}/${diy_prefix}/mpi)
+        install(FILES ${PROJECT_BINARY_DIR}/include/${diy_prefix}/mpi/mpitypes.hpp
+            DESTINATION ${diy_install_include_dir}/${diy_prefix}/mpi
+            COMPONENT ${diy_development_component})
     endif()
 endif()
 
 install(TARGETS ${diy_targets} EXPORT ${diy_export_name}
-    ARCHIVE DESTINATION ${diy_install_lib_dir}
-    LIBRARY DESTINATION ${diy_install_lib_dir}
-    RUNTIME DESTINATION ${diy_install_bin_dir})
+    ARCHIVE DESTINATION ${diy_install_lib_dir} COMPONENT ${diy_development_component}
+    LIBRARY DESTINATION ${diy_install_lib_dir} COMPONENT ${diy_runtime_component}
+    RUNTIME DESTINATION ${diy_install_bin_dir} COMPONENT ${diy_runtime_component})
 
 if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR) # Only generate these files when diy is the main project
   export(EXPORT ${diy_export_name} NAMESPACE DIY:: FILE "${PROJECT_BINARY_DIR}/diy-targets.cmake")
-  install(EXPORT ${diy_export_name} NAMESPACE DIY:: DESTINATION "." FILE diy-targets.cmake)
-  install(FILES "${PROJECT_BINARY_DIR}/diy-config.cmake" DESTINATION ".")
+  install(EXPORT ${diy_export_name} NAMESPACE DIY:: DESTINATION "." FILE diy-targets.cmake COMPONENT ${diy_development_component})
+  install(FILES "${PROJECT_BINARY_DIR}/diy-config.cmake" DESTINATION "." COMPONENT ${diy_development_component})
 endif()
+
+if      (python)
+    add_subdirectory(bindings/python)
+endif   (python)

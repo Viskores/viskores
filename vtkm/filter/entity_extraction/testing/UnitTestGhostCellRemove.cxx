@@ -276,12 +276,12 @@ void TestGhostCellRemove()
           for (auto& rt : removeType)
           {
             vtkm::filter::entity_extraction::GhostCellRemove ghostCellRemoval;
-            ghostCellRemoval.RemoveGhostField();
+            ghostCellRemoval.SetRemoveGhostField(true);
 
             if (rt == "all")
-              ghostCellRemoval.RemoveAllGhost();
+              ghostCellRemoval.SetTypesToRemoveToAll();
             else if (rt == "byType")
-              ghostCellRemoval.RemoveByType(vtkm::CellClassification::Ghost);
+              ghostCellRemoval.SetTypesToRemove(vtkm::CellClassification::Ghost);
 
             auto output = ghostCellRemoval.Execute(ds);
             vtkm::Id numCells = output.GetNumberOfCells();
@@ -323,7 +323,7 @@ void TestGhostCellRemove()
               ds = MakeRectilinear(nx, ny, nz, layer, nameType, true);
 
             vtkm::filter::entity_extraction::GhostCellRemove ghostCellRemoval;
-            ghostCellRemoval.RemoveGhostField();
+            ghostCellRemoval.SetRemoveGhostField(true);
             auto output = ghostCellRemoval.Execute(ds);
             VTKM_TEST_ASSERT(output.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>(),
                              "Wrong cell type for explicit conversion");

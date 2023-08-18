@@ -52,7 +52,8 @@ struct UnknownCopyOnDevice
     // by pulling out one of the component arrays and querying that.
     if (!this->Called &&
         ((device == vtkm::cont::DeviceAdapterTagAny{}) ||
-         (in.GetComponentArray(0).IsOnDevice(device))))
+         (in.GetComponentArray(0).IsOnDevice(device) &&
+          vtkm::cont::GetRuntimeDeviceTracker().CanRunOn(device))))
     {
       vtkm::cont::Invoker invoke(device);
       invoke(CopyWorklet{}, in, out);

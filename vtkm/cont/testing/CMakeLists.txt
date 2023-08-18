@@ -85,6 +85,7 @@ set(unit_tests_device
   UnitTestArrayHandleRandomStandardNormal.cxx
   UnitTestArrayHandleRandomUniformReal.cxx
   UnitTestArrayHandleRecombineVec.cxx
+  UnitTestArrayHandleRuntimeVec.cxx
   UnitTestArrayHandleSOA.cxx
   UnitTestArrayHandleSwizzle.cxx
   UnitTestArrayHandleTransform.cxx
@@ -123,7 +124,7 @@ if(TARGET vtkm_filter_field_conversion)
 endif()
 
 if(TARGET vtkm_filter_contour)
-  list(APPEND unit_tests_device
+  list(APPEND unit_tests
     UnitTestAbort.cxx
   )
 endif()

@@ -23,7 +23,7 @@
 
 #include <vtkmstd/integer_sequence.h>
 
-
+#include <array>
 #include <numeric>
 #include <type_traits>
 #include <utility>
@@ -565,7 +565,6 @@ struct DecoratorHandleTraits
   using StorageTraits = decor::DecoratorStorageTraits<DecoratorImplT, ArrayTs...>;
   using ValueType = typename StorageTraits::ValueType;
   using StorageTag = StorageTagDecorator<DecoratorImplT, ArrayTs...>;
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
   using Superclass = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
 };
 
@@ -651,7 +650,6 @@ class ArrayHandleDecorator
 private:
   using Traits = internal::DecoratorHandleTraits<typename std::decay<DecoratorImplT>::type,
                                                  typename std::decay<ArrayTs>::type...>;
-  using StorageType = typename Traits::StorageType;
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleDecorator,

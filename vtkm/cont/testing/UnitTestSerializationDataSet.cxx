@@ -22,16 +22,26 @@ using CellSetTypes = vtkm::List<vtkm::cont::CellSetExplicit<>,
                                 vtkm::cont::CellSetStructured<2>,
                                 vtkm::cont::CellSetStructured<3>>;
 
-using DataSetWrapper = vtkm::cont::SerializableDataSet<FieldTypeList, CellSetTypes>;
+using DataSetWrapper = vtkm::cont::DataSetWithCellSetTypes<CellSetTypes>;
 
-VTKM_CONT void TestEqualDataSet(const DataSetWrapper& ds1, const DataSetWrapper& ds2)
+VTKM_CONT void TestEqualDataSetWrapper(const DataSetWrapper& ds1, const DataSetWrapper& ds2)
 {
   VTKM_TEST_ASSERT(test_equal_DataSets(ds1.DataSet, ds2.DataSet, CellSetTypes{}));
 }
 
+VTKM_CONT void TestEqualDataSet(const vtkm::cont::DataSet& ds1, const vtkm::cont::DataSet& ds2)
+{
+  VTKM_TEST_ASSERT(test_equal_DataSets(ds1, ds2, CellSetTypes{}));
+}
+
 void RunTest(const vtkm::cont::DataSet& ds)
 {
-  TestSerialization(DataSetWrapper(ds), TestEqualDataSet);
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
+  TestSerialization(vtkm::cont::SerializableDataSet<FieldTypeList, CellSetTypes>(ds),
+                    TestEqualDataSetWrapper);
+  VTKM_DEPRECATED_SUPPRESS_END
+  TestSerialization(DataSetWrapper(ds), TestEqualDataSetWrapper);
+  TestSerialization(ds, TestEqualDataSet);
 }
 
 void TestDataSetSerialization()

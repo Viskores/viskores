@@ -12,6 +12,7 @@ TEST_DEPENDS
   vtkm_filter_field_conversion
   vtkm_filter_geometry_refinement
   vtkm_filter_vector_analysis
+  vtkm_io
   vtkm_source
 TEST_OPTIONAL_DEPENDS
   vtkm_rendering_testing

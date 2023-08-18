@@ -9,7 +9,7 @@
 ##============================================================================
 
 set(headers
-  ParticleAdvection.h
+  Analysis.h
   CellInterpolationHelper.h
   EulerIntegrator.h
   Field.h
@@ -18,11 +18,14 @@ set(headers
   IntegratorStatus.h
   LagrangianStructures.h
   Particles.h
+  ParticleAdvection.h
   ParticleAdvectionWorklets.h
   RK4Integrator.h
   TemporalGridEvaluators.h
   Stepper.h
   StreamSurface.h
+  TemporalGridEvaluators.h
+  Termination.h
   )
 
 #-----------------------------------------------------------------------------

@@ -35,6 +35,7 @@ template <typename FieldType>
 class ExecutionGridEvaluator
 {
   using GhostCellArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8>;
+  using ExecFieldType = typename FieldType::ExecutionType;
 
 public:
   VTKM_CONT
@@ -86,9 +87,9 @@ public:
   }
 
   template <typename Point>
-  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& point,
-                                         const vtkm::FloatDefault& time,
-                                         vtkm::VecVariable<Point, 2>& out) const
+  VTKM_EXEC GridEvaluatorStatus HelpEvaluate(const Point& point,
+                                             const vtkm::FloatDefault& time,
+                                             vtkm::VecVariable<Point, 2>& out) const
   {
     vtkm::Id cellId = -1;
     Point parametric;
@@ -134,8 +135,38 @@ public:
 
       status.SetOk();
     }
-
     return status;
+  }
+
+  template <typename Point>
+  VTKM_EXEC GridEvaluatorStatus DeligateEvaluateToField(const Point& point,
+                                                        const vtkm::FloatDefault& time,
+                                                        vtkm::VecVariable<Point, 2>& out) const
+  {
+    GridEvaluatorStatus status;
+    status.SetOk();
+    // TODO: Allow for getting status from deligated work from Field
+    if (!this->Field.GetValue(point, time, out, this->Locator, this->InterpolationHelper))
+    {
+      status.SetFail();
+      status.SetSpatialBounds();
+    }
+    return status;
+  }
+
+  template <typename Point>
+  VTKM_EXEC GridEvaluatorStatus Evaluate(const Point& point,
+                                         const vtkm::FloatDefault& time,
+                                         vtkm::VecVariable<Point, 2>& out) const
+  {
+    if (!ExecFieldType::DelegateToField::value)
+    {
+      return this->HelpEvaluate(point, time, out);
+    }
+    else
+    {
+      return this->DeligateEvaluateToField(point, time, out);
+    }
   }
 
 private:
@@ -150,7 +181,7 @@ private:
   using GhostCellPortal = typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType;
 
   vtkm::Bounds Bounds;
-  typename FieldType::ExecutionType Field;
+  ExecFieldType Field;
   GhostCellPortal GhostCells;
   bool HaveGhostCells;
   vtkm::exec::CellInterpolationHelper InterpolationHelper;

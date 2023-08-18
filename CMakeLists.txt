@@ -181,6 +181,16 @@ vtkm_option(VTKm_NO_INSTALL_README_LICENSE "disable the installation of README a
 # Allow VTK to turn off these symlinks for its wheel distribution.
 vtkm_option(VTKm_SKIP_LIBRARY_VERSIONS "Skip versioning VTK-m libraries" OFF)
 
+# During development, running unit tests with the default values can be too lengthy.
+# Allow for the developer to skip the majority of the default values and control them
+# through ctest's command-line. Doesn't affect CI unless enabled.
+vtkm_option(VTKm_OVERRIDE_CTEST_TIMEOUT "Disable default ctest timeout" OFF)
+
+# VTKm_ENABLE_GPU_MPI makes VTK-m to use DIY routines that enables GPU aware
+# MPI. By default, this option is disabled. Also, this option is hidden unless
+# VTKm_ENABLE_MPI=ON.
+cmake_dependent_option(VTKm_ENABLE_GPU_MPI "Enable GPU AWARE MPI support" OFF "VTKm_ENABLE_MPI" OFF)
+
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
@@ -191,6 +201,7 @@ mark_as_advanced(
   VTKm_ENABLE_DEVELOPER_FLAGS
   VTKm_NO_INSTALL_README_LICENSE
   VTKm_SKIP_LIBRARY_VERSIONS
+  VTKm_OVERRIDE_CTEST_TIMEOUT
   )
 
 #-----------------------------------------------------------------------------
@@ -220,6 +231,11 @@ include(VTKmBuildType)
 
 # Include the vtk-m wrappers
 include(VTKmWrappers)
+
+# By default: Set VTKm_ENABLE_KOKKOS_THRUST to ON if VTKm_ENABLE_KOKKOS is ON, otherwise
+# disable it (or if the user explicitly turns this option OFF)
+cmake_dependent_option(VTKm_ENABLE_KOKKOS_THRUST "Enable Kokkos thrust support (only valid with CUDA and HIP)"
+  ON "VTKm_ENABLE_KOKKOS;Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP" OFF)
 
 # Create vtkm_compiler_flags library. This is an interface library that
 # holds all the C++ compiler flags that are needed for consumers and
@@ -451,11 +467,14 @@ if (VTKm_ENABLE_TESTING)
   add_test(NAME SystemInformation
     COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmSystemInformation.cmake"
     )
-  add_test(NAME CopyrightStatement
-    COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckCopyright.cmake"
-    )
-  # increase timeout since on some machines CopyrightStatement test takes a long time.
-  set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
+  if(NOT WIN32)
+    # Test takes too long on windows
+    add_test(NAME CopyrightStatement
+      COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckCopyright.cmake"
+      )
+    # increase timeout since on some machines CopyrightStatement test takes a long time.
+    set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
+  endif()
 
   # Setup the infrastructure to allow VTK-m to run tests against a temporary
   # installed version of VTK-m.

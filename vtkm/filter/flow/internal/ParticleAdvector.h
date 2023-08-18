@@ -29,91 +29,48 @@ template <typename DSIType>
 class ParticleAdvector
 {
 public:
+  using ParticleType = typename DSIType::PType;
+
   ParticleAdvector(const vtkm::filter::flow::internal::BoundsMap& bm,
                    const std::vector<DSIType>& blocks,
                    const bool& useThreaded,
-                   const vtkm::filter::flow::FlowResultType& parType)
+                   const bool& useAsyncComm)
     : Blocks(blocks)
     , BoundsMap(bm)
-    , ResultType(parType)
     , UseThreadedAlgorithm(useThreaded)
+    , UseAsynchronousCommunication(useAsyncComm)
   {
   }
 
-  vtkm::cont::PartitionedDataSet Execute(vtkm::Id numSteps,
-                                         vtkm::FloatDefault stepSize,
-                                         const vtkm::cont::UnknownArrayHandle& seeds)
-  {
-    using ParticleTypeList = vtkm::List<vtkm::Particle, vtkm::ChargedParticle>;
-
-    vtkm::cont::PartitionedDataSet result;
-    seeds.CastAndCallForTypes<ParticleTypeList, VTKM_DEFAULT_STORAGE_LIST>(
-      [&](const auto& concreteSeeds) {
-        result = this->Execute(numSteps, stepSize, concreteSeeds);
-      });
-
-    return result;
-  }
-
-private:
-  template <typename AlgorithmType, typename ParticleType>
-  vtkm::cont::PartitionedDataSet RunAlgo(vtkm::Id numSteps,
-                                         vtkm::FloatDefault stepSize,
-                                         const vtkm::cont::ArrayHandle<ParticleType>& seeds)
-  {
-    AlgorithmType algo(this->BoundsMap, this->Blocks);
-    algo.Execute(numSteps, stepSize, seeds);
-    return algo.GetOutput();
-  }
-
-  template <typename ParticleType>
-  vtkm::cont::PartitionedDataSet Execute(vtkm::Id numSteps,
-                                         vtkm::FloatDefault stepSize,
-                                         const vtkm::cont::ArrayHandle<ParticleType>& seeds)
+  vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::ArrayHandle<ParticleType>& seeds,
+                                         vtkm::FloatDefault stepSize)
   {
     if (!this->UseThreadedAlgorithm)
     {
-      if (this->ResultType == vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE)
-      {
-        using AlgorithmType = vtkm::filter::flow::internal::
-          AdvectAlgorithm<DSIType, vtkm::worklet::flow::ParticleAdvectionResult, ParticleType>;
-
-        return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
-      }
-      else
-      {
-        using AlgorithmType = vtkm::filter::flow::internal::
-          AdvectAlgorithm<DSIType, vtkm::worklet::flow::StreamlineResult, ParticleType>;
-
-        return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
-      }
+      using AlgorithmType = vtkm::filter::flow::internal::AdvectAlgorithm<DSIType>;
+      return this->RunAlgo<AlgorithmType>(seeds, stepSize);
     }
     else
     {
-      if (this->ResultType == vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE)
-      {
-        using AlgorithmType = vtkm::filter::flow::internal::AdvectAlgorithmThreaded<
-          DSIType,
-          vtkm::worklet::flow::ParticleAdvectionResult,
-          ParticleType>;
-
-        return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
-      }
-      else
-      {
-        using AlgorithmType = vtkm::filter::flow::internal::
-          AdvectAlgorithmThreaded<DSIType, vtkm::worklet::flow::StreamlineResult, ParticleType>;
-
-        return this->RunAlgo<AlgorithmType, ParticleType>(numSteps, stepSize, seeds);
-      }
+      using AlgorithmType = vtkm::filter::flow::internal::AdvectAlgorithmThreaded<DSIType>;
+      return this->RunAlgo<AlgorithmType>(seeds, stepSize);
     }
   }
 
+private:
+  template <typename AlgorithmType>
+  vtkm::cont::PartitionedDataSet RunAlgo(const vtkm::cont::ArrayHandle<ParticleType>& seeds,
+                                         vtkm::FloatDefault stepSize)
+  {
+    AlgorithmType algo(this->BoundsMap, this->Blocks, this->UseAsynchronousCommunication);
+    algo.Execute(seeds, stepSize);
+    return algo.GetOutput();
+  }
 
   std::vector<DSIType> Blocks;
   vtkm::filter::flow::internal::BoundsMap BoundsMap;
-  FlowResultType ResultType;
   bool UseThreadedAlgorithm;
+  bool UseAsynchronousCommunication = true;
 };
 
 }

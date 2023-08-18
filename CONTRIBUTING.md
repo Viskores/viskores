@@ -19,7 +19,7 @@ Before you begin, perform initial setup:
 
 3.  Use Git to create a local clone of the main VTK repository:
 
-        $ git clone https://gitlab.kitware.com/vtk/vtk-m.git
+        $ git clone git@gitlab.kitware.com:vtk/vtk-m.git
         $ cd vtk-m
 
     The main repository will be configured as your `origin` remote.
@@ -32,14 +32,26 @@ Before you begin, perform initial setup:
     This will prompt for your GitLab user name and configure a remote
     called `gitlab` to refer to it.
 
-5. (Optional but highly recommended.)
+5.  (Required to use Git LFS.)
+    [Using the SSH URL for the origin remote] is needed for Git LFS to work.
+    Do not forget to run `$ ./Utilities/SetupForDevelopment.sh` after changing
+    the remote URL.
+
+6.  (Optional but highly recommended.)
+
+
+
+
+    Settings/General/Project Features/Git LFS; set it to off; and _save changes_.
+
+7. (Optional but highly recommended.)
     [Register with the VTK-m dashboard] on Kitware's CDash instance to
     better know how your code performs in regression tests. After
     registering and signing in, click on "All Dashboards" link in the upper
     left corner, scroll down and click "Subscribe to this project" on the
     right of VTK-m.
 
-6.  (Optional but highly recommended.)
+8.  (Optional but highly recommended.)
     [Sign up for the VTK-m mailing list] to communicate with other
     developers and users.
 

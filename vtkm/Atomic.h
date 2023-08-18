@@ -324,6 +324,11 @@ VTKM_EXEC_CONT inline void AtomicLoadFence(vtkm::MemoryOrder order)
     Kokkos::memory_fence();
   }
 }
+#ifdef KOKKOS_INTERNAL_NOT_PARALLEL
+#define VTKM_DESUL_MEM_SCOPE desul::MemoryScopeCaller()
+#else
+#define VTKM_DESUL_MEM_SCOPE desul::MemoryScopeDevice()
+#endif
 
 template <typename T>
 VTKM_EXEC_CONT inline T AtomicLoadImpl(T* const addr, vtkm::MemoryOrder order)
@@ -331,17 +336,17 @@ VTKM_EXEC_CONT inline T AtomicLoadImpl(T* const addr, vtkm::MemoryOrder order)
   switch (order)
   {
     case vtkm::MemoryOrder::Relaxed:
-      return Kokkos::Impl::atomic_load(addr, Kokkos::Impl::memory_order_relaxed);
+      return desul::atomic_load(addr, desul::MemoryOrderRelaxed(), VTKM_DESUL_MEM_SCOPE);
     case vtkm::MemoryOrder::Acquire:
     case vtkm::MemoryOrder::Release:           // Release doesn't make sense. Use Acquire.
     case vtkm::MemoryOrder::AcquireAndRelease: // Release doesn't make sense. Use Acquire.
-      return Kokkos::Impl::atomic_load(addr, Kokkos::Impl::memory_order_acquire);
+      return desul::atomic_load(addr, desul::MemoryOrderAcquire(), VTKM_DESUL_MEM_SCOPE);
     case vtkm::MemoryOrder::SequentiallyConsistent:
-      return Kokkos::Impl::atomic_load(addr, Kokkos::Impl::memory_order_seq_cst);
+      return desul::atomic_load(addr, desul::MemoryOrderSeqCst(), VTKM_DESUL_MEM_SCOPE);
   }
 
   // Should never reach here, but avoid compiler warnings
-  return Kokkos::Impl::atomic_load(addr, Kokkos::Impl::memory_order_seq_cst);
+  return desul::atomic_load(addr, desul::MemoryOrderSeqCst(), VTKM_DESUL_MEM_SCOPE);
 }
 
 template <typename T>
@@ -350,15 +355,15 @@ VTKM_EXEC_CONT inline void AtomicStoreImpl(T* addr, T value, vtkm::MemoryOrder o
   switch (order)
   {
     case vtkm::MemoryOrder::Relaxed:
-      Kokkos::Impl::atomic_store(addr, value, Kokkos::Impl::memory_order_relaxed);
+      desul::atomic_store(addr, value, desul::MemoryOrderRelaxed(), VTKM_DESUL_MEM_SCOPE);
       break;
     case vtkm::MemoryOrder::Acquire: // Acquire doesn't make sense. Use Release.
     case vtkm::MemoryOrder::Release:
     case vtkm::MemoryOrder::AcquireAndRelease: // Acquire doesn't make sense. Use Release.
-      Kokkos::Impl::atomic_store(addr, value, Kokkos::Impl::memory_order_release);
+      desul::atomic_store(addr, value, desul::MemoryOrderRelease(), VTKM_DESUL_MEM_SCOPE);
       break;
     case vtkm::MemoryOrder::SequentiallyConsistent:
-      Kokkos::Impl::atomic_store(addr, value, Kokkos::Impl::memory_order_seq_cst);
+      desul::atomic_store(addr, value, desul::MemoryOrderSeqCst(), VTKM_DESUL_MEM_SCOPE);
       break;
   }
 }

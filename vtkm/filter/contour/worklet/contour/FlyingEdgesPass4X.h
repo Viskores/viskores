@@ -32,9 +32,6 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
 {
 
   vtkm::Id3 PointDims;
-  vtkm::Vec3f Origin;
-  vtkm::Vec3f Spacing;
-
   T IsoValue;
 
   vtkm::Id CellWriteOffset;
@@ -43,13 +40,9 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
   ComputePass4X() {}
   ComputePass4X(T value,
                 const vtkm::Id3& pdims,
-                const vtkm::Vec3f& origin,
-                const vtkm::Vec3f& spacing,
                 vtkm::Id multiContourCellOffset,
                 vtkm::Id multiContourPointOffset)
     : PointDims(pdims)
-    , Origin(origin)
-    , Spacing(spacing)
     , IsoValue(value)
     , CellWriteOffset(multiContourCellOffset)
     , PointWriteOffset(multiContourPointOffset)
@@ -62,6 +55,7 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
                                 FieldInPoint axis_maxs,
                                 WholeArrayIn cell_tri_count,
                                 WholeArrayIn edgeData,
+                                WholeArrayIn coords,
                                 WholeArrayIn data,
                                 WholeArrayOut connectivity,
                                 WholeArrayOut edgeIds,
@@ -69,13 +63,14 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
                                 WholeArrayOut inputCellIds,
                                 WholeArrayOut points);
   using ExecutionSignature =
-    void(ThreadIndices, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, WorkIndex);
+    void(ThreadIndices, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, WorkIndex);
 
   template <typename ThreadIndices,
             typename FieldInPointId3,
             typename FieldInPointId,
             typename WholeTriField,
             typename WholeEdgeField,
+            typename WholeCoordsField,
             typename WholeDataField,
             typename WholeConnField,
             typename WholeEdgeIdField,
@@ -88,6 +83,7 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
                             const FieldInPointId& axis_maxs,
                             const WholeTriField& cellTriCount,
                             const WholeEdgeField& edges,
+                            const WholeCoordsField& coords,
                             const WholeDataField& field,
                             const WholeConnField& conn,
                             const WholeEdgeIdField& interpolatedEdgeIds,
@@ -141,6 +137,7 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
                          field,
                          interpolatedEdgeIds,
                          weights,
+                         coords,
                          points,
                          state.startPos,
                          increments,
@@ -158,12 +155,14 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
   template <typename WholeDataField,
             typename WholeIEdgeField,
             typename WholeWeightField,
+            typename WholeCoordsField,
             typename WholePointField>
   VTKM_EXEC inline void Generate(const vtkm::Vec<vtkm::UInt8, 3>& boundaryStatus,
                                  const vtkm::Id3& ijk,
                                  const WholeDataField& field,
                                  const WholeIEdgeField& interpolatedEdgeIds,
                                  const WholeWeightField& weights,
+                                 const WholeCoordsField coords,
                                  const WholePointField& points,
                                  const vtkm::Id4& startPos,
                                  const vtkm::Id3& incs,
@@ -188,7 +187,7 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
         interpolatedEdgeIds.Set(writeIndex, pos);
         weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
 
-        auto coord = this->InterpolateCoordinate(t, ijk, ijk + vtkm::Id3{ 1, 0, 0 });
+        auto coord = this->InterpolateCoordinate(coords, t, ijk, ijk + vtkm::Id3{ 1, 0, 0 });
         points.Set(writeIndex, coord);
       }
       if (edgeUses[4])
@@ -201,7 +200,7 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
         interpolatedEdgeIds.Set(writeIndex, pos);
         weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
 
-        auto coord = this->InterpolateCoordinate(t, ijk, ijk + vtkm::Id3{ 0, 1, 0 });
+        auto coord = this->InterpolateCoordinate(coords, t, ijk, ijk + vtkm::Id3{ 0, 1, 0 });
         points.Set(writeIndex, coord);
       }
       if (edgeUses[8])
@@ -214,7 +213,7 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
         interpolatedEdgeIds.Set(writeIndex, pos);
         weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
 
-        auto coord = this->InterpolateCoordinate(t, ijk, ijk + vtkm::Id3{ 0, 0, 1 });
+        auto coord = this->InterpolateCoordinate(coords, t, ijk, ijk + vtkm::Id3{ 0, 0, 1 });
         points.Set(writeIndex, coord);
       }
     }
@@ -231,30 +230,30 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
     const bool onZ = boundaryStatus[AxisToSum::zindex] & FlyingEdges3D::MaxBoundary;
     if (onX) //+x boundary
     {
-      this->InterpolateEdge(ijk, pos[0], incs, 5, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-      this->InterpolateEdge(ijk, pos[0], incs, 9, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+      this->InterpolateEdge(ijk, pos[0], incs, 5, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points);
+      this->InterpolateEdge(ijk, pos[0], incs, 9, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points);
       if (onY) //+x +y
       {
-        this->InterpolateEdge(ijk, pos[0], incs, 11, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+        this->InterpolateEdge(ijk, pos[0], incs, 11, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points);
       }
       if (onZ) //+x +z
       {
-        this->InterpolateEdge(ijk, pos[0], incs, 7, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+        this->InterpolateEdge(ijk, pos[0], incs, 7, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points);
       }
     }
     if (onY) //+y boundary
     {
-      this->InterpolateEdge(ijk, pos[0], incs, 1, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-      this->InterpolateEdge(ijk, pos[0], incs, 10, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+      this->InterpolateEdge(ijk, pos[0], incs, 1, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points);
+      this->InterpolateEdge(ijk, pos[0], incs, 10, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points);
       if (onZ) //+y +z boundary
       {
-        this->InterpolateEdge(ijk, pos[0], incs, 3, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+        this->InterpolateEdge(ijk, pos[0], incs, 3, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points);
       }
     }
     if (onZ) //+z boundary
     {
-      this->InterpolateEdge(ijk, pos[0], incs, 2, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
-      this->InterpolateEdge(ijk, pos[0], incs, 6, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, points);
+      this->InterpolateEdge(ijk, pos[0], incs, 2, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points);
+      this->InterpolateEdge(ijk, pos[0], incs, 6, edgeUses, edgeIds, field, interpolatedEdgeIds, weights, coords, points);
     }
     // clang-format on
   }
@@ -264,6 +263,7 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
   template <typename WholeField,
             typename WholeIEdgeField,
             typename WholeWeightField,
+            typename WholeCoordsField,
             typename WholePointField>
   VTKM_EXEC inline void InterpolateEdge(const vtkm::Id3& ijk,
                                         vtkm::Id currentIdx,
@@ -274,6 +274,7 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
                                         const WholeField& field,
                                         const WholeIEdgeField& interpolatedEdgeIds,
                                         const WholeWeightField& weights,
+                                        const WholeCoordsField& coords,
                                         const WholePointField& points) const
   {
     using AxisToSum = SumXAxis;
@@ -300,29 +301,48 @@ struct ComputePass4X : public vtkm::worklet::WorkletVisitCellsWithPoints
     T t = static_cast<T>((this->IsoValue - s0) / (s1 - s0));
     weights.Set(writeIndex, static_cast<vtkm::FloatDefault>(t));
 
-    auto coord = this->InterpolateCoordinate(t, ijk + offsets1, ijk + offsets2);
+    auto coord = this->InterpolateCoordinate(coords, t, ijk + offsets1, ijk + offsets2);
     points.Set(writeIndex, coord);
   }
 
+  // Fast interpolation method for uniform coordinates
   //----------------------------------------------------------------------------
-  inline VTKM_EXEC vtkm::Vec3f InterpolateCoordinate(T t,
-                                                     const vtkm::Id3& ijk0,
-                                                     const vtkm::Id3& ijk1) const
+  inline VTKM_EXEC vtkm::Vec3f InterpolateCoordinate(
+    vtkm::internal::ArrayPortalUniformPointCoordinates coords,
+    T t,
+    const vtkm::Id3& ijk0,
+    const vtkm::Id3& ijk1) const
   {
     return vtkm::Vec3f(
-      this->Origin[0] +
-        this->Spacing[0] *
+      coords.GetOrigin()[0] +
+        coords.GetSpacing()[0] *
           (static_cast<vtkm::FloatDefault>(ijk0[0]) +
            static_cast<vtkm::FloatDefault>(t) * static_cast<vtkm::FloatDefault>(ijk1[0] - ijk0[0])),
-      this->Origin[1] +
-        this->Spacing[1] *
+      coords.GetOrigin()[1] +
+        coords.GetSpacing()[1] *
           (static_cast<vtkm::FloatDefault>(ijk0[1]) +
            static_cast<vtkm::FloatDefault>(t) * static_cast<vtkm::FloatDefault>(ijk1[1] - ijk0[1])),
-      this->Origin[2] +
-        this->Spacing[2] *
+      coords.GetOrigin()[2] +
+        coords.GetSpacing()[2] *
           (static_cast<vtkm::FloatDefault>(ijk0[2]) +
            static_cast<vtkm::FloatDefault>(t) *
              static_cast<vtkm::FloatDefault>(ijk1[2] - ijk0[2])));
+  }
+
+  // Interpolation for explicit coordinates
+  //----------------------------------------------------------------------------
+  template <typename CoordsPortal>
+  inline VTKM_EXEC vtkm::Vec3f InterpolateCoordinate(CoordsPortal coords,
+                                                     T t,
+                                                     const vtkm::Id3& ijk0,
+                                                     const vtkm::Id3& ijk1) const
+  {
+    return (1.0f - static_cast<vtkm::FloatDefault>(t)) *
+      coords.Get(ijk0[0] + this->PointDims[0] * ijk0[1] +
+                 this->PointDims[0] * this->PointDims[1] * ijk0[2]) +
+      static_cast<vtkm::FloatDefault>(t) *
+      coords.Get(ijk1[0] + this->PointDims[0] * ijk1[1] +
+                 this->PointDims[0] * this->PointDims[1] * ijk1[2]);
   }
 };
 }

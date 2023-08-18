@@ -1,3 +1,15 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
 FROM nvidia/cuda:11.6.1-devel-ubuntu18.04
 LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@kitware.com>"
 
@@ -28,13 +40,14 @@ RUN mkdir /opt/cmake/ && \
 ENV PATH "/opt/cmake/bin:${PATH}"
 
 # Build and install Kokkos
+ARG KOKKOS_VERSION=3.7.01
 RUN mkdir -p /opt/kokkos/build && \
     cd /opt/kokkos/build && \
-    curl -L https://github.com/kokkos/kokkos/archive/refs/tags/3.4.01.tar.gz > kokkos-3.4.01.tar.gz && \
-    tar -xf kokkos-3.4.01.tar.gz && \
+    curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz > kokkos-$KOKKOS_VERSION.tar.gz && \
+    tar -xf kokkos-$KOKKOS_VERSION.tar.gz && \
     mkdir bld && cd bld && \
-    CXX=/opt/kokkos/build/kokkos-3.4.01/bin/nvcc_wrapper \
-    cmake -B . -S ../kokkos-3.4.01 \
+    CXX=/opt/kokkos/build/kokkos-$KOKKOS_VERSION/bin/nvcc_wrapper \
+    cmake -B . -S ../kokkos-$KOKKOS_VERSION \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
           -DCMAKE_CXX_FLAGS=-fPIC \

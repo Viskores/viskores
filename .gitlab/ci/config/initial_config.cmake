@@ -91,25 +91,19 @@ foreach(option IN LISTS options)
     set(VTKm_ENABLE_HDF5_IO "ON" CACHE STRING "")
 
   elseif(maxwell STREQUAL option)
-    set(VTKm_CUDA_Architecture "maxwell" CACHE STRING "")
+    set(vtkm_cuda_arch "maxwell")
 
   elseif(pascal STREQUAL option)
-    set(VTKm_CUDA_Architecture "pascal" CACHE STRING "")
+    set(vtkm_cuda_arch "pascal")
 
   elseif(volta STREQUAL option)
-    set(VTKm_CUDA_Architecture "volta" CACHE STRING "")
+    set(vtkm_cuda_arch "volta")
 
-  # From turing we set the architecture using the cannonical
-  # CMAKE_CUDA_ARCHITECTURES
   elseif(turing STREQUAL option)
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
-      set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING "")
-    else()
-      set(VTKm_CUDA_Architecture "turing" CACHE STRING "")
-    endif()
+    set(vtkm_cuda_arch "turing")
 
   elseif(ampere STREQUAL option)
-    set(CMAKE_CUDA_ARCHITECTURES "80" CACHE STRING "")
+    set(vtkm_cuda_arch "ampere")
 
   elseif(hip STREQUAL option)
     if(CMAKE_VERSION VERSION_LESS_EQUAL 3.20)
@@ -161,6 +155,25 @@ foreach(option IN LISTS options)
   endif()
 
 endforeach()
+
+# We need to use VTKm_CUDA_Architecture for older CMake versions
+if(vtkm_cuda_arch)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+    if(vtkm_cuda_arch STREQUAL "maxwell")
+      set(CMAKE_CUDA_ARCHITECTURES "50" CACHE STRING "")
+    elseif(vtkm_cuda_arch STREQUAL "pascal")
+      set(CMAKE_CUDA_ARCHITECTURES "60" CACHE STRING "")
+    elseif(vtkm_cuda_arch STREQUAL "volta")
+      set(CMAKE_CUDA_ARCHITECTURES "70" CACHE STRING "")
+    elseif(vtkm_cuda_arch STREQUAL "turing")
+      set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING "")
+    elseif(vtkm_cuda_arch STREQUAL "ampere")
+      set(CMAKE_CUDA_ARCHITECTURES "80" CACHE STRING "")
+    endif()
+  else()
+    set(VTKm_CUDA_Architecture "${vtkm_cuda_arch}" CACHE STRING "")
+  endif()
+endif()
 
 # Compile tutorials on all builders. The code is small and basic. And since
 # it is the tutorial, it should work really well.

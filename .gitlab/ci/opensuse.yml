@@ -1,0 +1,44 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
+build:opensuse_gcc13:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux-x86_64
+  extends:
+    - .opensuse
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CMAKE_BUILD_TYPE: Debug
+    VTKM_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5+min_build"
+
+test:opensuse_gcc13:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux-x86_64
+  extends:
+    - .opensuse
+    - .cmake_test_linux
+    - .run_automatically
+  variables:
+    #Restrict OpenMP number of threads since multiple test stages
+    #execute on the same hardware concurrently
+    OMP_NUM_THREADS: 4
+  dependencies:
+    - build:opensuse_gcc13
+  needs:
+    - build:opensuse_gcc13

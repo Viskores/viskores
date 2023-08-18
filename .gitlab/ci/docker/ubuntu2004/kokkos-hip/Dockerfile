@@ -1,3 +1,15 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
 FROM rocm/dev-ubuntu-20.04
 LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@kitware.com>"
 
@@ -15,6 +27,7 @@ RUN apt update && \
     ninja-build \
     rsync \
     ssh \
+    rocthrust-dev \
     && \
     apt clean
 
@@ -47,7 +60,7 @@ ENV CMAKE_PREFIX_PATH "/opt/rocm/lib/cmake:/opt/rocm/lib:${CMAKE_PREFIX_PATH}"
 ENV CMAKE_GENERATOR "Ninja"
 
 # Build and install Kokkos
-ARG KOKKOS_VERSION=3.6.00
+ARG KOKKOS_VERSION=3.7.01
 COPY kokkos_cmake_config.cmake kokkos_cmake_config.cmake
 RUN curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz | tar -xzf - && \
     cmake -S kokkos-$KOKKOS_VERSION -B build -C kokkos_cmake_config.cmake                          && \

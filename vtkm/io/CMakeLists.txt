@@ -30,6 +30,7 @@ set(headers
   VTKStructuredGridReader.h
   VTKStructuredPointsReader.h
   VTKUnstructuredGridReader.h
+  VTKVisItFileReader.h
   )
 
 set(template_sources
@@ -57,6 +58,7 @@ set(sources
   VTKStructuredGridReader.cxx
   VTKStructuredPointsReader.cxx
   VTKUnstructuredGridReader.cxx
+  VTKVisItFileReader.cxx
   )
 
 if (VTKm_ENABLE_HDF5_IO)
@@ -85,7 +87,7 @@ vtkm_library(
 
 if (VTKm_ENABLE_HDF5_IO)
   target_include_directories(vtkm_io PRIVATE $<BUILD_INTERFACE:${HDF5_INCLUDE_DIR}>)
-  target_link_libraries(vtkm_io PRIVATE ${HDF5_HL_LIBRARIES})
+  target_link_libraries(vtkm_io PRIVATE ${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
 endif()
 
 add_subdirectory(internal)

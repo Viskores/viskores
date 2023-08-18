@@ -7,9 +7,9 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
-
 set(headers
   Probe.h
+  HistSampling.h
   )
 
 vtkm_declare_headers(${headers})

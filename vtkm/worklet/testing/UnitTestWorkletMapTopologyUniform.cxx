@@ -147,7 +147,7 @@ static void TestAvgPointToCell()
     // of the way we get cell indices. We need to make that
     // part more flexible.
     &cellset,
-    dataSet.GetField("pointvar"),
+    dataSet.GetField("pointvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>(),
     result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
@@ -165,7 +165,9 @@ static void TestAvgPointToCell()
       // of the way we get cell indices. We need to make that
       // part more flexible.
       dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D()),
-      dataSet.GetField("cellvar"), // should be pointvar
+      dataSet.GetField("cellvar")
+        .GetData()
+        .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>(), // should be pointvar
       result);
   }
   catch (vtkm::cont::ErrorBadValue& error)
@@ -192,7 +194,7 @@ static void TestAvgCellToPoint()
     // of the way we get cell indices. We need to make that
     // part more flexible.
     dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D()),
-    dataSet.GetField("cellvar"),
+    dataSet.GetField("cellvar").GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>(),
     result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
@@ -210,7 +212,9 @@ static void TestAvgCellToPoint()
       // of the way we get cell indices. We need to make that
       // part more flexible.
       dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListStructured2D()),
-      dataSet.GetField("pointvar"), // should be cellvar
+      dataSet.GetField("pointvar")
+        .GetData()
+        .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>(), // should be cellvar
       result);
   }
   catch (vtkm::cont::ErrorBadValue& error)

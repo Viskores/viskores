@@ -420,37 +420,70 @@ namespace vtkm
 namespace cont
 {
 
-template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST,
-          typename CellSetTypesList = VTKM_DEFAULT_CELL_SET_LIST>
-struct SerializableDataSet
+/// \brief Specify cell sets to use when serializing a `DataSet`.
+///
+/// Usually when serializing a `DataSet`, it uses a fixed set of standard
+/// `CellSet` types to serialize. If you are writing an algorithm with a
+/// custom `CellSet`, you can specify the `CellSet`(s) as the template
+/// parameter for this class (either as a list of `CellSet`s or in a
+/// single `vtkm::List` parameter).
+///
+template <typename... CellSetTypes>
+struct DataSetWithCellSetTypes
 {
-  SerializableDataSet() = default;
+  vtkm::cont::DataSet DataSet;
 
-  explicit SerializableDataSet(const vtkm::cont::DataSet& dataset)
+  DataSetWithCellSetTypes() = default;
+
+  explicit DataSetWithCellSetTypes(const vtkm::cont::DataSet& dataset)
     : DataSet(dataset)
   {
   }
-
-  vtkm::cont::DataSet DataSet;
 };
+
+template <typename... CellSetTypes>
+struct DataSetWithCellSetTypes<vtkm::List<CellSetTypes...>>
+  : DataSetWithCellSetTypes<CellSetTypes...>
+{
+  using DataSetWithCellSetTypes<CellSetTypes...>::DataSetWithCellSetTypes;
+};
+
+template <typename FieldTypeList = VTKM_DEFAULT_TYPE_LIST,
+          typename CellSetTypesList = VTKM_DEFAULT_CELL_SET_LIST>
+struct VTKM_DEPRECATED(
+  2.1,
+  "Serialize DataSet directly or use DataSetWithCellSetTypes for weird CellSets.")
+  SerializableDataSet : DataSetWithCellSetTypes<CellSetTypesList>
+{
+  using DataSetWithCellSetTypes<CellSetTypesList>::DataSetWithCellSetTypes;
+};
+
 }
 } // vtkm::cont
 
 namespace mangled_diy_namespace
 {
 
-template <typename FieldTypeList, typename CellSetTypesList>
-struct Serialization<vtkm::cont::SerializableDataSet<FieldTypeList, CellSetTypesList>>
+template <>
+struct VTKM_CONT_EXPORT Serialization<vtkm::cont::DataSet>
+{
+  static VTKM_CONT void foo();
+  static VTKM_CONT void save(BinaryBuffer& bb, const vtkm::cont::DataSet& obj);
+  static VTKM_CONT void load(BinaryBuffer& bb, vtkm::cont::DataSet& obj);
+};
+
+template <typename... CellSetTypes>
+struct Serialization<vtkm::cont::DataSetWithCellSetTypes<CellSetTypes...>>
 {
 private:
-  using Type = vtkm::cont::SerializableDataSet<FieldTypeList, CellSetTypesList>;
+  using Type = vtkm::cont::DataSetWithCellSetTypes<CellSetTypes...>;
 
 public:
   static VTKM_CONT void save(BinaryBuffer& bb, const Type& serializable)
   {
     const auto& dataset = serializable.DataSet;
 
-    vtkmdiy::save(bb, dataset.GetCellSet().ResetCellSetList(CellSetTypesList{}));
+    vtkmdiy::save(bb, dataset.GetCellSet().ResetCellSetList(vtkm::List<CellSetTypes...>{}));
 
     vtkm::IdComponent numberOfFields = dataset.GetNumberOfFields();
     vtkmdiy::save(bb, numberOfFields);
@@ -472,7 +505,7 @@ public:
     auto& dataset = serializable.DataSet;
     dataset = {}; // clear
 
-    vtkm::cont::UncertainCellSet<CellSetTypesList> cells;
+    vtkm::cont::UncertainCellSet<vtkm::List<CellSetTypes...>> cells;
     vtkmdiy::load(bb, cells);
     dataset.SetCellSet(cells);
 
@@ -495,6 +528,20 @@ public:
     }
   }
 };
+
+template <typename... CellSetTypes>
+struct Serialization<vtkm::cont::DataSetWithCellSetTypes<vtkm::List<CellSetTypes...>>>
+  : Serialization<vtkm::cont::DataSetWithCellSetTypes<CellSetTypes...>>
+{
+};
+
+VTKM_DEPRECATED_SUPPRESS_BEGIN
+template <typename FieldTypeList, typename CellSetTypesList>
+struct Serialization<vtkm::cont::SerializableDataSet<FieldTypeList, CellSetTypesList>>
+  : Serialization<vtkm::cont::DataSetWithCellSetTypes<CellSetTypesList>>
+{
+};
+VTKM_DEPRECATED_SUPPRESS_END
 
 } // diy
 /// @endcond SERIALIZATION

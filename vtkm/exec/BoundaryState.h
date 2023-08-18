@@ -37,6 +37,11 @@ struct BoundaryState
   {
   }
 
+  /// Returns the center index of the neighborhood. This is typically the position of the
+  /// invocation of the worklet given this boundary condition.
+  ///
+  VTKM_EXEC const vtkm::Id3& GetCenterIndex() const { return this->IJK; }
+
   ///@{
   /// Returns true if a neighborhood of the given radius is contained within the bounds of the cell
   /// set in the X, Y, or Z direction. Returns false if the neighborhood extends outside of the

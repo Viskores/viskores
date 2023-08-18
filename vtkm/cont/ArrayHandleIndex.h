@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_ArrayHandleIndex_h
 #define vtk_m_cont_ArrayHandleIndex_h
 
+#include <vtkm/Range.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
 namespace vtkm
@@ -71,6 +72,43 @@ VTKM_CONT inline vtkm::cont::ArrayHandleIndex make_ArrayHandleIndex(vtkm::Id len
 {
   return vtkm::cont::ArrayHandleIndex(length);
 }
+
+namespace internal
+{
+
+template <typename S>
+struct ArrayRangeComputeImpl;
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagIndex>
+{
+  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
+    const vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagIndex>& input,
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool computeFiniteRange,
+    vtkm::cont::DeviceAdapterId device) const;
+};
+
+template <typename S>
+struct ArrayRangeComputeMagnitudeImpl;
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeMagnitudeImpl<vtkm::cont::StorageTagIndex>
+{
+  VTKM_CONT vtkm::Range operator()(
+    const vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagIndex>& input,
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool computeFiniteRange,
+    vtkm::cont::DeviceAdapterId device) const
+  {
+    auto rangeAH = ArrayRangeComputeImpl<vtkm::cont::StorageTagIndex>{}(
+      input, maskArray, computeFiniteRange, device);
+    return rangeAH.ReadPortal().Get(0);
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

@@ -10,6 +10,7 @@
 #ifndef vtk_m_cont_kokkos_internal_DeviceAdapterAlgorithmKokkos_h
 #define vtk_m_cont_kokkos_internal_DeviceAdapterAlgorithmKokkos_h
 
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -38,6 +39,15 @@ VTKM_THIRDPARTY_POST_INCLUDE
 #define VTKM_VOLATILE volatile
 #endif
 
+#if defined(VTKM_ENABLE_KOKKOS_THRUST) && (defined(__HIP__) || defined(__CUDA__))
+#define VTKM_USE_KOKKOS_THRUST
+#endif
+
+#if defined(VTKM_USE_KOKKOS_THRUST)
+#include <thrust/device_ptr.h>
+#include <thrust/iterator/constant_iterator.h>
+#include <thrust/sort.h>
+#endif
 
 namespace vtkm
 {
@@ -733,6 +743,13 @@ private:
   template <typename T>
   VTKM_CONT static void SortImpl(vtkm::cont::ArrayHandle<T>& values, vtkm::SortLess, std::true_type)
   {
+    // In Kokkos 3.7, we have noticed some errors when sorting with zero-length arrays (which
+    // should do nothing). There is no check, and the bin size computation gets messed up.
+    if (values.GetNumberOfValues() <= 1)
+    {
+      return;
+    }
+
     vtkm::cont::Token token;
     auto portal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagKokkos{}, token);
     kokkos::internal::KokkosViewExec<T> view(portal.GetArray(), portal.GetNumberOfValues());
@@ -763,6 +780,225 @@ public:
   {
     SortImpl(values, comp, typename std::is_scalar<T>::type{});
   }
+
+protected:
+  // Kokkos currently (11/10/2022) does not support a sort_by_key operator
+  // so instead we are using thrust if and only if HIP or CUDA are the backends for Kokkos
+#if defined(VTKM_USE_KOKKOS_THRUST)
+
+  template <typename T, typename U, typename BinaryCompare>
+  VTKM_CONT static std::enable_if_t<(std::is_same<BinaryCompare, vtkm::SortLess>::value ||
+                                     std::is_same<BinaryCompare, vtkm::SortGreater>::value)>
+  SortByKeyImpl(vtkm::cont::ArrayHandle<T>& keys,
+                vtkm::cont::ArrayHandle<U>& values,
+                BinaryCompare,
+                std::true_type,
+                std::true_type)
+  {
+    vtkm::cont::Token token;
+    auto keys_portal = keys.PrepareForInPlace(vtkm::cont::DeviceAdapterTagKokkos{}, token);
+    auto values_portal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagKokkos{}, token);
+
+    kokkos::internal::KokkosViewExec<T> keys_view(keys_portal.GetArray(),
+                                                  keys_portal.GetNumberOfValues());
+    kokkos::internal::KokkosViewExec<U> values_view(values_portal.GetArray(),
+                                                    values_portal.GetNumberOfValues());
+
+    thrust::device_ptr<T> keys_begin(keys_view.data());
+    thrust::device_ptr<T> keys_end(keys_view.data() + keys_view.size());
+    thrust::device_ptr<U> values_begin(values_view.data());
+
+    if (std::is_same<BinaryCompare, vtkm::SortLess>::value)
+    {
+      thrust::sort_by_key(keys_begin, keys_end, values_begin, thrust::less<T>());
+    }
+    else
+    {
+      thrust::sort_by_key(keys_begin, keys_end, values_begin, thrust::greater<T>());
+    }
+  }
+
+#endif
+
+  template <typename T,
+            typename U,
+            class StorageT,
+            class StorageU,
+            class BinaryCompare,
+            typename ValidKeys,
+            typename ValidValues>
+  VTKM_CONT static void SortByKeyImpl(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                      vtkm::cont::ArrayHandle<U, StorageU>& values,
+                                      BinaryCompare binary_compare,
+                                      ValidKeys,
+                                      ValidValues)
+  {
+    // Default to general algorithm
+    Superclass::SortByKey(keys, values, binary_compare);
+  }
+
+public:
+  template <typename T, typename U, class StorageT, class StorageU>
+  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                  vtkm::cont::ArrayHandle<U, StorageU>& values)
+  {
+    // Make sure not to use the general algorithm here since
+    // it will use Sort algorithm instead of SortByKey
+    SortByKey(keys, values, internal::DefaultCompareFunctor());
+  }
+
+  template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
+  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                  vtkm::cont::ArrayHandle<U, StorageU>& values,
+                                  BinaryCompare binary_compare)
+  {
+    // If T or U are not scalar types, or the BinaryCompare is not supported
+    // then the general algorithm is called, otherwise we will run thrust
+    SortByKeyImpl(keys,
+                  values,
+                  binary_compare,
+                  typename std::is_scalar<T>::type{},
+                  typename std::is_scalar<U>::type{});
+  }
+
+  //----------------------------------------------------------------------------
+  // Reduce By Key
+
+#ifdef VTKM_USE_KOKKOS_THRUST
+
+protected:
+  template <typename K, typename V, class BinaryFunctor>
+  VTKM_CONT static void ReduceByKeyImpl(const vtkm::cont::ArrayHandle<K>& keys,
+                                        const vtkm::cont::ArrayHandle<V>& values,
+                                        vtkm::cont::ArrayHandle<K>& keys_output,
+                                        vtkm::cont::ArrayHandle<V>& values_output,
+                                        BinaryFunctor binary_functor)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
+
+    vtkm::Id num_unique_keys;
+    {
+      vtkm::cont::Token token;
+
+      auto keys_portal = keys.PrepareForInput(vtkm::cont::DeviceAdapterTagKokkos{}, token);
+      auto values_portal = values.PrepareForInput(vtkm::cont::DeviceAdapterTagKokkos{}, token);
+
+      auto keys_output_portal =
+        keys_output.PrepareForOutput(numberOfKeys, vtkm::cont::DeviceAdapterTagKokkos{}, token);
+      auto values_output_portal =
+        values_output.PrepareForOutput(numberOfKeys, vtkm::cont::DeviceAdapterTagKokkos{}, token);
+
+      thrust::device_ptr<const K> keys_begin(keys_portal.GetArray());
+      thrust::device_ptr<const K> keys_end(keys_portal.GetArray() + numberOfKeys);
+      thrust::device_ptr<const V> values_begin(values_portal.GetArray());
+      thrust::device_ptr<K> keys_output_begin(keys_output_portal.GetArray());
+      thrust::device_ptr<V> values_output_begin(values_output_portal.GetArray());
+
+      auto ends = thrust::reduce_by_key(keys_begin,
+                                        keys_end,
+                                        values_begin,
+                                        keys_output_begin,
+                                        values_output_begin,
+                                        thrust::equal_to<K>(),
+                                        binary_functor);
+
+      num_unique_keys = ends.first - keys_output_begin;
+    }
+
+    // Resize output (reduce allocation)
+    keys_output.Allocate(num_unique_keys, CopyFlag::On);
+    values_output.Allocate(num_unique_keys, CopyFlag::On);
+  }
+
+
+  template <typename K, typename V, class BinaryFunctor>
+  VTKM_CONT static void ReduceByKeyImpl(
+    const vtkm::cont::ArrayHandle<K>& keys,
+    const vtkm::cont::ArrayHandle<V, vtkm::cont::StorageTagConstant>& values,
+    vtkm::cont::ArrayHandle<K>& keys_output,
+    vtkm::cont::ArrayHandle<V>& values_output,
+    BinaryFunctor binary_functor)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
+
+    vtkm::Id num_unique_keys;
+    {
+      vtkm::cont::Token token;
+
+      auto keys_portal = keys.PrepareForInput(vtkm::cont::DeviceAdapterTagKokkos{}, token);
+      auto value = values.ReadPortal().Get(0);
+
+      auto keys_output_portal =
+        keys_output.PrepareForOutput(numberOfKeys, vtkm::cont::DeviceAdapterTagKokkos{}, token);
+      auto values_output_portal =
+        values_output.PrepareForOutput(numberOfKeys, vtkm::cont::DeviceAdapterTagKokkos{}, token);
+
+      thrust::device_ptr<const K> keys_begin(keys_portal.GetArray());
+      thrust::device_ptr<const K> keys_end(keys_portal.GetArray() + numberOfKeys);
+      thrust::constant_iterator<const V> values_begin(value);
+      thrust::device_ptr<K> keys_output_begin(keys_output_portal.GetArray());
+      thrust::device_ptr<V> values_output_begin(values_output_portal.GetArray());
+
+      auto ends = thrust::reduce_by_key(keys_begin,
+                                        keys_end,
+                                        values_begin,
+                                        keys_output_begin,
+                                        values_output_begin,
+                                        thrust::equal_to<K>(),
+                                        binary_functor);
+
+      num_unique_keys = ends.first - keys_output_begin;
+    }
+
+    // Resize output (reduce allocation)
+    keys_output.Allocate(num_unique_keys, CopyFlag::On);
+    values_output.Allocate(num_unique_keys, CopyFlag::On);
+  }
+
+  template <typename T,
+            typename U,
+            class KIn,
+            class VIn,
+            class KOut,
+            class VOut,
+            class BinaryFunctor>
+  VTKM_CONT static void ReduceByKeyImpl(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                        const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                        vtkm::cont::ArrayHandle<T, KOut>& keys_output,
+                                        vtkm::cont::ArrayHandle<U, VOut>& values_output,
+                                        BinaryFunctor binary_functor)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    Superclass::ReduceByKey(keys, values, keys_output, values_output, binary_functor);
+  }
+
+public:
+  template <typename T,
+            typename U,
+            class KIn,
+            class VIn,
+            class KOut,
+            class VOut,
+            class BinaryFunctor>
+  VTKM_CONT static void ReduceByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                    const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                    vtkm::cont::ArrayHandle<T, KOut>& keys_output,
+                                    vtkm::cont::ArrayHandle<U, VOut>& values_output,
+                                    BinaryFunctor binary_functor)
+  {
+    VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
+
+    ReduceByKeyImpl(keys, values, keys_output, values_output, binary_functor);
+  }
+
+#endif
+
+  //--------------------------------------------------------------------------
 
   VTKM_CONT static void Synchronize()
   {

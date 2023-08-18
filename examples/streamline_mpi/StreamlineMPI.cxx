@@ -18,7 +18,6 @@
 #include <vtkm/filter/flow/ParticleAdvection.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
-#include <vtkm/io/reader/VTKDataSetReader.h>
 
 #include <mpi.h>
 #include <vtkm/thirdparty/diy/diy.h>

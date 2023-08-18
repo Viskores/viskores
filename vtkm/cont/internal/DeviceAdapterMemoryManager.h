@@ -196,6 +196,37 @@ public:
   /// objects were created by a previous call to this object.
   VTKM_CONT virtual void CopyDeviceToDevice(const vtkm::cont::internal::BufferInfo& src,
                                             const vtkm::cont::internal::BufferInfo& dest) const = 0;
+
+
+  /// \brief Low-level method to allocate memory on the device.
+  ///
+  /// This method allocates an array of the given number of bytes on the device and returns
+  /// a void pointer to the array. The preferred method to allocate memory is to use the
+  /// `Allocate` method, which returns a `BufferInfo` that manages its own memory. However,
+  /// for cases where you are interfacing with code outside of VTK-m and need just a raw
+  /// pointer, this method can be used. The returned memory can be freed with
+  /// `DeleteRawPointer`.
+  VTKM_CONT virtual void* AllocateRawPointer(vtkm::BufferSizeType size) const;
+
+  /// \brief Low-level method to copy data on the device.
+  ///
+  /// This method copies data from one raw pointer to another. It performs the same
+  /// function as `CopyDeviceToDevice`, except that it operates on raw pointers
+  /// instead of `BufferInfo` objects. This is a useful low-level mechanism to move
+  /// data on a device in memory locations created externally to VTK-m.
+  VTKM_CONT virtual void CopyDeviceToDeviceRawPointer(const void* src,
+                                                      void* dest,
+                                                      vtkm::BufferSizeType size) const;
+
+  /// \brief Low-level method to delete memory on the device.
+  ///
+  /// This method takes a pointer to memory allocated on the device and frees it.
+  /// The preferred method to delete memory is to use the deallocation routines in
+  /// `BufferInfo` objects created with `Allocate`. But for cases where you only
+  /// have a raw pointer to the data, this method can be used to manage it. This
+  /// method should only be used on memory allocated with this
+  /// `DeviceAdaperMemoryManager`.
+  VTKM_CONT virtual void DeleteRawPointer(void*) const = 0;
 };
 
 /// \brief The device adapter memory manager.
@@ -206,6 +237,14 @@ public:
 ///
 template <typename DeviceAdapterTag>
 class DeviceAdapterMemoryManager;
+
+VTKM_CONT_EXPORT VTKM_CONT void HostDeleter(void*);
+VTKM_CONT_EXPORT VTKM_CONT void* HostAllocate(vtkm::BufferSizeType);
+VTKM_CONT_EXPORT VTKM_CONT void HostReallocate(void*&,
+                                               void*&,
+                                               vtkm::BufferSizeType,
+                                               vtkm::BufferSizeType);
+
 
 VTKM_CONT_EXPORT VTKM_CONT void InvalidRealloc(void*&,
                                                void*&,

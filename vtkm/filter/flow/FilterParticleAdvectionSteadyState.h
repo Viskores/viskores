@@ -21,13 +21,29 @@ namespace filter
 {
 namespace flow
 {
+
+template <typename Derived>
+struct FlowTraits;
+
+template <typename Derived>
 class VTKM_FILTER_FLOW_EXPORT FilterParticleAdvectionSteadyState : public FilterParticleAdvection
 {
-private:
-  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
-    const vtkm::cont::PartitionedDataSet& inData) override;
-};
+public:
+  using ParticleType = typename FlowTraits<Derived>::ParticleType;
+  using FieldType = typename FlowTraits<Derived>::FieldType;
+  using TerminationType = typename FlowTraits<Derived>::TerminationType;
+  using AnalysisType = typename FlowTraits<Derived>::AnalysisType;
 
+private:
+  VTKM_CONT FieldType GetField(const vtkm::cont::DataSet& data) const;
+
+  VTKM_CONT TerminationType GetTermination(const vtkm::cont::DataSet& data) const;
+
+  VTKM_CONT AnalysisType GetAnalysis(const vtkm::cont::DataSet& data) const;
+
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& input) override;
+};
 }
 }
 } // namespace vtkm::filter::flow

@@ -8,6 +8,8 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(geometry_refinement_headers
+  ConvertToPointCloud.h
+  Shrink.h
   SplitSharpEdges.h
   Tetrahedralize.h
   Triangulate.h
@@ -16,6 +18,8 @@ set(geometry_refinement_headers
   )
 
 set(geometry_refinement_sources
+  ConvertToPointCloud.cxx
+  Shrink.cxx
   SplitSharpEdges.cxx
   Tetrahedralize.cxx
   Triangulate.cxx

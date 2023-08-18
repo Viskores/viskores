@@ -36,8 +36,14 @@
 
 #include <math.h>
 
+// Uncomment to turn on floating point exceptions for Mac builds
+// This non-portable solution is known to fail for some platforms (such as the dashboard).
+//#define VTKM_TEST_APPLE_FPE
+
 #if defined(VTKM_GCC) && !defined(__APPLE__)
 #include <fenv.h>
+#elif defined(__APPLE__) && defined(__MACH__) && defined(VTKM_TEST_APPLE_FPE)
+#include <cfenv>
 #endif
 
 // Try to enforce using the correct testing version. (Those that include the
@@ -120,6 +126,23 @@ inline void FloatingPointExceptionTrapEnable()
   // Turn on floating point exception trapping where available
 #if defined(VTKM_GCC) && !defined(__APPLE__)
   feenableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
+#elif defined(__APPLE__) && defined(__MACH__) && defined(VTKM_TEST_APPLE_FPE)
+  std::fenv_t fenv;
+  if (std::fegetenv(&fenv) != 0)
+  {
+    return;
+  }
+  int excepts = FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID;
+#if defined(__arm) || defined(__arm64) || defined(__aarch64__)
+  // ARM architecture
+  fenv.__fpcr |= (excepts << 8);
+#else
+  // Intel architecture
+  // Control flags are masked exceptions, so we have to unset them.
+  fenv.__control &= ~excepts;
+  fenv.__mxcsr &= ~(excepts << 7);
+#endif
+  fesetenv(&fenv);
 #endif
 }
 
@@ -128,6 +151,22 @@ inline void FloatingPointExceptionTrapDisable()
   // Turn on floating point exception trapping where available
 #if defined(VTKM_GCC) && !defined(__APPLE__)
   fedisableexcept(FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
+#elif defined(__APPLE__) && defined(__MACH__) && defined(VTKM_TEST_APPLE_FPE)
+  std::fenv_t fenv;
+  if (std::fegetenv(&fenv) != 0)
+  {
+    return;
+  }
+  int excepts = FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID;
+#if defined(__arm) || defined(__arm64) || defined(__aarch64__)
+  // ARM architecture
+  fenv.__fpcr &= ~(excepts << 8);
+#else
+  // Control flags are masked exceptions, so we have to set them.
+  fenv.__control |= excepts;
+  fenv.__mxcsr |= excepts << 7;
+#endif
+  fesetenv(&fenv);
 #endif
 }
 
@@ -585,12 +624,8 @@ namespace detail
 template <typename T1, typename T2>
 struct TestEqualImpl
 {
-  template <typename Dimensionality1, typename Dimensionality2>
-  VTKM_EXEC_CONT bool DoIt(T1 vector1,
-                           T2 vector2,
-                           vtkm::Float64 tolerance,
-                           Dimensionality1,
-                           Dimensionality2) const
+  template <typename IsBase1, typename IsBase2>
+  VTKM_EXEC_CONT bool DoIt(T1 vector1, T2 vector2, vtkm::Float64 tolerance, IsBase1, IsBase2) const
   {
     using Traits1 = vtkm::VecTraits<T1>;
     using Traits2 = vtkm::VecTraits<T2>;
@@ -619,8 +654,8 @@ struct TestEqualImpl
   VTKM_EXEC_CONT bool DoIt(T1 scalar1,
                            T2 scalar2,
                            vtkm::Float64 tolerance,
-                           vtkm::TypeTraitsScalarTag,
-                           vtkm::TypeTraitsScalarTag) const
+                           std::true_type,
+                           std::true_type) const
   {
     // Do all comparisons using 64-bit floats.
     return test_equal(
@@ -629,11 +664,13 @@ struct TestEqualImpl
 
   VTKM_EXEC_CONT bool operator()(T1 value1, T2 value2, vtkm::Float64 tolerance) const
   {
+    using Base1 = typename vtkm::VecTraits<T1>::BaseComponentType;
+    using Base2 = typename vtkm::VecTraits<T2>::BaseComponentType;
     return this->DoIt(value1,
                       value2,
                       tolerance,
-                      typename vtkm::TypeTraits<T1>::DimensionalityTag(),
-                      typename vtkm::TypeTraits<T2>::DimensionalityTag());
+                      typename std::is_same<T1, Base1>::type{},
+                      typename std::is_same<T2, Base2>::type{});
   }
 };
 

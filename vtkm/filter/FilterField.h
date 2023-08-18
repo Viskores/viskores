@@ -13,6 +13,8 @@
 
 #include <vtkm/filter/Filter.h>
 
+#include <vtkm/cont/ArrayCopy.h>
+
 namespace vtkm
 {
 namespace filter
@@ -46,7 +48,7 @@ public:
     vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
     auto index_st = static_cast<std::size_t>(index);
-    ResizeIfNeeded(index_st);
+    this->ResizeIfNeeded(index_st);
     this->ActiveFieldNames[index_st] = name;
     this->ActiveFieldAssociation[index_st] = association;
   }
@@ -79,7 +81,7 @@ public:
   void SetActiveCoordinateSystem(vtkm::IdComponent index, vtkm::Id coord_idx)
   {
     auto index_st = static_cast<std::size_t>(index);
-    ResizeIfNeeded(index_st);
+    this->ResizeIfNeeded(index_st);
     this->ActiveCoordinateSystemIndices[index_st] = coord_idx;
   }
 
@@ -120,6 +122,19 @@ public:
   }
   ///@}
 
+  /// \brief Return the number of active fields currently set.
+  ///
+  /// The general interface to `FilterField` allows a user to set an arbitrary number
+  /// of active fields (indexed 0 and on). This method returns the number of active
+  /// fields that are set. Note that the filter implementation is free to ignore
+  /// any active fields it does not support. Also note that an active field can be
+  /// set to be either a named field or a coordinate system.
+  vtkm::IdComponent GetNumberOfActiveFields() const
+  {
+    VTKM_ASSERT(this->ActiveFieldNames.size() == this->UseCoordinateSystemAsField.size());
+    return static_cast<vtkm::IdComponent>(this->UseCoordinateSystemAsField.size());
+  }
+
 protected:
   VTKM_CONT
   const vtkm::cont::Field& GetFieldFromDataSet(const vtkm::cont::DataSet& input) const
@@ -147,6 +162,16 @@ protected:
     }
   }
 
+  ///@{
+  /// \brief Convenience method to get the array from a filter's input scalar field.
+  ///
+  /// A field filter typically gets its input fields using the internal `GetFieldFromDataSet`.
+  /// To use this field in a worklet, it eventually needs to be converted to an
+  /// `ArrayHandle`. If the input field is limited to be a scalar field, then this method
+  /// provides a convenient way to determine the correct array type. Like other `CastAndCall`
+  /// methods, it takes as input a `Field` (or `UnknownArrayHandle`) and a function/functor
+  /// to call with the appropriate `ArrayHandle` type.
+  ///
   template <typename Functor, typename... Args>
   VTKM_CONT void CastAndCallScalarField(const vtkm::cont::UnknownArrayHandle& fieldArray,
                                         Functor&& functor,
@@ -165,6 +190,7 @@ protected:
     this->CastAndCallScalarField(
       field.GetData(), std::forward<Functor>(functor), std::forward<Args>(args)...);
   }
+  ///@}
 
 
 private:
@@ -176,6 +202,18 @@ private:
   };
 
 protected:
+  ///@{
+  /// \brief Convenience method to get the array from a filter's input vector field.
+  ///
+  /// A field filter typically gets its input fields using the internal `GetFieldFromDataSet`.
+  /// To use this field in a worklet, it eventually needs to be converted to an
+  /// `ArrayHandle`. If the input field is limited to be a vector field with vectors of a
+  /// specific size, then this method provides a convenient way to determine the correct array
+  /// type. Like other `CastAndCall` methods, it takes as input a `Field` (or
+  /// `UnknownArrayHandle`) and a function/functor to call with the appropriate `ArrayHandle`
+  /// type. You also have to provide the vector size as the first template argument.
+  /// For example `CastAndCallVecField<3>(field, functor);`.
+  ///
   template <vtkm::IdComponent VecSize, typename Functor, typename... Args>
   VTKM_CONT void CastAndCallVecField(const vtkm::cont::UnknownArrayHandle& fieldArray,
                                      Functor&& functor,
@@ -195,6 +233,52 @@ protected:
     this->CastAndCallVecField<VecSize>(
       field.GetData(), std::forward<Functor>(functor), std::forward<Args>(args)...);
   }
+  ///@}
+
+  ///@{
+  /// This method is like `CastAndCallVecField` except that it can be used for a
+  /// field of unknown vector size (or scalars). This method will call the given
+  /// functor with an `ArrayHandleRecombineVec`.
+  ///
+  /// Note that there are limitations with using `ArrayHandleRecombineVec` within a
+  /// worklet. Because the size of the vectors are not known at compile time, you
+  /// cannot just create an intermediate `Vec` of the correct size. Typically, you
+  /// must allocate the output array (for example, with `ArrayHandleRuntimeVec`), and
+  /// the worklet must iterate over the components and store them in the prealocated
+  /// output.
+  ///
+  template <typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallVariableVecField(const vtkm::cont::UnknownArrayHandle& fieldArray,
+                                             Functor&& functor,
+                                             Args&&... args) const
+  {
+    if (fieldArray.IsBaseComponentType<vtkm::Float32>())
+    {
+      functor(fieldArray.ExtractArrayFromComponents<vtkm::Float32>(), std::forward<Args>(args)...);
+    }
+    else if (fieldArray.IsBaseComponentType<vtkm::Float64>())
+    {
+      functor(fieldArray.ExtractArrayFromComponents<vtkm::Float64>(), std::forward<Args>(args)...);
+    }
+    else
+    {
+      // Field component type is not directly supported. Copy to floating point array.
+      vtkm::cont::UnknownArrayHandle floatArray = fieldArray.NewInstanceFloatBasic();
+      vtkm::cont::ArrayCopy(fieldArray, floatArray);
+      functor(floatArray.ExtractArrayFromComponents<vtkm::FloatDefault>(),
+              std::forward<Args>(args)...);
+    }
+  }
+
+  template <typename Functor, typename... Args>
+  VTKM_CONT void CastAndCallVariableVecField(const vtkm::cont::Field& field,
+                                             Functor&& functor,
+                                             Args&&... args) const
+  {
+    this->CastAndCallVariableVecField(
+      field.GetData(), std::forward<Functor>(functor), std::forward<Args>(args)...);
+  }
+  ///@}
 
   /// \brief Create the output data set for `DoExecute`
   ///

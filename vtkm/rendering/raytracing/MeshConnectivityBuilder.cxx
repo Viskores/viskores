@@ -430,7 +430,7 @@ public:
 
     cellIndex[dir1] = cellIndex[dir1] + dir1Offset;
     cellIndex[dir2] = cellIndex[dir2] + dir2Offset;
-    vtkm::Id cellId = Connectivity.LogicalToFlatToIndex(cellIndex);
+    vtkm::Id cellId = Connectivity.LogicalToFlatVisitIndex(cellIndex);
     vtkm::VecVariable<vtkm::Id, 8> cellIndices = Connectivity.GetIndices(cellId);
 
     // Look up the offset into the face list for each cell type

@@ -91,11 +91,6 @@ void RuntimeDeviceConfigurationBase::Initialize(
     "SetThreads",
     this->GetDevice().GetName());
   InitializeOption(
-    configOptions.VTKmNumaRegions,
-    [&](const vtkm::Id& value) { return this->SetNumaRegions(value); },
-    "SetNumaRegions",
-    this->GetDevice().GetName());
-  InitializeOption(
     configOptions.VTKmDeviceInstance,
     [&](const vtkm::Id& value) { return this->SetDeviceInstance(value); },
     "SetDeviceInstance",
@@ -117,22 +112,12 @@ RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::SetThreads(const v
   return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
 }
 
-RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::SetNumaRegions(const vtkm::Id&)
-{
-  return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
-}
-
 RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::SetDeviceInstance(const vtkm::Id&)
 {
   return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
 }
 
 RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::GetThreads(vtkm::Id&) const
-{
-  return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
-}
-
-RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::GetNumaRegions(vtkm::Id&) const
 {
   return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
 }

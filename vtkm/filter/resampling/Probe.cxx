@@ -30,15 +30,34 @@ bool DoMapField(vtkm::cont::DataSet& result,
 {
   if (field.IsPointField())
   {
-    auto resolve = [&](const auto& concrete) {
-      using T = typename std::decay_t<decltype(concrete)>::ValueType;
-      vtkm::cont::ArrayHandle<T> outputArray = worklet.ProcessPointField(
-        concrete, vtkm::cont::internal::CastInvalidValue<T>(invalidValue));
-      result.AddPointField(field.GetName(), outputArray);
+    vtkm::cont::UnknownArrayHandle inArray = field.GetData();
+    vtkm::cont::UnknownArrayHandle outArray = inArray.NewInstanceBasic();
+
+    bool called = false;
+    auto tryType = [&](auto t) {
+      using T = std::decay_t<decltype(t)>;
+      if (!called && inArray.IsBaseComponentType<T>())
+      {
+        called = true;
+        vtkm::IdComponent numComponents = inArray.GetNumberOfComponentsFlat();
+        VTKM_ASSERT(numComponents == outArray.GetNumberOfComponentsFlat());
+
+        for (vtkm::IdComponent cIndex = 0; cIndex < numComponents; ++cIndex)
+        {
+          worklet.ProcessPointField(inArray.ExtractComponent<T>(cIndex),
+                                    outArray.ExtractComponent<T>(cIndex, vtkm::CopyFlag::Off),
+                                    vtkm::cont::internal::CastInvalidValue<T>(invalidValue));
+        }
+      }
     };
-    field.GetData()
-      .CastAndCallForTypesWithFloatFallback<vtkm::TypeListField, VTKM_DEFAULT_STORAGE_LIST>(
-        resolve);
+    vtkm::ListForEach(tryType, vtkm::TypeListScalarAll{});
+    if (!called)
+    {
+      VTKM_LOG_CAST_FAIL(worklet, vtkm::TypeListScalarAll);
+      return false;
+    }
+
+    result.AddPointField(field.GetName(), outArray);
     return true;
   }
   else if (field.IsCellField())

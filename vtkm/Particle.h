@@ -143,7 +143,7 @@ public:
 
   VTKM_EXEC_CONT
   vtkm::Vec3f Velocity(const vtkm::VecVariable<vtkm::Vec3f, 2>& vectors,
-                       const vtkm::FloatDefault& vtkmNotUsed(length))
+                       const vtkm::FloatDefault& vtkmNotUsed(length)) const
   {
     // Velocity is evaluated from the Velocity field
     // and is not influenced by the particle
@@ -213,6 +213,29 @@ public:
   {
   }
 
+  VTKM_EXEC_CONT
+  ChargedParticle(const vtkm::ChargedParticle& other)
+    : Position(other.Position)
+    , ID(other.ID)
+    , NumSteps(other.NumSteps)
+    , Status(other.Status)
+    , Time(other.Time)
+    , Mass(other.Mass)
+    , Charge(other.Charge)
+    , Weighting(other.Weighting)
+    , Momentum(other.Momentum)
+  {
+  }
+
+  vtkm::ChargedParticle& operator=(const vtkm::ChargedParticle&) = default;
+
+  VTKM_EXEC_CONT
+  ~ChargedParticle() noexcept
+  {
+    // This must not be defaulted, since defaulted virtual destructors are
+    // troublesome with CUDA __host__ __device__ markup.
+  }
+
   VTKM_EXEC_CONT const vtkm::Vec3f& GetPosition() const { return this->Position; }
   VTKM_EXEC_CONT void SetPosition(const vtkm::Vec3f& position) { this->Position = position; }
 
@@ -230,7 +253,7 @@ public:
   VTKM_EXEC_CONT void SetTime(vtkm::FloatDefault time) { this->Time = time; }
 
   VTKM_EXEC_CONT
-  vtkm::Float64 Gamma(vtkm::Vec3f momentum, bool reciprocal = false) const
+  vtkm::Float64 Gamma(const vtkm::Vec3f& momentum, bool reciprocal = false) const
   {
     constexpr vtkm::FloatDefault c2 = SPEED_OF_LIGHT * SPEED_OF_LIGHT;
     const vtkm::Float64 fMom2 = vtkm::MagnitudeSquared(momentum);
@@ -244,7 +267,7 @@ public:
 
   VTKM_EXEC_CONT
   vtkm::Vec3f Velocity(const vtkm::VecVariable<vtkm::Vec3f, 2>& vectors,
-                       const vtkm::FloatDefault& length)
+                       const vtkm::FloatDefault& length) const
   {
     VTKM_ASSERT(vectors.GetNumberOfComponents() == 2);
 
@@ -265,8 +288,6 @@ public:
     const vtkm::Vec3f mom_plus = mom_minus + vtkm::Cross(mom_prime, s);
 
     const vtkm::Vec3f mom_new = mom_plus + 0.5 * this->Charge * eField * length;
-    //TODO : Sould this be a const method?
-    // If yes, need a better way to update momentum
     this->Momentum = mom_new;
 
     // momentum = velocity * mass * gamma;
@@ -302,7 +323,7 @@ private:
   vtkm::Float64 Mass;
   vtkm::Float64 Charge;
   vtkm::Float64 Weighting;
-  vtkm::Vec3f Momentum;
+  mutable vtkm::Vec3f Momentum;
   constexpr static vtkm::FloatDefault SPEED_OF_LIGHT =
     static_cast<vtkm::FloatDefault>(2.99792458e8);
 
@@ -326,7 +347,6 @@ public:
 };
 
 } //namespace vtkm
-
 
 namespace mangled_diy_namespace
 {

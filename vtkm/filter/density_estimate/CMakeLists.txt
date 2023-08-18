@@ -8,6 +8,7 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 set(density_estimate_headers
+  ContinuousScatterPlot.h
   Entropy.h
   Histogram.h
   NDEntropy.h
@@ -15,9 +16,11 @@ set(density_estimate_headers
   ParticleDensityBase.h
   ParticleDensityCloudInCell.h
   ParticleDensityNearestGridPoint.h
+  Statistics.h
   )
 
 set(density_estimate_sources_device
+  ContinuousScatterPlot.cxx
   Entropy.cxx
   Histogram.cxx
   NDEntropy.cxx
@@ -25,6 +28,7 @@ set(density_estimate_sources_device
   ParticleDensityBase.cxx
   ParticleDensityCloudInCell.cxx
   ParticleDensityNearestGridPoint.cxx
+  Statistics.cxx
   )
 
 vtkm_library(

@@ -19,8 +19,6 @@ set(headers
   FetchTagArrayDirectIn.h
   FetchTagArrayDirectInOut.h
   FetchTagArrayDirectOut.h
-  FetchTagArrayDirectOutArrayHandleGroupVecVariable.h
-  FetchTagArrayDirectOutArrayHandleRecombineVec.h
   FetchTagArrayNeighborhoodIn.h
   FetchTagArrayTopologyMapIn.h
   FetchTagExecObject.h

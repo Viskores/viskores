@@ -5,11 +5,13 @@ namespace diy
         int from, to;
         int nparts;
         int round;
+        int nblobs;
     };
 
     struct Master::InFlightSend
     {
         std::shared_ptr<MemoryBuffer> message;
+        BinaryBlob                    blob;
         mpi::request                  request;
 
         MessageInfo info;           // for debug purposes
@@ -18,12 +20,18 @@ namespace diy
     struct Master::InFlightRecv
     {
         MemoryBuffer    message;
-        MessageInfo     info { -1, -1, -1, -1 };
+        MessageInfo     info { -1, -1, -1, -1, -1 };
         bool            done = false;
+        MemoryManagement mem;
 
         inline bool     recv(mpi::communicator& comm, const mpi::status& status);
         inline void     place(IncomingRound* in, bool unload, ExternalStorage* storage, IExchangeInfo* iexchange);
-        void            reset()     { *this = InFlightRecv(); }
+        void            reset()
+        {
+            MemoryManagement mem_ = mem;
+            *this = InFlightRecv();
+            mem = mem_;
+        }
     };
 
     struct Master::InFlightRecvsMap: public std::map<int, InFlightRecv>
@@ -111,7 +119,7 @@ recv(mpi::communicator& comm, const mpi::status& status)
 
         result = true;
     }
-    else
+    else if (info.nparts > 0)
     {
         size_t start_idx = message.buffer.size();
         size_t count = status.count<char>();
@@ -124,9 +132,24 @@ recv(mpi::communicator& comm, const mpi::status& status)
         comm.recv(status.source(), status.tag(), window);
 
         info.nparts--;
+    } else if (info.nblobs > 0)
+    {
+        size_t count = status.count<char>();
+        detail::VectorWindow<char> window;
+
+        char* buffer = mem.allocate(info.to, count);
+
+        window.begin = buffer;
+        window.count = count;
+
+        comm.recv(status.source(), status.tag(), window);
+
+        message.save_binary_blob(buffer, count, mem.deallocate);
+
+        info.nblobs--;
     }
 
-    if (info.nparts == 0)
+    if (info.nparts == 0 && info.nblobs == 0)
         done = true;
 
     return result;

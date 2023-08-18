@@ -186,6 +186,18 @@ struct GetTypeInParentheses<void(T)>
   }                                                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
+  explicit classname(const std::vector<vtkm::cont::internal::Buffer>& buffers)                     \
+    : Superclass(buffers)                                                                          \
+  {                                                                                                \
+  }                                                                                                \
+                                                                                                   \
+  VTKM_CONT                                                                                        \
+  explicit classname(std::vector<vtkm::cont::internal::Buffer>&& buffers) noexcept                 \
+    : Superclass(std::move(buffers))                                                               \
+  {                                                                                                \
+  }                                                                                                \
+                                                                                                   \
+  VTKM_CONT                                                                                        \
   Thisclass& operator=(const Thisclass& src)                                                       \
   {                                                                                                \
     this->Superclass::operator=(src);                                                              \
@@ -200,7 +212,10 @@ struct GetTypeInParentheses<void(T)>
   }                                                                                                \
                                                                                                    \
   using ValueType = typename__ Superclass::ValueType;                                              \
-  using StorageTag = typename__ Superclass::StorageTag
+  using StorageTag = typename__ Superclass::StorageTag;                                            \
+  using StorageType = typename__ Superclass::StorageType;                                          \
+  using ReadPortalType = typename__ Superclass::ReadPortalType;                                    \
+  using WritePortalType = typename__ Superclass::WritePortalType
 
 /// \brief Macro to make default methods in ArrayHandle subclasses.
 ///
@@ -329,12 +344,12 @@ public:
   /// Special constructor for subclass specializations that need to set the
   /// initial state array. Used when pulling data from other sources.
   ///
-  VTKM_CONT ArrayHandle(const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  VTKM_CONT explicit ArrayHandle(const std::vector<vtkm::cont::internal::Buffer>& buffers)
     : Buffers(buffers)
   {
   }
 
-  VTKM_CONT ArrayHandle(std::vector<vtkm::cont::internal::Buffer>&& buffers) noexcept
+  VTKM_CONT explicit ArrayHandle(std::vector<vtkm::cont::internal::Buffer>&& buffers) noexcept
     : Buffers(std::move(buffers))
   {
   }
@@ -752,9 +767,9 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
   std::ostream& out,
   vtkm::VecTraitsTagMultipleComponents)
 {
-  using Traits = vtkm::internal::SafeVecTraits<T>;
+  using Traits = vtkm::VecTraits<T>;
   using ComponentType = typename Traits::ComponentType;
-  using IsVecOfVec = typename vtkm::internal::SafeVecTraits<ComponentType>::HasMultipleComponents;
+  using IsVecOfVec = typename vtkm::VecTraits<ComponentType>::HasMultipleComponents;
   vtkm::IdComponent numComponents = Traits::GetNumberOfComponents(value);
   out << "(";
   printSummary_ArrayHandle_Value(Traits::GetComponent(value, 0), out, IsVecOfVec());
@@ -774,10 +789,10 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
 {
   out << "{";
   printSummary_ArrayHandle_Value(
-    value.first, out, typename vtkm::internal::SafeVecTraits<T1>::HasMultipleComponents());
+    value.first, out, typename vtkm::VecTraits<T1>::HasMultipleComponents());
   out << ",";
   printSummary_ArrayHandle_Value(
-    value.second, out, typename vtkm::internal::SafeVecTraits<T2>::HasMultipleComponents());
+    value.second, out, typename vtkm::VecTraits<T2>::HasMultipleComponents());
   out << "}";
 }
 
@@ -793,7 +808,7 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
 {
   using ArrayType = vtkm::cont::ArrayHandle<T, StorageT>;
   using PortalType = typename ArrayType::ReadPortalType;
-  using IsVec = typename vtkm::internal::SafeVecTraits<T>::HasMultipleComponents;
+  using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
 
   vtkm::Id sz = array.GetNumberOfValues();
 

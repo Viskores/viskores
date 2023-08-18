@@ -20,23 +20,28 @@ set(flow_headers
   PathParticle.h
   Streamline.h
   StreamSurface.h
+  WarpXStreamline.h
   )
 
 set(flow_sources
   internal/Messenger.cxx
   FilterParticleAdvection.cxx
-  ParticleAdvection.cxx
-  Pathline.cxx
-  PathParticle.cxx
-  Streamline.cxx
   )
 
 set(flow_device_sources
+  worklet/Analysis.cxx
   Lagrangian.cxx
   LagrangianStructures.cxx
   FilterParticleAdvectionSteadyState.cxx
   FilterParticleAdvectionUnsteadyState.cxx
   StreamSurface.cxx
+  Lagrangian.cxx
+  LagrangianStructures.cxx
+  ParticleAdvection.cxx
+  Pathline.cxx
+  PathParticle.cxx
+  Streamline.cxx
+  WarpXStreamline.cxx
   )
 
 vtkm_library(

@@ -153,7 +153,6 @@ void Camera::GetRealViewport(vtkm::Id screenWidth,
     vtkm::Float32 daspect =
       (this->Camera2D.Right - this->Camera2D.Left) / (this->Camera2D.Top - this->Camera2D.Bottom);
     daspect *= this->Camera2D.XScale;
-//cerr << "waspect="<<waspect << "   \tdaspect="<<daspect<<endl;
 
 //needed as center is a constant value
 #if defined(VTKM_MSVC)

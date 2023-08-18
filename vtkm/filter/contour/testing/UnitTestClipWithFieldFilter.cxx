@@ -70,8 +70,8 @@ void TestClipExplicit()
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   temp.AsArrayHandle(resultArrayHandle);
 
-  vtkm::Float32 expected[7] = { 1, 2, 1, 0, 0.5, 0.5, 0.5 };
-  for (int i = 0; i < 7; ++i)
+  vtkm::Float32 expected[6] = { 1, 2, 1, 0.5, 0.5, 0.5 };
+  for (int i = 0; i < 6; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
                      "Wrong result for Clip fliter on triangle explicit data");

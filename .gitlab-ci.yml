@@ -1,3 +1,15 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
 .docker_image: &docker_image
   variables:
     GIT_CLONE_PATH: $CI_BUILDS_DIR/gitlab-kitware-sciviz-ci
@@ -38,7 +50,7 @@
     - .docker_image
 
 .ubuntu1804_cuda_kokkos: &ubuntu1804_cuda_kokkos
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20220407"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20230125"
   extends:
     - .docker_image
 
@@ -53,12 +65,17 @@
     - .docker_image
 
 .ubuntu2004_kokkos: &ubuntu2004_kokkos
-  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20210916"
+  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20230705"
   extends:
     - .docker_image
 
 .ubuntu2004_hip_kokkos: &ubuntu2004_hip_kokkos
-  image: "kitware/vtkm:ci-ubuntu2004_hip_kokkos-20220620"
+  image: "kitware/vtkm:ci-ubuntu2004_hip_kokkos-20230220"
+  extends:
+    - .docker_image
+
+.opensuse: &opensuse
+  image: "kitware/vtkm:ci-opensuse-20230619"
   extends:
     - .docker_image
 
@@ -96,7 +113,7 @@
       when: on_success
     - when: never
 
-.run_spock_ci: &run_spock_ci
+.run_crusher_ci: &run_crusher_ci
   rules:
     - if: '$CI_PROJECT_PATH == "ci/csc331_crusher/dev/vtk-m"'
       when: on_success
@@ -116,6 +133,10 @@ stages:
 .use_minimum_supported_cmake:
   variables:
     CMAKE_VERSION: "3.13.5"
+
+.warning_policy:
+  allow_failure:
+    exit_codes: [ 47 ]
 
 .install_cmake: &install_cmake |
   export PATH=$PWD/.gitlab/cmake/bin:$PATH
@@ -141,8 +162,10 @@ stages:
   script:
     - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
     - sccache --show-stats
+    - cmake -P .gitlab/ci/check_warnings.cmake || exit 47
   extends:
     - .cmake_build_artifacts
+    - .warning_policy
 
 .cmake_test_linux: &cmake_test_linux
   stage: test
@@ -192,6 +215,7 @@ stages:
       # CTest and CMake install files.
       # Note: this also captures our CIState.cmake file
       - build/CMakeCache.txt
+      - build/compile_num_warnings.log
       - build/**/*.cmake
       - build/Testing/
 
@@ -214,11 +238,12 @@ stages:
 
 include:
   - local: '/.gitlab/ci/ascent.yml'
-  - local: '/.gitlab/ci/spock.yml'
+  - local: '/.gitlab/ci/crusher.yml'
   - local: '/.gitlab/ci/centos7.yml'
   - local: '/.gitlab/ci/centos8.yml'
   - local: '/.gitlab/ci/doxygen.yml'
   - local: '/.gitlab/ci/macos.yml'
+  - local: '/.gitlab/ci/opensuse.yml'
   - local: '/.gitlab/ci/rhel8.yml'
   - local: '/.gitlab/ci/ubuntu1604.yml'
   - local: '/.gitlab/ci/ubuntu1804.yml'

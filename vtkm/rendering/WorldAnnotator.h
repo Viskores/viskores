@@ -27,15 +27,13 @@ class Canvas;
 class VTKM_RENDERING_EXPORT WorldAnnotator
 {
 public:
-  WorldAnnotator(const vtkm::rendering::Canvas* canvas);
+  explicit WorldAnnotator(const vtkm::rendering::Canvas* canvas);
 
-  virtual ~WorldAnnotator();
-
-  virtual void AddLine(const vtkm::Vec3f_64& point0,
-                       const vtkm::Vec3f_64& point1,
-                       vtkm::Float32 lineWidth,
-                       const vtkm::rendering::Color& color,
-                       bool inFront = false) const;
+  void AddLine(const vtkm::Vec3f_64& point0,
+               const vtkm::Vec3f_64& point1,
+               vtkm::Float32 lineWidth,
+               const vtkm::rendering::Color& color,
+               bool inFront = false) const;
 
   VTKM_CONT
   void AddLine(vtkm::Float64 x0,
@@ -58,14 +56,14 @@ public:
   VTKM_CONT
   void EndLineRenderingBatch() const;
 
-  virtual void AddText(const vtkm::Vec3f_32& origin,
-                       const vtkm::Vec3f_32& right,
-                       const vtkm::Vec3f_32& up,
-                       vtkm::Float32 scale,
-                       const vtkm::Vec2f_32& anchor,
-                       const vtkm::rendering::Color& color,
-                       const std::string& text,
-                       const vtkm::Float32 depth = 0.f) const;
+  void AddText(const vtkm::Vec3f_32& origin,
+               const vtkm::Vec3f_32& right,
+               const vtkm::Vec3f_32& up,
+               vtkm::Float32 scale,
+               const vtkm::Vec2f_32& anchor,
+               const vtkm::rendering::Color& color,
+               const std::string& text,
+               vtkm::Float32 depth = 0.f) const;
 
   VTKM_CONT
   void AddText(vtkm::Float32 originX,
@@ -94,7 +92,7 @@ public:
 
 private:
   const vtkm::rendering::Canvas* Canvas;
-  vtkm::rendering::LineRendererBatcher LineBatcher;
+  mutable vtkm::rendering::LineRendererBatcher LineBatcher;
 };
 }
 } //namespace vtkm::rendering

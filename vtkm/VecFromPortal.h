@@ -33,14 +33,6 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  VecFromPortal()
-    : NumComponents(0)
-    , Offset(0)
-  {
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
   VecFromPortal(const PortalType& portal, vtkm::IdComponent numComponents = 0, vtkm::Id offset = 0)
     : Portal(portal)
     , NumComponents(numComponents)
@@ -61,6 +53,18 @@ public:
     }
   }
 
+  template <vtkm::IdComponent N>
+  VTKM_EXEC_CONT operator vtkm::Vec<ComponentType, N>() const
+  {
+    vtkm::Vec<ComponentType, N> result;
+    this->CopyInto(result);
+    for (vtkm::IdComponent index = this->NumComponents; index < N; ++index)
+    {
+      result[index] = vtkm::TypeTraits<ComponentType>::ZeroInitialization();
+    }
+    return result;
+  }
+
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   vtkm::internal::ArrayPortalValueReference<PortalType> operator[](vtkm::IdComponent index) const
@@ -68,6 +72,20 @@ public:
     return vtkm::internal::ArrayPortalValueReference<PortalType>(this->Portal,
                                                                  index + this->Offset);
   }
+
+  template <typename T, vtkm::IdComponent N>
+  VTKM_EXEC_CONT VecFromPortal& operator=(const vtkm::Vec<T, N>& src)
+  {
+    vtkm::IdComponent numComponents = vtkm::Min(N, this->NumComponents);
+    for (vtkm::IdComponent index = 0; index < numComponents; ++index)
+    {
+      this->Portal.Set(index + this->Offset, src[index]);
+    }
+    return *this;
+  }
+
+  VTKM_EXEC_CONT const PortalType& GetPortal() const { return this->Portal; }
+  VTKM_EXEC_CONT vtkm::Id GetOffset() const { return this->Offset; }
 
 private:
   PortalType Portal;
@@ -115,6 +133,15 @@ struct VecTraits<vtkm::VecFromPortal<PortalType>>
   static ComponentType GetComponent(const VecType& vector, vtkm::IdComponent componentIndex)
   {
     return vector[componentIndex];
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  static void SetComponent(const VecType& vector,
+                           vtkm::IdComponent componentIndex,
+                           const ComponentType& value)
+  {
+    vector[componentIndex] = value;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS

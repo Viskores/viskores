@@ -24,20 +24,20 @@ namespace rendering
 class VTKM_RENDERING_EXPORT AxisAnnotation
 {
 protected:
-  void CalculateTicks(const vtkm::Range& range,
-                      bool minor,
-                      std::vector<vtkm::Float64>& positions,
-                      std::vector<vtkm::Float64>& proportions,
-                      int modifyTickQuantity) const;
-  void CalculateTicksLogarithmic(const vtkm::Range& range,
-                                 bool minor,
-                                 std::vector<vtkm::Float64>& positions,
-                                 std::vector<vtkm::Float64>& proportions) const;
+  static void CalculateTicks(const vtkm::Range& range,
+                             bool minor,
+                             std::vector<vtkm::Float64>& positions,
+                             std::vector<vtkm::Float64>& proportions,
+                             int modifyTickQuantity);
+  static void CalculateTicksLogarithmic(const vtkm::Range& range,
+                                        bool minor,
+                                        std::vector<vtkm::Float64>& positions,
+                                        std::vector<vtkm::Float64>& proportions);
 
 public:
-  AxisAnnotation();
+  AxisAnnotation() = default;
 
-  virtual ~AxisAnnotation();
+  virtual ~AxisAnnotation() = default;
 
   virtual void Render(const vtkm::rendering::Camera& camera,
                       const vtkm::rendering::WorldAnnotator& worldAnnotator,

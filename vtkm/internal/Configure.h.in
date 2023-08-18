@@ -300,9 +300,16 @@
 #ifndef VTKM_KOKKOS_HIP
 #cmakedefine VTKM_KOKKOS_HIP
 #endif
+// Mark if Kokkos algorithms should use thrust
+#if defined(VTKM_KOKKOS_HIP) || defined(VTKM_KOKKOS_CUDA)
+#cmakedefine VTKM_ENABLE_KOKKOS_THRUST
+#endif
 
 //Mark if we are building with MPI enabled.
 #cmakedefine VTKM_ENABLE_MPI
+
+//Mark if we are building with GPU AWARE MPI enabled.
+#cmakedefine VTKM_ENABLE_GPU_MPI
 
 //Mark what version of the CUDA compiler we have. This is needed to correctly
 //choose consistent implementation ( so we don't violate ODR ) when we compile
@@ -312,12 +319,12 @@
 #define VTKM_CUDA_VERSION_MINOR @VTKM_CUDA_VERSION_MINOR@
 #endif
 
-#if __cplusplus >= 201103L || \
-    ( defined(VTKM_MSVC) && _MSC_VER >= 1900  ) || \
+#if __cplusplus >= 201402L || \
+    ( defined(VTKM_MSVC) && _MSC_VER >= 1910 ) || \
     ( defined(VTKM_ICC)  && defined(__INTEL_CXX11_MODE__) )
-#define VTKM_HAVE_CXX_11
+#define VTKM_HAVE_CXX_14
 #else
-#error "VTK-m requires at least a C++11 compiler"
+#error "VTK-m requires at least a C++14 compiler"
 #endif
 
 //Mark if we have enabled logging.

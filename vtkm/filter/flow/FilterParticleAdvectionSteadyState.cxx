@@ -9,9 +9,9 @@
 //============================================================================
 
 #include <vtkm/filter/flow/FilterParticleAdvectionSteadyState.h>
-#include <vtkm/filter/flow/internal/DataSetIntegratorSteadyState.h>
 
 #include <vtkm/filter/flow/internal/BoundsMap.h>
+#include <vtkm/filter/flow/internal/DataSetIntegratorSteadyState.h>
 #include <vtkm/filter/flow/internal/ParticleAdvector.h>
 
 namespace vtkm
@@ -21,78 +21,89 @@ namespace filter
 namespace flow
 {
 
-namespace
+template <typename Derived>
+VTKM_CONT typename FilterParticleAdvectionSteadyState<Derived>::FieldType
+FilterParticleAdvectionSteadyState<Derived>::GetField(const vtkm::cont::DataSet& data) const
 {
-VTKM_CONT std::vector<vtkm::filter::flow::internal::DataSetIntegratorSteadyState>
-CreateDataSetIntegrators(
-  const vtkm::cont::PartitionedDataSet& input,
-  const vtkm::cont::Variant<std::string, std::pair<std::string, std::string>>& activeField,
-  const vtkm::filter::flow::internal::BoundsMap& boundsMap,
-  const vtkm::filter::flow::IntegrationSolverType solverType,
-  const vtkm::filter::flow::VectorFieldType vecFieldType,
-  const vtkm::filter::flow::FlowResultType resultType)
-{
-  using DSIType = vtkm::filter::flow::internal::DataSetIntegratorSteadyState;
+  const Derived* inst = static_cast<const Derived*>(this);
+  return inst->GetField(data);
+}
 
+template <typename Derived>
+VTKM_CONT typename FilterParticleAdvectionSteadyState<Derived>::TerminationType
+FilterParticleAdvectionSteadyState<Derived>::GetTermination(const vtkm::cont::DataSet& data) const
+{
+  const Derived* inst = static_cast<const Derived*>(this);
+  return inst->GetTermination(data);
+}
+
+template <typename Derived>
+VTKM_CONT typename FilterParticleAdvectionSteadyState<Derived>::AnalysisType
+FilterParticleAdvectionSteadyState<Derived>::GetAnalysis(const vtkm::cont::DataSet& data) const
+{
+  const Derived* inst = static_cast<const Derived*>(this);
+  return inst->GetAnalysis(data);
+}
+
+template <typename Derived>
+VTKM_CONT vtkm::cont::PartitionedDataSet
+FilterParticleAdvectionSteadyState<Derived>::DoExecutePartitions(
+  const vtkm::cont::PartitionedDataSet& input)
+{
+  //using ParticleType    = FilterParticleAdvectionSteadyState<Derived>::ParticleType;
+  //using FieldType       = FilterParticleAdvectionSteadyState<Derived>::FieldType;
+  //using TerminationType = FilterParticleAdvectionSteadyState<Derived>::TerminationType;
+  //using AnalysisType    = FilterParticleAdvectionSteadyState<Derived>::AnalysisType;
+  using DSIType = vtkm::filter::flow::internal::
+    DataSetIntegratorSteadyState<ParticleType, FieldType, TerminationType, AnalysisType>;
+
+  this->ValidateOptions();
+
+
+  vtkm::filter::flow::internal::BoundsMap boundsMap(input);
   std::vector<DSIType> dsi;
   for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
   {
     vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
-    auto ds = input.GetPartition(i);
-    if (activeField.IsType<DSIType::VelocityFieldNameType>())
-    {
-      const auto& fieldNm = activeField.Get<DSIType::VelocityFieldNameType>();
-      if (!ds.HasPointField(fieldNm) && !ds.HasCellField(fieldNm))
-        throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
-    }
-    else if (activeField.IsType<DSIType::ElectroMagneticFieldNameType>())
-    {
-      const auto& fieldNm = activeField.Get<DSIType::ElectroMagneticFieldNameType>();
-      const auto& electric = fieldNm.first;
-      const auto& magnetic = fieldNm.second;
-      if (!ds.HasPointField(electric) && !ds.HasCellField(electric))
-        throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
-      if (!ds.HasPointField(magnetic) && !ds.HasCellField(magnetic))
-        throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
-    }
-    dsi.emplace_back(ds, blockId, activeField, solverType, vecFieldType, resultType);
+    auto dataset = input.GetPartition(i);
+
+    // Build the field for the current dataset
+    FieldType field = this->GetField(dataset);
+    // Build the termination for the current dataset
+    TerminationType termination = this->GetTermination(dataset);
+    // Build the analysis for the current dataset
+    AnalysisType analysis = this->GetAnalysis(dataset);
+
+    dsi.emplace_back(blockId, field, dataset, this->SolverType, termination, analysis);
   }
-  return dsi;
-}
-
-} //anonymous namespace
-
-VTKM_CONT vtkm::cont::PartitionedDataSet FilterParticleAdvectionSteadyState::DoExecutePartitions(
-  const vtkm::cont::PartitionedDataSet& input)
-{
-  using DSIType = vtkm::filter::flow::internal::DataSetIntegratorSteadyState;
-  this->ValidateOptions();
-
-  using VariantType = vtkm::cont::Variant<std::string, std::pair<std::string, std::string>>;
-  VariantType variant;
-
-  if (this->VecFieldType == vtkm::filter::flow::VectorFieldType::VELOCITY_FIELD_TYPE)
-  {
-    const auto& field = this->GetActiveFieldName();
-    variant.Emplace<DSIType::VelocityFieldNameType>(field);
-  }
-  else if (this->VecFieldType == vtkm::filter::flow::VectorFieldType::ELECTRO_MAGNETIC_FIELD_TYPE)
-  {
-    const auto& electric = this->GetEField();
-    const auto& magnetic = this->GetBField();
-    variant.Emplace<DSIType::ElectroMagneticFieldNameType>(electric, magnetic);
-  }
-
-  vtkm::filter::flow::internal::BoundsMap boundsMap(input);
-  auto dsi = CreateDataSetIntegrators(
-    input, variant, boundsMap, this->SolverType, this->VecFieldType, this->GetResultType());
 
   vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(
-    boundsMap, dsi, this->UseThreadedAlgorithm, this->GetResultType());
+    boundsMap, dsi, this->UseThreadedAlgorithm, this->UseAsynchronousCommunication);
 
-  return pav.Execute(this->NumberOfSteps, this->StepSize, this->Seeds);
+  vtkm::cont::ArrayHandle<ParticleType> particles;
+  this->Seeds.AsArrayHandle(particles);
+  return pav.Execute(particles, this->StepSize);
 }
 
 }
 }
 } // namespace vtkm::filter::flow
+
+#include <vtkm/filter/flow/ParticleAdvection.h>
+#include <vtkm/filter/flow/Streamline.h>
+#include <vtkm/filter/flow/WarpXStreamline.h>
+
+namespace vtkm
+{
+namespace filter
+{
+namespace flow
+{
+
+template class FilterParticleAdvectionSteadyState<vtkm::filter::flow::ParticleAdvection>;
+template class FilterParticleAdvectionSteadyState<vtkm::filter::flow::Streamline>;
+template class FilterParticleAdvectionSteadyState<vtkm::filter::flow::WarpXStreamline>;
+
+} // namespace flow
+} // namespace filter
+} // namespace vtkm

@@ -20,7 +20,6 @@ namespace rendering
 {
 
 AxisAnnotation2D::AxisAnnotation2D()
-  : AxisAnnotation()
 {
   this->AlignH = TextAnnotation::HCenter;
   this->AlignV = TextAnnotation::VCenter;
@@ -30,8 +29,6 @@ AxisAnnotation2D::AxisAnnotation2D()
   this->Logarithmic = false;
   this->MoreOrLessTickAdjustment = 0;
 }
-
-AxisAnnotation2D::~AxisAnnotation2D() {}
 
 void AxisAnnotation2D::SetRangeForAutoTicks(const Range& range)
 {
@@ -84,12 +81,11 @@ void AxisAnnotation2D::Render(const vtkm::rendering::Camera& camera,
   canvas.AddLine(this->PosX0, this->PosY0, this->PosX1, this->PosY1, this->LineWidth, this->Color);
 
   // major ticks
-  unsigned int nmajor = (unsigned int)this->ProportionsMajor.size();
+  auto nmajor = (unsigned int)this->ProportionsMajor.size();
   while (this->Labels.size() < nmajor)
   {
-    this->Labels.push_back(
-      std::unique_ptr<TextAnnotation>(new vtkm::rendering::TextAnnotationScreen(
-        "test", this->Color, this->FontScale, vtkm::Vec2f_32(0, 0), 0)));
+    this->Labels.push_back(std::make_unique<TextAnnotationScreen>(
+      "test", this->Color, this->FontScale, vtkm::Vec2f_32(0, 0)));
   }
 
   std::stringstream numberToString;
@@ -116,8 +112,7 @@ void AxisAnnotation2D::Render(const vtkm::rendering::Camera& camera,
     this->Labels[i]->SetText(numberToString.str());
     //if (fabs(this->PositionsMajor[i]) < 1e-10)
     //    this->Labels[i]->SetText("0");
-    TextAnnotation* tempBase = this->Labels[i].get();
-    TextAnnotationScreen* tempDerived = static_cast<TextAnnotationScreen*>(tempBase);
+    auto* tempDerived = dynamic_cast<TextAnnotationScreen*>(this->Labels[i].get());
     tempDerived->SetPosition(vtkm::Float32(xs), vtkm::Float32(ys));
 
     this->Labels[i]->SetAlignment(this->AlignH, this->AlignV);
@@ -126,7 +121,7 @@ void AxisAnnotation2D::Render(const vtkm::rendering::Camera& camera,
   // minor ticks
   if (this->MinorTickSizeX != 0 || this->MinorTickSizeY != 0)
   {
-    unsigned int nminor = (unsigned int)this->ProportionsMinor.size();
+    auto nminor = (unsigned int)this->ProportionsMinor.size();
     for (unsigned int i = 0; i < nminor; ++i)
     {
       vtkm::Float64 xc = this->PosX0 + (this->PosX1 - this->PosX0) * this->ProportionsMinor[i];
@@ -140,9 +135,9 @@ void AxisAnnotation2D::Render(const vtkm::rendering::Camera& camera,
     }
   }
 
-  for (unsigned int i = 0; i < nmajor; ++i)
+  for (auto& label : this->Labels)
   {
-    this->Labels[i]->Render(camera, worldAnnotator, canvas);
+    label->Render(camera, worldAnnotator, canvas);
   }
 }
 }

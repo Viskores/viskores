@@ -36,7 +36,6 @@ struct MapPermutationWorklet : vtkm::worklet::WorkletMapField
                             InputPortalType inputPortal,
                             OutputType& output) const
   {
-    VTKM_STATIC_ASSERT(vtkm::HasVecTraits<OutputType>::value);
     if ((permutationIndex >= 0) && (permutationIndex < inputPortal.GetNumberOfValues()))
     {
       output = inputPortal.Get(permutationIndex);

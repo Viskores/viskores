@@ -22,7 +22,7 @@
 #include <vtkm/rendering/TextAnnotationBillboard.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 
-#include <sstream>
+#include <memory>
 
 namespace vtkm
 {
@@ -48,8 +48,6 @@ protected:
 
 public:
   AxisAnnotation3D();
-
-  ~AxisAnnotation3D();
 
   AxisAnnotation3D(const AxisAnnotation3D&) = delete;
 
@@ -111,9 +109,9 @@ public:
     this->SetRange(vtkm::Range(lower, upper));
   }
 
-  virtual void Render(const vtkm::rendering::Camera& camera,
-                      const vtkm::rendering::WorldAnnotator& worldAnnotator,
-                      vtkm::rendering::Canvas& canvas) override;
+  void Render(const vtkm::rendering::Camera& camera,
+              const vtkm::rendering::WorldAnnotator& worldAnnotator,
+              vtkm::rendering::Canvas& canvas) override;
 };
 }
 } //namespace vtkm::rendering

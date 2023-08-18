@@ -78,6 +78,11 @@ public:
   {
     throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
+
+  VTKM_CONT virtual void DeleteRawPointer(void*) const override
+  {
+    throw vtkm::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
+  }
 };
 
 class RuntimeDeviceConfigurationInvalid final
@@ -97,13 +102,6 @@ public:
     throw vtkm::cont::ErrorBadDevice("Tried to set the number of threads on an invalid device");
   }
 
-  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode SetNumaRegions(
-    const vtkm::Id&) override final
-  {
-    throw vtkm::cont::ErrorBadDevice(
-      "Tried to set the number of numa regions on an invalid device");
-  }
-
   VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode SetDeviceInstance(
     const vtkm::Id&) override final
   {
@@ -114,13 +112,6 @@ public:
     vtkm::Id&) const override final
   {
     throw vtkm::cont::ErrorBadDevice("Tried to get the number of threads on an invalid device");
-  }
-
-  VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode GetNumaRegions(
-    vtkm::Id&) const override final
-  {
-    throw vtkm::cont::ErrorBadDevice(
-      "Tried to get the number of numa regions on an invalid device");
   }
 
   VTKM_CONT virtual vtkm::cont::internal::RuntimeDeviceConfigReturnCode GetDeviceInstance(

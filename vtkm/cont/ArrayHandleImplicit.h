@@ -158,7 +158,6 @@ struct ArrayHandleImplicitTraits
   using PortalType = vtkm::internal::ArrayPortalImplicit<FunctorType>;
   using StorageTag = vtkm::cont::StorageTagImplicit<PortalType>;
   using Superclass = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 };
 
 } // namespace detail

@@ -11,6 +11,8 @@
 #define vtk_m_cont_ArrayHandleCartesianProduct_h
 
 #include <vtkm/Assert.h>
+#include <vtkm/Range.h>
+#include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/ArrayExtractComponent.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -342,10 +344,6 @@ public:
                                                           SecondHandleType,
                                                           ThirdHandleType>::Superclass));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
   ArrayHandleCartesianProduct(const FirstHandleType& firstArray,
                               const SecondHandleType& secondArray,
@@ -483,6 +481,64 @@ struct ArrayExtractComponentImpl<vtkm::cont::StorageTagCartesianProduct<STs...>>
       default:
         throw vtkm::cont::ErrorBadValue("Invalid component index to ArrayExtractComponent.");
     }
+  }
+};
+
+template <typename T, typename S>
+vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeGeneric(
+  const vtkm::cont::ArrayHandle<T, S>& input,
+  const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+  bool computeFiniteRange,
+  vtkm::cont::DeviceAdapterId device);
+
+template <typename S>
+struct ArrayRangeComputeImpl;
+
+template <typename ST1, typename ST2, typename ST3>
+struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>
+{
+  template <typename T>
+  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
+    const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>,
+                                  vtkm::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>& input_,
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool computeFiniteRange,
+    vtkm::cont::DeviceAdapterId device) const
+  {
+    if (maskArray.GetNumberOfValues() != 0)
+    {
+      return vtkm::cont::internal::ArrayRangeComputeGeneric(
+        input_, maskArray, computeFiniteRange, device);
+    }
+
+    const auto& input =
+      static_cast<const vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T, ST1>,
+                                                                vtkm::cont::ArrayHandle<T, ST2>,
+                                                                vtkm::cont::ArrayHandle<T, ST3>>&>(
+        input_);
+
+    vtkm::cont::ArrayHandle<vtkm::Range> ranges[3];
+    ranges[0] = vtkm::cont::internal::ArrayRangeComputeImpl<ST1>{}(
+      input.GetFirstArray(), maskArray, computeFiniteRange, device);
+    ranges[1] = vtkm::cont::internal::ArrayRangeComputeImpl<ST2>{}(
+      input.GetSecondArray(), maskArray, computeFiniteRange, device);
+    ranges[2] = vtkm::cont::internal::ArrayRangeComputeImpl<ST3>{}(
+      input.GetThirdArray(), maskArray, computeFiniteRange, device);
+
+    auto numComponents =
+      ranges[0].GetNumberOfValues() + ranges[1].GetNumberOfValues() + ranges[2].GetNumberOfValues();
+    vtkm::cont::ArrayHandle<vtkm::Range> result;
+    result.Allocate(numComponents);
+    auto resultPortal = result.WritePortal();
+    for (vtkm::Id i = 0, index = 0; i < 3; ++i)
+    {
+      auto rangePortal = ranges[i].ReadPortal();
+      for (vtkm::Id j = 0; j < rangePortal.GetNumberOfValues(); ++j, ++index)
+      {
+        resultPortal.Set(index, rangePortal.Get(j));
+      }
+    }
+    return result;
   }
 };
 

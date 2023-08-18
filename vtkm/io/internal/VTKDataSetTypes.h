@@ -170,83 +170,53 @@ struct DataTypeName<vtkm::Float64>
   static const char* Name() { return "double"; }
 };
 
-template <typename T, typename Functor>
-inline void SelectVecTypeAndCall(T, vtkm::IdComponent numComponents, const Functor& functor)
-{
-  switch (numComponents)
-  {
-    case 1:
-      functor(T());
-      break;
-    case 2:
-      functor(vtkm::Vec<T, 2>());
-      break;
-    case 3:
-      functor(vtkm::Vec<T, 3>());
-      break;
-    case 4:
-      functor(vtkm::Vec<T, 4>());
-      break;
-    case 9:
-      functor(vtkm::Vec<T, 9>());
-      break;
-    default:
-      functor(numComponents, T());
-      break;
-  }
-}
-
 template <typename Functor>
-inline void SelectTypeAndCall(DataType dtype,
-                              vtkm::IdComponent numComponents,
-                              const Functor& functor)
+inline void SelectTypeAndCall(DataType dtype, Functor&& functor)
 {
   switch (dtype)
   {
     case DTYPE_BIT:
-      SelectVecTypeAndCall(DummyBitType(), numComponents, functor);
+      functor(DummyBitType());
       break;
     case DTYPE_UNSIGNED_CHAR:
-      SelectVecTypeAndCall(vtkm::UInt8(), numComponents, functor);
+      functor(vtkm::UInt8());
       break;
     case DTYPE_CHAR:
-      SelectVecTypeAndCall(vtkm::Int8(), numComponents, functor);
+      functor(vtkm::Int8());
       break;
     case DTYPE_UNSIGNED_SHORT:
-      SelectVecTypeAndCall(vtkm::UInt16(), numComponents, functor);
+      functor(vtkm::UInt16());
       break;
     case DTYPE_SHORT:
-      SelectVecTypeAndCall(vtkm::Int16(), numComponents, functor);
+      functor(vtkm::Int16());
       break;
     case DTYPE_UNSIGNED_INT:
-      SelectVecTypeAndCall(vtkm::UInt32(), numComponents, functor);
+      functor(vtkm::UInt32());
       break;
     case DTYPE_INT:
-      SelectVecTypeAndCall(vtkm::Int32(), numComponents, functor);
+      functor(vtkm::Int32());
       break;
     case DTYPE_UNSIGNED_LONG:
     case DTYPE_UNSIGNED_LONG_LONG:
-      SelectVecTypeAndCall(vtkm::UInt64(), numComponents, functor);
+      functor(vtkm::UInt64());
       break;
     case DTYPE_LONG:
     case DTYPE_LONG_LONG:
-      SelectVecTypeAndCall(vtkm::Int64(), numComponents, functor);
+      functor(vtkm::Int64());
       break;
     case DTYPE_FLOAT:
-      SelectVecTypeAndCall(vtkm::Float32(), numComponents, functor);
+      functor(vtkm::Float32());
       break;
     case DTYPE_DOUBLE:
-      SelectVecTypeAndCall(vtkm::Float64(), numComponents, functor);
+      functor(vtkm::Float64());
       break;
     default:
       assert(false);
   }
 }
+
 }
 }
 } // namespace vtkm::io::internal
-
-VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::ColorChannel8)
-VTKM_BASIC_TYPE_VECTOR(vtkm::io::internal::DummyBitType)
 
 #endif // vtk_m_io_internal_VTKDataSetTypes_h

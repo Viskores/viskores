@@ -38,6 +38,7 @@ set(headers
   ArrayHandleRandomStandardNormal.h
   ArrayHandleRandomUniformBits.h
   ArrayHandleRandomUniformReal.h
+  ArrayHandleRuntimeVec.h
   ArrayHandleSOA.h
   ArrayHandleStride.h
   ArrayHandleSwizzle.h
@@ -50,6 +51,7 @@ set(headers
   ArrayPortalToIterators.h
   ArrayRangeCompute.h
   ArrayRangeComputeTemplate.h
+  ArrayRangeComputeTemplateInstantiationsIncludes.h
   AssignerPartitionedDataSet.h
   AtomicArray.h
   BitField.h
@@ -85,6 +87,7 @@ set(headers
   DeviceAdapterAlgorithm.h
   DeviceAdapterList.h
   DeviceAdapterTag.h
+  DIYMemoryManagement.h
   EnvironmentTracker.h
   Error.h
   ErrorBadAllocation.h
@@ -133,7 +136,6 @@ set(sources
   ArrayHandleBasic.cxx
   ArrayHandleSOA.cxx
   ArrayHandleStride.cxx
-  ArrayHandleUniformPointCoordinates.cxx
   AssignerPartitionedDataSet.cxx
   BitField.cxx
   BoundsCompute.cxx
@@ -153,6 +155,7 @@ set(sources
   DataSetBuilderRectilinear.cxx
   DataSetBuilderUniform.cxx
   DeviceAdapterTag.cxx
+  DIYMemoryManagement.cxx
   EnvironmentTracker.cxx
   ErrorBadDevice.cxx
   ErrorBadType.cxx
@@ -180,6 +183,8 @@ set(sources
 set(device_sources
   ArrayCopy.cxx
   ArrayGetValues.cxx
+  ArrayHandleIndex.cxx
+  ArrayHandleUniformPointCoordinates.cxx
   ArrayRangeCompute.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
   CellLocatorUniformBins.cxx
@@ -190,6 +195,7 @@ set(device_sources
   ConvertNumComponentsToOffsets.cxx
   Field.cxx
   internal/ArrayCopyUnknown.cxx
+  internal/ArrayRangeComputeUtils.cxx
   internal/Buffer.cxx
   internal/MapArrayPermutation.cxx
   MergePartitionedDataSet.cxx
@@ -259,6 +265,15 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/DefaultTypes.h.in
 vtkm_install_headers(vtkm/cont
   ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/DefaultTypes.h
   )
+
+#-----------------------------------------------------------------------------
+# Some operations are pre-compiled for many different types. Improve parallel
+# compiles by breaking them up into smaller units.
+vtkm_add_instantiations(array_range_instantiations
+  INSTANTIATIONS_FILE ArrayRangeComputeTemplate.h
+  TEMPLATE_SOURCE ArrayRangeComputeTemplateInstantiationsIncludes.h
+  )
+list(APPEND device_sources ${array_range_instantiations})
 
 #-----------------------------------------------------------------------------
 vtkm_library( NAME vtkm_cont

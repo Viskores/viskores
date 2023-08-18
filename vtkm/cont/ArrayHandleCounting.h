@@ -12,7 +12,11 @@
 
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
+#include <vtkm/cont/internal/ArrayRangeComputeUtils.h>
+
+#include <vtkm/Range.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/VecFlat.h>
 #include <vtkm/VecTraits.h>
 
 namespace vtkm
@@ -76,27 +80,17 @@ private:
 namespace detail
 {
 
-template <typename T, typename UseVecTraits = vtkm::HasVecTraits<T>>
-struct CanCountImpl;
-
 template <typename T>
-struct CanCountImpl<T, std::false_type>
-{
-  using TTraits = vtkm::TypeTraits<T>;
-  static constexpr bool IsNumeric =
-    !std::is_same<typename TTraits::NumericTag, vtkm::TypeTraitsUnknownTag>::value;
-
-  static constexpr bool value = IsNumeric;
-};
-
-template <typename T>
-struct CanCountImpl<T, std::true_type>
+struct CanCountImpl
 {
   using VTraits = vtkm::VecTraits<T>;
   using BaseType = typename VTraits::BaseComponentType;
+  using TTraits = vtkm::TypeTraits<BaseType>;
+  static constexpr bool IsNumeric =
+    !std::is_same<typename TTraits::NumericTag, vtkm::TypeTraitsUnknownTag>::value;
   static constexpr bool IsBool = std::is_same<BaseType, bool>::value;
 
-  static constexpr bool value = CanCountImpl<BaseType, std::false_type>::value && !IsBool;
+  static constexpr bool value = IsNumeric && !IsBool;
 };
 
 } // namespace detail
@@ -152,6 +146,64 @@ make_ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::
 {
   return vtkm::cont::ArrayHandleCounting<CountingValueType>(start, step, length);
 }
+
+namespace internal
+{
+
+template <typename S>
+struct ArrayRangeComputeImpl;
+
+template <>
+struct VTKM_CONT_EXPORT ArrayRangeComputeImpl<vtkm::cont::StorageTagCounting>
+{
+  template <typename T>
+  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> operator()(
+    const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagCounting>& input,
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& maskArray,
+    bool vtkmNotUsed(computeFiniteRange), // assume array produces only finite values
+    vtkm::cont::DeviceAdapterId device) const
+  {
+    using Traits = vtkm::VecTraits<vtkm::VecFlat<T>>;
+    vtkm::cont::ArrayHandle<vtkm::Range> result;
+    result.Allocate(Traits::NUM_COMPONENTS);
+
+    if (input.GetNumberOfValues() <= 0)
+    {
+      result.Fill(vtkm::Range{});
+      return result;
+    }
+
+    vtkm::Id2 firstAndLast{ 0, input.GetNumberOfValues() - 1 };
+    if (maskArray.GetNumberOfValues() > 0)
+    {
+      firstAndLast = GetFirstAndLastUnmaskedIndices(maskArray, device);
+    }
+
+    if (firstAndLast[1] < firstAndLast[0])
+    {
+      result.Fill(vtkm::Range{});
+      return result;
+    }
+
+    auto portal = result.WritePortal();
+    // assume the values to be finite
+    auto first = make_VecFlat(input.ReadPortal().Get(firstAndLast[0]));
+    auto last = make_VecFlat(input.ReadPortal().Get(firstAndLast[1]));
+    for (vtkm::IdComponent cIndex = 0; cIndex < Traits::NUM_COMPONENTS; ++cIndex)
+    {
+      auto firstComponent = Traits::GetComponent(first, cIndex);
+      auto lastComponent = Traits::GetComponent(last, cIndex);
+      portal.Set(cIndex,
+                 vtkm::Range(vtkm::Min(firstComponent, lastComponent),
+                             vtkm::Max(firstComponent, lastComponent)));
+    }
+
+    return result;
+  }
+};
+
+} // namespace internal
+
 }
 } // namespace vtkm::cont
 

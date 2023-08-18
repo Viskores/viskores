@@ -283,6 +283,7 @@ vtkm::cont::DataSet Make2DUniformStatDataSet1()
 //
 // Create a dataset with known point data and cell data (statistical distributions)
 //
+VTKM_DEPRECATED_SUPPRESS_BEGIN
 void PrintStatInfo(vtkm::worklet::FieldStatistics<vtkm::Float32>::StatInfo statinfo)
 {
   std::cout << "   Median " << statinfo.median << std::endl;
@@ -302,12 +303,14 @@ void PrintStatInfo(vtkm::worklet::FieldStatistics<vtkm::Float32>::StatInfo stati
     std::cout << statinfo.centralMoment[i] << " ";
   std::cout << "]" << std::endl;
 }
+VTKM_DEPRECATED_SUPPRESS_END
 
 //
 // Test simple dataset 2D Uniform with 10 cells
 //
 void TestFieldSimple()
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   // Create the output structure
   vtkm::worklet::FieldStatistics<vtkm::Float32>::StatInfo statinfo;
 
@@ -332,6 +335,7 @@ void TestFieldSimple()
   VTKM_TEST_ASSERT(test_equal(statinfo.stddev, expected[5]), "Error in stddev");
   VTKM_TEST_ASSERT(test_equal(statinfo.skewness, expected[6]), "Error in skewness");
   VTKM_TEST_ASSERT(test_equal(statinfo.kurtosis, expected[7]), "Error in kurtosis");
+  VTKM_DEPRECATED_SUPPRESS_END
 }
 
 //
@@ -339,6 +343,7 @@ void TestFieldSimple()
 //
 void TestFieldStandardDistributions()
 {
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   // Create the output structure
   vtkm::worklet::FieldStatistics<vtkm::Float32>::StatInfo statinfo;
 
@@ -374,6 +379,8 @@ void TestFieldStandardDistributions()
   vtkm::worklet::FieldStatistics<vtkm::Float32>().Run(p_uniform, statinfo);
   std::cout << "Uniform distributed POINT data:" << std::endl;
   PrintStatInfo(statinfo);
+  VTKM_DEPRECATED_SUPPRESS_END
+
 } // TestFieldStatistics
 
 void TestFieldStatistics()

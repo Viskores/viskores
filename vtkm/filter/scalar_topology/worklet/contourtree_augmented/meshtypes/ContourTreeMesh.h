@@ -73,8 +73,6 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/ArrayRangeCompute.h>
-#include <vtkm/cont/ArrayRangeComputeTemplate.h>
 #include <vtkm/cont/ConvertNumComponentsToOffsets.h>
 #include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Timer.h>
@@ -576,8 +574,7 @@ template <typename FieldType>
 inline void ContourTreeMesh<FieldType>::ComputeMaxNeighbors()
 {
   auto neighborCounts = make_ArrayHandleOffsetsToNumComponents(this->NeighborOffsets);
-  vtkm::cont::ArrayHandle<vtkm::Range> rangeArray = vtkm::cont::ArrayRangeCompute(neighborCounts);
-  this->MaxNeighbors = static_cast<vtkm::Id>(rangeArray.ReadPortal().Get(0).Max);
+  this->MaxNeighbors = vtkm::cont::Algorithm::Reduce(neighborCounts, 0, vtkm::Maximum{});
 }
 
 // Define the behavior for the execution object generate by the PrepareForExecution function

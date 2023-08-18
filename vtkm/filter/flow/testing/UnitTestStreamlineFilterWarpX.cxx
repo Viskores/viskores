@@ -11,7 +11,7 @@
 #include <vtkm/Particle.h>
 
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/flow/Streamline.h>
+#include <vtkm/filter/flow/WarpXStreamline.h>
 #include <vtkm/io/VTKDataSetReader.h>
 
 namespace
@@ -43,7 +43,7 @@ void GenerateChargedParticles(const vtkm::cont::ArrayHandle<vtkm::Vec3f>& pos,
   }
 }
 
-void TestStreamlineFilters()
+void TestFilters()
 {
   std::string particleFile = vtkm::cont::testing::Testing::DataPath("misc/warpXparticles.vtk");
   std::string fieldFile = vtkm::cont::testing::Testing::DataPath("misc/warpXfields.vtk");
@@ -88,12 +88,10 @@ void TestStreamlineFilters()
     1.0 / (SPEED_OF_LIGHT * vtkm::Sqrt(1. / spacing[0] + 1. / spacing[1] + 1. / spacing[2])));
   std::cout << "CFL length : " << length << std::endl;
 
-  vtkm::filter::flow::Streamline streamline;
-
+  vtkm::filter::flow::WarpXStreamline streamline;
   streamline.SetStepSize(length);
   streamline.SetNumberOfSteps(steps);
   streamline.SetSeeds(seeds);
-  streamline.SetVectorFieldType(vtkm::filter::flow::VectorFieldType::ELECTRO_MAGNETIC_FIELD_TYPE);
   streamline.SetEField("E");
   streamline.SetBField("B");
 
@@ -109,5 +107,5 @@ void TestStreamlineFilters()
 
 int UnitTestStreamlineFilterWarpX(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestStreamlineFilters, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestFilters, argc, argv);
 }

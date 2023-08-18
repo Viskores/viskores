@@ -27,10 +27,9 @@ namespace vtkm
 {
 namespace worklet
 {
-
 //simple functor that prints basic statistics
 template <typename FieldType>
-class FieldStatistics
+class VTKM_DEPRECATED(2.1, "Use DescriptiveStatistics or the statistics filter.") FieldStatistics
 {
 public:
   // For moments readability

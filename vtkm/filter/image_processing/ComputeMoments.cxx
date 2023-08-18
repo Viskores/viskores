@@ -21,18 +21,6 @@ namespace filter
 {
 namespace image_processing
 {
-using SupportedTypes = vtkm::List<vtkm::Float32,
-                                  vtkm::Float64,
-                                  vtkm::Vec<vtkm::Float32, 2>,
-                                  vtkm::Vec<vtkm::Float64, 2>,
-                                  vtkm::Vec<vtkm::Float32, 3>,
-                                  vtkm::Vec<vtkm::Float64, 3>,
-                                  vtkm::Vec<vtkm::Float32, 4>,
-                                  vtkm::Vec<vtkm::Float64, 4>,
-                                  vtkm::Vec<vtkm::Float32, 6>,
-                                  vtkm::Vec<vtkm::Float64, 6>,
-                                  vtkm::Vec<vtkm::Float32, 9>,
-                                  vtkm::Vec<vtkm::Float64, 9>>;
 
 VTKM_CONT ComputeMoments::ComputeMoments()
 {
@@ -53,8 +41,7 @@ VTKM_CONT vtkm::cont::DataSet ComputeMoments::DoExecute(const vtkm::cont::DataSe
   auto resolveType = [&](const auto& concrete) {
     worklet.Run(input.GetCellSet(), concrete, this->Order, output);
   };
-  field.GetData().CastAndCallForTypesWithFloatFallback<SupportedTypes, VTKM_DEFAULT_STORAGE_LIST>(
-    resolveType);
+  this->CastAndCallVariableVecField(field, resolveType);
 
   return output;
 }

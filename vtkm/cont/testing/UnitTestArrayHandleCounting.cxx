@@ -27,12 +27,7 @@ template <typename ValueType>
 struct TemplatedTests
 {
   using ArrayHandleType = vtkm::cont::ArrayHandleCounting<ValueType>;
-
-  using ArrayHandleType2 = vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagCounting>;
-
-  using PortalType =
-    typename vtkm::cont::internal::Storage<ValueType,
-                                           typename ArrayHandleType::StorageTag>::ReadPortalType;
+  using PortalType = typename ArrayHandleType::ReadPortalType;
 
   void operator()(const ValueType& startingValue, const ValueType& step)
   {
@@ -41,7 +36,8 @@ struct TemplatedTests
     ArrayHandleType arrayMake =
       vtkm::cont::make_ArrayHandleCounting(startingValue, step, ARRAY_SIZE);
 
-    ArrayHandleType2 arrayHandle = ArrayHandleType(startingValue, step, ARRAY_SIZE);
+    typename ArrayHandleType::Superclass arrayHandle =
+      ArrayHandleType(startingValue, step, ARRAY_SIZE);
 
     VTKM_TEST_ASSERT(arrayConst.GetNumberOfValues() == ARRAY_SIZE,
                      "Counting array using constructor has wrong size.");

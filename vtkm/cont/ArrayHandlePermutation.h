@@ -248,10 +248,6 @@ public:
       vtkm::cont::StorageTagPermutation<typename IndexArrayHandleType::StorageTag,
                                         typename ValueArrayHandleType::StorageTag>>));
 
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
   ArrayHandlePermutation(const IndexArrayHandleType& indexArray,
                          const ValueArrayHandleType& valueArray)

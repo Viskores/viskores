@@ -12,6 +12,7 @@ set(unit_tests
   UnitTestBOVDataSetReader.cxx
   UnitTestFileUtils.cxx
   UnitTestPixelTypes.cxx
+  UnitTestVisItFileDataSetReader.cxx
   UnitTestVTKDataSetReader.cxx
   UnitTestVTKDataSetWriter.cxx
 )

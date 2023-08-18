@@ -10,6 +10,8 @@
 
 #include <vtkm/rendering/AxisAnnotation3D.h>
 
+#include <sstream>
+
 namespace vtkm
 {
 namespace rendering
@@ -36,8 +38,6 @@ AxisAnnotation3D::AxisAnnotation3D()
 {
 }
 
-AxisAnnotation3D::~AxisAnnotation3D() {}
-
 void AxisAnnotation3D::SetTickInvert(bool x, bool y, bool z)
 {
   this->Invert[0] = x ? +1.0f : -1.0f;
@@ -48,9 +48,9 @@ void AxisAnnotation3D::SetTickInvert(bool x, bool y, bool z)
 void AxisAnnotation3D::SetLabelFontScale(Float64 s)
 {
   this->FontScale = s;
-  for (unsigned int i = 0; i < this->Labels.size(); i++)
+  for (auto& label : this->Labels)
   {
-    this->Labels[i]->SetScale(vtkm::Float32(s));
+    label->SetScale(vtkm::Float32(s));
   }
 }
 
@@ -65,12 +65,11 @@ void AxisAnnotation3D::Render(const Camera& camera,
   std::vector<vtkm::Float64> proportions;
   // major ticks
   CalculateTicks(this->Range, false, positions, proportions, this->MoreOrLessTickAdjustment);
-  unsigned int nmajor = (unsigned int)proportions.size();
+  auto nmajor = (unsigned int)proportions.size();
   while (this->Labels.size() < nmajor)
   {
-    this->Labels.push_back(
-      std::unique_ptr<TextAnnotationBillboard>(new vtkm::rendering::TextAnnotationBillboard(
-        "test", this->Color, vtkm::Float32(this->FontScale), vtkm::Vec3f_32(0, 0, 0), 0)));
+    this->Labels.push_back(std::make_unique<TextAnnotationBillboard>(
+      "test", this->Color, vtkm::Float32(this->FontScale), vtkm::Vec3f_32(0, 0, 0)));
   }
 
   std::stringstream numberToString;
@@ -144,15 +143,12 @@ void AxisAnnotation3D::Render(const Camera& camera,
     this->Labels[i]->SetPosition(vtkm::Float32(tickPos[0] - tickSize[0]),
                                  vtkm::Float32(tickPos[1] - tickSize[1]),
                                  vtkm::Float32(tickPos[2] - tickSize[2]));
-    vtkm::Vec3f_32 pp(vtkm::Float32(tickPos[0] - tickSize[0]),
-                      vtkm::Float32(tickPos[1] - tickSize[1]),
-                      vtkm::Float32(tickPos[2] - tickSize[2]));
     this->Labels[i]->SetAlignment(TextAnnotation::HCenter, TextAnnotation::VCenter);
   }
 
   // minor ticks
   CalculateTicks(this->Range, true, positions, proportions, this->MoreOrLessTickAdjustment);
-  unsigned int nminor = (unsigned int)proportions.size();
+  auto nminor = (unsigned int)proportions.size();
   for (unsigned int i = 0; i < nminor; ++i)
   {
     vtkm::Vec3f_64 tickPos = proportions[i] * (this->Point1 - this->Point0) + this->Point0;
@@ -197,9 +193,9 @@ void AxisAnnotation3D::Render(const Camera& camera,
     }
   }
 
-  for (unsigned int i = 0; i < nmajor; ++i)
+  for (auto& label : this->Labels)
   {
-    this->Labels[i]->Render(camera, worldAnnotator, canvas);
+    label->Render(camera, worldAnnotator, canvas);
   }
 }
 }

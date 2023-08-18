@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/Algorithm.h>
 #include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
 #include <vtkm/filter/geometry_refinement/worklet/Tetrahedralize.h>
@@ -41,6 +42,18 @@ VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
     return false;
   }
 }
+
+struct IsShapeTetra
+{
+  VTKM_EXEC_CONT
+  bool operator()(vtkm::UInt8 shape) const { return shape == vtkm::CELL_SHAPE_TETRA; }
+};
+
+struct BinaryAnd
+{
+  VTKM_EXEC_CONT
+  bool operator()(bool u, bool v) const { return u && v; }
+};
 } // anonymous namespace
 
 namespace vtkm
@@ -53,14 +66,58 @@ VTKM_CONT vtkm::cont::DataSet Tetrahedralize::DoExecute(const vtkm::cont::DataSe
 {
   const vtkm::cont::UnknownCellSet& inCellSet = input.GetCellSet();
 
-  vtkm::cont::CellSetSingleType<> outCellSet;
-  vtkm::worklet::Tetrahedralize worklet;
-  vtkm::cont::CastAndCall(inCellSet,
-                          [&](const auto& concrete) { outCellSet = worklet.Run(concrete); });
+  // In case we already have a CellSetSingleType of tetras,
+  // don't call the worklet and return the input DataSet directly
+  if (inCellSet.CanConvert<vtkm::cont::CellSetSingleType<>>() &&
+      inCellSet.AsCellSet<vtkm::cont::CellSetSingleType<>>().GetCellShapeAsId() ==
+        vtkm::CellShapeTagTetra::Id)
+  {
+    return input;
+  }
 
-  auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
-  // create the output dataset (without a CoordinateSystem).
-  vtkm::cont::DataSet output = this->CreateResult(input, outCellSet, mapper);
+  vtkm::cont::CellSetSingleType<> outCellSet;
+  vtkm::cont::DataSet output;
+
+  // Optimization in case we only have tetras in the CellSet
+  bool allTetras = false;
+  if (inCellSet.CanConvert<vtkm::cont::CellSetExplicit<>>())
+  {
+    vtkm::cont::CellSetExplicit<> inCellSetExplicit =
+      inCellSet.AsCellSet<vtkm::cont::CellSetExplicit<>>();
+
+    auto shapeArray = inCellSetExplicit.GetShapesArray(vtkm::TopologyElementTagCell(),
+                                                       vtkm::TopologyElementTagPoint());
+    auto isCellTetraArray = vtkm::cont::make_ArrayHandleTransform(shapeArray, IsShapeTetra{});
+
+    allTetras = vtkm::cont::Algorithm::Reduce(isCellTetraArray, true, BinaryAnd{});
+
+    if (allTetras)
+    {
+      // Reuse the input's connectivity array
+      outCellSet.Fill(inCellSet.GetNumberOfPoints(),
+                      vtkm::CellShapeTagTetra::Id,
+                      4,
+                      inCellSetExplicit.GetConnectivityArray(vtkm::TopologyElementTagCell(),
+                                                             vtkm::TopologyElementTagPoint()));
+
+      // Copy all fields from the input
+      output = this->CreateResult(input, outCellSet, [&](auto& result, const auto& f) {
+        result.AddField(f);
+        return true;
+      });
+    }
+  }
+
+  if (!allTetras)
+  {
+    vtkm::worklet::Tetrahedralize worklet;
+    vtkm::cont::CastAndCall(inCellSet,
+                            [&](const auto& concrete) { outCellSet = worklet.Run(concrete); });
+
+    auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
+    // create the output dataset (without a CoordinateSystem).
+    output = this->CreateResult(input, outCellSet, mapper);
+  }
 
   // We did not change the geometry of the input dataset at all. Just attach coordinate system
   // of input dataset to output dataset.

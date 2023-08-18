@@ -17,6 +17,7 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleMultiplexer.h>
 #include <vtkm/cont/ArrayHandleRecombineVec.h>
+#include <vtkm/cont/ArrayHandleRuntimeVec.h>
 #include <vtkm/cont/ArrayHandleStride.h>
 #include <vtkm/cont/StorageList.h>
 
@@ -43,6 +44,14 @@ void UnknownAHDelete(void* mem)
 }
 
 template <typename T, typename S>
+const std::vector<vtkm::cont::internal::Buffer>& UnknownAHBuffers(void* mem)
+{
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  AH* arrayHandle = reinterpret_cast<AH*>(mem);
+  return arrayHandle->GetBuffers();
+}
+
+template <typename T, typename S>
 void* UnknownAHNewInstance()
 {
   return new vtkm::cont::ArrayHandle<T, S>;
@@ -56,49 +65,86 @@ vtkm::Id UnknownAHNumberOfValues(void* mem)
   return arrayHandle->GetNumberOfValues();
 }
 
-template <typename T, typename StaticSize = typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic>
-struct UnknownAHNumberOfComponentsImpl;
-template <typename T>
-struct UnknownAHNumberOfComponentsImpl<T, vtkm::VecTraitsTagSizeStatic>
+// Uses SFINAE to use Storage<>::GetNumberOfComponents if it exists, or the VecTraits otherwise
+template <typename T, typename S>
+inline auto UnknownAHNumberOfComponentsImpl(void* mem)
+  -> decltype(vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(
+    std::vector<vtkm::cont::internal::Buffer>()))
 {
-  static constexpr vtkm::IdComponent Value = vtkm::internal::SafeVecTraits<T>::NUM_COMPONENTS;
-};
-template <typename T>
-struct UnknownAHNumberOfComponentsImpl<T, vtkm::VecTraitsTagSizeVariable>
-{
-  static constexpr vtkm::IdComponent Value = 0;
-};
-
-template <typename T>
-vtkm::IdComponent UnknownAHNumberOfComponents()
-{
-  return UnknownAHNumberOfComponentsImpl<T>::Value;
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  AH* arrayHandle = reinterpret_cast<AH*>(mem);
+  return vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(arrayHandle->GetBuffers());
 }
 
-template <typename T,
-          typename = typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic,
-          typename = vtkm::HasVecTraits<T>>
-struct UnknownAHNumberOfComponentsFlatImpl;
-template <typename T>
-struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeStatic, std::true_type>
+// Uses SFINAE to use the number of compnents in VecTraits.
+// Note that this will conflict with the above overloaded function if the storage has a
+// GetNumberOfComponents method and VecTraits has a static size. However, I cannot think
+// of a use case for the storage to report the number of components for a static data type.
+// If that happens, this implementation will need to be modified.
+template <typename T, typename S>
+inline auto UnknownAHNumberOfComponentsImpl(void*) -> decltype(vtkm::VecTraits<T>::NUM_COMPONENTS)
 {
-  static constexpr vtkm::IdComponent Value = vtkm::VecFlat<T>::NUM_COMPONENTS;
-};
-template <typename T>
-struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeVariable, std::true_type>
-{
-  static constexpr vtkm::IdComponent Value = 0;
-};
-template <typename T>
-struct UnknownAHNumberOfComponentsFlatImpl<T, vtkm::VecTraitsTagSizeStatic, std::false_type>
-{
-  static constexpr vtkm::IdComponent Value = 1;
-};
+  static constexpr vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
+  return numComponents;
+}
 
-template <typename T>
-vtkm::IdComponent UnknownAHNumberOfComponentsFlat()
+// Fallback for when there is no way to determine the number of components. (This could be
+// because each value could have a different number of components.
+template <typename T, typename S>
+inline vtkm::IdComponent UnknownAHNumberOfComponentsImpl(...)
 {
-  return UnknownAHNumberOfComponentsFlatImpl<T>::Value;
+  return 0;
+}
+
+template <typename T, typename S>
+vtkm::IdComponent UnknownAHNumberOfComponents(void* mem)
+{
+  return UnknownAHNumberOfComponentsImpl<T, S>(mem);
+}
+
+// Uses SFINAE to use Storage<>::GetNumberOfComponents if it exists, or the VecTraits otherwise
+template <typename T, typename S>
+inline auto UnknownAHNumberOfComponentsFlatImpl(void* mem)
+  -> decltype(vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(
+    std::vector<vtkm::cont::internal::Buffer>()))
+{
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  AH* arrayHandle = reinterpret_cast<AH*>(mem);
+  // Making an assumption here that `T` is a `Vec`-like object that `GetNumberOfComponents`
+  // will report on how many each has. Further assuming that the components of `T` are
+  // static. If a future `ArrayHandle` type violates this, this code will have to become
+  // more complex.
+  return (vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(arrayHandle->GetBuffers()) *
+          vtkm::VecFlat<typename vtkm::VecTraits<T>::ComponentType>::NUM_COMPONENTS);
+}
+
+// Uses SFINAE to use the number of compnents in VecTraits.
+// Note that this will conflict with the above overloaded function if the storage has a
+// GetNumberOfComponents method and VecTraits has a static size. However, I cannot think
+// of a use case for the storage to report the number of components for a static data type.
+// If that happens, this implementation will need to be modified.
+template <typename T, typename S>
+inline auto UnknownAHNumberOfComponentsFlatImpl(void*)
+  -> decltype(vtkm::VecTraits<T>::NUM_COMPONENTS)
+{
+  //  static constexpr vtkm::IdComponent numComponents = vtkm::VecFlat<T>::NUM_COMPONENTS;
+  //  return numComponents;
+  return vtkm::VecFlat<T>::NUM_COMPONENTS;
+}
+
+// Fallback for when there is no way to determine the number of components. (This could be
+// because each value could have a different number of components or just that VecTraits
+// are not defined.) Since it cannot be flattened, just return the same as num components.
+template <typename T, typename S>
+inline vtkm::IdComponent UnknownAHNumberOfComponentsFlatImpl(...)
+{
+  return UnknownAHNumberOfComponentsImpl<T, S>(static_cast<void*>(nullptr));
+}
+
+template <typename T, typename S>
+vtkm::IdComponent UnknownAHNumberOfComponentsFlat(void* mem)
+{
+  return UnknownAHNumberOfComponentsFlatImpl<T, S>(mem);
 }
 
 template <typename T, typename S>
@@ -220,6 +266,9 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   using DeleteType = void(void*);
   DeleteType* DeleteFunction;
 
+  using BuffersType = const std::vector<vtkm::cont::internal::Buffer>&(void*);
+  BuffersType* Buffers;
+
   using NewInstanceType = void*();
   NewInstanceType* NewInstance;
 
@@ -230,7 +279,7 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   using NumberOfValuesType = vtkm::Id(void*);
   NumberOfValuesType* NumberOfValues;
 
-  using NumberOfComponentsType = vtkm::IdComponent();
+  using NumberOfComponentsType = vtkm::IdComponent(void*);
   NumberOfComponentsType* NumberOfComponents;
   NumberOfComponentsType* NumberOfComponentsFlat;
 
@@ -313,14 +362,13 @@ std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTag
 template <typename T>
 std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic()
 {
-  return UnknownAHNewInstanceBasic<T>(typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic{});
+  return UnknownAHNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T>
 std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTraitsTagSizeStatic)
 {
-  using FloatT = typename vtkm::internal::SafeVecTraits<T>::template ReplaceBaseComponentType<
-    vtkm::FloatDefault>;
+  using FloatT = typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::FloatDefault>;
   return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<FloatT>{});
 }
 template <typename T>
@@ -332,8 +380,7 @@ std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTrai
 template <typename T>
 std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
 {
-  return UnknownAHNewInstanceFloatBasic<T>(
-    typename vtkm::internal::SafeVecTraits<T>::IsSizeStatic{});
+  return UnknownAHNewInstanceFloatBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T, typename S>
@@ -342,14 +389,15 @@ inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S
   , ValueType(typeid(T))
   , StorageType(typeid(S))
   , BaseComponentType(
-      UnknownAHComponentInfo::Make<typename vtkm::internal::SafeVecTraits<T>::BaseComponentType>())
+      UnknownAHComponentInfo::Make<typename vtkm::VecTraits<T>::BaseComponentType>())
   , DeleteFunction(detail::UnknownAHDelete<T, S>)
+  , Buffers(detail::UnknownAHBuffers<T, S>)
   , NewInstance(detail::UnknownAHNewInstance<T, S>)
   , NewInstanceBasic(detail::UnknownAHNewInstanceBasic<T>)
   , NewInstanceFloatBasic(detail::UnknownAHNewInstanceFloatBasic<T>)
   , NumberOfValues(detail::UnknownAHNumberOfValues<T, S>)
-  , NumberOfComponents(detail::UnknownAHNumberOfComponents<T>)
-  , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T>)
+  , NumberOfComponents(detail::UnknownAHNumberOfComponents<T, S>)
+  , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T, S>)
   , Allocate(detail::UnknownAHAllocate<T, S>)
   , ShallowCopy(detail::UnknownAHShallowCopy<T, S>)
   , DeepCopy(detail::UnknownAHDeepCopy<T, S>)
@@ -607,13 +655,10 @@ public:
 #ifdef VTKM_MSVC
   VTKM_DEPRECATED_SUPPRESS_BEGIN
 #endif
-  ///@{
-  /// Returns this array cast appropriately and stored in the given `ArrayHandle` type.
-  /// Throws an `ErrorBadType` if the stored array cannot be stored in the given array type.
-  /// Use the `CanConvert` method to determine if the array can be returned with the given type.
-  ///
+
+private:
   template <typename T, typename S>
-  VTKM_CONT void AsArrayHandle(vtkm::cont::ArrayHandle<T, S>& array) const
+  VTKM_CONT void BaseAsArrayHandle(vtkm::cont::ArrayHandle<T, S>& array) const
   {
     using ArrayType = vtkm::cont::ArrayHandle<T, S>;
     if (!this->IsType<ArrayType>())
@@ -624,6 +669,21 @@ public:
 
     array = *reinterpret_cast<ArrayType*>(this->Container->ArrayHandlePointer);
   }
+
+public:
+  ///@{
+  /// Returns this array cast appropriately and stored in the given `ArrayHandle` type.
+  /// Throws an `ErrorBadType` if the stored array cannot be stored in the given array type.
+  /// Use the `CanConvert` method to determine if the array can be returned with the given type.
+  ///
+  template <typename T, typename S>
+  VTKM_CONT void AsArrayHandle(vtkm::cont::ArrayHandle<T, S>& array) const
+  {
+    this->BaseAsArrayHandle(array);
+  }
+
+  template <typename T>
+  VTKM_CONT void AsArrayHandle(vtkm::cont::ArrayHandle<T>& array) const;
 
   template <typename T, typename... Ss>
   VTKM_CONT void AsArrayHandle(
@@ -636,6 +696,26 @@ public:
     using ContainedArrayType = vtkm::cont::ArrayHandle<SourceT, SourceS>;
     array = vtkm::cont::ArrayHandleCast<TargetT, ContainedArrayType>(
       this->AsArrayHandle<ContainedArrayType>());
+  }
+
+  template <typename T>
+  VTKM_CONT void AsArrayHandle(
+    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagRuntimeVec>& array) const
+  {
+    using BaseT = typename T::ComponentType;
+    if (this->IsStorageType<vtkm::cont::StorageTagBasic>() && this->IsBaseComponentType<BaseT>())
+    {
+      // Reinterpret the basic array as components, and then wrap that in a runtime vec
+      // with the correct amount of components.
+      vtkm::cont::ArrayHandle<BaseT, vtkm::cont::StorageTagBasic> basicArray(
+        this->Container->Buffers(this->Container->ArrayHandlePointer));
+      array =
+        vtkm::cont::ArrayHandleRuntimeVec<BaseT>(this->GetNumberOfComponentsFlat(), basicArray);
+    }
+    else
+    {
+      this->BaseAsArrayHandle(array);
+    }
   }
 
   template <typename ArrayType>
@@ -877,6 +957,19 @@ struct UnknownArrayHandleCanConvert
   }
 };
 
+template <typename T>
+struct UnknownArrayHandleCanConvert<T, vtkm::cont::StorageTagBasic>
+{
+  VTKM_CONT bool operator()(const vtkm::cont::UnknownArrayHandle& array) const
+  {
+    using UnrolledVec = vtkm::internal::UnrollVec<T>;
+    return (array.IsType<vtkm::cont::ArrayHandleBasic<T>>() ||
+            (array.IsStorageType<vtkm::cont::StorageTagRuntimeVec>() &&
+             array.IsBaseComponentType<typename UnrolledVec::ComponentType>() &&
+             UnrolledVec::NUM_COMPONENTS == array.GetNumberOfComponentsFlat()));
+  }
+};
+
 template <typename TargetT, typename SourceT, typename SourceS>
 struct UnknownArrayHandleCanConvert<TargetT, vtkm::cont::StorageTagCast<SourceT, SourceS>>
 {
@@ -907,15 +1000,87 @@ struct UnknownArrayHandleCanConvert<T, vtkm::cont::StorageTagMultiplexer<Ss...>>
   }
 };
 
+template <typename T>
+struct UnknownArrayHandleCanConvert<T, vtkm::cont::StorageTagRuntimeVec>
+{
+  VTKM_CONT bool operator()(const vtkm::cont::UnknownArrayHandle& array) const
+  {
+    using BaseComponentType = typename T::ComponentType;
+    return (array.IsType<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagRuntimeVec>>() ||
+            (array.IsStorageType<vtkm::cont::StorageTagBasic>() &&
+             array.IsBaseComponentType<BaseComponentType>()));
+  }
+};
+
 } // namespace detail
 
 template <typename ArrayHandleType>
-VTKM_CONT bool UnknownArrayHandle::CanConvert() const
+VTKM_CONT inline bool UnknownArrayHandle::CanConvert() const
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
   return detail::UnknownArrayHandleCanConvert<typename ArrayHandleType::ValueType,
                                               typename ArrayHandleType::StorageTag>{}(*this);
+}
+
+namespace detail
+{
+
+template <typename T,
+          vtkm::IdComponent =
+            vtkm::VecTraits<typename vtkm::internal::UnrollVec<T>::ComponentType>::NUM_COMPONENTS>
+struct UnknownArrayHandleRuntimeVecAsBasic
+{
+  VTKM_CONT bool operator()(const vtkm::cont::UnknownArrayHandle*,
+                            const detail::UnknownAHContainer*,
+                            vtkm::cont::ArrayHandle<T>&) const
+  {
+    // This version only gets called if T contains a `Vec`-like object that is not a strict `Vec`.
+    // This is rare but could happen. In this case, the type cannot be stored in an
+    // `ArrayHandleRuntimeVec` and therefore the load can never happen, so just ignore.
+    return false;
+  }
+};
+
+template <typename T>
+struct UnknownArrayHandleRuntimeVecAsBasic<T, 1>
+{
+  VTKM_CONT bool operator()(const vtkm::cont::UnknownArrayHandle* self,
+                            const detail::UnknownAHContainer* container,
+                            vtkm::cont::ArrayHandle<T>& array) const
+  {
+    using UnrolledVec = vtkm::internal::UnrollVec<T>;
+    using ComponentType = typename UnrolledVec::ComponentType;
+    if (self->IsStorageType<vtkm::cont::StorageTagRuntimeVec>() &&
+        self->IsBaseComponentType<ComponentType>() &&
+        UnrolledVec::NUM_COMPONENTS == self->GetNumberOfComponentsFlat())
+    {
+      // Pull out the components array out of the buffers. The array might not match exactly
+      // the array put in, but the buffer should still be consistent with the array (which works
+      // because the size of a basic array is based on the number of bytes in the buffer).
+      using RuntimeVecType = typename vtkm::cont::ArrayHandleRuntimeVec<ComponentType>::ValueType;
+      using StorageRuntimeVec =
+        vtkm::cont::internal::Storage<RuntimeVecType, vtkm::cont::StorageTagRuntimeVec>;
+      StorageRuntimeVec::AsArrayHandleBasic(container->Buffers(container->ArrayHandlePointer),
+                                            array);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+};
+
+} // namespace detail
+
+template <typename T>
+VTKM_CONT inline void UnknownArrayHandle::AsArrayHandle(vtkm::cont::ArrayHandle<T>& array) const
+{
+  if (!detail::UnknownArrayHandleRuntimeVecAsBasic<T>{}(this, this->Container.get(), array))
+  {
+    this->BaseAsArrayHandle(array);
+  }
 }
 
 namespace detail

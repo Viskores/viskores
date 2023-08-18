@@ -462,46 +462,6 @@ public:
       inCellSet, this->PointInputToOutputMap, this->MergeKeys.GetInputRange());
   }
 
-private:
-  struct MapPointFieldFunctor
-  {
-    template <typename T, typename S>
-    VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, S>& inArray,
-                              vtkm::cont::UnknownArrayHandle& outHolder,
-                              const PointMerge& self) const
-    {
-      vtkm::cont::ArrayHandle<T> outArray;
-      self.MapPointField(inArray, outArray);
-      outHolder = vtkm::cont::UnknownArrayHandle(outArray);
-    }
-  };
-
-public:
-  template <typename InArrayHandle, typename OutArrayHandle>
-  VTKM_CONT void MapPointField(const InArrayHandle& inArray, OutArrayHandle& outArray) const
-  {
-    vtkm::worklet::AverageByKey::Run(this->MergeKeys, inArray, outArray);
-  }
-
-  template <typename T, typename S>
-  VTKM_CONT vtkm::cont::ArrayHandle<T> MapPointField(
-    const vtkm::cont::ArrayHandle<T, S>& inArray) const
-  {
-    vtkm::cont::ArrayHandle<T> outArray;
-    this->MapPointField(inArray, outArray);
-
-    return outArray;
-  }
-
-  template <typename TL, typename SL>
-  VTKM_CONT vtkm::cont::UncertainArrayHandle<TL, SL> MapPointField(
-    const vtkm::cont::UncertainArrayHandle<TL, SL>& inArray) const
-  {
-    vtkm::cont::UncertainArrayHandle<TL, SL> outArray;
-    vtkm::cont::CastAndCall(inArray, MapPointFieldFunctor{}, outArray, *this);
-    return outArray;
-  }
-
   vtkm::worklet::Keys<vtkm::Id> GetMergeKeys() const { return this->MergeKeys; }
 
 private:
