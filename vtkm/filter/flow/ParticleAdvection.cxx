@@ -17,9 +17,38 @@ namespace filter
 namespace flow
 {
 
-VTKM_CONT vtkm::filter::flow::FlowResultType ParticleAdvection::GetResultType() const
+// using ParticleType    = vtkm::Particle;
+// using TerminationType = vtkm::worklet::flow::NormalTermination;
+// using AnalysisType    = vtkm::worklet::flow::Streamline;
+// using ArrayType       = vtkm::cont::ArrayHandle<vtkm::Vec3f>;
+// using FieldType       = vtkm::worklet::flow::VelocityField<ArrayType>;
+
+VTKM_CONT ParticleAdvection::FieldType ParticleAdvection::GetField(
+  const vtkm::cont::DataSet& dataset) const
 {
-  return vtkm::filter::flow::FlowResultType::PARTICLE_ADVECT_TYPE;
+  const auto& fieldNm = this->GetActiveFieldName();
+  if (!dataset.HasPointField(fieldNm) && !dataset.HasCellField(fieldNm))
+    throw vtkm::cont::ErrorFilterExecution("Unsupported field assocation");
+  auto assoc = dataset.GetField(fieldNm).GetAssociation();
+  ArrayType arr;
+  vtkm::cont::ArrayCopyShallowIfPossible(dataset.GetField(fieldNm).GetData(), arr);
+  return ParticleAdvection::FieldType(arr, assoc);
+}
+
+VTKM_CONT ParticleAdvection::TerminationType ParticleAdvection::GetTermination(
+  const vtkm::cont::DataSet& dataset) const
+{
+  // dataset not used
+  (void)dataset;
+  return ParticleAdvection::TerminationType(this->NumberOfSteps);
+}
+
+VTKM_CONT ParticleAdvection::AnalysisType ParticleAdvection::GetAnalysis(
+  const vtkm::cont::DataSet& dataset) const
+{
+  // dataset not used
+  (void)dataset;
+  return ParticleAdvection::AnalysisType{};
 }
 
 }

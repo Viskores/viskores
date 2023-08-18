@@ -21,6 +21,14 @@
 #include <vtkm/filter/flow/worklet/RK4Integrator.h>
 #include <vtkm/filter/flow/worklet/Stepper.h>
 
+#include <vtkm/filter/flow/worklet/Analysis.h>
+#include <vtkm/filter/flow/worklet/Termination.h>
+//#include <vtkm/worklet/WorkletMapField.h>
+
+//#include <cstring>
+//#include <sstream>
+//#include <string.h>
+
 namespace vtkm
 {
 namespace filter
@@ -220,7 +228,6 @@ VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& i
   using Stepper = vtkm::worklet::flow::Stepper<RK4Type, GridEvalType>;
 
   vtkm::worklet::flow::ParticleAdvection particleadvection;
-  vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle> res;
 
   const auto field = input.GetField(this->GetActiveFieldName());
   FieldType velocities(field.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f>>(),
@@ -228,9 +235,10 @@ VTKM_CONT vtkm::cont::DataSet Lagrangian::DoExecute(const vtkm::cont::DataSet& i
 
   GridEvalType gridEval(coords, cells, velocities);
   Stepper rk4(gridEval, static_cast<vtkm::Float32>(this->StepSize));
-
-  res = particleadvection.Run(rk4, basisParticleArray, 1); // Taking a single step
-  auto particles = res.Particles;
+  vtkm::worklet::flow::NormalTermination termination(1);
+  vtkm::worklet::flow::NoAnalysis<vtkm::Particle> analysis;
+  particleadvection.Run(rk4, basisParticleArray, termination, analysis); // Taking a single step
+  auto particles = analysis.Particles;
 
   vtkm::cont::DataSet outputData;
 

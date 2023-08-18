@@ -13,14 +13,17 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/filter/flow/LagrangianStructures.h>
 
+#include <vtkm/filter/flow/worklet/Analysis.h>
 #include <vtkm/filter/flow/worklet/Field.h>
 #include <vtkm/filter/flow/worklet/GridEvaluators.h>
 #include <vtkm/filter/flow/worklet/LagrangianStructures.h>
 #include <vtkm/filter/flow/worklet/ParticleAdvection.h>
 #include <vtkm/filter/flow/worklet/RK4Integrator.h>
 #include <vtkm/filter/flow/worklet/Stepper.h>
+#include <vtkm/filter/flow/worklet/Termination.h>
 
 namespace
 {
@@ -144,11 +147,14 @@ VTKM_CONT vtkm::cont::DataSet LagrangianStructures::DoExecute(const vtkm::cont::
     GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), velocities);
     Stepper integrator(evaluator, stepSize);
     vtkm::worklet::flow::ParticleAdvection particles;
-    vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle> advectionResult;
+    vtkm::worklet::flow::NormalTermination termination(numberOfSteps);
+    vtkm::worklet::flow::NoAnalysis<vtkm::Particle> analysis;
     vtkm::cont::ArrayHandle<vtkm::Particle> advectionPoints;
-    this->Invoke(detail::MakeParticles{}, lcsInputPoints, advectionPoints);
-    advectionResult = particles.Run(integrator, advectionPoints, numberOfSteps);
-    this->Invoke(detail::ExtractParticlePosition{}, advectionResult.Particles, lcsOutputPoints);
+
+    vtkm::cont::Invoker invoke;
+    invoke(detail::MakeParticles{}, lcsInputPoints, advectionPoints);
+    particles.Run(integrator, advectionPoints, termination, analysis);
+    invoke(detail::ExtractParticlePosition{}, analysis.Particles, lcsOutputPoints);
   }
   // FTLE output field
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputField;

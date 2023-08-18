@@ -92,8 +92,8 @@ public:
     this->TermID.emplace_back(pID);
   }
 
-  const vtkm::filter::flow::internal::BoundsMap BoundsMap;
-  const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
+  vtkm::filter::flow::internal::BoundsMap BoundsMap;
+  std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
 
   ParticleBlockIds InBounds;
   ParticleBlockIds OutOfBounds;
@@ -102,36 +102,13 @@ public:
   std::vector<vtkm::Id> TermIdx;
 };
 
-using DSIHelperInfoType =
-  vtkm::cont::Variant<DSIHelperInfo<vtkm::Particle>, DSIHelperInfo<vtkm::ChargedParticle>>;
-
-template <typename Derived>
+template <typename Derived, typename ParticleType>
 class DataSetIntegrator
 {
 public:
-  using VelocityFieldNameType = std::string;
-  using ElectroMagneticFieldNameType = std::pair<std::string, std::string>;
-
-protected:
-  using FieldNameType = vtkm::cont::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType>;
-
-  using RType =
-    vtkm::cont::Variant<vtkm::worklet::flow::ParticleAdvectionResult<vtkm::Particle>,
-                        vtkm::worklet::flow::ParticleAdvectionResult<vtkm::ChargedParticle>,
-                        vtkm::worklet::flow::StreamlineResult<vtkm::Particle>,
-                        vtkm::worklet::flow::StreamlineResult<vtkm::ChargedParticle>>;
-
-public:
-  DataSetIntegrator(vtkm::Id id,
-                    const FieldNameType& fieldName,
-                    vtkm::filter::flow::IntegrationSolverType solverType,
-                    vtkm::filter::flow::VectorFieldType vecFieldType,
-                    vtkm::filter::flow::FlowResultType resultType)
-    : FieldName(fieldName)
-    , Id(id)
+  DataSetIntegrator(vtkm::Id id, vtkm::filter::flow::IntegrationSolverType solverType)
+    : Id(id)
     , SolverType(solverType)
-    , VecFieldType(vecFieldType)
-    , AdvectionResType(resultType)
     , Rank(this->Comm.rank())
   {
     //check that things are valid.
@@ -141,57 +118,33 @@ public:
   VTKM_CONT void SetCopySeedFlag(bool val) { this->CopySeedArray = val; }
 
   VTKM_CONT
-  void Advect(DSIHelperInfoType& b,
-              vtkm::FloatDefault stepSize, //move these to member data(?)
-              vtkm::Id maxSteps)
+  void Advect(DSIHelperInfo<ParticleType>& b,
+              vtkm::FloatDefault stepSize) //move these to member data(?)
   {
     Derived* inst = static_cast<Derived*>(this);
-
-    //Cast the DSIHelperInfo<ParticleType> to the concrete type and call DoAdvect.
-    b.CastAndCall([&](auto& concrete) { inst->DoAdvect(concrete, stepSize, maxSteps); });
+    inst->DoAdvect(b, stepSize);
   }
 
-  template <typename ParticleType>
-  VTKM_CONT bool GetOutput(vtkm::cont::DataSet& ds) const;
-
+  VTKM_CONT bool GetOutput(vtkm::cont::DataSet& dataset) const
+  {
+    Derived* inst = static_cast<Derived*>(this);
+    return inst->GetOutput(dataset);
+  }
 
 protected:
-  template <typename ParticleType, template <typename> class ResultType>
-  VTKM_CONT void UpdateResult(const ResultType<ParticleType>& result,
-                              DSIHelperInfo<ParticleType>& dsiInfo);
-
-  VTKM_CONT bool IsParticleAdvectionResult() const
-  {
-    return this->AdvectionResType == FlowResultType::PARTICLE_ADVECT_TYPE;
-  }
-
-  VTKM_CONT bool IsStreamlineResult() const
-  {
-    return this->AdvectionResType == FlowResultType::STREAMLINE_TYPE;
-  }
-
-  template <typename ParticleType>
   VTKM_CONT inline void ClassifyParticles(const vtkm::cont::ArrayHandle<ParticleType>& particles,
                                           DSIHelperInfo<ParticleType>& dsiInfo) const;
 
   //Data members.
-  vtkm::cont::Variant<VelocityFieldNameType, ElectroMagneticFieldNameType> FieldName;
-
   vtkm::Id Id;
   vtkm::filter::flow::IntegrationSolverType SolverType;
-  vtkm::filter::flow::VectorFieldType VecFieldType;
-  vtkm::filter::flow::FlowResultType AdvectionResType =
-    vtkm::filter::flow::FlowResultType::UNKNOWN_TYPE;
-
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   vtkm::Id Rank;
   bool CopySeedArray = false;
-  std::vector<RType> Results;
 };
 
-template <typename Derived>
-template <typename ParticleType>
-VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
+template <typename Derived, typename ParticleType>
+VTKM_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyParticles(
   const vtkm::cont::ArrayHandle<ParticleType>& particles,
   DSIHelperInfo<ParticleType>& dsiInfo) const
 {
@@ -273,146 +226,6 @@ VTKM_CONT inline void DataSetIntegrator<Derived>::ClassifyParticles(
 
   //Make sure everything is copacetic.
   dsiInfo.Validate(n);
-}
-
-template <typename Derived>
-template <typename ParticleType, template <typename> class ResultType>
-VTKM_CONT inline void DataSetIntegrator<Derived>::UpdateResult(
-  const ResultType<ParticleType>& result,
-  DSIHelperInfo<ParticleType>& dsiInfo)
-{
-  this->ClassifyParticles(result.Particles, dsiInfo);
-
-  if (this->IsParticleAdvectionResult())
-  {
-    if (dsiInfo.TermIdx.empty())
-      return;
-
-    using ResType = vtkm::worklet::flow::ParticleAdvectionResult<ParticleType>;
-    auto indicesAH = vtkm::cont::make_ArrayHandle(dsiInfo.TermIdx, vtkm::CopyFlag::Off);
-    auto termPerm = vtkm::cont::make_ArrayHandlePermutation(indicesAH, result.Particles);
-
-    vtkm::cont::ArrayHandle<ParticleType> termParticles;
-    vtkm::cont::Algorithm::Copy(termPerm, termParticles);
-
-    ResType termRes(termParticles);
-    this->Results.emplace_back(termRes);
-  }
-  else if (this->IsStreamlineResult())
-    this->Results.emplace_back(result);
-}
-
-template <typename Derived>
-template <typename ParticleType>
-VTKM_CONT inline bool DataSetIntegrator<Derived>::GetOutput(vtkm::cont::DataSet& ds) const
-{
-  std::size_t nResults = this->Results.size();
-  if (nResults == 0)
-    return false;
-
-  if (this->IsParticleAdvectionResult())
-  {
-    using ResType = vtkm::worklet::flow::ParticleAdvectionResult<ParticleType>;
-
-    std::vector<vtkm::cont::ArrayHandle<ParticleType>> allParticles;
-    allParticles.reserve(nResults);
-    for (const auto& vres : this->Results)
-      allParticles.emplace_back(vres.template Get<ResType>().Particles);
-
-    vtkm::cont::ArrayHandle<vtkm::Vec3f> pts;
-    vtkm::cont::ParticleArrayCopy(allParticles, pts);
-
-    vtkm::Id numPoints = pts.GetNumberOfValues();
-    if (numPoints > 0)
-    {
-      //Create coordinate system and vertex cell set.
-      ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", pts));
-
-      vtkm::cont::CellSetSingleType<> cells;
-      vtkm::cont::ArrayHandleIndex conn(numPoints);
-      vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-
-      vtkm::cont::ArrayCopy(conn, connectivity);
-      cells.Fill(numPoints, vtkm::CELL_SHAPE_VERTEX, 1, connectivity);
-      ds.SetCellSet(cells);
-    }
-  }
-  else if (this->IsStreamlineResult())
-  {
-    using ResType = vtkm::worklet::flow::StreamlineResult<ParticleType>;
-
-    //Easy case with one result.
-    if (nResults == 1)
-    {
-      const auto& res = this->Results[0].template Get<ResType>();
-      ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", res.Positions));
-      ds.SetCellSet(res.PolyLines);
-    }
-    else
-    {
-      std::vector<vtkm::Id> posOffsets(nResults, 0);
-      vtkm::Id totalNumCells = 0, totalNumPts = 0;
-      for (std::size_t i = 0; i < nResults; i++)
-      {
-        const auto& res = this->Results[i].template Get<ResType>();
-        if (i == 0)
-          posOffsets[i] = 0;
-        else
-          posOffsets[i] = totalNumPts;
-
-        totalNumPts += res.Positions.GetNumberOfValues();
-        totalNumCells += res.PolyLines.GetNumberOfCells();
-      }
-
-      //Append all the points together.
-      vtkm::cont::ArrayHandle<vtkm::Vec3f> appendPts;
-      appendPts.Allocate(totalNumPts);
-      for (std::size_t i = 0; i < nResults; i++)
-      {
-        const auto& res = this->Results[i].template Get<ResType>();
-        // copy all values into appendPts starting at offset.
-        vtkm::cont::Algorithm::CopySubRange(
-          res.Positions, 0, res.Positions.GetNumberOfValues(), appendPts, posOffsets[i]);
-      }
-      ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", appendPts));
-
-      //Create polylines.
-      std::vector<vtkm::Id> numPtsPerCell(static_cast<std::size_t>(totalNumCells));
-      std::size_t off = 0;
-      for (std::size_t i = 0; i < nResults; i++)
-      {
-        const auto& res = this->Results[i].template Get<ResType>();
-        vtkm::Id nCells = res.PolyLines.GetNumberOfCells();
-        for (vtkm::Id j = 0; j < nCells; j++)
-          numPtsPerCell[off++] = static_cast<vtkm::Id>(res.PolyLines.GetNumberOfPointsInCell(j));
-      }
-
-      auto numPointsPerCellArray = vtkm::cont::make_ArrayHandle(numPtsPerCell, vtkm::CopyFlag::Off);
-
-      vtkm::cont::ArrayHandle<vtkm::Id> cellIndex;
-      vtkm::Id connectivityLen =
-        vtkm::cont::Algorithm::ScanExclusive(numPointsPerCellArray, cellIndex);
-      vtkm::cont::ArrayHandleIndex connCount(connectivityLen);
-      vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-      vtkm::cont::ArrayCopy(connCount, connectivity);
-
-      vtkm::cont::ArrayHandle<vtkm::UInt8> cellTypes;
-      auto polyLineShape = vtkm::cont::make_ArrayHandleConstant<vtkm::UInt8>(
-        vtkm::CELL_SHAPE_POLY_LINE, totalNumCells);
-      vtkm::cont::ArrayCopy(polyLineShape, cellTypes);
-      auto offsets = vtkm::cont::ConvertNumComponentsToOffsets(numPointsPerCellArray);
-
-      vtkm::cont::CellSetExplicit<> polyLines;
-      polyLines.Fill(totalNumPts, cellTypes, connectivity, offsets);
-      ds.SetCellSet(polyLines);
-    }
-  }
-  else
-  {
-    throw vtkm::cont::ErrorFilterExecution("Unsupported ParticleAdvectionResultType");
-  }
-
-  return true;
 }
 
 }

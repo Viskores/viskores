@@ -12,6 +12,7 @@
 #define vtk_m_filter_flow_FilterParticleAdvection_h
 
 #include <vtkm/Particle.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
@@ -69,23 +70,6 @@ public:
   }
 
   VTKM_CONT
-  void SetVectorFieldType(vtkm::filter::flow::VectorFieldType vecFieldType)
-  {
-    this->VecFieldType = vecFieldType;
-  }
-
-  ///@{
-  /// Choose the field to operate on. Note, if
-  /// `this->UseCoordinateSystemAsField` is true, then the active field is not used.
-  VTKM_CONT void SetEField(const std::string& name) { this->SetActiveField(0, name); }
-
-  VTKM_CONT void SetBField(const std::string& name) { this->SetActiveField(1, name); }
-
-  VTKM_CONT std::string GetEField() const { return this->GetActiveFieldName(0); }
-
-  VTKM_CONT std::string GetBField() const { return this->GetActiveFieldName(1); }
-
-  VTKM_CONT
   bool GetUseThreadedAlgorithm() { return this->UseThreadedAlgorithm; }
 
   VTKM_CONT
@@ -104,10 +88,9 @@ public:
 protected:
   VTKM_CONT virtual void ValidateOptions() const;
 
-  VTKM_CONT virtual vtkm::filter::flow::FlowResultType GetResultType() const = 0;
-
   bool BlockIdsSet = false;
   std::vector<vtkm::Id> BlockIds;
+
   vtkm::Id NumberOfSteps = 0;
   vtkm::cont::UnknownArrayHandle Seeds;
   vtkm::filter::flow::IntegrationSolverType SolverType =

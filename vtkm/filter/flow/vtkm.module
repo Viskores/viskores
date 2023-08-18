@@ -11,6 +11,7 @@ OPTIONAL_DEPENDS
 TEST_DEPENDS
   vtkm_filter_geometry_refinement
   vtkm_filter_mesh_info
+  vtkm_filter_flow
   vtkm_io
 TEST_OPTIONAL_DEPENDS
   vtkm_rendering_testing

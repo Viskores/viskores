@@ -31,6 +31,7 @@ class ExecutionVelocityField
 public:
   using FieldPortalType = typename FieldArrayType::ReadPortalType;
   using Association = vtkm::cont::Field::Association;
+  using DelegateToField = std::false_type;
 
   VTKM_CONT
   ExecutionVelocityField(const FieldArrayType& velocityValues,
@@ -68,8 +69,57 @@ public:
     value = vtkm::make_Vec(velocityInterp);
   }
 
+  template <typename Point, typename Locator, typename Helper>
+  VTKM_EXEC bool GetValue(const Point& vtkmNotUsed(point),
+                          const vtkm::FloatDefault& vtkmNotUsed(time),
+                          vtkm::VecVariable<Point, 2>& vtkmNotUsed(out),
+                          const Locator& vtkmNotUsed(locator),
+                          const Helper& vtkmNotUsed(helper)) const
+  {
+    //TODO Raise Error : Velocity Field should not allow this path
+    return false;
+  }
+
 private:
   FieldPortalType VelocityValues;
+  Association Assoc;
+};
+
+template <typename FieldArrayType>
+class VelocityField : public vtkm::cont::ExecutionObjectBase
+{
+public:
+  using ExecutionType = ExecutionVelocityField<FieldArrayType>;
+  using Association = vtkm::cont::Field::Association;
+
+  VTKM_CONT
+  VelocityField() = default;
+
+  VTKM_CONT
+  VelocityField(const FieldArrayType& fieldValues)
+    : FieldValues(fieldValues)
+    , Assoc(vtkm::cont::Field::Association::Points)
+  {
+  }
+
+  VTKM_CONT
+  VelocityField(const FieldArrayType& fieldValues, const Association assoc)
+    : FieldValues(fieldValues)
+    , Assoc(assoc)
+  {
+    if (assoc != Association::Points && assoc != Association::Cells)
+      throw("Unsupported field association");
+  }
+
+  VTKM_CONT
+  const ExecutionType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                          vtkm::cont::Token& token) const
+  {
+    return ExecutionType(this->FieldValues, this->Assoc, device, token);
+  }
+
+private:
+  FieldArrayType FieldValues;
   Association Assoc;
 };
 
@@ -79,6 +129,7 @@ class ExecutionElectroMagneticField
 public:
   using FieldPortalType = typename FieldArrayType::ReadPortalType;
   using Association = vtkm::cont::Field::Association;
+  using DelegateToField = std::false_type;
 
   VTKM_CONT
   ExecutionElectroMagneticField(const FieldArrayType& electricValues,
@@ -124,47 +175,20 @@ public:
     value = vtkm::make_Vec(electricInterp, magneticInterp);
   }
 
+  template <typename Point, typename Locator, typename Helper>
+  VTKM_EXEC bool GetValue(const Point& vtkmNotUsed(point),
+                          const vtkm::FloatDefault& vtkmNotUsed(time),
+                          vtkm::VecVariable<Point, 2>& vtkmNotUsed(out),
+                          const Locator& vtkmNotUsed(locator),
+                          const Helper& vtkmNotUsed(helper)) const
+  {
+    //TODO : Raise Error : Velocity Field should not allow this path
+    return false;
+  }
+
 private:
   FieldPortalType ElectricValues;
   FieldPortalType MagneticValues;
-  Association Assoc;
-};
-
-template <typename FieldArrayType>
-class VelocityField : public vtkm::cont::ExecutionObjectBase
-{
-public:
-  using ExecutionType = ExecutionVelocityField<FieldArrayType>;
-  using Association = vtkm::cont::Field::Association;
-
-  VTKM_CONT
-  VelocityField() = default;
-
-  VTKM_CONT
-  VelocityField(const FieldArrayType& fieldValues)
-    : FieldValues(fieldValues)
-    , Assoc(vtkm::cont::Field::Association::Points)
-  {
-  }
-
-  VTKM_CONT
-  VelocityField(const FieldArrayType& fieldValues, const Association assoc)
-    : FieldValues(fieldValues)
-    , Assoc(assoc)
-  {
-    if (assoc != Association::Points && assoc != Association::Cells)
-      throw("Unsupported field association");
-  }
-
-  VTKM_CONT
-  const ExecutionType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
-                                          vtkm::cont::Token& token) const
-  {
-    return ExecutionType(this->FieldValues, this->Assoc, device, token);
-  }
-
-private:
-  FieldArrayType FieldValues;
   Association Assoc;
 };
 

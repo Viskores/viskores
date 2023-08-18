@@ -21,9 +21,18 @@ namespace filter
 namespace flow
 {
 
+template <typename Derived>
+struct FlowTraits;
+
+template <typename Derived>
 class VTKM_FILTER_FLOW_EXPORT FilterParticleAdvectionUnsteadyState : public FilterParticleAdvection
 {
 public:
+  using ParticleType = typename FlowTraits<Derived>::ParticleType;
+  using FieldType = typename FlowTraits<Derived>::FieldType;
+  using TerminationType = typename FlowTraits<Derived>::TerminationType;
+  using AnalysisType = typename FlowTraits<Derived>::AnalysisType;
+
   VTKM_CONT void SetPreviousTime(vtkm::FloatDefault t1) { this->Time1 = t1; }
 
   VTKM_CONT void SetNextTime(vtkm::FloatDefault t2) { this->Time2 = t2; }
@@ -32,12 +41,15 @@ public:
 
   VTKM_CONT void SetNextDataSet(const vtkm::cont::PartitionedDataSet& pds) { this->Input2 = pds; }
 
-protected:
-  VTKM_CONT virtual void ValidateOptions() const override;
-
 private:
+  VTKM_CONT FieldType GetField(const vtkm::cont::DataSet& data) const;
+
+  VTKM_CONT TerminationType GetTermination(const vtkm::cont::DataSet& data) const;
+
+  VTKM_CONT AnalysisType GetAnalysis(const vtkm::cont::DataSet& data) const;
+
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
-    const vtkm::cont::PartitionedDataSet& inData) override;
+    const vtkm::cont::PartitionedDataSet& input);
 
   vtkm::cont::PartitionedDataSet Input2;
   vtkm::FloatDefault Time1 = -1;

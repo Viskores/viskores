@@ -1,4 +1,5 @@
-//============================================================================
+//=============================================================================
+//
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -6,7 +7,8 @@
 //  This software is distributed WITHOUT ANY WARRANTY; without even
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
+//
+//=============================================================================
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
@@ -65,19 +67,22 @@ VTKM_CONT vtkm::cont::DataSet StreamSurface::DoExecute(const vtkm::cont::DataSet
   GridEvalType eval(coords, cells, velocities);
   Stepper rk4(eval, this->StepSize);
 
-  vtkm::worklet::flow::Streamline streamline;
-
   using ParticleArray = vtkm::cont::ArrayHandle<vtkm::Particle>;
   vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
   vtkm::cont::ArrayCopy(this->Seeds.AsArrayHandle<ParticleArray>(), seedArray);
-  auto res = streamline.Run(rk4, seedArray, this->NumberOfSteps);
+
+  vtkm::worklet::flow::ParticleAdvection worklet;
+  vtkm::worklet::flow::NormalTermination termination(this->NumberOfSteps);
+  vtkm::worklet::flow::StreamlineAnalysis<vtkm::Particle> analysis(this->NumberOfSteps);
+
+  worklet.Run(rk4, seedArray, termination, analysis);
 
   //compute surface from streamlines
   vtkm::worklet::flow::StreamSurface streamSurface;
   vtkm::cont::ArrayHandle<vtkm::Vec3f> srfPoints;
   vtkm::cont::CellSetSingleType<> srfCells;
-  vtkm::cont::CoordinateSystem slCoords("coordinates", res.Positions);
-  streamSurface.Run(slCoords, res.PolyLines, srfPoints, srfCells);
+  vtkm::cont::CoordinateSystem slCoords("coordinates", analysis.Streams);
+  streamSurface.Run(slCoords, analysis.PolyLines, srfPoints, srfCells);
 
   vtkm::cont::DataSet outData;
   vtkm::cont::CoordinateSystem outputCoords("coordinates", srfPoints);

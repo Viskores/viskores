@@ -28,14 +28,16 @@ namespace flow
 namespace internal
 {
 
-template <typename DSIType, template <typename> class ResultType, typename ParticleType>
-class AdvectAlgorithmThreaded : public AdvectAlgorithm<DSIType, ResultType, ParticleType>
+template <typename DSIType>
+class AdvectAlgorithmThreaded : public AdvectAlgorithm<DSIType>
 {
 public:
+  using ParticleType = typename DSIType::PType;
+
   AdvectAlgorithmThreaded(const vtkm::filter::flow::internal::BoundsMap& bm,
                           std::vector<DSIType>& blocks,
                           bool useAsyncComm)
-    : AdvectAlgorithm<DSIType, ResultType, ParticleType>(bm, blocks, useAsyncComm)
+    : AdvectAlgorithm<DSIType>(bm, blocks, useAsyncComm)
     , Done(false)
     , WorkerActivate(false)
   {
@@ -64,8 +66,7 @@ protected:
   bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId) override
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
-    bool val = this->AdvectAlgorithm<DSIType, ResultType, ParticleType>::GetActiveParticles(
-      particles, blockId);
+    bool val = this->AdvectAlgorithm<DSIType>::GetActiveParticles(particles, blockId);
     this->WorkerActivate = val;
     return val;
   }
@@ -76,7 +77,7 @@ protected:
     if (!particles.empty())
     {
       std::lock_guard<std::mutex> lock(this->Mutex);
-      this->AdvectAlgorithm<DSIType, ResultType, ParticleType>::UpdateActive(particles, idsMap);
+      this->AdvectAlgorithm<DSIType>::UpdateActive(particles, idsMap);
 
       //Let workers know there is new work
       this->WorkerActivateCondition.notify_all();
@@ -105,7 +106,7 @@ protected:
     this->WorkerActivateCondition.wait(lock, [this] { return WorkerActivate || Done; });
   }
 
-  void UpdateWorkerResult(vtkm::Id blockId, DSIHelperInfoType& b)
+  void UpdateWorkerResult(vtkm::Id blockId, DSIHelperInfo<ParticleType>& b)
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
     auto& it = this->WorkerResults[blockId];
@@ -121,9 +122,8 @@ protected:
       if (this->GetActiveParticles(v, blockId))
       {
         auto& block = this->GetDataSet(blockId);
-        DSIHelperInfoType bb =
-          DSIHelperInfo<ParticleType>(v, this->BoundsMap, this->ParticleBlockIDsMap);
-        block.Advect(bb, this->StepSize, this->MaxNumberOfSteps);
+        DSIHelperInfo<ParticleType> bb(v, this->BoundsMap, this->ParticleBlockIDsMap);
+        block.Advect(bb, this->StepSize);
         this->UpdateWorkerResult(blockId, bb);
       }
       else
@@ -146,17 +146,14 @@ protected:
 
     while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
     {
-
-      std::unordered_map<vtkm::Id, std::vector<DSIHelperInfoType>> workerResults;
+      std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> workerResults;
       this->GetWorkerResults(workerResults);
 
       vtkm::Id numTerm = 0;
       for (auto& it : workerResults)
       {
         for (auto& r : it.second)
-        {
-          numTerm += this->UpdateResult(r.Get<DSIHelperInfo<ParticleType>>());
-        }
+          numTerm += this->UpdateResult(r);
       }
 
       vtkm::Id numTermMessages = 0;
@@ -177,12 +174,12 @@ protected:
     if (this->Done)
       return true;
 
-    return (this->AdvectAlgorithm<DSIType, ResultType, ParticleType>::GetBlockAndWait(
-              syncComm, numLocalTerm) &&
+    return (this->AdvectAlgorithm<DSIType>::GetBlockAndWait(syncComm, numLocalTerm) &&
             !this->WorkerActivate && this->WorkerResults.empty());
   }
 
-  void GetWorkerResults(std::unordered_map<vtkm::Id, std::vector<DSIHelperInfoType>>& results)
+  void GetWorkerResults(
+    std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>>& results)
   {
     results.clear();
 
@@ -198,7 +195,7 @@ protected:
   std::mutex Mutex;
   bool WorkerActivate;
   std::condition_variable WorkerActivateCondition;
-  std::unordered_map<vtkm::Id, std::vector<DSIHelperInfoType>> WorkerResults;
+  std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> WorkerResults;
 };
 
 }
