@@ -1,3 +1,0 @@
-# New Shrink filter
-
-The Shrink filter shrinks the cells of a DataSet towards their centroid, computed as the average position of the cell points. This filter disconnects the cells, duplicating the points connected to multiple cells. The resulting CellSet is always an `ExplicitCellSet`.
