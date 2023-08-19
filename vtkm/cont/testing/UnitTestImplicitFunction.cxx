@@ -331,6 +331,41 @@ void TestSphere()
           vtkm::Vec3f{ -2.0f, 0.0f, 0.0f } } });
 }
 
+void TestMultiPlane()
+{
+  std::cout << "Testing vtkm::MultiPlane\n";
+  std::cout << "  3 axis aligned planes intersected at (1, 1, 1)" << std::endl;
+  vtkm::MultiPlane<3> TriplePlane;
+  //insert xy plane
+  TriplePlane.AddPlane(vtkm::Vec3f{ 1.0f, 1.0f, 0.0f }, vtkm::Vec3f{ 0.0f, 0.0f, 1.0f });
+  //insert yz plane
+  TriplePlane.AddPlane(vtkm::Vec3f{ 0.0f, 1.0f, 1.0f }, vtkm::Vec3f{ 1.0f, 0.0f, 0.0f });
+  //insert xz plane
+  TriplePlane.AddPlane(vtkm::Vec3f{ 1.0f, 0.0f, 1.0f }, vtkm::Vec3f{ 0.0f, 1.0f, 0.0f });
+  Try(TriplePlane,
+      { { 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f } },
+      { {
+        vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+        vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
+        vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+        vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+        vtkm::Vec3f{ 0.0f, 1.0f, 0.0f },
+        vtkm::Vec3f{ 1.0f, 0.0f, 0.0f },
+        vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+        vtkm::Vec3f{ 0.0f, 0.0f, 1.0f },
+      } });
+  std::cout << "  test MultiPlane copy" << std::endl;
+  vtkm::MultiPlane<4> QuadPlane1(TriplePlane);
+  vtkm::MultiPlane<4> QuadPlane2 = TriplePlane;
+  for (int i = 0; i < 3; i++)
+  {
+    VTKM_TEST_ASSERT(QuadPlane1.GetPlane(i).GetOrigin() == TriplePlane.GetPlane(i).GetOrigin());
+    VTKM_TEST_ASSERT(QuadPlane1.GetPlane(i).GetNormal() == TriplePlane.GetPlane(i).GetNormal());
+    VTKM_TEST_ASSERT(QuadPlane2.GetPlane(i).GetOrigin() == TriplePlane.GetPlane(i).GetOrigin());
+    VTKM_TEST_ASSERT(QuadPlane1.GetPlane(i).GetNormal() == TriplePlane.GetPlane(i).GetNormal());
+  }
+}
+
 void Run()
 {
   TestBox();
@@ -338,6 +373,7 @@ void Run()
   TestFrustum();
   TestPlane();
   TestSphere();
+  TestMultiPlane();
 }
 
 } // anonymous namespace
