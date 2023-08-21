@@ -94,7 +94,7 @@ struct LookupTable : public vtkm::worklet::WorkletMapField
       // When v is very close to p.Range[1], the floating point calculation giving
       // idx may map above the highest value in the lookup table. That is why it
       // is padded
-      idx = static_cast<vtkm::Int32>(v);
+      idx = 1 + static_cast<vtkm::Int32>(v);
     }
     output = lookupTable.Get(idx);
   }
