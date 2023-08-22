@@ -1,4 +1,4 @@
-VTKm License Version 2.0
+VTKm License Version 2.1
 ========================================================================
 
 Copyright (c) 2014-2023
