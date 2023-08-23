@@ -12,8 +12,8 @@
 
 #include <vtkm/Bounds.h>
 #include <vtkm/Math.h>
+#include <vtkm/VecVariable.h>
 #include <vtkm/VectorAnalysis.h>
-
 #include <vtkm/exec/Variant.h>
 
 // For interface class only.
@@ -654,6 +654,77 @@ private:
   Vector Center;
 };
 
+//============================================================================
+/// \brief Implicit function for a MultiPlane
+///
+/// A MultiPlane contains multiple planes. Each plane is defined by a point and a normal to the plane.
+/// MaxNumPlanes specifies the maximum number of planes it can hold. We can assign another MultiPlane with
+/// a smaller number of planes to the current MultiPlane.
+template <vtkm::IdComponent MaxNumPlanes>
+class VTKM_ALWAYS_EXPORT MultiPlane
+  : public vtkm::internal::ImplicitFunctionBase<MultiPlane<MaxNumPlanes>>
+{
+public:
+  using Scalar = vtkm::FloatDefault;
+  using Vector = vtkm::Vec<Scalar, 3>;
+  VTKM_CONT MultiPlane() = default;
+  template <vtkm::IdComponent SrcMaxPlanes>
+  VTKM_CONT MultiPlane(const MultiPlane<SrcMaxPlanes>& src)
+    : Planes(src.GetPlanes())
+  {
+  }
+  template <vtkm::IdComponent SrcMaxPlanes>
+  VTKM_CONT MultiPlane& operator=(const MultiPlane<SrcMaxPlanes>& src)
+  {
+    this->Planes = vtkm::VecVariable<vtkm::Plane, MaxNumPlanes>{ src.GetPlanes() };
+  }
+  VTKM_CONT void AddPlane(const Vector& origin, const Vector& normal)
+  {
+    VTKM_ASSERT(this->Planes.GetNumberOfComponents() < MaxNumPlanes);
+    this->Planes.Append(Plane(origin, normal));
+  }
+  VTKM_CONT vtkm::Plane GetPlane(int idx)
+  {
+    VTKM_ASSERT((idx >= 0) && (idx < MaxNumPlanes));
+    return this->Planes[idx];
+  }
+  VTKM_CONT vtkm::VecVariable<vtkm::Plane, MaxNumPlanes> GetPlanes() const { return this->Planes; }
+  VTKM_EXEC_CONT Scalar Value(const Vector& point) const
+  {
+    Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
+    vtkm::IdComponent NumPlanes = this->Planes.GetNumberOfComponents();
+    for (vtkm::IdComponent index = 0; index < NumPlanes; ++index)
+    {
+      const Vector& p = this->Planes[index].GetOrigin();
+      const Vector& n = this->Planes[index].GetNormal();
+      const Scalar val = vtkm::Dot(point - p, n);
+      maxVal = vtkm::Max(maxVal, val);
+    }
+    return maxVal;
+  }
+  VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
+  {
+    Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
+    vtkm::IdComponent maxValIdx = 0;
+    vtkm::IdComponent NumPlanes = Planes.GetNumberOfComponents();
+    for (vtkm::IdComponent index = 0; index < NumPlanes; ++index)
+    {
+      const Vector& p = this->Planes[index].GetOrigin();
+      const Vector& n = this->Planes[index].GetNormal();
+      Scalar val = vtkm::Dot(point - p, n);
+      if (val > maxVal)
+      {
+        maxVal = val;
+        maxValIdx = index;
+      }
+    }
+    return this->Planes[maxValIdx].GetNormal();
+  }
+
+private:
+  vtkm::VecVariable<vtkm::Plane, MaxNumPlanes> Planes;
+};
+
 namespace detail
 {
 
@@ -751,13 +822,15 @@ class ImplicitFunctionGeneral
                                              vtkm::Cylinder,
                                              vtkm::Frustum,
                                              vtkm::Plane,
-                                             vtkm::Sphere>
+                                             vtkm::Sphere,
+                                             vtkm::MultiPlane<3>>
 {
   using Superclass = vtkm::ImplicitFunctionMultiplexer<vtkm::Box,
                                                        vtkm::Cylinder,
                                                        vtkm::Frustum,
                                                        vtkm::Plane,
-                                                       vtkm::Sphere>;
+                                                       vtkm::Sphere,
+                                                       vtkm::MultiPlane<3>>;
 
 public:
   using Superclass::Superclass;

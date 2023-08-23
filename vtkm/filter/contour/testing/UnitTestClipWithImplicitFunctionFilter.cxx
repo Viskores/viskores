@@ -12,13 +12,12 @@
 
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
-
 namespace
 {
 
 using Coord3D = vtkm::Vec3f;
 
-vtkm::cont::DataSet MakeTestDatasetStructured()
+vtkm::cont::DataSet MakeTestDatasetStructured2D()
 {
   static constexpr vtkm::Id xdim = 3, ydim = 3;
   static const vtkm::Id2 dim(xdim, ydim);
@@ -39,11 +38,30 @@ vtkm::cont::DataSet MakeTestDatasetStructured()
   return ds;
 }
 
-void TestClipStructured(vtkm::Float64 offset)
+vtkm::cont::DataSet MakeTestDatasetStructured3D()
 {
-  std::cout << "Testing ClipWithImplicitFunction Filter on Structured data" << std::endl;
+  static constexpr vtkm::Id xdim = 3, ydim = 3, zdim = 3;
+  static const vtkm::Id3 dim(xdim, ydim, zdim);
+  static constexpr vtkm::Id numVerts = xdim * ydim * zdim;
+  vtkm::Float32 scalars[numVerts];
+  for (vtkm::Id i = 0; i < numVerts; i++)
+  {
+    scalars[i] = static_cast<vtkm::Float32>(i * 0.1);
+  }
+  scalars[13] = 0.0f;
+  vtkm::cont::DataSet ds;
+  ds = vtkm::cont::DataSetBuilderUniform::Create(
+    dim, vtkm::Vec3f(-1.0f, -1.0f, -1.0f), vtkm::Vec3f(1, 1, 1));
+  ds.AddPointField("scalars", scalars, numVerts);
+  return ds;
+}
 
-  vtkm::cont::DataSet ds = MakeTestDatasetStructured();
+void TestClipStructuredSphere(vtkm::Float64 offset)
+{
+  std::cout << "Testing ClipWithImplicitFunction Filter on Structured data with Sphere function"
+            << std::endl;
+
+  vtkm::cont::DataSet ds = MakeTestDatasetStructured2D();
 
   vtkm::Vec3f center(1, 1, 0);
 
@@ -82,11 +100,13 @@ void TestClipStructured(vtkm::Float64 offset)
   }
 }
 
-void TestClipStructuredInverted()
+void TestClipStructuredInvertedSphere()
 {
-  std::cout << "Testing ClipWithImplicitFunctionInverted Filter on Structured data" << std::endl;
+  std::cout
+    << "Testing ClipWithImplicitFunctionInverted Filter on Structured data with Sphere function"
+    << std::endl;
 
-  vtkm::cont::DataSet ds = MakeTestDatasetStructured();
+  vtkm::cont::DataSet ds = MakeTestDatasetStructured2D();
 
   vtkm::Vec3f center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
@@ -118,13 +138,50 @@ void TestClipStructuredInverted()
   }
 }
 
+void TestClipStructuredInvertedMultiPlane()
+{
+  std::cout << "Testing TestClipStructured Filter on Structured data with MultiPlane function"
+            << std::endl;
+  vtkm::cont::DataSet ds = MakeTestDatasetStructured3D();
+  vtkm::filter::contour::ClipWithImplicitFunction clip;
+  vtkm::MultiPlane<3> TriplePlane;
+  //set xy plane
+  TriplePlane.AddPlane(vtkm::Vec3f{ 1.0f, 1.0f, 0.0f }, vtkm::Vec3f{ 0.0f, 0.0f, 1.0f });
+  //set yz plane
+  TriplePlane.AddPlane(vtkm::Vec3f{ 0.0f, 1.0f, 1.0f }, vtkm::Vec3f{ 1.0f, 0.0f, 0.0f });
+  //set xz plane
+  TriplePlane.AddPlane(vtkm::Vec3f{ 1.0f, 0.0f, 1.0f }, vtkm::Vec3f{ 0.0f, 1.0f, 0.0f });
+  clip.SetInvertClip(true);
+  clip.SetImplicitFunction(TriplePlane);
+  clip.SetFieldsToPass("scalars");
+  auto outputData = clip.Execute(ds);
+
+  VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
+                   "Wrong number of coordinate systems in the output dataset");
+  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
+                   "Wrong number of fields in the output dataset");
+  VTKM_TEST_ASSERT(outputData.GetNumberOfCells() == 1,
+                   "Wrong number of cells in the output dataset");
+  vtkm::cont::UnknownArrayHandle temp = outputData.GetField("scalars").GetData();
+  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
+  temp.AsArrayHandle(resultArrayHandle);
+  vtkm::Float32 expected[4] = { 0.0f, 0.1f, 0.3f, 0.9f };
+  for (int i = 0; i < 4; ++i)
+  {
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
+                     "Wrong result for ClipWithImplicitFunction fliter on sturctured data in "
+                     "TestClipStructuredInvertedMultiPlane");
+  }
+}
+
 void TestClip()
 {
   //todo: add more clip tests
-  TestClipStructured(-0.2);
-  TestClipStructured(0.0);
-  TestClipStructured(0.2);
-  TestClipStructuredInverted();
+  TestClipStructuredSphere(-0.2);
+  TestClipStructuredSphere(0.0);
+  TestClipStructuredSphere(0.2);
+  TestClipStructuredInvertedSphere();
+  TestClipStructuredInvertedMultiPlane();
 }
 
 } // anonymous namespace
