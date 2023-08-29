@@ -375,6 +375,20 @@ public:
   }
 };
 
+/// @brief Create an array by adding a stride to a basic array.
+///
+template <typename T>
+vtkm::cont::ArrayHandleStride<T> make_ArrayHandleStride(
+  const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>& array,
+  vtkm::Id numValues,
+  vtkm::Id stride,
+  vtkm::Id offset,
+  vtkm::Id modulo = 0,
+  vtkm::Id divisor = 1)
+{
+  return { array, numValues, stride, offset, modulo, divisor };
+}
+
 }
 } // namespace vtkm::cont
 
