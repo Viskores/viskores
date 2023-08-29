@@ -50,57 +50,39 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_augmented_mesh_dem_get_owned_vertices_by_global_id_worklet_h
-#define vtk_m_worklet_contourtree_augmented_mesh_dem_get_owned_vertices_by_global_id_worklet_h
+#ifndef vtk_m_filter_scalar_topology_internal_ExchangeBranchEndsFunctor_h
+#define vtk_m_filter_scalar_topology_internal_ExchangeBranchEndsFunctor_h
 
-#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
-#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/data_set_mesh/IdRelabeler.h>
-#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
+
+// clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <vtkm/thirdparty/diy/diy.h>
+VTKM_THIRDPARTY_POST_INCLUDE
+// clang-format on
+
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
-namespace contourtree_augmented
+namespace scalar_topology
 {
-namespace data_set_mesh
+namespace internal
 {
 
-// Worklet for computing the sort indices from the sort order
-class GetOwnedVerticesByGlobalIdWorklet : public vtkm::worklet::WorkletMapField
+struct ExchangeBranchEndsFunctor
 {
-public:
-  using ControlSignature = void(FieldIn meshIndices,      // (input) index into active vertices
-                                ExecObject meshStructure, // (input) mesh structure execution object
-                                FieldOut ownedVertices    // (output) vertices owned by the mesh
-  );
-  using ExecutionSignature = _3(_1, _2);
-  using InputDomain = _1;
+  VTKM_CONT void operator()(
+    BranchDecompositionBlock* b,
+    const vtkmdiy::ReduceProxy& rp,     // communication proxy
+    const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
+  ) const;
+};
 
-  // Constructor
-  VTKM_EXEC_CONT
-  GetOwnedVerticesByGlobalIdWorklet(
-    const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler)
-    : LocalToGlobalIdRelabeler(localToGlobalIdRelabeler)
-  {
-  }
-
-  /// Functor returning NO_SUCH_ELEMENT if vertex is not owed or the global mesh index if the vertex is owned
-  /// The functor simply calls the GetVertexOwned functin of the meshStructure for all vertices
-  template <typename MeshStructureType>
-  VTKM_EXEC vtkm::Id operator()(const vtkm::Id meshIndex,
-                                const MeshStructureType& meshStructure) const
-  {
-    return meshStructure.GetVertexOwned(meshIndex, this->LocalToGlobalIdRelabeler);
-  }
-
-private:
-  const vtkm::worklet::contourtree_augmented::mesh_dem::IdRelabeler LocalToGlobalIdRelabeler;
-}; // Mesh2D_DEM_VertexStarter
-
-} // namespace data_set_mesh
-} // namespace contourtree_augmented
-} // namespace worklet
+} // namespace internal
+} // namespace scalar_topology
+} // namespace filter
 } // namespace vtkm
 
 #endif

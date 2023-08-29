@@ -446,6 +446,89 @@ inline void TestContourTreeUniformDistributed8x9(int nBlocks, int rank = 0, int 
   }
 }
 
+inline void TestContourTreeUniformDistributedBranchDecomposition8x9(int nBlocks,
+                                                                    int rank = 0,
+                                                                    int size = 1)
+{
+  if (rank == 0)
+  {
+    std::cout << "Testing Distributed Branch Decomposition on 2D 8x9 data set " << nBlocks
+              << " blocks." << std::endl;
+  }
+  vtkm::cont::DataSet in_ds = vtkm::cont::testing::MakeTestDataSet().Make2DUniformDataSet3();
+  bool augmentHierarchicalTree = true;
+  bool computeHierarchicalVolumetricBranchDecomposition = true;
+  vtkm::cont::PartitionedDataSet result =
+    RunContourTreeDUniformDistributed(in_ds,
+                                      "pointvar",
+                                      false,
+                                      nBlocks,
+                                      rank,
+                                      size,
+                                      augmentHierarchicalTree,
+                                      computeHierarchicalVolumetricBranchDecomposition);
+
+
+  if (vtkm::cont::EnvironmentTracker::GetCommunicator().rank() == 0)
+  {
+    using Edge = vtkm::worklet::contourtree_distributed::Edge;
+    std::vector<Edge> computed;
+
+    for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+    {
+      auto ds = result.GetPartition(ds_no);
+      auto upperEndGRId = ds.GetField("UpperEndGlobalRegularIds")
+                            .GetData()
+                            .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                            .ReadPortal();
+      auto lowerEndGRId = ds.GetField("LowerEndGlobalRegularIds")
+                            .GetData()
+                            .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                            .ReadPortal();
+      vtkm::Id nBranches = upperEndGRId.GetNumberOfValues();
+
+      for (vtkm::Id branch = 0; branch < nBranches; ++branch)
+      {
+        Edge edge(upperEndGRId.Get(branch), lowerEndGRId.Get(branch));
+
+        if (std::find(computed.begin(), computed.end(), edge) == computed.end())
+        {
+          computed.push_back(edge);
+        }
+      }
+    }
+
+    std::vector<Edge> expected{
+      Edge(10, 20), Edge(23, 71), Edge(34, 24), Edge(38, 20), Edge(61, 50)
+    };
+
+    std::sort(computed.begin(), computed.end());
+    std::sort(expected.begin(), expected.end());
+
+    if (computed == expected)
+    {
+      std::cout << "Branch Decomposition: Results Match!" << std::endl;
+      return;
+    }
+
+    std::cout << "Branch Decomposition Results:" << std::endl;
+    std::cout << "Computed Contour Tree" << std::endl;
+    for (std::size_t i = 0; i < computed.size(); i++)
+    {
+      std::cout << std::setw(12) << computed[i].low << std::setw(14) << computed[i].high
+                << std::endl;
+    }
+
+    std::cout << "Expected Contour Tree" << std::endl;
+    for (std::size_t i = 0; i < expected.size(); i++)
+    {
+      std::cout << std::setw(12) << expected[i].low << std::setw(14) << expected[i].high
+                << std::endl;
+    }
+    VTKM_TEST_FAIL("Branch Decomposition Failed!");
+  }
+}
+
 inline void TestContourTreeUniformDistributed5x6x7(int nBlocks,
                                                    bool marchingCubes,
                                                    int rank = 0,

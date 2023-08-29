@@ -9,9 +9,12 @@
 ##============================================================================
 
 set(headers
+  BranchEndComparator.h
+  BranchEndGlobalUpdateWorklet.h
   CollapseBranchesPointerDoublingWorklet.h
   CollapseBranchesWorklet.h
   FindBestSupernodeWorklet.h
+  GetOuterEndWorklet.h
   LocalBestUpDownByVolumeBestUpDownEdgeWorklet.h
   LocalBestUpDownByVolumeInitSuperarcListWorklet.h
   LocalBestUpDownByVolumeWorklet.h
