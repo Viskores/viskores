@@ -28,15 +28,19 @@ VTKM_EXEC inline vtkm::Id3 compute_incs3d(const vtkm::Id3& dims)
   return vtkm::Id3{ 1, dims[0], (dims[0] * dims[1]) };
 }
 
-VTKM_EXEC inline constexpr vtkm::Id increment_cellId(SumXAxis, vtkm::Id cellId, vtkm::Id)
+VTKM_EXEC inline constexpr vtkm::Id increment_cellId(SumXAxis,
+                                                     vtkm::Id cellId,
+                                                     vtkm::Id,
+                                                     vtkm::Id numToIncrement = 1)
 {
-  return cellId + 1;
+  return cellId + numToIncrement;
 }
 VTKM_EXEC inline constexpr vtkm::Id increment_cellId(SumYAxis,
                                                      vtkm::Id cellId,
-                                                     vtkm::Id y_point_axis_inc)
+                                                     vtkm::Id y_point_axis_inc,
+                                                     vtkm::Id numToIncrement = 1)
 {
-  return cellId + (y_point_axis_inc - 1);
+  return cellId + ((y_point_axis_inc - 1) * numToIncrement);
 }
 
 VTKM_EXEC inline bool case_includes_axes(vtkm::UInt8 const* const edgeUses)
@@ -159,6 +163,7 @@ struct Pass4TrimState
     cellId = compute_start(AxisToSum{}, ijk, pdims - vtkm::Id3{ 1, 1, 1 });
 
     //update our ijk
+    cellId = increment_cellId(AxisToSum{}, cellId, axis_inc, left - ijk[AxisToSum::xindex]);
     ijk[AxisToSum::xindex] = left;
 
     boundaryStatus[0] = FlyingEdges3D::Interior;
