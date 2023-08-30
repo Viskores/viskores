@@ -16,6 +16,7 @@ set(headers
 vtkm_declare_headers(${headers})
 
 add_subdirectory(branch_decomposition)
+add_subdirectory(select_top_volume_contours)
 add_subdirectory(contourtree)
 add_subdirectory(contourtree_augmented)
 add_subdirectory(contourtree_distributed)
