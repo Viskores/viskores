@@ -101,7 +101,8 @@ public:
 
     //See if it's in the last bin.
     if ((lastCell.BinIdx >= 0) && (lastCell.BinIdx < this->CellIds.GetNumberOfValues()) &&
-        this->PointInBin(point, lastCell.BinIdx, cellId, pc) == vtkm::ErrorCode::Success)
+        this->PointInBin(point, lastCell.BinIdx, cellId, pc, lastCell.CellId) ==
+          vtkm::ErrorCode::Success)
     {
       parametric = pc;
       lastCell.CellId = cellId;
@@ -210,15 +211,16 @@ private:
   vtkm::ErrorCode PointInBin(const vtkm::Vec3f& point,
                              const vtkm::Id& binIdx,
                              vtkm::Id& cellId,
-                             vtkm::Vec3f& parametric) const
+                             vtkm::Vec3f& parametric,
+                             const vtkm::Id& lastCellId = -1) const
   {
     auto binIds = this->CellIds.Get(binIdx);
 
+    vtkm::Vec3f pc;
     for (vtkm::IdComponent i = 0; i < binIds.GetNumberOfComponents(); i++)
     {
       vtkm::Id cid = binIds[i];
-      vtkm::Vec3f pc;
-      if (this->PointInCell(point, cid, pc) == vtkm::ErrorCode::Success)
+      if (cid != lastCellId && this->PointInCell(point, cid, pc) == vtkm::ErrorCode::Success)
       {
         cellId = cid;
         parametric = pc;
