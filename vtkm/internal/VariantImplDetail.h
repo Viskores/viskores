@@ -25,6 +25,7 @@
 #include <vtkmstd/is_trivial.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <type_traits>
 
 
@@ -75,33 +76,88 @@ constexpr std::size_t MaxSizeOf()
 #endif
 
 // --------------------------------------------------------------------------------
+// Helper functions to determine the maximum alignment size.
+template <typename... Ts>
+constexpr std::size_t MaxAlignmentOf()
+{
+  return std::max({ std::alignment_of<Ts>::value... });
+}
+
+// --------------------------------------------------------------------------------
 // Placeholder for a fully used structure of the given type.
-template <std::size_t Size, bool = (Size > 8)>
-struct SizedPlaceholder
-{
-  VTKM_STATIC_ASSERT(Size > 0);
-  vtkm::Int8 A;
-  SizedPlaceholder<Size - 1> B;
-};
+// This placeholder is used for compilers that do not correctly copy `struct`s
+// in `union`s where some of the `struct`s have padding. This is added to the
+// front of the `union` for the compiler to pick up and use.
+//
+// It is normally sufficient to have a full `struct`, but we have also encountered
+// compilers that only use it if the alignment is at least as large. But we
+// don't want the alignment too large because it can add unwanted padding
+// elsewhere. Also, adding `alignas` did not work to resolve this problem for
+// the compiler.
 
+template <std::size_t Alignment>
+struct TypeForAlignmentImpl;
 template <>
-struct SizedPlaceholder<1, false>
+struct TypeForAlignmentImpl<8>
 {
-  vtkm::Int8 A;
+  using type = vtkm::Int64;
+};
+template <>
+struct TypeForAlignmentImpl<4>
+{
+  using type = vtkm::Int32;
+};
+template <>
+struct TypeForAlignmentImpl<2>
+{
+  using type = vtkm::Int16;
+};
+template <>
+struct TypeForAlignmentImpl<1>
+{
+  using type = vtkm::Int8;
+};
+template <std::size_t Alignment>
+using TypeForAlignment = typename TypeForAlignmentImpl<Alignment>::type;
+
+template <std::size_t Size, typename Word, bool = (Size >= 4)>
+struct SizedPlaceholderImpl;
+
+template <std::size_t Size, typename Word>
+struct SizedPlaceholderImpl<Size, Word, true>
+{
+  Word A;
+  Word B;
+  Word C;
+  Word D;
+  SizedPlaceholderImpl<Size - 4, Word> E;
+};
+template <typename Word>
+struct SizedPlaceholderImpl<4, Word, true>
+{
+  Word A;
+  Word B;
+  Word C;
+  Word D;
 };
 
-template <std::size_t Size>
-struct SizedPlaceholder<Size, true>
+template <std::size_t Size, typename Word>
+struct SizedPlaceholderImpl<Size, Word, false>
 {
-  vtkm::Int8 A;
-  vtkm::Int8 B;
-  vtkm::Int8 C;
-  vtkm::Int8 D;
-  vtkm::Int8 E;
-  vtkm::Int8 F;
-  vtkm::Int8 G;
-  vtkm::Int8 H;
-  SizedPlaceholder<Size - 8> I;
+  Word A;
+  SizedPlaceholderImpl<Size - 1, Word> B;
+};
+template <typename Word>
+struct SizedPlaceholderImpl<1, Word, false>
+{
+  Word A;
+};
+
+template <typename... Ts>
+struct SizedPlaceholder
+  : SizedPlaceholderImpl<(MaxSizeOf<Ts...>() / MaxAlignmentOf<Ts...>()),
+                         TypeForAlignment<MaxAlignmentOf<Ts...>()>>
+{
 };
 
 // clang-format off
@@ -147,10 +203,9 @@ union VariantUnionNTD;
 template <typename T0>
 union VariantUnionTD<T0>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0> Placeholder;
 
   T0 V0;
   VTK_M_DEVICE VariantUnionTD(vtkm::internal::NullType) { }
@@ -159,10 +214,9 @@ union VariantUnionTD<T0>
 template <typename T0>
 union VariantUnionNTD<T0>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0> Placeholder;
 
   T0 V0;
   VTK_M_DEVICE VariantUnionNTD(vtkm::internal::NullType) { }
@@ -173,10 +227,9 @@ union VariantUnionNTD<T0>
 template <typename T0, typename T1>
 union VariantUnionTD<T0, T1>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -186,10 +239,9 @@ union VariantUnionTD<T0, T1>
 template <typename T0, typename T1>
 union VariantUnionNTD<T0, T1>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -201,10 +253,9 @@ union VariantUnionNTD<T0, T1>
 template <typename T0, typename T1, typename T2>
 union VariantUnionTD<T0, T1, T2>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -215,10 +266,9 @@ union VariantUnionTD<T0, T1, T2>
 template <typename T0, typename T1, typename T2>
 union VariantUnionNTD<T0, T1, T2>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -231,10 +281,9 @@ union VariantUnionNTD<T0, T1, T2>
 template <typename T0, typename T1, typename T2, typename T3>
 union VariantUnionTD<T0, T1, T2, T3>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2, T3> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -246,10 +295,9 @@ union VariantUnionTD<T0, T1, T2, T3>
 template <typename T0, typename T1, typename T2, typename T3>
 union VariantUnionNTD<T0, T1, T2, T3>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2, T3> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -263,10 +311,9 @@ union VariantUnionNTD<T0, T1, T2, T3>
 template <typename T0, typename T1, typename T2, typename T3, typename T4>
 union VariantUnionTD<T0, T1, T2, T3, T4>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3, T4>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2, T3, T4> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -279,10 +326,9 @@ union VariantUnionTD<T0, T1, T2, T3, T4>
 template <typename T0, typename T1, typename T2, typename T3, typename T4>
 union VariantUnionNTD<T0, T1, T2, T3, T4>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3, T4>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2, T3, T4> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -297,10 +343,9 @@ union VariantUnionNTD<T0, T1, T2, T3, T4>
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
 union VariantUnionTD<T0, T1, T2, T3, T4, T5>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3, T4, T5>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2, T3, T4, T5> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -314,10 +359,9 @@ union VariantUnionTD<T0, T1, T2, T3, T4, T5>
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
 union VariantUnionNTD<T0, T1, T2, T3, T4, T5>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3, T4, T5>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2, T3, T4, T5> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -333,10 +377,9 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5>
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
 union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3, T4, T5, T6>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -351,10 +394,9 @@ union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6>
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
 union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3, T4, T5, T6>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -371,10 +413,9 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6>
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
 union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3, T4, T5, T6, T7>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6, T7> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -390,10 +431,9 @@ union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7>
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
 union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3, T4, T5, T6, T7>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6, T7> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -415,7 +455,7 @@ union VariantUnionTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>
   // Work around issue where CUDA sometimes seems to miss initializing some struct members
   // if another entry in the varient has a struct with padding. Place an item that requires
   // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>()> Placeholder;
+  SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...> Placeholder;
 
   T0 V0;
   T1 V1;
@@ -437,7 +477,7 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>
   // Work around issue where CUDA sometimes seems to miss initializing some struct members
   // if another entry in the varient has a struct with padding. Place an item that requires
   // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>()> Placeholder;
+  SizedPlaceholder<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...> Placeholder;
 
   T0 V0;
   T1 V1;
