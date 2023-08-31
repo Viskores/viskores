@@ -140,7 +140,7 @@ void TestPointMerging()
             << std::endl;
   cleanGrid.SetRemoveDegenerateCells(true);
   vtkm::cont::DataSet noDegenerateCells = cleanGrid.Execute(inData);
-  constexpr vtkm::Id numNonDegenerateCells = 33;
+  constexpr vtkm::Id numNonDegenerateCells = 18;
   VTKM_TEST_ASSERT(noDegenerateCells.GetNumberOfCells() == numNonDegenerateCells);
   VTKM_TEST_ASSERT(noDegenerateCells.GetCellSet().GetNumberOfPoints() == farFastMergeNumPoints);
   VTKM_TEST_ASSERT(noDegenerateCells.GetNumberOfPoints() == farFastMergeNumPoints);

@@ -44,18 +44,20 @@ struct RemoveDegenerateCells
     {
       const vtkm::IdComponent numPoints = pointIds.GetNumberOfComponents();
       vtkm::IdComponent numUnduplicatedPoints = 0;
-      for (vtkm::IdComponent localPointId = 0; localPointId < numPoints; ++localPointId)
+      // Skip first point if it is the same as the last.
+      for (vtkm::IdComponent localPointId = ((pointIds[0] != pointIds[numPoints - 1]) ? 0 : 1);
+           localPointId < numPoints;
+           ++localPointId)
       {
         ++numUnduplicatedPoints;
         if (numUnduplicatedPoints >= dimensionality + 1)
         {
           return true;
         }
-        while (((localPointId < numPoints - 1) &&
-                (pointIds[localPointId] == pointIds[localPointId + 1])) ||
-               ((localPointId == numPoints - 1) && (pointIds[localPointId] == pointIds[0])))
+        // Skip over any repeated points. Assume any repeated points are adjacent.
+        while ((localPointId < numPoints - 1) &&
+               (pointIds[localPointId] == pointIds[localPointId + 1]))
         {
-          // Skip over any repeated points. Assume any repeated points are adjacent.
           ++localPointId;
         }
       }
@@ -65,7 +67,7 @@ struct RemoveDegenerateCells
     template <typename CellShapeTag, typename PointVecType>
     VTKM_EXEC bool CheckForDimensionality(vtkm::CellTopologicalDimensionsTag<0>,
                                           CellShapeTag,
-                                          PointVecType&&)
+                                          PointVecType&&) const
     {
       return true;
     }
@@ -73,9 +75,10 @@ struct RemoveDegenerateCells
     template <typename CellShapeTag, typename PointVecType>
     VTKM_EXEC bool CheckForDimensionality(vtkm::CellTopologicalDimensionsTag<3>,
                                           CellShapeTag shape,
-                                          PointVecType&& pointIds)
+                                          PointVecType&& pointIds) const
     {
-      const vtkm::IdComponent numFaces = vtkm::exec::CellFaceNumberOfFaces(shape, *this);
+      vtkm::IdComponent numFaces;
+      vtkm::exec::CellFaceNumberOfFaces(shape, numFaces);
       vtkm::Id numValidFaces = 0;
       for (vtkm::IdComponent faceId = 0; faceId < numFaces; ++faceId)
       {
