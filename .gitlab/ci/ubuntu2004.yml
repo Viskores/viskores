@@ -22,7 +22,8 @@ build:ubuntu2004_kokkos:
     - .run_automatically
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
-    VTKM_SETTINGS: "kokkos+shared+64bit_floats"
+    CMAKE_PREFIX_PATH: "/opt/anari"
+    VTKM_SETTINGS: "kokkos+shared+64bit_floats+rendering+anari"
 
 test:ubuntu2004_kokkos:
   tags:

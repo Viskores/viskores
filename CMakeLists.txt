@@ -112,6 +112,13 @@ cmake_dependent_option(VTKm_ENABLE_TESTING_LIBRARY "Enable VTKm Testing Library"
   OFF "NOT VTKm_ENABLE_TESTING;NOT VTKm_ENABLE_BENCHMARKS" ON)
 mark_as_advanced(VTKm_ENABLE_TESTING_LIBRARY)
 
+# The ANARI interop library uses a bit of code in vtkm_rendering, so this option
+# currently requires vtkm_rendering to be built. Eventually this dependency
+# should go away as vtkm_anari doesn't require applications to use anything from
+# vtkm_rendering directly.
+cmake_dependent_option(VTKm_ENABLE_ANARI "Enable ANARI interop support"
+  OFF "VTKm_ENABLE_RENDERING" OFF)
+
 # We may want to make finer controls on whether libraries/modules get built.
 # VTK uses the concept of groups for its modules
 vtkm_option(VTKm_BUILD_ALL_LIBRARIES
@@ -216,6 +223,7 @@ vtkm_module_force_group(Testing
   DISABLE_VALUE "DONT_WANT"
   )
 vtkm_module_force_group(Benchmarking ENABLE_OPTION VTKm_ENABLE_BENCHMARKS)
+vtkm_module_force_group(ANARI ENABLE_OPTION VTKm_ENABLE_ANARI)
 
 # The tutorial requires several common filters. This logic might need to
 # become more complicated (or less compliated if we decide to always

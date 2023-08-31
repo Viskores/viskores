@@ -53,6 +53,9 @@ foreach(option IN LISTS options)
   elseif(no_rendering STREQUAL option)
     set(VTKm_ENABLE_RENDERING "OFF" CACHE STRING "")
 
+  elseif(anari STREQUAL option)
+    set(VTKm_ENABLE_ANARI "ON" CACHE STRING "")
+
   elseif(no_testing STREQUAL option)
     set(VTKm_ENABLE_TESTING "OFF" CACHE STRING "")
     set(VTKm_ENABLE_TESTING_LIBRARY "OFF" CACHE STRING "")
