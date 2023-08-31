@@ -16,6 +16,7 @@
 
 #include <vtkm/filter/clean_grid/CleanGrid.h>
 #include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
 #include <vtkm/filter/field_transform/PointElevation.h>
 #include <vtkm/source/Tangle.h>
 
@@ -61,7 +62,6 @@ void TestContourFilterUniform()
   contour.SetMergeDuplicatePoints(true);
   contour.SetIsoValues({ 50, 100, 150 });
   contour.SetActiveField(fieldName);
-  contour.SetFieldsToPass(fieldName);
   vtkm::cont::DataSet result = contour.Execute(inputData);
 
   result.PrintSummary(std::cout);
@@ -70,6 +70,36 @@ void TestContourFilterUniform()
   vtkm::rendering::testing::RenderTestOptions testOptions;
   vtkm::rendering::testing::RenderTest(
     result, "pointvar", "filter/contour-uniform.png", testOptions);
+
+  std::cout << "Generate image for contour filter on a uniform grid with a cell field" << std::endl;
+  inputData = maker.Make3DUniformDataSet2();
+  VTKM_TEST_ASSERT(inputData.HasField(fieldName));
+
+  std::string cellFieldName = "elevation";
+  vtkm::filter::field_transform::PointElevation elevation;
+  vtkm::Bounds bounds = inputData.GetCoordinateSystem().GetBounds();
+  elevation.SetLowPoint(bounds.MinCorner());
+  elevation.SetHighPoint(bounds.MaxCorner());
+  elevation.SetRange(0, 1);
+  elevation.SetOutputFieldName(cellFieldName);
+  elevation.SetUseCoordinateSystemAsField(true);
+  inputData = elevation.Execute(inputData);
+
+  vtkm::filter::field_conversion::CellAverage point2cell;
+  point2cell.SetActiveField(cellFieldName);
+  point2cell.SetFieldsToPass(fieldName);
+  inputData = point2cell.Execute(inputData);
+
+  VTKM_TEST_ASSERT(inputData.HasPointField(fieldName));
+  VTKM_TEST_ASSERT(inputData.HasCellField(cellFieldName));
+
+  contour.SetIsoValues({ 80 });
+  result = contour.Execute(inputData);
+
+  result.PrintSummary(std::cout);
+
+  vtkm::rendering::testing::RenderTest(
+    result, cellFieldName, "filter/contour-uniform-cellfield.png", testOptions);
 }
 
 void TestContourFilterUniformBoundaries()
