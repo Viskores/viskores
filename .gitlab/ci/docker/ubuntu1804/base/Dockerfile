@@ -11,7 +11,7 @@
 ##=============================================================================
 
 FROM ubuntu:18.04
-LABEL maintainer "Robert Maynard<robert.maynard@kitware.com>"
+LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
 # Base dependencies for building VTK-m projects
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -26,8 +26,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libomp-dev \
       libtbb-dev \
       libhdf5-dev \
+      make \
       mpich \
       ninja-build \
+      pkg-config \
       software-properties-common
 
 # extra dependencies for charm machine
