@@ -122,3 +122,5 @@ test:ubuntu1604_clang5:
     - build:ubuntu1604_clang5
   needs:
     - build:ubuntu1604_clang5
+  variables:
+      CTEST_EXCLUSIONS: "make_built_against_test_install"
