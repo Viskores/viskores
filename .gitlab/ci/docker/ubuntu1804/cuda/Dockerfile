@@ -11,7 +11,7 @@
 ##=============================================================================
 
 FROM nvidia/cuda:11.7.1-devel-ubuntu18.04
-LABEL maintainer "Vicente Adolfo Bolea Sanchez <vicente.bolea@kitware.com>"
+LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
 # Base dependencies for building VTK-m projects
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -22,8 +22,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libmpich-dev \
       libomp-dev \
       libtbb-dev \
+      make \
       mpich \
       ninja-build \
+      pkg-config \
       python3 \
       python3-scipy \
       && \

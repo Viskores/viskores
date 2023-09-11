@@ -11,7 +11,7 @@
 ##=============================================================================
 
 FROM rocm/dev-ubuntu-20.04
-LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@kitware.com>"
+LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
 # Base dependencies for building VTK-m projects
 RUN apt update && \
@@ -23,8 +23,10 @@ RUN apt update && \
 
     libmpich-dev \
     libomp-dev \
+    make \
     mpich \
     ninja-build \
+    pkg-config \
     rsync \
     ssh \
     rocthrust-dev \

@@ -30,7 +30,7 @@
     - .docker_image
 
 .ubuntu1604: &ubuntu1604
-  image: "kitware/vtkm:ci-ubuntu1604-20201016"
+  image: "kitware/vtkm:ci-ubuntu1604-20230906"
   extends:
     - .docker_image
 
@@ -40,32 +40,32 @@
     - .docker_image
 
 .ubuntu1804: &ubuntu1804
-  image: "kitware/vtkm:ci-ubuntu1804-20210107"
+  image: "kitware/vtkm:ci-ubuntu1804-20230906"
   extends:
     - .docker_image
 
 .ubuntu1804_cuda: &ubuntu1804_cuda
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11-20220919"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11-20230906"
   extends:
     - .docker_image
 
 .ubuntu1804_cuda_kokkos: &ubuntu1804_cuda_kokkos
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20230125"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20230906"
   extends:
     - .docker_image
 
 .ubuntu2004_doxygen: &ubuntu2004_doxygen
-  image: "kitware/vtkm:ci-doxygen-20201016"
+  image: "kitware/vtkm:ci-doxygen-20230906"
   extends:
     - .docker_image
 
 .ubuntu2004: &ubuntu2004
-  image: "kitware/vtkm:ci-ubuntu2004-20220623"
+  image: "kitware/vtkm:ci-ubuntu2004-20230906"
   extends:
     - .docker_image
 
 .ubuntu2004_kokkos: &ubuntu2004_kokkos
-  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20230829"
+  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20230906"
   extends:
     - .docker_image
 
