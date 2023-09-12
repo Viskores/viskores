@@ -17,5 +17,5 @@ libdir=${exec_prefix}/lib
 Name: VTKm
 Description: The VTKm library
 Version: @VTKm_VERSION@
-Cflags: -I${includedir}/vtkm-@CMAKE_INSTALL_PREFIX@
+Cflags: -I${includedir} -I${includedir}/vtkm/thirdparty/diy/vtkmdiy/include/ -I${includedir}/vtkm/thirdparty/lcl/vtkmlcl/
 Libs: -L${libdir}@lib_args@

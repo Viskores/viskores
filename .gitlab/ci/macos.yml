@@ -90,6 +90,10 @@ test:macos_xcode14:
     - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
   extends:
     - .cmake_test_artifacts
+  variables:
+    CTEST_EXCLUSIONS: >-
+      smoke_test_make_built_against_test_install
+      smoke_test_pkgconfig_make_built_against_test_install
 
 .macos_build_tags:
   tags:

@@ -9,7 +9,7 @@
 ##============================================================================
 
 # -----------------------------------------------------------------------------
-function(vtkm_test_install )
+function(vtkm_test_install)
   if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
     # Find all modules that are not-compiled. Skip these directories.
     set(dir_exceptions)
@@ -89,11 +89,11 @@ set(CMAKE_HIP_COMPILER \"${CMAKE_HIP_COMPILER}\" CACHE FILEPATH \"\")
 endfunction()
 
 # -----------------------------------------------------------------------------
-function(vtkm_test_against_install dir)
+function(vtkm_test_against_install_cmake dir)
   set(name ${dir})
   set(install_prefix "${VTKm_BINARY_DIR}/CMakeFiles/_tmp_install")
   set(src_dir "${CMAKE_CURRENT_SOURCE_DIR}/${name}/")
-  set(build_dir "${VTKm_BINARY_DIR}/CMakeFiles/_tmp_build/test_${name}/")
+  set(build_dir "${VTKm_BINARY_DIR}/CMakeFiles/_tmp_build/test_${name}_cmake/")
 
   set(args )
   if(CMAKE_VERSION VERSION_LESS 3.13)
@@ -134,7 +134,7 @@ function(vtkm_test_against_install dir)
   #this information to built the test name to make it clear to the user
   #what a 'passing' test means
   set(retcode 0)
-  set(build_name "${name}_built_against_test_install")
+  set(build_name "${name}_cmake_built_against_test_install")
   set(test_label "TEST_INSTALL")
 
   add_test(NAME ${build_name}
@@ -161,4 +161,73 @@ function(vtkm_test_against_install dir)
   set_tests_properties(${build_name} PROPERTIES LABELS ${test_label} )
   set_tests_properties(${build_name} PROPERTIES FIXTURES_REQUIRED vtkm_installed)
   set_tests_properties(${build_name} PROPERTIES TIMEOUT 600)
+endfunction()
+
+# -----------------------------------------------------------------------------
+function(_test_install_make dir name)
+  set(build_name "${name}_make_built_against_test_install")
+  set(build_example_dir "${VTKm_BINARY_DIR}/CMakeFiles/_tmp_build/test_${name}_make/")
+  set(source_example_dir "${CMAKE_CURRENT_SOURCE_DIR}/${dir}/")
+
+  # Create build dir if it doesnt exists
+  add_test(NAME ${build_name}_setup
+           COMMAND ${CMAKE_COMMAND} -E make_directory ${build_example_dir})
+
+  # Build and invoke its test
+  add_test(NAME ${build_name}
+           WORKING_DIRECTORY ${build_example_dir}
+           COMMAND make -f ${source_example_dir}/Makefile check V=1 VPATH=${source_example_dir})
+
+  set_tests_properties(${build_name}_setup PROPERTIES FIXTURES_SETUP "makefile_setup")
+  set_tests_properties(${build_name} PROPERTIES ENVIRONMENT "${ARGN}")
+  set_tests_properties(${build_name} PROPERTIES LABELS "TEST_INSTALL")
+  set_tests_properties(${build_name} PROPERTIES FIXTURES_REQUIRED "vtkm_installed;makefile_setup")
+  set_tests_properties(${build_name} PROPERTIES TIMEOUT 600)
+endfunction()
+
+# -----------------------------------------------------------------------------
+function(vtkm_test_against_install_make dir)
+  # Only add tests if and only if Make is found
+  if (NOT ${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
+    # Only these compilers accept the -std=c++XX parameter
+    if (NOT ${CMAKE_CXX_COMPILER_ID} MATCHES "GNU|Clang|Intel")
+      return()
+    endif()
+    find_program(make_found make)
+    if (NOT make_found)
+      return()
+    endif()
+  endif()
+
+  set(env_vars
+      "CXX=${CMAKE_CXX_COMPILER}"
+      "CXXFLAGS=$CACHE{CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD}"
+  )
+
+  set(vtkm_install_dir "${VTKm_BINARY_DIR}/CMakeFiles/_tmp_install")
+  if (WIN32)
+    string(REPLACE ";" "\\;" escaped_path "$ENV{PATH}")
+    list(APPEND env_vars "PATH=$<SHELL_PATH:${vtkm_install_dir}/bin>\\;${escaped_path}")
+  elseif(APPLE)
+    list(APPEND env_vars "DYLD_LIBRARY_PATH=${vtkm_install_dir}/lib:$ENV{DYLD_LIBRARY_PATH}")
+  else()
+    list(APPEND env_vars "LD_LIBRARY_PATH=${vtkm_install_dir}/lib:$ENV{LD_LIBRARY_PATH}")
+  endif()
+
+  # The plain make test uses the given dir as its test name
+  _test_install_make(${dir} ${dir}
+    "VTKM_INSTALL_PREFIX=${vtkm_install_dir}"
+    "VTKM_CONFIG_MK_PATH=${vtkm_install_dir}/share/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}/vtkm_config.mk"
+    ${env_vars}
+  )
+
+  # Create pkg-config test if pkg-config is found
+  find_program(pkgconfig_found pkg-config)
+  if (pkgconfig_found)
+    _test_install_make(${dir} "${dir}_pkgconfig"
+      "PKG_CONFIG_PATH=${vtkm_install_dir}/share/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}/"
+      "PKG_CONFIG_TEST_ARGS=--define-variable=prefix=${vtkm_install_dir}"
+      ${env_vars}
+    )
+  endif()
 endfunction()

@@ -37,10 +37,21 @@ set(test_exclusions
   $ENV{CTEST_EXCLUSIONS}
 )
 
+string(REPLACE " " ";" test_exclusions "${test_exclusions}")
 string(REPLACE ";" "|" test_exclusions "${test_exclusions}")
 if (test_exclusions)
-  set(test_exclusions "(${test_exclusions})")
+  set(test_exclusions EXCLUDE "(${test_exclusions})")
 endif ()
+
+if (DEFINED ENV{TEST_INCLUSIONS})
+  set(test_inclusions INCLUDE $ENV{TEST_INCLUSIONS})
+  unset(test_exclusions)
+endif()
+
+set(PARALLEL_LEVEL "10")
+if (DEFINED ENV{CTEST_MAX_PARALLELISM})
+  set(PARALLEL_LEVEL $ENV{CTEST_MAX_PARALLELISM})
+endif()
 
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
   set(junit_args OUTPUT_JUNIT "${CTEST_BINARY_DIRECTORY}/junit.xml")
@@ -48,9 +59,10 @@ endif()
 
 # reduced parallel level so we don't exhaust system resources
 ctest_memcheck(
-  PARALLEL_LEVEL "4"
+  PARALLEL_LEVEL ${PARALLEL_LEVEL}
   RETURN_VALUE test_result
-  EXCLUDE "${test_exclusions}"
+  ${test_exclusions}
+  ${test_inclusions}
   DEFECT_COUNT defects
   ${junit_args}
   )
