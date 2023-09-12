@@ -89,26 +89,30 @@ public:
                            vtkm::Vec3f& parametric,
                            LastCell& lastCell) const
   {
-    //See if point is inside the last cell.
-    vtkm::Vec3f pc;
-    if ((lastCell.CellId >= 0) && (lastCell.CellId < this->CellSet.GetNumberOfElements()) &&
-        this->PointInCell(point, lastCell.CellId, pc) == vtkm::ErrorCode::Success)
+    if (this->LastCellValid(lastCell))
     {
-      parametric = pc;
-      cellId = lastCell.CellId;
-      return vtkm::ErrorCode::Success;
+      //See if the point is still in the same bin.
+      vtkm::Id binIdx = this->FindBinIdx(point);
+      if (binIdx == lastCell.BinIdx)
+      {
+        vtkm::Vec3f pc;
+        //Check the last cell first.
+        if (this->PointInCell(point, lastCell.CellId, pc))
+        {
+          parametric = pc;
+          cellId = lastCell.CellId;
+          return vtkm::ErrorCode::Success;
+        }
+        //Otherwise, check cells in the bin, but skip lastCell.CellId
+        else if (this->PointInBin(point, lastCell.BinIdx, cellId, pc, lastCell.CellId))
+        {
+          parametric = pc;
+          return vtkm::ErrorCode::Success;
+        }
+      }
     }
 
-    //See if it's in the last bin.
-    if ((lastCell.BinIdx >= 0) && (lastCell.BinIdx < this->CellIds.GetNumberOfValues()) &&
-        this->PointInBin(point, lastCell.BinIdx, cellId, pc, lastCell.CellId) ==
-          vtkm::ErrorCode::Success)
-    {
-      parametric = pc;
-      lastCell.CellId = cellId;
-      return vtkm::ErrorCode::Success;
-    }
-
+    //LastCell not initialized, or not in the same bin: do a full test.
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
@@ -118,6 +122,27 @@ public:
   VTKM_EXEC const CellLocatorUniformBins* operator->() const { return this; }
 
 private:
+  VTKM_EXEC vtkm::Id FindBinIdx(const vtkm::Vec3f& point) const
+  {
+    vtkm::Vec3f temp;
+    temp = point - this->Origin;
+    temp = temp * this->InvSpacing;
+
+    //make sure that if we border the upper edge, we sample the correct cell
+    vtkm::Id3 logicalCell = vtkm::Min(vtkm::Id3(temp), this->MaxCellIds);
+
+    vtkm::Id binIdx =
+      (logicalCell[2] * this->CellDims[1] + logicalCell[1]) * this->CellDims[0] + logicalCell[0];
+
+    return binIdx;
+  }
+
+  VTKM_EXEC bool LastCellValid(const LastCell& lastCell) const
+  {
+    return lastCell.BinIdx >= 0 && lastCell.BinIdx < this->CellIds.GetNumberOfValues() &&
+      lastCell.CellId >= 0 && lastCell.CellId < this->CellSet.GetNumberOfElements();
+  }
+
   VTKM_EXEC bool IsInside(const vtkm::Vec3f& point) const
   {
     if (point[0] < this->Origin[0] || point[0] > this->MaxPoint[0])
@@ -146,20 +171,10 @@ private:
     }
 
     //Find the bin containing the point.
-    vtkm::Id3 logicalCell(0, 0, 0);
-
-    vtkm::Vec3f temp;
-    temp = point - this->Origin;
-    temp = temp * this->InvSpacing;
-
-    //make sure that if we border the upper edge, we sample the correct cell
-    logicalCell = vtkm::Min(vtkm::Id3(temp), this->MaxCellIds);
-
-    vtkm::Id binIdx =
-      (logicalCell[2] * this->CellDims[1] + logicalCell[1]) * this->CellDims[0] + logicalCell[0];
+    vtkm::Id binIdx = this->FindBinIdx(point);
 
     vtkm::Vec3f pc;
-    if (this->PointInBin(point, binIdx, cellId, pc) == vtkm::ErrorCode::Success)
+    if (this->PointInBin(point, binIdx, cellId, pc))
     {
       parametric = pc;
       lastCell.CellId = cellId;
@@ -208,11 +223,11 @@ private:
   }
 
   VTKM_EXEC
-  vtkm::ErrorCode PointInBin(const vtkm::Vec3f& point,
-                             const vtkm::Id& binIdx,
-                             vtkm::Id& cellId,
-                             vtkm::Vec3f& parametric,
-                             const vtkm::Id& lastCellId = -1) const
+  bool PointInBin(const vtkm::Vec3f& point,
+                  const vtkm::Id& binIdx,
+                  vtkm::Id& cellId,
+                  vtkm::Vec3f& parametric,
+                  const vtkm::Id& skipCellId = -1) const
   {
     auto binIds = this->CellIds.Get(binIdx);
 
@@ -220,21 +235,19 @@ private:
     for (vtkm::IdComponent i = 0; i < binIds.GetNumberOfComponents(); i++)
     {
       vtkm::Id cid = binIds[i];
-      if (cid != lastCellId && this->PointInCell(point, cid, pc) == vtkm::ErrorCode::Success)
+      if (cid != skipCellId && this->PointInCell(point, cid, pc))
       {
         cellId = cid;
         parametric = pc;
-        return vtkm::ErrorCode::Success;
+        return true;
       }
     }
 
-    return vtkm::ErrorCode::CellNotFound;
+    return false;
   }
 
   VTKM_EXEC
-  vtkm::ErrorCode PointInCell(const vtkm::Vec3f& point,
-                              const vtkm::Id& cid,
-                              vtkm::Vec3f& parametric) const
+  bool PointInCell(const vtkm::Vec3f& point, const vtkm::Id& cid, vtkm::Vec3f& parametric) const
   {
     auto indices = this->CellSet.GetIndices(cid);
     auto pts = vtkm::make_VecFromPortalPermute(&indices, this->Coords);
@@ -244,10 +257,10 @@ private:
     if (status == vtkm::ErrorCode::Success && inside)
     {
       parametric = pc;
-      return vtkm::ErrorCode::Success;
+      return true;
     }
 
-    return vtkm::ErrorCode::CellNotFound;
+    return false;
   }
 
   vtkm::Id3 CellDims;
