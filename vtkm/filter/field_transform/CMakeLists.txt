@@ -16,6 +16,7 @@ set(field_transform_headers
   PointElevation.h
   PointTransform.h
   SphericalCoordinateTransform.h
+  Warp.h
   WarpScalar.h
   WarpVector.h
   )
@@ -28,8 +29,7 @@ set(field_transform_sources
   PointElevation.cxx
   PointTransform.cxx
   SphericalCoordinateTransform.cxx
-  WarpScalar.cxx
-  WarpVector.cxx
+  Warp.cxx
   )
 
 set(field_transform_sources_no_device

@@ -11,8 +11,16 @@
 #ifndef vtk_m_filter_field_transform_WarpScalar_h
 #define vtk_m_filter_field_transform_WarpScalar_h
 
-#include <vtkm/filter/FilterField.h>
-#include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
+#include <vtkm/filter/field_transform/Warp.h>
+
+#include <vtkm/Deprecated.h>
+
+struct VTKM_DEPRECATED(2.2, "WarpScalar.h header no longer supported. Use Warp.h.")
+  vtkm_deprecated_WarpScalar_h_warning
+{
+};
+
+vtkm_deprecated_WarpScalar_h_warning vtkm_give_WarpScalar_h_warning;
 
 namespace vtkm
 {
@@ -20,73 +28,65 @@ namespace filter
 {
 namespace field_transform
 {
-/// \brief Modify points by moving points along point normals by the scalar
-/// amount times the scalar factor.
-///
-/// A filter that modifies point coordinates by moving points along point normals
-/// by the scalar amount times the scalar factor.
-/// It's a VTK-m version of the vtkWarpScalar in VTK.
-/// Useful for creating carpet or x-y-z plots.
-/// It doesn't modify the point coordinates, but creates a new point coordinates that have been warped.
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT WarpScalar : public vtkm::filter::FilterField
+
+class VTKM_DEPRECATED(2.2, "Use more general Warp filter.") WarpScalar
+  : public vtkm::filter::field_transform::Warp
 {
 public:
-  VTKM_CONT
-  explicit WarpScalar(vtkm::FloatDefault scaleAmount);
+  VTKM_DEPRECATED(2.2, "Use SetScaleFactor().")
+  VTKM_CONT explicit WarpScalar(vtkm::FloatDefault scaleAmount)
+  {
+    this->SetScaleFactor(scaleAmount);
+    this->SetOutputFieldName("warpscalar");
+  }
 
-  ///@{
-  /// Choose the secondary field to operate on. In the warp op A + B *
-  /// scaleAmount * scalarFactor, B is the secondary field
-  VTKM_CONT
-  void SetNormalField(
+  VTKM_DEPRECATED(2.2, "Use SetDirectionField().")
+  VTKM_CONT void SetNormalField(
     const std::string& name,
     vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
-    this->NormalFieldName = name;
-    this->NormalFieldAssociation = association;
+    if ((association != vtkm::cont::Field::Association::Any) &&
+        (association != vtkm::cont::Field::Association::Points))
+    {
+      throw vtkm::cont::ErrorBadValue("Normal field should always be associated with points.");
+    }
+    this->SetDirectionField(name);
   }
 
-  VTKM_CONT const std::string& GetNormalFieldName() const { return this->NormalFieldName; }
+  VTKM_DEPRECATED(2.2, "Use GetDirectionFieldName().")
+  VTKM_CONT std::string GetNormalFieldName() const { return this->GetDirectionFieldName(); }
 
+  VTKM_DEPRECATED(2.2, "Only point association supported.")
   VTKM_CONT vtkm::cont::Field::Association GetNormalFieldAssociation() const
   {
-    return this->NormalFieldAssociation;
+    return this->GetActiveFieldAssociation(1);
   }
-  ///@}
 
-  ///@{
-  /// Choose the scalar factor field to operate on. In the warp op A + B *
-  /// scaleAmount * scalarFactor, scalarFactor is the scalar factor field.
-  VTKM_CONT
-  void SetScalarFactorField(
+  VTKM_DEPRECATED(2.2, "Use SetScaleField().")
+  VTKM_CONT void SetScalarFactorField(
     const std::string& name,
     vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any)
   {
-    this->ScalarFactorFieldName = name;
-    this->ScalarFactorFieldAssociation = association;
+    if ((association != vtkm::cont::Field::Association::Any) &&
+        (association != vtkm::cont::Field::Association::Points))
+    {
+      throw vtkm::cont::ErrorBadValue("Normal field should always be associated with points.");
+    }
+    this->SetScaleField(name);
   }
 
-  VTKM_CONT const std::string& GetScalarFactorFieldName() const
-  {
-    return this->ScalarFactorFieldName;
-  }
+  VTKM_DEPRECATED(2.2, "Use GetScaleField().")
+  VTKM_CONT std::string GetScalarFactorFieldName() const { return this->GetScaleFieldName(); }
 
+  VTKM_DEPRECATED(2.2, "Only point association supported.")
   VTKM_CONT vtkm::cont::Field::Association GetScalarFactorFieldAssociation() const
   {
-    return this->ScalarFactorFieldAssociation;
+    return this->GetActiveFieldAssociation(1);
   }
-  ///@}
-
-private:
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
-
-  std::string NormalFieldName = "normal";
-  vtkm::cont::Field::Association NormalFieldAssociation = vtkm::cont::Field::Association::Any;
-  std::string ScalarFactorFieldName = "scalarfactor";
-  vtkm::cont::Field::Association ScalarFactorFieldAssociation = vtkm::cont::Field::Association::Any;
-  vtkm::FloatDefault ScaleAmount;
 };
+
 } // namespace field_transform
 } // namespace filter
 } // namespace vtkm
-#endif // vtk_m_filter_field_transform_WarpScalar_h
+
+#endif //vtk_m_filter_field_transform_WarpScalar_h

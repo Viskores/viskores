@@ -36,8 +36,7 @@
 #include <vtkm/filter/entity_extraction/ThresholdPoints.h>
 #include <vtkm/filter/field_conversion/CellAverage.h>
 #include <vtkm/filter/field_conversion/PointAverage.h>
-#include <vtkm/filter/field_transform/WarpScalar.h>
-#include <vtkm/filter/field_transform/WarpVector.h>
+#include <vtkm/filter/field_transform/Warp.h>
 #include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
 #include <vtkm/filter/geometry_refinement/Triangulate.h>
 #include <vtkm/filter/geometry_refinement/VertexClustering.h>
@@ -358,10 +357,11 @@ void BenchWarpScalar(::benchmark::State& state)
   const vtkm::cont::DeviceAdapterId device = Config.Device;
   const bool isPartitioned = static_cast<bool>(state.range(0));
 
-  vtkm::filter::field_transform::WarpScalar filter{ 2. };
+  vtkm::filter::field_transform::Warp filter;
+  filter.SetScaleFactor(2.0f);
   filter.SetUseCoordinateSystemAsField(true);
-  filter.SetNormalField(PointVectorsName, vtkm::cont::Field::Association::Points);
-  filter.SetScalarFactorField(PointScalarsName, vtkm::cont::Field::Association::Points);
+  filter.SetDirectionField(PointVectorsName);
+  filter.SetScaleField(PointScalarsName);
 
   vtkm::cont::PartitionedDataSet input;
   input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();
@@ -385,9 +385,10 @@ void BenchWarpVector(::benchmark::State& state)
   const vtkm::cont::DeviceAdapterId device = Config.Device;
   const bool isPartitioned = static_cast<bool>(state.range(0));
 
-  vtkm::filter::field_transform::WarpVector filter{ 2. };
+  vtkm::filter::field_transform::Warp filter;
+  filter.SetScaleFactor(2.0f);
   filter.SetUseCoordinateSystemAsField(true);
-  filter.SetVectorField(PointVectorsName, vtkm::cont::Field::Association::Points);
+  filter.SetDirectionField(PointVectorsName);
 
   vtkm::cont::PartitionedDataSet input;
   input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();

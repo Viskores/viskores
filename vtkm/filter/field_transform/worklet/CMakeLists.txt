@@ -12,8 +12,6 @@ set(headers
   CoordinateSystemTransform.h
   PointElevation.h
   PointTransform.h
-  WarpScalar.h
-  WarpVector.h
   LogValues.h
   )
 
