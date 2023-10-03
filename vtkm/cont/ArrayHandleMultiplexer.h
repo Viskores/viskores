@@ -148,6 +148,17 @@ namespace internal
 namespace detail
 {
 
+struct MultiplexerGetNumberOfComponentsFlatFunctor
+{
+  template <typename StorageType>
+  VTKM_CONT vtkm::IdComponent operator()(
+    StorageType,
+    const std::vector<vtkm::cont::internal::Buffer>& buffers) const
+  {
+    return StorageType::GetNumberOfComponentsFlat(buffers);
+  }
+};
+
 struct MultiplexerGetNumberOfValuesFunctor
 {
   template <typename StorageType>
@@ -250,6 +261,13 @@ public:
     vtkm::internal::ArrayPortalMultiplexer<typename StorageFor<StorageTags>::ReadPortalType...>;
   using WritePortalType =
     vtkm::internal::ArrayPortalMultiplexer<typename StorageFor<StorageTags>::WritePortalType...>;
+
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    return Variant(buffers).CastAndCall(detail::MultiplexerGetNumberOfComponentsFlatFunctor{},
+                                        ArrayBuffers(buffers));
+  }
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)

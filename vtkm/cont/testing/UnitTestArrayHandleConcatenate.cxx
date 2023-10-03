@@ -124,6 +124,7 @@ void TestConcatOfConcat()
   vtkm::cont::printSummary_ArrayHandle(array5, std::cout, true);
 
   VTKM_TEST_ASSERT(array5.GetNumberOfValues() == 4 * ARRAY_SIZE);
+  VTKM_TEST_ASSERT(array5.GetNumberOfComponentsFlat() == 1);
 
   // Check the values in array5. If array5 is correct, all the `ArrayHandleConcatinate`s
   // (such as in array3) must be working.
@@ -163,6 +164,7 @@ void TestConcatenateEmptyArray()
   vtkm::cont::printSummary_ArrayHandle(arrConc2, std::cout, true);
 
   VTKM_TEST_ASSERT(arrConc2.GetNumberOfValues() == ARRAY_SIZE);
+  VTKM_TEST_ASSERT(arrConc2.GetNumberOfComponentsFlat() == 1);
 }
 
 void TestConcatenateFill()

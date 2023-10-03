@@ -21,6 +21,7 @@ void TestArrayHandleIndex()
 {
   vtkm::cont::ArrayHandleIndex array(ARRAY_SIZE);
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Bad size.");
+  VTKM_TEST_ASSERT(array.GetNumberOfComponentsFlat() == 1);
   auto portal = array.ReadPortal();
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {

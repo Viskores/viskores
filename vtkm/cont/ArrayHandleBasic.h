@@ -18,6 +18,8 @@
 
 #include <vtkm/internal/ArrayPortalBasic.h>
 
+#include <vtkm/VecFlat.h>
+
 #include <limits>
 
 namespace vtkm
@@ -47,6 +49,12 @@ public:
   {
     buffers[0].SetNumberOfBytes(
       vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numValues), preserve, token);
+  }
+
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return vtkm::VecFlat<T>::NUM_COMPONENTS;
   }
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(

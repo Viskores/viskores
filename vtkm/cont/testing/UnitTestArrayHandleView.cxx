@@ -63,6 +63,9 @@ struct TestViewAsInput
 
       ViewHandleType view =
         vtkm::cont::make_ArrayHandleView(implicit, start_pos, counting_ARRAY_SIZE);
+      VTKM_TEST_ASSERT(view.GetNumberOfComponentsFlat() ==
+                       vtkm::VecFlat<ValueType>::NUM_COMPONENTS);
+      VTKM_TEST_ASSERT(view.GetNumberOfValues() == counting_ARRAY_SIZE);
 
       vtkm::cont::ArrayHandle<ValueType> result;
 

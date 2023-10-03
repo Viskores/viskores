@@ -129,6 +129,8 @@ struct TestRuntimeVecAsInput
     auto runtimeVecArray = vtkm::cont::make_ArrayHandleRuntimeVec(NUM_COMPONENTS, baseArray);
     VTKM_TEST_ASSERT(runtimeVecArray.GetNumberOfValues() == ARRAY_SIZE,
                      "Group array reporting wrong array size.");
+    VTKM_TEST_ASSERT(runtimeVecArray.GetNumberOfComponentsFlat() ==
+                     NUM_COMPONENTS * vtkm::VecFlat<ComponentType>::NUM_COMPONENTS);
 
     vtkm::cont::ArrayHandle<ValueType> resultArray;
 

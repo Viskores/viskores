@@ -240,6 +240,12 @@ public:
                                                 typename Storage2::WritePortalType,
                                                 typename Storage3::WritePortalType>;
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return vtkm::VecFlat<T>::NUM_COMPONENTS * 3;
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

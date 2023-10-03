@@ -445,6 +445,15 @@ public:
       buffers[0].GetMetaData<detail::RecombineVecMetaData>().ArrayBufferOffsets.size() - 1);
   }
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    vtkm::IdComponent numComponents = GetNumberOfComponents(buffers);
+    vtkm::IdComponent numSubComponents =
+      SourceStorage::GetNumberOfComponentsFlat(BuffersForComponent(buffers, 0));
+    return numComponents * numSubComponents;
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

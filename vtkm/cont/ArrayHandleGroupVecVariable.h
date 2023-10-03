@@ -167,6 +167,13 @@ public:
     vtkm::internal::ArrayPortalGroupVecVariable<typename ComponentsStorage::WritePortalType,
                                                 typename OffsetsStorage::ReadPortalType>;
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    // Number of components can be variable.
+    return 0;
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

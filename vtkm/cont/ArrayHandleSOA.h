@@ -144,6 +144,12 @@ public:
     return std::vector<vtkm::cont::internal::Buffer>(static_cast<std::size_t>(NUM_COMPONENTS));
   }
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return vtkm::VecFlat<ComponentType>::NUM_COMPONENTS * NUM_COMPONENTS;
+  }
+
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
                                       const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
