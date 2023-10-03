@@ -15,6 +15,7 @@ namespace vtkm
 namespace rendering
 {
 
+/// @brief Glyph shapes supported by glyphing mappers.
 enum struct GlyphType
 {
   Arrow,
