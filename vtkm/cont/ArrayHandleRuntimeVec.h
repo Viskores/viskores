@@ -177,6 +177,15 @@ public:
     return buffers[0].GetMetaData<Info>().NumberOfComponents;
   }
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    vtkm::IdComponent numComponents = GetNumberOfComponents(buffers);
+    vtkm::IdComponent numSubComponents =
+      ComponentsStorage::GetNumberOfComponentsFlat(ComponentsBuffers(buffers));
+    return numComponents * numSubComponents;
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

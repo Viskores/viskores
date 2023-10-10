@@ -122,6 +122,8 @@ struct TestSOAAsInput
         soaArray.SetArray(componentIndex, componentArray);
       }
 
+      VTKM_TEST_ASSERT(soaArray.GetNumberOfComponentsFlat() ==
+                       vtkm::VecFlat<ValueType>::NUM_COMPONENTS);
       VTKM_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
       VTKM_TEST_ASSERT(soaArray.ReadPortal().GetNumberOfValues() == ARRAY_SIZE);
       CheckPortal(soaArray.ReadPortal());

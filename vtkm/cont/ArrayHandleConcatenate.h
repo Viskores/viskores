@@ -157,6 +157,22 @@ public:
     vtkm::internal::ArrayPortalConcatenate<typename SourceStorage1::WritePortalType,
                                            typename SourceStorage2::WritePortalType>;
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    vtkm::IdComponent components1 = SourceStorage1::GetNumberOfComponentsFlat(Buffers1(buffers));
+    vtkm::IdComponent components2 = SourceStorage2::GetNumberOfComponentsFlat(Buffers2(buffers));
+    if (components1 == components2)
+    {
+      return components1;
+    }
+    else
+    {
+      // Inconsistent component size.
+      return 0;
+    }
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

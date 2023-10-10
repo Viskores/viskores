@@ -129,6 +129,12 @@ struct VTKM_ALWAYS_EXPORT
     return vtkm::cont::internal::PortalToArrayHandleImplicitBuffers(ArrayPortalType{});
   }
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return vtkm::VecFlat<typename ArrayPortalType::ValueType>::NUM_COMPONENTS;
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

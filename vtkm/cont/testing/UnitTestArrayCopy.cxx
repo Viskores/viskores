@@ -15,6 +15,8 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleReverse.h>
+#include <vtkm/cont/ArrayHandleRuntimeVec.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
@@ -215,6 +217,41 @@ void TryCopy()
     vtkm::cont::ArrayHandle<ValueType> output;
     vtkm::cont::ArrayCopy(input, output);
     TestValues(input, output);
+  }
+
+  {
+    std::cout << "runtime vec size -> runtime vec size" << std::endl;
+    using ComponentType = typename VTraits::BaseComponentType;
+    vtkm::cont::ArrayHandle<ValueType> staticVecArray = MakeInputArray<ValueType>();
+    vtkm::cont::ArrayHandleRuntimeVec<ComponentType> input =
+      vtkm::cont::make_ArrayHandleRuntimeVec(staticVecArray);
+    vtkm::cont::ArrayHandleRuntimeVec<ComponentType> output(input.GetNumberOfComponents());
+    vtkm::cont::ArrayCopy(input, output);
+    // Convert the arrays back to static vec sizes for comparison, because TestValues
+    // uses a device array copy that may not work on runtime vec sizes.
+    TestValues(staticVecArray,
+               output.template AsArrayHandleBasic<vtkm::cont::ArrayHandle<ValueType>>());
+  }
+
+  {
+    std::cout << "runtime vec size reverse -> runtime vec size view" << std::endl;
+    using ComponentType = typename VTraits::BaseComponentType;
+    vtkm::cont::ArrayHandle<ValueType> staticVecArray = MakeInputArray<ValueType>();
+    vtkm::cont::ArrayHandleRuntimeVec<ComponentType> inputRuntimeVec =
+      vtkm::cont::make_ArrayHandleRuntimeVec(staticVecArray);
+    auto input = vtkm::cont::make_ArrayHandleReverse(inputRuntimeVec);
+    vtkm::cont::ArrayHandleRuntimeVec<ComponentType> outputBase(
+      inputRuntimeVec.GetNumberOfComponents());
+    outputBase.Allocate(ARRAY_SIZE * 2);
+    auto output = vtkm::cont::make_ArrayHandleView(outputBase, 2, ARRAY_SIZE);
+    vtkm::cont::ArrayCopy(input, output);
+    // Convert the arrays back to static vec sizes for comparison, because TestValues
+    // uses a device array copy that may not work on runtime vec sizes.
+    TestValues(vtkm::cont::make_ArrayHandleReverse(staticVecArray),
+               vtkm::cont::make_ArrayHandleView(
+                 outputBase.template AsArrayHandleBasic<vtkm::cont::ArrayHandle<ValueType>>(),
+                 2,
+                 ARRAY_SIZE));
   }
 
   // Test the copy methods in UnknownArrayHandle. Although this would be appropriate in

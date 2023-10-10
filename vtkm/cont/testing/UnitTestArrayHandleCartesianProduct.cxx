@@ -39,6 +39,7 @@ void ArrayHandleCPBasic(vtkm::cont::ArrayHandle<T> x,
   //Make sure we have the right number of values.
   VTKM_TEST_ASSERT(cpArray.GetNumberOfValues() == (nx * ny * nz),
                    "Cartesian array constructor has wrong number of values");
+  VTKM_TEST_ASSERT(cpArray.GetNumberOfComponentsFlat() == 3);
 
   //Make sure the values are correct.
   vtkm::Vec<T, 3> val;

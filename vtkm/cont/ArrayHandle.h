@@ -465,6 +465,12 @@ public:
     return StorageType::GetNumberOfValues(this->GetBuffers());
   }
 
+  /// @copydoc vtkm::cont::UnknownArrayHandle::GetNumberOfComponentsFlat
+  VTKM_CONT vtkm::IdComponent GetNumberOfComponentsFlat() const
+  {
+    return StorageType::GetNumberOfComponentsFlat(this->GetBuffers());
+  }
+
   ///@{
   ///  \brief Allocates an array large enough to hold the given number of values.
   ///

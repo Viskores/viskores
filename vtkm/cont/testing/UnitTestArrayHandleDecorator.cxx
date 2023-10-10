@@ -320,6 +320,8 @@ struct DecoratorTests
       {
         auto portalDecor = ahDecor.ReadPortal();
         VTKM_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
+        VTKM_TEST_ASSERT(ahDecor.GetNumberOfComponentsFlat() ==
+                         vtkm::VecFlat<ValueType>::NUM_COMPONENTS);
         VTKM_TEST_ASSERT(portalDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalDecor.Get(0) == ValueType{ 23 });
         VTKM_TEST_ASSERT(portalDecor.Get(1) == ValueType{ 21 });
@@ -340,6 +342,8 @@ struct DecoratorTests
       { // Accessing portal should give all 25s:
         auto portalDecor = ahDecor.ReadPortal();
         VTKM_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
+        VTKM_TEST_ASSERT(ahDecor.GetNumberOfComponentsFlat() ==
+                         vtkm::VecFlat<ValueType>::NUM_COMPONENTS);
         VTKM_TEST_ASSERT(portalDecor.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalDecor.Get(0) == ValueType{ 25 });
         VTKM_TEST_ASSERT(portalDecor.Get(1) == ValueType{ 25 });
@@ -356,6 +360,8 @@ struct DecoratorTests
       { // ah3Copy should have updated values:
         auto portalAH3Copy = ah3Copy.ReadPortal();
         VTKM_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
+        VTKM_TEST_ASSERT(ahDecor.GetNumberOfComponentsFlat() ==
+                         vtkm::VecFlat<ValueType>::NUM_COMPONENTS);
         VTKM_TEST_ASSERT(portalAH3Copy.GetNumberOfValues() == ARRAY_SIZE);
         VTKM_TEST_ASSERT(portalAH3Copy.Get(0) == ValueType{ 15 });
         VTKM_TEST_ASSERT(portalAH3Copy.Get(1) == ValueType{ 15 });

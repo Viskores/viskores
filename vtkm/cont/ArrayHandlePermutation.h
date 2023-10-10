@@ -142,6 +142,12 @@ public:
     vtkm::internal::ArrayPortalPermutation<typename IndexStorage::ReadPortalType,
                                            typename ValueStorage::WritePortalType>;
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    return ValueStorage::GetNumberOfComponentsFlat(ValueBuffers(buffers));
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
