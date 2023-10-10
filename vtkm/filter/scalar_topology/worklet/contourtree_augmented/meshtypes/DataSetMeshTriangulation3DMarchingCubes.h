@@ -92,12 +92,12 @@ public:
 
   DataSetMeshTriangulation3DMarchingCubes(vtkm::Id3 meshSize);
 
-  MeshBoundary3DExec GetMeshBoundaryExecutionObject() const;
+  MeshBoundary3DExec<true> GetMeshBoundaryExecutionObject() const;
 
   void GetBoundaryVertices(
     IdArrayType& boundaryVertexArray,    // output
     IdArrayType& boundarySortIndexArray, // output
-    MeshBoundary3DExec* meshBoundaryExecObj =
+    MeshBoundary3DExec<true>* meshBoundaryExecObj =
       nullptr // optional input, included for consistency with ContourTreeMesh
   ) const;
 
@@ -180,16 +180,16 @@ inline MeshStructureMarchingCubes DataSetMeshTriangulation3DMarchingCubes::Prepa
                                     token);
 }
 
-inline MeshBoundary3DExec DataSetMeshTriangulation3DMarchingCubes::GetMeshBoundaryExecutionObject()
-  const
+inline MeshBoundary3DExec<true>
+DataSetMeshTriangulation3DMarchingCubes::GetMeshBoundaryExecutionObject() const
 {
-  return MeshBoundary3DExec(this->MeshSize, this->SortOrder);
+  return MeshBoundary3DExec<true>(this->MeshSize, this->SortIndices);
 }
 
 inline void DataSetMeshTriangulation3DMarchingCubes::GetBoundaryVertices(
-  IdArrayType& boundaryVertexArray,       // output
-  IdArrayType& boundarySortIndexArray,    // output
-  MeshBoundary3DExec* meshBoundaryExecObj // input
+  IdArrayType& boundaryVertexArray,             // output
+  IdArrayType& boundarySortIndexArray,          // output
+  MeshBoundary3DExec<true>* meshBoundaryExecObj // input
 ) const
 {
   vtkm::Id numBoundary = 2 * this->MeshSize[1] * this->MeshSize[0] // xy faces

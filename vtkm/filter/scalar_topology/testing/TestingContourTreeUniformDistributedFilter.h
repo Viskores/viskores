@@ -289,9 +289,7 @@ inline vtkm::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
   }
 
   filter.SetUseMarchingCubes(useMarchingCubes);
-  // Freudenthal: Only use boundary extrema; MC: use all points on boundary
-  // TODO/FIXME: Figure out why MC does not work when only using boundary extrema
-  filter.SetUseBoundaryExtremaOnly(!useMarchingCubes);
+  filter.SetUseBoundaryExtremaOnly(true);
   filter.SetAugmentHierarchicalTree(augmentHierarchicalTree);
   filter.SetActiveField(fieldName);
   auto result = filter.Execute(pds);

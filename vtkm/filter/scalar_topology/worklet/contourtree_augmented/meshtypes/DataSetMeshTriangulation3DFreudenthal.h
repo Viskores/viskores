@@ -89,11 +89,11 @@ public:
 
   DataSetMeshTriangulation3DFreudenthal(vtkm::Id3 meshSize);
 
-  MeshBoundary3DExec GetMeshBoundaryExecutionObject() const;
+  MeshBoundary3DExec<false> GetMeshBoundaryExecutionObject() const;
 
   void GetBoundaryVertices(IdArrayType& boundaryVertexArray,    // output
                            IdArrayType& boundarySortIndexArray, // output
-                           MeshBoundary3DExec* meshBoundaryExecObj =
+                           MeshBoundary3DExec<false>* meshBoundaryExecObj =
                              NULL // optional input, included for consistency with ContourTreeMesh
   ) const;
 
@@ -148,16 +148,16 @@ inline MeshStructureFreudenthal3D DataSetMeshTriangulation3DFreudenthal::Prepare
                                     token);
 }
 
-inline MeshBoundary3DExec DataSetMeshTriangulation3DFreudenthal::GetMeshBoundaryExecutionObject()
-  const
+inline MeshBoundary3DExec<false>
+DataSetMeshTriangulation3DFreudenthal::GetMeshBoundaryExecutionObject() const
 {
-  return MeshBoundary3DExec(this->MeshSize, this->SortIndices);
+  return MeshBoundary3DExec<false>(this->MeshSize, this->SortIndices);
 }
 
 inline void DataSetMeshTriangulation3DFreudenthal::GetBoundaryVertices(
-  IdArrayType& boundaryVertexArray,       // output
-  IdArrayType& boundarySortIndexArray,    // output
-  MeshBoundary3DExec* meshBoundaryExecObj // input
+  IdArrayType& boundaryVertexArray,              // output
+  IdArrayType& boundarySortIndexArray,           // output
+  MeshBoundary3DExec<false>* meshBoundaryExecObj // input
 ) const
 {
   vtkm::Id numBoundary = 2 * this->MeshSize[1] * this->MeshSize[0] // xy faces
