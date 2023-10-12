@@ -16,6 +16,7 @@ set(unit_tests
 set(unit_tests_device
   UnitTestContourFilter.cxx # Algorithm used, needs device compiler
   UnitTestMIRFilter.cxx # Algorithm used, needs device compiler
+  UnitTestSliceMultipleFilter.cxx # Algorithm used, needs device compiler
   )
 
 if (VTKm_ENABLE_RENDERING)
