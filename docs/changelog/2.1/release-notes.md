@@ -36,6 +36,8 @@
   - Implement Flying Edges for structured cellsets with rectilinear and curvilinear coordinates.
   - Added a `HistSampling` filter.
   - New Shrink filter.
+  - Fix interpolation of cell fields with flying edges.
+  - Fix degenerate cell removal.
 
 4. [Control Environment](#Control_Environment)
   - Added a reader for VisIt files.
@@ -46,6 +48,7 @@
   - Require Kokkos 3.7.
   - Sped up compilation of ArrayRangeCompute.cxx.
   - Kokkos atomic functions switched to use desul library.
+  - Added Makefile contract tests.
 
 6. [Others](#Others)
   - Clarified license of test data.
@@ -526,9 +529,26 @@ This filter assumes the field data are point clouds. It samples the field data a
 
 The Shrink filter shrinks the cells of a DataSet towards their centroid, computed as the average position of the cell points. This filter disconnects the cells, duplicating the points connected to multiple cells. The resulting CellSet is always an `ExplicitCellSet`.
 
+## Fix interpolation of cell fields with flying edges
+
+The flying edges algorithm (used when contouring uniform structured cell
+sets) was not interpolating cell fields correctly. There was an indexing
+issue where a shortcut in the stepping was not incrementing the cell index.
+
+## Fix degenerate cell removal
+
+There was a bug in `CleanGrid` when removing degenerate polygons where it
+would not detect if the first and last point were the same. This has been
+fixed.
+
+There was also an error with function overloading that was causing 0D and
+3D cells to enter the wrong computation for degenerate cells. This has also
+been fixed.
+
+
 # Control Environment
 
-## Added a reader for VisIt files.
+## Added a reader for VisIt files
 
 A VisIt file is a text file that contains the path and filename of a number of VTK files. This provides a convenient way to load `vtkm::cont::PartitionedDataSet` data from VTK files. The first line of the file is the keyword `!NBLOCKS <N>` that specifies the number of VTK files to be read.
 
@@ -585,6 +605,20 @@ build a monolithic file.
 Kokkos 4 switches from their interal library based off of desul to using desul
 directly.  This removes VTK-m's dependency on the Kokkos internal
 implementation (Kokkos::Impl) to using desul directly.
+
+## Added Makefile contract tests
+
+Added Makefile contract tests to ensure that the VTK-m smoke test example
+application can be built and run using a Makefile against a VTK-m install tree.
+This will help users who use bare Make as their build system. Additionally,
+fixed both the VTK-m pkg-config `vtkm.pc` and the `vtkm_config.mk` file to
+ensure that both files are correctly generated and added CI coverage to ensure
+that they are always up-to-date and correct. This improves support for users
+who use bare Make as their build system, and increases confidence in the
+correctness of both the VTK-m pkg-config file `vtkm.pc` and of the Makefile
+`vtkm_config.mk`.
+
+You can run these tests with: `ctest -R smoke_test`
 
 # Others
 
