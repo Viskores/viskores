@@ -171,6 +171,9 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
 
 void ANARIMapperVolume::UpdateSpatialField()
 {
+  if (!this->Handles->SpatialField)
+    return;
+
   auto d = this->GetDevice();
 
   anari_cpp::unsetParameter(d, this->Handles->SpatialField, "origin");
