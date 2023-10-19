@@ -41,7 +41,6 @@ public:
   {
     return this->GetActiveFieldAssociation();
   }
-  ///@}
 
   ///@{
   /// When set to true, uses a coordinate system as the primary field instead of the one selected

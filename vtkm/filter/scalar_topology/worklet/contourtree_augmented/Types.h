@@ -383,7 +383,6 @@ struct GetLocalAndGlobalPointDimensions
     globalPointDimensions = cells.GetGlobalPointDimensions();
     globalPointIndexStart = cells.GetGlobalPointIndexStart();
   }
-  ///@}
 
 
   ///  Raise ErrorBadValue if the input cell set is not a vtkm::cont::CellSetStructured<2> or <3>

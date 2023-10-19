@@ -95,7 +95,7 @@ public:
     this->UseScaleField = true;
     this->SetActiveField(2, name, vtkm::cont::Field::Association::Points);
   }
-  /// @copydoc SetScalarFactorField
+  /// @copydoc SetScaleField
   VTKM_CONT std::string GetScaleFieldName() const { return this->GetActiveFieldName(2); }
 
   /// @brief Specifies whether a scale factor field is used.
@@ -103,7 +103,7 @@ public:
   /// When true, a scale factor field the constant scale factor is used. When false, the scale factor field (active
   /// field index 2) is used.
   VTKM_CONT void SetUseScaleField(bool flag) { this->UseScaleField = flag; }
-  /// @copydoc SetUseConstantScale
+  /// @copydoc SetUseScaleField
   VTKM_CONT bool GetUseScaleField() const { return this->UseScaleField; }
 
   /// @brief Specifies an additional scale factor to scale the displacements.
