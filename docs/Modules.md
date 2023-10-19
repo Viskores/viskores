@@ -102,6 +102,8 @@ arguments for that option. The following options can be defined in a
     named `testing`, which will build any necessary testing executables and
     add ctest tests. If this option is given, no tests are added. (Note,
     modules generally should have tests.)
+  * `TESTING_DIR`: Specify the name of the testing subdirectory. If not
+    provided, `testing` is used.
 	
 A `vtkm.module` file may also have comments. Everything between a `#` and
 the end of the line will be ignored.

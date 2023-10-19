@@ -1,0 +1,10 @@
+NAME
+  UsersGuide
+GROUPS
+  Core
+TESTING_DIR
+  examples
+TEST_DEPENDS
+  vtkm_cont
+  vtkm_filter_mesh_info
+  vtkm_rendering
