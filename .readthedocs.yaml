@@ -23,8 +23,8 @@ build:
     python: '3.10'
   jobs:
     post_install:
-    - cmake -G'Unix Makefiles' -B build -S . -DVTKm_ENABLE_DOCUMENTATION=ON -DVTKm_ENABLE_USERS_GUIDE=ON
-    - cmake --build build --target docs/doxygen
+    - cmake -B build -S . -DVTKm_ENABLE_DOCUMENTATION=ON -DVTKm_ENABLE_USERS_GUIDE=ON
+    - cmake --build build --target VTKmDoxygenDocs
 
 sphinx:
   configuration: ./build/docs/users-guide/VTKmUsersGuideHTML.cache/conf.py
