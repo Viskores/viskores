@@ -21,6 +21,8 @@ docutils==0.18.1
     #   breathe
     #   sphinx
     #   sphinx-rtd-theme
+extract-values==1.0
+    # via -r docs/requirements.in
 idna==3.4
     # via requests
 imagesize==1.4.1
