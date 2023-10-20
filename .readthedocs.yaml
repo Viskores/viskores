@@ -18,12 +18,12 @@ build:
   os: ubuntu-22.04
   apt_packages:
   - cmake
-  - ninja
+  - make
   tools:
     python: '3.10'
   jobs:
     post_install:
-    - cmake -GNinja -B build -S . -DVTKm_ENABLE_DOCUMENTATION=ON -DVTKm_ENABLE_USERS_GUIDE=ON
+    - cmake -G'Unix Makefiles' -B build -S . -DVTKm_ENABLE_DOCUMENTATION=ON -DVTKm_ENABLE_USERS_GUIDE=ON
     - cmake --build build --target docs/doxygen
 
 sphinx:
