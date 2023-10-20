@@ -21,8 +21,6 @@ docutils==0.18.1
     #   breathe
     #   sphinx
     #   sphinx-rtd-theme
-extract-values==1.0
-    # via -r docs/requirements.in
 idna==3.4
     # via requests
 imagesize==1.4.1
@@ -35,6 +33,8 @@ packaging==23.2
     # via sphinx
 pygments==2.16.1
     # via sphinx
+readthedocs-sphinx-search==0.3.1
+    # via -r docs/requirements.in
 requests==2.31.0
     # via sphinx
 snowballstemmer==2.2.0

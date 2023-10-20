@@ -16,16 +16,22 @@ version: 2
 # Set the OS, Python version and other tools you might need
 build:
   os: ubuntu-22.04
+  apt_packages:
+  - cmake
   tools:
-    python: "3.12"
+    python: '3.10'
+  jobs:
+    post_install:
+    - cmake -B build -S . -DVTKm_ENABLE_DOCUMENTATION=ON -DVTKm_ENABLE_USERS_GUIDE=ON
+    - cmake --build build --target docs/doxygen
 
 sphinx:
-  configuration: docs/users-guide/conf.py
-
-formats:
-  - pdf
-  - epub
+  configuration: ./docs/users-guide/VTKmUsersGuideHTML.cache/conf.py
 
 python:
   install:
-    - requirements: docs/requirements.txt
+  - requirements: docs/requirements.txt
+
+formats:
+- pdf
+- epub
