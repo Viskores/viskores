@@ -20,15 +20,15 @@ build:
     python: "3.12"
 
 sphinx:
-   configuration: docs/users-guide/conf.py
+  configuration: docs/users-guide/conf.py
 
 formats:
-   - pdf
-   - epub
+  - pdf
+  - epub
 
-# Optional but recommended, declare the Python requirements required
-# to build your documentation
-# See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
-# python:
-#    install:
-#    - requirements: docs/requirements.txt
+Optional but recommended, declare the Python requirements required
+to build your documentation
+See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
+python:
+  install:
+    - requirements: docs/requirements.txt
