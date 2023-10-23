@@ -19,10 +19,16 @@ build:
   apt_packages:
   - cmake
   - make
+
+
   tools:
     python: '3.10'
   jobs:
     post_install:
+
+
+
+
     - cmake -B build -S . -DVTKm_ENABLE_DOCUMENTATION=ON -DVTKm_ENABLE_USERS_GUIDE=ON
     - cmake --build build --target VTKmDoxygenDocs
     - cp -f ./build/docs/users-guide/VTKmUsersGuideHTML.cache/conf.py docs/users-guide/conf.py
