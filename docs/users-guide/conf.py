@@ -52,7 +52,7 @@ extensions = [
 ]
 # Note: there are some custom extensions at the bottom of this file.
 
-todo_include_todos = True
+todo_include_todos = @include_todos@
 
 numfig = True
 autosectionlabel_prefix_document = True

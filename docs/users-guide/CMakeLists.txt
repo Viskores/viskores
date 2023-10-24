@@ -25,9 +25,18 @@ if (NOT Sphinx_FOUND)
     "Could not find Sphinx to build User's Guide. If you want to compile Doxygen without the User's Guide, turn off VTKm_ENABLE_USERS_GUIDE.")
 endif()
 
+option(VTKm_USERS_GUIDE_INCLUDE_TODOS
+  "When building the VTK-m User's Guide, specify whether to include TODO notes." ON)
+mark_as_advanced(VTKm_USERS_GUIDE_INCLUDE_TODOS)
+
 # Configuration used in conf.py.
 set(doxygen_xml_output_dir "${VTKm_BINARY_DIR}/docs/doxygen/xml")
 set(example_directory "${CMAKE_CURRENT_SOURCE_DIR}/examples")
+if(VTKm_USERS_GUIDE_INCLUDE_TODOS)
+  set(include_todos "True")
+else()
+  set(include_todos "False")
+endif()
 
 sphinx_add_docs(VTKmUsersGuideHTML
   BUILDER html
