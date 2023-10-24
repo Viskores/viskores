@@ -66,6 +66,7 @@ foreach(option IN LISTS options)
 
   elseif(docs STREQUAL option)
     set(VTKm_ENABLE_DOCUMENTATION "ON" CACHE STRING "")
+    set(VTKm_USERS_GUIDE_INCLUDE_TODOS "OFF" CACHE STRING "")
 
   elseif(benchmarks STREQUAL option)
     set(VTKm_ENABLE_BENCHMARKS "ON" CACHE STRING "")

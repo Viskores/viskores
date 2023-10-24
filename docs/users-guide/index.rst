@@ -4,8 +4,6 @@
 The VTK-m User's Guide
 ==============================
 
-.. todo:: Hide TODOs for release documentation.
-
 | **The VTK-m User's Guide**
 | Version |version|
 
