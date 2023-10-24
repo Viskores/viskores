@@ -31,7 +31,7 @@ build:
 
 
 
-    - cmake -B build -S . -DVTKm_ENABLE_DOCUMENTATION=ON -DVTKm_ENABLE_USERS_GUIDE=ON
+    - cmake -B build -S . -DVTKm_ENABLE_DOCUMENTATION=ON -DVTKm_ENABLE_USERS_GUIDE=ON -DVTKm_USERS_GUIDE_INCLUDE_TODOS=OFF
     - cmake --build build --target VTKmDoxygenDocs
     - cp -f ./build/docs/users-guide/VTKmUsersGuideHTML.cache/conf.py docs/users-guide/conf.py
 
