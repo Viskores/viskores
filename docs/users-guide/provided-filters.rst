@@ -216,9 +216,7 @@ Slice
 A slice operation intersects a mesh with a surface.
 The :class:`vtkm::filter::contour::Slice` filter uses a :class:`vtkm::ImplicitFunctionGeneral` to specify an implicit surface to slice on.
 A plane is a common thing to slice on, but other surfaces are available.
-See Chapter \ref{chap:ImplicitFunctions} for information on implicit functions.
-
-.. todo:: Fix reference to implicit functions above.
+See :chapref:`implicit-functions:Implicit Functions` for information on implicit functions.
 
 .. doxygenclass:: vtkm::filter::contour::Slice
    :members:
@@ -266,10 +264,8 @@ Clip with Implicit Function
    double: clip; implicit function
 
 The :class:`vtkm::filter::contour::ClipWithImplicitFunction` function takes an implicit function and removes all parts of the data that are inside (or outside) that function.
-See Chapter \ref{chap:ImplicitFunctions} for more detail on how implicit functions are represented in |VTKm|.
+See :chapref:`implicit-functions:Implicit Functions` for more detail on how implicit functions are represented in |VTKm|.
 A companion filter that discards a region of the data based on the value of a scalar field is described in :secref:`provided-filters:Extract Geometry`.
-
-.. todo:: Fix above reference to implicit function chapter.
 
 The result of :class:`vtkm::filter::contour::ClipWithImplicitFunction` is a volume.
 If a cell has its vertices positioned all outside the implicit function, then it will be discarded entirely.
@@ -383,11 +379,9 @@ Extract Geometry
    double: extract geometry; filter
 
 The :class:`vtkm::filter::entity_extraction::ExtractGeometry` filter extracts all of the cells in a :class:`vtkm::cont::DataSet` that is inside or outside of an implicit function.
-Implicit functions are described in Chapter \ref{chap:ImplicitFunctions}.
+Implicit functions are described in :chapref:`implicit-functions:Implicit Functions`.
 They define a function in 3D space that follow a geometric shape.
 The inside of the implicit function is the region of negative values.
-
-.. todo:: Fix above reference to implicit function chapter.
 
 .. doxygenclass:: vtkm::filter::entity_extraction::ExtractGeometry
    :members:
@@ -535,9 +529,7 @@ Field to Colors
 
 The :class:`vtkm::filter::field_transform::FieldToColors` filter takes a field in a data set, looks up each value in a color table, and writes the resulting colors to a new field.
 The color to be used for each field value is specified using a :class:`vtkm::cont::ColorTable` object.
-:class:`vtkm::cont::ColorTable` objects are also used with |VTKm|'s rendering module and are described in Section~\ref{sec:ColorTables}.
-
-.. todo:: Fix above reference to color tables section.
+:class:`vtkm::cont::ColorTable` objects are also used with |VTKm|'s rendering module and are described in :secref:`rendering:Color Tables`.
 
 :class:`vtkm::filter::field_transform::FieldToColors` has three modes it can use to select how it should treat the input field.
 These input modes are contained in :enum:`vtkm::filter::field_transform::FieldToColors::InputMode`.

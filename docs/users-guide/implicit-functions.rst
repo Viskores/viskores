@@ -60,7 +60,7 @@ The :class:`vtkm::Sphere` is defined by a center location and a radius, which ar
 An example :class:`vtkm::Sphere` is shown in :numref:`fig:ImplicitSphere`.
 
 .. figure:: images/ImplicitSphere.png
-   :width: width=2.5in
+   :width: 2.5in
    :name: fig:ImplicitSphere
 
    Visual Representation of an Implicit Sphere.
