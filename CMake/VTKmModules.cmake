@@ -562,6 +562,26 @@ so that other modules know this module is loaded.")
   get_property(_vtkm_module_list GLOBAL PROPERTY "_vtkm_module_list")
   list(APPEND _vtkm_module_list ${target_module})
   set_property(GLOBAL PROPERTY "_vtkm_module_list" "${_vtkm_module_list}")
+  get_property(target_module_type
+    TARGET    "${target_module}"
+    PROPERTY  TYPE)
+  if (target_module_type STREQUAL "SHARED_LIBRARY")
+    set_property(TARGET "${target_module}"
+      PROPERTY
+      BUILD_RPATH_USE_ORIGIN 1)
+    if (UNIX)
+      if (APPLE)
+        set(target_module_rpath
+          "@loader_path")
+      else ()
+        set(target_module_rpath
+          "$ORIGIN")
+      endif ()
+      set_property(TARGET "${target_module}" APPEND
+        PROPERTY
+        INSTALL_RPATH "${target_module_rpath}")
+    endif ()
+  endif()
 endfunction()
 
 # -----------------------------------------------------------------------------
