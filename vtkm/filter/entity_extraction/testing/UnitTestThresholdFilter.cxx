@@ -311,6 +311,27 @@ public:
     VTKM_TEST_ASSERT(failures == 0, "Some combinations have failed");
   }
 
+  // Regression test for issue #804
+  static void RegressionTest804()
+  {
+    std::cout << "Regression test for issue #804" << std::endl;
+
+    auto input = vtkm::cont::DataSetBuilderUniform::Create(vtkm::Id2{ 4, 2 });
+    static const vtkm::Vec2f pointvar[8] = { { 0.0f, 7.0f }, { 1.0f, 6.0f }, { 2.0f, 5.0f },
+                                             { 3.0f, 4.0f }, { 4.0f, 3.0f }, { 5.0f, 2.0f },
+                                             { 6.0f, 1.0f }, { 7.0f, 0.0f } };
+    input.AddPointField("pointvar", pointvar, 8);
+
+    vtkm::filter::entity_extraction::Threshold threshold;
+    threshold.SetActiveField("pointvar");
+    threshold.SetAllInRange(false);
+    threshold.SetThresholdBelow(4.0);
+    threshold.SetComponentToTestToAll();
+    auto output = threshold.Execute(input);
+    auto numOutputCells = output.GetNumberOfCells();
+    VTKM_TEST_ASSERT(numOutputCells == 2, "Wrong number of cells in the output");
+  }
+
   void operator()() const
   {
     TestingThreshold::TestRegular2D(false);
@@ -320,6 +341,7 @@ public:
     TestingThreshold::TestExplicit3D();
     TestingThreshold::TestExplicit3DZeroResults();
     TestingThreshold::TestAllOptions();
+    TestingThreshold::RegressionTest804();
   }
 };
 }
