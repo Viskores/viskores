@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/Field.h>
 #include <vtkm/rendering/internal/RunTriangulator.h>
 #include <vtkm/rendering/raytracing/TriangleExtractor.h>
 

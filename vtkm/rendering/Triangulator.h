@@ -644,7 +644,7 @@ public:
   void Run(const vtkm::cont::UnknownCellSet& cellset,
            vtkm::cont::ArrayHandle<vtkm::Id4>& outputIndices,
            vtkm::Id& outputTriangles,
-           const vtkm::cont::Field& ghostField)
+           const vtkm::cont::Field& ghostField = vtkm::cont::Field())
   {
     bool fastPath = false;
     if (cellset.CanConvert<vtkm::cont::CellSetStructured<3>>())
@@ -704,21 +704,24 @@ public:
     }
 
     // removed blanked triangles
-    vtkm::cont::ArrayHandle<vtkm::Id4> nonGhostTriangles;
-    nonGhostTriangles.Allocate(outputTriangles);
-    vtkm::Id counter = 0;
-    for (vtkm::Id i = 0; i < outputTriangles; ++i)
+    if (ghostField.GetNumberOfValues() > 0)
     {
-      if (int(ghostField.GetData().ExtractComponent<vtkm::UInt8>(0).ReadPortal().Get(
-            outputIndices.ReadPortal().Get(i)[0])) == 0)
+      vtkm::cont::ArrayHandle<vtkm::Id4> nonGhostTriangles;
+      nonGhostTriangles.Allocate(outputTriangles);
+      vtkm::Id counter = 0;
+      for (vtkm::Id i = 0; i < outputTriangles; ++i)
       {
-        nonGhostTriangles.WritePortal().Set(counter, outputIndices.ReadPortal().Get(i));
-        counter++;
+        if (int(ghostField.GetData().ExtractComponent<vtkm::UInt8>(0).ReadPortal().Get(
+              outputIndices.ReadPortal().Get(i)[0])) == 0)
+        {
+          nonGhostTriangles.WritePortal().Set(counter, outputIndices.ReadPortal().Get(i));
+          counter++;
+        }
       }
+      nonGhostTriangles.Allocate(counter, vtkm::CopyFlag::On);
+      outputIndices = nonGhostTriangles;
+      outputTriangles = counter;
     }
-    nonGhostTriangles.Allocate(counter, vtkm::CopyFlag::On);
-    outputIndices = nonGhostTriangles;
-    outputTriangles = counter;
 
     //get rid of any triagles we cannot see
     if (!fastPath)
