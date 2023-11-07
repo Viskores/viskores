@@ -35,12 +35,15 @@ public:
   /// @copydoc GetGlyphType
   void SetGlyphType(vtkm::rendering::GlyphType glyphType);
 
+  using Mapper::RenderCells;
+
   void RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                    const vtkm::cont::CoordinateSystem& coords,
                    const vtkm::cont::Field& scalarField,
                    const vtkm::cont::ColorTable& colorTable,
                    const vtkm::rendering::Camera& camera,
-                   const vtkm::Range& scalarRange) override;
+                   const vtkm::Range& scalarRange,
+                   const vtkm::cont::Field& ghostField) override;
 
   vtkm::rendering::Mapper* NewCopy() const override;
 

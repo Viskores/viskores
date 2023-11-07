@@ -55,7 +55,8 @@ void MapperGlyphVector::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                                     const vtkm::cont::Field& field,
                                     const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
                                     const vtkm::rendering::Camera& camera,
-                                    const vtkm::Range& vtkmNotUsed(fieldRange))
+                                    const vtkm::Range& vtkmNotUsed(fieldRange),
+                                    const vtkm::cont::Field& ghostField)
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
 

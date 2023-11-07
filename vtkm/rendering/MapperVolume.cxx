@@ -77,7 +77,8 @@ void MapperVolume::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                                const vtkm::cont::Field& scalarField,
                                const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
                                const vtkm::rendering::Camera& camera,
-                               const vtkm::Range& scalarRange)
+                               const vtkm::Range& scalarRange,
+                               const vtkm::cont::Field& ghostField)
 {
   if (!cellset.CanConvert<vtkm::cont::CellSetStructured<3>>())
   {

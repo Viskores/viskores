@@ -165,6 +165,42 @@ struct Bounds
   VTKM_EXEC_CONT
   vtkm::Vec3f_64 MaxCorner() const { return vtkm::Vec3f_64(this->X.Max, this->Y.Max, this->Z.Max); }
 
+  /// \b Returns all cornes of the  bounds
+  ///
+  /// \c Corders returns the cornerst of the bounds.If the bounds
+  /// are empty, the results are undefined.
+  ///
+  VTKM_EXEC_CONT
+  void Corners(vtkm::Vec3f_64* corners) const
+  {
+    corners[0] = vtkm::Vec3f(this->X.Min, this->Y.Min, this->Z.Min);
+    corners[1] = vtkm::Vec3f(this->X.Min, this->Y.Min, this->Z.Max);
+    corners[2] = vtkm::Vec3f(this->X.Min, this->Y.Max, this->Z.Min);
+    corners[3] = vtkm::Vec3f(this->X.Min, this->Y.Max, this->Z.Max);
+    corners[4] = vtkm::Vec3f(this->X.Max, this->Y.Min, this->Z.Min);
+    corners[5] = vtkm::Vec3f(this->X.Max, this->Y.Min, this->Z.Max);
+    corners[6] = vtkm::Vec3f(this->X.Max, this->Y.Max, this->Z.Min);
+    corners[7] = vtkm::Vec3f(this->X.Max, this->Y.Max, this->Z.Max);
+  }
+
+  /// \b Returns the max point of the bounds
+  ///
+  /// \c Distance returns the Euclidean distance of the bounding box to a given point. If the bounds
+  /// are empty, the results are undefined.
+  ///
+  VTKM_EXEC_CONT
+  vtkm::Float64 Distance(vtkm::Vec3f_64 point) const
+  {
+    vtkm::Vec3f_64 corners[8];
+    Corners(corners);
+    vtkm::Float64 distance = std::numeric_limits<double>::max();
+    for (unsigned int p = 0; p < 8; p++)
+    {
+      distance = std::min(distance, std::sqrt(vtkm::Dot(corners[p] - point, corners[p] - point)));
+    }
+    return distance;
+  }
+
   /// \b Expand bounds to include a point.
   ///
   /// This version of \c Include expands the bounds just enough to include the

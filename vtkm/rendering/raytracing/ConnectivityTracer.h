@@ -96,7 +96,8 @@ public:
   void SetVolumeData(const vtkm::cont::Field& scalarField,
                      const vtkm::Range& scalarBounds,
                      const vtkm::cont::UnknownCellSet& cellSet,
-                     const vtkm::cont::CoordinateSystem& coords);
+                     const vtkm::cont::CoordinateSystem& coords,
+                     const vtkm::cont::Field& ghostField);
 
   void SetEnergyData(const vtkm::cont::Field& absorption,
                      const vtkm::Int32 numBins,
@@ -181,6 +182,7 @@ protected:
   // Data set info
   vtkm::cont::Field ScalarField;
   vtkm::cont::Field EmissionField;
+  vtkm::cont::Field GhostField;
   vtkm::cont::UnknownCellSet CellSet;
   vtkm::cont::CoordinateSystem Coords;
   vtkm::Range ScalarBounds;

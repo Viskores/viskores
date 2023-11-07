@@ -45,18 +45,8 @@ void CellLocatorPartitioned::Build()
     this->LocatorsCont.at(index) = cellLocator;
 
     // fill vector of ghostFields
-    vtkm::cont::ArrayHandle<vtkm::UInt8> ghostArrayHandle;
-    if (dataset.HasCellField("vtkGhostType"))
-    {
-      dataset.GetField("vtkGhostType").GetData().AsArrayHandle(ghostArrayHandle);
-    }
-    else
-    {
-      vtkm::cont::ArrayCopy(
-        vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(0, dataset.GetNumberOfCells()),
-        ghostArrayHandle);
-    }
-    this->GhostsCont.at(index) = ghostArrayHandle;
+    this->GhostsCont.at(index) =
+      dataset.GetGhostCellField().GetData().ExtractComponent<vtkm::UInt8>(0);
   }
 }
 

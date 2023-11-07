@@ -163,11 +163,11 @@ public:
 
   /// \brief Returns the cell field that matches the ghost cell field name.
   ///
-  /// This method will throw an exception if no match is found. Use `HasGhostCellField()` to query
+  /// This method will return a constant array of zeros if no match is found. Use `HasGhostCellField()` to query
   /// whether a particular field exists.
   ///@{
   VTKM_CONT
-  const vtkm::cont::Field& GetGhostCellField() const;
+  const vtkm::cont::Field GetGhostCellField() const;
   ///@}
 
   /// \brief Returns the first point field that matches the provided name.
@@ -239,6 +239,13 @@ public:
   template <typename T, typename Storage>
   VTKM_CONT void AddCellField(const std::string& fieldName,
                               const vtkm::cont::ArrayHandle<T, Storage>& field)
+  {
+    this->AddField(make_FieldCell(fieldName, field));
+  }
+
+  template <typename T>
+  VTKM_CONT void AddCellField(const std::string& fieldName,
+                              const vtkm::cont::ArrayHandleConstant<T>& field)
   {
     this->AddField(make_FieldCell(fieldName, field));
   }

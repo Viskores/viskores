@@ -130,7 +130,11 @@ public:
 
     if (this->Mode == RenderMode::Volume)
     {
-      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+      Tracer.SetVolumeData(this->ScalarField,
+                           this->ScalarRange,
+                           this->Cells,
+                           this->Coords,
+                           this->Dataset.GetGhostCellField());
     }
     else
     {
@@ -149,7 +153,11 @@ public:
   {
     if (this->Mode == RenderMode::Volume)
     {
-      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+      Tracer.SetVolumeData(this->ScalarField,
+                           this->ScalarRange,
+                           this->Cells,
+                           this->Coords,
+                           this->Dataset.GetGhostCellField());
     }
     else
     {
@@ -169,7 +177,11 @@ public:
 
     if (this->Mode == RenderMode::Volume)
     {
-      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+      Tracer.SetVolumeData(this->ScalarField,
+                           this->ScalarRange,
+                           this->Cells,
+                           this->Coords,
+                           this->Dataset.GetGhostCellField());
     }
     else
     {
@@ -188,7 +200,11 @@ public:
   {
     if (this->Mode == RenderMode::Volume)
     {
-      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+      Tracer.SetVolumeData(this->ScalarField,
+                           this->ScalarRange,
+                           this->Cells,
+                           this->Coords,
+                           this->Dataset.GetGhostCellField());
     }
     else
     {
@@ -220,7 +236,11 @@ public:
 
     if (this->Mode == RenderMode::Volume)
     {
-      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+      Tracer.SetVolumeData(this->ScalarField,
+                           this->ScalarRange,
+                           this->Cells,
+                           this->Coords,
+                           this->Dataset.GetGhostCellField());
     }
     else
     {

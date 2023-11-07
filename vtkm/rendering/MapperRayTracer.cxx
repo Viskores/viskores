@@ -10,6 +10,7 @@
 
 #include <vtkm/rendering/MapperRayTracer.h>
 
+#include <vtkm/cont/BoundsCompute.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
 
@@ -27,6 +28,52 @@ namespace vtkm
 {
 namespace rendering
 {
+
+struct MapperRayTracer::CompareIndices
+{
+  vtkm::Vec3f CameraDirection;
+  vtkm::Vec3f* Centers;
+  CompareIndices(vtkm::Vec3f* centers, vtkm::Vec3f cameraDirection)
+    : CameraDirection(cameraDirection)
+    , Centers(centers)
+  {
+  }
+
+  bool operator()(int i, int j) const
+  {
+    return (vtkm::Dot(Centers[i], CameraDirection) < vtkm::Dot(Centers[j], CameraDirection));
+  }
+};
+
+void MapperRayTracer::RenderCellsPartitioned(const vtkm::cont::PartitionedDataSet partitionedData,
+                                             const std::string fieldName,
+                                             const vtkm::cont::ColorTable& colorTable,
+                                             const vtkm::rendering::Camera& camera,
+                                             const vtkm::Range& scalarRange)
+{
+  // sort partitions back to front for best rendering with the volume renderer
+  vtkm::Vec3f centers[partitionedData.GetNumberOfPartitions()];
+  std::vector<int> indices(partitionedData.GetNumberOfPartitions());
+  for (unsigned int p = 0; p < partitionedData.GetNumberOfPartitions(); p++)
+  {
+    indices[p] = p;
+    centers[p] = vtkm::cont::BoundsCompute(partitionedData.GetPartition(p)).Center();
+  }
+  CompareIndices comparator(centers, camera.GetLookAt() - camera.GetPosition());
+  std::sort(indices.begin(), indices.end(), comparator);
+
+  for (unsigned int p = 0; p < partitionedData.GetNumberOfPartitions(); p++)
+  {
+    auto partition = partitionedData.GetPartition(indices[p]);
+    this->RenderCells(partition.GetCellSet(),
+                      partition.GetCoordinateSystem(),
+                      partition.GetField(fieldName.c_str()),
+                      colorTable,
+                      camera,
+                      scalarRange,
+                      partition.GetGhostCellField());
+  }
+}
 
 struct MapperRayTracer::InternalsType
 {
@@ -78,7 +125,8 @@ void MapperRayTracer::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                                   const vtkm::cont::Field& scalarField,
                                   const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
                                   const vtkm::rendering::Camera& camera,
-                                  const vtkm::Range& scalarRange)
+                                  const vtkm::Range& scalarRange,
+                                  const vtkm::cont::Field& ghostField)
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
   logger->OpenLogEntry("mapper_ray_tracer");
@@ -93,7 +141,8 @@ void MapperRayTracer::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
   //
   vtkm::Bounds shapeBounds;
   raytracing::TriangleExtractor triExtractor;
-  triExtractor.ExtractCells(cellset);
+  triExtractor.ExtractCells(cellset, ghostField);
+
   if (triExtractor.GetNumberOfTriangles() > 0)
   {
     auto triIntersector = std::make_shared<raytracing::TriangleIntersector>();
@@ -115,8 +164,6 @@ void MapperRayTracer::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
   this->Internals->Rays.Buffers.at(0).InitConst(0.f);
   raytracing::RayOperations::MapCanvasToRays(
     this->Internals->Rays, camera, *this->Internals->Canvas);
-
-
 
   this->Internals->Tracer.SetField(scalarField, scalarRange);
 

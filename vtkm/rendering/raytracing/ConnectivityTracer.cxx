@@ -196,10 +196,12 @@ void ConnectivityTracer::SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec4f_3
 void ConnectivityTracer::SetVolumeData(const vtkm::cont::Field& scalarField,
                                        const vtkm::Range& scalarBounds,
                                        const vtkm::cont::UnknownCellSet& cellSet,
-                                       const vtkm::cont::CoordinateSystem& coords)
+                                       const vtkm::cont::CoordinateSystem& coords,
+                                       const vtkm::cont::Field& ghostField)
 {
   //TODO: Need a way to tell if we have been updated
   ScalarField = scalarField;
+  GhostField = ghostField;
   ScalarBounds = scalarBounds;
   CellSet = cellSet;
   Coords = coords;
@@ -892,8 +894,8 @@ public:
     InvDeltaScalar = (minScalar == maxScalar) ? 1.f : 1.f / (maxScalar - minScalar);
   }
 
-
   using ControlSignature = void(FieldIn,
+                                WholeArrayIn,
                                 WholeArrayIn,
                                 FieldIn,
                                 FieldIn,
@@ -902,11 +904,15 @@ public:
                                 WholeArrayIn,
                                 WholeArrayInOut,
                                 FieldIn);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex, _9);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, WorkIndex, _10);
 
-  template <typename ScalarPortalType, typename ColorMapType, typename FrameBufferType>
+  template <typename ScalarPortalType,
+            typename GhostPortalType,
+            typename ColorMapType,
+            typename FrameBufferType>
   VTKM_EXEC inline void operator()(const vtkm::Id& currentCell,
                                    ScalarPortalType& scalarPortal,
+                                   GhostPortalType& ghostPortal,
                                    const FloatType& enterDistance,
                                    const FloatType& exitDistance,
                                    FloatType& currentDistance,
@@ -918,6 +924,8 @@ public:
   {
 
     if (rayStatus != RAY_ACTIVE)
+      return;
+    if (int(ghostPortal.Get(currentCell)) != 0)
       return;
 
     vtkm::Vec4f_32 color;
@@ -1228,6 +1236,7 @@ void ConnectivityTracer::SampleCells(Ray<FloatType>& rays, detail::RayTracking<F
 
     dispatcher.Invoke(rays.HitIdx,
                       vtkm::rendering::raytracing::GetScalarFieldArray(this->ScalarField),
+                      GhostField.GetData().ExtractComponent<vtkm::UInt8>(0),
                       *(tracker.EnterDist),
                       *(tracker.ExitDist),
                       tracker.CurrentDistance,

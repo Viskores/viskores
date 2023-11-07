@@ -232,7 +232,8 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
                                    const vtkm::cont::Field& inScalarField,
                                    const vtkm::cont::ColorTable& colorTable,
                                    const vtkm::rendering::Camera& camera,
-                                   const vtkm::Range& scalarRange)
+                                   const vtkm::Range& scalarRange,
+                                   const vtkm::cont::Field& ghostField)
 {
   vtkm::cont::UnknownCellSet cellSet = inCellSet;
 
@@ -331,7 +332,8 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
     MapperRayTracer raytracer;
     raytracer.SetCanvas(&canvas);
     raytracer.SetActiveColorTable(colorTable);
-    raytracer.RenderCells(cellSet, actualCoords, actualField, colorTable, camera, scalarRange);
+    raytracer.RenderCells(
+      cellSet, actualCoords, actualField, colorTable, camera, scalarRange, ghostField);
     renderer.SetSolidDepthBuffer(canvas.GetDepthBuffer());
   }
   else

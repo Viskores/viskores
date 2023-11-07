@@ -22,16 +22,16 @@ class VTKM_ALWAYS_EXPORT CellLocatorPartitioned
 {
 private:
   vtkm::cont::ArrayHandle<vtkm::cont::CellLocatorGeneral::ExecObjType>::ReadPortalType Locators;
-  vtkm::cont::ArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType>::ReadPortalType
-    Ghosts;
+  vtkm::cont::ArrayHandle<
+    vtkm::cont::ArrayHandleStride<vtkm::UInt8>::ReadPortalType>::ReadPortalType Ghosts;
 
 public:
   VTKM_CONT CellLocatorPartitioned() = default;
   VTKM_CONT CellLocatorPartitioned(
     const vtkm::cont::ArrayHandle<vtkm::cont::CellLocatorGeneral::ExecObjType>::ReadPortalType&
       locators,
-    vtkm::cont::ArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType>::ReadPortalType
-      ghosts)
+    vtkm::cont::ArrayHandle<
+      vtkm::cont::ArrayHandleStride<vtkm::UInt8>::ReadPortalType>::ReadPortalType ghosts)
     : Locators(locators)
     , Ghosts(ghosts)
   {

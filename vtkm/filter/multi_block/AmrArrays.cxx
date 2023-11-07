@@ -223,21 +223,12 @@ void AmrArrays::ComputeGenerateGhostType()
         this->AmrDataSet.GetPartition(this->PartitionIds.at(l).at(bParent));
       vtkm::cont::CellSetStructured<Dim> cellset;
       partition.GetCellSet().AsCellSet(cellset);
-      vtkm::cont::ArrayHandle<vtkm::UInt8> ghostField;
-      if (!partition.HasField("vtkGhostType", vtkm::cont::Field::Association::Cells))
-      {
-        ghostField.AllocateAndFill(partition.GetNumberOfCells(), 0);
-      }
-      else
-      {
-        vtkm::cont::Invoker invoke;
-        invoke(vtkm::worklet::ResetGhostTypeWorklet{},
-               partition.GetField("vtkGhostType", vtkm::cont::Field::Association::Cells)
-                 .GetData()
-                 .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>>(),
-               ghostField);
-      }
-      partition.AddCellField("vtkGhostType", ghostField);
+      vtkm::cont::ArrayHandle<vtkm::UInt8> ghostArrayHandle;
+      vtkm::cont::Invoker invoke;
+      invoke(vtkm::worklet::ResetGhostTypeWorklet{},
+             partition.GetGhostCellField().GetData().ExtractComponent<vtkm::UInt8>(0),
+             ghostArrayHandle);
+      partition.AddCellField(vtkm::cont::GetGlobalGhostCellFieldName(), ghostArrayHandle);
 
       auto pointField = partition.GetCoordinateSystem().GetDataAsMultiplexer();
 
@@ -253,11 +244,10 @@ void AmrArrays::ComputeGenerateGhostType()
             .GetBounds();
         //        std::cout<<" is (partly) contained in level "<<l + 1<<" block "<<bChild<<" which is partition "<<this->ChildrenIdsVector.at(this->PartitionIds.at(l).at(bParent)).at(bChild)<<" with bounds "<<boundsChild<<std::endl;
 
-        vtkm::cont::Invoker invoke;
         invoke(vtkm::worklet::GenerateGhostTypeWorklet<Dim>{ boundsChild },
                cellset,
                pointField,
-               ghostField);
+               partition.GetGhostCellField().GetData().ExtractComponent<vtkm::UInt8>(0));
       }
       this->AmrDataSet.ReplacePartition(this->PartitionIds.at(l).at(bParent), partition);
     }

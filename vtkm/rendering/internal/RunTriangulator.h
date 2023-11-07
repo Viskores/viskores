@@ -31,7 +31,8 @@ namespace internal
 VTKM_RENDERING_EXPORT
 void RunTriangulator(const vtkm::cont::UnknownCellSet& cellSet,
                      vtkm::cont::ArrayHandle<vtkm::Id4>& indices,
-                     vtkm::Id& numberOfTriangles);
+                     vtkm::Id& numberOfTriangles,
+                     const vtkm::cont::Field& ghostField);
 }
 }
 } // namespace vtkm::rendering::internal

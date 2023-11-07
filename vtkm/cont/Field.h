@@ -16,6 +16,7 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
@@ -247,6 +248,14 @@ vtkm::cont::Field make_FieldCell(std::string name, const vtkm::cont::ArrayHandle
 /// Convenience function to build cell fields from vtkm::cont::UnknownArrayHandle
 inline vtkm::cont::Field make_FieldCell(std::string name,
                                         const vtkm::cont::UnknownArrayHandle& data)
+{
+  return vtkm::cont::Field(name, vtkm::cont::Field::Association::Cells, data);
+}
+
+/// Convenience function to build cell fields from vtkm::cont::ArrayHandleConstant
+template <typename T>
+inline vtkm::cont::Field make_FieldCell(std::string name,
+                                        const vtkm::cont::ArrayHandleConstant<T>& data)
 {
   return vtkm::cont::Field(name, vtkm::cont::Field::Association::Cells, data);
 }
