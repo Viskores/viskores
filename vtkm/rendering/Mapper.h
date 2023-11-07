@@ -43,7 +43,7 @@ public:
                            const vtkm::cont::ColorTable& colorTable,
                            const vtkm::rendering::Camera& camera,
                            const vtkm::Range& scalarRange,
-                           const vtkm::cont::Field& ghostField = vtkm::cont::Field()) = 0;
+                           const vtkm::cont::Field& ghostField) = 0;
 
   virtual void RenderCellsPartitioned(const vtkm::cont::PartitionedDataSet partitionedData,
                                       const std::string fieldName,
