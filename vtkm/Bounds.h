@@ -108,7 +108,7 @@ struct Bounds
   /// are empty, 0 is returned.
   ///
   VTKM_EXEC_CONT
-  vtkm::FloatDefault Volume() const
+  vtkm::Float64 Volume() const
   {
     if (this->IsNonEmpty())
     {
@@ -126,7 +126,7 @@ struct Bounds
   /// are empty, 0 is returned.
   ///
   VTKM_EXEC_CONT
-  vtkm::FloatDefault Area() const
+  vtkm::Float64 Area() const
   {
     if (this->IsNonEmpty())
     {
@@ -144,9 +144,9 @@ struct Bounds
   /// are empty, the results are undefined.
   ///
   VTKM_EXEC_CONT
-  vtkm::Vec3f Center() const
+  vtkm::Vec3f_64 Center() const
   {
-    return vtkm::Vec3f(this->X.Center(), this->Y.Center(), this->Z.Center());
+    return vtkm::Vec3f_64(this->X.Center(), this->Y.Center(), this->Z.Center());
   }
 
   /// \b Returns the min point of the bounds
@@ -155,7 +155,7 @@ struct Bounds
   /// are empty, the results are undefined.
   ///
   VTKM_EXEC_CONT
-  vtkm::Vec3f MinCorner() const { return vtkm::Vec3f(this->X.Min, this->Y.Min, this->Z.Min); }
+  vtkm::Vec3f_64 MinCorner() const { return vtkm::Vec3f_64(this->X.Min, this->Y.Min, this->Z.Min); }
 
   /// \b Returns the max point of the bounds
   ///
@@ -163,7 +163,7 @@ struct Bounds
   /// are empty, the results are undefined.
   ///
   VTKM_EXEC_CONT
-  vtkm::Vec3f MaxCorner() const { return vtkm::Vec3f(this->X.Max, this->Y.Max, this->Z.Max); }
+  vtkm::Vec3f_64 MaxCorner() const { return vtkm::Vec3f_64(this->X.Max, this->Y.Max, this->Z.Max); }
 
   /// \b Returns all cornes of the  bounds
   ///
@@ -171,16 +171,16 @@ struct Bounds
   /// are empty, the results are undefined.
   ///
   VTKM_EXEC_CONT
-  void Corners(vtkm::Vec3f* corners) const
+  void Corners(vtkm::Vec3f_64* corners) const
   {
-    corners[0] = vtkm::Vec3f(this->X.Min, this->Y.Min, this->Z.Min);
-    corners[1] = vtkm::Vec3f(this->X.Min, this->Y.Min, this->Z.Max);
-    corners[2] = vtkm::Vec3f(this->X.Min, this->Y.Max, this->Z.Min);
-    corners[3] = vtkm::Vec3f(this->X.Min, this->Y.Max, this->Z.Max);
-    corners[4] = vtkm::Vec3f(this->X.Max, this->Y.Min, this->Z.Min);
-    corners[5] = vtkm::Vec3f(this->X.Max, this->Y.Min, this->Z.Max);
-    corners[6] = vtkm::Vec3f(this->X.Max, this->Y.Max, this->Z.Min);
-    corners[7] = vtkm::Vec3f(this->X.Max, this->Y.Max, this->Z.Max);
+    corners[0] = vtkm::Vec3f_64(this->X.Min, this->Y.Min, this->Z.Min);
+    corners[1] = vtkm::Vec3f_64(this->X.Min, this->Y.Min, this->Z.Max);
+    corners[2] = vtkm::Vec3f_64(this->X.Min, this->Y.Max, this->Z.Min);
+    corners[3] = vtkm::Vec3f_64(this->X.Min, this->Y.Max, this->Z.Max);
+    corners[4] = vtkm::Vec3f_64(this->X.Max, this->Y.Min, this->Z.Min);
+    corners[5] = vtkm::Vec3f_64(this->X.Max, this->Y.Min, this->Z.Max);
+    corners[6] = vtkm::Vec3f_64(this->X.Max, this->Y.Max, this->Z.Min);
+    corners[7] = vtkm::Vec3f_64(this->X.Max, this->Y.Max, this->Z.Max);
   }
 
   /// \b Returns the max point of the bounds
@@ -189,11 +189,11 @@ struct Bounds
   /// are empty, the results are undefined.
   ///
   VTKM_EXEC_CONT
-  vtkm::FloatDefault Distance(vtkm::Vec3f point) const
+  vtkm::Float64 Distance(vtkm::Vec3f_64 point) const
   {
-    vtkm::Vec3f corners[8];
+    vtkm::Vec3f_64 corners[8];
     Corners(corners);
-    vtkm::FloatDefault distance = std::numeric_limits<double>::max();
+    vtkm::Float64 distance = std::numeric_limits<double>::max();
     for (unsigned int p = 0; p < 8; p++)
     {
       distance = std::min(distance, std::sqrt(vtkm::Dot(corners[p] - point, corners[p] - point)));
