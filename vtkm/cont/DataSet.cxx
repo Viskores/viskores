@@ -153,7 +153,7 @@ bool DataSet::HasGhostCellField() const
   return this->HasCellField(this->GetGhostCellFieldName());
 }
 
-const vtkm::cont::Field DataSet::GetGhostCellField() const
+vtkm::cont::Field DataSet::GetGhostCellField() const
 {
   if (this->HasGhostCellField())
   {
