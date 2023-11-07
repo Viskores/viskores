@@ -704,7 +704,8 @@ public:
     }
 
     // removed blanked triangles
-    if (ghostField.GetNumberOfValues() > 0)
+    // TODO: this currently excludes unstructured data that was triangulated
+    if (ghostField.GetNumberOfValues() == outputTriangles)
     {
       vtkm::cont::ArrayHandle<vtkm::Id4> nonGhostTriangles;
       nonGhostTriangles.Allocate(outputTriangles);
