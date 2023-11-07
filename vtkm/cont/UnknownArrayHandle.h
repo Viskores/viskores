@@ -231,7 +231,7 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   using NewInstanceType = void*();
   NewInstanceType* NewInstance;
 
-  using NewInstanceBasicType = std::shared_ptr<UnknownAHContainer>();
+  using NewInstanceBasicType = std::shared_ptr<UnknownAHContainer>(void*);
   NewInstanceBasicType* NewInstanceBasic;
   NewInstanceBasicType* NewInstanceFloatBasic;
 
@@ -307,39 +307,56 @@ private:
   explicit UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array);
 };
 
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTagSizeStatic)
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(void*, vtkm::VecTraitsTagSizeStatic)
 {
   return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<T>{});
 }
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTagSizeVariable)
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(void* mem,
+                                                              vtkm::VecTraitsTagSizeVariable)
 {
-  throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
-                                 vtkm::cont::TypeToString<T>());
+  vtkm::IdComponent numComponents = UnknownAHNumberOfComponentsFlat<T, S>(mem);
+  if (numComponents < 1)
+  {
+    // Array can have an inconsistent number of components. Cannot be represented by basic array.
+    throw vtkm::cont::ErrorBadType("Cannot create a basic array from array with ValueType of " +
+                                   vtkm::cont::TypeToString<T>());
+  }
+  using ComponentType = typename vtkm::VecTraits<T>::BaseComponentType;
+  return UnknownAHContainer::Make(vtkm::cont::ArrayHandleRuntimeVec<ComponentType>(numComponents));
 }
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic()
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(void* mem)
 {
-  return UnknownAHNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
+  return UnknownAHNewInstanceBasic<T, S>(mem, typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTraitsTagSizeStatic)
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(void*,
+                                                                   vtkm::VecTraitsTagSizeStatic)
 {
   using FloatT = typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::FloatDefault>;
   return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<FloatT>{});
 }
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTraitsTagSizeVariable)
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(void* mem,
+                                                                   vtkm::VecTraitsTagSizeVariable)
 {
-  throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
-                                 vtkm::cont::TypeToString<T>());
+  vtkm::IdComponent numComponents = UnknownAHNumberOfComponentsFlat<T, S>(mem);
+  if (numComponents < 1)
+  {
+    // Array can have an inconsistent number of components. Cannot be represented by basic array.
+    throw vtkm::cont::ErrorBadType("Cannot create a basic array from array with ValueType of " +
+                                   vtkm::cont::TypeToString<T>());
+  }
+  return UnknownAHContainer::Make(
+    vtkm::cont::ArrayHandleRuntimeVec<vtkm::FloatDefault>(numComponents));
 }
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(void* mem)
 {
-  return UnknownAHNewInstanceFloatBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
+  return UnknownAHNewInstanceFloatBasic<T, S>(mem, typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T, typename S>
@@ -352,8 +369,8 @@ inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S
   , DeleteFunction(detail::UnknownAHDelete<T, S>)
   , Buffers(detail::UnknownAHBuffers<T, S>)
   , NewInstance(detail::UnknownAHNewInstance<T, S>)
-  , NewInstanceBasic(detail::UnknownAHNewInstanceBasic<T>)
-  , NewInstanceFloatBasic(detail::UnknownAHNewInstanceFloatBasic<T>)
+  , NewInstanceBasic(detail::UnknownAHNewInstanceBasic<T, S>)
+  , NewInstanceFloatBasic(detail::UnknownAHNewInstanceFloatBasic<T, S>)
   , NumberOfValues(detail::UnknownAHNumberOfValues<T, S>)
   , NumberOfComponents(detail::UnknownAHNumberOfComponents<T, S>)
   , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T, S>)

@@ -254,6 +254,44 @@ void TryCopy()
                  ARRAY_SIZE));
   }
 
+  {
+    std::cout << "runtime vec size -> runtime vec size (different type)" << std::endl;
+    using ComponentType = typename VTraits::BaseComponentType;
+    using SourceType = typename VTraits::template ReplaceComponentType<vtkm::UInt8>;
+    vtkm::cont::ArrayHandle<SourceType> staticVecArray = MakeInputArray<SourceType>();
+    vtkm::cont::ArrayHandleRuntimeVec<vtkm::UInt8> input =
+      vtkm::cont::make_ArrayHandleRuntimeVec(staticVecArray);
+    vtkm::cont::ArrayHandleRuntimeVec<ComponentType> output(input.GetNumberOfComponents());
+    vtkm::cont::ArrayCopy(input, output);
+    // Convert the arrays back to static vec sizes for comparison, because TestValues
+    // uses a device array copy that may not work on runtime vec sizes.
+    TestValues(staticVecArray,
+               output.template AsArrayHandleBasic<vtkm::cont::ArrayHandle<ValueType>>());
+  }
+
+  {
+    std::cout << "basic -> recombined vec" << std::endl;
+    using ComponentType = typename VTraits::BaseComponentType;
+    vtkm::cont::ArrayHandle<ValueType> input = MakeInputArray<ValueType>();
+    vtkm::cont::ArrayHandle<ValueType> output;
+    auto recombinedVec =
+      vtkm::cont::UnknownArrayHandle{ output }.ExtractArrayFromComponents<ComponentType>();
+    vtkm::cont::ArrayCopy(input, recombinedVec);
+    TestValues(input, output);
+  }
+
+  {
+    std::cout << "basic -> recombined vec (different type)" << std::endl;
+    using SourceType = typename VTraits::template ReplaceComponentType<vtkm::Id>;
+    using ComponentType = typename VTraits::BaseComponentType;
+    vtkm::cont::ArrayHandle<SourceType> input = MakeInputArray<SourceType>();
+    vtkm::cont::ArrayHandle<ValueType> output;
+    auto recombinedVec =
+      vtkm::cont::UnknownArrayHandle{ output }.ExtractArrayFromComponents<ComponentType>();
+    vtkm::cont::ArrayCopy(input, recombinedVec);
+    TestValues(input, output);
+  }
+
   // Test the copy methods in UnknownArrayHandle. Although this would be appropriate in
   // UnitTestUnknownArrayHandle, it is easier to test copies here.
   {

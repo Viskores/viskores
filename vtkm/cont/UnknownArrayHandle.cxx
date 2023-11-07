@@ -219,7 +219,7 @@ VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceBasic() const
   }
   if (this->Container)
   {
-    newArray.Container = this->Container->NewInstanceBasic();
+    newArray.Container = this->Container->NewInstanceBasic(this->Container->ArrayHandlePointer);
   }
   return newArray;
 }
@@ -237,7 +237,8 @@ VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceFloatBasic() const
   UnknownArrayHandle newArray;
   if (this->Container)
   {
-    newArray.Container = this->Container->NewInstanceFloatBasic();
+    newArray.Container =
+      this->Container->NewInstanceFloatBasic(this->Container->ArrayHandlePointer);
   }
   return newArray;
 }
