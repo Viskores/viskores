@@ -251,15 +251,6 @@ inline vtkm::cont::Field make_FieldCell(std::string name,
 {
   return vtkm::cont::Field(name, vtkm::cont::Field::Association::Cells, data);
 }
-
-/// Convenience function to build cell fields from vtkm::cont::ArrayHandleConstant
-template <typename T>
-inline vtkm::cont::Field make_FieldCell(std::string name,
-                                        const vtkm::cont::ArrayHandleConstant<T>& data)
-{
-  return vtkm::cont::Field(name, vtkm::cont::Field::Association::Cells, data);
-}
-
 } // namespace cont
 } // namespace vtkm
 

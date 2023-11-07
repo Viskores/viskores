@@ -224,10 +224,20 @@ void AmrArrays::ComputeGenerateGhostType()
       vtkm::cont::CellSetStructured<Dim> cellset;
       partition.GetCellSet().AsCellSet(cellset);
       vtkm::cont::ArrayHandle<vtkm::UInt8> ghostArrayHandle;
-      vtkm::cont::Invoker invoke;
-      invoke(vtkm::worklet::ResetGhostTypeWorklet{},
-             partition.GetGhostCellField().GetData().ExtractComponent<vtkm::UInt8>(0),
-             ghostArrayHandle);
+      if (!partition.HasGhostCellField())
+      {
+        ghostArrayHandle.AllocateAndFill(partition.GetNumberOfCells(), 0);
+        //        vtkm::cont::ArrayHandleConstant<vtkm::UInt8> ghostArrayHandle = vtkm::cont::ArrayHandleConstant<vtkm::UInt8> (0, partition.GetNumberOfCells());
+      }
+      else
+      {
+        vtkm::cont::Invoker invoke;
+        invoke(vtkm::worklet::ResetGhostTypeWorklet{},
+               partition.GetGhostCellField()
+                 .GetData()
+                 .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>>(),
+               ghostArrayHandle);
+      }
       partition.AddCellField(vtkm::cont::GetGlobalGhostCellFieldName(), ghostArrayHandle);
 
       auto pointField = partition.GetCoordinateSystem().GetDataAsMultiplexer();
@@ -244,10 +254,11 @@ void AmrArrays::ComputeGenerateGhostType()
             .GetBounds();
         //        std::cout<<" is (partly) contained in level "<<l + 1<<" block "<<bChild<<" which is partition "<<this->ChildrenIdsVector.at(this->PartitionIds.at(l).at(bParent)).at(bChild)<<" with bounds "<<boundsChild<<std::endl;
 
+        vtkm::cont::Invoker invoke;
         invoke(vtkm::worklet::GenerateGhostTypeWorklet<Dim>{ boundsChild },
                cellset,
                pointField,
-               partition.GetGhostCellField().GetData().ExtractComponent<vtkm::UInt8>(0));
+               ghostArrayHandle);
       }
       this->AmrDataSet.ReplacePartition(this->PartitionIds.at(l).at(bParent), partition);
     }
@@ -264,15 +275,21 @@ void AmrArrays::GenerateIndexArrays()
     {
       vtkm::cont::DataSet partition = this->AmrDataSet.GetPartition(this->PartitionIds.at(l).at(b));
 
-      partition.AddCellField(
-        "vtkAmrLevel", vtkm::cont::ArrayHandleConstant<vtkm::Id>(l, partition.GetNumberOfCells()));
+      vtkm::cont::ArrayHandle<vtkm::Id> fieldAmrLevel;
+      vtkm::cont::ArrayCopy(
+        vtkm::cont::ArrayHandleConstant<vtkm::Id>(l, partition.GetNumberOfCells()), fieldAmrLevel);
+      partition.AddCellField("vtkAmrLevel", fieldAmrLevel);
 
-      partition.AddCellField(
-        "vtkAmrIndex", vtkm::cont::ArrayHandleConstant<vtkm::Id>(b, partition.GetNumberOfCells()));
+      vtkm::cont::ArrayHandle<vtkm::Id> fieldBlockId;
+      vtkm::cont::ArrayCopy(
+        vtkm::cont::ArrayHandleConstant<vtkm::Id>(b, partition.GetNumberOfCells()), fieldBlockId);
+      partition.AddCellField("vtkAmrIndex", fieldBlockId);
 
-      partition.AddCellField("vtkCompositeIndex",
-                             vtkm::cont::ArrayHandleConstant<vtkm::Id>(
-                               this->PartitionIds.at(l).at(b), partition.GetNumberOfCells()));
+      vtkm::cont::ArrayHandle<vtkm::Id> fieldPartitionIndex;
+      vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(
+                              this->PartitionIds.at(l).at(b), partition.GetNumberOfCells()),
+                            fieldPartitionIndex);
+      partition.AddCellField("vtkCompositeIndex", fieldPartitionIndex);
 
       this->AmrDataSet.ReplacePartition(this->PartitionIds.at(l).at(b), partition);
     }

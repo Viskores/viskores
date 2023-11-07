@@ -26,23 +26,31 @@ namespace rendering
 class VTKM_RENDERING_EXPORT Actor
 {
 public:
-  Actor(const vtkm::cont::DataSet dataSet, const std::string fieldName);
+  Actor(const vtkm::cont::DataSet dataSet,
+        const std::string coordinateName,
+        const std::string fieldName);
 
   Actor(const vtkm::cont::DataSet dataSet,
+        const std::string coordinateName,
         const std::string fieldName,
         const vtkm::cont::ColorTable& colorTable);
 
   Actor(const vtkm::cont::DataSet dataSet,
+        const std::string coordinateName,
         const std::string fieldName,
         const vtkm::rendering::Color& color);
 
-  Actor(const vtkm::cont::PartitionedDataSet dataSet, const std::string fieldName);
+  Actor(const vtkm::cont::PartitionedDataSet dataSet,
+        const std::string coordinateName,
+        const std::string fieldName);
 
   Actor(const vtkm::cont::PartitionedDataSet dataSet,
+        const std::string coordinateName,
         const std::string fieldName,
         const vtkm::cont::ColorTable& colorTable);
 
   Actor(const vtkm::cont::PartitionedDataSet dataSet,
+        const std::string coordinateName,
         const std::string fieldName,
         const vtkm::rendering::Color& color);
 
