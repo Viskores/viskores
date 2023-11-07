@@ -36,7 +36,7 @@ void TestAmrArraysExecute(int dim, int numberOfLevels, int cellsPerDimension)
   vtkm::filter::entity_extraction::Threshold threshold;
   threshold.SetLowerThreshold(0);
   threshold.SetUpperThreshold(1);
-  threshold.SetActiveField("vtkGhostType");
+  threshold.SetActiveField(vtkm::cont::GetGlobalGhostCellFieldName());
   vtkm::cont::PartitionedDataSet derivedDataSet = threshold.Execute(amrDataSet);
   //  std::cout << "derived " << std::endl;
   //  derivedDataSet.PrintSummary(std::cout);
