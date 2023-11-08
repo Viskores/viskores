@@ -65,13 +65,14 @@ protected:
   vtkm::cont::ArrayHandle<vtkm::Vec4f_32> ColorMap;
   bool LogarithmX = false;
   bool LogarithmY = false;
-  c virtual void RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
-                                 const vtkm::cont::CoordinateSystem& coords,
-                                 const vtkm::cont::Field& scalarField,
-                                 const vtkm::cont::ColorTable& colorTable,
-                                 const vtkm::rendering::Camera& camera,
-                                 const vtkm::Range& scalarRange,
-                                 const vtkm::cont::Field& ghostField) = 0;
+
+  virtual void RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                               const vtkm::cont::CoordinateSystem& coords,
+                               const vtkm::cont::Field& scalarField,
+                               const vtkm::cont::ColorTable& colorTable,
+                               const vtkm::rendering::Camera& camera,
+                               const vtkm::Range& scalarRange,
+                               const vtkm::cont::Field& ghostField) = 0;
 };
 }
 } //namespace vtkm::rendering
