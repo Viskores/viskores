@@ -72,16 +72,6 @@ public:
    */
   void SetRadiusDelta(const vtkm::Float32& delta);
 
-  using Mapper::RenderCells;
-
-  void RenderCells(const vtkm::cont::UnknownCellSet& cellset,
-                   const vtkm::cont::CoordinateSystem& coords,
-                   const vtkm::cont::Field& scalarField,
-                   const vtkm::cont::ColorTable& colorTable,
-                   const vtkm::rendering::Camera& camera,
-                   const vtkm::Range& scalarRange,
-                   const vtkm::cont::Field& ghostField) override;
-
   void SetCompositeBackground(bool on);
   vtkm::rendering::Mapper* NewCopy() const override;
 
@@ -90,6 +80,14 @@ private:
   std::shared_ptr<InternalsType> Internals;
 
   struct RenderFunctor;
+
+  void RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                       const vtkm::cont::CoordinateSystem& coords,
+                       const vtkm::cont::Field& scalarField,
+                       const vtkm::cont::ColorTable& colorTable,
+                       const vtkm::rendering::Camera& camera,
+                       const vtkm::Range& scalarRange,
+                       const vtkm::cont::Field& ghostField) override;
 };
 }
 } //namespace vtkm::rendering

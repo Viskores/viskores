@@ -65,13 +65,13 @@ void MapperRayTracer::RenderCellsPartitioned(const vtkm::cont::PartitionedDataSe
   for (unsigned int p = 0; p < partitionedData.GetNumberOfPartitions(); p++)
   {
     auto partition = partitionedData.GetPartition(indices[p]);
-    this->RenderCells(partition.GetCellSet(),
-                      partition.GetCoordinateSystem(),
-                      partition.GetField(fieldName.c_str()),
-                      colorTable,
-                      camera,
-                      scalarRange,
-                      partition.GetGhostCellField());
+    this->RenderCellsImpl(partition.GetCellSet(),
+                          partition.GetCoordinateSystem(),
+                          partition.GetField(fieldName.c_str()),
+                          colorTable,
+                          camera,
+                          scalarRange,
+                          partition.GetGhostCellField());
   }
 }
 
@@ -120,13 +120,13 @@ vtkm::rendering::Canvas* MapperRayTracer::GetCanvas() const
   return this->Internals->Canvas;
 }
 
-void MapperRayTracer::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
-                                  const vtkm::cont::CoordinateSystem& coords,
-                                  const vtkm::cont::Field& scalarField,
-                                  const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
-                                  const vtkm::rendering::Camera& camera,
-                                  const vtkm::Range& scalarRange,
-                                  const vtkm::cont::Field& ghostField)
+void MapperRayTracer::RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                                      const vtkm::cont::CoordinateSystem& coords,
+                                      const vtkm::cont::Field& scalarField,
+                                      const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
+                                      const vtkm::rendering::Camera& camera,
+                                      const vtkm::Range& scalarRange,
+                                      const vtkm::cont::Field& ghostField)
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
   logger->OpenLogEntry("mapper_ray_tracer");

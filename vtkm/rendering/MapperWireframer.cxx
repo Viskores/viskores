@@ -227,13 +227,13 @@ void MapperWireframer::SetIsOverlay(bool isOverlay)
   this->Internals->IsOverlay = isOverlay;
 }
 
-void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
-                                   const vtkm::cont::CoordinateSystem& coords,
-                                   const vtkm::cont::Field& inScalarField,
-                                   const vtkm::cont::ColorTable& colorTable,
-                                   const vtkm::rendering::Camera& camera,
-                                   const vtkm::Range& scalarRange,
-                                   const vtkm::cont::Field& ghostField)
+void MapperWireframer::RenderCellsImpl(const vtkm::cont::UnknownCellSet& inCellSet,
+                                       const vtkm::cont::CoordinateSystem& coords,
+                                       const vtkm::cont::Field& inScalarField,
+                                       const vtkm::cont::ColorTable& colorTable,
+                                       const vtkm::rendering::Camera& camera,
+                                       const vtkm::Range& scalarRange,
+                                       const vtkm::cont::Field& ghostField)
 {
   vtkm::cont::UnknownCellSet cellSet = inCellSet;
 

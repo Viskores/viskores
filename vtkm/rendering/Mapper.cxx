@@ -25,22 +25,33 @@ void Mapper::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                          const vtkm::rendering::Camera& camera,
                          const vtkm::Range& scalarRange)
 {
-  RenderCells(cellset,
-              coords,
-              scalarField,
-              colorTable,
-              camera,
-              scalarRange,
-              make_FieldCell(
-                vtkm::cont::GetGlobalGhostCellFieldName(),
-                vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(0, scalarField.GetNumberOfValues())));
+  RenderCellsImpl(cellset,
+                  coords,
+                  scalarField,
+                  colorTable,
+                  camera,
+                  scalarRange,
+                  make_FieldCell(vtkm::cont::GetGlobalGhostCellFieldName(),
+                                 vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(
+                                   0, scalarField.GetNumberOfValues())));
+};
+
+void Mapper::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
+                         const vtkm::cont::CoordinateSystem& coords,
+                         const vtkm::cont::Field& scalarField,
+                         const vtkm::cont::ColorTable& colorTable,
+                         const vtkm::rendering::Camera& camera,
+                         const vtkm::Range& scalarRange,
+                         const vtkm::cont::Field& ghostField)
+{
+  RenderCellsImpl(cellset, coords, scalarField, colorTable, camera, scalarRange, ghostField);
 };
 
 struct CompareIndices
 {
   vtkm::Vec3f CameraDirection;
-  vtkm::Vec3f* Centers;
-  CompareIndices(vtkm::Vec3f* centers, vtkm::Vec3f cameraDirection)
+  std::vector<vtkm::Vec3f>& Centers;
+  CompareIndices(std::vector<vtkm::Vec3f>& centers, vtkm::Vec3f cameraDirection)
     : CameraDirection(cameraDirection)
     , Centers(centers)
   {
@@ -59,22 +70,23 @@ void Mapper::RenderCellsPartitioned(const vtkm::cont::PartitionedDataSet partiti
                                     const vtkm::Range& scalarRange)
 {
   // sort partitions back to front for best rendering with the volume renderer
-  vtkm::Vec3f centers[partitionedData.GetNumberOfPartitions()];
+  std::vector<vtkm::Vec3f> centers(partitionedData.GetNumberOfPartitions()); // vector for centers
   std::vector<int> indices(partitionedData.GetNumberOfPartitions());
-  for (unsigned int p = 0; p < partitionedData.GetNumberOfPartitions(); p++)
+  for (vtkm::Id p = 0; p < partitionedData.GetNumberOfPartitions(); p++)
   {
-    indices[p] = p;
-    centers[p] = vtkm::cont::BoundsCompute(partitionedData.GetPartition(p)).Center();
+    indices[static_cast<size_t>(p)] = p;
+    centers[static_cast<size_t>(p)] =
+      vtkm::cont::BoundsCompute(partitionedData.GetPartition(p)).Center();
   }
   CompareIndices comparator(centers, camera.GetLookAt() - camera.GetPosition());
   std::sort(indices.begin(), indices.end(), comparator);
 
-  for (unsigned int p = 0; p < partitionedData.GetNumberOfPartitions(); p++)
+  for (vtkm::Id p = 0; p < partitionedData.GetNumberOfPartitions(); p++)
   {
-    auto partition = partitionedData.GetPartition(indices[p]);
+    auto partition = partitionedData.GetPartition(indices[static_cast<size_t>(p)]);
     this->RenderCells(partition.GetCellSet(),
                       partition.GetCoordinateSystem(),
-                      partition.GetField(fieldName.c_str()),
+                      partition.GetField(fieldName),
                       colorTable,
                       camera,
                       scalarRange,

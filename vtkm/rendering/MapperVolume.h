@@ -29,16 +29,6 @@ public:
   void SetCanvas(vtkm::rendering::Canvas* canvas) override;
   virtual vtkm::rendering::Canvas* GetCanvas() const override;
 
-  using Mapper::RenderCells;
-
-  virtual void RenderCells(const vtkm::cont::UnknownCellSet& cellset,
-                           const vtkm::cont::CoordinateSystem& coords,
-                           const vtkm::cont::Field& scalarField,
-                           const vtkm::cont::ColorTable&, //colorTable
-                           const vtkm::rendering::Camera& camera,
-                           const vtkm::Range& scalarRange,
-                           const vtkm::cont::Field& ghostField) override;
-
   vtkm::rendering::Mapper* NewCopy() const override;
   void SetSampleDistance(const vtkm::Float32 distance);
   void SetCompositeBackground(const bool compositeBackground);
@@ -46,6 +36,14 @@ public:
 private:
   struct InternalsType;
   std::shared_ptr<InternalsType> Internals;
+
+  virtual void RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                               const vtkm::cont::CoordinateSystem& coords,
+                               const vtkm::cont::Field& scalarField,
+                               const vtkm::cont::ColorTable&, //colorTable
+                               const vtkm::rendering::Camera& camera,
+                               const vtkm::Range& scalarRange,
+                               const vtkm::cont::Field& ghostField) override;
 };
 }
 } //namespace vtkm::rendering

@@ -59,13 +59,13 @@ vtkm::rendering::Canvas* MapperConnectivity::GetCanvas() const
 
 
 VTKM_CONT
-void MapperConnectivity::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
-                                     const vtkm::cont::CoordinateSystem& coords,
-                                     const vtkm::cont::Field& scalarField,
-                                     const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
-                                     const vtkm::rendering::Camera& camera,
-                                     const vtkm::Range& scalarRange,
-                                     const vtkm::cont::Field& ghostField)
+void MapperConnectivity::RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                                         const vtkm::cont::CoordinateSystem& coords,
+                                         const vtkm::cont::Field& scalarField,
+                                         const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
+                                         const vtkm::rendering::Camera& camera,
+                                         const vtkm::Range& scalarRange,
+                                         const vtkm::cont::Field& ghostField)
 {
   vtkm::cont::DataSet dataset;
 

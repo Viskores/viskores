@@ -31,6 +31,11 @@ class VTKM_RENDERING_EXPORT ConnectivityProxy
 {
 public:
   ConnectivityProxy(const vtkm::cont::DataSet& dataset, const std::string& fieldName);
+
+  ConnectivityProxy(const vtkm::cont::DataSet& dataSet,
+                    const std::string& fieldName,
+                    const std::string& coordinateName);
+
   ConnectivityProxy(const vtkm::cont::UnknownCellSet& cellset,
                     const vtkm::cont::CoordinateSystem& coords,
                     const vtkm::cont::Field& scalarField);
