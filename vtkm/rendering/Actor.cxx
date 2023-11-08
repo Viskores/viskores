@@ -217,7 +217,7 @@ const vtkm::cont::UnknownCellSet& Actor::GetCells() const
   return this->Internals->Data.GetPartition(0).GetCellSet();
 }
 
-const vtkm::cont::CoordinateSystem& Actor::GetCoordinates() const
+vtkm::cont::CoordinateSystem Actor::GetCoordinates() const
 {
   return this->Internals->Data.GetPartition(0).GetCoordinateSystem(this->Internals->CoordinateName);
 }

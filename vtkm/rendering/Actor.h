@@ -81,7 +81,7 @@ public:
 
   const vtkm::cont::UnknownCellSet& GetCells() const;
 
-  const vtkm::cont::CoordinateSystem& GetCoordinates() const;
+  vtkm::cont::CoordinateSystem GetCoordinates() const;
 
   const vtkm::cont::Field& GetScalarField() const;
 
