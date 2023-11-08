@@ -51,15 +51,26 @@ struct CompareIndices
 {
   vtkm::Vec3f CameraDirection;
   std::vector<vtkm::Vec3f>& Centers;
-  CompareIndices(std::vector<vtkm::Vec3f>& centers, vtkm::Vec3f cameraDirection)
+  bool SortBackToFront;
+  CompareIndices(std::vector<vtkm::Vec3f>& centers,
+                 vtkm::Vec3f cameraDirection,
+                 bool sortBackToFront)
     : CameraDirection(cameraDirection)
     , Centers(centers)
+    , SortBackToFront(sortBackToFront)
   {
   }
 
   bool operator()(int i, int j) const
   {
-    return (vtkm::Dot(Centers[i], CameraDirection) > vtkm::Dot(Centers[j], CameraDirection));
+    if (SortBackToFront)
+    {
+      return (vtkm::Dot(Centers[i], CameraDirection) > vtkm::Dot(Centers[j], CameraDirection));
+    }
+    else
+    {
+      return (vtkm::Dot(Centers[i], CameraDirection) < vtkm::Dot(Centers[j], CameraDirection));
+    }
   }
 };
 
@@ -78,7 +89,8 @@ void Mapper::RenderCellsPartitioned(const vtkm::cont::PartitionedDataSet partiti
     centers[static_cast<size_t>(p)] =
       vtkm::cont::BoundsCompute(partitionedData.GetPartition(p)).Center();
   }
-  CompareIndices comparator(centers, camera.GetLookAt() - camera.GetPosition());
+  CompareIndices comparator(
+    centers, camera.GetLookAt() - camera.GetPosition(), this->SortBackToFront);
   std::sort(indices.begin(), indices.end(), comparator);
 
   for (vtkm::Id p = 0; p < partitionedData.GetNumberOfPartitions(); p++)

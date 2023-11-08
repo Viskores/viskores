@@ -29,52 +29,6 @@ namespace vtkm
 namespace rendering
 {
 
-struct MapperRayTracer::CompareIndices
-{
-  vtkm::Vec3f CameraDirection;
-  vtkm::Vec3f* Centers;
-  CompareIndices(vtkm::Vec3f* centers, vtkm::Vec3f cameraDirection)
-    : CameraDirection(cameraDirection)
-    , Centers(centers)
-  {
-  }
-
-  bool operator()(int i, int j) const
-  {
-    return (vtkm::Dot(Centers[i], CameraDirection) < vtkm::Dot(Centers[j], CameraDirection));
-  }
-};
-
-void MapperRayTracer::RenderCellsPartitioned(const vtkm::cont::PartitionedDataSet partitionedData,
-                                             const std::string fieldName,
-                                             const vtkm::cont::ColorTable& colorTable,
-                                             const vtkm::rendering::Camera& camera,
-                                             const vtkm::Range& scalarRange)
-{
-  // sort partitions back to front for best rendering with the volume renderer
-  vtkm::Vec3f centers[partitionedData.GetNumberOfPartitions()];
-  std::vector<int> indices(partitionedData.GetNumberOfPartitions());
-  for (unsigned int p = 0; p < partitionedData.GetNumberOfPartitions(); p++)
-  {
-    indices[p] = p;
-    centers[p] = vtkm::cont::BoundsCompute(partitionedData.GetPartition(p)).Center();
-  }
-  CompareIndices comparator(centers, camera.GetLookAt() - camera.GetPosition());
-  std::sort(indices.begin(), indices.end(), comparator);
-
-  for (unsigned int p = 0; p < partitionedData.GetNumberOfPartitions(); p++)
-  {
-    auto partition = partitionedData.GetPartition(indices[p]);
-    this->RenderCellsImpl(partition.GetCellSet(),
-                          partition.GetCoordinateSystem(),
-                          partition.GetField(fieldName.c_str()),
-                          colorTable,
-                          camera,
-                          scalarRange,
-                          partition.GetGhostCellField());
-  }
-}
-
 struct MapperRayTracer::InternalsType
 {
   vtkm::rendering::CanvasRayTracer* Canvas;
@@ -95,6 +49,9 @@ struct MapperRayTracer::InternalsType
 MapperRayTracer::MapperRayTracer()
   : Internals(new InternalsType)
 {
+  // for the volume renderer sorting back to front gives better results, which is the default
+  // but for the raytracer front to back is better.
+  this->SortBackToFront = false;
 }
 
 MapperRayTracer::~MapperRayTracer() {}

@@ -66,6 +66,10 @@ protected:
   bool LogarithmX = false;
   bool LogarithmY = false;
 
+  // for the volume renderer sorting back to front gives better results, which is the default
+  // but for the raytracer front to back is better.
+  bool SortBackToFront = true;
+
   virtual void RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
                                const vtkm::cont::CoordinateSystem& coords,
                                const vtkm::cont::Field& scalarField,
