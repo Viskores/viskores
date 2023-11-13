@@ -18,7 +18,7 @@ All the file I/O classes are declared under the ``vtkm::io`` namespace.
    increasing power and complexity.
    In particular, :secref:`dataset:Building Data Sets` describes how to build |VTKm| data set objects and Section \ref{sec:ArrayHandle:Adapting} documents how to adapt data structures defined in other libraries to be used directly in |VTKm|.
 
-.. todo:: Add ArrayHandle section reference above.
+.. todo:: Add custom ArrayHandle section reference above.
 
 ------------------------------
 Readers

@@ -30,6 +30,11 @@ namespace vtkm
                 " Compilers often have a recursive template instantiation limit of around 1024," \
                 " so operations on lists this large can lead to confusing and misleading errors.")
 
+/// @brief A template used to hold a list of types.
+///
+/// `List` is an empty `struct` that is used to hold a list of types as its template
+/// arguments. VTK-m provides templated types that allows a `List` to be
+/// manipulated and used in numerous ways.
 template <typename... Ts>
 struct List
 {
@@ -78,13 +83,14 @@ struct UniversalTypeTag
 
 } // namespace detail
 
-/// A special tag for an empty list.
+/// @brief A convenience type for an empty list.
 ///
 using ListEmpty = vtkm::List<>;
 
-/// A special tag for a list that represents holding all potential values
+/// @brief A special type for a list that represents holding all potential values
 ///
-/// Note: Can not be used with ForEach and some list transforms for obvious reasons.
+/// Note: This list cannot be used with `ForEach` and some list transforms
+/// for obvious reasons.
 using ListUniversal = vtkm::List<detail::UniversalTypeTag>;
 
 namespace detail
@@ -711,7 +717,6 @@ struct ListIntersectImpl<vtkm::ListUniversal, vtkm::ListUniversal>
 template <typename List1, typename List2>
 using ListIntersect = typename detail::ListIntersectImpl<List1, List2>::type;
 
-///@{
 /// For each typename represented by the list, call the functor with a
 /// default instance of that type.
 ///
@@ -729,7 +734,6 @@ VTKM_EXEC_CONT void ListForEach(Functor&&, vtkm::ListEmpty, Args&&...)
 {
   // No types to run functor on.
 }
-///@}
 
 namespace detail
 {

@@ -15,13 +15,17 @@ set(examples
   GuideExampleEnvironmentModifierMacros.cxx
   GuideExampleInitialization.cxx
   GuideExampleIO.cxx
+  GuideExampleLists.cxx
   GuideExampleProvidedFilters.cxx
   GuideExampleRendering.cxx
   GuideExampleRuntimeDeviceTracker.cxx
   GuideExampleTimer.cxx
+  GuideExampleTraits.cxx
+  GuideExampleTuple.cxx
   )
 set(examples_device
   GuideExampleCellEdgesFaces.cxx
+  GuideExampleCellLocator.cxx
   GuideExampleDataSetCreation.cxx
   GuideExampleErrorHandling.cxx
   GuideExampleSimpleAlgorithm.cxx

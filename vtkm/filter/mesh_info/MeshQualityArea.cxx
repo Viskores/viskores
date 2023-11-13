@@ -61,7 +61,7 @@ struct AreaWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
       vtkmGenericCellShapeMacro(metricValue =
                                   this->ComputeMetric<OutType>(numPoints, pts, CellShapeTag()));
       default:
-        this->RaiseError(vtkm::ErrorString(vtkm::ErrorCode::CellNotFound));
+        this->RaiseError(vtkm::ErrorString(vtkm::ErrorCode::InvalidShapeId));
         metricValue = OutType(0.0);
     }
   }
