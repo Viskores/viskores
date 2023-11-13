@@ -129,8 +129,8 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   const auto& cells = actor.GetCellSet();
   const auto& fieldArray = actor.GetField().GetData();
 
-  const bool isStructured = cells.IsType<vtkm::cont::CellSetStructured<3>>();
-  const bool isFloat = fieldArray.IsType<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+  const bool isStructured = cells.CanConvert<vtkm::cont::CellSetStructured<3>>();
+  const bool isFloat = fieldArray.CanConvert<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
   this->Handles->ReleaseArrays();
 
