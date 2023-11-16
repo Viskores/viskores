@@ -33,7 +33,7 @@ void BenchParticleAdvection(::benchmark::State& state)
 
   vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
 
-  std::vector<vtkm::Vec3f> vectorField(static_cast<std::size_t>(numPoints));
+  std::vector<vtkm::Vec3f> vectorField(static_cast<std::size_t>(numPoints)); // 3D
   for (std::size_t i = 0; i < static_cast<std::size_t>(numPoints); i++)
     vectorField[i] = vecX;
 
