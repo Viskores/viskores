@@ -25,17 +25,23 @@ RUN zypper refresh && \
 
       hdf5-devel \
       libgomp1 \
-      libucp-devel \
-      mpich-ofi \
-      mpich-ofi-devel \
+      make \
       ninja \
-      openucx-tools \
       python311 \
       python311-scipy \
       tbb-devel && \
     zypper clean --all
 
-ENV fI_PROVIDER=sockets
+ARG MPICH_VERSION=4.1.1
+RUN curl -s -L https://www.mpich.org/static/downloads/${MPICH_VERSION}/mpich-${MPICH_VERSION}.tar.gz | tar xzf - && \
+    cd mpich-${MPICH_VERSION} && \
+    ./configure \
+      --disable-fortran \
+      --prefix=/usr/local \
+      --with-device=ch3:sock:tcp && \
+    make -j $(nproc) && \
+    make install && \
+    rm -rf mpich-${MPICH_VERSION}
 
 
 
