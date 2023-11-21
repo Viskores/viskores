@@ -42,7 +42,7 @@ namespace filter
 ///
 /// // select fields to map to the output, if different from default which is to map all input
 /// // fields.
-/// contour.SetFieldToPass({"var1", "var2"});
+/// contour.SetFieldsToPass({"var1", "var2"});
 ///
 /// // execute the filter on vtkm::cont::DataSet.
 /// vtkm::cont::DataSet dsInput = ...
@@ -253,7 +253,6 @@ public:
     }
   }
 
-  ///@{
   /// \brief Specify which fields get passed from input to output.
   ///
   /// After a filter successfully executes and returns a new data set, fields are mapped from
@@ -264,42 +263,47 @@ public:
   /// By default, all fields are passed during execution.
   ///
   VTKM_CONT void SetFieldsToPass(const vtkm::filter::FieldSelection& fieldsToPass);
+  /// @copydoc SetFieldsToPass
   VTKM_CONT void SetFieldsToPass(vtkm::filter::FieldSelection&& fieldsToPass);
 
   VTKM_DEPRECATED(2.0)
   VTKM_CONT void SetFieldsToPass(const vtkm::filter::FieldSelection& fieldsToPass,
                                  vtkm::filter::FieldSelection::Mode mode);
 
+  /// @copydoc SetFieldsToPass
   VTKM_CONT void SetFieldsToPass(
     std::initializer_list<std::string> fields,
     vtkm::filter::FieldSelection::Mode mode = vtkm::filter::FieldSelection::Mode::Select);
 
+  /// @copydoc SetFieldsToPass
   VTKM_CONT void SetFieldsToPass(
     std::initializer_list<std::pair<std::string, vtkm::cont::Field::Association>> fields,
     vtkm::filter::FieldSelection::Mode mode = vtkm::filter::FieldSelection::Mode::Select);
 
 
+  /// @copydoc SetFieldsToPass
   VTKM_CONT void SetFieldsToPass(
     const std::string& fieldname,
     vtkm::cont::Field::Association association,
     vtkm::filter::FieldSelection::Mode mode = vtkm::filter::FieldSelection::Mode::Select);
 
+  /// @copydoc SetFieldsToPass
   VTKM_CONT void SetFieldsToPass(const std::string& fieldname,
                                  vtkm::filter::FieldSelection::Mode mode)
   {
     this->SetFieldsToPass(fieldname, vtkm::cont::Field::Association::Any, mode);
   }
 
+  /// @copydoc SetFieldsToPass
   VTKM_CONT
   const vtkm::filter::FieldSelection& GetFieldsToPass() const { return this->FieldsToPass; }
+  /// @copydoc SetFieldsToPass
   VTKM_CONT
   vtkm::filter::FieldSelection& GetFieldsToPass() { return this->FieldsToPass; }
-  ///@}
 
-  ///@{
   /// \brief Specify whether to always pass coordinate systems.
   ///
-  /// `CoordinateSystem`s in a `DataSet` are really just point fields marked as being a
+  /// `vtkm::cont::CoordinateSystem`s in a `DataSet` are really just point fields marked as being a
   /// coordinate system. Thus, a coordinate system is passed if and only if the associated
   /// field is passed.
   ///
@@ -308,22 +312,18 @@ public:
   /// to `false`, then coordinate systems will only be passed if it is marked so by
   /// `FieldsToPass`.
   VTKM_CONT void SetPassCoordinateSystems(bool flag) { this->PassCoordinateSystems = flag; }
+  /// @copydoc SetPassCoordinateSystems
   VTKM_CONT bool GetPassCoordinateSystems() const { return this->PassCoordinateSystems; }
-  ///@}
 
-  ///@{
   /// Executes the filter on the input and produces a result dataset.
   ///
-  /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
+  /// On success, this the dataset produced. On error, `vtkm::cont::ErrorExecution` will be thrown.
   VTKM_CONT vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input);
-  ///@}
 
-  ///@{
   /// Executes the filter on the input PartitionedDataSet and produces a result PartitionedDataSet.
   ///
-  /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
+  /// On success, this the dataset produced. On error, `vtkm::cont::ErrorExecution` will be thrown.
   VTKM_CONT vtkm::cont::PartitionedDataSet Execute(const vtkm::cont::PartitionedDataSet& input);
-  ///@}
 
   // FIXME: Is this actually materialize? Are there different kinds of Invoker?
   /// Specify the vtkm::cont::Invoker to be used to execute worklets by
@@ -416,7 +416,6 @@ protected:
     return outDataSet;
   }
 
-  ///@{
   /// \brief Create the output data set for `DoExecute`.
   ///
   /// This form of `CreateResult` will create an output data set with the given `CellSet`
@@ -456,6 +455,27 @@ protected:
     return outDataSet;
   }
 
+  /// \brief Create the output data set for `DoExecute`.
+  ///
+  /// This form of `CreateResult` will create an output data set with the given `CellSet`
+  /// and `CoordinateSystem`. You must also provide a field mapper function, which is a
+  /// function that takes the output `DataSet` being created and a `Field` from the input
+  /// and then applies any necessary transformations to the field array and adds it to
+  /// the `DataSet`.
+  ///
+  /// \param[in] inDataSet The input data set being modified (usually the one passed
+  ///     into `DoExecute`). The returned `DataSet` is filled with fields of `inDataSet`
+  ///     (as selected by the `FieldsToPass` state of the filter).
+  /// \param[in] resultCellSet The `CellSet` of the output will be set to this.
+  /// \param[in] coordsName The name of the coordinate system to be added to the output.
+  /// \param[in] coordsData The array containing the coordinates of the points.
+  /// \param[in] fieldMapper A function or functor that takes a `DataSet` as its first
+  ///     argument and a `Field` as its second argument. The `DataSet` is the data being
+  ///     created and will eventually be returned by `CreateResult`. The `Field` comes from
+  ///     `inDataSet`. The function should map the `Field` to match `resultCellSet` and then
+  ///     add the resulting field to the `DataSet`. If the mapping is not possible, then
+  ///     the function should do nothing.
+  ///
   template <typename FieldMapper>
   VTKM_CONT vtkm::cont::DataSet CreateResultCoordinateSystem(
     const vtkm::cont::DataSet& inDataSet,
@@ -470,7 +490,6 @@ protected:
       vtkm::cont::CoordinateSystem{ coordsName, coordsData },
       fieldMapper);
   }
-  ///@}
 
   VTKM_CONT virtual vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) = 0;
   VTKM_CONT virtual vtkm::cont::PartitionedDataSet DoExecutePartitions(

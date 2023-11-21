@@ -12,6 +12,14 @@
 
 #include <vtkm/cont/DeviceAdapterTag.h>
 
+/// @struct vtkm::cont::DeviceAdapterTagTBB
+/// @brief Tag for a device adapter that uses the Intel Threading Building Blocks
+/// library to run algorithms on multiple threads.
+///
+/// For this device to work, VTK-m must be configured to use TBB and the executable
+/// must be linked to the TBB library. This tag is defined in
+/// `vtkm/cont/tbb/DeviceAdapterTBB.h`.
+
 //We always create the tbb tag when included, but we only mark it as
 //a valid tag when VTKM_ENABLE_TBB is true. This is for easier development
 //of multi-backend systems

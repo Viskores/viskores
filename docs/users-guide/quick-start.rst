@@ -27,11 +27,8 @@ The ``Initialize`` function is defined in the :file:`vtkm/cont/Initialize.h` hea
    :file: VTKmQuickStart.cxx
    :caption: Initializing |VTKm|.
 
-.. todo:: Uncomment and add cross reference.
-
-..
-   ``Initialize`` has many options to customize command line argument processing.
-   See Chapter \ref{chap:Initialization} for more details.
+``Initialize`` has many options to customize command line argument processing.
+See :chapref:`initialization:Initialization` for more details.
 
 .. didyouknow::
   Don't have access to ``argc`` and ``argv``?
@@ -52,7 +49,7 @@ These files have a :file:`.vtk` extension.
 
 VTK legacy files can be read using the :class:`vtkm::io::VTKDataSetReader` object, which is declared in the :file:`vtkm/io/VTKDataSetReader.h` header file.
 The object is constructed with a string specifying the filename (which for this example we will get from the command line).
-The data is then read in by calling the :member:`vtkm::io::VTKDataSetReader::ReadDataSet` method.
+The data is then read in by calling the :func:`vtkm::io::VTKDataSetReader::ReadDataSet` method.
 
 .. load-example:: VTKmQuickStartReadFile
    :file: VTKmQuickStart.cxx
@@ -133,9 +130,9 @@ In our case we only have one ``DataSet`` to render, so we simply create a single
 The second step in setting up a render is to create a *view*.
 The view comprises the aforementioned scene, a *mapper*, which describes how the data are to be rendered, and a *canvas*, which holds the image buffer and other rendering context.
 The view is created in :exlineref:`VTKmQuickStartRender:view`.
-The image generation is then performed by calling :member:`vtkm::rendering::View::Paint` on the view object (:exlineref:`VTKmQuickStartRender:paint`).
+The image generation is then performed by calling :func:`vtkm::rendering::View::Paint` on the view object (:exlineref:`VTKmQuickStartRender:paint`).
 However, the rendering done by |VTKm|'s rendering classes is performed offscreen, which means that the result does not appear on your computer's monitor.
-The easiest way to see the image is to save it to an image file using the :member:`vtkm::rendering::View::SaveAs` method (:exlineref:`VTKmQuickStartRender:save`).
+The easiest way to see the image is to save it to an image file using the :func:`vtkm::rendering::View::SaveAs` method (:exlineref:`VTKmQuickStartRender:save`).
 
 
 ------------------------------

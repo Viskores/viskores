@@ -21,6 +21,7 @@ namespace vtkm
 namespace rendering
 {
 
+/// @brief A view for a 3D data set.
 class VTKM_RENDERING_EXPORT View3D : public vtkm::rendering::View
 {
 public:

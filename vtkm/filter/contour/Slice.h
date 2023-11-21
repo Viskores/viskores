@@ -21,13 +21,24 @@ namespace filter
 {
 namespace contour
 {
+
+/// @brief Intersect a mesh with an implicit surface.
+///
+/// This filter accepts a `vtkm::ImplicitFunction` that defines the surface to
+/// slice on. A `vtkm::Plane` is a common function to use that cuts the mesh
+/// along a plane.
+///
 class VTKM_FILTER_CONTOUR_EXPORT Slice : public vtkm::filter::contour::Contour
 {
 public:
-  /// Set/Get the implicit function that is used to perform the slicing.
+  /// @brief Set the implicit function that is used to perform the slicing.
+  ///
+  /// Only a limited number of implicit functions are supported. See
+  /// `vtkm::ImplicitFunctionGeneral` for information on which ones.
   ///
   VTKM_CONT
   void SetImplicitFunction(const vtkm::ImplicitFunctionGeneral& func) { this->Function = func; }
+  /// @brief Get the implicit function that us used to perform the slicing.
   VTKM_CONT
   const vtkm::ImplicitFunctionGeneral& GetImplicitFunction() const { return this->Function; }
 

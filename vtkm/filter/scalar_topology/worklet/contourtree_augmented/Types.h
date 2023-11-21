@@ -329,9 +329,10 @@ public:
 struct GetPointDimensions
 {
   ///@{
-  /// Get the number of rows, cols, and slices of a vtkm::cont::CellSetStructured
-  /// @param[in] cells  The input vtkm::cont::CellSetStructured
-  /// @param[out] pointDimensions mesh size (#cols, #rows #slices in old notation) with last dimension having a value of 1 for 2D data
+  /// Get the number of rows, cols, and slices of a vtkm::cont::CellSetStructured.
+  /// @param[in] cells  The input vtkm::cont::CellSetStructured.
+  /// @param[out] pointDimensions mesh size (often referred to as columns, rows, and slices)
+  ///   with last dimension having a value of 1 for 2D data.
   void operator()(const vtkm::cont::CellSetStructured<2>& cells, vtkm::Id3& pointDimensions) const
   {
     vtkm::Id2 pointDimensions2D = cells.GetPointDimensions();
@@ -383,7 +384,6 @@ struct GetLocalAndGlobalPointDimensions
     globalPointDimensions = cells.GetGlobalPointDimensions();
     globalPointIndexStart = cells.GetGlobalPointIndexStart();
   }
-  ///@}
 
 
   ///  Raise ErrorBadValue if the input cell set is not a vtkm::cont::CellSetStructured<2> or <3>

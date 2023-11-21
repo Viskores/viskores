@@ -10,7 +10,11 @@
 #ifndef @EXPORT_MACRO_NAME@_EXPORT_H
 #define @EXPORT_MACRO_NAME@_EXPORT_H
 
-#if defined(_MSC_VER)
+#if defined(VTKM_DOXYGEN_ONLY)
+#   define @EXPORT_MACRO_NAME@_EXPORT_DEFINE
+#   define @EXPORT_MACRO_NAME@_IMPORT_DEFINE
+#   define @EXPORT_MACRO_NAME@_NO_EXPORT_DEFINE
+#elif defined(_MSC_VER)
 # if @EXPORT_IS_BUILT_STATIC@
     /* This is a static component and has no need for exports
        elf based static libraries are able to have hidden/default visibility

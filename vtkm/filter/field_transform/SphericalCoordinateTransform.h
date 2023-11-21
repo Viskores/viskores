@@ -21,13 +21,23 @@ namespace filter
 namespace field_transform
 {
 
+/// @brief Transform coordinates between Cartesian and spherical.
+///
+/// By default, this filter will transform the first coordinate system, but
+/// this can be changed by setting the active field.
+///
+/// The resulting transformation will be set as the first coordinate system
+/// in the output.
+///
 class VTKM_FILTER_FIELD_TRANSFORM_EXPORT SphericalCoordinateTransform
   : public vtkm::filter::FilterField
 {
 public:
   VTKM_CONT SphericalCoordinateTransform();
 
+  /// @brief Establish a transformation from Cartesian to spherical coordinates.
   VTKM_CONT void SetCartesianToSpherical() { CartesianToSpherical = true; }
+  /// @brief Establish a transformation from spherical to Cartesian coordiantes.
   VTKM_CONT void SetSphericalToCartesian() { CartesianToSpherical = false; }
 
 private:

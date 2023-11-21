@@ -35,7 +35,9 @@ class RecombineVec
   vtkm::VecCConst<PortalType> Portals;
   vtkm::Id Index;
 
+  /// @cond NOPE
   friend vtkm::internal::ArrayPortalRecombineVec<PortalType>;
+  /// @endcond
 
 public:
   using ComponentType = typename std::remove_const<typename PortalType::ValueType>::type;

@@ -19,12 +19,12 @@ namespace filter
 {
 namespace field_transform
 {
-/// \brief Adds fields to a `DataSet` that give the ids for the points and cells.
+/// \brief Adds fields to a `vtkm::cont::DataSet` that give the ids for the points and cells.
 ///
 /// This filter will add (by default) a point field named `pointids` that gives the
 /// index of the associated point and likewise a cell field named `cellids` for the
 /// associated cell indices. These fields are useful for tracking the provenance of
-/// the elements of a `DataSet` as it gets manipulated by filters. It is also
+/// the elements of a `vtkm::cont::DataSet` as it gets manipulated by filters. It is also
 /// convenient for adding indices to operations designed for fields and generally
 /// creating test data.
 ///
@@ -37,45 +37,40 @@ class VTKM_FILTER_FIELD_TRANSFORM_EXPORT GenerateIds : public vtkm::filter::Filt
   bool UseFloat = false;
 
 public:
-  /// \{
-  /// \brief The name given to the generated point field.
+  /// @brief The name given to the generated point field.
   ///
   /// By default, the name is `pointids`.
   ///
   const std::string& GetPointFieldName() const { return this->PointFieldName; }
+  /// @copydoc GetPointFieldName
   void SetPointFieldName(const std::string& name) { this->PointFieldName = name; }
-  /// \}
 
-  /// \{
-  /// \brief The name given to the generated cell field.
+  /// @brief The name given to the generated cell field.
   ///
   /// By default, the name is `cellids`.
   ///
   const std::string& GetCellFieldName() const { return this->CellFieldName; }
+  /// @copydoc GetCellFieldName
   void SetCellFieldName(const std::string& name) { this->CellFieldName = name; }
-  /// \}
 
-  /// \{
-  /// \brief Specify whether the point id field is generated.
+  /// @brief Specify whether the point id field is generated.
   ///
   /// When `GeneratePointIds` is `true` (the default), a field echoing the point
   /// indices is generated. When set to `false`, this output is not created.
   ///
   bool GetGeneratePointIds() const { return this->GeneratePointIds; }
+  /// @copydoc GetGeneratePointIds
   void SetGeneratePointIds(bool flag) { this->GeneratePointIds = flag; }
-  /// \}
 
-  /// \{
   /// \brief Specify whether the cell id field is generated.
   ///
   /// When `GenerateCellIds` is `true` (the default), a field echoing the cell
   /// indices is generated. When set to `false`, this output is not created.
   ///
   bool GetGenerateCellIds() const { return this->GenerateCellIds; }
+  /// @copydoc GetGenerateCellIds
   void SetGenerateCellIds(bool flag) { this->GenerateCellIds = flag; }
-  /// \}
 
-  /// \{
   /// \brief Specify whether the generated fields should be integer or float.
   ///
   /// When `UseFloat` is `false` (the default), then the fields generated will have
@@ -83,6 +78,7 @@ public:
   /// with type `vtkm::FloatDefault`.
   ///
   bool GetUseFloat() const { return this->UseFloat; }
+  /// @copydoc GetUseFloat
   void SetUseFloat(bool flag) { this->UseFloat = flag; }
 
 private:

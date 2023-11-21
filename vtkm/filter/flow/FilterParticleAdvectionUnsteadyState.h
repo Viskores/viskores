@@ -24,6 +24,8 @@ namespace flow
 template <typename Derived>
 struct FlowTraits;
 
+/// @brief Superclass for filters that operate on flow that changes over time.
+///
 template <typename Derived>
 class VTKM_FILTER_FLOW_EXPORT FilterParticleAdvectionUnsteadyState : public FilterParticleAdvection
 {
@@ -33,12 +35,20 @@ public:
   using TerminationType = typename FlowTraits<Derived>::TerminationType;
   using AnalysisType = typename FlowTraits<Derived>::AnalysisType;
 
+  /// @brief Specifies time value for the input data set.
+  ///
+  /// This is the data set that passed into the `Execute()` method.
   VTKM_CONT void SetPreviousTime(vtkm::FloatDefault t1) { this->Time1 = t1; }
 
+  /// @brief Specifies time value for the next data set.
+  ///
+  /// This is the data set passed into `SetNextDataSet()` @e before `Execute()` is called.
   VTKM_CONT void SetNextTime(vtkm::FloatDefault t2) { this->Time2 = t2; }
 
+  /// @brief Specifies the data for the later time step.
   VTKM_CONT void SetNextDataSet(const vtkm::cont::DataSet& ds) { this->Input2 = { ds }; }
 
+  /// @brief Specifies the data for the later time step.
   VTKM_CONT void SetNextDataSet(const vtkm::cont::PartitionedDataSet& pds) { this->Input2 = pds; }
 
 private:

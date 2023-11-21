@@ -43,20 +43,20 @@ public:
   /// The glyph mapper will place glyphs over locations specified by either the points
   /// or the cells of a mesh. The glyph may also be oriented by a scalar field with the
   /// same association.
-  virtual vtkm::cont::Field::Association GetGlyphAssociation() const;
-  /// @copydoc GetGlyphAssociation
-  virtual void SetGlyphAssociation(vtkm::cont::Field::Association association);
-  /// @copydoc GetGlyphAssociation
+  virtual vtkm::cont::Field::Association GetAssociation() const;
+  /// @copydoc GetAssociation
+  virtual void SetAssociation(vtkm::cont::Field::Association association);
+  /// @copydoc GetAssociation
   virtual bool GetUseCells() const;
-  /// @copydoc GetGlyphAssociation
+  /// @copydoc GetAssociation
   virtual void SetUseCells();
-  /// @copydoc GetGlyphAssociation
+  /// @copydoc GetAssociation
   virtual bool GetUsePoints() const;
-  /// @copydoc GetGlyphAssociation
+  /// @copydoc GetAssociation
   virtual void SetUsePoints();
-  VTKM_DEPRECATED(2.2, "Use GetUsePoints() or GetGlyphAssociation().")
+  VTKM_DEPRECATED(2.2, "Use GetUsePoints() or GetAssociation().")
   virtual bool GetUseNodes() const;
-  VTKM_DEPRECATED(2.2, "Use SetUsePoints() or SetGlyphAssociation().")
+  VTKM_DEPRECATED(2.2, "Use SetUsePoints() or SetAssociation().")
   virtual void SetUseNodes();
 
   // These options do not seem to be supported yet.
@@ -102,7 +102,7 @@ protected:
   vtkm::rendering::CanvasRayTracer* Canvas = nullptr;
   bool CompositeBackground = true;
 
-  vtkm::cont::Field::Association GlyphAssociation = vtkm::cont::Field::Association::Points;
+  vtkm::cont::Field::Association Association = vtkm::cont::Field::Association::Points;
 
   bool UseStride = false;
   vtkm::Id Stride = 1;

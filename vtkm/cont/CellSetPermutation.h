@@ -309,6 +309,16 @@ struct CellSetPermutationConnectivityChooser<vtkm::TopologyElementTagPoint,
 
 } // internal
 
+/// @brief Rearranges the cells of one cell set to create another cell set.
+///
+/// This restructuring of cells is not done by copying data to a new structure.
+/// Rather, `CellSetPermutation` establishes a look-up from one cell structure to
+/// another. Cells are permuted on the fly while algorithms are run.
+///
+/// A `CellSetPermutation` is established by providing a mapping array that for every
+/// cell index provides the equivalent cell index in the cell set being permuted.
+/// `CellSetPermutation` is most often used to mask out cells in a data set so that
+/// algorithms will skip over those cells when running.
 template <typename OriginalCellSetType_,
           typename PermutationArrayHandleType_ =
             vtkm::cont::ArrayHandle<vtkm::Id, VTKM_DEFAULT_CELLSET_PERMUTATION_STORAGE_TAG>>
@@ -324,17 +334,21 @@ public:
   using OriginalCellSetType = OriginalCellSetType_;
   using PermutationArrayHandleType = PermutationArrayHandleType_;
 
-  VTKM_CONT
-  CellSetPermutation(const PermutationArrayHandleType& validCellIds,
-                     const OriginalCellSetType& cellset)
+  /// @brief Create a `CellSetPermutation`.
+  ///
+  /// @param[in] validCellIds An array that defines the permutation. If index @a i
+  ///   is value @a j, then the @a ith cell of this cell set will be the same as
+  ///   the @a jth cell in the original @a cellset.
+  /// @param[in] cellset The original cell set that this one is permuting.
+  VTKM_CONT CellSetPermutation(const PermutationArrayHandleType& validCellIds,
+                               const OriginalCellSetType& cellset)
     : CellSet()
     , ValidCellIds(validCellIds)
     , FullCellSet(cellset)
   {
   }
 
-  VTKM_CONT
-  CellSetPermutation()
+  VTKM_CONT CellSetPermutation()
     : CellSet()
     , ValidCellIds()
     , FullCellSet()
@@ -358,9 +372,11 @@ public:
     return *this;
   }
 
+  /// @brief Returns the original `CellSet` that this one is permuting.
   VTKM_CONT
   const OriginalCellSetType& GetFullCellSet() const { return this->FullCellSet; }
 
+  /// @brief Returns the array used to permute the cell indices.
   VTKM_CONT
   const PermutationArrayHandleType& GetValidCellIds() const { return this->ValidCellIds; }
 
@@ -426,7 +442,12 @@ public:
     vtkm::cont::ArrayCopy(other->GetValidCellIds(), this->ValidCellIds);
   }
 
-  //This is the way you can fill the memory from another system without copying
+  /// @brief Set the topology.
+  ///
+  /// @param[in] validCellIds An array that defines the permutation. If index @a i
+  ///   is value @a j, then the @a ith cell of this cell set will be the same as
+  ///   the @a jth cell in the original @a cellset.
+  /// @param[in] cellset The original cell set that this one is permuting.
   VTKM_CONT
   void Fill(const PermutationArrayHandleType& validCellIds, const OriginalCellSetType& cellset)
   {
