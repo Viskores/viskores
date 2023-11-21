@@ -418,7 +418,11 @@ public:
     normal[0] = (vtkm::Abs(vtkm::Abs(lp[0]) - 1.0f) <= eps) ? lp[0] : 0.0f;
     normal[1] = (vtkm::Abs(vtkm::Abs(lp[1]) - 1.0f) <= eps) ? lp[1] : 0.0f;
     normal[2] = (vtkm::Abs(vtkm::Abs(lp[2]) - 1.0f) <= eps) ? lp[2] : 0.0f;
-    vtkm::Normalize(normal);
+    Precision magSquared = vtkm::MagnitudeSquared(normal);
+    if (magSquared > eps)
+    {
+      normal = vtkm::RSqrt(magSquared) * normal;
+    }
 
     // Flip normal if it is pointing the wrong way
     if (vtkm::Dot(normal, rayDir) > 0.0f)
