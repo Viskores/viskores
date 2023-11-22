@@ -9,10 +9,12 @@
 ##============================================================================
 set(multi_block_headers
   AmrArrays.h
+  MergeDataSets.h
   )
 
 set(multi_block_sources
   AmrArrays.cxx
+  MergeDataSets.cxx
   )
 
 vtkm_library(

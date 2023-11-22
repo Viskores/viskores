@@ -22,20 +22,15 @@ class DataSet;
 class PartitionedDataSet;
 
 //@{
-/// \brief Functions to compute bounds for a single dataSset or partition dataset
-///
-/// These are utility functions that compute bounds for a single dataset or
-/// partitioned dataset. When VTK-m is operating in an distributed environment,
-/// these are bounds on the local process. To get global bounds across all
-/// ranks, use `vtkm::cont::BoundsGlobalCompute` instead.
-///
-/// Note that if the provided CoordinateSystem does not exists, empty bounds
-/// are returned. Likewise, for PartitionedDataSet, partitions without the
-/// chosen CoordinateSystem are skipped.
+/// \brief This function can merge multiple data sets into on data set.
+/// This function assume all input partitions have the same coordinates systems.
+/// If a field does not exist in a specific partition but exists in other partitions,
+/// the invalide value will be used to fill the coresponding region of that field in the merged data set.
 VTKM_CONT_EXPORT
 VTKM_CONT
 vtkm::cont::DataSet MergePartitionedDataSet(
-  const vtkm::cont::PartitionedDataSet& partitionedDataSet);
+  const vtkm::cont::PartitionedDataSet& partitionedDataSet,
+  vtkm::Float64 invalidValue = vtkm::Nan64());
 
 //@}
 }
