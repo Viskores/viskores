@@ -1004,6 +1004,19 @@ The :class:`vtkm::filter::multi_block::AmrArrays` filter determines the hierarch
   This is why they use the prefix of "vtk" instead of "vtkm".
   Likewise, the flags used for ``vtkGhostType`` are compatible with VTK.
 
+Merge Data Sets
+------------------------------
+
+.. index::
+   double: merge data sets; filter
+
+A :class:`vtkm::cont::PartitionedDataSet` can often be treated the same as a :class:`vtkm::cont::DataSet` as both can be passed to a filter's `Execute` method.
+However, it is sometimes important to have all the data contained in a single ``DataSet``.
+The :class:`vtkm::filter::multi_block::MergeDataSets` filter can do just that to the partitions of a `vtkm::cont::PartitionedDataSet`.
+
+.. doxygenclass:: vtkm::filter::multi_block::MergeDataSets
+   :members:
+
 
 Resampling
 ==============================
