@@ -356,7 +356,7 @@ void TestDifferentCoords()
   vtkm::filter::multi_block::MergeDataSets mergeDataSets;
   try
   {
-    auto result = mergeDataSets.Execute(inputDataSets);
+    mergeDataSets.Execute(inputDataSets);
   }
   catch (vtkm::cont::ErrorExecution& e)
   {
@@ -375,7 +375,7 @@ void TestDifferentCoords()
   inputDataSets2.AppendPartition(dataSet2);
   try
   {
-    auto result = mergeDataSets.Execute(inputDataSets2);
+    mergeDataSets.Execute(inputDataSets2);
   }
   catch (vtkm::cont::ErrorExecution& e)
   {
@@ -447,9 +447,6 @@ void TestMissingFieldsAndSameFieldName()
       { 10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
   vtkm::cont::ArrayHandle<vtkm::Float32> validatePointVar2 =
     vtkm::cont::make_ArrayHandle<vtkm::Float32>(
-      { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f });
-  vtkm::cont::ArrayHandle<vtkm::Float32> validatePointVar3 =
-    vtkm::cont::make_ArrayHandle<vtkm::Float32>(
       { 10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f, 10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f });
   vtkm::cont::ArrayHandle<vtkm::Id> validateCellVar =
     vtkm::cont::make_ArrayHandle<vtkm::Id>({ 0, 0, 100, 200 });
@@ -479,7 +476,7 @@ void TestMissingFieldsAndSameFieldName()
     test_equal_ArrayHandles(result.GetPartition(0)
                               .GetField("fieldSameName2", vtkm::cont::Field::Association::Points)
                               .GetData(),
-                            validatePointVar3),
+                            validatePointVar2),
     "wrong fieldSameName2 values");
   VTKM_TEST_ASSERT(
     test_equal_ArrayHandles(result.GetPartition(0)
