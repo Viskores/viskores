@@ -360,10 +360,7 @@ if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm_kokkos)
 
     # Make sure rocthrust is available if requested
     if(VTKm_ENABLE_KOKKOS_THRUST)
-      find_package(rocthrust)
-      if(NOT rocthrust_FOUND)
-        message(FATAL_ERROR "rocthrust not found. Please set VTKm_ENABLE_KOKKOS_THRUST to OFF.")
-      endif()
+      find_package(rocthrust REQUIRED CONFIG)
     endif()
   endif()
 
