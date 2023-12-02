@@ -20,15 +20,29 @@ namespace filter
 {
 namespace multi_block
 {
-/// \brief Merging multiple data sets into one data set.
+/// @brief Merging multiple data sets into one data set.
 ///
 /// This filter merges multiple data sets into one data set. We assume that the input data sets
 /// have the same coordinate system. If there are missing fields in a specific data set,
-//  the filter uses the InvalidValue specified by the user to fill in the associated position of the field array.
+/// the filter uses the InvalidValue specified by the user to fill in the associated position
+/// of the field array.
+///
+/// `MergeDataSets` is used by passing a `vtkm::cont::PartitionedDataSet` to its `Execute()`
+/// method. The `Execute()` will return a `vtkm::cont::PartitionedDataSet` because that is
+/// the common interface for all filters. However, the `vtkm::cont::PartitionedDataSet` will
+/// have one partition that is all the blocks merged together.
 class VTKM_FILTER_MULTI_BLOCK_EXPORT MergeDataSets : public vtkm::filter::Filter
 {
 public:
+  /// @brief Specify the value to use where field values are missing.
+  ///
+  /// One issue when merging blocks in a paritioned dataset is that the blocks/partitions
+  /// may have different fields. That is, one partition might not have all the fields of
+  /// another partition. When these partitions are merged together, the values for this
+  /// missing field must be set to something. They will be set to this value, which defaults
+  /// to NaN.
   void SetInvalidValue(vtkm::Float64 invalidValue) { this->InvalidValue = invalidValue; };
+  /// @copydoc SetInvalidValue
   vtkm::Float64 GetInvalidValue() { return this->InvalidValue; }
 
 private:
