@@ -260,7 +260,7 @@ public:
                              (ArrayHandle<T, vtkm::cont::StorageTagSOA>));
 
   ArrayHandleSOA(std::initializer_list<vtkm::cont::internal::Buffer>&& componentBuffers)
-    : Superclass(std::move(componentBuffers))
+    : Superclass(componentBuffers)
   {
   }
 

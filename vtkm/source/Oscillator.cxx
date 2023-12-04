@@ -75,7 +75,7 @@ public:
   VTKM_EXEC
   vtkm::FloatDefault operator()(const vtkm::Vec3f& vec) const
   {
-    vtkm::UInt8 oIdx;
+    vtkm::IdComponent oIdx;
     vtkm::FloatDefault t0, t, result = 0;
     const Oscillation* oscillator;
 

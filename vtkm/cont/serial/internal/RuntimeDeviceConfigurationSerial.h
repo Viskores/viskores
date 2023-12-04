@@ -24,7 +24,7 @@ template <>
 class RuntimeDeviceConfiguration<vtkm::cont::DeviceAdapterTagSerial>
   : public vtkm::cont::internal::RuntimeDeviceConfigurationBase
 {
-  VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const override final
+  VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const final
   {
     return vtkm::cont::DeviceAdapterTagSerial{};
   }

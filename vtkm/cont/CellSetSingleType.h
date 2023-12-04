@@ -97,7 +97,7 @@ public:
     return *this;
   }
 
-  virtual ~CellSetSingleType() override {}
+  ~CellSetSingleType() override {}
 
   /// @brief Start adding cells one at a time.
   ///
@@ -252,7 +252,7 @@ public:
     this->NumberOfPointsPerCell = other->NumberOfPointsPerCell;
   }
 
-  virtual void PrintSummary(std::ostream& out) const override
+  void PrintSummary(std::ostream& out) const override
   {
     out << "   CellSetSingleType: Type=" << this->CellShapeAsId << std::endl;
     out << "   CellPointIds:" << std::endl;

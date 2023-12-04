@@ -10,6 +10,8 @@
 #ifndef vtk_m_worklet_colorconversion_Conversions_h
 #define vtk_m_worklet_colorconversion_Conversions_h
 
+#include <cmath>
+
 namespace vtkm
 {
 namespace worklet
@@ -26,13 +28,13 @@ VTKM_EXEC inline vtkm::UInt8 ColorToUChar(T t)
 template <>
 VTKM_EXEC inline vtkm::UInt8 ColorToUChar(vtkm::Float64 t)
 {
-  return static_cast<vtkm::UInt8>(t * 255.0f + 0.5f);
+  return static_cast<vtkm::UInt8>(std::round(t * 255.0f));
 }
 
 template <>
 VTKM_EXEC inline vtkm::UInt8 ColorToUChar(vtkm::Float32 t)
 {
-  return static_cast<vtkm::UInt8>(t * 255.0f + 0.5f);
+  return static_cast<vtkm::UInt8>(std::round(t * 255.0f));
 }
 
 

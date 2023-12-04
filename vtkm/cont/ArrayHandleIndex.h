@@ -124,7 +124,7 @@ namespace cont
 template <>
 struct SerializableTypeString<vtkm::cont::ArrayHandleIndex>
 {
-  static VTKM_CONT const std::string Get() { return "AH_Index"; }
+  static VTKM_CONT std::string Get() { return "AH_Index"; }
 };
 
 template <>

@@ -70,7 +70,7 @@ public:
   VTKM_CONT CellSetExtrude& operator=(const CellSetExtrude& src);
   VTKM_CONT CellSetExtrude& operator=(CellSetExtrude&& src) noexcept;
 
-  virtual ~CellSetExtrude() override;
+  ~CellSetExtrude() override;
 
   vtkm::Int32 GetNumberOfPlanes() const;
 
