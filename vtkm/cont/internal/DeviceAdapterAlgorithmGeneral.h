@@ -529,7 +529,10 @@ public:
 
   //--------------------------------------------------------------------------
   // Reduce
+#ifndef VTKM_CUDA
+  // nvcc doesn't like the private class declaration so disable under CUDA
 private:
+#endif
   template <typename T, typename BinaryFunctor>
   class ReduceDecoratorImpl
   {
