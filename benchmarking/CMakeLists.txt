@@ -47,6 +47,7 @@ set(benchmarks
   BenchmarkDeviceAdapter
   BenchmarkFieldAlgorithms
   BenchmarkFilters
+  BenchmarkLocators
   BenchmarkODEIntegrators
   BenchmarkTopologyAlgorithms
   )
