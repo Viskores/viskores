@@ -139,7 +139,7 @@ vtkm::cont::ArrayHandle<vtkm::Vec3f> CreateRandomPoints(vtkm::Id numPoints,
   for (auto& pt : pts)
     pt = rpg.GetPt();
 
-  return vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::Off);
+  return vtkm::cont::make_ArrayHandle(pts, vtkm::CopyFlag::On);
 }
 
 template <typename LocatorType>
@@ -255,8 +255,9 @@ void BenchLocator2DGeneratorUB(::benchmark::internal::Benchmark* bm)
         }
 }
 
+
 VTKM_BENCHMARK_APPLY(BenchLocator2D2L, BenchLocator2DGenerator2L);
-//VTKM_BENCHMARK_APPLY(BenchLocator2DUB, BenchLocator2DGeneratorUB);
+VTKM_BENCHMARK_APPLY(BenchLocator2DUB, BenchLocator2DGeneratorUB);
 
 } // end anon namespace
 
