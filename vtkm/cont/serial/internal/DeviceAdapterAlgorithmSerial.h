@@ -446,7 +446,6 @@ private:
     }
   }
 
-private:
   /// Reorder the value array along with the sorting algorithm
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
   VTKM_CONT static void SortByKeyDirect(vtkm::cont::ArrayHandle<T, StorageT>& keys,

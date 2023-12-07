@@ -42,11 +42,27 @@ public:
   using Scalar = vtkm::FloatDefault;
   using Vector = vtkm::Vec<Scalar, 3>;
 
+  /// @brief Evaluate the value of the implicit function.
+  ///
+  /// The `Value()` method for an implicit function takes a `vtkm::Vec3f` and
+  /// returns a `vtkm::FloatDefault` representing the orientation of the point
+  /// with respect to the implicit function's shape. Negative scalar values
+  /// represent vector points inside of the implicit function's shape. Positive
+  /// scalar values represent vector points outside the implicit function's shape.
+  /// Zero values represent vector points that lie on the surface of the implicit
+  /// function.
   VTKM_EXEC_CONT Scalar Value(Scalar x, Scalar y, Scalar z) const
   {
     return reinterpret_cast<const Derived*>(this)->Value(Vector(x, y, z));
   }
 
+  /// @brief Evaluate the gradient of the implicit function.
+  ///
+  /// The ``Gradient()`` method for an implicit function takes a `vtkm::Vec3f`
+  /// and returns a `vtkm::Vec3f` representing the pointing direction from the
+  /// implicit function's shape. Gradient calculations are more object shape
+  /// specific. It is advised to look at the individual shape implementations
+  /// for specific implicit functions.
   VTKM_EXEC_CONT Vector Gradient(Scalar x, Scalar y, Scalar z) const
   {
     return reinterpret_cast<const Derived*>(this)->Gradient(Vector(x, y, z));
@@ -130,9 +146,9 @@ private:
 };
 
 //============================================================================
-/// \brief Implicit function for a box
+/// @brief Implicit function for a box
 ///
-/// \c Box computes the implicit function and/or gradient for a axis-aligned
+/// `Box` computes the implicit function and/or gradient for a axis-aligned
 /// bounding box. Each side of the box is orthogonal to all other sides
 /// meeting along shared edges and all faces are orthogonal to the x-y-z
 /// coordinate axes.
@@ -140,41 +156,50 @@ private:
 class VTKM_ALWAYS_EXPORT Box : public internal::ImplicitFunctionBase<Box>
 {
 public:
-  /// \brief Construct box with center at (0,0,0) and each side of length 1.0.
+  /// @brief Construct box with center at (0,0,0) and each side of length 1.0.
   VTKM_EXEC_CONT Box()
     : MinPoint(Vector(Scalar(-0.5)))
     , MaxPoint(Vector(Scalar(0.5)))
   {
   }
 
+  /// @brief Construct a box with the specified minimum and maximum point.
   VTKM_EXEC_CONT Box(const Vector& minPoint, const Vector& maxPoint)
     : MinPoint(minPoint)
     , MaxPoint(maxPoint)
   {
   }
 
+  /// @brief Construct a box with the specified minimum and maximum point.
   VTKM_EXEC_CONT Box(Scalar xmin, Scalar xmax, Scalar ymin, Scalar ymax, Scalar zmin, Scalar zmax)
     : MinPoint(xmin, ymin, zmin)
     , MaxPoint(xmax, ymax, zmax)
   {
   }
 
+  /// @brief Construct a box that encompasses the given bounds.
   VTKM_CONT Box(const vtkm::Bounds& bounds) { this->SetBounds(bounds); }
 
+  /// @brief Specify the minimum coordinate of the box.
   VTKM_CONT void SetMinPoint(const Vector& point) { this->MinPoint = point; }
 
+  /// @brief Specify the maximum coordinate of the box.
   VTKM_CONT void SetMaxPoint(const Vector& point) { this->MaxPoint = point; }
 
+  /// @copydoc SetMinPoint
   VTKM_EXEC_CONT const Vector& GetMinPoint() const { return this->MinPoint; }
 
+  /// @copydoc SetMaxPoint
   VTKM_EXEC_CONT const Vector& GetMaxPoint() const { return this->MaxPoint; }
 
+  /// @brief Specify the size and location of the box by the bounds it encompasses.
   VTKM_CONT void SetBounds(const vtkm::Bounds& bounds)
   {
     this->SetMinPoint({ Scalar(bounds.X.Min), Scalar(bounds.Y.Min), Scalar(bounds.Z.Min) });
     this->SetMaxPoint({ Scalar(bounds.X.Max), Scalar(bounds.Y.Max), Scalar(bounds.Z.Max) });
   }
 
+  /// @copydoc SetBounds
   VTKM_EXEC_CONT vtkm::Bounds GetBounds() const
   {
     return vtkm::Bounds(vtkm::Range(this->MinPoint[0], this->MaxPoint[0]),
@@ -182,6 +207,7 @@ public:
                         vtkm::Range(this->MinPoint[2], this->MaxPoint[2]));
   }
 
+  /// @copydoc internal::ImplicitFunctionBase::Value
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Scalar minDistance = vtkm::NegativeInfinity32();
@@ -250,6 +276,7 @@ public:
     }
   }
 
+  /// @copydoc internal::ImplicitFunctionBase::Gradient
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     vtkm::IdComponent minAxis = 0;
@@ -400,6 +427,8 @@ public:
   {
   }
 
+  /// Construct a cylinder with the given axis and radius.
+  /// The cylinder is centered at the origin.
   VTKM_EXEC_CONT Cylinder(const Vector& axis, Scalar radius)
     : Center(Scalar(0))
     , Axis(axis)
@@ -407,6 +436,7 @@ public:
   {
   }
 
+  /// Construct a cylinder at the given center, axis, and radius.
   VTKM_EXEC_CONT Cylinder(const Vector& center, const Vector& axis, Scalar radius)
     : Center(center)
     , Axis(vtkm::Normal(axis))
@@ -414,12 +444,18 @@ public:
   {
   }
 
+  /// @brief Specify the center of the cylinder.
+  ///
+  /// The axis of the cylinder goes through the center.
   VTKM_CONT void SetCenter(const Vector& center) { this->Center = center; }
 
+  /// @brief Specify the direction of the axis of the cylinder.
   VTKM_CONT void SetAxis(const Vector& axis) { this->Axis = vtkm::Normal(axis); }
 
+  /// @brief Specify the radius of the cylinder.
   VTKM_CONT void SetRadius(Scalar radius) { this->Radius = radius; }
 
+  /// @copydoc internal::ImplicitFunctionBase::Value
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Vector x2c = point - this->Center;
@@ -427,6 +463,7 @@ public:
     return vtkm::Dot(x2c, x2c) - (proj * proj) - (this->Radius * this->Radius);
   }
 
+  /// @copydoc internal::ImplicitFunctionBase::Gradient
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     Vector x2c = point - this->Center;
@@ -442,20 +479,25 @@ private:
 };
 
 //============================================================================
-/// \brief Implicit function for a frustum
+/// @brief Implicit function for a frustum
 class VTKM_ALWAYS_EXPORT Frustum : public vtkm::internal::ImplicitFunctionBase<Frustum>
 {
 public:
-  /// \brief Construct axis-aligned frustum with center at (0,0,0) and each side of length 1.0.
+  /// @brief Construct axis-aligned frustum with center at (0,0,0) and each side of length 1.0.
   Frustum() = default;
 
+  /// @brief Construct a frustum defined with 6 planes of the given points and normals.
   VTKM_EXEC_CONT Frustum(const Vector points[6], const Vector normals[6])
   {
     this->SetPlanes(points, normals);
   }
 
+  /// @brief Construct a frustum defined by the 8 points of the bounding hexahedron.
+  ///
+  /// The points should be specified in the order of hex-cell vertices
   VTKM_EXEC_CONT explicit Frustum(const Vector points[8]) { this->CreateFromPoints(points); }
 
+  /// @brief Specifies the 6 planes of the frustum.
   VTKM_EXEC void SetPlanes(const Vector points[6], const Vector normals[6])
   {
     for (vtkm::Id index : { 0, 1, 2, 3, 4, 5 })
@@ -468,6 +510,7 @@ public:
     }
   }
 
+  /// @brief Set one of the 6 planes of the frustum.
   VTKM_EXEC void SetPlane(int idx, const Vector& point, const Vector& normal)
   {
     VTKM_ASSERT((idx >= 0) && (idx < 6));
@@ -475,6 +518,7 @@ public:
     this->Normals[idx] = normal;
   }
 
+  /// @copydoc SetPlanes
   VTKM_EXEC_CONT void GetPlanes(Vector points[6], Vector normals[6]) const
   {
     for (vtkm::Id index : { 0, 1, 2, 3, 4, 5 })
@@ -491,7 +535,9 @@ public:
 
   VTKM_EXEC_CONT const Vector* GetNormals() const { return this->Normals; }
 
-  // The points should be specified in the order of hex-cell vertices
+  /// @brief Specifies the frustum as the 8 points of the bounding hexahedron.
+  ///
+  /// The points should be specified in the order of hex-cell vertices
   VTKM_EXEC_CONT void CreateFromPoints(const Vector points[8])
   {
     // XXX(clang-format-3.9): 3.8 is silly. 3.9 makes it look like this.
@@ -512,6 +558,7 @@ public:
     }
   }
 
+  /// @copydoc internal::ImplicitFunctionBase::Value
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
@@ -525,6 +572,7 @@ public:
     return maxVal;
   }
 
+  /// @copydoc internal::ImplicitFunctionBase::Gradient
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
@@ -581,18 +629,31 @@ public:
   {
   }
 
+  /// @brief Specify the origin of the plane.
+  ///
+  /// The origin can be any point on the plane.
   VTKM_CONT void SetOrigin(const Vector& origin) { this->Origin = origin; }
 
+  /// @brief Specify the normal vector to the plane.
+  ///
+  /// The magnitude of the plane does not matter (so long as it is more than zero) in terms
+  /// of the location of the plane where the implicit function equals 0. However, if offsets
+  /// away from the plane matter then the magnitude determines the scale of the value away
+  /// from the plane.
   VTKM_CONT void SetNormal(const Vector& normal) { this->Normal = normal; }
 
+  /// @copydoc SetOrigin
   VTKM_EXEC_CONT const Vector& GetOrigin() const { return this->Origin; }
+  /// @copydoc SetNormal
   VTKM_EXEC_CONT const Vector& GetNormal() const { return this->Normal; }
 
+  /// @copydoc internal::ImplicitFunctionBase::Value
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     return vtkm::Dot(point - this->Origin, this->Normal);
   }
 
+  /// @copydoc internal::ImplicitFunctionBase::Gradient
   VTKM_EXEC_CONT Vector Gradient(const Vector&) const { return this->Normal; }
 
 private:
@@ -625,25 +686,32 @@ public:
   {
   }
 
+  /// Construct a sphere with the given center and radius.
   VTKM_EXEC_CONT Sphere(Vector center, Scalar radius)
     : Radius(radius)
     , Center(center)
   {
   }
 
+  /// Specify the radius of the sphere.
   VTKM_CONT void SetRadius(Scalar radius) { this->Radius = radius; }
 
+  /// Specify the center of the sphere.
   VTKM_CONT void SetCenter(const Vector& center) { this->Center = center; }
 
+  /// @copydoc SetRadius
   VTKM_EXEC_CONT Scalar GetRadius() const { return this->Radius; }
 
+  /// @copydoc SetCenter
   VTKM_EXEC_CONT const Vector& GetCenter() const { return this->Center; }
 
+  /// @copydoc internal::ImplicitFunctionBase::Value
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     return vtkm::MagnitudeSquared(point - this->Center) - (this->Radius * this->Radius);
   }
 
+  /// @copydoc internal::ImplicitFunctionBase::Gradient
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     return Scalar(2) * (point - this->Center);
@@ -689,6 +757,8 @@ public:
     return this->Planes[idx];
   }
   VTKM_CONT vtkm::VecVariable<vtkm::Plane, MaxNumPlanes> GetPlanes() const { return this->Planes; }
+
+  /// @copydoc internal::ImplicitFunctionBase::Value
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
@@ -702,6 +772,8 @@ public:
     }
     return maxVal;
   }
+
+  /// @copydoc internal::ImplicitFunctionBase::Gradient
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
@@ -792,11 +864,13 @@ public:
   {
   }
 
+  /// @copydoc internal::ImplicitFunctionBase::Value
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     return this->Variant.CastAndCall(detail::ImplicitFunctionValueFunctor{}, point);
   }
 
+  /// @copydoc internal::ImplicitFunctionBase::Gradient
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     return this->Variant.CastAndCall(detail::ImplicitFunctionGradientFunctor{}, point);
@@ -804,7 +878,7 @@ public:
 };
 
 //============================================================================
-/// \brief Implicit function that can switch among known implicit function types.
+/// @brief Implicit function that can switch among known implicit function types.
 ///
 /// `ImplicitFunctionGeneral` can behave as any of the predefined implicit functions
 /// provided by VTK-m. This is helpful when the type of implicit function is not
@@ -816,6 +890,9 @@ public:
 /// To use `ImplicitFunctionGeneral`, simply create the actual implicit
 /// function that you want to use, and then set the `ImplicitFunctionGeneral`
 /// to that concrete implicit function object.
+///
+/// `ImplicitFunctionGeneral` currently supports `vtkm::Box`, `vtkm::Cylinder`,
+/// `vtkm::Frustum`, `vtkm::Plane`, and `vtkm::Sphere`.
 ///
 class ImplicitFunctionGeneral
   : public vtkm::ImplicitFunctionMultiplexer<vtkm::Box,

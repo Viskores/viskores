@@ -23,18 +23,33 @@ namespace vtkm
 namespace rendering
 {
 
+/// @brief An item to be rendered.
+///
+/// The `Actor` holds the geometry from a `vtkm::cont::DataSet` as well as other visual
+/// properties that define how the geometry should look when it is rendered.
 class VTKM_RENDERING_EXPORT Actor
 {
 public:
+  /// Create an `Actor` object that renders a set of cells positioned by a given coordiante
+  /// system. A field to apply psudocoloring is also provided. The default colormap is applied.
+  /// The cells, coordinates, and field are typically pulled from a `vtkm::cont::DataSet` object.
   Actor(const vtkm::cont::UnknownCellSet& cells,
         const vtkm::cont::CoordinateSystem& coordinates,
         const vtkm::cont::Field& scalarField);
 
+  /// Create an `Actor` object that renders a set of cells positioned by a given coordiante
+  /// system. A field to apply psudocoloring is also provided. A color table providing the map
+  /// from scalar values to colors is also provided.
+  /// The cells, coordinates, and field are typically pulled from a `vtkm::cont::DataSet` object.
   Actor(const vtkm::cont::UnknownCellSet& cells,
         const vtkm::cont::CoordinateSystem& coordinates,
         const vtkm::cont::Field& scalarField,
         const vtkm::cont::ColorTable& colorTable);
 
+  /// Create an `Actor` object that renders a set of cells positioned by a given coordiante
+  /// system. A constant color to apply to the object is also provided.
+  /// The cells and coordinates are typically pulled from a `vtkm::cont::DataSet` object.
+  // Why do you have to provide a `Field` if a constant color is provided?
   Actor(const vtkm::cont::UnknownCellSet& cells,
         const vtkm::cont::CoordinateSystem& coordinates,
         const vtkm::cont::Field& scalarField,
@@ -63,6 +78,11 @@ public:
 
   const vtkm::Bounds& GetSpatialBounds() const;
 
+  /// @brief Specifies the range for psudocoloring.
+  ///
+  /// When coloring data by mapping a scalar field to colors, this is the range used for
+  /// the colors provided by the table. If a range is not provided, the range of data in the
+  /// field is used.
   void SetScalarRange(const vtkm::Range& scalarRange);
 
 private:

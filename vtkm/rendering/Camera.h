@@ -25,6 +25,15 @@ namespace vtkm
 namespace rendering
 {
 
+/// @brief Specifies the viewport for a rendering.
+///
+/// The `vtkm::rendering::View` object holds a `Camera` object to specify from
+/// what perspective the rendering should take place.
+///
+/// A `Camera` operates in one of two major modes: 2D mode
+/// or 3D mode. 2D mode is designed for looking at flat geometry (or close to flat
+/// geometry) that is parallel to the x-y plane. 3D mode provides the freedom to
+/// place the camera anywhere in 3D space.
 class VTKM_RENDERING_EXPORT Camera
 {
   struct Camera3DStruct
@@ -122,22 +131,25 @@ public:
                        vtkm::Float32& bottom,
                        vtkm::Float32& top) const;
 
-  /// \brief The mode of the camera (2D or 3D).
+  /// @brief The mode of the camera (2D or 3D).
   ///
-  /// \c vtkm::Camera can be set to a 2D or 3D mode. 2D mode is used for
+  /// `vtkm::rendering::Camera` can be set to a 2D or 3D mode. 2D mode is used for
   /// looking at data in the x-y plane. 3D mode allows the camera to be
   /// positioned anywhere and pointing at any place in 3D.
   ///
   VTKM_CONT
   vtkm::rendering::Camera::Mode GetMode() const { return this->ModeType; }
+  /// @copydoc GetMode
   VTKM_CONT
   void SetMode(vtkm::rendering::Camera::Mode mode) { this->ModeType = mode; }
+  /// @copydoc GetMode
   VTKM_CONT
   void SetModeTo3D() { this->SetMode(vtkm::rendering::Camera::Mode::ThreeD); }
+  /// @copydoc GetMode
   VTKM_CONT
   void SetModeTo2D() { this->SetMode(vtkm::rendering::Camera::Mode::TwoD); }
 
-  /// \brief The clipping range of the camera.
+  /// @brief The clipping range of the camera.
   ///
   /// The clipping range establishes the near and far clipping planes. These
   /// clipping planes are parallel to the viewing plane. The planes are defined
@@ -152,25 +164,28 @@ public:
   ///
   VTKM_CONT
   vtkm::Range GetClippingRange() const { return vtkm::Range(this->NearPlane, this->FarPlane); }
+  /// @copydoc GetClippingRange
   VTKM_CONT
   void SetClippingRange(vtkm::Float32 nearPlane, vtkm::Float32 farPlane)
   {
     this->NearPlane = nearPlane;
     this->FarPlane = farPlane;
   }
+  /// @copydoc GetClippingRange
   VTKM_CONT
   void SetClippingRange(vtkm::Float64 nearPlane, vtkm::Float64 farPlane)
   {
     this->SetClippingRange(static_cast<vtkm::Float32>(nearPlane),
                            static_cast<vtkm::Float32>(farPlane));
   }
+  /// @copydoc GetClippingRange
   VTKM_CONT
   void SetClippingRange(const vtkm::Range& nearFarRange)
   {
     this->SetClippingRange(nearFarRange.Min, nearFarRange.Max);
   }
 
-  /// \brief The viewport of the projection
+  /// @brief The viewport of the projection
   ///
   /// The projection of the camera can be offset to be centered around a subset
   /// of the rendered image. This is established with a "viewport," which is
@@ -189,6 +204,7 @@ public:
     bottom = this->ViewportBottom;
     top = this->ViewportTop;
   }
+  /// @copydoc GetViewport
   VTKM_CONT
   void GetViewport(vtkm::Float64& left,
                    vtkm::Float64& right,
@@ -200,12 +216,14 @@ public:
     bottom = this->ViewportBottom;
     top = this->ViewportTop;
   }
+  /// @copydoc GetViewport
   VTKM_CONT
   vtkm::Bounds GetViewport() const
   {
     return vtkm::Bounds(
       this->ViewportLeft, this->ViewportRight, this->ViewportBottom, this->ViewportTop, 0.0, 0.0);
   }
+  /// @copydoc GetViewport
   VTKM_CONT
   void SetViewport(vtkm::Float32 left, vtkm::Float32 right, vtkm::Float32 bottom, vtkm::Float32 top)
   {
@@ -214,6 +232,7 @@ public:
     this->ViewportBottom = bottom;
     this->ViewportTop = top;
   }
+  /// @copydoc GetViewport
   VTKM_CONT
   void SetViewport(vtkm::Float64 left, vtkm::Float64 right, vtkm::Float64 bottom, vtkm::Float64 top)
   {
@@ -222,6 +241,7 @@ public:
                       static_cast<vtkm::Float32>(bottom),
                       static_cast<vtkm::Float32>(top));
   }
+  /// @copydoc GetViewport
   VTKM_CONT
   void SetViewport(const vtkm::Bounds& viewportBounds)
   {
@@ -229,60 +249,66 @@ public:
       viewportBounds.X.Min, viewportBounds.X.Max, viewportBounds.Y.Min, viewportBounds.Y.Max);
   }
 
-  /// \brief The focal point the camera is looking at in 3D mode
+  /// @brief The focal point the camera is looking at in 3D mode
   ///
   /// When in 3D mode, the camera is set up to be facing the \c LookAt
   /// position. If \c LookAt is set, the mode is changed to 3D mode.
   ///
   VTKM_CONT
   const vtkm::Vec3f_32& GetLookAt() const { return this->Camera3D.LookAt; }
+  /// @copydoc GetLookAt
   VTKM_CONT
   void SetLookAt(const vtkm::Vec3f_32& lookAt)
   {
     this->SetModeTo3D();
     this->Camera3D.LookAt = lookAt;
   }
+  /// @copydoc GetLookAt
   VTKM_CONT
   void SetLookAt(const vtkm::Vec<Float64, 3>& lookAt)
   {
     this->SetLookAt(vtkm::Vec<Float32, 3>(lookAt));
   }
 
-  /// \brief The spatial position of the camera in 3D mode
+  /// @brief The spatial position of the camera in 3D mode
   ///
   /// When in 3D mode, the camera is modeled to be at a particular location. If
-  /// \c Position is set, the mode is changed to 3D mode.
+  /// `Position` is set, the mode is changed to 3D mode.
   ///
   VTKM_CONT
   const vtkm::Vec3f_32& GetPosition() const { return this->Camera3D.Position; }
+  /// @copydoc GetPosition
   VTKM_CONT
   void SetPosition(const vtkm::Vec3f_32& position)
   {
     this->SetModeTo3D();
     this->Camera3D.Position = position;
   }
+  /// @copydoc GetPosition
   VTKM_CONT
   void SetPosition(const vtkm::Vec3f_64& position) { this->SetPosition(vtkm::Vec3f_32(position)); }
 
-  /// \brief The up orientation of the camera in 3D mode
+  /// @brief The up orientation of the camera in 3D mode
   ///
   /// When in 3D mode, the camera is modeled to be at a particular location and
   /// looking at a particular spot. The view up vector orients the rotation of
   /// the image so that the top of the image is in the direction pointed to by
-  /// view up. If \c ViewUp is set, the mode is changed to 3D mode.
+  /// view up. If `ViewUp` is set, the mode is changed to 3D mode.
   ///
   VTKM_CONT
   const vtkm::Vec3f_32& GetViewUp() const { return this->Camera3D.ViewUp; }
+  /// @copydoc GetViewUp
   VTKM_CONT
   void SetViewUp(const vtkm::Vec3f_32& viewUp)
   {
     this->SetModeTo3D();
     this->Camera3D.ViewUp = viewUp;
   }
+  /// @copydoc GetViewUp
   VTKM_CONT
   void SetViewUp(const vtkm::Vec3f_64& viewUp) { this->SetViewUp(vtkm::Vec3f_32(viewUp)); }
 
-  /// \brief The xscale of the camera
+  /// @brief The xscale of the camera
   ///
   /// The xscale forces the 2D curves to be full-frame
   ///
@@ -290,16 +316,18 @@ public:
   ///
   VTKM_CONT
   vtkm::Float32 GetXScale() const { return this->Camera2D.XScale; }
+  /// @copydoc GetXScale
   VTKM_CONT
   void SetXScale(vtkm::Float32 xscale)
   {
     this->SetModeTo2D();
     this->Camera2D.XScale = xscale;
   }
+  /// @copydoc GetXScale
   VTKM_CONT
   void SetXScale(vtkm::Float64 xscale) { this->SetXScale(static_cast<vtkm::Float32>(xscale)); }
 
-  /// \brief The field of view angle
+  /// @brief The field of view angle
   ///
   /// The field of view defines the angle (in degrees) that are visible from
   /// the camera position.
@@ -308,71 +336,78 @@ public:
   ///
   VTKM_CONT
   vtkm::Float32 GetFieldOfView() const { return this->Camera3D.FieldOfView; }
+  /// @copydoc GetFieldOfView
   VTKM_CONT
   void SetFieldOfView(vtkm::Float32 fov)
   {
     this->SetModeTo3D();
     this->Camera3D.FieldOfView = fov;
   }
+  /// @copydoc GetFieldOfView
   VTKM_CONT
   void SetFieldOfView(vtkm::Float64 fov) { this->SetFieldOfView(static_cast<vtkm::Float32>(fov)); }
 
-  /// \brief Pans the camera
+  /// @brief Pans the camera
   ///
+  /// Panning the camera shifts the view horizontially and/or vertically with
+  /// respect to the image plane.
+  ///
+  /// Panning works in either 2D or 3D mode.
   void Pan(vtkm::Float32 dx, vtkm::Float32 dy);
-
-  /// \brief Pans the camera
-  ///
+  /// @copydoc Pan
   VTKM_CONT
   void Pan(vtkm::Float64 dx, vtkm::Float64 dy)
   {
     this->Pan(static_cast<vtkm::Float32>(dx), static_cast<vtkm::Float32>(dy));
   }
+  /// @copydoc Pan
   VTKM_CONT
   void Pan(vtkm::Vec2f_32 direction) { this->Pan(direction[0], direction[1]); }
-
+  /// @copydoc Pan
   VTKM_CONT
   void Pan(vtkm::Vec2f_64 direction) { this->Pan(direction[0], direction[1]); }
-
+  /// @copydoc Pan
   VTKM_CONT
   vtkm::Vec2f_32 GetPan() const
   {
     vtkm::Vec2f_32 pan;
+    // Note that the 2D and 3D pan are always set the same.
     pan[0] = this->Camera3D.XPan;
     pan[1] = this->Camera3D.YPan;
     return pan;
   }
 
 
-  /// \brief Zooms the camera in or out
+  /// @brief Zooms the camera in or out
   ///
   /// Zooming the camera scales everything in the image up or down. Positive
   /// zoom makes the geometry look bigger or closer. Negative zoom has the
   /// opposite effect. A zoom of 0 has no effect.
   ///
+  /// Zooming works in either 2D or 3D mode.
   void Zoom(vtkm::Float32 zoom);
-
+  /// @copydoc Zoom
   VTKM_CONT
   void Zoom(vtkm::Float64 zoom) { this->Zoom(static_cast<vtkm::Float32>(zoom)); }
-
+  /// @copydoc Zoom
   VTKM_CONT
   vtkm::Float32 GetZoom() const { return this->Camera3D.Zoom; }
 
-  /// \brief Moves the camera as if a point was dragged along a sphere.
+  /// @brief Moves the camera as if a point was dragged along a sphere.
   ///
-  /// \c TrackballRotate takes the normalized screen coordinates (in the range
-  /// -1 to 1) and rotates the camera around the \c LookAt position. The rotation
-  /// first projects the points to a sphere around the \c LookAt position. The
+  /// `TrackballRotate()` takes the normalized screen coordinates (in the range
+  /// -1 to 1) and rotates the camera around the `LookAt` position. The rotation
+  /// first projects the points to a sphere around the `LookAt` position. The
   /// camera is then rotated as if the start point was dragged to the end point
   /// along with the world.
   ///
-  /// \c TrackballRotate changes the mode to 3D.
+  /// `TrackballRotate()` changes the mode to 3D.
   ///
   void TrackballRotate(vtkm::Float32 startX,
                        vtkm::Float32 startY,
                        vtkm::Float32 endX,
                        vtkm::Float32 endY);
-
+  /// @copydoc TrackballRotate
   VTKM_CONT
   void TrackballRotate(vtkm::Float64 startX,
                        vtkm::Float64 startY,
@@ -385,30 +420,25 @@ public:
                           static_cast<vtkm::Float32>(endY));
   }
 
-  /// \brief Set up the camera to look at geometry
+  /// @brief Set up the camera to look at geometry
   ///
-  /// \c ResetToBounds takes a \c Bounds structure containing the bounds in
+  /// `ResetToBounds()` takes a `vtkm::Bounds` structure containing the bounds in
   /// 3D space that contain the geometry being rendered. This method sets up
   /// the camera so that it is looking at this region in space. The view
-  /// direction is preserved.
+  /// direction is preserved. `ResetToBounds()` can also take optional padding
+  /// that the viewpoint should preserve around the object. Padding is specified
+  /// as the fraction of the bounds to add as padding.
   ///
   void ResetToBounds(const vtkm::Bounds& dataBounds);
-
-  /// \brief Set up the camera to look at geometry with padding
-  ///
-  /// \c ResetToBounds takes a \c Bounds structure containing the bounds in
-  /// 3D space that contain the geometry being rendered and a \c Float64 value
-  /// representing the percent that a view should be padded in x, y, and z.
-  /// This method sets up the camera so that it is looking at this region in
-  // space with the given padding percent. The view direction is preserved.
-  ///
+  /// @copydoc ResetToBounds
   void ResetToBounds(const vtkm::Bounds& dataBounds, vtkm::Float64 dataViewPadding);
+  /// @copydoc ResetToBounds
   void ResetToBounds(const vtkm::Bounds& dataBounds,
                      vtkm::Float64 XDataViewPadding,
                      vtkm::Float64 YDataViewPadding,
                      vtkm::Float64 ZDataViewPadding);
 
-  /// \brief Roll the camera
+  /// @brief Roll the camera
   ///
   /// Rotates the camera around the view direction by the given angle. The
   /// angle is given in degrees.
@@ -416,68 +446,74 @@ public:
   /// Roll is currently only supported for 3D cameras.
   ///
   void Roll(vtkm::Float32 angleDegrees);
-
+  /// @copydoc Roll
   VTKM_CONT
   void Roll(vtkm::Float64 angleDegrees) { this->Roll(static_cast<vtkm::Float32>(angleDegrees)); }
 
-  /// \brief Rotate the camera about the view up vector centered at the focal point.
+  /// @brief Rotate the camera about the view up vector centered at the focal point.
   ///
-  /// Note that the view up vector is whatever was set via SetViewUp, and is
+  /// Note that the view up vector is whatever was set via `SetViewUp()`, and is
   /// not necessarily perpendicular to the direction of projection. The angle is
   /// given in degrees.
   ///
-  /// Azimuth only makes sense for 3D cameras, so the camera mode will be set
+  /// `Azimuth()` only makes sense for 3D cameras, so the camera mode will be set
   /// to 3D when this method is called.
   ///
   void Azimuth(vtkm::Float32 angleDegrees);
-
+  /// @copydoc Azimuth
   VTKM_CONT
   void Azimuth(vtkm::Float64 angleDegrees)
   {
     this->Azimuth(static_cast<vtkm::Float32>(angleDegrees));
   }
 
-  /// \brief Rotate the camera vertically around the focal point.
+  /// @brief Rotate the camera vertically around the focal point.
   ///
   /// Specifically, this rotates the camera about the cross product of the
   /// negative of the direction of projection and the view up vector, using the
-  /// focal point (LookAt) as the center of rotation. The angle is given
+  /// focal point (`LookAt`) as the center of rotation. The angle is given
   /// in degrees.
   ///
-  /// Elevation only makes sense for 3D cameras, so the camera mode will be set
+  /// `Elevation()` only makes sense for 3D cameras, so the camera mode will be set
   /// to 3D when this method is called.
   ///
   void Elevation(vtkm::Float32 angleDegrees);
-
+  /// @copydoc Elevation
   VTKM_CONT
   void Elevation(vtkm::Float64 angleDegrees)
   {
     this->Elevation(static_cast<vtkm::Float32>(angleDegrees));
   }
 
-  /// \brief Move the camera toward or away from the focal point.
+  /// @brief Move the camera toward or away from the focal point.
   ///
   /// Specifically, this divides the camera's distance from the focal point
-  /// (LookAt) by the given value. Use a value greater than one to dolly in
+  /// (`LookAt`) by the given value. Use a value greater than one to dolly in
   /// toward the focal point, and use a value less than one to dolly-out away
   /// from the focal point.
   ///
-  /// Dolly only makes sense for 3D cameras, so the camera mode will be set to
+  /// `Dolly()` has a similar effect as `Zoom()` since an object will appear larger
+  /// when the camera is closer. However, because you are moving the camera, `Dolly()`
+  /// can change the perspective relative to objects such as moving inside an object
+  /// for an interior perspective whereas `Zoom()` will just change the size of the
+  /// visible objects.
+  ///
+  /// `Dolly()` only makes sense for 3D cameras, so the camera mode will be set to
   /// 3D when this method is called.
   ///
   void Dolly(vtkm::Float32 value);
-
+  /// @copydoc Dolly
   VTKM_CONT
   void Dolly(vtkm::Float64 value) { this->Dolly(static_cast<vtkm::Float32>(value)); }
 
-  /// \brief The viewable region in the x-y plane
+  /// @brief The viewable region in the x-y plane
   ///
   /// When the camera is in 2D, it is looking at some region of the x-y plane.
   /// The region being looked at is defined by the range in x (determined by
   /// the left and right sides) and by the range in y (determined by the bottom
   /// and top sides).
   ///
-  /// \c SetViewRange2D changes the camera mode to 2D.
+  /// `SetViewRange2D()` changes the camera mode to 2D.
   ///
   VTKM_CONT
   void GetViewRange2D(vtkm::Float32& left,
@@ -490,6 +526,7 @@ public:
     bottom = this->Camera2D.Bottom;
     top = this->Camera2D.Top;
   }
+  /// @copydoc GetViewRange2D
   VTKM_CONT
   vtkm::Bounds GetViewRange2D() const
   {
@@ -500,6 +537,7 @@ public:
                         0.0,
                         0.0);
   }
+  /// @copydoc GetViewRange2D
   VTKM_CONT
   void SetViewRange2D(vtkm::Float32 left,
                       vtkm::Float32 right,
@@ -516,6 +554,7 @@ public:
     this->Camera2D.YPan = 0;
     this->Camera2D.Zoom = 1;
   }
+  /// @copydoc GetViewRange2D
   VTKM_CONT
   void SetViewRange2D(vtkm::Float64 left,
                       vtkm::Float64 right,
@@ -527,6 +566,7 @@ public:
                          static_cast<vtkm::Float32>(bottom),
                          static_cast<vtkm::Float32>(top));
   }
+  /// @copydoc GetViewRange2D
   VTKM_CONT
   void SetViewRange2D(const vtkm::Range& xRange, const vtkm::Range& yRange)
   {

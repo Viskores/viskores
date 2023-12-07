@@ -21,6 +21,10 @@ namespace vtkm
 namespace cont
 {
 
+/// @brief Defines the topological structure of the data in a `DataSet`.
+///
+/// Fundamentally, any cell set is a collection of cells, which typically (but not always)
+/// represent some region in space.
 class VTKM_CONT_EXPORT CellSet
 {
 public:
@@ -33,23 +37,37 @@ public:
 
   virtual ~CellSet();
 
+  /// @brief Get the number of cells in the topology.
   virtual vtkm::Id GetNumberOfCells() const = 0;
 
   virtual vtkm::Id GetNumberOfFaces() const = 0;
 
   virtual vtkm::Id GetNumberOfEdges() const = 0;
 
+  /// @brief Get the number of points in the topology.
   virtual vtkm::Id GetNumberOfPoints() const = 0;
 
+  /// @brief Get the shell shape of a particular cell.
   virtual vtkm::UInt8 GetCellShape(vtkm::Id id) const = 0;
+  /// @brief Get the number of points incident to a particular cell.
   virtual vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id id) const = 0;
+  /// @brief Get a list of points incident to a particular cell.
   virtual void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const = 0;
 
+  /// @brief Return a new `CellSet` that is the same derived class.
   virtual std::shared_ptr<CellSet> NewInstance() const = 0;
+  /// @brief Copy the provided `CellSet` into this object.
+  ///
+  /// The provided `CellSet` must be the same type as this one.
   virtual void DeepCopy(const CellSet* src) = 0;
 
+  /// @brief Print a summary of this cell set.
   virtual void PrintSummary(std::ostream&) const = 0;
 
+  /// @brief Remove the `CellSet` from any devices.
+  ///
+  /// Any memory used on a device to store this object will be deleted.
+  /// However, the data will still remain on the host.
   virtual void ReleaseResourcesExecution() = 0;
 };
 

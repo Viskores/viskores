@@ -25,8 +25,17 @@ namespace vtkm
 namespace cont
 {
 
-//Only works with fixed sized cell sets
-
+/// @brief An explicit cell set with all cells of the same shape.
+///
+/// `CellSetSingleType` is an explicit cell set constrained to contain cells that
+/// all have the same shape and all have the same number of points. So, for example
+/// if you are creating a surface that you know will contain only triangles,
+/// `CellSetSingleType` is a good representation for these data.
+///
+/// Using `CellSetSingleType` saves memory because the array of cell shapes and the
+/// array of point counts no longer need to be stored. `CellSetSingleType` also allows
+/// VTK-m to skip some processing and other storage required for general explicit cell
+/// sets.
 template <typename ConnectivityStorageTag = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG>
 class VTKM_ALWAYS_EXPORT CellSetSingleType
   : public vtkm::cont::CellSetExplicit<
@@ -88,11 +97,13 @@ public:
     return *this;
   }
 
-  virtual ~CellSetSingleType() override {}
+  ~CellSetSingleType() override {}
 
-  /// First method to add cells -- one at a time.
-  VTKM_CONT
-  void PrepareToAddCells(vtkm::Id numCells, vtkm::Id connectivityMaxLen)
+  /// @brief Start adding cells one at a time.
+  ///
+  /// After this method is called, `AddCell` is called repeatedly to add each cell.
+  /// Once all cells are added, call `CompleteAddingCells`.
+  VTKM_CONT void PrepareToAddCells(vtkm::Id numCells, vtkm::Id connectivityMaxLen)
   {
     this->CellShapeAsId = vtkm::CELL_SHAPE_EMPTY;
 
@@ -103,7 +114,9 @@ public:
     this->ExpectedNumberOfCellsAdded = numCells;
   }
 
-  /// Second method to add cells -- one at a time.
+  /// @brief Add a cell.
+  ///
+  /// This can only be called after `AddCell`.
   template <typename IdVecType>
   VTKM_CONT void AddCell(vtkm::UInt8 shapeId, vtkm::IdComponent numVertices, const IdVecType& ids)
   {
@@ -154,9 +167,8 @@ public:
     this->Data->ConnectivityAdded += numVertices;
   }
 
-  /// Third and final method to add cells -- one at a time.
-  VTKM_CONT
-  void CompleteAddingCells(vtkm::Id numPoints)
+  /// @brief Finish adding cells one at a time.
+  VTKM_CONT void CompleteAddingCells(vtkm::Id numPoints)
   {
     this->Data->NumberOfPoints = numPoints;
     this->Data->CellPointIds.Connectivity.Allocate(this->Data->ConnectivityAdded,
@@ -181,12 +193,14 @@ public:
     this->ExpectedNumberOfCellsAdded = -1;
   }
 
-  //This is the way you can fill the memory from another system without copying
-  VTKM_CONT
-  void Fill(vtkm::Id numPoints,
-            vtkm::UInt8 shapeId,
-            vtkm::IdComponent numberOfPointsPerCell,
-            const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag>& connectivity)
+  /// @brief Set all the cells of the mesh.
+  ///
+  /// This method can be used to fill the memory from another system without
+  /// copying data.
+  VTKM_CONT void Fill(vtkm::Id numPoints,
+                      vtkm::UInt8 shapeId,
+                      vtkm::IdComponent numberOfPointsPerCell,
+                      const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag>& connectivity)
   {
     this->Data->NumberOfPoints = numPoints;
     this->CellShapeAsId = shapeId;
@@ -238,7 +252,7 @@ public:
     this->NumberOfPointsPerCell = other->NumberOfPointsPerCell;
   }
 
-  virtual void PrintSummary(std::ostream& out) const override
+  void PrintSummary(std::ostream& out) const override
   {
     out << "   CellSetSingleType: Type=" << this->CellShapeAsId << std::endl;
     out << "   CellPointIds:" << std::endl;

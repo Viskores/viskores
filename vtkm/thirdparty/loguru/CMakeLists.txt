@@ -15,8 +15,7 @@ vtkm_get_kit_name(kit_name kit_dir)
 target_compile_features(vtkm_loguru INTERFACE cxx_std_11)
 
 target_include_directories(vtkm_loguru INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}/vtkm/thirdparty/loguru>)
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 target_link_libraries(vtkm_loguru INTERFACE ${CMAKE_DL_LIBS} Threads::Threads)
 

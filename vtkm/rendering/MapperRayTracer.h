@@ -21,6 +21,10 @@ namespace vtkm
 namespace rendering
 {
 
+/// @brief Mapper to render surfaces using ray tracing.
+///
+/// Provides a "standard" data mapper that uses ray tracing to render the surfaces
+/// of `DataSet` objects.
 class VTKM_RENDERING_EXPORT MapperRayTracer : public Mapper
 {
 public:

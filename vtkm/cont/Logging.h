@@ -496,6 +496,8 @@ inline VTKM_CONT std::string TypeToString(const T&)
  *
  * \param level  Desired LogLevel value for the log message.
  * \param cond   When false this function is no-op.
+ * \param file   The source file where the log entry was genearted.
+ * \param line   The line in the source file where the log entry was generated.
  * \param format Printf like format string.
  */
 VTKM_CONT_EXPORT

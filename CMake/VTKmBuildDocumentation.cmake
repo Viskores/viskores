@@ -14,11 +14,25 @@
 find_package(Doxygen REQUIRED)
 
 #-----------------------------------------------------------------------------
+# Function to turn CMake booleans to `YES` or `NO` as expected by Doxygen
+#-----------------------------------------------------------------------------
+function(to_yes_no variable)
+  if(${variable})
+    set(${variable} YES PARENT_SCOPE)
+  else()
+    set(${variable} NO PARENT_SCOPE)
+  endif()
+endfunction()
+
+#-----------------------------------------------------------------------------
 # Configure Doxygen
 #-----------------------------------------------------------------------------
 set(VTKm_DOXYGEN_HAVE_DOT ${DOXYGEN_DOT_FOUND})
 set(VTKm_DOXYGEN_DOT_PATH ${DOXYGEN_DOT_PATH})
 set(VTKm_DOXYFILE ${CMAKE_CURRENT_BINARY_DIR}/docs/doxyfile)
+
+to_yes_no(VTKm_ENABLE_USERS_GUIDE)
+to_yes_no(VTKm_Doxygen_HTML_output)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/doxyfile.in ${VTKm_DOXYFILE}
     @ONLY)

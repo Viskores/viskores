@@ -26,6 +26,12 @@ namespace field_conversion
 /// specified per cell) into point data (i.e., data specified at cell
 /// points). The method of transformation is based on averaging the data
 /// values of all cells using a particular point.
+///
+/// The cell field to convert comes from the active scalars.
+/// The default name for the output cell field is the same name as the input
+/// point field. The name can be overridden as always using the
+/// `SetOutputFieldName()` method.
+///
 class VTKM_FILTER_FIELD_CONVERSION_EXPORT PointAverage : public vtkm::filter::FilterField
 {
 private:

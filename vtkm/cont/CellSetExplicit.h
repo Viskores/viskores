@@ -66,6 +66,10 @@ VTKM_CONT_EXPORT void BuildReverseConnectivity(
 #define VTKM_DEFAULT_OFFSETS_STORAGE_TAG VTKM_DEFAULT_STORAGE_TAG
 #endif
 
+/// @brief Defines an irregular collection of cells.
+///
+/// The cells can be of different types and connected in arbitrary ways.
+/// This is done by explicitly providing for each cell a sequence of points that defines the cell.
 template <typename ShapesStorageTag = VTKM_DEFAULT_SHAPES_STORAGE_TAG,
           typename ConnectivityStorageTag = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
           typename OffsetsStorageTag = VTKM_DEFAULT_OFFSETS_STORAGE_TAG>
@@ -117,7 +121,7 @@ public:
   VTKM_CONT Thisclass& operator=(const Thisclass& src);
   VTKM_CONT Thisclass& operator=(Thisclass&& src) noexcept;
 
-  VTKM_CONT virtual ~CellSetExplicit() override;
+  VTKM_CONT ~CellSetExplicit() override;
 
   VTKM_CONT vtkm::Id GetNumberOfCells() const override;
   VTKM_CONT vtkm::Id GetNumberOfPoints() const override;
@@ -146,17 +150,25 @@ public:
 
   VTKM_CONT void GetIndices(vtkm::Id index, vtkm::cont::ArrayHandle<vtkm::Id>& ids) const;
 
-  /// First method to add cells -- one at a time.
+  /// @brief Start adding cells one at a time.
+  ///
+  /// After this method is called, `AddCell` is called repeatedly to add each cell.
+  /// Once all cells are added, call `CompleteAddingCells`.
   VTKM_CONT void PrepareToAddCells(vtkm::Id numCells, vtkm::Id connectivityMaxLen);
 
+  /// @brief Add a cell.
+  ///
+  /// This can only be called after `AddCell`.
   template <typename IdVecType>
   VTKM_CONT void AddCell(vtkm::UInt8 cellType, vtkm::IdComponent numVertices, const IdVecType& ids);
 
+  /// @brief Finish adding cells one at a time.
   VTKM_CONT void CompleteAddingCells(vtkm::Id numPoints);
 
-  /// Second method to add cells -- all at once.
-  /// Assigns the array handles to the explicit connectivity. This is
-  /// the way you can fill the memory from another system without copying
+  /// @brief Set all the cells of the mesh.
+  ///
+  /// This method can be used to fill the memory from another system without
+  /// copying data.
   VTKM_CONT
   void Fill(vtkm::Id numPoints,
             const vtkm::cont::ArrayHandle<vtkm::UInt8, ShapesStorageTag>& cellTypes,

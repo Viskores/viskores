@@ -21,6 +21,10 @@ namespace vtkm
 namespace rendering
 {
 
+/// @brief Converts data into commands to a rendering system.
+///
+/// This is the base class for all mapper classes in VTK-m. Different concrete
+/// derived classes can provide different representations and rendering techniques.
 class VTKM_RENDERING_EXPORT Mapper
 {
 public:

@@ -20,29 +20,35 @@ namespace filter
 {
 namespace geometry_refinement
 {
-/// \brief generate tube geometry from polylines.
 
-/// Takes as input a set of polylines, radius, num sides and capping flag.
-/// Produces tubes along each polyline
-
+/// @brief Generate a tube around each line and polyline.
+///
+/// The radius, number of sides, and end capping can be specified for each tube.
+/// The orientation of the geometry of the tube are computed automatically using
+/// a heuristic to minimize the twisting along the input data set.
+///
 class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Tube : public vtkm::filter::FilterField
 {
 public:
-  VTKM_CONT
-  void SetRadius(vtkm::FloatDefault r) { this->Radius = r; }
+  /// @brief Specify the radius of each tube.
+  VTKM_CONT void SetRadius(vtkm::FloatDefault r) { this->Radius = r; }
 
-  VTKM_CONT
-  void SetNumberOfSides(vtkm::Id n) { this->NumberOfSides = n; }
+  /// @brief Specify the number of sides for each tube.
+  ///
+  /// The tubes are generated using a polygonal approximation. This option determines
+  /// how many facets will be generated around the tube.
+  VTKM_CONT void SetNumberOfSides(vtkm::Id n) { this->NumberOfSides = n; }
 
-  VTKM_CONT
-  void SetCapping(bool v) { this->Capping = v; }
+  /// The `Tube` filter can optionally add a cap at the ends of each tube. This option
+  /// specifies whether that cap is generated.
+  VTKM_CONT void SetCapping(bool v) { this->Capping = v; }
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
   vtkm::FloatDefault Radius{};
-  vtkm::Id NumberOfSides{};
-  bool Capping{};
+  vtkm::Id NumberOfSides = 6;
+  bool Capping = false;
 };
 } // namespace geometry_refinement
 } // namespace filter

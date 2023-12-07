@@ -17,15 +17,16 @@ namespace vtkm
 namespace io
 {
 
-/// \brief Manages writing images using the PNM format
+/// \brief Writes images using the PNM format.
 ///
-/// `ImageWriterPNM` extends `ImageWriterBase`, and implements writing images in a
-/// valid PNM format (for magic number P6). More details on the PNM
-/// format can be found here: http://netpbm.sourceforge.net/doc/ppm.html
+/// `ImageWriterPNM` is constructed with the name of the file to write. The data
+/// is written to the file by calling the `WriteDataSet` method.
 ///
-/// When a file is writen the MaxColorValue found in the file is used to
-/// determine the PixelType required to stored PixelType is instead dependent
-/// upon the read MaxColorValue obtained from the file
+/// `ImageWriterPNM` writes images in PNM format (for magic number P6).
+/// These files are most commonly stored with a `.ppm` extension although the
+/// `.pnm` extension is also valid. More details on the PNM format can be found at
+/// http://netpbm.sourceforge.net/doc/ppm.html
+///
 class VTKM_IO_EXPORT ImageWriterPNM : public vtkm::io::ImageWriterBase
 {
   using Superclass = vtkm::io::ImageWriterBase;

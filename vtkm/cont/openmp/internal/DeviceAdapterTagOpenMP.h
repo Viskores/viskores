@@ -13,6 +13,14 @@
 
 #include <vtkm/cont/DeviceAdapterTag.h>
 
+/// @struct vtkm::cont::DeviceAdapterTagOpenMP
+/// @brief Tag for a device adapter that uses OpenMP compiler extensions to
+/// run algorithms on multiple threads.
+///
+/// For this device to work, VTK-m must be configured to use OpenMP and the code
+/// must be compiled with a compiler that supports OpenMP pragmas. This tag is
+/// defined in `vtkm/cont/openmp/DeviceAdapterOpenMP.h`.
+
 #ifdef VTKM_ENABLE_OPENMP
 VTKM_VALID_DEVICE_ADAPTER(OpenMP, VTKM_DEVICE_ADAPTER_OPENMP)
 #else

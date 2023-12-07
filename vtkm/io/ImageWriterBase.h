@@ -22,7 +22,7 @@ namespace io
 /// \brief Manages writing, and loading data from images
 ///
 /// `ImageWriterBase` implements methods for loading imaging data from a canvas or
-/// ArrayHandle and storing that data in a vtkm::cont::DataSet.  Image rgb values
+/// ArrayHandle and storing that data in a vtkm::cont::DataSet.  Image RGB values
 /// are represented as a point field in a 2D uniform dataset.
 ///
 /// `ImageWriterBase` can be constructed from a file, canvas, or ArrayHandle.  It can
@@ -38,12 +38,12 @@ public:
   using ColorArrayType = vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
 
   VTKM_CONT ImageWriterBase(const char* filename);
+  /// @brief Construct a writer to save data to the given file.
   VTKM_CONT ImageWriterBase(const std::string& filename);
   VTKM_CONT virtual ~ImageWriterBase() noexcept;
   ImageWriterBase(const ImageWriterBase&) = delete;
   ImageWriterBase& operator=(const ImageWriterBase&) = delete;
 
-  ///@{
   /// \brief Write the color field of a data set to an image file.
   ///
   /// The `DataSet` must have a 2D structured cell set.
@@ -54,7 +54,6 @@ public:
   ///
   VTKM_CONT virtual void WriteDataSet(const vtkm::cont::DataSet& dataSet,
                                       const std::string& colorField = {});
-  ///@}
 
   enum class PixelDepth
   {
@@ -62,12 +61,10 @@ public:
     PIXEL_16
   };
 
-  ///@{
-  /// You can specify the number of bits used by each color channel with the `PixelDepth`.
-  ///
+  /// @brief Specify the number of bits used by each color channel.
   VTKM_CONT PixelDepth GetPixelDepth() const { return this->Depth; }
+  /// @brief Specify the number of bits used by each color channel.
   VTKM_CONT void SetPixelDepth(PixelDepth depth) { this->Depth = depth; }
-  ///@}
 
   VTKM_CONT const std::string& GetFileName() const { return this->FileName; }
   VTKM_CONT void SetFileName(const std::string& filename) { this->FileName = filename; }

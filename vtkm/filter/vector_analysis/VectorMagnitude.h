@@ -20,6 +20,13 @@ namespace filter
 {
 namespace vector_analysis
 {
+
+/// @brief Compute the magnitudes of a vector field.
+///
+/// The vector field is selected with the `SetActiveField()` method. The default
+/// name for the output field is ``magnitude``, but that can be overridden using
+/// the `SetOutputFieldName()` method.
+///
 class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT VectorMagnitude : public vtkm::filter::FilterField
 {
 public:
@@ -28,6 +35,7 @@ public:
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
+
 } // namespace vector_analysis
 } // namespace filter
 } // namespace vtkm::filter

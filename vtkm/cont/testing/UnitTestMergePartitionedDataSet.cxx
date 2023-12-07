@@ -83,5 +83,7 @@ static void MergePartitionedDataSetTest()
 
 int UnitTestMergePartitionedDataSet(int argc, char* argv[])
 {
+  //More test cases can be found in the vtkm/filter/multi_block/testing/UnitTestMergeDataSetsFilter.cxx
+  //which is a filter that wraps MergePartitionedDataSet algorithm.
   return vtkm::cont::testing::Testing::Run(MergePartitionedDataSetTest, argc, argv);
 }

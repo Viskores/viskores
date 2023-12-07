@@ -31,10 +31,7 @@ class VTKM_ALWAYS_EXPORT FunctorBase
 {
 public:
   VTKM_EXEC_CONT
-  FunctorBase()
-    : ErrorMessage()
-  {
-  }
+  FunctorBase() {}
 
   VTKM_EXEC
   void RaiseError(const char* message) const { this->ErrorMessage.RaiseError(message); }

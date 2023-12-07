@@ -22,7 +22,8 @@ namespace rendering
 {
 
 /**
- * \brief MapperQuad renderers quad facess from a cell set via ray tracing.
+ * \brief A mapper that renderers quad faces from a cell set via ray tracing.
+ *
  *        As opposed to breaking quads into two trianges, scalars are
  *        interpolated using all 4 points of the quad resulting in more
  *        accurate interpolation.

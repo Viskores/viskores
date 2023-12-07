@@ -25,13 +25,23 @@ RUN zypper refresh && \
 
       hdf5-devel \
       libgomp1 \
-      mpich \
-      mpich-devel \
+      make \
       ninja \
       python311 \
       python311-scipy \
       tbb-devel && \
     zypper clean --all
+
+ARG MPICH_VERSION=4.1.1
+RUN curl -s -L https://www.mpich.org/static/downloads/${MPICH_VERSION}/mpich-${MPICH_VERSION}.tar.gz | tar xzf - && \
+    cd mpich-${MPICH_VERSION} && \
+    ./configure \
+      --disable-fortran \
+      --prefix=/usr/local \
+      --with-device=ch3:sock:tcp && \
+    make -j $(nproc) && \
+    make install && \
+    rm -rf mpich-${MPICH_VERSION}
 
 
 

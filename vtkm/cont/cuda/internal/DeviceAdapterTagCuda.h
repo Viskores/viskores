@@ -12,6 +12,13 @@
 
 #include <vtkm/cont/DeviceAdapterTag.h>
 
+/// @struct vtkm::cont::DeviceAdapterTagCuda
+/// @brief Tag for a device adapter that uses a CUDA capable GPU device.
+///
+/// For this device to work, VTK-m must be configured to use CUDA and the code must
+/// be compiled by the CUDA `nvcc` compiler. This tag is defined in
+/// `vtkm/cont/cuda/DeviceAdapterCuda.h`.
+
 // We always create the cuda tag when included, but we only mark it as a valid tag when
 // VTKM_ENABLE_CUDA is true. This is for easier development of multi-backend systems.
 //

@@ -150,7 +150,7 @@ public:
 
   /// Routine to return the global IDs for a set of vertices
   /// We here return a fancy array handle to convert values on-the-fly without requiring additional memory
-  /// @param[in] meshIds Array with sort Ids to be converted from local to global Ids
+  /// @param[in] sortIds Array with sort Ids to be converted from local to global Ids
   /// @param[in] localToGlobalIdRelabeler This parameter is the IdRelabeler
   ///            used to transform local to global Ids. The relabeler relies on the
   ///            decomposition of the global mesh which is not know by this block.
@@ -189,7 +189,7 @@ public:
 protected:
   //TODO/FIXME: Update comment, possibly refactor and move somewhere else (helper function outside class?)
   ///Compute a list of the global Iss of all vertices that logically belong to the data block represented by this
-  ///mesh object (used in distributd parallel computation). This is needed  to avoid multiple counting on bousndaries
+  ///mesh object (used in distributed parallel computation). This is needed  to avoid multiple counting on boundaries
   ///in the hierarchy during distributed parallel contour tree computation.
   /// Implementation of GetOwnedVerticesByGlobalId used internally by derived classes to
   /// implement the specific variant of the function .The implementations vary based on the
@@ -199,6 +199,9 @@ protected:
   ///                 and as such have PrepareForExecution functions that return a MeshBoundary object that
   ///                 we can use here. We are passing in the mesh since the base DataSetMesh class does
   ///                 not know about MeshBoundary classes and so we are passing the mesh in.
+  /// @param[in] localToGlobalIdRelabeler This parameter is the IdRelabeler
+  ///            used to transform local to global Ids. The relabeler relies on the
+  ///            decomposition of the global mesh which is not know by this block.
   /// @param[out] ownedVertices List of vertices that logically belong to
   template <typename MeshTypeObj>
   void GetOwnedVerticesByGlobalIdImpl(

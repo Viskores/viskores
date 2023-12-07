@@ -20,6 +20,9 @@ namespace vtkm
 namespace rendering
 {
 
+/// @brief A view for a 3D data set.
+///
+/// 2D data are rendered directly on the X-Y plane.
 class VTKM_RENDERING_EXPORT View2D : public vtkm::rendering::View
 {
 public:

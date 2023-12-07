@@ -1,0 +1,13 @@
+NAME
+  vtkm_filter_uncertainty
+GROUPS
+  FiltersCommon
+  Filters
+DEPENDS
+  vtkm_filter_core
+PRIVATE_DEPENDS
+  vtkm_worklet
+TEST_DEPENDS
+  vtkm_filter_uncertainty
+  vtkm_filter_core
+  vtkm_filter_vector_analysis
