@@ -85,11 +85,10 @@ public:
                                 ExecObject locator,
                                 WholeArrayIn dx,
                                 WholeArrayIn dy);
-  using ExecutionSignature = void(InputIndex, _1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename LocatorType, typename DeltaArrayType>
-  VTKM_EXEC void operator()(const vtkm::Id& /*idx*/,
-                            const vtkm::Vec3f& inPoint,
+  VTKM_EXEC void operator()(const vtkm::Vec3f& inPoint,
                             const LocatorType& locator,
                             const DeltaArrayType& dx,
                             const DeltaArrayType& dy) const
@@ -100,7 +99,6 @@ public:
     typename LocatorType::LastCell lastCell;
     for (vtkm::Id i = 0; i < this->NumIters; i++)
     {
-      //if (idx == 0) std::cout<<i<<": "<<pt<<std::endl;
       if (this->UseLastCell)
         locator.FindCell(pt, cellId, pcoords, lastCell);
       else
@@ -357,8 +355,8 @@ void Bench2LLocator2DGenerator(::benchmark::internal::Benchmark* bm)
 {
   bm->ArgNames({ "NumPoints", "DSNx", "DSNy", "LocL1Param", "LocL2Param" });
 
-  auto numPts = { 100, 500 };
-  auto DSdims = { 100, 200 };
+  auto numPts = { 5000, 10000 };
+  auto DSdims = { 100, 1000 };
   auto L1Param = { 64 };
   auto L2Param = { 1 };
 
@@ -376,7 +374,7 @@ void BenchUBLocator2DGenerator(::benchmark::internal::Benchmark* bm)
 {
   bm->ArgNames({ "NumPoints", "DSNx", "DSNy", "LocNx", "LocNy" });
 
-  auto numPts = { 1000, 5000, 10000 };
+  auto numPts = { 5000, 10000 };
   auto DSdims = { 100, 1000 };
   auto numBins = { 100, 500, 1000 };
 
@@ -393,9 +391,9 @@ void BenchLocator2DIterate2LGenerator(::benchmark::internal::Benchmark* bm)
 {
   bm->ArgNames({ "NumPoints", "NumIters", "DSNx", "DSNy", "LocL1Param", "LocL2Param", "LastCell" });
 
-  auto numPts = { 1000, 5000, 10000 };
+  auto numPts = { 1000, 5000 };
   auto numIters = { 100, 500 };
-  auto DSdims = { 500 };
+  auto DSdims = { 1000 };
   auto L1Param = { 64 };
   auto L2Param = { 1 };
   auto lastCell = { 0, 1 };
@@ -416,9 +414,9 @@ void BenchLocator2DIterateUBGenerator(::benchmark::internal::Benchmark* bm)
 {
   bm->ArgNames({ "NumPoints", "NumIters", "DSNx", "DSNy", "LocNx", "LocNY", "LastCell" });
 
-  auto numPts = { 1000, 5000, 10000 };
+  auto numPts = { 1000, 5000 };
   auto numIters = { 100, 500 };
-  auto DSdims = { 500 };
+  auto DSdims = { 1000 };
   auto numBins = { 128 };
   auto lastCell = { 0, 1 };
 
@@ -434,10 +432,10 @@ void BenchLocator2DIterateUBGenerator(::benchmark::internal::Benchmark* bm)
 }
 
 
-//VTKM_BENCHMARK_APPLY(Bench2LLocator2D, Bench2LLocator2DGenerator);
-//VTKM_BENCHMARK_APPLY(BenchUBLocator2D, BenchUBLocator2DGenerator);
+VTKM_BENCHMARK_APPLY(Bench2LLocator2D, Bench2LLocator2DGenerator);
+VTKM_BENCHMARK_APPLY(BenchUBLocator2D, BenchUBLocator2DGenerator);
 
-//VTKM_BENCHMARK_APPLY(Bench2LLocator2DIterate, BenchLocator2DIterate2LGenerator);
+VTKM_BENCHMARK_APPLY(Bench2LLocator2DIterate, BenchLocator2DIterate2LGenerator);
 VTKM_BENCHMARK_APPLY(BenchUBLocator2DIterate, BenchLocator2DIterateUBGenerator);
 
 } // end anon namespace
