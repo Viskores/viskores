@@ -20,7 +20,6 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/internal/OptionParser.h>
-#include <vtkm/io/VTKDataSetWriter.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/filter/clean_grid/CleanGrid.h>
@@ -36,7 +35,7 @@ vtkm::cont::InitializeResult Config;
 class RandomPointGenerator
 {
 public:
-  RandomPointGenerator(const vtkm::Bounds& bounds, const vtkm::UInt32& seed = 0)
+  RandomPointGenerator(const vtkm::Bounds& bounds, const vtkm::UInt32& seed)
     : Bounds(bounds)
     , Seed(seed)
   {
@@ -148,12 +147,6 @@ vtkm::cont::DataSet CreateExplicitDataSet2D(vtkm::Id Nx, vtkm::Id Ny)
     coordsPortal.Set(i, pt);
   }
 
-  /*
-  vtkm::io::VTKDataSetWriter writer("triDS.vtk");
-  writer.SetFileTypeToBinary();
-  writer.WriteDataSet(triDS);
-  */
-
   return triDS;
 }
 
@@ -197,7 +190,7 @@ void RunLocatorIterateBenchmark(
   invoker(worklet, points, locator, dx, dy);
 }
 
-void Bench2LLocator2D(::benchmark::State& state)
+void Bench2DCellLocatorTwoLevel(::benchmark::State& state)
 {
   vtkm::Id numPoints = static_cast<vtkm::Id>(state.range(0));
   vtkm::Id Nx = static_cast<vtkm::Id>(state.range(1));
@@ -218,13 +211,13 @@ void Bench2LLocator2D(::benchmark::State& state)
   locator2L.SetCoordinates(triDS.GetCoordinateSystem());
   locator2L.Update();
 
+  //Random number seed. Modify it during the loop to ensure different random numbers.
   vtkm::Id seed = 0;
   for (auto _ : state)
   {
     (void)_;
 
-    auto points = CreateRandomPoints(numPoints, triDS, seed);
-    seed++;
+    auto points = CreateRandomPoints(numPoints, triDS, seed++);
 
     timer.Start();
     RunLocatorBenchmark(points, locator2L);
@@ -233,7 +226,7 @@ void Bench2LLocator2D(::benchmark::State& state)
   }
 }
 
-void BenchUBLocator2D(::benchmark::State& state)
+void Bench2DCellLocatorUniformBins(::benchmark::State& state)
 {
   vtkm::Id numPoints = static_cast<vtkm::Id>(state.range(0));
   vtkm::Id Nx = static_cast<vtkm::Id>(state.range(1));
@@ -252,13 +245,13 @@ void BenchUBLocator2D(::benchmark::State& state)
   locatorUB.SetCoordinates(triDS.GetCoordinateSystem());
   locatorUB.Update();
 
+  //Random number seed. Modify it during the loop to ensure different random numbers.
   vtkm::Id seed = 0;
   for (auto _ : state)
   {
     (void)_;
 
-    auto points = CreateRandomPoints(numPoints, triDS, seed);
-    seed++;
+    auto points = CreateRandomPoints(numPoints, triDS, seed++);
 
     timer.Start();
     RunLocatorBenchmark(points, locatorUB);
@@ -267,7 +260,7 @@ void BenchUBLocator2D(::benchmark::State& state)
   }
 }
 
-void Bench2LLocator2DIterate(::benchmark::State& state)
+void Bench2DCellLocatorTwoLevelIterate(::benchmark::State& state)
 {
   vtkm::Id numPoints = static_cast<vtkm::Id>(state.range(0));
   vtkm::Id numIters = static_cast<vtkm::Id>(state.range(1));
@@ -290,25 +283,24 @@ void Bench2LLocator2DIterate(::benchmark::State& state)
   locator2L.SetCoordinates(triDS.GetCoordinateSystem());
   locator2L.Update();
 
+  //Random number seed. Modify it during the loop to ensure different random numbers.
   vtkm::Id seed = 0;
   for (auto _ : state)
   {
     (void)_;
 
-    auto points = CreateRandomPoints(numPoints, triDS, seed + 0);
-    auto dx = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(numIters, seed + 1);
-    auto dy = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(numIters, seed + 2);
+    auto points = CreateRandomPoints(numPoints, triDS, seed++);
+    auto dx = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(numIters, seed++);
+    auto dy = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(numIters, seed++);
 
     timer.Start();
     RunLocatorIterateBenchmark(points, numIters, locator2L, dx, dy, useLastCell);
     timer.Stop();
     state.SetIterationTime(timer.GetElapsedTime());
-
-    seed += 13;
   }
 }
 
-void BenchUBLocator2DIterate(::benchmark::State& state)
+void Bench2DCellLocatorUniformBinsIterate(::benchmark::State& state)
 {
   vtkm::Id numPoints = static_cast<vtkm::Id>(state.range(0));
   vtkm::Id numIters = static_cast<vtkm::Id>(state.range(1));
@@ -333,25 +325,24 @@ void BenchUBLocator2DIterate(::benchmark::State& state)
   locatorUB.SetCoordinates(triDS.GetCoordinateSystem());
   locatorUB.Update();
 
+  //Random number seed. Modify it during the loop to ensure different random numbers.
   vtkm::Id seed = 0;
   for (auto _ : state)
   {
     (void)_;
 
-    auto points = CreateRandomPoints(numPoints, triDS, seed + 0);
-    auto dx = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(numIters, seed + 1);
-    auto dy = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(numIters, seed + 2);
+    auto points = CreateRandomPoints(numPoints, triDS, seed++);
+    auto dx = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(numIters, seed++);
+    auto dy = vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(numIters, seed++);
 
     timer.Start();
     RunLocatorIterateBenchmark(points, numIters, locatorUB, dx, dy, useLastCell);
     timer.Stop();
     state.SetIterationTime(timer.GetElapsedTime());
-
-    seed += 13;
   }
 }
 
-void Bench2LLocator2DGenerator(::benchmark::internal::Benchmark* bm)
+void Bench2DCellLocatorTwoLevelGenerator(::benchmark::internal::Benchmark* bm)
 {
   bm->ArgNames({ "NumPoints", "DSNx", "DSNy", "LocL1Param", "LocL2Param" });
 
@@ -370,7 +361,7 @@ void Bench2LLocator2DGenerator(::benchmark::internal::Benchmark* bm)
           }
 }
 
-void BenchUBLocator2DGenerator(::benchmark::internal::Benchmark* bm)
+void Bench2DCellLocatorUniformBinsGenerator(::benchmark::internal::Benchmark* bm)
 {
   bm->ArgNames({ "NumPoints", "DSNx", "DSNy", "LocNx", "LocNy" });
 
@@ -387,7 +378,7 @@ void BenchUBLocator2DGenerator(::benchmark::internal::Benchmark* bm)
         }
 }
 
-void BenchLocator2DIterate2LGenerator(::benchmark::internal::Benchmark* bm)
+void Bench2DCellLocatorTwoLevelIterateGenerator(::benchmark::internal::Benchmark* bm)
 {
   bm->ArgNames({ "NumPoints", "NumIters", "DSNx", "DSNy", "LocL1Param", "LocL2Param", "LastCell" });
 
@@ -410,7 +401,7 @@ void BenchLocator2DIterate2LGenerator(::benchmark::internal::Benchmark* bm)
               }
 }
 
-void BenchLocator2DIterateUBGenerator(::benchmark::internal::Benchmark* bm)
+void Bench2DCellLocatorUniformBinsIterateGenerator(::benchmark::internal::Benchmark* bm)
 {
   bm->ArgNames({ "NumPoints", "NumIters", "DSNx", "DSNy", "LocNx", "LocNY", "LastCell" });
 
@@ -432,11 +423,12 @@ void BenchLocator2DIterateUBGenerator(::benchmark::internal::Benchmark* bm)
 }
 
 
-VTKM_BENCHMARK_APPLY(Bench2LLocator2D, Bench2LLocator2DGenerator);
-VTKM_BENCHMARK_APPLY(BenchUBLocator2D, BenchUBLocator2DGenerator);
+VTKM_BENCHMARK_APPLY(Bench2DCellLocatorTwoLevel, Bench2DCellLocatorTwoLevelGenerator);
+VTKM_BENCHMARK_APPLY(Bench2DCellLocatorUniformBins, Bench2DCellLocatorUniformBinsGenerator);
 
-VTKM_BENCHMARK_APPLY(Bench2LLocator2DIterate, BenchLocator2DIterate2LGenerator);
-VTKM_BENCHMARK_APPLY(BenchUBLocator2DIterate, BenchLocator2DIterateUBGenerator);
+VTKM_BENCHMARK_APPLY(Bench2DCellLocatorTwoLevelIterate, Bench2DCellLocatorTwoLevelIterateGenerator);
+VTKM_BENCHMARK_APPLY(Bench2DCellLocatorUniformBinsIterate,
+                     Bench2DCellLocatorUniformBinsIterateGenerator);
 
 } // end anon namespace
 
