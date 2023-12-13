@@ -9,8 +9,10 @@
 ##============================================================================
 
 set(examples
+  GuideExampleArrayHandle.cxx
   GuideExampleColorTables.cxx
   GuideExampleCoreDataTypes.cxx
+  GuideExampleEnvironmentModifierMacros.cxx
   GuideExampleInitialization.cxx
   GuideExampleIO.cxx
   GuideExampleProvidedFilters.cxx
@@ -19,8 +21,10 @@ set(examples
   GuideExampleTimer.cxx
   )
 set(examples_device
-  GuideExampleDataSetCreation.cxx # Uses CellSetPartitioned
-  GuideExampleErrorHandling.cxx # Calls worklet
+  GuideExampleCellEdgesFaces.cxx
+  GuideExampleDataSetCreation.cxx
+  GuideExampleErrorHandling.cxx
+  GuideExampleSimpleAlgorithm.cxx
   )
 set(extra_libs)
 

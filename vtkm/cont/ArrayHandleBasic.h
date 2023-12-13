@@ -288,6 +288,8 @@ VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandleMove(std::vector<T, Al
                                          internal::StdVectorReallocater<T, Allocator>);
 }
 
+/// Move an std::vector into an ArrayHandle.
+///
 template <typename T, typename Allocator>
 VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(std::vector<T, Allocator>&& array,
                                                            vtkm::CopyFlag vtkmNotUsed(copy))

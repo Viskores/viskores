@@ -76,7 +76,7 @@ today_fmt = '%B %d, %Y'
 rst_prolog = '''
 .. |VTKm| replace:: VTK‑m
 .. |report-year| replace:: 2023
-.. |report-number| replace:: ORNL/TM-2023/2863
+.. |report-number| replace:: ORNL/TM-2023/3182
 '''
 
 breathe_projects = { 'vtkm': '@doxygen_xml_output_dir@' }

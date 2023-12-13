@@ -55,14 +55,11 @@ The data is then read in by calling the :func:`vtkm::io::VTKDataSetReader::ReadD
    :file: VTKmQuickStart.cxx
    :caption: Reading data from a VTK legacy file.
 
-.. todo:: Uncomment and cross reference.
+The ``ReadDataSet`` method returns the data in a :class:`vtkm::cont::DataSet` object.
+The structure and features of a ``DataSet`` object is described in :chapref:`dataset:Data Sets`.
+For the purposes of this quick start, we will treat ``DataSet`` as a mostly opaque object that gets passed to and from operations in |VTKm|.
 
-..
-   The ``ReadDataSet`` method returns the data in a :class:`vtkm::cont::DataSet` object.
-   The structure and features of a ``DataSet`` object is described in Chapter \ref{chap:DataSet}.
-   For the purposes of this quick start, we will treat ``DataSet`` as a mostly opaque object that gets passed to and from operations in |VTKm|.
-
-   More information about |VTKm|'s file readers and writers can be found in Chapter \ref{chap:FileIO}.
+More information about |VTKm|'s file readers and writers can be found in :chapref:`io:File I/O`.
 
 
 ------------------------------
@@ -75,18 +72,14 @@ Algorithms in |VTKm| are encapsulated in units called *filters*.
 A filter takes in a ``DataSet``, processes it, and returns a new ``DataSet``.
 The returned ``DataSet`` often, but not always, contains data inherited from the source data.
 
-.. todo:: Fix cross reference to Running Filters.
-
-|VTKm| comes with many filters, which are documented in Chapter \ref{chap:RunningFilters}.
+|VTKm| comes with many filters, which are documented in :chapref:`provided-filters:Provided Filters`.
 For this example, we will demonstrate the use of the :class:`vtkm::filter::MeshQuality` filter, which is defined in the :file:`vtkm/filter/MeshQuality.h` header file.
 The ``MeshQuality`` filter will compute for each cell in the input data will compute a quantity representing some metric of the cell's shape.
 Several metrics are available, and in this example we will find the area of each cell.
 
-.. todo:: Fix cross reference to MeshQuality.
-
 Like all filters, ``MeshQuality`` contains an ``Execute`` method that takes an input ``DataSet`` and produces an output ``DataSet``.
 It also has several methods used to set up the parameters of the execution.
-Section \ref{sec:MeshQuality} provides details on all the options of ``MeshQuality``.
+:secref:`provided-filters:Mesh Quality Metrics` provides details on all the options of ``MeshQuality``.
 Suffice it to say that in this example we instruct the filter to find the area of each cell, which it will output to a field named ``area``.
 
 .. load-example:: VTKmQuickStartFilter
@@ -103,11 +96,9 @@ Rendering an Image
 Although it is possible to leverage external rendering systems, |VTKm| comes with its own self-contained image rendering algorithms.
 These rendering classes are completely implemented with the parallel features provided by |VTKm|, so using rendering in |VTKm| does not require any complex library dependencies.
 
-.. todo:: Fix cross reference to rendering chapter.
-
 Even a simple rendering scene requires setting up several parameters to establish what is to be featured in the image including what data should be rendered, how that data should be represented, where objects should be placed in space, and the qualities of the image to generate.
 Consequently, setting up rendering in |VTKm| involves many steps.
-Chapter \ref{chap:Rendering} goes into much detail on the ways in which a rendering scene is specified.
+:chapref:`rendering:Rendering` goes into much detail on the ways in which a rendering scene is specified.
 For now, we just briefly present some boilerplate to achieve a simple rendering.
 
 .. load-example:: VTKmQuickStartRender

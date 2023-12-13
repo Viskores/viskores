@@ -608,15 +608,8 @@ private:
 class VTKM_ALWAYS_EXPORT Plane : public vtkm::internal::ImplicitFunctionBase<Plane>
 {
 public:
-  /// Construct plane passing through origin and normal to z-axis.
-  VTKM_EXEC_CONT Plane()
-    : Origin(Scalar(0))
-    , Normal(Scalar(0), Scalar(0), Scalar(1))
-  {
-  }
-
   /// Construct a plane through the origin with the given normal.
-  VTKM_EXEC_CONT explicit Plane(const Vector& normal)
+  VTKM_EXEC_CONT explicit Plane(const Vector& normal = { 0, 0, 1 })
     : Origin(Scalar(0))
     , Normal(normal)
   {
@@ -672,15 +665,8 @@ private:
 class VTKM_ALWAYS_EXPORT Sphere : public vtkm::internal::ImplicitFunctionBase<Sphere>
 {
 public:
-  /// Construct sphere with center at (0,0,0) and radius = 0.5.
-  VTKM_EXEC_CONT Sphere()
-    : Radius(Scalar(0.5))
-    , Center(Scalar(0))
-  {
-  }
-
   /// Construct a sphere with center at (0,0,0) and the given radius.
-  VTKM_EXEC_CONT explicit Sphere(Scalar radius)
+  VTKM_EXEC_CONT explicit Sphere(Scalar radius = 0.5)
     : Radius(radius)
     , Center(Scalar(0))
   {

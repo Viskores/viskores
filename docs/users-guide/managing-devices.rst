@@ -156,11 +156,9 @@ This is the default behavior of :class:`vtkm::cont::ScopedRuntimeDeviceTracker`,
 
 .. doxygenenum:: RuntimeDeviceTrackerMode
 
-As a motivating example, let us say that we want to perform a deep copy of an array (described in Section~\ref{sec:DeepArrayCopies}).
+As a motivating example, let us say that we want to perform a deep copy of an array (described in :secref:`basic-array-handles:Deep Array Copies`).
 However, we do not want to do the copy on a Kokkos device because we happen to know the data is not on that device and we do not want to spend the time to transfer the data to that device.
 We can use a :class:`vtkm::cont::ScopedRuntimeDeviceTracker` to temporarily disable the Kokkos device for this operation.
-
-.. todo:: Fix reference above.
 
 .. load-example:: RestrictCopyDevice
    :file: GuideExampleRuntimeDeviceTracker.cxx
