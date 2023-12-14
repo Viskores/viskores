@@ -35,7 +35,7 @@ if (TARGET vtkm_kokkos)
     set_source_files_properties(${sources} TARGET_DIRECTORY vtkm_cont PROPERTIES LANGUAGE HIP)
     kokkos_compilation(SOURCE ${sources})
     if (VTKm_ENABLE_KOKKOS_THRUST)
-      target_link_libraries(vtkm_cont INTERFACE roc::rocthrust)
+      target_link_libraries(vtkm_cont PRIVATE $<$<LINK_LANGUAGE:CUDA>:roc::rocthrust>)
     endif()
   endif()
 
