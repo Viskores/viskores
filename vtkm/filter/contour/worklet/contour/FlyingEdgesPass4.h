@@ -42,6 +42,7 @@ struct launchComputePass4
   }
 
   template <typename DeviceAdapterTag,
+            typename IVType,
             typename T,
             typename CoordsType,
             typename StorageTagField,
@@ -50,7 +51,7 @@ struct launchComputePass4
             typename NormalType>
   VTKM_CONT bool LaunchXAxis(DeviceAdapterTag device,
                              vtkm::Id vtkmNotUsed(newPointSize),
-                             T isoval,
+                             IVType isoval,
                              CoordsType coordinateSystem,
                              const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
                              vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases,
@@ -67,7 +68,7 @@ struct launchComputePass4
     vtkm::cont::Invoker invoke(device);
     if (sharedState.GenerateNormals)
     {
-      ComputePass4XWithNormals<T> worklet4(
+      ComputePass4XWithNormals<IVType> worklet4(
         isoval, this->PointDims, this->CellWriteOffset, this->PointWriteOffset);
       invoke(worklet4,
              metaDataMesh2D,
@@ -87,7 +88,7 @@ struct launchComputePass4
     }
     else
     {
-      ComputePass4X<T> worklet4(
+      ComputePass4X<IVType> worklet4(
         isoval, this->PointDims, this->CellWriteOffset, this->PointWriteOffset);
       invoke(worklet4,
              metaDataMesh2D,
@@ -109,6 +110,7 @@ struct launchComputePass4
   }
 
   template <typename DeviceAdapterTag,
+            typename IVType,
             typename T,
             typename CoordsType,
             typename StorageTagField,
@@ -117,7 +119,7 @@ struct launchComputePass4
             typename NormalType>
   VTKM_CONT bool LaunchYAxis(DeviceAdapterTag device,
                              vtkm::Id newPointSize,
-                             T isoval,
+                             IVType isoval,
                              CoordsType coordinateSystem,
                              const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
                              vtkm::cont::ArrayHandle<vtkm::UInt8> edgeCases,
@@ -133,7 +135,7 @@ struct launchComputePass4
   {
     vtkm::cont::Invoker invoke(device);
 
-    ComputePass4Y<T> worklet4(
+    ComputePass4Y<IVType> worklet4(
       isoval, this->PointDims, this->CellWriteOffset, this->PointWriteOffset);
     invoke(worklet4,
            metaDataMesh2D,
@@ -149,7 +151,8 @@ struct launchComputePass4
            sharedState.CellIdMap);
 
     //This needs to be done on array handle view ( start = this->PointWriteOffset, len = newPointSize)
-    ComputePass5Y<T> worklet5(this->PointDims, this->PointWriteOffset, sharedState.GenerateNormals);
+    ComputePass5Y<IVType> worklet5(
+      this->PointDims, this->PointWriteOffset, sharedState.GenerateNormals);
 
     invoke(worklet5,
            vtkm::cont::make_ArrayHandleView(

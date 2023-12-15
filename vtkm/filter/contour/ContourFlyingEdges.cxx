@@ -63,10 +63,11 @@ vtkm::cont::DataSet ContourFlyingEdges::DoExecute(const vtkm::cont::DataSet& inD
   auto resolveFieldType = [&](const auto& concrete) {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
-    std::vector<T> ivalues(this->IsoValues.size());
+    using IVType = std::conditional_t<(sizeof(T) > 4), vtkm::Float64, vtkm::FloatDefault>;
+    std::vector<IVType> ivalues(this->IsoValues.size());
     for (std::size_t i = 0; i < ivalues.size(); ++i)
     {
-      ivalues[i] = static_cast<T>(this->IsoValues[i]);
+      ivalues[i] = static_cast<IVType>(this->IsoValues[i]);
     }
 
     if (this->GenerateNormals && !this->GetComputeFastNormals())
