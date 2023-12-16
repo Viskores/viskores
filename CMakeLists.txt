@@ -215,11 +215,6 @@ vtkm_option(VTKm_OVERRIDE_CTEST_TIMEOUT "Disable default ctest timeout" OFF)
 # VTKm_ENABLE_MPI=ON.
 cmake_dependent_option(VTKm_ENABLE_GPU_MPI "Enable GPU AWARE MPI support" OFF "VTKm_ENABLE_MPI" OFF)
 
-# By default: Set VTKm_ENABLE_KOKKOS_THRUST to ON if VTKm_ENABLE_KOKKOS is ON, otherwise
-# disable it (or if the user explicitly turns this option OFF)
-cmake_dependent_option(VTKm_ENABLE_KOKKOS_THRUST "Enable Kokkos thrust support (only valid with CUDA and HIP)"
-  ON "VTKm_ENABLE_KOKKOS;Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP" OFF)
-
 mark_as_advanced(
   VTKm_ENABLE_LOGGING
   VTKm_NO_ASSERT
@@ -261,6 +256,16 @@ include(VTKmBuildType)
 
 # Include the vtk-m wrappers
 include(VTKmWrappers)
+
+# By default: Set VTKm_ENABLE_KOKKOS_THRUST to ON if VTKm_ENABLE_KOKKOS is ON, otherwise
+# disable it (or if the user explicitly turns this option OFF)
+cmake_dependent_option(VTKm_ENABLE_KOKKOS_THRUST "Enable Kokkos thrust support (only valid with CUDA and HIP)"
+  ON "VTKm_ENABLE_KOKKOS;Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP" OFF)
+
+# CUDA already provides thrust
+if (VTKm_ENABLE_KOKKOS_THRUST AND TARGET vtkm_kokkos_hip)
+  find_package(rocthrust REQUIRED CONFIG)
+endif()
 
 # Create vtkm_compiler_flags library. This is an interface library that
 # holds all the C++ compiler flags that are needed for consumers and
