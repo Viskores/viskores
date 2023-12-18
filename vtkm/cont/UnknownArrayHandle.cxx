@@ -205,7 +205,7 @@ VTKM_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceBasic() const
     // capture the correct number of components.
     auto runtimeVecArrayCreator = [&](auto exampleComponent) {
       using ComponentType = decltype(exampleComponent);
-      if (this->IsBaseComponentType<ComponentType>())
+      if (!newArray.IsValid() && this->IsBaseComponentType<ComponentType>())
       {
         newArray =
           vtkm::cont::make_ArrayHandleRuntimeVec<ComponentType>(this->GetNumberOfComponentsFlat());
