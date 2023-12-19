@@ -32,8 +32,13 @@ namespace cont
 class VTKM_CONT_EXPORT Field
 {
 public:
+  /// @brief Identifies what elements of a data set a field is associated with.
+  ///
+  /// The `Association` enum is used by `vtkm::cont::Field` to specify on what
+  /// topological elements each item in the field is associated with.
   enum struct Association
   {
+    // Documentation is below (for better layout in generated documents).
     Any,
     WholeDataSet,
     Points,
@@ -41,6 +46,49 @@ public:
     Partitions,
     Global,
   };
+
+  /// @var Association Any
+  /// @brief Any field regardless of the association.
+  ///
+  /// This is used when choosing a `vtkm::cont::Field` that could be of any
+  /// association. It is often used as the default if no association is given.
+
+  /// @var Association WholeDataSet
+  /// @brief A "global" field that applies to the entirety of a `vtkm::cont::DataSet`.
+  ///
+  /// Fields of this association often contain summary or annotation information.
+  /// An example of a whole data set field could be the region that the mesh covers.
+
+  /// @var Association Points
+  /// @brief A field that applies to points.
+  ///
+  /// There is a separate field value attached to each point. Point fields usually represent
+  /// samples of continuous data that can be reinterpolated through cells. Physical properties
+  /// such as temperature, pressure, density, velocity, etc. are usually best represented in
+  /// point fields. Data that deals with the points of the topology, such as displacement
+  /// vectors, are also appropriate for point data.
+
+  /// @var Association Cells
+  /// @brief A field that applies to cells.
+  ///
+  /// There is a separate field value attached to each cell in a cell set. Cell fields
+  /// usually represent values from an integration over the finite cells of the mesh.
+  /// Integrated values like mass or volume are best represented in cell fields. Statistics
+  /// about each cell like strain or cell quality are also appropriate for cell data.
+
+  /// @var Association Partitions
+  /// @brief A field that applies to partitions.
+  ///
+  /// This type of field is attached to a `vtkm::cont::PartitionedDataSet`. There is a
+  /// separate field value attached to each partition. Identification or information
+  /// about the arrangement of partitions such as hierarchy levels are usually best
+  /// represented in partition fields.
+
+  /// @var Association Global
+  /// @brief A field that applies to all partitions.
+  ///
+  /// This type of field is attached to a `vtkm::cont::PartitionedDataSet`. It contains
+  /// values that are "global" across all partitions and data therin.
 
   VTKM_CONT
   Field() = default;
@@ -87,6 +135,14 @@ public:
   const vtkm::cont::UnknownArrayHandle& GetData() const;
   vtkm::cont::UnknownArrayHandle& GetData();
 
+  /// @brief Returns the range of each component in the field array.
+  ///
+  /// The ranges of each component are returned in an `ArrayHandle` containing `vtkm::Range`
+  /// values.
+  /// So, for example, calling `GetRange` on a scalar field will return an `ArrayHandle`
+  /// with exactly 1 entry in it. Calling `GetRange` on a field of 3D vectors will return
+  /// an `ArrayHandle` with exactly 3 entries corresponding to each of the components in
+  /// the range.
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
 
   VTKM_CONT void GetRange(vtkm::Range* range) const;

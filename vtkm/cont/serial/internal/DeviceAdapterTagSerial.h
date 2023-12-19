@@ -12,6 +12,13 @@
 
 #include <vtkm/cont/DeviceAdapterTag.h>
 
+/// @struct vtkm::cont::DeviceAdapterTagSerial
+/// @brief Tag for a device adapter that performs all computation on the
+/// same single thread as the control environment.
+///
+/// This device is useful for debugging. This device is always available. This tag is
+/// defined in `vtkm/cont/DeviceAdapterSerial.h`.
+
 VTKM_VALID_DEVICE_ADAPTER(Serial, VTKM_DEVICE_ADAPTER_SERIAL);
 
 #endif //vtk_m_cont_serial_internal_DeviceAdapterTagSerial_h

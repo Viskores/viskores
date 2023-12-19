@@ -116,8 +116,6 @@ void ArrayCopyImpl(const vtkm::cont::ArrayHandle<T, S>& source,
 /// pay heed and look for a different way to copy the data (perhaps
 /// using `ArrayCopyDevice`).
 ///
-/// @{
-///
 template <typename SourceArrayType, typename DestArrayType>
 inline void ArrayCopy(const SourceArrayType& source, DestArrayType& destination)
 {
@@ -128,6 +126,7 @@ inline void ArrayCopy(const SourceArrayType& source, DestArrayType& destination)
 }
 
 // Special case where we allow a const UnknownArrayHandle as output.
+/// @copydoc ArrayCopy
 template <typename SourceArrayType>
 inline void ArrayCopy(const SourceArrayType& source, vtkm::cont::UnknownArrayHandle& destination)
 {
@@ -144,8 +143,6 @@ void ArrayCopy(const vtkm::cont::UnknownArrayHandle&, const vtkm::cont::ArrayHan
 {
   VTKM_STATIC_ASSERT_MSG(sizeof(T) == 0, "Copying to a constant ArrayHandle is not allowed.");
 }
-
-/// @}
 
 /// \brief Copies from an unknown to a known array type.
 ///

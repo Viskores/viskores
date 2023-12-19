@@ -33,19 +33,19 @@ namespace tovtkm
 //------------------------------------------------------------------------------
 // All scalar types in vtkType.h
 using VTKScalarTypes = vtkm::List< //
-  char,                            //
   signed char,                     //
   unsigned char,                   //
   short,                           //
   unsigned short,                  //
   int,                             //
   unsigned int,                    //
-  long,                            //
-  unsigned long,                   //
   long long,                       //
   unsigned long long,              //
   float,                           //
-  double                           //
+  double,                          //
+  char,                            //
+  long,                            //
+  unsigned long                    //
   >;
 
 using SpecialGradientOutTypes =

@@ -234,7 +234,9 @@ public:
 
     vtkm::Float32 dx = x2 - x1;
     vtkm::Float32 dy = y2 - y1;
-    vtkm::Float32 gradient = (dx == 0.0) ? 1.0f : (dy / dx);
+    if (dx == 0.0)
+      dx = vtkm::Epsilon32(); // Avoid FPE
+    vtkm::Float32 gradient = dy / dx;
 
     vtkm::Float32 xEnd = vtkm::Round(x1);
     vtkm::Float32 yEnd = y1 + gradient * (xEnd - x1);

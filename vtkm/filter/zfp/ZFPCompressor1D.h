@@ -20,16 +20,19 @@ namespace filter
 {
 namespace zfp
 {
-/// \brief Compress a scalar field using ZFP
 
-/// Takes as input a 1D array and generates on
+/// \brief Compress a scalar field using ZFP.
+///
+/// Takes as input a 1D array and generates an
 /// output of compressed data.
 /// @warning
-/// This filter is currently only supports 1D volumes.
+/// This filter currently only supports 1D structured cell sets.
 class VTKM_FILTER_ZFP_EXPORT ZFPCompressor1D : public vtkm::filter::FilterField
 {
 public:
+  /// @brief Specifies the rate of compression.
   void SetRate(vtkm::Float64 _rate) { rate = _rate; }
+  /// @copydoc SetRate
   vtkm::Float64 GetRate() { return rate; }
 
 private:
@@ -37,6 +40,7 @@ private:
 
   vtkm::Float64 rate = 0;
 };
+
 } // namespace zfp
 } // namespace filter
 } // namespace vtkm::filter

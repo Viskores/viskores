@@ -20,21 +20,21 @@ namespace filter
 {
 namespace contour
 {
-/// \brief generate isosurface(s) from a Volume
 
-/// Takes as input a volume (e.g., 3D structured point set) and generates on
-/// output one or more isosurfaces.
-/// Multiple contour values must be specified to generate the isosurfaces.
-/// This filter automatically selects the right implmentation between Marching Cells
-/// and Flying Edges algorithms depending on the type of input \c DataSet : Flying Edges
-/// is only available for 3-dimensional datasets using uniform point coordinates.
-/// @warning
-/// This filter is currently only supports 3D volumes.
+/// \brief Generate contours or isosurfaces from a region of space.
+///
+/// `Contour` takes as input a mesh, often a volume, and generates on
+/// output one or more surfaces where a field equals a specified value.
+///
+/// This filter implements multiple algorithms for contouring, and the best algorithm
+/// will be selected based on the type of the input.
+///
+/// The scalar field to extract the contour from is selected with the `SetActiveField()`
+/// and related methods.
+///
 class VTKM_FILTER_CONTOUR_EXPORT Contour : public vtkm::filter::contour::AbstractContour
 {
 public:
-  /// Set/Get whether the fast path should be used for normals computation for
-  /// structured datasets. Off by default.
   VTKM_DEPRECATED(2.1, "Use SetComputeFastNormals.")
   VTKM_CONT void SetComputeFastNormalsForStructured(bool on) { this->SetComputeFastNormals(on); }
   VTKM_DEPRECATED(2.1, "Use GetComputeFastNormals.")
@@ -43,8 +43,6 @@ public:
     return this->GetComputeFastNormals();
   }
 
-  /// Set/Get whether the fast path should be used for normals computation for
-  /// unstructured datasets. On by default.
   VTKM_DEPRECATED(2.1, "Use SetComputeFastNormals.")
   VTKM_CONT void SetComputeFastNormalsForUnstructured(bool on) { this->SetComputeFastNormals(on); }
   VTKM_DEPRECATED(2.1, "Use GetComputeFastNormals.")

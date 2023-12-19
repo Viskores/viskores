@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/interop/anari/ANARIMapperVolume.h>
 
 namespace vtkm
@@ -129,12 +130,12 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   const auto& cells = actor.GetCellSet();
   const auto& fieldArray = actor.GetField().GetData();
 
-  const bool isStructured = cells.IsType<vtkm::cont::CellSetStructured<3>>();
-  const bool isFloat = fieldArray.IsType<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+  const bool isStructured = cells.CanConvert<vtkm::cont::CellSetStructured<3>>();
+  const bool isScalar = fieldArray.GetNumberOfComponentsFlat() == 1;
 
   this->Handles->ReleaseArrays();
 
-  if (isStructured && isFloat)
+  if (isStructured && isScalar)
   {
     auto structuredCells = cells.AsCellSet<vtkm::cont::CellSetStructured<3>>();
     auto pdims = structuredCells.GetPointDimensions();
@@ -143,8 +144,7 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
 
     auto d = this->GetDevice();
 
-    arrays.Data = fieldArray.AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
-
+    vtkm::cont::ArrayCopyShallowIfPossible(fieldArray, arrays.Data);
     auto* ptr = (float*)arrays.Data.GetBuffers()[0].ReadPointerHost(*arrays.Token);
 
     auto bounds = coords.GetBounds();

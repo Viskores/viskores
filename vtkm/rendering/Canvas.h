@@ -31,6 +31,7 @@ namespace rendering
 
 class WorldAnnotator;
 
+/// @brief Represents the image space that is the target of rendering.
 class VTKM_RENDERING_EXPORT Canvas
 {
 public:
@@ -38,34 +39,49 @@ public:
   using DepthBufferType = vtkm::cont::ArrayHandle<vtkm::Float32>;
   using FontTextureType = vtkm::rendering::Texture2D<1>;
 
+  /// Construct a canvas of a given width and height.
   Canvas(vtkm::Id width = 1024, vtkm::Id height = 1024);
   virtual ~Canvas();
 
+  /// Create a new `Canvas` object of the same subtype as this one.
   virtual vtkm::rendering::Canvas* NewCopy() const;
 
+  /// @brief Clear out the image buffers.
   virtual void Clear();
 
+  /// @brief Blend the foreground data with the background color.
+  ///
+  /// When a render is started, it is given a zeroed background rather than the
+  /// background color specified by `SetBackgroundColor()`. This is because when
+  /// blending pixel fragments of transparent objects the background color can
+  /// interfere. Call this method after the render is completed for the final
+  /// blend to get the proper background color.
   virtual void BlendBackground();
 
+  /// @brief The width of the image.
   VTKM_CONT
   vtkm::Id GetWidth() const;
 
+  /// @brief The height of the image.
   VTKM_CONT
   vtkm::Id GetHeight() const;
 
+  /// @brief Get the color channels of the image.
   VTKM_CONT
   const ColorBufferType& GetColorBuffer() const;
 
+  /// @copydoc GetColorBuffer
   VTKM_CONT
   ColorBufferType& GetColorBuffer();
 
+  /// @brief Get the depth channel of the image.
   VTKM_CONT
   const DepthBufferType& GetDepthBuffer() const;
 
+  /// @copydoc GetDepthBuffer
   VTKM_CONT
   DepthBufferType& GetDepthBuffer();
 
-  ///@{
   /// \brief Gets the image in this `Canvas` as a `vtkm::cont::DataSet`.
   ///
   /// The returned `DataSet` will be a uniform structured 2D grid. The color and depth
@@ -77,22 +93,27 @@ public:
   ///
   VTKM_CONT vtkm::cont::DataSet GetDataSet(const std::string& colorFieldName = "color",
                                            const std::string& depthFieldName = "depth") const;
+  /// @copydoc GetDataSet
   VTKM_CONT vtkm::cont::DataSet GetDataSet(const char* colorFieldName,
                                            const char* depthFieldName = "depth") const;
-  ///@}
 
+  /// @brief Change the size of the image.
   VTKM_CONT
   void ResizeBuffers(vtkm::Id width, vtkm::Id height);
 
+  /// @brief Specify the background color.
   VTKM_CONT
   const vtkm::rendering::Color& GetBackgroundColor() const;
 
+  /// @copydoc GetBackgroundColor
   VTKM_CONT
   void SetBackgroundColor(const vtkm::rendering::Color& color);
 
+  /// @brief Specify the foreground color used for annotations.
   VTKM_CONT
   const vtkm::rendering::Color& GetForegroundColor() const;
 
+  /// @copydoc GetForegroundColor
   VTKM_CONT
   void SetForegroundColor(const vtkm::rendering::Color& color);
 
@@ -111,6 +132,10 @@ public:
   virtual void SetViewToScreenSpace(const vtkm::rendering::Camera& camera, bool clip);
   virtual void SetViewportClipping(const vtkm::rendering::Camera&, bool) {}
 
+  /// @brief Save the rendered image.
+  ///
+  /// If the filename ends with ".png", it will be saved in the portable network
+  /// graphic format. Otherwise, the file will be saved in Netbpm portable pixmap format.
   virtual void SaveAs(const std::string& fileName) const;
 
   /// Creates a WorldAnnotator of a type that is paired with this Canvas. Other

@@ -22,6 +22,7 @@ namespace vtkm
 namespace cont
 {
 
+/// @brief Comprises a set of `vtkm::cont::DataSet` objects.
 class VTKM_CONT_EXPORT PartitionedDataSet
 {
   using StorageVec = std::vector<vtkm::cont::DataSet>;
@@ -65,34 +66,35 @@ public:
   const vtkm::cont::DataSet& GetPartition(vtkm::Id partId) const;
 
   /// Get an STL vector of all DataSet objects stored in PartitionedDataSet.
-  VTKM_CONT
-  const std::vector<vtkm::cont::DataSet>& GetPartitions() const;
+  VTKM_CONT const std::vector<vtkm::cont::DataSet>& GetPartitions() const;
 
-  /// Add DataSet @a ds to the end of the contained DataSet vector.
-  VTKM_CONT
-  void AppendPartition(const vtkm::cont::DataSet& ds);
+  /// Add DataSet @a ds to the end of the list of partitions.
+  VTKM_CONT void AppendPartition(const vtkm::cont::DataSet& ds);
 
-  /// Add DataSet @a ds to position @a index of the contained DataSet vector.
-  VTKM_CONT
-  void InsertPartition(vtkm::Id index, const vtkm::cont::DataSet& ds);
+  /// @brief Add DataSet @a ds to position @a index of the contained DataSet vector.
+  ///
+  /// All partitions at or after this location are pushed back.
+  VTKM_CONT void InsertPartition(vtkm::Id index, const vtkm::cont::DataSet& ds);
 
   /// Replace the @a index positioned element of the contained DataSet vector
   /// with @a ds.
-  VTKM_CONT
-  void ReplacePartition(vtkm::Id index, const vtkm::cont::DataSet& ds);
+  VTKM_CONT void ReplacePartition(vtkm::Id index, const vtkm::cont::DataSet& ds);
 
-  /// Append the DataSet vector @a partitions to the end of the contained one.
-  VTKM_CONT
-  void AppendPartitions(const std::vector<vtkm::cont::DataSet>& partitions);
+  /// Append the DataSet vector @a partitions to the end of list of partitions.
+  ///
+  /// This list can be provided as a `std::vector`, or it can be an initializer
+  /// list (declared in `{ }` curly braces).
+  VTKM_CONT void AppendPartitions(const std::vector<vtkm::cont::DataSet>& partitions);
 
-  ///@{
   /// Methods to Add and Get fields on a PartitionedDataSet
-  VTKM_CONT
-  vtkm::IdComponent GetNumberOfFields() const { return this->Fields.GetNumberOfFields(); }
+  VTKM_CONT vtkm::IdComponent GetNumberOfFields() const { return this->Fields.GetNumberOfFields(); }
 
-  //Fields on partitions.
+  /// @brief Adds a field that is applied to the meta-partition structure.
+  ///
+  /// The @a field must have a partition that applies across all partitions.
   VTKM_CONT void AddField(const Field& field) { this->Fields.AddField(field); }
 
+  /// @brief Add a field with a global association.
   template <typename T, typename Storage>
   VTKM_CONT void AddGlobalField(const std::string& fieldName,
                                 const vtkm::cont::ArrayHandle<T, Storage>& field)
@@ -114,6 +116,7 @@ public:
       make_Field(fieldName, vtkm::cont::Field::Association::Global, field, n, vtkm::CopyFlag::On));
   }
 
+  /// @brief Add a field where each entry is associated with a whole partition.
   template <typename T, typename Storage>
   VTKM_CONT void AddPartitionsField(const std::string& fieldName,
                                     const vtkm::cont::ArrayHandle<T, Storage>& field)
@@ -149,6 +152,9 @@ public:
     return this->Fields.GetField(name, assoc);
   }
 
+  /// @brief Get a field associated with the partitioned data structure.
+  ///
+  /// The field is selected by name and, optionally, the association.
   VTKM_CONT
   vtkm::cont::Field& GetField(
     const std::string& name,
@@ -157,12 +163,14 @@ public:
     return this->Fields.GetField(name, assoc);
   }
 
+  /// @brief Get a global field.
   VTKM_CONT
   const vtkm::cont::Field& GetGlobalField(const std::string& name) const
   {
     return this->GetField(name, vtkm::cont::Field::Association::Global);
   }
 
+  /// @brief Get a field associated with the partitions.
   VTKM_CONT
   const vtkm::cont::Field& GetPartitionsField(const std::string& name) const
   {
@@ -181,6 +189,7 @@ public:
     return this->GetField(name, vtkm::cont::Field::Association::Partitions);
   }
 
+  /// @brief Query whether the partitioned data set has the named field.
   VTKM_CONT
   bool HasField(const std::string& name,
                 vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::Any) const
@@ -188,18 +197,17 @@ public:
     return this->Fields.HasField(name, assoc);
   }
 
-  VTKM_CONT
-  bool HasGlobalField(const std::string& name) const
+  /// @brief Query whether the partitioned data set has the named global field.
+  VTKM_CONT bool HasGlobalField(const std::string& name) const
   {
     return (this->Fields.GetFieldIndex(name, vtkm::cont::Field::Association::Global) != -1);
   }
 
-  VTKM_CONT
-  bool HasPartitionsField(const std::string& name) const
+  /// @brief Query whether the partitioned data set has the named partition field.
+  VTKM_CONT bool HasPartitionsField(const std::string& name) const
   {
     return (this->Fields.GetFieldIndex(name, vtkm::cont::Field::Association::Partitions) != -1);
   }
-  ///@}
 
   /// Copies the partitions from the source. The fields on the PartitionedDataSet are not copied.
   VTKM_CONT
@@ -208,8 +216,11 @@ public:
   VTKM_CONT
   void PrintSummary(std::ostream& stream) const;
 
-  ///@{
-  /// API to support range-based for loops on partitions.
+  /// @name Iterators
+  ///
+  /// `PartitionedDataSet` provides an iterator interface that allows you to iterate
+  /// over the contained partitions using the `for (auto ds : pds)` syntax.
+  /// @{
   VTKM_CONT
   iterator begin() noexcept { return this->Partitions.begin(); }
   VTKM_CONT
@@ -222,7 +233,7 @@ public:
   const_iterator cbegin() const noexcept { return this->Partitions.cbegin(); }
   VTKM_CONT
   const_iterator cend() const noexcept { return this->Partitions.cend(); }
-  ///@}
+  /// @}
 
 private:
   std::vector<vtkm::cont::DataSet> Partitions;

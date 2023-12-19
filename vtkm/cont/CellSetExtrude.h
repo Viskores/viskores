@@ -46,6 +46,13 @@ struct CellSetExtrudeConnectivityChooser<vtkm::TopologyElementTagPoint,
 
 } // namespace detail
 
+/// @brief Defines a 3-dimensional extruded mesh representation.
+///
+/// `CellSetExtrude` takes takes a mesh defined in the XZ-plane and extrudes it along
+/// the Y-axis. This plane is repeated in a series of steps and forms wedge cells
+/// between them.
+///
+/// The extrusion can be linear or rotational (e.g., to form a torus).
 class VTKM_CONT_EXPORT CellSetExtrude : public CellSet
 {
 public:
@@ -63,7 +70,7 @@ public:
   VTKM_CONT CellSetExtrude& operator=(const CellSetExtrude& src);
   VTKM_CONT CellSetExtrude& operator=(CellSetExtrude&& src) noexcept;
 
-  virtual ~CellSetExtrude() override;
+  ~CellSetExtrude() override;
 
   vtkm::Int32 GetNumberOfPlanes() const;
 

@@ -20,7 +20,8 @@ namespace filter
 {
 namespace geometry_refinement
 {
-/// \brief Shrink cells of an arbitrary dataset by a constant factor
+/// \brief Shrink cells of an arbitrary dataset by a constant factor.
+///
 /// The Shrink filter shrinks the cells of a DataSet towards their centroid,
 /// computed as the average position of the cell points.
 /// This filter disconnects the cells, duplicating the points connected to multiple cells.
@@ -28,14 +29,18 @@ namespace geometry_refinement
 class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Shrink : public vtkm::filter::FilterField
 {
 public:
-  VTKM_CONT
-  void SetShrinkFactor(const vtkm::FloatDefault& factor)
+  /// @brief Specify the scale factor to size each cell.
+  ///
+  /// The shrink factor specifies the ratio of the shrunk cell to its original size.
+  /// This value must be between 0 and 1.
+  /// A value of 1 is the same size as the input, and a value of 0 shrinks each cell to a point.
+  VTKM_CONT void SetShrinkFactor(vtkm::FloatDefault factor)
   {
     this->ShrinkFactor = vtkm::Min(vtkm::Max(0, factor), 1); // Clamp shrink factor value
   }
 
-  VTKM_CONT
-  const vtkm::FloatDefault& GetShrinkFactor() const { return this->ShrinkFactor; }
+  /// @copydoc SetShrinkFactor
+  VTKM_CONT vtkm::FloatDefault GetShrinkFactor() const { return this->ShrinkFactor; }
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;

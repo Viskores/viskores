@@ -114,7 +114,7 @@ void SetupMapper(vtkm::rendering::MapperPoint& mapper,
   mapper.SetRadiusDelta(0.5);
   if (options.RenderCells)
   {
-    mapper.UseCells();
+    mapper.SetUseCells();
   }
 }
 

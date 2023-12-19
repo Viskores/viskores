@@ -51,12 +51,12 @@ public:
   {
   }
 
-  VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const override final
+  VTKM_CONT vtkm::cont::DeviceAdapterId GetDevice() const final
   {
     return vtkm::cont::DeviceAdapterTagTBB{};
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id& value) override final
+  VTKM_CONT RuntimeDeviceConfigReturnCode SetThreads(const vtkm::Id& value) final
   {
     this->CurrentNumThreads = value > 0 ? value : this->HardwareMaxThreads;
 #if TBB_VERSION_MAJOR >= 2020
@@ -69,7 +69,7 @@ public:
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id& value) const override final
+  VTKM_CONT RuntimeDeviceConfigReturnCode GetThreads(vtkm::Id& value) const final
   {
 #if TBB_VERSION_MAJOR >= 2020
     value = ::tbb::global_control::active_value(::tbb::global_control::max_allowed_parallelism);
@@ -79,8 +79,7 @@ public:
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VTKM_CONT virtual RuntimeDeviceConfigReturnCode GetMaxThreads(
-    vtkm::Id& value) const override final
+  VTKM_CONT RuntimeDeviceConfigReturnCode GetMaxThreads(vtkm::Id& value) const final
   {
     value = this->HardwareMaxThreads;
     return RuntimeDeviceConfigReturnCode::SUCCESS;

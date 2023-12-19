@@ -371,22 +371,22 @@ void MapperGlyphScalar::RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellse
   {
     vtkm::Float32 minSize = baseSize - baseSize * this->ScaleDelta;
     vtkm::Float32 maxSize = baseSize + baseSize * this->ScaleDelta;
-    if (this->GlyphAssociation == vtkm::cont::Field::Association::Points)
+    if (this->Association == vtkm::cont::Field::Association::Points)
     {
       glyphExtractor.ExtractCoordinates(processedCoords, processedField, minSize, maxSize);
     }
-    else // this->GlyphAssociation == vtkm::cont::Field::Association::Cells
+    else // this->Association == vtkm::cont::Field::Association::Cells
     {
       glyphExtractor.ExtractCells(processedCellSet, processedField, minSize, maxSize);
     }
   }
   else
   {
-    if (this->GlyphAssociation == vtkm::cont::Field::Association::Points)
+    if (this->Association == vtkm::cont::Field::Association::Points)
     {
       glyphExtractor.ExtractCoordinates(processedCoords, baseSize);
     }
-    else // this->GlyphAssociation == vtkm::cont::Field::Association::Cells
+    else // this->Association == vtkm::cont::Field::Association::Cells
     {
       glyphExtractor.ExtractCells(processedCellSet, baseSize);
     }

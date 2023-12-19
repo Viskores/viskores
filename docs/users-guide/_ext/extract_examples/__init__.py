@@ -102,7 +102,7 @@ def exlineref_role(name, rawtext, text, lineno, inliner, options = {}, content =
   # Strip optional `ex:` prefix.
   match = re.fullmatch(r'ex:(.*)', examplename)
   if match:
-    examplename = group(1)
+    examplename = match.group(1)
 
   try:
     example = find_examples.get_example(examplename)

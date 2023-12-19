@@ -17,14 +17,20 @@ namespace vtkm
 namespace io
 {
 
-/// \brief Manages reading images using the PNM format
+/// \brief Reads images using the PNM format.
 ///
-/// `ImageReaderPNM` extends `ImageReaderBase`, and implements reading images from a
-/// valid PNM format (for magic number P6). More details on the PNM
-/// format can be found here: http://netpbm.sourceforge.net/doc/ppm.html
+/// `ImageReaderPNM` is constructed with the name of the file to read. The data
+/// from the file is read by calling the `ReadDataSet` method.
 ///
-/// When a file is read the parsed MagicNumber and MaxColorSize provided
-/// are utilized to correctly parse the bits from the file
+/// Currently, `ImageReaderPNM` only supports files using the portable pixmap (PPM)
+/// format (with magic number ``P6''). These files are most commonly stored with a
+/// `.ppm` extension although the `.pnm` extension is also valid.
+/// More details on the PNM format can be found here at
+/// http://netpbm.sourceforge.net/doc/ppm.html
+///
+/// By default, the colors are stored in a field named "colors", but the name of the
+/// field can optionally be changed using the `SetPointFieldName` method.
+///
 class VTKM_IO_EXPORT ImageReaderPNM : public ImageReaderBase
 {
   using Superclass = ImageReaderBase;

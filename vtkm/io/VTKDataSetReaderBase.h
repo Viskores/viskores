@@ -116,7 +116,8 @@ public:
   VTKDataSetReaderBase(const VTKDataSetReaderBase&) = delete;
   void operator=(const VTKDataSetReaderBase&) = delete;
 
-  const VTKM_CONT vtkm::cont::DataSet& ReadDataSet();
+  /// @brief Load data from the file and return it in a `DataSet` object.
+  VTKM_CONT const vtkm::cont::DataSet& ReadDataSet();
 
   const vtkm::cont::DataSet& GetDataSet() const { return this->DataSet; }
 

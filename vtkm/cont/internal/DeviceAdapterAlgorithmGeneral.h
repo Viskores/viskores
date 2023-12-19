@@ -529,7 +529,10 @@ public:
 
   //--------------------------------------------------------------------------
   // Reduce
+#ifndef VTKM_CUDA
+  // nvcc doesn't like the private class declaration so disable under CUDA
 private:
+#endif
   template <typename T, typename BinaryFunctor>
   class ReduceDecoratorImpl
   {
@@ -1011,7 +1014,6 @@ public:
 
   //--------------------------------------------------------------------------
   // Sort by Key
-public:
   template <typename T, typename U, class StorageT, class StorageU>
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)

@@ -129,6 +129,11 @@ struct ArrayHandleCheck
 {
 };
 
+/// @brief Checks that the given type is a `vtkm::cont::ArrayHandle`.
+///
+/// If the type is not a `vtkm::cont::ArrayHandle` or a subclass, a static assert will
+/// cause a compile exception. This is a good way to ensure that a template argument
+/// that is assumed to be an array handle type actually is.
 #define VTKM_IS_ARRAY_HANDLE(T) VTKM_STATIC_ASSERT(::vtkm::cont::internal::ArrayHandleCheck<T>{})
 
 } // namespace internal
@@ -154,10 +159,7 @@ struct GetTypeInParentheses<void(T)>
   VTKM_IS_ARRAY_HANDLE(Superclass);                                                                \
                                                                                                    \
   VTKM_CONT                                                                                        \
-  classname()                                                                                      \
-    : Superclass()                                                                                 \
-  {                                                                                                \
-  }                                                                                                \
+  classname() {}                                                                                   \
                                                                                                    \
   VTKM_CONT                                                                                        \
   classname(const Thisclass& src)                                                                  \
@@ -276,7 +278,7 @@ VTKM_CONT_EXPORT VTKM_CONT bool ArrayHandleIsOnDevice(
 
 } // namespace detail
 
-/// \brief Manages an array-worth of data.
+/// @brief Manages an array-worth of data.
 ///
 /// `ArrayHandle` manages as array of data that can be manipulated by VTKm
 /// algorithms. The `ArrayHandle` may have up to two copies of the array, one
@@ -340,7 +342,6 @@ public:
   {
   }
 
-  ///@{
   /// Special constructor for subclass specializations that need to set the
   /// initial state array. Used when pulling data from other sources.
   ///
@@ -349,11 +350,13 @@ public:
   {
   }
 
+  /// Special constructor for subclass specializations that need to set the
+  /// initial state array. Used when pulling data from other sources.
+  ///
   VTKM_CONT explicit ArrayHandle(std::vector<vtkm::cont::internal::Buffer>&& buffers) noexcept
     : Buffers(std::move(buffers))
   {
   }
-  ///@}
 
   /// Destructs an empty ArrayHandle.
   ///
@@ -364,7 +367,7 @@ public:
   ///
   VTKM_CONT ~ArrayHandle() {}
 
-  /// \brief Copies an ArrayHandle
+  /// @brief Shallow copies an ArrayHandle
   ///
   VTKM_CONT
   vtkm::cont::ArrayHandle<ValueType, StorageTag>& operator=(
@@ -374,7 +377,7 @@ public:
     return *this;
   }
 
-  /// \brief Move and Assignment of an ArrayHandle
+  /// @brief Move and Assignment of an ArrayHandle
   ///
   VTKM_CONT
   vtkm::cont::ArrayHandle<ValueType, StorageTag>& operator=(
@@ -384,7 +387,7 @@ public:
     return *this;
   }
 
-  /// Like a pointer, two \c ArrayHandles are considered equal if they point
+  /// Like a pointer, two `ArrayHandle`s are considered equal if they point
   /// to the same location in memory.
   ///
   VTKM_CONT
@@ -415,8 +418,7 @@ public:
   ///
   VTKM_CONT StorageType GetStorage() const { return StorageType{}; }
 
-  ///@{
-  /// \brief Get an array portal that can be used in the control environment.
+  /// @brief Get an array portal that can be used in the control environment.
   ///
   /// The returned array can be used in the control environment to read values from the array. (It
   /// is not possible to write to the returned portal. That is `Get` will work on the portal, but
@@ -431,14 +433,14 @@ public:
     vtkm::cont::Token token;
     return this->ReadPortal(token);
   }
+  /// @copydoc ReadPortalType
   VTKM_CONT ReadPortalType ReadPortal(vtkm::cont::Token& token) const
   {
     return StorageType::CreateReadPortal(
       this->GetBuffers(), vtkm::cont::DeviceAdapterTagUndefined{}, token);
   }
-  ///@}
 
-  /// \brief Get an array portal that can be used in the control environment.
+  /// @brief Get an array portal that can be used in the control environment.
   ///
   /// The returned array can be used in the control environment to reand and write values to the
   /// array.
@@ -452,6 +454,7 @@ public:
     vtkm::cont::Token token;
     return this->WritePortal(token);
   }
+  /// @copydoc WritePortal
   VTKM_CONT WritePortalType WritePortal(vtkm::cont::Token& token) const
   {
     return StorageType::CreateWritePortal(
@@ -471,16 +474,15 @@ public:
     return StorageType::GetNumberOfComponentsFlat(this->GetBuffers());
   }
 
-  ///@{
-  ///  \brief Allocates an array large enough to hold the given number of values.
+  /// @brief Allocates an array large enough to hold the given number of values.
   ///
   /// The allocation may be done on an already existing array. If so, then the data
   /// are preserved as best as possible if the preserve flag is set to `vtkm::CopyFlag::On`.
   /// If the preserve flag is set to `vtkm::CopyFlag::Off` (the default), any existing data
   /// could be wiped out.
   ///
-  /// This method can throw `ErrorBadAllocation` if the array cannot be allocated or
-  /// `ErrorBadValue` if the allocation is not feasible (for example, the
+  /// This method can throw `vtkm::cont::ErrorBadAllocation` if the array cannot be allocated or
+  /// `vtkm::cont::ErrorBadValue` if the allocation is not feasible (for example, the
   /// array storage is read-only).
   ///
   VTKM_CONT void Allocate(vtkm::Id numberOfValues,
@@ -490,16 +492,15 @@ public:
     StorageType::ResizeBuffers(numberOfValues, this->GetBuffers(), preserve, token);
   }
 
+  /// @copydoc Allocate
   VTKM_CONT void Allocate(vtkm::Id numberOfValues,
                           vtkm::CopyFlag preserve = vtkm::CopyFlag::Off) const
   {
     vtkm::cont::Token token;
     this->Allocate(numberOfValues, preserve, token);
   }
-  ///@}
 
-  ///@{
-  /// \brief Allocates an array and fills it with an initial value.
+  /// @brief Allocates an array and fills it with an initial value.
   ///
   /// `AllocateAndFill` behaves similar to `Allocate` except that after allocation it fills
   /// the array with a given `fillValue`. This method is convenient when you wish to initialize
@@ -532,6 +533,7 @@ public:
     }
   }
 
+  /// @copydoc AllocateAndFill
   VTKM_CONT void AllocateAndFill(vtkm::Id numberOfValues,
                                  const ValueType& fillValue,
                                  vtkm::CopyFlag preserve = vtkm::CopyFlag::Off) const
@@ -539,10 +541,8 @@ public:
     vtkm::cont::Token token;
     this->AllocateAndFill(numberOfValues, fillValue, preserve, token);
   }
-  ///@}
 
-  /// @{
-  /// \brief Fills the array with a given value.
+  /// @brief Fills the array with a given value.
   ///
   /// After calling this method, every entry in the array from `startIndex` to `endIndex`.
   /// of the array is set to `fillValue`. If `startIndex` or `endIndex` is not specified,
@@ -555,17 +555,18 @@ public:
   {
     StorageType::Fill(this->GetBuffers(), fillValue, startIndex, endIndex, token);
   }
+  /// @copydoc Fill
   VTKM_CONT void Fill(const ValueType& fillValue, vtkm::Id startIndex, vtkm::Id endIndex) const
   {
     vtkm::cont::Token token;
     this->Fill(fillValue, startIndex, endIndex, token);
   }
+  /// @copydoc Fill
   VTKM_CONT void Fill(const ValueType& fillValue, vtkm::Id startIndex = 0) const
   {
     vtkm::cont::Token token;
     this->Fill(fillValue, startIndex, this->GetNumberOfValues(), token);
   }
-  /// @}
 
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).

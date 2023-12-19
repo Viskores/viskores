@@ -479,6 +479,18 @@ struct CheckExtractedArray
       auto extractedData = extractedPortal.Get(valueIndex);
       VTKM_TEST_ASSERT(test_equal(originalData, extractedData));
     }
+
+    // Make sure an extracted array stuffed back into an UnknownArrayHandle works.
+    // This can happen when working with an extracted array that is passed to functions
+    // that are implemented with UnknownArrayHandle.
+    vtkm::cont::UnknownArrayHandle unknownArray{ extractedArray };
+
+    using ComponentType =
+      typename vtkm::VecTraits<typename ExtractedArray::ValueType>::BaseComponentType;
+    vtkm::cont::UnknownArrayHandle newBasic = unknownArray.NewInstanceBasic();
+    newBasic.AsArrayHandle<vtkm::cont::ArrayHandleRuntimeVec<ComponentType>>();
+    vtkm::cont::UnknownArrayHandle newFloat = unknownArray.NewInstanceFloatBasic();
+    newFloat.AsArrayHandle<vtkm::cont::ArrayHandleRuntimeVec<vtkm::FloatDefault>>();
   }
 };
 

@@ -27,11 +27,8 @@ The ``Initialize`` function is defined in the :file:`vtkm/cont/Initialize.h` hea
    :file: VTKmQuickStart.cxx
    :caption: Initializing |VTKm|.
 
-.. todo:: Uncomment and add cross reference.
-
-..
-   ``Initialize`` has many options to customize command line argument processing.
-   See Chapter \ref{chap:Initialization} for more details.
+``Initialize`` has many options to customize command line argument processing.
+See :chapref:`initialization:Initialization` for more details.
 
 .. didyouknow::
   Don't have access to ``argc`` and ``argv``?
@@ -52,20 +49,17 @@ These files have a :file:`.vtk` extension.
 
 VTK legacy files can be read using the :class:`vtkm::io::VTKDataSetReader` object, which is declared in the :file:`vtkm/io/VTKDataSetReader.h` header file.
 The object is constructed with a string specifying the filename (which for this example we will get from the command line).
-The data is then read in by calling the :member:`vtkm::io::VTKDataSetReader::ReadDataSet` method.
+The data is then read in by calling the :func:`vtkm::io::VTKDataSetReader::ReadDataSet` method.
 
 .. load-example:: VTKmQuickStartReadFile
    :file: VTKmQuickStart.cxx
    :caption: Reading data from a VTK legacy file.
 
-.. todo:: Uncomment and cross reference.
+The ``ReadDataSet`` method returns the data in a :class:`vtkm::cont::DataSet` object.
+The structure and features of a ``DataSet`` object is described in :chapref:`dataset:Data Sets`.
+For the purposes of this quick start, we will treat ``DataSet`` as a mostly opaque object that gets passed to and from operations in |VTKm|.
 
-..
-   The ``ReadDataSet`` method returns the data in a :class:`vtkm::cont::DataSet` object.
-   The structure and features of a ``DataSet`` object is described in Chapter \ref{chap:DataSet}.
-   For the purposes of this quick start, we will treat ``DataSet`` as a mostly opaque object that gets passed to and from operations in |VTKm|.
-
-   More information about |VTKm|'s file readers and writers can be found in Chapter \ref{chap:FileIO}.
+More information about |VTKm|'s file readers and writers can be found in :chapref:`io:File I/O`.
 
 
 ------------------------------
@@ -78,18 +72,14 @@ Algorithms in |VTKm| are encapsulated in units called *filters*.
 A filter takes in a ``DataSet``, processes it, and returns a new ``DataSet``.
 The returned ``DataSet`` often, but not always, contains data inherited from the source data.
 
-.. todo:: Fix cross reference to Running Filters.
-
-|VTKm| comes with many filters, which are documented in Chapter \ref{chap:RunningFilters}.
+|VTKm| comes with many filters, which are documented in :chapref:`provided-filters:Provided Filters`.
 For this example, we will demonstrate the use of the :class:`vtkm::filter::MeshQuality` filter, which is defined in the :file:`vtkm/filter/MeshQuality.h` header file.
 The ``MeshQuality`` filter will compute for each cell in the input data will compute a quantity representing some metric of the cell's shape.
 Several metrics are available, and in this example we will find the area of each cell.
 
-.. todo:: Fix cross reference to MeshQuality.
-
 Like all filters, ``MeshQuality`` contains an ``Execute`` method that takes an input ``DataSet`` and produces an output ``DataSet``.
 It also has several methods used to set up the parameters of the execution.
-Section \ref{sec:MeshQuality} provides details on all the options of ``MeshQuality``.
+:secref:`provided-filters:Mesh Quality Metrics` provides details on all the options of ``MeshQuality``.
 Suffice it to say that in this example we instruct the filter to find the area of each cell, which it will output to a field named ``area``.
 
 .. load-example:: VTKmQuickStartFilter
@@ -106,11 +96,9 @@ Rendering an Image
 Although it is possible to leverage external rendering systems, |VTKm| comes with its own self-contained image rendering algorithms.
 These rendering classes are completely implemented with the parallel features provided by |VTKm|, so using rendering in |VTKm| does not require any complex library dependencies.
 
-.. todo:: Fix cross reference to rendering chapter.
-
 Even a simple rendering scene requires setting up several parameters to establish what is to be featured in the image including what data should be rendered, how that data should be represented, where objects should be placed in space, and the qualities of the image to generate.
 Consequently, setting up rendering in |VTKm| involves many steps.
-Chapter \ref{chap:Rendering} goes into much detail on the ways in which a rendering scene is specified.
+:chapref:`rendering:Rendering` goes into much detail on the ways in which a rendering scene is specified.
 For now, we just briefly present some boilerplate to achieve a simple rendering.
 
 .. load-example:: VTKmQuickStartRender
@@ -133,9 +121,9 @@ In our case we only have one ``DataSet`` to render, so we simply create a single
 The second step in setting up a render is to create a *view*.
 The view comprises the aforementioned scene, a *mapper*, which describes how the data are to be rendered, and a *canvas*, which holds the image buffer and other rendering context.
 The view is created in :exlineref:`VTKmQuickStartRender:view`.
-The image generation is then performed by calling :member:`vtkm::rendering::View::Paint` on the view object (:exlineref:`VTKmQuickStartRender:paint`).
+The image generation is then performed by calling :func:`vtkm::rendering::View::Paint` on the view object (:exlineref:`VTKmQuickStartRender:paint`).
 However, the rendering done by |VTKm|'s rendering classes is performed offscreen, which means that the result does not appear on your computer's monitor.
-The easiest way to see the image is to save it to an image file using the :member:`vtkm::rendering::View::SaveAs` method (:exlineref:`VTKmQuickStartRender:save`).
+The easiest way to see the image is to save it to an image file using the :func:`vtkm::rendering::View::SaveAs` method (:exlineref:`VTKmQuickStartRender:save`).
 
 
 ------------------------------

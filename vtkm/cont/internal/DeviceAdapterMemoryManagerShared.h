@@ -30,28 +30,25 @@ class VTKM_CONT_EXPORT DeviceAdapterMemoryManagerShared : public DeviceAdapterMe
 public:
   VTKM_CONT BufferInfo Allocate(vtkm::BufferSizeType size) const override;
 
-  VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyHostToDevice(
+  VTKM_CONT vtkm::cont::internal::BufferInfo CopyHostToDevice(
     const vtkm::cont::internal::BufferInfo& src) const override;
 
-  VTKM_CONT virtual void CopyHostToDevice(
-    const vtkm::cont::internal::BufferInfo& src,
-    const vtkm::cont::internal::BufferInfo& dest) const override;
+  VTKM_CONT void CopyHostToDevice(const vtkm::cont::internal::BufferInfo& src,
+                                  const vtkm::cont::internal::BufferInfo& dest) const override;
 
-  VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToHost(
+  VTKM_CONT vtkm::cont::internal::BufferInfo CopyDeviceToHost(
     const vtkm::cont::internal::BufferInfo& src) const override;
 
-  VTKM_CONT virtual void CopyDeviceToHost(
-    const vtkm::cont::internal::BufferInfo& src,
-    const vtkm::cont::internal::BufferInfo& dest) const override;
+  VTKM_CONT void CopyDeviceToHost(const vtkm::cont::internal::BufferInfo& src,
+                                  const vtkm::cont::internal::BufferInfo& dest) const override;
 
-  VTKM_CONT virtual vtkm::cont::internal::BufferInfo CopyDeviceToDevice(
+  VTKM_CONT vtkm::cont::internal::BufferInfo CopyDeviceToDevice(
     const vtkm::cont::internal::BufferInfo& src) const override;
 
-  VTKM_CONT virtual void CopyDeviceToDevice(
-    const vtkm::cont::internal::BufferInfo& src,
-    const vtkm::cont::internal::BufferInfo& dest) const override;
+  VTKM_CONT void CopyDeviceToDevice(const vtkm::cont::internal::BufferInfo& src,
+                                    const vtkm::cont::internal::BufferInfo& dest) const override;
 
-  VTKM_CONT virtual void DeleteRawPointer(void* mem) const override;
+  VTKM_CONT void DeleteRawPointer(void* mem) const override;
 };
 }
 }

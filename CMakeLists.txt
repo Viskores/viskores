@@ -126,6 +126,15 @@ cmake_dependent_option(VTKm_ENABLE_USERS_GUIDE
   "VTKm_ENABLE_DOCUMENTATION"
   OFF
   )
+# If you are building the User's Guide, you may only need the XML output from Doxygen, which
+# is much faster than generating the HTML. Thus, give the option to turn on/off the HTML output.
+cmake_dependent_option(VTKm_Doxygen_HTML_output
+  "Build HTML output"
+  ON
+  "VTKm_ENABLE_USERS_GUIDE"
+  ON
+  )
+mark_as_advanced(VTKm_Doxygen_HTML_output)
 
 # We may want to make finer controls on whether libraries/modules get built.
 # VTK uses the concept of groups for its modules
@@ -252,6 +261,11 @@ include(VTKmWrappers)
 # disable it (or if the user explicitly turns this option OFF)
 cmake_dependent_option(VTKm_ENABLE_KOKKOS_THRUST "Enable Kokkos thrust support (only valid with CUDA and HIP)"
   ON "VTKm_ENABLE_KOKKOS;Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP" OFF)
+
+# CUDA already provides thrust
+if (VTKm_ENABLE_KOKKOS_THRUST AND TARGET vtkm_kokkos_hip)
+  find_package(rocthrust REQUIRED CONFIG)
+endif()
 
 # Create vtkm_compiler_flags library. This is an interface library that
 # holds all the C++ compiler flags that are needed for consumers and

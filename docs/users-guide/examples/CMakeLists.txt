@@ -9,11 +9,40 @@
 ##============================================================================
 
 set(examples
+  GuideExampleArrayHandle.cxx
+  GuideExampleColorTables.cxx
   GuideExampleCoreDataTypes.cxx
+  GuideExampleEnvironmentModifierMacros.cxx
+  GuideExampleInitialization.cxx
+  GuideExampleIO.cxx
+  GuideExampleProvidedFilters.cxx
+  GuideExampleRendering.cxx
+  GuideExampleRuntimeDeviceTracker.cxx
+  GuideExampleTimer.cxx
   )
+set(examples_device
+  GuideExampleCellEdgesFaces.cxx
+  GuideExampleDataSetCreation.cxx
+  GuideExampleErrorHandling.cxx
+  GuideExampleSimpleAlgorithm.cxx
+  )
+set(extra_libs)
+
+vtkm_find_gl(OPTIONAL GL GLUT)
+if(TARGET GLUT::GLUT)
+  list(APPEND examples
+    GuideExampleRenderingInteractive.cxx
+    )
+  list(APPEND extra_libs OpenGL::GL GLUT::GLUT)
+else()
+  message("Not building OpenGL tutorial examples because GL/GLUT not found.")
+endif()
 
 vtkm_unit_tests(
   SOURCES ${examples}
+  DEVICE_SOURCES ${examples_device}
+  LIBRARIES ${extra_libs}
+  TEST_ARGS "--no-interaction"
   )
 
 # Special example that is an encapsulated program

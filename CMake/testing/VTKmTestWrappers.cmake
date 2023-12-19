@@ -172,13 +172,13 @@ function(vtkm_unit_tests)
     if(VTKm_ENABLE_TBB AND (enable_all_backends OR NOT per_device_suffix))
       list(APPEND per_device_command_line_arguments --vtkm-device=tbb)
       list(APPEND per_device_suffix "TBB")
-      list(APPEND per_device_timeout 180)
+      list(APPEND per_device_timeout $<IF:$<CONFIG:Debug>,300,180>)
       list(APPEND per_device_serial FALSE)
     endif()
     if(VTKm_ENABLE_OPENMP AND (enable_all_backends OR NOT per_device_suffix))
       list(APPEND per_device_command_line_arguments --vtkm-device=openmp)
       list(APPEND per_device_suffix "OPENMP")
-      list(APPEND per_device_timeout 180)
+      list(APPEND per_device_timeout $<IF:$<CONFIG:Debug>,300,180>)
       #We need to have all OpenMP tests run serially as they
       #will uses all the system cores, and we will cause a N*N thread
       #explosion which causes the tests to run slower than when run
@@ -189,7 +189,7 @@ function(vtkm_unit_tests)
       list(APPEND per_device_command_line_arguments --vtkm-device=serial)
       list(APPEND per_device_suffix "SERIAL")
       list(APPEND per_device_timeout 180)
-      list(APPEND per_device_serial FALSE)
+      list(APPEND per_device_serial $<IF:$<CONFIG:Debug>,300,180>)
     endif()
     if(NOT enable_all_backends)
       # If not enabling all backends, exactly one backend should have been added.
@@ -202,7 +202,7 @@ function(vtkm_unit_tests)
     # A specific backend was requested.
     set(per_device_command_line_arguments --vtkm-device=${VTKm_UT_BACKEND})
     set(per_device_suffix ${VTKm_UT_BACKEND})
-    set(per_device_timeout 180)
+    set(per_device_timeout $<IF:$<CONFIG:Debug>,300,180>)
     # Some devices don't like multiple tests run at the same time.
     set(per_device_serial TRUE)
   endif()

@@ -245,7 +245,10 @@ public:
   }
 
   //----------------------------------------------------------------------------
+#ifndef VTKM_CUDA
+  // nvcc doesn't like the private class declaration so disable under CUDA
 private:
+#endif
   template <typename ArrayHandle, typename BinaryOperator, typename ResultType>
   VTKM_CONT static ResultType ReduceImpl(const ArrayHandle& input,
                                          BinaryOperator binaryOperator,
@@ -414,7 +417,10 @@ public:
   }
 
   //----------------------------------------------------------------------------
+#ifndef VTKM_CUDA
+  // nvcc doesn't like the private class declaration so disable under CUDA
 private:
+#endif
   // Scan and Reduce have the same conditions
   template <typename BinaryOperator, typename ResultType>
   using UseKokkosScan = UseKokkosReduce<BinaryOperator, ResultType>;
@@ -546,7 +552,10 @@ public:
   }
 
   //----------------------------------------------------------------------------
+#ifndef VTKM_CUDA
+  // nvcc doesn't like the private class declaration so disable under CUDA
 private:
+#endif
   template <typename T, typename StorageIn, typename StorageOut, typename BinaryOperator>
   VTKM_CONT static T ScanInclusiveImpl(const vtkm::cont::ArrayHandle<T, StorageIn>& input,
                                        vtkm::cont::ArrayHandle<T, StorageOut>& output,

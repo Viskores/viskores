@@ -120,7 +120,7 @@ A ``Vec`` also supports basic arithmetic operators so that it can be used much l
 
 .. load-example:: SimpleVectorTypes
    :file: GuideExampleCoreDataTypes.cxx
-   :caption: Simple use of ``Vec`` objects.}
+   :caption: Simple use of ``Vec`` objects.
 
 You can also specify the precision for each of these vector types by appending the bit size of each component.
 For example, :type:`vtkm::Vec3f_32` and :type:`vtkm::Vec3f_64` represent 3-component floating point vectors with each component being 32 bits and 64 bits respectively.

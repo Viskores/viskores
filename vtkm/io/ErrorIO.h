@@ -19,6 +19,9 @@ namespace io
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
+/// This class is thrown when VTK-m encounters an error with the file system.
+/// This can happen if there is a problem with reading or writing a file such
+/// as a bad filename.
 class VTKM_ALWAYS_EXPORT ErrorIO : public vtkm::cont::Error
 {
 public:

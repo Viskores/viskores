@@ -22,7 +22,7 @@ namespace rendering
 {
 
 /**
- * \brief MapperCylinder renderers edges from a cell set
+ * \brief `MapperCylinder` renderers edges from a cell set
  *        and renders them as cylinders via ray tracing.
  *
  */

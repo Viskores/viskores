@@ -86,7 +86,6 @@ public:
 
   void PrintSummary(std::ostream& out) const;
 
-public:
   ExecObjType PrepareForExecution(vtkm::cont::DeviceAdapterId device,
                                   vtkm::cont::Token& token) const;
 
