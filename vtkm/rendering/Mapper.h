@@ -70,7 +70,7 @@ protected:
   bool LogarithmX = false;
   bool LogarithmY = false;
 
-  // for the volume renderer sorting back to front gives better results, which is the default
+  // for the volume renderer sorting back to front gives better results for transarent colors, which is the default
   // but for the raytracer front to back is better.
   bool SortBackToFront = true;
 
