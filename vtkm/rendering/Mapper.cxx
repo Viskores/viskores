@@ -25,15 +25,15 @@ void Mapper::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
                          const vtkm::rendering::Camera& camera,
                          const vtkm::Range& scalarRange)
 {
-  RenderCellsImpl(cellset,
-                  coords,
-                  scalarField,
-                  colorTable,
-                  camera,
-                  scalarRange,
-                  make_FieldCell(vtkm::cont::GetGlobalGhostCellFieldName(),
-                                 vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(
-                                   0, scalarField.GetNumberOfValues())));
+  RenderCellsImpl(
+    cellset,
+    coords,
+    scalarField,
+    colorTable,
+    camera,
+    scalarRange,
+    make_FieldCell(vtkm::cont::GetGlobalGhostCellFieldName(),
+                   vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(0, cellset.GetNumberOfCells())));
 };
 
 void Mapper::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
