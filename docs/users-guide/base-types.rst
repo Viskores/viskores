@@ -222,6 +222,4 @@ For example, :type:`vtkm::Vec4ui_8` is a \textidentifier{Vec} of 4 unsigned byte
 .. doxygentypedef:: vtkm::Vec4ui_64
 
 These types really just scratch the surface of the ``Vec`` types available in |VTKm| and the things that can be done with them.
-See ``:chapref:`advanced-types:Advanced Types` `` for more information on ``Vec`` types and what can be done with them.
-
-.. todo:: Update chapter reference.
+See :chapref:`advanced-types:Advanced Types` for more information on ``Vec`` types and what can be done with them.

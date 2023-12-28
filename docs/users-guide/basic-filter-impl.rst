@@ -15,7 +15,7 @@ There are multiple base filter classes that we can choose from.
 These different classes are documented later in Chapter \ref{chap:FilterTypeReference}.
 For this example we will use the :class:`vtkm::filter::FilterField` base class, which is used to derive one field from another field.
 
-.. todo:: Fix above reference.
+.. todo:: Fix above reference to filter types chapter.
 
 The following example shows the declaration of our pressure unit conversion filter.
 By convention, this declaration would be placed in a header file with a ``.h`` extension.
@@ -69,7 +69,7 @@ One of the challenges with writing filters is determining the actual types the a
 The :class:`vtkm::cont::Field` object pulled from the input :class:`vtkm::cont::DataSet` contains a :class:`vtkm::cont::ArrayHandle` (see :chapref:`basic-array-handles:Basic Array Handles`), but you do not know what the template parameters of the :class:`vtkm::cont::ArrayHandle` are.
 There are numerous ways to extract an array of an unknown type out of a :class:`vtkm::cont::ArrayHandle` (many of which will be explored later in Chapter \ref{chap:UnknownArrayHandle}), but the :class:`vtkm::filter::FilterField` contains some convenience functions to simplify this.
 
-.. todo:: Fix above reference.
+.. todo:: Fix above reference to unknown array handle chapter.
 
 In particular, this filter operates specifically on scalar fields.
 For this purpose, :class:`vtkm::filter::FilterField` provides the :func:`vtkm::filter::FilterField::CastAndCallScalarField` helper method.
@@ -115,4 +115,4 @@ This chapter has just provided a brief introduction to creating filters.
 There are several more filter superclasses to help express algorithms of different types.
 After some more worklet concepts to implement more complex algorithms are introduced in :partref:`part-advanced:Advanced Development`, we will see a more complete documentation of the types of filters in Chapter \ref{chap:FilterTypeReference}.
 
-.. todo:: Fix above reference.
+.. todo:: Fix above reference to filter type reference.

@@ -27,9 +27,12 @@ namespace vtkm
 ///
 struct RangeId
 {
+  /// The minimum index of the range (inclusive).
   vtkm::Id Min;
+  /// The maximum index of the range (exclusive).
   vtkm::Id Max;
 
+  /// Construct a range with no indices.
   VTKM_EXEC_CONT
   RangeId()
     : Min(0)
@@ -37,6 +40,8 @@ struct RangeId
   {
   }
 
+  /// Construct a range with the given minimum (inclusive) and maximum (exclusive)
+  /// indices.
   VTKM_EXEC_CONT
   RangeId(vtkm::Id min, vtkm::Id max)
     : Min(min)

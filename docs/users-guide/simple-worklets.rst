@@ -63,7 +63,7 @@ The parameters of the function prototype are *tags* that identify the type of da
 ``ControlSignature`` tags are defined by the worklet type and the various tags are documented more fully in Chapter \ref{chap:WorkletTypeReference}.
 In the case of :numref:`ex:ControlSignature`, the two tags ``FieldIn`` and ``FieldOut`` represent input and output data, respectively.
 
-.. todo:: Fix reference above.
+.. todo:: Fix worklet type reference above.
 
 .. index::
    single: control signature

@@ -511,15 +511,13 @@ First call :func:`vtkm::rendering::View::Paint` on the :class:`vtkm::rendering::
 Second, get the image color data out of the :class:`vtkm::rendering::View`'s :class:`vtkm::rendering::Canvas` object.
 This is done by calling :func:`vtkm::rendering::Canvas::GetColorBuffer`.
 This will return a :class:`vtkm::cont::ArrayHandle` object containing the image's pixel color data.
-(:class:`vtkm::cont::ArrayHandle` is discussed in detail in Chapter \ref{chap:BasicArrayHandles} and subsequent chapters.)
+(:class:`vtkm::cont::ArrayHandle` is discussed in detail in :chapref:`basic-array-handles:Basic Array Handles` and subsequent chapters.)
 A raw pointer can be pulled out of this :class:`vtkm::cont::ArrayHandle` by casting it to the :class:`vtkm::cont::ArrayHandleBase` subclass and calling the :func:`vtkm::cont::ArrayHandleBase::GetReadPointer` method on that.
 Third, the pixel color data are pasted into the OpenGL render context.
 There are multiple ways to do so, but the most straightforward way is to use the ``glDrawPixels`` function provided by OpenGL.
 Fourth, swap the OpenGL buffers.
 The method to swap OpenGL buffers varies by OS platform.
 The aforementioned graphics libraries GLUT and GLFW each provide a function for doing so.
-
-.. todo:: Fix chapter reference above.
 
 .. load-example:: RenderToOpenGL
    :file: GuideExampleRenderingInteractive.cxx

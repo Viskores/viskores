@@ -30,9 +30,13 @@ namespace vtkm
 ///
 struct Range
 {
+  /// The minumum value of the range (inclusive).
   vtkm::Float64 Min;
+  /// Tha maximum value of the range (inclusive).
   vtkm::Float64 Max;
 
+  /// Construct a range with a given minimum and maximum. If no minimum or maximum is
+  /// given, the range will be empty.
   VTKM_EXEC_CONT
   Range()
     : Min(vtkm::Infinity64())

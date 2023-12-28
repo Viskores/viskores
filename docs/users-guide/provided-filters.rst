@@ -412,8 +412,6 @@ The input and output of this filter are a structured data sets.
 .. doxygenclass:: vtkm::filter::entity_extraction::ExtractStructured
    :members:
 
-.. todo:: Document vtkm::RangeId and vtkm::RangeId3 (in advanced types chapter).
-
 Ghost Cell Removal
 ------------------------------
 

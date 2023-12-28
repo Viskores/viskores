@@ -28,15 +28,24 @@ namespace vtkm
 ///
 struct Bounds
 {
+  /// The range of values in the X direction. The `vtkm::Range` struct provides
+  /// the minimum and maximum along that axis.
   vtkm::Range X;
+  /// The range of values in the Y direction. The `vtkm::Range` struct provides
+  /// the minimum and maximum along that axis.
   vtkm::Range Y;
+  /// The range of values in the Z direction. The `vtkm::Range` struct provides
+  /// the minimum and maximum along that axis.
   vtkm::Range Z;
 
+  /// Construct an empty bounds. The bounds will represent no space until
+  /// otherwise modified.
   VTKM_EXEC_CONT
   Bounds() {}
 
   Bounds(const Bounds&) = default;
 
+  /// Construct a bounds with a given range in the x, y, and z dimensions.
   VTKM_EXEC_CONT
   Bounds(const vtkm::Range& xRange, const vtkm::Range& yRange, const vtkm::Range& zRange)
     : X(xRange)
@@ -45,6 +54,8 @@ struct Bounds
   {
   }
 
+  /// Construct a bounds with the minimum and maximum coordinates in the x, y, and z
+  /// directions.
   template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
   VTKM_EXEC_CONT Bounds(const T1& minX,
                         const T2& maxX,

@@ -75,6 +75,7 @@ today_fmt = '%B %d, %Y'
 
 rst_prolog = '''
 .. |VTKm| replace:: VTK‑m
+.. |Veclike| replace:: ``Vec``-like
 .. |report-year| replace:: 2023
 .. |report-number| replace:: ORNL/TM-2023/3182
 '''
