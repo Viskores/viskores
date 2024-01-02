@@ -66,13 +66,14 @@ public:
   void ReleaseCellMapArrays() { this->SharedState.CellIdMap.ReleaseResources(); }
 
   // Filter called without normals generation
-  template <typename ValueType,
+  template <typename IVType,
+            typename ValueType,
             typename CoordsType,
             typename StorageTagField,
             typename CoordinateType,
             typename StorageTagVertices>
   vtkm::cont::CellSetSingleType<> Run(
-    const std::vector<ValueType>& isovalues,
+    const std::vector<IVType>& isovalues,
     const vtkm::cont::CellSetStructured<3>& cells,
     const CoordsType& coordinateSystem,
     const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& input,
@@ -87,14 +88,15 @@ public:
   }
 
   // Filter called with normals generation
-  template <typename ValueType,
+  template <typename IVType,
+            typename ValueType,
             typename CoordsType,
             typename StorageTagField,
             typename CoordinateType,
             typename StorageTagVertices,
             typename StorageTagNormals>
   vtkm::cont::CellSetSingleType<> Run(
-    const std::vector<ValueType>& isovalues,
+    const std::vector<IVType>& isovalues,
     const vtkm::cont::CellSetStructured<3>& cells,
     const CoordsType& coordinateSystem,
     const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& input,
