@@ -61,7 +61,7 @@ struct CompareIndices
   {
   }
 
-  bool operator()(int i, int j) const
+  bool operator()(vtkm::Id i, vtkm::Id j) const
   {
     if (SortBackToFront)
     {
@@ -82,7 +82,7 @@ void Mapper::RenderCellsPartitioned(const vtkm::cont::PartitionedDataSet partiti
 {
   // sort partitions back to front for best rendering with the volume renderer
   std::vector<vtkm::Vec3f> centers(partitionedData.GetNumberOfPartitions()); // vector for centers
-  std::vector<int> indices(partitionedData.GetNumberOfPartitions());
+  std::vector<vtkm::Id> indices(partitionedData.GetNumberOfPartitions());
   for (vtkm::Id p = 0; p < partitionedData.GetNumberOfPartitions(); p++)
   {
     indices[static_cast<size_t>(p)] = p;
