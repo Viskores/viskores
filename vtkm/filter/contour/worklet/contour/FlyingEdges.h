@@ -40,7 +40,8 @@ vtkm::Id extend_by(vtkm::cont::ArrayHandle<T, S>& handle, vtkm::Id size)
 }
 
 //----------------------------------------------------------------------------
-template <typename ValueType,
+template <typename IVType,
+          typename ValueType,
           typename CoordsType,
           typename StorageTagField,
           typename StorageTagVertices,
@@ -50,7 +51,7 @@ template <typename ValueType,
 vtkm::cont::CellSetSingleType<> execute(
   const vtkm::cont::CellSetStructured<3>& cells,
   const CoordsType coordinateSystem,
-  const std::vector<ValueType>& isovalues,
+  const std::vector<IVType>& isovalues,
   const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& inputField,
   vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices>& points,
   vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>& normals,
@@ -82,7 +83,7 @@ vtkm::cont::CellSetSingleType<> execute(
   {
     auto multiContourCellOffset = sharedState.CellIdMap.GetNumberOfValues();
     auto multiContourPointOffset = sharedState.InterpolationWeights.GetNumberOfValues();
-    ValueType isoval = isovalues[i];
+    IVType isoval = isovalues[i];
 
     //----------------------------------------------------------------------------
     // PASS 1: Process all of the voxel edges that compose each row. Determine the
@@ -100,7 +101,7 @@ vtkm::cont::CellSetSingleType<> execute(
       // Additionally GPU's does significantly better when you do an initial fill
       // and write only non-below values
       //
-      ComputePass1<ValueType> worklet1(isoval, pdims);
+      ComputePass1<IVType> worklet1(isoval, pdims);
       vtkm::cont::TryExecuteOnDevice(invoke.GetDevice(),
                                      launchComputePass1{},
                                      worklet1,
