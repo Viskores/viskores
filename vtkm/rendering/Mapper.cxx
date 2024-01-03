@@ -65,7 +65,8 @@ struct CompareIndices
   {
     if (this->SortBackToFront)
     {
-      return (vtkm::Dot(Centers[i], CameraDirection) > vtkm::Dot(Centers[j], CameraDirection));
+      return (vtkm::Dot(this->Centers[i], this->CameraDirection) >
+              vtkm::Dot(this->Centers[j], this->CameraDirection));
     }
     else
     {
