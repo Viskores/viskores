@@ -63,7 +63,7 @@ struct CompareIndices
 
   bool operator()(vtkm::Id i, vtkm::Id j) const
   {
-    if (SortBackToFront)
+    if (this->SortBackToFront)
     {
       return (vtkm::Dot(Centers[i], CameraDirection) > vtkm::Dot(Centers[j], CameraDirection));
     }
