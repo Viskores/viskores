@@ -165,9 +165,9 @@ struct Bounds
   VTKM_EXEC_CONT
   vtkm::Vec3f_64 MaxCorner() const { return vtkm::Vec3f_64(this->X.Max, this->Y.Max, this->Z.Max); }
 
-  /// \b Returns all cornes of the  bounds
+  /// \b Returns all Corners of the bounds.
   ///
-  /// \c Corders returns the cornerst of the bounds.If the bounds
+  /// \c Corners returns the corners of the bounds. If the bounds
   /// are empty, the results are undefined.
   ///
   VTKM_EXEC_CONT
