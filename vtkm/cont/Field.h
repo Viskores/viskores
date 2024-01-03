@@ -16,7 +16,6 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/CastAndCall.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
 
@@ -307,6 +306,7 @@ inline vtkm::cont::Field make_FieldCell(std::string name,
 {
   return vtkm::cont::Field(name, vtkm::cont::Field::Association::Cells, data);
 }
+
 } // namespace cont
 } // namespace vtkm
 

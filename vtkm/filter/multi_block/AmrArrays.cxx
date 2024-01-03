@@ -227,7 +227,6 @@ void AmrArrays::ComputeGenerateGhostType()
       if (!partition.HasGhostCellField())
       {
         ghostArrayHandle.AllocateAndFill(partition.GetNumberOfCells(), 0);
-        //        vtkm::cont::ArrayHandleConstant<vtkm::UInt8> ghostArrayHandle = vtkm::cont::ArrayHandleConstant<vtkm::UInt8> (0, partition.GetNumberOfCells());
       }
       else
       {

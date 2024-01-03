@@ -12,6 +12,7 @@
 #define vtk_m_Bounds_h
 
 #include <vtkm/Range.h>
+#include <vtkm/VectorAnalysis.h>
 
 namespace vtkm
 {
@@ -171,7 +172,7 @@ struct Bounds
   /// are empty, the results are undefined.
   ///
   VTKM_EXEC_CONT
-  void Corners(vtkm::Vec3f_64* corners) const
+  void Corners(vtkm::Vec<vtkm::Vec3f_64, 8> corners) const
   {
     corners[0] = vtkm::Vec3f_64(this->X.Min, this->Y.Min, this->Z.Min);
     corners[1] = vtkm::Vec3f_64(this->X.Min, this->Y.Min, this->Z.Max);
@@ -183,22 +184,22 @@ struct Bounds
     corners[7] = vtkm::Vec3f_64(this->X.Max, this->Y.Max, this->Z.Max);
   }
 
-  /// \b Returns the max point of the bounds
+  /// \b Returns shortest distance to the 8 corners
   ///
-  /// \c Distance returns the Euclidean distance of the bounding box to a given point. If the bounds
+  /// \c Distance returns the smallest Euclidean distance between the 8 corners of a bounding box and  a given point. If the bounds
   /// are empty, the results are undefined.
   ///
   VTKM_EXEC_CONT
   vtkm::Float64 Distance(vtkm::Vec3f_64 point) const
   {
-    vtkm::Vec3f_64 corners[8];
+    vtkm::Vec<vtkm::Vec3f_64, 8> corners;
     Corners(corners);
-    vtkm::Float64 distance = std::numeric_limits<double>::max();
+    vtkm::Float64 distanceSquared = vtkm::Infinity64();
     for (unsigned int p = 0; p < 8; p++)
     {
-      distance = std::min(distance, std::sqrt(vtkm::Dot(corners[p] - point, corners[p] - point)));
+      distanceSquared = vtkm::Min(distanceSquared, vtkm::MagnitudeSquared(corners[p] - point));
     }
-    return distance;
+    return vtkm::Sqrt(distanceSquared);
   }
 
   /// \b Expand bounds to include a point.
