@@ -30,7 +30,7 @@
 ////
 int main(int argc, char* argv[])
 {
-  vtkm::cont::Initialize(argc, argv);
+  vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::AddHelp);
   ////
   //// END-EXAMPLE VTKmQuickStartInitialize
   ////
