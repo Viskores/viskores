@@ -88,29 +88,3 @@ test:ubuntu2004_hip_kokkos:
   needs:
     - build:ubuntu2004_hip_kokkos
   timeout: 3 hours
-
-# This is only for merge-requests
-build:ascent:
-  stage: build
-  variables:
-    BRANCH_NAME:     "mr${CI_MERGE_REQUEST_IID}-${CI_COMMIT_REF_NAME}"
-    ASCENT_REST_URL: "https://code.ornl.gov/api/v4/projects/7035"
-    ASCENT_GIT_URL:  "https://vbolea:${ECPTEST_TOKEN}@code.ornl.gov/ecpcitest/vtk-m.git"
-  tags:
-    - vtkm
-    - docker
-    - build
-    - linux-x86_64
-  extends:
-    - .ubuntu2004
-    - .run_only_merge_requests
-  script:
-    # A new commit is needed to symbolize a restart of a build from the same original commit
-    - .gitlab/ci/config/ecpci-amend-commit.sh "NEW_COMMIT_SHA"
-    - .gitlab/ci/config/ecpci-push-branch.sh "$ASCENT_GIT_URL" "$BRANCH_NAME"
-    - timeout 130m .gitlab/ci/config/ecpci-wait-commit-status.sh "$ASCENT_REST_URL" "$(cat NEW_COMMIT_SHA)"
-  after_script:
-    - .gitlab/ci/config/ecpci-remove-branch.sh "$ASCENT_GIT_URL" "$BRANCH_NAME" || true
-    - .gitlab/ci/config/ecpci-fetch-commit-trace.py "$ASCENT_REST_URL" "$(cat NEW_COMMIT_SHA)" "$ECPTEST_TOKEN"
-  timeout: 150 minutes
-  interruptible: true
