@@ -130,7 +130,7 @@ void ExampleLogging()
   ////
   //// BEGIN-EXAMPLE ConditionalLogging
   ////
-  for (size_t i = 0; i < 5; i++)
+  for (vtkm::Id i = 0; i < 5; i++)
   {
     VTKM_LOG_IF_S(vtkm::cont::LogLevel::Info, i % 2 == 0, "Found an even number: " << i);
   }

@@ -6,3 +6,4 @@ Advanced Development
    :maxdepth: 2
 
    advanced-types.rst
+   logging.rst
