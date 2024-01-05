@@ -116,10 +116,6 @@ foreach(option IN LISTS options)
     set(CMAKE_HIP_FLAGS "-O0 " CACHE STRING "")
     set(CMAKE_HIP_FLAGS_RELWITHDEBINFO "-g" CACHE STRING "")
 
-  elseif(ascent STREQUAL option)
-    set(CMAKE_C_FLAGS "-mcpu=power9" CACHE STRING "")
-    set(CMAKE_CXX_FLAGS "-mcpu=power9" CACHE STRING "")
-
   elseif(ccache STREQUAL option)
     find_program(CCACHE_COMMAND NAMES ccache REQUIRED)
 
