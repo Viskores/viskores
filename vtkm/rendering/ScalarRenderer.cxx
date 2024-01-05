@@ -77,7 +77,7 @@ void ScalarRenderer::SetInput(vtkm::cont::DataSet& dataSet)
   raytracing::TriangleExtractor triExtractor;
   vtkm::cont::UnknownCellSet cellSet = this->Internals->DataSet.GetCellSet();
   vtkm::cont::CoordinateSystem coords = this->Internals->DataSet.GetCoordinateSystem();
-  triExtractor.ExtractCells(cellSet);
+  triExtractor.ExtractCells(cellSet, dataSet.GetGhostCellField());
 
   if (triExtractor.GetNumberOfTriangles() > 0)
   {

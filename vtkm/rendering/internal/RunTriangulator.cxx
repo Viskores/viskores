@@ -22,10 +22,11 @@ namespace internal
 
 void RunTriangulator(const vtkm::cont::UnknownCellSet& cellSet,
                      vtkm::cont::ArrayHandle<vtkm::Id4>& indices,
-                     vtkm::Id& numberOfTriangles)
+                     vtkm::Id& numberOfTriangles,
+                     const vtkm::cont::Field& ghostField)
 {
   vtkm::rendering::Triangulator triangulator;
-  triangulator.Run(cellSet, indices, numberOfTriangles);
+  triangulator.Run(cellSet, indices, numberOfTriangles, ghostField);
 }
 }
 }

@@ -30,6 +30,34 @@ namespace rendering
 class VTKM_RENDERING_EXPORT Actor
 {
 public:
+  Actor(const vtkm::cont::DataSet dataSet,
+        const std::string coordinateName,
+        const std::string fieldName);
+
+  Actor(const vtkm::cont::DataSet dataSet,
+        const std::string coordinateName,
+        const std::string fieldName,
+        const vtkm::cont::ColorTable& colorTable);
+
+  Actor(const vtkm::cont::DataSet dataSet,
+        const std::string coordinateName,
+        const std::string fieldName,
+        const vtkm::rendering::Color& color);
+
+  Actor(const vtkm::cont::PartitionedDataSet dataSet,
+        const std::string coordinateName,
+        const std::string fieldName);
+
+  Actor(const vtkm::cont::PartitionedDataSet dataSet,
+        const std::string coordinateName,
+        const std::string fieldName,
+        const vtkm::cont::ColorTable& colorTable);
+
+  Actor(const vtkm::cont::PartitionedDataSet dataSet,
+        const std::string coordinateName,
+        const std::string fieldName,
+        const vtkm::rendering::Color& color);
+
   /// Create an `Actor` object that renders a set of cells positioned by a given coordiante
   /// system. A field to apply psudocoloring is also provided. The default colormap is applied.
   /// The cells, coordinates, and field are typically pulled from a `vtkm::cont::DataSet` object.
@@ -68,7 +96,7 @@ public:
 
   const vtkm::cont::UnknownCellSet& GetCells() const;
 
-  const vtkm::cont::CoordinateSystem& GetCoordinates() const;
+  vtkm::cont::CoordinateSystem GetCoordinates() const;
 
   const vtkm::cont::Field& GetScalarField() const;
 
@@ -90,6 +118,8 @@ private:
   std::unique_ptr<InternalsType> Internals;
 
   void Init(const vtkm::cont::CoordinateSystem& coordinates, const vtkm::cont::Field& scalarField);
+
+  void Init();
 };
 }
 } //namespace vtkm::rendering

@@ -74,7 +74,7 @@ private:
   template <vtkm::IdComponent Dim>
   void ComputeGenerateParentChildInformation();
 
-  /// generate the vtkGhostType array based on the overlap analogously to vtk
+  /// generate the GhostType array based on the overlap analogously to vtk
   /// blanked cells: 8 normal cells: 0
   VTKM_CONT
   void GenerateGhostType();

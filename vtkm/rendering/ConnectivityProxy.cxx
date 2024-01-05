@@ -29,10 +29,9 @@ protected:
   using TracerType = vtkm::rendering::raytracing::ConnectivityTracer;
 
   TracerType Tracer;
-  vtkm::cont::Field ScalarField;
-  vtkm::cont::Field EmissionField;
-  vtkm::cont::UnknownCellSet Cells;
-  vtkm::cont::CoordinateSystem Coords;
+  std::string CoordinateName;
+  std::string FieldName;
+  std::string EmissionFieldName;
   RenderMode Mode;
   vtkm::Bounds SpatialBounds;
   ColorMapType ColorMap;
@@ -41,11 +40,12 @@ protected:
   bool CompositeBackground;
 
 public:
-  InternalsType(const vtkm::cont::DataSet& dataSet, const std::string& fieldName)
+  InternalsType(const vtkm::cont::DataSet& dataSet,
+                const std::string& coordinateName,
+                const std::string& fieldName)
   {
     Dataset = dataSet;
-    Cells = dataSet.GetCellSet();
-    Coords = dataSet.GetCoordinateSystem();
+    CoordinateName = coordinateName;
     Mode = RenderMode::Volume;
     CompositeBackground = true;
     if (!fieldName.empty())
@@ -76,8 +76,9 @@ public:
   VTKM_CONT
   void SetScalarField(const std::string& fieldName)
   {
-    ScalarField = Dataset.GetField(fieldName);
-    const vtkm::cont::ArrayHandle<vtkm::Range> range = this->ScalarField.GetRange();
+    this->FieldName = fieldName;
+    const vtkm::cont::ArrayHandle<vtkm::Range> range =
+      this->Dataset.GetField(this->FieldName).GetRange();
     ScalarRange = range.ReadPortal().Get(0);
   }
 
@@ -104,7 +105,7 @@ public:
       throw vtkm::cont::ErrorBadValue(
         "Conn Proxy: energy mode must be set before setting emission field");
     }
-    EmissionField = Dataset.GetField(fieldName);
+    this->EmissionFieldName = fieldName;
   }
 
   VTKM_CONT
@@ -113,7 +114,8 @@ public:
   VTKM_CONT
   vtkm::Range GetScalarFieldRange()
   {
-    const vtkm::cont::ArrayHandle<vtkm::Range> range = this->ScalarField.GetRange();
+    const vtkm::cont::ArrayHandle<vtkm::Range> range =
+      this->Dataset.GetField(this->FieldName).GetRange();
     ScalarRange = range.ReadPortal().Get(0);
     return ScalarRange;
   }
@@ -130,15 +132,19 @@ public:
 
     if (this->Mode == RenderMode::Volume)
     {
-      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+      Tracer.SetVolumeData(this->Dataset.GetField(this->FieldName),
+                           this->ScalarRange,
+                           this->Dataset.GetCellSet(),
+                           this->Dataset.GetCoordinateSystem(this->CoordinateName),
+                           this->Dataset.GetGhostCellField());
     }
     else
     {
-      Tracer.SetEnergyData(this->ScalarField,
+      Tracer.SetEnergyData(this->Dataset.GetField(this->FieldName),
                            rays.Buffers.at(0).GetNumChannels(),
-                           this->Cells,
-                           this->Coords,
-                           this->EmissionField);
+                           this->Dataset.GetCellSet(),
+                           this->Dataset.GetCoordinateSystem(this->CoordinateName),
+                           this->Dataset.GetField(this->EmissionFieldName));
     }
 
     Tracer.FullTrace(rays);
@@ -149,15 +155,19 @@ public:
   {
     if (this->Mode == RenderMode::Volume)
     {
-      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+      Tracer.SetVolumeData(this->Dataset.GetField(this->FieldName),
+                           this->ScalarRange,
+                           this->Dataset.GetCellSet(),
+                           this->Dataset.GetCoordinateSystem(this->CoordinateName),
+                           this->Dataset.GetGhostCellField());
     }
     else
     {
-      Tracer.SetEnergyData(this->ScalarField,
+      Tracer.SetEnergyData(this->Dataset.GetField(this->FieldName),
                            rays.Buffers.at(0).GetNumChannels(),
-                           this->Cells,
-                           this->Coords,
-                           this->EmissionField);
+                           this->Dataset.GetCellSet(),
+                           this->Dataset.GetCoordinateSystem(this->CoordinateName),
+                           this->Dataset.GetField(this->EmissionFieldName));
     }
 
     Tracer.FullTrace(rays);
@@ -169,15 +179,19 @@ public:
 
     if (this->Mode == RenderMode::Volume)
     {
-      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+      Tracer.SetVolumeData(this->Dataset.GetField(this->FieldName),
+                           this->ScalarRange,
+                           this->Dataset.GetCellSet(),
+                           this->Dataset.GetCoordinateSystem(this->CoordinateName),
+                           this->Dataset.GetGhostCellField());
     }
     else
     {
-      Tracer.SetEnergyData(this->ScalarField,
+      Tracer.SetEnergyData(this->Dataset.GetField(this->FieldName),
                            rays.Buffers.at(0).GetNumChannels(),
-                           this->Cells,
-                           this->Coords,
-                           this->EmissionField);
+                           this->Dataset.GetCellSet(),
+                           this->Dataset.GetCoordinateSystem(this->CoordinateName),
+                           this->Dataset.GetField(this->EmissionFieldName));
     }
 
     return Tracer.PartialTrace(rays);
@@ -188,15 +202,19 @@ public:
   {
     if (this->Mode == RenderMode::Volume)
     {
-      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+      Tracer.SetVolumeData(this->Dataset.GetField(this->FieldName),
+                           this->ScalarRange,
+                           this->Dataset.GetCellSet(),
+                           this->Dataset.GetCoordinateSystem(this->CoordinateName),
+                           this->Dataset.GetGhostCellField());
     }
     else
     {
-      Tracer.SetEnergyData(this->ScalarField,
+      Tracer.SetEnergyData(this->Dataset.GetField(this->FieldName),
                            rays.Buffers.at(0).GetNumChannels(),
-                           this->Cells,
-                           this->Coords,
-                           this->EmissionField);
+                           this->Dataset.GetCellSet(),
+                           this->Dataset.GetCoordinateSystem(this->CoordinateName),
+                           this->Dataset.GetField(this->EmissionFieldName));
     }
 
     return Tracer.PartialTrace(rays);
@@ -214,13 +232,17 @@ public:
     rayCamera.SetParameters(
       camera, (vtkm::Int32)canvas->GetWidth(), (vtkm::Int32)canvas->GetHeight());
     vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
-    rayCamera.CreateRays(rays, this->Coords.GetBounds());
+    rayCamera.CreateRays(rays, this->Dataset.GetCoordinateSystem(this->CoordinateName).GetBounds());
     rays.Buffers.at(0).InitConst(0.f);
     raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvas);
 
     if (this->Mode == RenderMode::Volume)
     {
-      Tracer.SetVolumeData(this->ScalarField, this->ScalarRange, this->Cells, this->Coords);
+      Tracer.SetVolumeData(this->Dataset.GetField(this->FieldName),
+                           this->ScalarRange,
+                           this->Dataset.GetCellSet(),
+                           this->Dataset.GetCoordinateSystem(this->CoordinateName),
+                           this->Dataset.GetGhostCellField());
     }
     else
     {
@@ -241,9 +263,19 @@ public:
 VTKM_CONT
 ConnectivityProxy::ConnectivityProxy(const vtkm::cont::DataSet& dataSet,
                                      const std::string& fieldName)
-  : Internals(std::make_unique<InternalsType>(dataSet, fieldName))
+  : Internals(
+      std::make_unique<InternalsType>(dataSet, dataSet.GetCoordinateSystemName(), fieldName))
 {
 }
+
+VTKM_CONT
+ConnectivityProxy::ConnectivityProxy(const vtkm::cont::DataSet& dataSet,
+                                     const std::string& fieldName,
+                                     const std::string& coordinateName)
+  : Internals(std::make_unique<InternalsType>(dataSet, coordinateName, fieldName))
+{
+}
+
 
 VTKM_CONT
 ConnectivityProxy::ConnectivityProxy(const vtkm::cont::UnknownCellSet& cellset,
@@ -251,12 +283,11 @@ ConnectivityProxy::ConnectivityProxy(const vtkm::cont::UnknownCellSet& cellset,
                                      const vtkm::cont::Field& scalarField)
 {
   vtkm::cont::DataSet dataset;
-
   dataset.SetCellSet(cellset);
   dataset.AddCoordinateSystem(coords);
   dataset.AddField(scalarField);
 
-  Internals = std::make_unique<InternalsType>(dataset, scalarField.GetName());
+  Internals = std::make_unique<InternalsType>(dataset, coords.GetName(), scalarField.GetName());
 }
 
 ConnectivityProxy::ConnectivityProxy(const ConnectivityProxy& rhs)

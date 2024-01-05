@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/Field.h>
 #include <vtkm/rendering/internal/RunTriangulator.h>
 #include <vtkm/rendering/raytracing/TriangleExtractor.h>
 
@@ -20,8 +21,17 @@ namespace raytracing
 
 void TriangleExtractor::ExtractCells(const vtkm::cont::UnknownCellSet& cells)
 {
+  ExtractCells(
+    cells,
+    make_FieldCell(vtkm::cont::GetGlobalGhostCellFieldName(),
+                   vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(0, cells.GetNumberOfCells())));
+}
+
+void TriangleExtractor::ExtractCells(const vtkm::cont::UnknownCellSet& cells,
+                                     const vtkm::cont::Field& ghostField)
+{
   vtkm::Id numberOfTriangles;
-  vtkm::rendering::internal::RunTriangulator(cells, this->Triangles, numberOfTriangles);
+  vtkm::rendering::internal::RunTriangulator(cells, this->Triangles, numberOfTriangles, ghostField);
 }
 
 vtkm::cont::ArrayHandle<vtkm::Id4> TriangleExtractor::GetTriangles()

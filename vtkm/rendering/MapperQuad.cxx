@@ -70,12 +70,13 @@ vtkm::rendering::Canvas* MapperQuad::GetCanvas() const
   return this->Internals->Canvas;
 }
 
-void MapperQuad::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
-                             const vtkm::cont::CoordinateSystem& coords,
-                             const vtkm::cont::Field& scalarField,
-                             const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
-                             const vtkm::rendering::Camera& camera,
-                             const vtkm::Range& scalarRange)
+void MapperQuad::RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                                 const vtkm::cont::CoordinateSystem& coords,
+                                 const vtkm::cont::Field& scalarField,
+                                 const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
+                                 const vtkm::rendering::Camera& camera,
+                                 const vtkm::Range& scalarRange,
+                                 const vtkm::cont::Field& vtkmNotUsed(ghostField))
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
   logger->OpenLogEntry("mapper_ray_tracer");

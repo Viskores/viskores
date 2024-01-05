@@ -59,14 +59,23 @@ vtkm::rendering::Canvas* MapperConnectivity::GetCanvas() const
 
 
 VTKM_CONT
-void MapperConnectivity::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
-                                     const vtkm::cont::CoordinateSystem& coords,
-                                     const vtkm::cont::Field& scalarField,
-                                     const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
-                                     const vtkm::rendering::Camera& camera,
-                                     const vtkm::Range& scalarRange)
+void MapperConnectivity::RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                                         const vtkm::cont::CoordinateSystem& coords,
+                                         const vtkm::cont::Field& scalarField,
+                                         const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
+                                         const vtkm::rendering::Camera& camera,
+                                         const vtkm::Range& scalarRange,
+                                         const vtkm::cont::Field& ghostField)
 {
-  vtkm::rendering::ConnectivityProxy tracerProxy(cellset, coords, scalarField);
+  vtkm::cont::DataSet dataset;
+
+  dataset.SetCellSet(cellset);
+  dataset.AddCoordinateSystem(coords);
+  dataset.AddField(scalarField);
+  dataset.AddField(ghostField);
+
+  vtkm::rendering::ConnectivityProxy tracerProxy(dataset, scalarField.GetName());
+
   if (SampleDistance == -1.f)
   {
     // set a default distance

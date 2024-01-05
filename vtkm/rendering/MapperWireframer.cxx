@@ -227,12 +227,13 @@ void MapperWireframer::SetIsOverlay(bool isOverlay)
   this->Internals->IsOverlay = isOverlay;
 }
 
-void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
-                                   const vtkm::cont::CoordinateSystem& coords,
-                                   const vtkm::cont::Field& inScalarField,
-                                   const vtkm::cont::ColorTable& colorTable,
-                                   const vtkm::rendering::Camera& camera,
-                                   const vtkm::Range& scalarRange)
+void MapperWireframer::RenderCellsImpl(const vtkm::cont::UnknownCellSet& inCellSet,
+                                       const vtkm::cont::CoordinateSystem& coords,
+                                       const vtkm::cont::Field& inScalarField,
+                                       const vtkm::cont::ColorTable& colorTable,
+                                       const vtkm::rendering::Camera& camera,
+                                       const vtkm::Range& scalarRange,
+                                       const vtkm::cont::Field& ghostField)
 {
   vtkm::cont::UnknownCellSet cellSet = inCellSet;
 
@@ -241,6 +242,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
 
   vtkm::cont::CoordinateSystem actualCoords = coords;
   vtkm::cont::Field actualField = inScalarField;
+  vtkm::cont::Field actualGhostField = ghostField;
 
   if (is1D)
   {
@@ -298,12 +300,14 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
     dataSet.AddCoordinateSystem(actualCoords);
     dataSet.SetCellSet(inCellSet);
     dataSet.AddField(inScalarField);
+    dataSet.AddField(ghostField);
     vtkm::filter::entity_extraction::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);
     externalFaces.SetPassPolyData(true);
     vtkm::cont::DataSet output = externalFaces.Execute(dataSet);
     cellSet = output.GetCellSet();
     actualField = output.GetField(inScalarField.GetName());
+    actualGhostField = output.GetGhostCellField();
   }
 
   // Extract unique edges from the cell set.
@@ -331,7 +335,8 @@ void MapperWireframer::RenderCells(const vtkm::cont::UnknownCellSet& inCellSet,
     MapperRayTracer raytracer;
     raytracer.SetCanvas(&canvas);
     raytracer.SetActiveColorTable(colorTable);
-    raytracer.RenderCells(cellSet, actualCoords, actualField, colorTable, camera, scalarRange);
+    raytracer.RenderCells(
+      cellSet, actualCoords, actualField, colorTable, camera, scalarRange, actualGhostField);
     renderer.SetSolidDepthBuffer(canvas.GetDepthBuffer());
   }
   else

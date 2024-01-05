@@ -47,9 +47,9 @@ public:
 private:
   vtkm::cont::PartitionedDataSet Partitions;
   std::vector<CellLocatorGeneral> LocatorsCont;
-  std::vector<vtkm::cont::ArrayHandle<vtkm::UInt8>> GhostsCont;
+  std::vector<vtkm::cont::ArrayHandleStride<vtkm::UInt8>> GhostsCont;
   vtkm::cont::ArrayHandle<vtkm::cont::CellLocatorGeneral::ExecObjType> LocatorsExec;
-  vtkm::cont::ArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType> GhostsExec;
+  vtkm::cont::ArrayHandle<vtkm::cont::ArrayHandleStride<vtkm::UInt8>::ReadPortalType> GhostsExec;
   bool Modified = true;
 };
 } // namespace cont

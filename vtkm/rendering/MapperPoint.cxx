@@ -136,12 +136,13 @@ void MapperPoint::UseVariableRadius(bool useVariableRadius)
   this->Internals->UseVariableRadius = useVariableRadius;
 }
 
-void MapperPoint::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
-                              const vtkm::cont::CoordinateSystem& coords,
-                              const vtkm::cont::Field& scalarField,
-                              const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
-                              const vtkm::rendering::Camera& camera,
-                              const vtkm::Range& scalarRange)
+void MapperPoint::RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                                  const vtkm::cont::CoordinateSystem& coords,
+                                  const vtkm::cont::Field& scalarField,
+                                  const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
+                                  const vtkm::rendering::Camera& camera,
+                                  const vtkm::Range& scalarRange,
+                                  const vtkm::cont::Field& vtkmNotUsed(ghostField))
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
 

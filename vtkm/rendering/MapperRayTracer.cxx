@@ -10,6 +10,7 @@
 
 #include <vtkm/rendering/MapperRayTracer.h>
 
+#include <vtkm/cont/BoundsCompute.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
 
@@ -48,6 +49,9 @@ struct MapperRayTracer::InternalsType
 MapperRayTracer::MapperRayTracer()
   : Internals(new InternalsType)
 {
+  // for the volume renderer sorting back to front gives better results, which is the default
+  // but for the raytracer front to back is better.
+  this->SortBackToFront = false;
 }
 
 MapperRayTracer::~MapperRayTracer() {}
@@ -73,12 +77,13 @@ vtkm::rendering::Canvas* MapperRayTracer::GetCanvas() const
   return this->Internals->Canvas;
 }
 
-void MapperRayTracer::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
-                                  const vtkm::cont::CoordinateSystem& coords,
-                                  const vtkm::cont::Field& scalarField,
-                                  const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
-                                  const vtkm::rendering::Camera& camera,
-                                  const vtkm::Range& scalarRange)
+void MapperRayTracer::RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                                      const vtkm::cont::CoordinateSystem& coords,
+                                      const vtkm::cont::Field& scalarField,
+                                      const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
+                                      const vtkm::rendering::Camera& camera,
+                                      const vtkm::Range& scalarRange,
+                                      const vtkm::cont::Field& ghostField)
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
   logger->OpenLogEntry("mapper_ray_tracer");
@@ -93,7 +98,8 @@ void MapperRayTracer::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
   //
   vtkm::Bounds shapeBounds;
   raytracing::TriangleExtractor triExtractor;
-  triExtractor.ExtractCells(cellset);
+  triExtractor.ExtractCells(cellset, ghostField);
+
   if (triExtractor.GetNumberOfTriangles() > 0)
   {
     auto triIntersector = std::make_shared<raytracing::TriangleIntersector>();
@@ -115,8 +121,6 @@ void MapperRayTracer::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
   this->Internals->Rays.Buffers.at(0).InitConst(0.f);
   raytracing::RayOperations::MapCanvasToRays(
     this->Internals->Rays, camera, *this->Internals->Canvas);
-
-
 
   this->Internals->Tracer.SetField(scalarField, scalarRange);
 
