@@ -149,7 +149,21 @@ EXCLUDE_PATTERNS       = */benchmarking/*
 EXCLUDE_PATTERNS       += */examples/*
 EXCLUDE_PATTERNS       += */testing/*
 EXCLUDE_PATTERNS       += */thirdparty/*
+EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/filter/*/worklet/*
+EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/rendering/raytracing/*
 EXCLUDE_PATTERNS       += UnitTest*
+
+# Before filters existed in VTK-m, users were expected to interact directly
+# with worklets, and several algorithms were written in this way. There are
+# some complex algorithms that never made the jump to filters, but we never
+# threw them out in hopes they become useful. At some point, we should
+# probably delete or remove them, but for now just hide them to keep the
+# documentation from getting messy.
+EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/worklet/colorconversion/*
+EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/worklet/cosmotools/*
+EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/worklet/spatialstructure/*
+EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/worklet/splatkernels/*
+EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/worklet/wavelets/*
 
 EXCLUDE_SYMBOLS        = thrust
 EXCLUDE_SYMBOLS        += benchmarking

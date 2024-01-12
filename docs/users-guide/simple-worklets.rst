@@ -60,10 +60,9 @@ The function prototype matches what data are provided when the worklet is invoke
 
 The return type of the function prototype is always ``void``.
 The parameters of the function prototype are *tags* that identify the type of data that is expected to be passed to invoke.
-``ControlSignature`` tags are defined by the worklet type and the various tags are documented more fully in Chapter \ref{chap:WorkletTypeReference}.
+``ControlSignature`` tags are defined by the worklet type and the various
+tags are documented more fully in :chapref:`worklet-types:Worklet Types`.
 In the case of :numref:`ex:ControlSignature`, the two tags ``FieldIn`` and ``FieldOut`` represent input and output data, respectively.
-
-.. todo:: Fix worklet type reference above.
 
 .. index::
    single: control signature

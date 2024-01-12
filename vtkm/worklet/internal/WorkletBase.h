@@ -79,28 +79,45 @@ public:
   using _19 = vtkm::placeholders::Arg<19>;
   using _20 = vtkm::placeholders::Arg<20>;
 
-  /// \c ExecutionSignature tag for getting the work index.
+  /// @brief `ExecutionSignature` tag for getting the work index.
+  ///
+  /// This tag produces a `vtkm::Id` that uniquely identifies the invocation
+  /// instance of the worklet.
   ///
   using WorkIndex = vtkm::exec::arg::WorkIndex;
 
-  /// \c ExecutionSignature tag for getting the input index.
+  /// @brief `ExecutionSignature` tag for getting the input index.
   ///
+  /// This tag produces a `vtkm::Id` that identifies the index of the input
+  /// element, which can differ from the `WorkIndex` in a worklet with a scatter.
   using InputIndex = vtkm::exec::arg::InputIndex;
 
-  /// \c ExecutionSignature tag for getting the output index.
+  /// @brief `ExecutionSignature` tag for getting the output index.
   ///
+  /// This tag produces a `vtkm::Id` that identifies the index of the output element.
+  /// (This is generally the same as `WorkIndex`.)
   using OutputIndex = vtkm::exec::arg::OutputIndex;
 
-  /// \c ExecutionSignature tag for getting the thread indices.
+  /// @brief `ExecutionSignature` tag for getting the thread indices.
   ///
+  /// This tag produces an internal object that manages indices and other metadata
+  /// of the current thread. Thread indices objects vary by worklet type, but most
+  /// users can get the information they need through other signature tags.
   using ThreadIndices = vtkm::exec::arg::ThreadIndices;
 
-  /// \c ExecutionSignature tag for getting the visit index.
+  /// @brief `ExecutionSignature` tag for getting the visit index.
+  ///
+  /// This tag produces a `vtkm::IdComponent` that uniquely identifies when multiple
+  /// worklet invocations operate on the same input item, which can happen when
+  /// defining a worklet with scatter.
   ///
   using VisitIndex = vtkm::exec::arg::VisitIndex;
 
-  /// \c ExecutionSignature tag for getting the device adapter tag.
+  /// @brief `ExecutionSignature` tag for getting the device adapter tag.
   ///
+  /// This tag passes a device adapter tag object. This allows the worklet function
+  /// to template on or overload itself based on the type of device that it is
+  /// being executed on.
   struct Device : vtkm::exec::arg::ExecutionSignatureTagBase
   {
     // INDEX 0 (which is an invalid parameter index) is reserved to mean the device adapter tag.
@@ -108,7 +125,15 @@ public:
     using AspectTag = vtkm::exec::arg::AspectTagDefault;
   };
 
-  /// \c ControlSignature tag for execution object inputs.
+  /// @brief `ControlSignature` tag for execution object inputs.
+  ///
+  /// This tag represents an execution object that is passed directly from the
+  /// control environment to the worklet. A `ExecObject` argument expects a subclass
+  /// of `vtkm::exec::ExecutionObjectBase`. Subclasses of `vtkm::exec::ExecutionObjectBase`
+  /// behave like a factory for objects that work on particular devices. They
+  /// do this by implementing a `PrepareForExecution()` method that takes a device
+  /// adapter tag and returns an object that works on that device. That device-specific
+  /// object is passed directly to the worklet.
   struct ExecObject : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagExecObject;
@@ -130,15 +155,11 @@ public:
   /// everything in the output domain.
   using MaskType = vtkm::worklet::MaskNone;
 
-  /// \c ControlSignature tag for whole input arrays.
+  /// @brief `ControlSignature` tag for whole input arrays.
   ///
-  /// The \c WholeArrayIn control signature tag specifies an \c ArrayHandle
-  /// passed to the \c Invoke operation of the dispatcher. This is converted
-  /// to an \c ArrayPortal object and passed to the appropriate worklet
-  /// operator argument with one of the default args.
-  ///
-  /// The template operator specifies all the potential value types of the
-  /// array. The default value type is all types.
+  /// The `WholeArrayIn` control signature tag specifies a `vtkm::cont::ArrayHandle`
+  /// passed to the invoke of the worklet. An array portal capable of reading
+  /// from any place in the array is given to the worklet.
   ///
   struct WholeArrayIn : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -147,16 +168,12 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
 
-  /// \c ControlSignature tag for whole output arrays.
+  /// @brief `ControlSignature` tag for whole output arrays.
   ///
-  /// The \c WholeArrayOut control signature tag specifies an \c ArrayHandle
-  /// passed to the \c Invoke operation of the dispatcher. This is converted to
-  /// an \c ArrayPortal object and passed to the appropriate worklet operator
-  /// argument with one of the default args. Care should be taken to not write
-  /// a value in one instance that will be overridden by another entry.
-  ///
-  /// The template operator specifies all the potential value types of the
-  /// array. The default value type is all types.
+  /// The `WholeArrayOut` control signature tag specifies an `vtkm::cont::ArrayHandle`
+  /// passed to the invoke of the worklet. An array portal capable of writing
+  /// to any place in the array is given to the worklet. Developers should take
+  /// care when using writable whole arrays as introducing race conditions is possible.
   ///
   struct WholeArrayOut : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -165,17 +182,13 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
 
-  /// \c ControlSignature tag for whole input/output arrays.
+  /// @brief `ControlSignature` tag for whole input/output arrays.
   ///
-  /// The \c WholeArrayOut control signature tag specifies an \c ArrayHandle
-  /// passed to the \c Invoke operation of the dispatcher. This is converted to
-  /// an \c ArrayPortal object and passed to the appropriate worklet operator
-  /// argument with one of the default args. Care should be taken to not write
-  /// a value in one instance that will be read by or overridden by another
-  /// entry.
-  ///
-  /// The template operator specifies all the potential value types of the
-  /// array. The default value type is all types.
+  /// The `WholeArrayOut` control signature tag specifies a `vtkm::cont::ArrayHandle`
+  /// passed to the invoke of the worklet.  An array portal capable of reading
+  /// from or writing to any place in the array is given to the worklet. Developers
+  /// should take care when using writable whole arrays as introducing race
+  /// conditions is possible.
   ///
   struct WholeArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -184,17 +197,13 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
 
-  /// \c ControlSignature tag for whole input/output arrays.
+  /// @brief `ControlSignature` tag for whole input/output arrays.
   ///
-  /// The \c AtomicArrayInOut control signature tag specifies an \c ArrayHandle
-  /// passed to the \c Invoke operation of the dispatcher. This is converted to
-  /// a \c vtkm::exec::AtomicArray object and passed to the appropriate worklet
-  /// operator argument with one of the default args. The provided atomic
-  /// operations can be used to resolve concurrency hazards, but have the
-  /// potential to slow the program quite a bit.
-  ///
-  /// The template operator specifies all the potential value types of the
-  /// array. The default value type is all types.
+  /// The `AtomicArrayInOut` control signature tag specifies `vtkm::cont::ArrayHandle`
+  /// passed to the invoke of the worklet. A `vtkm::exec::AtomicArray` object capable
+  /// of performing atomic operations to the entries in the array is given to the
+  /// worklet. Atomic arrays can help avoid race conditions but can slow down the
+  /// running of a parallel algorithm.
   ///
   struct AtomicArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -233,18 +242,17 @@ public:
   };
   /// @}
 
-  /// \c ControlSignature tag for whole input topology.
-  ///
-  /// The \c WholeCellSetIn control signature tag specifies an \c CellSet
-  /// passed to the \c Invoke operation of the dispatcher. This is converted to
-  /// a \c vtkm::exec::Connectivity* object and passed to the appropriate worklet
-  /// operator argument with one of the default args. This can be used to
-  /// global lookup for arbitrary topology information
-
   using Point = vtkm::TopologyElementTagPoint;
   using Cell = vtkm::TopologyElementTagCell;
   using Edge = vtkm::TopologyElementTagEdge;
   using Face = vtkm::TopologyElementTagFace;
+
+  /// @brief `ControlSignature` tag for whole input topology.
+  ///
+  /// The `WholeCellSetIn` control signature tag specifies a `vtkm::cont::CellSet`
+  /// passed to the invoke of the worklet. A connectivity object capable of finding
+  /// elements of one type that are incident on elements of a different type. This
+  /// can be used to global lookup for arbitrary topology information
   template <typename VisitTopology = Cell, typename IncidentTopology = Point>
   struct WholeCellSetIn : vtkm::cont::arg::ControlSignatureTagBase
   {

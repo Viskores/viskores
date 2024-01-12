@@ -22,6 +22,11 @@ namespace placeholders
 {
 
 //============================================================================
+/// @brief Argument placeholders for an `ExecutionSignature`.
+///
+/// All worklet superclasses declare numeric tags in the form of
+/// `_1`, `_2`, `_3` etc. that are used in the `ExecutionSignature`
+/// to refer to the corresponding parameter in the `ControlSignature`.
 template <int ControlSignatureIndex>
 struct Arg : vtkm::exec::arg::BasicArg<ControlSignatureIndex>
 {
