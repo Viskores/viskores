@@ -22,10 +22,6 @@ namespace anari_cpp = ::anari;
 namespace anari
 {
 
-#if ANARI_SDK_VERSION_MINOR >= 8
-using namespace ::anari::math;
-#endif
-
 /// These declarations let ANARI C++ bindings infer the correct `ANARIDataType`
 /// enum value from VTK-m's C++ math types. This header should be included
 /// before any code which needs this type inference to function.
