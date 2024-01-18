@@ -216,6 +216,10 @@ stages:
       # CDash files.
       - build/DartConfiguration.tcl
 
+      # Users guide
+      - build/docs/users-guide/html
+      - build/docs/users-guide/latex
+
 .cmake_test_artifacts: &cmake_test_artifacts
   artifacts:
     expire_in: 24 hours
