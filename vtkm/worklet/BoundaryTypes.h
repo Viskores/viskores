@@ -11,6 +11,8 @@
 #ifndef vtk_m_worklet_BoundaryTypes_h
 #define vtk_m_worklet_BoundaryTypes_h
 
+#include <vtkm/Deprecated.h>
+
 namespace vtkm
 {
 namespace worklet
@@ -33,7 +35,7 @@ namespace worklet
 ///              1 1 2
 ///              3 3 5
 /// \endcode
-struct BoundaryClamp
+struct VTKM_DEPRECATED(2.2, "Never fully supported, so being removed.") BoundaryClamp
 {
 };
 }
