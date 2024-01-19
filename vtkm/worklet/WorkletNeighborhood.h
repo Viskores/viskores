@@ -58,16 +58,19 @@ public:
   /// All worklets must define their scatter operation.
   using ScatterType = vtkm::worklet::ScatterIdentity;
 
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   /// All neighborhood worklets must define their boundary type operation.
   /// The boundary type determines how loading on boundaries will work.
-  using BoundaryType = vtkm::worklet::BoundaryClamp;
+  using BoundaryType VTKM_DEPRECATED(2.2, "Never fully supported, so being removed.") =
+    vtkm::worklet::BoundaryClamp;
 
   /// In addition to defining the boundary type, the worklet must produce the
   /// boundary condition. The default BoundaryClamp has no state, so just return an
   /// instance.
   /// Note: Currently only BoundaryClamp is implemented
-  VTKM_CONT
-  BoundaryType GetBoundaryCondition() const { return BoundaryType(); }
+  VTKM_DEPRECATED(2.2, "Never fully supported, so being removed.")
+  VTKM_CONT BoundaryType GetBoundaryCondition() const { return BoundaryType(); }
+  VTKM_DEPRECATED_SUPPRESS_END
 
   /// \brief A control signature tag for input point fields.
   ///
