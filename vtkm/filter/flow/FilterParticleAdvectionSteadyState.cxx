@@ -58,13 +58,15 @@ FilterParticleAdvectionSteadyState<Derived>::DoExecutePartitions(
     DataSetIntegratorSteadyState<ParticleType, FieldType, TerminationType, AnalysisType>;
 
   this->ValidateOptions();
+  if (this->BlockIdsSet)
+    this->BoundsMap = vtkm::filter::flow::internal::BoundsMap(input, this->BlockIds);
+  else
+    this->BoundsMap = vtkm::filter::flow::internal::BoundsMap(input);
 
-
-  vtkm::filter::flow::internal::BoundsMap boundsMap(input);
   std::vector<DSIType> dsi;
   for (vtkm::Id i = 0; i < input.GetNumberOfPartitions(); i++)
   {
-    vtkm::Id blockId = boundsMap.GetLocalBlockId(i);
+    vtkm::Id blockId = this->BoundsMap.GetLocalBlockId(i);
     auto dataset = input.GetPartition(i);
 
     // Build the field for the current dataset
@@ -78,7 +80,7 @@ FilterParticleAdvectionSteadyState<Derived>::DoExecutePartitions(
   }
 
   vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(
-    boundsMap, dsi, this->UseThreadedAlgorithm, this->UseAsynchronousCommunication);
+    this->BoundsMap, dsi, this->UseThreadedAlgorithm, this->UseAsynchronousCommunication);
 
   vtkm::cont::ArrayHandle<ParticleType> particles;
   this->Seeds.AsArrayHandle(particles);

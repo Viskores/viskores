@@ -50,8 +50,6 @@ public:
 
   void Go() override
   {
-    this->ComputeTotalNumParticles();
-
     std::vector<std::thread> workerThreads;
     workerThreads.emplace_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
     this->Manage();
@@ -63,6 +61,12 @@ public:
   }
 
 protected:
+  bool HaveActiveParticles()
+  {
+    std::lock_guard<std::mutex> lock(this->Mutex);
+    return !this->Active.empty();
+  }
+
   bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId) override
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
@@ -144,38 +148,31 @@ protected:
     vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
       this->Comm, useAsync, this->BoundsMap, 1, 128);
 
-    while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
+    while (!this->Terminator.Done())
     {
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> workerResults;
       this->GetWorkerResults(workerResults);
 
-      vtkm::Id numTerm = 0;
       for (auto& it : workerResults)
-      {
         for (auto& r : it.second)
-          numTerm += this->UpdateResult(r);
-      }
+          this->UpdateResult(r);
 
-      vtkm::Id numTermMessages = 0;
-      this->Communicate(messenger, numTerm, numTermMessages);
-
-      this->TotalNumTerminatedParticles += (numTerm + numTermMessages);
-      if (this->TotalNumTerminatedParticles > this->TotalNumParticles)
-        throw vtkm::cont::ErrorFilterExecution("Particle count error");
+      this->Communicate(messenger);
+      this->Terminator.Control(this->HaveActiveParticles());
     }
 
     //Let the workers know that we are done.
     this->SetDone();
   }
 
-  bool GetBlockAndWait(const bool& syncComm, const vtkm::Id& numLocalTerm) override
+  bool GetBlockAndWait(const bool& syncComm) override
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
     if (this->Done)
       return true;
 
-    return (this->AdvectAlgorithm<DSIType>::GetBlockAndWait(syncComm, numLocalTerm) &&
-            !this->WorkerActivate && this->WorkerResults.empty());
+    return (this->AdvectAlgorithm<DSIType>::GetBlockAndWait(syncComm) && !this->WorkerActivate &&
+            this->WorkerResults.empty());
   }
 
   void GetWorkerResults(

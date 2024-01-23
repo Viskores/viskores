@@ -15,6 +15,7 @@
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/flow/FlowTypes.h>
+#include <vtkm/filter/flow/internal/BoundsMap.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
@@ -104,7 +105,7 @@ protected:
 
   bool BlockIdsSet = false;
   std::vector<vtkm::Id> BlockIds;
-
+  vtkm::filter::flow::internal::BoundsMap BoundsMap;
   vtkm::Id NumberOfSteps = 0;
   vtkm::cont::UnknownArrayHandle Seeds;
   vtkm::filter::flow::IntegrationSolverType SolverType =

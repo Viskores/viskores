@@ -15,6 +15,10 @@
 #include <vtkm/filter/flow/internal/BoundsMap.h>
 #include <vtkm/filter/flow/internal/DataSetIntegrator.h>
 #include <vtkm/filter/flow/internal/ParticleMessenger.h>
+#ifdef VTKM_ENABLE_MPI
+#include <vtkm/thirdparty/diy/diy.h>
+#include <vtkm/thirdparty/diy/mpi-cast.h>
+#endif
 
 namespace vtkm
 {
@@ -24,6 +28,83 @@ namespace flow
 {
 namespace internal
 {
+
+class AdvectAlgorithmTerminator
+{
+public:
+  AdvectAlgorithmTerminator(vtkmdiy::mpi::communicator& comm)
+    : MPIComm(vtkmdiy::mpi::mpi_cast(comm.handle()))
+  {
+  }
+
+  void AddWork()
+  {
+#ifdef VTKM_ENABLE_MPI
+    this->Dirty = 1;
+#endif
+  }
+
+  bool Done() const { return this->State == AdvectAlgorithmTerminatorState::DONE; }
+
+  void Control(bool haveLocalWork)
+  {
+#ifdef VTKM_ENABLE_MPI
+    if (this->State == STATE_0 && !haveLocalWork)
+    {
+      MPI_Ibarrier(this->MPIComm, &this->StateReq);
+      this->Dirty = 0;
+      this->State = STATE_1;
+    }
+    else if (this->State == STATE_1)
+    {
+      MPI_Status status;
+      int flag;
+      MPI_Test(&this->StateReq, &flag, &status);
+      if (flag == 1)
+      {
+        int localDirty = this->Dirty;
+        MPI_Iallreduce(
+          &localDirty, &this->AllDirty, 1, MPI_INT, MPI_LOR, this->MPIComm, &this->StateReq);
+        this->State = STATE_2;
+      }
+    }
+    else if (this->State == STATE_2)
+    {
+      MPI_Status status;
+      int flag;
+      MPI_Test(&this->StateReq, &flag, &status);
+      if (flag == 1)
+      {
+        if (this->AllDirty == 0) //done
+          this->State = DONE;
+        else
+          this->State = STATE_0; //reset.
+      }
+    }
+#else
+    if (!haveLocalWork)
+      this->State = DONE;
+#endif
+  }
+
+private:
+  enum AdvectAlgorithmTerminatorState
+  {
+    STATE_0,
+    STATE_1,
+    STATE_2,
+    DONE
+  };
+
+  AdvectAlgorithmTerminatorState State = AdvectAlgorithmTerminatorState::STATE_0;
+
+#ifdef VTKM_ENABLE_MPI
+  std::atomic<int> Dirty;
+  int AllDirty = 0;
+  MPI_Request StateReq;
+  MPI_Comm MPIComm;
+#endif
+};
 
 template <typename DSIType>
 class AdvectAlgorithm
@@ -39,6 +120,7 @@ public:
     , NumRanks(this->Comm.size())
     , Rank(this->Comm.rank())
     , UseAsynchronousCommunication(useAsyncComm)
+    , Terminator(this->Comm)
   {
   }
 
@@ -97,27 +179,21 @@ public:
     vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
       this->Comm, this->UseAsynchronousCommunication, this->BoundsMap, 1, 128);
 
-    this->ComputeTotalNumParticles();
-
-    while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
+    while (!this->Terminator.Done())
     {
       std::vector<ParticleType> v;
-      vtkm::Id numTerm = 0, blockId = -1;
+      vtkm::Id blockId = -1;
       if (this->GetActiveParticles(v, blockId))
       {
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfo<ParticleType> bb(v, this->BoundsMap, this->ParticleBlockIDsMap);
         block.Advect(bb, this->StepSize);
-        numTerm = this->UpdateResult(bb);
+        this->UpdateResult(bb);
       }
 
-      vtkm::Id numTermMessages = 0;
-      this->Communicate(messenger, numTerm, numTermMessages);
-
-      this->TotalNumTerminatedParticles += (numTerm + numTermMessages);
-      if (this->TotalNumTerminatedParticles > this->TotalNumParticles)
-        throw vtkm::cont::ErrorFilterExecution("Particle count error");
+      this->Communicate(messenger);
+      this->Terminator.Control(!this->Active.empty());
     }
   }
 
@@ -126,19 +202,6 @@ public:
     this->Active.clear();
     this->Inactive.clear();
     this->ParticleBlockIDsMap.clear();
-  }
-
-  void ComputeTotalNumParticles()
-  {
-    vtkm::Id numLocal = static_cast<vtkm::Id>(this->Inactive.size());
-    for (const auto& it : this->Active)
-      numLocal += it.second.size();
-
-#ifdef VTKM_ENABLE_MPI
-    vtkmdiy::mpi::all_reduce(this->Comm, numLocal, this->TotalNumParticles, std::plus<vtkm::Id>{});
-#else
-    this->TotalNumParticles = numLocal;
-#endif
   }
 
   DataSetIntegrator<DSIType, ParticleType>& GetDataSet(vtkm::Id id)
@@ -213,9 +276,7 @@ public:
     return !particles.empty();
   }
 
-  void Communicate(vtkm::filter::flow::internal::ParticleMessenger<ParticleType>& messenger,
-                   vtkm::Id numLocalTerminations,
-                   vtkm::Id& numTermMessages)
+  void Communicate(vtkm::filter::flow::internal::ParticleMessenger<ParticleType>& messenger)
   {
     std::vector<ParticleType> outgoing;
     std::vector<vtkm::Id> outgoingRanks;
@@ -224,16 +285,17 @@ public:
 
     std::vector<ParticleType> incoming;
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingBlockIDs;
-    numTermMessages = 0;
+
     bool block = false;
 #ifdef VTKM_ENABLE_MPI
-    block = this->GetBlockAndWait(messenger.UsingSyncCommunication(), numLocalTerminations);
+    block = this->GetBlockAndWait(messenger.UsingSyncCommunication());
 #endif
 
+    vtkm::Id numTermMessages;
     messenger.Exchange(outgoing,
                        outgoingRanks,
                        this->ParticleBlockIDsMap,
-                       numLocalTerminations,
+                       0,
                        incoming,
                        incomingBlockIDs,
                        numTermMessages,
@@ -311,17 +373,22 @@ public:
   {
     VTKM_ASSERT(particles.size() == idsMap.size());
 
-    for (auto pit = particles.begin(); pit != particles.end(); pit++)
+    if (!particles.empty())
     {
-      vtkm::Id particleID = pit->GetID();
-      const auto& it = idsMap.find(particleID);
-      VTKM_ASSERT(it != idsMap.end() && !it->second.empty());
-      vtkm::Id blockId = it->second[0];
-      this->Active[blockId].emplace_back(*pit);
-    }
+      this->Terminator.AddWork();
 
-    for (const auto& it : idsMap)
-      this->ParticleBlockIDsMap[it.first] = it.second;
+      for (auto pit = particles.begin(); pit != particles.end(); pit++)
+      {
+        vtkm::Id particleID = pit->GetID();
+        const auto& it = idsMap.find(particleID);
+        VTKM_ASSERT(it != idsMap.end() && !it->second.empty());
+        vtkm::Id blockId = it->second[0];
+        this->Active[blockId].emplace_back(*pit);
+      }
+
+      for (const auto& it : idsMap)
+        this->ParticleBlockIDsMap[it.first] = it.second;
+    }
   }
 
   virtual void UpdateInactive(const std::vector<ParticleType>& particles,
@@ -351,7 +418,7 @@ public:
   }
 
 
-  virtual bool GetBlockAndWait(const bool& syncComm, const vtkm::Id& numLocalTerm)
+  virtual bool GetBlockAndWait(const bool& syncComm)
   {
     bool haveNoWork = this->Active.empty() && this->Inactive.empty();
 
@@ -367,9 +434,11 @@ public:
       //2. numLocalTerm + this->TotalNumberOfTerminatedParticles == this->TotalNumberOfParticles
       //So, if neither are true, we can safely block and wait for communication to come in.
 
-      if (haveNoWork &&
-          (numLocalTerm + this->TotalNumTerminatedParticles < this->TotalNumParticles))
-        return true;
+      //      if (this->Terminator.State == AdvectAlgorithmTerminator::AdvectAlgorithmTerminatorState::STATE_2)
+      //        return true;
+
+      //      if (haveNoWork && (numLocalTerm + this->TotalNumTerminatedParticles < this->TotalNumParticles))
+      //        return true;
 
       return false;
     }
@@ -388,9 +457,8 @@ public:
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
   vtkm::Id Rank;
   vtkm::FloatDefault StepSize;
-  vtkm::Id TotalNumParticles = 0;
-  vtkm::Id TotalNumTerminatedParticles = 0;
   bool UseAsynchronousCommunication = true;
+  AdvectAlgorithmTerminator Terminator;
 };
 
 }
