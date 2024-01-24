@@ -32,8 +32,12 @@ namespace internal
 class AdvectAlgorithmTerminator
 {
 public:
+#ifdef VTKM_ENABLE_MPI
   AdvectAlgorithmTerminator(vtkmdiy::mpi::communicator& comm)
     : MPIComm(vtkmdiy::mpi::mpi_cast(comm.handle()))
+#else
+  AdvectAlgorithmTerminator(vtkmdiy::mpi::communicator& vtkmNotUsed(comm))
+#endif
   {
   }
 

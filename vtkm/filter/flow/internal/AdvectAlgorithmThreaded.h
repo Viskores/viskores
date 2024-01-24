@@ -39,7 +39,6 @@ public:
                           bool useAsyncComm)
     : AdvectAlgorithm<DSIType>(bm, blocks, useAsyncComm)
     , Done(false)
-    , WorkerActivate(false)
   {
     //For threaded algorithm, the particles go out of scope in the Work method.
     //When this happens, they are destructed by the time the Manage thread gets them.
@@ -61,10 +60,11 @@ public:
   }
 
 protected:
-  bool HaveActiveParticles()
+  bool HaveAnyWork()
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
-    return !this->Active.empty();
+    //We have work if there particles in any queues or a worker is busy.
+    return !this->Active.empty() || !this->Inactive.empty() || this->WorkerActivate;
   }
 
   bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId) override
@@ -158,7 +158,7 @@ protected:
           this->UpdateResult(r);
 
       this->Communicate(messenger);
-      this->Terminator.Control(this->HaveActiveParticles());
+      this->Terminator.Control(this->HaveAnyWork());
     }
 
     //Let the workers know that we are done.
@@ -190,7 +190,7 @@ protected:
 
   std::atomic<bool> Done;
   std::mutex Mutex;
-  bool WorkerActivate;
+  bool WorkerActivate = false;
   std::condition_variable WorkerActivateCondition;
   std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> WorkerResults;
 };
