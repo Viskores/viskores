@@ -17,7 +17,15 @@
 #include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/ext/linalg.h>
 
-namespace anari_cpp = ::anari;
+namespace anari_cpp
+{
+
+/// Put everything from the ANARI-SDK in a single namespace to de-clutter things
+
+using namespace ::anari;
+using namespace ::anari::math;
+
+} // namespace anari_cpp
 
 namespace anari
 {
