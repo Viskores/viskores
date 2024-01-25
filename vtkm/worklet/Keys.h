@@ -19,6 +19,7 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/Logging.h>
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Hash.h>
 
 #include <vtkm/exec/internal/ReduceByKeyLookup.h>
@@ -52,7 +53,7 @@ public:
   ~KeysBase() = default;
 
   VTKM_CONT
-  vtkm::Id GetInputRange() const { return this->Counts.GetNumberOfValues(); }
+  vtkm::Id GetInputRange() const { return this->Offsets.GetNumberOfValues() - 1; }
 
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Id> GetSortedValuesMap() const { return this->SortedValuesMap; }
@@ -60,8 +61,9 @@ public:
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Id> GetOffsets() const { return this->Offsets; }
 
+  VTKM_DEPRECATED(2.2, "Use the `GetOffsets()` array in an `ArrayHandleOffsetsToNumComponents`.")
   VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> GetCounts() const { return this->Counts; }
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> GetCounts() const;
 
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const { return this->SortedValuesMap.GetNumberOfValues(); }
@@ -74,15 +76,14 @@ public:
                                        vtkm::cont::Token& token) const
   {
     return ExecLookup(this->SortedValuesMap.PrepareForInput(device, token),
-                      this->Offsets.PrepareForInput(device, token),
-                      this->Counts.PrepareForInput(device, token));
+                      this->Offsets.PrepareForInput(device, token));
   }
 
   VTKM_CONT
   bool operator==(const vtkm::worklet::internal::KeysBase& other) const
   {
     return ((this->SortedValuesMap == other.SortedValuesMap) && (this->Offsets == other.Offsets) &&
-            (this->Counts == other.Counts));
+            (this->Offsets == other.Offsets));
   }
 
   VTKM_CONT
@@ -96,7 +97,6 @@ protected:
 
   vtkm::cont::ArrayHandle<vtkm::Id> SortedValuesMap;
   vtkm::cont::ArrayHandle<vtkm::Id> Offsets;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> Counts;
 };
 
 } // namespace internal
@@ -184,16 +184,14 @@ public:
   {
     return ExecLookup(this->UniqueKeys.PrepareForInput(device, token),
                       this->SortedValuesMap.PrepareForInput(device, token),
-                      this->Offsets.PrepareForInput(device, token),
-                      this->Counts.PrepareForInput(device, token));
+                      this->Offsets.PrepareForInput(device, token));
   }
 
   VTKM_CONT
   bool operator==(const vtkm::worklet::Keys<KeyType>& other) const
   {
     return ((this->UniqueKeys == other.UniqueKeys) &&
-            (this->SortedValuesMap == other.SortedValuesMap) && (this->Offsets == other.Offsets) &&
-            (this->Counts == other.Counts));
+            (this->SortedValuesMap == other.SortedValuesMap) && (this->Offsets == other.Offsets));
   }
 
   VTKM_CONT

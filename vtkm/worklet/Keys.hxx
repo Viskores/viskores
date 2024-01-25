@@ -87,16 +87,17 @@ VTKM_CONT void Keys<T>::BuildArraysInternal(KeyArrayType& keys, vtkm::cont::Devi
   vtkm::cont::Algorithm::SortByKey(device, keys, this->SortedValuesMap);
 
   // Find the unique keys and the number of values per key.
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> counts;
   vtkm::cont::Algorithm::ReduceByKey(device,
                                      keys,
                                      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
                                      this->UniqueKeys,
-                                     this->Counts,
+                                     counts,
                                      vtkm::Sum());
 
   // Get the offsets from the counts with a scan.
   vtkm::cont::Algorithm::ScanExtended(
-    device, vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
+    device, vtkm::cont::make_ArrayHandleCast(counts, vtkm::Id()), this->Offsets);
 
   VTKM_ASSERT(numKeys ==
               vtkm::cont::ArrayGetValue(this->Offsets.GetNumberOfValues() - 1, this->Offsets));
@@ -116,16 +117,17 @@ VTKM_CONT void Keys<T>::BuildArraysInternalStable(const KeyArrayType& keys,
   auto sortedKeys = vtkm::cont::make_ArrayHandlePermutation(this->SortedValuesMap, keys);
 
   // Find the unique keys and the number of values per key.
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> counts;
   vtkm::cont::Algorithm::ReduceByKey(device,
                                      sortedKeys,
                                      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
                                      this->UniqueKeys,
-                                     this->Counts,
+                                     counts,
                                      vtkm::Sum());
 
   // Get the offsets from the counts with a scan.
   vtkm::cont::Algorithm::ScanExtended(
-    device, vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
+    device, vtkm::cont::make_ArrayHandleCast(counts, vtkm::Id()), this->Offsets);
 
   VTKM_ASSERT(numKeys ==
               vtkm::cont::ArrayGetValue(this->Offsets.GetNumberOfValues() - 1, this->Offsets));

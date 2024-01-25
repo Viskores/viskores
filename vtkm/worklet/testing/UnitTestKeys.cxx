@@ -20,25 +20,24 @@ namespace
 static constexpr vtkm::Id ARRAY_SIZE = 1033;
 static constexpr vtkm::Id NUM_UNIQUE = ARRAY_SIZE / 10;
 
-template <typename KeyPortal, typename IdPortal, typename IdComponentPortal>
+template <typename KeyPortal, typename IdPortal>
 void CheckKeyReduce(const KeyPortal& originalKeys,
                     const KeyPortal& uniqueKeys,
                     const IdPortal& sortedValuesMap,
-                    const IdPortal& offsets,
-                    const IdComponentPortal& counts)
+                    const IdPortal& offsets)
 {
   using KeyType = typename KeyPortal::ValueType;
   vtkm::Id originalSize = originalKeys.GetNumberOfValues();
   vtkm::Id uniqueSize = uniqueKeys.GetNumberOfValues();
   VTKM_TEST_ASSERT(originalSize == sortedValuesMap.GetNumberOfValues(), "Inconsistent array size.");
   VTKM_TEST_ASSERT(uniqueSize == offsets.GetNumberOfValues() - 1, "Inconsistent array size.");
-  VTKM_TEST_ASSERT(uniqueSize == counts.GetNumberOfValues(), "Inconsistent array size.");
 
   for (vtkm::Id uniqueIndex = 0; uniqueIndex < uniqueSize; uniqueIndex++)
   {
     KeyType key = uniqueKeys.Get(uniqueIndex);
     vtkm::Id offset = offsets.Get(uniqueIndex);
-    vtkm::IdComponent groupCount = counts.Get(uniqueIndex);
+    vtkm::IdComponent groupCount =
+      static_cast<vtkm::IdComponent>(offsets.Get(uniqueIndex + 1) - offset);
     for (vtkm::IdComponent groupIndex = 0; groupIndex < groupCount; groupIndex++)
     {
       vtkm::Id originalIndex = sortedValuesMap.Get(offset + groupIndex);
@@ -69,8 +68,7 @@ void TryKeyType(KeyType)
   CheckKeyReduce(keyArray.ReadPortal(),
                  keys.GetUniqueKeys().ReadPortal(),
                  keys.GetSortedValuesMap().ReadPortal(),
-                 keys.GetOffsets().ReadPortal(),
-                 keys.GetCounts().ReadPortal());
+                 keys.GetOffsets().ReadPortal());
 }
 
 void TestKeys()

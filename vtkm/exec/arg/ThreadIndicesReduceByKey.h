@@ -42,7 +42,8 @@ public:
     const vtkm::exec::internal::ReduceByKeyLookupBase<P1, P2>& keyLookup)
     : Superclass(threadIndex, inIndex, visitIndex, outIndex)
     , ValueOffset(keyLookup.Offsets.Get(inIndex))
-    , NumberOfValues(keyLookup.Counts.Get(inIndex))
+    , NumberOfValues(static_cast<vtkm::IdComponent>(keyLookup.Offsets.Get(inIndex + 1) -
+                                                    keyLookup.Offsets.Get(inIndex)))
   {
   }
 
