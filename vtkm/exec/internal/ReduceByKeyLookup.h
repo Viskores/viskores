@@ -35,15 +35,11 @@ struct ReduceByKeyLookupBase
 
   IdPortalType SortedValuesMap;
   IdPortalType Offsets;
-  IdComponentPortalType Counts;
 
   VTKM_EXEC_CONT
-  ReduceByKeyLookupBase(const IdPortalType& sortedValuesMap,
-                        const IdPortalType& offsets,
-                        const IdComponentPortalType& counts)
+  ReduceByKeyLookupBase(const IdPortalType& sortedValuesMap, const IdPortalType& offsets)
     : SortedValuesMap(sortedValuesMap)
     , Offsets(offsets)
-    , Counts(counts)
   {
   }
 
@@ -68,9 +64,8 @@ struct ReduceByKeyLookup : ReduceByKeyLookupBase<IdPortalType, IdComponentPortal
   VTKM_EXEC_CONT
   ReduceByKeyLookup(const KeyPortalType& uniqueKeys,
                     const IdPortalType& sortedValuesMap,
-                    const IdPortalType& offsets,
-                    const IdComponentPortalType& counts)
-    : ReduceByKeyLookupBase<IdPortalType, IdComponentPortalType>(sortedValuesMap, offsets, counts)
+                    const IdPortalType& offsets)
+    : ReduceByKeyLookupBase<IdPortalType, IdComponentPortalType>(sortedValuesMap, offsets)
     , UniqueKeys(uniqueKeys)
   {
   }
