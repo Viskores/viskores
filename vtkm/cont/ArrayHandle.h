@@ -544,9 +544,10 @@ public:
 
   /// @brief Fills the array with a given value.
   ///
-  /// After calling this method, every entry in the array from `startIndex` to `endIndex`.
-  /// of the array is set to `fillValue`. If `startIndex` or `endIndex` is not specified,
-  /// then the fill happens from the begining or end, respectively.
+  /// After calling this method, every entry in the array from `startIndex` (inclusive)
+  /// to `endIndex` (exclusive) of the array is set to `fillValue`. If `startIndex` or
+  /// `endIndex` is not specified, then the fill happens from the begining or end,
+  /// respectively.
   ///
   VTKM_CONT void Fill(const ValueType& fillValue,
                       vtkm::Id startIndex,

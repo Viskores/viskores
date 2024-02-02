@@ -292,6 +292,23 @@ void TryCopy()
     TestValues(input, output);
   }
 
+  {
+    std::cout << "constant -> extracted component" << std::endl;
+    using ComponentType = typename VTraits::BaseComponentType;
+    vtkm::cont::ArrayHandle<ValueType> output;
+    output.Allocate(ARRAY_SIZE);
+    ValueType invalue = TestValue(7, ValueType{});
+    for (vtkm::IdComponent component = 0; component < VTraits::NUM_COMPONENTS; ++component)
+    {
+      vtkm::cont::ArrayHandleConstant<ComponentType> input(
+        VTraits::GetComponent(invalue, component), ARRAY_SIZE);
+      auto extractedComponent =
+        vtkm::cont::ArrayExtractComponent(output, component, vtkm::CopyFlag::Off);
+      vtkm::cont::ArrayCopy(input, extractedComponent);
+    }
+    TestValues(vtkm::cont::make_ArrayHandleConstant(invalue, ARRAY_SIZE), output);
+  }
+
   // Test the copy methods in UnknownArrayHandle. Although this would be appropriate in
   // UnitTestUnknownArrayHandle, it is easier to test copies here.
   {
