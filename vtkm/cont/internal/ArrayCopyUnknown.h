@@ -10,14 +10,18 @@
 #ifndef vtk_m_cont_internal_ArrayCopyUnknown_h
 #define vtk_m_cont_internal_ArrayCopyUnknown_h
 
-#include <vtkm/cont/UnknownArrayHandle.h>
-
 #include <vtkm/cont/vtkm_cont_export.h>
 
 namespace vtkm
 {
 namespace cont
 {
+
+// Rather than include UnknownArrayHandle.h, we just forward declare the class so
+// we can declare our functions and prevent any circular header dependencies from
+// core classes.
+class UnknownArrayHandle;
+
 namespace internal
 {
 
