@@ -34,7 +34,7 @@
     CMAKE_BUILD_TYPE: Release
     VTKM_SETTINGS: "tbb+openmp+mpi+shared+docs"
 
-docs:continous:
+build:docs-continous:
   script:
     - "true"
   extends:
@@ -42,7 +42,7 @@ docs:continous:
     - .ubuntu2004_doxygen
     - .build_docs
 
-docs:master:
+build:docs-master:
   environment:
     name: doxygen-nightly
     url: https://docs-m.vtk.org/nightly/
@@ -57,7 +57,7 @@ docs:master:
   variables:
     DOXYGEN_UPLOAD_REMOTE_PATH: "nightly"
 
-docs:latest:
+build:docs-latest:
   environment:
     name: doxygen-latest
     url: https://docs-m.vtk.org/latest/index.html
