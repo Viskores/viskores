@@ -202,6 +202,7 @@ VTKM_EXEC_CONT void ForEach(vtkm::Tuple<Ts...>& tuple, Function&& f)
   return vtkm::Apply(tuple, detail::TupleForEachFunctor{}, std::forward<Function>(f));
 }
 
+///@{
 /// @brief Construct a new `vtkm::Tuple` by applying a function to each value.
 ///
 /// The `vtkm::Transform` function builds a new `vtkm::Tuple` by calling a function
@@ -210,17 +211,18 @@ VTKM_EXEC_CONT void ForEach(vtkm::Tuple<Ts...>& tuple, Function&& f)
 /// created from the return type of the function.
 template <typename TupleType, typename Function>
 VTKM_EXEC_CONT auto Transform(const TupleType&& tuple, Function&& f)
-  -> decltype(Apply(tuple, detail::TupleTransformFunctor{}, std::forward<Function>(f)))
+  -> decltype(Apply(tuple, detail::TupleTransformFunctor(), std::forward<Function>(f)))
 {
-  return Apply(tuple, detail::TupleTransformFunctor{}, std::forward<Function>(f));
+  return Apply(tuple, detail::TupleTransformFunctor(), std::forward<Function>(f));
 }
 
 template <typename TupleType, typename Function>
 VTKM_EXEC_CONT auto Transform(TupleType&& tuple, Function&& f)
-  -> decltype(Apply(tuple, detail::TupleTransformFunctor{}, std::forward<Function>(f)))
+  -> decltype(Apply(tuple, detail::TupleTransformFunctor(), std::forward<Function>(f)))
 {
-  return Apply(tuple, detail::TupleTransformFunctor{}, std::forward<Function>(f));
+  return Apply(tuple, detail::TupleTransformFunctor(), std::forward<Function>(f));
 }
+///@}
 
 template <>
 class Tuple<>
