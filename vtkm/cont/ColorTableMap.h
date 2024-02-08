@@ -164,7 +164,7 @@ bool ColorTableMap(const vtkm::cont::ArrayHandle<T, S>& values,
 template <typename T, typename S>
 bool ColorTableMap(const vtkm::cont::ArrayHandle<T, S>& values,
                    const vtkm::cont::ColorTable& table,
-                   vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut)
+                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut)
 {
   vtkm::cont::Invoker invoke;
   invoke(vtkm::worklet::colorconversion::TransferFunction{}, values, table, rgbOut);
@@ -188,7 +188,7 @@ bool ColorTableMapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& v
 template <typename T, int N, typename S>
 bool ColorTableMapMagnitude(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                             const vtkm::cont::ColorTable& table,
-                            vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut)
+                            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut)
 {
   using namespace vtkm::worklet::colorconversion;
   return vtkm::cont::ColorTableMap(
@@ -214,7 +214,7 @@ template <typename T, int N, typename S>
 bool ColorTableMapComponent(const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, S>& values,
                             vtkm::IdComponent comp,
                             const vtkm::cont::ColorTable& table,
-                            vtkm::cont::ArrayHandle<vtkm::Vec3ui_8>& rgbOut)
+                            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>>& rgbOut)
 {
   using namespace vtkm::worklet::colorconversion;
   return vtkm::cont::ColorTableMap(

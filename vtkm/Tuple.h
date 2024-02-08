@@ -36,7 +36,7 @@ class Tuple;
 
 /// \brief Get the size of a tuple.
 ///
-/// Given a `vtkm::Tuple` type, because a `std::integral_constant` of the type.
+/// Given a `vtkm::Tuple` type, becomes a `std::integral_constant` of the type.
 ///
 template <typename TupleType>
 using TupleSize = std::integral_constant<vtkm::IdComponent, TupleType::Size>;

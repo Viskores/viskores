@@ -462,6 +462,8 @@ VTKM_CONT
 namespace internal
 {
 
+/// @cond
+
 template <>
 struct ArrayExtractComponentImpl<vtkm::cont::StorageTagSOA>
 {
@@ -484,6 +486,8 @@ struct ArrayExtractComponentImpl<vtkm::cont::StorageTagSOA>
       allowCopy);
   }
 };
+
+/// @endcond
 
 } // namespace internal
 
@@ -559,6 +563,8 @@ struct Serialization<vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagSO
 
 #ifndef vtkm_cont_ArrayHandleSOA_cxx
 
+/// @cond
+
 namespace vtkm
 {
 namespace cont
@@ -584,6 +590,8 @@ VTKM_ARRAYHANDLE_SOA_EXPORT(vtkm::Float64)
 #undef VTKM_ARRAYHANDLE_SOA_EXPORT
 }
 } // namespace vtkm::cont
+
+/// @endcond
 
 #endif // !vtkm_cont_ArrayHandleSOA_cxx
 

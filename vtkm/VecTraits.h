@@ -138,10 +138,13 @@ struct VTKM_NEVER_EXPORT VecTraits
   /// \brief Get a vector of the same type but with a different component.
   ///
   /// This type resolves to another vector with a different component type. For example,
-  /// `vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2>` is `vtkm::Vec<T2, N>`.
-  /// This replacement is not recursive. So `VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>`
-  /// is `vtkm::Vec<T2, N>`.
+  /// `vtkm::VecTraits<vtkm::Vec<T, N>>::%ReplaceComponentType<T2>` is `vtkm::Vec<T2, N>`. This
+  /// replacement is not recursive. So `VecTraits<Vec<Vec<T, M>, N>::%ReplaceComponentType<T2>` is
+  /// `vtkm::Vec<T2, N>`.
   ///
+  // Note: the `%` in the code samples above is a hint to doxygen to avoid attempting
+  // to link to the object (i.e. `ReplaceBaseComponentType`), which results in a warning.
+  // The `%` is removed from the doxygen text.
   template <typename NewComponentType>
   using ReplaceComponentType = NewComponentType;
 
@@ -149,8 +152,11 @@ struct VTKM_NEVER_EXPORT VecTraits
   ///
   /// This type resolves to another vector with a different base component type. The replacement
   /// is recursive for nested types. For example,
-  /// `VecTraits<Vec<Vec<T, M>, N>::ReplaceBaseComponentType<T2>` is `Vec<Vec<T2, M>, N>`.
+  /// `VecTraits<Vec<Vec<T, M>, N>::%ReplaceBaseComponentType<T2>` is `Vec<Vec<T2, M>, N>`.
   ///
+  // Note: the `%` in the code samples above is a hint to doxygen to avoid attempting
+  // to link to the object (i.e. `ReplaceBaseComponentType`), which results in a warning.
+  // The `%` is removed from the doxygen text.
   template <typename NewComponentType>
   using ReplaceBaseComponentType = NewComponentType;
 

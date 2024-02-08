@@ -184,15 +184,6 @@ static inline VTKM_EXEC_CONT vtkm::Float64 {0}(vtkm::Float64 x, vtkm::Float64 y)
 }}
 '''.format(vtkmname, expression)
 
-def unary_pi_related_function_no_vec(vtkmname):
-  return '''template <typename T>
-  static constexpr inline VTKM_EXEC_CONT auto {0}() -> typename detail::FloatingPointReturnType<T>::Type
-  {{
-    using FT = typename detail::FloatingPointReturnType<T>::Type;
-    using RAFT = typename detail::FloatingPointReturnType<T>::representable_as_float_type;
-    return static_cast<FT>(RAFT::value ? {0}f() : {0}());
-  }}
-'''.format(vtkmname)
 )\
 $extend(unary_math_function)\
 $extend(unary_math_function_no_vec)\
@@ -200,9 +191,7 @@ $extend(unary_Vec_function)\
 $extend(unary_template_function_no_vec)\
 $extend(binary_math_function)\
 $extend(binary_template_function)\
-$extend(unary_pi_related_function_no_vec)\
 \
-// clang-format off
 namespace vtkm
 {
 
@@ -213,120 +202,112 @@ template <typename T>
 struct FloatingPointReturnType
 {
   using ctype = typename vtkm::VecTraits<T>::ComponentType;
-  using representable_as_float_type = std::integral_constant<bool,
-                      ((sizeof(ctype) < sizeof(float)) || std::is_same<ctype, vtkm::Float32>::value)>;
-  using Type = typename std::conditional<representable_as_float_type::value,
-                                         vtkm::Float32,
-                                         vtkm::Float64>::type;
+  using representable_as_float_type =
+    std::integral_constant<bool,
+                           ((sizeof(ctype) < sizeof(float)) ||
+                            std::is_same<ctype, vtkm::Float32>::value)>;
+  using Type = typename std::
+    conditional<representable_as_float_type::value, vtkm::Float32, vtkm::Float64>::type;
 };
 } // namespace detail
+
+/// Returns the constant 2 times Pi.
+///
+template <typename T = vtkm::Float64>
+static constexpr inline VTKM_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type TwoPi()
+{
+  using FT = typename detail::FloatingPointReturnType<T>::Type;
+  return static_cast<FT>(6.28318530717958647692528676655900576);
+}
+
+/// Returns the constant Pi.
+///
+template <typename T = vtkm::Float64>
+static constexpr inline VTKM_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type Pi()
+{
+  using FT = typename detail::FloatingPointReturnType<T>::Type;
+  return static_cast<FT>(3.14159265358979323846264338327950288);
+}
+
+/// Returns the constant Pi halves.
+///
+template <typename T = vtkm::Float64>
+static constexpr inline VTKM_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type Pi_2()
+{
+  using FT = typename detail::FloatingPointReturnType<T>::Type;
+  return static_cast<FT>(1.57079632679489661923132169163975144);
+}
+
+/// Returns the constant Pi thirds.
+///
+template <typename T = vtkm::Float64>
+static constexpr inline VTKM_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type Pi_3()
+{
+  using FT = typename detail::FloatingPointReturnType<T>::Type;
+  return static_cast<FT>(1.04719755119659774615421446109316762);
+}
+
+/// Returns the constant Pi fourths.
+///
+template <typename T = vtkm::Float64>
+static constexpr inline VTKM_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type Pi_4()
+{
+  using FT = typename detail::FloatingPointReturnType<T>::Type;
+  return static_cast<FT>(0.78539816339744830961566084581987572);
+}
+
+/// Returns the constant Pi one hundred and eightieth.
+///
+template <typename T = vtkm::Float64>
+static constexpr inline VTKM_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type Pi_180()
+{
+  using FT = typename detail::FloatingPointReturnType<T>::Type;
+  return static_cast<FT>(0.01745329251994329547437168059786927);
+}
 
 /// Returns the constant 2 times Pi in float32.
 ///
 static constexpr inline VTKM_EXEC_CONT vtkm::Float32 TwoPif()
 {
-  return 6.28318530717958647692528676655900576f;
+  return TwoPi<vtkm::Float32>();
 }
 
 /// Returns the constant Pi in float32.
 ///
 static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pif()
 {
-  return 3.14159265358979323846264338327950288f;
+  return Pi<vtkm::Float32>();
 }
 
 /// Returns the constant Pi halves in float32.
 ///
 static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_2f()
 {
-  return 1.57079632679489661923132169163975144f;
+  return Pi_2<vtkm::Float32>();
 }
 
 /// Returns the constant Pi thirds in float32.
 ///
 static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_3f()
 {
-  return 1.04719755119659774615421446109316762f;
+  return Pi_3<vtkm::Float32>();
 }
 
 /// Returns the constant Pi fourths in float32.
 ///
 static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_4f()
 {
-  return 0.78539816339744830961566084581987572f;
+  return Pi_4<vtkm::Float32>();
 }
 
 /// Returns the constant Pi one hundred and eightieth in float32.
 ///
 static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_180f()
 {
-  return 0.01745329251994329547437168059786927f;
+  return Pi_180<vtkm::Float32>();
 }
 
-/// Returns the constant 2 times Pi in float64.
-///
-static constexpr inline VTKM_EXEC_CONT vtkm::Float64 TwoPi()
-{
-  return 6.28318530717958647692528676655900576;
-}
-
-/// Returns the constant Pi in float64.
-///
-static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi()
-{
-  return 3.14159265358979323846264338327950288;
-}
-
-/// Returns the constant Pi halves in float64.
-///
-static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_2()
-{
-  return 1.57079632679489661923132169163975144;
-}
-
-/// Returns the constant Pi thirds in float64.
-///
-static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_3()
-{
-  return 1.04719755119659774615421446109316762;
-}
-
-/// Returns the constant Pi fourths in float64.
-///
-static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_4()
-{
-  return 0.78539816339744830961566084581987572;
-}
-
-/// Returns the constant Pi one hundred and eightieth in float64.
-///
-static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_180()
-{
-  return 0.01745329251994329547437168059786927;
-}
-
-/// Returns the constant 2 times Pi.
-///
-$unary_pi_related_function_no_vec('TwoPi')\
-
-/// Returns the constant Pi.
-///
-$unary_pi_related_function_no_vec('Pi')\
-
-/// Returns the constant Pi halves.
-///
-$unary_pi_related_function_no_vec('Pi_2')\
-
-/// Returns the constant Pi thirds.
-///
-$unary_pi_related_function_no_vec('Pi_3')\
-
-/// Returns the constant Pi fourths.
-///
-$unary_pi_related_function_no_vec('Pi_4')\
-/// Returns the constant Pi one hundred and eightieth.
-///
-$unary_pi_related_function_no_vec('Pi_180')\
+// clang-format off
 
 /// Compute the sine of \p x.
 ///
