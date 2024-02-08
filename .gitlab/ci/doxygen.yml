@@ -34,7 +34,7 @@
     CMAKE_BUILD_TYPE: Release
     VTKM_SETTINGS: "tbb+openmp+mpi+shared+docs"
 
-build:docs-continous:
+build:docs-continuous:
   script:
     - "true"
   extends:
