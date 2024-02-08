@@ -8,7 +8,7 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-find_package(anari 0.7.0 REQUIRED)
+find_package(anari 0.8.0 REQUIRED)
 
 set(headers
   ANARIActor.h
