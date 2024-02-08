@@ -367,6 +367,9 @@ struct Serialization<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>>
 
 #ifndef vtk_m_cont_ArrayHandleBasic_cxx
 
+/// @cond
+/// Make doxygen ignore this section
+
 namespace vtkm
 {
 namespace cont
@@ -375,8 +378,6 @@ namespace cont
 namespace internal
 {
 
-/// \cond
-/// Make doxygen ignore this section
 #define VTKM_STORAGE_EXPORT(Type)                                                               \
   extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<Type, StorageTagBasic>;               \
   extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>; \
@@ -396,7 +397,6 @@ VTKM_STORAGE_EXPORT(vtkm::Float32)
 VTKM_STORAGE_EXPORT(vtkm::Float64)
 
 #undef VTKM_STORAGE_EXPORT
-/// \endcond
 
 } // namespace internal
 
@@ -423,6 +423,8 @@ VTKM_ARRAYHANDLE_EXPORT(vtkm::Float64)
 #undef VTKM_ARRAYHANDLE_EXPORT
 }
 } // end vtkm::cont
+
+/// @endcond
 
 #endif // !vtk_m_cont_ArrayHandleBasic_cxx
 

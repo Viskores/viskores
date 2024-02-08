@@ -42,27 +42,11 @@ public:
   using Scalar = vtkm::FloatDefault;
   using Vector = vtkm::Vec<Scalar, 3>;
 
-  /// @brief Evaluate the value of the implicit function.
-  ///
-  /// The `Value()` method for an implicit function takes a `vtkm::Vec3f` and
-  /// returns a `vtkm::FloatDefault` representing the orientation of the point
-  /// with respect to the implicit function's shape. Negative scalar values
-  /// represent vector points inside of the implicit function's shape. Positive
-  /// scalar values represent vector points outside the implicit function's shape.
-  /// Zero values represent vector points that lie on the surface of the implicit
-  /// function.
   VTKM_EXEC_CONT Scalar Value(Scalar x, Scalar y, Scalar z) const
   {
     return reinterpret_cast<const Derived*>(this)->Value(Vector(x, y, z));
   }
 
-  /// @brief Evaluate the gradient of the implicit function.
-  ///
-  /// The ``Gradient()`` method for an implicit function takes a `vtkm::Vec3f`
-  /// and returns a `vtkm::Vec3f` representing the pointing direction from the
-  /// implicit function's shape. Gradient calculations are more object shape
-  /// specific. It is advised to look at the individual shape implementations
-  /// for specific implicit functions.
   VTKM_EXEC_CONT Vector Gradient(Scalar x, Scalar y, Scalar z) const
   {
     return reinterpret_cast<const Derived*>(this)->Gradient(Vector(x, y, z));
@@ -207,7 +191,15 @@ public:
                         vtkm::Range(this->MinPoint[2], this->MaxPoint[2]));
   }
 
-  /// @copydoc internal::ImplicitFunctionBase::Value
+  /// @brief Evaluate the value of the implicit function.
+  ///
+  /// The `Value()` method for an implicit function takes a `vtkm::Vec3f` and
+  /// returns a `vtkm::FloatDefault` representing the orientation of the point
+  /// with respect to the implicit function's shape. Negative scalar values
+  /// represent vector points inside of the implicit function's shape. Positive
+  /// scalar values represent vector points outside the implicit function's shape.
+  /// Zero values represent vector points that lie on the surface of the implicit
+  /// function.
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Scalar minDistance = vtkm::NegativeInfinity32();
@@ -276,7 +268,13 @@ public:
     }
   }
 
-  /// @copydoc internal::ImplicitFunctionBase::Gradient
+  /// @brief Evaluate the gradient of the implicit function.
+  ///
+  /// The ``Gradient()`` method for an implicit function takes a `vtkm::Vec3f`
+  /// and returns a `vtkm::Vec3f` representing the pointing direction from the
+  /// implicit function's shape. Gradient calculations are more object shape
+  /// specific. It is advised to look at the individual shape implementations
+  /// for specific implicit functions.
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     vtkm::IdComponent minAxis = 0;
@@ -455,7 +453,15 @@ public:
   /// @brief Specify the radius of the cylinder.
   VTKM_CONT void SetRadius(Scalar radius) { this->Radius = radius; }
 
-  /// @copydoc internal::ImplicitFunctionBase::Value
+  /// @brief Evaluate the value of the implicit function.
+  ///
+  /// The `Value()` method for an implicit function takes a `vtkm::Vec3f` and
+  /// returns a `vtkm::FloatDefault` representing the orientation of the point
+  /// with respect to the implicit function's shape. Negative scalar values
+  /// represent vector points inside of the implicit function's shape. Positive
+  /// scalar values represent vector points outside the implicit function's shape.
+  /// Zero values represent vector points that lie on the surface of the implicit
+  /// function.
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Vector x2c = point - this->Center;
@@ -463,7 +469,13 @@ public:
     return vtkm::Dot(x2c, x2c) - (proj * proj) - (this->Radius * this->Radius);
   }
 
-  /// @copydoc internal::ImplicitFunctionBase::Gradient
+  /// @brief Evaluate the gradient of the implicit function.
+  ///
+  /// The ``Gradient()`` method for an implicit function takes a `vtkm::Vec3f`
+  /// and returns a `vtkm::Vec3f` representing the pointing direction from the
+  /// implicit function's shape. Gradient calculations are more object shape
+  /// specific. It is advised to look at the individual shape implementations
+  /// for specific implicit functions.
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     Vector x2c = point - this->Center;
@@ -558,7 +570,15 @@ public:
     }
   }
 
-  /// @copydoc internal::ImplicitFunctionBase::Value
+  /// @brief Evaluate the value of the implicit function.
+  ///
+  /// The `Value()` method for an implicit function takes a `vtkm::Vec3f` and
+  /// returns a `vtkm::FloatDefault` representing the orientation of the point
+  /// with respect to the implicit function's shape. Negative scalar values
+  /// represent vector points inside of the implicit function's shape. Positive
+  /// scalar values represent vector points outside the implicit function's shape.
+  /// Zero values represent vector points that lie on the surface of the implicit
+  /// function.
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
@@ -572,7 +592,13 @@ public:
     return maxVal;
   }
 
-  /// @copydoc internal::ImplicitFunctionBase::Gradient
+  /// @brief Evaluate the gradient of the implicit function.
+  ///
+  /// The ``Gradient()`` method for an implicit function takes a `vtkm::Vec3f`
+  /// and returns a `vtkm::Vec3f` representing the pointing direction from the
+  /// implicit function's shape. Gradient calculations are more object shape
+  /// specific. It is advised to look at the individual shape implementations
+  /// for specific implicit functions.
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
@@ -640,13 +666,27 @@ public:
   /// @copydoc SetNormal
   VTKM_EXEC_CONT const Vector& GetNormal() const { return this->Normal; }
 
-  /// @copydoc internal::ImplicitFunctionBase::Value
+  /// @brief Evaluate the value of the implicit function.
+  ///
+  /// The `Value()` method for an implicit function takes a `vtkm::Vec3f` and
+  /// returns a `vtkm::FloatDefault` representing the orientation of the point
+  /// with respect to the implicit function's shape. Negative scalar values
+  /// represent vector points inside of the implicit function's shape. Positive
+  /// scalar values represent vector points outside the implicit function's shape.
+  /// Zero values represent vector points that lie on the surface of the implicit
+  /// function.
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     return vtkm::Dot(point - this->Origin, this->Normal);
   }
 
-  /// @copydoc internal::ImplicitFunctionBase::Gradient
+  /// @brief Evaluate the gradient of the implicit function.
+  ///
+  /// The ``Gradient()`` method for an implicit function takes a `vtkm::Vec3f`
+  /// and returns a `vtkm::Vec3f` representing the pointing direction from the
+  /// implicit function's shape. Gradient calculations are more object shape
+  /// specific. It is advised to look at the individual shape implementations
+  /// for specific implicit functions.
   VTKM_EXEC_CONT Vector Gradient(const Vector&) const { return this->Normal; }
 
 private:
@@ -691,13 +731,27 @@ public:
   /// @copydoc SetCenter
   VTKM_EXEC_CONT const Vector& GetCenter() const { return this->Center; }
 
-  /// @copydoc internal::ImplicitFunctionBase::Value
+  /// @brief Evaluate the value of the implicit function.
+  ///
+  /// The `Value()` method for an implicit function takes a `vtkm::Vec3f` and
+  /// returns a `vtkm::FloatDefault` representing the orientation of the point
+  /// with respect to the implicit function's shape. Negative scalar values
+  /// represent vector points inside of the implicit function's shape. Positive
+  /// scalar values represent vector points outside the implicit function's shape.
+  /// Zero values represent vector points that lie on the surface of the implicit
+  /// function.
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     return vtkm::MagnitudeSquared(point - this->Center) - (this->Radius * this->Radius);
   }
 
-  /// @copydoc internal::ImplicitFunctionBase::Gradient
+  /// @brief Evaluate the gradient of the implicit function.
+  ///
+  /// The ``Gradient()`` method for an implicit function takes a `vtkm::Vec3f`
+  /// and returns a `vtkm::Vec3f` representing the pointing direction from the
+  /// implicit function's shape. Gradient calculations are more object shape
+  /// specific. It is advised to look at the individual shape implementations
+  /// for specific implicit functions.
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     return Scalar(2) * (point - this->Center);
@@ -744,7 +798,15 @@ public:
   }
   VTKM_CONT vtkm::VecVariable<vtkm::Plane, MaxNumPlanes> GetPlanes() const { return this->Planes; }
 
-  /// @copydoc internal::ImplicitFunctionBase::Value
+  /// @brief Evaluate the value of the implicit function.
+  ///
+  /// The `Value()` method for an implicit function takes a `vtkm::Vec3f` and
+  /// returns a `vtkm::FloatDefault` representing the orientation of the point
+  /// with respect to the implicit function's shape. Negative scalar values
+  /// represent vector points inside of the implicit function's shape. Positive
+  /// scalar values represent vector points outside the implicit function's shape.
+  /// Zero values represent vector points that lie on the surface of the implicit
+  /// function.
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
@@ -759,7 +821,13 @@ public:
     return maxVal;
   }
 
-  /// @copydoc internal::ImplicitFunctionBase::Gradient
+  /// @brief Evaluate the gradient of the implicit function.
+  ///
+  /// The ``Gradient()`` method for an implicit function takes a `vtkm::Vec3f`
+  /// and returns a `vtkm::Vec3f` representing the pointing direction from the
+  /// implicit function's shape. Gradient calculations are more object shape
+  /// specific. It is advised to look at the individual shape implementations
+  /// for specific implicit functions.
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     Scalar maxVal = vtkm::NegativeInfinity<Scalar>();
@@ -850,13 +918,27 @@ public:
   {
   }
 
-  /// @copydoc internal::ImplicitFunctionBase::Value
+  /// @brief Evaluate the value of the implicit function.
+  ///
+  /// The `Value()` method for an implicit function takes a `vtkm::Vec3f` and
+  /// returns a `vtkm::FloatDefault` representing the orientation of the point
+  /// with respect to the implicit function's shape. Negative scalar values
+  /// represent vector points inside of the implicit function's shape. Positive
+  /// scalar values represent vector points outside the implicit function's shape.
+  /// Zero values represent vector points that lie on the surface of the implicit
+  /// function.
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const
   {
     return this->Variant.CastAndCall(detail::ImplicitFunctionValueFunctor{}, point);
   }
 
-  /// @copydoc internal::ImplicitFunctionBase::Gradient
+  /// @brief Evaluate the gradient of the implicit function.
+  ///
+  /// The ``Gradient()`` method for an implicit function takes a `vtkm::Vec3f`
+  /// and returns a `vtkm::Vec3f` representing the pointing direction from the
+  /// implicit function's shape. Gradient calculations are more object shape
+  /// specific. It is advised to look at the individual shape implementations
+  /// for specific implicit functions.
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const
   {
     return this->Variant.CastAndCall(detail::ImplicitFunctionGradientFunctor{}, point);

@@ -102,7 +102,7 @@ class ExposedClass;
 if (test)
 {
   clause;
-}    
+}
 ```
 
   + Conditional clauses including loop conditionals such as for and while
@@ -112,7 +112,7 @@ if (test)
 for (auto v : vector)
 {
   single line clause;
-}    
+}
 ```
 
   + Two space indentation. Tabs are not allowed. Trailing whitespace
@@ -199,8 +199,8 @@ for (auto v : vector)
     `vtkm::IdComponent` for indices and sizes. Consider using
     `vtkm::FloatDefault` makes sense. Otherwise, use one of VTK-m's types
     do be explicit about the data type. These are `vtkm::Int8`,
-    vtkm::UInt8`, `vtkm::Int16`, vtkm::UInt16`, `vtkm::Int32`,
-    vtkm::UInt32`, `vtkm::Float32`, `vtkm::Int64`, vtkm::UInt64`, and
+    `vtkm::UInt8`, `vtkm::Int16`, `vtkm::UInt16`, `vtkm::Int32`,
+    `vtkm::UInt32`, `vtkm::Float32`, `vtkm::Int64`, `vtkm::UInt64`, and
     `vtkm::Float64`.
 
   + All functions and methods defined within the VTK-m toolkit should be

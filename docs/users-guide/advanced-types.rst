@@ -749,8 +749,8 @@ Transform Each Tuple Value
 The :func:`vtkm::Transform` function builds a new :class:`vtkm::Tuple` by calling a function or functor on each of the items in an existing :class:`vtkm::Tuple`.
 The return value is placed in the corresponding part of the resulting :class:`vtkm::Tuple`, and the type is automatically created from the return type of the function.
 
-.. doxygenfunction:: vtkm::Transform(const TupleType &&tuple, Function &&f) -> decltype(Apply(tuple, detail::TupleTransformFunctor{}, std::forward<Function>(f)))
-.. doxygenfunction:: vtkm::Transform(TupleType &&tuple, Function &&f) -> decltype(Apply(tuple, detail::TupleTransformFunctor{}, std::forward<Function>(f)))
+.. doxygenfunction:: vtkm::Transform(const TupleType &&tuple, Function &&f) -> decltype(Apply(tuple, detail::TupleTransformFunctor(), std::forward<Function>(f)))
+.. doxygenfunction:: vtkm::Transform(TupleType &&tuple, Function &&f) -> decltype(Apply(tuple, detail::TupleTransformFunctor(), std::forward<Function>(f)))
 
 .. load-example:: TupleTransform
    :file: GuideExampleTuple.cxx

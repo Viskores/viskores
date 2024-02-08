@@ -101,7 +101,7 @@ public:
   /// Operator used by DIY to compute a step in the fan in
   /// @param[in] block The local data block to be processed in this step. Instance of DistributedContourTreeBlockData.
   /// @param[in] rp DIY communication proxy
-  /// @param[in] unused partners of the current block (unused)
+  // @param[in] unused partners of the current block (unused)
   void operator()(
     vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>* block,
     const vtkmdiy::ReduceProxy& rp,
