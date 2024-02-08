@@ -29,6 +29,11 @@ set(examples_device
   GuideExampleDataSetCreation.cxx
   GuideExampleErrorHandling.cxx
   GuideExampleSimpleAlgorithm.cxx
+  GuideExampleUseWorkletMapField.cxx
+  GuideExampleUseWorkletPointNeighborhood.cxx
+  GuideExampleUseWorkletReduceByKey.cxx
+  GuideExampleUseWorkletVisitCellsWithPoints.cxx
+  GuideExampleUseWorkletVisitPointsWithCells.cxx
   )
 set(extra_libs)
 
