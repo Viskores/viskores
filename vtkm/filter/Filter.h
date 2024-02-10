@@ -25,12 +25,12 @@ namespace vtkm
 {
 namespace filter
 {
-/// @brief base class for all filters.
+/// @brief Base class for all filters.
 ///
 /// This is the base class for all filters. To add a new filter, one can subclass this and
 /// implement relevant methods.
 ///
-/// @section FilterUsage Usage
+/// **FilterUsage Usage**
 ///
 /// To execute a filter, one typically calls the `auto result = filter.Execute(input)`. Typical
 /// usage is as follows:
@@ -73,7 +73,7 @@ namespace filter
 /// `DoExecutePartitions(PartitionedDataSet&)`. See the implementation of
 /// `FilterParticleAdvection::Execute(PartitionedDataSet&)` for an example.
 ///
-/// @section Creating results and mapping fields
+/// **Creating results and mapping fields**
 ///
 /// For subclasses that map input fields into output fields, the implementation of its
 /// `DoExecute(DataSet&)` should create the `DataSet` to be returned with a call to
@@ -106,7 +106,7 @@ namespace filter
 /// provided as a convenience that uses the default mapper which trivially adds input Field to
 /// output DataSet (via a shallow copy).
 ///
-/// @section FilterThreadSafety CanThread
+/// **FilterThreadSafety CanThread**
 ///
 /// By default, the implementation of `DoExecute(DataSet&)` should model a *pure function*, i.e. it
 /// does not have any mutable shared state. This makes it thread-safe by default and allows
@@ -150,7 +150,8 @@ namespace filter
 /// needs to override the `CanThread()` virtual method to return `false`. The default
 /// `Execute(PartitionedDataSet&)` implementation will fallback to a serial for loop execution.
 ///
-/// @subsection FilterThreadScheduling DoExecute
+/// _FilterThreadScheduling DoExecute_
+///
 /// The default multi-threaded execution of `Execute(PartitionedDataSet&)` uses a simple FIFO queue
 /// of DataSet and pool of *worker* threads. Implementation of Filter subclass can override the
 /// `DoExecutePartitions(PartitionedDataSet)` virtual method to provide implementation specific
