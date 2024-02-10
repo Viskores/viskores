@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_flow_StreamSurface_h
 #define vtk_m_filter_flow_StreamSurface_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
@@ -32,7 +32,7 @@ namespace flow
 ///
 /// The output of this filter is a `vtkm::cont::DataSet` containing a mesh for the created
 /// surface.
-class VTKM_FILTER_FLOW_EXPORT StreamSurface : public vtkm::filter::FilterField
+class VTKM_FILTER_FLOW_EXPORT StreamSurface : public vtkm::filter::Filter
 {
 public:
   /// @brief Specifies the step size used for the numerical integrator.

@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_field_transform_CylindricalCoordinateTransform_h
 #define vtk_m_filter_field_transform_CylindricalCoordinateTransform_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -30,7 +30,7 @@ namespace field_transform
 /// in the output.
 ///
 class VTKM_FILTER_FIELD_TRANSFORM_EXPORT CylindricalCoordinateTransform
-  : public vtkm::filter::FilterField
+  : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT CylindricalCoordinateTransform();

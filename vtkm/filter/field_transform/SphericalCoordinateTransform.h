@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_field_transform_SphericalCoordinateTransform_h
 #define vtk_m_filter_field_transform_SphericalCoordinateTransform_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -29,8 +29,7 @@ namespace field_transform
 /// The resulting transformation will be set as the first coordinate system
 /// in the output.
 ///
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT SphericalCoordinateTransform
-  : public vtkm::filter::FilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT SphericalCoordinateTransform : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT SphericalCoordinateTransform();

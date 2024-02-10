@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_zfp_ZFPDecompressor2D_h
 #define vtk_m_filter_zfp_ZFPDecompressor2D_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/zfp/vtkm_filter_zfp_export.h>
 
 namespace vtkm
@@ -27,7 +27,7 @@ namespace zfp
 /// the decompressed version of the data.
 /// @warning
 /// This filter is currently only supports 2D structured cell sets.
-class VTKM_FILTER_ZFP_EXPORT ZFPDecompressor2D : public vtkm::filter::FilterField
+class VTKM_FILTER_ZFP_EXPORT ZFPDecompressor2D : public vtkm::filter::Filter
 {
 public:
   /// @brief Specifies the rate of compression.

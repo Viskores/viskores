@@ -42,7 +42,7 @@
 #ifndef vtk_m_filter_scalar_topology_DistributedBranchDecompositionFilter_h
 #define vtk_m_filter_scalar_topology_DistributedBranchDecompositionFilter_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
 namespace vtkm

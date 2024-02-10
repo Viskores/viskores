@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_contour_ClipWithField_h
 #define vtk_m_filter_contour_ClipWithField_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/contour/vtkm_filter_contour_export.h>
 
 namespace vtkm
@@ -28,7 +28,7 @@ namespace contour
 ///
 /// To select the scalar field, use the `SetActiveField()` and related methods.
 ///
-class VTKM_FILTER_CONTOUR_EXPORT ClipWithField : public vtkm::filter::FilterField
+class VTKM_FILTER_CONTOUR_EXPORT ClipWithField : public vtkm::filter::Filter
 {
 public:
   /// @brief Specifies the field value for the clip operation.

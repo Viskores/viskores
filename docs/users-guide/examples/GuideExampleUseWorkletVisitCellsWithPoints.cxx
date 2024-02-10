@@ -50,7 +50,7 @@ public:
 //// END-EXAMPLE UseWorkletVisitCellsWithPoints
 ////
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 
 #define VTKM_FILTER_FIELD_CONVERSION_EXPORT
 
@@ -64,7 +64,7 @@ namespace filter
 namespace field_conversion
 {
 
-class VTKM_FILTER_FIELD_CONVERSION_EXPORT CellCenters : public vtkm::filter::FilterField
+class VTKM_FILTER_FIELD_CONVERSION_EXPORT CellCenters : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT CellCenters();

@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_geometry_refinement_Tube_h
 #define vtk_m_filter_geometry_refinement_Tube_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/geometry_refinement/vtkm_filter_geometry_refinement_export.h>
 
 namespace vtkm
@@ -27,7 +27,7 @@ namespace geometry_refinement
 /// The orientation of the geometry of the tube are computed automatically using
 /// a heuristic to minimize the twisting along the input data set.
 ///
-class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Tube : public vtkm::filter::FilterField
+class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Tube : public vtkm::filter::Filter
 {
 public:
   /// @brief Specify the radius of each tube.

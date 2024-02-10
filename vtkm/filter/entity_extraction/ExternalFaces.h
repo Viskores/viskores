@@ -11,7 +11,7 @@
 #ifndef vtkm_filter_entity_extraction_ExternalFaces_h
 #define vtkm_filter_entity_extraction_ExternalFaces_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -30,7 +30,7 @@ namespace entity_extraction
 /// data set. An external face is defined is defined as a face/side of a cell
 /// that belongs only to one cell in the entire mesh.
 ///
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExternalFaces : public vtkm::filter::FilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExternalFaces : public vtkm::filter::Filter
 {
 public:
   ExternalFaces();

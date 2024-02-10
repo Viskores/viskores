@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_resampling_Probe_h
 #define vtk_m_filter_resampling_Probe_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/resampling/vtkm_filter_resampling_export.h>
 
 namespace vtkm
@@ -33,7 +33,7 @@ namespace resampling
 /// transferred to it. The fields are transfered by probing the input data
 /// set at the point locations of the geometry.
 ///
-class VTKM_FILTER_RESAMPLING_EXPORT Probe : public vtkm::filter::FilterField
+class VTKM_FILTER_RESAMPLING_EXPORT Probe : public vtkm::filter::Filter
 {
 public:
   /// @brief Specify the geometry to probe with.

@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_image_processing_ComputeMoments_h
 #define vtk_m_filter_image_processing_ComputeMoments_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/image_processing/vtkm_filter_image_processing_export.h>
 
 namespace vtkm
@@ -19,7 +19,7 @@ namespace filter
 {
 namespace image_processing
 {
-class VTKM_FILTER_IMAGE_PROCESSING_EXPORT ComputeMoments : public vtkm::filter::FilterField
+class VTKM_FILTER_IMAGE_PROCESSING_EXPORT ComputeMoments : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT ComputeMoments();

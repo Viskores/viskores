@@ -10,7 +10,7 @@
 
 #ifndef vtk_m_filter_uncertainty_ContourUncertainUniformMonteCarlo_h
 #define vtk_m_filter_uncertainty_ContourUncertainUniformMonteCarlo_h
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/uncertainty/vtkm_filter_uncertainty_export.h>
 
 namespace vtkm
@@ -25,8 +25,7 @@ namespace uncertainty
 /// We encourage usage of the ContourUncertainUniform filter because the Monte Carlo approach implemented
 /// in this filter is computationally inefficient.
 ///
-class VTKM_FILTER_UNCERTAINTY_EXPORT ContourUncertainUniformMonteCarlo
-  : public vtkm::filter::FilterField
+class VTKM_FILTER_UNCERTAINTY_EXPORT ContourUncertainUniformMonteCarlo : public vtkm::filter::Filter
 {
   std::string NumberNonzeroProbabilityName = "num_nonzero_probability";
   std::string EntropyName = "entropy";

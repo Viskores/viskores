@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_field_conversion_CellAverage_h
 #define vtk_m_filter_field_conversion_CellAverage_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/field_conversion/vtkm_filter_field_conversion_export.h>
 
 namespace vtkm
@@ -32,7 +32,7 @@ namespace field_conversion
 /// point field. The name can be overridden as always using the
 /// `SetOutputFieldName()` method.
 ///
-class VTKM_FILTER_FIELD_CONVERSION_EXPORT CellAverage : public vtkm::filter::FilterField
+class VTKM_FILTER_FIELD_CONVERSION_EXPORT CellAverage : public vtkm::filter::Filter
 {
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;

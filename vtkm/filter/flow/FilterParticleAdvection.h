@@ -13,7 +13,7 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
@@ -29,7 +29,7 @@ namespace flow
 /// Takes as input a vector field and seed locations and advects the seeds
 /// through the flow field.
 
-class VTKM_FILTER_FLOW_EXPORT FilterParticleAdvection : public vtkm::filter::FilterField
+class VTKM_FILTER_FLOW_EXPORT FilterParticleAdvection : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT

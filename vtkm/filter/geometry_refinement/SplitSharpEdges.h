@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_geometry_refinement_SplitSharpEdges_h
 #define vtk_m_filter_geometry_refinement_SplitSharpEdges_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/geometry_refinement/vtkm_filter_geometry_refinement_export.h>
 
 namespace vtkm
@@ -37,7 +37,7 @@ namespace geometry_refinement
 /// visually, but the topology becomes disconnectered there. Splitting sharp edges is most
 /// useful to duplicate normal shading vectors to make a sharp shading effect.
 ///
-class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT SplitSharpEdges : public vtkm::filter::FilterField
+class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT SplitSharpEdges : public vtkm::filter::Filter
 {
 public:
   /// @brief Specify the feature angle threshold to split on.

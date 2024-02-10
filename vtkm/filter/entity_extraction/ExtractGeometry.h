@@ -12,7 +12,7 @@
 #define vtk_m_fulter_entity_extraction_ExtractGeometry_h
 
 #include <vtkm/ImplicitFunction.h>
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -38,7 +38,7 @@ namespace entity_extraction
 /// cells into new cells whereas this filter will not, producing a more "crinkly"
 /// output.
 ///
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExtractGeometry : public vtkm::filter::FilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExtractGeometry : public vtkm::filter::Filter
 {
 public:
   /// @brief Specifies the implicit function to be used to perform extract geometry.

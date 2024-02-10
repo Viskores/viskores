@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_density_estimate_Statistics_h
 #define vtk_m_filter_density_estimate_Statistics_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/density_estimate/vtkm_filter_density_estimate_export.h>
 
 namespace vtkm
@@ -65,7 +65,7 @@ namespace density_estimate
 /// `vtkm::cont::DataSet` can be computed by creating a `vtkm::cont::PartitionedDataSet`
 /// with that as a single partition.
 ///
-class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT Statistics : public vtkm::filter::FilterField
+class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT Statistics : public vtkm::filter::Filter
 {
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;

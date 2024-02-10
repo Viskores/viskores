@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_geometry_refinement_Shrink_h
 #define vtk_m_filter_geometry_refinement_Shrink_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/geometry_refinement/vtkm_filter_geometry_refinement_export.h>
 
 namespace vtkm
@@ -26,7 +26,7 @@ namespace geometry_refinement
 /// computed as the average position of the cell points.
 /// This filter disconnects the cells, duplicating the points connected to multiple cells.
 /// The resulting CellSet is always an `ExplicitCellSet`.
-class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Shrink : public vtkm::filter::FilterField
+class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Shrink : public vtkm::filter::Filter
 {
 public:
   /// @brief Specify the scale factor to size each cell.

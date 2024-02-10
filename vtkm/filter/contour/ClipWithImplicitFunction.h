@@ -12,7 +12,7 @@
 
 #include <vtkm/ImplicitFunction.h>
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/contour/vtkm_filter_contour_export.h>
 
 namespace vtkm
@@ -27,7 +27,7 @@ namespace contour
 /// or `vtkm::Frustum`. The implicit function uses the point coordinates as its values.
 /// If there is more than one coordinate system in the input `vtkm::cont::DataSet`,
 /// it can be selected with `SetActiveCoordinateSystem()`.
-class VTKM_FILTER_CONTOUR_EXPORT ClipWithImplicitFunction : public vtkm::filter::FilterField
+class VTKM_FILTER_CONTOUR_EXPORT ClipWithImplicitFunction : public vtkm::filter::Filter
 {
 public:
   /// @brief Specifies the implicit function to be used to perform the clip operation.
