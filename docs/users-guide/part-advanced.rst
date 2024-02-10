@@ -8,3 +8,4 @@ Advanced Development
    advanced-types.rst
    logging.rst
    worklet-types.rst
+   worklet-error-handling.rst
