@@ -19,7 +19,7 @@
 namespace vtkm
 {
 
-/// \brief Basic Matrix type.
+/// @brief Basic Matrix type.
 ///
 /// The Matrix class holds a small two dimensional array for simple linear
 /// algebra and vector operations. VTK-m provides several Matrix-based
@@ -37,9 +37,11 @@ public:
   static constexpr vtkm::IdComponent NUM_ROWS = NumRow;
   static constexpr vtkm::IdComponent NUM_COLUMNS = NumCol;
 
+  /// Creates an uninitialized matrix. The values in the matrix are not determined.
   VTKM_EXEC_CONT
   Matrix() {}
 
+  /// Creates a matrix initialized with all values set to the provided `value`.
   VTKM_EXEC_CONT
   explicit Matrix(const ComponentType& value)
     : Components(vtkm::Vec<ComponentType, NUM_COLUMNS>(value))
@@ -110,7 +112,7 @@ VTKM_EXEC_CONT const vtkm::Vec<T, NumCol>& MatrixGetRow(
 }
 
 /// Returns a tuple containing the given column (indexed from 0) of the given
-/// matrix.  Might not be as efficient as the \c MatrixGetRow function.
+/// matrix.  Might not be as efficient as the `MatrixGetRow()` function.
 ///
 template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
 VTKM_EXEC_CONT vtkm::Vec<T, NumRow> MatrixGetColumn(const vtkm::Matrix<T, NumRow, NumCol>& matrix,
@@ -439,7 +441,7 @@ VTKM_EXEC_CONT vtkm::Vec<T, Size> MatrixLUPSolve(
 
 } // namespace detail
 
-/// Solve the linear system Ax = b for x. If a single solution is found, valid
+/// Solve the linear system Ax = b for x. If a single solution is found, `valid`
 /// is set to true, false otherwise.
 ///
 template <typename T, vtkm::IdComponent Size>

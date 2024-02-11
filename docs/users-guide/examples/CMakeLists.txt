@@ -16,6 +16,8 @@ set(examples
   GuideExampleInitialization.cxx
   GuideExampleIO.cxx
   GuideExampleLists.cxx
+  GuideExampleMatrix.cxx
+  GuideExampleNewtonsMethod.cxx
   GuideExampleProvidedFilters.cxx
   GuideExampleRendering.cxx
   GuideExampleRuntimeDeviceTracker.cxx
