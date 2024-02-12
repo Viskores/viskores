@@ -52,27 +52,12 @@ public:
   KeysBase& operator=(const KeysBase&) = default;
   ~KeysBase() = default;
 
-  /// @brief Returns the input range of a keys object when used as an input domain.
-  ///
-  /// This will be equal to the number of unique keys.
   VTKM_CONT
   vtkm::Id GetInputRange() const { return this->Offsets.GetNumberOfValues() - 1; }
 
-  /// @brief Returns the array that maps each input value to an array of sorted keys.
-  ///
-  /// This array is used internally as the indices to a `vtkm::cont::ArrayHandlePermutation`
-  /// to order input values with the grouped keys so that they can then be grouped. This is
-  /// an internal array that is seldom of use to code outside the
-  /// `vtkm::worklet::WorkletReduceByKey` implementation.
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Id> GetSortedValuesMap() const { return this->SortedValuesMap; }
 
-  /// @brief Returns an offsets array to group keys.
-  ///
-  /// Given an array of sorted keys (or more frequently values permuted to the sorting of
-  /// the keys), this array of indices can be used as offsets for a
-  /// `vtkm::cont::ArrayHandleGroupVecVariable`. This is an internal array that is seldom of
-  /// use to code outside the `vtkm::worklet::WorkletReduceByKey` implementation.
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Id> GetOffsets() const { return this->Offsets; }
 
@@ -80,9 +65,6 @@ public:
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::IdComponent> GetCounts() const;
 
-  /// @brief Returns the number of input keys and values used to build this structure.
-  ///
-  /// This is also the size of input arrays to a `vtkm::worklet::WorkletReduceByKey`.
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const { return this->SortedValuesMap.GetNumberOfValues(); }
 
@@ -196,16 +178,30 @@ public:
 #ifdef VTKM_DOXYGEN_ONLY
   // Document the superclass' methods as methods in this class.
 
-  /// @copydoc vtkm::worklet::internal::KeysBase::GetInputRange
+  /// @brief Returns the input range of a keys object when used as an input domain.
+  ///
+  /// This will be equal to the number of unique keys.
   vtkm::Id GetInputRange() const;
 
-  /// @copydoc vtkm::worklet::internal::KeysBase::GetSortedValuesMap
+  /// @brief Returns the array that maps each input value to an array of sorted keys.
+  ///
+  /// This array is used internally as the indices to a `vtkm::cont::ArrayHandlePermutation`
+  /// to order input values with the grouped keys so that they can then be grouped. This is
+  /// an internal array that is seldom of use to code outside the
+  /// `vtkm::worklet::WorkletReduceByKey` implementation.
   vtkm::cont::ArrayHandle<vtkm::Id> GetSortedValuesMap() const;
 
-  /// @copydoc vtkm::worklet::internal::KeysBase::GetOffsets
+  /// @brief Returns an offsets array to group keys.
+  ///
+  /// Given an array of sorted keys (or more frequently values permuted to the sorting of
+  /// the keys), this array of indices can be used as offsets for a
+  /// `vtkm::cont::ArrayHandleGroupVecVariable`. This is an internal array that is seldom of
+  /// use to code outside the `vtkm::worklet::WorkletReduceByKey` implementation.
   vtkm::cont::ArrayHandle<vtkm::Id> GetOffsets() const;
 
-  /// @copydoc vtkm::worklet::internal::KeysBase::GetNumberOfValues
+  /// @brief Returns the number of input keys and values used to build this structure.
+  ///
+  /// This is also the size of input arrays to a `vtkm::worklet::WorkletReduceByKey`.
   vtkm::Id GetNumberOfValues() const;
 #endif
 

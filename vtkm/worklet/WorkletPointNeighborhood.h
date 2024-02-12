@@ -116,27 +116,27 @@ public:
   {
   };
 
-  /// @copydoc vtkm::worklet::internal::WorkletBase::WorkIndex
+  /// @copydoc vtkm::exec::arg::WorkIndex
   struct WorkIndex : vtkm::worklet::internal::WorkletBase::WorkIndex
   {
   };
 
-  /// @copydoc vtkm::worklet::internal::WorkletBase::VisitIndex
+  /// @copydoc vtkm::exec::arg::VisitIndex
   struct VisitIndex : vtkm::worklet::internal::WorkletBase::VisitIndex
   {
   };
 
-  /// @copydoc vtkm::worklet::internal::WorkletBase::InputIndex
+  /// @copydoc vtkm::exec::arg::InputIndex
   struct InputIndex : vtkm::worklet::internal::WorkletBase::InputIndex
   {
   };
 
-  /// @copydoc vtkm::worklet::internal::WorkletBase::OutputIndex
+  /// @copydoc vtkm::exec::arg::OutputIndex
   struct OutputIndex : vtkm::worklet::internal::WorkletBase::OutputIndex
   {
   };
 
-  /// @copydoc vtkm::worklet::internal::WorkletBase::ThreadIndices
+  /// @copydoc vtkm::exec::arg::ThreadIndices
   struct ThreadIndices : vtkm::worklet::internal::WorkletBase::ThreadIndices
   {
   };

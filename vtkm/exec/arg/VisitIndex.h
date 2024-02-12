@@ -20,9 +20,9 @@ namespace exec
 namespace arg
 {
 
-/// \brief Aspect tag to use for getting the work index.
+/// @brief Aspect tag to use for getting the work index.
 ///
-/// The \c AspectTagVisitIndex aspect tag causes the \c Fetch class to ignore
+/// The `AspectTagVisitIndex` aspect tag causes the `Fetch` class to ignore
 /// whatever data is in the associated execution object and return the visit
 /// index.
 ///
@@ -30,15 +30,18 @@ struct AspectTagVisitIndex
 {
 };
 
-/// \brief The \c ExecutionSignature tag to use to get the visit index
+/// @brief The `ExecutionSignature` tag to use to get the visit index
+///
+/// This tag produces a `vtkm::IdComponent` that uniquely identifies when multiple
+/// worklet invocations operate on the same input item, which can happen when
+/// defining a worklet with scatter.
 ///
 /// When a worklet is dispatched, there is a scatter operation defined that
 /// optionally allows each input to go to multiple output entries. When one
 /// input is assigned to multiple outputs, there needs to be a mechanism to
 /// uniquely identify which output is which. The visit index is a value between
-/// 0 and the number of outputs a particular input goes to. This tag in the \c
-/// ExecutionSignature passes the visit index for this work. \c WorkletBase
-/// contains a typedef that points to this class.
+/// 0 and the number of outputs a particular input goes to. This tag in the
+/// `ExecutionSignature` passes the visit index for this work.
 ///
 struct VisitIndex : vtkm::exec::arg::ExecutionSignatureTagBase
 {
