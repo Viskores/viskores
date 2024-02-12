@@ -79,38 +79,19 @@ public:
   using _19 = vtkm::placeholders::Arg<19>;
   using _20 = vtkm::placeholders::Arg<20>;
 
-  /// @brief `ExecutionSignature` tag for getting the work index.
-  ///
-  /// This tag produces a `vtkm::Id` that uniquely identifies the invocation
-  /// instance of the worklet.
-  ///
+  /// @copydoc vtkm::exec::arg::WorkIndex
   using WorkIndex = vtkm::exec::arg::WorkIndex;
 
-  /// @brief `ExecutionSignature` tag for getting the input index.
-  ///
-  /// This tag produces a `vtkm::Id` that identifies the index of the input
-  /// element, which can differ from the `WorkIndex` in a worklet with a scatter.
+  /// @copydoc vtkm::exec::arg::InputIndex
   using InputIndex = vtkm::exec::arg::InputIndex;
 
-  /// @brief `ExecutionSignature` tag for getting the output index.
-  ///
-  /// This tag produces a `vtkm::Id` that identifies the index of the output element.
-  /// (This is generally the same as `WorkIndex`.)
+  /// @copydoc vtkm::exec::arg::OutputIndex
   using OutputIndex = vtkm::exec::arg::OutputIndex;
 
-  /// @brief `ExecutionSignature` tag for getting the thread indices.
-  ///
-  /// This tag produces an internal object that manages indices and other metadata
-  /// of the current thread. Thread indices objects vary by worklet type, but most
-  /// users can get the information they need through other signature tags.
+  /// @copydoc vtkm::exec::arg::ThreadIndices
   using ThreadIndices = vtkm::exec::arg::ThreadIndices;
 
-  /// @brief `ExecutionSignature` tag for getting the visit index.
-  ///
-  /// This tag produces a `vtkm::IdComponent` that uniquely identifies when multiple
-  /// worklet invocations operate on the same input item, which can happen when
-  /// defining a worklet with scatter.
-  ///
+  /// @copydoc vtkm::exec::arg::VisitIndex
   using VisitIndex = vtkm::exec::arg::VisitIndex;
 
   /// @brief `ExecutionSignature` tag for getting the device adapter tag.
