@@ -39,9 +39,10 @@ build:docs-continuous:
   script:
     - *build_doxygen_script
   extends:
+    - .build_docs
+    - .cmake_build_artifacts
     - .run_automatically
     - .ubuntu2004_doxygen
-    - .build_docs
 
 build:docs-master:
   script:
@@ -55,8 +56,9 @@ build:docs-master:
       when: on_success
     - when: never
   extends:
-    - .ubuntu2004_doxygen
     - .build_docs
+    - .cmake_build_artifacts
+    - .ubuntu2004_doxygen
   variables:
     DOXYGEN_UPLOAD_REMOTE_PATH: "nightly"
 
@@ -72,7 +74,8 @@ build:docs-latest:
       when: on_success
     - when: never
   extends:
-    - .ubuntu2004_doxygen
     - .build_docs
+    - .cmake_build_artifacts
+    - .ubuntu2004_doxygen
   variables:
     DOXYGEN_UPLOAD_REMOTE_PATH: "latest"
