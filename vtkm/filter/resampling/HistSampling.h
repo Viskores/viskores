@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_resampling_HistSampling_h
 #define vtk_m_filter_resampling_HistSampling_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/resampling/vtkm_filter_resampling_export.h>
 
 #include <vtkm/Deprecated.h>
@@ -37,7 +37,7 @@ namespace resampling
 ///
 /// The cell set of the input data is removed and replaced with a set with a vertex
 /// cell for each point. This effectively converts the data to a point cloud.
-class VTKM_FILTER_RESAMPLING_EXPORT HistSampling : public vtkm::filter::FilterField
+class VTKM_FILTER_RESAMPLING_EXPORT HistSampling : public vtkm::filter::Filter
 {
 public:
   /// @brief Specify the number of bins used when computing the histogram.

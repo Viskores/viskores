@@ -13,7 +13,7 @@
 
 #include <vtkm/CellClassification.h>
 #include <vtkm/Deprecated.h>
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -35,7 +35,7 @@ namespace entity_extraction
 /// boundary are marked as ghost cells together, which is common. If creating a
 /// structured data set is not possible, an explicit data set is produced.
 ///
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT GhostCellRemove : public vtkm::filter::FilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT GhostCellRemove : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT GhostCellRemove();

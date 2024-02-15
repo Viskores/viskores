@@ -88,7 +88,7 @@ public:
 
 } // namespace boxfilter
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 
 namespace vtkm
 {
@@ -97,7 +97,7 @@ namespace filter
 namespace convolution
 {
 
-class BoxFilter : public vtkm::filter::FilterField
+class BoxFilter : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT BoxFilter() = default;

@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_field_transform_CompositeVectors_h
 #define vtk_m_filter_field_transform_CompositeVectors_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -30,7 +30,7 @@ namespace field_transform
 /// All of the input fields must be scalar values. The type of the first field
 /// determines the type of the output vector field.
 ///
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT CompositeVectors : public vtkm::filter::FilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT CompositeVectors : public vtkm::filter::Filter
 {
 
 public:

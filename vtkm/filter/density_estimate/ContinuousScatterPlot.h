@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_density_estimate_ContinuousScatterPlot_h
 #define vtk_m_filter_density_estimate_ContinuousScatterPlot_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/density_estimate/vtkm_filter_density_estimate_export.h>
 
 namespace vtkm
@@ -36,7 +36,7 @@ namespace density_estimate
 /// vol. 14, no. 6, pp. 1428-1435, Nov.-Dec. 2008
 /// doi: 10.1109/TVCG.2008.119.
 
-class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT ContinuousScatterPlot : public vtkm::filter::FilterField
+class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT ContinuousScatterPlot : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT ContinuousScatterPlot() { this->SetOutputFieldName("density"); }

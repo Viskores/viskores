@@ -11,7 +11,7 @@
 #ifndef vtkm_m_filter_contour_MIRFilter_h
 #define vtkm_m_filter_contour_MIRFilter_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/contour/vtkm_filter_contour_export.h>
 
 namespace vtkm
@@ -48,7 +48,7 @@ namespace contour
 ///     total error % of the entire dataset is less than the specified amount (defaults to 1.0, returns after first iteration). Finally,
 ///     the error scaling and scaling decay allows for setting how much the cell VFs should react to the delta between target and calculated cell VFs.
 ///     the error scaling will decay by the decay variable every iteration (multiplicitively).
-class VTKM_FILTER_CONTOUR_EXPORT MIRFilter : public vtkm::filter::FilterField
+class VTKM_FILTER_CONTOUR_EXPORT MIRFilter : public vtkm::filter::Filter
 {
 public:
   /// @brief Sets the name of the offset/position cellset field in the dataset passed to the filter

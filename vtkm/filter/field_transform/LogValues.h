@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_field_transform_LogValues_h
 #define vtk_m_filter_field_transform_LogValues_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -32,7 +32,7 @@ namespace field_transform
 /// smallest numbers comparatively hard to see. Thus, `LogValues` supports setting a
 /// minimum value (with `SetMinValue()`) that will clamp any smaller values to that.
 ///
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT LogValues : public vtkm::filter::FilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT LogValues : public vtkm::filter::Filter
 {
 public:
   /// @brief Identifies a type of logarithm as specified by its base.

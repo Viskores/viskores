@@ -21,7 +21,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQuality_h
 #define vtk_m_filter_mesh_info_MeshQuality_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -66,7 +66,7 @@ enum struct CellMetric
   * Each field contains the metric summary statistics for the cell type.
   * Summary statists with all 0 values imply that the specified metric does not support the cell type.
   */
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQuality : public vtkm::filter::FilterField
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQuality : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT explicit MeshQuality(CellMetric);

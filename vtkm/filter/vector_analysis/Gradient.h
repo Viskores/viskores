@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_vector_analysis_Gradient_h
 #define vtk_m_filter_vector_analysis_Gradient_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/vector_analysis/vtkm_filter_vector_analysis_export.h>
 
 namespace vtkm
@@ -31,7 +31,7 @@ namespace vector_analysis
 ///
 /// If no explicit name for the output field is provided the filter will
 /// default to "Gradients"
-class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT Gradient : public vtkm::filter::FilterField
+class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT Gradient : public vtkm::filter::Filter
 {
 public:
   /// @brief Specify whether to compute gradients

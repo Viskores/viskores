@@ -21,7 +21,7 @@
 #ifndef vtk_m_filter_uncertainty_ContourUncertainUniform_h
 #define vtk_m_filter_uncertainty_ContourUncertainUniform_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/uncertainty/vtkm_filter_uncertainty_export.h>
 
 namespace vtkm
@@ -40,7 +40,7 @@ namespace uncertainty
 /// isosurface uncertainty corresponds to uncertainty in topology cases in
 /// the marching cubes algorithm.
 ///
-class VTKM_FILTER_UNCERTAINTY_EXPORT ContourUncertainUniform : public vtkm::filter::FilterField
+class VTKM_FILTER_UNCERTAINTY_EXPORT ContourUncertainUniform : public vtkm::filter::Filter
 {
 
   std::string NumberNonzeroProbabilityName = "num_nonzero_probability";

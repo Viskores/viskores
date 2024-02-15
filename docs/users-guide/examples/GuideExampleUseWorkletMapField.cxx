@@ -41,7 +41,7 @@ public:
 
 } // anonymous namespace
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 
 #define VTKM_FILTER_VECTOR_CALCULUS_EXPORT
 
@@ -56,8 +56,7 @@ namespace vector_calculus
 {
 
 //// LABEL Export
-class VTKM_FILTER_VECTOR_CALCULUS_EXPORT FieldMagnitude
-  : public vtkm::filter::FilterField
+class VTKM_FILTER_VECTOR_CALCULUS_EXPORT FieldMagnitude : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT FieldMagnitude();

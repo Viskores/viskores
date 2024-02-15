@@ -10,7 +10,7 @@
 
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 
 #include <vtkm/cont/Invoker.h>
 
@@ -94,7 +94,7 @@ namespace unit_conversion
 {
 
 class VTKM_FILTER_UNIT_CONVERSION_EXPORT PoundsPerSquareInchToNewtonsPerSquareMeterFilter
-  : public vtkm::filter::FilterField
+  : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT PoundsPerSquareInchToNewtonsPerSquareMeterFilter();

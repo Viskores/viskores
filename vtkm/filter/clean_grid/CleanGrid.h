@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_clean_grid_CleanGrid_h
 #define vtk_m_filter_clean_grid_CleanGrid_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/clean_grid/vtkm_filter_clean_grid_export.h>
 
 namespace vtkm
@@ -39,7 +39,7 @@ struct SharedStates;
 /// by the coordinate system. If there are multiple coordinate systems, the desired
 /// coordinate system can be selected with the `SetActiveCoordinateSystem()` method.
 ///
-class VTKM_FILTER_CLEAN_GRID_EXPORT CleanGrid : public vtkm::filter::FilterField
+class VTKM_FILTER_CLEAN_GRID_EXPORT CleanGrid : public vtkm::filter::Filter
 {
 public:
   /// When the CompactPointFields flag is true, the filter will identify and remove any

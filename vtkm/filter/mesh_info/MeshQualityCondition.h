@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityCondition_h
 #define vtk_m_filter_mesh_info_MeshQualityCondition_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,7 +30,7 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityCondition : public vtkm::filter::FilterField
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityCondition : public vtkm::filter::Filter
 {
 public:
   MeshQualityCondition();

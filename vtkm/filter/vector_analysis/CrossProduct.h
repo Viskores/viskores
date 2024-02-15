@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_vector_analysis_CrossProduct_h
 #define vtk_m_filter_vector_analysis_CrossProduct_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 
 #include <vtkm/filter/vector_analysis/vtkm_filter_vector_analysis_export.h>
 
@@ -26,7 +26,7 @@ namespace vector_analysis
 ///
 /// The left part of the operand is the "primary" field and the right part of the operand
 /// is the "secondary" field.
-class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT CrossProduct : public vtkm::filter::FilterField
+class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT CrossProduct : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT

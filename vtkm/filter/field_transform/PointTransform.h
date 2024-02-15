@@ -14,7 +14,7 @@
 #include <vtkm/Matrix.h>
 #include <vtkm/Transform3D.h>
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -40,7 +40,7 @@ namespace field_transform
 /// The default name for the output field is "transform", but that can be overridden as
 /// always using the `SetOutputFieldName()` method.
 ///
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT PointTransform : public vtkm::filter::FilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT PointTransform : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT

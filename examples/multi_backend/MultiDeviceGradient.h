@@ -10,7 +10,7 @@
 #ifndef vtk_m_examples_multibackend_MultiDeviceGradient_h
 #define vtk_m_examples_multibackend_MultiDeviceGradient_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 
 #include "TaskQueue.h"
 
@@ -22,7 +22,7 @@ using RuntimeTaskQueue = TaskQueue<std::function<void()>>;
 ///
 /// The Policy used with MultiDeviceGradient must include the TBB and CUDA
 /// backends.
-class MultiDeviceGradient : public vtkm::filter::FilterField
+class MultiDeviceGradient : public vtkm::filter::Filter
 {
 public:
   //Construct a MultiDeviceGradient and worker pool

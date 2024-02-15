@@ -11,14 +11,13 @@
 set(core_headers
   FieldSelection.h
   Filter.h
-  FilterField.h
+  FilterField.h #deprecated
   MapFieldMergeAverage.h
   MapFieldPermutation.h
   TaskQueue.h
   )
 set(core_sources
   FieldSelection.cxx
-  FilterField.cxx
   )
 set(core_sources_device
   MapFieldMergeAverage.cxx

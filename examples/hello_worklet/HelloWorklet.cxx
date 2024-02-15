@@ -10,7 +10,7 @@
 
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
@@ -43,7 +43,7 @@ namespace vtkm
 namespace filter
 {
 
-class HelloField : public vtkm::filter::FilterField
+class HelloField : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet)
