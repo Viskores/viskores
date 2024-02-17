@@ -24,9 +24,11 @@ namespace kokkos
 namespace internal
 {
 
-template <typename WType, typename IType>
+template <typename WType, typename IType, typename Hints>
 class TaskBasic1D : public vtkm::exec::TaskBase
 {
+  VTKM_IS_HINT_LIST(Hints);
+
 public:
   TaskBasic1D(const WType& worklet, const IType& invocation)
     : Worklet(worklet)
@@ -57,9 +59,11 @@ private:
   IType Invocation;
 };
 
-template <typename WType>
-class TaskBasic1D<WType, vtkm::internal::NullType> : public vtkm::exec::TaskBase
+template <typename WType, typename Hints>
+class TaskBasic1D<WType, vtkm::internal::NullType, Hints> : public vtkm::exec::TaskBase
 {
+  VTKM_IS_HINT_LIST(Hints);
+
 public:
   explicit TaskBasic1D(const WType& worklet)
     : Worklet(worklet)
@@ -78,9 +82,11 @@ private:
   typename std::remove_const<WType>::type Worklet;
 };
 
-template <typename WType, typename IType>
+template <typename WType, typename IType, typename Hints>
 class TaskBasic3D : public vtkm::exec::TaskBase
 {
+  VTKM_IS_HINT_LIST(Hints);
+
 public:
   TaskBasic3D(const WType& worklet, const IType& invocation)
     : Worklet(worklet)
@@ -112,9 +118,11 @@ private:
   IType Invocation;
 };
 
-template <typename WType>
-class TaskBasic3D<WType, vtkm::internal::NullType> : public vtkm::exec::TaskBase
+template <typename WType, typename Hints>
+class TaskBasic3D<WType, vtkm::internal::NullType, Hints> : public vtkm::exec::TaskBase
 {
+  VTKM_IS_HINT_LIST(Hints);
+
 public:
   explicit TaskBasic3D(const WType& worklet)
     : Worklet(worklet)

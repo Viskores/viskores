@@ -40,6 +40,8 @@
 #include <vtkm/cont/arg/TypeCheckTagCellSet.h>
 #include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
+#include <vtkm/cont/internal/Hints.h>
+
 #include <vtkm/worklet/MaskNone.h>
 #include <vtkm/worklet/ScatterIdentity.h>
 #include <vtkm/worklet/internal/Placeholders.h>
@@ -135,6 +137,11 @@ public:
   /// outputs are generated. The default mask is the none mask, which generates
   /// everything in the output domain.
   using MaskType = vtkm::worklet::MaskNone;
+
+  /// Worklets can provide hints to the scheduler by defining a `Hints` type that
+  /// resolves to a `vtkm::cont::internal::HintList`. The default hint list is empty
+  /// so that scheduling uses all defaults.
+  using Hints = vtkm::cont::internal::HintList<>;
 
   /// @brief `ControlSignature` tag for whole input arrays.
   ///

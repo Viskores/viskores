@@ -792,7 +792,8 @@ private:
     // vtkm::exec::internal::TaskSingular
     // vtkm::exec::internal::TaskTiling1D
     // vtkm::exec::internal::TaskTiling3D
-    auto task = TaskTypes::MakeTask(this->Worklet, invocation, range);
+    auto task =
+      TaskTypes::MakeTask(this->Worklet, invocation, range, typename WorkletType::Hints{});
     Algorithm::ScheduleTask(task, range);
   }
 };

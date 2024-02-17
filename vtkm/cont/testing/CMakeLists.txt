@@ -107,6 +107,7 @@ set(unit_tests_device
   UnitTestDataSetPermutation.cxx
   UnitTestDataSetSingleType.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
+  UnitTestHints.cxx
   UnitTestImplicitFunction.cxx
   UnitTestParticleArrayCopy.cxx
   UnitTestPointLocatorSparseGrid.cxx
@@ -130,6 +131,11 @@ if(TARGET vtkm_filter_contour)
 endif()
 
 vtkm_unit_tests(SOURCES ${unit_tests} DEVICE_SOURCES ${unit_tests_device})
+
+target_sources(UnitTests_vtkm_cont_testing
+  PRIVATE
+    UnitTestHints.cxx
+)
 
 #add distributed tests i.e.test to run with MPI
 #if MPI is enabled.

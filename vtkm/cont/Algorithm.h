@@ -17,6 +17,7 @@
 #include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/cont/Token.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/internal/Hints.h>
 
 
 namespace vtkm
@@ -932,29 +933,43 @@ struct Algorithm
     ScanExtended(vtkm::cont::DeviceAdapterTagAny(), input, output, binaryFunctor, initialValue);
   }
 
-
-  template <class Functor>
+  // Should this be deprecated in favor of `RuntimeDeviceTracker`?
+  template <typename Functor>
   VTKM_CONT static void Schedule(vtkm::cont::DeviceAdapterId devId,
                                  Functor functor,
                                  vtkm::Id numInstances)
   {
-    vtkm::cont::TryExecuteOnDevice(devId, detail::ScheduleFunctor(), functor, numInstances);
+    vtkm::cont::TryExecuteOnDevice(devId, detail::ScheduleFunctor{}, functor, numInstances);
   }
-  template <class Functor>
+  template <typename... Hints, typename Functor>
+  VTKM_CONT static void Schedule(vtkm::cont::internal::HintList<Hints...> hints,
+                                 Functor functor,
+                                 vtkm::Id numInstances)
+  {
+    vtkm::cont::TryExecute(detail::ScheduleFunctor{}, hints, functor, numInstances);
+  }
+  template <typename Functor>
   VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
   {
-    Schedule(vtkm::cont::DeviceAdapterTagAny(), functor, numInstances);
+    Schedule(vtkm::cont::DeviceAdapterTagAny{}, functor, numInstances);
   }
 
 
-  template <class Functor>
+  template <typename Functor>
   VTKM_CONT static void Schedule(vtkm::cont::DeviceAdapterId devId,
                                  Functor functor,
                                  vtkm::Id3 rangeMax)
   {
     vtkm::cont::TryExecuteOnDevice(devId, detail::ScheduleFunctor(), functor, rangeMax);
   }
-  template <class Functor>
+  template <typename... Hints, typename Functor>
+  VTKM_CONT static void Schedule(vtkm::cont::internal::HintList<Hints...> hints,
+                                 Functor functor,
+                                 vtkm::Id3 rangeMax)
+  {
+    vtkm::cont::TryExecute(detail::ScheduleFunctor{}, hints, functor, rangeMax);
+  }
+  template <typename Functor>
   VTKM_CONT static void Schedule(Functor functor, vtkm::Id3 rangeMax)
   {
     Schedule(vtkm::cont::DeviceAdapterTagAny(), functor, rangeMax);

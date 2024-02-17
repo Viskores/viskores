@@ -203,7 +203,8 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::CheckForErrors()
 void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThreads(
   vtkm::UInt32& blocks,
   vtkm::UInt32& threadsPerBlock,
-  vtkm::Id size)
+  vtkm::Id size,
+  vtkm::IdComponent maxThreadsPerBlock)
 {
   (void)size;
   vtkm::cont::cuda::internal::SetupKernelSchedulingParameters();
@@ -215,12 +216,17 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThrea
   const auto& params = cuda::internal::scheduling_1d_parameters[static_cast<size_t>(deviceId)];
   blocks = static_cast<vtkm::UInt32>(params.first);
   threadsPerBlock = static_cast<vtkm::UInt32>(params.second);
+  if ((maxThreadsPerBlock > 0) && (threadsPerBlock < static_cast<vtkm::UInt32>(maxThreadsPerBlock)))
+  {
+    threadsPerBlock = static_cast<vtkm::UInt32>(maxThreadsPerBlock);
+  }
 }
 
 void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThreads(
   vtkm::UInt32& blocks,
   dim3& threadsPerBlock,
-  const dim3& size)
+  const dim3& size,
+  vtkm::IdComponent maxThreadsPerBlock)
 {
   vtkm::cont::cuda::internal::SetupKernelSchedulingParameters();
 
@@ -239,6 +245,27 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetBlocksAndThrea
     const auto& params = cuda::internal::scheduling_3d_parameters[static_cast<size_t>(deviceId)];
     blocks = static_cast<vtkm::UInt32>(params.first);
     threadsPerBlock = params.second;
+  }
+
+  if (maxThreadsPerBlock > 0)
+  {
+    while ((threadsPerBlock.x * threadsPerBlock.y * threadsPerBlock.z) >
+           static_cast<vtkm::UInt32>(maxThreadsPerBlock))
+    {
+      // Reduce largest element until threads are small enough.
+      if (threadsPerBlock.x > threadsPerBlock.y)
+      {
+        threadsPerBlock.x /= 2;
+      }
+      else if (threadsPerBlock.y > threadsPerBlock.z)
+      {
+        threadsPerBlock.y /= 2;
+      }
+      else
+      {
+        threadsPerBlock.z /= 2;
+      }
+    }
   }
 }
 
