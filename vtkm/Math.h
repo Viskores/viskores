@@ -159,6 +159,7 @@ static constexpr inline VTKM_EXEC_CONT vtkm::Float32 Pi_180f()
 
 // clang-format off
 
+///@{
 /// Compute the sine of \p x.
 ///
 
@@ -217,7 +218,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Sin(x[0]),
                                                                          vtkm::Sin(x[1]));
 }
+///@}
 
+///@{
 /// Compute the cosine of \p x.
 ///
 
@@ -276,7 +279,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Cos(x[0]),
                                                                          vtkm::Cos(x[1]));
 }
+///@}
 
+///@{
 /// Compute the tangent of \p x.
 ///
 
@@ -335,7 +340,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Tan(x[0]),
                                                                          vtkm::Tan(x[1]));
 }
+///@}
 
+///@{
 /// Compute the arc sine of \p x.
 ///
 
@@ -394,7 +401,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::ASin(x[0]),
                                                                          vtkm::ASin(x[1]));
 }
+///@}
 
+///@{
 /// Compute the arc cosine of \p x.
 ///
 
@@ -453,7 +462,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::ACos(x[0]),
                                                                          vtkm::ACos(x[1]));
 }
+///@}
 
+///@{
 /// Compute the arc tangent of \p x.
 ///
 
@@ -512,7 +523,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::ATan(x[0]),
                                                                          vtkm::ATan(x[1]));
 }
+///@}
 
+///@{
 /// Compute the arc tangent of \p x / \p y using the signs of both arguments
 /// to determine the quadrant of the return value.
 ///
@@ -532,7 +545,9 @@ static inline VTKM_EXEC_CONT vtkm::Float64 ATan2(vtkm::Float64 x, vtkm::Float64 
   return std::atan2(x, y);
 #endif
 }
+///@}
 
+///@{
 /// Compute the hyperbolic sine of \p x.
 ///
 
@@ -591,7 +606,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::SinH(x[0]),
                                                                          vtkm::SinH(x[1]));
 }
+///@}
 
+///@{
 /// Compute the hyperbolic cosine of \p x.
 ///
 
@@ -650,7 +667,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::CosH(x[0]),
                                                                          vtkm::CosH(x[1]));
 }
+///@}
 
+///@{
 /// Compute the hyperbolic tangent of \p x.
 ///
 
@@ -709,7 +728,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::TanH(x[0]),
                                                                          vtkm::TanH(x[1]));
 }
+///@}
 
+///@{
 /// Compute the hyperbolic arc sine of \p x.
 ///
 
@@ -768,7 +789,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::ASinH(x[0]),
                                                                          vtkm::ASinH(x[1]));
 }
+///@}
 
+///@{
 /// Compute the hyperbolic arc cosine of \p x.
 ///
 
@@ -827,7 +850,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::ACosH(x[0]),
                                                                          vtkm::ACosH(x[1]));
 }
+///@}
 
+///@{
 /// Compute the hyperbolic arc tangent of \p x.
 ///
 
@@ -886,8 +911,10 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::ATanH(x[0]),
                                                                          vtkm::ATanH(x[1]));
 }
+///@}
 
 //-----------------------------------------------------------------------------
+///@{
 /// Computes \p x raised to the power of \p y.
 ///
 static inline VTKM_EXEC_CONT vtkm::Float32 Pow(vtkm::Float32 x, vtkm::Float32 y)
@@ -906,9 +933,12 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Pow(vtkm::Float64 x, vtkm::Float64 y)
   return std::pow(x, y);
 #endif
 }
+///@}
 
+///@{
 /// Compute the square root of \p x.
-///
+/// On some hardware it is faster to find the reciprocal square root, so `RSqrt`
+/// should be used if you actually plan to divide by the square root.
 
 inline VTKM_EXEC_CONT vtkm::Float32 Sqrt(vtkm::Float32 x)
 {
@@ -965,7 +995,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Sqrt(x[0]),
                                                                          vtkm::Sqrt(x[1]));
 }
+///@}
 
+///@{
 /// Compute the reciprocal square root of \p x. The result of this function is
 /// equivalent to <tt>1/Sqrt(x)</tt>. However, on some devices it is faster to
 /// compute the reciprocal square root than the regular square root. Thus, you
@@ -1033,7 +1065,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::RSqrt(x[0]),
                                                                          vtkm::RSqrt(x[1]));
 }
+///@}
 
+///@{
 /// Compute the cube root of \p x.
 ///
 
@@ -1092,7 +1126,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Cbrt(x[0]),
                                                                          vtkm::Cbrt(x[1]));
 }
+///@}
 
+///@{
 /// Compute the reciprocal cube root of \p x. The result of this function is
 /// equivalent to <tt>1/Cbrt(x)</tt>. However, on some devices it is faster to
 /// compute the reciprocal cube root than the regular cube root. Thus, you
@@ -1160,8 +1196,10 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::RCbrt(x[0]),
                                                                          vtkm::RCbrt(x[1]));
 }
+///@}
 
-/// Computes e**\p x, the base-e exponential of \p x.
+///@{
+/// Computes e^x, the base-e exponential of `x`.
 ///
 
 inline VTKM_EXEC_CONT vtkm::Float32 Exp(vtkm::Float32 x)
@@ -1219,8 +1257,10 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Exp(x[0]),
                                                                          vtkm::Exp(x[1]));
 }
+///@}
 
-/// Computes 2**\p x, the base-2 exponential of \p x.
+///@{
+/// Computes 2^x, the base-2 exponential of `x`.
 ///
 
 inline VTKM_EXEC_CONT vtkm::Float32 Exp2(vtkm::Float32 x)
@@ -1278,9 +1318,11 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Exp2(x[0]),
                                                                          vtkm::Exp2(x[1]));
 }
+///@}
 
-/// Computes (e**\p x) - 1, the of base-e exponental of \p x then minus 1. The
-/// accuracy of this function is good even for very small values of x.
+///@{
+/// Computes (e^x) - 1, the of base-e exponental of `x` then minus 1. The
+/// accuracy of this function is good even for very small values of `x`.
 ///
 
 inline VTKM_EXEC_CONT vtkm::Float32 ExpM1(vtkm::Float32 x)
@@ -1338,8 +1380,10 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::ExpM1(x[0]),
                                                                          vtkm::ExpM1(x[1]));
 }
+///@}
 
-/// Computes 10**\p x, the base-10 exponential of \p x.
+///@{
+/// Computes 10^x, the base-10 exponential of `x`.
 ///
 #ifdef VTKM_CUDA
 static inline VTKM_EXEC_CONT vtkm::Float32 Exp10(vtkm::Float32 x)
@@ -1403,7 +1447,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Exp10(x[0]),
                                                                          vtkm::Exp10(x[1]));
 }
+///@}
 
+///@{
 /// Computes the natural logarithm of \p x.
 ///
 
@@ -1462,7 +1508,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Log(x[0]),
                                                                          vtkm::Log(x[1]));
 }
+///@}
 
+///@{
 /// Computes the logarithm base 2 of \p x.
 ///
 
@@ -1521,7 +1569,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Log2(x[0]),
                                                                          vtkm::Log2(x[1]));
 }
+///@}
 
+///@{
 /// Computes the logarithm base 10 of \p x.
 ///
 
@@ -1580,9 +1630,11 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Log10(x[0]),
                                                                          vtkm::Log10(x[1]));
 }
+///@}
 
-/// Computes the value of log(1+x) accurately for very small values of x.
-///
+///@{
+/// Computes the value of log(1+x). This method is more accurate for very small values of x
+/// than the `vtkm::Log` function.
 
 inline VTKM_EXEC_CONT vtkm::Float32 Log1P(vtkm::Float32 x)
 {
@@ -1639,8 +1691,10 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Log1P(x[0]),
                                                                          vtkm::Log1P(x[1]));
 }
+///@}
 
 //-----------------------------------------------------------------------------
+///@{
 /// Returns \p x or \p y, whichever is larger.
 ///
 template <typename T>
@@ -1672,7 +1726,9 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Max(vtkm::Float64 x, vtkm::Float64 y)
 #endif
 }
 #endif // !VTKM_USE_STL
+///@}
 
+///@{
 /// Returns \p x or \p y, whichever is smaller.
 ///
 template <typename T>
@@ -1704,6 +1760,7 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Min(vtkm::Float64 x, vtkm::Float64 y)
 #endif
 }
 #endif // !VTKM_USE_STL
+///@}
 
 namespace detail
 {
@@ -1764,9 +1821,9 @@ static inline VTKM_EXEC_CONT T Min(const T& x, const T& y)
   return detail::Min(x, y, typename vtkm::TypeTraits<T>::DimensionalityTag());
 }
 
+///@{
 /// Clamp \p x to the given range.
 ///
-
 inline VTKM_EXEC_CONT vtkm::Float32 Clamp(vtkm::Float32 x, vtkm::Float32 lo, vtkm::Float32 hi)
 {
   return x > lo ? (x < hi ? x : hi) : lo;
@@ -1776,6 +1833,8 @@ inline VTKM_EXEC_CONT vtkm::Float64 Clamp(vtkm::Float64 x, vtkm::Float64 lo, vtk
 {
   return x > lo ? (x < hi ? x : hi) : lo;
 }
+///@}
+
 //-----------------------------------------------------------------------------
 
 //#ifdef VTKM_CUDA
@@ -1945,33 +2004,49 @@ struct FloatLimits<vtkm::Vec<vtkm::Float64, N>>
 
 } // namespace detail
 
-/// Returns the representation for not-a-number (NaN).
-///
+/// Returns the representation for infinity. The result is greater than any other
+/// number except another infinity or NaN. When comparing two infinities or infinity
+/// to NaN, neither is greater than, less than, nor equal to the other. The
+/// `Infinity` method is templated to specify either a 32 or 64 bit floating point
+/// number. The convenience methods `Infinity32` and`Infinity64` are non-templated
+/// versions that return the precision for a particular precision.
 template <typename T>
 static inline VTKM_EXEC_CONT T Nan()
 {
   return detail::FloatLimits<T>::Nan();
 }
 
-/// Returns the representation for infinity.
-///
+/// Returns the representation for infinity. The result is greater than any other
+/// number except another infinity or NaN. When comparing two infinities or infinity
+/// to NaN, neither is greater than, less than, nor equal to the other. The
+/// `Infinity` method is templated to specify either a 32 or 64 bit floating point
+/// number. The convenience methods `Infinity32` and`Infinity64` are non-templated
+/// versions that return the precision for a particular precision.
 template <typename T>
 static inline VTKM_EXEC_CONT T Infinity()
 {
   return detail::FloatLimits<T>::Infinity();
 }
 
-/// Returns the representation for negative infinity.
-///
+/// Returns the representation for negative infinity. The result is less than any
+/// other number except another negative infinity or NaN. When comparing two
+/// negative infinities or negative infinity to NaN, neither is greater than, less
+/// than, nor equal to the other. The `NegativeInfinity` method is templated to
+/// specify either a 32 or 64 bit floating point number. The convenience methods
+/// `NegativeInfinity32` and`NegativeInfinity64` are non-templated versions that
+/// return the precision for a particular precision.
 template <typename T>
 static inline VTKM_EXEC_CONT T NegativeInfinity()
 {
   return detail::FloatLimits<T>::NegativeInfinity();
 }
 
-/// Returns the difference between 1 and the least value greater than 1
-/// that is representable.
-///
+/// Returns the difference between 1 and the least value greater than 1 that
+/// is representable by a floating point number. Epsilon is useful for specifying
+/// the tolerance one should have when considering numerical error. The `Epsilon`
+/// method is templated to specify either a 32 or 64 bit floating point number. The
+/// convenience methods `Epsilon32` and`Epsilon64` are non-templated versions that
+/// return the precision for a particular precision.
 template <typename T>
 static inline VTKM_EXEC_CONT T Epsilon()
 {
@@ -1980,33 +2055,49 @@ static inline VTKM_EXEC_CONT T Epsilon()
 
 #else  // !VTKM_USE_IEEE_NONFINITE
 
-/// Returns the representation for not-a-number (NaN).
-///
+/// Returns the representation for infinity. The result is greater than any other
+/// number except another infinity or NaN. When comparing two infinities or infinity
+/// to NaN, neither is greater than, less than, nor equal to the other. The
+/// `Infinity` method is templated to specify either a 32 or 64 bit floating point
+/// number. The convenience methods `Infinity32` and`Infinity64` are non-templated
+/// versions that return the precision for a particular precision.
 template <typename T>
 static inline VTKM_EXEC_CONT T Nan()
 {
   return std::numeric_limits<T>::quiet_NaN();
 }
 
-/// Returns the representation for infinity.
-///
+/// Returns the representation for infinity. The result is greater than any other
+/// number except another infinity or NaN. When comparing two infinities or infinity
+/// to NaN, neither is greater than, less than, nor equal to the other. The
+/// `Infinity` method is templated to specify either a 32 or 64 bit floating point
+/// number. The convenience methods `Infinity32` and`Infinity64` are non-templated
+/// versions that return the precision for a particular precision.
 template <typename T>
 static inline VTKM_EXEC_CONT T Infinity()
 {
   return std::numeric_limits<T>::infinity();
 }
 
-/// Returns the representation for negative infinity.
-///
+/// Returns the representation for negative infinity. The result is less than any
+/// other number except another negative infinity or NaN. When comparing two
+/// negative infinities or negative infinity to NaN, neither is greater than, less
+/// than, nor equal to the other. The `NegativeInfinity` method is templated to
+/// specify either a 32 or 64 bit floating point number. The convenience methods
+/// `NegativeInfinity32` and`NegativeInfinity64` are non-templated versions that
+/// return the precision for a particular precision.
 template <typename T>
 static inline VTKM_EXEC_CONT T NegativeInfinity()
 {
   return -std::numeric_limits<T>::infinity();
 }
 
-/// Returns the difference between 1 and the least value greater than 1
-/// that is representable.
-///
+/// Returns the difference between 1 and the least value greater than 1 that
+/// is representable by a floating point number. Epsilon is useful for specifying
+/// the tolerance one should have when considering numerical error. The `Epsilon`
+/// method is templated to specify either a 32 or 64 bit floating point number. The
+/// convenience methods `Epsilon32` and`Epsilon64` are non-templated versions that
+/// return the precision for a particular precision.
 template <typename T>
 static inline VTKM_EXEC_CONT T Epsilon()
 {
@@ -2014,46 +2105,45 @@ static inline VTKM_EXEC_CONT T Epsilon()
 }
 #endif // !VTKM_USE_IEEE_NONFINITE
 
-/// Returns the representation for not-a-number (NaN).
-///
+/// @copydoc Nan
 static inline VTKM_EXEC_CONT vtkm::Float32 Nan32()
 {
   return vtkm::Nan<vtkm::Float32>();
 }
+/// @copydoc Nan
 static inline VTKM_EXEC_CONT vtkm::Float64 Nan64()
 {
   return vtkm::Nan<vtkm::Float64>();
 }
 
-/// Returns the representation for infinity.
-///
+/// @copydoc Infinity
 static inline VTKM_EXEC_CONT vtkm::Float32 Infinity32()
 {
   return vtkm::Infinity<vtkm::Float32>();
 }
+/// @copydoc Infinity
 static inline VTKM_EXEC_CONT vtkm::Float64 Infinity64()
 {
   return vtkm::Infinity<vtkm::Float64>();
 }
 
-/// Returns the representation for negative infinity.
-///
+/// @copydoc NegativeInfinity
 static inline VTKM_EXEC_CONT vtkm::Float32 NegativeInfinity32()
 {
   return vtkm::NegativeInfinity<vtkm::Float32>();
 }
+/// @copydoc NegativeInfinity
 static inline VTKM_EXEC_CONT vtkm::Float64 NegativeInfinity64()
 {
   return vtkm::NegativeInfinity<vtkm::Float64>();
 }
 
-/// Returns the difference between 1 and the least value greater than 1
-/// that is representable.
-///
+/// @copydoc Epsilon
 static inline VTKM_EXEC_CONT vtkm::Float32 Epsilon32()
 {
   return vtkm::Epsilon<vtkm::Float32>();
 }
+/// @copydoc Epsilon
 static inline VTKM_EXEC_CONT vtkm::Float64 Epsilon64()
 {
   return vtkm::Epsilon<vtkm::Float64>();
@@ -2094,6 +2184,7 @@ static inline VTKM_EXEC_CONT bool IsFinite(T x)
 }
 
 //-----------------------------------------------------------------------------
+///@{
 /// Round \p x to the smallest integer value not less than x.
 ///
 
@@ -2152,7 +2243,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Ceil(x[0]),
                                                                          vtkm::Ceil(x[1]));
 }
+///@}
 
+///@{
 /// Round \p x to the largest integer value not greater than x.
 ///
 
@@ -2211,7 +2304,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Floor(x[0]),
                                                                          vtkm::Floor(x[1]));
 }
+///@}
 
+///@{
 /// Round \p x to the nearest integral value.
 ///
 
@@ -2270,8 +2365,10 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
   return vtkm::Vec<typename detail::FloatingPointReturnType<T>::Type, 2>(vtkm::Round(x[0]),
                                                                          vtkm::Round(x[1]));
 }
+///@}
 
 //-----------------------------------------------------------------------------
+///@{
 /// Computes the remainder on division of 2 floating point numbers. The return
 /// value is \p numerator - n \p denominator, where n is the quotient of \p
 /// numerator divided by \p denominator rounded towards zero to an integer. For
@@ -2293,7 +2390,9 @@ static inline VTKM_EXEC_CONT vtkm::Float64 FMod(vtkm::Float64 x, vtkm::Float64 y
   return std::fmod(x, y);
 #endif
 }
+///@}
 
+///@{
 /// Computes the remainder on division of 2 floating point numbers. The return
 /// value is \p numerator - n \p denominator, where n is the quotient of \p
 /// numerator divided by \p denominator rounded towards the nearest integer
@@ -2325,7 +2424,9 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Remainder(vtkm::Float64 x, vtkm::Floa
 #endif
 }
 #endif // !VTKM_MSVC
+///@}
 
+///@{
 /// Returns the remainder on division of 2 floating point numbers just like
 /// Remainder. In addition, this function also returns the \c quotient used to
 /// get that remainder.
@@ -2361,7 +2462,9 @@ static inline VTKM_EXEC_CONT vtkm::Float64 RemainderQuotient(vtkm::Float64 numer
   quotient = static_cast<QType>(iQuotient);
   return result;
 }
+///@}
 
+///@{
 /// Gets the integral and fractional parts of \c x. The return value is the
 /// fractional part and \c integral is set to the integral part.
 ///
@@ -2382,8 +2485,10 @@ static inline VTKM_EXEC_CONT vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64& 
   return std::modf(x, &integral);
 #endif
 }
+///@}
 
 //-----------------------------------------------------------------------------
+///@{
 /// Return the absolute value of \p x. That is, return \p x if it is positive or
 /// \p -x if it is negative.
 ///
@@ -2451,7 +2556,9 @@ static inline VTKM_EXEC_CONT vtkm::Vec<T, 2> Abs(const vtkm::Vec<T, 2>& x)
 {
   return vtkm::Vec<T, 2>(vtkm::Abs(x[0]), vtkm::Abs(x[1]));
 }
+///@}
 
+///@{
 /// Returns a nonzero value if \p x is negative.
 ///
 static inline VTKM_EXEC_CONT vtkm::Int32 SignBit(vtkm::Float32 x)
@@ -2468,7 +2575,9 @@ static inline VTKM_EXEC_CONT vtkm::Int32 SignBit(vtkm::Float64 x)
 #endif
   return static_cast<vtkm::Int32>(signbit(x));
 }
+///@}
 
+///@{
 /// Returns true if \p x is less than zero, false otherwise.
 ///
 static inline VTKM_EXEC_CONT bool IsNegative(vtkm::Float32 x)
@@ -2479,7 +2588,9 @@ static inline VTKM_EXEC_CONT bool IsNegative(vtkm::Float64 x)
 {
   return (vtkm::SignBit(x) != 0);
 }
+///@}
 
+///@{
 /// Copies the sign of \p y onto \p x.  If \p y is positive, returns Abs(\p x).
 /// If \p y is negative, returns -Abs(\p x).
 ///
@@ -2511,10 +2622,11 @@ static inline VTKM_EXEC_CONT vtkm::Vec<T, N> CopySign(const vtkm::Vec<T, N>& x,
   }
   return result;
 }
+///@}
 
+///@{
 /// Decompose floating poing value
 ///
-
 inline VTKM_EXEC_CONT vtkm::Float32 Frexp(vtkm::Float32 x, vtkm::Int32 *exponent)
 {
   // See: https://github.com/ROCm-Developer-Tools/HIP/issues/2169
@@ -2533,6 +2645,7 @@ inline VTKM_EXEC_CONT vtkm::Float64 Frexp(vtkm::Float64 x, vtkm::Int32 *exponent
   return std::frexp(x, exponent);
 #endif
 }
+///@}
 
 inline VTKM_EXEC_CONT vtkm::Float32 Ldexp(vtkm::Float32 x, vtkm::Int32 exponent)
 {
@@ -2601,6 +2714,9 @@ inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistancePositive(vtkm::Float32 x, vtkm::
 
 } // namespace detail
 
+/// Computes the number of representables between two floating point numbers. This function
+/// is non-negative and symmetric in its arguments. If either argument is non-finite, the
+/// value returned is the maximum value allowed by 64-bit unsigned integers: 2^64-1.
 inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float64 x, vtkm::Float64 y)
 {
   static_assert(sizeof(vtkm::Float64) == sizeof(vtkm::UInt64), "vtkm::Float64 is incorrect size.");
@@ -2640,6 +2756,7 @@ inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float64 x, vtkm::Float64 
   return detail::FloatDistancePositive(x, y);
 }
 
+/// @copydoc FloatDistance
 inline VTKM_EXEC_CONT vtkm::UInt64 FloatDistance(vtkm::Float32 x, vtkm::Float32 y)
 {
   static_assert(sizeof(vtkm::Float32) == sizeof(vtkm::Int32), "vtkm::Float32 is incorrect size.");
@@ -2688,11 +2805,14 @@ inline VTKM_EXEC_CONT T DifferenceOfProducts(T a, T b, T c, T d)
     return dop + err;
 }
 
-// Solves ax² + bx + c = 0.
-// Only returns the real roots.
-// If there are real roots, the first element of the pair is <= the second.
-// If there are no real roots, both elements are NaNs.
-// The error should be at most 3 ulps.
+/// @brief Solves ax² + bx + c = 0.
+///
+/// Only returns the real roots.
+/// If there are real roots, the first element of the pair is less than or equal to the second.
+/// If there are no real roots, both elements are NaNs.
+/// If VTK-m is compiled with FMA support, each root is accurate to 3 ulps; otherwise
+/// the discriminant is prone to catastrophic subtractive cancellation and no accuracy
+/// guarantees can be provided.
 template<typename T>
 inline VTKM_EXEC_CONT vtkm::Vec<T, 2> QuadraticRoots(T a, T b, T c)
 {

@@ -9,3 +9,4 @@ Advanced Development
    logging.rst
    worklet-types.rst
    worklet-error-handling.rst
+   math.rst
