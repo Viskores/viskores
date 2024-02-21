@@ -196,13 +196,22 @@ def create_container(ci_file_path, *args):
   if os.getenv('https_proxy'):
     gitlab_env = [ 'https_proxy=' + os.getenv('https_proxy') ] + gitlab_env
 
+  def clean_script(script):
+    if isinstance(script, list):
+      from itertools import chain
+      return list(chain(*[clean_script(command) for command in script]))
+    elif isinstance(script, str):
+      return [script.strip()]
+    else:
+      raise(TypeError('Encountered bad type in script: `{}`'.format(type(script).__name__)))
+
   # The script and before_script could be anywhere!
   script_search_locations = [ci_state, subset, runner]
   for loc in script_search_locations:
     if 'before_script' in loc:
-      before_script = [command.strip() for command in loc['before_script']]
+      before_script = clean_script(loc['before_script'])
     if 'script' in loc:
-      script = [command.strip() for command in loc['script']]
+      script = clean_script(loc['script'])
 
   docker_template = string.Template('''
 FROM $image
