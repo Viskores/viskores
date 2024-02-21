@@ -26,7 +26,7 @@
 
 #include <vtkm/interop/TransferToOpenGL.h>
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/worklet/WorkletPointNeighborhood.h>
 
 #include <vtkm/cont/Invoker.h>
@@ -95,7 +95,7 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
 };
 
 
-class GameOfLife : public vtkm::filter::FilterField
+class GameOfLife : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT GameOfLife() { this->SetActiveField("state", vtkm::cont::Field::Association::Points); }
