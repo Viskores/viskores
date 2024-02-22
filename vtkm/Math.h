@@ -2003,151 +2003,129 @@ struct FloatLimits<vtkm::Vec<vtkm::Float64, N>>
 #undef VTKM_EPSILON_64
 
 } // namespace detail
+#endif //VTKM_USE_IEEE_NONFINITE
 
+///@{
 /// Returns the representation for infinity. The result is greater than any other
 /// number except another infinity or NaN. When comparing two infinities or infinity
 /// to NaN, neither is greater than, less than, nor equal to the other. The
-/// `Infinity` method is templated to specify either a 32 or 64 bit floating point
-/// number. The convenience methods `Infinity32` and`Infinity64` are non-templated
+/// `Nan()` function is templated to specify either a 32 or 64 bit floating point
+/// number. The convenience functions `Nan32()` and `Nan64()` are non-templated
 /// versions that return the precision for a particular precision.
+#ifdef VTKM_USE_IEEE_NONFINITE
 template <typename T>
 static inline VTKM_EXEC_CONT T Nan()
 {
   return detail::FloatLimits<T>::Nan();
 }
-
-/// Returns the representation for infinity. The result is greater than any other
-/// number except another infinity or NaN. When comparing two infinities or infinity
-/// to NaN, neither is greater than, less than, nor equal to the other. The
-/// `Infinity` method is templated to specify either a 32 or 64 bit floating point
-/// number. The convenience methods `Infinity32` and`Infinity64` are non-templated
-/// versions that return the precision for a particular precision.
-template <typename T>
-static inline VTKM_EXEC_CONT T Infinity()
-{
-  return detail::FloatLimits<T>::Infinity();
-}
-
-/// Returns the representation for negative infinity. The result is less than any
-/// other number except another negative infinity or NaN. When comparing two
-/// negative infinities or negative infinity to NaN, neither is greater than, less
-/// than, nor equal to the other. The `NegativeInfinity` method is templated to
-/// specify either a 32 or 64 bit floating point number. The convenience methods
-/// `NegativeInfinity32` and`NegativeInfinity64` are non-templated versions that
-/// return the precision for a particular precision.
-template <typename T>
-static inline VTKM_EXEC_CONT T NegativeInfinity()
-{
-  return detail::FloatLimits<T>::NegativeInfinity();
-}
-
-/// Returns the difference between 1 and the least value greater than 1 that
-/// is representable by a floating point number. Epsilon is useful for specifying
-/// the tolerance one should have when considering numerical error. The `Epsilon`
-/// method is templated to specify either a 32 or 64 bit floating point number. The
-/// convenience methods `Epsilon32` and`Epsilon64` are non-templated versions that
-/// return the precision for a particular precision.
-template <typename T>
-static inline VTKM_EXEC_CONT T Epsilon()
-{
-  return detail::FloatLimits<T>::Epsilon();
-}
-
 #else  // !VTKM_USE_IEEE_NONFINITE
-
-/// Returns the representation for infinity. The result is greater than any other
-/// number except another infinity or NaN. When comparing two infinities or infinity
-/// to NaN, neither is greater than, less than, nor equal to the other. The
-/// `Infinity` method is templated to specify either a 32 or 64 bit floating point
-/// number. The convenience methods `Infinity32` and`Infinity64` are non-templated
-/// versions that return the precision for a particular precision.
 template <typename T>
 static inline VTKM_EXEC_CONT T Nan()
 {
   return std::numeric_limits<T>::quiet_NaN();
 }
+#endif // !VTKM_USE_IEEE_NONFINITE
+static inline VTKM_EXEC_CONT vtkm::Float32 Nan32()
+{
+  return vtkm::Nan<vtkm::Float32>();
+}
+static inline VTKM_EXEC_CONT vtkm::Float64 Nan64()
+{
+  return vtkm::Nan<vtkm::Float64>();
+}
+///@}
 
+///@{
 /// Returns the representation for infinity. The result is greater than any other
 /// number except another infinity or NaN. When comparing two infinities or infinity
 /// to NaN, neither is greater than, less than, nor equal to the other. The
-/// `Infinity` method is templated to specify either a 32 or 64 bit floating point
-/// number. The convenience methods `Infinity32` and`Infinity64` are non-templated
+/// `Infinity()` function is templated to specify either a 32 or 64 bit floating point
+/// number. The convenience functions `Infinity32()` and`Infinity64()` are non-templated
 /// versions that return the precision for a particular precision.
+#ifdef VTKM_USE_IEEE_NONFINITE
+template <typename T>
+static inline VTKM_EXEC_CONT T Infinity()
+{
+  return detail::FloatLimits<T>::Infinity();
+}
+#else  // !VTKM_USE_IEEE_NONFINITE
 template <typename T>
 static inline VTKM_EXEC_CONT T Infinity()
 {
   return std::numeric_limits<T>::infinity();
 }
+#endif // !VTKM_USE_IEEE_NONFINITE
+static inline VTKM_EXEC_CONT vtkm::Float32 Infinity32()
+{
+  return vtkm::Infinity<vtkm::Float32>();
+}
+static inline VTKM_EXEC_CONT vtkm::Float64 Infinity64()
+{
+  return vtkm::Infinity<vtkm::Float64>();
+}
+///@}
 
+///@{
 /// Returns the representation for negative infinity. The result is less than any
 /// other number except another negative infinity or NaN. When comparing two
 /// negative infinities or negative infinity to NaN, neither is greater than, less
-/// than, nor equal to the other. The `NegativeInfinity` method is templated to
-/// specify either a 32 or 64 bit floating point number. The convenience methods
-/// `NegativeInfinity32` and`NegativeInfinity64` are non-templated versions that
+/// than, nor equal to the other. The `NegativeInfinity()` function is templated to
+/// specify either a 32 or 64 bit floating point number. The convenience functions
+/// `NegativeInfinity32()` and`NegativeInfinity64()` are non-templated versions that
 /// return the precision for a particular precision.
+#ifdef VTKM_USE_IEEE_NONFINITE
+template <typename T>
+static inline VTKM_EXEC_CONT T NegativeInfinity()
+{
+  return detail::FloatLimits<T>::NegativeInfinity();
+}
+#else  // !VTKM_USE_IEEE_NONFINITE
 template <typename T>
 static inline VTKM_EXEC_CONT T NegativeInfinity()
 {
   return -std::numeric_limits<T>::infinity();
 }
+#endif // !VTKM_USE_IEEE_NONFINITE
+static inline VTKM_EXEC_CONT vtkm::Float32 NegativeInfinity32()
+{
+  return vtkm::NegativeInfinity<vtkm::Float32>();
+}
+static inline VTKM_EXEC_CONT vtkm::Float64 NegativeInfinity64()
+{
+  return vtkm::NegativeInfinity<vtkm::Float64>();
+}
+///@}
 
+///@{
 /// Returns the difference between 1 and the least value greater than 1 that
 /// is representable by a floating point number. Epsilon is useful for specifying
-/// the tolerance one should have when considering numerical error. The `Epsilon`
-/// method is templated to specify either a 32 or 64 bit floating point number. The
-/// convenience methods `Epsilon32` and`Epsilon64` are non-templated versions that
+/// the tolerance one should have when considering numerical error. The `Epsilon()`
+/// function is templated to specify either a 32 or 64 bit floating point number. The
+/// convenience functions `Epsilon32()` and`Epsilon64()` are non-templated versions that
 /// return the precision for a particular precision.
+#ifdef VTKM_USE_IEEE_NONFINITE
+template <typename T>
+static inline VTKM_EXEC_CONT T Epsilon()
+{
+  return detail::FloatLimits<T>::Epsilon();
+}
+#else  // !VTKM_USE_IEEE_NONFINITE
 template <typename T>
 static inline VTKM_EXEC_CONT T Epsilon()
 {
   return std::numeric_limits<T>::epsilon();
 }
 #endif // !VTKM_USE_IEEE_NONFINITE
-
-/// @copydoc Nan
-static inline VTKM_EXEC_CONT vtkm::Float32 Nan32()
-{
-  return vtkm::Nan<vtkm::Float32>();
-}
-/// @copydoc Nan
-static inline VTKM_EXEC_CONT vtkm::Float64 Nan64()
-{
-  return vtkm::Nan<vtkm::Float64>();
-}
-
-/// @copydoc Infinity
-static inline VTKM_EXEC_CONT vtkm::Float32 Infinity32()
-{
-  return vtkm::Infinity<vtkm::Float32>();
-}
-/// @copydoc Infinity
-static inline VTKM_EXEC_CONT vtkm::Float64 Infinity64()
-{
-  return vtkm::Infinity<vtkm::Float64>();
-}
-
-/// @copydoc NegativeInfinity
-static inline VTKM_EXEC_CONT vtkm::Float32 NegativeInfinity32()
-{
-  return vtkm::NegativeInfinity<vtkm::Float32>();
-}
-/// @copydoc NegativeInfinity
-static inline VTKM_EXEC_CONT vtkm::Float64 NegativeInfinity64()
-{
-  return vtkm::NegativeInfinity<vtkm::Float64>();
-}
-
-/// @copydoc Epsilon
 static inline VTKM_EXEC_CONT vtkm::Float32 Epsilon32()
 {
   return vtkm::Epsilon<vtkm::Float32>();
 }
-/// @copydoc Epsilon
 static inline VTKM_EXEC_CONT vtkm::Float64 Epsilon64()
 {
   return vtkm::Epsilon<vtkm::Float64>();
 }
+///@}
+
 
 //-----------------------------------------------------------------------------
 /// Returns true if \p x is not a number.
