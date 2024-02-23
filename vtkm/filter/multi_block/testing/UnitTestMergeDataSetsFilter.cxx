@@ -590,6 +590,55 @@ void TestEmptyPartitions()
     "wrong cellVar values");
 }
 
+void TestMissingVectorFields()
+{
+  std::cout << "TestMissingVectorFields" << std::endl;
+  vtkm::cont::DataSetBuilderUniform dsb;
+  vtkm::Id2 dimensions(3, 2);
+  vtkm::cont::DataSet dataSet1 = dsb.Create(dimensions, vtkm::Vec2f(0.0, 0.0), vtkm::Vec2f(1, 1));
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 4>> pointVarVec4;
+  pointVarVec4.Allocate(6);
+  vtkm::cont::Invoker invoker;
+  invoker(SetPointValuesV4Worklet{}, dataSet1.GetCoordinateSystem().GetData(), pointVarVec4);
+  dataSet1.AddPointField("pointVarV4", pointVarVec4);
+  vtkm::cont::DataSet dataSet2 = dsb.Create(dimensions, vtkm::Vec2f(0.0, 0.0), vtkm::Vec2f(1, 1));
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> cellVarVec3 =
+    vtkm::cont::make_ArrayHandle<vtkm::Vec3f_64>({ { 1.0, 2.0, 3.0 }, { 4.0, 5.0, 6.0 } });
+  dataSet2.AddCellField("cellVarV3", cellVarVec3);
+  vtkm::cont::PartitionedDataSet inputDataSets;
+  inputDataSets.AppendPartition(dataSet1);
+  inputDataSets.AppendPartition(dataSet2);
+  vtkm::filter::multi_block::MergeDataSets mergeDataSets;
+  auto result = mergeDataSets.Execute(inputDataSets);
+
+  //checking results
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 4>> validatePointVar =
+    vtkm::cont::make_ArrayHandle<vtkm::Vec<vtkm::Float64, 4>>(
+      { { 0, 0, 0, 0 },
+        { 0.1, 0, 0, 0.1 },
+        { 0.2, 0, 0, 0.2 },
+        { 0, 0.1, 0, 0 },
+        { 0.1, 0.1, 0, 0.1 },
+        { 0.2, 0.1, 0, 0.2 },
+        { vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64() },
+        { vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64() },
+        { vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64() },
+        { vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64() },
+        { vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64() },
+        { vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64() } });
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> validateCellVar =
+    vtkm::cont::make_ArrayHandle<vtkm::Vec3f_64>({ { vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64() },
+                                                   { vtkm::Nan64(), vtkm::Nan64(), vtkm::Nan64() },
+                                                   { 1.0, 2.0, 3.0 },
+                                                   { 4.0, 5.0, 6.0 } });
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(result.GetPartition(0).GetField("pointVarV4").GetData(),
+                                           validatePointVar),
+                   "wrong point values for TestMissingVectorFields");
+  VTKM_TEST_ASSERT(test_equal_ArrayHandles(result.GetPartition(0).GetField("cellVarV3").GetData(),
+                                           validateCellVar),
+                   "wrong cell values for TestMissingVectorFields");
+}
+
 void TestMergeDataSetsFilter()
 {
   //same cell type (triangle), same field name, same data type, cellset is single type
@@ -606,12 +655,14 @@ void TestMergeDataSetsFilter()
   TestDiffCellsSameFieldsSameDataType();
   //test multiple partitions
   TestMoreThanTwoPartitions();
-  //some partitions have missing fields
+  //some partitions have missing scalar fields
   TestMissingFieldsAndSameFieldName();
   //test empty partitions
   TestEmptyPartitions();
   //test customized types
   TestCustomizedVecField();
+  //some partitions have missing vector fields
+  TestMissingVectorFields();
 }
 } // anonymous namespace
 int UnitTestMergeDataSetsFilter(int argc, char* argv[])
