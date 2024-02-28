@@ -105,7 +105,9 @@ anari_cpp::Volume ANARIMapperVolume::GetANARIVolume()
 
   anari_cpp::setAndReleaseParameter(d, this->Handles->Volume, "color", colorArray);
   anari_cpp::setAndReleaseParameter(d, this->Handles->Volume, "opacity", opacityArray);
+  // Keep old name as a parameter for bug-backwards compatibility: 'field' isn't the right name
   anari_cpp::setParameter(d, this->Handles->Volume, "field", this->GetANARISpatialField());
+  anari_cpp::setParameter(d, this->Handles->Volume, "value", this->GetANARISpatialField());
   anari_cpp::setParameter(d, this->Handles->Volume, "name", this->MakeObjectName("volume"));
   anari_cpp::commitParameters(d, this->Handles->Volume);
 
