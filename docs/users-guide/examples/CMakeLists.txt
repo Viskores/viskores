@@ -30,6 +30,8 @@ set(examples_device
   GuideExampleCellLocator.cxx
   GuideExampleDataSetCreation.cxx
   GuideExampleErrorHandling.cxx
+  GuideExampleFilterDataSetWithField.cxx
+  GuideExampleGenerateMeshConstantShape.cxx
   GuideExampleSimpleAlgorithm.cxx
   GuideExampleUseWorkletMapField.cxx
   GuideExampleUseWorkletPointNeighborhood.cxx
