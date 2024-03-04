@@ -30,6 +30,7 @@ struct PointsParameters
     anari_cpp::Array1D Position{ nullptr };
     anari_cpp::Array1D Radius{ nullptr };
     std::array<anari_cpp::Array1D, 4> Attribute;
+    std::array<std::string, 4> AttributeName;
   } Vertex{};
 
   unsigned int NumPrimitives{ 0 };
@@ -50,12 +51,16 @@ struct PointsFieldArrays
 {
   vtkm::cont::ArrayHandleRuntimeVec<vtkm::Float32> Field1;
   int NumberOfField1Components{ 1 };
+  std::string Field1Name;
   vtkm::cont::ArrayHandleRuntimeVec<vtkm::Float32> Field2;
   int NumberOfField2Components{ 1 };
+  std::string Field2Name;
   vtkm::cont::ArrayHandleRuntimeVec<vtkm::Float32> Field3;
   int NumberOfField3Components{ 1 };
+  std::string Field3Name;
   vtkm::cont::ArrayHandleRuntimeVec<vtkm::Float32> Field4;
   int NumberOfField4Components{ 1 };
+  std::string Field4Name;
   std::shared_ptr<vtkm::cont::Token> Token{ new vtkm::cont::Token };
 };
 
