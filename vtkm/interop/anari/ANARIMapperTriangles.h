@@ -29,6 +29,7 @@ struct TrianglesParameters
     anari_cpp::Array1D Position{ nullptr };
     anari_cpp::Array1D Normal{ nullptr };
     std::array<anari_cpp::Array1D, 4> Attribute;
+    std::array<std::string, 4> AttributeName;
   } Vertex{};
 
   struct PrimitiveData
@@ -53,9 +54,13 @@ struct TriangleArrays
 struct TriangleFieldArrays
 {
   vtkm::cont::ArrayHandle<vtkm::Float32> Field1;
+  std::string Field1Name;
   vtkm::cont::ArrayHandle<vtkm::Float32> Field2;
+  std::string Field2Name;
   vtkm::cont::ArrayHandle<vtkm::Float32> Field3;
+  std::string Field3Name;
   vtkm::cont::ArrayHandle<vtkm::Float32> Field4;
+  std::string Field4Name;
   std::shared_ptr<vtkm::cont::Token> Token{ new vtkm::cont::Token };
 };
 
