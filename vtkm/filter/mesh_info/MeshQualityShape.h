@@ -30,6 +30,17 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Compute a shape-based metric for each cell.
+///
+/// This metric is based on the condition number of the Jacobian matrix.
+///
+/// This only produces values for triangles, quadrilaterals, tetrahedra, and hexahedra.
+///
+/// For good quality triangles, the acceptable range is [0.25, 1]. Good quality quadrilaterals,
+/// tetrahedra, hexahedra are in the range [0.3, 1].  Poorer quality cells can have values
+/// as low as 0.
+///
+///
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityShape : public vtkm::filter::Filter
 {
 public:

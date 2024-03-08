@@ -30,6 +30,9 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Computes the maximum diagonal length within each cell in degrees.
+///
+/// This only produces values for hexahedra.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityMaxDiagonal : public vtkm::filter::Filter
 {
 public:

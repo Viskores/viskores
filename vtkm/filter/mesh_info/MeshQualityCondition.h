@@ -30,6 +30,12 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Compute for each cell the condition number of the weighted Jacobian matrix.
+///
+/// This only produces values for triangles, quadrilaterals, and tetrahedra.
+///
+/// The acceptable range of values for a good quality cell is [1, 1.3] for triangles,
+/// [1, 4] for quadrilaterals, and [1, 3] for tetrahedra.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityCondition : public vtkm::filter::Filter
 {
 public:

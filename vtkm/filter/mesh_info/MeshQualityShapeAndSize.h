@@ -30,6 +30,17 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Compute a metric for each cell based on the shape scaled by the cell size.
+///
+/// This filter multiplies the values of the shape metric by the relative size squared
+/// metric. See `vtkm::filter::mesh_info::MeshQualityShape` and
+/// `vtkm::filter::mesh_info::MeshQualityRelativeSizeSquared` for details on each of
+/// those metrics.
+///
+/// This only produces values for triangles, quadrilaterals, tetrahedra, and hexahedra.
+///
+/// For a good quality cell, this value will be in the range [0.2, 1]. Poorer quality
+/// cells can have values as low as 0.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityShapeAndSize : public vtkm::filter::Filter
 {
 public:

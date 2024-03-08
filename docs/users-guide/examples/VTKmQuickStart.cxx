@@ -58,8 +58,8 @@ int main(int argc, char* argv[])
   ////
   //// BEGIN-EXAMPLE VTKmQuickStartFilter
   ////
-  vtkm::filter::mesh_info::MeshQuality cellArea(
-    vtkm::filter::mesh_info::CellMetric::Area);
+  vtkm::filter::mesh_info::MeshQuality cellArea;
+  cellArea.SetMetric(vtkm::filter::mesh_info::CellMetric::Area);
   vtkm::cont::DataSet outData = cellArea.Execute(inData);
   ////
   //// END-EXAMPLE VTKmQuickStartFilter

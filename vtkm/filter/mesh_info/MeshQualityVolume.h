@@ -30,6 +30,9 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Compute the volume each cell.
+///
+/// This only produces values for tetrahedra, pyramids, wedges, and hexahedra.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityVolume : public vtkm::filter::Filter
 {
 public:

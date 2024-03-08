@@ -30,6 +30,19 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Compute the flatness of cells.
+///
+/// This only produces values for quadrilaterals. It is defined as the cosine of the minimum
+/// dihedral angle formed by the planes intersecting in diagonals (to the fourth power).
+///
+/// This metric will be 1 for a perfectly flat quadrilateral and be lower as the
+/// quadrilateral deviates from the plane. A good quality quadrilateral will have a
+/// value in the range [0.3, 1]. Poorer quality cells having lower values down to -1,
+/// although malformed cells might have an infinite value.
+///
+/// Note that the value of this filter is consistent with the equivalent metric in VisIt,
+/// and it differs from the implementation in the Verdict library. The Verdict library
+/// returns 1 - value.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityWarpage : public vtkm::filter::Filter
 {
 public:

@@ -30,6 +30,14 @@ namespace filter
 namespace mesh_info
 {
 
+/// @brief Computes the maximum angle within each cell in degrees.
+///
+/// This only produces values for triangles and quadrilaterals.
+///
+/// For a good quality triangle, this value should be in the range [60, 90]. Poorer quality
+/// triangles can have a value as high as 180. For a good quality quadrilateral, this value
+/// should be in the range [90, 135]. Poorer quality quadrilaterals  can have a value as high
+/// as 360.
 class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityMaxAngle : public vtkm::filter::Filter
 {
 public:
