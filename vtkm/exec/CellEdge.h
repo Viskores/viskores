@@ -154,6 +154,12 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeNumberOfEdges(vtkm::IdComponent 
   return vtkm::ErrorCode::Success;
 }
 
+/// @brief Get the number of edges in a cell.
+///
+/// @param[in]  numPoints The number of points in the cell.
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] numEdges A reference to return the number of edges.
 static inline VTKM_EXEC vtkm::ErrorCode CellEdgeNumberOfEdges(vtkm::IdComponent numPoints,
                                                               vtkm::CellShapeTagGeneric shape,
                                                               vtkm::IdComponent& numEdges)
@@ -237,6 +243,18 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeLocalIndex(vtkm::IdComponent num
   return vtkm::ErrorCode::Success;
 }
 
+/// Given the index for an edge of a cell and one of the points on that edge, this
+/// function returns the point index for the cell.
+/// To get the point indices relative to the data set, the returned index should be used
+/// to reference a `PointIndices` list.
+///
+/// @param[in]  numPoints The number of points in the cell.
+/// @param[in]  pointIndex The index of the edge within the cell.
+/// @param[in]  edgeIndex The index of the point on the edge (either 0 or 1).
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] result Reference to put the index of the point relative to the cell
+///     (between 0 and the number of points in the cell).
 static inline VTKM_EXEC vtkm::ErrorCode CellEdgeLocalIndex(vtkm::IdComponent numPoints,
                                                            vtkm::IdComponent pointIndex,
                                                            vtkm::IdComponent edgeIndex,
@@ -273,7 +291,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellEdgeLocalIndex(vtkm::IdComponent num
   }
 }
 
-/// \brief Returns a canonical identifier for a cell edge
+/// @brief Returns a canonical identifier for a cell edge
 ///
 /// Given information about a cell edge and the global point indices for that cell, returns a
 /// vtkm::Id2 that contains values that are unique to that edge. The values for two edges will be

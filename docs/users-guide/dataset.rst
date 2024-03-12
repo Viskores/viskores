@@ -118,15 +118,15 @@ Explicit meshes are also known as unstructured grids.
 Explicit meshes can contain cells of different shapes.
 The shapes that |VTKm| currently supports are listed in :numref:`fig:CreateExplicitMeshesCellShapes`.
 Each shape is identified using either a numeric identifier, provided by |VTKm| with identifiers of the form ``vtkm::CELL_SHAPE_*`` or special tag structures of the form ``vtkm::CellSetTag*``.
-Cell shapes are discussed in detail in ???.
-
-.. todo:: Add cell shape reference above.
+Cell shapes are discussed in detail in :chapref:`working-with-cells:Working with Cells`.
 
 .. figure:: images/CellConnections.png
    :width: 100%
    :name: fig:CreateExplicitMeshesCellShapes
 
    Basic Cell Shapes.
+
+.. todo:: Add ``vtkm::CellShapeTagPolyLine`` to this figure.
 
 ..
    .. |CellConnectionsVertex| image:: images/CellConnectionsVertex.png
@@ -280,7 +280,7 @@ A cell set determines the topological structure of the data in a data set.
 (2D cells have only points and edges, and 1D cells have only points.)
 :numref:`fig:CellTopology` shows the relationship between a cell's shape and these topological elements.
 The arrangement of these points, edges, and faces is defined by the *shape* of the cell, which prescribes a specific ordering of each.
-The basic cell shapes provided by |VTKm| are discussed in detail in Section~\ref{sec:CellShapeTagsIds} starting on page~\pageref{sec:CellShapeTagsIds}.
+The basic cell shapes provided by |VTKm| are discussed in detail in :chapref:`working-with-cells:Working with Cells`.
 
 .. todo:: Add cell shape reference above.
 

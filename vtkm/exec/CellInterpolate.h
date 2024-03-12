@@ -158,6 +158,14 @@ VTKM_EXEC vtkm::ErrorCode CellInterpolate(const vtkm::VecAxisAlignedPointCoordin
 /// Given the point field values for each node and the parametric coordinates
 /// of a point within the cell, interpolates the field to that point.
 ///
+/// @param[in]  pointFieldValues A list of field values for each point in the cell. This
+///     usually comes from a `FieldInPoint` argument in a
+///     `vtkm::worklet::WorkletVisitCellsWithPoints`.
+/// @param[in]  parametricCoords The parametric coordinates where you want to get the interpolated
+///     field value for.
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] result Value to store the interpolated field.
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC vtkm::ErrorCode CellInterpolate(const FieldVecType& pointFieldValues,
                                           const vtkm::Vec<ParametricCoordType, 3>& parametricCoords,
