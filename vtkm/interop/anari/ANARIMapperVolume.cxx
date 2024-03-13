@@ -132,6 +132,8 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   const auto& cells = actor.GetCellSet();
   const auto& fieldArray = actor.GetField().GetData();
 
+  const bool isPointBased =
+    actor.GetField().GetAssociation() == vtkm::cont::Field::Association::Points;
   const bool isStructured = cells.CanConvert<vtkm::cont::CellSetStructured<3>>();
   const bool isScalar = fieldArray.GetNumberOfComponentsFlat() == 1;
 
@@ -140,7 +142,8 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   if (isStructured && isScalar)
   {
     auto structuredCells = cells.AsCellSet<vtkm::cont::CellSetStructured<3>>();
-    auto pdims = structuredCells.GetPointDimensions();
+    auto pdims =
+      isPointBased ? structuredCells.GetPointDimensions() : structuredCells.GetCellDimensions();
 
     VolumeArrays arrays;
 
