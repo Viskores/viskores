@@ -10,6 +10,7 @@
 
 set(examples
   GuideExampleArrayHandle.cxx
+  GuideExampleCellShapes.cxx
   GuideExampleColorTables.cxx
   GuideExampleCoreDataTypes.cxx
   GuideExampleEnvironmentModifierMacros.cxx
@@ -28,6 +29,7 @@ set(examples
 set(examples_device
   GuideExampleCellEdgesFaces.cxx
   GuideExampleCellLocator.cxx
+  GuideExampleCellOperations.cxx
   GuideExampleDataSetCreation.cxx
   GuideExampleErrorHandling.cxx
   GuideExampleFilterDataSetWithField.cxx

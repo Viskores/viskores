@@ -52,24 +52,24 @@ struct CellTraits
   static const vtkm::IdComponent TOPOLOGICAL_DIMENSIONS = 3;
 
   /// This tag is typedef'ed to
-  /// vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS>. This provides
+  /// `vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS>`. This provides
   /// a convenient way to overload a function based on topological dimensions
   /// (which is usually more efficient than conditionals).
   ///
   using TopologicalDimensionsTag = vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS>;
 
-  /// \brief A tag specifying whether the number of points is fixed.
+  /// @brief A tag specifying whether the number of points is fixed.
   ///
-  /// If set to \c CellTraitsTagSizeFixed, then \c NUM_POINTS is set. If set to
-  /// \c CellTraitsTagSizeVariable, then the number of points is not known at
+  /// If set to `vtkm::CellTraitsTagSizeFixed`, then `NUM_POINTS` is set. If set to
+  /// `vtkm::CellTraitsTagSizeVariable`, then the number of points is not known at
   /// compile time.
   ///
   using IsSizeFixed = vtkm::CellTraitsTagSizeFixed;
 
-  /// \brief Number of points in the cell.
+  /// @brief Number of points in the cell.
   ///
-  /// This is only defined for cell shapes of a fixed number of points (i.e.
-  /// \c IsSizedFixed is set to \c CellTraitsTagSizeFixed.
+  /// This is only defined for cell shapes of a fixed number of points (i.e.,
+  /// `IsSizedFixed` is set to `vtkm::CellTraitsTagSizeFixed`).
   ///
   static constexpr vtkm::IdComponent NUM_POINTS = 3;
 };

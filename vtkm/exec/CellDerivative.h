@@ -181,6 +181,20 @@ VTKM_EXEC vtkm::ErrorCode CellDerivative(const FieldVecType& field,
 /// coordinate (i.e. the gradient) at that point. The derivative is not always
 /// constant in some "linear" cells.
 ///
+/// @param[in]  pointFieldValues A list of field values for each point in the cell. This
+///     usually comes from a `FieldInPoint` argument in a
+///     `vtkm::worklet::WorkletVisitCellsWithPoints`.
+/// @param[in]  worldCoordinateValues A list of world coordinates for each point in the cell. This
+///     usually comes from a `FieldInPoint` argument in a
+///     `vtkm::worklet::WorkletVisitCellsWithPoints` where the coordinate system is passed
+///     into that argument.
+/// @param[in]  parametricCoords The parametric coordinates where you want to find the derivative.
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] result Value to store the derivative/gradient. Because the derivative is taken
+///     partially in the x, y, and z directions, the result is a `vtkm::Vec` of size 3 with the
+///     component type the same as the field. If the field is itself a vector, you get a `Vec`
+///     of `Vec`s.
 template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
 VTKM_EXEC vtkm::ErrorCode CellDerivative(const FieldVecType& pointFieldValues,
                                          const WorldCoordType& worldCoordinateValues,

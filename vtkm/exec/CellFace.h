@@ -138,6 +138,11 @@ public:
 
 } // namespace detail
 
+/// @brief Get the number of faces in a cell.
+///
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] result A reference to return the number of faces.
 template <typename CellShapeTag>
 static inline VTKM_EXEC vtkm::ErrorCode CellFaceNumberOfFaces(CellShapeTag shape,
                                                               vtkm::IdComponent& result)
@@ -148,6 +153,15 @@ static inline VTKM_EXEC vtkm::ErrorCode CellFaceNumberOfFaces(CellShapeTag shape
   return vtkm::ErrorCode::Success;
 }
 
+/// @brief Get the number of points in a face.
+///
+/// Given a local index to the face and a shape of the cell, this method returns the
+/// number of points in that particular face.
+///
+/// @param[in]  faceIndex The index of the face within the cell.
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] result A reference to return the number of points in the selected face.
 template <typename CellShapeTag>
 static inline VTKM_EXEC vtkm::ErrorCode CellFaceNumberOfPoints(vtkm::IdComponent faceIndex,
                                                                CellShapeTag shape,
@@ -171,6 +185,18 @@ static inline VTKM_EXEC vtkm::ErrorCode CellFaceNumberOfPoints(vtkm::IdComponent
   return vtkm::ErrorCode::Success;
 }
 
+/// @brief Get the shape of a face.
+///
+/// Given a local index to the face and a shape of the cell, this method returns the
+/// identifier for the shape of that face.
+/// Faces are always polygons, so it is valid to just to treat the face as a
+/// `CELL_SHAPE_POLYGON`. However, the face will be checked to see if it can be
+/// further specialized to `CELL_SHAPE_TRIANGLE` or `CELL_SHAPE_QUAD`.
+///
+/// @param[in]  faceIndex The index of the face within the cell.
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] result A reference to return the number of points in the selected face.
 template <typename CellShapeTag>
 static inline VTKM_EXEC vtkm::ErrorCode CellFaceShape(vtkm::IdComponent faceIndex,
                                                       CellShapeTag shape,
@@ -200,6 +226,17 @@ static inline VTKM_EXEC vtkm::ErrorCode CellFaceShape(vtkm::IdComponent faceInde
   return vtkm::ErrorCode::Success;
 }
 
+/// Given the index for a face of a cell and one of the points on that face, this
+/// function returns the point index for the cell.
+/// To get the point indices relative to the data set, the returned index should be used
+/// to reference a `PointIndices` list.
+///
+/// @param[in]  pointIndex The index of the edge within the cell.
+/// @param[in]  faceIndex The index of the point on the face.
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] result Reference to put the index of the point relative to the cell
+///     (between 0 and the number of points in the cell).
 template <typename CellShapeTag>
 static inline VTKM_EXEC vtkm::ErrorCode CellFaceLocalIndex(vtkm::IdComponent pointIndex,
                                                            vtkm::IdComponent faceIndex,
@@ -221,10 +258,10 @@ static inline VTKM_EXEC vtkm::ErrorCode CellFaceLocalIndex(vtkm::IdComponent poi
   return vtkm::ErrorCode::Success;
 }
 
-/// \brief Returns a canonical identifier for a cell face
+/// @brief Returns a canonical identifier for a cell face
 ///
 /// Given information about a cell face and the global point indices for that cell, returns a
-/// vtkm::Id3 that contains values that are unique to that face. The values for two faces will be
+/// `vtkm::Id3` that contains values that are unique to that face. The values for two faces will be
 /// the same if and only if the faces contain the same points.
 ///
 /// Note that this property is only true if the mesh is conforming. That is, any two neighboring

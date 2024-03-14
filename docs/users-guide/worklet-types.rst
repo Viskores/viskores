@@ -131,10 +131,8 @@ A visit cells with points worklet supports the following tags in the parameters 
    :content-only:
 
 Point to cell field maps are a powerful construct that allow you to interpolate point fields throughout the space of the data set.
-See Chapter \ref{chap:WorkingWithCells} for a description on how to work with the cell information provided to the worklet.
+See :chapref:`working-with-cells:Working with Cells` for a description on how to work with the cell information provided to the worklet.
 The following example provides a simple demonstration that finds the geometric center of each cell by interpolating the point coordinates to the cell centers.
-
-.. todo:: Fix reference to chapter on working with cells above.
 
 .. load-example:: UseWorkletVisitCellsWithPoints
    :file: GuideExampleUseWorkletVisitCellsWithPoints.cxx
@@ -210,7 +208,7 @@ The following example does a simple averaging, but you can also implement other 
      This tag represents the cell set that defines the collection of elements the map will operate on.
      A \sigtag{CellSetIn} argument expects a \textidentifier{CellSet} subclass or an \textidentifier{UnknownCellSet} in the associated parameter of the \textidentifier{Invoker}.
      Each invocation of the worklet gets a cell shape tag.
-     (Cell shapes and the operations you can do with cells are discussed in Chapter \ref{chap:WorkingWithCells}.)
+     (Cell shapes and the operations you can do with cells are discussed in :chapref:`working-with-cells:Working with Cells`.)
 
      There must be exactly one \sigtag{CellSetIn} argument, and the worklet's \inputdomain must be set to this argument.
 
@@ -248,7 +246,7 @@ The following example does a simple averaging, but you can also implement other 
 
    \item[\sigtag{CellShape}]
      This tag produces a shape tag corresponding to the shape of the visited element.
-     (Cell shapes and the operations you can do with cells are discussed in Chapter \ref{chap:WorkingWithCells}.)
+     (Cell shapes and the operations you can do with cells are discussed in :chapref:`working-with-cells:Working with Cells`.)
      This is the same value that gets provided if you reference the \textsignature{CellSetIn} parameter.
 
      If the ``visit'' element is cells, the \sigtag{CellShape} clearly will match the shape of each cell.

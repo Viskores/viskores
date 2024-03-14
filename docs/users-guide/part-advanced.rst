@@ -11,3 +11,4 @@ Advanced Development
    extended-filter-impl.rst
    worklet-error-handling.rst
    math.rst
+   working-with-cells.rst
