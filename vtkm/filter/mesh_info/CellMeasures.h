@@ -11,8 +11,10 @@
 #ifndef vtk_m_filter_mesh_info_CellMeasures_h
 #define vtk_m_filter_mesh_info_CellMeasures_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
+
+#include <vtkm/Deprecated.h>
 
 namespace vtkm
 {
@@ -22,12 +24,18 @@ namespace mesh_info
 {
 
 /// \brief Specifies over what types of mesh elements CellMeasures will operate.
+///
+/// The values of `IntegrationType` may be `|`-ed together to select multiple
 enum struct IntegrationType
 {
   None = 0x00,
+  /// @copydoc CellMeasures::SetMeasureToArcLength
   ArcLength = 0x01,
+  /// @copydoc CellMeasures::SetMeasureToArea
   Area = 0x02,
+  /// @copydoc CellMeasures::SetMeasureToVolume
   Volume = 0x04,
+  /// @copydoc CellMeasures::SetMeasureToAll
   AllMeasures = ArcLength | Area | Volume
 };
 
@@ -40,27 +48,66 @@ VTKM_EXEC_CONT inline IntegrationType operator|(IntegrationType left, Integratio
   return static_cast<IntegrationType>(static_cast<int>(left) | static_cast<int>(right));
 }
 
-/// \brief Compute the measure of each (3D) cell in a dataset.
+/// @brief Compute the size measure of each cell in a dataset.
 ///
 /// CellMeasures is a filter that generates a new cell data array (i.e., one value
 /// specified per cell) holding the signed measure of the cell
 /// or 0 (if measure is not well defined or the cell type is unsupported).
 ///
 /// By default, the new cell-data array is named "measure".
-class VTKM_FILTER_MESH_INFO_EXPORT CellMeasures : public vtkm::filter::FilterField
+class VTKM_FILTER_MESH_INFO_EXPORT CellMeasures : public vtkm::filter::Filter
 {
 public:
-  VTKM_CONT
-  explicit CellMeasures(IntegrationType);
+  VTKM_CONT CellMeasures();
 
-  /// Set/Get the name of the cell measure field. If not set, "measure" is used.
-  void SetCellMeasureName(const std::string& name) { this->SetOutputFieldName(name); }
-  const std::string& GetCellMeasureName() const { return this->GetOutputFieldName(); }
+  VTKM_DEPRECATED(2.2, "Use default constructor and `SetIntegrationType`.")
+  VTKM_CONT explicit CellMeasures(IntegrationType);
+
+  /// @brief Specify the type of integrations to support.
+  ///
+  /// This filter can support integrating the size of 1D elements (arclength measurements),
+  /// 2D elements (area measurements), and 3D elements (volume measurements). The measures to
+  /// perform are specified with a `vtkm::filter::mesh_info::IntegrationType`.
+  ///
+  /// By default, the size measure for all types of elements is performed.
+  VTKM_CONT void SetMeasure(vtkm::filter::mesh_info::IntegrationType measure)
+  {
+    this->Measure = measure;
+  }
+  /// @copydoc SetMeasure
+  VTKM_CONT vtkm::filter::mesh_info::IntegrationType GetMeasure() const { return this->Measure; }
+  /// @brief Compute the length of 1D elements.
+  VTKM_CONT void SetMeasureToArcLength()
+  {
+    this->SetMeasure(vtkm::filter::mesh_info::IntegrationType::ArcLength);
+  }
+  /// @brief Compute the area of 2D elements.
+  VTKM_CONT void SetMeasureToArea()
+  {
+    this->SetMeasure(vtkm::filter::mesh_info::IntegrationType::Area);
+  }
+  /// @brief Compute the volume of 3D elements.
+  VTKM_CONT void SetMeasureToVolume()
+  {
+    this->SetMeasure(vtkm::filter::mesh_info::IntegrationType::Volume);
+  }
+  /// @brief Compute the size of all types of elements.
+  VTKM_CONT void SetMeasureToAll()
+  {
+    this->SetMeasure(vtkm::filter::mesh_info::IntegrationType::AllMeasures);
+  }
+
+  /// @brief Specify the name of the field generated.
+  ///
+  /// If not set, `measure` is used.
+  VTKM_CONT void SetCellMeasureName(const std::string& name) { this->SetOutputFieldName(name); }
+  /// @copydoc SetCellMeasureName
+  VTKM_CONT const std::string& GetCellMeasureName() const { return this->GetOutputFieldName(); }
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
-  IntegrationType measure;
+  IntegrationType Measure = vtkm::filter::mesh_info::IntegrationType::AllMeasures;
 };
 } // namespace mesh_info
 } // namespace filter

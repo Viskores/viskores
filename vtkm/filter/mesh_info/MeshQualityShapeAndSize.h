@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityShapeAndSize_h
 #define vtk_m_filter_mesh_info_MeshQualityShapeAndSize_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,7 +30,18 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityShapeAndSize : public vtkm::filter::FilterField
+/// @brief Compute a metric for each cell based on the shape scaled by the cell size.
+///
+/// This filter multiplies the values of the shape metric by the relative size squared
+/// metric. See `vtkm::filter::mesh_info::MeshQualityShape` and
+/// `vtkm::filter::mesh_info::MeshQualityRelativeSizeSquared` for details on each of
+/// those metrics.
+///
+/// This only produces values for triangles, quadrilaterals, tetrahedra, and hexahedra.
+///
+/// For a good quality cell, this value will be in the range [0.2, 1]. Poorer quality
+/// cells can have values as low as 0.
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityShapeAndSize : public vtkm::filter::Filter
 {
 public:
   MeshQualityShapeAndSize();

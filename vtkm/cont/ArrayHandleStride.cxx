@@ -11,6 +11,8 @@
 #define vtk_m_cont_ArrayHandleStride_cxx
 #include <vtkm/cont/ArrayHandleStride.h>
 
+#include <vtkm/cont/UnknownArrayHandle.h>
+
 namespace vtkm
 {
 namespace cont

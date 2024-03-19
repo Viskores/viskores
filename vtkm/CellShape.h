@@ -33,20 +33,38 @@ namespace vtkm
 enum CellShapeIdEnum
 {
   // Linear cells
+  /// Placeholder for empty or invalid cells.
   CELL_SHAPE_EMPTY = lcl::ShapeId::EMPTY,
+  /// Vertex cells of a single point.
   CELL_SHAPE_VERTEX = lcl::ShapeId::VERTEX,
   //CELL_SHAPE_POLY_VERTEX      = 2,
+  /// A line cell connecting two points.
   CELL_SHAPE_LINE = lcl::ShapeId::LINE,
+  /// A sequence of line segments.
+  /// A polyline has 2 or more points, and the points are connected in order
+  /// by line segments forming a piecewise linear curve.
   CELL_SHAPE_POLY_LINE = 4,
+  /// A triangle.
   CELL_SHAPE_TRIANGLE = lcl::ShapeId::TRIANGLE,
   //CELL_SHAPE_TRIANGLE_STRIP   = 6,
+  /// A general polygon shape.
+  /// All polygons have points ordered in counterclockwise order around the front side.
+  /// Some operations may be invalid if the polygon is not a convex shape.
   CELL_SHAPE_POLYGON = lcl::ShapeId::POLYGON,
   //CELL_SHAPE_PIXEL            = 8,
+  /// A four-sided polygon.
   CELL_SHAPE_QUAD = lcl::ShapeId::QUAD,
+  /// A tetrahedron.
+  /// A tetrahedron is a 3D polyhedron with 4 points and 4 triangular faces.
   CELL_SHAPE_TETRA = lcl::ShapeId::TETRA,
   //CELL_SHAPE_VOXEL            = 11,
+  /// A hexahedron.
   CELL_SHAPE_HEXAHEDRON = lcl::ShapeId::HEXAHEDRON,
+  /// A wedge.
+  /// Wedges are simple prisms that can be formed by extruding a triangle.
+  /// They have 2 triangular faces and 3 quadrilateral faces.
   CELL_SHAPE_WEDGE = lcl::ShapeId::WEDGE,
+  /// A pyramid with a quadrilateral base and four triangular faces.0
   CELL_SHAPE_PYRAMID = lcl::ShapeId::PYRAMID,
 
   NUMBER_OF_CELL_SHAPES
@@ -157,6 +175,8 @@ struct CellShapeTagGeneric
   {
   }
 
+  /// An identifier that corresponds to one of the `CELL_SHAPE_*` identifiers.
+  /// This value is used to detect the proper shape at runtime.
   vtkm::UInt8 Id;
 };
 

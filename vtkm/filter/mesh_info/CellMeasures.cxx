@@ -18,9 +18,17 @@ namespace filter
 {
 namespace mesh_info
 {
+
+//-----------------------------------------------------------------------------
+VTKM_CONT CellMeasures::CellMeasures()
+{
+  this->SetUseCoordinateSystemAsField(true);
+  this->SetCellMeasureName("measure");
+}
+
 //-----------------------------------------------------------------------------
 VTKM_CONT CellMeasures::CellMeasures(IntegrationType m)
-  : measure(m)
+  : Measure(m)
 {
   this->SetUseCoordinateSystemAsField(true);
   this->SetCellMeasureName("measure");
@@ -40,7 +48,7 @@ VTKM_CONT vtkm::cont::DataSet CellMeasures::DoExecute(const vtkm::cont::DataSet&
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray;
 
   auto resolveType = [&](const auto& concrete) {
-    this->Invoke(vtkm::worklet::CellMeasure{ this->measure }, cellset, concrete, outArray);
+    this->Invoke(vtkm::worklet::CellMeasure{ this->Measure }, cellset, concrete, outArray);
   };
   this->CastAndCallVecField<3>(field, resolveType);
 

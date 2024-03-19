@@ -43,7 +43,8 @@ void TestCellMeasuresFilter(vtkm::cont::DataSet& dataset,
 {
   std::cout << "Testing CellMeasures Filter on " << msg << "\n";
 
-  vtkm::filter::mesh_info::CellMeasures vols{ type };
+  vtkm::filter::mesh_info::CellMeasures vols;
+  vols.SetMeasure(type);
   vtkm::cont::DataSet outputData = vols.Execute(dataset);
 
   VTKM_TEST_ASSERT(vols.GetCellMeasureName() == "measure");

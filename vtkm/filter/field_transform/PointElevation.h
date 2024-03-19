@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_field_transform_PointElevation_h
 #define vtk_m_filter_field_transform_PointElevation_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -32,7 +32,7 @@ namespace field_transform
 ///
 /// The default name for the output field is ``elevation'', but that can be
 /// overridden as always using the `SetOutputFieldName()` method.
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT PointElevation : public vtkm::filter::FilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT PointElevation : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT PointElevation();

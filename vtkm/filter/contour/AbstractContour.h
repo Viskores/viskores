@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_contour_AbstractContour_h
 #define vtk_m_filter_contour_AbstractContour_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/filter/contour/vtkm_filter_contour_export.h>
 #include <vtkm/filter/vector_analysis/SurfaceNormals.h>
@@ -26,7 +26,7 @@ namespace contour
 ///
 /// Provides common configuration & execution methods for contour filters
 /// Only the method `DoExecute` executing the contour algorithm needs to be implemented
-class VTKM_FILTER_CONTOUR_EXPORT AbstractContour : public vtkm::filter::FilterField
+class VTKM_FILTER_CONTOUR_EXPORT AbstractContour : public vtkm::filter::Filter
 {
 public:
   void SetNumberOfIsoValues(vtkm::Id num)

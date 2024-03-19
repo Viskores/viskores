@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_flow_LagrangianStructures_h
 #define vtk_m_filter_flow_LagrangianStructures_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
@@ -28,7 +28,7 @@ namespace flow
 /// where they diverge or converge. By default, the points of the input `vtkm::cont::DataSet`
 /// are all advected for this computation unless an auxiliary grid is established.
 ///
-class VTKM_FILTER_FLOW_EXPORT LagrangianStructures : public vtkm::filter::FilterField
+class VTKM_FILTER_FLOW_EXPORT LagrangianStructures : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT

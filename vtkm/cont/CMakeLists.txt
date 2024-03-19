@@ -283,6 +283,11 @@ vtkm_library( NAME vtkm_cont
               DEVICE_SOURCES ${device_sources}
             )
 
+target_sources(vtkm_cont
+  PRIVATE
+    internal/Hints.h
+)
+
 add_subdirectory(internal)
 add_subdirectory(arg)
 

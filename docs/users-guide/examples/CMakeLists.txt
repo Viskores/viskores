@@ -10,12 +10,15 @@
 
 set(examples
   GuideExampleArrayHandle.cxx
+  GuideExampleCellShapes.cxx
   GuideExampleColorTables.cxx
   GuideExampleCoreDataTypes.cxx
   GuideExampleEnvironmentModifierMacros.cxx
   GuideExampleInitialization.cxx
   GuideExampleIO.cxx
   GuideExampleLists.cxx
+  GuideExampleMatrix.cxx
+  GuideExampleNewtonsMethod.cxx
   GuideExampleProvidedFilters.cxx
   GuideExampleRendering.cxx
   GuideExampleRuntimeDeviceTracker.cxx
@@ -26,9 +29,17 @@ set(examples
 set(examples_device
   GuideExampleCellEdgesFaces.cxx
   GuideExampleCellLocator.cxx
+  GuideExampleCellOperations.cxx
   GuideExampleDataSetCreation.cxx
   GuideExampleErrorHandling.cxx
+  GuideExampleFilterDataSetWithField.cxx
+  GuideExampleGenerateMeshConstantShape.cxx
   GuideExampleSimpleAlgorithm.cxx
+  GuideExampleUseWorkletMapField.cxx
+  GuideExampleUseWorkletPointNeighborhood.cxx
+  GuideExampleUseWorkletReduceByKey.cxx
+  GuideExampleUseWorkletVisitCellsWithPoints.cxx
+  GuideExampleUseWorkletVisitPointsWithCells.cxx
   )
 set(extra_libs)
 

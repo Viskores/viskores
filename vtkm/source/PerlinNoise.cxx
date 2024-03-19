@@ -11,7 +11,7 @@
 #include <random>
 
 #include <vtkm/VectorAnalysis.h>
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/source/PerlinNoise.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -125,7 +125,7 @@ struct PerlinNoiseWorklet : public vtkm::worklet::WorkletVisitPointsWithCells
   vtkm::Id Repeat;
 };
 
-class PerlinNoiseField : public vtkm::filter::FilterField
+class PerlinNoiseField : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT PerlinNoiseField(vtkm::IdComponent tableSize, vtkm::IdComponent seed)

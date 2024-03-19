@@ -67,6 +67,8 @@ It takes a single argument that is a condition that is expected to be true.
 If it is not true, the program is halted and a message is printed.
 Asserts are useful debugging tools to ensure that software is behaving and being used as expected.
 
+.. doxygendefine:: VTKM_ASSERT
+
 .. load-example:: Assert
    :file: GuideExampleErrorHandling.cxx
    :caption: Using :c:macro:`VTKM_ASSERT`.

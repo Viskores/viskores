@@ -271,7 +271,8 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  vtkm::filter::mesh_info::MeshQuality filter(shapeMetric);
+  vtkm::filter::mesh_info::MeshQuality filter;
+  filter.SetMetric(shapeMetric);
   TestMetrics(outFileName, input, filter);
   return 0;
 }

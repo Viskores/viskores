@@ -50,9 +50,11 @@ protected:
   SetErrorBufferSignature SetErrorBufferFunction = nullptr;
 };
 
-template <typename WType, typename IType>
+template <typename WType, typename IType, typename Hints>
 class TaskStrided1D : public TaskStrided
 {
+  VTKM_IS_HINT_LIST(Hints);
+
 public:
   TaskStrided1D(const WType& worklet, const IType& invocation)
     : TaskStrided()
@@ -90,9 +92,11 @@ private:
   const IType Invocation;
 };
 
-template <typename WType>
-class TaskStrided1D<WType, vtkm::internal::NullType> : public TaskStrided
+template <typename WType, typename Hints>
+class TaskStrided1D<WType, vtkm::internal::NullType, Hints> : public TaskStrided
 {
+  VTKM_IS_HINT_LIST(Hints);
+
 public:
   TaskStrided1D(WType& worklet)
     : TaskStrided()
@@ -116,9 +120,11 @@ private:
   typename std::remove_const<WType>::type Worklet;
 };
 
-template <typename WType, typename IType>
+template <typename WType, typename IType, typename Hints>
 class TaskStrided3D : public TaskStrided
 {
+  VTKM_IS_HINT_LIST(Hints);
+
 public:
   TaskStrided3D(const WType& worklet, const IType& invocation)
     : TaskStrided()
@@ -165,9 +171,11 @@ private:
   const IType Invocation;
 };
 
-template <typename WType>
-class TaskStrided3D<WType, vtkm::internal::NullType> : public TaskStrided
+template <typename WType, typename Hints>
+class TaskStrided3D<WType, vtkm::internal::NullType, Hints> : public TaskStrided
 {
+  VTKM_IS_HINT_LIST(Hints);
+
 public:
   TaskStrided3D(WType& worklet)
     : TaskStrided()

@@ -92,7 +92,7 @@ public:
   VTKM_CONT
   void SetBackgroundColor(const vtkm::rendering::Color& color);
 
-  /// @brief @Specify the color of foreground elements.
+  /// @brief Specify the color of foreground elements.
   ///
   /// The foreground is typically used for annotation elements.
   /// The foreground should contrast well with the background.

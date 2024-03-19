@@ -105,7 +105,9 @@ anari_cpp::Volume ANARIMapperVolume::GetANARIVolume()
 
   anari_cpp::setAndReleaseParameter(d, this->Handles->Volume, "color", colorArray);
   anari_cpp::setAndReleaseParameter(d, this->Handles->Volume, "opacity", opacityArray);
+  // Keep old name as a parameter for bug-backwards compatibility: 'field' isn't the right name
   anari_cpp::setParameter(d, this->Handles->Volume, "field", this->GetANARISpatialField());
+  anari_cpp::setParameter(d, this->Handles->Volume, "value", this->GetANARISpatialField());
   anari_cpp::setParameter(d, this->Handles->Volume, "name", this->MakeObjectName("volume"));
   anari_cpp::commitParameters(d, this->Handles->Volume);
 
@@ -130,6 +132,8 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   const auto& cells = actor.GetCellSet();
   const auto& fieldArray = actor.GetField().GetData();
 
+  const bool isPointBased =
+    actor.GetField().GetAssociation() == vtkm::cont::Field::Association::Points;
   const bool isStructured = cells.CanConvert<vtkm::cont::CellSetStructured<3>>();
   const bool isScalar = fieldArray.GetNumberOfComponentsFlat() == 1;
 
@@ -138,7 +142,8 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   if (isStructured && isScalar)
   {
     auto structuredCells = cells.AsCellSet<vtkm::cont::CellSetStructured<3>>();
-    auto pdims = structuredCells.GetPointDimensions();
+    auto pdims =
+      isPointBased ? structuredCells.GetPointDimensions() : structuredCells.GetCellDimensions();
 
     VolumeArrays arrays;
 

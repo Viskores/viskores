@@ -12,7 +12,7 @@
 #include <vtkm/cont/Initialize.h>
 #include <vtkm/cont/Invoker.h>
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/vector_analysis/Gradient.h>
 #include <vtkm/io/VTKDataSetReader.h>
 #include <vtkm/io/VTKDataSetWriter.h>
@@ -32,7 +32,7 @@ struct ComputeMagnitude : vtkm::worklet::WorkletMapField
 
 // The filter class used by external code to run the algorithm. Normally the class definition
 // is in a separate header file.
-class FieldMagnitude : public vtkm::filter::FilterField
+class FieldMagnitude : public vtkm::filter::Filter
 {
 protected:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet) override;

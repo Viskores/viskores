@@ -65,7 +65,7 @@
     - .docker_image
 
 .ubuntu2004_kokkos: &ubuntu2004_kokkos
-  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20230906"
+  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20240119"
   extends:
     - .docker_image
 
@@ -215,6 +215,10 @@ stages:
 
       # CDash files.
       - build/DartConfiguration.tcl
+
+      # Users guide
+      - build/docs/users-guide/html
+      - build/docs/users-guide/latex
 
 .cmake_test_artifacts: &cmake_test_artifacts
   artifacts:

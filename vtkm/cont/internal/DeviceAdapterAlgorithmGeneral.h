@@ -20,6 +20,7 @@
 #include <vtkm/cont/BitField.h>
 #include <vtkm/cont/Logging.h>
 #include <vtkm/cont/internal/FunctorsGeneral.h>
+#include <vtkm/cont/internal/Hints.h>
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/TaskSingular.h>
@@ -58,18 +59,28 @@ namespace internal
 ///    : DeviceAdapterAlgorithmGeneral<DeviceAdapterAlgorithm<DeviceAdapterTagFoo>,
 ///                                    DeviceAdapterTagFoo>
 /// {
-///   template<class Functor>
-///   VTKM_CONT static void Schedule(Functor functor,
-///                                        vtkm::Id numInstances)
+///   template<typename Hints, typename Functor>
+///   VTKM_CONT static void Schedule(Hints, Functor functor, vtkm::Id numInstances)
 ///   {
 ///     ...
 ///   }
 ///
-///   template<class Functor>
-///   VTKM_CONT static void Schedule(Functor functor,
-///                                        vtkm::Id3 maxRange)
+///   template<typename Functor>
+///   VTKM_CONT static void Schedule(Functor&& functor, vtkm::Id numInstances)
+///   {
+///     Schedule(vtkm::cont::internal::HintList<>{}, functor, numInstances);
+///   }
+///
+///   template<typename Hints, typename Functor>
+///   VTKM_CONT static void Schedule(Hints, Functor functor, vtkm::Id3 maxRange)
 ///   {
 ///     ...
+///   }
+///
+///   template<typename Functor>
+///   VTKM_CONT static void Schedule(Functor&& functor, vtkm::Id3 maxRange)
+///   {
+///     Schedule(vtkm::cont::internal::HintList<>{}, functor, numInstances);
 ///   }
 ///
 ///   VTKM_CONT static void Synchronize()

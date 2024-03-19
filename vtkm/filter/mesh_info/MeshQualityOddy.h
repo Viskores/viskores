@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityOddy_h
 #define vtk_m_filter_mesh_info_MeshQualityOddy_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,7 +30,13 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityOddy : public vtkm::filter::FilterField
+/// @brief Compute for each cell the maximum deviation of a metric tensor from an identity matrix, over all corners and cell center.
+///
+/// This only produces values for quadrilaterals and hexahedra.
+///
+/// For a good quality quadrilateral or hexahedron, this value should be in the range
+/// [0, 0.5]. Poorer quality cells can have unboundedly larger values.
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityOddy : public vtkm::filter::Filter
 {
 public:
   MeshQualityOddy();

@@ -10,10 +10,14 @@
 ##
 ##=============================================================================
 
-.upload_doxygen: &upload_doxygen
-  script:
-    - chmod 400 $DOC_KEY_FILE
-    - rsync -rtv --delete -e "ssh -i $DOC_KEY_FILE -o StrictHostKeyChecking=no" build/docs/doxygen/html/ "kitware@web.kitware.com:vtkm_documentation/$DOXYGEN_UPLOAD_REMOTE_PATH"
+.upload_doxygen_script: &upload_doxygen_script
+  - chmod 400 $DOC_KEY_FILE
+  - rsync -rtv --delete -e "ssh -i $DOC_KEY_FILE -o StrictHostKeyChecking=no" build/docs/doxygen/html/ "kitware@web.kitware.com:vtkm_documentation/$DOXYGEN_UPLOAD_REMOTE_PATH"
+
+.build_doxygen_script: &build_doxygen_script
+  - cmake --build "${CI_PROJECT_DIR}/build" --target docs/doxygen
+  - cmake --build "${CI_PROJECT_DIR}/build" --target VTKmUsersGuideHTML
+  - cmake --build "${CI_PROJECT_DIR}/build" --target VTKmUsersGuideLaTeX
 
 .build_docs: &build_docs
   stage: build
@@ -25,24 +29,25 @@
   before_script:
     - cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
     - ctest -VV -S .gitlab/ci/ctest_configure.cmake
-    - cmake --build "${CI_PROJECT_DIR}/build" --target VTKmUsersGuideLaTeX
-    - cmake --build "${CI_PROJECT_DIR}/build" --target VTKmUsersGuideHTML
-    - cmake --build "${CI_PROJECT_DIR}/build" --target docs/doxygen
   timeout:  30 minutes
   interruptible: true
   variables:
     CMAKE_BUILD_TYPE: Release
     VTKM_SETTINGS: "tbb+openmp+mpi+shared+docs"
 
-docs:continous:
+build:docs-continuous:
   script:
-    - "true"
+    - *build_doxygen_script
   extends:
+    - .build_docs
+    - .cmake_build_artifacts
     - .run_automatically
     - .ubuntu2004_doxygen
-    - .build_docs
 
-docs:master:
+build:docs-master:
+  script:
+    - *build_doxygen_script
+    - *upload_doxygen_script
   environment:
     name: doxygen-nightly
     url: https://docs-m.vtk.org/nightly/
@@ -51,13 +56,16 @@ docs:master:
       when: on_success
     - when: never
   extends:
-    - .ubuntu2004_doxygen
     - .build_docs
-    - .upload_doxygen
+    - .cmake_build_artifacts
+    - .ubuntu2004_doxygen
   variables:
     DOXYGEN_UPLOAD_REMOTE_PATH: "nightly"
 
-docs:latest:
+build:docs-latest:
+  script:
+    - *build_doxygen_script
+    - *upload_doxygen_script
   environment:
     name: doxygen-latest
     url: https://docs-m.vtk.org/latest/index.html
@@ -66,8 +74,8 @@ docs:latest:
       when: on_success
     - when: never
   extends:
-    - .ubuntu2004_doxygen
     - .build_docs
-    - .upload_doxygen
+    - .cmake_build_artifacts
+    - .ubuntu2004_doxygen
   variables:
     DOXYGEN_UPLOAD_REMOTE_PATH: "latest"

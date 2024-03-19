@@ -12,6 +12,8 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/internal/Hints.h>
+
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
 namespace vtkm

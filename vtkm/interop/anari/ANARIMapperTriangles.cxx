@@ -214,18 +214,22 @@ static TriangleFieldArrays UnpackFields(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
   if (!emptyField1)
   {
     retval.Field1.Allocate(numTris * 3);
+    retval.Field1Name = fields[0].GetName();
   }
   if (!emptyField2)
   {
     retval.Field2.Allocate(numTris * 3);
+    retval.Field2Name = fields[1].GetName();
   }
   if (!emptyField3)
   {
     retval.Field3.Allocate(numTris * 3);
+    retval.Field3Name = fields[2].GetName();
   }
   if (!emptyField4)
   {
     retval.Field4.Allocate(numTris * 3);
+    retval.Field4Name = fields[3].GetName();
   }
 
   ExtractTriangleFields fieldsWorklet(emptyField1,
@@ -459,24 +463,28 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
     auto* a = (float*)fieldArrays.Field1.GetBuffers()[0].ReadPointerHost(*fieldArrays.Token);
     this->Handles->Parameters.Vertex.Attribute[0] =
       anari_cpp::newArray1D(d, a, NoopANARIDeleter, nullptr, numVerts);
+    this->Handles->Parameters.Vertex.AttributeName[0] = fieldArrays.Field1Name;
   }
   if (fieldArrays.Field2.GetNumberOfValues() != 0)
   {
     auto* a = (float*)fieldArrays.Field2.GetBuffers()[0].ReadPointerHost(*fieldArrays.Token);
     this->Handles->Parameters.Vertex.Attribute[1] =
       anari_cpp::newArray1D(d, a, NoopANARIDeleter, nullptr, numVerts);
+    this->Handles->Parameters.Vertex.AttributeName[1] = fieldArrays.Field2Name;
   }
   if (fieldArrays.Field3.GetNumberOfValues() != 0)
   {
     auto* a = (float*)fieldArrays.Field3.GetBuffers()[0].ReadPointerHost(*fieldArrays.Token);
     this->Handles->Parameters.Vertex.Attribute[2] =
       anari_cpp::newArray1D(d, a, NoopANARIDeleter, nullptr, numVerts);
+    this->Handles->Parameters.Vertex.AttributeName[2] = fieldArrays.Field3Name;
   }
   if (fieldArrays.Field4.GetNumberOfValues() != 0)
   {
     auto* a = (float*)fieldArrays.Field4.GetBuffers()[0].ReadPointerHost(*fieldArrays.Token);
     this->Handles->Parameters.Vertex.Attribute[3] =
       anari_cpp::newArray1D(d, a, NoopANARIDeleter, nullptr, numVerts);
+    this->Handles->Parameters.Vertex.AttributeName[3] = fieldArrays.Field4Name;
   }
   if (this->CalculateNormals)
   {
@@ -519,6 +527,10 @@ void ANARIMapperTriangles::UpdateGeometry()
   anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.attribute3");
   anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.normal");
   anari_cpp::unsetParameter(d, this->Handles->Geometry, "primitive.index");
+  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute0.name");
+  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute1.name");
+  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute2.name");
+  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute3.name");
 
   anari_cpp::setParameter(d, this->Handles->Geometry, "name", this->MakeObjectName("geometry"));
 
@@ -528,6 +540,8 @@ void ANARIMapperTriangles::UpdateGeometry()
       d, this->Handles->Geometry, "vertex.position", this->Handles->Parameters.Vertex.Position);
     if (this->GetMapFieldAsAttribute())
     {
+      // Attributes //
+
       anari_cpp::setParameter(d,
                               this->Handles->Geometry,
                               "vertex.attribute0",
@@ -544,6 +558,37 @@ void ANARIMapperTriangles::UpdateGeometry()
                               this->Handles->Geometry,
                               "vertex.attribute3",
                               this->Handles->Parameters.Vertex.Attribute[3]);
+
+      // Attribute names for USD //
+
+      if (!this->Handles->Parameters.Vertex.AttributeName[0].empty())
+      {
+        anari_cpp::setParameter(d,
+                                this->Handles->Geometry,
+                                "usd::attribute0.name",
+                                this->Handles->Parameters.Vertex.AttributeName[0]);
+      }
+      if (!this->Handles->Parameters.Vertex.AttributeName[1].empty())
+      {
+        anari_cpp::setParameter(d,
+                                this->Handles->Geometry,
+                                "usd::attribute1.name",
+                                this->Handles->Parameters.Vertex.AttributeName[1]);
+      }
+      if (!this->Handles->Parameters.Vertex.AttributeName[2].empty())
+      {
+        anari_cpp::setParameter(d,
+                                this->Handles->Geometry,
+                                "usd::attribute2.name",
+                                this->Handles->Parameters.Vertex.AttributeName[2]);
+      }
+      if (!this->Handles->Parameters.Vertex.AttributeName[3].empty())
+      {
+        anari_cpp::setParameter(d,
+                                this->Handles->Geometry,
+                                "usd::attribute3.name",
+                                this->Handles->Parameters.Vertex.AttributeName[3]);
+      }
     }
 
     if (CalculateNormals)

@@ -17,14 +17,18 @@
 #include <anari/anari_cpp.hpp>
 #include <anari/anari_cpp/ext/linalg.h>
 
-namespace anari_cpp = ::anari;
+namespace anari_cpp
+{
+
+/// Put everything from the ANARI-SDK in a single namespace to de-clutter things
+
+using namespace ::anari;
+using namespace ::anari::math;
+
+} // namespace anari_cpp
 
 namespace anari
 {
-
-#if ANARI_SDK_VERSION_MINOR >= 8
-using namespace ::anari::math;
-#endif
 
 /// These declarations let ANARI C++ bindings infer the correct `ANARIDataType`
 /// enum value from VTK-m's C++ math types. This header should be included

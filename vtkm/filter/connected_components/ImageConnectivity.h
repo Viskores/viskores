@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_connected_components_ImageConnectivity_h
 #define vtk_m_filter_connected_components_ImageConnectivity_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/connected_components/vtkm_filter_connected_components_export.h>
 
 /// \brief Groups connected points that have the same field value.
@@ -32,7 +32,7 @@ namespace filter
 {
 namespace connected_components
 {
-class VTKM_FILTER_CONNECTED_COMPONENTS_EXPORT ImageConnectivity : public vtkm::filter::FilterField
+class VTKM_FILTER_CONNECTED_COMPONENTS_EXPORT ImageConnectivity : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT ImageConnectivity() { this->SetOutputFieldName("component"); }

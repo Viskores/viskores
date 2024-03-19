@@ -210,7 +210,7 @@ VTKM_EXEC_CONT void CopyVecFlatToNested(const vtkm::Vec<T, N>& flatVec, NestedVe
 ///   auto flatVec = vtkm::make_VecFlat(nestedVec);
 /// ```
 ///
-/// `flatVec` is now of type `vtkm::VecFlat<vtkm::Vec<vtkm::Vec<T, 2>, 3>.
+/// `flatVec` is now of type `vtkm::VecFlat<vtkm::Vec<vtkm::Vec<T, 2>, 3>`.
 /// `flatVec::NUM_COMPONENTS` is 6 (3 * 2). The `[]` operator takes an index between
 /// 0 and 5 and returns a value of type `vtkm::Id`. The indices are explored in
 /// depth-first order. So `flatVec[0] == nestedVec[0][0]`, `flatVec[1] == nestedVec[0][1]`,

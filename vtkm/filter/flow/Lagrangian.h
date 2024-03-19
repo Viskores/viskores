@@ -12,7 +12,7 @@
 #define vtk_m_filter_flow_Lagrangian_h
 
 #include <vtkm/Particle.h>
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
@@ -22,7 +22,7 @@ namespace filter
 namespace flow
 {
 
-class VTKM_FILTER_FLOW_EXPORT Lagrangian : public vtkm::filter::FilterField
+class VTKM_FILTER_FLOW_EXPORT Lagrangian : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT

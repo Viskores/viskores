@@ -355,7 +355,8 @@ int TestMeshQuality()
   for (size_t i = 0; i < numTests; i++)
   {
     printf("Testing metric %s\n", metricName[i].c_str());
-    vtkm::filter::mesh_info::MeshQuality filter(metrics[i]);
+    vtkm::filter::mesh_info::MeshQuality filter;
+    filter.SetMetric(metrics[i]);
     testFailed = TestMeshQualityFilter(inputs[i], expectedValues[i], metricName[i], filter);
     if (testFailed)
     {

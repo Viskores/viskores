@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityRelativeSizeSquared_h
 #define vtk_m_filter_mesh_info_MeshQualityRelativeSizeSquared_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,7 +30,20 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityRelativeSizeSquared : public vtkm::filter::FilterField
+/// @brief Compute for each cell the ratio of area or volume to the mesh average.
+///
+/// If S is the size of a cell and avgS is the average cell size in the mesh, then
+/// let R = S/avgS. R is "normalized" to be in the range [0, 1] by taking the minimum
+/// of R and 1/R. This value is then squared.
+///
+/// This only produces values for triangles, quadrilaterals, tetrahedra, and hexahedra.
+///
+/// For a good quality triangle, the relative sized squared should be in the range [0.25, 1].
+/// For a good quality quadrilateral, it should be in the range [0.3, 1].
+/// For a good quality tetrahedron, it should be in the range [0.3, 1].
+/// For a good quality hexahedron, it should be in the range [0.5, 1].
+/// Poorer quality cells can have a relative size squared as low as 0.
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityRelativeSizeSquared : public vtkm::filter::Filter
 {
 public:
   MeshQualityRelativeSizeSquared();

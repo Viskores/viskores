@@ -110,22 +110,21 @@ enum class KeysSortType
   Stable = 1
 };
 
-/// \brief Manage keys for a \c WorkletReduceByKey.
+/// \brief Manage keys for a `vtkm::worklet::WorkletReduceByKey`.
 ///
-/// The \c WorkletReduceByKey worklet (and its associated \c
-/// DispatcherReduceByKey) take an array of keys for its input domain, find all
-/// identical keys, and runs a worklet that produces a single value for every
-/// key given all matching values. This class is used as the associated input
-/// for the keys input domain.
+/// The `vtkm::worklet::WorkletReduceByKey` worklet takes an array of keys for
+/// its input domain, finds all identical keys, and runs a worklet that produces
+/// a single value for every key given all matching values. This class is used
+/// as the associated input for the keys input domain.
 ///
-/// \c Keys is templated on the key array handle type and accepts an instance
+/// `Keys` is templated on the key array handle type and accepts an instance
 /// of this array handle as its constructor. It builds the internal structures
 /// needed to use the keys.
 ///
-/// The same \c Keys structure can be used for multiple different \c Invoke of
-/// different dispatchers. When used in this way, the processing done in the \c
-/// Keys structure is reused for all the \c Invoke. This is more efficient than
-/// creating a different \c Keys structure for each \c Invoke.
+/// The same `Keys` structure can be used for multiple different invokes of
+/// different or the same worklets. When used in this way, the processing done in the
+/// `Keys` structure is reused for all the invokes. This is more efficient than
+/// creating a different `Keys` structure for each invoke.
 ///
 template <typename T>
 class VTKM_ALWAYS_EXPORT Keys : public internal::KeysBase
@@ -137,9 +136,9 @@ public:
   VTKM_CONT
   Keys();
 
-  /// \b Construct a Keys class from an array of keys.
+  /// Construct a `Keys` class from an array of keys.
   ///
-  /// Given an array of keys, construct a \c Keys class that will manage
+  /// Given an array of keys, construct a `Keys` class that will manage
   /// using these keys to perform reduce-by-key operations.
   ///
   /// The input keys object is not modified and the result is not stable
@@ -171,8 +170,40 @@ public:
     KeysSortType sort,
     vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny());
 
+  /// Returns an array of unique keys. The order of keys in this array describes
+  /// the order that result values will be placed in a `vtkm::worklet::WorkletReduceByKey`.
   VTKM_CONT
   KeyArrayHandleType GetUniqueKeys() const { return this->UniqueKeys; }
+
+#ifdef VTKM_DOXYGEN_ONLY
+  // Document the superclass' methods as methods in this class.
+
+  /// @brief Returns the input range of a keys object when used as an input domain.
+  ///
+  /// This will be equal to the number of unique keys.
+  vtkm::Id GetInputRange() const;
+
+  /// @brief Returns the array that maps each input value to an array of sorted keys.
+  ///
+  /// This array is used internally as the indices to a `vtkm::cont::ArrayHandlePermutation`
+  /// to order input values with the grouped keys so that they can then be grouped. This is
+  /// an internal array that is seldom of use to code outside the
+  /// `vtkm::worklet::WorkletReduceByKey` implementation.
+  vtkm::cont::ArrayHandle<vtkm::Id> GetSortedValuesMap() const;
+
+  /// @brief Returns an offsets array to group keys.
+  ///
+  /// Given an array of sorted keys (or more frequently values permuted to the sorting of
+  /// the keys), this array of indices can be used as offsets for a
+  /// `vtkm::cont::ArrayHandleGroupVecVariable`. This is an internal array that is seldom of
+  /// use to code outside the `vtkm::worklet::WorkletReduceByKey` implementation.
+  vtkm::cont::ArrayHandle<vtkm::Id> GetOffsets() const;
+
+  /// @brief Returns the number of input keys and values used to build this structure.
+  ///
+  /// This is also the size of input arrays to a `vtkm::worklet::WorkletReduceByKey`.
+  vtkm::Id GetNumberOfValues() const;
+#endif
 
   using ExecLookup = vtkm::exec::internal::ReduceByKeyLookup<
     typename KeyArrayHandleType::ReadPortalType,

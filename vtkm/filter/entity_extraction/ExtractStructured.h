@@ -12,7 +12,7 @@
 #define vtk_m_filter_entity_extraction_ExtractStructured_h
 
 #include <vtkm/RangeId3.h>
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -37,7 +37,7 @@ namespace entity_extraction
 /// for image processing, subsampling large volumes to reduce data size, or
 /// extracting regions of a volume with interesting data.
 ///
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExtractStructured : public vtkm::filter::FilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExtractStructured : public vtkm::filter::Filter
 {
 public:
   /// @brief Specifies what volume of interest (VOI) should be extracted by the filter.

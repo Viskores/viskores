@@ -12,7 +12,7 @@
 #define vtk_m_filter_field_transform_FieldToColors_h
 
 #include <vtkm/cont/ColorTable.h>
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -26,7 +26,7 @@ namespace field_transform
 /// This filter is useful for generating colors that could be used for rendering or
 /// other purposes.
 ///
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT FieldToColors : public vtkm::filter::FilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT FieldToColors : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT

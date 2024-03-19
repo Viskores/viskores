@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_entity_extraction_MaskPoints_h
 #define vtk_m_filter_entity_extraction_MaskPoints_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -23,7 +23,7 @@ namespace entity_extraction
 /// \brief Subselect points using a stride
 ///
 /// Extract only every Nth point where N is equal to a stride value
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT MaskPoints : public vtkm::filter::FilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT MaskPoints : public vtkm::filter::Filter
 {
 public:
   // When CompactPoints is set, instead of copying the points and point fields

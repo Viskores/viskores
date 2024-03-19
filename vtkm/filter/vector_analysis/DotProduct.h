@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_vector_analysis_DotProduct_h
 #define vtk_m_filter_vector_analysis_DotProduct_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/vector_analysis/vtkm_filter_vector_analysis_export.h>
 
 namespace vtkm
@@ -28,7 +28,7 @@ namespace vector_analysis
 /// primary and secondary seldom matters).
 ///
 /// The dot product can operate on vectors of any length.
-class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT DotProduct : public vtkm::filter::FilterField
+class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT DotProduct : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT DotProduct();

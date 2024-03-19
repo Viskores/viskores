@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_vector_analysis_SurfaceNormal_h
 #define vtk_m_filter_vector_analysis_SurfaceNormal_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/vector_analysis/vtkm_filter_vector_analysis_export.h>
 
 namespace vtkm
@@ -41,7 +41,7 @@ namespace vector_analysis
 /// the `SetCellNormalsName()` and `SetPointNormalsName()` methods. The filter will also
 /// respect the name in `SetOutputFieldName()` if neither of the others are set.
 ///
-class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT SurfaceNormals : public vtkm::filter::FilterField
+class VTKM_FILTER_VECTOR_ANALYSIS_EXPORT SurfaceNormals : public vtkm::filter::Filter
 {
 public:
   /// Create SurfaceNormals filter. This calls

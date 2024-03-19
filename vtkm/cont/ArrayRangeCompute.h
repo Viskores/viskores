@@ -22,30 +22,33 @@ namespace cont
 {
 
 /// @{
-/// \brief Compute the range of the data in an array handle.
+/// @brief Compute the range of the data in an array handle.
 ///
 /// Given an `ArrayHandle`, this function computes the range (min and max) of
 /// the values in the array. For arrays containing Vec values, the range is
 /// computed for each component, and in the case of nested Vecs, ranges are computed
 /// for each of the leaf components.
 ///
-/// \param array The input array as a `vtkm::cont::UnknownArrayHandle`.
-/// \param maskArray An array handle of type `vtkm::cont::ArrayHandle<vtkm::UInt8>`.
-///                  This array should have the same number of elements as the input array
-///                  with each value representing the masking status of the corresponding
-///                  value in the input array (masked if 0 else unmasked). Ignored if empty.
-/// \param computeFiniteRange Optional boolean parameter to specify if non-finite values in the
-///                           array should be ignored to compute the finite range of
-///                           the array. For Vec types, individual component values
-///                           are considered independantly.
-/// \param device This optional parameter can be used to specify a device to run the
-///               range computation on. The default value is `vtkm::cont::DeviceAdapterTagAny{}`.
+/// The `array` parameter is the input array as a `vtkm::cont::UnknownArrayHandle`.
 ///
-/// \return The result is returned in an `ArrayHandle` of `Range` objects. There is
+/// The optional `maskArray` parameter supports selectively choosing which entries to
+/// include in the range. It is an array handle of type `vtkm::cont::ArrayHandle<vtkm::UInt8>`.
+/// This array should have the same number of elements as the input array
+/// with each value representing the masking status of the corresponding
+/// value in the input array (masked if 0 else unmasked). Ignored if empty.
+///
+/// The optional `computeFiniteRange` parameter specifies whether if non-finite
+/// values in the array should be ignored to compute the finite range of
+/// the array. For Vec types, individual component values are considered independantly.
+///
+/// The optional `device` parameter can be used to specify a device to run the
+/// range computation on. The default value is `vtkm::cont::DeviceAdapterTagAny{}`.
+///
+/// @return The result is returned in an `ArrayHandle` of `Range` objects. There is
 /// one value in the returned array for every component of the input's value
 /// type. For nested Vecs the results are stored in depth-first order.
 ///
-/// \note `ArrayRangeCompute` takes an UnknownArrayHandle as the input.
+/// @note `ArrayRangeCompute` takes an UnknownArrayHandle as the input.
 /// The implementation uses precompiled and specicialized code for several of the
 /// most commonly used value and storage types, with a fallback for other cases.
 /// This is so that ArrayRangeCompute.h can be included in code that does not use a
@@ -56,7 +59,7 @@ namespace cont
 /// implemented by specializing the template class `ArrayRangeComputeImpl`.
 /// Please refer to ArrayRangeComputeTemplate.h for details
 ///
-/// \sa ArrayRangeComputeTemplate
+/// @sa ArrayRangeComputeTemplate
 ///
 
 VTKM_CONT_EXPORT vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
@@ -85,17 +88,21 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
 /// Given an `ArrayHandle`, this function computes the range (min and max) of
 /// the magnitude of the values in the array.
 ///
-/// \param array The input array as a `vtkm::cont::UnknownArrayHandle`.
-/// \param maskArray An array handle of type `vtkm::cont::ArrayHandle<vtkm::UInt8>`.
-///                  This array should have the same number of elements as the input array
-///                  with each value representing the masking status of the corresponding
-///                  value in the input array (masked if 0 else unmasked). Ignored if empty.
-/// \param computeFiniteRange Optional boolean value to specify if non-finite values in the
-///                           array should be ignored to compute the finite range of
-///                           the array. A Vec with any non-finite component will be
-///                           ignored.
-/// \param device This optional parameter can be used to specify a device to run the
-///               range computation on. The default value is `vtkm::cont::DeviceAdapterTagAny{}`.
+///
+/// The `array` parameter is the input array as a `vtkm::cont::UnknownArrayHandle`.
+///
+/// The optional `maskArray` parameter supports selectively choosing which entries to
+/// include in the range. It is an array handle of type `vtkm::cont::ArrayHandle<vtkm::UInt8>`.
+/// This array should have the same number of elements as the input array
+/// with each value representing the masking status of the corresponding
+/// value in the input array (masked if 0 else unmasked). Ignored if empty.
+///
+/// The optional `computeFiniteRange` parameter specifies whether if non-finite
+/// values in the array should be ignored to compute the finite range of
+/// the array. A Vec with any non-finite component will be ignored.
+///
+/// The optional `device` parameter can be used to specify a device to run the
+/// range computation on. The default value is `vtkm::cont::DeviceAdapterTagAny{}`.
 ///
 /// \return The result is returned in a single `Range` objects.
 ///

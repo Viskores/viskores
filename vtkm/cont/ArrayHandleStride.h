@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/ArrayHandleBasic.h>
 #include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/internal/ArrayCopyUnknown.h>
 
 #include <vtkm/internal/ArrayPortalBasic.h>
 
@@ -257,14 +258,11 @@ public:
     }
   }
 
-  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>&,
-                             const T&,
-                             vtkm::Id,
-                             vtkm::Id,
-                             vtkm::cont::Token&)
-  {
-    throw vtkm::cont::ErrorBadType("Fill not supported for ArrayHandleStride.");
-  }
+  VTKM_CONT static void Fill(const std::vector<vtkm::cont::internal::Buffer>& buffers,
+                             const T& fillValue,
+                             vtkm::Id startIndex,
+                             vtkm::Id endIndex,
+                             vtkm::cont::Token& token);
 
   VTKM_CONT static ReadPortalType CreateReadPortal(
     const std::vector<vtkm::cont::internal::Buffer>& buffers,
@@ -397,6 +395,57 @@ vtkm::cont::ArrayHandleStride<T> make_ArrayHandleStride(
 
 }
 } // namespace vtkm::cont
+
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
+
+template <typename T>
+VTKM_CONT inline void Storage<T, vtkm::cont::StorageTagStride>::Fill(
+  const std::vector<vtkm::cont::internal::Buffer>& buffers,
+  const T& fillValue,
+  vtkm::Id startIndex,
+  vtkm::Id endIndex,
+  vtkm::cont::Token& token)
+{
+  const StrideInfo& info = GetInfo(buffers);
+  vtkm::cont::ArrayHandleBasic<T> basicArray = GetBasicArray(buffers);
+  if ((info.Stride == 1) && (info.Modulo == 0) && (info.Divisor <= 1))
+  {
+    // Standard stride in array allows directly calling fill on the basic array.
+    basicArray.Fill(fillValue, startIndex + info.Offset, endIndex + info.Offset, token);
+  }
+  else
+  {
+    // The fill does not necessarily cover a contiguous region. We have to have a loop
+    // to set it. But we are not allowed to write device code here. Instead, create
+    // a stride array containing the fill value with a modulo of 1 so that this fill
+    // value repeates. Then feed this into a precompiled array copy that supports
+    // stride arrays.
+    const vtkm::Id numFill = endIndex - startIndex;
+    auto fillValueArray = vtkm::cont::make_ArrayHandle({ fillValue });
+    vtkm::cont::ArrayHandleStride<T> constantArray(fillValueArray, numFill, 1, 0, 1, 1);
+    vtkm::cont::ArrayHandleStride<T> outputView(GetBasicArray(buffers),
+                                                numFill,
+                                                info.Stride,
+                                                info.ArrayIndex(startIndex),
+                                                info.Modulo,
+                                                info.Divisor);
+    // To prevent circular dependencies, this header file does not actually include
+    // UnknownArrayHandle.h. Thus, it is possible to get a compile error on the following
+    // line for using a declared but not defined `UnknownArrayHandle`. In the unlikely
+    // event this occurs, simply include `vtkm/cont/UnknownArrayHandle.h` somewhere up the
+    // include chain.
+    vtkm::cont::internal::ArrayCopyUnknown(constantArray, outputView);
+  }
+}
+
+}
+}
+} // namespace vtkm::cont::internal
 
 //=============================================================================
 // Specializations of serialization related classes

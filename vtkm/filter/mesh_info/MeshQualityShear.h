@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityShear_h
 #define vtk_m_filter_mesh_info_MeshQualityShear_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,7 +30,14 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityShear : public vtkm::filter::FilterField
+/// @brief Compute the shear of each cell.
+///
+/// The shear of a cell is computed by taking the minimum of the Jacobian at each corner
+/// divided by the length of the corner's adjacent edges.
+///
+/// This only produces values for quadrilaterals and hexahedra. Good quality cells will
+/// have values in the range [0.3, 1]. Poorer quality cells can have values as low as 0.
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityShear : public vtkm::filter::Filter
 {
 public:
   MeshQualityShear();

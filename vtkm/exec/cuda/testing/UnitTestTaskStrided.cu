@@ -342,8 +342,8 @@ void TestErrorFunctorInvoke()
       TestExecObject(input.PrepareForInPlace(DeviceAdapter(), token)),
       TestExecObject(output.PrepareForInPlace(DeviceAdapter(), token)));
 
-  using TaskStrided1 =
-    vtkm::exec::cuda::internal::TaskStrided1D<TestWorkletErrorProxy, InvocationType1>;
+  using TaskStrided1 = vtkm::exec::cuda::internal::
+    TaskStrided1D<TestWorkletErrorProxy, InvocationType1, vtkm::cont::internal::HintList<>>;
   TestWorkletErrorProxy worklet;
   InvocationType1 invocation(execObjects);
 

@@ -20,22 +20,22 @@ namespace exec
 namespace arg
 {
 
-/// \brief Aspect tag to use for getting the work index.
+/// @brief Aspect tag to use for getting the work index.
 ///
-/// The \c AspectTagWorkIndex aspect tag causes the \c Fetch class to ignore
+/// The `AspectTagWorkIndex` aspect tag causes the `Fetch` class to ignore
 /// whatever data is in the associated execution object and return the index.
 ///
 struct AspectTagWorkIndex
 {
 };
 
-/// \brief The \c ExecutionSignature tag to use to get the work index
+/// @brief The `ExecutionSignature` tag to use to get the work index
 ///
+/// This tag produces a `vtkm::Id` that uniquely identifies the invocation
+/// instance of the worklet.
 /// When a worklet is dispatched, it broken into pieces defined by the input
-/// domain and scheduled on independent threads. This tag in the \c
-/// ExecutionSignature passes the index for this work. \c WorkletBase contains
-/// a typedef that points to this class.
-///
+/// domain and scheduled on independent threads. This tag in the
+/// `ExecutionSignature` passes the index for this work.
 struct WorkIndex : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   // The index does not really matter because the fetch is going to ignore it.

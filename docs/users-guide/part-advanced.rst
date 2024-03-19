@@ -7,3 +7,8 @@ Advanced Development
 
    advanced-types.rst
    logging.rst
+   worklet-types.rst
+   extended-filter-impl.rst
+   worklet-error-handling.rst
+   math.rst
+   working-with-cells.rst

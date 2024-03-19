@@ -80,6 +80,20 @@ static PointsFieldArrays UnpackFields(FieldSet fields)
   retval.Field3 = makeFieldArray(fields[2], retval.NumberOfField3Components);
   retval.Field4 = makeFieldArray(fields[3], retval.NumberOfField4Components);
 
+  auto isFieldEmpty = [](const vtkm::cont::Field& f) -> bool {
+    return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1 ||
+      !f.GetData().CanConvert<AttributeHandleT>();
+  };
+
+  if (!isFieldEmpty(fields[0]))
+    retval.Field1Name = fields[0].GetName();
+  if (!isFieldEmpty(fields[1]))
+    retval.Field2Name = fields[1].GetName();
+  if (!isFieldEmpty(fields[2]))
+    retval.Field3Name = fields[2].GetName();
+  if (!isFieldEmpty(fields[3]))
+    retval.Field4Name = fields[3].GetName();
+
   return retval;
 }
 
@@ -300,6 +314,11 @@ void ANARIMapperPoints::ConstructArrays(bool regenerate)
   this->Handles->Parameters.Vertex.Attribute[3] =
     createANARIArray(d, fieldArrays.Field4, fieldArrays.Token);
 
+  this->Handles->Parameters.Vertex.AttributeName[0] = fieldArrays.Field1Name;
+  this->Handles->Parameters.Vertex.AttributeName[1] = fieldArrays.Field2Name;
+  this->Handles->Parameters.Vertex.AttributeName[2] = fieldArrays.Field3Name;
+  this->Handles->Parameters.Vertex.AttributeName[3] = fieldArrays.Field4Name;
+
   this->UpdateGeometry();
   this->UpdateMaterial();
 
@@ -323,6 +342,10 @@ void ANARIMapperPoints::UpdateGeometry()
   anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.attribute1");
   anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.attribute2");
   anari_cpp::unsetParameter(d, this->Handles->Geometry, "vertex.attribute3");
+  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute0.name");
+  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute1.name");
+  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute2.name");
+  anari_cpp::unsetParameter(d, this->Handles->Geometry, "usd::attribute3.name");
 
   anari_cpp::setParameter(d, this->Handles->Geometry, "name", this->MakeObjectName("geometry"));
 
@@ -334,6 +357,8 @@ void ANARIMapperPoints::UpdateGeometry()
       d, this->Handles->Geometry, "vertex.radius", this->Handles->Parameters.Vertex.Radius);
     if (this->GetMapFieldAsAttribute())
     {
+      // Attributes //
+
       anari_cpp::setParameter(d,
                               this->Handles->Geometry,
                               "vertex.attribute0",
@@ -350,6 +375,37 @@ void ANARIMapperPoints::UpdateGeometry()
                               this->Handles->Geometry,
                               "vertex.attribute3",
                               this->Handles->Parameters.Vertex.Attribute[3]);
+
+      // Attribute names for USD //
+
+      if (!this->Handles->Parameters.Vertex.AttributeName[0].empty())
+      {
+        anari_cpp::setParameter(d,
+                                this->Handles->Geometry,
+                                "usd::attribute0.name",
+                                this->Handles->Parameters.Vertex.AttributeName[0]);
+      }
+      if (!this->Handles->Parameters.Vertex.AttributeName[1].empty())
+      {
+        anari_cpp::setParameter(d,
+                                this->Handles->Geometry,
+                                "usd::attribute1.name",
+                                this->Handles->Parameters.Vertex.AttributeName[1]);
+      }
+      if (!this->Handles->Parameters.Vertex.AttributeName[2].empty())
+      {
+        anari_cpp::setParameter(d,
+                                this->Handles->Geometry,
+                                "usd::attribute2.name",
+                                this->Handles->Parameters.Vertex.AttributeName[2]);
+      }
+      if (!this->Handles->Parameters.Vertex.AttributeName[3].empty())
+      {
+        anari_cpp::setParameter(d,
+                                this->Handles->Geometry,
+                                "usd::attribute3.name",
+                                this->Handles->Parameters.Vertex.AttributeName[3]);
+      }
     }
   }
 
