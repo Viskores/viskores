@@ -112,30 +112,34 @@ public:
   /// \brief Perform an atomic load of the indexed element with acquire memory
   /// ordering.
   /// \param index The index of the element to load.
+  /// \param order The memory ordering to use for the load operation.
   /// \return The value of the atomic array at \a index.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ValueType Get(vtkm::Id index) const
+  ValueType Get(vtkm::Id index, vtkm::MemoryOrder order = vtkm::MemoryOrder::Acquire) const
   {
     // We only support 32/64 bit signed/unsigned ints, and vtkm::Atomic
     // currently only provides API for unsigned types.
     // We'll cast the signed types to unsigned to work around this.
     using APIType = typename detail::MakeUnsigned<ValueType>::type;
 
-    return static_cast<T>(vtkm::AtomicLoad(reinterpret_cast<APIType*>(this->Data + index)));
+    return static_cast<T>(vtkm::AtomicLoad(reinterpret_cast<APIType*>(this->Data + index), order));
   }
 
   /// \brief Peform an atomic addition with sequentially consistent memory
   /// ordering.
   /// \param index The index of the array element that will be added to.
   /// \param value The addend of the atomic add operation.
+  /// \param order The memory ordering to use for the add operation.
   /// \return The original value of the element at \a index (before addition).
   /// \warning Overflow behavior from this operation is undefined.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ValueType Add(vtkm::Id index, const ValueType& value) const
+  ValueType Add(vtkm::Id index,
+                const ValueType& value,
+                vtkm::MemoryOrder order = vtkm::MemoryOrder::SequentiallyConsistent) const
   {
     // We only support 32/64 bit signed/unsigned ints, and vtkm::Atomic
     // currently only provides API for unsigned types.
@@ -145,14 +149,15 @@ public:
     // document that overflow is undefined for this operation.
     using APIType = typename detail::ArithType<ValueType>::type;
 
-    return static_cast<T>(
-      vtkm::AtomicAdd(reinterpret_cast<APIType*>(this->Data + index), static_cast<APIType>(value)));
+    return static_cast<T>(vtkm::AtomicAdd(
+      reinterpret_cast<APIType*>(this->Data + index), static_cast<APIType>(value), order));
   }
 
   /// \brief Peform an atomic store to memory while enforcing, at minimum, "release"
   /// memory ordering.
   /// \param index The index of the array element that will be added to.
   /// \param value The value to write for the atomic store operation.
+  /// \param order The memory ordering to use for the store operation.
   /// \warning Using something like:
   /// ```
   /// Set(index, Get(index)+N)
@@ -162,7 +167,9 @@ public:
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  void Set(vtkm::Id index, const ValueType& value) const
+  void Set(vtkm::Id index,
+           const ValueType& value,
+           vtkm::MemoryOrder order = vtkm::MemoryOrder::Release) const
   {
     // We only support 32/64 bit signed/unsigned ints, and vtkm::Atomic
     // currently only provides API for unsigned types.
@@ -172,7 +179,8 @@ public:
     // document that overflow is undefined for this operation.
     using APIType = typename detail::MakeUnsigned<ValueType>::type;
 
-    vtkm::AtomicStore(reinterpret_cast<APIType*>(this->Data + index), static_cast<APIType>(value));
+    vtkm::AtomicStore(
+      reinterpret_cast<APIType*>(this->Data + index), static_cast<APIType>(value), order);
   }
 
   /// \brief Perform an atomic compare and exchange operation with sequentially consistent
@@ -181,6 +189,7 @@ public:
   /// modified.
   /// \param oldValue A pointer to the expected value of the indexed element.
   /// \param newValue The value to replace the indexed element with.
+  /// \param order The memory ordering to use for the compare and exchange operation.
   /// \return If the operation is successful, \a true is returned. Otherwise,
   /// \a oldValue is replaced with the current value of the indexed element,
   /// the element is not modified, and \a false is returned. In either case, \a oldValue
@@ -220,7 +229,10 @@ public:
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  bool CompareExchange(vtkm::Id index, ValueType* oldValue, const ValueType& newValue) const
+  bool CompareExchange(vtkm::Id index,
+                       ValueType* oldValue,
+                       const ValueType& newValue,
+                       vtkm::MemoryOrder order = vtkm::MemoryOrder::SequentiallyConsistent) const
   {
     // We only support 32/64 bit signed/unsigned ints, and vtkm::Atomic
     // currently only provides API for unsigned types.
@@ -231,7 +243,8 @@ public:
 
     return vtkm::AtomicCompareExchange(reinterpret_cast<APIType*>(this->Data + index),
                                        reinterpret_cast<APIType*>(oldValue),
-                                       static_cast<APIType>(newValue));
+                                       static_cast<APIType>(newValue),
+                                       order);
   }
 
 private:
