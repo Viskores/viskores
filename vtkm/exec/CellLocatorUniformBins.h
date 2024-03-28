@@ -89,31 +89,37 @@ public:
                            vtkm::Vec3f& parametric,
                            LastCell& lastCell) const
   {
-    if (this->LastCellValid(lastCell))
+    vtkm::Id binIdx = this->FindBinIdx(point);
+
+    if (binIdx == -1)
     {
-      //See if the point is still in the same bin.
-      vtkm::Id binIdx = this->FindBinIdx(point);
-      if (binIdx == lastCell.BinIdx)
+      lastCell.CellId = -1;
+      lastCell.BinIdx = -1;
+      cellId = -1;
+      return vtkm::ErrorCode::CellNotFound;
+    }
+    //See if the point is still in the same bin.
+    else if (binIdx == lastCell.BinIdx && this->LastCellValid(lastCell))
+    {
+      vtkm::Vec3f pc;
+      //Check the last cell first.
+      if (this->PointInCell(point, lastCell.CellId, pc))
       {
-        vtkm::Vec3f pc;
-        //Check the last cell first.
-        if (this->PointInCell(point, lastCell.CellId, pc))
-        {
-          parametric = pc;
-          cellId = lastCell.CellId;
-          return vtkm::ErrorCode::Success;
-        }
-        //Otherwise, check cells in the bin, but skip lastCell.CellId
-        else if (this->PointInBin(point, lastCell.BinIdx, cellId, pc, lastCell.CellId))
-        {
-          parametric = pc;
-          return vtkm::ErrorCode::Success;
-        }
+        parametric = pc;
+        cellId = lastCell.CellId;
+        return vtkm::ErrorCode::Success;
+      }
+      //Otherwise, check cells in the bin, but skip lastCell.CellId
+      else if (this->PointInBin(point, lastCell.BinIdx, cellId, pc, lastCell.CellId))
+      {
+        parametric = pc;
+        return vtkm::ErrorCode::Success;
       }
     }
 
     //LastCell not initialized, or not in the same bin: do a full test.
-    return this->FindCellImpl(point, cellId, parametric, lastCell);
+    //Since already computed the binIdx, re-use it.
+    return this->FindCellImpl(point, cellId, parametric, lastCell, binIdx);
   }
 
   VTKM_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
@@ -124,6 +130,9 @@ public:
 private:
   VTKM_EXEC vtkm::Id FindBinIdx(const vtkm::Vec3f& point) const
   {
+    if (!this->IsInside(point))
+      return -1;
+
     vtkm::Vec3f temp;
     temp = point - this->Origin;
     temp = temp * this->InvSpacing;
@@ -159,20 +168,27 @@ private:
   vtkm::ErrorCode FindCellImpl(const vtkm::Vec3f& point,
                                vtkm::Id& cellId,
                                vtkm::Vec3f& parametric,
-                               LastCell& lastCell) const
+                               LastCell& lastCell,
+                               vtkm::Id ptBinIdx = -1) const
   {
     lastCell.CellId = -1;
     lastCell.BinIdx = -1;
 
-    if (!this->IsInside(point))
+    //if ptBinIdx is set, use it. Otherwise, compute the bin idx.
+    vtkm::Id binIdx = -1;
+    if (ptBinIdx == -1)
+      binIdx = this->FindBinIdx(point);
+    else
+      binIdx = ptBinIdx;
+
+    //point not in a bin. return not found.
+    if (binIdx == -1)
     {
       cellId = -1;
       return vtkm::ErrorCode::CellNotFound;
     }
 
-    //Find the bin containing the point.
-    vtkm::Id binIdx = this->FindBinIdx(point);
-
+    //search cells in the bin.
     vtkm::Vec3f pc;
     if (this->PointInBin(point, binIdx, cellId, pc))
     {
