@@ -144,7 +144,7 @@
 /// \endcode
 
 /// \def VTKM_LOG_SCOPE_FUNCTION(level)
-/// Equivalent to VTKM_LOG_SCOPE(__func__);
+/// Equivalent to `VTKM_LOG_SCOPE(level, __func__)`
 
 /// \def VTKM_LOG_ALWAYS_S(level, ...)
 /// This ostream-style log message is always emitted, even when logging is
@@ -297,7 +297,7 @@ namespace cont
 /// Log levels for use with the logging macros.
 enum class LogLevel
 {
-  /// Used with SetStderrLogLevel to silence the log. Do not actually log to
+  /// A placeholder used to silence all logging. Do not actually log to
   /// this level.
   Off = -9, //loguru::Verbosity_OFF,
 
@@ -314,36 +314,41 @@ enum class LogLevel
   /// output.
   Info = 0, //loguru::Verbosity_INFO,
 
-  /// The range 1-255 are reserved to application use.
+  /// The first in a range of logging levels reserved for code that uses VTK-m.
+  /// Internal VTK-m code will not log on these levels but will report these logs.
   UserFirst = 1,
-  /// The range 1-255 are reserved to application use.
+  /// The last in a range of logging levels reserved for code that uses VTK-m.
   UserLast = 255,
 
-  /// Information about which devices are enabled/disabled
+  /// Information about which devices are enabled/disabled.
   DevicesEnabled,
 
   /// General timing data and algorithm flow information, such as filter
   /// execution, worklet dispatches, and device algorithm calls.
   Perf,
 
-  /// Host-side resource allocations/frees (e.g. ArrayHandle control buffers)
+  /// Host-side resource allocations/frees (e.g. ArrayHandle control buffers).
   MemCont,
 
-  /// Device-side resource allocations/frees (e.g ArrayHandle device buffers)
+  /// Device-side resource allocations/frees (e.g ArrayHandle device buffers).
   MemExec,
 
-  /// Host->device / device->host data copies
+  /// Transferring of data between a host and device.
   MemTransfer,
 
-  /// Details on Device-side Kernel Launches
+  /// Details on device-side kernel launches.
   KernelLaunches,
 
-  /// When a dynamic object is (or isn't) resolved via CastAndCall, etc.
+  /// Reports when a dynamic object is (or is not) resolved via a CastAndCall or other
+  /// casting method.
   Cast,
 
-  /// 1024-2047 are reserved for application usage.
+  /// The first in a range of logging levels reserved for code that uses VTK-m.
+  /// Internal VTK-m code will not log on these levels but will report these logs.
+  /// These are used similarly to those in the UserFirst range but are at a lower
+  /// precedence that also includes more verbose reporting from VTK-m.
   UserVerboseFirst = 1024,
-  /// 1024-2047 are reserved for application usage.
+  /// The last in a range of logging levels reserved for code that uses VTK-m.
   UserVerboseLast = 2047
 };
 
@@ -416,7 +421,7 @@ VTKM_CONT
 std::string GetLogLevelName(vtkm::cont::LogLevel level);
 
 /**
- * The name to identify the current thread in the log output.
+ * Specifies a humman-readable name to identify the current thread in the log output.
  * @{
  */
 VTKM_CONT_EXPORT
@@ -442,7 +447,7 @@ VTKM_CONT
 std::string GetStackTrace(vtkm::Int32 skip = 0);
 
 //@{
-/// Convert a size in bytes to a human readable string (e.g. "64 bytes",
+/// Convert a size in bytes to a human readable string (such as "64 bytes",
 /// "1.44 MiB", "128 GiB", etc). @a prec controls the fixed point precision
 /// of the stringified number.
 VTKM_CONT_EXPORT
@@ -458,7 +463,7 @@ VTKM_CONT inline std::string GetHumanReadableSize(T&& bytes, int prec = 2)
 
 //@{
 /// Returns "%1 (%2 bytes)" where %1 is the result from GetHumanReadableSize
-/// and two is the exact number of bytes.
+/// and %2 is the exact number of bytes.
 VTKM_CONT_EXPORT
 VTKM_CONT
 std::string GetSizeString(vtkm::UInt64 bytes, int prec = 2);
@@ -496,6 +501,8 @@ inline VTKM_CONT std::string TypeToString(const T&)
  *
  * \param level  Desired LogLevel value for the log message.
  * \param cond   When false this function is no-op.
+ * \param file   The source file where the log entry was genearted.
+ * \param line   The line in the source file where the log entry was generated.
  * \param format Printf like format string.
  */
 VTKM_CONT_EXPORT

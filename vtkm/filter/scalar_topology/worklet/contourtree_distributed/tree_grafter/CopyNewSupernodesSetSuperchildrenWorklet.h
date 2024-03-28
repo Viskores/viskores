@@ -83,7 +83,7 @@ public:
   using InputDomain = _1;
 
   /// Default Constructor
-  /// @param[in]numhierarchicalTreeSupernodes should be set to hierarchicalTree.Supernodes.GetNumberOfValues()
+  /// @param[in] numHierarchicalTreeSupernodes should be set to hierarchicalTree.Supernodes.GetNumberOfValues()
   VTKM_EXEC_CONT
   CopyNewSupernodesSetSuperchildrenWorklet(vtkm::Id numHierarchicalTreeSupernodes)
     : NumHierarchicalTreeSupernodes(numHierarchicalTreeSupernodes)

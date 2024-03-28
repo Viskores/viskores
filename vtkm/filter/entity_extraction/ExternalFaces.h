@@ -11,7 +11,7 @@
 #ifndef vtkm_filter_entity_extraction_ExternalFaces_h
 #define vtkm_filter_entity_extraction_ExternalFaces_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/entity_extraction/vtkm_filter_entity_extraction_export.h>
 
 namespace vtkm
@@ -24,15 +24,13 @@ namespace filter
 {
 namespace entity_extraction
 {
-/// \brief  Extract external faces of a geometry
+/// @brief Extract external faces of a geometry.
 ///
-/// ExternalFaces is a filter that extracts all external faces from a
+/// `ExternalFaces` is a filter that extracts all external faces from a
 /// data set. An external face is defined is defined as a face/side of a cell
 /// that belongs only to one cell in the entire mesh.
-/// @warning
-/// This filter is currently only supports propagation of point properties
 ///
-class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExternalFaces : public vtkm::filter::FilterField
+class VTKM_FILTER_ENTITY_EXTRACTION_EXPORT ExternalFaces : public vtkm::filter::Filter
 {
 public:
   ExternalFaces();
@@ -42,20 +40,25 @@ public:
   // thread un-safe filter.
   bool CanThread() const override { return false; }
 
-  // When CompactPoints is set, instead of copying the points and point fields
-  // from the input, the filter will create new compact fields without the
-  // unused elements
-  VTKM_CONT
-  bool GetCompactPoints() const { return this->CompactPoints; }
-  VTKM_CONT
-  void SetCompactPoints(bool value) { this->CompactPoints = value; }
+  /// @brief Option to remove unused points and compact result int a smaller array.
+  ///
+  /// When CompactPoints is on, instead of copying the points and point fields
+  /// from the input, the filter will create new compact fields without the
+  /// unused elements.
+  /// When off (the default), unused points will remain listed in the topology,
+  /// but point fields and coordinate systems will be shallow-copied to the output.
+  VTKM_CONT bool GetCompactPoints() const { return this->CompactPoints; }
+  /// @copydoc GetCompactPoints
+  VTKM_CONT void SetCompactPoints(bool value) { this->CompactPoints = value; }
 
-  // When PassPolyData is set (the default), incoming poly data (0D, 1D, and 2D cells)
-  // will be passed to the output external faces data set.
-  VTKM_CONT
-  bool GetPassPolyData() const { return this->PassPolyData; }
-  VTKM_CONT
-  void SetPassPolyData(bool value);
+  /// @brief Specify how polygonal data (polygons, lines, and vertices) will be handled.
+  ///
+  /// When on (the default), these cells will be passed to the output.
+  /// When off, these cells will be removed from the output. (Because they have less than 3
+  /// topological dimensions, they are not considered to have any "faces.")
+  VTKM_CONT bool GetPassPolyData() const { return this->PassPolyData; }
+  /// @copydoc GetPassPolyData
+  VTKM_CONT void SetPassPolyData(bool value);
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;

@@ -684,6 +684,31 @@ public:
              pointsOnlyConnectivity);
 
       pointsOnlyConnectivityIndices.ReleaseResources();
+
+      // We want to find the entries in `InCellInterpolationInfo` that point to exisiting points.
+      // `cellPointEdgeReverseConnectivity` map to entries that point to edges.
+      vtkm::cont::ArrayHandle<vtkm::UInt8> stencil;
+      stencil.AllocateAndFill(this->InCellInterpolationInfo.GetNumberOfValues(), 1);
+      auto edgeOnlyStencilEntries =
+        vtkm::cont::make_ArrayHandlePermutation(cellPointEdgeReverseConnectivity, stencil);
+      vtkm::cont::Algorithm::Fill(edgeOnlyStencilEntries, vtkm::UInt8{});
+      vtkm::cont::ArrayHandle<vtkm::Id> idxsToPoints;
+      vtkm::cont::Algorithm::CopyIf(
+        vtkm::cont::ArrayHandleIndex(this->InCellInterpolationInfo.GetNumberOfValues()),
+        stencil,
+        idxsToPoints);
+      stencil.ReleaseResources();
+
+      // Remap the point indices in `InCellInterpolationInfo`, to the used-only point indices
+      // computed above.
+      // This only works if the points needed for interpolating centroids are included in the
+      // `connectivity` array. This has been verified to be true for all cases in the clip tables.
+      auto inCellInterpolationInfoPointsOnly =
+        vtkm::cont::make_ArrayHandlePermutation(idxsToPoints, this->InCellInterpolationInfo);
+      invoke(vtkm::worklet::RemoveUnusedPoints::TransformPointIndices{},
+             inCellInterpolationInfoPointsOnly,
+             pointMapInputToOutput,
+             inCellInterpolationInfoPointsOnly);
     }
 
     // Get unique EdgeInterpolation : unique edge points.
@@ -701,6 +726,9 @@ public:
                                        EdgeInterpolation::LessThanOp());
     edgeInterpolation.ReleaseResources();
 
+    // This only works if the edges in `cellPointEdgeInterpolation` also exist in
+    // `EdgePointsInterpolation`. This has been verified to be true for all cases in the clip
+    // tables.
     vtkm::cont::ArrayHandle<vtkm::Id> cellInterpolationIndexToUnique;
     vtkm::cont::Algorithm::LowerBounds(this->EdgePointsInterpolation,
                                        cellPointEdgeInterpolation,

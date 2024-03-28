@@ -223,21 +223,21 @@ void AmrArrays::ComputeGenerateGhostType()
         this->AmrDataSet.GetPartition(this->PartitionIds.at(l).at(bParent));
       vtkm::cont::CellSetStructured<Dim> cellset;
       partition.GetCellSet().AsCellSet(cellset);
-      vtkm::cont::ArrayHandle<vtkm::UInt8> ghostField;
-      if (!partition.HasField("vtkGhostType", vtkm::cont::Field::Association::Cells))
+      vtkm::cont::ArrayHandle<vtkm::UInt8> ghostArrayHandle;
+      if (!partition.HasGhostCellField())
       {
-        ghostField.AllocateAndFill(partition.GetNumberOfCells(), 0);
+        ghostArrayHandle.AllocateAndFill(partition.GetNumberOfCells(), 0);
       }
       else
       {
         vtkm::cont::Invoker invoke;
         invoke(vtkm::worklet::ResetGhostTypeWorklet{},
-               partition.GetField("vtkGhostType", vtkm::cont::Field::Association::Cells)
+               partition.GetGhostCellField()
                  .GetData()
                  .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::UInt8>>(),
-               ghostField);
+               ghostArrayHandle);
       }
-      partition.AddCellField("vtkGhostType", ghostField);
+      partition.AddCellField(vtkm::cont::GetGlobalGhostCellFieldName(), ghostArrayHandle);
 
       auto pointField = partition.GetCoordinateSystem().GetDataAsMultiplexer();
 
@@ -257,7 +257,7 @@ void AmrArrays::ComputeGenerateGhostType()
         invoke(vtkm::worklet::GenerateGhostTypeWorklet<Dim>{ boundsChild },
                cellset,
                pointField,
-               ghostField);
+               ghostArrayHandle);
       }
       this->AmrDataSet.ReplacePartition(this->PartitionIds.at(l).at(bParent), partition);
     }

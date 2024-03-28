@@ -57,7 +57,8 @@ endif()
 if (VTKm_ENABLE_TESTING)
   # These need to be fast to build as they will
   # be built each time we run the test
-  vtkm_test_against_install(demo)
-  vtkm_test_against_install(histogram)
-  vtkm_test_against_install(smoke_test)
+  vtkm_test_against_install_cmake(demo)
+  vtkm_test_against_install_cmake(histogram)
+  vtkm_test_against_install_cmake(smoke_test)
+  vtkm_test_against_install_make(smoke_test)
 endif()

@@ -27,3 +27,15 @@ VTK_M_KEYS_EXPORT(vtkm::IdComponent);
 #endif
 
 #undef VTK_M_KEYS_EXPORT
+
+// Putting this deprecated implementation here because I am too lazy to create
+// a separate source file just for a deprecated method.
+#include <vtkm/cont/ArrayCopyDevice.h>
+#include <vtkm/cont/ArrayHandleOffsetsToNumComponents.h>
+vtkm::cont::ArrayHandle<vtkm::IdComponent> vtkm::worklet::internal::KeysBase::GetCounts() const
+{
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> counts;
+  vtkm::cont::ArrayCopyDevice(
+    vtkm::cont::make_ArrayHandleOffsetsToNumComponents(this->GetOffsets()), counts);
+  return counts;
+}

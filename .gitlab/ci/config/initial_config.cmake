@@ -53,6 +53,9 @@ foreach(option IN LISTS options)
   elseif(no_rendering STREQUAL option)
     set(VTKm_ENABLE_RENDERING "OFF" CACHE STRING "")
 
+  elseif(anari STREQUAL option)
+    set(VTKm_ENABLE_ANARI "ON" CACHE STRING "")
+
   elseif(no_testing STREQUAL option)
     set(VTKm_ENABLE_TESTING "OFF" CACHE STRING "")
     set(VTKm_ENABLE_TESTING_LIBRARY "OFF" CACHE STRING "")
@@ -63,6 +66,7 @@ foreach(option IN LISTS options)
 
   elseif(docs STREQUAL option)
     set(VTKm_ENABLE_DOCUMENTATION "ON" CACHE STRING "")
+    set(VTKm_USERS_GUIDE_INCLUDE_TODOS "OFF" CACHE STRING "")
 
   elseif(benchmarks STREQUAL option)
     set(VTKm_ENABLE_BENCHMARKS "ON" CACHE STRING "")
@@ -115,10 +119,6 @@ foreach(option IN LISTS options)
     # -O1 and -O2 results in ridiculous build times in ROCm < 5.3
     set(CMAKE_HIP_FLAGS "-O0 " CACHE STRING "")
     set(CMAKE_HIP_FLAGS_RELWITHDEBINFO "-g" CACHE STRING "")
-
-  elseif(ascent STREQUAL option)
-    set(CMAKE_C_FLAGS "-mcpu=power9" CACHE STRING "")
-    set(CMAKE_CXX_FLAGS "-mcpu=power9" CACHE STRING "")
 
   elseif(ccache STREQUAL option)
     find_program(CCACHE_COMMAND NAMES ccache REQUIRED)

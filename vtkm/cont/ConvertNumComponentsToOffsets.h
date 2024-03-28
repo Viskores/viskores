@@ -22,21 +22,20 @@ namespace cont
 {
 
 
-/// @{
 /// `ConvertNumComponentsToOffsets` takes an array of Vec sizes (i.e. the number of components in
 /// each `Vec`) and returns an array of offsets to a packed array of such `Vec`s. The resulting
 /// array can be used with `ArrayHandleGroupVecVariable`.
 ///
-/// \param numComponentsArray the input array that specifies the number of components in each group
+/// @param[in] numComponentsArray the input array that specifies the number of components in each group
 /// Vec.
 ///
-/// \param offsetsArray (optional) the output \c ArrayHandle, which must have a value type of \c
+/// @param[out] offsetsArray (optional) the output \c ArrayHandle, which must have a value type of \c
 /// vtkm::Id. If the output \c ArrayHandle is not given, it is returned.
 ///
-/// \param componentsArraySize (optional) a reference to a \c vtkm::Id and is filled with the
+/// @param[in] componentsArraySize (optional) a reference to a \c vtkm::Id and is filled with the
 /// expected size of the component values array.
 ///
-/// \param device (optional) specifies the device on which to run the conversion.
+/// \param[in] device (optional) specifies the device on which to run the conversion.
 ///
 /// Note that this function is pre-compiled for some set of `ArrayHandle` types. If you get a
 /// warning about an inefficient conversion (or the operation fails outright), you might need to
@@ -61,8 +60,6 @@ VTKM_CONT_EXPORT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets
 VTKM_CONT_EXPORT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets(
   const vtkm::cont::UnknownArrayHandle& numComponentsArray,
   vtkm::cont::DeviceAdapterId device = vtkm::cont::DeviceAdapterTagAny{});
-
-/// @}
 
 } // namespace vtkm::cont
 } // namespace vtkm

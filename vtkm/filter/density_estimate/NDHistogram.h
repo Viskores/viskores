@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_density_estimate_NDHistogram_h
 #define vtk_m_filter_density_estimate_NDHistogram_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/density_estimate/vtkm_filter_density_estimate_export.h>
 
 namespace vtkm
@@ -31,7 +31,7 @@ namespace density_estimate
 /// The first three numbers are binIDs for FieldA, FieldB and FieldC. Frequency[i] stores
 /// the frequency for this bin (FieldA[i], FieldB[i], FieldC[i]).
 ///
-class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT NDHistogram : public vtkm::filter::FilterField
+class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT NDHistogram : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT

@@ -490,6 +490,7 @@ struct StorageTagStride;
 } // vtkm::cont
 
 //-------------------------------------------------------------------------------------------------
+/// @cond NOPE
 VTKM_INSTANTIATION_BEGIN
 VTK_M_ARRAY_RANGE_COMPUTE_ALL_SCALARS(extern template VTKM_CONT_TEMPLATE_EXPORT,
                                       vtkm::cont::StorageTagBasic);
@@ -624,5 +625,6 @@ VTKM_INSTANTIATION_BEGIN
 VTK_M_ARRAY_RANGE_COMPUTE_ALL_SCALARS(extern template VTKM_CONT_TEMPLATE_EXPORT,
                                       vtkm::cont::StorageTagStride);
 VTKM_INSTANTIATION_END
+/// @endcond
 
 #endif //vtk_m_cont_ArrayRangeComputeTemplate_h

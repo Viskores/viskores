@@ -20,9 +20,9 @@ namespace exec
 namespace arg
 {
 
-/// \brief Aspect tag to use for getting the thread indices.
+/// @brief Aspect tag to use for getting the thread indices.
 ///
-/// The \c AspectTagThreadIndices aspect tag causes the \c Fetch class to
+/// The `AspectTagThreadIndices` aspect tag causes the `Fetch` class to
 /// ignore whatever data is in the associated execution object and return the
 /// thread indices.
 ///
@@ -30,13 +30,16 @@ struct AspectTagThreadIndices
 {
 };
 
-/// \brief The \c ExecutionSignature tag to use to get the thread indices
+/// @brief The `ExecutionSignature` tag to use to get the thread indices
+///
+/// This tag produces an internal object that manages indices and other metadata
+/// of the current thread. Thread indices objects vary by worklet type, but most
+/// users can get the information they need through other signature tags.
 ///
 /// When a worklet is dispatched, it broken into pieces defined by the input
 /// domain and scheduled on independent threads. During this process multiple
 /// indices associated with the input and output can be generated. This tag in
-/// the \c ExecutionSignature passes the index for this work. \c WorkletBase
-/// contains a typedef that points to this class.
+/// the `ExecutionSignature` passes the index for this work.
 ///
 struct ThreadIndices : vtkm::exec::arg::ExecutionSignatureTagBase
 {

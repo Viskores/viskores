@@ -109,8 +109,12 @@ $endif\
 - [ ] Unfreeze the release branch (In Gitlab VTK-m page)
   - Settings/Repository/Protected Branches: Release; "allowed to push: Maintainers"
 
-## Update Spack
+## Update Packages
 - [ ] Update Spack package: https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/vtk-m/package.py
+- [ ] Update Conda-forge package: https://github.com/conda-forge/vtk-m-feedstock
+$if(RC == "")\
+- [ ] Update OBS package: https://build.opensuse.org/package/show/science/vtk-m
+$endif\
 
 ## Post-release
 $if(PATCH == 0 and RC == "-rc1")\
@@ -246,7 +250,7 @@ git log --format="%an" v1.4.0..v1.5.0 | sort -u | wc -l
 
 Example to compute the number of merge requests
 ```
-git log v1.4.0..v1.5.0 | grep 'Merge | wc -l
+git log v2.0.0..v2.1.0 | grep 'Merge topic' | wc -l
 ```
 
 A standard template to use is:
@@ -264,11 +268,9 @@ https://gitlab.kitware.com/vtk/vtk-m/-/tags/v$(VERSION)) or in the vtkm
 repository at `docs/$(VERSION)/release-notes.md`
 
 $if(int(PATCH) > 0)\
-- Update the link to register with the VTK-m dashboard
-.
-.
-.
-- CMAKE: CUDA ampere generate sm_80/86
+- changelog title 1
+- changelog title 2
+- changelog title 3
 $else\
 1. Core
     - Core change 1

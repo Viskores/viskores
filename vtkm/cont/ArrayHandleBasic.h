@@ -18,6 +18,8 @@
 
 #include <vtkm/internal/ArrayPortalBasic.h>
 
+#include <vtkm/VecFlat.h>
+
 #include <limits>
 
 namespace vtkm
@@ -47,6 +49,12 @@ public:
   {
     buffers[0].SetNumberOfBytes(
       vtkm::internal::NumberOfValuesToNumberOfBytes<T>(numValues), preserve, token);
+  }
+
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return vtkm::VecFlat<T>::NUM_COMPONENTS;
   }
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(
@@ -280,6 +288,8 @@ VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandleMove(std::vector<T, Al
                                          internal::StdVectorReallocater<T, Allocator>);
 }
 
+/// Move an std::vector into an ArrayHandle.
+///
 template <typename T, typename Allocator>
 VTKM_CONT vtkm::cont::ArrayHandleBasic<T> make_ArrayHandle(std::vector<T, Allocator>&& array,
                                                            vtkm::CopyFlag vtkmNotUsed(copy))
@@ -357,6 +367,9 @@ struct Serialization<vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>>
 
 #ifndef vtk_m_cont_ArrayHandleBasic_cxx
 
+/// @cond
+/// Make doxygen ignore this section
+
 namespace vtkm
 {
 namespace cont
@@ -365,8 +378,6 @@ namespace cont
 namespace internal
 {
 
-/// \cond
-/// Make doxygen ignore this section
 #define VTKM_STORAGE_EXPORT(Type)                                                               \
   extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<Type, StorageTagBasic>;               \
   extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>; \
@@ -386,7 +397,6 @@ VTKM_STORAGE_EXPORT(vtkm::Float32)
 VTKM_STORAGE_EXPORT(vtkm::Float64)
 
 #undef VTKM_STORAGE_EXPORT
-/// \endcond
 
 } // namespace internal
 
@@ -413,6 +423,8 @@ VTKM_ARRAYHANDLE_EXPORT(vtkm::Float64)
 #undef VTKM_ARRAYHANDLE_EXPORT
 }
 } // end vtkm::cont
+
+/// @endcond
 
 #endif // !vtk_m_cont_ArrayHandleBasic_cxx
 

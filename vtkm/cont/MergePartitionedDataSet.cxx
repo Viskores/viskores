@@ -7,8 +7,6 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/MergePartitionedDataSet.h>
-
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
@@ -17,14 +15,32 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Logging.h>
+#include <vtkm/cont/MergePartitionedDataSet.h>
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/UnknownCellSet.h>
-
+#include <vtkm/cont/internal/CastInvalidValue.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+
 namespace
 {
+
+struct CopyWithOffsetWorklet : public vtkm::worklet::WorkletMapField
+{
+  vtkm::Id OffsetValue;
+  VTKM_CONT
+  CopyWithOffsetWorklet(const vtkm::Id offset)
+    : OffsetValue(offset)
+  {
+  }
+  typedef void ControlSignature(FieldIn, FieldInOut);
+  typedef void ExecutionSignature(_1, _2);
+  VTKM_EXEC void operator()(const vtkm::Id originalValue, vtkm::Id& outputValue) const
+  {
+    outputValue = originalValue + this->OffsetValue;
+  }
+};
 
 void CountPointsAndCells(const vtkm::cont::PartitionedDataSet& partitionedDataSet,
                          vtkm::Id& numPointsTotal,
@@ -61,7 +77,8 @@ struct PassCellShapesNumIndices : vtkm::worklet::WorkletVisitCellsWithPoints
 void MergeShapes(const vtkm::cont::PartitionedDataSet& partitionedDataSet,
                  vtkm::Id numCellsTotal,
                  vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
-                 vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices)
+                 vtkm::cont::ArrayHandle<vtkm::IdComponent>& numIndices,
+                 const vtkm::Id firstNonEmptyPartitionId)
 {
   vtkm::cont::Invoker invoke;
 
@@ -69,9 +86,14 @@ void MergeShapes(const vtkm::cont::PartitionedDataSet& partitionedDataSet,
   numIndices.Allocate(numCellsTotal);
 
   vtkm::Id cellStartIndex = 0;
-  for (vtkm::Id partitionId = 0; partitionId < partitionedDataSet.GetNumberOfPartitions();
+  for (vtkm::Id partitionId = firstNonEmptyPartitionId;
+       partitionId < partitionedDataSet.GetNumberOfPartitions();
        ++partitionId)
   {
+    if (partitionedDataSet.GetPartition(partitionId).GetNumberOfPoints() == 0)
+    {
+      continue;
+    }
     vtkm::cont::DataSet partition = partitionedDataSet.GetPartition(partitionId);
     vtkm::Id numCellsPartition = partition.GetNumberOfCells();
 
@@ -113,7 +135,8 @@ struct PassCellIndices : vtkm::worklet::WorkletVisitCellsWithPoints
 void MergeIndices(const vtkm::cont::PartitionedDataSet& partitionedDataSet,
                   const vtkm::cont::ArrayHandle<vtkm::Id>& offsets,
                   vtkm::Id numIndicesTotal,
-                  vtkm::cont::ArrayHandle<vtkm::Id>& indices)
+                  vtkm::cont::ArrayHandle<vtkm::Id>& indices,
+                  const vtkm::Id firstNonEmptyPartitionId)
 {
   vtkm::cont::Invoker invoke;
 
@@ -121,9 +144,14 @@ void MergeIndices(const vtkm::cont::PartitionedDataSet& partitionedDataSet,
 
   vtkm::Id pointStartIndex = 0;
   vtkm::Id cellStartIndex = 0;
-  for (vtkm::Id partitionId = 0; partitionId < partitionedDataSet.GetNumberOfPartitions();
+  for (vtkm::Id partitionId = firstNonEmptyPartitionId;
+       partitionId < partitionedDataSet.GetNumberOfPartitions();
        ++partitionId)
   {
+    if (partitionedDataSet.GetPartition(partitionId).GetNumberOfPoints() == 0)
+    {
+      continue;
+    }
     vtkm::cont::DataSet partition = partitionedDataSet.GetPartition(partitionId);
     vtkm::Id numCellsPartition = partition.GetNumberOfCells();
 
@@ -139,239 +167,311 @@ void MergeIndices(const vtkm::cont::PartitionedDataSet& partitionedDataSet,
   VTKM_ASSERT(cellStartIndex == (offsets.GetNumberOfValues() - 1));
 }
 
-vtkm::cont::CellSetExplicit<> MergeCellSets(
+vtkm::cont::CellSetSingleType<> MergeCellSetsSingleType(
+  const vtkm::cont::PartitionedDataSet& partitionedDataSet,
+  const vtkm::Id firstNonEmptyPartitionId)
+{
+  vtkm::Id numCells = 0;
+  vtkm::Id numPoints = 0;
+  vtkm::Id numOfDataSet = partitionedDataSet.GetNumberOfPartitions();
+  std::vector<vtkm::Id> cellOffsets(numOfDataSet);
+  std::vector<vtkm::Id> pointOffsets(numOfDataSet);
+  //Mering cell set into single type
+  //checking the cell type to make sure how many points per cell
+  vtkm::IdComponent numberOfPointsPerCell =
+    partitionedDataSet.GetPartition(firstNonEmptyPartitionId)
+      .GetCellSet()
+      .GetNumberOfPointsInCell(0);
+  for (vtkm::Id partitionIndex = firstNonEmptyPartitionId; partitionIndex < numOfDataSet;
+       partitionIndex++)
+  {
+    if (partitionedDataSet.GetPartition(partitionIndex).GetNumberOfPoints() == 0)
+    {
+      continue;
+    }
+    cellOffsets[partitionIndex] = numCells;
+    numCells += partitionedDataSet.GetPartition(partitionIndex).GetNumberOfCells();
+    pointOffsets[partitionIndex] = numPoints;
+    numPoints += partitionedDataSet.GetPartition(partitionIndex).GetNumberOfPoints();
+  }
+  //We assume all cells have same type, which should have been previously checked.
+  const vtkm::Id mergedConnSize = numCells * numberOfPointsPerCell;
+  // Calculating merged offsets for all domains
+  vtkm::cont::ArrayHandle<vtkm::Id> mergedConn;
+  mergedConn.Allocate(mergedConnSize);
+  for (vtkm::Id partitionIndex = firstNonEmptyPartitionId; partitionIndex < numOfDataSet;
+       partitionIndex++)
+  {
+    if (partitionedDataSet.GetPartition(partitionIndex).GetNumberOfPoints() == 0)
+    {
+      continue;
+    }
+    auto cellSet = partitionedDataSet.GetPartition(partitionIndex).GetCellSet();
+    // Grabing the connectivity and copy it into the larger connectivity array
+    vtkm::cont::CellSetSingleType<> singleType =
+      cellSet.AsCellSet<vtkm::cont::CellSetSingleType<>>();
+    const vtkm::cont::ArrayHandle<vtkm::Id> connPerDataSet = singleType.GetConnectivityArray(
+      vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+    vtkm::Id copySize = connPerDataSet.GetNumberOfValues();
+    VTKM_ASSERT(copySize == cellSet.GetNumberOfCells() * numberOfPointsPerCell);
+    // Mapping connectivity array per data into proper region of merged connectivity array
+    // and also adjust the value in merged connectivity array
+    vtkm::cont::Invoker invoker;
+    invoker(CopyWithOffsetWorklet{ pointOffsets[partitionIndex] },
+            connPerDataSet,
+            vtkm::cont::make_ArrayHandleView(
+              mergedConn, cellOffsets[partitionIndex] * numberOfPointsPerCell, copySize));
+  }
+  vtkm::cont::CellSetSingleType<> cellSet;
+  //Filling in the cellSet according to shapeId and number of points per cell.
+  vtkm::UInt8 cellShapeId =
+    partitionedDataSet.GetPartition(firstNonEmptyPartitionId).GetCellSet().GetCellShape(0);
+  cellSet.Fill(numPoints, cellShapeId, numberOfPointsPerCell, mergedConn);
+  return cellSet;
+}
+
+vtkm::cont::CellSetExplicit<> MergeCellSetsExplicit(
   const vtkm::cont::PartitionedDataSet& partitionedDataSet,
   vtkm::Id numPointsTotal,
-  vtkm::Id numCellsTotal)
+  vtkm::Id numCellsTotal,
+  const vtkm::Id firstNonEmptyPartitionId)
 {
   vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
-  MergeShapes(partitionedDataSet, numCellsTotal, shapes, numIndices);
+  MergeShapes(partitionedDataSet, numCellsTotal, shapes, numIndices, firstNonEmptyPartitionId);
 
   vtkm::cont::ArrayHandle<vtkm::Id> offsets;
   vtkm::Id numIndicesTotal;
   vtkm::cont::ConvertNumComponentsToOffsets(numIndices, offsets, numIndicesTotal);
   numIndices.ReleaseResources();
 
+  //Merging connectivity/indicies array
   vtkm::cont::ArrayHandle<vtkm::Id> indices;
-  MergeIndices(partitionedDataSet, offsets, numIndicesTotal, indices);
+  MergeIndices(partitionedDataSet, offsets, numIndicesTotal, indices, firstNonEmptyPartitionId);
 
   vtkm::cont::CellSetExplicit<> outCells;
   outCells.Fill(numPointsTotal, shapes, indices, offsets);
   return outCells;
 }
 
-struct ClearPartitionWorklet : vtkm::worklet::WorkletMapField
+vtkm::Id GetFirstEmptyPartition(const vtkm::cont::PartitionedDataSet& partitionedDataSet)
 {
-  using ControlSignature = void(FieldIn indices, WholeArrayInOut array);
-  using ExecutionSignature = void(WorkIndex, _2);
-
-  vtkm::Id IndexOffset;
-
-  ClearPartitionWorklet(vtkm::Id indexOffset)
-    : IndexOffset(indexOffset)
+  vtkm::Id numOfDataSet = partitionedDataSet.GetNumberOfPartitions();
+  vtkm::Id firstNonEmptyPartitionId = -1;
+  for (vtkm::Id partitionIndex = 0; partitionIndex < numOfDataSet; partitionIndex++)
   {
-  }
-
-  template <typename OutPortalType>
-  VTKM_EXEC void operator()(vtkm::Id index, OutPortalType& outPortal) const
-  {
-    // It's weird to get a value from a portal only to override it, but the expect type
-    // is weird (a variable-sized Vec), so this is the only practical way to set it.
-    auto outVec = outPortal.Get(index + this->IndexOffset);
-    for (vtkm::IdComponent comp = 0; comp < outVec.GetNumberOfComponents(); ++comp)
+    if (partitionedDataSet.GetPartition(partitionIndex).GetNumberOfPoints() != 0)
     {
-      outVec[comp] = 0;
+      firstNonEmptyPartitionId = partitionIndex;
+      break;
     }
-    // Shouldn't really do anything.
-    outPortal.Set(index + this->IndexOffset, outVec);
   }
-};
-
-template <typename OutArrayHandle>
-void ClearPartition(OutArrayHandle& outArray, vtkm::Id startIndex, vtkm::Id numValues)
-{
-  vtkm::cont::Invoker invoke;
-  invoke(ClearPartitionWorklet{ startIndex }, vtkm::cont::ArrayHandleIndex(numValues), outArray);
+  return firstNonEmptyPartitionId;
 }
 
-struct CopyPartitionWorklet : vtkm::worklet::WorkletMapField
+bool PartitionsAreSingleType(const vtkm::cont::PartitionedDataSet partitionedDataSet,
+                             const vtkm::Id firstNonEmptyPartitionId)
 {
-  using ControlSignature = void(FieldIn sourceArray, WholeArrayInOut mergedArray);
-  using ExecutionSignature = void(WorkIndex, _1, _2);
-
-  vtkm::Id IndexOffset;
-
-  CopyPartitionWorklet(vtkm::Id indexOffset)
-    : IndexOffset(indexOffset)
+  vtkm::Id numOfDataSet = partitionedDataSet.GetNumberOfPartitions();
+  for (vtkm::Id partitionIndex = firstNonEmptyPartitionId; partitionIndex < numOfDataSet;
+       partitionIndex++)
   {
-  }
-
-  template <typename InVecType, typename OutPortalType>
-  VTKM_EXEC void operator()(vtkm::Id index, const InVecType& inVec, OutPortalType& outPortal) const
-  {
-    // It's weird to get a value from a portal only to override it, but the expect type
-    // is weird (a variable-sized Vec), so this is the only practical way to set it.
-    auto outVec = outPortal.Get(index + this->IndexOffset);
-    VTKM_ASSERT(inVec.GetNumberOfComponents() == outVec.GetNumberOfComponents());
-    for (vtkm::IdComponent comp = 0; comp < outVec.GetNumberOfComponents(); ++comp)
+    if (partitionedDataSet.GetPartition(partitionIndex).GetNumberOfPoints() == 0)
     {
-      outVec[comp] = static_cast<typename decltype(outVec)::ComponentType>(inVec[comp]);
+      continue;
     }
-    // Shouldn't really do anything.
-    outPortal.Set(index + this->IndexOffset, outVec);
-  }
-};
-
-template <typename OutArrayHandle>
-void CopyPartition(const vtkm::cont::Field& inField, OutArrayHandle& outArray, vtkm::Id startIndex)
-{
-  vtkm::cont::Invoker invoke;
-  using ComponentType = typename OutArrayHandle::ValueType::ComponentType;
-  if (inField.GetData().IsBaseComponentType<ComponentType>())
-  {
-    invoke(CopyPartitionWorklet{ startIndex },
-           inField.GetData().ExtractArrayFromComponents<ComponentType>(),
-           outArray);
-  }
-  else
-  {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-               "Discovered mismatched types for field " << inField.GetName()
-                                                        << ". Requires extra copy.");
-    invoke(CopyPartitionWorklet{ startIndex },
-           inField.GetDataAsDefaultFloat().ExtractArrayFromComponents<vtkm::FloatDefault>(),
-           outArray);
-  }
-}
-
-template <typename HasFieldFunctor, typename GetFieldFunctor>
-vtkm::cont::UnknownArrayHandle MergeArray(vtkm::Id numPartitions,
-                                          HasFieldFunctor&& hasField,
-                                          GetFieldFunctor&& getField,
-                                          vtkm::Id totalSize)
-{
-  vtkm::cont::UnknownArrayHandle mergedArray = getField(0).GetData().NewInstanceBasic();
-  mergedArray.Allocate(totalSize);
-
-  vtkm::Id startIndex = 0;
-  for (vtkm::Id partitionId = 0; partitionId < numPartitions; ++partitionId)
-  {
-    vtkm::Id partitionSize;
-    if (hasField(partitionId, partitionSize))
+    auto cellSet = partitionedDataSet.GetPartition(partitionIndex).GetCellSet();
+    if (!cellSet.IsType<vtkm::cont::CellSetSingleType<>>())
     {
-      vtkm::cont::Field sourceField = getField(partitionId);
-      mergedArray.CastAndCallWithExtractedArray(
-        [=](auto array) { CopyPartition(sourceField, array, startIndex); });
-    }
-    else
-    {
-      mergedArray.CastAndCallWithExtractedArray(
-        [=](auto array) { ClearPartition(array, startIndex, partitionSize); });
-    }
-    startIndex += partitionSize;
-  }
-  VTKM_ASSERT(startIndex == totalSize);
-
-  return mergedArray;
-}
-
-vtkm::cont::CoordinateSystem MergeCoordinateSystem(
-  const vtkm::cont::PartitionedDataSet& partitionedDataSet,
-  vtkm::IdComponent coordId,
-  vtkm::Id numPointsTotal)
-{
-  std::string coordName = partitionedDataSet.GetPartition(0).GetCoordinateSystem(coordId).GetName();
-  auto hasField = [&](vtkm::Id partitionId, vtkm::Id& partitionSize) -> bool {
-    vtkm::cont::DataSet partition = partitionedDataSet.GetPartition(partitionId);
-    partitionSize = partition.GetNumberOfPoints();
-    // Should partitions match coordinates on name or coordinate id? They both should match, but
-    // for now let's go by id and check the name.
-    if (partition.GetNumberOfCoordinateSystems() <= coordId)
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-                 "When merging partitions, partition "
-                   << partitionId << " is missing coordinate system with index " << coordId);
       return false;
     }
-    if (partition.GetCoordinateSystem(coordId).GetName() != coordName)
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-                 "When merging partitions, partition "
-                   << partitionId << " reported a coordinate system with name '"
-                   << partition.GetCoordinateSystem(coordId).GetName()
-                   << "' instead of expected name '" << coordName << "'");
-    }
-    return true;
-  };
-  auto getField = [&](vtkm::Id partitionId) -> vtkm::cont::Field {
-    return partitionedDataSet.GetPartition(partitionId).GetCoordinateSystem(coordId);
-  };
-  vtkm::cont::UnknownArrayHandle mergedArray =
-    MergeArray(partitionedDataSet.GetNumberOfPartitions(), hasField, getField, numPointsTotal);
-  return vtkm::cont::CoordinateSystem{ coordName, mergedArray };
-}
-
-vtkm::cont::Field MergeField(const vtkm::cont::PartitionedDataSet& partitionedDataSet,
-                             vtkm::IdComponent fieldId,
-                             vtkm::Id numPointsTotal,
-                             vtkm::Id numCellsTotal)
-{
-  vtkm::cont::Field referenceField = partitionedDataSet.GetPartition(0).GetField(fieldId);
-  vtkm::Id totalSize = 0;
-  switch (referenceField.GetAssociation())
-  {
-    case vtkm::cont::Field::Association::Points:
-      totalSize = numPointsTotal;
-      break;
-    case vtkm::cont::Field::Association::Cells:
-      totalSize = numCellsTotal;
-      break;
-    default:
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Skipping merge of field '" << referenceField.GetName()
-                                             << "' because it has an unsupported association.");
-      return referenceField;
   }
 
-  auto hasField = [&](vtkm::Id partitionId, vtkm::Id& partitionSize) -> bool {
-    vtkm::cont::DataSet partition = partitionedDataSet.GetPartition(partitionId);
-    if (partition.HasField(referenceField.GetName(), referenceField.GetAssociation()))
+  //Make sure the cell type of each non-empty partition is same
+  //with tested one, and they also have the same number of points.
+  //We know that all cell sets are of type `CellSetSingleType<>` at this point.
+  //Polygons may have different number of points even with the same shape id.
+  //It is more efficient to `GetCellShape(0)` from `CellSetSingleType` compared with `CellSetExplicit`.
+  auto cellSetFirst = partitionedDataSet.GetPartition(firstNonEmptyPartitionId).GetCellSet();
+  vtkm::UInt8 cellShapeId = cellSetFirst.GetCellShape(0);
+  vtkm::IdComponent numPointsInCell = cellSetFirst.GetNumberOfPointsInCell(0);
+  for (vtkm::Id partitionIndex = firstNonEmptyPartitionId + 1; partitionIndex < numOfDataSet;
+       partitionIndex++)
+  {
+    auto cellSet = partitionedDataSet.GetPartition(partitionIndex).GetCellSet();
+    if (cellSet.GetCellShape(0) != cellShapeId ||
+        cellSet.GetNumberOfPointsInCell(0) != numPointsInCell)
     {
-      partitionSize = partition.GetField(referenceField.GetName(), referenceField.GetAssociation())
-                        .GetData()
-                        .GetNumberOfValues();
-      return true;
+      return false;
     }
-    else
+  }
+  return true;
+}
+
+void CheckCoordsNames(const vtkm::cont::PartitionedDataSet partitionedDataSet,
+                      const vtkm::Id firstNonEmptyPartitionId)
+{
+  vtkm::IdComponent numCoords =
+    partitionedDataSet.GetPartition(firstNonEmptyPartitionId).GetNumberOfCoordinateSystems();
+  std::vector<std::string> coordsNames;
+  for (vtkm::IdComponent coordsIndex = 0; coordsIndex < numCoords; coordsIndex++)
+  {
+    coordsNames.push_back(partitionedDataSet.GetPartition(firstNonEmptyPartitionId)
+                            .GetCoordinateSystemName(coordsIndex));
+  }
+  vtkm::Id numOfDataSet = partitionedDataSet.GetNumberOfPartitions();
+  for (vtkm::Id partitionIndex = firstNonEmptyPartitionId; partitionIndex < numOfDataSet;
+       partitionIndex++)
+  {
+    if (partitionedDataSet.GetPartition(partitionIndex).GetNumberOfPoints() == 0)
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Partition " << partitionId << " does not have field "
-                              << referenceField.GetName());
-      switch (referenceField.GetAssociation())
+      //Skip the empty data sets in the partitioned data sets
+      continue;
+    }
+    if (numCoords != partitionedDataSet.GetPartition(partitionIndex).GetNumberOfCoordinateSystems())
+    {
+      throw vtkm::cont::ErrorExecution("Data sets have different number of coordinate systems");
+    }
+    for (vtkm::IdComponent coordsIndex = 0; coordsIndex < numCoords; coordsIndex++)
+    {
+      if (!partitionedDataSet.GetPartition(partitionIndex)
+             .HasCoordinateSystem(coordsNames[coordsIndex]))
       {
-        case vtkm::cont::Field::Association::Points:
-          partitionSize = partition.GetNumberOfPoints();
-          break;
-        case vtkm::cont::Field::Association::Cells:
-          partitionSize = partition.GetNumberOfCells();
-          break;
-        default:
-          partitionSize = 0;
-          break;
+        throw vtkm::cont::ErrorExecution(
+          "Coordinates system name: " + coordsNames[coordsIndex] +
+          " in the first partition does not exist in other partitions");
       }
-      return false;
     }
+  }
+}
+
+
+void MergeFieldsAndAddIntoDataSet(vtkm::cont::DataSet& outputDataSet,
+                                  const vtkm::cont::PartitionedDataSet partitionedDataSet,
+                                  const vtkm::Id numPoints,
+                                  const vtkm::Id numCells,
+                                  const vtkm::Float64 invalidValue,
+                                  const vtkm::Id firstNonEmptyPartitionId)
+{
+  // Merging selected fields and coordinates
+  // We get fields names in all partitions firstly
+  // The inserted map stores the field name and a index of the first partition that owns that field
+  vtkm::cont::Invoker invoke;
+  auto associationHash = [](vtkm::cont::Field::Association const& association) {
+    return static_cast<std::size_t>(association);
   };
-  auto getField = [&](vtkm::Id partitionId) -> vtkm::cont::Field {
-    return partitionedDataSet.GetPartition(partitionId)
-      .GetField(referenceField.GetName(), referenceField.GetAssociation());
-  };
-  vtkm::cont::UnknownArrayHandle mergedArray =
-    MergeArray(partitionedDataSet.GetNumberOfPartitions(), hasField, getField, totalSize);
-  return vtkm::cont::Field{ referenceField.GetName(),
-                            referenceField.GetAssociation(),
-                            mergedArray };
+  std::unordered_map<vtkm::cont::Field::Association,
+                     std::unordered_map<std::string, vtkm::Id>,
+                     decltype(associationHash)>
+    fieldsMap(2, associationHash);
+
+  vtkm::Id numOfDataSet = partitionedDataSet.GetNumberOfPartitions();
+  for (vtkm::Id partitionIndex = firstNonEmptyPartitionId; partitionIndex < numOfDataSet;
+       partitionIndex++)
+  {
+    if (partitionedDataSet.GetPartition(partitionIndex).GetNumberOfPoints() == 0)
+    {
+      continue;
+    }
+    vtkm::IdComponent numFields =
+      partitionedDataSet.GetPartition(partitionIndex).GetNumberOfFields();
+    for (vtkm::IdComponent fieldIndex = 0; fieldIndex < numFields; fieldIndex++)
+    {
+      const vtkm::cont::Field& field =
+        partitionedDataSet.GetPartition(partitionIndex).GetField(fieldIndex);
+      auto association = field.GetAssociation();
+      bool isSupported = (association == vtkm::cont::Field::Association::Points ||
+                          association == vtkm::cont::Field::Association::Cells);
+      if (!isSupported)
+      {
+        VTKM_LOG_S(vtkm::cont::LogLevel::Info,
+                   "Skipping merge of field '" << field.GetName()
+                                               << "' because it has an unsupported association.");
+      }
+      //Do not store the field index again if it exists in fieldMap
+      if (fieldsMap[association].find(field.GetName()) != fieldsMap[association].end())
+      {
+        continue;
+      }
+      fieldsMap[association][field.GetName()] = partitionIndex;
+    }
+  }
+  // Iterate all fields and create merged field arrays
+  for (auto fieldMapIter = fieldsMap.begin(); fieldMapIter != fieldsMap.end(); ++fieldMapIter)
+  {
+    auto fieldAssociation = fieldMapIter->first;
+    auto fieldNamesMap = fieldMapIter->second;
+    for (auto fieldNameIter = fieldNamesMap.begin(); fieldNameIter != fieldNamesMap.end();
+         ++fieldNameIter)
+    {
+      std::string fieldName = fieldNameIter->first;
+      vtkm::Id partitionOwnsField = fieldNameIter->second;
+      const vtkm::cont::Field& field =
+        partitionedDataSet.GetPartition(partitionOwnsField).GetField(fieldName, fieldAssociation);
+
+      vtkm::cont::UnknownArrayHandle mergedFieldArray = field.GetData().NewInstanceBasic();
+      if (fieldAssociation == vtkm::cont::Field::Association::Points)
+      {
+        mergedFieldArray.Allocate(numPoints);
+      }
+      else
+      {
+        //We may add a new association (such as edges or faces) in future
+        VTKM_ASSERT(fieldAssociation == vtkm::cont::Field::Association::Cells);
+        mergedFieldArray.Allocate(numCells);
+      }
+      //Merging each field into the mergedField array
+      auto resolveType = [&](auto& concreteOut) {
+        vtkm::Id offset = 0;
+        for (vtkm::Id partitionIndex = firstNonEmptyPartitionId; partitionIndex < numOfDataSet;
+             ++partitionIndex)
+        {
+          if (partitionedDataSet.GetPartition(partitionIndex).GetNumberOfPoints() == 0)
+          {
+            continue;
+          }
+          if (partitionedDataSet.GetPartition(partitionIndex).HasField(fieldName, fieldAssociation))
+          {
+            vtkm::cont::UnknownArrayHandle in = partitionedDataSet.GetPartition(partitionIndex)
+                                                  .GetField(fieldName, fieldAssociation)
+                                                  .GetData();
+            vtkm::Id copySize = in.GetNumberOfValues();
+            auto viewOut = vtkm::cont::make_ArrayHandleView(concreteOut, offset, copySize);
+            vtkm::cont::ArrayCopy(in, viewOut);
+            offset += copySize;
+          }
+          else
+          {
+            //Creating invalid values for the partition that does not have the field
+            using ComponentType =
+              typename std::decay_t<decltype(concreteOut)>::ValueType::ComponentType;
+            ComponentType castInvalid =
+              vtkm::cont::internal::CastInvalidValue<ComponentType>(invalidValue);
+            vtkm::Id copySize = 0;
+            if (fieldAssociation == vtkm::cont::Field::Association::Points)
+            {
+              copySize = partitionedDataSet.GetPartition(partitionIndex).GetNumberOfPoints();
+            }
+            else
+            {
+              copySize = partitionedDataSet.GetPartition(partitionIndex).GetNumberOfCells();
+            }
+            for (vtkm::IdComponent component = 0; component < concreteOut.GetNumberOfComponents();
+                 ++component)
+            {
+              //Extracting each component from RecombineVec and copy invalid value into it
+              //Avoid using invoke to call worklet on ArrayHandleRecombineVec (it may cause long compiling issue on CUDA 12.x).
+              concreteOut.GetComponentArray(component).Fill(castInvalid, offset, offset + copySize);
+            }
+            offset += copySize;
+          }
+        }
+      };
+      mergedFieldArray.CastAndCallWithExtractedArray(resolveType);
+      outputDataSet.AddField(vtkm::cont::Field(fieldName, fieldAssociation, mergedFieldArray));
+    }
+  }
+  return;
 }
 
 } // anonymous namespace
@@ -385,31 +485,54 @@ namespace cont
 
 VTKM_CONT
 vtkm::cont::DataSet MergePartitionedDataSet(
-  const vtkm::cont::PartitionedDataSet& partitionedDataSet)
+  const vtkm::cont::PartitionedDataSet& partitionedDataSet,
+  vtkm::Float64 invalidValue)
 {
-  // verify correctnees of data
-  VTKM_ASSERT(partitionedDataSet.GetNumberOfPartitions() > 0);
+  vtkm::cont::DataSet outputData;
+  //The name of coordinates system in the first non-empty partition will be used in merged data set
+  vtkm::Id firstNonEmptyPartitionId = GetFirstEmptyPartition(partitionedDataSet);
+  if (firstNonEmptyPartitionId == -1)
+  {
+    return outputData;
+  }
+
+  //Checking the name of coordinates system, if all partitions have different name with the firstNonEmptyPartitionId
+  //just throw the exception now
+  CheckCoordsNames(partitionedDataSet, firstNonEmptyPartitionId);
+
+  //Checking if all partitions have CellSetSingleType with the same cell type
+  bool allPartitionsAreSingleType =
+    PartitionsAreSingleType(partitionedDataSet, firstNonEmptyPartitionId);
 
   vtkm::Id numPointsTotal;
   vtkm::Id numCellsTotal;
   CountPointsAndCells(partitionedDataSet, numPointsTotal, numCellsTotal);
 
-  vtkm::cont::DataSet outputData;
-  outputData.SetCellSet(MergeCellSets(partitionedDataSet, numPointsTotal, numCellsTotal));
-
-  vtkm::cont::DataSet partition0 = partitionedDataSet.GetPartition(0);
-  for (vtkm::IdComponent coordId = 0; coordId < partition0.GetNumberOfCoordinateSystems();
-       ++coordId)
+  if (allPartitionsAreSingleType)
+  {
+    outputData.SetCellSet(MergeCellSetsSingleType(partitionedDataSet, firstNonEmptyPartitionId));
+  }
+  else
+  {
+    outputData.SetCellSet(MergeCellSetsExplicit(
+      partitionedDataSet, numPointsTotal, numCellsTotal, firstNonEmptyPartitionId));
+  }
+  //Merging fields and coordinate systems
+  MergeFieldsAndAddIntoDataSet(outputData,
+                               partitionedDataSet,
+                               numPointsTotal,
+                               numCellsTotal,
+                               invalidValue,
+                               firstNonEmptyPartitionId);
+  //Labeling fields that belong to the coordinate system.
+  //There might be multiple coordinates systems, assuming all partitions have the same name of the coordinates system
+  vtkm::IdComponent numCoordsNames =
+    partitionedDataSet.GetPartition(firstNonEmptyPartitionId).GetNumberOfCoordinateSystems();
+  for (vtkm::IdComponent i = 0; i < numCoordsNames; i++)
   {
     outputData.AddCoordinateSystem(
-      MergeCoordinateSystem(partitionedDataSet, coordId, numPointsTotal));
+      partitionedDataSet.GetPartition(firstNonEmptyPartitionId).GetCoordinateSystemName(i));
   }
-
-  for (vtkm::IdComponent fieldId = 0; fieldId < partition0.GetNumberOfFields(); ++fieldId)
-  {
-    outputData.AddField(MergeField(partitionedDataSet, fieldId, numPointsTotal, numCellsTotal));
-  }
-
   return outputData;
 }
 

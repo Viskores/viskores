@@ -39,19 +39,36 @@ namespace vtkm
 namespace worklet
 {
 
+/// @brief Base class for worklets that group elements by keys.
+///
+/// The `InputDomain` of this worklet is a `vtkm::worklet::Keys` object,
+/// which holds an array of keys. All entries of this array with the same
+/// key are collected together, and the operator of the worklet is called
+/// once for each unique key.
+///
+/// Input arrays are (typically) the same size as the number of keys. When
+/// these objects are passed to the operator of the worklet, all values of
+/// the associated key are placed in a Vec-like object. Output arrays get
+/// sized by the number of unique keys, and each call to the operator produces
+/// one result for each output.
 class WorkletReduceByKey : public vtkm::worklet::internal::WorkletBase
 {
 public:
   template <typename Worklet>
   using Dispatcher = vtkm::worklet::DispatcherReduceByKey<Worklet>;
-  /// \brief A control signature tag for input keys.
+
+  /// @defgroup WorkletReduceByKeyControlSigTags `ControlSignature` tags
+  /// Tags that can be used in the `ControlSignature` of a `WorkletMapField`.
+  /// @{
+
+  /// @brief A control signature tag for input keys.
   ///
-  /// A \c WorkletReduceByKey operates by collecting all identical keys and
+  /// A `WorkletReduceByKey` operates by collecting all identical keys and
   /// then executing the worklet on each unique key. This tag specifies a
-  /// \c Keys object that defines and manages these keys.
+  /// `vtkm::worklet::Keys` object that defines and manages these keys.
   ///
-  /// A \c WorkletReduceByKey should have exactly one \c KeysIn tag in its \c
-  /// ControlSignature, and the \c InputDomain should point to it.
+  /// A `WorkletReduceByKey` should have exactly one `KeysIn` tag in its
+  /// `ControlSignature`, and the `InputDomain` should point to it.
   ///
   struct KeysIn : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -60,12 +77,13 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagKeysIn;
   };
 
-  /// \brief A control signature tag for input values.
+  /// @brief A control signature tag for input values associated with the keys.
   ///
-  /// A \c WorkletReduceByKey operates by collecting all values associated with
+  /// A `WorkletReduceByKey` operates by collecting all values associated with
   /// identical keys and then giving the worklet a Vec-like object containing
-  /// all values with a matching key. This tag specifies an \c ArrayHandle
-  /// object that holds the values.
+  /// all values with a matching key. This tag specifies an `vtkm::cont::ArrayHandle`
+  /// object that holds the values. The number of values in this array must be equal
+  /// to the size of the array used with the `KeysIn` argument.
   ///
   struct ValuesIn : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -74,12 +92,13 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
 
-  /// \brief A control signature tag for input/output values.
+  /// @brief A control signature tag for input/output values associated with the keys.
   ///
-  /// A \c WorkletReduceByKey operates by collecting all values associated with
+  /// A `WorkletReduceByKey` operates by collecting all values associated with
   /// identical keys and then giving the worklet a Vec-like object containing
-  /// all values with a matching key. This tag specifies an \c ArrayHandle
-  /// object that holds the values.
+  /// all values with a matching key. This tag specifies an `vtkm::cont::ArrayHandle`
+  /// object that holds the values. The number of values in this array must be equal
+  /// to the size of the array used with the `KeysIn` argument.
   ///
   /// This tag might not work with scatter operations.
   ///
@@ -90,12 +109,14 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
 
-  /// \brief A control signature tag for output values.
+  /// \brief A control signature tag for output values associated with the keys.
   ///
-  /// A \c WorkletReduceByKey operates by collecting all values associated with
-  /// identical keys and then giving the worklet a Vec-like object containing
-  /// all values with a matching key. This tag specifies an \c ArrayHandle
-  /// object that holds the values.
+  /// This tag behaves the same as `ValuesInOut` except that the array is resized
+  /// appropriately and no input values are passed to the worklet. As with
+  /// `ValuesInOut`, values the worklet writes to its |Veclike| object get placed
+  /// in the location of the original arrays.
+  ///
+  /// Use of `ValuesOut` is rare.
   ///
   /// This tag might not work with scatter operations.
   ///
@@ -106,46 +127,14 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
 
-  /// \brief A control signature tag for reduced output values.
+  /// @brief A control signature tag for reduced output values.
   ///
-  /// A \c WorkletReduceByKey operates by collecting all identical keys and
+  /// A `WorkletReduceByKey` operates by collecting all identical keys and
   /// calling one instance of the worklet for those identical keys. The worklet
-  /// then produces a "reduced" value per key.
-  ///
-  /// This tag specifies an \c ArrayHandle object that holds the values. It is
-  /// an input array with entries for each reduced value. This could be useful
-  /// to access values from a previous run of WorkletReduceByKey.
-  ///
-  struct ReducedValuesIn : vtkm::cont::arg::ControlSignatureTagBase
-  {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayIn;
-    using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
-    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
-  };
-
-  /// \brief A control signature tag for reduced output values.
-  ///
-  /// A \c WorkletReduceByKey operates by collecting all identical keys and
-  /// calling one instance of the worklet for those identical keys. The worklet
-  /// then produces a "reduced" value per key.
-  ///
-  /// This tag specifies an \c ArrayHandle object that holds the values. It is
-  /// an input/output array with entries for each reduced value. This could be
-  /// useful to access values from a previous run of WorkletReduceByKey.
-  ///
-  struct ReducedValuesInOut : vtkm::cont::arg::ControlSignatureTagBase
-  {
-    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayInOut;
-    using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
-    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
-  };
-
-  /// \brief A control signature tag for reduced output values.
-  ///
-  /// A \c WorkletReduceByKey operates by collecting all identical keys and
-  /// calling one instance of the worklet for those identical keys. The worklet
-  /// then produces a "reduced" value per key. This tag specifies an \c
-  /// ArrayHandle object that holds the values.
+  /// then produces a "reduced" value per key. This tag specifies a
+  /// `vtkm::cont::ArrayHandle` object that holds the values. The array is resized
+  /// to be the number of unique keys, and each call of the operator sets
+  /// a single value in the array
   ///
   struct ReducedValuesOut : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -154,16 +143,148 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
 
-  /// \brief The \c ExecutionSignature tag to get the number of values.
+  /// @brief A control signature tag for reduced input values.
   ///
-  /// A \c WorkletReduceByKey operates by collecting all values associated with
+  /// A`WorkletReduceByKey` operates by collecting all identical keys and
+  /// calling one instance of the worklet for those identical keys. The worklet
+  /// then produces a "reduced" value per key.
+  ///
+  /// This tag specifies a `vtkm::cont::ArrayHandle` object that holds the values.
+  /// It is an input array with entries for each reduced value. The number of values
+  /// in the array must equal the number of _unique_ keys.
+  ///
+  /// A `ReducedValuesIn` argument is usually used to pass reduced values from one
+  /// invoke of a reduce by key worklet to another invoke of a reduced by key worklet
+  /// such as in an algorithm that requires iterative steps.
+  ///
+  struct ReducedValuesIn : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayIn;
+    using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
+  };
+
+  /// @brief A control signature tag for reduced output values.
+  ///
+  /// A `WorkletReduceByKey` operates by collecting all identical keys and
+  /// calling one instance of the worklet for those identical keys. The worklet
+  /// then produces a "reduced" value per key.
+  ///
+  /// This tag specifies a `vtkm::cont::ArrayHandle` object that holds the values.
+  /// It is an input/output array with entries for each reduced value. The number
+  /// of values in the array must equal the number of _unique_ keys.
+  ///
+  /// This tag behaves the same as `ReducedValuesIn` except that the worklet may
+  /// write values back into the array. Make sure that the associated parameter to
+  /// the worklet operator is a reference so that the changed value gets written
+  /// back to the array.
+  ///
+  struct ReducedValuesInOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayInOut;
+    using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
+  };
+
+#ifdef VTKM_DOXYGEN_ONLY
+  // These redeclarations of superclass features are for documentation purposes only.
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeArrayIn
+  struct WholeArrayIn : vtkm::worklet::internal::WorkletBase::WholeArrayIn
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeArrayOut
+  struct WholeArrayOut : vtkm::worklet::internal::WorkletBase::WholeArrayOut
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeArrayInOut
+  struct WholeArrayInOut : vtkm::worklet::internal::WorkletBase::WholeArrayInOut
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::AtomicArrayInOut
+  struct AtomicArrayInOut : vtkm::worklet::internal::WorkletBase::AtomicArrayInOut
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeCellSetIn
+  template <typename VisitTopology = Cell, typename IncidentTopology = Point>
+  struct WholeCellSetIn
+    : vtkm::worklet::internal::WorkletBase::WholeCellSetIn<VisitTopology, IncidentTopology>
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::ExecObject
+  struct ExecObject : vtkm::worklet::internal::WorkletBase::ExecObject
+  {
+  };
+#endif
+
+  /// @}
+
+  /// @defgroup WorkletReduceByKeyExecutionSigTags `ExecutionSignature` tags
+  /// Tags that can be used in the `ExecutionSignature` of a `WorkletMapField`.
+  /// @{
+
+#ifdef VTKM_DOXYGEN_ONLY
+  // These redeclarations of superclass features are for documentation purposes only.
+
+  /// @copydoc vtkm::placeholders::Arg
+  struct _1 : vtkm::worklet::internal::WorkletBase::_1
+  {
+  };
+#endif
+
+  /// @brief The `ExecutionSignature` tag to get the number of values.
+  ///
+  /// A `WorkletReduceByKey` operates by collecting all values associated with
   /// identical keys and then giving the worklet a Vec-like object containing all
-  /// values with a matching key. This \c ExecutionSignature tag provides the
-  /// number of values associated with the key and given in the Vec-like objects.
+  /// values with a matching key. This tag produces a `vtkm::IdComponent` that is
+  /// equal to the number of times the key associated with this call to the worklet
+  /// occurs in the input. This is the same size as the Vec-like objects provided
+  /// by `ValuesIn` arguments.
   ///
   struct ValueCount : vtkm::exec::arg::ValueCount
   {
   };
+
+#ifdef VTKM_DOXYGEN_ONLY
+  // These redeclarations of superclass features are for documentation purposes only.
+
+  /// @copydoc vtkm::exec::arg::WorkIndex
+  struct WorkIndex : vtkm::worklet::internal::WorkletBase::WorkIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::VisitIndex
+  struct VisitIndex : vtkm::worklet::internal::WorkletBase::VisitIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::InputIndex
+  struct InputIndex : vtkm::worklet::internal::WorkletBase::InputIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::OutputIndex
+  struct OutputIndex : vtkm::worklet::internal::WorkletBase::OutputIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::ThreadIndices
+  struct ThreadIndices : vtkm::worklet::internal::WorkletBase::ThreadIndices
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::Device
+  struct Device : vtkm::worklet::internal::WorkletBase::Device
+  {
+  };
+#endif
+
+  /// @}
 
   /// Reduce by key worklets use the related thread indices class.
   ///

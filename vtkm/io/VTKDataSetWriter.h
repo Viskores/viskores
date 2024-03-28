@@ -26,24 +26,31 @@ enum struct FileType
   BINARY
 };
 
-struct VTKM_IO_EXPORT VTKDataSetWriter
+/// @brief Reads a legacy VTK file.
+///
+/// By convention, legacy VTK files have a `.vtk` extension.
+/// This class should be constructed with a filename, and the data
+/// read with `ReadDataSet`.
+class VTKM_IO_EXPORT VTKDataSetWriter
 {
 public:
   VTKM_CONT VTKDataSetWriter(const char* fileName);
+  /// @brief Construct a writer to save data to the given file.
   VTKM_CONT VTKDataSetWriter(const std::string& fileName);
 
+  /// @brief Write data from the given `DataSet` object to the file specified in the constructor.
   VTKM_CONT void WriteDataSet(const vtkm::cont::DataSet& dataSet) const;
 
-  /// \brief Get whether the file will be written in ASCII or binary format.
+  /// @brief Get whether the file will be written in ASCII or binary format.
   ///
   VTKM_CONT vtkm::io::FileType GetFileType() const;
 
-  /// \{
-  /// \brief Set whether the file will be written in ASCII or binary format.
+  /// @brief Set whether the file will be written in ASCII or binary format.
   VTKM_CONT void SetFileType(vtkm::io::FileType type);
+  /// @brief Set whether the file will be written in ASCII or binary format.
   VTKM_CONT void SetFileTypeToAscii() { this->SetFileType(vtkm::io::FileType::ASCII); }
+  /// @brief Set whether the file will be written in ASCII or binary format.
   VTKM_CONT void SetFileTypeToBinary() { this->SetFileType(vtkm::io::FileType::BINARY); }
-  /// \}
 
 private:
   std::string FileName;

@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityTaper_h
 #define vtk_m_filter_mesh_info_MeshQualityTaper_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,7 +30,17 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityTaper : public vtkm::filter::FilterField
+/// @brief Compute the taper of each cell.
+///
+/// The taper of a quadrilateral is computed as the maximum ratio of the cross-derivative
+/// with its shortest associated principal axis.
+///
+/// This only produces values for quadrilaterals and hexahedra.
+///
+/// A good quality quadrilateral will have a taper in the range of [0, 0.7]. A good quality
+/// hexahedron will have a taper in the range of [0, 0.5]. The unit square or cube will
+/// have a taper of 0. Poorer quality cells will have larger values (with no upper limit).
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityTaper : public vtkm::filter::Filter
 {
 public:
   MeshQualityTaper();

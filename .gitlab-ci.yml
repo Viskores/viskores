@@ -30,7 +30,7 @@
     - .docker_image
 
 .ubuntu1604: &ubuntu1604
-  image: "kitware/vtkm:ci-ubuntu1604-20201016"
+  image: "kitware/vtkm:ci-ubuntu1604-20230906"
   extends:
     - .docker_image
 
@@ -40,32 +40,32 @@
     - .docker_image
 
 .ubuntu1804: &ubuntu1804
-  image: "kitware/vtkm:ci-ubuntu1804-20210107"
+  image: "kitware/vtkm:ci-ubuntu1804-20230906"
   extends:
     - .docker_image
 
 .ubuntu1804_cuda: &ubuntu1804_cuda
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11-20220919"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11-20230906"
   extends:
     - .docker_image
 
 .ubuntu1804_cuda_kokkos: &ubuntu1804_cuda_kokkos
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20230125"
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20230906"
   extends:
     - .docker_image
 
 .ubuntu2004_doxygen: &ubuntu2004_doxygen
-  image: "kitware/vtkm:ci-doxygen-20201016"
+  image: "kitware/vtkm:ci-doxygen-20231020"
   extends:
     - .docker_image
 
 .ubuntu2004: &ubuntu2004
-  image: "kitware/vtkm:ci-ubuntu2004-20220623"
+  image: "kitware/vtkm:ci-ubuntu2004-20230906"
   extends:
     - .docker_image
 
 .ubuntu2004_kokkos: &ubuntu2004_kokkos
-  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20230705"
+  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20240119"
   extends:
     - .docker_image
 
@@ -75,7 +75,7 @@
     - .docker_image
 
 .opensuse: &opensuse
-  image: "kitware/vtkm:ci-opensuse-20230619"
+  image: "kitware/vtkm:ci-opensuse-20231121"
   extends:
     - .docker_image
 
@@ -104,12 +104,6 @@
 .run_upstream_branches: &run_upstream_branches
   rules:
     - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_MERGE_REQUEST_ID == null'
-      when: on_success
-    - when: never
-
-.run_ascent_ci: &run_ascent_ci
-  rules:
-    - if: '$CI_PROJECT_PATH == "ecpcitest/vtk-m"'
       when: on_success
     - when: never
 
@@ -222,6 +216,10 @@ stages:
       # CDash files.
       - build/DartConfiguration.tcl
 
+      # Users guide
+      - build/docs/users-guide/html
+      - build/docs/users-guide/latex
+
 .cmake_test_artifacts: &cmake_test_artifacts
   artifacts:
     expire_in: 24 hours
@@ -237,7 +235,6 @@ stages:
 
 
 include:
-  - local: '/.gitlab/ci/ascent.yml'
   - local: '/.gitlab/ci/crusher.yml'
   - local: '/.gitlab/ci/centos7.yml'
   - local: '/.gitlab/ci/centos8.yml'

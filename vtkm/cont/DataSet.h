@@ -31,6 +31,29 @@ VTKM_CONT_EXPORT VTKM_CONT const std::string& GetGlobalGhostCellFieldName() noex
 
 VTKM_CONT_EXPORT VTKM_CONT void SetGlobalGhostCellFieldName(const std::string& name) noexcept;
 
+/// @brief Contains and manages the geometric data structures that VTK-m operates on.
+///
+/// A `DataSet` is the main data structure used by VTK-m to pass data in and out of
+/// filters, rendering, and other components. A data set comprises the following 3
+/// data structures.
+///
+/// * **CellSet** A cell set describes topological connections. A cell set defines some
+///   number of points in space and how they connect to form cells, filled regions of
+///   space. A data set has exactly one cell set.
+/// * **Field** A field describes numerical data associated with the topological elements
+///   in a cell set. The field is represented as an array, and each entry in the field
+///   array corresponds to a topological element (point, edge, face, or cell). Together
+///   the cell set topology and discrete data values in the field provide an interpolated
+///   function throughout the volume of space covered by the data set. A cell set can
+///   have any number of fields.
+/// * **CoordinateSystem** A coordinate system is a special field that describes the
+///   physical location of the points in a data set. Although it is most common for a
+///   data set to contain a single coordinate system, VTK-m supports data sets with no
+///   coordinate system such as abstract data structures like graphs that might not have
+///   positions in a space. `DataSet` also supports multiple coordinate systems for data
+///   that have multiple representations for position. For example, geospatial data could
+///   simultaneously have coordinate systems defined by 3D position, latitude-longitude,
+///   and any number of 2D projections.
 class VTKM_CONT_EXPORT DataSet
 {
 public:
@@ -163,11 +186,11 @@ public:
 
   /// \brief Returns the cell field that matches the ghost cell field name.
   ///
-  /// This method will throw an exception if no match is found. Use `HasGhostCellField()` to query
+  /// This method will return a constant array of zeros if no match is found. Use `HasGhostCellField()` to query
   /// whether a particular field exists.
   ///@{
   VTKM_CONT
-  const vtkm::cont::Field& GetGhostCellField() const;
+  vtkm::cont::Field GetGhostCellField() const;
   ///@}
 
   /// \brief Returns the first point field that matches the provided name.

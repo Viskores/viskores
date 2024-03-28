@@ -13,6 +13,7 @@
 #include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/cont/UnknownCellSet.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
@@ -21,6 +22,10 @@ namespace vtkm
 namespace rendering
 {
 
+/// @brief Converts data into commands to a rendering system.
+///
+/// This is the base class for all mapper classes in VTK-m. Different concrete
+/// derived classes can provide different representations and rendering techniques.
 class VTKM_RENDERING_EXPORT Mapper
 {
 public:
@@ -34,7 +39,21 @@ public:
                            const vtkm::cont::Field& scalarField,
                            const vtkm::cont::ColorTable& colorTable,
                            const vtkm::rendering::Camera& camera,
-                           const vtkm::Range& scalarRange) = 0;
+                           const vtkm::Range& scalarRange);
+
+  void RenderCells(const vtkm::cont::UnknownCellSet& cellset,
+                   const vtkm::cont::CoordinateSystem& coords,
+                   const vtkm::cont::Field& scalarField,
+                   const vtkm::cont::ColorTable& colorTable,
+                   const vtkm::rendering::Camera& camera,
+                   const vtkm::Range& scalarRange,
+                   const vtkm::cont::Field& ghostField);
+
+  virtual void RenderCellsPartitioned(const vtkm::cont::PartitionedDataSet partitionedData,
+                                      const std::string fieldName,
+                                      const vtkm::cont::ColorTable& colorTable,
+                                      const vtkm::rendering::Camera& camera,
+                                      const vtkm::Range& scalarRange);
 
   virtual void SetActiveColorTable(const vtkm::cont::ColorTable& ct);
 
@@ -50,6 +69,18 @@ protected:
   vtkm::cont::ArrayHandle<vtkm::Vec4f_32> ColorMap;
   bool LogarithmX = false;
   bool LogarithmY = false;
+
+  // for the volume renderer sorting back to front gives better results for transarent colors, which is the default
+  // but for the raytracer front to back is better.
+  bool SortBackToFront = true;
+
+  virtual void RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                               const vtkm::cont::CoordinateSystem& coords,
+                               const vtkm::cont::Field& scalarField,
+                               const vtkm::cont::ColorTable& colorTable,
+                               const vtkm::rendering::Camera& camera,
+                               const vtkm::Range& scalarRange,
+                               const vtkm::cont::Field& ghostField) = 0;
 };
 }
 } //namespace vtkm::rendering

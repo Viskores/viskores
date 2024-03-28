@@ -135,6 +135,8 @@ void Fill()
   MultiplexerType multiplexer = vtkm::cont::ArrayHandle<ValueType>{};
 
   multiplexer.AllocateAndFill(ARRAY_SIZE, testValue1);
+  VTKM_TEST_ASSERT(multiplexer.GetNumberOfComponentsFlat() ==
+                   vtkm::VecFlat<ValueType>::NUM_COMPONENTS);
   {
     auto portal = multiplexer.ReadPortal();
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE);

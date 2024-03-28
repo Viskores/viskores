@@ -144,6 +144,12 @@ public:
     return std::vector<vtkm::cont::internal::Buffer>(static_cast<std::size_t>(NUM_COMPONENTS));
   }
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return vtkm::VecFlat<ComponentType>::NUM_COMPONENTS * NUM_COMPONENTS;
+  }
+
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
                                       const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,
@@ -254,7 +260,7 @@ public:
                              (ArrayHandle<T, vtkm::cont::StorageTagSOA>));
 
   ArrayHandleSOA(std::initializer_list<vtkm::cont::internal::Buffer>&& componentBuffers)
-    : Superclass(std::move(componentBuffers))
+    : Superclass(componentBuffers)
   {
   }
 
@@ -456,6 +462,8 @@ VTKM_CONT
 namespace internal
 {
 
+/// @cond
+
 template <>
 struct ArrayExtractComponentImpl<vtkm::cont::StorageTagSOA>
 {
@@ -478,6 +486,8 @@ struct ArrayExtractComponentImpl<vtkm::cont::StorageTagSOA>
       allowCopy);
   }
 };
+
+/// @endcond
 
 } // namespace internal
 
@@ -553,6 +563,8 @@ struct Serialization<vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagSO
 
 #ifndef vtkm_cont_ArrayHandleSOA_cxx
 
+/// @cond
+
 namespace vtkm
 {
 namespace cont
@@ -578,6 +590,8 @@ VTKM_ARRAYHANDLE_SOA_EXPORT(vtkm::Float64)
 #undef VTKM_ARRAYHANDLE_SOA_EXPORT
 }
 } // namespace vtkm::cont
+
+/// @endcond
 
 #endif // !vtkm_cont_ArrayHandleSOA_cxx
 

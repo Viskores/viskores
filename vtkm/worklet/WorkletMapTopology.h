@@ -96,9 +96,6 @@ public:
 
   /// \brief A control signature tag for output fields.
   ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
-  ///
   struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArrayOut;
@@ -116,8 +113,12 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
   };
 
-  /// \brief A control signature tag for input connectivity.
+  /// @brief A control signature tag for input connectivity.
   ///
+  /// The associated parameter of the invoke should be a subclass of `vtkm::cont::CellSet`.
+  ///
+  /// There should be exactly one `CellSetIn` argument in the `ControlSignature`,
+  /// and the `InputDomain` must point to it.
   struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagCellSet;
@@ -256,6 +257,7 @@ class WorkletVisitCellsWithPoints
   : public WorkletMapTopology<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
 {
 public:
+#ifndef VTKM_DOXYGEN_ONLY
   using FieldInPoint = FieldInIncident;
 
   using FieldInCell = FieldInVisit;
@@ -267,6 +269,188 @@ public:
   using PointCount = IncidentElementCount;
 
   using PointIndices = IncidentElementIndices;
+#else  // VTKM_DOXYGEN_ONLY
+  // These redeclarations of superclass features are for documentation purposes only.
+
+  /// @defgroup WorkletVisitCellsWithPointsControlSigTags `ControlSignature` tags
+  /// Tags that can be used in the `ControlSignature` of a `WorkletVisitCellsWithPoints`.
+  /// @{
+
+  /// @copydoc vtkm::worklet::WorkletMapTopology::CellSetIn
+  struct CellSetIn
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::CellSetIn
+  {
+  };
+
+  /// @brief A control signature tag for input fields on the cells of the topology.
+  ///
+  /// The associated parameter of the invoke should be a `vtkm::cont::ArrayHandle` that has
+  /// the same number of values as the cells of the provided `CellSet`.
+  /// The worklet gets a single value that is the field at that cell.
+  struct FieldInCell : FieldInVisit
+  {
+  };
+
+  /// @brief A control signature tag for input fields on the points of the topology.
+  ///
+  /// The associated parameter of the invoke should be a `vtkm::cont::ArrayHandle` that has
+  /// the same number of values as the points of the provided `CellSet`.
+  /// The worklet gets a Vec-like object containing the field values on all incident points.
+  struct FieldInPoint : FieldInIncident
+  {
+  };
+
+  /// @brief A control signature tag for input fields from the visited topology.
+  ///
+  /// For `WorkletVisitCellsWithPoints`, this is the same as `FieldInCell`.
+  struct FieldInVisit
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::FieldInVisit
+  {
+  };
+
+  /// @brief A control signature tag for input fields from the incident topology.
+  ///
+  /// For `WorkletVisitCellsWithPoints`, this is the same as `FieldInPoint`.
+  struct FieldInIncident
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::FieldInIncident
+  {
+  };
+
+  /// @brief A control signature tag for output fields.
+  ///
+  /// A `WorkletVisitCellsWithPoints` always has the output on the cells of the topology.
+  /// The associated parameter of the invoke should be a `vtkm::cont::ArrayHandle`, and it will
+  /// be resized to the number of cells in the provided `CellSet`.
+  struct FieldOutCell : FieldOut
+  {
+  };
+
+  /// @copydoc FieldOutCell
+  struct FieldOut
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::FieldOut
+  {
+  };
+
+  /// @brief A control signature tag for input-output (in-place) fields.
+  ///
+  /// A `WorkletVisitCellsWithPoints` always has the output on the cells of the topology.
+  /// The associated parameter of the invoke should be a `vtkm::cont::ArrayHandle`, and it must
+  /// have the same number of values as the number of cells of the topology.
+  struct FieldInOutCell : FieldInOut
+  {
+  };
+
+  /// @copydoc FieldInOutCell
+  struct FieldInOut
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::FieldInOut
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeArrayIn
+  struct WholeArrayIn : vtkm::worklet::internal::WorkletBase::WholeArrayIn
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeArrayOut
+  struct WholeArrayOut : vtkm::worklet::internal::WorkletBase::WholeArrayOut
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeArrayInOut
+  struct WholeArrayInOut : vtkm::worklet::internal::WorkletBase::WholeArrayInOut
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::AtomicArrayInOut
+  struct AtomicArrayInOut : vtkm::worklet::internal::WorkletBase::AtomicArrayInOut
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeCellSetIn
+  template <typename VisitTopology = Cell, typename IncidentTopology = Point>
+  struct WholeCellSetIn
+    : vtkm::worklet::internal::WorkletBase::WholeCellSetIn<VisitTopology, IncidentTopology>
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::ExecObject
+  struct ExecObject : vtkm::worklet::internal::WorkletBase::ExecObject
+  {
+  };
+
+  /// @}
+
+  /// @defgroup WorkletVisitCellsWithPointsExecutionSigTags `ExecutionSignature` tags
+  /// Tags that can be used in the `ExecutionSignature` of a `WorkletVisitCellsWithPoints`.
+  /// @{
+
+  /// @copydoc vtkm::placeholders::Arg
+  struct _1 : vtkm::worklet::internal::WorkletBase::_1
+  {
+  };
+
+  /// @brief An execution signature tag to get the shape of the visited cell.
+  ///
+  /// This tag causes a `vtkm::UInt8` to be passed to the worklet containing containing an
+  /// id for the shape of the cell being visited.
+  struct CellShape
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::CellShape
+  {
+  };
+
+  /// @brief An execution signature tag to get the number of incident points.
+  ///
+  /// Each cell in a `vtkm::cont::CellSet` can be incident on a number of points. This
+  /// tag causes a `vtkm::IdComponent` to be passed to the worklet containing the number
+  /// of incident points.
+  struct PointCount
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType,
+                                        IncidentTopologyType>::IncidentElementCount
+  {
+  };
+
+  /// @brief An execution signature tag to get the indices of the incident points.
+  ///
+  /// The indices will be provided in a Vec-like object containing `vtkm::Id` indices for the
+  /// cells in the data set.
+  struct PointIndices
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType,
+                                        IncidentTopologyType>::IncidentElementIndices
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::WorkIndex
+  struct WorkIndex : vtkm::worklet::internal::WorkletBase::WorkIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::VisitIndex
+  struct VisitIndex : vtkm::worklet::internal::WorkletBase::VisitIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::InputIndex
+  struct InputIndex : vtkm::worklet::internal::WorkletBase::InputIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::OutputIndex
+  struct OutputIndex : vtkm::worklet::internal::WorkletBase::OutputIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::ThreadIndices
+  struct ThreadIndices : vtkm::worklet::internal::WorkletBase::ThreadIndices
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::Device
+  struct Device : vtkm::worklet::internal::WorkletBase::Device
+  {
+  };
+
+/// @}
+#endif // VTKM_DOXYGEN_ONLY
 };
 
 /// Base class for worklets that map from Cells to Points.
@@ -275,6 +459,7 @@ class WorkletVisitPointsWithCells
   : public WorkletMapTopology<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
 {
 public:
+#ifndef VTKM_DOXYGEN_ONLY
   using FieldInCell = FieldInIncident;
 
   using FieldInPoint = FieldInVisit;
@@ -286,6 +471,179 @@ public:
   using CellCount = IncidentElementCount;
 
   using CellIndices = IncidentElementIndices;
+#else  // VTKM_DOXYGEN_ONLY
+  // These redeclarations of superclass features are for documentation purposes only.
+
+  /// @defgroup WorkletVisitPointsWithCellsControlSigTags `ControlSignature` tags
+  /// Tags that can be used in the `ControlSignature` of a `WorkletVisitPointsWithCells`.
+  /// @{
+
+  /// @copydoc vtkm::worklet::WorkletMapTopology::CellSetIn
+  struct CellSetIn
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::CellSetIn
+  {
+  };
+
+  /// @brief A control signature tag for input fields on the points of the topology.
+  ///
+  /// The associated parameter of the invoke should be a `vtkm::cont::ArrayHandle` that has
+  /// the same number of values as the points of the provided `CellSet`.
+  /// The worklet gets a single value that is the field at that point.
+  struct FieldInPoint : FieldInVisit
+  {
+  };
+
+  /// @brief A control signature tag for input fields on the cells of the topology.
+  ///
+  /// The associated parameter of the invoke should be a `vtkm::cont::ArrayHandle` that has
+  /// the same number of values as the cells of the provided `CellSet`.
+  /// The worklet gets a Vec-like object containing the field values on all incident cells.
+  struct FieldInCell : FieldInIncident
+  {
+  };
+
+  /// @brief A control signature tag for input fields from the visited topology.
+  ///
+  /// For `WorkletVisitPointsWithCells`, this is the same as `FieldInPoint`.
+  struct FieldInVisit
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::FieldInVisit
+  {
+  };
+
+  /// @brief A control signature tag for input fields from the incident topology.
+  ///
+  /// For `WorkletVisitPointsWithCells`, this is the same as `FieldInCell`.
+  struct FieldInIncident
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::FieldInIncident
+  {
+  };
+
+  /// @brief A control signature tag for output fields.
+  ///
+  /// A `WorkletVisitPointsWithCells` always has the output on the points of the topology.
+  /// The associated parameter of the invoke should be a `vtkm::cont::ArrayHandle`, and it will
+  /// be resized to the number of points in the provided `CellSet`.
+  struct FieldOutPoint : FieldOut
+  {
+  };
+
+  /// @copydoc FieldOutPoint
+  struct FieldOut
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::FieldOut
+  {
+  };
+
+  /// @brief A control signature tag for input-output (in-place) fields.
+  ///
+  /// A `WorkletVisitPointsWithCells` always has the output on the points of the topology.
+  /// The associated parameter of the invoke should be a `vtkm::cont::ArrayHandle`, and it must
+  /// have the same number of values as the number of points of the topology.
+  struct FieldInOutPoint : FieldInOut
+  {
+  };
+
+  /// @copydoc FieldInOutPoint
+  struct FieldInOut
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::FieldInOut
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeArrayIn
+  struct WholeArrayIn : vtkm::worklet::internal::WorkletBase::WholeArrayIn
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeArrayOut
+  struct WholeArrayOut : vtkm::worklet::internal::WorkletBase::WholeArrayOut
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeArrayInOut
+  struct WholeArrayInOut : vtkm::worklet::internal::WorkletBase::WholeArrayInOut
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::AtomicArrayInOut
+  struct AtomicArrayInOut : vtkm::worklet::internal::WorkletBase::AtomicArrayInOut
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::WholeCellSetIn
+  template <typename VisitTopology = Cell, typename IncidentTopology = Point>
+  struct WholeCellSetIn
+    : vtkm::worklet::internal::WorkletBase::WholeCellSetIn<VisitTopology, IncidentTopology>
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::ExecObject
+  struct ExecObject : vtkm::worklet::internal::WorkletBase::ExecObject
+  {
+  };
+
+  /// @}
+
+  /// @defgroup WorkletVisitPointsWithCellsExecutionSigTags `ExecutionSignature` tags
+  /// Tags that can be used in the `ExecutionSignature` of a `WorkletVisitPointsWithCells`.
+  /// @{
+
+  /// @copydoc vtkm::placeholders::Arg
+  struct _1 : vtkm::worklet::internal::WorkletBase::_1
+  {
+  };
+
+  /// @brief An execution signature tag to get the number of incident cells.
+  ///
+  /// Each point in a `vtkm::cont::CellSet` can be incident on a number of cells. This
+  /// tag causes a `vtkm::IdComponent` to be passed to the worklet containing the number
+  /// of incident cells.
+  struct CellCount
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType,
+                                        IncidentTopologyType>::IncidentElementCount
+  {
+  };
+
+  /// @brief An execution signature tag to get the indices of the incident cells.
+  ///
+  /// The indices will be provided in a Vec-like object containing `vtkm::Id` indices for the
+  /// points in the data set.
+  struct CellIndices
+    : vtkm::worklet::WorkletMapTopology<VisitTopologyType,
+                                        IncidentTopologyType>::IncidentElementIndices
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::WorkIndex
+  struct WorkIndex : vtkm::worklet::internal::WorkletBase::WorkIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::VisitIndex
+  struct VisitIndex : vtkm::worklet::internal::WorkletBase::VisitIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::InputIndex
+  struct InputIndex : vtkm::worklet::internal::WorkletBase::InputIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::OutputIndex
+  struct OutputIndex : vtkm::worklet::internal::WorkletBase::OutputIndex
+  {
+  };
+
+  /// @copydoc vtkm::exec::arg::ThreadIndices
+  struct ThreadIndices : vtkm::worklet::internal::WorkletBase::ThreadIndices
+  {
+  };
+
+  /// @copydoc vtkm::worklet::internal::WorkletBase::Device
+  struct Device : vtkm::worklet::internal::WorkletBase::Device
+  {
+  };
+
+  /// @}
+#endif // VTKM_DOXYGEN_ONLY
 };
 
 }

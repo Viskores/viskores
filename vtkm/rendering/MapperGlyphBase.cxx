@@ -18,17 +18,7 @@ namespace vtkm
 namespace rendering
 {
 
-MapperGlyphBase::MapperGlyphBase()
-  : Canvas(nullptr)
-  , CompositeBackground(true)
-  , UseNodes(true)
-  , UseStride(false)
-  , Stride(1)
-  , ScaleByValue(false)
-  , BaseSize(-1.f)
-  , ScaleDelta(0.5f)
-{
-}
+MapperGlyphBase::MapperGlyphBase() {}
 
 MapperGlyphBase::~MapperGlyphBase() {}
 
@@ -49,24 +39,52 @@ vtkm::rendering::Canvas* MapperGlyphBase::GetCanvas() const
   return this->Canvas;
 }
 
+vtkm::cont::Field::Association MapperGlyphBase::GetAssociation() const
+{
+  return this->Association;
+}
+
+void MapperGlyphBase::SetAssociation(vtkm::cont::Field::Association association)
+{
+  switch (association)
+  {
+    case vtkm::cont::Field::Association::Cells:
+    case vtkm::cont::Field::Association::Points:
+      this->Association = association;
+      break;
+    default:
+      throw vtkm::cont::ErrorBadValue("Invalid glyph association.");
+  }
+}
+
 bool MapperGlyphBase::GetUseCells() const
 {
-  return !this->UseNodes;
+  return this->Association == vtkm::cont::Field::Association::Cells;
 }
 
 void MapperGlyphBase::SetUseCells()
 {
-  this->UseNodes = false;
+  this->SetAssociation(vtkm::cont::Field::Association::Cells);
+}
+
+bool MapperGlyphBase::GetUsePoints() const
+{
+  return this->Association == vtkm::cont::Field::Association::Points;
+}
+
+void MapperGlyphBase::SetUsePoints()
+{
+  this->SetAssociation(vtkm::cont::Field::Association::Points);
 }
 
 bool MapperGlyphBase::GetUseNodes() const
 {
-  return this->UseNodes;
+  return this->GetUsePoints();
 }
 
 void MapperGlyphBase::SetUseNodes()
 {
-  this->UseNodes = true;
+  this->SetUsePoints();
 }
 
 vtkm::Float32 MapperGlyphBase::GetBaseSize() const

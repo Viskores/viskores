@@ -16,11 +16,18 @@
 namespace vtkm
 {
 
+/// An object returned from `NewtonsMethod()` that contains the result and
+/// other information about the final state.
 template <typename ScalarType, vtkm::IdComponent Size>
 struct NewtonsMethodResult
 {
+  /// True if Newton's method ran into a singularity.
   bool Valid;
+  /// True if Newton's method converted to below the convergence value.
   bool Converged;
+  /// The solution found by Newton's method. If `Converged` is false,
+  /// then this value is likely inaccurate. If `Valid` is false, then
+  /// this value is undefined.
   vtkm::Vec<ScalarType, Size> Solution;
 };
 
@@ -34,6 +41,23 @@ struct NewtonsMethodResult
 /// that evaluates to the desired output, or the closest point found, is
 /// returned.
 ///
+/// @param[in] jacobianEvaluator A functor whose operation takes a `vtkm::Vec`
+///            and returns a `vtkm::Matrix` containing the math function's
+///            Jacobian vector at that point.
+/// @param[in] functionEvaluator A functor whose operation takes a `vtkm::Vec`
+///            and returns the evaluation of the math function at that point as
+///            another `vtkm::Vec`.
+/// @param[in] desiredFunctionOutput The desired output of the function.
+/// @param[in] initialGuess The initial guess to search from. If not specified,
+///            the origin is used.
+/// @param[in] convergeDifference The convergence distance. If the iterative method
+///            changes all values less than this amount. Once all values change less,
+///            it considers the solution found. If not specified, set to 0.001.
+/// @param[in] maxIterations The maximum amount of iterations to run before giving up and
+///            returning the best solution found. If not specified, set to 10.
+///
+/// @returns A `vtkm::NewtonsMethodResult` containing the best found result and state
+/// about its validity.
 VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename ScalarType,
           vtkm::IdComponent Size,

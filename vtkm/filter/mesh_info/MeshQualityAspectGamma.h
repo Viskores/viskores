@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityAspectGamma_h
 #define vtk_m_filter_mesh_info_MeshQualityAspectGamma_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,7 +30,14 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityAspectGamma : public vtkm::filter::FilterField
+/// @brief For each cell, compute the normalized root-mean-square of the edge lengths.
+///
+/// This only produces values for tetrahedra.
+///
+/// The root-mean-square edge length is normalized to the volume such that the value is
+/// 1 for an equilateral tetrahedron. The acceptable range for good quality meshes is
+/// considered to be [1, 3]. The normal range of values is [1, FLOAT_MAX].
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityAspectGamma : public vtkm::filter::Filter
 {
 public:
   MeshQualityAspectGamma();

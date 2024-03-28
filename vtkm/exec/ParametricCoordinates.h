@@ -118,6 +118,10 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesCenter(
 /// Returns the parametric center of the given cell shape with the given number
 /// of points.
 ///
+/// @param[in]  numPoints The number of points in the cell.
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] pcoords `vtkm::Vec` to store the parametric center.
 template <typename ParametricCoordType>
 static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesCenter(
   vtkm::IdComponent numPoints,
@@ -241,6 +245,12 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesPoint(
 /// Returns the parametric coordinate of a cell point of the given shape with
 /// the given number of points.
 ///
+/// @param[in]  numPoints The number of points in the cell.
+/// @param[in]  pointIndex The local index for the point to get the parametric coordinates
+///     of. This index is between 0 and _n_-1 where _n_ is the number of points in the cell.
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] pcoords `vtkm::Vec` to store the parametric center.
 template <typename ParametricCoordType>
 static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesPoint(
   vtkm::IdComponent numPoints,
@@ -354,8 +364,17 @@ static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesToWorldCoordinates(
 }
 
 //-----------------------------------------------------------------------------
-/// Returns the world coordinate corresponding to the given parametric coordinate of a cell.
+/// Converts parametric coordinates (coordinates relative to the cell) to world coordinates
+/// (coordinates in the global system).
 ///
+/// @param[in]  pointWCoords A list of world coordinates for each point in the cell. This
+///     usually comes from a `FieldInPoint` argument in a
+///     `vtkm::worklet::WorkletVisitCellsWithPoints` where the coordinate system is passed
+///     into that argument.
+/// @param[in]  pcoords The parametric coordinates where you want to get world coordinates for.
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] result `vtkm::Vec` to store the interpolated world coordinates.
 template <typename WorldCoordVector, typename PCoordType>
 static inline VTKM_EXEC vtkm::ErrorCode ParametricCoordinatesToWorldCoordinates(
   const WorldCoordVector& pointWCoords,
@@ -541,8 +560,18 @@ static inline VTKM_EXEC vtkm::ErrorCode WorldCoordinatesToParametricCoordinates(
 }
 
 //-----------------------------------------------------------------------------
-/// Returns the world paramteric corresponding to the given world coordinate for a cell.
+/// Converts world coordinates (coordinates in the global system) to parametric
+/// coordinates (coordinates relative to the cell). This function can be slow for
+/// cell types with nonlinear interpolation (which is anything that is not a simplex).
 ///
+/// @param[in]  pointWCoords A list of world coordinates for each point in the cell. This
+///     usually comes from a `FieldInPoint` argument in a
+///     `vtkm::worklet::WorkletVisitCellsWithPoints` where the coordinate system is passed
+///     into that argument.
+/// @param[in]  wcoords The world coordinates where you want to get parametric coordinates for.
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+///     This method is overloaded for different shape types.
+/// @param[out] result `vtkm::Vec` to store the associated parametric coordinates.
 template <typename WorldCoordVector>
 static inline VTKM_EXEC vtkm::ErrorCode WorldCoordinatesToParametricCoordinates(
   const WorldCoordVector& pointWCoords,

@@ -11,7 +11,7 @@
 ##=============================================================================
 
 FROM ubuntu:20.04
-LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@kitware.com>"
+LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
 ENV TZ=America/New_York
 
@@ -27,8 +27,10 @@ RUN apt update && DEBIAN_FRONTEND="noninteractive" apt install -y --no-install-r
       libomp-dev \
       libtbb-dev \
       libhdf5-dev \
+      make \
       mpich \
       ninja-build \
+      pkg-config \
       python \
       python3-scipy \
       software-properties-common && \

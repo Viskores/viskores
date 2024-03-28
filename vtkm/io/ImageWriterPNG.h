@@ -17,12 +17,14 @@ namespace vtkm
 namespace io
 {
 
-/// \brief Manages writing images using the PNG format via lodepng
+/// @brief Writes images using the PNG format.
 ///
-/// \c ImageWriterPNG extends vtkm::io::ImageWriterBase and implements writing images in a valid
-/// PNG format.  It utilizes lodepng's encode file functions to write
-/// PNG images that are automatically compressed to optimal sizes relative to
-/// the actual bit complexity of the image.
+/// `ImageWriterPNG` is constructed with the name of the file to write. The data
+/// is written to the file by calling the `WriteDataSet` method.
+///
+/// When writing files, `ImageReaderPNG` automatically compresses data to optimal
+/// sizes relative to the actual bit complexity of the provided image.
+///
 ///
 class VTKM_IO_EXPORT ImageWriterPNG : public vtkm::io::ImageWriterBase
 {

@@ -161,6 +161,8 @@ struct PermutationTests
                      "Permutation portal wrong size.");
     VTKM_TEST_ASSERT(permutationArray.ReadPortal().GetNumberOfValues() == ARRAY_SIZE,
                      "Permutation portal wrong size.");
+    VTKM_TEST_ASSERT(permutationArray.GetNumberOfComponentsFlat() ==
+                     vtkm::VecFlat<ValueType>::NUM_COMPONENTS);
 
     vtkm::cont::Invoker invoke;
 

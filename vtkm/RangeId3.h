@@ -26,12 +26,20 @@ namespace vtkm
 ///
 struct RangeId3
 {
+  /// The range of values in the X direction. The `vtkm::RangeId` struct provides
+  /// the minimum and maximum along that axis.
   vtkm::RangeId X;
+  /// The range of values in the Y direction. The `vtkm::RangeId` struct provides
+  /// the minimum and maximum along that axis.
   vtkm::RangeId Y;
+  /// The range of values in the Z direction. The `vtkm::RangeId` struct provides
+  /// the minimum and maximum along that axis.
   vtkm::RangeId Z;
 
+  /// Construct an empty 3D range.
   RangeId3() = default;
 
+  /// Construct a range with the given x, y, and z directions.
   VTKM_EXEC_CONT
   RangeId3(const vtkm::RangeId& xrange, const vtkm::RangeId& yrange, const vtkm::RangeId& zrange)
     : X(xrange)
@@ -40,6 +48,7 @@ struct RangeId3
   {
   }
 
+  /// Construct a range with the given minimum (inclusive) and maximum (exclusive) points.
   VTKM_EXEC_CONT
   RangeId3(vtkm::Id minX, vtkm::Id maxX, vtkm::Id minY, vtkm::Id maxY, vtkm::Id minZ, vtkm::Id maxZ)
     : X(vtkm::RangeId(minX, maxX))

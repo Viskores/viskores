@@ -153,7 +153,7 @@ bool DataSet::HasGhostCellField() const
   return this->HasCellField(this->GetGhostCellFieldName());
 }
 
-const vtkm::cont::Field& DataSet::GetGhostCellField() const
+vtkm::cont::Field DataSet::GetGhostCellField() const
 {
   if (this->HasGhostCellField())
   {
@@ -161,7 +161,9 @@ const vtkm::cont::Field& DataSet::GetGhostCellField() const
   }
   else
   {
-    throw vtkm::cont::ErrorBadValue("No Ghost Cell Field");
+    return make_FieldCell(
+      this->GetGhostCellFieldName(),
+      vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(0, this->GetNumberOfCells()));
   }
 }
 

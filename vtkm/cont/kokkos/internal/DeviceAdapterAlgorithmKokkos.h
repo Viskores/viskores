@@ -245,7 +245,10 @@ public:
   }
 
   //----------------------------------------------------------------------------
+#ifndef VTKM_CUDA
+  // nvcc doesn't like the private class declaration so disable under CUDA
 private:
+#endif
   template <typename ArrayHandle, typename BinaryOperator, typename ResultType>
   VTKM_CONT static ResultType ReduceImpl(const ArrayHandle& input,
                                          BinaryOperator binaryOperator,
@@ -414,7 +417,10 @@ public:
   }
 
   //----------------------------------------------------------------------------
+#ifndef VTKM_CUDA
+  // nvcc doesn't like the private class declaration so disable under CUDA
 private:
+#endif
   // Scan and Reduce have the same conditions
   template <typename BinaryOperator, typename ResultType>
   using UseKokkosScan = UseKokkosReduce<BinaryOperator, ResultType>;
@@ -546,7 +552,10 @@ public:
   }
 
   //----------------------------------------------------------------------------
+#ifndef VTKM_CUDA
+  // nvcc doesn't like the private class declaration so disable under CUDA
 private:
+#endif
   template <typename T, typename StorageIn, typename StorageOut, typename BinaryOperator>
   VTKM_CONT static T ScanInclusiveImpl(const vtkm::cont::ArrayHandle<T, StorageIn>& input,
                                        vtkm::cont::ArrayHandle<T, StorageOut>& output,
@@ -661,9 +670,9 @@ public:
   }
 
   //----------------------------------------------------------------------------
-  template <typename WType, typename IType>
+  template <typename WType, typename IType, typename Hints>
   VTKM_CONT static void ScheduleTask(
-    vtkm::exec::kokkos::internal::TaskBasic1D<WType, IType>& functor,
+    vtkm::exec::kokkos::internal::TaskBasic1D<WType, IType, Hints>& functor,
     vtkm::Id numInstances)
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
@@ -676,15 +685,22 @@ public:
 
     functor.SetErrorMessageBuffer(GetErrorMessageBufferInstance());
 
-    Kokkos::RangePolicy<vtkm::cont::kokkos::internal::ExecutionSpace, vtkm::Id> policy(
-      vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), 0, numInstances);
+    constexpr vtkm::IdComponent maxThreadsPerBlock =
+      vtkm::cont::internal::HintFind<Hints,
+                                     vtkm::cont::internal::HintThreadsPerBlock<0>,
+                                     vtkm::cont::DeviceAdapterTagKokkos>::MaxThreads;
+
+    Kokkos::RangePolicy<vtkm::cont::kokkos::internal::ExecutionSpace,
+                        Kokkos::LaunchBounds<maxThreadsPerBlock, 0>,
+                        Kokkos::IndexType<vtkm::Id>>
+      policy(vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(), 0, numInstances);
     Kokkos::parallel_for(policy, functor);
     CheckForErrors(); // synchronizes
   }
 
-  template <typename WType, typename IType>
+  template <typename WType, typename IType, typename Hints>
   VTKM_CONT static void ScheduleTask(
-    vtkm::exec::kokkos::internal::TaskBasic3D<WType, IType>& functor,
+    vtkm::exec::kokkos::internal::TaskBasic3D<WType, IType, Hints>& functor,
     vtkm::Id3 rangeMax)
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
@@ -697,7 +713,13 @@ public:
 
     functor.SetErrorMessageBuffer(GetErrorMessageBufferInstance());
 
+    constexpr vtkm::IdComponent maxThreadsPerBlock =
+      vtkm::cont::internal::HintFind<Hints,
+                                     vtkm::cont::internal::HintThreadsPerBlock<0>,
+                                     vtkm::cont::DeviceAdapterTagKokkos>::MaxThreads;
+
     Kokkos::MDRangePolicy<vtkm::cont::kokkos::internal::ExecutionSpace,
+                          Kokkos::LaunchBounds<maxThreadsPerBlock, 0>,
                           Kokkos::Rank<3>,
                           Kokkos::IndexType<vtkm::Id>>
       policy(vtkm::cont::kokkos::internal::GetExecutionSpaceInstance(),
@@ -720,22 +742,36 @@ public:
     CheckForErrors(); // synchronizes
   }
 
-  template <class Functor>
-  VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
+  template <typename Hints, typename Functor>
+  VTKM_CONT static void Schedule(Hints, Functor functor, vtkm::Id numInstances)
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::exec::kokkos::internal::TaskBasic1D<Functor, vtkm::internal::NullType> kernel(functor);
+    vtkm::exec::kokkos::internal::TaskBasic1D<Functor, vtkm::internal::NullType, Hints> kernel(
+      functor);
     ScheduleTask(kernel, numInstances);
   }
 
-  template <class Functor>
-  VTKM_CONT static void Schedule(Functor functor, const vtkm::Id3& rangeMax)
+  template <typename FunctorType>
+  VTKM_CONT static inline void Schedule(FunctorType&& functor, vtkm::Id numInstances)
+  {
+    Schedule(vtkm::cont::internal::HintList<>{}, functor, numInstances);
+  }
+
+  template <typename Hints, typename Functor>
+  VTKM_CONT static void Schedule(Hints, Functor functor, const vtkm::Id3& rangeMax)
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
-    vtkm::exec::kokkos::internal::TaskBasic3D<Functor, vtkm::internal::NullType> kernel(functor);
+    vtkm::exec::kokkos::internal::TaskBasic3D<Functor, vtkm::internal::NullType, Hints> kernel(
+      functor);
     ScheduleTask(kernel, rangeMax);
+  }
+
+  template <typename FunctorType>
+  VTKM_CONT static inline void Schedule(FunctorType&& functor, vtkm::Id3 rangeMax)
+  {
+    Schedule(vtkm::cont::internal::HintList<>{}, functor, rangeMax);
   }
 
   //----------------------------------------------------------------------------
@@ -1011,20 +1047,28 @@ template <>
 class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagKokkos>
 {
 public:
-  template <typename WorkletType, typename InvocationType>
-  VTKM_CONT static vtkm::exec::kokkos::internal::TaskBasic1D<WorkletType, InvocationType>
-  MakeTask(WorkletType& worklet, InvocationType& invocation, vtkm::Id)
+  template <typename Hints, typename WorkletType, typename InvocationType>
+  VTKM_CONT static vtkm::exec::kokkos::internal::TaskBasic1D<WorkletType, InvocationType, Hints>
+  MakeTask(WorkletType& worklet, InvocationType& invocation, vtkm::Id, Hints = Hints{})
   {
-    return vtkm::exec::kokkos::internal::TaskBasic1D<WorkletType, InvocationType>(worklet,
-                                                                                  invocation);
+    return vtkm::exec::kokkos::internal::TaskBasic1D<WorkletType, InvocationType, Hints>(
+      worklet, invocation);
   }
 
-  template <typename WorkletType, typename InvocationType>
-  VTKM_CONT static vtkm::exec::kokkos::internal::TaskBasic3D<WorkletType, InvocationType>
-  MakeTask(WorkletType& worklet, InvocationType& invocation, vtkm::Id3)
+  template <typename Hints, typename WorkletType, typename InvocationType>
+  VTKM_CONT static vtkm::exec::kokkos::internal::TaskBasic3D<WorkletType, InvocationType, Hints>
+  MakeTask(WorkletType& worklet, InvocationType& invocation, vtkm::Id3, Hints = {})
   {
-    return vtkm::exec::kokkos::internal::TaskBasic3D<WorkletType, InvocationType>(worklet,
-                                                                                  invocation);
+    return vtkm::exec::kokkos::internal::TaskBasic3D<WorkletType, InvocationType, Hints>(
+      worklet, invocation);
+  }
+
+  template <typename WorkletType, typename InvocationType, typename RangeType>
+  VTKM_CONT static auto MakeTask(WorkletType& worklet,
+                                 InvocationType& invocation,
+                                 const RangeType& range)
+  {
+    return MakeTask<vtkm::cont::internal::HintList<>>(worklet, invocation, range);
   }
 };
 }

@@ -259,8 +259,8 @@ public:
   VTKM_CONT_EXPORT static void ScheduleTask(vtkm::exec::tbb::internal::TaskTiling3D& functor,
                                             vtkm::Id3 size);
 
-  template <class FunctorType>
-  VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id numInstances)
+  template <typename Hints, typename FunctorType>
+  VTKM_CONT static inline void Schedule(Hints, FunctorType functor, vtkm::Id numInstances)
   {
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
                    "Schedule TBB 1D: '%s'",
@@ -270,8 +270,14 @@ public:
     ScheduleTask(kernel, numInstances);
   }
 
-  template <class FunctorType>
-  VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id3 rangeMax)
+  template <typename FunctorType>
+  VTKM_CONT static inline void Schedule(FunctorType&& functor, vtkm::Id numInstances)
+  {
+    Schedule(vtkm::cont::internal::HintList<>{}, functor, numInstances);
+  }
+
+  template <typename Hints, typename FunctorType>
+  VTKM_CONT static inline void Schedule(Hints, FunctorType functor, vtkm::Id3 rangeMax)
   {
     VTKM_LOG_SCOPE(vtkm::cont::LogLevel::Perf,
                    "Schedule TBB 3D: '%s'",
@@ -279,6 +285,12 @@ public:
 
     vtkm::exec::tbb::internal::TaskTiling3D kernel(functor);
     ScheduleTask(kernel, rangeMax);
+  }
+
+  template <typename FunctorType>
+  VTKM_CONT static inline void Schedule(FunctorType&& functor, vtkm::Id3 rangeMax)
+  {
+    Schedule(vtkm::cont::internal::HintList<>{}, functor, rangeMax);
   }
 
   //1. We need functions for each of the following
@@ -421,20 +433,32 @@ template <>
 class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagTBB>
 {
 public:
-  template <typename WorkletType, typename InvocationType>
+  template <typename Hints, typename WorkletType, typename InvocationType>
   static vtkm::exec::tbb::internal::TaskTiling1D MakeTask(WorkletType& worklet,
                                                           InvocationType& invocation,
-                                                          vtkm::Id)
+                                                          vtkm::Id,
+                                                          Hints = Hints{})
   {
+    // Currently ignoring hints.
     return vtkm::exec::tbb::internal::TaskTiling1D(worklet, invocation);
   }
 
-  template <typename WorkletType, typename InvocationType>
+  template <typename Hints, typename WorkletType, typename InvocationType>
   static vtkm::exec::tbb::internal::TaskTiling3D MakeTask(WorkletType& worklet,
                                                           InvocationType& invocation,
-                                                          vtkm::Id3)
+                                                          vtkm::Id3,
+                                                          Hints = Hints{})
   {
+    // Currently ignoring hints.
     return vtkm::exec::tbb::internal::TaskTiling3D(worklet, invocation);
+  }
+
+  template <typename WorkletType, typename InvocationType, typename RangeType>
+  VTKM_CONT static auto MakeTask(WorkletType& worklet,
+                                 InvocationType& invocation,
+                                 const RangeType& range)
+  {
+    return MakeTask<vtkm::cont::internal::HintList<>>(worklet, invocation, range);
   }
 };
 }

@@ -147,9 +147,13 @@ struct ComputePass1 : public vtkm::worklet::WorkletVisitPointsWithCells
 
 struct launchComputePass1
 {
-  template <typename DeviceAdapterTag, typename T, typename StorageTagField, typename... Args>
+  template <typename DeviceAdapterTag,
+            typename IVType,
+            typename T,
+            typename StorageTagField,
+            typename... Args>
   VTKM_CONT bool LaunchXAxis(DeviceAdapterTag device,
-                             const ComputePass1<T>& worklet,
+                             const ComputePass1<IVType>& worklet,
                              const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
                              vtkm::cont::ArrayHandle<vtkm::UInt8>& edgeCases,
                              vtkm::cont::CellSetStructured<2>& metaDataMesh2D,
@@ -162,9 +166,13 @@ struct launchComputePass1
     return true;
   }
 
-  template <typename DeviceAdapterTag, typename T, typename StorageTagField, typename... Args>
+  template <typename DeviceAdapterTag,
+            typename IVType,
+            typename T,
+            typename StorageTagField,
+            typename... Args>
   VTKM_CONT bool LaunchYAxis(DeviceAdapterTag device,
-                             const ComputePass1<T>& worklet,
+                             const ComputePass1<IVType>& worklet,
                              const vtkm::cont::ArrayHandle<T, StorageTagField>& inputField,
                              vtkm::cont::ArrayHandle<vtkm::UInt8>& edgeCases,
                              vtkm::cont::CellSetStructured<2>& metaDataMesh2D,

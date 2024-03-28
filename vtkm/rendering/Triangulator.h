@@ -19,8 +19,10 @@
 #include <vtkm/rendering/raytracing/MeshConnectivityBuilder.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/ScatterUniform.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
+
 namespace vtkm
 {
 namespace rendering
@@ -34,18 +36,51 @@ namespace rendering
 class Triangulator
 {
 public:
+  struct InterleaveArrays12 : vtkm::worklet::WorkletMapField
+  {
+    using ControlSignature = void(FieldIn, FieldOut);
+    using ExecutionSignature = void(_1, _2);
+    using InputDomain = _1;
+    using ScatterType = vtkm::worklet::ScatterUniform<12>;
+    template <typename T>
+    VTKM_EXEC void operator()(const T& input, T& output) const
+    {
+      if (int(input) == 0)
+        output = 1;
+    }
+  };
+
+  struct InterleaveArrays2 : vtkm::worklet::WorkletMapField
+  {
+    using ControlSignature = void(FieldIn, FieldOut);
+    using ExecutionSignature = void(_1, _2);
+    using InputDomain = _1;
+    using ScatterType = vtkm::worklet::ScatterUniform<2>;
+    template <typename T>
+    VTKM_EXEC void operator()(const T& input, T& output) const
+    {
+      if (int(input) == 0)
+        output = 1;
+    }
+  };
+
   class CountTriangles : public vtkm::worklet::WorkletVisitCellsWithPoints
   {
   public:
     VTKM_CONT
     CountTriangles() {}
-    using ControlSignature = void(CellSetIn cellset, FieldOut);
-    using ExecutionSignature = void(CellShape, _2);
+    using ControlSignature = void(CellSetIn cellset, FieldInCell ghostField, FieldOut triangles);
+    using ExecutionSignature = void(CellShape, _2, _3);
 
-    VTKM_EXEC
-    void operator()(vtkm::CellShapeTagGeneric shapeType, vtkm::Id& triangles) const
+    template <typename ghostlArrayType>
+    VTKM_EXEC void operator()(vtkm::CellShapeTagGeneric shapeType,
+                              ghostlArrayType& ghostField,
+                              vtkm::Id& triangles) const
     {
-      if (shapeType.Id == vtkm::CELL_SHAPE_TRIANGLE)
+
+      if (int(ghostField) != 0)
+        triangles = 0;
+      else if (shapeType.Id == vtkm::CELL_SHAPE_TRIANGLE)
         triangles = 1;
       else if (shapeType.Id == vtkm::CELL_SHAPE_QUAD)
         triangles = 2;
@@ -61,21 +96,38 @@ public:
         triangles = 0;
     }
 
-    VTKM_EXEC
-    void operator()(vtkm::CellShapeTagHexahedron vtkmNotUsed(shapeType), vtkm::Id& triangles) const
+    template <typename ghostlArrayType>
+    VTKM_EXEC void operator()(vtkm::CellShapeTagHexahedron vtkmNotUsed(shapeType),
+                              ghostlArrayType& ghostField,
+                              vtkm::Id& triangles) const
     {
-      triangles = 12;
+
+      if (int(ghostField) != 0)
+        triangles = 0;
+      else
+        triangles = 12;
     }
 
-    VTKM_EXEC
-    void operator()(vtkm::CellShapeTagQuad vtkmNotUsed(shapeType), vtkm::Id& triangles) const
+    template <typename ghostlArrayType>
+    VTKM_EXEC void operator()(vtkm::CellShapeTagQuad vtkmNotUsed(shapeType),
+                              ghostlArrayType& ghostField,
+                              vtkm::Id& triangles) const
     {
-      triangles = 2;
+      if (int(ghostField) != 0)
+        triangles = 0;
+      else
+        triangles = 2;
     }
-    VTKM_EXEC
-    void operator()(vtkm::CellShapeTagWedge vtkmNotUsed(shapeType), vtkm::Id& triangles) const
+
+    template <typename ghostlArrayType>
+    VTKM_EXEC void operator()(vtkm::CellShapeTagWedge vtkmNotUsed(shapeType),
+                              ghostlArrayType& ghostField,
+                              vtkm::Id& triangles) const
     {
-      triangles = 8;
+      if (int(ghostField) != 0)
+        triangles = 0;
+      else
+        triangles = 8;
     }
   }; //class CountTriangles
 
@@ -643,7 +695,8 @@ public:
   VTKM_CONT
   void Run(const vtkm::cont::UnknownCellSet& cellset,
            vtkm::cont::ArrayHandle<vtkm::Id4>& outputIndices,
-           vtkm::Id& outputTriangles)
+           vtkm::Id& outputTriangles,
+           const vtkm::cont::Field& ghostField = vtkm::cont::Field())
   {
     bool fastPath = false;
     if (cellset.CanConvert<vtkm::cont::CellSetStructured<3>>())
@@ -665,6 +718,17 @@ public:
         .Invoke(cellSetStructured3D, cellIdxs, outputIndices);
 
       outputTriangles = numCells * 12;
+
+      // removed blanked triangles
+      vtkm::cont::ArrayHandle<vtkm::UInt8> triangleGhostArrayHandle;
+      triangleGhostArrayHandle.AllocateAndFill(outputTriangles, 0); //numCells * 12
+      vtkm::worklet::DispatcherMapField<InterleaveArrays12>(InterleaveArrays12())
+        .Invoke(ghostField.GetData().ExtractComponent<vtkm::UInt8>(0), triangleGhostArrayHandle);
+
+      vtkm::cont::ArrayHandle<vtkm::Id4> nonGhostTriangles;
+      vtkm::cont::Algorithm::CopyIf(outputIndices, triangleGhostArrayHandle, nonGhostTriangles);
+      outputTriangles = nonGhostTriangles.GetNumberOfValues();
+      outputIndices = nonGhostTriangles;
     }
     else if (cellset.CanConvert<vtkm::cont::CellSetStructured<2>>())
     {
@@ -678,6 +742,18 @@ public:
         .Invoke(cellSetStructured2D, cellIdxs, outputIndices);
 
       outputTriangles = numCells * 2;
+
+      // removed blanked triangles
+      vtkm::cont::ArrayHandle<vtkm::UInt8> triangleGhostArrayHandle;
+      triangleGhostArrayHandle.AllocateAndFill(outputTriangles, 0); //numCells * 2
+      vtkm::worklet::DispatcherMapField<InterleaveArrays2>(InterleaveArrays2())
+        .Invoke(ghostField.GetData().ExtractComponent<vtkm::UInt8>(0), triangleGhostArrayHandle);
+
+      vtkm::cont::ArrayHandle<vtkm::Id4> nonGhostTriangles;
+      vtkm::cont::Algorithm::CopyIf(outputIndices, triangleGhostArrayHandle, nonGhostTriangles);
+      outputTriangles = nonGhostTriangles.GetNumberOfValues();
+      outputIndices = nonGhostTriangles;
+
       // no need to do external faces on 2D cell set
       fastPath = true;
     }
@@ -686,8 +762,11 @@ public:
       auto cellSetUnstructured =
         cellset.ResetCellSetList(VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED{});
       vtkm::cont::ArrayHandle<vtkm::Id> trianglesPerCell;
+
       vtkm::worklet::DispatcherMapTopology<CountTriangles>(CountTriangles())
-        .Invoke(cellSetUnstructured, trianglesPerCell);
+        .Invoke(cellSetUnstructured,
+                ghostField.GetData().ExtractComponent<vtkm::UInt8>(0),
+                trianglesPerCell);
 
       vtkm::Id totalTriangles = 0;
       totalTriangles = vtkm::cont::Algorithm::Reduce(trianglesPerCell, vtkm::Id(0));

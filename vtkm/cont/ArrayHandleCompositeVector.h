@@ -289,6 +289,15 @@ private:
   }
 
 public:
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    // Assume that all subcomponents are the same size. Things are not well defined otherwise.
+    return vtkm::tuple_element_t<0, StorageTuple>::GetNumberOfComponentsFlat(
+             GetBuffers(buffers, 0)) *
+      ValueType::NUM_COMPONENTS;
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

@@ -105,6 +105,12 @@ public:
     buffers[0].GetMetaData<vtkm::cont::internal::BitFieldMetaData>().NumberOfBits = numberOfBits;
   }
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return 1;
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

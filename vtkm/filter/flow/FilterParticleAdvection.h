@@ -13,7 +13,7 @@
 
 #include <vtkm/Particle.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/flow/FlowTypes.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
@@ -29,24 +29,38 @@ namespace flow
 /// Takes as input a vector field and seed locations and advects the seeds
 /// through the flow field.
 
-class VTKM_FILTER_FLOW_EXPORT FilterParticleAdvection : public vtkm::filter::FilterField
+class VTKM_FILTER_FLOW_EXPORT FilterParticleAdvection : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT
   bool CanThread() const override { return false; }
 
-  VTKM_CONT
-  void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
+  /// @brief Specifies the step size used for the numerical integrator.
+  ///
+  /// The numerical integrators operate by advancing each particle by a finite amount.
+  /// This parameter defines the distance to advance each time. Smaller values are
+  /// more accurate but take longer to integrate. An appropriate step size is usually
+  /// around the size of each cell.
+  VTKM_CONT void SetStepSize(vtkm::FloatDefault s) { this->StepSize = s; }
 
-  VTKM_CONT
-  void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
+  /// @brief Specifies the maximum number of integration steps for each particle.
+  ///
+  /// Some particle paths may loop and continue indefinitely. This parameter sets an upper
+  /// limit on the total length of advection.
+  VTKM_CONT void SetNumberOfSteps(vtkm::Id n) { this->NumberOfSteps = n; }
 
+  /// @brief Specify the seed locations for the particle advection.
+  ///
+  /// Each seed represents one particle that is advected by the vector field.
+  /// The particles are represented by a `vtkm::Particle` object or similar
+  /// type of object (such as `vtkm::ChargedParticle`).
   template <typename ParticleType>
   VTKM_CONT void SetSeeds(vtkm::cont::ArrayHandle<ParticleType>& seeds)
   {
     this->Seeds = seeds;
   }
 
+  /// @copydoc SetSeeds
   template <typename ParticleType>
   VTKM_CONT void SetSeeds(const std::vector<ParticleType>& seeds,
                           vtkm::CopyFlag copyFlag = vtkm::CopyFlag::On)

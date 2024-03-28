@@ -76,6 +76,10 @@ struct TestGroupVecVariableAsInput
 
     auto groupVecArray = vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray);
 
+    VTKM_TEST_ASSERT(groupVecArray.GetNumberOfValues() == ARRAY_SIZE);
+    // Num components is inconsistent, so you should just get 0.
+    VTKM_TEST_ASSERT(groupVecArray.GetNumberOfComponentsFlat() == 0);
+
     invoke(GroupVariableInputWorklet{}, groupVecArray, dummyArray);
 
     dummyArray.ReadPortal();

@@ -181,6 +181,12 @@ public:
     return vtkm::cont::internal::CreateBuffers(info, firstArray, secondArray);
   }
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return 1;
+  }
+
   VTKM_CONT static void ResizeBuffers(vtkm::Id numValues,
                                       const std::vector<vtkm::cont::internal::Buffer>& buffers,
                                       vtkm::CopyFlag preserve,

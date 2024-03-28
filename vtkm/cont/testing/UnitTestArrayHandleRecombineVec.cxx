@@ -50,6 +50,8 @@ struct TestRecombineVecAsInput
       recombinedArray.AppendComponentArray(vtkm::cont::ArrayExtractComponent(baseArray, cIndex));
     }
     VTKM_TEST_ASSERT(recombinedArray.GetNumberOfComponents() == VTraits::NUM_COMPONENTS);
+    VTKM_TEST_ASSERT(recombinedArray.GetNumberOfComponentsFlat() ==
+                     vtkm::VecFlat<T>::NUM_COMPONENTS);
     VTKM_TEST_ASSERT(recombinedArray.GetNumberOfValues() == ARRAY_SIZE);
 
     vtkm::cont::ArrayHandle<T> outputArray;

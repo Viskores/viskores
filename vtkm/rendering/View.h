@@ -27,6 +27,7 @@ namespace vtkm
 namespace rendering
 {
 
+/// @brief The abstract class representing the view of a rendering scene.
 class VTKM_RENDERING_EXPORT View
 {
   struct InternalData;
@@ -47,39 +48,54 @@ public:
 
   virtual ~View();
 
+  /// @brief Specify the scene object holding the objects to render.
   VTKM_CONT
   const vtkm::rendering::Scene& GetScene() const;
+  /// @copydoc GetScene
   VTKM_CONT
   vtkm::rendering::Scene& GetScene();
+  /// @copydoc GetScene
   VTKM_CONT
   void SetScene(const vtkm::rendering::Scene& scene);
 
+  /// @brief Specify the mapper object determining how objects are rendered.
   VTKM_CONT
   const vtkm::rendering::Mapper& GetMapper() const;
+  /// @copydoc GetMapper
   VTKM_CONT
   vtkm::rendering::Mapper& GetMapper();
 
+  /// @brief Specify the canvas object that holds the buffer to render into.
   VTKM_CONT
   const vtkm::rendering::Canvas& GetCanvas() const;
+  /// @copydoc GetCanvas
   VTKM_CONT
   vtkm::rendering::Canvas& GetCanvas();
 
   VTKM_CONT
   const vtkm::rendering::WorldAnnotator& GetWorldAnnotator() const;
 
+  /// @brief Specify the perspective from which to render a scene.
   VTKM_CONT
   const vtkm::rendering::Camera& GetCamera() const;
+  /// @copydoc GetCamera
   VTKM_CONT
   vtkm::rendering::Camera& GetCamera();
+  /// @copydoc GetCamera
   VTKM_CONT
   void SetCamera(const vtkm::rendering::Camera& camera);
 
+  /// @brief Specify the color used where nothing is rendered.
   VTKM_CONT
   const vtkm::rendering::Color& GetBackgroundColor() const;
-
+  /// @copydoc GetBackgroundColor
   VTKM_CONT
   void SetBackgroundColor(const vtkm::rendering::Color& color);
 
+  /// @brief Specify the color of foreground elements.
+  ///
+  /// The foreground is typically used for annotation elements.
+  /// The foreground should contrast well with the background.
   VTKM_CONT
   void SetForegroundColor(const vtkm::rendering::Color& color);
 
@@ -92,12 +108,14 @@ public:
   VTKM_CONT void SetRenderAnnotationsEnabled(bool val) { this->RenderAnnotationsEnabled = val; }
   VTKM_CONT bool GetRenderAnnotationsEnabled() const { return this->RenderAnnotationsEnabled; }
 
+  /// @brief Render a scene and store the result in the canvas' buffers.
   virtual void Paint() = 0;
   virtual void RenderScreenAnnotations() = 0;
   virtual void RenderWorldAnnotations() = 0;
 
   void RenderAnnotations();
 
+  /// @copydoc vtkm::rendering::Canvas::SaveAs
   void SaveAs(const std::string& fileName) const;
 
   VTKM_CONT

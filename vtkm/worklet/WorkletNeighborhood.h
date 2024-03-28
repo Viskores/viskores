@@ -42,11 +42,11 @@ namespace worklet
 class WorkletNeighborhood : public vtkm::worklet::internal::WorkletBase
 {
 public:
-  /// \brief The \c ExecutionSignature tag to query if the current iteration is inside the boundary.
+  /// @brief The `ExecutionSignature` tag to query if the current iteration is inside the boundary.
   ///
-  /// A \c WorkletPointNeighborhood operates by iterating over all points using a defined
-  /// neighborhood. This \c ExecutionSignature tag provides a \c BoundaryState object that allows
-  /// you to query whether the neighborhood of the current iteration is completely inside the
+  /// This `ExecutionSignature` tag provides a `vtkm::exec::BoundaryState` object that provides
+  /// information about where the local neighborhood is in relationship to the full mesh. It allows
+  /// you to query whether the neighborhood of the current worklet call is completely inside the
   /// bounds of the mesh or if it extends beyond the mesh. This is important as when you are on a
   /// boundary the neighboordhood will contain empty values for a certain subset of values, and in
   /// this case the values returned will depend on the boundary behavior.
@@ -58,21 +58,27 @@ public:
   /// All worklets must define their scatter operation.
   using ScatterType = vtkm::worklet::ScatterIdentity;
 
+  VTKM_DEPRECATED_SUPPRESS_BEGIN
   /// All neighborhood worklets must define their boundary type operation.
   /// The boundary type determines how loading on boundaries will work.
-  using BoundaryType = vtkm::worklet::BoundaryClamp;
+  using BoundaryType VTKM_DEPRECATED(2.2, "Never fully supported, so being removed.") =
+    vtkm::worklet::BoundaryClamp;
 
   /// In addition to defining the boundary type, the worklet must produce the
   /// boundary condition. The default BoundaryClamp has no state, so just return an
   /// instance.
   /// Note: Currently only BoundaryClamp is implemented
-  VTKM_CONT
-  BoundaryType GetBoundaryCondition() const { return BoundaryType(); }
+  VTKM_DEPRECATED(2.2, "Never fully supported, so being removed.")
+  VTKM_CONT BoundaryType GetBoundaryCondition() const { return BoundaryType(); }
+  VTKM_DEPRECATED_SUPPRESS_END
 
-  /// \brief A control signature tag for input point fields.
+  /// @brief A control signature tag for input fields.
   ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
+  /// A `FieldIn` argument expects a `vtkm::cont::ArrayHandle` in the associated
+  /// parameter of the invoke. Each invocation of the worklet gets a single value
+  /// out of this array.
+  ///
+  /// This tag means that the field is read only.
   ///
   struct FieldIn : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -81,10 +87,13 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
 
-  /// \brief A control signature tag for output point fields.
+  /// @brief A control signature tag for output fields.
   ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
+  /// A `FieldOut` argument expects a `vtkm::cont::ArrayHandle` in the associated
+  /// parameter of the invoke. The array is resized before scheduling begins, and
+  /// each invocation of the worklet sets a single value in the array.
+  ///
+  /// This tag means that the field is write only.
   ///
   struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -93,10 +102,14 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
 
-  /// \brief A control signature tag for input-output (in-place) point fields.
+  /// @brief A control signature tag for input-output (in-place) fields.
   ///
-  /// This tag takes a template argument that is a type list tag that limits
-  /// the possible value types in the array.
+  /// A `FieldInOut` argument expects a `vtkm::cont::ArrayHandle` in the
+  /// associated parameter of the invoke. Each invocation of the worklet gets a
+  /// single value out of this array, which is replaced by the resulting value
+  /// after the worklet completes.
+  ///
+  /// This tag means that the field is read and write.
   ///
   struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
@@ -105,8 +118,14 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
   };
 
-  /// \brief A control signature tag for input connectivity.
+  /// @brief A control signature tag for input connectivity.
   ///
+  /// This tag represents the cell set that defines the collection of points the
+  /// map will operate on. A `CellSetIn` argument expects a `vtkm::cont::CellSetStructured`
+  /// object in the associated parameter of the invoke.
+  ///
+  /// There must be exactly one `CellSetIn` argument, and the worklet's `InputDomain` must
+  /// be set to this argument.
   struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagCellSetStructured;
@@ -115,16 +134,24 @@ public:
     using FetchTag = vtkm::exec::arg::FetchTagCellSetIn;
   };
 
-  /// \brief A control signature tag for neighborhood input values.
+  /// @brief A control signature tag for neighborhood input values.
   ///
-  /// A \c WorkletPointNeighborhood operates allowing access to a adjacent point
+  /// A neighborhood worklet operates by allowing access to a adjacent element
   /// values in a NxNxN patch called a neighborhood.
   /// No matter the size of the neighborhood it is symmetric across its center
   /// in each axis, and the current point value will be at the center
-  /// For example a 3x3x3 neighborhood would
+  /// For example a 3x3x3 neighborhood would have local indices ranging from -1 to 1
+  /// in each dimension.
   ///
-  /// This tag specifies an \c ArrayHandle object that holds the values. It is
-  /// an input array with entries for each point.
+  /// This tag specifies a `vtkm::cont::ArrayHandle` object that holds the values. It is
+  /// an input array with entries for each element.
+  ///
+  /// What differentiates `FieldInNeighborhood` from `FieldIn` is that `FieldInNeighborhood`
+  /// allows the worklet function to access the field value at the element it is visiting and
+  /// the field values in the neighborhood around it. Thus, instead of getting a single value
+  /// out of the array, each invocation of the worklet gets a `vtkm::exec::FieldNeighborhood`
+  /// object. These objects allow retrieval of field values using indices relative to the
+  /// visited element.
   ///
   struct FieldInNeighborhood : vtkm::cont::arg::ControlSignatureTagBase
   {

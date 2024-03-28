@@ -32,7 +32,7 @@ met:
    without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OR
 CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
@@ -48,6 +48,7 @@ The following files and directories come from third parties. Check the
 contents of these for details on the specifics of their respective
 licenses.
 - - - - - - - - - - - - - - - - - - - - - - - - do not remove this line
+CMake/FindSphinx.cmake
 CMake/FindTBB.cmake
 Utilities
 vtkm/cont/tbb/internal/parallel_sort.h

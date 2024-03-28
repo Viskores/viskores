@@ -49,6 +49,8 @@ struct TestGroupVecAsInput
       groupArray(baseArray);
     VTKM_TEST_ASSERT(groupArray.GetNumberOfValues() == ARRAY_SIZE,
                      "Group array reporting wrong array size.");
+    VTKM_TEST_ASSERT(groupArray.GetNumberOfComponentsFlat() ==
+                     vtkm::VecFlat<ComponentType>::NUM_COMPONENTS * NUM_COMPONENTS);
 
     vtkm::cont::ArrayHandle<ValueType> resultArray;
 

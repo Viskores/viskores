@@ -37,6 +37,7 @@ $# Ignore the following comment. It is meant for the generated file.
 #include <vtkmstd/is_trivial.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <type_traits>
 
 $py(max_expanded=8)\
@@ -108,33 +109,88 @@ constexpr std::size_t MaxSizeOf()
 #endif
 
 // --------------------------------------------------------------------------------
+// Helper functions to determine the maximum alignment size.
+template <typename... Ts>
+constexpr std::size_t MaxAlignmentOf()
+{
+  return std::max({ std::alignment_of<Ts>::value... });
+}
+
+// --------------------------------------------------------------------------------
 // Placeholder for a fully used structure of the given type.
-template <std::size_t Size, bool = (Size > 8)>
-struct SizedPlaceholder
-{
-  VTKM_STATIC_ASSERT(Size > 0);
-  vtkm::Int8 A;
-  SizedPlaceholder<Size - 1> B;
-};
+// This placeholder is used for compilers that do not correctly copy `struct`s
+// in `union`s where some of the `struct`s have padding. This is added to the
+// front of the `union` for the compiler to pick up and use.
+//
+// It is normally sufficient to have a full `struct`, but we have also encountered
+// compilers that only use it if the alignment is at least as large. But we
+// don't want the alignment too large because it can add unwanted padding
+// elsewhere. Also, adding `alignas` did not work to resolve this problem for
+// the compiler.
 
+template <std::size_t Alignment>
+struct TypeForAlignmentImpl;
 template <>
-struct SizedPlaceholder<1, false>
+struct TypeForAlignmentImpl<8>
 {
-  vtkm::Int8 A;
+  using type = vtkm::Int64;
+};
+template <>
+struct TypeForAlignmentImpl<4>
+{
+  using type = vtkm::Int32;
+};
+template <>
+struct TypeForAlignmentImpl<2>
+{
+  using type = vtkm::Int16;
+};
+template <>
+struct TypeForAlignmentImpl<1>
+{
+  using type = vtkm::Int8;
+};
+template <std::size_t Alignment>
+using TypeForAlignment = typename TypeForAlignmentImpl<Alignment>::type;
+
+template <std::size_t Size, typename Word, bool = (Size >= 4)>
+struct SizedPlaceholderImpl;
+
+template <std::size_t Size, typename Word>
+struct SizedPlaceholderImpl<Size, Word, true>
+{
+  Word A;
+  Word B;
+  Word C;
+  Word D;
+  SizedPlaceholderImpl<Size - 4, Word> E;
+};
+template <typename Word>
+struct SizedPlaceholderImpl<4, Word, true>
+{
+  Word A;
+  Word B;
+  Word C;
+  Word D;
 };
 
-template <std::size_t Size>
-struct SizedPlaceholder<Size, true>
+template <std::size_t Size, typename Word>
+struct SizedPlaceholderImpl<Size, Word, false>
 {
-  vtkm::Int8 A;
-  vtkm::Int8 B;
-  vtkm::Int8 C;
-  vtkm::Int8 D;
-  vtkm::Int8 E;
-  vtkm::Int8 F;
-  vtkm::Int8 G;
-  vtkm::Int8 H;
-  SizedPlaceholder<Size - 8> I;
+  Word A;
+  SizedPlaceholderImpl<Size - 1, Word> B;
+};
+template <typename Word>
+struct SizedPlaceholderImpl<1, Word, false>
+{
+  Word A;
+};
+
+template <typename... Ts>
+struct SizedPlaceholder
+  : SizedPlaceholderImpl<(MaxSizeOf<Ts...>() / MaxAlignmentOf<Ts...>()),
+                         TypeForAlignment<MaxAlignmentOf<Ts...>()>>
+{
 };
 
 // clang-format off
@@ -181,10 +237,9 @@ $for(param_length in range(max_expanded))\
 template <$typename_list(param_length)>
 union VariantUnionTD<$type_list(param_length)>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<$type_list(param_length)>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<$type_list(param_length)> Placeholder;
 
 $for(param_index in range(param_length + 1))\
   T$(param_index) V$(param_index);
@@ -195,10 +250,9 @@ $endfor\
 template <$typename_list(param_length)>
 union VariantUnionNTD<$type_list(param_length)>
 {
-  // Work around issue where CUDA sometimes seems to miss initializing some struct members
-  // if another entry in the varient has a struct with padding. Place an item that requires
-  // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<$type_list(param_length)>()> Placeholder;
+  // Work around issue where some compilers miss initializing some struct members if another entry
+  // in the varient has a struct with padding. Place an item that requires everthing to be copied.
+  SizedPlaceholder<$type_list(param_length)> Placeholder;
 
 $for(param_index in range(param_length + 1))\
   T$(param_index) V$(param_index);
@@ -216,7 +270,7 @@ union VariantUnionTD<$type_list(max_expanded), Ts...>
   // Work around issue where CUDA sometimes seems to miss initializing some struct members
   // if another entry in the varient has a struct with padding. Place an item that requires
   // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<$type_list(max_expanded), Ts...>()> Placeholder;
+  SizedPlaceholder<$type_list(max_expanded), Ts...> Placeholder;
 
 $for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);
@@ -233,7 +287,7 @@ union VariantUnionNTD<$type_list(max_expanded), Ts...>
   // Work around issue where CUDA sometimes seems to miss initializing some struct members
   // if another entry in the varient has a struct with padding. Place an item that requires
   // everthing to be copied.
-  SizedPlaceholder<MaxSizeOf<$type_list(max_expanded), Ts...>()> Placeholder;
+  SizedPlaceholder<$type_list(max_expanded), Ts...> Placeholder;
 
 $for(param_index in range(max_expanded))\
   T$(param_index) V$(param_index);

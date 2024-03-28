@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_density_estimate_NDEntropy_h
 #define vtk_m_filter_density_estimate_NDEntropy_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/density_estimate/vtkm_filter_density_estimate_export.h>
 
 namespace vtkm
@@ -23,7 +23,7 @@ namespace density_estimate
 ///
 /// This filter calculate the entropy of input N-Dims fields.
 ///
-class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT NDEntropy : public vtkm::filter::FilterField
+class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT NDEntropy : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT

@@ -69,7 +69,7 @@ struct MeshQualityWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
       vtkmGenericCellShapeMacro(metricValue = self->template ComputeMetric<OutType>(
                                   numPoints, pts, CellShapeTag{}, errorCode));
       default:
-        errorCode = vtkm::ErrorCode::CellNotFound;
+        errorCode = vtkm::ErrorCode::InvalidShapeId;
         metricValue = OutType(0.0);
     }
 

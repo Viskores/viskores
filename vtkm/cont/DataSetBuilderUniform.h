@@ -26,7 +26,14 @@ public:
   VTKM_CONT
   DataSetBuilderUniform();
 
-  //1D uniform grid
+  /// @brief Create a 1D uniform `DataSet`.
+  ///
+  /// @param[in] dimension The size of the grid. The dimensions are specified
+  ///   based on the number of points (as opposed to the number of cells).
+  /// @param[in] origin The origin of the data. This is the point coordinate with
+  ///   the minimum value in all dimensions.
+  /// @param[in] spacing The uniform distance between adjacent points.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const vtkm::Id& dimension,
                                               const T& origin,
@@ -40,11 +47,24 @@ public:
       coordNm);
   }
 
-  VTKM_CONT
-  static vtkm::cont::DataSet Create(const vtkm::Id& dimension,
-                                    const std::string& coordNm = "coords");
+  /// @brief Create a 1D uniform `DataSet`.
+  ///
+  /// The origin is set to 0 and the spacing is set to 1.
+  ///
+  /// @param[in] dimension The size of the grid. The dimensions are specified
+  ///   based on the number of points (as opposed to the number of cells).
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
+  VTKM_CONT static vtkm::cont::DataSet Create(const vtkm::Id& dimension,
+                                              const std::string& coordNm = "coords");
 
-  //2D uniform grids.
+  /// @brief Create a 2D uniform `DataSet`.
+  ///
+  /// @param[in] dimensions The size of the grid. The dimensions are specified
+  ///   based on the number of points (as opposed to the number of cells).
+  /// @param[in] origin The origin of the data. This is the point coordinate with
+  ///   the minimum value in all dimensions.
+  /// @param[in] spacing The uniform distance between adjacent points.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const vtkm::Id2& dimensions,
                                               const vtkm::Vec<T, 2>& origin,
@@ -61,11 +81,24 @@ public:
                                                 coordNm);
   }
 
-  VTKM_CONT
-  static vtkm::cont::DataSet Create(const vtkm::Id2& dimensions,
-                                    const std::string& coordNm = "coords");
+  /// @brief Create a 2D uniform `DataSet`.
+  ///
+  /// The origin is set to (0,0) and the spacing is set to (1,1).
+  ///
+  /// @param[in] dimensions The size of the grid. The dimensions are specified
+  ///   based on the number of points (as opposed to the number of cells).
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
+  VTKM_CONT static vtkm::cont::DataSet Create(const vtkm::Id2& dimensions,
+                                              const std::string& coordNm = "coords");
 
-  //3D uniform grids.
+  /// @brief Create a 3D uniform `DataSet`.
+  ///
+  /// @param[in] dimensions The size of the grid. The dimensions are specified
+  ///   based on the number of points (as opposed to the number of cells).
+  /// @param[in] origin The origin of the data. This is the point coordinate with
+  ///   the minimum value in all dimensions.
+  /// @param[in] spacing The uniform distance between adjacent points.
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const vtkm::Id3& dimensions,
                                               const vtkm::Vec<T, 3>& origin,
@@ -83,9 +116,15 @@ public:
       coordNm);
   }
 
-  VTKM_CONT
-  static vtkm::cont::DataSet Create(const vtkm::Id3& dimensions,
-                                    const std::string& coordNm = "coords");
+  /// @brief Create a 3D uniform `DataSet`.
+  ///
+  /// The origin is set to (0,0,0) and the spacing is set to (1,1,1).
+  ///
+  /// @param[in] dimensions The size of the grid. The dimensions are specified
+  ///   based on the number of points (as opposed to the number of cells).
+  /// @param[in] coordNm (optional) The name to register the coordinates as.
+  VTKM_CONT static vtkm::cont::DataSet Create(const vtkm::Id3& dimensions,
+                                              const std::string& coordNm = "coords");
 
 private:
   VTKM_CONT

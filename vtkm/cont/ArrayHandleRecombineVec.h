@@ -35,7 +35,9 @@ class RecombineVec
   vtkm::VecCConst<PortalType> Portals;
   vtkm::Id Index;
 
+  /// @cond NOPE
   friend vtkm::internal::ArrayPortalRecombineVec<PortalType>;
+  /// @endcond
 
 public:
   using ComponentType = typename std::remove_const<typename PortalType::ValueType>::type;
@@ -443,6 +445,15 @@ public:
   {
     return static_cast<vtkm::IdComponent>(
       buffers[0].GetMetaData<detail::RecombineVecMetaData>().ArrayBufferOffsets.size() - 1);
+  }
+
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    vtkm::IdComponent numComponents = GetNumberOfComponents(buffers);
+    vtkm::IdComponent numSubComponents =
+      SourceStorage::GetNumberOfComponentsFlat(BuffersForComponent(buffers, 0));
+    return numComponents * numSubComponents;
   }
 
   VTKM_CONT static vtkm::Id GetNumberOfValues(

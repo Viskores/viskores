@@ -18,14 +18,14 @@ namespace vtkm
 namespace exec
 {
 
-/// \brief Provides a neighborhood's placement with respect to the mesh's boundary.
+/// @brief Provides a neighborhood's placement with respect to the mesh's boundary.
 ///
-/// \c BoundaryState provides functionality for \c WorkletPointNeighborhood algorithms and Fetch's
+/// `BoundaryState` provides functionality for `vtkm::worklet::WorkletPointNeighborhood` algorithms
 /// to determine if they are operating on a point near the boundary. It allows you to query about
 /// overlaps of the neighborhood and the mesh boundary. It also helps convert local neighborhood
 /// ids to the corresponding location in the mesh.
 ///
-/// This class is typically constructed using the \c Boundary tag in an \c ExecutionSignature.
+/// This class is typically constructed using the `Boundary` tag in an `ExecutionSignature`.
 /// There is little reason to construct this in user code.
 ///
 struct BoundaryState
@@ -114,8 +114,16 @@ struct BoundaryState
       this->IsNeighborInZBoundary(neighbor[2]);
   }
 
-  /// Returns the minimum neighborhood indices that are within the bounds of the data.
+  /// @brief Returns the minimum neighborhood indices that are within the bounds of the data.
   ///
+  /// Given a radius for the neighborhood, returns a `vtkm::IdComponent3` for the "lower left"
+  /// (minimum) index. If the visited point is in the middle of the mesh, the returned triplet
+  /// is the negative radius for all components. But if the visited point is near the mesh
+  /// boundary, then the minimum index will be clipped.
+  ///
+  /// For example, if the visited point is at [5,5,5] and `MinNeighborIndices(2)` is called,
+  /// then [-2,-2,-2] is returned. However, if the visited point is at [0,1,2] and
+  /// `MinNeighborIndices(2)` is called, then [0,-1,-2] is returned.
   VTKM_EXEC vtkm::IdComponent3 MinNeighborIndices(vtkm::IdComponent radius) const
   {
     VTKM_ASSERT(radius >= 0);
@@ -136,8 +144,17 @@ struct BoundaryState
     return minIndices;
   }
 
-  /// Returns the minimum neighborhood indices that are within the bounds of the data.
+  /// @brief Returns the minimum neighborhood indices that are within the bounds of the data.
   ///
+  /// Given a radius for the neighborhood, returns a `vtkm::IdComponent3` for the "upper right"
+  /// (maximum) index. If the visited point is in the middle of the mesh, the returned triplet
+  /// is the positive radius for all components. But if the visited point is near the mesh
+  /// boundary, then the maximum index will be clipped.
+  ///
+  /// For example, if the visited point is at [5,5,5] in a 10 by 10 by 10 mesh and
+  /// `MaxNeighborIndices(2)` is called, then [2,2,2] is returned. However, if the visited point
+  /// is at [7, 8, 9] in the same mesh and `MaxNeighborIndices(2)` is called, then [2, 1, 0]
+  /// is returned.
   VTKM_EXEC vtkm::IdComponent3 MaxNeighborIndices(vtkm::IdComponent radius) const
   {
     VTKM_ASSERT(radius >= 0);
@@ -159,7 +176,6 @@ struct BoundaryState
     return maxIndices;
   }
 
-  ///@{
   /// Takes a local neighborhood index (in the ranges of -neighborhood size to neighborhood size)
   /// and returns the ijk of the equivalent point in the full data set. If the given value is out
   /// of range, the value is clamped to the nearest boundary. For example, if given a neighbor
@@ -173,15 +189,14 @@ struct BoundaryState
     return vtkm::Max(vtkm::Id3(0), vtkm::Min(this->PointDimensions - vtkm::Id3(1), fullIndex));
   }
 
+  /// @copydoc NeighborIndexToFullIndexClamp
   VTKM_EXEC vtkm::Id3 NeighborIndexToFullIndexClamp(vtkm::IdComponent neighborI,
                                                     vtkm::IdComponent neighborJ,
                                                     vtkm::IdComponent neighborK) const
   {
     return this->NeighborIndexToFullIndexClamp(vtkm::make_Vec(neighborI, neighborJ, neighborK));
   }
-  ///@}
 
-  ///@{
   /// Takes a local neighborhood index (in the ranges of -neighborhood size to neighborhood size)
   /// and returns the ijk of the equivalent point in the full data set. If the given value is out
   /// of range, the returned value is undefined.
@@ -191,15 +206,14 @@ struct BoundaryState
     return this->IJK + neighbor;
   }
 
+  /// @copydoc NeighborIndexToFullIndex
   VTKM_EXEC vtkm::Id3 NeighborIndexToFullIndex(vtkm::IdComponent neighborI,
                                                vtkm::IdComponent neighborJ,
                                                vtkm::IdComponent neighborK) const
   {
     return this->NeighborIndexToFullIndex(vtkm::make_Vec(neighborI, neighborJ, neighborK));
   }
-  ///@}
 
-  ///@{
   /// Takes a local neighborhood index (in the ranges of -neighborhood size to
   /// neighborhood size), clamps it to the dataset bounds, and returns a new
   /// neighborhood index. For example, if given a neighbor index that is past
@@ -214,15 +228,14 @@ struct BoundaryState
     return vtkm::IdComponent3{ clampedFullIndex - this->IJK };
   }
 
+  /// @copydoc ClampNeighborIndex
   VTKM_EXEC vtkm::IdComponent3 ClampNeighborIndex(vtkm::IdComponent neighborI,
                                                   vtkm::IdComponent neighborJ,
                                                   vtkm::IdComponent neighborK) const
   {
     return this->ClampNeighborIndex(vtkm::make_Vec(neighborI, neighborJ, neighborK));
   }
-  ///@}
 
-  ///@{
   /// Takes a local neighborhood index (in the ranges of -neighborhood size to neighborhood size)
   /// and returns the flat index of the equivalent point in the full data set. If the given value
   /// is out of range, the value is clamped to the nearest boundary. For example, if given a
@@ -236,15 +249,14 @@ struct BoundaryState
     return (full[2] * this->PointDimensions[1] + full[1]) * this->PointDimensions[0] + full[0];
   }
 
+  /// @copydoc NeighborIndexToFlatIndexClamp
   VTKM_EXEC vtkm::Id NeighborIndexToFlatIndexClamp(vtkm::IdComponent neighborI,
                                                    vtkm::IdComponent neighborJ,
                                                    vtkm::IdComponent neighborK) const
   {
     return this->NeighborIndexToFlatIndexClamp(vtkm::make_Vec(neighborI, neighborJ, neighborK));
   }
-  ///@}
 
-  ///@{
   /// Takes a local neighborhood index (in the ranges of -neighborhood size to neighborhood size)
   /// and returns the flat index of the equivalent point in the full data set. If the given value
   /// is out of range, the result is undefined.
@@ -255,14 +267,18 @@ struct BoundaryState
     return (full[2] * this->PointDimensions[1] + full[1]) * this->PointDimensions[0] + full[0];
   }
 
+  /// @copydoc NeighborIndexToFlatIndex
   VTKM_EXEC vtkm::Id NeighborIndexToFlatIndex(vtkm::IdComponent neighborI,
                                               vtkm::IdComponent neighborJ,
                                               vtkm::IdComponent neighborK) const
   {
     return this->NeighborIndexToFlatIndex(vtkm::make_Vec(neighborI, neighborJ, neighborK));
   }
-  ///@}
+
+  /// The 3D index of the visited element.
   vtkm::Id3 IJK;
+
+  /// The dimensions of the elements in the mesh.
   vtkm::Id3 PointDimensions;
 };
 }

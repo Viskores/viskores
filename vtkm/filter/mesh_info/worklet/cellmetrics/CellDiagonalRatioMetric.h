@@ -69,7 +69,7 @@ VTKM_EXEC inline OutType ComputeDiagonalRatio(const VecType& diagonals)
       maxLen = currLen;
   }
 
-  if (minLen <= OutType(0.0))
+  if (maxLen <= OutType(0.0))
     return vtkm::Infinity<OutType>();
 
   //Take square root because we only did magnitude squared before

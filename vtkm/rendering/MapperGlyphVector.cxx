@@ -50,12 +50,13 @@ void MapperGlyphVector::SetGlyphType(vtkm::rendering::GlyphType glyphType)
   this->GlyphType = glyphType;
 }
 
-void MapperGlyphVector::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
-                                    const vtkm::cont::CoordinateSystem& coords,
-                                    const vtkm::cont::Field& field,
-                                    const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
-                                    const vtkm::rendering::Camera& camera,
-                                    const vtkm::Range& vtkmNotUsed(fieldRange))
+void MapperGlyphVector::RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                                        const vtkm::cont::CoordinateSystem& coords,
+                                        const vtkm::cont::Field& field,
+                                        const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
+                                        const vtkm::rendering::Camera& camera,
+                                        const vtkm::Range& vtkmNotUsed(fieldRange),
+                                        const vtkm::cont::Field& vtkmNotUsed(ghostField))
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
 
@@ -69,7 +70,8 @@ void MapperGlyphVector::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
 
   vtkm::Bounds coordBounds = coords.GetBounds();
   vtkm::Float32 baseSize = this->BaseSize;
-  if (baseSize == -1.f)
+  // The weird formulation of this condition is to handle NaN correctly.
+  if (!(baseSize > 0))
   {
     // set a default size
     vtkm::Float64 lx = coordBounds.X.Length();
@@ -92,22 +94,22 @@ void MapperGlyphVector::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
   {
     vtkm::Float32 minSize = baseSize - baseSize * this->ScaleDelta;
     vtkm::Float32 maxSize = baseSize + baseSize * this->ScaleDelta;
-    if (this->UseNodes)
+    if (this->Association == vtkm::cont::Field::Association::Points)
     {
       glyphExtractor.ExtractCoordinates(processedCoords, processedField, minSize, maxSize);
     }
-    else
+    else // this->Association == vtkm::cont::Field::Association::Cells
     {
       glyphExtractor.ExtractCells(processedCellSet, processedField, minSize, maxSize);
     }
   }
   else
   {
-    if (this->UseNodes)
+    if (this->Association == vtkm::cont::Field::Association::Points)
     {
       glyphExtractor.ExtractCoordinates(processedCoords, processedField, baseSize);
     }
-    else
+    else // this->Association == vtkm::cont::Field::Association::Cells
     {
       glyphExtractor.ExtractCells(processedCellSet, processedField, baseSize);
     }

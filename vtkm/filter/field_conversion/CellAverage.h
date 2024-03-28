@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_field_conversion_CellAverage_h
 #define vtk_m_filter_field_conversion_CellAverage_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/field_conversion/vtkm_filter_field_conversion_export.h>
 
 namespace vtkm
@@ -20,14 +20,19 @@ namespace filter
 {
 namespace field_conversion
 {
-/// \brief  Point to cell interpolation filter.
+/// \brief Point to cell interpolation filter.
 ///
 /// CellAverage is a filter that transforms point data (i.e., data
 /// specified at cell points) into cell data (i.e., data specified per cell).
 /// The method of transformation is based on averaging the data
 /// values of all points used by particular cell.
 ///
-class VTKM_FILTER_FIELD_CONVERSION_EXPORT CellAverage : public vtkm::filter::FilterField
+/// The point field to convert comes from the active scalars.
+/// The default name for the output cell field is the same name as the input
+/// point field. The name can be overridden as always using the
+/// `SetOutputFieldName()` method.
+///
+class VTKM_FILTER_FIELD_CONVERSION_EXPORT CellAverage : public vtkm::filter::Filter
 {
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;

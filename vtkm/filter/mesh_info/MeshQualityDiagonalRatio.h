@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityDiagonalRatio_h
 #define vtk_m_filter_mesh_info_MeshQualityDiagonalRatio_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,7 +30,13 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityDiagonalRatio : public vtkm::filter::FilterField
+/// @brief Compute for each cell the ratio of the maximum diagonal to the minimum diagonal.
+///
+/// This only produces values for quadrilaterals and hexahedra.
+///
+/// An acceptable range for a good quality cell is [0.65, 1]. The normal range is [0, 1], but
+/// a degenerate cell with no size will have the value of infinity.
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityDiagonalRatio : public vtkm::filter::Filter
 {
 public:
   MeshQualityDiagonalRatio();

@@ -400,8 +400,8 @@ public:
   VTKM_CONT_EXPORT static void ScheduleTask(vtkm::exec::serial::internal::TaskTiling3D& functor,
                                             vtkm::Id3 size);
 
-  template <class FunctorType>
-  VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id size)
+  template <typename Hints, typename FunctorType>
+  VTKM_CONT static inline void Schedule(Hints, FunctorType functor, vtkm::Id size)
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
@@ -409,13 +409,25 @@ public:
     ScheduleTask(kernel, size);
   }
 
-  template <class FunctorType>
-  VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id3 size)
+  template <typename FunctorType>
+  VTKM_CONT static inline void Schedule(FunctorType&& functor, vtkm::Id size)
+  {
+    Schedule(vtkm::cont::internal::HintList<>{}, functor, size);
+  }
+
+  template <typename Hints, typename FunctorType>
+  VTKM_CONT static inline void Schedule(Hints, FunctorType functor, vtkm::Id3 size)
   {
     VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Perf);
 
     vtkm::exec::serial::internal::TaskTiling3D kernel(functor);
     ScheduleTask(kernel, size);
+  }
+
+  template <typename FunctorType>
+  VTKM_CONT static inline void Schedule(FunctorType&& functor, vtkm::Id3 size)
+  {
+    Schedule(vtkm::cont::internal::HintList<>{}, functor, size);
   }
 
 private:
@@ -446,7 +458,6 @@ private:
     }
   }
 
-private:
   /// Reorder the value array along with the sorting algorithm
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
   VTKM_CONT static void SortByKeyDirect(vtkm::cont::ArrayHandle<T, StorageT>& keys,
@@ -558,20 +569,32 @@ template <>
 class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
-  template <typename WorkletType, typename InvocationType>
+  template <typename Hints, typename WorkletType, typename InvocationType>
   static vtkm::exec::serial::internal::TaskTiling1D MakeTask(WorkletType& worklet,
                                                              InvocationType& invocation,
-                                                             vtkm::Id)
+                                                             vtkm::Id,
+                                                             Hints = Hints{})
   {
+    // Currently ignoring hints.
     return vtkm::exec::serial::internal::TaskTiling1D(worklet, invocation);
   }
 
-  template <typename WorkletType, typename InvocationType>
+  template <typename Hints, typename WorkletType, typename InvocationType>
   static vtkm::exec::serial::internal::TaskTiling3D MakeTask(WorkletType& worklet,
                                                              InvocationType& invocation,
-                                                             vtkm::Id3)
+                                                             vtkm::Id3,
+                                                             Hints = Hints{})
   {
+    // Currently ignoring hints.
     return vtkm::exec::serial::internal::TaskTiling3D(worklet, invocation);
+  }
+
+  template <typename WorkletType, typename InvocationType, typename RangeType>
+  VTKM_CONT static auto MakeTask(WorkletType& worklet,
+                                 InvocationType& invocation,
+                                 const RangeType& range)
+  {
+    return MakeTask<vtkm::cont::internal::HintList<>>(worklet, invocation, range);
   }
 };
 }

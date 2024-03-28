@@ -15,6 +15,8 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleReverse.h>
+#include <vtkm/cont/ArrayHandleRuntimeVec.h>
 #include <vtkm/cont/ArrayHandleView.h>
 #include <vtkm/cont/UncertainArrayHandle.h>
 #include <vtkm/cont/UnknownArrayHandle.h>
@@ -215,6 +217,96 @@ void TryCopy()
     vtkm::cont::ArrayHandle<ValueType> output;
     vtkm::cont::ArrayCopy(input, output);
     TestValues(input, output);
+  }
+
+  {
+    std::cout << "runtime vec size -> runtime vec size" << std::endl;
+    using ComponentType = typename VTraits::BaseComponentType;
+    vtkm::cont::ArrayHandle<ValueType> staticVecArray = MakeInputArray<ValueType>();
+    vtkm::cont::ArrayHandleRuntimeVec<ComponentType> input =
+      vtkm::cont::make_ArrayHandleRuntimeVec(staticVecArray);
+    vtkm::cont::ArrayHandleRuntimeVec<ComponentType> output(input.GetNumberOfComponents());
+    vtkm::cont::ArrayCopy(input, output);
+    // Convert the arrays back to static vec sizes for comparison, because TestValues
+    // uses a device array copy that may not work on runtime vec sizes.
+    TestValues(staticVecArray,
+               output.template AsArrayHandleBasic<vtkm::cont::ArrayHandle<ValueType>>());
+  }
+
+  {
+    std::cout << "runtime vec size reverse -> runtime vec size view" << std::endl;
+    using ComponentType = typename VTraits::BaseComponentType;
+    vtkm::cont::ArrayHandle<ValueType> staticVecArray = MakeInputArray<ValueType>();
+    vtkm::cont::ArrayHandleRuntimeVec<ComponentType> inputRuntimeVec =
+      vtkm::cont::make_ArrayHandleRuntimeVec(staticVecArray);
+    auto input = vtkm::cont::make_ArrayHandleReverse(inputRuntimeVec);
+    vtkm::cont::ArrayHandleRuntimeVec<ComponentType> outputBase(
+      inputRuntimeVec.GetNumberOfComponents());
+    outputBase.Allocate(ARRAY_SIZE * 2);
+    auto output = vtkm::cont::make_ArrayHandleView(outputBase, 2, ARRAY_SIZE);
+    vtkm::cont::ArrayCopy(input, output);
+    // Convert the arrays back to static vec sizes for comparison, because TestValues
+    // uses a device array copy that may not work on runtime vec sizes.
+    TestValues(vtkm::cont::make_ArrayHandleReverse(staticVecArray),
+               vtkm::cont::make_ArrayHandleView(
+                 outputBase.template AsArrayHandleBasic<vtkm::cont::ArrayHandle<ValueType>>(),
+                 2,
+                 ARRAY_SIZE));
+  }
+
+  {
+    std::cout << "runtime vec size -> runtime vec size (different type)" << std::endl;
+    using ComponentType = typename VTraits::BaseComponentType;
+    using SourceType = typename VTraits::template ReplaceComponentType<vtkm::UInt8>;
+    vtkm::cont::ArrayHandle<SourceType> staticVecArray = MakeInputArray<SourceType>();
+    vtkm::cont::ArrayHandleRuntimeVec<vtkm::UInt8> input =
+      vtkm::cont::make_ArrayHandleRuntimeVec(staticVecArray);
+    vtkm::cont::ArrayHandleRuntimeVec<ComponentType> output(input.GetNumberOfComponents());
+    vtkm::cont::ArrayCopy(input, output);
+    // Convert the arrays back to static vec sizes for comparison, because TestValues
+    // uses a device array copy that may not work on runtime vec sizes.
+    TestValues(staticVecArray,
+               output.template AsArrayHandleBasic<vtkm::cont::ArrayHandle<ValueType>>());
+  }
+
+  {
+    std::cout << "basic -> recombined vec" << std::endl;
+    using ComponentType = typename VTraits::BaseComponentType;
+    vtkm::cont::ArrayHandle<ValueType> input = MakeInputArray<ValueType>();
+    vtkm::cont::ArrayHandle<ValueType> output;
+    auto recombinedVec =
+      vtkm::cont::UnknownArrayHandle{ output }.ExtractArrayFromComponents<ComponentType>();
+    vtkm::cont::ArrayCopy(input, recombinedVec);
+    TestValues(input, output);
+  }
+
+  {
+    std::cout << "basic -> recombined vec (different type)" << std::endl;
+    using SourceType = typename VTraits::template ReplaceComponentType<vtkm::Id>;
+    using ComponentType = typename VTraits::BaseComponentType;
+    vtkm::cont::ArrayHandle<SourceType> input = MakeInputArray<SourceType>();
+    vtkm::cont::ArrayHandle<ValueType> output;
+    auto recombinedVec =
+      vtkm::cont::UnknownArrayHandle{ output }.ExtractArrayFromComponents<ComponentType>();
+    vtkm::cont::ArrayCopy(input, recombinedVec);
+    TestValues(input, output);
+  }
+
+  {
+    std::cout << "constant -> extracted component" << std::endl;
+    using ComponentType = typename VTraits::BaseComponentType;
+    vtkm::cont::ArrayHandle<ValueType> output;
+    output.Allocate(ARRAY_SIZE);
+    ValueType invalue = TestValue(7, ValueType{});
+    for (vtkm::IdComponent component = 0; component < VTraits::NUM_COMPONENTS; ++component)
+    {
+      vtkm::cont::ArrayHandleConstant<ComponentType> input(
+        VTraits::GetComponent(invalue, component), ARRAY_SIZE);
+      auto extractedComponent =
+        vtkm::cont::ArrayExtractComponent(output, component, vtkm::CopyFlag::Off);
+      vtkm::cont::ArrayCopy(input, extractedComponent);
+    }
+    TestValues(vtkm::cont::make_ArrayHandleConstant(invalue, ARRAY_SIZE), output);
   }
 
   // Test the copy methods in UnknownArrayHandle. Although this would be appropriate in

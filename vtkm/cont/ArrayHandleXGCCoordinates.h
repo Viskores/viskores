@@ -186,6 +186,12 @@ public:
   using ReadPortalType =
     vtkm::internal::ArrayPortalXGCCoordinates<typename SourceStorage::ReadPortalType>;
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return 3;
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

@@ -57,7 +57,7 @@
 #ifndef vtk_m_filter_scalar_topology_ContourTreeUniform_h
 #define vtk_m_filter_scalar_topology_ContourTreeUniform_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
 namespace vtkm
@@ -72,7 +72,7 @@ namespace scalar_topology
 /// peak of contour
 /// Based on the algorithm presented in the paper:
 //  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
-class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeMesh2D : public vtkm::filter::FilterField
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeMesh2D : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT
@@ -89,7 +89,7 @@ private:
 /// peak of contour
 /// Based on the algorithm presented in the paper:
 //  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
-class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeMesh3D : public vtkm::filter::FilterField
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeMesh3D : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT

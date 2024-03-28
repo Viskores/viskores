@@ -28,26 +28,18 @@ namespace rendering
 
 struct MapperPoint::InternalsType
 {
-  vtkm::rendering::CanvasRayTracer* Canvas;
+  vtkm::rendering::CanvasRayTracer* Canvas = nullptr;
   vtkm::rendering::raytracing::RayTracer Tracer;
   vtkm::rendering::raytracing::Camera RayCamera;
   vtkm::rendering::raytracing::Ray<vtkm::Float32> Rays;
-  bool CompositeBackground;
-  vtkm::Float32 PointRadius;
-  bool UseNodes;
-  vtkm::Float32 PointDelta;
-  bool UseVariableRadius;
+  bool CompositeBackground = true;
+  vtkm::Float32 PointRadius = -1.f;
+  vtkm::cont::Field::Association Association = vtkm::cont::Field::Association::Points;
+  vtkm::Float32 PointDelta = 0.5f;
+  bool UseVariableRadius = false;
 
   VTKM_CONT
-  InternalsType()
-    : Canvas(nullptr)
-    , CompositeBackground(true)
-    , PointRadius(-1.f)
-    , UseNodes(true)
-    , PointDelta(0.5f)
-    , UseVariableRadius(false)
-  {
-  }
+  InternalsType() = default;
 };
 
 MapperPoint::MapperPoint()
@@ -78,13 +70,51 @@ vtkm::rendering::Canvas* MapperPoint::GetCanvas() const
   return this->Internals->Canvas;
 }
 
+vtkm::cont::Field::Association MapperPoint::GetAssociation() const
+{
+  return this->Internals->Association;
+}
+
+void MapperPoint::SetAssociation(cont::Field::Association association)
+{
+  switch (association)
+  {
+    case vtkm::cont::Field::Association::Cells:
+    case vtkm::cont::Field::Association::Points:
+      this->Internals->Association = association;
+      break;
+    default:
+      throw vtkm::cont::ErrorBadValue("Invalid point mapper association.");
+  }
+}
+
+bool MapperPoint::GetUseCells() const
+{
+  return this->GetAssociation() == vtkm::cont::Field::Association::Cells;
+}
+
+void MapperPoint::SetUseCells()
+{
+  this->SetAssociation(vtkm::cont::Field::Association::Cells);
+}
+
+bool MapperPoint::GetUsePoints() const
+{
+  return this->GetAssociation() == vtkm::cont::Field::Association::Points;
+}
+
+void MapperPoint::SetUsePoints()
+{
+  this->SetAssociation(vtkm::cont::Field::Association::Points);
+}
+
 void MapperPoint::UseCells()
 {
-  this->Internals->UseNodes = false;
+  this->SetUseCells();
 }
 void MapperPoint::UseNodes()
 {
-  this->Internals->UseNodes = true;
+  this->SetUsePoints();
 }
 
 void MapperPoint::SetRadius(const vtkm::Float32& radius)
@@ -106,12 +136,13 @@ void MapperPoint::UseVariableRadius(bool useVariableRadius)
   this->Internals->UseVariableRadius = useVariableRadius;
 }
 
-void MapperPoint::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
-                              const vtkm::cont::CoordinateSystem& coords,
-                              const vtkm::cont::Field& scalarField,
-                              const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
-                              const vtkm::rendering::Camera& camera,
-                              const vtkm::Range& scalarRange)
+void MapperPoint::RenderCellsImpl(const vtkm::cont::UnknownCellSet& cellset,
+                                  const vtkm::cont::CoordinateSystem& coords,
+                                  const vtkm::cont::Field& scalarField,
+                                  const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
+                                  const vtkm::rendering::Camera& camera,
+                                  const vtkm::Range& scalarRange,
+                                  const vtkm::cont::Field& vtkmNotUsed(ghostField))
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
 
@@ -145,26 +176,30 @@ void MapperPoint::RenderCells(const vtkm::cont::UnknownCellSet& cellset,
   {
     vtkm::Float32 minRadius = baseRadius - baseRadius * this->Internals->PointDelta;
     vtkm::Float32 maxRadius = baseRadius + baseRadius * this->Internals->PointDelta;
-    if (this->Internals->UseNodes)
+    switch (this->Internals->Association)
     {
-
-      sphereExtractor.ExtractCoordinates(coords, scalarField, minRadius, maxRadius);
-    }
-    else
-    {
-      sphereExtractor.ExtractCells(cellset, scalarField, minRadius, maxRadius);
+      case vtkm::cont::Field::Association::Points:
+        sphereExtractor.ExtractCoordinates(coords, scalarField, minRadius, maxRadius);
+        break;
+      case vtkm::cont::Field::Association::Cells:
+        sphereExtractor.ExtractCells(cellset, scalarField, minRadius, maxRadius);
+        break;
+      default:
+        throw vtkm::cont::ErrorInternal("Bad association.");
     }
   }
   else
   {
-    if (this->Internals->UseNodes)
+    switch (this->Internals->Association)
     {
-
-      sphereExtractor.ExtractCoordinates(coords, baseRadius);
-    }
-    else
-    {
-      sphereExtractor.ExtractCells(cellset, baseRadius);
+      case vtkm::cont::Field::Association::Points:
+        sphereExtractor.ExtractCoordinates(coords, baseRadius);
+        break;
+      case vtkm::cont::Field::Association::Cells:
+        sphereExtractor.ExtractCells(cellset, baseRadius);
+        break;
+      default:
+        throw vtkm::cont::ErrorInternal("Bad association.");
     }
   }
 

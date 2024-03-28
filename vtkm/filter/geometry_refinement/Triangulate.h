@@ -20,10 +20,20 @@ namespace filter
 {
 namespace geometry_refinement
 {
+
+/// @brief Convert all polygons of a `vtkm::cont::DataSet` into triangles.
+///
+/// Note that although the triangles will occupy the same space of the cells that
+/// they replace, the interpolation of point fields within these cells might differ.
+/// For example, the first order interpolation of a quadrilateral uses bilinear
+/// interpolation, which actually results in quadratic equations. This differs from the
+/// purely linear field in a triangle, so the triangle replacement of the quadrilateral
+/// will not have exactly the same interpolation.
 class VTKM_FILTER_GEOMETRY_REFINEMENT_EXPORT Triangulate : public vtkm::filter::Filter
 {
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 };
+
 } // namespace geometry_refinement
 } // namespace filter
 } // namespace vtkm

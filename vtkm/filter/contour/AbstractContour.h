@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_contour_AbstractContour_h
 #define vtk_m_filter_contour_AbstractContour_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/filter/contour/vtkm_filter_contour_export.h>
 #include <vtkm/filter/vector_analysis/SurfaceNormals.h>
@@ -25,8 +25,8 @@ namespace contour
 /// \brief Contour filter interface
 ///
 /// Provides common configuration & execution methods for contour filters
-/// Only the method \c DoExecute executing the contour algorithm needs to be implemented
-class VTKM_FILTER_CONTOUR_EXPORT AbstractContour : public vtkm::filter::FilterField
+/// Only the method `DoExecute` executing the contour algorithm needs to be implemented
+class VTKM_FILTER_CONTOUR_EXPORT AbstractContour : public vtkm::filter::Filter
 {
 public:
   void SetNumberOfIsoValues(vtkm::Id num)
@@ -39,8 +39,15 @@ public:
 
   vtkm::Id GetNumberOfIsoValues() const { return static_cast<vtkm::Id>(this->IsoValues.size()); }
 
+  /// @brief Set a field value on which to extract a contour.
+  ///
+  /// This form of the method is usually used when only one contour is being extracted.
   void SetIsoValue(vtkm::Float64 v) { this->SetIsoValue(0, v); }
 
+  /// @brief Set a field value on which to extract a contour.
+  ///
+  /// This form is used to specify multiple contours. The method is called
+  /// multiple times with different @a index parameters.
   void SetIsoValue(vtkm::Id index, vtkm::Float64 v)
   {
     std::size_t i = static_cast<std::size_t>(index);
@@ -51,44 +58,91 @@ public:
     this->IsoValues[i] = v;
   }
 
+  /// @brief Set multiple iso values at once.
+  ///
+  /// The iso values can be specified as either a `std::vector` or an initializer list.
+  /// So, both
+  ///
+  /// @code{.cpp}
+  /// std::vector<vtkm::Float64> isovalues = { 0.2, 0.5, 0.7 };
+  /// contour.SetIsoValues(isovalues);
+  /// @endcode
+  ///
+  /// and
+  ///
+  /// @code{.cpp}
+  /// contour.SetIsoValues({ 0.2, 0.5, 0.7 });
+  /// @endcode
+  ///
+  /// work.
   void SetIsoValues(const std::vector<vtkm::Float64>& values) { this->IsoValues = values; }
 
-  vtkm::Float64 GetIsoValue(vtkm::Id index) const
+  /// @brief Return a value used to contour the mesh.
+  vtkm::Float64 GetIsoValue(vtkm::Id index = 0) const
   {
     return this->IsoValues[static_cast<std::size_t>(index)];
   }
 
-  /// Set/Get whether normals should be generated. Off by default.
+  /// @brief Set whether normals should be generated.
+  ///
+  /// Normals are used in shading calculations during rendering and can make the
+  /// surface appear more smooth.
+  ///
+  /// Off by default.
   VTKM_CONT
-  void SetGenerateNormals(bool on) { this->GenerateNormals = on; }
+  void SetGenerateNormals(bool flag) { this->GenerateNormals = flag; }
+  /// Get whether normals should be generated.
   VTKM_CONT
   bool GetGenerateNormals() const { return this->GenerateNormals; }
 
-  /// Set/Get whether to append the ids of the intersected edges to the vertices of the isosurface triangles. Off by default.
+  /// Set whether to append the ids of the intersected edges to the vertices of the isosurface
+  /// triangles. Off by default.
   VTKM_CONT
-  void SetAddInterpolationEdgeIds(bool on) { this->AddInterpolationEdgeIds = on; }
+  void SetAddInterpolationEdgeIds(bool flag) { this->AddInterpolationEdgeIds = flag; }
+  /// Get whether to append the ids of the intersected edges to the vertices of the isosurface
+  /// triangles.
   VTKM_CONT
   bool GetAddInterpolationEdgeIds() const { return this->AddInterpolationEdgeIds; }
 
-  /// Set/Get whether the fast path should be used for normals computation. Off by default.
+  /// @brief Set whether the fast path should be used for normals computation.
+  ///
+  /// When this flag is off (the default), the generated normals are based on
+  /// the gradient of the field being contoured and can be quite expensive to compute.
+  /// When the flag is on, a faster method that computes the normals based on the faces
+  /// of the isosurface mesh is used, but the normals do not look as good as the
+  /// gradient based normals.
+  ///
+  /// This flag has no effect if `SetGenerateNormals` is false.
   VTKM_CONT
-  void SetComputeFastNormals(bool on) { this->ComputeFastNormals = on; }
+  void SetComputeFastNormals(bool flag) { this->ComputeFastNormals = flag; }
+  /// Get whether the fast path should be used for normals computation.
   VTKM_CONT
   bool GetComputeFastNormals() const { return this->ComputeFastNormals; }
 
+  /// Set the name of the field for the generated normals.
   VTKM_CONT
   void SetNormalArrayName(const std::string& name) { this->NormalArrayName = name; }
 
+  /// Get the name of the field for the generated normals.
   VTKM_CONT
   const std::string& GetNormalArrayName() const { return this->NormalArrayName; }
 
-  /// Set/Get whether the points generated should be unique for every triangle
+  /// Set whether the points generated should be unique for every triangle
   /// or will duplicate points be merged together. Duplicate points are identified
   /// by the unique edge it was generated from.
+  ///
+  /// Because the contour filter (like all filters in VTK-m) runs in parallel, parallel
+  /// threads can (and often do) create duplicate versions of points. When this flag is
+  /// set to true, a secondary operation will find all duplicated points and combine
+  /// them together. If false, points will be duplicated. In addition to requiring more
+  /// storage, duplicated points mean that triangles next to each other will not be
+  /// considered adjecent to subsequent filters.
   ///
   VTKM_CONT
   void SetMergeDuplicatePoints(bool on) { this->MergeDuplicatedPoints = on; }
 
+  /// Get whether the points generated should be unique for every triangle
+  /// or will duplicate points be merged together.
   VTKM_CONT
   bool GetMergeDuplicatePoints() { return this->MergeDuplicatedPoints; }
 

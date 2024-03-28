@@ -80,11 +80,12 @@ class ComputeDistributedContourTreeFunctor
 {
 public:
   /// Create the functor
-  /// @param[in] globalSize  Global extends of the input mesh (i.e., number of mesh points in each dimension)
+  /// @param[in] globalSize  Global extents of the input mesh (i.e., number of mesh points in each dimension).
+  /// @param[in] useBoundaryExtremaOnly Use boundary extrema only (instead of the full boundary) during the fan in.
   /// @param[in] timingsLogLevel Set the vtkm::cont:LogLevel to be used to record timings information
-  ///                            specific to the computation of the hierachical contour tree
+  ///                            specific to the computation of the hierachical contour tree.
   /// @param[in] treeLogLevel Set the vtkm::cont:LogLevel to be used to record metadata information
-  ///                         about the various trees computed as part of the hierarchical contour tree compute
+  ///                         about the various trees computed as part of the hierarchical contour tree compute.
   ComputeDistributedContourTreeFunctor(
     vtkm::Id3 globalSize,
     bool useBoundaryExtremaOnly,
@@ -100,7 +101,7 @@ public:
   /// Operator used by DIY to compute a step in the fan in
   /// @param[in] block The local data block to be processed in this step. Instance of DistributedContourTreeBlockData.
   /// @param[in] rp DIY communication proxy
-  /// @param[in] unused partners of the current block (unused)
+  // @param[in] unused partners of the current block (unused)
   void operator()(
     vtkm::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>* block,
     const vtkmdiy::ReduceProxy& rp,

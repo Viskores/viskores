@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityDimension_h
 #define vtk_m_filter_mesh_info_MeshQualityDimension_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,7 +30,10 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityDimension : public vtkm::filter::FilterField
+/// @brief Compute for each cell a metric specifically designed for Sandia's Pronto code.
+///
+/// This only produces values for hexahedra.
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityDimension : public vtkm::filter::Filter
 {
 public:
   MeshQualityDimension();

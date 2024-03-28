@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityStretch_h
 #define vtk_m_filter_mesh_info_MeshQualityStretch_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,7 +30,15 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityStretch : public vtkm::filter::FilterField
+/// @brief Compute the stretch of each cell.
+///
+/// The stretch of a cell is computed as the ratio of the minimum edge length to the maximum
+/// diagonal, normalized for the unit cube. A good quality cell will have a stretch in
+/// the range [0.25, 1]. Poorer quality cells can have a stretch as low as 0 although a malformed
+/// cell might return a strech of infinity.
+///
+/// This only produces values for quadrilaterals and hexahedra.
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityStretch : public vtkm::filter::Filter
 {
 public:
   MeshQualityStretch();

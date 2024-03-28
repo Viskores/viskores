@@ -219,6 +219,7 @@ struct VerifyUserTransferredMemory
 
     VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
                      "ArrayHandle has wrong number of entries.");
+    VTKM_TEST_ASSERT(arrayHandle.GetNumberOfComponentsFlat() == vtkm::VecFlat<T>::NUM_COMPONENTS);
 
     std::cout << "Check array with user transferred memory." << std::endl;
     CheckArray(arrayHandle);

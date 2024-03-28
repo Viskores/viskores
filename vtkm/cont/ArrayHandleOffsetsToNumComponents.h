@@ -76,6 +76,12 @@ public:
     return OffsetsStorage::CreateBuffers();
   }
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return 1;
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

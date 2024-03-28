@@ -10,7 +10,7 @@
 #ifndef vtk_m_filter_field_transform_CompositeVectors_h
 #define vtk_m_filter_field_transform_CompositeVectors_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/field_transform/vtkm_filter_field_transform_export.h>
 
 namespace vtkm
@@ -20,28 +20,31 @@ namespace filter
 namespace field_transform
 {
 
-/// \brief Combine multiple scalar fields into a single vector field.
+/// @brief Combine multiple scalar fields into a single vector field.
 ///
 /// Scalar fields are selected as the active input fields, and the combined vector
-/// field is set at the output. The `SetFieldNameList` method takes a `std::vector`
-/// of field names to use as the component fields. Alternately, the superclass'
-/// set active field methods can be used to select the fields independently.
+/// field is set at the output. The `SetFieldNameList()` method takes a `std::vector`
+/// of field names to use as the component fields. Alternately, the `SetActiveField()`
+/// method can be used to select the fields independently.
 ///
 /// All of the input fields must be scalar values. The type of the first field
 /// determines the type of the output vector field.
 ///
-class VTKM_FILTER_FIELD_TRANSFORM_EXPORT CompositeVectors : public vtkm::filter::FilterField
+class VTKM_FILTER_FIELD_TRANSFORM_EXPORT CompositeVectors : public vtkm::filter::Filter
 {
 
 public:
   VTKM_CONT
   CompositeVectors() { this->SetOutputFieldName("CompositedField"); };
 
-  VTKM_CONT
-  void SetFieldNameList(
+  /// @brief Specifies the names of the fields to use as components for the output.
+  VTKM_CONT void SetFieldNameList(
     const std::vector<std::string>& fieldNameList,
     vtkm::cont::Field::Association association = vtkm::cont::Field::Association::Any);
 
+  /// @brief The number of fields specified as inputs.
+  ///
+  /// This will be the number of components in the generated field.
   VTKM_CONT vtkm::IdComponent GetNumberOfFields() const;
 
 private:

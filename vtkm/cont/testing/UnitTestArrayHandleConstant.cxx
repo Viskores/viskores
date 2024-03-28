@@ -46,6 +46,9 @@ struct TestConstantAsInput
       vtkm::cont::make_ArrayHandleConstant(value, ARRAY_SIZE);
 
     VTKM_TEST_ASSERT(constant.GetValue() == value);
+    VTKM_TEST_ASSERT(constant.GetNumberOfValues() == ARRAY_SIZE);
+    VTKM_TEST_ASSERT(constant.GetNumberOfComponentsFlat() ==
+                     vtkm::VecFlat<ValueType>::NUM_COMPONENTS);
 
     vtkm::cont::ArrayHandle<ValueType> result;
 

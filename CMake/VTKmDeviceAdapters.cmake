@@ -350,6 +350,7 @@ if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm_kokkos)
   elseif(HIP IN_LIST Kokkos_DEVICES)
     cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
     enable_language(HIP)
+
     set_target_properties(Kokkos::kokkoscore PROPERTIES
       INTERFACE_COMPILE_OPTIONS ""
       INTERFACE_LINK_OPTIONS ""
@@ -357,14 +358,6 @@ if(VTKm_ENABLE_KOKKOS AND NOT TARGET vtkm_kokkos)
     add_library(vtkm_kokkos_hip INTERFACE)
     set_property(TARGET vtkm_kokkos_hip PROPERTY EXPORT_NAME kokkos_hip)
     install(TARGETS vtkm_kokkos_hip EXPORT ${VTKm_EXPORT_NAME})
-
-    # Make sure rocthrust is available if requested
-    if(VTKm_ENABLE_KOKKOS_THRUST)
-      find_package(rocthrust)
-      if(NOT rocthrust_FOUND)
-        message(FATAL_ERROR "rocthrust not found. Please set VTKm_ENABLE_KOKKOS_THRUST to OFF.")
-      endif()
-    endif()
   endif()
 
   add_library(vtkm_kokkos INTERFACE IMPORTED GLOBAL)

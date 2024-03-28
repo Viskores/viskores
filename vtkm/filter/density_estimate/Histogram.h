@@ -11,7 +11,7 @@
 #ifndef vtk_m_filter_density_estimate_Histogram_h
 #define vtk_m_filter_density_estimate_Histogram_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/density_estimate/vtkm_filter_density_estimate_export.h>
 
 namespace vtkm
@@ -20,43 +20,58 @@ namespace filter
 {
 namespace density_estimate
 {
-/// \brief Construct the histogram of a given Field
+/// \brief Construct the histogram of a given field.
 ///
-/// Construct a histogram with a default of 10 bins.
+/// The range of the field is evenly split to a set number of bins (set by
+/// `SetNumberOfBins()`). This filter then counts the number of values in the filter
+/// that are in each bin.
 ///
-class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT Histogram : public vtkm::filter::FilterField
+/// The result of this filter is stored in a `vtkm::cont::DataSet` with no points
+/// or cells. It contains only a single field containing the histogram (bin counts).
+/// The field has an association of `vtkm::cont::Field::Association::WholeDataSet`.
+/// The field contains an array of `vtkm::Id` with the bin counts. By default, the
+/// field is named "histogram", but that can be changed with the `SetOutputFieldName()`
+/// method.
+///
+/// If this filter is run on a partitioned data set, the result will be a
+/// `vtkm::cont::PartitionedDataSet` containing a single
+/// `vtkm::cont::DataSet` as previously described.
+///
+class VTKM_FILTER_DENSITY_ESTIMATE_EXPORT Histogram : public vtkm::filter::Filter
 {
 public:
-  //Construct a histogram with a default of 10 bins
-  VTKM_CONT
-  Histogram();
+  VTKM_CONT Histogram();
 
-  VTKM_CONT
-  void SetNumberOfBins(vtkm::Id count) { this->NumberOfBins = count; }
+  /// @brief Set the number of bins for the resulting histogram.
+  ///
+  /// By default, a histogram with 10 bins is created.
+  VTKM_CONT void SetNumberOfBins(vtkm::Id count) { this->NumberOfBins = count; }
 
-  VTKM_CONT
-  vtkm::Id GetNumberOfBins() const { return this->NumberOfBins; }
+  /// @brief Get the number of bins for the resulting histogram.
+  VTKM_CONT vtkm::Id GetNumberOfBins() const { return this->NumberOfBins; }
 
-  ///@{
-  /// Get/Set the range to use to generate the histogram. If range is set to
-  /// empty, the field's global range (computed using `vtkm::cont::FieldRangeGlobalCompute`)
-  /// will be used.
-  VTKM_CONT
-  void SetRange(const vtkm::Range& range) { this->Range = range; }
+  /// @brief Set the range to use to generate the histogram.
+  ///
+  /// If range is set to empty, the field's global range (computed using
+  /// `vtkm::cont::FieldRangeGlobalCompute`) will be used.
+  VTKM_CONT void SetRange(const vtkm::Range& range) { this->Range = range; }
 
-  VTKM_CONT
-  const vtkm::Range& GetRange() const { return this->Range; }
-  ///@}
+  /// @brief Get the range used to generate the histogram.
+  ///
+  /// If the returned range is empty, then the field's global range will be used.
+  VTKM_CONT const vtkm::Range& GetRange() const { return this->Range; }
 
-  /// Returns the bin delta of the last computed field.
-  VTKM_CONT
-  vtkm::Float64 GetBinDelta() const { return this->BinDelta; }
+  /// @brief Returns the size of bin in the computed histogram.
+  ///
+  /// This value is only valid after a call to `Execute`.
+  VTKM_CONT vtkm::Float64 GetBinDelta() const { return this->BinDelta; }
 
-  /// Returns the range used for most recent execute. If `SetRange` is used to
-  /// specify and non-empty range, then this will be same as the range after
-  /// the `Execute` call.
-  VTKM_CONT
-  vtkm::Range GetComputedRange() const { return this->ComputedRange; }
+  /// @brief Returns the range used for most recent execute.
+  ///
+  /// If `SetRange` is used to specify a non-empty range, then this range will
+  /// be returned. Otherwise, the coputed range is returned.
+  /// This value is only valid after a call to `Execute`.
+  VTKM_CONT vtkm::Range GetComputedRange() const { return this->ComputedRange; }
 
 private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;

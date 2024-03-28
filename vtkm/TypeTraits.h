@@ -72,6 +72,8 @@ public:
   /// also be treated as vectors with VecTraits.
   using DimensionalityTag = vtkm::TypeTraitsUnknownTag;
 
+  /// @brief A static function that returns 0 (or the closest equivalent to it)
+  /// for the given type.
   VTKM_EXEC_CONT static T ZeroInitialization() { return T(); }
 };
 

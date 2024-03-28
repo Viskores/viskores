@@ -20,7 +20,7 @@
 #ifndef vtk_m_filter_mesh_info_MeshQualityArea_h
 #define vtk_m_filter_mesh_info_MeshQualityArea_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/mesh_info/vtkm_filter_mesh_info_export.h>
 
 namespace vtkm
@@ -30,15 +30,18 @@ namespace filter
 namespace mesh_info
 {
 
-class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityArea : public vtkm::filter::FilterField
+/// @brief Compute the area of each cell.
+///
+/// This only produces values for triangles and quadrilaterals.
+class VTKM_FILTER_MESH_INFO_EXPORT MeshQualityArea : public vtkm::filter::Filter
 {
 public:
   MeshQualityArea();
 
-  /// \brief Computes the area of all polygonal cells and returns the total area.
+  /// @brief Computes the area of all polygonal cells and returns the total area.
   vtkm::Float64 ComputeTotalArea(const vtkm::cont::DataSet& input);
 
-  /// \brief Computes the average area of cells.
+  /// @brief Computes the average area of cells.
   ///
   /// This method first computes the total area of all cells and then divides that by the
   /// number of cells in the dataset.

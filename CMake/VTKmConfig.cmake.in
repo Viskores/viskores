@@ -72,6 +72,7 @@ set(VTKm_ENABLE_OPENMP "@VTKm_ENABLE_OPENMP@")
 set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
 set(VTKm_ENABLE_LOGGING "@VTKm_ENABLE_LOGGING@")
 set(VTKm_ENABLE_RENDERING "@VTKm_ENABLE_RENDERING@")
+set(VTKm_ENABLE_ANARI "@VTKm_ENABLE_ANARI@")
 set(VTKm_ENABLE_GL_CONTEXT "@VTKm_ENABLE_GL_CONTEXT@")
 set(VTKm_ENABLE_OSMESA_CONTEXT "@VTKm_ENABLE_OSMESA_CONTEXT@")
 set(VTKm_ENABLE_EGL_CONTEXT "@VTKm_ENABLE_EGL_CONTEXT@")
@@ -93,6 +94,7 @@ endif()
 include(CMakeFindDependencyMacro)
 
 set(CMAKE_MODULE_PATH_save_vtkm "${CMAKE_MODULE_PATH}")
+set(PACKAGE_PREFIX_DIR_save_vtkm "${PACKAGE_PREFIX_DIR}")
 list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_LIST_DIR}")
 
 if (VTKm_ENABLE_TBB)
@@ -102,6 +104,16 @@ if (VTKm_ENABLE_TBB)
     list(APPEND VTKm_NOT_FOUND_REASON "TBB not found: ${TBB_NOT_FOUND_MESSAGE}")
   endif()
 endif()
+
+if (VTKm_ENABLE_ANARI)
+  find_dependency(anari)
+  if (NOT anari_FOUND)
+    set(VTKm_FOUND 0)
+    list(APPEND VTKm_NOT_FOUND_REASON "ANARI not found: ${anari_NOT_FOUND_MESSAGE}")
+  endif()
+endif()
+
+set(PACKAGE_PREFIX_DIR ${PACKAGE_PREFIX_DIR_save_vtkm})
 
 # Load the library exports, but only if not compiling VTK-m itself
 set_and_check(VTKm_CONFIG_DIR "@PACKAGE_VTKm_INSTALL_CONFIG_DIR@")

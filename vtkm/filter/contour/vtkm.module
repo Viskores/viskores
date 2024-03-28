@@ -7,6 +7,7 @@ DEPENDS
   vtkm_filter_core
   vtkm_filter_vector_analysis
   vtkm_filter_mesh_info
+  vtkm_filter_multi_block
 PRIVATE_DEPENDS
   vtkm_worklet
 TEST_DEPENDS

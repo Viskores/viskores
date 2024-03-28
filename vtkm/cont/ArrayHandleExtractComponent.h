@@ -114,6 +114,12 @@ public:
   using WritePortalType =
     vtkm::internal::ArrayPortalExtractComponent<typename SourceStorage::WritePortalType>;
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return vtkm::VecFlat<ValueType>::NUM_COMPONENTS;
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {
@@ -229,6 +235,9 @@ VTKM_CONT ArrayHandleExtractComponent<ArrayHandleType> make_ArrayHandleExtractCo
 namespace internal
 {
 
+///@cond
+// Doxygen has trouble parsing this, and it is not important to document.
+
 template <typename ArrayHandleType>
 struct ArrayExtractComponentImpl<vtkm::cont::StorageTagExtractComponent<ArrayHandleType>>
 {
@@ -248,6 +257,8 @@ struct ArrayExtractComponentImpl<vtkm::cont::StorageTagExtractComponent<ArrayHan
       src.GetArray(), (src.GetComponent() * FLAT_SUB_COMPONENTS) + componentIndex, allowCopy);
   }
 };
+
+/// @endcond
 
 } // namespace internal
 

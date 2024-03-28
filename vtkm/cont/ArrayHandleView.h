@@ -119,6 +119,12 @@ public:
   using WritePortalType =
     vtkm::internal::ArrayPortalView<typename ArrayHandleType::WritePortalType>;
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    return SourceStorage::GetNumberOfComponentsFlat(SourceBuffers(buffers));
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

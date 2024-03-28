@@ -11,6 +11,7 @@
 #define vtk_m_rendering_raytracing_Triangle_Extractor_h
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Field.h>
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 namespace vtkm
@@ -26,6 +27,8 @@ protected:
   vtkm::cont::ArrayHandle<vtkm::Id4> Triangles; // (cellid, v0, v1, v2)
 public:
   void ExtractCells(const vtkm::cont::UnknownCellSet& cells);
+
+  void ExtractCells(const vtkm::cont::UnknownCellSet& cells, const vtkm::cont::Field& ghostField);
 
   vtkm::cont::ArrayHandle<vtkm::Id4> GetTriangles();
   vtkm::Id GetNumberOfTriangles() const;

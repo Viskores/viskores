@@ -79,18 +79,28 @@ struct VTKM_NEVER_EXPORT VecTraits
 
   /// \brief Number of components in the vector.
   ///
-  /// This is only defined for vectors of a static size.
+  /// This is only defined for vectors of a static size. That is, `NUM_COMPONENTS`
+  /// is not available when `IsSizeStatic` is set to `vtkm::VecTraitsTagSizeVariable`.
   ///
   static constexpr vtkm::IdComponent NUM_COMPONENTS = 1;
 
-  /// Number of components in the given vector.
+  /// @brief Returns the number of components in the given vector.
+  ///
+  /// The result of `GetNumberOfComponents()` is the same value of `NUM_COMPONENTS`
+  /// for vector types that have a static size (that is, `IsSizeStatic` is
+  /// `vtkm::VecTraitsTagSizeStatic`). But unlike `NUM_COMPONENTS`, `GetNumberOfComponents()`
+  /// works for vectors of any type.
   ///
   static constexpr vtkm::IdComponent GetNumberOfComponents(const T&) { return NUM_COMPONENTS; }
 
   /// \brief A tag specifying whether this vector has multiple components (i.e. is a "real" vector).
   ///
-  /// This tag can be useful for creating specialized functions when a vector
-  /// is really just a scalar.
+  /// This type is set to either `vtkm::VecTraitsTagSingleComponent` if the vector length
+  /// is size 1 or `vtkm::VecTraitsTagMultipleComponents` otherwise.
+  /// This tag can be useful for creating specialized functions when a vector is really
+  /// just a scalar. If the vector type is of variable size (that is, `IsSizeStatic` is
+  /// `vtkm::VecTraitsTagSizeVariable`), then `HasMultipleComponents` might be
+  /// `vtkm::VecTraitsTagMultipleComponents` even when at run time there is only one component.
   ///
   using HasMultipleComponents = vtkm::VecTraitsTagSingleComponent;
 
@@ -109,6 +119,7 @@ struct VTKM_NEVER_EXPORT VecTraits
   {
     return vector;
   }
+  /// @copydoc GetComponent
   VTKM_EXEC_CONT static ComponentType& GetComponent(T& vector,
                                                     vtkm::IdComponent vtkmNotUsed(component))
   {
@@ -127,10 +138,13 @@ struct VTKM_NEVER_EXPORT VecTraits
   /// \brief Get a vector of the same type but with a different component.
   ///
   /// This type resolves to another vector with a different component type. For example,
-  /// `vtkm::VecTraits<vtkm::Vec<T, N>>::ReplaceComponentType<T2>` is `vtkm::Vec<T2, N>`.
-  /// This replacement is not recursive. So `VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2>`
-  /// is `vtkm::Vec<T2, N>`.
+  /// `vtkm::VecTraits<vtkm::Vec<T, N>>::%ReplaceComponentType<T2>` is `vtkm::Vec<T2, N>`. This
+  /// replacement is not recursive. So `VecTraits<Vec<Vec<T, M>, N>::%ReplaceComponentType<T2>` is
+  /// `vtkm::Vec<T2, N>`.
   ///
+  // Note: the `%` in the code samples above is a hint to doxygen to avoid attempting
+  // to link to the object (i.e. `ReplaceBaseComponentType`), which results in a warning.
+  // The `%` is removed from the doxygen text.
   template <typename NewComponentType>
   using ReplaceComponentType = NewComponentType;
 
@@ -138,8 +152,11 @@ struct VTKM_NEVER_EXPORT VecTraits
   ///
   /// This type resolves to another vector with a different base component type. The replacement
   /// is recursive for nested types. For example,
-  /// `VecTraits<Vec<Vec<T, M>, N>::ReplaceBaseComponentType<T2>` is `Vec<Vec<T2, M>, N>`.
+  /// `VecTraits<Vec<Vec<T, M>, N>::%ReplaceBaseComponentType<T2>` is `Vec<Vec<T2, M>, N>`.
   ///
+  // Note: the `%` in the code samples above is a hint to doxygen to avoid attempting
+  // to link to the object (i.e. `ReplaceBaseComponentType`), which results in a warning.
+  // The `%` is removed from the doxygen text.
   template <typename NewComponentType>
   using ReplaceBaseComponentType = NewComponentType;
 

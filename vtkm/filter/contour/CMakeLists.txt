@@ -17,6 +17,7 @@ set(contour_headers
   ContourMarchingCells.h
   MIRFilter.h
   Slice.h
+  SliceMultiple.h
 )
 
 set(contour_sources_device
@@ -26,6 +27,7 @@ set(contour_sources_device
   ContourMarchingCells.cxx
   MIRFilter.cxx
   Slice.cxx
+  SliceMultiple.cxx
 )
 
 set(contour_sources

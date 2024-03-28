@@ -63,7 +63,7 @@
 #include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/InteriorForest.h>
 
 #include <memory>
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
 namespace vtkm
@@ -87,8 +87,7 @@ namespace scalar_topology
 /// tree are merged progressively using a binary-reduction scheme to compute the
 /// final contour tree. I.e., in the multi-block context, the final tree is
 /// constructed on rank 0.
-class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeUniformDistributed
-  : public vtkm::filter::FilterField
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeUniformDistributed : public vtkm::filter::Filter
 {
 public:
   VTKM_CONT bool CanThread() const override

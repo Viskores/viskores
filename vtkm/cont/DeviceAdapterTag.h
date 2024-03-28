@@ -49,19 +49,41 @@ namespace cont
 
 using DeviceAdapterNameType = std::string;
 
+/// @brief An object used to specify a device.
+///
+/// `vtkm::cont::DeviceAdapterId` can be used to specify a device to use when
+/// executing some code. Each `DeviceAdapterTag` object inherits from
+/// `vtkm::cont::DeviceAdapterId`. Functions can accept a `vtkm::cont::DeviceAdapterId`
+/// object rather than a templated tag to select a device adapter at runtime.
 struct DeviceAdapterId
 {
   constexpr bool operator==(DeviceAdapterId other) const { return this->Value == other.Value; }
   constexpr bool operator!=(DeviceAdapterId other) const { return this->Value != other.Value; }
   constexpr bool operator<(DeviceAdapterId other) const { return this->Value < other.Value; }
 
+  /// @brief Return whether this object represents a valid type of device.
+  ///
+  /// This method will return true if the id represents a specific, valid device.
+  /// It will return true even if the device is disabled in by the runtime tracker
+  /// or if the device is not supported by the VTK-m build configuration.
+  ///
+  /// It should be noted that this method return false for tags that are not specific
+  /// devices. This includes `vtkm::cont::DeviceAdapterTagAny` and
+  /// `vtkm::cont::DeviceAdapterTagUndefined`.
   constexpr bool IsValueValid() const
   {
     return this->Value > 0 && this->Value < VTKM_MAX_DEVICE_ADAPTER_ID;
   }
 
+  /// @brief Returns the numeric value of the index.
   constexpr vtkm::Int8 GetValue() const { return this->Value; }
 
+  /// @brief Return a name representing the device.
+  ///
+  /// The string returned from this method is stored in a type named
+  /// `vtkm::cont::DeviceAdapterNameType`, which is currently aliased to
+  /// `std::string`. The device adapter name is useful for printing information
+  /// about a device being used.
   VTKM_CONT_EXPORT
   DeviceAdapterNameType GetName() const;
 
@@ -149,10 +171,18 @@ struct DeviceAdapterTraits;
   }                                                                                 \
   }
 
-// Represents when using TryExecute that the functor
-// can be executed on any device instead of a specific
-// one
+/// @struct vtkm::cont::DeviceAdapterTagAny
+/// @brief Tag for a device adapter used to specify that any device may be used
+/// for an operation.
+///
+/// In practice this is limited to devices that are currently available.
+
 VTKM_VALID_DEVICE_ADAPTER(Any, VTKM_DEVICE_ADAPTER_ANY)
+
+/// @struct vtkm::cont::DeviceAdapterTagUndefined
+/// @brief Tag for a device adapter used to avoid specifying a device.
+///
+/// Useful as a placeholder when a device can be specified but none is given.
 
 VTKM_INVALID_DEVICE_ADAPTER(Undefined, VTKM_DEVICE_ADAPTER_UNDEFINED)
 

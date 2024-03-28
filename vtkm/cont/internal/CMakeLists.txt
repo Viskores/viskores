@@ -25,6 +25,7 @@ set(headers
   DeviceAdapterListHelpers.h
   FieldCollection.h
   FunctorsGeneral.h
+  Hints.h
   IteratorFromArrayPortal.h
   KXSort.h
   MapArrayPermutation.h

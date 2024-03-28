@@ -15,22 +15,28 @@
 namespace vtkm
 {
 
-/// \brief Represent 2D integer range.
+/// @brief Represent 2D integer range.
 ///
-/// \c vtkm::RangeId2 is a helper class for representing a 2D range of integer
+/// `vtkm::RangeId2` is a helper class for representing a 2D range of integer
 /// values. The typical use of this class is to express a box of indices
-/// in the x, y, and z directions.
+/// in the x and y directions.
 ///
-/// \c RangeId2 also contains several helper functions for computing and
+/// `RangeId2` also contains several helper functions for computing and
 /// maintaining the range.
 ///
 struct RangeId2
 {
+  /// The range of values in the X direction. The `vtkm::RangeId` struct provides
+  /// the minimum and maximum along that axis.
   vtkm::RangeId X;
+  /// The range of values in the Y direction. The `vtkm::RangeId` struct provides
+  /// the minimum and maximum along that axis.
   vtkm::RangeId Y;
 
+  /// Construct an empty 2D range.
   RangeId2() = default;
 
+  /// Construct a range with the given x and y directions.
   VTKM_EXEC_CONT
   RangeId2(const vtkm::RangeId& xrange, const vtkm::RangeId& yrange)
     : X(xrange)
@@ -38,6 +44,7 @@ struct RangeId2
   {
   }
 
+  /// Construct a range with the given minimum (inclusive) and maximum (exclusive) points.
   VTKM_EXEC_CONT
   RangeId2(vtkm::Id minX, vtkm::Id maxX, vtkm::Id minY, vtkm::Id maxY)
     : X(vtkm::RangeId(minX, maxX))
@@ -45,8 +52,8 @@ struct RangeId2
   {
   }
 
-  /// Initialize range with an array of 6 values in the order xmin, xmax,
-  /// ymin, ymax, zmin, zmax.
+  /// Initialize range with an array of 4 values in the order xmin, xmax,
+  /// ymin, ymax.
   ///
   VTKM_EXEC_CONT
   explicit RangeId2(const vtkm::Id range[4])

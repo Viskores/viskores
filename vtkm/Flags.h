@@ -13,11 +13,13 @@
 namespace vtkm
 {
 
-enum class CopyFlag
+/// @brief Identifier used to specify whether a function should deep copy data.
+enum struct CopyFlag
 {
   Off = 0,
   On = 1
 };
+
 }
 
 #endif // vtk_m_Flags_h

@@ -36,6 +36,7 @@ set(FILES_TO_CHECK
 set(EXCEPTIONS
   LICENSE.txt
   README.txt
+  docs/users-guide/requirements.txt
   )
 
 if (NOT VTKm_SOURCE_DIR)

@@ -102,6 +102,12 @@ public:
     SourceStorage::ResizeBuffers(numValues, buffers, preserve, token);
   }
 
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>& buffers)
+  {
+    return SourceStorage::GetNumberOfComponentsFlat(buffers);
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

@@ -30,10 +30,24 @@ public:
   VTKM_CONT
   DataSetBuilderExplicit() {}
 
-  //Single cell explicits.
-  //TODO
-
-  //Zoo explicit cell
+  /// \brief Create a 1D `DataSet` with arbitrary cell connectivity.
+  ///
+  /// The cell connectivity is specified with arrays defining the shape and point
+  /// connections of each cell.
+  /// In this form, the cell connectivity and coordinates are specified as `std::vector`
+  /// and the data will be copied to create the data object.
+  ///
+  /// @param[in] xVals An array providing the x coordinate of each point.
+  /// @param[in] shapes An array of shapes for each cell. Each entry should be one of the
+  ///   `vtkm::CELL_SHAPE_*` values identifying the shape of the corresponding cell.
+  /// @param[in] numIndices An array containing for each cell the number of points incident
+  ///   on that cell.
+  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  ///   incident on each cell. Each cell has a short array of indices that reference points
+  ///   in the @a coords array. The length of each of these short arrays is specified by
+  ///   the @a numIndices array. These variable length arrays are tightly packed together
+  ///   in this @a connectivity array.
+  /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const std::vector<T>& xVals,
                                               const std::vector<vtkm::UInt8>& shapes,
@@ -46,6 +60,25 @@ public:
       xVals, yVals, zVals, shapes, numIndices, connectivity, coordsNm);
   }
 
+  /// \brief Create a 2D `DataSet` with arbitrary cell connectivity.
+  ///
+  /// The cell connectivity is specified with arrays defining the shape and point
+  /// connections of each cell.
+  /// In this form, the cell connectivity and coordinates are specified as `std::vector`
+  /// and the data will be copied to create the data object.
+  ///
+  /// @param[in] xVals An array providing the x coordinate of each point.
+  /// @param[in] yVals An array providing the x coordinate of each point.
+  /// @param[in] shapes An array of shapes for each cell. Each entry should be one of the
+  ///   `vtkm::CELL_SHAPE_*` values identifying the shape of the corresponding cell.
+  /// @param[in] numIndices An array containing for each cell the number of points incident
+  ///   on that cell.
+  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  ///   incident on each cell. Each cell has a short array of indices that reference points
+  ///   in the @a coords array. The length of each of these short arrays is specified by
+  ///   the @a numIndices array. These variable length arrays are tightly packed together
+  ///   in this @a connectivity array.
+  /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const std::vector<T>& xVals,
                                               const std::vector<T>& yVals,
@@ -59,6 +92,26 @@ public:
       xVals, yVals, zVals, shapes, numIndices, connectivity, coordsNm);
   }
 
+  /// \brief Create a 3D `DataSet` with arbitrary cell connectivity.
+  ///
+  /// The cell connectivity is specified with arrays defining the shape and point
+  /// connections of each cell.
+  /// In this form, the cell connectivity and coordinates are specified as `std::vector`
+  /// and the data will be copied to create the data object.
+  ///
+  /// @param[in] xVals An array providing the x coordinate of each point.
+  /// @param[in] yVals An array providing the x coordinate of each point.
+  /// @param[in] zVals An array providing the x coordinate of each point.
+  /// @param[in] shapes An array of shapes for each cell. Each entry should be one of the
+  ///   `vtkm::CELL_SHAPE_*` values identifying the shape of the corresponding cell.
+  /// @param[in] numIndices An array containing for each cell the number of points incident
+  ///   on that cell.
+  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  ///   incident on each cell. Each cell has a short array of indices that reference points
+  ///   in the @a coords array. The length of each of these short arrays is specified by
+  ///   the @a numIndices array. These variable length arrays are tightly packed together
+  ///   in this @a connectivity array.
+  /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const std::vector<T>& xVals,
                                               const std::vector<T>& yVals,
@@ -68,6 +121,24 @@ public:
                                               const std::vector<vtkm::Id>& connectivity,
                                               const std::string& coordsNm = "coords");
 
+  /// \brief Create a 3D `DataSet` with arbitrary cell connectivity.
+  ///
+  /// The cell connectivity is specified with arrays defining the shape and point
+  /// connections of each cell.
+  /// In this form, the cell connectivity and coordinates are specified as `std::vector`
+  /// and the data will be copied to create the data object.
+  ///
+  /// @param[in] coords An array of point coordinates.
+  /// @param[in] shapes An array of shapes for each cell. Each entry should be one of the
+  ///   `vtkm::CELL_SHAPE_*` values identifying the shape of the corresponding cell.
+  /// @param[in] numIndices An array containing for each cell the number of points incident
+  ///   on that cell.
+  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  ///   incident on each cell. Each cell has a short array of indices that reference points
+  ///   in the @a coords array. The length of each of these short arrays is specified by
+  ///   the @a numIndices array. These variable length arrays are tightly packed together
+  ///   in this @a connectivity array.
+  /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(const std::vector<vtkm::Vec<T, 3>>& coords,
                                               const std::vector<vtkm::UInt8>& shapes,
@@ -75,6 +146,25 @@ public:
                                               const std::vector<vtkm::Id>& connectivity,
                                               const std::string& coordsNm = "coords");
 
+  /// \brief Create a 3D `DataSet` with arbitrary cell connectivity.
+  ///
+  /// The cell connectivity is specified with arrays defining the shape and point
+  /// connections of each cell.
+  /// In this form, the cell connectivity and coordinates are specified as `ArrayHandle`
+  /// and the memory will be shared with the created data object. That said, the `DataSet`
+  /// construction will generate a new array for offsets.
+  ///
+  /// @param[in] coords An array of point coordinates.
+  /// @param[in] shapes An array of shapes for each cell. Each entry should be one of the
+  ///   `vtkm::CELL_SHAPE_*` values identifying the shape of the corresponding cell.
+  /// @param[in] numIndices An array containing for each cell the number of points incident
+  ///   on that cell.
+  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  ///   incident on each cell. Each cell has a short array of indices that reference points
+  ///   in the @a coords array. The length of each of these short arrays is specified by
+  ///   the @a numIndices array. These variable length arrays are tightly packed together
+  ///   in this @a connectivity array.
+  /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T>
   VTKM_CONT static vtkm::cont::DataSet Create(
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords,
@@ -87,6 +177,27 @@ public:
     return DataSetBuilderExplicit::BuildDataSet(coords, shapes, offsets, connectivity, coordsNm);
   }
 
+  /// \brief Create a 3D `DataSet` with arbitrary cell connectivity for a single cell type.
+  ///
+  /// The cell connectivity is specified with an array defining the point
+  /// connections of each cell.
+  /// All the cells in the `DataSet` are of the same shape and contain the same number
+  /// of incident points.
+  /// In this form, the cell connectivity and coordinates are specified as `std::vector`
+  /// and the data will be copied to create the data object.
+  ///
+  /// @param[in] coords An array of point coordinates.
+  /// @param[in] tag A tag object representing the shape of all the cells in the mesh.
+  ///   Cell shape tag objects have a name of the form `vtkm::CellShapeTag*` such as
+  ///   `vtkm::CellShapeTagTriangle` or `vtkm::CellShapeTagHexahedron`. To specify a
+  ///   cell shape determined at runtime, use `vtkm::CellShapeTagGeneric`.
+  /// @param[in] numberOfPointsPerCell The number of points that are incident to each cell.
+  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  ///   incident on each cell. Each cell has a short array of indices that reference points
+  ///   in the @a coords array. The length of each of these short arrays is specified by
+  ///   @a numberOfPointsPerCell. These short arrays are tightly packed together
+  ///   in this @a connectivity array.
+  /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T, typename CellShapeTag>
   VTKM_CONT static vtkm::cont::DataSet Create(const std::vector<vtkm::Vec<T, 3>>& coords,
                                               CellShapeTag tag,
@@ -94,6 +205,27 @@ public:
                                               const std::vector<vtkm::Id>& connectivity,
                                               const std::string& coordsNm = "coords");
 
+  /// \brief Create a 3D `DataSet` with arbitrary cell connectivity for a single cell type.
+  ///
+  /// The cell connectivity is specified with an array defining the point
+  /// connections of each cell.
+  /// All the cells in the `DataSet` are of the same shape and contain the same number
+  /// of incident points.
+  /// In this form, the cell connectivity and coordinates are specified as `ArrayHandle`
+  /// and the memory will be shared with the created data object.
+  ///
+  /// @param[in] coords An array of point coordinates.
+  /// @param[in] tag A tag object representing the shape of all the cells in the mesh.
+  ///   Cell shape tag objects have a name of the form `vtkm::CellShapeTag*` such as
+  ///   `vtkm::CellShapeTagTriangle` or `vtkm::CellShapeTagHexahedron`. To specify a
+  ///   cell shape determined at runtime, use `vtkm::CellShapeTagGeneric`.
+  /// @param[in] numberOfPointsPerCell The number of points that are incident to each cell.
+  /// @param[in] connectivity An array specifying for each cell the indicies of points
+  ///   incident on each cell. Each cell has a short array of indices that reference points
+  ///   in the @a coords array. The length of each of these short arrays is specified by
+  ///   @a numberOfPointsPerCell. These short arrays are tightly packed together
+  ///   in this @a connectivity array.
+  /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T, typename CellShapeTag>
   VTKM_CONT static vtkm::cont::DataSet Create(
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords,
@@ -231,27 +363,54 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   return dataSet;
 }
 
+/// @brief Helper class to build a `DataSet` by iteratively adding points and cells.
+///
+/// This class allows you to specify a `DataSet` by adding points and cells one at a time.
 class VTKM_CONT_EXPORT DataSetBuilderExplicitIterative
 {
 public:
-  VTKM_CONT
-  DataSetBuilderExplicitIterative();
+  VTKM_CONT DataSetBuilderExplicitIterative();
 
-  VTKM_CONT
-  void Begin(const std::string& coordName = "coords");
+  /// @brief Begin defining points and cells of a `DataSet`.
+  ///
+  /// The state of this object is initialized to be ready to use `AddPoint` and
+  /// `AddCell` methods.
+  ///
+  /// @param[in] coordName (optional) The name to register the coordinates as.
+  VTKM_CONT void Begin(const std::string& coordName = "coords");
 
-  //Define points.
-  VTKM_CONT
-  vtkm::cont::DataSet Create();
+  /// @brief Add a point to the `DataSet`.
+  ///
+  /// @param[in] pt The coordinates of the point to add.
+  /// @returns The index of the newly created point.
+  VTKM_CONT vtkm::Id AddPoint(const vtkm::Vec3f& pt);
 
-  VTKM_CONT
-  vtkm::Id AddPoint(const vtkm::Vec3f& pt);
+  /// @brief Add a point to the `DataSet`.
+  ///
+  /// @param[in] pt The coordinates of the point to add.
+  /// @returns The index of the newly created point.
+  template <typename T>
+  VTKM_CONT vtkm::Id AddPoint(const vtkm::Vec<T, 3>& pt)
+  {
+    return AddPoint(static_cast<vtkm::Vec3f>(pt));
+  }
 
-  VTKM_CONT
-  vtkm::Id AddPoint(const vtkm::FloatDefault& x,
-                    const vtkm::FloatDefault& y,
-                    const vtkm::FloatDefault& z = 0);
+  /// @brief Add a point to the `DataSet`.
+  ///
+  /// @param[in] x The x coordinate of the newly created point.
+  /// @param[in] y The y coordinate of the newly created point.
+  /// @param[in] z The z coordinate of the newly created point.
+  /// @returns The index of the newly created point.
+  VTKM_CONT vtkm::Id AddPoint(const vtkm::FloatDefault& x,
+                              const vtkm::FloatDefault& y,
+                              const vtkm::FloatDefault& z = 0);
 
+  /// @brief Add a point to the `DataSet`.
+  ///
+  /// @param[in] x The x coordinate of the newly created point.
+  /// @param[in] y The y coordinate of the newly created point.
+  /// @param[in] z The z coordinate of the newly created point.
+  /// @returns The index of the newly created point.
   template <typename T>
   VTKM_CONT vtkm::Id AddPoint(const T& x, const T& y, const T& z = 0)
   {
@@ -260,24 +419,41 @@ public:
                     static_cast<vtkm::FloatDefault>(z));
   }
 
-  template <typename T>
-  VTKM_CONT vtkm::Id AddPoint(const vtkm::Vec<T, 3>& pt)
-  {
-    return AddPoint(static_cast<vtkm::Vec3f>(pt));
-  }
+  /// @brief Add a cell to the `DataSet`.
+  ///
+  /// @param[in] shape Identifies the shape of the cell. Use one of the
+  ///   `vtkm::CELL_SHAPE_*` values.
+  /// @param[in] conn List of indices to the incident points.
+  VTKM_CONT void AddCell(const vtkm::UInt8& shape, const std::vector<vtkm::Id>& conn);
 
-  //Define cells.
-  VTKM_CONT
-  void AddCell(vtkm::UInt8 shape);
+  /// @brief Add a cell to the `DataSet`.
+  ///
+  /// @param[in] shape Identifies the shape of the cell. Use one of the
+  ///   `vtkm::CELL_SHAPE_*` values.
+  /// @param[in] conn List of indices to the incident points.
+  /// @param[in] n The number of incident points (and the length of the `conn` array).
+  VTKM_CONT void AddCell(const vtkm::UInt8& shape,
+                         const vtkm::Id* conn,
+                         const vtkm::IdComponent& n);
 
-  VTKM_CONT
-  void AddCell(const vtkm::UInt8& shape, const std::vector<vtkm::Id>& conn);
+  /// @brief Start adding a cell to the `DataSet`.
+  ///
+  /// The incident points are later added one at a time using `AddCellPoint`.
+  /// The cell is completed the next time `AddCell` or `Create` is called.
+  ///
+  /// @param[in] shape Identifies the shape of the cell. Use one of the
+  VTKM_CONT void AddCell(vtkm::UInt8 shape);
 
-  VTKM_CONT
-  void AddCell(const vtkm::UInt8& shape, const vtkm::Id* conn, const vtkm::IdComponent& n);
+  /// @brief Add an incident point to the current cell.
+  ///
+  /// @param[in] pointIndex Index to the incident point.
+  VTKM_CONT void AddCellPoint(vtkm::Id pointIndex);
 
-  VTKM_CONT
-  void AddCellPoint(vtkm::Id pointIndex);
+  /// @brief Produce the `DataSet`.
+  ///
+  /// The points and cells previously added are finalized and the resulting `DataSet`
+  /// is returned.
+  VTKM_CONT vtkm::cont::DataSet Create();
 
 private:
   std::string coordNm;

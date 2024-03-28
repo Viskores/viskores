@@ -506,6 +506,25 @@ public:
   using ReadPortalType = typename Traits::ReadPortalType;
   using WritePortalType = typename Traits::WritePortalType;
 
+private:
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlatImpl(vtkm::VecTraitsTagSizeStatic)
+  {
+    return vtkm::VecFlat<DecoratorImplT>::NUM_COMPONENTS;
+  }
+
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlatImpl(vtkm::VecTraitsTagSizeVariable)
+  {
+    // Currently only support getting the number of components for statically sized types.
+    return 0;
+  }
+
+public:
+  VTKM_CONT static vtkm::IdComponent GetNumberOfComponentsFlat(
+    const std::vector<vtkm::cont::internal::Buffer>&)
+  {
+    return GetNumberOfComponentsFlatImpl(typename vtkm::VecTraits<DecoratorImplT>::IsSizeStatic{});
+  }
+
   VTKM_CONT static vtkm::Id GetNumberOfValues(
     const std::vector<vtkm::cont::internal::Buffer>& buffers)
   {

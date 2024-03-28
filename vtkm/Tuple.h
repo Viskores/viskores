@@ -36,7 +36,7 @@ class Tuple;
 
 /// \brief Get the size of a tuple.
 ///
-/// Given a `vtkm::Tuple` type, because a `std::integral_constant` of the type.
+/// Given a `vtkm::Tuple` type, becomes a `std::integral_constant` of the type.
 ///
 template <typename TupleType>
 using TupleSize = std::integral_constant<vtkm::IdComponent, TupleType::Size>;
@@ -75,27 +75,31 @@ struct tuple_element
 template <std::size_t Index, typename TupleType>
 using tuple_element_t = typename tuple_element<Index, TupleType>::type;
 
-///@{
-/// \brief Retrieve the object from a `vtkm::Tuple` at the given index.
-///
+/// @brief Retrieve the object from a `vtkm::Tuple` at the given index.
 VTKM_SUPPRESS_EXEC_WARNINGS
 template <vtkm::IdComponent Index, typename... Ts>
-VTKM_EXEC_CONT auto Get(const vtkm::Tuple<Ts...>& tuple) -> decltype(tuple.template Get<Index>())
+VTKM_EXEC_CONT auto Get(const vtkm::Tuple<Ts...>& tuple)
+#ifndef VTKM_DOXYGEN_ONLY
+  // Breathe (for Sphinx) has problems parsing this declarator id.
+  -> decltype(tuple.template Get<Index>())
+#endif
 {
   return tuple.template Get<Index>();
 }
 
+/// @brief Retrieve the object from a `vtkm::Tuple` at the given index.
 VTKM_SUPPRESS_EXEC_WARNINGS
 template <vtkm::IdComponent Index, typename... Ts>
-VTKM_EXEC_CONT auto Get(vtkm::Tuple<Ts...>& tuple) -> decltype(tuple.template Get<Index>())
+VTKM_EXEC_CONT auto Get(vtkm::Tuple<Ts...>& tuple)
+#ifndef VTKM_DOXYGEN_ONLY
+  // Breathe (for Sphinx) has problems parsing this declarator id.
+  -> decltype(tuple.template Get<Index>())
+#endif
 {
   return tuple.template Get<Index>();
 }
-///@}
 
-///@{
-/// \brief Compatible with `std::get` for `vtkm::Tuple`.
-///
+/// @brief Compatible with `std::get` for `vtkm::Tuple`.
 VTKM_SUPPRESS_EXEC_WARNINGS
 template <std::size_t Index, typename... Ts>
 VTKM_EXEC_CONT auto get(const vtkm::Tuple<Ts...>& tuple)
@@ -104,6 +108,7 @@ VTKM_EXEC_CONT auto get(const vtkm::Tuple<Ts...>& tuple)
   return vtkm::Get<static_cast<vtkm::IdComponent>(Index)>(tuple);
 }
 
+/// @brief Compatible with `std::get` for `vtkm::Tuple`.
 VTKM_SUPPRESS_EXEC_WARNINGS
 template <std::size_t Index, typename... Ts>
 VTKM_EXEC_CONT auto get(vtkm::Tuple<Ts...>& tuple)
@@ -111,7 +116,6 @@ VTKM_EXEC_CONT auto get(vtkm::Tuple<Ts...>& tuple)
 {
   return vtkm::Get<static_cast<vtkm::IdComponent>(Index)>(tuple);
 }
-///@}
 
 /// \brief Creates a new `vtkm::Tuple` with the given types.
 ///
@@ -145,14 +149,6 @@ struct TupleTransformFunctor
   }
 };
 
-VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename TupleType, typename Function>
-VTKM_EXEC_CONT auto TupleTransform(TupleType&& tuple, Function&& f)
-  -> decltype(tuple.Apply(TupleTransformFunctor{}, std::forward<Function>(f)))
-{
-  return tuple.Apply(TupleTransformFunctor{}, std::forward<Function>(f));
-}
-
 struct TupleForEachFunctor
 {
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -163,16 +159,70 @@ struct TupleForEachFunctor
   }
 };
 
-VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename TupleType, typename Function>
-VTKM_EXEC_CONT auto TupleForEach(TupleType&& tuple, Function&& f)
-  -> decltype(tuple.Apply(TupleForEachFunctor{}, std::forward<Function>(f)))
-{
-  return tuple.Apply(TupleForEachFunctor{}, std::forward<Function>(f));
-}
-
 } // namespace detail
 /// @endcond
+
+/// @brief Call a function with the values of a `vtkm::Tuple` as arguments.
+///
+/// If a `vtkm::Tuple<A, B, C>` is given with values `a`, `b`, and `c`, then
+/// `f` will be called as `f(a, b, c)`.
+///
+/// Additional arguments can optionally be given to `vtkm::Apply()`. These
+/// arguments will be added to the _beginning_ of the arguments to the function.
+///
+/// The returned value of the function (if any) will be returned from `vtkm::Apply()`.
+template <typename... Ts, typename Function, typename... Args>
+VTKM_EXEC_CONT auto Apply(const vtkm::Tuple<Ts...>& tuple, Function&& f, Args&&... args)
+  -> decltype(tuple.Apply(std::forward<Function>(f), std::forward<Args>(args)...))
+{
+  return tuple.Apply(std::forward<Function>(f), std::forward<Args>(args)...);
+}
+
+/// @copydoc Apply
+template <typename... Ts, typename Function, typename... Args>
+VTKM_EXEC_CONT auto Apply(vtkm::Tuple<Ts...>& tuple, Function&& f, Args&&... args)
+  -> decltype(tuple.Apply(std::forward<Function>(f), std::forward<Args>(args)...))
+{
+  return tuple.Apply(std::forward<Function>(f), std::forward<Args>(args)...);
+}
+
+/// @brief Call a function with each value of the given tuple.
+///
+/// The function calls will be done in the order of the values in the `vtkm::Tuple`.
+template <typename... Ts, typename Function>
+VTKM_EXEC_CONT void ForEach(const vtkm::Tuple<Ts...>& tuple, Function&& f)
+{
+  return vtkm::Apply(tuple, detail::TupleForEachFunctor{}, std::forward<Function>(f));
+}
+
+/// @copydoc ForEach
+template <typename... Ts, typename Function>
+VTKM_EXEC_CONT void ForEach(vtkm::Tuple<Ts...>& tuple, Function&& f)
+{
+  return vtkm::Apply(tuple, detail::TupleForEachFunctor{}, std::forward<Function>(f));
+}
+
+///@{
+/// @brief Construct a new `vtkm::Tuple` by applying a function to each value.
+///
+/// The `vtkm::Transform` function builds a new `vtkm::Tuple` by calling a function
+/// or functor on each of the items in the given `tuple`. The return value is placed
+/// in the corresponding part of the resulting Tuple, and the type is automatically
+/// created from the return type of the function.
+template <typename TupleType, typename Function>
+VTKM_EXEC_CONT auto Transform(const TupleType&& tuple, Function&& f)
+  -> decltype(Apply(tuple, detail::TupleTransformFunctor(), std::forward<Function>(f)))
+{
+  return Apply(tuple, detail::TupleTransformFunctor(), std::forward<Function>(f));
+}
+
+template <typename TupleType, typename Function>
+VTKM_EXEC_CONT auto Transform(TupleType&& tuple, Function&& f)
+  -> decltype(Apply(tuple, detail::TupleTransformFunctor(), std::forward<Function>(f)))
+{
+  return Apply(tuple, detail::TupleTransformFunctor(), std::forward<Function>(f));
+}
+///@}
 
 template <>
 class Tuple<>
@@ -285,28 +335,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -396,28 +446,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -519,28 +569,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -654,28 +704,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -801,28 +851,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -960,28 +1010,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -1131,28 +1181,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -1314,28 +1364,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -1509,28 +1559,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -1716,28 +1766,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -1935,28 +1985,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -2166,28 +2216,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -2409,28 +2459,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -2664,28 +2714,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -2931,28 +2981,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -3210,28 +3260,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -3501,28 +3551,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -3804,28 +3854,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -4119,28 +4169,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -4446,28 +4496,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 
@@ -4872,28 +4922,28 @@ public:
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f)
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT void ForEach(Function&& f) const
   {
-    detail::TupleForEach(*this, std::forward<Function>(f));
+    vtkm::ForEach(*this, std::forward<Function>(f));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f)
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename Function>
   VTKM_EXEC_CONT auto Transform(Function&& f) const
-    -> decltype(detail::TupleTransform(*this, std::forward<Function>(f)))
+    -> decltype(vtkm::Transform(*this, std::forward<Function>(f)))
   {
-    return detail::TupleTransform(*this, std::forward<Function>(f));
+    return vtkm::Transform(*this, std::forward<Function>(f));
   }
 };
 

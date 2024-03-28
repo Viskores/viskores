@@ -23,6 +23,7 @@
 
 #include <vtkm/Deprecated.h>
 #include <vtkm/TypeList.h>
+#include <vtkm/VecTraits.h>
 
 #include <memory>
 #include <typeindex>
@@ -65,6 +66,14 @@ vtkm::Id UnknownAHNumberOfValues(void* mem)
   return arrayHandle->GetNumberOfValues();
 }
 
+template <typename T, typename S>
+vtkm::IdComponent UnknownAHNumberOfComponentsFlat(void* mem)
+{
+  using AH = vtkm::cont::ArrayHandle<T, S>;
+  AH* arrayHandle = reinterpret_cast<AH*>(mem);
+  return arrayHandle->GetNumberOfComponentsFlat();
+}
+
 // Uses SFINAE to use Storage<>::GetNumberOfComponents if it exists, or the VecTraits otherwise
 template <typename T, typename S>
 inline auto UnknownAHNumberOfComponentsImpl(void* mem)
@@ -76,75 +85,25 @@ inline auto UnknownAHNumberOfComponentsImpl(void* mem)
   return vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(arrayHandle->GetBuffers());
 }
 
-// Uses SFINAE to use the number of compnents in VecTraits.
-// Note that this will conflict with the above overloaded function if the storage has a
-// GetNumberOfComponents method and VecTraits has a static size. However, I cannot think
-// of a use case for the storage to report the number of components for a static data type.
-// If that happens, this implementation will need to be modified.
+// Uses static vec size.
 template <typename T, typename S>
-inline auto UnknownAHNumberOfComponentsImpl(void*) -> decltype(vtkm::VecTraits<T>::NUM_COMPONENTS)
+inline vtkm::IdComponent UnknownAHNumberOfComponentsImpl(void*, vtkm::VecTraitsTagSizeStatic)
 {
-  static constexpr vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
-  return numComponents;
+  return vtkm::VecTraits<T>::NUM_COMPONENTS;
 }
 
-// Fallback for when there is no way to determine the number of components. (This could be
-// because each value could have a different number of components.
+// The size of the vecs are not defined at compile time. Assume that the components are not
+// nested and use the flat components query.
 template <typename T, typename S>
-inline vtkm::IdComponent UnknownAHNumberOfComponentsImpl(...)
+inline vtkm::IdComponent UnknownAHNumberOfComponentsImpl(void* mem, vtkm::VecTraitsTagSizeVariable)
 {
-  return 0;
+  return UnknownAHNumberOfComponentsFlat<T, S>(mem);
 }
 
 template <typename T, typename S>
 vtkm::IdComponent UnknownAHNumberOfComponents(void* mem)
 {
-  return UnknownAHNumberOfComponentsImpl<T, S>(mem);
-}
-
-// Uses SFINAE to use Storage<>::GetNumberOfComponents if it exists, or the VecTraits otherwise
-template <typename T, typename S>
-inline auto UnknownAHNumberOfComponentsFlatImpl(void* mem)
-  -> decltype(vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(
-    std::vector<vtkm::cont::internal::Buffer>()))
-{
-  using AH = vtkm::cont::ArrayHandle<T, S>;
-  AH* arrayHandle = reinterpret_cast<AH*>(mem);
-  // Making an assumption here that `T` is a `Vec`-like object that `GetNumberOfComponents`
-  // will report on how many each has. Further assuming that the components of `T` are
-  // static. If a future `ArrayHandle` type violates this, this code will have to become
-  // more complex.
-  return (vtkm::cont::internal::Storage<T, S>::GetNumberOfComponents(arrayHandle->GetBuffers()) *
-          vtkm::VecFlat<typename vtkm::VecTraits<T>::ComponentType>::NUM_COMPONENTS);
-}
-
-// Uses SFINAE to use the number of compnents in VecTraits.
-// Note that this will conflict with the above overloaded function if the storage has a
-// GetNumberOfComponents method and VecTraits has a static size. However, I cannot think
-// of a use case for the storage to report the number of components for a static data type.
-// If that happens, this implementation will need to be modified.
-template <typename T, typename S>
-inline auto UnknownAHNumberOfComponentsFlatImpl(void*)
-  -> decltype(vtkm::VecTraits<T>::NUM_COMPONENTS)
-{
-  //  static constexpr vtkm::IdComponent numComponents = vtkm::VecFlat<T>::NUM_COMPONENTS;
-  //  return numComponents;
-  return vtkm::VecFlat<T>::NUM_COMPONENTS;
-}
-
-// Fallback for when there is no way to determine the number of components. (This could be
-// because each value could have a different number of components or just that VecTraits
-// are not defined.) Since it cannot be flattened, just return the same as num components.
-template <typename T, typename S>
-inline vtkm::IdComponent UnknownAHNumberOfComponentsFlatImpl(...)
-{
-  return UnknownAHNumberOfComponentsImpl<T, S>(static_cast<void*>(nullptr));
-}
-
-template <typename T, typename S>
-vtkm::IdComponent UnknownAHNumberOfComponentsFlat(void* mem)
-{
-  return UnknownAHNumberOfComponentsFlatImpl<T, S>(mem);
+  return UnknownAHNumberOfComponentsImpl<T, S>(mem, typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T, typename S>
@@ -272,7 +231,7 @@ struct VTKM_CONT_EXPORT UnknownAHContainer
   using NewInstanceType = void*();
   NewInstanceType* NewInstance;
 
-  using NewInstanceBasicType = std::shared_ptr<UnknownAHContainer>();
+  using NewInstanceBasicType = std::shared_ptr<UnknownAHContainer>(void*);
   NewInstanceBasicType* NewInstanceBasic;
   NewInstanceBasicType* NewInstanceFloatBasic;
 
@@ -348,39 +307,56 @@ private:
   explicit UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S>& array);
 };
 
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTagSizeStatic)
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(void*, vtkm::VecTraitsTagSizeStatic)
 {
   return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<T>{});
 }
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(vtkm::VecTraitsTagSizeVariable)
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(void* mem,
+                                                              vtkm::VecTraitsTagSizeVariable)
 {
-  throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
-                                 vtkm::cont::TypeToString<T>());
+  vtkm::IdComponent numComponents = UnknownAHNumberOfComponentsFlat<T, S>(mem);
+  if (numComponents < 1)
+  {
+    // Array can have an inconsistent number of components. Cannot be represented by basic array.
+    throw vtkm::cont::ErrorBadType("Cannot create a basic array from array with ValueType of " +
+                                   vtkm::cont::TypeToString<T>());
+  }
+  using ComponentType = typename vtkm::VecTraits<T>::BaseComponentType;
+  return UnknownAHContainer::Make(vtkm::cont::ArrayHandleRuntimeVec<ComponentType>(numComponents));
 }
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic()
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(void* mem)
 {
-  return UnknownAHNewInstanceBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
+  return UnknownAHNewInstanceBasic<T, S>(mem, typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTraitsTagSizeStatic)
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(void*,
+                                                                   vtkm::VecTraitsTagSizeStatic)
 {
   using FloatT = typename vtkm::VecTraits<T>::template ReplaceBaseComponentType<vtkm::FloatDefault>;
   return UnknownAHContainer::Make(vtkm::cont::ArrayHandleBasic<FloatT>{});
 }
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(vtkm::VecTraitsTagSizeVariable)
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(void* mem,
+                                                                   vtkm::VecTraitsTagSizeVariable)
 {
-  throw vtkm::cont::ErrorBadType("Cannot create a basic array container from with ValueType of " +
-                                 vtkm::cont::TypeToString<T>());
+  vtkm::IdComponent numComponents = UnknownAHNumberOfComponentsFlat<T, S>(mem);
+  if (numComponents < 1)
+  {
+    // Array can have an inconsistent number of components. Cannot be represented by basic array.
+    throw vtkm::cont::ErrorBadType("Cannot create a basic array from array with ValueType of " +
+                                   vtkm::cont::TypeToString<T>());
+  }
+  return UnknownAHContainer::Make(
+    vtkm::cont::ArrayHandleRuntimeVec<vtkm::FloatDefault>(numComponents));
 }
-template <typename T>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic()
+template <typename T, typename S>
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(void* mem)
 {
-  return UnknownAHNewInstanceFloatBasic<T>(typename vtkm::VecTraits<T>::IsSizeStatic{});
+  return UnknownAHNewInstanceFloatBasic<T, S>(mem, typename vtkm::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T, typename S>
@@ -393,8 +369,8 @@ inline UnknownAHContainer::UnknownAHContainer(const vtkm::cont::ArrayHandle<T, S
   , DeleteFunction(detail::UnknownAHDelete<T, S>)
   , Buffers(detail::UnknownAHBuffers<T, S>)
   , NewInstance(detail::UnknownAHNewInstance<T, S>)
-  , NewInstanceBasic(detail::UnknownAHNewInstanceBasic<T>)
-  , NewInstanceFloatBasic(detail::UnknownAHNewInstanceFloatBasic<T>)
+  , NewInstanceBasic(detail::UnknownAHNewInstanceBasic<T, S>)
+  , NewInstanceFloatBasic(detail::UnknownAHNewInstanceFloatBasic<T, S>)
   , NumberOfValues(detail::UnknownAHNumberOfValues<T, S>)
   , NumberOfComponents(detail::UnknownAHNumberOfComponents<T, S>)
   , NumberOfComponentsFlat(detail::UnknownAHNumberOfComponentsFlat<T, S>)
@@ -621,8 +597,12 @@ public:
   /// of components (in this case 3).
   /// If the array holds a hierarchy of `Vec`s (such as `vtkm::Vec<vtkm::Vec3f, 2>`), this will
   /// return the total number of vecs (in this case 6).
-  /// If the array holds `Vec`-like objects that have the number of components that can vary
-  /// at runtime, this method will return 0 (because there is no consistent answer).
+  ///
+  /// If this object is holding an array where the number of components can be selected at
+  /// runtime (for example, `vtkm::cont::ArrayHandleRuntimeVec`), this method will still return
+  /// the correct number of components. However, if each value in the array can be a `Vec` of
+  /// a different size (such as `vtkm::cont::ArrayHandleGroupVecVariable`),
+  /// this method will return 0 (because there is no consistent answer).
   ///
   VTKM_CONT vtkm::IdComponent GetNumberOfComponentsFlat() const;
 
