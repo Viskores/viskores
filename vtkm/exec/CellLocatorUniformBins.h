@@ -116,6 +116,7 @@ public:
         return vtkm::ErrorCode::Success;
       }
     }
+    //if cell still not found, drop to the general find cell below.
 
     //LastCell not initialized, or not in the same bin: do a full test.
     //Since already computed the binIdx, re-use it.
