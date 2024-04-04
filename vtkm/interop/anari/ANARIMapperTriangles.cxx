@@ -188,8 +188,8 @@ static TriangleFieldArrays UnpackFields(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
   using AttributeHandleT = decltype(retval.Field1);
 
   auto isFieldEmpty = [](const vtkm::cont::Field& f) -> bool {
-    return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1 ||
-      !f.GetData().CanConvert<AttributeHandleT>();
+    return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1; // ||
+      // !f.GetData().CanConvert<AttributeHandleT>();
   };
 
   const bool emptyField1 = isFieldEmpty(fields[0]);
@@ -197,14 +197,28 @@ static TriangleFieldArrays UnpackFields(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
   const bool emptyField3 = isFieldEmpty(fields[2]);
   const bool emptyField4 = isFieldEmpty(fields[3]);
 
+  vtkm::cont::ArrayHandle<vtkm::Float32> floatField1;
+  vtkm::cont::ArrayHandle<vtkm::Float32> floatField2;
+  vtkm::cont::ArrayHandle<vtkm::Float32> floatField3;
+  vtkm::cont::ArrayHandle<vtkm::Float32> floatField4;
+
+  if (!emptyField1)
+    vtkm::cont::ArrayCopyShallowIfPossible(fields[0].GetData(), floatField1);
+  if (!emptyField2)
+    vtkm::cont::ArrayCopyShallowIfPossible(fields[1].GetData(), floatField2);
+  if (!emptyField3)
+    vtkm::cont::ArrayCopyShallowIfPossible(fields[2].GetData(), floatField3);
+  if (!emptyField4)
+    vtkm::cont::ArrayCopyShallowIfPossible(fields[3].GetData(), floatField4);
+
   auto field1 =
-    emptyField1 ? AttributeHandleT{} : fields[0].GetData().AsArrayHandle<AttributeHandleT>();
+    emptyField1 ? AttributeHandleT{} : floatField1 /*.AsArrayHandle<AttributeHandleT>()*/;
   auto field2 =
-    emptyField2 ? AttributeHandleT{} : fields[1].GetData().AsArrayHandle<AttributeHandleT>();
+    emptyField2 ? AttributeHandleT{} : floatField2 /*.AsArrayHandle<AttributeHandleT>()*/;
   auto field3 =
-    emptyField3 ? AttributeHandleT{} : fields[2].GetData().AsArrayHandle<AttributeHandleT>();
+    emptyField3 ? AttributeHandleT{} : floatField3 /*.AsArrayHandle<AttributeHandleT>()*/;
   auto field4 =
-    emptyField4 ? AttributeHandleT{} : fields[3].GetData().AsArrayHandle<AttributeHandleT>();
+    emptyField4 ? AttributeHandleT{} : floatField4 /*.AsArrayHandle<AttributeHandleT>()*/;
 
   vtkm::Range field1Range = range;
   vtkm::Range field2Range = range;
@@ -242,10 +256,10 @@ static TriangleFieldArrays UnpackFields(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
                                       field4Range);
   vtkm::worklet::DispatcherMapField<ExtractTriangleFields>(fieldsWorklet)
     .Invoke(tris,
-            field1,
-            field2,
-            field3,
-            field4,
+            floatField1,
+            floatField2,
+            floatField3,
+            floatField4,
             retval.Field1,
             retval.Field2,
             retval.Field3,
@@ -330,6 +344,9 @@ void ANARIMapperTriangles::SetANARIColorMapValueRange(const vtkm::Vec2f_32& valu
   auto scale = anari_cpp::scaling_matrix(anari_cpp::float3(1.f / (valueRange[1] - valueRange[0])));
   auto translation = anari_cpp::translation_matrix(anari_cpp::float3(-valueRange[0], 0, 0));
   anari_cpp::setParameter(d, s, "inTransform", anari_cpp::mul(scale, translation));
+  anari_cpp::setParameter(d, s, "outTransform", anari_cpp::math::mat4(anari_cpp::identity));
+  anari_cpp::setParameter(d, s, "inOffset", vtkm::Vec4f_32(0.f, 0.f, 0.f, 0.f));
+  anari_cpp::setParameter(d, s, "outOffset", vtkm::Vec4f_32(0.f, 0.f, 0.f, 0.f));
   anari_cpp::commitParameters(d, s);
 }
 
@@ -374,9 +391,13 @@ anari_cpp::Surface ANARIMapperTriangles::GetANARISurface()
   colors[2] = vtkm::Vec4f_32(0.f, 0.f, 1.f, 1.f);
   anari_cpp::unmap(d, colorArray);
   anari_cpp::setAndReleaseParameter(d, s, "image", colorArray);
-  anari_cpp::setParameter(d, s, "filter", "linear");
+  anari_cpp::setParameter(d, s, "filter", "nearest");
   anari_cpp::setParameter(d, s, "wrapMode", "clampToEdge");
   anari_cpp::setParameter(d, s, "name", this->MakeObjectName("colormap"));
+  anari_cpp::setParameter(d, s, "inTransform", anari_cpp::mat4(anari_cpp::identity));
+  anari_cpp::setParameter(d, s, "outTransform", anari_cpp::math::mat4(anari_cpp::identity));
+  anari_cpp::setParameter(d, s, "inOffset", vtkm::Vec4f_32(0.f, 0.f, 0.f, 0.f));
+  anari_cpp::setParameter(d, s, "outOffset", vtkm::Vec4f_32(0.f, 0.f, 0.f, 0.f));
   anari_cpp::commitParameters(d, s);
 
   this->SetANARIColorMapValueRange(vtkm::Vec2f_32(0.f, 10.f));

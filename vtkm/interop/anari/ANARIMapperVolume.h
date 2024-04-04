@@ -22,7 +22,7 @@ namespace anari
 
 /// @brief Raw ANARI arrays and parameter values set on the `ANARISpatialField`.
 ///
-struct VolumeParameters
+struct StructuredVolumeParameters
 {
   anari_cpp::Array3D Data{ nullptr };
   int Dims[3];
@@ -30,11 +30,33 @@ struct VolumeParameters
   float Spacing[3];
 };
 
+struct UnstructuredVolumeParameters
+{
+  anari_cpp::Array1D VertexPosition{ nullptr };
+  anari_cpp::Array1D VertexData{ nullptr };
+  anari_cpp::Array1D Index{ nullptr };
+  anari_cpp::Array1D CellIndex{ nullptr };
+  anari_cpp::Array1D CellData{ nullptr };
+  anari_cpp::Array1D CellType{ nullptr };
+  bool IndexPrefixed{ false };
+};
+
 /// @brief VTK-m data arrays underlying the `ANARIArray` handles created by the mapper.
 ///
-struct VolumeArrays
+struct StructuredVolumeArrays
 {
   vtkm::cont::ArrayHandle<vtkm::Float32> Data;
+  std::shared_ptr<vtkm::cont::Token> Token{ new vtkm::cont::Token };
+};
+
+struct UntructuredVolumeArrays
+{
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> VertexPosition;
+  vtkm::cont::ArrayHandle<vtkm::Float32> VertexData;
+  vtkm::cont::ArrayHandle<vtkm::UInt64> Index;
+  vtkm::cont::ArrayHandle<vtkm::UInt64> CellIndex;
+  vtkm::cont::ArrayHandle<vtkm::Float32> CellData;
+  vtkm::cont::ArrayHandle<vtkm::UInt8> CellType;
   std::shared_ptr<vtkm::cont::Token> Token{ new vtkm::cont::Token };
 };
 
@@ -92,13 +114,15 @@ private:
     anari_cpp::Device Device{ nullptr };
     anari_cpp::SpatialField SpatialField{ nullptr };
     anari_cpp::Volume Volume{ nullptr };
-    VolumeParameters Parameters;
+    StructuredVolumeParameters StructuredParameters;
+    UnstructuredVolumeParameters UnstructuredParameters;
     ~ANARIHandles();
     void ReleaseArrays();
   };
 
   std::shared_ptr<ANARIHandles> Handles;
-  VolumeArrays Arrays;
+  StructuredVolumeArrays StructuredArrays;
+  UntructuredVolumeArrays UnstructuredArrays;
 };
 
 } // namespace anari
