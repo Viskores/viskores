@@ -157,6 +157,8 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   this->Current = true;
   this->Valid = false;
 
+  auto d = this->GetDevice();
+
   const auto& actor = this->GetActor();
   const auto& coords = actor.GetCoordinateSystem();
   const auto& cells = actor.GetCellSet();
@@ -168,23 +170,20 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   const bool isScalar = fieldArray.GetNumberOfComponentsFlat() == 1;
 
   this->Handles->ReleaseArrays();
-
-  if (!this->Handles->SpatialField)
-  {
-    this->Handles->SpatialField = anari_cpp::newObject<anari_cpp::SpatialField>(
-      this->GetDevice(), (isStructured && isScalar) ? "structuredRegular" : "unstructured");
-  }
+  anari_cpp::release(d, this->Handles->SpatialField);
+  this->Handles->SpatialField = nullptr;
 
   // Structured regular volume data
   if (isStructured && isScalar)
   {
+    this->Handles->SpatialField =
+      anari_cpp::newObject<anari_cpp::SpatialField>(this->GetDevice(), "structuredRegular");
+
     auto structuredCells = cells.AsCellSet<vtkm::cont::CellSetStructured<3>>();
     auto pdims =
       isPointBased ? structuredCells.GetPointDimensions() : structuredCells.GetCellDimensions();
 
     StructuredVolumeArrays arrays;
-
-    auto d = this->GetDevice();
 
     vtkm::cont::ArrayCopyShallowIfPossible(fieldArray, arrays.Data);
     auto* ptr = (float*)arrays.Data.GetBuffers()[0].ReadPointerHost(*arrays.Token);
@@ -206,15 +205,11 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     this->StructuredArrays = arrays;
     this->Valid = true;
   }
-
   // Unstructured volume data
-  else
+  else if (isPointBased)
   {
-
-    if (!isPointBased)
-    {
-      throw vtkm::cont::ErrorBadValue("Anari Unstructured volume data must be point-based.");
-    }
+    this->Handles->SpatialField =
+      anari_cpp::newObject<anari_cpp::SpatialField>(this->GetDevice(), "unstructured");
 
     UntructuredVolumeArrays arrays;
 
@@ -264,9 +259,6 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
 
     // Vetrex Data
     vtkm::cont::ArrayCopyShallowIfPossible(fieldArray, arrays.VertexData);
-
-    // Send data to ANARI
-    auto d = this->GetDevice();
 
     // "indexPrefixed"
     this->Handles->UnstructuredParameters.IndexPrefixed = false;
@@ -399,6 +391,13 @@ void ANARIMapperVolume::UpdateSpatialField()
   }
 
   anari_cpp::commitParameters(d, this->Handles->SpatialField);
+
+  if (this->Handles->Volume)
+  {
+    anari_cpp::setParameter(d, this->Handles->Volume, "field", this->GetANARISpatialField());
+    anari_cpp::setParameter(d, this->Handles->Volume, "value", this->GetANARISpatialField());
+    anari_cpp::commitParameters(d, this->Handles->Volume);
+  }
 }
 
 ANARIMapperVolume::ANARIHandles::~ANARIHandles()
