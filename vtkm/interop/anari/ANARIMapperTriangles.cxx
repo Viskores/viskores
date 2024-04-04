@@ -185,11 +185,8 @@ static TriangleFieldArrays UnpackFields(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
 
   const auto numTris = tris.GetNumberOfValues();
 
-  using AttributeHandleT = decltype(retval.Field1);
-
   auto isFieldEmpty = [](const vtkm::cont::Field& f) -> bool {
-    return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1; // ||
-      // !f.GetData().CanConvert<AttributeHandleT>();
+    return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1;
   };
 
   const bool emptyField1 = isFieldEmpty(fields[0]);
@@ -210,15 +207,6 @@ static TriangleFieldArrays UnpackFields(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
     vtkm::cont::ArrayCopyShallowIfPossible(fields[2].GetData(), floatField3);
   if (!emptyField4)
     vtkm::cont::ArrayCopyShallowIfPossible(fields[3].GetData(), floatField4);
-
-  auto field1 =
-    emptyField1 ? AttributeHandleT{} : floatField1 /*.AsArrayHandle<AttributeHandleT>()*/;
-  auto field2 =
-    emptyField2 ? AttributeHandleT{} : floatField2 /*.AsArrayHandle<AttributeHandleT>()*/;
-  auto field3 =
-    emptyField3 ? AttributeHandleT{} : floatField3 /*.AsArrayHandle<AttributeHandleT>()*/;
-  auto field4 =
-    emptyField4 ? AttributeHandleT{} : floatField4 /*.AsArrayHandle<AttributeHandleT>()*/;
 
   vtkm::Range field1Range = range;
   vtkm::Range field2Range = range;
