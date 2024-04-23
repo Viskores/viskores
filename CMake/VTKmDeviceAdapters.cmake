@@ -71,7 +71,7 @@ if(VTKm_ENABLE_OPENMP AND NOT (TARGET vtkm_openmp OR TARGET vtkm::openmp))
   endif()
   if(OpenMP_CXX_LIBRARIES)
     set_target_properties(vtkm_openmp PROPERTIES
-      INTERFACE_LINK_LIBRARIES "${OpenMP_CXX_LIBRARIES}")
+      INTERFACE_LINK_LIBRARIES OpenMP::OpenMP_CXX)
   endif()
   install(TARGETS vtkm_openmp EXPORT ${VTKm_EXPORT_NAME})
 endif()
