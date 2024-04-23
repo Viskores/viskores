@@ -58,21 +58,13 @@ if(VTKm_ENABLE_OPENMP AND NOT (TARGET vtkm_openmp OR TARGET vtkm::openmp))
   find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
 
   add_library(vtkm_openmp INTERFACE)
+  target_link_libraries(vtkm_openmp INTERFACE OpenMP::OpenMP_CXX)
+  target_compile_options(vtkm_openmp INTERFACE $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>)
+  if(VTKm_ENABLE_CUDA)
+    string(REPLACE ";" "," openmp_cuda_flags "-Xcompiler=${OpenMP_CXX_FLAGS}")
+    target_compile_options(vtkm_openmp INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:${openmp_cuda_flags}>)
+  endif()
   set_target_properties(vtkm_openmp PROPERTIES EXPORT_NAME openmp)
-  if(OpenMP_CXX_FLAGS)
-    set_property(TARGET vtkm_openmp
-      APPEND PROPERTY INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>)
-
-    if(VTKm_ENABLE_CUDA)
-      string(REPLACE ";" "," openmp_cuda_flags "-Xcompiler=${OpenMP_CXX_FLAGS}")
-      set_property(TARGET vtkm_openmp
-        APPEND PROPERTY INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:${openmp_cuda_flags}>)
-    endif()
-  endif()
-  if(OpenMP_CXX_LIBRARIES)
-    set_target_properties(vtkm_openmp PROPERTIES
-      INTERFACE_LINK_LIBRARIES OpenMP::OpenMP_CXX)
-  endif()
   install(TARGETS vtkm_openmp EXPORT ${VTKm_EXPORT_NAME})
 endif()
 
