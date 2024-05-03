@@ -10,11 +10,13 @@
 #ifndef vtkm_m_worklet_ExtractGeometry_h
 #define vtkm_m_worklet_ExtractGeometry_h
 
+#include <vtkm/worklet/CellDeepCopy.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Invoker.h>
@@ -114,28 +116,13 @@ public:
     }
   };
 
-  ////////////////////////////////////////////////////////////////////////////////////
-  // Extract cells by ids permutes input data
-  template <typename CellSetType>
-  vtkm::cont::CellSetPermutation<CellSetType> Run(const CellSetType& cellSet,
-                                                  const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds)
-  {
-    using OutputType = vtkm::cont::CellSetPermutation<CellSetType>;
-
-    vtkm::cont::ArrayCopy(cellIds, this->ValidCellIds);
-
-    return OutputType(this->ValidCellIds, cellSet);
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////////
-  // Extract cells by implicit function permutes input data
   template <typename CellSetType, typename ImplicitFunction>
-  vtkm::cont::CellSetPermutation<CellSetType> Run(const CellSetType& cellSet,
-                                                  const vtkm::cont::CoordinateSystem& coordinates,
-                                                  const ImplicitFunction& implicitFunction,
-                                                  bool extractInside,
-                                                  bool extractBoundaryCells,
-                                                  bool extractOnlyBoundaryCells)
+  vtkm::cont::CellSetExplicit<> Run(const CellSetType& cellSet,
+                                    const vtkm::cont::CoordinateSystem& coordinates,
+                                    const ImplicitFunction& implicitFunction,
+                                    bool extractInside,
+                                    bool extractBoundaryCells,
+                                    bool extractOnlyBoundaryCells)
   {
     // Worklet output will be a boolean passFlag array
     vtkm::cont::ArrayHandle<bool> passFlags;
@@ -149,7 +136,10 @@ public:
     vtkm::cont::Algorithm::CopyIf(indices, passFlags, this->ValidCellIds);
 
     // generate the cellset
-    return vtkm::cont::CellSetPermutation<CellSetType>(this->ValidCellIds, cellSet);
+    vtkm::cont::CellSetPermutation<CellSetType> permutedCellSet(this->ValidCellIds, cellSet);
+
+    vtkm::cont::CellSetExplicit<> outputCells;
+    return vtkm::worklet::CellDeepCopy::Run(permutedCellSet);
   }
 
   vtkm::cont::ArrayHandle<vtkm::Id> GetValidCellIds() const { return this->ValidCellIds; }
