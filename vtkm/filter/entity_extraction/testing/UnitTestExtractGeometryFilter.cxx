@@ -11,6 +11,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/filter/clean_grid/CleanGrid.h>
 #include <vtkm/filter/entity_extraction/ExtractGeometry.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
@@ -41,11 +42,21 @@ public:
     vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8), "Wrong result for ExtractGeometry");
 
+    vtkm::filter::clean_grid::CleanGrid cleanGrid;
+    cleanGrid.SetCompactPointFields(true);
+    cleanGrid.SetMergePoints(false);
+    vtkm::cont::DataSet cleanOutput = cleanGrid.Execute(output);
+
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
-    output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
+    cleanOutput.GetField("cellvar").GetData().AsArrayHandle(outCellData);
 
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 21.f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(7) == 42.f, "Wrong cell field data");
+
+    vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
+    cleanOutput.GetField("pointvar").GetData().AsArrayHandle(outPointData);
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 99);
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(7) == 90);
   }
 
   static void TestUniformByBox1()
