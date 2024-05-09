@@ -152,6 +152,11 @@ if (VTKm_ENABLE_HDF5_IO)
   find_package(HDF5 REQUIRED COMPONENTS HL)
 endif()
 
+# If the linked HDF5 is parallel, we need to add the MPI include directory
+# for its dependencies
+vtkm_option(VTKm_HDF5_IS_PARALLEL "HDF5 library is parallel" OFF)
+mark_as_advanced(VTKm_HDF5_IS_PARALLEL)
+
 # VTK-m will turn on logging by default, but will set the default
 # logging level to WARN.  This option should not be visible by default
 # in the GUI, as ERROR and WARN level logging should not interfere
