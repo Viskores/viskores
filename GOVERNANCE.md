@@ -4,6 +4,15 @@ This document outlines the governance of the Viskores software project. It
 describes how the software is managed and decisions are made.
 
 
+## Technical Charter
+
+See the [technical charter] for the official structure of this project.
+This document provides a subset of the technical charter for clarity of the
+roles and responsibility of members and developers. In the case there is
+disagreement between this document and the technical charter, the technical
+charter takes precedence.
+
+
 ## Technical Steering Committee
 
 The technical steering committee (TSC) is a collection of individuals
@@ -105,9 +114,11 @@ user may submit a pull request from their own fork.
 
 ## Amendments
 
-This governance may be amended by a two-thirds vote of the entire TSC and
-may be subject to approval by LF Projects.
+The technical charter (and by extension this governance) may be amended by
+a two-thirds vote of the entire TSC and may be subject to approval by LF
+Projects.
 
 
+[technical charter]: docs/technical-charter.pdf
 [Developer Certificate of Origin]: http://developercertificate.org
 [contributing]: CONTRIBUTING.md
