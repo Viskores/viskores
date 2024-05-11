@@ -99,7 +99,7 @@ VTKM_THIRDPARTY_POST_INCLUDE
 #include <utility>
 #include <vector>
 
-using ValueType = vtkm::Float32;
+using ValueType = vtkm::Float64;
 
 #define SINGLE_FILE_STDOUT_STDERR
 
