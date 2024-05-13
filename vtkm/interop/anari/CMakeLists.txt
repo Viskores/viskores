@@ -44,4 +44,10 @@ vtkm_library(
   DEVICE_SOURCES ${device_sources}
   )
 
+vtkm_add_target_information(vtkm_anari
+  DROP_UNUSED_SYMBOLS
+  MODIFY_CUDA_FLAGS
+  DEVICE_SOURCES ANARIMapperVolume.cxx
+  )
+
 target_link_libraries(vtkm_anari PUBLIC anari::anari)

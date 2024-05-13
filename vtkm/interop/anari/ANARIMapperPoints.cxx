@@ -81,8 +81,7 @@ static PointsFieldArrays UnpackFields(FieldSet fields)
   retval.Field4 = makeFieldArray(fields[3], retval.NumberOfField4Components);
 
   auto isFieldEmpty = [](const vtkm::cont::Field& f) -> bool {
-    return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1 ||
-      !f.GetData().CanConvert<AttributeHandleT>();
+    return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1;
   };
 
   if (!isFieldEmpty(fields[0]))
