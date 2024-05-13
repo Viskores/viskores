@@ -541,7 +541,7 @@ void BenchCountSetBitsImpl(benchmark::State& state,
   {
     (void)_;
     timer.Start();
-    const vtkm::Id setBits = vtkm::cont::Algorithm::CountSetBits(Config.Device, bits);
+    vtkm::Id setBits = vtkm::cont::Algorithm::CountSetBits(Config.Device, bits);
     benchmark::DoNotOptimize(setBits);
     timer.Stop();
 
