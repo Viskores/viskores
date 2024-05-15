@@ -101,6 +101,12 @@ public:
 
 } // namespace internal
 
+/// @brief Basic array storage for an array handle.
+///
+/// This array handle references a standard C array. It provides a level
+/// of safety and management across devices.
+/// This is the default used when no storage is specified. Using this subclass
+/// allows access to the underlying raw array.
 template <typename T>
 class VTKM_ALWAYS_EXPORT ArrayHandleBasic : public ArrayHandle<T, vtkm::cont::StorageTagBasic>
 {
@@ -173,50 +179,89 @@ public:
   {
   }
 
-  /// @{
-  /// \brief Gets raw access to the `ArrayHandle`'s data.
+  /// @brief Gets raw access to the `ArrayHandle`'s data.
   ///
-  /// Note that the returned array may become invalidated by other operations on the ArryHandle
-  /// unless you provide a token.
+  /// Note that the returned array may become invalidated by other operations on the ArryHandle.
   ///
-  const T* GetReadPointer(vtkm::cont::Token& token) const
-  {
-    return reinterpret_cast<const T*>(this->GetBuffers()[0].ReadPointerHost(token));
-  }
   const T* GetReadPointer() const
   {
     vtkm::cont::Token token;
     return this->GetReadPointer(token);
   }
-  T* GetWritePointer(vtkm::cont::Token& token) const
+  /// @brief Gets raw access to the `ArrayHandle`'s data.
+  ///
+  /// @param token When a `vtkm::cont::Token` is provided, the array is locked
+  /// from being used by any write operations until the token goes out of scope.
+  ///
+  const T* GetReadPointer(vtkm::cont::Token& token) const
   {
-    return reinterpret_cast<T*>(this->GetBuffers()[0].WritePointerHost(token));
+    return reinterpret_cast<const T*>(this->GetBuffers()[0].ReadPointerHost(token));
   }
+  /// @brief Gets raw write access to the `ArrayHandle`'s data.
+  ///
+  /// Note that the returned array may become invalidated by other operations on the ArryHandle.
+  ///
   T* GetWritePointer() const
   {
     vtkm::cont::Token token;
     return this->GetWritePointer(token);
   }
-
-  const T* GetReadPointer(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
+  /// @brief Gets raw write access to the `ArrayHandle`'s data.
+  ///
+  /// @param token When a `vtkm::cont::Token` is provided, the array is locked
+  /// from being used by any read or write operations until the token goes out of scope.
+  ///
+  T* GetWritePointer(vtkm::cont::Token& token) const
   {
-    return reinterpret_cast<const T*>(this->GetBuffers()[0].ReadPointerDevice(device, token));
+    return reinterpret_cast<T*>(this->GetBuffers()[0].WritePointerHost(token));
   }
+
+  /// @brief Gets raw access to the `ArrayHandle`'s data on a particular device.
+  ///
+  /// Note that the returned array may become invalidated by other operations on the ArryHandle.
+  ///
+  /// @param device The device ID or device tag specifying on which device the array will
+  /// be valid on.
+  ///
   const T* GetReadPointer(vtkm::cont::DeviceAdapterId device) const
   {
     vtkm::cont::Token token;
     return this->GetReadPointer(device, token);
   }
-  T* GetWritePointer(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
+  /// @brief Gets raw access to the `ArrayHandle`'s data.
+  ///
+  /// @param device The device ID or device tag specifying on which device the array will
+  /// be valid on.
+  /// @param token When a `vtkm::cont::Token` is provided, the array is locked
+  /// from being used by any write operations until the token goes out of scope.
+  ///
+  const T* GetReadPointer(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
   {
-    return reinterpret_cast<T*>(this->GetBuffers()[0].WritePointerDevice(device, token));
+    return reinterpret_cast<const T*>(this->GetBuffers()[0].ReadPointerDevice(device, token));
   }
+  /// @brief Gets raw write access to the `ArrayHandle`'s data.
+  ///
+  /// Note that the returned array may become invalidated by other operations on the ArryHandle.
+  ///
+  /// @param device The device ID or device tag specifying on which device the array will
+  /// be valid on.
+  ///
   T* GetWritePointer(vtkm::cont::DeviceAdapterId device) const
   {
     vtkm::cont::Token token;
     return this->GetWritePointer(device, token);
   }
-  /// @}
+  /// @brief Gets raw write access to the `ArrayHandle`'s data.
+  ///
+  /// @param device The device ID or device tag specifying on which device the array will
+  /// be valid on.
+  /// @param token When a `vtkm::cont::Token` is provided, the array is locked
+  /// from being used by any read or write operations until the token goes out of scope.
+  ///
+  T* GetWritePointer(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
+  {
+    return reinterpret_cast<T*>(this->GetBuffers()[0].WritePointerDevice(device, token));
+  }
 };
 
 /// A convenience function for creating an ArrayHandle from a standard C array.

@@ -12,6 +12,7 @@
 
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleSOA.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/DeviceAdapter.h>
@@ -517,6 +518,64 @@ void TestExecutionPortalsExample()
   CheckArrayValues(outputArray, 2);
 }
 
+////
+//// BEGIN-EXAMPLE GetArrayPointer
+////
+void LegacyFunction(const int* data);
+
+void UseArrayWithLegacy(const vtkm::cont::ArrayHandle<vtkm::Int32> array)
+{
+  vtkm::cont::ArrayHandleBasic<vtkm::Int32> basicArray = array;
+  vtkm::cont::Token token; // Token prevents array from changing while in scope.
+  const int* cArray = basicArray.GetReadPointer(token);
+  LegacyFunction(cArray);
+  // When function returns, token goes out of scope and array can be modified.
+}
+////
+//// END-EXAMPLE GetArrayPointer
+////
+
+void LegacyFunction(const int* data)
+{
+  std::cout << "Got data: " << data[0] << std::endl;
+}
+
+void TryUseArrayWithLegacy()
+{
+  vtkm::cont::ArrayHandle<vtkm::Int32> array;
+  array.Allocate(50);
+  SetPortal(array.WritePortal());
+  UseArrayWithLegacy(array);
+}
+
+void ArrayHandleFromComponents()
+{
+  ////
+  //// BEGIN-EXAMPLE ArrayHandleSOAFromComponentArrays
+  ////
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> component1;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> component2;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> component3;
+  // Fill component arrays...
+  //// PAUSE-EXAMPLE
+  component1.AllocateAndFill(50, 0);
+  component2.AllocateAndFill(50, 1);
+  component3.AllocateAndFill(50, 2);
+  //// RESUME-EXAMPLE
+
+  vtkm::cont::ArrayHandleSOA<vtkm::Vec3f> soaArray =
+    vtkm::cont::make_ArrayHandleSOA(component1, component2, component3);
+  ////
+  //// END-EXAMPLE ArrayHandleSOAFromComponentArrays
+  ////
+
+  auto portal = soaArray.ReadPortal();
+  for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); ++index)
+  {
+    VTKM_TEST_ASSERT(portal.Get(index) == vtkm::Vec3f{ 0, 1, 2 });
+  }
+}
+
 void Test()
 {
   BasicConstruction();
@@ -528,6 +587,8 @@ void Test()
   TestArrayPortalVectors();
   TestControlPortalsExample();
   TestExecutionPortalsExample();
+  TryUseArrayWithLegacy();
+  ArrayHandleFromComponents();
 }
 
 } // anonymous namespace

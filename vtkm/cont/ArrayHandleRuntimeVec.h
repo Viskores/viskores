@@ -296,7 +296,7 @@ public:
 
 } // namespace internal
 
-/// \brief Fancy array handle for a basic array with runtime selected vec size.
+/// @brief Fancy array handle for a basic array with runtime selected vec size.
 ///
 /// It is sometimes the case that you need to create an array of `Vec`s where
 /// the number of components is not known until runtime. This is problematic
@@ -341,6 +341,14 @@ private:
   using ComponentsArrayType = vtkm::cont::ArrayHandle<ComponentType, StorageTagBasic>;
 
 public:
+  /// @brief Construct an `ArrayHandleRuntimeVec` with a given number of components.
+  ///
+  /// @param  numComponents The size of the `Vec`s stored in the array. This must be
+  /// specified at the time of construction.
+  ///
+  /// @param componentsArray This optional parameter allows you to supply a basic array
+  /// that holds the components. This provides a mechanism to group consecutive values
+  /// into vectors.
   VTKM_CONT
   ArrayHandleRuntimeVec(vtkm::IdComponent numComponents,
                         const ComponentsArrayType& componentsArray = ComponentsArrayType{})
@@ -348,18 +356,22 @@ public:
   {
   }
 
+  /// @brief Return the number of components in each vec value.
   VTKM_CONT vtkm::IdComponent GetNumberOfComponents() const
   {
     return StorageType::GetNumberOfComponents(this->GetBuffers());
   }
 
+  /// @brief Return a basic array containing the components stored in this array.
+  ///
+  /// The returned array is shared with this object. Modifying the contents of one array
+  /// will modify the other.
   VTKM_CONT vtkm::cont::ArrayHandleBasic<ComponentType> GetComponentsArray() const
   {
     return StorageType::GetComponentsArray(this->GetBuffers());
   }
 
-  ///@{
-  /// \brief Converts the array to that of a basic array handle.
+  /// @brief Converts the array to that of a basic array handle.
   ///
   /// This method converts the `ArrayHandleRuntimeVec` to a simple `ArrayHandleBasic`.
   /// This is useful if the `ArrayHandleRuntimeVec` is passed to a routine that works
@@ -371,6 +383,7 @@ public:
     StorageType::AsArrayHandleBasic(this->GetBuffers(), array);
   }
 
+  /// @copydoc AsArrayHandleBasic
   template <typename ArrayType>
   ArrayType AsArrayHandleBasic() const
   {
@@ -378,7 +391,6 @@ public:
     this->AsArrayHandleBasic(array);
     return array;
   }
-  ///@}
 };
 
 /// `make_ArrayHandleRuntimeVec` is convenience function to generate an
@@ -407,6 +419,8 @@ VTKM_CONT auto make_ArrayHandleRuntimeVec(
     numComponents * UnrolledVec::NUM_COMPONENTS, flatComponents);
 }
 
+/// Converts a basic array handle into an `ArrayHandleRuntimeVec` with 1 component. The
+/// constructed array is essentially equivalent but of a different type.
 template <typename T>
 VTKM_CONT auto make_ArrayHandleRuntimeVec(
   const vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>& componentsArray)

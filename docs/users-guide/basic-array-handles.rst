@@ -2,11 +2,11 @@
 Basic Array Handles
 ==============================
 
-.. index:: array handle
+.. index:: array handle; basic
 
 :chapref:`dataset:Data Sets` describes the basic data sets used by |VTKm|.
 This chapter dives deeper into how |VTKm| represents data.
-Ultimately, data structures like \vtkmcont{DataSet} can be broken down into arrays of numbers.
+Ultimately, data structures like :class:`vtkm::cont::DataSet` can be broken down into arrays of numbers.
 Arrays in |VTKm| are managed by a unit called an *array handle*.
 
 An array handle, which is implemented with the :class:`vtkm::cont::ArrayHandle` class, manages an array of data that can be accessed or manipulated by |VTKm| algorithms.
@@ -42,6 +42,8 @@ This is convenient for creating arrays used as the output for algorithms.
 
 Chapter \ref{chap:AccessingAllocatingArrays} describes in detail how to allocate memory and access data in an :class:`vtkm::cont::ArrayHandle`.
 However, you can use the :func:`vtkm::cont::make_ArrayHandle` function for a simplified way to create an :class:`vtkm::cont::ArrayHandle` with data.
+
+.. todo:: Update chapter reference above. Also consider moving the access/allocation chapter earlier.
 
 :func:`vtkm::cont::make_ArrayHandle` has many forms.
 An easy form to use takes an initializer list and creates a basic :class:`vtkm::cont::ArrayHandle` with it.
@@ -156,7 +158,7 @@ The Hidden Second Template Parameter
    double: array handle; storage
 
 We have already seen that :class:`vtkm::cont::ArrayHandle` is a templated class with the template parameter indicating the type of values stored in the array.
-However, :class:`vtkm::cont::ArrayHandle` has a second hidden parameter that indicates the \keyterm{storage} of the array.
+However, :class:`vtkm::cont::ArrayHandle` has a second hidden parameter that indicates the _storage_ of the array.
 We have so far been able to ignore this second template parameter because |VTKm| will assign a default storage for us that will store the data in a basic array.
 
 Changing the storage of an :class:`vtkm::cont::ArrayHandle` lets us do many weird and wonderful things.

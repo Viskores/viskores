@@ -10,6 +10,7 @@
 
 set(examples
   GuideExampleArrayHandle.cxx
+  GuideExampleArrayHandleRuntimeVec.cxx
   GuideExampleCellShapes.cxx
   GuideExampleColorTables.cxx
   GuideExampleCoreDataTypes.cxx
@@ -35,6 +36,7 @@ set(examples_device
   GuideExampleFilterDataSetWithField.cxx
   GuideExampleGenerateMeshConstantShape.cxx
   GuideExampleSimpleAlgorithm.cxx
+  GuideExampleUnknownArrayHandle.cxx
   GuideExampleUseWorkletMapField.cxx
   GuideExampleUseWorkletPointNeighborhood.cxx
   GuideExampleUseWorkletReduceByKey.cxx
