@@ -226,9 +226,9 @@ VTKM_EXEC_CONT inline bool AtomicCompareExchangeImpl(T* addr,
   }
 }
 #if __CUDA_ARCH__ < 200
-VTKM_EXEC_CONT inline vtkm::Float32 vtkmAtomicAddImpl(vtkm::Float32* address,
-                                                      vtkm::Float32 value,
-                                                      vtkm::MemoryOrder order)
+VTKM_EXEC_CONT inline vtkm::Float32 AtomicAddImpl(vtkm::Float32* address,
+                                                  vtkm::Float32 value,
+                                                  vtkm::MemoryOrder order)
 {
   AtomicStoreFence(order);
   vtkm::UInt32 assumed;
@@ -245,7 +245,7 @@ VTKM_EXEC_CONT inline vtkm::Float32 vtkmAtomicAddImpl(vtkm::Float32* address,
 }
 #endif
 #if __CUDA_ARCH__ < 600
-VTKM_EXEC_CONT inline vtkm::Float64 vtkmAtomicAdd(vtkm::Float64* address,
+VTKM_EXEC_CONT inline vtkm::Float64 AtomicAddImpl(vtkm::Float64* address,
                                                   vtkm::Float64 value,
                                                   vtkm::MemoryOrder order)
 {
