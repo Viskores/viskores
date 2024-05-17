@@ -63,6 +63,7 @@
 #include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <vtkm/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
+#include <vtkm/filter/scalar_topology/SelectTopVolumeContoursFilter.h>
 #include <vtkm/filter/scalar_topology/testing/SuperArcHelper.h>
 #include <vtkm/filter/scalar_topology/testing/VolumeHelper.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
@@ -466,6 +467,14 @@ inline void TestContourTreeUniformDistributedBranchDecomposition8x9(int nBlocks,
                                       augmentHierarchicalTree,
                                       computeHierarchicalVolumetricBranchDecomposition);
 
+  using vtkm::filter::scalar_topology::SelectTopVolumeContoursFilter;
+
+  vtkm::Id numBranches = 2;
+  SelectTopVolumeContoursFilter tp_filter;
+
+  tp_filter.SetSavedBranches(numBranches);
+
+  auto tp_result = tp_filter.Execute(result);
 
   if (vtkm::cont::EnvironmentTracker::GetCommunicator().rank() == 0)
   {
@@ -503,27 +512,99 @@ inline void TestContourTreeUniformDistributedBranchDecomposition8x9(int nBlocks,
     std::sort(computed.begin(), computed.end());
     std::sort(expected.begin(), expected.end());
 
-    if (computed == expected)
+    if (computed != expected)
     {
-      std::cout << "Branch Decomposition: Results Match!" << std::endl;
-      return;
+      std::cout << "Branch Decomposition Results:" << std::endl;
+      std::cout << "Computed Contour Tree" << std::endl;
+      for (std::size_t i = 0; i < computed.size(); i++)
+      {
+        std::cout << std::setw(12) << computed[i].low << std::setw(14) << computed[i].high
+                  << std::endl;
+      }
+
+      std::cout << "Expected Contour Tree" << std::endl;
+      for (std::size_t i = 0; i < expected.size(); i++)
+      {
+        std::cout << std::setw(12) << expected[i].low << std::setw(14) << expected[i].high
+                  << std::endl;
+      }
+      VTKM_TEST_FAIL("Branch Decomposition Failed!");
     }
 
-    std::cout << "Branch Decomposition Results:" << std::endl;
-    std::cout << "Computed Contour Tree" << std::endl;
-    for (std::size_t i = 0; i < computed.size(); i++)
+    std::cout << "Branch Decomposition: Results Match!" << std::endl;
+
+    for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
     {
-      std::cout << std::setw(12) << computed[i].low << std::setw(14) << computed[i].high
-                << std::endl;
+      auto ds = tp_result.GetPartition(ds_no);
+      auto topVolBranchGRId = ds.GetField("TopVolumeBranchGlobalRegularIds")
+                                .GetData()
+                                .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                .ReadPortal();
+      auto topVolBranchVolume = ds.GetField("TopVolumeBranchVolume")
+                                  .GetData()
+                                  .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                  .ReadPortal();
+      auto topVolBranchSaddleEpsilon = ds.GetField("TopVolumeBranchSaddleEpsilon")
+                                         .GetData()
+                                         .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                         .ReadPortal();
+      auto topVolBranchSaddleIsoValue = ds.GetField("TopVolumeBranchSaddleIsoValue")
+                                          .GetData()
+                                          .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>()
+                                          .ReadPortal();
+
+      vtkm::Id nSelectedBranches = topVolBranchGRId.GetNumberOfValues();
+      Edge expectedGRIdVolumeAtBranch0(38, 6);
+      Edge expectedEpsilonIsoAtBranch0(1, 50);
+      Edge expectedGRIdVolumeAtBranch1(50, 2);
+      Edge expectedEpsilonIsoAtBranch1(-1, 30);
+
+      for (vtkm::Id branch = 0; branch < nSelectedBranches; ++branch)
+      {
+        bool failed = false;
+        Edge computedGRIdVolume(topVolBranchGRId.Get(branch), topVolBranchVolume.Get(branch));
+        Edge computedEpsilonIso(topVolBranchSaddleEpsilon.Get(branch),
+                                (vtkm::Id)topVolBranchSaddleIsoValue.Get(branch));
+
+        switch (branch)
+        {
+          case 0:
+            failed = !(computedGRIdVolume == expectedGRIdVolumeAtBranch0);
+            failed = (failed || !(computedEpsilonIso == expectedEpsilonIsoAtBranch0));
+            break;
+          case 1:
+            failed = !(computedGRIdVolume == expectedGRIdVolumeAtBranch1);
+            failed = (failed || !(computedEpsilonIso == expectedEpsilonIsoAtBranch1));
+            break;
+          default:
+            VTKM_TEST_ASSERT(false);
+        }
+
+        if (failed)
+        {
+          std::vector<Edge> expectedGRIdVolume{ expectedGRIdVolumeAtBranch0,
+                                                expectedGRIdVolumeAtBranch1 };
+
+          std::vector<Edge> expectedEpsilonIso{ expectedEpsilonIsoAtBranch0,
+                                                expectedEpsilonIsoAtBranch1 };
+
+          std::cout << "Top Branch Volume Results:" << std::endl;
+          std::cout << "Computed Top Branch Volume:branch=" << branch << std::endl;
+          std::cout << computedGRIdVolume.low << std::setw(14) << computedGRIdVolume.high
+                    << std::setw(5) << computedEpsilonIso.low << std::setw(14)
+                    << computedEpsilonIso.high << std::endl;
+
+          std::cout << "Expected Top Branch Volume:branch=" << branch << std::endl;
+          std::cout << expectedGRIdVolume[branch].low << std::setw(14)
+                    << expectedGRIdVolume[branch].high << std::setw(5)
+                    << expectedEpsilonIso[branch].low << std::setw(14)
+                    << expectedEpsilonIso[branch].high << std::endl;
+          VTKM_TEST_FAIL("Top Branch Volume Computation Failed!");
+        }
+      }
     }
 
-    std::cout << "Expected Contour Tree" << std::endl;
-    for (std::size_t i = 0; i < expected.size(); i++)
-    {
-      std::cout << std::setw(12) << expected[i].low << std::setw(14) << expected[i].high
-                << std::endl;
-    }
-    VTKM_TEST_FAIL("Branch Decomposition Failed!");
+    std::cout << "Top Branch Volume: Results Match!" << std::endl;
   }
 }
 

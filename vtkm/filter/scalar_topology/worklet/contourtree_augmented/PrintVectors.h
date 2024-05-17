@@ -72,7 +72,7 @@ namespace contourtree_augmented
 {
 
 // local constants to allow changing the spacing as needed
-constexpr int PRINT_WIDTH = 12;
+constexpr int PRINT_WIDTH = 14;
 constexpr int PREFIX_WIDTH = 30;
 
 template <typename T, typename StorageType>

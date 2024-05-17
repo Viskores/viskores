@@ -268,13 +268,13 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
 
   // we have to permute a bunch of arrays, so let's have some temporaries to store them
   IdArrayType permutedHyperparents;
-  PermuteArray<vtkm::Id>(
+  PermuteArrayWithMaskedIndex<vtkm::Id>(
     this->ContourTreeResult.Hyperparents, this->ContourTreeResult.Hypernodes, permutedHyperparents);
   IdArrayType permutedSupernodes;
-  PermuteArray<vtkm::Id>(
+  PermuteArrayWithMaskedIndex<vtkm::Id>(
     this->ContourTreeResult.Supernodes, this->ContourTreeResult.Hypernodes, permutedSupernodes);
   IdArrayType permutedSuperarcs;
-  PermuteArray<vtkm::Id>(
+  PermuteArrayWithMaskedIndex<vtkm::Id>(
     this->ContourTreeResult.Superarcs, this->ContourTreeResult.Hypernodes, permutedSuperarcs);
 
   // now we establish the reverse index array
@@ -284,7 +284,7 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
   // for (vtkm::Id supernode = 0; supernode < this->ContourTreeResult.Supernodes.size(); supernode++)
   //   superSortIndex[this->ContourTreeResult.Hypernodes[supernode]] = supernode;
 
-  //typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, vtkm::cont::ArrayHandleIndex> PermuteArrayHandleIndex;
+  //typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, vtkm::cont::ArrayHandleIndex> PermuteArrayWithMaskedIndexHandleIndex;
   vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> permutedSuperSortIndex(
     this->ContourTreeResult.Hypernodes, // index array
     superSortIndex);                    // value array
@@ -307,7 +307,7 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
 
   // we will permute the hyperarcs & copy them back with the new supernode target IDs
   IdArrayType permutedHyperarcs;
-  PermuteArray<vtkm::Id>(
+  PermuteArrayWithMaskedIndex<vtkm::Id>(
     this->ContourTreeResult.Hyperarcs, this->ContourTreeResult.Hypernodes, permutedHyperarcs);
   contourtree_maker_inc_ns::ComputeHyperAndSuperStructure_PermuteArcs permuteHyperarcsWorklet;
   this->Invoke(
@@ -315,9 +315,9 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
 
   // now swizzle the WhenTransferred value
   IdArrayType permutedWhenTransferred;
-  PermuteArray<vtkm::Id>(this->ContourTreeResult.WhenTransferred,
-                         this->ContourTreeResult.Hypernodes,
-                         permutedWhenTransferred);
+  PermuteArrayWithMaskedIndex<vtkm::Id>(this->ContourTreeResult.WhenTransferred,
+                                        this->ContourTreeResult.Hypernodes,
+                                        permutedWhenTransferred);
   vtkm::cont::Algorithm::Copy(permutedWhenTransferred, this->ContourTreeResult.WhenTransferred);
 
   // now we compress both the hypernodes & Hyperarcs

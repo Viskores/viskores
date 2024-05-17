@@ -659,11 +659,12 @@ public:
 
     IdArrayType permutedBranches;
     permutedBranches.Allocate(nSupernodes);
-    PermuteArray<vtkm::Id>(whichBranch, supernodeSorter, permutedBranches);
+    PermuteArrayWithMaskedIndex<vtkm::Id>(whichBranch, supernodeSorter, permutedBranches);
 
     IdArrayType permutedRegularID;
     permutedRegularID.Allocate(nSupernodes);
-    PermuteArray<vtkm::Id>(contourTree.Supernodes, supernodeSorter, permutedRegularID);
+    PermuteArrayWithMaskedIndex<vtkm::Id>(
+      contourTree.Supernodes, supernodeSorter, permutedRegularID);
 
 #ifdef DEBUG_PRINT
     std::cout << "VI A. Sorted into Branches" << std::endl;

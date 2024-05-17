@@ -75,7 +75,9 @@ namespace contourtree_augmented
 
 // permute routines
 template <typename ValueType, typename ArrayType>
-inline void PermuteArray(const ArrayType& input, IdArrayType& permute, ArrayType& output)
+inline void PermuteArrayWithMaskedIndex(const ArrayType& input,
+                                        IdArrayType& permute,
+                                        ArrayType& output)
 { // permuteValues()
   using transform_type =
     vtkm::cont::ArrayHandleTransform<IdArrayType, MaskedIndexFunctor<ValueType>>;
@@ -108,6 +110,38 @@ inline void PermuteArray(const ArrayType& input, IdArrayType& permute, ArrayType
   // Finally, copy the permuted values to the output array
   vtkm::cont::ArrayCopyDevice(permutedInput, output);
 } // permuteValues()
+
+
+// permute value type arrays
+template <typename ArrayType>
+inline void PermuteArrayWithRawIndex(const ArrayType& input,
+                                     IdArrayType& permute,
+                                     ArrayType& output)
+{ // PermuteArrayWithRawIndex()
+  using permute_type = vtkm::cont::ArrayHandlePermutation<IdArrayType, ArrayType>;
+
+  // resize the output, i.e., output.resize(permute.size());
+  vtkm::Id permNumValues = permute.GetNumberOfValues();
+  vtkm::Id outNumValues = output.GetNumberOfValues();
+  if (permNumValues > outNumValues)
+  {
+    output.Allocate(permNumValues);
+  }
+  else if (permNumValues < outNumValues)
+  {
+    output.Allocate(permNumValues, vtkm::CopyFlag::On);
+  } // else the output has already the correct size
+
+  // The following is equivalent to doing the following in serial
+  //
+  // for (vtkm::Id entry = 0; entry < permute.size(); entry++)
+  //     output[entry] = input[permute[entry]];
+  //
+  // fancy vtkm array so that we do not actually copy any data here
+  permute_type permutedInput(permute, input);
+  // Finally, copy the permuted values to the output array
+  vtkm::cont::ArrayCopyDevice(permutedInput, output);
+} // PermuteArrayWithRawIndex()
 
 
 // transform functor used in ContourTreeMesh to flag indicies as other when using the CombinedVectorClass

@@ -12,17 +12,21 @@ set(scalar_topology_headers
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   DistributedBranchDecompositionFilter.h
+  SelectTopVolumeContoursFilter.h
   )
 
 set(scalar_topology_sources
   internal/BranchDecompositionBlock.cxx
+  internal/SelectTopVolumeContoursBlock.cxx
   internal/ComputeBlockIndices.cxx
   internal/ComputeDistributedBranchDecompositionFunctor.cxx
+  internal/SelectTopVolumeContoursFunctor.cxx
   internal/ExchangeBranchEndsFunctor.cxx
   ContourTreeUniform.cxx
   ContourTreeUniformAugmented.cxx
   ContourTreeUniformDistributed.cxx
   DistributedBranchDecompositionFilter.cxx
+  SelectTopVolumeContoursFilter.cxx
   )
 
 vtkm_library(

@@ -74,6 +74,7 @@
 
 #include <vtkm/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <vtkm/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
+#include <vtkm/filter/scalar_topology/SelectTopVolumeContoursFilter.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ProcessContourTree.h>
@@ -213,8 +214,8 @@ int main(int argc, char* argv[])
     if (!augmentHierarchicalTree)
     {
       VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-                 "Warning: --computeVolumeBranchDecomposition only "
-                 "allowed augmentation. Enabling --augmentHierarchicalTree option.");
+                 "Warning: --computeVolumeBranchDecomposition requires augmentation. "
+                 "Enabling --augmentHierarchicalTree option.");
       augmentHierarchicalTree = true;
     }
   }
@@ -264,6 +265,31 @@ int main(int argc, char* argv[])
       return EXIT_FAILURE;
     }
   }
+
+  vtkm::Id numBranches = 0;
+  if (parser.hasOption("--numBranches"))
+  {
+    numBranches = std::stoi(parser.getOption("--numBranches"));
+    if (!computeHierarchicalVolumetricBranchDecomposition)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "Warning: --numBranches requires computing branch decomposition. "
+                 "Enabling --computeHierarchicalVolumetricBranchDecomposition option.");
+      computeHierarchicalVolumetricBranchDecomposition = true;
+    }
+    if (!augmentHierarchicalTree)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "Warning: --numBranches requires augmentation. "
+                 "Enabling --augmentHierarchicalTree option.");
+      augmentHierarchicalTree = true;
+    }
+  }
+
+  ValueType eps = 0.00001f;
+
+  if (parser.hasOption("--eps"))
+    eps = std::stof(parser.getOption("--eps"));
 
 #ifdef ENABLE_HDFIO
   std::string dataset_name = "data";
@@ -336,7 +362,12 @@ int main(int argc, char* argv[])
       std::cout << "--augmentHierarchicalTree Augment the hierarchical tree." << std::endl;
       std::cout << "--computeVolumeBranchDecomposition Compute the volume branch decomposition. "
                 << std::endl;
-      std::cout << "                 Requries --augmentHierarchicalTree to be set." << std::endl;
+      std::cout << "                 Requires --augmentHierarchicalTree to be set." << std::endl;
+      std::cout << "--numBranches    Number of top volume branches to select." << std::endl;
+      std::cout << "                 Requires --computeVolumeBranchDecomposition." << std::endl;
+      std::cout
+        << "--eps=<float>   Floating point offset awary from the critical point. (default=0.00001)"
+        << std::endl;
       std::cout << "--preSplitFiles  Input data is already pre-split into blocks." << std::endl;
       std::cout << "--saveDot        Save DOT files of the distributed contour tree " << std::endl
                 << "                 computation (Default=False). " << std::endl;
@@ -383,6 +414,8 @@ int main(int argc, char* argv[])
                  << "    saveOutputData=" << saveOutputData << std::endl
                  << "    forwardSummary=" << forwardSummary << std::endl
                  << "    nblocks=" << numBlocks << std::endl
+                 << "    nbranches=" << numBranches << std::endl
+                 << "    eps=" << eps << std::endl
 #ifdef ENABLE_HDFIO
                  << "    dataset=" << dataset_name << " (HDF5 only)" << std::endl
                  << "    blocksPerDim=" << blocksPerDimIn[0] << "," << blocksPerDimIn[1] << ","
@@ -642,6 +675,15 @@ int main(int argc, char* argv[])
   vtkm::Float64 branchDecompTime = currTime - prevTime;
   prevTime = currTime;
 
+  // Compute SelectTopVolumeContours if needed
+  vtkm::cont::PartitionedDataSet tp_result;
+  if (numBranches > 0)
+  {
+    vtkm::filter::scalar_topology::SelectTopVolumeContoursFilter tp_filter;
+    tp_filter.SetSavedBranches(numBranches);
+    tp_result = tp_filter.Execute(bd_result);
+  }
+
   // Save output
   if (saveOutputData)
   {
@@ -682,6 +724,66 @@ int main(int argc, char* argv[])
           {
             treeStream << std::setw(12) << upperEndGRId.Get(branch) << std::setw(14)
                        << lowerEndGRId.Get(branch) << std::endl;
+          }
+        }
+
+        if (numBranches > 0)
+        {
+#ifndef DEBUG_PRINT
+          bool print_to_files = (rank == 0);
+          vtkm::Id max_blocks_to_print = 1;
+#else
+          bool print_to_files = true;
+          vtkm::Id max_blocks_to_print = result.GetNumberOfPartitions();
+#endif
+
+          for (vtkm::Id ds_no = 0; print_to_files && ds_no < max_blocks_to_print; ++ds_no)
+          {
+            auto ds = tp_result.GetPartition(ds_no);
+            std::string topVolumeBranchFileName = std::string("TopVolumeBranch_Rank_") +
+              std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+              std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
+            std::ofstream topVolumeBranchStream(topVolumeBranchFileName.c_str());
+            auto topVolBranchGRId = ds.GetField("TopVolumeBranchGlobalRegularIds")
+                                      .GetData()
+                                      .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                      .ReadPortal();
+            auto topVolBranchVolume = ds.GetField("TopVolumeBranchVolume")
+                                        .GetData()
+                                        .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                        .ReadPortal();
+            auto topVolBranchSaddleEpsilon = ds.GetField("TopVolumeBranchSaddleEpsilon")
+                                               .GetData()
+                                               .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                               .ReadPortal();
+            auto topVolBranchSaddleIsoValue = ds.GetField("TopVolumeBranchSaddleIsoValue")
+                                                .GetData()
+                                                .AsArrayHandle<vtkm::cont::ArrayHandle<ValueType>>()
+                                                .ReadPortal();
+
+            vtkm::Id nSelectedBranches = topVolBranchGRId.GetNumberOfValues();
+            for (vtkm::Id branch = 0; branch < nSelectedBranches; ++branch)
+            {
+              topVolumeBranchStream << std::setw(12) << topVolBranchGRId.Get(branch)
+                                    << std::setw(14) << topVolBranchVolume.Get(branch)
+                                    << std::setw(5) << topVolBranchSaddleEpsilon.Get(branch)
+                                    << std::setw(14) << topVolBranchSaddleIsoValue.Get(branch)
+                                    << std::endl;
+            }
+
+            std::string isoValuesFileName = std::string("IsoValues_Rank_") +
+              std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+              std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
+            std::ofstream isoValuesStream(isoValuesFileName.c_str());
+
+            for (vtkm::Id branch = 0; branch < nSelectedBranches; ++branch)
+            {
+              isoValuesStream << (topVolBranchSaddleIsoValue.Get(branch) +
+                                  (eps * topVolBranchSaddleEpsilon.Get(branch)))
+                              << " ";
+            }
+
+            isoValuesStream << std::endl;
           }
         }
       }

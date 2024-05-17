@@ -9,17 +9,11 @@
 ##============================================================================
 
 set(headers
-  BranchDecompositionBlock.h
-  SelectTopVolumeContoursBlock.h
-  ComputeBlockIndices.h
-  ComputeDistributedBranchDecompositionFunctor.h
-  SelectTopVolumeContoursFunctor.h
-  ExchangeBranchEndsFunctor.h
+  ClarifyBranchEndSupernodeTypeWorklet.h
+  UpdateInfoByBranchDirectionWorklet.h
+  GetBranchVolumeWorklet.h
+  BranchVolumeComparator.h
   )
 #-----------------------------------------------------------------------------
-
-# Note: The C++ source files BranchDecompositionBlock.cxx and
-# ComputeDistributedBranchDecompositionFunctor.cxx are added to the scalar
-# topology library in the CMakeLists.txt in our parent directory.
 
 vtkm_declare_headers(${headers})
