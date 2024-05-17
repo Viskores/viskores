@@ -228,14 +228,6 @@ int main(int argc, char* argv[])
   if (parser.hasOption("--mc"))
   {
     useMarchingCubes = true;
-    if (useBoundaryExtremaOnly)
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
-                 "Warning: Marching cubes connectivity currently only works when "
-                 "using full boundary. Enabling the --useFullBoundary option "
-                 "to ensure that the app works.");
-      useBoundaryExtremaOnly = false;
-    }
   }
   bool preSplitFiles = false;
   if (parser.hasOption("--preSplitFiles"))
