@@ -107,12 +107,6 @@
       when: on_success
     - when: never
 
-.run_ascent_ci: &run_ascent_ci
-  rules:
-    - if: '$CI_PROJECT_PATH == "ecpcitest/vtk-m"'
-      when: on_success
-    - when: never
-
 .run_crusher_ci: &run_crusher_ci
   rules:
     - if: '$CI_PROJECT_PATH == "ci/csc331_crusher/dev/vtk-m"'
@@ -237,7 +231,6 @@ stages:
 
 
 include:
-  - local: '/.gitlab/ci/ascent.yml'
   - local: '/.gitlab/ci/crusher.yml'
   - local: '/.gitlab/ci/centos7.yml'
   - local: '/.gitlab/ci/centos8.yml'
