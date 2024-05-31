@@ -192,21 +192,21 @@ public:
 
 } // namespace internal
 
-/// \brief Fancy array handle that groups values into vectors.
+/// @brief Fancy array handle that groups values into vectors.
 ///
 /// It is sometimes the case that an array is stored such that consecutive
 /// entries are meant to form a group. This fancy array handle takes an array
 /// of values and a size of groups and then groups the consecutive values
-/// stored in a \c Vec.
+/// stored in a `vtkm::Vec`.
 ///
 /// For example, if you have an array handle with the six values 0,1,2,3,4,5
-/// and give it to a \c ArrayHandleGroupVec with the number of components set
-/// to 3, you get an array that looks like it contains two values of \c Vec
-/// values of size 3 with the data [0,1,2], [3,4,5].
+/// and give it to a `ArrayHandleGroupVec` with the number of components set
+/// to 3, you get an array that looks like it contains two values of `vtkm::Vec`
+/// of size 3 with the data [0,1,2], [3,4,5].
 ///
 /// The array of components should have a number of values that divides evenly
-/// with the size of the Vec. If the components array does not divide evenly
-/// into `Vec`s, then a warning will be logged and the extra component values
+/// with the size of the `vtkm::Vec`. If the components array does not divide evenly
+/// into `vtkm::Vec`s, then a warning will be logged and the extra component values
 /// will be ignored.
 ///
 template <typename ComponentsArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
@@ -229,19 +229,21 @@ public:
 
   using ComponentType = typename ComponentsArrayHandleType::ValueType;
 
+  /// Construct an `ArrayHandleGroupVec` with a provided components array.
   VTKM_CONT
   ArrayHandleGroupVec(const ComponentsArrayHandleType& componentsArray)
     : Superclass(componentsArray.GetBuffers())
   {
   }
 
+  /// Retrieve the components array being grouped.
   VTKM_CONT ComponentsArrayHandleType GetComponentsArray() const
   {
     return ComponentsArrayHandleType(this->GetBuffers());
   }
 };
 
-/// \c make_ArrayHandleGroupVec is convenience function to generate an
+/// `make_ArrayHandleGroupVec` is convenience function to generate an
 /// ArrayHandleGroupVec. It takes in an ArrayHandle and the number of components
 /// (as a specified template parameter), and returns an array handle with
 /// consecutive entries grouped in a Vec.

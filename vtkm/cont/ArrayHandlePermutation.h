@@ -254,6 +254,7 @@ public:
       vtkm::cont::StorageTagPermutation<typename IndexArrayHandleType::StorageTag,
                                         typename ValueArrayHandleType::StorageTag>>));
 
+  /// Construct a permuation array with index and value arrays.
   VTKM_CONT
   ArrayHandlePermutation(const IndexArrayHandleType& indexArray,
                          const ValueArrayHandleType& valueArray)
@@ -261,11 +262,21 @@ public:
   {
   }
 
+  /// @brief Return the array used for indices.
+  ///
+  /// The index array provides how indices get permuted. When a value is retrieved from an
+  /// `ArrayHandlePermutation`, an index is retrived from this index array, and this new
+  /// index is used to retrieve a value from the value array.
   VTKM_CONT IndexArrayHandleType GetIndexArray() const
   {
     return StorageType::GetIndexArray(this->GetBuffers());
   }
 
+  /// @brief Return the array used for values.
+  ///
+  /// The index array provides how indices get permuted. When a value is retrieved from an
+  /// `ArrayHandlePermutation`, an index is retrived from this index array, and this new
+  /// index is used to retrieve a value from the value array.
   VTKM_CONT ValueArrayHandleType GetValueArray() const
   {
     return StorageType::GetValueArray(this->GetBuffers());
@@ -275,13 +286,13 @@ public:
 /// make_ArrayHandleTransform is convenience function to generate an
 /// ArrayHandleTransform.  It takes in an ArrayHandle and a functor
 /// to apply to each element of the Handle.
-
 template <typename IndexArrayHandleType, typename ValueArrayHandleType>
 VTKM_CONT vtkm::cont::ArrayHandlePermutation<IndexArrayHandleType, ValueArrayHandleType>
 make_ArrayHandlePermutation(IndexArrayHandleType indexArray, ValueArrayHandleType valueArray)
 {
   return ArrayHandlePermutation<IndexArrayHandleType, ValueArrayHandleType>(indexArray, valueArray);
 }
+
 }
 } // namespace vtkm::cont
 

@@ -51,9 +51,9 @@ private:
 }; // class PhiloxFunctor
 } // namespace detail
 
-/// \brief An \c ArrayHandle that provides a source of random bits
+/// @brief An `ArrayHandle` that provides a source of random bits
 ///
-/// \c ArrayHandleRandomUniformBits is a specialization of ArrayHandleImplicit.
+/// `ArrayHandleRandomUniformBits` is a specialization of `ArrayHandleImplicit`.
 /// It takes a user supplied seed and hash it with the a given index value. The
 /// hashed value is the value of the array at that position.
 ///
@@ -64,9 +64,9 @@ private:
 /// is used as the hash function.
 ///
 /// Note: In contrast to traditional random number generator,
-/// ArrayHandleRandomUniformBits does not have "state", i.e. multiple calls
+/// `ArrayHandleRandomUniformBits` does not have "state", i.e. multiple calls
 /// the Get() method with the same index will always return the same hash value.
-/// To ge a new set of random bits, create a new ArrayHandleRandomUniformBits
+/// To get a new set of random bits, create a new `ArrayHandleRandomUniformBits`
 /// with a different seed.
 class VTKM_ALWAYS_EXPORT ArrayHandleRandomUniformBits
   : public vtkm::cont::ArrayHandleImplicit<detail::PhiloxFunctor>
@@ -77,8 +77,13 @@ public:
   VTKM_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandleRandomUniformBits,
                                 (vtkm::cont::ArrayHandleImplicit<detail::PhiloxFunctor>));
 
-  /// The type of seed is specifically designed to be an vtkm::Vec<> to provide
-  /// type safety for the parameters so user will not transpose two integer parameters.
+  /// Construct an `ArrayHandleRandomUniformBits`.
+  ///
+  /// @param length Specifies the length of the generated array.
+  /// @param seed Provides a seed to use for the pseudorandom numbers. To prevent confusion
+  /// between the seed and the length, the type of the seed is a `vtkm::Vec` of size 1. To
+  /// specify the seed, declare it in braces. For example, to construct a random array of
+  /// size 50 with seed 123, use `ArrayHandleRandomUniformBits(50, { 123 })`.
   explicit ArrayHandleRandomUniformBits(vtkm::Id length, SeedType seed = { std::random_device{}() })
     : Superclass(detail::PhiloxFunctor(seed), length)
   {
