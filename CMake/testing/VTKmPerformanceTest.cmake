@@ -76,6 +76,14 @@ function(add_benchmark_test benchmark)
     set(VTKm_PERF_COMPARE_JSON "${CMAKE_BINARY_DIR}/$ENV{CI_COMMIT_SHA}_${VTKm_PERF_NAME}.json")
   endif()
 
+  # Only upload when we are inside a CI build and in master.  We need to check
+  # if VTKM_BENCH_RECORDS_TOKEN is either defined or non-empty, the reason is
+  # that in Gitlab CI Variables for protected branches are also defined in MR
+  # from forks, however, they are empty.
+  if (DEFINED ENV{VTKM_BENCH_RECORDS_TOKEN} AND NOT $ENV{VTKM_BENCH_RECORDS_TOKEN} STREQUAL "")
+    set(enable_upload TRUE)
+  endif()
+
   set(test_name "PerformanceTest${VTKm_PERF_NAME}")
 
   ###TEST INVOKATIONS##########################################################
@@ -117,12 +125,7 @@ function(add_benchmark_test benchmark)
     -P "${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTestReport.cmake"
     )
 
-
-  # Only upload when we are inside a CI build and in master.  We need to check
-  # if VTKM_BENCH_RECORDS_TOKEN is non-empty, the reason is that in Gitlab CI
-  # Variables for protected branches are also defined in MR from forks,
-  # however, they are empty.
-  if ($ENV{VTKM_BENCH_RECORDS_TOKEN})
+  if (enable_upload)
     add_test(NAME "${test_name}Upload"
       COMMAND ${CMAKE_COMMAND}
       "-DVTKm_PERF_REPO=${VTKm_PERF_REPO}"
