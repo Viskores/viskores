@@ -151,6 +151,7 @@ public:
       T,
       StorageTagCast<typename ArrayHandleType::ValueType, typename ArrayHandleType::StorageTag>>));
 
+  /// Construct an `ArrayHandleCast` from a source array handle.
   ArrayHandleCast(const vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
                                                 typename ArrayHandleType::StorageTag>& handle)
     : Superclass(Superclass::StorageType::CreateBuffers(handle))
@@ -158,11 +159,10 @@ public:
     this->ValidateTypeCast<typename ArrayHandleType::ValueType>();
   }
 
-  /// Implemented so that it is defined exclusively in the control environment.
-  /// If there is a separate device for the execution environment (for example,
-  /// with CUDA), then the automatically generated destructor could be
-  /// created for all devices, and it would not be valid for all devices.
-  ///
+  // Implemented so that it is defined exclusively in the control environment.
+  // If there is a separate device for the execution environment (for example,
+  // with CUDA), then the automatically generated destructor could be
+  // created for all devices, and it would not be valid for all devices.
   ~ArrayHandleCast() {}
 
   /// \brief Returns the `ArrayHandle` that is being transformed.
@@ -246,7 +246,7 @@ struct MakeArrayHandleCastImpl<T, T, ArrayType>
 
 } // namespace detail
 
-/// make_ArrayHandleCast is convenience function to generate an
+/// `make_ArrayHandleCast` is convenience function to generate an
 /// ArrayHandleCast.
 ///
 template <typename T, typename ArrayType>

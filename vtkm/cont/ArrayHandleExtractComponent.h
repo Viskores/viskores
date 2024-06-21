@@ -178,14 +178,14 @@ namespace vtkm
 namespace cont
 {
 
-/// \brief A fancy ArrayHandle that turns a vector array into a scalar array by
+/// @brief A fancy `ArrayHandle` that turns a vector array into a scalar array by
 /// slicing out a single component of each vector.
 ///
-/// ArrayHandleExtractComponent is a specialization of ArrayHandle. It takes an
-/// input ArrayHandle with a vtkm::Vec ValueType and a component index
+/// `ArrayHandleExtractComponent` is a specialization of `ArrayHandle`. It takes an
+/// input `ArrayHandle` with a `vtkm::Vec` `ValueType` and a component index
 /// and uses this information to expose a scalar array consisting of the
-/// specified component across all vectors in the input ArrayHandle. So for a
-/// given index i, ArrayHandleExtractComponent looks up the i-th vtkm::Vec in
+/// specified component across all vectors in the input `ArrayHandle`. So for a
+/// given index i, `ArrayHandleExtractComponent` looks up the i-th `vtkm::Vec` in
 /// the index array and reads or writes to the specified component, leave all
 /// other components unmodified. This is done on the fly rather than creating a
 /// copy of the array.
@@ -203,17 +203,20 @@ public:
       typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType,
       StorageTagExtractComponent<ArrayHandleType>>));
 
+  /// Construct an `ArrayHandleExtractComponent` with a given array and component.
   VTKM_CONT
   ArrayHandleExtractComponent(const ArrayHandleType& array, vtkm::IdComponent component)
     : Superclass(StorageType::CreateBuffers(component, array))
   {
   }
 
+  /// Get the component index being extracted from the source array.
   VTKM_CONT vtkm::IdComponent GetComponent() const
   {
     return StorageType::ComponentIndex(this->GetBuffers());
   }
 
+  /// Get the source array of `Vec`s to get a component out of.
   VTKM_CONT ArrayHandleType GetArray() const
   {
     using BaseArray = vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
@@ -222,8 +225,8 @@ public:
   }
 };
 
-/// make_ArrayHandleExtractComponent is convenience function to generate an
-/// ArrayHandleExtractComponent.
+/// `make_ArrayHandleExtractComponent` is convenience function to generate an
+/// `ArrayHandleExtractComponent`.
 template <typename ArrayHandleType>
 VTKM_CONT ArrayHandleExtractComponent<ArrayHandleType> make_ArrayHandleExtractComponent(
   const ArrayHandleType& array,

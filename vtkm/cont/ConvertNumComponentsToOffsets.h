@@ -35,7 +35,7 @@ namespace cont
 /// @param[in] componentsArraySize (optional) a reference to a \c vtkm::Id and is filled with the
 /// expected size of the component values array.
 ///
-/// \param[in] device (optional) specifies the device on which to run the conversion.
+/// @param[in] device (optional) specifies the device on which to run the conversion.
 ///
 /// Note that this function is pre-compiled for some set of `ArrayHandle` types. If you get a
 /// warning about an inefficient conversion (or the operation fails outright), you might need to

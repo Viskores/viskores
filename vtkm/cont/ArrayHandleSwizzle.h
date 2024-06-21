@@ -204,12 +204,22 @@ public:
 
   using MapType = typename Traits::MapType;
 
+  /// Construct an `ArrayHandleSwizzle` with a source array and a swizzle map.
+  /// The swizzle map is a `vtkm::Vec` containing `vtkm::IdComponent` components
+  /// and sized to the number of components in the array. Each value in the map
+  /// specifies from which component of the input the corresponding component of
+  /// the output should come from.
   VTKM_CONT ArrayHandleSwizzle(const ArrayHandleType& array, const MapType& map)
     : Superclass(array, Traits::GetFunctor(map), Traits::GetInverseFunctor(map))
   {
   }
 };
 
+/// Construct an `ArrayHandleSwizzle` from a provided array and swizzle map.
+/// The swizzle map is a `vtkm::Vec` containing `vtkm::IdComponent` components
+/// and sized to the number of components in the array. Each value in the map
+/// specifies from which component of the input the corresponding component of
+/// the output should come from.
 template <typename ArrayHandleType, vtkm::IdComponent OutSize>
 VTKM_CONT ArrayHandleSwizzle<ArrayHandleType, OutSize> make_ArrayHandleSwizzle(
   const ArrayHandleType& array,
@@ -218,11 +228,14 @@ VTKM_CONT ArrayHandleSwizzle<ArrayHandleType, OutSize> make_ArrayHandleSwizzle(
   return ArrayHandleSwizzle<ArrayHandleType, OutSize>(array, map);
 }
 
+/// Construct an `ArrayHandleSwizzle` from a provided array and swizzle map.
+/// The swizzle map is specified as independent function parameters after the array.
+/// Each value in the map specifies from which component of the input the corresponding
+/// component of the output should come from.
 template <typename ArrayHandleType, typename... SwizzleIndexTypes>
-VTKM_CONT ArrayHandleSwizzle<ArrayHandleType, vtkm::IdComponent(sizeof...(SwizzleIndexTypes) + 1)>
-make_ArrayHandleSwizzle(const ArrayHandleType& array,
-                        vtkm::IdComponent swizzleIndex0,
-                        SwizzleIndexTypes... swizzleIndices)
+VTKM_CONT auto make_ArrayHandleSwizzle(const ArrayHandleType& array,
+                                       vtkm::IdComponent swizzleIndex0,
+                                       SwizzleIndexTypes... swizzleIndices)
 {
   return make_ArrayHandleSwizzle(array, vtkm::make_Vec(swizzleIndex0, swizzleIndices...));
 }

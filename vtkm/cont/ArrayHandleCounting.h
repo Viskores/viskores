@@ -31,7 +31,7 @@ struct VTKM_ALWAYS_EXPORT StorageTagCounting
 namespace internal
 {
 
-/// \brief An implicit array portal that returns an counting value.
+/// \brief An implicit array portal that returns a counting value.
 template <class CountingValueType>
 class VTKM_ALWAYS_EXPORT ArrayPortalCounting
 {
@@ -48,6 +48,11 @@ public:
   {
   }
 
+  /// @brief Create an implicit counting array.
+  ///
+  /// @param start The starting value in the first value of the array.
+  /// @param step The increment between sequential values in the array.
+  /// @param numValues The size of the array.
   VTKM_EXEC_CONT
   ArrayPortalCounting(ValueType start, ValueType step, vtkm::Id numValues)
     : Start(start)
@@ -56,15 +61,19 @@ public:
   {
   }
 
+  /// Returns the starting value.
   VTKM_EXEC_CONT
   ValueType GetStart() const { return this->Start; }
 
+  /// Returns the step value.
   VTKM_EXEC_CONT
   ValueType GetStep() const { return this->Step; }
 
+  /// Returns the number of values in the array.
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
+  /// Returns the value for the given index.
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {

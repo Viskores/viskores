@@ -233,13 +233,13 @@ public:
 
 } // namespace internal
 
-/// \brief Fancy array handle that groups values into vectors of different sizes.
+/// @brief Fancy array handle that groups values into vectors of different sizes.
 ///
 /// It is sometimes the case that you need to run a worklet with an input or
 /// output that has a different number of values per instance. For example, the
-/// cells of a CellCetExplicit can have different numbers of points in each
+/// cells of a `vtkm::cont::CellCetExplicit` can have different numbers of points in each
 /// cell. If inputting or outputting cells of this type, each instance of the
-/// worklet might need a \c Vec of a different length. This fance array handle
+/// worklet might need a `vtkm::Vec` of a different length. This fancy array handle
 /// takes an array of values and an array of offsets and groups the consecutive
 /// values in Vec-like objects. The values are treated as tightly packed, so
 /// that each Vec contains the values from one offset to the next. The last
@@ -247,25 +247,25 @@ public:
 ///
 /// For example, if you have an array handle with the 9 values
 /// 0,1,2,3,4,5,6,7,8 an offsets array handle with the 4 values 0,4,6,9 and give
-/// them to an \c ArrayHandleGroupVecVariable, you get an array that looks like
+/// them to an `ArrayHandleGroupVecVariable`, you get an array that looks like
 /// it contains three values of Vec-like objects with the data [0,1,2,3],
 /// [4,5], and [6,7,8].
 ///
 /// Note that caution should be used with `ArrayHandleRuntimeVec` because the
-/// size of the `Vec` values is not known at compile time. Thus, the value
-/// type of this array is forced to a special `VecFromPortal` class that can cause
-/// surprises if treated as a `Vec`. In particular, the static `NUM_COMPONENTS`
-/// expression does not exist. Furthermore, new variables of type `VecFromPortal`
+/// size of the `vtkm::Vec` values is not known at compile time. Thus, the value
+/// type of this array is forced to a special `vtkm::VecFromPortal` class that can cause
+/// surprises if treated as a `vtkm::Vec`. In particular, the static `NUM_COMPONENTS`
+/// expression does not exist. Furthermore, new variables of type `vtkm::VecFromPortal`
 /// cannot be created. This means that simple operators like `+` will not work
 /// because they require an intermediate object to be created. (Equal operators
 /// like `+=` do work because they are given an existing variable to place the
 /// output.)
 ///
 /// The offsets array is often derived from a list of sizes for each of the
-/// entries. You can use the convenience function \c
-/// ConvertNumComponentsToOffsets to take an array of sizes (i.e. the number of
-/// components for each entry) and get an array of offsets needed for \c
-/// ArrayHandleGroupVecVariable.
+/// entries. You can use the convenience function
+/// `vtkm::cont::ConvertNumComponentsToOffsets` to take an array of sizes
+/// (i.e. the number of components for each entry) and get an array of offsets
+/// needed for `ArrayHandleGroupVecVariable`.
 ///
 template <typename ComponentsArrayHandleType, typename OffsetsArrayHandleType>
 class ArrayHandleGroupVecVariable
@@ -292,6 +292,7 @@ public:
 
   using ComponentType = typename ComponentsArrayHandleType::ValueType;
 
+  /// Construct an `ArrayHandleGroupVecVariable`
   VTKM_CONT
   ArrayHandleGroupVecVariable(const ComponentsArrayHandleType& componentsArray,
                               const OffsetsArrayHandleType& offsetsArray)
@@ -299,18 +300,20 @@ public:
   {
   }
 
+  /// Return the components array providing the data for the grouped vec array.
   VTKM_CONT ComponentsArrayHandleType GetComponentsArray() const
   {
     return StorageType::GetComponentsArray(this->GetBuffers());
   }
 
+  /// Return the offsets array defining the locations and sizes of each value.
   VTKM_CONT OffsetsArrayHandleType GetOffsetsArray() const
   {
     return StorageType::GetOffsetsArray(this->GetBuffers());
   }
 };
 
-/// \c make_ArrayHandleGroupVecVariable is convenience function to generate an
+/// `make_ArrayHandleGroupVecVariable` is convenience function to generate an
 /// ArrayHandleGroupVecVariable. It takes in an ArrayHandle of values and an
 /// array handle of offsets and returns an array handle with consecutive
 /// entries grouped in a Vec.
