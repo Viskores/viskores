@@ -339,7 +339,7 @@ configure_package_config_file(
 write_basic_package_version_file(
   ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   VERSION ${VTKm_VERSION}
-  COMPATIBILITY ExactVersion )
+  COMPATIBILITY SameMajorVersion )
 
 #-----------------------------------------------------------------------------
 # Create makefile/package files for projects not using CMake
