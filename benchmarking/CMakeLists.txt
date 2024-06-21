@@ -80,10 +80,14 @@ if(VTKm_ENABLE_PERFORMANCE_TESTING)
     REGEX BenchTetrahedralize
     )
   add_benchmark_test(BenchmarkFilters
-    NAME BenchContour
+    NAME BenchContourStructured
     REGEX
       BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:1/GenNormals:0.*/MultiPartitioned:0
       BenchContour/IsStructuredDataSet:1/NIsoVals:12/MergePts:0/GenNormals:1/FastNormals:1.*/MultiPartitioned:0
+    )
+  add_benchmark_test(BenchmarkFilters
+    NAME BenchContourUnstructured
+    REGEX
       BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:1/GenNormals:0.*/MultiPartitioned:0
       BenchContour/IsStructuredDataSet:0/NIsoVals:12/MergePts:0/GenNormals:1/FastNormals:1.*/MultiPartitioned:0
     )
