@@ -69,8 +69,8 @@
   extends:
     - .docker_image
 
-.ubuntu2004_hip_kokkos: &ubuntu2004_hip_kokkos
-  image: "kitware/vtkm:ci-ubuntu2004_hip_kokkos-20230220"
+.ubuntu2204_hip_kokkos: &ubuntu2204_hip_kokkos
+  image: "kitware/vtkm:ci-ubuntu2204_hip_kokkos-20240625"
   extends:
     - .docker_image
 
@@ -245,4 +245,5 @@ include:
   - local: '/.gitlab/ci/ubuntu1604.yml'
   - local: '/.gitlab/ci/ubuntu1804.yml'
   - local: '/.gitlab/ci/ubuntu2004.yml'
+  - local: '/.gitlab/ci/ubuntu2204.yml'
   - local: '/.gitlab/ci/windows10.yml'
