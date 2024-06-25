@@ -42,12 +42,22 @@ The technical steering committee (TSC) is a collection of individuals
 responsible for all technical oversight of Viskores. The TSC comprises
 developers and stakeholders of Viskores.
 
-The TSC voting members are the committers of the project (see [Committers
-and Contributors](#committers-and-contributors) below). The TSC may choose
-an alternative approach for determining the voting members of the TSC, and
-any such alternative approach will be documented in this file. Any meetings
-of the TSC are intended to be open to the public, and can be conducted
-electronically, via teleconference, or in person.
+The TSC voting members are listed below along with their GitHub usernames.
+
+  * Kenneth Moreland (@kmorel) -- Chair
+  * Li-Ta "Ollie" Lo (@ollielo)
+  * David Pugmire (@dpugmire)
+  * Mark Bolstad (@renderdude)
+  * Hank Childs (@hankchilds)
+
+A TSC voting member may be added by a majority approval of the existing
+members. A TSC member may be removed by self-request, they have remained
+inactive for a year or more, or by a majority approval of the other
+existing TSC voting members. The TSC may choose an alternative approach for
+determining the voting members of the TSC, and any such alternative
+approach will be documented in this file. Any meetings of the TSC are
+intended to be open to the public, and can be conducted electronically, via
+teleconference, or in person.
 
 The TSC may (1) establish work flow procedures for the submission,
 approval, and closure/archiving of projects, (2) set requirements for the
@@ -85,6 +95,14 @@ Project, which may include:
   * Coordinating any marketing, events, or communications regarding the
     Project.
 
+Individually, each TSC member agrees to perform the following functions:
+
+  * Participate in the responsibilities of the TSC.
+  * Regularly attend meetings of the TSC.
+  * Participate in on-line TSC voting.
+  * Perform review and/or commits of contributions.
+
+
 ### Voting
 
 Although Viskores aims to operate as a consensus-based community, if any
@@ -115,19 +133,15 @@ _Committers_ are contributors who have earned the ability to modify
 ("commit") source code, documentation or other technical artifacts in a
 project's repository.
 
-A contributor may become a committer by a majority approval of the existing
-committers. A committer may be removed by self-request, if it has been at
-least one year since their last commit, or by a majority approval of the
-other existing Committers.
+A contributor may become a committer by a majority approval of the TSC
+voting members. A committer may be removed by self-request, if it has been
+at least one year since their last commit, or by a majority approval of the
+TSC.
 
-A committer also has the role of a voting member of the TSC. As a person
-fulfilling these dual roles, anyone accepting the position of a committer
-agrees to perform the following:
-
-  * Participate in the responsibilities of the TSC.
-  * Regularly attend meetings of the TSC.
-  * Participate in on-line TSC voting.
-  * Perform review and/or commits of contributions.
+Committers are expected to uphold the contributing guidelines of Viskores.
+Furthermore, committers will be expected to review and facilitate in pull
+requests where appropriate. Committers are encouraged to attend the regular
+Viskores meetings.
 
 It should be noted that anyone can choose to implicitly be a contributor by
 agreeing to the [Developer Certificate of Origin] sign-off and submitting a
