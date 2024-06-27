@@ -83,8 +83,6 @@ Additionally, you can use its constructors or the :func:`vtkm::cont::make_ArrayH
 Strided Arrays
 --------------------
 
-.. todo:: Should this be moved to the chapter/section on transformed arrays?
-
 .. index::
    double: array handle; stride
    double: array handle; offset
@@ -163,3 +161,14 @@ This is convenient for operations that want to operate on arrays with an unknown
 .. load-example:: GetRuntimeVec
    :file: GuideExampleArrayHandleRuntimeVec.cxx
    :caption: Using :class:`vtkm::cont::ArrayHandleRuntimeVec` to get an array regardless of the size of the contained :class:`vtkm::Vec` values.
+
+
+---------------------------------------------
+Recombined Vec Arrays of Strided Components
+---------------------------------------------
+
+|VTKm| contains a special array, :class:`vtkm::cont::ArrayHandleRecombineVec`, to combine component arrays represented in :class:`vtkm::cont::ArrayHandleStride` together to form `Vec` values.
+:class:`vtkm::cont::ArrayHandleRecombineVec` is similar to :class:`vtkm::cont::ArrayHandleSOA` (see :secref:`memory-layout:Structure of Arrays`) except that (1) it holds stride arrays for its components instead of basic arrays and that (2) the number of components can be specified at runtime.
+:class:`vtkm::cont::ArrayHandleRecombineVec` is mainly provided for the implementation of extracting arrays out of a :class:`vtkm::cont::UnknownArrayHandle` (see :secref:`unknown-array-handle:Extracting All Components`).
+
+.. doxygenclass:: vtkm::cont::ArrayHandleRecombineVec

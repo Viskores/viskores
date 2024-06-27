@@ -9,3 +9,4 @@ Developing Algorithms
    basic-array-handles.rst
    simple-worklets.rst
    basic-filter-impl.rst
+   unknown-array-handle.rst

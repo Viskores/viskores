@@ -636,9 +636,7 @@ This is most typically used with C++ run-time type information to convert a run-
 
 .. doxygenfunction:: vtkm::ListForEach(Functor &&f, vtkm::List<Ts...>, Args&&... args)
 
-The following example shows a rudimentary version of converting a dynamically-typed array to a statically-typed array similar to what is done in |VTKm| classes like :class:`vtkm::cont::UnknownArrayHandle` (which is documented in Chapter~\ref{chap:UnknownArrayHandle}).
-
-.. todo:: Fix ``UnknownArrayHandle`` chapter reference above.
+The following example shows a rudimentary version of converting a dynamically-typed array to a statically-typed array similar to what is done in |VTKm| classes like :class:`vtkm::cont::UnknownArrayHandle`, which is documented in :chapref:`unknown-array-handle:Unknown Array Handles`.
 
 .. load-example:: ListForEach
    :file: GuideExampleLists.cxx
