@@ -345,7 +345,7 @@ void TryPrintArrayContents()
   ////
   //// BEGIN-EXAMPLE CastAndCallWithFloatFallback
   ////
-  uncertainArray.CastAndCall(PrintArrayContentsFunctor{});
+  uncertainArray.CastAndCallWithFloatFallback(PrintArrayContentsFunctor{});
   ////
   //// END-EXAMPLE CastAndCallWithFloatFallback
   ////
