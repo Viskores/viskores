@@ -261,6 +261,7 @@ test:ubuntu1804_cuda_perftest:
   variables:
     TEST_INCLUSIONS: "PerformanceTest"
     VTKm_PERF_REMOTE_URL: "https://vbolea:$VTKM_BENCH_RECORDS_TOKEN@gitlab.kitware.com/vbolea/vtk-m-benchmark-records.git"
+    VTKm_PERF_BENCH_DEVICE: "cuda"
     VTKm_PERF_ALPHA: "0.05"
     VTKm_PERF_REPETITIONS: "10"
     VTKm_PERF_DIST: "t"
