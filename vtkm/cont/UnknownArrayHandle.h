@@ -1207,6 +1207,9 @@ VTKM_CONT void UnknownArrayHandle::CastAndCallForTypesWithFloatFallback(Functor&
   if (!called)
   {
     // Copy to a float array and try again
+    VTKM_LOG_F(vtkm::cont::LogLevel::Info,
+               "Cast and call from %s failed. Copying to basic float array.",
+               this->GetArrayTypeName().c_str());
     vtkm::cont::UnknownArrayHandle floatArray = this->NewInstanceFloatBasic();
     floatArray.DeepCopyFrom(*this);
     vtkm::ListForEach(detail::UnknownArrayHandleTry{},
