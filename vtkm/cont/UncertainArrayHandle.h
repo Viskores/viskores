@@ -109,10 +109,10 @@ public:
 
   /// \brief Call a functor using the underlying array type with a float cast fallback.
   ///
-  /// `CastAndCallWithFloatFallback` attempts to cast the held array to a specific value type,
+  /// `CastAndCallWithFloatFallback()` attempts to cast the held array to a specific value type,
   /// and then calls the given functor with the cast array. If the underlying array
   /// does not match any of the requested array types, the array is copied to a new
-  /// `ArrayHandleBasic` with `FloatDefault` components in its value and attempts to
+  /// `ArrayHandleBasic` with `vtkm::FloatDefault` components in its value and attempts to
   /// cast to those types.
   ///
   template <typename Functor, typename... Args>

@@ -2,6 +2,8 @@
 Fancy Array Handles
 ==============================
 
+.. todo:: Document :class:`vtkm::cont::ArrayHandleMultiplexer`.
+
 .. index::
    double: array handle; fancy
 

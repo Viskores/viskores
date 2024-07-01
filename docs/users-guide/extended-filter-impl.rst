@@ -88,7 +88,7 @@ That calls a lambda function that invokes a worklet to create the output field.
 .. didyouknow::
    The filter implemented in :numref:`ex:FilterFieldImpl` is limited to only find the magnitude of :class:`vtkm::Vec`'s with 3 components.
    It may be the case you wish to implement a filter that operates on :class:`vtkm::Vec`'s of multiple sizes (or perhaps even any size).
-   Chapter \ref{chap:UnknownArrayHandle} discusses how you can use the :class:`vtkm::cont::UnknownArrayHandle` contained in the :class:`vtkm::cont::Field` to more expressively decide what types to check for.
+   :chapref:`unknown-array-handle:Unknown Array Handles` discusses how you can use the :class:`vtkm::cont::UnknownArrayHandle` contained in the :class:`vtkm::cont::Field` to more expressively decide what types to check for.
 
 .. doxygenfunction:: vtkm::filter::Filter::CastAndCallVariableVecField(const vtkm::cont::UnknownArrayHandle&, Functor&&, Args&&...) const
 .. doxygenfunction:: vtkm::filter::Filter::CastAndCallVariableVecField(const vtkm::cont::Field&, Functor&&, Args&&...) const
