@@ -19,6 +19,44 @@ But it can also optionally take the ``argc`` and ``argv`` arguments to the ``mai
 |VTKm| accepts arguments that, for example, configure the compute device to use or establish logging levels.
 Any arguments that are handled by |VTKm| are removed from the ``argc``/``argv`` list so that your program can then respond to the remaining arguments.
 
+Many options can also be set with environment variables.
+If both the environment variable and command line argument are provided, the command line argument is used.
+The following table lists the currently supported options.
+
+.. list-table:: |VTKm| command line arguments and environment variable options.
+   :widths: 23 22 15 40
+   :header-rows: 1
+
+   * - Command Line Argument
+     - Environment Variable
+     - Default Value
+     - Description
+   * - ``--vtkm-help``
+     -
+     -
+     - Causes the program to print information about |VTKm| command line arguments and then exits the program.
+   * - ``--vtkm-log-level``
+     - ``VTKM_LOG_LEVEL``
+     - ``WARNING``
+     - Specifies the logging level.
+       Valid values are ``INFO``, ``WARNING``, ``ERROR``, ``FATAL``, and ``OFF``.
+       This can also be set to a numeric value for the logging level.
+   * - ``--vtkm-device``
+     - ``VTKM_DEVICE``
+     -
+     - Force |VTKm| to use the specified device.
+       If not specified or ``Any`` given, then any available device may be used.
+   * - ``--vtkm-num-threads``
+     - ``VTKM_NUM_THREADS``
+     -
+     - Set the number of threads to use on a multi-core device.
+       If not specified, the device will use the cores available in the system.
+   * - ``--vtkm-device-instance``
+     - ``VTKM_DEVICE_INSTANCE``
+     -
+     - Selects the device to use when more than one device device of a given type is available.
+       The device is specified with a numbered index.
+
 :func:`vtkm::cont::Initialize` returns a :struct:`vtkm::cont::InitializeResult` structure.
 This structure contains information about the supported arguments and options selected during initialization.
 
