@@ -17,6 +17,7 @@
 
 #include <vtkm/thirdparty/diy/environment.h>
 
+#include <cstdlib>
 #include <memory>
 #include <sstream>
 
@@ -123,7 +124,7 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
   }
   else
   {
-    vtkm::cont::InitLogging(argc, argv, loggingFlag);
+    vtkm::cont::InitLogging(argc, argv, loggingFlag, "VTKM_LOG_LEVEL");
   }
   if (!vtkmdiy::mpi::environment::initialized())
   {
@@ -225,37 +226,70 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
         vtkm::cont::DeviceAdapterTagAny{}, runtimeDeviceOptions, argc, argv);
     }
 
+    // Check for device on command line.
     if (options[opt::OptionIndex::DEVICE])
     {
       const char* arg = options[opt::OptionIndex::DEVICE].arg;
-      auto id = vtkm::cont::make_DeviceAdapterId(arg);
-      if (id != vtkm::cont::DeviceAdapterTagAny{})
+      config.Device = vtkm::cont::make_DeviceAdapterId(arg);
+    }
+    // If not on command line, check for device in environment variable.
+    if (config.Device == vtkm::cont::DeviceAdapterTagUndefined{})
+    {
+      const char* deviceEnv = std::getenv("VTKM_DEVICE");
+      if (deviceEnv != nullptr)
       {
-        vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(id);
+        auto id = vtkm::cont::make_DeviceAdapterId(std::getenv("VTKM_DEVICE"));
+        if (VtkmDeviceArg::DeviceIsAvailable(id))
+        {
+          config.Device = id;
+        }
+        else
+        {
+          // Got invalid device. Log an error, but continue to do the default action for
+          // the device (i.e., ignore the environment variable setting).
+          VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                     "Invalid device `"
+                       << deviceEnv
+                       << "` specified in VTKM_DEVICE environment variable. Ignoring.");
+          VTKM_LOG_S(vtkm::cont::LogLevel::Error,
+                     "Valid devices are: " << VtkmDeviceArg::GetValidDeviceNames());
+        }
+      }
+    }
+    // If still not defined, check to see if "any" device should be added.
+    if ((config.Device == vtkm::cont::DeviceAdapterTagUndefined{}) &&
+        (opts & InitializeOptions::DefaultAnyDevice) != InitializeOptions::None)
+    {
+      config.Device = vtkm::cont::DeviceAdapterTagAny{};
+    }
+    // Set the state for the device selected.
+    if (config.Device == vtkm::cont::DeviceAdapterTagUndefined{})
+    {
+      if ((opts & InitializeOptions::RequireDevice) != InitializeOptions::None)
+      {
+        auto devices = VtkmDeviceArg::GetValidDeviceNames();
+        VTKM_LOG_S(vtkm::cont::LogLevel::Fatal, "Device not given on command line.");
+        std::cerr << "Target device must be specified via --vtkm-device.\n"
+                     "Valid devices: "
+                  << devices << std::endl;
+        if ((opts & InitializeOptions::AddHelp) != InitializeOptions::None)
+        {
+          std::cerr << config.Usage;
+        }
+        exit(1);
       }
       else
       {
-        vtkm::cont::GetRuntimeDeviceTracker().Reset();
+        // No device specified. Do nothing and let VTK-m decide what it is going to do.
       }
-      config.Device = id;
     }
-    else if ((opts & InitializeOptions::DefaultAnyDevice) != InitializeOptions::None)
+    else if (config.Device == vtkm::cont::DeviceAdapterTagAny{})
     {
       vtkm::cont::GetRuntimeDeviceTracker().Reset();
-      config.Device = vtkm::cont::DeviceAdapterTagAny{};
     }
-    else if ((opts & InitializeOptions::RequireDevice) != InitializeOptions::None)
+    else
     {
-      auto devices = VtkmDeviceArg::GetValidDeviceNames();
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Device not given on command line.");
-      std::cerr << "Target device must be specified via --vtkm-device.\n"
-                   "Valid devices: "
-                << devices << std::endl;
-      if ((opts & InitializeOptions::AddHelp) != InitializeOptions::None)
-      {
-        std::cerr << config.Usage;
-      }
-      exit(1);
+      vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(config.Device);
     }
 
 

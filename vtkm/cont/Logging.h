@@ -371,7 +371,10 @@ enum class LogLevel
  */
 VTKM_CONT_EXPORT
 VTKM_CONT
-void InitLogging(int& argc, char* argv[], const std::string& loggingFlag = "--vtkm-log-level");
+void InitLogging(int& argc,
+                 char* argv[],
+                 const std::string& loggingFlag = "--vtkm-log-level",
+                 const std::string& loggingEnv = "VTKM_LOG_LEVEL");
 VTKM_CONT_EXPORT
 VTKM_CONT
 void InitLogging();
