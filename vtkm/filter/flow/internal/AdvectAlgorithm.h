@@ -12,8 +12,10 @@
 #define vtk_m_filter_flow_internal_AdvectAlgorithm_h
 
 #include <vtkm/cont/PartitionedDataSet.h>
+#include <vtkm/filter/flow/internal/AdvectAlgorithmTerminator.h>
 #include <vtkm/filter/flow/internal/BoundsMap.h>
 #include <vtkm/filter/flow/internal/DataSetIntegrator.h>
+#include <vtkm/filter/flow/internal/ParticleExchanger.h>
 #include <vtkm/filter/flow/internal/ParticleMessenger.h>
 #ifdef VTKM_ENABLE_MPI
 #include <vtkm/thirdparty/diy/diy.h>
@@ -29,86 +31,26 @@ namespace flow
 namespace internal
 {
 
-class AdvectAlgorithmTerminator
-{
-public:
-#ifdef VTKM_ENABLE_MPI
-  AdvectAlgorithmTerminator(vtkmdiy::mpi::communicator& comm)
-    : MPIComm(vtkmdiy::mpi::mpi_cast(comm.handle()))
-#else
-  AdvectAlgorithmTerminator(vtkmdiy::mpi::communicator& vtkmNotUsed(comm))
-#endif
-  {
-  }
+/*
+ParticleMessenger::Exchange()
+ - SendParticles(outData--> map[dstRank]=vector of pairs);
+ -- SendParticles(map...)
+ --- for each m : map  SendParticles(m);
+ ---- SendParticles(dst, container)
+ ----- serialize, SendData(dst, buff);
+ ------ SendDataAsync(dst,buff)
+ -------  header??, req=mpi_isend(), store req.
 
-  void AddWork()
-  {
-#ifdef VTKM_ENABLE_MPI
-    this->Dirty = 1;
-#endif
-  }
+ - RecvAny(data, block);
+ -- RecvData(tags, buffers, block)
+ --- RecvDataAsyncProbe(tag, buffers, block)
+ ---- while (true)
+ ----- if block:  MPI_Probe() msgReceived=true
+ ----- else : MPI_Iprobe msgReceived = check
+ ----- if msgRecvd: MPI_Get_count(), MPI_Recv(), buffers, blockAndWait=false
 
-  bool Done() const { return this->State == AdvectAlgorithmTerminatorState::DONE; }
 
-  void Control(bool haveLocalWork)
-  {
-#ifdef VTKM_ENABLE_MPI
-    if (this->State == STATE_0 && !haveLocalWork)
-    {
-      MPI_Ibarrier(this->MPIComm, &this->StateReq);
-      this->Dirty = 0;
-      this->State = STATE_1;
-    }
-    else if (this->State == STATE_1)
-    {
-      MPI_Status status;
-      int flag;
-      MPI_Test(&this->StateReq, &flag, &status);
-      if (flag == 1)
-      {
-        int localDirty = this->Dirty;
-        MPI_Iallreduce(
-          &localDirty, &this->AllDirty, 1, MPI_INT, MPI_LOR, this->MPIComm, &this->StateReq);
-        this->State = STATE_2;
-      }
-    }
-    else if (this->State == STATE_2)
-    {
-      MPI_Status status;
-      int flag;
-      MPI_Test(&this->StateReq, &flag, &status);
-      if (flag == 1)
-      {
-        if (this->AllDirty == 0) //done
-          this->State = DONE;
-        else
-          this->State = STATE_0; //reset.
-      }
-    }
-#else
-    if (!haveLocalWork)
-      this->State = DONE;
-#endif
-  }
-
-private:
-  enum AdvectAlgorithmTerminatorState
-  {
-    STATE_0,
-    STATE_1,
-    STATE_2,
-    DONE
-  };
-
-  AdvectAlgorithmTerminatorState State = AdvectAlgorithmTerminatorState::STATE_0;
-
-#ifdef VTKM_ENABLE_MPI
-  std::atomic<int> Dirty;
-  int AllDirty = 0;
-  MPI_Request StateReq;
-  MPI_Comm MPIComm;
-#endif
-};
+*/
 
 template <typename DSIType>
 class AdvectAlgorithm
@@ -125,6 +67,7 @@ public:
     , Rank(this->Comm.rank())
     , UseAsynchronousCommunication(useAsyncComm)
     , Terminator(this->Comm)
+    , Exchanger(this->Comm)
   {
   }
 
@@ -280,6 +223,11 @@ public:
     return !particles.empty();
   }
 
+  void ExchangeParticles()
+  {
+    //    this->Exchanger.Exchange(outgoing, outgoingRanks, this->ParticleBlockIDsMap, incoming, incomingBlockIDs, block);
+  }
+
   void Communicate(vtkm::filter::flow::internal::ParticleMessenger<ParticleType>& messenger)
   {
     std::vector<ParticleType> outgoing;
@@ -294,6 +242,8 @@ public:
 #ifdef VTKM_ENABLE_MPI
     block = this->GetBlockAndWait(messenger.UsingSyncCommunication());
 #endif
+
+    //    this->Exchanger.Exchange(outgoing, outgoingRanks, this->ParticleBlockIDsMap, incoming, incomingBlockIDs, block);
 
     vtkm::Id numTermMessages;
     messenger.Exchange(outgoing,
@@ -463,6 +413,8 @@ public:
   vtkm::FloatDefault StepSize;
   bool UseAsynchronousCommunication = true;
   AdvectAlgorithmTerminator Terminator;
+
+  ParticleExchanger<ParticleType> Exchanger;
 };
 
 }

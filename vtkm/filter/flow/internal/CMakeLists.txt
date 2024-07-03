@@ -10,6 +10,7 @@
 
 set(headers
   AdvectAlgorithm.h
+  AdvectAlgorithmTerminator.h
   AdvectAlgorithmThreaded.h
   BoundsMap.h
   DataSetIntegrator.h
@@ -19,6 +20,7 @@ set(headers
   LagrangianStructureHelpers.h
   Messenger.h
   ParticleAdvector.h
+  ParticleExchanger.h
   ParticleMessenger.h
   )
 
