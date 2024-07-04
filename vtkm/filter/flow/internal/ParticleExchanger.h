@@ -35,15 +35,14 @@ public:
   {
   }
 #ifdef VTKM_ENABLE_MPI
-  ~ParticleExchanger() { this->CleanupSendBuffers(); }
+  ~ParticleExchanger() { this->CleanupSendBuffers(false); }
 #endif
 
   void Exchange(const std::vector<ParticleType>& outData,
                 const std::vector<vtkm::Id>& outRanks,
                 const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
                 std::vector<ParticleType>& inData,
-                std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
-                bool blockAndWait)
+                std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap)
   {
     VTKM_ASSERT(outData.size() == outRanks.size());
 
@@ -53,8 +52,8 @@ public:
     else
     {
       this->SendParticles(outData, outRanks, outBlockIDsMap);
-      this->RecvParticles(inData, inDataBlockIDsMap, blockAndWait);
-      this->CleanupSendBuffers();
+      this->RecvParticles(inData, inDataBlockIDsMap);
+      this->CleanupSendBuffers(true);
     }
 #endif
   }
@@ -65,7 +64,44 @@ private:
   // pair(particle, bids);
   using ParticleCommType = std::pair<ParticleType, std::vector<vtkm::Id>>;
 
-  void CleanupSendBuffers() { std::cout << "IMPLEMENT ME!!!" << std::endl; }
+  void CleanupSendBuffers(bool checkRequests)
+  {
+    if (!checkRequests)
+    {
+      for (auto& entry : this->SendBuffers)
+        delete entry.second;
+      this->SendBuffers.clear();
+      return;
+    }
+
+    std::vector<MPI_Request> requests;
+    for (auto& req : this->SendBuffers)
+      requests.emplace_back(req.first);
+
+    std::vector<MPI_Status> status(requests.size());
+    std::vector<int> indices(requests.size());
+    int num = 0;
+    int err = MPI_Testsome(requests.size(), requests.data(), &num, indices.data(), status.data());
+    if (err != MPI_SUCCESS)
+      throw vtkm::cont::ErrorFilterExecution(
+        "Error with MPI_Testsome in ParticleExchanger::CleanupSendBuffers");
+
+#if 0
+    if (num > 0)
+    {
+      std::size_t sz = static_cast<std::size_t>(num);
+      for (std::size_t i = 0; i < sz; i++)
+      {
+        auto it = this->SendBuffers.find(requests[indices[i]]);
+        if (it == this->SendBuffers.end())
+          throw vtkm::cont::ErrorFilterExecution("Error with requests in ParticleExchanger::CleanupSendBuffers");
+
+//        delete it->second;
+//        this->SendBuffers.erase(it->first);
+      }
+    }
+#endif
+  }
 
   void SendParticles(const std::vector<ParticleType>& outData,
                      const std::vector<vtkm::Id>& outRanks,
@@ -82,7 +118,8 @@ private:
     for (std::size_t i = 0; i < n; i++)
     {
       const auto& bids = outBlockIDsMap.find(outData[i].GetID())->second;
-      sendData[outRanks[i]].emplace_back(std::make_pair(std::move(outData[i]), std::move(bids)));
+      //sendData[outRanks[i]].emplace_back(std::make_pair(std::move(outData[i]), std::move(bids)));
+      sendData[outRanks[i]].emplace_back(std::make_pair(outData[i], bids));
     }
 
     //Send to dst, vector<pair<particle, bids>>
@@ -101,6 +138,7 @@ private:
     //Serialize vector(pair(particle, bids)) and send.
     vtkmdiy::MemoryBuffer* bb = new vtkmdiy::MemoryBuffer();
     vtkmdiy::save(*bb, data);
+    bb->reset();
 
     MPI_Request req;
     int err = MPI_Isend(bb->buffer.data(), bb->size(), MPI_BYTE, dst, 0, this->MPIComm, &req);
@@ -110,8 +148,7 @@ private:
   }
 
   void RecvParticles(std::vector<ParticleType>& inData,
-                     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
-                     bool blockAndWait) const
+                     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap) const
   {
     inData.resize(0);
     inDataBlockIDsMap.clear();
@@ -121,75 +158,55 @@ private:
     MPI_Status status;
     while (true)
     {
-      bool msgReceived = false;
-      int err;
-      if (blockAndWait)
-      {
-        err = MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, this->MPIComm, &status);
-        if (err != MPI_SUCCESS)
-          throw vtkm::cont::ErrorFilterExecution(
-            "Error in MPI_Probe in ParticleExchanger::RecvParticles");
-        msgReceived = true;
-      }
-      else
-      {
-        int flag = 0;
-        err = MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, this->MPIComm, &flag, &status);
-        if (err != MPI_SUCCESS)
-          throw vtkm::cont::ErrorFilterExecution(
-            "Error in MPI_Probe in ParticleExchanger::RecvParticles");
-        msgReceived = (flag == 1);
-      }
+      int flag = 0;
+      int err = MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, this->MPIComm, &flag, &status);
+      if (err != MPI_SUCCESS)
+        throw vtkm::cont::ErrorFilterExecution(
+          "Error in MPI_Probe in ParticleExchanger::RecvParticles");
 
-      if (msgReceived)
-      {
-        int incomingSize;
-        err = MPI_Get_count(&status, MPI_BYTE, &incomingSize);
-        if (err != MPI_SUCCESS)
-          throw vtkm::cont::ErrorFilterExecution(
-            "Error in MPI_Probe in ParticleExchanger::RecvParticles");
-
-        std::vector<char> recvBuff;
-        recvBuff.resize(incomingSize);
-        MPI_Status recvStatus;
-
-        err = MPI_Recv(recvBuff.data(),
-                       incomingSize,
-                       MPI_BYTE,
-                       status.MPI_SOURCE,
-                       status.MPI_TAG,
-                       this->MPIComm,
-                       &recvStatus);
-        if (err != MPI_SUCCESS)
-          throw vtkm::cont::ErrorFilterExecution(
-            "Error in MPI_Probe in ParticleExchanger::RecvParticles");
-
-        vtkmdiy::MemoryBuffer memBuff;
-        vtkmdiy::save(memBuff, recvBuff);
-        buffers.emplace_back(std::move(memBuff));
-
-        blockAndWait = false; //Check one more time to see if anything else arrived.
-      }
-      else
-      {
+      if (flag == 0) //no message arrived we are done.
         break;
-      }
-    }
 
-    //Unpack buffers into particle data.
-    //buffers: vector<pair(particle, vector<vtkm::Id>)>
-    for (auto& b : buffers)
-    {
+      //Otherwise, recv the incoming data
+      int incomingSize;
+      err = MPI_Get_count(&status, MPI_BYTE, &incomingSize);
+      if (err != MPI_SUCCESS)
+        throw vtkm::cont::ErrorFilterExecution(
+          "Error in MPI_Probe in ParticleExchanger::RecvParticles");
+
+      std::vector<char> recvBuff;
+      recvBuff.resize(incomingSize);
+      MPI_Status recvStatus;
+
+      err = MPI_Recv(recvBuff.data(),
+                     incomingSize,
+                     MPI_BYTE,
+                     status.MPI_SOURCE,
+                     status.MPI_TAG,
+                     this->MPIComm,
+                     &recvStatus);
+      if (err != MPI_SUCCESS)
+        throw vtkm::cont::ErrorFilterExecution(
+          "Error in MPI_Probe in ParticleExchanger::RecvParticles");
+
+      //Add incoming data to inData and inDataBlockIds.
+      vtkmdiy::MemoryBuffer memBuff;
+      memBuff.save_binary(recvBuff.data(), incomingSize);
+      memBuff.reset();
+
       std::vector<ParticleCommType> data;
-      vtkmdiy::load(b, data);
-
-      for (auto& d : data)
+      vtkmdiy::load(memBuff, data);
+      memBuff.reset();
+      for (const auto& d : data)
       {
         const auto& particle = d.first;
         const auto& bids = d.second;
-        inDataBlockIDsMap[particle.GetID()] = std::move(bids);
-        inData.emplace_back(std::move(particle));
+        inDataBlockIDsMap[particle.GetID()] = bids;
+        inData.emplace_back(particle);
       }
+
+      //Note, we don't terminate the while loop here. We want to go back and
+      //check if any messages came in while buffers were being processed.
     }
   }
 

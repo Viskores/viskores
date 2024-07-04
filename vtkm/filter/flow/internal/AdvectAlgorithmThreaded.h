@@ -15,7 +15,6 @@
 #include <vtkm/filter/flow/internal/AdvectAlgorithm.h>
 #include <vtkm/filter/flow/internal/BoundsMap.h>
 #include <vtkm/filter/flow/internal/DataSetIntegrator.h>
-#include <vtkm/filter/flow/internal/ParticleMessenger.h>
 
 #include <thread>
 
@@ -144,10 +143,6 @@ protected:
                  "Forcing asynchronous communication.");
     }
 
-    bool useAsync = true;
-    vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
-      this->Comm, useAsync, this->BoundsMap, 1, 128);
-
     while (!this->Terminator.Done())
     {
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> workerResults;
@@ -157,22 +152,12 @@ protected:
         for (auto& r : it.second)
           this->UpdateResult(r);
 
-      this->Communicate(messenger);
+      this->ExchangeParticles();
       this->Terminator.Control(this->HaveAnyWork());
     }
 
     //Let the workers know that we are done.
     this->SetDone();
-  }
-
-  bool GetBlockAndWait(const bool& syncComm) override
-  {
-    std::lock_guard<std::mutex> lock(this->Mutex);
-    if (this->Done)
-      return true;
-
-    return (this->AdvectAlgorithm<DSIType>::GetBlockAndWait(syncComm) && !this->WorkerActivate &&
-            this->WorkerResults.empty());
   }
 
   void GetWorkerResults(

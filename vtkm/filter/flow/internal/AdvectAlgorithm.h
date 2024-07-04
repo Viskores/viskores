@@ -16,7 +16,6 @@
 #include <vtkm/filter/flow/internal/BoundsMap.h>
 #include <vtkm/filter/flow/internal/DataSetIntegrator.h>
 #include <vtkm/filter/flow/internal/ParticleExchanger.h>
-#include <vtkm/filter/flow/internal/ParticleMessenger.h>
 #ifdef VTKM_ENABLE_MPI
 #include <vtkm/thirdparty/diy/diy.h>
 #include <vtkm/thirdparty/diy/mpi-cast.h>
@@ -123,9 +122,6 @@ public:
   //Advect all the particles.
   virtual void Go()
   {
-    vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
-      this->Comm, this->UseAsynchronousCommunication, this->BoundsMap, 1, 128);
-
     while (!this->Terminator.Done())
     {
       std::vector<ParticleType> v;
@@ -139,7 +135,7 @@ public:
         this->UpdateResult(bb);
       }
 
-      this->Communicate(messenger);
+      this->ExchangeParticles();
       this->Terminator.Control(!this->Active.empty());
     }
   }
@@ -225,11 +221,6 @@ public:
 
   void ExchangeParticles()
   {
-    //    this->Exchanger.Exchange(outgoing, outgoingRanks, this->ParticleBlockIDsMap, incoming, incomingBlockIDs, block);
-  }
-
-  void Communicate(vtkm::filter::flow::internal::ParticleMessenger<ParticleType>& messenger)
-  {
     std::vector<ParticleType> outgoing;
     std::vector<vtkm::Id> outgoingRanks;
 
@@ -238,22 +229,8 @@ public:
     std::vector<ParticleType> incoming;
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingBlockIDs;
 
-    bool block = false;
-#ifdef VTKM_ENABLE_MPI
-    block = this->GetBlockAndWait(messenger.UsingSyncCommunication());
-#endif
-
-    //    this->Exchanger.Exchange(outgoing, outgoingRanks, this->ParticleBlockIDsMap, incoming, incomingBlockIDs, block);
-
-    vtkm::Id numTermMessages;
-    messenger.Exchange(outgoing,
-                       outgoingRanks,
-                       this->ParticleBlockIDsMap,
-                       0,
-                       incoming,
-                       incomingBlockIDs,
-                       numTermMessages,
-                       block);
+    this->Exchanger.Exchange(
+      outgoing, outgoingRanks, this->ParticleBlockIDsMap, incoming, incomingBlockIDs);
 
     //Cleanup what was sent.
     for (const auto& p : outgoing)
@@ -369,33 +346,6 @@ public:
     }
 
     return numTerm;
-  }
-
-
-  virtual bool GetBlockAndWait(const bool& syncComm)
-  {
-    bool haveNoWork = this->Active.empty() && this->Inactive.empty();
-
-    //Using syncronous communication we should only block and wait if we have no particles
-    if (syncComm)
-    {
-      return haveNoWork;
-    }
-    else
-    {
-      //Otherwise, for asyncronous communication, there are only two cases where blocking would deadlock.
-      //1. There are active particles.
-      //2. numLocalTerm + this->TotalNumberOfTerminatedParticles == this->TotalNumberOfParticles
-      //So, if neither are true, we can safely block and wait for communication to come in.
-
-      //      if (this->Terminator.State == AdvectAlgorithmTerminator::AdvectAlgorithmTerminatorState::STATE_2)
-      //        return true;
-
-      //      if (haveNoWork && (numLocalTerm + this->TotalNumTerminatedParticles < this->TotalNumParticles))
-      //        return true;
-
-      return false;
-    }
   }
 
   //Member data
