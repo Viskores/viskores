@@ -80,7 +80,7 @@ FilterParticleAdvectionSteadyState<Derived>::DoExecutePartitions(
   }
 
   vtkm::filter::flow::internal::ParticleAdvector<DSIType> pav(
-    this->BoundsMap, dsi, this->UseThreadedAlgorithm, this->UseAsynchronousCommunication);
+    this->BoundsMap, dsi, this->UseThreadedAlgorithm);
 
   vtkm::cont::ArrayHandle<ParticleType> particles;
   this->Seeds.AsArrayHandle(particles);

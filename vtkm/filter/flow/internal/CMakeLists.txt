@@ -18,10 +18,8 @@ set(headers
   DataSetIntegratorUnsteadyState.h
   GridMetaData.h
   LagrangianStructureHelpers.h
-  Messenger.h
   ParticleAdvector.h
   ParticleExchanger.h
-  ParticleMessenger.h
   )
 
 # Note: The C++ source files are added to the flow library

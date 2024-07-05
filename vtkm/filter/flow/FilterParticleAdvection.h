@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_flow_FilterParticleAdvection_h
 #define vtk_m_filter_flow_FilterParticleAdvection_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Particle.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/Filter.h>
@@ -90,15 +91,20 @@ public:
   VTKM_CONT
   void SetUseThreadedAlgorithm(bool val) { this->UseThreadedAlgorithm = val; }
 
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous no.");
   VTKM_CONT
-  void SetUseAsynchronousCommunication() { this->UseAsynchronousCommunication = true; }
+  void SetUseAsynchronousCommunication() {}
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous no.");
   VTKM_CONT
-  bool GetUseAsynchronousCommunication() { return this->UseAsynchronousCommunication; }
+  bool GetUseAsynchronousCommunication() { return true; }
 
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous no.");
   VTKM_CONT
-  void SetUseSynchronousCommunication() { this->UseAsynchronousCommunication = false; }
+  void SetUseSynchronousCommunication() {}
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous no.");
   VTKM_CONT
-  bool GetUseSynchronousCommunication() { return !this->GetUseAsynchronousCommunication(); }
+  bool GetUseSynchronousCommunication() { return false; }
+
 
 protected:
   VTKM_CONT virtual void ValidateOptions() const;
@@ -111,7 +117,6 @@ protected:
   vtkm::filter::flow::IntegrationSolverType SolverType =
     vtkm::filter::flow::IntegrationSolverType::RK4_TYPE;
   vtkm::FloatDefault StepSize = 0;
-  bool UseAsynchronousCommunication = true;
   bool UseThreadedAlgorithm = false;
   vtkm::filter::flow::VectorFieldType VecFieldType =
     vtkm::filter::flow::VectorFieldType::VELOCITY_FIELD_TYPE;

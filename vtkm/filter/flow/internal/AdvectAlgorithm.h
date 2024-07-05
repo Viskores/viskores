@@ -57,14 +57,11 @@ class AdvectAlgorithm
 public:
   using ParticleType = typename DSIType::PType;
 
-  AdvectAlgorithm(const vtkm::filter::flow::internal::BoundsMap& bm,
-                  std::vector<DSIType>& blocks,
-                  bool useAsyncComm)
+  AdvectAlgorithm(const vtkm::filter::flow::internal::BoundsMap& bm, std::vector<DSIType>& blocks)
     : Blocks(blocks)
     , BoundsMap(bm)
     , NumRanks(this->Comm.size())
     , Rank(this->Comm.rank())
-    , UseAsynchronousCommunication(useAsyncComm)
     , Terminator(this->Comm)
     , Exchanger(this->Comm)
   {
@@ -361,7 +358,6 @@ public:
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
   vtkm::Id Rank;
   vtkm::FloatDefault StepSize;
-  bool UseAsynchronousCommunication = true;
   AdvectAlgorithmTerminator Terminator;
 
   ParticleExchanger<ParticleType> Exchanger;

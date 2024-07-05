@@ -34,9 +34,8 @@ public:
   using ParticleType = typename DSIType::PType;
 
   AdvectAlgorithmThreaded(const vtkm::filter::flow::internal::BoundsMap& bm,
-                          std::vector<DSIType>& blocks,
-                          bool useAsyncComm)
-    : AdvectAlgorithm<DSIType>(bm, blocks, useAsyncComm)
+                          std::vector<DSIType>& blocks)
+    : AdvectAlgorithm<DSIType>(bm, blocks)
     , Done(false)
   {
     //For threaded algorithm, the particles go out of scope in the Work method.
@@ -136,13 +135,6 @@ protected:
 
   void Manage()
   {
-    if (!this->UseAsynchronousCommunication)
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Synchronous communication not supported for AdvectAlgorithmThreaded."
-                 "Forcing asynchronous communication.");
-    }
-
     while (!this->Terminator.Done())
     {
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> workerResults;
