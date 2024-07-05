@@ -189,6 +189,12 @@ public:
 
 } // namespace internal
 
+/// @brief Provided a windowed view into a `vtkm::cont::ArrayHandle`.
+///
+/// `ArrayHandleView` is a fancy array that wraps around another `ArrayHandle`
+/// and reindexes it to provide access to a specified region of values in the
+/// array. This view is specified using the offset to the first index and the
+/// length of the entries to view.
 template <typename ArrayHandleType>
 class ArrayHandleView
   : public vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
@@ -203,23 +209,33 @@ public:
     (vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
                              StorageTagView<typename ArrayHandleType::StorageTag>>));
 
+  /// Create an `ArrayHandleView` over a provided source array.
+  ///
+  /// @param array The source array to create a view from.
+  /// @param startIndex The offset in `array` to start the view.
+  /// @param numValues The number of values in the view.
   VTKM_CONT
   ArrayHandleView(const ArrayHandleType& array, vtkm::Id startIndex, vtkm::Id numValues)
     : Superclass(StorageType::CreateBuffers(startIndex, numValues, array))
   {
   }
 
+  /// Retrieve the full array being viewed.
   VTKM_CONT ArrayHandleType GetSourceArray() const
   {
     return this->GetStorage().GetSourceArray(this->GetBuffers());
   }
 
+  /// Retrieve the start index from the array being viewed.
+  /// (Note, to get the number of values, simply call the `GetNumberOfValues`
+  /// method from the superclass.)
   VTKM_CONT vtkm::Id GetStartIndex() const
   {
     return this->GetStorage().GetStartIndex(this->GetBuffers());
   }
 };
 
+/// @brief Construct a `vtkm::cont::ArrayHandleView` from a source array.
 template <typename ArrayHandleType>
 ArrayHandleView<ArrayHandleType> make_ArrayHandleView(const ArrayHandleType& array,
                                                       vtkm::Id startIndex,

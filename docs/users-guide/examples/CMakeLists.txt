@@ -10,6 +10,19 @@
 
 set(examples
   GuideExampleArrayHandle.cxx
+  GuideExampleArrayHandleCast.cxx
+  GuideExampleArrayHandleCompositeVector.cxx
+  GuideExampleArrayHandleConstant.cxx
+  GuideExampleArrayHandleCoordinateSystems.cxx
+  GuideExampleArrayHandleCounting.cxx
+  GuideExampleArrayHandleExtractComponent.cxx
+  GuideExampleArrayHandleGroupVec.cxx
+  GuideExampleArrayHandlePermutation.cxx
+  GuideExampleArrayHandleRandom.cxx
+  GuideExampleArrayHandleRuntimeVec.cxx
+  GuideExampleArrayHandleSwizzle.cxx
+  GuideExampleArrayHandleView.cxx
+  GuideExampleArrayHandleZip.cxx
   GuideExampleCellShapes.cxx
   GuideExampleColorTables.cxx
   GuideExampleCoreDataTypes.cxx
@@ -27,6 +40,7 @@ set(examples
   GuideExampleTuple.cxx
   )
 set(examples_device
+  GuideExampleArrayHandleDiscard.cxx
   GuideExampleCellEdgesFaces.cxx
   GuideExampleCellLocator.cxx
   GuideExampleCellOperations.cxx
@@ -35,6 +49,7 @@ set(examples_device
   GuideExampleFilterDataSetWithField.cxx
   GuideExampleGenerateMeshConstantShape.cxx
   GuideExampleSimpleAlgorithm.cxx
+  GuideExampleUnknownArrayHandle.cxx
   GuideExampleUseWorkletMapField.cxx
   GuideExampleUseWorkletPointNeighborhood.cxx
   GuideExampleUseWorkletReduceByKey.cxx

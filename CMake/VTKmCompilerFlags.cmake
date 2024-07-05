@@ -90,6 +90,19 @@ set_target_properties(
   EXPORT_NAME developer_flags
   )
 
+# Intel OneAPI compilers >= 2021.2.0 turn on "fast math" at any non-zero
+# optimization level. Suppress this non-standard behavior using the
+# `-fp-model=precise` flag.
+set(intel_oneapi_compiler_version_min "2021.2.0")
+set(is_lang "$<COMPILE_LANGUAGE:CXX>")
+set(is_intelllvm "$<CXX_COMPILER_ID:IntelLLVM>")
+set(is_intelllvm_fastmath_assuming_version "$<VERSION_GREATER_EQUAL:$<CXX_COMPILER_VERSION>,${intel_oneapi_compiler_version_min}>")
+set(intel_oneapi_compiler_detections
+  "$<AND:${is_lang},${is_intelllvm},${is_intelllvm_fastmath_assuming_version}>")
+target_compile_options(vtkm_developer_flags
+  INTERFACE
+    "$<BUILD_INTERFACE:$<${intel_oneapi_compiler_detections}:-fp-model=precise>>")
+
 # Additional warnings just for Clang 3.5+, and AppleClang 7+
 # about failures to vectorize.
 if (VTKM_COMPILER_IS_CLANG AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.4)

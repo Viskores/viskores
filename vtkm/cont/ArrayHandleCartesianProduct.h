@@ -350,6 +350,8 @@ public:
                                                           SecondHandleType,
                                                           ThirdHandleType>::Superclass));
 
+  /// Construct an `ArrayHandleCartesianProduct` given arrays for the coordinates in
+  /// the x, y, and z diretions.
   VTKM_CONT
   ArrayHandleCartesianProduct(const FirstHandleType& firstArray,
                               const SecondHandleType& secondArray,
@@ -365,14 +367,17 @@ public:
   ///
   ~ArrayHandleCartesianProduct() {}
 
+  /// Get the array for the coordinates in the x direction.
   VTKM_CONT FirstHandleType GetFirstArray() const
   {
     return StorageType::GetArrayHandle1(this->GetBuffers());
   }
+  /// Get the array for the coordinates in the y direction.
   VTKM_CONT SecondHandleType GetSecondArray() const
   {
     return StorageType::GetArrayHandle2(this->GetBuffers());
   }
+  /// Get the array for the coordinates in the z direction.
   VTKM_CONT ThirdHandleType GetThirdArray() const
   {
     return StorageType::GetArrayHandle3(this->GetBuffers());

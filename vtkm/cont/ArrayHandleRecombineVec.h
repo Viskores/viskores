@@ -587,19 +587,19 @@ public:
 
 } // namespace internal
 
-/// \brief A grouping of `ArrayHandleStride`s into an `ArrayHandle` of `Vec`s.
+/// @brief A grouping of `ArrayHandleStride`s into an `ArrayHandle` of `vtkm::Vec`s.
 ///
 /// The main intention of `ArrayHandleStride` is to pull out a component of an
-/// `ArrayHandle` without knowing there `ArrayHandle`'s storage or `Vec` shape.
+/// `ArrayHandle` without knowing there `ArrayHandle`'s storage or `vtkm::Vec` shape.
 /// However, usually you want to do an operation on all the components together.
 /// `ArrayHandleRecombineVec` implements the functionality to easily take a
 /// group of extracted components and treat them as a single `ArrayHandle` of
-/// `Vec` values.
+/// `vtkm::Vec` values.
 ///
 /// Note that caution should be used with `ArrayHandleRecombineVec` because the
-/// size of the `Vec` values is not known at compile time. Thus, the value
+/// size of the `vtkm::Vec` values is not known at compile time. Thus, the value
 /// type of this array is forced to a special `RecombineVec` class that can cause
-/// surprises if treated as a `Vec`. In particular, the static `NUM_COMPONENTS`
+/// surprises if treated as a `vtkm::Vec`. In particular, the static `NUM_COMPONENTS`
 /// expression does not exist. Furthermore, new variables of type `RecombineVec`
 /// cannot be created. This means that simple operators like `+` will not work
 /// because they require an intermediate object to be created. (Equal operators
@@ -618,17 +618,33 @@ public:
     (vtkm::cont::ArrayHandle<internal::detail::RecombinedValueType<ComponentType>,
                              vtkm::cont::internal::StorageTagRecombineVec>));
 
+  /// @brief Return the number of components in each value of the array.
+  ///
+  /// This is also equal to the number of component arrays referenced by this
+  /// fancy array.
+  ///
+  /// `ArrayHandleRecombineVec` always stores flat Vec values. As such, this number
+  /// of components is the same as the number of base components.
   vtkm::IdComponent GetNumberOfComponents() const
   {
     return StorageType::GetNumberOfComponents(this->GetBuffers());
   }
 
+  /// @brief Get the array storing the values for a particular component.
+  ///
+  /// The returned array is a `vtkm::cont::ArrayHandleStride`. It is possible
+  /// that the returned arrays from different components reference the same area
+  /// of physical memory (usually referencing values interleaved with each other).
   vtkm::cont::ArrayHandleStride<ComponentType> GetComponentArray(
     vtkm::IdComponent componentIndex) const
   {
     return StorageType::ArrayForComponent(this->GetBuffers(), componentIndex);
   }
 
+  /// @brief Add a component array.
+  ///
+  /// `AppendComponentArray()` provides an easy way to build an `ArrayHandleRecombineVec`
+  /// by iteratively adding the component arrays.
   void AppendComponentArray(
     const vtkm::cont::ArrayHandle<ComponentType, vtkm::cont::StorageTagStride>& array)
   {

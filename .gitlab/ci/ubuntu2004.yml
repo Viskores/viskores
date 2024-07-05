@@ -10,7 +10,7 @@
 ##
 ##=============================================================================
 
-build:ubuntu2004_kokkos:
+build:ubuntu2004_kokkos37:
   tags:
     - build
     - vtkm
@@ -25,7 +25,7 @@ build:ubuntu2004_kokkos:
     CMAKE_PREFIX_PATH: "/opt/anari"
     VTKM_SETTINGS: "kokkos+shared+64bit_floats+rendering+anari"
 
-test:ubuntu2004_kokkos:
+test:ubuntu2004_kokkos37:
   tags:
     - test
     - vtkm
@@ -36,55 +36,6 @@ test:ubuntu2004_kokkos:
     - .cmake_test_linux
     - .run_automatically
   dependencies:
-    - build:ubuntu2004_kokkos
+    - build:ubuntu2004_kokkos37
   needs:
-    - build:ubuntu2004_kokkos
-
-build:ubuntu2004_hip_kokkos:
-  tags:
-    - vtkm
-    - docker
-    - linux-x86_64
-    - radeon
-  extends:
-    - .ubuntu2004_hip_kokkos
-    - .cmake_build_linux
-    - .run_automatically
-  variables:
-    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
-    VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_rendering+ccache"
-
-    CMAKE_PREFIX_PATH:       "/opt/rocm/lib/cmake"
-    LD_LIBRARY_PATH:         "/opt/rocm/lib"
-    CMAKE_HIP_COMPILER:      "/opt/rocm/llvm/bin/clang++"
-    Kokkos_CXX_COMPILER:     "/opt/rocm/llvm/bin/clang++"
-    CMAKE_HIP_ARCHITECTURES: "gfx900"
-
-    # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
-    CCACHE_IGNOREOPTIONS:    "-isystem=*"
-    CCACHE_BASEDIR:          "$CI_PROJECT_DIR"
-    CCACHE_COMPILERCHECK:    "content"
-    CCACHE_NOHASHDIR:        "true"
-    CCACHE_RESHARE:          "true"
-  after_script:
-    - ccache -v -s
-    - ccache -z
-
-test:ubuntu2004_hip_kokkos:
-  tags:
-    - vtkm
-    - docker
-    - linux-x86_64
-    - radeon
-  extends:
-    - .ubuntu2004_hip_kokkos
-    - .cmake_test_linux
-    - .run_upstream_branches
-  variables:
-    CTEST_MAX_PARALLELISM: 1
-    CTEST_EXCLUSIONS: "UnitTestWorkletParticleAdvection"
-  dependencies:
-    - build:ubuntu2004_hip_kokkos
-  needs:
-    - build:ubuntu2004_hip_kokkos
-  timeout: 3 hours
+    - build:ubuntu2004_kokkos37

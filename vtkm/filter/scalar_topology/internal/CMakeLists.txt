@@ -10,8 +10,10 @@
 
 set(headers
   BranchDecompositionBlock.h
+  SelectTopVolumeContoursBlock.h
   ComputeBlockIndices.h
   ComputeDistributedBranchDecompositionFunctor.h
+  SelectTopVolumeContoursFunctor.h
   ExchangeBranchEndsFunctor.h
   )
 #-----------------------------------------------------------------------------

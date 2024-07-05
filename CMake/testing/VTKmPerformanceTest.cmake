@@ -80,7 +80,7 @@ function(add_benchmark_test benchmark)
   # if VTKM_BENCH_RECORDS_TOKEN is either defined or non-empty, the reason is
   # that in Gitlab CI Variables for protected branches are also defined in MR
   # from forks, however, they are empty.
-  if (DEFINED ENV{VTKM_BENCH_RECORDS_TOKEN} AND ENV{VTKM_BENCH_RECORDS_TOKEN})
+  if (DEFINED ENV{VTKM_BENCH_RECORDS_TOKEN} AND NOT $ENV{VTKM_BENCH_RECORDS_TOKEN} STREQUAL "")
     set(enable_upload TRUE)
   endif()
 

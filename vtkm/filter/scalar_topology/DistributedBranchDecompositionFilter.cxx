@@ -331,7 +331,6 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
     outputDataSets[ds_no] = input.GetPartition(ds_no);
   }
 
-
   branch_decomposition_master.foreach (
     [&](BranchDecompositionBlock* b, const vtkmdiy::Master::ProxyWithLink&) {
       vtkm::cont::Field branchRootField(
@@ -347,6 +346,51 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
                                           vtkm::cont::Field::Association::WholeDataSet,
                                           b->VolumetricBranchDecomposer.LowerEndGRId);
       outputDataSets[b->LocalBlockNo].AddField(LowerEndGRIdField);
+
+      vtkm::cont::Field UpperEndIntrinsicVolume(
+        "UpperEndIntrinsicVolume",
+        vtkm::cont::Field::Association::WholeDataSet,
+        b->VolumetricBranchDecomposer.UpperEndIntrinsicVolume);
+      outputDataSets[b->LocalBlockNo].AddField(UpperEndIntrinsicVolume);
+      vtkm::cont::Field UpperEndDependentVolume(
+        "UpperEndDependentVolume",
+        vtkm::cont::Field::Association::WholeDataSet,
+        b->VolumetricBranchDecomposer.UpperEndDependentVolume);
+      outputDataSets[b->LocalBlockNo].AddField(UpperEndDependentVolume);
+      vtkm::cont::Field LowerEndIntrinsicVolume(
+        "LowerEndIntrinsicVolume",
+        vtkm::cont::Field::Association::WholeDataSet,
+        b->VolumetricBranchDecomposer.LowerEndIntrinsicVolume);
+      outputDataSets[b->LocalBlockNo].AddField(LowerEndIntrinsicVolume);
+      vtkm::cont::Field LowerEndDependentVolume(
+        "LowerEndDependentVolume",
+        vtkm::cont::Field::Association::WholeDataSet,
+        b->VolumetricBranchDecomposer.LowerEndDependentVolume);
+      outputDataSets[b->LocalBlockNo].AddField(LowerEndDependentVolume);
+      vtkm::cont::Field LowerEndSuperarcId("LowerEndSuperarcId",
+                                           vtkm::cont::Field::Association::WholeDataSet,
+                                           b->VolumetricBranchDecomposer.LowerEndSuperarcId);
+      outputDataSets[b->LocalBlockNo].AddField(LowerEndSuperarcId);
+      vtkm::cont::Field UpperEndSuperarcId("UpperEndSuperarcId",
+                                           vtkm::cont::Field::Association::WholeDataSet,
+                                           b->VolumetricBranchDecomposer.UpperEndSuperarcId);
+      outputDataSets[b->LocalBlockNo].AddField(UpperEndSuperarcId);
+      vtkm::cont::Field LowerEndValue("LowerEndValue",
+                                      vtkm::cont::Field::Association::WholeDataSet,
+                                      b->VolumetricBranchDecomposer.LowerEndValue);
+      outputDataSets[b->LocalBlockNo].AddField(LowerEndValue);
+      vtkm::cont::Field UpperEndValue("UpperEndValue",
+                                      vtkm::cont::Field::Association::WholeDataSet,
+                                      b->VolumetricBranchDecomposer.UpperEndValue);
+      outputDataSets[b->LocalBlockNo].AddField(UpperEndValue);
+      vtkm::cont::Field BranchRoot("BranchRoot",
+                                   vtkm::cont::Field::Association::WholeDataSet,
+                                   b->VolumetricBranchDecomposer.BranchRoot);
+      outputDataSets[b->LocalBlockNo].AddField(BranchRoot);
+      vtkm::cont::Field BranchRootGRId("BranchRootGRId",
+                                       vtkm::cont::Field::Association::WholeDataSet,
+                                       b->VolumetricBranchDecomposer.BranchRootGRId);
+      outputDataSets[b->LocalBlockNo].AddField(BranchRootGRId);
     });
 
   timingsStream << "    " << std::setw(38) << std::left

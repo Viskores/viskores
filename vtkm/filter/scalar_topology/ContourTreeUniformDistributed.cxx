@@ -832,6 +832,15 @@ VTKM_CONT void ContourTreeUniformDistributed::DoPostExecute(
                "from information in CellSetStructured.");
     diyBounds = vtkm::filter::scalar_topology::internal::ComputeBlockIndices(
       input, diyDivisions, vtkmdiyLocalBlockGids);
+
+    // Set BlocksPerDimension fromn diyDivisions result as add them
+    // as information to the output data set for use in subsequent
+    // filters
+    this->BlocksPerDimension = vtkm::Id3{ 1, 1, 1 };
+    for (unsigned int d = 0; d < diyDivisions.size(); ++d)
+    {
+      this->BlocksPerDimension[d] = diyDivisions[d];
+    }
   }
   else
   {

@@ -81,6 +81,8 @@ Optional dependencies are:
 
   + Kokkos Device Adapter
       + [Kokkos](https://kokkos.github.io/) 3.7+
+      + CXX env variable or CMAKE_CXX_COMPILER should be set to
+        hipcc when using Kokkos device adapter with HIP (ROCM>=6).
   + CUDA Device Adapter
       + [Cuda Toolkit 9.2, >= 10.2](https://developer.nvidia.com/cuda-toolkit)
       + Note CUDA >= 10.2 is required on Windows

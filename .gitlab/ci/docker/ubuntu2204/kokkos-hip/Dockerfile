@@ -10,7 +10,7 @@
 ##
 ##=============================================================================
 
-FROM rocm/dev-ubuntu-20.04
+FROM rocm/dev-ubuntu-22.04
 LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
 # Base dependencies for building VTK-m projects
@@ -61,11 +61,22 @@ ENV PATH "/opt/cmake/bin:${PATH}"
 ENV CMAKE_PREFIX_PATH "/opt/rocm/lib/cmake:/opt/rocm/lib:${CMAKE_PREFIX_PATH}"
 ENV CMAKE_GENERATOR "Ninja"
 
-# Build and install Kokkos
-ARG KOKKOS_VERSION=3.7.01
+ENV KOKKOS_VERSION=3.7.01
 COPY kokkos_cmake_config.cmake kokkos_cmake_config.cmake
 RUN curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz | tar -xzf - && \
-    cmake -S kokkos-$KOKKOS_VERSION -B build -C kokkos_cmake_config.cmake                          && \
+    cmake -S kokkos-$KOKKOS_VERSION -B build -C kokkos_cmake_config.cmake                             \
+       -DCMAKE_PREFIX_INSTALL=/opt/kokkos/$KOKKOS_VERSION                                             \
+       -DKokkos_ARCH_VEGA900=ON                                                                    && \
+    cmake --build build -v                                                                         && \
+    cmake --install build                                                                          && \
+    rm -rf build kokkos-$KOKKOS_VERSION
+
+ENV KOKKOS_VERSION=4.3.01
+COPY kokkos_cmake_config.cmake kokkos_cmake_config.cmake
+RUN curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz | tar -xzf - && \
+    cmake -S kokkos-$KOKKOS_VERSION -B build -C kokkos_cmake_config.cmake                             \
+       -DCMAKE_PREFIX_INSTALL=/opt/kokkos/$KOKKOS_VERSION                                             \
+       -DKokkos_ARCH_VEGA906=ON                                                                    && \
     cmake --build build -v                                                                         && \
     cmake --install build                                                                          && \
     rm -rf build kokkos-$KOKKOS_VERSION

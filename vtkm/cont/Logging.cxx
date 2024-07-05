@@ -30,7 +30,7 @@
 
 #endif // VTKM_ENABLE_LOGGING
 
-#include <cassert>
+#include <cstdlib>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
@@ -108,7 +108,10 @@ namespace cont
 {
 
 VTKM_CONT
-void InitLogging(int& argc, char* argv[], const std::string& loggingFlag)
+void InitLogging(int& argc,
+                 char* argv[],
+                 const std::string& loggingFlag,
+                 const std::string& loggingEnv)
 {
   SetLogLevelName(vtkm::cont::LogLevel::Off, "Off");
   SetLogLevelName(vtkm::cont::LogLevel::Fatal, "FATL");
@@ -130,8 +133,16 @@ void InitLogging(int& argc, char* argv[], const std::string& loggingFlag)
     loguru::set_verbosity_to_name_callback(&verbosityToNameCallback);
     loguru::set_name_to_verbosity_callback(&nameToVerbosityCallback);
 
-    // Set the default log level to warning
-    SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
+    const char* envLevel = std::getenv(loggingEnv.c_str());
+    if (envLevel != nullptr)
+    {
+      SetStderrLogLevel(envLevel);
+    }
+    else
+    {
+      // Set the default log level to warning
+      SetStderrLogLevel(vtkm::cont::LogLevel::Warn);
+    }
     loguru::init(argc, argv, loggingFlag.c_str());
   }
 #else  // VTKM_ENABLE_LOGGING

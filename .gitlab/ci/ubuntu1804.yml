@@ -196,7 +196,7 @@ test:ubuntu1804_clang8:
 
 # Build on ubuntu1804 with kokkos and test on ubuntu1804
 # Uses CUDA 11
-build:ubuntu1804_kokkos:
+build:ubuntu1804_kokkos37:
   tags:
     - build
     - vtkm
@@ -212,7 +212,7 @@ build:ubuntu1804_kokkos:
     CMAKE_BUILD_TYPE: Release
     VTKM_SETTINGS: "benchmarks+kokkos+turing+64bit_floats+shared"
 
-test:ubuntu1804_kokkos:
+test:ubuntu1804_kokkos37:
   tags:
     - test
     - vtkm
@@ -225,9 +225,9 @@ test:ubuntu1804_kokkos:
     - .cmake_test_linux
     - .run_automatically
   dependencies:
-    - build:ubuntu1804_kokkos
+    - build:ubuntu1804_kokkos37
   needs:
-    - build:ubuntu1804_kokkos
+    - build:ubuntu1804_kokkos37
 
 build:ubuntu1804_cuda_perftest:
   tags:
@@ -261,6 +261,7 @@ test:ubuntu1804_cuda_perftest:
   variables:
     TEST_INCLUSIONS: "PerformanceTest"
     VTKm_PERF_REMOTE_URL: "https://vbolea:$VTKM_BENCH_RECORDS_TOKEN@gitlab.kitware.com/vbolea/vtk-m-benchmark-records.git"
+    VTKm_PERF_BENCH_DEVICE: "cuda"
     VTKm_PERF_ALPHA: "0.05"
     VTKm_PERF_REPETITIONS: "10"
     VTKm_PERF_DIST: "t"

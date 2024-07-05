@@ -58,9 +58,9 @@ struct Storage<T, vtkm::cont::StorageTagConstant> : Storage<T, StorageTagConstan
 
 } // namespace internal
 
-/// \brief An array handle with a constant value.
+/// @brief An array handle with a constant value.
 ///
-/// ArrayHandleConstant is an implicit array handle with a constant value. A
+/// `ArrayHandleConstant` is an implicit array handle with a constant value. A
 /// constant array handle is constructed by giving a value and an array length.
 /// The resulting array is of the given size with each entry the same value
 /// given in the constructor. The array is defined implicitly, so there it
@@ -74,6 +74,7 @@ public:
                              (ArrayHandleConstant<T>),
                              (vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagConstant>));
 
+  /// Construct a constant array containing the given value.
   VTKM_CONT
   ArrayHandleConstant(T value, vtkm::Id numberOfValues = 0)
     : Superclass(internal::FunctorToArrayHandleImplicitBuffers(internal::ConstantFunctor<T>(value),
@@ -81,17 +82,15 @@ public:
   {
   }
 
-  /// \brief Returns the constant value stored in this array.
+  /// @brief Returns the constant value stored in this array.
   ///
   /// The value set in the constructor of this array is returned even if the number of values is 0.
   ///
   VTKM_CONT T GetValue() const { return this->ReadPortal().GetFunctor()(0); }
 };
 
-/// make_ArrayHandleConstant is convenience function to generate an
-/// ArrayHandleImplicit.  It takes a functor and the virtual length of the
-/// array.
-///
+/// `make_ArrayHandleConstant` is convenience function to generate an
+/// ArrayHandleImplicit.
 template <typename T>
 vtkm::cont::ArrayHandleConstant<T> make_ArrayHandleConstant(T value, vtkm::Id numberOfValues)
 {

@@ -365,8 +365,7 @@ The third array identifies an offset into the second array where the point indic
 An explicit cell set can also identify the number of indices defined for each cell by subtracting consecutive entries in the offsets array.
 It is often the case when creating a :class:`vtkm::cont::CellSetExplicit` that you have an array containing the number of indices rather than the offsets.
 Such an array can be converted to an offsets array that can be used with :class:`vtkm::cont::CellSetExplicit` by using the :func:`vtkm::cont::ConvertNumComponentsToOffsets` convenience function.
-
-.. doxygenfunction:: vtkm::cont::ConvertNumComponentsToOffsets(const vtkm::cont::UnknownArrayHandle&, vtkm::cont::ArrayHandle<vtkm::Id>&, vtkm::Id&, vtkm::cont::DeviceAdapterId)
+See the documentation for :class:`vtkm::cont::ArrayHandleGroupVecVariable` in :secref:`fancy-array-handles:Grouped Vector Arrays` for examples of using :func:`vtkm::cont::ConvertNumComponentsToOffsets`.
 
 :class:`vtkm::cont::CellSetExplicit` is a powerful representation for a cell set
 because it can represent an arbitrary collection of cells. However, because

@@ -73,6 +73,10 @@ namespace worklet
 namespace contourtree_augmented
 {
 
+// TODO/FIXME: Consider making marching cubes connectivity its own class. However
+// at the moment making this a boolean template parameter makes it easuer to avoid
+// code duplication. However, if we add more mesh types we should refactor.
+template <bool MarchingCubesConnectivity>
 class MeshBoundary3D
 {
 public:
@@ -106,22 +110,69 @@ public:
   }
 
   VTKM_EXEC_CONT
-  vtkm::Id CountLinkComponentsIn2DSlice(const vtkm::Id meshIndex, const vtkm::Id2 strides) const
+  vtkm::Id CountLinkComponentsIn2DSlice4Neighborhood(const vtkm::Id meshIndex,
+                                                     const vtkm::Id2 strides) const
   {
-    // IMPORTANT: We assume that function is called only for *interior* vertices (i.e., neither row nor col
-    // within slice is 0 and we do not need to check for boundary cases).
+    // IMPORTANT: We assume that function is called only for *interior* vertices (i.e.,
+    // neither row nor col within slice is 0 and we do not need to check for boundary cases).
     vtkm::Id sortIndex = this->SortIndicesPortal.Get(meshIndex);
     bool prevWasInUpperLink = false;
-    vtkm::Id numComponents = 0;
+    vtkm::Id numLinkTypeChanges = 0;
 
-    const int N_INCIDENT_EDGES_2D = 6;
-    for (vtkm::Id edgeNo = 0; edgeNo < N_INCIDENT_EDGES_2D; edgeNo++)
-    { // per edge
+    for (vtkm::Id edgeNo = 0; edgeNo < 4 + 1; edgeNo++)
+    {
       VTKM_ASSERT(meshIndex + strides[1] + strides[0] <
                   this->SortIndicesPortal.GetNumberOfValues());
       VTKM_ASSERT(meshIndex - strides[1] - strides[0] >= 0);
       vtkm::Id nbrSortIndex;
-      switch (edgeNo)
+      switch (edgeNo % 4)
+      {
+        case 0:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex + strides[0]);
+          break; // [1]    , [0] + 1
+        case 1:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex + strides[1]);
+          break; // [1] + 1, [0]
+        case 2:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex - strides[0]);
+          break; // [1]    , [0] - 1
+        case 3:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex - strides[1]);
+          break; // [1] - 1, [0]
+        default:
+          // Should not occur, since switch statement is over edgeNo % 4
+          VTKM_ASSERT(false);
+          // Initialize nbrSortIndex to something anyway to prevent compiler warning
+          // Set to the sort index of the vertex itself since there is "no" edge so
+          // that it contains a "sane" value if it should ever be reached.
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex);
+          break;
+      } // switch edgeNo
+
+      bool currIsInUpperLink = (nbrSortIndex > sortIndex);
+      numLinkTypeChanges += (edgeNo != 0 && currIsInUpperLink != prevWasInUpperLink) ? 1 : 0;
+      prevWasInUpperLink = currIsInUpperLink;
+    } // per edge
+    return numLinkTypeChanges == 0 ? 1 : numLinkTypeChanges;
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Id CountLinkComponentsIn2DSlice6Neighborhood(const vtkm::Id meshIndex,
+                                                     const vtkm::Id2 strides) const
+  {
+    // IMPORTANT: We assume that function is called only for *interior* vertices (i.e.,
+    // neither row nor col within slice is 0 and we do not need to check for boundary cases).
+    vtkm::Id sortIndex = this->SortIndicesPortal.Get(meshIndex);
+    bool prevWasInUpperLink = false;
+    vtkm::Id numLinkTypeChanges = 0;
+
+    for (vtkm::Id edgeNo = 0; edgeNo < 6 + 1; edgeNo++)
+    {
+      VTKM_ASSERT(meshIndex + strides[1] + strides[0] <
+                  this->SortIndicesPortal.GetNumberOfValues());
+      VTKM_ASSERT(meshIndex - strides[1] - strides[0] >= 0);
+      vtkm::Id nbrSortIndex;
+      switch (edgeNo % 6)
       {
         case 0:
           nbrSortIndex = this->SortIndicesPortal.Get(meshIndex + strides[0]);
@@ -142,20 +193,80 @@ public:
           nbrSortIndex = this->SortIndicesPortal.Get(meshIndex - strides[1]);
           break; // [1] - 1, [0]
         default:
-          // Due to CUDA we cannot throw an exception here, which would make the most
-          // sense
-          VTKM_ASSERT(false); // Should not occur, edgeNo < N_INCIDENT_EDGES_2D = 6
+          // Should not occur, since switch statement is over edgeNo % 6
+          VTKM_ASSERT(false);
           // Initialize nbrSortIndex to something anyway to prevent compiler warning
           // Set to the sort index of the vertex itself since there is "no" edge so
           // that it contains a "sane" value if it should ever be reached.
           nbrSortIndex = this->SortIndicesPortal.Get(meshIndex);
           break;
-      }
+      } // seitch edgeNo
 
       bool currIsInUpperLink = (nbrSortIndex > sortIndex);
-      numComponents += (edgeNo != 0 && currIsInUpperLink != prevWasInUpperLink) ? 1 : 0;
+      numLinkTypeChanges += (edgeNo != 0 && currIsInUpperLink != prevWasInUpperLink) ? 1 : 0;
+      prevWasInUpperLink = currIsInUpperLink;
     } // per edge
-    return numComponents;
+    return numLinkTypeChanges == 0 ? 1 : numLinkTypeChanges;
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Id CountLinkComponentsIn2DSlice8Neighborhood(const vtkm::Id meshIndex,
+                                                     const vtkm::Id2 strides) const
+  {
+    // IMPORTANT: We assume that function is called only for *interior* vertices (i.e.,
+    // neither row nor col within slice is 0 and we do not need to check for boundary cases).
+    vtkm::Id sortIndex = this->SortIndicesPortal.Get(meshIndex);
+    bool prevWasInUpperLink = false;
+    vtkm::Id numLinkTypeChanges = 0;
+
+    for (vtkm::Id edgeNo = 0; edgeNo < 8 + 1; edgeNo++)
+    {
+      VTKM_ASSERT(meshIndex + strides[1] + strides[0] <
+                  this->SortIndicesPortal.GetNumberOfValues());
+      VTKM_ASSERT(meshIndex - strides[1] - strides[0] >= 0);
+      vtkm::Id nbrSortIndex;
+
+      switch (edgeNo % 8)
+      {
+        case 0:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex + strides[0]);
+          break; // [1]    , [0] + 1
+        case 1:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex + strides[1] + strides[0]);
+          break; // [1] + 1, [0] + 1
+        case 2:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex + strides[1]);
+          break; // [1] + 1, [0]
+        case 3:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex + strides[1] - strides[0]);
+          break; // [1] + 1, [0] -1
+        case 4:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex - strides[0]);
+          break; // [1]    , [0] - 1
+        case 5:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex - strides[1] - strides[0]);
+          break; // [1] - 1, [0] - 1
+        case 6:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex - strides[1]);
+          break; // [1] - 1, [0]
+        case 7:
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex - strides[1] + strides[0]);
+          break; // [1] - 1, [0] + 1
+        default:
+          // Should not occur, since switch statement is over edgeNo % 8
+          VTKM_ASSERT(false);
+          // Initialize nbrSortIndex to something anyway to prevent compiler warning
+          // Set to the sort index of the vertex itself since there is "no" edge so
+          // that it contains a "sane" value if it should ever be reached.
+          nbrSortIndex = this->SortIndicesPortal.Get(meshIndex);
+          break;
+      } // switch edgeNo
+
+      bool currIsInUpperLink = (nbrSortIndex > sortIndex);
+      numLinkTypeChanges += (edgeNo != 0 && currIsInUpperLink != prevWasInUpperLink) ? 1 : 0;
+      prevWasInUpperLink = currIsInUpperLink;
+    } // per edge
+    return numLinkTypeChanges == 0 ? 1 : numLinkTypeChanges;
   }
 
   VTKM_EXEC_CONT
@@ -192,11 +303,20 @@ public:
             (pos[1] == this->MeshStructure.MeshSize[1] - 1 &&
              pos[2] == this->MeshStructure.MeshSize[2] - 1))
         {
-          VTKM_ASSERT(meshIndex >= 1);
-          vtkm::Id sp = this->SortIndicesPortal.Get(meshIndex - 1);
-          VTKM_ASSERT(meshIndex + 1 < this->SortIndicesPortal.GetNumberOfValues());
-          vtkm::Id sn = this->SortIndicesPortal.Get(meshIndex + 1);
-          return (sortIndex < sp && sortIndex < sn) || (sortIndex > sp && sortIndex > sn);
+          if (MarchingCubesConnectivity)
+          {
+            // TODO/FIXME: Be more selective about what points to include, but will likely
+            // require an additional layer of "ghost cells"
+            return true;
+          }
+          else
+          {
+            VTKM_ASSERT(meshIndex >= 1);
+            vtkm::Id sp = this->SortIndicesPortal.Get(meshIndex - 1);
+            VTKM_ASSERT(meshIndex + 1 < this->SortIndicesPortal.GetNumberOfValues());
+            vtkm::Id sn = this->SortIndicesPortal.Get(meshIndex + 1);
+            return (sortIndex < sp && sortIndex < sn) || (sortIndex > sp && sortIndex > sn);
+          }
         }
         // Edges in [1] directtion
         else if ((pos[0] == 0 && pos[2] == 0) ||
@@ -205,13 +325,22 @@ public:
                  (pos[0] == this->MeshStructure.MeshSize[0] - 1 &&
                   pos[2] == this->MeshStructure.MeshSize[2] - 1))
         {
-          VTKM_ASSERT(pos[1] > 0 && pos[1] < this->MeshStructure.MeshSize[1] - 1);
-          VTKM_ASSERT(meshIndex >= this->MeshStructure.MeshSize[0]);
-          vtkm::Id sp = this->SortIndicesPortal.Get(meshIndex - this->MeshStructure.MeshSize[0]);
-          VTKM_ASSERT(meshIndex + this->MeshStructure.MeshSize[0] <
-                      this->SortIndicesPortal.GetNumberOfValues());
-          vtkm::Id sn = this->SortIndicesPortal.Get(meshIndex + this->MeshStructure.MeshSize[0]);
-          return (sortIndex < sp && sortIndex < sn) || (sortIndex > sp && sortIndex > sn);
+          if (MarchingCubesConnectivity)
+          {
+            // TODO/FIXME: Be more selective about what points to include, but will likely
+            // require an additional layer of "ghost cells"
+            return true;
+          }
+          else
+          {
+            VTKM_ASSERT(pos[1] > 0 && pos[1] < this->MeshStructure.MeshSize[1] - 1);
+            VTKM_ASSERT(meshIndex >= this->MeshStructure.MeshSize[0]);
+            vtkm::Id sp = this->SortIndicesPortal.Get(meshIndex - this->MeshStructure.MeshSize[0]);
+            VTKM_ASSERT(meshIndex + this->MeshStructure.MeshSize[0] <
+                        this->SortIndicesPortal.GetNumberOfValues());
+            vtkm::Id sn = this->SortIndicesPortal.Get(meshIndex + this->MeshStructure.MeshSize[0]);
+            return (sortIndex < sp && sortIndex < sn) || (sortIndex > sp && sortIndex > sn);
+          }
         }
         // Edges in [2] direction
         else if ((pos[1] == 0 && pos[0] == 0) ||
@@ -220,11 +349,20 @@ public:
                  (pos[1] == this->MeshStructure.MeshSize[1] - 1 &&
                   pos[0] == this->MeshStructure.MeshSize[0] - 1))
         {
-          VTKM_ASSERT(meshIndex >= nPerSlice);
-          vtkm::Id sp = this->SortIndicesPortal.Get(meshIndex - nPerSlice);
-          VTKM_ASSERT(meshIndex + nPerSlice < this->SortIndicesPortal.GetNumberOfValues());
-          vtkm::Id sn = this->SortIndicesPortal.Get(meshIndex + nPerSlice);
-          return (sortIndex < sp && sortIndex < sn) || (sortIndex > sp && sortIndex > sn);
+          if (MarchingCubesConnectivity)
+          {
+            // TODO/FIXME: Be more selective about what points to include, but will likely
+            // require an additional layer of "ghost cells"
+            return true;
+          }
+          else
+          {
+            VTKM_ASSERT(meshIndex >= nPerSlice);
+            vtkm::Id sp = this->SortIndicesPortal.Get(meshIndex - nPerSlice);
+            VTKM_ASSERT(meshIndex + nPerSlice < this->SortIndicesPortal.GetNumberOfValues());
+            vtkm::Id sn = this->SortIndicesPortal.Get(meshIndex + nPerSlice);
+            return (sortIndex < sp && sortIndex < sn) || (sortIndex > sp && sortIndex > sn);
+          }
         }
         else
         {
@@ -233,22 +371,52 @@ public:
           { // On [2]-perpendicular face
             VTKM_ASSERT(pos[0] != 0 && pos[0] != this->MeshStructure.MeshSize[0]);
             VTKM_ASSERT(pos[1] != 0 && pos[1] != this->MeshStructure.MeshSize[1]);
-            return CountLinkComponentsIn2DSlice(meshIndex,
-                                                vtkm::Id2(1, this->MeshStructure.MeshSize[0])) != 2;
+            if (MarchingCubesConnectivity)
+            {
+              return CountLinkComponentsIn2DSlice4Neighborhood(
+                       meshIndex, vtkm::Id2(1, this->MeshStructure.MeshSize[0])) != 2 ||
+                CountLinkComponentsIn2DSlice8Neighborhood(
+                  meshIndex, vtkm::Id2(1, this->MeshStructure.MeshSize[0])) != 2;
+            }
+            else
+            {
+              return CountLinkComponentsIn2DSlice6Neighborhood(
+                       meshIndex, vtkm::Id2(1, this->MeshStructure.MeshSize[0])) != 2;
+            }
           }
           else if (pos[1] == 0 || pos[1] == this->MeshStructure.MeshSize[1] - 1)
           { // On [1]-perpendicular face
             VTKM_ASSERT(pos[0] != 0 && pos[0] != this->MeshStructure.MeshSize[0]);
             VTKM_ASSERT(pos[2] != 0 && pos[2] != this->MeshStructure.MeshSize[2]);
-            return CountLinkComponentsIn2DSlice(meshIndex, vtkm::Id2(1, nPerSlice)) != 2;
+            if (MarchingCubesConnectivity)
+            {
+              return CountLinkComponentsIn2DSlice4Neighborhood(meshIndex,
+                                                               vtkm::Id2(1, nPerSlice)) != 2 ||
+                CountLinkComponentsIn2DSlice8Neighborhood(meshIndex, vtkm::Id2(1, nPerSlice)) != 2;
+            }
+            else
+            {
+              return CountLinkComponentsIn2DSlice6Neighborhood(meshIndex,
+                                                               vtkm::Id2(1, nPerSlice)) != 2;
+            }
           }
           else
           { // On [0]-perpendicular face
             VTKM_ASSERT(pos[0] == 0 || pos[0] == this->MeshStructure.MeshSize[0] - 1);
             VTKM_ASSERT(pos[1] != 0 && pos[1] != this->MeshStructure.MeshSize[1]);
             VTKM_ASSERT(pos[2] != 0 && pos[2] != this->MeshStructure.MeshSize[2]);
-            return CountLinkComponentsIn2DSlice(
-                     meshIndex, vtkm::Id2(nPerSlice, this->MeshStructure.MeshSize[0])) != 2;
+            if (MarchingCubesConnectivity)
+            {
+              return CountLinkComponentsIn2DSlice4Neighborhood(
+                       meshIndex, vtkm::Id2(nPerSlice, this->MeshStructure.MeshSize[0])) != 2 ||
+                CountLinkComponentsIn2DSlice8Neighborhood(
+                  meshIndex, vtkm::Id2(nPerSlice, this->MeshStructure.MeshSize[0])) != 2;
+            }
+            else
+            {
+              return CountLinkComponentsIn2DSlice6Neighborhood(
+                       meshIndex, vtkm::Id2(nPerSlice, this->MeshStructure.MeshSize[0])) != 2;
+            }
           }
         }
       }
@@ -269,6 +437,10 @@ protected:
 };
 
 
+// TODO/FIXME: Consider making marching cubes connectivity its own class. However
+// at the moment making this a boolean template parameter makes it easuer to avoid
+// code duplication. However, if we add more mesh types we should refactor.
+template <bool MarchingCubesConnectivity>
 class MeshBoundary3DExec : public vtkm::cont::ExecutionObjectBase
 {
 public:
@@ -279,10 +451,12 @@ public:
   {
   }
 
-  VTKM_CONT MeshBoundary3D PrepareForExecution(vtkm::cont::DeviceAdapterId device,
-                                               vtkm::cont::Token& token) const
+  VTKM_CONT MeshBoundary3D<MarchingCubesConnectivity> PrepareForExecution(
+    vtkm::cont::DeviceAdapterId device,
+    vtkm::cont::Token& token) const
   {
-    return MeshBoundary3D(this->MeshSize, this->SortIndices, device, token);
+    return MeshBoundary3D<MarchingCubesConnectivity>(
+      this->MeshSize, this->SortIndices, device, token);
   }
 
 protected:

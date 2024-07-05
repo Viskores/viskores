@@ -390,18 +390,21 @@ struct Storage<T, vtkm::cont::StorageTagCompositeVec<StorageTag>> : Storage<T, S
 
 } // namespace internal
 
-/// \brief An \c ArrayHandle that combines components from other arrays.
+/// @brief An `ArrayHandle` that combines components from other arrays.
 ///
-/// \c ArrayHandleCompositeVector is a specialization of \c ArrayHandle that
+/// `ArrayHandleCompositeVector` is a specialization of `ArrayHandle` that
 /// derives its content from other arrays. It takes any number of
 /// single-component \c ArrayHandle objects and mimics an array that contains
 /// vectors with components that come from these delegate arrays.
 ///
-/// The easiest way to create and type an \c ArrayHandleCompositeVector is
+/// The easiest way to create and type an `ArrayHandleCompositeVector` is
 /// to use the \c make_ArrayHandleCompositeVector functions.
 ///
-/// The \c ArrayHandleExtractComponent class may be helpful when a desired
-/// component is part of an \c ArrayHandle with a \c vtkm::Vec \c ValueType.
+/// The `ArrayHandleExtractComponent` class may be helpful when a desired
+/// component is part of an `ArrayHandle` with a `vtkm::Vec` `ValueType`.
+///
+/// If you are attempted to combine components that you know are stored in
+/// basic `ArrayHandle`s, consider using `ArrayHandleSOA` instead.
 ///
 template <typename... ArrayTs>
 class ArrayHandleCompositeVector
@@ -413,12 +416,14 @@ public:
                              (ArrayHandleCompositeVector<ArrayTs...>),
                              (typename internal::CompositeVectorTraits<ArrayTs...>::Superclass));
 
+  /// Construct an `ArrayHandleCompositeVector` from a set of component vectors.
   VTKM_CONT
   ArrayHandleCompositeVector(const ArrayTs&... arrays)
     : Superclass(StorageType::CreateBuffers(arrays...))
   {
   }
 
+  /// Return the arrays of all of the components in a `vtkm::Tuple` object.
   VTKM_CONT vtkm::Tuple<ArrayTs...> GetArrayTuple() const
   {
     return StorageType::GetArrayTuple(this->GetBuffers());

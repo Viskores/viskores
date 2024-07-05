@@ -942,13 +942,13 @@ inline void ActiveGraph::DebugPrint(const char* message, const char* fileName, l
 
   // Active Vertex Arrays
   IdArrayType activeIndices;
-  PermuteArray<vtkm::Id>(this->GlobalIndex, this->ActiveVertices, activeIndices);
+  PermuteArrayWithMaskedIndex<vtkm::Id>(this->GlobalIndex, this->ActiveVertices, activeIndices);
   IdArrayType activeFirst;
-  PermuteArray<vtkm::Id>(this->FirstEdge, this->ActiveVertices, activeFirst);
+  PermuteArrayWithMaskedIndex<vtkm::Id>(this->FirstEdge, this->ActiveVertices, activeFirst);
   IdArrayType activeOutdegree;
-  PermuteArray<vtkm::Id>(this->Outdegree, this->ActiveVertices, activeOutdegree);
+  PermuteArrayWithMaskedIndex<vtkm::Id>(this->Outdegree, this->ActiveVertices, activeOutdegree);
   IdArrayType activeHyperarcs;
-  PermuteArray<vtkm::Id>(this->Hyperarcs, this->ActiveVertices, activeHyperarcs);
+  PermuteArrayWithMaskedIndex<vtkm::Id>(this->Hyperarcs, this->ActiveVertices, activeHyperarcs);
   std::cout << "Active Vertex Arrays - Size: " << this->ActiveVertices.GetNumberOfValues()
             << std::endl;
   PrintHeader(this->ActiveVertices.GetNumberOfValues());
@@ -961,9 +961,9 @@ inline void ActiveGraph::DebugPrint(const char* message, const char* fileName, l
 
   // Full Edge Arrays
   IdArrayType farIndices;
-  PermuteArray<vtkm::Id>(this->GlobalIndex, this->EdgeFar, farIndices);
+  PermuteArrayWithMaskedIndex<vtkm::Id>(this->GlobalIndex, this->EdgeFar, farIndices);
   IdArrayType nearIndices;
-  PermuteArray<vtkm::Id>(this->GlobalIndex, this->EdgeNear, nearIndices);
+  PermuteArrayWithMaskedIndex<vtkm::Id>(this->GlobalIndex, this->EdgeNear, nearIndices);
   std::cout << "Full Edge Arrays - Size:     " << this->EdgeNear.GetNumberOfValues() << std::endl;
   PrintHeader(this->EdgeFar.GetNumberOfValues());
   PrintIndices("Near", this->EdgeNear);
@@ -974,9 +974,9 @@ inline void ActiveGraph::DebugPrint(const char* message, const char* fileName, l
 
   // Active Edge Arrays
   IdArrayType activeFarIndices;
-  PermuteArray<vtkm::Id>(this->EdgeFar, this->ActiveEdges, activeFarIndices);
+  PermuteArrayWithMaskedIndex<vtkm::Id>(this->EdgeFar, this->ActiveEdges, activeFarIndices);
   IdArrayType activeNearIndices;
-  PermuteArray<vtkm::Id>(this->EdgeNear, this->ActiveEdges, activeNearIndices);
+  PermuteArrayWithMaskedIndex<vtkm::Id>(this->EdgeNear, this->ActiveEdges, activeNearIndices);
   std::cout << "Active Edge Arrays - Size:   " << this->ActiveEdges.GetNumberOfValues()
             << std::endl;
   PrintHeader(this->ActiveEdges.GetNumberOfValues());
@@ -987,9 +987,9 @@ inline void ActiveGraph::DebugPrint(const char* message, const char* fileName, l
 
   // Edge Sorter Array
   IdArrayType sortedFarIndices;
-  PermuteArray<vtkm::Id>(this->EdgeFar, this->EdgeSorter, sortedFarIndices);
+  PermuteArrayWithMaskedIndex<vtkm::Id>(this->EdgeFar, this->EdgeSorter, sortedFarIndices);
   IdArrayType sortedNearIndices;
-  PermuteArray<vtkm::Id>(this->EdgeNear, this->EdgeSorter, sortedNearIndices);
+  PermuteArrayWithMaskedIndex<vtkm::Id>(this->EdgeNear, this->EdgeSorter, sortedNearIndices);
   std::cout << "Edge Sorter - Size:          " << this->EdgeSorter.GetNumberOfValues() << std::endl;
   PrintHeader(this->EdgeSorter.GetNumberOfValues());
   PrintIndices("Edge Sorter", this->EdgeSorter);

@@ -600,7 +600,7 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
   {
     IdArrayType superarcGRId;
     vtkm::cont::make_ArrayHandlePermutation(supernodes, globalRegularIds);
-    vtkm::worklet::contourtree_augmented::PermuteArray<vtkm::Id>(
+    vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id>(
       globalRegularIds, supernodes, superarcGRId);
 
     std::stringstream resultStream;
@@ -615,7 +615,7 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
       using InArrayHandleType = std::decay_t<decltype(inArray)>;
       using ValueType = typename InArrayHandleType::ValueType;
       vtkm::cont::ArrayHandle<ValueType> superarcValue;
-      vtkm::worklet::contourtree_augmented::PermuteArray<ValueType>(
+      vtkm::worklet::contourtree_augmented::PermuteArrayWithRawIndex<InArrayHandleType>(
         inArray, supernodes, superarcValue);
       vtkm::worklet::contourtree_augmented::PrintValues(
         "Data Values", superarcValue, -1, resultStream);
@@ -627,7 +627,6 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
       "Intrinsic Volumes", intrinsicVolumes, -1, resultStream);
     vtkm::worklet::contourtree_augmented::PrintIndices(
       "Dependent Volumes", dependentVolumes, -1, resultStream);
-    resultStream << std::endl;
 
     VTKM_LOG_S(vtkm::cont::LogLevel::Info, resultStream.str());
   }
@@ -690,27 +689,27 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
   //   actualOuterNodeValues[i] = dataValues[supernodes[outerNodes[actualSuperarcs[i]]]];
   //   actualOuterNodeRegularIds[i] = globalRegularIds[supernodes[outerNodes[actualSuperarcs[i]]]];
   // }
-  // Solution: PermuteArray helps allocate the space so no need for explicit allocation
-  // PermuteArray also calls MaskedIndex
+  // Solution: PermuteArrayWithMaskedIndex helps allocate the space so no need for explicit allocation
+  // PermuteArrayWithMaskedIndex also calls MaskedIndex
 
   // IdArrayType, size: nActualSuperarcs
   IdArrayType actualBranchRoots;
-  vtkm::worklet::contourtree_augmented::PermuteArray<vtkm::Id>(
+  vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id>(
     branchRoots, actualSuperarcs, actualBranchRoots);
 
   // IdArrayType, size: nActualSuperarcs
   IdArrayType actualOuterNodes;
-  vtkm::worklet::contourtree_augmented::PermuteArray<vtkm::Id>(
+  vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id>(
     outerNodes, actualSuperarcs, actualOuterNodes);
 
   // IdArrayType, size: nActualSuperarcs
   IdArrayType actualOuterNodeLocalIds;
-  vtkm::worklet::contourtree_augmented::PermuteArray<vtkm::Id>(
+  vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id>(
     supernodes, actualOuterNodes, actualOuterNodeLocalIds);
 
   // IdArrayType, size: nActualSuperarcs
   IdArrayType actualOuterNodeRegularIds;
-  vtkm::worklet::contourtree_augmented::PermuteArray<vtkm::Id>(
+  vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id>(
     globalRegularIds, actualOuterNodeLocalIds, actualOuterNodeRegularIds);
 
   auto resolveArray = [&](const auto& inArray) {
@@ -744,7 +743,7 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
 
     // This is the real superarc local ID after permutation
     IdArrayType permutedActualSuperarcs;
-    vtkm::worklet::contourtree_augmented::PermuteArray<vtkm::Id>(
+    vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id>(
       actualSuperarcs, sortedSuperarcs, permutedActualSuperarcs);
 
 #ifdef DEBUG_HIERARCHICAL_VOLUMETRIC_BRANCH_DECOMPOSER

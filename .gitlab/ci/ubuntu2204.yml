@@ -1,0 +1,85 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
+.kokkos_rocm_vars: &kokkos_rocm_vars
+  variables:
+    CCACHE_BASEDIR:          "$CI_PROJECT_DIR"
+    CCACHE_COMPILERCHECK:    "content"
+    # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
+    CCACHE_IGNOREOPTIONS:    "-isystem=*"
+    CCACHE_NOHASHDIR:        "true"
+    CCACHE_RESHARE:          "true"
+
+    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
+    CMAKE_HIP_COMPILER:      "/opt/rocm/llvm/bin/clang++"
+    Kokkos_CXX_COMPILER:     "/opt/rocm/llvm/bin/clang++"
+    LD_LIBRARY_PATH:         "/opt/rocm/lib"
+    CXX:                     "hipcc"
+
+build:ubuntu2204_hip_kokkos37:
+  tags:
+    - vtkm
+    - docker
+    - linux-x86_64
+    - radeon
+  extends:
+    - .ubuntu2204_hip_kokkos
+    - .cmake_build_linux
+    - .kokkos_rocm_vars
+    - .run_automatically
+  variables:
+    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
+    CMAKE_HIP_ARCHITECTURES: "gfx900"
+    Kokkos_DIR:              "/opt/kokkos/3.7.01/"
+    VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_rendering+ccache"
+  after_script:
+    - ccache -v -s
+    - ccache -z
+
+test:ubuntu2204_hip_kokkos37:
+  tags:
+    - vtkm
+    - docker
+    - linux-x86_64
+    - radeon
+  extends:
+    - .ubuntu2204_hip_kokkos
+    - .cmake_test_linux
+    - .run_upstream_branches
+  variables:
+    CTEST_MAX_PARALLELISM: 1
+    CTEST_EXCLUSIONS: "UnitTestWorkletParticleAdvection"
+  dependencies:
+    - build:ubuntu2204_hip_kokkos37
+  needs:
+    - build:ubuntu2204_hip_kokkos37
+  timeout: 3 hours
+
+build:ubuntu2204_hip_kokkos43:
+  tags:
+    - vtkm
+    - docker
+    - linux-x86_64
+    - radeon
+  extends:
+    - .ubuntu2204_hip_kokkos
+    - .cmake_build_linux
+    - .kokkos_rocm_vars
+    - .run_automatically
+  variables:
+    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
+    CMAKE_HIP_ARCHITECTURES: "gfx906"
+    Kokkos_DIR:              "/opt/kokkos/4.3.01/"
+    VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_rendering+ccache"
+  after_script:
+    - ccache -v -s
+    - ccache -z

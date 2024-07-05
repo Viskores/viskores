@@ -23,9 +23,9 @@ David Pugmire,
 Nick Thompson,
 Allison Vacanti,
 Abhishek Yenpure,
-and the |VTKm| community
+and the |VTKm| community.
 
-Moreland, K. (|report-year|). *The VTK-m User's Guide*, Tech report |report-number|, Oak Ridge National Laboratory.
+Moreland, K. (|report-year|). *The VTK-m User's Guide*, version |release|, Tech report |report-number|, Oak Ridge National Laboratory.
 
 .. centered:: Join the VTK-m Community at http://m.vtk.org.
 

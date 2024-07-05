@@ -12,3 +12,5 @@ Advanced Development
    worklet-error-handling.rst
    math.rst
    working-with-cells.rst
+   memory-layout.rst
+   fancy-array-handles.rst

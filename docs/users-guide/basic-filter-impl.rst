@@ -72,9 +72,7 @@ The filter implementation can get the appropriate field to operate on using the 
 
 One of the challenges with writing filters is determining the actual types the algorithm is operating on.
 The :class:`vtkm::cont::Field` object pulled from the input :class:`vtkm::cont::DataSet` contains a :class:`vtkm::cont::ArrayHandle` (see :chapref:`basic-array-handles:Basic Array Handles`), but you do not know what the template parameters of the :class:`vtkm::cont::ArrayHandle` are.
-There are numerous ways to extract an array of an unknown type out of a :class:`vtkm::cont::ArrayHandle` (many of which will be explored later in Chapter \ref{chap:UnknownArrayHandle}), but the :class:`vtkm::filter::Filter` contains some convenience functions to simplify this.
-
-.. todo:: Fix above reference to unknown array handle chapter.
+There are numerous ways to extract an array of an unknown type out of a :class:`vtkm::cont::ArrayHandle`, many of which will be explored later in :chapref:`unknown-array-handle:Unknown Array Handles`, but the :class:`vtkm::filter::Filter` contains some convenience functions to simplify this.
 
 In particular, this filter operates specifically on scalar fields.
 For this purpose, :class:`vtkm::filter::Filter` provides the :func:`vtkm::filter::Filter::CastAndCallScalarField` helper method.

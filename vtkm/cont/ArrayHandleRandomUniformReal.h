@@ -50,6 +50,18 @@ struct CanonicalFunctor<vtkm::Float32>
 };
 } // detail
 
+/// @brief An `ArrayHandle` that provides a source of random numbers with uniform distribution.
+///
+/// `ArrayHandleRandomUniformReal` takes a user supplied seed and hashes it to provide
+/// a sequence of numbers drawn from a random uniform distribution in the range [0, 1).
+/// `ArrayHandleRandomUniformReal` is built on top of `ArrayHandleRandomUniformBits` so
+/// shares its behavior with that array.
+///
+/// Note: In contrast to traditional random number generator,
+/// `ArrayHandleRandomUniformReal` does not have "state", i.e. multiple calls
+/// the Get() method with the same index will always return the same hash value.
+/// To get a new set of random bits, create a new `ArrayHandleRandomUniformBits`
+/// with a different seed.
 template <typename Real = vtkm::Float64>
 class VTKM_ALWAYS_EXPORT ArrayHandleRandomUniformReal
   : public vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleRandomUniformBits,
@@ -64,6 +76,13 @@ public:
     (vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleRandomUniformBits,
                                       detail::CanonicalFunctor<Real>>));
 
+  /// Construct an `ArrayHandleRandomUniformReal`.
+  ///
+  /// @param length Specifies the length of the generated array.
+  /// @param seed Provides a seed to use for the pseudorandom numbers. To prevent confusion
+  /// between the seed and the length, the type of the seed is a `vtkm::Vec` of size 1. To
+  /// specify the seed, declare it in braces. For example, to construct a random array of
+  /// size 50 with seed 123, use `ArrayHandleRandomUniformReal(50, { 123 })`.
   explicit ArrayHandleRandomUniformReal(vtkm::Id length, SeedType seed = { std::random_device{}() })
     : Superclass(vtkm::cont::ArrayHandleRandomUniformBits{ length, seed },
                  detail::CanonicalFunctor<Real>{})

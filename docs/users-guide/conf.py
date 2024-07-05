@@ -20,7 +20,7 @@ project = "The VTK-m User's Guide"
 copyright = 'Kitware Inc., National Technology & Engineering Solutions of Sandia LLC, UT-Battelle LLC, Los Alamos National Security LLC'
 author = 'Kenneth Moreland'
 version = '@VTKm_VERSION_FULL@'
-release = '@VTKm_VERSION_FULL@'
+release = '@VTKm_VERSION_MAJOR@.@VTKm_VERSION_MINOR@'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -76,8 +76,8 @@ today_fmt = '%B %d, %Y'
 rst_prolog = '''
 .. |VTKm| replace:: VTK‑m
 .. |Veclike| replace:: ``Vec``-like
-.. |report-year| replace:: 2023
-.. |report-number| replace:: ORNL/TM-2023/3182
+.. |report-year| replace:: 2024
+.. |report-number| replace:: ORNL/TM-2024/3443
 '''
 
 breathe_projects = { 'vtkm': '@doxygen_xml_output_dir@' }
