@@ -59,9 +59,21 @@ public:
   }
 
 private:
-  // pair(vector of particles, vector of blockIds)
-  //using ParticleCommType = std::pair<std::vector<ParticleType>, std::vector<vtkm::Id>>;
-  // pair(particle, bids);
+  void SerialExchange(const std::vector<ParticleType>& outData,
+                      const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
+                      std::vector<ParticleType>& inData,
+                      std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap)
+  {
+    //Copy output to input.
+    for (const auto& p : outData)
+    {
+      const auto& bids = outBlockIDsMap.find(p.GetID())->second;
+      inData.emplace_back(p);
+      inDataBlockIDsMap[p.GetID()] = bids;
+    }
+  }
+
+#ifdef VTKM_ENABLE_MPI
   using ParticleCommType = std::pair<ParticleType, std::vector<vtkm::Id>>;
 
   void CleanupSendBuffers(bool checkRequests)
@@ -85,22 +97,6 @@ private:
     if (err != MPI_SUCCESS)
       throw vtkm::cont::ErrorFilterExecution(
         "Error with MPI_Testsome in ParticleExchanger::CleanupSendBuffers");
-
-#if 0
-    if (num > 0)
-    {
-      std::size_t sz = static_cast<std::size_t>(num);
-      for (std::size_t i = 0; i < sz; i++)
-      {
-        auto it = this->SendBuffers.find(requests[indices[i]]);
-        if (it == this->SendBuffers.end())
-          throw vtkm::cont::ErrorFilterExecution("Error with requests in ParticleExchanger::CleanupSendBuffers");
-
-//        delete it->second;
-//        this->SendBuffers.erase(it->first);
-      }
-    }
-#endif
   }
 
   void SendParticles(const std::vector<ParticleType>& outData,
@@ -210,22 +206,6 @@ private:
     }
   }
 
-  void SerialExchange(const std::vector<ParticleType>& outData,
-                      const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
-                      std::vector<ParticleType>& inData,
-                      std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap)
-  {
-    //Copy output to input.
-    for (const auto& p : outData)
-    {
-      const auto& bids = outBlockIDsMap.find(p.GetID())->second;
-      inData.emplace_back(p);
-      inDataBlockIDsMap[p.GetID()] = bids;
-    }
-  }
-
-
-#ifdef VTKM_ENABLE_MPI
   MPI_Comm MPIComm;
   vtkm::Id NumRanks;
   vtkm::Id Rank;
