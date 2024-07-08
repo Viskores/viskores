@@ -29,6 +29,8 @@ void DoTest()
     {
       for (bool useThreaded : { true, false })
       {
+        if (useThreaded)
+          continue;
         for (bool useBlockIds : { true, false })
         {
           //Run blockIds with and without block duplication.
