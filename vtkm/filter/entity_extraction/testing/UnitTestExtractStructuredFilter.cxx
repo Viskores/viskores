@@ -341,7 +341,7 @@ public:
 
   static void TestUniform3D7()
   {
-    std::cout << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform, exclude boundary" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
     vtkm::filter::entity_extraction::ExtractStructured extract;
@@ -351,6 +351,7 @@ public:
     vtkm::Id3 sample(3, 3, 2);
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
+    extract.SetIncludeBoundary(false); // default
 
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     vtkm::cont::DataSet output = extract.Execute(dataset);
@@ -371,16 +372,16 @@ public:
                      "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(3) == 99.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(4) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(7) == 97.0f, "Wrong point field data");
 
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 16.0f, "Wrong cell field data");
   }
 
-  VTKM_DEPRECATED_SUPPRESS_BEGIN
-  // This test repeates TestUniform3D7 but uses deprecated behavior.
   static void TestUniform3D8()
   {
-    std::cout << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform, include boundary" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::entity_extraction::ExtractStructured extract;
 
@@ -411,12 +412,15 @@ public:
 
     VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(4) == 99.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(5) == 0.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(7) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.ReadPortal().Get(13) == 97.0f, "Wrong point field data");
 
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(0) == 16.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(1) == 19.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(2) == 28.0f, "Wrong cell field data");
     VTKM_TEST_ASSERT(outCellData.ReadPortal().Get(3) == 31.0f, "Wrong cell field data");
   }
-  VTKM_DEPRECATED_SUPPRESS_END
 
   static void TestRectilinear2D()
   {
