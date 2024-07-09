@@ -85,17 +85,23 @@ public:
   VTKM_CONT
   void SetSampleRate(vtkm::Id3 sampleRate) { this->SampleRate = sampleRate; }
 
-  // Get if we should include the outer boundary on a subsample
-  // (NOTE: This method is deprecated because it is not clear from either
-  // the documentation or the source code what the intention of this feature
-  // is. If your are using this method somewhere and think it should remain,
-  // please open a merge request to "de-deprecate" it and add a test and
-  // documentation of the expected behavior.)
-  VTKM_DEPRECATED(2.2)
+  /// @brief Specifies if the outer boundary should always be included.
+  ///
+  /// When a subsample rate is specified, it is possible that some of the
+  /// boundary samples will not be included in the sampling. If this is the
+  /// case and `IncludeBoundary` is set to true, then an extra sample is
+  /// set in the output and the values on the boundary are included. For example,
+  /// say the input has resolution (5, 5, 1) (and the VOI matches), and the sample
+  /// rate is set to (3, 3, 1). If `IncludeBoundary` is false, then the output will
+  /// have the 4 points that correspond to the 3D indices (0, 0, 0), (3, 0, 0),
+  /// (0, 3, 0), and (3, 3, 0) of the input. This misses the outer boundary at
+  /// index 4 in the x and y directions. If `IncludeBoundary is set to true, then
+  /// the output will have the 9 points that correspond to the 3D indices (0, 0, 0),
+  /// (3, 0, 0), (4, 0, 0), (0, 3, 0), (3, 3, 0), (4, 3, 0), (0, 4, 0), (3, 4, 0),
+  /// and (4, 4, 0) to capture this outer boundary.
   VTKM_CONT
   bool GetIncludeBoundary() const { return this->IncludeBoundary; }
-  // Set if we should include the outer boundary on a subsample
-  VTKM_DEPRECATED(2.2)
+  /// @copydoc GetIncludeBoundary
   VTKM_CONT
   void SetIncludeBoundary(bool value) { this->IncludeBoundary = value; }
 
