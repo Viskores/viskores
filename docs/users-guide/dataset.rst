@@ -492,9 +492,13 @@ The :class:`vtkm::cont::Field` class also has several convenience methods for qu
 
 .. doxygenfunction:: vtkm::cont::Field::GetRange() const
 
-Details on how to get data from a :class:`vtkm::cont::ArrayHandle` them is given in Chapter \ref{chap:AccessingAllocatingArrays}.
-
-.. todo:: Fix above reference to array handle chapter.
+.. didyouknow::
+   The :class:`vtkm::cont::Field` class does not give direct access to the data in the field.
+   This is in part because the field can hold any number of data types and in part because data access is more efficient in filters and other features that run in parallel.
+   The :func:`vtkm::cont::Field::PrintSummary` function can be used to get some summary information for debugging.
+   To get direct access to the data, you will first have to get a :class:`vtkm::cont::UnknownArrayHandle` from :func:`vtkm::cont::Field::Data`.
+   The :class:`vtkm::cont::UnknownArrayHandle` then has to be converted to a :class:`vtkm::cont::ArrayHandle` of the proper type as described in :chapref:`unknown-array-handle:Unknown Array Handles`.
+   Once the proper :class:`vtkm::cont::ArrayHandle` is retrieved, the data can finally be accessed through an array portal as described in :secref:`basic-array-handles:Array Portals`.
 
 
 ------------------------------

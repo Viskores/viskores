@@ -180,9 +180,8 @@ Vecs from Portals
 
 |VTKm| provides further examples of |Veclike| objects as well.
 For example, the :class:`vtkm::VecFromPortal` and :class:`vtkm::VecFromPortalPermute` objects allow you to treat a subsection of an arbitrarily large array as a :class:`vtkm::Vec`.
-These objects work by attaching to array portals, which are described in Section~\ref{sec:ArrayPortals}.
-
-.. todo:: Fix reference to array portals.
+These objects work by attaching to array portals, which are described in
+:secref:`basic-array-handles:Array Portals`.
 
 .. doxygenclass:: vtkm::VecFromPortal
    :members:
