@@ -89,9 +89,9 @@ Field maps most commonly perform basic calculator arithmetic, as demonstrated in
 
 Although simple, the :class:`vtkm::worklet::WorkletMapField` worklet type can be used (and abused) as a general parallel-for/scheduling mechanism.
 In particular, the :class:`WorkIndex` execution signature tag can be used to get a unique index, the ``WholeArray*`` tags can be used to get random access to arrays, and the :class:`ExecObject` control signature tag can be used to pass execution objects directly to the worklet.
-Whole arrays and execution objects are talked about in more detail in Chapters \ref{chap:Globals} and \ref{chap:ExecutionObjects}, respectively, in more detail, but here is a simple example that uses the random access of :class`WholeArrayOut` to make a worklet that copies an array in reverse order.
+Whole arrays and execution objects are talked about in more detail in :chapref:`globals:Global Arrays and Topology` and Chapter \ref{chap:ExecutionObjects}, respectively, in more detail, but here is a simple example that uses the random access of :class:`WholeArrayOut` to make a worklet that copies an array in reverse order.
 
-.. todo:: Fix references to globals and execution object chapters above.
+.. todo:: Fix reference to execution object chapter above.
 
 .. load-example:: RandomArrayAccess
    :file: GuideExampleUseWorkletMapField.cxx
