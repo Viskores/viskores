@@ -40,11 +40,8 @@ This is convenient for creating arrays used as the output for algorithms.
    :file: GuideExampleArrayHandle.cxx
    :caption: Creating an :class:`vtkm::cont::ArrayHandle` for output data.
 
-Chapter \ref{chap:AccessingAllocatingArrays} describes in detail how to allocate memory and access data in an :class:`vtkm::cont::ArrayHandle`.
-However, you can use the :func:`vtkm::cont::make_ArrayHandle` function for a simplified way to create an :class:`vtkm::cont::ArrayHandle` with data.
-
-.. todo:: Update chapter reference above. Also consider moving the access/allocation chapter earlier.
-
+There are times when you will wish to create a :class:`vtkm::cont::ArrayHandle` populated with existing data.
+This can be done with the :func:`vtkm::cont::make_ArrayHandle` function.
 :func:`vtkm::cont::make_ArrayHandle` has many forms.
 An easy form to use takes an initializer list and creates a basic :class:`vtkm::cont::ArrayHandle` with it.
 This allows you to create a short :class:`vtkm::cont::ArrayHandle` from literals.
@@ -120,6 +117,37 @@ This solution is shown in :exlineref:ex:ArrayOutOfScope:MoveVector`.
 
 
 ------------------------------
+Allocating
+------------------------------
+
+.. index::
+   double: array handle; allocate
+
+:class:`vtkm::cont::ArrayHandle` is capable of allocating its own memory.
+The most straightforward way to allocate memory is to call the :func:`vtkm::cont::ArrayHandle::Allocate` method.
+The :func:`vtkm::cont::ArrayHandle::Allocate` method takes a single argument, which is the number of elements to make the array.
+
+.. load-example:: ArrayHandleAllocate
+   :file: GuideExampleArrayHandle.cxx
+   :caption: Allocating an :class:`vtkm::cont::ArrayHandle`.
+
+By default when you :func:`vtkm::cont::ArrayHandle::Allocate` an array, it potentially destroys any existing data in it.
+However, there are cases where you wish to grow or shrink an array while preserving the existing data.
+To preserve the existing data when allocating an array, pass :enumerator:`vtkm::CopyFlag::On` as an optional second argument.
+
+.. load-example:: ArrayHandleReallocate
+   :file: GuideExampleArrayHandle.cxx
+   :caption: Resizing an :class:`vtkm::cont::ArrayHandle`.
+
+It is also possible to initialize new values in an allocated :class:`vtkm::cont::ArrayHandle` by using the :func:`vtkm::cont::ArrayHandle::AllocateAndFill` method.
+
+.. didyouknow::
+   The ability to allocate memory is a key difference between :class:`vtkm::cont::ArrayHandle` and many other common forms of smart pointers.
+   When one :class:`vtkm::cont::ArrayHandle` allocates new memory, all other :class:`vtkm::cont::ArrayHandle`'s pointing to the same managed memory get the newly allocated memory.
+   This feature makes it possible to pass a :class:`vtkm::cont::ArrayHandle` to a method to be reallocated and filled without worrying about C++ details on how to reference the :class:`vtkm::cont::ArrayHandle` object itself.
+
+
+------------------------------
 Deep Array Copies
 ------------------------------
 
@@ -148,6 +176,72 @@ The destination array will be properly reallocated to the correct size.
 .. doxygenfunction:: vtkm::cont::ArrayCopy(const SourceArrayType&, DestArrayType&)
 
 .. doxygenfunction:: vtkm::cont::ArrayCopy(const SourceArrayType&, vtkm::cont::UnknownArrayHandle&)
+
+
+------------------------------
+Array Portals
+------------------------------
+
+.. index::
+   single: array portal
+   single: array handle; array portal
+
+The :class:`vtkm::cont::ArrayHandle` class does not provide direct access to the data in the array.
+This is because the control and access to arrays is often in different parts of the code in |VTKm|.
+To get direct access to the data, you must retrieve an *array portal* to the array.
+There is no single :class:`ArrayPortal` class declared, but the structure of all such classes has the following members.
+
+.. cpp:class:: ArrayPortal
+
+   A class that provides access to the data in an array.
+   Each :class:`vtkm::cont::ArrayHandle` type defines its own array portal.
+
+.. cpp:type:: T ArrayPortal::ValueType
+
+   The type for each item in the array.
+
+.. cpp:function:: vtkm::Id ArrayPortal::GetNumberOfValues() const
+
+   Returns the number of entries in the array.
+
+.. cpp:function:: ArrayPortal::ValueType ArrayPortal::Get(vtkm::Id index) const
+
+   Returns the value in the array at the given index.
+
+.. cpp:function:: void ArrayPortal::Set(vtkm::Id index, const ArrayPortal::ValueType& value) const
+
+   Sets the entry at the given index of the array to the provided value.
+
+A :class:`vtkm::cont::ArrayHandle` provides its own array portal of an internal type.
+The correct type for the array portal is :type:`vtkm::cont::ArrayHandle::ReadPortalType` for read-only access and :type:`vtkm::cont::ArrayHandle::WritePortalType` for read-write access.
+
+:class:`vtkm::cont::ArrayHandle` provides the methods :func:`vtkm::cont::ArrayHandle::ReadPortal` and :func:`vtkm::cont::ArrayHandle::WritePortal` to get the associated array portal objects to access the data in the control environment.
+These methods also have the side effect of refreshing the control environment copy of the data as if you called :func:`vtkm::cont::ArrayHandle::SyncControlArray`.
+Be aware that calling :func:`vtkm::cont::ArrayHandle::WritePortal` will invalidate any copy in the execution environment, meaning that any subsequent use will cause the data to be copied back again.
+
+.. load-example:: ArrayHandlePopulate
+   :file: GuideExampleArrayHandle.cxx
+   :caption: Populating a :class:`vtkm::cont::ArrayHandle`.
+
+.. didyouknow::
+   Most operations on arrays in |VTKm| should really be done in the execution environment.
+   Keep in mind that whenever doing an operation using a control array portal, that operation will likely be slow for large arrays.
+   However, some operations, like performing file I/O, make sense in the control environment.
+
+.. commonerrors::
+   The portal returned from :func:`vtkm::cont::ArrayHandle::ReadPortal` or :func:`vtkm::cont::ArrayHandle::WritePortal` is only good as long as the data in the :class:`vtkm::cont::ArrayHandle` are not moved or reallocated.
+   For example, if you call :func:`vtkm::cont::ArrayHandle::Allocate`, any previously created array portals are likely to become invalid, and using them will result in undefined behavior.
+   Thus, you should keep portals only as long as is necessary to complete an operation.
+
+|VTKm| provides a pair of functions, :func:`vtkm::cont::ArrayPortalToIteratorBegin` and :func:`vtkm::cont::ArrayPortalToIterationEnd`, to convert an :class:`ArrayPortal` into a C++ STL iterator.
+This makes it easy to operate on |VTKm| arrays like other C++ STL containers, but keep in mind this will all be done in serial on the host processor.
+
+.. doxygenfunction:: vtkm::cont::ArrayPortalToIteratorBegin
+.. doxygenfunction:: vtkm::cont::ArrayPortalToIteratorEnd
+
+.. load-example:: ControlPortals
+   :file: GuideExampleArrayHandle.cxx
+   :caption: Using portals as C++ iterators.
 
 
 ----------------------------------------

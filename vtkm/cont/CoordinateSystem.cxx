@@ -66,10 +66,10 @@ CoordinateSystem::GetDataAsMultiplexer() const
 }
 
 VTKM_CONT
-void CoordinateSystem::PrintSummary(std::ostream& out) const
+void CoordinateSystem::PrintSummary(std::ostream& out, bool full) const
 {
   out << "    Coordinate System ";
-  this->Superclass::PrintSummary(out);
+  this->Superclass::PrintSummary(out, full);
 }
 
 template VTKM_CONT_EXPORT CoordinateSystem::CoordinateSystem(

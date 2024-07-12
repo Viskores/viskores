@@ -92,9 +92,11 @@ public:
   VTKM_CONT
   Field() = default;
 
+  /// Create a field with the given name, association, and data.
   VTKM_CONT
   Field(std::string name, Association association, const vtkm::cont::UnknownArrayHandle& data);
 
+  /// Create a field with the given name, association, and data.
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
                   Association association,
@@ -111,27 +113,39 @@ public:
   VTKM_CONT Field& operator=(const vtkm::cont::Field& src);
   VTKM_CONT Field& operator=(vtkm::cont::Field&& src) noexcept;
 
+  /// Return true if this field is associated with cells.
   VTKM_CONT bool IsCellField() const { return this->FieldAssociation == Association::Cells; }
+  /// Return true if this field is associated with points.
   VTKM_CONT bool IsPointField() const { return this->FieldAssociation == Association::Points; }
+  /// Return true if this field is associated with the whole data set.
   VTKM_CONT bool IsWholeDataSetField() const
   {
     return this->FieldAssociation == Association::WholeDataSet;
   }
+  /// Return true if this field is associated with partitions in a partitioned data set.
   VTKM_CONT bool IsPartitionsField() const
   {
     return this->FieldAssociation == Association::Partitions;
   }
+  /// Return true if this field is global.
+  /// A global field is applied to a `vtkm::cont::PartitionedDataSet` to refer to data that
+  /// applies across an entire collection of data.
   VTKM_CONT bool IsGlobalField() const { return this->FieldAssociation == Association::Global; }
 
   /// Returns true if the array of the field has a value type that matches something in
   /// `VTKM_FIELD_TYPE_LIST` and a storage that matches something in `VTKM_FIELD_STORAGE_LIST`.
   VTKM_CONT bool IsSupportedType() const;
 
+  /// Return the number of values in the field array.
   VTKM_CONT vtkm::Id GetNumberOfValues() const { return this->Data.GetNumberOfValues(); }
 
+  /// Return the name of the field.
   VTKM_CONT const std::string& GetName() const { return this->Name; }
+  /// Return the association of the field.
   VTKM_CONT Association GetAssociation() const { return this->FieldAssociation; }
+  /// Get the array of the data for the field.
   const vtkm::cont::UnknownArrayHandle& GetData() const;
+  /// Get the array of the data for the field.
   vtkm::cont::UnknownArrayHandle& GetData();
 
   /// @brief Returns the range of each component in the field array.
@@ -144,6 +158,11 @@ public:
   /// the range.
   VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
 
+  /// @brief Returns the range of each component in the field array.
+  ///
+  /// A C array of `vtkm::Range` objects is passed in as a place to store the result.
+  /// It is imperative that the array be allocated to be large enough to hold an entry
+  /// for each component.
   VTKM_CONT void GetRange(vtkm::Range* range) const;
 
   /// \brief Get the data as an array with `vtkm::FloatDefault` components.
@@ -204,9 +223,11 @@ public:
     this->SetData(vtkm::cont::UnknownArrayHandle(newdata));
   }
 
+  /// Print a summary of the data in the field.
   VTKM_CONT
-  virtual void PrintSummary(std::ostream& out) const;
+  virtual void PrintSummary(std::ostream& out, bool full = false) const;
 
+  /// Remove the data from the device memory (but preserve the data on the host).
   VTKM_CONT
   virtual void ReleaseResourcesExecution()
   {

@@ -79,7 +79,7 @@ Field& Field::operator=(vtkm::cont::Field&& src) noexcept
 
 
 VTKM_CONT
-void Field::PrintSummary(std::ostream& out) const
+void Field::PrintSummary(std::ostream& out, bool full) const
 {
   out << "   " << this->Name;
   out << " assoc= ";
@@ -104,7 +104,7 @@ void Field::PrintSummary(std::ostream& out) const
       out << "Global ";
       break;
   }
-  this->Data.PrintSummary(out);
+  this->Data.PrintSummary(out, full);
 }
 
 VTKM_CONT
