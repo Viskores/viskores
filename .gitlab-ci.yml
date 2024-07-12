@@ -107,9 +107,9 @@
       when: on_success
     - when: never
 
-.run_crusher_ci: &run_crusher_ci
+.run_frontier_ci: &run_frontier_ci
   rules:
-    - if: '$CI_PROJECT_PATH == "ci/csc331_crusher/dev/vtk-m"'
+    - if: '$CI_PROJECT_PATH == "ci/ums033/dev/vtk-m"'
       when: on_success
     - when: never
 
@@ -235,10 +235,10 @@ stages:
 
 
 include:
-  - local: '/.gitlab/ci/crusher.yml'
   - local: '/.gitlab/ci/centos7.yml'
   - local: '/.gitlab/ci/centos8.yml'
   - local: '/.gitlab/ci/doxygen.yml'
+  - local: '/.gitlab/ci/frontier.yml'
   - local: '/.gitlab/ci/macos.yml'
   - local: '/.gitlab/ci/opensuse.yml'
   - local: '/.gitlab/ci/rhel8.yml'
