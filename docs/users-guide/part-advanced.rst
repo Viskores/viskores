@@ -14,3 +14,4 @@ Advanced Development
    working-with-cells.rst
    memory-layout.rst
    fancy-array-handles.rst
+   globals.rst
