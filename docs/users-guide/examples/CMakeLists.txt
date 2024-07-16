@@ -49,6 +49,9 @@ set(examples_device
   GuideExampleFilterDataSetWithField.cxx
   GuideExampleGenerateMeshConstantShape.cxx
   GuideExampleSimpleAlgorithm.cxx
+  GuideExampleSimpleHistogram.cxx
+  GuideExampleSumOfAngles.cxx
+  GuideExampleTriangleQuality.cxx
   GuideExampleUnknownArrayHandle.cxx
   GuideExampleUseWorkletMapField.cxx
   GuideExampleUseWorkletPointNeighborhood.cxx
