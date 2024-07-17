@@ -97,7 +97,7 @@ test:macos_xcode14:
 
 .macos_build_tags:
   tags:
-    - vtk-m
+    - vtkm
     - macos-x86_64
     - xcode-14.2
     - nonconcurrent
