@@ -78,7 +78,6 @@ public:
   ///
   VTKM_CONT void DetachFromAll();
 
-  ///@{
   /// \brief Add an object to attach to the `Token`.
   ///
   /// To attach an object to a `Token`, you need the object itself, a pointer to
@@ -111,6 +110,7 @@ public:
                  conditionVariablePointer);
   }
 
+  /// @copydoc Attach
   template <typename T>
   VTKM_CONT void Attach(T&& object,
                         vtkm::cont::Token::ReferenceCount* referenceCountPoiner,
@@ -120,7 +120,6 @@ public:
     std::unique_lock<std::mutex> lock(*mutexPointer, std::defer_lock);
     this->Attach(std::forward<T>(object), referenceCountPoiner, lock, conditionVariablePointer);
   }
-  ///@}
 
   /// \brief Determine if this `Token` is already attached to an object.
   ///

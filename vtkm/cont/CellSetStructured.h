@@ -78,6 +78,8 @@ public:
     return this->Structure.GetGlobalPointDimensions();
   }
 
+  /// Get the dimensions of the cells.
+  /// This is typically one less than the dimensions of the points.
   SchedulingRangeType GetCellDimensions() const { return this->Structure.GetCellDimensions(); }
 
   SchedulingRangeType GetGlobalCellDimensions() const
@@ -136,12 +138,31 @@ public:
   using ExecConnectivityType =
     vtkm::exec::ConnectivityStructured<VisitTopology, IncidentTopology, Dimension>;
 
+  /// @brief Prepares the data for a particular device and returns the execution object for it.
+  ///
+  /// @param device Specifies the device on which the cell set will ve available.
+  /// @param visitTopology Specifies the "visit" topology element. This is the element
+  /// that will be indexed in the resulting connectivity object. This is typically
+  /// `vtkm::TopologyElementTagPoint` or `vtkm::TopologyElementTagCell`.
+  /// @param incidentTopology Specifies the "incident" topology element. This is the element
+  /// that will incident to the elements that are visited. This is typically
+  /// `vtkm::TopologyElementTagPoint` or `vtkm::TopologyElementTagCell`.
+  /// @param token Provides a `vtkm::cont::Token` object that will define the span which
+  /// the return execution object must be valid.
+  ///
+  /// @returns A connectivity object that can be used in the execution environment on the
+  /// specified device.
   template <typename VisitTopology, typename IncidentTopology>
-  ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(vtkm::cont::DeviceAdapterId,
-                                                                        VisitTopology,
-                                                                        IncidentTopology,
-                                                                        vtkm::cont::Token&) const
+  ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(
+    vtkm::cont::DeviceAdapterId device,
+    VisitTopology visitTopology,
+    IncidentTopology incidentTopology,
+    vtkm::cont::Token& token) const
   {
+    (void)device;
+    (void)visitTopology;
+    (void)incidentTopology;
+    (void)token;
     return ExecConnectivityType<VisitTopology, IncidentTopology>(this->Structure);
   }
 
