@@ -14,6 +14,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/flow/testing/GenerateTestDataSets.h>
 #include <vtkm/filter/flow/worklet/Analysis.h>
 #include <vtkm/filter/flow/worklet/EulerIntegrator.h>
 #include <vtkm/filter/flow/worklet/Field.h>
@@ -25,7 +26,6 @@
 #include <vtkm/filter/flow/worklet/Termination.h>
 #include <vtkm/filter/mesh_info/GhostCellClassify.h>
 #include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 #include <random>
 

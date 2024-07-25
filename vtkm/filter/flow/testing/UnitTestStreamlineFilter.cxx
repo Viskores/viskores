@@ -17,8 +17,8 @@
 #include <vtkm/filter/flow/PathParticle.h>
 #include <vtkm/filter/flow/Pathline.h>
 #include <vtkm/filter/flow/Streamline.h>
+#include <vtkm/filter/flow/testing/GenerateTestDataSets.h>
 #include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 namespace
 {
