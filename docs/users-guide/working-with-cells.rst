@@ -168,6 +168,16 @@ The :file:`vtkm/exec/CellInterpolate.h` header contains the function :func:`vtkm
    :file: GuideExampleCellOperations.cxx
    :caption: Interpolating field values to a cell's center.
 
+The previous form of :func:`vtkm::exec::CellInterpolate` is typically used within a :class:`vtkm::worklet::WorkletVisitCellsWithPoints` to interpolate within cells provided by the worklet.
+There is another form of :func:`vtkm::exec::CellInterpolate` that is used when provided with a cell set structure from a ``WholeCellSetIn``.
+Using ``WholeCellSetIn`` is described in more detail in :secref:`globals:Whole Cell Sets`, but the summary is that you can get the shape and incident points of any cell in the mesh.
+In this case, the alternate form of :func:`vtkm::exec::CellInterpolate` takes a ``Vec`` of the point indices for the cell and an array portal of all field values.
+
+.. doxygenfunction:: vtkm::exec::CellInterpolate(const IndicesVecType&, const FieldPortalType&, const vtkm::Vec<ParametricCoordType, 3>&, CellShapeTag, typename FieldPortalType::ValueType&)
+
+.. load-example:: CellLookupInterp
+   :file: GuideExampleCellOperations.cxx
+   :caption: Interpolating field values in a cell queried from a global structure.
 
 ------------------------------
 Derivatives

@@ -18,7 +18,7 @@
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
 #include <vtkm/VecVariable.h>
 
-#include <vtkm/testing/Testing.h>
+#include <vtkm/cont/testing/Testing.h>
 
 #define CHECK_CALL(call) \
   VTKM_TEST_ASSERT((call) == vtkm::ErrorCode::Success, "Call resulted in error.")
@@ -91,6 +91,49 @@ struct TestInterpolateFunctor
                      "Interpolation at center not average value.");
   }
 
+  template <typename CellShapeTag, typename IndexVecType, typename FieldPortalType>
+  void DoTestWithIndices(CellShapeTag shape,
+                         const IndexVecType& pointIndices,
+                         const FieldPortalType& fieldValues) const
+  {
+    vtkm::IdComponent numPoints = pointIndices.GetNumberOfComponents();
+    if (numPoints < 1)
+    {
+      return;
+    }
+
+    FieldType averageValue = vtkm::TypeTraits<FieldType>::ZeroInitialization();
+    for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
+    {
+      averageValue = averageValue + fieldValues.Get(pointIndices[pointIndex]);
+    }
+    averageValue = static_cast<ComponentType>(1.0 / numPoints) * averageValue;
+
+    for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
+    {
+      vtkm::Vec3f pcoord;
+      CHECK_CALL(vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, pcoord));
+      FieldType interpolatedValue;
+      CHECK_CALL(
+        vtkm::exec::CellInterpolate(pointIndices, fieldValues, pcoord, shape, interpolatedValue));
+
+      VTKM_TEST_ASSERT(test_equal(fieldValues.Get(pointIndices[pointIndex]), interpolatedValue),
+                       "Interpolation at point not point value.");
+    }
+
+    if (shape.Id != vtkm::CELL_SHAPE_POLY_LINE)
+    {
+      vtkm::Vec3f pcoord;
+      CHECK_CALL(vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, pcoord));
+      FieldType interpolatedValue;
+      CHECK_CALL(
+        vtkm::exec::CellInterpolate(pointIndices, fieldValues, pcoord, shape, interpolatedValue));
+
+      VTKM_TEST_ASSERT(test_equal(averageValue, interpolatedValue),
+                       "Interpolation at center not average value.");
+    }
+  }
+
   template <typename CellShapeTag>
   void DoTest(CellShapeTag shape, vtkm::IdComponent numPoints) const
   {
@@ -102,6 +145,19 @@ struct TestInterpolateFunctor
     }
 
     this->DoTestWithField(shape, fieldValues);
+
+    vtkm::cont::ArrayHandle<FieldType> fieldArray;
+    fieldArray.Allocate(41);
+    SetPortal(fieldArray.WritePortal());
+
+    vtkm::VecVariable<vtkm::Id, MAX_POINTS> pointIndices;
+    for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
+    {
+      vtkm::Id globalIndex = (7 + (13 * pointIndex)) % 41;
+      pointIndices.Append(globalIndex);
+    }
+
+    this->DoTestWithIndices(shape, pointIndices, fieldArray.ReadPortal());
   }
 
   template <typename CellShapeTag>
@@ -154,5 +210,5 @@ void TestInterpolate()
 
 int UnitTestCellInterpolate(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestInterpolate, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestInterpolate, argc, argv);
 }

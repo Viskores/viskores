@@ -11,9 +11,10 @@
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/ParametricCoordinates.h>
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <vtkm/cont/Invoker.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -25,7 +26,7 @@ namespace
 ////
 struct CellCenters : vtkm::worklet::WorkletVisitCellsWithPoints
 {
-  using ControlSignature = void(CellSetIn,
+  using ControlSignature = void(CellSetIn inputCells,
                                 FieldInPoint inputField,
                                 FieldOutCell outputField);
   using ExecutionSignature = void(CellShape, PointCount, _2, _3);
@@ -52,6 +53,46 @@ struct CellCenters : vtkm::worklet::WorkletVisitCellsWithPoints
 //// END-EXAMPLE CellCenters
 ////
 
+////
+//// BEGIN-EXAMPLE CellLookupInterp
+////
+struct CellLookupInterp : vtkm::worklet::WorkletMapField
+{
+  using ControlSignature = void(WholeCellSetIn<> inputCells,
+                                WholeArrayIn inputField,
+                                FieldOut outputField);
+  using ExecutionSignature = void(InputIndex, _1, _2, _3);
+  using InputDomain = _3;
+
+  template<typename StructureType, typename FieldInPortalType, typename FieldOutType>
+  VTKM_EXEC void operator()(vtkm::Id index,
+                            const StructureType& structure,
+                            const FieldInPortalType& inputField,
+                            FieldOutType& outputField) const
+  {
+    // Normally you would use something like a locator to find the index to
+    // a cell that matches some query criteria. For demonstration purposes,
+    // we are just using a passed in index.
+    auto shape = structure.GetCellShape(index);
+    vtkm::IdComponent pointCount = structure.GetNumberOfIndices(index);
+
+    vtkm::Vec3f center;
+    vtkm::ErrorCode status =
+      vtkm::exec::ParametricCoordinatesCenter(pointCount, shape, center);
+    if (status != vtkm::ErrorCode::Success)
+    {
+      this->RaiseError(vtkm::ErrorString(status));
+      return;
+    }
+
+    auto pointIndices = structure.GetIndices(index);
+    vtkm::exec::CellInterpolate(pointIndices, inputField, center, shape, outputField);
+  }
+};
+////
+//// END-EXAMPLE CellLookupInterp
+////
+
 void TryCellCenters()
 {
   std::cout << "Trying CellCenters worklet." << std::endl;
@@ -62,14 +103,25 @@ void TryCellCenters()
   using ArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
   ArrayType centers;
 
-  vtkm::worklet::DispatcherMapTopology<CellCenters> dispatcher;
-  dispatcher.Invoke(dataSet.GetCellSet(),
-                    dataSet.GetField("pointvar").GetData().AsArrayHandle<ArrayType>(),
-                    centers);
-
+  vtkm::cont::Invoker invoke;
+  invoke(CellCenters{},
+         dataSet.GetCellSet(),
+         dataSet.GetField("pointvar").GetData().AsArrayHandle<ArrayType>(),
+         centers);
   vtkm::cont::printSummary_ArrayHandle(centers, std::cout);
   std::cout << std::endl;
+  VTKM_TEST_ASSERT(centers.GetNumberOfValues() ==
+                     dataSet.GetCellSet().GetNumberOfCells(),
+                   "Bad number of cells.");
+  VTKM_TEST_ASSERT(test_equal(60.1875, centers.ReadPortal().Get(0)), "Bad first value.");
 
+  centers.Fill(0);
+  invoke(CellLookupInterp{},
+         dataSet.GetCellSet(),
+         dataSet.GetField("pointvar").GetData().AsArrayHandle<ArrayType>(),
+         centers);
+  vtkm::cont::printSummary_ArrayHandle(centers, std::cout);
+  std::cout << std::endl;
   VTKM_TEST_ASSERT(centers.GetNumberOfValues() ==
                      dataSet.GetCellSet().GetNumberOfCells(),
                    "Bad number of cells.");
@@ -122,11 +174,13 @@ void TryCellDerivatives()
   using ArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> derivatives;
 
+  vtkm::cont::Invoker invoke;
   vtkm::worklet::DispatcherMapTopology<CellDerivatives> dispatcher;
-  dispatcher.Invoke(dataSet.GetCellSet(),
-                    dataSet.GetField("pointvar").GetData().AsArrayHandle<ArrayType>(),
-                    dataSet.GetCoordinateSystem().GetData(),
-                    derivatives);
+  invoke(CellDerivatives{},
+         dataSet.GetCellSet(),
+         dataSet.GetField("pointvar").GetData().AsArrayHandle<ArrayType>(),
+         dataSet.GetCoordinateSystem().GetData(),
+         derivatives);
 
   vtkm::cont::printSummary_ArrayHandle(derivatives, std::cout);
   std::cout << std::endl;
