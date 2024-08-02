@@ -76,6 +76,7 @@ VTK-m Requires:
   + [CMake](http://www.cmake.org/download/)
       + CMake 3.12+
       + CMake 3.13+ (for CUDA support)
+      + CMake 3.24+ (for ROCM+THRUST support)
 
 Optional dependencies are:
 
