@@ -35,7 +35,13 @@ if (TARGET vtkm_kokkos)
     set_source_files_properties(${sources} TARGET_DIRECTORY vtkm_cont PROPERTIES LANGUAGE HIP)
     kokkos_compilation(SOURCE ${sources})
     if (VTKm_ENABLE_KOKKOS_THRUST)
-      target_link_libraries(vtkm_cont PRIVATE $<$<LINK_LANGUAGE:CUDA>:roc::rocthrust>)
+      # rocthrust does not wrap its compile defs/ops/dirs with $<$<COMPILE_LANGUAGE:HIP>.
+      # We need this workaround since we mix CXX and HIP source files in vtkm_cont.
+      target_link_libraries(vtkm_cont
+        PRIVATE
+          $<$<COMPILE_LANGUAGE:HIP>:roc::rocthrust>
+          $<LINK_ONLY:roc::rocthrust>
+      )
     endif()
   endif()
 

@@ -15,14 +15,14 @@
 
 set -ex
 
-version="${1:-3.23.4}"
+version="${1:-3.30.2}"
 
 case "$( uname -s )" in
     Linux)
         readonly -A sumsByVersion=(
             # We require CMake >= 3.13 in the CI to support CUDA builds
             ['3.13.5']='e2fd0080a6f0fc1ec84647acdcd8e0b4019770f48d83509e6a5b0b6ea27e5864'
-            ['3.23.4']='3fbcbff85043d63a8a83c8bdf8bd5b1b2fd5768f922de7dc4443de7805a2670d'
+            ['3.30.2']='cdd7fb352605cee3ae53b0e18b5929b642900e33d6b0173e19f6d4f2067ebf16'
         )
         shatool="sha256sum"
         sha256sum="${sumsByVersion[$version]}"
@@ -31,7 +31,7 @@ case "$( uname -s )" in
         ;;
     Darwin)
         shatool="shasum -a 256"
-        sha256sum="98cac043cdf321caa4fd07f27da3316db6c8bc48c39997bf78e27e5c46c4eb68"
+        sha256sum="c6fdda745f9ce69bca048e91955c7d043ba905d6388a62e0ff52b681ac17183c"
         platform="macos"
         arch="universal"
         ;;
