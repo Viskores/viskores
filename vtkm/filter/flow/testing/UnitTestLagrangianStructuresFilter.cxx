@@ -13,7 +13,7 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/flow/LagrangianStructures.h>
-#include <vtkm/worklet/testing/GenerateTestDataSets.h>
+#include <vtkm/filter/flow/testing/GenerateTestDataSets.h>
 
 namespace auxiliary
 {
