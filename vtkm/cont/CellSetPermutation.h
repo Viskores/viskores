@@ -471,6 +471,20 @@ public:
     OriginalCellSetType,
     PermutationArrayHandleType>::ExecConnectivityType;
 
+  /// @brief Prepares the data for a particular device and returns the execution object for it.
+  ///
+  /// @param device Specifies the device on which the cell set will ve available.
+  /// @param visitTopology Specifies the "visit" topology element. This is the element
+  /// that will be indexed in the resulting connectivity object. This is typically
+  /// `vtkm::TopologyElementTagPoint` or `vtkm::TopologyElementTagCell`.
+  /// @param incidentTopology Specifies the "incident" topology element. This is the element
+  /// that will incident to the elements that are visited. This is typically
+  /// `vtkm::TopologyElementTagPoint` or `vtkm::TopologyElementTagCell`.
+  /// @param token Provides a `vtkm::cont::Token` object that will define the span which
+  /// the return execution object must be valid.
+  ///
+  /// @returns A connectivity object that can be used in the execution environment on the
+  /// specified device.
   VTKM_CONT ExecConnectivityType<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
   PrepareForInput(vtkm::cont::DeviceAdapterId device,
                   vtkm::TopologyElementTagCell visitTopology,
@@ -484,12 +498,15 @@ public:
       this->FullCellSet.PrepareForInput(device, visitTopology, incidentTopology, token));
   }
 
+  /// @copydoc PrepareForInput
   VTKM_CONT ExecConnectivityType<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
   PrepareForInput(vtkm::cont::DeviceAdapterId device,
-                  vtkm::TopologyElementTagPoint,
-                  vtkm::TopologyElementTagCell,
+                  vtkm::TopologyElementTagPoint visitTopology,
+                  vtkm::TopologyElementTagCell incidentTopology,
                   vtkm::cont::Token& token) const
   {
+    (void)visitTopology;
+    (void)incidentTopology;
     if (!this->VisitPointsWithCells.ElementsValid)
     {
       auto connTable = internal::RConnBuilderInput<CellSetPermutation>::Get(*this, device);

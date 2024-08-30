@@ -386,6 +386,41 @@ VTKM_CONT std::vector<typename PortalType::ValueType> CopyArrayPortalToVector(
 //// END-EXAMPLE ArrayPortalToIterators
 ////
 
+void TestArrayPortalToken()
+{
+  ////
+  //// BEGIN-EXAMPLE ArrayPortalToken
+  ////
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> arrayHandle;
+  // Fill array with interesting stuff...
+  //// PAUSE-EXAMPLE
+  arrayHandle.Allocate(10);
+  SetPortal(arrayHandle.WritePortal());
+  //// RESUME-EXAMPLE
+
+  std::vector<vtkm::FloatDefault> externalData;
+  externalData.reserve(static_cast<std::size_t>(arrayHandle.GetNumberOfValues()));
+  {
+    vtkm::cont::Token token;
+    auto arrayPortal = arrayHandle.ReadPortal(token);
+    // token is attached to arrayHandle. arrayHandle cannot invalidate arrayPortal
+    // while token exists.
+
+    for (vtkm::Id index = 0; index < arrayPortal.GetNumberOfValues(); ++index)
+    {
+      externalData.push_back(arrayPortal.Get(index));
+    }
+
+    // Error! This will block because of token and therefore cause a deadlock!
+    //arrayHandle.ReleaseResources();
+  }
+  // Token is destroyed. We can delete the array.
+  arrayHandle.ReleaseResources();
+  ////
+  //// END-EXAMPLE ArrayPortalToken
+  ////
+}
+
 void TestArrayPortalVectors()
 {
   vtkm::cont::ArrayHandle<vtkm::Float32> inputArray = SafeDataLoad1();
@@ -584,6 +619,7 @@ void Test()
   ArrayHandleFromVector();
   AllocateAndFillArrayHandle();
   CheckSafeDataLoad();
+  TestArrayPortalToken();
   TestArrayPortalVectors();
   TestControlPortalsExample();
   TestExecutionPortalsExample();
