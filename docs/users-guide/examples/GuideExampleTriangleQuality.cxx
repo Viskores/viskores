@@ -163,7 +163,6 @@ struct DemoTriangleQuality
 ////
 //// BEGIN-EXAMPLE TriangleQualityExecObject
 ////
-template<typename Device>
 class TriangleQualityTableExecutionObject
 {
   using TableArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
@@ -189,13 +188,11 @@ public:
 class TriangleQualityTable : public vtkm::cont::ExecutionObjectBase
 {
 public:
-  template<typename Device>
-  VTKM_CONT TriangleQualityTableExecutionObject<Device> PrepareForExecution(
-    Device,
-    vtkm::cont::Token& token) const
+  VTKM_CONT TriangleQualityTableExecutionObject
+  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
   {
-    return TriangleQualityTableExecutionObject<Device>(
-      detail::GetTriangleQualityTable().PrepareForInput(Device{}, token));
+    return TriangleQualityTableExecutionObject(
+      detail::GetTriangleQualityTable().PrepareForInput(device, token));
   }
 };
 

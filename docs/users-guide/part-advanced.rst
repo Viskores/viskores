@@ -15,3 +15,4 @@ Advanced Development
    memory-layout.rst
    fancy-array-handles.rst
    globals.rst
+   execution-objects.rst
