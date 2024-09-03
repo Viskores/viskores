@@ -17,7 +17,7 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/VecVariable.h>
 
-#include <vtkm/testing/Testing.h>
+#include <vtkm/cont/testing/Testing.h>
 
 #include <ctime>
 #include <random>
@@ -330,5 +330,5 @@ void TestDerivative()
 
 int UnitTestCellDerivative(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestDerivative, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestDerivative, argc, argv);
 }
