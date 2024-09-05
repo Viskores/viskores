@@ -91,15 +91,25 @@ public:
 
   /// @brief Adds a field that is applied to the meta-partition structure.
   ///
-  /// The @a field must have a partition that applies across all partitions.
+  /// The `field` must have an association that applies across all partitions.
   VTKM_CONT void AddField(const Field& field) { this->Fields.AddField(field); }
+
+  /// @brief Adds a field that is applied to the meta-partition structure.
+  ///
+  /// The `field` must have an association that applies across all partitions.
+  VTKM_CONT void AddField(const std::string& name,
+                          vtkm::cont::Field::Association association,
+                          const vtkm::cont::UnknownArrayHandle& data)
+  {
+    this->AddField({ name, association, data });
+  }
 
   /// @brief Add a field with a global association.
   template <typename T, typename Storage>
   VTKM_CONT void AddGlobalField(const std::string& fieldName,
                                 const vtkm::cont::ArrayHandle<T, Storage>& field)
   {
-    this->AddField(vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::Global, field));
+    this->AddField(fieldName, vtkm::cont::Field::Association::Global, field);
   }
 
   template <typename T>
@@ -121,7 +131,7 @@ public:
   VTKM_CONT void AddPartitionsField(const std::string& fieldName,
                                     const vtkm::cont::ArrayHandle<T, Storage>& field)
   {
-    this->AddField(vtkm::cont::Field(fieldName, vtkm::cont::Field::Association::Partitions, field));
+    this->AddField(fieldName, vtkm::cont::Field::Association::Partitions, field);
   }
 
   template <typename T>

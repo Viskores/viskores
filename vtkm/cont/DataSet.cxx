@@ -102,6 +102,14 @@ void DataSet::AddField(const Field& field)
   this->Fields.AddField(field);
 }
 
+void DataSet::AddField(const std::string& name,
+                       vtkm::cont::Field::Association association,
+                       const vtkm::cont::UnknownArrayHandle& data)
+{
+  this->AddField({ name, association, data });
+}
+
+
 vtkm::Id DataSet::GetNumberOfCells() const
 {
   return this->CellSet.GetNumberOfCells();
@@ -171,6 +179,12 @@ vtkm::IdComponent DataSet::AddCoordinateSystem(const vtkm::cont::CoordinateSyste
 {
   this->AddField(cs);
   return this->AddCoordinateSystem(cs.GetName());
+}
+
+vtkm::IdComponent DataSet::AddCoordinateSystem(const std::string& name,
+                                               const vtkm::cont::UnknownArrayHandle& data)
+{
+  return this->AddCoordinateSystem({ name, data });
 }
 
 vtkm::IdComponent DataSet::AddCoordinateSystem(const std::string& pointFieldName)
