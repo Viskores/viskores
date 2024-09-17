@@ -9,6 +9,8 @@
 //============================================================================
 
 #include <vtkm/Math.h>
+#include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -41,6 +43,37 @@ vtkm::cont::DataSet MakeNormalsTestDataSet()
   dataSet.AddPointField("pointvar", vars, nVerts);
 
   return dataSet;
+}
+
+// Verify that the direction of the normals is consistent with the triangle winding.
+void CheckWinding(const vtkm::cont::DataSet& contour)
+{
+  vtkm::cont::CellSetSingleType<> cellSet;
+  contour.GetCellSet().AsCellSet(cellSet);
+
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> coords;
+  contour.GetCoordinateSystem().GetData().AsArrayHandle(coords);
+  auto coordsPortal = coords.ReadPortal();
+
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> normals;
+  contour.GetPointField("normals").GetData().AsArrayHandle(normals);
+  auto normalsPortal = normals.ReadPortal();
+
+  for (vtkm::Id triId = 0; triId < cellSet.GetNumberOfCells(); ++triId)
+  {
+    vtkm::Id3 pointIds;
+    cellSet.GetIndices(triId, pointIds);
+
+    vtkm::Vec3f facetNormal = vtkm::TriangleNormal(
+      coordsPortal.Get(pointIds[0]), coordsPortal.Get(pointIds[1]), coordsPortal.Get(pointIds[2]));
+    for (vtkm::IdComponent i = 0; i < 3; ++i)
+    {
+      vtkm::Vec3f pointNormal = normalsPortal.Get(pointIds[i]);
+      vtkm::FloatDefault normalDirections = vtkm::Dot(facetNormal, pointNormal);
+      VTKM_TEST_ASSERT(normalDirections > 0,
+                       "Triangle winding and computed normal pointing in different directions.");
+    }
+  }
 }
 
 void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
@@ -90,14 +123,14 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   //When using the Y axis algorithm the cells are generated in a different
   //order.
   const vtkm::Vec3f fast_fe_y[numVerts] = {
-    { -0.243433f, -0.429741f, -0.869519f }, { 0.158904f, 0.164214f, -0.973542f },
-    { -0.895292f, -0.390217f, -0.214903f }, { -0.895057f, 0.134692f, -0.425125f },
-    { 0.829547f, -0.418793f, -0.36941f },   { 0.846705f, 0.425787f, -0.319054f },
-    { 0.253811f, -0.853394f, -0.4553f },    { -0.216381f, 0.940084f, -0.263478f },
-    { -0.848579f, -0.35602f, 0.391362f },   { -0.93948f, 0.252957f, 0.231065f },
-    { 0.831549f, -0.472663f, 0.291744f },   { 0.910494f, 0.0298277f, 0.412446f },
-    { -0.362862f, -0.815464f, 0.450944f },  { 0.107848f, 0.958544f, 0.263748f },
-    { 0.135131f, -0.437674f, 0.888921f },   { -0.286251f, 0.172078f, 0.942576f }
+    { 0.243433f, 0.429741f, 0.869519f },   { -0.158904f, -0.164214f, 0.973542f },
+    { 0.895292f, 0.390217f, 0.214903f },   { 0.895057f, -0.134692f, 0.425125f },
+    { -0.829547f, 0.418793f, 0.36941f },   { -0.846705f, -0.425787f, 0.319054f },
+    { -0.253811f, 0.853394f, 0.4553f },    { 0.216381f, -0.940084f, 0.263478f },
+    { 0.848579f, 0.35602f, -0.391362f },   { 0.93948f, -0.252957f, -0.231065f },
+    { -0.831549f, 0.472663f, -0.291744f }, { -0.910494f, -0.0298277f, -0.412446f },
+    { 0.362862f, 0.815464f, -0.450944f },  { -0.107848f, -0.958544f, -0.263748f },
+    { -0.135131f, 0.437674f, -0.888921f }, { 0.286251f, -0.172078f, -0.942576f }
   };
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> normals;
@@ -140,6 +173,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
                        i);
     }
   }
+  CheckWinding(result);
 
   // Test the other normals generation method
   if (structured)
@@ -176,6 +210,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
                        i);
     }
   }
+  CheckWinding(result);
 }
 
 void TestContourNormals()

@@ -53,12 +53,20 @@ struct SumXAxis
   static constexpr vtkm::Id xindex = 0;
   static constexpr vtkm::Id yindex = 1;
   static constexpr vtkm::Id zindex = 2;
+
+  static constexpr vtkm::IdComponent windingIndex0 = 0;
+  static constexpr vtkm::IdComponent windingIndex1 = 2;
+  static constexpr vtkm::IdComponent windingIndex2 = 1;
 };
 struct SumYAxis
 {
   static constexpr vtkm::Id xindex = 1;
   static constexpr vtkm::Id yindex = 0;
   static constexpr vtkm::Id zindex = 2;
+
+  static constexpr vtkm::IdComponent windingIndex0 = 0;
+  static constexpr vtkm::IdComponent windingIndex1 = 1;
+  static constexpr vtkm::IdComponent windingIndex2 = 2;
 };
 
 template <typename Device>

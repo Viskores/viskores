@@ -48,7 +48,7 @@ VTKM_EXEC inline bool case_includes_axes(vtkm::UInt8 const* const edgeUses)
   return (edgeUses[0] != 0 || edgeUses[4] != 0 || edgeUses[8] != 0);
 }
 
-template <typename WholeConnField, typename WholeCellIdField>
+template <typename AxisToSum, typename WholeConnField, typename WholeCellIdField>
 VTKM_EXEC inline void generate_tris(vtkm::Id inputCellId,
                                     vtkm::UInt8 edgeCase,
                                     vtkm::UInt8 numTris,
@@ -68,9 +68,9 @@ VTKM_EXEC inline void generate_tris(vtkm::Id inputCellId,
     //produced. By keeping the winding the same we make sure
     //that 'fast' normals are consistent with the marching
     //cells version
-    conn.Set(index, edgeIds[edges[edgeIndex]]);
-    conn.Set(index + 1, edgeIds[edges[edgeIndex + 2]]);
-    conn.Set(index + 2, edgeIds[edges[edgeIndex + 1]]);
+    conn.Set(index, edgeIds[edges[edgeIndex + AxisToSum::windingIndex0]]);
+    conn.Set(index + 1, edgeIds[edges[edgeIndex + AxisToSum::windingIndex1]]);
+    conn.Set(index + 2, edgeIds[edges[edgeIndex + AxisToSum::windingIndex2]]);
     index += 3;
     edgeIndex += 3;
   }

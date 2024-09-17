@@ -126,7 +126,7 @@ struct ComputePass4XWithNormals : public vtkm::worklet::WorkletVisitCellsWithPoi
       if (numTris > 0)
       {
         // Start by generating triangles for this case
-        generate_tris(
+        generate_tris<AxisToSum>(
           state.cellId, edgeCase, numTris, edgeIds, cell_tri_offset, conn, inputCellIds);
 
         // Now generate edgeIds and weights along voxel axes if needed. Remember to take

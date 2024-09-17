@@ -183,7 +183,7 @@ struct launchComputePass4
   VTKM_CONT bool operator()(DeviceAdapterTag device, Args&&... args) const
   {
     return this->Launch(
-      (typename select_AxisToSum<DeviceAdapterTag>::type){}, device, std::forward<Args>(args)...);
+      typename select_AxisToSum<DeviceAdapterTag>::type{}, device, std::forward<Args>(args)...);
   }
 };
 }
