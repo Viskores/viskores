@@ -86,6 +86,16 @@ public:
   /// integer index.
   VTKM_CONT void AddField(const Field& field);
 
+  /// \brief Adds a field to the `DataSet`.
+  ///
+  /// Note that the indexing of fields is not the same as the order in which they are
+  /// added, and that adding a field can arbitrarily reorder the integer indexing of
+  /// all the fields. To retrieve a specific field, retrieve the field by name, not by
+  /// integer index.
+  VTKM_CONT void AddField(const std::string& name,
+                          vtkm::cont::Field::Association association,
+                          const vtkm::cont::UnknownArrayHandle& data);
+
   ///@{
   /// \brief Retrieves a field by index.
   ///
@@ -221,14 +231,14 @@ public:
   VTKM_CONT
   void AddPointField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
   {
-    this->AddField(make_FieldPoint(fieldName, field));
+    this->AddField(fieldName, vtkm::cont::Field::Association::Points, field);
   }
 
   template <typename T, typename Storage>
   VTKM_CONT void AddPointField(const std::string& fieldName,
                                const vtkm::cont::ArrayHandle<T, Storage>& field)
   {
-    this->AddField(make_FieldPoint(fieldName, field));
+    this->AddPointField(fieldName, vtkm::cont::UnknownArrayHandle{ field });
   }
 
   template <typename T>
@@ -256,14 +266,14 @@ public:
   VTKM_CONT
   void AddCellField(const std::string& fieldName, const vtkm::cont::UnknownArrayHandle& field)
   {
-    this->AddField(make_FieldCell(fieldName, field));
+    this->AddField(fieldName, vtkm::cont::Field::Association::Cells, field);
   }
 
   template <typename T, typename Storage>
   VTKM_CONT void AddCellField(const std::string& fieldName,
                               const vtkm::cont::ArrayHandle<T, Storage>& field)
   {
-    this->AddField(make_FieldCell(fieldName, field));
+    this->AddCellField(fieldName, vtkm::cont::UnknownArrayHandle{ field });
   }
 
   template <typename T>
@@ -340,16 +350,24 @@ public:
   ///
   /// The coordinate system will also be added as a point field of the same name.
   ///
-  /// \returns the index assigned to the added coordinate system.
+  /// \returns the field index assigned to the added coordinate system.
   VTKM_CONT
   vtkm::IdComponent AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs);
+
+  /// \brief Adds a `CoordinateSystem` with the given name and data.
+  ///
+  /// The coordinate system will also be added as a point field of the same name.
+  ///
+  /// \returns the field index assigned to the added coordinate system.
+  VTKM_CONT vtkm::IdComponent AddCoordinateSystem(const std::string& name,
+                                                  const vtkm::cont::UnknownArrayHandle& data);
 
   /// \brief Marks the point field with the given name as a coordinate system.
   ///
   /// If no such point field exists or the point field is of the wrong format, an exception
   /// will be throw.
   ///
-  /// \returns the index assigned to the added coordinate system.
+  /// \returns the field index assigned to the added coordinate system.
   VTKM_CONT vtkm::IdComponent AddCoordinateSystem(const std::string& pointFieldName);
 
   VTKM_CONT

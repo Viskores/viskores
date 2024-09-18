@@ -474,6 +474,10 @@ Associations are identified by the :enum:`vtkm::cont::Field::Association` enumer
 
 .. doxygenenum:: vtkm::cont::Field::Association
 
+A :class:`vtkm::cont::Field` class can be constructed by providing the name, association and data.
+
+.. doxygenfunction:: vtkm::cont::Field::Field(std::string, Association, const vtkm::cont::UnknownArrayHandle&)
+
 The :class:`vtkm::cont::Field` class also has several convenience methods for querying the association.
 
 .. doxygenfunction:: vtkm::cont::Field::IsPointField
@@ -514,6 +518,14 @@ The spatial location is described by providing a 3D vector at each point that gi
 The point coordinates can then be interpolated throughout the mesh.
 
 .. doxygenclass:: vtkm::cont::CoordinateSystem
+
+Because a :class:`vtkm::cont::CoordinateSystem` is a field that is always associated with points, it can be constructed with just the name and the data.
+
+.. doxygenfunction:: vtkm::cont::CoordinateSystem::CoordinateSystem(std::string, const vtkm::cont::UnknownArrayHandle&)
+
+:class:`vtkm::cont::CoordinateSystem` also has a convenience constructor for creating a uniform mesh of points.
+
+.. doxygenfunction:: vtkm::cont::CoordinateSystem::CoordinateSystem(std::string, vtkm::Id3, vtkm::Vec3f, vtkm::Vec3f)
 
 In addition to all the methods provided by the :class:`vtkm::cont::Field` superclass, the :class:`vtkm::cont::CoordinateSystem` also provides a :func:`vtkm::cont::CoordinateSystem::GetBounds` convenience method that returns a :class:`vtkm::Bounds` object giving the spatial bounds of the coordinate system.
 
