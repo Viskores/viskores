@@ -168,21 +168,22 @@ struct launchComputePass4
   }
 
   template <typename DeviceAdapterTag, typename... Args>
-  VTKM_CONT bool operator()(DeviceAdapterTag device, Args&&... args) const
+  VTKM_CONT bool Launch(SumXAxis, DeviceAdapterTag device, Args&&... args) const
   {
     return this->LaunchXAxis(device, std::forward<Args>(args)...);
   }
 
-  template <typename... Args>
-  VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterTagCuda device, Args&&... args) const
+  template <typename DeviceAdapterTag, typename... Args>
+  VTKM_CONT bool Launch(SumYAxis, DeviceAdapterTag device, Args&&... args) const
   {
     return this->LaunchYAxis(device, std::forward<Args>(args)...);
   }
 
-  template <typename... Args>
-  VTKM_CONT bool operator()(vtkm::cont::DeviceAdapterTagKokkos device, Args&&... args) const
+  template <typename DeviceAdapterTag, typename... Args>
+  VTKM_CONT bool operator()(DeviceAdapterTag device, Args&&... args) const
   {
-    return this->LaunchYAxis(device, std::forward<Args>(args)...);
+    return this->Launch(
+      typename select_AxisToSum<DeviceAdapterTag>::type{}, device, std::forward<Args>(args)...);
   }
 };
 }

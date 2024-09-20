@@ -15,10 +15,12 @@
 
 
 #include <vtkm/filter/contour/worklet/contour/FlyingEdgesHelpers.h>
+#include <vtkm/filter/contour/worklet/contour/FlyingEdgesPass4Common.h>
 #include <vtkm/filter/contour/worklet/contour/FlyingEdgesTables.h>
 
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/filter/vector_analysis/worklet/gradient/StructuredPointGradient.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 namespace vtkm
 {
@@ -120,7 +122,7 @@ struct ComputePass4Y : public vtkm::worklet::WorkletVisitCellsWithPoints
       if (numTris > 0)
       {
         // Start by generating triangles for this case
-        generate_tris(
+        generate_tris<AxisToSum>(
           state.cellId, edgeCase, numTris, edgeIds, cell_tri_offset, conn, inputCellIds);
 
         // Now generate edgeIds and weights along voxel axes if needed. Remember to take
