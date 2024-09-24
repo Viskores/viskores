@@ -46,6 +46,7 @@ set(examples_device
   GuideExampleCellOperations.cxx
   GuideExampleDataSetCreation.cxx
   GuideExampleErrorHandling.cxx
+  GuideExampleFields.cxx
   GuideExampleFilterDataSetWithField.cxx
   GuideExampleGenerateMeshConstantShape.cxx
   GuideExampleSimpleAlgorithm.cxx

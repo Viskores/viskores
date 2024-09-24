@@ -422,8 +422,7 @@ Ghost Cell Removal
 
 The :class:`vtkm::filter::entity_extraction::GhostCellRemove` filter is used to remove cells from a data set according to a cell centered field that specifies whether a cell is a regular cell or a ghost cell.
 By default, the filter will get the ghost cell information that is registered in the input :class:`vtkm::cont::DataSet`, but it also possible to specify an arbitrary field for this purpose.
-
-.. todo:: Better document how ghost cells work in |VTKm| (somewhere).
+Ghost cell information is documented in :secref:`dataset:Cell Classification and Ghost Cells`.
 
 .. doxygenclass:: vtkm::filter::entity_extraction::GhostCellRemove
    :members:
@@ -866,8 +865,7 @@ Ghost Cell Classification
 
 The :class:`vtkm::filter::mesh_info::GhostCellClassify` filter determines which cells should be considered ghost cells in a structured data set.
 The ghost cells are expected to be on the border.
-
-.. todo:: Document ``vtkm::CellClassification``.
+Ghost cell information is documented in :secref:`dataset:Cell Classification and Ghost Cells`.
 
 .. doxygenclass:: vtkm::filter::mesh_info::GhostCellClassify
    :members:
@@ -990,9 +988,9 @@ The :class:`vtkm::filter::multi_block::AmrArrays` filter determines the hierarch
    :members:
 
 .. didyouknow::
-  The names of the generated field arrays arrays (e.g. ``vtkAmrLevel``) are chosen to be compatible with the equivalent arrays in VTK.
-  This is why they use the prefix of "vtk" instead of "vtkm".
-  Likewise, the flags used for ``vtkGhostType`` are compatible with VTK.
+   The names of the generated field arrays arrays (e.g. ``vtkAmrLevel``) are chosen to be compatible with the equivalent arrays in VTK.
+   This is why they use the prefix of "vtk" instead of "vtkm".
+   Likewise, the flags used for ``vtkGhostType`` are compatible with VTK.
 
 Merge Data Sets
 ------------------------------

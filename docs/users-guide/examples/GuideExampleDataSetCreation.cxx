@@ -166,6 +166,14 @@ void CreateUniformGrid()
   ////
   //// END-EXAMPLE UnknownCellSetResetCellSetList
   ////
+
+  ////
+  //// BEGIN-EXAMPLE DataSetPrintSummary
+  ////
+  dataSet.PrintSummary(std::cout);
+  ////
+  //// END-EXAMPLE DataSetPrintSummary
+  ////
 }
 
 void CreateUniformGridCustomOriginSpacing()
@@ -450,6 +458,46 @@ void CreateExplicitGridIterative()
                    "Wrong number of cells on point 7");
 }
 
+////
+//// BEGIN-EXAMPLE DataSetCopyOperator
+////
+vtkm::cont::DataSet AddFieldsExample(const vtkm::cont::DataSet& input)
+{
+  vtkm::cont::DataSet output;
+  output = input;
+
+  // Add interesting fields...
+
+  return output;
+}
+////
+//// END-EXAMPLE DataSetCopyOperator
+////
+
+////
+//// BEGIN-EXAMPLE DataSetCopyStructure
+////
+vtkm::cont::DataSet RemoveFieldExample(const vtkm::cont::DataSet& input,
+                                       const std::string& fieldToRemove)
+{
+  vtkm::cont::DataSet output;
+  output.CopyStructure(input);
+
+  for (vtkm::IdComponent fieldId = 0; fieldId < input.GetNumberOfFields(); ++fieldId)
+  {
+    vtkm::cont::Field field = input.GetField(fieldId);
+    if (field.GetName() != fieldToRemove)
+    {
+      output.AddField(field);
+    }
+  }
+
+  return output;
+}
+////
+//// END-EXAMPLE DataSetCopyStructure
+////
+
 void AddFieldData()
 {
   std::cout << "Add field data." << std::endl;
@@ -513,6 +561,30 @@ void AddFieldData()
   ////
   //// END-EXAMPLE AddFieldData
   ////
+
+  ////
+  //// BEGIN-EXAMPLE IterateFields
+  ////
+  std::cout << "Fields in data:";
+  for (vtkm::IdComponent fieldId = 0; fieldId < dataSet.GetNumberOfFields(); ++fieldId)
+  {
+    vtkm::cont::Field field = dataSet.GetField(fieldId);
+    std::cout << " " << field.GetName();
+  }
+  std::cout << std::endl;
+  ////
+  //// END-EXAMPLE IterateFields
+  ////
+
+  vtkm::cont::DataSet copy1 = AddFieldsExample(dataSet);
+  VTKM_TEST_ASSERT(copy1.GetNumberOfFields() == dataSet.GetNumberOfFields());
+  VTKM_TEST_ASSERT(copy1.GetNumberOfPoints() == dataSet.GetNumberOfPoints());
+  VTKM_TEST_ASSERT(copy1.GetNumberOfCells() == dataSet.GetNumberOfCells());
+
+  vtkm::cont::DataSet copy2 = RemoveFieldExample(dataSet, "boundary_cells");
+  VTKM_TEST_ASSERT(copy2.GetNumberOfFields() == dataSet.GetNumberOfFields() - 1);
+  VTKM_TEST_ASSERT(copy2.GetNumberOfPoints() == dataSet.GetNumberOfPoints());
+  VTKM_TEST_ASSERT(copy2.GetNumberOfCells() == dataSet.GetNumberOfCells());
 }
 
 void CreateCellSetPermutation()
