@@ -10,14 +10,12 @@
 
 set(headers
   GenerateTestDataSets.h
-  TestingContourTreeUniformDistributedLoadArrays.h
   )
 
 set(unit_tests
   UnitTestAverageByKey.cxx
   UnitTestBoundingIntervalHierarchy.cxx
   UnitTestCellDeepCopy.cxx
-  UnitTestContourTreeUniformDistributed.cxx
   UnitTestCosmoTools.cxx
   UnitTestDescriptiveStatistics.cxx
   UnitTestDispatcherBase.cxx
