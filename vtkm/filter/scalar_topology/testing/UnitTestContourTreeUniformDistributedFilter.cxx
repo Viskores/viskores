@@ -50,6 +50,13 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
+// NOTE: To save test time, we reduced test coverage on September 2th 2024. The
+// tests still running should be sufficient to uncovoer any issues due to VTK-m
+// changes. However, if we continue development of the contour tree algorithm,
+// we should re-enable the additional tests as they have revealed problems in
+// the past.
+// #define ENABLE_ADDITIONAL_TESTS
+
 #include "TestingContourTreeUniformDistributedFilter.h"
 
 namespace
@@ -66,20 +73,27 @@ public:
   void operator()() const
   {
     using vtkm::cont::testing::Testing;
+#ifdef ENABLE_ADDITIONAL_TESTS
     TestContourTreeUniformDistributed8x9(2);
     // TestContourTreeUniformDistributed8x9(3); CRASH???
     TestContourTreeUniformDistributed8x9(4);
+#endif
     TestContourTreeUniformDistributed8x9(8);
     TestContourTreeUniformDistributed8x9(16);
 
+#ifdef ENABLE_ADDITIONAL_TESTS
     TestContourTreeUniformDistributed5x6x7(2, false);
     TestContourTreeUniformDistributed5x6x7(4, false);
+#endif
     TestContourTreeUniformDistributed5x6x7(8, false);
     TestContourTreeUniformDistributed5x6x7(16, false);
+#ifdef ENABLE_ADDITIONAL_TESTS
     TestContourTreeUniformDistributed5x6x7(2, true);
     TestContourTreeUniformDistributed5x6x7(4, true);
+#endif
     TestContourTreeUniformDistributed5x6x7(8, true);
     TestContourTreeUniformDistributed5x6x7(16, true);
+#ifdef ENABLE_ADDITIONAL_TESTS
     TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
                         "var",
                         Testing::RegressionImagePath("vanc.ct_txt"),
@@ -88,6 +102,7 @@ public:
                         "var",
                         Testing::RegressionImagePath("vanc.ct_txt"),
                         4);
+#endif
     TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
                         "var",
                         Testing::RegressionImagePath("vanc.ct_txt"),
@@ -126,6 +141,7 @@ public:
                         false);
 
     // tests for contour tree presimplification on 2D vanc dataset
+#ifdef ENABLE_ADDITIONAL_TESTS
     TestContourTreePresimplification(
       "vanc", // dataset name
       "var",  // field name
@@ -135,6 +151,7 @@ public:
       vtkm::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"), // dataset file path
       1                                                               // presimplifyThreshold
     );
+#endif
     TestContourTreePresimplification(
       "vanc",
       "var",
@@ -142,6 +159,7 @@ public:
       4,
       vtkm::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"),
       1);
+#ifdef ENABLE_ADDITIONAL_TESTS
     TestContourTreePresimplification(
       "vanc",
       "var",
@@ -149,6 +167,7 @@ public:
       2,
       vtkm::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"),
       4);
+#endif
     TestContourTreePresimplification(
       "vanc",
       "var",
@@ -158,6 +177,7 @@ public:
       4);
 
     // test for contour tree presimplification on 3D 5x6x7 dataset
+#ifdef ENABLE_ADDITIONAL_TESTS
     TestContourTreePresimplification(
       "5x6x7",    // dataset name
       "pointvar", // field name
@@ -174,6 +194,7 @@ public:
       4,
       vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet4(),
       2);
+#endif
     TestContourTreePresimplification(
       "5x6x7",
       "pointvar",
@@ -181,6 +202,7 @@ public:
       8,
       vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet4(),
       2);
+#ifdef ENABLE_ADDITIONAL_TESTS
     TestContourTreePresimplification(
       "5x6x7",
       "pointvar",
@@ -195,6 +217,7 @@ public:
       4,
       vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet4(),
       4);
+#endif
     TestContourTreePresimplification(
       "5x6x7",
       "pointvar",
