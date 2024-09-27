@@ -1051,19 +1051,18 @@ inline void RunContourTreePresimplification(std::string fieldName,
   tp_result = tp_filter.Execute(bd_result);
 }
 
-// routine to test contour tree presimplification
-inline void TestContourTreePresimplification(
-  std::string datasetName,
-  std::string fieldName,
-  std::string gtbr_filename,
-  int nBlocks,
-  vtkm::cont::DataSet input_ds, // dataset if we pre-load the dataset
-  std::string ds_filename = "", // dataset file name if we load data from file
-  const vtkm::Id presimplifyThreshold = 1,
-  bool marchingCubes = false,
-  int rank = 0,
-  int size = 1,
-  bool passBlockIndices = true)
+// routine to test contour tree presimplification when data set is
+// already in memory
+inline void TestContourTreePresimplification(std::string datasetName,
+                                             std::string fieldName,
+                                             std::string gtbr_filename,
+                                             int nBlocks,
+                                             vtkm::cont::DataSet input_ds,
+                                             const vtkm::Id presimplifyThreshold = 1,
+                                             bool marchingCubes = false,
+                                             int rank = 0,
+                                             int size = 1,
+                                             bool passBlockIndices = true)
 {
   if (rank == 0)
   {
@@ -1074,37 +1073,10 @@ inline void TestContourTreePresimplification(
               << std::endl;
   }
 
-  // data set should either be loaded from file or passed as input.
-  // if we get a ds_filename, we load the dataset from file, which means that input_ds becomes useless.
-  // if the ds_filename is empty, we use input_ds.
-  // TODO/FIXME: is there a better way to do this?
-  vtkm::cont::DataSet ds;
-  if (!ds_filename.empty())
-  {
-    if (rank == 0)
-      std::cout << "Loading data from " << ds_filename << std::endl;
-    vtkm::io::VTKDataSetReader reader(ds_filename);
-    try
-    {
-      ds = reader.ReadDataSet();
-    }
-    catch (vtkm::io::ErrorIO& e)
-    {
-      std::string message("Error reading: ");
-      message += ds_filename;
-      message += ", ";
-      message += e.GetMessage();
-
-      VTKM_TEST_FAIL(message.c_str());
-    }
-  }
-  else
-    ds = input_ds;
-
   // get the output of contour tree + presimplification
   vtkm::cont::PartitionedDataSet tp_result;
   RunContourTreePresimplification(fieldName,
-                                  ds,
+                                  input_ds,
                                   tp_result,
                                   nBlocks,
                                   marchingCubes,
@@ -1133,6 +1105,47 @@ inline void TestContourTreePresimplification(
                                              rank,
                                              presimplifyThreshold);
   }
+}
+
+inline void TestContourTreePresimplification(std::string datasetName,
+                                             std::string fieldName,
+                                             std::string gtbr_filename,
+                                             int nBlocks,
+                                             std::string ds_filename, // dataset file name
+                                             const vtkm::Id presimplifyThreshold = 1,
+                                             bool marchingCubes = false,
+                                             int rank = 0,
+                                             int size = 1,
+                                             bool passBlockIndices = true)
+{
+  vtkm::cont::DataSet ds;
+  if (rank == 0)
+    std::cout << "Loading data from " << ds_filename << std::endl;
+  vtkm::io::VTKDataSetReader reader(ds_filename);
+  try
+  {
+    ds = reader.ReadDataSet();
+  }
+  catch (vtkm::io::ErrorIO& e)
+  {
+    std::string message("Error reading: ");
+    message += ds_filename;
+    message += ", ";
+    message += e.GetMessage();
+
+    VTKM_TEST_FAIL(message.c_str());
+  }
+
+  TestContourTreePresimplification(datasetName,
+                                   fieldName,
+                                   gtbr_filename,
+                                   nBlocks,
+                                   ds,
+                                   presimplifyThreshold,
+                                   marchingCubes,
+                                   rank,
+                                   size,
+                                   passBlockIndices);
 }
 
 }
