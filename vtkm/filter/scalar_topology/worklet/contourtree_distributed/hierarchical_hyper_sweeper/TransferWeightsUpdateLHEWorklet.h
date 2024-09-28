@@ -74,7 +74,7 @@ public:
                                 FieldIn sortedTransferTargetShiftedView,
                                 FieldIn valuePrefixSumShiftedView,
                                 WholeArrayInOut dependentValuesPortal);
-  using ExecutionSgnature = void(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename InOutPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& sortedTransferTargetValue,
@@ -88,30 +88,27 @@ public:
     {
       return;
     }
-    if (sortedTransferTargetValue != sortedTransferTargetPreviousValue)
+
+    // we need to separate out the flag for attachment points
+    bool superarcTransfer =
+      vtkm::worklet::contourtree_augmented::TransferToSuperarc(sortedTransferTargetValue);
+    vtkm::Id superarcOrNodeId =
+      vtkm::worklet::contourtree_augmented::MaskedIndex(sortedTransferTargetValue);
+
+    // ignore the transfers for attachment points
+    if (superarcTransfer)
     {
-      auto originalValue = dependentValuesPortal.Get(sortedTransferTargetValue);
-      dependentValuesPortal.Set(sortedTransferTargetValue,
-                                originalValue - valuePrefixSumPreviousValue);
+      return;
     }
 
-
-    // In serial this worklet implements the following operation
-    /*
-    for (vtkm::Id supernode = firstSupernode + 1; supernode < lastSupernode; supernode++)
-    { // per supernode
-      // ignore any that point at NO_SUCH_ELEMENT
-      if (noSuchElement(sortedTransferTarget[supernode]))
-        continue;
-
-      // the LHE at 0 is special - it subtracts zero.  In practice, since NO_SUCH_ELEMENT will sort low, this will never
-      // occur, but let's keep the logic strict
-      if (sortedTransferTarget[supernode] != sortedTransferTarget[supernode-1])
-      { // LHE not 0
-        dependentValues[sortedTransferTarget[supernode]] -= valuePrefixSum[supernode-1];
-      } // LHE not 0
-    } // per supernode
-    */
+    // the LHE at 0 is special - it subtracts zero.  In practice, since NO_SUCH_ELEMENT will sort low, this will never
+    // occur, but let's keep the logic strict
+    auto originalValue = dependentValuesPortal.Get(superarcOrNodeId);
+    // Outside the worklet, we have excluded the condition where supernode == firstSupernode using shift
+    if (sortedTransferTargetValue != sortedTransferTargetPreviousValue)
+    { // LHE not 0
+      dependentValuesPortal.Set(superarcOrNodeId, originalValue - valuePrefixSumPreviousValue);
+    }
   } // operator()()
 };  // TransferWeightsUpdateLHEWorklet
 

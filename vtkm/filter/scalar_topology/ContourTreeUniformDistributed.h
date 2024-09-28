@@ -118,6 +118,11 @@ public:
     this->AugmentHierarchicalTree = augmentHierarchicalTree;
   }
 
+  VTKM_CONT void SetPresimplifyThreshold(vtkm::Id presimplifyThreshold)
+  {
+    this->PresimplifyThreshold = presimplifyThreshold;
+  }
+
   VTKM_CONT void SetBlockIndices(vtkm::Id3 blocksPerDim,
                                  const vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices)
   {
@@ -126,6 +131,8 @@ public:
   }
 
   VTKM_CONT bool GetAugmentHierarchicalTree() { return this->AugmentHierarchicalTree; }
+
+  VTKM_CONT vtkm::Id GetPresimplifyThreshold() { return this->PresimplifyThreshold; }
 
   VTKM_CONT void SetSaveDotFiles(bool saveDotFiles) { this->SaveDotFiles = saveDotFiles; }
 
@@ -166,7 +173,10 @@ private:
     vtkmdiy::RegularSwapPartners& partners,
     const FieldType&, // dummy parameter to get the type
     std::stringstream& timingsStream,
-    std::vector<vtkm::cont::DataSet>& hierarchicalTreeOutputDataSet);
+    const vtkm::cont::PartitionedDataSet& input,
+    bool useAugmentedTree,
+    std::vector<vtkm::cont::ArrayHandle<vtkm::Id>>& intrinsicVolumes,
+    std::vector<vtkm::cont::ArrayHandle<vtkm::Id>>& dependentVolumes);
 
   ///
   /// Internal helper function that implements the actual functionality of PostExecute
@@ -187,6 +197,9 @@ private:
 
   /// Augment hierarchical tree
   bool AugmentHierarchicalTree;
+
+  /// Threshold to use for volume pre-simplification
+  vtkm::Id PresimplifyThreshold;
 
   /// Save dot files for all tree computations
   bool SaveDotFiles;

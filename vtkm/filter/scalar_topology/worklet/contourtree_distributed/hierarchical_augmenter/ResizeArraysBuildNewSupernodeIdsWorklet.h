@@ -65,12 +65,16 @@ public:
   /// Control signature for the worklet
   using ControlSignature = void(
     FieldIn supernodeIndex, // input domain ArrayHandleIndex(SupernodeSorter.GetNumberOfValues())
+    // FieldIn supernodeIdSetPermuted, // input supernodeIDSet permuted by supernodeSorter to allow for FieldIn
     FieldIn
-      supernodeIdSetPermuted, // input supernodeIDSet permuted by supernodeSorter to allow for FieldIn
+      globalRegularIdSet, // input globalRegularIdSet permuted by supernodeSorter to allow for FieldIn
+    ExecObject findRegularByGlobal,
+    WholeArrayIn baseTreeRegular2Supernode,
     WholeArrayInOut
       newSupernodeIds // output/input (both are necessary since not all valyes will be overwritten)
   );
-  using ExecutionSignature = void(_1, _2, _3);
+
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
   // Default Constructor
@@ -80,10 +84,13 @@ public:
   {
   }
 
-  template <typename InOutFieldPortalType>
+  template <typename InOutFieldPortalType, typename InFieldPortalType, typename ExecObjectType>
   VTKM_EXEC void operator()(
-    const vtkm::Id& supernode,      // InputIndex of supernodeSorter
-    const vtkm::Id& oldSupernodeId, // same as supernodeIDSet[supernodeSetIndex];
+    const vtkm::Id& supernode, // InputIndex of supernodeSorter
+    // const vtkm::Id& oldSupernodeId, // same as supernodeIDSet[supernodeSetIndex];
+    const vtkm::Id& globalRegularIdSetValue, // same as globalRegularIDSet[supernodeSetIndex]
+    const ExecObjectType& findRegularByGlobal,
+    const InFieldPortalType& baseTreeRegular2SupernodePortal,
     const InOutFieldPortalType& newSupernodeIdsPortal) const
   {
     // per supernode
@@ -96,6 +103,17 @@ public:
     // that if it came from another block it will be set to NO_SUCH_ELEMENT
     // vtkm::Id oldSupernodeId set on input since we use ArrayHandlePermutation to
     // shuffle supernodeIDSet by supernodeSorter;
+    // TODO/WARNING:  Logic error in that comment for presimplified trees, but not for the original version.  See RetrieveOldSupernodes() for why.
+
+    // TODO/WARNING:  We substitute a search in the old hierarchical tree for the supernode.  If it is present, then we fill in it's entry in the
+
+    // newSupernodeIDs array. If not, we're happy.
+    vtkm::Id oldRegularId = findRegularByGlobal.FindRegularByGlobal(globalRegularIdSetValue);
+    vtkm::Id oldSupernodeId = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    if (!vtkm::worklet::contourtree_augmented::NoSuchElement(oldRegularId))
+    {
+      oldSupernodeId = baseTreeRegular2SupernodePortal.Get(oldRegularId);
+    }
 
     // and write to the lookup array
     if (!vtkm::worklet::contourtree_augmented::NoSuchElement(oldSupernodeId))

@@ -81,9 +81,17 @@ public:
   using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 
+
   /// Default Constructor
   VTKM_EXEC_CONT
-  FindSuperparentForNecessaryNodesWorklet() {}
+  FindSuperparentForNecessaryNodesWorklet(vtkm::Id3 meshBlockOrigin,
+                                          vtkm::Id3 meshBlockSize,
+                                          vtkm::Id3 meshGlobalSize)
+    : MeshBlockOrigin(meshBlockOrigin)
+    , MeshBlockSize(meshBlockSize)
+    , MeshGlobalSize(meshGlobalSize)
+  {
+  }
 
   /// operator() of the workelt
   template <typename InFieldPortalType,
@@ -111,8 +119,16 @@ public:
     // first check to see if it is already present (newRegularId set on input)
     vtkm::Id newRegularId = findRegularByGlobal.FindRegularByGlobal(globalRegularId);
 
+    // Explicitly check whether the vertex belongs to the base block. If it doesn't, we ignore it
+    if (!this->IsInMesh(globalRegularId))
+    {
+      // Set to NO_SUCH_ELEMENT by default. By doing this in the worklet we an avoid having to
+      // initialize the output arrays first and we can use FieldIn instead of FieldInOut
+      regularSuperparentsValue = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+      regularNodesNeededValue = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    }
     // if it fails this test, then it's already in tree
-    if (vtkm::worklet::contourtree_augmented::NoSuchElement(newRegularId))
+    else if (vtkm::worklet::contourtree_augmented::NoSuchElement(newRegularId))
     { // not yet in tree
       // since it's not in the tree, we want to find where it belongs
       // to do so, we need to find an "above" and "below" node for it. Since it exists in the old tree, it belongs to a superarc, and we
@@ -200,7 +216,78 @@ public:
     */
   } // operator()()
 
-}; // FindSuperparentForNecessaryNodesWorklet
+
+private:
+  // Mesh data
+  vtkm::Id3 MeshBlockOrigin;
+  vtkm::Id3 MeshBlockSize;
+  vtkm::Id3 MeshGlobalSize;
+
+  VTKM_EXEC
+  bool IsInMesh(vtkm::Id globalId) const
+  {                                  // IsInMesh()
+    if (this->MeshGlobalSize[2] > 1) // 3D
+    {
+      // convert from global ID to global coords
+      vtkm::Id3 pos{ globalId % this->MeshGlobalSize[0],
+                     (globalId / this->MeshGlobalSize[0]) % this->MeshGlobalSize[1],
+                     globalId / (this->MeshGlobalSize[0] * this->MeshGlobalSize[1]) };
+
+      // test validity
+      if (pos[2] < this->MeshBlockOrigin[2])
+      {
+        return false;
+      }
+      if (pos[2] >= this->MeshBlockOrigin[2] + this->MeshBlockSize[2])
+      {
+        return false;
+      }
+      if (pos[1] < this->MeshBlockOrigin[1])
+      {
+        return false;
+      }
+      if (pos[1] >= this->MeshBlockOrigin[1] + this->MeshBlockSize[1])
+      {
+        return false;
+      }
+      if (pos[0] < this->MeshBlockOrigin[0])
+      {
+        return false;
+      }
+      if (pos[0] >= this->MeshBlockOrigin[0] + this->MeshBlockSize[0])
+      {
+        return false;
+      }
+      // it's in the block - return true
+      return true;
+    }    // end if 3D
+    else // 2D mesh
+    {
+      // convert from global ID to global coords
+      vtkm::Id2 pos{ globalId % this->MeshGlobalSize[0], globalId / this->MeshGlobalSize[0] };
+
+      // test validity
+      if (pos[1] < this->MeshBlockOrigin[1])
+      {
+        return false;
+      }
+      if (pos[1] >= this->MeshBlockOrigin[1] + this->MeshBlockSize[1])
+      {
+        return false;
+      }
+      if (pos[0] < this->MeshBlockOrigin[0])
+      {
+        return false;
+      }
+      if (pos[0] >= this->MeshBlockOrigin[0] + this->MeshBlockSize[0])
+      {
+        return false;
+      }
+      // it's in the block - return true
+      return true;
+    }
+  } // IsInMesh()
+};  // FindSuperparentForNecessaryNodesWorklet
 
 } // namespace hierarchical_augmenter
 } // namespace contourtree_distributed

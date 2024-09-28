@@ -50,51 +50,77 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_SelectTopVolumeContoursBlock_h
-#define vtk_m_filter_scalar_topology_internal_SelectTopVolumeContoursBlock_h
+#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_transfer_weights_update_lhe_worklet_round2_h
+#define vtk_m_worklet_contourtree_distributed_hierarchical_hyper_sweeper_transfer_weights_update_lhe_worklet_round2_h
 
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
-namespace filter
+namespace worklet
 {
-namespace scalar_topology
+namespace contourtree_distributed
 {
-namespace internal
+namespace hierarchical_hyper_sweeper
 {
 
-struct SelectTopVolumeContoursBlock
+/// Worklet used in HierarchicalHyperSweeper.TransferWeights(...) to implement
+/// step 7b. Now find the LHE of each group and subtract out the prior weight
+class TransferWeightsUpdateLHEWorkletRound2 : public vtkm::worklet::WorkletMapField
 {
-  SelectTopVolumeContoursBlock(vtkm::Id localBlockNo, int globalBlockId);
+public:
+  using ControlSignature = void(FieldIn sortedTransferTargetPortal,
+                                FieldIn sortedTransferTargetShiftedView,
+                                FieldIn valuePrefixSumShiftedView,
+                                WholeArrayInOut intrinsicValues,
+                                WholeArrayInOut dependentValues);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
-  void SortBranchByVolume(const vtkm::cont::DataSet& hierarchicalTreeDataSet,
-                          const vtkm::Id totalVolume);
+  template <typename InOutPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& sortedTransferTargetValue,
+                            const vtkm::Id& sortedTransferTargetPreviousValue,
+                            const vtkm::Id& valuePrefixSumPreviousValue,
+                            InOutPortalType& intrinsicValuesPortal,
+                            InOutPortalType& dependentValuesPortal) const
+  {
+    // per supernode
+    // ignore any that point at NO_SUCH_ELEMENT
+    if (vtkm::worklet::contourtree_augmented::NoSuchElement(sortedTransferTargetValue))
+    {
+      return;
+    }
 
-  // Block metadata
-  vtkm::Id LocalBlockNo;
-  int GlobalBlockId; // TODO/FIXME: Check whether really needed. Possibly only during debugging
+    // we need to separate out the flag for attachment points
+    bool superarcTransfer =
+      vtkm::worklet::contourtree_augmented::TransferToSuperarc(sortedTransferTargetValue);
+    vtkm::Id superarcOrNodeId =
+      vtkm::worklet::contourtree_augmented::MaskedIndex(sortedTransferTargetValue);
 
-  vtkm::worklet::contourtree_augmented::IdArrayType BranchVolume;
-  vtkm::worklet::contourtree_augmented::IdArrayType BranchSaddleEpsilon;
-  vtkm::worklet::contourtree_augmented::IdArrayType SortedBranchByVolume;
-  vtkm::cont::UnknownArrayHandle BranchSaddleIsoValue;
+    // ignore the transfers for attachment points
+    if (!superarcTransfer)
+    {
+      return;
+    }
 
-  // Output Datasets.
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchRootGRId;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchVolume;
-  vtkm::cont::UnknownArrayHandle TopVolumeBranchSaddleIsoValue;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchSaddleEpsilon;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchUpperEndGRId;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchLowerEndGRId;
+    // the LHE at 0 is special - it subtracts zero.  In practice, since NO_SUCH_ELEMENT will sort low, this will never
+    // occur, but let's keep the logic strict
+    auto originalIntrinsicValue = intrinsicValuesPortal.Get(superarcOrNodeId);
+    auto originalDependentValue = dependentValuesPortal.Get(superarcOrNodeId);
+    // Outside the worklet, we have excluded the condition where supernode == firstSupernode using shift
+    if (sortedTransferTargetValue != sortedTransferTargetPreviousValue)
+    { // LHE not 0
+      intrinsicValuesPortal.Set(superarcOrNodeId,
+                                originalIntrinsicValue - valuePrefixSumPreviousValue);
+      dependentValuesPortal.Set(superarcOrNodeId,
+                                originalDependentValue - valuePrefixSumPreviousValue);
+    }
+  } // operator()()
+};  // TransferWeightsUpdateLHEWorklet
 
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b) { delete static_cast<SelectTopVolumeContoursBlock*>(b); }
-};
-
-} // namespace internal
-} // namespace scalar_topology
-} // namespace filter
+} // namespace hierarchical_hyper_sweeper
+} // namespace contourtree_distributed
+} // namespace worklet
 } // namespace vtkm
+
 #endif

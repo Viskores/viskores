@@ -61,6 +61,7 @@ namespace hierarchical_augmenter
 /// Worklet used to implement the main part of HierarchicalAugmenter::CreateSuperarcs
 /// Connect superarcs for the level & set hyperparents & superchildren count, whichRound,
 /// whichIteration, super2hypernode
+template <typename FieldType>
 class CreateSuperarcsWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -69,342 +70,537 @@ public:
   /// Control signature for the worklet
   /// @param[in] supernodeSorter input domain. We need access to InputIndex and InputIndex+1,
   ///                           therefore this is a WholeArrayIn transfer.
-  /// @param[in] superparentSet WholeArrayIn because we need access to superparentSet[supernodeSorter[InputIndex]]
-  ///                           and superparentSet[supernodeSorter[InputIndex+1]].
-  /// @param[in] baseTreeSuperarcs WholeArrayIn because we need access to baseTreeSuperarcsPortal.Get(superparentOldSuperId)
-  ///                           While this could be done with fancy array magic, it would require a sequence of multiple
-  ///                           fancy arrays and would likely not be cheaper then computing things in the worklet.
-  /// @param[in] newSupernodeIds WholeArrayIn because we need to access newSupernodeIdsPortal.Get(oldTargetSuperId)
-  ///                           where oldTargetSuperId is the unmasked baseTreeSuperarcsPortal.Get(superparentOldSuperId)
-  /// @param[in] baseTreeSupernodes WholeArrayIn because we need to access baseTreeSupernodesPortal.Get(superparentOldSuperId);
-  /// @param[in] baseTreeRegularNodeGlobalIds WholeArrayIn because we need to access
-  ///                           baseTreeRegularNodeGlobalIdsPortal.Get(superparentOldSuperId);
-  /// @param[in] globalRegularIdSet FieldInd. Permute globalRegularIdSet with supernodeSorter in order to allow this to be a FieldIn.
-  /// @param[in] baseTreeSuper2Hypernode WholeArrayIn because we need to access
-  ///                           baseTreeSuper2HypernodePortal.Get(superparentOldSuperId)
-  /// @param[in] baseTreeWhichIteration WholeArrayIn because we need to access baseTreeWhichIterationPortal.Get(superparentOldSuperId)
-  ///                           and baseTreeWhichIterationPortal.Get(superparentOldSuperId+1)
-  /// @param[in] augmentedTreeSuperarcsView  output view of  this->AugmentedTree->Superarcs with
+  /// @param[in] supernodeIdSetPermuted Field in of supernodeIdSet permuted by the supernodeSorter array to
+  ///                                 allow us to use FieldIn
+  /// @param[in] globalRegularIdSetPermuted Field in of globalRegularIdSet permuted by supernodeSorter array to
+  ///                           allow use of FieldIn
+  /// @param[in] dataValueSetPermuted Field in of dataValyeSet permuted by supernodeSorter array to
+  ///                           allow use of FieldIn
+  /// @param[in] ExecObject findSuperArcForUnknownNode Execute object in to find the superarc of arbitrary node
+  /// @param[in] ExecObject createSuperarcsData Data object in, storing many BaseTree arrays
+  /// @param[out, in] augmentedTreeSupernodes  this->AugmentedTree->Supernodes array
+  /// @param[out] augmentedTreeSuperarcsView  output view of  this->AugmentedTree->Superarcs with
   ///                           vtkm::cont::make_ArrayHandleView(this->AugmentedTree->Superarcs,
   ///                           numSupernodesAlready, this->SupernodeSorter.GetNumberOfValues()).
   ///                           By using this view allows us to do this one as a FieldOut and it effectively the
   ///                           same as accessing the array at the newSuppernodeId location.
-  /// @param[in] augmentedTreeFirstSupernodePerIteration WholeArrayInOut because we need to update multiple locations.
-  ///                           In is used to preseve original values. Set to augmentedTree->firstSupernodePerIteration[roundNumber].
-  /// @param[in] augmentedTreeSuper2hypernode FieldOut. Output view of this->AugmentedTree->Super2Hypernode
+  /// @param[out] augmentedTreeHyperparentsView  output view of  this->AugmentedTree->Hyperparents with
+  ///                           vtkm::cont::make_ArrayHandleView(this->AugmentedTree->Hyperparents,
+  ///                           numSupernodesAlready, this->SupernodeSorter.GetNumberOfValues()).
+  ///                           By using this view allows us to do this one as a FieldOut and it effectively the
+  ///                           same as accessing the array at the newSuppernodeId location.
+  /// @param[out] augmentedTreeSuper2HypernodeView  output view of  this->AugmentedTree->Super2Hypernode with
   ///                           vtkm::cont::make_ArrayHandleView(this->AugmentedTree->Super2Hypernode,
   ///                           numSupernodesAlready, this->SupernodeSorter.GetNumberOfValues()).
   ///                           By using this view allows us to do this one as a FieldOut and it effectively the
   ///                           same as accessing the array at the newSuppernodeId location.
+  /// @param[out] augmentedTreeWhichRoundView  output view of  this->AugmentedTree->WhichRound with
+  ///                           vtkm::cont::make_ArrayHandleView(this->AugmentedTree->WhichRound,
+  ///                           numSupernodesAlready, this->SupernodeSorter.GetNumberOfValues()).
+  ///                           By using this view allows us to do this one as a FieldOut and it effectively the
+  ///                           same as accessing the array at the newSuppernodeId location.
+  /// @param[out] augmentedTreeWhichIterationView  output view of  this->AugmentedTree->WhichIteration with
+  ///                           vtkm::cont::make_ArrayHandleView(this->AugmentedTree->WhichIteration,
+  ///                           numSupernodesAlready, this->SupernodeSorter.GetNumberOfValues()).
+  ///                           By using this view allows us to do this one as a FieldOut and it effectively the
+  ///                           same as accessing the array at the newSuppernodeId location.
+  /// @param[out] augmentedTreeRegularNodeGlobalIdsView  output view of  this->AugmentedTree->RegularNodeGlobalIds with
+  ///                           vtkm::cont::make_ArrayHandleView(this->AugmentedTree->RegularNodeGlobalIds,
+  ///                           numSupernodesAlready, this->SupernodeSorter.GetNumberOfValues()).
+  ///                           By using this view allows us to do this one as a FieldOut and it effectively the
+  ///                           same as accessing the array at the newRegularId location.
+  /// @param[out] augmentedTreeDataValuesView  output view of  this->AugmentedTree->DataValues with
+  ///                           vtkm::cont::make_ArrayHandleView(this->AugmentedTree->DataValues,
+  ///                           numSupernodesAlready, this->SupernodeSorter.GetNumberOfValues()).
+  ///                           By using this view allows us to do this one as a FieldOut and it effectively the
+  ///                           same as accessing the array at the newRegularId location.
+  /// @param[out] augmentedTreeRegular2SupernodeView  output view of  this->AugmentedTree->Regular2Supernode with
+  ///                           vtkm::cont::make_ArrayHandleView(this->AugmentedTree->Regular2Supernode,
+  ///                           numSupernodesAlready, this->SupernodeSorter.GetNumberOfValues()).
+  ///                           By using this view allows us to do this one as a FieldOut and it effectively the
+  ///                           same as accessing the array at the newRegularId location.
+  /// @param[out] augmentedTreeSuperparentsView  output view of  this->AugmentedTree->Superparents with
+  ///                           vtkm::cont::make_ArrayHandleView(this->AugmentedTree->Superparents,
+  ///                           numSupernodesAlready, this->SupernodeSorter.GetNumberOfValues()).
+  ///                           By using this view allows us to do this one as a FieldOut and it effectively the
+  ///                           same as accessing the array at the newRegularId location.
+
   using ControlSignature = void(
+    // Inputs
     WholeArrayIn supernodeSorter,
-    WholeArrayIn superparentSet,                             // input
-    WholeArrayIn baseTreeSuperarcs,                          // input
-    WholeArrayIn newSupernodeIds,                            // input
-    WholeArrayIn baseTreeSupernodes,                         // input
-    WholeArrayIn baseTreeRegularNodeGlobalIds,               // input
-    FieldIn globalRegularIdSet,                              // input
-    WholeArrayIn baseTreeSuper2Hypernode,                    // input
-    WholeArrayIn baseTreeWhichIteration,                     // input
-    FieldOut augmentedTreeSuperarcsView,                     // output
-    WholeArrayInOut augmentedTreeFirstSupernodePerIteration, // input/output
-    FieldOut augmentedTreeSuper2hypernode                    // ouput
-  );
-  using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12);
+    FieldIn supernodeIdSetPermuted,
+    FieldIn globalRegularIdSetPermuted,
+    FieldIn dataValueSetPermuted,
+    ExecObject findSuperArcForUnknownNode,
+    ExecObject createSuperarcsData,
+    // Outputs
+    WholeArrayInOut augmentedTreeSupernodes,
+    FieldOut augmentedTreeSuperarcsView,
+    FieldOut augmentedTreeHyperparentsView,
+    FieldOut augmentedTreeSuper2Hypernode,
+    FieldOut augmentedTreeWhichRoundView,
+    FieldOut augmentedTreeWhichIterationView,
+    FieldOut augmentedTreeRegularNodeGlobalIdsView,
+    FieldOut augmentedTreeDataValuesView,
+    FieldOut augmentedTreeRegular2SupernodeView,
+    FieldOut augmentedTreeSuperparentsViews);
+  using ExecutionSignature =
+    void(InputIndex, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16);
+
   using InputDomain = _1;
 
   /// Default Constructor
   /// @param[in] numSupernodesAlready Set to vtkm::cont::ArrayGetValue(0, this->AugmentedTree->FirstSupernodePerIteration[roundNumber]);
   /// @param[in] baseTreeNumRounds Set to this->BaseTree->NumRounds
-  /// @param[in] augmentedTreeNumIterations Set to  vtkm::cont::ArrayGetValue(roundNumber, this->AugmentedTree->NumIterations);
-  /// @param[in] roundNumber Set the current round
-  /// @param[in] numAugmentedTreeSupernodes Set to augmentedTreeSupernodes this->AugmentedTree->Supernodes.GetNumberOfValues();
+  /// @param[in] numInsertedSupernodes Set to  numInsertedSupernodes
   VTKM_EXEC_CONT
   CreateSuperarcsWorklet(const vtkm::Id& numSupernodesAlready,
                          const vtkm::Id& baseTreeNumRounds,
-                         const vtkm::Id& augmentedTreeNumIterations,
-                         const vtkm::Id& roundNumber,
-                         const vtkm::Id& numAugmentedTreeSupernodes)
+                         const vtkm::Id& numInsertedSupernodes,
+                         const vtkm::Id& roundNo)
     : NumSupernodesAlready(numSupernodesAlready)
     , BaseTreeNumRounds(baseTreeNumRounds)
-    , AugmentedTreeNumIterations(augmentedTreeNumIterations)
-    , RoundNumber(roundNumber)
-    , NumAugmentedTreeSupernodes(numAugmentedTreeSupernodes)
+    , NumInsertedSupernodes(numInsertedSupernodes)
+    , RoundNo(roundNo)
   {
   }
 
   /// operator() of the workelt
-  template <typename InFieldPortalType, typename InOutFieldPortalType>
+  template <typename InFieldPortalType,
+            typename ExecObjType,
+            typename ExecObjectTypeData,
+            typename InOutFieldPortalType>
+  //typename InOutDataFieldPortalType>
+  //typename InOutFieldPortalType,
+  //typename ExecObjectTypeData,
+  //typename ExecObjType>
   VTKM_EXEC void operator()(
+    // Inputs
     const vtkm::Id& supernode, // InputIndex of supernodeSorter
     const InFieldPortalType& supernodeSorterPortal,
-    const InFieldPortalType& superparentSetPortal,
-    const InFieldPortalType& baseTreeSuperarcsPortal,
-    const InFieldPortalType& newSupernodeIdsPortal,
-    const InFieldPortalType& baseTreeSupernodesPortal,
-    const InFieldPortalType& baseTreeRegularNodeGlobalIdsPortal,
-    const vtkm::Id& globalRegularIdSetValue,
-    const InFieldPortalType& baseTreeSuper2HypernodePortal,
-    const InFieldPortalType& baseTreeWhichIterationPortal,
-    vtkm::Id& augmentedTreeSuperarcsValue, // same as augmentedTree->superarcs[newSupernodeId]
-    const InOutFieldPortalType&
-      augmentedTreeFirstSupernodePerIterationPortal, // augmentedTree->firstSupernodePerIteration[roundNumber]
-    vtkm::Id& augmentedTreeSuper2hypernodeValue) const
+    const vtkm::Id& oldSupernodeId, //  supernodeIdSet[supernodeSorterPortal.Get(supernode)]
+    const vtkm::Id&
+      globalRegularIdSetValue, //  globalRegularIdSet[supernodeSorterPortal.Get(supernode)]];
+    const FieldType& dataValueSetValue, //  dataValueSet[supernodeSorterPortal.Get(supernode)]];
+    const ExecObjType&
+      findSuperArcForUnknownNode, // Execution object to call FindSuperArcForUnknownNode
+    const ExecObjectTypeData&
+      createSuperarcsData, // Execution object of collect BaseTree data array
+    // Outputs
+    const InOutFieldPortalType& augmentedTreeSupernodesPortal,
+    vtkm::Id& augmentedTreeSuperarcsValue, // set value for AugmentedTree->Superarcs[newSupernodeId]
+    vtkm::Id&
+      augmentedTreeHyperparentsValue, // set value for AugmentedTree->Hyperparents[newSupernodeId]
+    vtkm::Id&
+      augmentedTreeSuper2HypernodeValue, // set value for AugmentedTree->Super2Hypernode[newSupernodeId]
+    vtkm::Id& augmentedTreeWhichRoundValue,     // AugmentedTree->WhichRound[newSupernodeId]
+    vtkm::Id& augmentedTreeWhichIterationValue, // AugmentedTree->WhichIteration[newSupernodeId]
+    vtkm::Id&
+      augmentedTreeRegularNodeGlobalIdsValue, // AugmentedTree->RegularNodeGlobalIds[newRegularID]
+    FieldType& augmentedTreeDataValuesValue,  // AugmentedTree->DataValues[newRegularID]
+    vtkm::Id& augmentedTreeRegular2SupernodeValue, // AugmentedTree->Regular2Supernode[newRegularID]
+    vtkm::Id& augmentedTreeSuperparentsValue       // AugmentedTree->Superparents[newRegularID]
+  ) const
   {
     // per supernode in the set
     // retrieve the index from the sorting index array
     vtkm::Id supernodeSetIndex = supernodeSorterPortal.Get(supernode);
 
-    // work out the new supernode Id. We have this defined on the outside as a fancy array handle,
-    // however, using the fancy handle here would not really make a performance differnce and
-    // computing it here is more readable
+    // work out the new supernode ID
     vtkm::Id newSupernodeId = this->NumSupernodesAlready + supernode;
 
-    // NOTE: The newRegularId is no longer needed here since all parts
-    //       that used it in the worklet have been moved outside
-    // vtkm::Id newRegularId = newSupernodeId;
+    // and the old supernode ID
+    //  vtkm::Id oldSupernodeId = supernodeIDSet[supernodeSetIndex];  Extracted on call and provides as input
 
-    // NOTE: This part has been moved out of the worklet and is performed using standard vtkm copy constructs
-    // // setting the supernode's regular Id is now trivial
-    // augmentedTreeSupernodesPortal.Set(newSupernodeId, newRegularId);
+    //	At all levels above 0, we used to keep regular vertices in case they are attachment points.
+    //  After augmentation, we don't need to.
+    //	Instead, at all levels above 0, the regular nodes in each round are identical to the supernodes
+    //	In order to avoid confusion, we will copy the ID into a separate variable
+    vtkm::Id newRegularId = newSupernodeId;
 
-    // retrieve the ascending flag from the superparent
-    vtkm::Id superparentSetVal = superparentSetPortal.Get(supernodeSetIndex);
-    // get the ascending flag from the parent
-    bool superarcAscends = vtkm::worklet::contourtree_augmented::IsAscending(superparentSetVal);
-    // strip the ascending flag from the superparent.
-    vtkm::Id superparentOldSuperId =
-      vtkm::worklet::contourtree_augmented::MaskedIndex(superparentSetVal);
+    // setting the supernode's regular ID is now trivial
+    augmentedTreeSupernodesPortal.Set(newSupernodeId, newRegularId);
 
-    // setting the superarc is done the usual way.  Our sort routine has ended up
-    // with the supernodes arranged in either ascending or descending order
-    // inwards along the parent superarc (as expressed by the superparent Id).
-    // Each superarc except the last in the segment points to the next one:
-    // the last one points to the target of the original superarc.
-    // first test to see if we're the last in the array
-    if (supernode == supernodeSorterPortal.GetNumberOfValues() - 1)
-    { // last in the array
-      // special case for root of entire tree at end of top level
-      if (RoundNumber == this->BaseTreeNumRounds)
+    // retrieve the old superID of the superparent.  This is slightly tricky, as we have four classes of supernodes:
+    // 1. the root of the entire tree
+    // 2. attachment points not being inserted. In this case, the supernode ID is stored in the superparentSet
+    //    array, not the superparent for insertion purposes
+    // 3. attachment points being inserted.  In this case, the superparent is stored in the superparentSet array
+    // 4. "ordinary" supernodes, where the superparent is the same as the supernode ID anyway
+    //
+    // Note that an attachment point gets inserted into a parent superarc.  But the attachment point itself has
+    // a NULL superarc, because it's only a virtual insertion.
+    // This means that such an attachment superarc cannot be the superparent of any other attachment point
+    // It is therefore reasonable to deal with 1. & 2 separately. 3. & 4. then combine together
+
+    // first we test for the root of the tree
+    if ((this->RoundNo == BaseTreeNumRounds) &&
+        (supernode == supernodeSorterPortal.GetNumberOfValues() - 1))
+    { // root of the tree
+      // note that oldSupernodeID is guaranteed not to be NO_SUCH_ELEMENT, as the root is in every tree
+      // set the super arrays
+      augmentedTreeSuperarcsValue = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+      // hyperstructure carries over, so we use the same hyperparent as before
+      augmentedTreeHyperparentsValue = createSuperarcsData.BaseTreeHyperparents.Get(oldSupernodeId);
+      // and set the hypernode ID
+      augmentedTreeSuper2HypernodeValue =
+        createSuperarcsData.BaseTreeSuper2Hypernode.Get(oldSupernodeId);
+      // and the round and iteration
+      augmentedTreeWhichRoundValue = createSuperarcsData.BaseTreeWhichRound.Get(oldSupernodeId);
+      augmentedTreeWhichIterationValue =
+        createSuperarcsData.BaseTreeWhichIteration.Get(oldSupernodeId);
+      // and set the relevant regular arrays
+      augmentedTreeRegularNodeGlobalIdsValue = globalRegularIdSetValue;
+      augmentedTreeDataValuesValue = dataValueSetValue;
+      // for the root, these always point to itself
+      augmentedTreeRegular2SupernodeValue = newSupernodeId;
+      augmentedTreeSuperparentsValue = newSupernodeId;
+    } // root of the tree
+    // now deal with unsimplified attachment points, which we can identify because they were in the "kept" batch, not the "inserted" batch,
+    // and this is given away by the index into the set of supernodes to be added
+    // and the fact that the superarc is NO_SUCH_ELEMENT
+    else if ((supernodeSetIndex >= this->NumInsertedSupernodes) &&
+             (vtkm::worklet::contourtree_augmented::NoSuchElement(
+               createSuperarcsData.BaseTreeSuperarcs.Get(oldSupernodeId))))
+    { // preserved attachment point
+      // note that oldSupernodeID is guaranteed not to be NO_SUCH_ELEMENT, as the supernode came from this block originally
+      // set the superarc to NO_SUCH_ELEMENT, as before
+      augmentedTreeSuperarcsValue = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+      // hyperstructure carries over, so we use the same hyperparent as before
+      // the "if" clauses guarantee the oldSupernodeId not to be NO_SUCH_ELEMENT.
+      // We cannot prepare the array permutation outside the worklet, or the guarantee does not hold.
+      augmentedTreeHyperparentsValue = createSuperarcsData.BaseTreeHyperparents.Get(oldSupernodeId);
+      // attachment points are never hypernodes anyway, so set it directly
+      augmentedTreeSuper2HypernodeValue = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+      // and the round and iteration
+      augmentedTreeWhichRoundValue = createSuperarcsData.BaseTreeWhichRound.Get(oldSupernodeId);
+      augmentedTreeWhichIterationValue =
+        createSuperarcsData.BaseTreeWhichIteration.Get(oldSupernodeId);
+      // and set the relevant regular arrays
+      augmentedTreeRegularNodeGlobalIdsValue = globalRegularIdSetValue;
+      augmentedTreeDataValuesValue = dataValueSetValue;
+      // for a preserved attachment point, this always points to itself
+      augmentedTreeRegular2SupernodeValue = newSupernodeId;
+      // the superparent is the tricky one, as the old one may have been broken up by insertions at a higher level
+
+      // Here, what we need to do is a search in the augmented tree to find which superarc to attach to.  This is necessary
+      // because the old superarc it attached to may have been broken up.
+      // We are guaranteed that there is one, and that it only uses the higher levels of the augmented tree,
+      // so the fact that we are partially constructed doesn't get in the way.  To do this, we need supernodes
+      // known to be in the higher level that are above and below the supernode.
+      // Since the point was an attachment point in the base tree, that means that there is a higher round superarc
+      // it inserts into.  Moreover, the algorithm ALWAYS inserts a supernode at or above its original round, so
+      // we can guarantee that both ends of the parent are in the higher levels.  Which means we only need to work
+      // out which end is higher.
+
+      // the "if" clauses guarantee the oldSupernodeId not to be NO_SUCH_ELEMENT.
+      // However, we cannot prepare the array permutation outside the worklet, or the guarantee does not hold.
+      //      indexType oldRegularID = baseTree->supernodes[oldSupernodeID];
+      //      indexType oldSuperFrom = baseTree->superparents[oldRegularID];
+      //      indexType oldSuperTo = baseTree->superarcs[oldSuperFrom];
+      vtkm::Id oldRegularId = createSuperarcsData.BaseTreeSupernodes.Get(oldSupernodeId);
+      vtkm::Id oldSuperFromValue = createSuperarcsData.BaseTreeSuperparents.Get(oldRegularId);
+      vtkm::Id oldSuperToValue = createSuperarcsData.BaseTreeSuperarcs.Get(oldSuperFromValue);
+
+      // retrieve the ascending flag
+      bool ascendingSuperarc = vtkm::worklet::contourtree_augmented::IsAscending(oldSuperToValue);
+      // and mask out the flags
+      vtkm::Id oldSuperToMaskedIndex =
+        vtkm::worklet::contourtree_augmented::MaskedIndex(oldSuperToValue);
+
+      // since we haven't set up the regular search array yet, we can't use that
+      // instead, we know that the two supernodes must be in the new tree, so we retrieve their new super IDs
+      // and convert them to regular
+
+      // retrieve their new super IDs
+      vtkm::Id newSuperFrom = createSuperarcsData.NewSupernodeIds.Get(oldSuperFromValue);
+      vtkm::Id newSuperTo = createSuperarcsData.NewSupernodeIds.Get(oldSuperToMaskedIndex);
+
+      // convert to regular IDs (which is what the FindSuperArcForUnknownNode() routine assumes)
+      vtkm::Id newRegularFrom = augmentedTreeSupernodesPortal.Get(newSuperFrom);
+      vtkm::Id newRegularTo = augmentedTreeSupernodesPortal.Get(newSuperTo);
+
+      // the new superparent after the search
+      vtkm::Id newSuperparentId = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+
+      // depending on the ascending flag
+      if (ascendingSuperarc)
       {
-        augmentedTreeSuperarcsValue = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+        newSuperparentId = findSuperArcForUnknownNode.FindSuperArcForUnknownNode(
+          globalRegularIdSetValue, dataValueSetValue, newRegularTo, newRegularFrom);
       }
       else
-      { // not the tree root
-        // retrieve the target of the superarc from the base tree (masking to strip out the ascending flag)
-        vtkm::Id oldTargetSuperId = vtkm::worklet::contourtree_augmented::MaskedIndex(
-          baseTreeSuperarcsPortal.Get(superparentOldSuperId));
-        // convert to a new supernode Id
-        vtkm::Id newTargetSuperId = newSupernodeIdsPortal.Get(oldTargetSuperId);
-        // add the ascending flag back in and store in the array
-        augmentedTreeSuperarcsValue = newTargetSuperId |
-          (superarcAscends ? vtkm::worklet::contourtree_augmented::IS_ASCENDING : 0x00);
-      } // not the tree root
-      // since there's an extra entry in the firstSupernode array as a sentinel, set it
-      augmentedTreeFirstSupernodePerIterationPortal.Set(this->AugmentedTreeNumIterations,
-                                                        NumAugmentedTreeSupernodes);
-    } // last in the array
-    else if (superparentOldSuperId !=
-             vtkm::worklet::contourtree_augmented::MaskedIndex(
-               superparentSetPortal.Get(supernodeSorterPortal.Get(supernode + 1))))
-    { // last in the segment
-      // retrieve the target of the superarc from the base tree (masking to strip out the ascending flag)
-      vtkm::Id oldTargetSuperId = vtkm::worklet::contourtree_augmented::MaskedIndex(
-        baseTreeSuperarcsPortal.Get(superparentOldSuperId));
-      // convert to a new supernode Id
-      vtkm::Id newTargetSuperId = newSupernodeIdsPortal.Get(oldTargetSuperId);
-      // add the ascending flag back in and store in the array
-      augmentedTreeSuperarcsValue = newTargetSuperId |
-        (superarcAscends ? vtkm::worklet::contourtree_augmented::IS_ASCENDING : 0x00);
+      {
+        newSuperparentId = findSuperArcForUnknownNode.FindSuperArcForUnknownNode(
+          globalRegularIdSetValue, dataValueSetValue, newRegularFrom, newRegularTo);
+      }
 
-      // since we're the last in the segment, we check to see if we are at the end of an iteration
-      vtkm::Id iterationNumber = vtkm::worklet::contourtree_augmented::MaskedIndex(
-        baseTreeWhichIterationPortal.Get(superparentOldSuperId));
-      vtkm::Id iterationNumberOfNext = vtkm::worklet::contourtree_augmented::MaskedIndex(
-        baseTreeWhichIterationPortal.Get(superparentOldSuperId + 1));
+      // attachment points use the superparent to store the superarc they insert onto
+      augmentedTreeSuperparentsValue = newSuperparentId;
 
-      if (iterationNumber != iterationNumberOfNext)
-      { // boundary of iterations
-        // If so, we set the "firstSupernodePerIteration" for the next
-        augmentedTreeFirstSupernodePerIterationPortal.Set(iterationNumberOfNext,
-                                                          newSupernodeId + 1);
-      } // boundary of iterations
-    }   // last in the segment
+    } // preserved attachment point
     else
-    { // not last in the segment
-      // the target is always the next one, so just store it with the ascending flag
-      augmentedTreeSuperarcsValue = (newSupernodeId + 1) |
-        (superarcAscends ? vtkm::worklet::contourtree_augmented::IS_ASCENDING : 0x00);
-    } // not last in the segment
+    { // raised attachment point or "ordinary" supernodes
+      // Since all of the superparents must be in the base tree, we can now retrieve the target
+      vtkm::Id superparentOldSuperId = vtkm::worklet::contourtree_augmented::MaskedIndex(
+        createSuperarcsData.SuperparentSet.Get(supernodeSetIndex));
 
-    // set the first supernode in the first iteration to the beginning of the round
-    augmentedTreeFirstSupernodePerIterationPortal.Set(0, this->NumSupernodesAlready);
+      vtkm::Id oldTargetSuperId = createSuperarcsData.BaseTreeSuperarcs.Get(superparentOldSuperId);
 
+      // and break it into a target and flags
+      bool ascendingSuperarc = vtkm::worklet::contourtree_augmented::IsAscending(oldTargetSuperId);
+      // NOTE: if the target was NO_SUCH_ELEMENT, this will hold 0
+      oldTargetSuperId = vtkm::worklet::contourtree_augmented::MaskedIndex(oldTargetSuperId);
 
-    // NOTE: This part has been moved out of the worklet and is performed using standard vtkm copy constructs
-    // // setting the hyperparent is straightforward since the hyperstructure is preserved
-    // // we take the superparent (which is guaranteed to be in the baseTree), find it's hyperparent and use that
-    // augmentedTreeHyperparentsPortal.Set(newSupernodeId, baseTreeHyperparentsPortal.Get(superparentOldSuperId));
+      // and another boolean for whether we are the last element in a segment
+      bool isLastInSegment = false;
 
-    // NOTE: This part could potentially be made a separate worklet but it does not seem necessary
-    // similarly, the super2hypernode should carry over, but it's harder to test because of the attachment points which
-    // do not have valid old supernode Ids.  Instead, we check their superparent's regular global Id against them: if it
-    // matches, then it must be the start of the superarc, in which case it does have an old Id, and we can then use the
-    // existing hypernode Id
-    vtkm::Id superparentOldRegularId = baseTreeSupernodesPortal.Get(superparentOldSuperId);
-    vtkm::Id superparentGlobalId = baseTreeRegularNodeGlobalIdsPortal.Get(superparentOldRegularId);
-    // Here: globalRegularIdSetValue is the same as globalRegularIdSetPortal.Get(supernodeSetIndex)
-    if (superparentGlobalId == globalRegularIdSetValue)
-    {
-      // augmentedTreeSuper2hypernodePortal.Set(newSupernodeId, baseTreeSuper2HypernodePortal.Get(superparentOldSuperId));
-      augmentedTreeSuper2hypernodeValue = baseTreeSuper2HypernodePortal.Get(superparentOldSuperId);
-    }
-    else
-    {
-      // augmentedTreeSuper2hypernodePortal.Set(newSupernodeId, vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-      augmentedTreeSuper2hypernodeValue = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
-    }
-
-    // NOTE: This part has been moved out of the worklet and is performed using standard vtkm copy constructs
-    // // which round and iteration carry over
-    // augmentedTreeWhichRoundPortal.Set(newSupernodeId, baseTreeWhichRoundPortal.Get(superparentOldSuperId));
-    // augmentedTreeWhichIterationPortal.Set(newSupernodeId, baseTreeWhichIterationPortal.Get(superparentOldSuperId));
-
-    // now we deal with the regular-sized arrays
-
-    // NOTE: This part has been moved out of the worklet and is performed using standard vtkm copy constructs
-    // // copy the global regular Id and data value
-    // augmentedTreeRegularNodeGlobalIdsPortal.Set(newRegularId, globalRegularIdSetPortal.Get(supernodeSetIndex));
-    // augmentedTreeDataValuesPortal.Set(newRegularId, dataValueSetPortal.Get(supernodeSetIndex));
-
-    // NOTE: This part has been moved out of the worklet and is performed using standard vtkm copy constructs
-    // // the sort order will be dealt with later
-    // // since all of these nodes are supernodes, they will be their own superparent, which means that:
-    // //  a.  the regular2node can be set immediately
-    // augmentedTreeRegular2SupernodePortal.Set(newRegularId, newSupernodeId);
-    // //  b.  as can the superparent
-    // augmentedTreeSuperparentsPortal.Set(newRegularId, newSupernodeId);
-
-    // In serial this worklet implements the following operation
-    /*
-    for (vtkm::Id supernode = 0; supernode < supernodeSorter.size(); supernode++)
-    { // per supernode in the set
-      // retrieve the index from the sorting index array
-      vtkm::Id supernodeSetIndex = supernodeSorter[supernode];
-
-      // work out the new supernode ID
-      vtkm::Id newSupernodeID = numSupernodesAlready + supernode;
-
-      //  At all levels above 0, we used to keep regular vertices in case they are attachment points.  After augmentation, we don't need to.
-      //  Instead, at all levels above 0, the regular nodes in each round are identical to the supernodes
-      //  In order to avoid confusion, we will copy the ID into a separate variable
-      vtkm::Id newRegularID = newSupernodeID;
-
-      // setting the supernode's regular ID is now trivial
-      augmentedTree->supernodes      [newSupernodeID] = newRegularID;
-
-      // retrieve the ascending flag from the superparent
-      bool superarcAscends = isAscending(superparentSet[supernodeSetIndex]);
-
-      // strip the ascending flag from the superparent
-      vtkm::Id superparentOldSuperID = maskedIndex(superparentSet[supernodeSetIndex]);
+      // end of the entire array counts as last in segment
+      if (supernode == supernodeSorterPortal.GetNumberOfValues() - 1)
+      {
+        isLastInSegment = true;
+      }
+      // otherwise, check for a mismatch in the sorting superparent which indicates the end of a segment
+      else if (vtkm::worklet::contourtree_augmented::MaskedIndex(
+                 createSuperarcsData.SuperparentSet.Get(supernodeSetIndex)) !=
+               vtkm::worklet::contourtree_augmented::MaskedIndex(
+                 createSuperarcsData.SuperparentSet.Get(supernodeSorterPortal.Get(supernode + 1))))
+      {
+        isLastInSegment = true;
+      }
 
       // setting the superarc is done the usual way.  Our sort routine has ended up with the supernodes arranged in either ascending or descending order
       // inwards along the parent superarc (as expressed by the superparent ID).  Each superarc except the last in the segment points to the next one:
       // the last one points to the target of the original superarc.
-      // first test to see if we're the last in the array
-      if (supernode == supernodeSorter.size() - 1)
-      { // last in the array
-        // special case for root of entire tree at end of top level
-        if (roundNumber == baseTree->nRounds)
-        {
-          augmentedTree->superarcs[newSupernodeID] = NO_SUCH_ELEMENT;
-        }
-        else
-        { // not the tree root
-          // retrieve the target of the superarc from the base tree (masking to strip out the ascending flag)
-          vtkm::Id oldTargetSuperID = maskedIndex(baseTree->superarcs[superparentOldSuperID]);
-          // convert to a new supernode ID
-          vtkm::Id newTargetSuperID = newSupernodeIDs[oldTargetSuperID];
-          // add the ascending flag back in and store in the array
-          augmentedTree->superarcs[newSupernodeID] = newTargetSuperID | (superarcAscends ? IS_ASCENDING : 0x00);
-        } // not the tree root
-        // since there's an extra entry in the firstSupernode array as a sentinel, set it
-        augmentedTree->firstSupernodePerIteration[roundNumber][augmentedTree->nIterations[roundNumber]] = augmentedTree->supernodes.size();
-      } // last in the array
-      else if (superparentOldSuperID != maskedIndex(superparentSet[supernodeSorter[supernode+1]]))
-      { // last in the segment
-        // retrieve the target of the superarc from the base tree (masking to strip out the ascending flag)
-        vtkm::Id oldTargetSuperID = maskedIndex(baseTree->superarcs[superparentOldSuperID]);
-        // convert to a new supernode ID
-        vtkm::Id newTargetSuperID = newSupernodeIDs[oldTargetSuperID];
-        // add the ascending flag back in and store in the array
-        augmentedTree->superarcs[newSupernodeID] = newTargetSuperID | (superarcAscends ? IS_ASCENDING : 0x00);
-
-        // since we're the last in the segment, we check to see if we are at the end of an iteration
-        vtkm::Id iterationNumber     = maskedIndex(baseTree->whichIteration[superparentOldSuperID]);
-        vtkm::Id iterationNumberOfNext = maskedIndex(baseTree->whichIteration[superparentOldSuperID + 1]);
-
-        if (iterationNumber != iterationNumberOfNext)
-        { // boundary of iterations
-          // If so, we set the "firstSupernodePerIteration" for the next
-          augmentedTree->firstSupernodePerIteration[roundNumber][iterationNumberOfNext] = newSupernodeID + 1;
-        } // boundary of iterations
-      } // last in the segment
+      if (isLastInSegment)
+      { // last in segment
+        // we take the old target of the superarc (in old supernode IDs) and convert it to a new supernode ID
+        augmentedTreeSuperarcsValue = createSuperarcsData.NewSupernodeIds.Get(oldTargetSuperId) |
+          (ascendingSuperarc ? vtkm::worklet::contourtree_augmented::IS_ASCENDING : 0x00);
+      } // last in segment
       else
-      { // not last in the segment
+      { // not last in segment
         // the target is always the next one, so just store it with the ascending flag
-        augmentedTree->superarcs[newSupernodeID] = (newSupernodeID+1) | (superarcAscends ? IS_ASCENDING : 0x00);
-      } // not last in the segment
+        augmentedTreeSuperarcsValue = (newSupernodeId + 1) |
+          (ascendingSuperarc ? vtkm::worklet::contourtree_augmented::IS_ASCENDING : 0x00);
+      } // not last in segment
 
-      // set the first supernode in the first iteration to the beginning of the round
-      augmentedTree->firstSupernodePerIteration[roundNumber][0] = numSupernodesAlready;
+      // first we identify the hyperarc on which the superarc sits
+      // this will be visible in the old base tree, since hyperstructure carries over
+      vtkm::Id oldHyperparent = createSuperarcsData.BaseTreeHyperparents.Get(superparentOldSuperId);
 
-      // setting the hyperparent is straightforward since the hyperstructure is preserved
-      // we take the superparent (which is guaranteed to be in the baseTree), find it's hyperparent and use that
-      augmentedTree->hyperparents      [newSupernodeID] = baseTree->hyperparents      [superparentOldSuperID];
+      // hyperstructure carries over, so we use the same hyperparent as the superparent
+      augmentedTreeHyperparentsValue = oldHyperparent;
 
-      // similarly, the super2hypernode should carry over, but it's harder to test because of the attachment points which
-      // do not have valid old supernode IDs.  Instead, we check their superparent's regular global ID against them: if it
-      // matches, then it must be the start of the superarc, in which case it does have an old ID, and we can then use the
-      // existing hypernode ID
-      vtkm::Id superparentOldRegularID = baseTree->supernodes[superparentOldSuperID];
-      vtkm::Id superparentGlobalID = baseTree->regularNodeGlobalIDs[superparentOldRegularID];
-      if (superparentGlobalID == globalRegularIDSet[supernodeSetIndex])
+      // retrieve the hyperparent's old supernode ID & convert to a new one, then test it
+      if (createSuperarcsData.NewSupernodeIds.Get(
+            createSuperarcsData.BaseTreeHypernodes.Get(oldHyperparent)) == newSupernodeId)
       {
-        augmentedTree->super2hypernode  [newSupernodeID]   = baseTree->super2hypernode[superparentOldSuperID];
+        augmentedTreeSuper2HypernodeValue = oldHyperparent;
       }
       else
       {
-        augmentedTree->super2hypernode  [newSupernodeID]   = NO_SUCH_ELEMENT;
+        augmentedTreeSuper2HypernodeValue = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
       }
 
-      // which round and iteration carry over
-      augmentedTree->whichRound      [newSupernodeID]   = baseTree->whichRound[superparentOldSuperID];
-      augmentedTree->whichIteration    [newSupernodeID]   = baseTree->whichIteration[superparentOldSuperID];
+      // round and iteration are set from the superparent, since we are raising to its level
+      augmentedTreeWhichRoundValue =
+        createSuperarcsData.BaseTreeWhichRound.Get(superparentOldSuperId);
+      augmentedTreeWhichIterationValue =
+        createSuperarcsData.BaseTreeWhichIteration.Get(superparentOldSuperId);
+      // and set the relevant regular arrays
+      augmentedTreeRegularNodeGlobalIdsValue = globalRegularIdSetValue;
+      augmentedTreeDataValuesValue = dataValueSetValue;
+      // for all supernodes, this points to itself
+      augmentedTreeRegular2SupernodeValue = newSupernodeId;
+      // and since we're inserted, so does this
+      augmentedTreeSuperparentsValue = newSupernodeId;
+    } // raised attachment point or "ordinary" supernodes
 
-      // now we deal with the regular-sized arrays
+    /*  Original PPP2 code
+    for (indexType supernode = 0; supernode < supernodeSorter.size(); supernode++)
+        { // per supernode in the set
+        // retrieve the index from the sorting index array
+        indexType supernodeSetIndex = supernodeSorter[supernode];
 
-      // copy the global regular ID and data value
-      augmentedTree->regularNodeGlobalIDs  [newRegularID]    = globalRegularIDSet[supernodeSetIndex];
-      augmentedTree->dataValues      [newRegularID]    = dataValueSet[supernodeSetIndex];
+        // work out the new supernode ID
+        indexType newSupernodeID = nSupernodesAlready + supernode;
 
-      // the sort order will be dealt with later
-      // since all of these nodes are supernodes, they will be their own superparent, which means that:
-      //  a.  the regular2node can be set immediately
-      augmentedTree->regular2supernode  [newRegularID]     = newSupernodeID;
-      //  b.  as can the superparent
-      augmentedTree->superparents      [newRegularID]     = newSupernodeID;
-    } // per supernode in the set
+        // and the old supernode ID
+        // NB: May be NO_SUCH_ELEMENT if not already in the base tree
+        indexType oldSupernodeID = supernodeIDSet[supernodeSetIndex];
+
+        //	At all levels above 0, we used to keep regular vertices in case they are attachment points.  After augmentation, we don't need to.
+        //	Instead, at all levels above 0, the regular nodes in each round are identical to the supernodes
+        //	In order to avoid confusion, we will copy the ID into a separate variable
+        indexType newRegularID = newSupernodeID;
+
+        // setting the supernode's regular ID is now trivial
+        augmentedTree->supernodes			[newSupernodeID] = newRegularID;
+
+        // retrieve the old superID of the superparent.  This is slightly tricky, as we have four classes of supernodes:
+        // 1. the root of the entire tree
+        // 2. attachment points not being inserted. In this case, the supernode ID is stored in the superparentSet array, not the superparent for insertion purposes
+        // 3. attachment points being inserted.  In this case, the superparent is stored in the superparentSet array
+        // 4. "ordinary" supernodes, where the superparent is the same as the supernode ID anyway
+        //
+        // Note that an attachment point gets inserted into a parent superarc.  But the attachment point itself has a NULL superarc, because it's only a virtual insertion
+        // This means that such an attachment superarc cannot be the superparent of any other attachment point
+        // It is therefore reasonable to deal with 1. & 2 separately. 3. & 4. then combine together
+
+        // first we test for the root of the tree
+        if ((roundNo == baseTree->nRounds) && (supernode == supernodeSorter.size() - 1))
+            { // root of the tree
+            // note that oldSupernodeID is guaranteed not to be NO_SUCH_ELEMENT, as the root is in every tree
+            // set the super arrays
+            augmentedTree->superarcs			[newSupernodeID]	= NO_SUCH_ELEMENT;
+            // hyperstructure carries over, so we use the same hyperparent as before
+            augmentedTree->hyperparents			[newSupernodeID]	= baseTree->hyperparents[oldSupernodeID];
+            // and set the hypernode ID
+            augmentedTree->super2hypernode		[newSupernodeID]	= baseTree->super2hypernode[oldSupernodeID];
+            // and the round and iteration
+            augmentedTree->whichRound			[newSupernodeID]	= baseTree->whichRound[oldSupernodeID];
+            augmentedTree->whichIteration		[newSupernodeID]	= baseTree->whichIteration[oldSupernodeID];
+            // and set the relevant regular arrays
+            augmentedTree->regularNodeGlobalIDs	[newRegularID]		= globalRegularIDSet[supernodeSetIndex];
+            augmentedTree->dataValues			[newRegularID]		= dataValueSet[supernodeSetIndex];
+            // for the root, these always point to itself
+            augmentedTree->regular2supernode	[newRegularID]		= newSupernodeID;
+            augmentedTree->superparents			[newRegularID]		= newSupernodeID;
+            } // root of the tree
+        // now deal with unsimplified attachment points, which we can identify because they were in the "kept" batch, not the "inserted" batch,
+        // and this is given away by the index into the set of supernodes to be added
+        // and the fact that the superarc is NO_SUCH_ELEMENT
+        else if	((supernodeSetIndex >= nInsertedSupernodes) && (noSuchElement(baseTree->superarcs[oldSupernodeID])))
+            { // preserved attachment point
+            // note that oldSupernodeID is guaranteed not to be NO_SUCH_ELEMENT, as the supernode came from this block originally
+            // set the superarc to NO_SUCH_ELEMENT, as before
+            augmentedTree->superarcs			[newSupernodeID]	= NO_SUCH_ELEMENT;
+            // hyperstructure carries over, so we use the same hyperparent as before
+            augmentedTree->hyperparents			[newSupernodeID]	= baseTree->hyperparents[oldSupernodeID];
+            // attachment points are never hypernodes anyway, so set it directly
+            augmentedTree->super2hypernode		[newSupernodeID]	= NO_SUCH_ELEMENT;
+            // and the round and iteration
+            augmentedTree->whichRound			[newSupernodeID]	= baseTree->whichRound[oldSupernodeID];
+            augmentedTree->whichIteration		[newSupernodeID]	= baseTree->whichIteration[oldSupernodeID];
+            // and set the relevant regular arrays
+            augmentedTree->regularNodeGlobalIDs	[newRegularID]		= globalRegularIDSet[supernodeSetIndex];
+            augmentedTree->dataValues			[newRegularID]		= dataValueSet[supernodeSetIndex];
+            // for a preserved attachment point, this always points to itself
+            augmentedTree->regular2supernode	[newRegularID]		= newSupernodeID;
+            // the superparent is the tricky one, as the old one may have been broken up by insertions at a higher level
+
+            // Here, what we need to do is a search in the augmented tree to find which superarc to attach to.  This is necessary
+            // because the old superarc it attached to may have been broken up.
+            // We are guaranteed that there is one, and that it only uses the higher levels of the augmented tree,
+            // so the fact that we are partially constructed doesn't get in the way.  To do this, we need supernodes
+            // known to be in the higher level that are above and below the supernode.
+            // Since the point was an attachment point in the base tree, that means that there is a higher round superarc
+            // it inserts into.  Moreover, the algorithm ALWAYS inserts a supernode at or above its original round, so
+            // we can guarantee that both ends of the parent are in the higher levels.  Which means we only need to work
+            // out which end is higher.
+            indexType oldRegularID = baseTree->supernodes[oldSupernodeID];
+            indexType oldSuperFrom = baseTree->superparents[oldRegularID];
+            indexType oldSuperTo = baseTree->superarcs[oldSuperFrom];
+            // retrieve the ascending flag
+            bool ascendingSuperarc = isAscending(oldSuperTo);
+            // and mask out the flags
+            oldSuperTo = maskedIndex(oldSuperTo);
+
+            // since we haven't set up the regular search array yet, we can't use that
+            // instead, we know that the two supernodes must be in the new tree, so we retrieve their new super IDs
+            // and convert them to regular
+
+            // retrieve their new super IDs
+            indexType newSuperFrom = newSupernodeIDs[oldSuperFrom];
+            indexType newSuperTo = newSupernodeIDs[oldSuperTo];
+
+            // convert to regular IDs (which is what the FindSuperArcForUnknownNode() routine assumes)
+            indexType newRegularFrom = augmentedTree->supernodes[newSuperFrom];
+            indexType newRegularTo = augmentedTree->supernodes[newSuperTo];
+
+            // the new superparent after the search
+            indexType newSuperparentID = NO_SUCH_ELEMENT;
+
+            // depending on the ascending flag
+            if (ascendingSuperarc)
+                newSuperparentID = augmentedTree->FindSuperArcForUnknownNode(globalRegularIDSet[supernodeSetIndex],dataValueSet[supernodeSetIndex], newRegularTo, newRegularFrom);
+            else
+                newSuperparentID = augmentedTree->FindSuperArcForUnknownNode(globalRegularIDSet[supernodeSetIndex],dataValueSet[supernodeSetIndex], newRegularFrom, newRegularTo);
+
+            // attachment points use the superparent to store the superarc they insert onto
+            augmentedTree->superparents			[newRegularID] 		= newSuperparentID;
+
+            } // preserved attachment point
+        else
+            { // raised attachment point or "ordinary" supernodes
+            // Since all of the superparents must be in the base tree, we can now retrieve the target
+            indexType superparentOldSuperID = maskedIndex(superparentSet[supernodeSetIndex]);
+            indexType oldTargetSuperID = baseTree->superarcs[superparentOldSuperID];
+            // and break it into a target and flags
+            bool ascendingSuperarc = isAscending(oldTargetSuperID);
+            // NOTE: if the target was NO_SUCH_ELEMENT, this will hold 0
+            oldTargetSuperID = maskedIndex(oldTargetSuperID);
+
+            // and another boolean for whether we are the last element in a segment
+            bool isLastInSegment = false;
+
+            // end of the entire array counts as last in segment
+            if (supernode == supernodeSorter.size() - 1)
+                isLastInSegment = true;
+            // otherwise, check for a mismatch in the sorting superparent which indicates the end of a segment
+            else if (maskedIndex(superparentSet[supernodeSetIndex]) != maskedIndex(superparentSet[supernodeSorter[supernode+1]]))
+                isLastInSegment = true;
+
+            // setting the superarc is done the usual way.  Our sort routine has ended up with the supernodes arranged in either ascending or descending order
+            // inwards along the parent superarc (as expressed by the superparent ID).  Each superarc except the last in the segment points to the next one:
+            // the last one points to the target of the original superarc.
+            if (isLastInSegment)
+                { // last in segment
+                // we take the old target of the superarc (in old supernode IDs) and convert it to a new supernode ID
+                augmentedTree->superarcs[newSupernodeID] = newSupernodeIDs[oldTargetSuperID] | (ascendingSuperarc ? IS_ASCENDING : 0x00);
+                } // last in segment
+            else
+                { // not last in segment
+                // the target is always the next one, so just store it with the ascending flag
+                augmentedTree->superarcs[newSupernodeID] = (newSupernodeID+1) | (ascendingSuperarc ? IS_ASCENDING : 0x00);
+                } // not last in segment
+
+            // first we identify the hyperarc on which the superarc sits
+            // this will be visible in the old base tree, since hyperstructure carries over
+            indexType oldHyperparent = baseTree->hyperparents[superparentOldSuperID];
+
+            // hyperstructure carries over, so we use the same hyperparent as the superparent
+            augmentedTree->hyperparents			[newSupernodeID]	= oldHyperparent;
+            // retrieve the hyperparent's old supernode ID & convert to a new one, then test it
+            if (newSupernodeIDs[baseTree->hypernodes[oldHyperparent]] == newSupernodeID)
+                augmentedTree->super2hypernode	[newSupernodeID]	= oldHyperparent;
+            else
+                augmentedTree->super2hypernode	[newSupernodeID]	= NO_SUCH_ELEMENT;
+
+            // round and iteration are set from the superparent, since we are raising to its level
+            augmentedTree->whichRound			[newSupernodeID]	= baseTree->whichRound[superparentOldSuperID];
+            augmentedTree->whichIteration		[newSupernodeID]	= baseTree->whichIteration[superparentOldSuperID];
+            // and set the relevant regular arrays
+            augmentedTree->regularNodeGlobalIDs	[newRegularID]		= globalRegularIDSet[supernodeSetIndex];
+            augmentedTree->dataValues			[newRegularID]		= dataValueSet[supernodeSetIndex];
+            // for all supernodes, this points to itself
+            augmentedTree->regular2supernode	[newRegularID]		= newSupernodeID;
+            // and since we're inserted, so does this
+            augmentedTree->superparents			[newRegularID]		= newSupernodeID;
+            } // raised attachment point or "ordinary" supernodes
+
+        } // per supernode in the set
     */
+
+
   } // operator()()
 
 private:
   const vtkm::Id NumSupernodesAlready;
   const vtkm::Id BaseTreeNumRounds;
-  const vtkm::Id AugmentedTreeNumIterations;
-  const vtkm::Id RoundNumber;
-  const vtkm::Id NumAugmentedTreeSupernodes;
+  const vtkm::Id NumInsertedSupernodes;
+  const vtkm::Id RoundNo;
 
 }; // CreateSuperarcsWorklet
 

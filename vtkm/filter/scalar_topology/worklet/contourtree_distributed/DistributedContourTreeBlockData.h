@@ -76,10 +76,12 @@ template <typename FieldType>
 struct DistributedContourTreeBlockData
 {
   // Block metadata
-  int GlobalBlockId;     // Global DIY id of this block
-  vtkm::Id LocalBlockNo; // Local block id on this rank
-  vtkm::Id3 BlockOrigin; // Origin of the data block
-  vtkm::Id3 BlockSize;   // Extends of the data block
+  int GlobalBlockId;          // Global DIY id of this block
+  vtkm::Id LocalBlockNo;      // Local block id on this rank
+  vtkm::Id3 BlockOrigin;      // Origin of the data block
+  vtkm::Id3 BlockSize;        // Extends of the data block
+  vtkm::Id3 FixedBlockOrigin; // Origin unaffected by fan-in
+  vtkm::Id3 FixedBlockSize;   // Extends unaffected by fan-in
 
   // Fan in data
   std::vector<vtkm::worklet::contourtree_augmented::ContourTree> ContourTrees;

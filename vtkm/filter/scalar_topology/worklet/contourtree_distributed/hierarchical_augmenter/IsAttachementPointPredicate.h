@@ -81,27 +81,50 @@ public:
     const vtkm::worklet::contourtree_augmented::IdArrayType& superarcs,
     const vtkm::worklet::contourtree_augmented::IdArrayType& whichRound,
     const vtkm::Id numRounds,
+    vtkm::worklet::contourtree_augmented::IdArrayType* volumeArray,
+    vtkm::Id presimplifyThreshold,
     vtkm::cont::DeviceAdapterId device,
     vtkm::cont::Token& token)
     : SuperarcsPortal(superarcs.PrepareForInput(device, token))
     , WhichRoundPortal(whichRound.PrepareForInput(device, token))
     , NumRounds(numRounds)
+    , PresimplifyThreshold(presimplifyThreshold)
   { // constructor
+    this->Presimplify = ((volumeArray != NULL) && (presimplifyThreshold > 0));
+    // If we presimplify then store the volumeArray. Otherwise we don't need to volume array and we
+    // set it to another portal, just to make sure the variable is being initalized with something
+    this->VolumeArrayPortal =
+      this->Presimplify ? volumeArray->PrepareForInput(device, token) : this->WhichRoundPortal;
   } // constructor
 
   // () operator - gets called to do comparison
   VTKM_EXEC
   bool operator()(const vtkm::Id& supernode) const
   { // operator()
-    return (
-      vtkm::worklet::contourtree_augmented::NoSuchElement(this->SuperarcsPortal.Get(supernode)) &&
-      (this->WhichRoundPortal.Get(supernode) < this->NumRounds));
+    // an attachment point is defined by having no superarc (NO_SUCH_ELEMENT) and not being in
+    // the final round (where this indicates the global root)
+    bool predicate =
+      (vtkm::worklet::contourtree_augmented::NoSuchElement(this->SuperarcsPortal.Get(supernode)) &&
+       (this->WhichRoundPortal.Get(supernode) < this->NumRounds));
+    // if we pass this check then we need to also check that the supernode passes the pre-simplification threshold
+    if (predicate && this->Presimplify)
+    {
+      // suppress if it's volume is at or below the threshold
+      if (this->VolumeArrayPortal.Get(supernode) <= this->PresimplifyThreshold)
+      {                    // below threshold
+        predicate = false; // do not keep attachement point below the simplification threshold
+      }                    // below threshold
+    }
+    return predicate;
   } // operator()
 
 private:
   IdPortalType SuperarcsPortal;
   IdPortalType WhichRoundPortal;
   const vtkm::Id NumRounds;
+  bool Presimplify;
+  IdPortalType VolumeArrayPortal;
+  vtkm::Id PresimplifyThreshold;
 
 
 }; // IsAttachementPointPredicateImpl
@@ -113,24 +136,35 @@ public:
   VTKM_CONT
   IsAttachementPointPredicate(const vtkm::worklet::contourtree_augmented::IdArrayType& superarcs,
                               const vtkm::worklet::contourtree_augmented::IdArrayType& whichRound,
-                              const vtkm::Id numRounds)
+                              const vtkm::Id numRounds,
+                              vtkm::worklet::contourtree_augmented::IdArrayType* volumeArray = NULL,
+                              vtkm::Id presimplifyThreshold = 0)
     : Superarcs(superarcs)
     , WhichRound(whichRound)
     , NumRounds(numRounds)
+    , VolumeArray(volumeArray)
+    , PresimplifyThreshold(presimplifyThreshold)
   {
   }
 
   VTKM_CONT IsAttachementPointPredicateImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
                                                                 vtkm::cont::Token& token) const
   {
-    return IsAttachementPointPredicateImpl(
-      this->Superarcs, this->WhichRound, this->NumRounds, device, token);
+    return IsAttachementPointPredicateImpl(this->Superarcs,
+                                           this->WhichRound,
+                                           this->NumRounds,
+                                           this->VolumeArray,
+                                           this->PresimplifyThreshold,
+                                           device,
+                                           token);
   }
 
 private:
   vtkm::worklet::contourtree_augmented::IdArrayType Superarcs;
   vtkm::worklet::contourtree_augmented::IdArrayType WhichRound;
   const vtkm::Id NumRounds;
+  vtkm::worklet::contourtree_augmented::IdArrayType* VolumeArray;
+  vtkm::Id PresimplifyThreshold;
 }; // IsAttachementPointPredicate
 
 } // namespace hierarchical_augmenter
