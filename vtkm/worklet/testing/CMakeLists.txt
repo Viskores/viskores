@@ -34,14 +34,15 @@ set(unit_tests
   UnitTestStreamLineUniformGrid.cxx
   UnitTestTriangleWinding.cxx
   UnitTestWholeCellSetIn.cxx
+  UnitTestWorkletCellNeighborhood.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapField3d.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapFieldWholeArray.cxx
   UnitTestWorkletMapFieldWholeArrayAtomic.cxx
-  UnitTestWorkletMapPointNeighborhood.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyUniform.cxx
+  UnitTestWorkletPointNeighborhood.cxx
   UnitTestWorkletReduceByKey.cxx
   UnitTestWaveletCompressor.cxx
  )

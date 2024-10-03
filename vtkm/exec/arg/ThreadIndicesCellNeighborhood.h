@@ -78,7 +78,7 @@ public:
         inputIndex,
         visitIndex,
         outputIndex,
-        vtkm::exec::BoundaryState{ detail::To3D(connectivity.FlatToLogicalToIndex(inputIndex)),
+        vtkm::exec::BoundaryState{ detail::To3D(connectivity.FlatToLogicalVisitIndex(inputIndex)),
                                    detail::To3D(connectivity.GetCellDimensions()) })
   {
   }
