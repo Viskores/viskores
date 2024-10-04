@@ -46,6 +46,32 @@ public:
     Unused5 = 1 << 6,
   };
 
+  /// @var vtkm::UInt8 Normal
+  /// @brief Value used for a normal cell.
+  ///
+  /// This value is the clearing of any cell classification flags. This identifies
+  /// the cells as a "normal" cell without any special or exclusionary properties.
+
+  /// @var vtkm::UInt8 Ghost
+  /// @brief Flag used for a ghost cell.
+  ///
+  /// This flag indicates the associated cell is repeated information from a different
+  /// partition. The ghost cell is provided to give data from cells in neighboring
+  /// partitions. This allows operations to correctly compute neighborhood information
+  /// without explicit communications. Ghost cells are typically removed for rendering.
+
+  /// @var vtkm::UInt8 Invalid
+  /// @brief Flag used for an invalid cell.
+
+  /// @var vtkm::UInt8 Blanked
+  /// @brief Flag used for a cell that should not be considered part of the data.
+  ///
+  /// A blanked cell should be ignored from the data. Cells with this flag should
+  /// be treated as if they were not declared. Blanked cells are primarily used
+  /// in structured cell sets to remove parts of the interior of the mesh volume that
+  /// could not otherwise be removed. Blanked cells are common in AMR structures
+  /// to indicate cells that are further refined in deeper levels.
+
   VTKM_EXEC constexpr CellClassification(vtkm::UInt8 flags = vtkm::UInt8{ Normal })
     : Flags(flags)
   {
