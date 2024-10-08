@@ -14,7 +14,7 @@
 #include <vtkm/cont/CellSetList.h>
 
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
-#include <vtkm/cont/internal/CellLocatorBase.h>
+#include <vtkm/cont/CellLocatorBase.h>
 
 #include <vtkm/exec/CellLocatorMultiplexer.h>
 #include <vtkm/exec/CellLocatorUniformBins.h>
@@ -35,11 +35,8 @@ namespace cont
 /// produces a more efficient search structure, especially for GPUs where memory
 /// access patterns are critical to performance.
 
-class VTKM_CONT_EXPORT CellLocatorUniformBins
-  : public vtkm::cont::internal::CellLocatorBase<CellLocatorUniformBins>
+class VTKM_CONT_EXPORT CellLocatorUniformBins : public vtkm::cont::CellLocatorBase
 {
-  using Superclass = vtkm::cont::internal::CellLocatorBase<CellLocatorUniformBins>;
-
   template <typename CellSetCont>
   using CellSetContToExec =
     typename CellSetCont::template ExecConnectivityType<vtkm::TopologyElementTagCell,
@@ -66,8 +63,7 @@ public:
                                   vtkm::cont::Token& token) const;
 
 private:
-  friend Superclass;
-  VTKM_CONT void Build();
+  VTKM_CONT void Build() override;
 
   vtkm::Vec3f InvSpacing;
   vtkm::Vec3f MaxPoint;

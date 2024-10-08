@@ -58,6 +58,7 @@ set(headers
   BoundsCompute.h
   BoundsGlobalCompute.h
   CastAndCall.h
+  CellLocatorBase.h
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorChooser.h
   CellLocatorGeneral.h
@@ -140,6 +141,7 @@ set(sources
   BitField.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
+  CellLocatorBase.cxx
   CellLocatorGeneral.cxx
   CellLocatorPartitioned.cxx
   CellLocatorRectilinearGrid.cxx

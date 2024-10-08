@@ -17,7 +17,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 
-#include <vtkm/cont/internal/CellLocatorBase.h>
+#include <vtkm/cont/CellLocatorBase.h>
 
 #include <vtkm/exec/CellLocatorBoundingIntervalHierarchy.h>
 #include <vtkm/exec/CellLocatorMultiplexer.h>
@@ -27,11 +27,8 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_CONT_EXPORT CellLocatorBoundingIntervalHierarchy
-  : public vtkm::cont::internal::CellLocatorBase<CellLocatorBoundingIntervalHierarchy>
+class VTKM_CONT_EXPORT CellLocatorBoundingIntervalHierarchy : public vtkm::cont::CellLocatorBase
 {
-  using Superclass = vtkm::cont::internal::CellLocatorBase<CellLocatorBoundingIntervalHierarchy>;
-
 public:
   using SupportedCellSets = VTKM_DEFAULT_CELL_SET_LIST;
 
@@ -80,8 +77,7 @@ private:
   vtkm::cont::ArrayHandle<vtkm::exec::CellLocatorBoundingIntervalHierarchyNode> Nodes;
   vtkm::cont::ArrayHandle<vtkm::Id> ProcessedCellIds;
 
-  friend Superclass;
-  VTKM_CONT void Build();
+  VTKM_CONT void Build() override;
 
   struct MakeExecObject;
 };

@@ -13,7 +13,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellSetList.h>
 
-#include <vtkm/cont/internal/CellLocatorBase.h>
+#include <vtkm/cont/CellLocatorBase.h>
 
 #include <vtkm/exec/CellLocatorMultiplexer.h>
 #include <vtkm/exec/CellLocatorTwoLevel.h>
@@ -40,11 +40,8 @@ namespace cont
 /// Javor Kalojanov, Markus Billeter, and Philipp Slusallek. "Two-Level Grids for Ray Tracing
 /// on GPUs." _Computer Graphics Forum_, 2011, pages 307-314. DOI 10.1111/j.1467-8659.2011.01862.x
 ///
-class VTKM_CONT_EXPORT CellLocatorTwoLevel
-  : public vtkm::cont::internal::CellLocatorBase<CellLocatorTwoLevel>
+class VTKM_CONT_EXPORT CellLocatorTwoLevel : public vtkm::cont::CellLocatorBase
 {
-  using Superclass = vtkm::cont::internal::CellLocatorBase<CellLocatorTwoLevel>;
-
   template <typename CellSetCont>
   using CellSetContToExec =
     typename CellSetCont::template ExecConnectivityType<vtkm::TopologyElementTagCell,
@@ -90,8 +87,7 @@ public:
                                   vtkm::cont::Token& token) const;
 
 private:
-  friend Superclass;
-  VTKM_CONT void Build();
+  VTKM_CONT void Build() override;
 
   vtkm::FloatDefault DensityL1, DensityL2;
 
