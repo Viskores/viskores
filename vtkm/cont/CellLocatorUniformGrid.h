@@ -10,7 +10,7 @@
 #ifndef vtkm_cont_CellLocatorUniformGrid_h
 #define vtkm_cont_CellLocatorUniformGrid_h
 
-#include <vtkm/cont/internal/CellLocatorBase.h>
+#include <vtkm/cont/CellLocatorBase.h>
 
 #include <vtkm/exec/CellLocatorUniformGrid.h>
 
@@ -19,11 +19,8 @@ namespace vtkm
 namespace cont
 {
 
-class VTKM_CONT_EXPORT CellLocatorUniformGrid
-  : public vtkm::cont::internal::CellLocatorBase<CellLocatorUniformGrid>
+class VTKM_CONT_EXPORT CellLocatorUniformGrid : public vtkm::cont::CellLocatorBase
 {
-  using Superclass = vtkm::cont::internal::CellLocatorBase<CellLocatorUniformGrid>;
-
 public:
   using LastCell = vtkm::exec::CellLocatorUniformGrid::LastCell;
 
@@ -39,8 +36,7 @@ private:
   vtkm::Vec3f MaxPoint;
   bool Is3D = true;
 
-  friend Superclass;
-  VTKM_CONT void Build();
+  VTKM_CONT void Build() override;
 };
 }
 } // vtkm::cont
