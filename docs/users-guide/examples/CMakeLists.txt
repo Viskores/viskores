@@ -49,6 +49,7 @@ set(examples_device
   GuideExampleFields.cxx
   GuideExampleFilterDataSetWithField.cxx
   GuideExampleGenerateMeshConstantShape.cxx
+  GuideExamplePointLocator.cxx
   GuideExampleSimpleAlgorithm.cxx
   GuideExampleSimpleHistogram.cxx
   GuideExampleSumOfAngles.cxx

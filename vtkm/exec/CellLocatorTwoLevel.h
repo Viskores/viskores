@@ -88,6 +88,16 @@ namespace exec
 {
 
 //--------------------------------------------------------------------
+
+/// @brief Structure for locating cells.
+///
+/// Use the `FindCell()` method to identify which cell contains a point in space.
+/// The `FindCell()` method optionally takes a `LastCell` object, which is a
+/// structure nested in this class. The `LastCell` object can help speed locating
+/// cells for successive finds at nearby points.
+///
+/// This class is provided by `vtkm::cont::CellLocatorTwoLevel`
+/// when passed to a worklet.
 template <typename CellStructureType>
 class VTKM_ALWAYS_EXPORT CellLocatorTwoLevel
 {
@@ -153,12 +163,14 @@ public:
   {
   }
 
+  /// @copydoc vtkm::exec::CellLocatorUniformGrid::LastCell
   struct LastCell
   {
     vtkm::Id CellId = -1;
     vtkm::Id LeafIdx = -1;
   };
 
+  /// @copydoc vtkm::exec::CellLocatorUniformGrid::FindCell
   VTKM_EXEC
   vtkm::ErrorCode FindCell(const FloatVec3& point, vtkm::Id& cellId, FloatVec3& parametric) const
   {
@@ -166,6 +178,7 @@ public:
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
+  /// @copydoc vtkm::exec::CellLocatorUniformGrid::FindCell
   VTKM_EXEC
   vtkm::ErrorCode FindCell(const FloatVec3& point,
                            vtkm::Id& cellId,

@@ -16,3 +16,4 @@ Advanced Development
    fancy-array-handles.rst
    globals.rst
    execution-objects.rst
+   locators.rst

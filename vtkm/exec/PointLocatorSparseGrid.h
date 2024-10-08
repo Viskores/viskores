@@ -19,6 +19,12 @@ namespace vtkm
 namespace exec
 {
 
+/// @brief Structure for locating point.
+///
+/// Use the `FindNearestNeighbor()` method to identify which cell contains a point in space.
+///
+/// This class is provided by `vtkm::cont::PointLocatorSparseGrid` when passed
+/// to a worklet.
 class VTKM_ALWAYS_EXPORT PointLocatorSparseGrid
 {
 public:
@@ -44,11 +50,11 @@ public:
   {
   }
 
-  /// \brief Nearest neighbor search using a Uniform Grid
+  /// @brief Nearest neighbor search using a Uniform Grid
   ///
-  /// Parallel search of nearesat neighbor for each point in the \c queryPoints in the set of
-  /// \c coords. Returns neareast neighbot in \c nearestNeighborIds and distances to nearest
-  /// neighbor in \c distances.
+  /// Parallel search of nearesat neighbor for each point in the `queryPoints` in the set of
+  /// `coords`. Returns neareast neighbot in `nearestNeighborIds` and distances to nearest
+  /// neighbor in `distances`.
   ///
   /// \param queryPoint Point coordinates to query for nearest neighbor.
   /// \param nearestNeighborId Neareast neighbor in the training dataset for each points in
