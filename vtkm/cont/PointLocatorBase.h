@@ -20,45 +20,51 @@ namespace vtkm
 {
 namespace cont
 {
-namespace internal
-{
 
-/// \brief Base class for all `PointLocator` classes.
+/// @brief Base class for all `PointLocator` classes.
 ///
-/// `PointLocatorBase` uses the curiously recurring template pattern (CRTP). Subclasses
-/// must provide their own type for the template parameter. Subclasses must implement
-/// `Build` and `PrepareForExecution` methods.
+/// `PointLocatorBase` subclasses must implement the pure virtual `Build()` method.
+/// They also must provide a `PrepareForExecution()` method to satisfy the
+/// `ExecutionObjectBase` superclass.
 ///
-template <typename Derived>
-class VTKM_ALWAYS_EXPORT PointLocatorBase : public vtkm::cont::ExecutionObjectBase
+/// If a derived class changes its state in a way that invalidates its internal search
+/// structure, it should call the protected `SetModified()` method. This will alert the
+/// base class to rebuild the structure on the next call to `Update()`.
+class VTKM_CONT_EXPORT PointLocatorBase : public vtkm::cont::ExecutionObjectBase
 {
 public:
+  virtual ~PointLocatorBase() = default;
+
+  /// @brief Specify the `CoordinateSystem` defining the location of the cells.
+  ///
+  /// This is often retrieved from the `vtkm::cont::DataSet::GetCoordinateSystem()` method,
+  /// but it can be any array of size 3 `Vec`s.
   vtkm::cont::CoordinateSystem GetCoordinates() const { return this->Coords; }
+  /// @copydoc GetCoordinates
   void SetCoordinates(const vtkm::cont::CoordinateSystem& coords)
   {
     this->Coords = coords;
     this->SetModified();
   }
-
-  void Update()
+  /// @copydoc GetCoordinates
+  VTKM_CONT void SetCoordinates(const vtkm::cont::UnknownArrayHandle& coords)
   {
-    if (this->Modified)
-    {
-      static_cast<Derived*>(const_cast<PointLocatorBase*>(this))->Build();
-      this->Modified = false;
-    }
+    this->SetCoordinates({ "coords", coords });
   }
+
+  void Update() const;
 
 protected:
   void SetModified() { this->Modified = true; }
   bool GetModified() const { return this->Modified; }
+
+  virtual void Build() = 0;
 
 private:
   vtkm::cont::CoordinateSystem Coords;
   mutable bool Modified = true;
 };
 
-} // vtkm::cont::internal
 } // vtkm::cont
 } // vtkm
 
