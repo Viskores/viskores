@@ -11400,11 +11400,6 @@ public:
       return FacesLookup[shape];
     }
 
-    VTKM_EXEC vtkm::UInt8 GetPoint(vtkm::Id pointIndex) const
-    {
-      return this->CellFacePortal.Get(pointIndex);
-    }
-
   private:
     typename vtkm::cont::ArrayHandle<vtkm::UInt8>::ReadPortalType MIRTablesDataPortal;
     typename vtkm::cont::ArrayHandle<vtkm::UInt16>::ReadPortalType MIRTablesIndicesPortal;
