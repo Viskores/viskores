@@ -45,11 +45,15 @@ developers and stakeholders of Viskores.
 The TSC voting members are listed below along with their GitHub usernames.
 
   * Kenneth Moreland (@kmorel) -- Chair
+  * Jefferson Amstutz (@jeffamstutz)
   * Mark Bolstad (@renderdude)
   * Hank Childs (@hankchilds)
   * Berk Geveci (@berkgeveci)
+  * Nicole Marsaglia (@nicolemarsaglia)
   * Li-Ta "Ollie" Lo (@ollielo)
   * David Pugmire (@dpugmire)
+  * Silvio Rizzi (@srizzi88)
+  * Gunther Weber (@ghweber)
 
 A TSC voting member may be added by a majority approval of the existing
 members. A TSC member may be removed by self-request, they have remained
