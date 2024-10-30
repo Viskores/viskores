@@ -691,7 +691,7 @@ struct VariantCases
         // just the one that it currently holds.
         return f(storage.V7, std::forward<Args>(args)...);
       default:
-        return VariantCases<NumCases - 8>::template CastAndCall(
+        return VariantCases<NumCases - 8>::template CastAndCall<>(
           index - 8, std::forward<Functor>(f), storage.Remaining, std::forward<Args>(args)...);
     }
   }

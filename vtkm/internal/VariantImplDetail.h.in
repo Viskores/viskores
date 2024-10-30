@@ -346,7 +346,7 @@ $for(param_index in range(max_expanded))\
         return f(storage.V$(param_index), std::forward<Args>(args)...);
 $endfor\
       default:
-        return VariantCases<NumCases - $(max_expanded)>::template CastAndCall(
+        return VariantCases<NumCases - $(max_expanded)>::template CastAndCall<>(
           index - $(max_expanded), std::forward<Functor>(f), storage.Remaining, std::forward<Args>(args)...);
     }
   }
