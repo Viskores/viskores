@@ -35,8 +35,6 @@ test:ubuntu2004_kokkos:
     - .ubuntu2004_kokkos
     - .cmake_test_linux
     - .run_automatically
-  dependencies:
-    - build:ubuntu2004_kokkos
   needs:
     - build:ubuntu2004_kokkos
 
@@ -83,8 +81,6 @@ test:ubuntu2004_hip_kokkos:
   variables:
     CTEST_MAX_PARALLELISM: 1
     CTEST_EXCLUSIONS: "UnitTestWorkletParticleAdvection"
-  dependencies:
-    - build:ubuntu2004_hip_kokkos
   needs:
     - build:ubuntu2004_hip_kokkos
   timeout: 3 hours

@@ -36,8 +36,6 @@ test:rhel8:
     - .rhel8
     - .cmake_test_linux
     - .run_automatically
-  dependencies:
-    - build:rhel8
   needs:
     - build:rhel8
 
@@ -67,7 +65,5 @@ test:rhel8_vtk_types:
     - .rhel8
     - .cmake_test_linux
     - .run_automatically
-  dependencies:
-    - build:rhel8_vtk_types
   needs:
     - build:rhel8_vtk_types
