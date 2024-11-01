@@ -26,8 +26,6 @@ test:macos_xcode14:
     - .run_automatically
   needs:
     - build:macos_xcode14
-  dependencies:
-    - build:macos_xcode14
 
 .macos_xcode14:
   variables:
