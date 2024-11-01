@@ -45,8 +45,6 @@ test:centos8_sanitizer:
       smoke_test_cmake_built_against_test_install
       smoke_test_make_built_against_test_install
       smoke_test_pkgconfig_make_built_against_test_install
-  dependencies:
-    - build:centos8_sanitizer
   needs:
     - build:centos8_sanitizer
 

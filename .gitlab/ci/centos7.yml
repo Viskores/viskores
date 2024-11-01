@@ -42,8 +42,6 @@ test:centos7_gcc73:
     - .cmake_test_linux
     - .run_automatically
     - .use_minimum_supported_cmake
-  dependencies:
-    - build:centos7_gcc73
   needs:
     - build:centos7_gcc73
 
@@ -61,7 +59,5 @@ test:rhel8_test_centos7:
     - .run_automatically
   variables:
       CTEST_EXCLUSIONS: "built_against_test_install"
-  dependencies:
-    - build:centos7_gcc73
   needs:
     - build:centos7_gcc73

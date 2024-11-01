@@ -135,7 +135,5 @@ test:windows_vs2019:
   extends:
     - .cmake_test_windows
     - .run_automatically
-  dependencies:
-    - build:windows_vs2019
   needs:
     - build:windows_vs2019
