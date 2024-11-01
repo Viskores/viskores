@@ -228,8 +228,6 @@ test:ubuntu2004_$<compiler>:
     - .ubuntu2004_cuda
     - .cmake_test_linux
     - .only-default
-  dependencies:
-    - build:ubuntu2004_$<compiler>
   needs:
     - build:ubuntu2004_$<compiler>
 ```

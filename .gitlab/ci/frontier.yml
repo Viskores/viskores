@@ -104,8 +104,6 @@ test:frontier_gcc_hip:
     - .run_frontier_ci
   needs:
     - build:frontier_gcc_hip
-  dependencies:
-    - build:frontier_gcc_hip
   variables:
     # -c48 --gpus=8 since we want to use fully utilize a node
     # SMT=2 since compiling is balanced type of task (IO|computing).

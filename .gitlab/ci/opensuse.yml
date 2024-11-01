@@ -38,7 +38,5 @@ test:opensuse_gcc13:
     #Restrict OpenMP number of threads since multiple test stages
     #execute on the same hardware concurrently
     OMP_NUM_THREADS: 4
-  dependencies:
-    - build:opensuse_gcc13
   needs:
     - build:opensuse_gcc13

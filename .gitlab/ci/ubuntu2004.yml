@@ -35,7 +35,5 @@ test:ubuntu2004_kokkos37:
     - .ubuntu2004_kokkos
     - .cmake_test_linux
     - .run_automatically
-  dependencies:
-    - build:ubuntu2004_kokkos37
   needs:
     - build:ubuntu2004_kokkos37
