@@ -32,7 +32,6 @@ set(headers
   OptionParserArguments.h
   ParallelRadixSort.h
   ParallelRadixSortInterface.h
-  PointLocatorBase.h
   ReverseConnectivityBuilder.h
   RuntimeDeviceConfiguration.h
   RuntimeDeviceConfigurationOptions.h

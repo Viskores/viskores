@@ -110,6 +110,7 @@ set(headers
   MergePartitionedDataSet.h
   ParticleArrayCopy.h
   PartitionedDataSet.h
+  PointLocatorBase.h
   PointLocatorSparseGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
@@ -173,6 +174,7 @@ set(sources
   Logging.cxx
   RuntimeDeviceTracker.cxx
   PartitionedDataSet.cxx
+  PointLocatorBase.cxx
   Storage.cxx
   Token.cxx
   TryExecute.cxx
