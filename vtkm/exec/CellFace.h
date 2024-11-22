@@ -278,7 +278,7 @@ static inline VTKM_EXEC vtkm::ErrorCode CellFaceCanonicalId(
   vtkm::IdComponent numPointsInFace;
   result = { -1 };
   VTKM_RETURN_ON_ERROR(vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
-  if (numPointsInFace == 0)
+  if (numPointsInFace < 1)
   {
     // An invalid face. We should already have gotten an error from
     // CellFaceNumberOfPoints.
@@ -343,6 +343,51 @@ static inline VTKM_EXEC vtkm::ErrorCode CellFaceCanonicalId(
   return vtkm::ErrorCode::Success;
 }
 
+/// \brief Returns the min point id of a cell face
+/// Given information about a cell face and the global point indices for that cell, returns a
+/// vtkm::Id that contains the minimum point id for that face.
+template <typename CellShapeTag, typename GlobalPointIndicesVecType>
+static inline VTKM_EXEC vtkm::ErrorCode CellFaceMinPointId(
+  vtkm::IdComponent faceIndex,
+  CellShapeTag shape,
+  const GlobalPointIndicesVecType& globalPointIndicesVec,
+  vtkm::Id& minFacePointId)
+{
+  vtkm::IdComponent numPointsInFace;
+  minFacePointId = { -1 };
+  VTKM_RETURN_ON_ERROR(vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
+  if (numPointsInFace < 1)
+  {
+    // An invalid face. We should already have gotten an error from
+    // CellFaceNumberOfPoints.
+    return vtkm::ErrorCode::InvalidFaceId;
+  }
+
+  detail::CellFaceTables table;
+  minFacePointId = globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 0)];
+  vtkm::Id nextPoint = globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 1)];
+  if (nextPoint < minFacePointId)
+  {
+    minFacePointId = nextPoint;
+  }
+  nextPoint = globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 2)];
+  if (nextPoint < minFacePointId)
+  {
+    minFacePointId = nextPoint;
+  }
+
+  // Check the rest of the points to see if they are in the lowest 3
+  for (vtkm::IdComponent pointIndex = 3; pointIndex < numPointsInFace; pointIndex++)
+  {
+    nextPoint = globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, pointIndex)];
+    if (nextPoint < minFacePointId)
+    {
+      minFacePointId = nextPoint;
+    }
+  }
+
+  return vtkm::ErrorCode::Success;
+}
 }
 } // namespace vtkm::exec
 
