@@ -77,7 +77,8 @@ vtkm::cont::DataSet ClipWithField::DoExecute(const vtkm::cont::DataSet& input)
   vtkm::cont::CellSetExplicit<> outputCellSet;
 
   auto resolveFieldType = [&](const auto& concrete) {
-    outputCellSet = worklet.Run(inputCellSet, concrete, this->ClipValue, this->Invert);
+    outputCellSet = this->Invert ? worklet.Run<true>(inputCellSet, concrete, this->ClipValue)
+                                 : worklet.Run<false>(inputCellSet, concrete, this->ClipValue);
   };
   this->CastAndCallScalarField(this->GetFieldFromDataSet(input).GetData(), resolveFieldType);
 
