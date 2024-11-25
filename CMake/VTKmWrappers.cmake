@@ -174,8 +174,10 @@ function(vtkm_setup_job_pool)
     # We try to allocate a pool size where we presume each compilation process
     # will require 3GB of memory. To allow for other NON VTK-m jobs we leave at
     # least 3GB of memory as 'slop'.
-    cmake_host_system_information(RESULT vtkm_mem_ QUERY TOTAL_PHYSICAL_MEMORY)
-    math(EXPR vtkm_pool_size "(${vtkm_mem_}/3072)-1")
+    if (NOT DEFINED vtkm_pool_size)
+      cmake_host_system_information(RESULT vtkm_mem_ QUERY TOTAL_PHYSICAL_MEMORY)
+      math(EXPR vtkm_pool_size "(${vtkm_mem_}/3072)-1")
+    endif ()
 
     if (vtkm_pool_size LESS 1)
       set(vtkm_pool_size 1)

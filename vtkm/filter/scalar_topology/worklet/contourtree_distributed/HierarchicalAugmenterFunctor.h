@@ -64,7 +64,6 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
 
-
 namespace vtkm
 {
 namespace worklet
@@ -125,7 +124,6 @@ public:
       if (target.gid != selfid)
       { // Send to partner
         blockData->HierarchicalAugmenter.PrepareOutAttachmentPoints(round);
-        // TODO/FIXME: Correct function? Correct round?
         rp.enqueue(target, blockData->HierarchicalAugmenter.OutData);
         // Note: HierarchicalAugmenter.ReleaseSwapArrays() does not necessarily delete the
         // arrays. Rather, it releases the reference to them. If, for example, the data

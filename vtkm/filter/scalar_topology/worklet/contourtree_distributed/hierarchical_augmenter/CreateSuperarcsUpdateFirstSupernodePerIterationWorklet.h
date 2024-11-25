@@ -37,83 +37,67 @@
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-#ifndef vtk_m_worklet_testing_contourtree_distributed_load_arrays_h
-#define vtk_m_worklet_testing_contourtree_distributed_load_arrays_h
+//=============================================================================
+//  The PPP2 algorithm and software were jointly developed by
+//  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
+//  Oliver Ruebel (LBNL)
+//==============================================================================
 
-#include <vtkm/Types.h>
-#include <vtkm/cont/ArrayHandle.h>
+#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_augmenter_create_auperarcs_update_first_supernode_per_iteration_worklet_h
+#define vtk_m_worklet_contourtree_distributed_hierarchical_augmenter_create_auperarcs_update_first_supernode_per_iteration_worklet_h
+
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
 namespace worklet
 {
-namespace testing
-{
 namespace contourtree_distributed
 {
-
-// Types used in binary test files
-typedef size_t FileSizeType;
-typedef unsigned long long FileIndexType;
-const FileIndexType FileIndexMask = 0x07FFFFFFFFFFFFFFLL;
-typedef double FileDataType;
-
-inline void ReadIndexArray(std::ifstream& is, vtkm::cont::ArrayHandle<vtkm::Id>& indexArray)
+namespace hierarchical_augmenter
 {
-  FileSizeType sz;
-  is.read(reinterpret_cast<char*>(&sz), sizeof(sz));
-  //std::cout << "Reading index array of size " << sz << std::endl;
-  indexArray.Allocate(sz);
-  auto writePortal = indexArray.WritePortal();
 
-  for (vtkm::Id i = 0; i < static_cast<vtkm::Id>(sz); ++i)
-  {
-    FileIndexType x;
-    is.read(reinterpret_cast<char*>(&x), sizeof(x));
-    // Covert from index type size in file (64 bit) to index type currently used by
-    // shifting the flag portion of the index accordingly
-    vtkm::Id shiftedFlagVal = (x & FileIndexMask) |
-      ((x & ~FileIndexMask) >> ((sizeof(FileIndexType) - sizeof(vtkm::Id)) << 3));
-    writePortal.Set(i, shiftedFlagVal);
-  }
-}
-
-inline void ReadIndexArrayVector(std::ifstream& is,
-                                 std::vector<vtkm::cont::ArrayHandle<vtkm::Id>>& indexArrayVector)
+/// Worklet used in HierarchicalAugmenter::UpdateHyperstructure to set the hyperarcs and hypernodes
+class CreateSuperarcsUpdateFirstSupernodePerIterationWorklet : public vtkm::worklet::WorkletMapField
 {
-  FileSizeType sz;
-  is.read(reinterpret_cast<char*>(&sz), sizeof(sz));
-  //std::cout << "Reading vector of " << sz << " index arrays" << std::endl;
-  indexArrayVector.resize(sz);
+public:
+  /// Control signature for the worklet
+  using ControlSignature = void(FieldIn indexArray,
+                                WholeArrayInOut augmentedTreeFirstSupernodePerIteration);
+  using ExecutionSignature = void(_1, _2);
+  using InputDomain = _1;
 
-  for (vtkm::Id i = 0; i < static_cast<vtkm::Id>(sz); ++i)
-  {
-    ReadIndexArray(is, indexArrayVector[i]);
-  }
-}
+  // Default Constructor
+  VTKM_EXEC_CONT
+  CreateSuperarcsUpdateFirstSupernodePerIterationWorklet() {}
 
-template <class FieldType>
-inline void ReadDataArray(std::ifstream& is, vtkm::cont::ArrayHandle<FieldType>& dataArray)
-{
-  FileSizeType sz;
-  is.read(reinterpret_cast<char*>(&sz), sizeof(sz));
-  //std::cout << "Reading data array of size " << sz << std::endl;
-  dataArray.Allocate(sz);
-  auto writePortal = dataArray.WritePortal();
+  template <typename InOutFieldPortalType>
+  VTKM_EXEC void operator()(
+    const vtkm::Id& iteration,
+    const InOutFieldPortalType& augmentedTreeFirstSupernodePerIterationPortal) const
+  { // operator()()
+    if (augmentedTreeFirstSupernodePerIterationPortal.Get(iteration) == 0)
+    {
+      augmentedTreeFirstSupernodePerIterationPortal.Set(
+        iteration, augmentedTreeFirstSupernodePerIterationPortal.Get(iteration + 1));
+    }
 
-  for (vtkm::Id i = 0; i < static_cast<vtkm::Id>(sz); ++i)
-  {
-    FileDataType x;
-    is.read(reinterpret_cast<char*>(&x), sizeof(x));
-    //std::cout << "Read " << x << std::endl;
-    writePortal.Set(
-      i,
-      FieldType(x)); // Test data is stored as double but generally is also ok to be cast to float.
-  }
-}
+    /*
+    for (indexType iteration = 1; iteration < augmentedTree->nIterations[roundNo]; ++iteration)
+    {
+      if (augmentedTree->firstSupernodePerIteration[roundNo][iteration] == 0)
+      {
+        augmentedTree->firstSupernodePerIteration[roundNo][iteration] =
+          augmentedTree->firstSupernodePerIteration[roundNo][iteration+1];
+      }
+    }
+    */
+  } // operator()()
+};  // CreateSuperarcsUpdateFirstSupernodePerIterationWorklet
 
+} // namespace hierarchical_augmenter
 } // namespace contourtree_distributed
-} // namespace testing
 } // namespace worklet
 } // namespace vtkm
 

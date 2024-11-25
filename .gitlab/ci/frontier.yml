@@ -11,11 +11,11 @@
 ##=============================================================================
 
 # Ad-hoc build that runs in the ECP Hardware, concretely in OLCF Spock.
-.crusher_gcc_hip:
+.frontier_gcc_hip:
   variables:
-    CCACHE_BASEDIR:          "/lustre/orion/csc331/scratch/"
-    CCACHE_DIR:              "/lustre/orion/csc331/scratch/vbolea/ci/vtk-m/ccache"
-    CUSTOM_CI_BUILDS_DIR:    "/lustre/orion/csc331/scratch/vbolea/ci/vtk-m/runtime"
+    CCACHE_BASEDIR:          "/lustre/orion/ums033/scratch/"
+    CCACHE_DIR:              "/lustre/orion/ums033/scratch/ums033_auser/ci/vtk-m/ccache"
+    CUSTOM_CI_BUILDS_DIR:    "/lustre/orion/ums033/scratch/ums033_auser/ci/vtk-m/runtime"
 
     # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
     CCACHE_IGNOREOPTIONS:    "-isystem=*"
@@ -37,6 +37,7 @@
     # The user default module list should not exist
     # craype;rocm;gcc should be loaded first
     JOB_MODULES: >-
+      DefApps
       craype-accel-amd-gfx90a
       gcc/12
       cmake
@@ -46,8 +47,24 @@
 
       ninja
       zstd
-    VTKM_SETTINGS: kokkos+hip+gfx90a+crusher+ccache+no_rendering
+    OLCF_SERVICE_ACCOUNT: "ums033_auser"
+    VTKM_SETTINGS: kokkos+hip+gfx90a+frontier+ccache+no_rendering
   interruptible: true
+
+setup_modules:
+  stage: .pre
+  extends:
+    - .run_frontier_ci
+  tags: [frontier, shell]
+  variables:
+    CUSTOM_CI_BUILDS_DIR: "/lustre/orion/ums033/scratch/ums033_auser/ci/vtk-m/runtime"
+    OLCF_SERVICE_ACCOUNT: "ums033_auser"
+    GIT_STRATEGY: none
+  script:
+    - module load DefApps
+
+
+    - module save
 
 .setup_env_ecpci: &setup_env_ecpci |
   module purge
@@ -55,12 +72,12 @@
   module list
   export PATH="${CCACHE_INSTALL_DIR}/ccache:$PATH"
 
-build:crusher_gcc_hip:
+build:frontier_gcc_hip:
   stage: build
-  tags: [crusher, shell]
+  tags: [frontier, shell]
   extends:
-    - .crusher_gcc_hip
-    - .run_crusher_ci
+    - .frontier_gcc_hip
+    - .run_frontier_ci
   before_script:
     - *setup_env_ecpci
     - mkdir -p "$CCACHE_INSTALL_DIR"
@@ -69,15 +86,6 @@ build:crusher_gcc_hip:
     - ccache -z
     - ccache -s
     - .gitlab/ci/config/kokkos.sh "$CI_BUILDS_DIR" "3.7.01" $KOKKOS_OPTS
-
-
-
-
-
-
-
-
-
   script:
     - cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
     - ctest -VV -S .gitlab/ci/ctest_configure.cmake
@@ -88,18 +96,18 @@ build:crusher_gcc_hip:
       - build/
       - .gitlab/ccache/ccache
 
-test:crusher_gcc_hip:
+test:frontier_gcc_hip:
   stage: test
-  tags: [crusher, slurm]
+  tags: [frontier, slurm]
   extends:
-    - .crusher_gcc_hip
-    - .run_crusher_ci
+    - .frontier_gcc_hip
+    - .run_frontier_ci
   needs:
-    - build:crusher_gcc_hip
-  dependencies:
-    - build:crusher_gcc_hip
+    - build:frontier_gcc_hip
   variables:
-    SCHEDULER_PARAMETERS: "-ACSC331_crusher -pbatch -t120 --nice=0 -c32 --gpus=4 -N 1"
+    # -c48 --gpus=8 since we want to use fully utilize a node
+    # SMT=2 since compiling is balanced type of task (IO|computing).
+    SCHEDULER_PARAMETERS: "-AUMS033 -pbatch -t 00:30:00 --nice=0 -c48 --threads-per-core=2 --gpus=8 -N 1"
     # We need this to skip ctest_submit from being run inside a jsrun job
     GITLAB_CI_EMULATION: 1
     # Tests errors to address due to different env in Spock
@@ -112,8 +120,8 @@ test:crusher_gcc_hip:
   before_script:
     - *setup_env_ecpci
   script:
-    - CTEST_MAX_PARALLELISM=32 ctest -VV -S .gitlab/ci/ctest_build.cmake
-    - CTEST_MAX_PARALLELISM=4  ctest -VV -S .gitlab/ci/ctest_test.cmake
+    - CTEST_MAX_PARALLELISM=96 ctest -VV -S .gitlab/ci/ctest_build.cmake
+    - CTEST_MAX_PARALLELISM=8  ctest -VV -S .gitlab/ci/ctest_test.cmake
   after_script:
     - *setup_env_ecpci
     - ccache -s

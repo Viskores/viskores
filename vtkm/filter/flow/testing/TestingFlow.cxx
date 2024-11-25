@@ -15,8 +15,8 @@
 #include <vtkm/filter/flow/ParticleAdvection.h>
 #include <vtkm/filter/flow/Pathline.h>
 #include <vtkm/filter/flow/Streamline.h>
+#include <vtkm/filter/flow/testing/GenerateTestDataSets.h>
 #include <vtkm/thirdparty/diy/diy.h>
-#include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 vtkm::cont::ArrayHandle<vtkm::Vec3f> CreateConstantVectorField(vtkm::Id num, const vtkm::Vec3f& vec)
 {

@@ -264,11 +264,21 @@ include(VTKmWrappers)
 
 # By default: Set VTKm_ENABLE_KOKKOS_THRUST to ON if VTKm_ENABLE_KOKKOS is ON, otherwise
 # disable it (or if the user explicitly turns this option OFF)
-cmake_dependent_option(VTKm_ENABLE_KOKKOS_THRUST "Enable Kokkos thrust support (only valid with CUDA and HIP)"
-  ON "VTKm_ENABLE_KOKKOS;Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP" OFF)
+cmake_dependent_option(
+  VTKm_ENABLE_KOKKOS_THRUST
+  "Enable Kokkos thrust support (only valid with CUDA and HIP)"
+  ON
+  "VTKm_ENABLE_KOKKOS;Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP; NOT Kokkos_ENABLE_HIP AND CMAKE_VERSION VERSION_LESS 3.24"
+  OFF
+)
 
 # CUDA already provides thrust
 if (VTKm_ENABLE_KOKKOS_THRUST AND TARGET vtkm_kokkos_hip)
+  if (CMAKE_VERSION VERSION_LESS 3.24)
+    message(FATAL_ERROR "VTKm_ENABLE_KOKKOS_THRUST=ON with HIP needs CMAKE >= 3.24")
+  endif()
+  # This policy is needed for LINK_ONLY to work in LINK_LIBRARIES.
+  cmake_policy(SET CMP0131 NEW)
   find_package(rocthrust REQUIRED CONFIG)
 endif()
 

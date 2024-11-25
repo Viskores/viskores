@@ -18,6 +18,19 @@ In addition to the base :class:`vtkm::cont::DataSet`, |VTKm| provides :class:`vt
 A :class:`vtkm::cont::PartitionedDataSet` is implemented as a collection of :class:`vtkm::cont::DataSet` objects.
 Partitioned data sets are described later in :secref:`dataset:Partitioned Data Sets`.
 
+As will be seen throughout this chapter, there is a lot of variability in the structure that can be represented in a :class:`vtkm::cont::DataSet`.
+To get a human-readable synopsis of its contents, use the :func:`vtkm::cont::DataSet::PrintSummary` method.
+This is particularly helpful for debugging.
+
+.. doxygenfunction:: vtkm::cont::DataSet::PrintSummary
+
+The :func:`vtkm::cont::DataSet::PrintSummary` method takes a C++ output stream to direct the description.
+Usually ``std::cout`` is provided to direct the output to the terminal.
+
+.. load-example:: DataSetPrintSummary
+   :file: GuideExampleDataSetCreation.cxx
+   :caption: Printing a summary of a :class:`vtkm::cont::DataSet`.
+
 
 ------------------------------
 Building Data Sets
@@ -258,6 +271,27 @@ The following (somewhat contrived) example defines fields for a uniform grid tha
    :file: GuideExampleDataSetCreation.cxx
    :caption: Adding fields to a :class:`vtkm::cont::DataSet`.
 
+Copying Data Sets
+==============================
+
+It is sometimes the case where you want to derive one :class:`vtkm::cont::DataSet` from another.
+In this case, you might need to copy the information from one object to another.
+To copy all the information from one :class:`vtkm::cont::DataSet` to another, simply use the assignment operator.
+
+.. load-example:: DataSetCopyOperator
+   :file: GuideExampleDataSetCreation.cxx
+   :caption: Copying a :class:`vtkm::cont::DataSet` with the copy operator.
+
+Sometimes it is desirable to copy the structure of a :class:`vtkm::cont::DataSet` without copying the entire data.
+That is, you wish to use the same geometry but have different information about the physical properties.
+This can be done with the :func:`vtkm::cont::DataSet::CopyStructure` method.
+
+.. doxygenfunction:: vtkm::cont::DataSet::CopyStructure
+
+.. load-example:: DataSetCopyStructure
+   :file: GuideExampleDataSetCreation.cxx
+   :caption: Copying the structure of a :class:`vtkm::cont::DataSet`.
+
 
 ------------------------------
 Cell Sets
@@ -276,19 +310,32 @@ A cell set determines the topological structure of the data in a data set.
 .. doxygenclass:: vtkm::cont::CellSet
    :members:
 
+A :class:`vtkm::cont::DataSet` holds a :class:`vtkm::cont::CellSet` structure to define the cells it contains.
+This cell set can be set or retrieved from a :class:`vtkm::cont::DataSet` object.
+
+.. doxygenfunction:: vtkm::cont::DataSet::SetCellSet
+.. doxygenfunction:: vtkm::cont::DataSet::GetCellSet()
+.. doxygenfunction:: vtkm::cont::DataSet::GetCellSet() const
+
+Cell sets are returned from a data set wrapped in a :class:`vtkm::cont::UnknownCellSet`, which is documented in :secref:`dataset:Unknown Cell Sets`.
+
 3D cells are made up of *points*, *edges*, and *faces*.
 (2D cells have only points and edges, and 1D cells have only points.)
 :numref:`fig:CellTopology` shows the relationship between a cell's shape and these topological elements.
 The arrangement of these points, edges, and faces is defined by the *shape* of the cell, which prescribes a specific ordering of each.
 The basic cell shapes provided by |VTKm| are discussed in detail in :chapref:`working-with-cells:Working with Cells`.
 
-.. todo:: Add cell shape reference above.
-
 .. figure:: images/CellConstituents.png
    :width: 50%
    :name: fig:CellTopology
 
    The relationship between a cell shape and its topological elements (points, edges, and faces).
+
+The number of points and cells can be retrieved from the :func:`vtkm::cont::CellSet::GetNumberOfPoints` and :func:`vtkm::cont::CellSet::GetNumberOfCells` methods, respectively.
+The :class:`vtkm::cont::DataSet` class contains convenience methods to get the number of points or cells without retrieving the cell set.
+
+.. doxygenfunction:: vtkm::cont::DataSet::GetNumberOfPoints
+.. doxygenfunction:: vtkm::cont::DataSet::GetNumberOfCells
 
 There are multiple ways to express the connections of a cell set, each with
 different benefits and restrictions. These different cell set types are
@@ -453,6 +500,9 @@ Fields are often used to describe physical properties such as pressure, temperat
 Fields are represented in a |VTKm| data set as an array where each value is associated with a particular element type of a mesh (such as points or cells).
 This association of field values to mesh elements and the structure of the cell set determines how the field is interpolated throughout the space of the mesh.
 
+Field Class
+==============================
+
 Fields are manged by the :class:`vtkm::cont::Field` class.
 
 .. doxygenclass:: vtkm::cont::Field
@@ -474,6 +524,10 @@ Associations are identified by the :enum:`vtkm::cont::Field::Association` enumer
 
 .. doxygenenum:: vtkm::cont::Field::Association
 
+A :class:`vtkm::cont::Field` class can be constructed by providing the name, association and data.
+
+.. doxygenfunction:: vtkm::cont::Field::Field(std::string, Association, const vtkm::cont::UnknownArrayHandle&)
+
 The :class:`vtkm::cont::Field` class also has several convenience methods for querying the association.
 
 .. doxygenfunction:: vtkm::cont::Field::IsPointField
@@ -492,10 +546,55 @@ The :class:`vtkm::cont::Field` class also has several convenience methods for qu
 
 .. doxygenfunction:: vtkm::cont::Field::GetRange() const
 
-Details on how to get data from a :class:`vtkm::cont::ArrayHandle` them is given in Chapter \ref{chap:AccessingAllocatingArrays}.
+.. didyouknow::
+   The :class:`vtkm::cont::Field` class does not give direct access to the data in the field.
+   This is in part because the field can hold any number of data types and in part because data access is more efficient in filters and other features that run in parallel.
+   The :func:`vtkm::cont::Field::PrintSummary` function can be used to get some summary information for debugging.
+   To get direct access to the data, you will first have to get a :class:`vtkm::cont::UnknownArrayHandle` from :func:`vtkm::cont::Field::Data`.
+   The :class:`vtkm::cont::UnknownArrayHandle` then has to be converted to a :class:`vtkm::cont::ArrayHandle` of the proper type as described in :chapref:`unknown-array-handle:Unknown Array Handles`.
+   Once the proper :class:`vtkm::cont::ArrayHandle` is retrieved, the data can finally be accessed through an array portal as described in :secref:`basic-array-handles:Array Portals`.
 
-.. todo:: Fix above reference to array handle chapter.
+Managing Data Set Fields
+==============================
 
+:secref:`dataset:Add Fields` describes the convenient :func:`vtkm::cont::DataSet::AddPointField` and :func:`vtkm::cont::DataSet::AddCellField` methods for adding fields to a :class:`vtkm::cont::DataSet` from an array.
+Fields can be added more generally by passing a :class:`vtkm::cont::Field` object or by providing a :enum:`vtkm::cont::Field::Association`.
+
+.. doxygenfunction:: vtkm::cont::DataSet::AddField(const Field&)
+.. doxygenfunction:: vtkm::cont::DataSet::AddField(const std::string&, vtkm::cont::Field::Association, const vtkm::cont::UnknownArrayHandle&)
+
+A :class:`vtkm::cont::Field` can be retrieved from a :class:`vtkm::cont::DataSet` by name and an optional association.
+
+.. doxygenfunction:: vtkm::cont::DataSet::GetField(const std::string&, vtkm::cont::Field::Association) const
+.. doxygenfunction:: vtkm::cont::DataSet::GetField(const std::string&, vtkm::cont::Field::Association)
+.. doxygenfunction:: vtkm::cont::DataSet::GetPointField(const std::string&) const
+.. doxygenfunction:: vtkm::cont::DataSet::GetPointField(const std::string&)
+.. doxygenfunction:: vtkm::cont::DataSet::GetCellField(const std::string&) const
+.. doxygenfunction:: vtkm::cont::DataSet::GetCellField(const std::string&)
+
+The number of fields in a :class:`vtkm::cont::DataSet` is returned by :func:`vtkm::cont::DataSet::GetNumberOfFields`.
+
+.. doxygenfunction:: vtkm::cont::DataSet::GetNumberOfFields
+
+It is possible to iterate over all fields of a :class:`vtkm::cont::DataSet` by quering the number of fields and then retrieving the fields by index.
+
+.. doxygenfunction:: vtkm::cont::DataSet::GetField(vtkm::Id) const
+.. doxygenfunction:: vtkm::cont::DataSet::GetField(vtkm::Id)
+
+.. load-example:: IterateFields
+   :file: GuideExampleDataSetCreation.cxx
+   :caption: Iterating over all the fields in a :class:`vtkm::cont::DataSet`.
+
+.. commonerrors::
+   Avoid retrieving fields by index unless doing simple iterations like this.
+   The ordering of the fields can change so under some circumstances you may get different :class:`vtkm::cont::Field` objects for the same index.
+
+:func:`vtkm::cont::DataSet::GetField` and the related methods will throw an exception if the :class:`vtkm::cont::DataSet` does not contain the requested field.
+You can test whether a :class:`vtkm::cont::DataSet` has a field without having an exception thrown using one of the variations of :func:`vtkm::cont::DataSet::HasField`.
+
+.. doxygenfunction:: vtkm::cont::DataSet::HasField
+.. doxygenfunction:: vtkm::cont::DataSet::HasPointField
+.. doxygenfunction:: vtkm::cont::DataSet::HasCellField
 
 ------------------------------
 Coordinate Systems
@@ -509,20 +608,64 @@ A coordinate system determines the location of a mesh's elements in space.
 The spatial location is described by providing a 3D vector at each point that gives the coordinates there.
 The point coordinates can then be interpolated throughout the mesh.
 
+Coordinate System Class
+==============================
+
+Coordinate systems are managed by :class:`vtkm::cont::CoordinateSystem`, which is a subclass of :class:`vtkm::cont::Field`.
+This is because a coordinate system is conceptually just a field with some special properties.
+
 .. doxygenclass:: vtkm::cont::CoordinateSystem
+
+Because a :class:`vtkm::cont::CoordinateSystem` is a field that is always associated with points, it can be constructed with just the name and the data.
+
+.. doxygenfunction:: vtkm::cont::CoordinateSystem::CoordinateSystem(std::string, const vtkm::cont::UnknownArrayHandle&)
+
+:class:`vtkm::cont::CoordinateSystem` also has a convenience constructor for creating a uniform mesh of points.
+
+.. doxygenfunction:: vtkm::cont::CoordinateSystem::CoordinateSystem(std::string, vtkm::Id3, vtkm::Vec3f, vtkm::Vec3f)
 
 In addition to all the methods provided by the :class:`vtkm::cont::Field` superclass, the :class:`vtkm::cont::CoordinateSystem` also provides a :func:`vtkm::cont::CoordinateSystem::GetBounds` convenience method that returns a :class:`vtkm::Bounds` object giving the spatial bounds of the coordinate system.
 
 .. doxygenfunction:: vtkm::cont::CoordinateSystem::GetBounds
 
+Managing Data Set Coordinate Systems
+========================================
+
 It is typical for a :class:`vtkm::cont::DataSet` to have one coordinate system defined, but it is possible to define multiple coordinate systems.
 This is helpful when there are multiple ways to express coordinates.
-For example, positions in geographic may be expressed as Cartesian coordinates or as latitude-longitude coordinates.
+For example, planetary positions may be expressed as Cartesian coordinates or as latitude-longitude coordinates.
 Both are valid and useful in different ways.
 
 It is also valid to have a :class:`vtkm::cont::DataSet` with no coordinate system.
 This is useful when the structure is not rooted in physical space.
 For example, if the cell set is representing a graph structure, there might not be any physical space that has meaning for the graph.
+
+Similar to regular fields, coordinate systems can be added to a :class:`vtkm::cont::DataSet` by either constructing a :class:`vtkm::cont::CoordinateSystem` or by providing the array and field information.
+
+.. doxygenfunction:: vtkm::cont::DataSet::AddCoordinateSystem(const vtkm::cont::CoordinateSystem&)
+.. doxygenfunction:: vtkm::cont::DataSet::AddCoordinateSystem(const std::string&, const vtkm::cont::UnknownArrayHandle&)
+
+Because coordinate systems are part of the list of fields, an existing point field can be marked as a coordinate system by just providing its name.
+
+.. doxygenfunction:: vtkm::cont::DataSet::AddCoordinateSystem(const std::string&)
+
+A :class:`vtkm::cont::CoordinateSystem` can be retrieved from a :class:`vtkm::cont::DataSet` by name.
+
+.. doxygenfunction:: vtkm::cont::DataSet::GetCoordinateSystem(const std::string&) const
+
+:func:`vtkm::cont::DataSet::GetCoordianteSystem` will throw an exception if the :class:`vtkm::cont::DataSet` does not contain the requested field.
+You can test whether a :class:`vtkm::cont::DataSet` has a field without having an exception thrown by using :func:`vtkm::cont::DataSet::HasCoordinateSystem`.
+
+.. doxygenfunction:: vtkm::cont::DataSet::HasCoordinateSystem
+
+Coordiante systems can also be retrieved by index.
+Because most ``DataSet``'s contain exactly one coordiante system, it is common to pick the coordinate system at index 0, which is the default argument.
+
+.. doxygenfunction:: vtkm::cont::DataSet::GetCoordinateSystem(vtkm::Id) const
+
+It is also possible to iterate over all coordinate systems by retrieving the number of coordinate systems.
+
+.. doxygenfunction:: vtkm::cont::DataSet::GetNumberOfCoordinateSystems
 
 
 ------------------------------
@@ -585,3 +728,95 @@ In both cases, the :func:`vtkm::cont::Filter::Execute` method is called on the f
 .. load-example:: FilterPartitionedDataSet
    :file: GuideExampleDataSetCreation.cxx
    :caption: Applying a filter to multi block data.
+
+
+-----------------------------------
+Cell Classification and Ghost Cells
+-----------------------------------
+
+.. index::
+   single: ghost cell
+   single: cell; ghost
+   single: halo cell
+   single: cell; halo
+
+One of the challenges of managing data that is divided into partitions, such as in a :class:`vtkm::cont::PartitionedDataSet` or across MPI ranks, is dealing with the boundary between partitions.
+A cell on the boundary on one partition will not have the connection information to an adjacent cell in a neighboring partition.
+This can cause a problem with many of the filtering operations in |VTKm| that operate on each partition independently.
+
+A simple remedy to many of the issues with this missing connectivity information is the introduction of *ghost cells* (sometimes also known as halo cells).
+A ghost cell is one that is included in a :class:`vtkm::cont::DataSet`, but should not be considered part of the partition.
+It is assumed a ghost cell can be removed from the data as it is repeated information.
+However, it is provided so that algorithms using information across cell neighbors will get that information.
+
+There exist some filters in |VTKm| to manipulate ghost cells such as those described in :secref:`provided-filters:Ghost Cell Removal`, :secref:`provided-filters:Ghost Cell Classification`, and :secref:`provided-filters:AMR Arrays`.
+The following operations document how to add and use ghost cell information.
+
+Ghost Cell Fields
+==============================
+
+Each :class:`vtkm::cont::DataSet` can contain a special cell field that provides for each cell a flag identifying the cell as normal, ghost, or other properties.
+
+.. doxygenfunction:: vtkm::cont::DataSet::GetGhostCellField
+.. doxygenfunction:: vtkm::cont::DataSet::HasGhostCellField
+.. doxygenfunction:: vtkm::cont::DataSet::SetGhostCellField(const vtkm::cont::Field&)
+.. doxygenfunction:: vtkm::cont::DataSet::SetGhostCellField(const std::string&, const vtkm::cont::UnknownArrayHandle&)
+
+Like coordinate systems, ghost cell fields are stored with the list of all fields within a :class:`vtkm::cont::DataSet` and are identified by the name of the field.
+So, the ghost cell field can be specified by providing the name of an existing field.
+
+.. doxygenfunction:: vtkm::cont::DataSet::SetGhostCellField(const std::string&)
+
+The name of the field used for ghost cells is set independently of the field.
+
+.. doxygenfunction:: vtkm::cont::DataSet::GetGhostCellFieldName
+.. doxygenfunction:: vtkm::cont::DataSet::SetGhostCellFieldName
+
+The :class:`vtkm::cont::DataSet` may name a ghost cell field that does not exist.
+In this case, :func:`vtkm::cont::DataSet::HasGhostCellField` will report no ghost cell field, but the name will still exist.
+If a cell field with this name is later added to the :class:`vtkm::cont::DataSet`, it will automatically become the ghost cell field.
+Likewise, because the name of the ghost cell field already exists, a ghost cell field can be created by just providing the array without the name.
+
+.. doxygenfunction:: vtkm::cont::DataSet::SetGhostCellField(const vtkm::cont::UnknownArrayHandle&)
+
+|VTKm| also specifies a "global" cell field name.
+All :class:`vtkm::cont::DataSet` objects will be born with this global cell field name.
+
+.. doxygenfunction:: vtkm::cont::GetGlobalGhostCellFieldName
+.. doxygenfunction:: vtkm::cont::SetGlobalGhostCellFieldName
+
+This global cell field name makes it easier to work with other libraries or data sources that have a particular naming convention for ghost cells.
+
+.. didyouknow::
+   The default global ghost cell name is ``vtkGhostCells``.
+   This follows the convention of the VTK visualization library.
+
+Cell Classification Flags
+==============================
+
+The ghost cell field is typically a field of :type:`vtkm::UInt8` values.
+Each value is treated as bit flags specifying the classification of the cell.
+The interpretation of the ghost cell field flags is determined by :class:`vtkm::CellClassification`.
+
+.. doxygenclass:: vtkm::CellClassification
+
+.. index::
+   double: cell; blanking
+   double: cell; invalid
+
+:class:`vtkm::CellClassification` behaves like a scoped enum, but values of type :class:`vtkm::CellClassification` can be used interchangeably with :type:`vtkm::UInt8`.
+This simplifies working with classification flags.
+Valid classification flags can be the or-ing of any of the following flags.
+
+.. doxygenenumvalue:: vtkm::CellClassification::Normal
+.. doxygenenumvalue:: vtkm::CellClassification::Ghost
+.. doxygenenumvalue:: vtkm::CellClassification::Invalid
+.. doxygenenumvalue:: vtkm::CellClassification::Blanked
+
+.. didyouknow::
+   Like the default ghost cell field name, the :class:`vtkm::CellClassification` flags follow the same flags used in the VTK library.
+   This allows data to be more easily imported between the two libraries.
+
+.. load-example:: SettingGhostCells
+   :file: GuideExampleFields.cxx
+   :caption: Using :class:`vtkm::CellClassification` to establish ghost and blanked cells.

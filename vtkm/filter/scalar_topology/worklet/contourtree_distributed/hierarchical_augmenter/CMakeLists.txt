@@ -23,6 +23,9 @@ set(headers
   AttachmentAndSupernodeComparator.h
   ResizeArraysBuildNewSupernodeIdsWorklet.h
   CreateSuperarcsWorklet.h
+  CreateSuperarcsData.h
+  CreateSuperarcsSetFirstSupernodePerIterationWorklet.h
+  CreateSuperarcsUpdateFirstSupernodePerIterationWorklet.h
   HierarchicalAugmenterInOutData.h
 )
 

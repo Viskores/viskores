@@ -89,13 +89,22 @@ public:
     // while the index time in PPP is unsigned. Thus, for PPP "regular" indices are always
     // smaller that NO_SUCH_ELEMENT, while with the signed vtkm::Id, NO_SUCH_ELEMENT is
     // negative and the order is not as intented.
-    // TODO/FIXME: Verify this implementation is correct.
-    // TODO/FIXME: Is there a better way to do this?
     auto leftVal = this->SuperarcPortal.Get(left);
     auto rightVal = this->SuperarcPortal.Get(right);
+
+    // Elements with TRANSFER_TO_SUPERARC as a heading flag should have higher "value order" than other elements without it.
+    // Although TRANSFER_TO_SUPERARC is positive, a safer way to do this is to extract the heading indicator explicitly.
+    bool isLeftTransferTo = vtkm::worklet::contourtree_augmented::TransferToSuperarc(leftVal);
+    bool isRightTransferTo = vtkm::worklet::contourtree_augmented::TransferToSuperarc(rightVal);
+
+    // If both elements are NO_SUCH_ELEMENT, we compare the index order to guarantee a determined order
+    // It is not necessary to enforce the order, but a fixed order is beneficial for debug purposes
     if (vtkm::worklet::contourtree_augmented::NoSuchElement(leftVal))
     {
-      return false;
+      if (vtkm::worklet::contourtree_augmented::NoSuchElement(rightVal))
+        return left < right;
+      else
+        return false;
     }
     else if (vtkm::worklet::contourtree_augmented::NoSuchElement(rightVal))
     {
@@ -103,8 +112,21 @@ public:
     }
     else
     {
-      return vtkm::worklet::contourtree_augmented::MaskedIndex(leftVal) <
-        vtkm::worklet::contourtree_augmented::MaskedIndex(rightVal);
+      if (isLeftTransferTo && !isRightTransferTo)
+        return false;
+      else if (!isLeftTransferTo && isRightTransferTo)
+        return true;
+      else
+      {
+        vtkm::Id leftMaskedVal = vtkm::worklet::contourtree_augmented::MaskedIndex(leftVal);
+        vtkm::Id rightMaskedVal = vtkm::worklet::contourtree_augmented::MaskedIndex(rightVal);
+        if (leftMaskedVal < rightMaskedVal)
+          return true;
+        if (leftMaskedVal > rightMaskedVal)
+          return false;
+        // tiebreaker using the ID for debug purpose
+        return left < right;
+      }
     }
   } // operator()
 

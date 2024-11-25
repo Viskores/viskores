@@ -86,11 +86,26 @@ constexpr vtkm::Id IS_REGULAR = static_cast<vtkm::Id>(2);
 constexpr vtkm::Id IS_SADDLE = static_cast<vtkm::Id>(3);
 constexpr vtkm::Id IS_ATTACHMENT = static_cast<vtkm::Id>(4);
 
+// NOTE: 29/08/2024
+// After discussion between Mingzhe and Hamish, warning left in.
+// The logic for the choice is that we are already using 5 bits out of 64, leaving us with 0.5 exa-indices available.
+// Using an extra bit flag would reduce it to 0.25 exa-indices, which may pose a problem in the future.
+// We therefore have chosen to reuse an existing bit flag, which is not used in the section of code in question.
+// (HierarchicalHypersweeper.h: ComputeSuperarcTransferWeights())
+// WARNING 11/07/2023
+// TERMINAL_ELEMENT is primarily used for optimisation of memory access during pointer doubling operations
+// We now need to distinguish between a supernode and superarc when sorting by superarc(node) IDs
+// This only (at present) comes up when processing attachment points, which have null superarcs, so it
+// is reasonable to reuse TERMINAL_ELEMENT for this purpose.  However, we give it a separate macro name with
+// the same value to aid comprehension
+constexpr vtkm::Id TRANSFER_TO_SUPERARC = TERMINAL_ELEMENT;
+
 // clang-format on
 using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
 
 using EdgePair = vtkm::Pair<vtkm::Id, vtkm::Id>; // here EdgePair.first=low and EdgePair.second=high
 using EdgePairArray = vtkm::cont::ArrayHandle<EdgePair>; // Array of edge pairs
+
 
 // inline functions for retrieving flags or index
 VTKM_EXEC_CONT
@@ -143,6 +158,12 @@ inline bool NoFlagsSet(vtkm::Id flaggedIndex)
   return (flaggedIndex & ~INDEX_MASK) == 0;
 } // NoFlagsSet
 
+// Helper function: to check that the TRANSFER_TO_SUPERARC flag is set
+VTKM_EXEC_CONT
+inline bool TransferToSuperarc(vtkm::Id flaggedIndex)
+{ // transferToSuperarc()
+  return ((flaggedIndex & TRANSFER_TO_SUPERARC) != 0);
+} // transferToSuperarc()
 
 // Debug helper function: Assert that an index array has no element with any flags set
 template <typename S>
@@ -224,6 +245,23 @@ inline std::string FlagString(vtkm::Id flaggedIndex)
   fString += (IsAscending(flaggedIndex) ? "a" : ".");
   return fString;
 } // FlagString()
+
+
+// == comparison operator for edges
+inline bool edgeEqual(const EdgePair& LHS, const EdgePair& RHS)
+{ // operator ==
+
+  if (LHS.first != RHS.first)
+  {
+    return false;
+  }
+  if (LHS.second != RHS.second)
+  {
+    return false;
+  }
+  return true;
+} // operator ==
+
 
 class EdgeDataHeight
 {

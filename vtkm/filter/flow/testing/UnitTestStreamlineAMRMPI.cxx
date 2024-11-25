@@ -14,8 +14,8 @@
 #include <vtkm/filter/flow/ParticleAdvection.h>
 #include <vtkm/filter/flow/Pathline.h>
 #include <vtkm/filter/flow/Streamline.h>
+#include <vtkm/filter/flow/testing/GenerateTestDataSets.h>
 #include <vtkm/thirdparty/diy/diy.h>
-#include <vtkm/worklet/testing/GenerateTestDataSets.h>
 
 namespace
 {

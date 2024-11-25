@@ -76,6 +76,19 @@ public:
 private:
 };
 
+//Simple functor to subset a VTKm ArrayHandle
+class NoSuchElementPredicate
+{
+public:
+  VTKM_EXEC_CONT
+  NoSuchElementPredicate() {}
+
+  VTKM_EXEC_CONT
+  bool operator()(const vtkm::Id& vertexId) const { return NoSuchElement(vertexId); }
+
+private:
+};
+
 } // namespace contourtree_augmented
 } // namespace worklet
 } // namespace vtkm

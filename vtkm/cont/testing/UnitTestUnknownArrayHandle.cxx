@@ -295,6 +295,60 @@ void TryNewInstance(vtkm::cont::UnknownArrayHandle originalArray)
   floatArray.AsArrayHandle(staticFloatArray);
 }
 
+template <typename ActualT>
+struct CheckActualTypeFunctor
+{
+  template <typename T, typename S>
+  void operator()(const vtkm::cont::ArrayHandle<T, S>& array, bool& called) const
+  {
+    called = true;
+    VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Unexpected array size.");
+    auto portal = array.ReadPortal();
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
+      T retrieved = portal.Get(i);
+      ActualT expected = TestValue(i, ActualT{});
+      VTKM_TEST_ASSERT(test_equal(retrieved, expected));
+    }
+  }
+};
+
+template <typename T>
+void TryCastAndCallFallback()
+{
+  vtkm::cont::UnknownArrayHandle array = CreateArrayUnknown(T{});
+
+  using FallbackTypes = vtkm::List<vtkm::FloatDefault,
+                                   vtkm::Vec2f,
+                                   vtkm::Vec3f,
+                                   vtkm::Vec4f,
+                                   vtkm::Vec<vtkm::Vec2f, 3>,
+                                   vtkm::Vec<vtkm::Vec<vtkm::Vec4f, 3>, 2>>;
+  bool called = false;
+  array.CastAndCallForTypesWithFloatFallback<FallbackTypes, vtkm::cont::StorageListBasic>(
+    CheckActualTypeFunctor<T>{}, called);
+  VTKM_TEST_ASSERT(
+    called, "The functor was never called (and apparently a bad value exception not thrown).");
+}
+
+void TryCastAndCallFallback()
+{
+  std::cout << "  Scalar array." << std::endl;
+  TryCastAndCallFallback<vtkm::Float64>();
+
+  std::cout << "  Equivalent scalar." << std::endl;
+  TryCastAndCallFallback<VTKM_UNUSED_INT_TYPE>();
+
+  std::cout << "  Basic Vec." << std::endl;
+  TryCastAndCallFallback<vtkm::Id3>();
+
+  std::cout << "  Vec of Vecs." << std::endl;
+  TryCastAndCallFallback<vtkm::Vec<vtkm::Vec2f_32, 3>>();
+
+  std::cout << "  Vec of Vecs of Vecs." << std::endl;
+  TryCastAndCallFallback<vtkm::Vec<vtkm::Vec<vtkm::Id4, 3>, 2>>();
+}
+
 template <typename T>
 void TryAsMultiplexer(vtkm::cont::UnknownArrayHandle sourceArray)
 {
@@ -659,6 +713,9 @@ void TestUnknownArrayHandle()
 
   std::cout << "Try AsArrayHandle" << std::endl;
   TryAsArrayHandle();
+
+  std::cout << "Try CastAndCall with fallback" << std::endl;
+  TryCastAndCallFallback();
 
   std::cout << "Try ExtractComponent" << std::endl;
   TryExtractComponent();

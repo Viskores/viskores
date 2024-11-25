@@ -43,8 +43,6 @@ test:ubuntu1804_gcc9:
     #Restrict OpenMP number of threads since multiple test stages
     #execute on the same hardware concurrently
     OMP_NUM_THREADS: 4
-  dependencies:
-    - build:ubuntu1804_gcc9
   needs:
     - build:ubuntu1804_gcc9
 
@@ -80,8 +78,6 @@ test:ubuntu1804_gcc7:
     - .ubuntu1804_cuda
     - .cmake_test_linux
     - .run_automatically
-  dependencies:
-    - build:ubuntu1804_gcc7
   needs:
     - build:ubuntu1804_gcc7
 
@@ -120,8 +116,6 @@ test:ubuntu1804_clang_cuda:
     - .cmake_test_linux
     - .run_automatically
     # - .run_upstream_branches
-  dependencies:
-    - build:ubuntu1804_clang_cuda
   needs:
     - build:ubuntu1804_clang_cuda
 
@@ -156,8 +150,6 @@ test:ubuntu1804_gcc6:
     #Restrict OpenMP number of threads since multiple test stages
     #execute on the same hardware concurrently
     OMP_NUM_THREADS: 3
-  dependencies:
-    - build:ubuntu1804_gcc6
   needs:
     - build:ubuntu1804_gcc6
 
@@ -189,8 +181,6 @@ test:ubuntu1804_clang8:
     - .ubuntu1804
     - .cmake_test_linux
     - .run_automatically
-  dependencies:
-    - build:ubuntu1804_clang8
   needs:
     - build:ubuntu1804_clang8
 
@@ -224,8 +214,6 @@ test:ubuntu1804_kokkos37:
     - .ubuntu1804_cuda_kokkos
     - .cmake_test_linux
     - .run_automatically
-  dependencies:
-    - build:ubuntu1804_kokkos37
   needs:
     - build:ubuntu1804_kokkos37
 
@@ -254,8 +242,6 @@ test:ubuntu1804_cuda_perftest:
     - .ubuntu1804_cuda
     - .cmake_test_linux
     - .run_automatically
-  dependencies:
-    - build:ubuntu1804_cuda_perftest
   needs:
     - build:ubuntu1804_cuda_perftest
   variables:

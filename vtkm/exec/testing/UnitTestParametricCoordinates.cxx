@@ -15,7 +15,7 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/VecVariable.h>
 
-#include <vtkm/testing/Testing.h>
+#include <vtkm/cont/testing/Testing.h>
 
 #include <ctime>
 #include <random>
@@ -232,5 +232,5 @@ void TestAllPCoords()
 
 int UnitTestParametricCoordinates(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TestAllPCoords, argc, argv);
+  return vtkm::cont::testing::Testing::Run(TestAllPCoords, argc, argv);
 }

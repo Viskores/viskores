@@ -10,7 +10,7 @@
 #ifndef vtk_m_cont_PointLocatorSparseGrid_h
 #define vtk_m_cont_PointLocatorSparseGrid_h
 
-#include <vtkm/cont/internal/PointLocatorBase.h>
+#include <vtkm/cont/PointLocatorBase.h>
 #include <vtkm/exec/PointLocatorSparseGrid.h>
 
 namespace vtkm
@@ -32,11 +32,8 @@ namespace cont
 /// Parallel Techniques." In _Eurographics Symposium on Parallel Graphics and Visualization
 /// (EGPGV)_, June 2019. DOI 10.2312/pgv.20191112.
 ///
-class VTKM_CONT_EXPORT PointLocatorSparseGrid
-  : public vtkm::cont::internal::PointLocatorBase<PointLocatorSparseGrid>
+class VTKM_CONT_EXPORT PointLocatorSparseGrid : public vtkm::cont::PointLocatorBase
 {
-  using Superclass = vtkm::cont::internal::PointLocatorBase<PointLocatorSparseGrid>;
-
 public:
   using RangeType = vtkm::Vec<vtkm::Range, 3>;
 
@@ -82,8 +79,7 @@ private:
       (this->Range[2].Max < this->Range[2].Min);
   }
 
-  friend Superclass;
-  VTKM_CONT void Build();
+  VTKM_CONT void Build() override;
 
   RangeType Range = { { 0.0, -1.0 } };
   vtkm::Id3 Dims = { 32 };

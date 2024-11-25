@@ -22,6 +22,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterTag.h>
 #include <vtkm/cont/Invoker.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -222,6 +223,7 @@ void TestWorkletPointNeighborhood(vtkm::cont::DeviceAdapterId id)
 {
   std::cout << "Testing Point Neighborhood Worklet on device adapter: " << id.GetName()
             << std::endl;
+  vtkm::cont::ScopedRuntimeDeviceTracker deviceScope(id);
 
   TestMaxNeighborValue();
   TestScatterIdentityNeighbor();
@@ -231,7 +233,7 @@ void TestWorkletPointNeighborhood(vtkm::cont::DeviceAdapterId id)
 
 static void TestMaxNeighborValue()
 {
-  std::cout << "Testing MaxPointOfCell worklet" << std::endl;
+  std::cout << "Testing MaxNeighborValue worklet" << std::endl;
 
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
@@ -348,7 +350,7 @@ static void TestIndexing()
 
 } // anonymous namespace
 
-int UnitTestWorkletMapPointNeighborhood(int argc, char* argv[])
+int UnitTestWorkletPointNeighborhood(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::RunOnDevice(TestWorkletPointNeighborhood, argc, argv);
 }

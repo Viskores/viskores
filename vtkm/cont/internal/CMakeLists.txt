@@ -16,7 +16,6 @@ set(headers
   ArrayTransfer.h
   Buffer.h
   CastInvalidValue.h
-  CellLocatorBase.h
   ConnectivityExplicitInternals.h
   ConvertNumComponentsToOffsetsTemplate.h
   DeviceAdapterAlgorithmGeneral.h
@@ -33,7 +32,6 @@ set(headers
   OptionParserArguments.h
   ParallelRadixSort.h
   ParallelRadixSortInterface.h
-  PointLocatorBase.h
   ReverseConnectivityBuilder.h
   RuntimeDeviceConfiguration.h
   RuntimeDeviceConfigurationOptions.h

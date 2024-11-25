@@ -100,8 +100,18 @@ public:
       if ((supernode == this->LastSupernode - 1) ||
           (transferTarget != sortedTransferTargetPortal.Get(supernode + 1)))
       { // RHE of segment
-        auto originalValue = dependentValuesPortal.Get(transferTarget);
-        dependentValuesPortal.Set(transferTarget, originalValue + valuePrefixSum);
+        // we need to separate out the flag for attachment points
+        bool superarcTransfer =
+          vtkm::worklet::contourtree_augmented::TransferToSuperarc(transferTarget);
+        vtkm::Id superarcOrNodeId =
+          vtkm::worklet::contourtree_augmented::MaskedIndex(transferTarget);
+        // we ignore attachment points
+        if (superarcTransfer)
+        {
+          return;
+        }
+        auto originalValue = dependentValuesPortal.Get(superarcOrNodeId);
+        dependentValuesPortal.Set(superarcOrNodeId, originalValue + valuePrefixSum);
       } // RHE of segment
     }
 
@@ -113,10 +123,19 @@ public:
         if (noSuchElement(sortedTransferTarget[supernode]))
           continue;
 
-        // the RHE of each segment transfers its weight (including all irrelevant prefixes)
         if ((supernode == lastSupernode - 1) || (sortedTransferTarget[supernode] != sortedTransferTarget[supernode+1]))
         { // RHE of segment
-          dependentValues[sortedTransferTarget[supernode]] += valuePrefixSum[supernode];
+            // WARNING 11/07/2023
+            // we need to separate out the flag for attachment points
+            bool superarcTransfer = transferToSuperarc(sortedTransferTarget[supernode]);
+            indexType superarcOrNodeID = maskedIndex(sortedTransferTarget[supernode]);
+
+            // we ignore attachment points
+            if (superarcTransfer)
+               continue;
+
+            // transfer as dependent weight
+            dependentValues[superarcOrNodeID] += valuePrefixSum[supernode];
         } // RHE of segment
       } // per supernode
     */

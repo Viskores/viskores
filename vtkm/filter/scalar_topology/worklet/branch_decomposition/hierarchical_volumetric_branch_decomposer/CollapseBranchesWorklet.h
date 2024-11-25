@@ -65,6 +65,7 @@ public:
   using ControlSignature = void(
     FieldIn bestUpSupernode,
     FieldIn bestDownSupernode,
+    FieldIn superarcs,
     // Execution objects from the hierarchical tree to use the FindRegularByGlobal function
     ExecObject findRegularByGlobal,
     // Execution objects from the hierarchical tree to use the FindSuperArcBetweenNodes, function
@@ -72,12 +73,15 @@ public:
     WholeArrayIn hierarchicalTreeRegular2supernode,
     WholeArrayIn hierarchicalTreeWhichRound,
     WholeArrayInOut branchRoot);
-  using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5, _6, _7);
+  using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5, _6, _7, _8);
   using InputDomain = _1;
 
   /// Default Constructor
   VTKM_EXEC_CONT
-  CollapseBranchesWorklet() {}
+  CollapseBranchesWorklet(vtkm::Id numRounds)
+    : NumRounds(numRounds)
+  {
+  }
 
   /// operator() of the workelt
   template <typename ExecObjectType1,
@@ -88,6 +92,7 @@ public:
     const vtkm::Id& supernode,                  // iteration index
     const vtkm::Id& bestUpSupernodeId,          // bestUpSupernode[supernode]
     const vtkm::Id& bestDownSupernodeId,        // bestDownSupernode[supernode]
+    const vtkm::Id& superarcsId,                // hierarchicalTree.superarcs[supernode]
     const ExecObjectType1& findRegularByGlobal, // Execution object to call FindRegularByGlobal
     const ExecObjectType2&
       findSuperArcBetweenNodes, // Execution object to call FindSuperArcBetweenNodes
@@ -103,6 +108,18 @@ public:
     //          If it does exist and is a downwards superarc, we now have the correct ID
     //          If it does exist and is an upwards superarc, then the current supernode must have an ascending arc to it, and we're done
     //  Also do the same for the best down, then for each supernode, point the higher numbered at the lower
+
+    // ADDED 19/07/2023
+    // If there are any attachment points left in the hierarchical tree, there is an extra edge case we need to deal with.
+    // It occurs when a supernode is simultaneously the target of an ascending superarc and a descending one
+    // What we do is to test for this here: if we are an attachment point, we omit connecting the best up and down
+    // ADDED 19/07/2023
+    // test for attachment points
+    if ((hierarchicalTreeWhichRoundPortal.Get(supernode) != this->NumRounds) &&
+        (vtkm::worklet::contourtree_augmented::NoSuchElement(superarcsId)))
+    {
+      return;
+    }
 
     // if there is no best up, we're at an upper leaf and will not connect up two superarcs anyway, so we can skip the supernode
     if (vtkm::worklet::contourtree_augmented::NoSuchElement(bestUpSupernodeId))
@@ -233,6 +250,8 @@ public:
     */
   } // operator()()
 
+private:
+  vtkm::Id NumRounds;
 
 }; // CollapseBranchesWorklet
 

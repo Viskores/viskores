@@ -86,6 +86,8 @@ struct SelectTopVolumeContoursBlock
   vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchVolume;
   vtkm::cont::UnknownArrayHandle TopVolumeBranchSaddleIsoValue;
   vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchSaddleEpsilon;
+  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchUpperEndGRId;
+  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchLowerEndGRId;
 
   // Destroy function allowing DIY to own blocks and clean them up after use
   static void Destroy(void* b) { delete static_cast<SelectTopVolumeContoursBlock*>(b); }

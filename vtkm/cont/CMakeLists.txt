@@ -58,6 +58,7 @@ set(headers
   BoundsCompute.h
   BoundsGlobalCompute.h
   CastAndCall.h
+  CellLocatorBase.h
   CellLocatorBoundingIntervalHierarchy.h
   CellLocatorChooser.h
   CellLocatorGeneral.h
@@ -109,6 +110,7 @@ set(headers
   MergePartitionedDataSet.h
   ParticleArrayCopy.h
   PartitionedDataSet.h
+  PointLocatorBase.h
   PointLocatorSparseGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
@@ -140,6 +142,7 @@ set(sources
   BitField.cxx
   BoundsCompute.cxx
   BoundsGlobalCompute.cxx
+  CellLocatorBase.cxx
   CellLocatorGeneral.cxx
   CellLocatorPartitioned.cxx
   CellLocatorRectilinearGrid.cxx
@@ -171,6 +174,7 @@ set(sources
   Logging.cxx
   RuntimeDeviceTracker.cxx
   PartitionedDataSet.cxx
+  PointLocatorBase.cxx
   Storage.cxx
   Token.cxx
   TryExecute.cxx

@@ -66,65 +66,82 @@ class UpdateHyperstructureSetSuperchildrenWorklet : public vtkm::worklet::Workle
 public:
   /// Control signature for the worklet
   using ControlSignature = void(
-    WholeArrayIn augmentedTreeHypernodes, // input (we need both this and the next value)
-    FieldOut augmentedTreeSuperchildren   // output
+    WholeArrayIn augmentedTreeHypernodes,      // input (we need both this and the next value)
+    FieldIn augmentedTreeSuperarcs,            // input
+    WholeArrayIn augmentedTreeHyperparents,    // input
+    WholeArrayInOut augmentedTreeSuperchildren // output
   );
-  using ExecutionSignature = void(InputIndex, _1, _2);
-  using InputDomain = _1;
+  using ExecutionSignature = void(InputIndex, _1, _2, _3, _4);
+  using InputDomain = _2;
 
   // Default Constructor
   VTKM_EXEC_CONT
-  UpdateHyperstructureSetSuperchildrenWorklet(const vtkm::Id& augmentedTreeNumSupernodes)
+  UpdateHyperstructureSetSuperchildrenWorklet(const vtkm::Id& augmentedTreeNumSupernodes,
+                                              const vtkm::Id& supernodeStartIndex)
     : AugmentedTreeNumSupernodes(augmentedTreeNumSupernodes)
+    , AugmentedTreeSupernodeStartIndex(supernodeStartIndex)
   {
   }
 
 
-  template <typename InFieldPortalType>
-  VTKM_EXEC void operator()(
-    const vtkm::Id& hypernode,
-    const InFieldPortalType& augmentedTreeHypernodesPortal,
-    vtkm::Id&
-      augmentedTreeSuperchildrenValue // same as augmentedTree->superchildren[InputIndex] = ...
-  ) const
+  template <typename InFieldPortalType1, typename InFieldPortalType2, typename OutFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& supernode,
+                            const InFieldPortalType1& augmentedTreeHypernodesPortal,
+                            const vtkm::Id& augmentedTreeSuperarcsValue,
+                            const InFieldPortalType2& augmentedTreeHyperparentsPortal,
+                            const OutFieldPortalType& augmentedTreeSuperchildrenPortal) const
   {
-    // per hypernode
-    // retrieve the new superId
-    vtkm::Id superId = augmentedTreeHypernodesPortal.Get(hypernode);
-    // and the next one over
-    vtkm::Id nextSuperId;
-    if (hypernode == augmentedTreeHypernodesPortal.GetNumberOfValues() - 1)
+    // per supernode
+    // attachment points have NULL superarcs and are skipped
+    if (vtkm::worklet::contourtree_augmented::NoSuchElement(augmentedTreeSuperarcsValue))
     {
-      nextSuperId = this->AugmentedTreeNumSupernodes;
+      return;
     }
-    else
-    {
-      nextSuperId = augmentedTreeHypernodesPortal.Get(hypernode + 1);
-    }
-    // the difference is the number of superchildren
-    augmentedTreeSuperchildrenValue = nextSuperId - superId;
+    // we are now guaranteed to have a valid hyperparent
+    vtkm::Id hyperparent = augmentedTreeHyperparentsPortal.Get(supernode);
+    vtkm::Id hyperparentSuperId = augmentedTreeHypernodesPortal.Get(hyperparent);
 
+    // we could be at the end of the array, so test explicitly
+    if (this->AugmentedTreeSupernodeStartIndex + supernode == this->AugmentedTreeNumSupernodes - 1)
+    {
+      // this means that we are the end of the segment and can subtract the hyperparent's super ID to get the number of superchildren
+      augmentedTreeSuperchildrenPortal.Set(hyperparent,
+                                           this->AugmentedTreeNumSupernodes - hyperparentSuperId);
+    }
+    // otherwise, if our hyperparent is different from our neighbor's, we are the end of the segment
+    else if (hyperparent != augmentedTreeHyperparentsPortal.Get(supernode + 1))
+    {
+      // again, subtract to get the number
+      augmentedTreeSuperchildrenPortal.Set(
+        hyperparent, supernode + this->AugmentedTreeSupernodeStartIndex + 1 - hyperparentSuperId);
+    }
+    // per supernode
     // In serial this worklet implements the following operation
     /*
-      for (vtkm::Id hypernode = 0; hypernode < augmentedTree->hypernodes.size(); hypernode++)
-      { // per hypernode
-        // retrieve the new super ID
-        vtkm::Id superID = augmentedTree->hypernodes[hypernode];
-        // and the next one over
-        vtkm::Id nextSuperID;
-        if (hypernode == augmentedTree->hypernodes.size() - 1)
-          nextSuperID = augmentedTree->supernodes.size();
-        else
-          nextSuperID = augmentedTree->hypernodes[hypernode+1];
-        // the difference is the number of superchildren
-        augmentedTree->superchildren[hypernode] = nextSuperID - superID;
-      } // per hypernode
+      for (indexType supernode = augmentedTree->firstSupernodePerIteration[roundNo][0]; supernode < augmentedTree->firstSupernodePerIteration[roundNo][augmentedTree->nIterations[roundNo]]; supernode++)
+      { // per supernode
+        // attachment points have NULL superarcs and are skipped
+       if (noSuchElement(augmentedTree->superarcs[supernode]))
+          continue;
+       // we are now guaranteed to have a valid hyperparent
+       indexType hyperparent = augmentedTree->hyperparents[supernode];
+       indexType hyperparentSuperID = augmentedTree->hypernodes[hyperparent];
 
+       // we could be at the end of the array, so test explicitly
+      if (supernode == augmentedTree->supernodes.size() - 1)
+        // this means that we are the end of the segment and can subtract the hyperparent's super ID to get the number of superchildren
+        augmentedTree->superchildren[hyperparent] = augmentedTree->supernodes.size() - hyperparentSuperID;
+      // otherwise, if our hyperparent is different from our neighbor's, we are the end of the segment
+      else if (hyperparent != augmentedTree->hyperparents[supernode + 1])
+        // again, subtract to get the number
+        augmentedTree->superchildren[hyperparent] = supernode + 1 - hyperparentSuperID;
+      } // per supernode
     */
   } // operator()()
 
 private:
   const vtkm::Id AugmentedTreeNumSupernodes;
+  const vtkm::Id AugmentedTreeSupernodeStartIndex;
 }; // UpdateHyperstructureSetSuperchildrenWorklet
 
 } // namespace hierarchical_augmenter

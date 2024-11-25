@@ -42,7 +42,6 @@ struct BoundaryState
   ///
   VTKM_EXEC const vtkm::Id3& GetCenterIndex() const { return this->IJK; }
 
-  ///@{
   /// Returns true if a neighborhood of the given radius is contained within the bounds of the cell
   /// set in the X, Y, or Z direction. Returns false if the neighborhood extends outside of the
   /// boundary of the data in the X, Y, or Z direction.
@@ -57,17 +56,18 @@ struct BoundaryState
     VTKM_ASSERT(radius >= 0);
     return (((this->IJK[0] - radius) >= 0) && ((this->IJK[0] + radius) < this->PointDimensions[0]));
   }
+  /// @copydoc IsRadiusInXBoundary
   VTKM_EXEC bool IsRadiusInYBoundary(vtkm::IdComponent radius) const
   {
     VTKM_ASSERT(radius >= 0);
     return (((this->IJK[1] - radius) >= 0) && ((this->IJK[1] + radius) < this->PointDimensions[1]));
   }
+  /// @copydoc IsRadiusInXBoundary
   VTKM_EXEC bool IsRadiusInZBoundary(vtkm::IdComponent radius) const
   {
     VTKM_ASSERT(radius >= 0);
     return (((this->IJK[2] - radius) >= 0) && ((this->IJK[2] + radius) < this->PointDimensions[2]));
   }
-  ///@}
 
   /// Returns true if a neighborhood of the given radius is contained within the bounds
   /// of the cell set. Returns false if the neighborhood extends outside of the boundary of the
@@ -84,7 +84,6 @@ struct BoundaryState
       this->IsRadiusInZBoundary(radius);
   }
 
-  ///@{
   /// Returns true if the neighbor at the specified @a offset is contained
   /// within the bounds of the cell set in the X, Y, or Z direction. Returns
   /// false if the neighbor falls outside of the boundary of the data in the X,
@@ -94,15 +93,16 @@ struct BoundaryState
   {
     return (((this->IJK[0] + offset) >= 0) && ((this->IJK[0] + offset) < this->PointDimensions[0]));
   }
+  /// @copydoc IsNeighborInXBoundary
   VTKM_EXEC bool IsNeighborInYBoundary(vtkm::IdComponent offset) const
   {
     return (((this->IJK[1] + offset) >= 0) && ((this->IJK[1] + offset) < this->PointDimensions[1]));
   }
+  /// @copydoc IsNeighborInXBoundary
   VTKM_EXEC bool IsNeighborInZBoundary(vtkm::IdComponent offset) const
   {
     return (((this->IJK[2] + offset) >= 0) && ((this->IJK[2] + offset) < this->PointDimensions[2]));
   }
-  ///@}
 
   /// Returns true if the neighbor at the specified offset vector is contained
   /// within the bounds of the cell set. Returns false if the neighbor falls

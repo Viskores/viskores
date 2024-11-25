@@ -13,6 +13,8 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/ErrorCode.h>
 #include <vtkm/VecAxisAlignedPointCoordinates.h>
+#include <vtkm/VecFromPortalPermute.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/exec/FunctorBase.h>
 
 #include <lcl/lcl.h>
@@ -156,7 +158,7 @@ VTKM_EXEC vtkm::ErrorCode CellInterpolate(const vtkm::VecAxisAlignedPointCoordin
 /// \brief Interpolate a point field in a cell.
 ///
 /// Given the point field values for each node and the parametric coordinates
-/// of a point within the cell, interpolates the field to that point.
+/// of a location within the cell, interpolates the field to that location.
 ///
 /// @param[in]  pointFieldValues A list of field values for each point in the cell. This
 ///     usually comes from a `FieldInPoint` argument in a
@@ -182,6 +184,38 @@ VTKM_EXEC vtkm::ErrorCode CellInterpolate(const FieldVecType& pointFieldValues,
       status = vtkm::ErrorCode::InvalidShapeId;
   }
   return status;
+}
+
+//-----------------------------------------------------------------------------
+/// @brief Interpolate a point field in a cell.
+///
+/// Given the indices of the points for each node in a `Vec`, a portal to the point
+/// field values, and the parametric coordinates of a location within the cell, interpolates
+/// to that location.
+///
+/// @param[in]  pointIndices A list of point indices for each point in the cell. This
+///     usually comes from a `GetIndices()` call on the structure object provided by
+///     a `WholeCellSetIn` argument to a worklet.
+/// @param[in]  pointFieldPortal An array portal containing all the values in a point
+///     field array. This usually comes from a `WholeArrayIn` worklet argument.
+/// @param[in]  parametricCoords The parametric coordinates where you want to get the
+///     interpolaged field value for.
+/// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
+/// @param[out] result Value to store the interpolated field.
+template <typename IndicesVecType,
+          typename FieldPortalType,
+          typename ParametricCoordType,
+          typename CellShapeTag>
+VTKM_EXEC vtkm::ErrorCode CellInterpolate(const IndicesVecType& pointIndices,
+                                          const FieldPortalType& pointFieldPortal,
+                                          const vtkm::Vec<ParametricCoordType, 3>& parametricCoords,
+                                          CellShapeTag shape,
+                                          typename FieldPortalType::ValueType& result)
+{
+  return CellInterpolate(vtkm::make_VecFromPortalPermute(&pointIndices, pointFieldPortal),
+                         parametricCoords,
+                         shape,
+                         result);
 }
 
 }

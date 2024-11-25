@@ -140,14 +140,20 @@ public:
   VTKM_CONT vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id cellid) const override;
   VTKM_CONT void GetCellPointIds(vtkm::Id id, vtkm::Id* ptids) const override;
 
+  /// Returns an array portal that can be used to get the shape id of each cell.
+  /// Using the array portal returned from this method to get many shape ids is likely
+  /// significantly faster than calling `GetCellShape()` for each cell.
   VTKM_CONT typename vtkm::cont::ArrayHandle<vtkm::UInt8, ShapesStorageTag>::ReadPortalType
   ShapesReadPortal() const;
 
   VTKM_CONT vtkm::UInt8 GetCellShape(vtkm::Id cellid) const override;
 
+  /// Retrieves the indices of the points incident to the given cell.
+  /// If the provided `vtkm::Vec` does not have enough components, the result will be truncated.
   template <vtkm::IdComponent NumIndices>
   VTKM_CONT void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id, NumIndices>& ids) const;
 
+  /// Retrieves the indices of the points incident to the given cell.
   VTKM_CONT void GetIndices(vtkm::Id index, vtkm::cont::ArrayHandle<vtkm::Id>& ids) const;
 
   /// @brief Start adding cells one at a time.
@@ -179,22 +185,56 @@ public:
   using ExecConnectivityType =
     typename ConnectivityChooser<VisitTopology, IncidentTopology>::ExecConnectivityType;
 
+  /// @brief Prepares the data for a particular device and returns the execution object for it.
+  ///
+  /// @param device Specifies the device on which the cell set will ve available.
+  /// @param visitTopology Specifies the "visit" topology element. This is the element
+  /// that will be indexed in the resulting connectivity object. This is typically
+  /// `vtkm::TopologyElementTagPoint` or `vtkm::TopologyElementTagCell`.
+  /// @param incidentTopology Specifies the "incident" topology element. This is the element
+  /// that will incident to the elements that are visited. This is typically
+  /// `vtkm::TopologyElementTagPoint` or `vtkm::TopologyElementTagCell`.
+  /// @param token Provides a `vtkm::cont::Token` object that will define the span which
+  /// the return execution object must be valid.
+  ///
+  /// @returns A connectivity object that can be used in the execution environment on the
+  /// specified device.
   template <typename VisitTopology, typename IncidentTopology>
   VTKM_CONT ExecConnectivityType<VisitTopology, IncidentTopology> PrepareForInput(
-    vtkm::cont::DeviceAdapterId,
-    VisitTopology,
-    IncidentTopology,
-    vtkm::cont::Token&) const;
+    vtkm::cont::DeviceAdapterId device,
+    VisitTopology visitTopology,
+    IncidentTopology incidentTopology,
+    vtkm::cont::Token& token) const;
 
+  /// Returns the `vtkm::cont::ArrayHandle` holding the shape information.
+  /// The shapes array corresponding to `vtkm::TopologyElementTagCell` for the `VisitTopology`
+  /// and `vtkm::TopologyElementTagPoint` for the `IncidentTopology` is the same as that provided
+  /// when filling the explicit cell set.
+  /// `ExplicitCellSet` is capable of providing the inverse connections (cells incident on
+  /// each point) on request.
   template <typename VisitTopology, typename IncidentTopology>
   VTKM_CONT const typename ConnectivityChooser<VisitTopology, IncidentTopology>::ShapesArrayType&
     GetShapesArray(VisitTopology, IncidentTopology) const;
 
+  /// Returns the `vtkm::cont::ArrayHandle` containing the connectivity information.
+  /// Returns the `vtkm::cont::ArrayHandle` holding the shape information.
+  /// The incident array corresponding to `vtkm::TopologyElementTagCell` for the `VisitTopology`
+  /// and `vtkm::TopologyElementTagPoint` for the `IncidentTopology` is the same as that provided
+  /// when filling the explicit cell set.
+  /// `ExplicitCellSet` is capable of providing the inverse connections (cells incident on
+  /// each point) on request.
   template <typename VisitTopology, typename IncidentTopology>
   VTKM_CONT const typename ConnectivityChooser<VisitTopology,
                                                IncidentTopology>::ConnectivityArrayType&
     GetConnectivityArray(VisitTopology, IncidentTopology) const;
 
+  /// Returns the `vtkm::cont::ArrayHandle` containing the offsets into theconnectivity information.
+  /// Returns the `vtkm::cont::ArrayHandle` holding the offset information.
+  /// The offset array corresponding to `vtkm::TopologyElementTagCell` for the `VisitTopology`
+  /// and `vtkm::TopologyElementTagPoint` for the `IncidentTopology` is the same as that provided
+  /// when filling the explicit cell set.
+  /// `ExplicitCellSet` is capable of providing the inverse connections (cells incident on
+  /// each point) on request.
   template <typename VisitTopology, typename IncidentTopology>
   VTKM_CONT const typename ConnectivityChooser<VisitTopology, IncidentTopology>::OffsetsArrayType&
     GetOffsetsArray(VisitTopology, IncidentTopology) const;
@@ -203,6 +243,9 @@ public:
   VTKM_CONT typename ConnectivityChooser<VisitTopology, IncidentTopology>::NumIndicesArrayType
     GetNumIndicesArray(VisitTopology, IncidentTopology) const;
 
+  /// Returns whether the `CellSetExplicit` has information for the given visit and incident
+  /// topology elements. If the connectivity is not available, it will be automatically created
+  /// if requested, but that will take time.
   template <typename VisitTopology, typename IncidentTopology>
   VTKM_CONT bool HasConnectivity(VisitTopology visit, IncidentTopology incident) const
   {

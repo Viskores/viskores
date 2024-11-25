@@ -113,13 +113,13 @@ public:
     if (isLowerLeaf)
       return contourtree_augmented::IsAscending(upperDirection)
         ? upperDependent
-        : totalVolume - upperDependent + upperIntrinsic;
+        : totalVolume - upperDependent + upperIntrinsic - 1;
     // if the branch is a maximum-saddle branch
     // if the lower end superarc direction is pointing down, then true; otherwise, false
     if (isUpperLeaf)
       return !contourtree_augmented::IsAscending(lowerDirection)
         ? lowerDependent
-        : totalVolume - lowerDependent + lowerIntrinsic;
+        : totalVolume - lowerDependent + lowerIntrinsic - 1;
 
     // in case of fallout, should never reach
     return 0;

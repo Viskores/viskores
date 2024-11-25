@@ -663,7 +663,7 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
   auto hyperarcsPortal = this->Hyperarcs.ReadPortal();
   auto regularNodeGlobalIdsPortal = this->RegularNodeGlobalIds.ReadPortal();
   auto whichIterationPortal = this->WhichIteration.ReadPortal();
-  auto whichRoundPortal = this->whichRound.ReadPortal();
+  auto whichRoundPortal = this->WhichRound.ReadPortal();
   auto superarcsPortal = this->Superarcs.ReadPortal();
   auto superparentsPortal = this->Superparents.ReadPortal();
   for (vtkm::Id supernode = 0; supernode < this->Supernodes.GetNumberOfValues(); supernode++)
@@ -708,7 +708,7 @@ std::string HierarchicalContourTree<FieldType>::PrintDotSuperStructure(const cha
     if (contourtree_augmented::NoSuchElement(superarcTo))
     { // no superarc
       // if it occurred on the final round, it's the global root and is shown as the NULL node
-      if (whichRoundPortal.Get(superarcFrom) == this->NRounds)
+      if (whichRoundPortal.Get(superarcFrom) == this->NumRounds)
       { // root node
         outstream << "\tSN" << std::setw(1) << superarcFrom << " -> SA" << std::setw(1) << superarc
                   << " [label=\"S" << std::setw(1) << superarc << "\",style=dotted]\n";
@@ -1054,6 +1054,13 @@ void HierarchicalContourTree<FieldType>::AddToVTKMDataSet(vtkm::cont::DataSet& d
   ds.AddField(firstSupernodePerIterationOffsetsField);
   // TODO/FIXME: It seems we may only need the counts for the first iteration, so check, which
   // information we actually need.
+  // Add the number of rounds as an array of length 1
+  vtkm::cont::ArrayHandle<vtkm::Id> tempNumRounds;
+  tempNumRounds.Allocate(1);
+  vtkm::worklet::contourtree_augmented::IdArraySetValue(0, this->NumRounds, tempNumRounds);
+  vtkm::cont::Field numRoundsField(
+    "NumRounds", vtkm::cont::Field::Association::WholeDataSet, tempNumRounds);
+  ds.AddField(numRoundsField);
 }
 
 } // namespace contourtree_distributed

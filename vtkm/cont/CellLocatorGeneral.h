@@ -38,11 +38,8 @@ namespace cont
 /// Also note that `CellLocatorGeneral` can add a significant amount of code inside
 /// of worklet that uses it, and this might cause some issues with some compilers.
 ///
-class VTKM_CONT_EXPORT CellLocatorGeneral
-  : public vtkm::cont::internal::CellLocatorBase<CellLocatorGeneral>
+class VTKM_CONT_EXPORT CellLocatorGeneral : public vtkm::cont::CellLocatorBase
 {
-  using Superclass = vtkm::cont::internal::CellLocatorBase<CellLocatorGeneral>;
-
 public:
   using ContLocatorList = vtkm::List<vtkm::cont::CellLocatorUniformGrid,
                                      vtkm::cont::CellLocatorRectilinearGrid,
@@ -62,8 +59,7 @@ public:
 private:
   vtkm::cont::ListAsVariant<ContLocatorList> LocatorImpl;
 
-  friend Superclass;
-  VTKM_CONT void Build();
+  VTKM_CONT void Build() override;
 
   struct PrepareFunctor;
 };

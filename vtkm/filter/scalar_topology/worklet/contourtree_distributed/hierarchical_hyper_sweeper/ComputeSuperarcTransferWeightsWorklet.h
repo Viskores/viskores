@@ -116,7 +116,8 @@ public:
       else
       { // attachment point
         // set the transfer target
-        transferTarget = hierarchicalTreeSuperparentsPortal.Get(supernodeRegularId);
+        transferTarget = hierarchicalTreeSuperparentsPortal.Get(supernodeRegularId) |
+          vtkm::worklet::contourtree_augmented::TRANSFER_TO_SUPERARC;
       } // attachment point
     }   // null superarc
     else

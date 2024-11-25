@@ -308,7 +308,9 @@ public:
   using StorageTag = StorageTag_;
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
+  /// The type of portal used when accessing data in a read-only mode.
   using ReadPortalType = typename StorageType::ReadPortalType;
+  /// The type of portal used when accessing data in a read-write mode.
   using WritePortalType = typename StorageType::WritePortalType;
 
   /// Constructs an empty ArrayHandle.

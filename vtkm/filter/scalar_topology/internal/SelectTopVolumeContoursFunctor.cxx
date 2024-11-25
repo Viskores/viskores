@@ -102,6 +102,8 @@ void SelectTopVolumeContoursFunctor::operator()(
         auto topVolBranchRootGRIdPortal = b->TopVolumeBranchRootGRId.ReadPortal();
         auto topVolBranchVolumePortal = b->TopVolumeBranchVolume.ReadPortal();
         auto topVolBranchSaddleEpsilonPortal = b->TopVolumeBranchSaddleEpsilon.ReadPortal();
+        auto topVolBranchUpperEndPortal = b->TopVolumeBranchUpperEndGRId.ReadPortal();
+        auto topVolBranchLowerEndPortal = b->TopVolumeBranchLowerEndGRId.ReadPortal();
 
         vtkm::Id nBranches = topVolBranchRootGRIdPortal.GetNumberOfValues();
 
@@ -112,6 +114,10 @@ void SelectTopVolumeContoursFunctor::operator()(
           rp.enqueue(target, topVolBranchVolumePortal.Get(branch));
         for (vtkm::Id branch = 0; branch < nBranches; ++branch)
           rp.enqueue(target, topVolBranchSaddleEpsilonPortal.Get(branch));
+        for (vtkm::Id branch = 0; branch < nBranches; ++branch)
+          rp.enqueue(target, topVolBranchUpperEndPortal.Get(branch));
+        for (vtkm::Id branch = 0; branch < nBranches; ++branch)
+          rp.enqueue(target, topVolBranchLowerEndPortal.Get(branch));
 
         auto resolveArray = [&](const auto& inArray) {
           using InArrayHandleType = std::decay_t<decltype(inArray)>;
@@ -199,6 +205,34 @@ void SelectTopVolumeContoursFunctor::operator()(
       // Replace with dequeuing ArrayHandles once bug is fixed.
       // rp.dequeue(ingid, incomingTopVolBranchSaddleEpsilon);
 
+      IdArrayType incomingTopVolBranchUpperEnd;
+      incomingTopVolBranchUpperEnd.Allocate(nIncoming);
+      auto incomingTopVolBranchUpperEndPortal = incomingTopVolBranchUpperEnd.WritePortal();
+      for (vtkm::Id branch = 0; branch < nIncoming; ++branch)
+      {
+        vtkm::Id incomingTmpBranchUpperEnd;
+        rp.dequeue(ingid, incomingTmpBranchUpperEnd);
+        incomingTopVolBranchUpperEndPortal.Set(branch, incomingTmpBranchUpperEnd);
+      }
+
+      // TODO/FIXME: This is a workaround for a bug in DIY/vtk-m.
+      // Replace with dequeuing ArrayHandles once bug is fixed.
+      // rp.dequeue(ingid, incomingTopVolBranchUpperEnd);
+
+      IdArrayType incomingTopVolBranchLowerEnd;
+      incomingTopVolBranchLowerEnd.Allocate(nIncoming);
+      auto incomingTopVolBranchLowerEndPortal = incomingTopVolBranchLowerEnd.WritePortal();
+      for (vtkm::Id branch = 0; branch < nIncoming; ++branch)
+      {
+        vtkm::Id incomingTmpBranchLowerEnd;
+        rp.dequeue(ingid, incomingTmpBranchLowerEnd);
+        incomingTopVolBranchLowerEndPortal.Set(branch, incomingTmpBranchLowerEnd);
+      }
+
+      // TODO/FIXME: This is a workaround for a bug in DIY/vtk-m.
+      // Replace with dequeuing ArrayHandles once bug is fixed.
+      // rp.dequeue(ingid, incomingTopVolBranchLowerEnd);
+
       auto resolveArray = [&](auto& inArray) {
         using InArrayHandleType = std::decay_t<decltype(inArray)>;
         using ValueType = typename InArrayHandleType::ValueType;
@@ -246,10 +280,14 @@ void SelectTopVolumeContoursFunctor::operator()(
         IdArrayType mergedTopVolBranchGRId;
         IdArrayType mergedTopVolBranchVolume;
         IdArrayType mergedTopVolBranchSaddleEpsilon;
+        IdArrayType mergedTopVolBranchUpperEnd;
+        IdArrayType mergedTopVolBranchLowerEnd;
         InArrayHandleType mergedTopVolBranchSaddleIsoValue;
         mergedTopVolBranchGRId.Allocate(nIncoming + nSelf);
         mergedTopVolBranchVolume.Allocate(nIncoming + nSelf);
         mergedTopVolBranchSaddleEpsilon.Allocate(nIncoming + nSelf);
+        mergedTopVolBranchUpperEnd.Allocate(nIncoming + nSelf);
+        mergedTopVolBranchLowerEnd.Allocate(nIncoming + nSelf);
         mergedTopVolBranchSaddleIsoValue.Allocate(nIncoming + nSelf);
 
         vtkm::cont::Algorithm::CopySubRange(
@@ -258,6 +296,10 @@ void SelectTopVolumeContoursFunctor::operator()(
           incomingTopVolBranchVolume, 0, nIncoming, mergedTopVolBranchVolume, 0);
         vtkm::cont::Algorithm::CopySubRange(
           incomingTopVolBranchSaddleEpsilon, 0, nIncoming, mergedTopVolBranchSaddleEpsilon, 0);
+        vtkm::cont::Algorithm::CopySubRange(
+          incomingTopVolBranchUpperEnd, 0, nIncoming, mergedTopVolBranchUpperEnd, 0);
+        vtkm::cont::Algorithm::CopySubRange(
+          incomingTopVolBranchLowerEnd, 0, nIncoming, mergedTopVolBranchLowerEnd, 0);
         vtkm::cont::Algorithm::CopySubRange<ValueType, ValueType>(
           incomingTopVolBranchSaddleIsoValue, 0, nIncoming, mergedTopVolBranchSaddleIsoValue, 0);
         vtkm::cont::Algorithm::CopySubRange(
@@ -266,6 +308,10 @@ void SelectTopVolumeContoursFunctor::operator()(
           b->TopVolumeBranchVolume, 0, nSelf, mergedTopVolBranchVolume, nIncoming);
         vtkm::cont::Algorithm::CopySubRange(
           b->TopVolumeBranchSaddleEpsilon, 0, nSelf, mergedTopVolBranchSaddleEpsilon, nIncoming);
+        vtkm::cont::Algorithm::CopySubRange(
+          b->TopVolumeBranchUpperEndGRId, 0, nSelf, mergedTopVolBranchUpperEnd, nIncoming);
+        vtkm::cont::Algorithm::CopySubRange(
+          b->TopVolumeBranchLowerEndGRId, 0, nSelf, mergedTopVolBranchLowerEnd, nIncoming);
         vtkm::cont::Algorithm::CopySubRange<ValueType, ValueType>(
           inArray, 0, nSelf, mergedTopVolBranchSaddleIsoValue, nIncoming);
 
@@ -289,6 +335,12 @@ void SelectTopVolumeContoursFunctor::operator()(
         IdArrayType permutedTopVolBranchSaddleEpsilon;
         vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id, IdArrayType>(
           mergedTopVolBranchSaddleEpsilon, sortedBranchId, permutedTopVolBranchSaddleEpsilon);
+        IdArrayType permutedTopVolBranchUpperEnd;
+        vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id, IdArrayType>(
+          mergedTopVolBranchUpperEnd, sortedBranchId, permutedTopVolBranchUpperEnd);
+        IdArrayType permutedTopVolBranchLowerEnd;
+        vtkm::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<vtkm::Id, IdArrayType>(
+          mergedTopVolBranchLowerEnd, sortedBranchId, permutedTopVolBranchLowerEnd);
         InArrayHandleType permutedTopVolBranchSaddleIsoValue;
         vtkm::worklet::contourtree_augmented::PermuteArrayWithRawIndex<InArrayHandleType>(
           mergedTopVolBranchSaddleIsoValue, sortedBranchId, permutedTopVolBranchSaddleIsoValue);
@@ -318,6 +370,8 @@ void SelectTopVolumeContoursFunctor::operator()(
         IdArrayType mergedUniqueBranchGRId;
         IdArrayType mergedUniqueBranchVolume;
         IdArrayType mergedUniqueBranchSaddleEpsilon;
+        IdArrayType mergedUniqueBranchUpperEnd;
+        IdArrayType mergedUniqueBranchLowerEnd;
         InArrayHandleType mergedUniqueBranchSaddleIsoValue;
 
         vtkm::cont::Algorithm::CopyIf(
@@ -326,6 +380,10 @@ void SelectTopVolumeContoursFunctor::operator()(
           permutedTopVolBranchVolume, oneIfUniqueBranch, mergedUniqueBranchVolume);
         vtkm::cont::Algorithm::CopyIf(
           permutedTopVolBranchSaddleEpsilon, oneIfUniqueBranch, mergedUniqueBranchSaddleEpsilon);
+        vtkm::cont::Algorithm::CopyIf(
+          permutedTopVolBranchUpperEnd, oneIfUniqueBranch, mergedUniqueBranchUpperEnd);
+        vtkm::cont::Algorithm::CopyIf(
+          permutedTopVolBranchLowerEnd, oneIfUniqueBranch, mergedUniqueBranchLowerEnd);
         vtkm::cont::Algorithm::CopyIf(
           permutedTopVolBranchSaddleIsoValue, oneIfUniqueBranch, mergedUniqueBranchSaddleIsoValue);
 
@@ -356,6 +414,10 @@ void SelectTopVolumeContoursFunctor::operator()(
                                               0,
                                               this->nSavedBranches,
                                               b->TopVolumeBranchSaddleEpsilon);
+          vtkm::cont::Algorithm::CopySubRange(
+            mergedUniqueBranchUpperEnd, 0, this->nSavedBranches, b->TopVolumeBranchUpperEndGRId);
+          vtkm::cont::Algorithm::CopySubRange(
+            mergedUniqueBranchLowerEnd, 0, this->nSavedBranches, b->TopVolumeBranchLowerEndGRId);
           // InArrayHandleType subRangeUniqueBranchSaddleIsoValue;
           inArray.Allocate(this->nSavedBranches);
           vtkm::cont::Algorithm::CopySubRange(
@@ -368,6 +430,8 @@ void SelectTopVolumeContoursFunctor::operator()(
           vtkm::cont::Algorithm::Copy(mergedUniqueBranchVolume, b->TopVolumeBranchVolume);
           vtkm::cont::Algorithm::Copy(mergedUniqueBranchSaddleEpsilon,
                                       b->TopVolumeBranchSaddleEpsilon);
+          vtkm::cont::Algorithm::Copy(mergedUniqueBranchUpperEnd, b->TopVolumeBranchUpperEndGRId);
+          vtkm::cont::Algorithm::Copy(mergedUniqueBranchLowerEnd, b->TopVolumeBranchLowerEndGRId);
           inArray.Allocate(nMergedUnique);
           vtkm::cont::Algorithm::Copy(mergedUniqueBranchSaddleIsoValue, inArray);
         }
