@@ -129,7 +129,7 @@ VTK-m has been tested on the following configurations:c
 
 ## Building ##
 
-VTK-m supports all majors platforms (Windows, Linux, OSX), and uses CMake
+VTK-m supports all major platforms (Windows, Linux, OSX), and uses CMake
 to generate all the build rules for the project. The VTK-m source code is
 available from the [VTK-m download page] or by directly cloning the [VTK-m
 git repository].
@@ -155,7 +155,7 @@ Users Guide].
 
 The VTK-m source distribution includes a number of examples. The goal of the
 VTK-m examples is to illustrate specific VTK-m concepts in a consistent and
-simple format. However, these examples only cover a small portion of the
+simple format. However, these examples cover only a small portion of the
 capabilities of VTK-m.
 
 Below is a simple example of using VTK-m to create a simple data set and use VTK-m's rendering
