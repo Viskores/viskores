@@ -13,31 +13,27 @@
 
 #include <vtkm/internal/ExportMacros.h>
 
-#ifdef VTKM_CUDA
-#include <thrust/swap.h>
-#else
 #include <algorithm>
-#endif
 
 namespace vtkm
 {
 
 /// Performs a swap operation. Safe to call from cuda code.
-#if defined(VTKM_CUDA)
+#if defined(VTKM_CUDA) && defined(VTKM_CUDA_DEVICE_PASS)
 // CUDA 12 adds a `cub::Swap` function that creates ambiguity with `vtkm::Swap`.
 // This happens when a function from the `cub` namespace is called with an object of a class
 // defined in the `vtkm` namespace as an argument. If that function has an unqualified call to
 // `Swap`, it results in ADL being used, causing the templated functions `cub::Swap` and
 // `vtkm::Swap` to conflict.
-#if defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR >= 12) && \
-  defined(VTKM_CUDA_DEVICE_PASS)
+#if defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR >= 12)
 using cub::Swap;
 #else
 template <typename T>
 VTKM_EXEC_CONT inline void Swap(T& a, T& b)
 {
-  using thrust::swap;
-  swap(a, b);
+  T temp = a;
+  a = b;
+  b = temp;
 }
 #endif
 #elif defined(VTKM_HIP)
