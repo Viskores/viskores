@@ -251,7 +251,11 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
       if (comm.rank() == comm.size() - 1)
       {
         bool checkEnds = out.GetNumberOfPartitions() == static_cast<vtkm::Id>(blockIds.size());
-        VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
+        auto nP = out.GetNumberOfPartitions();
+        if (nP != 1)
+          std::cout << comm.rank() << " numPartitions= " << nP << std::endl;
+        VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1,
+                         "Wrong number of partitions in output 1");
         ValidateOutput(out.GetPartition(0),
                        numSeeds,
                        xMaxRanges[xMaxRanges.size() - 1],
@@ -260,7 +264,8 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
                        duplicateBlocks);
       }
       else
-        VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 0, "Wrong number of partitions in output");
+        VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 0,
+                         "Wrong number of partitions in output 0");
     }
     else if (fType == PATHLINE)
     {

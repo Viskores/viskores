@@ -47,6 +47,9 @@ public:
 
   void Go() override
   {
+    this->DebugStream << "Go:  work= " << this->HaveAnyWork() << std::endl;
+    //this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
+
     std::vector<std::thread> workerThreads;
     workerThreads.emplace_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
     this->Manage();
@@ -62,7 +65,8 @@ protected:
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
     //We have work if there particles in any queues or a worker is busy.
-    return !this->Active.empty() || !this->Inactive.empty() || this->WorkerActivate;
+    return !this->Active.empty() || !this->Inactive.empty() || this->WorkerActivate ||
+      this->Exchanger.GetNumberOfBufferedSends() > 0;
   }
 
   bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId) override
@@ -70,6 +74,8 @@ protected:
     std::lock_guard<std::mutex> lock(this->Mutex);
     bool val = this->AdvectAlgorithm<DSIType>::GetActiveParticles(particles, blockId);
     this->WorkerActivate = val;
+    if (val)
+      this->DebugStream << "  Advect " << particles[0] << std::endl;
     return val;
   }
 
@@ -135,17 +141,22 @@ protected:
 
   void Manage()
   {
-    while (!this->Terminator.Done())
+    //this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
+    while (!this->Terminator.GetDone(this->DebugStream))
     {
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> workerResults;
       this->GetWorkerResults(workerResults);
 
       for (auto& it : workerResults)
         for (auto& r : it.second)
+        {
           this->UpdateResult(r);
+          this->DebugStream << " Advect DONE " << std::endl;
+        }
 
+      //this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
       this->ExchangeParticles();
-      this->Terminator.Control(this->HaveAnyWork());
+      //this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
     }
 
     //Let the workers know that we are done.
