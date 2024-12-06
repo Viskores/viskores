@@ -11,8 +11,6 @@
 #ifndef vtk_m_filter_flow_internal_AdvectAlgorithmTerminator_h
 #define vtk_m_filter_flow_internal_AdvectAlgorithmTerminator_h
 
-#include "DebugStream.h"
-
 namespace vtkm
 {
 namespace filter
@@ -42,52 +40,22 @@ public:
     this->FirstCall = true;
   }
 
-  std::string StateToStr() const
-  {
-    if (this->State == STATE_0)
-      return "STATE_0";
-    else if (this->State == STATE_1)
-      return "STATE_1";
-    else if (this->State == STATE_1B)
-      return "STATE_1B";
-    else if (this->State == STATE_2)
-      return "STATE_2";
-    else if (this->State == DONE)
-      return "STATE_DONE";
-    else
-      return "******STATE_ERROR";
-  }
-
   bool Done() const { return this->State == AdvectAlgorithmTerminatorState::DONE; }
 
-  void Control(bool haveLocalWork, DebugStreamType& DebugStream)
+  void Control(bool haveLocalWork)
   {
 #ifdef VTKM_ENABLE_MPI
-    //DebugStream<<this->StateToStr()<<": Control: localWork= "<<haveLocalWork<<std::endl;
-    //DebugStream<<"Control: haveLocalWork: "<<haveLocalWork<<" LocalWork= "<<this->LocalWork<<" dirty= "<<this->Dirty<<" State= "<<this->State<<std::endl;
     if (this->FirstCall)
     {
       haveLocalWork = true;
       this->FirstCall = false;
     }
 
-    if (this->State == STATE_2 && haveLocalWork)
-    {
-      DebugStream << " DEATH" << std::endl;
-    }
     if (haveLocalWork)
-    {
       this->Dirty = 1;
-      DebugStream << this->StateToStr() << ": Control: Have local work" << std::endl;
-    }
-    else
-      DebugStream << this->StateToStr() << ": Control NO WORK Dirty= " << this->Dirty << " local "
-                  << this->LocalDirty << std::endl;
 
     if (this->State == STATE_0 && !haveLocalWork)
     {
-      DebugStream << this->StateToStr() << ": Control: --> STATE_1 (no local work), call barrier("
-                  << this->BarrierCnt << ") Dirty=0" << std::endl;
       MPI_Ibarrier(this->MPIComm, &this->StateReq);
       this->Dirty = 0;
       this->State = STATE_1;
@@ -98,20 +66,11 @@ public:
       int flag;
       MPI_Test(&this->StateReq, &flag, &status);
       if (flag == 1)
-      {
-        DebugStream << this->StateToStr() << ": Control: HIT barrier(" << this->BarrierCnt
-                    << ") Dirty= " << this->Dirty << std::endl;
         this->State = STATE_1B;
-      }
     }
     else if (this->State == STATE_1B)
     {
-      DebugStream << this->StateToStr() << ": Control: Check for new work. dirty= " << this->Dirty
-                  << std::endl;
       this->LocalDirty = this->Dirty;
-      DebugStream << this->StateToStr() << ": Control: call ireduce(" << this->IReduceCnt
-                  << ") : localDirty=" << this->LocalDirty << std::endl;
-      DebugStream << this->StateToStr() << ": Control: --> STATE_2" << std::endl;
       MPI_Iallreduce(
         &this->LocalDirty, &this->AllDirty, 1, MPI_INT, MPI_LOR, this->MPIComm, &this->StateReq);
       this->State = STATE_2;
@@ -124,20 +83,10 @@ public:
       MPI_Test(&this->StateReq, &flag, &status);
       if (flag == 1)
       {
-        DebugStream << this->StateToStr() << ": Control: HIT ireduce(" << this->IReduceCnt
-                    << ") AllDirty= " << this->AllDirty << std::endl;
         if (this->AllDirty == 0) //done
-        {
-          DebugStream << this->StateToStr() << ": Control: --> DONE allDirty= " << this->AllDirty
-                      << " Dirty= " << this->Dirty << std::endl;
           this->State = DONE;
-        }
         else
-        {
-          DebugStream << this->StateToStr() << ": Control: --> STATE_0 allDirty= " << this->AllDirty
-                      << " (reset)" << std::endl;
           this->State = STATE_0; //reset.
-        }
         this->IReduceCnt++;
       }
     }

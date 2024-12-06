@@ -51,8 +51,7 @@ public:
                 const std::vector<vtkm::Id>& outRanks,
                 const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& outBlockIDsMap,
                 std::vector<ParticleType>& inData,
-                std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap,
-                DebugStreamType& debugStream)
+                std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& inDataBlockIDsMap)
   {
     VTKM_ASSERT(outData.size() == outRanks.size());
 
@@ -61,16 +60,9 @@ public:
 #ifdef VTKM_ENABLE_MPI
     else
     {
-      //debugStream<<"   PE::sendbuffs0=  "<<this->GetNumberOfBufferedSends()<<std::endl;
-      this->CleanupSendBuffers(true, debugStream);
-      //debugStream<<"   PE::sendbuffs1=  "<<this->GetNumberOfBufferedSends()<<std::endl;
-      if (!outData.empty())
-        debugStream << "    PE::Send " << outData[0] << std::endl;
+      this->CleanupSendBuffers(true);
       this->SendParticles(outData, outRanks, outBlockIDsMap);
       this->RecvParticles(inData, inDataBlockIDsMap);
-      if (!inData.empty())
-        debugStream << "     PE::Recv " << inData[0] << std::endl;
-      //debugStream<<"   PE::sendbuffs2=  "<<this->GetNumberOfBufferedSends()<<std::endl;
     }
 #endif
   }
@@ -93,7 +85,7 @@ private:
 #ifdef VTKM_ENABLE_MPI
   using ParticleCommType = std::pair<ParticleType, std::vector<vtkm::Id>>;
 
-  void CleanupSendBuffers(bool checkRequests, DebugStreamType& debugStream)
+  void CleanupSendBuffers(bool checkRequests)
   {
     if (!checkRequests)
     {
@@ -103,11 +95,8 @@ private:
       return;
     }
 
-    //debugStream<<"  PE::CleanupSendBuffers sz= "<<this->SendBuffers.size()<<std::endl;
     if (this->SendBuffers.empty())
-    {
       return;
-    }
 
     std::vector<MPI_Request> requests;
     for (auto& req : this->SendBuffers)
@@ -127,8 +116,6 @@ private:
       throw vtkm::cont::ErrorFilterExecution(
         "Error with MPI_Testsome in ParticleExchanger::CleanupSendBuffers");
 
-    debugStream << "     MPI_Testsome0: " << num
-                << " --> SendBuffers.size= " << this->SendBuffers.size() << std::endl;
     if (num > 0)
     {
       for (int i = 0; i < num; i++)
@@ -147,8 +134,6 @@ private:
         //std::cout<<this->Rank<<" SendBuffer: Delete"<<std::endl;
       }
     }
-    debugStream << "     MPI_Testsome1: " << num
-                << " --> SendBuffers.size= " << this->SendBuffers.size() << std::endl;
   }
 
   void SendParticles(const std::vector<ParticleType>& outData,

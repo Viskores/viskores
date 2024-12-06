@@ -11,7 +11,6 @@
 #ifndef vtk_m_filter_flow_internal_AdvectAlgorithmThreaded_h
 #define vtk_m_filter_flow_internal_AdvectAlgorithmThreaded_h
 
-#include "DebugStream.h"
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/filter/flow/internal/AdvectAlgorithm.h>
 #include <vtkm/filter/flow/internal/BoundsMap.h>
@@ -39,7 +38,6 @@ public:
     : AdvectAlgorithm<DSIType>(bm, blocks)
     , Done(false)
   {
-    this->DebugStream << "ctor. meow" << std::endl;
     //For threaded algorithm, the particles go out of scope in the Work method.
     //When this happens, they are destructed by the time the Manage thread gets them.
     //Set the copy flag so the std::vector is copied into the ArrayHandle
@@ -49,9 +47,7 @@ public:
 
   void Go() override
   {
-    this->DebugStream << "Go: localwork= " << this->HaveWork() << std::endl;
-    this->Terminator.Control(this->HaveWork(), this->DebugStream);
-    this->DebugStream << "HaveLocalWork: " << this->HaveWork() << std::endl;
+    this->Terminator.Control(this->HaveWork());
     std::vector<std::thread> workerThreads;
     workerThreads.emplace_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
     this->Manage();
@@ -67,15 +63,6 @@ protected:
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
     return this->AdvectAlgorithm<DSIType>::HaveWork() || this->WorkerActivate;
-
-    /*
-    //We have work if there particles in any queues or a worker is busy.
-    //return !this->Active.empty() || !this->Inactive.empty() || this->WorkerActivate;
-    bool val = (!this->Active.empty() || !this->Inactive.empty() || this->WorkerActivate);
-//    this->DebugStream<<"HaveAnyWork= "<<val<<std::endl;
-
-    return val;
-    */
   }
 
   bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId) override
@@ -117,7 +104,6 @@ protected:
 
   void WorkerWait()
   {
-    this->DebugStream << " WorkerWait()" << std::endl;
     std::unique_lock<std::mutex> lock(this->Mutex);
     this->WorkerActivateCondition.wait(lock, [this] { return WorkerActivate || Done; });
   }
@@ -131,19 +117,15 @@ protected:
 
   void Work()
   {
-    this->DebugStream << " Work()" << std::endl;
     while (!this->CheckDone())
     {
       std::vector<ParticleType> v;
       vtkm::Id blockId = -1;
       if (this->GetActiveParticles(v, blockId))
       {
-        //this->DebugStream<<" Work: numP= "<<v.size()<<std::endl;
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfo<ParticleType> bb(v, this->BoundsMap, this->ParticleBlockIDsMap);
-        this->DebugStream << " Advect " << v.size() << " v[0]= " << v[0] << std::endl;
         block.Advect(bb, this->StepSize);
-        this->DebugStream << " Advect DONE: " << v[0] << std::endl;
         this->UpdateWorkerResult(blockId, bb);
       }
       else
@@ -165,7 +147,7 @@ protected:
           numTerm += this->UpdateResult(r);
 
       this->ExchangeParticles();
-      this->Terminator.Control(this->HaveWork(), this->DebugStream);
+      this->Terminator.Control(this->HaveWork());
     }
     this->SetDone();
   }

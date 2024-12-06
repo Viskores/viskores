@@ -22,8 +22,6 @@
 #include <vtkm/thirdparty/diy/mpi-cast.h>
 #endif
 
-#include "DebugStream.h"
-
 namespace vtkm
 {
 namespace filter
@@ -55,8 +53,6 @@ ParticleMessenger::Exchange()
 */
 
 
-#define DEBUG_STREAM(x) this->DebugStream << x;
-
 template <typename DSIType>
 class AdvectAlgorithm
 {
@@ -70,9 +66,7 @@ public:
     , Rank(this->Comm.rank())
     , Terminator(this->Comm)
     , Exchanger(this->Comm)
-    , DebugStream(this->Rank)
   {
-    this->DebugStream << "ctor\n";
   }
 
   void Execute(const vtkm::cont::ArrayHandle<ParticleType>& seeds, vtkm::FloatDefault stepSize)
@@ -142,16 +136,14 @@ public:
       std::vector<ParticleType> v;
       vtkm::Id blockId = -1;
 
-      this->Terminator.Control(this->HaveWork(), this->DebugStream);
+      this->Terminator.Control(this->HaveWork());
       if (this->GetActiveParticles(v, blockId))
       {
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfo<ParticleType> bb(v, this->BoundsMap, this->ParticleBlockIDsMap);
-        this->DebugStream << " Advect: " << v[0] << "\n";
         block.Advect(bb, this->StepSize);
         this->UpdateResult(bb);
-        this->DebugStream << " Advect DONE.\n";
       }
 
       this->ExchangeParticles();
@@ -247,12 +239,8 @@ public:
     std::vector<ParticleType> incoming;
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingBlockIDs;
 
-    this->Exchanger.Exchange(outgoing,
-                             outgoingRanks,
-                             this->ParticleBlockIDsMap,
-                             incoming,
-                             incomingBlockIDs,
-                             this->DebugStream);
+    this->Exchanger.Exchange(
+      outgoing, outgoingRanks, this->ParticleBlockIDsMap, incoming, incomingBlockIDs);
 
     //Cleanup what was sent.
     for (const auto& p : outgoing)
@@ -328,8 +316,6 @@ public:
 
     if (!particles.empty())
     {
-      //this->Terminator.AddWork(this->DebugStream);
-
       for (auto pit = particles.begin(); pit != particles.end(); pit++)
       {
         vtkm::Id particleID = pit->GetID();
@@ -363,7 +349,6 @@ public:
     //Update terminated particles.
     if (numTerm > 0)
     {
-      this->DebugStream << "Terminated: " << numTerm << "\n";
       for (const auto& id : stuff.TermID)
         this->ParticleBlockIDsMap.erase(id);
     }
@@ -387,8 +372,6 @@ public:
   AdvectAlgorithmTerminator Terminator;
 
   ParticleExchanger<ParticleType> Exchanger;
-
-  DebugStreamType DebugStream;
 };
 
 }
