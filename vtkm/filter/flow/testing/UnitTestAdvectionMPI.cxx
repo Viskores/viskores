@@ -68,8 +68,6 @@ void DoTest()
         continue;
       for (bool useThreaded : { true, false })
       {
-        if (useThreaded)
-          continue;
         for (bool useBlockIds : { true, false })
         {
           if (useBlockIds)

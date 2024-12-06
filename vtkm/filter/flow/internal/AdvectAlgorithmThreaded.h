@@ -39,6 +39,7 @@ public:
     : AdvectAlgorithm<DSIType>(bm, blocks)
     , Done(false)
   {
+    this->DebugStream << "ctor. meow" << std::endl;
     //For threaded algorithm, the particles go out of scope in the Work method.
     //When this happens, they are destructed by the time the Manage thread gets them.
     //Set the copy flag so the std::vector is copied into the ArrayHandle
@@ -48,17 +49,9 @@ public:
 
   void Go() override
   {
-    this->DebugStream << "GO() #active= " << this->Active.size() << std::endl;
-    this->NumParticlesWorkingOn = 0;
-    if (!this->Active.empty() || !this->Inactive.empty())
-    {
-      this->NumParticlesWorkingOn = this->Inactive.size();
-      for (const auto& it : this->Active)
-        this->NumParticlesWorkingOn += it.second.size();
-      this->Terminator.AddWork(this->NumParticlesWorkingOn, this->DebugStream);
-    }
-    this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
-    //this->DebugStream<<"HaveLocalWork: "<<this->HaveAnyWork()<<std::endl;
+    this->DebugStream << "Go: localwork= " << this->HaveWork() << std::endl;
+    this->Terminator.Control(this->HaveWork(), this->DebugStream);
+    this->DebugStream << "HaveLocalWork: " << this->HaveWork() << std::endl;
     std::vector<std::thread> workerThreads;
     workerThreads.emplace_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
     this->Manage();
@@ -70,10 +63,10 @@ public:
   }
 
 protected:
-  bool HaveAnyWork()
+  bool HaveWork() override
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
-    return this->NumParticlesWorkingOn > 0;
+    return this->AdvectAlgorithm<DSIType>::HaveWork() || this->WorkerActivate;
 
     /*
     //We have work if there particles in any queues or a worker is busy.
@@ -160,11 +153,8 @@ protected:
 
   void Manage()
   {
-    this->DebugStream << "Manage() numP= " << this->NumParticlesWorkingOn << std::endl;
-    //this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
     while (!this->Terminator.Done())
     {
-      //this->DebugStream<<"  0_Manage() numP= "<<this->NumParticlesWorkingOn<<std::endl;
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> workerResults;
       this->GetWorkerResults(workerResults);
 
@@ -174,14 +164,9 @@ protected:
         for (auto& r : it.second)
           numTerm += this->UpdateResult(r);
 
-      bool val = this->ExchangeParticles();
-      if (val || numTerm > 0)
-        this->DebugStream << "  1_Manage() numP= " << this->NumParticlesWorkingOn << std::endl;
-      this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
+      this->ExchangeParticles();
+      this->Terminator.Control(this->HaveWork(), this->DebugStream);
     }
-
-    //Let the workers know that we are done.
-    this->DebugStream << "Manage() DONE numP= " << this->NumParticlesWorkingOn << std::endl;
     this->SetDone();
   }
 

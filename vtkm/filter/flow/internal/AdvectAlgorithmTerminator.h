@@ -58,31 +58,6 @@ public:
       return "******STATE_ERROR";
   }
 
-  void AddWork(int numWork, DebugStreamType& DebugStream)
-  {
-#if 0
-#ifdef VTKM_ENABLE_MPI
-    this->LocalWork += numWork;
-    this->Dirty = 1;
-    //this->State = STATE_0;
-    DebugStream<<this->StateToStr()<<": AddWork: localWork= "<<this->LocalWork<<" dirty= "<<this->Dirty<<std::endl;
-#endif
-#endif
-  }
-  void RemoveWork(int numWork, DebugStreamType& DebugStream)
-  {
-#if 0
-    //If we are removing work, we better have added it already.
-    VTKM_ASSERT(this->LocalWork > 0);
-    this->LocalWork -= numWork;
-    if (this->LocalWork == 0)
-      this->Dirty = 0;
-    VTKM_ASSERT(this->LocalWork >= 0);
-
-    DebugStream<<this->StateToStr()<<": RemoveWork: localWork= "<<this->LocalWork<<" dirty= "<<this->Dirty<<std::endl;
-#endif
-  }
-
   bool Done() const { return this->State == AdvectAlgorithmTerminatorState::DONE; }
 
   void Control(bool haveLocalWork, DebugStreamType& DebugStream)
@@ -196,7 +171,6 @@ private:
   MPI_Request StateReq;
 #endif
 };
-
 
 }
 }

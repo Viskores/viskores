@@ -124,7 +124,7 @@ public:
     this->SetSeedArray(particles, blockIDs);
   }
 
-  bool HaveWork()
+  virtual bool HaveWork()
   {
     int activeCnt = this->Active.size();
     int inactiveCnt = this->Inactive.size();
@@ -137,14 +137,6 @@ public:
   //Advect all the particles.
   virtual void Go()
   {
-    this->NumParticlesWorkingOn = 0;
-    if (!this->Active.empty() || !this->Inactive.empty())
-    {
-      this->NumParticlesWorkingOn = this->Inactive.size();
-      for (const auto& it : this->Active)
-        this->NumParticlesWorkingOn += it.second.size();
-    }
-
     while (!this->Terminator.Done())
     {
       std::vector<ParticleType> v;
@@ -162,7 +154,6 @@ public:
         this->DebugStream << " Advect DONE.\n";
       }
 
-      //this->Terminator.Control(this->HaveWork(), this->DebugStream);
       this->ExchangeParticles();
     }
   }
@@ -246,7 +237,7 @@ public:
     return !particles.empty();
   }
 
-  bool ExchangeParticles()
+  void ExchangeParticles()
   {
     std::vector<ParticleType> outgoing;
     std::vector<vtkm::Id> outgoingRanks;
@@ -256,10 +247,6 @@ public:
     std::vector<ParticleType> incoming;
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingBlockIDs;
 
-    if (!outgoing.empty())
-      this->DebugStream << "Exchange: outgoing= " << std::to_string(outgoing.size()) << " "
-                        << outgoing[0] << "\n";
-
     this->Exchanger.Exchange(outgoing,
                              outgoingRanks,
                              this->ParticleBlockIDsMap,
@@ -267,29 +254,11 @@ public:
                              incomingBlockIDs,
                              this->DebugStream);
 
-    bool val = false;
-    if (!incoming.empty())
-    {
-      this->Terminator.AddWork(incoming.size(), this->DebugStream);
-      this->NumParticlesWorkingOn += incoming.size();
-      val = true;
-    }
-    if (!outgoing.empty())
-    {
-      this->Terminator.RemoveWork(outgoing.size(), this->DebugStream);
-      this->NumParticlesWorkingOn -= outgoing.size();
-      val = true;
-    }
-
     //Cleanup what was sent.
     for (const auto& p : outgoing)
       this->ParticleBlockIDsMap.erase(p.GetID());
 
-    if (!incoming.empty())
-      this->DebugStream << "Exchange: incoming= " << incoming.size() << " " << incoming[0] << "\n";
     this->UpdateActive(incoming, incomingBlockIDs);
-
-    return val;
   }
 
   void GetOutgoingParticles(std::vector<ParticleType>& outgoing,
@@ -397,8 +366,6 @@ public:
       this->DebugStream << "Terminated: " << numTerm << "\n";
       for (const auto& id : stuff.TermID)
         this->ParticleBlockIDsMap.erase(id);
-      this->Terminator.RemoveWork(numTerm, this->DebugStream);
-      this->NumParticlesWorkingOn -= numTerm;
     }
 
     return numTerm;
@@ -420,7 +387,6 @@ public:
   AdvectAlgorithmTerminator Terminator;
 
   ParticleExchanger<ParticleType> Exchanger;
-  vtkm::Id NumParticlesWorkingOn = 0;
 
   DebugStreamType DebugStream;
 };
