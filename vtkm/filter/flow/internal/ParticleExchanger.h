@@ -61,16 +61,16 @@ public:
 #ifdef VTKM_ENABLE_MPI
     else
     {
-      debugStream << "   PE::sendbuffs0=  " << this->GetNumberOfBufferedSends() << std::endl;
+      //debugStream<<"   PE::sendbuffs0=  "<<this->GetNumberOfBufferedSends()<<std::endl;
       this->CleanupSendBuffers(true, debugStream);
-      debugStream << "   PE::sendbuffs1=  " << this->GetNumberOfBufferedSends() << std::endl;
+      //debugStream<<"   PE::sendbuffs1=  "<<this->GetNumberOfBufferedSends()<<std::endl;
       if (!outData.empty())
         debugStream << "    PE::Send " << outData[0] << std::endl;
       this->SendParticles(outData, outRanks, outBlockIDsMap);
       this->RecvParticles(inData, inDataBlockIDsMap);
       if (!inData.empty())
         debugStream << "     PE::Recv " << inData[0] << std::endl;
-      debugStream << "   PE::sendbuffs2=  " << this->GetNumberOfBufferedSends() << std::endl;
+      //debugStream<<"   PE::sendbuffs2=  "<<this->GetNumberOfBufferedSends()<<std::endl;
     }
 #endif
   }
@@ -103,7 +103,7 @@ private:
       return;
     }
 
-    debugStream << "  PE::CleanupSendBuffers sz= " << this->SendBuffers.size() << std::endl;
+    //debugStream<<"  PE::CleanupSendBuffers sz= "<<this->SendBuffers.size()<<std::endl;
     if (this->SendBuffers.empty())
     {
       return;
@@ -144,7 +144,7 @@ private:
         //Delete the buffer and remove from SendBuffers.
         delete it->second;
         this->SendBuffers.erase(it);
-        std::cout << this->Rank << " SendBuffer: Delete" << std::endl;
+        //std::cout<<this->Rank<<" SendBuffer: Delete"<<std::endl;
       }
     }
     debugStream << "     MPI_Testsome1: " << num

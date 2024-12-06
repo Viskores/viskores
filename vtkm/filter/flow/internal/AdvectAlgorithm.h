@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_flow_internal_AdvectAlgorithm_h
 #define vtk_m_filter_flow_internal_AdvectAlgorithm_h
 
+
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/filter/flow/internal/AdvectAlgorithmTerminator.h>
 #include <vtkm/filter/flow/internal/BoundsMap.h>
@@ -53,6 +54,9 @@ ParticleMessenger::Exchange()
 
 */
 
+
+#define DEBUG_STREAM(x) this->DebugStream << x;
+
 template <typename DSIType>
 class AdvectAlgorithm
 {
@@ -68,6 +72,7 @@ public:
     , Exchanger(this->Comm)
     , DebugStream(this->Rank)
   {
+    this->DebugStream << "ctor\n";
   }
 
   void Execute(const vtkm::cont::ArrayHandle<ParticleType>& seeds, vtkm::FloatDefault stepSize)
@@ -119,48 +124,46 @@ public:
     this->SetSeedArray(particles, blockIDs);
   }
 
-  virtual bool HaveAnyWork()
+  bool HaveWork()
   {
-    auto numActive = this->Active.size();
-    auto numInactive = this->Inactive.size();
-    vtkm::Id num = this->Exchanger.GetNumberOfBufferedSends();
+    int activeCnt = this->Active.size();
+    int inactiveCnt = this->Inactive.size();
+    int numBuffers = this->Exchanger.GetNumberOfBufferedSends();
 
-    bool haveWork = numActive > 0 || numInactive > 0 || num > 0;
-    this->DebugStream << "HaveAnyWork: AIB= " << numActive << " " << numInactive << " " << num
-                      << "  val= " << haveWork << std::endl;
-
+    bool haveWork = (activeCnt > 0 || inactiveCnt > 0 || numBuffers > 0);
     return haveWork;
   }
 
   //Advect all the particles.
   virtual void Go()
   {
-    bool anyWork = this->HaveAnyWork();
-    this->DebugStream << "Go: anyWork= " << anyWork << std::endl;
-    this->Terminator.SetStatus(anyWork, this->DebugStream);
+    this->NumParticlesWorkingOn = 0;
+    if (!this->Active.empty() || !this->Inactive.empty())
+    {
+      this->NumParticlesWorkingOn = this->Inactive.size();
+      for (const auto& it : this->Active)
+        this->NumParticlesWorkingOn += it.second.size();
+    }
 
-    while (true)
+    while (!this->Terminator.Done())
     {
       std::vector<ParticleType> v;
       vtkm::Id blockId = -1;
+
+      this->Terminator.Control(this->HaveWork(), this->DebugStream);
       if (this->GetActiveParticles(v, blockId))
       {
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfo<ParticleType> bb(v, this->BoundsMap, this->ParticleBlockIDsMap);
-        this->DebugStream << "      Advect " << v[0] << std::endl;
+        this->DebugStream << " Advect: " << v[0] << "\n";
         block.Advect(bb, this->StepSize);
-        this->DebugStream << "      Advect DONE " << v[0] << std::endl;
         this->UpdateResult(bb);
+        this->DebugStream << " Advect DONE.\n";
       }
-      if (this->Terminator.GetDone(this->DebugStream))
-        break;
 
-      //this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
+      //this->Terminator.Control(this->HaveWork(), this->DebugStream);
       this->ExchangeParticles();
-
-      anyWork = this->HaveAnyWork();
-      this->Terminator.SetStatus(anyWork, this->DebugStream);
     }
   }
 
@@ -184,7 +187,6 @@ public:
                             const std::vector<std::vector<vtkm::Id>>& blockIds)
   {
     VTKM_ASSERT(particles.size() == blockIds.size());
-    //this->Terminator.AddWork(particles.size(), this->DebugStream);
 
     auto pit = particles.begin();
     auto bit = blockIds.begin();
@@ -244,7 +246,7 @@ public:
     return !particles.empty();
   }
 
-  void ExchangeParticles()
+  bool ExchangeParticles()
   {
     std::vector<ParticleType> outgoing;
     std::vector<vtkm::Id> outgoingRanks;
@@ -254,6 +256,10 @@ public:
     std::vector<ParticleType> incoming;
     std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingBlockIDs;
 
+    if (!outgoing.empty())
+      this->DebugStream << "Exchange: outgoing= " << std::to_string(outgoing.size()) << " "
+                        << outgoing[0] << "\n";
+
     this->Exchanger.Exchange(outgoing,
                              outgoingRanks,
                              this->ParticleBlockIDsMap,
@@ -261,25 +267,29 @@ public:
                              incomingBlockIDs,
                              this->DebugStream);
 
+    bool val = false;
+    if (!incoming.empty())
+    {
+      this->Terminator.AddWork(incoming.size(), this->DebugStream);
+      this->NumParticlesWorkingOn += incoming.size();
+      val = true;
+    }
+    if (!outgoing.empty())
+    {
+      this->Terminator.RemoveWork(outgoing.size(), this->DebugStream);
+      this->NumParticlesWorkingOn -= outgoing.size();
+      val = true;
+    }
+
     //Cleanup what was sent.
     for (const auto& p : outgoing)
       this->ParticleBlockIDsMap.erase(p.GetID());
-    //if (!incoming.empty())
-    //  this->Terminator.AddWork(incoming.size(), this->DebugStream);
-    //if (!outgoing.empty())
-    //  this->Terminator.RemoveWork(outgoing.size(), this->DebugStream);
 
-    vtkm::Id n = this->Exchanger.GetNumberOfBufferedSends();
-    if (n > 0)
-    {
-      //this->DebugStream<<"Add BufferedSend work"<<std::endl;
-      //this->Terminator.AddWork(n, this->DebugStream);
-    }
-
+    if (!incoming.empty())
+      this->DebugStream << "Exchange: incoming= " << incoming.size() << " " << incoming[0] << "\n";
     this->UpdateActive(incoming, incomingBlockIDs);
 
-    //bool haveWork = this->HaveAnyWork();
-    //this->Terminator.Control(haveWork, this->DebugStream);
+    return val;
   }
 
   void GetOutgoingParticles(std::vector<ParticleType>& outgoing,
@@ -349,6 +359,8 @@ public:
 
     if (!particles.empty())
     {
+      //this->Terminator.AddWork(this->DebugStream);
+
       for (auto pit = particles.begin(); pit != particles.end(); pit++)
       {
         vtkm::Id particleID = pit->GetID();
@@ -382,10 +394,11 @@ public:
     //Update terminated particles.
     if (numTerm > 0)
     {
+      this->DebugStream << "Terminated: " << numTerm << "\n";
       for (const auto& id : stuff.TermID)
         this->ParticleBlockIDsMap.erase(id);
-
-      //this->Terminator.RemoveWork(numTerm, this->DebugStream);
+      this->Terminator.RemoveWork(numTerm, this->DebugStream);
+      this->NumParticlesWorkingOn -= numTerm;
     }
 
     return numTerm;
@@ -407,6 +420,8 @@ public:
   AdvectAlgorithmTerminator Terminator;
 
   ParticleExchanger<ParticleType> Exchanger;
+  vtkm::Id NumParticlesWorkingOn = 0;
+
   DebugStreamType DebugStream;
 };
 

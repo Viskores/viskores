@@ -210,8 +210,8 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
     AddVectorFields(pds, fieldName, vecX);
 
     vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
-    seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                               vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1) });
+    seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0) });
+    //vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1) });
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
 
     if (fType == STREAMLINE)

@@ -22,307 +22,181 @@ namespace flow
 namespace internal
 {
 
-#ifdef VTKM_ENABLE_MPI
-namespace //anonymous
-{
-class ParallelAdvectAlgorithmTerminator
-{
-  static constexpr int UNSET = -1;
-  static constexpr int IDLE = 0;
-  static constexpr int ACTIVE = 1;
-  static constexpr int DONE = 2;
-
-public:
-  ParallelAdvectAlgorithmTerminator(vtkmdiy::mpi::communicator& comm)
-    : FirstCall(true)
-    , MPIComm(vtkmdiy::mpi::mpi_cast(comm.handle()))
-    , NumRanks(comm.size())
-    , Rank(comm.rank())
-    , Token(UNSET)
-  {
-    this->FromRank = this->Rank - 1;
-    this->ToRank = this->Rank + 1;
-    if (this->Rank == 0)
-      this->FromRank = this->NumRanks - 1;
-    if (this->Rank == this->NumRanks - 1)
-      this->ToRank = 0;
-  }
-
-  void SetStatus(const bool& haveWork, DebugStreamType& debugStream)
-  {
-    if (this->Token != DONE)
-    {
-      if (haveWork)
-        this->Token = ACTIVE;
-      else
-        this->Token = IDLE;
-    }
-    debugStream << "SetStatus from Work: " << this->StatusToStr()
-                << " S,R counters= " << this->SendCnt << " " << this->RecvCnt << std::endl;
-  }
-
-  bool GetDone(DebugStreamType& debugStream)
-  {
-    debugStream << std::endl
-                << "GetDone0: from/to " << this->FromRank << " " << this->ToRank << " "
-                << this->Info() << std::endl;
-    // Once we are done, we need to wait for the sends to complete so that the forward neighbor gets the message.
-    if (this->Token == DONE && this->SendCnt == 0)
-    {
-      //If we have an outstanding recv, cancel it.
-      if (this->RecvCnt > 0)
-      {
-        MPI_Cancel(&this->RecvReq);
-        MPI_Request_free(&this->RecvReq);
-        this->RecvCnt--;
-      }
-      VTKM_ASSERT(this->RecvCnt == 0);
-      debugStream << "GetDone1: from/to " << this->FromRank << " " << this->ToRank << " "
-                  << this->Info() << std::endl;
-      return true;
-    }
-
-    //Otherwise, pass tokens along the ring.
-    if (this->Rank == 0)
-      this->RingHead(debugStream);
-    else
-      this->RingBody(debugStream);
-
-    return false;
-  }
-
-private:
-  // Rank 0 is the head of the ring.
-  void RingHead(DebugStreamType& debugStream)
-  {
-    //Begin the ring on the first call.
-    if (this->FirstCall)
-    {
-      this->PostSendToken(debugStream);
-      debugStream << "GetDone1: from/to " << this->FromRank << " " << this->ToRank << " "
-                  << this->Info() << std::endl;
-      this->FirstCall = false;
-      return;
-    }
-
-    //If send is done, then post a receive and return.
-    if (this->CheckSendComplete(debugStream))
-    {
-      this->PostRecvToken(debugStream);
-      debugStream << "GetDone1: from/to " << this->FromRank << " " << this->ToRank << " "
-                  << this->Info() << std::endl;
-      return;
-    }
-
-    //Tail of ring responds back to head.
-    if (this->CheckRecvComplete(debugStream))
-    {
-      //If the entire ring is IDLE and root is still IDLE, we are done.
-      if (this->RecvToken == IDLE && this->Token == IDLE)
-      {
-        debugStream << "   everyone idle. DONE" << std::endl;
-        this->Token = DONE;
-      }
-      this->RoundCnt++;
-      this->PostSendToken(debugStream);
-      debugStream << "GetDone1: from/to " << this->FromRank << " " << this->ToRank << " "
-                  << this->Info() << " NEW ROUND" << std::endl;
-    }
-  }
-
-  // Rank 1 to NumRanks-1 is the body of the ring.
-  void RingBody(DebugStreamType& debugStream)
-  {
-    //We always need 1 active recv.
-    if (this->RecvCnt == 0)
-    {
-      this->PostRecvToken(debugStream);
-      //debugStream<<"GetDone1: from/to "<<this->FromRank<<" "<<this->ToRank<<" "<<this->Info()<<std::endl;
-      //return;
-    }
-
-    //Check for completed send.
-    this->CheckSendComplete(debugStream);
-
-    // Check if token received from prev neighbor.
-    if (this->CheckRecvComplete(debugStream))
-    {
-      //If previous token is ACTIVE, pass on ACTIVE;
-      //If previous token is DONE, pass on DONE.
-      //otherwise, previous is IDLE, so pass on my token.
-      if (this->RecvToken == ACTIVE)
-        this->Token = ACTIVE;
-      else if (this->RecvToken == DONE)
-        this->Token = DONE;
-
-      //Pass token to forward neighbor.
-      this->PostSendToken(debugStream);
-      debugStream << "GetDone1: from/to " << this->FromRank << " " << this->ToRank << " "
-                  << this->Info() << std::endl;
-    }
-  }
-
-  bool CheckSendComplete(DebugStreamType& debugStream)
-  {
-    if (this->SendCnt > 0)
-    {
-      MPI_Status status;
-      int flag;
-      int err = MPI_Test(&this->SendReq, &flag, &status);
-      if (flag == 1)
-      {
-        this->SendCnt--;
-        debugStream << " Send completed. cnt=" << this->SendCnt << std::endl;
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  bool CheckRecvComplete(DebugStreamType& debugStream)
-  {
-    if (this->RecvCnt > 0)
-    {
-      MPI_Status status;
-      int flag;
-      int err = MPI_Test(&this->RecvReq, &flag, &status);
-      if (flag == 1)
-      {
-        this->RecvCnt--;
-        this->RecvToken = this->RecvBuffer[0];
-        this->RoundCnt = this->RecvBuffer[1];
-        debugStream << " Recv(" << this->FromRank << ") " << this->StatusToStr(this->RecvToken)
-                    << " " << this->RoundCnt << " cnt= " << this->RecvCnt << std::endl;
-        return true;
-      }
-    }
-    return false;
-  }
-
-  void PostSendToken(DebugStreamType& debugStream)
-  {
-    this->SendToken = this->Token;
-    if (this->SendToken == IDLE && (this->SendCnt > 0 || this->RecvCnt > 0))
-    {
-      debugStream << "   idle --> active" << std::endl;
-      this->SendToken = ACTIVE;
-    }
-    this->SendCnt++;
-    this->SendBuffer[0] = this->SendToken;
-    this->SendBuffer[1] = this->RoundCnt;
-    MPI_Isend(
-      &this->SendBuffer, 2, MPI_INT, this->ToRank, this->Tag, this->MPIComm, &this->SendReq);
-    if (this->Rank == 0 && this->FirstCall)
-      debugStream << " BEGIN ";
-
-    debugStream << " Send(" << this->ToRank << ") " << this->StatusToStr(this->SendToken) << " "
-                << this->RoundCnt << " " << &this->SendReq << " cnt= " << this->SendCnt
-                << std::endl;
-  }
-
-  void PostRecvToken(DebugStreamType& debugStream)
-  {
-    MPI_Irecv(
-      &this->RecvBuffer, 2, MPI_INT, this->FromRank, this->Tag, this->MPIComm, &this->RecvReq);
-    this->RecvCnt++;
-    debugStream << " Post Irecv(" << this->FromRank << ") " << &this->RecvReq
-                << " cnt= " << this->RecvCnt << std::endl;
-  }
-
-
-  int SendCnt = 0;
-  int RecvCnt = 0;
-  bool FirstCall;
-  MPI_Comm MPIComm;
-  MPI_Request RecvReq, SendReq;
-  int NumRanks;
-  int Rank, ToRank, FromRank;
-  int Token;
-  int SendToken, RecvToken;
-  int Tag = 314;
-  int RoundCnt = 0;
-  int SendBuffer[2], RecvBuffer[2];
-
-
-  //stuff to toss.
-  std::string StatusToStr() const { return this->StatusToStr(this->Token); }
-
-  std::string StatusToStr(const int& status) const
-  {
-    std::string str;
-    if (status == UNSET)
-      str = "UNSET";
-    else if (status == IDLE)
-      str = "IDLE";
-    else if (status == ACTIVE)
-      str = "ACTIVE";
-    else if (status == DONE)
-      str = "DONE";
-    else
-      str = "ERROR " + std::to_string(status);
-
-    return str;
-  }
-
-  std::string Info(int token = -100) const
-  {
-    int tmp = this->Token;
-    if (token != -100)
-      tmp = token;
-    std::string str = this->StatusToStr(tmp) + " S,R cnt= " + std::to_string(this->SendCnt) + " " +
-      std::to_string(this->RecvCnt);
-    str = str + " roundCnt= " + std::to_string(this->RoundCnt);
-    if (this->SendCnt > 1 || this->RecvCnt > 1)
-      str = str + " ********** ERROR";
-    return str;
-  }
-};
-} //namespace anonymous
-#endif
-
 class AdvectAlgorithmTerminator
 {
-  static constexpr int UNSET = -1;
-  static constexpr int IDLE = 0;
-  static constexpr int ACTIVE = 1;
-  static constexpr int DONE = 2;
+  bool FirstCall;
 
 public:
 #ifdef VTKM_ENABLE_MPI
   AdvectAlgorithmTerminator(vtkmdiy::mpi::communicator& comm)
-    : HaveWork(false)
-    , ParallelTerminator(comm)
+    : AllDirty(1)
+    , Dirty(1)
+    , LocalWork(0)
+    , MPIComm(vtkmdiy::mpi::mpi_cast(comm.handle()))
+    , Rank(comm.rank())
+    , State(STATE_0)
 #else
   AdvectAlgorithmTerminator(vtkmdiy::mpi::communicator& vtkmNotUsed(comm))
-    : HaveWork(false)
 #endif
   {
+    this->FirstCall = true;
   }
 
-  void SetStatus(const bool& haveWork, DebugStreamType& debugStream)
+  std::string StateToStr() const
   {
-    this->HaveWork = haveWork;
+    if (this->State == STATE_0)
+      return "STATE_0";
+    else if (this->State == STATE_1)
+      return "STATE_1";
+    else if (this->State == STATE_1B)
+      return "STATE_1B";
+    else if (this->State == STATE_2)
+      return "STATE_2";
+    else if (this->State == DONE)
+      return "STATE_DONE";
+    else
+      return "******STATE_ERROR";
+  }
+
+  void AddWork(int numWork, DebugStreamType& DebugStream)
+  {
+#if 0
 #ifdef VTKM_ENABLE_MPI
-    this->ParallelTerminator.SetStatus(this->HaveWork, debugStream);
+    this->LocalWork += numWork;
+    this->Dirty = 1;
+    //this->State = STATE_0;
+    DebugStream<<this->StateToStr()<<": AddWork: localWork= "<<this->LocalWork<<" dirty= "<<this->Dirty<<std::endl;
+#endif
+#endif
+  }
+  void RemoveWork(int numWork, DebugStreamType& DebugStream)
+  {
+#if 0
+    //If we are removing work, we better have added it already.
+    VTKM_ASSERT(this->LocalWork > 0);
+    this->LocalWork -= numWork;
+    if (this->LocalWork == 0)
+      this->Dirty = 0;
+    VTKM_ASSERT(this->LocalWork >= 0);
+
+    DebugStream<<this->StateToStr()<<": RemoveWork: localWork= "<<this->LocalWork<<" dirty= "<<this->Dirty<<std::endl;
 #endif
   }
 
-  bool GetDone(DebugStreamType& debugStream)
+  bool Done() const { return this->State == AdvectAlgorithmTerminatorState::DONE; }
+
+  void Control(bool haveLocalWork, DebugStreamType& DebugStream)
   {
 #ifdef VTKM_ENABLE_MPI
-    return this->ParallelTerminator.GetDone(debugStream);
+    //DebugStream<<this->StateToStr()<<": Control: localWork= "<<haveLocalWork<<std::endl;
+    //DebugStream<<"Control: haveLocalWork: "<<haveLocalWork<<" LocalWork= "<<this->LocalWork<<" dirty= "<<this->Dirty<<" State= "<<this->State<<std::endl;
+    if (this->FirstCall)
+    {
+      haveLocalWork = true;
+      this->FirstCall = false;
+    }
+
+    if (this->State == STATE_2 && haveLocalWork)
+    {
+      DebugStream << " DEATH" << std::endl;
+    }
+    if (haveLocalWork)
+    {
+      this->Dirty = 1;
+      DebugStream << this->StateToStr() << ": Control: Have local work" << std::endl;
+    }
+    else
+      DebugStream << this->StateToStr() << ": Control NO WORK Dirty= " << this->Dirty << " local "
+                  << this->LocalDirty << std::endl;
+
+    if (this->State == STATE_0 && !haveLocalWork)
+    {
+      DebugStream << this->StateToStr() << ": Control: --> STATE_1 (no local work), call barrier("
+                  << this->BarrierCnt << ") Dirty=0" << std::endl;
+      MPI_Ibarrier(this->MPIComm, &this->StateReq);
+      this->Dirty = 0;
+      this->State = STATE_1;
+    }
+    else if (this->State == STATE_1)
+    {
+      MPI_Status status;
+      int flag;
+      MPI_Test(&this->StateReq, &flag, &status);
+      if (flag == 1)
+      {
+        DebugStream << this->StateToStr() << ": Control: HIT barrier(" << this->BarrierCnt
+                    << ") Dirty= " << this->Dirty << std::endl;
+        this->State = STATE_1B;
+      }
+    }
+    else if (this->State == STATE_1B)
+    {
+      DebugStream << this->StateToStr() << ": Control: Check for new work. dirty= " << this->Dirty
+                  << std::endl;
+      this->LocalDirty = this->Dirty;
+      DebugStream << this->StateToStr() << ": Control: call ireduce(" << this->IReduceCnt
+                  << ") : localDirty=" << this->LocalDirty << std::endl;
+      DebugStream << this->StateToStr() << ": Control: --> STATE_2" << std::endl;
+      MPI_Iallreduce(
+        &this->LocalDirty, &this->AllDirty, 1, MPI_INT, MPI_LOR, this->MPIComm, &this->StateReq);
+      this->State = STATE_2;
+      this->BarrierCnt++;
+    }
+    else if (this->State == STATE_2)
+    {
+      MPI_Status status;
+      int flag;
+      MPI_Test(&this->StateReq, &flag, &status);
+      if (flag == 1)
+      {
+        DebugStream << this->StateToStr() << ": Control: HIT ireduce(" << this->IReduceCnt
+                    << ") AllDirty= " << this->AllDirty << std::endl;
+        if (this->AllDirty == 0) //done
+        {
+          DebugStream << this->StateToStr() << ": Control: --> DONE allDirty= " << this->AllDirty
+                      << " Dirty= " << this->Dirty << std::endl;
+          this->State = DONE;
+        }
+        else
+        {
+          DebugStream << this->StateToStr() << ": Control: --> STATE_0 allDirty= " << this->AllDirty
+                      << " (reset)" << std::endl;
+          this->State = STATE_0; //reset.
+        }
+        this->IReduceCnt++;
+      }
+    }
 #else
-    return !this->HaveWork;
+    if (!haveLocalWork)
+      this->State = DONE;
 #endif
   }
 
 private:
-  bool HaveWork;
+  enum AdvectAlgorithmTerminatorState
+  {
+    STATE_0,
+    STATE_1,
+    STATE_1B,
+    STATE_2,
+    DONE
+  };
+
 #ifdef VTKM_ENABLE_MPI
-  ParallelAdvectAlgorithmTerminator ParallelTerminator;
+  int AllDirty;
+  int BarrierCnt = 0;
+  int IReduceCnt = 0;
+  //Dirty: Has this rank seen any work since entering state?
+  std::atomic<int> Dirty;
+  int LocalDirty;
+  std::atomic<int> LocalWork;
+  MPI_Comm MPIComm;
+  vtkm::Id Rank;
+  AdvectAlgorithmTerminatorState State = AdvectAlgorithmTerminatorState::STATE_0;
+  MPI_Request StateReq;
 #endif
 };
+
 
 }
 }

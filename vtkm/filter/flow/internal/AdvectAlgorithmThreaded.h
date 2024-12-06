@@ -11,6 +11,7 @@
 #ifndef vtk_m_filter_flow_internal_AdvectAlgorithmThreaded_h
 #define vtk_m_filter_flow_internal_AdvectAlgorithmThreaded_h
 
+#include "DebugStream.h"
 #include <vtkm/cont/PartitionedDataSet.h>
 #include <vtkm/filter/flow/internal/AdvectAlgorithm.h>
 #include <vtkm/filter/flow/internal/BoundsMap.h>
@@ -47,9 +48,17 @@ public:
 
   void Go() override
   {
-    this->DebugStream << "Go:  work= " << this->HaveAnyWork() << std::endl;
-    //this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
-
+    this->DebugStream << "GO() #active= " << this->Active.size() << std::endl;
+    this->NumParticlesWorkingOn = 0;
+    if (!this->Active.empty() || !this->Inactive.empty())
+    {
+      this->NumParticlesWorkingOn = this->Inactive.size();
+      for (const auto& it : this->Active)
+        this->NumParticlesWorkingOn += it.second.size();
+      this->Terminator.AddWork(this->NumParticlesWorkingOn, this->DebugStream);
+    }
+    this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
+    //this->DebugStream<<"HaveLocalWork: "<<this->HaveAnyWork()<<std::endl;
     std::vector<std::thread> workerThreads;
     workerThreads.emplace_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
     this->Manage();
@@ -64,9 +73,16 @@ protected:
   bool HaveAnyWork()
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
+    return this->NumParticlesWorkingOn > 0;
+
+    /*
     //We have work if there particles in any queues or a worker is busy.
-    return !this->Active.empty() || !this->Inactive.empty() || this->WorkerActivate ||
-      this->Exchanger.GetNumberOfBufferedSends() > 0;
+    //return !this->Active.empty() || !this->Inactive.empty() || this->WorkerActivate;
+    bool val = (!this->Active.empty() || !this->Inactive.empty() || this->WorkerActivate);
+//    this->DebugStream<<"HaveAnyWork= "<<val<<std::endl;
+
+    return val;
+    */
   }
 
   bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId) override
@@ -74,8 +90,6 @@ protected:
     std::lock_guard<std::mutex> lock(this->Mutex);
     bool val = this->AdvectAlgorithm<DSIType>::GetActiveParticles(particles, blockId);
     this->WorkerActivate = val;
-    if (val)
-      this->DebugStream << "  Advect " << particles[0] << std::endl;
     return val;
   }
 
@@ -110,6 +124,7 @@ protected:
 
   void WorkerWait()
   {
+    this->DebugStream << " WorkerWait()" << std::endl;
     std::unique_lock<std::mutex> lock(this->Mutex);
     this->WorkerActivateCondition.wait(lock, [this] { return WorkerActivate || Done; });
   }
@@ -123,15 +138,19 @@ protected:
 
   void Work()
   {
+    this->DebugStream << " Work()" << std::endl;
     while (!this->CheckDone())
     {
       std::vector<ParticleType> v;
       vtkm::Id blockId = -1;
       if (this->GetActiveParticles(v, blockId))
       {
+        //this->DebugStream<<" Work: numP= "<<v.size()<<std::endl;
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfo<ParticleType> bb(v, this->BoundsMap, this->ParticleBlockIDsMap);
+        this->DebugStream << " Advect " << v.size() << " v[0]= " << v[0] << std::endl;
         block.Advect(bb, this->StepSize);
+        this->DebugStream << " Advect DONE: " << v[0] << std::endl;
         this->UpdateWorkerResult(blockId, bb);
       }
       else
@@ -141,25 +160,28 @@ protected:
 
   void Manage()
   {
+    this->DebugStream << "Manage() numP= " << this->NumParticlesWorkingOn << std::endl;
     //this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
-    while (!this->Terminator.GetDone(this->DebugStream))
+    while (!this->Terminator.Done())
     {
+      //this->DebugStream<<"  0_Manage() numP= "<<this->NumParticlesWorkingOn<<std::endl;
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> workerResults;
       this->GetWorkerResults(workerResults);
 
+      //bool localWork = !workerResults.empty();
+      vtkm::Id numTerm = 0;
       for (auto& it : workerResults)
         for (auto& r : it.second)
-        {
-          this->UpdateResult(r);
-          this->DebugStream << " Advect DONE " << std::endl;
-        }
+          numTerm += this->UpdateResult(r);
 
-      //this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
-      this->ExchangeParticles();
-      //this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
+      bool val = this->ExchangeParticles();
+      if (val || numTerm > 0)
+        this->DebugStream << "  1_Manage() numP= " << this->NumParticlesWorkingOn << std::endl;
+      this->Terminator.Control(this->HaveAnyWork(), this->DebugStream);
     }
 
     //Let the workers know that we are done.
+    this->DebugStream << "Manage() DONE numP= " << this->NumParticlesWorkingOn << std::endl;
     this->SetDone();
   }
 
