@@ -31,28 +31,6 @@ namespace flow
 namespace internal
 {
 
-/*
-ParticleMessenger::Exchange()
- - SendParticles(outData--> map[dstRank]=vector of pairs);
- -- SendParticles(map...)
- --- for each m : map  SendParticles(m);
- ---- SendParticles(dst, container)
- ----- serialize, SendData(dst, buff);
- ------ SendDataAsync(dst,buff)
- -------  header??, req=mpi_isend(), store req.
-
- - RecvAny(data, block);
- -- RecvData(tags, buffers, block)
- --- RecvDataAsyncProbe(tag, buffers, block)
- ---- while (true)
- ----- if block:  MPI_Probe() msgReceived=true
- ----- else : MPI_Iprobe msgReceived = check
- ----- if msgRecvd: MPI_Get_count(), MPI_Recv(), buffers, blockAndWait=false
-
-
-*/
-
-
 template <typename DSIType>
 class AdvectAlgorithm
 {
@@ -265,6 +243,7 @@ public:
       auto ranks = this->BoundsMap.FindRank(bid[0]);
       VTKM_ASSERT(!ranks.empty());
 
+      //Only 1 rank has the block.
       if (ranks.size() == 1)
       {
         if (ranks[0] == this->Rank)
@@ -280,7 +259,7 @@ public:
       }
       else
       {
-        //Decide where it should go...
+        //Multiple ranks have the block, decide where it should go...
 
         //Random selection:
         vtkm::Id outRank = std::rand() % ranks.size();
