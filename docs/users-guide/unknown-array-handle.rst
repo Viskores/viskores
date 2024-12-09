@@ -185,9 +185,21 @@ This can be done with the :func:`vtkm::cont::UnknownArrayHandle::DeepCopyFrom` m
    :file: GuideExampleUnknownArrayHandle.cxx
    :caption: Deep copy arrays of unknown types.
 
+.. didyouknow::
+   The :class:`vtkm::cont::UnknownArrayHandle` copy methods behave similarly to the :func:`vtkm::cont::ArrayCopy` functions.
+
 It is often the case that you have good reason to believe that an array is of an expected type, but you have no way to be sure.
 To simplify code, the most rational thing to do is to get the array as the expected type if that is indeed what it is, or to copy it to an array of that type otherwise.
-The :func:`vtkm::cont::UnknownArrayHandle::CopyShallowIfPossible` does just that.
+The :func:`vtkm::cont::ArrayCopyShallowIfPossible` does just that.
+
+.. doxygenfunction:: vtkm::cont::ArrayCopyShallowIfPossible
+
+.. load-example:: ArrayCopyShallow
+   :file: GuideExampleUnknownArrayHandle.cxx
+   :caption: Using :func:`vtkm::cont::ArrayCopyShallowIfPossible` to get an unknown array as a particular type.
+
+:class:`vtkm::cont::UnknownArrayHandle` also has a method to do a similar shallow copy into it.
+This method works by setting an array of a particular type into the :class:`vtkm::cont::UnknownArrayHandle`.
 
 .. doxygenfunction:: vtkm::cont::UnknownArrayHandle::CopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle&)
 .. doxygenfunction:: vtkm::cont::UnknownArrayHandle::CopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle&) const
@@ -195,9 +207,6 @@ The :func:`vtkm::cont::UnknownArrayHandle::CopyShallowIfPossible` does just that
 .. load-example:: UnknownArrayHandleShallowCopy
    :file: GuideExampleUnknownArrayHandle.cxx
    :caption: Using :func:`vtkm::cont::UnknownArrayHandle::CopyShallowIfPossible` to get an unknown array as a particular type.
-
-.. didyouknow::
-   The :class:`vtkm::cont::UnknownArrayHandle` copy methods behave similarly to the :func:`vtkm::cont::ArrayCopy` functions.
 
 
 ----------------------------------------
