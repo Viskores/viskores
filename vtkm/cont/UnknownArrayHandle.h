@@ -734,9 +734,9 @@ public:
   /// the array is deep copied.
   ///
   /// This method is roughly equivalent to the `vtkm::cont::ArrayCopyShallowIfPossible()` function
-  /// (defined in `vtkm/cont/ArrayCopy.h`). However, this method can be used without
-  /// having to use a device compiler (whereas `vtkm::cont::ArrayCopyShallowIfPossible()` does require
-  /// a device device compiler).
+  /// (defined in `vtkm/cont/ArrayCopy.h`). This form allows you to copy into a type defined
+  /// elsewhere (and hidden in the `UnknownArrayHandle`) whereas `ArrayCopyShallowIfPossible()`
+  /// must be copied into an `ArrayHandle` of a known type.
   ///
   void CopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle& source);
 
@@ -750,9 +750,9 @@ public:
   /// of `CopyShallowIfPossible()` throws an exception.
   ///
   /// This method is roughly equivalent to the `vtkm::cont::ArrayCopyShallowIfPossible()` function
-  /// (defined in `vtkm/cont/ArrayCopy.h`). However, this method can be used without
-  /// having to use a device compiler (whereas `vtkm::cont::ArrayCopyShallowIfPossible()` does require
-  /// a device device compiler).
+  /// (defined in `vtkm/cont/ArrayCopy.h`). This form allows you to copy into a type defined
+  /// elsewhere (and hidden in the `UnknownArrayHandle`) whereas `ArrayCopyShallowIfPossible()`
+  /// must be copied into an `ArrayHandle` of a known type.
   ///
   void CopyShallowIfPossible(const vtkm::cont::UnknownArrayHandle& source) const;
 

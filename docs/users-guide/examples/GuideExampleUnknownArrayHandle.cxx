@@ -9,6 +9,7 @@
 //============================================================================
 
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -181,6 +182,20 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::FloatDefault> CopyToDefaultArray(
 ////
 
 ////
+//// BEGIN-EXAMPLE ArrayCopyShallow
+////
+VTKM_CONT vtkm::cont::ArrayHandle<vtkm::FloatDefault> GetAsFloatArray(
+  const vtkm::cont::UnknownArrayHandle& unknownArray)
+{
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> output;
+  vtkm::cont::ArrayCopyShallowIfPossible(unknownArray, output);
+  return output;
+}
+////
+//// END-EXAMPLE ArrayCopyShallow
+////
+
+////
 //// BEGIN-EXAMPLE UnknownArrayHandleShallowCopy
 ////
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::FloatDefault> GetAsDefaultArray(
@@ -231,6 +246,7 @@ void CastUnknownArrayHandle()
 
   GetMiddleValue(unknownArray);
   CopyToDefaultArray(unknownArray);
+  GetAsFloatArray(unknownArray);
   GetAsDefaultArray(unknownArray);
 }
 
