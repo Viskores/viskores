@@ -120,12 +120,8 @@ public:
 
   virtual bool HaveWork()
   {
-    int activeCnt = this->Active.size();
-    int inactiveCnt = this->Inactive.size();
-    int numBuffers = this->Exchanger.GetNumberOfBufferedSends();
-
-    bool haveWork = (activeCnt > 0 || inactiveCnt > 0 || numBuffers > 0);
-    return haveWork;
+    return !this->Active.empty() || !this->Inactive.empty() ||
+      this->Exchanger.GetNumberOfBufferedSends() > 0;
   }
 
   //Advect all the particles.

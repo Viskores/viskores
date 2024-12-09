@@ -91,17 +91,19 @@ public:
   VTKM_CONT
   void SetUseThreadedAlgorithm(bool val) { this->UseThreadedAlgorithm = val; }
 
-  VTKM_DEPRECATED(2.2, "All communication is asynchronous no.");
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous now.")
   VTKM_CONT
   void SetUseAsynchronousCommunication() {}
-  VTKM_DEPRECATED(2.2, "All communication is asynchronous no.");
+
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous now.")
   VTKM_CONT
   bool GetUseAsynchronousCommunication() { return true; }
 
-  VTKM_DEPRECATED(2.2, "All communication is asynchronous no.");
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous now.")
   VTKM_CONT
   void SetUseSynchronousCommunication() {}
-  VTKM_DEPRECATED(2.2, "All communication is asynchronous no.");
+
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous now.")
   VTKM_CONT
   bool GetUseSynchronousCommunication() { return false; }
 
