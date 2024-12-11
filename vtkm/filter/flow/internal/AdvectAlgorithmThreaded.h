@@ -140,7 +140,6 @@ protected:
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> workerResults;
       this->GetWorkerResults(workerResults);
 
-      //bool localWork = !workerResults.empty();
       vtkm::Id numTerm = 0;
       for (auto& it : workerResults)
         for (auto& r : it.second)
