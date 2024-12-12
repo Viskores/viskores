@@ -10,6 +10,8 @@
 #include <vtkm/cont/kokkos/internal/KokkosAlloc.h>
 
 #include <vtkm/cont/ErrorBadAllocation.h>
+#include <vtkm/cont/Initialize.h>
+#include <vtkm/cont/Logging.h>
 #include <vtkm/cont/kokkos/internal/KokkosTypes.h>
 
 #include <sstream>
@@ -25,6 +27,13 @@ namespace internal
 
 void* Allocate(std::size_t size)
 {
+  if (!Kokkos::is_initialized())
+  {
+    VTKM_LOG_F(vtkm::cont::LogLevel::Info,
+               "Allocating device memory before Kokkos has been initialized. Calling "
+               "vtkm::cont::Initialize.");
+    vtkm::cont::Initialize();
+  }
   try
   {
     return Kokkos::kokkos_malloc<ExecutionSpace::memory_space>(size);
