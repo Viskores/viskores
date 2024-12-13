@@ -109,7 +109,6 @@ build:windows_vs2019:
     - shell
     - vs2019
     - msvc-19.28  # sync with VCVARSVERSION above
-    - large-memory
   extends:
     - .cmake_build_windows
     - .run_automatically
