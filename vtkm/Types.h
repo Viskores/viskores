@@ -393,26 +393,29 @@ public:
   using ComponentType = T;
 
 protected:
-  VecBaseCommon() = default;
+  constexpr VecBaseCommon() = default;
 
   VTKM_EXEC_CONT
-  const DerivedClass& Derived() const { return *static_cast<const DerivedClass*>(this); }
+  constexpr const DerivedClass& Derived() const { return *static_cast<const DerivedClass*>(this); }
 
   VTKM_EXEC_CONT
-  DerivedClass& Derived() { return *static_cast<DerivedClass*>(this); }
+  constexpr DerivedClass& Derived() { return *static_cast<DerivedClass*>(this); }
 
 private:
   // Only for internal use
   VTKM_EXEC_CONT
-  inline vtkm::IdComponent NumComponents() const { return this->Derived().GetNumberOfComponents(); }
+  constexpr vtkm::IdComponent NumComponents() const
+  {
+    return this->Derived().GetNumberOfComponents();
+  }
 
   // Only for internal use
   VTKM_EXEC_CONT
-  inline const T& Component(vtkm::IdComponent index) const { return this->Derived()[index]; }
+  constexpr const T& Component(vtkm::IdComponent index) const { return this->Derived()[index]; }
 
   // Only for internal use
   VTKM_EXEC_CONT
-  inline T& Component(vtkm::IdComponent index) { return this->Derived()[index]; }
+  constexpr T& Component(vtkm::IdComponent index) { return this->Derived()[index]; }
 
 public:
   template <vtkm::IdComponent OtherSize>
@@ -581,10 +584,10 @@ public:
 #endif // not using cuda < 8
 
   VTKM_EXEC_CONT
-  ComponentType* GetPointer() { return &this->Component(0); }
+  constexpr ComponentType* GetPointer() { return &this->Component(0); }
 
   VTKM_EXEC_CONT
-  const ComponentType* GetPointer() const { return &this->Component(0); }
+  constexpr const ComponentType* GetPointer() const { return &this->Component(0); }
 };
 
 
@@ -682,7 +685,7 @@ public:
     return this->Components[idx];
   }
 
-  inline VTKM_EXEC_CONT ComponentType& operator[](vtkm::IdComponent idx)
+  inline VTKM_EXEC_CONT constexpr ComponentType& operator[](vtkm::IdComponent idx)
   {
     VTKM_ASSERT(idx >= 0);
     VTKM_ASSERT(idx < NUM_COMPONENTS);
@@ -779,7 +782,7 @@ class VTKM_ALWAYS_EXPORT VecCBase : public vtkm::detail::VecBaseCommon<T, Derive
 {
 protected:
   VTKM_EXEC_CONT
-  VecCBase() {}
+  constexpr VecCBase() {}
 };
 
 } // namespace detail
@@ -813,7 +816,7 @@ public:
 #endif
 
   using Superclass::Superclass;
-  Vec() = default;
+  constexpr Vec() = default;
 #if defined(_MSC_VER) && _MSC_VER < 1910
   template <typename... Ts>
   constexpr Vec(T value, Ts&&... values)
@@ -838,7 +841,7 @@ public:
   using ComponentType = T;
   static constexpr vtkm::IdComponent NUM_COMPONENTS = 0;
 
-  Vec() = default;
+  constexpr Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const ComponentType&) {}
 
   template <typename OtherType>
@@ -899,7 +902,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 2> : public detail::VecBase<T, 2, Vec<T, 2>>
   using Superclass = detail::VecBase<T, 2, Vec<T, 2>>;
 
 public:
-  Vec() = default;
+  constexpr Vec() = default;
   VTKM_EXEC_CONT Vec(const T& value)
     : Superclass(value)
   {
@@ -1015,7 +1018,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 3> : public detail::VecBase<T, 3, Vec<T, 3>>
   using Superclass = detail::VecBase<T, 3, Vec<T, 3>>;
 
 public:
-  Vec() = default;
+  constexpr Vec() = default;
   VTKM_EXEC_CONT Vec(const T& value)
     : Superclass(value)
   {
@@ -1133,7 +1136,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 4> : public detail::VecBase<T, 4, Vec<T, 4>>
   using Superclass = detail::VecBase<T, 4, Vec<T, 4>>;
 
 public:
-  Vec() = default;
+  constexpr Vec() = default;
   VTKM_EXEC_CONT Vec(const T& value)
     : Superclass(value)
   {
@@ -1286,55 +1289,55 @@ public:
 #endif
 
   VTKM_EXEC_CONT
-  VecC()
+  constexpr VecC()
     : Components(nullptr)
     , NumberOfComponents(0)
   {
   }
 
   VTKM_EXEC_CONT
-  VecC(T* array, vtkm::IdComponent size)
+  constexpr VecC(T* array, vtkm::IdComponent size)
     : Components(array)
     , NumberOfComponents(size)
   {
   }
 
   template <vtkm::IdComponent Size>
-  VTKM_EXEC_CONT VecC(vtkm::Vec<T, Size>& src)
+  constexpr VTKM_EXEC_CONT VecC(vtkm::Vec<T, Size>& src)
     : Components(src.GetPointer())
     , NumberOfComponents(Size)
   {
   }
 
   VTKM_EXEC_CONT
-  explicit VecC(T& src)
+  explicit constexpr VecC(T& src)
     : Components(&src)
     , NumberOfComponents(1)
   {
   }
 
   VTKM_EXEC_CONT
-  VecC(const VecC<T>& src)
+  constexpr VecC(const VecC<T>& src)
     : Components(src.Components)
     , NumberOfComponents(src.NumberOfComponents)
   {
   }
 
-  inline VTKM_EXEC_CONT const T& operator[](vtkm::IdComponent index) const
+  inline VTKM_EXEC_CONT constexpr const T& operator[](vtkm::IdComponent index) const
   {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->NumberOfComponents);
     return this->Components[index];
   }
 
-  inline VTKM_EXEC_CONT T& operator[](vtkm::IdComponent index)
+  inline VTKM_EXEC_CONT constexpr T& operator[](vtkm::IdComponent index)
   {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->NumberOfComponents);
     return this->Components[index];
   }
 
-  inline VTKM_EXEC_CONT vtkm::IdComponent GetNumberOfComponents() const
+  inline VTKM_EXEC_CONT constexpr vtkm::IdComponent GetNumberOfComponents() const
   {
     return this->NumberOfComponents;
   }
@@ -1380,55 +1383,55 @@ public:
 #endif
 
   VTKM_EXEC_CONT
-  VecCConst()
+  constexpr VecCConst()
     : Components(nullptr)
     , NumberOfComponents(0)
   {
   }
 
   VTKM_EXEC_CONT
-  VecCConst(const T* array, vtkm::IdComponent size)
+  constexpr VecCConst(const T* array, vtkm::IdComponent size)
     : Components(array)
     , NumberOfComponents(size)
   {
   }
 
   template <vtkm::IdComponent Size>
-  VTKM_EXEC_CONT VecCConst(const vtkm::Vec<T, Size>& src)
+  VTKM_EXEC_CONT constexpr VecCConst(const vtkm::Vec<T, Size>& src)
     : Components(src.GetPointer())
     , NumberOfComponents(Size)
   {
   }
 
   VTKM_EXEC_CONT
-  explicit VecCConst(const T& src)
+  explicit constexpr VecCConst(const T& src)
     : Components(&src)
     , NumberOfComponents(1)
   {
   }
 
   VTKM_EXEC_CONT
-  VecCConst(const VecCConst<T>& src)
+  constexpr VecCConst(const VecCConst<T>& src)
     : Components(src.Components)
     , NumberOfComponents(src.NumberOfComponents)
   {
   }
 
   VTKM_EXEC_CONT
-  VecCConst(const VecC<T>& src)
+  constexpr VecCConst(const VecC<T>& src)
     : Components(src.Components)
     , NumberOfComponents(src.NumberOfComponents)
   {
   }
 
-  inline VTKM_EXEC_CONT const T& operator[](vtkm::IdComponent index) const
+  inline VTKM_EXEC_CONT constexpr const T& operator[](vtkm::IdComponent index) const
   {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->NumberOfComponents);
     return this->Components[index];
   }
 
-  inline VTKM_EXEC_CONT vtkm::IdComponent GetNumberOfComponents() const
+  inline VTKM_EXEC_CONT constexpr vtkm::IdComponent GetNumberOfComponents() const
   {
     return this->NumberOfComponents;
   }
@@ -1449,7 +1452,7 @@ private:
 /// Creates a \c VecC from an input array.
 ///
 template <typename T>
-static inline VTKM_EXEC_CONT vtkm::VecC<T> make_VecC(T* array, vtkm::IdComponent size)
+static inline VTKM_EXEC_CONT constexpr vtkm::VecC<T> make_VecC(T* array, vtkm::IdComponent size)
 {
   return vtkm::VecC<T>(array, size);
 }
@@ -1457,7 +1460,8 @@ static inline VTKM_EXEC_CONT vtkm::VecC<T> make_VecC(T* array, vtkm::IdComponent
 /// Creates a \c VecCConst from a constant input array.
 ///
 template <typename T>
-static inline VTKM_EXEC_CONT vtkm::VecCConst<T> make_VecC(const T* array, vtkm::IdComponent size)
+static inline VTKM_EXEC_CONT constexpr vtkm::VecCConst<T> make_VecC(const T* array,
+                                                                    vtkm::IdComponent size)
 {
   return vtkm::VecCConst<T>(array, size);
 }

@@ -151,7 +151,7 @@ void ArrayCopy(const vtkm::cont::UnknownArrayHandle&, const vtkm::cont::ArrayHan
 /// assumption about it being a particular type). You really just want a shallow
 /// copy (a reference in a concrete `ArrayHandle`) if that is possible.
 ///
-/// `ArrayCopyShallowIfPossible` pulls an array of a specific type from an
+/// `ArrayCopyShallowIfPossible()` pulls an array of a specific type from an
 /// `UnknownArrayHandle`. If the type is compatible, it will perform a shallow copy.
 /// If it is not possible, a deep copy is performed to get it to the correct type.
 ///
