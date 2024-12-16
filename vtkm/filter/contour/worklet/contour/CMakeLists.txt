@@ -21,9 +21,11 @@ set(headers
   FlyingEdgesPass4XWithNormals.h
   FlyingEdgesPass4Y.h
   FlyingEdgesTables.h
-  MarchingCellTables.h
   MarchingCells.h
+  MarchingCellTables.h
   )
 
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})
+
+vtkm_pyexpander_generated_file(MarchingCellTables.h)
