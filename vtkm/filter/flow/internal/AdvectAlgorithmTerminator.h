@@ -35,12 +35,20 @@ public:
     , State(STATE_0)
 #else
   AdvectAlgorithmTerminator(vtkmdiy::mpi::communicator& vtkmNotUsed(comm))
+    : HaveWork(false)
 #endif
   {
     this->FirstCall = true;
   }
 
-  bool Done() const { return this->State == AdvectAlgorithmTerminatorState::DONE; }
+  bool Done() const
+  {
+#ifdef VTKM_ENABLE_MPI
+    return this->State == AdvectAlgorithmTerminatorState::DONE;
+#else
+    return this->HaveWork;
+#endif
+  }
 
   void Control(bool haveLocalWork)
   {
@@ -91,12 +99,12 @@ public:
       }
     }
 #else
-    if (!haveLocalWork)
-      this->State = DONE;
+    this->HaveWork = haveLocalWork;
 #endif
   }
 
 private:
+#ifdef VTKM_ENABLE_MPI
   enum AdvectAlgorithmTerminatorState
   {
     STATE_0,
@@ -106,7 +114,6 @@ private:
     DONE
   };
 
-#ifdef VTKM_ENABLE_MPI
   int AllDirty;
   int BarrierCnt = 0;
   int IReduceCnt = 0;
@@ -118,6 +125,8 @@ private:
   vtkm::Id Rank;
   AdvectAlgorithmTerminatorState State = AdvectAlgorithmTerminatorState::STATE_0;
   MPI_Request StateReq;
+#else
+  bool HaveWork;
 #endif
 };
 
