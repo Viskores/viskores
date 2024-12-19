@@ -13,6 +13,7 @@
 
 #include <vtkm/filter/Filter.h>
 #include <vtkm/filter/MapFieldPermutation.h>
+#include <vtkm/filter/contour/ContourDimension.h>
 #include <vtkm/filter/contour/vtkm_filter_contour_export.h>
 #include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 
@@ -127,6 +128,65 @@ public:
   VTKM_CONT
   const std::string& GetNormalArrayName() const { return this->NormalArrayName; }
 
+  /// @brief Specify the dimension of cells on which to operate the contour.
+  ///
+  /// The contour filters operate on cells of a particular dimension
+  /// (i.e., polyhedra, polygons, or lines) and generate simplicies
+  /// of one less dimension (i.e., triangles, lines, or vertices).
+  /// The default is `vtkm::filter::contour::ContourDimension::Auto`.
+  VTKM_CONT void SetInputCellDimension(vtkm::filter::contour::ContourDimension dimension)
+  {
+    this->InputCellDimension = dimension;
+  }
+
+  /// @copydoc SetInputCellDimension
+  VTKM_CONT vtkm::filter::contour::ContourDimension GetInputCellDimension() const
+  {
+    return this->InputCellDimension;
+  }
+
+  /// @brief Specifies an automatic selection of the input cell dimension.
+  ///
+  /// This option first tries to contour polyhedra. If any polyhedra have the
+  /// contour, that is used. Otherwise, it tries to contour polygons.
+  /// If that fails, lines are contoured.
+  VTKM_CONT void SetInputCellDimensionToAuto()
+  {
+    this->SetInputCellDimension(vtkm::filter::contour::ContourDimension::Auto);
+  }
+
+  /// @brief Specifies a combination of all possible contours.
+  ///
+  /// This option runs contour on all possible dimension types and then merges all contours together.
+  VTKM_CONT void SetInputCellDimensionToAll()
+  {
+    this->SetInputCellDimension(vtkm::filter::contour::ContourDimension::All);
+  }
+
+  /// @brief Specifies running contours on polyhedra.
+  ///
+  /// This option runs contour on polyhedra, generating triangles.
+  VTKM_CONT void SetInputCellDimensionToPolyhedra()
+  {
+    this->SetInputCellDimension(vtkm::filter::contour::ContourDimension::Polyhedra);
+  }
+
+  /// @brief Specifies running contours on polygons.
+  ///
+  /// This option runs contour on polygons, generating lines.
+  VTKM_CONT void SetInputCellDimensionToPolygons()
+  {
+    this->SetInputCellDimension(vtkm::filter::contour::ContourDimension::Polygons);
+  }
+
+  /// @brief Specifies running contours on lines.
+  ///
+  /// This option runs contour on lines, generating vertices.
+  VTKM_CONT void SetInputCellDimensionToLines()
+  {
+    this->SetInputCellDimension(vtkm::filter::contour::ContourDimension::Lines);
+  }
+
   /// Set whether the points generated should be unique for every triangle
   /// or will duplicate points be merged together. Duplicate points are identified
   /// by the unique edge it was generated from.
@@ -144,7 +204,7 @@ public:
   /// Get whether the points generated should be unique for every triangle
   /// or will duplicate points be merged together.
   VTKM_CONT
-  bool GetMergeDuplicatePoints() { return this->MergeDuplicatedPoints; }
+  bool GetMergeDuplicatePoints() const { return this->MergeDuplicatedPoints; }
 
 protected:
   /// \brief Map a given field to the output \c DataSet , depending on its type.
@@ -222,6 +282,9 @@ protected:
   std::vector<vtkm::Float64> IsoValues;
   bool GenerateNormals = true;
   bool ComputeFastNormals = false;
+
+  vtkm::filter::contour::ContourDimension InputCellDimension =
+    vtkm::filter::contour::ContourDimension::Auto;
 
   bool AddInterpolationEdgeIds = false;
   bool MergeDuplicatedPoints = true;

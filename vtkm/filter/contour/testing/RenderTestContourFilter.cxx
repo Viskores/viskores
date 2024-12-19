@@ -160,12 +160,36 @@ void TestContourFilterTangle()
   vtkm::rendering::testing::RenderTest(result, "tangle", "filter/contour-tangle.png", testOptions);
 }
 
+void TestContourFilterPoly()
+{
+  std::cout << "Generate Image for Contour filter on polygons" << std::endl;
+
+  auto pathname = vtkm::cont::testing::Testing::DataPath("unstructured/poly_contour_cases.vtk");
+  vtkm::io::VTKDataSetReader reader(pathname);
+  vtkm::cont::DataSet dataSet = reader.ReadDataSet();
+
+  vtkm::filter::contour::Contour contour;
+  contour.SetIsoValues({ -0.20, -0.12, -0.04, 0.04, 0.12, 0.20 });
+  contour.SetActiveField("PerlinNoise");
+  contour.SetMergeDuplicatePoints(true);
+  auto result = contour.Execute(dataSet);
+
+  result.PrintSummary(std::cout);
+
+  vtkm::rendering::testing::RenderTestOptions testOptions;
+  testOptions.Mapper = vtkm::rendering::testing::MapperType::Cylinder;
+  testOptions.Radius = 0.01f;
+  vtkm::rendering::testing::RenderTest(
+    result, "PerlinNoise", "filter/contour-poly.png", testOptions);
+}
+
 void TestContourFilter()
 {
   TestContourFilterUniform();
   TestContourFilterUniformBoundaries();
   TestContourFilterTangle();
   TestContourFilterWedge();
+  TestContourFilterPoly();
 }
 } // namespace
 

@@ -33,8 +33,10 @@ class VTKM_FILTER_CONTOUR_EXPORT ContourMarchingCells
   : public vtkm::filter::contour::AbstractContour
 {
 protected:
-  VTKM_CONT
-  vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& result) override;
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& result) override;
+
+  template <vtkm::UInt8 Dims>
+  VTKM_CONT vtkm::cont::DataSet DoExecuteDimension(const vtkm::cont::DataSet& result);
 };
 } // namespace contour
 } // namespace filter

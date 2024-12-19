@@ -180,28 +180,31 @@ The contouring/isosurface algorithm is implemented by :class:`vtkm::filter::cont
 :class:`vtkm::filter::contour::Contour` also inherits the following methods.
 
 .. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetIsoValue(vtkm::Float64)
-
 .. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetIsoValue(vtkm::Id, vtkm::Float64)
-
 .. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetIsoValues
-
 .. doxygenfunction:: vtkm::filter::contour::AbstractContour::GetIsoValue
 
 .. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetGenerateNormals
-
 .. doxygenfunction:: vtkm::filter::contour::AbstractContour::GetGenerateNormals
 
 .. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetComputeFastNormals
-
 .. doxygenfunction:: vtkm::filter::contour::AbstractContour::GetComputeFastNormals
 
 .. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetNormalArrayName
-
 .. doxygenfunction:: vtkm::filter::contour::AbstractContour::GetNormalArrayName
 
-.. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetMergeDuplicatePoints
+.. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetInputCellDimension
+.. doxygenfunction:: vtkm::filter::contour::AbstractContour::GetInputCellDimension
+.. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetInputCellDimensionToAuto
+.. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetInputCellDimensionToAll
+.. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetInputCellDimensionToPolyhedra
+.. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetInputCellDimensionToPolygons
+.. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetInputCellDimensionToLines
 
+.. doxygenfunction:: vtkm::filter::contour::AbstractContour::SetMergeDuplicatePoints
 .. doxygenfunction:: vtkm::filter::contour::AbstractContour::GetMergeDuplicatePoints
+
+.. doxygenenum:: vtkm::filter::contour::ContourDimension
 
 .. load-example:: Contour
    :file: GuideExampleProvidedFilters.cxx

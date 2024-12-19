@@ -48,8 +48,7 @@ vtkm::cont::DataSet MakeNormalsTestDataSet()
 // Verify that the direction of the normals is consistent with the triangle winding.
 void CheckWinding(const vtkm::cont::DataSet& contour)
 {
-  vtkm::cont::CellSetSingleType<> cellSet;
-  contour.GetCellSet().AsCellSet(cellSet);
+  vtkm::cont::UnknownCellSet cellSet = contour.GetCellSet();
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f> coords;
   contour.GetCoordinateSystem().GetData().AsArrayHandle(coords);
@@ -61,8 +60,9 @@ void CheckWinding(const vtkm::cont::DataSet& contour)
 
   for (vtkm::Id triId = 0; triId < cellSet.GetNumberOfCells(); ++triId)
   {
+    VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(triId) == 3);
     vtkm::Id3 pointIds;
-    cellSet.GetIndices(triId, pointIds);
+    cellSet.GetCellPointIds(triId, &pointIds[0]);
 
     vtkm::Vec3f facetNormal = vtkm::TriangleNormal(
       coordsPortal.Get(pointIds[0]), coordsPortal.Get(pointIds[1]), coordsPortal.Get(pointIds[2]));

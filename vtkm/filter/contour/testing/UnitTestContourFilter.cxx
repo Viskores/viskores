@@ -92,9 +92,7 @@ public:
       }
 
       vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();
-      vtkm::cont::UnknownCellSet dcells = result.GetCellSet();
-      using CellSetType = vtkm::cont::CellSetSingleType<>;
-      const CellSetType& cells = dcells.AsCellSet<CellSetType>();
+      vtkm::cont::UnknownCellSet cells = result.GetCellSet();
 
       //verify that the number of points is correct (72)
       //verify that the number of cells is correct (160)
@@ -113,10 +111,7 @@ public:
                        "Shouldn't have less coordinates than the unmerged version");
 
       //verify that the number of cells is correct (160)
-      vtkm::cont::UnknownCellSet dcells = result.GetCellSet();
-
-      using CellSetType = vtkm::cont::CellSetSingleType<>;
-      const CellSetType& cells = dcells.AsCellSet<CellSetType>();
+      vtkm::cont::UnknownCellSet cells = result.GetCellSet();
       VTKM_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
     }
   }
@@ -157,9 +152,6 @@ public:
     vtkm::io::VTKDataSetReader reader(pathname);
 
     vtkm::cont::DataSet dataSet = reader.ReadDataSet();
-
-    vtkm::cont::CellSetSingleType<> cellSet;
-    dataSet.GetCellSet().AsCellSet(cellSet);
 
     vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
     dataSet.GetPointField("gyroid").GetData().AsArrayHandle(fieldArray);
@@ -245,6 +237,58 @@ public:
                      "Wrong number of cells in rectilinear contour");
   }
 
+  void TestMixedShapes() const
+  {
+    auto pathname = vtkm::cont::testing::Testing::DataPath("unstructured/mixed-cell-shapes.vtk");
+    vtkm::io::VTKDataSetReader reader(pathname);
+    vtkm::cont::DataSet input = reader.ReadDataSet();
+
+    // Single-cell contour
+    vtkm::filter::contour::Contour filter;
+    filter.SetActiveField("scalars");
+    filter.SetMergeDuplicatePoints(true);
+    filter.SetIsoValues({ 5.5, 9.5, 11.5, 14.5, 17.5, 20.5, 25.5 });
+
+    {
+      filter.SetInputCellDimensionToAuto();
+      vtkm::cont::DataSet output = filter.Execute(input);
+      VTKM_TEST_ASSERT(output.GetNumberOfPoints() == 18);
+      VTKM_TEST_ASSERT(output.GetNumberOfCells() == 10);
+      VTKM_TEST_ASSERT(output.GetCellSet().GetCellShape(0) == vtkm::CELL_SHAPE_TRIANGLE);
+    }
+
+    {
+      filter.SetInputCellDimensionToPolyhedra();
+      vtkm::cont::DataSet output = filter.Execute(input);
+      VTKM_TEST_ASSERT(output.GetNumberOfPoints() == 18);
+      VTKM_TEST_ASSERT(output.GetNumberOfCells() == 10);
+      VTKM_TEST_ASSERT(output.GetCellSet().GetCellShape(0) == vtkm::CELL_SHAPE_TRIANGLE);
+    }
+
+    {
+      filter.SetInputCellDimensionToPolygons();
+      vtkm::cont::DataSet output = filter.Execute(input);
+      VTKM_TEST_ASSERT(output.GetNumberOfPoints() == 16);
+      VTKM_TEST_ASSERT(output.GetNumberOfCells() == 8);
+      VTKM_TEST_ASSERT(output.GetCellSet().GetCellShape(0) == vtkm::CELL_SHAPE_LINE);
+    }
+
+    {
+      filter.SetInputCellDimensionToLines();
+      vtkm::cont::DataSet output = filter.Execute(input);
+      VTKM_TEST_ASSERT(output.GetNumberOfPoints() == 2);
+      VTKM_TEST_ASSERT(output.GetNumberOfCells() == 2);
+      VTKM_TEST_ASSERT(output.GetCellSet().GetCellShape(0) == vtkm::CELL_SHAPE_VERTEX);
+    }
+
+    {
+      filter.SetInputCellDimensionToAll();
+      vtkm::cont::DataSet output = filter.Execute(input);
+      VTKM_TEST_ASSERT(output.GetNumberOfPoints() == 36);
+      VTKM_TEST_ASSERT(output.GetNumberOfCells() == 20);
+    }
+  }
+
   void operator()() const
   {
     this->TestContourUniformGrid<vtkm::filter::contour::Contour>(72);
@@ -265,6 +309,8 @@ public:
     this->TestNonUniformStructured<vtkm::filter::contour::ContourMarchingCells>();
 
     this->TestUnsupportedFlyingEdges();
+
+    this->TestMixedShapes();
   }
 
 }; // class TestContourFilter

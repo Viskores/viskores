@@ -32,6 +32,7 @@ namespace worklet
 namespace contour
 {
 
+template <vtkm::UInt8 Dims>
 struct DeduceCoordType
 {
   template <typename CoordinateType, typename CellSetType, typename... Args>
@@ -40,10 +41,11 @@ struct DeduceCoordType
                   vtkm::cont::CellSetSingleType<>& result,
                   Args&&... args) const
   {
-    result = marching_cells::execute(cells, coords, std::forward<Args>(args)...);
+    result = marching_cells::execute<Dims>(cells, coords, std::forward<Args>(args)...);
   }
 };
 
+template <vtkm::UInt8 Dims>
 struct DeduceCellType
 {
   template <typename CellSetType, typename ValueType, typename StorageTagField>
@@ -58,18 +60,20 @@ struct DeduceCellType
 };
 
 // Declared outside of class, non-inline so that instantiations can be exported correctly.
+template <vtkm::UInt8 Dims>
 template <typename CellSetType, typename ValueType, typename StorageTagField>
-void DeduceCellType::operator()(const CellSetType& cells,
-                                const vtkm::cont::CoordinateSystem& coordinateSystem,
-                                vtkm::cont::CellSetSingleType<>& outputCells,
-                                const std::vector<ValueType>& isovalues,
-                                const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& input,
-                                vtkm::cont::ArrayHandle<vtkm::Vec3f>& vertices,
-                                vtkm::cont::ArrayHandle<vtkm::Vec3f>& normals,
-                                vtkm::worklet::contour::CommonState& sharedState) const
+void DeduceCellType<Dims>::operator()(
+  const CellSetType& cells,
+  const vtkm::cont::CoordinateSystem& coordinateSystem,
+  vtkm::cont::CellSetSingleType<>& outputCells,
+  const std::vector<ValueType>& isovalues,
+  const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& input,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& normals,
+  vtkm::worklet::contour::CommonState& sharedState) const
 {
   vtkm::cont::CastAndCall(coordinateSystem,
-                          contour::DeduceCoordType{},
+                          contour::DeduceCoordType<Dims>{},
                           cells,
                           outputCells,
                           isovalues,
@@ -125,7 +129,7 @@ public:
 
 public:
   // Filter called without normals generation
-  template <typename ValueType, typename StorageTagField>
+  template <vtkm::UInt8 Dims, typename ValueType, typename StorageTagField>
   VTKM_CONT vtkm::cont::CellSetSingleType<> Run(
     const std::vector<ValueType>& isovalues,
     const vtkm::cont::UnknownCellSet& cells,
@@ -138,7 +142,7 @@ public:
 
     vtkm::cont::CellSetSingleType<> outputCells;
     vtkm::cont::CastAndCall(cells,
-                            contour::DeduceCellType{},
+                            contour::DeduceCellType<Dims>{},
                             coordinateSystem,
                             outputCells,
                             isovalues,
@@ -150,7 +154,7 @@ public:
   }
 
   // Filter called with normals generation
-  template <typename ValueType, typename StorageTagField>
+  template <vtkm::UInt8 Dims, typename ValueType, typename StorageTagField>
   VTKM_CONT vtkm::cont::CellSetSingleType<> Run(
     const std::vector<ValueType>& isovalues,
     const vtkm::cont::UnknownCellSet& cells,
@@ -163,7 +167,7 @@ public:
 
     vtkm::cont::CellSetSingleType<> outputCells;
     vtkm::cont::CastAndCall(cells,
-                            contour::DeduceCellType{},
+                            contour::DeduceCellType<Dims>{},
                             coordinateSystem,
                             outputCells,
                             isovalues,
@@ -183,7 +187,7 @@ private:
 } // namespace vtkm::worklet
 
 VTKM_INSTANTIATION_BEGIN
-extern template void vtkm::worklet::contour::DeduceCellType::operator()(
+extern template void vtkm::worklet::contour::DeduceCellType<2>::operator()(
   const vtkm::cont::CellSetStructured<2>& cells,
   const vtkm::cont::CoordinateSystem& coordinateSystem,
   vtkm::cont::CellSetSingleType<>& outputCells,
@@ -194,7 +198,7 @@ extern template void vtkm::worklet::contour::DeduceCellType::operator()(
   vtkm::worklet::contour::CommonState& sharedState) const;
 VTKM_INSTANTIATION_END
 VTKM_INSTANTIATION_BEGIN
-extern template void vtkm::worklet::contour::DeduceCellType::operator()(
+extern template void vtkm::worklet::contour::DeduceCellType<2>::operator()(
   const vtkm::cont::CellSetStructured<2>& cells,
   const vtkm::cont::CoordinateSystem& coordinateSystem,
   vtkm::cont::CellSetSingleType<>& outputCells,
@@ -206,7 +210,7 @@ extern template void vtkm::worklet::contour::DeduceCellType::operator()(
 VTKM_INSTANTIATION_END
 
 VTKM_INSTANTIATION_BEGIN
-extern template void vtkm::worklet::contour::DeduceCellType::operator()(
+extern template void vtkm::worklet::contour::DeduceCellType<3>::operator()(
   const vtkm::cont::CellSetStructured<3>& cells,
   const vtkm::cont::CoordinateSystem& coordinateSystem,
   vtkm::cont::CellSetSingleType<>& outputCells,
@@ -217,7 +221,7 @@ extern template void vtkm::worklet::contour::DeduceCellType::operator()(
   vtkm::worklet::contour::CommonState& sharedState) const;
 VTKM_INSTANTIATION_END
 VTKM_INSTANTIATION_BEGIN
-extern template void vtkm::worklet::contour::DeduceCellType::operator()(
+extern template void vtkm::worklet::contour::DeduceCellType<3>::operator()(
   const vtkm::cont::CellSetStructured<3>& cells,
   const vtkm::cont::CoordinateSystem& coordinateSystem,
   vtkm::cont::CellSetSingleType<>& outputCells,
@@ -229,7 +233,7 @@ extern template void vtkm::worklet::contour::DeduceCellType::operator()(
 VTKM_INSTANTIATION_END
 
 VTKM_INSTANTIATION_BEGIN
-extern template void vtkm::worklet::contour::DeduceCellType::operator()(
+extern template void vtkm::worklet::contour::DeduceCellType<3>::operator()(
   const vtkm::cont::CellSetExplicit<>& cells,
   const vtkm::cont::CoordinateSystem& coordinateSystem,
   vtkm::cont::CellSetSingleType<>& outputCells,
@@ -240,7 +244,7 @@ extern template void vtkm::worklet::contour::DeduceCellType::operator()(
   vtkm::worklet::contour::CommonState& sharedState) const;
 VTKM_INSTANTIATION_END
 VTKM_INSTANTIATION_BEGIN
-extern template void vtkm::worklet::contour::DeduceCellType::operator()(
+extern template void vtkm::worklet::contour::DeduceCellType<3>::operator()(
   const vtkm::cont::CellSetExplicit<>& cells,
   const vtkm::cont::CoordinateSystem& coordinateSystem,
   vtkm::cont::CellSetSingleType<>& outputCells,
@@ -252,7 +256,7 @@ extern template void vtkm::worklet::contour::DeduceCellType::operator()(
 VTKM_INSTANTIATION_END
 
 VTKM_INSTANTIATION_BEGIN
-extern template void vtkm::worklet::contour::DeduceCellType::operator()(
+extern template void vtkm::worklet::contour::DeduceCellType<3>::operator()(
   const vtkm::cont::CellSetSingleType<>& cells,
   const vtkm::cont::CoordinateSystem& coordinateSystem,
   vtkm::cont::CellSetSingleType<>& outputCells,
@@ -263,7 +267,99 @@ extern template void vtkm::worklet::contour::DeduceCellType::operator()(
   vtkm::worklet::contour::CommonState& sharedState) const;
 VTKM_INSTANTIATION_END
 VTKM_INSTANTIATION_BEGIN
-extern template void vtkm::worklet::contour::DeduceCellType::operator()(
+extern template void vtkm::worklet::contour::DeduceCellType<3>::operator()(
+  const vtkm::cont::CellSetSingleType<>& cells,
+  const vtkm::cont::CoordinateSystem& coordinateSystem,
+  vtkm::cont::CellSetSingleType<>& outputCells,
+  const std::vector<vtkm::Float64>& isovalues,
+  const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>& input,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& normals,
+  vtkm::worklet::contour::CommonState& sharedState) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::contour::DeduceCellType<2>::operator()(
+  const vtkm::cont::CellSetExplicit<>& cells,
+  const vtkm::cont::CoordinateSystem& coordinateSystem,
+  vtkm::cont::CellSetSingleType<>& outputCells,
+  const std::vector<vtkm::Float32>& isovalues,
+  const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>& input,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& normals,
+  vtkm::worklet::contour::CommonState& sharedState) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::contour::DeduceCellType<2>::operator()(
+  const vtkm::cont::CellSetExplicit<>& cells,
+  const vtkm::cont::CoordinateSystem& coordinateSystem,
+  vtkm::cont::CellSetSingleType<>& outputCells,
+  const std::vector<vtkm::Float64>& isovalues,
+  const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>& input,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& normals,
+  vtkm::worklet::contour::CommonState& sharedState) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::contour::DeduceCellType<2>::operator()(
+  const vtkm::cont::CellSetSingleType<>& cells,
+  const vtkm::cont::CoordinateSystem& coordinateSystem,
+  vtkm::cont::CellSetSingleType<>& outputCells,
+  const std::vector<vtkm::Float32>& isovalues,
+  const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>& input,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& normals,
+  vtkm::worklet::contour::CommonState& sharedState) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::contour::DeduceCellType<2>::operator()(
+  const vtkm::cont::CellSetSingleType<>& cells,
+  const vtkm::cont::CoordinateSystem& coordinateSystem,
+  vtkm::cont::CellSetSingleType<>& outputCells,
+  const std::vector<vtkm::Float64>& isovalues,
+  const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>& input,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& normals,
+  vtkm::worklet::contour::CommonState& sharedState) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::contour::DeduceCellType<1>::operator()(
+  const vtkm::cont::CellSetExplicit<>& cells,
+  const vtkm::cont::CoordinateSystem& coordinateSystem,
+  vtkm::cont::CellSetSingleType<>& outputCells,
+  const std::vector<vtkm::Float32>& isovalues,
+  const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>& input,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& normals,
+  vtkm::worklet::contour::CommonState& sharedState) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::contour::DeduceCellType<1>::operator()(
+  const vtkm::cont::CellSetExplicit<>& cells,
+  const vtkm::cont::CoordinateSystem& coordinateSystem,
+  vtkm::cont::CellSetSingleType<>& outputCells,
+  const std::vector<vtkm::Float64>& isovalues,
+  const vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>& input,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& normals,
+  vtkm::worklet::contour::CommonState& sharedState) const;
+VTKM_INSTANTIATION_END
+
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::contour::DeduceCellType<1>::operator()(
+  const vtkm::cont::CellSetSingleType<>& cells,
+  const vtkm::cont::CoordinateSystem& coordinateSystem,
+  vtkm::cont::CellSetSingleType<>& outputCells,
+  const std::vector<vtkm::Float32>& isovalues,
+  const vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>& input,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& vertices,
+  vtkm::cont::ArrayHandle<vtkm::Vec3f>& normals,
+  vtkm::worklet::contour::CommonState& sharedState) const;
+VTKM_INSTANTIATION_END
+VTKM_INSTANTIATION_BEGIN
+extern template void vtkm::worklet::contour::DeduceCellType<1>::operator()(
   const vtkm::cont::CellSetSingleType<>& cells,
   const vtkm::cont::CoordinateSystem& coordinateSystem,
   vtkm::cont::CellSetSingleType<>& outputCells,
