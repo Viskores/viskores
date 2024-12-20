@@ -105,6 +105,7 @@ public:
   //Advect all the particles.
   virtual void Go()
   {
+    this->Terminator.Control(this->HaveWork());
     while (!this->Terminator.Done())
     {
       std::vector<ParticleType> v;
@@ -121,6 +122,7 @@ public:
       }
 
       this->ExchangeParticles();
+      this->Terminator.Control(this->HaveWork());
     }
   }
 

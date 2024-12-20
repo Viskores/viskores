@@ -46,7 +46,7 @@ public:
 #ifdef VTKM_ENABLE_MPI
     return this->State == AdvectAlgorithmTerminatorState::DONE;
 #else
-    return this->HaveWork;
+    return !this->HaveWork;
 #endif
   }
 
