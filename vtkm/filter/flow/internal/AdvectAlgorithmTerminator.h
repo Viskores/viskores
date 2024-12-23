@@ -22,8 +22,6 @@ namespace internal
 
 class AdvectAlgorithmTerminator
 {
-  bool FirstCall;
-
 public:
 #ifdef VTKM_ENABLE_MPI
   AdvectAlgorithmTerminator(vtkmdiy::mpi::communicator& comm)
@@ -82,7 +80,6 @@ public:
       MPI_Iallreduce(
         &this->LocalDirty, &this->AllDirty, 1, MPI_INT, MPI_LOR, this->MPIComm, &this->StateReq);
       this->State = STATE_2;
-      this->BarrierCnt++;
     }
     else if (this->State == STATE_2)
     {
@@ -95,7 +92,6 @@ public:
           this->State = DONE;
         else
           this->State = STATE_0; //reset.
-        this->IReduceCnt++;
       }
     }
 #else
@@ -104,6 +100,8 @@ public:
   }
 
 private:
+  bool FirstCall;
+
 #ifdef VTKM_ENABLE_MPI
   enum AdvectAlgorithmTerminatorState
   {
@@ -115,8 +113,6 @@ private:
   };
 
   int AllDirty;
-  int BarrierCnt = 0;
-  int IReduceCnt = 0;
   //Dirty: Has this rank seen any work since entering state?
   std::atomic<int> Dirty;
   int LocalDirty;
