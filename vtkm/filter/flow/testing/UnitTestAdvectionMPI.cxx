@@ -59,9 +59,6 @@ void DoTest()
 
   for (vtkm::Id nPerRank = 1; nPerRank < 3; ++nPerRank)
   {
-    if (nPerRank != 1)
-      continue;
-
     for (bool useGhost : { true, false })
     {
       if (useGhost)
@@ -70,9 +67,6 @@ void DoTest()
       {
         for (bool useBlockIds : { true, false })
         {
-          if (useBlockIds)
-            continue;
-
           //Run blockIds with and without block duplication.
           if (useBlockIds && comm.size() > 1)
           {

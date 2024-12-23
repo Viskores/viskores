@@ -51,6 +51,8 @@ public:
   {
     this->SetStepSize(stepSize);
     this->SetSeeds(seeds);
+    this->Terminator.Control(this->HaveWork());
+
     this->Go();
   }
 
@@ -105,13 +107,11 @@ public:
   //Advect all the particles.
   virtual void Go()
   {
-    this->Terminator.Control(this->HaveWork());
     while (!this->Terminator.Done())
     {
       std::vector<ParticleType> v;
       vtkm::Id blockId = -1;
 
-      this->Terminator.Control(this->HaveWork());
       if (this->GetActiveParticles(v, blockId))
       {
         //make this a pointer to avoid the copy?
@@ -122,7 +122,6 @@ public:
       }
 
       this->ExchangeParticles();
-      this->Terminator.Control(this->HaveWork());
     }
   }
 
@@ -223,6 +222,8 @@ public:
       this->ParticleBlockIDsMap.erase(p.GetID());
 
     this->UpdateActive(incoming, incomingBlockIDs);
+
+    this->Terminator.Control(this->HaveWork());
   }
 
   void GetOutgoingParticles(std::vector<ParticleType>& outgoing,
