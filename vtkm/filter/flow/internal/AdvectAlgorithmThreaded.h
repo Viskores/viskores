@@ -47,7 +47,6 @@ public:
 
   void Go() override
   {
-    this->Terminator.Control(this->HaveWork());
     std::vector<std::thread> workerThreads;
     workerThreads.emplace_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
     this->Manage();
@@ -63,6 +62,22 @@ protected:
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
     return this->AdvectAlgorithm<DSIType>::HaveWork() || this->WorkerActivate;
+  }
+
+  virtual bool GetDone() override
+  {
+    std::lock_guard<std::mutex> lock(this->Mutex);
+#ifndef VTKM_ENABLE_MPI
+    return !this->CheckHaveWork();
+#else
+    return this->Terminator.Done();
+#endif
+  }
+
+  bool WorkerGetDone()
+  {
+    std::lock_guard<std::mutex> lock(this->Mutex);
+    return this->Done;
   }
 
   bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId) override
@@ -85,12 +100,6 @@ protected:
       this->WorkerActivateCondition.notify_all();
       this->WorkerActivate = true;
     }
-  }
-
-  bool CheckDone()
-  {
-    std::lock_guard<std::mutex> lock(this->Mutex);
-    return this->Done;
   }
 
   void SetDone()
@@ -117,7 +126,7 @@ protected:
 
   void Work()
   {
-    while (!this->CheckDone())
+    while (!this->WorkerGetDone())
     {
       std::vector<ParticleType> v;
       vtkm::Id blockId = -1;
@@ -135,7 +144,7 @@ protected:
 
   void Manage()
   {
-    while (!this->Terminator.Done())
+    while (!this->GetDone())
     {
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> workerResults;
       this->GetWorkerResults(workerResults);
@@ -146,7 +155,6 @@ protected:
           numTerm += this->UpdateResult(r);
 
       this->ExchangeParticles();
-      this->Terminator.Control(this->HaveWork());
     }
     this->SetDone();
   }
@@ -162,6 +170,12 @@ protected:
       results = this->WorkerResults;
       this->WorkerResults.clear();
     }
+  }
+
+private:
+  bool CheckHaveWork()
+  {
+    return this->AdvectAlgorithm<DSIType>::HaveWork() || this->WorkerActivate;
   }
 
   std::atomic<bool> Done;

@@ -13,11 +13,11 @@
 
 
 #include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/filter/flow/internal/AdvectAlgorithmTerminator.h>
 #include <vtkm/filter/flow/internal/BoundsMap.h>
 #include <vtkm/filter/flow/internal/DataSetIntegrator.h>
-#include <vtkm/filter/flow/internal/ParticleExchanger.h>
 #ifdef VTKM_ENABLE_MPI
+#include <vtkm/filter/flow/internal/AdvectAlgorithmTerminator.h>
+#include <vtkm/filter/flow/internal/ParticleExchanger.h>
 #include <vtkm/thirdparty/diy/diy.h>
 #include <vtkm/thirdparty/diy/mpi-cast.h>
 #endif
@@ -40,10 +40,12 @@ public:
   AdvectAlgorithm(const vtkm::filter::flow::internal::BoundsMap& bm, std::vector<DSIType>& blocks)
     : Blocks(blocks)
     , BoundsMap(bm)
+#ifdef VTKM_ENABLE_MPI
+    , Exchanger(this->Comm)
+    , Terminator(this->Comm)
+#endif
     , NumRanks(this->Comm.size())
     , Rank(this->Comm.rank())
-    , Terminator(this->Comm)
-    , Exchanger(this->Comm)
   {
   }
 
@@ -51,7 +53,6 @@ public:
   {
     this->SetStepSize(stepSize);
     this->SetSeeds(seeds);
-    this->Terminator.Control(this->HaveWork());
 
     this->Go();
   }
@@ -100,14 +101,27 @@ public:
 
   virtual bool HaveWork()
   {
-    return !this->Active.empty() || !this->Inactive.empty() ||
-      this->Exchanger.GetNumberOfBufferedSends() > 0;
+    const bool haveParticles = !this->Active.empty() || !this->Inactive.empty();
+#ifndef VTKM_ENABLE_MPI
+    return haveParticles;
+#else
+    return haveParticles || this->Exchanger.HaveWork();
+#endif
+  }
+
+  virtual bool GetDone()
+  {
+#ifndef VTKM_ENABLE_MPI
+    return !this->HaveWork();
+#else
+    return this->Terminator.Done();
+#endif
   }
 
   //Advect all the particles.
   virtual void Go()
   {
-    while (!this->Terminator.Done())
+    while (!this->GetDone())
     {
       std::vector<ParticleType> v;
       vtkm::Id blockId = -1;
@@ -206,26 +220,48 @@ public:
 
   void ExchangeParticles()
   {
-    std::vector<ParticleType> outgoing;
-    std::vector<vtkm::Id> outgoingRanks;
+#ifndef VTKM_ENABLE_MPI
+    this->SerialExchange();
+#else
+    // MPI with only 1 rank.
+    if (this->NumRanks == 1)
+      this->SerialExchange();
+    else
+    {
+      std::vector<ParticleType> outgoing;
+      std::vector<vtkm::Id> outgoingRanks;
 
-    this->GetOutgoingParticles(outgoing, outgoingRanks);
+      this->GetOutgoingParticles(outgoing, outgoingRanks);
 
-    std::vector<ParticleType> incoming;
-    std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingBlockIDs;
+      std::vector<ParticleType> incoming;
+      std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> incomingBlockIDs;
 
-    this->Exchanger.Exchange(
-      outgoing, outgoingRanks, this->ParticleBlockIDsMap, incoming, incomingBlockIDs);
+      this->Exchanger.Exchange(
+        outgoing, outgoingRanks, this->ParticleBlockIDsMap, incoming, incomingBlockIDs);
 
-    //Cleanup what was sent.
-    for (const auto& p : outgoing)
-      this->ParticleBlockIDsMap.erase(p.GetID());
+      //Cleanup what was sent.
+      for (const auto& p : outgoing)
+        this->ParticleBlockIDsMap.erase(p.GetID());
 
-    this->UpdateActive(incoming, incomingBlockIDs);
+      this->UpdateActive(incoming, incomingBlockIDs);
+    }
 
     this->Terminator.Control(this->HaveWork());
+#endif
   }
 
+  void SerialExchange()
+  {
+    for (const auto& p : this->Inactive)
+    {
+      const auto& bid = this->ParticleBlockIDsMap[p.GetID()];
+      VTKM_ASSERT(!bid.empty());
+      this->Active[bid[0]].emplace_back(std::move(p));
+    }
+    this->Inactive.clear();
+  }
+
+#ifdef VTKM_ENABLE_MPI
   void GetOutgoingParticles(std::vector<ParticleType>& outgoing,
                             std::vector<vtkm::Id>& outgoingRanks)
   {
@@ -286,6 +322,7 @@ public:
     if (!particlesStaying.empty())
       this->UpdateActive(particlesStaying, particlesStayingBlockIDs);
   }
+#endif
 
   virtual void UpdateActive(const std::vector<ParticleType>& particles,
                             const std::unordered_map<vtkm::Id, std::vector<vtkm::Id>>& idsMap)
@@ -340,6 +377,10 @@ public:
   std::vector<DSIType> Blocks;
   vtkm::filter::flow::internal::BoundsMap BoundsMap;
   vtkmdiy::mpi::communicator Comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+#ifdef VTKM_ENABLE_MPI
+  ParticleExchanger<ParticleType> Exchanger;
+  AdvectAlgorithmTerminator Terminator;
+#endif
   std::vector<ParticleType> Inactive;
   vtkm::Id MaxNumberOfSteps = 0;
   vtkm::Id NumRanks;
@@ -347,9 +388,6 @@ public:
   std::unordered_map<vtkm::Id, std::vector<vtkm::Id>> ParticleBlockIDsMap;
   vtkm::Id Rank;
   vtkm::FloatDefault StepSize;
-  AdvectAlgorithmTerminator Terminator;
-
-  ParticleExchanger<ParticleType> Exchanger;
 };
 
 }

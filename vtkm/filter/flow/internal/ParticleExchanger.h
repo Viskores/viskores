@@ -38,14 +38,7 @@ public:
   ~ParticleExchanger() {} //{ this->CleanupSendBuffers(false); }
 #endif
 
-  vtkm::Id GetNumberOfBufferedSends() const
-  {
-#ifdef VTKM_ENABLE_MPI
-    return static_cast<vtkm::Id>(this->SendBuffers.size());
-#else
-    return 0;
-#endif
-  }
+  bool HaveWork() const { return !this->SendBuffers.empty(); }
 
   void Exchange(const std::vector<ParticleType>& outData,
                 const std::vector<vtkm::Id>& outRanks,
