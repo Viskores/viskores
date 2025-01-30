@@ -10,6 +10,11 @@
 ##
 ##=============================================================================
 
+default:
+  id_tokens:
+    OLCF_ID_TOKEN:
+      aud: https://code.olcf.ornl.gov
+
 # Ad-hoc build that runs in the ECP Hardware, concretely in OLCF Spock.
 .frontier_gcc_hip:
   variables:
@@ -46,7 +51,6 @@
 
 
       ninja
-      zstd
     OLCF_SERVICE_ACCOUNT: "ums033_auser"
     VTKM_SETTINGS: kokkos+hip+gfx90a+frontier+ccache+no_rendering
   interruptible: true
