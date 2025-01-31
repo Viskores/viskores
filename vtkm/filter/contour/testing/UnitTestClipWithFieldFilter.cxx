@@ -74,7 +74,7 @@ void TestClipExplicit()
   for (int i = 0; i < 6; ++i)
   {
     VTKM_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for Clip fliter on triangle explicit data");
+                     "Wrong result for Clip filter on triangle explicit data");
   }
 }
 
