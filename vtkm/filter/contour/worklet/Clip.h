@@ -14,19 +14,23 @@
 #include <vtkm/Swap.h>
 
 #include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayHandleConcatenate.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArraySetValues.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Invoker.h>
+#include <vtkm/cont/Logging.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/contour/worklet/clip/ClipTables.h>
 
 #include <vtkm/worklet/MaskSelect.h>
-#include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
 
 
 #if defined(THRUST_MAJOR_VERSION) && THRUST_MAJOR_VERSION == 1 && THRUST_MINOR_VERSION == 8 && \
@@ -47,7 +51,59 @@ namespace worklet
 class Clip
 {
 public:
-  struct ClipStats
+  using BatchesHandle = vtkm::cont::ArrayHandleGroupVecVariable<
+    vtkm::cont::ArrayHandleIndex,
+    vtkm::cont::ArrayHandleConcatenate<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
+                                       vtkm::cont::ArrayHandleConstant<vtkm::Id>>>;
+  static BatchesHandle CreateBatches(const vtkm::Id& numberOfElements, const vtkm::Id& batchSize)
+  {
+    const vtkm::Id numberOfBatches = ((numberOfElements - 1) / batchSize) + 1;
+    // create the offsets array
+    const vtkm::cont::ArrayHandleCounting<vtkm::Id> offsetsExceptLast(
+      0, batchSize, numberOfBatches);
+    const vtkm::cont::ArrayHandleConstant<vtkm::Id> lastOffset(numberOfElements, 1);
+    const auto offsets = vtkm::cont::make_ArrayHandleConcatenate(offsetsExceptLast, lastOffset);
+    // create the indices array
+    const auto indices = vtkm::cont::ArrayHandleIndex(numberOfElements);
+    return vtkm::cont::make_ArrayHandleGroupVecVariable(indices, offsets);
+  }
+
+  static BatchesHandle CreateBatches(const vtkm::Id& numberOfElements)
+  {
+    auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
+    if (tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda{}) ||
+        tracker.CanRunOn(vtkm::cont::DeviceAdapterTagKokkos{}))
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Creating batches with batch size 6 for GPUs.");
+      return CreateBatches(numberOfElements, 6);
+    }
+    else
+    {
+      const vtkm::Int32 batchSize =
+        vtkm::Min(1000, vtkm::Max(1, static_cast<vtkm::Int32>(numberOfElements / 250000)));
+      VTKM_LOG_F(
+        vtkm::cont::LogLevel::Info, "Creating batches with batch size %d for CPUs.", batchSize);
+      return CreateBatches(numberOfElements, batchSize);
+    }
+  }
+
+  struct PointBatchData
+  {
+    vtkm::Id NumberOfKeptPoints = 0;
+
+    struct SumOp
+    {
+      VTKM_EXEC_CONT
+      PointBatchData operator()(const PointBatchData& stat1, const PointBatchData& stat2) const
+      {
+        PointBatchData sum = stat1;
+        sum.NumberOfKeptPoints += stat2.NumberOfKeptPoints;
+        return sum;
+      }
+    };
+  };
+
+  struct CellBatchData
   {
     vtkm::Id NumberOfCells = 0;
     vtkm::Id NumberOfCellIndices = 0;
@@ -58,9 +114,9 @@ public:
     struct SumOp
     {
       VTKM_EXEC_CONT
-      ClipStats operator()(const ClipStats& stat1, const ClipStats& stat2) const
+      CellBatchData operator()(const CellBatchData& stat1, const CellBatchData& stat2) const
       {
-        ClipStats sum = stat1;
+        CellBatchData sum = stat1;
         sum.NumberOfCells += stat2.NumberOfCells;
         sum.NumberOfCellIndices += stat2.NumberOfCellIndices;
         sum.NumberOfEdges += stat2.NumberOfEdges;
@@ -103,8 +159,12 @@ public:
   class MarkKeptPoints : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(FieldIn scalar, FieldOut keptPointMask);
-    using ExecutionSignature = _2(_1);
+    using ControlSignature = void(FieldIn pointBatch,
+                                  FieldOut pointBatchData,
+                                  FieldOut batchWithKeptPointsMask,
+                                  WholeArrayIn scalars,
+                                  WholeArrayOut keptPointsMask);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
     VTKM_CONT
     explicit MarkKeptPoints(vtkm::Float64 isoValue)
@@ -112,98 +172,160 @@ public:
     {
     }
 
-    template <typename T>
-    VTKM_EXEC vtkm::UInt8 operator()(const T& scalar) const
+    template <typename BatchType, typename PointScalars, typename KeptPointsMask>
+    VTKM_EXEC void operator()(const BatchType& pointBatch,
+                              PointBatchData& pointBatchData,
+                              vtkm::UInt8& batchWithKeptPointsMask,
+                              const PointScalars& scalars,
+                              KeptPointsMask& keptPointsMask) const
     {
-      return Invert ? scalar < this->IsoValue : scalar >= this->IsoValue;
+      for (vtkm::IdComponent id = 0, size = pointBatch.GetNumberOfComponents(); id < size; ++id)
+      {
+        const vtkm::Id& pointId = pointBatch[id];
+        const auto scalar = scalars.Get(pointId);
+        const vtkm::UInt8 kept = Invert ? scalar < this->IsoValue : scalar >= this->IsoValue;
+        keptPointsMask.Set(pointId, kept);
+        pointBatchData.NumberOfKeptPoints += kept;
+      }
+      batchWithKeptPointsMask = pointBatchData.NumberOfKeptPoints > 0;
     }
 
   private:
     vtkm::Float64 IsoValue;
   };
 
-  template <bool Invert>
-  class ComputeClipStats : public vtkm::worklet::WorkletVisitCellsWithPoints
+  class ComputePointMaps : public vtkm::worklet::WorkletMapField
   {
   public:
-    using ControlSignature = void(CellSetIn cellSet,
-                                  FieldInPoint pointMask,
-                                  FieldOutCell clipStat,
-                                  FieldOutCell clippedMask,
-                                  FieldOutCell keptOrClippedMask,
-                                  FieldOutCell caseIndex);
+    using ControlSignature = void(FieldIn pointBatch,
+                                  FieldIn pointBatchDataOffsets,
+                                  WholeArrayIn keptPointsMask,
+                                  WholeArrayOut pointsInputToOutput,
+                                  WholeArrayOut pointsOutputToInput);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
-    using ExecutionSignature = void(CellShape, PointCount, _2, _3, _4, _5, _6);
+    using MaskType = vtkm::worklet::MaskSelect;
 
-    using CT = internal::ClipTables<Invert>;
-
-    template <typename CellShapeTag, typename KeptPointsMask>
-    VTKM_EXEC void operator()(const CellShapeTag& shape,
-                              const vtkm::IdComponent pointCount,
+    template <typename BatchType,
+              typename KeptPointsMask,
+              typename PointsInputToOutput,
+              typename PointsOutputToInput>
+    VTKM_EXEC void operator()(const BatchType& pointBatch,
+                              const PointBatchData& pointBatchDataOffsets,
                               const KeptPointsMask& keptPointsMask,
-                              ClipStats& clipStat,
-                              vtkm::UInt8& clippedMask,
-                              vtkm::UInt8& keptOrClippedMask,
-                              vtkm::UInt8& caseIndex) const
+                              PointsInputToOutput& pointsInputToOutput,
+                              PointsOutputToInput& pointsOutputToInput) const
     {
-      namespace CTI = vtkm::worklet::internal::ClipTablesInformation;
-      // compute case index
-      caseIndex = 0;
-      for (vtkm::IdComponent ptId = pointCount - 1; ptId >= 0; --ptId)
+      vtkm::Id pointOffset = pointBatchDataOffsets.NumberOfKeptPoints;
+      for (vtkm::IdComponent id = 0, size = pointBatch.GetNumberOfComponents(); id < size; ++id)
       {
-        static constexpr auto InvertUint8 = static_cast<vtkm::UInt8>(Invert);
-        caseIndex |= (InvertUint8 != keptPointsMask[ptId]) << ptId;
-      }
-
-      if (CT::IsCellDiscarded(pointCount, caseIndex)) // discarded cell
-      {
-        // we do that to determine if a cell is discarded using only the caseIndex
-        caseIndex = CT::GetDiscardedCellCase();
-      }
-      else if (CT::IsCellKept(pointCount, caseIndex)) // kept cell
-      {
-        // we do that to determine if a cell is kept using only the caseIndex
-        caseIndex = CT::GetKeptCellCase();
-        clipStat.NumberOfCells = 1;
-        clipStat.NumberOfCellIndices = pointCount;
-      }
-      else // clipped cell
-      {
-        vtkm::Id index = CT::GetCaseIndex(shape.Id, caseIndex);
-        const vtkm::UInt8 numberOfShapes = CT::ValueAt(index++);
-
-        clipStat.NumberOfCells = numberOfShapes;
-        for (vtkm::IdComponent shapeId = 0; shapeId < numberOfShapes; ++shapeId)
+        const vtkm::Id& pointId = pointBatch[id];
+        if (keptPointsMask.Get(pointId))
         {
-          const vtkm::UInt8 cellShape = CT::ValueAt(index++);
-          const vtkm::UInt8 numberOfCellIndices = CT::ValueAt(index++);
-
-          for (vtkm::IdComponent pointId = 0; pointId < numberOfCellIndices; pointId++, index++)
-          {
-            // Find how many points need to be calculated using edge interpolation.
-            const vtkm::UInt8 pointIndex = CT::ValueAt(index);
-            clipStat.NumberOfEdges += (pointIndex >= CTI::E00 && pointIndex <= CTI::E11);
-          }
-          if (cellShape != CTI::ST_PNT) // normal cell
-          {
-            // Collect number of indices required for storing current shape
-            clipStat.NumberOfCellIndices += numberOfCellIndices;
-          }
-          else // cellShape == ST_PNT
-          {
-            --clipStat.NumberOfCells; // decrement since this is a centroid shape
-            clipStat.NumberOfCentroids++;
-            clipStat.NumberOfCentroidIndices += numberOfCellIndices;
-          }
+          pointsInputToOutput.Set(pointId, pointOffset);
+          pointsOutputToInput.Set(pointOffset, pointId);
+          pointOffset++;
         }
       }
-      keptOrClippedMask = caseIndex != CT::GetDiscardedCellCase();
-      clippedMask = keptOrClippedMask && caseIndex != CT::GetKeptCellCase();
     }
   };
 
   template <bool Invert>
-  class ExtractEdges : public vtkm::worklet::WorkletVisitCellsWithPoints
+  class ComputeCellStats : public vtkm::worklet::WorkletMapField
+  {
+  public:
+    using ControlSignature = void(FieldIn cellBatch,
+                                  FieldOut cellBatchData,
+                                  FieldOut batchWithClippedCellsMask,
+                                  FieldOut batchWithKeptOrClippedCellsMask,
+                                  WholeCellSetIn<> cellSet,
+                                  WholeArrayIn keptPointsMask,
+                                  WholeArrayOut caseIndices);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
+
+    using CT = internal::ClipTables<Invert>;
+
+    template <typename BatchType,
+              typename CellSetType,
+              typename KeptPointsMask,
+              typename CaseIndices>
+    VTKM_EXEC void operator()(const BatchType& cellBatch,
+                              CellBatchData& cellBatchData,
+                              vtkm::UInt8& batchWithClippedCellsMask,
+                              vtkm::UInt8& batchWithKeptOrClippedCellsMask,
+                              const CellSetType& cellSet,
+                              const KeptPointsMask& keptPointsMask,
+                              CaseIndices& caseIndices) const
+    {
+      namespace CTI = vtkm::worklet::internal::ClipTablesInformation;
+      for (vtkm::IdComponent id = 0, size = cellBatch.GetNumberOfComponents(); id < size; ++id)
+      {
+        const vtkm::Id& cellId = cellBatch[id];
+        const auto shape = cellSet.GetCellShape(cellId);
+        const auto points = cellSet.GetIndices(cellId);
+        const vtkm::IdComponent pointCount = points.GetNumberOfComponents();
+
+        // compute case index
+        vtkm::UInt8 caseIndex = 0;
+        for (vtkm::IdComponent ptId = pointCount - 1; ptId >= 0; --ptId)
+        {
+          static constexpr auto InvertUint8 = static_cast<vtkm::UInt8>(Invert);
+          caseIndex |= (InvertUint8 != keptPointsMask.Get(points[ptId])) << ptId;
+        }
+
+        if (CT::IsCellDiscarded(pointCount, caseIndex)) // discarded cell
+        {
+          // we do that to determine if a cell is discarded using only the caseIndex
+          caseIndices.Set(cellId, CT::GetDiscardedCellCase());
+        }
+        else if (CT::IsCellKept(pointCount, caseIndex)) // kept cell
+        {
+          // we do that to determine if a cell is kept using only the caseIndex
+          caseIndices.Set(cellId, CT::GetKeptCellCase());
+          cellBatchData.NumberOfCells += 1;
+          cellBatchData.NumberOfCellIndices += pointCount;
+        }
+        else // clipped cell
+        {
+          caseIndices.Set(cellId, caseIndex);
+
+          vtkm::Id index = CT::GetCaseIndex(shape.Id, caseIndex);
+          const vtkm::UInt8 numberOfShapes = CT::ValueAt(index++);
+
+          cellBatchData.NumberOfCells += numberOfShapes;
+          for (vtkm::IdComponent shapeId = 0; shapeId < numberOfShapes; ++shapeId)
+          {
+            const vtkm::UInt8 cellShape = CT::ValueAt(index++);
+            const vtkm::UInt8 numberOfCellIndices = CT::ValueAt(index++);
+
+            for (vtkm::IdComponent pointId = 0; pointId < numberOfCellIndices; pointId++, index++)
+            {
+              // Find how many points need to be calculated using edge interpolation.
+              const vtkm::UInt8 pointIndex = CT::ValueAt(index);
+              cellBatchData.NumberOfEdges += (pointIndex >= CTI::E00 && pointIndex <= CTI::E11);
+            }
+            if (cellShape != CTI::ST_PNT) // normal cell
+            {
+              // Collect number of indices required for storing current shape
+              cellBatchData.NumberOfCellIndices += numberOfCellIndices;
+            }
+            else // cellShape == CTI::ST_PNT
+            {
+              --cellBatchData.NumberOfCells; // decrement since this is a centroid shape
+              cellBatchData.NumberOfCentroids++;
+              cellBatchData.NumberOfCentroidIndices += numberOfCellIndices;
+            }
+          }
+        }
+      }
+      batchWithClippedCellsMask = cellBatchData.NumberOfCells > 0 &&
+        (cellBatchData.NumberOfEdges > 0 || cellBatchData.NumberOfCentroids > 0);
+      batchWithKeptOrClippedCellsMask = cellBatchData.NumberOfCells > 0;
+    }
+  };
+
+  template <bool Invert>
+  class ExtractEdges : public vtkm::worklet::WorkletMapField
   {
   public:
     VTKM_CONT
@@ -212,61 +334,74 @@ public:
     {
     }
 
-    using ControlSignature = void(CellSetIn cellSet,
-                                  FieldInPoint scalars,
-                                  FieldInCell clipStatOffsets,
-                                  FieldInCell caseIndex,
+    using ControlSignature = void(FieldIn cellBatch,
+                                  FieldIn cellBatchDataOffsets,
+                                  WholeCellSetIn<> cellSet,
+                                  WholeArrayIn scalars,
+                                  WholeArrayIn caseIndices,
                                   WholeArrayOut edges);
-
-    using ExecutionSignature = void(CellShape, PointIndices, _2, _3, _4, _5);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
     using MaskType = vtkm::worklet::MaskSelect;
 
     using CT = internal::ClipTables<Invert>;
 
-    template <typename CellShapeTag,
-              typename PointIndicesVec,
+    template <typename BatchType,
+              typename CellSetType,
               typename PointScalars,
+              typename CaseIndices,
               typename EdgesArray>
-    VTKM_EXEC void operator()(const CellShapeTag& shape,
-                              const PointIndicesVec& points,
+    VTKM_EXEC void operator()(const BatchType& cellBatch,
+                              const CellBatchData& cellBatchDataOffsets,
+                              const CellSetType& cellSet,
                               const PointScalars& scalars,
-                              const ClipStats& clipStat,
-                              const vtkm::UInt8& caseIndex,
+                              const CaseIndices& caseIndices,
                               EdgesArray& edges) const
     {
       namespace CTI = vtkm::worklet::internal::ClipTablesInformation;
-      vtkm::Id edgeOffset = clipStat.NumberOfEdges;
+      vtkm::Id edgeOffset = cellBatchDataOffsets.NumberOfEdges;
 
-      // only clipped cells have edges
-      vtkm::Id index = CT::GetCaseIndex(shape.Id, caseIndex);
-      const vtkm::UInt8 numberOfShapes = CT::ValueAt(index++);
-
-      for (vtkm::IdComponent shapeId = 0; shapeId < numberOfShapes; shapeId++)
+      for (vtkm::IdComponent id = 0, size = cellBatch.GetNumberOfComponents(); id < size; ++id)
       {
-        /*vtkm::UInt8 cellShape = */ CT::ValueAt(index++);
-        const vtkm::UInt8 numberOfCellIndices = CT::ValueAt(index++);
+        const vtkm::Id& cellId = cellBatch[id];
+        const vtkm::UInt8 caseIndex = caseIndices.Get(cellId);
 
-        for (vtkm::IdComponent pointId = 0; pointId < numberOfCellIndices; pointId++, index++)
+        if (caseIndex != CT::GetDiscardedCellCase() &&
+            caseIndex != CT::GetKeptCellCase()) // clipped cell
         {
-          // Find how many points need to be calculated using edge interpolation.
-          const vtkm::UInt8 pointIndex = CT::ValueAt(index);
-          if (pointIndex >= CTI::E00 && pointIndex <= CTI::E11)
+          const auto shape = cellSet.GetCellShape(cellId);
+          const auto points = cellSet.GetIndices(cellId);
+
+          // only clipped cells have edges
+          vtkm::Id index = CT::GetCaseIndex(shape.Id, caseIndex);
+          const vtkm::UInt8 numberOfShapes = CT::ValueAt(index++);
+
+          for (vtkm::IdComponent shapeId = 0; shapeId < numberOfShapes; shapeId++)
           {
-            typename CT::EdgeVec edge = CT::GetEdge(shape.Id, pointIndex - CTI::E00);
-            EdgeInterpolation ei;
-            ei.Vertex1 = points[edge[0]];
-            ei.Vertex2 = points[edge[1]];
-            // For consistency purposes keep the points ordered.
-            if (ei.Vertex1 > ei.Vertex2)
+            /*vtkm::UInt8 cellShape = */ CT::ValueAt(index++);
+            const vtkm::UInt8 numberOfCellIndices = CT::ValueAt(index++);
+
+            for (vtkm::IdComponent pointId = 0; pointId < numberOfCellIndices; pointId++, index++)
             {
-              vtkm::Swap(ei.Vertex1, ei.Vertex2);
-              vtkm::Swap(edge[0], edge[1]);
+              // Find how many points need to be calculated using edge interpolation.
+              const vtkm::UInt8 pointIndex = CT::ValueAt(index);
+              if (pointIndex >= CTI::E00 && pointIndex <= CTI::E11)
+              {
+                typename CT::EdgeVec edge = CT::GetEdge(shape.Id, pointIndex - CTI::E00);
+                EdgeInterpolation ei;
+                ei.Vertex1 = points[edge[0]];
+                ei.Vertex2 = points[edge[1]];
+                // For consistency purposes keep the points ordered.
+                if (ei.Vertex1 > ei.Vertex2)
+                {
+                  vtkm::Swap(ei.Vertex1, ei.Vertex2);
+                }
+                ei.Weight = (static_cast<vtkm::Float64>(scalars.Get(ei.Vertex1)) - this->IsoValue) /
+                  static_cast<vtkm::Float64>(scalars.Get(ei.Vertex2) - scalars.Get(ei.Vertex1));
+                // Add edge to the list of edges.
+                edges.Set(edgeOffset++, ei);
+              }
             }
-            ei.Weight = (static_cast<vtkm::Float64>(scalars[edge[0]]) - this->IsoValue) /
-              static_cast<vtkm::Float64>(scalars[edge[1]] - scalars[edge[0]]);
-            // Add edge to the list of edges.
-            edges.Set(edgeOffset++, ei);
           }
         }
       }
@@ -277,7 +412,7 @@ public:
   };
 
   template <bool Invert>
-  class GenerateCellSet : public vtkm::worklet::WorkletVisitCellsWithPoints
+  class GenerateCellSet : public vtkm::worklet::WorkletMapField
   {
   public:
     VTKM_CONT
@@ -287,9 +422,10 @@ public:
     {
     }
 
-    using ControlSignature = void(CellSetIn cellSet,
-                                  FieldInCell caseIndex,
-                                  FieldInCell clipStatOffsets,
+    using ControlSignature = void(FieldIn cellBatch,
+                                  FieldIn cellBatchDataOffsets,
+                                  WholeCellSetIn<> cellSet,
+                                  WholeArrayIn caseIndices,
                                   WholeArrayIn pointMapOutputToInput,
                                   WholeArrayIn edgeIndexToUnique,
                                   WholeArrayOut centroidOffsets,
@@ -298,15 +434,15 @@ public:
                                   WholeArrayOut shapes,
                                   WholeArrayOut offsets,
                                   WholeArrayOut connectivity);
-    using ExecutionSignature =
-      void(InputIndex, CellShape, PointIndices, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12);
 
     using MaskType = vtkm::worklet::MaskSelect;
 
     using CT = internal::ClipTables<Invert>;
 
-    template <typename CellShapeTag,
-              typename PointVecType,
+    template <typename BatchType,
+              typename CellSetType,
+              typename CaseIndices,
               typename PointMapInputToOutput,
               typename EdgeIndexToUnique,
               typename CentroidOffsets,
@@ -315,11 +451,10 @@ public:
               typename Shapes,
               typename Offsets,
               typename Connectivity>
-    VTKM_EXEC void operator()(vtkm::Id cellId,
-                              const CellShapeTag& shape,
-                              const PointVecType& points,
-                              const vtkm::UInt8& caseIndex,
-                              const ClipStats& clipStatOffsets,
+    VTKM_EXEC void operator()(const BatchType& cellBatch,
+                              const CellBatchData& cellBatchDataOffsets,
+                              const CellSetType& cellSet,
+                              const CaseIndices& caseIndices,
                               const PointMapInputToOutput pointMapInputToOutput,
                               const EdgeIndexToUnique& edgeIndexToUnique,
                               CentroidOffsets& centroidOffsets,
@@ -330,87 +465,99 @@ public:
                               Connectivity& connectivity) const
     {
       namespace CTI = vtkm::worklet::internal::ClipTablesInformation;
-      vtkm::Id cellsOffset = clipStatOffsets.NumberOfCells;
-      vtkm::Id cellIndicesOffset = clipStatOffsets.NumberOfCellIndices;
-      vtkm::Id edgeOffset = clipStatOffsets.NumberOfEdges;
-      vtkm::Id centroidOffset = clipStatOffsets.NumberOfCentroids;
-      vtkm::Id centroidIndicesOffset = clipStatOffsets.NumberOfCentroidIndices;
+      vtkm::Id cellsOffset = cellBatchDataOffsets.NumberOfCells;
+      vtkm::Id cellIndicesOffset = cellBatchDataOffsets.NumberOfCellIndices;
+      vtkm::Id edgeOffset = cellBatchDataOffsets.NumberOfEdges;
+      vtkm::Id centroidOffset = cellBatchDataOffsets.NumberOfCentroids;
+      vtkm::Id centroidIndicesOffset = cellBatchDataOffsets.NumberOfCentroidIndices;
 
-      if (caseIndex == CT::GetKeptCellCase()) // kept cell
+      for (vtkm::IdComponent id = 0, size = cellBatch.GetNumberOfComponents(); id < size; ++id)
       {
-        cellMapOutputToInput.Set(cellsOffset, cellId);
-        shapes.Set(cellsOffset, static_cast<vtkm::UInt8>(shape.Id));
-        offsets.Set(cellsOffset, cellIndicesOffset);
-        for (vtkm::IdComponent pointId = 0; pointId < points.GetNumberOfComponents(); ++pointId)
+        const vtkm::Id& cellId = cellBatch[id];
+        const vtkm::UInt8 caseIndex = caseIndices.Get(cellId);
+        if (caseIndex != CT::GetDiscardedCellCase()) // not discarded cell
         {
-          connectivity.Set(cellIndicesOffset++, pointMapInputToOutput.Get(points[pointId]));
-        }
-      }
-      else // clipped cell
-      {
-        vtkm::Id centroidIndex = 0;
-
-        vtkm::Id index = CT::GetCaseIndex(shape.Id, caseIndex);
-        const vtkm::UInt8 numberOfShapes = CT::ValueAt(index++);
-
-        for (vtkm::IdComponent shapeId = 0; shapeId < numberOfShapes; shapeId++)
-        {
-          const vtkm::UInt8 cellShape = CT::ValueAt(index++);
-          const vtkm::UInt8 numberOfCellIndices = CT::ValueAt(index++);
-
-          if (cellShape != CTI::ST_PNT) // normal cell
+          const auto shape = cellSet.GetCellShape(cellId);
+          const auto points = cellSet.GetIndices(cellId);
+          if (caseIndex == CT::GetKeptCellCase()) // kept cell
           {
-            // Store the cell data
             cellMapOutputToInput.Set(cellsOffset, cellId);
-            shapes.Set(cellsOffset, cellShape);
-            offsets.Set(cellsOffset++, cellIndicesOffset);
-
-            for (vtkm::IdComponent pointId = 0; pointId < numberOfCellIndices; pointId++, index++)
+            shapes.Set(cellsOffset, static_cast<vtkm::UInt8>(shape.Id));
+            offsets.Set(cellsOffset, cellIndicesOffset);
+            for (vtkm::IdComponent pointId = 0; pointId < points.GetNumberOfComponents(); ++pointId)
             {
-              // Find how many points need to be calculated using edge interpolation.
-              const vtkm::UInt8 pointIndex = CT::ValueAt(index);
-              if (pointIndex <= CTI::P7) // Input Point
-              {
-                // We know pt P0 must be > P0 since we already
-                // assume P0 == 0.  This is why we do not
-                // bother subtracting P0 from pt here.
-                connectivity.Set(cellIndicesOffset++,
-                                 pointMapInputToOutput.Get(points[pointIndex]));
-              }
-              else if (/*pointIndex >= CTI::E00 &&*/ pointIndex <= CTI::E11) // Mid-Edge Point
-              {
-                connectivity.Set(cellIndicesOffset++,
-                                 this->EdgePointsOffset + edgeIndexToUnique.Get(edgeOffset++));
-              }
-              else // pointIndex == CTI::N0 // Centroid Point
-              {
-                connectivity.Set(cellIndicesOffset++, centroidIndex);
-              }
+              connectivity.Set(cellIndicesOffset++, pointMapInputToOutput.Get(points[pointId]));
             }
           }
-          else // cellShape == CTI::ST_PNT
+          else // clipped cell
           {
-            // Store the centroid data
-            centroidIndex = this->CentroidPointsOffset + centroidOffset;
-            centroidOffsets.Set(centroidOffset++, centroidIndicesOffset);
+            vtkm::Id centroidIndex = 0;
 
-            for (vtkm::IdComponent pointId = 0; pointId < numberOfCellIndices; pointId++, index++)
+            vtkm::Id index = CT::GetCaseIndex(shape.Id, caseIndex);
+            const vtkm::UInt8 numberOfShapes = CT::ValueAt(index++);
+
+            for (vtkm::IdComponent shapeId = 0; shapeId < numberOfShapes; shapeId++)
             {
-              // Find how many points need to be calculated using edge interpolation.
-              const vtkm::UInt8 pointIndex = CT::ValueAt(index);
-              if (pointIndex <= CTI::P7) // Input Point
+              const vtkm::UInt8 cellShape = CT::ValueAt(index++);
+              const vtkm::UInt8 numberOfCellIndices = CT::ValueAt(index++);
+
+              if (cellShape != CTI::ST_PNT) // normal cell
               {
-                // We know pt P0 must be > P0 since we already
-                // assume P0 == 0.  This is why we do not
-                // bother subtracting P0 from pt here.
-                centroidConnectivity.Set(centroidIndicesOffset++,
-                                         pointMapInputToOutput.Get(points[pointIndex]));
+                // Store the cell data
+                cellMapOutputToInput.Set(cellsOffset, cellId);
+                shapes.Set(cellsOffset, cellShape);
+                offsets.Set(cellsOffset++, cellIndicesOffset);
+
+                for (vtkm::IdComponent pointId = 0; pointId < numberOfCellIndices;
+                     pointId++, index++)
+                {
+                  // Find how many points need to be calculated using edge interpolation.
+                  const vtkm::UInt8 pointIndex = CT::ValueAt(index);
+                  if (pointIndex <= CTI::P7) // Input Point
+                  {
+                    // We know pt P0 must be > P0 since we already
+                    // assume P0 == 0.  This is why we do not
+                    // bother subtracting P0 from pt here.
+                    connectivity.Set(cellIndicesOffset++,
+                                     pointMapInputToOutput.Get(points[pointIndex]));
+                  }
+                  else if (/*pointIndex >= CTI::E00 &&*/ pointIndex <= CTI::E11) // Mid-Edge Point
+                  {
+                    connectivity.Set(cellIndicesOffset++,
+                                     this->EdgePointsOffset + edgeIndexToUnique.Get(edgeOffset++));
+                  }
+                  else // pointIndex == CTI::N0 // Centroid Point
+                  {
+                    connectivity.Set(cellIndicesOffset++, centroidIndex);
+                  }
+                }
               }
-              else /*pointIndex >= CTI::E00 && pointIndex <= CTI::E11*/ // Mid-Edge Point
+              else // cellShape == CTI::ST_PNT
               {
-                centroidConnectivity.Set(centroidIndicesOffset++,
-                                         this->EdgePointsOffset +
-                                           edgeIndexToUnique.Get(edgeOffset++));
+                // Store the centroid data
+                centroidIndex = this->CentroidPointsOffset + centroidOffset;
+                centroidOffsets.Set(centroidOffset++, centroidIndicesOffset);
+
+                for (vtkm::IdComponent pointId = 0; pointId < numberOfCellIndices;
+                     pointId++, index++)
+                {
+                  // Find how many points need to be calculated using edge interpolation.
+                  const vtkm::UInt8 pointIndex = CT::ValueAt(index);
+                  if (pointIndex <= CTI::P7) // Input Point
+                  {
+                    // We know pt P0 must be > P0 since we already
+                    // assume P0 == 0.  This is why we do not
+                    // bother subtracting P0 from pt here.
+                    centroidConnectivity.Set(centroidIndicesOffset++,
+                                             pointMapInputToOutput.Get(points[pointIndex]));
+                  }
+                  else /*pointIndex >= CTI::E00 && pointIndex <= CTI::E11*/ // Mid-Edge Point
+                  {
+                    centroidConnectivity.Set(centroidIndicesOffset++,
+                                             this->EdgePointsOffset +
+                                               edgeIndexToUnique.Get(edgeOffset++));
+                  }
+                }
               }
             }
           }
@@ -436,59 +583,100 @@ public:
     // Create an invoker.
     vtkm::cont::Invoker invoke;
 
+    // Create batches of points to process.
+    auto pointBatches = CreateBatches(numberOfInputPoints);
+
+    // Create an array to store the point batch statistics.
+    vtkm::cont::ArrayHandle<PointBatchData> pointBatchesData;
+    pointBatchesData.Allocate(pointBatches.GetNumberOfValues());
+
+    // Create a mask to only process the batches that have kept points.
+    vtkm::cont::ArrayHandle<vtkm::UInt8> batchesWithKeptPointsMask;
+    batchesWithKeptPointsMask.Allocate(pointBatches.GetNumberOfValues());
+
     // Create an array to store the mask of kept points.
     vtkm::cont::ArrayHandle<vtkm::UInt8> keptPointsMask;
     keptPointsMask.Allocate(numberOfInputPoints);
 
     // Mark the points that are kept.
-    invoke(MarkKeptPoints<Invert>(value), scalars, keptPointsMask);
+    invoke(MarkKeptPoints<Invert>(value),
+           pointBatches,
+           pointBatchesData,
+           batchesWithKeptPointsMask,
+           scalars,
+           keptPointsMask);
+
+    // Compute the total of pointBatchesData, and convert pointBatchesData to offsets in-place.
+    const PointBatchData pointBatchTotal = vtkm::cont::Algorithm::ScanExclusive(
+      pointBatchesData, pointBatchesData, PointBatchData::SumOp(), PointBatchData{});
+
+    // Create arrays to store the point map from input to output, and output to input.
+    vtkm::cont::ArrayHandle<vtkm::Id> pointMapInputToOutput;
+    pointMapInputToOutput.Allocate(numberOfInputPoints);
+    this->PointMapOutputToInput.Allocate(pointBatchTotal.NumberOfKeptPoints);
+
+    // Compute the point map from input to output, and output to input. (see Scatter Counting)
+    invoke(ComputePointMaps(),
+           vtkm::worklet::MaskSelect(batchesWithKeptPointsMask),
+           pointBatches,
+           pointBatchesData, // pointBatchesDataOffsets
+           keptPointsMask,
+           pointMapInputToOutput,
+           this->PointMapOutputToInput);
+    // Release pointBatches related arrays since they are no longer needed.
+    pointBatches.ReleaseResources();
+    pointBatchesData.ReleaseResources();
+    batchesWithKeptPointsMask.ReleaseResources();
+
+    // Create batches of cells to process.
+    auto cellBatches = CreateBatches(numberOfInputCells);
+
+    // Create an array to store the cell batch statistics.
+    vtkm::cont::ArrayHandle<CellBatchData> cellBatchesData;
+    cellBatchesData.Allocate(cellBatches.GetNumberOfValues());
+
+    // Create a mask to only process the batches that have clipped cells, to extract the edges.
+    vtkm::cont::ArrayHandle<vtkm::UInt8> batchesWithClippedCellsMask;
+    batchesWithClippedCellsMask.Allocate(cellBatches.GetNumberOfValues());
+
+    // Create a mask to only process the batches that have kept or clipped cells.
+    vtkm::cont::ArrayHandle<vtkm::UInt8> batchesWithKeptOrClippedCellsMask;
+    batchesWithKeptOrClippedCellsMask.Allocate(cellBatches.GetNumberOfValues());
 
     // Create an array to save the caseIndex for each cell.
     vtkm::cont::ArrayHandle<vtkm::UInt8> caseIndices;
     caseIndices.Allocate(numberOfInputCells);
 
-    // Create an array to store the statistics of the clip operation.
-    vtkm::cont::ArrayHandle<ClipStats> clipStats;
-    clipStats.Allocate(numberOfInputCells);
-
-    // Create a mask to only process the cells that are clipped, to extract the edges.
-    vtkm::cont::ArrayHandle<vtkm::UInt8> clippedMask;
-
-    // Create a mask to only process the kept or clipped cells.
-    vtkm::cont::ArrayHandle<vtkm::UInt8> keptOrClippedMask;
-
-    // Compute the statistics of the clip operation.
-    invoke(ComputeClipStats<Invert>(),
+    // Compute the cell statistics of the clip operation.
+    invoke(ComputeCellStats<Invert>(),
+           cellBatches,
+           cellBatchesData,
+           batchesWithClippedCellsMask,
+           batchesWithKeptOrClippedCellsMask,
            cellSet,
            keptPointsMask,
-           clipStats,
-           clippedMask,
-           keptOrClippedMask,
            caseIndices);
-
-    // Create ScatterCounting on the keptPointsMask.
-    vtkm::worklet::ScatterCounting scatterCullDiscardedPoints(keptPointsMask, true);
-    auto pointMapInputToOutput = scatterCullDiscardedPoints.GetInputToOutputMap();
-    this->PointMapOutputToInput = scatterCullDiscardedPoints.GetOutputToInputMap();
     keptPointsMask.ReleaseResources(); // Release keptPointsMask since it's no longer needed.
 
-    // Compute the total of clipStats, and convert clipStats to offsets in-place.
-    const ClipStats total =
-      vtkm::cont::Algorithm::ScanExclusive(clipStats, clipStats, ClipStats::SumOp(), ClipStats{});
+    // Compute the total of cellBatchesData, and convert cellBatchesData to offsets in-place.
+    const CellBatchData cellBatchTotal = vtkm::cont::Algorithm::ScanExclusive(
+      cellBatchesData, cellBatchesData, CellBatchData::SumOp(), CellBatchData{});
 
     // Create an array to store the edge interpolations.
     vtkm::cont::ArrayHandle<EdgeInterpolation> edgeInterpolation;
-    edgeInterpolation.Allocate(total.NumberOfEdges);
+    edgeInterpolation.Allocate(cellBatchTotal.NumberOfEdges);
 
     // Extract the edges.
     invoke(ExtractEdges<Invert>(value),
-           vtkm::worklet::MaskSelect(clippedMask),
+           vtkm::worklet::MaskSelect(batchesWithClippedCellsMask),
+           cellBatches,
+           cellBatchesData, // cellBatchesDataOffsets
            cellSet,
            scalars,
-           clipStats, // clipStatOffsets
            caseIndices,
            edgeInterpolation);
-    clippedMask.ReleaseResources(); // Release clippedMask since it's no longer needed.
+    // Release batchesWithClippedCellsMask since it's no longer needed.
+    batchesWithClippedCellsMask.ReleaseResources();
 
     // Sort the edge interpolations.
     vtkm::cont::Algorithm::Sort(edgeInterpolation, EdgeInterpolation::LessThanOp());
@@ -507,7 +695,7 @@ public:
     // Get the number of kept points, unique edge points, centroids, and output points.
     const vtkm::Id numberOfKeptPoints = this->PointMapOutputToInput.GetNumberOfValues();
     const vtkm::Id numberOfUniqueEdgePoints = this->EdgePointsInterpolation.GetNumberOfValues();
-    const vtkm::Id numberOfCentroids = total.NumberOfCentroids;
+    const vtkm::Id numberOfCentroids = cellBatchTotal.NumberOfCentroids;
     const vtkm::Id numberOfOutputPoints =
       numberOfKeptPoints + numberOfUniqueEdgePoints + numberOfCentroids;
     // Create the offsets to write the point indices.
@@ -518,27 +706,28 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> centroidOffsets;
     centroidOffsets.Allocate(numberOfCentroids + 1);
     vtkm::cont::ArrayHandle<vtkm::Id> centroidConnectivity;
-    centroidConnectivity.Allocate(total.NumberOfCentroidIndices);
+    centroidConnectivity.Allocate(cellBatchTotal.NumberOfCentroidIndices);
     this->CentroidPointsInterpolation =
       vtkm::cont::make_ArrayHandleGroupVecVariable(centroidConnectivity, centroidOffsets);
 
     // Allocate the output cell set.
     vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
-    shapes.Allocate(total.NumberOfCells);
+    shapes.Allocate(cellBatchTotal.NumberOfCells);
     vtkm::cont::ArrayHandle<vtkm::Id> offsets;
-    offsets.Allocate(total.NumberOfCells + 1);
+    offsets.Allocate(cellBatchTotal.NumberOfCells + 1);
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
-    connectivity.Allocate(total.NumberOfCellIndices);
+    connectivity.Allocate(cellBatchTotal.NumberOfCellIndices);
 
     // Allocate Cell Map output to Input.
-    this->CellMapOutputToInput.Allocate(total.NumberOfCells);
+    this->CellMapOutputToInput.Allocate(cellBatchTotal.NumberOfCells);
 
     // Generate the output cell set.
     invoke(GenerateCellSet<Invert>(this->EdgePointsOffset, this->CentroidPointsOffset),
-           vtkm::worklet::MaskSelect(keptOrClippedMask),
+           vtkm::worklet::MaskSelect(batchesWithKeptOrClippedCellsMask),
+           cellBatches,
+           cellBatchesData, // cellBatchesDataOffsets
            cellSet,
            caseIndices,
-           clipStats, // clipStatOffsets
            pointMapInputToOutput,
            edgeInterpolationIndexToUnique,
            centroidOffsets,
@@ -550,8 +739,10 @@ public:
     // All no longer needed arrays will be released at the end of this function.
 
     // Set the last offset to the size of the connectivity.
-    vtkm::cont::ArraySetValue(total.NumberOfCells, total.NumberOfCellIndices, offsets);
-    vtkm::cont::ArraySetValue(numberOfCentroids, total.NumberOfCentroidIndices, centroidOffsets);
+    vtkm::cont::ArraySetValue(
+      cellBatchTotal.NumberOfCells, cellBatchTotal.NumberOfCellIndices, offsets);
+    vtkm::cont::ArraySetValue(
+      numberOfCentroids, cellBatchTotal.NumberOfCentroidIndices, centroidOffsets);
 
     vtkm::cont::CellSetExplicit<> output;
     output.Fill(numberOfOutputPoints, shapes, connectivity, offsets);
@@ -742,7 +933,7 @@ namespace detail
 
 // causes a different code path which does not have the bug
 template <>
-struct is_integral<vtkm::worklet::ClipStats> : public true_type
+struct is_integral<vtkm::worklet::CellBatchesData> : public true_type
 {
 };
 }
