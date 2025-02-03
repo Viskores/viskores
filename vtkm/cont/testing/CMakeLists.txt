@@ -29,6 +29,7 @@ set(unit_tests
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayPortalFromIterators.cxx
   UnitTestArrayPortalToIterators.cxx
+  UnitTestArraySetValues.cxx
   UnitTestBuffer.cxx
   UnitTestComputeRange.cxx
   UnitTestControlSignatureTag.cxx
