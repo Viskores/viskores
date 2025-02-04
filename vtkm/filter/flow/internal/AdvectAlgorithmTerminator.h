@@ -20,6 +20,36 @@ namespace flow
 namespace internal
 {
 
+// This is based on:
+// D. Morozov, et al., "IExchange: Asynchronous Communication and Termination Detection for Iterative Algorithms,"
+// 2021 IEEE 11th Symposium on Large Data Analysis and Visualization (LDAV), New Orleans, LA, USA, 2021, pp. 12-21,
+// doi: 10.1109/LDAV53230.2021.00009.
+//
+// The challenge for async termination is to determine when all work is complete and no messages remain in flight.
+// The algorithm uses a number of states to determine when this occurs.
+// State 0: a process is working.
+// State 1: Process is done and waiting
+// State 2: All done and checking for cancelation
+// State 3: Done
+//
+// State 0:  ----- if no work ----> State 1: (locally done. call ibarrier).
+//                                      |
+//                                      |  ibarrier done
+//                                      |  dirty = "have new work since entering State 1"
+//                                      |  call iallreduce(dirty)
+//                                      |
+//                                  State 2: (all done, checking for cancel)
+//                                      |
+//                                      | if dirty == 1 : GOTO State 0.
+//                                      | else: goto State 3 (DONE)
+//
+// A process begins in State 0 and remains until it has no more work to do.
+// Process calls ibarrier and enters State 1.  When the ibarrier is satisfied, this means that all processes are in State 1.
+// When all processes are in State 1, each process sets a dirty flag to true if any work has arrived since entering State 1.
+// Each procces call iallreduce(dirty) and enter State 2.
+// In State 2, if the iallreduce returns true, there is new work, so return to State 0.
+// If the iallreduce returns false, then all work is complete and we can terminate.
+//
 class AdvectAlgorithmTerminator
 {
 public:
@@ -72,14 +102,12 @@ public:
       int flag;
       MPI_Test(&this->StateReq, &flag, &status);
       if (flag == 1)
-        this->State = STATE_1B;
-    }
-    else if (this->State == STATE_1B)
-    {
-      this->LocalDirty = this->Dirty;
-      MPI_Iallreduce(
-        &this->LocalDirty, &this->AllDirty, 1, MPI_INT, MPI_LOR, this->MPIComm, &this->StateReq);
-      this->State = STATE_2;
+      {
+        this->LocalDirty = this->Dirty;
+        MPI_Iallreduce(
+          &this->LocalDirty, &this->AllDirty, 1, MPI_INT, MPI_LOR, this->MPIComm, &this->StateReq);
+        this->State = STATE_2;
+      }
     }
     else if (this->State == STATE_2)
     {
@@ -107,7 +135,6 @@ private:
   {
     STATE_0,
     STATE_1,
-    STATE_1B,
     STATE_2,
     DONE
   };
