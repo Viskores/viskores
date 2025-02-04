@@ -30,7 +30,6 @@ namespace internal
 // State 0: a process is working.
 // State 1: Process is done and waiting
 // State 2: All done and checking for cancelation
-// State 3: Done
 //
 // State 0:  ----- if no work ----> State 1: (locally done. call ibarrier).
 //                                      |
@@ -41,7 +40,7 @@ namespace internal
 //                                  State 2: (all done, checking for cancel)
 //                                      |
 //                                      | if dirty == 1 : GOTO State 0.
-//                                      | else: goto State 3 (DONE)
+//                                      | else: Done
 //
 // A process begins in State 0 and remains until it has no more work to do.
 // Process calls ibarrier and enters State 1.  When the ibarrier is satisfied, this means that all processes are in State 1.
@@ -92,6 +91,8 @@ public:
 
     if (this->State == STATE_0 && !haveLocalWork)
     {
+      //No more work for this rank.
+      //Set Dirty = 0 (to see if any work arrives while in STATE_1)
       MPI_Ibarrier(this->MPIComm, &this->StateReq);
       this->Dirty = 0;
       this->State = STATE_1;
@@ -116,10 +117,12 @@ public:
       MPI_Test(&this->StateReq, &flag, &status);
       if (flag == 1)
       {
-        if (this->AllDirty == 0) //done
+        //If no rank has had any new work since the iBarrier, work is complete.
+        //Otherwise, return to STATE_0.
+        if (this->AllDirty == 0)
           this->State = DONE;
         else
-          this->State = STATE_0; //reset.
+          this->State = STATE_0;
       }
     }
 #else
