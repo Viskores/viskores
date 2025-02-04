@@ -1,0 +1,15 @@
+NAME
+  UsersGuide
+GROUPS
+  Core
+TESTING_DIR
+  examples
+TEST_DEPENDS
+  viskores_cont
+  viskores_filter_contour
+  viskores_filter_field_conversion
+  viskores_filter_field_transform
+  viskores_filter_flow
+  viskores_filter_geometry_refinement
+  viskores_filter_mesh_info
+  viskores_rendering

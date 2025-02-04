@@ -1,0 +1,9 @@
+{
+    "release_user": "kwrobot.release.viskores",
+    "project": "vtk/viskores",
+    "maintainers": [
+        "ben.boeckel",
+        "kmorel",
+        "vbolea"
+    ]
+}

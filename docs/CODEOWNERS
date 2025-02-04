@@ -1,0 +1,24 @@
+# Subsystems have specific owners
+
+
+CMake/                                      @robertmaynard
+data/                                       @dpugmire
+docs/                                       @robertmaynard @kmorel
+examples/                                   @kmorel
+Utilities/                                  @kmorel
+viskores/                                       @robertmaynard @kmorel
+viskores/interop/                               @robertmaynard
+viskores/io/                                    @sujin.philip
+viskores/rendering/                             @mclarsen
+viskores/source/                                @robertmaynard @ollielo
+viskores/testing/                               @sujin.philip
+viskores/thirdparty/                            @ben.boeckel
+viskores/worklet/cellmetrics/                   @hankchilds
+viskores/worklet/contourtree/                   @oruebel @ghweber @sujin.philip
+viskores/worklet/contourtree_augmented/         @oruebel @ghweber @sujin.philip
+viskores/worklet/cosmotools/                    @ollielo
+viskores/worklet/lcs/                           @ayenpure @dpugmire
+viskores/worklet/moments/                       @ollielo @robertmaynard
+viskores/worklet/particleadvection              @ayenpure @dpugmire
+viskores/worklet/spatialstructure               @ayenpure @kmorel
+viskores/worklet/zfp                            @mclarsen

@@ -1,0 +1,249 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
+.docker_image: &docker_image
+  variables:
+    GIT_CLONE_PATH: $CI_BUILDS_DIR/gitlab-kitware-sciviz-ci
+
+.centos7: &centos7
+  image: "kitware/vtkm:ci-centos7_cuda10.2-20210128"
+  extends:
+    - .docker_image
+
+.centos8: &centos8
+  image: "kitware/vtkm:ci-centos8-20201016"
+  extends:
+    - .docker_image
+
+.rhel8: &rhel8
+  image: "kitware/vtkm:ci-rhel8_cuda10.2-20201016"
+  extends:
+    - .docker_image
+
+.ubuntu1604: &ubuntu1604
+  image: "kitware/vtkm:ci-ubuntu1604-20230906"
+  extends:
+    - .docker_image
+
+.ubuntu1604_cuda: &ubuntu1604_cuda
+  image: "kitware/vtkm:ci-ubuntu1604_cuda9.2-20201016"
+  extends:
+    - .docker_image
+
+.ubuntu1804: &ubuntu1804
+  image: "kitware/vtkm:ci-ubuntu1804-20230906"
+  extends:
+    - .docker_image
+
+.ubuntu1804_cuda: &ubuntu1804_cuda
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11-20230906"
+  extends:
+    - .docker_image
+
+.ubuntu1804_cuda_kokkos: &ubuntu1804_cuda_kokkos
+  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20230906"
+  extends:
+    - .docker_image
+
+.ubuntu2004_doxygen: &ubuntu2004_doxygen
+  image: "kitware/vtkm:ci-doxygen-20231020"
+  extends:
+    - .docker_image
+
+.ubuntu2004: &ubuntu2004
+  image: "kitware/vtkm:ci-ubuntu2004-20230906"
+  extends:
+    - .docker_image
+
+.ubuntu2004_kokkos: &ubuntu2004_kokkos
+  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20240119"
+  extends:
+    - .docker_image
+
+.ubuntu2204_hip_kokkos: &ubuntu2204_hip_kokkos
+  image: "kitware/vtkm:ci-ubuntu2204_hip_kokkos-20240625"
+  extends:
+    - .docker_image
+
+.opensuse: &opensuse
+  image: "kitware/vtkm:ci-opensuse-20231121"
+  extends:
+    - .docker_image
+
+.run_automatically: &run_automatically
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID'
+      when: on_success
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m"'
+      when: on_success
+    - when: never
+
+.run_only_merge_requests: &run_only_merge_requests
+  rules:
+    - if: '$CI_MERGE_REQUEST_ID && $CI_PROJECT_PATH == "vtk/vtk-m"'
+      when: on_success
+    - when: never
+
+.run_scheduled: &run_scheduled
+  rules:
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_TAG'
+      when: on_success
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_PIPELINE_SOURCE == "schedule"'
+      when: on_success
+    - when: never
+
+.run_upstream_branches: &run_upstream_branches
+  rules:
+    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_MERGE_REQUEST_ID == null'
+      when: on_success
+    - when: never
+
+.run_frontier_ci: &run_frontier_ci
+  rules:
+    - if: '$CI_PROJECT_PATH == "ci/ums033/dev/vtk-m"'
+      when: on_success
+    - when: never
+
+# General Longer Term Tasks:
+# - Setup clang tidy as sub-pipeline
+# - Setup a machine to replicate the issue in https://gitlab.kitware.com/vtk/vtk-m/-/issues/447
+#   Note: Centos7 doesn't work as they ship separate standard library
+#   headers for each version. We will have to figure out something else
+#   like using spack or building llvm/clang from source
+
+stages:
+  - build
+  - test
+
+.use_minimum_supported_cmake:
+  variables:
+    CMAKE_VERSION: "3.13.5"
+
+.warning_policy:
+  allow_failure:
+    exit_codes: [ 47 ]
+
+.install_cmake: &install_cmake |
+  export PATH=$PWD/.gitlab/cmake/bin:$PATH
+  .gitlab/ci/config/cmake.sh "$CMAKE_VERSION"
+  cmake --version
+
+.cmake_build_linux: &cmake_build_linux
+  stage: build
+  timeout:  2 hours
+  interruptible: true
+  before_script:
+    - *install_cmake
+    - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
+    - export PATH=$PWD/.gitlab:$PATH
+    - .gitlab/ci/config/sccache.sh
+    - SCCACHE_IDLE_TIMEOUT=0 sccache --start-server
+    - sccache --show-stats
+    - .gitlab/ci/config/google_benchmarks.sh
+    - "cmake --version"
+    - "cmake -V -P .gitlab/ci/config/fetch_vtkm_tags.cmake"
+    - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
+    - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
+  script:
+    - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
+    - sccache --show-stats
+    - cmake -P .gitlab/ci/check_warnings.cmake || exit 47
+  extends:
+    - .cmake_build_artifacts
+    - .warning_policy
+
+.cmake_test_linux: &cmake_test_linux
+  stage: test
+  timeout:  50 minutes
+  interruptible: true
+  before_script:
+    - *install_cmake
+    - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
+    - export PATH=$PWD/.gitlab:$PATH
+  script:
+    - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
+  extends:
+    - .cmake_test_artifacts
+
+.cmake_memcheck_linux: &cmake_memcheck_linux
+  stage: test
+  timeout:  2 hours
+  interruptible: true
+  before_script:
+    - *install_cmake
+  script:
+    - "ctest -VV -S .gitlab/ci/ctest_memcheck.cmake"
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      # The generated regression testing images
+      - build/*.png
+      - build/*.pnm
+      - build/*.pmm
+      - build/junit.xml
+    reports:
+      junit: build/junit.xml
+
+.cmake_build_artifacts: &cmake_build_artifacts
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      # The artifacts of the build.
+      - build/bin/
+      - build/include/
+      - build/vtkm/thirdparty/diy/vtkmdiy/
+      - build/lib/
+      - build/config/
+
+      # CTest and CMake install files.
+      # Note: this also captures our CIState.cmake file
+      - build/CMakeCache.txt
+      - build/compile_num_warnings.log
+      - build/**/*.cmake
+      - build/Testing/
+
+      # CDash files.
+      - build/DartConfiguration.tcl
+
+      # Users guide
+      - build/docs/users-guide/html
+      - build/docs/users-guide/latex
+
+.cmake_test_artifacts: &cmake_test_artifacts
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      # The generated regression testing images
+      - build/**/*.png
+      - build/**/*.pnm
+      - build/**/*.pmm
+      - build/junit.xml
+    reports:
+      junit: build/junit.xml
+
+
+include:
+  - local: '/.gitlab/ci/centos7.yml'
+  - local: '/.gitlab/ci/centos8.yml'
+  - local: '/.gitlab/ci/doxygen.yml'
+  - local: '/.gitlab/ci/frontier.yml'
+  - local: '/.gitlab/ci/macos.yml'
+  - local: '/.gitlab/ci/opensuse.yml'
+  - local: '/.gitlab/ci/rhel8.yml'
+  - local: '/.gitlab/ci/ubuntu1604.yml'
+  - local: '/.gitlab/ci/ubuntu1804.yml'
+  - local: '/.gitlab/ci/ubuntu2004.yml'
+  - local: '/.gitlab/ci/ubuntu2204.yml'
+  - local: '/.gitlab/ci/windows10.yml'

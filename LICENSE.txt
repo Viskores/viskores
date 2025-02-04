@@ -1,19 +1,19 @@
-Viskores License Version 0.0
+Viskores License Version 2.2
 ========================================================================
 
-Copyright (c) 2024
+Copyright (c) 2014-2024
 Kitware Inc.,
+National Technology & Engineering Solutions of Sandia, LLC (NTESS),
 UT-Battelle, LLC.,
 Los Alamos National Security, LLC.,
-National Technology & Engineering Solutions of Sandia, LLC (NTESS),
 All rights reserved.
+
+Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government
+retains certain rights in this software.
 
 Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
 Laboratory (LANL), the U.S. Government retains certain rights in
 this software.
-
-Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government
-retains certain rights in this software.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -43,3 +43,18 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ========================================================================
+
+The following files and directories come from third parties. Check the
+contents of these for details on the specifics of their respective
+licenses.
+- - - - - - - - - - - - - - - - - - - - - - - - do not remove this line
+CMake/FindSphinx.cmake
+CMake/FindTBB.cmake
+Utilities
+viskores/cont/tbb/internal/parallel_sort.h
+viskores/cont/tbb/internal/parallel_radix_sort_tbb.h
+viskores/cont/tbb/internal/ParallelSortTBB.hxx
+viskores/cont/tbb/internal/kxsort.h
+viskores/thirdparty
+version.txt
+.gitlab/cmake

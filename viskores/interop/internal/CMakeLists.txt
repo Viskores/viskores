@@ -1,0 +1,23 @@
+##============================================================================
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##============================================================================
+
+set(headers
+  BufferTypePicker.h
+  OpenGLHeaders.h
+  TransferToOpenGL.h
+  )
+
+#-----------------------------------------------------------------------------
+viskores_declare_headers(${headers})
+
+#-----------------------------------------------------------------------------
+if(TARGET viskores_rendering AND Viskores_ENABLE_TESTING)
+  add_subdirectory(testing)
+endif()
