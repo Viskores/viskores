@@ -7,8 +7,6 @@ read -r -d '' CPPRULES << EOF
   NewName: viskores
 - QualifiedName: vtkm
   NewName: viskores
-- QualifiedName: vtkM
-  NewName: Viskores
 - QualifiedName: Vtk-m
   NewName: Viskores
 - QualifiedName: Vtkm
@@ -18,7 +16,7 @@ read -r -d '' CPPRULES << EOF
 - QualifiedName: VTKm
   NewName: Viskores
 - QualifiedName: VTK-M
-  NewName: VISKORES
+  NewName: Viskores
 - QualifiedName: VTKM
   NewName: VISKORES
 - QualifiedName: VTK_M
@@ -31,20 +29,20 @@ EOF
 read -r -d '' SEDRULES << EOF
 # PREPROCESSOR
 /^#/s/vtk-m|vtkm|vtk_m/viskores/g
-/^#/s/VTK-m|VTKm|vtkM|Vtk-m|Vtkm/Viskores/g
-/^#/s/VTK-M|VTK_M|VTKM/VISKORES/g
+/^#/s/VTK-M|VTK-m|VTKm|Vtk-m|Vtkm/Viskores/g
+/^#/s/VTK_M|VTKM/VISKORES/g
 s/VTKm/Viskores/g
 s/VTKM|VTK_M/VISKORES/g
 
 # C STYLE COMMENTS
 /\/\*.*\*\//s/vtk-m|vtkm/viskores/g
-/\/\*.*\*\//s/VTK-m|VTKm|vtkM|Vtk-m|Vtkm/Viskores/g
-/\/\*.*\*\//s/VTK-M|VTKM|VTK_M/VISKORES/g
+/\/\*.*\*\//s/VTK-M|VTK-m|VTKm|Vtk-m|Vtkm/Viskores/g
+/\/\*.*\*\//s/VTKM|VTK_M/VISKORES/g
 
 # CPP STYLE COMMENTS
 s/(\/\/\/?.*)(vtk-m|vtkm)/\1viskores/g
-s/(\/\/\/?.*)(VTK-m|VTKm|vtkM|Vtk-m|Vtkm)/\1Viskores/g
-s/(\/\/\/?.*)(VTK-M|VTKM|VTK_M)/\1VISKORES/g
+s/(\/\/\/?.*)(VTK-M|VTK-m|VTKm|Vtk-m|Vtkm)/\1Viskores/g
+s/(\/\/\/?.*)(VTKM|VTK_M)/\1VISKORES/g
 EOF
 
 function usage()

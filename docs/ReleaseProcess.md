@@ -86,7 +86,7 @@ shown in here:
 
 # Get started with a new Release
 
-1. Go to `https://gitlab.kitware.com/viskores/viskores/` and open a new issue.
+1. Go to `https://github.com/Viskores/viskores/` and open a new issue.
 2. Generate and copy to clipboard the release script (-rcN is optional):
 ```
 # Download pyexpander (Available in pip)

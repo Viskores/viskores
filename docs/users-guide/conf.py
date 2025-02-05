@@ -74,7 +74,7 @@ numfig_format = {
 today_fmt = '%B %d, %Y'
 
 rst_prolog = '''
-.. |Viskores| replace:: VTK‑m
+.. |Viskores| replace:: Viskores
 .. |Veclike| replace:: ``Vec``-like
 .. |report-year| replace:: 2024
 .. |report-number| replace:: ORNL/TM-2024/3443

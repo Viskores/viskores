@@ -82,7 +82,7 @@ viskores_build_dir=${home_dir}/viskores/build
 viskores_install_dir=${home_dir}/viskores/install
 
 if true; then
-git clone -b master https://gitlab.kitware.com/vtk/viskores.git ${viskores_src_dir}
+git clone -b master https://github.com/Viskores/viskores.git ${viskores_src_dir}
 cd ${viskores_src_dir}/data && git lfs pull && cd ../../../ && pwd
 rm -rf ${viskores_build_dir}
 ${cmake_build_dir}/bin/cmake -S ${viskores_src_dir} -B ${viskores_build_dir} \

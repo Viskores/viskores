@@ -91,7 +91,7 @@ The API for these two environments are located in the ``viskores::cont`` and ``v
 Items located in the base ``viskores`` namespace are available in both environments.
 
 .. didyouknow::
-   Although it is conventional to spell out names in identifiers (as outlined in https://gitlab.kitware.com/vtk/viskores/blob/master/docs/CodingConventions.md) there is an exception to abbreviate control and execution to ``cont`` and ``exec``, respectively.
+   Although it is conventional to spell out names in identifiers (as outlined in https://github.com/Viskores/viskores/blob/master/docs/CodingConventions.md) there is an exception to abbreviate control and execution to ``cont`` and ``exec``, respectively.
    This is because it is also part of the coding convention to declare the entire namespace when using an identifier that is part of the corresponding package.
    The shorter names make the identifiers easier to read, faster to type, and more feasible to pack lines in terminal displays.
    These abbreviations are also used instead of more common abbreviations (e.g. ctrl for control) because, as part of actual English words, they are easier to type.

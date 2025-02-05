@@ -33,14 +33,14 @@ git repository]. The latest Viskores release is always on the `release` branch
 and can be cloned as so.
 
 ```sh
-git clone --branch release https://gitlab.kitware.com/vtk/viskores.git
+git clone --branch release https://github.com/Viskores/viskores.git
 ```
 
 If you are feeling more daring, you can simply clone the main branch with
 the latest developments.
 
 ```sh
-git clone https://gitlab.kitware.com/vtk/viskores.git
+git clone https://github.com/Viskores/viskores.git
 ```
 
 ## Building Viskores and the Tutorial Examples
@@ -57,7 +57,7 @@ experience with Viskores, it might be best to start with a simple build.
 Here is a list of minimal commands to download and build Viskores.
 
 ```sh
-git clone --branch release https://gitlab.kitware.com/vtk/viskores.git
+git clone --branch release https://github.com/Viskores/viskores.git
 mkdir viskores-build
 cd viskores-build
 cmake ../viskores -DViskores_ENABLE_TUTORIALS=ON
@@ -98,7 +98,7 @@ of each one, listed from most basic to increasing complexity.
   that extracts topological features from a mesh.
 
 [slides]: https://www.dropbox.com/s/4pp4xf1jlvlt4th/Viskores_Tutorial_VIS22.pptx?dl=0
-[The Viskores User's Guide]: https://gitlab.kitware.com/vtk/viskores-user-guide/-/wikis/home
-[Viskores git repository]: https://gitlab.kitware.com/vtk/viskores
-[Viskores releases page]: https://gitlab.kitware.com/vtk/viskores/-/releases
-[Viskores dependencies list]: https://gitlab.kitware.com/vtk/viskores#dependencies
+[The Viskores User's Guide]: https://github.com/Viskores/viskores-user-guide/-/wikis/home
+[Viskores git repository]: https://github.com/Viskores/viskores
+[Viskores releases page]: https://github.com/Viskores/viskores/-/releases
+[Viskores dependencies list]: https://github.com/Viskores/viskores#dependencies

@@ -12,7 +12,7 @@ Getting |Viskores|
 |Viskores| is an open source software product where the code is made freely available.
 To get the latest released version of |Viskores|, go to the |Viskores| releases page:
 
-  https://gitlab.kitware.com/vtk/viskores/-/releases
+  https://github.com/Viskores/viskores/-/releases
 
 From there with your favorite browser you may download the source code from any of the recent |Viskores| releases in a variety of different archive files such as zip or tar gzip.
 
@@ -20,10 +20,10 @@ For access to the most recent work, the |Viskores| development team provides pub
 The main |Viskores| repository on a GitLab instance hosted at Kitware, Inc.
 The repository can be browsed from its project web page:
 
-  https://gitlab.kitware.com/vtk/viskores
+  https://github.com/Viskores/viskores
 
 We leave access to the :index:`git` hosted repository as an exercise for the user.
-Those interested in :command:`git` access for the purpose of contributing to |Viskores| should consult the `CONTRIBUTING <https://gitlab.kitware.com/vtk/viskores/blob/master/CONTRIBUTING.md>`_ guidelines documented in the source code.
+Those interested in :command:`git` access for the purpose of contributing to |Viskores| should consult the `CONTRIBUTING <https://github.com/Viskores/viskores/blob/master/CONTRIBUTING.md>`_ guidelines documented in the source code.
 
 .. %% \index{git|(}
 
@@ -35,7 +35,7 @@ Those interested in :command:`git` access for the purpose of contributing to |Vi
 .. %% To get a copy of the |Viskores| repository, issue a git clone command.
 
 .. %% \begin{blankexample}{Cloning the main |Viskores| git repository.}
-.. %% git clone https://gitlab.kitware.com/vtk/viskores.git
+.. %% git clone https://github.com/Viskores/viskores.git
 .. %% \end{blankexample}
 
 .. %% The git clone command will create a copy of all the source code to your local machine.

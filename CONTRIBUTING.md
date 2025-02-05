@@ -54,7 +54,7 @@ Before you begin, perform initial setup:
     developers and users.
 
 [GitLab Access]: https://gitlab.kitware.com/users/sign_in
-[Fork Viskores]: https://gitlab.kitware.com/vtk/viskores/-/forks/new
+[Fork Viskores]: https://github.com/Viskores/viskores/-/forks/new
 [Register with the Viskores dashboard]: https://open.cdash.org/register
 [Sign up for the Viskores mailing list]: http://vtk.org/mailman/listinfo/viskores
 
@@ -162,7 +162,7 @@ and signed in for [GitLab Access] and created your fork by visiting the
 main [Viskores GitLab] repository page and using the "Fork" button in the
 upper right.
 
-[Viskores GitLab]: https://gitlab.kitware.com/vtk/viskores
+[Viskores GitLab]: https://github.com/Viskores/viskores
 
 1.  Checkout the topic if it is not your current branch:
 
@@ -550,7 +550,7 @@ origin refers to, run
 It will give you a list of remotes and their URLs that you have configured.
 If you have a line like
 
-    origin  https://gitlab.kitware.com/vtk/viskores.git (fetch)
+    origin  https://github.com/Viskores/viskores.git (fetch)
 
 or
 
@@ -560,7 +560,7 @@ then everything is OK. If it is anything else (for example, it has your
 GitLab username in it), then you have a problem. Fortunately, you can fix
 it by simply changing the remote's URL:
 
-    $ git remote set-url origin https://gitlab.kitware.com/vtk/viskores.git
+    $ git remote set-url origin https://github.com/Viskores/viskores.git
 
 If you had to change the `origin` remote, you should also rerun
 `Utilities/SetupForDevelopment.sh` to make sure the other remotes are set

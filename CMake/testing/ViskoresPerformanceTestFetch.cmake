@@ -14,7 +14,7 @@ REQUIRE_FLAG("Viskores_SOURCE_DIR")
 REQUIRE_FLAG_MUTABLE("Viskores_PERF_REPO")
 REQUIRE_FLAG_MUTABLE("Viskores_PERF_REMOTE_URL")
 
-set(upstream_url "https://gitlab.kitware.com/vtk/viskores.git")
+set(upstream_url "https://github.com/Viskores/viskores.git")
 
 file(REMOVE_RECURSE viskores-benchmark-records)
 execute(COMMAND /usr/bin/git clone -b records ${Viskores_PERF_REMOTE_URL} ${Viskores_PERF_REPO})
