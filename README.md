@@ -2,7 +2,7 @@
 
 Lightweight Cell Library is a collection of cell types and cell functionality
 that is designed be used scientific visualization libraries of
-VTK-m, and VTK.
+Viskores, and VTK.
 
 You can find out more about the design of Lightweight Cell Library in [DESIGN.md].
 

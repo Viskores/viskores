@@ -171,7 +171,7 @@ LCL_EXEC inline lcl::ErrorCode parametricToWorld(
 }
 
 //-----------------------------------------------------------------------------
-// The following implementation is lifted from VTK-m
+// The following implementation is lifted from Viskores
 //-----------------------------------------------------------------------------
 // We will solve the world to parametric coordinates problem geometrically.
 // Consider the parallelogram formed by wcoords and p0 of the triangle and

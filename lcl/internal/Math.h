@@ -436,7 +436,7 @@ Vector<T, NumCol> matrixMultiply(
 }
 
 //---------------------------------------------------------------------------
-// The following code is copied from VTK-m
+// The following code is copied from Viskores
 
 namespace detail
 {
