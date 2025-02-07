@@ -92,7 +92,7 @@ source files with custom allocators.*/
 #include <string>
 #endif /*LODEPNG_COMPILE_CPP*/
 
-namespace vtkm
+namespace viskores
 {
 namespace png
 {
@@ -1041,7 +1041,7 @@ unsigned compress(std::vector<unsigned char>& out, const std::vector<unsigned ch
 #endif /*LODEPNG_COMPILE_CPP*/
 
 } /* namespace png */
-} /* namespace vtkm */
+} /* namespace viskores */
 
 /*
 TODO:
