@@ -7,7 +7,7 @@ jobs:
       - checkout
       - run:
           name: CDash
-          command: ./scripts/ci/circle/post-cdash-status
+          command: .circleci/post-cdash-status
 
 workflows:
   version: 2
