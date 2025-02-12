@@ -1,0 +1,14 @@
+# type      center      r       omega0      zeta
+periodic    44  44 64    35      0.785
+periodic   128  44 64    35      1.57
+periodic   212  44 64    35      2.355
+periodic    44 128 64    35      3.14
+periodic   128 128 64    35      3.925
+periodic   212 128 64    35      4.71
+periodic    44 212 64    35      5.495
+periodic   128 212 64    35      6.28
+periodic   212 212 64    35      7.065
+periodic    86  86 64    20      7.065
+periodic    86 170 64    20      5.495
+periodic   168  86 64    20      3.14
+periodic   170 170 64    20      1.57

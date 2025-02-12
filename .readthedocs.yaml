@@ -1,0 +1,43 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
+# Required
+version: 2
+
+# Set the OS, Python version and other tools you might need
+build:
+  os: ubuntu-22.04
+  apt_packages:
+  - cmake
+  - make
+  - git-lfs
+  tools:
+    python: '3.10'
+  jobs:
+    post_install:
+    - git lfs install --local
+    - git lfs fetch --include "*.png"
+    - git lfs checkout *.png
+    - cmake -B build -S . -DViskores_ENABLE_DOCUMENTATION=ON -DViskores_ENABLE_USERS_GUIDE=ON -DViskores_USERS_GUIDE_INCLUDE_TODOS=OFF
+    - cmake --build build --target ViskoresDoxygenDocs
+    - cp -f ./build/docs/users-guide/ViskoresUsersGuideHTML.cache/conf.py docs/users-guide/conf.py
+
+sphinx:
+  configuration: docs/users-guide/conf.py
+
+python:
+  install:
+  - requirements: docs/users-guide/requirements.txt
+
+formats:
+- epub
+- pdf

@@ -1,0 +1,39 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
+build:ubuntu2004_kokkos37:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux-x86_64
+  extends:
+    - .ubuntu2004_kokkos
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    CMAKE_PREFIX_PATH: "/opt/anari"
+    VTKM_SETTINGS: "kokkos+shared+64bit_floats+rendering+anari"
+
+test:ubuntu2004_kokkos37:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux-x86_64
+  extends:
+    - .ubuntu2004_kokkos
+    - .cmake_test_linux
+    - .run_automatically
+  needs:
+    - build:ubuntu2004_kokkos37

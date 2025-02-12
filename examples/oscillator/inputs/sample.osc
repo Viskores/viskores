@@ -1,0 +1,6 @@
+# type      center      r       omega0      zeta
+damped      32 32 32    10.     3.14        .3
+damped      16 32 16    10.     9.5         .1
+damped      48 32 48    5.      3.14        .1
+decaying    16 32 48    15      3.14
+periodic    48 32 16    15      3.14

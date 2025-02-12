@@ -1,0 +1,120 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
+# Build on ubuntu1604 with CUDA 9.2 and test on ubuntu1604 and ubuntu1804
+# Uses gcc 5, and build for pascal as CUDA 9.2 doesn't support turing
+build:ubuntu1604_gcc5:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux-x86_64
+    - large-memory
+  extends:
+    - .ubuntu1604_cuda
+    - .cmake_build_linux
+    - .run_automatically
+    - .use_minimum_supported_cmake
+  variables:
+    CC: "gcc-5"
+    CXX: "g++-5"
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    VTKM_SETTINGS: "cuda+pascal+shared+ascent_types+32bit_ids+64bit_floats"
+
+test:ubuntu1604_gcc5:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux-x86_64
+    - cuda-rt
+    - pascal
+  extends:
+    - .ubuntu1604_cuda
+    - .cmake_test_linux
+    - .run_automatically
+    - .use_minimum_supported_cmake
+  needs:
+    - build:ubuntu1604_gcc5
+
+# Build on ubuntu1704 with OpenMP + CUDA
+# Runs only on nightlies
+build:ubuntu1604_gcc5_2:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux-x86_64
+    - large-memory
+  extends:
+    - .ubuntu1604_cuda
+    - .cmake_build_linux
+    - .run_upstream_branches
+    - .use_minimum_supported_cmake
+  variables:
+    CC: "gcc-5"
+    CXX: "g++-5"
+    CMAKE_BUILD_TYPE: Release
+    VTKM_SETTINGS: "openmp+cuda+pascal+examples+static"
+
+test:ubuntu1804_test_ubuntu1604_gcc5_2:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux-x86_64
+    - cuda-rt
+    - pascal
+  extends:
+    - .ubuntu1804_cuda
+    - .cmake_test_linux
+    - .run_upstream_branches
+    - .use_minimum_supported_cmake
+  variables:
+      CTEST_EXCLUSIONS: "built_against_test_install"
+  needs:
+    - build:ubuntu1604_gcc5_2
+
+# Build on ubuntu1604 with tbb and test on ubuntu1604
+# Uses clang 5
+build:ubuntu1604_clang5:
+  tags:
+    - build
+    - vtkm
+    - docker
+    - linux-x86_64
+  extends:
+    - .ubuntu1604
+    - .cmake_build_linux
+    - .run_automatically
+    - .use_minimum_supported_cmake
+  variables:
+    CC: "clang-5.0"
+    CXX: "clang++-5.0"
+    CMAKE_BUILD_TYPE: Debug
+    VTKM_SETTINGS: "tbb+static+64bit_floats"
+
+test:ubuntu1604_clang5:
+  tags:
+    - test
+    - vtkm
+    - docker
+    - linux-x86_64
+  extends:
+    - .ubuntu1604
+    - .cmake_test_linux
+    - .run_automatically
+    - .use_minimum_supported_cmake
+  needs:
+    - build:ubuntu1604_clang5
+  variables:
+      CTEST_EXCLUSIONS: "make_built_against_test_install"
