@@ -93,8 +93,8 @@ public:
       hierarchicalTreeSuperarc,      // hierarchicalTree.superarcs[actualSuperarcs[InputIndex]]
     const FieldType& dependentValue, // dependentValues[actualSuperarcs[InputIndex]]
     const FieldType& intrinsicValue, // intrinsicValues[actualSuperarcs[InputIndex]]
-    viskores::Id& upVolume,              // upVolume[actualSuperarcs[InputIndex]]
-    viskores::Id& downVolume             // downVolume[actualSuperarcs[InputIndex]]
+    viskores::Id& upVolume,          // upVolume[actualSuperarcs[InputIndex]]
+    viskores::Id& downVolume         // downVolume[actualSuperarcs[InputIndex]]
   ) const
   {
     // per actual superarc

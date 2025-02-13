@@ -1,0 +1,21 @@
+name: Checks
+on:
+  push:
+    branches:
+      - main
+      - release*
+  pull_request:
+    branches:
+      - main
+      - release*
+jobs:
+  format:
+    if: needs.git_checks.outputs.num_code_changes > 0
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/viskores/format:20250212
+    steps:
+      - uses: actions/checkout@v4
+      - name: CXX
+        working-directory: source
+        run: ./Utilities/Script/format.bash

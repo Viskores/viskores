@@ -110,12 +110,12 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id& vertexID,
-                                const InFieldPortalType& activeEdges,
-                                const InFieldPortalType& edgeFar,
-                                const InFieldPortalType& firstEdge,
-                                const InFieldPortalType& prunesTo,
-                                const InFieldPortalType& outdegree,
-                                const OutFieldPortalType& chainExtremum) const
+                                        const InFieldPortalType& activeEdges,
+                                        const InFieldPortalType& edgeFar,
+                                        const InFieldPortalType& firstEdge,
+                                        const InFieldPortalType& prunesTo,
+                                        const InFieldPortalType& outdegree,
+                                        const OutFieldPortalType& chainExtremum) const
   {
     viskores::Id newOutdegree = 0;
 

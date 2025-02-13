@@ -100,13 +100,13 @@ public:
 
   template <typename InFieldPortalType, typename InIdPortalType, typename InVectorPortalType>
   VISKORES_EXEC T operator()(const viskores::Id& i,
-                         const InIdPortalType& binId,
-                         const InIdPortalType& partId,
-                         const InFieldPortalType& xLoc,
-                         const InFieldPortalType& yLoc,
-                         const InFieldPortalType& zLoc,
-                         const InVectorPortalType& firstParticleId,
-                         const InVectorPortalType& lastParticleId) const
+                             const InIdPortalType& binId,
+                             const InIdPortalType& partId,
+                             const InFieldPortalType& xLoc,
+                             const InFieldPortalType& yLoc,
+                             const InFieldPortalType& zLoc,
+                             const InVectorPortalType& firstParticleId,
+                             const InVectorPortalType& lastParticleId) const
   {
     viskores::Id iId = partId.Get(i);
     viskores::Id ibin = binId.Get(i);

@@ -95,8 +95,8 @@ public:
 
     template <typename WholeArrayType>
     VISKORES_EXEC void operator()(const viskores::Id& index,
-                              const WholeArrayType& counts,
-                              viskores::Id& difference) const
+                                  const WholeArrayType& counts,
+                                  viskores::Id& difference) const
     {
       if (index == 0)
         difference = counts.Get(index);

@@ -120,7 +120,8 @@ public:
   ///
   /// Note: these are a select set of the presets you can get by providing a string identifier.
   ///
-  ColorTable(viskores::cont::ColorTable::Preset preset = viskores::cont::ColorTable::Preset::Default);
+  ColorTable(
+    viskores::cont::ColorTable::Preset preset = viskores::cont::ColorTable::Preset::Default);
 
   /// \brief Construct a color table from a preset color table
   ///
@@ -327,9 +328,9 @@ public:
   /// Note: rgb1, and rgb2 values need to be between 0 and 1.0 (inclusive).
   /// Return the index of the point x1 (0 based), or -1 on error.
   viskores::Int32 AddSegment(viskores::Float64 x1,
-                         const viskores::Vec3f_32& rgb1,
-                         viskores::Float64 x2,
-                         const viskores::Vec3f_32& rgb2);
+                             const viskores::Vec3f_32& rgb1,
+                             viskores::Float64 x2,
+                             const viskores::Vec3f_32& rgb2);
 
   /// Add a line segment to the color function. All points which lay between x1 and x2
   /// (inclusive) are removed from the function.
@@ -337,9 +338,9 @@ public:
   /// Note: hsv1, and hsv2 values need to be between 0 and 1.0 (inclusive)
   /// Return the index of the point x1 (0 based), or -1 on error
   viskores::Int32 AddSegmentHSV(viskores::Float64 x1,
-                            const viskores::Vec3f_32& hsv1,
-                            viskores::Float64 x2,
-                            const viskores::Vec3f_32& hsv2);
+                                const viskores::Vec3f_32& hsv1,
+                                viskores::Float64 x2,
+                                const viskores::Vec3f_32& hsv2);
 
   /// Get the location, and rgb information for an existing point in the opacity function.
   ///
@@ -387,9 +388,9 @@ public:
   /// Note: alpha, midpoint, and sharpness values need to be between 0 and 1.0 (inclusive)
   /// Return the index of the point (0 based), or -1 on error.
   viskores::Int32 AddPointAlpha(viskores::Float64 x,
-                            viskores::Float32 alpha,
-                            viskores::Float32 midpoint,
-                            viskores::Float32 sharpness);
+                                viskores::Float32 alpha,
+                                viskores::Float32 midpoint,
+                                viskores::Float32 sharpness);
 
   /// Add a line segment to the opacity function. All points which lay between x1 and x2
   /// (inclusive) are removed from the function. Uses a midpoint of
@@ -398,9 +399,9 @@ public:
   /// Note: alpha values need to be between 0 and 1.0 (inclusive)
   /// Return the index of the point x1 (0 based), or -1 on error
   viskores::Int32 AddSegmentAlpha(viskores::Float64 x1,
-                              viskores::Float32 alpha1,
-                              viskores::Float64 x2,
-                              viskores::Float32 alpha2)
+                                  viskores::Float32 alpha1,
+                                  viskores::Float64 x2,
+                                  viskores::Float32 alpha2)
   {
     viskores::Vec2f_32 mid_sharp(0.5f, 0.0f);
     return AddSegmentAlpha(x1, alpha1, x2, alpha2, mid_sharp, mid_sharp);
@@ -412,11 +413,11 @@ public:
   /// Note: alpha, midpoint, and sharpness values need to be between 0 and 1.0 (inclusive)
   /// Return the index of the point x1 (0 based), or -1 on error
   viskores::Int32 AddSegmentAlpha(viskores::Float64 x1,
-                              viskores::Float32 alpha1,
-                              viskores::Float64 x2,
-                              viskores::Float32 alpha2,
-                              const viskores::Vec2f_32& mid_sharp1,
-                              const viskores::Vec2f_32& mid_sharp2);
+                                  viskores::Float32 alpha1,
+                                  viskores::Float64 x2,
+                                  viskores::Float32 alpha2,
+                                  const viskores::Vec2f_32& mid_sharp1,
+                                  const viskores::Vec2f_32& mid_sharp2);
 
   /// Get the location, alpha, midpoint and sharpness information for an existing
   /// point in the opacity function.
@@ -569,7 +570,7 @@ public:
   ///
   /// This pointer is only valid as long as the ColorTable is unmodified
   viskores::exec::ColorTable PrepareForExecution(viskores::cont::DeviceAdapterId deviceId,
-                                             viskores::cont::Token& token) const;
+                                                 viskores::cont::Token& token) const;
 
   /// \brief Returns the modified count for changes of the color table
   ///

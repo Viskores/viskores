@@ -84,26 +84,29 @@ struct TypeTraits<const T> : TypeTraits<T>
 {
 };
 
-#define VISKORES_BASIC_REAL_TYPE(T)                                  \
-  template <>                                                    \
-  struct TypeTraits<T>                                           \
-  {                                                              \
-    using NumericTag = TypeTraitsRealTag;                        \
-    using DimensionalityTag = TypeTraitsScalarTag;               \
-    VISKORES_EXEC_CONT static T ZeroInitialization() { return T(); } \
+#define VISKORES_BASIC_REAL_TYPE(T)                  \
+  template <>                                        \
+  struct TypeTraits<T>                               \
+  {                                                  \
+    using NumericTag = TypeTraitsRealTag;            \
+    using DimensionalityTag = TypeTraitsScalarTag;   \
+    VISKORES_EXEC_CONT static T ZeroInitialization() \
+    {                                                \
+      return T();                                    \
+    }                                                \
   };
 
-#define VISKORES_BASIC_INTEGER_TYPE(T)                 \
-  template <>                                      \
-  struct TypeTraits<T>                             \
-  {                                                \
-    using NumericTag = TypeTraitsIntegerTag;       \
-    using DimensionalityTag = TypeTraitsScalarTag; \
-    VISKORES_EXEC_CONT static T ZeroInitialization()   \
-    {                                              \
-      using ReturnType = T;                        \
-      return ReturnType();                         \
-    }                                              \
+#define VISKORES_BASIC_INTEGER_TYPE(T)               \
+  template <>                                        \
+  struct TypeTraits<T>                               \
+  {                                                  \
+    using NumericTag = TypeTraitsIntegerTag;         \
+    using DimensionalityTag = TypeTraitsScalarTag;   \
+    VISKORES_EXEC_CONT static T ZeroInitialization() \
+    {                                                \
+      using ReturnType = T;                          \
+      return ReturnType();                           \
+    }                                                \
   };
 
 /// Traits for basic C++ types.
@@ -179,7 +182,7 @@ struct TypeTraits<viskores::Pair<T, U>>
   static viskores::Pair<T, U> ZeroInitialization()
   {
     return viskores::Pair<T, U>(TypeTraits<T>::ZeroInitialization(),
-                            TypeTraits<U>::ZeroInitialization());
+                                TypeTraits<U>::ZeroInitialization());
   }
 };
 

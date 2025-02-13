@@ -90,11 +90,11 @@ public:
             typename MeshSortIndexPortalType,
             typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& from,
-                            const viskores::Id& to,
-                            const InFieldPortalType& bractVertexSupersetPortal,
-                            const MeshSortIndexPortalType& meshSortIndexPortal,
-                            const OutFieldPortalType& upNeighbourPortal,
-                            const OutFieldPortalType& downNeighbourPortal) const
+                                const viskores::Id& to,
+                                const InFieldPortalType& bractVertexSupersetPortal,
+                                const MeshSortIndexPortalType& meshSortIndexPortal,
+                                const OutFieldPortalType& upNeighbourPortal,
+                                const OutFieldPortalType& downNeighbourPortal) const
   {
     // per vertex
     // ignore the last terminating edge

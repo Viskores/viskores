@@ -194,7 +194,8 @@ viskores::cont::DataSet ScalarRenderer::Result::ToDataSet()
       viskores::cont::Field(ScalarNames[i], viskores::cont::Field::Association::Cells, Scalars[i]));
   }
 
-  result.AddField(viskores::cont::Field("depth", viskores::cont::Field::Association::Cells, Depths));
+  result.AddField(
+    viskores::cont::Field("depth", viskores::cont::Field::Association::Cells, Depths));
 
   return result;
 }

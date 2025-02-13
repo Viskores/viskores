@@ -39,10 +39,16 @@ public:
   VISKORES_EXEC_CONT bool CheckFail() const { return !this->test(this->SUCCESS_BIT); }
 
   VISKORES_EXEC_CONT void SetSpatialBounds() { this->set(this->SPATIAL_BOUNDS_BIT); }
-  VISKORES_EXEC_CONT bool CheckSpatialBounds() const { return this->test(this->SPATIAL_BOUNDS_BIT); }
+  VISKORES_EXEC_CONT bool CheckSpatialBounds() const
+  {
+    return this->test(this->SPATIAL_BOUNDS_BIT);
+  }
 
   VISKORES_EXEC_CONT void SetTemporalBounds() { this->set(this->TEMPORAL_BOUNDS_BIT); }
-  VISKORES_EXEC_CONT bool CheckTemporalBounds() const { return this->test(this->TEMPORAL_BOUNDS_BIT); }
+  VISKORES_EXEC_CONT bool CheckTemporalBounds() const
+  {
+    return this->test(this->TEMPORAL_BOUNDS_BIT);
+  }
 
   VISKORES_EXEC_CONT void SetInGhostCell() { this->set(this->IN_GHOST_CELL_BIT); }
   VISKORES_EXEC_CONT bool CheckInGhostCell() const { return this->test(this->IN_GHOST_CELL_BIT); }

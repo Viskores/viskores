@@ -42,7 +42,10 @@ public:
   ///
   /// The values are floating point and in the range [0, 1].
   VISKORES_EXEC_CONT
-  Color(viskores::Float32 r_, viskores::Float32 g_, viskores::Float32 b_, viskores::Float32 a_ = 1.f)
+  Color(viskores::Float32 r_,
+        viskores::Float32 g_,
+        viskores::Float32 b_,
+        viskores::Float32 a_ = 1.f)
     : Components(r_, g_, b_, a_)
   {
   }
@@ -141,8 +144,8 @@ public:
   static VISKORES_RENDERING_EXPORT Color white, black;
   static VISKORES_RENDERING_EXPORT Color red, green, blue;
   static VISKORES_RENDERING_EXPORT Color cyan, magenta, yellow;
-  static VISKORES_RENDERING_EXPORT Color gray10, gray20, gray30, gray40, gray50, gray60, gray70, gray80,
-    gray90;
+  static VISKORES_RENDERING_EXPORT Color gray10, gray20, gray30, gray40, gray50, gray60, gray70,
+    gray80, gray90;
 };
 }
 } //namespace viskores::rendering

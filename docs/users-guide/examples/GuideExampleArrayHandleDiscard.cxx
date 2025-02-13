@@ -21,11 +21,12 @@ namespace
 ////
 template<typename InputArrayType, typename OutputArrayType1, typename OutputArrayType2>
 VISKORES_CONT void DoFoo(InputArrayType input,
-                     OutputArrayType1 output1,
-                     OutputArrayType2 output2);
+                         OutputArrayType1 output1,
+                         OutputArrayType2 output2);
 
 template<typename InputArrayType>
-VISKORES_CONT inline viskores::cont::ArrayHandle<viskores::FloatDefault> DoBar(InputArrayType input)
+VISKORES_CONT inline viskores::cont::ArrayHandle<viskores::FloatDefault> DoBar(
+  InputArrayType input)
 {
   VISKORES_IS_ARRAY_HANDLE(InputArrayType);
 
@@ -43,8 +44,8 @@ VISKORES_CONT inline viskores::cont::ArrayHandle<viskores::FloatDefault> DoBar(I
 
 template<typename InputArrayType, typename OutputArrayType1, typename OutputArrayType2>
 VISKORES_CONT inline void DoFoo(InputArrayType input,
-                            OutputArrayType1 output1,
-                            OutputArrayType2 output2)
+                                OutputArrayType1 output1,
+                                OutputArrayType2 output2)
 {
   viskores::cont::Algorithm::Copy(input, output1);
   viskores::cont::Algorithm::Copy(input, output2);

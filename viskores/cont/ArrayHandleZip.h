@@ -153,24 +153,24 @@ class Storage<viskores::Pair<T1, T2>, viskores::cont::StorageTagZip<ST1, ST2>>
     const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     const Info& info = buffers[0].GetMetaData<Info>();
-    return std::vector<viskores::cont::internal::Buffer>(buffers.begin() + 1,
-                                                     buffers.begin() + info.SecondBuffersOffset);
+    return std::vector<viskores::cont::internal::Buffer>(
+      buffers.begin() + 1, buffers.begin() + info.SecondBuffersOffset);
   }
   VISKORES_CONT static std::vector<viskores::cont::internal::Buffer> SecondArrayBuffers(
     const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     const Info& info = buffers[0].GetMetaData<Info>();
     return std::vector<viskores::cont::internal::Buffer>(buffers.begin() + info.SecondBuffersOffset,
-                                                     buffers.end());
+                                                         buffers.end());
   }
 
 public:
   using ReadPortalType =
     viskores::exec::internal::ArrayPortalZip<typename FirstStorage::ReadPortalType,
-                                         typename SecondStorage::ReadPortalType>;
+                                             typename SecondStorage::ReadPortalType>;
   using WritePortalType =
     viskores::exec::internal::ArrayPortalZip<typename FirstStorage::WritePortalType,
-                                         typename SecondStorage::WritePortalType>;
+                                             typename SecondStorage::WritePortalType>;
 
   static std::vector<viskores::cont::internal::Buffer> CreateBuffers(
     const FirstArrayType& firstArray = FirstArrayType{},
@@ -187,10 +187,11 @@ public:
     return 1;
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     FirstStorage::ResizeBuffers(numValues, FirstArrayBuffers(buffers), preserve, token);
     SecondStorage::ResizeBuffers(numValues, SecondArrayBuffers(buffers), preserve, token);
@@ -205,10 +206,10 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             const ValueType& fillValue,
-                             viskores::Id startIndex,
-                             viskores::Id endIndex,
-                             viskores::cont::Token& token)
+                                 const ValueType& fillValue,
+                                 viskores::Id startIndex,
+                                 viskores::Id endIndex,
+                                 viskores::cont::Token& token)
   {
     FirstStorage::Fill(FirstArrayBuffers(buffers), fillValue.first, startIndex, endIndex, token);
     SecondStorage::Fill(SecondArrayBuffers(buffers), fillValue.second, startIndex, endIndex, token);
@@ -238,7 +239,8 @@ public:
   {
     return FirstArrayType(FirstArrayBuffers(buffers));
   }
-  static SecondArrayType GetSecondArray(const std::vector<viskores::cont::internal::Buffer>& buffers)
+  static SecondArrayType GetSecondArray(
+    const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return SecondArrayType(SecondArrayBuffers(buffers));
   }
@@ -319,7 +321,7 @@ template <typename T1, typename T2, typename ST1, typename ST2>
 struct SerializableTypeString<
   viskores::cont::ArrayHandle<viskores::Pair<T1, T2>, viskores::cont::StorageTagZip<ST1, ST2>>>
   : SerializableTypeString<viskores::cont::ArrayHandleZip<viskores::cont::ArrayHandle<T1, ST1>,
-                                                      viskores::cont::ArrayHandle<T2, ST2>>>
+                                                          viskores::cont::ArrayHandle<T2, ST2>>>
 {
 };
 }
@@ -359,7 +361,7 @@ template <typename T1, typename T2, typename ST1, typename ST2>
 struct Serialization<
   viskores::cont::ArrayHandle<viskores::Pair<T1, T2>, viskores::cont::StorageTagZip<ST1, ST2>>>
   : Serialization<viskores::cont::ArrayHandleZip<viskores::cont::ArrayHandle<T1, ST1>,
-                                             viskores::cont::ArrayHandle<T2, ST2>>>
+                                                 viskores::cont::ArrayHandle<T2, ST2>>>
 {
 };
 

@@ -126,18 +126,19 @@ public:
   using IsValidWordTypeAtomic = BitFieldTraits::IsValidWordTypeAtomic<WordType>;
 
   VISKORES_STATIC_ASSERT_MSG(IsValidWordType<WordTypeDefault>::value,
-                         "Internal error: Default word type is invalid.");
+                             "Internal error: Default word type is invalid.");
   VISKORES_STATIC_ASSERT_MSG(IsValidWordType<WordTypePreferred>::value,
-                         "Device-specific fast word type is invalid.");
+                             "Device-specific fast word type is invalid.");
 
   VISKORES_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordTypeDefault>::value,
-                         "Internal error: Default word type is invalid.");
+                             "Internal error: Default word type is invalid.");
   VISKORES_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordTypePreferred>::value,
-                         "Device-specific fast word type is invalid for atomic operations.");
+                             "Device-specific fast word type is invalid for atomic operations.");
 
 protected:
   friend class viskores::cont::BitField;
-  friend class viskores::cont::internal::Storage<bool, viskores::cont::internal::StorageTagBitField>;
+  friend class viskores::cont::internal::Storage<bool,
+                                                 viskores::cont::internal::StorageTagBitField>;
 
   /// Construct a BitPortal from a raw array.
   VISKORES_CONT BitPortalBase(BufferType rawArray, viskores::Id numberOfBits)
@@ -194,7 +195,8 @@ public:
   VISKORES_EXEC_CONT static BitCoordinate GetBitCoordinateFromIndex(viskores::Id bitIdx) noexcept
   {
     VISKORES_STATIC_ASSERT(IsValidWordType<WordType>::value);
-    static constexpr viskores::Id BitsPerWord = static_cast<viskores::Id>(sizeof(WordType) * CHAR_BIT);
+    static constexpr viskores::Id BitsPerWord =
+      static_cast<viskores::Id>(sizeof(WordType) * CHAR_BIT);
     return { static_cast<viskores::Id>(bitIdx / BitsPerWord),
              static_cast<viskores::Int32>(bitIdx % BitsPerWord) };
   }
@@ -281,8 +283,8 @@ public:
   {
     VISKORES_STATIC_ASSERT_MSG(!IsConst, "'Set' method called on const BitField portal.");
     VISKORES_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordType>::value,
-                           "Requested WordType does not support atomic"
-                           " operations on target execution platform.");
+                               "Requested WordType does not support atomic"
+                               " operations on target execution platform.");
     viskores::AtomicStore(this->GetWordAddress<WordType>(wordIdx), word);
   }
 
@@ -300,8 +302,8 @@ public:
   VISKORES_EXEC_CONT WordType GetWordAtomic(viskores::Id wordIdx) const
   {
     VISKORES_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordType>::value,
-                           "Requested WordType does not support atomic"
-                           " operations on target execution platform.");
+                               "Requested WordType does not support atomic"
+                               " operations on target execution platform.");
     return viskores::AtomicLoad(this->GetWordAddress<WordType>(wordIdx));
   }
 
@@ -325,8 +327,8 @@ public:
   {
     VISKORES_STATIC_ASSERT_MSG(!IsConst, "Attempt to modify const BitField portal.");
     VISKORES_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordType>::value,
-                           "Requested WordType does not support atomic"
-                           " operations on target execution platform.");
+                               "Requested WordType does not support atomic"
+                               " operations on target execution platform.");
     WordType* addr = this->GetWordAddress<WordType>(wordIdx);
     return viskores::AtomicNot(addr);
   }
@@ -355,8 +357,8 @@ public:
   {
     VISKORES_STATIC_ASSERT_MSG(!IsConst, "Attempt to modify const BitField portal.");
     VISKORES_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordType>::value,
-                           "Requested WordType does not support atomic"
-                           " operations on target execution platform.");
+                               "Requested WordType does not support atomic"
+                               " operations on target execution platform.");
     WordType* addr = this->GetWordAddress<WordType>(wordIdx);
     return viskores::AtomicAnd(addr, wordmask);
   }
@@ -385,8 +387,8 @@ public:
   {
     VISKORES_STATIC_ASSERT_MSG(!IsConst, "Attempt to modify const BitField portal.");
     VISKORES_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordType>::value,
-                           "Requested WordType does not support atomic"
-                           " operations on target execution platform.");
+                               "Requested WordType does not support atomic"
+                               " operations on target execution platform.");
     WordType* addr = this->GetWordAddress<WordType>(wordIdx);
     return viskores::AtomicOr(addr, wordmask);
   }
@@ -415,8 +417,8 @@ public:
   {
     VISKORES_STATIC_ASSERT_MSG(!IsConst, "Attempt to modify const BitField portal.");
     VISKORES_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordType>::value,
-                           "Requested WordType does not support atomic"
-                           " operations on target execution platform.");
+                               "Requested WordType does not support atomic"
+                               " operations on target execution platform.");
     WordType* addr = this->GetWordAddress<WordType>(wordIdx);
     return viskores::AtomicXor(addr, wordmask);
   }
@@ -465,13 +467,13 @@ public:
   /// operation.
   template <typename WordType = WordTypePreferred>
   VISKORES_EXEC_CONT bool CompareExchangeWordAtomic(viskores::Id wordIdx,
-                                                WordType* oldWord,
-                                                WordType newWord) const
+                                                    WordType* oldWord,
+                                                    WordType newWord) const
   {
     VISKORES_STATIC_ASSERT_MSG(!IsConst, "Attempt to modify const BitField portal.");
     VISKORES_STATIC_ASSERT_MSG(IsValidWordTypeAtomic<WordType>::value,
-                           "Requested WordType does not support atomic"
-                           " operations on target execution platform.");
+                               "Requested WordType does not support atomic"
+                               " operations on target execution platform.");
     WordType* addr = this->GetWordAddress<WordType>(wordIdx);
     return viskores::AtomicCompareExchange(addr, oldWord, newWord);
   }
@@ -559,12 +561,12 @@ public:
 
   /// Allocate the requested number of bits.
   VISKORES_CONT void Allocate(viskores::Id numberOfBits,
-                          viskores::CopyFlag preserve,
-                          viskores::cont::Token& token) const;
+                              viskores::CopyFlag preserve,
+                              viskores::cont::Token& token) const;
 
   /// Allocate the requested number of bits.
   VISKORES_CONT void Allocate(viskores::Id numberOfBits,
-                          viskores::CopyFlag preserve = viskores::CopyFlag::Off) const
+                              viskores::CopyFlag preserve = viskores::CopyFlag::Off) const
   {
     viskores::cont::Token token;
     this->Allocate(numberOfBits, preserve, token);
@@ -573,8 +575,8 @@ public:
   /// Allocate the requested number of bits and fill with the requested bit or word.
   template <typename ValueType>
   VISKORES_CONT void AllocateAndFill(viskores::Id numberOfBits,
-                                 ValueType value,
-                                 viskores::cont::Token& token) const
+                                     ValueType value,
+                                     viskores::cont::Token& token) const
   {
     this->Allocate(numberOfBits, viskores::CopyFlag::Off, token);
     this->Fill(value, token);
@@ -588,8 +590,8 @@ public:
 
 private:
   VISKORES_CONT void FillImpl(const void* word,
-                          viskores::BufferSizeType wordSize,
-                          viskores::cont::Token& token) const;
+                              viskores::BufferSizeType wordSize,
+                              viskores::cont::Token& token) const;
 
 public:
   /// Set subsequent words to the given word of bits.
@@ -655,7 +657,7 @@ public:
   /// any data. Returns a portal that can be used in code running in the
   /// execution environment.
   VISKORES_CONT ReadPortalType PrepareForInput(viskores::cont::DeviceAdapterId device,
-                                           viskores::cont::Token& token) const;
+                                               viskores::cont::Token& token) const;
 
   /// Prepares (allocates) this BitField to be used as an output from an
   /// operation in the execution environment. The internal state of this class
@@ -664,8 +666,8 @@ public:
   /// object are called). Returns a portal that can be used in code running in
   /// the execution environment.
   VISKORES_CONT WritePortalType PrepareForOutput(viskores::Id numBits,
-                                             viskores::cont::DeviceAdapterId device,
-                                             viskores::cont::Token& token) const;
+                                                 viskores::cont::DeviceAdapterId device,
+                                                 viskores::cont::Token& token) const;
 
   /// Prepares this BitField to be used in an in-place operation (both as input
   /// and output) in the execution environment. If necessary, copies data to
@@ -673,7 +675,7 @@ public:
   /// not yet contain any data. Returns a portal that can be used in code
   /// running in the execution environment.
   VISKORES_CONT WritePortalType PrepareForInPlace(viskores::cont::DeviceAdapterId device,
-                                              viskores::cont::Token& token) const;
+                                                  viskores::cont::Token& token) const;
 
 private:
   mutable viskores::cont::internal::Buffer Buffer;

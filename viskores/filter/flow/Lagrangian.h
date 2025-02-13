@@ -75,10 +75,14 @@ public:
     this->BasisParticles = basisParticles;
   }
   VISKORES_CONT
-  viskores::cont::ArrayHandle<viskores::Particle> GetBasisParticles() const { return this->BasisParticles; }
+  viskores::cont::ArrayHandle<viskores::Particle> GetBasisParticles() const
+  {
+    return this->BasisParticles;
+  }
 
   VISKORES_CONT
-  void SetBasisParticlesOriginal(const viskores::cont::ArrayHandle<viskores::Particle>& basisParticles)
+  void SetBasisParticlesOriginal(
+    const viskores::cont::ArrayHandle<viskores::Particle>& basisParticles)
   {
     this->BasisParticlesOriginal = basisParticles;
   }

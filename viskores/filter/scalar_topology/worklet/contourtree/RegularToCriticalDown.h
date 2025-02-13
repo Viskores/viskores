@@ -84,8 +84,8 @@ public:
 
   template <typename InFieldPortalType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id& vertexID,
-                                const InFieldPortalType& mergeArcs,
-                                const InFieldPortalType& regularToCritical) const
+                                        const InFieldPortalType& mergeArcs,
+                                        const InFieldPortalType& regularToCritical) const
   {
     viskores::Id sortVector;
 

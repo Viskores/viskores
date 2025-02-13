@@ -52,7 +52,8 @@ struct TestArrayPortalSOA
     SOAPortalType soaPortalIn(ARRAY_SIZE);
 
     std::array<viskores::cont::ArrayHandle<ComponentType>, NUM_COMPONENTS> implArrays;
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         ++componentIndex)
     {
       viskores::cont::ArrayHandle<ComponentType> array;
       array.Allocate(ARRAY_SIZE);
@@ -73,7 +74,8 @@ struct TestArrayPortalSOA
     std::cout << "Test data set in SOA portal gets set in component portals." << std::endl;
     {
       SOAPortalType soaPortalOut(ARRAY_SIZE);
-      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+           ++componentIndex)
       {
         viskores::cont::ArrayHandle<ComponentType> array;
         array.Allocate(ARRAY_SIZE);
@@ -86,7 +88,8 @@ struct TestArrayPortalSOA
       SetPortal(soaPortalOut);
     }
 
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         ++componentIndex)
     {
       auto portal = implArrays[static_cast<size_t>(componentIndex)].ReadPortal();
       for (viskores::Id valueIndex = 0; valueIndex < ARRAY_SIZE; ++valueIndex)
@@ -109,7 +112,8 @@ struct TestSOAAsInput
 
     {
       viskores::cont::ArrayHandleSOA<ValueType> soaArray;
-      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+           ++componentIndex)
       {
         viskores::cont::ArrayHandle<ComponentType> componentArray;
         componentArray.Allocate(ARRAY_SIZE);
@@ -123,7 +127,7 @@ struct TestSOAAsInput
       }
 
       VISKORES_TEST_ASSERT(soaArray.GetNumberOfComponentsFlat() ==
-                       viskores::VecFlat<ValueType>::NUM_COMPONENTS);
+                           viskores::VecFlat<ValueType>::NUM_COMPONENTS);
       VISKORES_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
       VISKORES_TEST_ASSERT(soaArray.ReadPortal().GetNumberOfValues() == ARRAY_SIZE);
       CheckPortal(soaArray.ReadPortal());
@@ -199,7 +203,8 @@ struct TestSOAAsOutput
     viskores::cont::Invoker{}(PassThrough{}, basicArray, soaArray);
 
     VISKORES_TEST_ASSERT(soaArray.GetNumberOfValues() == ARRAY_SIZE);
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         ++componentIndex)
     {
       viskores::cont::ArrayHandle<ComponentType> componentArray = soaArray.GetArray(componentIndex);
       auto componentPortal = componentArray.ReadPortal();

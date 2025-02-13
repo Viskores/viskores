@@ -201,7 +201,8 @@ public:
   template <typename ArrayType>
   typename ArrayType::ValueType DeviceSum(const ArrayType& array)
   {
-    return viskores::cont::Algorithm::Reduce(array, static_cast<typename ArrayType::ValueType>(0.0));
+    return viskores::cont::Algorithm::Reduce(array,
+                                             static_cast<typename ArrayType::ValueType>(0.0));
   }
 
   // Helper functors for finding the max and min of an array
@@ -338,10 +339,10 @@ protected:
     }
     else
     {
-      level =
-        static_cast<viskores::Id>(viskores::Floor(1.0 +
-                                          viskores::Log2(static_cast<viskores::Float64>(sigInLen) /
-                                                     static_cast<viskores::Float64>(filterLength))));
+      level = static_cast<viskores::Id>(
+        viskores::Floor(1.0 +
+                        viskores::Log2(static_cast<viskores::Float64>(sigInLen) /
+                                       static_cast<viskores::Float64>(filterLength))));
     }
   }
 

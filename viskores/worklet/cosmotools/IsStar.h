@@ -78,9 +78,9 @@ public:
 
   template <typename InPortalType, typename InPortalType2>
   VISKORES_EXEC void operator()(const viskores::Id& i,
-                            const InPortalType& haloIdCurrent,
-                            const InPortalType& haloIdLast,
-                            InPortalType2& rootedStar) const
+                                const InPortalType& haloIdCurrent,
+                                const InPortalType& haloIdLast,
+                                InPortalType2& rootedStar) const
   {
     viskores::Id dValue = haloIdLast.Get(i);
     viskores::Id ddValue = haloIdCurrent.Get(dValue);

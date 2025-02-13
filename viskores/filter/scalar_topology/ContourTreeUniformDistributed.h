@@ -87,7 +87,8 @@ namespace scalar_topology
 /// tree are merged progressively using a binary-reduction scheme to compute the
 /// final contour tree. I.e., in the multi-block context, the final tree is
 /// constructed on rank 0.
-class VISKORES_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeUniformDistributed : public viskores::filter::Filter
+class VISKORES_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeUniformDistributed
+  : public viskores::filter::Filter
 {
 public:
   VISKORES_CONT bool CanThread() const override
@@ -96,8 +97,9 @@ public:
     return false;
   }
 
-  ContourTreeUniformDistributed(viskores::cont::LogLevel timingsLogLevel = viskores::cont::LogLevel::Perf,
-                                viskores::cont::LogLevel treeLogLevel = viskores::cont::LogLevel::Info);
+  ContourTreeUniformDistributed(
+    viskores::cont::LogLevel timingsLogLevel = viskores::cont::LogLevel::Perf,
+    viskores::cont::LogLevel treeLogLevel = viskores::cont::LogLevel::Info);
 
   VISKORES_CONT void SetUseBoundaryExtremaOnly(bool useBoundaryExtremaOnly)
   {
@@ -123,8 +125,9 @@ public:
     this->PresimplifyThreshold = presimplifyThreshold;
   }
 
-  VISKORES_CONT void SetBlockIndices(viskores::Id3 blocksPerDim,
-                                 const viskores::cont::ArrayHandle<viskores::Id3>& localBlockIndices)
+  VISKORES_CONT void SetBlockIndices(
+    viskores::Id3 blocksPerDim,
+    const viskores::cont::ArrayHandle<viskores::Id3>& localBlockIndices)
   {
     this->BlocksPerDimension = blocksPerDim;
     viskores::cont::ArrayCopy(localBlockIndices, this->LocalBlockIndices);
@@ -139,17 +142,18 @@ public:
   VISKORES_CONT bool GetSaveDotFiles() { return this->SaveDotFiles; }
 
   template <typename T, typename StorageType>
-  VISKORES_CONT void ComputeLocalTree(const viskores::Id blockIndex,
-                                  const viskores::cont::DataSet& input,
-                                  const viskores::cont::ArrayHandle<T, StorageType>& fieldArray);
+  VISKORES_CONT void ComputeLocalTree(
+    const viskores::Id blockIndex,
+    const viskores::cont::DataSet& input,
+    const viskores::cont::ArrayHandle<T, StorageType>& fieldArray);
 
   /// Implement per block contour tree computation after the MeshType has been discovered
   template <typename T, typename StorageType, typename MeshType, typename MeshBoundaryExecType>
   VISKORES_CONT void ComputeLocalTreeImpl(const viskores::Id blockIndex,
-                                      const viskores::cont::DataSet& input,
-                                      const viskores::cont::ArrayHandle<T, StorageType>& field,
-                                      MeshType& mesh,
-                                      MeshBoundaryExecType& meshBoundaryExecObject);
+                                          const viskores::cont::DataSet& input,
+                                          const viskores::cont::ArrayHandle<T, StorageType>& field,
+                                          MeshType& mesh,
+                                          MeshBoundaryExecType& meshBoundaryExecObject);
 
 private:
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
@@ -163,7 +167,7 @@ private:
   VISKORES_CONT void PreExecute(const viskores::cont::PartitionedDataSet& input);
 
   VISKORES_CONT void PostExecute(const viskores::cont::PartitionedDataSet& input,
-                             viskores::cont::PartitionedDataSet& output);
+                                 viskores::cont::PartitionedDataSet& output);
 
 
   template <typename FieldType>
@@ -185,7 +189,7 @@ private:
   /// computed on the block to compute the final contour tree.
   template <typename T>
   VISKORES_CONT void DoPostExecute(const viskores::cont::PartitionedDataSet& input,
-                               viskores::cont::PartitionedDataSet& output);
+                                   viskores::cont::PartitionedDataSet& output);
   ///@}
 
   /// Use only boundary critical points in the parallel merge to reduce communication.

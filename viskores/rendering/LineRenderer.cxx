@@ -52,9 +52,9 @@ void LineRenderer::RenderLine(const viskores::Vec3f_64& point0,
 viskores::Vec3f_32 LineRenderer::TransformPoint(const viskores::Vec3f_64& point) const
 {
   viskores::Vec4f_32 temp(static_cast<viskores::Float32>(point[0]),
-                      static_cast<viskores::Float32>(point[1]),
-                      static_cast<viskores::Float32>(point[2]),
-                      1.0f);
+                          static_cast<viskores::Float32>(point[1]),
+                          static_cast<viskores::Float32>(point[2]),
+                          1.0f);
   temp = viskores::MatrixMultiply(Transform, temp);
   viskores::Vec3f_32 p;
   for (viskores::IdComponent i = 0; i < 3; ++i)

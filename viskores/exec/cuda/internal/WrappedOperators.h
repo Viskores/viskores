@@ -104,7 +104,8 @@ struct WrappedBinaryOperator
   VISKORES_EXEC T operator()(const T& x, const T& y) const { return m_f(x, y); }
 
   template <typename U>
-  VISKORES_EXEC T operator()(const T& x, const viskores::internal::ArrayPortalValueReference<U>& y) const
+  VISKORES_EXEC T operator()(const T& x,
+                             const viskores::internal::ArrayPortalValueReference<U>& y) const
   {
     // to support proper implicit conversion, and avoid overload
     // ambiguities.
@@ -112,14 +113,15 @@ struct WrappedBinaryOperator
   }
 
   template <typename U>
-  VISKORES_EXEC T operator()(const viskores::internal::ArrayPortalValueReference<U>& x, const T& y) const
+  VISKORES_EXEC T operator()(const viskores::internal::ArrayPortalValueReference<U>& x,
+                             const T& y) const
   {
     return m_f(x.Get(), y);
   }
 
   template <typename U, typename V>
   VISKORES_EXEC T operator()(const viskores::internal::ArrayPortalValueReference<U>& x,
-                         const viskores::internal::ArrayPortalValueReference<V>& y) const
+                             const viskores::internal::ArrayPortalValueReference<V>& y) const
   {
     return m_f(x.Get(), y.Get());
   }
@@ -158,20 +160,22 @@ struct WrappedBinaryPredicate
   VISKORES_EXEC bool operator()(const T& x, const T& y) const { return m_f(x, y); }
 
   template <typename U>
-  VISKORES_EXEC bool operator()(const T& x, const viskores::internal::ArrayPortalValueReference<U>& y) const
+  VISKORES_EXEC bool operator()(const T& x,
+                                const viskores::internal::ArrayPortalValueReference<U>& y) const
   {
     return m_f(x, y.Get());
   }
 
   template <typename U>
-  VISKORES_EXEC bool operator()(const viskores::internal::ArrayPortalValueReference<U>& x, const T& y) const
+  VISKORES_EXEC bool operator()(const viskores::internal::ArrayPortalValueReference<U>& x,
+                                const T& y) const
   {
     return m_f(x.Get(), y);
   }
 
   template <typename U, typename V>
   VISKORES_EXEC bool operator()(const viskores::internal::ArrayPortalValueReference<U>& x,
-                            const viskores::internal::ArrayPortalValueReference<V>& y) const
+                                const viskores::internal::ArrayPortalValueReference<V>& y) const
   {
     return m_f(x.Get(), y.Get());
   }

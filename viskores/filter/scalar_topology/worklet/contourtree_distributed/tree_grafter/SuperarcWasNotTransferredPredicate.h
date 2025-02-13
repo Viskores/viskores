@@ -80,7 +80,8 @@ public:
   {
   }
 
-  VISKORES_EXEC bool operator()(const viskores::worklet::contourtree_augmented::EdgePair& superarc) const
+  VISKORES_EXEC bool operator()(
+    const viskores::worklet::contourtree_augmented::EdgePair& superarc) const
   { // operator ()
     // if either end is marked as transferred, the arc must be gone already
     return !((!viskores::worklet::contourtree_augmented::NoSuchElement(

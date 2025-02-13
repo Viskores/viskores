@@ -50,7 +50,8 @@ void TestNGP()
   filter.SetActiveField("mass");
   VISKORES_TEST_ASSERT(test_equal(filter.GetBounds(), bounds));
   VISKORES_TEST_ASSERT(test_equal(filter.GetOrigin(), viskores::make_Vec(0, 0, 0)));
-  VISKORES_TEST_ASSERT(test_equal(filter.GetSpacing(), viskores::make_Vec(0.33333, 0.33333, 0.33333)));
+  VISKORES_TEST_ASSERT(
+    test_equal(filter.GetSpacing(), viskores::make_Vec(0.33333, 0.33333, 0.33333)));
   auto density = filter.Execute(dataSet);
 
   viskores::cont::ArrayHandle<viskores::FloatDefault> field;
@@ -93,8 +94,8 @@ void TestCIC()
     positions, viskores::CellShapeTagVertex{}, 1, connectivity);
 
   viskores::cont::ArrayHandle<viskores::Float32> mass;
-  viskores::cont::ArrayCopyDevice(viskores::cont::ArrayHandleRandomUniformReal<viskores::Float32>(N, 0xd1ce),
-                              mass);
+  viskores::cont::ArrayCopyDevice(
+    viskores::cont::ArrayHandleRandomUniformReal<viskores::Float32>(N, 0xd1ce), mass);
   dataSet.AddCellField("mass", mass);
 
   viskores::Id3 cellDims = { 3, 3, 3 };

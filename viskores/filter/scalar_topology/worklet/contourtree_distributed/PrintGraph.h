@@ -439,12 +439,12 @@ std::string ContourTreeDotGraphPrint(
       outStream << "r " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
                 << regularID << "\\n";
     if (showMask & viskores::worklet::contourtree_distributed::SHOW_MESH_SORT_ID)
-      outStream << "s " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH) << sortID
-                << "\\n";
+      outStream << "s " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
+                << sortID << "\\n";
     // and the node ID
     if (showMask & viskores::worklet::contourtree_distributed::SHOW_NODE_ID)
-      outStream << "n " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH) << node
-                << "\\n";
+      outStream << "n " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
+                << node << "\\n";
     // print the superparent
     if (showMask & viskores::worklet::contourtree_distributed::SHOW_SUPERPARENT)
       outStream << "sp" << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
@@ -535,8 +535,8 @@ std::string ContourTreeDotGraphPrint(
       // set the color based on the from vertex
       // retrieve the superparent
       viskores::Id superparent = superparentsPortal.Get(node);
-      viskores::Id iteration =
-        viskores::worklet::contourtree_augmented::MaskedIndex(whenTransferredPortal.Get(superparent));
+      viskores::Id iteration = viskores::worklet::contourtree_augmented::MaskedIndex(
+        whenTransferredPortal.Get(superparent));
       outStream << ",color="
                 << viskores::worklet::contourtree_augmented::NODE_COLORS
                      [iteration % viskores::worklet::contourtree_augmented::N_NODE_COLORS];
@@ -640,8 +640,9 @@ template <typename FieldType>
 std::string ContourTreeMeshDotGraphPrint(
   const std::string& label, // the label to use as title for the graph
   viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType>& mesh, // the mesh itself
-  const viskores::Id showMask = SHOW_CONTOUR_TREE_MESH_ALL) // mask with flags for what elements to show
-{                                                       // ContourTreeMeshDotGraphPrint()
+  const viskores::Id showMask =
+    SHOW_CONTOUR_TREE_MESH_ALL) // mask with flags for what elements to show
+{                               // ContourTreeMeshDotGraphPrint()
   // initialise a string stream to capture the output
   std::stringstream outStream;
 
@@ -670,8 +671,8 @@ std::string ContourTreeMeshDotGraphPrint(
     outStream << ",fillcolor=white";
     outStream << ",label=\"";
     if (showMask & viskores::worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_VERTEX_ID)
-      outStream << "r " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH) << vertex
-                << "\\n";
+      outStream << "r " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
+                << vertex << "\\n";
     if (showMask & viskores::worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_GLOBAL_ID)
       outStream << "g " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
                 << globalID << "\\n";
@@ -724,7 +725,8 @@ std::string BoundaryTreeDotGraphPrint(
   MeshType& mesh,           // the underlying mesh for the contour tree
   MeshBoundaryExecObjType&
     meshBoundaryExecutionObject, // the boundary description need to determin if a vertex is on the boundary
-  viskores::worklet::contourtree_distributed::BoundaryTree& boundaryTree, // the boundary tree itself
+  viskores::worklet::contourtree_distributed::BoundaryTree&
+    boundaryTree, // the boundary tree itself
   const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
     localToGlobalIdRelabeler, // relabler needed to compute global ids
   const viskores::cont::ArrayHandle<T, StorageType>& field,
@@ -797,8 +799,8 @@ std::string BoundaryTreeDotGraphPrint(
     outStream << ",fillcolor=" << (liesOnBoundaryPortal.Get(regularID) ? "grey" : "white");
     outStream << ",label=\"";
     if (showMask & viskores::worklet::contourtree_distributed::SHOW_BOUNDARY_TREE_VERTEX_ID)
-      outStream << "b " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH) << node
-                << "\\n";
+      outStream << "b " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
+                << node << "\\n";
     if (showMask & viskores::worklet::contourtree_distributed::SHOW_BOUNDARY_TREE_GLOBAL_ID)
       outStream << "g " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
                 << globalID << "\\n";
@@ -809,8 +811,8 @@ std::string BoundaryTreeDotGraphPrint(
       outStream << "r " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
                 << regularID << "\\n";
     if (showMask & viskores::worklet::contourtree_distributed::SHOW_BOUNDARY_TREE_MESH_SORT_ID)
-      outStream << "s " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH) << sortID
-                << "\\n";
+      outStream << "s " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
+                << sortID << "\\n";
     outStream << "\"];\n";
   } // per vertex
   // always show the null node
@@ -915,7 +917,8 @@ std::string InteriorForestDotGraphPrint(
   auto dataValuesPortal = field.ReadPortal();
 
   // loop through all of the supernodes in the contour tree
-  for (viskores::Id supernode = 0; supernode < contourTree.Supernodes.GetNumberOfValues(); supernode++)
+  for (viskores::Id supernode = 0; supernode < contourTree.Supernodes.GetNumberOfValues();
+       supernode++)
   { // per supernode
     // retrieve the various IDs for the supernode
     viskores::Id sortID = supernodesPortal.Get(supernode);
@@ -951,13 +954,14 @@ std::string InteriorForestDotGraphPrint(
       outStream << "r " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
                 << regularID << "\\n";
     if (showMask & viskores::worklet::contourtree_distributed::SHOW_INTERIOR_FOREST_MESH_SORT_ID)
-      outStream << "s " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH) << sortID
-                << "\\n";
+      outStream << "s " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
+                << sortID << "\\n";
     outStream << "\"];\n";
   } // per supernode
 
   // now loop through the superarcs in the contour tree
-  for (viskores::Id supernode = 0; supernode < contourTree.Supernodes.GetNumberOfValues(); supernode++)
+  for (viskores::Id supernode = 0; supernode < contourTree.Supernodes.GetNumberOfValues();
+       supernode++)
   { // per supernode / superarc
     // retrieve the various IDs for the supernode
     viskores::Id sortID = supernodesPortal.Get(supernode);
@@ -1068,7 +1072,8 @@ std::string HierarchicalContourTreeDotGraphPrint(
   outStream << "\t// Nodes" << std::endl;
 
   // loop through all of the nodes in the regular list
-  for (viskores::Id node = 0; node < hierarchicalTree.RegularNodeGlobalIds.GetNumberOfValues(); node++)
+  for (viskores::Id node = 0; node < hierarchicalTree.RegularNodeGlobalIds.GetNumberOfValues();
+       node++)
   { // per node
     // Since the superparent for an attachment point is set to another supernode, reset the calculation here
     //viskores::Id whichRound = maskedIndex(hierarchicalTree.WhichRound[superID]);
@@ -1171,8 +1176,8 @@ std::string HierarchicalContourTreeDotGraphPrint(
       outStream << "r " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
                 << regularID << "\\n";
     if (showMask & viskores::worklet::contourtree_distributed::SHOW_MESH_SORT_ID)
-      outStream << "s " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH) << sortID
-                << "\\n";
+      outStream << "s " << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
+                << sortID << "\\n";
     // print the superparent
     if (showMask & viskores::worklet::contourtree_distributed::SHOW_SUPERPARENT)
       outStream << "sp" << std::setw(viskores::worklet::contourtree_distributed::INDEX_WIDTH)
@@ -1229,7 +1234,8 @@ std::string HierarchicalContourTreeDotGraphPrint(
   // now show superarc nodes
   outStream << "\t// Superarc nodes\n";
   // now repeat to create nodes for the middle of each superarc (to represent the superarcs themselves)
-  for (viskores::Id superarc = 0; superarc < hierarchicalTree.Superarcs.GetNumberOfValues(); superarc++)
+  for (viskores::Id superarc = 0; superarc < hierarchicalTree.Superarcs.GetNumberOfValues();
+       superarc++)
   { // per superarc
     // retrieve ID of target superarc
     viskores::Id superarcFrom = superarc;

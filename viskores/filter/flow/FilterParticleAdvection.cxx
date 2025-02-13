@@ -23,7 +23,8 @@ namespace filter
 namespace flow
 {
 
-VISKORES_CONT viskores::cont::DataSet FilterParticleAdvection::DoExecute(const viskores::cont::DataSet& inData)
+VISKORES_CONT viskores::cont::DataSet FilterParticleAdvection::DoExecute(
+  const viskores::cont::DataSet& inData)
 {
   auto out = this->DoExecutePartitions(inData);
   if (out.GetNumberOfPartitions() != 1)

@@ -40,20 +40,25 @@ constexpr viskores::Id ARRAY_SIZE = 10;
 ////
 VISKORES_CONT
 viskores::cont::UnknownArrayHandle LoadUnknownArray(const void* buffer,
-                                                viskores::Id length,
-                                                std::string type)
+                                                    viskores::Id length,
+                                                    std::string type)
 {
   viskores::cont::UnknownArrayHandle handle;
   if (type == "float")
   {
-    viskores::cont::ArrayHandle<viskores::Float32> concreteArray = viskores::cont::make_ArrayHandle(
-      reinterpret_cast<const viskores::Float32*>(buffer), length, viskores::CopyFlag::On);
+    viskores::cont::ArrayHandle<viskores::Float32> concreteArray =
+      viskores::cont::make_ArrayHandle(
+        reinterpret_cast<const viskores::Float32*>(buffer),
+        length,
+        viskores::CopyFlag::On);
     handle = concreteArray;
   }
   else if (type == "int")
   {
-    viskores::cont::ArrayHandle<viskores::Int32> concreteArray = viskores::cont::make_ArrayHandle(
-      reinterpret_cast<const viskores::Int32*>(buffer), length, viskores::CopyFlag::On);
+    viskores::cont::ArrayHandle<viskores::Int32> concreteArray =
+      viskores::cont::make_ArrayHandle(reinterpret_cast<const viskores::Int32*>(buffer),
+                                       length,
+                                       viskores::CopyFlag::On);
     handle = concreteArray;
   }
   return handle;
@@ -120,7 +125,8 @@ void NonTypeUnknownArrayHandleAllocate()
   //// END-EXAMPLE UnknownArrayHandleBasicInstance
   ////
 
-  VISKORES_TEST_ASSERT(basicArray.IsType<viskores::cont::ArrayHandleBasic<viskores::Id>>());
+  VISKORES_TEST_ASSERT(
+    basicArray.IsType<viskores::cont::ArrayHandleBasic<viskores::Id>>());
 
   ////
   //// BEGIN-EXAMPLE UnknownArrayHandleFloatInstance
@@ -129,7 +135,8 @@ void NonTypeUnknownArrayHandleAllocate()
   // Returns an array of type ArrayHandleBasic<viskores::FloatDefault>
   viskores::cont::UnknownArrayHandle floatArray = intArray.NewInstanceFloatBasic();
 
-  viskores::cont::UnknownArrayHandle id3Array = viskores::cont::ArrayHandle<viskores::Id3>();
+  viskores::cont::UnknownArrayHandle id3Array =
+    viskores::cont::ArrayHandle<viskores::Id3>();
   // Returns an array of type ArrayHandleBasic<viskores::Vec3f>
   viskores::cont::UnknownArrayHandle float3Array = id3Array.NewInstanceFloatBasic();
   ////
@@ -138,7 +145,8 @@ void NonTypeUnknownArrayHandleAllocate()
 
   VISKORES_TEST_ASSERT(
     floatArray.IsType<viskores::cont::ArrayHandleBasic<viskores::FloatDefault>>());
-  VISKORES_TEST_ASSERT(float3Array.IsType<viskores::cont::ArrayHandleBasic<viskores::Vec3f>>());
+  VISKORES_TEST_ASSERT(
+    float3Array.IsType<viskores::cont::ArrayHandleBasic<viskores::Vec3f>>());
 }
 
 ////
@@ -147,7 +155,8 @@ void NonTypeUnknownArrayHandleAllocate()
 VISKORES_CONT viskores::FloatDefault GetMiddleValue(
   const viskores::cont::UnknownArrayHandle& unknownArray)
 {
-  if (unknownArray.CanConvert<viskores::cont::ArrayHandleConstant<viskores::FloatDefault>>())
+  if (unknownArray
+        .CanConvert<viskores::cont::ArrayHandleConstant<viskores::FloatDefault>>())
   {
     // Fast path for known array
     viskores::cont::ArrayHandleConstant<viskores::FloatDefault> constantArray;
@@ -173,7 +182,8 @@ VISKORES_CONT viskores::cont::ArrayHandle<viskores::FloatDefault> CopyToDefaultA
   const viskores::cont::UnknownArrayHandle& unknownArray)
 {
   // Initialize the output UnknownArrayHandle with the array type we want to copy to.
-  viskores::cont::UnknownArrayHandle output = viskores::cont::ArrayHandle<viskores::FloatDefault>{};
+  viskores::cont::UnknownArrayHandle output =
+    viskores::cont::ArrayHandle<viskores::FloatDefault>{};
   output.DeepCopyFrom(unknownArray);
   return output.AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>();
 }
@@ -202,7 +212,8 @@ VISKORES_CONT viskores::cont::ArrayHandle<viskores::FloatDefault> GetAsDefaultAr
   const viskores::cont::UnknownArrayHandle& unknownArray)
 {
   // Initialize the output UnknownArrayHandle with the array type we want to copy to.
-  viskores::cont::UnknownArrayHandle output = viskores::cont::ArrayHandle<viskores::FloatDefault>{};
+  viskores::cont::UnknownArrayHandle output =
+    viskores::cont::ArrayHandle<viskores::FloatDefault>{};
   output.CopyShallowIfPossible(unknownArray);
   return output.AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>();
 }
@@ -328,7 +339,8 @@ void TryPrintArrayContents()
   ////
   //// BEGIN-EXAMPLE UncertainArrayHandle
   ////
-  viskores::cont::UncertainArrayHandle<viskores::TypeListScalarAll, viskores::cont::StorageListBasic>
+  viskores::cont::UncertainArrayHandle<viskores::TypeListScalarAll,
+                                       viskores::cont::StorageListBasic>
     uncertainArray(unknownArray);
   uncertainArray.CastAndCall(PrintArrayContentsFunctor{});
   ////
@@ -340,10 +352,10 @@ void TryPrintArrayContents()
   //// BEGIN-EXAMPLE UnknownArrayResetTypes
   ////
   viskores::cont::Invoker invoke;
-  invoke(
-    MyWorklet{},
-    unknownArray.ResetTypes<viskores::TypeListScalarAll, viskores::cont::StorageListBasic>(),
-    outArray);
+  invoke(MyWorklet{},
+         unknownArray
+           .ResetTypes<viskores::TypeListScalarAll, viskores::cont::StorageListBasic>(),
+         outArray);
   ////
   //// END-EXAMPLE UnknownArrayResetTypes
   ////
@@ -374,11 +386,11 @@ void ExtractUnknownComponent()
   ////
   viskores::cont::ArrayHandleBasic<viskores::Vec3f> concreteArray =
     viskores::cont::make_ArrayHandle<viskores::Vec3f>({ { 0, 1, 2 },
-                                                { 3, 4, 5 },
-                                                { 6, 7, 8 },
-                                                { 9, 10, 11 },
-                                                { 12, 13, 14 },
-                                                { 15, 16, 17 } });
+                                                        { 3, 4, 5 },
+                                                        { 6, 7, 8 },
+                                                        { 9, 10, 11 },
+                                                        { 12, 13, 14 },
+                                                        { 15, 16, 17 } });
 
   viskores::cont::UnknownArrayHandle unknownArray(concreteArray);
 
@@ -389,7 +401,7 @@ void ExtractUnknownComponent()
   //// END-EXAMPLE UnknownArrayExtractComponent
   ////
   VISKORES_TEST_ASSERT(componentArray.GetNumberOfValues() ==
-                   concreteArray.GetNumberOfValues());
+                       concreteArray.GetNumberOfValues());
   {
     auto portal = componentArray.ReadPortal();
     auto expectedPortal = concreteArray.ReadPortal();
@@ -441,7 +453,7 @@ void ExtractUnknownComponent()
     auto portal = outputArrays[outIndex].ReadPortal();
     auto expectedPortal = deepTypeArray.ReadPortal();
     VISKORES_TEST_ASSERT(portal.GetNumberOfValues() ==
-                     (concreteArray.GetNumberOfValues() / 2));
+                         (concreteArray.GetNumberOfValues() / 2));
     for (viskores::IdComponent i = 0; i < portal.GetNumberOfValues(); ++i)
     {
       VISKORES_TEST_ASSERT(
@@ -489,7 +501,8 @@ void IndexInitialize(viskores::Id size, const viskores::cont::UnknownArrayHandle
 //// BEGIN-EXAMPLE UseUnknownArrayConstOutput
 ////
 template<typename T>
-void Foo(const viskores::cont::ArrayHandle<T>& input, viskores::cont::ArrayHandle<T>& output)
+void Foo(const viskores::cont::ArrayHandle<T>& input,
+         viskores::cont::ArrayHandle<T>& output)
 {
   IndexInitialize(input.GetNumberOfValues(), output);
   // ...

@@ -290,7 +290,8 @@ public:
       }
     } // for each edge
 
-    for (viskores::UInt8 permIndex = 0; permIndex < CubeVertexPermutations_NumPermutations; permIndex++)
+    for (viskores::UInt8 permIndex = 0; permIndex < CubeVertexPermutations_NumPermutations;
+         permIndex++)
     {
       // Combpute connection configuration in each of the eight cubes
       // surrounding a vertex
@@ -341,7 +342,8 @@ public:
       {
         for (int edgeNo = 0; edgeNo < 15; ++edgeNo)
         {
-          if (InCubeConnectionsEighteenPortal.Get(caseNo) & (static_cast<viskores::Id>(1) << edgeNo))
+          if (InCubeConnectionsEighteenPortal.Get(caseNo) &
+              (static_cast<viskores::Id>(1) << edgeNo))
           {
             const auto& edge = LinkVertexConnectionsEighteenPortal.Get(edgeNo);
             viskores::IdComponent edge0 = edge[0];

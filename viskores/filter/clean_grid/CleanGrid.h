@@ -97,9 +97,10 @@ private:
   VISKORES_CONT
   viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inData) override;
 
-  VISKORES_CONT viskores::cont::DataSet GenerateOutput(const viskores::cont::DataSet& inData,
-                                               viskores::cont::CellSetExplicit<>& outputCellSet,
-                                               clean_grid::SharedStates& worklets);
+  VISKORES_CONT viskores::cont::DataSet GenerateOutput(
+    const viskores::cont::DataSet& inData,
+    viskores::cont::CellSetExplicit<>& outputCellSet,
+    clean_grid::SharedStates& worklets);
 
   bool CompactPointFields = true;
   bool MergePoints = true;

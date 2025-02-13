@@ -92,9 +92,9 @@ static void DoTest()
             << std::endl;
 
   VISKORES_TEST_ASSERT(VISKORES_DEPRECATED_MAKE_MESSAGE(X.Y) ==
-                   std::string(" Deprecated in version X.Y."));
+                       std::string(" Deprecated in version X.Y."));
   VISKORES_TEST_ASSERT(VISKORES_DEPRECATED_MAKE_MESSAGE(X.Y.Z, "Use feature foo instead.") ==
-                   std::string("Use feature foo instead. Deprecated in version X.Y.Z."));
+                       std::string("Use feature foo instead. Deprecated in version X.Y.Z."));
 
   // Using valid classes with unused deprecated parts should be fine.
   NewClass useIt;

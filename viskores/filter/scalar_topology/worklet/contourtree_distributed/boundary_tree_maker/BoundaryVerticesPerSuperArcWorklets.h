@@ -82,9 +82,10 @@ public:
   }
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const InFieldPortalType& boundarySuperparentsPortal,
-                            const viskores::Id& boundaryVertex,
-                            const OutFieldPortalType& superarcIntrinsicBoundaryCountPortal) const
+  VISKORES_EXEC void operator()(
+    const InFieldPortalType& boundarySuperparentsPortal,
+    const viskores::Id& boundaryVertex,
+    const OutFieldPortalType& superarcIntrinsicBoundaryCountPortal) const
   {
     if (boundaryVertex == 0)
     {
@@ -141,9 +142,10 @@ public:
   BoundaryVerticiesPerSuperArcStepTwoWorklet() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const InFieldPortalType& boundarySuperparentsPortal,
-                            const viskores::Id& boundaryVertex,
-                            const OutFieldPortalType& superarcIntrinsicBoundaryCountPortal) const
+  VISKORES_EXEC void operator()(
+    const InFieldPortalType& boundarySuperparentsPortal,
+    const viskores::Id& boundaryVertex,
+    const OutFieldPortalType& superarcIntrinsicBoundaryCountPortal) const
   {
     if (boundaryVertex == 0)
     {

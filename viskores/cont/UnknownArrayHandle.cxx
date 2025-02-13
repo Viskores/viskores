@@ -53,22 +53,22 @@ using RemoveBasicStorage = viskores::ListRemoveIf<List, IsBasicStorage>;
 
 using UnknownSerializationTypes =
   viskores::ListAppend<viskores::TypeListBaseC, AllVec<2>, AllVec<3>, AllVec<4>>;
-using UnknownSerializationSpecializedStorage =
-  viskores::ListAppend<RemoveBasicStorage<VISKORES_DEFAULT_STORAGE_LIST>,
-                   viskores::List<viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                                                     viskores::cont::StorageTagBasic,
-                                                                     viskores::cont::StorageTagBasic>,
-                              viskores::cont::StorageTagConstant,
-                              viskores::cont::StorageTagCounting,
-                              viskores::cont::StorageTagIndex,
-                              viskores::cont::StorageTagGroupVec<viskores::cont::StorageTagBasic, 2>,
-                              viskores::cont::StorageTagGroupVec<viskores::cont::StorageTagBasic, 3>,
-                              viskores::cont::StorageTagGroupVec<viskores::cont::StorageTagBasic, 4>,
-                              viskores::cont::StorageTagPermutation<viskores::cont::StorageTagBasic,
-                                                                viskores::cont::StorageTagBasic>,
-                              viskores::cont::StorageTagReverse<viskores::cont::StorageTagBasic>,
-                              viskores::cont::StorageTagSOA,
-                              viskores::cont::StorageTagUniformPoints>>;
+using UnknownSerializationSpecializedStorage = viskores::ListAppend<
+  RemoveBasicStorage<VISKORES_DEFAULT_STORAGE_LIST>,
+  viskores::List<viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
+                                                            viskores::cont::StorageTagBasic,
+                                                            viskores::cont::StorageTagBasic>,
+                 viskores::cont::StorageTagConstant,
+                 viskores::cont::StorageTagCounting,
+                 viskores::cont::StorageTagIndex,
+                 viskores::cont::StorageTagGroupVec<viskores::cont::StorageTagBasic, 2>,
+                 viskores::cont::StorageTagGroupVec<viskores::cont::StorageTagBasic, 3>,
+                 viskores::cont::StorageTagGroupVec<viskores::cont::StorageTagBasic, 4>,
+                 viskores::cont::StorageTagPermutation<viskores::cont::StorageTagBasic,
+                                                       viskores::cont::StorageTagBasic>,
+                 viskores::cont::StorageTagReverse<viskores::cont::StorageTagBasic>,
+                 viskores::cont::StorageTagSOA,
+                 viskores::cont::StorageTagUniformPoints>>;
 
 } // anonymous namespace
 
@@ -203,12 +203,13 @@ VISKORES_CONT UnknownArrayHandle UnknownArrayHandle::NewInstanceBasic() const
     // Special case for `ArrayHandleRuntimeVec`, which (1) can be used in place of
     // a basic array in `UnknownArrayHandle` and (2) needs a special construction to
     // capture the correct number of components.
-    auto runtimeVecArrayCreator = [&](auto exampleComponent) {
+    auto runtimeVecArrayCreator = [&](auto exampleComponent)
+    {
       using ComponentType = decltype(exampleComponent);
       if (!newArray.IsValid() && this->IsBaseComponentType<ComponentType>())
       {
-        newArray =
-          viskores::cont::make_ArrayHandleRuntimeVec<ComponentType>(this->GetNumberOfComponentsFlat());
+        newArray = viskores::cont::make_ArrayHandleRuntimeVec<ComponentType>(
+          this->GetNumberOfComponentsFlat());
       }
     };
     viskores::ListForEach(runtimeVecArrayCreator, viskores::TypeListBaseC{});
@@ -329,8 +330,8 @@ VISKORES_CONT viskores::IdComponent UnknownArrayHandle::GetNumberOfComponentsFla
 }
 
 VISKORES_CONT void UnknownArrayHandle::Allocate(viskores::Id numValues,
-                                            viskores::CopyFlag preserve,
-                                            viskores::cont::Token& token) const
+                                                viskores::CopyFlag preserve,
+                                                viskores::cont::Token& token) const
 {
   if (this->Container)
   {
@@ -343,13 +344,15 @@ VISKORES_CONT void UnknownArrayHandle::Allocate(viskores::Id numValues,
   }
 }
 
-VISKORES_CONT void UnknownArrayHandle::Allocate(viskores::Id numValues, viskores::CopyFlag preserve) const
+VISKORES_CONT void UnknownArrayHandle::Allocate(viskores::Id numValues,
+                                                viskores::CopyFlag preserve) const
 {
   viskores::cont::Token token;
   this->Allocate(numValues, preserve, token);
 }
 
-VISKORES_CONT void UnknownArrayHandle::DeepCopyFrom(const viskores::cont::UnknownArrayHandle& source)
+VISKORES_CONT void UnknownArrayHandle::DeepCopyFrom(
+  const viskores::cont::UnknownArrayHandle& source)
 {
   if (!this->IsValid())
   {
@@ -359,7 +362,8 @@ VISKORES_CONT void UnknownArrayHandle::DeepCopyFrom(const viskores::cont::Unknow
   const_cast<const UnknownArrayHandle*>(this)->DeepCopyFrom(source);
 }
 
-VISKORES_CONT void UnknownArrayHandle::DeepCopyFrom(const viskores::cont::UnknownArrayHandle& source) const
+VISKORES_CONT void UnknownArrayHandle::DeepCopyFrom(
+  const viskores::cont::UnknownArrayHandle& source) const
 {
   if (!this->IsValid())
   {
@@ -393,7 +397,8 @@ void UnknownArrayHandle::CopyShallowIfPossible(const viskores::cont::UnknownArra
 }
 
 VISKORES_CONT
-void UnknownArrayHandle::CopyShallowIfPossible(const viskores::cont::UnknownArrayHandle& source) const
+void UnknownArrayHandle::CopyShallowIfPossible(
+  const viskores::cont::UnknownArrayHandle& source) const
 {
   if (!this->IsValid())
   {
@@ -445,7 +450,7 @@ namespace internal
 {
 
 VISKORES_CONT_EXPORT void ThrowCastAndCallException(const viskores::cont::UnknownArrayHandle& ref,
-                                                const std::type_info& type)
+                                                    const std::type_info& type)
 {
   std::ostringstream out;
   out << "Could not find appropriate cast for array in CastAndCall.\n"
@@ -488,9 +493,9 @@ struct SaveBasicArray
 {
   template <typename ComponentType>
   VISKORES_CONT void operator()(ComponentType,
-                            mangled_diy_namespace::BinaryBuffer& bb,
-                            const viskores::cont::UnknownArrayHandle& obj,
-                            bool& saved)
+                                mangled_diy_namespace::BinaryBuffer& bb,
+                                const viskores::cont::UnknownArrayHandle& obj,
+                                bool& saved)
   {
     // Basic arrays and arrays with compatible layouts can be loaed/saved as an
     // ArrayHandleRuntimeVec. Thus, we can load/save them all with one routine.
@@ -510,10 +515,10 @@ struct LoadBasicArray
 {
   template <typename ComponentType>
   VISKORES_CONT void operator()(ComponentType,
-                            mangled_diy_namespace::BinaryBuffer& bb,
-                            viskores::cont::UnknownArrayHandle& obj,
-                            const std::string& componentTypeString,
-                            bool& loaded)
+                                mangled_diy_namespace::BinaryBuffer& bb,
+                                viskores::cont::UnknownArrayHandle& obj,
+                                const std::string& componentTypeString,
+                                bool& loaded)
   {
     if (!loaded && (componentTypeString == viskores::cont::TypeToString<ComponentType>()))
     {
@@ -526,7 +531,7 @@ struct LoadBasicArray
 };
 
 VISKORES_CONT void SaveSpecializedArray(mangled_diy_namespace::BinaryBuffer& bb,
-                                    const viskores::cont::UnknownArrayHandle& obj)
+                                        const viskores::cont::UnknownArrayHandle& obj)
 {
   viskores::IdComponent numComponents = obj.GetNumberOfComponents();
   switch (numComponents)
@@ -534,8 +539,8 @@ VISKORES_CONT void SaveSpecializedArray(mangled_diy_namespace::BinaryBuffer& bb,
     case 1:
       viskoresdiy::save(bb, SerializedArrayType::SpecializedStorage);
       viskoresdiy::save(bb, numComponents);
-      viskoresdiy::save(bb,
-                    obj.ResetTypes<viskores::TypeListBaseC, UnknownSerializationSpecializedStorage>());
+      viskoresdiy::save(
+        bb, obj.ResetTypes<viskores::TypeListBaseC, UnknownSerializationSpecializedStorage>());
       break;
     case 2:
       viskoresdiy::save(bb, SerializedArrayType::SpecializedStorage);
@@ -561,12 +566,13 @@ VISKORES_CONT void SaveSpecializedArray(mangled_diy_namespace::BinaryBuffer& bb,
 }
 
 VISKORES_CONT void LoadSpecializedArray(mangled_diy_namespace::BinaryBuffer& bb,
-                                    viskores::cont::UnknownArrayHandle& obj)
+                                        viskores::cont::UnknownArrayHandle& obj)
 {
   viskores::IdComponent numComponents;
   viskoresdiy::load(bb, numComponents);
 
-  viskores::cont::UncertainArrayHandle<viskores::TypeListBaseC, UnknownSerializationSpecializedStorage>
+  viskores::cont::UncertainArrayHandle<viskores::TypeListBaseC,
+                                       UnknownSerializationSpecializedStorage>
     array1;
   viskores::cont::UncertainArrayHandle<AllVec<2>, UnknownSerializationSpecializedStorage> array2;
   viskores::cont::UncertainArrayHandle<AllVec<3>, UnknownSerializationSpecializedStorage> array3;
@@ -591,7 +597,8 @@ VISKORES_CONT void LoadSpecializedArray(mangled_diy_namespace::BinaryBuffer& bb,
       obj = array4;
       break;
     default:
-      throw viskores::cont::ErrorInternal("Unexpected component size when loading UnknownArrayHandle.");
+      throw viskores::cont::ErrorInternal(
+        "Unexpected component size when loading UnknownArrayHandle.");
   }
 }
 
@@ -600,8 +607,9 @@ VISKORES_CONT void LoadSpecializedArray(mangled_diy_namespace::BinaryBuffer& bb,
 namespace mangled_diy_namespace
 {
 
-void Serialization<viskores::cont::UnknownArrayHandle>::save(BinaryBuffer& bb,
-                                                         const viskores::cont::UnknownArrayHandle& obj)
+void Serialization<viskores::cont::UnknownArrayHandle>::save(
+  BinaryBuffer& bb,
+  const viskores::cont::UnknownArrayHandle& obj)
 {
   bool saved = false;
 
@@ -615,8 +623,9 @@ void Serialization<viskores::cont::UnknownArrayHandle>::save(BinaryBuffer& bb,
   }
 }
 
-void Serialization<viskores::cont::UnknownArrayHandle>::load(BinaryBuffer& bb,
-                                                         viskores::cont::UnknownArrayHandle& obj)
+void Serialization<viskores::cont::UnknownArrayHandle>::load(
+  BinaryBuffer& bb,
+  viskores::cont::UnknownArrayHandle& obj)
 {
   SerializedArrayType arrayType;
   viskoresdiy::load(bb, arrayType);
@@ -632,7 +641,8 @@ void Serialization<viskores::cont::UnknownArrayHandle>::load(BinaryBuffer& bb,
         LoadBasicArray{}, viskores::TypeListBaseC{}, bb, obj, componentTypeString, loaded);
       if (!loaded)
       {
-        throw viskores::cont::ErrorInternal("Failed to load basic array. Unexpected buffer values.");
+        throw viskores::cont::ErrorInternal(
+          "Failed to load basic array. Unexpected buffer values.");
       }
       break;
     }

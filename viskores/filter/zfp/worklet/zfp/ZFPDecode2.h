@@ -29,11 +29,11 @@ namespace zfp
 
 template <typename Scalar, typename PortalType>
 VISKORES_EXEC inline void ScatterPartial2(const Scalar* q,
-                                      PortalType& scalars,
-                                      const viskores::Id2 dims,
-                                      viskores::Id offset,
-                                      viskores::Int32 nx,
-                                      viskores::Int32 ny)
+                                          PortalType& scalars,
+                                          const viskores::Id2 dims,
+                                          viskores::Id offset,
+                                          viskores::Int32 nx,
+                                          viskores::Int32 ny)
 {
   viskores::Id x, y;
   for (y = 0; y < ny; y++, offset += dims[0] - nx, q += 4 - nx)
@@ -47,9 +47,9 @@ VISKORES_EXEC inline void ScatterPartial2(const Scalar* q,
 
 template <typename Scalar, typename PortalType>
 VISKORES_EXEC inline void Scatter2(const Scalar* q,
-                               PortalType& scalars,
-                               const viskores::Id2 dims,
-                               viskores::Id offset)
+                                   PortalType& scalars,
+                                   const viskores::Id2 dims,
+                                   viskores::Id offset)
 {
   for (viskores::Id y = 0; y < 4; y++, offset += dims[0] - 4)
   {
@@ -80,8 +80,8 @@ public:
 
   template <typename InputScalarPortal, typename BitstreamPortal>
   VISKORES_EXEC void operator()(const viskores::Id blockIdx,
-                            InputScalarPortal& scalars,
-                            BitstreamPortal& stream) const
+                                InputScalarPortal& scalars,
+                                BitstreamPortal& stream) const
   {
     using Scalar = typename InputScalarPortal::ValueType;
     constexpr viskores::Int32 BlockSize = 16;
@@ -109,10 +109,12 @@ public:
       partial = true;
     if (partial)
     {
-      const viskores::Int32 nx =
-        logicalStart[0] + 4 > Dims[0] ? viskores::Int32(Dims[0] - logicalStart[0]) : viskores::Int32(4);
-      const viskores::Int32 ny =
-        logicalStart[1] + 4 > Dims[1] ? viskores::Int32(Dims[1] - logicalStart[1]) : viskores::Int32(4);
+      const viskores::Int32 nx = logicalStart[0] + 4 > Dims[0]
+        ? viskores::Int32(Dims[0] - logicalStart[0])
+        : viskores::Int32(4);
+      const viskores::Int32 ny = logicalStart[1] + 4 > Dims[1]
+        ? viskores::Int32(Dims[1] - logicalStart[1])
+        : viskores::Int32(4);
       ScatterPartial2(fblock, scalars, Dims, offset, nx, ny);
     }
     else

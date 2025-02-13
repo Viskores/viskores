@@ -34,20 +34,25 @@ void TestCheckCellSet()
   using viskores::cont::arg::TypeCheckTagCellSet;
 
   VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagCellSet, viskores::cont::CellSetExplicit<>>::value),
-                   "Type check failed.");
+                       "Type check failed.");
 
-  VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagCellSet, viskores::cont::CellSetStructured<2>>::value),
-                   "Type check failed.");
+  VISKORES_TEST_ASSERT(
+    (TypeCheck<TypeCheckTagCellSet, viskores::cont::CellSetStructured<2>>::value),
+    "Type check failed.");
 
-  VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagCellSet, viskores::cont::CellSetStructured<3>>::value),
-                   "Type check failed.");
+  VISKORES_TEST_ASSERT(
+    (TypeCheck<TypeCheckTagCellSet, viskores::cont::CellSetStructured<3>>::value),
+    "Type check failed.");
 
-  VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagCellSet, TestNotCellSet>::value), "Type check failed.");
+  VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagCellSet, TestNotCellSet>::value),
+                       "Type check failed.");
 
-  VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagCellSet, viskores::Id>::value), "Type check failed.");
+  VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagCellSet, viskores::Id>::value),
+                       "Type check failed.");
 
-  VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagCellSet, viskores::cont::ArrayHandle<viskores::Id>>::value),
-                   "Type check failed.");
+  VISKORES_TEST_ASSERT(
+    !(TypeCheck<TypeCheckTagCellSet, viskores::cont::ArrayHandle<viskores::Id>>::value),
+    "Type check failed.");
 }
 
 } // anonymous namespace

@@ -86,11 +86,12 @@ public:
   PropagateBoundaryCountsComputeGroupTotalsWorklet() {}
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& hyperarc,
-                            const InFieldPortalType& hyperarcTargetSortPermutationPortal,
-                            const InFieldPortalType& hyperarcsPortal,
-                            const InFieldPortalType& accumulatedBoundaryCountPortal,
-                            const InOutFieldPortalType& supernodeTransferBoundaryCountPortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::Id& hyperarc,
+    const InFieldPortalType& hyperarcTargetSortPermutationPortal,
+    const InFieldPortalType& hyperarcsPortal,
+    const InFieldPortalType& accumulatedBoundaryCountPortal,
+    const InOutFieldPortalType& supernodeTransferBoundaryCountPortal) const
   {
     // the prefix sum of the first element is the correct value anyway so we can ignore it
     if (hyperarc == 0)

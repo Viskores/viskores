@@ -42,11 +42,15 @@ public:
   /// member variable, or from the templated type if MaxColorValue hasn't been
   /// set from a read file.
   ///
-  VISKORES_CONT void Write(viskores::Id width, viskores::Id height, const ColorArrayType& pixels) override;
+  VISKORES_CONT void Write(viskores::Id width,
+                           viskores::Id height,
+                           const ColorArrayType& pixels) override;
 
 protected:
   template <typename PixelType>
-  VISKORES_CONT void WriteToFile(viskores::Id width, viskores::Id height, const ColorArrayType& pixels);
+  VISKORES_CONT void WriteToFile(viskores::Id width,
+                                 viskores::Id height,
+                                 const ColorArrayType& pixels);
 };
 }
 } // namespace viskores::io

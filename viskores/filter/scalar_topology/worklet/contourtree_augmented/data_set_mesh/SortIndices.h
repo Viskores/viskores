@@ -79,8 +79,8 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const InFieldPortalType& sortOrder,
-                            const viskores::Id vertexIndex,
-                            const OutFieldPortalType& sortIndices) const
+                                const viskores::Id vertexIndex,
+                                const OutFieldPortalType& sortIndices) const
   {
     sortIndices.Set(sortOrder.Get(vertexIndex), vertexIndex);
   }

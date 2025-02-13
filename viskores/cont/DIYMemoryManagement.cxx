@@ -33,13 +33,11 @@ viskores::cont::internal::DeviceAdapterMemoryManagerBase& GetMemoryManager(
 viskoresdiy::MemoryManagement GetDIYMemoryManagement(viskores::cont::DeviceAdapterId device)
 {
   return viskoresdiy::MemoryManagement(
-    [device](int, size_t n) {
-      return static_cast<char*>(GetMemoryManager(device).AllocateRawPointer(n));
-    },
+    [device](int, size_t n)
+    { return static_cast<char*>(GetMemoryManager(device).AllocateRawPointer(n)); },
     [device](const char* p) { GetMemoryManager(device).DeleteRawPointer(const_cast<char*>(p)); },
-    [device](char* dest, const char* src, size_t count) {
-      GetMemoryManager(device).CopyDeviceToDeviceRawPointer(src, dest, count);
-    });
+    [device](char* dest, const char* src, size_t count)
+    { GetMemoryManager(device).CopyDeviceToDeviceRawPointer(src, dest, count); });
 }
 
 }

@@ -146,7 +146,8 @@ public:
   {
     viskores::cont::Token connToken;
     auto connPortal = conn.PrepareForInput(device, connToken);
-    auto zeros = viskores::cont::make_ArrayHandleConstant(viskores::IdComponent{ 0 }, numberOfPoints);
+    auto zeros =
+      viskores::cont::make_ArrayHandleConstant(viskores::IdComponent{ 0 }, numberOfPoints);
 
     // Compute RConn offsets by atomically building a histogram and doing an
     // extended scan.
@@ -320,13 +321,14 @@ void ComputeRConnTable(RConnTableT& rConnTable,
 
 // Specialize for CellSetSingleType:
 template <typename RConnTableT, typename ConnectivityStorageTag>
-void ComputeRConnTable(RConnTableT& rConnTable,
-                       const ConnectivityExplicitInternals< // SingleType specialization types:
-                         typename viskores::cont::ArrayHandleConstant<viskores::UInt8>::StorageTag,
-                         ConnectivityStorageTag,
-                         typename viskores::cont::ArrayHandleCounting<viskores::Id>::StorageTag>& connTable,
-                       viskores::Id numberOfPoints,
-                       viskores::cont::DeviceAdapterId device)
+void ComputeRConnTable(
+  RConnTableT& rConnTable,
+  const ConnectivityExplicitInternals< // SingleType specialization types:
+    typename viskores::cont::ArrayHandleConstant<viskores::UInt8>::StorageTag,
+    ConnectivityStorageTag,
+    typename viskores::cont::ArrayHandleCounting<viskores::Id>::StorageTag>& connTable,
+  viskores::Id numberOfPoints,
+  viskores::cont::DeviceAdapterId device)
 {
   if (rConnTable.ElementsValid)
   {
@@ -338,7 +340,8 @@ void ComputeRConnTable(RConnTableT& rConnTable,
   auto& rOffsets = rConnTable.Offsets;
   const viskores::Id rConnSize = conn.GetNumberOfValues();
 
-  const viskores::IdComponent cellSize = [&]() -> viskores::IdComponent {
+  const viskores::IdComponent cellSize = [&]() -> viskores::IdComponent
+  {
     if (connTable.Offsets.GetNumberOfValues() >= 2)
     {
       const auto firstTwo = viskores::cont::ArrayGetValues({ 0, 1 }, connTable.Offsets);

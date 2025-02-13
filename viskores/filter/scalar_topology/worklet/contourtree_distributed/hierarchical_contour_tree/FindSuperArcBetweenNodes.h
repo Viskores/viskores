@@ -88,7 +88,8 @@ public:
   // it will always be the same ID as one of them if it exists
   // if not, it will be NO_SUCH_ELEMENT
   VISKORES_EXEC
-  viskores::Id FindSuperArcBetweenNodes(viskores::Id firstSupernode, viskores::Id secondSupernode) const
+  viskores::Id FindSuperArcBetweenNodes(viskores::Id firstSupernode,
+                                        viskores::Id secondSupernode) const
   { // FindSuperArcBetweenNodes()
     // if the second is the target of the first's superarc
     if (viskores::worklet::contourtree_augmented::MaskedIndex(

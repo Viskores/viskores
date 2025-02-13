@@ -59,8 +59,8 @@ public:
 
   template <typename NeighIn, typename TOut>
   VISKORES_EXEC void operator()(const NeighIn& image,
-                            const viskores::exec::BoundaryState& boundary,
-                            TOut& moment) const
+                                const viskores::exec::BoundaryState& boundary,
+                                TOut& moment) const
   {
     using ComponentType = typename TOut::ComponentType;
     const viskores::IdComponent numComponents = moment.GetNumberOfComponents();
@@ -123,7 +123,11 @@ private:
 struct ComputeMoments3D : public viskores::worklet::WorkletPointNeighborhood
 {
 public:
-  ComputeMoments3D(const viskores::Vec3f& _spacing, viskores::Float64 _radius, int _p, int _q, int _r)
+  ComputeMoments3D(const viskores::Vec3f& _spacing,
+                   viskores::Float64 _radius,
+                   int _p,
+                   int _q,
+                   int _r)
     : RadiusDiscrete(viskores::IdComponent(_radius / (_spacing[0] - 1e-10)),
                      viskores::IdComponent(_radius / (_spacing[1] - 1e-10)),
                      viskores::IdComponent(_radius / (_spacing[2] - 1e-10)))
@@ -147,8 +151,8 @@ public:
 
   template <typename NeighIn, typename TOut>
   VISKORES_EXEC void operator()(const NeighIn& image,
-                            const viskores::exec::BoundaryState& boundary,
-                            TOut& moment) const
+                                const viskores::exec::BoundaryState& boundary,
+                                TOut& moment) const
   {
     using ComponentType = typename TOut::ComponentType;
     const viskores::IdComponent numComponents = moment.GetNumberOfComponents();
@@ -190,8 +194,9 @@ public:
 
           if (viskores::Dot(radius, radius) <= 1)
           {
-            ComponentType multiplier = static_cast<ComponentType>(
-              viskores::Pow(radius[0], p) * viskores::Pow(radius[1], q) * viskores::Pow(radius[2], r));
+            ComponentType multiplier =
+              static_cast<ComponentType>(viskores::Pow(radius[0], p) * viskores::Pow(radius[1], q) *
+                                         viskores::Pow(radius[2], r));
             auto inputField = image.Get(i, j, k);
             // For variable sized Vecs, need to iterate over each component.
             for (viskores::IdComponent componentI = 0; componentI < numComponents; ++componentI)

@@ -34,7 +34,8 @@ namespace filter
 namespace scalar_topology
 {
 
-VISKORES_CONT viskores::cont::DataSet SelectTopVolumeContoursFilter::DoExecute(const viskores::cont::DataSet&)
+VISKORES_CONT viskores::cont::DataSet SelectTopVolumeContoursFilter::DoExecute(
+  const viskores::cont::DataSet&)
 {
   throw viskores::cont::ErrorFilterExecution(
     "SelectTopVolumeContoursFilter expects PartitionedDataSet as input.");
@@ -50,10 +51,10 @@ VISKORES_CONT viskores::cont::PartitionedDataSet SelectTopVolumeContoursFilter::
   using SelectTopVolumeContoursBlock =
     viskores::filter::scalar_topology::internal::SelectTopVolumeContoursBlock;
   viskoresdiy::Master branch_top_volume_master(comm,
-                                           1,  // Use 1 thread, Viskores will do the treading
-                                           -1, // All blocks in memory
-                                           0,  // No create function
-                                           SelectTopVolumeContoursBlock::Destroy);
+                                               1,  // Use 1 thread, Viskores will do the treading
+                                               -1, // All blocks in memory
+                                               0,  // No create function
+                                               SelectTopVolumeContoursBlock::Destroy);
 
   auto firstDS = input.GetPartition(0);
   viskores::Id3 firstPointDimensions, firstGlobalPointDimensions, firstGlobalPointIndexStart;
@@ -64,10 +65,10 @@ VISKORES_CONT viskores::cont::PartitionedDataSet SelectTopVolumeContoursFilter::
     firstGlobalPointIndexStart);
   int numDims = firstGlobalPointDimensions[2] > 1 ? 3 : 2;
   auto viskoresBlocksPerDimensionRP = input.GetPartition(0)
-                                    .GetField("viskoresBlocksPerDimension")
-                                    .GetData()
-                                    .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
-                                    .ReadPortal();
+                                        .GetField("viskoresBlocksPerDimension")
+                                        .GetData()
+                                        .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                                        .ReadPortal();
 
   int globalNumberOfBlocks = 1;
 
@@ -83,9 +84,9 @@ VISKORES_CONT viskores::cont::PartitionedDataSet SelectTopVolumeContoursFilter::
     const viskores::cont::DataSet& ds = input.GetPartition(localBlockIndex);
     int globalBlockId = static_cast<int>(
       viskores::cont::ArrayGetValue(0,
-                                ds.GetField("viskoresGlobalBlockId")
-                                  .GetData()
-                                  .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()));
+                                    ds.GetField("viskoresGlobalBlockId")
+                                      .GetData()
+                                      .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()));
 
     SelectTopVolumeContoursBlock* b =
       new SelectTopVolumeContoursBlock(localBlockIndex, globalBlockId);
@@ -97,7 +98,8 @@ VISKORES_CONT viskores::cont::PartitionedDataSet SelectTopVolumeContoursFilter::
   viskoresdiy::fix_links(branch_top_volume_master, assigner);
 
   branch_top_volume_master.foreach (
-    [&](SelectTopVolumeContoursBlock* b, const viskoresdiy::Master::ProxyWithLink&) {
+    [&](SelectTopVolumeContoursBlock* b, const viskoresdiy::Master::ProxyWithLink&)
+    {
       const auto& globalSize = firstGlobalPointDimensions;
       viskores::Id totalVolume = globalSize[0] * globalSize[1] * globalSize[2];
       const viskores::cont::DataSet& ds = input.GetPartition(b->LocalBlockNo);
@@ -113,8 +115,9 @@ VISKORES_CONT viskores::cont::PartitionedDataSet SelectTopVolumeContoursFilter::
       viskores::cont::Algorithm::CopySubRange(
         b->SortedBranchByVolume, 1, nActualSavedBranches, topVolumeBranch);
 
-      auto branchRootGRId =
-        ds.GetField("BranchRootGRId").GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>();
+      auto branchRootGRId = ds.GetField("BranchRootGRId")
+                              .GetData()
+                              .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>();
 
       auto upperEndGRId = ds.GetField("UpperEndGlobalRegularIds")
                             .GetData()
@@ -142,7 +145,8 @@ VISKORES_CONT viskores::cont::PartitionedDataSet SelectTopVolumeContoursFilter::
       viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id>(
         lowerEndGRId, topVolumeBranch, b->TopVolumeBranchLowerEndGRId);
 
-      auto resolveArray = [&](const auto& inArray) {
+      auto resolveArray = [&](const auto& inArray)
+      {
         using InArrayHandleType = std::decay_t<decltype(inArray)>;
         InArrayHandleType topVolBranchSaddleIsoValue;
         viskores::worklet::contourtree_augmented::PermuteArrayWithRawIndex<InArrayHandleType>(
@@ -151,14 +155,16 @@ VISKORES_CONT viskores::cont::PartitionedDataSet SelectTopVolumeContoursFilter::
       };
 
       b->BranchSaddleIsoValue
-        .CastAndCallForTypes<viskores::TypeListScalarAll, viskores::cont::StorageListBasic>(resolveArray);
+        .CastAndCallForTypes<viskores::TypeListScalarAll, viskores::cont::StorageListBasic>(
+          resolveArray);
     });
 
   // We apply all-to-all broadcast to collect the top nSavedBranches branches by volume
   viskoresdiy::all_to_all(
     branch_top_volume_master,
     assigner,
-    viskores::filter::scalar_topology::internal::SelectTopVolumeContoursFunctor(this->nSavedBranches));
+    viskores::filter::scalar_topology::internal::SelectTopVolumeContoursFunctor(
+      this->nSavedBranches));
 
   // For each block, we compute the get the extracted isosurface for every selected branch
   // storing format: key (branch ID) - Value (list of meshes in the isosurface)
@@ -166,35 +172,44 @@ VISKORES_CONT viskores::cont::PartitionedDataSet SelectTopVolumeContoursFilter::
   std::vector<viskores::cont::DataSet> outputDataSets(input.GetNumberOfPartitions());
 
   branch_top_volume_master.foreach (
-    [&](SelectTopVolumeContoursBlock* b, const viskoresdiy::Master::ProxyWithLink&) {
-      viskores::cont::Field TopVolBranchUpperEndField("TopVolumeBranchUpperEnd",
-                                                  viskores::cont::Field::Association::WholeDataSet,
-                                                  b->TopVolumeBranchUpperEndGRId);
+    [&](SelectTopVolumeContoursBlock* b, const viskoresdiy::Master::ProxyWithLink&)
+    {
+      viskores::cont::Field TopVolBranchUpperEndField(
+        "TopVolumeBranchUpperEnd",
+        viskores::cont::Field::Association::WholeDataSet,
+        b->TopVolumeBranchUpperEndGRId);
       outputDataSets[b->LocalBlockNo].AddField(TopVolBranchUpperEndField);
-      viskores::cont::Field TopVolBranchLowerEndField("TopVolumeBranchLowerEnd",
-                                                  viskores::cont::Field::Association::WholeDataSet,
-                                                  b->TopVolumeBranchLowerEndGRId);
+      viskores::cont::Field TopVolBranchLowerEndField(
+        "TopVolumeBranchLowerEnd",
+        viskores::cont::Field::Association::WholeDataSet,
+        b->TopVolumeBranchLowerEndGRId);
       outputDataSets[b->LocalBlockNo].AddField(TopVolBranchLowerEndField);
       viskores::cont::Field TopVolBranchGRIdField("TopVolumeBranchGlobalRegularIds",
-                                              viskores::cont::Field::Association::WholeDataSet,
-                                              b->TopVolumeBranchRootGRId);
+                                                  viskores::cont::Field::Association::WholeDataSet,
+                                                  b->TopVolumeBranchRootGRId);
       outputDataSets[b->LocalBlockNo].AddField(TopVolBranchGRIdField);
-      viskores::cont::Field TopVolBranchVolumeField("TopVolumeBranchVolume",
-                                                viskores::cont::Field::Association::WholeDataSet,
-                                                b->TopVolumeBranchVolume);
+      viskores::cont::Field TopVolBranchVolumeField(
+        "TopVolumeBranchVolume",
+        viskores::cont::Field::Association::WholeDataSet,
+        b->TopVolumeBranchVolume);
       outputDataSets[b->LocalBlockNo].AddField(TopVolBranchVolumeField);
-      viskores::cont::Field TopVolBranchSaddleEpsilonField("TopVolumeBranchSaddleEpsilon",
-                                                       viskores::cont::Field::Association::WholeDataSet,
-                                                       b->TopVolumeBranchSaddleEpsilon);
+      viskores::cont::Field TopVolBranchSaddleEpsilonField(
+        "TopVolumeBranchSaddleEpsilon",
+        viskores::cont::Field::Association::WholeDataSet,
+        b->TopVolumeBranchSaddleEpsilon);
       outputDataSets[b->LocalBlockNo].AddField(TopVolBranchSaddleEpsilonField);
 
-      auto resolveArray = [&](const auto& inArray) {
+      auto resolveArray = [&](const auto& inArray)
+      {
         viskores::cont::Field TopVolBranchSaddleIsoValueField(
-          "TopVolumeBranchSaddleIsoValue", viskores::cont::Field::Association::WholeDataSet, inArray);
+          "TopVolumeBranchSaddleIsoValue",
+          viskores::cont::Field::Association::WholeDataSet,
+          inArray);
         outputDataSets[b->LocalBlockNo].AddField(TopVolBranchSaddleIsoValueField);
       };
       b->TopVolumeBranchSaddleIsoValue
-        .CastAndCallForTypes<viskores::TypeListScalarAll, viskores::cont::StorageListBasic>(resolveArray);
+        .CastAndCallForTypes<viskores::TypeListScalarAll, viskores::cont::StorageListBasic>(
+          resolveArray);
     });
 
   return viskores::cont::PartitionedDataSet{ outputDataSets };

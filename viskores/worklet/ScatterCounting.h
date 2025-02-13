@@ -44,13 +44,13 @@ struct ScatterCountingBuilder;
 struct VISKORES_WORKLET_EXPORT ScatterCounting : internal::ScatterBase
 {
   using CountTypes = viskores::List<viskores::Int64,
-                                viskores::Int32,
-                                viskores::Int16,
-                                viskores::Int8,
-                                viskores::UInt64,
-                                viskores::UInt32,
-                                viskores::UInt16,
-                                viskores::UInt8>;
+                                    viskores::Int32,
+                                    viskores::Int16,
+                                    viskores::Int8,
+                                    viskores::UInt64,
+                                    viskores::UInt32,
+                                    viskores::UInt16,
+                                    viskores::UInt8>;
 
   /// Construct a \c ScatterCounting object using an array of counts for the
   /// number of outputs for each input. Part of the construction requires
@@ -59,14 +59,15 @@ struct VISKORES_WORKLET_EXPORT ScatterCounting : internal::ScatterBase
   /// other users might make use of it, so you can instruct the constructor
   /// to save the input to output map.
   ///
-  VISKORES_CONT ScatterCounting(const viskores::cont::UnknownArrayHandle& countArray,
-                            viskores::cont::DeviceAdapterId device = viskores::cont::DeviceAdapterTagAny(),
-                            bool saveInputToOutputMap = false)
+  VISKORES_CONT ScatterCounting(
+    const viskores::cont::UnknownArrayHandle& countArray,
+    viskores::cont::DeviceAdapterId device = viskores::cont::DeviceAdapterTagAny(),
+    bool saveInputToOutputMap = false)
   {
     this->BuildArrays(countArray, device, saveInputToOutputMap);
   }
   VISKORES_CONT ScatterCounting(const viskores::cont::UnknownArrayHandle& countArray,
-                            bool saveInputToOutputMap)
+                                bool saveInputToOutputMap)
   {
     this->BuildArrays(countArray, viskores::cont::DeviceAdapterTagAny(), saveInputToOutputMap);
   }
@@ -111,7 +112,10 @@ struct VISKORES_WORKLET_EXPORT ScatterCounting : internal::ScatterBase
   /// (See documentation for the constructor.)
   ///
   VISKORES_CONT
-  viskores::cont::ArrayHandle<viskores::Id> GetInputToOutputMap() const { return this->InputToOutputMap; }
+  viskores::cont::ArrayHandle<viskores::Id> GetInputToOutputMap() const
+  {
+    return this->InputToOutputMap;
+  }
 
 private:
   viskores::Id InputRange;
@@ -122,8 +126,8 @@ private:
   friend struct detail::ScatterCountingBuilder;
 
   VISKORES_CONT void BuildArrays(const viskores::cont::UnknownArrayHandle& countArray,
-                             viskores::cont::DeviceAdapterId device,
-                             bool saveInputToOutputMap);
+                                 viskores::cont::DeviceAdapterId device,
+                                 bool saveInputToOutputMap);
 };
 }
 } // namespace viskores::worklet

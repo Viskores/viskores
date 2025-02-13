@@ -39,7 +39,10 @@ private:
 
   // NOLINTNEXTLINE(performance-move-const-arg)
   VISKORES_CONT static viskores::Id3&& ToId3(viskores::Id3&& src) { return std::move(src); }
-  VISKORES_CONT static viskores::Id3 ToId3(viskores::Id2&& src) { return viskores::Id3(src[0], src[1], 1); }
+  VISKORES_CONT static viskores::Id3 ToId3(viskores::Id2&& src)
+  {
+    return viskores::Id3(src[0], src[1], 1);
+  }
   VISKORES_CONT static viskores::Id3 ToId3(viskores::Id&& src) { return viskores::Id3(src, 1, 1); }
 
 public:
@@ -48,12 +51,13 @@ public:
   };
 
   template <viskores::IdComponent dimensions>
-  VISKORES_CONT CellLocatorRectilinearGrid(const viskores::Id planeSize,
-                                       const viskores::Id rowSize,
-                                       const viskores::cont::CellSetStructured<dimensions>& cellSet,
-                                       const RectilinearType& coords,
-                                       viskores::cont::DeviceAdapterId device,
-                                       viskores::cont::Token& token)
+  VISKORES_CONT CellLocatorRectilinearGrid(
+    const viskores::Id planeSize,
+    const viskores::Id rowSize,
+    const viskores::cont::CellSetStructured<dimensions>& cellSet,
+    const RectilinearType& coords,
+    viskores::cont::DeviceAdapterId device,
+    viskores::cont::Token& token)
     : PlaneSize(planeSize)
     , RowSize(rowSize)
     , PointDimensions(ToId3(cellSet.GetPointDimensions()))
@@ -94,17 +98,17 @@ public:
 
   VISKORES_EXEC
   viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                           viskores::Id& cellId,
-                           viskores::Vec3f& parametric,
-                           LastCell& viskoresNotUsed(lastCell)) const
+                               viskores::Id& cellId,
+                               viskores::Vec3f& parametric,
+                               LastCell& viskoresNotUsed(lastCell)) const
   {
     return this->FindCell(point, cellId, parametric);
   }
 
   VISKORES_EXEC
   viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                           viskores::Id& cellId,
-                           viskores::Vec3f& parametric) const
+                               viskores::Id& cellId,
+                               viskores::Vec3f& parametric) const
   {
     if (!this->IsInside(point))
     {

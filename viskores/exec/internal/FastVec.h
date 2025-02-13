@@ -44,7 +44,9 @@ private:
   Type Vec;
 };
 
-template <typename ComponentType, viskores::IdComponent NumComponents, viskores::IdComponent MaxSize>
+template <typename ComponentType,
+          viskores::IdComponent NumComponents,
+          viskores::IdComponent MaxSize>
 class FastVec<viskores::Vec<ComponentType, NumComponents>, MaxSize>
 {
 public:

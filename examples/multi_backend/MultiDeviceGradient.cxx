@@ -154,7 +154,7 @@ VISKORES_CONT MultiDeviceGradient::MultiDeviceGradient()
     catch (const viskores::cont::ErrorBadDevice& err)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-                 "Error getting CudaDeviceCount: " << err.GetMessage());
+                     "Error getting CudaDeviceCount: " << err.GetMessage());
     }
   }
   //Step 3. Launch a worker that will use openMP (if enabled).
@@ -216,7 +216,8 @@ VISKORES_CONT viskores::cont::PartitionedDataSet MultiDeviceGradient::DoExecuteP
   {
     viskores::cont::DataSet input = *partition;
     this->Queue.push( //build a lambda that is the work to do
-      [=]() {
+      [=]()
+      {
         viskores::filter::vector_analysis::Gradient perThreadGrad = gradient;
 
         viskores::cont::DataSet result = perThreadGrad.Execute(input);
@@ -235,7 +236,8 @@ VISKORES_CONT viskores::cont::PartitionedDataSet MultiDeviceGradient::DoExecuteP
     //will allows us to have multiple works execute in a non
     //blocking manner
     this->Queue.push( //build a lambda that is the work to do
-      [=]() {
+      [=]()
+      {
         viskores::filter::vector_analysis::Gradient perThreadGrad = gradient;
 
         viskores::cont::DataSet result = perThreadGrad.Execute(input);
@@ -250,9 +252,11 @@ VISKORES_CONT viskores::cont::PartitionedDataSet MultiDeviceGradient::DoExecuteP
   return output;
 }
 
-VISKORES_CONT viskores::cont::DataSet MultiDeviceGradient::DoExecute(const viskores::cont::DataSet& inData)
+VISKORES_CONT viskores::cont::DataSet MultiDeviceGradient::DoExecute(
+  const viskores::cont::DataSet& inData)
 {
-  viskores::cont::PartitionedDataSet outData = this->Execute(viskores::cont::PartitionedDataSet(inData));
+  viskores::cont::PartitionedDataSet outData =
+    this->Execute(viskores::cont::PartitionedDataSet(inData));
   VISKORES_ASSERT(outData.GetNumberOfPartitions() == 1);
   return outData.GetPartition(0);
 }

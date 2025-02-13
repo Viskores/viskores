@@ -61,17 +61,17 @@ public:
 
   VISKORES_EXEC
   viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                           viskores::Id& cellId,
-                           viskores::Vec3f& parametric,
-                           LastCell& viskoresNotUsed(lastCell)) const
+                               viskores::Id& cellId,
+                               viskores::Vec3f& parametric,
+                               LastCell& viskoresNotUsed(lastCell)) const
   {
     return this->FindCell(point, cellId, parametric);
   }
 
   VISKORES_EXEC
   viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                           viskores::Id& cellId,
-                           viskores::Vec3f& parametric) const
+                               viskores::Id& cellId,
+                               viskores::Vec3f& parametric) const
   {
     if (!this->IsInside(point))
     {

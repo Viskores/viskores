@@ -54,7 +54,8 @@ public:
     using ExecutionSignature = void(PointCount, _2);
     using InputDomain = _1;
 
-    VISKORES_EXEC void operator()(viskores::IdComponent pointCount, viskores::IdComponent& numIndices) const
+    VISKORES_EXEC void operator()(viskores::IdComponent pointCount,
+                                  viskores::IdComponent& numIndices) const
     {
       numIndices = pointCount;
     }
@@ -68,8 +69,8 @@ public:
 
     template <typename PointIndicesType, typename OutConnectivityType>
     VISKORES_EXEC void operator()(viskores::IdComponent pointCount,
-                              const PointIndicesType& pointIndices,
-                              OutConnectivityType& connectivity) const
+                                  const PointIndicesType& pointIndices,
+                                  OutConnectivityType& connectivity) const
     {
       for (viskores::IdComponent i = 0; i < pointCount; ++i)
       {
@@ -95,7 +96,7 @@ public:
     viskores::cont::DeviceAdapterId)
   {
     return viskores::cont::internal::ConvertNumComponentsToOffsetsTemplate(numIndices,
-                                                                       connectivityLength);
+                                                                           connectivityLength);
   }
 
   template <typename CellSetPermutationType, typename OffsetsStorageType>
@@ -122,7 +123,8 @@ struct RConnBuilderInputData
 {
   using ConnectivityArrayType = viskores::cont::ArrayHandle<viskores::Id, ConnectivityStorageTag>;
   using OffsetsArrayType = viskores::cont::ArrayHandle<viskores::Id, OffsetsStorageTag>;
-  using NumIndicesArrayType = viskores::cont::ArrayHandle<viskores::IdComponent, NumIndicesStorageTag>;
+  using NumIndicesArrayType =
+    viskores::cont::ArrayHandle<viskores::IdComponent, NumIndicesStorageTag>;
 
   ConnectivityArrayType Connectivity;
   OffsetsArrayType Offsets; // Includes the past-the-end offset.
@@ -171,7 +173,7 @@ private:
   using OffsetsStorageTag = viskores::cont::ArrayHandle<viskores::Id>::StorageTag;
   using NumIndicesStorageTag =
     typename viskores::cont::ArrayHandlePermutation<PermutationArrayHandleType,
-                                                InNumIndicesArrayType>::StorageTag;
+                                                    InNumIndicesArrayType>::StorageTag;
 
 
 public:
@@ -299,11 +301,13 @@ struct CellSetPermutationConnectivityChooser<viskores::TopologyElementTagPoint,
                                              PermutationArrayHandleType>
 {
   using ConnectivityPortalType = typename viskores::cont::ArrayHandle<viskores::Id>::ReadPortalType;
-  using NumIndicesPortalType = typename viskores::cont::ArrayHandle<viskores::IdComponent>::ReadPortalType;
+  using NumIndicesPortalType =
+    typename viskores::cont::ArrayHandle<viskores::IdComponent>::ReadPortalType;
   using OffsetPortalType = typename viskores::cont::ArrayHandle<viskores::Id>::ReadPortalType;
 
   using ExecConnectivityType =
-    viskores::exec::ConnectivityPermutedVisitPointsWithCells<ConnectivityPortalType, OffsetPortalType>;
+    viskores::exec::ConnectivityPermutedVisitPointsWithCells<ConnectivityPortalType,
+                                                             OffsetPortalType>;
 };
 
 } // internal
@@ -318,9 +322,10 @@ struct CellSetPermutationConnectivityChooser<viskores::TopologyElementTagPoint,
 /// cell index provides the equivalent cell index in the cell set being permuted.
 /// `CellSetPermutation` is most often used to mask out cells in a data set so that
 /// algorithms will skip over those cells when running.
-template <typename OriginalCellSetType_,
-          typename PermutationArrayHandleType_ =
-            viskores::cont::ArrayHandle<viskores::Id, VISKORES_DEFAULT_CELLSET_PERMUTATION_STORAGE_TAG>>
+template <
+  typename OriginalCellSetType_,
+  typename PermutationArrayHandleType_ =
+    viskores::cont::ArrayHandle<viskores::Id, VISKORES_DEFAULT_CELLSET_PERMUTATION_STORAGE_TAG>>
 class CellSetPermutation : public CellSet
 {
   VISKORES_IS_CELL_SET(OriginalCellSetType_);
@@ -340,7 +345,7 @@ public:
   ///   the @a jth cell in the original @a cellset.
   /// @param[in] cellset The original cell set that this one is permuting.
   VISKORES_CONT CellSetPermutation(const PermutationArrayHandleType& validCellIds,
-                               const OriginalCellSetType& cellset)
+                                   const OriginalCellSetType& cellset)
     : CellSet()
     , ValidCellIds(validCellIds)
     , FullCellSet(cellset)
@@ -408,8 +413,8 @@ public:
   }
 
   VISKORES_DEPRECATED(1.6,
-                  "Calling GetCellShape(cellid) is a performance bug. Call ShapesReadPortal() "
-                  "and loop over the Get.")
+                      "Calling GetCellShape(cellid) is a performance bug. Call ShapesReadPortal() "
+                      "and loop over the Get.")
   viskores::UInt8 GetCellShape(viskores::Id id) const override
   {
     // Looping over GetCellShape is a performance bug.
@@ -485,7 +490,8 @@ public:
   ///
   /// @returns A connectivity object that can be used in the execution environment on the
   /// specified device.
-  VISKORES_CONT ExecConnectivityType<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint>
+  VISKORES_CONT
+  ExecConnectivityType<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint>
   PrepareForInput(viskores::cont::DeviceAdapterId device,
                   viskores::TopologyElementTagCell visitTopology,
                   viskores::TopologyElementTagPoint incidentTopology,
@@ -499,7 +505,8 @@ public:
   }
 
   /// @copydoc PrepareForInput
-  VISKORES_CONT ExecConnectivityType<viskores::TopologyElementTagPoint, viskores::TopologyElementTagCell>
+  VISKORES_CONT
+  ExecConnectivityType<viskores::TopologyElementTagPoint, viskores::TopologyElementTagCell>
   PrepareForInput(viskores::cont::DeviceAdapterId device,
                   viskores::TopologyElementTagPoint visitTopology,
                   viskores::TopologyElementTagCell incidentTopology,
@@ -554,8 +561,9 @@ public:
   VISKORES_CONT
   CellSetPermutation(const PermutationArrayHandleType2& validCellIds,
                      const CellSetPermutation<CellSetType, PermutationArrayHandleType1>& cellset)
-    : Superclass(viskores::cont::make_ArrayHandlePermutation(validCellIds, cellset.GetValidCellIds()),
-                 cellset.GetFullCellSet())
+    : Superclass(
+        viskores::cont::make_ArrayHandlePermutation(validCellIds, cellset.GetValidCellIds()),
+        cellset.GetFullCellSet())
   {
   }
 
@@ -582,15 +590,15 @@ public:
 };
 
 template <typename OriginalCellSet, typename PermutationArrayHandleType>
-viskores::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType> make_CellSetPermutation(
-  const PermutationArrayHandleType& cellIndexMap,
-  const OriginalCellSet& cellSet)
+viskores::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType>
+make_CellSetPermutation(const PermutationArrayHandleType& cellIndexMap,
+                        const OriginalCellSet& cellSet)
 {
   VISKORES_IS_CELL_SET(OriginalCellSet);
   VISKORES_IS_ARRAY_HANDLE(PermutationArrayHandleType);
 
-  return viskores::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType>(cellIndexMap,
-                                                                                     cellSet);
+  return viskores::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType>(
+    cellIndexMap, cellSet);
 }
 }
 } // namespace viskores::cont

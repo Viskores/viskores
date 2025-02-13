@@ -32,7 +32,9 @@ viskores::Vec3f ArchimedeanSpiralToCartesian(viskores::Vec3f const& p)
   return xyz;
 }
 
-void TubeThatSpiral(viskores::FloatDefault radius, viskores::Id numLineSegments, viskores::Id numSides)
+void TubeThatSpiral(viskores::FloatDefault radius,
+                    viskores::Id numLineSegments,
+                    viskores::Id numSides)
 {
   viskores::cont::DataSetBuilderExplicitIterative dsb;
   std::vector<viskores::Id> ids;
@@ -65,11 +67,12 @@ void TubeThatSpiral(viskores::FloatDefault radius, viskores::Id numLineSegments,
   // This generates a new pointset, and new cell set.
   viskores::cont::ArrayHandle<viskores::Vec3f> tubePoints;
   viskores::cont::CellSetSingleType<> tubeCells;
-  tubeWorklet.Run(
-    ds.GetCoordinateSystem().GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>(),
-    ds.GetCellSet(),
-    tubePoints,
-    tubeCells);
+  tubeWorklet.Run(ds.GetCoordinateSystem()
+                    .GetData()
+                    .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>(),
+                  ds.GetCellSet(),
+                  tubePoints,
+                  tubeCells);
 
   viskores::cont::DataSet tubeDataset;
   tubeDataset.AddCoordinateSystem(viskores::cont::CoordinateSystem("coords", tubePoints));
@@ -116,9 +119,9 @@ void TubeThatSpiral(viskores::FloatDefault radius, viskores::Id numLineSegments,
 
   tubeDataset.AddPointField("Spiral Radius", v);
   scene.AddActor(viskores::rendering::Actor(tubeDataset.GetCellSet(),
-                                        tubeDataset.GetCoordinateSystem(),
-                                        tubeDataset.GetField("Spiral Radius"),
-                                        colorTable));
+                                            tubeDataset.GetCoordinateSystem(),
+                                            tubeDataset.GetField("Spiral Radius"),
+                                            colorTable));
   viskores::rendering::View3D view(scene, mapper, canvas, camera, bg);
   view.Paint();
   // We can save the file as a .NetBPM:

@@ -161,8 +161,8 @@ public:
     const VisitArrayType& visit,
     const ThreadToOutArrayType& threadToOut,
     const viskores::exec::ConnectivityStructured<viskores::TopologyElementTagPoint,
-                                             viskores::TopologyElementTagCell,
-                                             Dimension>& inputDomain //this should be explicit
+                                                 viskores::TopologyElementTagCell,
+                                                 Dimension>& inputDomain //this should be explicit
   ) const
   {
     const viskores::Id outIndex = threadToOut.Get(threadIndex);
@@ -193,13 +193,13 @@ public:
             typename InputDomainType,
             bool S = IsScatterIdentity,
             bool M = IsMaskNone>
-  VISKORES_EXEC EnableFnWhen<S && M, viskores::exec::arg::ThreadIndicesPointNeighborhood> GetThreadIndices(
-    viskores::Id threadIndex1D,
-    const viskores::Id3& threadIndex3D,
-    const OutToInArrayType& viskoresNotUsed(outToIn),
-    const VisitArrayType& viskoresNotUsed(visit),
-    const ThreadToOutArrayType& viskoresNotUsed(threadToOut),
-    const InputDomainType& connectivity) const
+  VISKORES_EXEC EnableFnWhen<S && M, viskores::exec::arg::ThreadIndicesPointNeighborhood>
+  GetThreadIndices(viskores::Id threadIndex1D,
+                   const viskores::Id3& threadIndex3D,
+                   const OutToInArrayType& viskoresNotUsed(outToIn),
+                   const VisitArrayType& viskoresNotUsed(visit),
+                   const ThreadToOutArrayType& viskoresNotUsed(threadToOut),
+                   const InputDomainType& connectivity) const
   {
     return viskores::exec::arg::ThreadIndicesPointNeighborhood(
       threadIndex3D, threadIndex1D, connectivity);
@@ -222,11 +222,11 @@ public:
   {
     const viskores::Id outIndex = threadToOut.Get(threadIndex1D);
     return viskores::exec::arg::ThreadIndicesPointNeighborhood(threadIndex3D,
-                                                           threadIndex1D,
-                                                           outToIn.Get(outIndex),
-                                                           visit.Get(outIndex),
-                                                           outIndex,
-                                                           connectivity);
+                                                               threadIndex1D,
+                                                               outToIn.Get(outIndex),
+                                                               visit.Get(outIndex),
+                                                               outIndex,
+                                                               connectivity);
   }
 };
 }

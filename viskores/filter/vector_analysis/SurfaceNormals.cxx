@@ -67,8 +67,8 @@ viskores::cont::DataSet SurfaceNormals::DoExecute(const viskores::cont::DataSet&
   if (!this->GetUseCoordinateSystemAsField())
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-               "Active scalars to SurfaceNormals filter must be a coordinate system. "
-               "Ignoring false UseCoordinateSystemAsField flag.");
+                   "Active scalars to SurfaceNormals filter must be a coordinate system. "
+                   "Ignoring false UseCoordinateSystemAsField flag.");
   }
 
   if (!this->GenerateCellNormals && !this->GeneratePointNormals)
@@ -81,7 +81,8 @@ viskores::cont::DataSet SurfaceNormals::DoExecute(const viskores::cont::DataSet&
     inputDataSet.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()).GetDataAsMultiplexer();
 
   viskores::cont::ArrayHandle<viskores::Vec3f> faceNormals;
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     viskores::worklet::FacetedSurfaceNormals faceted;
     faceted.SetNormalize(this->NormalizeCellNormals);
     faceted.Run(inputCellSet, concrete, faceNormals);
@@ -98,7 +99,8 @@ viskores::cont::DataSet SurfaceNormals::DoExecute(const viskores::cont::DataSet&
       this->CreateResultFieldPoint(inputDataSet, ComputePointNormalsName(this), pointNormals);
     if (this->GenerateCellNormals)
     {
-      outputDataSet.AddField(viskores::cont::make_FieldCell(ComputeCellNormalsName(this), faceNormals));
+      outputDataSet.AddField(
+        viskores::cont::make_FieldCell(ComputeCellNormalsName(this), faceNormals));
     }
   }
   else

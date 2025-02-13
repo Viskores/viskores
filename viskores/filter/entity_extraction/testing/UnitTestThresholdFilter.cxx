@@ -50,26 +50,26 @@ public:
     if (returnAllInRange)
     {
       VISKORES_TEST_ASSERT(output.GetNumberOfFields() == 2,
-                       "Wrong number of fields in the output dataset");
+                           "Wrong number of fields in the output dataset");
 
       viskores::cont::ArrayHandle<viskores::Float32> cellFieldArray;
       output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
       VISKORES_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
-                         cellFieldArray.ReadPortal().Get(0) == 100.1f,
-                       "Wrong cell field data");
+                             cellFieldArray.ReadPortal().Get(0) == 100.1f,
+                           "Wrong cell field data");
     }
     else
     {
       VISKORES_TEST_ASSERT(output.GetNumberOfFields() == 2,
-                       "Wrong number of fields in the output dataset");
+                           "Wrong number of fields in the output dataset");
 
       viskores::cont::ArrayHandle<viskores::Float32> cellFieldArray;
       output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
       VISKORES_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
-                         cellFieldArray.ReadPortal().Get(0) == 200.1f,
-                       "Wrong cell field data");
+                             cellFieldArray.ReadPortal().Get(0) == 200.1f,
+                           "Wrong cell field data");
     }
 
     // Make sure that the resulting data set can be successfully passed to another
@@ -106,29 +106,29 @@ public:
     if (returnAllInRange)
     {
       VISKORES_TEST_ASSERT(output.GetNumberOfFields() == 2,
-                       "Wrong number of fields in the output dataset");
+                           "Wrong number of fields in the output dataset");
 
       viskores::cont::ArrayHandle<viskores::Float32> cellFieldArray;
       output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
       VISKORES_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 3 &&
-                         cellFieldArray.ReadPortal().Get(0) == 100.1f &&
-                         cellFieldArray.ReadPortal().Get(1) == 100.2f &&
-                         cellFieldArray.ReadPortal().Get(2) == 100.3f,
-                       "Wrong cell field data");
+                             cellFieldArray.ReadPortal().Get(0) == 100.1f &&
+                             cellFieldArray.ReadPortal().Get(1) == 100.2f &&
+                             cellFieldArray.ReadPortal().Get(2) == 100.3f,
+                           "Wrong cell field data");
     }
     else
     {
       VISKORES_TEST_ASSERT(output.GetNumberOfFields() == 2,
-                       "Wrong number of fields in the output dataset");
+                           "Wrong number of fields in the output dataset");
 
       viskores::cont::ArrayHandle<viskores::Float32> cellFieldArray;
       output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
       VISKORES_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                         cellFieldArray.ReadPortal().Get(0) == 100.1f &&
-                         cellFieldArray.ReadPortal().Get(1) == 100.2f,
-                       "Wrong cell field data");
+                             cellFieldArray.ReadPortal().Get(0) == 100.1f &&
+                             cellFieldArray.ReadPortal().Get(1) == 100.2f,
+                           "Wrong cell field data");
     }
 
     // Make sure that the resulting data set can be successfully passed to another
@@ -151,15 +151,15 @@ public:
     auto output = threshold.Execute(dataset);
 
     VISKORES_TEST_ASSERT(output.GetNumberOfFields() == 2,
-                     "Wrong number of fields in the output dataset");
+                         "Wrong number of fields in the output dataset");
 
     viskores::cont::ArrayHandle<viskores::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
     VISKORES_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                       cellFieldArray.ReadPortal().Get(0) == 100.1f &&
-                       cellFieldArray.ReadPortal().Get(1) == 100.2f,
-                     "Wrong cell field data");
+                           cellFieldArray.ReadPortal().Get(0) == 100.1f &&
+                           cellFieldArray.ReadPortal().Get(1) == 100.2f,
+                         "Wrong cell field data");
 
     // Make sure that the resulting data set can be successfully passed to another
     // simple filter using the cell set.
@@ -181,7 +181,7 @@ public:
     auto output = threshold.Execute(dataset);
 
     VISKORES_TEST_ASSERT(output.GetNumberOfFields() == 2,
-                     "Wrong number of fields in the output dataset");
+                         "Wrong number of fields in the output dataset");
 
     viskores::cont::ArrayHandle<viskores::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
@@ -200,15 +200,15 @@ public:
 
     auto input = viskores::cont::DataSetBuilderUniform::Create(viskores::Id2{ 4, 2 });
     static const viskores::Vec2f pointvar[8] = { { 0.0f, 1.0f },   { 4.0f, 5.0f },  { 8.0f, 9.0f },
-                                             { 12.0f, 13.0f }, { 2.0f, 3.0f },  { 6.0f, 7.0f },
-                                             { 10.0f, 11.0f }, { 14.0f, 15.0f } };
+                                                 { 12.0f, 13.0f }, { 2.0f, 3.0f },  { 6.0f, 7.0f },
+                                                 { 10.0f, 11.0f }, { 14.0f, 15.0f } };
     static const viskores::Vec2f cellvar[3] = { { 0.0f, 2.0f }, { 3.0f, 6.0f }, { 7.0f, 14.0f } };
     input.AddPointField("pointvar", pointvar, 8);
     input.AddCellField("cellvar", cellvar, 3);
 
     viskores::Id expected[] = { 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 1, 2, 3, 0, 3, 0, 2, 1,
-                            1, 2, 1, 2, 1, 2, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3,
-                            2, 1, 3, 0, 2, 1, 1, 2, 1, 2, 0, 3, 0, 3, 1, 2, 0, 3 };
+                                1, 2, 1, 2, 1, 2, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3,
+                                2, 1, 3, 0, 2, 1, 1, 2, 1, 2, 0, 3, 0, 3, 1, 2, 0, 3 };
 
     viskores::Float64 lower = 7.0;
     viskores::Float64 upper = 11.0;
@@ -318,8 +318,8 @@ public:
 
     auto input = viskores::cont::DataSetBuilderUniform::Create(viskores::Id2{ 4, 2 });
     static const viskores::Vec2f pointvar[8] = { { 0.0f, 7.0f }, { 1.0f, 6.0f }, { 2.0f, 5.0f },
-                                             { 3.0f, 4.0f }, { 4.0f, 3.0f }, { 5.0f, 2.0f },
-                                             { 6.0f, 1.0f }, { 7.0f, 0.0f } };
+                                                 { 3.0f, 4.0f }, { 4.0f, 3.0f }, { 5.0f, 2.0f },
+                                                 { 6.0f, 1.0f }, { 7.0f, 0.0f } };
     input.AddPointField("pointvar", pointvar, 8);
 
     viskores::filter::entity_extraction::Threshold threshold;

@@ -85,10 +85,10 @@ public:
 
   template <typename IdWholeArrayInPortalType, typename EdgeWholeArrayInOutPortal>
   VISKORES_EXEC void operator()(const viskores::Id currentId,
-                            const IdWholeArrayInPortalType& hypersweepSumValuesPortal,
-                            const IdWholeArrayInPortalType& superarcIntrinsicWeightPortal,
-                            const IdWholeArrayInPortalType& superarcsPortal,
-                            const EdgeWholeArrayInOutPortal& arcsPortal) const
+                                const IdWholeArrayInPortalType& hypersweepSumValuesPortal,
+                                const IdWholeArrayInPortalType& superarcIntrinsicWeightPortal,
+                                const IdWholeArrayInPortalType& superarcsPortal,
+                                const EdgeWholeArrayInOutPortal& arcsPortal) const
   {
     Id i = currentId;
     Id parent = MaskedIndex(superarcsPortal.Get(i));
@@ -157,11 +157,12 @@ public:
   VISKORES_EXEC_CONT ComputeIntrinsicWeight() {}
 
   template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id superarc,
-                            const IdWholeArrayInPortalType& arcsPortal,
-                            const IdWholeArrayInPortalType& superarcsPortal,
-                            const IdWholeArrayInPortalType& firstVertexForSuperparentPortal,
-                            const IdWholeArrayInOutPortalType& superarcIntrinsicWeightPortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::Id superarc,
+    const IdWholeArrayInPortalType& arcsPortal,
+    const IdWholeArrayInPortalType& superarcsPortal,
+    const IdWholeArrayInPortalType& firstVertexForSuperparentPortal,
+    const IdWholeArrayInOutPortalType& superarcIntrinsicWeightPortal) const
   {
     if (superarc == superarcsPortal.GetNumberOfValues() - 1)
     {
@@ -233,11 +234,11 @@ public:
             typename IdWholeArrayIn,
             typename IdWholeArrayInOut>
   VISKORES_EXEC void operator()(const viskores::Id hyperarcId,
-                            const IdWholeArrayHandleCountingIn& iterationHypernodesPortal,
-                            const IdWholeArrayIn& hypernodesPortal,
-                            const IdWholeArrayIn& hyperarcsPortal,
-                            const IdWholeArrayIn& howManyUsedPortal,
-                            const IdWholeArrayInOut& minMaxIndexPortal) const
+                                const IdWholeArrayHandleCountingIn& iterationHypernodesPortal,
+                                const IdWholeArrayIn& hypernodesPortal,
+                                const IdWholeArrayIn& hyperarcsPortal,
+                                const IdWholeArrayIn& howManyUsedPortal,
+                                const IdWholeArrayInOut& minMaxIndexPortal) const
   {
     Id i = iterationHypernodesPortal.Get(hyperarcId);
 
@@ -250,7 +251,8 @@ public:
     //
     // The value of the prefix scan is now accumulated in the last supernode of the hyperarc. Transfer is to the target
     //
-    viskores::Id lastSupernode = MaskedIndex(hypernodesPortal.Get(i + 1)) - howManyUsedPortal.Get(i);
+    viskores::Id lastSupernode =
+      MaskedIndex(hypernodesPortal.Get(i + 1)) - howManyUsedPortal.Get(i);
 
     //
     // Transfer the accumulated value to the target supernode
@@ -287,8 +289,8 @@ public:
   viskores::Id GlobalMinSortedIndex, GlobalMaxSortedIndex, RootSupernodeId;
 
   VISKORES_EXEC_CONT InitialiseArcs(viskores::Id _globalMinSortedIndex,
-                                viskores::Id _globalMaxSortedIndex,
-                                viskores::Id _rootSupernodeId)
+                                    viskores::Id _globalMaxSortedIndex,
+                                    viskores::Id _rootSupernodeId)
     : GlobalMinSortedIndex(_globalMinSortedIndex)
     , GlobalMaxSortedIndex(_globalMaxSortedIndex)
     , RootSupernodeId(_rootSupernodeId)
@@ -297,12 +299,12 @@ public:
 
   template <typename IdWholeArrayInPortalType, typename EdgeWholeArrayInOutPortal>
   VISKORES_EXEC void operator()(const viskores::Id currentId,
-                            const IdWholeArrayInPortalType& minParentsPortal,
-                            const IdWholeArrayInPortalType& maxParentsPortal,
-                            const IdWholeArrayInPortalType& minValuesPortal,
-                            const IdWholeArrayInPortalType& maxValuesPortal,
-                            const IdWholeArrayInPortalType& superarcsPortal,
-                            const EdgeWholeArrayInOutPortal& arcsPortal) const
+                                const IdWholeArrayInPortalType& minParentsPortal,
+                                const IdWholeArrayInPortalType& maxParentsPortal,
+                                const IdWholeArrayInPortalType& minValuesPortal,
+                                const IdWholeArrayInPortalType& maxValuesPortal,
+                                const IdWholeArrayInPortalType& superarcsPortal,
+                                const EdgeWholeArrayInOutPortal& arcsPortal) const
   {
     Id i = currentId;
     Id parent = MaskedIndex(superarcsPortal.Get(i));
@@ -371,10 +373,10 @@ public:
             typename IdWholeArrayInPortalType,
             typename EdgeWholeArrayInOutPortal>
   VISKORES_EXEC void operator()(const viskores::Id currentId,
-                            const Float64WholeArrayInPortalType& fieldValuesPortal,
-                            const IdWholeArrayInPortalType& ctSortOrderPortal,
-                            const IdWholeArrayInPortalType& supernodesPortal,
-                            const EdgeWholeArrayInOutPortal& arcsPortal) const
+                                const Float64WholeArrayInPortalType& fieldValuesPortal,
+                                const IdWholeArrayInPortalType& ctSortOrderPortal,
+                                const IdWholeArrayInPortalType& supernodesPortal,
+                                const EdgeWholeArrayInOutPortal& arcsPortal) const
   {
     Id i = currentId;
     EdgeDataHeight edge = arcsPortal.Get(i);
@@ -408,9 +410,9 @@ public:
 
   template <typename IdWholeArrayInPortalType, typename EdgeWholeArrayInOutPortal>
   VISKORES_EXEC void operator()(const viskores::Id currentId,
-                            const IdWholeArrayInPortalType& bestUpwardPortal,
-                            const IdWholeArrayInPortalType& bestDownwardPortal,
-                            const EdgeWholeArrayInOutPortal& arcsPortal) const
+                                const IdWholeArrayInPortalType& bestUpwardPortal,
+                                const IdWholeArrayInPortalType& bestDownwardPortal,
+                                const EdgeWholeArrayInOutPortal& arcsPortal) const
   {
     viskores::Id i = currentId;
 
@@ -456,7 +458,7 @@ public:
 
   template <typename IdWholeArrayInPortalType>
   VISKORES_EXEC void operator()(const viskores::Id currentId,
-                            const IdWholeArrayInPortalType& maskedArrayPortal) const
+                                const IdWholeArrayInPortalType& maskedArrayPortal) const
   {
     const auto currentValue = maskedArrayPortal.Get(currentId);
     maskedArrayPortal.Set(currentId, MaskedIndex(currentValue));
@@ -477,9 +479,9 @@ public:
 
   template <typename IdWholeArrayInPortalType, typename IdWholeArrayOutPortalType>
   VISKORES_EXEC void operator()(const viskores::Id supernodeId,
-                            const IdWholeArrayInPortalType& bestUpwardPortal,
-                            const IdWholeArrayInPortalType& bestDownwardPortal,
-                            const IdWholeArrayOutPortalType& whichBranchPortal) const
+                                const IdWholeArrayInPortalType& bestUpwardPortal,
+                                const IdWholeArrayInPortalType& bestDownwardPortal,
+                                const IdWholeArrayOutPortalType& whichBranchPortal) const
   {
     viskores::Id bestUp = bestUpwardPortal.Get(supernodeId);
     if (NoSuchElement(bestUp))
@@ -508,8 +510,8 @@ public:
 
   template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
   VISKORES_EXEC void operator()(const viskores::Id supernode,
-                            const IdWholeArrayInPortalType& chainToBranchPortal,
-                            const IdWholeArrayInOutPortalType& whichBranchPortal) const
+                                const IdWholeArrayInPortalType& chainToBranchPortal,
+                                const IdWholeArrayInOutPortalType& whichBranchPortal) const
   {
     const auto currentValue = MaskedIndex(whichBranchPortal.Get(supernode));
     whichBranchPortal.Set(supernode, chainToBranchPortal.Get(currentValue));
@@ -534,10 +536,10 @@ public:
 
   template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
   VISKORES_EXEC void operator()(const viskores::Id supernode,
-                            const IdWholeArrayInPortalType& supernodeSorterPortal,
-                            const IdWholeArrayInPortalType& whichBranchPortal,
-                            const IdWholeArrayInOutPortalType& branchMinimumPortal,
-                            const IdWholeArrayInOutPortalType& branchMaximumPortal) const
+                                const IdWholeArrayInPortalType& supernodeSorterPortal,
+                                const IdWholeArrayInPortalType& whichBranchPortal,
+                                const IdWholeArrayInOutPortalType& branchMinimumPortal,
+                                const IdWholeArrayInOutPortalType& branchMaximumPortal) const
   {
     // retrieve supernode & branch IDs
     viskores::Id supernodeID = supernodeSorterPortal.Get(supernode);
@@ -583,13 +585,13 @@ public:
 
   template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
   VISKORES_EXEC void operator()(const viskores::Id branchID,
-                            const IdWholeArrayInPortalType& whichBranchPortal,
-                            const IdWholeArrayInPortalType& branchMinimumPortal,
-                            const IdWholeArrayInPortalType& branchMaximumPortal,
-                            const IdWholeArrayInPortalType& bestDownwardPortal,
-                            const IdWholeArrayInPortalType& bestUpwardPortal,
-                            const IdWholeArrayInOutPortalType& branchSaddlePortal,
-                            const IdWholeArrayInOutPortalType& branchParentPortal) const
+                                const IdWholeArrayInPortalType& whichBranchPortal,
+                                const IdWholeArrayInPortalType& branchMinimumPortal,
+                                const IdWholeArrayInPortalType& branchMaximumPortal,
+                                const IdWholeArrayInPortalType& bestDownwardPortal,
+                                const IdWholeArrayInPortalType& bestUpwardPortal,
+                                const IdWholeArrayInOutPortalType& branchSaddlePortal,
+                                const IdWholeArrayInOutPortalType& branchParentPortal) const
   {
     viskores::Id branchMax = branchMaximumPortal.Get(branchID);
     // check whether the maximum is NOT a leaf
@@ -627,8 +629,8 @@ public:
 
   template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
   VISKORES_EXEC void operator()(const viskores::Id supernode,
-                            const IdWholeArrayInPortalType& whichBranchPortal,
-                            const IdWholeArrayInOutPortalType& chainToBranchPortal) const
+                                const IdWholeArrayInPortalType& whichBranchPortal,
+                                const IdWholeArrayInOutPortalType& chainToBranchPortal) const
   {
     // test whether the supernode points to itself to find the top ends
     if (MaskedIndex(whichBranchPortal.Get(supernode)) == supernode)
@@ -651,8 +653,8 @@ public:
 
   template <typename IdWholeArrayInPortalType, typename IdWholeArrayInOutPortalType>
   VISKORES_EXEC void operator()(const viskores::Id supernode,
-                            const IdWholeArrayInPortalType& whichBranchPortal,
-                            const IdWholeArrayInOutPortalType& chainToBranchPortal) const
+                                const IdWholeArrayInPortalType& whichBranchPortal,
+                                const IdWholeArrayInOutPortalType& chainToBranchPortal) const
   {
     // test whether the supernode points to itself to find the top ends
     if (MaskedIndex(whichBranchPortal.Get(supernode)) == supernode)
@@ -687,9 +689,9 @@ public:
 
   template <typename IdWholeArrayIn, typename IdWholeArrayInOut>
   VISKORES_EXEC void operator()(const viskores::Id superarcId,
-                            const IdWholeArrayIn& parentsPortal,
-                            const IdWholeArrayIn& supernodesPortal,
-                            const IdWholeArrayInOut& hypersweepValuesPortal) const
+                                const IdWholeArrayIn& parentsPortal,
+                                const IdWholeArrayIn& supernodesPortal,
+                                const IdWholeArrayInOut& hypersweepValuesPortal) const
   {
     Id i = superarcId;
 

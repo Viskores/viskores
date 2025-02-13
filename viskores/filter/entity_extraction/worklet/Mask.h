@@ -28,7 +28,8 @@ class Mask
 {
 public:
   template <typename CellSetType>
-  viskores::cont::CellSetPermutation<CellSetType> Run(const CellSetType& cellSet, const viskores::Id stride)
+  viskores::cont::CellSetPermutation<CellSetType> Run(const CellSetType& cellSet,
+                                                      const viskores::Id stride)
   {
     using OutputType = viskores::cont::CellSetPermutation<CellSetType>;
 

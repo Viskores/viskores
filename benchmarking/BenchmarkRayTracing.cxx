@@ -59,7 +59,8 @@ void BenchRayTracing(::benchmark::State& state)
 
   viskores::rendering::CanvasRayTracer canvas(1920, 1080);
   viskores::rendering::raytracing::Camera rayCamera;
-  rayCamera.SetParameters(camera, viskores::Int32(canvas.GetWidth()), viskores::Int32(canvas.GetHeight()));
+  rayCamera.SetParameters(
+    camera, viskores::Int32(canvas.GetWidth()), viskores::Int32(canvas.GetHeight()));
   viskores::rendering::raytracing::Ray<viskores::Float32> rays;
   rayCamera.CreateRays(rays, coords.GetBounds());
 
@@ -83,9 +84,9 @@ void BenchRayTracing(::benchmark::State& state)
   {
     auto color = colorPortal.Get(i);
     viskores::Vec4f_32 t(color[0] * conversionToFloatSpace,
-                     color[1] * conversionToFloatSpace,
-                     color[2] * conversionToFloatSpace,
-                     color[3] * conversionToFloatSpace);
+                         color[1] * conversionToFloatSpace,
+                         color[2] * conversionToFloatSpace,
+                         color[3] * conversionToFloatSpace);
     portal.Set(i, t);
   }
 

@@ -21,8 +21,8 @@ void RayOperations::MapCanvasToRays(Ray<viskores::Float32>& rays,
 {
   viskores::Id width = canvas.GetWidth();
   viskores::Id height = canvas.GetHeight();
-  viskores::Matrix<viskores::Float32, 4, 4> projview =
-    viskores::MatrixMultiply(camera.CreateProjectionMatrix(width, height), camera.CreateViewMatrix());
+  viskores::Matrix<viskores::Float32, 4, 4> projview = viskores::MatrixMultiply(
+    camera.CreateProjectionMatrix(width, height), camera.CreateViewMatrix());
   bool valid;
   viskores::Matrix<viskores::Float32, 4, 4> inverse = viskores::MatrixInverse(projview, valid);
   (void)valid; // this can be a false negative for really tiny spatial domains.

@@ -95,8 +95,9 @@ public:
       viskores::FloatDefault val = viskores::FloatDefault(
         1. -
         viskores::Exp(-oscillator->Zeta * oscillator->Omega * t0) *
-          (viskores::Sin(viskores::Sqrt(1 - oscillator->Zeta * oscillator->Zeta) * oscillator->Omega * t +
-                     phi) /
+          (viskores::Sin(viskores::Sqrt(1 - oscillator->Zeta * oscillator->Zeta) *
+                           oscillator->Omega * t +
+                         phi) /
            viskores::Sin(phi)));
       result += val * dist_damp;
     }
@@ -242,8 +243,8 @@ viskores::cont::DataSet Oscillator::DoExecute() const
   viskores::Id3 cellDims = this->GetCellDimensions();
   const viskores::Vec3f origin(0.0f, 0.0f, 0.0f);
   const viskores::Vec3f spacing(1.0f / static_cast<viskores::FloatDefault>(cellDims[0]),
-                            1.0f / static_cast<viskores::FloatDefault>(cellDims[1]),
-                            1.0f / static_cast<viskores::FloatDefault>(cellDims[2]));
+                                1.0f / static_cast<viskores::FloatDefault>(cellDims[1]),
+                                1.0f / static_cast<viskores::FloatDefault>(cellDims[2]));
 
   viskores::cont::ArrayHandleUniformPointCoordinates coordinates(pointDims, origin, spacing);
   dataSet.AddCoordinateSystem(viskores::cont::CoordinateSystem("coordinates", coordinates));

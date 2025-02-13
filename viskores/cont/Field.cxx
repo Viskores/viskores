@@ -26,7 +26,9 @@ namespace cont
 
 /// constructors for points / whole mesh
 VISKORES_CONT
-Field::Field(std::string name, Association association, const viskores::cont::UnknownArrayHandle& data)
+Field::Field(std::string name,
+             Association association,
+             const viskores::cont::UnknownArrayHandle& data)
   : Name(name)
   , FieldAssociation(association)
   , Data(data)
@@ -160,7 +162,9 @@ namespace
 struct CheckArrayType
 {
   template <typename T, typename S>
-  void operator()(viskores::List<T, S>, const viskores::cont::UnknownArrayHandle& data, bool& found) const
+  void operator()(viskores::List<T, S>,
+                  const viskores::cont::UnknownArrayHandle& data,
+                  bool& found) const
   {
     if (data.CanConvert<viskores::cont::ArrayHandle<T, S>>())
     {
@@ -176,7 +180,8 @@ bool Field::IsSupportedType() const
   bool found = false;
   viskores::ListForEach(
     CheckArrayType{},
-    viskores::cont::internal::ListAllArrayTypes<VISKORES_DEFAULT_TYPE_LIST, VISKORES_DEFAULT_STORAGE_LIST>{},
+    viskores::cont::internal::ListAllArrayTypes<VISKORES_DEFAULT_TYPE_LIST,
+                                                VISKORES_DEFAULT_STORAGE_LIST>{},
     this->Data,
     found);
   return found;
@@ -242,8 +247,8 @@ viskores::cont::UnknownArrayHandle Field::GetDataAsDefaultFloat() const
   }
 
   VISKORES_LOG_SCOPE(viskores::cont::LogLevel::Info,
-                 "Converting field '%s' to default floating point.",
-                 this->GetName().c_str());
+                     "Converting field '%s' to default floating point.",
+                     this->GetName().c_str());
   viskores::cont::UnknownArrayHandle outArray = this->Data.NewInstanceFloatBasic();
   outArray.Allocate(this->Data.GetNumberOfValues());
   this->Data.CastAndCallWithExtractedArray(CopyToFloatArray{}, outArray);
@@ -273,7 +278,8 @@ void Field::ConvertToExpected()
 namespace mangled_diy_namespace
 {
 
-void Serialization<viskores::cont::Field>::save(BinaryBuffer& bb, const viskores::cont::Field& field)
+void Serialization<viskores::cont::Field>::save(BinaryBuffer& bb,
+                                                const viskores::cont::Field& field)
 {
   viskoresdiy::save(bb, field.GetName());
   viskoresdiy::save(bb, static_cast<int>(field.GetAssociation()));

@@ -53,9 +53,9 @@ public:
 
     template <typename ConnectivityInVec, typename InVecFieldPortalType, typename ImplicitFunction>
     VISKORES_EXEC bool operator()(viskores::Id numIndices,
-                              const ConnectivityInVec& connectivityIn,
-                              const InVecFieldPortalType& coordinates,
-                              const ImplicitFunction& function) const
+                                  const ConnectivityInVec& connectivityIn,
+                                  const InVecFieldPortalType& coordinates,
+                                  const ImplicitFunction& function) const
     {
       // Count points inside/outside volume of interest
       viskores::IdComponent inCnt = 0;
@@ -118,11 +118,11 @@ public:
 
   template <typename CellSetType, typename ImplicitFunction>
   viskores::cont::CellSetExplicit<> Run(const CellSetType& cellSet,
-                                    const viskores::cont::CoordinateSystem& coordinates,
-                                    const ImplicitFunction& implicitFunction,
-                                    bool extractInside,
-                                    bool extractBoundaryCells,
-                                    bool extractOnlyBoundaryCells)
+                                        const viskores::cont::CoordinateSystem& coordinates,
+                                        const ImplicitFunction& implicitFunction,
+                                        bool extractInside,
+                                        bool extractBoundaryCells,
+                                        bool extractOnlyBoundaryCells)
   {
     // Worklet output will be a boolean passFlag array
     viskores::cont::ArrayHandle<bool> passFlags;
@@ -132,7 +132,8 @@ public:
     invoke(worklet, cellSet, coordinates, implicitFunction, passFlags);
 
     viskores::cont::ArrayHandleCounting<viskores::Id> indices =
-      viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(1), passFlags.GetNumberOfValues());
+      viskores::cont::make_ArrayHandleCounting(
+        viskores::Id(0), viskores::Id(1), passFlags.GetNumberOfValues());
     viskores::cont::Algorithm::CopyIf(indices, passFlags, this->ValidCellIds);
 
     // generate the cellset

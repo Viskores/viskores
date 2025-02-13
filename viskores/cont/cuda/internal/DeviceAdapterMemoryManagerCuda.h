@@ -26,7 +26,8 @@ class VISKORES_CONT_EXPORT DeviceAdapterMemoryManager<viskores::cont::DeviceAdap
   : public DeviceAdapterMemoryManagerBase
 {
 public:
-  VISKORES_CONT viskores::cont::internal::BufferInfo Allocate(viskores::BufferSizeType size) const override;
+  VISKORES_CONT viskores::cont::internal::BufferInfo Allocate(
+    viskores::BufferSizeType size) const override;
 
   VISKORES_CONT viskores::cont::DeviceAdapterId GetDevice() const override;
 

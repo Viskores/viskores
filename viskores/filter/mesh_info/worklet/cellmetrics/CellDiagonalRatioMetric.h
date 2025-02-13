@@ -80,9 +80,9 @@ VISKORES_EXEC inline OutType ComputeDiagonalRatio(const VecType& diagonals)
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellDiagonalRatioMetric(const viskores::IdComponent& numPts,
-                                          const PointCoordVecType& pts,
-                                          CellShapeType shape,
-                                          viskores::ErrorCode&)
+                                              const PointCoordVecType& pts,
+                                              CellShapeType shape,
+                                              viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -97,9 +97,9 @@ VISKORES_EXEC OutType CellDiagonalRatioMetric(const viskores::IdComponent& numPt
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellDiagonalRatioMetric(const viskores::IdComponent& numPts,
-                                          const PointCoordVecType& pts,
-                                          viskores::CellShapeTagQuad,
-                                          viskores::ErrorCode& ec)
+                                              const PointCoordVecType& pts,
+                                              viskores::CellShapeTagQuad,
+                                              viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -126,9 +126,9 @@ VISKORES_EXEC OutType CellDiagonalRatioMetric(const viskores::IdComponent& numPt
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellDiagonalRatioMetric(const viskores::IdComponent& numPts,
-                                          const PointCoordVecType& pts,
-                                          viskores::CellShapeTagHexahedron,
-                                          viskores::ErrorCode& ec)
+                                              const PointCoordVecType& pts,
+                                              viskores::CellShapeTagHexahedron,
+                                              viskores::ErrorCode& ec)
 {
   if (numPts != 8)
   {

@@ -23,8 +23,8 @@ namespace detail
 {
 
 VISKORES_CONT_EXPORT void HandleTryExecuteException(viskores::cont::DeviceAdapterId deviceId,
-                                                viskores::cont::RuntimeDeviceTracker& tracker,
-                                                const std::string& functorName)
+                                                    viskores::cont::RuntimeDeviceTracker& tracker,
+                                                    const std::string& functorName)
 {
   try
   {
@@ -33,7 +33,8 @@ VISKORES_CONT_EXPORT void HandleTryExecuteException(viskores::cont::DeviceAdapte
   }
   catch (viskores::cont::ErrorBadAllocation& e)
   {
-    VISKORES_LOG_TRYEXECUTE_DISABLE("Bad allocation (" << e.GetMessage() << ")", functorName, deviceId);
+    VISKORES_LOG_TRYEXECUTE_DISABLE(
+      "Bad allocation (" << e.GetMessage() << ")", functorName, deviceId);
     //currently we only consider OOM errors worth disabling a device for
     //than we fallback to another device
     tracker.ReportAllocationFailure(deviceId, e);
@@ -59,8 +60,8 @@ VISKORES_CONT_EXPORT void HandleTryExecuteException(viskores::cont::DeviceAdapte
   catch (viskores::cont::ErrorUserAbort& e)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               e.GetMessage() << " Aborting: " << functorName << ", on device "
-                              << deviceId.GetName());
+                   e.GetMessage() << " Aborting: " << functorName << ", on device "
+                                  << deviceId.GetName());
     throw;
   }
   catch (viskores::cont::Error& e)

@@ -19,9 +19,8 @@
 #define viskores_exec_internal_WorkletInvokeFunctorDetail_h
 
 #if !defined(viskores_exec_internal_TaskSingular_h) && \
-    !defined(viskores_exec_internal_TaskTiling_h) &&  \
-    !defined(viskores_exec_cuda_internal_TaskStrided_h) && \
-    !defined(VISKORES_TEST_HEADER_BUILD)
+  !defined(viskores_exec_internal_TaskTiling_h) &&     \
+  !defined(viskores_exec_cuda_internal_TaskStrided_h) && !defined(VISKORES_TEST_HEADER_BUILD)
 #error WorkletInvokeFunctorDetail.h must be included from TaskSingular.h, TaskTiling.h, TaskStrided.h
 #endif
 
@@ -71,18 +70,17 @@ struct InvocationToFetch
   // ParameterIndex. Note that ControlParameterIndex of 0 is reserved
   // for getting the device adapter tag.
   using ControlInterface = typename Invocation::ControlInterface;
-  using ControlSignatureTag =
-    typename std::conditional<
-      ControlParameterIndex == 0,
-      DummyDeviceControlSignatureTag,
-      typename ControlInterface::template ParameterType<ControlParameterIndex>::type>::type;
+  using ControlSignatureTag = typename std::conditional<
+    ControlParameterIndex == 0,
+    DummyDeviceControlSignatureTag,
+    typename ControlInterface::template ParameterType<ControlParameterIndex>::type>::type;
   using FetchTag = typename ControlSignatureTag::FetchTag;
 
   using ExecObjectType =
-    typename std::conditional<
-      ControlParameterIndex == 0,
-      typename Invocation::DeviceAdapterTag,
-      typename Invocation::ParameterInterface::template ParameterType<ControlParameterIndex>::type>::type;
+    typename std::conditional<ControlParameterIndex == 0,
+                              typename Invocation::DeviceAdapterTag,
+                              typename Invocation::ParameterInterface::template ParameterType<
+                                ControlParameterIndex>::type>::type;
 
   using type = viskores::exec::arg::Fetch<FetchTag, AspectTag, ExecObjectType>;
 
@@ -91,7 +89,8 @@ struct InvocationToFetch
     return typename Invocation::DeviceAdapterTag();
   }
 
-  VISKORES_EXEC static ExecObjectType GetParameterImpl(const Invocation& invocation, std::false_type)
+  VISKORES_EXEC static ExecObjectType GetParameterImpl(const Invocation& invocation,
+                                                       std::false_type)
   {
     return viskores::internal::ParameterGet<ControlParameterIndex>(invocation.Parameters);
   }

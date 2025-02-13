@@ -106,7 +106,7 @@ void CompareArrays(viskores::cont::ArrayHandle<T> array1, viskores::cont::ArrayH
   PortalType portal2 = array2.ReadPortal();
 
   VISKORES_TEST_ASSERT(portal1.GetNumberOfValues() == portal2.GetNumberOfValues(),
-                   "Arrays are not the same length.");
+                       "Arrays are not the same length.");
 
   for (viskores::Id index = 0; index < portal1.GetNumberOfValues(); index++)
   {

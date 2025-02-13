@@ -116,13 +116,15 @@ void TestIO()
   std::cout << "Reading data" << std::endl;
   viskores::cont::DataSet readData = OpenDataFromVTKFile();
 
-  const viskores::cont::CellSet* createdCellSet = createdData.GetCellSet().GetCellSetBase();
+  const viskores::cont::CellSet* createdCellSet =
+    createdData.GetCellSet().GetCellSetBase();
   const viskores::cont::CellSet* readCellSet = readData.GetCellSet().GetCellSetBase();
-  VISKORES_TEST_ASSERT(createdCellSet->GetNumberOfCells() == readCellSet->GetNumberOfCells(),
-                   "Createded and read data do not match.");
+  VISKORES_TEST_ASSERT(createdCellSet->GetNumberOfCells() ==
+                         readCellSet->GetNumberOfCells(),
+                       "Createded and read data do not match.");
   VISKORES_TEST_ASSERT(createdCellSet->GetNumberOfPoints() ==
-                     readCellSet->GetNumberOfPoints(),
-                   "Createded and read data do not match.");
+                         readCellSet->GetNumberOfPoints(),
+                       "Createded and read data do not match.");
 
   std::cout << "Reading and writing image data" << std::endl;
   viskores::Bounds colorBarBounds(-0.8, -0.6, -0.8, 0.8, 0, 0);
@@ -140,17 +142,21 @@ void TestIO()
 
   readData = OpenDataFromPNG();
   VISKORES_TEST_ASSERT(readData.HasPointField("pixel_colors"),
-                   "Point Field Not Found: pixel-data");
+                       "Point Field Not Found: pixel-data");
   viskores::cont::Field colorField = readData.GetPointField("pixel_colors");
-  VISKORES_TEST_ASSERT(colorField.GetNumberOfValues() == 64 * 64, "wrong image dimensions");
-  VISKORES_TEST_ASSERT(colorField.GetData().IsType<CheckType>(), "wrong ArrayHandle type");
+  VISKORES_TEST_ASSERT(colorField.GetNumberOfValues() == 64 * 64,
+                       "wrong image dimensions");
+  VISKORES_TEST_ASSERT(colorField.GetData().IsType<CheckType>(),
+                       "wrong ArrayHandle type");
 
   readData = OpenDataFromPNM();
   VISKORES_TEST_ASSERT(readData.HasPointField("pixels"),
-                   "Point Field Not Found: pixel-data");
+                       "Point Field Not Found: pixel-data");
   colorField = readData.GetPointField("pixels");
-  VISKORES_TEST_ASSERT(colorField.GetNumberOfValues() == 64 * 64, "wrong image dimensions");
-  VISKORES_TEST_ASSERT(colorField.GetData().IsType<CheckType>(), "wrong ArrayHandle type");
+  VISKORES_TEST_ASSERT(colorField.GetNumberOfValues() == 64 * 64,
+                       "wrong image dimensions");
+  VISKORES_TEST_ASSERT(colorField.GetData().IsType<CheckType>(),
+                       "wrong ArrayHandle type");
 }
 
 } // namespace

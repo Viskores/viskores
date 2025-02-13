@@ -85,7 +85,8 @@ private:
     for (ds_const_iterator ds_it = pds.cbegin(); ds_it != pds.cend(); ++ds_it)
     {
       ds_it->GetCellSet().CastAndCallForTypes<viskores::cont::CellSetListStructured>(
-        [&minimumGlobalPointIndexStartThisRank](const auto& css) {
+        [&minimumGlobalPointIndexStartThisRank](const auto& css)
+        {
           minimumGlobalPointIndexStartThisRank.resize(css.Dimension,
                                                       std::numeric_limits<viskores::Id>::max());
           for (viskores::IdComponent d = 0; d < css.Dimension; ++d)
@@ -100,9 +101,9 @@ private:
     std::vector<viskores::Id> minimumGlobalPointIndexStart;
     auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
     viskoresdiy::mpi::all_reduce(comm,
-                             minimumGlobalPointIndexStartThisRank,
-                             minimumGlobalPointIndexStart,
-                             viskoresdiy::mpi::minimum<viskores::Id>{});
+                                 minimumGlobalPointIndexStartThisRank,
+                                 minimumGlobalPointIndexStart,
+                                 viskoresdiy::mpi::minimum<viskores::Id>{});
 
     // Shift all cell sets so that minimum global point index start
     // along each dimension is zero
@@ -111,7 +112,8 @@ private:
     {
       // This does not work, i.e., it does not really change the cell set for the DataSet
       ds_it->GetCellSet().CastAndCallForTypes<viskores::cont::CellSetListStructured>(
-        [&minimumGlobalPointIndexStart, &ds_it](auto& css) {
+        [&minimumGlobalPointIndexStart, &ds_it](auto& css)
+        {
           auto pointIndexStart = css.GetGlobalPointIndexStart();
           typename std::remove_reference_t<decltype(css)>::SchedulingRangeType
             shiftedPointIndexStart;
@@ -138,7 +140,8 @@ private:
     for (ds_const_iterator ds_it = pds.cbegin(); ds_it != pds.cend(); ++ds_it)
     {
       ds_it->GetCellSet().CastAndCallForTypes<viskores::cont::CellSetListStructured>(
-        [&globalPointDimensionsThisRank](const auto& css) {
+        [&globalPointDimensionsThisRank](const auto& css)
+        {
           globalPointDimensionsThisRank.resize(css.Dimension, -1);
           for (viskores::IdComponent d = 0; d < css.Dimension; ++d)
           {
@@ -153,9 +156,9 @@ private:
     std::vector<viskores::Id> globalPointDimensions;
     auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
     viskoresdiy::mpi::all_reduce(comm,
-                             globalPointDimensionsThisRank,
-                             globalPointDimensions,
-                             viskoresdiy::mpi::maximum<viskores::Id>{});
+                                 globalPointDimensionsThisRank,
+                                 globalPointDimensions,
+                                 viskoresdiy::mpi::maximum<viskores::Id>{});
 
     // Set this information in all cell sets
     using ds_iterator = viskores::cont::PartitionedDataSet::iterator;
@@ -163,7 +166,8 @@ private:
     {
       // This does not work, i.e., it does not really change the cell set for the DataSet
       ds_it->GetCellSet().CastAndCallForTypes<viskores::cont::CellSetListStructured>(
-        [&globalPointDimensions, &ds_it](auto& css) {
+        [&globalPointDimensions, &ds_it](auto& css)
+        {
           typename std::remove_reference_t<decltype(css)>::SchedulingRangeType gpd;
           for (viskores::IdComponent d = 0; d < css.Dimension; ++d)
           {
@@ -223,8 +227,9 @@ private:
       std::tie(blockIndex, blockOrigin, blockSize) =
         viskores::filter::testing::contourtree_uniform_distributed::ComputeBlockExtents(
           globalSize, blocksPerAxis, startBlockNo + blockNo);
-      pds.AppendPartition(viskores::filter::testing::contourtree_uniform_distributed::CreateSubDataSet(
-        ds, blockOrigin, blockSize, fieldName));
+      pds.AppendPartition(
+        viskores::filter::testing::contourtree_uniform_distributed::CreateSubDataSet(
+          ds, blockOrigin, blockSize, fieldName));
       localBlockIndicesPortal.Set(blockNo, blockIndex);
     }
   }
@@ -239,7 +244,7 @@ private:
   {
     namespace caugmented_ns = viskores::worklet::contourtree_augmented;
 
-    DataValueType eps = 0.00001f;  // Distance away from critical point
+    DataValueType eps = 0.00001f;      // Distance away from critical point
     viskores::Id numComp = levels + 1; // Number of components the tree should be simplified to
     bool usePersistenceSorter = true;
 
@@ -354,7 +359,7 @@ private:
         VISKORES_TEST_ASSERT(false);
     }
     viskores::filter::scalar_topology::ContourTreeAugmented filter(useMarchingCubes,
-                                                               computeRegularStructure);
+                                                                   computeRegularStructure);
     filter.SetActiveField("pointvar");
     filter.Execute(dataSet);
     return filter;
@@ -394,21 +399,21 @@ public:
     std::cout << "          13           19" << std::endl;
 
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 7),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), viskores::make_Pair(0, 12)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), viskores::make_Pair(4, 13)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), viskores::make_Pair(12, 13)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), viskores::make_Pair(12, 18)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), viskores::make_Pair(12, 20)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), viskores::make_Pair(13, 14)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), viskores::make_Pair(13, 19)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
   }
 
   void TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(
@@ -442,23 +447,23 @@ public:
     std::cout << "          61           71" << std::endl;
 
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 8),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), viskores::make_Pair(10, 20)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), viskores::make_Pair(20, 34)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), viskores::make_Pair(20, 38)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), viskores::make_Pair(20, 61)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), viskores::make_Pair(23, 34)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), viskores::make_Pair(24, 34)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), viskores::make_Pair(50, 61)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), viskores::make_Pair(61, 71)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
   }
 
   void TestContourTree_Mesh3D_Freudenthal_CubicExtents(
@@ -496,25 +501,25 @@ public:
 
     // Make sure the contour tree is correct
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 9),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), viskores::make_Pair(0, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), viskores::make_Pair(31, 42)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), viskores::make_Pair(42, 43)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), viskores::make_Pair(42, 56)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), viskores::make_Pair(56, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), viskores::make_Pair(56, 92)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), viskores::make_Pair(62, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), viskores::make_Pair(81, 92)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), viskores::make_Pair(92, 93)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
   }
 
   void TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(
@@ -552,25 +557,25 @@ public:
 
     // Make sure the contour tree is correct
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 9),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), viskores::make_Pair(0, 112)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), viskores::make_Pair(71, 72)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), viskores::make_Pair(72, 78)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), viskores::make_Pair(72, 101)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), viskores::make_Pair(101, 112)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), viskores::make_Pair(101, 132)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), viskores::make_Pair(107, 112)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), viskores::make_Pair(131, 132)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), viskores::make_Pair(132, 138)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
   }
 
   void TestContourTree_Mesh3D_MarchingCubes_CubicExtents(
@@ -609,29 +614,30 @@ public:
     std::cout << "         118          124" << std::endl;
 
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 11),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), viskores::make_Pair(0, 118)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), viskores::make_Pair(31, 41)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), viskores::make_Pair(41, 43)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), viskores::make_Pair(41, 56)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), viskores::make_Pair(56, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), viskores::make_Pair(56, 91)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), viskores::make_Pair(62, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), viskores::make_Pair(67, 118)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), viskores::make_Pair(81, 91)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(9), viskores::make_Pair(91, 93)),
-                     "Wrong result for ContourTree filter");
-    VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(10), viskores::make_Pair(118, 124)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
+    VISKORES_TEST_ASSERT(
+      test_equal(saddlePeak.WritePortal().Get(10), viskores::make_Pair(118, 124)),
+      "Wrong result for ContourTree filter");
   }
 
   void TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(
@@ -670,29 +676,30 @@ public:
     std::cout << "         203          209" << std::endl;
 
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 11),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), viskores::make_Pair(0, 203)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), viskores::make_Pair(71, 72)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), viskores::make_Pair(72, 78)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), viskores::make_Pair(72, 101)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), viskores::make_Pair(101, 112)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), viskores::make_Pair(101, 132)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), viskores::make_Pair(107, 112)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), viskores::make_Pair(112, 203)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), viskores::make_Pair(131, 132)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(9), viskores::make_Pair(132, 138)),
-                     "Wrong result for ContourTree filter");
-    VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(10), viskores::make_Pair(203, 209)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
+    VISKORES_TEST_ASSERT(
+      test_equal(saddlePeak.WritePortal().Get(10), viskores::make_Pair(203, 209)),
+      "Wrong result for ContourTree filter");
   }
 
   void TestAnalysis() const
@@ -706,7 +713,7 @@ public:
     bool useMarchingCubes = false;
     bool computeRegularStructure = true;
     viskores::filter::scalar_topology::ContourTreeAugmented filter(useMarchingCubes,
-                                                               computeRegularStructure);
+                                                                   computeRegularStructure);
     filter.SetActiveField(fieldName);
 
 #ifdef VISKORES_ENABLE_MPI

@@ -376,11 +376,12 @@ private:
     this->TimingsLogString = timingsStream.str();
     if (this->TimingsLogLevel != viskores::cont::LogLevel::Off)
     {
-      VISKORES_LOG_S(this->TimingsLogLevel,
-                 std::endl
-                   << "    ------------------- Contour Tree Worklet Timings ----------------------"
-                   << std::endl
-                   << this->TimingsLogString);
+      VISKORES_LOG_S(
+        this->TimingsLogLevel,
+        std::endl
+          << "    ------------------- Contour Tree Worklet Timings ----------------------"
+          << std::endl
+          << this->TimingsLogString);
     }
   }
 };

@@ -46,7 +46,8 @@ public:
 protected:
   void* WPtr = nullptr;
 
-  using SetErrorBufferSignature = void (*)(void*, const viskores::exec::internal::ErrorMessageBuffer&);
+  using SetErrorBufferSignature = void (*)(void*,
+                                           const viskores::exec::internal::ErrorMessageBuffer&);
   SetErrorBufferSignature SetErrorBufferFunction = nullptr;
 };
 

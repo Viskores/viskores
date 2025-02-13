@@ -85,7 +85,8 @@ public:
 
   /// The functor checks the direction of the superarc based on the flag information
   /// and returns the outer end supernode of the superarc (without flag information)
-  VISKORES_EXEC viskores::Id operator()(const viskores::Id& superarcId, const viskores::Id& superarcTo) const
+  VISKORES_EXEC viskores::Id operator()(const viskores::Id& superarcId,
+                                        const viskores::Id& superarcTo) const
   {
     if (contourtree_augmented::NoSuchElement(superarcTo))
     {
@@ -123,7 +124,7 @@ public:
 
   template <typename InIdPortalType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id superarcId,
-                                const InIdPortalType& branchRootsPortal) const
+                                        const InIdPortalType& branchRootsPortal) const
   {
     const viskores::Id superarcSize = branchRootsPortal.GetNumberOfValues();
 
@@ -155,7 +156,8 @@ public:
   VISKORES_EXEC_CONT
   CopyArcDirectionWorklet() {}
 
-  VISKORES_EXEC viskores::Id operator()(const viskores::Id superarcId, const viskores::Id superarcTo) const
+  VISKORES_EXEC viskores::Id operator()(const viskores::Id superarcId,
+                                        const viskores::Id superarcTo) const
   {
     if (contourtree_augmented::IsAscending(superarcTo))
     {

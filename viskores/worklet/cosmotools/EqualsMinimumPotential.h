@@ -79,7 +79,9 @@ public:
   EqualsMinimumPotential() {}
 
   VISKORES_EXEC
-  viskores::Id operator()(const viskores::Id& partId, const T& potential1, const T& potential2) const
+  viskores::Id operator()(const viskores::Id& partId,
+                          const T& potential1,
+                          const T& potential2) const
   {
     viskores::Id minParticleIndx = 0;
     if (fabs(potential1 - potential2) < 0.000000000001)

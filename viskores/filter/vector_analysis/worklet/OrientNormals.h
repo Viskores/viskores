@@ -51,7 +51,8 @@ public:
   VISKORES_CONT static void RunCellNormals(
     const CellSetType& cells,
     const viskores::cont::ArrayHandle<viskores::Vec<CoordsCompType, 3>, CoordsStorageType>& coords,
-    viskores::cont::ArrayHandle<viskores::Vec<CellNormalCompType, 3>, CellNormalStorageType>& cellNormals)
+    viskores::cont::ArrayHandle<viskores::Vec<CellNormalCompType, 3>, CellNormalStorageType>&
+      cellNormals)
   {
     OrientCellNormals::Run(cells, coords, cellNormals);
   }
@@ -82,7 +83,8 @@ public:
     const viskores::cont::ArrayHandle<viskores::Vec<CoordsCompType, 3>, CoordsStorageType>& coords,
     viskores::cont::ArrayHandle<viskores::Vec<PointNormalCompType, 3>, PointNormalStorageType>&
       pointNormals,
-    viskores::cont::ArrayHandle<viskores::Vec<CellNormalCompType, 3>, CellNormalStorageType>& cellNormals)
+    viskores::cont::ArrayHandle<viskores::Vec<CellNormalCompType, 3>, CellNormalStorageType>&
+      cellNormals)
   {
     OrientPointAndCellNormals::Run(cells, coords, pointNormals, cellNormals);
   }

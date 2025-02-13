@@ -32,8 +32,13 @@ namespace worklet
 ///
 class VISKORES_WORKLET_EXPORT MaskSelect : public internal::MaskBase
 {
-  using MaskTypes =
-    viskores::List<viskores::Int32, viskores::Int64, viskores::UInt32, viskores::UInt64, viskores::Int8, viskores::UInt8, char>;
+  using MaskTypes = viskores::List<viskores::Int32,
+                                   viskores::Int64,
+                                   viskores::UInt32,
+                                   viskores::UInt64,
+                                   viskores::Int8,
+                                   viskores::UInt8,
+                                   char>;
 
 public:
   using ThreadToOutputMapType = viskores::cont::ArrayHandle<viskores::Id>;
@@ -60,7 +65,7 @@ private:
   ThreadToOutputMapType ThreadToOutputMap;
 
   VISKORES_CONT ThreadToOutputMapType Build(const viskores::cont::UnknownArrayHandle& maskArray,
-                                        viskores::cont::DeviceAdapterId device);
+                                            viskores::cont::DeviceAdapterId device);
 };
 }
 } // namespace viskores::worklet

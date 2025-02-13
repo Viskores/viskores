@@ -21,7 +21,8 @@ namespace
 
 constexpr viskores::Id ARRAY_SIZE = 10;
 
-using HandleTypesToTest = viskores::List<viskores::Id, viskores::Vec2i_32, viskores::FloatDefault, viskores::Vec3f_64>;
+using HandleTypesToTest =
+  viskores::List<viskores::Id, viskores::Vec2i_32, viskores::FloatDefault, viskores::Vec3f_64>;
 
 struct PassThrough : public viskores::worklet::WorkletMapField
 {
@@ -48,7 +49,7 @@ struct TestConstantAsInput
     VISKORES_TEST_ASSERT(constant.GetValue() == value);
     VISKORES_TEST_ASSERT(constant.GetNumberOfValues() == ARRAY_SIZE);
     VISKORES_TEST_ASSERT(constant.GetNumberOfComponentsFlat() ==
-                     viskores::VecFlat<ValueType>::NUM_COMPONENTS);
+                         viskores::VecFlat<ValueType>::NUM_COMPONENTS);
 
     viskores::cont::ArrayHandle<ValueType> result;
 

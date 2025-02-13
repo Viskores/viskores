@@ -56,9 +56,9 @@ using FloatType = viskores::FloatDefault;
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numPts,
-                                           const PointCoordVecType& pts,
-                                           CellShapeType shape,
-                                           viskores::ErrorCode&)
+                                               const PointCoordVecType& pts,
+                                               CellShapeType shape,
+                                               viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -78,9 +78,9 @@ VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numP
 //Full Range  : [-FLOAT_MAX, FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numPts,
-                                           const PointCoordVecType& pts,
-                                           viskores::CellShapeTagTriangle,
-                                           viskores::ErrorCode& ec)
+                                               const PointCoordVecType& pts,
+                                               viskores::CellShapeTagTriangle,
+                                               viskores::ErrorCode& ec)
 {
   if (numPts != 3)
   {
@@ -135,9 +135,9 @@ VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numP
 // Full range   : [-1, 1]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numPts,
-                                           const PointCoordVecType& pts,
-                                           viskores::CellShapeTagQuad,
-                                           viskores::ErrorCode& ec)
+                                               const PointCoordVecType& pts,
+                                               viskores::CellShapeTagQuad,
+                                               viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -180,8 +180,8 @@ VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numP
   alpha1Scaled /= l1l0_product;
   alpha2Scaled /= l2l1_product;
   alpha3Scaled /= l3l2_product;
-  const Scalar q =
-    viskores::Min(alpha0Scaled, viskores::Min(alpha1Scaled, viskores::Min(alpha2Scaled, alpha3Scaled)));
+  const Scalar q = viskores::Min(
+    alpha0Scaled, viskores::Min(alpha1Scaled, viskores::Min(alpha2Scaled, alpha3Scaled)));
   return q;
 }
 
@@ -195,9 +195,9 @@ VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numP
 // Full range  : [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numPts,
-                                           const PointCoordVecType& pts,
-                                           viskores::CellShapeTagHexahedron,
-                                           viskores::ErrorCode& ec)
+                                               const PointCoordVecType& pts,
+                                               viskores::CellShapeTagHexahedron,
+                                               viskores::ErrorCode& ec)
 {
   if (numPts != 8)
   {
@@ -223,7 +223,8 @@ VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numP
                              { (-1 * HexEdges[10]), (-1 * HexEdges[11]), (-1 * HexEdges[7]) },
                              { principleXAxis, principleYAxis, principleZAxis } };
   OutType currDeterminant, minDeterminant = viskores::Infinity<OutType>();
-  FloatType lenSquared1, lenSquared2, lenSquared3, minLengthSquared = viskores::Infinity<FloatType>();
+  FloatType lenSquared1, lenSquared2, lenSquared3,
+    minLengthSquared = viskores::Infinity<FloatType>();
   viskores::IdComponent matrixIndex;
   for (matrixIndex = 0; matrixIndex < 9; matrixIndex++)
   {
@@ -237,9 +238,9 @@ VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numP
     viskores::Normalize(hexMatrices[matrixIndex][0]);
     viskores::Normalize(hexMatrices[matrixIndex][1]);
     viskores::Normalize(hexMatrices[matrixIndex][2]);
-    currDeterminant =
-      (OutType)viskores::Dot(hexMatrices[matrixIndex][0],
-                         viskores::Cross(hexMatrices[matrixIndex][1], hexMatrices[matrixIndex][2]));
+    currDeterminant = (OutType)viskores::Dot(
+      hexMatrices[matrixIndex][0],
+      viskores::Cross(hexMatrices[matrixIndex][1], hexMatrices[matrixIndex][2]));
     if (currDeterminant < minDeterminant)
     {
       minDeterminant = currDeterminant;
@@ -266,9 +267,9 @@ VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numP
 // Full range: [FLOAT_MIN,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numPts,
-                                           const PointCoordVecType& pts,
-                                           viskores::CellShapeTagTetra,
-                                           viskores::ErrorCode& ec)
+                                               const PointCoordVecType& pts,
+                                               viskores::CellShapeTagTetra,
+                                               viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -281,7 +282,8 @@ VISKORES_EXEC OutType CellScaledJacobianMetric(const viskores::IdComponent& numP
   Edge Edges[6] = { pts[1] - pts[0], pts[2] - pts[1], pts[0] - pts[2],
                     pts[3] - pts[0], pts[3] - pts[1], pts[3] - pts[2] };
   OutType EdgesSquared[6];
-  OutType jacobian = static_cast<OutType>(viskores::Dot(viskores::Cross(Edges[2], Edges[0]), Edges[3]));
+  OutType jacobian =
+    static_cast<OutType>(viskores::Dot(viskores::Cross(Edges[2], Edges[0]), Edges[3]));
   // compute the scaled jacobian
   OutType currSide, maxSide = viskores::NegativeInfinity<OutType>();
   viskores::IdComponent edgeIndex, sideIndex;

@@ -36,7 +36,10 @@ VISKORES_NEVER_EXPORT void TaskTilingSetErrorBuffer(
 }
 
 template <typename WType, typename IType>
-VISKORES_NEVER_EXPORT void TaskTiling1DExecute(void* w, void* const v, viskores::Id start, viskores::Id end)
+VISKORES_NEVER_EXPORT void TaskTiling1DExecute(void* w,
+                                               void* const v,
+                                               viskores::Id start,
+                                               viskores::Id end)
 {
   using WorkletType = typename std::remove_cv<WType>::type;
   using InvocationType = typename std::remove_cv<IType>::type;
@@ -59,7 +62,10 @@ VISKORES_NEVER_EXPORT void TaskTiling1DExecute(void* w, void* const v, viskores:
 }
 
 template <typename FType>
-VISKORES_NEVER_EXPORT void FunctorTiling1DExecute(void* f, void* const, viskores::Id start, viskores::Id end)
+VISKORES_NEVER_EXPORT void FunctorTiling1DExecute(void* f,
+                                                  void* const,
+                                                  viskores::Id start,
+                                                  viskores::Id end)
 {
   using FunctorType = typename std::remove_cv<FType>::type;
   FunctorType const* const functor = static_cast<FunctorType*>(f);
@@ -72,12 +78,12 @@ VISKORES_NEVER_EXPORT void FunctorTiling1DExecute(void* f, void* const, viskores
 
 template <typename WType, typename IType>
 VISKORES_NEVER_EXPORT void TaskTiling3DExecute(void* w,
-                                           void* const v,
-                                           const viskores::Id3& maxSize,
-                                           viskores::Id istart,
-                                           viskores::Id iend,
-                                           viskores::Id j,
-                                           viskores::Id k)
+                                               void* const v,
+                                               const viskores::Id3& maxSize,
+                                               viskores::Id istart,
+                                               viskores::Id iend,
+                                               viskores::Id j,
+                                               viskores::Id k)
 {
   using WorkletType = typename std::remove_cv<WType>::type;
   using InvocationType = typename std::remove_cv<IType>::type;
@@ -105,12 +111,12 @@ VISKORES_NEVER_EXPORT void TaskTiling3DExecute(void* w,
 
 template <typename FType>
 VISKORES_NEVER_EXPORT void FunctorTiling3DExecute(void* f,
-                                              void* const,
-                                              const viskores::Id3& viskoresNotUsed(maxSize),
-                                              viskores::Id istart,
-                                              viskores::Id iend,
-                                              viskores::Id j,
-                                              viskores::Id k)
+                                                  void* const,
+                                                  const viskores::Id3& viskoresNotUsed(maxSize),
+                                                  viskores::Id istart,
+                                                  viskores::Id iend,
+                                                  viskores::Id j,
+                                                  viskores::Id k)
 {
   using FunctorType = typename std::remove_cv<FType>::type;
   FunctorType const* const functor = static_cast<FunctorType*>(f);
@@ -205,7 +211,8 @@ protected:
   using ExecuteSignature = void (*)(void*, void* const, viskores::Id, viskores::Id);
   ExecuteSignature ExecuteFunction;
 
-  using SetErrorBufferSignature = void (*)(void*, const viskores::exec::internal::ErrorMessageBuffer&);
+  using SetErrorBufferSignature = void (*)(void*,
+                                           const viskores::exec::internal::ErrorMessageBuffer&);
   SetErrorBufferSignature SetErrorBufferFunction;
 };
 
@@ -290,11 +297,17 @@ protected:
   void* Worklet;
   void* Invocation;
 
-  using ExecuteSignature =
-    void (*)(void*, void* const, const viskores::Id3&, viskores::Id, viskores::Id, viskores::Id, viskores::Id);
+  using ExecuteSignature = void (*)(void*,
+                                    void* const,
+                                    const viskores::Id3&,
+                                    viskores::Id,
+                                    viskores::Id,
+                                    viskores::Id,
+                                    viskores::Id);
   ExecuteSignature ExecuteFunction;
 
-  using SetErrorBufferSignature = void (*)(void*, const viskores::exec::internal::ErrorMessageBuffer&);
+  using SetErrorBufferSignature = void (*)(void*,
+                                           const viskores::exec::internal::ErrorMessageBuffer&);
   SetErrorBufferSignature SetErrorBufferFunction;
 };
 }

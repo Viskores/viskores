@@ -25,8 +25,10 @@ void TestVectorMagnitude()
   viskores::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
   const int nVerts = 18;
-  viskores::Float64 fvars[nVerts] = { 10.1,  20.1,  30.1,  40.1,  50.2,  60.2,  70.2,  80.2,  90.3,
-                                  100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5, 180.5 };
+  viskores::Float64 fvars[nVerts] = {
+    10.1,  20.1,  30.1,  40.1,  50.2,  60.2,  70.2,  80.2,  90.3,
+    100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5, 180.5
+  };
 
   std::vector<viskores::Vec3f_64> fvec(nVerts);
   for (std::size_t i = 0; i < fvec.size(); ++i)

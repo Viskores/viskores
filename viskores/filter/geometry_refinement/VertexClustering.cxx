@@ -16,8 +16,8 @@
 namespace
 {
 VISKORES_CONT bool DoMapField(viskores::cont::DataSet& result,
-                          const viskores::cont::Field& field,
-                          const viskores::worklet::VertexClustering& worklet)
+                              const viskores::cont::Field& field,
+                              const viskores::worklet::VertexClustering& worklet)
 {
   if (field.IsPointField())
   {
@@ -45,12 +45,14 @@ namespace filter
 {
 namespace geometry_refinement
 {
-VISKORES_CONT viskores::cont::DataSet VertexClustering::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet VertexClustering::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   //need to compute bounds first
   viskores::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
-  auto inCellSet = input.GetCellSet().ResetCellSetList<VISKORES_DEFAULT_CELL_SET_LIST_UNSTRUCTURED>();
+  auto inCellSet =
+    input.GetCellSet().ResetCellSetList<VISKORES_DEFAULT_CELL_SET_LIST_UNSTRUCTURED>();
   viskores::cont::UnknownCellSet outCellSet;
   viskores::cont::UnknownArrayHandle outCoords;
   viskores::worklet::VertexClustering worklet;

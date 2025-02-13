@@ -86,8 +86,8 @@ namespace detail
 
 template <class ValueType, class StorageTag, class DeviceAdapterTag>
 VISKORES_CONT void CopyFromHandle(const viskores::cont::ArrayHandle<ValueType, StorageTag>& handle,
-                              viskores::interop::BufferState& state,
-                              DeviceAdapterTag)
+                                  viskores::interop::BufferState& state,
+                                  DeviceAdapterTag)
 {
   //Generic implementation that will work no matter what. We copy the data
   //in the given handle to storage held by the buffer state.
@@ -187,7 +187,8 @@ public:
   }
 
   template <typename StorageTag>
-  VISKORES_CONT void Transfer(const viskores::cont::ArrayHandle<ValueType, StorageTag>& handle) const
+  VISKORES_CONT void Transfer(
+    const viskores::cont::ArrayHandle<ValueType, StorageTag>& handle) const
   {
     //make a buffer for the handle if the user has forgotten too
     if (!glIsBuffer(*this->State.GetHandle()))

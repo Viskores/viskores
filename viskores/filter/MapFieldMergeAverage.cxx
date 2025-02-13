@@ -32,8 +32,8 @@ struct DoMapFieldMerge
 } // anonymous namespace
 
 bool viskores::filter::MapFieldMergeAverage(const viskores::cont::Field& inputField,
-                                        const viskores::worklet::internal::KeysBase& keys,
-                                        viskores::cont::Field& outputField)
+                                            const viskores::worklet::internal::KeysBase& keys,
+                                            viskores::cont::Field& outputField)
 {
   VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -43,7 +43,8 @@ bool viskores::filter::MapFieldMergeAverage(const viskores::cont::Field& inputFi
   try
   {
     inputField.GetData().CastAndCallWithExtractedArray(DoMapFieldMerge{}, keys, outputArray);
-    outputField = viskores::cont::Field(inputField.GetName(), inputField.GetAssociation(), outputArray);
+    outputField =
+      viskores::cont::Field(inputField.GetName(), inputField.GetAssociation(), outputArray);
     return true;
   }
   catch (...)
@@ -54,8 +55,8 @@ bool viskores::filter::MapFieldMergeAverage(const viskores::cont::Field& inputFi
 }
 
 bool viskores::filter::MapFieldMergeAverage(const viskores::cont::Field& inputField,
-                                        const viskores::worklet::internal::KeysBase& keys,
-                                        viskores::cont::DataSet& outputData)
+                                            const viskores::worklet::internal::KeysBase& keys,
+                                            viskores::cont::DataSet& outputData)
 {
   VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 

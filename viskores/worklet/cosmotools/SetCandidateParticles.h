@@ -85,9 +85,9 @@ public:
 
   template <typename OutPortalType>
   VISKORES_EXEC void operator()(const T& bestPot,
-                            const viskores::Id& offset,
-                            const viskores::Id& count,
-                            const OutPortalType& candidate) const
+                                const viskores::Id& offset,
+                                const viskores::Id& count,
+                                const OutPortalType& candidate) const
   {
     if (bestPot <= cutoffPotential)
     {

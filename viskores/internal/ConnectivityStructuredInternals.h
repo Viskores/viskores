@@ -38,7 +38,10 @@ public:
   void SetPointDimensions(viskores::Id dimensions) { this->PointDimensions = dimensions; }
 
   VISKORES_EXEC_CONT
-  void SetGlobalPointDimensions(viskores::Id dimensions) { this->GlobalPointDimensions = dimensions; }
+  void SetGlobalPointDimensions(viskores::Id dimensions)
+  {
+    this->GlobalPointDimensions = dimensions;
+  }
 
   VISKORES_EXEC_CONT
   void SetGlobalPointIndexStart(viskores::Id start) { this->GlobalPointIndexStart = start; }
@@ -135,13 +138,19 @@ public:
   viskores::Id FlatToLogicalPointIndex(viskores::Id flatPointIndex) const { return flatPointIndex; }
 
   VISKORES_EXEC_CONT
-  viskores::Id LogicalToFlatPointIndex(viskores::Id logicalPointIndex) const { return logicalPointIndex; }
+  viskores::Id LogicalToFlatPointIndex(viskores::Id logicalPointIndex) const
+  {
+    return logicalPointIndex;
+  }
 
   VISKORES_EXEC_CONT
   viskores::Id FlatToLogicalCellIndex(viskores::Id flatCellIndex) const { return flatCellIndex; }
 
   VISKORES_EXEC_CONT
-  viskores::Id LogicalToFlatCellIndex(viskores::Id logicalCellIndex) const { return logicalCellIndex; }
+  viskores::Id LogicalToFlatCellIndex(viskores::Id logicalCellIndex) const
+  {
+    return logicalCellIndex;
+  }
 
   VISKORES_CONT
   void PrintSummary(std::ostream& out) const
@@ -185,10 +194,16 @@ public:
   viskores::Id2 GetCellDimensions() const { return this->PointDimensions - viskores::Id2(1); }
 
   VISKORES_EXEC_CONT
-  viskores::Id2 GetGlobalCellDimensions() const { return this->GlobalPointDimensions - viskores::Id2(1); }
+  viskores::Id2 GetGlobalCellDimensions() const
+  {
+    return this->GlobalPointDimensions - viskores::Id2(1);
+  }
 
   VISKORES_EXEC_CONT
-  viskores::Id GetNumberOfPoints() const { return viskores::ReduceProduct(this->GetPointDimensions()); }
+  viskores::Id GetNumberOfPoints() const
+  {
+    return viskores::ReduceProduct(this->GetPointDimensions());
+  }
 
   //returns an id2 to signal what kind of scheduling to use
   VISKORES_EXEC_CONT
@@ -209,7 +224,10 @@ public:
   static constexpr viskores::IdComponent MAX_CELL_TO_POINT = 4;
 
   VISKORES_EXEC_CONT
-  viskores::Id GetNumberOfCells() const { return viskores::ReduceProduct(this->GetCellDimensions()); }
+  viskores::Id GetNumberOfCells() const
+  {
+    return viskores::ReduceProduct(this->GetCellDimensions());
+  }
   VISKORES_EXEC_CONT
   viskores::IdComponent GetNumberOfPointsInCell() const { return NUM_POINTS_IN_CELL; }
   VISKORES_EXEC_CONT
@@ -235,7 +253,8 @@ public:
     return this->GetPointsOfCell(this->FlatToLogicalCellIndex(cellIndex));
   }
 
-  VISKORES_EXEC_CONT viskores::IdComponent GetNumberOfCellsOnPoint(const SchedulingRangeType& ij) const
+  VISKORES_EXEC_CONT viskores::IdComponent GetNumberOfCellsOnPoint(
+    const SchedulingRangeType& ij) const
   {
     viskores::IdComponent numCells = 1;
 
@@ -283,7 +302,8 @@ public:
   }
 
   VISKORES_EXEC_CONT
-  viskores::VecVariable<viskores::Id, MAX_CELL_TO_POINT> GetCellsOfPoint(viskores::Id pointIndex) const
+  viskores::VecVariable<viskores::Id, MAX_CELL_TO_POINT> GetCellsOfPoint(
+    viskores::Id pointIndex) const
   {
     return this->GetCellsOfPoint(this->FlatToLogicalPointIndex(pointIndex));
   }
@@ -398,7 +418,10 @@ public:
   static constexpr viskores::IdComponent MAX_CELL_TO_POINT = 8;
 
   VISKORES_EXEC_CONT
-  viskores::Id GetNumberOfCells() const { return viskores::ReduceProduct(this->GetCellDimensions()); }
+  viskores::Id GetNumberOfCells() const
+  {
+    return viskores::ReduceProduct(this->GetCellDimensions());
+  }
   VISKORES_EXEC_CONT
   viskores::IdComponent GetNumberOfPointsInCell() const { return NUM_POINTS_IN_CELL; }
   VISKORES_EXEC_CONT
@@ -407,7 +430,8 @@ public:
   using CellShapeTag = viskores::CellShapeTagHexahedron;
 
   VISKORES_EXEC_CONT
-  viskores::Vec<viskores::Id, NUM_POINTS_IN_CELL> GetPointsOfCell(const SchedulingRangeType& ijk) const
+  viskores::Vec<viskores::Id, NUM_POINTS_IN_CELL> GetPointsOfCell(
+    const SchedulingRangeType& ijk) const
   {
     viskores::Vec<viskores::Id, NUM_POINTS_IN_CELL> pointIds;
     pointIds[0] = (ijk[2] * this->PointDimensions[1] + ijk[1]) * this->PointDimensions[0] + ijk[0];
@@ -428,7 +452,8 @@ public:
     return this->GetPointsOfCell(this->FlatToLogicalCellIndex(cellIndex));
   }
 
-  VISKORES_EXEC_CONT viskores::IdComponent GetNumberOfCellsOnPoint(const SchedulingRangeType& ijk) const
+  VISKORES_EXEC_CONT viskores::IdComponent GetNumberOfCellsOnPoint(
+    const SchedulingRangeType& ijk) const
   {
     viskores::IdComponent numCells = 1;
 
@@ -497,7 +522,8 @@ public:
   }
 
   VISKORES_EXEC_CONT
-  viskores::VecVariable<viskores::Id, MAX_CELL_TO_POINT> GetCellsOfPoint(viskores::Id pointIndex) const
+  viskores::VecVariable<viskores::Id, MAX_CELL_TO_POINT> GetCellsOfPoint(
+    viskores::Id pointIndex) const
   {
     return this->GetCellsOfPoint(this->FlatToLogicalPointIndex(pointIndex));
   }
@@ -522,8 +548,8 @@ public:
     const viskores::Id indexij = flatPointIndex % pointDims01;
 
     return viskores::Id3(indexij % this->PointDimensions[0],
-                     indexij / this->PointDimensions[0],
-                     flatPointIndex / pointDims01);
+                         indexij / this->PointDimensions[0],
+                         flatPointIndex / pointDims01);
   }
 
   VISKORES_EXEC_CONT
@@ -539,8 +565,8 @@ public:
   {
     const viskores::Id indexij = flatCellIndex % this->CellDim01;
     return viskores::Id3(indexij % this->CellDimensions[0],
-                     indexij / this->CellDimensions[0],
-                     flatCellIndex / this->CellDim01);
+                         indexij / this->CellDimensions[0],
+                         flatCellIndex / this->CellDim01);
   }
 
   VISKORES_EXEC_CONT
@@ -571,7 +597,7 @@ struct ConnectivityStructuredIndexHelper
   // We need to create a test which depends on the templated types so
   // it doesn't get picked up without a concrete instantiation.
   VISKORES_STATIC_ASSERT_MSG(sizeof(VisitTopology) == static_cast<size_t>(-1),
-                         "Missing Specialization for Topologies");
+                             "Missing Specialization for Topologies");
 };
 
 template <viskores::IdComponent Dimension>
@@ -601,7 +627,7 @@ struct ConnectivityStructuredIndexHelper<viskores::TopologyElementTagCell,
 
   template <typename IndexType>
   VISKORES_EXEC_CONT static IndicesType GetIndices(const ConnectivityType& connectivity,
-                                               const IndexType& cellIndex)
+                                                   const IndexType& cellIndex)
   {
     return connectivity.GetPointsOfCell(cellIndex);
   }
@@ -615,7 +641,7 @@ struct ConnectivityStructuredIndexHelper<viskores::TopologyElementTagCell,
 
   VISKORES_EXEC_CONT
   static viskores::Id LogicalToFlatIncidentIndex(const ConnectivityType& connectivity,
-                                             const LogicalIndexType& logicalFromIndex)
+                                                 const LogicalIndexType& logicalFromIndex)
   {
     return connectivity.LogicalToFlatPointIndex(logicalFromIndex);
   }
@@ -629,7 +655,7 @@ struct ConnectivityStructuredIndexHelper<viskores::TopologyElementTagCell,
 
   VISKORES_EXEC_CONT
   static viskores::Id LogicalToFlatVisitIndex(const ConnectivityType& connectivity,
-                                          const LogicalIndexType& logicalToIndex)
+                                              const LogicalIndexType& logicalToIndex)
   {
     return connectivity.LogicalToFlatCellIndex(logicalToIndex);
   }
@@ -653,15 +679,16 @@ struct ConnectivityStructuredIndexHelper<viskores::TopologyElementTagPoint,
   }
 
   template <typename IndexType>
-  VISKORES_EXEC_CONT static viskores::IdComponent GetNumberOfIndices(const ConnectivityType& connectivity,
-                                                             const IndexType& pointIndex)
+  VISKORES_EXEC_CONT static viskores::IdComponent GetNumberOfIndices(
+    const ConnectivityType& connectivity,
+    const IndexType& pointIndex)
   {
     return connectivity.GetNumberOfCellsOnPoint(pointIndex);
   }
 
   template <typename IndexType>
   VISKORES_EXEC_CONT static IndicesType GetIndices(const ConnectivityType& connectivity,
-                                               const IndexType& pointIndex)
+                                                   const IndexType& pointIndex)
   {
     return connectivity.GetCellsOfPoint(pointIndex);
   }
@@ -675,7 +702,7 @@ struct ConnectivityStructuredIndexHelper<viskores::TopologyElementTagPoint,
 
   VISKORES_EXEC_CONT
   static viskores::Id LogicalToFlatIncidentIndex(const ConnectivityType& connectivity,
-                                             const LogicalIndexType& logicalFromIndex)
+                                                 const LogicalIndexType& logicalFromIndex)
   {
     return connectivity.LogicalToFlatCellIndex(logicalFromIndex);
   }
@@ -689,7 +716,7 @@ struct ConnectivityStructuredIndexHelper<viskores::TopologyElementTagPoint,
 
   VISKORES_EXEC_CONT
   static viskores::Id LogicalToFlatVisitIndex(const ConnectivityType& connectivity,
-                                          const LogicalIndexType& logicalToIndex)
+                                              const LogicalIndexType& logicalToIndex)
   {
     return connectivity.LogicalToFlatPointIndex(logicalToIndex);
   }

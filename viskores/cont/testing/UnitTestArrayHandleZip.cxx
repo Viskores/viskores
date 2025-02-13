@@ -69,7 +69,8 @@ struct TestZipAsInput
     viskores::cont::ArrayHandle<ValueType> values =
       viskores::cont::make_ArrayHandle(testValues, ARRAY_SIZE, viskores::CopyFlag::Off);
 
-    viskores::cont::ArrayHandleZip<viskores::cont::ArrayHandle<KeyType>, viskores::cont::ArrayHandle<ValueType>>
+    viskores::cont::ArrayHandleZip<viskores::cont::ArrayHandle<KeyType>,
+                                   viskores::cont::ArrayHandle<ValueType>>
       zip = viskores::cont::make_ArrayHandleZip(keys, values);
 
     viskores::cont::ArrayHandle<PairType> result;
@@ -112,7 +113,8 @@ struct TestZipAsOutput
 
     viskores::cont::ArrayHandle<KeyType> result_keys;
     viskores::cont::ArrayHandle<ValueType> result_values;
-    viskores::cont::ArrayHandleZip<viskores::cont::ArrayHandle<KeyType>, viskores::cont::ArrayHandle<ValueType>>
+    viskores::cont::ArrayHandleZip<viskores::cont::ArrayHandle<KeyType>,
+                                   viskores::cont::ArrayHandle<ValueType>>
       result_zip = viskores::cont::make_ArrayHandleZip(result_keys, result_values);
 
     this->Invoke(PassThrough{}, input, result_zip);
@@ -129,7 +131,7 @@ struct TestZipAsOutput
         test_equal(result_key, KeyType(static_cast<KeyComponentType>(ARRAY_SIZE - i))),
         "ArrayHandleZip Failed as input for key");
       VISKORES_TEST_ASSERT(test_equal(result_value, ValueType(static_cast<ValueComponentType>(i))),
-                       "ArrayHandleZip Failed as input for value");
+                           "ArrayHandleZip Failed as input for value");
     }
 
     // Test filling the zipped array.
@@ -142,7 +144,8 @@ struct TestZipAsOutput
     // First entry should be the same.
     VISKORES_TEST_ASSERT(
       test_equal(keysPortal.Get(0), KeyType(static_cast<KeyComponentType>(ARRAY_SIZE))));
-    VISKORES_TEST_ASSERT(test_equal(valsPortal.Get(0), ValueType(static_cast<ValueComponentType>(0))));
+    VISKORES_TEST_ASSERT(
+      test_equal(valsPortal.Get(0), ValueType(static_cast<ValueComponentType>(0))));
     // The rest should be fillValue
     for (viskores::Id index = 1; index < ARRAY_SIZE; ++index)
     {
@@ -169,7 +172,8 @@ struct TestZipAsInPlace
     viskores::cont::ArrayHandle<ValueType> outputValues;
     outputValues.Allocate(ARRAY_SIZE);
 
-    this->Invoke(InplaceFunctorPair{}, viskores::cont::make_ArrayHandleZip(inputValues, outputValues));
+    this->Invoke(InplaceFunctorPair{},
+                 viskores::cont::make_ArrayHandleZip(inputValues, outputValues));
 
     CheckPortal(outputValues.ReadPortal());
   }
@@ -178,8 +182,8 @@ struct TestZipAsInPlace
 void Run()
 {
   using ZipTypesToTest = viskores::List<viskores::Pair<viskores::UInt8, viskores::Id>,
-                                    viskores::Pair<viskores::Float64, viskores::Vec4ui_8>,
-                                    viskores::Pair<viskores::Vec3f_32, viskores::Vec4i_8>>;
+                                        viskores::Pair<viskores::Float64, viskores::Vec4ui_8>,
+                                        viskores::Pair<viskores::Vec3f_32, viskores::Vec4i_8>>;
   using HandleTypesToTest =
     viskores::List<viskores::Id, viskores::Vec2i_32, viskores::FloatDefault, viskores::Vec3f_64>;
 

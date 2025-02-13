@@ -42,8 +42,8 @@ public:
 
   //template <typename ParticleType>
   VISKORES_EXEC void Analyze(const viskores::Id index,
-                         const ParticleType& oldParticle,
-                         const ParticleType& newParticle)
+                             const ParticleType& oldParticle,
+                             const ParticleType& newParticle)
   {
     // Do nothing
     (void)index;
@@ -82,8 +82,9 @@ public:
     this->Particles = particles; //, viskores::CopyFlag::Off);
   }
 
-  VISKORES_CONT NoAnalysisExec<ParticleType> PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                             viskores::cont::Token& token) const
+  VISKORES_CONT NoAnalysisExec<ParticleType> PrepareForExecution(
+    viskores::cont::DeviceAdapterId device,
+    viskores::cont::Token& token) const
   {
     (void)device;
     (void)token;
@@ -93,7 +94,7 @@ public:
   VISKORES_CONT bool SupportPushOutOfBounds() const { return true; }
 
   VISKORES_CONT static bool MakeDataSet(viskores::cont::DataSet& dataset,
-                                    const std::vector<NoAnalysis>& results);
+                                        const std::vector<NoAnalysis>& results);
 };
 
 template <typename ParticleType>
@@ -140,8 +141,8 @@ public:
 
   //template <typename ParticleType>
   VISKORES_EXEC void Analyze(const viskores::Id index,
-                         const ParticleType& oldParticle,
-                         const ParticleType& newParticle)
+                             const ParticleType& oldParticle,
+                             const ParticleType& newParticle)
   {
     (void)oldParticle;
     viskores::Id streamLength = this->StreamLengths.Get(index);
@@ -222,7 +223,7 @@ public:
 
 
   VISKORES_CONT static bool MakeDataSet(viskores::cont::DataSet& dataset,
-                                    const std::vector<StreamlineAnalysis>& results);
+                                        const std::vector<StreamlineAnalysis>& results);
 
 private:
   viskores::Id NumParticles;
@@ -237,7 +238,8 @@ private:
 extern template class VISKORES_FILTER_FLOW_TEMPLATE_EXPORT NoAnalysis<viskores::Particle>;
 extern template class VISKORES_FILTER_FLOW_TEMPLATE_EXPORT NoAnalysis<viskores::ChargedParticle>;
 extern template class VISKORES_FILTER_FLOW_TEMPLATE_EXPORT StreamlineAnalysis<viskores::Particle>;
-extern template class VISKORES_FILTER_FLOW_TEMPLATE_EXPORT StreamlineAnalysis<viskores::ChargedParticle>;
+extern template class VISKORES_FILTER_FLOW_TEMPLATE_EXPORT
+  StreamlineAnalysis<viskores::ChargedParticle>;
 #endif //!viskores_filter_flow_worklet_Analysis_cxx
 
 } // namespace flow

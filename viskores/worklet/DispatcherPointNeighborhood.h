@@ -25,13 +25,13 @@ class WorkletPointNeighborhood;
 template <typename WorkletType>
 class DispatcherPointNeighborhood
   : public viskores::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType>,
-                                                   WorkletType,
-                                                   viskores::worklet::WorkletNeighborhood>
+                                                       WorkletType,
+                                                       viskores::worklet::WorkletNeighborhood>
 {
   using Superclass =
     viskores::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType>,
-                                            WorkletType,
-                                            viskores::worklet::WorkletNeighborhood>;
+                                                WorkletType,
+                                                viskores::worklet::WorkletNeighborhood>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:

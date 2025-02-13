@@ -37,10 +37,14 @@ public:
   ImageWriterPNG& operator=(const ImageWriterPNG&) = delete;
 
 protected:
-  VISKORES_CONT void Write(viskores::Id width, viskores::Id height, const ColorArrayType& pixels) override;
+  VISKORES_CONT void Write(viskores::Id width,
+                           viskores::Id height,
+                           const ColorArrayType& pixels) override;
 
   template <typename PixelType>
-  VISKORES_CONT void WriteToFile(viskores::Id width, viskores::Id height, const ColorArrayType& pixels);
+  VISKORES_CONT void WriteToFile(viskores::Id width,
+                                 viskores::Id height,
+                                 const ColorArrayType& pixels);
 };
 }
 } // namespace viskores::io

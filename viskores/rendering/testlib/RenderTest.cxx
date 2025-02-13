@@ -178,16 +178,17 @@ void DoRenderTest(viskores::rendering::Canvas& canvas,
     if (options.Colors.empty())
     {
       scene.AddActor(viskores::rendering::Actor(dataSet.GetCellSet(),
-                                            dataSet.GetCoordinateSystem(),
-                                            dataSet.GetField(fieldName),
-                                            options.ColorTable));
+                                                dataSet.GetCoordinateSystem(),
+                                                dataSet.GetField(fieldName),
+                                                options.ColorTable));
     }
     else
     {
-      scene.AddActor(viskores::rendering::Actor(dataSet.GetCellSet(),
-                                            dataSet.GetCoordinateSystem(),
-                                            dataSet.GetField(fieldName),
-                                            options.Colors[dataFieldId % options.Colors.size()]));
+      scene.AddActor(
+        viskores::rendering::Actor(dataSet.GetCellSet(),
+                                   dataSet.GetCoordinateSystem(),
+                                   dataSet.GetField(fieldName),
+                                   options.Colors[dataFieldId % options.Colors.size()]));
     }
     bounds.Include(dataSet.GetCoordinateSystem().GetBounds());
     fieldRange.Include(dataSet.GetField(fieldName).GetRange().ReadPortal().Get(0));
@@ -213,18 +214,18 @@ void DoRenderTest(viskores::rendering::Canvas& canvas,
 
   view.AddTextAnnotation(std::unique_ptr<viskores::rendering::TextAnnotationScreen>(
     new viskores::rendering::TextAnnotationScreen(options.Title,
-                                              options.Foreground,
-                                              options.TitleScale,
-                                              options.TitlePosition,
-                                              options.TitleAngle)));
+                                                  options.Foreground,
+                                                  options.TitleScale,
+                                                  options.TitlePosition,
+                                                  options.TitleAngle)));
   view.SetRenderAnnotationsEnabled(options.EnableAnnotations);
 
   VISKORES_TEST_ASSERT(test_equal_images(view,
-                                     outputFile,
-                                     options.AverageRadius,
-                                     options.PixelShiftRadius,
-                                     options.AllowedPixelErrorRatio,
-                                     options.Threshold));
+                                         outputFile,
+                                         options.AverageRadius,
+                                         options.PixelShiftRadius,
+                                         options.AllowedPixelErrorRatio,
+                                         options.Threshold));
 }
 
 void DoRenderTest(viskores::rendering::CanvasRayTracer& canvas,
@@ -290,8 +291,8 @@ void RenderTest(const DataSetFieldVector& dataSetsFields,
   std::unique_ptr<viskores::cont::ScopedRuntimeDeviceTracker> deviceScope;
   if (options.AllowAnyDevice)
   {
-    deviceScope =
-      std::make_unique<viskores::cont::ScopedRuntimeDeviceTracker>(viskores::cont::DeviceAdapterTagAny{});
+    deviceScope = std::make_unique<viskores::cont::ScopedRuntimeDeviceTracker>(
+      viskores::cont::DeviceAdapterTagAny{});
   }
 
   if (options.Canvas != viskores::rendering::testing::CanvasType::RayTracer)

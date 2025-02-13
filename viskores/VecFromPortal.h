@@ -33,7 +33,9 @@ public:
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   VISKORES_EXEC_CONT
-  VecFromPortal(const PortalType& portal, viskores::IdComponent numComponents = 0, viskores::Id offset = 0)
+  VecFromPortal(const PortalType& portal,
+                viskores::IdComponent numComponents = 0,
+                viskores::Id offset = 0)
     : Portal(portal)
     , NumComponents(numComponents)
     , Offset(offset)
@@ -67,17 +69,19 @@ public:
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   VISKORES_EXEC_CONT
-  viskores::internal::ArrayPortalValueReference<PortalType> operator[](viskores::IdComponent index) const
+  viskores::internal::ArrayPortalValueReference<PortalType> operator[](
+    viskores::IdComponent index) const
   {
     return viskores::internal::ArrayPortalValueReference<PortalType>(this->Portal,
-                                                                 index + this->Offset);
+                                                                     index + this->Offset);
   }
 
   // Only works with Vec-like objects with operator[] and GetNumberofComponents
   template <typename OtherVecType>
   VISKORES_EXEC_CONT VecFromPortal& operator=(const OtherVecType& src)
   {
-    viskores::IdComponent numComponents = viskores::Min(src.GetNumberOfComponents(), this->NumComponents);
+    viskores::IdComponent numComponents =
+      viskores::Min(src.GetNumberOfComponents(), this->NumComponents);
     for (viskores::IdComponent index = 0; index < numComponents; ++index)
     {
       this->Portal.Set(index + this->Offset, src[index]);
@@ -89,7 +93,8 @@ public:
   template <typename OtherVecType>
   VISKORES_EXEC_CONT VecFromPortal& operator+=(const OtherVecType& other)
   {
-    viskores::IdComponent numComponents = viskores::Min(other.GetNumberOfComponents(), this->NumComponents);
+    viskores::IdComponent numComponents =
+      viskores::Min(other.GetNumberOfComponents(), this->NumComponents);
     for (viskores::IdComponent index = 0; index < numComponents; ++index)
     {
       (*this)[index] += other[index];
@@ -101,7 +106,8 @@ public:
   template <typename OtherVecType>
   VISKORES_EXEC_CONT VecFromPortal& operator-=(const OtherVecType& other)
   {
-    viskores::IdComponent numComponents = viskores::Min(other.GetNumberOfComponents(), this->NumComponents);
+    viskores::IdComponent numComponents =
+      viskores::Min(other.GetNumberOfComponents(), this->NumComponents);
     for (viskores::IdComponent index = 0; index < numComponents; ++index)
     {
       (*this)[index] -= other[index];
@@ -113,7 +119,8 @@ private:
   template <typename OtherVecType>
   VISKORES_EXEC_CONT void Multiply(const OtherVecType& other, viskores::TypeTraitsVectorTag)
   {
-    viskores::IdComponent numComponents = viskores::Min(other.GetNumberOfComponents(), this->NumComponents);
+    viskores::IdComponent numComponents =
+      viskores::Min(other.GetNumberOfComponents(), this->NumComponents);
     for (viskores::IdComponent index = 0; index < numComponents; ++index)
     {
       (*this)[index] *= other[index];
@@ -142,7 +149,8 @@ public:
   template <typename OtherVecType>
   VISKORES_EXEC_CONT VecFromPortal& operator/=(const OtherVecType& other)
   {
-    viskores::IdComponent numComponents = viskores::Min(other.GetNumberOfComponents(), this->NumComponents);
+    viskores::IdComponent numComponents =
+      viskores::Min(other.GetNumberOfComponents(), this->NumComponents);
     for (viskores::IdComponent index = 0; index < numComponents; ++index)
     {
       (*this)[index] /= other[index];
@@ -237,7 +245,8 @@ struct VecTraits<viskores::VecFromPortal<PortalType>>
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <viskores::IdComponent destSize>
-  VISKORES_EXEC_CONT static void CopyInto(const VecType& src, viskores::Vec<ComponentType, destSize>& dest)
+  VISKORES_EXEC_CONT static void CopyInto(const VecType& src,
+                                          viskores::Vec<ComponentType, destSize>& dest)
   {
     src.CopyInto(dest);
   }

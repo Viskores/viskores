@@ -36,7 +36,8 @@ VISKORES_EXEC_CONT inline viskores::HashType HashFNV1a32(const InVecType& inVec)
   viskores::HashType hash = FNV1A_OFFSET;
   for (viskores::IdComponent index = 0; index < numComponents; index++)
   {
-    viskores::HashType dataBits = static_cast<viskores::HashType>(Traits::GetComponent(inVec, index));
+    viskores::HashType dataBits =
+      static_cast<viskores::HashType>(Traits::GetComponent(inVec, index));
     hash = (hash * FNV1A_PRIME) ^ dataBits;
   }
 
@@ -54,11 +55,13 @@ VISKORES_EXEC_CONT inline viskores::HashType HashFNV1a64(const InVecType& inVec)
   viskores::HashType hash = FNV1A_OFFSET;
   for (viskores::IdComponent index = 0; index < numComponents; index++)
   {
-    viskores::UInt64 allDataBits = static_cast<viskores::UInt64>(Traits::GetComponent(inVec, index));
+    viskores::UInt64 allDataBits =
+      static_cast<viskores::UInt64>(Traits::GetComponent(inVec, index));
     viskores::HashType upperDataBits =
       static_cast<viskores::HashType>((allDataBits & 0xFFFFFFFF00000000L) >> 32);
     hash = (hash * FNV1A_PRIME) ^ upperDataBits;
-    viskores::HashType lowerDataBits = static_cast<viskores::HashType>(allDataBits & 0x00000000FFFFFFFFL);
+    viskores::HashType lowerDataBits =
+      static_cast<viskores::HashType>(allDataBits & 0x00000000FFFFFFFFL);
     hash = (hash * FNV1A_PRIME) ^ lowerDataBits;
   }
 

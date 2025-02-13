@@ -55,7 +55,10 @@ struct ScatterUniform : internal::ScatterBase
   VISKORES_CONT ScatterUniform() = default;
 
   VISKORES_CONT
-  viskores::Id GetOutputRange(viskores::Id inputRange) const { return inputRange * NumOutputsPerInput; }
+  viskores::Id GetOutputRange(viskores::Id inputRange) const
+  {
+    return inputRange * NumOutputsPerInput;
+  }
   VISKORES_CONT
   viskores::Id GetOutputRange(viskores::Id3 inputRange) const
   {

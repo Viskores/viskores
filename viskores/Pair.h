@@ -84,8 +84,8 @@ struct Pair
   }
 
   template <typename U1, typename U2>
-  VISKORES_EXEC_CONT Pair(viskores::Pair<U1, U2>&& src) noexcept(noexcept(U1{ std::declval<U1&&>() },
-                                                                  U2{ std::declval<U2&&>() }))
+  VISKORES_EXEC_CONT Pair(viskores::Pair<U1, U2>&& src) noexcept(
+    noexcept(U1{ std::declval<U1&&>() }, U2{ std::declval<U2&&>() }))
     : first(std::move(src.first))
     , second(std::move(src.second))
   {
@@ -100,15 +100,16 @@ struct Pair
 
   template <typename U1, typename U2>
   VISKORES_EXEC_CONT Pair(std::pair<U1, U2>&& src) noexcept(noexcept(U1{ std::declval<U1&&>() },
-                                                                 U2{ std::declval<U2&&>() }))
+                                                                     U2{ std::declval<U2&&>() }))
     : first(std::move(src.first))
     , second(std::move(src.second))
   {
   }
 
-  viskores::Pair<FirstType, SecondType>& operator=(const viskores::Pair<FirstType, SecondType>& src) =
+  viskores::Pair<FirstType, SecondType>& operator=(
+    const viskores::Pair<FirstType, SecondType>& src) = default;
+  viskores::Pair<FirstType, SecondType>& operator=(viskores::Pair<FirstType, SecondType>&& src) =
     default;
-  viskores::Pair<FirstType, SecondType>& operator=(viskores::Pair<FirstType, SecondType>&& src) = default;
 
   VISKORES_EXEC_CONT
   bool operator==(const viskores::Pair<FirstType, SecondType>& other) const
@@ -136,34 +137,43 @@ struct Pair
   /// first are equal.
   ///
   VISKORES_EXEC_CONT
-  bool operator>(const viskores::Pair<FirstType, SecondType>& other) const { return (other < *this); }
+  bool operator>(const viskores::Pair<FirstType, SecondType>& other) const
+  {
+    return (other < *this);
+  }
 
   /// Tests ordering on the first object, and then on the second object if the
   /// first are equal.
   ///
   VISKORES_EXEC_CONT
-  bool operator<=(const viskores::Pair<FirstType, SecondType>& other) const { return !(other < *this); }
+  bool operator<=(const viskores::Pair<FirstType, SecondType>& other) const
+  {
+    return !(other < *this);
+  }
 
   /// Tests ordering on the first object, and then on the second object if the
   /// first are equal.
   ///
   VISKORES_EXEC_CONT
-  bool operator>=(const viskores::Pair<FirstType, SecondType>& other) const { return !(*this < other); }
+  bool operator>=(const viskores::Pair<FirstType, SecondType>& other) const
+  {
+    return !(*this < other);
+  }
 };
 
 /// Pairwise Add.
 /// This is done by adding the two objects separately.
 /// Useful for Reduce operation on a zipped array
 template <typename T, typename U>
-VISKORES_EXEC_CONT viskores::Pair<T, U> operator+(const viskores::Pair<T, U>& a, const viskores::Pair<T, U>& b)
+VISKORES_EXEC_CONT viskores::Pair<T, U> operator+(const viskores::Pair<T, U>& a,
+                                                  const viskores::Pair<T, U>& b)
 {
   return viskores::Pair<T, U>(a.first + b.first, a.second + b.second);
 }
 
 template <typename T1, typename T2>
-VISKORES_EXEC_CONT viskores::Pair<typename std::decay<T1>::type, typename std::decay<T2>::type> make_Pair(
-  T1&& v1,
-  T2&& v2)
+VISKORES_EXEC_CONT viskores::Pair<typename std::decay<T1>::type, typename std::decay<T2>::type>
+make_Pair(T1&& v1, T2&& v2)
 {
   using DT1 = typename std::decay<T1>::type;
   using DT2 = typename std::decay<T2>::type;

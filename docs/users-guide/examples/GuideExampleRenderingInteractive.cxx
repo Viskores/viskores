@@ -162,7 +162,9 @@ void DoMousePan(viskores::rendering::View& view,
 ////
 //// BEGIN-EXAMPLE MouseZoom
 ////
-void DoMouseZoom(viskores::rendering::View& view, viskores::Id mouseStartY, viskores::Id mouseEndY)
+void DoMouseZoom(viskores::rendering::View& view,
+                 viskores::Id mouseStartY,
+                 viskores::Id mouseEndY)
 {
   viskores::Id screenHeight = view.GetCanvas().GetHeight();
 
@@ -337,9 +339,9 @@ int go()
   //// BEGIN-EXAMPLE SpecifyColorTable
   ////
   viskores::rendering::Actor actor(surfaceData.GetCellSet(),
-                               surfaceData.GetCoordinateSystem(),
-                               surfaceData.GetField("RandomPointScalars"),
-                               viskores::cont::ColorTable("inferno"));
+                                   surfaceData.GetCoordinateSystem(),
+                                   surfaceData.GetField("RandomPointScalars"),
+                                   viskores::cont::ColorTable("inferno"));
   ////
   //// END-EXAMPLE SpecifyColorTable
   ////

@@ -30,9 +30,9 @@ struct AspectRatioWorklet : MeshQualityWorklet<AspectRatioWorklet>
 {
   template <typename OutType, typename PointCoordVecType, typename CellShapeType>
   VISKORES_EXEC OutType ComputeMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  CellShapeType shape,
-                                  viskores::ErrorCode& ec) const
+                                      const PointCoordVecType& pts,
+                                      CellShapeType shape,
+                                      viskores::ErrorCode& ec) const
   {
     return viskores::worklet::cellmetrics::CellAspectRatioMetric<OutType>(numPts, pts, shape, ec);
   }

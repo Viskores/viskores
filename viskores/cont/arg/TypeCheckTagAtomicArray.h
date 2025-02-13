@@ -37,7 +37,8 @@ struct TypeCheck<TypeCheckTagAtomicArray, ArrayType>
 };
 
 template <typename T>
-struct TypeCheck<TypeCheckTagAtomicArray, viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>>
+struct TypeCheck<TypeCheckTagAtomicArray,
+                 viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>>
 {
   static constexpr bool value = viskores::ListHas<viskores::cont::AtomicArrayTypeList, T>::value;
 };

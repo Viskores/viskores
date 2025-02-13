@@ -24,14 +24,14 @@ struct CheckCellMeasuresFunctor
                   const std::vector<viskores::Float32>& expected) const
   {
     VISKORES_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() ==
-                       static_cast<viskores::Id>(expected.size()),
-                     "Wrong number of entries in the output dataset");
+                           static_cast<viskores::Id>(expected.size()),
+                         "Wrong number of entries in the output dataset");
 
     auto portal = resultArrayHandle.ReadPortal();
     for (std::size_t i = 0; i < expected.size(); ++i)
     {
       VISKORES_TEST_ASSERT(test_equal(portal.Get(static_cast<viskores::Id>(i)), expected[i]),
-                       "Wrong result for CellMeasure filter");
+                           "Wrong result for CellMeasure filter");
     }
   }
 };
@@ -49,14 +49,14 @@ void TestCellMeasuresFilter(viskores::cont::DataSet& dataset,
 
   VISKORES_TEST_ASSERT(vols.GetCellMeasureName() == "measure");
   VISKORES_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
+                       "Wrong number of coordinate systems in the output dataset");
   VISKORES_TEST_ASSERT(outputData.GetNumberOfCells() == static_cast<viskores::Id>(expected.size()),
-                   "Wrong number of cells in the output dataset");
+                       "Wrong number of cells in the output dataset");
 
   // Check that the empty measure name above produced a field with the expected name.
   auto result = outputData.GetField(vols.GetCellMeasureName()).GetData();
   VISKORES_TEST_ASSERT(result.GetNumberOfValues() == static_cast<viskores::Id>(expected.size()),
-                   "Output field could not be found or was improper.");
+                       "Output field could not be found or was improper.");
 
   viskores::cont::CastAndCall(
     result.ResetTypes(viskores::TypeListFieldScalar{}, VISKORES_DEFAULT_STORAGE_LIST{}),

@@ -42,7 +42,7 @@ struct Fetch<viskores::exec::arg::FetchTagArrayDirectOut,
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
   VISKORES_EXEC ValueType Load(const ThreadIndicesType& indices,
-                           const ExecObjectType& arrayPortal) const
+                               const ExecObjectType& arrayPortal) const
   {
     return this->DoLoad(
       indices, arrayPortal, typename std::is_default_constructible<ValueType>::type{});
@@ -51,8 +51,8 @@ struct Fetch<viskores::exec::arg::FetchTagArrayDirectOut,
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType, typename T>
   VISKORES_EXEC void Store(const ThreadIndicesType& indices,
-                       const ExecObjectType& arrayPortal,
-                       const T& value) const
+                           const ExecObjectType& arrayPortal,
+                           const T& value) const
   {
     arrayPortal.Set(indices.GetOutputIndex(), static_cast<ValueType>(value));
   }
@@ -60,7 +60,9 @@ struct Fetch<viskores::exec::arg::FetchTagArrayDirectOut,
 private:
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
-  VISKORES_EXEC ValueType DoLoad(const ThreadIndicesType&, const ExecObjectType&, std::true_type) const
+  VISKORES_EXEC ValueType DoLoad(const ThreadIndicesType&,
+                                 const ExecObjectType&,
+                                 std::true_type) const
   {
     // Load is a no-op for this fetch.
     return ValueType();
@@ -69,8 +71,8 @@ private:
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
   VISKORES_EXEC ValueType DoLoad(const ThreadIndicesType& indices,
-                             const ExecObjectType& arrayPortal,
-                             std::false_type) const
+                                 const ExecObjectType& arrayPortal,
+                                 std::false_type) const
   {
     // Cannot create a ValueType object, so pull one out of the array portal. This may seem
     // weird because an output array often has garbage in it. However, this case can happen

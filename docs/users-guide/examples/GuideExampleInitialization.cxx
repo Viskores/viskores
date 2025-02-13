@@ -30,7 +30,8 @@ int main(int argc, char** argv)
   viskores::cont::InitializeOptions options =
     viskores::cont::InitializeOptions::ErrorOnBadOption |
     viskores::cont::InitializeOptions::DefaultAnyDevice;
-  viskores::cont::InitializeResult config = viskores::cont::Initialize(argc, argv, options);
+  viskores::cont::InitializeResult config =
+    viskores::cont::Initialize(argc, argv, options);
 
   if (argc != 2)
   {
@@ -58,7 +59,8 @@ namespace LoggingExample
 ////
 //// BEGIN-EXAMPLE InitializeLogging
 ////
-static const viskores::cont::LogLevel CustomLogLevel = viskores::cont::LogLevel::UserFirst;
+static const viskores::cont::LogLevel CustomLogLevel =
+  viskores::cont::LogLevel::UserFirst;
 
 int main(int argc, char** argv)
 {
@@ -97,13 +99,13 @@ template<typename T>
 void DoSomething(T&& x)
 {
   VISKORES_LOG_S(CustomLogLevel,
-             "Doing something with type " << viskores::cont::TypeToString<T>());
+                 "Doing something with type " << viskores::cont::TypeToString<T>());
 
   viskores::Id arraySize = 100000 * sizeof(T);
   VISKORES_LOG_S(CustomLogLevel,
-             "Size of array is " << viskores::cont::GetHumanReadableSize(arraySize));
+                 "Size of array is " << viskores::cont::GetHumanReadableSize(arraySize));
   VISKORES_LOG_S(CustomLogLevel,
-             "More precisely it is " << viskores::cont::GetSizeString(arraySize, 4));
+                 "More precisely it is " << viskores::cont::GetSizeString(arraySize, 4));
 
   VISKORES_LOG_S(CustomLogLevel, "Stack location: " << viskores::cont::GetStackTrace());
   ////
@@ -119,10 +121,11 @@ void ExampleLogging()
   //// BEGIN-EXAMPLE BasicLogging
   ////
   VISKORES_LOG_F(viskores::cont::LogLevel::Info,
-             "Base Viskores version: %d.%d",
-             VISKORES_VERSION_MAJOR,
-             VISKORES_VERSION_MINOR);
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Full Viskores version: " << VISKORES_VERSION_FULL);
+                 "Base Viskores version: %d.%d",
+                 VISKORES_VERSION_MAJOR,
+                 VISKORES_VERSION_MINOR);
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 "Full Viskores version: " << VISKORES_VERSION_FULL);
   ////
   //// END-EXAMPLE BasicLogging
   ////
@@ -132,7 +135,8 @@ void ExampleLogging()
   ////
   for (viskores::Id i = 0; i < 5; i++)
   {
-    VISKORES_LOG_IF_S(viskores::cont::LogLevel::Info, i % 2 == 0, "Found an even number: " << i);
+    VISKORES_LOG_IF_S(
+      viskores::cont::LogLevel::Info, i % 2 == 0, "Found an even number: " << i);
   }
   ////
   //// END-EXAMPLE ConditionalLogging

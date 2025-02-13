@@ -89,10 +89,10 @@ public:
             typename InFieldPortalType,
             typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(
-    const viskores::Id& supernode,                  // iteration index
-    const viskores::Id& bestUpSupernodeId,          // bestUpSupernode[supernode]
-    const viskores::Id& bestDownSupernodeId,        // bestDownSupernode[supernode]
-    const viskores::Id& superarcsId,                // hierarchicalTree.superarcs[supernode]
+    const viskores::Id& supernode,              // iteration index
+    const viskores::Id& bestUpSupernodeId,      // bestUpSupernode[supernode]
+    const viskores::Id& bestDownSupernodeId,    // bestDownSupernode[supernode]
+    const viskores::Id& superarcsId,            // hierarchicalTree.superarcs[supernode]
     const ExecObjectType1& findRegularByGlobal, // Execution object to call FindRegularByGlobal
     const ExecObjectType2&
       findSuperArcBetweenNodes, // Execution object to call FindSuperArcBetweenNodes
@@ -138,7 +138,8 @@ public:
 
     // do the same for the best down
     // Search for the regular ID of the best down supernode
-    viskores::Id bestDownLocalRegularId = findRegularByGlobal.FindRegularByGlobal(bestDownSupernodeId);
+    viskores::Id bestDownLocalRegularId =
+      findRegularByGlobal.FindRegularByGlobal(bestDownSupernodeId);
 
     // test to see whether it exists in this rank's hierarchical tree.
     if (viskores::worklet::contourtree_augmented::NoSuchElement(bestDownLocalRegularId))

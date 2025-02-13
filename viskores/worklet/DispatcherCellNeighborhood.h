@@ -26,13 +26,13 @@ class WorkletCellNeighborhood;
 template <typename WorkletType>
 class DispatcherCellNeighborhood
   : public viskores::worklet::internal::DispatcherBase<DispatcherCellNeighborhood<WorkletType>,
-                                                   WorkletType,
-                                                   viskores::worklet::WorkletNeighborhood>
+                                                       WorkletType,
+                                                       viskores::worklet::WorkletNeighborhood>
 {
   using Superclass =
     viskores::worklet::internal::DispatcherBase<DispatcherCellNeighborhood<WorkletType>,
-                                            WorkletType,
-                                            viskores::worklet::WorkletNeighborhood>;
+                                                WorkletType,
+                                                viskores::worklet::WorkletNeighborhood>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:

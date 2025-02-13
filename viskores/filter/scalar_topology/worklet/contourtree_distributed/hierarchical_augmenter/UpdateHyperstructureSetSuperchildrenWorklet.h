@@ -86,10 +86,10 @@ public:
 
   template <typename InFieldPortalType1, typename InFieldPortalType2, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& supernode,
-                            const InFieldPortalType1& augmentedTreeHypernodesPortal,
-                            const viskores::Id& augmentedTreeSuperarcsValue,
-                            const InFieldPortalType2& augmentedTreeHyperparentsPortal,
-                            const OutFieldPortalType& augmentedTreeSuperchildrenPortal) const
+                                const InFieldPortalType1& augmentedTreeHypernodesPortal,
+                                const viskores::Id& augmentedTreeSuperarcsValue,
+                                const InFieldPortalType2& augmentedTreeHyperparentsPortal,
+                                const OutFieldPortalType& augmentedTreeSuperchildrenPortal) const
   {
     // per supernode
     // attachment points have NULL superarcs and are skipped

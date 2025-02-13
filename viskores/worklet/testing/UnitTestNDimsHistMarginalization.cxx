@@ -261,16 +261,16 @@ void TestNDimsHistMarginalization()
   // Ground truth ND histogram
   viskores::Id gtNonSparseBins = 40;
   viskores::Id gtIdx0[40] = { 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4,
-                          4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 8, 9 };
+                              4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 8, 9 };
   viskores::Id gtIdx1[40] = { 1, 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 7, 0, 1, 2, 3, 4, 5, 0, 1,
-                          2, 3, 4, 5, 7, 8, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 1, 2, 0, 1 };
+                              2, 3, 4, 5, 7, 8, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 1, 2, 0, 1 };
   viskores::Id gtFreq[40] = { 1,  2, 1, 2, 1, 4, 7, 6, 3, 2, 2, 1, 6, 6, 8, 6, 2, 2, 6, 9,
-                          10, 2, 5, 1, 1, 1, 6, 7, 9, 6, 3, 3, 2, 3, 2, 2, 3, 2, 1, 1 };
+                              10, 2, 5, 1, 1, 1, 6, 7, 9, 6, 3, 3, 2, 3, 2, 2, 3, 2, 1, 1 };
 
   // Check result
   viskores::Id nonSparseBins = marginalBinIds[0].WritePortal().GetNumberOfValues();
   VISKORES_TEST_ASSERT(nonSparseBins == gtNonSparseBins,
-                   "Incorrect ND-histogram marginalization results");
+                       "Incorrect ND-histogram marginalization results");
 
   for (int i = 0; i < nonSparseBins; i++)
   {
@@ -278,7 +278,7 @@ void TestNDimsHistMarginalization()
     viskores::Id idx1 = marginalBinIds[1].WritePortal().Get(i);
     viskores::Id f = marginalFreqs.WritePortal().Get(i);
     VISKORES_TEST_ASSERT(idx0 == gtIdx0[i] && idx1 == gtIdx1[i] && f == gtFreq[i],
-                     "Incorrect ND-histogram marginalization results");
+                         "Incorrect ND-histogram marginalization results");
   }
 } // TestNDimsHistMarginalization
 }

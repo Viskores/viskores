@@ -45,7 +45,10 @@ public:
   ///
   /// The output field is also marked as the ghost cell field in the output
   /// `viskores::cont::DataSet`.
-  VISKORES_CONT void SetGhostCellName(const std::string& fieldName) { this->GhostCellName = fieldName; }
+  VISKORES_CONT void SetGhostCellName(const std::string& fieldName)
+  {
+    this->GhostCellName = fieldName;
+  }
   /// @copydoc SetGhostCellName
   VISKORES_CONT const std::string& GetGhostCellName() { return this->GhostCellName; }
 };

@@ -59,7 +59,8 @@ using BaseLineConnectivityType = viskores::cont::ArrayHandleImplicit<BaseLineCon
 BaseLineConnectivityType BaseLineConnectivity(BaseLineConnectivityFunctor{},
                                               BaseLineNumberOfCells * 8);
 
-auto PermutationArray = viskores::cont::ArrayHandleCounting<viskores::Id>(0, 2, BaseLineNumberOfCells / 2);
+auto PermutationArray =
+  viskores::cont::ArrayHandleCounting<viskores::Id>(0, 2, BaseLineNumberOfCells / 2);
 
 //-----------------------------------------------------------------------------
 viskores::cont::CellSetExplicit<> MakeCellSetExplicit()
@@ -80,7 +81,8 @@ viskores::cont::CellSetExplicit<> MakeCellSetExplicit()
   return cellset;
 }
 
-viskores::cont::CellSetSingleType<typename BaseLineConnectivityType::StorageTag> MakeCellSetSingleType()
+viskores::cont::CellSetSingleType<typename BaseLineConnectivityType::StorageTag>
+MakeCellSetSingleType()
 {
   viskores::cont::CellSetSingleType<typename BaseLineConnectivityType::StorageTag> cellset;
   cellset.Fill(BaseLineNumberOfPoints, viskores::CELL_SHAPE_HEXAHEDRON, 8, BaseLineConnectivity);
@@ -107,7 +109,8 @@ void TestAgainstBaseLine(const viskores::cont::CellSet& cellset,
   viskores::internal::ConnectivityStructuredInternals<3> baseLineStructure;
   baseLineStructure.SetPointDimensions(BaseLinePointDimensions);
 
-  VISKORES_TEST_ASSERT(cellset.GetNumberOfPoints() == BaseLineNumberOfPoints, "Wrong number of points");
+  VISKORES_TEST_ASSERT(cellset.GetNumberOfPoints() == BaseLineNumberOfPoints,
+                       "Wrong number of points");
 
   viskores::Id numCells = cellset.GetNumberOfCells();
   viskores::Id expectedNumCell = (flag == IsPermutationCellSet::NO)
@@ -121,7 +124,8 @@ void TestAgainstBaseLine(const viskores::cont::CellSet& cellset,
     VISKORES_TEST_ASSERT(cellset.GetCellShape(i) == viskores::CELL_SHAPE_HEXAHEDRON, "Wrong shape");
     VISKORES_TEST_ASSERT(cellset.GetNumberOfPointsInCell(i) == 8, "Wrong number of points-of-cell");
 
-    viskores::Id baseLineCellId = (flag == IsPermutationCellSet::YES) ? permutationPortal.Get(i) : i;
+    viskores::Id baseLineCellId =
+      (flag == IsPermutationCellSet::YES) ? permutationPortal.Get(i) : i;
     auto baseLinePointIds = baseLineStructure.GetPointsOfCell(baseLineCellId);
 
     viskores::Id pointIds[8];

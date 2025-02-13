@@ -16,7 +16,7 @@ namespace viskores
 namespace cont
 {
 
-#define VISKORES_ARRAYHANDLE_SOA_INSTANTIATE(Type)                                    \
+#define VISKORES_ARRAYHANDLE_SOA_INSTANTIATE(Type)                                        \
   template class VISKORES_CONT_EXPORT ArrayHandle<viskores::Vec<Type, 2>, StorageTagSOA>; \
   template class VISKORES_CONT_EXPORT ArrayHandle<viskores::Vec<Type, 3>, StorageTagSOA>; \
   template class VISKORES_CONT_EXPORT ArrayHandle<viskores::Vec<Type, 4>, StorageTagSOA>;

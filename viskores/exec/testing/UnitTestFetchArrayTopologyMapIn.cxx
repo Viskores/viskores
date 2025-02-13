@@ -65,8 +65,9 @@ struct replace
   };
 
   template <typename T, viskores::IdComponent Index>
-  VISKORES_CONT typename ReturnType<T, Index>::type operator()(T&& x,
-                                                           viskores::internal::IndexTag<Index>) const
+  VISKORES_CONT typename ReturnType<T, Index>::type operator()(
+    T&& x,
+    viskores::internal::IndexTag<Index>) const
   {
     return x;
   }
@@ -89,11 +90,11 @@ struct FetchArrayTopologyMapInTests
     using ConnectivityType = typename Invocation::InputDomainType;
     using ThreadIndicesType =
       viskores::exec::arg::ThreadIndicesTopologyMap<ConnectivityType,
-                                                viskores::exec::arg::CustomScatterOrMaskTag>;
+                                                    viskores::exec::arg::CustomScatterOrMaskTag>;
 
     using FetchType = viskores::exec::arg::Fetch<viskores::exec::arg::FetchTagArrayTopologyMapIn,
-                                             viskores::exec::arg::AspectTagDefault,
-                                             TestPortal<T>>;
+                                                 viskores::exec::arg::AspectTagDefault,
+                                                 TestPortal<T>>;
 
     FetchType fetch;
 
@@ -107,7 +108,7 @@ struct FetchArrayTopologyMapInTests
     auto value =
       fetch.Load(indices, viskores::internal::ParameterGet<ParamIndex>(invocation.Parameters));
     VISKORES_TEST_ASSERT(value.GetNumberOfComponents() == 8,
-                     "Topology fetch got wrong number of components.");
+                         "Topology fetch got wrong number of components.");
 
     VISKORES_TEST_ASSERT(test_equal(value[0], TestValue(0, T())), "Got invalid value from Load.");
     VISKORES_TEST_ASSERT(test_equal(value[1], TestValue(1, T())), "Got invalid value from Load.");
@@ -141,11 +142,11 @@ struct FetchArrayTopologyMapInTests
                               .StaticTransformCont(portalReplaceFunctor);
 
     this->TryInvocation(viskores::internal::make_Invocation<InputDomainIndex>(updatedInterface,
-                                                                          baseFunctionInterface,
-                                                                          baseFunctionInterface,
-                                                                          TestIndexPortal(),
-                                                                          TestZeroPortal(),
-                                                                          TestIndexPortal()));
+                                                                              baseFunctionInterface,
+                                                                              baseFunctionInterface,
+                                                                              TestIndexPortal(),
+                                                                              TestZeroPortal(),
+                                                                              TestIndexPortal()));
   }
 };
 
@@ -163,17 +164,19 @@ struct TryType
   }
 };
 
-template <viskores::IdComponent NumDimensions, viskores::IdComponent ParamIndex, typename Invocation>
+template <viskores::IdComponent NumDimensions,
+          viskores::IdComponent ParamIndex,
+          typename Invocation>
 void TryStructuredPointCoordinatesInvocation(const Invocation& invocation)
 {
   using ConnectivityType = typename Invocation::InputDomainType;
   using ThreadIndicesType =
     viskores::exec::arg::ThreadIndicesTopologyMap<ConnectivityType,
-                                              viskores::exec::arg::CustomScatterOrMaskTag>;
+                                                  viskores::exec::arg::CustomScatterOrMaskTag>;
 
   viskores::exec::arg::Fetch<viskores::exec::arg::FetchTagArrayTopologyMapIn,
-                         viskores::exec::arg::AspectTagDefault,
-                         viskores::internal::ArrayPortalUniformPointCoordinates>
+                             viskores::exec::arg::AspectTagDefault,
+                             viskores::internal::ArrayPortalUniformPointCoordinates>
     fetch;
 
   viskores::Vec3f origin = TestValue(0, viskores::Vec3f());
@@ -210,8 +213,8 @@ void TryStructuredPointCoordinatesInvocation(const Invocation& invocation)
 template <viskores::IdComponent NumDimensions>
 void TryStructuredPointCoordinates(
   const viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell,
-                                           viskores::TopologyElementTagPoint,
-                                           NumDimensions>& connectivity,
+                                               viskores::TopologyElementTagPoint,
+                                               NumDimensions>& connectivity,
   const viskores::internal::ArrayPortalUniformPointCoordinates& coordinates)
 {
   using NullType = viskores::internal::NullType;
@@ -225,11 +228,11 @@ void TryStructuredPointCoordinates(
   // Try with topology in argument 1 and point coordinates in argument 2
   TryStructuredPointCoordinatesInvocation<NumDimensions, 2>(
     viskores::internal::make_Invocation<1>(firstFunctionInterface,
-                                       baseFunctionInterface,
-                                       baseFunctionInterface,
-                                       TestIndexPortal(),
-                                       TestZeroPortal(),
-                                       TestIndexPortal()));
+                                           baseFunctionInterface,
+                                           baseFunctionInterface,
+                                           TestIndexPortal(),
+                                           TestZeroPortal(),
+                                           TestIndexPortal()));
 
   // Try again with topology in argument 3 and point coordinates in argument 1
   auto secondFunctionInterface = viskores::internal::make_FunctionInterface<void>(
@@ -237,11 +240,11 @@ void TryStructuredPointCoordinates(
 
   TryStructuredPointCoordinatesInvocation<NumDimensions, 1>(
     viskores::internal::make_Invocation<3>(secondFunctionInterface,
-                                       baseFunctionInterface,
-                                       baseFunctionInterface,
-                                       TestIndexPortal(),
-                                       TestZeroPortal(),
-                                       TestIndexPortal()));
+                                           baseFunctionInterface,
+                                           baseFunctionInterface,
+                                           TestIndexPortal(),
+                                           TestZeroPortal(),
+                                           TestIndexPortal()));
 }
 
 void TryStructuredPointCoordinates()
@@ -254,22 +257,25 @@ void TryStructuredPointCoordinates()
   std::cout << "3D" << std::endl;
   viskores::internal::ConnectivityStructuredInternals<3> connectivityInternals3d;
   connectivityInternals3d.SetPointDimensions(viskores::Id3(3, 2, 2));
-  viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 3>
-    connectivity3d(connectivityInternals3d);
+  viskores::exec::
+    ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 3>
+      connectivity3d(connectivityInternals3d);
   TryStructuredPointCoordinates(connectivity3d, coordinates);
 
   std::cout << "2D" << std::endl;
   viskores::internal::ConnectivityStructuredInternals<2> connectivityInternals2d;
   connectivityInternals2d.SetPointDimensions(viskores::Id2(3, 2));
-  viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 2>
-    connectivity2d(connectivityInternals2d);
+  viskores::exec::
+    ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 2>
+      connectivity2d(connectivityInternals2d);
   TryStructuredPointCoordinates(connectivity2d, coordinates);
 
   std::cout << "1D" << std::endl;
   viskores::internal::ConnectivityStructuredInternals<1> connectivityInternals1d;
   connectivityInternals1d.SetPointDimensions(3);
-  viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 1>
-    connectivity1d(connectivityInternals1d);
+  viskores::exec::
+    ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 1>
+      connectivity1d(connectivityInternals1d);
   TryStructuredPointCoordinates(connectivity1d, coordinates);
 }
 

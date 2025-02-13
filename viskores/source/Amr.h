@@ -74,7 +74,10 @@ public:
   {
     this->CellsPerDimension = cellsPerDimension;
   }
-  VISKORES_CONT viskores::IdComponent GetCellsPerDimension() const { return this->CellsPerDimension; }
+  VISKORES_CONT viskores::IdComponent GetCellsPerDimension() const
+  {
+    return this->CellsPerDimension;
+  }
 
   VISKORES_CONT void SetNumberOfLevels(viskores::IdComponent numberOfLevels)
   {

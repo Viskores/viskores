@@ -52,11 +52,14 @@ void TestCosmoCenterFinder(const char* fileName)
   }
 
   viskores::cont::ArrayHandle<viskores::Float32> xLocArray =
-    viskores::cont::make_ArrayHandle<viskores::Float32>(xLocation, nParticles, viskores::CopyFlag::Off);
+    viskores::cont::make_ArrayHandle<viskores::Float32>(
+      xLocation, nParticles, viskores::CopyFlag::Off);
   viskores::cont::ArrayHandle<viskores::Float32> yLocArray =
-    viskores::cont::make_ArrayHandle<viskores::Float32>(yLocation, nParticles, viskores::CopyFlag::Off);
+    viskores::cont::make_ArrayHandle<viskores::Float32>(
+      yLocation, nParticles, viskores::CopyFlag::Off);
   viskores::cont::ArrayHandle<viskores::Float32> zLocArray =
-    viskores::cont::make_ArrayHandle<viskores::Float32>(zLocation, nParticles, viskores::CopyFlag::Off);
+    viskores::cont::make_ArrayHandle<viskores::Float32>(
+      zLocation, nParticles, viskores::CopyFlag::Off);
 
   // Output MBP particleId pairs array
   viskores::Pair<viskores::Id, viskores::Float32> nxnResult;
@@ -72,7 +75,7 @@ void TestCosmoCenterFinder(const char* fileName)
       xLocArray, yLocArray, zLocArray, nParticles, particleMass, nxnResult);
 
     VISKORES_LOG_S(CosmoLogLevel,
-               "NxN MPB = " << nxnResult.first << "  potential = " << nxnResult.second);
+                   "NxN MPB = " << nxnResult.first << "  potential = " << nxnResult.second);
   }
 
   {
@@ -81,7 +84,7 @@ void TestCosmoCenterFinder(const char* fileName)
       xLocArray, yLocArray, zLocArray, nParticles, particleMass, mxnResult);
 
     VISKORES_LOG_S(CosmoLogLevel,
-               "MxN MPB = " << mxnResult.first << "  potential = " << mxnResult.second);
+                   "MxN MPB = " << mxnResult.first << "  potential = " << mxnResult.second);
   }
 
   if (nxnResult.first == mxnResult.first)
@@ -125,7 +128,8 @@ int main(int argc, char* argv[])
   }
 
 #ifndef VISKORES_ENABLE_LOGGING
-  std::cout << "Warning: turn on Viskores_ENABLE_LOGGING CMake option to turn on timing." << std::endl;
+  std::cout << "Warning: turn on Viskores_ENABLE_LOGGING CMake option to turn on timing."
+            << std::endl;
 #endif
 
   TestCosmoCenterFinder(argv[1]);

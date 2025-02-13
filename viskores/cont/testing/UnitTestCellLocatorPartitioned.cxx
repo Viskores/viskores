@@ -32,9 +32,9 @@ struct QueryCellsWorklet : public viskores::worklet::WorkletMapField
 
   template <typename PointType, typename CellLocatorExecObjectType>
   VISKORES_EXEC void operator()(const PointType& point,
-                            const CellLocatorExecObjectType& cellLocator,
-                            viskores::Id& cellId,
-                            viskores::Id& partitionId) const
+                                const CellLocatorExecObjectType& cellLocator,
+                                viskores::Id& cellId,
+                                viskores::Id& partitionId) const
   {
     viskores::Vec3f parametric;
     viskores::ErrorCode status = cellLocator.FindCell(point, partitionId, cellId, parametric);

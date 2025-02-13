@@ -59,7 +59,7 @@ void CheckResults(viskores::cont::DataSet inDataSet,
   {
     auto field = inDataSet.GetField(FieldNames[componentIndex]);
     VISKORES_TEST_ASSERT(compositedField.GetAssociation() == field.GetAssociation(),
-                     "Got bad association value.");
+                         "Got bad association value.");
 
     viskores::IdComponent fieldLen = static_cast<viskores::IdComponent>(field.GetNumberOfValues());
     VISKORES_TEST_ASSERT(compositedFieldLen == fieldLen, "Got wrong field length.");

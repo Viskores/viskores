@@ -320,7 +320,8 @@ struct ArrayPortalValueReference
     return viskores::VecTraits<ValueType>::GetNumberOfComponents(this->Get());
   }
   VISKORES_EXEC_CONT
-  typename viskores::VecTraits<ValueType>::ComponentType operator[](viskores::IdComponent index) const
+  typename viskores::VecTraits<ValueType>::ComponentType operator[](
+    viskores::IdComponent index) const
   {
     return viskores::VecTraits<ValueType>::GetComponent(this->Get(), index);
   }
@@ -367,7 +368,7 @@ void swap(typename viskores::internal::ArrayPortalValueReference<T>::ValueType& 
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator==(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const typename LhsPortalType::ValueType& rhs)
+                                   const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() == rhs)
 {
   return lhs.Get() == rhs;
@@ -375,7 +376,7 @@ VISKORES_EXEC_CONT auto operator==(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator==(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() == rhs.Get())
 {
   return lhs.Get() == rhs.Get();
@@ -383,7 +384,7 @@ VISKORES_EXEC_CONT auto operator==(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator==(const typename RhsPortalType::ValueType& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs == rhs.Get())
 {
   return lhs == rhs.Get();
@@ -392,7 +393,7 @@ VISKORES_EXEC_CONT auto operator==(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator!=(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const typename LhsPortalType::ValueType& rhs)
+                                   const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() != rhs)
 {
   return lhs.Get() != rhs;
@@ -400,7 +401,7 @@ VISKORES_EXEC_CONT auto operator!=(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator!=(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() != rhs.Get())
 {
   return lhs.Get() != rhs.Get();
@@ -408,7 +409,7 @@ VISKORES_EXEC_CONT auto operator!=(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator!=(const typename RhsPortalType::ValueType& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs != rhs.Get())
 {
   return lhs != rhs.Get();
@@ -417,7 +418,7 @@ VISKORES_EXEC_CONT auto operator!=(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator<(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const typename LhsPortalType::ValueType& rhs)
+                                  const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() < rhs)
 {
   return lhs.Get() < rhs;
@@ -425,7 +426,7 @@ VISKORES_EXEC_CONT auto operator<(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator<(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() < rhs.Get())
 {
   return lhs.Get() < rhs.Get();
@@ -433,7 +434,7 @@ VISKORES_EXEC_CONT auto operator<(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator<(const typename RhsPortalType::ValueType& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs < rhs.Get())
 {
   return lhs < rhs.Get();
@@ -442,7 +443,7 @@ VISKORES_EXEC_CONT auto operator<(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator>(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const typename LhsPortalType::ValueType& rhs)
+                                  const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() > rhs)
 {
   return lhs.Get() > rhs;
@@ -450,7 +451,7 @@ VISKORES_EXEC_CONT auto operator>(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator>(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() > rhs.Get())
 {
   return lhs.Get() > rhs.Get();
@@ -458,7 +459,7 @@ VISKORES_EXEC_CONT auto operator>(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator>(const typename RhsPortalType::ValueType& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs > rhs.Get())
 {
   return lhs > rhs.Get();
@@ -467,7 +468,7 @@ VISKORES_EXEC_CONT auto operator>(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator<=(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const typename LhsPortalType::ValueType& rhs)
+                                   const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() <= rhs)
 {
   return lhs.Get() <= rhs;
@@ -475,7 +476,7 @@ VISKORES_EXEC_CONT auto operator<=(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator<=(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() <= rhs.Get())
 {
   return lhs.Get() <= rhs.Get();
@@ -483,7 +484,7 @@ VISKORES_EXEC_CONT auto operator<=(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator<=(const typename RhsPortalType::ValueType& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs <= rhs.Get())
 {
   return lhs <= rhs.Get();
@@ -492,7 +493,7 @@ VISKORES_EXEC_CONT auto operator<=(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator>=(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const typename LhsPortalType::ValueType& rhs)
+                                   const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() >= rhs)
 {
   return lhs.Get() >= rhs;
@@ -500,7 +501,7 @@ VISKORES_EXEC_CONT auto operator>=(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator>=(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() >= rhs.Get())
 {
   return lhs.Get() >= rhs.Get();
@@ -508,7 +509,7 @@ VISKORES_EXEC_CONT auto operator>=(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator>=(const typename RhsPortalType::ValueType& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs >= rhs.Get())
 {
   return lhs >= rhs.Get();
@@ -517,7 +518,7 @@ VISKORES_EXEC_CONT auto operator>=(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator+(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const typename LhsPortalType::ValueType& rhs)
+                                  const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() + rhs)
 {
   return lhs.Get() + rhs;
@@ -525,7 +526,7 @@ VISKORES_EXEC_CONT auto operator+(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator+(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() + rhs.Get())
 {
   return lhs.Get() + rhs.Get();
@@ -533,7 +534,7 @@ VISKORES_EXEC_CONT auto operator+(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator+(const typename RhsPortalType::ValueType& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs + rhs.Get())
 {
   return lhs + rhs.Get();
@@ -542,7 +543,7 @@ VISKORES_EXEC_CONT auto operator+(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator-(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const typename LhsPortalType::ValueType& rhs)
+                                  const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() - rhs)
 {
   return lhs.Get() - rhs;
@@ -550,7 +551,7 @@ VISKORES_EXEC_CONT auto operator-(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator-(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() - rhs.Get())
 {
   return lhs.Get() - rhs.Get();
@@ -558,7 +559,7 @@ VISKORES_EXEC_CONT auto operator-(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator-(const typename RhsPortalType::ValueType& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs - rhs.Get())
 {
   return lhs - rhs.Get();
@@ -567,7 +568,7 @@ VISKORES_EXEC_CONT auto operator-(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator*(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const typename LhsPortalType::ValueType& rhs)
+                                  const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() * rhs)
 {
   return lhs.Get() * rhs;
@@ -575,7 +576,7 @@ VISKORES_EXEC_CONT auto operator*(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator*(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() * rhs.Get())
 {
   return lhs.Get() * rhs.Get();
@@ -583,7 +584,7 @@ VISKORES_EXEC_CONT auto operator*(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator*(const typename RhsPortalType::ValueType& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs * rhs.Get())
 {
   return lhs * rhs.Get();
@@ -592,7 +593,7 @@ VISKORES_EXEC_CONT auto operator*(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator/(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const typename LhsPortalType::ValueType& rhs)
+                                  const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() / rhs)
 {
   return lhs.Get() / rhs;
@@ -600,7 +601,7 @@ VISKORES_EXEC_CONT auto operator/(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator/(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() / rhs.Get())
 {
   return lhs.Get() / rhs.Get();
@@ -608,7 +609,7 @@ VISKORES_EXEC_CONT auto operator/(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator/(const typename RhsPortalType::ValueType& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs / rhs.Get())
 {
   return lhs / rhs.Get();
@@ -617,7 +618,7 @@ VISKORES_EXEC_CONT auto operator/(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator%(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const typename LhsPortalType::ValueType& rhs)
+                                  const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() % rhs)
 {
   return lhs.Get() % rhs;
@@ -625,7 +626,7 @@ VISKORES_EXEC_CONT auto operator%(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator%(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() % rhs.Get())
 {
   return lhs.Get() % rhs.Get();
@@ -633,7 +634,7 @@ VISKORES_EXEC_CONT auto operator%(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator%(const typename RhsPortalType::ValueType& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs % rhs.Get())
 {
   return lhs % rhs.Get();
@@ -642,7 +643,7 @@ VISKORES_EXEC_CONT auto operator%(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator^(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const typename LhsPortalType::ValueType& rhs)
+                                  const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() ^ rhs)
 {
   return lhs.Get() ^ rhs;
@@ -650,7 +651,7 @@ VISKORES_EXEC_CONT auto operator^(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator^(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() ^ rhs.Get())
 {
   return lhs.Get() ^ rhs.Get();
@@ -658,7 +659,7 @@ VISKORES_EXEC_CONT auto operator^(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator^(const typename RhsPortalType::ValueType& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs ^ rhs.Get())
 {
   return lhs ^ rhs.Get();
@@ -667,7 +668,7 @@ VISKORES_EXEC_CONT auto operator^(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator|(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const typename LhsPortalType::ValueType& rhs)
+                                  const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() | rhs)
 {
   return lhs.Get() | rhs;
@@ -675,7 +676,7 @@ VISKORES_EXEC_CONT auto operator|(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator|(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() | rhs.Get())
 {
   return lhs.Get() | rhs.Get();
@@ -683,7 +684,7 @@ VISKORES_EXEC_CONT auto operator|(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator|(const typename RhsPortalType::ValueType& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs | rhs.Get())
 {
   return lhs | rhs.Get();
@@ -692,7 +693,7 @@ VISKORES_EXEC_CONT auto operator|(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator&(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const typename LhsPortalType::ValueType& rhs)
+                                  const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() & rhs)
 {
   return lhs.Get() & rhs;
@@ -700,7 +701,7 @@ VISKORES_EXEC_CONT auto operator&(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator&(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() & rhs.Get())
 {
   return lhs.Get() & rhs.Get();
@@ -708,7 +709,7 @@ VISKORES_EXEC_CONT auto operator&(const ArrayPortalValueReference<LhsPortalType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator&(const typename RhsPortalType::ValueType& lhs,
-                              const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                  const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs & rhs.Get())
 {
   return lhs & rhs.Get();
@@ -717,7 +718,7 @@ VISKORES_EXEC_CONT auto operator&(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator<<(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const typename LhsPortalType::ValueType& rhs)
+                                   const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() << rhs)
 {
   return lhs.Get() << rhs;
@@ -725,7 +726,7 @@ VISKORES_EXEC_CONT auto operator<<(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator<<(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() << rhs.Get())
 {
   return lhs.Get() << rhs.Get();
@@ -733,7 +734,7 @@ VISKORES_EXEC_CONT auto operator<<(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator<<(const typename RhsPortalType::ValueType& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs << rhs.Get())
 {
   return lhs << rhs.Get();
@@ -742,7 +743,7 @@ VISKORES_EXEC_CONT auto operator<<(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator>>(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const typename LhsPortalType::ValueType& rhs)
+                                   const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() >> rhs)
 {
   return lhs.Get() >> rhs;
@@ -750,7 +751,7 @@ VISKORES_EXEC_CONT auto operator>>(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator>>(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() >> rhs.Get())
 {
   return lhs.Get() >> rhs.Get();
@@ -758,7 +759,7 @@ VISKORES_EXEC_CONT auto operator>>(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator>>(const typename RhsPortalType::ValueType& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs >> rhs.Get())
 {
   return lhs >> rhs.Get();
@@ -783,7 +784,7 @@ VISKORES_EXEC_CONT auto operator!(const ArrayPortalValueReference<PortalType>& r
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator&&(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const typename LhsPortalType::ValueType& rhs)
+                                   const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() && rhs)
 {
   return lhs.Get() && rhs;
@@ -791,7 +792,7 @@ VISKORES_EXEC_CONT auto operator&&(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator&&(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() && rhs.Get())
 {
   return lhs.Get() && rhs.Get();
@@ -799,7 +800,7 @@ VISKORES_EXEC_CONT auto operator&&(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator&&(const typename RhsPortalType::ValueType& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs && rhs.Get())
 {
   return lhs && rhs.Get();
@@ -808,7 +809,7 @@ VISKORES_EXEC_CONT auto operator&&(const typename RhsPortalType::ValueType& lhs,
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType>
 VISKORES_EXEC_CONT auto operator||(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const typename LhsPortalType::ValueType& rhs)
+                                   const typename LhsPortalType::ValueType& rhs)
   -> decltype(lhs.Get() || rhs)
 {
   return lhs.Get() || rhs;
@@ -816,7 +817,7 @@ VISKORES_EXEC_CONT auto operator||(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename LhsPortalType, typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator||(const ArrayPortalValueReference<LhsPortalType>& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs.Get() || rhs.Get())
 {
   return lhs.Get() || rhs.Get();
@@ -824,7 +825,7 @@ VISKORES_EXEC_CONT auto operator||(const ArrayPortalValueReference<LhsPortalType
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename RhsPortalType>
 VISKORES_EXEC_CONT auto operator||(const typename RhsPortalType::ValueType& lhs,
-                               const ArrayPortalValueReference<RhsPortalType>& rhs)
+                                   const ArrayPortalValueReference<RhsPortalType>& rhs)
   -> decltype(lhs || rhs.Get())
 {
   return lhs || rhs.Get();
@@ -840,13 +841,15 @@ namespace viskores
 
 template <typename PortalType>
 struct TypeTraits<viskores::internal::ArrayPortalValueReference<PortalType>>
-  : viskores::TypeTraits<typename viskores::internal::ArrayPortalValueReference<PortalType>::ValueType>
+  : viskores::TypeTraits<
+      typename viskores::internal::ArrayPortalValueReference<PortalType>::ValueType>
 {
 };
 
 template <typename PortalType>
 struct VecTraits<viskores::internal::ArrayPortalValueReference<PortalType>>
-  : viskores::VecTraits<typename viskores::internal::ArrayPortalValueReference<PortalType>::ValueType>
+  : viskores::VecTraits<
+      typename viskores::internal::ArrayPortalValueReference<PortalType>::ValueType>
 {
 };
 

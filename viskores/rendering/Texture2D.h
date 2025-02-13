@@ -135,10 +135,13 @@ public:
 
   private:
     VISKORES_EXEC
-    inline ColorType GetNearestNeighbourFilteredColor(viskores::Float32 u, viskores::Float32 v) const
+    inline ColorType GetNearestNeighbourFilteredColor(viskores::Float32 u,
+                                                      viskores::Float32 v) const
     {
-      viskores::Id x = static_cast<viskores::Id>(viskores::Round(u * static_cast<viskores::Float32>(Width - 1)));
-      viskores::Id y = static_cast<viskores::Id>(viskores::Round(v * static_cast<viskores::Float32>(Height - 1)));
+      viskores::Id x =
+        static_cast<viskores::Id>(viskores::Round(u * static_cast<viskores::Float32>(Width - 1)));
+      viskores::Id y =
+        static_cast<viskores::Id>(viskores::Round(v * static_cast<viskores::Float32>(Height - 1)));
       return GetColorAtCoords(x, y);
     }
 
@@ -175,7 +178,10 @@ public:
     }
 
     VISKORES_EXEC
-    inline void GetNextCoords(viskores::Id x, viskores::Id y, viskores::Id& xn, viskores::Id& yn) const
+    inline void GetNextCoords(viskores::Id x,
+                              viskores::Id y,
+                              viskores::Id& xn,
+                              viskores::Id& yn) const
     {
       switch (WrapMode)
       {

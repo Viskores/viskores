@@ -42,10 +42,11 @@ public:
     return std::vector<viskores::cont::internal::Buffer>(1);
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     buffers[0].SetNumberOfBytes(
       viskores::internal::NumberOfValuesToNumberOfBytes<T>(numValues), preserve, token);
@@ -62,14 +63,14 @@ public:
   {
     VISKORES_ASSERT(buffers.size() == 1);
     return static_cast<viskores::Id>(buffers[0].GetNumberOfBytes() /
-                                 static_cast<viskores::BufferSizeType>(sizeof(T)));
+                                     static_cast<viskores::BufferSizeType>(sizeof(T)));
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             const T& fillValue,
-                             viskores::Id startIndex,
-                             viskores::Id endIndex,
-                             viskores::cont::Token& token)
+                                 const T& fillValue,
+                                 viskores::Id startIndex,
+                                 viskores::Id endIndex,
+                                 viskores::cont::Token& token)
   {
     VISKORES_ASSERT(buffers.size() == 1);
     constexpr viskores::BufferSizeType fillValueSize =
@@ -108,25 +109,27 @@ public:
 /// This is the default used when no storage is specified. Using this subclass
 /// allows access to the underlying raw array.
 template <typename T>
-class VISKORES_ALWAYS_EXPORT ArrayHandleBasic : public ArrayHandle<T, viskores::cont::StorageTagBasic>
+class VISKORES_ALWAYS_EXPORT ArrayHandleBasic
+  : public ArrayHandle<T, viskores::cont::StorageTagBasic>
 {
 public:
   VISKORES_ARRAY_HANDLE_SUBCLASS(ArrayHandleBasic,
-                             (ArrayHandleBasic<T>),
-                             (ArrayHandle<T, viskores::cont::StorageTagBasic>));
+                                 (ArrayHandleBasic<T>),
+                                 (ArrayHandle<T, viskores::cont::StorageTagBasic>));
 
   ArrayHandleBasic(
     T* array,
     viskores::Id numberOfValues,
     viskores::cont::internal::BufferInfo::Deleter deleter,
     viskores::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<viskores::cont::internal::Buffer>{ viskores::cont::internal::MakeBuffer(
-        viskores::cont::DeviceAdapterTagUndefined{},
-        array,
-        array,
-        viskores::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
-        deleter,
-        reallocater) })
+    : Superclass(
+        std::vector<viskores::cont::internal::Buffer>{ viskores::cont::internal::MakeBuffer(
+          viskores::cont::DeviceAdapterTagUndefined{},
+          array,
+          array,
+          viskores::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+          deleter,
+          reallocater) })
   {
   }
 
@@ -136,13 +139,14 @@ public:
     viskores::cont::DeviceAdapterId device,
     viskores::cont::internal::BufferInfo::Deleter deleter,
     viskores::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<viskores::cont::internal::Buffer>{ viskores::cont::internal::MakeBuffer(
-        device,
-        array,
-        array,
-        viskores::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
-        deleter,
-        reallocater) })
+    : Superclass(
+        std::vector<viskores::cont::internal::Buffer>{ viskores::cont::internal::MakeBuffer(
+          device,
+          array,
+          array,
+          viskores::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+          deleter,
+          reallocater) })
   {
   }
 
@@ -152,13 +156,14 @@ public:
     viskores::Id numberOfValues,
     viskores::cont::internal::BufferInfo::Deleter deleter,
     viskores::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<viskores::cont::internal::Buffer>{ viskores::cont::internal::MakeBuffer(
-        viskores::cont::DeviceAdapterTagUndefined{},
-        array,
-        container,
-        viskores::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
-        deleter,
-        reallocater) })
+    : Superclass(
+        std::vector<viskores::cont::internal::Buffer>{ viskores::cont::internal::MakeBuffer(
+          viskores::cont::DeviceAdapterTagUndefined{},
+          array,
+          container,
+          viskores::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+          deleter,
+          reallocater) })
   {
   }
 
@@ -169,13 +174,14 @@ public:
     viskores::cont::DeviceAdapterId device,
     viskores::cont::internal::BufferInfo::Deleter deleter,
     viskores::cont::internal::BufferInfo::Reallocater reallocater = internal::InvalidRealloc)
-    : Superclass(std::vector<viskores::cont::internal::Buffer>{ viskores::cont::internal::MakeBuffer(
-        device,
-        array,
-        container,
-        viskores::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
-        deleter,
-        reallocater) })
+    : Superclass(
+        std::vector<viskores::cont::internal::Buffer>{ viskores::cont::internal::MakeBuffer(
+          device,
+          array,
+          container,
+          viskores::internal::NumberOfValuesToNumberOfBytes<T>(numberOfValues),
+          deleter,
+          reallocater) })
   {
   }
 
@@ -235,7 +241,8 @@ public:
   /// @param token When a `viskores::cont::Token` is provided, the array is locked
   /// from being used by any write operations until the token goes out of scope.
   ///
-  const T* GetReadPointer(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
+  const T* GetReadPointer(viskores::cont::DeviceAdapterId device,
+                          viskores::cont::Token& token) const
   {
     return reinterpret_cast<const T*>(this->GetBuffers()[0].ReadPointerDevice(device, token));
   }
@@ -268,15 +275,16 @@ public:
 ///
 template <typename T>
 VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandle(const T* array,
-                                                           viskores::Id numberOfValues,
-                                                           viskores::CopyFlag copy)
+                                                                   viskores::Id numberOfValues,
+                                                                   viskores::CopyFlag copy)
 {
   if (copy == viskores::CopyFlag::On)
   {
     viskores::cont::ArrayHandleBasic<T> handle;
     handle.Allocate(numberOfValues);
-    std::copy(
-      array, array + numberOfValues, viskores::cont::ArrayPortalToIteratorBegin(handle.WritePortal()));
+    std::copy(array,
+              array + numberOfValues,
+              viskores::cont::ArrayPortalToIteratorBegin(handle.WritePortal()));
     return handle;
   }
   else
@@ -295,7 +303,8 @@ VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandleMove(
   T*& array,
   viskores::Id numberOfValues,
   viskores::cont::internal::BufferInfo::Deleter deleter = internal::SimpleArrayDeleter<T>,
-  viskores::cont::internal::BufferInfo::Reallocater reallocater = internal::SimpleArrayReallocater<T>)
+  viskores::cont::internal::BufferInfo::Reallocater reallocater =
+    internal::SimpleArrayReallocater<T>)
 {
   viskores::cont::ArrayHandleBasic<T> arrayHandle(array, numberOfValues, deleter, reallocater);
   array = nullptr;
@@ -305,8 +314,9 @@ VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandleMove(
 /// A convenience function for creating an ArrayHandle from an std::vector.
 ///
 template <typename T, typename Allocator>
-VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandle(const std::vector<T, Allocator>& array,
-                                                           viskores::CopyFlag copy)
+VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandle(
+  const std::vector<T, Allocator>& array,
+  viskores::CopyFlag copy)
 {
   if (!array.empty())
   {
@@ -322,22 +332,24 @@ VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandle(const std::ve
 /// Move an std::vector into an ArrayHandle.
 ///
 template <typename T, typename Allocator>
-VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandleMove(std::vector<T, Allocator>&& array)
+VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandleMove(
+  std::vector<T, Allocator>&& array)
 {
   using vector_type = std::vector<T, Allocator>;
   vector_type* container = new vector_type(std::move(array));
   return viskores::cont::ArrayHandleBasic<T>(container->data(),
-                                         container,
-                                         static_cast<viskores::Id>(container->size()),
-                                         internal::StdVectorDeleter<T, Allocator>,
-                                         internal::StdVectorReallocater<T, Allocator>);
+                                             container,
+                                             static_cast<viskores::Id>(container->size()),
+                                             internal::StdVectorDeleter<T, Allocator>,
+                                             internal::StdVectorReallocater<T, Allocator>);
 }
 
 /// Move an std::vector into an ArrayHandle.
 ///
 template <typename T, typename Allocator>
-VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandle(std::vector<T, Allocator>&& array,
-                                                           viskores::CopyFlag viskoresNotUsed(copy))
+VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandle(
+  std::vector<T, Allocator>&& array,
+  viskores::CopyFlag viskoresNotUsed(copy))
 {
   return make_ArrayHandleMove(array);
 }
@@ -345,9 +357,11 @@ VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandle(std::vector<T
 /// Create an ArrayHandle directly from an initializer list of values.
 ///
 template <typename T>
-VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandle(std::initializer_list<T>&& values)
+VISKORES_CONT viskores::cont::ArrayHandleBasic<T> make_ArrayHandle(
+  std::initializer_list<T>&& values)
 {
-  return make_ArrayHandle(values.begin(), static_cast<viskores::Id>(values.size()), viskores::CopyFlag::On);
+  return make_ArrayHandle(
+    values.begin(), static_cast<viskores::Id>(values.size()), viskores::CopyFlag::On);
 }
 }
 } // namespace viskores::cont
@@ -384,14 +398,16 @@ namespace mangled_diy_namespace
 template <typename T>
 struct Serialization<viskores::cont::ArrayHandleBasic<T>>
 {
-  static VISKORES_CONT void save(BinaryBuffer& bb,
-                             const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>& obj)
+  static VISKORES_CONT void save(
+    BinaryBuffer& bb,
+    const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>& obj)
   {
     viskoresdiy::save(bb, obj.GetBuffers()[0]);
   }
 
-  static VISKORES_CONT void load(BinaryBuffer& bb,
-                             viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>& obj)
+  static VISKORES_CONT void load(
+    BinaryBuffer& bb,
+    viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>& obj)
   {
     viskores::cont::internal::Buffer buffer;
     viskoresdiy::load(bb, buffer);
@@ -423,11 +439,14 @@ namespace cont
 namespace internal
 {
 
-#define VISKORES_STORAGE_EXPORT(Type)                                                               \
-  extern template class VISKORES_CONT_TEMPLATE_EXPORT Storage<Type, StorageTagBasic>;               \
-  extern template class VISKORES_CONT_TEMPLATE_EXPORT Storage<viskores::Vec<Type, 2>, StorageTagBasic>; \
-  extern template class VISKORES_CONT_TEMPLATE_EXPORT Storage<viskores::Vec<Type, 3>, StorageTagBasic>; \
-  extern template class VISKORES_CONT_TEMPLATE_EXPORT Storage<viskores::Vec<Type, 4>, StorageTagBasic>;
+#define VISKORES_STORAGE_EXPORT(Type)                                                 \
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT Storage<Type, StorageTagBasic>; \
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT                                 \
+    Storage<viskores::Vec<Type, 2>, StorageTagBasic>;                                 \
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT                                 \
+    Storage<viskores::Vec<Type, 3>, StorageTagBasic>;                                 \
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT                                 \
+    Storage<viskores::Vec<Type, 4>, StorageTagBasic>;
 
 VISKORES_STORAGE_EXPORT(char)
 VISKORES_STORAGE_EXPORT(viskores::Int8)
@@ -451,7 +470,8 @@ VISKORES_STORAGE_EXPORT(viskores::Float64)
     ArrayHandle<viskores::Vec<Type, 2>, StorageTagBasic>;                                 \
   extern template class VISKORES_CONT_TEMPLATE_EXPORT                                     \
     ArrayHandle<viskores::Vec<Type, 3>, StorageTagBasic>;                                 \
-  extern template class VISKORES_CONT_TEMPLATE_EXPORT ArrayHandle<viskores::Vec<Type, 4>, StorageTagBasic>;
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT                                     \
+    ArrayHandle<viskores::Vec<Type, 4>, StorageTagBasic>;
 
 VISKORES_ARRAYHANDLE_EXPORT(char)
 VISKORES_ARRAYHANDLE_EXPORT(viskores::Int8)

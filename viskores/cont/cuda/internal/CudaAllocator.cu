@@ -92,8 +92,9 @@ void CudaAllocator::ForceManagedMemoryOn()
   }
   else
   {
-    VISKORES_LOG_F(viskores::cont::LogLevel::Warn,
-               "CudaAllocator trying to enable managed memory on hardware that doesn't support it");
+    VISKORES_LOG_F(
+      viskores::cont::LogLevel::Warn,
+      "CudaAllocator trying to enable managed memory on hardware that doesn't support it");
   }
 }
 
@@ -172,9 +173,9 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
 
   {
     VISKORES_LOG_F(viskores::cont::LogLevel::MemExec,
-               "Allocated CUDA array of %s at %p.",
-               viskores::cont::GetSizeString(numBytes).c_str(),
-               ptr);
+                   "Allocated CUDA array of %s at %p.",
+                   viskores::cont::GetSizeString(numBytes).c_str(),
+                   ptr);
   }
 
   return ptr;
@@ -197,9 +198,9 @@ void* CudaAllocator::AllocateUnManaged(std::size_t numBytes)
 
   {
     VISKORES_LOG_F(viskores::cont::LogLevel::MemExec,
-               "Allocated CUDA array of %s at %p.",
-               viskores::cont::GetSizeString(numBytes).c_str(),
-               ptr);
+                   "Allocated CUDA array of %s at %p.",
+                   viskores::cont::GetSizeString(numBytes).c_str(),
+                   ptr);
   }
   return ptr;
 }
@@ -246,9 +247,9 @@ void CudaAllocator::FreeDeferred(void* ptr, std::size_t numBytes)
 
   {
     VISKORES_LOG_F(viskores::cont::LogLevel::MemExec,
-               "Deferring free of CUDA allocation at %p of %s.",
-               ptr,
-               viskores::cont::GetSizeString(numBytes).c_str());
+                   "Deferring free of CUDA allocation at %p of %s.",
+                   ptr,
+                   viskores::cont::GetSizeString(numBytes).c_str());
   }
 
   std::vector<void*> toFree;
@@ -329,63 +330,66 @@ void CudaAllocator::PrepareForInPlace(const void* ptr, std::size_t numBytes)
 
 void CudaAllocator::Initialize()
 {
-  std::call_once(IsInitializedFlag, []() {
-    auto cudaDeviceConfig = dynamic_cast<
-      viskores::cont::internal::RuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagCuda>&>(
-      viskores::cont::RuntimeDeviceInformation{}.GetRuntimeConfiguration(
-        viskores::cont::DeviceAdapterTagCuda()));
-    viskores::Id numDevices;
-    cudaDeviceConfig.GetMaxDevices(numDevices);
-
-    if (numDevices == 0)
+  std::call_once(
+    IsInitializedFlag,
+    []()
     {
-      return;
-    }
+      auto cudaDeviceConfig = dynamic_cast<viskores::cont::internal::RuntimeDeviceConfiguration<
+        viskores::cont::DeviceAdapterTagCuda>&>(
+        viskores::cont::RuntimeDeviceInformation{}.GetRuntimeConfiguration(
+          viskores::cont::DeviceAdapterTagCuda()));
+      viskores::Id numDevices;
+      cudaDeviceConfig.GetMaxDevices(numDevices);
 
-    // Check all devices, use the feature set supported by all
-    bool managedMemorySupported = true;
-    std::vector<cudaDeviceProp> cudaProp;
-    cudaDeviceConfig.GetCudaDeviceProp(cudaProp);
-    for (int i = 0; i < numDevices && managedMemorySupported; ++i)
-    {
-      // We check for concurrentManagedAccess, as devices with only the
-      // managedAccess property have extra synchronization requirements.
-      managedMemorySupported = managedMemorySupported && cudaProp[i].concurrentManagedAccess;
-    }
+      if (numDevices == 0)
+      {
+        return;
+      }
 
-    HardwareSupportsManagedMemory = managedMemorySupported;
-    ManagedMemoryEnabled = managedMemorySupported;
+      // Check all devices, use the feature set supported by all
+      bool managedMemorySupported = true;
+      std::vector<cudaDeviceProp> cudaProp;
+      cudaDeviceConfig.GetCudaDeviceProp(cudaProp);
+      for (int i = 0; i < numDevices && managedMemorySupported; ++i)
+      {
+        // We check for concurrentManagedAccess, as devices with only the
+        // managedAccess property have extra synchronization requirements.
+        managedMemorySupported = managedMemorySupported && cudaProp[i].concurrentManagedAccess;
+      }
 
-    VISKORES_LOG_F(viskores::cont::LogLevel::Info,
-               "CudaAllocator hardware %s managed memory",
-               HardwareSupportsManagedMemory ? "supports" : "doesn't support");
+      HardwareSupportsManagedMemory = managedMemorySupported;
+      ManagedMemoryEnabled = managedMemorySupported;
+
+      VISKORES_LOG_F(viskores::cont::LogLevel::Info,
+                     "CudaAllocator hardware %s managed memory",
+                     HardwareSupportsManagedMemory ? "supports" : "doesn't support");
 
 // Check if users want to disable managed memory
 #pragma warning(push)
 // getenv is not thread safe on windows but since it's inside a call_once block so
 // it's fine to suppress the warning here.
 #pragma warning(disable : 4996)
-    const char* buf = std::getenv(NO_VISKORES_MANAGED_MEMORY);
+      const char* buf = std::getenv(NO_VISKORES_MANAGED_MEMORY);
 #pragma warning(pop)
-    if (managedMemorySupported && buf != nullptr)
-    { //only makes sense to disable managed memory if the hardware supports it
-      //in the first place
-      ManagedMemoryEnabled = false;
-      VISKORES_LOG_F(
-        viskores::cont::LogLevel::Info,
-        "CudaAllocator disabling managed memory due to NO_VISKORES_MANAGED_MEMORY env variable");
-    }
+      if (managedMemorySupported && buf != nullptr)
+      { //only makes sense to disable managed memory if the hardware supports it
+        //in the first place
+        ManagedMemoryEnabled = false;
+        VISKORES_LOG_F(
+          viskores::cont::LogLevel::Info,
+          "CudaAllocator disabling managed memory due to NO_VISKORES_MANAGED_MEMORY env variable");
+      }
 
-    // CUDA does not give any indication of whether it is still running, but we have found from
-    // experience that it finalizes itself during program termination. However, the user might
-    // have their own objects being cleaned up during termination after CUDA. We need a flag
-    // to catch if this happens after CUDA finalizes itself. We will set this flag to true now
-    // and false on termination. Because we are creating the atexit call here (after CUDA must
-    // have initialized itself), C++ will require our function that unsets the flag to happen
-    // before CUDA finalizes.
-    IsInitialized = true;
-    std::atexit([]() { IsInitialized = false; });
-  });
+      // CUDA does not give any indication of whether it is still running, but we have found from
+      // experience that it finalizes itself during program termination. However, the user might
+      // have their own objects being cleaned up during termination after CUDA. We need a flag
+      // to catch if this happens after CUDA finalizes itself. We will set this flag to true now
+      // and false on termination. Because we are creating the atexit call here (after CUDA must
+      // have initialized itself), C++ will require our function that unsets the flag to happen
+      // before CUDA finalizes.
+      IsInitialized = true;
+      std::atexit([]() { IsInitialized = false; });
+    });
 }
 }
 }

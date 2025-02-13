@@ -29,12 +29,12 @@ namespace zfp
 
 template <typename Scalar, typename PortalType>
 VISKORES_EXEC inline void ScatterPartial3(const Scalar* q,
-                                      PortalType& scalars,
-                                      const viskores::Id3 dims,
-                                      viskores::Id offset,
-                                      viskores::Int32 nx,
-                                      viskores::Int32 ny,
-                                      viskores::Int32 nz)
+                                          PortalType& scalars,
+                                          const viskores::Id3 dims,
+                                          viskores::Id offset,
+                                          viskores::Int32 nx,
+                                          viskores::Int32 ny,
+                                          viskores::Int32 nz)
 {
   viskores::Id x, y, z;
   for (z = 0; z < nz; z++, offset += dims[0] * dims[1] - ny * dims[0], q += 4 * (4 - ny))
@@ -51,9 +51,9 @@ VISKORES_EXEC inline void ScatterPartial3(const Scalar* q,
 
 template <typename Scalar, typename PortalType>
 VISKORES_EXEC inline void Scatter3(const Scalar* q,
-                               PortalType& scalars,
-                               const viskores::Id3 dims,
-                               viskores::Id offset)
+                                   PortalType& scalars,
+                                   const viskores::Id3 dims,
+                                   viskores::Id offset)
 {
   for (viskores::Id z = 0; z < 4; z++, offset += dims[0] * dims[1] - 4 * dims[0])
   {
@@ -88,8 +88,8 @@ public:
 
   template <typename InputScalarPortal, typename BitstreamPortal>
   VISKORES_EXEC void operator()(const viskores::Id blockIdx,
-                            InputScalarPortal& scalars,
-                            BitstreamPortal& stream) const
+                                InputScalarPortal& scalars,
+                                BitstreamPortal& stream) const
   {
     using Scalar = typename InputScalarPortal::ValueType;
     constexpr viskores::Int32 BlockSize = 64;
@@ -121,12 +121,15 @@ public:
       partial = true;
     if (partial)
     {
-      const viskores::Int32 nx =
-        logicalStart[0] + 4 > Dims[0] ? viskores::Int32(Dims[0] - logicalStart[0]) : viskores::Int32(4);
-      const viskores::Int32 ny =
-        logicalStart[1] + 4 > Dims[1] ? viskores::Int32(Dims[1] - logicalStart[1]) : viskores::Int32(4);
-      const viskores::Int32 nz =
-        logicalStart[2] + 4 > Dims[2] ? viskores::Int32(Dims[2] - logicalStart[2]) : viskores::Int32(4);
+      const viskores::Int32 nx = logicalStart[0] + 4 > Dims[0]
+        ? viskores::Int32(Dims[0] - logicalStart[0])
+        : viskores::Int32(4);
+      const viskores::Int32 ny = logicalStart[1] + 4 > Dims[1]
+        ? viskores::Int32(Dims[1] - logicalStart[1])
+        : viskores::Int32(4);
+      const viskores::Int32 nz = logicalStart[2] + 4 > Dims[2]
+        ? viskores::Int32(Dims[2] - logicalStart[2])
+        : viskores::Int32(4);
       ScatterPartial3(fblock, scalars, Dims, offset, nx, ny, nz);
     }
     else

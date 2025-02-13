@@ -97,7 +97,7 @@ public:
 
   viskores::Id nRows; // (input) number of rows in 2D
   viskores::Id nCols; // (input) number of cols in 2D
-  bool ascending; // (input) ascending or descending (join or split tree)
+  bool ascending;     // (input) ascending or descending (join or split tree)
 
   // Constructor
   VISKORES_EXEC_CONT
@@ -111,10 +111,10 @@ public:
   //template<typename InFieldPortalType>
   template <typename InFieldPortalType /*, typename InOutFieldPortalType*/>
   VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                            const viskores::Id& nbrMask,
-                            const InFieldPortalType& arcArray,
-                            viskores::Id& outdegree,
-                            viskores::Id& isCritical) const
+                                const viskores::Id& nbrMask,
+                                const InFieldPortalType& arcArray,
+                                viskores::Id& outdegree,
+                                viskores::Id& isCritical) const
   {
     // get the row and column
     viskores::Id row = VERTEX_ROW(vertex, nCols);

@@ -16,7 +16,8 @@
 
 // If more tests need a value for Matrix, we can move this to Testing.h
 template <typename T, viskores::IdComponent NumRow, viskores::IdComponent NumCol>
-viskores::Matrix<T, NumRow, NumCol> TestValue(viskores::Id index, const viskores::Matrix<T, NumRow, NumCol>&)
+viskores::Matrix<T, NumRow, NumCol> TestValue(viskores::Id index,
+                                              const viskores::Matrix<T, NumRow, NumCol>&)
 {
   viskores::Matrix<T, NumRow, NumCol> value;
   for (viskores::IdComponent rowIndex = 0; rowIndex < NumRow; rowIndex++)
@@ -32,7 +33,7 @@ viskores::Matrix<T, NumRow, NumCol> TestValue(viskores::Id index, const viskores
 namespace
 {
 
-#define FOR_ROW_COL(matrix)                                       \
+#define FOR_ROW_COL(matrix)                                           \
   for (viskores::IdComponent row = 0; row < (matrix).NUM_ROWS; row++) \
     for (viskores::IdComponent col = 0; col < (matrix).NUM_COLUMNS; col++)
 
@@ -49,7 +50,8 @@ struct MatrixTest
     MatrixType matrix(5);
     FOR_ROW_COL(matrix)
     {
-      VISKORES_TEST_ASSERT(test_equal(matrix(row, col), static_cast<T>(5)), "Constant set incorrect.");
+      VISKORES_TEST_ASSERT(test_equal(matrix(row, col), static_cast<T>(5)),
+                           "Constant set incorrect.");
     }
   }
 
@@ -57,21 +59,29 @@ struct MatrixTest
   {
     MatrixType matrix;
     MatrixType value = TestValue(0, MatrixType());
-    FOR_ROW_COL(matrix) { matrix[row][col] = ComponentType(value(row, col) * 2); }
     FOR_ROW_COL(matrix)
     {
-      VISKORES_TEST_ASSERT(test_equal(matrix(row, col), value(row, col) * 2), "Bad set or retrieve.");
+      matrix[row][col] = ComponentType(value(row, col) * 2);
+    }
+    FOR_ROW_COL(matrix)
+    {
+      VISKORES_TEST_ASSERT(test_equal(matrix(row, col), value(row, col) * 2),
+                           "Bad set or retrieve.");
       const MatrixType const_matrix = matrix;
       VISKORES_TEST_ASSERT(test_equal(const_matrix(row, col), value(row, col) * 2),
-                       "Bad set or retrieve.");
+                           "Bad set or retrieve.");
     }
 
-    FOR_ROW_COL(matrix) { matrix(row, col) = value(row, col); }
+    FOR_ROW_COL(matrix)
+    {
+      matrix(row, col) = value(row, col);
+    }
     const MatrixType const_matrix = matrix;
     FOR_ROW_COL(matrix)
     {
       VISKORES_TEST_ASSERT(test_equal(matrix[row][col], value(row, col)), "Bad set or retrieve.");
-      VISKORES_TEST_ASSERT(test_equal(const_matrix[row][col], value(row, col)), "Bad set or retrieve.");
+      VISKORES_TEST_ASSERT(test_equal(const_matrix[row][col], value(row, col)),
+                           "Bad set or retrieve.");
     }
     VISKORES_TEST_ASSERT(matrix == const_matrix, "Equal test operator not working.");
     VISKORES_TEST_ASSERT(!(matrix != const_matrix), "Not-Equal test operator not working.");
@@ -101,7 +111,7 @@ struct MatrixTest
     FOR_ROW_COL(matrix)
     {
       VISKORES_TEST_ASSERT(test_equal(matrix(NUM_ROWS - row - 1, col), const_matrix(row, col)),
-                       "Rows not set right.");
+                           "Rows not set right.");
     }
 
     for (viskores::IdComponent col = 0; col < NUM_COLS; col++)
@@ -112,7 +122,7 @@ struct MatrixTest
     FOR_ROW_COL(matrix)
     {
       VISKORES_TEST_ASSERT(test_equal(matrix(row, NUM_COLS - col - 1), const_matrix(row, col)),
-                       "Columns not set right.");
+                           "Columns not set right.");
     }
   }
 
@@ -128,7 +138,7 @@ struct MatrixTest
       viskores::Vec<T, NUM_COLS> leftVector = viskores::MatrixGetRow(leftFactor, row);
       viskores::Vec<T, NUM_COLS> rightVector = viskores::MatrixGetColumn(rightFactor, col);
       VISKORES_TEST_ASSERT(test_equal(product(row, col), viskores::Dot(leftVector, rightVector)),
-                       "Matrix multiple wrong.");
+                           "Matrix multiple wrong.");
     }
 
     MatrixType matrixFactor;
@@ -144,7 +154,7 @@ struct MatrixTest
     for (viskores::IdComponent index = 0; index < NUM_COLS; index++)
     {
       VISKORES_TEST_ASSERT(test_equal(leftResult[index], T(NUM_ROWS * (NUM_ROWS + 1))),
-                       "Vector/matrix multiple wrong.");
+                           "Vector/matrix multiple wrong.");
     }
 
     viskores::Vec<T, NUM_ROWS> rightResult = viskores::MatrixMultiply(matrixFactor, rightVector);
@@ -165,7 +175,8 @@ struct MatrixTest
 
     MatrixType multMatrix = viskores::MatrixMultiply(originalMatrix, identityMatrix);
 
-    VISKORES_TEST_ASSERT(test_equal(originalMatrix, multMatrix), "Identity is not really identity.");
+    VISKORES_TEST_ASSERT(test_equal(originalMatrix, multMatrix),
+                         "Identity is not really identity.");
   }
 
   static void Transpose()
@@ -176,7 +187,7 @@ struct MatrixTest
     FOR_ROW_COL(originalMatrix)
     {
       VISKORES_TEST_ASSERT(test_equal(originalMatrix(row, col), transMatrix(col, row)),
-                       "Transpose wrong.");
+                           "Transpose wrong.");
     }
   }
 
@@ -298,11 +309,15 @@ void PrintMatrix(const viskores::Matrix<T, S, S>& m)
 template <typename T, int Size>
 void SingularMatrix(viskores::Matrix<T, Size, Size>& singularMatrix)
 {
-  FOR_ROW_COL(singularMatrix) { singularMatrix(row, col) = static_cast<T>(row + col); }
+  FOR_ROW_COL(singularMatrix)
+  {
+    singularMatrix(row, col) = static_cast<T>(row + col);
+  }
   constexpr bool larger_than_1 = Size > 1;
   if (larger_than_1)
   {
-    viskores::MatrixSetRow(singularMatrix, 0, viskores::MatrixGetRow(singularMatrix, (Size + 1) / 2));
+    viskores::MatrixSetRow(
+      singularMatrix, 0, viskores::MatrixGetRow(singularMatrix, (Size + 1) / 2));
   }
 }
 
@@ -323,7 +338,8 @@ T RecursiveDeterminant(const viskores::Matrix<T, Size, Size>& A)
   for (viskores::IdComponent rowIndex = 0; rowIndex < Size; rowIndex++)
   {
     // Create the cofactor matrix for entry A(rowIndex,0)
-    for (viskores::IdComponent cofactorRowIndex = 0; cofactorRowIndex < rowIndex; cofactorRowIndex++)
+    for (viskores::IdComponent cofactorRowIndex = 0; cofactorRowIndex < rowIndex;
+         cofactorRowIndex++)
     {
       for (viskores::IdComponent colIndex = 1; colIndex < Size; colIndex++)
       {
@@ -412,7 +428,7 @@ struct SquareMatrixTest
     MatrixType permutedMatrix = viskores::MatrixMultiply(P, originalMatrix);
     MatrixType productMatrix = viskores::MatrixMultiply(L, U);
     VISKORES_TEST_ASSERT(test_equal(permutedMatrix, productMatrix),
-                     "LUP-factorization gave inconsistent answer.");
+                         "LUP-factorization gave inconsistent answer.");
 
     // Check that a singular matrix is identified.
     MatrixType singularMatrix;
@@ -447,7 +463,7 @@ struct SquareMatrixTest
     for (viskores::IdComponent i = 0; i < SIZE; ++i)
     {
       VISKORES_TEST_ASSERT(viskores::IsNan(x[i]),
-                       "Expected values of solution to singular matrix to be NaNs");
+                           "Expected values of solution to singular matrix to be NaNs");
     }
 
     VISKORES_TEST_ASSERT(!valid, "Expected matrix to be declared singular.");
@@ -465,7 +481,7 @@ struct SquareMatrixTest
     // Check result.
     viskores::Matrix<T, SIZE, SIZE> product = viskores::MatrixMultiply(A, inverse);
     VISKORES_TEST_ASSERT(test_equal(product, viskores::MatrixIdentity<T, SIZE>()),
-                     "Matrix inverse did not give identity.");
+                         "Matrix inverse did not give identity.");
 
     // Check that a singular matrix is identified.
     MatrixType singularMatrix;
@@ -484,13 +500,14 @@ struct SquareMatrixTest
     // Check result.
     T determinantCheck = RecursiveDeterminant(A);
     VISKORES_TEST_ASSERT(test_equal(determinant, determinantCheck),
-                     "Determinant computations do not agree.");
+                         "Determinant computations do not agree.");
 
     // Check that a singular matrix has a zero determinant.
     MatrixType singularMatrix;
     SingularMatrix(singularMatrix);
     determinant = viskores::MatrixDeterminant(singularMatrix);
-    VISKORES_TEST_ASSERT(test_equal(determinant, T(0.0)), "Non-zero determinant for singular matrix.");
+    VISKORES_TEST_ASSERT(test_equal(determinant, T(0.0)),
+                         "Non-zero determinant for singular matrix.");
   }
 
   static void Run()

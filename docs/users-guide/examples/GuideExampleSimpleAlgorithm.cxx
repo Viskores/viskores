@@ -26,7 +26,8 @@ constexpr viskores::Id ARRAY_SIZE = 10;
 //// BEGIN-EXAMPLE SimpleWorklet
 ////
 //// LABEL Inherit
-struct PoundsPerSquareInchToNewtonsPerSquareMeterWorklet : viskores::worklet::WorkletMapField
+struct PoundsPerSquareInchToNewtonsPerSquareMeterWorklet
+  : viskores::worklet::WorkletMapField
 {
   //// LABEL ControlSignature
   //// BEGIN-EXAMPLE ControlSignature
@@ -93,13 +94,14 @@ namespace filter
 namespace unit_conversion
 {
 
-class VISKORES_FILTER_UNIT_CONVERSION_EXPORT PoundsPerSquareInchToNewtonsPerSquareMeterFilter
-  : public viskores::filter::Filter
+class VISKORES_FILTER_UNIT_CONVERSION_EXPORT
+  PoundsPerSquareInchToNewtonsPerSquareMeterFilter : public viskores::filter::Filter
 {
 public:
   VISKORES_CONT PoundsPerSquareInchToNewtonsPerSquareMeterFilter();
 
-  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inDataSet) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(
+    const viskores::cont::DataSet& inDataSet) override;
 };
 
 }
@@ -141,7 +143,8 @@ PoundsPerSquareInchToNewtonsPerSquareMeterFilter::DoExecute(
   viskores::cont::UnknownArrayHandle outArray;
 
   //// LABEL Lambda
-  auto resolveType = [&](const auto& inputArray) {
+  auto resolveType = [&](const auto& inputArray)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(inputArray)>::ValueType;
     //// LABEL CreateOutputArray

@@ -110,10 +110,11 @@ public:
     return viskores::cont::internal::CreateBuffers(metaData);
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag,
-                                      viskores::cont::Token&)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag,
+    viskores::cont::Token&)
   {
     VISKORES_ASSERT(numValues >= 0);
     buffers[0].GetMetaData<DiscardMetaData>().NumberOfValues = numValues;
@@ -132,17 +133,18 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>&,
-                             const ValueType&,
-                             viskores::Id,
-                             viskores::Id,
-                             viskores::cont::Token&)
+                                 const ValueType&,
+                                 viskores::Id,
+                                 viskores::Id,
+                                 viskores::cont::Token&)
   {
     // Fill is a NO-OP.
   }
 
-  VISKORES_CONT static ReadPortalType CreateReadPortal(const std::vector<viskores::cont::internal::Buffer>&,
-                                                   viskores::cont::DeviceAdapterId,
-                                                   viskores::cont::Token&)
+  VISKORES_CONT static ReadPortalType CreateReadPortal(
+    const std::vector<viskores::cont::internal::Buffer>&,
+    viskores::cont::DeviceAdapterId,
+    viskores::cont::Token&)
   {
     throw viskores::cont::ErrorBadValue("Cannot read from ArrayHandleDiscard.");
   }
@@ -173,9 +175,10 @@ template <typename ValueType_>
 class ArrayHandleDiscard : public internal::ArrayHandleDiscardTraits<ValueType_>::Superclass
 {
 public:
-  VISKORES_ARRAY_HANDLE_SUBCLASS(ArrayHandleDiscard,
-                             (ArrayHandleDiscard<ValueType_>),
-                             (typename internal::ArrayHandleDiscardTraits<ValueType_>::Superclass));
+  VISKORES_ARRAY_HANDLE_SUBCLASS(
+    ArrayHandleDiscard,
+    (ArrayHandleDiscard<ValueType_>),
+    (typename internal::ArrayHandleDiscardTraits<ValueType_>::Superclass));
 };
 
 /// Helper to determine if an ArrayHandle type is an ArrayHandleDiscard.

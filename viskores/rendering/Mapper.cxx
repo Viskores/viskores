@@ -25,15 +25,15 @@ void Mapper::RenderCells(const viskores::cont::UnknownCellSet& cellset,
                          const viskores::rendering::Camera& camera,
                          const viskores::Range& scalarRange)
 {
-  RenderCellsImpl(
-    cellset,
-    coords,
-    scalarField,
-    colorTable,
-    camera,
-    scalarRange,
-    make_FieldCell(viskores::cont::GetGlobalGhostCellFieldName(),
-                   viskores::cont::ArrayHandleConstant<viskores::UInt8>(0, cellset.GetNumberOfCells())));
+  RenderCellsImpl(cellset,
+                  coords,
+                  scalarField,
+                  colorTable,
+                  camera,
+                  scalarRange,
+                  make_FieldCell(viskores::cont::GetGlobalGhostCellFieldName(),
+                                 viskores::cont::ArrayHandleConstant<viskores::UInt8>(
+                                   0, cellset.GetNumberOfCells())));
 };
 
 void Mapper::RenderCells(const viskores::cont::UnknownCellSet& cellset,
@@ -83,7 +83,8 @@ void Mapper::RenderCellsPartitioned(const viskores::cont::PartitionedDataSet par
                                     const viskores::Range& scalarRange)
 {
   // sort partitions back to front for best rendering with the volume renderer
-  std::vector<viskores::Vec3f> centers(partitionedData.GetNumberOfPartitions()); // vector for centers
+  std::vector<viskores::Vec3f> centers(
+    partitionedData.GetNumberOfPartitions()); // vector for centers
   std::vector<viskores::Id> indices(partitionedData.GetNumberOfPartitions());
   for (viskores::Id p = 0; p < partitionedData.GetNumberOfPartitions(); p++)
   {
@@ -127,9 +128,9 @@ void Mapper::SetActiveColorTable(const viskores::cont::ColorTable& colorTable)
   {
     auto color = colorPortal.Get(i);
     viskores::Vec4f_32 t(color[0] * conversionToFloatSpace,
-                     color[1] * conversionToFloatSpace,
-                     color[2] * conversionToFloatSpace,
-                     color[3] * conversionToFloatSpace);
+                         color[1] * conversionToFloatSpace,
+                         color[2] * conversionToFloatSpace,
+                         color[3] * conversionToFloatSpace);
     portal.Set(i, t);
   }
 }

@@ -92,9 +92,9 @@ VISKORES_CONT void TestConcatInvoke()
         correct_value = basicPortal.Get(i - implicitLen);
       const ValueType control_value = concatPortal.Get(i);
       VISKORES_TEST_ASSERT(test_equal(result_v, correct_value),
-                       "ArrayHandleConcatenate as Input Failed");
+                           "ArrayHandleConcatenate as Input Failed");
       VISKORES_TEST_ASSERT(test_equal(result_v, control_value),
-                       "ArrayHandleConcatenate as Input Failed");
+                           "ArrayHandleConcatenate as Input Failed");
     }
 
     concatenate.ReleaseResources();
@@ -108,14 +108,15 @@ void TestConcatOfConcat()
   viskores::cont::ArrayHandleIndex array1(ARRAY_SIZE);
   viskores::cont::ArrayHandleIndex array2(2 * ARRAY_SIZE);
 
-  viskores::cont::ArrayHandleConcatenate<viskores::cont::ArrayHandleIndex, viskores::cont::ArrayHandleIndex>
+  viskores::cont::ArrayHandleConcatenate<viskores::cont::ArrayHandleIndex,
+                                         viskores::cont::ArrayHandleIndex>
     array3(array1, array2);
 
   viskores::cont::ArrayHandleIndex array4(ARRAY_SIZE);
   viskores::cont::ArrayHandleConcatenate<
     viskores::cont::ArrayHandleConcatenate<viskores::cont::ArrayHandleIndex,  // 1st
-                                       viskores::cont::ArrayHandleIndex>, // ArrayHandle
-    viskores::cont::ArrayHandleIndex>                                     // 2nd ArrayHandle
+                                           viskores::cont::ArrayHandleIndex>, // ArrayHandle
+    viskores::cont::ArrayHandleIndex>                                         // 2nd ArrayHandle
     array5;
   {
     array5 = viskores::cont::make_ArrayHandleConcatenate(array3, array4);

@@ -81,9 +81,9 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& sharc,
-                            const viskores::Id supernode,
-                            const InFieldPortalType& shSortIndexPortal,
-                            const OutFieldPortalType& contourTreeSHArcsPortal) const
+                                const viskores::Id supernode,
+                                const InFieldPortalType& shSortIndexPortal,
+                                const OutFieldPortalType& contourTreeSHArcsPortal) const
   {
     if (NoSuchElement(sharc))
       contourTreeSHArcsPortal.Set(supernode, (viskores::Id)NO_SUCH_ELEMENT);

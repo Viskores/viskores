@@ -60,14 +60,16 @@ viskores::cont::ArrayHandle<viskores::Float64, S> make_ScalarField(
 }
 
 template <typename S>
-viskores::cont::ArrayHandleCast<viskores::FloatDefault, viskores::cont::ArrayHandle<viskores::UInt8, S>>
+viskores::cont::ArrayHandleCast<viskores::FloatDefault,
+                                viskores::cont::ArrayHandle<viskores::UInt8, S>>
 make_ScalarField(const viskores::cont::ArrayHandle<viskores::UInt8, S>& ah)
 {
   return viskores::cont::make_ArrayHandleCast(ah, viskores::FloatDefault());
 }
 
 template <typename S>
-viskores::cont::ArrayHandleCast<viskores::FloatDefault, viskores::cont::ArrayHandle<viskores::Int8, S>>
+viskores::cont::ArrayHandleCast<viskores::FloatDefault,
+                                viskores::cont::ArrayHandle<viskores::Int8, S>>
 make_ScalarField(const viskores::cont::ArrayHandle<viskores::Int8, S>& ah)
 {
   return viskores::cont::make_ArrayHandleCast(ah, viskores::FloatDefault());
@@ -87,13 +89,14 @@ public:
 
   template <typename CellShapeType, typename IsoValuesType, typename FieldInType>
   VISKORES_EXEC void operator()(CellShapeType shape,
-                            viskores::IdComponent numVertices,
-                            const IsoValuesType& isovalues,
-                            const FieldInType& fieldIn,
-                            viskores::IdComponent& numTriangles) const
+                                viskores::IdComponent numVertices,
+                                const IsoValuesType& isovalues,
+                                const FieldInType& fieldIn,
+                                viskores::IdComponent& numTriangles) const
   {
     viskores::IdComponent sum = 0;
-    viskores::IdComponent numIsoValues = static_cast<viskores::IdComponent>(isovalues.GetNumberOfValues());
+    viskores::IdComponent numIsoValues =
+      static_cast<viskores::IdComponent>(isovalues.GetNumberOfValues());
 
     for (viskores::Id i = 0; i < numIsoValues; ++i)
     {
@@ -164,7 +167,7 @@ public:
   }
 
   VISKORES_CONT ExecObject PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                           viskores::cont::Token& token)
+                                               viskores::cont::Token& token)
   {
     return ExecObject(this->Size,
                       this->InterpWeights,
@@ -211,22 +214,24 @@ public:
             typename IsoValuesType,
             typename FieldInType, // Vec-like, one per input point
             typename IndicesVecType>
-  VISKORES_EXEC void operator()(const CellShape shape,
-                            viskores::IdComponent numVertices,
-                            const IsoValuesType& isovalues,
-                            const FieldInType& fieldIn, // Input point field defining the contour
-                            const EdgeWeightGenerateMetaData::ExecObject& metaData,
-                            viskores::Id inputCellId,
-                            viskores::Id outputCellId,
-                            viskores::IdComponent visitIndex,
-                            const IndicesVecType& indices) const
+  VISKORES_EXEC void operator()(
+    const CellShape shape,
+    viskores::IdComponent numVertices,
+    const IsoValuesType& isovalues,
+    const FieldInType& fieldIn, // Input point field defining the contour
+    const EdgeWeightGenerateMetaData::ExecObject& metaData,
+    viskores::Id inputCellId,
+    viskores::Id outputCellId,
+    viskores::IdComponent visitIndex,
+    const IndicesVecType& indices) const
   {
     const viskores::Id outputPointId = 3 * outputCellId;
     using FieldType = typename viskores::VecTraits<FieldInType>::ComponentType;
 
     viskores::IdComponent sum = 0, caseNumber = 0;
     viskores::IdComponent i = 0,
-                      numIsoValues = static_cast<viskores::IdComponent>(isovalues.GetNumberOfValues());
+                          numIsoValues =
+                            static_cast<viskores::IdComponent>(isovalues.GetNumberOfValues());
 
     for (i = 0; i < numIsoValues; ++i)
     {
@@ -250,7 +255,8 @@ public:
     visitIndex = sum - visitIndex - 1;
 
     // Interpolate for vertex positions and associated scalar values
-    auto edges = viskores::worklet::marching_cells::GetTriangleEdges(shape.Id, caseNumber, visitIndex);
+    auto edges =
+      viskores::worklet::marching_cells::GetTriangleEdges(shape.Id, caseNumber, visitIndex);
     for (viskores::IdComponent triVertex = 0; triVertex < 3; triVertex++)
     {
       viskores::IdComponent2 edgeVertices;
@@ -273,8 +279,9 @@ public:
 
       metaData.InterpContourPortal.Set(outputPointId + triVertex, static_cast<viskores::UInt8>(i));
 
-      metaData.InterpIdPortal.Set(outputPointId + triVertex,
-                                  viskores::Id2(indices[edgeVertices[0]], indices[edgeVertices[1]]));
+      metaData.InterpIdPortal.Set(
+        outputPointId + triVertex,
+        viskores::Id2(indices[edgeVertices[0]], indices[edgeVertices[1]]));
 
       viskores::FloatDefault interpolant =
         static_cast<viskores::FloatDefault>(isovalues.Get(i) - fieldValues[0]) /
@@ -295,14 +302,15 @@ struct MultiContourLess
   }
 
   template <typename T, typename U>
-  VISKORES_EXEC_CONT bool operator()(const viskores::Pair<T, U>& a, const viskores::Pair<T, U>& b) const
+  VISKORES_EXEC_CONT bool operator()(const viskores::Pair<T, U>& a,
+                                     const viskores::Pair<T, U>& b) const
   {
     return (a.first < b.first) || (!(b.first < a.first) && (a.second < b.second));
   }
 
   template <typename T, typename U>
   VISKORES_EXEC_CONT bool operator()(const viskores::internal::ArrayPortalValueReference<T>& a,
-                                 const U& b) const
+                                     const U& b) const
   {
     U&& t = static_cast<U>(a);
     return t < b;
@@ -326,10 +334,10 @@ struct MergeDuplicateValues : viskores::worklet::WorkletReduceByKey
             typename ValuesOutType,
             typename Values2OutType>
   VISKORES_EXEC void operator()(const T&,
-                            const ValuesInType& values1,
-                            const Values2InType& values2,
-                            ValuesOutType& valueOut1,
-                            Values2OutType& valueOut2) const
+                                const ValuesInType& values1,
+                                const Values2InType& values2,
+                                ValuesOutType& valueOut1,
+                                Values2OutType& valueOut2) const
   {
     valueOut1 = values1[0];
     valueOut2 = values2[0];
@@ -347,7 +355,8 @@ struct CopyEdgeIds : viskores::worklet::WorkletMapField
   void operator()(const viskores::Id2& input, viskores::Id2& output) const { output = input; }
 
   template <typename T>
-  VISKORES_EXEC void operator()(const viskores::Pair<T, viskores::Id2>& input, viskores::Id2& output) const
+  VISKORES_EXEC void operator()(const viskores::Pair<T, viskores::Id2>& input,
+                                viskores::Id2& output) const
   {
     output = input.second;
   }
@@ -421,12 +430,12 @@ public:
             typename WholeFieldIn,
             typename NormalType>
   VISKORES_EXEC void operator()(const viskores::IdComponent& numCells,
-                            const FromIndexType& cellIds,
-                            viskores::Id pointId,
-                            const CellSetInType& geometry,
-                            const WholeCoordinatesIn& pointCoordinates,
-                            const WholeFieldIn& inputField,
-                            NormalType& normal) const
+                                const FromIndexType& cellIds,
+                                viskores::Id pointId,
+                                const CellSetInType& geometry,
+                                const WholeCoordinatesIn& pointCoordinates,
+                                const WholeFieldIn& inputField,
+                                NormalType& normal) const
   {
     viskores::worklet::gradient::PointGradient gradient;
     gradient(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, normal);
@@ -437,17 +446,18 @@ public:
             typename WholeFieldIn,
             typename NormalType>
   VISKORES_EXEC void operator()(const viskores::IdComponent& viskoresNotUsed(numCells),
-                            const FromIndexType& viskoresNotUsed(cellIds),
-                            viskores::Id pointId,
-                            viskores::exec::ConnectivityStructured<Cell, Point, 3>& geometry,
-                            const WholeCoordinatesIn& pointCoordinates,
-                            const WholeFieldIn& inputField,
-                            NormalType& normal) const
+                                const FromIndexType& viskoresNotUsed(cellIds),
+                                viskores::Id pointId,
+                                viskores::exec::ConnectivityStructured<Cell, Point, 3>& geometry,
+                                const WholeCoordinatesIn& pointCoordinates,
+                                const WholeFieldIn& inputField,
+                                NormalType& normal) const
   {
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     viskores::exec::ConnectivityStructured<Point, Cell, 3> pointGeom(geometry);
-    viskores::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom);
+    viskores::exec::arg::ThreadIndicesPointNeighborhood tpn(
+      pointId, pointId, 0, pointId, pointGeom);
 
     const auto& boundary = tpn.GetBoundaryState();
     viskores::exec::FieldNeighborhood<WholeCoordinatesIn> points(pointCoordinates, boundary);
@@ -491,14 +501,14 @@ public:
             typename WholeWeightsIn,
             typename NormalType>
   VISKORES_EXEC void operator()(const viskores::IdComponent& numCells,
-                            const FromIndexType& cellIds,
-                            viskores::Id pointId,
-                            const CellSetInType& geometry,
-                            const WholeCoordinatesIn& pointCoordinates,
-                            const WholeFieldIn& inputField,
-                            viskores::Id edgeId,
-                            const WholeWeightsIn& weights,
-                            NormalType& normal) const
+                                const FromIndexType& cellIds,
+                                viskores::Id pointId,
+                                const CellSetInType& geometry,
+                                const WholeCoordinatesIn& pointCoordinates,
+                                const WholeFieldIn& inputField,
+                                viskores::Id edgeId,
+                                const WholeWeightsIn& weights,
+                                NormalType& normal) const
   {
     viskores::worklet::gradient::PointGradient gradient;
     NormalType grad1;
@@ -515,19 +525,20 @@ public:
             typename WholeWeightsIn,
             typename NormalType>
   VISKORES_EXEC void operator()(const viskores::IdComponent& viskoresNotUsed(numCells),
-                            const FromIndexType& viskoresNotUsed(cellIds),
-                            viskores::Id pointId,
-                            viskores::exec::ConnectivityStructured<Cell, Point, 3>& geometry,
-                            const WholeCoordinatesIn& pointCoordinates,
-                            const WholeFieldIn& inputField,
-                            viskores::Id edgeId,
-                            const WholeWeightsIn& weights,
-                            NormalType& normal) const
+                                const FromIndexType& viskoresNotUsed(cellIds),
+                                viskores::Id pointId,
+                                viskores::exec::ConnectivityStructured<Cell, Point, 3>& geometry,
+                                const WholeCoordinatesIn& pointCoordinates,
+                                const WholeFieldIn& inputField,
+                                viskores::Id edgeId,
+                                const WholeWeightsIn& weights,
+                                NormalType& normal) const
   {
     //Optimization for structured cellsets so we can call StructuredPointGradient
     //and have way faster gradients
     viskores::exec::ConnectivityStructured<Point, Cell, 3> pointGeom(geometry);
-    viskores::exec::arg::ThreadIndicesPointNeighborhood tpn(pointId, pointId, 0, pointId, pointGeom);
+    viskores::exec::arg::ThreadIndicesPointNeighborhood tpn(
+      pointId, pointId, 0, pointId, pointGeom);
 
     const auto& boundary = tpn.GetBoundaryState();
     viskores::exec::FieldNeighborhood<WholeCoordinatesIn> points(pointCoordinates, boundary);
@@ -675,9 +686,9 @@ viskores::cont::CellSetSingleType<> execute(
       marching_cells::MergeDuplicates(
         invoker,
         viskores::cont::make_ArrayHandleZip(contourIds, sharedState.InterpolationEdgeIds), //keys
-        sharedState.InterpolationWeights,                                              //values
-        sharedState.InterpolationEdgeIds,                                              //values
-        originalCellIdsForPoints,                                                      //values
+        sharedState.InterpolationWeights,                                                  //values
+        sharedState.InterpolationEdgeIds,                                                  //values
+        originalCellIdsForPoints,                                                          //values
         connectivity); // computed using lower bounds
     }
   }

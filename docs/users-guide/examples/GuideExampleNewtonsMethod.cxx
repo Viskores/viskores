@@ -38,7 +38,8 @@ struct FunctionFunctor
 struct JacobianFunctor
 {
   template<typename T>
-  VISKORES_EXEC_CONT viskores::Matrix<T, 2, 2> operator()(const viskores::Vec<T, 2>& x) const
+  VISKORES_EXEC_CONT viskores::Matrix<T, 2, 2> operator()(
+    const viskores::Vec<T, 2>& x) const
   {
     viskores::Matrix<T, 2, 2> jacobian;
     jacobian(0, 0) = 2 * x[0];
@@ -62,9 +63,9 @@ void SolveNonlinear()
   // The one found depends on the starting value.
   viskores::NewtonsMethodResult<viskores::Float32, 2> answer1 =
     viskores::NewtonsMethod(JacobianFunctor(),
-                        FunctionFunctor(),
-                        viskores::make_Vec(2.0f, 1.0f),
-                        viskores::make_Vec(1.0f, 0.0f));
+                            FunctionFunctor(),
+                            viskores::make_Vec(2.0f, 1.0f),
+                            viskores::make_Vec(1.0f, 0.0f));
   if (!answer1.Valid || !answer1.Converged)
   {
     // Failed to find solution
@@ -76,9 +77,9 @@ void SolveNonlinear()
 
   viskores::NewtonsMethodResult<viskores::Float32, 2> answer2 =
     viskores::NewtonsMethod(JacobianFunctor(),
-                        FunctionFunctor(),
-                        viskores::make_Vec(2.0f, 1.0f),
-                        viskores::make_Vec(0.0f, -2.0f));
+                            FunctionFunctor(),
+                            viskores::make_Vec(2.0f, 1.0f),
+                            viskores::make_Vec(0.0f, -2.0f));
   if (!answer2.Valid || !answer2.Converged)
   {
     // Failed to find solution
@@ -91,9 +92,9 @@ void SolveNonlinear()
   std::cout << answer1.Solution << " " << answer2.Solution << std::endl;
 
   VISKORES_TEST_ASSERT(test_equal(answer1.Solution, viskores::make_Vec(1, 1), 0.01),
-                   "Bad answer 1.");
+                       "Bad answer 1.");
   VISKORES_TEST_ASSERT(test_equal(answer2.Solution, viskores::make_Vec(-1, -1), 0.01),
-                   "Bad answer 2.");
+                       "Bad answer 2.");
   //// RESUME-EXAMPLE
 }
 ////

@@ -35,7 +35,7 @@ void StorageNoResizeImpl(viskores::Id currentNumValues,
   else
   {
     throw viskores::cont::ErrorBadAllocation("Cannot resize arrays with storage type of " +
-                                         storageTagName);
+                                             storageTagName);
   }
 }
 

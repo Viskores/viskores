@@ -53,7 +53,7 @@ public:
   /// the first point field that matches this criteria is written.
   ///
   VISKORES_CONT virtual void WriteDataSet(const viskores::cont::DataSet& dataSet,
-                                      const std::string& colorField = {});
+                                          const std::string& colorField = {});
 
   enum class PixelDepth
   {
@@ -73,7 +73,9 @@ protected:
   std::string FileName;
   PixelDepth Depth = PixelDepth::PIXEL_8;
 
-  VISKORES_CONT virtual void Write(viskores::Id width, viskores::Id height, const ColorArrayType& pixels) = 0;
+  VISKORES_CONT virtual void Write(viskores::Id width,
+                                   viskores::Id height,
+                                   const ColorArrayType& pixels) = 0;
 };
 }
 }

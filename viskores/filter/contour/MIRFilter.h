@@ -70,11 +70,12 @@ public:
 
 private:
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
-  VISKORES_CONT bool DoMapField(viskores::cont::DataSet& result,
-                            const viskores::cont::Field& field,
-                            const viskores::cont::ArrayHandle<viskores::Id>& filterCellInterp,
-                            const viskores::cont::ArrayHandle<viskores::Vec<viskores::Float64, 8>>& MIRWeights,
-                            const viskores::cont::ArrayHandle<viskores::Vec<viskores::Id, 8>> MIRIDs);
+  VISKORES_CONT bool DoMapField(
+    viskores::cont::DataSet& result,
+    const viskores::cont::Field& field,
+    const viskores::cont::ArrayHandle<viskores::Id>& filterCellInterp,
+    const viskores::cont::ArrayHandle<viskores::Vec<viskores::Float64, 8>>& MIRWeights,
+    const viskores::cont::ArrayHandle<viskores::Vec<viskores::Id, 8>> MIRIDs);
 
   std::string pos_name;
   std::string len_name;

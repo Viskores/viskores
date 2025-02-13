@@ -34,8 +34,8 @@ void TestUniformGrid(viskores::filter::clean_grid::CleanGrid clean)
   viskores::cont::CellSetExplicit<> outCellSet;
   outData.GetCellSet().AsCellSet(outCellSet);
   VISKORES_TEST_ASSERT(outCellSet.GetNumberOfPoints() == 6,
-                   "Wrong number of points: ",
-                   outCellSet.GetNumberOfPoints());
+                       "Wrong number of points: ",
+                       outCellSet.GetNumberOfPoints());
   VISKORES_TEST_ASSERT(
     outCellSet.GetNumberOfCells() == 2, "Wrong number of cells: ", outCellSet.GetNumberOfCells());
   viskores::Id4 cellIds;
@@ -47,24 +47,24 @@ void TestUniformGrid(viskores::filter::clean_grid::CleanGrid clean)
   viskores::cont::ArrayHandle<viskores::Float32> outPointField;
   outData.GetField("pointvar").GetData().AsArrayHandle(outPointField);
   VISKORES_TEST_ASSERT(outPointField.GetNumberOfValues() == 6,
-                   "Wrong point field size: ",
-                   outPointField.GetNumberOfValues());
+                       "Wrong point field size: ",
+                       outPointField.GetNumberOfValues());
   VISKORES_TEST_ASSERT(test_equal(outPointField.ReadPortal().Get(1), 20.1),
-                   "Bad point field value: ",
-                   outPointField.ReadPortal().Get(1));
+                       "Bad point field value: ",
+                       outPointField.ReadPortal().Get(1));
   VISKORES_TEST_ASSERT(test_equal(outPointField.ReadPortal().Get(4), 50.1),
-                   "Bad point field value: ",
-                   outPointField.ReadPortal().Get(1));
+                       "Bad point field value: ",
+                       outPointField.ReadPortal().Get(1));
 
   viskores::cont::ArrayHandle<viskores::Float32> outCellField;
   outData.GetField("cellvar").GetData().AsArrayHandle(outCellField);
   VISKORES_TEST_ASSERT(outCellField.GetNumberOfValues() == 2, "Wrong cell field size.");
   VISKORES_TEST_ASSERT(test_equal(outCellField.ReadPortal().Get(0), 100.1),
-                   "Bad cell field value",
-                   outCellField.ReadPortal().Get(0));
+                       "Bad cell field value",
+                       outCellField.ReadPortal().Get(0));
   VISKORES_TEST_ASSERT(test_equal(outCellField.ReadPortal().Get(1), 200.1),
-                   "Bad cell field value",
-                   outCellField.ReadPortal().Get(0));
+                       "Bad cell field value",
+                       outCellField.ReadPortal().Get(0));
 }
 
 void TestPointMerging()
@@ -112,7 +112,8 @@ void TestPointMerging()
   VISKORES_TEST_ASSERT(closeFastMerge.GetNumberOfCells() == originalNumCells);
   VISKORES_TEST_ASSERT(closeFastMerge.GetCellSet().GetNumberOfPoints() == closeMergeNumPoints);
   VISKORES_TEST_ASSERT(closeFastMerge.GetNumberOfPoints() == closeMergeNumPoints);
-  VISKORES_TEST_ASSERT(closeFastMerge.GetField("pointvar").GetNumberOfValues() == closeMergeNumPoints);
+  VISKORES_TEST_ASSERT(closeFastMerge.GetField("pointvar").GetNumberOfValues() ==
+                       closeMergeNumPoints);
   VISKORES_TEST_ASSERT(closeFastMerge.GetField("cellvar").GetNumberOfValues() == originalNumCells);
 
   std::cout << "Clean grid with largely separated points" << std::endl;
@@ -133,7 +134,8 @@ void TestPointMerging()
   VISKORES_TEST_ASSERT(farFastMerge.GetNumberOfCells() == originalNumCells);
   VISKORES_TEST_ASSERT(farFastMerge.GetCellSet().GetNumberOfPoints() == farFastMergeNumPoints);
   VISKORES_TEST_ASSERT(farFastMerge.GetNumberOfPoints() == farFastMergeNumPoints);
-  VISKORES_TEST_ASSERT(farFastMerge.GetField("pointvar").GetNumberOfValues() == farFastMergeNumPoints);
+  VISKORES_TEST_ASSERT(farFastMerge.GetField("pointvar").GetNumberOfValues() ==
+                       farFastMergeNumPoints);
   VISKORES_TEST_ASSERT(farFastMerge.GetField("cellvar").GetNumberOfValues() == originalNumCells);
 
   std::cout << "Clean grid with largely separated points quickly with degenerate cells"
@@ -145,9 +147,9 @@ void TestPointMerging()
   VISKORES_TEST_ASSERT(noDegenerateCells.GetCellSet().GetNumberOfPoints() == farFastMergeNumPoints);
   VISKORES_TEST_ASSERT(noDegenerateCells.GetNumberOfPoints() == farFastMergeNumPoints);
   VISKORES_TEST_ASSERT(noDegenerateCells.GetField("pointvar").GetNumberOfValues() ==
-                   farFastMergeNumPoints);
+                       farFastMergeNumPoints);
   VISKORES_TEST_ASSERT(noDegenerateCells.GetField("cellvar").GetNumberOfValues() ==
-                   numNonDegenerateCells);
+                       numNonDegenerateCells);
 }
 
 void RunTest()

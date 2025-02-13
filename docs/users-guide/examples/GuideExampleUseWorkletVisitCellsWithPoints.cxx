@@ -34,9 +34,9 @@ public:
 
   template<typename CellShape, typename InputPointFieldType, typename OutputType>
   VISKORES_EXEC void operator()(CellShape shape,
-                            viskores::IdComponent numPoints,
-                            const InputPointFieldType& inputPointField,
-                            OutputType& centerOut) const
+                                viskores::IdComponent numPoints,
+                                const InputPointFieldType& inputPointField,
+                                OutputType& centerOut) const
   {
     viskores::Vec3f parametricCenter;
     viskores::exec::ParametricCoordinatesCenter(numPoints, shape, parametricCenter);
@@ -64,12 +64,14 @@ namespace filter
 namespace field_conversion
 {
 
-class VISKORES_FILTER_FIELD_CONVERSION_EXPORT CellCenters : public viskores::filter::Filter
+class VISKORES_FILTER_FIELD_CONVERSION_EXPORT CellCenters
+  : public viskores::filter::Filter
 {
 public:
   VISKORES_CONT CellCenters();
 
-  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inDataSet) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(
+    const viskores::cont::DataSet& inDataSet) override;
 };
 
 } // namespace field_conversion
@@ -95,7 +97,8 @@ CellCenters::CellCenters()
   this->SetOutputFieldName("");
 }
 
-VISKORES_CONT cont::DataSet CellCenters::DoExecute(const viskores::cont::DataSet& inDataSet)
+VISKORES_CONT cont::DataSet CellCenters::DoExecute(
+  const viskores::cont::DataSet& inDataSet)
 {
   viskores::cont::Field inField = this->GetFieldFromDataSet(inDataSet);
 
@@ -106,12 +109,14 @@ VISKORES_CONT cont::DataSet CellCenters::DoExecute(const viskores::cont::DataSet
 
   viskores::cont::UnknownArrayHandle outUnknownArray;
 
-  auto resolveType = [&](const auto& inArray) {
+  auto resolveType = [&](const auto& inArray)
+  {
     using InArrayHandleType = std::decay_t<decltype(inArray)>;
     using ValueType = typename InArrayHandleType::ValueType;
     viskores::cont::ArrayHandle<ValueType> outArray;
 
-    this->Invoke(viskores::worklet::CellCenter{}, inDataSet.GetCellSet(), inArray, outArray);
+    this->Invoke(
+      viskores::worklet::CellCenter{}, inDataSet.GetCellSet(), inArray, outArray);
 
     outUnknownArray = outArray;
   };
@@ -153,8 +158,9 @@ void CheckCellCenters(const viskores::cont::DataSet& dataSet)
   viskores::cont::ArrayHandle<viskores::Vec3f> cellCentersArray;
   dataSet.GetCellField("cell_center").GetData().AsArrayHandle(cellCentersArray);
 
-  VISKORES_TEST_ASSERT(cellSet.GetNumberOfCells() == cellCentersArray.GetNumberOfValues(),
-                   "Cell centers array has wrong number of values.");
+  VISKORES_TEST_ASSERT(cellSet.GetNumberOfCells() ==
+                         cellCentersArray.GetNumberOfValues(),
+                       "Cell centers array has wrong number of values.");
 
   viskores::Id3 cellDimensions = cellSet.GetCellDimensions() - viskores::Id3(1);
 

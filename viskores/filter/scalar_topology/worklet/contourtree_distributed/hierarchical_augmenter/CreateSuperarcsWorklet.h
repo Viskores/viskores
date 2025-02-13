@@ -188,7 +188,8 @@ public:
       createSuperarcsData, // Execution object of collect BaseTree data array
     // Outputs
     const InOutFieldPortalType& augmentedTreeSupernodesPortal,
-    viskores::Id& augmentedTreeSuperarcsValue, // set value for AugmentedTree->Superarcs[newSupernodeId]
+    viskores::Id&
+      augmentedTreeSuperarcsValue, // set value for AugmentedTree->Superarcs[newSupernodeId]
     viskores::Id&
       augmentedTreeHyperparentsValue, // set value for AugmentedTree->Hyperparents[newSupernodeId]
     viskores::Id&
@@ -198,8 +199,9 @@ public:
     viskores::Id&
       augmentedTreeRegularNodeGlobalIdsValue, // AugmentedTree->RegularNodeGlobalIds[newRegularID]
     FieldType& augmentedTreeDataValuesValue,  // AugmentedTree->DataValues[newRegularID]
-    viskores::Id& augmentedTreeRegular2SupernodeValue, // AugmentedTree->Regular2Supernode[newRegularID]
-    viskores::Id& augmentedTreeSuperparentsValue       // AugmentedTree->Superparents[newRegularID]
+    viskores::Id&
+      augmentedTreeRegular2SupernodeValue,       // AugmentedTree->Regular2Supernode[newRegularID]
+    viskores::Id& augmentedTreeSuperparentsValue // AugmentedTree->Superparents[newRegularID]
   ) const
   {
     // per supernode in the set
@@ -303,7 +305,8 @@ public:
       viskores::Id oldSuperToValue = createSuperarcsData.BaseTreeSuperarcs.Get(oldSuperFromValue);
 
       // retrieve the ascending flag
-      bool ascendingSuperarc = viskores::worklet::contourtree_augmented::IsAscending(oldSuperToValue);
+      bool ascendingSuperarc =
+        viskores::worklet::contourtree_augmented::IsAscending(oldSuperToValue);
       // and mask out the flags
       viskores::Id oldSuperToMaskedIndex =
         viskores::worklet::contourtree_augmented::MaskedIndex(oldSuperToValue);
@@ -345,10 +348,12 @@ public:
       viskores::Id superparentOldSuperId = viskores::worklet::contourtree_augmented::MaskedIndex(
         createSuperarcsData.SuperparentSet.Get(supernodeSetIndex));
 
-      viskores::Id oldTargetSuperId = createSuperarcsData.BaseTreeSuperarcs.Get(superparentOldSuperId);
+      viskores::Id oldTargetSuperId =
+        createSuperarcsData.BaseTreeSuperarcs.Get(superparentOldSuperId);
 
       // and break it into a target and flags
-      bool ascendingSuperarc = viskores::worklet::contourtree_augmented::IsAscending(oldTargetSuperId);
+      bool ascendingSuperarc =
+        viskores::worklet::contourtree_augmented::IsAscending(oldTargetSuperId);
       // NOTE: if the target was NO_SUCH_ELEMENT, this will hold 0
       oldTargetSuperId = viskores::worklet::contourtree_augmented::MaskedIndex(oldTargetSuperId);
 
@@ -387,7 +392,8 @@ public:
 
       // first we identify the hyperarc on which the superarc sits
       // this will be visible in the old base tree, since hyperstructure carries over
-      viskores::Id oldHyperparent = createSuperarcsData.BaseTreeHyperparents.Get(superparentOldSuperId);
+      viskores::Id oldHyperparent =
+        createSuperarcsData.BaseTreeHyperparents.Get(superparentOldSuperId);
 
       // hyperstructure carries over, so we use the same hyperparent as the superparent
       augmentedTreeHyperparentsValue = oldHyperparent;
@@ -400,7 +406,8 @@ public:
       }
       else
       {
-        augmentedTreeSuper2HypernodeValue = viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+        augmentedTreeSuper2HypernodeValue =
+          viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
       }
 
       // round and iteration are set from the superparent, since we are raising to its level

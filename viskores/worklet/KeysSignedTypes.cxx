@@ -12,11 +12,11 @@
 #include <viskores/worklet/Keys.h>
 #include <viskores/worklet/Keys.hxx>
 
-#define VISKORES_KEYS_EXPORT(T)                                                       \
-  template class VISKORES_WORKLET_EXPORT viskores::worklet::Keys<T>;                       \
+#define VISKORES_KEYS_EXPORT(T)                                                                \
+  template class VISKORES_WORKLET_EXPORT viskores::worklet::Keys<T>;                           \
   template VISKORES_WORKLET_EXPORT VISKORES_CONT void viskores::worklet::Keys<T>::BuildArrays( \
-    const viskores::cont::ArrayHandle<T>& keys,                                        \
-    viskores::worklet::KeysSortType sort,                                              \
+    const viskores::cont::ArrayHandle<T>& keys,                                                \
+    viskores::worklet::KeysSortType sort,                                                      \
     viskores::cont::DeviceAdapterId device)
 
 VISKORES_KEYS_EXPORT(viskores::Id);
@@ -32,7 +32,8 @@ VISKORES_KEYS_EXPORT(viskores::IdComponent);
 // a separate source file just for a deprecated method.
 #include <viskores/cont/ArrayCopyDevice.h>
 #include <viskores/cont/ArrayHandleOffsetsToNumComponents.h>
-viskores::cont::ArrayHandle<viskores::IdComponent> viskores::worklet::internal::KeysBase::GetCounts() const
+viskores::cont::ArrayHandle<viskores::IdComponent>
+viskores::worklet::internal::KeysBase::GetCounts() const
 {
   viskores::cont::ArrayHandle<viskores::IdComponent> counts;
   viskores::cont::ArrayCopyDevice(

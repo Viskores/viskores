@@ -24,13 +24,13 @@ class Moller
 public:
   template <typename Precision>
   VISKORES_EXEC void IntersectTri(const viskores::Vec<Precision, 3>& a,
-                              const viskores::Vec<Precision, 3>& b,
-                              const viskores::Vec<Precision, 3>& c,
-                              const viskores::Vec<Precision, 3>& dir,
-                              Precision& distance,
-                              Precision& u,
-                              Precision& v,
-                              const viskores::Vec<Precision, 3>& origin) const
+                                  const viskores::Vec<Precision, 3>& b,
+                                  const viskores::Vec<Precision, 3>& c,
+                                  const viskores::Vec<Precision, 3>& dir,
+                                  Precision& distance,
+                                  Precision& u,
+                                  Precision& v,
+                                  const viskores::Vec<Precision, 3>& origin) const
   {
     const viskores::Float32 EPSILON2 = 0.0001f;
 
@@ -79,8 +79,8 @@ class WaterTight
 public:
   template <typename Precision>
   VISKORES_EXEC inline void FindDir(const viskores::Vec<Precision, 3>& dir,
-                                viskores::Vec<Precision, 3>& s,
-                                viskores::Vec<Int32, 3>& k) const
+                                    viskores::Vec<Precision, 3>& s,
+                                    viskores::Vec<Int32, 3>& k) const
   {
     //Find max ray direction
     k[2] = 0;
@@ -120,13 +120,13 @@ public:
 
   template <typename Precision>
   VISKORES_EXEC_CONT inline void IntersectTri(const viskores::Vec<Precision, 3>& a,
-                                          const viskores::Vec<Precision, 3>& b,
-                                          const viskores::Vec<Precision, 3>& c,
-                                          const viskores::Vec<Precision, 3>& dir,
-                                          Precision& distance,
-                                          Precision& u,
-                                          Precision& v,
-                                          const viskores::Vec<Precision, 3>& origin) const
+                                              const viskores::Vec<Precision, 3>& b,
+                                              const viskores::Vec<Precision, 3>& c,
+                                              const viskores::Vec<Precision, 3>& dir,
+                                              Precision& distance,
+                                              Precision& u,
+                                              Precision& v,
+                                              const viskores::Vec<Precision, 3>& origin) const
   {
     viskores::Vec<Int32, 3> k;
     viskores::Vec<Precision, 3> s;
@@ -225,14 +225,14 @@ public:
 
   template <typename Precision>
   VISKORES_EXEC inline void IntersectTriSn(const viskores::Vec<Precision, 3>& a,
-                                       const viskores::Vec<Precision, 3>& b,
-                                       const viskores::Vec<Precision, 3>& c,
-                                       const viskores::Vec<Precision, 3>& s,
-                                       const viskores::Vec<Int32, 3>& k,
-                                       Precision& distance,
-                                       Precision& u,
-                                       Precision& v,
-                                       const viskores::Vec<Precision, 3>& origin) const
+                                           const viskores::Vec<Precision, 3>& b,
+                                           const viskores::Vec<Precision, 3>& c,
+                                           const viskores::Vec<Precision, 3>& s,
+                                           const viskores::Vec<Int32, 3>& k,
+                                           Precision& distance,
+                                           Precision& u,
+                                           Precision& v,
+                                           const viskores::Vec<Precision, 3>& origin) const
   {
     viskores::Vec<Precision, 3> A, B, C;
     A = a - origin;
@@ -295,14 +295,15 @@ public:
 }; //WaterTight
 
 template <>
-VISKORES_EXEC inline void WaterTight::IntersectTri<viskores::Float64>(const viskores::Vec3f_64& a,
-                                                              const viskores::Vec3f_64& b,
-                                                              const viskores::Vec3f_64& c,
-                                                              const viskores::Vec3f_64& dir,
-                                                              viskores::Float64& distance,
-                                                              viskores::Float64& u,
-                                                              viskores::Float64& v,
-                                                              const viskores::Vec3f_64& origin) const
+VISKORES_EXEC inline void WaterTight::IntersectTri<viskores::Float64>(
+  const viskores::Vec3f_64& a,
+  const viskores::Vec3f_64& b,
+  const viskores::Vec3f_64& c,
+  const viskores::Vec3f_64& dir,
+  viskores::Float64& distance,
+  viskores::Float64& u,
+  viskores::Float64& v,
+  const viskores::Vec3f_64& origin) const
 {
   //Find max ray direction
   int kz = 0;

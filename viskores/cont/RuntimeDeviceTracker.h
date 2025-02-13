@@ -61,7 +61,7 @@ public:
   /// device as being unusable for all future invocations.
   ///
   VISKORES_CONT void ReportAllocationFailure(viskores::cont::DeviceAdapterId deviceId,
-                                         const viskores::cont::ErrorBadAllocation&)
+                                             const viskores::cont::ErrorBadAllocation&)
   {
     this->SetDeviceState(deviceId, false);
   }
@@ -69,7 +69,7 @@ public:
 
   /// Report a ErrorBadDevice failure and flag the device as unusable.
   VISKORES_CONT void ReportBadDeviceFailure(viskores::cont::DeviceAdapterId deviceId,
-                                        const viskores::cont::ErrorBadDevice&)
+                                            const viskores::cont::ErrorBadDevice&)
   {
     this->SetDeviceState(deviceId, false);
   }

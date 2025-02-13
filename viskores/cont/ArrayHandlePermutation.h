@@ -103,8 +103,9 @@ class Storage<T, viskores::cont::StorageTagPermutation<IndexStorageTag, ValueSto
   VISKORES_STATIC_ASSERT_MSG(
     (viskores::cont::internal::IsValidArrayHandle<viskores::Id, IndexStorageTag>::value),
     "Invalid index storage tag.");
-  VISKORES_STATIC_ASSERT_MSG((viskores::cont::internal::IsValidArrayHandle<T, ValueStorageTag>::value),
-                         "Invalid value storage tag.");
+  VISKORES_STATIC_ASSERT_MSG(
+    (viskores::cont::internal::IsValidArrayHandle<T, ValueStorageTag>::value),
+    "Invalid value storage tag.");
 
   using IndexStorage = viskores::cont::internal::Storage<viskores::Id, IndexStorageTag>;
   using ValueStorage = viskores::cont::internal::Storage<T, ValueStorageTag>;
@@ -122,14 +123,14 @@ class Storage<T, viskores::cont::StorageTagPermutation<IndexStorageTag, ValueSto
   {
     Info info = buffers[0].GetMetaData<Info>();
     return std::vector<viskores::cont::internal::Buffer>(buffers.begin() + 1,
-                                                     buffers.begin() + info.ValueBufferOffset);
+                                                         buffers.begin() + info.ValueBufferOffset);
   }
   VISKORES_CONT static std::vector<viskores::cont::internal::Buffer> ValueBuffers(
     const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     Info info = buffers[0].GetMetaData<Info>();
     return std::vector<viskores::cont::internal::Buffer>(buffers.begin() + info.ValueBufferOffset,
-                                                     buffers.end());
+                                                         buffers.end());
   }
 
 public:
@@ -137,10 +138,10 @@ public:
 
   using ReadPortalType =
     viskores::internal::ArrayPortalPermutation<typename IndexStorage::ReadPortalType,
-                                           typename ValueStorage::ReadPortalType>;
+                                               typename ValueStorage::ReadPortalType>;
   using WritePortalType =
     viskores::internal::ArrayPortalPermutation<typename IndexStorage::ReadPortalType,
-                                           typename ValueStorage::WritePortalType>;
+                                               typename ValueStorage::WritePortalType>;
 
   VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlat(
     const std::vector<viskores::cont::internal::Buffer>& buffers)
@@ -155,10 +156,10 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>&,
-                             const T&,
-                             viskores::Id,
-                             viskores::Id,
-                             viskores::cont::Token&)
+                                 const T&,
+                                 viskores::Id,
+                                 viskores::Id,
+                                 viskores::cont::Token&)
   {
     throw viskores::cont::ErrorBadType("Fill not supported for ArrayHandlePermutation.");
   }
@@ -234,7 +235,7 @@ class ArrayHandlePermutation
   : public viskores::cont::ArrayHandle<
       typename ValueArrayHandleType::ValueType,
       viskores::cont::StorageTagPermutation<typename IndexArrayHandleType::StorageTag,
-                                        typename ValueArrayHandleType::StorageTag>>
+                                            typename ValueArrayHandleType::StorageTag>>
 {
   // If the following line gives a compile error, then the ArrayHandleType
   // template argument is not a valid ArrayHandle type.
@@ -252,7 +253,7 @@ public:
     (viskores::cont::ArrayHandle<
       typename ValueArrayHandleType::ValueType,
       viskores::cont::StorageTagPermutation<typename IndexArrayHandleType::StorageTag,
-                                        typename ValueArrayHandleType::StorageTag>>));
+                                            typename ValueArrayHandleType::StorageTag>>));
 
   /// Construct a permuation array with index and value arrays.
   VISKORES_CONT
@@ -320,7 +321,7 @@ struct SerializableTypeString<
   viskores::cont::ArrayHandle<T, viskores::cont::StorageTagPermutation<IdxST, ValST>>>
   : SerializableTypeString<
       viskores::cont::ArrayHandlePermutation<viskores::cont::ArrayHandle<viskores::Id, IdxST>,
-                                         viskores::cont::ArrayHandle<T, ValST>>>
+                                             viskores::cont::ArrayHandle<T, ValST>>>
 {
 };
 }
@@ -356,9 +357,11 @@ public:
 };
 
 template <typename T, typename IdxST, typename ValST>
-struct Serialization<viskores::cont::ArrayHandle<T, viskores::cont::StorageTagPermutation<IdxST, ValST>>>
-  : Serialization<viskores::cont::ArrayHandlePermutation<viskores::cont::ArrayHandle<viskores::Id, IdxST>,
-                                                     viskores::cont::ArrayHandle<T, ValST>>>
+struct Serialization<
+  viskores::cont::ArrayHandle<T, viskores::cont::StorageTagPermutation<IdxST, ValST>>>
+  : Serialization<
+      viskores::cont::ArrayHandlePermutation<viskores::cont::ArrayHandle<viskores::Id, IdxST>,
+                                             viskores::cont::ArrayHandle<T, ValST>>>
 {
 };
 

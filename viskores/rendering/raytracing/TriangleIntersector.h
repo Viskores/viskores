@@ -40,25 +40,29 @@ public:
   viskores::Id GetNumberOfShapes() const override;
 
 
-  VISKORES_CONT void IntersectRays(Ray<viskores::Float32>& rays, bool returnCellIndex = false) override;
-  VISKORES_CONT void IntersectRays(Ray<viskores::Float64>& rays, bool returnCellIndex = false) override;
+  VISKORES_CONT void IntersectRays(Ray<viskores::Float32>& rays,
+                                   bool returnCellIndex = false) override;
+  VISKORES_CONT void IntersectRays(Ray<viskores::Float64>& rays,
+                                   bool returnCellIndex = false) override;
 
 
-  VISKORES_CONT void IntersectionData(Ray<viskores::Float32>& rays,
-                                  const viskores::cont::Field scalarField,
-                                  const viskores::Range& scalarRange = viskores::Range()) override;
+  VISKORES_CONT void IntersectionData(
+    Ray<viskores::Float32>& rays,
+    const viskores::cont::Field scalarField,
+    const viskores::Range& scalarRange = viskores::Range()) override;
 
-  VISKORES_CONT void IntersectionData(Ray<viskores::Float64>& rays,
-                                  const viskores::cont::Field scalarField,
-                                  const viskores::Range& scalarRange = viskores::Range()) override;
+  VISKORES_CONT void IntersectionData(
+    Ray<viskores::Float64>& rays,
+    const viskores::cont::Field scalarField,
+    const viskores::Range& scalarRange = viskores::Range()) override;
 
   template <typename Precision>
   VISKORES_CONT void IntersectRaysImp(Ray<Precision>& rays, bool returnCellIndex);
 
   template <typename Precision>
   VISKORES_CONT void IntersectionDataImp(Ray<Precision>& rays,
-                                     const viskores::cont::Field scalarField,
-                                     const viskores::Range& scalarRange);
+                                         const viskores::cont::Field scalarField,
+                                         const viskores::Range& scalarRange);
 
 }; // class intersector
 }

@@ -39,9 +39,11 @@ struct PhiloxFunctor
     using counters_type = typename philox_functor::counters_type;
 
     auto idx = static_cast<viskores::UInt64>(index);
-    counters_type counters{ static_cast<viskores::UInt32>(idx), static_cast<viskores::UInt32>(idx >> 32) };
+    counters_type counters{ static_cast<viskores::UInt32>(idx),
+                            static_cast<viskores::UInt32>(idx >> 32) };
     counters_type result = philox_functor{}(counters, Seed);
-    return static_cast<viskores::UInt64>(result[0]) | static_cast<viskores::UInt64>(result[1]) << 32;
+    return static_cast<viskores::UInt64>(result[0]) |
+      static_cast<viskores::UInt64>(result[1]) << 32;
   }
 
 private:
@@ -75,7 +77,7 @@ public:
   using SeedType = viskores::Vec<viskores::UInt32, 1>;
 
   VISKORES_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandleRandomUniformBits,
-                                (viskores::cont::ArrayHandleImplicit<detail::PhiloxFunctor>));
+                                    (viskores::cont::ArrayHandleImplicit<detail::PhiloxFunctor>));
 
   /// Construct an `ArrayHandleRandomUniformBits`.
   ///
@@ -84,7 +86,8 @@ public:
   /// between the seed and the length, the type of the seed is a `viskores::Vec` of size 1. To
   /// specify the seed, declare it in braces. For example, to construct a random array of
   /// size 50 with seed 123, use `ArrayHandleRandomUniformBits(50, { 123 })`.
-  explicit ArrayHandleRandomUniformBits(viskores::Id length, SeedType seed = { std::random_device{}() })
+  explicit ArrayHandleRandomUniformBits(viskores::Id length,
+                                        SeedType seed = { std::random_device{}() })
     : Superclass(detail::PhiloxFunctor(seed), length)
   {
   }

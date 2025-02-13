@@ -153,7 +153,7 @@ void TestStreamLineUniformGrid()
   std::cout << "Number of coordinates " << numberOfPoints << std::endl;
 
   VISKORES_TEST_ASSERT(test_equal(numberOfCells, numSeeds * 2),
-                   "Wrong number of cells for stream lines");
+                       "Wrong number of cells for stream lines");
 }
 
 int UnitTestStreamLineUniformGrid(int argc, char* argv[])

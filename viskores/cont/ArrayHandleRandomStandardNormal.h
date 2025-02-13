@@ -23,16 +23,20 @@ namespace detail
 {
 struct BoxMuller
 {
-  VISKORES_EXEC_CONT viskores::Float32 operator()(const viskores::Pair<viskores::Float32, viskores::Float32>& uv) const
+  VISKORES_EXEC_CONT viskores::Float32 operator()(
+    const viskores::Pair<viskores::Float32, viskores::Float32>& uv) const
   {
     // We take two U(0, 1) and return one N(0, 1)
-    return viskores::Sqrt(-2.0f * viskores::Log(uv.first)) * viskores::Cos(2.0f * viskores::TwoPif() * uv.second);
+    return viskores::Sqrt(-2.0f * viskores::Log(uv.first)) *
+      viskores::Cos(2.0f * viskores::TwoPif() * uv.second);
   }
 
-  VISKORES_EXEC_CONT viskores::Float64 operator()(const viskores::Pair<viskores::Float64, viskores::Float64>& uv) const
+  VISKORES_EXEC_CONT viskores::Float64 operator()(
+    const viskores::Pair<viskores::Float64, viskores::Float64>& uv) const
   {
     // We take two U(0, 1) and return one N(0, 1)
-    return viskores::Sqrt(-2.0 * viskores::Log(uv.first)) * viskores::Cos(2 * viskores::TwoPi() * uv.second);
+    return viskores::Sqrt(-2.0 * viskores::Log(uv.first)) *
+      viskores::Cos(2 * viskores::TwoPi() * uv.second);
   }
 };
 } //detail
@@ -57,7 +61,7 @@ template <typename Real = viskores::Float64>
 class VISKORES_ALWAYS_EXPORT ArrayHandleRandomStandardNormal
   : public viskores::cont::ArrayHandleTransform<
       viskores::cont::ArrayHandleZip<viskores::cont::ArrayHandleRandomUniformReal<Real>,
-                                 viskores::cont::ArrayHandleRandomUniformReal<Real>>,
+                                     viskores::cont::ArrayHandleRandomUniformReal<Real>>,
       detail::BoxMuller>
 {
 public:
@@ -69,7 +73,7 @@ public:
     (ArrayHandleRandomStandardNormal<Real>),
     (viskores::cont::ArrayHandleTransform<
       viskores::cont::ArrayHandleZip<viskores::cont::ArrayHandleRandomUniformReal<Real>,
-                                 viskores::cont::ArrayHandleRandomUniformReal<Real>>,
+                                     viskores::cont::ArrayHandleRandomUniformReal<Real>>,
       detail::BoxMuller>));
 
   /// Construct an `ArrayHandleRandomStandardNormal`.
@@ -82,7 +86,7 @@ public:
   explicit ArrayHandleRandomStandardNormal(viskores::Id length,
                                            SeedType seed = { std::random_device{}() })
     : Superclass(viskores::cont::make_ArrayHandleZip(UniformReal{ length, seed },
-                                                 UniformReal{ length, { ~seed[0] } }),
+                                                     UniformReal{ length, { ~seed[0] } }),
                  detail::BoxMuller{})
   {
   }

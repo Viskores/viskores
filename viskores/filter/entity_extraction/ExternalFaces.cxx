@@ -38,7 +38,7 @@ void ExternalFaces::SetPassPolyData(bool value)
 
 //-----------------------------------------------------------------------------
 viskores::cont::DataSet ExternalFaces::GenerateOutput(const viskores::cont::DataSet& input,
-                                                  viskores::cont::CellSetExplicit<>& outCellSet)
+                                                      viskores::cont::CellSetExplicit<>& outCellSet)
 {
   //3. Check the fields of the dataset to see what kinds of fields are present, so
   //   we can free the cell mapping array if it won't be needed.
@@ -56,7 +56,8 @@ viskores::cont::DataSet ExternalFaces::GenerateOutput(const viskores::cont::Data
   }
 
   //4. create the output dataset
-  auto mapper = [&](auto& result, const auto& f) {
+  auto mapper = [&](auto& result, const auto& f)
+  {
     // New Design: We are still using the old MapFieldOntoOutput to demonstrate the transition
     this->MapFieldOntoOutput(result, f);
   };
@@ -102,7 +103,8 @@ viskores::cont::DataSet ExternalFaces::DoExecute(const viskores::cont::DataSet& 
   }
 }
 
-bool ExternalFaces::MapFieldOntoOutput(viskores::cont::DataSet& result, const viskores::cont::Field& field)
+bool ExternalFaces::MapFieldOntoOutput(viskores::cont::DataSet& result,
+                                       const viskores::cont::Field& field)
 {
   if (field.IsPointField())
   {

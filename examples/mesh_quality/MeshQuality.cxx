@@ -258,7 +258,8 @@ int main(int argc, char* argv[])
 
   // A cell metric is now computed for every shape type that exists in the
   // input dataset.
-  viskores::filter::mesh_info::CellMetric shapeMetric = viskores::filter::mesh_info::CellMetric::Volume;
+  viskores::filter::mesh_info::CellMetric shapeMetric =
+    viskores::filter::mesh_info::CellMetric::Volume;
 
   try
   {

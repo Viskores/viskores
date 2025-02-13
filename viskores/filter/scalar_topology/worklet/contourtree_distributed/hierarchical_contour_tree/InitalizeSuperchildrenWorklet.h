@@ -80,8 +80,8 @@ public:
 
   template <typename InFieldPortalType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id& hyperarc,
-                                const viskores::Id& hyperarcVal,
-                                const InFieldPortalType& hypernodesPortal) const
+                                        const viskores::Id& hyperarcVal,
+                                        const InFieldPortalType& hypernodesPortal) const
   {
     // per hyperarc
     // test for root element

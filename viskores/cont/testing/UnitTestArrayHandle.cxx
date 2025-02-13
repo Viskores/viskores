@@ -106,10 +106,10 @@ struct VerifyEmptyArrays
     // allocated.
     viskores::cont::ArrayHandle<T> arrayHandle = viskores::cont::ArrayHandle<T>();
     VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
-                     "Uninitialized array does not report zero values.");
+                         "Uninitialized array does not report zero values.");
     arrayHandle = viskores::cont::ArrayHandle<T>();
     VISKORES_TEST_ASSERT(arrayHandle.ReadPortal().GetNumberOfValues() == 0,
-                     "Uninitialized array does not give portal with zero values.");
+                         "Uninitialized array does not give portal with zero values.");
     viskores::cont::Token token;
     arrayHandle = viskores::cont::ArrayHandle<T>();
     arrayHandle.Allocate(0, viskores::CopyFlag::On);
@@ -144,7 +144,7 @@ struct VerifyUserOwnedMemory
       viskores::cont::make_ArrayHandle(buffer, viskores::CopyFlag::Off);
 
     VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
-                     "ArrayHandle has wrong number of entries.");
+                         "ArrayHandle has wrong number of entries.");
 
     std::cout << "Check array with user provided memory." << std::endl;
     CheckArray(arrayHandle);
@@ -186,7 +186,8 @@ struct VerifyUserOwnedMemory
         //you should not be able to allocate a size larger than the
         //user provided and get the results
         viskores::cont::Token token;
-        arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, viskores::cont::DeviceAdapterTagSerial{}, token);
+        arrayHandle.PrepareForOutput(
+          ARRAY_SIZE * 2, viskores::cont::DeviceAdapterTagSerial{}, token);
         token.DetachFromAll();
         arrayHandle.WritePortal();
       }
@@ -195,8 +196,8 @@ struct VerifyUserOwnedMemory
         gotException = true;
       }
       VISKORES_TEST_ASSERT(gotException,
-                       "PrepareForOutput should fail when asked to "
-                       "re-allocate user provided memory.");
+                           "PrepareForOutput should fail when asked to "
+                           "re-allocate user provided memory.");
     }
   }
 };
@@ -218,8 +219,9 @@ struct VerifyUserTransferredMemory
     viskores::cont::ArrayHandleBasic<T> arrayHandle(buffer, ARRAY_SIZE, user_free_function);
 
     VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
-                     "ArrayHandle has wrong number of entries.");
-    VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfComponentsFlat() == viskores::VecFlat<T>::NUM_COMPONENTS);
+                         "ArrayHandle has wrong number of entries.");
+    VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfComponentsFlat() ==
+                         viskores::VecFlat<T>::NUM_COMPONENTS);
 
     std::cout << "Check array with user transferred memory." << std::endl;
     CheckArray(arrayHandle);
@@ -257,7 +259,8 @@ struct VerifyUserTransferredMemory
         //you should not be able to allocate a size larger than the
         //user provided and get the results
         viskores::cont::Token token;
-        arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, viskores::cont::DeviceAdapterTagSerial{}, token);
+        arrayHandle.PrepareForOutput(
+          ARRAY_SIZE * 2, viskores::cont::DeviceAdapterTagSerial{}, token);
         token.DetachFromAll();
         arrayHandle.WritePortal();
       }
@@ -266,8 +269,8 @@ struct VerifyUserTransferredMemory
         gotException = true;
       }
       VISKORES_TEST_ASSERT(gotException,
-                       "PrepareForOutput should fail when asked to "
-                       "re-allocate user provided memory.");
+                           "PrepareForOutput should fail when asked to "
+                           "re-allocate user provided memory.");
     }
   }
 };
@@ -286,11 +289,12 @@ struct VerifyVectorMovedMemory
       buffer[static_cast<std::size_t>(index)] = TestValue(index, T());
     }
 
-    viskores::cont::ArrayHandle<T> arrayHandle = viskores::cont::make_ArrayHandleMove(std::move(buffer));
+    viskores::cont::ArrayHandle<T> arrayHandle =
+      viskores::cont::make_ArrayHandleMove(std::move(buffer));
     // buffer is now invalid
 
     VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
-                     "ArrayHandle has wrong number of entries.");
+                         "ArrayHandle has wrong number of entries.");
 
     std::cout << "Check array with moved std::vector memory." << std::endl;
     CheckArray(arrayHandle);
@@ -339,7 +343,7 @@ struct VerifyInitializerList
       viskores::cont::make_ArrayHandle({ TestValue(0, T()), TestValue(1, T()), TestValue(2, T()) });
 
     VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 3,
-                     "ArrayHandle has wrong number of entries.");
+                         "ArrayHandle has wrong number of entries.");
 
     std::cout << "Check array with initializer list memory." << std::endl;
     CheckArray(arrayHandle);
@@ -386,23 +390,23 @@ struct VerifyVISKORESAllocatedHandle
     viskores::cont::ArrayHandle<T> arrayHandle;
 
     VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
-                     "ArrayHandle has wrong number of entries.");
+                         "ArrayHandle has wrong number of entries.");
     invoke(AssignTestValue{}, viskores::cont::ArrayHandleIndex(ARRAY_SIZE * 2), arrayHandle);
 
     VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE * 2,
-                     "Array not allocated correctly.");
+                         "Array not allocated correctly.");
     CheckArray(arrayHandle);
 
     std::cout << "Try shrinking the array." << std::endl;
     arrayHandle.Allocate(ARRAY_SIZE, viskores::CopyFlag::On);
     VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
-                     "Array size did not shrink correctly.");
+                         "Array size did not shrink correctly.");
     CheckArray(arrayHandle);
 
     std::cout << "Try reallocating array." << std::endl;
     arrayHandle.Allocate(ARRAY_SIZE * 2);
     VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE * 2,
-                     "Array size did not allocate correctly.");
+                         "Array size did not allocate correctly.");
     // No point in checking values. This method can invalidate them.
 
     std::cout << "Try in place operation." << std::endl;
@@ -414,7 +418,7 @@ struct VerifyVISKORESAllocatedHandle
 
     VISKORES_TEST_ASSERT(arrayHandle == arrayHandle, "Array handle does not equal itself.");
     VISKORES_TEST_ASSERT(arrayHandle != viskores::cont::ArrayHandle<T>(),
-                     "Array handle equals different array.");
+                         "Array handle equals different array.");
   }
 };
 
@@ -434,13 +438,13 @@ struct VerifyVISKORESTransferredOwnership
       auto copyOfHandle = arrayHandle;
 
       VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
-                       "ArrayHandle has wrong number of entries.");
+                           "ArrayHandle has wrong number of entries.");
       invoke(AssignTestValue{}, viskores::cont::ArrayHandleIndex(ARRAY_SIZE * 2), arrayHandle);
 
       transferredMemory = copyOfHandle.GetBuffers()[0].TakeHostBufferOwnership();
 
       VISKORES_TEST_ASSERT(copyOfHandle.GetNumberOfValues() == ARRAY_SIZE * 2,
-                       "Array not allocated correctly.");
+                           "Array not allocated correctly.");
       CheckArray(arrayHandle);
 
       std::cout << "Try in place operation." << std::endl;
@@ -505,12 +509,14 @@ struct VerifyEqualityOperators
     {
       viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic> a1;
       viskores::cont::ArrayHandle<viskores::Vec<typename OtherType<T>::Type, 3>,
-                              viskores::cont::StorageTagBasic>
+                                  viskores::cont::StorageTagBasic>
         tmp;
       auto a2 = viskores::cont::make_ArrayHandleExtractComponent(tmp, 1);
 
-      VISKORES_TEST_ASSERT(a1 != a2, "Arrays with different storage and value type compared equal.");
-      VISKORES_TEST_ASSERT(!(a1 == a2), "Arrays with different storage and value type compared equal.");
+      VISKORES_TEST_ASSERT(a1 != a2,
+                           "Arrays with different storage and value type compared equal.");
+      VISKORES_TEST_ASSERT(!(a1 == a2),
+                           "Arrays with different storage and value type compared equal.");
     }
   }
 };

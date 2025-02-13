@@ -88,13 +88,13 @@ public:
 
   template <typename OutFieldPortalType, typename InFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertexId,
-                            const viskores::Id vertex,
-                            const InFieldPortalType& firstEdgePortal,
-                            const InFieldPortalType& outdegreePortal,
-                            const InFieldPortalType& activeEdgesPortal,
-                            const InFieldPortalType& hyperarcsPortal,
-                            const InFieldPortalType& edgeFarPortal,
-                            const OutFieldPortalType& newOutdegreePortal) const
+                                const viskores::Id vertex,
+                                const InFieldPortalType& firstEdgePortal,
+                                const InFieldPortalType& outdegreePortal,
+                                const InFieldPortalType& activeEdgesPortal,
+                                const InFieldPortalType& hyperarcsPortal,
+                                const InFieldPortalType& edgeFarPortal,
+                                const OutFieldPortalType& newOutdegreePortal) const
   {
     // first start found
     viskores::Id firstExt = (viskores::Id)NO_SUCH_ELEMENT;
@@ -117,11 +117,11 @@ public:
         firstExt = nbrFar;
       else // otherwise, check for whether we have an actual merge saddle
         if (firstExt != nbrFar)
-      { // first non-matching
-        isGenuineSaddle = true;
-        break;
-      } // first non-matching
-    }   // per edge
+        { // first non-matching
+          isGenuineSaddle = true;
+          break;
+        } // first non-matching
+    }     // per edge
 
     // if it's not a genuine saddle, ignore it
     if (!isGenuineSaddle)

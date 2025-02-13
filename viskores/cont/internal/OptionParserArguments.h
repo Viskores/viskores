@@ -48,9 +48,9 @@ struct ViskoresArg : public option::Arg
       if (msg)
       {
         VISKORES_LOG_ALWAYS_S(viskores::cont::LogLevel::Error,
-                          "Missing argument after option '"
-                            << std::string(option.name, static_cast<size_t>(option.namelen))
-                            << "'.\n");
+                              "Missing argument after option '"
+                                << std::string(option.name, static_cast<size_t>(option.namelen))
+                                << "'.\n");
       }
       return option::ARG_ILLEGAL;
     }

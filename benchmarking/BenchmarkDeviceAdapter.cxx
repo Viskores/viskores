@@ -96,21 +96,21 @@ static constexpr int SmallRangeMultiplier = 1 << 21; // Ensure a sample at 2MiB
 
 #ifndef VISKORES_ENABLE_KOKKOS
 using TypeList = viskores::List<viskores::UInt8,
-                            viskores::Float32,
-                            viskores::Int64,
-                            viskores::Float64,
-                            viskores::Vec3f_32,
-                            viskores::Pair<viskores::Int32, viskores::Float64>>;
+                                viskores::Float32,
+                                viskores::Int64,
+                                viskores::Float64,
+                                viskores::Vec3f_32,
+                                viskores::Pair<viskores::Int32, viskores::Float64>>;
 
 using SmallTypeList = viskores::List<viskores::UInt8, viskores::Float32, viskores::Int64>;
 #else
 // Kokkos requires 0 == (sizeof(Kokkos::MinMaxScalar<ValueType>) % sizeof(int)
 // so removing viskores::UInt8
 using TypeList = viskores::List<viskores::Float32,
-                            viskores::Int64,
-                            viskores::Float64,
-                            viskores::Vec3f_32,
-                            viskores::Pair<viskores::Int32, viskores::Float64>>;
+                                viskores::Int64,
+                                viskores::Float64,
+                                viskores::Vec3f_32,
+                                viskores::Pair<viskores::Int32, viskores::Float64>>;
 
 using SmallTypeList = viskores::List<viskores::Float32, viskores::Int64>;
 #endif
@@ -119,7 +119,8 @@ using SmallTypeList = viskores::List<viskores::Float32, viskores::Int64>;
 using AtomicWordTypes = viskores::List<viskores::UInt32>;
 
 // The Fill algorithm uses different word types:
-using FillWordTypes = viskores::List<viskores::UInt8, viskores::UInt16, viskores::UInt32, viskores::UInt64>;
+using FillWordTypes =
+  viskores::List<viskores::UInt8, viskores::UInt16, viskores::UInt32, viskores::UInt64>;
 
 using IdArrayHandle = viskores::cont::ArrayHandle<viskores::Id>;
 
@@ -162,7 +163,8 @@ template <typename T, viskores::IdComponent N>
 struct TestValueFunctor<viskores::Vec<T, N>>
 {
   template <std::size_t... Ns>
-  VISKORES_EXEC_CONT viskores::Vec<T, N> FillVec(viskores::Id i, viskoresstd::index_sequence<Ns...>) const
+  VISKORES_EXEC_CONT viskores::Vec<T, N> FillVec(viskores::Id i,
+                                                 viskoresstd::index_sequence<Ns...>) const
   {
     return viskores::make_Vec(TestValue<T>(i + static_cast<viskores::Id>(Ns))...);
   }
@@ -305,9 +307,9 @@ struct GenerateBitFieldWorklet : public viskores::worklet::WorkletMapField
 // loads.
 template <typename WordType>
 VISKORES_CONT viskores::cont::BitField GenerateBitField(WordType exemplar,
-                                                viskores::Id stride,
-                                                viskores::Id maxMaskedWord,
-                                                viskores::Id numWords)
+                                                        viskores::Id stride,
+                                                        viskores::Id maxMaskedWord,
+                                                        viskores::Id numWords)
 {
   if (stride == 0)
   {
@@ -352,7 +354,8 @@ void BenchBitFieldToUnorderedSetImpl(benchmark::State& state,
     state.SetLabel(desc.str());
   }
 
-  viskores::cont::BitField bits = GenerateBitField<WordType>(exemplar, stride, maxMaskedWord, numWords);
+  viskores::cont::BitField bits =
+    GenerateBitField<WordType>(exemplar, stride, maxMaskedWord, numWords);
 
   IdArrayHandle indices;
 
@@ -534,7 +537,8 @@ void BenchCountSetBitsImpl(benchmark::State& state,
     state.SetLabel(desc.str());
   }
 
-  viskores::cont::BitField bits = GenerateBitField<WordType>(exemplar, stride, maxMaskedWord, numWords);
+  viskores::cont::BitField bits =
+    GenerateBitField<WordType>(exemplar, stride, maxMaskedWord, numWords);
 
   viskores::cont::Timer timer{ Config.Device };
   for (auto _ : state)
@@ -630,9 +634,9 @@ void BenchFillArrayHandle(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchFillArrayHandle,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 void BenchFillBitFieldBool(benchmark::State& state)
 {
@@ -660,8 +664,8 @@ void BenchFillBitFieldBool(benchmark::State& state)
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
 };
 VISKORES_BENCHMARK_OPTS(BenchFillBitFieldBool,
-                      ->Ranges({ { FullRange.first, FullRange.second }, { 0, 1 } })
-                      ->ArgNames({ "Size", "Val" }));
+                          ->Ranges({ { FullRange.first, FullRange.second }, { 0, 1 } })
+                          ->ArgNames({ "Size", "Val" }));
 
 template <typename WordType>
 void BenchFillBitFieldMask(benchmark::State& state)
@@ -690,9 +694,9 @@ void BenchFillBitFieldMask(benchmark::State& state)
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
 };
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchFillBitFieldMask,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              FillWordTypes);
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  FillWordTypes);
 
 template <typename ValueType>
 void BenchLowerBounds(benchmark::State& state)
@@ -735,10 +739,10 @@ void BenchLowerBounds(benchmark::State& state)
 };
 
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchLowerBounds,
-                                ->RangeMultiplier(SmallRangeMultiplier)
-                                ->Ranges({ SmallRange, SmallRange })
-                                ->ArgNames({ "Size", "InputSize" }),
-                              TypeList);
+                                    ->RangeMultiplier(SmallRangeMultiplier)
+                                    ->Ranges({ SmallRange, SmallRange })
+                                    ->ArgNames({ "Size", "InputSize" }),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchReduce(benchmark::State& state)
@@ -770,9 +774,9 @@ void BenchReduce(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchReduce,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchReduceByKey(benchmark::State& state)
@@ -806,7 +810,8 @@ void BenchReduceByKey(benchmark::State& state)
   {
     (void)_;
     timer.Start();
-    viskores::cont::Algorithm::ReduceByKey(device, keysIn, valuesIn, keysOut, valuesOut, viskores::Add{});
+    viskores::cont::Algorithm::ReduceByKey(
+      device, keysIn, valuesIn, keysOut, valuesOut, viskores::Add{});
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -860,9 +865,9 @@ void BenchScanExclusive(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchScanExclusive,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchScanExtended(benchmark::State& state)
@@ -894,9 +899,9 @@ void BenchScanExtended(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchScanExtended,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchScanInclusive(benchmark::State& state)
@@ -928,9 +933,9 @@ void BenchScanInclusive(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchScanInclusive,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchSort(benchmark::State& state)
@@ -965,9 +970,9 @@ void BenchSort(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchSort,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchSortByKey(benchmark::State& state)
@@ -1047,7 +1052,8 @@ void BenchStableSortIndices(benchmark::State& state)
   {
     (void)_;
     // Reset the indices array:
-    viskores::cont::Algorithm::Copy(device, viskores::cont::make_ArrayHandleIndex(numValues), indices);
+    viskores::cont::Algorithm::Copy(
+      device, viskores::cont::make_ArrayHandleIndex(numValues), indices);
 
     timer.Start();
     viskores::worklet::StableSortIndices::Sort(device, values, indices);
@@ -1061,9 +1067,9 @@ void BenchStableSortIndices(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchStableSortIndices,
-                                ->Range(SmallRange.first, SmallRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+                                    ->Range(SmallRange.first, SmallRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchStableSortIndicesUnique(benchmark::State& state)
@@ -1125,8 +1131,8 @@ void BenchmarkStableSortIndicesUniqueGenerator(benchmark::internal::Benchmark* b
 }
 
 VISKORES_BENCHMARK_TEMPLATES_APPLY(BenchStableSortIndicesUnique,
-                               BenchmarkStableSortIndicesUniqueGenerator,
-                               SmallTypeList);
+                                   BenchmarkStableSortIndicesUniqueGenerator,
+                                   SmallTypeList);
 
 template <typename ValueType>
 void BenchUnique(benchmark::State& state)
@@ -1224,10 +1230,10 @@ void BenchUpperBounds(benchmark::State& state)
 };
 
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchUpperBounds,
-                                ->RangeMultiplier(SmallRangeMultiplier)
-                                ->Ranges({ SmallRange, SmallRange })
-                                ->ArgNames({ "Size", "InputSize" }),
-                              SmallTypeList);
+                                    ->RangeMultiplier(SmallRangeMultiplier)
+                                    ->Ranges({ SmallRange, SmallRange })
+                                    ->ArgNames({ "Size", "InputSize" }),
+                                  SmallTypeList);
 
 } // end anon namespace
 

@@ -43,9 +43,9 @@ public:
 
   template <typename InPointPortalType, typename OutPointPortalType>
   VISKORES_EXEC void operator()(const viskores::Id out_idx,
-                            const viskores::Id in_idx,
-                            const InPointPortalType& points,
-                            OutPointPortalType& outP) const
+                                const viskores::Id in_idx,
+                                const InPointPortalType& points,
+                                OutPointPortalType& outP) const
   {
     outP.Set(out_idx, static_cast<viskores::Vec3f_32>(points.Get(in_idx)));
   }
@@ -59,7 +59,8 @@ static PointsFieldArrays UnpackFields(FieldSet fields)
 
   using AttributeHandleT = decltype(retval.Field1);
 
-  auto makeFieldArray = [](auto field, auto& numComps) -> AttributeHandleT {
+  auto makeFieldArray = [](auto field, auto& numComps) -> AttributeHandleT
+  {
     if (field.GetNumberOfValues() == 0)
       return {};
 
@@ -80,9 +81,8 @@ static PointsFieldArrays UnpackFields(FieldSet fields)
   retval.Field3 = makeFieldArray(fields[2], retval.NumberOfField3Components);
   retval.Field4 = makeFieldArray(fields[3], retval.NumberOfField4Components);
 
-  auto isFieldEmpty = [](const viskores::cont::Field& f) -> bool {
-    return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1;
-  };
+  auto isFieldEmpty = [](const viskores::cont::Field& f) -> bool
+  { return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1; };
 
   if (!isFieldEmpty(fields[0]))
     retval.Field1Name = fields[0].GetName();
@@ -290,7 +290,8 @@ void ANARIMapperPoints::ConstructArrays(bool regenerate)
   this->Handles->Parameters.Vertex.Radius =
     anari_cpp::newArray1D(d, r, NoopANARIDeleter, nullptr, numPoints);
 
-  auto createANARIArray = [](auto device, auto fieldArray, auto& token) -> anari_cpp::Array1D {
+  auto createANARIArray = [](auto device, auto fieldArray, auto& token) -> anari_cpp::Array1D
+  {
     const auto nv = fieldArray.GetNumberOfValues();
     if (nv == 0)
       return nullptr;

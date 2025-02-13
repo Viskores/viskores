@@ -16,5 +16,7 @@ int UnitTestTaskTilingSerial(int argc, char* argv[])
 {
 
   return viskores::testing::Testing::Run(
-    viskores::exec::internal::testing::TestTaskTiling<viskores::cont::DeviceAdapterTagSerial>, argc, argv);
+    viskores::exec::internal::testing::TestTaskTiling<viskores::cont::DeviceAdapterTagSerial>,
+    argc,
+    argv);
 }

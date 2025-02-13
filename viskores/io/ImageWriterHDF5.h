@@ -33,14 +33,18 @@ public:
   ImageWriterHDF5& operator=(const ImageWriterHDF5&) = delete;
 
   VISKORES_CONT void WriteDataSet(const viskores::cont::DataSet& dataSet,
-                              const std::string& colorField = {});
+                                  const std::string& colorField = {});
 
 protected:
-  VISKORES_CONT void Write(viskores::Id width, viskores::Id height, const ColorArrayType& pixels) override;
+  VISKORES_CONT void Write(viskores::Id width,
+                           viskores::Id height,
+                           const ColorArrayType& pixels) override;
 
 private:
   template <typename PixelType>
-  VISKORES_CONT int WriteToFile(viskores::Id width, viskores::Id height, const ColorArrayType& pixels);
+  VISKORES_CONT int WriteToFile(viskores::Id width,
+                                viskores::Id height,
+                                const ColorArrayType& pixels);
 
   std::int64_t fileid = 0;
   // FIXME: a hack for the moment, design a better API.

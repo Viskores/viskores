@@ -82,19 +82,19 @@ public:
 
   template <typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& returnIndex,
-                            const viskores::Id& newVertexIdValue,
-                            const OutFieldPortalType& upNeighbourPortal,
-                            const OutFieldPortalType& downNeighbourPortal) const
+                                const viskores::Id& newVertexIdValue,
+                                const OutFieldPortalType& upNeighbourPortal,
+                                const OutFieldPortalType& downNeighbourPortal) const
   {
     // per vertex
     // necessary vertices
     if (!viskores::worklet::contourtree_augmented::NoSuchElement(newVertexIdValue))
     { // necessary vertex
       // set both up & down neighbours to self with terminal element set
-      upNeighbourPortal.Set(returnIndex,
-                            returnIndex | viskores::worklet::contourtree_augmented::TERMINAL_ELEMENT);
-      downNeighbourPortal.Set(returnIndex,
-                              returnIndex | viskores::worklet::contourtree_augmented::TERMINAL_ELEMENT);
+      upNeighbourPortal.Set(
+        returnIndex, returnIndex | viskores::worklet::contourtree_augmented::TERMINAL_ELEMENT);
+      downNeighbourPortal.Set(
+        returnIndex, returnIndex | viskores::worklet::contourtree_augmented::TERMINAL_ELEMENT);
     } // necessary vertex
 
     // In serial this worklet implements the following operation

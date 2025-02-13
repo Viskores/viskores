@@ -16,10 +16,10 @@
 namespace
 {
 VISKORES_CONT void DoMapField(viskores::cont::DataSet& result,
-                          const viskores::cont::Field& field,
-                          const viskores::cont::ArrayHandle<viskores::Id>& CellFieldMap,
-                          const viskores::cont::ArrayHandle<viskores::Id>& PointFieldMap,
-                          const viskores::worklet::ExtractStructured& worklet)
+                              const viskores::cont::Field& field,
+                              const viskores::cont::ArrayHandle<viskores::Id>& CellFieldMap,
+                              const viskores::cont::ArrayHandle<viskores::Id>& PointFieldMap,
+                              const viskores::worklet::ExtractStructured& worklet)
 {
   if (field.IsPointField())
   {
@@ -83,9 +83,8 @@ viskores::cont::DataSet ExtractStructured::DoExecute(const viskores::cont::DataS
   auto PointFieldMap =
     worklet.ProcessPointField(viskores::cont::ArrayHandleIndex(input.GetNumberOfPoints()));
 
-  auto mapper = [&](auto& result, const auto& f) {
-    DoMapField(result, f, CellFieldMap, PointFieldMap, worklet);
-  };
+  auto mapper = [&](auto& result, const auto& f)
+  { DoMapField(result, f, CellFieldMap, PointFieldMap, worklet); };
   return this->CreateResult(input, cellset, mapper);
 }
 

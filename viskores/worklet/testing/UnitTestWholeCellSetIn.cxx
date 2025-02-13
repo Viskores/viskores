@@ -36,11 +36,11 @@ struct TestWholeCellSetIn
 
     template <typename ConnectivityType>
     VISKORES_EXEC void operator()(viskores::Id index,
-                              const ConnectivityType& connectivity,
-                              viskores::Id& numberOfElements,
-                              viskores::UInt8& shape,
-                              viskores::IdComponent& numberOfIndices,
-                              viskores::Id& connectionSum) const
+                                  const ConnectivityType& connectivity,
+                                  viskores::Id& numberOfElements,
+                                  viskores::UInt8& shape,
+                                  viskores::IdComponent& numberOfIndices,
+                                  viskores::Id& connectionSum) const
     {
       numberOfElements = connectivity.GetNumberOfElements();
       shape = connectivity.GetCellShape(index).Id;
@@ -53,7 +53,8 @@ struct TestWholeCellSetIn
       }
 
       connectionSum = 0;
-      for (viskores::IdComponent componentIndex = 0; componentIndex < indices.GetNumberOfComponents();
+      for (viskores::IdComponent componentIndex = 0;
+           componentIndex < indices.GetNumberOfComponents();
            componentIndex++)
       {
         connectionSum += indices[componentIndex];
@@ -62,11 +63,12 @@ struct TestWholeCellSetIn
   };
 
   template <typename CellSetType>
-  VISKORES_CONT static void RunCells(const CellSetType& cellSet,
-                                 viskores::cont::ArrayHandle<viskores::Id> numberOfElements,
-                                 viskores::cont::ArrayHandle<viskores::UInt8> shapeIds,
-                                 viskores::cont::ArrayHandle<viskores::IdComponent> numberOfIndices,
-                                 viskores::cont::ArrayHandle<viskores::Id> connectionSum)
+  VISKORES_CONT static void RunCells(
+    const CellSetType& cellSet,
+    viskores::cont::ArrayHandle<viskores::Id> numberOfElements,
+    viskores::cont::ArrayHandle<viskores::UInt8> shapeIds,
+    viskores::cont::ArrayHandle<viskores::IdComponent> numberOfIndices,
+    viskores::cont::ArrayHandle<viskores::Id> connectionSum)
   {
     using WorkletType =
       WholeCellSetWorklet<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint>;
@@ -80,11 +82,12 @@ struct TestWholeCellSetIn
   }
 
   template <typename CellSetType>
-  VISKORES_CONT static void RunPoints(const CellSetType* cellSet,
-                                  viskores::cont::ArrayHandle<viskores::Id> numberOfElements,
-                                  viskores::cont::ArrayHandle<viskores::UInt8> shapeIds,
-                                  viskores::cont::ArrayHandle<viskores::IdComponent> numberOfIndices,
-                                  viskores::cont::ArrayHandle<viskores::Id> connectionSum)
+  VISKORES_CONT static void RunPoints(
+    const CellSetType* cellSet,
+    viskores::cont::ArrayHandle<viskores::Id> numberOfElements,
+    viskores::cont::ArrayHandle<viskores::UInt8> shapeIds,
+    viskores::cont::ArrayHandle<viskores::IdComponent> numberOfIndices,
+    viskores::cont::ArrayHandle<viskores::Id> connectionSum)
   {
     using WorkletType =
       WholeCellSetWorklet<viskores::TopologyElementTagPoint, viskores::TopologyElementTagCell>;
@@ -103,9 +106,9 @@ template <typename CellSetType,
           typename NumIndicesArrayType,
           typename ConnectionSumArrayType>
 VISKORES_CONT void TryCellConnectivity(const CellSetType& cellSet,
-                                   const ShapeArrayType& expectedShapeIds,
-                                   const NumIndicesArrayType& expectedNumberOfIndices,
-                                   const ConnectionSumArrayType& expectedSum)
+                                       const ShapeArrayType& expectedShapeIds,
+                                       const NumIndicesArrayType& expectedNumberOfIndices,
+                                       const ConnectionSumArrayType& expectedSum)
 {
   std::cout << "  trying point to cell connectivity" << std::endl;
   viskores::cont::ArrayHandle<viskores::Id> numberOfElements;
@@ -117,15 +120,15 @@ VISKORES_CONT void TryCellConnectivity(const CellSetType& cellSet,
 
   std::cout << "    Number of elements: " << numberOfElements.ReadPortal().Get(0) << std::endl;
   VISKORES_TEST_ASSERT(test_equal_portals(numberOfElements.ReadPortal(),
-                                      viskores::cont::make_ArrayHandleConstant(
-                                        cellSet.GetNumberOfCells(), cellSet.GetNumberOfCells())
-                                        .ReadPortal()),
-                   "Incorrect number of elements.");
+                                          viskores::cont::make_ArrayHandleConstant(
+                                            cellSet.GetNumberOfCells(), cellSet.GetNumberOfCells())
+                                            .ReadPortal()),
+                       "Incorrect number of elements.");
 
   std::cout << "    Shape Ids: ";
   viskores::cont::printSummary_ArrayHandle(shapeIds, std::cout, true);
   VISKORES_TEST_ASSERT(test_equal_portals(shapeIds.ReadPortal(), expectedShapeIds.ReadPortal()),
-                   "Incorrect shape Ids.");
+                       "Incorrect shape Ids.");
 
   std::cout << "    Number of indices: ";
   viskores::cont::printSummary_ArrayHandle(numberOfIndices, std::cout, true);
@@ -136,7 +139,7 @@ VISKORES_CONT void TryCellConnectivity(const CellSetType& cellSet,
   std::cout << "    Sum of indices: ";
   viskores::cont::printSummary_ArrayHandle(connectionSum, std::cout, true);
   VISKORES_TEST_ASSERT(test_equal_portals(connectionSum.ReadPortal(), expectedSum.ReadPortal()),
-                   "Incorrect sum of indices.");
+                       "Incorrect sum of indices.");
 }
 
 template <typename CellSetType,
@@ -144,9 +147,9 @@ template <typename CellSetType,
           typename NumIndicesArrayType,
           typename ConnectionSumArrayType>
 VISKORES_CONT void TryPointConnectivity(const CellSetType& cellSet,
-                                    const ShapeArrayType& expectedShapeIds,
-                                    const NumIndicesArrayType& expectedNumberOfIndices,
-                                    const ConnectionSumArrayType& expectedSum)
+                                        const ShapeArrayType& expectedShapeIds,
+                                        const NumIndicesArrayType& expectedNumberOfIndices,
+                                        const ConnectionSumArrayType& expectedSum)
 {
   std::cout << "  trying cell to point connectivity" << std::endl;
   viskores::cont::ArrayHandle<viskores::Id> numberOfElements;
@@ -158,16 +161,17 @@ VISKORES_CONT void TryPointConnectivity(const CellSetType& cellSet,
     &cellSet, numberOfElements, shapeIds, numberOfIndices, connectionSum);
 
   std::cout << "    Number of elements: " << numberOfElements.ReadPortal().Get(0) << std::endl;
-  VISKORES_TEST_ASSERT(test_equal_portals(numberOfElements.ReadPortal(),
-                                      viskores::cont::make_ArrayHandleConstant(
-                                        cellSet.GetNumberOfPoints(), cellSet.GetNumberOfPoints())
-                                        .ReadPortal()),
-                   "Incorrect number of elements.");
+  VISKORES_TEST_ASSERT(
+    test_equal_portals(numberOfElements.ReadPortal(),
+                       viskores::cont::make_ArrayHandleConstant(cellSet.GetNumberOfPoints(),
+                                                                cellSet.GetNumberOfPoints())
+                         .ReadPortal()),
+    "Incorrect number of elements.");
 
   std::cout << "    Shape Ids: ";
   viskores::cont::printSummary_ArrayHandle(shapeIds, std::cout, true);
   VISKORES_TEST_ASSERT(test_equal_portals(shapeIds.ReadPortal(), expectedShapeIds.ReadPortal()),
-                   "Incorrect shape Ids.");
+                       "Incorrect shape Ids.");
 
   std::cout << "    Number of indices: ";
   viskores::cont::printSummary_ArrayHandle(numberOfIndices, std::cout, true);
@@ -178,21 +182,22 @@ VISKORES_CONT void TryPointConnectivity(const CellSetType& cellSet,
   std::cout << "    Sum of indices: ";
   viskores::cont::printSummary_ArrayHandle(connectionSum, std::cout, true);
   VISKORES_TEST_ASSERT(test_equal_portals(connectionSum.ReadPortal(), expectedSum.ReadPortal()),
-                   "Incorrect sum of indices.");
+                       "Incorrect sum of indices.");
 }
 
 VISKORES_CONT
 void TryExplicitGrid()
 {
   std::cout << "Testing explicit grid." << std::endl;
-  viskores::cont::DataSet dataSet = viskores::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
+  viskores::cont::DataSet dataSet =
+    viskores::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
   viskores::cont::CellSetExplicit<> cellSet;
   dataSet.GetCellSet().AsCellSet(cellSet);
 
   viskores::UInt8 expectedCellShapes[] = { viskores::CELL_SHAPE_HEXAHEDRON,
-                                       viskores::CELL_SHAPE_PYRAMID,
-                                       viskores::CELL_SHAPE_TETRA,
-                                       viskores::CELL_SHAPE_WEDGE };
+                                           viskores::CELL_SHAPE_PYRAMID,
+                                           viskores::CELL_SHAPE_TETRA,
+                                           viskores::CELL_SHAPE_WEDGE };
 
   viskores::IdComponent expectedCellNumIndices[] = { 8, 5, 4, 6 };
 
@@ -221,19 +226,21 @@ VISKORES_CONT
 void TryCellSetPermutation()
 {
   std::cout << "Testing permutation grid." << std::endl;
-  viskores::cont::DataSet dataSet = viskores::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
+  viskores::cont::DataSet dataSet =
+    viskores::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
   viskores::cont::CellSetExplicit<> originalCellSet;
   dataSet.GetCellSet().AsCellSet(originalCellSet);
 
   viskores::Id permutationArray[] = { 2, 0, 1 };
 
-  viskores::cont::CellSetPermutation<viskores::cont::CellSetExplicit<>, viskores::cont::ArrayHandle<viskores::Id>>
+  viskores::cont::CellSetPermutation<viskores::cont::CellSetExplicit<>,
+                                     viskores::cont::ArrayHandle<viskores::Id>>
     cellSet(viskores::cont::make_ArrayHandle(permutationArray, 3, viskores::CopyFlag::Off),
             originalCellSet);
 
   viskores::UInt8 expectedCellShapes[] = { viskores::CELL_SHAPE_TETRA,
-                                       viskores::CELL_SHAPE_HEXAHEDRON,
-                                       viskores::CELL_SHAPE_PYRAMID };
+                                           viskores::CELL_SHAPE_HEXAHEDRON,
+                                           viskores::CELL_SHAPE_PYRAMID };
 
   viskores::IdComponent expectedCellNumIndices[] = { 4, 8, 5 };
 
@@ -253,7 +260,8 @@ VISKORES_CONT
 void TryStructuredGrid3D()
 {
   std::cout << "Testing 3D structured grid." << std::endl;
-  viskores::cont::DataSet dataSet = viskores::cont::testing::MakeTestDataSet().Make3DUniformDataSet0();
+  viskores::cont::DataSet dataSet =
+    viskores::cont::testing::MakeTestDataSet().Make3DUniformDataSet0();
   viskores::cont::CellSetStructured<3> cellSet;
   dataSet.GetCellSet().AsCellSet(cellSet);
 
@@ -267,7 +275,7 @@ void TryStructuredGrid3D()
     viskores::cont::make_ArrayHandle(expectedCellIndexSum, numCells, viskores::CopyFlag::Off));
 
   viskores::IdComponent expectedPointNumIndices[18] = { 1, 2, 1, 1, 2, 1, 2, 4, 2,
-                                                    2, 4, 2, 1, 2, 1, 1, 2, 1 };
+                                                        2, 4, 2, 1, 2, 1, 1, 2, 1 };
 
   viskores::Id expectedPointIndexSum[18] = { 0, 1, 1, 0, 1, 1, 2, 6, 4, 2, 6, 4, 2, 5, 3, 2, 5, 3 };
 
@@ -283,7 +291,8 @@ VISKORES_CONT
 void TryStructuredGrid2D()
 {
   std::cout << "Testing 2D structured grid." << std::endl;
-  viskores::cont::DataSet dataSet = viskores::cont::testing::MakeTestDataSet().Make2DUniformDataSet0();
+  viskores::cont::DataSet dataSet =
+    viskores::cont::testing::MakeTestDataSet().Make2DUniformDataSet0();
   viskores::cont::CellSetStructured<2> cellSet;
   dataSet.GetCellSet().AsCellSet(cellSet);
 
@@ -312,7 +321,8 @@ VISKORES_CONT
 void TryStructuredGrid1D()
 {
   std::cout << "Testing 1D structured grid." << std::endl;
-  viskores::cont::DataSet dataSet = viskores::cont::testing::MakeTestDataSet().Make1DUniformDataSet0();
+  viskores::cont::DataSet dataSet =
+    viskores::cont::testing::MakeTestDataSet().Make1DUniformDataSet0();
   viskores::cont::CellSetStructured<1> cellSet;
   dataSet.GetCellSet().AsCellSet(cellSet);
 

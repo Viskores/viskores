@@ -135,7 +135,8 @@ struct DoVariantTestWorklet
       viskores::cont::UnknownArrayHandle outputVariant(outputHandle);
       viskores::cont::UnknownArrayHandle inoutVariant(inoutHandle);
       dispatcher.Invoke(
-        inputVariant.template ResetTypes<viskores::List<T>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>(),
+        inputVariant
+          .template ResetTypes<viskores::List<T>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>(),
         outputVariant.ResetTypes<viskores::List<T>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>(),
         inoutVariant.ResetTypes<viskores::List<T>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>());
       CheckPortal(outputHandle.ReadPortal());
@@ -182,7 +183,7 @@ void TestWorkletMapField(viskores::cont::DeviceAdapterId id)
   std::cout << "Testing Map Field on device adapter: " << id.GetName() << std::endl;
 
   viskores::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorklet>(),
-                                   viskores::TypeListCommon());
+                                       viskores::TypeListCommon());
 }
 
 } // mapfield namespace

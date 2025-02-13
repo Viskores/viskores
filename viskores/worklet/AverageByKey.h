@@ -61,8 +61,8 @@ struct AverageByKey
   ///
   template <typename InArrayType, typename OutArrayType>
   VISKORES_CONT static void Run(const viskores::worklet::internal::KeysBase& keys,
-                            const InArrayType& inValues,
-                            const OutArrayType& outAverages)
+                                const InArrayType& inValues,
+                                const OutArrayType& outAverages)
   {
     VISKORES_LOG_SCOPE(viskores::cont::LogLevel::Perf, "AverageByKey::Run");
 
@@ -113,10 +113,11 @@ struct AverageByKey
             class KeyOutStorage,
             class ValueInStorage,
             class ValueOutStorage>
-  VISKORES_CONT static void Run(const viskores::cont::ArrayHandle<KeyType, KeyInStorage>& keyArray,
-                            const viskores::cont::ArrayHandle<ValueType, ValueInStorage>& valueArray,
-                            viskores::cont::ArrayHandle<KeyType, KeyOutStorage>& outputKeyArray,
-                            viskores::cont::ArrayHandle<ValueType, ValueOutStorage>& outputValueArray)
+  VISKORES_CONT static void Run(
+    const viskores::cont::ArrayHandle<KeyType, KeyInStorage>& keyArray,
+    const viskores::cont::ArrayHandle<ValueType, ValueInStorage>& valueArray,
+    viskores::cont::ArrayHandle<KeyType, KeyOutStorage>& outputKeyArray,
+    viskores::cont::ArrayHandle<ValueType, ValueOutStorage>& outputValueArray)
   {
     VISKORES_LOG_SCOPE(viskores::cont::LogLevel::Perf, "AverageByKey::Run");
 

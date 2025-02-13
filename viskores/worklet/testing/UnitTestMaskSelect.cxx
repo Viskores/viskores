@@ -65,8 +65,8 @@ TestMaskArrays MakeMaskArraysLong()
     1,
     1,
   });
-  arrays.ThreadToOutputMap =
-    viskores::cont::make_ArrayHandle<viskores::Id>({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15 });
+  arrays.ThreadToOutputMap = viskores::cont::make_ArrayHandle<viskores::Id>(
+    { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15 });
 
   return arrays;
 }
@@ -75,7 +75,8 @@ TestMaskArrays MakeMaskArraysZero()
 {
   TestMaskArrays arrays;
 
-  arrays.SelectArray = viskores::cont::make_ArrayHandle<viskores::IdComponent>({ 0, 0, 0, 0, 0, 0 });
+  arrays.SelectArray =
+    viskores::cont::make_ArrayHandle<viskores::IdComponent>({ 0, 0, 0, 0, 0, 0 });
   arrays.ThreadToOutputMap.Allocate(0);
 
   return arrays;
@@ -89,7 +90,10 @@ struct TestMaskSelectWorklet : public viskores::worklet::WorkletMapField
   using MaskType = viskores::worklet::MaskSelect;
 
   VISKORES_EXEC
-  void operator()(viskores::Id inputIndex, viskores::Id& indexCopy) const { indexCopy = inputIndex; }
+  void operator()(viskores::Id inputIndex, viskores::Id& indexCopy) const
+  {
+    indexCopy = inputIndex;
+  }
 };
 
 template <typename T, typename SelectArrayType>
@@ -126,8 +130,9 @@ void CompareArrays(viskores::cont::ArrayHandle<T> array1,
 template <typename T>
 void CompareArrays(viskores::cont::ArrayHandle<T> array1, viskores::cont::ArrayHandle<T> array2)
 {
-  CompareArrays(
-    array1, array2, viskores::cont::make_ArrayHandleConstant<bool>(true, array1.GetNumberOfValues()));
+  CompareArrays(array1,
+                array2,
+                viskores::cont::make_ArrayHandleConstant<bool>(true, array1.GetNumberOfValues()));
 }
 
 // This unit test makes sure the ScatterCounting generates the correct map
@@ -161,7 +166,7 @@ void TestMaskWorklet(const TestMaskArrays& arrays)
 
   viskores::cont::ArrayHandle<viskores::Id> selectIndexCopy;
   viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(nullValue, inputSize),
-                        selectIndexCopy);
+                            selectIndexCopy);
 
   std::cout << "    Invoke worklet" << std::endl;
   dispatcher.Invoke(inputIndices, selectIndexCopy);

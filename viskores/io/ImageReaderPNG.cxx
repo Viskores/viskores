@@ -22,8 +22,8 @@ namespace
 VISKORES_CONT
 template <typename PixelType>
 viskores::io::ImageReaderBase::ColorArrayType ReadFromPNG(const std::string& fileName,
-                                                      viskores::Id& width,
-                                                      viskores::Id& height)
+                                                          viskores::Id& width,
+                                                          viskores::Id& height)
 {
   unsigned char* imageData;
   unsigned uwidth, uheight;

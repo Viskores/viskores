@@ -29,12 +29,12 @@ namespace zfp
 
 template <typename Scalar, typename PortalType>
 VISKORES_EXEC inline void GatherPartial3(Scalar* q,
-                                     const PortalType& scalars,
-                                     const viskores::Id3 dims,
-                                     viskores::Id offset,
-                                     viskores::Int32 nx,
-                                     viskores::Int32 ny,
-                                     viskores::Int32 nz)
+                                         const PortalType& scalars,
+                                         const viskores::Id3 dims,
+                                         viskores::Id offset,
+                                         viskores::Int32 nx,
+                                         viskores::Int32 ny,
+                                         viskores::Int32 nz)
 {
   viskores::Id x, y, z;
 
@@ -66,9 +66,9 @@ VISKORES_EXEC inline void GatherPartial3(Scalar* q,
 
 template <typename Scalar, typename PortalType>
 VISKORES_EXEC inline void Gather3(Scalar* fblock,
-                              const PortalType& scalars,
-                              const viskores::Id3 dims,
-                              viskores::Id offset)
+                                  const PortalType& scalars,
+                                  const viskores::Id3 dims,
+                                  viskores::Id offset)
 {
   // TODO: gather partial
   viskores::Id counter = 0;
@@ -106,8 +106,8 @@ public:
 
   template <typename InputScalarPortal, typename BitstreamPortal>
   VISKORES_EXEC void operator()(const viskores::Id blockIdx,
-                            const InputScalarPortal& scalars,
-                            BitstreamPortal& stream) const
+                                const InputScalarPortal& scalars,
+                                BitstreamPortal& stream) const
   {
     using Scalar = typename InputScalarPortal::ValueType;
     constexpr viskores::Int32 BlockSize = 64;
@@ -132,12 +132,15 @@ public:
       partial = true;
     if (partial)
     {
-      const viskores::Int32 nx =
-        logicalStart[0] + 4 > Dims[0] ? viskores::Int32(Dims[0] - logicalStart[0]) : viskores::Int32(4);
-      const viskores::Int32 ny =
-        logicalStart[1] + 4 > Dims[1] ? viskores::Int32(Dims[1] - logicalStart[1]) : viskores::Int32(4);
-      const viskores::Int32 nz =
-        logicalStart[2] + 4 > Dims[2] ? viskores::Int32(Dims[2] - logicalStart[2]) : viskores::Int32(4);
+      const viskores::Int32 nx = logicalStart[0] + 4 > Dims[0]
+        ? viskores::Int32(Dims[0] - logicalStart[0])
+        : viskores::Int32(4);
+      const viskores::Int32 ny = logicalStart[1] + 4 > Dims[1]
+        ? viskores::Int32(Dims[1] - logicalStart[1])
+        : viskores::Int32(4);
+      const viskores::Int32 nz = logicalStart[2] + 4 > Dims[2]
+        ? viskores::Int32(Dims[2] - logicalStart[2])
+        : viskores::Int32(4);
 
       GatherPartial3(fblock, scalars, Dims, offset, nx, ny, nz);
     }

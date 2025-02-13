@@ -60,9 +60,9 @@ public:
     using ExecutionSignature = void(_1, _2, _3, _4);
 
     VISKORES_EXEC void operator()(const viskores::Id& hitIdx,
-                              const viskores::Vec<Precision, 3>& normal,
-                              const viskores::Vec<Precision, 3>& intersection,
-                              Precision& output) const
+                                  const viskores::Vec<Precision, 3>& normal,
+                                  const viskores::Vec<Precision, 3>& intersection,
+                                  Precision& output) const
     {
       if (hitIdx < 0)
       {
@@ -80,7 +80,8 @@ public:
       const Precision one = 1.f;
       cosTheta = viskores::Min(viskores::Max(cosTheta, zero), one);
       //Specular lighting
-      viskores::Vec<Precision, 3> reflect = 2.f * viskores::dot(lightDir, normal) * normal - lightDir;
+      viskores::Vec<Precision, 3> reflect =
+        2.f * viskores::dot(lightDir, normal) * normal - lightDir;
       viskores::Normalize(reflect);
       Precision cosPhi = viskores::dot(reflect, viewDir);
       Precision specularConstant =
@@ -127,10 +128,10 @@ public:
   }; //class Shade
 
   VISKORES_CONT void run(Ray<Precision>& rays,
-                     const viskores::rendering::raytracing::Camera& camera,
-                     const Precision missScalar,
-                     viskores::cont::ArrayHandle<Precision> shadings,
-                     bool shade)
+                         const viskores::rendering::raytracing::Camera& camera,
+                         const Precision missScalar,
+                         viskores::cont::ArrayHandle<Precision> shadings,
+                         bool shade)
   {
     if (shade)
     {
@@ -190,8 +191,8 @@ public:
 
   typedef void ExecutionSignature(_1, _2, _3);
   VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
-                            const Precision& scalar,
-                            Precision& output) const
+                                const Precision& scalar,
+                                Precision& output) const
   {
     Precision value = scalar;
     if (hitIndex < 0)

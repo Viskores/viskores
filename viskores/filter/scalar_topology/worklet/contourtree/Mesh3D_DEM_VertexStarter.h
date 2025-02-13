@@ -101,11 +101,14 @@ public:
   viskores::Id nRows;   // (input) number of rows in 3D
   viskores::Id nCols;   // (input) number of cols in 3D
   viskores::Id nSlices; // (input) number of cols in 3D
-  bool ascending;   // ascending or descending (join or split tree)
+  bool ascending;       // ascending or descending (join or split tree)
 
   // Constructor
   VISKORES_EXEC_CONT
-  Mesh3D_DEM_VertexStarter(viskores::Id NRows, viskores::Id NCols, viskores::Id NSlices, bool Ascending)
+  Mesh3D_DEM_VertexStarter(viskores::Id NRows,
+                           viskores::Id NCols,
+                           viskores::Id NSlices,
+                           bool Ascending)
     : nRows(NRows)
     , nCols(NCols)
     , nSlices(NSlices)
@@ -116,9 +119,9 @@ public:
   // Locate the next vertex in direction indicated
   template <typename InFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                            const InFieldPortalType& values,
-                            viskores::Id& chain,
-                            viskores::Id& linkMask) const
+                                const InFieldPortalType& values,
+                                viskores::Id& chain,
+                                viskores::Id& linkMask) const
   {
     VertexValueComparator<InFieldPortalType> lessThan(values);
     viskores::Id row = VERTEX_ROW_3D(vertex, nRows, nCols);

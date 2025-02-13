@@ -132,11 +132,13 @@ inline TestEqualResult test_equal_images(
   {
     std::ostringstream fileNameStream;
     fileNameStream << prefix << i << suffix;
-    std::ifstream check(viskores::cont::testing::Testing::RegressionImagePath(fileNameStream.str()));
+    std::ifstream check(
+      viskores::cont::testing::Testing::RegressionImagePath(fileNameStream.str()));
     if (!check.good())
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 "Stopped filename search at: " << fileNameStream.str() << ", beginning testing");
+                     "Stopped filename search at: " << fileNameStream.str()
+                                                    << ", beginning testing");
       break;
     }
     fileNames.push_back(fileNameStream.str());

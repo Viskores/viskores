@@ -55,8 +55,8 @@ public:
 
   template <typename CellSetType, typename ScalarsArrayHandle, typename UnaryPredicate>
   viskores::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
-                                      const ScalarsArrayHandle& scalars,
-                                      const UnaryPredicate& predicate)
+                                          const ScalarsArrayHandle& scalars,
+                                          const UnaryPredicate& predicate)
   {
     viskores::cont::ArrayHandle<bool> passFlags;
 
@@ -68,7 +68,8 @@ public:
 
     viskores::cont::ArrayHandle<viskores::Id> pointIds;
     viskores::cont::ArrayHandleCounting<viskores::Id> indices =
-      viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(1), passFlags.GetNumberOfValues());
+      viskores::cont::make_ArrayHandleCounting(
+        viskores::Id(0), viskores::Id(1), passFlags.GetNumberOfValues());
     viskores::cont::Algorithm::CopyIf(indices, passFlags, pointIds);
 
     // Make CellSetSingleType with VERTEX at each point id

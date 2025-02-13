@@ -111,5 +111,6 @@ public:
 
 int UnitTestDistributedBranchDecompositionFilter(int argc, char* argv[])
 {
-  return viskores::cont::testing::Testing::Run(TestDistributedBranchDecompositionFilter(), argc, argv);
+  return viskores::cont::testing::Testing::Run(
+    TestDistributedBranchDecompositionFilter(), argc, argv);
 }

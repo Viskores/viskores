@@ -18,7 +18,8 @@
 #include <viskores/filter/flow/testing/GenerateTestDataSets.h>
 #include <viskores/thirdparty/diy/diy.h>
 
-viskores::cont::ArrayHandle<viskores::Vec3f> CreateConstantVectorField(viskores::Id num, const viskores::Vec3f& vec)
+viskores::cont::ArrayHandle<viskores::Vec3f> CreateConstantVectorField(viskores::Id num,
+                                                                       const viskores::Vec3f& vec)
 {
   viskores::cont::ArrayHandleConstant<viskores::Vec3f> vecConst;
   vecConst = viskores::cont::make_ArrayHandleConstant(vec, num);
@@ -36,7 +37,8 @@ void AddVectorFields(viskores::cont::PartitionedDataSet& pds,
     ds.AddPointField(fieldName, CreateConstantVectorField(ds.GetNumberOfPoints(), vec));
 }
 
-std::vector<viskores::cont::PartitionedDataSet> CreateAllDataSetBounds(viskores::Id nPerRank, bool useGhost)
+std::vector<viskores::cont::PartitionedDataSet> CreateAllDataSetBounds(viskores::Id nPerRank,
+                                                                       bool useGhost)
 {
   auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
 
@@ -75,7 +77,8 @@ std::vector<viskores::cont::PartitionedDataSet> CreateAllDataSetBounds(viskores:
   return allPDS;
 }
 
-std::vector<viskores::Range> ExtractMaxXRanges(const viskores::cont::PartitionedDataSet& pds, bool useGhost)
+std::vector<viskores::Range> ExtractMaxXRanges(const viskores::cont::PartitionedDataSet& pds,
+                                               bool useGhost)
 {
   std::vector<viskores::Range> xMaxRanges;
   for (const auto& ds : pds.GetPartitions())
@@ -99,7 +102,7 @@ void ValidateOutput(const viskores::cont::DataSet& out,
 {
   //Validate the result is correct.
   VISKORES_TEST_ASSERT(out.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
+                       "Wrong number of coordinate systems in the output dataset");
 
   viskores::cont::UnknownCellSet dcells = out.GetCellSet();
   viskores::Id numCells = out.GetNumberOfCells();
@@ -216,8 +219,9 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
     AddVectorFields(pds, fieldName, vecX);
 
     viskores::cont::ArrayHandle<viskores::Particle> seedArray;
-    seedArray = viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0),
-                                               viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1) });
+    seedArray =
+      viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0),
+                                         viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1) });
     viskores::Id numSeeds = seedArray.GetNumberOfValues();
 
     if (fType == STREAMLINE)
@@ -265,7 +269,8 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
       if (comm.rank() == comm.size() - 1)
       {
         bool checkEnds = out.GetNumberOfPartitions() == static_cast<viskores::Id>(blockIds.size());
-        VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
+        VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 1,
+                             "Wrong number of partitions in output");
         ValidateOutput(out.GetPartition(0),
                        numSeeds,
                        xMaxRanges[xMaxRanges.size() - 1],
@@ -274,7 +279,8 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
                        duplicateBlocks);
       }
       else
-        VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 0, "Wrong number of partitions in output");
+        VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 0,
+                             "Wrong number of partitions in output");
     }
     else if (fType == PATHLINE)
     {

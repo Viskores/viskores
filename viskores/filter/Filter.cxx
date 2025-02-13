@@ -23,7 +23,9 @@ namespace filter
 
 namespace
 {
-void RunFilter(Filter* self, viskores::filter::DataSetQueue& input, viskores::filter::DataSetQueue& output)
+void RunFilter(Filter* self,
+               viskores::filter::DataSetQueue& input,
+               viskores::filter::DataSetQueue& output)
 {
   auto& tracker = viskores::cont::GetRuntimeDeviceTracker();
   bool prevVal = tracker.GetThreadFriendlyMemAlloc();
@@ -73,7 +75,7 @@ void Filter::SetFieldsToPass(const viskores::filter::FieldSelection& fieldsToPas
 }
 
 VISKORES_CONT void Filter::SetFieldsToPass(std::initializer_list<std::string> fields,
-                                       viskores::filter::FieldSelection::Mode mode)
+                                           viskores::filter::FieldSelection::Mode mode)
 {
   this->SetFieldsToPass(viskores::filter::FieldSelection{ fields, mode });
 }
@@ -141,18 +143,17 @@ viskores::cont::DataSet Filter::Execute(const viskores::cont::DataSet& input)
 viskores::cont::PartitionedDataSet Filter::Execute(const viskores::cont::PartitionedDataSet& input)
 {
   VISKORES_LOG_SCOPE(viskores::cont::LogLevel::Perf,
-                 "Filter (%d partitions): '%s'",
-                 (int)input.GetNumberOfPartitions(),
-                 viskores::cont::TypeToString<decltype(*this)>().c_str());
+                     "Filter (%d partitions): '%s'",
+                     (int)input.GetNumberOfPartitions(),
+                     viskores::cont::TypeToString<decltype(*this)>().c_str());
 
   return this->DoExecutePartitions(input);
 }
 
 viskores::cont::DataSet Filter::CreateResult(const viskores::cont::DataSet& inDataSet) const
 {
-  auto fieldMapper = [](viskores::cont::DataSet& out, const viskores::cont::Field& fieldToPass) {
-    out.AddField(fieldToPass);
-  };
+  auto fieldMapper = [](viskores::cont::DataSet& out, const viskores::cont::Field& fieldToPass)
+  { out.AddField(fieldToPass); };
   return this->CreateResult(inDataSet, inDataSet.GetCellSet(), fieldMapper);
 }
 
@@ -160,14 +161,13 @@ viskores::cont::PartitionedDataSet Filter::CreateResult(
   const viskores::cont::PartitionedDataSet& input,
   const viskores::cont::PartitionedDataSet& resultPartitions) const
 {
-  auto fieldMapper = [](viskores::cont::PartitionedDataSet& out, const viskores::cont::Field& fieldToPass) {
-    out.AddField(fieldToPass);
-  };
+  auto fieldMapper = [](viskores::cont::PartitionedDataSet& out,
+                        const viskores::cont::Field& fieldToPass) { out.AddField(fieldToPass); };
   return this->CreateResult(input, resultPartitions, fieldMapper);
 }
 
 viskores::cont::DataSet Filter::CreateResultField(const viskores::cont::DataSet& inDataSet,
-                                              const viskores::cont::Field& resultField) const
+                                                  const viskores::cont::Field& resultField) const
 {
   viskores::cont::DataSet outDataSet = this->CreateResult(inDataSet);
   outDataSet.AddField(resultField);

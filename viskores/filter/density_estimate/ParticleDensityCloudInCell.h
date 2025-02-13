@@ -46,7 +46,8 @@ namespace density_estimate
 /// considered as clusters or halos while low density regions could be considered as bubbles
 /// or cavities in the particle data.
 ///
-class VISKORES_FILTER_DENSITY_ESTIMATE_EXPORT ParticleDensityCloudInCell : public ParticleDensityBase
+class VISKORES_FILTER_DENSITY_ESTIMATE_EXPORT ParticleDensityCloudInCell
+  : public ParticleDensityBase
 {
 public:
   using Superclass = ParticleDensityBase;

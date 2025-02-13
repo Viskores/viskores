@@ -43,11 +43,11 @@ struct TestExecObjectWorklet
 
     template <typename InPortalType, typename OutPortalType, typename DeviceTag>
     VISKORES_EXEC void operator()(const viskores::Id& index,
-                              const InPortalType& execIn,
-                              OutPortalType& execOut,
-                              T& out,
-                              DeviceTag,
-                              DeviceTag) const
+                                  const InPortalType& execIn,
+                                  OutPortalType& execOut,
+                                  T& out,
+                                  DeviceTag,
+                                  DeviceTag) const
     {
       VISKORES_IS_DEVICE_ADAPTER_TAG(DeviceTag);
 
@@ -98,7 +98,8 @@ struct DoTestWorklet
     outputHandle = viskores::cont::ArrayHandle<T>();
     outputHandle.Allocate(ARRAY_SIZE);
 
-    viskores::cont::UncertainArrayHandle<viskores::List<T>, viskores::List<viskores::cont::StorageTagBasic>>
+    viskores::cont::UncertainArrayHandle<viskores::List<T>,
+                                         viskores::List<viskores::cont::StorageTagBasic>>
       outputFieldDynamic(outputFieldArray);
     dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldDynamic, SimpleExecObject());
 
@@ -130,13 +131,14 @@ struct LargerStruct
 };
 
 using VariantTypePadding = viskores::exec::Variant<StructWithPadding, StructWithoutPadding>;
-using VariantTypeSizes = viskores::exec::Variant<StructWithPadding, StructWithoutPadding, LargerStruct>;
+using VariantTypeSizes =
+  viskores::exec::Variant<StructWithPadding, StructWithoutPadding, LargerStruct>;
 
 struct VarientPaddingExecObj : viskores::cont::ExecutionObjectBase
 {
   VariantTypePadding Variant;
   VISKORES_CONT VariantTypePadding PrepareForExecution(const viskores::cont::DeviceAdapterId&,
-                                                   viskores::cont::Token&) const
+                                                       viskores::cont::Token&) const
   {
     return this->Variant;
   }
@@ -145,7 +147,7 @@ struct VarientSizesExecObj : viskores::cont::ExecutionObjectBase
 {
   VariantTypeSizes Variant;
   VISKORES_CONT VariantTypeSizes PrepareForExecution(const viskores::cont::DeviceAdapterId&,
-                                                 viskores::cont::Token&) const
+                                                     viskores::cont::Token&) const
   {
     return this->Variant;
   }
@@ -157,7 +159,9 @@ struct TestVariantExecObjectPadding : viskores::worklet::WorkletMapField
   // Using an output field as the domain is weird, but it works.
   using InputDomain = _1;
 
-  VISKORES_EXEC void operator()(viskores::Int32& a, viskores::Int64& c, const VariantTypePadding& variant) const
+  VISKORES_EXEC void operator()(viskores::Int32& a,
+                                viskores::Int64& c,
+                                const VariantTypePadding& variant) const
   {
     a = variant.Get<StructWithPadding>().A;
     c = variant.Get<StructWithPadding>().C;
@@ -171,9 +175,9 @@ struct TestVariantExecObjectNoPadding : viskores::worklet::WorkletMapField
   using InputDomain = _1;
 
   VISKORES_EXEC void operator()(viskores::Int32& a,
-                            viskores::Int32& b,
-                            viskores::Int64& c,
-                            const VariantTypePadding& variant) const
+                                viskores::Int32& b,
+                                viskores::Int64& c,
+                                const VariantTypePadding& variant) const
   {
     a = variant.Get<StructWithoutPadding>().A;
     b = variant.Get<StructWithoutPadding>().B;
@@ -188,9 +192,9 @@ struct TestVariantExecObjectLarger : viskores::worklet::WorkletMapField
   using InputDomain = _1;
 
   VISKORES_EXEC void operator()(viskores::Int64& c,
-                            viskores::Int64& d,
-                            viskores::Int64& e,
-                            const VariantTypeSizes& variant) const
+                                viskores::Int64& d,
+                                viskores::Int64& e,
+                                const VariantTypeSizes& variant) const
   {
     c = variant.Get<LargerStruct>().C;
     d = variant.Get<LargerStruct>().D;
@@ -287,7 +291,7 @@ void TestWorkletMapFieldExecArg(viskores::cont::DeviceAdapterId id)
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   viskores::testing::Testing::TryTypes(map_exec_field::DoTestWorklet<TestExecObjectWorklet>(),
-                                   viskores::TypeListCommon());
+                                       viskores::TypeListCommon());
 
   std::cout << "--- Worklet passing variant." << std::endl;
   DoTestVariant();

@@ -58,16 +58,17 @@ public:
     }
     else
     {
-      auto computeBins = [&](auto resolvedField) {
+      auto computeBins = [&](auto resolvedField)
+      {
         // CastAndCallWithExtractedArray should give us an ArrayHandleRecombineVec
         using T = typename std::decay_t<decltype(resolvedField)>::ValueType::ComponentType;
         viskores::cont::ArrayHandleRecombineVec<T> recombineField{ resolvedField };
         if (recombineField.GetNumberOfComponents() != 1)
         {
           VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                     "NDHistogram expects scalar fields, but was given field with "
-                       << recombineField.GetNumberOfComponents()
-                       << " components. Extracting first component.");
+                         "NDHistogram expects scalar fields, but was given field with "
+                           << recombineField.GetNumberOfComponents()
+                           << " components. Extracting first component.");
         }
         viskores::cont::ArrayHandleStride<T> field =
           viskores::cont::ArrayExtractComponent(recombineField, 0);
@@ -109,7 +110,8 @@ public:
 
     // Count frequency of each bin
     viskores::cont::ArrayHandleConstant<viskores::Id> constArray(1, NumDataPoints);
-    viskores::cont::Algorithm::ReduceByKey(Bin1DIndex, constArray, Bin1DIndex, freqs, viskores::Add());
+    viskores::cont::Algorithm::ReduceByKey(
+      Bin1DIndex, constArray, Bin1DIndex, freqs, viskores::Add());
 
     //convert back to multi variate binId
     for (viskores::Id i = static_cast<viskores::Id>(NumberOfBins.size()) - 1; i >= 0; i--)

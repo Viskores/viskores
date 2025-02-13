@@ -45,10 +45,10 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   template <typename InBufferPortalType, typename OutBufferPortalType>
   VISKORES_EXEC void operator()(const viskores::UInt8& mask,
-                            const InBufferPortalType& inBuffer,
-                            const viskores::Id& offset,
-                            OutBufferPortalType& outBuffer,
-                            const viskores::Id& index) const
+                                const InBufferPortalType& inBuffer,
+                                const viskores::Id& offset,
+                                OutBufferPortalType& outBuffer,
+                                const viskores::Id& index) const
   {
     if (mask == 0)
     {
@@ -80,8 +80,8 @@ public:
   using ExecutionSignature = void(_1, _2, WorkIndex);
   template <typename ValueType, typename PortalType>
   VISKORES_EXEC void operator()(ValueType& outValue,
-                            const PortalType& source,
-                            const viskores::Id& index) const
+                                const PortalType& source,
+                                const viskores::Id& index) const
   {
     outValue = source.Get(index % NumChannels);
   }
@@ -100,7 +100,8 @@ public:
   {
     viskores::cont::ArrayHandle<viskores::Id> offsets;
     offsets.Allocate(buffer.Size);
-    viskores::cont::ArrayHandleCast<viskores::Id, viskores::cont::ArrayHandle<viskores::UInt8>> castedMasks(masks);
+    viskores::cont::ArrayHandleCast<viskores::Id, viskores::cont::ArrayHandle<viskores::UInt8>>
+      castedMasks(masks);
     viskores::cont::Algorithm::ScanExclusive(castedMasks, offsets);
 
     viskores::cont::ArrayHandle<Precision> compactedBuffer;

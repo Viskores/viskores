@@ -67,12 +67,14 @@ struct Storage<T, viskores::cont::StorageTagConstant> : Storage<T, StorageTagCon
 /// takes (almost) no memory.
 ///
 template <typename T>
-class ArrayHandleConstant : public viskores::cont::ArrayHandle<T, viskores::cont::StorageTagConstant>
+class ArrayHandleConstant
+  : public viskores::cont::ArrayHandle<T, viskores::cont::StorageTagConstant>
 {
 public:
-  VISKORES_ARRAY_HANDLE_SUBCLASS(ArrayHandleConstant,
-                             (ArrayHandleConstant<T>),
-                             (viskores::cont::ArrayHandle<T, viskores::cont::StorageTagConstant>));
+  VISKORES_ARRAY_HANDLE_SUBCLASS(
+    ArrayHandleConstant,
+    (ArrayHandleConstant<T>),
+    (viskores::cont::ArrayHandle<T, viskores::cont::StorageTagConstant>));
 
   /// Construct a constant array containing the given value.
   VISKORES_CONT
@@ -92,7 +94,8 @@ public:
 /// `make_ArrayHandleConstant` is convenience function to generate an
 /// ArrayHandleImplicit.
 template <typename T>
-viskores::cont::ArrayHandleConstant<T> make_ArrayHandleConstant(T value, viskores::Id numberOfValues)
+viskores::cont::ArrayHandleConstant<T> make_ArrayHandleConstant(T value,
+                                                                viskores::Id numberOfValues)
 {
   return viskores::cont::ArrayHandleConstant<T>(value, numberOfValues);
 }
@@ -104,9 +107,10 @@ template <>
 struct VISKORES_CONT_EXPORT ArrayExtractComponentImpl<viskores::cont::StorageTagConstant>
 {
   template <typename T>
-  VISKORES_CONT auto operator()(const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagConstant>& src,
-                            viskores::IdComponent componentIndex,
-                            viskores::CopyFlag allowCopy) const
+  VISKORES_CONT auto operator()(
+    const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagConstant>& src,
+    viskores::IdComponent componentIndex,
+    viskores::CopyFlag allowCopy) const
   {
     if (allowCopy != viskores::CopyFlag::On)
     {

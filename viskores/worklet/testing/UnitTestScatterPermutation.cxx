@@ -39,9 +39,9 @@ public:
   }
 
   VISKORES_EXEC void operator()(viskores::Id pointId,
-                            viskores::IdComponent visit,
-                            viskores::Id& outPointId,
-                            viskores::IdComponent& outVisit) const
+                                viskores::IdComponent visit,
+                                viskores::Id& outPointId,
+                                viskores::IdComponent& outVisit) const
   {
     outPointId = pointId;
     outVisit = visit;
@@ -49,7 +49,8 @@ public:
 };
 
 template <typename CellSetType>
-void RunTest(const CellSetType& cellset, const viskores::cont::ArrayHandle<viskores::Id>& permutation)
+void RunTest(const CellSetType& cellset,
+             const viskores::cont::ArrayHandle<viskores::Id>& permutation)
 {
   viskores::cont::ArrayHandle<viskores::Id> outPointId;
   viskores::cont::ArrayHandle<viskores::IdComponent> outVisit;
@@ -60,14 +61,15 @@ void RunTest(const CellSetType& cellset, const viskores::cont::ArrayHandle<visko
   for (viskores::Id i = 0; i < permutation.GetNumberOfValues(); ++i)
   {
     VISKORES_TEST_ASSERT(outPointId.ReadPortal().Get(i) == permutation.ReadPortal().Get(i),
-                     "output point ids do not match the permutation");
+                         "output point ids do not match the permutation");
     VISKORES_TEST_ASSERT(outVisit.ReadPortal().Get(i) == 0, "incorrect visit index");
   }
 }
 
 void TestScatterPermutation()
 {
-  viskores::cont::DataSet dataset = viskores::cont::testing::MakeTestDataSet().Make2DUniformDataSet0();
+  viskores::cont::DataSet dataset =
+    viskores::cont::testing::MakeTestDataSet().Make2DUniformDataSet0();
   auto cellset = dataset.GetCellSet();
   viskores::Id numberOfPoints = cellset.GetNumberOfPoints();
 

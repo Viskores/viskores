@@ -147,7 +147,7 @@ void BenchGradient(::benchmark::State& state, int options)
     if (options & Divergence || options & Vorticity || options & QCriterion)
     {
       throw viskores::cont::ErrorInternal("A requested gradient output is "
-                                      "incompatible with scalar input.");
+                                          "incompatible with scalar input.");
     }
     filter.SetActiveField(PointScalarsName, viskores::cont::Field::Association::Points);
   }
@@ -196,12 +196,16 @@ void BenchGradient(::benchmark::State& state, int options)
   }
 }
 
-#define VISKORES_PRIVATE_GRADIENT_BENCHMARK(Name, Opts)                                   \
-  void BenchGradient##Name(::benchmark::State& state) { BenchGradient(state, Opts); } \
+#define VISKORES_PRIVATE_GRADIENT_BENCHMARK(Name, Opts) \
+  void BenchGradient##Name(::benchmark::State& state)   \
+  {                                                     \
+    BenchGradient(state, Opts);                         \
+  }                                                     \
   VISKORES_BENCHMARK(BenchGradient##Name)
 
 VISKORES_PRIVATE_GRADIENT_BENCHMARK(Scalar, Gradient | ScalarInput);
-VISKORES_PRIVATE_GRADIENT_BENCHMARK(ScalarPartitionedData, Gradient | ScalarInput | PartitionedInput);
+VISKORES_PRIVATE_GRADIENT_BENCHMARK(ScalarPartitionedData,
+                                    Gradient | ScalarInput | PartitionedInput);
 VISKORES_PRIVATE_GRADIENT_BENCHMARK(Vector, Gradient);
 VISKORES_PRIVATE_GRADIENT_BENCHMARK(VectorPartitionedData, Gradient | PartitionedInput);
 VISKORES_PRIVATE_GRADIENT_BENCHMARK(VectorRow, Gradient | RowOrdering);
@@ -210,7 +214,7 @@ VISKORES_PRIVATE_GRADIENT_BENCHMARK(Divergence, Divergence);
 VISKORES_PRIVATE_GRADIENT_BENCHMARK(Vorticity, Vorticity);
 VISKORES_PRIVATE_GRADIENT_BENCHMARK(QCriterion, QCriterion);
 VISKORES_PRIVATE_GRADIENT_BENCHMARK(All,
-                                Gradient | PointGradient | Divergence | Vorticity | QCriterion);
+                                    Gradient | PointGradient | Divergence | Vorticity | QCriterion);
 
 #undef VISKORES_PRIVATE_GRADIENT_BENCHMARK
 
@@ -219,7 +223,8 @@ void BenchThreshold(::benchmark::State& state, bool partitionedInput)
   const viskores::cont::DeviceAdapterId device = Config.Device;
 
   // Lookup the point scalar range
-  const auto range = []() -> viskores::Range {
+  const auto range = []() -> viskores::Range
+  {
     auto ptScalarField =
       GetInputDataSet().GetField(PointScalarsName, viskores::cont::Field::Association::Points);
     return ptScalarField.GetRange().ReadPortal().Get(0);
@@ -249,8 +254,11 @@ void BenchThreshold(::benchmark::State& state, bool partitionedInput)
   }
 }
 
-#define VISKORES_PRIVATE_THRESHOLD_BENCHMARK(Name, Opts)                                    \
-  void BenchThreshold##Name(::benchmark::State& state) { BenchThreshold(state, Opts); } \
+#define VISKORES_PRIVATE_THRESHOLD_BENCHMARK(Name, Opts) \
+  void BenchThreshold##Name(::benchmark::State& state)   \
+  {                                                      \
+    BenchThreshold(state, Opts);                         \
+  }                                                      \
   VISKORES_BENCHMARK(BenchThreshold##Name)
 
 VISKORES_PRIVATE_THRESHOLD_BENCHMARK(BenchThreshold, false);
@@ -263,7 +271,8 @@ void BenchThresholdPoints(::benchmark::State& state)
   const bool partitionedInput = static_cast<bool>(state.range(1));
 
   // Lookup the point scalar range
-  const auto range = []() -> viskores::Range {
+  const auto range = []() -> viskores::Range
+  {
     auto ptScalarField =
       GetInputDataSet().GetField(PointScalarsName, viskores::cont::Field::Association::Points);
     return ptScalarField.GetRange().ReadPortal().Get(0);
@@ -423,7 +432,8 @@ void BenchContour(::benchmark::State& state)
 
   // Set up some equally spaced contours, with the min/max slightly inside the
   // scalar range:
-  const viskores::Range scalarRange = []() -> viskores::Range {
+  const viskores::Range scalarRange = []() -> viskores::Range
+  {
     auto field =
       GetInputDataSet().GetField(PointScalarsName, viskores::cont::Field::Association::Points);
     return field.GetRange().ReadPortal().Get(0);
@@ -474,7 +484,8 @@ void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
                  "FastNormals",
                  "MultiPartitioned" });
 
-  auto helper = [&](const viskores::Id numIsoVals) {
+  auto helper = [&](const viskores::Id numIsoVals)
+  {
     bm->Args({ 0, numIsoVals, 0, 0, 0, 0 });
     bm->Args({ 0, numIsoVals, 1, 0, 0, 0 });
     bm->Args({ 0, numIsoVals, 0, 1, 0, 0 });
@@ -595,9 +606,9 @@ void BenchVertexClustering(::benchmark::State& state)
   }
 }
 VISKORES_BENCHMARK_OPTS(BenchVertexClustering,
-                      ->RangeMultiplier(2)
-                      ->Range(32, 1024)
-                      ->ArgName("NumDivs"));
+                          ->RangeMultiplier(2)
+                          ->Range(32, 1024)
+                          ->ArgName("NumDivs"));
 
 // Helper for resetting the reverse connectivity table:
 struct PrepareForInput
@@ -627,12 +638,14 @@ struct PrepareForInput
   }
 
   template <typename T1, typename T2, typename T3, typename DeviceTag>
-  VISKORES_CONT bool operator()(DeviceTag, const viskores::cont::CellSetExplicit<T1, T2, T3>& cellSet) const
+  VISKORES_CONT bool operator()(DeviceTag,
+                                const viskores::cont::CellSetExplicit<T1, T2, T3>& cellSet) const
   {
     // Why does CastAndCall insist on making the cellset const?
     using CellSetT = viskores::cont::CellSetExplicit<T1, T2, T3>;
     CellSetT& mcellSet = const_cast<CellSetT&>(cellSet);
-    mcellSet.ResetConnectivity(viskores::TopologyElementTagPoint{}, viskores::TopologyElementTagCell{});
+    mcellSet.ResetConnectivity(viskores::TopologyElementTagPoint{},
+                               viskores::TopologyElementTagCell{});
 
     viskores::cont::Token token;
     this->Timer.Start();
@@ -770,8 +783,8 @@ void CreateMissingFields()
     PointVectorGenerator worklet(bounds);
     viskores::worklet::DispatcherMapField<PointVectorGenerator> dispatch(worklet);
     dispatch.Invoke(points, pvecs);
-    GetInputDataSet().AddField(
-      viskores::cont::Field("GeneratedPointVectors", viskores::cont::Field::Association::Points, pvecs));
+    GetInputDataSet().AddField(viskores::cont::Field(
+      "GeneratedPointVectors", viskores::cont::Field::Association::Points, pvecs));
     PointVectorsName = "GeneratedPointVectors";
     std::cerr << "[CreateFields] Generated point vectors '" << PointVectorsName
               << "' from coordinate data.\n";
@@ -1073,7 +1086,8 @@ void InitDataSet(int& argc, char** argv)
   std::cerr
     << "[InitDataSet] Create UnstructuredInputDataSet from Tetrahedralized InputDataSet...\n";
   viskores::filter::geometry_refinement::Tetrahedralize tet;
-  tet.SetFieldsToPass(viskores::filter::FieldSelection(viskores::filter::FieldSelection::Mode::All));
+  tet.SetFieldsToPass(
+    viskores::filter::FieldSelection(viskores::filter::FieldSelection::Mode::All));
   UnstructuredInputDataSet = new viskores::cont::DataSet;
   *UnstructuredInputDataSet = tet.Execute(GetInputDataSet());
 
@@ -1120,7 +1134,8 @@ int main(int argc, char* argv[])
   }
   InitDataSet(argc, args.data());
 
-  const std::string dataSetSummary = []() -> std::string {
+  const std::string dataSetSummary = []() -> std::string
+  {
     std::ostringstream out;
     GetInputDataSet().PrintSummary(out);
     return out.str();

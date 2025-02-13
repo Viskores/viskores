@@ -48,7 +48,7 @@ public:
 
     template <typename ImplicitFunction>
     VISKORES_EXEC bool operator()(const viskores::Vec3f_64& coordinate,
-                              const ImplicitFunction& function) const
+                                  const ImplicitFunction& function) const
     {
       bool pass = passValue;
       viskores::Float64 value = function.Value(coordinate);
@@ -68,7 +68,7 @@ public:
   // Extract points by id creates new cellset of vertex cells
   template <typename CellSetType>
   viskores::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
-                                      const viskores::cont::ArrayHandle<viskores::Id>& pointIds)
+                                          const viskores::cont::ArrayHandle<viskores::Id>& pointIds)
   {
     viskores::cont::ArrayCopy(pointIds, this->ValidPointIds);
 
@@ -84,9 +84,9 @@ public:
   // Extract points by implicit function
   template <typename CellSetType, typename CoordinateType, typename ImplicitFunction>
   viskores::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
-                                      const CoordinateType& coordinates,
-                                      const ImplicitFunction& implicitFunction,
-                                      bool extractInside)
+                                          const CoordinateType& coordinates,
+                                          const ImplicitFunction& implicitFunction,
+                                          bool extractInside)
   {
     // Worklet output will be a boolean passFlag array
     viskores::cont::ArrayHandle<bool> passFlags;
@@ -96,7 +96,8 @@ public:
     invoke(worklet, cellSet, coordinates, implicitFunction, passFlags);
 
     viskores::cont::ArrayHandleCounting<viskores::Id> indices =
-      viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(1), passFlags.GetNumberOfValues());
+      viskores::cont::make_ArrayHandleCounting(
+        viskores::Id(0), viskores::Id(1), passFlags.GetNumberOfValues());
     viskores::cont::Algorithm::CopyIf(indices, passFlags, this->ValidPointIds);
 
     // Make CellSetSingleType with VERTEX at each point id

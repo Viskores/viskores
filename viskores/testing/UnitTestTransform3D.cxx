@@ -59,7 +59,7 @@ struct TransformTests
     Vec translated2 = viskores::Transform3DPoint(translate, translated1);
     std::cout << " Second translation: " << translated2 << std::endl;
     VISKORES_TEST_ASSERT(test_equal(translated2, startPoint + T(2) * translateAmount),
-                     "Bad translation.");
+                         "Bad translation.");
 
     // Vectors should be invariant to translation.
     translated1 = viskores::Transform3DVector(translate, startPoint);
@@ -108,18 +108,18 @@ struct TransformTests
     Vec rotated1 = viskores::Transform3DPoint(rotateX, startPoint);
     std::cout << " First rotate: " << rotated1 << std::endl;
     VISKORES_TEST_ASSERT(test_equal(rotated1, Vec(startPoint[0], -startPoint[2], startPoint[1])),
-                     "Bad rotate.");
+                         "Bad rotate.");
 
     Vec rotated2 = viskores::Transform3DPoint(rotateX, rotated1);
     std::cout << " Second rotate: " << rotated2 << std::endl;
     VISKORES_TEST_ASSERT(test_equal(rotated2, Vec(startPoint[0], -startPoint[1], -startPoint[2])),
-                     "Bad rotate.");
+                         "Bad rotate.");
 
     // Vectors should rotate the same as points.
     rotated1 = viskores::Transform3DVector(rotateX, startPoint);
     std::cout << " Vector rotate: " << rotated1 << std::endl;
     VISKORES_TEST_ASSERT(test_equal(rotated1, Vec(startPoint[0], -startPoint[2], startPoint[1])),
-                     "Bad rotate.");
+                         "Bad rotate.");
 
     std::cout << "--Rotate 90 degrees around Y" << std::endl;
     Transform rotateY = viskores::Transform3DRotateY(ninetyDegrees);
@@ -127,18 +127,18 @@ struct TransformTests
     rotated1 = viskores::Transform3DPoint(rotateY, startPoint);
     std::cout << " First rotate: " << rotated1 << std::endl;
     VISKORES_TEST_ASSERT(test_equal(rotated1, Vec(startPoint[2], startPoint[1], -startPoint[0])),
-                     "Bad rotate.");
+                         "Bad rotate.");
 
     rotated2 = viskores::Transform3DPoint(rotateY, rotated1);
     std::cout << " Second rotate: " << rotated2 << std::endl;
     VISKORES_TEST_ASSERT(test_equal(rotated2, Vec(-startPoint[0], startPoint[1], -startPoint[2])),
-                     "Bad rotate.");
+                         "Bad rotate.");
 
     // Vectors should rotate the same as points.
     rotated1 = viskores::Transform3DVector(rotateY, startPoint);
     std::cout << " Vector rotate: " << rotated1 << std::endl;
     VISKORES_TEST_ASSERT(test_equal(rotated1, Vec(startPoint[2], startPoint[1], -startPoint[0])),
-                     "Bad rotate.");
+                         "Bad rotate.");
 
     std::cout << "--Rotate 90 degrees around Z" << std::endl;
     Transform rotateZ = viskores::Transform3DRotateZ(ninetyDegrees);
@@ -146,18 +146,18 @@ struct TransformTests
     rotated1 = viskores::Transform3DPoint(rotateZ, startPoint);
     std::cout << " First rotate: " << rotated1 << std::endl;
     VISKORES_TEST_ASSERT(test_equal(rotated1, Vec(-startPoint[1], startPoint[0], startPoint[2])),
-                     "Bad rotate.");
+                         "Bad rotate.");
 
     rotated2 = viskores::Transform3DPoint(rotateZ, rotated1);
     std::cout << " Second rotate: " << rotated2 << std::endl;
     VISKORES_TEST_ASSERT(test_equal(rotated2, Vec(-startPoint[0], -startPoint[1], startPoint[2])),
-                     "Bad rotate.");
+                         "Bad rotate.");
 
     // Vectors should rotate the same as points.
     rotated1 = viskores::Transform3DVector(rotateZ, startPoint);
     std::cout << " Vector rotate: " << rotated1 << std::endl;
     VISKORES_TEST_ASSERT(test_equal(rotated1, Vec(-startPoint[1], startPoint[0], startPoint[2])),
-                     "Bad rotate.");
+                         "Bad rotate.");
   }
 
   void CheckPerspective()

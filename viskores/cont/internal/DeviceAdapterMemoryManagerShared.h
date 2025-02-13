@@ -33,20 +33,23 @@ public:
   VISKORES_CONT viskores::cont::internal::BufferInfo CopyHostToDevice(
     const viskores::cont::internal::BufferInfo& src) const override;
 
-  VISKORES_CONT void CopyHostToDevice(const viskores::cont::internal::BufferInfo& src,
-                                  const viskores::cont::internal::BufferInfo& dest) const override;
+  VISKORES_CONT void CopyHostToDevice(
+    const viskores::cont::internal::BufferInfo& src,
+    const viskores::cont::internal::BufferInfo& dest) const override;
 
   VISKORES_CONT viskores::cont::internal::BufferInfo CopyDeviceToHost(
     const viskores::cont::internal::BufferInfo& src) const override;
 
-  VISKORES_CONT void CopyDeviceToHost(const viskores::cont::internal::BufferInfo& src,
-                                  const viskores::cont::internal::BufferInfo& dest) const override;
+  VISKORES_CONT void CopyDeviceToHost(
+    const viskores::cont::internal::BufferInfo& src,
+    const viskores::cont::internal::BufferInfo& dest) const override;
 
   VISKORES_CONT viskores::cont::internal::BufferInfo CopyDeviceToDevice(
     const viskores::cont::internal::BufferInfo& src) const override;
 
-  VISKORES_CONT void CopyDeviceToDevice(const viskores::cont::internal::BufferInfo& src,
-                                    const viskores::cont::internal::BufferInfo& dest) const override;
+  VISKORES_CONT void CopyDeviceToDevice(
+    const viskores::cont::internal::BufferInfo& src,
+    const viskores::cont::internal::BufferInfo& dest) const override;
 
   VISKORES_CONT void DeleteRawPointer(void* mem) const override;
 };

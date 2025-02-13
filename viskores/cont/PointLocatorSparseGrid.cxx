@@ -75,11 +75,11 @@ void PointLocatorSparseGrid::Build()
   }
 
   auto rmin = viskores::make_Vec(static_cast<viskores::FloatDefault>(this->Range[0].Min),
-                             static_cast<viskores::FloatDefault>(this->Range[1].Min),
-                             static_cast<viskores::FloatDefault>(this->Range[2].Min));
+                                 static_cast<viskores::FloatDefault>(this->Range[1].Min),
+                                 static_cast<viskores::FloatDefault>(this->Range[2].Min));
   auto rmax = viskores::make_Vec(static_cast<viskores::FloatDefault>(this->Range[0].Max),
-                             static_cast<viskores::FloatDefault>(this->Range[1].Max),
-                             static_cast<viskores::FloatDefault>(this->Range[2].Max));
+                                 static_cast<viskores::FloatDefault>(this->Range[1].Max),
+                                 static_cast<viskores::FloatDefault>(this->Range[2].Max));
 
   // generate unique id for each input point
   viskores::cont::ArrayHandleIndex pointIndex(this->GetCoordinates().GetNumberOfValues());
@@ -108,11 +108,11 @@ viskores::exec::PointLocatorSparseGrid PointLocatorSparseGrid::PrepareForExecuti
   viskores::cont::Token& token) const
 {
   auto rmin = viskores::make_Vec(static_cast<viskores::FloatDefault>(this->Range[0].Min),
-                             static_cast<viskores::FloatDefault>(this->Range[1].Min),
-                             static_cast<viskores::FloatDefault>(this->Range[2].Min));
+                                 static_cast<viskores::FloatDefault>(this->Range[1].Min),
+                                 static_cast<viskores::FloatDefault>(this->Range[2].Min));
   auto rmax = viskores::make_Vec(static_cast<viskores::FloatDefault>(this->Range[0].Max),
-                             static_cast<viskores::FloatDefault>(this->Range[1].Max),
-                             static_cast<viskores::FloatDefault>(this->Range[2].Max));
+                                 static_cast<viskores::FloatDefault>(this->Range[1].Max),
+                                 static_cast<viskores::FloatDefault>(this->Range[2].Max));
   return viskores::exec::PointLocatorSparseGrid(
     rmin,
     rmax,

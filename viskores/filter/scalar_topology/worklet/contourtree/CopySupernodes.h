@@ -88,14 +88,14 @@ public:
 
   template <typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& isSupernode,
-                            const viskores::Id& regularID,
-                            const viskores::Id& superID,
-                            const viskores::Id& upCandidate,
-                            const viskores::Id& downCandidate,
-                            const OutFieldPortalType& regularToCritical,
-                            const OutFieldPortalType& supernodes,
-                            const OutFieldPortalType& updegree,
-                            const OutFieldPortalType& downdegree) const
+                                const viskores::Id& regularID,
+                                const viskores::Id& superID,
+                                const viskores::Id& upCandidate,
+                                const viskores::Id& downCandidate,
+                                const OutFieldPortalType& regularToCritical,
+                                const OutFieldPortalType& supernodes,
+                                const OutFieldPortalType& updegree,
+                                const OutFieldPortalType& downdegree) const
   {
     if (isSupernode)
     { // supernode

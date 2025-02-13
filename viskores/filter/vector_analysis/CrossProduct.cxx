@@ -26,8 +26,8 @@ public:
 
   template <typename T>
   VISKORES_EXEC void operator()(const viskores::Vec<T, 3>& vec1,
-                            const viskores::Vec<T, 3>& vec2,
-                            viskores::Vec<T, 3>& outVec) const
+                                const viskores::Vec<T, 3>& vec2,
+                                viskores::Vec<T, 3>& outVec) const
   {
     outVec = viskores::Cross(vec1, vec2);
   }
@@ -49,7 +49,8 @@ VISKORES_CONT CrossProduct::CrossProduct()
 }
 
 //-----------------------------------------------------------------------------
-VISKORES_CONT viskores::cont::DataSet CrossProduct::DoExecute(const viskores::cont::DataSet& inDataSet)
+VISKORES_CONT viskores::cont::DataSet CrossProduct::DoExecute(
+  const viskores::cont::DataSet& inDataSet)
 {
   viskores::cont::Field primaryField = this->GetFieldFromDataSet(0, inDataSet);
   viskores::cont::UnknownArrayHandle primaryArray = primaryField.GetData();
@@ -63,7 +64,8 @@ VISKORES_CONT viskores::cont::DataSet CrossProduct::DoExecute(const viskores::co
   // type and storage to a concrete ArrayHandle<T, S> with T from the `TypeList` and S from
   // `StorageList`. It then passes the concrete array to the lambda as the first argument.
   // We can later recover the concrete ValueType, T, from the concrete array.
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     const auto& secondaryField = this->GetFieldFromDataSet(1, inDataSet);

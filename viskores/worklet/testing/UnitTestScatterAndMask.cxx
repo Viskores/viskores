@@ -43,9 +43,9 @@ struct FieldWorklet : viskores::worklet::WorkletMapField
   using MaskType = viskores::worklet::MaskIndices;
 
   VISKORES_EXEC void operator()(FieldType inField,
-                            viskores::IdComponent visitIndex,
-                            FieldType& fieldCopy,
-                            viskores::IdComponent& visitCopy) const
+                                viskores::IdComponent visitIndex,
+                                FieldType& fieldCopy,
+                                viskores::IdComponent& visitCopy) const
   {
     fieldCopy = inField;
     visitCopy = visitIndex;
@@ -65,9 +65,9 @@ struct TopologyWorklet : viskores::worklet::WorkletVisitPointsWithCells
   using MaskType = viskores::worklet::MaskIndices;
 
   VISKORES_EXEC void operator()(FieldType inField,
-                            viskores::IdComponent visitIndex,
-                            FieldType& fieldCopy,
-                            viskores::IdComponent& visitCopy) const
+                                viskores::IdComponent visitIndex,
+                                FieldType& fieldCopy,
+                                viskores::IdComponent& visitCopy) const
   {
     fieldCopy = inField;
     visitCopy = visitIndex;
@@ -87,9 +87,9 @@ struct NeighborhoodWorklet : viskores::worklet::WorkletPointNeighborhood
   using MaskType = viskores::worklet::MaskIndices;
 
   VISKORES_EXEC void operator()(FieldType inField,
-                            viskores::IdComponent visitIndex,
-                            FieldType& fieldCopy,
-                            viskores::IdComponent& visitCopy) const
+                                viskores::IdComponent visitIndex,
+                                FieldType& fieldCopy,
+                                viskores::IdComponent& visitCopy) const
   {
     fieldCopy = inField;
     visitCopy = visitIndex;
@@ -111,10 +111,12 @@ void TestMapWorklet()
   SetPortal(inField.WritePortal());
 
   viskores::cont::ArrayHandle<FieldType> fieldCopy;
-  viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant(FieldNull, numPoints * 2), fieldCopy);
+  viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant(FieldNull, numPoints * 2),
+                            fieldCopy);
 
   viskores::cont::ArrayHandle<viskores::IdComponent> visitCopy;
-  viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant(IdNull, numPoints * 2), visitCopy);
+  viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant(IdNull, numPoints * 2),
+                            visitCopy);
 
   // The scatter is hardcoded to create 2 outputs for every input.
   // Set up the mask to select a range of values in the middle.
@@ -138,23 +140,24 @@ void TestMapWorklet()
       viskores::Id inputIndex = outputIndex / 2;
       FieldType expectedField = TestValue(inputIndex, FieldType());
       VISKORES_TEST_ASSERT(fieldValue == expectedField,
-                       outputIndex,
-                       ": expected ",
-                       expectedField,
-                       ", got ",
-                       fieldValue);
+                           outputIndex,
+                           ": expected ",
+                           expectedField,
+                           ", got ",
+                           fieldValue);
 
       viskores::IdComponent expectedVisit = static_cast<viskores::IdComponent>(outputIndex % 2);
       VISKORES_TEST_ASSERT(visitValue == expectedVisit,
-                       outputIndex,
-                       ": expected ",
-                       expectedVisit,
-                       ", got ",
-                       visitValue);
+                           outputIndex,
+                           ": expected ",
+                           expectedVisit,
+                           ", got ",
+                           visitValue);
     }
     else
     {
-      VISKORES_TEST_ASSERT(viskores::IsNan(fieldValue), outputIndex, ": expected NaN, got ", fieldValue);
+      VISKORES_TEST_ASSERT(
+        viskores::IsNan(fieldValue), outputIndex, ": expected NaN, got ", fieldValue);
       VISKORES_TEST_ASSERT(
         visitValue == IdNull, outputIndex, ": expected ", IdNull, ", got ", visitValue);
     }

@@ -84,8 +84,8 @@ public:
 
   template <typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& supernode,
-                            const OutFieldPortalType& updegreePortal,
-                            const OutFieldPortalType& downdegreePortal) const
+                                const OutFieldPortalType& updegreePortal,
+                                const OutFieldPortalType& downdegreePortal) const
   {
     updegreePortal.Set(supernode, 0);
     downdegreePortal.Set(supernode, 0);

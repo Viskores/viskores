@@ -92,16 +92,16 @@ public:
   /// If yes, update all information for the selfEnd
   /// Otherwise, do nothing
   VISKORES_EXEC void operator()(const viskores::Id& sharedBranchID,
-                            viskores::Id& selfEndGRID,
-                            const viskores::Id& incomingEndGRID,
-                            ValueType& selfEndValue,
-                            const ValueType& incomingEndValue,
-                            viskores::Id& selfEndSuperarcID,
-                            const viskores::Id& incomingEndSuperarcID,
-                            viskores::Id& selfEndIntrinsicVolume,
-                            const viskores::Id& incomingEndIntrinsicVolume,
-                            viskores::Id& selfEndDependentVolume,
-                            const viskores::Id& incomingEndDependentVolume) const
+                                viskores::Id& selfEndGRID,
+                                const viskores::Id& incomingEndGRID,
+                                ValueType& selfEndValue,
+                                const ValueType& incomingEndValue,
+                                viskores::Id& selfEndSuperarcID,
+                                const viskores::Id& incomingEndSuperarcID,
+                                viskores::Id& selfEndIntrinsicVolume,
+                                const viskores::Id& incomingEndIntrinsicVolume,
+                                viskores::Id& selfEndDependentVolume,
+                                const viskores::Id& incomingEndDependentVolume) const
   {
     // sharedBranchID is only used as an index anchor for all shared branches.
     // We don't use its content.

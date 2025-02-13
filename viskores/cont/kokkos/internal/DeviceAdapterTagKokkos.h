@@ -23,7 +23,7 @@
 //We always create the kokkos tag when included, but we only mark it as
 //a valid tag when VISKORES_ENABLE_KOKKOS is true. This is for easier development
 //of multi-backend systems
-#if defined(VISKORES_ENABLE_KOKKOS) &&                       \
+#if defined(VISKORES_ENABLE_KOKKOS) &&                           \
   ((!defined(VISKORES_KOKKOS_CUDA) || defined(VISKORES_CUDA)) || \
    !defined(VISKORES_NO_ERROR_ON_MIXED_CUDA_CXX_TAG))
 VISKORES_VALID_DEVICE_ADAPTER(Kokkos, VISKORES_DEVICE_ADAPTER_KOKKOS);

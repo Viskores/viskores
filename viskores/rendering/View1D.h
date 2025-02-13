@@ -25,18 +25,20 @@ namespace rendering
 class VISKORES_RENDERING_EXPORT View1D : public viskores::rendering::View
 {
 public:
-  View1D(const viskores::rendering::Scene& scene,
-         const viskores::rendering::Mapper& mapper,
-         const viskores::rendering::Canvas& canvas,
-         const viskores::rendering::Color& backgroundColor = viskores::rendering::Color(0, 0, 0, 1),
-         const viskores::rendering::Color& foregroundColor = viskores::rendering::Color(1, 1, 1, 1));
+  View1D(
+    const viskores::rendering::Scene& scene,
+    const viskores::rendering::Mapper& mapper,
+    const viskores::rendering::Canvas& canvas,
+    const viskores::rendering::Color& backgroundColor = viskores::rendering::Color(0, 0, 0, 1),
+    const viskores::rendering::Color& foregroundColor = viskores::rendering::Color(1, 1, 1, 1));
 
-  View1D(const viskores::rendering::Scene& scene,
-         const viskores::rendering::Mapper& mapper,
-         const viskores::rendering::Canvas& canvas,
-         const viskores::rendering::Camera& camera,
-         const viskores::rendering::Color& backgroundColor = viskores::rendering::Color(0, 0, 0, 1),
-         const viskores::rendering::Color& foregroundColor = viskores::rendering::Color(1, 1, 1, 1));
+  View1D(
+    const viskores::rendering::Scene& scene,
+    const viskores::rendering::Mapper& mapper,
+    const viskores::rendering::Canvas& canvas,
+    const viskores::rendering::Camera& camera,
+    const viskores::rendering::Color& backgroundColor = viskores::rendering::Color(0, 0, 0, 1),
+    const viskores::rendering::Color& foregroundColor = viskores::rendering::Color(1, 1, 1, 1));
 
   void Paint() override;
   void RenderScreenAnnotations() override;

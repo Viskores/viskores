@@ -29,7 +29,8 @@ void CheckKeyReduce(const KeyPortal& originalKeys,
   using KeyType = typename KeyPortal::ValueType;
   viskores::Id originalSize = originalKeys.GetNumberOfValues();
   viskores::Id uniqueSize = uniqueKeys.GetNumberOfValues();
-  VISKORES_TEST_ASSERT(originalSize == sortedValuesMap.GetNumberOfValues(), "Inconsistent array size.");
+  VISKORES_TEST_ASSERT(originalSize == sortedValuesMap.GetNumberOfValues(),
+                       "Inconsistent array size.");
   VISKORES_TEST_ASSERT(uniqueSize == offsets.GetNumberOfValues() - 1, "Inconsistent array size.");
 
   for (viskores::Id uniqueIndex = 0; uniqueIndex < uniqueSize; uniqueIndex++)

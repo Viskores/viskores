@@ -62,7 +62,7 @@ struct VISKORES_NEVER_EXPORT VecTraits
 {
   // The base VecTraits should not be used with qualifiers.
   VISKORES_STATIC_ASSERT_MSG((std::is_same<std::remove_pointer_t<std::decay_t<T>>, T>::value),
-                         "The base VecTraits should not be used with qualifiers.");
+                             "The base VecTraits should not be used with qualifiers.");
 
   /// \brief Type of the components in the vector.
   ///
@@ -114,14 +114,16 @@ struct VISKORES_NEVER_EXPORT VecTraits
 
   /// Returns the value in a given component of the vector.
   ///
-  VISKORES_EXEC_CONT static const ComponentType& GetComponent(const T& vector,
-                                                          viskores::IdComponent viskoresNotUsed(component))
+  VISKORES_EXEC_CONT static const ComponentType& GetComponent(
+    const T& vector,
+    viskores::IdComponent viskoresNotUsed(component))
   {
     return vector;
   }
   /// @copydoc GetComponent
-  VISKORES_EXEC_CONT static ComponentType& GetComponent(T& vector,
-                                                    viskores::IdComponent viskoresNotUsed(component))
+  VISKORES_EXEC_CONT static ComponentType& GetComponent(
+    T& vector,
+    viskores::IdComponent viskoresNotUsed(component))
   {
     return vector;
   }
@@ -129,8 +131,8 @@ struct VISKORES_NEVER_EXPORT VecTraits
   /// Changes the value in a given component of the vector.
   ///
   VISKORES_EXEC_CONT static void SetComponent(T& vector,
-                                          viskores::IdComponent viskoresNotUsed(component),
-                                          ComponentType value)
+                                              viskores::IdComponent viskoresNotUsed(component),
+                                              ComponentType value)
   {
     vector = value;
   }
@@ -163,14 +165,16 @@ struct VISKORES_NEVER_EXPORT VecTraits
   /// Copies the components in the given vector into a given Vec object.
   ///
   template <viskores::IdComponent destSize>
-  VISKORES_EXEC_CONT static void CopyInto(const T& src, viskores::Vec<ComponentType, destSize>& dest)
+  VISKORES_EXEC_CONT static void CopyInto(const T& src,
+                                          viskores::Vec<ComponentType, destSize>& dest)
   {
     dest[0] = src;
   }
 };
 
 template <typename T>
-using HasVecTraits VISKORES_DEPRECATED(2.1, "All types now have VecTraits defined.") = std::true_type;
+using HasVecTraits VISKORES_DEPRECATED(2.1,
+                                       "All types now have VecTraits defined.") = std::true_type;
 
 // These partial specializations allow VecTraits to work with const and reference qualifiers.
 template <typename T>
@@ -205,8 +209,8 @@ struct VISKORES_NEVER_EXPORT VecTraits<T*> : VecTraits<T>
     return VecTraits<T>::GetComponent(*vector, component);
   }
   VISKORES_EXEC_CONT static void SetComponent(T* vector,
-                                          viskores::IdComponent component,
-                                          typename VecTraits<T>::ComponentType value)
+                                              viskores::IdComponent component,
+                                              typename VecTraits<T>::ComponentType value)
   {
     VecTraits<T>::SetComponent(*vector, component, value);
   }
@@ -324,8 +328,8 @@ struct VISKORES_NEVER_EXPORT VecTraits<viskores::Vec<T, Size>>
   /// Changes the value in a given component of the vector.
   ///
   VISKORES_EXEC_CONT static void SetComponent(VecType& vector,
-                                          viskores::IdComponent component,
-                                          ComponentType value)
+                                              viskores::IdComponent component,
+                                              ComponentType value)
   {
     vector[component] = value;
   }
@@ -361,16 +365,18 @@ struct VISKORES_NEVER_EXPORT VecTraits<viskores::Vec<T, Size>>
     typename detail::VecReplaceBaseComponentTypeGCC4or5<T, Size, NewComponentType>::type;
 #else // !GCC <= 5
   template <typename NewComponentType>
-  using ReplaceBaseComponentType = viskores::Vec<
-    typename viskores::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
-    Size>;
+  using ReplaceBaseComponentType =
+    viskores::Vec<typename viskores::VecTraits<ComponentType>::template ReplaceBaseComponentType<
+                    NewComponentType>,
+                  Size>;
 #endif
   ///@}
 
   /// Converts whatever type this vector is into the standard Viskores Tuple.
   ///
   template <viskores::IdComponent destSize>
-  VISKORES_EXEC_CONT static void CopyInto(const VecType& src, viskores::Vec<ComponentType, destSize>& dest)
+  VISKORES_EXEC_CONT static void CopyInto(const VecType& src,
+                                          viskores::Vec<ComponentType, destSize>& dest)
   {
     src.CopyInto(dest);
   }
@@ -458,13 +464,14 @@ struct VISKORES_NEVER_EXPORT VecTraits<viskores::VecC<T>>
   /// @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode is Vec<Vec<T2, M>, N>.
   ///
   template <typename NewComponentType>
-  using ReplaceBaseComponentType = viskores::VecC<
-    typename viskores::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>>;
+  using ReplaceBaseComponentType = viskores::VecC<typename viskores::VecTraits<
+    ComponentType>::template ReplaceBaseComponentType<NewComponentType>>;
 
   /// Converts whatever type this vector is into the standard Viskores Tuple.
   ///
   template <viskores::IdComponent destSize>
-  VISKORES_EXEC_CONT static void CopyInto(const VecType& src, viskores::Vec<ComponentType, destSize>& dest)
+  VISKORES_EXEC_CONT static void CopyInto(const VecType& src,
+                                          viskores::Vec<ComponentType, destSize>& dest)
   {
     src.CopyInto(dest);
   }
@@ -547,13 +554,14 @@ struct VISKORES_NEVER_EXPORT VecTraits<viskores::VecCConst<T>>
   /// @code VecTraits<Vec<Vec<T, M>, N>::ReplaceComponentType<T2> @endcode is Vec<Vec<T2, M>, N>.
   ///
   template <typename NewComponentType>
-  using ReplaceBaseComponentType = viskores::VecCConst<
-    typename viskores::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>>;
+  using ReplaceBaseComponentType = viskores::VecCConst<typename viskores::VecTraits<
+    ComponentType>::template ReplaceBaseComponentType<NewComponentType>>;
 
   /// Converts whatever type this vector is into the standard Viskores Tuple.
   ///
   template <viskores::IdComponent destSize>
-  VISKORES_EXEC_CONT static void CopyInto(const VecType& src, viskores::Vec<ComponentType, destSize>& dest)
+  VISKORES_EXEC_CONT static void CopyInto(const VecType& src,
+                                          viskores::Vec<ComponentType, destSize>& dest)
   {
     src.CopyInto(dest);
   }
@@ -586,8 +594,8 @@ struct VISKORES_DEPRECATED(2.1, "VecTraitsBasic is now the default implementatio
   static ComponentType& GetComponent(ScalarType& vector, viskores::IdComponent) { return vector; }
 
   VISKORES_EXEC_CONT static void SetComponent(ScalarType& vector,
-                                          viskores::IdComponent,
-                                          ComponentType value)
+                                              viskores::IdComponent,
+                                              ComponentType value)
   {
     vector = value;
   }
@@ -599,15 +607,16 @@ struct VISKORES_DEPRECATED(2.1, "VecTraitsBasic is now the default implementatio
   using ReplaceBaseComponentType = NewComponentType;
 
   template <viskores::IdComponent destSize>
-  VISKORES_EXEC_CONT static void CopyInto(const ScalarType& src, viskores::Vec<ScalarType, destSize>& dest)
+  VISKORES_EXEC_CONT static void CopyInto(const ScalarType& src,
+                                          viskores::Vec<ScalarType, destSize>& dest)
   {
     dest[0] = src;
   }
 };
 
 template <typename T>
-struct VISKORES_DEPRECATED(2.1 "VecTraits now safe to use on any type.") VISKORES_NEVER_EXPORT SafeVecTraits
-  : viskores::VecTraits<T>
+struct VISKORES_DEPRECATED(2.1 "VecTraits now safe to use on any type.")
+  VISKORES_NEVER_EXPORT SafeVecTraits : viskores::VecTraits<T>
 {
 };
 
@@ -616,9 +625,10 @@ struct VISKORES_DEPRECATED(2.1 "VecTraits now safe to use on any type.") VISKORE
 namespace detail
 {
 
-struct VISKORES_DEPRECATED(2.1,
-                       "VISKORES_BASIC_TYPE_VECTOR is no longer necessary because VecTraits implements "
-                       "basic type by default.") VISKORES_BASIC_TYPE_VECTOR_is_deprecated
+struct VISKORES_DEPRECATED(
+  2.1,
+  "VISKORES_BASIC_TYPE_VECTOR is no longer necessary because VecTraits implements "
+  "basic type by default.") VISKORES_BASIC_TYPE_VECTOR_is_deprecated
 {
 };
 
@@ -629,17 +639,17 @@ struct issue_VISKORES_BASIC_TYPE_VECTOR_deprecation_warning;
 
 } // namespace viskores
 
-#define VISKORES_BASIC_TYPE_VECTOR(type)                            \
-  namespace viskores                                                \
-  {                                                             \
-  namespace detail                                              \
-  {                                                             \
-  template <>                                                   \
-  struct issue_VISKORES_BASIC_TYPE_VECTOR_deprecation_warning<type> \
+#define VISKORES_BASIC_TYPE_VECTOR(type)                                \
+  namespace viskores                                                    \
+  {                                                                     \
+  namespace detail                                                      \
+  {                                                                     \
+  template <>                                                           \
+  struct issue_VISKORES_BASIC_TYPE_VECTOR_deprecation_warning<type>     \
     : public viskores::detail::VISKORES_BASIC_TYPE_VECTOR_is_deprecated \
-  {                                                             \
-  };                                                            \
-  }                                                             \
+  {                                                                     \
+  };                                                                    \
+  }                                                                     \
   }
 
 #endif //viskores_VecTraits_h

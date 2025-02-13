@@ -37,9 +37,9 @@ public:
 
   template <typename WeightType, typename InFieldPortalType, typename OutFieldType>
   VISKORES_EXEC void operator()(const viskores::Id2& low_high,
-                            const WeightType& weight,
-                            const InFieldPortalType& inPortal,
-                            OutFieldType& result) const
+                                const WeightType& weight,
+                                const InFieldPortalType& inPortal,
+                                OutFieldType& result) const
   {
     //fetch the low / high values from inPortal
     OutFieldType lowValue = inPortal.Get(low_high[0]);
@@ -47,16 +47,18 @@ public:
 
     // Interpolate per-vected because some vec-like objects do not allow intermediate variables
     using VTraits = viskores::VecTraits<OutFieldType>;
-    VISKORES_ASSERT(VTraits::GetNumberOfComponents(lowValue) == VTraits::GetNumberOfComponents(result));
+    VISKORES_ASSERT(VTraits::GetNumberOfComponents(lowValue) ==
+                    VTraits::GetNumberOfComponents(result));
     VISKORES_ASSERT(VTraits::GetNumberOfComponents(highValue) ==
-                VTraits::GetNumberOfComponents(result));
-    for (viskores::IdComponent cIndex = 0; cIndex < VTraits::GetNumberOfComponents(result); ++cIndex)
+                    VTraits::GetNumberOfComponents(result));
+    for (viskores::IdComponent cIndex = 0; cIndex < VTraits::GetNumberOfComponents(result);
+         ++cIndex)
     {
       VTraits::SetComponent(result,
                             cIndex,
                             viskores::Lerp(VTraits::GetComponent(lowValue, cIndex),
-                                       VTraits::GetComponent(highValue, cIndex),
-                                       weight));
+                                           VTraits::GetComponent(highValue, cIndex),
+                                           weight));
     }
   }
 };

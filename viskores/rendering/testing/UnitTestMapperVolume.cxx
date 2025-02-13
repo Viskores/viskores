@@ -38,7 +38,8 @@ void TestRectilinear()
   options.ColorTable = colorTable;
 
   viskores::cont::DataSet rectDS, unsDS;
-  std::string rectfname = viskores::cont::testing::Testing::DataPath("third_party/visit/example.vtk");
+  std::string rectfname =
+    viskores::cont::testing::Testing::DataPath("third_party/visit/example.vtk");
   viskores::io::VTKDataSetReader rectReader(rectfname);
 
   try

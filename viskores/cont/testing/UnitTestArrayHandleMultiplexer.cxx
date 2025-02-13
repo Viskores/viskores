@@ -39,13 +39,14 @@ static void CheckArray(const viskores::cont::ArrayHandleMultiplexer<Ts0...>& mul
   using T = typename std::remove_reference<decltype(multiplexerArray)>::type::ValueType;
 
   viskores::cont::printSummary_ArrayHandle(multiplexerArray, std::cout);
-  VISKORES_TEST_ASSERT(test_equal_portals(multiplexerArray.ReadPortal(), expectedArray.ReadPortal()),
-                   "Multiplexer array gave wrong result in control environment");
+  VISKORES_TEST_ASSERT(
+    test_equal_portals(multiplexerArray.ReadPortal(), expectedArray.ReadPortal()),
+    "Multiplexer array gave wrong result in control environment");
 
   viskores::cont::ArrayHandle<T> copy;
   viskores::cont::Algorithm::Copy(multiplexerArray, copy);
   VISKORES_TEST_ASSERT(test_equal_portals(copy.ReadPortal(), expectedArray.ReadPortal()),
-                   "Multiplexer did not copy correctly in execution environment");
+                       "Multiplexer did not copy correctly in execution environment");
 }
 
 void BasicSwitch()
@@ -87,17 +88,18 @@ void Reduce()
   std::cout << "\n--- Reduce" << std::endl;
 
   using ValueType = viskores::Vec3f;
-  using MultiplexerType = viskores::cont::ArrayHandleMultiplexer<
-    viskores::cont::ArrayHandleConstant<ValueType>,
-    viskores::cont::ArrayHandleCounting<ValueType>,
-    viskores::cont::ArrayHandle<ValueType>,
-    viskores::cont::ArrayHandleUniformPointCoordinates,
-    viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>>>;
+  using MultiplexerType =
+    viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandleConstant<ValueType>,
+                                           viskores::cont::ArrayHandleCounting<ValueType>,
+                                           viskores::cont::ArrayHandle<ValueType>,
+                                           viskores::cont::ArrayHandleUniformPointCoordinates,
+                                           viskores::cont::ArrayHandleCartesianProduct<
+                                             viskores::cont::ArrayHandle<viskores::FloatDefault>,
+                                             viskores::cont::ArrayHandle<viskores::FloatDefault>,
+                                             viskores::cont::ArrayHandle<viskores::FloatDefault>>>;
 
-  MultiplexerType multiplexer =
-    viskores::cont::ArrayHandleCounting<ValueType>(viskores::Vec3f(1), viskores::Vec3f(1), ARRAY_SIZE);
+  MultiplexerType multiplexer = viskores::cont::ArrayHandleCounting<ValueType>(
+    viskores::Vec3f(1), viskores::Vec3f(1), ARRAY_SIZE);
 
   {
     std::cout << "Basic Reduce" << std::endl;
@@ -111,7 +113,8 @@ void Reduce()
     viskores::Vec<ValueType, 2> result =
       viskores::cont::Algorithm::Reduce(multiplexer, initial, viskores::MinAndMax<ValueType>{});
     VISKORES_TEST_ASSERT(test_equal(result[0], ValueType(1)));
-    VISKORES_TEST_ASSERT(test_equal(result[1], ValueType(static_cast<viskores::FloatDefault>(ARRAY_SIZE))));
+    VISKORES_TEST_ASSERT(
+      test_equal(result[1], ValueType(static_cast<viskores::FloatDefault>(ARRAY_SIZE))));
   }
 }
 
@@ -120,14 +123,15 @@ void Fill()
   std::cout << "\n--- Fill" << std::endl;
 
   using ValueType = viskores::Vec3f;
-  using MultiplexerType = viskores::cont::ArrayHandleMultiplexer<
-    viskores::cont::ArrayHandleConstant<ValueType>,
-    viskores::cont::ArrayHandleCounting<ValueType>,
-    viskores::cont::ArrayHandle<ValueType>,
-    viskores::cont::ArrayHandleUniformPointCoordinates,
-    viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>>>;
+  using MultiplexerType =
+    viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandleConstant<ValueType>,
+                                           viskores::cont::ArrayHandleCounting<ValueType>,
+                                           viskores::cont::ArrayHandle<ValueType>,
+                                           viskores::cont::ArrayHandleUniformPointCoordinates,
+                                           viskores::cont::ArrayHandleCartesianProduct<
+                                             viskores::cont::ArrayHandle<viskores::FloatDefault>,
+                                             viskores::cont::ArrayHandle<viskores::FloatDefault>,
+                                             viskores::cont::ArrayHandle<viskores::FloatDefault>>>;
 
   const ValueType testValue1 = TestValue(1, ValueType{});
   const ValueType testValue2 = TestValue(2, ValueType{});
@@ -136,7 +140,7 @@ void Fill()
 
   multiplexer.AllocateAndFill(ARRAY_SIZE, testValue1);
   VISKORES_TEST_ASSERT(multiplexer.GetNumberOfComponentsFlat() ==
-                   viskores::VecFlat<ValueType>::NUM_COMPONENTS);
+                       viskores::VecFlat<ValueType>::NUM_COMPONENTS);
   {
     auto portal = multiplexer.ReadPortal();
     VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE);

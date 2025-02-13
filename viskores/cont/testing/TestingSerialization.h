@@ -117,8 +117,9 @@ struct RandomValue : RandomValue_<T>
 template <typename T>
 struct RandomArrayHandle
 {
-  static viskores::cont::ArrayHandle<T> Make(UniformRandomValueGenerator<BaseScalarType_t<T>>& rangen,
-                                         viskores::Id length)
+  static viskores::cont::ArrayHandle<T> Make(
+    UniformRandomValueGenerator<BaseScalarType_t<T>>& rangen,
+    viskores::Id length)
   {
     viskores::cont::ArrayHandle<T> a;
     a.Allocate(length);
@@ -132,8 +133,8 @@ struct RandomArrayHandle
   }
 
   static viskores::cont::ArrayHandle<T> Make(viskores::Id length,
-                                         BaseScalarType_t<T> min,
-                                         BaseScalarType_t<T> max)
+                                             BaseScalarType_t<T> min,
+                                             BaseScalarType_t<T> max)
   {
     auto rangen = UniformRandomValueGenerator<BaseScalarType_t<T>>(min, max);
     return Make(rangen, length);
@@ -187,15 +188,13 @@ void TestSerialization(const T& obj, const TestEqualFunctor& test)
   master.add(gid, &block, link);
 
   // compute, exchange, compute
-  master.foreach ([](Block<T>* b, const viskoresdiy::Master::ProxyWithLink& cp) {
-    cp.enqueue(cp.link()->target(0), b->send);
-  });
+  master.foreach ([](Block<T>* b, const viskoresdiy::Master::ProxyWithLink& cp)
+                  { cp.enqueue(cp.link()->target(0), b->send); });
 
   viskores::cont::DIYMasterExchange(master);
 
-  master.foreach ([](Block<T>* b, const viskoresdiy::Master::ProxyWithLink& cp) {
-    cp.dequeue(cp.link()->target(1).gid, b->received);
-  });
+  master.foreach ([](Block<T>* b, const viskoresdiy::Master::ProxyWithLink& cp)
+                  { cp.dequeue(cp.link()->target(1).gid, b->received); });
 
   comm.barrier();
 

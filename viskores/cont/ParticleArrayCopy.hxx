@@ -50,11 +50,11 @@ struct CopyParticleAllWorklet : public viskores::worklet::WorkletMapField
                                 FieldOut outTime);
 
   VISKORES_EXEC void operator()(const ParticleType& inParticle,
-                            viskores::Vec3f& outPos,
-                            viskores::Id& outID,
-                            viskores::Id& outSteps,
-                            viskores::ParticleStatus& outStatus,
-                            viskores::FloatDefault& outTime) const
+                                viskores::Vec3f& outPos,
+                                viskores::Id& outID,
+                                viskores::Id& outSteps,
+                                viskores::ParticleStatus& outStatus,
+                                viskores::FloatDefault& outTime) const
   {
     outPos = inParticle.GetPosition();
     outID = inParticle.GetID();
@@ -78,8 +78,8 @@ VISKORES_ALWAYS_EXPORT inline void ParticleArrayCopy(
 
   if (CopyTerminatedOnly)
   {
-    auto termTrn =
-      viskores::cont::make_ArrayHandleTransform(inP, detail::ExtractTerminatedFunctor<ParticleType>());
+    auto termTrn = viskores::cont::make_ArrayHandleTransform(
+      inP, detail::ExtractTerminatedFunctor<ParticleType>());
     viskores::cont::Algorithm::CopyIf(posTrn, termTrn, outPos);
   }
   else
@@ -89,7 +89,8 @@ VISKORES_ALWAYS_EXPORT inline void ParticleArrayCopy(
 
 template <typename ParticleType>
 VISKORES_ALWAYS_EXPORT inline void ParticleArrayCopy(
-  const std::vector<viskores::cont::ArrayHandle<ParticleType, viskores::cont::StorageTagBasic>>& inputs,
+  const std::vector<viskores::cont::ArrayHandle<ParticleType, viskores::cont::StorageTagBasic>>&
+    inputs,
   viskores::cont::ArrayHandle<viskores::Vec3f, viskores::cont::StorageTagBasic>& outPos)
 {
   viskores::Id numParticles = 0;

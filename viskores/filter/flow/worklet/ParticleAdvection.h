@@ -33,10 +33,10 @@ public:
 
   template <typename ParticleType>
   VISKORES_EXEC void operator()(const viskores::Vec3f& pt,
-                            const viskores::Id& id,
-                            const viskores::FloatDefault& time,
-                            const viskores::Id& step,
-                            ParticleType& particle) const
+                                const viskores::Id& id,
+                                const viskores::FloatDefault& time,
+                                const viskores::Id& step,
+                                ParticleType& particle) const
   {
     particle.SetPosition(pt);
     particle.SetID(id);

@@ -31,11 +31,11 @@ public:
     const viskores::Id3& threadIndex3D,
     viskores::Id threadIndex1D,
     const viskores::exec::ConnectivityStructured<viskores::TopologyElementTagPoint,
-                                             viskores::TopologyElementTagCell,
-                                             Dimension>& connectivity)
-    : Superclass(
-        threadIndex1D,
-        viskores::exec::BoundaryState{ threadIndex3D, detail::To3D(connectivity.GetPointDimensions()) })
+                                                 viskores::TopologyElementTagCell,
+                                                 Dimension>& connectivity)
+    : Superclass(threadIndex1D,
+                 viskores::exec::BoundaryState{ threadIndex3D,
+                                                detail::To3D(connectivity.GetPointDimensions()) })
   {
   }
 
@@ -47,14 +47,14 @@ public:
     viskores::IdComponent visitIndex,
     viskores::Id outputIndex,
     const viskores::exec::ConnectivityStructured<viskores::TopologyElementTagPoint,
-                                             viskores::TopologyElementTagCell,
-                                             Dimension>& connectivity)
-    : Superclass(
-        threadIndex1D,
-        inputIndex,
-        visitIndex,
-        outputIndex,
-        viskores::exec::BoundaryState{ threadIndex3D, detail::To3D(connectivity.GetPointDimensions()) })
+                                                 viskores::TopologyElementTagCell,
+                                                 Dimension>& connectivity)
+    : Superclass(threadIndex1D,
+                 inputIndex,
+                 visitIndex,
+                 outputIndex,
+                 viskores::exec::BoundaryState{ threadIndex3D,
+                                                detail::To3D(connectivity.GetPointDimensions()) })
   {
   }
 
@@ -65,15 +65,15 @@ public:
     viskores::IdComponent visitIndex,
     viskores::Id outputIndex,
     const viskores::exec::ConnectivityStructured<viskores::TopologyElementTagPoint,
-                                             viskores::TopologyElementTagCell,
-                                             Dimension>& connectivity)
-    : Superclass(
-        threadIndex,
-        inputIndex,
-        visitIndex,
-        outputIndex,
-        viskores::exec::BoundaryState{ detail::To3D(connectivity.FlatToLogicalVisitIndex(inputIndex)),
-                                   detail::To3D(connectivity.GetPointDimensions()) })
+                                                 viskores::TopologyElementTagCell,
+                                                 Dimension>& connectivity)
+    : Superclass(threadIndex,
+                 inputIndex,
+                 visitIndex,
+                 outputIndex,
+                 viskores::exec::BoundaryState{
+                   detail::To3D(connectivity.FlatToLogicalVisitIndex(inputIndex)),
+                   detail::To3D(connectivity.GetPointDimensions()) })
   {
   }
 };

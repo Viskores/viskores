@@ -90,13 +90,13 @@ public:
   // array handle rather than a portal direclty to a IdArrayType
   template <typename InFieldPortalType, typename GlobalIdFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& sortId,
-                            const viskores::Id& isNecessary,
-                            const viskores::Id& supersetId,
-                            const GlobalIdFieldPortalType& meshGlobalIdsPortal,
-                            const InFieldPortalType& upNeighbourPortal,
-                            const InFieldPortalType& downNeighbourPortal,
-                            viskores::Id& interiorForestAbove,
-                            viskores::Id& interiorForestBelow) const
+                                const viskores::Id& isNecessary,
+                                const viskores::Id& supersetId,
+                                const GlobalIdFieldPortalType& meshGlobalIdsPortal,
+                                const InFieldPortalType& upNeighbourPortal,
+                                const InFieldPortalType& downNeighbourPortal,
+                                viskores::Id& interiorForestAbove,
+                                viskores::Id& interiorForestBelow) const
   {
     (void)
       sortId; // TODO: Remove if not needed. This was included in original code but seems unused. Avoid compiler warning.

@@ -48,26 +48,26 @@ public:
     viskores::Id3 logical;
     logical[0] = (point[0] == Bounds.X.Max)
       ? CellDims[0] - 1
-      : static_cast<viskores::Id>(viskores::Floor((point[0] / Bounds.X.Length()) *
-                                          static_cast<viskores::FloatDefault>(CellDims[0])));
+      : static_cast<viskores::Id>(viskores::Floor(
+          (point[0] / Bounds.X.Length()) * static_cast<viskores::FloatDefault>(CellDims[0])));
     logical[1] = (point[1] == Bounds.Y.Max)
       ? CellDims[1] - 1
-      : static_cast<viskores::Id>(viskores::Floor((point[1] / Bounds.Y.Length()) *
-                                          static_cast<viskores::FloatDefault>(CellDims[1])));
+      : static_cast<viskores::Id>(viskores::Floor(
+          (point[1] / Bounds.Y.Length()) * static_cast<viskores::FloatDefault>(CellDims[1])));
     logical[2] = (point[2] == Bounds.Z.Max)
       ? CellDims[2] - 1
-      : static_cast<viskores::Id>(viskores::Floor((point[2] / Bounds.Z.Length()) *
-                                          static_cast<viskores::FloatDefault>(CellDims[2])));
+      : static_cast<viskores::Id>(viskores::Floor(
+          (point[2] / Bounds.Z.Length()) * static_cast<viskores::FloatDefault>(CellDims[2])));
 
     return logical[2] * CellDims[0] * CellDims[1] + logical[1] * CellDims[0] + logical[0];
   }
 
   template <typename PointType, typename LocatorType>
   VISKORES_EXEC void operator()(const PointType& pointIn,
-                            const LocatorType& locator,
-                            viskores::Id& cellId,
-                            PointType& parametric,
-                            bool& match) const
+                                const LocatorType& locator,
+                                viskores::Id& cellId,
+                                PointType& parametric,
+                                bool& match) const
   {
     viskores::Id calculated = CalculateCellId(pointIn);
     viskores::ErrorCode status = locator.FindCell(pointIn, cellId, parametric);
@@ -89,7 +89,8 @@ void TestTest()
 {
   viskores::cont::Invoker invoke;
 
-  viskores::cont::DataSet dataset = viskores::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
+  viskores::cont::DataSet dataset =
+    viskores::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
   viskores::cont::CoordinateSystem coords = dataset.GetCoordinateSystem();
   viskores::cont::UnknownCellSet cellSet = dataset.GetCellSet();
 

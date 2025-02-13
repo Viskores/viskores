@@ -107,8 +107,8 @@ private:
 
   template <std::size_t... I>
   VISKORES_EXEC_CONT void Set(viskores::Id valueIndex,
-                          const ValueType& value,
-                          viskoresstd::index_sequence<I...>) const
+                              const ValueType& value,
+                              viskoresstd::index_sequence<I...>) const
   {
     // Is there a better way to unpack an expression and execute them with no other side effects?
     (void)std::initializer_list<bool>{ this->SetComponent<I>(valueIndex, value)... };
@@ -135,9 +135,11 @@ class VISKORES_ALWAYS_EXPORT
 
 public:
   using ReadPortalType =
-    viskores::internal::ArrayPortalSOA<ValueType, viskores::internal::ArrayPortalBasicRead<ComponentType>>;
+    viskores::internal::ArrayPortalSOA<ValueType,
+                                       viskores::internal::ArrayPortalBasicRead<ComponentType>>;
   using WritePortalType =
-    viskores::internal::ArrayPortalSOA<ValueType, viskores::internal::ArrayPortalBasicWrite<ComponentType>>;
+    viskores::internal::ArrayPortalSOA<ValueType,
+                                       viskores::internal::ArrayPortalBasicWrite<ComponentType>>;
 
   VISKORES_CONT static std::vector<viskores::cont::internal::Buffer> CreateBuffers()
   {
@@ -150,14 +152,16 @@ public:
     return viskores::VecFlat<ComponentType>::NUM_COMPONENTS * NUM_COMPONENTS;
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     viskores::BufferSizeType numBytes =
       viskores::internal::NumberOfValuesToNumberOfBytes<ComponentType>(numValues);
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         ++componentIndex)
     {
       buffers[componentIndex].SetNumberOfBytes(numBytes, preserve, token);
     }
@@ -172,16 +176,17 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             const ValueType& fillValue,
-                             viskores::Id startIndex,
-                             viskores::Id endIndex,
-                             viskores::cont::Token& token)
+                                 const ValueType& fillValue,
+                                 viskores::Id startIndex,
+                                 viskores::Id endIndex,
+                                 viskores::cont::Token& token)
   {
     constexpr viskores::BufferSizeType sourceSize =
       static_cast<viskores::BufferSizeType>(sizeof(ComponentType));
     viskores::BufferSizeType startByte = startIndex * sourceSize;
     viskores::BufferSizeType endByte = endIndex * sourceSize;
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         ++componentIndex)
     {
       ComponentType source = fillValue[componentIndex];
       buffers[componentIndex].Fill(&source, sourceSize, startByte, endByte, token);
@@ -195,7 +200,8 @@ public:
   {
     viskores::Id numValues = GetNumberOfValues(buffers);
     ReadPortalType portal(numValues);
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         ++componentIndex)
     {
       VISKORES_ASSERT(buffers[0].GetNumberOfBytes() == buffers[componentIndex].GetNumberOfBytes());
       portal.SetPortal(componentIndex,
@@ -214,7 +220,8 @@ public:
   {
     viskores::Id numValues = GetNumberOfValues(buffers);
     WritePortalType portal(numValues);
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         ++componentIndex)
     {
       VISKORES_ASSERT(buffers[0].GetNumberOfBytes() == buffers[componentIndex].GetNumberOfBytes());
       portal.SetPortal(componentIndex,
@@ -252,12 +259,13 @@ class ArrayHandleSOA : public ArrayHandle<T, viskores::cont::StorageTagSOA>
   using ComponentType = typename viskores::VecTraits<T>::ComponentType;
   static constexpr viskores::IdComponent NUM_COMPONENTS = viskores::VecTraits<T>::NUM_COMPONENTS;
 
-  using ComponentArrayType = viskores::cont::ArrayHandle<ComponentType, viskores::cont::StorageTagBasic>;
+  using ComponentArrayType =
+    viskores::cont::ArrayHandle<ComponentType, viskores::cont::StorageTagBasic>;
 
 public:
   VISKORES_ARRAY_HANDLE_SUBCLASS(ArrayHandleSOA,
-                             (ArrayHandleSOA<T>),
-                             (ArrayHandle<T, viskores::cont::StorageTagSOA>));
+                                 (ArrayHandleSOA<T>),
+                                 (ArrayHandle<T, viskores::cont::StorageTagSOA>));
 
   ArrayHandleSOA(std::initializer_list<viskores::cont::internal::Buffer>&& componentBuffers)
     : Superclass(componentBuffers)
@@ -277,7 +285,8 @@ public:
   /// @endcode
   ArrayHandleSOA(const std::array<ComponentArrayType, NUM_COMPONENTS>& componentArrays)
   {
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         ++componentIndex)
     {
       this->SetArray(componentIndex, componentArrays[componentIndex]);
     }
@@ -297,7 +306,8 @@ public:
   ArrayHandleSOA(const std::vector<ComponentArrayType>& componentArrays)
   {
     VISKORES_ASSERT(componentArrays.size() == NUM_COMPONENTS);
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         ++componentIndex)
     {
       this->SetArray(componentIndex, componentArrays[componentIndex]);
     }
@@ -346,7 +356,8 @@ public:
     {
       // Note, std::vectors that come from std::initializer_list must be copied because the scope
       // of the objects in the initializer list disappears.
-      this->SetArray(componentIndex, viskores::cont::make_ArrayHandle(vector, viskores::CopyFlag::On));
+      this->SetArray(componentIndex,
+                     viskores::cont::make_ArrayHandle(vector, viskores::CopyFlag::On));
       ++componentIndex;
     }
   }
@@ -462,7 +473,8 @@ public:
   }
 
   /// @brief Get a basic array representing the component for the given index.
-  VISKORES_CONT viskores::cont::ArrayHandleBasic<ComponentType> GetArray(viskores::IdComponent index) const
+  VISKORES_CONT viskores::cont::ArrayHandleBasic<ComponentType> GetArray(
+    viskores::IdComponent index) const
   {
     return ComponentArrayType({ this->GetBuffers()[index] });
   }
@@ -496,8 +508,9 @@ using VecSizeFromRemaining =
 /// @endcode
 template <typename ValueType>
 VISKORES_CONT ArrayHandleSOA<ValueType> make_ArrayHandleSOA(
-  std::initializer_list<viskores::cont::ArrayHandle<typename viskores::VecTraits<ValueType>::ComponentType,
-                                                viskores::cont::StorageTagBasic>>&& componentArrays)
+  std::initializer_list<
+    viskores::cont::ArrayHandle<typename viskores::VecTraits<ValueType>::ComponentType,
+                                viskores::cont::StorageTagBasic>>&& componentArrays)
 {
   return ArrayHandleSOA<ValueType>(std::move(componentArrays));
 }
@@ -520,7 +533,8 @@ template <typename ComponentType, typename... RemainingArrays>
 VISKORES_CONT ArrayHandleSOA<
   viskores::Vec<ComponentType, internal::VecSizeFromRemaining<RemainingArrays...>::value>>
 make_ArrayHandleSOA(
-  const viskores::cont::ArrayHandle<ComponentType, viskores::cont::StorageTagBasic>& componentArray0,
+  const viskores::cont::ArrayHandle<ComponentType, viskores::cont::StorageTagBasic>&
+    componentArray0,
   const RemainingArrays&... componentArrays)
 {
   return { componentArray0, componentArrays... };
@@ -573,7 +587,7 @@ make_ArrayHandleSOA(viskores::CopyFlag copy,
   // Convert std::vector to ArrayHandle first so that it correctly handles a mix of rvalue args.
   return { viskores::cont::make_ArrayHandle(vector0, copy),
            viskores::cont::make_ArrayHandle(std::forward<RemainingVectors>(componentVectors),
-                                        copy)... };
+                                            copy)... };
 }
 
 /// @brief Create a `viskores::cont::ArrayHandleSOA` with a number of `std::vector`.
@@ -630,7 +644,8 @@ make_ArrayHandleSOAMove(std::vector<ComponentType>&& vector0,
                         RemainingVectors&&... componentVectors)
 {
   return { viskores::cont::make_ArrayHandleMove(std::move(vector0)),
-           viskores::cont::make_ArrayHandleMove(std::forward<RemainingVectors>(componentVectors))... };
+           viskores::cont::make_ArrayHandleMove(
+             std::forward<RemainingVectors>(componentVectors))... };
 }
 
 /// @brief Create a `viskores::cont::ArrayHandleSOA` with an initializer list of C arrays.
@@ -692,10 +707,10 @@ struct ArrayExtractComponentImpl<viskores::cont::StorageTagSOA>
   auto operator()(const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagSOA>& src,
                   viskores::IdComponent componentIndex,
                   viskores::CopyFlag allowCopy) const
-    -> decltype(
-      ArrayExtractComponentImpl<viskores::cont::StorageTagBasic>{}(viskores::cont::ArrayHandleBasic<T>{},
-                                                               componentIndex,
-                                                               allowCopy))
+    -> decltype(ArrayExtractComponentImpl<viskores::cont::StorageTagBasic>{}(
+      viskores::cont::ArrayHandleBasic<T>{},
+      componentIndex,
+      allowCopy))
   {
     using FirstLevelComponentType = typename viskores::VecTraits<T>::ComponentType;
     viskores::cont::ArrayHandleSOA<T> array(src);
@@ -749,11 +764,13 @@ template <typename ValueType>
 struct Serialization<viskores::cont::ArrayHandleSOA<ValueType>>
 {
   using BaseType = viskores::cont::ArrayHandle<ValueType, viskores::cont::StorageTagSOA>;
-  static constexpr viskores::IdComponent NUM_COMPONENTS = viskores::VecTraits<ValueType>::NUM_COMPONENTS;
+  static constexpr viskores::IdComponent NUM_COMPONENTS =
+    viskores::VecTraits<ValueType>::NUM_COMPONENTS;
 
   static VISKORES_CONT void save(BinaryBuffer& bb, const BaseType& obj)
   {
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         ++componentIndex)
     {
       viskoresdiy::save(bb, obj.GetBuffers()[componentIndex]);
     }
@@ -791,10 +808,13 @@ namespace viskores
 namespace cont
 {
 
-#define VISKORES_ARRAYHANDLE_SOA_EXPORT(Type)                                                         \
-  extern template class VISKORES_CONT_TEMPLATE_EXPORT ArrayHandle<viskores::Vec<Type, 2>, StorageTagSOA>; \
-  extern template class VISKORES_CONT_TEMPLATE_EXPORT ArrayHandle<viskores::Vec<Type, 3>, StorageTagSOA>; \
-  extern template class VISKORES_CONT_TEMPLATE_EXPORT ArrayHandle<viskores::Vec<Type, 4>, StorageTagSOA>;
+#define VISKORES_ARRAYHANDLE_SOA_EXPORT(Type)           \
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT   \
+    ArrayHandle<viskores::Vec<Type, 2>, StorageTagSOA>; \
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT   \
+    ArrayHandle<viskores::Vec<Type, 3>, StorageTagSOA>; \
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT   \
+    ArrayHandle<viskores::Vec<Type, 4>, StorageTagSOA>;
 
 VISKORES_ARRAYHANDLE_SOA_EXPORT(char)
 VISKORES_ARRAYHANDLE_SOA_EXPORT(viskores::Int8)

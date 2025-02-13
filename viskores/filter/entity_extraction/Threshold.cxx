@@ -113,7 +113,8 @@ VISKORES_CONT void Threshold::SetThresholdAbove(viskores::Float64 value)
   this->SetUpperThreshold(viskores::Infinity<viskores::Float64>());
 }
 
-VISKORES_CONT void Threshold::SetThresholdBetween(viskores::Float64 value1, viskores::Float64 value2)
+VISKORES_CONT void Threshold::SetThresholdBetween(viskores::Float64 value1,
+                                                  viskores::Float64 value2)
 {
   this->SetLowerThreshold(value1);
   this->SetUpperThreshold(value2);
@@ -130,7 +131,8 @@ viskores::cont::DataSet Threshold::DoExecute(const viskores::cont::DataSet& inpu
   viskores::worklet::Threshold worklet;
   viskores::cont::UnknownCellSet cellOut;
 
-  auto callWithArrayBaseComponent = [&](auto baseComp) {
+  auto callWithArrayBaseComponent = [&](auto baseComp)
+  {
     using ComponentType = decltype(baseComp);
     if (!field.GetData().IsBaseComponentType<ComponentType>())
     {

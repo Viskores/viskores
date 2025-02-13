@@ -41,8 +41,8 @@ struct CellLocatorChooserImpl<viskores::cont::CellSetStructured<3>, UniformArray
 
 using RectilinearArray =
   viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                          viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                          viskores::cont::ArrayHandle<viskores::FloatDefault>>;
+                                              viskores::cont::ArrayHandle<viskores::FloatDefault>,
+                                              viskores::cont::ArrayHandle<viskores::FloatDefault>>;
 
 template <>
 struct CellLocatorChooserImpl<viskores::cont::CellSetStructured<3>, RectilinearArray>
@@ -127,16 +127,17 @@ struct CastAndCallCellLocatorChooserFunctor
 /// Any additional args are passed to the functor.
 ///
 template <typename CellSetType, typename Functor, typename... Args>
-VISKORES_CONT void CastAndCallCellLocatorChooser(const CellSetType& cellSet,
-                                             const viskores::cont::CoordinateSystem& coordinateSystem,
-                                             Functor&& functor,
-                                             Args&&... args)
+VISKORES_CONT void CastAndCallCellLocatorChooser(
+  const CellSetType& cellSet,
+  const viskores::cont::CoordinateSystem& coordinateSystem,
+  Functor&& functor,
+  Args&&... args)
 {
   viskores::cont::CastAndCall(cellSet,
-                          detail::CastAndCallCellLocatorChooserFunctor{},
-                          coordinateSystem,
-                          std::forward<Functor>(functor),
-                          std::forward<Args>(args)...);
+                              detail::CastAndCallCellLocatorChooserFunctor{},
+                              coordinateSystem,
+                              std::forward<Functor>(functor),
+                              std::forward<Args>(args)...);
 }
 
 /// \brief Calls a functor with the appropriate type of `CellLocator`.
@@ -148,8 +149,8 @@ VISKORES_CONT void CastAndCallCellLocatorChooser(const CellSetType& cellSet,
 ///
 template <typename Functor, typename... Args>
 VISKORES_CONT void CastAndCallCellLocatorChooser(const viskores::cont::DataSet& dataSet,
-                                             Functor&& functor,
-                                             Args&&... args)
+                                                 Functor&& functor,
+                                                 Args&&... args)
 {
   CastAndCallCellLocatorChooser(dataSet.GetCellSet(),
                                 dataSet.GetCoordinateSystem(),

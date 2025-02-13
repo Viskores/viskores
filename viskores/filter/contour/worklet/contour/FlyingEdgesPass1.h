@@ -47,18 +47,18 @@ namespace flying_edges
 
 template <typename WholeEdgeField>
 inline VISKORES_EXEC void write_edge(SumXAxis,
-                                 viskores::Id write_index,
-                                 WholeEdgeField& edges,
-                                 viskores::UInt8 edgeCase)
+                                     viskores::Id write_index,
+                                     WholeEdgeField& edges,
+                                     viskores::UInt8 edgeCase)
 {
   edges.Set(write_index, edgeCase);
 }
 
 template <typename WholeEdgeField>
 inline VISKORES_EXEC void write_edge(SumYAxis,
-                                 viskores::Id write_index,
-                                 WholeEdgeField& edges,
-                                 viskores::UInt8 edgeCase)
+                                     viskores::Id write_index,
+                                     WholeEdgeField& edges,
+                                     viskores::UInt8 edgeCase)
 {
   if (edgeCase != FlyingEdges3D::Below)
   {
@@ -93,12 +93,12 @@ struct ComputePass1 : public viskores::worklet::WorkletVisitPointsWithCells
             typename WholeDataField,
             typename Device>
   VISKORES_EXEC void operator()(const ThreadIndices& threadIndices,
-                            viskores::Id3& axis_sum,
-                            viskores::Id& axis_min,
-                            viskores::Id& axis_max,
-                            WholeEdgeField& edges,
-                            const WholeDataField& field,
-                            Device) const
+                                viskores::Id3& axis_sum,
+                                viskores::Id& axis_min,
+                                viskores::Id& axis_max,
+                                WholeEdgeField& edges,
+                                const WholeDataField& field,
+                                Device) const
   {
     using AxisToSum = typename select_AxisToSum<Device>::type;
 
@@ -162,11 +162,11 @@ struct launchComputePass1
             typename StorageTagField,
             typename... Args>
   VISKORES_CONT bool operator()(DeviceAdapterTag device,
-                            const ComputePass1<IVType>& worklet,
-                            const viskores::cont::ArrayHandle<T, StorageTagField>& inputField,
-                            viskores::cont::ArrayHandle<viskores::UInt8>& edgeCases,
-                            viskores::cont::CellSetStructured<2>& metaDataMesh2D,
-                            Args&&... args) const
+                                const ComputePass1<IVType>& worklet,
+                                const viskores::cont::ArrayHandle<T, StorageTagField>& inputField,
+                                viskores::cont::ArrayHandle<viskores::UInt8>& edgeCases,
+                                viskores::cont::CellSetStructured<2>& metaDataMesh2D,
+                                Args&&... args) const
   {
     using AxisToSum = typename select_AxisToSum<DeviceAdapterTag>::type;
 

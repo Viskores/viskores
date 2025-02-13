@@ -14,8 +14,8 @@
 namespace
 {
 VISKORES_CONT bool DoMapField(viskores::cont::DataSet& result,
-                          const viskores::cont::Field& field,
-                          const viskores::worklet::Mask& worklet)
+                              const viskores::cont::Field& field,
+                              const viskores::worklet::Mask& worklet)
 {
   if (field.IsPointField() || field.IsWholeDataSetField())
   {

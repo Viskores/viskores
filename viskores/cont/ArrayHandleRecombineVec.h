@@ -44,7 +44,8 @@ public:
 
   RecombineVec(const RecombineVec&) = default;
 
-  VISKORES_EXEC_CONT RecombineVec(const viskores::VecCConst<PortalType>& portals, viskores::Id index)
+  VISKORES_EXEC_CONT RecombineVec(const viskores::VecCConst<PortalType>& portals,
+                                  viskores::Id index)
     : Portals(portals)
     , Index(index)
   {
@@ -56,10 +57,11 @@ public:
   }
 
   VISKORES_EXEC_CONT
-  viskores::internal::ArrayPortalValueReference<PortalType> operator[](viskores::IdComponent cIndex) const
+  viskores::internal::ArrayPortalValueReference<PortalType> operator[](
+    viskores::IdComponent cIndex) const
   {
     return viskores::internal::ArrayPortalValueReference<PortalType>(this->Portals[cIndex],
-                                                                 this->Index);
+                                                                     this->Index);
   }
 
   template <typename T, viskores::IdComponent DestSize>
@@ -291,14 +293,15 @@ struct VecTraits<viskores::internal::RecombineVec<PortalType>>
   }
 
   VISKORES_EXEC_CONT static void SetComponent(const VecType& vector,
-                                          viskores::IdComponent componentIndex,
-                                          const ComponentType& component)
+                                              viskores::IdComponent componentIndex,
+                                              const ComponentType& component)
   {
     vector[componentIndex] = component;
   }
 
   template <viskores::IdComponent destSize>
-  VISKORES_EXEC_CONT static void CopyInto(const VecType& src, viskores::Vec<ComponentType, destSize>& dest)
+  VISKORES_EXEC_CONT static void CopyInto(const VecType& src,
+                                          viskores::Vec<ComponentType, destSize>& dest)
   {
     src.CopyInto(dest);
   }
@@ -327,7 +330,10 @@ public:
   {
   }
 
-  VISKORES_EXEC_CONT viskores::Id GetNumberOfValues() const { return this->Portals[0].GetNumberOfValues(); }
+  VISKORES_EXEC_CONT viskores::Id GetNumberOfValues() const
+  {
+    return this->Portals[0].GetNumberOfValues();
+  }
 
   VISKORES_EXEC_CONT ValueType Get(viskores::Id index) const
   {
@@ -419,7 +425,8 @@ class Storage<viskores::internal::RecombineVec<ReadWritePortal>,
               viskores::cont::internal::StorageTagRecombineVec>
 {
   using ComponentType = typename ReadWritePortal::ValueType;
-  using SourceStorage = viskores::cont::internal::Storage<ComponentType, viskores::cont::StorageTagStride>;
+  using SourceStorage =
+    viskores::cont::internal::Storage<ComponentType, viskores::cont::StorageTagStride>;
   using ArrayType = viskores::cont::ArrayHandle<ComponentType, viskores::cont::StorageTagStride>;
 
   VISKORES_STATIC_ASSERT(
@@ -462,10 +469,11 @@ public:
     return SourceStorage::GetNumberOfValues(BuffersForComponent(buffers, 0));
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     viskores::IdComponent numComponents = GetNumberOfComponents(buffers);
     for (viskores::IdComponent component = 0; component < numComponents; ++component)
@@ -476,10 +484,10 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>&,
-                             const viskores::internal::RecombineVec<ReadWritePortal>&,
-                             viskores::Id,
-                             viskores::Id,
-                             viskores::cont::Token&)
+                                 const viskores::internal::RecombineVec<ReadWritePortal>&,
+                                 viskores::Id,
+                                 viskores::Id,
+                                 viskores::cont::Token&)
   {
     throw viskores::cont::ErrorBadType("Fill not supported for ArrayHandleRecombineVec.");
   }
@@ -575,7 +583,7 @@ public:
   }
 
   VISKORES_CONT static void AppendComponent(std::vector<viskores::cont::internal::Buffer>& buffers,
-                                        const ArrayType& array)
+                                            const ArrayType& array)
   {
     // Add buffers of new array to our list of buffers.
     buffers.insert(buffers.end(), array.GetBuffers().begin(), array.GetBuffers().end());
@@ -609,14 +617,14 @@ public:
 template <typename ComponentType>
 class ArrayHandleRecombineVec
   : public viskores::cont::ArrayHandle<internal::detail::RecombinedValueType<ComponentType>,
-                                   viskores::cont::internal::StorageTagRecombineVec>
+                                       viskores::cont::internal::StorageTagRecombineVec>
 {
 public:
   VISKORES_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleRecombineVec,
     (ArrayHandleRecombineVec<ComponentType>),
     (viskores::cont::ArrayHandle<internal::detail::RecombinedValueType<ComponentType>,
-                             viskores::cont::internal::StorageTagRecombineVec>));
+                                 viskores::cont::internal::StorageTagRecombineVec>));
 
   /// @brief Return the number of components in each value of the array.
   ///
@@ -664,13 +672,15 @@ struct ArrayExtractComponentImpl<viskores::cont::internal::StorageTagRecombineVe
   viskores::cont::ArrayHandleStride<
     typename viskores::VecFlat<typename RecombineVec::ComponentType>::ComponentType>
   operator()(
-    const viskores::cont::ArrayHandle<RecombineVec, viskores::cont::internal::StorageTagRecombineVec>& src,
+    const viskores::cont::ArrayHandle<RecombineVec,
+                                      viskores::cont::internal::StorageTagRecombineVec>& src,
     viskores::IdComponent componentIndex,
     viskores::CopyFlag allowCopy) const
   {
     using ComponentType = typename RecombineVec::ComponentType;
     viskores::cont::ArrayHandleRecombineVec<ComponentType> array(src);
-    constexpr viskores::IdComponent subComponents = viskores::VecFlat<ComponentType>::NUM_COMPONENTS;
+    constexpr viskores::IdComponent subComponents =
+      viskores::VecFlat<ComponentType>::NUM_COMPONENTS;
     return viskores::cont::ArrayExtractComponent(
       array.GetComponentArray(componentIndex / subComponents),
       componentIndex % subComponents,
@@ -712,15 +722,14 @@ struct VISKORES_CONT_EXPORT ArrayRangeComputeImpl<viskores::cont::internal::Stor
 {
   template <typename RecombineVecType>
   VISKORES_CONT viskores::cont::ArrayHandle<viskores::Range> operator()(
-    const viskores::cont::ArrayHandle<RecombineVecType, viskores::cont::internal::StorageTagRecombineVec>&
-      input_,
+    const viskores::cont::ArrayHandle<RecombineVecType,
+                                      viskores::cont::internal::StorageTagRecombineVec>& input_,
     const viskores::cont::ArrayHandle<viskores::UInt8>& maskArray,
     bool computeFiniteRange,
     viskores::cont::DeviceAdapterId device) const
   {
-    auto input =
-      static_cast<viskores::cont::ArrayHandleRecombineVec<typename RecombineVecType::ComponentType>>(
-        input_);
+    auto input = static_cast<
+      viskores::cont::ArrayHandleRecombineVec<typename RecombineVecType::ComponentType>>(input_);
 
     viskores::cont::ArrayHandle<viskores::Range> result;
     result.Allocate(input.GetNumberOfComponents());
@@ -754,19 +763,19 @@ struct ArrayValueIsNested<
 };
 
 template <>
-struct VISKORES_CONT_EXPORT ArrayRangeComputeMagnitudeImpl<viskores::cont::internal::StorageTagRecombineVec>
+struct VISKORES_CONT_EXPORT
+  ArrayRangeComputeMagnitudeImpl<viskores::cont::internal::StorageTagRecombineVec>
 {
   template <typename RecombineVecType>
   VISKORES_CONT viskores::Range operator()(
-    const viskores::cont::ArrayHandle<RecombineVecType, viskores::cont::internal::StorageTagRecombineVec>&
-      input_,
+    const viskores::cont::ArrayHandle<RecombineVecType,
+                                      viskores::cont::internal::StorageTagRecombineVec>& input_,
     const viskores::cont::ArrayHandle<viskores::UInt8>& maskArray,
     bool computeFiniteRange,
     viskores::cont::DeviceAdapterId device) const
   {
-    auto input =
-      static_cast<viskores::cont::ArrayHandleRecombineVec<typename RecombineVecType::ComponentType>>(
-        input_);
+    auto input = static_cast<
+      viskores::cont::ArrayHandleRecombineVec<typename RecombineVecType::ComponentType>>(input_);
 
     if (input.GetNumberOfValues() < 1)
     {

@@ -48,12 +48,12 @@ struct ComputePass2 : public viskores::worklet::WorkletVisitCellsWithPoints
             typename WholeEdgeField,
             typename Device>
   VISKORES_EXEC void operator()(const ThreadIndices& threadIndices,
-                            const WholeSumField& axis_sums,
-                            const FieldInPointId& axis_mins,
-                            const FieldInPointId& axis_maxs,
-                            viskores::Int32& cell_tri_count,
-                            const WholeEdgeField& edges,
-                            Device) const
+                                const WholeSumField& axis_sums,
+                                const FieldInPointId& axis_mins,
+                                const FieldInPointId& axis_maxs,
+                                viskores::Int32& cell_tri_count,
+                                const WholeEdgeField& edges,
+                                Device) const
   {
     using AxisToSum = typename select_AxisToSum<Device>::type;
 
@@ -139,11 +139,11 @@ struct ComputePass2 : public viskores::worklet::WorkletVisitCellsWithPoints
   // as it is safe as those
   template <typename AxisToSum>
   VISKORES_EXEC inline void CountBoundaryEdgeUses(AxisToSum,
-                                              viskores::Vec<bool, 3> onBoundary,
-                                              viskores::UInt8 const* const edgeUses,
-                                              viskores::Id3& sums,
-                                              viskores::Id3& adj_row_sum,
-                                              viskores::Id3& adj_col_sum) const
+                                                  viskores::Vec<bool, 3> onBoundary,
+                                                  viskores::UInt8 const* const edgeUses,
+                                                  viskores::Id3& sums,
+                                                  viskores::Id3& adj_row_sum,
+                                                  viskores::Id3& adj_col_sum) const
   {
     if (onBoundary[AxisToSum::xindex]) //+x boundary
     {

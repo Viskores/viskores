@@ -24,13 +24,13 @@ namespace
 void AppendOptionDescriptors(std::vector<option::Descriptor>& usage,
                              const bool& useOptionIndex = true)
 {
-  usage.push_back(
-    { useOptionIndex ? static_cast<uint32_t>(option::OptionIndex::NUM_THREADS) : 0,
-      0,
-      "",
-      "viskores-num-threads",
-      option::ViskoresArg::Required,
-      "  --viskores-num-threads <dev> \tSets the number of threads to use for the selected device" });
+  usage.push_back({ useOptionIndex ? static_cast<uint32_t>(option::OptionIndex::NUM_THREADS) : 0,
+                    0,
+                    "",
+                    "viskores-num-threads",
+                    option::ViskoresArg::Required,
+                    "  --viskores-num-threads <dev> \tSets the number of threads to use for the "
+                    "selected device" });
   usage.push_back({ useOptionIndex ? static_cast<uint32_t>(option::OptionIndex::NUMA_REGIONS) : 1,
                     0,
                     "",
@@ -50,9 +50,10 @@ void AppendOptionDescriptors(std::vector<option::Descriptor>& usage,
 } // anonymous namespace
 
 RuntimeDeviceConfigurationOptions::RuntimeDeviceConfigurationOptions(const bool& useOptionIndex)
-  : ViskoresNumThreads(useOptionIndex ? option::OptionIndex::NUM_THREADS : 0, "VISKORES_NUM_THREADS")
+  : ViskoresNumThreads(useOptionIndex ? option::OptionIndex::NUM_THREADS : 0,
+                       "VISKORES_NUM_THREADS")
   , ViskoresDeviceInstance(useOptionIndex ? option::OptionIndex::DEVICE_INSTANCE : 2,
-                       "VISKORES_DEVICE_INSTANCE")
+                           "VISKORES_DEVICE_INSTANCE")
   , Initialized(false)
 {
 }
@@ -75,7 +76,8 @@ RuntimeDeviceConfigurationOptions::RuntimeDeviceConfigurationOptions(int& argc, 
 {
   std::vector<option::Descriptor> usage;
   AppendOptionDescriptors(usage, false);
-  usage.push_back({ option::OptionIndex::UNKNOWN, 0, "", "", option::ViskoresArg::UnknownOption, "" });
+  usage.push_back(
+    { option::OptionIndex::UNKNOWN, 0, "", "", option::ViskoresArg::UnknownOption, "" });
   usage.push_back({ 0, 0, 0, 0, 0, 0 });
 
   option::Stats stats(usage.data(), argc, argv);

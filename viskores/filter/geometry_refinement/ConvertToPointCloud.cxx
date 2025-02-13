@@ -35,7 +35,8 @@ viskores::cont::DataSet ConvertToPointCloud::DoExecute(const viskores::cont::Dat
   viskores::cont::CellSetSingleType<> cellSet;
   cellSet.Fill(numPoints, viskores::CELL_SHAPE_VERTEX, 1, connectivity);
 
-  auto fieldMapper = [&](viskores::cont::DataSet& outData, viskores::cont::Field& field) {
+  auto fieldMapper = [&](viskores::cont::DataSet& outData, viskores::cont::Field& field)
+  {
     if (field.IsCellField())
     {
       // Cell fields are dropped.

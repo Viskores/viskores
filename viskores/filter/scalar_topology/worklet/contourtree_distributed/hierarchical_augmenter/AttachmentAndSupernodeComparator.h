@@ -103,13 +103,17 @@ public:
   bool operator()(const viskores::Id& left, const viskores::Id& right) const
   { // operator()
     // first comparison is on superparent WITHOUT ascending descending flag
-    if (viskores::worklet::contourtree_augmented::MaskedIndex(this->SuperparentSetPortal.Get(left)) <
-        viskores::worklet::contourtree_augmented::MaskedIndex(this->SuperparentSetPortal.Get(right)))
+    if (viskores::worklet::contourtree_augmented::MaskedIndex(
+          this->SuperparentSetPortal.Get(left)) <
+        viskores::worklet::contourtree_augmented::MaskedIndex(
+          this->SuperparentSetPortal.Get(right)))
     {
       return true;
     }
-    if (viskores::worklet::contourtree_augmented::MaskedIndex(this->SuperparentSetPortal.Get(left)) >
-        viskores::worklet::contourtree_augmented::MaskedIndex(this->SuperparentSetPortal.Get(right)))
+    if (viskores::worklet::contourtree_augmented::MaskedIndex(
+          this->SuperparentSetPortal.Get(left)) >
+        viskores::worklet::contourtree_augmented::MaskedIndex(
+          this->SuperparentSetPortal.Get(right)))
     {
       return false;
     }

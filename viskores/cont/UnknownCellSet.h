@@ -83,7 +83,10 @@ public:
   /// \brief Returns a pointer to the `CellSet` base class.
   ///
   VISKORES_CONT viskores::cont::CellSet* GetCellSetBase() { return this->Container.get(); }
-  VISKORES_CONT const viskores::cont::CellSet* GetCellSetBase() const { return this->Container.get(); }
+  VISKORES_CONT const viskores::cont::CellSet* GetCellSetBase() const
+  {
+    return this->Container.get();
+  }
 
   /// \brief Create a new cell set of the same type as this cell set.
   ///
@@ -249,7 +252,7 @@ namespace internal
 {
 
 VISKORES_CONT_EXPORT void ThrowCastAndCallException(const viskores::cont::UnknownCellSet&,
-                                                const std::type_info&);
+                                                    const std::type_info&);
 
 template <>
 struct DynamicTransformTraits<viskores::cont::UnknownCellSet>
@@ -265,7 +268,8 @@ VISKORES_CONT void UnknownCellSet::CastAndCallForTypes(Functor&& functor, Args&&
   VISKORES_IS_LIST(CellSetList);
   bool called = false;
   viskores::ListForEach(
-    [&](auto cellSet) {
+    [&](auto cellSet)
+    {
       if (!called && this->CanConvert<decltype(cellSet)>())
       {
         called = true;
@@ -295,7 +299,7 @@ template <typename Functor, typename... Args>
 void CastAndCall(const viskores::cont::UnknownCellSet& cellSet, Functor&& f, Args&&... args)
 {
   cellSet.CastAndCallForTypes<VISKORES_DEFAULT_CELL_SET_LIST>(std::forward<Functor>(f),
-                                                          std::forward<Args>(args)...);
+                                                              std::forward<Args>(args)...);
 }
 
 namespace internal
@@ -310,9 +314,9 @@ using UnknownCellSetCheck = typename std::is_base_of<viskores::cont::UnknownCell
 #define VISKORES_IS_UNKNOWN_CELL_SET(T) \
   VISKORES_STATIC_ASSERT(::viskores::cont::internal::UnknownCellSetCheck<T>::value)
 
-#define VISKORES_IS_KNOWN_OR_UNKNOWN_CELL_SET(T)                                 \
+#define VISKORES_IS_KNOWN_OR_UNKNOWN_CELL_SET(T)                                     \
   VISKORES_STATIC_ASSERT(::viskores::cont::internal::CellSetCheck<T>::type::value || \
-                     ::viskores::cont::internal::UnknownCellSetCheck<T>::value)
+                         ::viskores::cont::internal::UnknownCellSetCheck<T>::value)
 
 } // namespace internal
 

@@ -36,7 +36,10 @@ class VISKORES_FILTER_CONTOUR_EXPORT Contour : public viskores::filter::contour:
 {
 public:
   VISKORES_DEPRECATED(2.1, "Use SetComputeFastNormals.")
-  VISKORES_CONT void SetComputeFastNormalsForStructured(bool on) { this->SetComputeFastNormals(on); }
+  VISKORES_CONT void SetComputeFastNormalsForStructured(bool on)
+  {
+    this->SetComputeFastNormals(on);
+  }
   VISKORES_DEPRECATED(2.1, "Use GetComputeFastNormals.")
   VISKORES_CONT bool GetComputeFastNormalsForStructured() const
   {
@@ -44,7 +47,10 @@ public:
   }
 
   VISKORES_DEPRECATED(2.1, "Use SetComputeFastNormals.")
-  VISKORES_CONT void SetComputeFastNormalsForUnstructured(bool on) { this->SetComputeFastNormals(on); }
+  VISKORES_CONT void SetComputeFastNormalsForUnstructured(bool on)
+  {
+    this->SetComputeFastNormals(on);
+  }
   VISKORES_DEPRECATED(2.1, "Use GetComputeFastNormals.")
   VISKORES_CONT bool GetComputeFastNormalsForUnstructured() const
   {

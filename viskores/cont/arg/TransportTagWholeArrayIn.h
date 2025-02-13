@@ -59,10 +59,10 @@ struct Transport<viskores::cont::arg::TransportTagWholeArrayIn, ContObjectType, 
 
   template <typename InputDomainType>
   VISKORES_CONT ExecObjectType operator()(ContObjectType& array,
-                                      const InputDomainType&,
-                                      viskores::Id,
-                                      viskores::Id,
-                                      viskores::cont::Token& token) const
+                                          const InputDomainType&,
+                                          viskores::Id,
+                                          viskores::Id,
+                                          viskores::cont::Token& token) const
   {
     // Note: we ignore the size of the domain because the randomly accessed
     // array might not have the same size depending on how the user is using

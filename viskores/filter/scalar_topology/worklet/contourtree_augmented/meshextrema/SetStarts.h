@@ -82,8 +82,8 @@ public:
 
   template <typename MeshStructureType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& sortIndex,
-                            const MeshStructureType& meshStructure,
-                            const OutFieldPortalType& meshExtrema) const
+                                const MeshStructureType& meshStructure,
+                                const OutFieldPortalType& meshExtrema) const
   {
     meshExtrema.Set(sortIndex, meshStructure.GetExtremalNeighbour(sortIndex));
 

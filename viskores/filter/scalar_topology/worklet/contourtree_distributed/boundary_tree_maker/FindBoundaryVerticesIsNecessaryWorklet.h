@@ -84,7 +84,7 @@ public:
 
   template <typename MeshBoundaryExecType>
   VISKORES_EXEC bool operator()(const viskores::Id& node,
-                            const MeshBoundaryExecType& meshBoundaryExec) const
+                                const MeshBoundaryExecType& meshBoundaryExec) const
   {
     return meshBoundaryExec.IsNecessary(node);
   }

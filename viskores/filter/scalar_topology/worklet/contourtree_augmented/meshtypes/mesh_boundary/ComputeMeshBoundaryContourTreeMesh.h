@@ -83,8 +83,8 @@ public:
 
   template <typename MeshBoundaryType>
   VISKORES_EXEC void operator()(const viskores::Id& nodeIndex,
-                            const MeshBoundaryType& meshBoundary,
-                            bool& isOnBoundary) const
+                                const MeshBoundaryType& meshBoundary,
+                                bool& isOnBoundary) const
   {
     isOnBoundary = meshBoundary.LiesOnBoundary(nodeIndex);
     /*

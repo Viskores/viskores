@@ -86,11 +86,11 @@ public:
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const InOutFieldPortalType& treeArcsPortal,
-                            const viskores::Id node,
-                            const InFieldPortalType& nodesPortal,
-                            const InFieldPortalType& treeSuperparentsPortal,
-                            const InFieldPortalType& treeSuperarcsPortal,
-                            const InFieldPortalType& treeSupernodesPortal) const
+                                const viskores::Id node,
+                                const InFieldPortalType& nodesPortal,
+                                const InFieldPortalType& treeSuperparentsPortal,
+                                const InFieldPortalType& treeSuperarcsPortal,
+                                const InFieldPortalType& treeSupernodesPortal) const
   {
     // per node
     viskores::Id nodeID = nodesPortal.Get(node);

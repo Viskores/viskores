@@ -58,16 +58,17 @@ RuntimeDeviceConfigReturnCode GetArgFromList(const std::vector<std::string>& arg
   }
   catch (const std::invalid_argument&)
   {
-    VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-               "Unable to get arg " + argName +
-                 "from kokkos argList, invalid argument thrown... This shouldn't have happened");
+    VISKORES_LOG_S(
+      viskores::cont::LogLevel::Error,
+      "Unable to get arg " + argName +
+        "from kokkos argList, invalid argument thrown... This shouldn't have happened");
     return RuntimeDeviceConfigReturnCode::INVALID_VALUE;
   }
   catch (const std::out_of_range&)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-               "Unable to get arg " + argName +
-                 "from kokkos argList, out of range thrown... This shouldn't have happened");
+                   "Unable to get arg " + argName +
+                     "from kokkos argList, out of range thrown... This shouldn't have happened");
     return RuntimeDeviceConfigReturnCode::INVALID_VALUE;
   }
   return RuntimeDeviceConfigReturnCode::NOT_APPLIED;
@@ -85,7 +86,8 @@ public:
     return viskores::cont::DeviceAdapterTagKokkos{};
   }
 
-  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const viskores::Id& value) override final
+  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(
+    const viskores::Id& value) override final
   {
     if (Kokkos::is_initialized())
     {
@@ -104,9 +106,10 @@ public:
   {
     if (Kokkos::is_initialized())
     {
-      VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                 "SetDeviceInstance was called but Kokkos was already initailized! Updates will "
-                 "not be applied.");
+      VISKORES_LOG_S(
+        viskores::cont::LogLevel::Warn,
+        "SetDeviceInstance was called but Kokkos was already initailized! Updates will "
+        "not be applied.");
       return RuntimeDeviceConfigReturnCode::NOT_APPLIED;
     }
     this->KokkosArguments.insert(this->KokkosArguments.begin(),
@@ -114,7 +117,8 @@ public:
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(viskores::Id& value) const override final
+  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(
+    viskores::Id& value) const override final
   {
     return GetArgFromList(this->KokkosArguments, "--kokkos-num-threads", value);
   }

@@ -27,7 +27,9 @@ void Define()
   ////
   //// BEGIN-EXAMPLE DefineTuple
   ////
-  viskores::Tuple<viskores::Id, viskores::Vec3f, viskores::cont::ArrayHandle<viskores::Int32>> myTuple;
+  viskores::
+    Tuple<viskores::Id, viskores::Vec3f, viskores::cont::ArrayHandle<viskores::Int32>>
+      myTuple;
   ////
   //// END-EXAMPLE DefineTuple
   ////
@@ -42,8 +44,9 @@ void Init()
   //// BEGIN-EXAMPLE InitTuple
   ////
   // Initialize a tuple with 0, [0, 1, 2], and an existing ArrayHandle.
-  viskores::Tuple<viskores::Id, viskores::Vec3f, viskores::cont::ArrayHandle<viskores::Float32>> myTuple1(
-    0, viskores::Vec3f(0, 1, 2), array);
+  viskores::
+    Tuple<viskores::Id, viskores::Vec3f, viskores::cont::ArrayHandle<viskores::Float32>>
+      myTuple1(0, viskores::Vec3f(0, 1, 2), array);
 
   // Another way to create the same tuple.
   auto myTuple2 = viskores::MakeTuple(viskores::Id(0), viskores::Vec3f(0, 1, 2), array);
@@ -285,7 +288,8 @@ void Apply()
   VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE);
   for (viskores::Id i = 0; i < ARRAY_SIZE; ++i)
   {
-    VISKORES_TEST_ASSERT(test_equal(portal.Get(i), 2 * TestValue(i, viskores::Float32{})));
+    VISKORES_TEST_ASSERT(
+      test_equal(portal.Get(i), 2 * TestValue(i, viskores::Float32{})));
   }
 }
 
@@ -295,10 +299,10 @@ void Apply()
 struct ScanArrayLengthFunctor
 {
   template<viskores::IdComponent N, typename Array, typename... Remaining>
-  viskores::Vec<viskores::Id, N + 1 + viskores::IdComponent(sizeof...(Remaining))> operator()(
-    const viskores::Vec<viskores::Id, N>& partialResult,
-    const Array& nextArray,
-    const Remaining&... remainingArrays) const
+  viskores::Vec<viskores::Id, N + 1 + viskores::IdComponent(sizeof...(Remaining))>
+  operator()(const viskores::Vec<viskores::Id, N>& partialResult,
+             const Array& nextArray,
+             const Remaining&... remainingArrays) const
   {
     viskores::Vec<viskores::Id, N + 1> nextResult;
     std::copy(&partialResult[0], &partialResult[0] + N, &nextResult[0]);
@@ -307,7 +311,8 @@ struct ScanArrayLengthFunctor
   }
 
   template<viskores::IdComponent N>
-  viskores::Vec<viskores::Id, N> operator()(const viskores::Vec<viskores::Id, N>& result) const
+  viskores::Vec<viskores::Id, N> operator()(
+    const viskores::Vec<viskores::Id, N>& result) const
   {
     return result;
   }
@@ -330,8 +335,8 @@ void ApplyExtraArgs()
   //// RESUME-EXAMPLE
   auto arrayTuple = viskores::MakeTuple(array1, array2, array3);
 
-  viskores::Vec<viskores::Id, 4> sizeScan =
-    viskores::Apply(arrayTuple, ScanArrayLengthFunctor{}, viskores::Vec<viskores::Id, 1>{ 0 });
+  viskores::Vec<viskores::Id, 4> sizeScan = viskores::Apply(
+    arrayTuple, ScanArrayLengthFunctor{}, viskores::Vec<viskores::Id, 1>{ 0 });
   ////
   //// END-EXAMPLE TupleApplyExtraArgs
   ////

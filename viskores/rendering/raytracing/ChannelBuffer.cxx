@@ -163,8 +163,8 @@ public:
   using ExecutionSignature = void(_1, _2, _3);
   template <typename T, typename BufferPortalType>
   VISKORES_EXEC void operator()(T& outValue,
-                            const BufferPortalType& inBuffer,
-                            const viskores::Id& index) const
+                                const BufferPortalType& inBuffer,
+                                const viskores::Id& index) const
   {
     viskores::Id valueIndex = index * NumChannels + ChannelNum;
     BOUNDS_CHECK(inBuffer, valueIndex);
@@ -209,9 +209,9 @@ public:
   using ExecutionSignature = void(_1, _2, _3, WorkIndex);
   template <typename T, typename IndexPortalType, typename BufferPortalType>
   VISKORES_EXEC void operator()(const T& inValue,
-                            const IndexPortalType& sparseIndexes,
-                            BufferPortalType& outBuffer,
-                            const viskores::Id& index) const
+                                const IndexPortalType& sparseIndexes,
+                                BufferPortalType& outBuffer,
+                                const viskores::Id& index) const
   {
     viskores::Id sparse = index / NumChannels;
     BOUNDS_CHECK(sparseIndexes, sparse);

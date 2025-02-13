@@ -110,7 +110,7 @@ inline void InteriorForest::PrintContent(std::ostream& outStream) const
 {
   // Per Supernode Arrays
   viskores::worklet::contourtree_augmented::PrintHeader(this->IsNecessary.GetNumberOfValues(),
-                                                    outStream);
+                                                        outStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "IsNecessary", this->IsNecessary, -1, outStream);
   viskores::worklet::contourtree_augmented::PrintIndices("Above", this->Above, -1, outStream);

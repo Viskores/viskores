@@ -36,7 +36,8 @@ VISKORES_CONT Pathline::TerminationType Pathline::GetTermination(
   return Pathline::TerminationType(this->NumberOfSteps);
 }
 
-VISKORES_CONT Pathline::AnalysisType Pathline::GetAnalysis(const viskores::cont::DataSet& dataset) const
+VISKORES_CONT Pathline::AnalysisType Pathline::GetAnalysis(
+  const viskores::cont::DataSet& dataset) const
 {
   // dataset not used
   (void)dataset;

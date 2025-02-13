@@ -120,8 +120,10 @@ void VTKPolyDataReader::Read()
       shapesBuffer.end(), static_cast<std::size_t>(cellNumIndices.GetNumberOfValues()), shape);
   }
 
-  viskores::cont::ArrayHandle<viskores::Id> connectivity = ConcatinateArrayHandles(connectivityArrays);
-  viskores::cont::ArrayHandle<viskores::IdComponent> numIndices = ConcatinateArrayHandles(numIndicesArrays);
+  viskores::cont::ArrayHandle<viskores::Id> connectivity =
+    ConcatinateArrayHandles(connectivityArrays);
+  viskores::cont::ArrayHandle<viskores::IdComponent> numIndices =
+    ConcatinateArrayHandles(numIndicesArrays);
   viskores::cont::ArrayHandle<viskores::UInt8> shapes;
   shapes.Allocate(static_cast<viskores::Id>(shapesBuffer.size()));
   std::copy(shapesBuffer.begin(),

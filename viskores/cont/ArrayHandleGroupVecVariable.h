@@ -145,16 +145,16 @@ class Storage<viskores::VecFromPortal<ComponentsPortal>,
     const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     Info info = buffers[0].GetMetaData<Info>();
-    return std::vector<viskores::cont::internal::Buffer>(buffers.begin() + 1,
-                                                     buffers.begin() + info.OffsetsBuffersOffset);
+    return std::vector<viskores::cont::internal::Buffer>(
+      buffers.begin() + 1, buffers.begin() + info.OffsetsBuffersOffset);
   }
 
   VISKORES_CONT static std::vector<viskores::cont::internal::Buffer> OffsetsBuffers(
     const std::vector<viskores::cont::internal::Buffer> buffers)
   {
     Info info = buffers[0].GetMetaData<Info>();
-    return std::vector<viskores::cont::internal::Buffer>(buffers.begin() + info.OffsetsBuffersOffset,
-                                                     buffers.end());
+    return std::vector<viskores::cont::internal::Buffer>(
+      buffers.begin() + info.OffsetsBuffersOffset, buffers.end());
   }
 
 public:
@@ -162,10 +162,10 @@ public:
 
   using ReadPortalType =
     viskores::internal::ArrayPortalGroupVecVariable<typename ComponentsStorage::ReadPortalType,
-                                                typename OffsetsStorage::ReadPortalType>;
+                                                    typename OffsetsStorage::ReadPortalType>;
   using WritePortalType =
     viskores::internal::ArrayPortalGroupVecVariable<typename ComponentsStorage::WritePortalType,
-                                                typename OffsetsStorage::ReadPortalType>;
+                                                    typename OffsetsStorage::ReadPortalType>;
 
   VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlat(
     const std::vector<viskores::cont::internal::Buffer>&)
@@ -181,10 +181,10 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>&,
-                             const viskores::VecFromPortal<ComponentsPortal>&,
-                             viskores::Id,
-                             viskores::Id,
-                             viskores::cont::Token&)
+                                 const viskores::VecFromPortal<ComponentsPortal>&,
+                                 viskores::Id,
+                                 viskores::Id,
+                                 viskores::cont::Token&)
   {
     throw viskores::cont::ErrorBadType("Fill not supported for ArrayHandleGroupVecVariable.");
   }
@@ -272,7 +272,7 @@ class ArrayHandleGroupVecVariable
   : public viskores::cont::ArrayHandle<
       viskores::VecFromPortal<typename ComponentsArrayHandleType::WritePortalType>,
       viskores::cont::StorageTagGroupVecVariable<typename ComponentsArrayHandleType::StorageTag,
-                                             typename OffsetsArrayHandleType::StorageTag>>
+                                                 typename OffsetsArrayHandleType::StorageTag>>
 {
   VISKORES_IS_ARRAY_HANDLE(ComponentsArrayHandleType);
   VISKORES_IS_ARRAY_HANDLE(OffsetsArrayHandleType);
@@ -288,7 +288,7 @@ public:
     (viskores::cont::ArrayHandle<
       viskores::VecFromPortal<typename ComponentsArrayHandleType::WritePortalType>,
       viskores::cont::StorageTagGroupVecVariable<typename ComponentsArrayHandleType::StorageTag,
-                                             typename OffsetsArrayHandleType::StorageTag>>));
+                                                 typename OffsetsArrayHandleType::StorageTag>>));
 
   using ComponentType = typename ComponentsArrayHandleType::ValueType;
 
@@ -319,12 +319,14 @@ public:
 /// entries grouped in a Vec.
 ///
 template <typename ComponentsArrayHandleType, typename OffsetsArrayHandleType>
-VISKORES_CONT viskores::cont::ArrayHandleGroupVecVariable<ComponentsArrayHandleType, OffsetsArrayHandleType>
-make_ArrayHandleGroupVecVariable(const ComponentsArrayHandleType& componentsArray,
-                                 const OffsetsArrayHandleType& offsetsArray)
+VISKORES_CONT
+  viskores::cont::ArrayHandleGroupVecVariable<ComponentsArrayHandleType, OffsetsArrayHandleType>
+  make_ArrayHandleGroupVecVariable(const ComponentsArrayHandleType& componentsArray,
+                                   const OffsetsArrayHandleType& offsetsArray)
 {
-  return viskores::cont::ArrayHandleGroupVecVariable<ComponentsArrayHandleType, OffsetsArrayHandleType>(
-    componentsArray, offsetsArray);
+  return viskores::cont::ArrayHandleGroupVecVariable<ComponentsArrayHandleType,
+                                                     OffsetsArrayHandleType>(componentsArray,
+                                                                             offsetsArray);
 }
 }
 } // namespace viskores::cont
@@ -351,10 +353,10 @@ struct SerializableTypeString<viskores::cont::ArrayHandleGroupVecVariable<SAH, O
 template <typename SP, typename SST, typename OST>
 struct SerializableTypeString<
   viskores::cont::ArrayHandle<viskores::VecFromPortal<SP>,
-                          viskores::cont::StorageTagGroupVecVariable<SST, OST>>>
-  : SerializableTypeString<
-      viskores::cont::ArrayHandleGroupVecVariable<viskores::cont::ArrayHandle<typename SP::ValueType, SST>,
-                                              viskores::cont::ArrayHandle<viskores::Id, OST>>>
+                              viskores::cont::StorageTagGroupVecVariable<SST, OST>>>
+  : SerializableTypeString<viskores::cont::ArrayHandleGroupVecVariable<
+      viskores::cont::ArrayHandle<typename SP::ValueType, SST>,
+      viskores::cont::ArrayHandle<viskores::Id, OST>>>
 {
 };
 }
@@ -390,11 +392,12 @@ public:
 };
 
 template <typename SP, typename SST, typename OST>
-struct Serialization<viskores::cont::ArrayHandle<viskores::VecFromPortal<SP>,
-                                             viskores::cont::StorageTagGroupVecVariable<SST, OST>>>
-  : Serialization<
-      viskores::cont::ArrayHandleGroupVecVariable<viskores::cont::ArrayHandle<typename SP::ValueType, SST>,
-                                              viskores::cont::ArrayHandle<viskores::Id, OST>>>
+struct Serialization<
+  viskores::cont::ArrayHandle<viskores::VecFromPortal<SP>,
+                              viskores::cont::StorageTagGroupVecVariable<SST, OST>>>
+  : Serialization<viskores::cont::ArrayHandleGroupVecVariable<
+      viskores::cont::ArrayHandle<typename SP::ValueType, SST>,
+      viskores::cont::ArrayHandle<viskores::Id, OST>>>
 {
 };
 } // diy

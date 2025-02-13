@@ -48,7 +48,7 @@ template <>
 viskores::Vec2ui_8 as_color<viskores::Vec2ui_8>(viskores::Float32 v, viskores::Float32 alpha)
 { //generate luminance+alpha values
   return viskores::Vec2ui_8(static_cast<viskores::UInt8>(v * 255.0f + 0.5f),
-                        static_cast<viskores::UInt8>(alpha * 255.0f + 0.5f));
+                            static_cast<viskores::UInt8>(alpha * 255.0f + 0.5f));
 }
 
 template <>
@@ -71,9 +71,9 @@ template <>
 viskores::Vec4ui_8 as_color<viskores::Vec4ui_8>(viskores::Float32 v, viskores::Float32 alpha)
 { //generate rgba
   return viskores::Vec4ui_8(static_cast<viskores::UInt8>(v * 255.0f + 0.5f),
-                        static_cast<viskores::UInt8>(v * 255.0f + 0.5f),
-                        static_cast<viskores::UInt8>(v * 255.0f + 0.5f),
-                        static_cast<viskores::UInt8>(alpha * 255.0f + 0.5f));
+                            static_cast<viskores::UInt8>(v * 255.0f + 0.5f),
+                            static_cast<viskores::UInt8>(v * 255.0f + 0.5f),
+                            static_cast<viskores::UInt8>(alpha * 255.0f + 0.5f));
 }
 
 
@@ -340,13 +340,13 @@ struct TestToRGBA
 
 
 using TypeListScalarColorTypes = viskores::List<viskores::Float32,
-                                            viskores::Float64,
-                                            viskores::Vec2f_32,
-                                            viskores::Vec2f_64,
-                                            viskores::Vec3f_32,
-                                            viskores::Vec3f_64,
-                                            viskores::Vec4f_32,
-                                            viskores::Vec4f_64>;
+                                                viskores::Float64,
+                                                viskores::Vec2f_32,
+                                                viskores::Vec2f_64,
+                                                viskores::Vec3f_32,
+                                                viskores::Vec3f_64,
+                                                viskores::Vec4f_32,
+                                                viskores::Vec4f_64>;
 
 using TypeListUIntColorTypes =
   viskores::List<viskores::UInt8, viskores::Vec2ui_8, viskores::Vec3ui_8, viskores::Vec4ui_8>;
@@ -375,10 +375,11 @@ void TestScalarsToColors()
   std::cout
     << "Test ConvertToRGBA with Scalar types and varying range with alpha values=[0.25, 0.5, 0.75]"
     << std::endl;
-  viskores::testing::Testing::TryTypes(TestToRGBA(-0.075f, -0.025f, 0.25f), TypeListScalarColorTypes());
+  viskores::testing::Testing::TryTypes(TestToRGBA(-0.075f, -0.025f, 0.25f),
+                                       TypeListScalarColorTypes());
   viskores::testing::Testing::TryTypes(TestToRGBA(0.0f, 2048.0f, 0.5f), TypeListScalarColorTypes());
   viskores::testing::Testing::TryTypes(TestToRGBA(-2048.0f, 2048.0f, 0.75f),
-                                   TypeListScalarColorTypes());
+                                       TypeListScalarColorTypes());
 }
 }
 

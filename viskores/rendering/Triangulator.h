@@ -74,8 +74,8 @@ public:
 
     template <typename ghostlArrayType>
     VISKORES_EXEC void operator()(viskores::CellShapeTagGeneric shapeType,
-                              ghostlArrayType& ghostField,
-                              viskores::Id& triangles) const
+                                  ghostlArrayType& ghostField,
+                                  viskores::Id& triangles) const
     {
 
       if (int(ghostField) != 0)
@@ -98,8 +98,8 @@ public:
 
     template <typename ghostlArrayType>
     VISKORES_EXEC void operator()(viskores::CellShapeTagHexahedron viskoresNotUsed(shapeType),
-                              ghostlArrayType& ghostField,
-                              viskores::Id& triangles) const
+                                  ghostlArrayType& ghostField,
+                                  viskores::Id& triangles) const
     {
 
       if (int(ghostField) != 0)
@@ -110,8 +110,8 @@ public:
 
     template <typename ghostlArrayType>
     VISKORES_EXEC void operator()(viskores::CellShapeTagQuad viskoresNotUsed(shapeType),
-                              ghostlArrayType& ghostField,
-                              viskores::Id& triangles) const
+                                  ghostlArrayType& ghostField,
+                                  viskores::Id& triangles) const
     {
       if (int(ghostField) != 0)
         triangles = 0;
@@ -121,8 +121,8 @@ public:
 
     template <typename ghostlArrayType>
     VISKORES_EXEC void operator()(viskores::CellShapeTagWedge viskoresNotUsed(shapeType),
-                              ghostlArrayType& ghostField,
-                              viskores::Id& triangles) const
+                                  ghostlArrayType& ghostField,
+                                  viskores::Id& triangles) const
     {
       if (int(ghostField) != 0)
         triangles = 0;
@@ -147,8 +147,8 @@ public:
 #endif
     template <typename CellNodeVecType, typename OutIndicesPortal>
     VISKORES_EXEC void operator()(const CellNodeVecType& cellIndices,
-                              const viskores::Id& cellIndex,
-                              OutIndicesPortal& outputIndices) const
+                                  const viskores::Id& cellIndex,
+                                  OutIndicesPortal& outputIndices) const
     {
       viskores::Id4 triangle;
       if (DIM == 2)
@@ -306,8 +306,8 @@ public:
 
     template <typename IndicesPortalType, typename OutputFlagsPortalType>
     VISKORES_EXEC void operator()(const IndicesPortalType& indices,
-                              OutputFlagsPortalType& outputFlags,
-                              const viskores::Id& index) const
+                                  OutputFlagsPortalType& outputFlags,
+                                  const viskores::Id& index) const
     {
       if (index == 0)
         return;
@@ -331,10 +331,10 @@ public:
 
     template <typename VecType, typename OutputPortal>
     VISKORES_EXEC void operator()(const viskores::Id& triangleOffset,
-                              viskores::CellShapeTagWedge viskoresNotUsed(shapeType),
-                              const VecType& cellIndices,
-                              const viskores::Id& cellId,
-                              OutputPortal& outputIndices) const
+                                  viskores::CellShapeTagWedge viskoresNotUsed(shapeType),
+                                  const VecType& cellIndices,
+                                  const viskores::Id& cellId,
+                                  OutputPortal& outputIndices) const
     {
       viskores::Id4 triangle;
 
@@ -381,10 +381,10 @@ public:
     }
     template <typename VecType, typename OutputPortal>
     VISKORES_EXEC void operator()(const viskores::Id& triangleOffset,
-                              viskores::CellShapeTagQuad viskoresNotUsed(shapeType),
-                              const VecType& cellIndices,
-                              const viskores::Id& cellId,
-                              OutputPortal& outputIndices) const
+                                  viskores::CellShapeTagQuad viskoresNotUsed(shapeType),
+                                  const VecType& cellIndices,
+                                  const viskores::Id& cellId,
+                                  OutputPortal& outputIndices) const
     {
       viskores::Id4 triangle;
 
@@ -401,10 +401,10 @@ public:
 
     template <typename VecType, typename OutputPortal>
     VISKORES_EXEC void operator()(const viskores::Id& triangleOffset,
-                              viskores::CellShapeTagHexahedron viskoresNotUsed(shapeType),
-                              const VecType& cellIndices,
-                              const viskores::Id& cellId,
-                              OutputPortal& outputIndices) const
+                                  viskores::CellShapeTagHexahedron viskoresNotUsed(shapeType),
+                                  const VecType& cellIndices,
+                                  const viskores::Id& cellId,
+                                  OutputPortal& outputIndices) const
     {
       viskores::Id4 triangle;
 
@@ -472,10 +472,10 @@ public:
 
     template <typename VecType, typename OutputPortal>
     VISKORES_EXEC void operator()(const viskores::Id& triangleOffset,
-                              viskores::CellShapeTagGeneric shapeType,
-                              const VecType& cellIndices,
-                              const viskores::Id& cellId,
-                              OutputPortal& outputIndices) const
+                                  viskores::CellShapeTagGeneric shapeType,
+                                  const VecType& cellIndices,
+                                  const viskores::Id& cellId,
+                                  OutputPortal& outputIndices) const
     {
       viskores::Id4 triangle;
 
@@ -723,7 +723,8 @@ public:
       viskores::cont::ArrayHandle<viskores::UInt8> triangleGhostArrayHandle;
       triangleGhostArrayHandle.AllocateAndFill(outputTriangles, 0); //numCells * 12
       viskores::worklet::DispatcherMapField<InterleaveArrays12>(InterleaveArrays12())
-        .Invoke(ghostField.GetData().ExtractComponent<viskores::UInt8>(0), triangleGhostArrayHandle);
+        .Invoke(ghostField.GetData().ExtractComponent<viskores::UInt8>(0),
+                triangleGhostArrayHandle);
 
       viskores::cont::ArrayHandle<viskores::Id4> nonGhostTriangles;
       viskores::cont::Algorithm::CopyIf(outputIndices, triangleGhostArrayHandle, nonGhostTriangles);
@@ -747,7 +748,8 @@ public:
       viskores::cont::ArrayHandle<viskores::UInt8> triangleGhostArrayHandle;
       triangleGhostArrayHandle.AllocateAndFill(outputTriangles, 0); //numCells * 2
       viskores::worklet::DispatcherMapField<InterleaveArrays2>(InterleaveArrays2())
-        .Invoke(ghostField.GetData().ExtractComponent<viskores::UInt8>(0), triangleGhostArrayHandle);
+        .Invoke(ghostField.GetData().ExtractComponent<viskores::UInt8>(0),
+                triangleGhostArrayHandle);
 
       viskores::cont::ArrayHandle<viskores::Id4> nonGhostTriangles;
       viskores::cont::Algorithm::CopyIf(outputIndices, triangleGhostArrayHandle, nonGhostTriangles);

@@ -75,9 +75,9 @@ struct TemplatedTests
     IteratorType begin = viskores::cont::internal::make_IteratorBegin(portal);
     IteratorType end = viskores::cont::internal::make_IteratorEnd(portal);
     VISKORES_TEST_ASSERT(std::distance(begin, end) == ARRAY_SIZE,
-                     "Distance between begin and end incorrect.");
+                         "Distance between begin and end incorrect.");
     VISKORES_TEST_ASSERT(std::distance(end, begin) == -ARRAY_SIZE,
-                     "Distance between begin and end incorrect.");
+                         "Distance between begin and end incorrect.");
 
     std::cout << "    Check forward iteration." << std::endl;
     VISKORES_TEST_ASSERT(CheckIterator(begin, end, ORIGINAL_VALUE()), "Forward iteration wrong");
@@ -88,14 +88,15 @@ struct TemplatedTests
     {
       middle--;
       ValueType value = *middle;
-      VISKORES_TEST_ASSERT(value == ExpectedValue(index, ORIGINAL_VALUE()), "Backward iteration wrong");
+      VISKORES_TEST_ASSERT(value == ExpectedValue(index, ORIGINAL_VALUE()),
+                           "Backward iteration wrong");
     }
 
     std::cout << "    Check advance" << std::endl;
     middle = begin + ARRAY_SIZE / 2;
     VISKORES_TEST_ASSERT(std::distance(begin, middle) == ARRAY_SIZE / 2, "Bad distance to middle.");
     VISKORES_TEST_ASSERT(ValueType(*middle) == ExpectedValue(ARRAY_SIZE / 2, ORIGINAL_VALUE()),
-                     "Bad value at middle.");
+                         "Bad value at middle.");
   }
 
   template <class ArrayPortalType>
@@ -113,14 +114,17 @@ struct TemplatedTests
 
     std::cout << "    Check values in portal." << std::endl;
     VISKORES_TEST_ASSERT(CheckPortal(portal, WRITE_VALUE),
-                     "Did not get correct values when writing to iterator.");
+                         "Did not get correct values when writing to iterator.");
   }
 
   void TestOperators()
   {
     struct Functor
     {
-      VISKORES_EXEC ValueType operator()(viskores::Id index) const { return TestValue(index, ValueType{}); }
+      VISKORES_EXEC ValueType operator()(viskores::Id index) const
+      {
+        return TestValue(index, ValueType{});
+      }
     };
     Functor functor;
 
@@ -190,7 +194,8 @@ struct TemplatedTests
 
     FillIterator(array, array + ARRAY_SIZE, ORIGINAL_VALUE());
 
-    ::viskores::cont::internal::ArrayPortalFromIterators<ValueType*> portal(array, array + ARRAY_SIZE);
+    ::viskores::cont::internal::ArrayPortalFromIterators<ValueType*> portal(array,
+                                                                            array + ARRAY_SIZE);
     ::viskores::cont::internal::ArrayPortalFromIterators<const ValueType*> const_portal(
       array, array + ARRAY_SIZE);
 

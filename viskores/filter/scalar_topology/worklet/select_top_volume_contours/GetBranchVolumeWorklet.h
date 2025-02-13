@@ -98,13 +98,13 @@ public:
 
   /// The functor checks the direction of the branch
   VISKORES_EXEC viskores::Id operator()(const viskores::Id& lowerDirection,
-                                const viskores::Id& lowerIntrinsic,
-                                const viskores::Id& lowerDependent,
-                                const viskores::Id& upperDirection,
-                                const viskores::Id& upperIntrinsic,
-                                const viskores::Id& upperDependent,
-                                const bool& isLowerLeaf,
-                                const bool& isUpperLeaf) const
+                                        const viskores::Id& lowerIntrinsic,
+                                        const viskores::Id& lowerDependent,
+                                        const viskores::Id& upperDirection,
+                                        const viskores::Id& upperIntrinsic,
+                                        const viskores::Id& upperDependent,
+                                        const bool& isLowerLeaf,
+                                        const bool& isUpperLeaf) const
   {
     if (isLowerLeaf && isUpperLeaf)
       return totalVolume;

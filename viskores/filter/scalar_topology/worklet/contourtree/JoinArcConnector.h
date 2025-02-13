@@ -100,10 +100,10 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                            const InFieldPortalType& vertexSorter,
-                            const InFieldPortalType& extrema,
-                            const InFieldPortalType& saddles,
-                            const OutFieldPortalType& mergeArcs) const
+                                const InFieldPortalType& vertexSorter,
+                                const InFieldPortalType& extrema,
+                                const InFieldPortalType& saddles,
+                                const OutFieldPortalType& mergeArcs) const
   {
     // work out whether we have the low element on the join arc
     bool joinToSaddle = false;

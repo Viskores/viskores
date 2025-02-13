@@ -22,16 +22,16 @@ namespace io
 
 VISKORES_IO_EXPORT
 viskores::UInt32 EncodePNG(std::vector<unsigned char> const& image,
-                       unsigned long width,
-                       unsigned long height,
-                       unsigned char* out_png,
-                       std::size_t out_size);
+                           unsigned long width,
+                           unsigned long height,
+                           unsigned char* out_png,
+                           std::size_t out_size);
 
 VISKORES_IO_EXPORT
 viskores::UInt32 SavePNG(std::string const& filename,
-                     std::vector<unsigned char> const& image,
-                     unsigned long width,
-                     unsigned long height);
+                         std::vector<unsigned char> const& image,
+                         unsigned long width,
+                         unsigned long height);
 }
 } // viskores::io
 

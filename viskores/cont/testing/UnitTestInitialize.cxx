@@ -84,7 +84,8 @@ void InitializeCustomOptions()
 
   int argc;
   char** argv;
-  viskores::cont::testing::Testing::MakeArgsAddProgramName(argc, argv, "--foo", "-bar", "baz", "buz");
+  viskores::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--foo", "-bar", "baz", "buz");
   viskores::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "--foo", "-bar", "baz", "buz");
 
@@ -105,12 +106,21 @@ void InitializeMixedOptions()
   viskores::cont::Initialize(argc, argv, viskores::cont::InitializeOptions::AddHelp);
   CheckArgs(argc, argv, "--foo", "--bar", "baz");
 
-  viskores::cont::testing::Testing::MakeArgsAddProgramName(
-    argc, argv, "--foo", "--viskores-log-level", "OFF", "--", "--viskores-device", "Any", "--bar", "baz");
+  viskores::cont::testing::Testing::MakeArgsAddProgramName(argc,
+                                                           argv,
+                                                           "--foo",
+                                                           "--viskores-log-level",
+                                                           "OFF",
+                                                           "--",
+                                                           "--viskores-device",
+                                                           "Any",
+                                                           "--bar",
+                                                           "baz");
   viskores::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "--foo", "--", "--viskores-device", "Any", "--bar", "baz");
 
-  viskores::cont::testing::Testing::MakeArgsAddProgramName(argc, argv, "--viskores-device", "Any", "foo");
+  viskores::cont::testing::Testing::MakeArgsAddProgramName(
+    argc, argv, "--viskores-device", "Any", "foo");
   viskores::cont::Initialize(argc, argv);
   CheckArgs(argc, argv, "foo");
 }
@@ -146,8 +156,14 @@ void InitializeRuntimeDeviceConfigurationWithArgs()
 {
   int argc;
   char** argv;
-  viskores::cont::testing::Testing::MakeArgsAddProgramName(
-    argc, argv, "--viskores-device", "Any", "--viskores-num-threads", "100", "--viskores-device-instance", "2");
+  viskores::cont::testing::Testing::MakeArgsAddProgramName(argc,
+                                                           argv,
+                                                           "--viskores-device",
+                                                           "Any",
+                                                           "--viskores-num-threads",
+                                                           "100",
+                                                           "--viskores-device-instance",
+                                                           "2");
   viskores::cont::Initialize(argc, argv);
   CheckArgs(argc, argv);
 }
@@ -167,7 +183,8 @@ void InitializeWithHelp()
 void DoInitializeTests()
 {
   // Technically, by the time we get here, we have already called Initialize once.
-  std::cout << "Note: This test calls viskores::cont::Initialize multiple times to test" << std::endl
+  std::cout << "Note: This test calls viskores::cont::Initialize multiple times to test"
+            << std::endl
             << "it under different circumstances. You may get warnings/errors about" << std::endl
             << "that, particularly from the logging interface." << std::endl;
 

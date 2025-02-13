@@ -110,7 +110,8 @@ void DebugPrint(const char* msg, viskores::cont::ArrayHandle<U>& array)
 }
 
 template <typename U>
-void DebugPrint(const char* msg, viskores::cont::ArrayHandleReverse<viskores::cont::ArrayHandle<U>>& array)
+void DebugPrint(const char* msg,
+                viskores::cont::ArrayHandleReverse<viskores::cont::ArrayHandle<U>>& array)
 {
   viskores::Id count = 20;
   count = std::min(count, array.GetNumberOfValues());
@@ -192,16 +193,16 @@ public:
 
   // cosmo tools constructor for all particles
   CosmoTools(const viskores::Id NParticles,                  // Number of particles
-             const T mass,                               // Particle mass for potential
+             const T mass,                                   // Particle mass for potential
              const viskores::Id pmin,                        // Minimum particles per halo
-             const T bb,                                 // Linking length between particles
+             const T bb,                                     // Linking length between particles
              viskores::cont::ArrayHandle<T, StorageType>& X, // Physical location of each particle
              viskores::cont::ArrayHandle<T, StorageType>& Y,
              viskores::cont::ArrayHandle<T, StorageType>& Z);
 
   // cosmo tools constructor for particles in one halo
   CosmoTools(const viskores::Id NParticles,                  // Number of particles
-             const T mass,                               // Particle mass for potential
+             const T mass,                                   // Particle mass for potential
              viskores::cont::ArrayHandle<T, StorageType>& X, // Physical location of each particle
              viskores::cont::ArrayHandle<T, StorageType>& Y,
              viskores::cont::ArrayHandle<T, StorageType>& Z);

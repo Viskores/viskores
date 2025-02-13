@@ -40,8 +40,8 @@ public:
     output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
     VISKORES_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
-                       cellFieldArray.ReadPortal().Get(7) == 14.f,
-                     "Wrong mask data");
+                           cellFieldArray.ReadPortal().Get(7) == 14.f,
+                         "Wrong mask data");
   }
 
   static void TestUniform3D()
@@ -61,8 +61,8 @@ public:
     output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
     VISKORES_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 7 &&
-                       cellFieldArray.ReadPortal().Get(2) == 18.f,
-                     "Wrong mask data");
+                           cellFieldArray.ReadPortal().Get(2) == 18.f,
+                         "Wrong mask data");
   }
 
   static void TestExplicit()
@@ -82,8 +82,8 @@ public:
     output.GetField("cellvar").GetData().AsArrayHandle(cellFieldArray);
 
     VISKORES_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                       cellFieldArray.ReadPortal().Get(1) == 120.2f,
-                     "Wrong mask data");
+                           cellFieldArray.ReadPortal().Get(1) == 120.2f,
+                         "Wrong mask data");
   }
 
   void operator()() const

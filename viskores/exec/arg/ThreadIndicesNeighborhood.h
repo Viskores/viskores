@@ -61,7 +61,7 @@ class ThreadIndicesNeighborhood
 
 public:
   VISKORES_EXEC ThreadIndicesNeighborhood(viskores::Id threadIndex1D,
-                                      const viskores::exec::BoundaryState& state)
+                                          const viskores::exec::BoundaryState& state)
     : State(state)
     , ThreadIndex(threadIndex1D)
     , InputIndex(threadIndex1D)
@@ -71,10 +71,10 @@ public:
   }
 
   VISKORES_EXEC ThreadIndicesNeighborhood(viskores::Id threadIndex1D,
-                                      viskores::Id inputIndex,
-                                      viskores::IdComponent visitIndex,
-                                      viskores::Id outputIndex,
-                                      const viskores::exec::BoundaryState& state)
+                                          viskores::Id inputIndex,
+                                          viskores::IdComponent visitIndex,
+                                          viskores::Id outputIndex,
+                                          const viskores::exec::BoundaryState& state)
     : State(state)
     , ThreadIndex(threadIndex1D)
     , InputIndex(inputIndex)

@@ -31,10 +31,11 @@ struct SwizzleTests
   using SwizzleArrayType = viskores::cont::ArrayHandleSwizzle<SwizzleInputArrayType, OutSize>;
 
   using ReferenceComponentArrayType = viskores::cont::ArrayHandleCounting<ValueType>;
-  using ReferenceArrayType = viskores::cont::ArrayHandleCompositeVector<ReferenceComponentArrayType,
-                                                                    ReferenceComponentArrayType,
-                                                                    ReferenceComponentArrayType,
-                                                                    ReferenceComponentArrayType>;
+  using ReferenceArrayType =
+    viskores::cont::ArrayHandleCompositeVector<ReferenceComponentArrayType,
+                                               ReferenceComponentArrayType,
+                                               ReferenceComponentArrayType,
+                                               ReferenceComponentArrayType>;
 
   template <viskores::IdComponent Size>
   using MapType = viskores::Vec<viskores::IdComponent, Size>;
@@ -74,7 +75,7 @@ struct SwizzleTests
     auto swizzle = viskores::cont::make_ArrayHandleSwizzle(input, map);
 
     VISKORES_TEST_ASSERT(input.GetNumberOfValues() == swizzle.GetNumberOfValues(),
-                     "Number of values in copied Swizzle array does not match input.");
+                         "Number of values in copied Swizzle array does not match input.");
   }
 
   template <viskores::IdComponent OutSize>
@@ -100,10 +101,10 @@ struct SwizzleTests
     using SwizzleVectorType = viskores::Vec<ValueType, OutSize>;
 
     VISKORES_TEST_ASSERT(map.GetNumberOfComponents() ==
-                       viskores::VecTraits<SwizzleVectorType>::NUM_COMPONENTS,
-                     "Unexpected runtime component map size.");
+                           viskores::VecTraits<SwizzleVectorType>::NUM_COMPONENTS,
+                         "Unexpected runtime component map size.");
     VISKORES_TEST_ASSERT(testArray.GetNumberOfValues() == this->RefArray.GetNumberOfValues(),
-                     "Number of values incorrect in Read test.");
+                         "Number of values incorrect in Read test.");
 
     auto refPortal = this->RefArray.ReadPortal();
     auto testPortal = testArray.ReadPortal();
@@ -120,7 +121,7 @@ struct SwizzleTests
       }
 
       VISKORES_TEST_ASSERT(test_equal(refVecSwizzle, testPortal.Get(i), 0.),
-                       "Invalid value encountered in Read test.");
+                           "Invalid value encountered in Read test.");
     }
   }
 
@@ -137,7 +138,10 @@ struct SwizzleTests
     }
 
     VISKORES_EXEC_CONT
-    void operator()(viskores::Id index) const { this->Portal.Set(index, this->Portal.Get(index) * 2.); }
+    void operator()(viskores::Id index) const
+    {
+      this->Portal.Set(index, this->Portal.Get(index) * 2.);
+    }
   };
 
   struct WriteExec
@@ -205,7 +209,7 @@ struct SwizzleTests
     auto portal = testArray.ReadPortal();
 
     VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == refPortal.GetNumberOfValues(),
-                     "Number of values in write test output do not match input.");
+                         "Number of values in write test output do not match input.");
 
     for (viskores::Id i = 0; i < portal.GetNumberOfValues(); ++i)
     {
@@ -310,7 +314,8 @@ struct ArgToTemplateType
 
 void TestArrayHandleSwizzle()
 {
-  using TestTypes = viskores::List<viskores::Int32, viskores::Int64, viskores::Float32, viskores::Float64>;
+  using TestTypes =
+    viskores::List<viskores::Int32, viskores::Int64, viskores::Float32, viskores::Float64>;
   viskores::testing::Testing::TryTypes(ArgToTemplateType(), TestTypes());
 }
 

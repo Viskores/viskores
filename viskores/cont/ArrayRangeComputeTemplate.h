@@ -46,7 +46,8 @@ struct ComputeRangeOptionsDecorator
 
     using InValueType = typename SrcPortal::ValueType;
     using InVecTraits = viskores::VecTraits<InValueType>;
-    using ResultType = viskores::Vec<viskores::Vec<viskores::Float64, InVecTraits::NUM_COMPONENTS>, 2>;
+    using ResultType =
+      viskores::Vec<viskores::Vec<viskores::Float64, InVecTraits::NUM_COMPONENTS>, 2>;
 
     VISKORES_EXEC_CONT
     ResultType operator()(viskores::Id idx) const
@@ -99,7 +100,7 @@ struct NestedToFlat<ArrayHandleType, true>
   static auto Transform(const ArrayHandleType& in)
   {
     return viskores::cont::ArrayHandleCast<viskores::VecFlat<typename ArrayHandleType::ValueType>,
-                                       ArrayHandleType>(in);
+                                           ArrayHandleType>(in);
   }
 };
 
@@ -147,11 +148,13 @@ inline viskores::cont::ArrayHandle<viskores::Range> ArrayRangeComputeGeneric(
     auto decorated =
       make_ArrayHandleDecorator(flattened.GetNumberOfValues(), decorator, flattened, maskArray);
 
-    using ResultType = viskores::Vec<viskores::Vec<viskores::Float64, VecTraits::NUM_COMPONENTS>, 2>;
+    using ResultType =
+      viskores::Vec<viskores::Vec<viskores::Float64, VecTraits::NUM_COMPONENTS>, 2>;
     using MinAndMaxFunctor = viskores::MinAndMax<typename ResultType::ComponentType>;
     ResultType identity{ { viskores::Range{}.Min }, { viskores::Range{}.Max } };
 
-    auto result = viskores::cont::Algorithm::Reduce(device, decorated, identity, MinAndMaxFunctor{});
+    auto result =
+      viskores::cont::Algorithm::Reduce(device, decorated, identity, MinAndMaxFunctor{});
 
     auto portal = range.WritePortal();
     for (viskores::IdComponent i = 0; i < VecTraits::NUM_COMPONENTS; ++i)
@@ -270,9 +273,9 @@ struct ArrayRangeComputeMagnitudeImpl
 {
   template <typename T>
   viskores::Range operator()(const viskores::cont::ArrayHandle<T, S>& input,
-                         const viskores::cont::ArrayHandle<viskores::UInt8>& maskArray,
-                         bool computeFiniteRange,
-                         viskores::cont::DeviceAdapterId device) const
+                             const viskores::cont::ArrayHandle<viskores::UInt8>& maskArray,
+                             bool computeFiniteRange,
+                             viskores::cont::DeviceAdapterId device) const
   {
     return viskores::cont::internal::ArrayRangeComputeMagnitudeGeneric(
       input, maskArray, computeFiniteRange, device);
@@ -304,7 +307,7 @@ viskores::cont::ArrayHandle<viskores::Range> ArrayRangeComputeTemplate(
   viskores::cont::DeviceAdapterId device = viskores::cont::DeviceAdapterTagAny{})
 {
   VISKORES_ASSERT(maskArray.GetNumberOfValues() == 0 ||
-              maskArray.GetNumberOfValues() == input.GetNumberOfValues());
+                  maskArray.GetNumberOfValues() == input.GetNumberOfValues());
   return internal::ArrayRangeComputeImpl<S>{}(input, maskArray, computeFiniteRange, device);
 }
 
@@ -340,14 +343,15 @@ viskores::Range ArrayRangeComputeMagnitudeTemplate(
   viskores::cont::DeviceAdapterId device = viskores::cont::DeviceAdapterTagAny{})
 {
   VISKORES_ASSERT(maskArray.GetNumberOfValues() == 0 ||
-              maskArray.GetNumberOfValues() == input.GetNumberOfValues());
+                  maskArray.GetNumberOfValues() == input.GetNumberOfValues());
   return internal::ArrayRangeComputeMagnitudeImpl<S>{}(
     input, maskArray, computeFiniteRange, device);
 }
 
 template <typename T, typename S>
-inline viskores::Range ArrayRangeComputeMagnitudeTemplate(const viskores::cont::ArrayHandle<T, S>& input,
-                                                      viskores::cont::DeviceAdapterId device)
+inline viskores::Range ArrayRangeComputeMagnitudeTemplate(
+  const viskores::cont::ArrayHandle<T, S>& input,
+  viskores::cont::DeviceAdapterId device)
 {
   return ArrayRangeComputeMagnitudeTemplate(input, false, device);
 }
@@ -366,21 +370,21 @@ inline viskores::cont::ArrayHandle<viskores::Range> ArrayRangeCompute(
 }
 } // namespace viskores::cont
 
-#define VISKORES_ARRAY_RANGE_COMPUTE_DCLR(...)                                   \
+#define VISKORES_ARRAY_RANGE_COMPUTE_DCLR(...)                                            \
   viskores::cont::ArrayHandle<viskores::Range> viskores::cont::ArrayRangeComputeTemplate( \
-    const viskores::cont::ArrayHandle<__VA_ARGS__>&,                              \
-    const viskores::cont::ArrayHandle<viskores::UInt8>&,                              \
-    bool,                                                                     \
+    const viskores::cont::ArrayHandle<__VA_ARGS__>&,                                      \
+    const viskores::cont::ArrayHandle<viskores::UInt8>&,                                  \
+    bool,                                                                                 \
     viskores::cont::DeviceAdapterId)
 
-#define VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(...)               \
+#define VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(...)                    \
   viskores::Range viskores::cont::ArrayRangeComputeMagnitudeTemplate( \
-    const viskores::cont::ArrayHandle<__VA_ARGS__>&,              \
+    const viskores::cont::ArrayHandle<__VA_ARGS__>&,                  \
     const viskores::cont::ArrayHandle<viskores::UInt8>&,              \
-    bool,                                                     \
+    bool,                                                             \
     viskores::cont::DeviceAdapterId)
 
-#define VISKORES_ARRAY_RANGE_COMPUTE_INT_SCALARS(modifiers, ...)              \
+#define VISKORES_ARRAY_RANGE_COMPUTE_INT_SCALARS(modifiers, ...)                  \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Int8, __VA_ARGS__);       \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Int8, __VA_ARGS__);   \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::UInt8, __VA_ARGS__);      \
@@ -398,7 +402,7 @@ inline viskores::cont::ArrayHandle<viskores::Range> ArrayRangeCompute(
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::UInt64, __VA_ARGS__);     \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::UInt64, __VA_ARGS__)
 
-#define VISKORES_ARRAY_RANGE_COMPUTE_FLOAT_SCALARS(modifiers, ...)             \
+#define VISKORES_ARRAY_RANGE_COMPUTE_FLOAT_SCALARS(modifiers, ...)                 \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Float32, __VA_ARGS__);     \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Float32, __VA_ARGS__); \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Float64, __VA_ARGS__);     \
@@ -408,9 +412,9 @@ inline viskores::cont::ArrayHandle<viskores::Range> ArrayRangeCompute(
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(bool, __VA_ARGS__); \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(bool, __VA_ARGS__)
 
-#define VISKORES_ARRAY_RANGE_COMPUTE_OTHER_SCALARS(modifiers, ...)                           \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(char, __VA_ARGS__);                            \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(char, __VA_ARGS__);                        \
+#define VISKORES_ARRAY_RANGE_COMPUTE_OTHER_SCALARS(modifiers, ...)                               \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(char, __VA_ARGS__);                                \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(char, __VA_ARGS__);                            \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(signed VISKORES_UNUSED_INT_TYPE, __VA_ARGS__);     \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(signed VISKORES_UNUSED_INT_TYPE, __VA_ARGS__); \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(unsigned VISKORES_UNUSED_INT_TYPE, __VA_ARGS__);   \
@@ -422,45 +426,48 @@ inline viskores::cont::ArrayHandle<viskores::Range> ArrayRangeCompute(
   VISKORES_ARRAY_RANGE_COMPUTE_BOOL_SCALARS(modifiers, __VA_ARGS__);  \
   VISKORES_ARRAY_RANGE_COMPUTE_OTHER_SCALARS(modifiers, __VA_ARGS__)
 
-#define VISKORES_ARRAY_RANGE_COMPUTE_INT_VECN(modifiers, N, ...)                            \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Int8, N>, __VA_ARGS__);       \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::Int8, N>, __VA_ARGS__);   \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::UInt8, N>, __VA_ARGS__);      \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::UInt8, N>, __VA_ARGS__);  \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Int16, N>, __VA_ARGS__);      \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::Int16, N>, __VA_ARGS__);  \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::UInt16, N>, __VA_ARGS__);     \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::UInt16, N>, __VA_ARGS__); \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Int32, N>, __VA_ARGS__);      \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::Int32, N>, __VA_ARGS__);  \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::UInt32, N>, __VA_ARGS__);     \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::UInt32, N>, __VA_ARGS__); \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Int64, N>, __VA_ARGS__);      \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::Int64, N>, __VA_ARGS__);  \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::UInt64, N>, __VA_ARGS__);     \
+#define VISKORES_ARRAY_RANGE_COMPUTE_INT_VECN(modifiers, N, ...)                                   \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Int8, N>, __VA_ARGS__);      \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::Int8, N>, __VA_ARGS__);  \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::UInt8, N>, __VA_ARGS__);     \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::UInt8, N>, __VA_ARGS__); \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Int16, N>, __VA_ARGS__);     \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::Int16, N>, __VA_ARGS__); \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::UInt16, N>, __VA_ARGS__);    \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::UInt16, N>,              \
+                                                  __VA_ARGS__);                                    \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Int32, N>, __VA_ARGS__);     \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::Int32, N>, __VA_ARGS__); \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::UInt32, N>, __VA_ARGS__);    \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::UInt32, N>,              \
+                                                  __VA_ARGS__);                                    \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Int64, N>, __VA_ARGS__);     \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::Int64, N>, __VA_ARGS__); \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::UInt64, N>, __VA_ARGS__);    \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::UInt64, N>, __VA_ARGS__)
 
-#define VISKORES_ARRAY_RANGE_COMPUTE_FLOAT_VECN(modifiers, N, ...)                           \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Float32, N>, __VA_ARGS__);     \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::Float32, N>, __VA_ARGS__); \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Float64, N>, __VA_ARGS__);     \
+#define VISKORES_ARRAY_RANGE_COMPUTE_FLOAT_VECN(modifiers, N, ...)                               \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Float32, N>, __VA_ARGS__); \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::Float32, N>,           \
+                                                  __VA_ARGS__);                                  \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<viskores::Float64, N>, __VA_ARGS__); \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<viskores::Float64, N>, __VA_ARGS__)
 
-#define VISKORES_ARRAY_RANGE_COMPUTE_BOOL_VECN(modifiers, N, ...)               \
+#define VISKORES_ARRAY_RANGE_COMPUTE_BOOL_VECN(modifiers, N, ...)                   \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<bool, N>, __VA_ARGS__); \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<bool, N>, __VA_ARGS__)
 
-#define VISKORES_ARRAY_RANGE_COMPUTE_OTHER_VECN(modifiers, N, ...)                             \
+#define VISKORES_ARRAY_RANGE_COMPUTE_OTHER_VECN(modifiers, N, ...)                                 \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<char, N>, __VA_ARGS__);                \
   modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<char, N>, __VA_ARGS__);            \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<signed VISKORES_UNUSED_INT_TYPE, N>,       \
-                                           __VA_ARGS__);                                    \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<signed VISKORES_UNUSED_INT_TYPE, N>,   \
-                                               __VA_ARGS__);                                \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<unsigned VISKORES_UNUSED_INT_TYPE, N>,     \
-                                           __VA_ARGS__);                                    \
-  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(viskores::Vec<unsigned VISKORES_UNUSED_INT_TYPE, N>, \
-                                               __VA_ARGS__)
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<signed VISKORES_UNUSED_INT_TYPE, N>,   \
+                                              __VA_ARGS__);                                        \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(                                                 \
+    viskores::Vec<signed VISKORES_UNUSED_INT_TYPE, N>, __VA_ARGS__);                               \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_DCLR(viskores::Vec<unsigned VISKORES_UNUSED_INT_TYPE, N>, \
+                                              __VA_ARGS__);                                        \
+  modifiers VISKORES_ARRAY_RANGE_COMPUTE_MAG_DCLR(                                                 \
+    viskores::Vec<unsigned VISKORES_UNUSED_INT_TYPE, N>, __VA_ARGS__)
 
 #define VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(modifiers, N, ...)      \
   VISKORES_ARRAY_RANGE_COMPUTE_INT_VECN(modifiers, N, __VA_ARGS__);   \
@@ -493,44 +500,44 @@ struct StorageTagStride;
 /// @cond NOPE
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_ALL_SCALARS(extern template VISKORES_CONT_TEMPLATE_EXPORT,
+                                         viskores::cont::StorageTagBasic);
+VISKORES_INSTANTIATION_END
+
+VISKORES_INSTANTIATION_BEGIN
+VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
+                                      2,
                                       viskores::cont::StorageTagBasic);
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   2,
-                                   viskores::cont::StorageTagBasic);
+                                      3,
+                                      viskores::cont::StorageTagBasic);
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   3,
-                                   viskores::cont::StorageTagBasic);
-VISKORES_INSTANTIATION_END
-
-VISKORES_INSTANTIATION_BEGIN
-VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   4,
-                                   viskores::cont::StorageTagBasic);
+                                      4,
+                                      viskores::cont::StorageTagBasic);
 VISKORES_INSTANTIATION_END
 
 //-------------------------------------------------------------------------------------------------
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   2,
-                                   viskores::cont::StorageTagSOA);
+                                      2,
+                                      viskores::cont::StorageTagSOA);
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   3,
-                                   viskores::cont::StorageTagSOA);
+                                      3,
+                                      viskores::cont::StorageTagSOA);
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   4,
-                                   viskores::cont::StorageTagSOA);
+                                      4,
+                                      viskores::cont::StorageTagSOA);
 VISKORES_INSTANTIATION_END
 
 //-------------------------------------------------------------------------------------------------
@@ -539,91 +546,91 @@ VISKORES_ARRAY_RANGE_COMPUTE_FLOAT_VECN(
   extern template VISKORES_CONT_TEMPLATE_EXPORT,
   3,
   viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic>);
+                                             viskores::cont::StorageTagBasic,
+                                             viskores::cont::StorageTagBasic>);
 VISKORES_INSTANTIATION_END
 
 //-------------------------------------------------------------------------------------------------
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_FLOAT_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                     3,
-                                     StorageTagXGCCoordinates);
+                                        3,
+                                        StorageTagXGCCoordinates);
 VISKORES_INSTANTIATION_END
 
 //-------------------------------------------------------------------------------------------------
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_ALL_SCALARS(extern template VISKORES_CONT_TEMPLATE_EXPORT,
+                                         viskores::cont::StorageTagConstant);
+VISKORES_INSTANTIATION_END
+
+VISKORES_INSTANTIATION_BEGIN
+VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
+                                      2,
                                       viskores::cont::StorageTagConstant);
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   2,
-                                   viskores::cont::StorageTagConstant);
+                                      3,
+                                      viskores::cont::StorageTagConstant);
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   3,
-                                   viskores::cont::StorageTagConstant);
-VISKORES_INSTANTIATION_END
-
-VISKORES_INSTANTIATION_BEGIN
-VISKORES_ARRAY_RANGE_COMPUTE_ALL_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   4,
-                                   viskores::cont::StorageTagConstant);
+                                      4,
+                                      viskores::cont::StorageTagConstant);
 VISKORES_INSTANTIATION_END
 
 //-------------------------------------------------------------------------------------------------
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_INT_SCALARS(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                      viskores::cont::StorageTagCounting);
+                                         viskores::cont::StorageTagCounting);
 VISKORES_ARRAY_RANGE_COMPUTE_FLOAT_SCALARS(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                        viskores::cont::StorageTagCounting);
+                                           viskores::cont::StorageTagCounting);
 VISKORES_ARRAY_RANGE_COMPUTE_OTHER_SCALARS(extern template VISKORES_CONT_TEMPLATE_EXPORT,
+                                           viskores::cont::StorageTagCounting);
+VISKORES_INSTANTIATION_END
+
+VISKORES_INSTANTIATION_BEGIN
+VISKORES_ARRAY_RANGE_COMPUTE_INT_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
+                                      2,
+                                      viskores::cont::StorageTagCounting);
+VISKORES_ARRAY_RANGE_COMPUTE_FLOAT_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
+                                        2,
+                                        viskores::cont::StorageTagCounting);
+VISKORES_ARRAY_RANGE_COMPUTE_OTHER_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
+                                        2,
                                         viskores::cont::StorageTagCounting);
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_INT_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   2,
-                                   viskores::cont::StorageTagCounting);
+                                      3,
+                                      viskores::cont::StorageTagCounting);
 VISKORES_ARRAY_RANGE_COMPUTE_FLOAT_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                     2,
-                                     viskores::cont::StorageTagCounting);
+                                        3,
+                                        viskores::cont::StorageTagCounting);
 VISKORES_ARRAY_RANGE_COMPUTE_OTHER_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                     2,
-                                     viskores::cont::StorageTagCounting);
+                                        3,
+                                        viskores::cont::StorageTagCounting);
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_INT_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   3,
-                                   viskores::cont::StorageTagCounting);
+                                      4,
+                                      viskores::cont::StorageTagCounting);
 VISKORES_ARRAY_RANGE_COMPUTE_FLOAT_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                     3,
-                                     viskores::cont::StorageTagCounting);
+                                        4,
+                                        viskores::cont::StorageTagCounting);
 VISKORES_ARRAY_RANGE_COMPUTE_OTHER_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                     3,
-                                     viskores::cont::StorageTagCounting);
-VISKORES_INSTANTIATION_END
-
-VISKORES_INSTANTIATION_BEGIN
-VISKORES_ARRAY_RANGE_COMPUTE_INT_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                   4,
-                                   viskores::cont::StorageTagCounting);
-VISKORES_ARRAY_RANGE_COMPUTE_FLOAT_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                     4,
-                                     viskores::cont::StorageTagCounting);
-VISKORES_ARRAY_RANGE_COMPUTE_OTHER_VECN(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                     4,
-                                     viskores::cont::StorageTagCounting);
+                                        4,
+                                        viskores::cont::StorageTagCounting);
 VISKORES_INSTANTIATION_END
 
 //-------------------------------------------------------------------------------------------------
 VISKORES_INSTANTIATION_BEGIN
 VISKORES_ARRAY_RANGE_COMPUTE_ALL_SCALARS(extern template VISKORES_CONT_TEMPLATE_EXPORT,
-                                      viskores::cont::StorageTagStride);
+                                         viskores::cont::StorageTagStride);
 VISKORES_INSTANTIATION_END
 /// @endcond
 

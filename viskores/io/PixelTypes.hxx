@@ -33,7 +33,8 @@ void BasePixel<B, C>::FillImageAtIndexWithPixel(unsigned char* imageData, const 
 }
 
 template <const viskores::Id B, const viskores::IdComponent C>
-void BasePixel<B, C>::ConstructPixelFromImage(const unsigned char* imageData, const viskores::Id index)
+void BasePixel<B, C>::ConstructPixelFromImage(const unsigned char* imageData,
+                                              const viskores::Id index)
 {
   viskores::Id initShift = BIT_DEPTH - 8;
   for (viskores::Id channel = 0; channel < NUM_CHANNELS; channel++)
@@ -57,10 +58,11 @@ typename RGBPixel<B>::ComponentType RGBPixel<B>::Diff(const Superclass& pixel) c
 template <const viskores::Id B>
 viskores::Vec4f_32 RGBPixel<B>::ToVec4f() const
 {
-  return viskores::Vec4f_32(static_cast<viskores::Float32>(this->Components[0]) / this->MAX_COLOR_VALUE,
-                        static_cast<viskores::Float32>(this->Components[1]) / this->MAX_COLOR_VALUE,
-                        static_cast<viskores::Float32>(this->Components[2]) / this->MAX_COLOR_VALUE,
-                        1);
+  return viskores::Vec4f_32(
+    static_cast<viskores::Float32>(this->Components[0]) / this->MAX_COLOR_VALUE,
+    static_cast<viskores::Float32>(this->Components[1]) / this->MAX_COLOR_VALUE,
+    static_cast<viskores::Float32>(this->Components[2]) / this->MAX_COLOR_VALUE,
+    1);
 }
 
 template <const viskores::Id B>
@@ -72,10 +74,11 @@ typename GreyPixel<B>::ComponentType GreyPixel<B>::Diff(const Superclass& pixel)
 template <const viskores::Id B>
 viskores::Vec4f_32 GreyPixel<B>::ToVec4f() const
 {
-  return viskores::Vec4f_32(static_cast<viskores::Float32>(this->Components[0]) / this->MAX_COLOR_VALUE,
-                        static_cast<viskores::Float32>(this->Components[0]) / this->MAX_COLOR_VALUE,
-                        static_cast<viskores::Float32>(this->Components[0]) / this->MAX_COLOR_VALUE,
-                        1);
+  return viskores::Vec4f_32(
+    static_cast<viskores::Float32>(this->Components[0]) / this->MAX_COLOR_VALUE,
+    static_cast<viskores::Float32>(this->Components[0]) / this->MAX_COLOR_VALUE,
+    static_cast<viskores::Float32>(this->Components[0]) / this->MAX_COLOR_VALUE,
+    1);
 }
 
 template <const viskores::Id B>

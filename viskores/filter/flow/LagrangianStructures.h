@@ -55,7 +55,10 @@ public:
   ///
   /// The FTLE works by advecting all points a finite distance, and this parameter
   /// specifies how far to advect.
-  void SetAdvectionTime(viskores::FloatDefault advectionTime) { this->AdvectionTime = advectionTime; }
+  void SetAdvectionTime(viskores::FloatDefault advectionTime)
+  {
+    this->AdvectionTime = advectionTime;
+  }
   /// @copydoc SetAdvectionTime
   viskores::FloatDefault GetAdvectionTime() { return this->AdvectionTime; }
 
@@ -74,7 +77,10 @@ public:
   ///
   /// Seeds for advection will be placed along the points of this auxiliary grid.
   /// This option has no effect unless the UseAuxiliaryGrid option is on.
-  void SetAuxiliaryGridDimensions(viskores::Id3 auxiliaryDims) { this->AuxiliaryDims = auxiliaryDims; }
+  void SetAuxiliaryGridDimensions(viskores::Id3 auxiliaryDims)
+  {
+    this->AuxiliaryDims = auxiliaryDims;
+  }
   /// @copydoc SetAuxiliaryGridDimensions
   viskores::Id3 GetAuxiliaryGridDimensions() { return this->AuxiliaryDims; }
 
@@ -100,7 +106,10 @@ public:
     this->FlowMapOutput = flowMap;
   }
   /// @copydoc SetFlowMapOutput
-  inline viskores::cont::ArrayHandle<viskores::Vec3f> GetFlowMapOutput() { return this->FlowMapOutput; }
+  inline viskores::cont::ArrayHandle<viskores::Vec3f> GetFlowMapOutput()
+  {
+    return this->FlowMapOutput;
+  }
 
 private:
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inData) override;

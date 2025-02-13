@@ -110,7 +110,8 @@ viskores::cont::DataSet ANARIActor::MakeDataSet(bool includeFields) const
   if (!includeFields)
     return dataset;
 
-  auto addField = [&](const viskores::cont::Field& field) {
+  auto addField = [&](const viskores::cont::Field& field)
+  {
     if (field.GetNumberOfValues() > 0)
       dataset.AddField(field);
   };

@@ -70,7 +70,9 @@ public:
   using ExecutionSignature = void(_1, _2, WorkIndex);
 
   template <typename OutputArrayPortalType>
-  VISKORES_EXEC void operator()(T x, OutputArrayPortalType& outputArrayPortal, viskores::Id workIndex) const
+  VISKORES_EXEC void operator()(T x,
+                                OutputArrayPortalType& outputArrayPortal,
+                                viskores::Id workIndex) const
   {
     T r = rmin_ + (4.0 - rmin_) * workIndex / (width_ - 1);
     // We can't display need more limit points than pixels of height:

@@ -85,7 +85,8 @@ void BasicConstruction()
   ////
   //// BEGIN-EXAMPLE ArrayHandleStorageParameter
   ////
-  viskores::cont::ArrayHandle<viskores::Float32, viskores::cont::StorageTagBasic> arrayHandle;
+  viskores::cont::ArrayHandle<viskores::Float32, viskores::cont::StorageTagBasic>
+    arrayHandle;
   ////
   //// END-EXAMPLE ArrayHandleStorageParameter
   ////
@@ -119,7 +120,8 @@ void ArrayHandleFromInitializerList()
   //// BEGIN-EXAMPLE ArrayHandleFromInitializerListTyped
   ////
   viskores::cont::ArrayHandle<viskores::FloatDefault> inputArray =
-    viskores::cont::make_ArrayHandle<viskores::FloatDefault>({ 1.4142f, 2.7183f, 3.1416f });
+    viskores::cont::make_ArrayHandle<viskores::FloatDefault>(
+      { 1.4142f, 2.7183f, 3.1416f });
   ////
   //// END-EXAMPLE ArrayHandleFromInitializerListTyped
   ////
@@ -221,7 +223,8 @@ void AllocateAndFillArrayHandle()
 
   viskores::Range range = rangePortal.Get(0);
   VISKORES_TEST_ASSERT(test_equal(range.Min, TestValue(0)), "Bad min value.");
-  VISKORES_TEST_ASSERT(test_equal(range.Max, TestValue(ARRAY_SIZE - 1)), "Bad max value.");
+  VISKORES_TEST_ASSERT(test_equal(range.Max, TestValue(ARRAY_SIZE - 1)),
+                       "Bad max value.");
 
   ////
   //// BEGIN-EXAMPLE ArrayHandleReallocate
@@ -424,11 +427,12 @@ void TestArrayPortalToken()
 void TestArrayPortalVectors()
 {
   viskores::cont::ArrayHandle<viskores::Float32> inputArray = SafeDataLoad1();
-  std::vector<viskores::Float32> buffer = CopyArrayPortalToVector(inputArray.ReadPortal());
+  std::vector<viskores::Float32> buffer =
+    CopyArrayPortalToVector(inputArray.ReadPortal());
 
   VISKORES_TEST_ASSERT(static_cast<viskores::Id>(buffer.size()) ==
-                     inputArray.GetNumberOfValues(),
-                   "Vector was sized wrong.");
+                         inputArray.GetNumberOfValues(),
+                       "Vector was sized wrong.");
 
   for (viskores::Id index = 0; index < inputArray.GetNumberOfValues(); index++)
   {
@@ -437,8 +441,8 @@ void TestArrayPortalVectors()
       "Bad data value.");
   }
 
-  SimpleScalarArrayPortal<viskores::Float32> portal(&buffer.at(0),
-                                                static_cast<viskores::Id>(buffer.size()));
+  SimpleScalarArrayPortal<viskores::Float32> portal(
+    &buffer.at(0), static_cast<viskores::Id>(buffer.size()));
 
   ////
   //// BEGIN-EXAMPLE ArrayPortalToIteratorBeginEnd
@@ -467,8 +471,10 @@ void TestArrayPortalVectors()
 template<typename T, typename Storage>
 void SortCheckArrayHandle(viskores::cont::ArrayHandle<T, Storage> arrayHandle)
 {
-  using WritePortalType = typename viskores::cont::ArrayHandle<T, Storage>::WritePortalType;
-  using ReadPortalType = typename viskores::cont::ArrayHandle<T, Storage>::ReadPortalType;
+  using WritePortalType =
+    typename viskores::cont::ArrayHandle<T, Storage>::WritePortalType;
+  using ReadPortalType =
+    typename viskores::cont::ArrayHandle<T, Storage>::ReadPortalType;
 
   WritePortalType readwritePortal = arrayHandle.WritePortal();
   // This is actually pretty dumb. Sorting would be generally faster in

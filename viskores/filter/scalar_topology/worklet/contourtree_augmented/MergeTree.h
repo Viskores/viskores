@@ -158,7 +158,8 @@ inline MergeTree::MergeTree(viskores::Id meshSize, bool isJoinTree)
   viskores::cont::Algorithm::Copy(meshSizeNullArray, this->Arcs);
 
   // Initialize the superparents with NO_SUCH_ELEMENT
-  viskores::cont::ArrayHandleConstant<viskores::Id> noSuchElementArray((viskores::Id)NO_SUCH_ELEMENT, meshSize);
+  viskores::cont::ArrayHandleConstant<viskores::Id> noSuchElementArray(
+    (viskores::Id)NO_SUCH_ELEMENT, meshSize);
   viskores::cont::Algorithm::Copy(noSuchElementArray, this->Superparents);
 
 } // MergeTree()

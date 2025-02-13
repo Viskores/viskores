@@ -25,8 +25,12 @@ namespace cont
 /// \brief A type list containing types that can be used with an AtomicArray.
 ///
 /// @cond NONE
-using AtomicArrayTypeList =
-  viskores::List<viskores::UInt32, viskores::Int32, viskores::UInt64, viskores::Int64, viskores::Float32, viskores::Float64>;
+using AtomicArrayTypeList = viskores::List<viskores::UInt32,
+                                           viskores::Int32,
+                                           viskores::UInt64,
+                                           viskores::Int64,
+                                           viskores::Float32,
+                                           viskores::Float64>;
 /// @endcond
 
 

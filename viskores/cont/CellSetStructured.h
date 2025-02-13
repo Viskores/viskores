@@ -92,7 +92,8 @@ public:
     return this->Structure.GetGlobalPointIndexStart();
   }
 
-  viskores::IdComponent GetNumberOfPointsInCell(viskores::Id viskoresNotUsed(cellIndex) = 0) const override
+  viskores::IdComponent GetNumberOfPointsInCell(
+    viskores::Id viskoresNotUsed(cellIndex) = 0) const override
   {
     return this->Structure.GetNumberOfPointsInCell();
   }

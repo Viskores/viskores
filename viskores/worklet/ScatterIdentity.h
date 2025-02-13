@@ -43,7 +43,10 @@ struct ScatterIdentity : internal::ScatterBase
 
   using VisitArrayType = viskores::cont::ArrayHandleConstant<viskores::IdComponent>;
   VISKORES_CONT
-  VisitArrayType GetVisitArray(viskores::Id inputRange) const { return VisitArrayType(0, inputRange); }
+  VisitArrayType GetVisitArray(viskores::Id inputRange) const
+  {
+    return VisitArrayType(0, inputRange);
+  }
   VISKORES_CONT
   VisitArrayType GetVisitArray(viskores::Id3 inputRange) const
   {

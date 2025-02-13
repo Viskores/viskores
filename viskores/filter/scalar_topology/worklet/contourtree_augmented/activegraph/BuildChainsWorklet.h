@@ -80,8 +80,8 @@ public:
 
   template <typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertexId,
-                            const viskores::Id /*vertex*/, // FIXME: Remove unused parameter?
-                            const InOutFieldPortalType& hyperarcsPortal) const
+                                const viskores::Id /*vertex*/, // FIXME: Remove unused parameter?
+                                const InOutFieldPortalType& hyperarcsPortal) const
   {
     // retrieve neighbour's ID
     viskores::Id neighbour = hyperarcsPortal.Get(vertexId);

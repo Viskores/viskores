@@ -28,9 +28,9 @@ namespace exec
 /// By default, cells have zero measure unless this template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
-                              const PointCoordVecType& pts,
-                              CellShapeType shape,
-                              viskores::ErrorCode&)
+                                  const PointCoordVecType& pts,
+                                  CellShapeType shape,
+                                  viskores::ErrorCode&)
 {
   (void)numPts;
   (void)pts;
@@ -42,9 +42,9 @@ VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
 /// Compute the arc length of a poly-line cell.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
-                              const PointCoordVecType& pts,
-                              viskores::CellShapeTagLine,
-                              viskores::ErrorCode& ec)
+                                  const PointCoordVecType& pts,
+                                  viskores::CellShapeTagLine,
+                                  viskores::ErrorCode& ec)
 {
   OutType arcLength(0.0);
   if (numPts < 2)
@@ -66,9 +66,9 @@ VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
 /// Compute the area of a triangular cell.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
-                              const PointCoordVecType& pts,
-                              viskores::CellShapeTagTriangle,
-                              viskores::ErrorCode& ec)
+                                  const PointCoordVecType& pts,
+                                  viskores::CellShapeTagTriangle,
+                                  viskores::ErrorCode& ec)
 {
   if (numPts != 3)
   {
@@ -84,9 +84,9 @@ VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
 /// Compute the area of a quadrilateral cell.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
-                              const PointCoordVecType& pts,
-                              viskores::CellShapeTagQuad,
-                              viskores::ErrorCode& ec)
+                                  const PointCoordVecType& pts,
+                                  viskores::CellShapeTagQuad,
+                                  viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -135,9 +135,9 @@ VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType ComputeMeasure(const viskores::IdComponent&,
-                                 const PointCoordVecType&,
-                                 viskores::CellShapeTagPolygon,
-                                 viskores::ErrorCode& ec)
+                                     const PointCoordVecType&,
+                                     viskores::CellShapeTagPolygon,
+                                     viskores::ErrorCode& ec)
 {
   ec = viskores::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
@@ -148,9 +148,9 @@ VISKORES_EXEC OutType ComputeMeasure(const viskores::IdComponent&,
 /// Compute the volume of a tetrahedron.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
-                              const PointCoordVecType& pts,
-                              viskores::CellShapeTagTetra,
-                              viskores::ErrorCode& ec)
+                                  const PointCoordVecType& pts,
+                                  viskores::CellShapeTagTetra,
+                                  viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -168,9 +168,9 @@ VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
 /// Compute the volume of a hexahedral cell (approximated via triple product of average edge along each parametric axis).
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
-                              const PointCoordVecType& pts,
-                              viskores::CellShapeTagHexahedron,
-                              viskores::ErrorCode& ec)
+                                  const PointCoordVecType& pts,
+                                  viskores::CellShapeTagHexahedron,
+                                  viskores::ErrorCode& ec)
 {
   if (numPts != 8)
   {
@@ -212,9 +212,9 @@ VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
 /// Compute the volume of a wedge cell (approximated as 3 tetrahedra).
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
-                              const PointCoordVecType& pts,
-                              viskores::CellShapeTagWedge,
-                              viskores::ErrorCode& ec)
+                                  const PointCoordVecType& pts,
+                                  viskores::CellShapeTagWedge,
+                                  viskores::ErrorCode& ec)
 {
   if (numPts != 6)
   {
@@ -243,9 +243,9 @@ VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
 /// Compute the volume of a pyramid (approximated as 2 tetrahedra)
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMeasure(const viskores::IdComponent& numPts,
-                              const PointCoordVecType& pts,
-                              viskores::CellShapeTagPyramid,
-                              viskores::ErrorCode& ec)
+                                  const PointCoordVecType& pts,
+                                  viskores::CellShapeTagPyramid,
+                                  viskores::ErrorCode& ec)
 {
   if (numPts != 5)
   {

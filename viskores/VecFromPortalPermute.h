@@ -44,7 +44,10 @@ public:
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   VISKORES_EXEC_CONT
-  viskores::IdComponent GetNumberOfComponents() const { return this->Indices->GetNumberOfComponents(); }
+  viskores::IdComponent GetNumberOfComponents() const
+  {
+    return this->Indices->GetNumberOfComponents();
+  }
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <viskores::IdComponent DestSize>
@@ -89,7 +92,10 @@ public:
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   VISKORES_EXEC_CONT
-  viskores::IdComponent GetNumberOfComponents() const { return this->Indices->GetNumberOfComponents(); }
+  viskores::IdComponent GetNumberOfComponents() const
+  {
+    return this->Indices->GetNumberOfComponents();
+  }
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <viskores::IdComponent DestSize>
@@ -156,7 +162,8 @@ struct VecTraits<viskores::VecFromPortalPermute<IndexVecType, PortalType>>
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <viskores::IdComponent destSize>
-  VISKORES_EXEC_CONT static void CopyInto(const VecType& src, viskores::Vec<ComponentType, destSize>& dest)
+  VISKORES_EXEC_CONT static void CopyInto(const VecType& src,
+                                          viskores::Vec<ComponentType, destSize>& dest)
   {
     src.CopyInto(dest);
   }
@@ -171,9 +178,8 @@ inline VISKORES_EXEC VecFromPortalPermute<IndexVecType, PortalType> make_VecFrom
 }
 
 template <typename IndexVecType, typename PortalType>
-inline VISKORES_EXEC VecFromPortalPermute<IndexVecType, const PortalType*> make_VecFromPortalPermute(
-  const IndexVecType* index,
-  const PortalType* const portal)
+inline VISKORES_EXEC VecFromPortalPermute<IndexVecType, const PortalType*>
+make_VecFromPortalPermute(const IndexVecType* index, const PortalType* const portal)
 {
   return VecFromPortalPermute<IndexVecType, const PortalType*>(index, portal);
 }

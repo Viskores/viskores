@@ -101,9 +101,9 @@ public:
 
   template <typename CellShapeTagType, typename PointsVecType>
   VISKORES_EXEC void operator()(CellShapeTagType cellShape,
-                            PointsVecType points,
-                            const PointType& pc,
-                            PointType& wc) const
+                                PointsVecType points,
+                                const PointType& pc,
+                                PointType& wc) const
   {
     auto status = viskores::exec::CellInterpolate(points, pc, cellShape, wc);
     if (status != viskores::ErrorCode::Success)
@@ -158,9 +158,9 @@ public:
 
   template <typename LocatorType>
   VISKORES_EXEC void operator()(const viskores::Vec3f& point,
-                            const LocatorType& locator,
-                            viskores::Id& cellId,
-                            viskores::Vec3f& pcoords) const
+                                const LocatorType& locator,
+                                viskores::Id& cellId,
+                                viskores::Vec3f& pcoords) const
   {
     viskores::ErrorCode status = locator.FindCell(point, cellId, pcoords);
     if (status != viskores::ErrorCode::Success)
@@ -200,20 +200,20 @@ void TestWithDataSet(const viskores::cont::DataSet& dataset)
   {
     VISKORES_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
     VISKORES_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
-                     "Incorrect parameteric coordinates");
+                         "Incorrect parameteric coordinates");
   }
 }
 
 void TestCellLocatorChooser()
 {
-  TestWithDataSet<viskores::cont::CellSetStructured<3>, viskores::cont::ArrayHandleUniformPointCoordinates>(
-    MakeTestDataSetUniform());
+  TestWithDataSet<viskores::cont::CellSetStructured<3>,
+                  viskores::cont::ArrayHandleUniformPointCoordinates>(MakeTestDataSetUniform());
 
-  TestWithDataSet<
-    viskores::cont::CellSetStructured<3>,
-    viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>>>(
+  TestWithDataSet<viskores::cont::CellSetStructured<3>,
+                  viskores::cont::ArrayHandleCartesianProduct<
+                    viskores::cont::ArrayHandle<viskores::FloatDefault>,
+                    viskores::cont::ArrayHandle<viskores::FloatDefault>,
+                    viskores::cont::ArrayHandle<viskores::FloatDefault>>>(
     MakeTestDataSetRectilinear());
 
   TestWithDataSet<viskores::cont::CellSetStructured<3>, viskores::cont::ArrayHandle<PointType>>(

@@ -62,7 +62,8 @@
 /// A utility macro that takes 1 or more arguments and converts it into the C string version
 /// of the first argument.
 
-#define VISKORES_STRINGIFY_FIRST(...) VISKORES_EXPAND(VISKORES_STRINGIFY_FIRST_IMPL(__VA_ARGS__, dummy))
+#define VISKORES_STRINGIFY_FIRST(...) \
+  VISKORES_EXPAND(VISKORES_STRINGIFY_FIRST_IMPL(__VA_ARGS__, dummy))
 #define VISKORES_STRINGIFY_FIRST_IMPL(first, ...) #first
 
 /// \def VISKORES_TEST_ASSERT(condition, messages..)
@@ -95,10 +96,13 @@ public:
   std::string GetMergedMessage() const
   {
     std::string msg;
-    std::for_each(this->Messages.rbegin(), this->Messages.rend(), [&](const std::string& next) {
-      msg += (msg.empty() ? "" : ": ");
-      msg += next;
-    });
+    std::for_each(this->Messages.rbegin(),
+                  this->Messages.rend(),
+                  [&](const std::string& next)
+                  {
+                    msg += (msg.empty() ? "" : ": ");
+                    msg += next;
+                  });
 
     return msg;
   }
@@ -177,11 +181,14 @@ inline void FloatingPointExceptionTrapDisable()
 template <typename T>
 struct TypeName;
 
-#define VISKORES_BASIC_TYPE(type, name)            \
-  template <>                                   \
-  struct TypeName<type>                         \
-  {                                             \
-    static std::string Name() { return #name; } \
+#define VISKORES_BASIC_TYPE(type, name) \
+  template <>                           \
+  struct TypeName<type>                 \
+  {                                     \
+    static std::string Name()           \
+    {                                   \
+      return #name;                     \
+    }                                   \
   }
 
 VISKORES_BASIC_TYPE(viskores::Float32, F32);
@@ -363,9 +370,9 @@ public:
   public:
     template <typename... Ts>
     VISKORES_CONT TestFailure(const std::string& file,
-                          viskores::Id line,
-                          const char* func,
-                          Ts&&... messages)
+                              viskores::Id line,
+                              const char* func,
+                              Ts&&... messages)
       : File(file)
       , Line(line)
       , Func(func)
@@ -398,20 +405,20 @@ public:
     }
     template <typename T1, typename T2, typename T3, typename T4>
     VISKORES_CONT void AppendMessages(std::stringstream& messageStream,
-                                  T1&& m1,
-                                  T2&& m2,
-                                  T3&& m3,
-                                  T4&& m4)
+                                      T1&& m1,
+                                      T2&& m2,
+                                      T3&& m3,
+                                      T4&& m4)
     {
       messageStream << m1 << m2 << m3 << m4;
     }
     template <typename T1, typename T2, typename T3, typename T4, typename... Ts>
     VISKORES_CONT void AppendMessages(std::stringstream& messageStream,
-                                  T1&& m1,
-                                  T2&& m2,
-                                  T3&& m3,
-                                  T4&& m4,
-                                  Ts&&... ms)
+                                      T1&& m1,
+                                      T2&& m2,
+                                      T3&& m3,
+                                      T4&& m4,
+                                      Ts&&... ms)
     {
       messageStream << m1 << m2 << m3 << m4;
       this->AppendMessages(messageStream, std::forward<Ts>(ms)...);
@@ -425,11 +432,11 @@ public:
 
   template <typename... Ts>
   static VISKORES_CONT void Assert(const std::string& conditionString,
-                               const std::string& file,
-                               viskores::Id line,
-                               const char* func,
-                               bool condition,
-                               Ts&&... messages)
+                                   const std::string& file,
+                                   viskores::Id line,
+                                   const char* func,
+                                   bool condition,
+                                   Ts&&... messages)
   {
     if (condition)
     {
@@ -443,28 +450,28 @@ public:
   }
 
   static VISKORES_CONT void Assert(const std::string& conditionString,
-                               const std::string& file,
-                               viskores::Id line,
-                               const char* func,
-                               bool condition)
+                                   const std::string& file,
+                                   viskores::Id line,
+                                   const char* func,
+                                   bool condition)
   {
     Assert(conditionString, file, line, func, condition, "Test assertion failed");
   }
 
   static VISKORES_CONT void Assert(const std::string& conditionString,
-                               const std::string& file,
-                               viskores::Id line,
-                               const char* func,
-                               const TestEqualResult& result)
+                                   const std::string& file,
+                                   viskores::Id line,
+                                   const char* func,
+                                   const TestEqualResult& result)
   {
     Assert(conditionString, file, line, func, static_cast<bool>(result), result.GetMergedMessage());
   }
 
   template <typename... Ts>
   static VISKORES_CONT void TestFail(const std::string& file,
-                                 viskores::Id line,
-                                 const char* func,
-                                 Ts&&... messages)
+                                     viskores::Id line,
+                                     const char* func,
+                                     Ts&&... messages)
   {
     throw TestFailure(file, line, func, std::forward<Ts>(messages)...);
   }
@@ -548,7 +555,8 @@ public:
     template <typename T>
     void operator()(T t) const
     {
-      std::cout << "*** " << viskores::testing::TypeName<T>::Name() << " ***************" << std::endl;
+      std::cout << "*** " << viskores::testing::TypeName<T>::Name() << " ***************"
+                << std::endl;
       this->Function(t);
     }
 
@@ -612,8 +620,8 @@ struct TestEqualImpl;
 ///
 template <typename T1, typename T2>
 static inline VISKORES_EXEC_CONT bool test_equal(T1 value1,
-                                             T2 value2,
-                                             viskores::Float64 tolerance = 0.00001)
+                                                 T2 value2,
+                                                 viskores::Float64 tolerance = 0.00001)
 {
   return detail::TestEqualImpl<T1, T2>()(value1, value2, tolerance);
 }
@@ -625,7 +633,11 @@ template <typename T1, typename T2>
 struct TestEqualImpl
 {
   template <typename IsBase1, typename IsBase2>
-  VISKORES_EXEC_CONT bool DoIt(T1 vector1, T2 vector2, viskores::Float64 tolerance, IsBase1, IsBase2) const
+  VISKORES_EXEC_CONT bool DoIt(T1 vector1,
+                               T2 vector2,
+                               viskores::Float64 tolerance,
+                               IsBase1,
+                               IsBase2) const
   {
     using Traits1 = viskores::VecTraits<T1>;
     using Traits2 = viskores::VecTraits<T2>;
@@ -652,10 +664,10 @@ struct TestEqualImpl
   }
 
   VISKORES_EXEC_CONT bool DoIt(T1 scalar1,
-                           T2 scalar2,
-                           viskores::Float64 tolerance,
-                           std::true_type,
-                           std::true_type) const
+                               T2 scalar2,
+                               viskores::Float64 tolerance,
+                               std::true_type,
+                               std::true_type) const
   {
     // Do all comparisons using 64-bit floats.
     return test_equal(
@@ -678,8 +690,8 @@ template <>
 struct TestEqualImpl<viskores::Float64, viskores::Float64>
 {
   VISKORES_EXEC_CONT bool operator()(viskores::Float64 value1,
-                                 viskores::Float64 value2,
-                                 viskores::Float64 tolerance) const
+                                     viskores::Float64 value2,
+                                     viskores::Float64 tolerance) const
   {
     // Handle non-finites. Normally, non-finites are never "equal" to each other (for valid
     // mathematical reasons), but for testing purposes if the two values are the same type of
@@ -713,7 +725,8 @@ struct TestEqualImpl<viskores::Float64, viskores::Float64>
       // These cannot be within tolerance, so just return false.
       return false;
     }
-    if ((ratio > viskores::Float64(1.0) - tolerance) && (ratio < viskores::Float64(1.0) + tolerance))
+    if ((ratio > viskores::Float64(1.0) - tolerance) &&
+        (ratio < viskores::Float64(1.0) + tolerance))
     {
       // This component is OK. The condition is checked in this way to
       // correctly handle non-finites that fail all comparisons. Thus, if a
@@ -735,8 +748,8 @@ template <>
 struct TestEqualImpl<std::string, std::string>
 {
   VISKORES_CONT bool operator()(const std::string& string1,
-                            const std::string& string2,
-                            viskores::Float64 viskoresNotUsed(tolerance)) const
+                                const std::string& string2,
+                                viskores::Float64 viskoresNotUsed(tolerance)) const
   {
     return string1 == string2;
   }
@@ -760,7 +773,9 @@ struct TestEqualImpl<T, const char*>
 template <>
 struct TestEqualImpl<const char*, const char*>
 {
-  VISKORES_CONT bool operator()(const char* string1, const char* string2, viskores::Float64 tolerance) const
+  VISKORES_CONT bool operator()(const char* string1,
+                                const char* string2,
+                                viskores::Float64 tolerance) const
   {
     return TestEqualImpl<std::string, std::string>()(string1, string2, tolerance);
   }
@@ -773,8 +788,8 @@ template <typename T1, typename T2, typename T3, typename T4>
 struct TestEqualImpl<viskores::Pair<T1, T2>, viskores::Pair<T3, T4>>
 {
   VISKORES_EXEC_CONT bool operator()(const viskores::Pair<T1, T2>& pair1,
-                                 const viskores::Pair<T3, T4>& pair2,
-                                 viskores::Float64 tolerance) const
+                                     const viskores::Pair<T3, T4>& pair2,
+                                     viskores::Float64 tolerance) const
   {
     return test_equal(pair1.first, pair2.first, tolerance) &&
       test_equal(pair1.second, pair2.second, tolerance);
@@ -787,8 +802,8 @@ template <>
 struct TestEqualImpl<viskores::Range, viskores::Range>
 {
   VISKORES_EXEC_CONT bool operator()(const viskores::Range& range1,
-                                 const viskores::Range& range2,
-                                 viskores::Float64 tolerance) const
+                                     const viskores::Range& range2,
+                                     viskores::Float64 tolerance) const
   {
     return (test_equal(range1.Min, range2.Min, tolerance) &&
             test_equal(range1.Max, range2.Max, tolerance));
@@ -801,8 +816,8 @@ template <>
 struct TestEqualImpl<viskores::Bounds, viskores::Bounds>
 {
   VISKORES_EXEC_CONT bool operator()(const viskores::Bounds& bounds1,
-                                 const viskores::Bounds& bounds2,
-                                 viskores::Float64 tolerance) const
+                                     const viskores::Bounds& bounds2,
+                                     viskores::Float64 tolerance) const
   {
     return (test_equal(bounds1.X, bounds2.X, tolerance) &&
             test_equal(bounds1.Y, bounds2.Y, tolerance) &&
@@ -815,7 +830,9 @@ struct TestEqualImpl<viskores::Bounds, viskores::Bounds>
 template <>
 struct TestEqualImpl<bool, bool>
 {
-  VISKORES_EXEC_CONT bool operator()(bool bool1, bool bool2, viskores::Float64 viskoresNotUsed(tolerance))
+  VISKORES_EXEC_CONT bool operator()(bool bool1,
+                                     bool bool2,
+                                     viskores::Float64 viskoresNotUsed(tolerance))
   {
     return bool1 == bool2;
   }
@@ -969,7 +986,7 @@ static inline VISKORES_CONT void SetPortal(const PortalType& portal)
 ///
 template <typename PortalType1, typename PortalType2>
 static inline VISKORES_CONT bool test_equal_portals(const PortalType1& portal1,
-                                                const PortalType2& portal2)
+                                                    const PortalType2& portal2)
 {
   if (portal1.GetNumberOfValues() != portal2.GetNumberOfValues())
   {

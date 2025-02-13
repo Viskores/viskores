@@ -103,8 +103,8 @@ struct CobmineHyperSweepBlockFunctor
         int incomingGlobalBlockId;
         rp.dequeue(ingid, incomingGlobalBlockId);
         VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                   "Combining local block " << b->GlobalBlockId << " with incomoing block "
-                                            << incomingGlobalBlockId);
+                       "Combining local block " << b->GlobalBlockId << " with incomoing block "
+                                                << incomingGlobalBlockId);
 #endif
         viskores::cont::ArrayHandle<viskores::Id> incomingIntrinsicVolume;
         rp.dequeue(ingid, incomingIntrinsicVolume);
@@ -117,7 +117,7 @@ struct CobmineHyperSweepBlockFunctor
         auto intrinsicVolumeView =
           make_ArrayHandleView(b->IntrinsicVolume, 0, numSupernodesToProcess);
         VISKORES_ASSERT(incomingIntrinsicVolume.GetNumberOfValues() ==
-                    intrinsicVolumeView.GetNumberOfValues());
+                        intrinsicVolumeView.GetNumberOfValues());
 
         viskores::cont::Algorithm::Transform(
           intrinsicVolumeView, incomingIntrinsicVolume, intrinsicVolumeView, viskores::Sum());
@@ -125,7 +125,7 @@ struct CobmineHyperSweepBlockFunctor
         auto dependentVolumeView =
           make_ArrayHandleView(b->DependentVolume, 0, numSupernodesToProcess);
         VISKORES_ASSERT(incomingDependentVolume.GetNumberOfValues() ==
-                    dependentVolumeView.GetNumberOfValues());
+                        dependentVolumeView.GetNumberOfValues());
         viskores::cont::Algorithm::Transform(
           dependentVolumeView, incomingDependentVolume, dependentVolumeView, viskores::Sum());
       }

@@ -122,8 +122,8 @@ public:
   {
   }
 
-  VISKORES_CONT ContourTreeNodeComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                              viskores::cont::Token& token)
+  VISKORES_CONT ContourTreeNodeComparatorImpl
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token)
   {
     return ContourTreeNodeComparatorImpl(this->Superparents, this->Superarcs, device, token);
   }

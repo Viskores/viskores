@@ -39,18 +39,18 @@ viskores::IdComponent ANARIScene::GetNumberOfMappers() const
 bool ANARIScene::HasMapperWithName(const char* _name) const
 {
   std::string name = _name;
-  auto itr = std::find_if(this->Mappers.begin(), this->Mappers.end(), [&](auto& m) {
-    return m.Mapper->GetName() == name;
-  });
+  auto itr = std::find_if(this->Mappers.begin(),
+                          this->Mappers.end(),
+                          [&](auto& m) { return m.Mapper->GetName() == name; });
   return itr != this->Mappers.end();
 }
 
 viskores::IdComponent ANARIScene::GetMapperIndexByName(const char* _name)
 {
   std::string name = _name;
-  auto itr = std::find_if(this->Mappers.begin(), this->Mappers.end(), [&](auto& m) {
-    return m.Mapper->GetName() == name;
-  });
+  auto itr = std::find_if(this->Mappers.begin(),
+                          this->Mappers.end(),
+                          [&](auto& m) { return m.Mapper->GetName() == name; });
   return static_cast<viskores::IdComponent>(std::distance(this->Mappers.begin(), itr));
 }
 
@@ -62,9 +62,9 @@ ANARIMapper& ANARIScene::GetMapper(viskores::IdComponent id)
 ANARIMapper& ANARIScene::GetMapper(const char* _name)
 {
   std::string name = _name;
-  auto itr = std::find_if(this->Mappers.begin(), this->Mappers.end(), [&](auto& m) {
-    return m.Mapper->GetName() == name;
-  });
+  auto itr = std::find_if(this->Mappers.begin(),
+                          this->Mappers.end(),
+                          [&](auto& m) { return m.Mapper->GetName() == name; });
   return *itr->Mapper;
 }
 

@@ -22,29 +22,30 @@
 ///
 #define VISKORES_CUDA_CHECK_ASYNCHRONOUS_ERROR()                                              \
   VISKORES_SWALLOW_SEMICOLON_PRE_BLOCK                                                        \
-  {                                                                                       \
+  {                                                                                           \
     const cudaError_t viskores_cuda_check_async_error = cudaGetLastError();                   \
     if (viskores_cuda_check_async_error != cudaSuccess)                                       \
-    {                                                                                     \
+    {                                                                                         \
       throw ::viskores::cont::cuda::ErrorCuda(                                                \
         viskores_cuda_check_async_error, __FILE__, __LINE__, "Unchecked asynchronous error"); \
-    }                                                                                     \
-  }                                                                                       \
+    }                                                                                         \
+  }                                                                                           \
   VISKORES_SWALLOW_SEMICOLON_POST_BLOCK
 
 /// A macro that can be wrapped around a CUDA command and will throw an
 /// ErrorCuda exception if the CUDA command fails.
 ///
-#define VISKORES_CUDA_CALL(command)                                                                \
-  VISKORES_CUDA_CHECK_ASYNCHRONOUS_ERROR();                                                        \
-  VISKORES_SWALLOW_SEMICOLON_PRE_BLOCK                                                             \
-  {                                                                                            \
-    const cudaError_t viskores_cuda_call_error = command;                                          \
-    if (viskores_cuda_call_error != cudaSuccess)                                                   \
-    {                                                                                          \
-      throw ::viskores::cont::cuda::ErrorCuda(viskores_cuda_call_error, __FILE__, __LINE__, #command); \
-    }                                                                                          \
-  }                                                                                            \
+#define VISKORES_CUDA_CALL(command)                              \
+  VISKORES_CUDA_CHECK_ASYNCHRONOUS_ERROR();                      \
+  VISKORES_SWALLOW_SEMICOLON_PRE_BLOCK                           \
+  {                                                              \
+    const cudaError_t viskores_cuda_call_error = command;        \
+    if (viskores_cuda_call_error != cudaSuccess)                 \
+    {                                                            \
+      throw ::viskores::cont::cuda::ErrorCuda(                   \
+        viskores_cuda_call_error, __FILE__, __LINE__, #command); \
+    }                                                            \
+  }                                                              \
   VISKORES_SWALLOW_SEMICOLON_POST_BLOCK
 
 namespace viskores

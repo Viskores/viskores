@@ -87,16 +87,17 @@ public:
   InitializeActiveGraphVertices() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& sortIndex,
-                            const InFieldPortalType& outDegrees,
-                            const InFieldPortalType& inverseIndex,
-                            const InFieldPortalType& extrema,
-                            const viskores::Id /*vertexIndex*/, // FIXME: Remove unused parameter?
-                            const OutFieldPortalType& activeIndices,
-                            const OutFieldPortalType& globalIndex,
-                            const OutFieldPortalType& outdegree,
-                            const OutFieldPortalType& hyperarcs,
-                            const OutFieldPortalType& activeVertices) const
+  VISKORES_EXEC void operator()(
+    const viskores::Id& sortIndex,
+    const InFieldPortalType& outDegrees,
+    const InFieldPortalType& inverseIndex,
+    const InFieldPortalType& extrema,
+    const viskores::Id /*vertexIndex*/, // FIXME: Remove unused parameter?
+    const OutFieldPortalType& activeIndices,
+    const OutFieldPortalType& globalIndex,
+    const OutFieldPortalType& outdegree,
+    const OutFieldPortalType& hyperarcs,
+    const OutFieldPortalType& activeVertices) const
   {
     if (outDegrees.Get(sortIndex) != 1)
     {

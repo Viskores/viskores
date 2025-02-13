@@ -126,11 +126,11 @@ struct VISKORES_CONT_EXPORT ScheduleParameters
 ///
 VISKORES_CONT_EXPORT void InitScheduleParameters(
   viskores::cont::cuda::ScheduleParameters (*)(char const* name,
-                                           int major,
-                                           int minor,
-                                           int multiProcessorCount,
-                                           int maxThreadsPerMultiProcessor,
-                                           int maxThreadsPerBlock));
+                                               int major,
+                                               int minor,
+                                               int multiProcessorCount,
+                                               int maxThreadsPerMultiProcessor,
+                                               int maxThreadsPerBlock));
 
 namespace internal
 {
@@ -237,7 +237,10 @@ struct CastPortal<PortalType, BinaryFunctor, std::false_type>
   viskores::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 
   VISKORES_EXEC
-  ValueType Get(viskores::Id index) const { return static_cast<ValueType>(this->Portal.Get(index)); }
+  ValueType Get(viskores::Id index) const
+  {
+    return static_cast<ValueType>(this->Portal.Get(index));
+  }
 };
 
 struct CudaFreeFunctor
@@ -277,10 +280,11 @@ private:
   template <typename BitsPortal, typename IndicesPortal, typename GlobalPopCountType>
   struct BitFieldToUnorderedSetFunctor : public viskores::exec::FunctorBase
   {
-    VISKORES_STATIC_ASSERT_MSG(VISKORES_PASS_COMMAS(std::is_same<GlobalPopCountType, viskores::Int32>::value ||
-                                            std::is_same<GlobalPopCountType, viskores::UInt32>::value ||
-                                            std::is_same<GlobalPopCountType, viskores::UInt64>::value),
-                           "Unsupported GlobalPopCountType. Must support CUDA atomicAdd.");
+    VISKORES_STATIC_ASSERT_MSG(
+      VISKORES_PASS_COMMAS(std::is_same<GlobalPopCountType, viskores::Int32>::value ||
+                           std::is_same<GlobalPopCountType, viskores::UInt32>::value ||
+                           std::is_same<GlobalPopCountType, viskores::UInt64>::value),
+      "Unsupported GlobalPopCountType. Must support CUDA atomicAdd.");
 
     //Using typename BitsPortal::WordTypePreferred causes dependent type errors using GCC 4.8.5
     //which is the GCC required compiler for CUDA 9.2 on summit/power9
@@ -423,10 +427,10 @@ private:
 
   template <class ValueIterator, class StencilPortal, class OutputPortal, class UnaryPredicate>
   VISKORES_CONT static viskores::Id CopyIfPortal(ValueIterator valuesBegin,
-                                         ValueIterator valuesEnd,
-                                         StencilPortal stencil,
-                                         OutputPortal output,
-                                         UnaryPredicate unary_predicate)
+                                                 ValueIterator valuesEnd,
+                                                 StencilPortal stencil,
+                                                 OutputPortal output,
+                                                 UnaryPredicate unary_predicate)
   {
     auto outputBegin = cuda::internal::IteratorBegin(output);
 
@@ -454,9 +458,9 @@ private:
 
   template <class ValuePortal, class StencilPortal, class OutputPortal, class UnaryPredicate>
   VISKORES_CONT static viskores::Id CopyIfPortal(ValuePortal values,
-                                         StencilPortal stencil,
-                                         OutputPortal output,
-                                         UnaryPredicate unary_predicate)
+                                                 StencilPortal stencil,
+                                                 OutputPortal output,
+                                                 UnaryPredicate unary_predicate)
   {
     return CopyIfPortal(cuda::internal::IteratorBegin(values),
                         cuda::internal::IteratorEnd(values),
@@ -467,10 +471,10 @@ private:
 
   template <class InputPortal, class OutputPortal>
   VISKORES_CONT static void CopySubRangePortal(const InputPortal& input,
-                                           viskores::Id inputOffset,
-                                           viskores::Id size,
-                                           const OutputPortal& output,
-                                           viskores::Id outputOffset)
+                                               viskores::Id inputOffset,
+                                               viskores::Id size,
+                                               const OutputPortal& output,
+                                               viskores::Id outputOffset)
   {
     try
     {
@@ -489,10 +493,11 @@ private:
   template <typename BitsPortal, typename GlobalPopCountType>
   struct CountSetBitsFunctor : public viskores::exec::FunctorBase
   {
-    VISKORES_STATIC_ASSERT_MSG(VISKORES_PASS_COMMAS(std::is_same<GlobalPopCountType, viskores::Int32>::value ||
-                                            std::is_same<GlobalPopCountType, viskores::UInt32>::value ||
-                                            std::is_same<GlobalPopCountType, viskores::UInt64>::value),
-                           "Unsupported GlobalPopCountType. Must support CUDA atomicAdd.");
+    VISKORES_STATIC_ASSERT_MSG(
+      VISKORES_PASS_COMMAS(std::is_same<GlobalPopCountType, viskores::Int32>::value ||
+                           std::is_same<GlobalPopCountType, viskores::UInt32>::value ||
+                           std::is_same<GlobalPopCountType, viskores::UInt64>::value),
+      "Unsupported GlobalPopCountType. Must support CUDA atomicAdd.");
 
     //Using typename BitsPortal::WordTypePreferred causes dependent type errors using GCC 4.8.5
     //which is the GCC required compiler for CUDA 9.2 on summit/power9
@@ -579,8 +584,8 @@ private:
 
   template <class InputPortal, class ValuesPortal, class OutputPortal>
   VISKORES_CONT static void LowerBoundsPortal(const InputPortal& input,
-                                          const ValuesPortal& values,
-                                          const OutputPortal& output)
+                                              const ValuesPortal& values,
+                                              const OutputPortal& output)
   {
     using ValueType = typename ValuesPortal::ValueType;
     LowerBoundsPortal(input, values, output, ::thrust::less<ValueType>());
@@ -588,7 +593,7 @@ private:
 
   template <class InputPortal, class OutputPortal>
   VISKORES_CONT static void LowerBoundsPortal(const InputPortal& input,
-                                          const OutputPortal& values_output)
+                                              const OutputPortal& values_output)
   {
     using ValueType = typename InputPortal::ValueType;
     LowerBoundsPortal(input, values_output, values_output, ::thrust::less<ValueType>());
@@ -596,9 +601,9 @@ private:
 
   template <class InputPortal, class ValuesPortal, class OutputPortal, class BinaryCompare>
   VISKORES_CONT static void LowerBoundsPortal(const InputPortal& input,
-                                          const ValuesPortal& values,
-                                          const OutputPortal& output,
-                                          BinaryCompare binary_compare)
+                                              const ValuesPortal& values,
+                                              const OutputPortal& output,
+                                              BinaryCompare binary_compare)
   {
     using ValueType = typename InputPortal::ValueType;
     viskores::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
@@ -628,8 +633,8 @@ private:
 
   template <class InputPortal, typename T, class BinaryFunctor>
   VISKORES_CONT static T ReducePortal(const InputPortal& input,
-                                  T initialValue,
-                                  BinaryFunctor binary_functor)
+                                      T initialValue,
+                                      BinaryFunctor binary_functor)
   {
     using fast_path = std::is_same<typename InputPortal::ValueType, T>;
     return ReducePortalImpl(input, initialValue, binary_functor, fast_path());
@@ -637,9 +642,9 @@ private:
 
   template <class InputPortal, typename T, class BinaryFunctor>
   VISKORES_CONT static T ReducePortalImpl(const InputPortal& input,
-                                      T initialValue,
-                                      BinaryFunctor binary_functor,
-                                      std::true_type)
+                                          T initialValue,
+                                          BinaryFunctor binary_functor,
+                                          std::true_type)
   {
     //The portal type and the initial value are the same so we can use
     //the thrust reduction algorithm
@@ -663,15 +668,15 @@ private:
 
   template <class InputPortal, typename T, class BinaryFunctor>
   VISKORES_CONT static T ReducePortalImpl(const InputPortal& input,
-                                      T initialValue,
-                                      BinaryFunctor binary_functor,
-                                      std::false_type)
+                                          T initialValue,
+                                          BinaryFunctor binary_functor,
+                                          std::false_type)
   {
     //The portal type and the initial value AREN'T the same type so we have
     //to a slower approach, where we wrap the input portal inside a cast
     //portal
-    viskores::cont::cuda::internal::CastPortal<InputPortal, BinaryFunctor> castPortal(input,
-                                                                                  binary_functor);
+    viskores::cont::cuda::internal::CastPortal<InputPortal, BinaryFunctor> castPortal(
+      input, binary_functor);
 
     viskores::exec::cuda::internal::WrappedBinaryOperator<T, BinaryFunctor> bop(binary_functor);
 
@@ -697,10 +702,10 @@ private:
             class ValueOutputPortal,
             class BinaryFunctor>
   VISKORES_CONT static viskores::Id ReduceByKeyPortal(const KeysPortal& keys,
-                                              const ValuesPortal& values,
-                                              const KeysOutputPortal& keys_output,
-                                              const ValueOutputPortal& values_output,
-                                              BinaryFunctor binary_functor)
+                                                      const ValuesPortal& values,
+                                                      const KeysOutputPortal& keys_output,
+                                                      const ValueOutputPortal& values_output,
+                                                      BinaryFunctor binary_functor)
   {
     auto keys_out_begin = cuda::internal::IteratorBegin(keys_output);
     auto values_out_begin = cuda::internal::IteratorBegin(values_output);
@@ -710,7 +715,8 @@ private:
     ::thrust::equal_to<typename KeysPortal::ValueType> binaryPredicate;
 
     using ValueType = typename ValuesPortal::ValueType;
-    viskores::exec::cuda::internal::WrappedBinaryOperator<ValueType, BinaryFunctor> bop(binary_functor);
+    viskores::exec::cuda::internal::WrappedBinaryOperator<ValueType, BinaryFunctor> bop(
+      binary_functor);
 
     try
     {
@@ -732,8 +738,9 @@ private:
   }
 
   template <class InputPortal, class OutputPortal>
-  VISKORES_CONT static typename InputPortal::ValueType ScanExclusivePortal(const InputPortal& input,
-                                                                       const OutputPortal& output)
+  VISKORES_CONT static typename InputPortal::ValueType ScanExclusivePortal(
+    const InputPortal& input,
+    const OutputPortal& output)
   {
     using ValueType = typename OutputPortal::ValueType;
 
@@ -792,20 +799,23 @@ private:
   }
 
   template <class InputPortal, class OutputPortal>
-  VISKORES_CONT static typename InputPortal::ValueType ScanInclusivePortal(const InputPortal& input,
-                                                                       const OutputPortal& output)
+  VISKORES_CONT static typename InputPortal::ValueType ScanInclusivePortal(
+    const InputPortal& input,
+    const OutputPortal& output)
   {
     using ValueType = typename OutputPortal::ValueType;
     return ScanInclusivePortal(input, output, ::thrust::plus<ValueType>());
   }
 
   template <class InputPortal, class OutputPortal, class BinaryFunctor>
-  VISKORES_CONT static typename InputPortal::ValueType ScanInclusivePortal(const InputPortal& input,
-                                                                       const OutputPortal& output,
-                                                                       BinaryFunctor binary_functor)
+  VISKORES_CONT static typename InputPortal::ValueType ScanInclusivePortal(
+    const InputPortal& input,
+    const OutputPortal& output,
+    BinaryFunctor binary_functor)
   {
     using ValueType = typename OutputPortal::ValueType;
-    viskores::exec::cuda::internal::WrappedBinaryOperator<ValueType, BinaryFunctor> bop(binary_functor);
+    viskores::exec::cuda::internal::WrappedBinaryOperator<ValueType, BinaryFunctor> bop(
+      binary_functor);
 
     try
     {
@@ -830,8 +840,8 @@ private:
 
   template <typename KeysPortal, typename ValuesPortal, typename OutputPortal>
   VISKORES_CONT static void ScanInclusiveByKeyPortal(const KeysPortal& keys,
-                                                 const ValuesPortal& values,
-                                                 const OutputPortal& output)
+                                                     const ValuesPortal& values,
+                                                     const OutputPortal& output)
   {
     using KeyType = typename KeysPortal::ValueType;
     using ValueType = typename OutputPortal::ValueType;
@@ -845,10 +855,10 @@ private:
             typename BinaryPredicate,
             typename AssociativeOperator>
   VISKORES_CONT static void ScanInclusiveByKeyPortal(const KeysPortal& keys,
-                                                 const ValuesPortal& values,
-                                                 const OutputPortal& output,
-                                                 BinaryPredicate binary_predicate,
-                                                 AssociativeOperator binary_operator)
+                                                     const ValuesPortal& values,
+                                                     const OutputPortal& output,
+                                                     BinaryPredicate binary_predicate,
+                                                     AssociativeOperator binary_operator)
   {
     using KeyType = typename KeysPortal::ValueType;
     viskores::exec::cuda::internal::WrappedBinaryOperator<KeyType, BinaryPredicate> bpred(
@@ -875,8 +885,8 @@ private:
 
   template <typename KeysPortal, typename ValuesPortal, typename OutputPortal>
   VISKORES_CONT static void ScanExclusiveByKeyPortal(const KeysPortal& keys,
-                                                 const ValuesPortal& values,
-                                                 const OutputPortal& output)
+                                                     const ValuesPortal& values,
+                                                     const OutputPortal& output)
   {
     using KeyType = typename KeysPortal::ValueType;
     using ValueType = typename OutputPortal::ValueType;
@@ -895,11 +905,11 @@ private:
             typename BinaryPredicate,
             typename AssociativeOperator>
   VISKORES_CONT static void ScanExclusiveByKeyPortal(const KeysPortal& keys,
-                                                 const ValuesPortal& values,
-                                                 const OutputPortal& output,
-                                                 T initValue,
-                                                 BinaryPredicate binary_predicate,
-                                                 AssociativeOperator binary_operator)
+                                                     const ValuesPortal& values,
+                                                     const OutputPortal& output,
+                                                     T initValue,
+                                                     BinaryPredicate binary_predicate,
+                                                     AssociativeOperator binary_operator)
   {
     using KeyType = typename KeysPortal::ValueType;
     viskores::exec::cuda::internal::WrappedBinaryOperator<KeyType, BinaryPredicate> bpred(
@@ -959,8 +969,8 @@ private:
 
   template <class KeysPortal, class ValuesPortal, class BinaryCompare>
   VISKORES_CONT static void SortByKeyPortal(const KeysPortal& keys,
-                                        const ValuesPortal& values,
-                                        BinaryCompare binary_compare)
+                                            const ValuesPortal& values,
+                                            BinaryCompare binary_compare)
   {
     using ValueType = typename KeysPortal::ValueType;
     viskores::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
@@ -997,7 +1007,8 @@ private:
   }
 
   template <class ValuesPortal, class BinaryCompare>
-  VISKORES_CONT static viskores::Id UniquePortal(const ValuesPortal values, BinaryCompare binary_compare)
+  VISKORES_CONT static viskores::Id UniquePortal(const ValuesPortal values,
+                                                 BinaryCompare binary_compare)
   {
     using ValueType = typename ValuesPortal::ValueType;
     viskores::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
@@ -1018,8 +1029,8 @@ private:
 
   template <class InputPortal, class ValuesPortal, class OutputPortal>
   VISKORES_CONT static void UpperBoundsPortal(const InputPortal& input,
-                                          const ValuesPortal& values,
-                                          const OutputPortal& output)
+                                              const ValuesPortal& values,
+                                              const OutputPortal& output)
   {
     try
     {
@@ -1038,9 +1049,9 @@ private:
 
   template <class InputPortal, class ValuesPortal, class OutputPortal, class BinaryCompare>
   VISKORES_CONT static void UpperBoundsPortal(const InputPortal& input,
-                                          const ValuesPortal& values,
-                                          const OutputPortal& output,
-                                          BinaryCompare binary_compare)
+                                              const ValuesPortal& values,
+                                              const OutputPortal& output,
+                                              BinaryCompare binary_compare)
   {
     using ValueType = typename OutputPortal::ValueType;
 
@@ -1064,7 +1075,7 @@ private:
 
   template <class InputPortal, class OutputPortal>
   VISKORES_CONT static void UpperBoundsPortal(const InputPortal& input,
-                                          const OutputPortal& values_output)
+                                              const OutputPortal& values_output)
   {
     try
     {
@@ -1083,7 +1094,7 @@ private:
 
   template <typename GlobalPopCountType, typename BitsPortal, typename IndicesPortal>
   VISKORES_CONT static viskores::Id BitFieldToUnorderedSetPortal(const BitsPortal& bits,
-                                                         const IndicesPortal& indices)
+                                                                 const IndicesPortal& indices)
   {
     using Functor = BitFieldToUnorderedSetFunctor<BitsPortal, IndicesPortal, GlobalPopCountType>;
 
@@ -1139,7 +1150,7 @@ public:
 
   template <typename T, typename U, class SIn, class SOut>
   VISKORES_CONT static void Copy(const viskores::cont::ArrayHandle<T, SIn>& input,
-                             viskores::cont::ArrayHandle<U, SOut>& output)
+                                 viskores::cont::ArrayHandle<U, SOut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1156,8 +1167,8 @@ public:
 
   template <typename T, typename U, class SIn, class SStencil, class SOut>
   VISKORES_CONT static void CopyIf(const viskores::cont::ArrayHandle<U, SIn>& input,
-                               const viskores::cont::ArrayHandle<T, SStencil>& stencil,
-                               viskores::cont::ArrayHandle<U, SOut>& output)
+                                   const viskores::cont::ArrayHandle<T, SStencil>& stencil,
+                                   viskores::cont::ArrayHandle<U, SOut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1184,9 +1195,9 @@ public:
 
   template <typename T, typename U, class SIn, class SStencil, class SOut, class UnaryPredicate>
   VISKORES_CONT static void CopyIf(const viskores::cont::ArrayHandle<U, SIn>& input,
-                               const viskores::cont::ArrayHandle<T, SStencil>& stencil,
-                               viskores::cont::ArrayHandle<U, SOut>& output,
-                               UnaryPredicate unary_predicate)
+                                   const viskores::cont::ArrayHandle<T, SStencil>& stencil,
+                                   viskores::cont::ArrayHandle<U, SOut>& output,
+                                   UnaryPredicate unary_predicate)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1212,10 +1223,10 @@ public:
 
   template <typename T, typename U, class SIn, class SOut>
   VISKORES_CONT static bool CopySubRange(const viskores::cont::ArrayHandle<T, SIn>& input,
-                                     viskores::Id inputStartIndex,
-                                     viskores::Id numberOfElementsToCopy,
-                                     viskores::cont::ArrayHandle<U, SOut>& output,
-                                     viskores::Id outputIndex = 0)
+                                         viskores::Id inputStartIndex,
+                                         viskores::Id numberOfElementsToCopy,
+                                         viskores::cont::ArrayHandle<U, SOut>& output,
+                                         viskores::Id outputIndex = 0)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1280,8 +1291,8 @@ public:
 
   template <typename T, class SIn, class SVal, class SOut>
   VISKORES_CONT static void LowerBounds(const viskores::cont::ArrayHandle<T, SIn>& input,
-                                    const viskores::cont::ArrayHandle<T, SVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, SOut>& output)
+                                        const viskores::cont::ArrayHandle<T, SVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, SOut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1294,9 +1305,9 @@ public:
 
   template <typename T, class SIn, class SVal, class SOut, class BinaryCompare>
   VISKORES_CONT static void LowerBounds(const viskores::cont::ArrayHandle<T, SIn>& input,
-                                    const viskores::cont::ArrayHandle<T, SVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, SOut>& output,
-                                    BinaryCompare binary_compare)
+                                        const viskores::cont::ArrayHandle<T, SVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, SOut>& output,
+                                        BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1309,8 +1320,9 @@ public:
   }
 
   template <class SIn, class SOut>
-  VISKORES_CONT static void LowerBounds(const viskores::cont::ArrayHandle<viskores::Id, SIn>& input,
-                                    viskores::cont::ArrayHandle<viskores::Id, SOut>& values_output)
+  VISKORES_CONT static void LowerBounds(
+    const viskores::cont::ArrayHandle<viskores::Id, SIn>& input,
+    viskores::cont::ArrayHandle<viskores::Id, SOut>& values_output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1335,8 +1347,8 @@ public:
 
   template <typename T, typename U, class SIn, class BinaryFunctor>
   VISKORES_CONT static U Reduce(const viskores::cont::ArrayHandle<T, SIn>& input,
-                            U initialValue,
-                            BinaryFunctor binary_functor)
+                                U initialValue,
+                                BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1377,10 +1389,10 @@ public:
             class VOut,
             class BinaryFunctor>
   VISKORES_CONT static void ReduceByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                    const viskores::cont::ArrayHandle<U, VIn>& values,
-                                    viskores::cont::ArrayHandle<T, KOut>& keys_output,
-                                    viskores::cont::ArrayHandle<U, VOut>& values_output,
-                                    BinaryFunctor binary_functor)
+                                        const viskores::cont::ArrayHandle<U, VIn>& values,
+                                        viskores::cont::ArrayHandle<T, KOut>& keys_output,
+                                        viskores::cont::ArrayHandle<U, VOut>& values_output,
+                                        BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1409,7 +1421,7 @@ public:
 
   template <typename T, class SIn, class SOut>
   VISKORES_CONT static T ScanExclusive(const viskores::cont::ArrayHandle<T, SIn>& input,
-                                   viskores::cont::ArrayHandle<T, SOut>& output)
+                                       viskores::cont::ArrayHandle<T, SOut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1432,9 +1444,9 @@ public:
 
   template <typename T, class SIn, class SOut, class BinaryFunctor>
   VISKORES_CONT static T ScanExclusive(const viskores::cont::ArrayHandle<T, SIn>& input,
-                                   viskores::cont::ArrayHandle<T, SOut>& output,
-                                   BinaryFunctor binary_functor,
-                                   const T& initialValue)
+                                       viskores::cont::ArrayHandle<T, SOut>& output,
+                                       BinaryFunctor binary_functor,
+                                       const T& initialValue)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1460,7 +1472,7 @@ public:
 
   template <typename T, class SIn, class SOut>
   VISKORES_CONT static T ScanInclusive(const viskores::cont::ArrayHandle<T, SIn>& input,
-                                   viskores::cont::ArrayHandle<T, SOut>& output)
+                                       viskores::cont::ArrayHandle<T, SOut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1483,8 +1495,8 @@ public:
 
   template <typename T, class SIn, class SOut, class BinaryFunctor>
   VISKORES_CONT static T ScanInclusive(const viskores::cont::ArrayHandle<T, SIn>& input,
-                                   viskores::cont::ArrayHandle<T, SOut>& output,
-                                   BinaryFunctor binary_functor)
+                                       viskores::cont::ArrayHandle<T, SOut>& output,
+                                       BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1509,8 +1521,8 @@ public:
 
   template <typename T, typename U, typename KIn, typename VIn, typename VOut>
   VISKORES_CONT static void ScanInclusiveByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                           const viskores::cont::ArrayHandle<U, VIn>& values,
-                                           viskores::cont::ArrayHandle<U, VOut>& output)
+                                               const viskores::cont::ArrayHandle<U, VIn>& values,
+                                               viskores::cont::ArrayHandle<U, VOut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1541,9 +1553,9 @@ public:
             typename VOut,
             typename BinaryFunctor>
   VISKORES_CONT static void ScanInclusiveByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                           const viskores::cont::ArrayHandle<U, VIn>& values,
-                                           viskores::cont::ArrayHandle<U, VOut>& output,
-                                           BinaryFunctor binary_functor)
+                                               const viskores::cont::ArrayHandle<U, VIn>& values,
+                                               viskores::cont::ArrayHandle<U, VOut>& output,
+                                               BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1570,8 +1582,8 @@ public:
 
   template <typename T, typename U, typename KIn, typename VIn, typename VOut>
   VISKORES_CONT static void ScanExclusiveByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                           const viskores::cont::ArrayHandle<U, VIn>& values,
-                                           viskores::cont::ArrayHandle<U, VOut>& output)
+                                               const viskores::cont::ArrayHandle<U, VIn>& values,
+                                               viskores::cont::ArrayHandle<U, VOut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1604,10 +1616,10 @@ public:
             typename VOut,
             typename BinaryFunctor>
   VISKORES_CONT static void ScanExclusiveByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                           const viskores::cont::ArrayHandle<U, VIn>& values,
-                                           viskores::cont::ArrayHandle<U, VOut>& output,
-                                           const U& initialValue,
-                                           BinaryFunctor binary_functor)
+                                               const viskores::cont::ArrayHandle<U, VIn>& values,
+                                               viskores::cont::ArrayHandle<U, VOut>& output,
+                                               const U& initialValue,
+                                               BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1668,8 +1680,8 @@ public:
   {
     using ThreadsPerBlock =
       viskores::cont::internal::HintFind<viskores::cont::internal::HintList<Hints...>,
-                                     viskores::cont::internal::HintThreadsPerBlock<0>,
-                                     viskores::cont::DeviceAdapterTagCuda>;
+                                         viskores::cont::internal::HintThreadsPerBlock<0>,
+                                         viskores::cont::DeviceAdapterTagCuda>;
     GetBlocksAndThreads(std::forward<Args>(args)..., ThreadsPerBlock::MaxThreads);
   }
 
@@ -1689,8 +1701,9 @@ public:
 
 public:
   template <typename WType, typename IType, typename Hints>
-  static void ScheduleTask(viskores::exec::cuda::internal::TaskStrided1D<WType, IType, Hints>& functor,
-                           viskores::Id numInstances)
+  static void ScheduleTask(
+    viskores::exec::cuda::internal::TaskStrided1D<WType, IType, Hints>& functor,
+    viskores::Id numInstances)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1713,7 +1726,7 @@ public:
       using FunctorType = std::decay_t<decltype(functor)>;
       cudaFuncAttributes empty_kernel_attrs;
       VISKORES_CUDA_CALL(cudaFuncGetAttributes(&empty_kernel_attrs,
-                                           cuda::internal::TaskStrided1DLaunch<FunctorType>));
+                                               cuda::internal::TaskStrided1DLaunch<FunctorType>));
       LogKernelLaunch(empty_kernel_attrs, typeid(WType), blocks, threadsPerBlock, numInstances);
     }
 #endif
@@ -1723,8 +1736,9 @@ public:
   }
 
   template <typename WType, typename IType, typename Hints>
-  static void ScheduleTask(viskores::exec::cuda::internal::TaskStrided3D<WType, IType, Hints>& functor,
-                           viskores::Id3 rangeMax)
+  static void ScheduleTask(
+    viskores::exec::cuda::internal::TaskStrided3D<WType, IType, Hints>& functor,
+    viskores::Id3 rangeMax)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1752,7 +1766,7 @@ public:
       using FunctorType = std::decay_t<decltype(functor)>;
       cudaFuncAttributes empty_kernel_attrs;
       VISKORES_CUDA_CALL(cudaFuncGetAttributes(&empty_kernel_attrs,
-                                           cuda::internal::TaskStrided3DLaunch<FunctorType>));
+                                               cuda::internal::TaskStrided3DLaunch<FunctorType>));
       LogKernelLaunch(empty_kernel_attrs, typeid(WType), blocks, threadsPerBlock, ranges);
     }
 #endif
@@ -1766,8 +1780,8 @@ public:
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
-    viskores::exec::cuda::internal::TaskStrided1D<Functor, viskores::internal::NullType, Hints> kernel(
-      functor);
+    viskores::exec::cuda::internal::TaskStrided1D<Functor, viskores::internal::NullType, Hints>
+      kernel(functor);
 
     ScheduleTask(kernel, numInstances);
   }
@@ -1783,8 +1797,8 @@ public:
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
-    viskores::exec::cuda::internal::TaskStrided3D<Functor, viskores::internal::NullType, Hints> kernel(
-      functor);
+    viskores::exec::cuda::internal::TaskStrided3D<Functor, viskores::internal::NullType, Hints>
+      kernel(functor);
     ScheduleTask(kernel, rangeMax);
   }
 
@@ -1805,7 +1819,7 @@ public:
 
   template <typename T, class Storage, class BinaryCompare>
   VISKORES_CONT static void Sort(viskores::cont::ArrayHandle<T, Storage>& values,
-                             BinaryCompare binary_compare)
+                                 BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1815,7 +1829,7 @@ public:
 
   template <typename T, typename U, class StorageT, class StorageU>
   VISKORES_CONT static void SortByKey(viskores::cont::ArrayHandle<T, StorageT>& keys,
-                                  viskores::cont::ArrayHandle<U, StorageU>& values)
+                                      viskores::cont::ArrayHandle<U, StorageU>& values)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1826,8 +1840,8 @@ public:
 
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
   VISKORES_CONT static void SortByKey(viskores::cont::ArrayHandle<T, StorageT>& keys,
-                                  viskores::cont::ArrayHandle<U, StorageU>& values,
-                                  BinaryCompare binary_compare)
+                                      viskores::cont::ArrayHandle<U, StorageU>& values,
+                                      BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1854,7 +1868,7 @@ public:
 
   template <typename T, class Storage, class BinaryCompare>
   VISKORES_CONT static void Unique(viskores::cont::ArrayHandle<T, Storage>& values,
-                               BinaryCompare binary_compare)
+                                   BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1870,8 +1884,8 @@ public:
 
   template <typename T, class SIn, class SVal, class SOut>
   VISKORES_CONT static void UpperBounds(const viskores::cont::ArrayHandle<T, SIn>& input,
-                                    const viskores::cont::ArrayHandle<T, SVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, SOut>& output)
+                                        const viskores::cont::ArrayHandle<T, SVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, SOut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1884,9 +1898,9 @@ public:
 
   template <typename T, class SIn, class SVal, class SOut, class BinaryCompare>
   VISKORES_CONT static void UpperBounds(const viskores::cont::ArrayHandle<T, SIn>& input,
-                                    const viskores::cont::ArrayHandle<T, SVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, SOut>& output,
-                                    BinaryCompare binary_compare)
+                                        const viskores::cont::ArrayHandle<T, SVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, SOut>& output,
+                                        BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1899,8 +1913,9 @@ public:
   }
 
   template <class SIn, class SOut>
-  VISKORES_CONT static void UpperBounds(const viskores::cont::ArrayHandle<viskores::Id, SIn>& input,
-                                    viskores::cont::ArrayHandle<viskores::Id, SOut>& values_output)
+  VISKORES_CONT static void UpperBounds(
+    const viskores::cont::ArrayHandle<viskores::Id, SIn>& input,
+    viskores::cont::ArrayHandle<viskores::Id, SOut>& values_output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1938,8 +1953,8 @@ public:
 
   template <typename WorkletType, typename InvocationType, typename RangeType>
   VISKORES_CONT static auto MakeTask(WorkletType& worklet,
-                                 InvocationType& invocation,
-                                 const RangeType& range)
+                                     InvocationType& invocation,
+                                     const RangeType& range)
   {
     return MakeTask<viskores::cont::internal::HintList<>>(worklet, invocation, range);
   }

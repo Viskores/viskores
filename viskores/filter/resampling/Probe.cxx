@@ -34,7 +34,8 @@ bool DoMapField(viskores::cont::DataSet& result,
     viskores::cont::UnknownArrayHandle outArray = inArray.NewInstanceBasic();
 
     bool called = false;
-    auto tryType = [&](auto t) {
+    auto tryType = [&](auto t)
+    {
       using T = std::decay_t<decltype(t)>;
       if (!called && inArray.IsBaseComponentType<T>())
       {
@@ -92,9 +93,8 @@ viskores::cont::DataSet Probe::DoExecute(const viskores::cont::DataSet& input)
               input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
               this->Geometry.GetCoordinateSystem().GetData());
 
-  auto mapper = [&](auto& outDataSet, const auto& f) {
-    DoMapField(outDataSet, f, worklet, this->InvalidValue);
-  };
+  auto mapper = [&](auto& outDataSet, const auto& f)
+  { DoMapField(outDataSet, f, worklet, this->InvalidValue); };
   auto output = this->CreateResultCoordinateSystem(
     input, this->Geometry.GetCellSet(), this->Geometry.GetCoordinateSystem(), mapper);
   output.AddField(viskores::cont::make_FieldPoint("HIDDEN", worklet.GetHiddenPointsField()));

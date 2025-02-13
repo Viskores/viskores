@@ -23,7 +23,8 @@ namespace filter
 namespace density_estimate
 {
 
-VISKORES_CONT viskores::cont::DataSet ContinuousScatterPlot::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet ContinuousScatterPlot::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   // This algorithm only operate on tetra cells, we need to apply the tetrahedralize filter first.
   auto tetrahedralizeFilter = viskores::filter::geometry_refinement::Tetrahedralize();
@@ -45,7 +46,8 @@ VISKORES_CONT viskores::cont::DataSet ContinuousScatterPlot::DoExecute(const vis
   viskores::cont::DataSet scatterplotDataSet;
   viskores::worklet::ContinuousScatterPlot worklet;
 
-  auto resolveFieldType = [&](const auto& resolvedScalar) {
+  auto resolveFieldType = [&](const auto& resolvedScalar)
+  {
     using FieldType = typename std::decay_t<decltype(resolvedScalar)>::ValueType;
 
     viskores::cont::CellSetSingleType<> scatterplotCellSet;

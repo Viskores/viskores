@@ -52,9 +52,9 @@ namespace cellmetrics
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellMaxDiagonalMetric(const viskores::IdComponent& numPts,
-                                        const PointCoordVecType& pts,
-                                        CellShapeType shape,
-                                        viskores::ErrorCode&)
+                                            const PointCoordVecType& pts,
+                                            CellShapeType shape,
+                                            viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -64,9 +64,9 @@ VISKORES_EXEC OutType CellMaxDiagonalMetric(const viskores::IdComponent& numPts,
 // ============================= 3D Volume cells ==================================
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMaxDiagonalMetric(const viskores::IdComponent& numPts,
-                                        const PointCoordVecType& pts,
-                                        viskores::CellShapeTagHexahedron,
-                                        viskores::ErrorCode& ec)
+                                            const PointCoordVecType& pts,
+                                            viskores::CellShapeTagHexahedron,
+                                            viskores::ErrorCode& ec)
 {
   if (numPts != 8)
   {

@@ -94,8 +94,8 @@ namespace internal
 /// Given an array portal, returns the buffers for the `ArrayHandle` with a storage that
 /// is (or is compatible with) a storage tag of `StorageTagImplicit<PortalType>`.
 template <typename PortalType>
-VISKORES_CONT inline std::vector<viskores::cont::internal::Buffer> PortalToArrayHandleImplicitBuffers(
-  const PortalType& portal)
+VISKORES_CONT inline std::vector<viskores::cont::internal::Buffer>
+PortalToArrayHandleImplicitBuffers(const PortalType& portal)
 {
   std::vector<viskores::cont::internal::Buffer> buffers(1);
   buffers[0].SetMetaData(portal);
@@ -105,9 +105,8 @@ VISKORES_CONT inline std::vector<viskores::cont::internal::Buffer> PortalToArray
 /// Given a functor and the number of values, returns the buffers for the `ArrayHandleImplicit`
 /// for the given functor.
 template <typename FunctorType>
-VISKORES_CONT inline std::vector<viskores::cont::internal::Buffer> FunctorToArrayHandleImplicitBuffers(
-  const FunctorType& functor,
-  viskores::Id numValues)
+VISKORES_CONT inline std::vector<viskores::cont::internal::Buffer>
+FunctorToArrayHandleImplicitBuffers(const FunctorType& functor, viskores::Id numValues)
 {
   return PortalToArrayHandleImplicitBuffers(
     viskores::internal::ArrayPortalImplicit<FunctorType>(functor, numValues));
@@ -185,8 +184,8 @@ private:
 
 public:
   VISKORES_ARRAY_HANDLE_SUBCLASS(ArrayHandleImplicit,
-                             (ArrayHandleImplicit<FunctorType>),
-                             (typename ArrayTraits::Superclass));
+                                 (ArrayHandleImplicit<FunctorType>),
+                                 (typename ArrayTraits::Superclass));
 
   VISKORES_CONT
   ArrayHandleImplicit(FunctorType functor, viskores::Id length)
@@ -200,8 +199,9 @@ public:
 /// arry.
 
 template <typename FunctorType>
-VISKORES_CONT viskores::cont::ArrayHandleImplicit<FunctorType> make_ArrayHandleImplicit(FunctorType functor,
-                                                                                viskores::Id length)
+VISKORES_CONT viskores::cont::ArrayHandleImplicit<FunctorType> make_ArrayHandleImplicit(
+  FunctorType functor,
+  viskores::Id length)
 {
   return ArrayHandleImplicit<FunctorType>(functor, length);
 }

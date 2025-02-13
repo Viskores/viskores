@@ -48,9 +48,9 @@ public:
 
   template <typename PointArray>
   VISKORES_EXEC void operator()(const viskores::Id index,
-                            const PointArray& input,
-                            const PointArray& output,
-                            Scalar& outputField) const
+                                const PointArray& input,
+                                const PointArray& output,
+                                Scalar& outputField) const
   {
     const viskores::Vec<viskores::Id, 6> neighborIndices = this->GridData.GetNeighborIndices(index);
 
@@ -127,9 +127,9 @@ public:
    */
   template <typename PointArray>
   VISKORES_EXEC void operator()(const viskores::Id index,
-                            const PointArray& input,
-                            const PointArray& output,
-                            Scalar& outputField) const
+                                const PointArray& input,
+                                const PointArray& output,
+                                Scalar& outputField) const
   {
     const viskores::Vec<viskores::Id, 6> neighborIndices = this->GridData.GetNeighborIndices(index);
 

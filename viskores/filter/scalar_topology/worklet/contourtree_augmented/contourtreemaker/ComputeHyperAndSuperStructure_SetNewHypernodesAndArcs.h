@@ -66,7 +66,8 @@ namespace contourtree_maker_inc
 {
 
 // Worklet for settubg the super/hyperarcs fromm the permuted super/hyperarcs vector
-class ComputeHyperAndSuperStructure_SetNewHypernodesAndArcs : public viskores::worklet::WorkletMapField
+class ComputeHyperAndSuperStructure_SetNewHypernodesAndArcs
+  : public viskores::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn contourTreeSupernodes, // (input) active super/hyperarcs
@@ -85,14 +86,15 @@ public:
   ComputeHyperAndSuperStructure_SetNewHypernodesAndArcs() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& /*supernodeID*/, // FIXME: Remove unused parameter?
-                            const viskores::Id supernode,
-                            const InFieldPortalType& contourTreeWhenTransferredPortal,
-                            const InFieldPortalType& contourTreeHypernodesPortal,
-                            const InFieldPortalType& contourTreeHyperarcsPortal,
-                            const InFieldPortalType& newHypernodePositionPortal,
-                            const OutFieldPortalType& newHypernodesPortal,
-                            const OutFieldPortalType& newHyperarcsPortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::Id& /*supernodeID*/, // FIXME: Remove unused parameter?
+    const viskores::Id supernode,
+    const InFieldPortalType& contourTreeWhenTransferredPortal,
+    const InFieldPortalType& contourTreeHypernodesPortal,
+    const InFieldPortalType& contourTreeHyperarcsPortal,
+    const InFieldPortalType& newHypernodePositionPortal,
+    const OutFieldPortalType& newHypernodesPortal,
+    const OutFieldPortalType& newHyperarcsPortal) const
   {
     bool isAHypernode = IsHypernode(contourTreeWhenTransferredPortal.Get(supernode));
     // ignore non-hypernodes

@@ -81,8 +81,8 @@ public:
 
   template <typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertexId,
-                            const viskores::Id /*vertex*/, // FIXME: Remove unused parameter?
-                            const InOutFieldPortalType& hyperarcsPortal) const
+                                const viskores::Id /*vertex*/, // FIXME: Remove unused parameter?
+                                const InOutFieldPortalType& hyperarcsPortal) const
   {
     // retrieve the corresponding chain extremum
     viskores::Id hypernode = hyperarcsPortal.Get(vertexId);

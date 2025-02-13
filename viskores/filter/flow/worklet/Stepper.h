@@ -50,8 +50,8 @@ public:
 
   template <typename Particle>
   VISKORES_EXEC IntegratorStatus Step(Particle& particle,
-                                  viskores::FloatDefault& time,
-                                  viskores::Vec3f& outpos) const
+                                      viskores::FloatDefault& time,
+                                      viskores::Vec3f& outpos) const
   {
     viskores::Vec3f velocity(0, 0, 0);
     auto status = this->Integrator.CheckStep(particle, this->DeltaT, velocity);
@@ -68,8 +68,8 @@ public:
 
   template <typename Particle>
   VISKORES_EXEC IntegratorStatus SmallStep(Particle& particle,
-                                       viskores::FloatDefault& time,
-                                       viskores::Vec3f& outpos) const
+                                           viskores::FloatDefault& time,
+                                           viskores::Vec3f& outpos) const
   {
     //Stepping by this->DeltaT goes beyond the bounds of the dataset.
     //We need to take an Euler step that goes outside of the dataset.
@@ -138,8 +138,9 @@ public:
     // Get the evaluation status for the point that is moved by the euler step.
     evalStatus = this->Evaluator.Evaluate(outpos, time, currValue);
 
-    IntegratorStatus status(
-      evalStatus, viskores::MagnitudeSquared(velocity) <= viskores::Epsilon<viskores::FloatDefault>());
+    IntegratorStatus status(evalStatus,
+                            viskores::MagnitudeSquared(velocity) <=
+                              viskores::Epsilon<viskores::FloatDefault>());
     status.SetOk(); //status is ok.
 
     return status;
@@ -154,8 +155,8 @@ private:
   IntegratorType Integrator;
   EvaluatorType Evaluator;
   viskores::FloatDefault DeltaT;
-  viskores::FloatDefault Tolerance =
-    std::numeric_limits<viskores::FloatDefault>::epsilon() * static_cast<viskores::FloatDefault>(100.0f);
+  viskores::FloatDefault Tolerance = std::numeric_limits<viskores::FloatDefault>::epsilon() *
+    static_cast<viskores::FloatDefault>(100.0f);
 
 public:
   VISKORES_CONT
@@ -176,7 +177,7 @@ public:
   /// Return the StepperImpl object
   /// Prepares the execution object of Stepper
   VISKORES_CONT auto PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                     viskores::cont::Token& token) const
+                                         viskores::cont::Token& token) const
     -> StepperImpl<decltype(this->Integrator.PrepareForExecution(device, token)),
                    decltype(this->Evaluator.PrepareForExecution(device, token))>
   {

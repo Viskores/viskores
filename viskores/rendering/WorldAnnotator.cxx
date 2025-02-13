@@ -56,7 +56,8 @@ void WorldAnnotator::AddText(const viskores::Vec3f_32& origin,
   viskores::Vec3f_32 n = viskores::Cross(right, up);
   viskores::Normalize(n);
 
-  viskores::Matrix<viskores::Float32, 4, 4> transform = MatrixHelpers::WorldMatrix(origin, right, up, n);
+  viskores::Matrix<viskores::Float32, 4, 4> transform =
+    MatrixHelpers::WorldMatrix(origin, right, up, n);
   transform = viskores::MatrixMultiply(Canvas->GetModelView(), transform);
   transform = viskores::MatrixMultiply(Canvas->GetProjection(), transform);
   Canvas->AddText(transform, scale, anchor, color, text, depth);

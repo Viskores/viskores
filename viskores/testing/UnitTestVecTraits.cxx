@@ -39,7 +39,7 @@ struct TestVecTypeFunctor
     using Traits = viskores::VecTraits<T>;
     using ComponentType = typename Traits::ComponentType;
     VISKORES_TEST_ASSERT(Traits::NUM_COMPONENTS <= MAX_VECTOR_SIZE,
-                     "Need to update test for larger vectors.");
+                         "Need to update test for larger vectors.");
     T inVector;
     for (viskores::IdComponent index = 0; index < Traits::NUM_COMPONENTS; index++)
     {
@@ -49,10 +49,10 @@ struct TestVecTypeFunctor
     viskores::testing::TestVecType<Traits::NUM_COMPONENTS>(inVector, outVector);
     viskores::VecC<ComponentType> outVecC(outVector);
     viskores::testing::TestVecType<Traits::NUM_COMPONENTS>(viskores::VecC<ComponentType>(inVector),
-                                                       outVecC);
+                                                           outVecC);
     viskores::VecCConst<ComponentType> outVecCConst(outVector);
-    viskores::testing::TestVecType<Traits::NUM_COMPONENTS>(viskores::VecCConst<ComponentType>(inVector),
-                                                       outVecCConst);
+    viskores::testing::TestVecType<Traits::NUM_COMPONENTS>(
+      viskores::VecCConst<ComponentType>(inVector), outVecCConst);
   }
 };
 

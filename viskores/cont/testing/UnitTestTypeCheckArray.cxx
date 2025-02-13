@@ -37,44 +37,44 @@ struct TryArraysOfType
 
     using StandardArray = viskores::cont::ArrayHandle<T>;
     VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagArrayIn, StandardArray>::value),
-                     "Standard array type check failed.");
+                         "Standard array type check failed.");
     VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagArrayInOut, StandardArray>::value),
-                     "Standard array type check failed.");
+                         "Standard array type check failed.");
     VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagArrayOut, StandardArray>::value),
-                     "Standard array type check failed.");
+                         "Standard array type check failed.");
 
     using CountingArray = viskores::cont::ArrayHandleCounting<T>;
     VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagArrayIn, CountingArray>::value),
-                     "Counting array type check failed.");
+                         "Counting array type check failed.");
     VISKORES_TEST_ASSERT((!TypeCheck<TypeCheckTagArrayInOut, CountingArray>::value),
-                     "Counting array type check failed.");
+                         "Counting array type check failed.");
     VISKORES_TEST_ASSERT((!TypeCheck<TypeCheckTagArrayOut, CountingArray>::value),
-                     "Counting array type check failed.");
+                         "Counting array type check failed.");
 
     using CompositeArray = viskores::cont::ArrayHandleCompositeVector<StandardArray, StandardArray>;
     VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagArrayIn, CompositeArray>::value),
-                     "Composite array type check failed.");
+                         "Composite array type check failed.");
     VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagArrayInOut, CompositeArray>::value),
-                     "Counting array type check failed.");
+                         "Counting array type check failed.");
     VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagArrayOut, CompositeArray>::value),
-                     "Counting array type check failed.");
+                         "Counting array type check failed.");
 
     // Just some type that is not a valid array.
     using NotAnArray = typename StandardArray::WritePortalType;
     VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayIn, NotAnArray>::value),
-                     "Not an array type check failed.");
+                         "Not an array type check failed.");
     VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayInOut, NotAnArray>::value),
-                     "Not an array type check failed.");
+                         "Not an array type check failed.");
     VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayOut, NotAnArray>::value),
-                     "Not an array type check failed.");
+                         "Not an array type check failed.");
 
     // Another type that is not a valid array.
     VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayIn, T>::value),
-                     "Not an array type check failed.");
+                         "Not an array type check failed.");
     VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayInOut, T>::value),
-                     "Not an array type check failed.");
+                         "Not an array type check failed.");
     VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagArrayOut, T>::value),
-                     "Not an array type check failed.");
+                         "Not an array type check failed.");
   }
 };
 
@@ -89,11 +89,11 @@ void TestCheckAtomicArray()
   using FloatArray = viskores::cont::ArrayHandle<viskores::Float32>;
 
   VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagAtomicArray, Int32Array>::value),
-                   "Check for 32-bit int failed.");
+                       "Check for 32-bit int failed.");
   VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagAtomicArray, Int64Array>::value),
-                   "Check for 64-bit int failed.");
+                       "Check for 64-bit int failed.");
   VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagAtomicArray, FloatArray>::value),
-                   "Check for float failed.");
+                       "Check for float failed.");
 }
 
 void TestCheckArray()

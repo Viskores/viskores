@@ -67,7 +67,8 @@ namespace bract_maker
 
 /// Worklet to transfer the dependent counts for hyperarcs
 /// Part of the BoundaryRestrictedAugmentedContourTree.PropagateBoundaryCounts function
-class PropagateBoundaryCountsTransferDependentCountsWorklet : public viskores::worklet::WorkletMapField
+class PropagateBoundaryCountsTransferDependentCountsWorklet
+  : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn supernodeIndex, // (input) index of supernodes for iteration
@@ -88,10 +89,11 @@ public:
   }
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& hypernode,
-                            const InFieldPortalType& hypernodesPortal,
-                            const InFieldPortalType& superarcDependentBoundaryCountPortal,
-                            const OutFieldPortalType& hyperarcDependentBoundaryCountPortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::Id& hypernode,
+    const InFieldPortalType& hypernodesPortal,
+    const InFieldPortalType& superarcDependentBoundaryCountPortal,
+    const OutFieldPortalType& hyperarcDependentBoundaryCountPortal) const
   {
     // v. per hypernode
     // A.Transfer dependent count from last superarc to hyperarc
@@ -105,7 +107,8 @@ public:
     else
     {
       lastSuperarc =
-        viskores::worklet::contourtree_augmented::MaskedIndex(hypernodesPortal.Get(hypernode + 1)) - 1;
+        viskores::worklet::contourtree_augmented::MaskedIndex(hypernodesPortal.Get(hypernode + 1)) -
+        1;
     }
     // 	Transfer the dependent count
     hyperarcDependentBoundaryCountPortal.Set(

@@ -56,10 +56,10 @@ void TestReadingPolyData(Format format)
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 6, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 8, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 8,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 6, "Incorrect number of cells");
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetSingleType<>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
 }
 
 void TestReadingPolyDataEmpty()
@@ -84,10 +84,10 @@ void TestReadingStructuredPoints(Format format)
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 72, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 72,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 30, "Incorrect number of cells");
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetStructured<3>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
 }
 
 void TestReadingStructuredPointsVisIt(Format format)
@@ -102,10 +102,10 @@ void TestReadingStructuredPointsVisIt(Format format)
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 64, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 64,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 27, "Incorrect number of cells");
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetStructured<3>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
 }
 
 void TestReadingUnstructuredGrid(Format format)
@@ -119,10 +119,10 @@ void TestReadingUnstructuredGrid(Format format)
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 26, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 26,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 15, "Incorrect number of cells");
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetExplicit<>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
 }
 
 void TestReadingV5Format(Format format)
@@ -136,10 +136,10 @@ void TestReadingV5Format(Format format)
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 7, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 26, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 26,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 15, "Incorrect number of cells");
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetExplicit<>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
 
   for (viskores::IdComponent fieldIdx = 0; fieldIdx < ds.GetNumberOfFields(); ++fieldIdx)
   {
@@ -148,15 +148,15 @@ void TestReadingV5Format(Format format)
     {
       case viskores::cont::Field::Association::Points:
         VISKORES_TEST_ASSERT(field.GetData().GetNumberOfValues() == ds.GetNumberOfPoints(),
-                         "Field ",
-                         field.GetName(),
-                         " is the wrong size");
+                             "Field ",
+                             field.GetName(),
+                             " is the wrong size");
         break;
       case viskores::cont::Field::Association::Cells:
         VISKORES_TEST_ASSERT(field.GetData().GetNumberOfValues() == ds.GetNumberOfCells(),
-                         "Field ",
-                         field.GetName(),
-                         " is the wrong size");
+                             "Field ",
+                             field.GetName(),
+                             " is the wrong size");
         break;
       default:
         // Could be any size.
@@ -167,8 +167,8 @@ void TestReadingV5Format(Format format)
 
 void TestReadingUnstructuredGridEmpty()
 {
-  viskores::cont::DataSet data =
-    readVTKDataSet(viskores::cont::testing::Testing::DataPath("unstructured/empty_unstructured.vtk"));
+  viskores::cont::DataSet data = readVTKDataSet(
+    viskores::cont::testing::Testing::DataPath("unstructured/empty_unstructured.vtk"));
 
   VISKORES_TEST_ASSERT(data.GetNumberOfPoints() == 26);
   VISKORES_TEST_ASSERT(data.GetNumberOfCells() == 0);
@@ -294,10 +294,10 @@ void TestReadingUnstructuredGridVisIt(Format format)
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 26, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 26,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 15, "Incorrect number of cells");
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetExplicit<>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
 }
 
 void TestReadingRectilinearGrid1(Format format)
@@ -312,10 +312,10 @@ void TestReadingRectilinearGrid1(Format format)
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 125, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 125,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 64, "Incorrect number of cells");
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetStructured<3>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
 }
 
 void TestReadingRectilinearGrid2(Format format)
@@ -330,10 +330,10 @@ void TestReadingRectilinearGrid2(Format format)
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 24, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 24,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 6, "Incorrect number of cells");
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetStructured<3>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
 }
 
 void TestReadingStructuredGridASCII()
@@ -346,10 +346,10 @@ void TestReadingStructuredGridASCII()
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 6, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 6,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 2, "Incorrect number of cells");
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetStructured<2>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
 }
 
 void TestReadingStructuredGridBin()
@@ -362,10 +362,10 @@ void TestReadingStructuredGridBin()
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 18, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 18,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 4, "Incorrect number of cells");
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetStructured<3>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
 }
 
 void TestReadingRotate()
@@ -374,12 +374,12 @@ void TestReadingRotate()
   viskores::cont::DataSet ds = readVTKDataSet(fusion.c_str());
 
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetStructured<3>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 33 * 33 * 33, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 33 * 33 * 33,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.HasField("rotate"),
-                   "The vtk file has a field 'rotate', but the dataset does not.");
+                       "The vtk file has a field 'rotate', but the dataset does not.");
 
   // Taken from Paraview + clicking Data Axes Grid:
   const viskores::cont::CoordinateSystem& coordinateSystem = ds.GetCoordinateSystem();
@@ -423,13 +423,14 @@ void TestReadingKitchen()
   viskores::cont::DataSet ds = readVTKDataSet(fusion.c_str());
 
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetStructured<3>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 28 * 24 * 17, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 28 * 24 * 17,
-                   "Incorrect number of points (from cell set)");
-  VISKORES_TEST_ASSERT(ds.HasField("h1"), "The vtk file has a field 'h1', but the dataset does not.");
+                       "Incorrect number of points (from cell set)");
+  VISKORES_TEST_ASSERT(ds.HasField("h1"),
+                       "The vtk file has a field 'h1', but the dataset does not.");
   VISKORES_TEST_ASSERT(ds.HasField("velocity"),
-                   "The vtk file has a field 'velocity', but the dataset does not.");
+                       "The vtk file has a field 'velocity', but the dataset does not.");
 
   // Paraview Information Panel of this file:
   // Bounds: [0.01, 7], [0.01, 5], [0.01, 2.5]
@@ -482,18 +483,20 @@ void TestReadingKitchen()
 void TestSkppingStringFields(Format format)
 {
   std::string testFileName = (format == FORMAT_ASCII)
-    ? viskores::cont::testing::Testing::DataPath("uniform/simple_structured_points_strings_ascii.vtk")
-    : viskores::cont::testing::Testing::DataPath("uniform/simple_structured_points_strings_bin.vtk");
+    ? viskores::cont::testing::Testing::DataPath(
+        "uniform/simple_structured_points_strings_ascii.vtk")
+    : viskores::cont::testing::Testing::DataPath(
+        "uniform/simple_structured_points_strings_bin.vtk");
 
   viskores::cont::DataSet ds = readVTKDataSet(testFileName);
 
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 72, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 72,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 30, "Incorrect number of cells");
   VISKORES_TEST_ASSERT(ds.GetCellSet().IsType<viskores::cont::CellSetStructured<3>>(),
-                   "Incorrect cellset type");
+                       "Incorrect cellset type");
 }
 
 void TestReadingVTKDataSet()

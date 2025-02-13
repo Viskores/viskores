@@ -59,14 +59,16 @@ viskores::cont::DataSet ExtractGeometry::DoExecute(const viskores::cont::DataSet
   viskores::worklet::ExtractGeometry worklet;
   viskores::cont::UnknownCellSet outCells;
 
-  cells.CastAndCallForTypes<VISKORES_DEFAULT_CELL_SET_LIST>([&](const auto& concrete) {
-    outCells = worklet.Run(concrete,
-                           coords,
-                           this->Function,
-                           this->ExtractInside,
-                           this->ExtractBoundaryCells,
-                           this->ExtractOnlyBoundaryCells);
-  });
+  cells.CastAndCallForTypes<VISKORES_DEFAULT_CELL_SET_LIST>(
+    [&](const auto& concrete)
+    {
+      outCells = worklet.Run(concrete,
+                             coords,
+                             this->Function,
+                             this->ExtractInside,
+                             this->ExtractBoundaryCells,
+                             this->ExtractOnlyBoundaryCells);
+    });
 
   // create the output dataset
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };

@@ -38,20 +38,24 @@ public:
   VISKORES_EXEC_CONT viskores::Float64 AngleList(viskores::Int32 i) const
   {
     viskores::Float64 angleList[NUM_NUMBERS] = { 0.643501108793284, // angle for 3, 4, 5 triangle.
-                                             0.78539816339745,  // pi/4
-                                             0.5235987755983,   // pi/6
-                                             1.0471975511966,   // pi/3
-                                             0.0 };
+                                                 0.78539816339745,  // pi/4
+                                                 0.5235987755983,   // pi/6
+                                                 1.0471975511966,   // pi/3
+                                                 0.0 };
     return angleList[i];
   }
   VISKORES_EXEC_CONT viskores::Float64 OppositeList(viskores::Int32 i) const
   {
-    viskores::Float64 oppositeList[NUM_NUMBERS] = { 3.0, 1.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 0.0 };
+    viskores::Float64 oppositeList[NUM_NUMBERS] = {
+      3.0, 1.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 0.0
+    };
     return oppositeList[i];
   }
   VISKORES_EXEC_CONT viskores::Float64 AdjacentList(viskores::Int32 i) const
   {
-    viskores::Float64 adjacentList[NUM_NUMBERS] = { 4.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 1.0, 1.0 };
+    viskores::Float64 adjacentList[NUM_NUMBERS] = {
+      4.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 1.0, 1.0
+    };
     return adjacentList[i];
   }
   VISKORES_EXEC_CONT viskores::Float64 HypotenuseList(viskores::Int32 i) const
@@ -124,7 +128,7 @@ struct ScalarFieldTests : public viskores::exec::FunctorBase
     VISKORES_MATH_ASSERT(test_equal(viskores::Pi(), 3.14159265), "Pi not correct.");
     VISKORES_MATH_ASSERT(test_equal(viskores::Pif(), 3.14159265f), "Pif not correct.");
     VISKORES_MATH_ASSERT(test_equal(viskores::Pi<viskores::Float64>(), 3.14159265),
-                     "Pi template function not correct.");
+                         "Pi template function not correct.");
   }
 
   VISKORES_EXEC
@@ -132,18 +136,18 @@ struct ScalarFieldTests : public viskores::exec::FunctorBase
   {
     VISKORES_MATH_ASSERT(test_equal(viskores::ATan2(T(0.0), T(1.0)), T(0.0)), "ATan2 x+ axis.");
     VISKORES_MATH_ASSERT(test_equal(viskores::ATan2(T(1.0), T(0.0)), T(0.5 * viskores::Pi())),
-                     "ATan2 y+ axis.");
+                         "ATan2 y+ axis.");
     VISKORES_MATH_ASSERT(test_equal(viskores::ATan2(T(-1.0), T(0.0)), T(-0.5 * viskores::Pi())),
-                     "ATan2 y- axis.");
+                         "ATan2 y- axis.");
 
     VISKORES_MATH_ASSERT(test_equal(viskores::ATan2(T(1.0), T(1.0)), T(0.25 * viskores::Pi())),
-                     "ATan2 Quadrant 1");
+                         "ATan2 Quadrant 1");
     VISKORES_MATH_ASSERT(test_equal(viskores::ATan2(T(1.0), T(-1.0)), T(0.75 * viskores::Pi())),
-                     "ATan2 Quadrant 2");
+                         "ATan2 Quadrant 2");
     VISKORES_MATH_ASSERT(test_equal(viskores::ATan2(T(-1.0), T(-1.0)), T(-0.75 * viskores::Pi())),
-                     "ATan2 Quadrant 3");
+                         "ATan2 Quadrant 3");
     VISKORES_MATH_ASSERT(test_equal(viskores::ATan2(T(-1.0), T(1.0)), T(-0.25 * viskores::Pi())),
-                     "ATan2 Quadrant 4");
+                         "ATan2 Quadrant 4");
   }
 
   VISKORES_EXEC
@@ -163,8 +167,8 @@ struct ScalarFieldTests : public viskores::exec::FunctorBase
   {
     VISKORES_MATH_ASSERT(test_equal(viskores::Log2(T(0.25)), T(-2.0)), "Bad value from Log2");
     VISKORES_MATH_ASSERT(test_equal(viskores::Log2(viskores::Vec<T, 4>(0.5, 1.0, 2.0, 4.0)),
-                                viskores::Vec<T, 4>(-1.0, 0.0, 1.0, 2.0)),
-                     "Bad value from Log2");
+                                    viskores::Vec<T, 4>(-1.0, 0.0, 1.0, 2.0)),
+                         "Bad value from Log2");
   }
 
   VISKORES_EXEC
@@ -232,12 +236,13 @@ struct ScalarFieldTests : public viskores::exec::FunctorBase
       viskores::Int64 quotient = table.QuotientList(index);
 
       VISKORES_MATH_ASSERT(test_equal(viskores::FMod(numerator, denominator), fmodremainder),
-                       "Bad FMod remainder.");
+                           "Bad FMod remainder.");
       VISKORES_MATH_ASSERT(test_equal(viskores::Remainder(numerator, denominator), remainder),
-                       "Bad remainder.");
+                           "Bad remainder.");
       viskores::Int64 q;
-      VISKORES_MATH_ASSERT(test_equal(viskores::RemainderQuotient(numerator, denominator, q), remainder),
-                       "Bad remainder-quotient remainder.");
+      VISKORES_MATH_ASSERT(
+        test_equal(viskores::RemainderQuotient(numerator, denominator, q), remainder),
+        "Bad remainder-quotient remainder.");
       VISKORES_MATH_ASSERT(test_equal(q, quotient), "Bad reminder-quotient quotient.");
     }
   }
@@ -256,7 +261,7 @@ struct ScalarFieldTests : public viskores::exec::FunctorBase
 
       T intPart;
       VISKORES_MATH_ASSERT(test_equal(viskores::ModF(x, intPart), fractional),
-                       "ModF returned wrong fractional part.");
+                           "ModF returned wrong fractional part.");
       VISKORES_MATH_ASSERT(test_equal(intPart, floor), "ModF returned wrong integral part.");
       VISKORES_MATH_ASSERT(test_equal(viskores::Floor(x), floor), "Bad floor.");
       VISKORES_MATH_ASSERT(test_equal(viskores::Ceil(x), ceil), "Bad ceil.");
@@ -332,7 +337,8 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
       VectorType opposite;
       VectorType adjacent;
       VectorType hypotenuse;
-      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
+      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+           componentIndex++)
       {
         Traits::SetComponent(angle,
                              componentIndex,
@@ -351,12 +357,15 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
           static_cast<ComponentType>(table.HypotenuseList(componentIndex + index)));
       }
 
-      VISKORES_MATH_ASSERT(test_equal(viskores::Sin(angle), opposite / hypotenuse), "Sin failed test.");
-      VISKORES_MATH_ASSERT(test_equal(viskores::Cos(angle), adjacent / hypotenuse), "Cos failed test.");
-      VISKORES_MATH_ASSERT(test_equal(viskores::Tan(angle), opposite / adjacent), "Tan failed test.");
+      VISKORES_MATH_ASSERT(test_equal(viskores::Sin(angle), opposite / hypotenuse),
+                           "Sin failed test.");
+      VISKORES_MATH_ASSERT(test_equal(viskores::Cos(angle), adjacent / hypotenuse),
+                           "Cos failed test.");
+      VISKORES_MATH_ASSERT(test_equal(viskores::Tan(angle), opposite / adjacent),
+                           "Tan failed test.");
 
       VISKORES_MATH_ASSERT(test_equal(viskores::ASin(opposite / hypotenuse), angle),
-                       "Arc Sin failed test.");
+                           "Arc Sin failed test.");
 
 #if defined(VISKORES_ICC)
       // When the intel compiler has vectorization enabled ( -O2/-O3 ) it converts the
@@ -365,12 +374,13 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
       // is larger than the default tolerance of test_equal.
       //
       VISKORES_MATH_ASSERT(test_equal(viskores::ACos(adjacent / hypotenuse), angle, 0.0004),
-                       "Arc Cos failed test.");
+                           "Arc Cos failed test.");
 #else
       VISKORES_MATH_ASSERT(test_equal(viskores::ACos(adjacent / hypotenuse), angle),
-                       "Arc Cos failed test.");
+                           "Arc Cos failed test.");
 #endif
-      VISKORES_MATH_ASSERT(test_equal(viskores::ATan(opposite / adjacent), angle), "Arc Tan failed test.");
+      VISKORES_MATH_ASSERT(test_equal(viskores::ATan(opposite / adjacent), angle),
+                           "Arc Tan failed test.");
     }
   }
 
@@ -382,7 +392,8 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
     for (viskores::IdComponent index = 0; index < Lists::NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType x;
-      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
+      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+           componentIndex++)
       {
         Traits::SetComponent(
           x, componentIndex, static_cast<ComponentType>(table.AngleList(componentIndex + index)));
@@ -390,16 +401,21 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
 
       const VectorType minusX = zero - x;
 
-      VISKORES_MATH_ASSERT(test_equal(viskores::SinH(x), 0.5 * (viskores::Exp(x) - viskores::Exp(minusX))),
-                       "SinH does not match definition.");
-      VISKORES_MATH_ASSERT(test_equal(viskores::CosH(x), 0.5 * (viskores::Exp(x) + viskores::Exp(minusX))),
-                       "SinH does not match definition.");
+      VISKORES_MATH_ASSERT(
+        test_equal(viskores::SinH(x), 0.5 * (viskores::Exp(x) - viskores::Exp(minusX))),
+        "SinH does not match definition.");
+      VISKORES_MATH_ASSERT(
+        test_equal(viskores::CosH(x), 0.5 * (viskores::Exp(x) + viskores::Exp(minusX))),
+        "SinH does not match definition.");
       VISKORES_MATH_ASSERT(test_equal(viskores::TanH(x), viskores::SinH(x) / viskores::CosH(x)),
-                       "TanH does not match definition");
+                           "TanH does not match definition");
 
-      VISKORES_MATH_ASSERT(test_equal(viskores::ASinH(viskores::SinH(x)), x), "SinH not inverting.");
-      VISKORES_MATH_ASSERT(test_equal(viskores::ACosH(viskores::CosH(x)), x), "CosH not inverting.");
-      VISKORES_MATH_ASSERT(test_equal(viskores::ATanH(viskores::TanH(x)), x), "TanH not inverting.");
+      VISKORES_MATH_ASSERT(test_equal(viskores::ASinH(viskores::SinH(x)), x),
+                           "SinH not inverting.");
+      VISKORES_MATH_ASSERT(test_equal(viskores::ACosH(viskores::CosH(x)), x),
+                           "CosH not inverting.");
+      VISKORES_MATH_ASSERT(test_equal(viskores::ATanH(viskores::TanH(x)), x),
+                           "TanH not inverting.");
     }
   }
 
@@ -411,7 +427,8 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
     {
       VectorType original;
       VectorType raiseresult;
-      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
+      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+           componentIndex++)
       {
         ComponentType x = static_cast<ComponentType>(table.NumberList(componentIndex + index));
         Traits::SetComponent(original, componentIndex, x);
@@ -458,16 +475,17 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
 
   template <typename FunctionType>
   VISKORES_EXEC void RaiseByTest(FunctionType function,
-                             ComponentType base,
-                             ComponentType exponentbias = 0.0,
-                             ComponentType resultbias = 0.0) const
+                                 ComponentType base,
+                                 ComponentType exponentbias = 0.0,
+                                 ComponentType resultbias = 0.0) const
   {
     Lists table;
     for (viskores::IdComponent index = 0; index < Lists::NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType original;
       VectorType raiseresult;
-      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
+      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+           componentIndex++)
       {
         ComponentType x = static_cast<ComponentType>(table.NumberList(componentIndex + index));
         Traits::SetComponent(original, componentIndex, x);
@@ -515,8 +533,8 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
 
   template <typename FunctionType>
   VISKORES_EXEC void LogBaseTest(FunctionType function,
-                             ComponentType base,
-                             ComponentType bias = 0.0) const
+                                 ComponentType base,
+                                 ComponentType bias = 0.0) const
   {
     Lists table;
     for (viskores::IdComponent index = 0; index < Lists::NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
@@ -524,7 +542,8 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
       VectorType basevector(base);
       VectorType original;
       VectorType biased;
-      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
+      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+           componentIndex++)
       {
         ComponentType x = static_cast<ComponentType>(table.NumberList(componentIndex + index));
         Traits::SetComponent(original, componentIndex, x);
@@ -573,13 +592,13 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
     VectorType negative2 = -positive2;
 
     VISKORES_MATH_ASSERT(test_equal(viskores::CopySign(positive1, positive2), positive1),
-                     "CopySign failed.");
+                         "CopySign failed.");
     VISKORES_MATH_ASSERT(test_equal(viskores::CopySign(negative1, positive2), positive1),
-                     "CopySign failed.");
+                         "CopySign failed.");
     VISKORES_MATH_ASSERT(test_equal(viskores::CopySign(positive1, negative2), negative1),
-                     "CopySign failed.");
+                         "CopySign failed.");
     VISKORES_MATH_ASSERT(test_equal(viskores::CopySign(negative1, negative2), negative1),
-                     "CopySign failed.");
+                         "CopySign failed.");
   }
 
   VISKORES_EXEC
@@ -588,44 +607,44 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
     {
       viskores::UInt64 dist = viskores::FloatDistance(1.0, 1.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from 1.0 to 1.0 is not zero.");
+                           "Float distance from 1.0 to 1.0 is not zero.");
 
       dist = viskores::FloatDistance(-1.0, -1.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from -1.0 to -1.0 is not zero.");
+                           "Float distance from -1.0 to -1.0 is not zero.");
 
       dist = viskores::FloatDistance(0.0, 0.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from 0.0 to 0.0 is not zero.");
+                           "Float distance from 0.0 to 0.0 is not zero.");
 
       // Check nan:
       dist = viskores::FloatDistance(std::numeric_limits<viskores::Float64>::quiet_NaN(), 1.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
-                       "Float distance to a Nan is not the documented value.");
+                           "Float distance to a Nan is not the documented value.");
 
       dist = viskores::FloatDistance(1.0, std::numeric_limits<viskores::Float64>::quiet_NaN());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
-                       "Float distance to a Nan is not the documented value.");
+                           "Float distance to a Nan is not the documented value.");
 
       // Check infinity:
       dist = viskores::FloatDistance(std::numeric_limits<viskores::Float64>::infinity(), 1.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
-                       "Float distance to infinity is not the documented value.");
+                           "Float distance to infinity is not the documented value.");
 
       dist = viskores::FloatDistance(1.0, std::numeric_limits<viskores::Float64>::infinity());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
-                       "Float distance to infinity is not the documented value.");
+                           "Float distance to infinity is not the documented value.");
 
       // Check saturation:
       dist = viskores::FloatDistance(std::numeric_limits<viskores::Float64>::lowest(),
-                                 std::numeric_limits<viskores::Float64>::max());
+                                     std::numeric_limits<viskores::Float64>::max());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(18437736874454810622uL), dist),
-                       "Float distance from lowest to max is incorrect.");
+                           "Float distance from lowest to max is incorrect.");
 
       dist = viskores::FloatDistance(std::numeric_limits<viskores::Float64>::max(),
-                                 std::numeric_limits<viskores::Float64>::lowest());
+                                     std::numeric_limits<viskores::Float64>::lowest());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(18437736874454810622uL), dist),
-                       "Float distance from max to lowest is incorrect.");
+                           "Float distance from max to lowest is incorrect.");
 
       // Check symmetry:
       dist = viskores::FloatDistance(-2.0, -1.0);
@@ -640,19 +659,21 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
       dist = viskores::FloatDistance(-0.25, 0.25);
       dist2 = viskores::FloatDistance(0.25, -0.25);
       VISKORES_MATH_ASSERT(test_equal(dist2, dist),
-                       "Symmetry is violated over a bound which contains zero.");
+                           "Symmetry is violated over a bound which contains zero.");
 
       // Check correctness:
       dist = viskores::FloatDistance(1.0, 1.0 + std::numeric_limits<viskores::Float64>::epsilon());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist),
-                       "Float distance from 1 to 1 + eps is not = 1.");
+                           "Float distance from 1 to 1 + eps is not = 1.");
       dist = viskores::FloatDistance(1.0 + std::numeric_limits<viskores::Float64>::epsilon(), 1.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist), "Symmetry is violated");
 
-      dist = viskores::FloatDistance(1.0, 1.0 + 2 * std::numeric_limits<viskores::Float64>::epsilon());
+      dist =
+        viskores::FloatDistance(1.0, 1.0 + 2 * std::numeric_limits<viskores::Float64>::epsilon());
       VISKORES_MATH_ASSERT(test_equal(viskores::Int64(2), dist),
-                       "Float distance from 1 to 1 + 2eps is not 2.");
-      dist = viskores::FloatDistance(1.0 + 2 * std::numeric_limits<viskores::Float64>::epsilon(), 1.0);
+                           "Float distance from 1 to 1 + 2eps is not 2.");
+      dist =
+        viskores::FloatDistance(1.0 + 2 * std::numeric_limits<viskores::Float64>::epsilon(), 1.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::Int64(2), dist), "Symmetry is violated.");
 
       // Now test x = y:
@@ -661,25 +682,25 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
       {
         dist = viskores::FloatDistance(x, x);
         VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                         "Float distance from x to x is not zero.");
+                             "Float distance from x to x is not zero.");
         x += 0.01;
       }
       // Test zero:
       dist = viskores::FloatDistance(0.0, 0.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from zero to zero is not zero.");
+                           "Float distance from zero to zero is not zero.");
       // Test signed zero:
       dist = viskores::FloatDistance(0.0, -0.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from 0.0 to -0.0 is not zero.");
+                           "Float distance from 0.0 to -0.0 is not zero.");
 
       dist = viskores::FloatDistance(-0.0, 0.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from -0.0 to 0.0 is not zero.");
+                           "Float distance from -0.0 to 0.0 is not zero.");
 
       dist = viskores::FloatDistance(-0.0, -0.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from -0.0 to 0.0 is not zero.");
+                           "Float distance from -0.0 to 0.0 is not zero.");
 
       // Negative to negative zero:
       dist = viskores::FloatDistance(-std::numeric_limits<viskores::Float64>::denorm_min(), -0.0);
@@ -691,7 +712,7 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
       // Negative to positive zero:
       dist = viskores::FloatDistance(-std::numeric_limits<viskores::Float64>::denorm_min(), 0.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist),
-                       "Negative to positive zero is incorrect.");
+                           "Negative to positive zero is incorrect.");
       // And symmetry:
       dist = viskores::FloatDistance(0.0, -std::numeric_limits<viskores::Float64>::denorm_min());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist), "Symmetry is violated.");
@@ -706,7 +727,7 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
       // Positive to negative zero:
       dist = viskores::FloatDistance(std::numeric_limits<viskores::Float64>::denorm_min(), -0.0);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist),
-                       "Positive to negative zero is incorrect.");
+                           "Positive to negative zero is incorrect.");
       // And symmetry:
       dist = viskores::FloatDistance(-0.0, std::numeric_limits<viskores::Float64>::denorm_min());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist), "Symmetry is violated.");
@@ -717,41 +738,41 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
     {
       viskores::UInt64 dist = viskores::FloatDistance(1.0f, 1.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from 1.0 to 1.0 is not zero.");
+                           "Float distance from 1.0 to 1.0 is not zero.");
 
       dist = viskores::FloatDistance(-1.0f, -1.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from -1.0 to -1.0 is not zero.");
+                           "Float distance from -1.0 to -1.0 is not zero.");
 
       dist = viskores::FloatDistance(0.0f, 0.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from 0.0 to 0.0 is not zero.");
+                           "Float distance from 0.0 to 0.0 is not zero.");
 
       // Check nan:
       dist = viskores::FloatDistance(std::numeric_limits<viskores::Float32>::quiet_NaN(), 1.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
-                       "Float distance to a Nan is not the documented value.");
+                           "Float distance to a Nan is not the documented value.");
 
       dist = viskores::FloatDistance(1.0f, std::numeric_limits<viskores::Float32>::quiet_NaN());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
-                       "Float distance to a Nan is not the documented value.");
+                           "Float distance to a Nan is not the documented value.");
 
       // Check infinity:
       dist = viskores::FloatDistance(std::numeric_limits<viskores::Float32>::infinity(), 1.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
-                       "Float distance to infinity is not the documented value.");
+                           "Float distance to infinity is not the documented value.");
 
       dist = viskores::FloatDistance(1.0f, std::numeric_limits<viskores::Float32>::infinity());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0xFFFFFFFFFFFFFFFFL), dist),
-                       "Float distance to infinity is not the documented value.");
+                           "Float distance to infinity is not the documented value.");
 
       // Check saturation:
       dist = viskores::FloatDistance(std::numeric_limits<viskores::Float32>::lowest(),
-                                 std::numeric_limits<viskores::Float32>::max());
+                                     std::numeric_limits<viskores::Float32>::max());
       VISKORES_MATH_ASSERT(dist > 0, "Float distance is negative.");
 
       dist = viskores::FloatDistance(std::numeric_limits<viskores::Float32>::max(),
-                                 std::numeric_limits<viskores::Float32>::lowest());
+                                     std::numeric_limits<viskores::Float32>::lowest());
       VISKORES_MATH_ASSERT(dist > 0, "Float distance is negative.");
 
       // Check symmetry:
@@ -767,19 +788,23 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
       dist = viskores::FloatDistance(-0.25f, 0.25f);
       dist2 = viskores::FloatDistance(0.25f, -0.25f);
       VISKORES_MATH_ASSERT(test_equal(dist2, dist),
-                       "Symmetry is violated over a bound which contains zero.");
+                           "Symmetry is violated over a bound which contains zero.");
 
       // Check correctness:
-      dist = viskores::FloatDistance(1.0f, 1.0f + std::numeric_limits<viskores::Float32>::epsilon());
+      dist =
+        viskores::FloatDistance(1.0f, 1.0f + std::numeric_limits<viskores::Float32>::epsilon());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist),
-                       "Float distance from 1 to 1 + eps is not = 1.");
-      dist = viskores::FloatDistance(1.0f + std::numeric_limits<viskores::Float32>::epsilon(), 1.0f);
+                           "Float distance from 1 to 1 + eps is not = 1.");
+      dist =
+        viskores::FloatDistance(1.0f + std::numeric_limits<viskores::Float32>::epsilon(), 1.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist), "Symmetry is violated");
 
-      dist = viskores::FloatDistance(1.0f, 1.0f + 2 * std::numeric_limits<viskores::Float32>::epsilon());
+      dist =
+        viskores::FloatDistance(1.0f, 1.0f + 2 * std::numeric_limits<viskores::Float32>::epsilon());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(2), dist),
-                       "Float distance from 1 to 1 + 2eps is not 2.");
-      dist = viskores::FloatDistance(1.0f + 2 * std::numeric_limits<viskores::Float32>::epsilon(), 1.0f);
+                           "Float distance from 1 to 1 + 2eps is not 2.");
+      dist =
+        viskores::FloatDistance(1.0f + 2 * std::numeric_limits<viskores::Float32>::epsilon(), 1.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(2), dist), "Symmetry is violated.");
 
       // Now test x = y:
@@ -788,25 +813,25 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
       {
         dist = viskores::FloatDistance(x, x);
         VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                         "Float distance from x to x is not zero.");
+                             "Float distance from x to x is not zero.");
         x += 0.01f;
       }
       // Test zero:
       dist = viskores::FloatDistance(0.0f, 0.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from zero to zero is not zero.");
+                           "Float distance from zero to zero is not zero.");
       // Test signed zero:
       dist = viskores::FloatDistance(0.0f, -0.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from 0.0 to -0.0 is not zero.");
+                           "Float distance from 0.0 to -0.0 is not zero.");
 
       dist = viskores::FloatDistance(-0.0f, 0.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from -0.0 to 0.0 is not zero.");
+                           "Float distance from -0.0 to 0.0 is not zero.");
 
       dist = viskores::FloatDistance(-0.0f, -0.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(0), dist),
-                       "Float distance from -0.0 to 0.0 is not zero.");
+                           "Float distance from -0.0 to 0.0 is not zero.");
 
       // Negative to negative zero:
       dist = viskores::FloatDistance(-std::numeric_limits<viskores::Float32>::denorm_min(), -0.0f);
@@ -818,7 +843,7 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
       // Negative to positive zero:
       dist = viskores::FloatDistance(-std::numeric_limits<viskores::Float32>::denorm_min(), 0.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist),
-                       "Negative to positive zero is incorrect.");
+                           "Negative to positive zero is incorrect.");
       // And symmetry:
       dist = viskores::FloatDistance(0.0f, -std::numeric_limits<viskores::Float32>::denorm_min());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist), "Symmetry is violated.");
@@ -833,7 +858,7 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
       // Positive to negative zero:
       dist = viskores::FloatDistance(std::numeric_limits<viskores::Float32>::denorm_min(), -0.0f);
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist),
-                       "Positive to negative zero is incorrect.");
+                           "Positive to negative zero is incorrect.");
       // And symmetry:
       dist = viskores::FloatDistance(-0.0f, std::numeric_limits<viskores::Float32>::denorm_min());
       VISKORES_MATH_ASSERT(test_equal(viskores::UInt64(1), dist), "Symmetry is violated.");
@@ -878,9 +903,9 @@ struct ScalarVectorFieldTests : public viskores::exec::FunctorBase
     // No real roots:
     roots = viskores::QuadraticRoots(1.0f, 0.0f, 1.0f);
     VISKORES_MATH_ASSERT(viskores::IsNan(roots[0]),
-                     "Roots should be Nan for a quadratic with complex roots.");
+                         "Roots should be Nan for a quadratic with complex roots.");
     VISKORES_MATH_ASSERT(viskores::IsNan(roots[1]),
-                     "Roots should be Nan for a quadratic with complex roots.");
+                         "Roots should be Nan for a quadratic with complex roots.");
 
 #if defined FP_FAST_FMA && !defined __HIP__ && !defined _ARCH_PPC && !defined _ARCH_PPC64
     // Wikipedia example:
@@ -983,8 +1008,10 @@ struct AbsTests : public viskores::exec::FunctorBase
     T positive = TestValue(index, T()); // Assuming all TestValues positive.
     T negative = -positive;
 
-    VISKORES_MATH_ASSERT(test_equal(viskores::Abs(positive), positive), "Abs returned wrong value.");
-    VISKORES_MATH_ASSERT(test_equal(viskores::Abs(negative), positive), "Abs returned wrong value.");
+    VISKORES_MATH_ASSERT(test_equal(viskores::Abs(positive), positive),
+                         "Abs returned wrong value.");
+    VISKORES_MATH_ASSERT(test_equal(viskores::Abs(negative), positive),
+                         "Abs returned wrong value.");
   }
 };
 
@@ -997,8 +1024,9 @@ struct TryAbsTests
   }
 };
 
-using TypeListAbs =
-  viskores::ListAppend<viskores::List<viskores::Int32, viskores::Int64>, viskores::TypeListIndex, viskores::TypeListField>;
+using TypeListAbs = viskores::ListAppend<viskores::List<viskores::Int32, viskores::Int64>,
+                                         viskores::TypeListIndex,
+                                         viskores::TypeListField>;
 
 //-----------------------------------------------------------------------------
 static constexpr viskores::Id BitOpSamples = 128 * 128;
@@ -1022,9 +1050,10 @@ struct BitOpTests : public viskores::exec::FunctorBase
   VISKORES_EXEC void TestWord(T word) const
   {
     VISKORES_MATH_ASSERT(test_equal(viskores::CountSetBits(word), this->DumbCountBits(word)),
-                     "CountBits returned wrong value.");
-    VISKORES_MATH_ASSERT(test_equal(viskores::FindFirstSetBit(word), this->DumbFindFirstSetBit(word)),
-                     "FindFirstSetBit returned wrong value.");
+                         "CountBits returned wrong value.");
+    VISKORES_MATH_ASSERT(
+      test_equal(viskores::FindFirstSetBit(word), this->DumbFindFirstSetBit(word)),
+      "FindFirstSetBit returned wrong value.");
   }
 
   VISKORES_EXEC viskores::Int32 DumbCountBits(T word) const

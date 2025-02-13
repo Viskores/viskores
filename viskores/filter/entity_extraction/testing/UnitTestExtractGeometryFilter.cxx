@@ -40,7 +40,8 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
     viskores::cont::DataSet output = extractGeometry.Execute(dataset);
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8), "Wrong result for ExtractGeometry");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8),
+                         "Wrong result for ExtractGeometry");
 
     viskores::filter::clean_grid::CleanGrid cleanGrid;
     cleanGrid.SetCompactPointFields(true);
@@ -77,7 +78,8 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
     viskores::cont::DataSet output = extractGeometry.Execute(dataset);
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 56), "Wrong result for ExtractGeometry");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 56),
+                         "Wrong result for ExtractGeometry");
 
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
     output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
@@ -104,7 +106,8 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
     viskores::cont::DataSet output = extractGeometry.Execute(dataset);
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 64), "Wrong result for ExtractGeometry");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 64),
+                         "Wrong result for ExtractGeometry");
 
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
     output.GetField("cellvar").GetData().AsArrayHandle(outCellData);
@@ -130,7 +133,8 @@ public:
     extractGeometry.SetExtractOnlyBoundaryCells(true);
 
     viskores::cont::DataSet output = extractGeometry.Execute(dataset);
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 56), "Wrong result for ExtractGeometry");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 56),
+                         "Wrong result for ExtractGeometry");
 
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
     output.GetField("cellvar").GetData().AsArrayHandle(outCellData);

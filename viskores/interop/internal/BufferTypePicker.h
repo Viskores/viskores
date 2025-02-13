@@ -31,7 +31,8 @@ static inline VISKORES_CONT GLenum BufferTypePickerImpl(NumericTag, Dimensionali
 }
 
 VISKORES_CONT
-static inline GLenum BufferTypePickerImpl(viskores::TypeTraitsIntegerTag, viskores::TypeTraitsScalarTag)
+static inline GLenum BufferTypePickerImpl(viskores::TypeTraitsIntegerTag,
+                                          viskores::TypeTraitsScalarTag)
 {
   return GL_ELEMENT_ARRAY_BUFFER;
 }

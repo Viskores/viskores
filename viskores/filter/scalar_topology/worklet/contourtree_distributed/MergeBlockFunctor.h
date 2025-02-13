@@ -73,7 +73,8 @@ namespace contourtree_distributed
 // Functor used by DIY reduce the merge data blocks in parallel
 template <typename FieldType>
 void MergeBlockFunctor(
-  viskores::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>* block, // local Block.
+  viskores::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>*
+    block,                                          // local Block.
   const viskoresdiy::ReduceProxy& rp,               // communication proxy
   const viskoresdiy::RegularMergePartners& partners // partners of the current block
 )
@@ -105,7 +106,8 @@ void MergeBlockFunctor(
       viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMeshIn;
       contourTreeMeshIn.NumVertices = recvblock.NumVertices;
       contourTreeMeshIn.SortOrder = viskores::cont::ArrayHandleIndex(contourTreeMeshIn.NumVertices);
-      contourTreeMeshIn.SortIndices = viskores::cont::ArrayHandleIndex(contourTreeMeshIn.NumVertices);
+      contourTreeMeshIn.SortIndices =
+        viskores::cont::ArrayHandleIndex(contourTreeMeshIn.NumVertices);
       contourTreeMeshIn.SortedValues = recvblock.SortedValue;
       contourTreeMeshIn.GlobalMeshIndex = recvblock.GlobalMeshIndex;
       contourTreeMeshIn.NeighborConnectivity = recvblock.NeighborConnectivity;
@@ -114,8 +116,10 @@ void MergeBlockFunctor(
 
       viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType> contourTreeMeshOut;
       contourTreeMeshOut.NumVertices = block->NumVertices;
-      contourTreeMeshOut.SortOrder = viskores::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
-      contourTreeMeshOut.SortIndices = viskores::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
+      contourTreeMeshOut.SortOrder =
+        viskores::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
+      contourTreeMeshOut.SortIndices =
+        viskores::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
       contourTreeMeshOut.SortedValues = block->SortedValue;
       contourTreeMeshOut.GlobalMeshIndex = block->GlobalMeshIndex;
       contourTreeMeshOut.NeighborConnectivity = block->NeighborConnectivity;
@@ -165,8 +169,8 @@ void MergeBlockFunctor(
         viskores::worklet::ContourTreeAugmented worklet;
         viskores::cont::ArrayHandle<FieldType> currField;
         viskores::Id3 maxIdx(currBlockOrigin[0] + currBlockSize[0] - 1,
-                         currBlockOrigin[1] + currBlockSize[1] - 1,
-                         currBlockOrigin[2] + currBlockSize[2] - 1);
+                             currBlockOrigin[1] + currBlockSize[1] - 1,
+                             currBlockOrigin[2] + currBlockSize[2] - 1);
         auto meshBoundaryExecObj =
           contourTreeMeshOut.GetMeshBoundaryExecutionObject(globalSize, currBlockOrigin, maxIdx);
         worklet.Run(
@@ -177,18 +181,21 @@ void MergeBlockFunctor(
           currNumIterations,
           block->ComputeRegularStructure,
           meshBoundaryExecObj);
-        viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType>* newContourTreeMesh = 0;
+        viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType>* newContourTreeMesh =
+          0;
         if (block->ComputeRegularStructure == 1)
         {
           // If we have the fully augmented contour tree
-          newContourTreeMesh = new viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType>(
-            currContourTree.Arcs, contourTreeMeshOut);
+          newContourTreeMesh =
+            new viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType>(
+              currContourTree.Arcs, contourTreeMeshOut);
         }
         else if (block->ComputeRegularStructure == 2)
         {
           // If we have the partially augmented (e.g., boundary augmented) contour tree
-          newContourTreeMesh = new viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType>(
-            currContourTree.Augmentnodes, currContourTree.Augmentarcs, contourTreeMeshOut);
+          newContourTreeMesh =
+            new viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType>(
+              currContourTree.Augmentnodes, currContourTree.Augmentarcs, contourTreeMeshOut);
         }
         else
         {

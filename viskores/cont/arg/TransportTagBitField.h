@@ -39,10 +39,10 @@ struct Transport<viskores::cont::arg::TransportTagBitFieldIn, viskores::cont::Bi
 
   template <typename InputDomainType>
   VISKORES_CONT ExecObjectType operator()(viskores::cont::BitField& field,
-                                      const InputDomainType&,
-                                      viskores::Id,
-                                      viskores::Id,
-                                      viskores::cont::Token& token) const
+                                          const InputDomainType&,
+                                          viskores::Id,
+                                          viskores::Id,
+                                          viskores::cont::Token& token) const
   {
     return field.PrepareForInput(Device{}, token);
   }
@@ -55,10 +55,10 @@ struct Transport<viskores::cont::arg::TransportTagBitFieldOut, viskores::cont::B
 
   template <typename InputDomainType>
   VISKORES_CONT ExecObjectType operator()(viskores::cont::BitField& field,
-                                      const InputDomainType&,
-                                      viskores::Id,
-                                      viskores::Id,
-                                      viskores::cont::Token& token) const
+                                          const InputDomainType&,
+                                          viskores::Id,
+                                          viskores::Id,
+                                          viskores::cont::Token& token) const
   {
     // This behaves similarly to WholeArray tags, where "Out" maps to InPlace
     // since we don't want to reallocate or enforce size restrictions.
@@ -73,10 +73,10 @@ struct Transport<viskores::cont::arg::TransportTagBitFieldInOut, viskores::cont:
 
   template <typename InputDomainType>
   VISKORES_CONT ExecObjectType operator()(viskores::cont::BitField& field,
-                                      const InputDomainType&,
-                                      viskores::Id,
-                                      viskores::Id,
-                                      viskores::cont::Token& token) const
+                                          const InputDomainType&,
+                                          viskores::Id,
+                                          viskores::Id,
+                                          viskores::cont::Token& token) const
   {
     return field.PrepareForInPlace(Device{}, token);
   }

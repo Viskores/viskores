@@ -30,7 +30,7 @@ viskores::cont::CellSetExplicit<> CreateCellSet()
 }
 
 viskores::cont::CellSetPermutation<viskores::cont::CellSetExplicit<>,
-                               viskores::cont::ArrayHandleCounting<viskores::Id>>
+                                   viskores::cont::ArrayHandleCounting<viskores::Id>>
 CreatePermutedCellSet()
 {
   std::cout << "Creating input cell set" << std::endl;
@@ -58,18 +58,19 @@ void CheckOutput(const viskores::cont::CellSetExplicit<>& copiedCells)
 
   viskores::Id numberOfCells = copiedCells.GetNumberOfCells();
   VISKORES_TEST_ASSERT(numberOfCells == originalCells.GetNumberOfCells(),
-                   "Result has wrong number of cells");
+                       "Result has wrong number of cells");
 
   // Cells should be copied backward. Check that.
   for (viskores::Id cellIndex = 0; cellIndex < numberOfCells; cellIndex++)
   {
     viskores::Id oCellIndex = numberOfCells - cellIndex - 1;
-    VISKORES_TEST_ASSERT(copiedCells.GetCellShape(cellIndex) == originalCells.GetCellShape(oCellIndex),
-                     "Bad cell shape");
+    VISKORES_TEST_ASSERT(copiedCells.GetCellShape(cellIndex) ==
+                           originalCells.GetCellShape(oCellIndex),
+                         "Bad cell shape");
 
     viskores::IdComponent numPoints = copiedCells.GetNumberOfPointsInCell(cellIndex);
     VISKORES_TEST_ASSERT(numPoints == originalCells.GetNumberOfPointsInCell(oCellIndex),
-                     "Bad number of points in cell");
+                         "Bad number of points in cell");
 
     // Only checking 3 points. All cells should have at least 3
     viskores::Id3 cellPoints{ 0 };

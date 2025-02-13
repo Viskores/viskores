@@ -59,10 +59,10 @@ public:
   VISKORES_CONT CellSetExtrude();
 
   VISKORES_CONT CellSetExtrude(const viskores::cont::ArrayHandle<viskores::Int32>& conn,
-                           viskores::Int32 numberOfPointsPerPlane,
-                           viskores::Int32 numberOfPlanes,
-                           const viskores::cont::ArrayHandle<viskores::Int32>& nextNode,
-                           bool periodic);
+                               viskores::Int32 numberOfPointsPerPlane,
+                               viskores::Int32 numberOfPlanes,
+                               const viskores::cont::ArrayHandle<viskores::Int32>& nextNode,
+                               bool periodic);
 
   VISKORES_CONT CellSetExtrude(const CellSetExtrude& src);
   VISKORES_CONT CellSetExtrude(CellSetExtrude&& src) noexcept;
@@ -103,14 +103,19 @@ public:
 
   viskores::Int32 GetNumberOfPointsPerPlane() const { return this->NumberOfPointsPerPlane; }
 
-  const viskores::cont::ArrayHandle<viskores::Int32>& GetNextNodeArray() const { return this->NextNode; }
+  const viskores::cont::ArrayHandle<viskores::Int32>& GetNextNodeArray() const
+  {
+    return this->NextNode;
+  }
 
   bool GetIsPeriodic() const { return this->IsPeriodic; }
 
   template <viskores::IdComponent NumIndices>
-  VISKORES_CONT void GetIndices(viskores::Id index, viskores::Vec<viskores::Id, NumIndices>& ids) const;
+  VISKORES_CONT void GetIndices(viskores::Id index,
+                                viskores::Vec<viskores::Id, NumIndices>& ids) const;
 
-  VISKORES_CONT void GetIndices(viskores::Id index, viskores::cont::ArrayHandle<viskores::Id>& ids) const;
+  VISKORES_CONT void GetIndices(viskores::Id index,
+                                viskores::cont::ArrayHandle<viskores::Id>& ids) const;
 
   template <typename VisitTopology, typename IncidentTopology>
   using ExecConnectivityType =
@@ -118,14 +123,14 @@ public:
                                                        IncidentTopology>::ExecConnectivityType;
 
   viskores::exec::ConnectivityExtrude PrepareForInput(viskores::cont::DeviceAdapterId,
-                                                  viskores::TopologyElementTagCell,
-                                                  viskores::TopologyElementTagPoint,
-                                                  viskores::cont::Token&) const;
+                                                      viskores::TopologyElementTagCell,
+                                                      viskores::TopologyElementTagPoint,
+                                                      viskores::cont::Token&) const;
 
   viskores::exec::ReverseConnectivityExtrude PrepareForInput(viskores::cont::DeviceAdapterId,
-                                                         viskores::TopologyElementTagPoint,
-                                                         viskores::TopologyElementTagCell,
-                                                         viskores::cont::Token&) const;
+                                                             viskores::TopologyElementTagPoint,
+                                                             viskores::TopologyElementTagCell,
+                                                             viskores::cont::Token&) const;
 
 private:
   void BuildReverseConnectivity();

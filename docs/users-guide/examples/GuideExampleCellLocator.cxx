@@ -45,10 +45,10 @@ struct QueryCellsWorklet : public viskores::worklet::WorkletMapField
            typename FieldPortal,
            typename OutType>
   VISKORES_EXEC void operator()(const Point& point,
-                            const CellLocatorExecObject& cellLocator,
-                            const CellSet& cellSet,
-                            const FieldPortal& field,
-                            OutType& out) const
+                                const CellLocatorExecObject& cellLocator,
+                                const CellSet& cellSet,
+                                const FieldPortal& field,
+                                OutType& out) const
   {
     // Use the cell locator to find the cell containing the point and the parametric
     // coordinates within that cell.
@@ -135,18 +135,19 @@ void TestCellLocator()
   using ValueType = viskores::Vec3f;
   using ArrayType = viskores::cont::ArrayHandle<ValueType>;
 
-  viskores::cont::DataSet data = viskores::cont::DataSetBuilderUniform::Create(DimensionSizes);
+  viskores::cont::DataSet data =
+    viskores::cont::DataSetBuilderUniform::Create(DimensionSizes);
 
   ArrayType inField;
   viskores::cont::ArrayCopy(viskores::cont::ArrayHandleUniformPointCoordinates(
-                          DimensionSizes, ValueType(0.0f), ValueType(2.0f)),
-                        inField);
+                              DimensionSizes, ValueType(0.0f), ValueType(2.0f)),
+                            inField);
 
   DemoQueryCells demo;
 
   viskores::cont::ArrayCopy(viskores::cont::ArrayHandleUniformPointCoordinates(
-                          DimensionSizes - viskores::Id3(1), ValueType(0.5f)),
-                        demo.QueryPoints);
+                              DimensionSizes - viskores::Id3(1), ValueType(0.5f)),
+                            demo.QueryPoints);
 
   ArrayType interpolated = demo.Run(data, inField);
 
@@ -159,7 +160,8 @@ void TestCellLocator()
   std::cout << "Interpolated: ";
   viskores::cont::printSummary_ArrayHandle(interpolated, std::cout);
 
-  VISKORES_TEST_ASSERT(test_equal_portals(expected.ReadPortal(), interpolated.ReadPortal()));
+  VISKORES_TEST_ASSERT(
+    test_equal_portals(expected.ReadPortal(), interpolated.ReadPortal()));
 }
 
 void Run()

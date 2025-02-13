@@ -45,7 +45,7 @@ struct ArrayPortalMultiplexerGetFunctor
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename PortalType>
   VISKORES_EXEC_CONT typename PortalType::ValueType operator()(const PortalType& portal,
-                                                           viskores::Id index) const noexcept
+                                                               viskores::Id index) const noexcept
   {
     return portal.Get(index);
   }
@@ -55,8 +55,8 @@ struct ArrayPortalMultiplexerSetFunctor
 {
   template <typename PortalType>
   VISKORES_EXEC_CONT void operator()(const PortalType& portal,
-                                 viskores::Id index,
-                                 const typename PortalType::ValueType& value) const noexcept
+                                     viskores::Id index,
+                                     const typename PortalType::ValueType& value) const noexcept
   {
     this->DoSet(
       portal, index, value, typename viskores::internal::PortalSupportsSets<PortalType>::type{});
@@ -66,9 +66,9 @@ private:
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename PortalType>
   VISKORES_EXEC_CONT void DoSet(const PortalType& portal,
-                            viskores::Id index,
-                            const typename PortalType::ValueType& value,
-                            std::true_type) const noexcept
+                                viskores::Id index,
+                                const typename PortalType::ValueType& value,
+                                std::true_type) const noexcept
   {
     portal.Set(index, value);
   }
@@ -76,9 +76,9 @@ private:
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename PortalType>
   VISKORES_EXEC_CONT void DoSet(const PortalType&,
-                            viskores::Id,
-                            const typename PortalType::ValueType&,
-                            std::false_type) const noexcept
+                                viskores::Id,
+                                const typename PortalType::ValueType&,
+                                std::false_type) const noexcept
   {
     // This is an error but whatever.
     VISKORES_ASSERT(false && "Calling Set on a portal that does not support it.");
@@ -162,8 +162,9 @@ struct MultiplexerGetNumberOfComponentsFlatFunctor
 struct MultiplexerGetNumberOfValuesFunctor
 {
   template <typename StorageType>
-  VISKORES_CONT viskores::Id operator()(StorageType,
-                                const std::vector<viskores::cont::internal::Buffer>& buffers) const
+  VISKORES_CONT viskores::Id operator()(
+    StorageType,
+    const std::vector<viskores::cont::internal::Buffer>& buffers) const
   {
     return StorageType::GetNumberOfValues(buffers);
   }
@@ -173,10 +174,10 @@ struct MultiplexerResizeBuffersFunctor
 {
   template <typename StorageType>
   VISKORES_CONT void operator()(StorageType,
-                            viskores::Id numValues,
-                            const std::vector<viskores::cont::internal::Buffer>& buffers,
-                            viskores::CopyFlag preserve,
-                            viskores::cont::Token& token) const
+                                viskores::Id numValues,
+                                const std::vector<viskores::cont::internal::Buffer>& buffers,
+                                viskores::CopyFlag preserve,
+                                viskores::cont::Token& token) const
   {
     StorageType::ResizeBuffers(numValues, buffers, preserve, token);
   }
@@ -186,11 +187,11 @@ struct MultiplexerFillFunctor
 {
   template <typename ValueType, typename StorageType>
   VISKORES_CONT void operator()(StorageType,
-                            const std::vector<viskores::cont::internal::Buffer>& buffers,
-                            const ValueType& fillValue,
-                            viskores::Id startIndex,
-                            viskores::Id endIndex,
-                            viskores::cont::Token& token) const
+                                const std::vector<viskores::cont::internal::Buffer>& buffers,
+                                const ValueType& fillValue,
+                                viskores::Id startIndex,
+                                viskores::Id endIndex,
+                                viskores::cont::Token& token) const
   {
     StorageType::Fill(buffers, fillValue, startIndex, endIndex, token);
   }
@@ -200,10 +201,11 @@ template <typename ReadPortalType>
 struct MultiplexerCreateReadPortalFunctor
 {
   template <typename StorageType>
-  VISKORES_CONT ReadPortalType operator()(StorageType,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::cont::DeviceAdapterId device,
-                                      viskores::cont::Token& token) const
+  VISKORES_CONT ReadPortalType
+  operator()(StorageType,
+             const std::vector<viskores::cont::internal::Buffer>& buffers,
+             viskores::cont::DeviceAdapterId device,
+             viskores::cont::Token& token) const
   {
     return ReadPortalType(StorageType::CreateReadPortal(buffers, device, token));
   }
@@ -213,10 +215,11 @@ template <typename WritePortalType>
 struct MultiplexerCreateWritePortalFunctor
 {
   template <typename StorageType>
-  VISKORES_CONT WritePortalType operator()(StorageType,
-                                       const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                       viskores::cont::DeviceAdapterId device,
-                                       viskores::cont::Token& token) const
+  VISKORES_CONT WritePortalType
+  operator()(StorageType,
+             const std::vector<viskores::cont::internal::Buffer>& buffers,
+             viskores::cont::DeviceAdapterId device,
+             viskores::cont::Token& token) const
   {
     return WritePortalType(StorageType::CreateWritePortal(buffers, device, token));
   }
@@ -229,7 +232,7 @@ struct MultiplexerArrayHandleVariantFunctor
 
   template <typename StorageTag>
   VISKORES_CONT VariantType operator()(viskores::cont::internal::Storage<T, StorageTag>,
-                                   const std::vector<viskores::cont::internal::Buffer>& buffers)
+                                       const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return VariantType(viskores::cont::ArrayHandle<T, StorageTag>(buffers));
   }
@@ -245,7 +248,8 @@ class Storage<ValueType, StorageTagMultiplexer<StorageTags...>>
 
   using StorageVariant = viskores::cont::Variant<StorageFor<StorageTags>...>;
 
-  VISKORES_CONT static StorageVariant Variant(const std::vector<viskores::cont::internal::Buffer>& buffers)
+  VISKORES_CONT static StorageVariant Variant(
+    const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<StorageVariant>();
   }
@@ -259,8 +263,8 @@ class Storage<ValueType, StorageTagMultiplexer<StorageTags...>>
 public:
   using ReadPortalType =
     viskores::internal::ArrayPortalMultiplexer<typename StorageFor<StorageTags>::ReadPortalType...>;
-  using WritePortalType =
-    viskores::internal::ArrayPortalMultiplexer<typename StorageFor<StorageTags>::WritePortalType...>;
+  using WritePortalType = viskores::internal::ArrayPortalMultiplexer<
+    typename StorageFor<StorageTags>::WritePortalType...>;
 
   VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlat(
     const std::vector<viskores::cont::internal::Buffer>& buffers)
@@ -276,20 +280,21 @@ public:
                                         ArrayBuffers(buffers));
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     Variant(buffers).CastAndCall(
       detail::MultiplexerResizeBuffersFunctor{}, numValues, ArrayBuffers(buffers), preserve, token);
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             const ValueType& fillValue,
-                             viskores::Id startIndex,
-                             viskores::Id endIndex,
-                             viskores::cont::Token& token)
+                                 const ValueType& fillValue,
+                                 viskores::Id startIndex,
+                                 viskores::Id endIndex,
+                                 viskores::cont::Token& token)
   {
     Variant(buffers).CastAndCall(detail::MultiplexerFillFunctor{},
                                  ArrayBuffers(buffers),
@@ -329,7 +334,8 @@ public:
   }
 
   template <typename ArrayType>
-  VISKORES_CONT static std::vector<viskores::cont::internal::Buffer> CreateBuffers(const ArrayType& array)
+  VISKORES_CONT static std::vector<viskores::cont::internal::Buffer> CreateBuffers(
+    const ArrayType& array)
   {
     VISKORES_IS_ARRAY_HANDLE(ArrayType);
     return viskores::cont::internal::CreateBuffers(StorageVariant{ array.GetStorage() }, array);
@@ -427,7 +433,8 @@ public:
     (viskores::cont::ArrayHandle<typename Traits::ValueType, typename Traits::StorageTag>));
 
   template <typename RealStorageTag>
-  VISKORES_CONT ArrayHandleMultiplexer(const viskores::cont::ArrayHandle<ValueType, RealStorageTag>& src)
+  VISKORES_CONT ArrayHandleMultiplexer(
+    const viskores::cont::ArrayHandle<ValueType, RealStorageTag>& src)
     : Superclass(StorageType::CreateBuffers(src))
   {
   }

@@ -46,7 +46,7 @@ class Redistributor
   const FilterType& Filter;
 
   viskores::cont::DataSet Extract(const viskores::cont::DataSet& input,
-                              const viskoresdiy::ContinuousBounds& bds) const
+                                  const viskoresdiy::ContinuousBounds& bds) const
   {
     // extract points
     viskores::Box box(bds.min[0], bds.max[0], bds.min[1], bds.max[1], bds.min[2], bds.max[2]);
@@ -82,11 +82,12 @@ class Redistributor
       else
       {
         VISKORES_ASSERT(this->Field.GetName() == field.GetName() &&
-                    this->Field.GetAssociation() == field.GetAssociation());
+                        this->Field.GetAssociation() == field.GetAssociation());
       }
 
-      field.GetData().CastAndCallForTypes<VISKORES_DEFAULT_TYPE_LIST, VISKORES_DEFAULT_STORAGE_LIST>(
-        Appender{}, this->Field, this->CurrentIdx);
+      field.GetData()
+        .CastAndCallForTypes<VISKORES_DEFAULT_TYPE_LIST, VISKORES_DEFAULT_STORAGE_LIST>(
+          Appender{}, this->Field, this->CurrentIdx);
       this->CurrentIdx += field.GetNumberOfValues();
     }
 
@@ -102,7 +103,8 @@ class Redistributor
       {
         viskores::cont::ArrayHandle<T> farray =
           field.GetData().template AsArrayHandle<viskores::cont::ArrayHandle<T>>();
-        viskores::cont::Algorithm::CopySubRange(data, 0, data.GetNumberOfValues(), farray, currentIdx);
+        viskores::cont::Algorithm::CopySubRange(
+          data, 0, data.GetNumberOfValues(), farray, currentIdx);
       }
     };
 
@@ -209,18 +211,19 @@ VISKORES_CONT viskores::cont::PartitionedDataSet RedistributePoints::DoExecutePa
 
   assert(static_cast<viskores::Id>(master.size()) == input.GetNumberOfPartitions());
   // let's populate local blocks
-  master.foreach ([&input](viskores::cont::DataSet* ds, const viskoresdiy::Master::ProxyWithLink& proxy) {
-    auto lid = proxy.master()->lid(proxy.gid());
-    *ds = input.GetPartition(lid);
-  });
+  master.foreach (
+    [&input](viskores::cont::DataSet* ds, const viskoresdiy::Master::ProxyWithLink& proxy)
+    {
+      auto lid = proxy.master()->lid(proxy.gid());
+      *ds = input.GetPartition(lid);
+    });
 
   internal::Redistributor<RedistributePoints> redistributor(decomposer, *this);
   viskoresdiy::all_to_all(master, assigner, redistributor, /*k=*/2);
 
   viskores::cont::PartitionedDataSet result;
-  master.foreach ([&result](viskores::cont::DataSet* ds, const viskoresdiy::Master::ProxyWithLink&) {
-    result.AppendPartition(*ds);
-  });
+  master.foreach ([&result](viskores::cont::DataSet* ds, const viskoresdiy::Master::ProxyWithLink&)
+                  { result.AppendPartition(*ds); });
 
   return result;
 }

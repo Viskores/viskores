@@ -14,6 +14,8 @@ VISKORES_THIRDPARTY_PRE_INCLUDE
 #include <viskores/thirdparty/lodepng/viskoreslodepng/lodepng.h>
 VISKORES_THIRDPARTY_POST_INCLUDE
 
-int viskores::io::internal::GreyColorType = static_cast<int>(viskores::png::LodePNGColorType::LCT_GREY);
+int viskores::io::internal::GreyColorType =
+  static_cast<int>(viskores::png::LodePNGColorType::LCT_GREY);
 
-int viskores::io::internal::RGBColorType = static_cast<int>(viskores::png::LodePNGColorType::LCT_RGB);
+int viskores::io::internal::RGBColorType =
+  static_cast<int>(viskores::png::LodePNGColorType::LCT_RGB);

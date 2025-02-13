@@ -58,10 +58,11 @@ void CheckVariableSize(viskores::VecTraitsTagSizeStatic)
 template <typename VecCoordsType>
 void CheckCoordsValues(const VecCoordsType& coords)
 {
-  for (viskores::IdComponent pointIndex = 0; pointIndex < VecCoordsType::NUM_COMPONENTS; pointIndex++)
+  for (viskores::IdComponent pointIndex = 0; pointIndex < VecCoordsType::NUM_COMPONENTS;
+       pointIndex++)
   {
     VISKORES_TEST_ASSERT(test_equal(coords[pointIndex], g_Coords[pointIndex]),
-                     "Incorrect point coordinate.");
+                         "Incorrect point coordinate.");
   }
 }
 
@@ -82,9 +83,9 @@ void TryVecAxisAlignedPointCoordinates(
 
   std::cout << "Check size." << std::endl;
   VISKORES_TEST_ASSERT(coords.GetNumberOfComponents() == VecCoordsType::NUM_COMPONENTS,
-                   "Wrong number of components.");
+                       "Wrong number of components.");
   VISKORES_TEST_ASSERT(VTraits::GetNumberOfComponents(coords) == VecCoordsType::NUM_COMPONENTS,
-                   "Wrong number of components.");
+                       "Wrong number of components.");
 
   std::cout << "Check contents." << std::endl;
   CheckCoordsValues(coords);
@@ -109,27 +110,30 @@ void TestVecAxisAlignedPointCoordinates()
   viskores::VecAxisAlignedPointCoordinates<1> coords1d(g_Origin, g_Spacing);
   VISKORES_TEST_ASSERT(coords1d.NUM_COMPONENTS == 2, "Wrong number of components");
   VISKORES_TEST_ASSERT(viskores::VecAxisAlignedPointCoordinates<1>::NUM_COMPONENTS == 2,
-                   "Wrong number of components");
-  VISKORES_TEST_ASSERT(viskores::VecTraits<viskores::VecAxisAlignedPointCoordinates<1>>::NUM_COMPONENTS == 2,
-                   "Wrong number of components");
+                       "Wrong number of components");
+  VISKORES_TEST_ASSERT(
+    viskores::VecTraits<viskores::VecAxisAlignedPointCoordinates<1>>::NUM_COMPONENTS == 2,
+    "Wrong number of components");
   TryVecAxisAlignedPointCoordinates(coords1d);
 
   std::cout << "***** 2D Coordinates *****************" << std::endl;
   viskores::VecAxisAlignedPointCoordinates<2> coords2d(g_Origin, g_Spacing);
   VISKORES_TEST_ASSERT(coords2d.NUM_COMPONENTS == 4, "Wrong number of components");
   VISKORES_TEST_ASSERT(viskores::VecAxisAlignedPointCoordinates<2>::NUM_COMPONENTS == 4,
-                   "Wrong number of components");
-  VISKORES_TEST_ASSERT(viskores::VecTraits<viskores::VecAxisAlignedPointCoordinates<2>>::NUM_COMPONENTS == 4,
-                   "Wrong number of components");
+                       "Wrong number of components");
+  VISKORES_TEST_ASSERT(
+    viskores::VecTraits<viskores::VecAxisAlignedPointCoordinates<2>>::NUM_COMPONENTS == 4,
+    "Wrong number of components");
   TryVecAxisAlignedPointCoordinates(coords2d);
 
   std::cout << "***** 3D Coordinates *****************" << std::endl;
   viskores::VecAxisAlignedPointCoordinates<3> coords3d(g_Origin, g_Spacing);
   VISKORES_TEST_ASSERT(coords3d.NUM_COMPONENTS == 8, "Wrong number of components");
   VISKORES_TEST_ASSERT(viskores::VecAxisAlignedPointCoordinates<3>::NUM_COMPONENTS == 8,
-                   "Wrong number of components");
-  VISKORES_TEST_ASSERT(viskores::VecTraits<viskores::VecAxisAlignedPointCoordinates<3>>::NUM_COMPONENTS == 8,
-                   "Wrong number of components");
+                       "Wrong number of components");
+  VISKORES_TEST_ASSERT(
+    viskores::VecTraits<viskores::VecAxisAlignedPointCoordinates<3>>::NUM_COMPONENTS == 8,
+    "Wrong number of components");
   TryVecAxisAlignedPointCoordinates(coords3d);
 }
 

@@ -39,7 +39,7 @@ namespace internal
 /// indicative of an error.)
 ///
 VISKORES_CONT_EXPORT viskores::BufferSizeType NumberOfValuesToNumberOfBytes(viskores::Id numValues,
-                                                                    std::size_t typeSize);
+                                                                            std::size_t typeSize);
 
 template <typename T>
 viskores::BufferSizeType NumberOfValuesToNumberOfBytes(viskores::Id numValues)
@@ -122,15 +122,15 @@ public:
   /// Preserving data might cost more time or memory.
   ///
   VISKORES_CONT void SetNumberOfBytes(viskores::BufferSizeType numberOfBytes,
-                                  viskores::CopyFlag preserve,
-                                  viskores::cont::Token& token) const;
+                                      viskores::CopyFlag preserve,
+                                      viskores::cont::Token& token) const;
 
 private:
   VISKORES_CONT bool MetaDataIsType(const std::string& type) const;
   VISKORES_CONT void SetMetaData(void* data,
-                             const std::string& type,
-                             detail::DeleterType* deleter,
-                             detail::CopierType copier) const;
+                                 const std::string& type,
+                                 detail::DeleterType* deleter,
+                                 detail::CopierType copier) const;
   VISKORES_CONT void* GetMetaData(const std::string& type) const;
 
 public:
@@ -216,7 +216,7 @@ public:
   /// `ReadPointerHost`. It is an error to set `device` to `DeviceAdapterTagAny`.
   ///
   VISKORES_CONT const void* ReadPointerDevice(viskores::cont::DeviceAdapterId device,
-                                          viskores::cont::Token& token) const;
+                                              viskores::cont::Token& token) const;
 
   /// \brief Returns a writable host (control environment) pointer to the buffer.
   ///
@@ -236,7 +236,7 @@ public:
   /// `WritePointerHost`. It is an error to set `device` to `DeviceAdapterTagAny`.
   ///
   VISKORES_CONT void* WritePointerDevice(viskores::cont::DeviceAdapterId device,
-                                     viskores::cont::Token& token) const;
+                                         viskores::cont::Token& token) const;
 
   /// \brief Enqueue a token for access to the buffer.
   ///
@@ -261,7 +261,7 @@ public:
   ///
   VISKORES_CONT void DeepCopyFrom(const viskores::cont::internal::Buffer& source) const;
   VISKORES_CONT void DeepCopyFrom(const viskores::cont::internal::Buffer& source,
-                              viskores::cont::DeviceAdapterId device) const;
+                                  viskores::cont::DeviceAdapterId device) const;
   /// @}
 
   /// \brief Resets the `Buffer` to the memory allocated at the `BufferInfo`.
@@ -320,10 +320,10 @@ public:
   /// Both `start` and `end` must be divisible by `sourceSize`.
   ///
   VISKORES_CONT void Fill(const void* source,
-                      viskores::BufferSizeType sourceSize,
-                      viskores::BufferSizeType start,
-                      viskores::BufferSizeType end,
-                      viskores::cont::Token& token) const;
+                          viskores::BufferSizeType sourceSize,
+                          viskores::BufferSizeType start,
+                          viskores::BufferSizeType end,
+                          viskores::cont::Token& token) const;
 
   VISKORES_CONT bool operator==(const viskores::cont::internal::Buffer& rhs) const
   {

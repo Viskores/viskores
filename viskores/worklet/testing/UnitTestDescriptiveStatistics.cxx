@@ -44,8 +44,8 @@ void TestIntegerSequence()
   // We only have 23 bits for FloatInt in Float32. This limits N to 11 bits.
   constexpr viskores::Float32 N = 1000;
 
-  auto integers =
-    viskores::cont::ArrayHandleCounting<viskores::Float32>(0.0f, 1.0f, static_cast<viskores::Id>(N));
+  auto integers = viskores::cont::ArrayHandleCounting<viskores::Float32>(
+    0.0f, 1.0f, static_cast<viskores::Id>(N));
   auto result = viskores::worklet::DescriptiveStatistics::Run(integers);
 
   VISKORES_TEST_ASSERT(test_equal(result.N(), N));
@@ -142,8 +142,10 @@ void TestMeanProperties()
 
   // 1. Linearity, Mean(a * x + b) = a * Mean(x) + b
   std::vector<viskores::Float32> axpb(x.size());
-  std::transform(
-    x.begin(), x.end(), axpb.begin(), [](viskores::Float32 value) { return 4.0f * value + 1000.f; });
+  std::transform(x.begin(),
+                 x.end(),
+                 axpb.begin(),
+                 [](viskores::Float32 value) { return 4.0f * value + 1000.f; });
 
   auto x_array = viskores::cont::make_ArrayHandle(x, viskores::CopyFlag::Off);
   auto axpb_array = viskores::cont::make_ArrayHandle(axpb, viskores::CopyFlag::Off);
@@ -193,9 +195,10 @@ void TestVarianceProperty()
     condition_number_kv += viskores::Abs(rp.Get(i) - mean_kv) * viskores::Abs(rp.Get(i));
   }
   condition_number_kv *= (2.0f / (static_cast<float>(rp.GetNumberOfValues() - 1) * var_kv));
-  VISKORES_TEST_ASSERT(test_equal(var_kv,
-                              4.0 * 4.0 * var_v,
-                              condition_number_kv * std::numeric_limits<viskores::Float32>::epsilon()));
+  VISKORES_TEST_ASSERT(
+    test_equal(var_kv,
+               4.0 * 4.0 * var_v,
+               condition_number_kv * std::numeric_limits<viskores::Float32>::epsilon()));
 
   // Random shuffle
   std::vector<viskores::Float32> px = v;
@@ -212,14 +215,16 @@ void TestVarianceProperty()
   }
   condition_number_v *= (2.0f / (static_cast<float>(rp.GetNumberOfValues() - 1) * var_v));
 
-  VISKORES_TEST_ASSERT(
-    test_equal(var_v, var_px, condition_number_v * std::numeric_limits<viskores::Float32>::epsilon()));
+  VISKORES_TEST_ASSERT(test_equal(
+    var_v, var_px, condition_number_v * std::numeric_limits<viskores::Float32>::epsilon()));
 }
 
 void TestMomentsByKey()
 {
-  auto keys_array = viskores::cont::make_ArrayHandle<viskores::UInt32>({ 0, 1, 2, 2, 3, 3, 3, 4, 4, 4, 4 });
-  auto values_array = viskores::cont::make_ArrayHandleConstant(1.0f, keys_array.GetNumberOfValues());
+  auto keys_array =
+    viskores::cont::make_ArrayHandle<viskores::UInt32>({ 0, 1, 2, 2, 3, 3, 3, 4, 4, 4, 4 });
+  auto values_array =
+    viskores::cont::make_ArrayHandleConstant(1.0f, keys_array.GetNumberOfValues());
 
   auto results = viskores::worklet::DescriptiveStatistics::Run(keys_array, values_array);
   VISKORES_TEST_ASSERT(results.GetNumberOfValues() == 5);
@@ -267,7 +272,8 @@ void TestEdgeCases()
   StatValueType empty;
   VISKORES_TEST_ASSERT(test_equal(empty.N(), 0));
   VISKORES_TEST_ASSERT(test_equal(empty.Min(), std::numeric_limits<viskores::FloatDefault>::max()));
-  VISKORES_TEST_ASSERT(test_equal(empty.Max(), std::numeric_limits<viskores::FloatDefault>::lowest()));
+  VISKORES_TEST_ASSERT(
+    test_equal(empty.Max(), std::numeric_limits<viskores::FloatDefault>::lowest()));
   VISKORES_TEST_ASSERT(test_equal(empty.Mean(), 0));
   VISKORES_TEST_ASSERT(test_equal(empty.SampleVariance(), 0));
   VISKORES_TEST_ASSERT(test_equal(empty.PopulationVariance(), 0));
@@ -277,7 +283,8 @@ void TestEdgeCases()
   result = empty + empty;
   VISKORES_TEST_ASSERT(test_equal(empty.N(), 0));
   VISKORES_TEST_ASSERT(test_equal(empty.Min(), std::numeric_limits<viskores::FloatDefault>::max()));
-  VISKORES_TEST_ASSERT(test_equal(empty.Max(), std::numeric_limits<viskores::FloatDefault>::lowest()));
+  VISKORES_TEST_ASSERT(
+    test_equal(empty.Max(), std::numeric_limits<viskores::FloatDefault>::lowest()));
   VISKORES_TEST_ASSERT(test_equal(empty.Mean(), 0));
   VISKORES_TEST_ASSERT(test_equal(empty.SampleVariance(), 0));
   VISKORES_TEST_ASSERT(test_equal(empty.PopulationVariance(), 0));

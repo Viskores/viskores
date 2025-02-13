@@ -33,7 +33,9 @@ void ImageWriterPNM::Write(viskores::Id width, viskores::Id height, const ColorA
 }
 
 template <typename PixelType>
-void ImageWriterPNM::WriteToFile(viskores::Id width, viskores::Id height, const ColorArrayType& pixels)
+void ImageWriterPNM::WriteToFile(viskores::Id width,
+                                 viskores::Id height,
+                                 const ColorArrayType& pixels)
 {
   std::ofstream outStream(this->FileName.c_str(), std::ios_base::binary | std::ios_base::out);
   outStream << "P6\n" << width << " " << height << "\n";
@@ -53,7 +55,8 @@ void ImageWriterPNM::WriteToFile(viskores::Id width, viskores::Id height, const 
     for (viskores::Id xIndex = 0; xIndex < width; xIndex++, pnmIndex++)
     {
       viskores::Id viskoresIndex = yIndex * width + xIndex;
-      PixelType(pixelPortal.Get(viskoresIndex)).FillImageAtIndexWithPixel(imageData.data(), pnmIndex);
+      PixelType(pixelPortal.Get(viskoresIndex))
+        .FillImageAtIndexWithPixel(imageData.data(), pnmIndex);
     }
   }
   outStream.write((char*)imageData.data(), imageSize);

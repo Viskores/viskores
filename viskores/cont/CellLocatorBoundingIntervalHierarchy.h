@@ -27,15 +27,18 @@ namespace viskores
 namespace cont
 {
 
-class VISKORES_CONT_EXPORT CellLocatorBoundingIntervalHierarchy : public viskores::cont::CellLocatorBase
+class VISKORES_CONT_EXPORT CellLocatorBoundingIntervalHierarchy
+  : public viskores::cont::CellLocatorBase
 {
 public:
   using SupportedCellSets = VISKORES_DEFAULT_CELL_SET_LIST;
 
   using CellLocatorExecList =
-    viskores::ListTransform<SupportedCellSets, viskores::exec::CellLocatorBoundingIntervalHierarchy>;
+    viskores::ListTransform<SupportedCellSets,
+                            viskores::exec::CellLocatorBoundingIntervalHierarchy>;
 
-  using ExecObjType = viskores::ListApply<CellLocatorExecList, viskores::exec::CellLocatorMultiplexer>;
+  using ExecObjType =
+    viskores::ListApply<CellLocatorExecList, viskores::exec::CellLocatorMultiplexer>;
   using LastCell = typename ExecObjType::LastCell;
 
   VISKORES_CONT
@@ -69,7 +72,7 @@ public:
   viskores::Id GetMaxLeafSize() { return this->MaxLeafSize; }
 
   VISKORES_CONT ExecObjType PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                            viskores::cont::Token& token) const;
+                                                viskores::cont::Token& token) const;
 
 private:
   viskores::IdComponent NumPlanes;

@@ -30,7 +30,8 @@ VISKORES_CONT viskores::cont::UnknownArrayHandle ExtractComponent(
   viskores::IdComponent componentIndex)
 {
   viskores::cont::UnknownArrayHandle extractedComponentArray;
-  auto resolveType = [&](auto componentExample) {
+  auto resolveType = [&](auto componentExample)
+  {
     using ComponentType = decltype(componentExample);
     if (array.IsBaseComponentType<ComponentType>())
     {
@@ -51,8 +52,9 @@ namespace filter
 namespace field_transform
 {
 
-VISKORES_CONT void CompositeVectors::SetFieldNameList(const std::vector<std::string>& fieldNameList,
-                                                  viskores::cont::Field::Association association)
+VISKORES_CONT void CompositeVectors::SetFieldNameList(
+  const std::vector<std::string>& fieldNameList,
+  viskores::cont::Field::Association association)
 {
   viskores::IdComponent index = 0;
   for (auto& fieldName : fieldNameList)
@@ -67,7 +69,8 @@ VISKORES_CONT viskores::IdComponent CompositeVectors::GetNumberOfFields() const
   return this->GetNumberOfActiveFields();
 }
 
-VISKORES_CONT viskores::cont::DataSet CompositeVectors::DoExecute(const viskores::cont::DataSet& inDataSet)
+VISKORES_CONT viskores::cont::DataSet CompositeVectors::DoExecute(
+  const viskores::cont::DataSet& inDataSet)
 {
   viskores::IdComponent numComponents = this->GetNumberOfFields();
   if (numComponents < 1)
@@ -82,7 +85,8 @@ VISKORES_CONT viskores::cont::DataSet CompositeVectors::DoExecute(const viskores
   viskores::cont::Field firstField = this->GetFieldFromDataSet(0, inDataSet);
   viskores::Id numValues = firstField.GetNumberOfValues();
   viskores::cont::Field::Association association = firstField.GetAssociation();
-  auto allocateOutput = [&](auto exampleComponent) {
+  auto allocateOutput = [&](auto exampleComponent)
+  {
     using ComponentType = decltype(exampleComponent);
     if (firstField.GetData().IsBaseComponentType<ComponentType>())
     {

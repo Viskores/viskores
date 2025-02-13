@@ -103,8 +103,8 @@ struct Ray
   /// reported as valid.
   template <bool OtherTwoSided, int Dim_ = Dim, typename std::enable_if<Dim_ == 2, int>::type = 0>
   VISKORES_EXEC_CONT bool Intersect(const Ray<CoordType, Dim, OtherTwoSided>& other,
-                                Vector& point,
-                                CoordType tol = 0.f);
+                                    Vector& point,
+                                    CoordType tol = 0.f);
 };
 
 /// Represent a finite line segment with a pair of points
@@ -182,8 +182,8 @@ struct LineSegment
   /// reported as valid.
   template <int Dim_ = Dim, typename std::enable_if<Dim_ == 2, int>::type = 0>
   VISKORES_EXEC_CONT bool IntersectInfinite(const LineSegment<CoordType, Dim>& other,
-                                        Vector& point,
-                                        CoordType tol = 0.f);
+                                            Vector& point,
+                                            CoordType tol = 0.f);
 };
 
 /// Represent a plane with a base point (origin) and normal vector.
@@ -226,10 +226,10 @@ struct Plane
   /// If the input is a ray, the \a parameter will be non-negative.
   template <bool IsTwoSided>
   VISKORES_EXEC_CONT bool Intersect(const Ray<CoordType, 3, IsTwoSided>& ray,
-                                CoordType& parameter,
-                                Vector& point,
-                                bool& lineInPlane,
-                                CoordType tol = CoordType(1e-6f)) const;
+                                    CoordType& parameter,
+                                    Vector& point,
+                                    bool& lineInPlane,
+                                    CoordType tol = CoordType(1e-6f)) const;
 
   /// Intersect this plane with the line \a segment.
   ///

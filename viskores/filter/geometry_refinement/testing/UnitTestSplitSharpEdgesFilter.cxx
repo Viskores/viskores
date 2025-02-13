@@ -31,11 +31,11 @@ const viskores::Vec3f expectedCoords[24] = {
 };
 
 const std::vector<viskores::Id> expectedConnectivityArray91{ 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6,
-                                                         3, 0, 4, 7, 4, 5, 6, 7, 0, 3, 2, 1 };
-const std::vector<viskores::FloatDefault> expectedPointvar{ 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.3f,
-                                                        70.3f, 80.3f, 10.1f, 10.1f, 20.1f, 20.1f,
-                                                        30.2f, 30.2f, 40.2f, 40.2f, 50.3f, 50.3f,
-                                                        60.3f, 60.3f, 70.3f, 70.3f, 80.3f, 80.3f };
+                                                             3, 0, 4, 7, 4, 5, 6, 7, 0, 3, 2, 1 };
+const std::vector<viskores::FloatDefault> expectedPointvar{
+  10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.3f, 70.3f, 80.3f, 10.1f, 10.1f, 20.1f, 20.1f,
+  30.2f, 30.2f, 40.2f, 40.2f, 50.3f, 50.3f, 60.3f, 60.3f, 70.3f, 70.3f, 80.3f, 80.3f
+};
 
 viskores::cont::DataSet Make3DExplicitSimpleCube()
 {
@@ -141,19 +141,19 @@ void TestSplitSharpEdgesFilterSplitEveryEdge(
   for (viskores::IdComponent i = 0; i < newCoords.GetNumberOfValues(); i++)
   {
     VISKORES_TEST_ASSERT(test_equal(newCoordsP.Get(i)[0], expectedCoords[i][0]),
-                     "result value does not match expected value");
+                         "result value does not match expected value");
     VISKORES_TEST_ASSERT(test_equal(newCoordsP.Get(i)[1], expectedCoords[i][1]),
-                     "result value does not match expected value");
+                         "result value does not match expected value");
     VISKORES_TEST_ASSERT(test_equal(newCoordsP.Get(i)[2], expectedCoords[i][2]),
-                     "result value does not match expected value");
+                         "result value does not match expected value");
   }
 
   auto newPointvarFieldPortal = newPointvarField.ReadPortal();
   for (viskores::IdComponent i = 0; i < newPointvarField.GetNumberOfValues(); i++)
   {
     VISKORES_TEST_ASSERT(test_equal(newPointvarFieldPortal.Get(static_cast<viskores::Id>(i)),
-                                expectedPointvar[static_cast<unsigned long>(i)]),
-                     "point field array result does not match expected value");
+                                    expectedPointvar[static_cast<unsigned long>(i)]),
+                         "point field array result does not match expected value");
   }
 }
 
@@ -177,29 +177,29 @@ void TestSplitSharpEdgesFilterNoSplit(
   for (viskores::IdComponent i = 0; i < newCoords.GetNumberOfValues(); i++)
   {
     VISKORES_TEST_ASSERT(test_equal(newCoordsP.Get(i)[0], expectedCoords[i][0]),
-                     "result value does not match expected value");
+                         "result value does not match expected value");
     VISKORES_TEST_ASSERT(test_equal(newCoordsP.Get(i)[1], expectedCoords[i][1]),
-                     "result value does not match expected value");
+                         "result value does not match expected value");
     VISKORES_TEST_ASSERT(test_equal(newCoordsP.Get(i)[2], expectedCoords[i][2]),
-                     "result value does not match expected value");
+                         "result value does not match expected value");
   }
 
-  const auto& connectivityArray = newCellset.GetConnectivityArray(viskores::TopologyElementTagCell(),
-                                                                  viskores::TopologyElementTagPoint());
+  const auto& connectivityArray = newCellset.GetConnectivityArray(
+    viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
   auto connectivityArrayPortal = connectivityArray.ReadPortal();
   for (viskores::IdComponent i = 0; i < connectivityArray.GetNumberOfValues(); i++)
   {
     VISKORES_TEST_ASSERT(connectivityArrayPortal.Get(static_cast<viskores::Id>(i)) ==
-                       expectedConnectivityArray91[static_cast<unsigned long>(i)],
-                     "connectivity array result does not match expected value");
+                           expectedConnectivityArray91[static_cast<unsigned long>(i)],
+                         "connectivity array result does not match expected value");
   }
 
   auto newPointvarFieldPortal = newPointvarField.ReadPortal();
   for (viskores::IdComponent i = 0; i < newPointvarField.GetNumberOfValues(); i++)
   {
     VISKORES_TEST_ASSERT(test_equal(newPointvarFieldPortal.Get(static_cast<viskores::Id>(i)),
-                                expectedPointvar[static_cast<unsigned long>(i)]),
-                     "point field array result does not match expected value");
+                                    expectedPointvar[static_cast<unsigned long>(i)]),
+                         "point field array result does not match expected value");
   }
 }
 

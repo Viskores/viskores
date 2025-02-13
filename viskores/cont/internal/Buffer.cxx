@@ -172,9 +172,9 @@ struct FillFunctor : viskores::exec::FunctorBase
   viskores::Id NumSourceValues;
 
   VISKORES_CONT FillFunctor(void* targetArray,
-                        const void* sourceValues,
-                        viskores::BufferSizeType sourceValuesSize,
-                        viskores::BufferSizeType start)
+                            const void* sourceValues,
+                            viskores::BufferSizeType sourceValuesSize,
+                            viskores::BufferSizeType start)
     : TargetArray(reinterpret_cast<T*>(targetArray))
     , SourceValues(reinterpret_cast<const T*>(sourceValues))
     , NumSourceValues(sourceValuesSize / sizeof(T))
@@ -910,7 +910,8 @@ void* Buffer::WritePointerHost(viskores::cont::Token& token) const
   return this->Internals->GetHostBuffer(lock).GetPointer();
 }
 
-void* Buffer::WritePointerDevice(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
+void* Buffer::WritePointerDevice(viskores::cont::DeviceAdapterId device,
+                                 viskores::cont::Token& token) const
 {
   if (device.IsValueValid())
   {
@@ -1126,25 +1127,29 @@ void Buffer::Fill(const void* source,
     [](void*&, void*&, viskores::BufferSizeType, viskores::BufferSizeType) {}));
 
   // First, try setting on any device that already has the data.
-  bool success = viskores::cont::TryExecute([&](auto device) {
-    if (this->IsAllocatedOnDevice(device))
+  bool success = viskores::cont::TryExecute(
+    [&](auto device)
     {
-      FillBuffer(*this, sourceBuffer, start, end, device, token);
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  });
+      if (this->IsAllocatedOnDevice(device))
+      {
+        FillBuffer(*this, sourceBuffer, start, end, device, token);
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    });
 
   if (!success)
   {
     // Likely the data was not on any device. Fill on any device.
-    viskores::cont::TryExecute([&](auto device) {
-      FillBuffer(*this, sourceBuffer, start, end, device, token);
-      return true;
-    });
+    viskores::cont::TryExecute(
+      [&](auto device)
+      {
+        FillBuffer(*this, sourceBuffer, start, end, device, token);
+        return true;
+      });
   }
 }
 
@@ -1155,8 +1160,9 @@ void Buffer::Fill(const void* source,
 namespace mangled_diy_namespace
 {
 
-void Serialization<viskores::cont::internal::Buffer>::save(BinaryBuffer& bb,
-                                                       const viskores::cont::internal::Buffer& obj)
+void Serialization<viskores::cont::internal::Buffer>::save(
+  BinaryBuffer& bb,
+  const viskores::cont::internal::Buffer& obj)
 {
   viskores::BufferSizeType size = obj.GetNumberOfBytes();
   std::unique_ptr<viskores::cont::Token> token;
@@ -1176,7 +1182,8 @@ void Serialization<viskores::cont::internal::Buffer>::save(BinaryBuffer& bb,
   // viskores::cont::Token is not.
   bb.save_binary_blob(static_cast<const char*>(ptr),
                       static_cast<std::size_t>(size),
-                      [token = token.release()](const char[]) {
+                      [token = token.release()](const char[])
+                      {
                         if (token != nullptr)
                         {
                           token->DetachFromAll();
@@ -1186,7 +1193,7 @@ void Serialization<viskores::cont::internal::Buffer>::save(BinaryBuffer& bb,
 }
 
 void Serialization<viskores::cont::internal::Buffer>::load(BinaryBuffer& bb,
-                                                       viskores::cont::internal::Buffer& obj)
+                                                           viskores::cont::internal::Buffer& obj)
 {
   viskores::cont::Token token;
   auto blob = bb.load_binary_blob();
@@ -1197,8 +1204,9 @@ void Serialization<viskores::cont::internal::Buffer>::load(BinaryBuffer& bb,
   {
     auto device = viskores::cont::GetDIYDeviceAdapter();
     void* ptr = obj.WritePointerDevice(device, token);
-    viskores::cont::RuntimeDeviceInformation().GetMemoryManager(device).CopyDeviceToDeviceRawPointer(
-      blob.pointer.get(), ptr, size);
+    viskores::cont::RuntimeDeviceInformation()
+      .GetMemoryManager(device)
+      .CopyDeviceToDeviceRawPointer(blob.pointer.get(), ptr, size);
   }
 }
 

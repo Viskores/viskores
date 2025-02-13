@@ -86,12 +86,12 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& superID,
-                            const viskores::Id /*activeID*/, // FIXME: Remove unused parameter?
-                            const InFieldPortalType& inwardsPortal,
-                            const InFieldPortalType& outdegreePortal,
-                            const InFieldPortalType& indegreePortal,
-                            const OutFieldPortalType& outboundPortal,
-                            const OutFieldPortalType& inboundPortal) const
+                                const viskores::Id /*activeID*/, // FIXME: Remove unused parameter?
+                                const InFieldPortalType& inwardsPortal,
+                                const InFieldPortalType& outdegreePortal,
+                                const InFieldPortalType& indegreePortal,
+                                const OutFieldPortalType& outboundPortal,
+                                const OutFieldPortalType& inboundPortal) const
   {
     viskores::Id inNeighbour = inwardsPortal.Get(superID);
 

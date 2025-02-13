@@ -30,8 +30,8 @@ void* Allocate(std::size_t size)
   if (!Kokkos::is_initialized())
   {
     VISKORES_LOG_F(viskores::cont::LogLevel::Info,
-               "Allocating device memory before Kokkos has been initialized. Calling "
-               "viskores::cont::Initialize.");
+                   "Allocating device memory before Kokkos has been initialized. Calling "
+                   "viskores::cont::Initialize.");
     viskores::cont::Initialize();
   }
   try

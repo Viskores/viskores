@@ -116,7 +116,10 @@ public:
   }
 
   VISKORES_EXEC_CONT ValueType* GetIteratorBegin() const { return this->Array; }
-  VISKORES_EXEC_CONT ValueType* GetIteratorEnd() const { return this->Array + this->NumberOfValues; }
+  VISKORES_EXEC_CONT ValueType* GetIteratorEnd() const
+  {
+    return this->Array + this->NumberOfValues;
+  }
 
   VISKORES_EXEC_CONT ValueType* GetArray() const { return this->Array; }
 

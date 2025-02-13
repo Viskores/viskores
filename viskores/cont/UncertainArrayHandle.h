@@ -42,9 +42,9 @@ class VISKORES_ALWAYS_EXPORT UncertainArrayHandle : public viskores::cont::Unkno
   VISKORES_IS_LIST(StorageTypeList);
 
   VISKORES_STATIC_ASSERT_MSG((!std::is_same<ValueTypeList, viskores::ListUniversal>::value),
-                         "Cannot use viskores::ListUniversal with UncertainArrayHandle.");
+                             "Cannot use viskores::ListUniversal with UncertainArrayHandle.");
   VISKORES_STATIC_ASSERT_MSG((!std::is_same<StorageTypeList, viskores::ListUniversal>::value),
-                         "Cannot use viskores::ListUniversal with UncertainArrayHandle.");
+                             "Cannot use viskores::ListUniversal with UncertainArrayHandle.");
 
   using Superclass = UnknownArrayHandle;
   using Thisclass = UncertainArrayHandle<ValueTypeList, StorageTypeList>;
@@ -126,7 +126,7 @@ public:
 // Defined here to avoid circular dependencies between UnknownArrayHandle and UncertainArrayHandle.
 template <typename NewValueTypeList, typename NewStorageTypeList>
 VISKORES_CONT viskores::cont::UncertainArrayHandle<NewValueTypeList, NewStorageTypeList>
-  UnknownArrayHandle::ResetTypes(NewValueTypeList, NewStorageTypeList) const
+UnknownArrayHandle::ResetTypes(NewValueTypeList, NewStorageTypeList) const
 {
   return viskores::cont::UncertainArrayHandle<NewValueTypeList, NewStorageTypeList>(*this);
 }
@@ -218,12 +218,13 @@ public:
     viskoresdiy::load(bb, typeString);
 
     bool success = false;
-    viskores::ListForEach(internal::UncertainArrayHandleDeserializeFunctor{},
-                      viskores::cont::internal::ListAllArrayTypes<ValueTypeList, StorageTypeList>{},
-                      obj,
-                      typeString,
-                      success,
-                      bb);
+    viskores::ListForEach(
+      internal::UncertainArrayHandleDeserializeFunctor{},
+      viskores::cont::internal::ListAllArrayTypes<ValueTypeList, StorageTypeList>{},
+      obj,
+      typeString,
+      success,
+      bb);
 
     if (!success)
     {

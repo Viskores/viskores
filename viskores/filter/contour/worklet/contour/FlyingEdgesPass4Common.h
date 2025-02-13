@@ -29,16 +29,16 @@ VISKORES_EXEC inline viskores::Id3 compute_incs3d(const viskores::Id3& dims)
 }
 
 VISKORES_EXEC inline constexpr viskores::Id increment_cellId(SumXAxis,
-                                                     viskores::Id cellId,
-                                                     viskores::Id,
-                                                     viskores::Id numToIncrement = 1)
+                                                             viskores::Id cellId,
+                                                             viskores::Id,
+                                                             viskores::Id numToIncrement = 1)
 {
   return cellId + numToIncrement;
 }
 VISKORES_EXEC inline constexpr viskores::Id increment_cellId(SumYAxis,
-                                                     viskores::Id cellId,
-                                                     viskores::Id y_point_axis_inc,
-                                                     viskores::Id numToIncrement = 1)
+                                                             viskores::Id cellId,
+                                                             viskores::Id y_point_axis_inc,
+                                                             viskores::Id numToIncrement = 1)
 {
   return cellId + ((y_point_axis_inc - 1) * numToIncrement);
 }
@@ -50,12 +50,12 @@ VISKORES_EXEC inline bool case_includes_axes(viskores::UInt8 const* const edgeUs
 
 template <typename AxisToSum, typename WholeConnField, typename WholeCellIdField>
 VISKORES_EXEC inline void generate_tris(viskores::Id inputCellId,
-                                    viskores::UInt8 edgeCase,
-                                    viskores::UInt8 numTris,
-                                    viskores::Id* edgeIds,
-                                    viskores::Id& triId,
-                                    const WholeConnField& conn,
-                                    const WholeCellIdField& cellIds)
+                                        viskores::UInt8 edgeCase,
+                                        viskores::UInt8 numTris,
+                                        viskores::Id* edgeIds,
+                                        viskores::Id& triId,
+                                        const WholeConnField& conn,
+                                        const WholeCellIdField& cellIds)
 {
   auto* edges = data::GetTriEdgeCases(edgeCase);
   viskores::Id edgeIndex = 1;
@@ -82,10 +82,10 @@ VISKORES_EXEC inline void generate_tris(viskores::Id inputCellId,
 //----------------------------------------------------------------------------
 template <typename AxisToSum, typename FieldInPointId3>
 VISKORES_EXEC inline void init_voxelIds(AxisToSum,
-                                    viskores::Id writeOffset,
-                                    viskores::UInt8 edgeCase,
-                                    const FieldInPointId3& axis_sums,
-                                    viskores::Id* edgeIds)
+                                        viskores::Id writeOffset,
+                                        viskores::UInt8 edgeCase,
+                                        const FieldInPointId3& axis_sums,
+                                        viskores::Id* edgeIds)
 {
   auto* edgeUses = data::GetEdgeUses(edgeCase);
   edgeIds[0] = writeOffset + axis_sums[0][AxisToSum::xindex]; // x-edges
@@ -104,7 +104,8 @@ VISKORES_EXEC inline void init_voxelIds(AxisToSum,
 
 // Helper function to advance the point ids along voxel rows.
 //----------------------------------------------------------------------------
-VISKORES_EXEC inline void advance_voxelIds(viskores::UInt8 const* const edgeUses, viskores::Id* edgeIds)
+VISKORES_EXEC inline void advance_voxelIds(viskores::UInt8 const* const edgeUses,
+                                           viskores::Id* edgeIds)
 {
   edgeIds[0] += edgeUses[0]; // x-edges
   edgeIds[1] += edgeUses[1];
@@ -137,12 +138,12 @@ struct Pass4TrimState
             typename FieldInPointId,
             typename WholeEdgeField>
   VISKORES_EXEC Pass4TrimState(AxisToSum,
-                           const viskores::Id3& pdims,
-                           const ThreadIndices& threadIndices,
-                           const WholeSumField& viskoresNotUsed(axis_sums),
-                           const FieldInPointId& axis_mins,
-                           const FieldInPointId& axis_maxs,
-                           const WholeEdgeField& edges)
+                               const viskores::Id3& pdims,
+                               const ThreadIndices& threadIndices,
+                               const WholeSumField& viskoresNotUsed(axis_sums),
+                               const FieldInPointId& axis_mins,
+                               const FieldInPointId& axis_maxs,
+                               const WholeEdgeField& edges)
   {
     ijk = compute_ijk(AxisToSum{}, threadIndices.GetInputIndex3D());
 

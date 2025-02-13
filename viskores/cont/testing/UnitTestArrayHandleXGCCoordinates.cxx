@@ -78,15 +78,16 @@ template <typename T, typename S>
 void verify_results(viskores::cont::ArrayHandle<viskores::Vec<T, 3>, S> const& handle)
 {
   auto portal = handle.ReadPortal();
-  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == static_cast<viskores::Id>(correct_x_coords.size()),
-                   "coordinate portal size is incorrect");
+  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() ==
+                         static_cast<viskores::Id>(correct_x_coords.size()),
+                       "coordinate portal size is incorrect");
 
   for (viskores::Id i = 0; i < handle.GetNumberOfValues(); ++i)
   {
     auto v = portal.Get(i);
     auto e = viskores::make_Vec(correct_x_coords[static_cast<std::size_t>(i)],
-                            correct_y_coords[static_cast<std::size_t>(i)],
-                            correct_z_coords[static_cast<std::size_t>(i)]);
+                                correct_y_coords[static_cast<std::size_t>(i)],
+                                correct_z_coords[static_cast<std::size_t>(i)]);
     // std::cout << std::setprecision(4) << "computed " << v << " expected " << e << std::endl;
     VISKORES_TEST_ASSERT(test_equal(v, e), "incorrect conversion to Cartesian space");
   }
@@ -117,8 +118,8 @@ int TestArrayHandleXGCCoordinates()
     viskores::cont::make_ArrayHandle(points_rz, viskores::CopyFlag::Off), numPlanes, false);
 
   VISKORES_TEST_ASSERT(coords.GetNumberOfValues() ==
-                     static_cast<viskores::Id>(((points_rz.size() / 2) * numPlanes)),
-                   "coordinate size is incorrect");
+                         static_cast<viskores::Id>(((points_rz.size() / 2) * numPlanes)),
+                       "coordinate size is incorrect");
 
   // Verify first that control is correct
   verify_results(coords);

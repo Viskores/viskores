@@ -33,7 +33,9 @@ public:
   }
 
   VISKORES_EXEC_CONT
-  ThreadIndicesTesting(viskores::Id inputIndex, viskores::Id outputIndex, viskores::IdComponent visitIndex)
+  ThreadIndicesTesting(viskores::Id inputIndex,
+                       viskores::Id outputIndex,
+                       viskores::IdComponent visitIndex)
     : InputIndex(inputIndex)
     , OutputIndex(outputIndex)
     , VisitIndex(visitIndex)

@@ -295,8 +295,8 @@ void DoTest()
   std::cout << "Fancy array handle 1." << std::endl;
   viskores::cont::ArrayHandle<ValueType> valueArray;
   valueArray.Allocate(ARRAY_SIZE);
-  auto fancyArray1 =
-    viskores::cont::make_ArrayHandlePermutation(viskores::cont::ArrayHandleIndex(ARRAY_SIZE), valueArray);
+  auto fancyArray1 = viskores::cont::make_ArrayHandlePermutation(
+    viskores::cont::ArrayHandleIndex(ARRAY_SIZE), valueArray);
   DoThreadSafetyTest(fancyArray1);
 
   std::cout << "Fancy array handle 2." << std::endl;

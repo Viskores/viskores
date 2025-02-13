@@ -36,7 +36,7 @@ void TestScalarField()
 
   std::cout << result << std::endl;
   VISKORES_TEST_ASSERT((test_equal(result.Min, -5.0) && test_equal(result.Max, 5.0)),
-                   "Unexpected scalar field range.");
+                       "Unexpected scalar field range.");
 }
 
 template <typename T, viskores::IdComponent NumberOfComponents>
@@ -55,8 +55,11 @@ void TestVecField()
       fieldData[j][i] = data[j];
     }
   }
-  auto field = viskores::cont::make_Field(
-    "TestField", viskores::cont::Field::Association::Points, fieldData, nvals, viskores::CopyFlag::Off);
+  auto field = viskores::cont::make_Field("TestField",
+                                          viskores::cont::Field::Association::Points,
+                                          fieldData,
+                                          nvals,
+                                          viskores::CopyFlag::Off);
 
   viskores::Range result[NumberOfComponents];
   field.GetRange(result);
@@ -64,16 +67,16 @@ void TestVecField()
   for (viskores::IdComponent i = 0; i < NumberOfComponents; ++i)
   {
     VISKORES_TEST_ASSERT((test_equal(result[i].Min, -5.0) && test_equal(result[i].Max, 5.0)),
-                     "Unexpected vector field range.");
+                         "Unexpected vector field range.");
   }
 }
 
 void TestUniformCoordinateField()
 {
   viskores::cont::CoordinateSystem field("TestField",
-                                     viskores::Id3(10, 20, 5),
-                                     viskores::Vec3f(0.0f, -5.0f, 4.0f),
-                                     viskores::Vec3f(1.0f, 0.5f, 2.0f));
+                                         viskores::Id3(10, 20, 5),
+                                         viskores::Vec3f(0.0f, -5.0f, 4.0f),
+                                         viskores::Vec3f(1.0f, 0.5f, 2.0f));
 
   viskores::Bounds result = field.GetBounds();
 

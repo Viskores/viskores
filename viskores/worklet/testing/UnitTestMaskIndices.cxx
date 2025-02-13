@@ -32,7 +32,10 @@ public:
 
   using MaskType = viskores::worklet::MaskIndices;
 
-  VISKORES_EXEC void operator()(viskores::Id pointId, viskores::Id& outPointId) const { outPointId = pointId; }
+  VISKORES_EXEC void operator()(viskores::Id pointId, viskores::Id& outPointId) const
+  {
+    outPointId = pointId;
+  }
 };
 
 template <typename CellSetType>
@@ -40,13 +43,16 @@ void RunTest(const CellSetType& cellset, const viskores::cont::ArrayHandle<visko
 {
   viskores::Id numPoints = cellset.GetNumberOfPoints();
   viskores::cont::ArrayHandle<viskores::Id> outPointId;
-  viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant<viskores::Id>(-1, numPoints), outPointId);
+  viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant<viskores::Id>(-1, numPoints),
+                            outPointId);
 
-  viskores::worklet::DispatcherMapTopology<Worklet> dispatcher(viskores::worklet::MaskIndices{ indices });
+  viskores::worklet::DispatcherMapTopology<Worklet> dispatcher(
+    viskores::worklet::MaskIndices{ indices });
   dispatcher.Invoke(cellset, outPointId);
 
   viskores::cont::ArrayHandle<viskores::Int8> stencil;
-  viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant<viskores::Int8>(0, numPoints), stencil);
+  viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant<viskores::Int8>(0, numPoints),
+                            stencil);
 
   // Check that output that should be written was.
   for (viskores::Id i = 0; i < indices.GetNumberOfValues(); ++i)
@@ -55,10 +61,10 @@ void RunTest(const CellSetType& cellset, const viskores::cont::ArrayHandle<visko
     viskores::Id unMaskedIndex = indices.ReadPortal().Get(i);
     viskores::Id writtenValue = outPointId.ReadPortal().Get(unMaskedIndex);
     VISKORES_TEST_ASSERT(unMaskedIndex == writtenValue,
-                     "Did not pass unmasked index. Expected ",
-                     unMaskedIndex,
-                     ". Got ",
-                     writtenValue);
+                         "Did not pass unmasked index. Expected ",
+                         unMaskedIndex,
+                         ". Got ",
+                         writtenValue);
 
     // Mark index as passed.
     stencil.WritePortal().Set(unMaskedIndex, 1);
@@ -71,17 +77,18 @@ void RunTest(const CellSetType& cellset, const viskores::cont::ArrayHandle<visko
     {
       viskores::Id foundValue = outPointId.ReadPortal().Get(i);
       VISKORES_TEST_ASSERT(foundValue == -1,
-                       "Expected index ",
-                       i,
-                       " to be unwritten but was filled with ",
-                       foundValue);
+                           "Expected index ",
+                           i,
+                           " to be unwritten but was filled with ",
+                           foundValue);
     }
   }
 }
 
 void TestMaskIndices()
 {
-  viskores::cont::DataSet dataset = viskores::cont::testing::MakeTestDataSet().Make2DUniformDataSet0();
+  viskores::cont::DataSet dataset =
+    viskores::cont::testing::MakeTestDataSet().Make2DUniformDataSet0();
   auto cellset = dataset.GetCellSet();
   viskores::Id numberOfPoints = cellset.GetNumberOfPoints();
 

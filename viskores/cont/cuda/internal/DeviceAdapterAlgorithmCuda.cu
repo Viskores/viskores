@@ -66,7 +66,8 @@ struct VISKORES_CONT_EXPORT ScheduleParameterBuilder
   };
 
   std::map<GPU_STRATA, viskores::cont::cuda::ScheduleParameters> Presets;
-  std::function<viskores::cont::cuda::ScheduleParameters(const char*, int, int, int, int, int)> Compute;
+  std::function<viskores::cont::cuda::ScheduleParameters(const char*, int, int, int, int, int)>
+    Compute;
 
   // clang-format off
   // The presets for [one,two,three]_d_blocks are before we multiply by the number of SMs on the hardware
@@ -96,11 +97,11 @@ struct VISKORES_CONT_EXPORT ScheduleParameterBuilder
   // clang-format on
 
   viskores::cont::cuda::ScheduleParameters ComputeFromPreset(const char* name,
-                                                         int major,
-                                                         int minor,
-                                                         int numSMs,
-                                                         int maxThreadsPerSM,
-                                                         int maxThreadsPerBlock)
+                                                             int major,
+                                                             int minor,
+                                                             int numSMs,
+                                                             int maxThreadsPerSM,
+                                                             int maxThreadsPerBlock)
   {
     (void)minor;
     (void)maxThreadsPerSM;
@@ -135,28 +136,31 @@ VISKORES_CONT_EXPORT void SetupKernelSchedulingParameters()
   //check flag
   static std::once_flag lookupBuiltFlag;
 
-  std::call_once(lookupBuiltFlag, []() {
-    ScheduleParameterBuilder builder;
-    auto cudaDeviceConfig = dynamic_cast<
-      viskores::cont::internal::RuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagCuda>&>(
-      viskores::cont::RuntimeDeviceInformation{}.GetRuntimeConfiguration(
-        viskores::cont::DeviceAdapterTagCuda()));
-    std::vector<cudaDeviceProp> cudaDevices;
-    cudaDeviceConfig.GetCudaDeviceProp(cudaDevices);
-    for (const auto& deviceProp : cudaDevices)
+  std::call_once(
+    lookupBuiltFlag,
+    []()
     {
-      ScheduleParameters params = builder.Compute(deviceProp.name,
-                                                  deviceProp.major,
-                                                  deviceProp.minor,
-                                                  deviceProp.multiProcessorCount,
-                                                  deviceProp.maxThreadsPerMultiProcessor,
-                                                  deviceProp.maxThreadsPerBlock);
-      scheduling_1d_parameters.emplace_back(params.one_d_blocks, params.one_d_threads_per_block);
-      scheduling_2d_parameters.emplace_back(params.two_d_blocks, params.two_d_threads_per_block);
-      scheduling_3d_parameters.emplace_back(params.three_d_blocks,
-                                            params.three_d_threads_per_block);
-    }
-  });
+      ScheduleParameterBuilder builder;
+      auto cudaDeviceConfig = dynamic_cast<viskores::cont::internal::RuntimeDeviceConfiguration<
+        viskores::cont::DeviceAdapterTagCuda>&>(
+        viskores::cont::RuntimeDeviceInformation{}.GetRuntimeConfiguration(
+          viskores::cont::DeviceAdapterTagCuda()));
+      std::vector<cudaDeviceProp> cudaDevices;
+      cudaDeviceConfig.GetCudaDeviceProp(cudaDevices);
+      for (const auto& deviceProp : cudaDevices)
+      {
+        ScheduleParameters params = builder.Compute(deviceProp.name,
+                                                    deviceProp.major,
+                                                    deviceProp.minor,
+                                                    deviceProp.multiProcessorCount,
+                                                    deviceProp.maxThreadsPerMultiProcessor,
+                                                    deviceProp.maxThreadsPerBlock);
+        scheduling_1d_parameters.emplace_back(params.one_d_blocks, params.one_d_threads_per_block);
+        scheduling_2d_parameters.emplace_back(params.two_d_blocks, params.two_d_threads_per_block);
+        scheduling_3d_parameters.emplace_back(params.three_d_blocks,
+                                              params.three_d_threads_per_block);
+      }
+    });
 }
 }
 } // end namespace cuda::internal
@@ -171,7 +175,8 @@ auto DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagCuda>::GetPinnedErro
 
   if (!local.HostPtr)
   {
-    VISKORES_CUDA_CALL(cudaMallocHost((void**)&local.HostPtr, ERROR_ARRAY_SIZE, cudaHostAllocMapped));
+    VISKORES_CUDA_CALL(
+      cudaMallocHost((void**)&local.HostPtr, ERROR_ARRAY_SIZE, cudaHostAllocMapped));
     VISKORES_CUDA_CALL(cudaHostGetDevicePointer(&local.DevicePtr, local.HostPtr, 0));
     local.HostPtr[0] = '\0'; // clear
     local.Size = ERROR_ARRAY_SIZE;
@@ -184,7 +189,8 @@ void DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagCuda>::SetupErrorBuf
   viskores::exec::cuda::internal::TaskStrided& functor)
 {
   auto pinnedArray = GetPinnedErrorArray();
-  viskores::exec::internal::ErrorMessageBuffer errorMessage(pinnedArray.DevicePtr, pinnedArray.Size);
+  viskores::exec::internal::ErrorMessageBuffer errorMessage(pinnedArray.DevicePtr,
+                                                            pinnedArray.Size);
   functor.SetErrorMessageBuffer(errorMessage);
 }
 
@@ -216,7 +222,8 @@ void DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagCuda>::GetBlocksAndT
   const auto& params = cuda::internal::scheduling_1d_parameters[static_cast<size_t>(deviceId)];
   blocks = static_cast<viskores::UInt32>(params.first);
   threadsPerBlock = static_cast<viskores::UInt32>(params.second);
-  if ((maxThreadsPerBlock > 0) && (threadsPerBlock < static_cast<viskores::UInt32>(maxThreadsPerBlock)))
+  if ((maxThreadsPerBlock > 0) &&
+      (threadsPerBlock < static_cast<viskores::UInt32>(maxThreadsPerBlock)))
   {
     threadsPerBlock = static_cast<viskores::UInt32>(maxThreadsPerBlock);
   }
@@ -281,11 +288,11 @@ void DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagCuda>::LogKernelLaun
   (void)threadsPerBlock;
   std::string name = viskores::cont::TypeToString(worklet_info);
   VISKORES_LOG_F(viskores::cont::LogLevel::KernelLaunches,
-             "Launching 1D kernel %s on CUDA [ptx=%i, blocks=%i, threadsPerBlock=%i]",
-             name.c_str(),
-             (func_attrs.ptxVersion * 10),
-             blocks,
-             threadsPerBlock);
+                 "Launching 1D kernel %s on CUDA [ptx=%i, blocks=%i, threadsPerBlock=%i]",
+                 name.c_str(),
+                 (func_attrs.ptxVersion * 10),
+                 blocks,
+                 threadsPerBlock);
 }
 
 void DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagCuda>::LogKernelLaunch(
@@ -300,13 +307,13 @@ void DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagCuda>::LogKernelLaun
   (void)threadsPerBlock;
   std::string name = viskores::cont::TypeToString(worklet_info);
   VISKORES_LOG_F(viskores::cont::LogLevel::KernelLaunches,
-             "Launching 3D kernel %s on CUDA [ptx=%i, blocks=%i, threadsPerBlock=%i, %i, %i]",
-             name.c_str(),
-             (func_attrs.ptxVersion * 10),
-             blocks,
-             threadsPerBlock.x,
-             threadsPerBlock.y,
-             threadsPerBlock.z);
+                 "Launching 3D kernel %s on CUDA [ptx=%i, blocks=%i, threadsPerBlock=%i, %i, %i]",
+                 name.c_str(),
+                 (func_attrs.ptxVersion * 10),
+                 blocks,
+                 threadsPerBlock.x,
+                 threadsPerBlock.y,
+                 threadsPerBlock.z);
 }
 }
 } // end namespace viskores::cont

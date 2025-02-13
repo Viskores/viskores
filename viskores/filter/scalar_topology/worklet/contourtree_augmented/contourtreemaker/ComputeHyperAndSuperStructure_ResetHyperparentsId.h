@@ -81,8 +81,8 @@ public:
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const InFieldPortalType& superSortIndexPortal,
-                            const viskores::Id supernode,
-                            const InOutFieldPortalType& contourTreeHyperparentsPortal) const
+                                const viskores::Id supernode,
+                                const InOutFieldPortalType& contourTreeHyperparentsPortal) const
   {
     contourTreeHyperparentsPortal.Set(
       supernode,

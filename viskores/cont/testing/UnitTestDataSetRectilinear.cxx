@@ -44,7 +44,7 @@ static void TwoDimRectilinearTest()
 
   VISKORES_TEST_ASSERT(dataSet.GetNumberOfFields() == 3, "Incorrect number of fields");
   VISKORES_TEST_ASSERT(dataSet.GetNumberOfCoordinateSystems() == 1,
-                   "Incorrect number of coordinate systems");
+                       "Incorrect number of coordinate systems");
   VISKORES_TEST_ASSERT(cellSet.GetNumberOfPoints() == 6, "Incorrect number of points");
   VISKORES_TEST_ASSERT(cellSet.GetNumberOfCells() == 2, "Incorrect number of cells");
 
@@ -71,23 +71,25 @@ static void TwoDimRectilinearTest()
   for (viskores::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
   {
     VISKORES_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 4,
-                     "Incorrect number of cell indices");
+                         "Incorrect number of cell indices");
     viskores::IdComponent shape = cellSet.GetCellShape();
     VISKORES_TEST_ASSERT(shape == viskores::CELL_SHAPE_QUAD, "Incorrect element type.");
   }
 
   viskores::cont::Token token;
 
-  viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 2>
-    pointToCell = cellSet.PrepareForInput(viskores::cont::DeviceAdapterTagSerial(),
-                                          viskores::TopologyElementTagCell(),
-                                          viskores::TopologyElementTagPoint(),
-                                          token);
-  viskores::exec::ConnectivityStructured<viskores::TopologyElementTagPoint, viskores::TopologyElementTagCell, 2>
-    cellToPoint = cellSet.PrepareForInput(viskores::cont::DeviceAdapterTagSerial(),
-                                          viskores::TopologyElementTagPoint(),
-                                          viskores::TopologyElementTagCell(),
-                                          token);
+  viskores::exec::
+    ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 2>
+      pointToCell = cellSet.PrepareForInput(viskores::cont::DeviceAdapterTagSerial(),
+                                            viskores::TopologyElementTagCell(),
+                                            viskores::TopologyElementTagPoint(),
+                                            token);
+  viskores::exec::
+    ConnectivityStructured<viskores::TopologyElementTagPoint, viskores::TopologyElementTagCell, 2>
+      cellToPoint = cellSet.PrepareForInput(viskores::cont::DeviceAdapterTagSerial(),
+                                            viskores::TopologyElementTagPoint(),
+                                            viskores::TopologyElementTagCell(),
+                                            token);
 
   viskores::Id cells[2][4] = { { 0, 1, 4, 3 }, { 1, 2, 5, 4 } };
   for (viskores::Id cellIndex = 0; cellIndex < 2; cellIndex++)
@@ -96,24 +98,24 @@ static void TwoDimRectilinearTest()
     for (viskores::IdComponent localPointIndex = 0; localPointIndex < 4; localPointIndex++)
     {
       VISKORES_TEST_ASSERT(pointIds[localPointIndex] == cells[cellIndex][localPointIndex],
-                       "Incorrect point ID for cell");
+                           "Incorrect point ID for cell");
     }
   }
 
   viskores::Id expectedCellIds[6][4] = { { 0, -1, -1, -1 }, { 0, 1, -1, -1 }, { 1, -1, -1, -1 },
-                                     { 0, -1, -1, -1 }, { 0, 1, -1, -1 }, { 1, -1, -1, -1 } };
+                                         { 0, -1, -1, -1 }, { 0, 1, -1, -1 }, { 1, -1, -1, -1 } };
 
   for (viskores::Id pointIndex = 0; pointIndex < 6; pointIndex++)
   {
     viskores::VecVariable<viskores::Id, 4> retrievedCellIds =
       cellToPoint.GetIndices(cellToPoint.FlatToLogicalVisitIndex(pointIndex));
     VISKORES_TEST_ASSERT(retrievedCellIds.GetNumberOfComponents() <= 4,
-                     "Got wrong number of cell ids.");
+                         "Got wrong number of cell ids.");
     for (viskores::IdComponent cellIndex = 0; cellIndex < retrievedCellIds.GetNumberOfComponents();
          cellIndex++)
     {
       VISKORES_TEST_ASSERT(retrievedCellIds[cellIndex] == expectedCellIds[pointIndex][cellIndex],
-                       "Incorrect cell ID for point");
+                           "Incorrect cell ID for point");
     }
   }
 }
@@ -131,7 +133,7 @@ static void ThreeDimRectilinearTest()
   VISKORES_TEST_ASSERT(dataSet.GetNumberOfFields() == 3, "Incorrect number of fields");
 
   VISKORES_TEST_ASSERT(dataSet.GetNumberOfCoordinateSystems() == 1,
-                   "Incorrect number of coordinate systems");
+                       "Incorrect number of coordinate systems");
 
   VISKORES_TEST_ASSERT(cellSet.GetNumberOfPoints() == 18, "Incorrect number of points");
 
@@ -159,41 +161,43 @@ static void ThreeDimRectilinearTest()
   for (viskores::Id cellIndex = 0; cellIndex < numCells; cellIndex++)
   {
     VISKORES_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(cellIndex) == 8,
-                     "Incorrect number of cell indices");
+                         "Incorrect number of cell indices");
     viskores::IdComponent shape = cellSet.GetCellShape();
     VISKORES_TEST_ASSERT(shape == viskores::CELL_SHAPE_HEXAHEDRON, "Incorrect element type.");
   }
 
   //Test regular connectivity.
   viskores::cont::Token token;
-  viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 3>
-    pointToCell = cellSet.PrepareForInput(viskores::cont::DeviceAdapterTagSerial(),
-                                          viskores::TopologyElementTagCell(),
-                                          viskores::TopologyElementTagPoint(),
-                                          token);
+  viskores::exec::
+    ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 3>
+      pointToCell = cellSet.PrepareForInput(viskores::cont::DeviceAdapterTagSerial(),
+                                            viskores::TopologyElementTagCell(),
+                                            viskores::TopologyElementTagPoint(),
+                                            token);
   viskores::Id expectedPointIds[8] = { 0, 1, 4, 3, 6, 7, 10, 9 };
   viskores::Vec<viskores::Id, 8> retrievedPointIds = pointToCell.GetIndices(viskores::Id3(0));
   for (viskores::IdComponent localPointIndex = 0; localPointIndex < 8; localPointIndex++)
   {
     VISKORES_TEST_ASSERT(retrievedPointIds[localPointIndex] == expectedPointIds[localPointIndex],
-                     "Incorrect point ID for cell");
+                         "Incorrect point ID for cell");
   }
 
-  viskores::exec::ConnectivityStructured<viskores::TopologyElementTagPoint, viskores::TopologyElementTagCell, 3>
-    cellToPoint = cellSet.PrepareForInput(viskores::cont::DeviceAdapterTagSerial(),
-                                          viskores::TopologyElementTagPoint(),
-                                          viskores::TopologyElementTagCell(),
-                                          token);
+  viskores::exec::
+    ConnectivityStructured<viskores::TopologyElementTagPoint, viskores::TopologyElementTagCell, 3>
+      cellToPoint = cellSet.PrepareForInput(viskores::cont::DeviceAdapterTagSerial(),
+                                            viskores::TopologyElementTagPoint(),
+                                            viskores::TopologyElementTagCell(),
+                                            token);
   viskores::Id retrievedCellIds[6] = { 0, -1, -1, -1, -1, -1 };
   viskores::VecVariable<viskores::Id, 6> expectedCellIds = cellToPoint.GetIndices(viskores::Id3(0));
   VISKORES_TEST_ASSERT(expectedCellIds.GetNumberOfComponents() <= 6,
-                   "Got unexpected number of cell ids");
+                       "Got unexpected number of cell ids");
   for (viskores::IdComponent localPointIndex = 0;
        localPointIndex < expectedCellIds.GetNumberOfComponents();
        localPointIndex++)
   {
     VISKORES_TEST_ASSERT(expectedCellIds[localPointIndex] == retrievedCellIds[localPointIndex],
-                     "Incorrect cell ID for point");
+                         "Incorrect cell ID for point");
   }
 }
 

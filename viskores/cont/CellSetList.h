@@ -38,9 +38,9 @@ using CellSetListExplicit = viskores::List<
 using CellSetListExplicitDefault = CellSetListExplicit<>;
 
 using CellSetListCommon = viskores::List<viskores::cont::CellSetStructured<2>,
-                                     viskores::cont::CellSetStructured<3>,
-                                     viskores::cont::CellSetExplicit<>,
-                                     viskores::cont::CellSetSingleType<>>;
+                                         viskores::cont::CellSetStructured<3>,
+                                         viskores::cont::CellSetExplicit<>,
+                                         viskores::cont::CellSetSingleType<>>;
 
 using CellSetListStructured =
   viskores::List<viskores::cont::CellSetStructured<2>, viskores::cont::CellSetStructured<3>>;

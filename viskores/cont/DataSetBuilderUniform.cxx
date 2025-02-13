@@ -20,21 +20,22 @@ DataSetBuilderUniform::DataSetBuilderUniform() {}
 
 VISKORES_CONT
 viskores::cont::DataSet DataSetBuilderUniform::Create(const viskores::Id& dimension,
-                                                  const std::string& coordNm)
+                                                      const std::string& coordNm)
 {
   return CreateDataSet(viskores::Id3(dimension, 1, 1), VecType(0), VecType(1), coordNm);
 }
 
 VISKORES_CONT
 viskores::cont::DataSet DataSetBuilderUniform::Create(const viskores::Id2& dimensions,
-                                                  const std::string& coordNm)
+                                                      const std::string& coordNm)
 {
-  return CreateDataSet(viskores::Id3(dimensions[0], dimensions[1], 1), VecType(0), VecType(1), coordNm);
+  return CreateDataSet(
+    viskores::Id3(dimensions[0], dimensions[1], 1), VecType(0), VecType(1), coordNm);
 }
 
 VISKORES_CONT
 viskores::cont::DataSet DataSetBuilderUniform::Create(const viskores::Id3& dimensions,
-                                                  const std::string& coordNm)
+                                                      const std::string& coordNm)
 {
   return CreateDataSet(
     viskores::Id3(dimensions[0], dimensions[1], dimensions[2]), VecType(0), VecType(1), coordNm);
@@ -42,9 +43,9 @@ viskores::cont::DataSet DataSetBuilderUniform::Create(const viskores::Id3& dimen
 
 VISKORES_CONT
 viskores::cont::DataSet DataSetBuilderUniform::CreateDataSet(const viskores::Id3& dimensions,
-                                                         const viskores::Vec3f& origin,
-                                                         const viskores::Vec3f& spacing,
-                                                         const std::string& coordNm)
+                                                             const viskores::Vec3f& origin,
+                                                             const viskores::Vec3f& spacing,
+                                                             const std::string& coordNm)
 {
   viskores::Id dims[3] = { 1, 1, 1 };
   int ndims = 0;

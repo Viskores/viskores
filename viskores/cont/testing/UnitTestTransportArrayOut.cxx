@@ -48,17 +48,18 @@ struct TryArrayOutType
 
     using PortalType = typename ArrayHandleType::WritePortalType;
 
-    viskores::cont::arg::Transport<viskores::cont::arg::TransportTagArrayOut, ArrayHandleType, Device>
-      transport;
+    viskores::cont::arg::
+      Transport<viskores::cont::arg::TransportTagArrayOut, ArrayHandleType, Device>
+        transport;
 
     viskores::cont::Token token;
 
     TestKernelOut<PortalType> kernel;
-    kernel.Portal =
-      transport(handle, viskores::cont::ArrayHandleIndex(ARRAY_SIZE), ARRAY_SIZE, ARRAY_SIZE, token);
+    kernel.Portal = transport(
+      handle, viskores::cont::ArrayHandleIndex(ARRAY_SIZE), ARRAY_SIZE, ARRAY_SIZE, token);
 
     VISKORES_TEST_ASSERT(handle.GetNumberOfValues() == ARRAY_SIZE,
-                     "ArrayOut transport did not allocate array correctly.");
+                         "ArrayOut transport did not allocate array correctly.");
 
     viskores::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
     token.DetachFromAll();

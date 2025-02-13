@@ -39,10 +39,10 @@ struct CellGradient : viskores::worklet::WorkletVisitCellsWithPoints
             typename FieldInVecType,
             typename GradientOutType>
   VISKORES_EXEC void operator()(CellTagType shape,
-                            viskores::IdComponent pointCount,
-                            const PointCoordVecType& wCoords,
-                            const FieldInVecType& field,
-                            GradientOutType& outputGradient) const
+                                viskores::IdComponent pointCount,
+                                const PointCoordVecType& wCoords,
+                                const FieldInVecType& field,
+                                GradientOutType& outputGradient) const
   {
     viskores::Vec3f center;
     viskores::exec::ParametricCoordinatesCenter(pointCount, shape, center);

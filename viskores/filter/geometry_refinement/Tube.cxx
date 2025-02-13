@@ -15,12 +15,13 @@
 namespace
 {
 VISKORES_CONT bool DoMapField(viskores::cont::DataSet& result,
-                          const viskores::cont::Field& field,
-                          const viskores::worklet::Tube& worklet)
+                              const viskores::cont::Field& field,
+                              const viskores::worklet::Tube& worklet)
 {
   if (field.IsPointField())
   {
-    return viskores::filter::MapFieldPermutation(field, worklet.GetOutputPointSourceIndex(), result);
+    return viskores::filter::MapFieldPermutation(
+      field, worklet.GetOutputPointSourceIndex(), result);
   }
   else if (field.IsCellField())
   {

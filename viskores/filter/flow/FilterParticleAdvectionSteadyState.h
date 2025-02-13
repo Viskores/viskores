@@ -26,7 +26,8 @@ template <typename Derived>
 struct FlowTraits;
 
 template <typename Derived>
-class VISKORES_FILTER_FLOW_EXPORT FilterParticleAdvectionSteadyState : public FilterParticleAdvection
+class VISKORES_FILTER_FLOW_EXPORT FilterParticleAdvectionSteadyState
+  : public FilterParticleAdvection
 {
 public:
   using ParticleType = typename FlowTraits<Derived>::ParticleType;

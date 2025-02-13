@@ -126,49 +126,55 @@ struct DeviceAdapterTraits;
 /// Creates a tag named viskores::cont::DeviceAdapterTagName and associated MPL
 /// structures to use this tag. Always use this macro (in the base namespace)
 /// when creating a device adapter.
-#define VISKORES_VALID_DEVICE_ADAPTER(Name, Id)                                         \
-  namespace viskores                                                                    \
-  {                                                                                 \
-  namespace cont                                                                    \
-  {                                                                                 \
-  struct VISKORES_ALWAYS_EXPORT DeviceAdapterTag##Name : DeviceAdapterId                \
-  {                                                                                 \
-    constexpr DeviceAdapterTag##Name()                                              \
-      : DeviceAdapterId(Id)                                                         \
-    {                                                                               \
-    }                                                                               \
-    static constexpr bool IsEnabled = true;                                         \
-  };                                                                                \
-  template <>                                                                       \
-  struct DeviceAdapterTraits<viskores::cont::DeviceAdapterTag##Name>                    \
-  {                                                                                 \
-    static DeviceAdapterNameType GetName() { return DeviceAdapterNameType(#Name); } \
-  };                                                                                \
-  }                                                                                 \
+#define VISKORES_VALID_DEVICE_ADAPTER(Name, Id)                          \
+  namespace viskores                                                     \
+  {                                                                      \
+  namespace cont                                                         \
+  {                                                                      \
+  struct VISKORES_ALWAYS_EXPORT DeviceAdapterTag##Name : DeviceAdapterId \
+  {                                                                      \
+    constexpr DeviceAdapterTag##Name()                                   \
+      : DeviceAdapterId(Id)                                              \
+    {                                                                    \
+    }                                                                    \
+    static constexpr bool IsEnabled = true;                              \
+  };                                                                     \
+  template <>                                                            \
+  struct DeviceAdapterTraits<viskores::cont::DeviceAdapterTag##Name>     \
+  {                                                                      \
+    static DeviceAdapterNameType GetName()                               \
+    {                                                                    \
+      return DeviceAdapterNameType(#Name);                               \
+    }                                                                    \
+  };                                                                     \
+  }                                                                      \
   }
 
 /// Marks the tag named viskores::cont::DeviceAdapterTagName and associated
 /// structures as invalid to use. Always use this macro (in the base namespace)
 /// when creating a device adapter.
-#define VISKORES_INVALID_DEVICE_ADAPTER(Name, Id)                                       \
-  namespace viskores                                                                    \
-  {                                                                                 \
-  namespace cont                                                                    \
-  {                                                                                 \
-  struct VISKORES_ALWAYS_EXPORT DeviceAdapterTag##Name : DeviceAdapterId                \
-  {                                                                                 \
-    constexpr DeviceAdapterTag##Name()                                              \
-      : DeviceAdapterId(Id)                                                         \
-    {                                                                               \
-    }                                                                               \
-    static constexpr bool IsEnabled = false;                                        \
-  };                                                                                \
-  template <>                                                                       \
-  struct DeviceAdapterTraits<viskores::cont::DeviceAdapterTag##Name>                    \
-  {                                                                                 \
-    static DeviceAdapterNameType GetName() { return DeviceAdapterNameType(#Name); } \
-  };                                                                                \
-  }                                                                                 \
+#define VISKORES_INVALID_DEVICE_ADAPTER(Name, Id)                        \
+  namespace viskores                                                     \
+  {                                                                      \
+  namespace cont                                                         \
+  {                                                                      \
+  struct VISKORES_ALWAYS_EXPORT DeviceAdapterTag##Name : DeviceAdapterId \
+  {                                                                      \
+    constexpr DeviceAdapterTag##Name()                                   \
+      : DeviceAdapterId(Id)                                              \
+    {                                                                    \
+    }                                                                    \
+    static constexpr bool IsEnabled = false;                             \
+  };                                                                     \
+  template <>                                                            \
+  struct DeviceAdapterTraits<viskores::cont::DeviceAdapterTag##Name>     \
+  {                                                                      \
+    static DeviceAdapterNameType GetName()                               \
+    {                                                                    \
+      return DeviceAdapterNameType(#Name);                               \
+    }                                                                    \
+  };                                                                     \
+  }                                                                      \
   }
 
 /// @struct viskores::cont::DeviceAdapterTagAny

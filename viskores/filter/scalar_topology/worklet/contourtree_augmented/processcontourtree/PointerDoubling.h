@@ -90,7 +90,7 @@ public:
 
   template <typename WhichBranchArrayPortalType>
   VISKORES_EXEC void operator()(const viskores::Id supernode,
-                            const WhichBranchArrayPortalType& whichBranchPortal) const
+                                const WhichBranchArrayPortalType& whichBranchPortal) const
   {
     if (!IsTerminalElement(whichBranchPortal.Get(supernode)))
     {

@@ -54,9 +54,9 @@ namespace cellmetrics
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellAspectRatioMetric(const viskores::IdComponent& numPts,
-                                        const PointCoordVecType& pts,
-                                        CellShapeType shape,
-                                        viskores::ErrorCode&)
+                                            const PointCoordVecType& pts,
+                                            CellShapeType shape,
+                                            viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -69,9 +69,9 @@ VISKORES_EXEC OutType CellAspectRatioMetric(const viskores::IdComponent& numPts,
 // Compute the diagonal ratio of a triangle.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectRatioMetric(const viskores::IdComponent& numPts,
-                                        const PointCoordVecType& pts,
-                                        viskores::CellShapeTagTriangle,
-                                        viskores::ErrorCode& ec)
+                                            const PointCoordVecType& pts,
+                                            viskores::CellShapeTagTriangle,
+                                            viskores::ErrorCode& ec)
 {
   if (numPts != 3)
   {
@@ -93,9 +93,9 @@ VISKORES_EXEC OutType CellAspectRatioMetric(const viskores::IdComponent& numPts,
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectRatioMetric(const viskores::IdComponent& numPts,
-                                        const PointCoordVecType& pts,
-                                        viskores::CellShapeTagQuad,
-                                        viskores::ErrorCode& ec)
+                                            const PointCoordVecType& pts,
+                                            viskores::CellShapeTagQuad,
+                                            viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -124,9 +124,9 @@ VISKORES_EXEC OutType CellAspectRatioMetric(const viskores::IdComponent& numPts,
 // ========================= 3D cells ==================================
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectRatioMetric(const viskores::IdComponent& numPts,
-                                        const PointCoordVecType& pts,
-                                        viskores::CellShapeTagHexahedron,
-                                        viskores::ErrorCode& ec)
+                                            const PointCoordVecType& pts,
+                                            viskores::CellShapeTagHexahedron,
+                                            viskores::ErrorCode& ec)
 {
   if (numPts != 8)
   {
@@ -153,16 +153,17 @@ VISKORES_EXEC OutType CellAspectRatioMetric(const viskores::IdComponent& numPts,
 
   const Scalar q = viskores::Max(
     x1 / x2,
-    viskores::Max(x2 / x1, viskores::Max(x1 / x3, viskores::Max(x3 / x1, viskores::Max(x3 / x2, x3 / x2)))));
+    viskores::Max(x2 / x1,
+                  viskores::Max(x1 / x3, viskores::Max(x3 / x1, viskores::Max(x3 / x2, x3 / x2)))));
   return q;
 }
 
 // Compute the aspect ratio of a tetrahedron.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectRatioMetric(const viskores::IdComponent& numPts,
-                                        const PointCoordVecType& pts,
-                                        viskores::CellShapeTagTetra,
-                                        viskores::ErrorCode& ec)
+                                            const PointCoordVecType& pts,
+                                            viskores::CellShapeTagTetra,
+                                            viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {

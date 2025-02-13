@@ -130,10 +130,11 @@ public:
   ///
   /// Can also modify any metadata attached to the buffers.
   ///
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token);
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token);
 
   /// \brief Returns the number of entries allocated in the array.
   VISKORES_CONT static viskores::Id GetNumberOfValues(
@@ -142,10 +143,10 @@ public:
   /// \brief Fills the array with the given value starting and ending at the given indices.
   ///
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             const ValueType& fillValue,
-                             viskores::Id startIndex,
-                             viskores::Id endIndex,
-                             viskores::cont::Token& token);
+                                 const ValueType& fillValue,
+                                 viskores::Id startIndex,
+                                 viskores::Id endIndex,
+                                 viskores::cont::Token& token);
 
   /// \brief Create a read-only portal on the specified device.
   ///
@@ -167,8 +168,8 @@ namespace detail
 {
 
 VISKORES_CONT_EXPORT void StorageNoResizeImpl(viskores::Id currentNumValues,
-                                          viskores::Id requestedNumValues,
-                                          std::string storageTagName);
+                                              viskores::Id requestedNumValues,
+                                              std::string storageTagName);
 
 } // namespace detail
 
@@ -182,42 +183,46 @@ struct StorageTraits<viskores::cont::internal::Storage<T, S>>
   using Tag = S;
 };
 
-#define VISKORES_STORAGE_NO_RESIZE                                                                  \
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,                                       \
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers, \
-                                      viskores::CopyFlag,                                           \
-                                      viskores::cont::Token&)                                       \
-  {                                                                                             \
-    viskores::cont::internal::detail::StorageNoResizeImpl(                                          \
-      GetNumberOfValues(buffers),                                                               \
-      numValues,                                                                                \
-      viskores::cont::TypeToString<typename viskores::cont::internal::StorageTraits<Storage>::Tag>());  \
-  }                                                                                             \
+#define VISKORES_STORAGE_NO_RESIZE                                          \
+  VISKORES_CONT static void ResizeBuffers(                                  \
+    viskores::Id numValues,                                                 \
+    const std::vector<viskores::cont::internal::Buffer>& buffers,           \
+    viskores::CopyFlag,                                                     \
+    viskores::cont::Token&)                                                 \
+  {                                                                         \
+    viskores::cont::internal::detail::StorageNoResizeImpl(                  \
+      GetNumberOfValues(buffers),                                           \
+      numValues,                                                            \
+      viskores::cont::TypeToString<                                         \
+        typename viskores::cont::internal::StorageTraits<Storage>::Tag>()); \
+  }                                                                         \
   using ResizeBuffersEatComma = void
 
-#define VISKORES_STORAGE_NO_WRITE_PORTAL                                                           \
-  using WritePortalType = viskores::internal::ArrayPortalDummy<                                    \
-    typename viskores::cont::internal::StorageTraits<Storage>::ValueType>;                         \
-  VISKORES_CONT static void Fill(                                                                  \
-    const std::vector<viskores::cont::internal::Buffer>&,                                          \
-    const typename viskores::cont::internal::StorageTraits<Storage>::ValueType&,                   \
-    viskores::Id,                                                                                  \
-    viskores::Id,                                                                                  \
-    viskores::cont::Token&)                                                                        \
-  {                                                                                            \
-    throw viskores::cont::ErrorBadAllocation(                                                      \
-      "Cannot write to arrays with storage type of " +                                         \
-      viskores::cont::TypeToString<typename viskores::cont::internal::StorageTraits<Storage>::Tag>()); \
-  }                                                                                            \
-  VISKORES_CONT static WritePortalType CreateWritePortal(                                          \
-    const std::vector<viskores::cont::internal::Buffer>&,                                          \
-    viskores::cont::DeviceAdapterId,                                                               \
-    viskores::cont::Token&)                                                                        \
-  {                                                                                            \
-    throw viskores::cont::ErrorBadAllocation(                                                      \
-      "Cannot write to arrays with storage type of " +                                         \
-      viskores::cont::TypeToString<typename viskores::cont::internal::StorageTraits<Storage>::Tag>()); \
-  }                                                                                            \
+#define VISKORES_STORAGE_NO_WRITE_PORTAL                                         \
+  using WritePortalType = viskores::internal::ArrayPortalDummy<                  \
+    typename viskores::cont::internal::StorageTraits<Storage>::ValueType>;       \
+  VISKORES_CONT static void Fill(                                                \
+    const std::vector<viskores::cont::internal::Buffer>&,                        \
+    const typename viskores::cont::internal::StorageTraits<Storage>::ValueType&, \
+    viskores::Id,                                                                \
+    viskores::Id,                                                                \
+    viskores::cont::Token&)                                                      \
+  {                                                                              \
+    throw viskores::cont::ErrorBadAllocation(                                    \
+      "Cannot write to arrays with storage type of " +                           \
+      viskores::cont::TypeToString<                                              \
+        typename viskores::cont::internal::StorageTraits<Storage>::Tag>());      \
+  }                                                                              \
+  VISKORES_CONT static WritePortalType CreateWritePortal(                        \
+    const std::vector<viskores::cont::internal::Buffer>&,                        \
+    viskores::cont::DeviceAdapterId,                                             \
+    viskores::cont::Token&)                                                      \
+  {                                                                              \
+    throw viskores::cont::ErrorBadAllocation(                                    \
+      "Cannot write to arrays with storage type of " +                           \
+      viskores::cont::TypeToString<                                              \
+        typename viskores::cont::internal::StorageTraits<Storage>::Tag>());      \
+  }                                                                              \
   using CreateWritePortalEatComma = void
 
 } // namespace internal

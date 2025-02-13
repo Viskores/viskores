@@ -313,8 +313,8 @@ void ChainGraph<T, StorageType>::FindGoverningSaddles()
 
   // sort with the comparator
   viskores::cont::Algorithm::Sort(edgeSorter,
-                              EdgePeakComparator<T, StorageType>(
-                                values, valueIndex, edgeFar, edgeNear, arcArray, isJoinGraph));
+                                  EdgePeakComparator<T, StorageType>(
+                                    values, valueIndex, edgeFar, edgeNear, arcArray, isJoinGraph));
 
 #ifdef DEBUG_PRINT
   DebugPrint("After Sorting");
@@ -350,8 +350,8 @@ void ChainGraph<T, StorageType>::TransferRegularPoints()
   std::cout << std::endl;
 #endif
   RegularPointTransferrer<T> regularPointTransferrer(isJoinGraph);
-  viskores::worklet::DispatcherMapField<RegularPointTransferrer<T>> regularPointTransferrerDispatcher(
-    regularPointTransferrer);
+  viskores::worklet::DispatcherMapField<RegularPointTransferrer<T>>
+    regularPointTransferrerDispatcher(regularPointTransferrer);
 
   regularPointTransferrerDispatcher.Invoke(activeVertices, // input
                                            chainExtremum,  // input (whole array)
@@ -588,7 +588,8 @@ void ChainGraph<T, StorageType>::BuildTrunk()
 
 // transfers partial results to merge tree array
 template <typename T, typename StorageType>
-void ChainGraph<T, StorageType>::TransferToMergeTree(viskores::cont::ArrayHandle<viskores::Id>& saddles)
+void ChainGraph<T, StorageType>::TransferToMergeTree(
+  viskores::cont::ArrayHandle<viskores::Id>& saddles)
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;

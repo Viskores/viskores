@@ -59,7 +59,7 @@ void ValidateError(const viskores::cont::Error& error)
   }
   VISKORES_TEST_ASSERT(test_equal(message, error.GetMessage()), "Message was incorrect");
   VISKORES_TEST_ASSERT(test_equal(message + "\n" + stackTrace, std::string(error.what())),
-                   "what() was incorrect");
+                       "what() was incorrect");
 }
 
 void DoErrorTest()

@@ -31,8 +31,8 @@ public:
 
   template <typename PointValueVecType, typename OutType>
   VISKORES_EXEC void operator()(const viskores::IdComponent& numPoints,
-                            const PointValueVecType& pointValues,
-                            OutType& average) const
+                                const PointValueVecType& pointValues,
+                                OutType& average) const
   {
     average = OutType(pointValues[0]);
     for (viskores::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
@@ -116,8 +116,8 @@ void TestDataSet_SingleType()
   //verify that the point to cell connectivity types are correct
   viskores::cont::ArrayHandleConstant<viskores::UInt8> shapesPointToCell =
     cellset.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
-  viskores::cont::ArrayHandle<viskores::Id> connPointToCell =
-    cellset.GetConnectivityArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+  viskores::cont::ArrayHandle<viskores::Id> connPointToCell = cellset.GetConnectivityArray(
+    viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
 
   VISKORES_TEST_ASSERT(shapesPointToCell.GetNumberOfValues() == 3, "Wrong number of shapes");
   VISKORES_TEST_ASSERT(connPointToCell.GetNumberOfValues() == 9, "Wrong connectivity length");
@@ -126,8 +126,8 @@ void TestDataSet_SingleType()
   //note the handle storage types differ compared to point to cell
   viskores::cont::ArrayHandleConstant<viskores::UInt8> shapesCellToPoint =
     cellset.GetShapesArray(viskores::TopologyElementTagPoint(), viskores::TopologyElementTagCell());
-  viskores::cont::ArrayHandle<viskores::Id> connCellToPoint =
-    cellset.GetConnectivityArray(viskores::TopologyElementTagPoint(), viskores::TopologyElementTagCell());
+  viskores::cont::ArrayHandle<viskores::Id> connCellToPoint = cellset.GetConnectivityArray(
+    viskores::TopologyElementTagPoint(), viskores::TopologyElementTagCell());
 
   VISKORES_TEST_ASSERT(shapesCellToPoint.GetNumberOfValues() == 5, "Wrong number of shapes");
   VISKORES_TEST_ASSERT(connCellToPoint.GetNumberOfValues() == 9, "Wrong connectivity length");
@@ -142,8 +142,9 @@ void TestDataSet_SingleType()
   auto portal = result.ReadPortal();
   for (int i = 0; i < 3; ++i)
   {
-    VISKORES_TEST_ASSERT(test_equal(portal.Get(i), expected[i]),
-                     "Wrong result for CellAverage worklet on explicit single type cellset data");
+    VISKORES_TEST_ASSERT(
+      test_equal(portal.Get(i), expected[i]),
+      "Wrong result for CellAverage worklet on explicit single type cellset data");
   }
 }
 

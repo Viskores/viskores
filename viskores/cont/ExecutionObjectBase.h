@@ -41,9 +41,10 @@ namespace detail
 struct CheckPrepareForExecution
 {
   template <typename T>
-  static auto check(T* p) -> decltype(p->PrepareForExecution(viskores::cont::DeviceAdapterTagSerial{},
-                                                             std::declval<viskores::cont::Token&>()),
-                                      std::true_type());
+  static auto check(T* p)
+    -> decltype(p->PrepareForExecution(viskores::cont::DeviceAdapterTagSerial{},
+                                       std::declval<viskores::cont::Token&>()),
+                std::true_type());
 
   template <typename T>
   static auto check(...) -> std::false_type;
@@ -78,7 +79,9 @@ struct HasPrepareForExecution
 /// and returns the execution object for a given device.
 ///
 template <typename T, typename Device>
-VISKORES_CONT auto CallPrepareForExecution(T&& execObject, Device device, viskores::cont::Token& token)
+VISKORES_CONT auto CallPrepareForExecution(T&& execObject,
+                                           Device device,
+                                           viskores::cont::Token& token)
   -> decltype(execObject.PrepareForExecution(device, token))
 {
   VISKORES_IS_EXECUTION_OBJECT(T);
@@ -89,8 +92,8 @@ VISKORES_CONT auto CallPrepareForExecution(T&& execObject, Device device, viskor
 
 template <typename T>
 VISKORES_CONT auto CallPrepareForExecution(T&& execObject,
-                                       viskores::cont::DeviceAdapterId device,
-                                       viskores::cont::Token& token)
+                                           viskores::cont::DeviceAdapterId device,
+                                           viskores::cont::Token& token)
   -> decltype(execObject.PrepareForExecution(device, token))
 {
   VISKORES_IS_EXECUTION_OBJECT(T);
@@ -107,9 +110,10 @@ VISKORES_CONT auto CallPrepareForExecution(T&& execObject,
 /// in the execution environment for a given ExecutionObject and device.
 ///
 template <typename ExecutionObject, typename Device = viskores::cont::DeviceAdapterId>
-using ExecutionObjectType = decltype(CallPrepareForExecution(std::declval<ExecutionObject>(),
-                                                             std::declval<Device>(),
-                                                             std::declval<viskores::cont::Token&>()));
+using ExecutionObjectType =
+  decltype(CallPrepareForExecution(std::declval<ExecutionObject>(),
+                                   std::declval<Device>(),
+                                   std::declval<viskores::cont::Token&>()));
 
 } // namespace internal
 }

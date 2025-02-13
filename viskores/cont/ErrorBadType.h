@@ -39,7 +39,7 @@ VISKORES_SILENCE_WEAK_VTABLE_WARNING_END
 /// or UncertainArrayhandle with an insufficient type list.
 //
 VISKORES_CONT_EXPORT void throwFailedDynamicCast(const std::string& baseType,
-                                             const std::string& derivedType);
+                                                 const std::string& derivedType);
 }
 } // namespace viskores::cont
 

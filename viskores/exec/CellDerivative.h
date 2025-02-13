@@ -66,33 +66,36 @@ template <typename FieldVecType,
           typename WorldCoordType,
           typename ParametricCoordType,
           typename CellShapeTag>
-VISKORES_EXEC viskores::ErrorCode CellDerivative(const FieldVecType& field,
-                                         const WorldCoordType& wCoords,
-                                         const viskores::Vec<ParametricCoordType, 3>& pcoords,
-                                         CellShapeTag shape,
-                                         viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
+VISKORES_EXEC viskores::ErrorCode CellDerivative(
+  const FieldVecType& field,
+  const WorldCoordType& wCoords,
+  const viskores::Vec<ParametricCoordType, 3>& pcoords,
+  CellShapeTag shape,
+  viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
 {
   return internal::CellDerivativeImpl(
     viskores::internal::make_LclCellShapeTag(shape), field, wCoords, pcoords, result);
 }
 
 template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
-VISKORES_EXEC viskores::ErrorCode CellDerivative(const FieldVecType&,
-                                         const WorldCoordType&,
-                                         const viskores::Vec<ParametricCoordType, 3>&,
-                                         viskores::CellShapeTagEmpty,
-                                         viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
+VISKORES_EXEC viskores::ErrorCode CellDerivative(
+  const FieldVecType&,
+  const WorldCoordType&,
+  const viskores::Vec<ParametricCoordType, 3>&,
+  viskores::CellShapeTagEmpty,
+  viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
 {
   result = { 0 };
   return viskores::ErrorCode::OperationOnEmptyCell;
 }
 
 template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
-VISKORES_EXEC viskores::ErrorCode CellDerivative(const FieldVecType& field,
-                                         const WorldCoordType& wCoords,
-                                         const viskores::Vec<ParametricCoordType, 3>& pcoords,
-                                         viskores::CellShapeTagPolyLine,
-                                         viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
+VISKORES_EXEC viskores::ErrorCode CellDerivative(
+  const FieldVecType& field,
+  const WorldCoordType& wCoords,
+  const viskores::Vec<ParametricCoordType, 3>& pcoords,
+  viskores::CellShapeTagPolyLine,
+  viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
 {
   viskores::IdComponent numPoints = field.GetNumberOfComponents();
   if (numPoints != wCoords.GetNumberOfComponents())
@@ -128,11 +131,12 @@ VISKORES_EXEC viskores::ErrorCode CellDerivative(const FieldVecType& field,
 
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
-VISKORES_EXEC viskores::ErrorCode CellDerivative(const FieldVecType& field,
-                                         const WorldCoordType& wCoords,
-                                         const viskores::Vec<ParametricCoordType, 3>& pcoords,
-                                         viskores::CellShapeTagPolygon,
-                                         viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
+VISKORES_EXEC viskores::ErrorCode CellDerivative(
+  const FieldVecType& field,
+  const WorldCoordType& wCoords,
+  const viskores::Vec<ParametricCoordType, 3>& pcoords,
+  viskores::CellShapeTagPolygon,
+  viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
 {
   const viskores::IdComponent numPoints = field.GetNumberOfComponents();
   if ((numPoints <= 0) || (numPoints != wCoords.GetNumberOfComponents()))
@@ -154,21 +158,23 @@ VISKORES_EXEC viskores::ErrorCode CellDerivative(const FieldVecType& field,
 
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
-VISKORES_EXEC viskores::ErrorCode CellDerivative(const FieldVecType& field,
-                                         const viskores::VecAxisAlignedPointCoordinates<2>& wCoords,
-                                         const viskores::Vec<ParametricCoordType, 3>& pcoords,
-                                         viskores::CellShapeTagQuad,
-                                         viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
+VISKORES_EXEC viskores::ErrorCode CellDerivative(
+  const FieldVecType& field,
+  const viskores::VecAxisAlignedPointCoordinates<2>& wCoords,
+  const viskores::Vec<ParametricCoordType, 3>& pcoords,
+  viskores::CellShapeTagQuad,
+  viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
 {
   return internal::CellDerivativeImpl(lcl::Pixel{}, field, wCoords, pcoords, result);
 }
 
 template <typename FieldVecType, typename ParametricCoordType>
-VISKORES_EXEC viskores::ErrorCode CellDerivative(const FieldVecType& field,
-                                         const viskores::VecAxisAlignedPointCoordinates<3>& wCoords,
-                                         const viskores::Vec<ParametricCoordType, 3>& pcoords,
-                                         viskores::CellShapeTagHexahedron,
-                                         viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
+VISKORES_EXEC viskores::ErrorCode CellDerivative(
+  const FieldVecType& field,
+  const viskores::VecAxisAlignedPointCoordinates<3>& wCoords,
+  const viskores::Vec<ParametricCoordType, 3>& pcoords,
+  viskores::CellShapeTagHexahedron,
+  viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
 {
   return internal::CellDerivativeImpl(lcl::Voxel{}, field, wCoords, pcoords, result);
 }
@@ -196,11 +202,12 @@ VISKORES_EXEC viskores::ErrorCode CellDerivative(const FieldVecType& field,
 ///     component type the same as the field. If the field is itself a vector, you get a `Vec`
 ///     of `Vec`s.
 template <typename FieldVecType, typename WorldCoordType, typename ParametricCoordType>
-VISKORES_EXEC viskores::ErrorCode CellDerivative(const FieldVecType& pointFieldValues,
-                                         const WorldCoordType& worldCoordinateValues,
-                                         const viskores::Vec<ParametricCoordType, 3>& parametricCoords,
-                                         viskores::CellShapeTagGeneric shape,
-                                         viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
+VISKORES_EXEC viskores::ErrorCode CellDerivative(
+  const FieldVecType& pointFieldValues,
+  const WorldCoordType& worldCoordinateValues,
+  const viskores::Vec<ParametricCoordType, 3>& parametricCoords,
+  viskores::CellShapeTagGeneric shape,
+  viskores::Vec<typename FieldVecType::ComponentType, 3>& result)
 {
   viskores::ErrorCode status;
   switch (shape.Id)

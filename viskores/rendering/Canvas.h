@@ -91,11 +91,12 @@ public:
   /// The arrays of the color and depth buffer are shallow copied. Thus, changes in
   /// the `Canvas` may cause unexpected behavior in the `DataSet`.
   ///
-  VISKORES_CONT viskores::cont::DataSet GetDataSet(const std::string& colorFieldName = "color",
-                                           const std::string& depthFieldName = "depth") const;
+  VISKORES_CONT viskores::cont::DataSet GetDataSet(
+    const std::string& colorFieldName = "color",
+    const std::string& depthFieldName = "depth") const;
   /// @copydoc GetDataSet
   VISKORES_CONT viskores::cont::DataSet GetDataSet(const char* colorFieldName,
-                                           const char* depthFieldName = "depth") const;
+                                                   const char* depthFieldName = "depth") const;
 
   /// @brief Change the size of the image.
   VISKORES_CONT
@@ -119,9 +120,9 @@ public:
 
   VISKORES_CONT
   viskores::Id2 GetScreenPoint(viskores::Float32 x,
-                           viskores::Float32 y,
-                           viskores::Float32 z,
-                           const viskores::Matrix<viskores::Float32, 4, 4>& transfor) const;
+                               viskores::Float32 y,
+                               viskores::Float32 z,
+                               const viskores::Matrix<viskores::Float32, 4, 4>& transfor) const;
 
   // If a subclass uses a system that renderers to different buffers, then
   // these should be overridden to copy the data to the buffers.

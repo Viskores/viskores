@@ -44,19 +44,19 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 9),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 4),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     viskores::cont::CellSetStructured<2> outputCellSet;
     output.GetCellSet().AsCellSet(outputCellSet);
     VISKORES_TEST_ASSERT(test_equal(outputCellSet.GetGlobalPointIndexStart()[0], 11),
-                     "Wrong result for ExtractStructured PointIndexStart");
+                         "Wrong result for ExtractStructured PointIndexStart");
     VISKORES_TEST_ASSERT(test_equal(outputCellSet.GetGlobalPointIndexStart()[1], 15),
-                     "Wrong result for ExtractStructured PointIndexStart");
+                         "Wrong result for ExtractStructured PointIndexStart");
     VISKORES_TEST_ASSERT(test_equal(outputCellSet.GetGlobalPointDimensions()[0], 15),
-                     "Wrong result for ExtractStructured GlobalPointDimensions");
+                         "Wrong result for ExtractStructured GlobalPointDimensions");
     VISKORES_TEST_ASSERT(test_equal(outputCellSet.GetGlobalPointDimensions()[1], 19),
-                     "Wrong result for ExtractStructured GlobalPointDimensions");
+                         "Wrong result for ExtractStructured GlobalPointDimensions");
 
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
@@ -68,7 +68,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 71.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(8) == 91.0f, "Wrong point field data");
@@ -91,9 +91,9 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 27),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
@@ -104,7 +104,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 99.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(26) == 97.0f, "Wrong point field data");
@@ -129,9 +129,9 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 125),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 64),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
@@ -142,7 +142,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(31) == 99.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(93) == 97.0f, "Wrong point field data");
@@ -166,9 +166,9 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 27),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
@@ -179,7 +179,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(26) == 15.0f, "Wrong point field data");
@@ -203,9 +203,9 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 64),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
@@ -216,7 +216,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 99.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(63) == 0.0f, "Wrong point field data");
@@ -241,9 +241,9 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 27),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
@@ -254,7 +254,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 90.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(26) == 0.0f, "Wrong point field data");
@@ -279,9 +279,9 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 9),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 4),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
@@ -292,7 +292,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 90.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(8) == 0.0f, "Wrong point field data");
@@ -317,9 +317,9 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 27),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
@@ -330,7 +330,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(26) == 0.0f, "Wrong point field data");
@@ -356,9 +356,9 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 8),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 1),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
@@ -369,7 +369,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(3) == 99.0f, "Wrong point field data");
@@ -395,9 +395,9 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 18),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 4),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
@@ -408,7 +408,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(4) == 99.0f, "Wrong point field data");
@@ -438,9 +438,9 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 4),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 1),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
@@ -451,7 +451,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(3) == 4.0f, "Wrong point field data");
@@ -475,9 +475,9 @@ public:
     extract.SetFieldsToPass({ "pointvar", "cellvar" });
     viskores::cont::DataSet output = extract.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfPoints(), 8),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 1),
-                     "Wrong result for ExtractStructured worklet");
+                         "Wrong result for ExtractStructured worklet");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     viskores::cont::ArrayHandle<viskores::Float32> outCellData;
@@ -488,7 +488,7 @@ public:
       test_equal(output.GetCellSet().GetNumberOfPoints(), outPointData.GetNumberOfValues()),
       "Data/Geometry mismatch for ExtractStructured filter");
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), outCellData.GetNumberOfValues()),
-                     "Data/Geometry mismatch for ExtractStructured filter");
+                         "Data/Geometry mismatch for ExtractStructured filter");
 
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(0) == 0.0f, "Wrong point field data");
     VISKORES_TEST_ASSERT(outPointData.ReadPortal().Get(7) == 10.0f, "Wrong point field data");

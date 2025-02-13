@@ -278,17 +278,17 @@ inline void ContourTree::PrintDotSuperStructure() const
       continue;
 
     if (IsAscending(superarcsPortal.Get(supernode)))
-      printf(
-        "\tedge s%lli -> s%lli[label=S%lli,dir=back]\n",
-        static_cast<viskores::Int64>(supernodesPortal.Get(MaskedIndex(superarcsPortal.Get(supernode)))),
-        static_cast<viskores::Int64>(supernodesPortal.Get(supernode)),
-        static_cast<viskores::Int64>(supernode));
+      printf("\tedge s%lli -> s%lli[label=S%lli,dir=back]\n",
+             static_cast<viskores::Int64>(
+               supernodesPortal.Get(MaskedIndex(superarcsPortal.Get(supernode)))),
+             static_cast<viskores::Int64>(supernodesPortal.Get(supernode)),
+             static_cast<viskores::Int64>(supernode));
     else
-      printf(
-        "\tedge s%lli -> s%lli[label=S%lli]\n",
-        static_cast<viskores::Int64>(supernodesPortal.Get(supernode)),
-        static_cast<viskores::Int64>(supernodesPortal.Get(MaskedIndex(superarcsPortal.Get(supernode)))),
-        static_cast<viskores::Int64>(supernode));
+      printf("\tedge s%lli -> s%lli[label=S%lli]\n",
+             static_cast<viskores::Int64>(supernodesPortal.Get(supernode)),
+             static_cast<viskores::Int64>(
+               supernodesPortal.Get(MaskedIndex(superarcsPortal.Get(supernode)))),
+             static_cast<viskores::Int64>(supernode));
   } // per supernode
 
   // now loop through hypernodes to show hyperarcs
@@ -298,13 +298,13 @@ inline void ContourTree::PrintDotSuperStructure() const
     if (NoSuchElement(hyperarcsPortal.Get(hypernode)))
       continue;
 
-    printf(
-      "\ts%lli -> s%lli [constraint=false][width=5.0][label=\"H%lli\\nW%lli\"]\n",
-      static_cast<viskores::Int64>(supernodesPortal.Get(hypernodesPortal.Get(hypernode))),
-      static_cast<viskores::Int64>(supernodesPortal.Get(MaskedIndex(hyperarcsPortal.Get(hypernode)))),
-      static_cast<viskores::Int64>(hypernode),
-      static_cast<viskores::Int64>(
-        MaskedIndex(whenTransferredPortal.Get(hypernodesPortal.Get(hypernode)))));
+    printf("\ts%lli -> s%lli [constraint=false][width=5.0][label=\"H%lli\\nW%lli\"]\n",
+           static_cast<viskores::Int64>(supernodesPortal.Get(hypernodesPortal.Get(hypernode))),
+           static_cast<viskores::Int64>(
+             supernodesPortal.Get(MaskedIndex(hyperarcsPortal.Get(hypernode)))),
+           static_cast<viskores::Int64>(hypernode),
+           static_cast<viskores::Int64>(
+             MaskedIndex(whenTransferredPortal.Get(hypernodesPortal.Get(hypernode)))));
   } // per hypernode
 
   // now add the hyperparents
@@ -371,7 +371,8 @@ inline std::string ContourTree::PrintHyperStructureStatistics(bool print) const
     } // new iteration
 
     // now compute the new path length - default to off the end
-    viskores::Id pathLength = static_cast<viskores::Id>(this->Supernodes.GetNumberOfValues() - supernodeID);
+    viskores::Id pathLength =
+      static_cast<viskores::Id>(this->Supernodes.GetNumberOfValues() - supernodeID);
     // for all except the last, take the next one
     if (hypernode != this->Hypernodes.GetNumberOfValues() - 1)
     {

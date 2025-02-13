@@ -79,10 +79,10 @@ public:
 
   template <typename InOutPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& sortedTransferTargetValue,
-                            const viskores::Id& sortedTransferTargetPreviousValue,
-                            const viskores::Id& valuePrefixSumPreviousValue,
-                            InOutPortalType& intrinsicValuesPortal,
-                            InOutPortalType& dependentValuesPortal) const
+                                const viskores::Id& sortedTransferTargetPreviousValue,
+                                const viskores::Id& valuePrefixSumPreviousValue,
+                                InOutPortalType& intrinsicValuesPortal,
+                                InOutPortalType& dependentValuesPortal) const
   {
     // per supernode
     // ignore any that point at NO_SUCH_ELEMENT

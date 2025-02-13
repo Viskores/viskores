@@ -27,7 +27,8 @@ void ArrayCopyConcreteSrc<viskores::cont::StorageTagCounting>::CopyCountingFloat
   if (result.IsBaseComponentType<viskores::FloatDefault>())
   {
     auto outArray = result.ExtractComponent<viskores::FloatDefault>(0);
-    viskores::cont::ArrayCopyDevice(viskores::cont::make_ArrayHandleCounting(start, step, size), outArray);
+    viskores::cont::ArrayCopyDevice(viskores::cont::make_ArrayHandleCounting(start, step, size),
+                                    outArray);
   }
   else
   {
@@ -38,7 +39,8 @@ void ArrayCopyConcreteSrc<viskores::cont::StorageTagCounting>::CopyCountingFloat
   }
 }
 
-viskores::cont::ArrayHandle<Id> ArrayCopyConcreteSrc<viskores::cont::StorageTagCounting>::CopyCountingId(
+viskores::cont::ArrayHandle<Id>
+ArrayCopyConcreteSrc<viskores::cont::StorageTagCounting>::CopyCountingId(
   const viskores::cont::ArrayHandleCounting<viskores::Id>& source) const
 {
   viskores::cont::ArrayHandle<Id> destination;

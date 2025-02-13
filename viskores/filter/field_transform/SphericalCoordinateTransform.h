@@ -29,7 +29,8 @@ namespace field_transform
 /// The resulting transformation will be set as the first coordinate system
 /// in the output.
 ///
-class VISKORES_FILTER_FIELD_TRANSFORM_EXPORT SphericalCoordinateTransform : public viskores::filter::Filter
+class VISKORES_FILTER_FIELD_TRANSFORM_EXPORT SphericalCoordinateTransform
+  : public viskores::filter::Filter
 {
 public:
   VISKORES_CONT SphericalCoordinateTransform();

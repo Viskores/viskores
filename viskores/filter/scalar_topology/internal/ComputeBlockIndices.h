@@ -79,9 +79,10 @@ namespace internal
 using DiscreteBoundsDivisionVector =
   viskoresdiy::RegularDecomposer<viskoresdiy::DiscreteBounds>::DivisionsVector;
 
-VISKORES_CONT viskoresdiy::DiscreteBounds ComputeBlockIndices(const viskores::cont::PartitionedDataSet& input,
-                                                      DiscreteBoundsDivisionVector& diyDivisions,
-                                                      std::vector<int>& diyLocalBlockGids);
+VISKORES_CONT viskoresdiy::DiscreteBounds ComputeBlockIndices(
+  const viskores::cont::PartitionedDataSet& input,
+  DiscreteBoundsDivisionVector& diyDivisions,
+  std::vector<int>& diyLocalBlockGids);
 
 VISKORES_CONT viskoresdiy::DiscreteBounds ComputeBlockIndices(
   const viskores::cont::PartitionedDataSet& input,

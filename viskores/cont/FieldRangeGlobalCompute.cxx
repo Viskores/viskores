@@ -23,9 +23,10 @@ namespace cont
 
 //-----------------------------------------------------------------------------
 VISKORES_CONT
-viskores::cont::ArrayHandle<viskores::Range> FieldRangeGlobalCompute(const viskores::cont::DataSet& dataset,
-                                                             const std::string& name,
-                                                             viskores::cont::Field::Association assoc)
+viskores::cont::ArrayHandle<viskores::Range> FieldRangeGlobalCompute(
+  const viskores::cont::DataSet& dataset,
+  const std::string& name,
+  viskores::cont::Field::Association assoc)
 {
   auto lrange = viskores::cont::FieldRangeCompute(dataset, name, assoc);
   return viskores::cont::detail::MergeRangesGlobal(lrange);
@@ -70,7 +71,7 @@ viskores::cont::ArrayHandle<viskores::Range> MergeRangesGlobal(
     [](void* ptr) { delete static_cast<VectorOfRangesT*>(ptr); });
 
   viskoresdiy::ContiguousAssigner assigner(/*num ranks*/ comm.size(),
-                                       /*global-num-blocks*/ comm.size());
+                                           /*global-num-blocks*/ comm.size());
   viskoresdiy::RegularDecomposer<viskoresdiy::DiscreteBounds> decomposer(
     /*dim*/ 1, viskoresdiy::interval(0, comm.size() - 1), comm.size());
   decomposer.decompose(comm.rank(), assigner, master);
@@ -81,7 +82,8 @@ viskores::cont::ArrayHandle<viskores::Range> MergeRangesGlobal(
 
   auto callback = [](VectorOfRangesT* data,
                      const viskoresdiy::ReduceProxy& srp,
-                     const viskoresdiy::RegularMergePartners&) {
+                     const viskoresdiy::RegularMergePartners&)
+  {
     const auto selfid = srp.gid();
     // 1. dequeue.
     std::vector<int> incoming;
@@ -99,8 +101,11 @@ viskores::cont::ArrayHandle<viskores::Range> MergeRangesGlobal(
         // effect.
         data->resize(std::max(data->size(), message.size()));
 
-        std::transform(
-          message.begin(), message.end(), data->begin(), data->begin(), std::plus<viskores::Range>());
+        std::transform(message.begin(),
+                       message.end(),
+                       data->begin(),
+                       data->begin(),
+                       std::plus<viskores::Range>());
       }
     }
     // 2. enqueue
@@ -117,7 +122,8 @@ viskores::cont::ArrayHandle<viskores::Range> MergeRangesGlobal(
   viskoresdiy::reduce(master, assigner, all_reduce_partners, callback);
   assert(master.size() == 1); // each rank will have exactly 1 block.
 
-  return viskores::cont::make_ArrayHandle(*master.block<VectorOfRangesT>(0), viskores::CopyFlag::On);
+  return viskores::cont::make_ArrayHandle(*master.block<VectorOfRangesT>(0),
+                                          viskores::CopyFlag::On);
 }
 } // namespace detail
 }

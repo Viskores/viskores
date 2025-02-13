@@ -89,7 +89,8 @@ public:
   ReplaceArcNumWithToVertexWorklet() {}
 
   template <typename InFieldPortalType>
-  VISKORES_EXEC void operator()(viskores::Id& neighboursVal, const InFieldPortalType& arcsPortal) const
+  VISKORES_EXEC void operator()(viskores::Id& neighboursVal,
+                                const InFieldPortalType& arcsPortal) const
   {
     neighboursVal =
       (neighboursVal % 2 == 0) ? MaskedIndex(arcsPortal.Get(neighboursVal / 2)) : neighboursVal / 2;

@@ -84,9 +84,9 @@ struct ContourTreeBlockData
   viskores::Id MaxNeighbors;
 
   // Block metadata
-  viskores::Id3 BlockOrigin;                // Origin of the data block
-  viskores::Id3 BlockSize;                  // Extends of the data block
-  viskores::Id3 GlobalSize;                 // Extends of the global mesh
+  viskores::Id3 BlockOrigin;            // Origin of the data block
+  viskores::Id3 BlockSize;              // Extends of the data block
+  viskores::Id3 GlobalSize;             // Extends of the global mesh
   unsigned int ComputeRegularStructure; // pass through augmentation setting
 };
 } // namespace contourtree_distributed
@@ -117,8 +117,9 @@ struct Serialization<viskores::worklet::contourtree_distributed::ContourTreeBloc
     viskoresdiy::save(bb, block.ComputeRegularStructure);
   }
 
-  static void load(viskoresdiy::BinaryBuffer& bb,
-                   viskores::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
+  static void load(
+    viskoresdiy::BinaryBuffer& bb,
+    viskores::worklet::contourtree_distributed::ContourTreeBlockData<FieldType>& block)
   {
     viskoresdiy::load(bb, block.NumVertices);
     viskoresdiy::load(bb, block.SortedValue);

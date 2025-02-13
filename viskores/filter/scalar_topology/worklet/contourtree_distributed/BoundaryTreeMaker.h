@@ -319,7 +319,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::Construct(
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->BoundaryTreeData->DebugPrint("All Completed\n", __FILE__, __LINE__));
+                 this->BoundaryTreeData->DebugPrint("All Completed\n", __FILE__, __LINE__));
 #endif
 } // Construct
 
@@ -366,7 +366,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryVertices(
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Boundary Vertices Set", __FILE__, __LINE__));
+                 this->DebugPrint("Boundary Vertices Set", __FILE__, __LINE__));
 #endif
 } // FindBoundaryVertices
 
@@ -382,12 +382,13 @@ template <typename MeshType, typename MeshBoundaryExecObjType>
 void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::ComputeDependentBoundaryCounts()
 { // ComputeDependentBoundaryCounts
   // 1.  copy in the superparent from the regular arrays in the contour tree
-  auto permutedContourTreeSuperparents =
-    viskores::cont::make_ArrayHandlePermutation(this->BoundaryIndices, this->ContourTree.Superparents);
+  auto permutedContourTreeSuperparents = viskores::cont::make_ArrayHandlePermutation(
+    this->BoundaryIndices, this->ContourTree.Superparents);
   viskores::cont::Algorithm::Copy(permutedContourTreeSuperparents, this->BoundarySuperparents);
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, this->DebugPrint("Superparents Set", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 this->DebugPrint("Superparents Set", __FILE__, __LINE__));
 #endif
 
   // 2. Sort this set & count by superarc to set initial intrinsic boundary counts
@@ -423,7 +424,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::ComputeDependentBound
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Initial Counts Set", __FILE__, __LINE__));
+                 this->DebugPrint("Initial Counts Set", __FILE__, __LINE__));
 #endif
 } // ComputeDependentBoundaryCounts
 
@@ -451,14 +452,15 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Arrays initialised", __FILE__, __LINE__));
+                 this->DebugPrint("Arrays initialised", __FILE__, __LINE__));
 #endif
 
   // b.  Iterate, propagating counts inwards
   for (viskores::Id iteration = 0; iteration < this->ContourTree.NumIterations; iteration++)
   { // b. per iteration
 #ifdef DEBUG_PRINT
-    VISKORES_LOG_S(viskores::cont::LogLevel::Info, this->DebugPrint("Top of Loop:", __FILE__, __LINE__));
+    VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                   this->DebugPrint("Top of Loop:", __FILE__, __LINE__));
 #endif
     // i. Pull the array bounds into register
     viskores::Id firstSupernode =
@@ -469,9 +471,10 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
     if (lastSupernode == firstSupernode)
     {
 #ifdef DEBUG_PRINT
-      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 "BoundaryTreeMaker::PropagateBoundaryCounts(): lastSupernode == firstSupernode "
-                 " -> Skipping iteration");
+      VISKORES_LOG_S(
+        viskores::cont::LogLevel::Info,
+        "BoundaryTreeMaker::PropagateBoundaryCounts(): lastSupernode == firstSupernode "
+        " -> Skipping iteration");
 #endif
       continue;
     }
@@ -500,7 +503,8 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
     } // end local context for step ii
 
 #ifdef DEBUG_PRINT
-    VISKORES_LOG_S(viskores::cont::LogLevel::Info, this->DebugPrint("After Transfer", __FILE__, __LINE__));
+    VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                   this->DebugPrint("After Transfer", __FILE__, __LINE__));
 #endif
     // iii.Perform prefix sum on dependent count range
     { // make local context so tempArray and fancyRangeArraySuperarcDependentBoundaryCountget  deleted
@@ -510,7 +514,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
       // to the same array and range
       viskores::worklet::contourtree_augmented::IdArrayType tempArray;
       viskores::cont::Algorithm::ScanInclusive(fancyRangeArraySuperarcDependentBoundaryCount,
-                                           tempArray);
+                                               tempArray);
       viskores::cont::Algorithm::CopySubRange(
         tempArray,
         0,
@@ -522,16 +526,16 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
 
 #ifdef DEBUG_PRINT
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               this->DebugPrint("After Prefix Sum", __FILE__, __LINE__));
+                   this->DebugPrint("After Prefix Sum", __FILE__, __LINE__));
 #endif
     //  iv.  Subtract out the dependent count of the prefix to the entire hyperarc
     { // make local context for iv so newSuperArcDependentBoundaryCount and the worklet gets deleted
       // Storage for the vector portion that will be modified
       viskores::worklet::contourtree_augmented::IdArrayType newSuperArcDependentBoundaryCount;
       viskores::cont::Algorithm::CopySubRange(this->SuperarcDependentBoundaryCount,
-                                          firstSupernode,
-                                          lastSupernode - firstSupernode,
-                                          newSuperArcDependentBoundaryCount);
+                                              firstSupernode,
+                                              lastSupernode - firstSupernode,
+                                              newSuperArcDependentBoundaryCount);
       auto subtractDependentCountsWorklet =
         bract_maker::PropagateBoundaryCountsSubtractDependentCountsWorklet(firstSupernode,
                                                                            firstHypernode);
@@ -548,14 +552,14 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
       );
       // copy the results back into our main array
       viskores::cont::Algorithm::CopySubRange(newSuperArcDependentBoundaryCount,
-                                          0,
-                                          newSuperArcDependentBoundaryCount.GetNumberOfValues(),
-                                          this->SuperarcDependentBoundaryCount,
-                                          firstSupernode);
+                                              0,
+                                              newSuperArcDependentBoundaryCount.GetNumberOfValues(),
+                                              this->SuperarcDependentBoundaryCount,
+                                              firstSupernode);
     } // end local context of iv
 #ifdef DEBUG_PRINT
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               this->DebugPrint("After Hyperarc Subtraction", __FILE__, __LINE__));
+                   this->DebugPrint("After Hyperarc Subtraction", __FILE__, __LINE__));
 #endif
 
     //  v.  Transfer the dependent count to the hyperarc's target supernode
@@ -577,7 +581,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
     } // end local context for step iv
 #ifdef DEBUG_PRINT
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               this->DebugPrint("After Dependent Count transfer", __FILE__, __LINE__));
+                   this->DebugPrint("After Dependent Count transfer", __FILE__, __LINE__));
 #endif
 
     // next we want to end up summing transfer count & storing in the target.
@@ -587,8 +591,8 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
     { // local context for summing transfer count & storing in the target.
       viskores::worklet::contourtree_augmented::IdArrayType hyperarcTargetSortPermutation;
       viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleCounting<viskores::Id>(
-                                    firstHypernode, 1, lastHypernode - firstHypernode),
-                                  hyperarcTargetSortPermutation);
+                                        firstHypernode, 1, lastHypernode - firstHypernode),
+                                      hyperarcTargetSortPermutation);
 
       // 2. sort the elements to cluster by hyperarc target, using a lambda function for comparator
       //    we need a reference that a lambda function can use
@@ -598,12 +602,12 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
       // 3. now compute the partial sum for the properly permuted boundary counts
       // total boundary count at each node
       viskores::worklet::contourtree_augmented::IdArrayType accumulatedBoundaryCount;
-      auto permutedHyperarcDependentCount =
-        viskores::cont::make_ArrayHandlePermutation(hyperarcTargetSortPermutation,       // id array
-                                                this->HyperarcDependentBoundaryCount // value array
-        );
+      auto permutedHyperarcDependentCount = viskores::cont::make_ArrayHandlePermutation(
+        hyperarcTargetSortPermutation,       // id array
+        this->HyperarcDependentBoundaryCount // value array
+      );
       viskores::cont::Algorithm::ScanInclusive(permutedHyperarcDependentCount,
-                                           accumulatedBoundaryCount);
+                                               accumulatedBoundaryCount);
 
       // 4. The partial sum is now over ALL hypertargets, so within each group we need to subtract the first from the last
       // To do so, the last hyperarc in each cluster copies its cumulative count to the output array
@@ -617,7 +621,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
 
 #ifdef DEBUG_PRINT
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 this->DebugPrint("After Tail Addition", __FILE__, __LINE__));
+                     this->DebugPrint("After Tail Addition", __FILE__, __LINE__));
 #endif
 
       // 5. Finally, we subtract the beginning of the group to get the total for each group
@@ -633,7 +637,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
     } // end  local context for summing transfer count & storing in the target.
 #ifdef DEBUG_PRINT
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               this->DebugPrint("After Hyperarc Transfer", __FILE__, __LINE__));
+                   this->DebugPrint("After Hyperarc Transfer", __FILE__, __LINE__));
 #endif
   } // b. per iteration
 
@@ -652,7 +656,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Iterations Complete", __FILE__, __LINE__));
+                 this->DebugPrint("Iterations Complete", __FILE__, __LINE__));
 #endif
 } // PropagateBoundaryCounts
 
@@ -676,9 +680,9 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindNecessaryInterior
   //  1. Identify the necessary supernodes (between two boundary points & still critical)
   //  1.A.  Start by setting all of them to "unnecessary"
   // Initalize isNecessary with False
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(false, this->ContourTree.Supernodes.GetNumberOfValues()),
-    this->InteriorForestData->IsNecessary);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    false, this->ContourTree.Supernodes.GetNumberOfValues()),
+                                  this->InteriorForestData->IsNecessary);
   // 1.B.  Our condition is that if the superarc dependent count is neither 0 nor the # of boundary
   //       points, the superarc target is necessary. Note that there may be write conflicts, but it's
   //       an OR operation, so it doesn't matter
@@ -691,7 +695,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindNecessaryInterior
   );
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Is Necessary Based on Dependency", __FILE__, __LINE__));
+                 this->DebugPrint("Is Necessary Based on Dependency", __FILE__, __LINE__));
 #endif
 
   // separate pass to set the superparent of every boundary node to be necessary
@@ -703,7 +707,8 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindNecessaryInterior
                this->ContourTree.Superarcs,
                this->InteriorForestData->IsNecessary);
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, this->DebugPrint("Is Necessary Set", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 this->DebugPrint("Is Necessary Set", __FILE__, __LINE__));
 #endif
 } // FindNecessaryInteriorSupernodes()
 
@@ -746,8 +751,8 @@ void BoundaryTreeMaker<MeshType,
   {
 #ifdef DEBUG_PRINT
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "BoundaryTreeMaker::AugmentBoundaryWithNecessaryInteriorSupernodes():"
-               "No additional nodes necessary. Returning.");
+                   "BoundaryTreeMaker::AugmentBoundaryWithNecessaryInteriorSupernodes():"
+                   "No additional nodes necessary. Returning.");
 #endif
     return;
   }
@@ -766,7 +771,7 @@ void BoundaryTreeMaker<MeshType,
     // TODO: Check if it is really necessary to initalize the new values
     viskores::cont::Algorithm::CopySubRange(
       viskores::cont::make_ArrayHandleConstant<viskores::Id>(0, this->NumBoundary), // set to 0
-      0,                                                                    // start index
+      0,                                                                            // start index
       this->NumNecessary,         // number of values to copy
       tempBoundaryVertexSuperset, // copy to temp
       this->NumBoundary           // start where our original values end
@@ -791,7 +796,7 @@ void BoundaryTreeMaker<MeshType,
     // TODO: Check if it is really necessary to initalize the new values
     viskores::cont::Algorithm::CopySubRange(
       viskores::cont::make_ArrayHandleConstant<viskores::Id>(0, this->NumBoundary), // set to 0
-      0,                                                                    // start index
+      0,                                                                            // start index
       this->NumNecessary,  // number of values to copy
       tempBoundaryIndices, // copy to temp
       this->NumBoundary    // start where our original values end
@@ -821,7 +826,7 @@ void BoundaryTreeMaker<MeshType,
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Necessary Appended", __FILE__, __LINE__));
+                 this->DebugPrint("Necessary Appended", __FILE__, __LINE__));
 #endif
 } // AugmentBoundaryWithNecessaryInteriorSupernodes
 
@@ -838,10 +843,10 @@ template <typename MeshType, typename MeshBoundaryExecObjType>
 void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryTreeSuperarcs()
 { // FindBoundaryTreeSuperarcs
   //  0.  Allocate memory for the tree2superset map
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->ContourTree.Supernodes.GetNumberOfValues()),
-    this->TreeToSuperset);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->ContourTree.Supernodes.GetNumberOfValues()),
+                                  this->TreeToSuperset);
 
   //  1.  Sort the boundary set by hyperparent
   auto contourTreeNodeHyperArcComparator = bract_maker::ContourTreeNodeHyperArcComparator(
@@ -850,25 +855,27 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryTreeSuper
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Sorted by Superparent", __FILE__, __LINE__));
+                 this->DebugPrint("Sorted by Superparent", __FILE__, __LINE__));
 #endif
 
   //  2.  Reset the order of the vertices in the BRACT
   viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandlePermutation(this->BoundaryIndices, // index array to permute with
-                                            this->Mesh->SortOrder  // value array to be permuted
-                                            ),
+    viskores::cont::make_ArrayHandlePermutation(
+      this->BoundaryIndices, // index array to permute with
+      this->Mesh->SortOrder  // value array to be permuted
+      ),
     this->BoundaryVertexSuperset // Copy the permuted Mesh->SortOrder to BoundaryVertexSuperset
   );
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, this->DebugPrint("Vertices Reset", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 this->DebugPrint("Vertices Reset", __FILE__, __LINE__));
 #endif
 
   // allocate memory for the superarcs (same size as supernodes for now)
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->BoundaryVertexSuperset.GetNumberOfValues()),
-    this->BoundaryTreeData->Superarcs);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->BoundaryVertexSuperset.GetNumberOfValues()),
+                                  this->BoundaryTreeData->Superarcs);
 
   // We would like to connect vertices to their neighbour on the hyperarc as usual
   // The problem here is that the root of the tree may be unnecessary
@@ -884,14 +891,14 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryTreeSuper
   // in order to find the boundary ID of each vertex transferred
   {
     // Allocate this->BoundaryTreeId with NoSuchElemet
-    viskores::cont::Algorithm::Copy(
-      viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                           this->ContourTree.Nodes.GetNumberOfValues()),
-      this->BoundaryTreeId);
+    viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                      this->ContourTree.Nodes.GetNumberOfValues()),
+                                    this->BoundaryTreeId);
     // Fill the relevant values
     auto tempPermutedBoundaryTreeId =
       viskores::cont::make_ArrayHandlePermutation(this->BoundaryVertexSuperset, // index array
-                                              this->BoundaryTreeId          // value array
+                                                  this->BoundaryTreeId          // value array
       );
     viskores::cont::Algorithm::Copy(
       viskores::cont::ArrayHandleIndex(
@@ -917,7 +924,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::FindBoundaryTreeSuper
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Restricted to Boundary", __FILE__, __LINE__));
+                 this->DebugPrint("Restricted to Boundary", __FILE__, __LINE__));
 #endif
 } // FindBoundaryTreeSuperarcs
 
@@ -964,9 +971,9 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::SetUpAndDownNeighbour
 { // SetUpAndDownNeighbours
   //  So, we will set an up- and down-neighbour for each one (for critical points, non-canonical)
   { // local context
-    auto tempNoSuchElementArray =
-      viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                           this->BoundaryVertexSuperset.GetNumberOfValues());
+    auto tempNoSuchElementArray = viskores::cont::make_ArrayHandleConstant(
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      this->BoundaryVertexSuperset.GetNumberOfValues());
     viskores::cont::Algorithm::Copy(tempNoSuchElementArray, this->UpNeighbour);
     viskores::cont::Algorithm::Copy(tempNoSuchElementArray, this->DownNeighbour);
   } // end local context
@@ -982,7 +989,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::SetUpAndDownNeighbour
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Initial Up/Down Neighbours Set", __FILE__, __LINE__));
+                 this->DebugPrint("Initial Up/Down Neighbours Set", __FILE__, __LINE__));
 #endif
 } // SetUpAndDownNeighbours
 
@@ -998,10 +1005,10 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::IdentifyRegularisedSu
   // it then follows we have a critical point and can set a flag accordingly
   // we will use a vector that stores NO_SUCH_ELEMENT for false, anything else for true
   // it gets reused as an ID
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->BoundaryVertexSuperset.GetNumberOfValues()),
-    this->NewVertexId);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->BoundaryVertexSuperset.GetNumberOfValues()),
+                                  this->NewVertexId);
 
   auto stepOneWorklet = bract_maker::IdentifyRegularisedSupernodesStepOneWorklet();
   this->Invoke(stepOneWorklet,
@@ -1025,7 +1032,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::IdentifyRegularisedSu
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Boundaries & Leaves Set", __FILE__, __LINE__));
+                 this->DebugPrint("Boundaries & Leaves Set", __FILE__, __LINE__));
 #endif
 } // IdentifyRegularisedSupernodes
 
@@ -1050,7 +1057,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::AddTerminalFlagsToUpD
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Up/Down Neighbours Terminated", __FILE__, __LINE__));
+                 this->DebugPrint("Up/Down Neighbours Terminated", __FILE__, __LINE__));
 #endif
 } //
 
@@ -1081,7 +1088,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PointerDoubleUpDownNe
   } // per iteration
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Pointer Doubling Done", __FILE__, __LINE__));
+                 this->DebugPrint("Pointer Doubling Done", __FILE__, __LINE__));
 #endif
 } // PointerDoubleUpDownNeighbours
 
@@ -1104,7 +1111,8 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
   viskores::worklet::contourtree_augmented::IdArrayType keptInBoundaryTree;
   //    Start by creating the ID #s with a partial sum (these will actually start from 1, not 0
   viskores::cont::Algorithm::ScanInclusive(
-    viskores::cont::make_ArrayHandleTransform(this->NewVertexId, bract_maker::NoSuchElementFunctor()),
+    viskores::cont::make_ArrayHandleTransform(this->NewVertexId,
+                                              bract_maker::NoSuchElementFunctor()),
     keptInBoundaryTree);
   // Update newVertexID, i.e., for each element set:
   // if (!noSuchElement(newVertexID[returnIndex]))
@@ -1118,7 +1126,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Compressed IDs Computed", __FILE__, __LINE__));
+                 this->DebugPrint("Compressed IDs Computed", __FILE__, __LINE__));
 #endif
   //    2.  Work out the new superarcs, which is slightly tricky, since they point inbound.
   //      For each necessary vertex N, the inbound vertex I in the original contour tree can point to:
@@ -1145,8 +1153,8 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
   // create an array to store the new superarc Ids and initalize it with NO_SUCH_ELEMENT
   viskores::worklet::contourtree_augmented::IdArrayType newSuperarc;
   viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->NumKept),
+    viskores::cont::make_ArrayHandleConstant(
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT, this->NumKept),
     newSuperarc);
   auto findNewSuperarcsWorklet = bract_maker::CompressRegularisedNodesFindNewSuperarcsWorklet();
   this->Invoke(findNewSuperarcsWorklet,
@@ -1159,18 +1167,19 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("New Superarcs Found", __FILE__, __LINE__));
+                 this->DebugPrint("New Superarcs Found", __FILE__, __LINE__));
 #endif
 
   //  3.  Now do the pass to resolve the root: choose the direction with decreasing index
   auto resolveRootWorklet = bract_maker::CompressRegularisedNodesResolveRootWorklet();
   this->Invoke(resolveRootWorklet,
                viskores::cont::ArrayHandleIndex(this->NumKept), // input
-               newSuperarc                                  // output
+               newSuperarc                                      // output
   );
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, this->DebugPrint("Root Resolved", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 this->DebugPrint("Root Resolved", __FILE__, __LINE__));
 #endif
 
   // 4.  Now transfer the vertices & resize
@@ -1188,7 +1197,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Vertices Transferred", __FILE__, __LINE__));
+                 this->DebugPrint("Vertices Transferred", __FILE__, __LINE__));
 #endif
 
   // 5.  Create an index array and sort it indirectly by sortOrder
@@ -1204,12 +1213,13 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
   {
     auto permutedReverseSorter =
       viskores::cont::make_ArrayHandlePermutation(vertexSorter, reverseSorter);
-    viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleIndex(this->NumKept), permutedReverseSorter);
+    viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleIndex(this->NumKept),
+                                    permutedReverseSorter);
   }
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Indirect Sort Complete", __FILE__, __LINE__));
+                 this->DebugPrint("Indirect Sort Complete", __FILE__, __LINE__));
 #endif
 
   //viskores::worklet::contourtree_augmented::PrintHeader(vertexSorter.GetNumberOfValues(), std::cerr);
@@ -1238,7 +1248,7 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::CompressRegularisedNo
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Regularised Nodes Compressed", __FILE__, __LINE__));
+                 this->DebugPrint("Regularised Nodes Compressed", __FILE__, __LINE__));
 #endif
 } // CompressRegularisedNodes
 
@@ -1254,9 +1264,9 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::SetInteriorForest(
   const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler)
 { // SetInteriorForest()
   // allocate memory for the residue arrays
-  auto tempNoSuchElementArray =
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->ContourTree.Supernodes.GetNumberOfValues());
+  auto tempNoSuchElementArray = viskores::cont::make_ArrayHandleConstant(
+    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+    this->ContourTree.Supernodes.GetNumberOfValues());
   viskores::cont::Algorithm::Copy(tempNoSuchElementArray, this->InteriorForestData->Above);
   viskores::cont::Algorithm::Copy(tempNoSuchElementArray, this->InteriorForestData->Below);
 
@@ -1284,8 +1294,8 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::SetInteriorForest(
     this->BoundaryTreeData->VertexIndex.GetNumberOfValues());
   // per vertex in the bract, convert it to a sort ID and then mesh ID and copy to the InteriorForestData
   viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandlePermutation(
-                                this->BoundaryTreeData->VertexIndex, this->Mesh->SortOrder),
-                              InteriorForestData->BoundaryTreeMeshIndices);
+                                    this->BoundaryTreeData->VertexIndex, this->Mesh->SortOrder),
+                                  InteriorForestData->BoundaryTreeMeshIndices);
 } // SetInteriorForest()
 
 
@@ -1318,14 +1328,14 @@ std::string BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::DebugPrint(con
 
   // Regular Vertex Arrays
   viskores::worklet::contourtree_augmented::PrintHeader(this->BoundaryTreeId.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "ID in Boundary Tree", this->BoundaryTreeId, -1, resultStream);
   resultStream << std::endl;
 
   // Boundary Vertex Arrays
   viskores::worklet::contourtree_augmented::PrintHeader(this->BoundaryIndices.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Boundary Sort Indices", this->BoundaryIndices, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
@@ -1359,13 +1369,13 @@ std::string BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::DebugPrint(con
 
   // BRACT sized Arrays
   viskores::worklet::contourtree_augmented::PrintHeader(this->NewVertexId.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "New Vertex ID", this->NewVertexId, -1, resultStream);
 
   // arrays with double use & different sizes
   viskores::worklet::contourtree_augmented::PrintHeader(this->UpNeighbour.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Up Neighbour", this->UpNeighbour, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(

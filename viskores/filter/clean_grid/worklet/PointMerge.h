@@ -64,7 +64,8 @@ public:
     }
 
     VISKORES_CONT
-    static viskores::Vec3f_64 ComputeBinWidths(const viskores::Bounds& bounds, viskores::Float64 delta)
+    static viskores::Vec3f_64 ComputeBinWidths(const viskores::Bounds& bounds,
+                                               viskores::Float64 delta)
     {
       const viskores::Vec3f_64 boundLengths(
         bounds.X.Length() + delta, bounds.Y.Length() + delta, bounds.Z.Length() + delta);
@@ -154,8 +155,8 @@ public:
 
     template <typename T>
     VISKORES_EXEC void operator()(const viskores::Vec<T, 3>& coordiantes,
-                              const BinLocator binLocator,
-                              viskores::HashType& hashOut) const
+                                  const BinLocator binLocator,
+                                  viskores::HashType& hashOut) const
     {
       viskores::Id3 binId = binLocator.FindBin(coordiantes);
       hashOut = viskores::Hash(binId);
@@ -184,9 +185,9 @@ public:
 
     template <typename IndexVecInType, typename CoordinateVecInType, typename IndexVecOutType>
     VISKORES_EXEC void operator()(IndexVecInType& pointIndices,
-                              CoordinateVecInType& pointCoordinates,
-                              const BinLocator& binLocator,
-                              IndexVecOutType& neighborIndices) const
+                                  CoordinateVecInType& pointCoordinates,
+                                  const BinLocator& binLocator,
+                                  IndexVecOutType& neighborIndices) const
     {
       // For each point we are going to find all points close enough to be considered neighbors. We
       // record the neighbors by filling in the same index into neighborIndices. That is, if two
@@ -328,10 +329,11 @@ public:
 private:
   template <typename T>
   VISKORES_CONT static void RunOneIteration(
-    viskores::Float64 delta,                              // Distance to consider two points coincident
-    bool fastCheck,                                   // If true, approximate distances are used
-    const BinLocator& binLocator,                     // Used to find nearby points
-    viskores::cont::ArrayHandle<viskores::Vec<T, 3>>& points, // coordinates, modified to merge close
+    viskores::Float64 delta,      // Distance to consider two points coincident
+    bool fastCheck,               // If true, approximate distances are used
+    const BinLocator& binLocator, // Used to find nearby points
+    viskores::cont::ArrayHandle<viskores::Vec<T, 3>>&
+      points, // coordinates, modified to merge close
     const viskores::cont::ArrayHandle<viskores::Id>&
       indexNeighborMap) // identifies each neighbor group, updated
   {
@@ -351,11 +353,11 @@ private:
 
 public:
   template <typename T>
-  VISKORES_CONT void Run(
-    viskores::Float64 delta,                              // Distance to consider two points coincident
-    bool fastCheck,                                   // If true, approximate distances are used
-    const viskores::Bounds& bounds,                       // Bounds of points
-    viskores::cont::ArrayHandle<viskores::Vec<T, 3>>& points) // coordinates, modified to merge close
+  VISKORES_CONT void Run(viskores::Float64 delta, // Distance to consider two points coincident
+                         bool fastCheck,          // If true, approximate distances are used
+                         const viskores::Bounds& bounds, // Bounds of points
+                         viskores::cont::ArrayHandle<viskores::Vec<T, 3>>&
+                           points) // coordinates, modified to merge close
   {
     viskores::cont::Invoker invoker;
 
@@ -363,7 +365,7 @@ public:
 
     viskores::cont::ArrayHandle<viskores::Id> indexNeighborMap;
     viskores::cont::ArrayCopy(viskores::cont::ArrayHandleIndex(points.GetNumberOfValues()),
-                          indexNeighborMap);
+                              indexNeighborMap);
 
     this->RunOneIteration(delta, fastCheck, binLocator, points, indexNeighborMap);
 
@@ -371,41 +373,48 @@ public:
     {
       // Run the algorithm again after shifting the bins to capture nearby points that straddled
       // the previous bins.
-      this->RunOneIteration(delta,
-                            fastCheck,
-                            binLocator.ShiftBins(bounds, delta, viskores::make_Vec(true, false, false)),
-                            points,
-                            indexNeighborMap);
-      this->RunOneIteration(delta,
-                            fastCheck,
-                            binLocator.ShiftBins(bounds, delta, viskores::make_Vec(false, true, false)),
-                            points,
-                            indexNeighborMap);
-      this->RunOneIteration(delta,
-                            fastCheck,
-                            binLocator.ShiftBins(bounds, delta, viskores::make_Vec(false, false, true)),
-                            points,
-                            indexNeighborMap);
-      this->RunOneIteration(delta,
-                            fastCheck,
-                            binLocator.ShiftBins(bounds, delta, viskores::make_Vec(true, true, false)),
-                            points,
-                            indexNeighborMap);
-      this->RunOneIteration(delta,
-                            fastCheck,
-                            binLocator.ShiftBins(bounds, delta, viskores::make_Vec(true, false, true)),
-                            points,
-                            indexNeighborMap);
-      this->RunOneIteration(delta,
-                            fastCheck,
-                            binLocator.ShiftBins(bounds, delta, viskores::make_Vec(false, true, true)),
-                            points,
-                            indexNeighborMap);
-      this->RunOneIteration(delta,
-                            fastCheck,
-                            binLocator.ShiftBins(bounds, delta, viskores::make_Vec(true, true, true)),
-                            points,
-                            indexNeighborMap);
+      this->RunOneIteration(
+        delta,
+        fastCheck,
+        binLocator.ShiftBins(bounds, delta, viskores::make_Vec(true, false, false)),
+        points,
+        indexNeighborMap);
+      this->RunOneIteration(
+        delta,
+        fastCheck,
+        binLocator.ShiftBins(bounds, delta, viskores::make_Vec(false, true, false)),
+        points,
+        indexNeighborMap);
+      this->RunOneIteration(
+        delta,
+        fastCheck,
+        binLocator.ShiftBins(bounds, delta, viskores::make_Vec(false, false, true)),
+        points,
+        indexNeighborMap);
+      this->RunOneIteration(
+        delta,
+        fastCheck,
+        binLocator.ShiftBins(bounds, delta, viskores::make_Vec(true, true, false)),
+        points,
+        indexNeighborMap);
+      this->RunOneIteration(
+        delta,
+        fastCheck,
+        binLocator.ShiftBins(bounds, delta, viskores::make_Vec(true, false, true)),
+        points,
+        indexNeighborMap);
+      this->RunOneIteration(
+        delta,
+        fastCheck,
+        binLocator.ShiftBins(bounds, delta, viskores::make_Vec(false, true, true)),
+        points,
+        indexNeighborMap);
+      this->RunOneIteration(
+        delta,
+        fastCheck,
+        binLocator.ShiftBins(bounds, delta, viskores::make_Vec(true, true, true)),
+        points,
+        indexNeighborMap);
     }
 
     this->MergeKeys = viskores::worklet::Keys<viskores::Id>(indexNeighborMap);
@@ -422,9 +431,9 @@ public:
 
   template <typename TL, typename SL>
   VISKORES_CONT void Run(
-    viskores::Float64 delta,                              // Distance to consider two points coincident
-    bool fastCheck,                                   // If true, approximate distances are used
-    const viskores::Bounds& bounds,                       // Bounds of points
+    viskores::Float64 delta,        // Distance to consider two points coincident
+    bool fastCheck,                 // If true, approximate distances are used
+    const viskores::Bounds& bounds, // Bounds of points
     viskores::cont::UncertainArrayHandle<TL, SL>& points) // coordinates, modified to merge close
   {
     // Get a cast to a concrete set of point coordiantes so that it can be modified in place
@@ -437,10 +446,11 @@ public:
     points = concretePoints;
   }
 
-  VISKORES_CONT void Run(viskores::Float64 delta,        // Distance to consider two points coincident
-                     bool fastCheck,             // If true, approximate distances are used
-                     const viskores::Bounds& bounds, // Bounds of points
-                     viskores::cont::UnknownArrayHandle& points) // coordinates, modified to merge close
+  VISKORES_CONT void Run(
+    viskores::Float64 delta,                    // Distance to consider two points coincident
+    bool fastCheck,                             // If true, approximate distances are used
+    const viskores::Bounds& bounds,             // Bounds of points
+    viskores::cont::UnknownArrayHandle& points) // coordinates, modified to merge close
   {
     // Get a cast to a concrete set of point coordiantes so that it can be modified in place
     viskores::cont::ArrayHandle<viskores::Vec3f> concretePoints;
@@ -453,10 +463,11 @@ public:
   }
 
   template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
-  VISKORES_CONT
-    viskores::cont::CellSetExplicit<ShapeStorage, VISKORES_DEFAULT_CONNECTIVITY_STORAGE_TAG, OffsetsStorage>
-    MapCellSet(const viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>&
-                 inCellSet) const
+  VISKORES_CONT viskores::cont::
+    CellSetExplicit<ShapeStorage, VISKORES_DEFAULT_CONNECTIVITY_STORAGE_TAG, OffsetsStorage>
+    MapCellSet(
+      const viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>&
+        inCellSet) const
   {
     return viskores::worklet::RemoveUnusedPoints::MapCellSet(
       inCellSet, this->PointInputToOutputMap, this->MergeKeys.GetInputRange());

@@ -176,10 +176,11 @@ public:
   template <typename StorageTag>
   void GraftInteriorForests(
     viskores::Id theRound,
-    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>& hierarchicalTree,
+    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>&
+      hierarchicalTree,
     const viskores::cont::ArrayHandle<FieldType, StorageTag>& meshDataValues,
-    const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler =
-      nullptr);
+    const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
+      localToGlobalIdRelabeler = nullptr);
 
 
   /// Routine to convert supernode IDs from global to IDs in the existing hierarchical tree
@@ -191,11 +192,11 @@ public:
   ///            If this->Mesh is a ContourTreeMesh then the IdRelabeler is not needed and we can
   ///            simply set it to a nullptr.
   template <typename StorageTag>
-  void GetHierarchicalIds(
-    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>& hierarchicalTree,
-    const viskores::cont::ArrayHandle<FieldType, StorageTag>& meshDataValues,
-    const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler =
-      nullptr);
+  void GetHierarchicalIds(viskores::worklet::contourtree_distributed::HierarchicalContourTree<
+                            FieldType>& hierarchicalTree,
+                          const viskores::cont::ArrayHandle<FieldType, StorageTag>& meshDataValues,
+                          const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
+                            localToGlobalIdRelabeler = nullptr);
 
   /// sets up an active superarc set
   void InitializeActiveSuperarcs();
@@ -214,11 +215,13 @@ public:
 
   /// Makes a list of new hypernodes, and maps their old IDs to their new ones
   void ListNewHypernodes(
-    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>& hierarchicalTree);
+    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>&
+      hierarchicalTree);
 
   /// Makes a list of new supernodes, and maps their old IDs to their new ones
   void ListNewSupernodes(
-    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>& hierarchicalTree);
+    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>&
+      hierarchicalTree);
 
   /// Makes a list of new nodes, and maps their old IDs to their new ones
   /// @param[in] hierarchicalTree Reference to the hierarchical tree
@@ -226,19 +229,20 @@ public:
   ///            this->Mesh->GetGlobalIdsFromMeshIndices(...) and this->Mesh->GetGlobalIdsFroSortIndices(...)
   ///            If this->Mesh is a ContourTreeMesh then the IdRelabeler is not needed and we can
   ///            simply set it to a nullptr.
-  void ListNewNodes(
-    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>& hierarchicalTree,
-    const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler =
-      nullptr);
+  void ListNewNodes(viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>&
+                      hierarchicalTree,
+                    const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
+                      localToGlobalIdRelabeler = nullptr);
 
   /// Copies in the hypernodes, now that we have correct super IDs
   void CopyNewHypernodes(
-    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>& hierarchicalTree);
+    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>&
+      hierarchicalTree);
 
   /// Copies in the supernodes, now that we have correct regular IDs
-  void CopyNewSupernodes(
-    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>& hierarchicalTree,
-    viskores::Id theRound);
+  void CopyNewSupernodes(viskores::worklet::contourtree_distributed::HierarchicalContourTree<
+                           FieldType>& hierarchicalTree,
+                         viskores::Id theRound);
 
   /// Copies the regular nodes in, setting all arrays except superparents
   /// Must be called LAST since it depends on the hypernodes & supernodes that have just been added
@@ -251,16 +255,16 @@ public:
   ///            If this->Mesh is a ContourTreeMesh then the IdRelabeler is not needed and we can
   ///            simply set it to a nullptr.
   template <typename StorageTag>
-  void CopyNewNodes(
-    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>& hierarchicalTree,
-    const viskores::cont::ArrayHandle<FieldType, StorageTag>& meshDataValues,
-    const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler =
-      nullptr);
+  void CopyNewNodes(viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>&
+                      hierarchicalTree,
+                    const viskores::cont::ArrayHandle<FieldType, StorageTag>& meshDataValues,
+                    const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
+                      localToGlobalIdRelabeler = nullptr);
 
   /// Transfers the details of nodes used in each iteration
-  void CopyIterationDetails(
-    viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>& hierarchicalTree,
-    viskores::Id theRound);
+  void CopyIterationDetails(viskores::worklet::contourtree_distributed::HierarchicalContourTree<
+                              FieldType>& hierarchicalTree,
+                            viskores::Id theRound);
 
   /// prints the contents of the object in a standard format
   std::string DebugPrint(const char* message, const char* fileName, long lineNum);
@@ -301,12 +305,13 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info, "theRound: " << theRound);
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             this->DebugPrint("Before GraftResidue()", __FILE__, __LINE__));
+                 this->DebugPrint("Before GraftResidue()", __FILE__, __LINE__));
   VISKORES_LOG_S(
     viskores::cont::LogLevel::Info,
     this->ContourTree.DebugPrint("Contour Tree Before GraftResidue()", __FILE__, __LINE__));
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("Hier Tree Before GraftResidue()", __FILE__, __LINE__));
+  VISKORES_LOG_S(
+    viskores::cont::LogLevel::Info,
+    hierarchicalTree.DebugPrint("Hier Tree Before GraftResidue()", __FILE__, __LINE__));
   VISKORES_LOG_S(
     viskores::cont::LogLevel::Info,
     this->InteriorForest->DebugPrint("InteriorForest Before GraftResidue()", __FILE__, __LINE__));
@@ -356,7 +361,7 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("Finished Transfer Iterations", __FILE__, __LINE__));
+                 DebugPrint("Finished Transfer Iterations", __FILE__, __LINE__));
 #endif
 
   // At this point, we can check to see whether all supernodes in the residue have already been transferred
@@ -372,8 +377,8 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
   );
   // Compute the sum of all values in attachmentCounter. viskores::Add() is the default (so it could be omitted).
   // We include it here to be more explicit about what Reduce does.
-  viskores::Id numAttachmentPoints =
-    viskores::cont::Algorithm::Reduce(attachmentCounter, static_cast<viskores::Id>(0), viskores::Add());
+  viskores::Id numAttachmentPoints = viskores::cont::Algorithm::Reduce(
+    attachmentCounter, static_cast<viskores::Id>(0), viskores::Add());
 
   // if there are any at all, we need an extra iteration
   if (numAttachmentPoints > 0)
@@ -393,7 +398,7 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("Finished Setting Attachment Point Iterations", __FILE__, __LINE__));
+                 DebugPrint("Finished Setting Attachment Point Iterations", __FILE__, __LINE__));
 #endif
   // The secondary arrays now hold all of the information we need, and we have to transfer it to the hierarchical tree
   // This used to be one single huge function, but has now been broken up for clarity (and because it simplified it)
@@ -415,8 +420,9 @@ void TreeGrafter<MeshType, FieldType>::GraftInteriorForests(
   CopyIterationDetails(hierarchicalTree, theRound);
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("GraftInteriorForests() Completed", __FILE__, __LINE__));
+  VISKORES_LOG_S(
+    viskores::cont::LogLevel::Info,
+    hierarchicalTree.DebugPrint("GraftInteriorForests() Completed", __FILE__, __LINE__));
 #endif
 } // GraftInteriorForests()
 
@@ -450,9 +456,9 @@ void TreeGrafter<MeshType, FieldType>::GetHierarchicalIds(
 
   // We start by resizing all of the arrays to the size of the BCT & setting everything to NO_SUCH_ELEMENT
   {
-    auto tempNoSuchElementArray =
-      viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                           this->ContourTree.Supernodes.GetNumberOfValues());
+    auto tempNoSuchElementArray = viskores::cont::make_ArrayHandleConstant(
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      this->ContourTree.Supernodes.GetNumberOfValues());
     viskores::cont::Algorithm::Copy(tempNoSuchElementArray, this->HierarchicalRegularId);
     viskores::cont::Algorithm::Copy(tempNoSuchElementArray, this->HierarchicalSuperId);
     viskores::cont::Algorithm::Copy(tempNoSuchElementArray, this->HierarchicalSuperparent);
@@ -513,7 +519,7 @@ void TreeGrafter<MeshType, FieldType>::GetHierarchicalIds(
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("GetHierarchicalIDs() Complete", __FILE__, __LINE__));
+                 DebugPrint("GetHierarchicalIDs() Complete", __FILE__, __LINE__));
 #endif
 } // GetHierarchicalIDs()
 
@@ -531,16 +537,17 @@ template <typename MeshType, typename FieldType>
 void TreeGrafter<MeshType, FieldType>::InitializeActiveSuperarcs()
 { // InitializeActiveSuperarcs()
   // Resize the up/down neighbours to all supernodes (we won't use all of them, but ...)
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->ContourTree.Supernodes.GetNumberOfValues()),
-    this->UpNeighbour);
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->ContourTree.Supernodes.GetNumberOfValues()),
-    this->DownNeighbour);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->ContourTree.Supernodes.GetNumberOfValues()),
+                                  this->UpNeighbour);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->ContourTree.Supernodes.GetNumberOfValues()),
+                                  this->DownNeighbour);
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Up & Down Resized", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("Up & Down Resized", __FILE__, __LINE__));
 #endif
 
   // start by working out a mapping from existing superarc ID to active superarc ID
@@ -596,26 +603,26 @@ void TreeGrafter<MeshType, FieldType>::InitializeActiveSuperarcs()
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("Active Superarc Array Initialized", __FILE__, __LINE__));
+                 DebugPrint("Active Superarc Array Initialized", __FILE__, __LINE__));
 #endif
 
   // prepare memory for our transfer arrays
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->ContourTree.Supernodes.GetNumberOfValues()),
-    this->WhenTransferred);
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->ContourTree.Supernodes.GetNumberOfValues()),
-    this->SupernodeType);
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->ContourTree.Supernodes.GetNumberOfValues()),
-    this->HierarchicalHyperarc);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->ContourTree.Supernodes.GetNumberOfValues()),
+                                  this->WhenTransferred);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->ContourTree.Supernodes.GetNumberOfValues()),
+                                  this->SupernodeType);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->ContourTree.Supernodes.GetNumberOfValues()),
+                                  this->HierarchicalHyperarc);
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("InitializeActiveSuperarcs() Complete", __FILE__, __LINE__));
+                 DebugPrint("InitializeActiveSuperarcs() Complete", __FILE__, __LINE__));
 #endif
 } // InitializeActiveSuperarcs()
 
@@ -635,19 +642,19 @@ void TreeGrafter<MeshType, FieldType>::FindCriticalPoints()
     this->ContourTree.Supernodes.GetNumberOfValues(),
     viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
   // Reset the UpNeighbour and DownNeighbour array
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->UpNeighbour.GetNumberOfValues()),
-    this->UpNeighbour);
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->DownNeighbour.GetNumberOfValues()),
-    this->DownNeighbour);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->UpNeighbour.GetNumberOfValues()),
+                                  this->UpNeighbour);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->DownNeighbour.GetNumberOfValues()),
+                                  this->DownNeighbour);
 
 #ifdef DEBUG_PRINT
   // TODO: Hamish: I don't think we need this DebugPrint here.
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("Setting Up/Down Neighbours", __FILE__, __LINE__));
+                 DebugPrint("Setting Up/Down Neighbours", __FILE__, __LINE__));
 #endif
 
   // fill in the up/down neighbour arrays
@@ -662,12 +669,13 @@ void TreeGrafter<MeshType, FieldType>::FindCriticalPoints()
   );
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Up/Down Neighbours Set", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("Up/Down Neighbours Set", __FILE__, __LINE__));
 #endif
 
   // now test whether they match what we expect: if not, we've found a saddle
-  auto findSaddlesWorklet =
-    viskores::worklet::contourtree_distributed::tree_grafter::FindCriticalPointsFindSaddlesWorklet();
+  auto findSaddlesWorklet = viskores::worklet::contourtree_distributed::tree_grafter::
+    FindCriticalPointsFindSaddlesWorklet();
   this->Invoke(findSaddlesWorklet,
                this->ActiveSuperarcs,             // input
                this->InteriorForest->IsNecessary, // input
@@ -678,7 +686,8 @@ void TreeGrafter<MeshType, FieldType>::FindCriticalPoints()
 
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Saddles Identified", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("Saddles Identified", __FILE__, __LINE__));
 #endif
   // flag the leaves
   auto findLeafsWorklet =
@@ -692,7 +701,8 @@ void TreeGrafter<MeshType, FieldType>::FindCriticalPoints()
   );
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Attachments Identified", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("Attachments Identified", __FILE__, __LINE__));
 #endif
 
   // one more pass to set terminal flags
@@ -707,7 +717,7 @@ void TreeGrafter<MeshType, FieldType>::FindCriticalPoints()
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("FindCriticalPoints() Complete", __FILE__, __LINE__));
+                 DebugPrint("FindCriticalPoints() Complete", __FILE__, __LINE__));
 #endif
 
 } // FindCriticalPoints()
@@ -723,7 +733,8 @@ void TreeGrafter<MeshType, FieldType>::CollapseRegularChains()
 { // CollapseRegularChains()
   // Compute the number of log steps required in this pass
   viskores::Id nLogSteps = static_cast<viskores::Id>(1);
-  for (viskores::Id shifter = this->ActiveSuperarcs.GetNumberOfValues(); shifter != 0; shifter >>= 1)
+  for (viskores::Id shifter = this->ActiveSuperarcs.GetNumberOfValues(); shifter != 0;
+       shifter >>= 1)
   {
     nLogSteps++;
   }
@@ -744,7 +755,7 @@ void TreeGrafter<MeshType, FieldType>::CollapseRegularChains()
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("CollapseRegularChains() Complete", __FILE__, __LINE__));
+                 DebugPrint("CollapseRegularChains() Complete", __FILE__, __LINE__));
 #endif
 
 } // CollapseRegularChains()
@@ -792,7 +803,7 @@ void TreeGrafter<MeshType, FieldType>::IdentifyLeafHyperarcs()
   //  WARNING!  The other supernodes should all have the hierarchical hyperparent previously set IN HIERARCHICAL superIDs
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("IdentifyLeafHyperarcs() Complete.", __FILE__, __LINE__));
+                 DebugPrint("IdentifyLeafHyperarcs() Complete.", __FILE__, __LINE__));
 #endif
 
 } // IdentifyLeafHyperarcs()
@@ -826,7 +837,7 @@ void TreeGrafter<MeshType, FieldType>::CompressActiveArrays()
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("CompressActiveArrays() Complete", __FILE__, __LINE__));
+                 DebugPrint("CompressActiveArrays() Complete", __FILE__, __LINE__));
 #endif
 } // CompressActiveArrays()
 
@@ -868,7 +879,7 @@ void TreeGrafter<MeshType, FieldType>::ListNewHypernodes(
   {
 #ifdef DEBUG_PRINT
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "TreeGrafter::ListNewHypernodes(): No new hypernodes. Returning.");
+                   "TreeGrafter::ListNewHypernodes(): No new hypernodes. Returning.");
 #endif
     return;
   }
@@ -878,7 +889,7 @@ void TreeGrafter<MeshType, FieldType>::ListNewHypernodes(
   // Viskores copy can't allocate for transformed arrays, but this->HierarchicalHyperId.Allocate(nOldHypernodes) has already been allocate earlier.
   auto permutedHierarchicalHyperId =
     viskores::cont::make_ArrayHandlePermutation(this->NewHypernodes,      // id array,
-                                            this->HierarchicalHyperId // value array to copy to
+                                                this->HierarchicalHyperId // value array to copy to
     );
   auto tempNewHierarchicalHyperIdValues = viskores::cont::ArrayHandleCounting<viskores::Id>(
     nOldHypernodes, 1, this->NewHypernodes.GetNumberOfValues());
@@ -889,7 +900,8 @@ void TreeGrafter<MeshType, FieldType>::ListNewHypernodes(
     permutedHierarchicalHyperId);
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("New Hypernodes Listed", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("New Hypernodes Listed", __FILE__, __LINE__));
 #endif
 } // ListNewHypernodes()
 
@@ -929,7 +941,7 @@ void TreeGrafter<MeshType, FieldType>::ListNewSupernodes(
   {
 #ifdef DEBUG_PRINT
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "TreeGrafter::ListNewSupernodes(): No new supernodes. Returning.");
+                   "TreeGrafter::ListNewSupernodes(): No new supernodes. Returning.");
 #endif
     return;
   }
@@ -947,9 +959,9 @@ void TreeGrafter<MeshType, FieldType>::ListNewSupernodes(
   // D.  Now we set the hierarchical super index which we need for subsequent writes
   viskores::Id nOldSupernodes = hierarchicalTree.Supernodes.GetNumberOfValues();
   // Viskores copy can't allocate for transformed arrays, but this->HierarchicalSuperId.Allocate(nOldHypernodes) has already been allocate earlier.
-  auto permutedHierarchicalSuperId =
-    viskores::cont::make_ArrayHandlePermutation(this->NewSupernodes,        // id array,
-                                            this->HierarchicalSuperId); // value array to copy to
+  auto permutedHierarchicalSuperId = viskores::cont::make_ArrayHandlePermutation(
+    this->NewSupernodes,        // id array,
+    this->HierarchicalSuperId); // value array to copy to
   auto tempNewHierarchicalSuperIdValues = viskores::cont::ArrayHandleCounting<viskores::Id>(
     nOldSupernodes, 1, this->NewSupernodes.GetNumberOfValues());
   viskores::cont::Algorithm::Copy(
@@ -958,7 +970,8 @@ void TreeGrafter<MeshType, FieldType>::ListNewSupernodes(
     // to hierarchicalSuperID[newSupernodes[newSupernode]]
     permutedHierarchicalSuperId);
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("New Supernodes Listed", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("New Supernodes Listed", __FILE__, __LINE__));
 #endif
 } // ListNewSupernodes()
 
@@ -973,10 +986,10 @@ void TreeGrafter<MeshType, FieldType>::ListNewNodes(
   const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler)
 { // ListNewNodes()
   //  A.  Initialise the array that maps regular IDs to "none"
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                         this->ContourTree.Nodes.GetNumberOfValues()),
-    this->HierarchicalTreeId);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->ContourTree.Nodes.GetNumberOfValues()),
+                                  this->HierarchicalTreeId);
 
   //  B.  Set the ID correctly for every regular node
   //    They will not all be in the hierarchical tree, so NO_SUCH_ELEMENT will occur, but that is
@@ -1036,7 +1049,7 @@ void TreeGrafter<MeshType, FieldType>::ListNewNodes(
   {
 #ifdef DEBUG_PRINT
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "TreeGrafter::ListNewNodes(): No noew nodes. Returning.");
+                   "TreeGrafter::ListNewNodes(): No noew nodes. Returning.");
 #endif
     return;
   }
@@ -1046,9 +1059,9 @@ void TreeGrafter<MeshType, FieldType>::ListNewNodes(
   // Viskores copy can't allocate for transformed arrays, but this->HierarchicalTreeId has already been allocate earlier.
   auto permutedHierarchicalTreeId =
     viskores::cont::make_ArrayHandlePermutation(this->NewNodes,            // id array,
-                                            this->HierarchicalTreeId); // value array to copy to
-  auto tempNewHierarchicalTreeIdValues =
-    viskores::cont::ArrayHandleCounting<viskores::Id>(nOldNodes, 1, this->NewNodes.GetNumberOfValues());
+                                                this->HierarchicalTreeId); // value array to copy to
+  auto tempNewHierarchicalTreeIdValues = viskores::cont::ArrayHandleCounting<viskores::Id>(
+    nOldNodes, 1, this->NewNodes.GetNumberOfValues());
   viskores::cont::Algorithm::Copy(
     // copy nOldNodes + newNodes
     tempNewHierarchicalTreeIdValues,
@@ -1058,7 +1071,8 @@ void TreeGrafter<MeshType, FieldType>::ListNewNodes(
   // WARNING: FOR NOW, we assume that we don't want to sort the regular nodes, just copy them in
   //  We now have a list of all nodes needing transfer, and a mapping of their IDs
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("New Nodes Listed", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("New Nodes Listed", __FILE__, __LINE__));
 #endif
 } // ListNewNodes()
 
@@ -1094,7 +1108,8 @@ void TreeGrafter<MeshType, FieldType>::CopyNewHypernodes(
   }
   // B.  Copy in the hypernodes & hyperarcs
   auto copyNewHypernodesWorklet =
-    viskores::worklet::contourtree_distributed::tree_grafter::CopyNewHypernodesWorklet(nOldHypernodes);
+    viskores::worklet::contourtree_distributed::tree_grafter::CopyNewHypernodesWorklet(
+      nOldHypernodes);
   this->Invoke(copyNewHypernodesWorklet,
                this->NewHypernodes,         // input iteration index.
                this->HierarchicalSuperId,   // input
@@ -1105,9 +1120,10 @@ void TreeGrafter<MeshType, FieldType>::CopyNewHypernodes(
 
   // we will get the superchildren to set the size for us
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("New Hypernodes Copied", __FILE__, __LINE__));
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("New Hypernodes Copied", __FILE__, __LINE__));
+                 DebugPrint("New Hypernodes Copied", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 hierarchicalTree.DebugPrint("New Hypernodes Copied", __FILE__, __LINE__));
 #endif
 
 } // CopyNewHypernodes()
@@ -1170,8 +1186,8 @@ void TreeGrafter<MeshType, FieldType>::CopyNewSupernodes(
 
   // B.  Copy in the supernodes, &c.
   auto copyNewSupernodesWorklet =
-    viskores::worklet::contourtree_distributed::tree_grafter::CopyNewSupernodesWorklet(theRound,
-                                                                                   nOldSupernodes);
+    viskores::worklet::contourtree_distributed::tree_grafter::CopyNewSupernodesWorklet(
+      theRound, nOldSupernodes);
   this->Invoke(copyNewSupernodesWorklet,
                this->NewSupernodes,             // input and iteration index
                this->ContourTree.Supernodes,    // input
@@ -1194,9 +1210,10 @@ void TreeGrafter<MeshType, FieldType>::CopyNewSupernodes(
 
   // loop to set the number of superchildren per hyperarc
   auto copyNewSupernodesSetSuperchildrenWorklet =
-    viskores::worklet::contourtree_distributed::tree_grafter::CopyNewSupernodesSetSuperchildrenWorklet(
-      hierarchicalTree.Supernodes.GetNumberOfValues());
-  auto newSupernodesIndex = viskores::cont::ArrayHandleIndex(this->NewSupernodes.GetNumberOfValues());
+    viskores::worklet::contourtree_distributed::tree_grafter::
+      CopyNewSupernodesSetSuperchildrenWorklet(hierarchicalTree.Supernodes.GetNumberOfValues());
+  auto newSupernodesIndex =
+    viskores::cont::ArrayHandleIndex(this->NewSupernodes.GetNumberOfValues());
   this->Invoke(
     copyNewSupernodesSetSuperchildrenWorklet,
     newSupernodesIndex,         // input array starting at 0 to NewSupernodes.GetNumberOfValues();
@@ -1218,17 +1235,18 @@ void TreeGrafter<MeshType, FieldType>::CopyNewSupernodes(
   );
   auto permutedHypernodes =
     viskores::cont::make_ArrayHandlePermutation(newHypernodeIndex, hierarchicalTree.Hypernodes);
-  auto permutedSuper2hypernode =
-    viskores::cont::make_ArrayHandlePermutation(permutedHypernodes, hierarchicalTree.Super2Hypernode);
+  auto permutedSuper2hypernode = viskores::cont::make_ArrayHandlePermutation(
+    permutedHypernodes, hierarchicalTree.Super2Hypernode);
   if (newHypernodeIndex.GetNumberOfValues())
   { // TODO/FIXME: Can we detect this earlier and save computation time?
     viskores::cont::Algorithm::Copy(newHypernodeIndex, permutedSuper2hypernode);
   }
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("New Supernodes Copied", __FILE__, __LINE__));
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("New Supernodes Copied", __FILE__, __LINE__));
+                 DebugPrint("New Supernodes Copied", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 hierarchicalTree.DebugPrint("New Supernodes Copied", __FILE__, __LINE__));
 #endif
 } // CopyNewSupernodes()
 
@@ -1276,26 +1294,29 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
   );
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Global IDs Copied", __FILE__, __LINE__));
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("Global IDs Copied", __FILE__, __LINE__));
+                 DebugPrint("Global IDs Copied", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 hierarchicalTree.DebugPrint("Global IDs Copied", __FILE__, __LINE__));
 #endif
 
   // B.  Next, we transfer the data values
   hierarchicalTree.DataValues.Allocate(totalNNodes, viskores::CopyFlag::On);
 
-  auto meshValuesPermuted = viskores::cont::make_ArrayHandlePermutation(this->NewNodes, meshDataValues);
+  auto meshValuesPermuted =
+    viskores::cont::make_ArrayHandlePermutation(this->NewNodes, meshDataValues);
   // copy all of mesh->DataValue(newNodes[newNode]) to the end of hierarchicalTree.DataValues starting at nOldNodes
   viskores::cont::Algorithm::CopySubRange(meshValuesPermuted,
-                                      0,
-                                      meshValuesPermuted.GetNumberOfValues(),
-                                      hierarchicalTree.DataValues,
-                                      nOldNodes);
+                                          0,
+                                          meshValuesPermuted.GetNumberOfValues(),
+                                          hierarchicalTree.DataValues,
+                                          nOldNodes);
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Data Values Copied", __FILE__, __LINE__));
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("Data Values Copied", __FILE__, __LINE__));
+                 DebugPrint("Data Values Copied", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 hierarchicalTree.DebugPrint("Data Values Copied", __FILE__, __LINE__));
 #endif
 
   // C.  Then we add the new array indices to the sort and resort it
@@ -1310,10 +1331,10 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
     auto tempCountingArray = viskores::cont::ArrayHandleCounting<viskores::Id>(
       nOldNodes, 1, hierarchicalTree.RegularNodeSortOrder.GetNumberOfValues() - nOldNodes);
     viskores::cont::Algorithm::CopySubRange(tempCountingArray,
-                                        0,
-                                        tempCountingArray.GetNumberOfValues(),
-                                        hierarchicalTree.RegularNodeSortOrder,
-                                        nOldNodes);
+                                            0,
+                                            tempCountingArray.GetNumberOfValues(),
+                                            hierarchicalTree.RegularNodeSortOrder,
+                                            nOldNodes);
   }
   {
     auto permuteComparator =
@@ -1322,9 +1343,10 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
     viskores::cont::Algorithm::Sort(hierarchicalTree.RegularNodeSortOrder, permuteComparator);
   }
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Sort Order Reset", __FILE__, __LINE__));
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("Sort Order Reset", __FILE__, __LINE__));
+                 DebugPrint("Sort Order Reset", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 hierarchicalTree.DebugPrint("Sort Order Reset", __FILE__, __LINE__));
   // hierarchicalTree.PrintDotSuperStructure("CopyNewNodes Hierarchical Tree");
 #endif
 
@@ -1344,7 +1366,8 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
     auto tempNewSupernodeIndex = viskores::cont::ArrayHandleCounting<viskores::Id>(
       tempStartIndex, 1, tempNumValues); // start, step, count
     auto regular2SupernodePermuted = viskores::cont::make_ArrayHandlePermutation(
-      viskores::cont::make_ArrayHandlePermutation(tempNewSupernodeIndex, hierarchicalTree.Supernodes),
+      viskores::cont::make_ArrayHandlePermutation(tempNewSupernodeIndex,
+                                                  hierarchicalTree.Supernodes),
       hierarchicalTree.Regular2Supernode);
     if (tempNewSupernodeIndex.GetNumberOfValues())
     { // TODO/FIXME: Can we detect this earlier and save computation time?
@@ -1373,9 +1396,10 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
   );
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("New Nodes Copied", __FILE__, __LINE__));
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("New Nodes Copied", __FILE__, __LINE__));
+                 DebugPrint("New Nodes Copied", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 hierarchicalTree.DebugPrint("New Nodes Copied", __FILE__, __LINE__));
 #endif
 
 } // CopyNewNodes()
@@ -1397,8 +1421,9 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
 { // CopyIterationDetails()
 
 #ifdef DEBUG_PRINT
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("Starting CopyIterationDetails()", __FILE__, __LINE__));
+  VISKORES_LOG_S(
+    viskores::cont::LogLevel::Info,
+    hierarchicalTree.DebugPrint("Starting CopyIterationDetails()", __FILE__, __LINE__));
 #endif
 
   // update the round counts
@@ -1414,7 +1439,7 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("Round Counts Updated", __FILE__, __LINE__));
+                 hierarchicalTree.DebugPrint("Round Counts Updated", __FILE__, __LINE__));
 #endif
 
   // calculate the number of old & total super and hyper nodes
@@ -1427,9 +1452,9 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("Node Counts Retrieved", __FILE__, __LINE__));
+                 hierarchicalTree.DebugPrint("Node Counts Retrieved", __FILE__, __LINE__));
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("About to Transfer Iteration Counts", __FILE__, __LINE__));
+                 DebugPrint("About to Transfer Iteration Counts", __FILE__, __LINE__));
 #endif
 
   // and set the per round iteration counts. There may be smarter ways of doing this, but . . .
@@ -1438,9 +1463,8 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
     this->NumTransferIterations + 1,
     viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
   {
-    auto copyFirstSupernodePerIterationWorklet =
-      viskores::worklet::contourtree_distributed::tree_grafter::CopyFirstSupernodePerIterationWorklet(
-        nOldSupernodes);
+    auto copyFirstSupernodePerIterationWorklet = viskores::worklet::contourtree_distributed::
+      tree_grafter::CopyFirstSupernodePerIterationWorklet(nOldSupernodes);
     auto newSupernodeIndex = viskores::cont::ArrayHandleCounting<viskores::Id>(
       nOldSupernodes, 1, nTotalSupernodes - nOldSupernodes); // fancy iteration index
     this->Invoke(
@@ -1460,7 +1484,7 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
 
 #ifdef DEBUG_PRINT_GRAFT_RESIDUE
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("Supernode Iteration Counts Set", __FILE__, __LINE__));
+                 hierarchicalTree.DebugPrint("Supernode Iteration Counts Set", __FILE__, __LINE__));
 #endif
 
   // we add one so we don't need special cases when establishing subranges
@@ -1475,9 +1499,8 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
     hierarchicalTree.Hypernodes.GetNumberOfValues());
   // copy the approbriat hierarchicalTree.FirstHypernodePerIteration values
   {
-    auto copyFirstHypernodePerIterationWorklet =
-      viskores::worklet::contourtree_distributed::tree_grafter::CopyFirstHypernodePerIterationWorklet(
-        nOldHypernodes);
+    auto copyFirstHypernodePerIterationWorklet = viskores::worklet::contourtree_distributed::
+      tree_grafter::CopyFirstHypernodePerIterationWorklet(nOldHypernodes);
     auto newHypernodeIndex = viskores::cont::ArrayHandleCounting<viskores::Id>(
       nOldHypernodes, 1, nTotalHypernodes - nOldHypernodes); // fancy iteration index
     this->Invoke(
@@ -1491,9 +1514,9 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
 
 #ifdef DEBUG_PRINT
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             hierarchicalTree.DebugPrint("Hypernode Iteration Counts Set", __FILE__, __LINE__));
+                 hierarchicalTree.DebugPrint("Hypernode Iteration Counts Set", __FILE__, __LINE__));
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("Iteration Details Copied", __FILE__, __LINE__));
+                 DebugPrint("Iteration Details Copied", __FILE__, __LINE__));
 #endif
 
 } // CopyIterationDetails()
@@ -1517,15 +1540,15 @@ inline std::string TreeGrafter<MeshType, FieldType>::DebugPrint(const char* mess
   resultStream << "------------------------------------------------------" << std::endl;
 
   // Regular Vertex Arrays
-  viskores::worklet::contourtree_augmented::PrintHeader(this->HierarchicalTreeId.GetNumberOfValues(),
-                                                    resultStream);
+  viskores::worklet::contourtree_augmented::PrintHeader(
+    this->HierarchicalTreeId.GetNumberOfValues(), resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "ID in Hierarchical Tree", this->HierarchicalTreeId, -1, resultStream);
   resultStream << std::endl;
 
   // Per Supernode Arrays
-  viskores::worklet::contourtree_augmented::PrintHeader(this->HierarchicalRegularId.GetNumberOfValues(),
-                                                    resultStream);
+  viskores::worklet::contourtree_augmented::PrintHeader(
+    this->HierarchicalRegularId.GetNumberOfValues(), resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Hierarchical Regular ID", this->HierarchicalRegularId, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
@@ -1550,24 +1573,25 @@ inline std::string TreeGrafter<MeshType, FieldType>::DebugPrint(const char* mess
 
   // Active Supernode Arrays
   viskores::worklet::contourtree_augmented::PrintHeader(this->ActiveSuperarcs.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintEdgePairArray(
     "Active Superarcs", this->ActiveSuperarcs, -1, resultStream);
 
   // Arrays for transfer to hierarchical tree
   viskores::worklet::contourtree_augmented::PrintHeader(this->NewHypernodes.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "New Hypernodes", this->NewHypernodes, -1, resultStream);
 
   viskores::worklet::contourtree_augmented::PrintHeader(this->NewSupernodes.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "New Supernodes", this->NewSupernodes, -1, resultStream);
 
   viskores::worklet::contourtree_augmented::PrintHeader(this->NewNodes.GetNumberOfValues(),
-                                                    resultStream);
-  viskores::worklet::contourtree_augmented::PrintIndices("New Nodes", this->NewNodes, -1, resultStream);
+                                                        resultStream);
+  viskores::worklet::contourtree_augmented::PrintIndices(
+    "New Nodes", this->NewNodes, -1, resultStream);
 
   resultStream << "------------------------------------------------------" << std::endl;
   resultStream << std::endl;

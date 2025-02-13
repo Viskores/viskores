@@ -42,18 +42,19 @@ using AllVec = viskores::ListAppend<AllVecOfSize<2>, AllVecOfSize<3>, AllVecOfSi
 
 using AllTypes = viskores::ListAppend<AllScalars, AllVec>;
 
-using CartesianProductStorage = viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                                                       viskores::cont::StorageTagBasic,
-                                                                       viskores::cont::StorageTagBasic>;
+using CartesianProductStorage =
+  viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
+                                             viskores::cont::StorageTagBasic,
+                                             viskores::cont::StorageTagBasic>;
 
 using StorageTagsList = viskores::List<viskores::cont::StorageTagBasic,
-                                   viskores::cont::StorageTagSOA,
-                                   viskores::cont::StorageTagXGCCoordinates,
-                                   viskores::cont::StorageTagUniformPoints,
-                                   CartesianProductStorage,
-                                   viskores::cont::StorageTagConstant,
-                                   viskores::cont::StorageTagCounting,
-                                   viskores::cont::StorageTagIndex>;
+                                       viskores::cont::StorageTagSOA,
+                                       viskores::cont::StorageTagXGCCoordinates,
+                                       viskores::cont::StorageTagUniformPoints,
+                                       CartesianProductStorage,
+                                       viskores::cont::StorageTagConstant,
+                                       viskores::cont::StorageTagCounting,
+                                       viskores::cont::StorageTagIndex>;
 
 template <typename StorageTag>
 struct StorageTagToValueTypesMap;
@@ -68,7 +69,8 @@ struct StorageTagToValueTypesMap;
 MAP_STORAGE_TAG_VALUE_TYPES(viskores::cont::StorageTagBasic, AllTypes);
 MAP_STORAGE_TAG_VALUE_TYPES(viskores::cont::StorageTagSOA, AllVec);
 MAP_STORAGE_TAG_VALUE_TYPES(viskores::cont::StorageTagXGCCoordinates, viskores::TypeListFieldVec3);
-MAP_STORAGE_TAG_VALUE_TYPES(viskores::cont::StorageTagUniformPoints, viskores::List<viskores::Vec3f>);
+MAP_STORAGE_TAG_VALUE_TYPES(viskores::cont::StorageTagUniformPoints,
+                            viskores::List<viskores::Vec3f>);
 MAP_STORAGE_TAG_VALUE_TYPES(CartesianProductStorage, viskores::TypeListFieldVec3);
 MAP_STORAGE_TAG_VALUE_TYPES(viskores::cont::StorageTagConstant, AllTypes);
 MAP_STORAGE_TAG_VALUE_TYPES(viskores::cont::StorageTagCounting, AllTypes);
@@ -93,9 +95,10 @@ void ThrowArrayRangeComputeFailed()
 
 } // namespace internal
 
-viskores::cont::ArrayHandle<viskores::Range> ArrayRangeCompute(const viskores::cont::UnknownArrayHandle& array,
-                                                       bool computeFiniteRange,
-                                                       viskores::cont::DeviceAdapterId device)
+viskores::cont::ArrayHandle<viskores::Range> ArrayRangeCompute(
+  const viskores::cont::UnknownArrayHandle& array,
+  bool computeFiniteRange,
+  viskores::cont::DeviceAdapterId device)
 {
   return ArrayRangeCompute(
     array, viskores::cont::ArrayHandle<viskores::UInt8>{}, computeFiniteRange, device);
@@ -112,12 +115,15 @@ viskores::cont::ArrayHandle<viskores::Range> ArrayRangeCompute(
   {
     viskores::cont::ArrayHandle<viskores::Range> ranges;
 
-    auto computeForArrayHandle = [&](const auto& input) {
-      ranges = viskores::cont::ArrayRangeComputeTemplate(input, maskArray, computeFiniteRange, device);
+    auto computeForArrayHandle = [&](const auto& input)
+    {
+      ranges =
+        viskores::cont::ArrayRangeComputeTemplate(input, maskArray, computeFiniteRange, device);
     };
 
     bool success = false;
-    auto computeForStorage = [&](auto storageTag) {
+    auto computeForStorage = [&](auto storageTag)
+    {
       using STag = decltype(storageTag);
       using VTypes = typename StorageTagToValueTypesMap<STag>::TypeList;
       if (array.IsStorageType<STag>())
@@ -142,7 +148,8 @@ viskores::cont::ArrayHandle<viskores::Range> ArrayRangeCompute(
   // fallback
   bool success = false;
   viskores::cont::ArrayHandle<viskores::Range> ranges;
-  auto computeForExtractComponent = [&](auto valueTypeObj) {
+  auto computeForExtractComponent = [&](auto valueTypeObj)
+  {
     using VT = decltype(valueTypeObj);
     if (!success && array.IsBaseComponentType<VT>())
     {
@@ -170,30 +177,33 @@ viskores::cont::ArrayHandle<viskores::Range> ArrayRangeCompute(
 }
 
 viskores::Range ArrayRangeComputeMagnitude(const viskores::cont::UnknownArrayHandle& array,
-                                       bool computeFiniteRange,
-                                       viskores::cont::DeviceAdapterId device)
+                                           bool computeFiniteRange,
+                                           viskores::cont::DeviceAdapterId device)
 {
   return ArrayRangeComputeMagnitude(
     array, viskores::cont::ArrayHandle<viskores::UInt8>{}, computeFiniteRange, device);
 }
 
-viskores::Range ArrayRangeComputeMagnitude(const viskores::cont::UnknownArrayHandle& array,
-                                       const viskores::cont::ArrayHandle<viskores::UInt8>& maskArray,
-                                       bool computeFiniteRange,
-                                       viskores::cont::DeviceAdapterId device)
+viskores::Range ArrayRangeComputeMagnitude(
+  const viskores::cont::UnknownArrayHandle& array,
+  const viskores::cont::ArrayHandle<viskores::UInt8>& maskArray,
+  bool computeFiniteRange,
+  viskores::cont::DeviceAdapterId device)
 {
   // First, try (potentially fast-paths) for common(ish) array types.
   try
   {
     viskores::Range range;
 
-    auto computeForArrayHandle = [&](const auto& input) {
+    auto computeForArrayHandle = [&](const auto& input)
+    {
       range = viskores::cont::ArrayRangeComputeMagnitudeTemplate(
         input, maskArray, computeFiniteRange, device);
     };
 
     bool success = false;
-    auto computeForStorage = [&](auto storageTag) {
+    auto computeForStorage = [&](auto storageTag)
+    {
       using STag = decltype(storageTag);
       using VTypes = typename StorageTagToValueTypesMap<STag>::TypeList;
       if (array.IsStorageType<STag>())
@@ -218,7 +228,8 @@ viskores::Range ArrayRangeComputeMagnitude(const viskores::cont::UnknownArrayHan
   // fallback
   bool success = false;
   viskores::Range range;
-  auto computeForExtractArrayFromComponents = [&](auto valueTypeObj) {
+  auto computeForExtractArrayFromComponents = [&](auto valueTypeObj)
+  {
     using VT = decltype(valueTypeObj);
     if (!success && array.IsBaseComponentType<VT>())
     {

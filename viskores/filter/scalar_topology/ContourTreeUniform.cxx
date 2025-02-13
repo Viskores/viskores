@@ -89,14 +89,17 @@ viskores::cont::DataSet ContourTreeMesh2D::DoExecute(const viskores::cont::DataS
 
   viskores::cont::ArrayHandle<viskores::Pair<viskores::Id, viskores::Id>> saddlePeak;
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     viskores::worklet::ContourTreeMesh2D worklet;
     worklet.Run(concrete, nRows, nCols, saddlePeak);
   };
   this->CastAndCallScalarField(field, resolveType);
 
-  return this->CreateResultField(
-    input, this->GetOutputFieldName(), viskores::cont::Field::Association::WholeDataSet, saddlePeak);
+  return this->CreateResultField(input,
+                                 this->GetOutputFieldName(),
+                                 viskores::cont::Field::Association::WholeDataSet,
+                                 saddlePeak);
 }
 
 //-----------------------------------------------------------------------------
@@ -125,14 +128,17 @@ viskores::cont::DataSet ContourTreeMesh3D::DoExecute(const viskores::cont::DataS
 
   viskores::cont::ArrayHandle<viskores::Pair<viskores::Id, viskores::Id>> saddlePeak;
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     viskores::worklet::ContourTreeMesh3D worklet;
     worklet.Run(concrete, nRows, nCols, nSlices, saddlePeak);
   };
   this->CastAndCallScalarField(field, resolveType);
 
-  return this->CreateResultField(
-    input, this->GetOutputFieldName(), viskores::cont::Field::Association::WholeDataSet, saddlePeak);
+  return this->CreateResultField(input,
+                                 this->GetOutputFieldName(),
+                                 viskores::cont::Field::Association::WholeDataSet,
+                                 saddlePeak);
 }
 } // namespace scalar_topology
 } // namespace filter

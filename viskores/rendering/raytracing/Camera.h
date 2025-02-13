@@ -47,7 +47,9 @@ public:
   std::string ToString();
 
   VISKORES_CONT
-  void SetParameters(const viskores::rendering::Camera& camera, viskores::Int32 width, viskores::Int32 height);
+  void SetParameters(const viskores::rendering::Camera& camera,
+                     viskores::Int32 width,
+                     viskores::Int32 height);
 
   VISKORES_CONT
   void SetHeight(const viskores::Int32& height);
@@ -135,8 +137,8 @@ private:
 
   template <typename Precision>
   VISKORES_CONT void UpdateDimensions(Ray<Precision>& rays,
-                                  const viskores::Bounds& boundingBox,
-                                  bool ortho2D);
+                                      const viskores::Bounds& boundingBox,
+                                      bool ortho2D);
 
 }; // class camera
 }

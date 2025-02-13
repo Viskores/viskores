@@ -78,7 +78,7 @@ public:
   // That is why we use a ArrayHandleMultiplexer here.
   using SortIndexPortalType =
     viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandle<viskores::Id>,
-                                       viskores::cont::ArrayHandleIndex>::ReadPortalType;
+                                           viskores::cont::ArrayHandleIndex>::ReadPortalType;
 
   // constructor - takes vectors as parameters
   VISKORES_CONT
@@ -126,14 +126,14 @@ public:
   BoundaryTreeNodeComparator(
     const viskores::worklet::contourtree_augmented::IdArrayType& regularId,
     const viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandle<viskores::Id>,
-                                             viskores::cont::ArrayHandleIndex>& meshSortIndex)
+                                                 viskores::cont::ArrayHandleIndex>& meshSortIndex)
     : RegularId(regularId)
     , MeshSortIndex(meshSortIndex)
   { // constructor
   } // constructor
 
-  VISKORES_CONT BoundaryTreeNodeComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                               viskores::cont::Token& token) const
+  VISKORES_CONT BoundaryTreeNodeComparatorImpl
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     return BoundaryTreeNodeComparatorImpl(this->RegularId.PrepareForInput(device, token),
                                           this->MeshSortIndex.PrepareForInput(device, token));
@@ -143,7 +143,7 @@ private:
   viskores::worklet::contourtree_augmented::IdArrayType RegularId;
   /// The ContourTreeMesh uses a smart ArrayHandleIndex instead of a regular IdArrayType array that is why we use a ArrayHandleMultiplexer here
   viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandle<viskores::Id>,
-                                     viskores::cont::ArrayHandleIndex>
+                                         viskores::cont::ArrayHandleIndex>
     MeshSortIndex;
 }; // BoundaryTreeNodeComparator
 

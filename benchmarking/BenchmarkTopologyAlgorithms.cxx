@@ -31,7 +31,8 @@ namespace
 
 #define CUBE_SIZE 256
 
-using ValueTypes = viskores::List<viskores::UInt32, viskores::Int32, viskores::Int64, viskores::Float32, viskores::Float64>;
+using ValueTypes = viskores::
+  List<viskores::UInt32, viskores::Int32, viskores::Int64, viskores::Float32, viskores::Float64>;
 
 using ValueUncertainHandle =
   viskores::cont::UncertainArrayHandle<ValueTypes, viskores::cont::StorageListBasic>;
@@ -48,8 +49,8 @@ public:
 
   template <typename PointValueVecType, typename OutType>
   VISKORES_EXEC void operator()(const PointValueVecType& pointValues,
-                            const viskores::IdComponent& numPoints,
-                            OutType& average) const
+                                const viskores::IdComponent& numPoints,
+                                OutType& average) const
   {
     OutType sum = static_cast<OutType>(pointValues[0]);
     for (viskores::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
@@ -70,8 +71,8 @@ public:
 
   template <typename CellVecType, typename OutType>
   VISKORES_EXEC void operator()(const CellVecType& cellValues,
-                            OutType& avgVal,
-                            const viskores::IdComponent& numCellIDs) const
+                                OutType& avgVal,
+                                const viskores::IdComponent& numCellIDs) const
   {
     //simple functor that returns the average cell Value.
     avgVal = viskores::TypeTraits<OutType>::ZeroInitialization();
@@ -152,9 +153,9 @@ struct NumberGenerator<T, typename std::enable_if<!std::is_floating_point<T>::va
 // Not a random value that's somehow "extra random".
 template <typename ArrayT>
 VISKORES_CONT typename ArrayT::ValueType FillRandomValues(ArrayT& array,
-                                                      viskores::Id size,
-                                                      viskores::Float64 min,
-                                                      viskores::Float64 max)
+                                                          viskores::Id size,
+                                                          viskores::Float64 min,
+                                                          viskores::Float64 max)
 {
   using ValueType = typename ArrayT::ValueType;
 

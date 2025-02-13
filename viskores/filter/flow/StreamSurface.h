@@ -62,7 +62,7 @@ public:
   /// @copydoc SetSeeds
   template <typename ParticleType>
   VISKORES_CONT void SetSeeds(const std::vector<ParticleType>& seeds,
-                          viskores::CopyFlag copyFlag = viskores::CopyFlag::On)
+                              viskores::CopyFlag copyFlag = viskores::CopyFlag::On)
   {
     this->Seeds = viskores::cont::make_ArrayHandle(seeds, copyFlag);
   }

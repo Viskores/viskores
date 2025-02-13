@@ -54,7 +54,8 @@ VISKORES_CONT viskores::cont::DataSet DistributedBranchDecompositionFilter::DoEx
     "DistributedBranchDecompositionFilter expects PartitionedDataSet as input.");
 }
 
-VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionFilter::DoExecutePartitions(
+VISKORES_CONT viskores::cont::PartitionedDataSet
+DistributedBranchDecompositionFilter::DoExecutePartitions(
   const viskores::cont::PartitionedDataSet& input)
 {
   viskores::cont::Timer timer;
@@ -72,10 +73,10 @@ VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionF
   using BranchDecompositionBlock =
     viskores::filter::scalar_topology::internal::BranchDecompositionBlock;
   viskoresdiy::Master branch_decomposition_master(comm,
-                                              1,  // Use 1 thread, Viskores will do the treading
-                                              -1, // All blocks in memory
-                                              0,  // No create function
-                                              BranchDecompositionBlock::Destroy);
+                                                  1,  // Use 1 thread, Viskores will do the treading
+                                                  -1, // All blocks in memory
+                                                  0,  // No create function
+                                                  BranchDecompositionBlock::Destroy);
 
   timingsStream << "    " << std::setw(60) << std::left
                 << "Create DIY Master and Assigner (Branch Decomposition)"
@@ -93,10 +94,10 @@ VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionF
     firstGlobalPointIndexStart);
   int numDims = firstGlobalPointDimensions[2] > 1 ? 3 : 2;
   auto viskoresBlocksPerDimensionRP = input.GetPartition(0)
-                                    .GetField("viskoresBlocksPerDimension")
-                                    .GetData()
-                                    .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
-                                    .ReadPortal();
+                                        .GetField("viskoresBlocksPerDimension")
+                                        .GetData()
+                                        .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                                        .ReadPortal();
 
   // ... compute division vector for global domain
   using RegularDecomposer = viskoresdiy::RegularDecomposer<viskoresdiy::DiscreteBounds>;
@@ -127,9 +128,9 @@ VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionF
     const viskores::cont::DataSet& ds = input.GetPartition(localBlockIndex);
     int globalBlockId = static_cast<int>(
       viskores::cont::ArrayGetValue(0,
-                                ds.GetField("viskoresGlobalBlockId")
-                                  .GetData()
-                                  .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()));
+                                    ds.GetField("viskoresGlobalBlockId")
+                                      .GetData()
+                                      .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()));
 
     BranchDecompositionBlock* newBlock =
       new BranchDecompositionBlock(localBlockIndex, globalBlockId, ds);
@@ -192,13 +193,18 @@ VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionF
 
   // Compute the initial volumes
   branch_decomposition_master.foreach (
-    [&](BranchDecompositionBlock* b, const viskoresdiy::Master::ProxyWithLink&) {
+    [&](BranchDecompositionBlock* b, const viskoresdiy::Master::ProxyWithLink&)
+    {
       // Get intrinsic and dependent volume from data set
       const viskores::cont::DataSet& ds = input.GetPartition(b->LocalBlockNo);
       viskores::cont::ArrayHandle<viskores::Id> intrinsicVolume =
-        ds.GetField("IntrinsicVolume").GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>();
+        ds.GetField("IntrinsicVolume")
+          .GetData()
+          .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>();
       viskores::cont::ArrayHandle<viskores::Id> dependentVolume =
-        ds.GetField("DependentVolume").GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>();
+        ds.GetField("DependentVolume")
+          .GetData()
+          .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>();
 
       // Get global size and compute total volume from it
       const auto& globalSize = firstGlobalPointDimensions;
@@ -245,7 +251,8 @@ VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionF
   timer.Start();
 
   branch_decomposition_master.foreach (
-    [&](BranchDecompositionBlock* b, const viskoresdiy::Master::ProxyWithLink&) {
+    [&](BranchDecompositionBlock* b, const viskoresdiy::Master::ProxyWithLink&)
+    {
       const viskores::cont::DataSet& ds = input.GetPartition(b->LocalBlockNo);
       b->VolumetricBranchDecomposer.CollapseBranches(ds, b->BranchRoots);
     });
@@ -256,7 +263,8 @@ VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionF
 
   //// Branch decompisition stored in branch root array b->BranchRoots
   branch_decomposition_master.foreach (
-    [&](BranchDecompositionBlock* b, const viskoresdiy::Master::ProxyWithLink&) {
+    [&](BranchDecompositionBlock* b, const viskoresdiy::Master::ProxyWithLink&)
+    {
   //// STEP 1: Find ends of branches locally
   //// STEP 1A: Find upper end of branch locally
   //// Segmented sort by branch ID of value of upper node of superarc
@@ -308,7 +316,7 @@ VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionF
   //// Senior branch will have leaves on both ends.
 #ifdef DEBUG_PRINT
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 "CollectBranches for local block " << b->GlobalBlockId << std::endl);
+                     "CollectBranches for local block " << b->GlobalBlockId << std::endl);
 #endif
       const viskores::cont::DataSet& ds = input.GetPartition(b->LocalBlockNo);
       b->VolumetricBranchDecomposer.CollectBranches(ds, b->BranchRoots);
@@ -317,9 +325,9 @@ VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionF
   // Now we have collected the branches, we do a global reduction to exchance branch end information
   // across all compute ranks
   viskoresdiy::reduce(branch_decomposition_master,
-                  assigner,
-                  partners,
-                  viskores::filter::scalar_topology::internal::ExchangeBranchEndsFunctor{});
+                      assigner,
+                      partners,
+                      viskores::filter::scalar_topology::internal::ExchangeBranchEndsFunctor{});
 
   std::vector<viskores::cont::DataSet> outputDataSets(input.GetNumberOfPartitions());
   // Copy input data set to output
@@ -332,19 +340,20 @@ VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionF
   }
 
   branch_decomposition_master.foreach (
-    [&](BranchDecompositionBlock* b, const viskoresdiy::Master::ProxyWithLink&) {
+    [&](BranchDecompositionBlock* b, const viskoresdiy::Master::ProxyWithLink&)
+    {
       viskores::cont::Field branchRootField(
         "BranchRoots", viskores::cont::Field::Association::WholeDataSet, b->BranchRoots);
       outputDataSets[b->LocalBlockNo].AddField(branchRootField);
 
       // Store the upper end and lower end global regular IDs of branches in the output
       viskores::cont::Field UpperEndGRIdField("UpperEndGlobalRegularIds",
-                                          viskores::cont::Field::Association::WholeDataSet,
-                                          b->VolumetricBranchDecomposer.UpperEndGRId);
+                                              viskores::cont::Field::Association::WholeDataSet,
+                                              b->VolumetricBranchDecomposer.UpperEndGRId);
       outputDataSets[b->LocalBlockNo].AddField(UpperEndGRIdField);
       viskores::cont::Field LowerEndGRIdField("LowerEndGlobalRegularIds",
-                                          viskores::cont::Field::Association::WholeDataSet,
-                                          b->VolumetricBranchDecomposer.LowerEndGRId);
+                                              viskores::cont::Field::Association::WholeDataSet,
+                                              b->VolumetricBranchDecomposer.LowerEndGRId);
       outputDataSets[b->LocalBlockNo].AddField(LowerEndGRIdField);
 
       viskores::cont::Field UpperEndIntrinsicVolume(
@@ -368,28 +377,28 @@ VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionF
         b->VolumetricBranchDecomposer.LowerEndDependentVolume);
       outputDataSets[b->LocalBlockNo].AddField(LowerEndDependentVolume);
       viskores::cont::Field LowerEndSuperarcId("LowerEndSuperarcId",
-                                           viskores::cont::Field::Association::WholeDataSet,
-                                           b->VolumetricBranchDecomposer.LowerEndSuperarcId);
+                                               viskores::cont::Field::Association::WholeDataSet,
+                                               b->VolumetricBranchDecomposer.LowerEndSuperarcId);
       outputDataSets[b->LocalBlockNo].AddField(LowerEndSuperarcId);
       viskores::cont::Field UpperEndSuperarcId("UpperEndSuperarcId",
-                                           viskores::cont::Field::Association::WholeDataSet,
-                                           b->VolumetricBranchDecomposer.UpperEndSuperarcId);
+                                               viskores::cont::Field::Association::WholeDataSet,
+                                               b->VolumetricBranchDecomposer.UpperEndSuperarcId);
       outputDataSets[b->LocalBlockNo].AddField(UpperEndSuperarcId);
       viskores::cont::Field LowerEndValue("LowerEndValue",
-                                      viskores::cont::Field::Association::WholeDataSet,
-                                      b->VolumetricBranchDecomposer.LowerEndValue);
+                                          viskores::cont::Field::Association::WholeDataSet,
+                                          b->VolumetricBranchDecomposer.LowerEndValue);
       outputDataSets[b->LocalBlockNo].AddField(LowerEndValue);
       viskores::cont::Field UpperEndValue("UpperEndValue",
-                                      viskores::cont::Field::Association::WholeDataSet,
-                                      b->VolumetricBranchDecomposer.UpperEndValue);
+                                          viskores::cont::Field::Association::WholeDataSet,
+                                          b->VolumetricBranchDecomposer.UpperEndValue);
       outputDataSets[b->LocalBlockNo].AddField(UpperEndValue);
       viskores::cont::Field BranchRoot("BranchRoot",
-                                   viskores::cont::Field::Association::WholeDataSet,
-                                   b->VolumetricBranchDecomposer.BranchRoot);
+                                       viskores::cont::Field::Association::WholeDataSet,
+                                       b->VolumetricBranchDecomposer.BranchRoot);
       outputDataSets[b->LocalBlockNo].AddField(BranchRoot);
       viskores::cont::Field BranchRootGRId("BranchRootGRId",
-                                       viskores::cont::Field::Association::WholeDataSet,
-                                       b->VolumetricBranchDecomposer.BranchRootGRId);
+                                           viskores::cont::Field::Association::WholeDataSet,
+                                           b->VolumetricBranchDecomposer.BranchRootGRId);
       outputDataSets[b->LocalBlockNo].AddField(BranchRootGRId);
     });
 
@@ -398,9 +407,9 @@ VISKORES_CONT viskores::cont::PartitionedDataSet DistributedBranchDecompositionF
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
 
   VISKORES_LOG_S(viskores::cont::LogLevel::Perf,
-             std::endl
-               << "-----------  DoExecutePartitions Timings ------------" << std::endl
-               << timingsStream.str());
+                 std::endl
+                   << "-----------  DoExecutePartitions Timings ------------" << std::endl
+                   << timingsStream.str());
 
   return viskores::cont::PartitionedDataSet{ outputDataSets };
 }

@@ -19,12 +19,14 @@ namespace filter
 namespace zfp
 {
 //-----------------------------------------------------------------------------
-VISKORES_CONT viskores::cont::DataSet ZFPDecompressor2D::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet ZFPDecompressor2D::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   // FIXME: it looks like the compressor can compress Ints and Floats but only decompressed
   //  to Float64?
   viskores::cont::ArrayHandle<viskores::Int64> compressed;
-  viskores::cont::ArrayCopyShallowIfPossible(this->GetFieldFromDataSet(input).GetData(), compressed);
+  viskores::cont::ArrayCopyShallowIfPossible(this->GetFieldFromDataSet(input).GetData(),
+                                             compressed);
 
   viskores::cont::CellSetStructured<2> cellSet;
   input.GetCellSet().AsCellSet(cellSet);

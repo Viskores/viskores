@@ -34,9 +34,9 @@ namespace internal
 
 template <typename VtkcCellShapeTag, typename FieldVecType, typename ParametricCoordType>
 VISKORES_EXEC viskores::ErrorCode CellInterpolateImpl(VtkcCellShapeTag tag,
-                                              const FieldVecType& field,
-                                              const ParametricCoordType& pcoords,
-                                              typename FieldVecType::ComponentType& result)
+                                                      const FieldVecType& field,
+                                                      const ParametricCoordType& pcoords,
+                                                      typename FieldVecType::ComponentType& result)
 {
   if (tag.numberOfPoints() != field.GetNumberOfComponents())
   {
@@ -55,21 +55,23 @@ VISKORES_EXEC viskores::ErrorCode CellInterpolateImpl(VtkcCellShapeTag tag,
 
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType, typename CellShapeTag>
-VISKORES_EXEC viskores::ErrorCode CellInterpolate(const FieldVecType& pointFieldValues,
-                                          const viskores::Vec<ParametricCoordType, 3>& pcoords,
-                                          CellShapeTag tag,
-                                          typename FieldVecType::ComponentType& result)
+VISKORES_EXEC viskores::ErrorCode CellInterpolate(
+  const FieldVecType& pointFieldValues,
+  const viskores::Vec<ParametricCoordType, 3>& pcoords,
+  CellShapeTag tag,
+  typename FieldVecType::ComponentType& result)
 {
-  auto lclTag = viskores::internal::make_LclCellShapeTag(tag, pointFieldValues.GetNumberOfComponents());
+  auto lclTag =
+    viskores::internal::make_LclCellShapeTag(tag, pointFieldValues.GetNumberOfComponents());
   return internal::CellInterpolateImpl(lclTag, pointFieldValues, pcoords, result);
 }
 
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
 VISKORES_EXEC viskores::ErrorCode CellInterpolate(const FieldVecType&,
-                                          const viskores::Vec<ParametricCoordType, 3>&,
-                                          viskores::CellShapeTagEmpty,
-                                          typename FieldVecType::ComponentType& result)
+                                                  const viskores::Vec<ParametricCoordType, 3>&,
+                                                  viskores::CellShapeTagEmpty,
+                                                  typename FieldVecType::ComponentType& result)
 {
   result = { 0 };
   return viskores::ErrorCode::OperationOnEmptyCell;
@@ -77,10 +79,11 @@ VISKORES_EXEC viskores::ErrorCode CellInterpolate(const FieldVecType&,
 
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
-VISKORES_EXEC viskores::ErrorCode CellInterpolate(const FieldVecType& field,
-                                          const viskores::Vec<ParametricCoordType, 3>& pcoords,
-                                          viskores::CellShapeTagPolyLine,
-                                          typename FieldVecType::ComponentType& result)
+VISKORES_EXEC viskores::ErrorCode CellInterpolate(
+  const FieldVecType& field,
+  const viskores::Vec<ParametricCoordType, 3>& pcoords,
+  viskores::CellShapeTagPolyLine,
+  typename FieldVecType::ComponentType& result)
 {
   const viskores::IdComponent numPoints = field.GetNumberOfComponents();
   if (numPoints < 1)
@@ -111,10 +114,11 @@ VISKORES_EXEC viskores::ErrorCode CellInterpolate(const FieldVecType& field,
 
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
-VISKORES_EXEC viskores::ErrorCode CellInterpolate(const FieldVecType& field,
-                                          const viskores::Vec<ParametricCoordType, 3>& pcoords,
-                                          viskores::CellShapeTagPolygon,
-                                          typename FieldVecType::ComponentType& result)
+VISKORES_EXEC viskores::ErrorCode CellInterpolate(
+  const FieldVecType& field,
+  const viskores::Vec<ParametricCoordType, 3>& pcoords,
+  viskores::CellShapeTagPolygon,
+  typename FieldVecType::ComponentType& result)
 {
   const viskores::IdComponent numPoints = field.GetNumberOfComponents();
   if (numPoints < 1)
@@ -136,20 +140,22 @@ VISKORES_EXEC viskores::ErrorCode CellInterpolate(const FieldVecType& field,
 
 //-----------------------------------------------------------------------------
 template <typename ParametricCoordType>
-VISKORES_EXEC viskores::ErrorCode CellInterpolate(const viskores::VecAxisAlignedPointCoordinates<2>& field,
-                                          const viskores::Vec<ParametricCoordType, 3>& pcoords,
-                                          viskores::CellShapeTagQuad,
-                                          viskores::Vec3f& result)
+VISKORES_EXEC viskores::ErrorCode CellInterpolate(
+  const viskores::VecAxisAlignedPointCoordinates<2>& field,
+  const viskores::Vec<ParametricCoordType, 3>& pcoords,
+  viskores::CellShapeTagQuad,
+  viskores::Vec3f& result)
 {
   return internal::CellInterpolateImpl(lcl::Pixel{}, field, pcoords, result);
 }
 
 //-----------------------------------------------------------------------------
 template <typename ParametricCoordType>
-VISKORES_EXEC viskores::ErrorCode CellInterpolate(const viskores::VecAxisAlignedPointCoordinates<3>& field,
-                                          const viskores::Vec<ParametricCoordType, 3>& pcoords,
-                                          viskores::CellShapeTagHexahedron,
-                                          viskores::Vec3f& result)
+VISKORES_EXEC viskores::ErrorCode CellInterpolate(
+  const viskores::VecAxisAlignedPointCoordinates<3>& field,
+  const viskores::Vec<ParametricCoordType, 3>& pcoords,
+  viskores::CellShapeTagHexahedron,
+  viskores::Vec3f& result)
 {
   return internal::CellInterpolateImpl(lcl::Voxel{}, field, pcoords, result);
 }
@@ -169,10 +175,11 @@ VISKORES_EXEC viskores::ErrorCode CellInterpolate(const viskores::VecAxisAligned
 ///     This method is overloaded for different shape types.
 /// @param[out] result Value to store the interpolated field.
 template <typename FieldVecType, typename ParametricCoordType>
-VISKORES_EXEC viskores::ErrorCode CellInterpolate(const FieldVecType& pointFieldValues,
-                                          const viskores::Vec<ParametricCoordType, 3>& parametricCoords,
-                                          viskores::CellShapeTagGeneric shape,
-                                          typename FieldVecType::ComponentType& result)
+VISKORES_EXEC viskores::ErrorCode CellInterpolate(
+  const FieldVecType& pointFieldValues,
+  const viskores::Vec<ParametricCoordType, 3>& parametricCoords,
+  viskores::CellShapeTagGeneric shape,
+  typename FieldVecType::ComponentType& result)
 {
   viskores::ErrorCode status;
   switch (shape.Id)
@@ -206,11 +213,12 @@ template <typename IndicesVecType,
           typename FieldPortalType,
           typename ParametricCoordType,
           typename CellShapeTag>
-VISKORES_EXEC viskores::ErrorCode CellInterpolate(const IndicesVecType& pointIndices,
-                                          const FieldPortalType& pointFieldPortal,
-                                          const viskores::Vec<ParametricCoordType, 3>& parametricCoords,
-                                          CellShapeTag shape,
-                                          typename FieldPortalType::ValueType& result)
+VISKORES_EXEC viskores::ErrorCode CellInterpolate(
+  const IndicesVecType& pointIndices,
+  const FieldPortalType& pointFieldPortal,
+  const viskores::Vec<ParametricCoordType, 3>& parametricCoords,
+  CellShapeTag shape,
+  typename FieldPortalType::ValueType& result)
 {
   return CellInterpolate(viskores::make_VecFromPortalPermute(&pointIndices, pointFieldPortal),
                          parametricCoords,

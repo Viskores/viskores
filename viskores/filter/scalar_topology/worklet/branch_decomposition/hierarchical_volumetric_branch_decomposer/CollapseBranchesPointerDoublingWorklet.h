@@ -73,7 +73,7 @@ public:
   /// operator() of the workelt
   template <typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id superarc,
-                            const InOutFieldPortalType& branchRootPortal) const
+                                const InOutFieldPortalType& branchRootPortal) const
   {
     viskores::Id branchRootVal1 = branchRootPortal.Get(superarc);
     viskores::Id branchRootVal2 = branchRootPortal.Get(branchRootPortal.Get(superarc));

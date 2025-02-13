@@ -47,11 +47,12 @@ struct TestRecombineVecAsInput
     viskores::cont::ArrayHandleRecombineVec<typename VTraits::ComponentType> recombinedArray;
     for (viskores::IdComponent cIndex = 0; cIndex < VTraits::NUM_COMPONENTS; ++cIndex)
     {
-      recombinedArray.AppendComponentArray(viskores::cont::ArrayExtractComponent(baseArray, cIndex));
+      recombinedArray.AppendComponentArray(
+        viskores::cont::ArrayExtractComponent(baseArray, cIndex));
     }
     VISKORES_TEST_ASSERT(recombinedArray.GetNumberOfComponents() == VTraits::NUM_COMPONENTS);
     VISKORES_TEST_ASSERT(recombinedArray.GetNumberOfComponentsFlat() ==
-                     viskores::VecFlat<T>::NUM_COMPONENTS);
+                         viskores::VecFlat<T>::NUM_COMPONENTS);
     VISKORES_TEST_ASSERT(recombinedArray.GetNumberOfValues() == ARRAY_SIZE);
 
     viskores::cont::ArrayHandle<T> outputArray;
@@ -77,7 +78,8 @@ struct TestRecombineVecAsOutput
     viskores::cont::ArrayHandleRecombineVec<typename VTraits::ComponentType> recombinedArray;
     for (viskores::IdComponent cIndex = 0; cIndex < VTraits::NUM_COMPONENTS; ++cIndex)
     {
-      recombinedArray.AppendComponentArray(viskores::cont::ArrayExtractComponent(outputArray, cIndex));
+      recombinedArray.AppendComponentArray(
+        viskores::cont::ArrayExtractComponent(outputArray, cIndex));
     }
     VISKORES_TEST_ASSERT(recombinedArray.GetNumberOfComponents() == VTraits::NUM_COMPONENTS);
 

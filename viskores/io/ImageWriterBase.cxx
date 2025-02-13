@@ -50,7 +50,8 @@ void ImageWriterBase::WriteDataSet(const viskores::cont::DataSet& dataSet,
   {
     if (!dataSet.HasPointField(colorFieldName))
     {
-      throw viskores::cont::ErrorBadValue("Data set does not have requested field " + colorFieldName);
+      throw viskores::cont::ErrorBadValue("Data set does not have requested field " +
+                                          colorFieldName);
     }
     colorField = dataSet.GetPointField(colorFieldName);
   }
@@ -79,7 +80,7 @@ void ImageWriterBase::WriteDataSet(const viskores::cont::DataSet& dataSet,
   if (CreateDirectoriesFromFilePath(this->FileName))
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "Created output directory: " << ParentPath(this->FileName));
+                   "Created output directory: " << ParentPath(this->FileName));
   }
   this->Write(width, height, colorField.GetData().AsArrayHandle<ColorArrayType>());
 }

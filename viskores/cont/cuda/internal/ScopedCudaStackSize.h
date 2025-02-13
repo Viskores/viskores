@@ -26,19 +26,20 @@ struct ScopedCudaStackSize
   ScopedCudaStackSize(std::size_t newStackSize)
   {
     cudaDeviceGetLimit(&this->OldStackSize, cudaLimitStackSize);
-    VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "Temporarily changing Cuda stack size from "
-                 << viskores::cont::GetHumanReadableSize(static_cast<viskores::UInt64>(this->OldStackSize))
-                 << " to "
-                 << viskores::cont::GetHumanReadableSize(static_cast<viskores::UInt64>(newStackSize)));
+    VISKORES_LOG_S(
+      viskores::cont::LogLevel::Info,
+      "Temporarily changing Cuda stack size from "
+        << viskores::cont::GetHumanReadableSize(static_cast<viskores::UInt64>(this->OldStackSize))
+        << " to "
+        << viskores::cont::GetHumanReadableSize(static_cast<viskores::UInt64>(newStackSize)));
     cudaDeviceSetLimit(cudaLimitStackSize, newStackSize);
   }
 
   ~ScopedCudaStackSize()
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "Restoring Cuda stack size to " << viskores::cont::GetHumanReadableSize(
-                 static_cast<viskores::UInt64>(this->OldStackSize)));
+                   "Restoring Cuda stack size to " << viskores::cont::GetHumanReadableSize(
+                     static_cast<viskores::UInt64>(this->OldStackSize)));
     cudaDeviceSetLimit(cudaLimitStackSize, this->OldStackSize);
   }
 

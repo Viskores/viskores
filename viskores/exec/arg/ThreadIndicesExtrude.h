@@ -35,10 +35,10 @@ public:
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   VISKORES_EXEC ThreadIndicesTopologyMap(viskores::Id threadIndex,
-                                     viskores::Id inputIndex,
-                                     viskores::IdComponent visitIndex,
-                                     viskores::Id outputIndex,
-                                     const ConnectivityType& connectivity)
+                                         viskores::Id inputIndex,
+                                         viskores::IdComponent visitIndex,
+                                         viskores::Id outputIndex,
+                                         const ConnectivityType& connectivity)
   {
     const LogicalIndexType logicalIndex = connectivity.FlatToLogicalToIndex(inputIndex);
 

@@ -108,7 +108,8 @@ struct DeviceAdapterAlgorithmGeneral
   // dependency.
 private:
   template <typename T, class CIn>
-  VISKORES_CONT static T GetExecutionValue(const viskores::cont::ArrayHandle<T, CIn>& input, viskores::Id index)
+  VISKORES_CONT static T GetExecutionValue(const viskores::cont::ArrayHandle<T, CIn>& input,
+                                           viskores::Id index)
   {
     viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic> output;
 
@@ -165,7 +166,7 @@ public:
   // Copy
   template <typename T, typename U, class CIn, class COut>
   VISKORES_CONT static void Copy(const viskores::cont::ArrayHandle<T, CIn>& input,
-                             viskores::cont::ArrayHandle<U, COut>& output)
+                                 viskores::cont::ArrayHandle<U, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -183,16 +184,17 @@ public:
   // CopyIf
   template <typename T, typename U, class CIn, class CStencil, class COut, class UnaryPredicate>
   VISKORES_CONT static void CopyIf(const viskores::cont::ArrayHandle<T, CIn>& input,
-                               const viskores::cont::ArrayHandle<U, CStencil>& stencil,
-                               viskores::cont::ArrayHandle<T, COut>& output,
-                               UnaryPredicate unary_predicate)
+                                   const viskores::cont::ArrayHandle<U, CStencil>& stencil,
+                                   viskores::cont::ArrayHandle<T, COut>& output,
+                                   UnaryPredicate unary_predicate)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
     VISKORES_ASSERT(input.GetNumberOfValues() == stencil.GetNumberOfValues());
     viskores::Id arrayLength = stencil.GetNumberOfValues();
 
-    using IndexArrayType = viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>;
+    using IndexArrayType =
+      viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>;
     IndexArrayType indices;
 
     {
@@ -229,8 +231,8 @@ public:
 
   template <typename T, typename U, class CIn, class CStencil, class COut>
   VISKORES_CONT static void CopyIf(const viskores::cont::ArrayHandle<T, CIn>& input,
-                               const viskores::cont::ArrayHandle<U, CStencil>& stencil,
-                               viskores::cont::ArrayHandle<T, COut>& output)
+                                   const viskores::cont::ArrayHandle<U, CStencil>& stencil,
+                                   viskores::cont::ArrayHandle<T, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -242,10 +244,10 @@ public:
   // CopySubRange
   template <typename T, typename U, class CIn, class COut>
   VISKORES_CONT static bool CopySubRange(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                     viskores::Id inputStartIndex,
-                                     viskores::Id numberOfElementsToCopy,
-                                     viskores::cont::ArrayHandle<U, COut>& output,
-                                     viskores::Id outputIndex = 0)
+                                         viskores::Id inputStartIndex,
+                                         viskores::Id numberOfElementsToCopy,
+                                         viskores::cont::ArrayHandle<U, COut>& output,
+                                         viskores::Id outputIndex = 0)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -340,8 +342,8 @@ public:
 
     auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{}, token);
 
-    using WordType =
-      typename viskores::cont::BitField::template ExecutionTypes<DeviceAdapterTag>::WordTypePreferred;
+    using WordType = typename viskores::cont::BitField::template ExecutionTypes<
+      DeviceAdapterTag>::WordTypePreferred;
 
     using Functor = FillBitFieldFunctor<decltype(portal), WordType>;
     Functor functor{ portal, value ? ~WordType{ 0 } : WordType{ 0 } };
@@ -366,8 +368,8 @@ public:
 
     auto portal = bits.PrepareForOutput(numBits, DeviceAdapterTag{}, token);
 
-    using WordType =
-      typename viskores::cont::BitField::template ExecutionTypes<DeviceAdapterTag>::WordTypePreferred;
+    using WordType = typename viskores::cont::BitField::template ExecutionTypes<
+      DeviceAdapterTag>::WordTypePreferred;
 
     using Functor = FillBitFieldFunctor<decltype(portal), WordType>;
     Functor functor{ portal, value ? ~WordType{ 0 } : WordType{ 0 } };
@@ -379,9 +381,12 @@ public:
   //--------------------------------------------------------------------------
   // Fill Bit Field (mask, resize)
   template <typename WordType>
-  VISKORES_CONT static void Fill(viskores::cont::BitField& bits, WordType word, viskores::Id numBits)
+  VISKORES_CONT static void Fill(viskores::cont::BitField& bits,
+                                 WordType word,
+                                 viskores::Id numBits)
   {
-    VISKORES_STATIC_ASSERT_MSG(viskores::cont::BitField::IsValidWordType<WordType>{}, "Invalid word type.");
+    VISKORES_STATIC_ASSERT_MSG(viskores::cont::BitField::IsValidWordType<WordType>{},
+                               "Invalid word type.");
 
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -413,7 +418,8 @@ public:
   template <typename WordType>
   VISKORES_CONT static void Fill(viskores::cont::BitField& bits, WordType word)
   {
-    VISKORES_STATIC_ASSERT_MSG(viskores::cont::BitField::IsValidWordType<WordType>{}, "Invalid word type.");
+    VISKORES_STATIC_ASSERT_MSG(viskores::cont::BitField::IsValidWordType<WordType>{},
+                               "Invalid word type.");
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
     const viskores::Id numBits = bits.GetNumberOfBits();
@@ -463,8 +469,8 @@ public:
   // Fill ArrayHandle (resize)
   template <typename T, typename S>
   VISKORES_CONT static void Fill(viskores::cont::ArrayHandle<T, S>& handle,
-                             const T& value,
-                             const viskores::Id numValues)
+                                 const T& value,
+                                 const viskores::Id numValues)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
     if (numValues == 0)
@@ -484,8 +490,8 @@ public:
   // Lower Bounds
   template <typename T, class CIn, class CVal, class COut>
   VISKORES_CONT static void LowerBounds(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                    const viskores::cont::ArrayHandle<T, CVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& output)
+                                        const viskores::cont::ArrayHandle<T, CVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -505,9 +511,9 @@ public:
 
   template <typename T, class CIn, class CVal, class COut, class BinaryCompare>
   VISKORES_CONT static void LowerBounds(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                    const viskores::cont::ArrayHandle<T, CVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& output,
-                                    BinaryCompare binary_compare)
+                                        const viskores::cont::ArrayHandle<T, CVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, COut>& output,
+                                        BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -529,8 +535,9 @@ public:
   }
 
   template <class CIn, class COut>
-  VISKORES_CONT static void LowerBounds(const viskores::cont::ArrayHandle<viskores::Id, CIn>& input,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& values_output)
+  VISKORES_CONT static void LowerBounds(
+    const viskores::cont::ArrayHandle<viskores::Id, CIn>& input,
+    viskores::cont::ArrayHandle<viskores::Id, COut>& values_output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -580,8 +587,8 @@ public:
 
   template <typename T, typename U, class CIn, class BinaryFunctor>
   VISKORES_CONT static U Reduce(const viskores::cont::ArrayHandle<T, CIn>& input,
-                            U initialValue,
-                            BinaryFunctor binary_functor)
+                                U initialValue,
+                                BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -612,10 +619,10 @@ public:
             class VOut,
             class BinaryFunctor>
   VISKORES_CONT static void ReduceByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                    const viskores::cont::ArrayHandle<U, VIn>& values,
-                                    viskores::cont::ArrayHandle<T, KOut>& keys_output,
-                                    viskores::cont::ArrayHandle<U, VOut>& values_output,
-                                    BinaryFunctor binary_functor)
+                                        const viskores::cont::ArrayHandle<U, VIn>& values,
+                                        viskores::cont::ArrayHandle<T, KOut>& keys_output,
+                                        viskores::cont::ArrayHandle<U, VOut>& values_output,
+                                        BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -685,9 +692,9 @@ public:
   // Scan Exclusive
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VISKORES_CONT static T ScanExclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output,
-                                   BinaryFunctor binaryFunctor,
-                                   const T& initialValue)
+                                       viskores::cont::ArrayHandle<T, COut>& output,
+                                       BinaryFunctor binaryFunctor,
+                                       const T& initialValue)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -716,7 +723,7 @@ public:
 
   template <typename T, class CIn, class COut>
   VISKORES_CONT static T ScanExclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output)
+                                       viskores::cont::ArrayHandle<T, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -728,9 +735,9 @@ public:
   // Scan Exclusive Extend
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VISKORES_CONT static void ScanExtended(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                     viskores::cont::ArrayHandle<T, COut>& output,
-                                     BinaryFunctor binaryFunctor,
-                                     const T& initialValue)
+                                         viskores::cont::ArrayHandle<T, COut>& output,
+                                         BinaryFunctor binaryFunctor,
+                                         const T& initialValue)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -762,7 +769,7 @@ public:
 
   template <typename T, class CIn, class COut>
   VISKORES_CONT static void ScanExtended(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                     viskores::cont::ArrayHandle<T, COut>& output)
+                                         viskores::cont::ArrayHandle<T, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -778,11 +785,12 @@ public:
             typename VIn,
             typename VOut,
             class BinaryFunctor>
-  VISKORES_CONT static void ScanExclusiveByKey(const viskores::cont::ArrayHandle<KeyT, KIn>& keys,
-                                           const viskores::cont::ArrayHandle<ValueT, VIn>& values,
-                                           viskores::cont::ArrayHandle<ValueT, VOut>& output,
-                                           const ValueT& initialValue,
-                                           BinaryFunctor binaryFunctor)
+  VISKORES_CONT static void ScanExclusiveByKey(
+    const viskores::cont::ArrayHandle<KeyT, KIn>& keys,
+    const viskores::cont::ArrayHandle<ValueT, VIn>& values,
+    viskores::cont::ArrayHandle<ValueT, VOut>& output,
+    const ValueT& initialValue,
+    BinaryFunctor binaryFunctor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -837,9 +845,10 @@ public:
   }
 
   template <typename KeyT, typename ValueT, class KIn, typename VIn, typename VOut>
-  VISKORES_CONT static void ScanExclusiveByKey(const viskores::cont::ArrayHandle<KeyT, KIn>& keys,
-                                           const viskores::cont::ArrayHandle<ValueT, VIn>& values,
-                                           viskores::cont::ArrayHandle<ValueT, VOut>& output)
+  VISKORES_CONT static void ScanExclusiveByKey(
+    const viskores::cont::ArrayHandle<KeyT, KIn>& keys,
+    const viskores::cont::ArrayHandle<ValueT, VIn>& values,
+    viskores::cont::ArrayHandle<ValueT, VOut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -851,7 +860,7 @@ public:
   // Scan Inclusive
   template <typename T, class CIn, class COut>
   VISKORES_CONT static T ScanInclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output)
+                                       viskores::cont::ArrayHandle<T, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -861,14 +870,14 @@ public:
 private:
   template <typename T1, typename S1, typename T2, typename S2>
   VISKORES_CONT static bool ArrayHandlesAreSame(const viskores::cont::ArrayHandle<T1, S1>&,
-                                            const viskores::cont::ArrayHandle<T2, S2>&)
+                                                const viskores::cont::ArrayHandle<T2, S2>&)
   {
     return false;
   }
 
   template <typename T, typename S>
   VISKORES_CONT static bool ArrayHandlesAreSame(const viskores::cont::ArrayHandle<T, S>& a1,
-                                            const viskores::cont::ArrayHandle<T, S>& a2)
+                                                const viskores::cont::ArrayHandle<T, S>& a2)
   {
     return a1 == a2;
   }
@@ -876,8 +885,8 @@ private:
 public:
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VISKORES_CONT static T ScanInclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output,
-                                   BinaryFunctor binary_functor)
+                                       viskores::cont::ArrayHandle<T, COut>& output,
+                                       BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -918,9 +927,10 @@ public:
   }
 
   template <typename KeyT, typename ValueT, class KIn, class VIn, class VOut>
-  VISKORES_CONT static void ScanInclusiveByKey(const viskores::cont::ArrayHandle<KeyT, KIn>& keys,
-                                           const viskores::cont::ArrayHandle<ValueT, VIn>& values,
-                                           viskores::cont::ArrayHandle<ValueT, VOut>& values_output)
+  VISKORES_CONT static void ScanInclusiveByKey(
+    const viskores::cont::ArrayHandle<KeyT, KIn>& keys,
+    const viskores::cont::ArrayHandle<ValueT, VIn>& values,
+    viskores::cont::ArrayHandle<ValueT, VOut>& values_output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -928,10 +938,11 @@ public:
   }
 
   template <typename KeyT, typename ValueT, class KIn, class VIn, class VOut, class BinaryFunctor>
-  VISKORES_CONT static void ScanInclusiveByKey(const viskores::cont::ArrayHandle<KeyT, KIn>& keys,
-                                           const viskores::cont::ArrayHandle<ValueT, VIn>& values,
-                                           viskores::cont::ArrayHandle<ValueT, VOut>& values_output,
-                                           BinaryFunctor binary_functor)
+  VISKORES_CONT static void ScanInclusiveByKey(
+    const viskores::cont::ArrayHandle<KeyT, KIn>& keys,
+    const viskores::cont::ArrayHandle<ValueT, VIn>& values,
+    viskores::cont::ArrayHandle<ValueT, VOut>& values_output,
+    BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -982,7 +993,7 @@ public:
   // Sort
   template <typename T, class Storage, class BinaryCompare>
   VISKORES_CONT static void Sort(viskores::cont::ArrayHandle<T, Storage>& values,
-                             BinaryCompare binary_compare)
+                                 BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1027,7 +1038,7 @@ public:
   // Sort by Key
   template <typename T, typename U, class StorageT, class StorageU>
   VISKORES_CONT static void SortByKey(viskores::cont::ArrayHandle<T, StorageT>& keys,
-                                  viskores::cont::ArrayHandle<U, StorageU>& values)
+                                      viskores::cont::ArrayHandle<U, StorageU>& values)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1040,8 +1051,8 @@ public:
 
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
   VISKORES_CONT static void SortByKey(viskores::cont::ArrayHandle<T, StorageT>& keys,
-                                  viskores::cont::ArrayHandle<U, StorageU>& values,
-                                  BinaryCompare binary_compare)
+                                      viskores::cont::ArrayHandle<U, StorageU>& values,
+                                      BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1061,9 +1072,9 @@ public:
             typename StorageV,
             typename BinaryFunctor>
   VISKORES_CONT static void Transform(const viskores::cont::ArrayHandle<T, StorageT>& input1,
-                                  const viskores::cont::ArrayHandle<U, StorageU>& input2,
-                                  viskores::cont::ArrayHandle<V, StorageV>& output,
-                                  BinaryFunctor binaryFunctor)
+                                      const viskores::cont::ArrayHandle<U, StorageU>& input2,
+                                      viskores::cont::ArrayHandle<V, StorageV>& output,
+                                      BinaryFunctor binaryFunctor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1100,7 +1111,7 @@ public:
 
   template <typename T, class Storage, class BinaryCompare>
   VISKORES_CONT static void Unique(viskores::cont::ArrayHandle<T, Storage>& values,
-                               BinaryCompare binary_compare)
+                                   BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1134,8 +1145,8 @@ public:
   // Upper bounds
   template <typename T, class CIn, class CVal, class COut>
   VISKORES_CONT static void UpperBounds(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                    const viskores::cont::ArrayHandle<T, CVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& output)
+                                        const viskores::cont::ArrayHandle<T, CVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1154,9 +1165,9 @@ public:
 
   template <typename T, class CIn, class CVal, class COut, class BinaryCompare>
   VISKORES_CONT static void UpperBounds(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                    const viskores::cont::ArrayHandle<T, CVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& output,
-                                    BinaryCompare binary_compare)
+                                        const viskores::cont::ArrayHandle<T, CVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, COut>& output,
+                                        BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1178,8 +1189,9 @@ public:
   }
 
   template <class CIn, class COut>
-  VISKORES_CONT static void UpperBounds(const viskores::cont::ArrayHandle<viskores::Id, CIn>& input,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& values_output)
+  VISKORES_CONT static void UpperBounds(
+    const viskores::cont::ArrayHandle<viskores::Id, CIn>& input,
+    viskores::cont::ArrayHandle<viskores::Id, COut>& values_output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 

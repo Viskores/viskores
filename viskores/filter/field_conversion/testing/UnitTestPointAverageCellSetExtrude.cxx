@@ -28,7 +28,7 @@ int TestCellSetExtrude()
   auto coords = viskores::cont::make_ArrayHandleXGCCoordinates(points_rz, numPlanes, false);
   auto cells = viskores::cont::make_CellSetExtrude(topology, coords, nextNode);
   VISKORES_TEST_ASSERT(cells.GetNumberOfPoints() == coords.GetNumberOfValues(),
-                   "number of points don't match between cells and coordinates");
+                       "number of points don't match between cells and coordinates");
 
   //test a filter
   viskores::cont::DataSet dataset;
@@ -53,7 +53,8 @@ int TestCellSetExtrude()
   {
     avg.SetActiveField("cfield");
     auto result = avg.Execute(dataset);
-    VISKORES_TEST_ASSERT(result.HasPointField("cfield"), "filter resulting dataset should be valid");
+    VISKORES_TEST_ASSERT(result.HasPointField("cfield"),
+                         "filter resulting dataset should be valid");
   }
   catch (const viskores::cont::Error& err)
   {

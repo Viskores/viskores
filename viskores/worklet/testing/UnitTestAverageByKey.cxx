@@ -41,7 +41,7 @@ void CheckAverageByKey(const KeyArray& uniqueKeys, const ValueArray& averagedVal
   for (viskores::Id index = 0; index < NUM_UNIQUE; ++index)
   {
     VISKORES_TEST_ASSERT(keyPortal.Get(index) == TestValue(index % NUM_UNIQUE, KeyType()),
-                     "Unexpected key.");
+                         "Unexpected key.");
 
     viskores::FloatDefault expectedAverage = static_cast<viskores::FloatDefault>(
       NUM_PER_GROUP * ((NUM_PER_GROUP - 1) * NUM_PER_GROUP) / 2 + index);
@@ -52,7 +52,8 @@ void CheckAverageByKey(const KeyArray& uniqueKeys, const ValueArray& averagedVal
 template <typename KeyType>
 void TryKeyType(KeyType)
 {
-  std::cout << "Testing with " << viskores::testing::TypeName<KeyType>::Name() << " keys." << std::endl;
+  std::cout << "Testing with " << viskores::testing::TypeName<KeyType>::Name() << " keys."
+            << std::endl;
 
   // Create key array
   KeyType keyBuffer[ARRAY_SIZE];

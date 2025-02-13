@@ -158,7 +158,8 @@ namespace testing
 using TestControlSignature = void(TestControlSignatureTagInput, TestControlSignatureTagOutput);
 using TestControlInterface = viskores::internal::FunctionInterface<TestControlSignature>;
 
-using TestExecutionSignature1 = void(viskores::exec::arg::BasicArg<1>, viskores::exec::arg::BasicArg<2>);
+using TestExecutionSignature1 = void(viskores::exec::arg::BasicArg<1>,
+                                     viskores::exec::arg::BasicArg<2>);
 using TestExecutionInterface1 = viskores::internal::FunctionInterface<TestExecutionSignature1>;
 
 using TestExecutionSignature2 = viskores::exec::arg::BasicArg<2>(viskores::exec::arg::BasicArg<1>);
@@ -168,20 +169,20 @@ using ExecutionParameterInterface =
   viskores::internal::FunctionInterface<void(TestExecObject, TestExecObject)>;
 
 using InvocationType1 = viskores::internal::Invocation<ExecutionParameterInterface,
-                                                   TestControlInterface,
-                                                   TestExecutionInterface1,
-                                                   1,
-                                                   MyOutputToInputMapPortal,
-                                                   MyVisitArrayPortal,
-                                                   MyThreadToOutputMapPortal>;
+                                                       TestControlInterface,
+                                                       TestExecutionInterface1,
+                                                       1,
+                                                       MyOutputToInputMapPortal,
+                                                       MyVisitArrayPortal,
+                                                       MyThreadToOutputMapPortal>;
 
 using InvocationType2 = viskores::internal::Invocation<ExecutionParameterInterface,
-                                                   TestControlInterface,
-                                                   TestExecutionInterface2,
-                                                   1,
-                                                   MyOutputToInputMapPortal,
-                                                   MyVisitArrayPortal,
-                                                   MyThreadToOutputMapPortal>;
+                                                       TestControlInterface,
+                                                       TestExecutionInterface2,
+                                                       1,
+                                                       MyOutputToInputMapPortal,
+                                                       MyVisitArrayPortal,
+                                                       MyThreadToOutputMapPortal>;
 
 // Not a full worklet, but provides operators that we expect in a worklet.
 struct TestWorkletProxy : viskores::exec::FunctorBase
@@ -280,7 +281,7 @@ void Test1DNormalTaskTilingInvoke()
   std::vector<viskores::Id> outputTestValues(100, static_cast<viskores::Id>(0xDEADDEAD));
   viskores::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
     viskores::internal::make_FunctionInterface<void>(TestExecObject(inputTestValues),
-                                                 TestExecObject(outputTestValues));
+                                                     TestExecObject(outputTestValues));
 
   std::cout << "  Try void return." << std::endl;
   TestWorkletProxy worklet;
@@ -300,13 +301,14 @@ void Test1DNormalTaskTilingInvoke()
   {
     VISKORES_TEST_ASSERT(inputTestValues[i] == 5, "Input value changed.");
     VISKORES_TEST_ASSERT(outputTestValues[i] ==
-                       inputTestValues[i] + 100 + (30 * static_cast<viskores::Id>(i)),
-                     "Output value not set right.");
+                           inputTestValues[i] + 100 + (30 * static_cast<viskores::Id>(i)),
+                         "Output value not set right.");
   }
 
   std::cout << "  Try return value." << std::endl;
   std::fill(inputTestValues.begin(), inputTestValues.end(), 6);
-  std::fill(outputTestValues.begin(), outputTestValues.end(), static_cast<viskores::Id>(0xDEADDEAD));
+  std::fill(
+    outputTestValues.begin(), outputTestValues.end(), static_cast<viskores::Id>(0xDEADDEAD));
 
   InvocationType2 invocation2(execObjects);
 
@@ -325,8 +327,8 @@ void Test1DNormalTaskTilingInvoke()
   {
     VISKORES_TEST_ASSERT(inputTestValues[i] == 6, "Input value changed.");
     VISKORES_TEST_ASSERT(outputTestValues[i] ==
-                       inputTestValues[i] + 200 + (30 * static_cast<viskores::Id>(i)),
-                     "Output value not set right.");
+                           inputTestValues[i] + 200 + (30 * static_cast<viskores::Id>(i)),
+                         "Output value not set right.");
   }
 }
 
@@ -371,7 +373,7 @@ void Test3DNormalTaskTilingInvoke()
   std::vector<viskores::Id> outputTestValues((8 * 8 * 8), static_cast<viskores::Id>(0xDEADDEAD));
   viskores::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
     viskores::internal::make_FunctionInterface<void>(TestExecObject(inputTestValues),
-                                                 TestExecObject(outputTestValues));
+                                                     TestExecObject(outputTestValues));
 
   std::cout << "  Try void return." << std::endl;
 
@@ -394,13 +396,14 @@ void Test3DNormalTaskTilingInvoke()
   {
     VISKORES_TEST_ASSERT(inputTestValues[i] == 5, "Input value changed.");
     VISKORES_TEST_ASSERT(outputTestValues[i] ==
-                       inputTestValues[i] + 100 + (30 * static_cast<viskores::Id>(i)),
-                     "Output value not set right.");
+                           inputTestValues[i] + 100 + (30 * static_cast<viskores::Id>(i)),
+                         "Output value not set right.");
   }
 
   std::cout << "  Try return value." << std::endl;
   std::fill(inputTestValues.begin(), inputTestValues.end(), 6);
-  std::fill(outputTestValues.begin(), outputTestValues.end(), static_cast<viskores::Id>(0xDEADDEAD));
+  std::fill(
+    outputTestValues.begin(), outputTestValues.end(), static_cast<viskores::Id>(0xDEADDEAD));
 
   InvocationType2 invocation2(execObjects);
   using TaskTypes = typename viskores::cont::DeviceTaskTypes<DeviceAdapter>;
@@ -422,8 +425,8 @@ void Test3DNormalTaskTilingInvoke()
   {
     VISKORES_TEST_ASSERT(inputTestValues[i] == 6, "Input value changed.");
     VISKORES_TEST_ASSERT(outputTestValues[i] ==
-                       inputTestValues[i] + 200 + (30 * static_cast<viskores::Id>(i)),
-                     "Output value not set right.");
+                           inputTestValues[i] + 200 + (30 * static_cast<viskores::Id>(i)),
+                         "Output value not set right.");
   }
 }
 
@@ -436,7 +439,7 @@ void Test3DErrorTaskTilingInvoke()
   std::vector<viskores::Id> outputTestValues((8 * 8 * 8), static_cast<viskores::Id>(0xDEADDEAD));
   viskores::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
     viskores::internal::make_FunctionInterface<void>(TestExecObject(inputTestValues),
-                                                 TestExecObject(outputTestValues));
+                                                     TestExecObject(outputTestValues));
 
   TestWorkletErrorProxy worklet;
   InvocationType1 invocation(execObjects);

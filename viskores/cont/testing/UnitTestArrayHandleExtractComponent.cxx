@@ -31,9 +31,9 @@ struct ExtractComponentTests
   using ReferenceComponentArray = viskores::cont::ArrayHandleCounting<ValueType>;
   using ReferenceCompositeArray =
     typename viskores::cont::ArrayHandleCompositeVector<ReferenceComponentArray,
-                                                    ReferenceComponentArray,
-                                                    ReferenceComponentArray,
-                                                    ReferenceComponentArray>;
+                                                        ReferenceComponentArray,
+                                                        ReferenceComponentArray,
+                                                        ReferenceComponentArray>;
 
   // This is used to build a ArrayHandleExtractComponent's internal array.
   ReferenceCompositeArray RefComposite;
@@ -42,10 +42,14 @@ struct ExtractComponentTests
   {
     // Build the Ref array
     const viskores::Id numValues = 32;
-    ReferenceComponentArray c1 = viskores::cont::make_ArrayHandleCounting<ValueType>(3, 2, numValues);
-    ReferenceComponentArray c2 = viskores::cont::make_ArrayHandleCounting<ValueType>(2, 3, numValues);
-    ReferenceComponentArray c3 = viskores::cont::make_ArrayHandleCounting<ValueType>(4, 4, numValues);
-    ReferenceComponentArray c4 = viskores::cont::make_ArrayHandleCounting<ValueType>(1, 3, numValues);
+    ReferenceComponentArray c1 =
+      viskores::cont::make_ArrayHandleCounting<ValueType>(3, 2, numValues);
+    ReferenceComponentArray c2 =
+      viskores::cont::make_ArrayHandleCounting<ValueType>(2, 3, numValues);
+    ReferenceComponentArray c3 =
+      viskores::cont::make_ArrayHandleCounting<ValueType>(4, 4, numValues);
+    ReferenceComponentArray c4 =
+      viskores::cont::make_ArrayHandleCounting<ValueType>(1, 3, numValues);
 
     this->RefComposite = viskores::cont::make_ArrayHandleCompositeVector(c1, c2, c3, c4);
   }
@@ -63,7 +67,7 @@ struct ExtractComponentTests
     ExtractArray extract(composite, component);
 
     VISKORES_TEST_ASSERT(composite.GetNumberOfValues() == extract.GetNumberOfValues(),
-                     "Number of values in copied ExtractComponent array does not match input.");
+                         "Number of values in copied ExtractComponent array does not match input.");
   }
 
   void ReadTestComponentExtraction(viskores::IdComponent component) const
@@ -91,7 +95,7 @@ struct ExtractComponentTests
     auto refPortal = this->RefComposite.ReadPortal();
 
     VISKORES_TEST_ASSERT(testPortal.GetNumberOfValues() == refPortal.GetNumberOfValues(),
-                     "Number of values in read test output do not match input.");
+                         "Number of values in read test output do not match input.");
 
     for (viskores::Id i = 0; i < testPortal.GetNumberOfValues(); ++i)
     {
@@ -162,7 +166,7 @@ struct ExtractComponentTests
     auto portal = testArray.ReadPortal();
 
     VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == refPortal.GetNumberOfValues(),
-                     "Number of values in write test output do not match input.");
+                         "Number of values in write test output do not match input.");
 
     for (viskores::Id i = 0; i < portal.GetNumberOfValues(); ++i)
     {
@@ -203,7 +207,8 @@ struct ArgToTemplateType
 
 void TestArrayHandleExtractComponent()
 {
-  using TestTypes = viskores::List<viskores::Int32, viskores::Int64, viskores::Float32, viskores::Float64>;
+  using TestTypes =
+    viskores::List<viskores::Int32, viskores::Int64, viskores::Float32, viskores::Float64>;
   viskores::testing::Testing::TryTypes(ArgToTemplateType(), TestTypes());
 }
 

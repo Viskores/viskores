@@ -29,7 +29,8 @@ template <typename T>
 struct TotalNumComponents<T, viskores::VecTraitsTagMultipleComponents>
 {
   VISKORES_STATIC_ASSERT_MSG(
-    (std::is_same<typename viskores::VecTraits<T>::IsSizeStatic, viskores::VecTraitsTagSizeStatic>::value),
+    (std::is_same<typename viskores::VecTraits<T>::IsSizeStatic,
+                  viskores::VecTraitsTagSizeStatic>::value),
     "viskores::VecFlat can only be used with Vec types with a static number of components.");
   using ComponentType = typename viskores::VecTraits<T>::ComponentType;
   static constexpr viskores::IdComponent value =
@@ -44,7 +45,7 @@ struct TotalNumComponents<T, viskores::VecTraitsTagSingleComponent>
 
 template <typename T>
 using FlattenVec = viskores::Vec<typename viskores::VecTraits<T>::BaseComponentType,
-                             viskores::internal::TotalNumComponents<T>::value>;
+                                 viskores::internal::TotalNumComponents<T>::value>;
 
 template <typename T>
 using IsFlatVec = typename std::is_same<T, FlattenVec<T>>::type;
@@ -54,16 +55,18 @@ namespace detail
 
 template <typename T>
 VISKORES_EXEC_CONT T GetFlatVecComponentImpl(const T& component,
-                                         viskores::IdComponent index,
-                                         std::true_type viskoresNotUsed(isBase))
+                                             viskores::IdComponent index,
+                                             std::true_type viskoresNotUsed(isBase))
 {
   VISKORES_ASSERT(index == 0);
   return component;
 }
 
 template <typename T>
-VISKORES_EXEC_CONT typename viskores::VecTraits<T>::BaseComponentType
-GetFlatVecComponentImpl(const T& vec, viskores::IdComponent index, std::false_type viskoresNotUsed(isBase))
+VISKORES_EXEC_CONT typename viskores::VecTraits<T>::BaseComponentType GetFlatVecComponentImpl(
+  const T& vec,
+  viskores::IdComponent index,
+  std::false_type viskoresNotUsed(isBase))
 {
   using Traits = viskores::VecTraits<T>;
   using ComponentType = typename Traits::ComponentType;
@@ -90,16 +93,16 @@ namespace detail
 
 template <typename T, viskores::IdComponent N>
 VISKORES_EXEC_CONT void CopyVecNestedToFlatImpl(T nestedVec,
-                                            viskores::Vec<T, N>& flatVec,
-                                            viskores::IdComponent flatOffset)
+                                                viskores::Vec<T, N>& flatVec,
+                                                viskores::IdComponent flatOffset)
 {
   flatVec[flatOffset] = nestedVec;
 }
 
 template <typename T, viskores::IdComponent NFlat, viskores::IdComponent NNest>
 VISKORES_EXEC_CONT void CopyVecNestedToFlatImpl(const viskores::Vec<T, NNest>& nestedVec,
-                                            viskores::Vec<T, NFlat>& flatVec,
-                                            viskores::IdComponent flatOffset)
+                                                viskores::Vec<T, NFlat>& flatVec,
+                                                viskores::IdComponent flatOffset)
 {
   for (viskores::IdComponent nestedIndex = 0; nestedIndex < NNest; ++nestedIndex)
   {
@@ -109,8 +112,8 @@ VISKORES_EXEC_CONT void CopyVecNestedToFlatImpl(const viskores::Vec<T, NNest>& n
 
 template <typename T, viskores::IdComponent N, typename NestedVecType>
 VISKORES_EXEC_CONT void CopyVecNestedToFlatImpl(const NestedVecType& nestedVec,
-                                            viskores::Vec<T, N>& flatVec,
-                                            viskores::IdComponent flatOffset)
+                                                viskores::Vec<T, N>& flatVec,
+                                                viskores::IdComponent flatOffset)
 {
   using Traits = viskores::VecTraits<NestedVecType>;
   using ComponentType = typename Traits::ComponentType;
@@ -127,7 +130,8 @@ VISKORES_EXEC_CONT void CopyVecNestedToFlatImpl(const NestedVecType& nestedVec,
 } // namespace detail
 
 template <typename T, viskores::IdComponent N, typename NestedVecType>
-VISKORES_EXEC_CONT void CopyVecNestedToFlat(const NestedVecType& nestedVec, viskores::Vec<T, N>& flatVec)
+VISKORES_EXEC_CONT void CopyVecNestedToFlat(const NestedVecType& nestedVec,
+                                            viskores::Vec<T, N>& flatVec)
 {
   detail::CopyVecNestedToFlatImpl(nestedVec, flatVec, 0);
 }
@@ -137,16 +141,16 @@ namespace detail
 
 template <typename T, viskores::IdComponent N>
 VISKORES_EXEC_CONT void CopyVecFlatToNestedImpl(const viskores::Vec<T, N>& flatVec,
-                                            viskores::IdComponent flatOffset,
-                                            T& nestedVec)
+                                                viskores::IdComponent flatOffset,
+                                                T& nestedVec)
 {
   nestedVec = flatVec[flatOffset];
 }
 
 template <typename T, viskores::IdComponent NFlat, viskores::IdComponent NNest>
 VISKORES_EXEC_CONT void CopyVecFlatToNestedImpl(const viskores::Vec<T, NFlat>& flatVec,
-                                            viskores::IdComponent flatOffset,
-                                            viskores::Vec<T, NNest>& nestedVec)
+                                                viskores::IdComponent flatOffset,
+                                                viskores::Vec<T, NNest>& nestedVec)
 {
   for (viskores::IdComponent nestedIndex = 0; nestedIndex < NNest; ++nestedIndex)
   {
@@ -154,10 +158,13 @@ VISKORES_EXEC_CONT void CopyVecFlatToNestedImpl(const viskores::Vec<T, NFlat>& f
   }
 }
 
-template <typename T, viskores::IdComponent NFlat, typename ComponentType, viskores::IdComponent NNest>
+template <typename T,
+          viskores::IdComponent NFlat,
+          typename ComponentType,
+          viskores::IdComponent NNest>
 VISKORES_EXEC_CONT void CopyVecFlatToNestedImpl(const viskores::Vec<T, NFlat>& flatVec,
-                                            viskores::IdComponent flatOffset,
-                                            viskores::Vec<ComponentType, NNest>& nestedVec)
+                                                viskores::IdComponent flatOffset,
+                                                viskores::Vec<ComponentType, NNest>& nestedVec)
 {
   constexpr viskores::IdComponent subSize = TotalNumComponents<ComponentType>::value;
 
@@ -171,8 +178,8 @@ VISKORES_EXEC_CONT void CopyVecFlatToNestedImpl(const viskores::Vec<T, NFlat>& f
 
 template <typename T, viskores::IdComponent N, typename NestedVecType>
 VISKORES_EXEC_CONT void CopyVecFlatToNestedImpl(const viskores::Vec<T, N>& flatVec,
-                                            viskores::IdComponent flatOffset,
-                                            NestedVecType& nestedVec)
+                                                viskores::IdComponent flatOffset,
+                                                NestedVecType& nestedVec)
 {
   using Traits = viskores::VecTraits<NestedVecType>;
   using ComponentType = typename Traits::ComponentType;
@@ -191,7 +198,8 @@ VISKORES_EXEC_CONT void CopyVecFlatToNestedImpl(const viskores::Vec<T, N>& flatV
 } // namespace detail
 
 template <typename T, viskores::IdComponent N, typename NestedVecType>
-VISKORES_EXEC_CONT void CopyVecFlatToNested(const viskores::Vec<T, N>& flatVec, NestedVecType& nestedVec)
+VISKORES_EXEC_CONT void CopyVecFlatToNested(const viskores::Vec<T, N>& flatVec,
+                                            NestedVecType& nestedVec)
 {
   detail::CopyVecFlatToNestedImpl(flatVec, 0, nestedVec);
 }

@@ -52,7 +52,8 @@ public:
     return numFaces[cellShapeId];
   }
 
-  VISKORES_EXEC viskores::Int32 NumPointsInFace(viskores::Int32 cellShapeId, viskores::Int32 faceIndex) const
+  VISKORES_EXEC viskores::Int32 NumPointsInFace(viskores::Int32 cellShapeId,
+                                                viskores::Int32 faceIndex) const
   {
     VISKORES_STATIC_CONSTEXPR_ARRAY viskores::Int32
       numPointsInFace[viskores::NUMBER_OF_CELL_SHAPES][MAX_NUM_FACES] = {
@@ -77,8 +78,8 @@ public:
   }
 
   VISKORES_EXEC viskores::Int32 PointsInFace(viskores::Int32 cellShapeId,
-                                     viskores::Int32 faceIndex,
-                                     viskores::Int32 localPointIndex) const
+                                             viskores::Int32 faceIndex,
+                                             viskores::Int32 localPointIndex) const
   {
     // clang-format off
     VISKORES_STATIC_CONSTEXPR_ARRAY viskores::Int32 pointsInFace[viskores::NUMBER_OF_CELL_SHAPES][MAX_NUM_FACES]
@@ -130,8 +131,8 @@ public:
       // 14: CELL_SHAPE_PYRAMID
       { { 0, 3, 2, 1 }, { 0, 1, 4, -1 }, { 1, 2, 4, -1 },
         { 2, 3, 4, -1 }, { 3, 0, 4, -1 },{ -1, -1, -1, -1 } }
-        // clang-format on
-      };
+                                                                  // clang-format on
+                                                                };
     return pointsInFace[cellShapeId][faceIndex][localPointIndex];
   }
 };
@@ -145,7 +146,7 @@ public:
 /// @param[out] result A reference to return the number of faces.
 template <typename CellShapeTag>
 static inline VISKORES_EXEC viskores::ErrorCode CellFaceNumberOfFaces(CellShapeTag shape,
-                                                              viskores::IdComponent& result)
+                                                                      viskores::IdComponent& result)
 {
   (void)shape; //C4100 false positive workaround
   detail::CellFaceTables table;
@@ -163,9 +164,10 @@ static inline VISKORES_EXEC viskores::ErrorCode CellFaceNumberOfFaces(CellShapeT
 ///     This method is overloaded for different shape types.
 /// @param[out] result A reference to return the number of points in the selected face.
 template <typename CellShapeTag>
-static inline VISKORES_EXEC viskores::ErrorCode CellFaceNumberOfPoints(viskores::IdComponent faceIndex,
-                                                               CellShapeTag shape,
-                                                               viskores::IdComponent& result)
+static inline VISKORES_EXEC viskores::ErrorCode CellFaceNumberOfPoints(
+  viskores::IdComponent faceIndex,
+  CellShapeTag shape,
+  viskores::IdComponent& result)
 {
   if ((faceIndex < 0) || (faceIndex >= detail::CellFaceTables::MAX_NUM_FACES))
   {
@@ -199,8 +201,8 @@ static inline VISKORES_EXEC viskores::ErrorCode CellFaceNumberOfPoints(viskores:
 /// @param[out] result A reference to return the number of points in the selected face.
 template <typename CellShapeTag>
 static inline VISKORES_EXEC viskores::ErrorCode CellFaceShape(viskores::IdComponent faceIndex,
-                                                      CellShapeTag shape,
-                                                      viskores::UInt8& result)
+                                                              CellShapeTag shape,
+                                                              viskores::UInt8& result)
 {
 
   if ((faceIndex < 0) || (faceIndex >= detail::CellFaceTables::MAX_NUM_FACES))
@@ -239,13 +241,14 @@ static inline VISKORES_EXEC viskores::ErrorCode CellFaceShape(viskores::IdCompon
 ///     (between 0 and the number of points in the cell).
 template <typename CellShapeTag>
 static inline VISKORES_EXEC viskores::ErrorCode CellFaceLocalIndex(viskores::IdComponent pointIndex,
-                                                           viskores::IdComponent faceIndex,
-                                                           CellShapeTag shape,
-                                                           viskores::IdComponent& result)
+                                                                   viskores::IdComponent faceIndex,
+                                                                   CellShapeTag shape,
+                                                                   viskores::IdComponent& result)
 {
   viskores::IdComponent numPointsInFace;
   result = -1;
-  VISKORES_RETURN_ON_ERROR(viskores::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
+  VISKORES_RETURN_ON_ERROR(
+    viskores::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
   if (numPointsInFace < 1)
   {
     // An invalid face. We should already have gotten an error from
@@ -277,7 +280,8 @@ static inline VISKORES_EXEC viskores::ErrorCode CellFaceCanonicalId(
 {
   viskores::IdComponent numPointsInFace;
   result = { -1 };
-  VISKORES_RETURN_ON_ERROR(viskores::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
+  VISKORES_RETURN_ON_ERROR(
+    viskores::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
   if (numPointsInFace < 1)
   {
     // An invalid face. We should already have gotten an error from
@@ -288,8 +292,8 @@ static inline VISKORES_EXEC viskores::ErrorCode CellFaceCanonicalId(
   detail::CellFaceTables table;
   //Sort the first 3 face points/nodes in ascending order
   result = viskores::Id3(globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 0)],
-                     globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 1)],
-                     globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 2)]);
+                         globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 1)],
+                         globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 2)]);
   viskores::Id temp;
   if (result[0] > result[2])
   {
@@ -313,7 +317,8 @@ static inline VISKORES_EXEC viskores::ErrorCode CellFaceCanonicalId(
   // Check the rest of the points to see if they are in the lowest 3
   for (viskores::IdComponent pointIndex = 3; pointIndex < numPointsInFace; pointIndex++)
   {
-    viskores::Id nextPoint = globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, pointIndex)];
+    viskores::Id nextPoint =
+      globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, pointIndex)];
     if (nextPoint < result[2])
     {
       if (nextPoint < result[1])
@@ -355,7 +360,8 @@ static inline VISKORES_EXEC viskores::ErrorCode CellFaceMinPointId(
 {
   viskores::IdComponent numPointsInFace;
   minFacePointId = { -1 };
-  VISKORES_RETURN_ON_ERROR(viskores::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
+  VISKORES_RETURN_ON_ERROR(
+    viskores::exec::CellFaceNumberOfPoints(faceIndex, shape, numPointsInFace));
   if (numPointsInFace < 1)
   {
     // An invalid face. We should already have gotten an error from

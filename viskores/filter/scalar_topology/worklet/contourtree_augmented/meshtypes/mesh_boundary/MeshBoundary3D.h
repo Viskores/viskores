@@ -111,7 +111,7 @@ public:
 
   VISKORES_EXEC_CONT
   viskores::Id CountLinkComponentsIn2DSlice4Neighborhood(const viskores::Id meshIndex,
-                                                     const viskores::Id2 strides) const
+                                                         const viskores::Id2 strides) const
   {
     // IMPORTANT: We assume that function is called only for *interior* vertices (i.e.,
     // neither row nor col within slice is 0 and we do not need to check for boundary cases).
@@ -122,7 +122,7 @@ public:
     for (viskores::Id edgeNo = 0; edgeNo < 4 + 1; edgeNo++)
     {
       VISKORES_ASSERT(meshIndex + strides[1] + strides[0] <
-                  this->SortIndicesPortal.GetNumberOfValues());
+                      this->SortIndicesPortal.GetNumberOfValues());
       VISKORES_ASSERT(meshIndex - strides[1] - strides[0] >= 0);
       viskores::Id nbrSortIndex;
       switch (edgeNo % 4)
@@ -158,7 +158,7 @@ public:
 
   VISKORES_EXEC_CONT
   viskores::Id CountLinkComponentsIn2DSlice6Neighborhood(const viskores::Id meshIndex,
-                                                     const viskores::Id2 strides) const
+                                                         const viskores::Id2 strides) const
   {
     // IMPORTANT: We assume that function is called only for *interior* vertices (i.e.,
     // neither row nor col within slice is 0 and we do not need to check for boundary cases).
@@ -169,7 +169,7 @@ public:
     for (viskores::Id edgeNo = 0; edgeNo < 6 + 1; edgeNo++)
     {
       VISKORES_ASSERT(meshIndex + strides[1] + strides[0] <
-                  this->SortIndicesPortal.GetNumberOfValues());
+                      this->SortIndicesPortal.GetNumberOfValues());
       VISKORES_ASSERT(meshIndex - strides[1] - strides[0] >= 0);
       viskores::Id nbrSortIndex;
       switch (edgeNo % 6)
@@ -211,7 +211,7 @@ public:
 
   VISKORES_EXEC_CONT
   viskores::Id CountLinkComponentsIn2DSlice8Neighborhood(const viskores::Id meshIndex,
-                                                     const viskores::Id2 strides) const
+                                                         const viskores::Id2 strides) const
   {
     // IMPORTANT: We assume that function is called only for *interior* vertices (i.e.,
     // neither row nor col within slice is 0 and we do not need to check for boundary cases).
@@ -222,7 +222,7 @@ public:
     for (viskores::Id edgeNo = 0; edgeNo < 8 + 1; edgeNo++)
     {
       VISKORES_ASSERT(meshIndex + strides[1] + strides[0] <
-                  this->SortIndicesPortal.GetNumberOfValues());
+                      this->SortIndicesPortal.GetNumberOfValues());
       VISKORES_ASSERT(meshIndex - strides[1] - strides[0] >= 0);
       viskores::Id nbrSortIndex;
 
@@ -335,10 +335,12 @@ public:
           {
             VISKORES_ASSERT(pos[1] > 0 && pos[1] < this->MeshStructure.MeshSize[1] - 1);
             VISKORES_ASSERT(meshIndex >= this->MeshStructure.MeshSize[0]);
-            viskores::Id sp = this->SortIndicesPortal.Get(meshIndex - this->MeshStructure.MeshSize[0]);
+            viskores::Id sp =
+              this->SortIndicesPortal.Get(meshIndex - this->MeshStructure.MeshSize[0]);
             VISKORES_ASSERT(meshIndex + this->MeshStructure.MeshSize[0] <
-                        this->SortIndicesPortal.GetNumberOfValues());
-            viskores::Id sn = this->SortIndicesPortal.Get(meshIndex + this->MeshStructure.MeshSize[0]);
+                            this->SortIndicesPortal.GetNumberOfValues());
+            viskores::Id sn =
+              this->SortIndicesPortal.Get(meshIndex + this->MeshStructure.MeshSize[0]);
             return (sortIndex < sp && sortIndex < sn) || (sortIndex > sp && sortIndex > sn);
           }
         }
@@ -392,7 +394,8 @@ public:
             {
               return CountLinkComponentsIn2DSlice4Neighborhood(meshIndex,
                                                                viskores::Id2(1, nPerSlice)) != 2 ||
-                CountLinkComponentsIn2DSlice8Neighborhood(meshIndex, viskores::Id2(1, nPerSlice)) != 2;
+                CountLinkComponentsIn2DSlice8Neighborhood(meshIndex, viskores::Id2(1, nPerSlice)) !=
+                2;
             }
             else
             {

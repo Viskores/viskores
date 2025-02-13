@@ -130,8 +130,8 @@ public:
   {
   }
 
-  VISKORES_CONT HyperArcSuperNodeComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                                viskores::cont::Token& token) const
+  VISKORES_CONT HyperArcSuperNodeComparatorImpl
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     return HyperArcSuperNodeComparatorImpl(this->Hyperparents.PrepareForInput(device, token),
                                            this->SuperID.PrepareForInput(device, token),

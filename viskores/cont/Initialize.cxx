@@ -36,10 +36,10 @@ struct ViskoresDeviceArg : public opt::Arg
       if (msg)
       {
         VISKORES_LOG_ALWAYS_S(viskores::cont::LogLevel::Error,
-                          "Missing device after option '"
-                            << std::string(option.name, static_cast<size_t>(option.namelen))
-                            << "'.\nValid devices are: " << ViskoresDeviceArg::GetValidDeviceNames()
-                            << "\n");
+                              "Missing device after option '"
+                                << std::string(option.name, static_cast<size_t>(option.namelen))
+                                << "'.\nValid devices are: "
+                                << ViskoresDeviceArg::GetValidDeviceNames() << "\n");
       }
       return opt::ARG_ILLEGAL;
     }
@@ -49,10 +49,10 @@ struct ViskoresDeviceArg : public opt::Arg
     if (!ViskoresDeviceArg::DeviceIsAvailable(id))
     {
       VISKORES_LOG_ALWAYS_S(viskores::cont::LogLevel::Error,
-                        "Unavailable device specificed after option '"
-                          << std::string(option.name, static_cast<size_t>(option.namelen)) << "': '"
-                          << option.arg << "'.\nValid devices are: "
-                          << ViskoresDeviceArg::GetValidDeviceNames() << "\n");
+                            "Unavailable device specificed after option '"
+                              << std::string(option.name, static_cast<size_t>(option.namelen))
+                              << "': '" << option.arg << "'.\nValid devices are: "
+                              << ViskoresDeviceArg::GetValidDeviceNames() << "\n");
       return opt::ARG_ILLEGAL;
     }
 
@@ -164,13 +164,13 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
                         opt::Arg::None,
                         "  --viskores-help \tPrint usage information." });
     }
-    usage.push_back(
-      { opt::OptionIndex::DEVICE,
-        0,
-        "",
-        "viskores-device",
-        ViskoresDeviceArg::IsDevice,
-        "  --viskores-device <dev> \tForce device to dev. Omit device to list available devices." });
+    usage.push_back({ opt::OptionIndex::DEVICE,
+                      0,
+                      "",
+                      "viskores-device",
+                      ViskoresDeviceArg::IsDevice,
+                      "  --viskores-device <dev> \tForce device to dev. Omit device to list "
+                      "available devices." });
     usage.push_back({ opt::OptionIndex::LOGLEVEL,
                       0,
                       "",
@@ -248,11 +248,11 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
           // Got invalid device. Log an error, but continue to do the default action for
           // the device (i.e., ignore the environment variable setting).
           VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-                     "Invalid device `"
-                       << deviceEnv
-                       << "` specified in VISKORES_DEVICE environment variable. Ignoring.");
+                         "Invalid device `"
+                           << deviceEnv
+                           << "` specified in VISKORES_DEVICE environment variable. Ignoring.");
           VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-                     "Valid devices are: " << ViskoresDeviceArg::GetValidDeviceNames());
+                         "Valid devices are: " << ViskoresDeviceArg::GetValidDeviceNames());
         }
       }
     }
@@ -310,7 +310,7 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
     for (int nonOpt = 0; nonOpt < parse.nonOptionsCount(); ++nonOpt)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 "Unknown argument to Initialize: " << parse.nonOption(nonOpt) << "\n");
+                     "Unknown argument to Initialize: " << parse.nonOption(nonOpt) << "\n");
       if ((opts & InitializeOptions::ErrorOnBadArgument) != InitializeOptions::None)
       {
         std::cerr << "Unknown argument: " << parse.nonOption(nonOpt) << std::endl;

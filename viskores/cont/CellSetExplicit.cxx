@@ -40,8 +40,10 @@ void DoBuildReverseConnectivity(
   visitCellsWithPoints.Connectivity = connections;
   visitCellsWithPoints.Offsets = offsets;
 
-  bool success =
-    viskores::cont::TryExecuteOnDevice(suggestedDevice, [&](viskores::cont::DeviceAdapterId realDevice) {
+  bool success = viskores::cont::TryExecuteOnDevice(
+    suggestedDevice,
+    [&](viskores::cont::DeviceAdapterId realDevice)
+    {
       viskores::cont::internal::ComputeRConnTable(
         visitPointsWithCells, visitCellsWithPoints, numberOfPoints, realDevice);
       return true;
@@ -50,7 +52,7 @@ void DoBuildReverseConnectivity(
   if (!success)
   {
     throw viskores::cont::ErrorExecution("Failed to run CellSetExplicit reverse "
-                                     "connectivity builder.");
+                                         "connectivity builder.");
   }
 }
 
@@ -146,18 +148,18 @@ void BuildReverseConnectivity(
   }
 
   viskores::ListForEach(BuildReverseConnectivityForCellSetType{},
-                    VISKORES_DEFAULT_CELL_SET_LIST{},
-                    connections,
-                    offsets,
-                    numberOfPoints,
-                    visitPointsWithCells,
-                    device);
+                        VISKORES_DEFAULT_CELL_SET_LIST{},
+                        connections,
+                        offsets,
+                        numberOfPoints,
+                        visitPointsWithCells,
+                        device);
 
   if (!visitPointsWithCells.ElementsValid)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-               "BuildReverseConnectivity attempted for all known cell set types; "
-               "falling back to copy connectivity arrays.");
+                   "BuildReverseConnectivity attempted for all known cell set types; "
+                   "falling back to copy connectivity arrays.");
     viskores::cont::ArrayHandle<viskores::Id> connectionsCopy;
     viskores::cont::ArrayCopy(connections, connectionsCopy);
     viskores::cont::ArrayHandle<viskores::Id> offsetsCopy;

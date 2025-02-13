@@ -26,12 +26,12 @@ namespace raytracing
 //
 template <typename T>
 VISKORES_EXEC_CONT inline void IntersectZoo(T xpoints[8],
-                                        T ypoints[8],
-                                        T zpoints[8],
-                                        const viskores::Vec<T, 3>& dir,
-                                        const viskores::Vec<T, 3>& origin,
-                                        T distances[6],
-                                        const viskores::Int32& shapeType)
+                                            T ypoints[8],
+                                            T zpoints[8],
+                                            const viskores::Vec<T, 3>& dir,
+                                            const viskores::Vec<T, 3>& origin,
+                                            T distances[6],
+                                            const viskores::Int32& shapeType)
 {
   // Some precalc for water tight intersections
   viskores::Vec<T, 3> s;
@@ -74,11 +74,11 @@ VISKORES_EXEC_CONT inline void IntersectZoo(T xpoints[8],
 }
 template <typename T>
 VISKORES_EXEC_CONT inline void IntersectHex(T xpoints[8],
-                                        T ypoints[8],
-                                        T zpoints[8],
-                                        const viskores::Vec<T, 3>& dir,
-                                        const viskores::Vec<T, 3>& origin,
-                                        T distances[6])
+                                            T ypoints[8],
+                                            T zpoints[8],
+                                            const viskores::Vec<T, 3>& dir,
+                                            const viskores::Vec<T, 3>& origin,
+                                            T distances[6])
 {
   // Some precalc for water tight intersections
   viskores::Vec<T, 3> s;
@@ -129,11 +129,11 @@ VISKORES_EXEC_CONT inline void IntersectHex(T xpoints[8],
 }
 template <typename T>
 VISKORES_EXEC_CONT inline void IntersectTet(T xpoints[8],
-                                        T ypoints[8],
-                                        T zpoints[8],
-                                        const viskores::Vec<T, 3>& dir,
-                                        const viskores::Vec<T, 3>& origin,
-                                        T distances[6])
+                                            T ypoints[8],
+                                            T zpoints[8],
+                                            const viskores::Vec<T, 3>& dir,
+                                            const viskores::Vec<T, 3>& origin,
+                                            T distances[6])
 {
   // Some precalc for water tight intersections
   viskores::Vec<T, 3> s;
@@ -172,11 +172,11 @@ VISKORES_EXEC_CONT inline void IntersectTet(T xpoints[8],
 //
 template <typename T>
 VISKORES_EXEC_CONT inline void IntersectWedge(T xpoints[8],
-                                          T ypoints[8],
-                                          T zpoints[8],
-                                          const viskores::Vec<T, 3>& dir,
-                                          const viskores::Vec<T, 3>& origin,
-                                          T distances[6])
+                                              T ypoints[8],
+                                              T zpoints[8],
+                                              const viskores::Vec<T, 3>& dir,
+                                              const viskores::Vec<T, 3>& origin,
+                                              T distances[6])
 {
   // Some precalc for water tight intersections
   viskores::Vec<T, 3> s;
@@ -239,13 +239,14 @@ class CellIntersector
 {
 public:
   template <typename T>
-  VISKORES_EXEC_CONT inline void IntersectCell(T* viskoresNotUsed(xpoints),
-                                           T* viskoresNotUsed(ypoints),
-                                           T* viskoresNotUsed(zpoints),
-                                           const viskores::Vec<T, 3>& viskoresNotUsed(dir),
-                                           const viskores::Vec<T, 3>& viskoresNotUsed(origin),
-                                           T* viskoresNotUsed(distances),
-                                           const viskores::UInt8 viskoresNotUsed(cellShape = 12));
+  VISKORES_EXEC_CONT inline void IntersectCell(
+    T* viskoresNotUsed(xpoints),
+    T* viskoresNotUsed(ypoints),
+    T* viskoresNotUsed(zpoints),
+    const viskores::Vec<T, 3>& viskoresNotUsed(dir),
+    const viskores::Vec<T, 3>& viskoresNotUsed(origin),
+    T* viskoresNotUsed(distances),
+    const viskores::UInt8 viskoresNotUsed(cellShape = 12));
 };
 
 //
@@ -257,12 +258,12 @@ class CellIntersector<CELL_SHAPE_HEXAHEDRON>
 public:
   template <typename T>
   VISKORES_EXEC_CONT inline void IntersectCell(T* xpoints,
-                                           T* ypoints,
-                                           T* zpoints,
-                                           const viskores::Vec<T, 3>& dir,
-                                           const viskores::Vec<T, 3>& origin,
-                                           T* distances,
-                                           const viskores::UInt8 cellShape = 12) const
+                                               T* ypoints,
+                                               T* zpoints,
+                                               const viskores::Vec<T, 3>& dir,
+                                               const viskores::Vec<T, 3>& origin,
+                                               T* distances,
+                                               const viskores::UInt8 cellShape = 12) const
   {
     if (cellShape == 12)
     {
@@ -284,12 +285,12 @@ class CellIntersector<254>
 public:
   template <typename T>
   VISKORES_EXEC_CONT inline void IntersectCell(T* xpoints,
-                                           T* ypoints,
-                                           T* zpoints,
-                                           const viskores::Vec<T, 3>& dir,
-                                           const viskores::Vec<T, 3>& origin,
-                                           T* distances,
-                                           const viskores::UInt8 cellShape = 12) const
+                                               T* ypoints,
+                                               T* zpoints,
+                                               const viskores::Vec<T, 3>& dir,
+                                               const viskores::Vec<T, 3>& origin,
+                                               T* distances,
+                                               const viskores::UInt8 cellShape = 12) const
   {
     if (cellShape == 12)
     {
@@ -311,12 +312,12 @@ class CellIntersector<CELL_SHAPE_TETRA>
 public:
   template <typename T>
   VISKORES_EXEC_CONT inline void IntersectCell(T* xpoints,
-                                           T* ypoints,
-                                           T* zpoints,
-                                           const viskores::Vec<T, 3>& dir,
-                                           const viskores::Vec<T, 3>& origin,
-                                           T distances[6],
-                                           const viskores::UInt8 cellShape = 12) const
+                                               T* ypoints,
+                                               T* zpoints,
+                                               const viskores::Vec<T, 3>& dir,
+                                               const viskores::Vec<T, 3>& origin,
+                                               T distances[6],
+                                               const viskores::UInt8 cellShape = 12) const
   {
     if (cellShape == CELL_SHAPE_TETRA)
     {
@@ -338,12 +339,12 @@ class CellIntersector<CELL_SHAPE_WEDGE>
 public:
   template <typename T>
   VISKORES_EXEC_CONT inline void IntersectCell(T* xpoints,
-                                           T* ypoints,
-                                           T* zpoints,
-                                           const viskores::Vec<T, 3>& dir,
-                                           const viskores::Vec<T, 3>& origin,
-                                           T distances[6],
-                                           const viskores::UInt8 cellShape = 12) const
+                                               T* ypoints,
+                                               T* zpoints,
+                                               const viskores::Vec<T, 3>& dir,
+                                               const viskores::Vec<T, 3>& origin,
+                                               T distances[6],
+                                               const viskores::UInt8 cellShape = 12) const
   {
     if (cellShape == CELL_SHAPE_WEDGE)
     {
@@ -364,12 +365,12 @@ class CellIntersector<255>
 public:
   template <typename T>
   VISKORES_EXEC_CONT inline void IntersectCell(T* xpoints,
-                                           T* ypoints,
-                                           T* zpoints,
-                                           const viskores::Vec<T, 3>& dir,
-                                           const viskores::Vec<T, 3>& origin,
-                                           T distances[6],
-                                           const viskores::UInt8 cellShape = 0) const
+                                               T* ypoints,
+                                               T* zpoints,
+                                               const viskores::Vec<T, 3>& dir,
+                                               const viskores::Vec<T, 3>& origin,
+                                               T distances[6],
+                                               const viskores::UInt8 cellShape = 0) const
   {
     IntersectZoo(xpoints, ypoints, zpoints, dir, origin, distances, cellShape);
   }

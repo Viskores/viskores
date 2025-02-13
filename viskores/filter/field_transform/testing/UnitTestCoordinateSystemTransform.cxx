@@ -65,12 +65,16 @@ viskores::cont::DataSet MakeTestDataSet(const CoordinateType& cType)
     //Spherical coordinates have some degenerate cases, so provide some good cases.
     viskores::FloatDefault R = 1.0f;
     viskores::FloatDefault eps = viskores::Epsilon<float>();
-    std::vector<viskores::FloatDefault> Thetas = {
-      eps, viskores::Pif() / 4.0f, viskores::Pif() / 3.0f, viskores::Pif() / 2.0f, viskores::Pif() - eps
-    };
-    std::vector<viskores::FloatDefault> Phis = {
-      eps, viskores::TwoPif() / 4.0f, viskores::TwoPif() / 3.0f, viskores::TwoPif() / 2.0f, viskores::TwoPif() - eps
-    };
+    std::vector<viskores::FloatDefault> Thetas = { eps,
+                                                   viskores::Pif() / 4.0f,
+                                                   viskores::Pif() / 3.0f,
+                                                   viskores::Pif() / 2.0f,
+                                                   viskores::Pif() - eps };
+    std::vector<viskores::FloatDefault> Phis = { eps,
+                                                 viskores::TwoPif() / 4.0f,
+                                                 viskores::TwoPif() / 3.0f,
+                                                 viskores::TwoPif() / 2.0f,
+                                                 viskores::TwoPif() - eps };
     for (auto& Theta : Thetas)
       for (auto& Phi : Phis)
         coordinates.push_back(viskores::make_Vec(R, Theta, Phi));
@@ -105,7 +109,7 @@ void ValidateCoordTransform(const viskores::cont::DataSet& ds,
   auto points = ds.GetCoordinateSystem().GetDataAsMultiplexer();
   auto pointsTrn = dsTrn.GetCoordinateSystem().GetDataAsMultiplexer();
   VISKORES_TEST_ASSERT(points.GetNumberOfValues() == pointsTrn.GetNumberOfValues(),
-                   "Incorrect number of points in point transform");
+                       "Incorrect number of points in point transform");
 
   auto pointsPortal = points.ReadPortal();
   auto pointsTrnPortal = pointsTrn.ReadPortal();

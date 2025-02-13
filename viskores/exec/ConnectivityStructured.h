@@ -34,8 +34,8 @@ class ConnectivityStructured
 
   using InternalsType = viskores::internal::ConnectivityStructuredInternals<Dimension>;
 
-  using Helper =
-    viskores::internal::ConnectivityStructuredIndexHelper<VisitTopology, IncidentTopology, Dimension>;
+  using Helper = viskores::internal::
+    ConnectivityStructuredIndexHelper<VisitTopology, IncidentTopology, Dimension>;
 
 public:
   using SchedulingRangeType = typename InternalsType::SchedulingRangeType;
@@ -113,7 +113,8 @@ public:
 
   /// Convenience method that converts a flat, 1D index to the incident elements to a `viskores::Vec`
   /// containing the logical indices in the grid.
-  VISKORES_EXEC_CONT SchedulingRangeType FlatToLogicalIncidentIndex(viskores::Id flatIncidentIndex) const
+  VISKORES_EXEC_CONT SchedulingRangeType
+  FlatToLogicalIncidentIndex(viskores::Id flatIncidentIndex) const
   {
     return Helper::FlatToLogicalIncidentIndex(this->Internals, flatIncidentIndex);
   }

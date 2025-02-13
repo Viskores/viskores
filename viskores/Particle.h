@@ -41,11 +41,17 @@ public:
 
   VISKORES_EXEC_CONT void SetSpatialBounds() { this->set(this->SPATIAL_BOUNDS_BIT); }
   VISKORES_EXEC_CONT void ClearSpatialBounds() { this->reset(this->SPATIAL_BOUNDS_BIT); }
-  VISKORES_EXEC_CONT bool CheckSpatialBounds() const { return this->test(this->SPATIAL_BOUNDS_BIT); }
+  VISKORES_EXEC_CONT bool CheckSpatialBounds() const
+  {
+    return this->test(this->SPATIAL_BOUNDS_BIT);
+  }
 
   VISKORES_EXEC_CONT void SetTemporalBounds() { this->set(this->TEMPORAL_BOUNDS_BIT); }
   VISKORES_EXEC_CONT void ClearTemporalBounds() { this->reset(this->TEMPORAL_BOUNDS_BIT); }
-  VISKORES_EXEC_CONT bool CheckTemporalBounds() const { return this->test(this->TEMPORAL_BOUNDS_BIT); }
+  VISKORES_EXEC_CONT bool CheckTemporalBounds() const
+  {
+    return this->test(this->TEMPORAL_BOUNDS_BIT);
+  }
 
   VISKORES_EXEC_CONT void SetTookAnySteps() { this->set(this->TOOK_ANY_STEPS_BIT); }
   VISKORES_EXEC_CONT void ClearTookAnySteps() { this->reset(this->TOOK_ANY_STEPS_BIT); }
@@ -75,7 +81,8 @@ private:
   static constexpr viskores::Id ZERO_VELOCITY = 6;
 };
 
-inline VISKORES_CONT std::ostream& operator<<(std::ostream& s, const viskores::ParticleStatus& status)
+inline VISKORES_CONT std::ostream& operator<<(std::ostream& s,
+                                              const viskores::ParticleStatus& status)
 {
   s << "[ok= " << status.CheckOk();
   s << " term= " << status.CheckTerminate();
@@ -126,7 +133,10 @@ public:
   }
 
   VISKORES_EXEC_CONT const viskores::Vec3f& GetPosition() const { return this->Position; }
-  VISKORES_EXEC_CONT void SetPosition(const viskores::Vec3f& position) { this->Position = position; }
+  VISKORES_EXEC_CONT void SetPosition(const viskores::Vec3f& position)
+  {
+    this->Position = position;
+  }
 
   VISKORES_EXEC_CONT viskores::Id GetID() const { return this->ID; }
   VISKORES_EXEC_CONT void SetID(viskores::Id id) { this->ID = id; }
@@ -143,7 +153,7 @@ public:
 
   VISKORES_EXEC_CONT
   viskores::Vec3f Velocity(const viskores::VecVariable<viskores::Vec3f, 2>& vectors,
-                       const viskores::FloatDefault& viskoresNotUsed(length)) const
+                           const viskores::FloatDefault& viskoresNotUsed(length)) const
   {
     // Velocity is evaluated from the Velocity field
     // and is not influenced by the particle
@@ -158,7 +168,8 @@ public:
     return this->Position;
   }
 
-  inline VISKORES_CONT friend std::ostream& operator<<(std::ostream& out, const viskores::Particle& p)
+  inline VISKORES_CONT friend std::ostream& operator<<(std::ostream& out,
+                                                       const viskores::Particle& p)
   {
     out << "v(" << p.Time << ") = " << p.Position << ", ID: " << p.ID
         << ", NumSteps: " << p.NumSteps << ", Status: " << p.Status;
@@ -237,7 +248,10 @@ public:
   }
 
   VISKORES_EXEC_CONT const viskores::Vec3f& GetPosition() const { return this->Position; }
-  VISKORES_EXEC_CONT void SetPosition(const viskores::Vec3f& position) { this->Position = position; }
+  VISKORES_EXEC_CONT void SetPosition(const viskores::Vec3f& position)
+  {
+    this->Position = position;
+  }
 
   VISKORES_EXEC_CONT viskores::Id GetID() const { return this->ID; }
   VISKORES_EXEC_CONT void SetID(viskores::Id id) { this->ID = id; }
@@ -267,7 +281,7 @@ public:
 
   VISKORES_EXEC_CONT
   viskores::Vec3f Velocity(const viskores::VecVariable<viskores::Vec3f, 2>& vectors,
-                       const viskores::FloatDefault& length) const
+                           const viskores::FloatDefault& length) const
   {
     VISKORES_ASSERT(vectors.GetNumberOfComponents() == 2);
 
@@ -307,7 +321,7 @@ public:
   }
 
   inline VISKORES_CONT friend std::ostream& operator<<(std::ostream& out,
-                                                   const viskores::ChargedParticle& p)
+                                                       const viskores::ChargedParticle& p)
   {
     out << "v(" << p.Time << ") = " << p.Position << ", ID: " << p.ID
         << ", NumSteps: " << p.NumSteps << ", Status: " << p.Status;

@@ -83,8 +83,8 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& sortID,
-                            const InFieldPortalType& sortVector,
-                            const OutFieldPortalType& degree) const
+                                const InFieldPortalType& sortVector,
+                                const OutFieldPortalType& degree) const
   {
     viskores::Id superID = sortVector.Get(sortID);
     viskores::Id prevSuper = sortVector.Get(sortID - 1);

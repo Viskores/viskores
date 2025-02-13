@@ -44,7 +44,7 @@ VISKORES_SILENCE_WEAK_VTABLE_WARNING_END
 ///  compiling source files as C++ files instead of CUDA."
 //
 VISKORES_CONT_EXPORT void throwFailedRuntimeDeviceTransfer(const std::string& className,
-                                                       viskores::cont::DeviceAdapterId device);
+                                                           viskores::cont::DeviceAdapterId device);
 }
 } // namespace viskores::cont
 

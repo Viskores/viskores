@@ -39,13 +39,13 @@ public:
     using InputDomain = _1;
 
     VISKORES_EXEC FieldType ZCrossProduct(const viskores::Pair<FieldType, FieldType>& point1,
-                                      const viskores::Pair<FieldType, FieldType>& point2,
-                                      const viskores::Pair<FieldType, FieldType>& point3) const
+                                          const viskores::Pair<FieldType, FieldType>& point2,
+                                          const viskores::Pair<FieldType, FieldType>& point3) const
     {
       return viskores::DifferenceOfProducts(point2.first - point1.first,
-                                        point3.second - point1.second,
-                                        point2.second - point1.second,
-                                        point3.first - point1.first);
+                                            point3.second - point1.second,
+                                            point2.second - point1.second,
+                                            point3.first - point1.first);
     }
 
     VISKORES_EXEC bool DifferentSign(const FieldType& value1, const FieldType& value2) const
@@ -54,27 +54,29 @@ public:
     }
 
     VISKORES_EXEC bool AllSameSign(const FieldType& value1,
-                               const FieldType& value2,
-                               const FieldType& value3) const
+                                   const FieldType& value2,
+                                   const FieldType& value3) const
     {
       return (!(DifferentSign(value1, value2) || DifferentSign(value2, value3)));
     }
 
     template <typename ScalarField, typename PointsOutOrder>
     VISKORES_EXEC void operator()(const ScalarField& scalar,
-                              PointsOutOrder& pointsOrder,
-                              viskores::IdComponent& numberOfPoints,
-                              viskores::IdComponent& numberOfTris) const
+                                  PointsOutOrder& pointsOrder,
+                                  viskores::IdComponent& numberOfPoints,
+                                  viskores::IdComponent& numberOfTris) const
     {
       // To classify our tetras following their projection in the 2D scalar domain,
       // We consider them as quads, with their coordinates being their respective scalar values.
 
       // To identify the projection, we want to know if the polygon formed by the 4 points of the quad is convex.
       // For this, we compute the Z component of the cross product of the vectors of the polygon's edges.
-      viskores::Vec<FieldType, 4> scalarCrossProduct{ ZCrossProduct(scalar[0], scalar[1], scalar[2]),
-                                                  ZCrossProduct(scalar[1], scalar[2], scalar[3]),
-                                                  ZCrossProduct(scalar[2], scalar[3], scalar[0]),
-                                                  ZCrossProduct(scalar[3], scalar[0], scalar[1]) };
+      viskores::Vec<FieldType, 4> scalarCrossProduct{
+        ZCrossProduct(scalar[0], scalar[1], scalar[2]),
+        ZCrossProduct(scalar[1], scalar[2], scalar[3]),
+        ZCrossProduct(scalar[2], scalar[3], scalar[0]),
+        ZCrossProduct(scalar[3], scalar[0], scalar[1])
+      };
 
       // If every cross product of consecutive edges of the quad is the same sign, it means that it is convex
       // In the case 2 of them are negative and 2 positive, the quad is self-intersecting.
@@ -171,9 +173,9 @@ public:
 
     template <typename VecType>
     VISKORES_EXEC Vec3t DiagonalIntersection(const VecType& point1,
-                                         const VecType& point2,
-                                         const VecType& point3,
-                                         const VecType& point4) const
+                                             const VecType& point2,
+                                             const VecType& point3,
+                                             const VecType& point4) const
     {
       FieldType denominator = viskores::DifferenceOfProducts(
         point1[0] - point2[0], point3[1] - point4[1], point1[1] - point2[1], point3[0] - point4[0]);
@@ -221,11 +223,11 @@ public:
               typename PointsOutOrder,
               typename DensityField>
     VISKORES_EXEC void operator()(const ScalarField& scalar,
-                              const CoordsType& coords,
-                              const viskores::IdComponent& numberOfTris,
-                              PointsOutOrder& ord,
-                              NewCoordsType& newCoords,
-                              DensityField& density) const
+                                  const CoordsType& coords,
+                                  const viskores::IdComponent& numberOfTris,
+                                  PointsOutOrder& ord,
+                                  NewCoordsType& newCoords,
+                                  DensityField& density) const
     {
       // Write points coordinates in the 2D plane based on provided scalar values
       for (int i = 0; i < 4; i++)
@@ -254,18 +256,20 @@ public:
 
       // Pre-compute some vectors to reuse later
       viskores::Vec<Vec3t, 3> spatialVector = { coords[1] - coords[0],
-                                            coords[2] - coords[0],
-                                            coords[3] - coords[0] };
-      viskores::Vec<Vec3t, 3> spatialCrossProducts = { viskores::Cross(spatialVector[1], spatialVector[0]),
-                                                   viskores::Cross(spatialVector[0], spatialVector[2]),
-                                                   viskores::Cross(spatialVector[2],
-                                                               spatialVector[1]) };
+                                                coords[2] - coords[0],
+                                                coords[3] - coords[0] };
+      viskores::Vec<Vec3t, 3> spatialCrossProducts = {
+        viskores::Cross(spatialVector[1], spatialVector[0]),
+        viskores::Cross(spatialVector[0], spatialVector[2]),
+        viskores::Cross(spatialVector[2], spatialVector[1])
+      };
       viskores::Vec<Vec3t, 2> scalarArray = { Vec3t{ scalar[1].first - scalar[0].first,
-                                                 scalar[2].first - scalar[0].first,
-                                                 scalar[3].first - scalar[0].first },
-                                          Vec3t{ Vec3t{ scalar[1].second - scalar[0].second,
-                                                        scalar[2].second - scalar[0].second,
-                                                        scalar[3].second - scalar[0].second } } };
+                                                     scalar[2].first - scalar[0].first,
+                                                     scalar[3].first - scalar[0].first },
+                                              Vec3t{
+                                                Vec3t{ scalar[1].second - scalar[0].second,
+                                                       scalar[2].second - scalar[0].second,
+                                                       scalar[3].second - scalar[0].second } } };
 
       // We need to calculate the determinant in the spatial domain, using the triple product formula
       FieldType determinant = viskores::Dot(spatialVector[2], spatialCrossProducts[0]);
@@ -286,19 +290,21 @@ public:
         // Each column of the matrix is then multiplied by the scalar difference
         // with the scalar value for point with index 0 and summed to get the gradient, for each scalar field.
         FieldType inv_determinant = 1.0f / determinant;
-        scalar_gradient = viskores::Vec<Vec3t, 2>{ inv_determinant *
-                                                 (spatialCrossProducts[0] * scalarArray[0][2] +
-                                                  spatialCrossProducts[1] * scalarArray[0][1] +
-                                                  spatialCrossProducts[2] * scalarArray[0][0]),
-                                               inv_determinant *
-                                                 (spatialCrossProducts[0] * scalarArray[1][2] +
-                                                  spatialCrossProducts[1] * scalarArray[1][1] +
-                                                  spatialCrossProducts[2] * scalarArray[1][0]) };
+        scalar_gradient =
+          viskores::Vec<Vec3t, 2>{ inv_determinant *
+                                     (spatialCrossProducts[0] * scalarArray[0][2] +
+                                      spatialCrossProducts[1] * scalarArray[0][1] +
+                                      spatialCrossProducts[2] * scalarArray[0][0]),
+                                   inv_determinant *
+                                     (spatialCrossProducts[0] * scalarArray[1][2] +
+                                      spatialCrossProducts[1] * scalarArray[1][1] +
+                                      spatialCrossProducts[2] * scalarArray[1][0]) };
       }
 
       // We get the volume measure, defined as the magnitude of the cross product of the gradient
       // See formula (10) in the "continuous scatterplots" paper for the demonstration
-      FieldType volume = viskores::Magnitude(viskores::Cross(scalar_gradient[0], scalar_gradient[1]));
+      FieldType volume =
+        viskores::Magnitude(viskores::Cross(scalar_gradient[0], scalar_gradient[1]));
 
       if (numberOfTris == 3)
       {
@@ -373,11 +379,11 @@ public:
 
     template <typename OrderType, typename ConnectivityType>
     VISKORES_EXEC void operator()(const OrderType& order,
-                              const viskores::IdComponent& numberOfTris,
-                              const viskores::Id& offsets,
-                              ConnectivityType& connectivity,
-                              const viskores::Id& visitIndex,
-                              const viskores::Id& cellId) const
+                                  const viskores::IdComponent& numberOfTris,
+                                  const viskores::Id& offsets,
+                                  ConnectivityType& connectivity,
+                                  const viskores::Id& visitIndex,
+                                  const viskores::Id& cellId) const
     {
       viskores::Id secondPoint, thirdPoint;
 
@@ -407,13 +413,15 @@ public:
             typename OutputCellSetType,
             typename CoordsOutStorageType,
             typename FieldType>
-  void Run(const viskores::cont::CellSetSingleType<>& inputCellSet,
-           const viskores::cont::ArrayHandle<viskores::Vec<CoordsComType, 3>, CoordsInStorageType>& coords,
-           viskores::cont::ArrayHandle<viskores::Vec<CoordsComTypeOut, 3>, CoordsOutStorageType>& newCoords,
-           viskores::cont::ArrayHandle<FieldType>& density,
-           const viskores::cont::ArrayHandle<FieldType>& field1,
-           const viskores::cont::ArrayHandle<FieldType>& field2,
-           OutputCellSetType& outputCellset)
+  void Run(
+    const viskores::cont::CellSetSingleType<>& inputCellSet,
+    const viskores::cont::ArrayHandle<viskores::Vec<CoordsComType, 3>, CoordsInStorageType>& coords,
+    viskores::cont::ArrayHandle<viskores::Vec<CoordsComTypeOut, 3>, CoordsOutStorageType>&
+      newCoords,
+    viskores::cont::ArrayHandle<FieldType>& density,
+    const viskores::cont::ArrayHandle<FieldType>& field1,
+    const viskores::cont::ArrayHandle<FieldType>& field2,
+    OutputCellSetType& outputCellset)
   {
     viskores::cont::Invoker invoke;
 

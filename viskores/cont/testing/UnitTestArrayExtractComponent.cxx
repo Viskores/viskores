@@ -64,7 +64,7 @@ struct GetVecFlatIndexImpl
   }
 
   VISKORES_CONT BaseComponentType operator()(const BaseComponentType& component,
-                                         viskores::IdComponent index) const
+                                             viskores::IdComponent index) const
   {
     VISKORES_ASSERT(index == 0);
     return component;
@@ -108,7 +108,8 @@ void CheckOutputArray(
   CheckInputArray(originalArray);
 
   using ComponentType = typename viskores::VecTraits<T>::BaseComponentType;
-  const viskores::IdComponent numComponents = GetTotalNumComponents(originalArray.ReadPortal().Get(0));
+  const viskores::IdComponent numComponents =
+    GetTotalNumComponents(originalArray.ReadPortal().Get(0));
 
   // Extract all the stride arrays first, and then allocate them later. This tests to
   // to make sure that the independent allocation of all the extracted arrays are consistent
@@ -152,7 +153,7 @@ void CheckOutputArray(
     for (viskores::IdComponent componentId = 0; componentId < numComponents; ++componentId)
     {
       VISKORES_TEST_ASSERT(test_equal(GetVecFlatIndex(inValue, componentId),
-                                  GetVecFlatIndex(outValue, numComponents - componentId - 1)));
+                                      GetVecFlatIndex(outValue, numComponents - componentId - 1)));
     }
   }
 
@@ -177,7 +178,7 @@ void DoTest()
 {
   using ArrayMultiplexerType =
     viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandleBasic<viskores::Vec3f>,
-                                       viskores::cont::ArrayHandleSOA<viskores::Vec3f>>;
+                                           viskores::cont::ArrayHandleSOA<viskores::Vec3f>>;
 
   {
     std::cout << "Basic array" << std::endl;
@@ -302,7 +303,8 @@ void DoTest()
 
   {
     std::cout << "ArrayHandleConstant" << std::endl;
-    viskores::cont::ArrayHandleConstant<viskores::Vec3f> array(TestValue(0, viskores::Vec3f{}), ARRAY_SIZE);
+    viskores::cont::ArrayHandleConstant<viskores::Vec3f> array(TestValue(0, viskores::Vec3f{}),
+                                                               ARRAY_SIZE);
     CheckInputArray(array, viskores::CopyFlag::On);
   }
 

@@ -50,9 +50,9 @@ namespace cellmetrics
 // By default, cells have no shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellShapeMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  CellShapeType shape,
-                                  viskores::ErrorCode&)
+                                      const PointCoordVecType& pts,
+                                      CellShapeType shape,
+                                      viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -65,9 +65,9 @@ VISKORES_EXEC OutType CellShapeMetric(const viskores::IdComponent& numPts,
 // Compute the shape quality metric of a triangular cell.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellShapeMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  viskores::CellShapeTagTriangle,
-                                  viskores::ErrorCode& ec)
+                                      const PointCoordVecType& pts,
+                                      viskores::CellShapeTagTriangle,
+                                      viskores::ErrorCode& ec)
 {
   if (numPts != 3)
   {
@@ -88,9 +88,9 @@ VISKORES_EXEC OutType CellShapeMetric(const viskores::IdComponent& numPts,
 /// Compute the shape of a quadrilateral.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellShapeMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  viskores::CellShapeTagQuad,
-                                  viskores::ErrorCode& ec)
+                                      const PointCoordVecType& pts,
+                                      viskores::CellShapeTagQuad,
+                                      viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -115,10 +115,11 @@ VISKORES_EXEC OutType CellShapeMetric(const viskores::IdComponent& numPts,
   const Scalar l3Squared =
     viskores::Pow(GetQuadL3Magnitude<Scalar, Vector, CollectionOfPoints>(pts), 2);
 
-  const Scalar min = viskores::Min(
-    (alpha0 / (l0Squared + l3Squared)),
-    viskores::Min((alpha1 / (l1Squared + l0Squared)),
-              viskores::Min((alpha2 / (l2Squared + l1Squared)), (alpha3 / (l3Squared + l2Squared)))));
+  const Scalar min =
+    viskores::Min((alpha0 / (l0Squared + l3Squared)),
+                  viskores::Min((alpha1 / (l1Squared + l0Squared)),
+                                viskores::Min((alpha2 / (l2Squared + l1Squared)),
+                                              (alpha3 / (l3Squared + l2Squared)))));
   const Scalar q(two * min);
 
   return q;
@@ -128,9 +129,9 @@ VISKORES_EXEC OutType CellShapeMetric(const viskores::IdComponent& numPts,
 /// Compute the shape of a tetrahedron.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellShapeMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  viskores::CellShapeTagTetra,
-                                  viskores::ErrorCode& ec)
+                                      const PointCoordVecType& pts,
+                                      viskores::CellShapeTagTetra,
+                                      viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -180,9 +181,9 @@ VISKORES_EXEC OutType CellShapeMetric(const viskores::IdComponent& numPts,
 /// Compute the shape of a hexahedral cell.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellShapeMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  viskores::CellShapeTagHexahedron,
-                                  viskores::ErrorCode& ec)
+                                      const PointCoordVecType& pts,
+                                      viskores::CellShapeTagHexahedron,
+                                      viskores::ErrorCode& ec)
 {
   if (numPts != 8)
   {

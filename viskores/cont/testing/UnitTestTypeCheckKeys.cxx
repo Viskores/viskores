@@ -34,16 +34,18 @@ void TestCheckKeys()
   using viskores::cont::arg::TypeCheckTagKeys;
 
   VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagKeys, viskores::worklet::Keys<viskores::Id>>::value),
-                   "Type check failed.");
-  VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagKeys, viskores::worklet::Keys<viskores::Float32>>::value),
-                   "Type check failed.");
+                       "Type check failed.");
+  VISKORES_TEST_ASSERT(
+    (TypeCheck<TypeCheckTagKeys, viskores::worklet::Keys<viskores::Float32>>::value),
+    "Type check failed.");
   VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagKeys, viskores::worklet::Keys<viskores::Id3>>::value),
-                   "Type check failed.");
+                       "Type check failed.");
 
   VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagKeys, TestNotKeys>::value), "Type check failed.");
   VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagKeys, viskores::Id>::value), "Type check failed.");
-  VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagKeys, viskores::cont::ArrayHandle<viskores::Id>>::value),
-                   "Type check failed.");
+  VISKORES_TEST_ASSERT(
+    !(TypeCheck<TypeCheckTagKeys, viskores::cont::ArrayHandle<viskores::Id>>::value),
+    "Type check failed.");
 }
 
 } // anonymous namespace

@@ -36,7 +36,8 @@ void CopyWithRuntime()
   //// BEGIN-EXAMPLE RestrictCopyDevice
   ////
   viskores::cont::ScopedRuntimeDeviceTracker tracker(
-    viskores::cont::DeviceAdapterTagKokkos(), viskores::cont::RuntimeDeviceTrackerMode::Disable);
+    viskores::cont::DeviceAdapterTagKokkos(),
+    viskores::cont::RuntimeDeviceTrackerMode::Disable);
 
   ////
   //// BEGIN-EXAMPLE ArrayCopy

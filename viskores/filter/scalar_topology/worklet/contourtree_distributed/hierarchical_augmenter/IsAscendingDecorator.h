@@ -71,7 +71,8 @@ public:
     VISKORES_EXEC_CONT viskores::Id operator()(viskores::Id i) const
     {
       viskores::Id superparent = this->SuperparentsPortal.Get(i);
-      if (viskores::worklet::contourtree_augmented::IsAscending(this->SuperarcsPortal.Get(superparent)))
+      if (viskores::worklet::contourtree_augmented::IsAscending(
+            this->SuperarcsPortal.Get(superparent)))
       {
         superparent |= viskores::worklet::contourtree_augmented::IS_ASCENDING;
       }

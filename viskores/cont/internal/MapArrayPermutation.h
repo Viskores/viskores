@@ -33,13 +33,13 @@ VISKORES_CONT_EXPORT viskores::cont::UnknownArrayHandle MapArrayPermutation(
 ///
 template <typename T, typename S>
 viskores::cont::UnknownArrayHandle MapArrayPermutation(
-  const viskores::cont::ArrayHandle<T,
-                                viskores::cont::StorageTagPermutation<viskores::cont::StorageTagBasic, S>>&
-    inputArray,
+  const viskores::cont::ArrayHandle<
+    T,
+    viskores::cont::StorageTagPermutation<viskores::cont::StorageTagBasic, S>>& inputArray,
   viskores::Float64 invalidValue = viskores::Nan64())
 {
   viskores::cont::ArrayHandlePermutation<viskores::cont::ArrayHandle<viskores::Id>,
-                                     viskores::cont::ArrayHandle<T, S>>
+                                         viskores::cont::ArrayHandle<T, S>>
     input = inputArray;
   return MapArrayPermutation(input.GetValueArray(), input.GetIndexArray(), invalidValue);
 }

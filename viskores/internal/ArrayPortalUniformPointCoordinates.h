@@ -52,8 +52,8 @@ public:
     VISKORES_ASSERT(index >= 0);
     VISKORES_ASSERT(index < this->GetNumberOfValues());
     return this->Get(viskores::Id3(index % this->Dimensions[0],
-                               (index / this->Dimensions[0]) % this->Dimensions[1],
-                               index / (this->Dimensions[0] * this->Dimensions[1])));
+                                   (index / this->Dimensions[0]) % this->Dimensions[1],
+                                   index / (this->Dimensions[0] * this->Dimensions[1])));
   }
 
   VISKORES_EXEC_CONT
@@ -64,11 +64,11 @@ public:
   {
     VISKORES_ASSERT((index[0] >= 0) && (index[1] >= 0) && (index[2] >= 0));
     VISKORES_ASSERT((index[0] < this->Dimensions[0]) && (index[1] < this->Dimensions[1]) &&
-                (index[2] < this->Dimensions[2]));
-    return ValueType(this->Origin[0] + this->Spacing[0] * static_cast<viskores::FloatDefault>(index[0]),
-                     this->Origin[1] + this->Spacing[1] * static_cast<viskores::FloatDefault>(index[1]),
-                     this->Origin[2] +
-                       this->Spacing[2] * static_cast<viskores::FloatDefault>(index[2]));
+                    (index[2] < this->Dimensions[2]));
+    return ValueType(
+      this->Origin[0] + this->Spacing[0] * static_cast<viskores::FloatDefault>(index[0]),
+      this->Origin[1] + this->Spacing[1] * static_cast<viskores::FloatDefault>(index[1]),
+      this->Origin[2] + this->Spacing[2] * static_cast<viskores::FloatDefault>(index[2]));
   }
 
   VISKORES_EXEC_CONT

@@ -32,7 +32,8 @@ void ValidateDataSet(const viskores::cont::DataSet& ds,
   //Verify basics..
 
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Wrong number of fields.");
-  VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1, "Wrong number of coordinate systems.");
+  VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
+                       "Wrong number of coordinate systems.");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == numPoints, "Wrong number of coordinates.");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == numCells, "Wrong number of cells.");
 
@@ -82,7 +83,10 @@ void ValidateDataSet(const viskores::cont::DataSet& ds,
 }
 
 template <typename T>
-viskores::Range FillMethod(viskores::IdComponent method, viskores::Id dimensionSize, T& origin, T& spacing)
+viskores::Range FillMethod(viskores::IdComponent method,
+                           viskores::Id dimensionSize,
+                           T& origin,
+                           T& spacing)
 {
   switch (method)
   {

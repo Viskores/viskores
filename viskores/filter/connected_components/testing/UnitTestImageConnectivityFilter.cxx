@@ -27,7 +27,8 @@ viskores::cont::DataSet MakeTestDataSet()
     0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0,
   };
 
-  viskores::cont::DataSet dataSet = viskores::cont::DataSetBuilderUniform::Create(viskores::Id3(8, 8, 1));
+  viskores::cont::DataSet dataSet =
+    viskores::cont::DataSetBuilderUniform::Create(viskores::Id3(8, 8, 1));
 
   dataSet.AddPointField("color", pixels);
 
@@ -48,9 +49,9 @@ void TestImageConnectivity()
   temp.AsArrayHandle(resultArrayHandle);
 
   std::vector<viskores::Id> componentExpected = { 0, 1, 1, 1, 0, 1, 1, 2, 0, 0, 0, 1, 0, 1, 1, 2,
-                                              0, 1, 1, 0, 0, 1, 1, 2, 0, 1, 0, 0, 0, 1, 1, 2,
-                                              0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
-                                              0, 1, 0, 1, 1, 1, 3, 3, 0, 1, 1, 1, 1, 1, 3, 3 };
+                                                  0, 1, 1, 0, 0, 1, 1, 2, 0, 1, 0, 0, 0, 1, 1, 2,
+                                                  0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1,
+                                                  0, 1, 0, 1, 1, 1, 3, 3, 0, 1, 1, 1, 1, 1, 3, 3 };
 
   for (viskores::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {

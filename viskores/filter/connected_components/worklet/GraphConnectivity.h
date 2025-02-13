@@ -36,10 +36,10 @@ public:
 
   template <typename InPortalType, typename AtomicCompInOut>
   VISKORES_EXEC void operator()(viskores::Id index,
-                            viskores::Id start,
-                            viskores::Id degree,
-                            const InPortalType& conn,
-                            AtomicCompInOut& comp) const
+                                viskores::Id start,
+                                viskores::Id degree,
+                                const InPortalType& conn,
+                                AtomicCompInOut& comp) const
   {
     for (viskores::Id offset = start; offset < start + degree; offset++)
     {

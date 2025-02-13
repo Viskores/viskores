@@ -17,8 +17,8 @@ namespace
 {
 //-----------------------------------------------------------------------------
 VISKORES_CONT bool DoMapField(viskores::cont::DataSet& result,
-                          const viskores::cont::Field& field,
-                          const viskores::worklet::Triangulate& worklet)
+                              const viskores::cont::Field& field,
+                              const viskores::worklet::Triangulate& worklet)
 {
   if (field.IsPointField())
   {
@@ -88,7 +88,8 @@ VISKORES_CONT viskores::cont::DataSet Triangulate::DoExecute(const viskores::con
 
     auto shapeArray = inCellSetExplicit.GetShapesArray(viskores::TopologyElementTagCell(),
                                                        viskores::TopologyElementTagPoint());
-    auto isCellTriangleArray = viskores::cont::make_ArrayHandleTransform(shapeArray, IsShapeTriangle{});
+    auto isCellTriangleArray =
+      viskores::cont::make_ArrayHandleTransform(shapeArray, IsShapeTriangle{});
     allTriangles = viskores::cont::Algorithm::Reduce(isCellTriangleArray, true, BinaryAnd{});
 
     if (allTriangles)
@@ -101,10 +102,13 @@ VISKORES_CONT viskores::cont::DataSet Triangulate::DoExecute(const viskores::con
                                                              viskores::TopologyElementTagPoint()));
 
       // Copy all fields from the input
-      output = this->CreateResult(input, outCellSet, [&](auto& result, const auto& f) {
-        result.AddField(f);
-        return true;
-      });
+      output = this->CreateResult(input,
+                                  outCellSet,
+                                  [&](auto& result, const auto& f)
+                                  {
+                                    result.AddField(f);
+                                    return true;
+                                  });
     }
   }
 
@@ -112,7 +116,7 @@ VISKORES_CONT viskores::cont::DataSet Triangulate::DoExecute(const viskores::con
   {
     viskores::worklet::Triangulate worklet;
     viskores::cont::CastAndCall(inCellSet,
-                            [&](const auto& concrete) { outCellSet = worklet.Run(concrete); });
+                                [&](const auto& concrete) { outCellSet = worklet.Run(concrete); });
 
     auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
     // create the output dataset (without a CoordinateSystem).
@@ -121,7 +125,8 @@ VISKORES_CONT viskores::cont::DataSet Triangulate::DoExecute(const viskores::con
 
   // We did not change the geometry of the input dataset at all. Just attach coordinate system
   // of input dataset to output dataset.
-  for (viskores::IdComponent coordSystemId = 0; coordSystemId < input.GetNumberOfCoordinateSystems();
+  for (viskores::IdComponent coordSystemId = 0;
+       coordSystemId < input.GetNumberOfCoordinateSystems();
        ++coordSystemId)
   {
     output.AddCoordinateSystem(input.GetCoordinateSystem(coordSystemId));

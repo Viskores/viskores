@@ -144,8 +144,8 @@ private:
       viskores::cont::make_ArrayHandle(HighDecomposeFilter, FilterLength, viskores::CopyFlag::Off);
     LowReconType =
       viskores::cont::make_ArrayHandle(LowReconstructFilter, FilterLength, viskores::CopyFlag::Off);
-    HighReconType =
-      viskores::cont::make_ArrayHandle(HighReconstructFilter, FilterLength, viskores::CopyFlag::Off);
+    HighReconType = viskores::cont::make_ArrayHandle(
+      HighReconstructFilter, FilterLength, viskores::CopyFlag::Off);
   }
 
   // Flipping operation; helper function to initialize a filter.

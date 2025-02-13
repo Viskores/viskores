@@ -56,8 +56,8 @@ struct TryExecuteTestFunctor
 
   template <typename Device>
   VISKORES_CONT bool operator()(Device,
-                            const viskores::cont::ArrayHandle<viskores::FloatDefault>& in,
-                            viskores::cont::ArrayHandle<viskores::FloatDefault>& out)
+                                const viskores::cont::ArrayHandle<viskores::FloatDefault>& in,
+                                viskores::cont::ArrayHandle<viskores::FloatDefault>& out)
   {
     using Algorithm = viskores::cont::DeviceAdapterAlgorithm<Device>;
     Algorithm::Copy(in, out);
@@ -180,7 +180,8 @@ void RunErrorTest(bool shouldFail, bool shouldThrow, bool shouldDisable)
 
   VISKORES_TEST_ASSERT(shouldFail == !succeeded, "TryExecute return status incorrect.");
   VISKORES_TEST_ASSERT(threw == shouldThrow, "TryExecute throw behavior incorrect.");
-  VISKORES_TEST_ASSERT(disabled == shouldDisable, "TryExecute device-disabling behavior incorrect.");
+  VISKORES_TEST_ASSERT(disabled == shouldDisable,
+                       "TryExecute device-disabling behavior incorrect.");
 }
 
 void TryExecuteErrorTests()

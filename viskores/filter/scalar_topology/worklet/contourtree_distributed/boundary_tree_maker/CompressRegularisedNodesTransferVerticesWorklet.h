@@ -81,8 +81,8 @@ public:
 
   template <typename OutPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& bractVertexSupersetIndex,
-                            const viskores::Id& newVertexIdIn,
-                            const OutPortalType& newVertexIndexPortal) const
+                                const viskores::Id& newVertexIdIn,
+                                const OutPortalType& newVertexIndexPortal) const
   {
     if (!viskores::worklet::contourtree_augmented::NoSuchElement(newVertexIdIn))
     {

@@ -55,7 +55,8 @@ public:
     viskores::cont::UnknownArrayHandle outArray;
 
     hello_worklet_example::HelloWorklet mag;
-    auto resolveType = [&](const auto& inputArray) {
+    auto resolveType = [&](const auto& inputArray)
+    {
       // use std::decay to remove const ref from the decltype of concrete.
       using T = typename std::decay_t<decltype(inputArray)>::ValueType::ComponentType;
       viskores::cont::ArrayHandle<T> result;

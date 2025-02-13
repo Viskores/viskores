@@ -33,7 +33,9 @@ struct ZFPStream
   viskores::Int32 minexp;
 
   template <typename T>
-  viskores::Float64 SetRate(const viskores::Float64 rate, const viskores::Int32 dims, T viskoresNotUsed(valueType))
+  viskores::Float64 SetRate(const viskores::Float64 rate,
+                            const viskores::Int32 dims,
+                            T viskoresNotUsed(valueType))
   {
     viskores::UInt32 n = 1u << (2 * dims);
     viskores::UInt32 bits = (unsigned int)floor(n * rate + 0.5);

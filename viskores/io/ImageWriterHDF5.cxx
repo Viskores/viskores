@@ -51,7 +51,9 @@ void ImageWriterHDF5::WriteDataSet(const viskores::cont::DataSet& dataSet,
 }
 
 template <typename PixelType>
-herr_t ImageWriterHDF5::WriteToFile(viskores::Id width, viskores::Id height, const ColorArrayType& pixels)
+herr_t ImageWriterHDF5::WriteToFile(viskores::Id width,
+                                    viskores::Id height,
+                                    const ColorArrayType& pixels)
 {
   constexpr auto BYTES_PER_PIXEL = PixelType::BYTES_PER_PIXEL;
 
@@ -65,7 +67,8 @@ herr_t ImageWriterHDF5::WriteToFile(viskores::Id width, viskores::Id height, con
     for (viskores::Id xindex = 0; xindex < width; ++xindex)
     {
       viskores::Id viskoresIndex = yindex * width + xindex;
-      PixelType(pixelPortal.Get(viskoresIndex)).FillImageAtIndexWithPixel(imageData.data(), pixelIndex);
+      PixelType(pixelPortal.Get(viskoresIndex))
+        .FillImageAtIndexWithPixel(imageData.data(), pixelIndex);
       pixelIndex++;
     }
   }

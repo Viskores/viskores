@@ -208,7 +208,8 @@ void DoStreamlines()
 
   viskores::cont::ArrayHandle<viskores::Vec3f> vectorField;
   viskores::cont::ArrayCopy(
-    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(1, 0, 0), numPoints), vectorField);
+    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(1, 0, 0), numPoints),
+    vectorField);
   inData.AddPointField("vectorvar", vectorField);
 
   ////
@@ -247,7 +248,8 @@ void DoStreamsurface()
 
   viskores::cont::ArrayHandle<viskores::Vec3f> vectorField;
   viskores::cont::ArrayCopy(
-    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(1, 0, 0), numPoints), vectorField);
+    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(1, 0, 0), numPoints),
+    vectorField);
   inData.AddPointField("vectorvar", vectorField);
 
   ////
@@ -324,12 +326,14 @@ void DoPathlines()
 
   viskores::cont::ArrayHandle<viskores::Vec3f> vectorField1;
   viskores::cont::ArrayCopy(
-    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(1, 0, 0), numPoints), vectorField1);
+    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(1, 0, 0), numPoints),
+    vectorField1);
   inData1.AddPointField("vectorvar", vectorField1);
 
   viskores::cont::ArrayHandle<viskores::Vec3f> vectorField2;
   viskores::cont::ArrayCopy(
-    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(0, 1, 0), numPoints), vectorField2);
+    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(0, 1, 0), numPoints),
+    vectorField2);
   inData2.AddPointField("vectorvar", vectorField2);
 
   ////
@@ -369,8 +373,8 @@ void DoCheckFieldPassing()
 
   viskores::cont::ArrayHandle<viskores::Float32> scalars;
   viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Float32>(
-                          1, inData.GetCellSet().GetNumberOfPoints()),
-                        scalars);
+                              1, inData.GetCellSet().GetNumberOfPoints()),
+                            scalars);
   inData.AddPointField("scalars", scalars);
 
   viskores::filter::field_transform::PointElevation filter;
@@ -390,11 +394,12 @@ void DoCheckFieldPassing()
 
   {
     viskores::cont::DataSet outData = filter.Execute(inData);
-    for (viskores::IdComponent fieldId = 0; fieldId < inData.GetNumberOfFields(); ++fieldId)
+    for (viskores::IdComponent fieldId = 0; fieldId < inData.GetNumberOfFields();
+         ++fieldId)
     {
       viskores::cont::Field inField = inData.GetField(fieldId);
       VISKORES_TEST_ASSERT(outData.HasField(inField.GetName(), inField.GetAssociation()),
-                       "Did not automatically pass all fields.");
+                           "Did not automatically pass all fields.");
     }
   }
 
@@ -417,7 +422,7 @@ void DoCheckFieldPassing()
 
     viskores::cont::DataSet outData = filter.Execute(inData);
     VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 1,
-                     "Could not turn off passing of fields");
+                         "Could not turn off passing of fields");
   }
 
   {
@@ -433,7 +438,7 @@ void DoCheckFieldPassing()
     viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
     VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 2,
-                     "Could not set field passing correctly.");
+                         "Could not set field passing correctly.");
     VISKORES_TEST_ASSERT(outData.HasPointField("pointvar"));
   }
 
@@ -450,7 +455,7 @@ void DoCheckFieldPassing()
     viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
     VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 3,
-                     "Could not set field passing correctly.");
+                         "Could not set field passing correctly.");
     VISKORES_TEST_ASSERT(outData.HasPointField("pointvar"));
     VISKORES_TEST_ASSERT(outData.HasCellField("cellvar"));
   }
@@ -468,7 +473,7 @@ void DoCheckFieldPassing()
     viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
     VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == (inData.GetNumberOfFields() - 1),
-                     "Could not set field passing correctly.");
+                         "Could not set field passing correctly.");
     VISKORES_TEST_ASSERT(outData.HasField("scalars"));
   }
 
@@ -489,7 +494,7 @@ void DoCheckFieldPassing()
     viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
     VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 3,
-                     "Could not set field passing correctly.");
+                         "Could not set field passing correctly.");
     VISKORES_TEST_ASSERT(outData.HasField("scalars"));
     VISKORES_TEST_ASSERT(outData.HasCellField("cellvar"));
   }
@@ -507,7 +512,7 @@ void DoCheckFieldPassing()
     viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
     VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 2,
-                     "Could not set field passing correctly.");
+                         "Could not set field passing correctly.");
     VISKORES_TEST_ASSERT(outData.HasPointField("pointvar"));
   }
 
@@ -527,7 +532,7 @@ void DoCheckFieldPassing()
     viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
     VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 4,
-                     "Could not set field passing correctly.");
+                         "Could not set field passing correctly.");
     VISKORES_TEST_ASSERT(outData.HasPointField("pointvar"));
     VISKORES_TEST_ASSERT(outData.HasCellField("cellvar"));
     VISKORES_TEST_ASSERT(outData.HasField("scalars"));

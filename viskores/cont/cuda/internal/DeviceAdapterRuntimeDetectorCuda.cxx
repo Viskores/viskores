@@ -30,25 +30,27 @@ void queryNumberOfDevicesandHighestArchSupported(viskores::Int32& nod, viskores:
   // initialize that query device Existence before we initialize the Runtime
   // Configuration. Once those constraints are removed/fixed this file can be
   // updated to use that call instead of directly querying the cuda device
-  std::call_once(deviceQueryFlag, []() {
-    //first query for the number of devices
-    auto res = cudaGetDeviceCount(&numDevices);
-    if (res != cudaSuccess)
-    {
-      numDevices = 0;
-    }
+  std::call_once(deviceQueryFlag,
+                 []()
+                 {
+                   //first query for the number of devices
+                   auto res = cudaGetDeviceCount(&numDevices);
+                   if (res != cudaSuccess)
+                   {
+                     numDevices = 0;
+                   }
 
-    for (viskores::Int32 i = 0; i < numDevices; i++)
-    {
-      cudaDeviceProp prop;
-      res = cudaGetDeviceProperties(&prop, i);
-      if (res == cudaSuccess)
-      {
-        const viskores::Int32 arch = (prop.major * 10) + prop.minor;
-        archVersion = viskores::Max(arch, archVersion);
-      }
-    }
-  });
+                   for (viskores::Int32 i = 0; i < numDevices; i++)
+                   {
+                     cudaDeviceProp prop;
+                     res = cudaGetDeviceProperties(&prop, i);
+                     if (res == cudaSuccess)
+                     {
+                       const viskores::Int32 arch = (prop.major * 10) + prop.minor;
+                       archVersion = viskores::Max(arch, archVersion);
+                     }
+                   }
+                 });
   nod = numDevices;
   has = archVersion;
 }

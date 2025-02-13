@@ -120,8 +120,8 @@ inline DataSetMeshTriangulation3DMarchingCubes::DataSetMeshTriangulation3DMarchi
   // Initialize the case tables in viskores
   this->EdgeBoundaryDetectionMasks =
     viskores::cont::make_ArrayHandle(m3d_marchingcubes::EdgeBoundaryDetectionMasks,
-                                 m3d_marchingcubes::N_ALL_NEIGHBOURS,
-                                 viskores::CopyFlag::Off);
+                                     m3d_marchingcubes::N_ALL_NEIGHBOURS,
+                                     viskores::CopyFlag::Off);
   this->CubeVertexPermutations = viskores::cont::make_ArrayHandleGroupVec<
     m3d_marchingcubes::
       CubeVertexPermutations_PermVecLength>( // create 2D array of vectors of lenghts ...PermVecLength
@@ -148,12 +148,12 @@ inline DataSetMeshTriangulation3DMarchingCubes::DataSetMeshTriangulation3DMarchi
       viskores::CopyFlag::Off));
   this->InCubeConnectionsSix =
     viskores::cont::make_ArrayHandle(m3d_marchingcubes::InCubeConnectionsSix,
-                                 m3d_marchingcubes::InCubeConnectionsSix_NumElements,
-                                 viskores::CopyFlag::Off);
+                                     m3d_marchingcubes::InCubeConnectionsSix_NumElements,
+                                     viskores::CopyFlag::Off);
   this->InCubeConnectionsEighteen =
     viskores::cont::make_ArrayHandle(m3d_marchingcubes::InCubeConnectionsEighteen,
-                                 m3d_marchingcubes::InCubeConnectionsEighteen_NumElements,
-                                 viskores::CopyFlag::Off);
+                                     m3d_marchingcubes::InCubeConnectionsEighteen_NumElements,
+                                     viskores::CopyFlag::Off);
 }
 
 inline void DataSetMeshTriangulation3DMarchingCubes::SetPrepareForExecutionBehavior(bool getMax)

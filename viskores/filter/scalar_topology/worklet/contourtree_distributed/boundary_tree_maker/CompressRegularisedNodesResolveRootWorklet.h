@@ -81,7 +81,7 @@ public:
 
   template <typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& newIndex,
-                            const InOutFieldPortalType& newSuperarcPortal) const
+                                const InOutFieldPortalType& newSuperarcPortal) const
   {
     // per kept vertex
     // retrieve it to register
@@ -102,8 +102,8 @@ public:
     // if there is loopback and we're the lower one, substitute NULL
     if (newIndex < newInbound)
     {
-      newSuperarcPortal.Set(newIndex,
-                            (viskores::Id)viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+      newSuperarcPortal.Set(
+        newIndex, (viskores::Id)viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
     }
 
     // In serial this worklet implements the following operation

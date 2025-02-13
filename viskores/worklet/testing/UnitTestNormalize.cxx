@@ -66,7 +66,7 @@ void TestNormal()
 
   //Make sure the number of values match.
   VISKORES_TEST_ASSERT(outputArray.GetNumberOfValues() == inputArray.GetNumberOfValues(),
-                   "Wrong number of results for Normalize worklet");
+                       "Wrong number of results for Normalize worklet");
 
   //Make sure each vector is correct.
   for (viskores::Id i = 0; i < inputArray.GetNumberOfValues(); i++)
@@ -93,7 +93,8 @@ void TestNormalize()
   inputArray = viskores::cont::make_ArrayHandle(inputVecs, viskores::CopyFlag::On);
 
   viskores::worklet::Normalize normalizeWorklet;
-  viskores::worklet::DispatcherMapField<viskores::worklet::Normalize> dispatcherNormalize(normalizeWorklet);
+  viskores::worklet::DispatcherMapField<viskores::worklet::Normalize> dispatcherNormalize(
+    normalizeWorklet);
   dispatcherNormalize.Invoke(inputArray);
 
   //Make sure each vector is correct.

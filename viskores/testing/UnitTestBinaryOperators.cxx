@@ -74,51 +74,62 @@ void BinaryOperatorTest()
     // Test1: basic param
     {
       result = min_and_max(T(1));
-      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(1), T(1))), "Test1 MinAndMax wrong");
+      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(1), T(1))),
+                           "Test1 MinAndMax wrong");
     }
 
     // Test2: basic param
     {
       result = min_and_max(viskores::TypeTraits<T>::ZeroInitialization(), T(1));
       VISKORES_TEST_ASSERT(
-        test_equal(result, viskores::Vec<T, 2>(viskores::TypeTraits<T>::ZeroInitialization(), T(1))),
+        test_equal(result,
+                   viskores::Vec<T, 2>(viskores::TypeTraits<T>::ZeroInitialization(), T(1))),
         "Test2 MinAndMax wrong");
 
       result = min_and_max(T(2), T(1));
-      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(1), T(2))), "Test2 MinAndMax wrong");
+      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(1), T(2))),
+                           "Test2 MinAndMax wrong");
     }
 
     // Test3: 1st param vector, 2nd param basic
     {
       result = min_and_max(viskores::Vec<T, 2>(3, 5), T(7));
-      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(3), T(7))), "Test3 MinAndMax Wrong");
+      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(3), T(7))),
+                           "Test3 MinAndMax Wrong");
 
       result = min_and_max(viskores::Vec<T, 2>(3, 5), T(2));
-      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(2), T(5))), "Test3 MinAndMax Wrong");
+      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(2), T(5))),
+                           "Test3 MinAndMax Wrong");
     }
 
     // Test4: 1st param basic, 2nd param vector
     {
       result = min_and_max(T(7), viskores::Vec<T, 2>(3, 5));
-      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(3), T(7))), "Test4 MinAndMax Wrong");
+      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(3), T(7))),
+                           "Test4 MinAndMax Wrong");
 
       result = min_and_max(T(2), viskores::Vec<T, 2>(3, 5));
-      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(2), T(5))), "Test4 MinAndMax Wrong");
+      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(2), T(5))),
+                           "Test4 MinAndMax Wrong");
     }
 
     // Test5: 2 vector param
     {
       result = min_and_max(viskores::Vec<T, 2>(2, 4), viskores::Vec<T, 2>(3, 5));
-      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(2), T(5))), "Test5 MinAndMax Wrong");
+      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(2), T(5))),
+                           "Test5 MinAndMax Wrong");
 
       result = min_and_max(viskores::Vec<T, 2>(2, 7), viskores::Vec<T, 2>(3, 5));
-      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(2), T(7))), "Test5 MinAndMax Wrong");
+      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(2), T(7))),
+                           "Test5 MinAndMax Wrong");
 
       result = min_and_max(viskores::Vec<T, 2>(4, 4), viskores::Vec<T, 2>(1, 8));
-      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(1), T(8))), "Test5 MinAndMax Wrong");
+      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(1), T(8))),
+                           "Test5 MinAndMax Wrong");
 
       result = min_and_max(viskores::Vec<T, 2>(4, 4), viskores::Vec<T, 2>(3, 3));
-      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(3), T(4))), "Test5 MinAndMax Wrong");
+      VISKORES_TEST_ASSERT(test_equal(result, viskores::Vec<T, 2>(T(3), T(4))),
+                           "Test5 MinAndMax Wrong");
     }
   }
 }

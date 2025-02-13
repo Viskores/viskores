@@ -65,7 +65,9 @@ inline VISKORES_EXEC viskores::Int32 MaxExponent(const FloatType* vals)
 }
 
 // maximum number of bit planes to encode
-inline VISKORES_EXEC viskores::Int32 precision(viskores::Int32 maxexp, viskores::Int32 maxprec, viskores::Int32 minexp)
+inline VISKORES_EXEC viskores::Int32 precision(viskores::Int32 maxexp,
+                                               viskores::Int32 maxprec,
+                                               viskores::Int32 minexp)
 {
   return viskores::Min(maxprec, viskores::Max(0, maxexp - minexp + 8));
 }
@@ -135,16 +137,19 @@ template <typename Int, typename UInt>
 inline VISKORES_EXEC UInt int2uint(const Int x);
 
 template <>
-inline VISKORES_EXEC viskores::UInt64 int2uint<viskores::Int64, viskores::UInt64>(const viskores::Int64 x)
+inline VISKORES_EXEC viskores::UInt64 int2uint<viskores::Int64, viskores::UInt64>(
+  const viskores::Int64 x)
 {
   return (static_cast<viskores::UInt64>(x) + (viskores::UInt64)0xaaaaaaaaaaaaaaaaull) ^
     (viskores::UInt64)0xaaaaaaaaaaaaaaaaull;
 }
 
 template <>
-inline VISKORES_EXEC viskores::UInt32 int2uint<viskores::Int32, viskores::UInt32>(const viskores::Int32 x)
+inline VISKORES_EXEC viskores::UInt32 int2uint<viskores::Int32, viskores::UInt32>(
+  const viskores::Int32 x)
 {
-  return (static_cast<viskores::UInt32>(x) + (viskores::UInt32)0xaaaaaaaau) ^ (viskores::UInt32)0xaaaaaaaau;
+  return (static_cast<viskores::UInt32>(x) + (viskores::UInt32)0xaaaaaaaau) ^
+    (viskores::UInt32)0xaaaaaaaau;
 }
 
 
@@ -239,9 +244,9 @@ inline VISKORES_EXEC void fwd_xform<viskores::Int32, 4>(viskores::Int32* p)
 
 template <viskores::Int32 BlockSize, typename PortalType, typename Int>
 VISKORES_EXEC void encode_block(BlockWriter<BlockSize, PortalType>& stream,
-                            viskores::Int32 maxbits,
-                            viskores::Int32 maxprec,
-                            Int* iblock)
+                                viskores::Int32 maxbits,
+                                viskores::Int32 maxprec,
+                                Int* iblock)
 {
   using UInt = typename zfp_traits<Int>::UInt;
 
@@ -283,9 +288,9 @@ VISKORES_EXEC void encode_block(BlockWriter<BlockSize, PortalType>& stream,
 
 template <viskores::Int32 BlockSize, typename Scalar, typename PortalType>
 inline VISKORES_EXEC void zfp_encodef(Scalar* fblock,
-                                  viskores::Int32 maxbits,
-                                  viskores::UInt32 blockIdx,
-                                  PortalType& stream)
+                                      viskores::Int32 maxbits,
+                                      viskores::UInt32 blockIdx,
+                                      PortalType& stream)
 {
   using Int = typename zfp::zfp_traits<Scalar>::Int;
   zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, viskores::Id(blockIdx));
@@ -319,9 +324,9 @@ template <viskores::Int32 BlockSize, typename PortalType>
 struct ZFPBlockEncoder<BlockSize, viskores::Float32, PortalType>
 {
   VISKORES_EXEC void encode(viskores::Float32* fblock,
-                        viskores::Int32 maxbits,
-                        viskores::UInt32 blockIdx,
-                        PortalType& stream)
+                            viskores::Int32 maxbits,
+                            viskores::UInt32 blockIdx,
+                            PortalType& stream)
   {
     zfp_encodef<BlockSize>(fblock, maxbits, blockIdx, stream);
   }
@@ -331,9 +336,9 @@ template <viskores::Int32 BlockSize, typename PortalType>
 struct ZFPBlockEncoder<BlockSize, viskores::Float64, PortalType>
 {
   VISKORES_EXEC void encode(viskores::Float64* fblock,
-                        viskores::Int32 maxbits,
-                        viskores::UInt32 blockIdx,
-                        PortalType& stream)
+                            viskores::Int32 maxbits,
+                            viskores::UInt32 blockIdx,
+                            PortalType& stream)
   {
     zfp_encodef<BlockSize>(fblock, maxbits, blockIdx, stream);
   }
@@ -343,9 +348,9 @@ template <viskores::Int32 BlockSize, typename PortalType>
 struct ZFPBlockEncoder<BlockSize, viskores::Int32, PortalType>
 {
   VISKORES_EXEC void encode(viskores::Int32* fblock,
-                        viskores::Int32 maxbits,
-                        viskores::UInt32 blockIdx,
-                        PortalType& stream)
+                            viskores::Int32 maxbits,
+                            viskores::UInt32 blockIdx,
+                            PortalType& stream)
   {
     using Int = typename zfp::zfp_traits<viskores::Int32>::Int;
     zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, viskores::Id(blockIdx));
@@ -357,9 +362,9 @@ template <viskores::Int32 BlockSize, typename PortalType>
 struct ZFPBlockEncoder<BlockSize, viskores::Int64, PortalType>
 {
   VISKORES_EXEC void encode(viskores::Int64* fblock,
-                        viskores::Int32 maxbits,
-                        viskores::UInt32 blockIdx,
-                        PortalType& stream)
+                            viskores::Int32 maxbits,
+                            viskores::UInt32 blockIdx,
+                            PortalType& stream)
   {
     using Int = typename zfp::zfp_traits<viskores::Int64>::Int;
     zfp::BlockWriter<BlockSize, PortalType> blockWriter(stream, maxbits, viskores::Id(blockIdx));

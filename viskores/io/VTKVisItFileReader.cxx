@@ -58,12 +58,12 @@ viskores::cont::PartitionedDataSet VTKVisItFileReader::ReadPartitionedDataSet()
       //!NBLOCKS is already set!!
       if (numBlocks > 0)
         throw viskores::io::ErrorIO("Invalid file: " + this->FileName +
-                                ". `!NBLOCKS` specified more than once.");
+                                    ". `!NBLOCKS` specified more than once.");
 
       numBlocks = std::atoi(line.substr(8, line.size()).c_str());
       if (numBlocks <= 0)
         throw viskores::io::ErrorIO("Invalid file: " + this->FileName +
-                                ". Number of blocks (!NBLOCKS) must be > 0.");
+                                    ". Number of blocks (!NBLOCKS) must be > 0.");
     }
     else if (numBlocks > 0)
     {
@@ -76,14 +76,14 @@ viskores::cont::PartitionedDataSet VTKVisItFileReader::ReadPartitionedDataSet()
       else
       {
         VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                   "Skipping: " << line << ". It does not appear to be a legacy VTK file.");
+                       "Skipping: " << line << ". It does not appear to be a legacy VTK file.");
         continue;
       }
     }
     else
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 "Skipping line that occurs before `!NBLOCKS`: " << line);
+                     "Skipping line that occurs before `!NBLOCKS`: " << line);
       continue;
     }
   }

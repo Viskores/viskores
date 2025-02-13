@@ -55,7 +55,10 @@ public:
   /// @brief Specify the `CoordinateSystem` defining the location of the cells.
   ///
   /// This is typically retrieved from the `viskores::cont::DataSet::GetCoordinateSystem()` method.
-  VISKORES_CONT const viskores::cont::CoordinateSystem& GetCoordinates() const { return this->Coords; }
+  VISKORES_CONT const viskores::cont::CoordinateSystem& GetCoordinates() const
+  {
+    return this->Coords;
+  }
   /// @copydoc GetCoordinates
   VISKORES_CONT void SetCoordinates(const viskores::cont::CoordinateSystem& coords)
   {

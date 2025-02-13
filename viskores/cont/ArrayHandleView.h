@@ -115,7 +115,8 @@ class Storage<T, StorageTagView<ST>>
 public:
   VISKORES_STORAGE_NO_RESIZE;
 
-  using ReadPortalType = viskores::internal::ArrayPortalView<typename ArrayHandleType::ReadPortalType>;
+  using ReadPortalType =
+    viskores::internal::ArrayPortalView<typename ArrayHandleType::ReadPortalType>;
   using WritePortalType =
     viskores::internal::ArrayPortalView<typename ArrayHandleType::WritePortalType>;
 
@@ -136,18 +137,20 @@ public:
     viskores::cont::DeviceAdapterId device,
     viskores::cont::Token& token)
   {
-    viskores::internal::ViewIndices indices = buffers[0].GetMetaData<viskores::internal::ViewIndices>();
+    viskores::internal::ViewIndices indices =
+      buffers[0].GetMetaData<viskores::internal::ViewIndices>();
     return ReadPortalType(SourceStorage::CreateReadPortal(SourceBuffers(buffers), device, token),
                           indices);
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             const T& fillValue,
-                             viskores::Id startIndex,
-                             viskores::Id endIndex,
-                             viskores::cont::Token& token)
+                                 const T& fillValue,
+                                 viskores::Id startIndex,
+                                 viskores::Id endIndex,
+                                 viskores::cont::Token& token)
   {
-    viskores::internal::ViewIndices indices = buffers[0].GetMetaData<viskores::internal::ViewIndices>();
+    viskores::internal::ViewIndices indices =
+      buffers[0].GetMetaData<viskores::internal::ViewIndices>();
     viskores::Id adjustedStartIndex = startIndex + indices.StartIndex;
     viskores::Id adjustedEndIndex = (endIndex < indices.NumberOfValues)
       ? endIndex + indices.StartIndex
@@ -161,7 +164,8 @@ public:
     viskores::cont::DeviceAdapterId device,
     viskores::cont::Token& token)
   {
-    viskores::internal::ViewIndices indices = buffers[0].GetMetaData<viskores::internal::ViewIndices>();
+    viskores::internal::ViewIndices indices =
+      buffers[0].GetMetaData<viskores::internal::ViewIndices>();
     return WritePortalType(SourceStorage::CreateWritePortal(SourceBuffers(buffers), device, token),
                            indices);
   }
@@ -171,8 +175,8 @@ public:
     viskores::Id numValues = 0,
     const ArrayHandleType& array = ArrayHandleType{})
   {
-    return viskores::cont::internal::CreateBuffers(viskores::internal::ViewIndices(startIndex, numValues),
-                                               array);
+    return viskores::cont::internal::CreateBuffers(
+      viskores::internal::ViewIndices(startIndex, numValues), array);
   }
 
   VISKORES_CONT static ArrayHandleType GetSourceArray(
@@ -181,7 +185,8 @@ public:
     return ArrayHandleType(SourceBuffers(buffers));
   }
 
-  VISKORES_CONT static viskores::Id GetStartIndex(const std::vector<viskores::cont::internal::Buffer>& buffers)
+  VISKORES_CONT static viskores::Id GetStartIndex(
+    const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<viskores::internal::ViewIndices>().StartIndex;
   }
@@ -198,7 +203,7 @@ public:
 template <typename ArrayHandleType>
 class ArrayHandleView
   : public viskores::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                   StorageTagView<typename ArrayHandleType::StorageTag>>
+                                       StorageTagView<typename ArrayHandleType::StorageTag>>
 {
   VISKORES_IS_ARRAY_HANDLE(ArrayHandleType);
 
@@ -207,7 +212,7 @@ public:
     ArrayHandleView,
     (ArrayHandleView<ArrayHandleType>),
     (viskores::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                             StorageTagView<typename ArrayHandleType::StorageTag>>));
+                                 StorageTagView<typename ArrayHandleType::StorageTag>>));
 
   /// Create an `ArrayHandleView` over a provided source array.
   ///

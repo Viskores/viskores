@@ -105,7 +105,7 @@ public:
       case viskores::cont::Field::Association::Cells:
       {
         viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleTransform(field, predicate),
-                                    passFlags);
+                                        passFlags);
         break;
       }
       default:
@@ -119,7 +119,9 @@ public:
     }
 
     viskores::cont::Algorithm::CopyIf(
-      viskores::cont::ArrayHandleIndex(passFlags.GetNumberOfValues()), passFlags, this->ValidCellIds);
+      viskores::cont::ArrayHandleIndex(passFlags.GetNumberOfValues()),
+      passFlags,
+      this->ValidCellIds);
 
     return OutputType(this->ValidCellIds, cellSet);
   }
@@ -134,10 +136,12 @@ public:
     bool invert = false)
   {
     viskores::cont::UnknownCellSet output;
-    CastAndCall(cellSet, [&](auto concrete) {
-      output = viskores::worklet::CellDeepCopy::Run(
-        this->RunImpl(concrete, field, fieldType, predicate, allPointsMustPass, invert));
-    });
+    CastAndCall(cellSet,
+                [&](auto concrete)
+                {
+                  output = viskores::worklet::CellDeepCopy::Run(this->RunImpl(
+                    concrete, field, fieldType, predicate, allPointsMustPass, invert));
+                });
     return output;
   }
 

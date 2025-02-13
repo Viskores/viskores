@@ -55,14 +55,20 @@ public:
     this->AllowedPixelErrorRatio = pixelErrorRatio;
   }
 
-  VISKORES_CONT viskores::FloatDefault GetPixelDiffThreshold() const { return this->PixelDiffThreshold; }
+  VISKORES_CONT viskores::FloatDefault GetPixelDiffThreshold() const
+  {
+    return this->PixelDiffThreshold;
+  }
   VISKORES_CONT void SetPixelDiffThreshold(const viskores::FloatDefault& threshold)
   {
     this->PixelDiffThreshold = threshold;
   }
 
   VISKORES_CONT bool GetImageDiffWithinThreshold() const { return this->ImageDiffWithinThreshold; }
-  VISKORES_CONT void SetThresholdFieldName(const std::string& name) { this->ThresholdFieldName = name; }
+  VISKORES_CONT void SetThresholdFieldName(const std::string& name)
+  {
+    this->ThresholdFieldName = name;
+  }
   VISKORES_CONT std::string GetThresholdFieldName() const { return this->ThresholdFieldName; }
 
   /// Choose the primary field to operate on.  For Image difference A - B, A is the
@@ -98,7 +104,8 @@ public:
   }
 
 private:
-  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& primaryArray) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(
+    const viskores::cont::DataSet& primaryArray) override;
 
   viskores::IdComponent AverageRadius = 0;
   viskores::IdComponent PixelShiftRadius = 0;

@@ -103,9 +103,9 @@ public:
   { // operator()
     // an attachment point is defined by having no superarc (NO_SUCH_ELEMENT) and not being in
     // the final round (where this indicates the global root)
-    bool predicate =
-      (viskores::worklet::contourtree_augmented::NoSuchElement(this->SuperarcsPortal.Get(supernode)) &&
-       (this->WhichRoundPortal.Get(supernode) < this->NumRounds));
+    bool predicate = (viskores::worklet::contourtree_augmented::NoSuchElement(
+                        this->SuperarcsPortal.Get(supernode)) &&
+                      (this->WhichRoundPortal.Get(supernode) < this->NumRounds));
     // if we pass this check then we need to also check that the supernode passes the pre-simplification threshold
     if (predicate && this->Presimplify)
     {
@@ -134,11 +134,12 @@ class IsAttachementPointPredicate : public viskores::cont::ExecutionObjectBase
 public:
   // constructor - takes vectors as parameters
   VISKORES_CONT
-  IsAttachementPointPredicate(const viskores::worklet::contourtree_augmented::IdArrayType& superarcs,
-                              const viskores::worklet::contourtree_augmented::IdArrayType& whichRound,
-                              const viskores::Id numRounds,
-                              viskores::worklet::contourtree_augmented::IdArrayType* volumeArray = NULL,
-                              viskores::Id presimplifyThreshold = 0)
+  IsAttachementPointPredicate(
+    const viskores::worklet::contourtree_augmented::IdArrayType& superarcs,
+    const viskores::worklet::contourtree_augmented::IdArrayType& whichRound,
+    const viskores::Id numRounds,
+    viskores::worklet::contourtree_augmented::IdArrayType* volumeArray = NULL,
+    viskores::Id presimplifyThreshold = 0)
     : Superarcs(superarcs)
     , WhichRound(whichRound)
     , NumRounds(numRounds)
@@ -147,8 +148,8 @@ public:
   {
   }
 
-  VISKORES_CONT IsAttachementPointPredicateImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                                viskores::cont::Token& token) const
+  VISKORES_CONT IsAttachementPointPredicateImpl
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     return IsAttachementPointPredicateImpl(this->Superarcs,
                                            this->WhichRound,

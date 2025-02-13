@@ -17,7 +17,8 @@ namespace filter
 {
 namespace connected_components
 {
-VISKORES_CONT viskores::cont::DataSet CellSetConnectivity::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet CellSetConnectivity::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   viskores::cont::ArrayHandle<viskores::Id> component;
 

@@ -30,9 +30,9 @@ public:
 
   template <typename VecType, typename ScalarType, typename FunctionType>
   VISKORES_EXEC void operator()(const VecType& point,
-                            ScalarType& val,
-                            VecType& gradient,
-                            const FunctionType& function) const
+                                ScalarType& val,
+                                VecType& gradient,
+                                const FunctionType& function) const
   {
     val = function.Value(point);
     gradient = function.Gradient(point);
@@ -40,18 +40,19 @@ public:
 };
 
 constexpr std::array<viskores::Vec3f, 8> points_g = { { { 0, 0, 0 },
-                                                    { 1, 0, 0 },
-                                                    { 1, 0, 1 },
-                                                    { 0, 0, 1 },
-                                                    { 0, 1, 0 },
-                                                    { 1, 1, 0 },
-                                                    { 1, 1, 1 },
-                                                    { 0, 1, 1 } } };
+                                                        { 1, 0, 0 },
+                                                        { 1, 0, 1 },
+                                                        { 0, 0, 1 },
+                                                        { 0, 1, 0 },
+                                                        { 1, 1, 0 },
+                                                        { 1, 1, 1 },
+                                                        { 0, 1, 1 } } };
 
 template <typename ImplicitFunctionType>
-void EvaluateOnCoordinates(const ImplicitFunctionType& function,
-                           viskores::cont::ArrayHandle<viskores::FloatDefault>& values,
-                           viskores::cont::ArrayHandle<viskores::Vec<viskores::FloatDefault, 3>>& gradients)
+void EvaluateOnCoordinates(
+  const ImplicitFunctionType& function,
+  viskores::cont::ArrayHandle<viskores::FloatDefault>& values,
+  viskores::cont::ArrayHandle<viskores::Vec<viskores::FloatDefault, 3>>& gradients)
 {
   viskores::cont::Invoker invoke;
   auto points = viskores::cont::make_ArrayHandle(
@@ -131,7 +132,8 @@ void TestBox()
           viskores::Vec3f{ 0.0f, 0.0f, 1.0f } } });
 
   std::cout << "  Specified bounds box" << std::endl;
-  box.SetBounds({ viskores::Range(0.0, 1.5), viskores::Range(-0.5, 1.5), viskores::Range(-0.5, 0.5) });
+  box.SetBounds(
+    { viskores::Range(0.0, 1.5), viskores::Range(-0.5, 1.5), viskores::Range(-0.5, 0.5) });
   Try(box,
       { { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f } },
       { { viskores::Vec3f{ -1.0f, 0.0f, 0.0f },
@@ -220,13 +222,12 @@ void TestFrustum()
           viskores::Vec3f{ 0.0f, 0.0f, 1.0f } } });
 
   std::cout << "  With 6 planes" << std::endl;
-  viskores::Vec3f planePoints[6] = {
-    { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f },  { -0.5f, 0.0f, 0.0f },
-    { 0.5f, 0.0f, 0.0f }, { 0.0f, 0.0f, -0.5f }, { 0.0f, 0.0f, 0.5f }
-  };
+  viskores::Vec3f planePoints[6] = { { 0.0f, 0.0f, 0.0f },  { 1.0f, 1.0f, 0.0f },
+                                     { -0.5f, 0.0f, 0.0f }, { 0.5f, 0.0f, 0.0f },
+                                     { 0.0f, 0.0f, -0.5f }, { 0.0f, 0.0f, 0.5f } };
   viskores::Vec3f planeNormals[6] = { { 0.0f, -1.0f, 0.0f }, { 0.707107f, 0.707107f, 0.0f },
-                                  { -1.0f, 0.0f, 0.0f }, { 0.707107f, -0.707107f, 0.0f },
-                                  { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f, 1.0f } };
+                                      { -1.0f, 0.0f, 0.0f }, { 0.707107f, -0.707107f, 0.0f },
+                                      { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f, 1.0f } };
   frustum.SetPlanes(planePoints, planeNormals);
   Try(frustum,
       { { 0.0f, 0.353553f, 0.5f, 0.5f, -0.5f, 0.0f, 0.5f, 0.5f } },

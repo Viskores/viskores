@@ -47,7 +47,8 @@ void MapperConnectivity::SetCanvas(Canvas* canvas)
     CanvasRT = dynamic_cast<CanvasRayTracer*>(canvas);
     if (CanvasRT == nullptr)
     {
-      throw viskores::cont::ErrorBadValue("Volume Render: bad canvas type. Must be CanvasRayTracer");
+      throw viskores::cont::ErrorBadValue(
+        "Volume Render: bad canvas type. Must be CanvasRayTracer");
     }
   }
 }
@@ -59,13 +60,14 @@ viskores::rendering::Canvas* MapperConnectivity::GetCanvas() const
 
 
 VISKORES_CONT
-void MapperConnectivity::RenderCellsImpl(const viskores::cont::UnknownCellSet& cellset,
-                                         const viskores::cont::CoordinateSystem& coords,
-                                         const viskores::cont::Field& scalarField,
-                                         const viskores::cont::ColorTable& viskoresNotUsed(colorTable),
-                                         const viskores::rendering::Camera& camera,
-                                         const viskores::Range& scalarRange,
-                                         const viskores::cont::Field& ghostField)
+void MapperConnectivity::RenderCellsImpl(
+  const viskores::cont::UnknownCellSet& cellset,
+  const viskores::cont::CoordinateSystem& coords,
+  const viskores::cont::Field& scalarField,
+  const viskores::cont::ColorTable& viskoresNotUsed(colorTable),
+  const viskores::rendering::Camera& camera,
+  const viskores::Range& scalarRange,
+  const viskores::cont::Field& ghostField)
 {
   viskores::cont::DataSet dataset;
 

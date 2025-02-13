@@ -138,7 +138,8 @@ struct RangeId
 
 /// Helper function for printing ranges during testing
 ///
-static inline VISKORES_CONT std::ostream& operator<<(std::ostream& stream, const viskores::RangeId& range)
+static inline VISKORES_CONT std::ostream& operator<<(std::ostream& stream,
+                                                     const viskores::RangeId& range)
 {
   return stream << "[" << range.Min << ".." << range.Max << ")";
 } // Declared inside of viskores namespace so that the operator work with ADL lookup

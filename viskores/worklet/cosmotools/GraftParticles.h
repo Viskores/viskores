@@ -103,14 +103,14 @@ public:
             typename InVectorPortalType,
             typename OutPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& i,
-                            const viskores::Id& iPartId,
-                            const viskores::Id& iBinId,
-                            const viskores::UInt32& activeFlag,
-                            const InIdPortalType& partIdArray,
-                            const InFieldPortalType& location,
-                            const InVectorPortalType& firstParticleId,
-                            const InVectorPortalType& lastParticleId,
-                            OutPortalType& haloId) const
+                                const viskores::Id& iPartId,
+                                const viskores::Id& iBinId,
+                                const viskores::UInt32& activeFlag,
+                                const InIdPortalType& partIdArray,
+                                const InFieldPortalType& location,
+                                const InVectorPortalType& firstParticleId,
+                                const InVectorPortalType& lastParticleId,
+                                OutPortalType& haloId) const
   {
     const viskores::Id yVal = (iBinId / xNum) % yNum;
     const viskores::Id zVal = iBinId / (xNum * yNum);

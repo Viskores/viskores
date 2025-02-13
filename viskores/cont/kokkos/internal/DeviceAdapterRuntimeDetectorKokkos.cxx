@@ -13,7 +13,8 @@ namespace viskores
 {
 namespace cont
 {
-VISKORES_CONT bool DeviceAdapterRuntimeDetector<viskores::cont::DeviceAdapterTagKokkos>::Exists() const
+VISKORES_CONT bool DeviceAdapterRuntimeDetector<viskores::cont::DeviceAdapterTagKokkos>::Exists()
+  const
 {
   return viskores::cont::DeviceAdapterTagKokkos::IsEnabled;
 }

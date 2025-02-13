@@ -23,7 +23,8 @@ namespace flow
 // using ArrayType       = viskores::cont::ArrayHandle<viskores::Vec3f>;
 // using FieldType       = viskores::worklet::flow::VelocityField<ArrayType>;
 
-VISKORES_CONT Streamline::FieldType Streamline::GetField(const viskores::cont::DataSet& dataset) const
+VISKORES_CONT Streamline::FieldType Streamline::GetField(
+  const viskores::cont::DataSet& dataset) const
 {
   const auto& fieldNm = this->GetActiveFieldName();
   if (!dataset.HasPointField(fieldNm) && !dataset.HasCellField(fieldNm))
@@ -42,7 +43,8 @@ VISKORES_CONT Streamline::TerminationType Streamline::GetTermination(
   return Streamline::TerminationType(this->NumberOfSteps);
 }
 
-VISKORES_CONT Streamline::AnalysisType Streamline::GetAnalysis(const viskores::cont::DataSet& dataset) const
+VISKORES_CONT Streamline::AnalysisType Streamline::GetAnalysis(
+  const viskores::cont::DataSet& dataset) const
 {
   // dataset not used
   (void)dataset;

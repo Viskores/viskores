@@ -47,9 +47,8 @@ VISKORES_CONT viskores::cont::DataSet CellMeasures::DoExecute(const viskores::co
   const auto& cellset = input.GetCellSet();
   viskores::cont::ArrayHandle<viskores::FloatDefault> outArray;
 
-  auto resolveType = [&](const auto& concrete) {
-    this->Invoke(viskores::worklet::CellMeasure{ this->Measure }, cellset, concrete, outArray);
-  };
+  auto resolveType = [&](const auto& concrete)
+  { this->Invoke(viskores::worklet::CellMeasure{ this->Measure }, cellset, concrete, outArray); };
   this->CastAndCallVecField<3>(field, resolveType);
 
   std::string outputName = this->GetCellMeasureName();

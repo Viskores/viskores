@@ -17,7 +17,8 @@ namespace filter
 namespace flow
 {
 
-VISKORES_CONT PathParticle::FieldType PathParticle::GetField(const viskores::cont::DataSet& dataset) const
+VISKORES_CONT PathParticle::FieldType PathParticle::GetField(
+  const viskores::cont::DataSet& dataset) const
 {
   const auto& fieldNm = this->GetActiveFieldName();
   if (!dataset.HasPointField(fieldNm) && !dataset.HasCellField(fieldNm))

@@ -38,13 +38,13 @@ public:
     // TODO: type trait for array portal?
     template <typename KeyType, typename ValueType1, typename InPortalType, typename ValueType2>
     VISKORES_EXEC void operator()(KeyType key,
-                              ValueType1 value1,
-                              viskores::Id lowerBounds,
-                              viskores::Id visitIndex,
-                              const InPortalType& value2,
-                              viskores::Id& keyOut,
-                              ValueType1& value1Out,
-                              ValueType2& value2Out) const
+                                  ValueType1 value1,
+                                  viskores::Id lowerBounds,
+                                  viskores::Id visitIndex,
+                                  const InPortalType& value2,
+                                  viskores::Id& keyOut,
+                                  ValueType1& value1Out,
+                                  ValueType2& value2Out) const
     {
       auto v2 = value2.Get(lowerBounds + visitIndex);
       keyOut = key;

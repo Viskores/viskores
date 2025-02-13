@@ -97,7 +97,7 @@ void TestLogGeneral(
     if (raw == 0)
     {
       VISKORES_TEST_ASSERT(test_equal(logv, LogFunc(filter.GetMinValue())),
-                       "log value was wrong for min value");
+                           "log value was wrong for min value");
       continue;
     }
     VISKORES_TEST_ASSERT(test_equal(logv, LogFunc(raw)), "log value was wrong for test");

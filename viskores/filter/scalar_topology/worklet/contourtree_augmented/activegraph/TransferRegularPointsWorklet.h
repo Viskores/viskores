@@ -93,9 +93,9 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertexId,
-                            const viskores::Id /*vertex*/, // FIXME: Remove unused parameter?
-                            const InFieldPortalType& hyperarcsPortal,
-                            const OutFieldPortalType& outdegreePortal) const
+                                const viskores::Id /*vertex*/, // FIXME: Remove unused parameter?
+                                const InFieldPortalType& hyperarcsPortal,
+                                const OutFieldPortalType& outdegreePortal) const
   {
     // FindGoverningSaddles() set the hyperarcs of the extrema already
     // to ignore them, we check the IS_HYPERNODE flag

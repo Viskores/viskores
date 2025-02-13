@@ -38,9 +38,9 @@ struct WarpWorklet : viskores::worklet::WorkletMapField
 
   template <typename PointType, typename DirectionType, typename ScaleType, typename ResultType>
   VISKORES_EXEC void operator()(const PointType& point,
-                            const DirectionType& direction,
-                            ScaleType scale,
-                            ResultType& result) const
+                                const DirectionType& direction,
+                                ScaleType scale,
+                                ResultType& result) const
   {
     viskores::IdComponent numComponents = result.GetNumberOfComponents();
     VISKORES_ASSERT(point.GetNumberOfComponents() == numComponents);
@@ -60,7 +60,7 @@ struct WarpWorklet : viskores::worklet::WorkletMapField
 // `ExtractArrayFromComponents`.
 template <typename Functor>
 VISKORES_CONT void CastAndCallExtractedArrayFloats(const viskores::cont::UnknownArrayHandle& array,
-                                               Functor&& functor)
+                                                   Functor&& functor)
 {
   if (array.IsBaseComponentType<viskores::Float32>())
   {
@@ -90,14 +90,14 @@ VISKORES_CONT void CastAndCallExtractedArrayFloats(const viskores::cont::Unknown
 template <typename T1, typename T2>
 struct BiggerTypeImpl
 {
-  VISKORES_STATIC_ASSERT(
-    (std::is_same<typename viskores::TypeTraits<T1>::NumericTag, viskores::TypeTraitsRealTag>::value));
-  VISKORES_STATIC_ASSERT(
-    (std::is_same<typename viskores::TypeTraits<T2>::NumericTag, viskores::TypeTraitsRealTag>::value));
+  VISKORES_STATIC_ASSERT((std::is_same<typename viskores::TypeTraits<T1>::NumericTag,
+                                       viskores::TypeTraitsRealTag>::value));
+  VISKORES_STATIC_ASSERT((std::is_same<typename viskores::TypeTraits<T2>::NumericTag,
+                                       viskores::TypeTraitsRealTag>::value));
   VISKORES_STATIC_ASSERT((std::is_same<typename viskores::TypeTraits<T1>::DimensionalityTag,
-                                   viskores::TypeTraitsScalarTag>::value));
+                                       viskores::TypeTraitsScalarTag>::value));
   VISKORES_STATIC_ASSERT((std::is_same<typename viskores::TypeTraits<T2>::DimensionalityTag,
-                                   viskores::TypeTraitsScalarTag>::value));
+                                       viskores::TypeTraitsScalarTag>::value));
   using type = std::conditional_t<(sizeof(T1) > sizeof(T2)), T1, T2>;
 };
 template <typename T1, typename T2>
@@ -141,9 +141,8 @@ VISKORES_CONT viskores::cont::UnknownArrayHandle ComputeWarp(
   viskores::FloatDefault scaleFactor)
 {
   viskores::cont::UnknownArrayHandle result;
-  auto functor = [&](auto concrete) {
-    result = ComputeWarp(invoke, points, directions, concrete, scaleFactor);
-  };
+  auto functor = [&](auto concrete)
+  { result = ComputeWarp(invoke, points, directions, concrete, scaleFactor); };
   CastAndCallExtractedArrayFloats(scales, functor);
   return result;
 }
@@ -157,9 +156,8 @@ VISKORES_CONT viskores::cont::UnknownArrayHandle ComputeWarp(
   viskores::FloatDefault scaleFactor)
 {
   viskores::cont::UnknownArrayHandle result;
-  auto functor = [&](auto concrete) {
-    result = ComputeWarp(invoke, points, concrete, scales, scaleFactor);
-  };
+  auto functor = [&](auto concrete)
+  { result = ComputeWarp(invoke, points, concrete, scales, scaleFactor); };
   CastAndCallExtractedArrayFloats(directions, functor);
   return result;
 }
@@ -172,9 +170,8 @@ VISKORES_CONT viskores::cont::UnknownArrayHandle ComputeWarp(
   viskores::FloatDefault scaleFactor)
 {
   viskores::cont::UnknownArrayHandle result;
-  auto functor = [&](auto concrete) {
-    result = ComputeWarp(invoke, concrete, directions, scales, scaleFactor);
-  };
+  auto functor = [&](auto concrete)
+  { result = ComputeWarp(invoke, concrete, directions, scales, scaleFactor); };
   CastAndCallExtractedArrayFloats(points, functor);
   return result;
 }
@@ -207,7 +204,7 @@ VISKORES_CONT viskores::cont::DataSet Warp::DoExecute(const viskores::cont::Data
   if (this->GetUseConstantDirection())
   {
     directions = viskores::cont::make_ArrayHandleConstant(this->GetConstantDirection(),
-                                                      points.GetNumberOfValues());
+                                                          points.GetNumberOfValues());
   }
   else
   {
@@ -221,8 +218,8 @@ VISKORES_CONT viskores::cont::DataSet Warp::DoExecute(const viskores::cont::Data
   }
   else
   {
-    scaleFactors =
-      viskores::cont::make_ArrayHandleConstant<viskores::FloatDefault>(1, points.GetNumberOfValues());
+    scaleFactors = viskores::cont::make_ArrayHandleConstant<viskores::FloatDefault>(
+      1, points.GetNumberOfValues());
   }
 
   viskores::cont::UnknownArrayHandle warpedPoints =
@@ -230,9 +227,8 @@ VISKORES_CONT viskores::cont::DataSet Warp::DoExecute(const viskores::cont::Data
 
   if (this->GetChangeCoordinateSystem())
   {
-    auto fieldMapper = [](viskores::cont::DataSet& out, const viskores::cont::Field& fieldToPass) {
-      out.AddField(fieldToPass);
-    };
+    auto fieldMapper = [](viskores::cont::DataSet& out, const viskores::cont::Field& fieldToPass)
+    { out.AddField(fieldToPass); };
     return this->CreateResultCoordinateSystem(
       inDataSet, inDataSet.GetCellSet(), this->GetOutputFieldName(), warpedPoints, fieldMapper);
   }

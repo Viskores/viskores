@@ -100,11 +100,11 @@ public:
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id& vertexID,
-                                const InFieldPortalType& firstEdge,
-                                const InFieldPortalType& outdegree,
-                                const InFieldPortalType& activeEdges,
-                                const InFieldPortalType& chainExtremum,
-                                const InOutFieldPortalType& edgeFar) const
+                                        const InFieldPortalType& firstEdge,
+                                        const InFieldPortalType& outdegree,
+                                        const InFieldPortalType& activeEdges,
+                                        const InFieldPortalType& chainExtremum,
+                                        const InOutFieldPortalType& edgeFar) const
   {
     viskores::Id newOutdegree;
 
@@ -125,10 +125,10 @@ public:
         firstMax = nbrHigh;
       else // otherwise, check for whether we have an actual join saddle
         if (firstMax != nbrHigh)
-      { // first non-matching
-        isGenuineSaddle = true;
-      } // first non-matching
-    }   // per edge
+        { // first non-matching
+          isGenuineSaddle = true;
+        } // first non-matching
+    }     // per edge
 
     // if it's not a genuine saddle, ignore the edges by setting updegree to 0
     if (!isGenuineSaddle)

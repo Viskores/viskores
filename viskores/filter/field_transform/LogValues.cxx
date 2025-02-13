@@ -20,7 +20,8 @@ namespace field_transform
 VISKORES_CONT viskores::cont::DataSet LogValues::DoExecute(const viskores::cont::DataSet& inDataSet)
 {
   viskores::cont::ArrayHandle<viskores::FloatDefault> logField;
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     switch (this->BaseValue)
     {
       case LogBase::E:
@@ -32,16 +33,18 @@ VISKORES_CONT viskores::cont::DataSet LogValues::DoExecute(const viskores::cont:
       }
       case LogBase::TWO:
       {
-        this->Invoke(viskores::worklet::detail::LogFunWorklet<viskores::Log2>{ this->GetMinValue() },
-                     concrete,
-                     logField);
+        this->Invoke(
+          viskores::worklet::detail::LogFunWorklet<viskores::Log2>{ this->GetMinValue() },
+          concrete,
+          logField);
         break;
       }
       case LogBase::TEN:
       {
-        this->Invoke(viskores::worklet::detail::LogFunWorklet<viskores::Log10>{ this->GetMinValue() },
-                     concrete,
-                     logField);
+        this->Invoke(
+          viskores::worklet::detail::LogFunWorklet<viskores::Log10>{ this->GetMinValue() },
+          concrete,
+          logField);
         break;
       }
       default:

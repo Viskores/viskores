@@ -31,7 +31,8 @@ FilterParticleAdvectionSteadyState<Derived>::GetField(const viskores::cont::Data
 
 template <typename Derived>
 VISKORES_CONT typename FilterParticleAdvectionSteadyState<Derived>::TerminationType
-FilterParticleAdvectionSteadyState<Derived>::GetTermination(const viskores::cont::DataSet& data) const
+FilterParticleAdvectionSteadyState<Derived>::GetTermination(
+  const viskores::cont::DataSet& data) const
 {
   const Derived* inst = static_cast<const Derived*>(this);
   return inst->GetTermination(data);

@@ -72,7 +72,7 @@ struct TemplatedTests
     void Set(viskores::Id index, const ValueType& value) const
     {
       VISKORES_TEST_ASSERT(value == ExpectedValue(index, this->Value),
-                       "Set unexpected value in array portal.");
+                           "Set unexpected value in array portal.");
     }
 
   private:
@@ -84,7 +84,7 @@ struct TemplatedTests
   {
     std::cout << "    Check distance" << std::endl;
     VISKORES_TEST_ASSERT(std::distance(begin, end) == ARRAY_SIZE,
-                     "Distance between begin and end incorrect.");
+                         "Distance between begin and end incorrect.");
 
     std::cout << "    Write expected value in iterator." << std::endl;
     viskores::Id index = 0;
@@ -100,14 +100,14 @@ struct TemplatedTests
   {
     std::cout << "    Check distance" << std::endl;
     VISKORES_TEST_ASSERT(std::distance(begin, end) == ARRAY_SIZE,
-                     "Distance between begin and end incorrect.");
+                         "Distance between begin and end incorrect.");
 
     std::cout << "    Read expected value from iterator." << std::endl;
     viskores::Id index = 0;
     for (IteratorType iter = begin; iter != end; iter++)
     {
       VISKORES_TEST_ASSERT(ValueType(*iter) == ExpectedValue(index, value),
-                       "Got bad value from iterator.");
+                           "Got bad value from iterator.");
       index++;
     }
     return true;
@@ -165,21 +165,23 @@ struct TemplatedTests
     {
       auto portal = viskores::cont::internal::ArrayPortalFromIterators<T*>(begin, end);
       auto iter = viskores::cont::ArrayPortalToIteratorBegin(portal);
-      VISKORES_TEST_ASSERT(viskores::cont::TypeToString(begin) == viskores::cont::TypeToString(iter),
-                       "Expected iterator type ",
-                       viskores::cont::TypeToString(begin),
-                       " but got ",
-                       viskores::cont::TypeToString(iter));
+      VISKORES_TEST_ASSERT(viskores::cont::TypeToString(begin) ==
+                             viskores::cont::TypeToString(iter),
+                           "Expected iterator type ",
+                           viskores::cont::TypeToString(begin),
+                           " but got ",
+                           viskores::cont::TypeToString(iter));
       VISKORES_STATIC_ASSERT((std::is_same<T*, decltype(iter)>::value));
     }
     {
       auto portal = viskores::cont::internal::ArrayPortalFromIterators<const T*>(cbegin, cend);
       auto iter = viskores::cont::ArrayPortalToIteratorBegin(portal);
-      VISKORES_TEST_ASSERT(viskores::cont::TypeToString(cbegin) == viskores::cont::TypeToString(iter),
-                       "Expected iterator type ",
-                       viskores::cont::TypeToString(cbegin),
-                       " but got ",
-                       viskores::cont::TypeToString(iter));
+      VISKORES_TEST_ASSERT(viskores::cont::TypeToString(cbegin) ==
+                             viskores::cont::TypeToString(iter),
+                           "Expected iterator type ",
+                           viskores::cont::TypeToString(cbegin),
+                           " but got ",
+                           viskores::cont::TypeToString(iter));
       VISKORES_STATIC_ASSERT((std::is_same<const T*, decltype(iter)>::value));
     }
 
@@ -187,21 +189,23 @@ struct TemplatedTests
     {
       auto portal = arrayHandle.WritePortal();
       auto iter = viskores::cont::ArrayPortalToIteratorBegin(portal);
-      VISKORES_TEST_ASSERT(viskores::cont::TypeToString(begin) == viskores::cont::TypeToString(iter),
-                       "Expected iterator type ",
-                       viskores::cont::TypeToString(begin),
-                       " but got ",
-                       viskores::cont::TypeToString(iter));
+      VISKORES_TEST_ASSERT(viskores::cont::TypeToString(begin) ==
+                             viskores::cont::TypeToString(iter),
+                           "Expected iterator type ",
+                           viskores::cont::TypeToString(begin),
+                           " but got ",
+                           viskores::cont::TypeToString(iter));
       VISKORES_STATIC_ASSERT((std::is_same<T*, decltype(iter)>::value));
     }
     {
       auto portal = arrayHandle.ReadPortal();
       auto iter = viskores::cont::ArrayPortalToIteratorBegin(portal);
-      VISKORES_TEST_ASSERT(viskores::cont::TypeToString(cbegin) == viskores::cont::TypeToString(iter),
-                       "Expected iterator type ",
-                       viskores::cont::TypeToString(cbegin),
-                       " but got ",
-                       viskores::cont::TypeToString(iter));
+      VISKORES_TEST_ASSERT(viskores::cont::TypeToString(cbegin) ==
+                             viskores::cont::TypeToString(iter),
+                           "Expected iterator type ",
+                           viskores::cont::TypeToString(cbegin),
+                           " but got ",
+                           viskores::cont::TypeToString(iter));
       VISKORES_STATIC_ASSERT((std::is_same<const T*, decltype(iter)>::value));
     }
   }
@@ -255,9 +259,9 @@ void TestCustomIterator()
 
   // Convenience API, too:
   VISKORES_TEST_ASSERT(std::is_same<decltype(viskores::cont::ArrayPortalToIteratorBegin(portal)),
-                                typename PortalType::IteratorType>::value);
+                                    typename PortalType::IteratorType>::value);
   VISKORES_TEST_ASSERT(std::is_same<decltype(viskores::cont::ArrayPortalToIteratorEnd(portal)),
-                                typename PortalType::IteratorType>::value);
+                                    typename PortalType::IteratorType>::value);
   VISKORES_TEST_ASSERT(viskores::cont::ArrayPortalToIteratorBegin(portal) == 32);
   VISKORES_TEST_ASSERT(viskores::cont::ArrayPortalToIteratorEnd(portal) == 13);
 }

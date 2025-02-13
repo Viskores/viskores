@@ -219,24 +219,45 @@ viskores::cont::DataSet MakeTestDataSet()
   dataSet.AddCoordinateSystem(viskores::cont::CoordinateSystem("coordinates", coordinates));
 
   // Set point scalars
-  dataSet.AddField(viskores::cont::make_Field(
-    "p_poisson", viskores::cont::Field::Association::Points, poisson, nVerts, viskores::CopyFlag::On));
-  dataSet.AddField(viskores::cont::make_Field(
-    "p_normal", viskores::cont::Field::Association::Points, normal, nVerts, viskores::CopyFlag::On));
-  dataSet.AddField(viskores::cont::make_Field(
-    "p_chiSquare", viskores::cont::Field::Association::Points, chiSquare, nVerts, viskores::CopyFlag::On));
-  dataSet.AddField(viskores::cont::make_Field(
-    "p_uniform", viskores::cont::Field::Association::Points, uniform, nVerts, viskores::CopyFlag::On));
+  dataSet.AddField(viskores::cont::make_Field("p_poisson",
+                                              viskores::cont::Field::Association::Points,
+                                              poisson,
+                                              nVerts,
+                                              viskores::CopyFlag::On));
+  dataSet.AddField(viskores::cont::make_Field("p_normal",
+                                              viskores::cont::Field::Association::Points,
+                                              normal,
+                                              nVerts,
+                                              viskores::CopyFlag::On));
+  dataSet.AddField(viskores::cont::make_Field("p_chiSquare",
+                                              viskores::cont::Field::Association::Points,
+                                              chiSquare,
+                                              nVerts,
+                                              viskores::CopyFlag::On));
+  dataSet.AddField(viskores::cont::make_Field("p_uniform",
+                                              viskores::cont::Field::Association::Points,
+                                              uniform,
+                                              nVerts,
+                                              viskores::CopyFlag::On));
 
   // Set cell scalars
-  dataSet.AddField(viskores::cont::make_Field(
-    "c_poisson", viskores::cont::Field::Association::Cells, poisson, nCells, viskores::CopyFlag::On));
+  dataSet.AddField(viskores::cont::make_Field("c_poisson",
+                                              viskores::cont::Field::Association::Cells,
+                                              poisson,
+                                              nCells,
+                                              viskores::CopyFlag::On));
   dataSet.AddField(viskores::cont::make_Field(
     "c_normal", viskores::cont::Field::Association::Cells, normal, nCells, viskores::CopyFlag::On));
-  dataSet.AddField(viskores::cont::make_Field(
-    "c_chiSquare", viskores::cont::Field::Association::Cells, chiSquare, nCells, viskores::CopyFlag::On));
-  dataSet.AddField(viskores::cont::make_Field(
-    "c_uniform", viskores::cont::Field::Association::Cells, poisson, nCells, viskores::CopyFlag::On));
+  dataSet.AddField(viskores::cont::make_Field("c_chiSquare",
+                                              viskores::cont::Field::Association::Cells,
+                                              chiSquare,
+                                              nCells,
+                                              viskores::CopyFlag::On));
+  dataSet.AddField(viskores::cont::make_Field("c_uniform",
+                                              viskores::cont::Field::Association::Cells,
+                                              poisson,
+                                              nCells,
+                                              viskores::CopyFlag::On));
 
   viskores::cont::CellSetStructured<dimension> cellSet;
 

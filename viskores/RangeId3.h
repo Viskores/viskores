@@ -41,7 +41,9 @@ struct RangeId3
 
   /// Construct a range with the given x, y, and z directions.
   VISKORES_EXEC_CONT
-  RangeId3(const viskores::RangeId& xrange, const viskores::RangeId& yrange, const viskores::RangeId& zrange)
+  RangeId3(const viskores::RangeId& xrange,
+           const viskores::RangeId& yrange,
+           const viskores::RangeId& zrange)
     : X(xrange)
     , Y(yrange)
     , Z(zrange)
@@ -50,7 +52,12 @@ struct RangeId3
 
   /// Construct a range with the given minimum (inclusive) and maximum (exclusive) points.
   VISKORES_EXEC_CONT
-  RangeId3(viskores::Id minX, viskores::Id maxX, viskores::Id minY, viskores::Id maxY, viskores::Id minZ, viskores::Id maxZ)
+  RangeId3(viskores::Id minX,
+           viskores::Id maxX,
+           viskores::Id minY,
+           viskores::Id maxY,
+           viskores::Id minZ,
+           viskores::Id maxZ)
     : X(viskores::RangeId(minX, maxX))
     , Y(viskores::RangeId(minY, maxY))
     , Z(viskores::RangeId(minZ, maxZ))

@@ -33,7 +33,8 @@ bool DoMapField(viskores::cont::DataSet& result,
     viskores::cont::UnknownArrayHandle inputArray = field.GetData();
     viskores::cont::UnknownArrayHandle outputArray = inputArray.NewInstanceBasic();
 
-    auto resolve = [&](const auto& concreteIn) {
+    auto resolve = [&](const auto& concreteIn)
+    {
       // use std::decay to remove const ref from the decltype of concrete.
       using BaseT = typename std::decay_t<decltype(concreteIn)>::ValueType::ComponentType;
       auto concreteOut = outputArray.ExtractArrayFromComponents<BaseT>();
@@ -76,9 +77,8 @@ viskores::cont::DataSet ClipWithField::DoExecute(const viskores::cont::DataSet& 
   const viskores::cont::UnknownCellSet& inputCellSet = input.GetCellSet();
   viskores::cont::CellSetExplicit<> outputCellSet;
 
-  auto resolveFieldType = [&](const auto& concrete) {
-    outputCellSet = worklet.Run(inputCellSet, concrete, this->ClipValue, this->Invert);
-  };
+  auto resolveFieldType = [&](const auto& concrete)
+  { outputCellSet = worklet.Run(inputCellSet, concrete, this->ClipValue, this->Invert); };
   this->CastAndCallScalarField(this->GetFieldFromDataSet(input).GetData(), resolveFieldType);
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };

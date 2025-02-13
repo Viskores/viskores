@@ -42,7 +42,8 @@ public:
   {
   }
 
-  void Execute(const viskores::cont::ArrayHandle<ParticleType>& seeds, viskores::FloatDefault stepSize)
+  void Execute(const viskores::cont::ArrayHandle<ParticleType>& seeds,
+               viskores::FloatDefault stepSize)
   {
     this->SetStepSize(stepSize);
     this->SetSeeds(seeds);
@@ -135,7 +136,8 @@ public:
       numLocal += it.second.size();
 
 #ifdef VISKORES_ENABLE_MPI
-    viskoresdiy::mpi::all_reduce(this->Comm, numLocal, this->TotalNumParticles, std::plus<viskores::Id>{});
+    viskoresdiy::mpi::all_reduce(
+      this->Comm, numLocal, this->TotalNumParticles, std::plus<viskores::Id>{});
 #else
     this->TotalNumParticles = numLocal;
 #endif
@@ -306,8 +308,9 @@ public:
       this->UpdateActive(particlesStaying, particlesStayingBlockIDs);
   }
 
-  virtual void UpdateActive(const std::vector<ParticleType>& particles,
-                            const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& idsMap)
+  virtual void UpdateActive(
+    const std::vector<ParticleType>& particles,
+    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& idsMap)
   {
     VISKORES_ASSERT(particles.size() == idsMap.size());
 
@@ -324,8 +327,9 @@ public:
       this->ParticleBlockIDsMap[it.first] = it.second;
   }
 
-  virtual void UpdateInactive(const std::vector<ParticleType>& particles,
-                              const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& idsMap)
+  virtual void UpdateInactive(
+    const std::vector<ParticleType>& particles,
+    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& idsMap)
   {
     VISKORES_ASSERT(particles.size() == idsMap.size());
 

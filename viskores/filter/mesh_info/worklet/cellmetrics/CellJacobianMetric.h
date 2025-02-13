@@ -56,9 +56,9 @@ namespace cellmetrics
 // By default, cells return the metric 0.0 unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellJacobianMetric(const viskores::IdComponent& numPts,
-                                     const PointCoordVecType& pts,
-                                     CellShapeType shape,
-                                     viskores::ErrorCode&)
+                                         const PointCoordVecType& pts,
+                                         CellShapeType shape,
+                                         viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -76,9 +76,9 @@ VISKORES_EXEC OutType CellJacobianMetric(const viskores::IdComponent& numPts,
 // Full range: [FLOAT_MIN,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellJacobianMetric(const viskores::IdComponent& numPts,
-                                     const PointCoordVecType& pts,
-                                     viskores::CellShapeTagQuad,
-                                     viskores::ErrorCode& ec)
+                                         const PointCoordVecType& pts,
+                                         viskores::CellShapeTagQuad,
+                                         viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -111,9 +111,9 @@ VISKORES_EXEC OutType CellJacobianMetric(const viskores::IdComponent& numPts,
 // Full range: [FLOAT_MIN ,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellJacobianMetric(const viskores::IdComponent& numPts,
-                                     const PointCoordVecType& pts,
-                                     viskores::CellShapeTagHexahedron,
-                                     viskores::ErrorCode& ec)
+                                         const PointCoordVecType& pts,
+                                         viskores::CellShapeTagHexahedron,
+                                         viskores::ErrorCode& ec)
 {
   if (numPts != 8)
   {
@@ -144,8 +144,9 @@ VISKORES_EXEC OutType CellJacobianMetric(const viskores::IdComponent& numPts,
         alpha2,
         viskores::Min(
           alpha3,
-          viskores::Min(alpha4,
-                    viskores::Min(alpha5, viskores::Min(alpha6, viskores::Min(alpha7, alpha8Div64))))))));
+          viskores::Min(
+            alpha4,
+            viskores::Min(alpha5, viskores::Min(alpha6, viskores::Min(alpha7, alpha8Div64))))))));
 
   return q;
 }
@@ -158,9 +159,9 @@ VISKORES_EXEC OutType CellJacobianMetric(const viskores::IdComponent& numPts,
 // Full range: [FLOAT_MIN,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellJacobianMetric(const viskores::IdComponent& numPts,
-                                     const PointCoordVecType& pts,
-                                     viskores::CellShapeTagTetra,
-                                     viskores::ErrorCode& ec)
+                                         const PointCoordVecType& pts,
+                                         viskores::CellShapeTagTetra,
+                                         viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {

@@ -40,7 +40,9 @@ public:
   using ExecutionSignature = void(_1, _2, _3);
 
   VISKORES_EXEC
-  void operator()(const viskores::Id& binIdIn, const viskores::Id& freqIn, viskores::Id& freqOut) const
+  void operator()(const viskores::Id& binIdIn,
+                  const viskores::Id& freqIn,
+                  viskores::Id& freqOut) const
   {
     if (bop(var, binIdIn))
       freqOut = freqIn;
@@ -66,7 +68,9 @@ public:
   }
 
   VISKORES_EXEC
-  void operator()(const viskores::Id& bin, const viskores::Id& binIndexIn, viskores::Id& binIndexOut) const
+  void operator()(const viskores::Id& bin,
+                  const viskores::Id& binIndexIn,
+                  viskores::Id& binIndexOut) const
   {
     binIndexOut = binIndexIn * numberOfBins + bin;
   }

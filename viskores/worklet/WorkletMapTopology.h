@@ -167,18 +167,19 @@ public:
             typename VisitArrayType,
             typename ThreadToOutArrayType,
             typename InputDomainType>
-  VISKORES_EXEC viskores::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
-                                                      viskores::exec::arg::CustomScatterOrMaskTag>
-  GetThreadIndices(viskores::Id threadIndex,
-                   const OutToInArrayType& outToIn,
-                   const VisitArrayType& visit,
-                   const ThreadToOutArrayType& threadToOut,
-                   const InputDomainType& connectivity) const
+  VISKORES_EXEC
+    viskores::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
+                                                  viskores::exec::arg::CustomScatterOrMaskTag>
+    GetThreadIndices(viskores::Id threadIndex,
+                     const OutToInArrayType& outToIn,
+                     const VisitArrayType& visit,
+                     const ThreadToOutArrayType& threadToOut,
+                     const InputDomainType& connectivity) const
   {
     const viskores::Id outIndex = threadToOut.Get(threadIndex);
-    return viskores::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
-                                                     viskores::exec::arg::CustomScatterOrMaskTag>(
-      threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, connectivity);
+    return viskores::exec::arg::
+      ThreadIndicesTopologyMap<InputDomainType, viskores::exec::arg::CustomScatterOrMaskTag>(
+        threadIndex, outToIn.Get(outIndex), visit.Get(outIndex), outIndex, connectivity);
   }
 
   /// In the remaining methods and `constexpr` we determine at compilation time
@@ -207,7 +208,7 @@ public:
   VISKORES_EXEC EnableFnWhen<
     S && M,
     viskores::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
-                                              viskores::exec::arg::DefaultScatterAndMaskTag>>
+                                                  viskores::exec::arg::DefaultScatterAndMaskTag>>
   GetThreadIndices(viskores::Id threadIndex1D,
                    const viskores::Id3& threadIndex3D,
                    const OutToInArrayType& viskoresNotUsed(outToIn),
@@ -215,9 +216,9 @@ public:
                    const ThreadToOutArrayType& viskoresNotUsed(threadToOut),
                    const InputDomainType& connectivity) const
   {
-    return viskores::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
-                                                     viskores::exec::arg::DefaultScatterAndMaskTag>(
-      threadIndex3D, threadIndex1D, connectivity);
+    return viskores::exec::arg::
+      ThreadIndicesTopologyMap<InputDomainType, viskores::exec::arg::DefaultScatterAndMaskTag>(
+        threadIndex3D, threadIndex1D, connectivity);
   }
 
   /// Default version
@@ -228,26 +229,26 @@ public:
             typename InputDomainType,
             bool S = IsScatterIdentity,
             bool M = IsMaskNone>
-  VISKORES_EXEC
-    EnableFnWhen<!(S && M),
-                 viskores::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
-                                                           viskores::exec::arg::CustomScatterOrMaskTag>>
-    GetThreadIndices(viskores::Id threadIndex1D,
-                     const viskores::Id3& threadIndex3D,
-                     const OutToInArrayType& outToIn,
-                     const VisitArrayType& visit,
-                     const ThreadToOutArrayType& threadToOut,
-                     const InputDomainType& connectivity) const
+  VISKORES_EXEC EnableFnWhen<
+    !(S && M),
+    viskores::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
+                                                  viskores::exec::arg::CustomScatterOrMaskTag>>
+  GetThreadIndices(viskores::Id threadIndex1D,
+                   const viskores::Id3& threadIndex3D,
+                   const OutToInArrayType& outToIn,
+                   const VisitArrayType& visit,
+                   const ThreadToOutArrayType& threadToOut,
+                   const InputDomainType& connectivity) const
   {
     const viskores::Id outIndex = threadToOut.Get(threadIndex1D);
-    return viskores::exec::arg::ThreadIndicesTopologyMap<InputDomainType,
-                                                     viskores::exec::arg::CustomScatterOrMaskTag>(
-      threadIndex3D,
-      threadIndex1D,
-      outToIn.Get(outIndex),
-      visit.Get(outIndex),
-      outIndex,
-      connectivity);
+    return viskores::exec::arg::
+      ThreadIndicesTopologyMap<InputDomainType, viskores::exec::arg::CustomScatterOrMaskTag>(
+        threadIndex3D,
+        threadIndex1D,
+        outToIn.Get(outIndex),
+        visit.Get(outIndex),
+        outIndex,
+        connectivity);
   }
 };
 
@@ -312,7 +313,8 @@ public:
   ///
   /// For `WorkletVisitCellsWithPoints`, this is the same as `FieldInPoint`.
   struct FieldInIncident
-    : viskores::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::FieldInIncident
+    : viskores::worklet::WorkletMapTopology<VisitTopologyType,
+                                            IncidentTopologyType>::FieldInIncident
   {
   };
 
@@ -405,7 +407,7 @@ public:
   /// of incident points.
   struct PointCount
     : viskores::worklet::WorkletMapTopology<VisitTopologyType,
-                                        IncidentTopologyType>::IncidentElementCount
+                                            IncidentTopologyType>::IncidentElementCount
   {
   };
 
@@ -415,7 +417,7 @@ public:
   /// cells in the data set.
   struct PointIndices
     : viskores::worklet::WorkletMapTopology<VisitTopologyType,
-                                        IncidentTopologyType>::IncidentElementIndices
+                                            IncidentTopologyType>::IncidentElementIndices
   {
   };
 
@@ -514,7 +516,8 @@ public:
   ///
   /// For `WorkletVisitPointsWithCells`, this is the same as `FieldInCell`.
   struct FieldInIncident
-    : viskores::worklet::WorkletMapTopology<VisitTopologyType, IncidentTopologyType>::FieldInIncident
+    : viskores::worklet::WorkletMapTopology<VisitTopologyType,
+                                            IncidentTopologyType>::FieldInIncident
   {
   };
 
@@ -598,7 +601,7 @@ public:
   /// of incident cells.
   struct CellCount
     : viskores::worklet::WorkletMapTopology<VisitTopologyType,
-                                        IncidentTopologyType>::IncidentElementCount
+                                            IncidentTopologyType>::IncidentElementCount
   {
   };
 
@@ -608,7 +611,7 @@ public:
   /// points in the data set.
   struct CellIndices
     : viskores::worklet::WorkletMapTopology<VisitTopologyType,
-                                        IncidentTopologyType>::IncidentElementIndices
+                                            IncidentTopologyType>::IncidentElementIndices
   {
   };
 

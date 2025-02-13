@@ -58,12 +58,13 @@ struct HasPrepareForControl
 
 /// Checks that the argument is a proper execution object.
 ///
-#define VISKORES_IS_EXECUTION_AND_CONTROL_OBJECT(execObject)                                          \
-  static_assert(::viskores::cont::internal::IsExecutionAndControlObjectBase<execObject>::value,       \
-                "Provided type is not a subclass of viskores::cont::ExecutionAndControlObjectBase."); \
-  static_assert(::viskores::cont::internal::HasPrepareForExecution<execObject>::value,                \
-                "Provided type does not have requisite PrepareForExecution method.");             \
-  static_assert(::viskores::cont::internal::HasPrepareForControl<execObject>::value,                  \
+#define VISKORES_IS_EXECUTION_AND_CONTROL_OBJECT(execObject)                              \
+  static_assert(                                                                          \
+    ::viskores::cont::internal::IsExecutionAndControlObjectBase<execObject>::value,       \
+    "Provided type is not a subclass of viskores::cont::ExecutionAndControlObjectBase."); \
+  static_assert(::viskores::cont::internal::HasPrepareForExecution<execObject>::value,    \
+                "Provided type does not have requisite PrepareForExecution method.");     \
+  static_assert(::viskores::cont::internal::HasPrepareForControl<execObject>::value,      \
                 "Provided type does not have requisite PrepareForControl method.")
 
 /// \brief Gets the object to use in the control environment from an ExecutionAndControlObject.

@@ -82,7 +82,8 @@ public:
   PointerDoubling() {}
 
   template <typename InOutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& vertexID, const InOutFieldPortalType& chains) const
+  VISKORES_EXEC void operator()(const viskores::Id& vertexID,
+                                const InOutFieldPortalType& chains) const
   {
     // get the neighbour's ID
     viskores::Id neighbour = chains.Get(vertexID);

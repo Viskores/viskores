@@ -173,10 +173,12 @@ void ScanTest()
   VISKORES_TEST_ASSERT(checkArrayHandle(output, { 6, 6, 6, 1, 9, 9, 1, 5, 8, 8 }));
   viskores::cont::Algorithm::ScanInclusiveByKey(keys, input, output);
   VISKORES_TEST_ASSERT(checkArrayHandle(output, { 6, 8, 13, 1, 9, 15, 1, 6, 14, 22 }));
-  out = viskores::cont::Algorithm::ScanExclusive(input, output, viskores::Maximum(), viskores::Id(0));
+  out =
+    viskores::cont::Algorithm::ScanExclusive(input, output, viskores::Maximum(), viskores::Id(0));
   VISKORES_TEST_ASSERT(checkArrayHandle(output, { 0, 6, 6, 6, 6, 9, 9, 9, 9, 9 }));
   VISKORES_TEST_ASSERT(test_equal(out, 9));
-  viskores::cont::Algorithm::ScanExclusiveByKey(keys, input, output, viskores::Id(0), viskores::Maximum());
+  viskores::cont::Algorithm::ScanExclusiveByKey(
+    keys, input, output, viskores::Id(0), viskores::Maximum());
   VISKORES_TEST_ASSERT(checkArrayHandle(output, { 0, 6, 6, 0, 0, 9, 0, 1, 5, 8 }));
   viskores::cont::Algorithm::ScanExclusiveByKey(keys, input, output);
   VISKORES_TEST_ASSERT(checkArrayHandle(output, { 0, 6, 8, 0, 0, 9, 0, 1, 6, 14 }));
@@ -212,7 +214,8 @@ struct CompFunctor
 
 struct CompExecObject : viskores::cont::ExecutionObjectBase
 {
-  VISKORES_CONT CompFunctor PrepareForExecution(viskores::cont::DeviceAdapterId, viskores::cont::Token&)
+  VISKORES_CONT CompFunctor PrepareForExecution(viskores::cont::DeviceAdapterId,
+                                                viskores::cont::Token&)
   {
     return CompFunctor();
   }
@@ -257,7 +260,8 @@ void SynchronizeTest()
 
 void TransformTest()
 {
-  auto transformInput = viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 3, 5, 7, 9, 11, 13, 15 });
+  auto transformInput =
+    viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 3, 5, 7, 9, 11, 13, 15 });
   auto transformInputOutput =
     viskores::cont::make_ArrayHandle<viskores::Id>({ 0, 2, 4, 8, 10, 12, 14, 16 });
   auto transformExpectedResult =
@@ -288,7 +292,8 @@ struct Within3Functor
 
 struct Within3ExecObject : viskores::cont::ExecutionObjectBase
 {
-  VISKORES_CONT Within3Functor PrepareForExecution(viskores::cont::DeviceAdapterId, viskores::cont::Token&)
+  VISKORES_CONT Within3Functor PrepareForExecution(viskores::cont::DeviceAdapterId,
+                                                   viskores::cont::Token&)
   {
     return Within3Functor();
   }

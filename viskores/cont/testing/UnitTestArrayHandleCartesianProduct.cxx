@@ -25,8 +25,8 @@ void ArrayHandleCPBasic(viskores::cont::ArrayHandle<T> x,
 
 {
   viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<T>,
-                                          viskores::cont::ArrayHandle<T>,
-                                          viskores::cont::ArrayHandle<T>>
+                                              viskores::cont::ArrayHandle<T>,
+                                              viskores::cont::ArrayHandle<T>>
     cpArray;
 
   viskores::Id nx = x.GetNumberOfValues();
@@ -38,7 +38,7 @@ void ArrayHandleCPBasic(viskores::cont::ArrayHandle<T> x,
 
   //Make sure we have the right number of values.
   VISKORES_TEST_ASSERT(cpArray.GetNumberOfValues() == (nx * ny * nz),
-                   "Cartesian array constructor has wrong number of values");
+                       "Cartesian array constructor has wrong number of values");
   VISKORES_TEST_ASSERT(cpArray.GetNumberOfComponentsFlat() == 3);
 
   //Make sure the values are correct.

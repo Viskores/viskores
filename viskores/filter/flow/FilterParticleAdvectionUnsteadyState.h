@@ -27,7 +27,8 @@ struct FlowTraits;
 /// @brief Superclass for filters that operate on flow that changes over time.
 ///
 template <typename Derived>
-class VISKORES_FILTER_FLOW_EXPORT FilterParticleAdvectionUnsteadyState : public FilterParticleAdvection
+class VISKORES_FILTER_FLOW_EXPORT FilterParticleAdvectionUnsteadyState
+  : public FilterParticleAdvection
 {
 public:
   using ParticleType = typename FlowTraits<Derived>::ParticleType;
@@ -49,7 +50,10 @@ public:
   VISKORES_CONT void SetNextDataSet(const viskores::cont::DataSet& ds) { this->Input2 = { ds }; }
 
   /// @brief Specifies the data for the later time step.
-  VISKORES_CONT void SetNextDataSet(const viskores::cont::PartitionedDataSet& pds) { this->Input2 = pds; }
+  VISKORES_CONT void SetNextDataSet(const viskores::cont::PartitionedDataSet& pds)
+  {
+    this->Input2 = pds;
+  }
 
 private:
   VISKORES_CONT FieldType GetField(const viskores::cont::DataSet& data) const;

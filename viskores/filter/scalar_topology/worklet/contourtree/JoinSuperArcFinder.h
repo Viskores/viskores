@@ -119,9 +119,9 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                            const InFieldPortalType& values,
-                            const OutFieldPortalType& saddles,
-                            const OutFieldPortalType& extrema) const
+                                const InFieldPortalType& values,
+                                const OutFieldPortalType& saddles,
+                                const OutFieldPortalType& extrema) const
   {
     VertexValueComparator<InFieldPortalType> lessThan(values);
 

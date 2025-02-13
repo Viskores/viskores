@@ -90,7 +90,7 @@ void TestTubeFilters()
 
   //Validate the result is correct.
   VISKORES_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
+                       "Wrong number of coordinate systems in the output dataset");
 
   viskores::cont::CoordinateSystem coords = output.GetCoordinateSystem();
   VISKORES_TEST_ASSERT(coords.GetNumberOfPoints() == 22, "Wrong number of coordinates");
@@ -104,24 +104,24 @@ void TestTubeFilters()
   VISKORES_TEST_ASSERT(ptArr.GetNumberOfValues() == 22, "Wrong number of values in point field");
 
   std::vector<viskores::FloatDefault> ptVals = { 0,  0,  0,  0,  1,  1,  1,  2,  2,  2,  2,
-                                             10, 10, 10, 10, 11, 11, 11, 12, 12, 12, 12 };
+                                                 10, 10, 10, 10, 11, 11, 11, 12, 12, 12, 12 };
   auto portal = ptArr.ReadPortal();
   for (viskores::Id i = 0; i < 22; i++)
     VISKORES_TEST_ASSERT(portal.Get(i) == ptVals[static_cast<std::size_t>(i)],
-                     "Wrong value for point field");
+                         "Wrong value for point field");
 
   //Validate the cell field
   viskores::cont::ArrayHandle<viskores::FloatDefault> cellArr;
   output.GetField("cellVar").GetData().AsArrayHandle(cellArr);
   VISKORES_TEST_ASSERT(cellArr.GetNumberOfValues() == 36, "Wrong number of values in cell field");
   std::vector<viskores::FloatDefault> cellVals = { 100, 100, 100, 100, 100, 100, 100, 100, 100,
-                                               100, 100, 100, 100, 100, 100, 100, 100, 100,
-                                               110, 110, 110, 110, 110, 110, 110, 110, 110,
-                                               110, 110, 110, 110, 110, 110, 110, 110, 110 };
+                                                   100, 100, 100, 100, 100, 100, 100, 100, 100,
+                                                   110, 110, 110, 110, 110, 110, 110, 110, 110,
+                                                   110, 110, 110, 110, 110, 110, 110, 110, 110 };
   portal = cellArr.ReadPortal();
   for (viskores::Id i = 0; i < 36; i++)
     VISKORES_TEST_ASSERT(portal.Get(i) == cellVals[static_cast<std::size_t>(i)],
-                     "Wrong value for cell field");
+                         "Wrong value for cell field");
 }
 }
 

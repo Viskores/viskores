@@ -31,9 +31,9 @@ void Scopes(int level = 0)
   DoWork();
 
   VISKORES_LOG_IF_F(viskores::cont::LogLevel::Info,
-                level % 2 != 0,
-                "Printing extra log message because level is odd (%d)",
-                level);
+                    level % 2 != 0,
+                    "Printing extra log message because level is odd (%d)",
+                    level);
   if (level < 5)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Recursing to level " << level + 1);

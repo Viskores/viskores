@@ -88,10 +88,10 @@ class VISKORES_CONT_EXPORT ArrayHandleBase
 /// with C++11 type_traits.
 ///
 template <typename T, typename StorageTag>
-using IsValidArrayHandle =
-  std::integral_constant<bool,
-                         !(std::is_base_of<viskores::cont::internal::UndefinedStorage,
-                                           viskores::cont::internal::Storage<T, StorageTag>>::value)>;
+using IsValidArrayHandle = std::integral_constant<
+  bool,
+  !(std::is_base_of<viskores::cont::internal::UndefinedStorage,
+                    viskores::cont::internal::Storage<T, StorageTag>>::value)>;
 
 /// Checks to see if the given type and storage forms a invalid array handle
 /// (some storage objects cannot support all types). This check is compatible
@@ -134,7 +134,8 @@ struct ArrayHandleCheck
 /// If the type is not a `viskores::cont::ArrayHandle` or a subclass, a static assert will
 /// cause a compile exception. This is a good way to ensure that a template argument
 /// that is assumed to be an array handle type actually is.
-#define VISKORES_IS_ARRAY_HANDLE(T) VISKORES_STATIC_ASSERT(::viskores::cont::internal::ArrayHandleCheck<T>{})
+#define VISKORES_IS_ARRAY_HANDLE(T) \
+  VISKORES_STATIC_ASSERT(::viskores::cont::internal::ArrayHandleCheck<T>{})
 
 } // namespace internal
 
@@ -152,71 +153,75 @@ struct GetTypeInParentheses<void(T)>
 } // namespace detail
 
 // Implementation for VISKORES_ARRAY_HANDLE_SUBCLASS macros
-#define VISKORES_ARRAY_HANDLE_SUBCLASS_IMPL(classname, fullclasstype, superclass, typename__)         \
-  using Thisclass = typename__ viskores::cont::detail::GetTypeInParentheses<void fullclasstype>::type; \
-  using Superclass = typename__ viskores::cont::detail::GetTypeInParentheses<void superclass>::type;   \
-                                                                                                   \
-  VISKORES_IS_ARRAY_HANDLE(Superclass);                                                                \
-                                                                                                   \
-  VISKORES_CONT                                                                                        \
-  classname() {}                                                                                   \
-                                                                                                   \
-  VISKORES_CONT                                                                                        \
-  classname(const Thisclass& src)                                                                  \
-    : Superclass(src)                                                                              \
-  {                                                                                                \
-  }                                                                                                \
-                                                                                                   \
-  VISKORES_CONT                                                                                        \
-  classname(Thisclass&& src) noexcept                                                              \
-    : Superclass(std::move(src))                                                                   \
-  {                                                                                                \
-  }                                                                                                \
-                                                                                                   \
-  VISKORES_CONT                                                                                        \
-  classname(const viskores::cont::ArrayHandle<typename__ Superclass::ValueType,                        \
-                                          typename__ Superclass::StorageTag>& src)                 \
-    : Superclass(src)                                                                              \
-  {                                                                                                \
-  }                                                                                                \
-                                                                                                   \
-  VISKORES_CONT                                                                                        \
-  classname(viskores::cont::ArrayHandle<typename__ Superclass::ValueType,                              \
-                                    typename__ Superclass::StorageTag>&& src) noexcept             \
-    : Superclass(std::move(src))                                                                   \
-  {                                                                                                \
-  }                                                                                                \
-                                                                                                   \
-  VISKORES_CONT                                                                                        \
-  explicit classname(const std::vector<viskores::cont::internal::Buffer>& buffers)                     \
-    : Superclass(buffers)                                                                          \
-  {                                                                                                \
-  }                                                                                                \
-                                                                                                   \
-  VISKORES_CONT                                                                                        \
-  explicit classname(std::vector<viskores::cont::internal::Buffer>&& buffers) noexcept                 \
-    : Superclass(std::move(buffers))                                                               \
-  {                                                                                                \
-  }                                                                                                \
-                                                                                                   \
-  VISKORES_CONT                                                                                        \
-  Thisclass& operator=(const Thisclass& src)                                                       \
-  {                                                                                                \
-    this->Superclass::operator=(src);                                                              \
-    return *this;                                                                                  \
-  }                                                                                                \
-                                                                                                   \
-  VISKORES_CONT                                                                                        \
-  Thisclass& operator=(Thisclass&& src) noexcept                                                   \
-  {                                                                                                \
-    this->Superclass::operator=(std::move(src));                                                   \
-    return *this;                                                                                  \
-  }                                                                                                \
-                                                                                                   \
-  using ValueType = typename__ Superclass::ValueType;                                              \
-  using StorageTag = typename__ Superclass::StorageTag;                                            \
-  using StorageType = typename__ Superclass::StorageType;                                          \
-  using ReadPortalType = typename__ Superclass::ReadPortalType;                                    \
+#define VISKORES_ARRAY_HANDLE_SUBCLASS_IMPL(classname, fullclasstype, superclass, typename__) \
+  using Thisclass =                                                                           \
+    typename__ viskores::cont::detail::GetTypeInParentheses<void fullclasstype>::type;        \
+  using Superclass =                                                                          \
+    typename__ viskores::cont::detail::GetTypeInParentheses<void superclass>::type;           \
+                                                                                              \
+  VISKORES_IS_ARRAY_HANDLE(Superclass);                                                       \
+                                                                                              \
+  VISKORES_CONT                                                                               \
+  classname()                                                                                 \
+  {                                                                                           \
+  }                                                                                           \
+                                                                                              \
+  VISKORES_CONT                                                                               \
+  classname(const Thisclass& src)                                                             \
+    : Superclass(src)                                                                         \
+  {                                                                                           \
+  }                                                                                           \
+                                                                                              \
+  VISKORES_CONT                                                                               \
+  classname(Thisclass&& src) noexcept                                                         \
+    : Superclass(std::move(src))                                                              \
+  {                                                                                           \
+  }                                                                                           \
+                                                                                              \
+  VISKORES_CONT                                                                               \
+  classname(const viskores::cont::ArrayHandle<typename__ Superclass::ValueType,               \
+                                              typename__ Superclass::StorageTag>& src)        \
+    : Superclass(src)                                                                         \
+  {                                                                                           \
+  }                                                                                           \
+                                                                                              \
+  VISKORES_CONT                                                                               \
+  classname(viskores::cont::ArrayHandle<typename__ Superclass::ValueType,                     \
+                                        typename__ Superclass::StorageTag>&& src) noexcept    \
+    : Superclass(std::move(src))                                                              \
+  {                                                                                           \
+  }                                                                                           \
+                                                                                              \
+  VISKORES_CONT                                                                               \
+  explicit classname(const std::vector<viskores::cont::internal::Buffer>& buffers)            \
+    : Superclass(buffers)                                                                     \
+  {                                                                                           \
+  }                                                                                           \
+                                                                                              \
+  VISKORES_CONT                                                                               \
+  explicit classname(std::vector<viskores::cont::internal::Buffer>&& buffers) noexcept        \
+    : Superclass(std::move(buffers))                                                          \
+  {                                                                                           \
+  }                                                                                           \
+                                                                                              \
+  VISKORES_CONT                                                                               \
+  Thisclass& operator=(const Thisclass& src)                                                  \
+  {                                                                                           \
+    this->Superclass::operator=(src);                                                         \
+    return *this;                                                                             \
+  }                                                                                           \
+                                                                                              \
+  VISKORES_CONT                                                                               \
+  Thisclass& operator=(Thisclass&& src) noexcept                                              \
+  {                                                                                           \
+    this->Superclass::operator=(std::move(src));                                              \
+    return *this;                                                                             \
+  }                                                                                           \
+                                                                                              \
+  using ValueType = typename__ Superclass::ValueType;                                         \
+  using StorageTag = typename__ Superclass::StorageTag;                                       \
+  using StorageType = typename__ Superclass::StorageType;                                     \
+  using ReadPortalType = typename__ Superclass::ReadPortalType;                               \
   using WritePortalType = typename__ Superclass::WritePortalType
 
 /// \brief Macro to make default methods in ArrayHandle subclasses.
@@ -355,7 +360,8 @@ public:
   /// Special constructor for subclass specializations that need to set the
   /// initial state array. Used when pulling data from other sources.
   ///
-  VISKORES_CONT explicit ArrayHandle(std::vector<viskores::cont::internal::Buffer>&& buffers) noexcept
+  VISKORES_CONT explicit ArrayHandle(
+    std::vector<viskores::cont::internal::Buffer>&& buffers) noexcept
     : Buffers(std::move(buffers))
   {
   }
@@ -488,15 +494,15 @@ public:
   /// array storage is read-only).
   ///
   VISKORES_CONT void Allocate(viskores::Id numberOfValues,
-                          viskores::CopyFlag preserve,
-                          viskores::cont::Token& token) const
+                              viskores::CopyFlag preserve,
+                              viskores::cont::Token& token) const
   {
     StorageType::ResizeBuffers(numberOfValues, this->GetBuffers(), preserve, token);
   }
 
   /// @copydoc Allocate
   VISKORES_CONT void Allocate(viskores::Id numberOfValues,
-                          viskores::CopyFlag preserve = viskores::CopyFlag::Off) const
+                              viskores::CopyFlag preserve = viskores::CopyFlag::Off) const
   {
     viskores::cont::Token token;
     this->Allocate(numberOfValues, preserve, token);
@@ -517,9 +523,9 @@ public:
   /// filled with the given `fillValue`.
   ///
   VISKORES_CONT void AllocateAndFill(viskores::Id numberOfValues,
-                                 const ValueType& fillValue,
-                                 viskores::CopyFlag preserve,
-                                 viskores::cont::Token& token) const
+                                     const ValueType& fillValue,
+                                     viskores::CopyFlag preserve,
+                                     viskores::cont::Token& token) const
   {
     // Note that there is a slight potential for a race condition here. It is possible for someone
     // else to resize the array in between getting the startIndex and locking the array in the
@@ -537,8 +543,8 @@ public:
 
   /// @copydoc AllocateAndFill
   VISKORES_CONT void AllocateAndFill(viskores::Id numberOfValues,
-                                 const ValueType& fillValue,
-                                 viskores::CopyFlag preserve = viskores::CopyFlag::Off) const
+                                     const ValueType& fillValue,
+                                     viskores::CopyFlag preserve = viskores::CopyFlag::Off) const
   {
     viskores::cont::Token token;
     this->AllocateAndFill(numberOfValues, fillValue, preserve, token);
@@ -552,14 +558,16 @@ public:
   /// respectively.
   ///
   VISKORES_CONT void Fill(const ValueType& fillValue,
-                      viskores::Id startIndex,
-                      viskores::Id endIndex,
-                      viskores::cont::Token& token) const
+                          viskores::Id startIndex,
+                          viskores::Id endIndex,
+                          viskores::cont::Token& token) const
   {
     StorageType::Fill(this->GetBuffers(), fillValue, startIndex, endIndex, token);
   }
   /// @copydoc Fill
-  VISKORES_CONT void Fill(const ValueType& fillValue, viskores::Id startIndex, viskores::Id endIndex) const
+  VISKORES_CONT void Fill(const ValueType& fillValue,
+                          viskores::Id startIndex,
+                          viskores::Id endIndex) const
   {
     viskores::cont::Token token;
     this->Fill(fillValue, startIndex, endIndex, token);
@@ -597,7 +605,7 @@ public:
   /// already attached. This can potentially lead to deadlocks.
   ///
   VISKORES_CONT ReadPortalType PrepareForInput(viskores::cont::DeviceAdapterId device,
-                                           viskores::cont::Token& token) const
+                                               viskores::cont::Token& token) const
   {
     return StorageType::CreateReadPortal(this->GetBuffers(), device, token);
   }
@@ -616,7 +624,7 @@ public:
   /// already attached. This can potentially lead to deadlocks.
   ///
   VISKORES_CONT WritePortalType PrepareForInPlace(viskores::cont::DeviceAdapterId device,
-                                              viskores::cont::Token& token) const
+                                                  viskores::cont::Token& token) const
   {
     return StorageType::CreateWritePortal(this->GetBuffers(), device, token);
   }
@@ -636,8 +644,8 @@ public:
   /// already attached. This can potentially lead to deadlocks.
   ///
   VISKORES_CONT WritePortalType PrepareForOutput(viskores::Id numberOfValues,
-                                             viskores::cont::DeviceAdapterId device,
-                                             viskores::cont::Token& token) const
+                                                 viskores::cont::DeviceAdapterId device,
+                                                 viskores::cont::Token& token) const
   {
     this->Allocate(numberOfValues, viskores::CopyFlag::Off, token);
     return StorageType::CreateWritePortal(this->GetBuffers(), device, token);
@@ -704,7 +712,8 @@ public:
   ///
   /// Takes the data that is in \a source and copies that data into this array.
   ///
-  VISKORES_CONT void DeepCopyFrom(const viskores::cont::ArrayHandle<ValueType, StorageTag>& source) const
+  VISKORES_CONT void DeepCopyFrom(
+    const viskores::cont::ArrayHandle<ValueType, StorageTag>& source) const
   {
     VISKORES_ASSERT(this->Buffers.size() == source.Buffers.size());
 
@@ -722,13 +731,17 @@ public:
   {
     return this->Buffers;
   }
-  VISKORES_CONT std::vector<viskores::cont::internal::Buffer>& GetBuffers() { return this->Buffers; }
+  VISKORES_CONT std::vector<viskores::cont::internal::Buffer>& GetBuffers()
+  {
+    return this->Buffers;
+  }
 
 private:
   mutable std::vector<viskores::cont::internal::Buffer> Buffers;
 
 protected:
-  VISKORES_CONT void SetBuffer(viskores::IdComponent index, const viskores::cont::internal::Buffer& buffer)
+  VISKORES_CONT void SetBuffer(viskores::IdComponent index,
+                               const viskores::cont::internal::Buffer& buffer)
   {
     this->Buffers[static_cast<std::size_t>(index)] = buffer;
   }
@@ -747,8 +760,10 @@ namespace detail
 {
 
 template <typename T>
-VISKORES_NEVER_EXPORT VISKORES_CONT inline void
-printSummary_ArrayHandle_Value(const T& value, std::ostream& out, viskores::VecTraitsTagSingleComponent)
+VISKORES_NEVER_EXPORT VISKORES_CONT inline void printSummary_ArrayHandle_Value(
+  const T& value,
+  std::ostream& out,
+  viskores::VecTraitsTagSingleComponent)
 {
   out << value;
 }
@@ -864,21 +879,22 @@ namespace detail
 VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal::Buffer>&);
 template <typename T, typename S, typename... Args>
 VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal::Buffer>& buffers,
-                                        const viskores::cont::ArrayHandle<T, S>& array,
-                                        const Args&... args);
+                                            const viskores::cont::ArrayHandle<T, S>& array,
+                                            const Args&... args);
 template <typename... Args>
 VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal::Buffer>& buffers,
-                                        const viskores::cont::internal::Buffer& buffer,
-                                        const Args&... args);
+                                            const viskores::cont::internal::Buffer& buffer,
+                                            const Args&... args);
 
 template <typename... Args>
-VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal::Buffer>& buffers,
-                                        const std::vector<viskores::cont::internal::Buffer>& addbuffs,
-                                        const Args&... args);
+VISKORES_CONT inline void CreateBuffersImpl(
+  std::vector<viskores::cont::internal::Buffer>& buffers,
+  const std::vector<viskores::cont::internal::Buffer>& addbuffs,
+  const Args&... args);
 template <typename Arg0, typename... Args>
 VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal::Buffer>& buffers,
-                                        const Arg0& arg0,
-                                        const Args&... args);
+                                            const Arg0& arg0,
+                                            const Args&... args);
 
 VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal::Buffer>&)
 {
@@ -887,44 +903,47 @@ VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal
 
 template <typename T, typename S, typename... Args>
 VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal::Buffer>& buffers,
-                                        const viskores::cont::ArrayHandle<T, S>& array,
-                                        const Args&... args)
+                                            const viskores::cont::ArrayHandle<T, S>& array,
+                                            const Args&... args)
 {
   CreateBuffersImpl(buffers, array.GetBuffers(), args...);
 }
 
 template <typename... Args>
 VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal::Buffer>& buffers,
-                                        const viskores::cont::internal::Buffer& buffer,
-                                        const Args&... args)
+                                            const viskores::cont::internal::Buffer& buffer,
+                                            const Args&... args)
 {
   buffers.push_back(buffer);
   CreateBuffersImpl(buffers, args...);
 }
 
 template <typename... Args>
-VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal::Buffer>& buffers,
-                                        const std::vector<viskores::cont::internal::Buffer>& addbuffs,
-                                        const Args&... args)
+VISKORES_CONT inline void CreateBuffersImpl(
+  std::vector<viskores::cont::internal::Buffer>& buffers,
+  const std::vector<viskores::cont::internal::Buffer>& addbuffs,
+  const Args&... args)
 {
   buffers.insert(buffers.end(), addbuffs.begin(), addbuffs.end());
   CreateBuffersImpl(buffers, args...);
 }
 
 template <typename T, typename S, typename... Args>
-VISKORES_CONT inline void CreateBuffersResolveArrays(std::vector<viskores::cont::internal::Buffer>& buffers,
-                                                 std::true_type,
-                                                 const viskores::cont::ArrayHandle<T, S>& array,
-                                                 const Args&... args)
+VISKORES_CONT inline void CreateBuffersResolveArrays(
+  std::vector<viskores::cont::internal::Buffer>& buffers,
+  std::true_type,
+  const viskores::cont::ArrayHandle<T, S>& array,
+  const Args&... args)
 {
   CreateBuffersImpl(buffers, array, args...);
 }
 
 template <typename MetaData, typename... Args>
-VISKORES_CONT inline void CreateBuffersResolveArrays(std::vector<viskores::cont::internal::Buffer>& buffers,
-                                                 std::false_type,
-                                                 const MetaData& metadata,
-                                                 const Args&... args)
+VISKORES_CONT inline void CreateBuffersResolveArrays(
+  std::vector<viskores::cont::internal::Buffer>& buffers,
+  std::false_type,
+  const MetaData& metadata,
+  const Args&... args)
 {
   viskores::cont::internal::Buffer buffer;
   buffer.SetMetaData(metadata);
@@ -934,8 +953,8 @@ VISKORES_CONT inline void CreateBuffersResolveArrays(std::vector<viskores::cont:
 
 template <typename Arg0, typename... Args>
 VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal::Buffer>& buffers,
-                                        const Arg0& arg0,
-                                        const Args&... args)
+                                            const Arg0& arg0,
+                                            const Args&... args)
 {
   // If the argument is a subclass of ArrayHandle, the template resolution will pick this
   // overload instead of the correct ArrayHandle overload. To resolve that, check to see
@@ -962,7 +981,8 @@ VISKORES_CONT inline void CreateBuffersImpl(std::vector<viskores::cont::internal
 ///   - Anything else: A buffer with the given object attached as metadata is added to the list.
 ///
 template <typename... Args>
-VISKORES_CONT inline std::vector<viskores::cont::internal::Buffer> CreateBuffers(const Args&... args)
+VISKORES_CONT inline std::vector<viskores::cont::internal::Buffer> CreateBuffers(
+  const Args&... args)
 {
   std::vector<viskores::cont::internal::Buffer> buffers;
   buffers.reserve(sizeof...(args));

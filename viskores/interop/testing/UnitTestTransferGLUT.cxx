@@ -103,5 +103,6 @@ int UnitTestTransferGLUT(int argc, char* argv[])
   std::cout << ::viskores_force_linking_to_pthread_to_fix_nvidia_libgl_bug();
 #endif
 
-  return viskores::interop::testing::TestingOpenGLInterop<viskores::cont::DeviceAdapterTagSerial>::Run();
+  return viskores::interop::testing::TestingOpenGLInterop<
+    viskores::cont::DeviceAdapterTagSerial>::Run();
 }

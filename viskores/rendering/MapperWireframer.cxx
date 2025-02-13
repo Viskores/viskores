@@ -66,9 +66,9 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
   template <typename ScalarType>
   VISKORES_EXEC void operator()(const viskores::Vec3f_32& inCoord,
-                            const ScalarType& scalar,
-                            viskores::Vec3f_32& outCoord,
-                            viskores::Float32& fieldOut) const
+                                const ScalarType& scalar,
+                                viskores::Vec3f_32& outCoord,
+                                viskores::Float32& fieldOut) const
   {
     //
     // Rendering supports lines based on a cellSetStructured<1>
@@ -104,7 +104,8 @@ struct EdgesCounter : public viskores::worklet::WorkletVisitCellsWithPoints
   using InputDomain = _1;
 
   template <typename CellShapeTag>
-  VISKORES_EXEC viskores::IdComponent operator()(CellShapeTag shape, viskores::IdComponent numPoints) const
+  VISKORES_EXEC viskores::IdComponent operator()(CellShapeTag shape,
+                                                 viskores::IdComponent numPoints) const
   {
     //TODO: Remove the if/then with templates.
     if (shape.Id == viskores::CELL_SHAPE_LINE)
@@ -136,9 +137,9 @@ struct EdgesExtracter : public viskores::worklet::WorkletVisitCellsWithPoints
 
   template <typename CellShapeTag, typename PointIndexVecType, typename EdgeIndexVecType>
   VISKORES_EXEC void operator()(CellShapeTag shape,
-                            const PointIndexVecType& pointIndices,
-                            viskores::IdComponent visitIndex,
-                            EdgeIndexVecType& edgeIndices) const
+                                const PointIndexVecType& pointIndices,
+                                viskores::IdComponent visitIndex,
+                                EdgeIndexVecType& edgeIndices) const
   {
     //TODO: Remove the if/then with templates.
     viskores::Id p1, p2;
@@ -274,7 +275,8 @@ void MapperWireframer::RenderCellsImpl(const viskores::cont::UnknownCellSet& inC
     viskores::cont::ArrayHandleCounting<viskores::Id> iter =
       viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(1), numCells);
     conn.Allocate(numCells * 2);
-    viskores::worklet::DispatcherMapField<CreateConnectivity>(CreateConnectivity()).Invoke(iter, conn);
+    viskores::worklet::DispatcherMapField<CreateConnectivity>(CreateConnectivity())
+      .Invoke(iter, conn);
 
     viskores::cont::CellSetSingleType<> newCellSet;
     newCellSet.Fill(newCoords.GetNumberOfValues(), viskores::CELL_SHAPE_LINE, 2, conn);

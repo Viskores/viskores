@@ -82,8 +82,8 @@ public:
 
   template <typename InPortalType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id& i,
-                                const viskores::Id& partPerHalo,
-                                const InPortalType& haloId) const
+                                        const viskores::Id& partPerHalo,
+                                        const InPortalType& haloId) const
   {
     // Boundary condition
     if ((i == 0) && (partPerHalo >= pmin))

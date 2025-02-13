@@ -43,18 +43,18 @@ struct Transport<viskores::cont::arg::TransportTagCellSetIn<VisitTopology, Incid
 {
   VISKORES_IS_CELL_SET(ContObjectType);
 
-  using ExecObjectType =
-    decltype(std::declval<ContObjectType>().PrepareForInput(Device(),
-                                                            VisitTopology(),
-                                                            IncidentTopology(),
-                                                            std::declval<viskores::cont::Token&>()));
+  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInput(
+    Device(),
+    VisitTopology(),
+    IncidentTopology(),
+    std::declval<viskores::cont::Token&>()));
 
   template <typename InputDomainType>
   VISKORES_CONT ExecObjectType operator()(const ContObjectType& object,
-                                      const InputDomainType&,
-                                      viskores::Id,
-                                      viskores::Id,
-                                      viskores::cont::Token& token) const
+                                          const InputDomainType&,
+                                          viskores::Id,
+                                          viskores::Id,
+                                          viskores::cont::Token& token) const
   {
     return object.PrepareForInput(Device(), VisitTopology(), IncidentTopology(), token);
   }

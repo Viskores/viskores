@@ -33,19 +33,19 @@ VISKORES_CONT viskores::Id ParseOption(const std::string& input, const std::stri
     if (pos != input.size())
     {
       throw viskores::cont::ErrorBadValue("Value '" + input + "' from source: '" + source +
-                                      "' has dangling characters, throwing");
+                                          "' has dangling characters, throwing");
     }
     return value;
   }
   catch (const std::invalid_argument&)
   {
-    throw viskores::cont::ErrorBadValue("Value '" + input +
-                                    "' failed to parse as integer from source: '" + source + "'");
+    throw viskores::cont::ErrorBadValue(
+      "Value '" + input + "' failed to parse as integer from source: '" + source + "'");
   }
   catch (const std::out_of_range&)
   {
-    throw viskores::cont::ErrorBadValue("Value '" + input + "' out of range for source: '" + source +
-                                    "'");
+    throw viskores::cont::ErrorBadValue("Value '" + input + "' out of range for source: '" +
+                                        source + "'");
   }
 }
 
@@ -96,7 +96,7 @@ viskores::Id RuntimeDeviceOption::GetValue() const
   if (!this->IsSet())
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-               "GetValue() called on Argument '" << this->EnvName << "' when it was not set.");
+                   "GetValue() called on Argument '" << this->EnvName << "' when it was not set.");
   }
   return this->Value;
 }

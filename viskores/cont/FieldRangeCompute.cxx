@@ -20,9 +20,10 @@ namespace cont
 
 //-----------------------------------------------------------------------------
 VISKORES_CONT
-viskores::cont::ArrayHandle<viskores::Range> FieldRangeCompute(const viskores::cont::DataSet& dataset,
-                                                       const std::string& name,
-                                                       viskores::cont::Field::Association assoc)
+viskores::cont::ArrayHandle<viskores::Range> FieldRangeCompute(
+  const viskores::cont::DataSet& dataset,
+  const std::string& name,
+  viskores::cont::Field::Association assoc)
 {
   viskores::cont::Field field;
   try
@@ -40,33 +41,36 @@ viskores::cont::ArrayHandle<viskores::Range> FieldRangeCompute(const viskores::c
 
 //-----------------------------------------------------------------------------
 VISKORES_CONT
-viskores::cont::ArrayHandle<viskores::Range> FieldRangeCompute(const viskores::cont::PartitionedDataSet& pds,
-                                                       const std::string& name,
-                                                       viskores::cont::Field::Association assoc)
+viskores::cont::ArrayHandle<viskores::Range> FieldRangeCompute(
+  const viskores::cont::PartitionedDataSet& pds,
+  const std::string& name,
+  viskores::cont::Field::Association assoc)
 {
-  std::vector<viskores::Range> result_vector = std::accumulate(
-    pds.begin(),
-    pds.end(),
-    std::vector<viskores::Range>(),
-    [&](const std::vector<viskores::Range>& accumulated_value, const viskores::cont::DataSet& dataset) {
-      viskores::cont::ArrayHandle<viskores::Range> partition_range =
-        viskores::cont::FieldRangeCompute(dataset, name, assoc);
+  std::vector<viskores::Range> result_vector =
+    std::accumulate(pds.begin(),
+                    pds.end(),
+                    std::vector<viskores::Range>(),
+                    [&](const std::vector<viskores::Range>& accumulated_value,
+                        const viskores::cont::DataSet& dataset)
+                    {
+                      viskores::cont::ArrayHandle<viskores::Range> partition_range =
+                        viskores::cont::FieldRangeCompute(dataset, name, assoc);
 
-      std::vector<viskores::Range> result = accumulated_value;
+                      std::vector<viskores::Range> result = accumulated_value;
 
-      // if the current partition has more components than we have seen so far,
-      // resize the result to fit all components.
-      result.resize(
-        std::max(result.size(), static_cast<size_t>(partition_range.GetNumberOfValues())));
+                      // if the current partition has more components than we have seen so far,
+                      // resize the result to fit all components.
+                      result.resize(std::max(
+                        result.size(), static_cast<size_t>(partition_range.GetNumberOfValues())));
 
-      auto portal = partition_range.ReadPortal();
-      std::transform(viskores::cont::ArrayPortalToIteratorBegin(portal),
-                     viskores::cont::ArrayPortalToIteratorEnd(portal),
-                     result.begin(),
-                     result.begin(),
-                     std::plus<viskores::Range>());
-      return result;
-    });
+                      auto portal = partition_range.ReadPortal();
+                      std::transform(viskores::cont::ArrayPortalToIteratorBegin(portal),
+                                     viskores::cont::ArrayPortalToIteratorEnd(portal),
+                                     result.begin(),
+                                     result.begin(),
+                                     std::plus<viskores::Range>());
+                      return result;
+                    });
 
   return viskores::cont::make_ArrayHandleMove(std::move(result_vector));
 }

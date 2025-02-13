@@ -34,9 +34,9 @@ struct CellCenters : viskores::worklet::WorkletVisitCellsWithPoints
 
   template<typename CellShapeTag, typename FieldInVecType, typename FieldOutType>
   VISKORES_EXEC void operator()(CellShapeTag shape,
-                            viskores::IdComponent pointCount,
-                            const FieldInVecType& inputField,
-                            FieldOutType& outputField) const
+                                viskores::IdComponent pointCount,
+                                const FieldInVecType& inputField,
+                                FieldOutType& outputField) const
   {
     viskores::Vec3f center;
     viskores::ErrorCode status =
@@ -66,9 +66,9 @@ struct CellLookupInterp : viskores::worklet::WorkletMapField
 
   template<typename StructureType, typename FieldInPortalType, typename FieldOutType>
   VISKORES_EXEC void operator()(viskores::Id index,
-                            const StructureType& structure,
-                            const FieldInPortalType& inputField,
-                            FieldOutType& outputField) const
+                                const StructureType& structure,
+                                const FieldInPortalType& inputField,
+                                FieldOutType& outputField) const
   {
     // Normally you would use something like a locator to find the index to
     // a cell that matches some query criteria. For demonstration purposes,
@@ -86,7 +86,8 @@ struct CellLookupInterp : viskores::worklet::WorkletMapField
     }
 
     auto pointIndices = structure.GetIndices(index);
-    viskores::exec::CellInterpolate(pointIndices, inputField, center, shape, outputField);
+    viskores::exec::CellInterpolate(
+      pointIndices, inputField, center, shape, outputField);
   }
 };
 ////
@@ -111,9 +112,10 @@ void TryCellCenters()
   viskores::cont::printSummary_ArrayHandle(centers, std::cout);
   std::cout << std::endl;
   VISKORES_TEST_ASSERT(centers.GetNumberOfValues() ==
-                     dataSet.GetCellSet().GetNumberOfCells(),
-                   "Bad number of cells.");
-  VISKORES_TEST_ASSERT(test_equal(60.1875, centers.ReadPortal().Get(0)), "Bad first value.");
+                         dataSet.GetCellSet().GetNumberOfCells(),
+                       "Bad number of cells.");
+  VISKORES_TEST_ASSERT(test_equal(60.1875, centers.ReadPortal().Get(0)),
+                       "Bad first value.");
 
   centers.Fill(0);
   invoke(CellLookupInterp{},
@@ -123,9 +125,10 @@ void TryCellCenters()
   viskores::cont::printSummary_ArrayHandle(centers, std::cout);
   std::cout << std::endl;
   VISKORES_TEST_ASSERT(centers.GetNumberOfValues() ==
-                     dataSet.GetCellSet().GetNumberOfCells(),
-                   "Bad number of cells.");
-  VISKORES_TEST_ASSERT(test_equal(60.1875, centers.ReadPortal().Get(0)), "Bad first value.");
+                         dataSet.GetCellSet().GetNumberOfCells(),
+                       "Bad number of cells.");
+  VISKORES_TEST_ASSERT(test_equal(60.1875, centers.ReadPortal().Get(0)),
+                       "Bad first value.");
 }
 ////
 //// BEGIN-EXAMPLE CellDerivatives
@@ -144,10 +147,10 @@ struct CellDerivatives : viskores::worklet::WorkletVisitCellsWithPoints
            typename PointCoordVecType,
            typename FieldOutType>
   VISKORES_EXEC void operator()(CellShapeTag shape,
-                            viskores::IdComponent pointCount,
-                            const FieldInVecType& inputField,
-                            const PointCoordVecType& pointCoordinates,
-                            FieldOutType& outputField) const
+                                viskores::IdComponent pointCount,
+                                const FieldInVecType& inputField,
+                                const PointCoordVecType& pointCoordinates,
+                                FieldOutType& outputField) const
   {
     viskores::Vec3f center;
     viskores::ErrorCode status =
@@ -157,7 +160,8 @@ struct CellDerivatives : viskores::worklet::WorkletVisitCellsWithPoints
       this->RaiseError(viskores::ErrorString(status));
       return;
     }
-    viskores::exec::CellDerivative(inputField, pointCoordinates, center, shape, outputField);
+    viskores::exec::CellDerivative(
+      inputField, pointCoordinates, center, shape, outputField);
   }
 };
 ////
@@ -186,11 +190,11 @@ void TryCellDerivatives()
   std::cout << std::endl;
 
   VISKORES_TEST_ASSERT(derivatives.GetNumberOfValues() ==
-                     dataSet.GetCellSet().GetNumberOfCells(),
-                   "Bad number of cells.");
-  VISKORES_TEST_ASSERT(
-    test_equal(viskores::make_Vec(10.025, 30.075, 60.125), derivatives.ReadPortal().Get(0)),
-    "Bad first value.");
+                         dataSet.GetCellSet().GetNumberOfCells(),
+                       "Bad number of cells.");
+  VISKORES_TEST_ASSERT(test_equal(viskores::make_Vec(10.025, 30.075, 60.125),
+                                  derivatives.ReadPortal().Get(0)),
+                       "Bad first value.");
 }
 
 void Run()

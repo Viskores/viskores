@@ -49,17 +49,17 @@ struct Transport<viskores::cont::arg::TransportTagArrayOut, ContObjectType, Devi
   // is not an array handle as an argument that is expected to be one.
   VISKORES_IS_ARRAY_HANDLE(ContObjectType);
 
-  using ExecObjectType =
-    decltype(std::declval<ContObjectType>().PrepareForOutput(viskores::Id{},
-                                                             Device{},
-                                                             std::declval<viskores::cont::Token&>()));
+  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForOutput(
+    viskores::Id{},
+    Device{},
+    std::declval<viskores::cont::Token&>()));
 
   template <typename InputDomainType>
   VISKORES_CONT ExecObjectType operator()(ContObjectType& object,
-                                      const InputDomainType& viskoresNotUsed(inputDomain),
-                                      viskores::Id viskoresNotUsed(inputRange),
-                                      viskores::Id outputRange,
-                                      viskores::cont::Token& token) const
+                                          const InputDomainType& viskoresNotUsed(inputDomain),
+                                          viskores::Id viskoresNotUsed(inputRange),
+                                          viskores::Id outputRange,
+                                          viskores::cont::Token& token) const
   {
     return object.PrepareForOutput(outputRange, Device(), token);
   }

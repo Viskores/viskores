@@ -93,11 +93,11 @@ public:
 
   /// The functor returns the isovalue and the epsilon direction around the saddle end of the branch
   VISKORES_EXEC void operator()(const bool isLowerLeaf,
-                            const bool isUpperLeaf,
-                            const ValueType upperEndValue,
-                            const ValueType lowerEndValue,
-                            viskores::Id& saddleEpsilon,
-                            ValueType& saddleValue) const
+                                const bool isUpperLeaf,
+                                const ValueType upperEndValue,
+                                const ValueType lowerEndValue,
+                                viskores::Id& saddleEpsilon,
+                                ValueType& saddleValue) const
   {
     // NOTE: for the main branch, the saddle value is undefined,
     // because both upper and lower ends are leaf nodes.

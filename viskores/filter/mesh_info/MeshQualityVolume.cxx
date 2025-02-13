@@ -40,15 +40,15 @@ struct VolumeWorklet : viskores::worklet::WorkletVisitCellsWithPoints
 
   template <typename CellShapeType, typename PointCoordVecType, typename OutType>
   VISKORES_EXEC void operator()(CellShapeType shape,
-                            const viskores::IdComponent& numPoints,
-                            const PointCoordVecType& pts,
-                            OutType& metricValue) const
+                                const viskores::IdComponent& numPoints,
+                                const PointCoordVecType& pts,
+                                OutType& metricValue) const
   {
     viskores::UInt8 thisId = shape.Id;
     switch (thisId)
     {
       viskoresGenericCellShapeMacro(metricValue =
-                                  this->ComputeMetric<OutType>(numPoints, pts, CellShapeTag()));
+                                      this->ComputeMetric<OutType>(numPoints, pts, CellShapeTag()));
       default:
         this->RaiseError(viskores::ErrorString(viskores::ErrorCode::InvalidShapeId));
         metricValue = OutType(0.0);
@@ -58,10 +58,11 @@ struct VolumeWorklet : viskores::worklet::WorkletVisitCellsWithPoints
 private:
   template <typename OutType, typename PointCoordVecType, typename CellShapeType>
   VISKORES_EXEC OutType ComputeMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  CellShapeType tag) const
+                                      const PointCoordVecType& pts,
+                                      CellShapeType tag) const
   {
-    constexpr viskores::IdComponent dims = viskores::CellTraits<CellShapeType>::TOPOLOGICAL_DIMENSIONS;
+    constexpr viskores::IdComponent dims =
+      viskores::CellTraits<CellShapeType>::TOPOLOGICAL_DIMENSIONS;
     viskores::ErrorCode errorCode{ viskores::ErrorCode::Success };
 
     if (dims == 3)
@@ -109,9 +110,8 @@ viskores::Float64 MeshQualityVolume::ComputeTotalVolume(const viskores::cont::Da
   }
 
   viskores::Float64 totalVolume = 0;
-  auto resolveType = [&](const auto& concrete) {
-    totalVolume = viskores::cont::Algorithm::Reduce(concrete, viskores::Float64{ 0 });
-  };
+  auto resolveType = [&](const auto& concrete)
+  { totalVolume = viskores::cont::Algorithm::Reduce(concrete, viskores::Float64{ 0 }); };
   this->CastAndCallScalarField(volumeField, resolveType);
   return totalVolume;
 }
@@ -135,12 +135,13 @@ viskores::cont::DataSet MeshQualityVolume::DoExecute(const viskores::cont::DataS
   if (!field.IsPointField())
   {
     throw viskores::cont::ErrorBadValue("Active field for MeshQuality must be point coordinates. "
-                                    "But the active field is not a point field.");
+                                        "But the active field is not a point field.");
   }
 
   viskores::cont::UnknownArrayHandle outArray;
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
     viskores::cont::ArrayHandle<T> result;
     this->Invoke(VolumeWorklet{}, input.GetCellSet(), concrete, result);

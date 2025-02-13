@@ -87,7 +87,8 @@ void validate(viskores::cont::ArrayHandle<T, U> handle, viskores::interop::Buffe
   //buffer is not smaller than the array.
   //This GL buffer size is done to improve performance when transferring
   //arrays to GL whose size changes on a per frame basis
-  VISKORES_TEST_ASSERT(retSize >= handle.GetNumberOfValues(), "OpenGL buffer not large enough size");
+  VISKORES_TEST_ASSERT(retSize >= handle.GetNumberOfValues(),
+                       "OpenGL buffer not large enough size");
 
   //validate that retsize matches the bufferstate capacity which returns
   //the amount of total GL buffer space, not the size we are using
@@ -99,7 +100,7 @@ void validate(viskores::cont::ArrayHandle<T, U> handle, viskores::interop::Buffe
     dynamic_cast<viskores::interop::internal::SMPTransferResource*>(state.GetResource());
 
   VISKORES_TEST_ASSERT(resource->Size == capacity,
-                   "buffer state internal resource doesn't match BufferState capacity");
+                       "buffer state internal resource doesn't match BufferState capacity");
 
   auto portal = handle.ReadPortal();
   auto iter = returnedValues.cbegin();
@@ -168,9 +169,12 @@ void test_ArrayHandleCast()
 
 void test_ArrayHandleCounting()
 {
-  auto counting1 = viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(1), viskores::Id(10000));
-  auto counting2 = viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(4), viskores::Id(10000));
-  auto counting3 = viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(0), viskores::Id(10000));
+  auto counting1 =
+    viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(1), viskores::Id(10000));
+  auto counting2 =
+    viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(4), viskores::Id(10000));
+  auto counting3 =
+    viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(0), viskores::Id(10000));
 
   //use the same state with different counting handles
   viskores::interop::BufferState state;

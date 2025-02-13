@@ -119,7 +119,8 @@ public:
       else
       {
         viskores::Id leftMaskedVal = viskores::worklet::contourtree_augmented::MaskedIndex(leftVal);
-        viskores::Id rightMaskedVal = viskores::worklet::contourtree_augmented::MaskedIndex(rightVal);
+        viskores::Id rightMaskedVal =
+          viskores::worklet::contourtree_augmented::MaskedIndex(rightVal);
         if (leftMaskedVal < rightMaskedVal)
           return true;
         if (leftMaskedVal > rightMaskedVal)
@@ -145,8 +146,8 @@ public:
   { // constructor
   } // constructor
 
-  VISKORES_CONT TransferTargetComperatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                             viskores::cont::Token& token) const
+  VISKORES_CONT TransferTargetComperatorImpl
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     return TransferTargetComperatorImpl(this->Superarcs.PrepareForInput(device, token));
   }

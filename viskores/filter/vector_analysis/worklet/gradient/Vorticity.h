@@ -20,7 +20,8 @@ namespace worklet
 namespace gradient
 {
 
-using VorticityTypes = viskores::List<viskores::Vec<viskores::Vec3f_32, 3>, viskores::Vec<viskores::Vec3f_64, 3>>;
+using VorticityTypes =
+  viskores::List<viskores::Vec<viskores::Vec3f_32, 3>, viskores::Vec<viskores::Vec3f_64, 3>>;
 
 
 struct Vorticity : public viskores::worklet::WorkletMapField

@@ -76,7 +76,10 @@ public:
     this->ConstantDirection = direction;
   }
   /// @copydoc SetConstantDirection
-  VISKORES_CONT const viskores::Vec3f& GetConstantDirection() const { return this->ConstantDirection; }
+  VISKORES_CONT const viskores::Vec3f& GetConstantDirection() const
+  {
+    return this->ConstantDirection;
+  }
 
   /// @brief Specifies whether a direction field or a constant direction direction is used.
   ///

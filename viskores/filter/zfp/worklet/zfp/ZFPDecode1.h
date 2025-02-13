@@ -29,9 +29,9 @@ namespace zfp
 
 template <typename Scalar, typename PortalType>
 VISKORES_EXEC inline void ScatterPartial1(const Scalar* q,
-                                      PortalType& scalars,
-                                      viskores::Id offset,
-                                      viskores::Int32 nx)
+                                          PortalType& scalars,
+                                          viskores::Id offset,
+                                          viskores::Int32 nx)
 {
   viskores::Id x;
   for (x = 0; x < nx; x++, offset++, q++)
@@ -68,8 +68,8 @@ public:
 
   template <typename InputScalarPortal, typename BitstreamPortal>
   VISKORES_EXEC void operator()(const viskores::Id blockIdx,
-                            InputScalarPortal& scalars,
-                            BitstreamPortal& stream) const
+                                InputScalarPortal& scalars,
+                                BitstreamPortal& stream) const
   {
     using Scalar = typename InputScalarPortal::ValueType;
     constexpr viskores::Int32 BlockSize = 4;

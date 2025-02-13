@@ -53,7 +53,8 @@ public:
   /// call any of the methods will result in a runtime exception.
   ///
   VISKORES_CONT
-  viskores::cont::internal::DeviceAdapterMemoryManagerBase& GetMemoryManager(DeviceAdapterId id) const;
+  viskores::cont::internal::DeviceAdapterMemoryManagerBase& GetMemoryManager(
+    DeviceAdapterId id) const;
 
   /// Returns a reference to a `RuntimeDeviceConfiguration` that will work with the
   /// given device. If the device in question is not valid, a placeholder

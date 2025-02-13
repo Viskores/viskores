@@ -49,8 +49,8 @@ struct aligned_union
 {
   static constexpr std::size_t alignment_value = viskoresstd::max_size<alignof(Types)...>::value;
 
-  using type =
-    viskoresstd::aligned_data_block<alignment_value, viskoresstd::max_size<Len, sizeof(Types)...>::value>;
+  using type = viskoresstd::aligned_data_block<alignment_value,
+                                               viskoresstd::max_size<Len, sizeof(Types)...>::value>;
 };
 
 } // namespace viskoresstd

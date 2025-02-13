@@ -48,7 +48,8 @@ VISKORES_EXEC void Halton2D(const viskores::Int32& sampleNum, viskores::Vec2f_32
 } // Halton2D
 
 VISKORES_EXEC
-viskores::Vec3f_32 CosineWeightedHemisphere(const viskores::Int32& sampleNum, const viskores::Vec3f_32& normal)
+viskores::Vec3f_32 CosineWeightedHemisphere(const viskores::Int32& sampleNum,
+                                            const viskores::Vec3f_32& normal)
 {
   //generate orthoganal basis about normal
   int kz = 0;

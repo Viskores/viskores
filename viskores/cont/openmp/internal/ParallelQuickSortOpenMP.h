@@ -69,9 +69,10 @@ private:
     this->SerialSize = 32768;
   }
 
-  viskores::Pair<viskores::Id, ValueType> MedianOf3(const viskores::Pair<viskores::Id, ValueType>& v1,
-                                            const viskores::Pair<viskores::Id, ValueType>& v2,
-                                            const viskores::Pair<viskores::Id, ValueType>& v3) const
+  viskores::Pair<viskores::Id, ValueType> MedianOf3(
+    const viskores::Pair<viskores::Id, ValueType>& v1,
+    const viskores::Pair<viskores::Id, ValueType>& v2,
+    const viskores::Pair<viskores::Id, ValueType>& v3) const
   {
     if (this->Compare(v1.second, v2.second))
     { // v1 < v2

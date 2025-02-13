@@ -26,8 +26,8 @@ namespace detail
 {
 
 VISKORES_CONT_EXPORT void HandleTryExecuteException(viskores::cont::DeviceAdapterId,
-                                                viskores::cont::RuntimeDeviceTracker&,
-                                                const std::string& functorName);
+                                                    viskores::cont::RuntimeDeviceTracker&,
+                                                    const std::string& functorName);
 
 template <typename DeviceTag, typename Functor, typename... Args>
 inline bool TryExecuteIfValid(std::true_type,
@@ -102,12 +102,12 @@ inline bool TryExecuteImpl(viskores::cont::DeviceAdapterId devId,
   auto& tracker = viskores::cont::GetRuntimeDeviceTracker();
   TryExecuteWrapper task;
   viskores::ListForEach(task,
-                    list,
-                    std::forward<Functor>(functor),
-                    devId,
-                    tracker,
-                    success,
-                    std::forward<Args>(args)...);
+                        list,
+                        std::forward<Functor>(functor),
+                        devId,
+                        tracker,
+                        success,
+                        std::forward<Args>(args)...);
   return success;
 }
 
@@ -121,12 +121,12 @@ inline bool TryExecuteImpl(viskores::cont::DeviceAdapterId devId,
   auto& tracker = viskores::cont::GetRuntimeDeviceTracker();
   TryExecuteWrapper task;
   viskores::ListForEach(task,
-                    VISKORES_DEFAULT_DEVICE_ADAPTER_LIST(),
-                    std::forward<Functor>(functor),
-                    devId,
-                    tracker,
-                    success,
-                    std::forward<Args>(args)...);
+                        VISKORES_DEFAULT_DEVICE_ADAPTER_LIST(),
+                        std::forward<Functor>(functor),
+                        devId,
+                        tracker,
+                        success,
+                        std::forward<Args>(args)...);
   return success;
 }
 } // namespace detail
@@ -182,9 +182,9 @@ VISKORES_CONT bool TryExecuteOnDevice(viskores::cont::DeviceAdapterId devId, Fun
 }
 template <typename Functor, typename Arg1, typename... Args>
 VISKORES_CONT bool TryExecuteOnDevice(viskores::cont::DeviceAdapterId devId,
-                                  Functor&& functor,
-                                  Arg1&& arg1,
-                                  Args&&... args)
+                                      Functor&& functor,
+                                      Arg1&& arg1,
+                                      Args&&... args)
 {
   //determine if we are being passed a device adapter or runtime tracker as our argument
   using is_deviceAdapter = viskores::internal::IsList<Arg1>;
@@ -243,8 +243,9 @@ VISKORES_CONT bool TryExecuteOnDevice(viskores::cont::DeviceAdapterId devId,
 template <typename Functor, typename... Args>
 VISKORES_CONT bool TryExecute(Functor&& functor, Args&&... args)
 {
-  return TryExecuteOnDevice(
-    viskores::cont::DeviceAdapterTagAny(), std::forward<Functor>(functor), std::forward<Args>(args)...);
+  return TryExecuteOnDevice(viskores::cont::DeviceAdapterTagAny(),
+                            std::forward<Functor>(functor),
+                            std::forward<Args>(args)...);
 }
 
 

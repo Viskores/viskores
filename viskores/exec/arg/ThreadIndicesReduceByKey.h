@@ -43,7 +43,7 @@ public:
     : Superclass(threadIndex, inIndex, visitIndex, outIndex)
     , ValueOffset(keyLookup.Offsets.Get(inIndex))
     , NumberOfValues(static_cast<viskores::IdComponent>(keyLookup.Offsets.Get(inIndex + 1) -
-                                                    keyLookup.Offsets.Get(inIndex)))
+                                                        keyLookup.Offsets.Get(inIndex)))
   {
   }
 

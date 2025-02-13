@@ -43,13 +43,13 @@ public:
             typename DepthBufferPortalType,
             typename ColorBufferPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& pixelIndex,
-                            ColorPortalType& colorBufferIn,
-                            const Precision& inDepth,
-                            const viskores::Vec<Precision, 3>& origin,
-                            const viskores::Vec<Precision, 3>& dir,
-                            DepthBufferPortalType& depthBuffer,
-                            ColorBufferPortalType& colorBuffer,
-                            const viskores::Id& index) const
+                                ColorPortalType& colorBufferIn,
+                                const Precision& inDepth,
+                                const viskores::Vec<Precision, 3>& origin,
+                                const viskores::Vec<Precision, 3>& dir,
+                                DepthBufferPortalType& depthBuffer,
+                                ColorBufferPortalType& colorBuffer,
+                                const viskores::Id& index) const
   {
     viskores::Vec<Precision, 3> intersection = origin + inDepth * dir;
 
@@ -108,13 +108,13 @@ public:
 
 template <typename Precision>
 VISKORES_CONT void WriteToCanvas(const viskores::rendering::raytracing::Ray<Precision>& rays,
-                             const viskores::cont::ArrayHandle<Precision>& colors,
-                             const viskores::rendering::Camera& camera,
-                             viskores::rendering::CanvasRayTracer* canvas)
+                                 const viskores::cont::ArrayHandle<Precision>& colors,
+                                 const viskores::rendering::Camera& camera,
+                                 viskores::rendering::CanvasRayTracer* canvas)
 {
   viskores::Matrix<viskores::Float32, 4, 4> viewProjMat =
     viskores::MatrixMultiply(camera.CreateProjectionMatrix(canvas->GetWidth(), canvas->GetHeight()),
-                         camera.CreateViewMatrix());
+                             camera.CreateViewMatrix());
 
   viskores::worklet::DispatcherMapField<SurfaceConverter>(SurfaceConverter(viewProjMat))
     .Invoke(rays.PixelIdx,
@@ -139,16 +139,18 @@ CanvasRayTracer::CanvasRayTracer(viskores::Id width, viskores::Id height)
 
 CanvasRayTracer::~CanvasRayTracer() {}
 
-void CanvasRayTracer::WriteToCanvas(const viskores::rendering::raytracing::Ray<viskores::Float32>& rays,
-                                    const viskores::cont::ArrayHandle<viskores::Float32>& colors,
-                                    const viskores::rendering::Camera& camera)
+void CanvasRayTracer::WriteToCanvas(
+  const viskores::rendering::raytracing::Ray<viskores::Float32>& rays,
+  const viskores::cont::ArrayHandle<viskores::Float32>& colors,
+  const viskores::rendering::Camera& camera)
 {
   internal::WriteToCanvas(rays, colors, camera, this);
 }
 
-void CanvasRayTracer::WriteToCanvas(const viskores::rendering::raytracing::Ray<viskores::Float64>& rays,
-                                    const viskores::cont::ArrayHandle<viskores::Float64>& colors,
-                                    const viskores::rendering::Camera& camera)
+void CanvasRayTracer::WriteToCanvas(
+  const viskores::rendering::raytracing::Ray<viskores::Float64>& rays,
+  const viskores::cont::ArrayHandle<viskores::Float64>& colors,
+  const viskores::rendering::Camera& camera)
 {
   internal::WriteToCanvas(rays, colors, camera, this);
 }

@@ -99,9 +99,9 @@ public:
   ///
   template <typename T>
   VISKORES_CONT void Attach(T&& object,
-                        viskores::cont::Token::ReferenceCount* referenceCountPointer,
-                        std::unique_lock<std::mutex>& lock,
-                        std::condition_variable* conditionVariablePointer)
+                            viskores::cont::Token::ReferenceCount* referenceCountPointer,
+                            std::unique_lock<std::mutex>& lock,
+                            std::condition_variable* conditionVariablePointer)
   {
     this->Attach(std::unique_ptr<ObjectReference>(
                    new ObjectReferenceImpl<typename std::decay<T>::type>(std::forward<T>(object))),
@@ -113,9 +113,9 @@ public:
   /// @copydoc Attach
   template <typename T>
   VISKORES_CONT void Attach(T&& object,
-                        viskores::cont::Token::ReferenceCount* referenceCountPoiner,
-                        std::mutex* mutexPointer,
-                        std::condition_variable* conditionVariablePointer)
+                            viskores::cont::Token::ReferenceCount* referenceCountPoiner,
+                            std::mutex* mutexPointer,
+                            std::condition_variable* conditionVariablePointer)
   {
     std::unique_lock<std::mutex> lock(*mutexPointer, std::defer_lock);
     this->Attach(std::forward<T>(object), referenceCountPoiner, lock, conditionVariablePointer);
@@ -161,29 +161,34 @@ public:
   VISKORES_CONT Reference GetReference() const;
 
 private:
-  VISKORES_CONT void Attach(std::unique_ptr<viskores::cont::Token::ObjectReference>&& objectReference,
-                        viskores::cont::Token::ReferenceCount* referenceCountPointer,
-                        std::unique_lock<std::mutex>& lock,
-                        std::condition_variable* conditionVariablePointer);
+  VISKORES_CONT void Attach(
+    std::unique_ptr<viskores::cont::Token::ObjectReference>&& objectReference,
+    viskores::cont::Token::ReferenceCount* referenceCountPointer,
+    std::unique_lock<std::mutex>& lock,
+    std::condition_variable* conditionVariablePointer);
 
   VISKORES_CONT bool IsAttached(std::unique_lock<std::mutex>& lock,
-                            viskores::cont::Token::ReferenceCount* referenceCountPointer) const;
+                                viskores::cont::Token::ReferenceCount* referenceCountPointer) const;
 };
 
-VISKORES_CONT inline bool operator==(const viskores::cont::Token& token, viskores::cont::Token::Reference ref)
+VISKORES_CONT inline bool operator==(const viskores::cont::Token& token,
+                                     viskores::cont::Token::Reference ref)
 {
   return token.GetReference() == ref;
 }
-VISKORES_CONT inline bool operator!=(const viskores::cont::Token& token, viskores::cont::Token::Reference ref)
+VISKORES_CONT inline bool operator!=(const viskores::cont::Token& token,
+                                     viskores::cont::Token::Reference ref)
 {
   return token.GetReference() != ref;
 }
 
-VISKORES_CONT inline bool operator==(viskores::cont::Token::Reference ref, const viskores::cont::Token& token)
+VISKORES_CONT inline bool operator==(viskores::cont::Token::Reference ref,
+                                     const viskores::cont::Token& token)
 {
   return ref == token.GetReference();
 }
-VISKORES_CONT inline bool operator!=(viskores::cont::Token::Reference ref, const viskores::cont::Token& token)
+VISKORES_CONT inline bool operator!=(viskores::cont::Token::Reference ref,
+                                     const viskores::cont::Token& token)
 {
   return ref != token.GetReference();
 }

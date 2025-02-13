@@ -21,8 +21,8 @@ public:
 
   template <typename WholeArrayType>
   VISKORES_EXEC void operator()(const viskores::Id& index,
-                            const WholeArrayType& counts,
-                            int& difference) const
+                                const WholeArrayType& counts,
+                                int& difference) const
   {
     difference = counts.Get(index + 1) - counts.Get(index);
   }
@@ -40,11 +40,11 @@ public:
 
   template <typename Conn, typename Comp, typename AtomicSame>
   VISKORES_EXEC void operator()(viskores::Id index,
-                            int start,
-                            int degree,
-                            const Conn& conns,
-                            const Comp& comps,
-                            AtomicSame& same) const
+                                int start,
+                                int degree,
+                                const Conn& conns,
+                                const Comp& comps,
+                                AtomicSame& same) const
   {
     for (viskores::Id offset = start; offset < start + degree; ++offset)
     {
@@ -90,14 +90,15 @@ public:
     viskores::cont::ArrayHandle<int> offsets_h =
       viskores::cont::make_ArrayHandle(offsets, viskores::CopyFlag::On);
 
-    viskores::cont::ArrayHandle<int> conns_h = viskores::cont::make_ArrayHandle(conns, viskores::CopyFlag::Off);
+    viskores::cont::ArrayHandle<int> conns_h =
+      viskores::cont::make_ArrayHandle(conns, viskores::CopyFlag::Off);
 
     viskores::cont::ArrayHandle<viskores::Id> comps_h;
     viskores::worklet::connectivity::GraphConnectivity::Run(counts_h, offsets_h, conns_h, comps_h);
 
-    VISKORES_TEST_ASSERT(viskores::cont::Algorithm::Reduce(comps_h, viskores::Id(0), viskores::Maximum{}) ==
-                       ncomps - 1,
-                     "number of components mismatch");
+    VISKORES_TEST_ASSERT(viskores::cont::Algorithm::Reduce(
+                           comps_h, viskores::Id(0), viskores::Maximum{}) == ncomps - 1,
+                         "number of components mismatch");
 
     viskores::cont::ArrayHandle<viskores::UInt32> atomicSame;
     atomicSame.Allocate(1);
@@ -105,7 +106,7 @@ public:
 
     invoke(SameComponent{}, offsets_h, counts_h, conns_h, comps_h, atomicSame);
     VISKORES_TEST_ASSERT(atomicSame.ReadPortal().Get(0) == 1,
-                     "Neighboring nodes don't have the same component id");
+                         "Neighboring nodes don't have the same component id");
   }
 
   void TestECL_CC_DataSets() const { TestECL_CC("internet.egr", 1); }

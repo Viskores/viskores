@@ -82,8 +82,8 @@ public:
 
   template <typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& index,
-                            const viskores::Id& candidate,
-                            const OutFieldPortalType& critical) const
+                                const viskores::Id& candidate,
+                                const OutFieldPortalType& critical) const
   {
     critical.Set(candidate, index);
   }

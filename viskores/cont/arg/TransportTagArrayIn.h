@@ -47,15 +47,16 @@ struct Transport<viskores::cont::arg::TransportTagArrayIn, ContObjectType, Devic
 
   VISKORES_IS_ARRAY_HANDLE(ContObjectType);
 
-  using ExecObjectType = decltype(
-    std::declval<ContObjectType>().PrepareForInput(Device(), std::declval<viskores::cont::Token&>()));
+  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInput(
+    Device(),
+    std::declval<viskores::cont::Token&>()));
 
   template <typename InputDomainType>
   VISKORES_CONT ExecObjectType operator()(const ContObjectType& object,
-                                      const InputDomainType& viskoresNotUsed(inputDomain),
-                                      viskores::Id inputRange,
-                                      viskores::Id viskoresNotUsed(outputRange),
-                                      viskores::cont::Token& token) const
+                                          const InputDomainType& viskoresNotUsed(inputDomain),
+                                          viskores::Id inputRange,
+                                          viskores::Id viskoresNotUsed(outputRange),
+                                          viskores::cont::Token& token) const
   {
     if (object.GetNumberOfValues() != inputRange)
     {

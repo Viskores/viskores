@@ -55,9 +55,10 @@ struct ExecutionSignatureTagCheck
 /// that a template argument is actually an \c ExecutionSignature tag. (You can
 /// get weird errors elsewhere in the code when a mistake is made.)
 ///
-#define VISKORES_IS_EXECUTION_SIGNATURE_TAG(tag)                                                  \
-  VISKORES_STATIC_ASSERT_MSG(::viskores::exec::arg::internal::ExecutionSignatureTagCheck<tag>::Valid, \
-                         "Provided a type that is not a valid ExecutionSignature tag.")
+#define VISKORES_IS_EXECUTION_SIGNATURE_TAG(tag)                             \
+  VISKORES_STATIC_ASSERT_MSG(                                                \
+    ::viskores::exec::arg::internal::ExecutionSignatureTagCheck<tag>::Valid, \
+    "Provided a type that is not a valid ExecutionSignature tag.")
 }
 }
 } // namespace viskores::exec::arg

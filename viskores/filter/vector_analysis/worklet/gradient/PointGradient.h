@@ -43,17 +43,17 @@ struct PointGradient : public viskores::worklet::WorkletVisitPointsWithCells
             typename WholeFieldIn,
             typename GradientOutType>
   VISKORES_EXEC void operator()(const viskores::IdComponent& numCells,
-                            const FromIndexType& cellIds,
-                            const viskores::Id& pointId,
-                            const CellSetInType& geometry,
-                            const WholeCoordinatesIn& pointCoordinates,
-                            const WholeFieldIn& inputField,
-                            GradientOutType& outputGradient) const
+                                const FromIndexType& cellIds,
+                                const viskores::Id& pointId,
+                                const CellSetInType& geometry,
+                                const WholeCoordinatesIn& pointCoordinates,
+                                const WholeFieldIn& inputField,
+                                GradientOutType& outputGradient) const
   {
     // Use optimized ThreadIndicesTopologyMap
     using CellThreadIndices =
       viskores::exec::arg::ThreadIndicesTopologyMap<CellSetInType,
-                                                viskores::exec::arg::DefaultScatterAndMaskTag>;
+                                                    viskores::exec::arg::DefaultScatterAndMaskTag>;
 
     using ValueType = typename WholeFieldIn::ValueType;
     using CellShapeTag = typename CellSetInType::CellShapeTag;
@@ -70,7 +70,8 @@ struct PointGradient : public viskores::worklet::WorkletVisitPointsWithCells
       const auto wCoords = this->GetValues(cellIndices, pointCoordinates);
       const auto field = this->GetValues(cellIndices, inputField);
 
-      const viskores::IdComponent pointIndexForCell = this->GetPointIndexForCell(cellIndices, pointId);
+      const viskores::IdComponent pointIndexForCell =
+        this->GetPointIndexForCell(cellIndices, pointId);
 
       this->ComputeGradient(cellShape, pointIndexForCell, wCoords, field, gradient);
     }
@@ -94,10 +95,10 @@ private:
             typename FieldInVecType,
             typename OutValueType>
   inline VISKORES_EXEC void ComputeGradient(CellShapeTag cellShape,
-                                        const viskores::IdComponent& pointIndexForCell,
-                                        const PointCoordVecType& wCoords,
-                                        const FieldInVecType& field,
-                                        viskores::Vec<OutValueType, 3>& gradient) const
+                                            const viskores::IdComponent& pointIndexForCell,
+                                            const PointCoordVecType& wCoords,
+                                            const FieldInVecType& field,
+                                            viskores::Vec<OutValueType, 3>& gradient) const
   {
     viskores::Vec3f pCoords;
     viskores::exec::ParametricCoordinatesPoint(
@@ -114,7 +115,7 @@ private:
 
   template <typename ThreadIndicesType>
   VISKORES_EXEC viskores::IdComponent GetPointIndexForCell(const ThreadIndicesType& indices,
-                                                   viskores::Id pointId) const
+                                                           viskores::Id pointId) const
   {
     viskores::IdComponent result = 0;
     const auto& topo = indices.GetIndicesIncident();
@@ -135,8 +136,8 @@ private:
     //we are passing in an viskores::Id when it wants a Id2 or an Id3 that
     //represents the flat index of the topology
     using Fetch = viskores::exec::arg::Fetch<viskores::exec::arg::FetchTagArrayTopologyMapIn,
-                                         viskores::exec::arg::AspectTagDefault,
-                                         WholeFieldIn>;
+                                             viskores::exec::arg::AspectTagDefault,
+                                             WholeFieldIn>;
     Fetch fetch;
     return fetch.Load(indices, in);
   }

@@ -129,7 +129,8 @@ public:
       throw viskores::cont::ErrorBadValue("ChannelBuffer resize: Size must be greater than -1 ");
     this->Size = newSize;
     viskores::cont::Token token;
-    this->Buffer.PrepareForOutput(this->Size * static_cast<viskores::Id>(NumChannels), device, token);
+    this->Buffer.PrepareForOutput(
+      this->Size * static_cast<viskores::Id>(NumChannels), device, token);
   }
 };
 }

@@ -35,8 +35,8 @@ public:
 
   template <typename Particle>
   VISKORES_EXEC IntegratorStatus CheckStep(const Particle& particle,
-                                       viskores::FloatDefault stepLength,
-                                       viskores::Vec3f& velocity) const
+                                           viskores::FloatDefault stepLength,
+                                           viskores::Vec3f& velocity) const
   {
     auto time = particle.GetTime();
     auto inpos = particle.GetEvaluationPosition(stepLength);
@@ -47,8 +47,9 @@ public:
 
     velocity = particle.Velocity(vectors, stepLength);
 
-    return IntegratorStatus(
-      evalStatus, viskores::MagnitudeSquared(velocity) <= viskores::Epsilon<viskores::FloatDefault>());
+    return IntegratorStatus(evalStatus,
+                            viskores::MagnitudeSquared(velocity) <=
+                              viskores::Epsilon<viskores::FloatDefault>());
   }
 
 private:
@@ -71,7 +72,7 @@ public:
   }
 
   VISKORES_CONT auto PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                     viskores::cont::Token& token) const
+                                         viskores::cont::Token& token) const
     -> ExecEulerIntegrator<decltype(this->Evaluator.PrepareForExecution(device, token))>
   {
     auto evaluator = this->Evaluator.PrepareForExecution(device, token);

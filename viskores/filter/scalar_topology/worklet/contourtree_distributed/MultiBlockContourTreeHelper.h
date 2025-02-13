@@ -130,13 +130,14 @@ public:
   // DIY. Subsequent construction of updated ContourTreeMeshes is handled separately.
   template <typename T>
   inline static viskores::worklet::contourtree_augmented::ContourTreeMesh<T>*
-  ComputeLocalContourTreeMesh(const viskores::Id3 localBlockOrigin,
-                              const viskores::Id3 localBlockSize,
-                              const viskores::Id3 globalSize,
-                              const viskores::cont::ArrayHandle<T>& field,
-                              const viskores::worklet::contourtree_augmented::ContourTree& contourTree,
-                              const viskores::worklet::contourtree_augmented::IdArrayType& sortOrder,
-                              unsigned int computeRegularStructure)
+  ComputeLocalContourTreeMesh(
+    const viskores::Id3 localBlockOrigin,
+    const viskores::Id3 localBlockSize,
+    const viskores::Id3 globalSize,
+    const viskores::cont::ArrayHandle<T>& field,
+    const viskores::worklet::contourtree_augmented::ContourTree& contourTree,
+    const viskores::worklet::contourtree_augmented::IdArrayType& sortOrder,
+    unsigned int computeRegularStructure)
 
   {
     // compute the global mesh index and initalize the local contour tree mesh
@@ -164,7 +165,7 @@ public:
       // GlobalMeshIndex by tranforming those indices with our IdRelabler
       viskores::worklet::contourtree_augmented::IdArrayType localGlobalMeshIndex;
       viskores::cont::ArrayHandlePermutation<viskores::worklet::contourtree_augmented::IdArrayType,
-                                         viskores::worklet::contourtree_augmented::IdArrayType>
+                                             viskores::worklet::contourtree_augmented::IdArrayType>
         permutedSortOrder(contourTree.Augmentnodes, sortOrder);
       auto transformedIndex = viskores::cont::make_ArrayHandleTransform(
         permutedSortOrder,

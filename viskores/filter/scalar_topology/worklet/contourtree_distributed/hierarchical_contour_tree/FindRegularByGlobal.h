@@ -87,7 +87,10 @@ public:
 
   /// Define also as an operator so that we can use it in ArrayHandleTransform directly
   VISKORES_EXEC
-  viskores::Id operator()(viskores::Id globalId) const { return this->FindRegularByGlobal(globalId); }
+  viskores::Id operator()(viskores::Id globalId) const
+  {
+    return this->FindRegularByGlobal(globalId);
+  }
 
   // TODO: This is just a binary search. Does Viskores have an implementation we can use to replace this with?
   /// routine to search the array of regular nodes for a particular global ID
@@ -169,15 +172,16 @@ class FindRegularByGlobal : public viskores::cont::ExecutionObjectBase
 public:
   /// constructor
   VISKORES_CONT
-  FindRegularByGlobal(const viskores::worklet::contourtree_augmented::IdArrayType& regularNodeSortOrder,
-                      const viskores::worklet::contourtree_augmented::IdArrayType& regularNodeGlobalIds)
+  FindRegularByGlobal(
+    const viskores::worklet::contourtree_augmented::IdArrayType& regularNodeSortOrder,
+    const viskores::worklet::contourtree_augmented::IdArrayType& regularNodeGlobalIds)
     : RegularNodeSortOrder(regularNodeSortOrder)
     , RegularNodeGlobalIds(regularNodeGlobalIds)
   {
   }
 
-  VISKORES_CONT FindRegularByGlobalDeviceData PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                              viskores::cont::Token& token) const
+  VISKORES_CONT FindRegularByGlobalDeviceData
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     return FindRegularByGlobalDeviceData(
       device, token, this->RegularNodeSortOrder, this->RegularNodeGlobalIds);

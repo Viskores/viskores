@@ -142,15 +142,17 @@ void MapperCylinder::RenderCellsImpl(const viskores::cont::UnknownCellSet& cells
       .Invoke(coords, dist);
 
 
-    viskores::Float32 min_dist =
-      viskores::cont::Algorithm::Reduce(dist, viskores::Infinity<viskores::Float32>(), viskores::Minimum());
+    viskores::Float32 min_dist = viskores::cont::Algorithm::Reduce(
+      dist, viskores::Infinity<viskores::Float32>(), viskores::Minimum());
 
-    baseRadius = 0.576769694f * min_dist - 0.603522029f * viskores::Pow(viskores::Float32(min_dist), 2.f) +
+    baseRadius = 0.576769694f * min_dist -
+      0.603522029f * viskores::Pow(viskores::Float32(min_dist), 2.f) +
       0.232171175f * viskores::Pow(viskores::Float32(min_dist), 3.f) -
       0.038697244f * viskores::Pow(viskores::Float32(min_dist), 4.f) +
       0.002366979f * viskores::Pow(viskores::Float32(min_dist), 5.f);
     baseRadius /= min_dist;
-    viskores::worklet::DispatcherMapField<viskores::rendering::raytracing::MemSet<viskores::Float32>>(
+    viskores::worklet::DispatcherMapField<
+      viskores::rendering::raytracing::MemSet<viskores::Float32>>(
       viskores::rendering::raytracing::MemSet<viskores::Float32>(baseRadius))
       .Invoke(cylExtractor.GetRadii());
   }

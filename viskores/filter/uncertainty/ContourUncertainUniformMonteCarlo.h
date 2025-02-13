@@ -25,7 +25,8 @@ namespace uncertainty
 /// We encourage usage of the ContourUncertainUniform filter because the Monte Carlo approach implemented
 /// in this filter is computationally inefficient.
 ///
-class VISKORES_FILTER_UNCERTAINTY_EXPORT ContourUncertainUniformMonteCarlo : public viskores::filter::Filter
+class VISKORES_FILTER_UNCERTAINTY_EXPORT ContourUncertainUniformMonteCarlo
+  : public viskores::filter::Filter
 {
   std::string NumberNonzeroProbabilityName = "num_nonzero_probability";
   std::string EntropyName = "entropy";

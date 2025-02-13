@@ -29,7 +29,8 @@ public:
   //
   // Extract all nodes using a constant radius
   //
-  void ExtractCoordinates(const viskores::cont::CoordinateSystem& coords, const viskores::Float32 radius);
+  void ExtractCoordinates(const viskores::cont::CoordinateSystem& coords,
+                          const viskores::Float32 radius);
 
   //
   // Set radius based on scalar field values. Each is interpolated from min to max

@@ -52,8 +52,9 @@ public:
   }
 
   template <typename T, typename S>
-  explicit MaskIndices(const viskores::cont::ArrayHandle<T, S>& indexArray,
-                       viskores::cont::DeviceAdapterId device = viskores::cont::DeviceAdapterTagAny())
+  explicit MaskIndices(
+    const viskores::cont::ArrayHandle<T, S>& indexArray,
+    viskores::cont::DeviceAdapterId device = viskores::cont::DeviceAdapterTagAny())
   {
     viskores::cont::Algorithm::Copy(device, indexArray, this->ThreadToOutputMap);
   }

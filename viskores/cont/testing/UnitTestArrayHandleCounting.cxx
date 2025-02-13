@@ -40,13 +40,13 @@ struct TemplatedTests
       ArrayHandleType(startingValue, step, ARRAY_SIZE);
 
     VISKORES_TEST_ASSERT(arrayConst.GetNumberOfValues() == ARRAY_SIZE,
-                     "Counting array using constructor has wrong size.");
+                         "Counting array using constructor has wrong size.");
 
     VISKORES_TEST_ASSERT(arrayMake.GetNumberOfValues() == ARRAY_SIZE,
-                     "Counting array using make has wrong size.");
+                         "Counting array using make has wrong size.");
 
     VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
-                     "Counting array using raw array handle + tag has wrong size.");
+                         "Counting array using raw array handle + tag has wrong size.");
 
     ValueType properValue = startingValue;
     auto arrayConstPortal = arrayConst.ReadPortal();
@@ -55,12 +55,12 @@ struct TemplatedTests
     for (viskores::Id index = 0; index < ARRAY_SIZE; index++)
     {
       VISKORES_TEST_ASSERT(arrayConstPortal.Get(index) == properValue,
-                       "Counting array using constructor has unexpected value.");
+                           "Counting array using constructor has unexpected value.");
       VISKORES_TEST_ASSERT(arrayMakePortal.Get(index) == properValue,
-                       "Counting array using make has unexpected value.");
+                           "Counting array using make has unexpected value.");
 
       VISKORES_TEST_ASSERT(arrayHandlePortal.Get(index) == properValue,
-                       "Counting array using raw array handle + tag has unexpected value.");
+                           "Counting array using raw array handle + tag has unexpected value.");
       properValue = properValue + step;
     }
   }

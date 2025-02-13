@@ -26,11 +26,11 @@ using StorageListBasic = viskores::List<viskores::cont::StorageTagBasic>;
 
 using StorageListCommon =
   viskores::List<viskores::cont::StorageTagBasic,
-             viskores::cont::StorageTagSOA,
-             viskores::cont::StorageTagUniformPoints,
-             viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                                    viskores::cont::StorageTagBasic,
-                                                    viskores::cont::StorageTagBasic>>;
+                 viskores::cont::StorageTagSOA,
+                 viskores::cont::StorageTagUniformPoints,
+                 viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
+                                                            viskores::cont::StorageTagBasic,
+                                                            viskores::cont::StorageTagBasic>>;
 
 }
 } // namespace viskores::cont

@@ -23,10 +23,10 @@ void TestWorkIndexFetch()
 {
   std::cout << "Trying WorkIndex fetch." << std::endl;
 
-  using FetchType =
-    viskores::exec::arg::Fetch<viskores::exec::arg::FetchTagArrayDirectIn, // Not used but probably common.
-                           viskores::exec::arg::AspectTagWorkIndex,
-                           viskores::internal::NullType>;
+  using FetchType = viskores::exec::arg::Fetch<
+    viskores::exec::arg::FetchTagArrayDirectIn, // Not used but probably common.
+    viskores::exec::arg::AspectTagWorkIndex,
+    viskores::internal::NullType>;
 
   FetchType fetch;
 

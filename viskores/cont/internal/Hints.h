@@ -82,7 +82,8 @@ struct IsHintList<HintList<Hints...>> : std::true_type
 /// does nothing. If the type is anything else, a compile error will occur. This
 /// macro is useful for checking that template arguments are an expected hint
 /// list. This helps diagnose improper template use more easily.
-#define VISKORES_IS_HINT_LIST(T) VISKORES_STATIC_ASSERT(::viskores::cont::internal::IsHintList<T>::value)
+#define VISKORES_IS_HINT_LIST(T) \
+  VISKORES_STATIC_ASSERT(::viskores::cont::internal::IsHintList<T>::value)
 
 namespace detail
 {
@@ -93,8 +94,9 @@ struct FindHintOperators
   VISKORES_IS_DEVICE_ADAPTER_TAG(Device);
 
   template <typename Hint>
-  using HintMatches = viskores::internal::meta::And<std::is_same<typename Hint::Tag, HintTag>,
-                                                viskores::ListHas<typename Hint::DeviceList, Device>>;
+  using HintMatches =
+    viskores::internal::meta::And<std::is_same<typename Hint::Tag, HintTag>,
+                                  viskores::ListHas<typename Hint::DeviceList, Device>>;
   template <typename Found, typename Next>
   using ReduceOperator = typename std::conditional<HintMatches<Next>::value, Next, Found>::type;
 };

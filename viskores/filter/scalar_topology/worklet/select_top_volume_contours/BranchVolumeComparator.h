@@ -126,8 +126,8 @@ public:
   {
   }
 
-  VISKORES_CONT BranchVolumeComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                           viskores::cont::Token& token) const
+  VISKORES_CONT BranchVolumeComparatorImpl
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     return BranchVolumeComparatorImpl(this->BranchRoots, this->BranchVolume, device, token);
   }

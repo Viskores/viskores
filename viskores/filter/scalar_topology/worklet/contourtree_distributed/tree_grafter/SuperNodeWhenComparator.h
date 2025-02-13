@@ -89,7 +89,8 @@ public:
   {
   }
 
-  VISKORES_EXEC bool operator()(const viskores::Id& leftSuperId, const viskores::Id& rightSuperId) const
+  VISKORES_EXEC bool operator()(const viskores::Id& leftSuperId,
+                                const viskores::Id& rightSuperId) const
   { // operator ()
     viskores::Id maskedLeftWhen = viskores::worklet::contourtree_augmented::MaskedIndex(
       this->WhenTransferredPortal.Get(leftSuperId));
@@ -182,8 +183,8 @@ public:
   {
   }
 
-  VISKORES_CONT SuperNodeWhenComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                            viskores::cont::Token& token) const
+  VISKORES_CONT SuperNodeWhenComparatorImpl
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     return SuperNodeWhenComparatorImpl(this->WhenTransferred.PrepareForInput(device, token),
                                        this->HierarchicalHyperparent.PrepareForInput(device, token),

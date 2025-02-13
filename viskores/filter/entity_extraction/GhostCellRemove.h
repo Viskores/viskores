@@ -52,7 +52,10 @@ public:
   ///
   /// The types to remove are specified by the flags in `viskores::CellClassification`.
   /// Any cell with a ghost array flag matching one or more of these flags will be removed.
-  VISKORES_CONT void SetTypesToRemove(viskores::UInt8 typeFlags) { this->TypesToRemove = typeFlags; }
+  VISKORES_CONT void SetTypesToRemove(viskores::UInt8 typeFlags)
+  {
+    this->TypesToRemove = typeFlags;
+  }
   /// @copydoc SetTypesToRemove
   VISKORES_CONT viskores::UInt8 GetTypesToRemove() const { return this->TypesToRemove; }
 

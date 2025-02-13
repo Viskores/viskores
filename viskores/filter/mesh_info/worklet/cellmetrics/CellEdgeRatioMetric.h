@@ -90,9 +90,9 @@ VISKORES_EXEC inline OutType ComputeEdgeRatio(const VecType& edges)
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      CellShapeType shape,
-                                      viskores::ErrorCode&)
+                                          const PointCoordVecType& pts,
+                                          CellShapeType shape,
+                                          viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -108,9 +108,9 @@ VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
 // Trivially equals 1, since only a single edge
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagLine,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagLine,
+                                          viskores::ErrorCode& ec)
 {
   UNUSED(pts);
   if (numPts < 2)
@@ -128,9 +128,9 @@ VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagTriangle,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagTriangle,
+                                          viskores::ErrorCode& ec)
 {
   if (numPts != 3)
   {
@@ -143,7 +143,8 @@ VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
   //The 3 edges of a triangle
   using Edge = typename PointCoordVecType::ComponentType;
   const Edge TriEdges[3] = { pts[1] - pts[0], pts[2] - pts[1], pts[0] - pts[2] };
-  return viskores::worklet::cellmetrics::ComputeEdgeRatio<OutType>(viskores::make_VecC(TriEdges, numEdges));
+  return viskores::worklet::cellmetrics::ComputeEdgeRatio<OutType>(
+    viskores::make_VecC(TriEdges, numEdges));
 }
 
 
@@ -154,9 +155,9 @@ VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagQuad,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagQuad,
+                                          viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -185,9 +186,9 @@ VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagTetra,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagTetra,
+                                          viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -202,7 +203,8 @@ VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
   const Edge TetEdges[6] = { pts[1] - pts[0], pts[2] - pts[1], pts[0] - pts[2],
                              pts[3] - pts[0], pts[3] - pts[1], pts[3] - pts[2] };
 
-  return viskores::worklet::cellmetrics::ComputeEdgeRatio<OutType>(viskores::make_VecC(TetEdges, numEdges));
+  return viskores::worklet::cellmetrics::ComputeEdgeRatio<OutType>(
+    viskores::make_VecC(TetEdges, numEdges));
 }
 
 
@@ -212,9 +214,9 @@ VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagHexahedron,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagHexahedron,
+                                          viskores::ErrorCode& ec)
 {
   if (numPts != 8)
   {
@@ -230,7 +232,8 @@ VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
                               pts[5] - pts[4], pts[6] - pts[5], pts[7] - pts[6], pts[4] - pts[7],
                               pts[4] - pts[0], pts[5] - pts[1], pts[6] - pts[2], pts[7] - pts[3] };
 
-  return viskores::worklet::cellmetrics::ComputeEdgeRatio<OutType>(viskores::make_VecC(HexEdges, numEdges));
+  return viskores::worklet::cellmetrics::ComputeEdgeRatio<OutType>(
+    viskores::make_VecC(HexEdges, numEdges));
 }
 
 
@@ -240,9 +243,9 @@ VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagWedge,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagWedge,
+                                          viskores::ErrorCode& ec)
 {
   if (numPts != 6)
   {
@@ -269,9 +272,9 @@ VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
 // TODO: Verdict/VTK don't define this metric for a pyramid. What does VisIt output?
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellEdgeRatioMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagPyramid,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagPyramid,
+                                          viskores::ErrorCode& ec)
 {
   if (numPts != 5)
   {

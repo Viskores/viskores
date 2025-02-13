@@ -74,8 +74,8 @@ void View1D::RenderScreenAnnotations()
   this->HorizontalAxisAnnotation.Render(
     this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
 
-  viskores::Float32 windowaspect =
-    viskores::Float32(this->GetCanvas().GetWidth()) / viskores::Float32(this->GetCanvas().GetHeight());
+  viskores::Float32 windowaspect = viskores::Float32(this->GetCanvas().GetWidth()) /
+    viskores::Float32(this->GetCanvas().GetHeight());
 
   this->VerticalAxisAnnotation.SetColor(AxisColor);
   this->VerticalAxisAnnotation.SetScreenPosition(
@@ -109,8 +109,8 @@ void View1D::RenderColorLegendAnnotations()
 
       //colorData[0] is the transfer function x position
       viskores::rendering::Color color{ static_cast<viskores::Float32>(colorData[1]),
-                                    static_cast<viskores::Float32>(colorData[2]),
-                                    static_cast<viskores::Float32>(colorData[3]) };
+                                        static_cast<viskores::Float32>(colorData[2]),
+                                        static_cast<viskores::Float32>(colorData[3]) };
       this->Legend.AddItem(act.GetScalarField().GetName(), color);
     }
     this->Legend.SetLabelColor(this->GetCanvas().GetForegroundColor());

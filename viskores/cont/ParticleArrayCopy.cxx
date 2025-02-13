@@ -39,11 +39,11 @@ struct CopyParticleAllWorklet : public viskores::worklet::WorkletMapField
                                 FieldOut outTime);
 
   VISKORES_EXEC void operator()(const viskores::Particle& inParticle,
-                            viskores::Vec3f& outPos,
-                            viskores::Id& outID,
-                            viskores::Id& outSteps,
-                            viskores::ParticleStatus& outStatus,
-                            viskores::FloatDefault& outTime) const
+                                viskores::Vec3f& outPos,
+                                viskores::Id& outID,
+                                viskores::Id& outSteps,
+                                viskores::ParticleStatus& outStatus,
+                                viskores::FloatDefault& outTime) const
   {
     outPos = inParticle.Pos;
     outID = inParticle.ID;

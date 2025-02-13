@@ -54,8 +54,8 @@ void CreateColorTableImage(const std::string& name)
   ColorBufferType colorBuffer = canvas.GetColorBuffer();
   ColorBufferType::WritePortalType colorPortal = colorBuffer.WritePortal();
   VISKORES_TEST_ASSERT(colorPortal.GetNumberOfValues() ==
-                     TABLE_IMAGE_WIDTH * TABLE_IMAGE_HEIGHT,
-                   "Wrong size of color buffer.");
+                         TABLE_IMAGE_WIDTH * TABLE_IMAGE_HEIGHT,
+                       "Wrong size of color buffer.");
 
   viskores::cont::ArrayHandle<viskores::Vec4ui_8> temp;
   colorTable.Sample(TABLE_IMAGE_WIDTH, temp);
@@ -69,9 +69,9 @@ void CreateColorTableImage(const std::string& name)
     {
       auto color = tempPortal.Get(i);
       viskores::Vec4f_32 t(color[0] * conversionToFloatSpace,
-                       color[1] * conversionToFloatSpace,
-                       color[2] * conversionToFloatSpace,
-                       color[3] * conversionToFloatSpace);
+                           color[1] * conversionToFloatSpace,
+                           color[2] * conversionToFloatSpace,
+                           color[3] * conversionToFloatSpace);
       colorPortal.Set(j * TABLE_IMAGE_WIDTH + i, t);
     }
   }

@@ -36,7 +36,7 @@
 //----------------------------------------------------------------------------
 #if defined(__VISKORES_GAUSSIAN_SPLATTER_BENCHMARK) && !defined(START_TIMER_BLOCK)
 // start timer
-#define START_TIMER_BLOCK(name)                      \
+#define START_TIMER_BLOCK(name)                          \
   viskores::cont::Timer timer_##name{ DeviceAdapter() }; \
   timer_##name.Start();
 
@@ -121,8 +121,9 @@ void OutputArrayDebug(const viskores::cont::ArrayHandle<T, S>& viskoresNotUsed(o
 }
 //----------------------------------------------------------------------------
 template <typename T, int S>
-void OutputArrayDebug(const viskores::cont::ArrayHandle<viskores::Vec<T, S>>& viskoresNotUsed(outputArray),
-                      const std::string& viskoresNotUsed(name))
+void OutputArrayDebug(
+  const viskores::cont::ArrayHandle<viskores::Vec<T, S>>& viskoresNotUsed(outputArray),
+  const std::string& viskoresNotUsed(name))
 {
 }
 //----------------------------------------------------------------------------
@@ -169,8 +170,8 @@ struct KernelSplatterFilterUniformGrid
 
     template <typename T>
     VISKORES_EXEC_CONT void operator()(const viskores::Id&,
-                                   const viskores::Id& viskoresNotUsed(index),
-                                   T& voxel_value) const
+                                       const viskores::Id& viskoresNotUsed(index),
+                                       T& voxel_value) const
     {
       voxel_value = T(0);
     }
@@ -209,13 +210,13 @@ struct KernelSplatterFilterUniformGrid
 
     template <typename T, typename T2>
     VISKORES_EXEC_CONT void operator()(const T& x,
-                                   const T& y,
-                                   const T& z,
-                                   const T2& h,
-                                   viskores::Vec3f_64& splatPoint,
-                                   viskores::Id3& minFootprint,
-                                   viskores::Id3& maxFootprint,
-                                   viskores::Id& footprintSize) const
+                                       const T& y,
+                                       const T& z,
+                                       const T2& h,
+                                       viskores::Vec3f_64& splatPoint,
+                                       viskores::Id3& minFootprint,
+                                       viskores::Id3& maxFootprint,
+                                       viskores::Id& footprintSize) const
     {
       PointType splat, min, max;
       viskores::Vec3f_64 sample = viskores::make_Vec(x, y, z);
@@ -259,9 +260,9 @@ struct KernelSplatterFilterUniformGrid
 
     template <typename T>
     VISKORES_EXEC_CONT void operator()(const T& modulus,
-                                   const T& offset,
-                                   const viskores::Id& index,
-                                   T& localId) const
+                                       const T& offset,
+                                       const viskores::Id& index,
+                                       T& localId) const
     {
       localId = (index - offset) % modulus;
     }
@@ -301,13 +302,13 @@ struct KernelSplatterFilterUniformGrid
 
     template <typename T, typename T2, typename P>
     VISKORES_EXEC_CONT void operator()(const viskores::Vec<P, 3>& splatPoint,
-                                   const T& minBound,
-                                   const T& maxBound,
-                                   const T2& kernel_H,
-                                   const T2& scale,
-                                   const viskores::Id localNeighborId,
-                                   viskores::Id& neighborVoxelId,
-                                   viskores::Float32& splatValue) const
+                                       const T& minBound,
+                                       const T& maxBound,
+                                       const T2& kernel_H,
+                                       const T2& scale,
+                                       const viskores::Id localNeighborId,
+                                       viskores::Id& neighborVoxelId,
+                                       viskores::Float32& splatValue) const
     {
       viskores::Id yRange = 1 + maxBound[1] - minBound[1];
       viskores::Id xRange = 1 + maxBound[0] - minBound[0];
@@ -319,8 +320,8 @@ struct KernelSplatterFilterUniformGrid
       // note the order of k,j,i
       viskores::Id3 voxel = minBound + viskores::make_Vec(k, j, i);
       PointType dist = viskores::make_Vec((splatPoint[0] - voxel[0]) * spacing_[0],
-                                      (splatPoint[1] - voxel[1]) * spacing_[0],
-                                      (splatPoint[2] - voxel[2]) * spacing_[0]);
+                                          (splatPoint[1] - voxel[1]) * spacing_[0],
+                                          (splatPoint[2] - voxel[2]) * spacing_[0]);
       viskores::Float64 dist2 = viskores::Dot(dist, dist);
 
       // Compute splat value using the kernel distance_squared function
@@ -350,8 +351,8 @@ struct KernelSplatterFilterUniformGrid
 
     template <typename ExecArgPortalType>
     VISKORES_EXEC_CONT void operator()(const viskores::Id& voxelIndex,
-                                   const viskores::Float64& splatValue,
-                                   ExecArgPortalType& execArg) const
+                                       const viskores::Float64& splatValue,
+                                       ExecArgPortalType& execArg) const
     {
       execArg.Set(voxelIndex, static_cast<viskores::Float32>(splatValue));
     }
@@ -436,7 +437,7 @@ struct KernelSplatterFilterUniformGrid
     START_TIMER_BLOCK(numNeighborsPrefixSum)
     const viskores::Id totalSplatSize =
       viskores::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ScanInclusive(numNeighbors,
-                                                                       numNeighborsPrefixSum);
+                                                                           numNeighborsPrefixSum);
     END_TIMER_BLOCK(numNeighborsPrefixSum)
 
     std::cout << "totalSplatSize " << totalSplatSize << "\n";
@@ -446,7 +447,7 @@ struct KernelSplatterFilterUniformGrid
     IdHandleType numNeighborsExclusiveSum;
     START_TIMER_BLOCK(numNeighborsExclusiveSum)
     viskores::cont::DeviceAdapterAlgorithm<DeviceAdapter>::ScanExclusive(numNeighbors,
-                                                                     numNeighborsExclusiveSum);
+                                                                         numNeighborsExclusiveSum);
     //END_TIMER_BLOCK(numNeighborsExclusiveSum)
     debug::OutputArrayDebug(numNeighborsExclusiveSum, "numNeighborsExclusiveSum");
 
@@ -510,7 +511,8 @@ struct KernelSplatterFilterUniformGrid
     FloatHandleType splatValues;
 
     GetSplatValue splatterDispatcher_worklet(origin_, spacing_, pointDimensions, kernel_);
-    viskores::worklet::DispatcherMapField<GetSplatValue> splatterDispatcher(splatterDispatcher_worklet);
+    viskores::worklet::DispatcherMapField<GetSplatValue> splatterDispatcher(
+      splatterDispatcher_worklet);
     splatterDispatcher.SetDevice(DeviceAdapter());
 
     START_TIMER_BLOCK(GetSplatValue)

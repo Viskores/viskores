@@ -49,7 +49,7 @@ void TestDataSet_Explicit()
   // test various field-getting methods and associations
   const viskores::cont::Field& f1 = ds.GetField("pointvar");
   VISKORES_TEST_ASSERT(f1.GetAssociation() == viskores::cont::Field::Association::Points,
-                   "Association of 'pointvar' was not Association::Points");
+                       "Association of 'pointvar' was not Association::Points");
   try
   {
     ds.GetCellField("cellvar");
@@ -71,7 +71,7 @@ void TestDataSet_Explicit()
   }
 
   VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                   "Incorrect number of coordinate systems");
+                       "Incorrect number of coordinate systems");
 
   // test cell-to-point connectivity
   viskores::cont::CellSetExplicit<> cellset;
@@ -86,19 +86,20 @@ void TestDataSet_Explicit()
 
   viskores::cont::ArrayHandleConstant<viskores::UInt8> shapes =
     cellset.GetShapesArray(viskores::TopologyElementTagPoint(), viskores::TopologyElementTagCell());
-  auto numIndices =
-    cellset.GetNumIndicesArray(viskores::TopologyElementTagPoint(), viskores::TopologyElementTagCell());
-  viskores::cont::ArrayHandle<viskores::Id> conn =
-    cellset.GetConnectivityArray(viskores::TopologyElementTagPoint(), viskores::TopologyElementTagCell());
+  auto numIndices = cellset.GetNumIndicesArray(viskores::TopologyElementTagPoint(),
+                                               viskores::TopologyElementTagCell());
+  viskores::cont::ArrayHandle<viskores::Id> conn = cellset.GetConnectivityArray(
+    viskores::TopologyElementTagPoint(), viskores::TopologyElementTagCell());
 
   VISKORES_TEST_ASSERT(TestArrayHandle(shapes, correctShapes, numPoints), "Got incorrect shapes");
   VISKORES_TEST_ASSERT(TestArrayHandle(numIndices, correctNumIndices, numPoints),
-                   "Got incorrect numIndices");
+                       "Got incorrect numIndices");
 
   // Some device adapters have unstable sorts, which may cause the order of
   // the indices for each point to be different but still correct. Iterate
   // over all the points and check the connectivity for each one.
-  VISKORES_TEST_ASSERT(conn.GetNumberOfValues() == connectivitySize, "Connectivity array wrong size.");
+  VISKORES_TEST_ASSERT(conn.GetNumberOfValues() == connectivitySize,
+                       "Connectivity array wrong size.");
   viskores::Id connectivityIndex = 0;
   auto connPortal = conn.ReadPortal();
   for (viskores::Id pointIndex = 0; pointIndex < numPoints; pointIndex++)
@@ -114,7 +115,7 @@ void TestDataSet_Explicit()
       viskores::Id expectedCell = connPortal.Get(connectivityIndex + cellIndex);
       std::set<viskores::Id>::iterator foundCell = correctIncidentCells.find(expectedCell);
       VISKORES_TEST_ASSERT(foundCell != correctIncidentCells.end(),
-                       "An incident cell in the connectivity list is wrong or repeated.");
+                           "An incident cell in the connectivity list is wrong or repeated.");
       correctIncidentCells.erase(foundCell);
     }
     connectivityIndex += numIncidentCells;
@@ -127,7 +128,7 @@ void TestDataSet_Explicit()
   for (viskores::IdComponent i = 0; i < 4; i++)
   {
     VISKORES_TEST_ASSERT(retrievedPointIds[i] == expectedPointIds[i],
-                     "Incorrect point ID for quad cell");
+                         "Incorrect point ID for quad cell");
   }
 }
 

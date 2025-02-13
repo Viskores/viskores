@@ -84,11 +84,11 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const InFieldPortalType& graphGlobalIndexPortal,
-                            const viskores::Id graphVertex,
-                            const InFieldPortalType& graphHyperarcsPortal,
-                            const InFieldPortalType& graphHyperIDPortal,
-                            const OutFieldPortalType& treeArcsPortal,
-                            const OutFieldPortalType& treeSuperparentsPortal) const
+                                const viskores::Id graphVertex,
+                                const InFieldPortalType& graphHyperarcsPortal,
+                                const InFieldPortalType& graphHyperIDPortal,
+                                const OutFieldPortalType& treeArcsPortal,
+                                const OutFieldPortalType& treeSuperparentsPortal) const
   {
     viskores::Id graphTarget = graphHyperarcsPortal.Get(graphVertex);
     // ignore all regular points

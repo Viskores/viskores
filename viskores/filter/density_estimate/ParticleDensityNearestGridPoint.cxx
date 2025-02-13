@@ -28,9 +28,9 @@ public:
 
   template <typename Point, typename T, typename CellLocatorExecObj, typename AtomicArray>
   VISKORES_EXEC void operator()(const Point& point,
-                            const T value,
-                            const CellLocatorExecObj& locator,
-                            AtomicArray& density) const
+                                const T value,
+                                const CellLocatorExecObj& locator,
+                                AtomicArray& density) const
   {
     viskores::Id cellId{};
     viskores::Vec3f parametric;
@@ -76,7 +76,8 @@ VISKORES_CONT viskores::cont::DataSet ParticleDensityNearestGridPoint::DoExecute
 
   auto coords = input.GetCoordinateSystem().GetDataAsMultiplexer();
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
 
@@ -97,8 +98,8 @@ VISKORES_CONT viskores::cont::DataSet ParticleDensityNearestGridPoint::DoExecute
 
   if (this->ComputeNumberDensity)
   {
-    resolveType(
-      viskores::cont::make_ArrayHandleConstant(viskores::FloatDefault{ 1 }, input.GetNumberOfPoints()));
+    resolveType(viskores::cont::make_ArrayHandleConstant(viskores::FloatDefault{ 1 },
+                                                         input.GetNumberOfPoints()));
   }
   else
   {

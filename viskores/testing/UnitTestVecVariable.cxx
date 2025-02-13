@@ -85,7 +85,7 @@ struct VecVariableTestFunctor
     for (viskores::IdComponent setIndex = 0; setIndex < SIZE; setIndex++)
     {
       VISKORES_TEST_ASSERT(vec2.GetNumberOfComponents() == setIndex,
-                       "Report wrong number of components");
+                           "Report wrong number of components");
       vec2.Append(source[setIndex]);
     }
     VISKORES_TEST_ASSERT(test_equal(vec2, vec1), "Bad values from Append.");

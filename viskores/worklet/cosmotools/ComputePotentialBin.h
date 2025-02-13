@@ -78,8 +78,8 @@ public:
   using InputDomain = _1;
 
   viskores::Id nBins; // Number of bins
-  T mass;         // Particle mass
-  T linkLen;      // Linking length is side of bin
+  T mass;             // Particle mass
+  T linkLen;          // Linking length is side of bin
 
   // Constructor
   VISKORES_EXEC_CONT
@@ -92,12 +92,12 @@ public:
 
   template <typename InIdPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& i,
-                            const InIdPortalType& count,
-                            const InIdPortalType& binX,
-                            const InIdPortalType& binY,
-                            const InIdPortalType& binZ,
-                            T& bestPotential,
-                            T& worstPotential) const
+                                const InIdPortalType& count,
+                                const InIdPortalType& binX,
+                                const InIdPortalType& binY,
+                                const InIdPortalType& binZ,
+                                T& bestPotential,
+                                T& worstPotential) const
   {
     viskores::Id ibinX = binX.Get(i);
     viskores::Id ibinY = binY.Get(i);
@@ -118,9 +118,10 @@ public:
         T yDistFar = static_cast<T>((yDelta + 1)) * linkLen;
         T zDistFar = static_cast<T>((zDelta + 1)) * linkLen;
 
-        T rNear =
-          viskores::Sqrt((xDistNear * xDistNear) + (yDistNear * yDistNear) + (zDistNear * zDistNear));
-        T rFar = viskores::Sqrt((xDistFar * xDistFar) + (yDistFar * yDistFar) + (zDistFar * zDistFar));
+        T rNear = viskores::Sqrt((xDistNear * xDistNear) + (yDistNear * yDistNear) +
+                                 (zDistNear * zDistNear));
+        T rFar =
+          viskores::Sqrt((xDistFar * xDistFar) + (yDistFar * yDistFar) + (zDistFar * zDistFar));
 
         if (rFar > 0.00000000001f)
         {

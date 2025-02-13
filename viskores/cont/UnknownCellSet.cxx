@@ -64,7 +64,8 @@ void UnknownCellSet::PrintSummary(std::ostream& os) const
 namespace internal
 {
 
-void ThrowCastAndCallException(const viskores::cont::UnknownCellSet& ref, const std::type_info& type)
+void ThrowCastAndCallException(const viskores::cont::UnknownCellSet& ref,
+                               const std::type_info& type)
 {
   std::ostringstream out;
   out << "Could not find appropriate cast for cell set in CastAndCall.\n"
@@ -98,13 +99,13 @@ namespace mangled_diy_namespace
 {
 
 void Serialization<viskores::cont::UnknownCellSet>::save(BinaryBuffer& bb,
-                                                     const viskores::cont::UnknownCellSet& obj)
+                                                         const viskores::cont::UnknownCellSet& obj)
 {
   viskoresdiy::save(bb, obj.ResetCellSetList<UnknownSerializationCellSets>());
 }
 
 void Serialization<viskores::cont::UnknownCellSet>::load(BinaryBuffer& bb,
-                                                     viskores::cont::UnknownCellSet& obj)
+                                                         viskores::cont::UnknownCellSet& obj)
 {
   viskores::cont::UncertainCellSet<UnknownSerializationCellSets> uncertainCellSet;
   viskoresdiy::load(bb, uncertainCellSet);

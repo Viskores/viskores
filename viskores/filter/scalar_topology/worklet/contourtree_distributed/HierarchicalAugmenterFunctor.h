@@ -79,7 +79,8 @@ public:
   /// Create the functor
   /// @param[in] timingsLogLevel Set the viskores::cont:LogLevel to be used to record timings information
   ///                            specific to the computation of the hierachical contour tree
-  HierarchicalAugmenterFunctor(viskores::cont::LogLevel timingsLogLevel = viskores::cont::LogLevel::Perf)
+  HierarchicalAugmenterFunctor(
+    viskores::cont::LogLevel timingsLogLevel = viskores::cont::LogLevel::Perf)
     : TimingsLogLevel(timingsLogLevel)
   {
   }
@@ -87,7 +88,7 @@ public:
 
   void operator()(
     viskores::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>*
-      blockData,                        // local Block.
+      blockData,                            // local Block.
     const viskoresdiy::ReduceProxy& rp,     // communication proxy
     const viskoresdiy::RegularSwapPartners& // partners of the current block (unused)
   ) const
@@ -141,14 +142,15 @@ public:
     timingsStream << "    " << std::setw(38) << std::left << "Total Time Functor Step"
                   << ": " << totalTimer.GetElapsedTime() << " seconds" << std::endl;
     // Record the times we logged
-    VISKORES_LOG_S(this->TimingsLogLevel,
-               std::endl
-                 << "    ---------------- Hierarchical Augmenter Functor Step ---------------------"
-                 << std::endl
-                 << "    Rank    : " << rank << std::endl
-                 << "    DIY Id  : " << selfid << std::endl
-                 << "    Round   : " << rp.round() << std::endl
-                 << timingsStream.str());
+    VISKORES_LOG_S(
+      this->TimingsLogLevel,
+      std::endl
+        << "    ---------------- Hierarchical Augmenter Functor Step ---------------------"
+        << std::endl
+        << "    Rank    : " << rank << std::endl
+        << "    DIY Id  : " << selfid << std::endl
+        << "    Round   : " << rp.round() << std::endl
+        << timingsStream.str());
   }
 
 private:

@@ -47,14 +47,14 @@ public:
 
   template <typename CellShape, typename PointCoordVecType, typename OutType>
   VISKORES_EXEC void operator()(CellShape shape,
-                            const viskores::IdComponent& numPoints,
-                            const PointCoordVecType& pts,
-                            OutType& volume) const
+                                const viskores::IdComponent& numPoints,
+                                const PointCoordVecType& pts,
+                                OutType& volume) const
   {
     switch (shape.Id)
     {
-      viskoresGenericCellShapeMacro(volume =
-                                  this->ComputeMeasure<OutType>(numPoints, pts, CellShapeTag()));
+      viskoresGenericCellShapeMacro(
+        volume = this->ComputeMeasure<OutType>(numPoints, pts, CellShapeTag()));
       default:
         this->RaiseError("Asked for volume of unknown cell shape.");
         volume = OutType(0.0);
@@ -64,8 +64,8 @@ public:
 private:
   template <typename OutType, typename PointCoordVecType, typename CellShapeType>
   VISKORES_EXEC OutType ComputeMeasure(const viskores::IdComponent& numPts,
-                                   const PointCoordVecType& pts,
-                                   CellShapeType) const
+                                       const PointCoordVecType& pts,
+                                       CellShapeType) const
   {
 #if defined(VISKORES_MSVC)
 #pragma warning(push)

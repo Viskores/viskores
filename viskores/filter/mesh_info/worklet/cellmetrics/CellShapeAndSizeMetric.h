@@ -55,10 +55,10 @@ using FloatType = viskores::FloatDefault;
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellShapeAndSizeMetric(const viskores::IdComponent& numPts,
-                                         const PointCoordVecType& pts,
-                                         const OutType& avgArea,
-                                         CellShapeType shape,
-                                         viskores::ErrorCode&)
+                                             const PointCoordVecType& pts,
+                                             const OutType& avgArea,
+                                             CellShapeType shape,
+                                             viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -71,10 +71,10 @@ VISKORES_EXEC OutType CellShapeAndSizeMetric(const viskores::IdComponent& numPts
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellShapeAndSizeMetric(const viskores::IdComponent& numPts,
-                                         const PointCoordVecType& pts,
-                                         const OutType& avgArea,
-                                         viskores::CellShapeTagTriangle tag,
-                                         viskores::ErrorCode& ec)
+                                             const PointCoordVecType& pts,
+                                             const OutType& avgArea,
+                                             viskores::CellShapeTagTriangle tag,
+                                             viskores::ErrorCode& ec)
 {
   OutType rss = viskores::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
     numPts, pts, avgArea, tag, ec);
@@ -85,10 +85,10 @@ VISKORES_EXEC OutType CellShapeAndSizeMetric(const viskores::IdComponent& numPts
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellShapeAndSizeMetric(const viskores::IdComponent& numPts,
-                                         const PointCoordVecType& pts,
-                                         const OutType& avgArea,
-                                         viskores::CellShapeTagQuad tag,
-                                         viskores::ErrorCode& ec)
+                                             const PointCoordVecType& pts,
+                                             const OutType& avgArea,
+                                             viskores::CellShapeTagQuad tag,
+                                             viskores::ErrorCode& ec)
 {
   OutType rss = viskores::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
     numPts, pts, avgArea, tag, ec);
@@ -101,10 +101,10 @@ VISKORES_EXEC OutType CellShapeAndSizeMetric(const viskores::IdComponent& numPts
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellShapeAndSizeMetric(const viskores::IdComponent& numPts,
-                                         const PointCoordVecType& pts,
-                                         const OutType& avgVolume,
-                                         viskores::CellShapeTagTetra tag,
-                                         viskores::ErrorCode& ec)
+                                             const PointCoordVecType& pts,
+                                             const OutType& avgVolume,
+                                             viskores::CellShapeTagTetra tag,
+                                             viskores::ErrorCode& ec)
 {
   OutType rss = viskores::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
     numPts, pts, avgVolume, tag, ec);
@@ -115,10 +115,10 @@ VISKORES_EXEC OutType CellShapeAndSizeMetric(const viskores::IdComponent& numPts
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellShapeAndSizeMetric(const viskores::IdComponent& numPts,
-                                         const PointCoordVecType& pts,
-                                         const OutType& avgVolume,
-                                         viskores::CellShapeTagHexahedron tag,
-                                         viskores::ErrorCode& ec)
+                                             const PointCoordVecType& pts,
+                                             const OutType& avgVolume,
+                                             viskores::CellShapeTagHexahedron tag,
+                                             viskores::ErrorCode& ec)
 {
   OutType rss = viskores::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
     numPts, pts, avgVolume, tag, ec);

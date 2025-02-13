@@ -28,7 +28,7 @@ void CheckArray(const ArrayHandleType array)
   for (viskores::Id index = 0; index < length; index++)
   {
     VISKORES_TEST_ASSERT(test_equal(portal.Get(index), TestValue(index, OriginalType())),
-                     "Array has wrong value.");
+                         "Array has wrong value.");
     VISKORES_TEST_ASSERT(
       !test_equal(portal.Get(index),
                   TestValue(index, typename ArrayHandleType::ValueType())),
@@ -45,8 +45,8 @@ VISKORES_CONT void Foo(const std::vector<T>& inputData)
   viskores::cont::ArrayHandle<T> originalArray =
     viskores::cont::make_ArrayHandle(inputData, viskores::CopyFlag::On);
 
-  viskores::cont::ArrayHandleCast<viskores::Float64, viskores::cont::ArrayHandle<T>> castArray(
-    originalArray);
+  viskores::cont::ArrayHandleCast<viskores::Float64, viskores::cont::ArrayHandle<T>>
+    castArray(originalArray);
   ////
   //// END-EXAMPLE ArrayHandleCast
   ////

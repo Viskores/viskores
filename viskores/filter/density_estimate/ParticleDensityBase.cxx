@@ -47,9 +47,8 @@ VISKORES_CONT void ParticleDensityBase::DoDivideByVolume(
   const viskores::cont::UnknownArrayHandle& density) const
 {
   auto volume = this->Spacing[0] * this->Spacing[1] * this->Spacing[2];
-  auto resolve = [&](const auto& concreteDensity) {
-    this->Invoke(DivideByVolumeWorklet{ volume }, concreteDensity);
-  };
+  auto resolve = [&](const auto& concreteDensity)
+  { this->Invoke(DivideByVolumeWorklet{ volume }, concreteDensity); };
   this->CastAndCallScalarField(density, resolve);
 }
 } // namespace density_estimate

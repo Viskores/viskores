@@ -98,7 +98,8 @@ public:
 
     if (cError != cudaSuccess)
     {
-      throw viskores::cont::ErrorExecution("Unable to get pointers to CUDA memory for OpenGL buffer.");
+      throw viskores::cont::ErrorExecution(
+        "Unable to get pointers to CUDA memory for OpenGL buffer.");
     }
 
     //assert that cuda_size is the same size as the buffer we created in OpenGL
@@ -147,7 +148,8 @@ public:
   }
 
   template <typename StorageTag>
-  VISKORES_CONT void Transfer(const viskores::cont::ArrayHandle<ValueType, StorageTag>& handle) const
+  VISKORES_CONT void Transfer(
+    const viskores::cont::ArrayHandle<ValueType, StorageTag>& handle) const
   {
     //make a buffer for the handle if the user has forgotten too
     if (!glIsBuffer(*this->State.GetHandle()))

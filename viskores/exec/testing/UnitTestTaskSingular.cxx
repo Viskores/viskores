@@ -135,7 +135,8 @@ namespace
 using TestControlSignature = void(TestControlSignatureTagInput, TestControlSignatureTagOutput);
 using TestControlInterface = viskores::internal::FunctionInterface<TestControlSignature>;
 
-using TestExecutionSignature1 = void(viskores::exec::arg::BasicArg<1>, viskores::exec::arg::BasicArg<2>);
+using TestExecutionSignature1 = void(viskores::exec::arg::BasicArg<1>,
+                                     viskores::exec::arg::BasicArg<2>);
 using TestExecutionInterface1 = viskores::internal::FunctionInterface<TestExecutionSignature1>;
 
 using TestExecutionSignature2 = viskores::exec::arg::BasicArg<2>(viskores::exec::arg::BasicArg<1>);
@@ -145,20 +146,20 @@ using ExecutionParameterInterface =
   viskores::internal::FunctionInterface<void(TestExecObject, TestExecObject)>;
 
 using InvocationType1 = viskores::internal::Invocation<ExecutionParameterInterface,
-                                                   TestControlInterface,
-                                                   TestExecutionInterface1,
-                                                   1,
-                                                   MyOutputToInputMapPortal,
-                                                   MyVisitArrayPortal,
-                                                   MyThreadToOutputMapPortal>;
+                                                       TestControlInterface,
+                                                       TestExecutionInterface1,
+                                                       1,
+                                                       MyOutputToInputMapPortal,
+                                                       MyVisitArrayPortal,
+                                                       MyThreadToOutputMapPortal>;
 
 using InvocationType2 = viskores::internal::Invocation<ExecutionParameterInterface,
-                                                   TestControlInterface,
-                                                   TestExecutionInterface2,
-                                                   1,
-                                                   MyOutputToInputMapPortal,
-                                                   MyVisitArrayPortal,
-                                                   MyThreadToOutputMapPortal>;
+                                                       TestControlInterface,
+                                                       TestExecutionInterface2,
+                                                       1,
+                                                       MyOutputToInputMapPortal,
+                                                       MyVisitArrayPortal,
+                                                       MyThreadToOutputMapPortal>;
 
 // Not a full worklet, but provides operators that we expect in a worklet.
 struct TestWorkletProxy : viskores::exec::FunctorBase
@@ -219,22 +220,25 @@ VISKORES_STATIC_ASSERT(
   (std::is_same<
     viskores::exec::internal::detail::
       InvocationToFetch<viskores::exec::arg::ThreadIndicesBasic, InvocationType1, 1>::type,
-    viskores::exec::arg::Fetch<TestFetchTagInput, viskores::exec::arg::AspectTagDefault, TestExecObject>>::
-     type::value));
+    viskores::exec::arg::Fetch<TestFetchTagInput,
+                               viskores::exec::arg::AspectTagDefault,
+                               TestExecObject>>::type::value));
 
 VISKORES_STATIC_ASSERT(
   (std::is_same<
     viskores::exec::internal::detail::
       InvocationToFetch<viskores::exec::arg::ThreadIndicesBasic, InvocationType1, 2>::type,
-    viskores::exec::arg::Fetch<TestFetchTagOutput, viskores::exec::arg::AspectTagDefault, TestExecObject>>::
-     type::value));
+    viskores::exec::arg::Fetch<TestFetchTagOutput,
+                               viskores::exec::arg::AspectTagDefault,
+                               TestExecObject>>::type::value));
 
 VISKORES_STATIC_ASSERT(
   (std::is_same<
     viskores::exec::internal::detail::
       InvocationToFetch<viskores::exec::arg::ThreadIndicesBasic, InvocationType2, 0>::type,
-    viskores::exec::arg::Fetch<TestFetchTagOutput, viskores::exec::arg::AspectTagDefault, TestExecObject>>::
-     type::value));
+    viskores::exec::arg::Fetch<TestFetchTagOutput,
+                               viskores::exec::arg::AspectTagDefault,
+                               TestExecObject>>::type::value));
 
 void TestNormalFunctorInvoke()
 {
@@ -244,7 +248,7 @@ void TestNormalFunctorInvoke()
   viskores::Id outputTestValue;
   viskores::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
     viskores::internal::make_FunctionInterface<void>(TestExecObject(&inputTestValue),
-                                                 TestExecObject(&outputTestValue));
+                                                     TestExecObject(&outputTestValue));
 
   std::cout << "  Try void return." << std::endl;
   inputTestValue = 5;
@@ -267,7 +271,8 @@ void TestNormalFunctorInvoke()
 
   taskInvokeWorklet2(2);
   VISKORES_TEST_ASSERT(inputTestValue == 6, "Input value changed.");
-  VISKORES_TEST_ASSERT(outputTestValue == inputTestValue + 200 + 30 * 2, "Output value not set right.");
+  VISKORES_TEST_ASSERT(outputTestValue == inputTestValue + 200 + 30 * 2,
+                       "Output value not set right.");
 }
 
 void TestErrorFunctorInvoke()
@@ -278,9 +283,10 @@ void TestErrorFunctorInvoke()
   viskores::Id outputTestValue = static_cast<viskores::Id>(0xDEADDEAD);
   viskores::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
     viskores::internal::make_FunctionInterface<void>(TestExecObject(&inputTestValue),
-                                                 TestExecObject(&outputTestValue));
+                                                     TestExecObject(&outputTestValue));
 
-  using TaskSingular1 = viskores::exec::internal::TaskSingular<TestWorkletErrorProxy, InvocationType1>;
+  using TaskSingular1 =
+    viskores::exec::internal::TaskSingular<TestWorkletErrorProxy, InvocationType1>;
   TestWorkletErrorProxy worklet;
   InvocationType1 invocation(execObjects);
   TaskSingular1 taskInvokeWorklet1 = TaskSingular1(worklet, invocation);

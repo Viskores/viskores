@@ -62,9 +62,9 @@ void TestClipExplicit()
   const viskores::cont::DataSet outputData = clip.Execute(ds);
 
   VISKORES_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
+                       "Wrong number of coordinate systems in the output dataset");
   VISKORES_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
-                   "Wrong number of fields in the output dataset");
+                       "Wrong number of fields in the output dataset");
 
   auto temp = outputData.GetField("scalars").GetData();
   viskores::cont::ArrayHandle<viskores::Float32> resultArrayHandle;
@@ -74,7 +74,7 @@ void TestClipExplicit()
   for (int i = 0; i < 6; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for Clip fliter on triangle explicit data");
+                         "Wrong result for Clip fliter on triangle explicit data");
   }
 }
 

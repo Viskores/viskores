@@ -144,9 +144,9 @@ public:
 
   template <typename EvaluatorType>
   VISKORES_EXEC void operator()(viskores::Particle& pointIn,
-                            const EvaluatorType& evaluator,
-                            viskores::worklet::flow::GridEvaluatorStatus& status,
-                            viskores::Vec3f& pointOut) const
+                                const EvaluatorType& evaluator,
+                                viskores::worklet::flow::GridEvaluatorStatus& status,
+                                viskores::Vec3f& pointOut) const
   {
     viskores::VecVariable<viskores::Vec3f, 2> values;
     status = evaluator.Evaluate(pointIn.GetPosition(), pointIn.GetTime(), values);
@@ -194,9 +194,9 @@ public:
 
   template <typename Particle, typename IntegratorType>
   VISKORES_EXEC void operator()(Particle& pointIn,
-                            const IntegratorType integrator,
-                            viskores::worklet::flow::IntegratorStatus& status,
-                            viskores::Vec3f& pointOut) const
+                                const IntegratorType integrator,
+                                viskores::worklet::flow::IntegratorStatus& status,
+                                viskores::Vec3f& pointOut) const
   {
     viskores::FloatDefault time = 0;
     status = integrator.Step(pointIn, time, pointOut);
@@ -231,10 +231,10 @@ void ValidateIntegrator(const IntegratorType& integrator,
     VISKORES_TEST_ASSERT(status.CheckOk(), "Error in evaluator for " + msg);
     if (status.CheckSpatialBounds())
       VISKORES_TEST_ASSERT(result == pointsPortal.Get(index).GetPosition(),
-                       "Error in evaluator result for [OUTSIDE SPATIAL]" + msg);
+                           "Error in evaluator result for [OUTSIDE SPATIAL]" + msg);
     else
       VISKORES_TEST_ASSERT(result == expStepResults[static_cast<size_t>(index)],
-                       "Error in evaluator result for " + msg);
+                           "Error in evaluator result for " + msg);
   }
 }
 
@@ -265,7 +265,7 @@ void ValidateIntegratorForBoundary(const viskores::Bounds& bounds,
     //Result should be push just outside of the bounds.
     viskores::Vec3f result = resultsPortal.Get(index);
     VISKORES_TEST_ASSERT(!bounds.Contains(result),
-                     "Integrator did not step out of boundary for " + msg);
+                         "Integrator did not step out of boundary for " + msg);
   }
 }
 
@@ -379,11 +379,11 @@ void TestGhostCellEvaluators()
   constexpr viskores::Id nZ = 6;
 
   viskores::Bounds bounds(0,
-                      static_cast<viskores::FloatDefault>(nX),
-                      0,
-                      static_cast<viskores::FloatDefault>(nY),
-                      0,
-                      static_cast<viskores::FloatDefault>(nZ));
+                          static_cast<viskores::FloatDefault>(nX),
+                          0,
+                          static_cast<viskores::FloatDefault>(nY),
+                          0,
+                          static_cast<viskores::FloatDefault>(nZ));
   viskores::Id3 dims(nX + 1, nY + 1, nZ + 1);
 
   auto dataSets = viskores::worklet::testing::CreateAllDataSets(bounds, dims, true);
@@ -420,26 +420,29 @@ void TestGhostCellEvaluators()
     for (viskores::Id i = 0; i < numSeeds; i++)
     {
       const auto& p = posPortal.Get(i);
-      VISKORES_TEST_ASSERT(p.GetStatus().CheckSpatialBounds(), "Particle did not leave the dataset.");
-      VISKORES_TEST_ASSERT(p.GetStatus().CheckInGhostCell(), "Particle did not end up in ghost cell.");
+      VISKORES_TEST_ASSERT(p.GetStatus().CheckSpatialBounds(),
+                           "Particle did not leave the dataset.");
+      VISKORES_TEST_ASSERT(p.GetStatus().CheckInGhostCell(),
+                           "Particle did not end up in ghost cell.");
 
       //Particles that start in a ghost cell should take no steps.
       if (p.GetID() == 0 || p.GetID() == 1 || p.GetID() == 2)
         VISKORES_TEST_ASSERT(p.GetNumberOfSteps() == 0,
-                         "Particle in ghost cell should *not* take any steps");
+                             "Particle in ghost cell should *not* take any steps");
       else if (p.GetID() == 3)
         VISKORES_TEST_ASSERT(p.GetNumberOfSteps() == 21,
-                         "Wrong number of steps for particle with ghost cells");
+                             "Wrong number of steps for particle with ghost cells");
     }
   }
 }
 
-void ValidateParticleAdvectionResult(const viskores::worklet::flow::NoAnalysis<viskores::Particle>& res,
-                                     viskores::Id nSeeds,
-                                     viskores::Id maxSteps)
+void ValidateParticleAdvectionResult(
+  const viskores::worklet::flow::NoAnalysis<viskores::Particle>& res,
+  viskores::Id nSeeds,
+  viskores::Id maxSteps)
 {
   VISKORES_TEST_ASSERT(res.Particles.GetNumberOfValues() == nSeeds,
-                   "Number of output particles does not match input.");
+                       "Number of output particles does not match input.");
   auto portal = res.Particles.ReadPortal();
   for (viskores::Id i = 0; i < nSeeds; i++)
   {
@@ -450,25 +453,26 @@ void ValidateParticleAdvectionResult(const viskores::worklet::flow::NoAnalysis<v
       VISKORES_TEST_ASSERT(status.CheckTerminate(), "Particle expected to be terminated");
     else
       VISKORES_TEST_ASSERT(status.CheckSpatialBounds() || status.CheckTemporalBounds(),
-                       "Particle expected to be outside spatial/temporal bounds");
+                           "Particle expected to be outside spatial/temporal bounds");
   }
 }
 
-void ValidateStreamlineResult(const viskores::worklet::flow::StreamlineAnalysis<viskores::Particle>& res,
-                              viskores::Id nSeeds,
-                              viskores::Id maxSteps)
+void ValidateStreamlineResult(
+  const viskores::worklet::flow::StreamlineAnalysis<viskores::Particle>& res,
+  viskores::Id nSeeds,
+  viskores::Id maxSteps)
 {
   VISKORES_TEST_ASSERT(res.PolyLines.GetNumberOfCells() == nSeeds,
-                   "Number of output streamlines does not match input.");
+                       "Number of output streamlines does not match input.");
   auto portal = res.Particles.ReadPortal();
   for (viskores::Id i = 0; i < nSeeds; i++)
   {
     VISKORES_TEST_ASSERT(portal.Get(i).GetNumberOfSteps() <= maxSteps,
-                     "Too many steps taken in streamline");
+                         "Too many steps taken in streamline");
     VISKORES_TEST_ASSERT(portal.Get(i).GetStatus().CheckOk(), "Bad status in streamline");
   }
   VISKORES_TEST_ASSERT(res.Particles.GetNumberOfValues() == nSeeds,
-                   "Number of output particles does not match input.");
+                       "Number of output particles does not match input.");
 }
 
 void TestIntegrators()
@@ -687,7 +691,7 @@ void TestParticleStatus()
         VISKORES_TEST_ASSERT(isZero0 == true, "Particle in zero velocity when it should not be.");
         VISKORES_TEST_ASSERT(isZero1 == false, "Particle in zero velocity when it should not be.");
         VISKORES_TEST_ASSERT(portal.Get(0).GetNumberOfSteps() == 1,
-                         "Particle should have taken only 1 step.");
+                             "Particle should have taken only 1 step.");
       }
     }
   }
@@ -768,20 +772,20 @@ void TestWorkletsBasic()
 
         viskores::Id numRequiredPoints = static_cast<viskores::Id>(endPts.size());
         VISKORES_TEST_ASSERT(analysis.Particles.GetNumberOfValues() == numRequiredPoints,
-                         "Wrong number of points in particle advection result.");
+                             "Wrong number of points in particle advection result.");
         auto portal = analysis.Particles.ReadPortal();
         for (viskores::Id i = 0; i < analysis.Particles.GetNumberOfValues(); i++)
         {
           VISKORES_TEST_ASSERT(portal.Get(i).GetPosition() == endPts[static_cast<std::size_t>(i)],
-                           "Particle advection point is wrong");
+                               "Particle advection point is wrong");
           VISKORES_TEST_ASSERT(portal.Get(i).GetNumberOfSteps() == maxSteps,
-                           "Particle advection NumSteps is wrong");
+                               "Particle advection NumSteps is wrong");
           VISKORES_TEST_ASSERT(viskores::Abs(portal.Get(i).GetTime() - endT) < stepSize / 100,
-                           "Particle advection Time is wrong");
+                               "Particle advection Time is wrong");
           VISKORES_TEST_ASSERT(portal.Get(i).GetStatus().CheckOk(),
-                           "Particle advection Status is wrong");
+                               "Particle advection Status is wrong");
           VISKORES_TEST_ASSERT(portal.Get(i).GetStatus().CheckTerminate(),
-                           "Particle advection particle did not terminate");
+                               "Particle advection particle did not terminate");
         }
       }
       else if (w == "streamline")
@@ -794,38 +798,40 @@ void TestWorkletsBasic()
         viskores::Id numRequiredPoints = static_cast<viskores::Id>(samplePts.size());
 
         VISKORES_TEST_ASSERT(analysis.Streams.GetNumberOfValues() == numRequiredPoints,
-                         "Wrong number of points in streamline result.");
+                             "Wrong number of points in streamline result.");
 
         //Make sure all the points match.
         auto parPortal = analysis.Particles.ReadPortal();
         for (viskores::Id i = 0; i < analysis.Particles.GetNumberOfValues(); i++)
         {
-          VISKORES_TEST_ASSERT(parPortal.Get(i).GetPosition() == endPts[static_cast<std::size_t>(i)],
-                           "Streamline end point is wrong");
+          VISKORES_TEST_ASSERT(parPortal.Get(i).GetPosition() ==
+                                 endPts[static_cast<std::size_t>(i)],
+                               "Streamline end point is wrong");
           VISKORES_TEST_ASSERT(parPortal.Get(i).GetNumberOfSteps() == maxSteps,
-                           "Streamline NumSteps is wrong");
+                               "Streamline NumSteps is wrong");
           VISKORES_TEST_ASSERT(viskores::Abs(parPortal.Get(i).GetTime() - endT) < stepSize / 100,
-                           "Streamline Time is wrong");
-          VISKORES_TEST_ASSERT(parPortal.Get(i).GetStatus().CheckOk(), "Streamline Status is wrong");
+                               "Streamline Time is wrong");
+          VISKORES_TEST_ASSERT(parPortal.Get(i).GetStatus().CheckOk(),
+                               "Streamline Status is wrong");
           VISKORES_TEST_ASSERT(parPortal.Get(i).GetStatus().CheckTerminate(),
-                           "Streamline particle did not terminate");
+                               "Streamline particle did not terminate");
         }
 
         auto posPortal = analysis.Streams.ReadPortal();
         for (viskores::Id i = 0; i < analysis.Streams.GetNumberOfValues(); i++)
           VISKORES_TEST_ASSERT(posPortal.Get(i) == samplePts[static_cast<std::size_t>(i)],
-                           "Streamline points do not match");
+                               "Streamline points do not match");
 
         viskores::Id numCells = analysis.PolyLines.GetNumberOfCells();
         VISKORES_TEST_ASSERT(numCells == static_cast<viskores::Id>(pts.size()),
-                         "Wrong number of polylines in streamline");
+                             "Wrong number of polylines in streamline");
         for (viskores::Id i = 0; i < numCells; i++)
         {
           VISKORES_TEST_ASSERT(analysis.PolyLines.GetCellShape(i) == viskores::CELL_SHAPE_POLY_LINE,
-                           "Wrong cell type in streamline.");
+                               "Wrong cell type in streamline.");
           VISKORES_TEST_ASSERT(analysis.PolyLines.GetNumberOfPointsInCell(i) ==
-                             static_cast<viskores::Id>(maxSteps + 1),
-                           "Wrong number of points in streamline cell");
+                                 static_cast<viskores::Id>(maxSteps + 1),
+                               "Wrong number of points in streamline cell");
         }
       }
     }
@@ -841,7 +847,7 @@ void ValidateResult(const ResultType& res,
   viskores::Id numPts = static_cast<viskores::Id>(endPts.size());
 
   VISKORES_TEST_ASSERT(res.Particles.GetNumberOfValues() == numPts,
-                   "Wrong number of points in particle advection result.");
+                       "Wrong number of points in particle advection result.");
 
   auto portal = res.Particles.ReadPortal();
   for (viskores::Id i = 0; i < 3; i++)
@@ -853,13 +859,13 @@ void ValidateResult(const ResultType& res,
     VISKORES_TEST_ASSERT(viskores::Magnitude(p - e) <= eps, "Particle advection point is wrong");
     if (portal.Get(i).GetStatus().CheckZeroVelocity())
       VISKORES_TEST_ASSERT(portal.Get(i).GetNumberOfSteps() > 0,
-                       "Particle advection NumSteps is wrong");
+                           "Particle advection NumSteps is wrong");
     else
       VISKORES_TEST_ASSERT(portal.Get(i).GetNumberOfSteps() == maxSteps,
-                       "Particle advection NumSteps is wrong");
+                           "Particle advection NumSteps is wrong");
     VISKORES_TEST_ASSERT(portal.Get(i).GetStatus().CheckOk(), "Particle advection Status is wrong");
     VISKORES_TEST_ASSERT(portal.Get(i).GetStatus().CheckTerminate(),
-                     "Particle advection particle did not terminate");
+                         "Particle advection particle did not terminate");
   }
 }
 

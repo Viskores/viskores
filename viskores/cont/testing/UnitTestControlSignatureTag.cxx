@@ -23,19 +23,20 @@ void TestControlSignatures()
   VISKORES_IS_CONTROL_SIGNATURE_TAG(viskores::worklet::WorkletMapField::FieldIn);
 
   VISKORES_TEST_ASSERT(viskores::cont::arg::internal::ControlSignatureTagCheck<
-                     viskores::worklet::WorkletMapField::FieldIn>::Valid,
-                   "Bad check for FieldIn");
+                         viskores::worklet::WorkletMapField::FieldIn>::Valid,
+                       "Bad check for FieldIn");
 
   VISKORES_TEST_ASSERT(viskores::cont::arg::internal::ControlSignatureTagCheck<
-                     viskores::worklet::WorkletMapField::FieldOut>::Valid,
-                   "Bad check for FieldOut");
+                         viskores::worklet::WorkletMapField::FieldOut>::Valid,
+                       "Bad check for FieldOut");
 
   VISKORES_TEST_ASSERT(
     !viskores::cont::arg::internal::ControlSignatureTagCheck<viskores::exec::arg::WorkIndex>::Valid,
     "Bad check for WorkIndex");
 
-  VISKORES_TEST_ASSERT(!viskores::cont::arg::internal::ControlSignatureTagCheck<viskores::Id>::Valid,
-                   "Bad check for viskores::Id");
+  VISKORES_TEST_ASSERT(
+    !viskores::cont::arg::internal::ControlSignatureTagCheck<viskores::Id>::Valid,
+    "Bad check for viskores::Id");
 }
 
 } // anonymous namespace

@@ -31,10 +31,10 @@ namespace zfp
 
 template <typename Scalar, typename PortalType>
 VISKORES_EXEC inline void GatherPartial1(Scalar* q,
-                                     const PortalType& scalars,
-                                     viskores::Id offset,
-                                     int nx,
-                                     int sx)
+                                         const PortalType& scalars,
+                                         viskores::Id offset,
+                                         int nx,
+                                         int sx)
 {
   viskores::Id x;
   for (x = 0; x < nx; x++, offset += sx)
@@ -43,7 +43,10 @@ VISKORES_EXEC inline void GatherPartial1(Scalar* q,
 }
 
 template <typename Scalar, typename PortalType>
-VISKORES_EXEC inline void Gather1(Scalar* fblock, const PortalType& scalars, viskores::Id offset, int sx)
+VISKORES_EXEC inline void Gather1(Scalar* fblock,
+                                  const PortalType& scalars,
+                                  viskores::Id offset,
+                                  int sx)
 {
   viskores::Id counter = 0;
 
@@ -74,8 +77,8 @@ public:
 
   template <class InputScalarPortal, typename BitstreamPortal>
   VISKORES_EXEC void operator()(const viskores::Id blockIdx,
-                            const InputScalarPortal& scalars,
-                            BitstreamPortal& stream) const
+                                const InputScalarPortal& scalars,
+                                BitstreamPortal& stream) const
   {
     using Scalar = typename InputScalarPortal::ValueType;
 
@@ -102,7 +105,8 @@ public:
     }
 
     zfp::ZFPBlockEncoder<BlockSize, Scalar, BitstreamPortal> encoder;
-    encoder.encode(fblock, static_cast<viskores::Int32>(MaxBits), viskores::UInt32(blockIdx), stream);
+    encoder.encode(
+      fblock, static_cast<viskores::Int32>(MaxBits), viskores::UInt32(blockIdx), stream);
   }
 };
 }

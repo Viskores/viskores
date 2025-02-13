@@ -38,7 +38,8 @@ void ValidateDataSet(const viskores::cont::DataSet& ds,
 {
   //Verify basics..
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Wrong number of fields.");
-  VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1, "Wrong number of coordinate systems.");
+  VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
+                       "Wrong number of coordinate systems.");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == numPoints, "Wrong number of coordinates.");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == numCells, "Wrong number of cells.");
 
@@ -80,18 +81,19 @@ std::vector<T> createVec(std::size_t n, const T* data)
 template <typename T>
 viskores::cont::ArrayHandle<T> createAH(std::size_t n, const T* data)
 {
-  return viskores::cont::make_ArrayHandle(data, static_cast<viskores::Id>(n), viskores::CopyFlag::On);
+  return viskores::cont::make_ArrayHandle(
+    data, static_cast<viskores::Id>(n), viskores::CopyFlag::On);
 }
 
 template <typename T>
 viskores::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
-                                     std::size_t numPoints,
-                                     const T* coords,
-                                     std::size_t numCells,
-                                     std::size_t numConn,
-                                     const viskores::Id* conn,
-                                     const viskores::IdComponent* indices,
-                                     const viskores::UInt8* shape)
+                                         std::size_t numPoints,
+                                         const T* coords,
+                                         std::size_t numCells,
+                                         std::size_t numConn,
+                                         const viskores::Id* conn,
+                                         const viskores::IdComponent* indices,
+                                         const viskores::UInt8* shape)
 {
   viskores::cont::DataSet dataSet;
   viskores::cont::DataSetBuilderExplicit dsb;
@@ -123,8 +125,10 @@ viskores::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
     }
     dataSet = dsb.Create(xvals, yvals, zvals, shapevals, indicesvals, connvals);
 
-    viskores::cont::ArrayHandle<T> P = viskores::cont::make_ArrayHandle(varP, viskores::CopyFlag::On);
-    viskores::cont::ArrayHandle<T> C = viskores::cont::make_ArrayHandle(varC, viskores::CopyFlag::On);
+    viskores::cont::ArrayHandle<T> P =
+      viskores::cont::make_ArrayHandle(varP, viskores::CopyFlag::On);
+    viskores::cont::ArrayHandle<T> C =
+      viskores::cont::make_ArrayHandle(varC, viskores::CopyFlag::On);
     dataSet.AddPointField("pointvar", P);
     dataSet.AddCellField("cellvar", C);
     return dataSet;
@@ -157,13 +161,13 @@ viskores::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
 
 template <typename T>
 viskores::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
-                                     std::size_t numPoints,
-                                     const T* coords,
-                                     std::size_t numCells,
-                                     std::size_t numConn,
-                                     const viskores::Id* conn,
-                                     const viskores::IdComponent* indices,
-                                     const viskores::UInt8* shape)
+                                         std::size_t numPoints,
+                                         const T* coords,
+                                         std::size_t numCells,
+                                         std::size_t numConn,
+                                         const viskores::Id* conn,
+                                         const viskores::IdComponent* indices,
+                                         const viskores::UInt8* shape)
 {
   viskores::cont::DataSet dataSet;
   viskores::cont::DataSetBuilderExplicit dsb;
@@ -214,18 +218,20 @@ viskores::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
   }
 }
 
-#define TEST_DATA(num)                                                                             \
-  viskores::cont::testing::ExplicitData##num::numPoints,                                               \
-    viskores::cont::testing::ExplicitData##num::coords,                                                \
-    viskores::cont::testing::ExplicitData##num::numCells,                                              \
-    viskores::cont::testing::ExplicitData##num::numConn, viskores::cont::testing::ExplicitData##num::conn, \
-    viskores::cont::testing::ExplicitData##num::numIndices,                                            \
+#define TEST_DATA(num)                                      \
+  viskores::cont::testing::ExplicitData##num::numPoints,    \
+    viskores::cont::testing::ExplicitData##num::coords,     \
+    viskores::cont::testing::ExplicitData##num::numCells,   \
+    viskores::cont::testing::ExplicitData##num::numConn,    \
+    viskores::cont::testing::ExplicitData##num::conn,       \
+    viskores::cont::testing::ExplicitData##num::numIndices, \
     viskores::cont::testing::ExplicitData##num::shapes
-#define TEST_NUMS(num)                               \
+#define TEST_NUMS(num)                                   \
   viskores::cont::testing::ExplicitData##num::numPoints, \
     viskores::cont::testing::ExplicitData##num::numCells
-#define TEST_BOUNDS(num) \
-  viskores::cont::testing::ExplicitData##num::numPoints, viskores::cont::testing::ExplicitData##num::coords
+#define TEST_BOUNDS(num)                                 \
+  viskores::cont::testing::ExplicitData##num::numPoints, \
+    viskores::cont::testing::ExplicitData##num::coords
 
 void TestDataSetBuilderExplicit()
 {

@@ -87,22 +87,24 @@ public:
     return std::vector<viskores::cont::internal::Buffer>(1);
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numberOfBits,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numberOfBits,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     const viskores::Id bytesNeeded = (numberOfBits + CHAR_BIT - 1) / CHAR_BIT;
     const viskores::Id blocksNeeded = (bytesNeeded + BlockSize - 1) / BlockSize;
     const viskores::Id numBytes = blocksNeeded * BlockSize;
 
     VISKORES_LOG_F(viskores::cont::LogLevel::MemCont,
-               "BitField Allocation: %llu bits, blocked up to %s bytes.",
-               static_cast<unsigned long long>(numberOfBits),
-               viskores::cont::GetSizeString(static_cast<viskores::UInt64>(numBytes)).c_str());
+                   "BitField Allocation: %llu bits, blocked up to %s bytes.",
+                   static_cast<unsigned long long>(numberOfBits),
+                   viskores::cont::GetSizeString(static_cast<viskores::UInt64>(numBytes)).c_str());
 
     buffers[0].SetNumberOfBytes(numBytes, preserve, token);
-    buffers[0].GetMetaData<viskores::cont::internal::BitFieldMetaData>().NumberOfBits = numberOfBits;
+    buffers[0].GetMetaData<viskores::cont::internal::BitFieldMetaData>().NumberOfBits =
+      numberOfBits;
   }
 
   VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlat(
@@ -122,10 +124,10 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             bool fillValue,
-                             viskores::Id startBit,
-                             viskores::Id endBit,
-                             viskores::cont::Token& token)
+                                 bool fillValue,
+                                 viskores::Id startBit,
+                                 viskores::Id endBit,
+                                 viskores::cont::Token& token)
   {
     VISKORES_ASSERT(buffers.size() == 1);
     constexpr viskores::BufferSizeType wordTypeSize =
@@ -190,7 +192,7 @@ class ArrayHandleBitField : public ArrayHandle<bool, internal::StorageTagBitFiel
 {
 public:
   VISKORES_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandleBitField,
-                                (ArrayHandle<bool, internal::StorageTagBitField>));
+                                    (ArrayHandle<bool, internal::StorageTagBitField>));
 
   VISKORES_CONT
   explicit ArrayHandleBitField(const viskores::cont::BitField& bitField)

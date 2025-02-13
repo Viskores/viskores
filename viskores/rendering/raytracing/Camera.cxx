@@ -131,10 +131,12 @@ public:
     viskores::Float32 ymax = viskores::Float32(BoundingBox.Y.Max) * invDiry - odiry;
     viskores::Float32 zmax = viskores::Float32(BoundingBox.Z.Max) * invDirz - odirz;
     viskores::Float32 mind = viskores::Max(
-      viskores::Max(viskores::Max(viskores::Min(ymin, ymax), viskores::Min(xmin, xmax)), viskores::Min(zmin, zmax)),
+      viskores::Max(viskores::Max(viskores::Min(ymin, ymax), viskores::Min(xmin, xmax)),
+                    viskores::Min(zmin, zmax)),
       0.f);
     viskores::Float32 maxd =
-      viskores::Min(viskores::Min(viskores::Max(ymin, ymax), viskores::Max(xmin, xmax)), viskores::Max(zmin, zmax));
+      viskores::Min(viskores::Min(viskores::Max(ymin, ymax), viskores::Max(xmin, xmax)),
+                    viskores::Max(zmin, zmax));
     if (maxd < mind)
     {
       hit = 0;
@@ -284,13 +286,13 @@ public:
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6, _7);
   template <typename Precision>
   VISKORES_EXEC void operator()(viskores::Id idx,
-                            Precision& rayDirX,
-                            Precision& rayDirY,
-                            Precision& rayDirZ,
-                            Precision& rayOriginX,
-                            Precision& rayOriginY,
-                            Precision& rayOriginZ,
-                            viskores::Id& pixelIndex) const
+                                Precision& rayDirX,
+                                Precision& rayDirY,
+                                Precision& rayDirZ,
+                                Precision& rayOriginX,
+                                Precision& rayOriginY,
+                                Precision& rayOriginZ,
+                                viskores::Id& pixelIndex) const
   {
     // this is 2d so always look down z
     rayDirX = 0.f;
@@ -378,10 +380,10 @@ public:
   using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
   template <typename Precision>
   VISKORES_EXEC void operator()(viskores::Id idx,
-                            Precision& rayDirX,
-                            Precision& rayDirY,
-                            Precision& rayDirZ,
-                            viskores::Id& pixelIndex) const
+                                Precision& rayDirX,
+                                Precision& rayDirY,
+                                Precision& rayDirZ,
+                                viskores::Id& pixelIndex) const
   {
     auto i = viskores::Int32(idx) % SubsetWidth;
     auto j = viskores::Int32(idx) / SubsetWidth;
@@ -551,7 +553,8 @@ void Camera::SetFieldOfView(const viskores::Float32& degrees)
     viskores::Float32 verticalDistance = viskores::Tan(0.5f * fovyRad);
 
     // Scale the vertical distance by the aspect ratio to get the horizontal distance.
-    viskores::Float32 aspectRatio = viskores::Float32(this->Width) / viskores::Float32(this->Height);
+    viskores::Float32 aspectRatio =
+      viskores::Float32(this->Width) / viskores::Float32(this->Height);
     viskores::Float32 horizontalDistance = aspectRatio * verticalDistance;
 
     // Now use the arctan function to get the proper field of view in the x direction.
@@ -660,21 +663,21 @@ void Camera::GetPixelData(const viskores::cont::CoordinateSystem& coords,
 
   //Create the ray direction
   viskores::worklet::DispatcherMapField<PixelData>(PixelData(this->Width,
-                                                         this->Height,
-                                                         this->FovX,
-                                                         this->FovY,
-                                                         this->Look,
-                                                         this->Up,
-                                                         this->Zoom,
-                                                         this->SubsetWidth,
-                                                         this->SubsetMinX,
-                                                         this->SubsetMinY,
-                                                         this->Position,
-                                                         boundingBox))
+                                                             this->Height,
+                                                             this->FovX,
+                                                             this->FovY,
+                                                             this->Look,
+                                                             this->Up,
+                                                             this->Zoom,
+                                                             this->SubsetWidth,
+                                                             this->SubsetMinX,
+                                                             this->SubsetMinY,
+                                                             this->Position,
+                                                             boundingBox))
     .Invoke(hits, dists); //X Y Z
   activePixels = viskores::cont::Algorithm::Reduce(hits, viskores::Int32(0));
-  aveRayDistance =
-    viskores::cont::Algorithm::Reduce(dists, viskores::Float32(0)) / viskores::Float32(activePixels);
+  aveRayDistance = viskores::cont::Algorithm::Reduce(dists, viskores::Float32(0)) /
+    viskores::Float32(activePixels);
 }
 
 VISKORES_CONT
@@ -783,7 +786,7 @@ void Camera::FindSubset(const viskores::Bounds& bounds)
 {
   this->ViewProjectionMat =
     viskores::MatrixMultiply(this->CameraView.CreateProjectionMatrix(this->Width, this->Height),
-                         this->CameraView.CreateViewMatrix());
+                             this->CameraView.CreateViewMatrix());
   viskores::Float32 x[2], y[2], z[2];
   x[0] = static_cast<viskores::Float32>(bounds.X.Min);
   x[1] = static_cast<viskores::Float32>(bounds.X.Max);
@@ -818,7 +821,8 @@ void Camera::FindSubset(const viskores::Bounds& bounds)
         extentPoint[1] = y[j];
         extentPoint[2] = z[k];
         extentPoint[3] = 1.f;
-        viskores::Vec4f_32 transformed = viskores::MatrixMultiply(this->ViewProjectionMat, extentPoint);
+        viskores::Vec4f_32 transformed =
+          viskores::MatrixMultiply(this->ViewProjectionMat, extentPoint);
         // perform the perspective divide
         for (viskores::Int32 a = 0; a < 3; ++a)
         {
@@ -881,8 +885,8 @@ void Camera::FindSubset(const viskores::Bounds& bounds)
 
 template <typename Precision>
 VISKORES_CONT void Camera::UpdateDimensions(Ray<Precision>& rays,
-                                        const viskores::Bounds& boundingBox,
-                                        bool ortho2D)
+                                            const viskores::Bounds& boundingBox,
+                                            bool ortho2D)
 {
   // If bounds have been provided, only cast rays that could hit the data
   bool imageSubsetModeOn = boundingBox.IsNonEmpty();
@@ -903,7 +907,7 @@ VISKORES_CONT void Camera::UpdateDimensions(Ray<Precision>& rays,
     //Update our ViewProjection matrix
     this->ViewProjectionMat =
       viskores::MatrixMultiply(this->CameraView.CreateProjectionMatrix(this->Width, this->Height),
-                           this->CameraView.CreateViewMatrix());
+                               this->CameraView.CreateViewMatrix());
     this->FindSubset(boundingBox);
   }
   else if (ortho2D)

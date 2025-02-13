@@ -221,7 +221,8 @@ public:
   }
 
   VISKORES_CONT
-  void Trace(const viskores::rendering::Camera& camera, viskores::rendering::CanvasRayTracer* canvas)
+  void Trace(const viskores::rendering::Camera& camera,
+             viskores::rendering::CanvasRayTracer* canvas)
   {
 
     if (canvas == nullptr)

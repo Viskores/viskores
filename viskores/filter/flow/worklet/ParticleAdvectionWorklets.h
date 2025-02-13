@@ -53,8 +53,8 @@ public:
 
   template <typename IntegratorType, typename IntegralCurveType>
   VISKORES_EXEC void operator()(const viskores::Id& idx,
-                            const IntegratorType& integrator,
-                            IntegralCurveType& integralCurve) const
+                                const IntegratorType& integrator,
+                                IntegralCurveType& integralCurve) const
   {
     auto particle = integralCurve.GetParticle(idx);
     viskores::FloatDefault time = particle.GetTime();

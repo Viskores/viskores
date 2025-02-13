@@ -88,7 +88,8 @@ void WriteData(const T* data, std::size_t size, int numComponents);
 void WriteViskoresArray(const viskores::cont::UnknownArrayHandle& array)
 {
   bool writeSuccess = false;
-  auto doWrite = [&](auto componentType) {
+  auto doWrite = [&](auto componentType)
+  {
     using ComponentType = decltype(componentType);
     using VecArrayType = viskores::cont::ArrayHandleRuntimeVec<ComponentType>;
     if (array.CanConvert<VecArrayType>())

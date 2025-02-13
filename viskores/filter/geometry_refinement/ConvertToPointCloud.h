@@ -35,7 +35,8 @@ namespace geometry_refinement
 /// Note that all fields associated with cells are dropped. This is because the
 /// cells are dropped.
 ///
-class VISKORES_FILTER_GEOMETRY_REFINEMENT_EXPORT ConvertToPointCloud : public viskores::filter::Filter
+class VISKORES_FILTER_GEOMETRY_REFINEMENT_EXPORT ConvertToPointCloud
+  : public viskores::filter::Filter
 {
   bool AssociateFieldsWithCells = false;
 
@@ -48,7 +49,10 @@ public:
   /// Note that any field that is marked as point coordinates will remain as point
   /// fields. It is not valid to set a cell field as the point coordinates.
   ///
-  VISKORES_CONT void SetAssociateFieldsWithCells(bool flag) { this->AssociateFieldsWithCells = flag; }
+  VISKORES_CONT void SetAssociateFieldsWithCells(bool flag)
+  {
+    this->AssociateFieldsWithCells = flag;
+  }
   /// @copydoc SetAssociateFieldsWithCells
   VISKORES_CONT bool GetAssociateFieldsWithCells() const { return this->AssociateFieldsWithCells; }
 

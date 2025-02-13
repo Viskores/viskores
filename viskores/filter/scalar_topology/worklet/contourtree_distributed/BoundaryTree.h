@@ -147,7 +147,8 @@ inline std::string BoundaryTree::Print()
     }
     // print out the from & to
     resultStream << std::setw(viskores::worklet::contourtree_augmented::PRINT_WIDTH) << from << " ";
-    resultStream << std::setw(viskores::worklet::contourtree_augmented::PRINT_WIDTH) << to << std::endl;
+    resultStream << std::setw(viskores::worklet::contourtree_augmented::PRINT_WIDTH) << to
+                 << std::endl;
   }
   return resultStream.str();
 } // Print
@@ -273,10 +274,11 @@ std::string BoundaryTree::PrintGlobalDot(
 inline void BoundaryTree::PrintContent(std::ostream& outStream) const
 {
   viskores::worklet::contourtree_augmented::PrintHeader(this->VertexIndex.GetNumberOfValues(),
-                                                    outStream);
+                                                        outStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Vertex Index", this->VertexIndex, -1, outStream);
-  viskores::worklet::contourtree_augmented::PrintIndices("Superarcs", this->Superarcs, -1, outStream);
+  viskores::worklet::contourtree_augmented::PrintIndices(
+    "Superarcs", this->Superarcs, -1, outStream);
 }
 
 inline std::string BoundaryTree::DebugPrint(const char* message,

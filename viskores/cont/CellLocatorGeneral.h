@@ -42,19 +42,19 @@ class VISKORES_CONT_EXPORT CellLocatorGeneral : public viskores::cont::CellLocat
 {
 public:
   using ContLocatorList = viskores::List<viskores::cont::CellLocatorUniformGrid,
-                                     viskores::cont::CellLocatorRectilinearGrid,
-                                     viskores::cont::CellLocatorTwoLevel>;
+                                         viskores::cont::CellLocatorRectilinearGrid,
+                                         viskores::cont::CellLocatorTwoLevel>;
 
-  using ExecLocatorList =
-    viskores::List<viskores::cont::internal::ExecutionObjectType<viskores::cont::CellLocatorUniformGrid>,
-               viskores::cont::internal::ExecutionObjectType<viskores::cont::CellLocatorRectilinearGrid>,
-               viskores::cont::internal::ExecutionObjectType<viskores::cont::CellLocatorTwoLevel>>;
+  using ExecLocatorList = viskores::List<
+    viskores::cont::internal::ExecutionObjectType<viskores::cont::CellLocatorUniformGrid>,
+    viskores::cont::internal::ExecutionObjectType<viskores::cont::CellLocatorRectilinearGrid>,
+    viskores::cont::internal::ExecutionObjectType<viskores::cont::CellLocatorTwoLevel>>;
 
   using ExecObjType = viskores::ListApply<ExecLocatorList, viskores::exec::CellLocatorMultiplexer>;
   using LastCell = typename ExecObjType::LastCell;
 
   VISKORES_CONT ExecObjType PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                            viskores::cont::Token& token) const;
+                                                viskores::cont::Token& token) const;
 
 private:
   viskores::cont::ListAsVariant<ContLocatorList> LocatorImpl;

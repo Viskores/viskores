@@ -285,7 +285,7 @@ inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
   {
     std::stringstream resultStream;
     viskores::worklet::contourtree_augmented::PrintHeader(superarcList.GetNumberOfValues(),
-                                                      resultStream);
+                                                          resultStream);
     viskores::worklet::contourtree_augmented::PrintEdgePairArray(
       "Superarc List", superarcList, -1, resultStream);
     resultStream << std::endl;
@@ -297,10 +297,11 @@ inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
   viskores::worklet::contourtree_augmented::IdArrayType actualSuperarcs;
   // and fill it up with index values [0, 1, 2 ... nSuperarcs-1] while simultaneously stream compacting the
   // values by keeping only those indices where the hierarchicalTree->Superarcs is not NoSuchElement.
-  viskores::cont::Algorithm::CopyIf(viskores::cont::ArrayHandleIndex(nSuperarcs), //input
-                                hierarchicalTreeSuperarcs,                // stencil
-                                actualSuperarcs,                          // output target array
-                                viskores::worklet::contourtree_augmented::NotNoSuchElementPredicate{});
+  viskores::cont::Algorithm::CopyIf(
+    viskores::cont::ArrayHandleIndex(nSuperarcs), //input
+    hierarchicalTreeSuperarcs,                    // stencil
+    actualSuperarcs,                              // output target array
+    viskores::worklet::contourtree_augmented::NotNoSuchElementPredicate{});
   // NOTE: The behavior here is slightly different from the original implementation, as the original code
   //       here does not resize actualSuperarcs but keeps it at the full length of nSuperacs and instead
   //       relies on the nActualSuperarcs parameter. However, the extra values are never used, so compacting
@@ -331,7 +332,8 @@ inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
   this->BestDownVolume.AllocateAndFill(nSupernodes, 0);
 
 #ifdef DEBUG_HIERARCHICAL_VOLUMETRIC_BRANCH_DECOMPOSER
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Arrays Allocated", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("Arrays Allocated", __FILE__, __LINE__));
 #endif
 
   // STAGE II: Pick the best (largest volume) edge upwards and downwards
@@ -344,8 +346,8 @@ inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
       LocalBestUpDownByVolumeBestUpDownEdgeWorklet bestUpDownEdgeWorklet(totalVolume);
     // permut input and output arrays here so we can use FieldIn and FieldOut to
     // avoid the use of WholeArray access in the worklet
-    auto permutedHierarchicalTreeSuperarcs =
-      viskores::cont::make_ArrayHandlePermutation(actualSuperarcs, hierarchicalTreeSuperarcs); // input
+    auto permutedHierarchicalTreeSuperarcs = viskores::cont::make_ArrayHandlePermutation(
+      actualSuperarcs, hierarchicalTreeSuperarcs); // input
     auto permutedDependetValues =
       viskores::cont::make_ArrayHandlePermutation(actualSuperarcs, dependentValues); // input
     auto permutedIntrinsicValues =
@@ -365,11 +367,12 @@ inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
   }
 
 #ifdef DEBUG_HIERARCHICAL_VOLUMETRIC_BRANCH_DECOMPOSER
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Volume Arrays Set Up", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("Volume Arrays Set Up", __FILE__, __LINE__));
   {
     std::stringstream resultStream;
     viskores::worklet::contourtree_augmented::PrintHeader(superarcList.GetNumberOfValues(),
-                                                      resultStream);
+                                                          resultStream);
     viskores::worklet::contourtree_augmented::PrintEdgePairArray(
       "Superarc List", superarcList, -1, resultStream);
     resultStream << std::endl;
@@ -386,7 +389,7 @@ inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
         SuperArcVolumetricComparatorIndirectGlobalIdComparator(
           this->UpVolume, superarcList, hierarchicalTreeRegularNodeGlobalIds, false);
     viskores::cont::Algorithm::Sort(actualSuperarcs,
-                                SuperArcVolumetricComparatorIndirectGlobalIdComparator);
+                                    SuperArcVolumetricComparatorIndirectGlobalIdComparator);
   }
 
 #ifdef DEBUG_HIERARCHICAL_VOLUMETRIC_BRANCH_DECOMPOSER
@@ -419,7 +422,7 @@ inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
   }
 #ifdef DEBUG_HIERARCHICAL_VOLUMETRIC_BRANCH_DECOMPOSER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("BestDownSupernode Written", __FILE__, __LINE__));
+                 DebugPrint("BestDownSupernode Written", __FILE__, __LINE__));
 #endif
 
   // II B 3.  Repeat for lower vertex
@@ -429,7 +432,7 @@ inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
         SuperArcVolumetricComparatorIndirectGlobalIdComparator(
           this->DownVolume, superarcList, hierarchicalTreeRegularNodeGlobalIds, true);
     viskores::cont::Algorithm::Sort(actualSuperarcs,
-                                SuperArcVolumetricComparatorIndirectGlobalIdComparator);
+                                    SuperArcVolumetricComparatorIndirectGlobalIdComparator);
   }
 
 #ifdef DEBUG_HIERARCHICAL_VOLUMETRIC_BRANCH_DECOMPOSER
@@ -464,7 +467,7 @@ inline void HierarchicalVolumetricBranchDecomposer::LocalBestUpDownByVolume(
 
 #ifdef DEBUG_HIERARCHICAL_VOLUMETRIC_BRANCH_DECOMPOSER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("Local Best Up/Down Computed", __FILE__, __LINE__));
+                 DebugPrint("Local Best Up/Down Computed", __FILE__, __LINE__));
 #endif
 } // LocalBestUpDownByVolume
 
@@ -488,15 +491,17 @@ inline void HierarchicalVolumetricBranchDecomposer::CollapseBranches(
     hierarchicalTreeDataSet.GetField("RegularNodeSortOrder")
       .GetData()
       .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>();
-  auto hierarchicalTreeRegular2Supernode = hierarchicalTreeDataSet.GetField("Regular2Supernode")
-                                             .GetData()
-                                             .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>();
+  auto hierarchicalTreeRegular2Supernode =
+    hierarchicalTreeDataSet.GetField("Regular2Supernode")
+      .GetData()
+      .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>();
   auto hierarchicalTreeWhichRound = hierarchicalTreeDataSet.GetField("WhichRound")
                                       .GetData()
                                       .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>();
 
   // initialise the superarcs to be their own branch roots
-  viskores::cont::ArrayCopy(viskores::cont::ArrayHandleIndex(branchRoot.GetNumberOfValues()), branchRoot);
+  viskores::cont::ArrayCopy(viskores::cont::ArrayHandleIndex(branchRoot.GetNumberOfValues()),
+                            branchRoot);
 
   //    For each supernode, convert the best up into a superarc ID
   {
@@ -613,12 +618,15 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
     std::stringstream resultStream;
     resultStream << "All Information In The Block" << std::endl;
     viskores::worklet::contourtree_augmented::PrintHeader(nSuperarcs, resultStream);
-    viskores::worklet::contourtree_augmented::PrintIndices("Superarcs", superarcs, -1, resultStream);
-    viskores::worklet::contourtree_augmented::PrintIndices("Supernodes", supernodes, -1, resultStream);
+    viskores::worklet::contourtree_augmented::PrintIndices(
+      "Superarcs", superarcs, -1, resultStream);
+    viskores::worklet::contourtree_augmented::PrintIndices(
+      "Supernodes", supernodes, -1, resultStream);
     viskores::worklet::contourtree_augmented::PrintIndices(
       "Regular IDs", superarcGRId, -1, resultStream);
 
-    auto resolveOutput = [&](const auto& inArray) {
+    auto resolveOutput = [&](const auto& inArray)
+    {
       using InArrayHandleType = std::decay_t<decltype(inArray)>;
       using ValueType = typename InArrayHandleType::ValueType;
       viskores::cont::ArrayHandle<ValueType> superarcValue;
@@ -681,10 +689,11 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
   IdArrayType actualSuperarcs;
   // fill it up with index values [0, 1, 2 ... nSuperarcs-1]
   // while keeping only those indices where the Superarcs is not NSE.
-  viskores::cont::Algorithm::CopyIf(superarcIndices, // input
-                                superarcs,       // stencil
-                                actualSuperarcs, // output target array
-                                viskores::worklet::contourtree_augmented::NotNoSuchElementPredicate{});
+  viskores::cont::Algorithm::CopyIf(
+    superarcIndices, // input
+    superarcs,       // stencil
+    actualSuperarcs, // output target array
+    viskores::worklet::contourtree_augmented::NotNoSuchElementPredicate{});
   viskores::Id nActualSuperarcs = actualSuperarcs.GetNumberOfValues();
 
   // Get the branch Id, data value and global regular ID for each actual superarc to be sorted
@@ -719,7 +728,8 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
   viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id>(
     globalRegularIds, actualOuterNodeLocalIds, actualOuterNodeRegularIds);
 
-  auto resolveArray = [&](const auto& inArray) {
+  auto resolveArray = [&](const auto& inArray)
+  {
     using InArrayHandleType = std::decay_t<decltype(inArray)>;
     using ValueType = typename InArrayHandleType::ValueType;
 
@@ -784,8 +794,8 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
     auto permutedDependentVolumes =
       viskores::cont::make_ArrayHandlePermutation(permutedActualSuperarcs, dependentVolumes);
 
-    viskores::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::OneIfBranchEndWorklet
-      oneIfBranchEndWorklet;
+    viskores::worklet::scalar_topology::hierarchical_volumetric_branch_decomposer::
+      OneIfBranchEndWorklet oneIfBranchEndWorklet;
     IdArrayType oneIfBranchEnd;
     oneIfBranchEnd.Allocate(nActualSuperarcs);
 
@@ -852,12 +862,13 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
           viskores::cont::ArrayHandle<bool> branchRootIdentical;
           viskores::cont::Algorithm::Transform(
             this->BranchRoot, UpperBranchRoot, branchRootIdentical, viskores::Equal());
-          identical = viskores::cont::Algorithm::Reduce(branchRootIdentical, true, viskores::LogicalAnd());
+          identical =
+            viskores::cont::Algorithm::Reduce(branchRootIdentical, true, viskores::LogicalAnd());
         }
         if (!identical)
         {
           VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-                     "Two reduced BranchRoot arrays are not identical!");
+                         "Two reduced BranchRoot arrays are not identical!");
         }
       }
       viskores::cont::Algorithm::CopyIf(branchRootGRIds, oneIfBranchEnd, this->BranchRootGRId);
@@ -979,7 +990,8 @@ std::string HierarchicalVolumetricBranchDecomposer::PrintBranches(
 
     // now retrieve the global ID & value for each end & output them
     viskores::Id superFromRegularId = hierarchicalTreeSupernodesPortal.Get(superarc);
-    viskores::Id superFromGlobalId = hierarchicalTreeRegularNodeGlobalIdsPortal.Get(superFromRegularId);
+    viskores::Id superFromGlobalId =
+      hierarchicalTreeRegularNodeGlobalIdsPortal.Get(superFromRegularId);
     typename DataValueArrayHandleType::ValueType superFromValue =
       hierarchicalTreeDataValuesPortal.Get(superFromRegularId);
     resultStream << branchRootGlobalId << "\t" << superFromValue << "\t" << superFromGlobalId
@@ -1018,14 +1030,16 @@ inline std::string HierarchicalVolumetricBranchDecomposer::PrintBranches(
 
   std::string result;
 
-  hierarchicalTreeDataValuesData.CastAndCallForTypes<TypeListScalarAll, VISKORES_DEFAULT_STORAGE_LIST>(
-    [&](const auto& hierarchicalTreeDataValuesAH) {
-      result = PrintBranches(hierarchicalTreeSuperarcsAH,
-                             hierarchicalTreeSupernodesAH,
-                             hierarchicalTreeRegularNodeGlobalIdsAH,
-                             hierarchicalTreeDataValuesAH,
-                             branchRootAH);
-    });
+  hierarchicalTreeDataValuesData
+    .CastAndCallForTypes<TypeListScalarAll, VISKORES_DEFAULT_STORAGE_LIST>(
+      [&](const auto& hierarchicalTreeDataValuesAH)
+      {
+        result = PrintBranches(hierarchicalTreeSuperarcsAH,
+                               hierarchicalTreeSupernodesAH,
+                               hierarchicalTreeRegularNodeGlobalIdsAH,
+                               hierarchicalTreeDataValuesAH,
+                               branchRootAH);
+      });
 
   return result;
 } // PrintBranches
@@ -1047,7 +1061,7 @@ inline std::string HierarchicalVolumetricBranchDecomposer::DebugPrint(std::strin
   resultStream << std::endl;
 
   viskores::worklet::contourtree_augmented::PrintHeader(this->UpVolume.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Up Volume by SA", this->UpVolume, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(

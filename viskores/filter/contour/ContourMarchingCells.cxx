@@ -48,7 +48,8 @@ viskores::cont::DataSet ContourMarchingCells::DoExecute(const viskores::cont::Da
 
   viskores::cont::CellSetSingleType<> outputCells;
 
-  auto resolveFieldType = [&](const auto& concrete) {
+  auto resolveFieldType = [&](const auto& concrete)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     std::vector<T> ivalues(this->IsoValues.size());

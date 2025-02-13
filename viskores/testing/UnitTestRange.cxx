@@ -25,7 +25,8 @@ void TestRange()
 
   viskores::Range emptyRange2;
   VISKORES_TEST_ASSERT(!emptyRange2.IsNonEmpty(), "2nd empty range not empty.");
-  VISKORES_TEST_ASSERT(!emptyRange.Union(emptyRange2).IsNonEmpty(), "Union of empty ranges not empty.");
+  VISKORES_TEST_ASSERT(!emptyRange.Union(emptyRange2).IsNonEmpty(),
+                       "Union of empty ranges not empty.");
   emptyRange2.Include(emptyRange);
   VISKORES_TEST_ASSERT(!emptyRange2.IsNonEmpty(), "Include empty in empty is not empty.");
 

@@ -24,10 +24,12 @@ viskores::cont::DataSet MakePointElevationTestDataSet()
   const viskores::Id dim = 5;
   for (viskores::Id j = 0; j < dim; ++j)
   {
-    viskores::Float32 z = static_cast<viskores::Float32>(j) / static_cast<viskores::Float32>(dim - 1);
+    viskores::Float32 z =
+      static_cast<viskores::Float32>(j) / static_cast<viskores::Float32>(dim - 1);
     for (viskores::Id i = 0; i < dim; ++i)
     {
-      viskores::Float32 x = static_cast<viskores::Float32>(i) / static_cast<viskores::Float32>(dim - 1);
+      viskores::Float32 x =
+        static_cast<viskores::Float32>(i) / static_cast<viskores::Float32>(dim - 1);
       viskores::Float32 y = (x * x + z * z) / 2.0f;
       coordinates.push_back(viskores::make_Vec(x, y, z));
     }
@@ -82,7 +84,7 @@ void TestPointElevationNoPolicy()
   for (viskores::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(coordsPortal.Get(i)[1] * 2.0, resultPortal.Get(i)),
-                     "Wrong result for PointElevation worklet");
+                         "Wrong result for PointElevation worklet");
   }
 }
 
@@ -113,7 +115,7 @@ void TestPointElevationWithPolicy()
   for (viskores::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(coordsPortal.Get(i)[1] * 2.0, resultPortal.Get(i)),
-                     "Wrong result for PointElevation worklet");
+                         "Wrong result for PointElevation worklet");
   }
 }
 

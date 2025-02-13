@@ -66,7 +66,8 @@ void TestExternalFacesExplicitGrid(const viskores::cont::DataSet& ds,
   viskores::cont::CellSetExplicit<> new_cellSet =
     resultds.GetCellSet().AsCellSet<viskores::cont::CellSetExplicit<>>();
   const viskores::Id numOutputExtFaces = new_cellSet.GetNumberOfCells();
-  VISKORES_TEST_ASSERT(numOutputExtFaces == numExpectedExtFaces, "Number of External Faces mismatch");
+  VISKORES_TEST_ASSERT(numOutputExtFaces == numExpectedExtFaces,
+                       "Number of External Faces mismatch");
 
   // verify fields
   VISKORES_TEST_ASSERT(resultds.HasField("pointvar"), "Point field not mapped successfully");
@@ -77,7 +78,7 @@ void TestExternalFacesExplicitGrid(const viskores::cont::DataSet& ds,
   {
     viskores::Id numOutputPoints = resultds.GetCoordinateSystem(0).GetNumberOfPoints();
     VISKORES_TEST_ASSERT(numOutputPoints == numExpectedPoints,
-                     "Incorrect number of points after compacting");
+                         "Incorrect number of points after compacting");
   }
 }
 

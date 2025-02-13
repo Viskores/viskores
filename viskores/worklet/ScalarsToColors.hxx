@@ -94,8 +94,9 @@ void ScalarsToColors::Run(const viskores::cont::ArrayHandle<T, S>& values,
 /// \brief Use magnitude of a vector to generate RGBA colors
 ///
 template <typename T, int N, typename S>
-void ScalarsToColors::RunMagnitude(const viskores::cont::ArrayHandle<viskores::Vec<T, N>, S>& values,
-                                   viskores::cont::ArrayHandle<viskores::Vec4ui_8>& rgbaOut) const
+void ScalarsToColors::RunMagnitude(
+  const viskores::cont::ArrayHandle<viskores::Vec<T, N>, S>& values,
+  viskores::cont::ArrayHandle<viskores::Vec4ui_8>& rgbaOut) const
 {
   //magnitude is a complex situation. the default scale factor is incorrect
   //
@@ -108,21 +109,24 @@ void ScalarsToColors::RunMagnitude(const viskores::cont::ArrayHandle<viskores::V
     viskores::worklet::DispatcherMapField<ShiftScaleToRGBA> dispatcher(
       ShiftScaleToRGBA(this->Shift, this->Scale, this->Alpha));
     dispatcher.Invoke(
-      viskores::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbaOut);
+      viskores::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()),
+      rgbaOut);
   }
   else
   {
     viskores::worklet::DispatcherMapField<ConvertToRGBA> dispatcher(ConvertToRGBA(this->Alpha));
     dispatcher.Invoke(
-      viskores::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbaOut);
+      viskores::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()),
+      rgbaOut);
   }
 }
 
 /// \brief Use magnitude of a vector to generate RGB colors
 ///
 template <typename T, int N, typename S>
-void ScalarsToColors::RunMagnitude(const viskores::cont::ArrayHandle<viskores::Vec<T, N>, S>& values,
-                                   viskores::cont::ArrayHandle<viskores::Vec3ui_8>& rgbOut) const
+void ScalarsToColors::RunMagnitude(
+  const viskores::cont::ArrayHandle<viskores::Vec<T, N>, S>& values,
+  viskores::cont::ArrayHandle<viskores::Vec3ui_8>& rgbOut) const
 {
 
   using namespace viskores::worklet::colorconversion;
@@ -133,36 +137,42 @@ void ScalarsToColors::RunMagnitude(const viskores::cont::ArrayHandle<viskores::V
     viskores::worklet::DispatcherMapField<ShiftScaleToRGB> dispatcher(
       ShiftScaleToRGB(this->Shift, this->Scale));
     dispatcher.Invoke(
-      viskores::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbOut);
+      viskores::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()),
+      rgbOut);
   }
   else
   {
     viskores::worklet::DispatcherMapField<ConvertToRGB> dispatcher;
     dispatcher.Invoke(
-      viskores::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()), rgbOut);
+      viskores::cont::make_ArrayHandleTransform(values, colorconversion::MagnitudePortal()),
+      rgbOut);
   }
 }
 
 /// \brief Use a single component of a vector to generate RGBA colors
 ///
 template <typename T, int N, typename S>
-void ScalarsToColors::RunComponent(const viskores::cont::ArrayHandle<viskores::Vec<T, N>, S>& values,
-                                   viskores::IdComponent comp,
-                                   viskores::cont::ArrayHandle<viskores::Vec4ui_8>& rgbaOut) const
+void ScalarsToColors::RunComponent(
+  const viskores::cont::ArrayHandle<viskores::Vec<T, N>, S>& values,
+  viskores::IdComponent comp,
+  viskores::cont::ArrayHandle<viskores::Vec4ui_8>& rgbaOut) const
 {
-  this->Run(viskores::cont::make_ArrayHandleTransform(values, colorconversion::ComponentPortal(comp)),
-            rgbaOut);
+  this->Run(
+    viskores::cont::make_ArrayHandleTransform(values, colorconversion::ComponentPortal(comp)),
+    rgbaOut);
 }
 
 /// \brief Use a single component of a vector to generate RGB colors
 ///
 template <typename T, int N, typename S>
-void ScalarsToColors::RunComponent(const viskores::cont::ArrayHandle<viskores::Vec<T, N>, S>& values,
-                                   viskores::IdComponent comp,
-                                   viskores::cont::ArrayHandle<viskores::Vec3ui_8>& rgbOut) const
+void ScalarsToColors::RunComponent(
+  const viskores::cont::ArrayHandle<viskores::Vec<T, N>, S>& values,
+  viskores::IdComponent comp,
+  viskores::cont::ArrayHandle<viskores::Vec3ui_8>& rgbOut) const
 {
-  this->Run(viskores::cont::make_ArrayHandleTransform(values, colorconversion::ComponentPortal(comp)),
-            rgbOut);
+  this->Run(
+    viskores::cont::make_ArrayHandleTransform(values, colorconversion::ComponentPortal(comp)),
+    rgbOut);
 }
 }
 }

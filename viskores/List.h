@@ -23,9 +23,9 @@ namespace viskores
 // happily create a list of any size. However, to make sure the compiler does not go
 // into an infinite loop, you can only iterate on a list so far. As such, it is safer
 // to limit the size of the lists.
-#define VISKORES_CHECK_LIST_SIZE(size)                                                               \
+#define VISKORES_CHECK_LIST_SIZE(size)                                                           \
   static_assert((size) <= 512,                                                                   \
-                "A viskores::List with more than 512 elements is not supported."                     \
+                "A viskores::List with more than 512 elements is not supported."                 \
                 " A list this long is problematic for compilers."                                \
                 " Compilers often have a recursive template instantiation limit of around 1024," \
                 " so operations on lists this large can lead to confusing and misleading errors.")
@@ -66,9 +66,9 @@ using IsList = typename viskores::internal::IsListImpl<T>::type;
 /// actually a device adapter tag. (You can get weird errors elsewhere in the
 /// code when a mistake is made.)
 ///
-#define VISKORES_IS_LIST(type)                                        \
+#define VISKORES_IS_LIST(type)                                            \
   VISKORES_STATIC_ASSERT_MSG((::viskores::internal::IsList<type>::value), \
-                         "Provided type is not a valid Viskores list type.")
+                             "Provided type is not a valid Viskores list type.")
 
 namespace detail
 {
@@ -102,8 +102,8 @@ struct ListSizeImpl;
 template <typename... Ts>
 struct ListSizeImpl<viskores::List<Ts...>>
 {
-  using type =
-    std::integral_constant<viskores::IdComponent, static_cast<viskores::IdComponent>(sizeof...(Ts))>;
+  using type = std::integral_constant<viskores::IdComponent,
+                                      static_cast<viskores::IdComponent>(sizeof...(Ts))>;
 };
 
 } // namespace detail
@@ -336,8 +336,8 @@ struct ListAtImpl;
 template <typename... Ts, viskores::IdComponent Index>
 struct ListAtImpl<viskores::List<Ts...>, Index>
 {
-  using type =
-    decltype(ListAtImplFunc<viskores::ListFill<const void*, Index>>::at(static_cast<Ts*>(nullptr)...));
+  using type = decltype(ListAtImplFunc<viskores::ListFill<const void*, Index>>::at(
+    static_cast<Ts*>(nullptr)...));
 };
 
 } // namespace detail
@@ -362,7 +362,10 @@ struct FindFirstOfType<NumSearched, Target> : std::integral_constant<viskores::I
 };
 
 // Basic search next one
-template <bool NextIsTarget, viskores::IdComponent NumSearched, typename Target, typename... Remaining>
+template <bool NextIsTarget,
+          viskores::IdComponent NumSearched,
+          typename Target,
+          typename... Remaining>
 struct FindFirstOfCheckHead;
 
 template <viskores::IdComponent NumSearched, typename Target, typename... Ts>
@@ -391,7 +394,10 @@ struct FindFirstOfType<NumSearched, Target, Next, Remaining...>
 };
 
 // If there are at least 6 entries, check the first 4 to quickly narrow down
-template <bool OneInFirst4Matches, viskores::IdComponent NumSearched, typename Target, typename... Ts>
+template <bool OneInFirst4Matches,
+          viskores::IdComponent NumSearched,
+          typename Target,
+          typename... Ts>
 struct FindFirstOfSplit4;
 
 template <viskores::IdComponent NumSearched,
@@ -444,7 +450,10 @@ struct FindFirstOfType<NumSearched, Target, T0, T1, T2, T3, T4, T5, Ts...>
 };
 
 // If there are at least 12 entries, check the first 8 to quickly narrow down
-template <bool OneInFirst8Matches, viskores::IdComponent NumSearched, typename Target, typename... Ts>
+template <bool OneInFirst8Matches,
+          viskores::IdComponent NumSearched,
+          typename Target,
+          typename... Ts>
 struct FindFirstOfSplit8;
 
 template <viskores::IdComponent NumSearched,
@@ -533,13 +542,15 @@ struct ListIndexOfImpl;
 template <typename... Ts, typename Target>
 struct ListIndexOfImpl<viskores::List<Ts...>, Target>
 {
-  using type = std::integral_constant<viskores::IdComponent, FindFirstOfType<0, Target, Ts...>::value>;
+  using type =
+    std::integral_constant<viskores::IdComponent, FindFirstOfType<0, Target, Ts...>::value>;
 };
 template <typename Target>
 struct ListIndexOfImpl<viskores::ListUniversal, Target>
 {
-  VISKORES_STATIC_ASSERT_MSG((std::is_same<Target, void>::value && std::is_same<Target, int>::value),
-                         "Cannot get indices in a universal list.");
+  VISKORES_STATIC_ASSERT_MSG((std::is_same<Target, void>::value &&
+                              std::is_same<Target, int>::value),
+                             "Cannot get indices in a universal list.");
 };
 
 } // namespace detail
@@ -623,7 +634,8 @@ struct ListRemoveIfCheckNext<Passed, Next, true, Rest, Predicate>
 template <typename... PassedTs, typename Next, typename Rest, template <typename> class Predicate>
 struct ListRemoveIfCheckNext<viskores::List<PassedTs...>, Next, false, Rest, Predicate>
 {
-  using type = typename ListRemoveIfGetNext<viskores::List<PassedTs..., Next>, Rest, Predicate>::type;
+  using type =
+    typename ListRemoveIfGetNext<viskores::List<PassedTs..., Next>, Rest, Predicate>::type;
 };
 
 template <typename Passed, typename Next, typename... RestTs, template <typename> class Predicate>
@@ -725,7 +737,7 @@ template <typename Functor, typename... Ts, typename... Args>
 VISKORES_EXEC_CONT void ListForEach(Functor&& f, viskores::List<Ts...>, Args&&... args)
 {
   VISKORES_STATIC_ASSERT_MSG((!std::is_same<viskores::List<Ts...>, viskores::ListUniversal>::value),
-                         "Cannot call ListFor on viskores::ListUniversal.");
+                             "Cannot call ListFor on viskores::ListUniversal.");
   auto init_list = { (f(Ts{}, std::forward<Args>(args)...), false)... };
   (void)init_list;
 }
@@ -799,11 +811,12 @@ template <typename T0,
           typename Result>
 struct ListReduceImpl<viskores::List<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>, Operator, Result>
 {
-  using type = typename ListReduceImpl<
-    viskores::List<T8, Ts...>,
-    Operator,
-    typename ListReduceImpl<viskores::List<T0, T1, T2, T3, T4, T5, T6, T7>, Operator, Result>::type>::
-    type;
+  using type =
+    typename ListReduceImpl<viskores::List<T8, Ts...>,
+                            Operator,
+                            typename ListReduceImpl<viskores::List<T0, T1, T2, T3, T4, T5, T6, T7>,
+                                                    Operator,
+                                                    Result>::type>::type;
 };
 
 } // namespace detail
@@ -839,8 +852,9 @@ using ListReduce = typename detail::ListReduceImpl<List, Operator, Initial>::typ
 /// ```
 ///
 template <typename List, template <typename> class Predicate = viskores::internal::meta::Identity>
-using ListAll =
-  viskores::ListReduce<viskores::ListTransform<List, Predicate>, viskores::internal::meta::And, std::true_type>;
+using ListAll = viskores::ListReduce<viskores::ListTransform<List, Predicate>,
+                                     viskores::internal::meta::And,
+                                     std::true_type>;
 
 /// \brief Determines whether any of the types in the list are "true."
 ///
@@ -864,8 +878,9 @@ using ListAll =
 /// ```
 ///
 template <typename List, template <typename> class Predicate = viskores::internal::meta::Identity>
-using ListAny =
-  viskores::ListReduce<viskores::ListTransform<List, Predicate>, viskores::internal::meta::Or, std::false_type>;
+using ListAny = viskores::ListReduce<viskores::ListTransform<List, Predicate>,
+                                     viskores::internal::meta::Or,
+                                     std::false_type>;
 
 #undef VISKORES_CHECK_LIST_SIZE
 

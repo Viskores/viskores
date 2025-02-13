@@ -12,11 +12,11 @@
 #include <viskores/worklet/Keys.h>
 #include <viskores/worklet/Keys.hxx>
 
-#define VISKORES_KEYS_EXPORT(T)                                                       \
-  template class VISKORES_WORKLET_EXPORT viskores::worklet::Keys<T>;                       \
+#define VISKORES_KEYS_EXPORT(T)                                                                \
+  template class VISKORES_WORKLET_EXPORT viskores::worklet::Keys<T>;                           \
   template VISKORES_WORKLET_EXPORT VISKORES_CONT void viskores::worklet::Keys<T>::BuildArrays( \
-    const viskores::cont::ArrayHandle<T>& keys,                                        \
-    viskores::worklet::KeysSortType sort,                                              \
+    const viskores::cont::ArrayHandle<T>& keys,                                                \
+    viskores::worklet::KeysSortType sort,                                                      \
     viskores::cont::DeviceAdapterId device)
 
 VISKORES_KEYS_EXPORT(viskores::HashType);

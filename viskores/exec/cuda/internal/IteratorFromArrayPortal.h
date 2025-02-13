@@ -74,7 +74,8 @@ private:
   VISKORES_EXEC
   viskores::internal::ArrayPortalValueReference<ArrayPortalType> dereference() const
   {
-    return viskores::internal::ArrayPortalValueReference<ArrayPortalType>(this->Portal, this->Index);
+    return viskores::internal::ArrayPortalValueReference<ArrayPortalType>(this->Portal,
+                                                                          this->Index);
   }
 
   VISKORES_EXEC

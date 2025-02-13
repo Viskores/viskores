@@ -163,8 +163,8 @@ public:
   {
   }
 
-  VISKORES_CONT SuperArcVolumetricComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                                 viskores::cont::Token& token)
+  VISKORES_CONT SuperArcVolumetricComparatorImpl
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token)
   {
     return SuperArcVolumetricComparatorImpl(
       this->Weight, this->SuperArcList, this->PairsAtLowEnd, device, token);

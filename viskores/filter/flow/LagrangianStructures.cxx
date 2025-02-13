@@ -72,8 +72,8 @@ public:
   using InputDomain = _1;
 
   VISKORES_EXEC void operator()(const viskores::Id index,
-                            const viskores::Vec3f& seed,
-                            viskores::Particle& particle) const
+                                const viskores::Vec3f& seed,
+                                viskores::Particle& particle) const
   {
     particle.SetID(index);
     particle.SetPosition(seed);
@@ -83,7 +83,8 @@ public:
 } //detail
 
 
-VISKORES_CONT viskores::cont::DataSet LagrangianStructures::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet LagrangianStructures::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   using Structured2DType = viskores::cont::CellSetStructured<2>;
   using Structured3DType = viskores::cont::CellSetStructured<3>;
@@ -106,8 +107,8 @@ VISKORES_CONT viskores::cont::DataSet LagrangianStructures::DoExecute(const visk
     viskores::Id3 lcsGridDims = this->GetAuxiliaryGridDimensions();
     viskores::Bounds inputBounds = coordinates.GetBounds();
     viskores::Vec3f origin(static_cast<viskores::FloatDefault>(inputBounds.X.Min),
-                       static_cast<viskores::FloatDefault>(inputBounds.Y.Min),
-                       static_cast<viskores::FloatDefault>(inputBounds.Z.Min));
+                           static_cast<viskores::FloatDefault>(inputBounds.Y.Min),
+                           static_cast<viskores::FloatDefault>(inputBounds.Z.Min));
     viskores::Vec3f spacing;
     spacing[0] = static_cast<viskores::FloatDefault>(inputBounds.X.Length()) /
       static_cast<viskores::FloatDefault>(lcsGridDims[0] - 1);
@@ -142,8 +143,9 @@ VISKORES_CONT viskores::cont::DataSet LagrangianStructures::DoExecute(const visk
   {
     const auto field = input.GetField(this->GetActiveFieldName());
 
-    FieldType velocities(field.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>(),
-                         field.GetAssociation());
+    FieldType velocities(
+      field.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>(),
+      field.GetAssociation());
     GridEvaluator evaluator(input.GetCoordinateSystem(), input.GetCellSet(), velocities);
     Stepper integrator(evaluator, stepSize);
     viskores::worklet::flow::ParticleAdvection particles;
@@ -177,9 +179,8 @@ VISKORES_CONT viskores::cont::DataSet LagrangianStructures::DoExecute(const visk
   }
 
 
-  auto fieldmapper = [&](viskores::cont::DataSet& dataset, const viskores::cont::Field& field) {
-    MapField(dataset, field);
-  };
+  auto fieldmapper = [&](viskores::cont::DataSet& dataset, const viskores::cont::Field& field)
+  { MapField(dataset, field); };
   viskores::cont::DataSet output = this->CreateResultCoordinateSystem(
     input, lcsInput.GetCellSet(), lcsInput.GetCoordinateSystem(), fieldmapper);
   output.AddPointField(this->GetOutputFieldName(), outputField);

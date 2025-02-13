@@ -93,7 +93,10 @@ public:
   ///
   VISKORES_SUPPRESS_EXEC_WARNINGS
   VISKORES_EXEC_CONT
-  IteratorType GetBegin() const { return viskores::cont::internal::make_IteratorBegin(this->Portal); }
+  IteratorType GetBegin() const
+  {
+    return viskores::cont::internal::make_IteratorBegin(this->Portal);
+  }
 
   /// Returns an iterator pointing to one past the end of the ArrayPortal.
   ///

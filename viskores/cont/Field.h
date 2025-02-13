@@ -99,8 +99,8 @@ public:
   /// Create a field with the given name, association, and data.
   template <typename T, typename Storage>
   VISKORES_CONT Field(std::string name,
-                  Association association,
-                  const viskores::cont::ArrayHandle<T, Storage>& data)
+                      Association association,
+                      const viskores::cont::ArrayHandle<T, Storage>& data)
     : Field(name, association, viskores::cont::UnknownArrayHandle{ data })
   {
   }
@@ -247,7 +247,8 @@ private:
 template <typename Functor, typename... Args>
 void CastAndCall(const viskores::cont::Field& field, Functor&& f, Args&&... args)
 {
-  viskores::cont::CastAndCall(field.GetData(), std::forward<Functor>(f), std::forward<Args>(args)...);
+  viskores::cont::CastAndCall(
+    field.GetData(), std::forward<Functor>(f), std::forward<Args>(args)...);
 }
 
 
@@ -255,44 +256,46 @@ void CastAndCall(const viskores::cont::Field& field, Functor&& f, Args&&... args
 /// Convenience functions to build fields from C style arrays and std::vector
 template <typename T>
 viskores::cont::Field make_Field(std::string name,
-                             Field::Association association,
-                             const T* data,
-                             viskores::Id size,
-                             viskores::CopyFlag copy)
+                                 Field::Association association,
+                                 const T* data,
+                                 viskores::Id size,
+                                 viskores::CopyFlag copy)
 {
-  return viskores::cont::Field(name, association, viskores::cont::make_ArrayHandle(data, size, copy));
+  return viskores::cont::Field(
+    name, association, viskores::cont::make_ArrayHandle(data, size, copy));
 }
 
 template <typename T>
 viskores::cont::Field make_Field(std::string name,
-                             Field::Association association,
-                             const std::vector<T>& data,
-                             viskores::CopyFlag copy)
+                                 Field::Association association,
+                                 const std::vector<T>& data,
+                                 viskores::CopyFlag copy)
 {
   return viskores::cont::Field(name, association, viskores::cont::make_ArrayHandle(data, copy));
 }
 
 template <typename T>
 viskores::cont::Field make_FieldMove(std::string name,
-                                 Field::Association association,
-                                 std::vector<T>&& data)
+                                     Field::Association association,
+                                     std::vector<T>&& data)
 {
-  return viskores::cont::Field(name, association, viskores::cont::make_ArrayHandleMove(std::move(data)));
+  return viskores::cont::Field(
+    name, association, viskores::cont::make_ArrayHandleMove(std::move(data)));
 }
 
 template <typename T>
 viskores::cont::Field make_Field(std::string name,
-                             Field::Association association,
-                             std::vector<T>&& data,
-                             viskores::CopyFlag viskoresNotUsed(copy))
+                                 Field::Association association,
+                                 std::vector<T>&& data,
+                                 viskores::CopyFlag viskoresNotUsed(copy))
 {
   return make_FieldMove(name, association, std::move(data));
 }
 
 template <typename T>
 viskores::cont::Field make_Field(std::string name,
-                             Field::Association association,
-                             std::initializer_list<T>&& data)
+                                 Field::Association association,
+                                 std::initializer_list<T>&& data)
 {
   return make_FieldMove(name, association, viskores::cont::make_ArrayHandle(std::move(data)));
 }
@@ -301,21 +304,23 @@ viskores::cont::Field make_Field(std::string name,
 
 /// Convenience function to build point fields from viskores::cont::ArrayHandle
 template <typename T, typename S>
-viskores::cont::Field make_FieldPoint(std::string name, const viskores::cont::ArrayHandle<T, S>& data)
+viskores::cont::Field make_FieldPoint(std::string name,
+                                      const viskores::cont::ArrayHandle<T, S>& data)
 {
   return viskores::cont::Field(name, viskores::cont::Field::Association::Points, data);
 }
 
 /// Convenience function to build point fields from viskores::cont::UnknownArrayHandle
 inline viskores::cont::Field make_FieldPoint(std::string name,
-                                         const viskores::cont::UnknownArrayHandle& data)
+                                             const viskores::cont::UnknownArrayHandle& data)
 {
   return viskores::cont::Field(name, viskores::cont::Field::Association::Points, data);
 }
 
 /// Convenience function to build cell fields from viskores::cont::ArrayHandle
 template <typename T, typename S>
-viskores::cont::Field make_FieldCell(std::string name, const viskores::cont::ArrayHandle<T, S>& data)
+viskores::cont::Field make_FieldCell(std::string name,
+                                     const viskores::cont::ArrayHandle<T, S>& data)
 {
   return viskores::cont::Field(name, viskores::cont::Field::Association::Cells, data);
 }
@@ -323,7 +328,7 @@ viskores::cont::Field make_FieldCell(std::string name, const viskores::cont::Arr
 
 /// Convenience function to build cell fields from viskores::cont::UnknownArrayHandle
 inline viskores::cont::Field make_FieldCell(std::string name,
-                                        const viskores::cont::UnknownArrayHandle& data)
+                                            const viskores::cont::UnknownArrayHandle& data)
 {
   return viskores::cont::Field(name, viskores::cont::Field::Association::Cells, data);
 }

@@ -23,7 +23,7 @@ template <typename T>
 void CheckTraits(const T&, viskores::IdComponent numComponents)
 {
   VISKORES_TEST_ASSERT((std::is_same<typename viskores::TypeTraits<T>::DimensionalityTag,
-                                 viskores::TypeTraitsVectorTag>::value));
+                                     viskores::TypeTraitsVectorTag>::value));
   VISKORES_TEST_ASSERT(viskores::VecTraits<T>::NUM_COMPONENTS == numComponents);
 }
 

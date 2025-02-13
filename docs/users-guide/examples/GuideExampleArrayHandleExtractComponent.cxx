@@ -21,11 +21,15 @@ void CheckArray(const ArrayHandleType array)
   VISKORES_TEST_ASSERT(array.GetNumberOfValues() == 3, "Permuted array has wrong size.");
 
   auto portal = array.ReadPortal();
-  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 3, "Permuted portal has wrong size.");
+  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 3,
+                       "Permuted portal has wrong size.");
 
-  VISKORES_TEST_ASSERT(test_equal(portal.Get(0), 0.2), "Permuted array has wrong value.");
-  VISKORES_TEST_ASSERT(test_equal(portal.Get(1), 1.2), "Permuted array has wrong value.");
-  VISKORES_TEST_ASSERT(test_equal(portal.Get(2), 2.2), "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(0), 0.2),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(1), 1.2),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(2), 2.2),
+                       "Permuted array has wrong value.");
 }
 
 void Test()

@@ -69,7 +69,8 @@ namespace scalar_topology
 namespace internal
 {
 
-SelectTopVolumeContoursBlock::SelectTopVolumeContoursBlock(viskores::Id localBlockNo, int globalBlockId)
+SelectTopVolumeContoursBlock::SelectTopVolumeContoursBlock(viskores::Id localBlockNo,
+                                                           int globalBlockId)
   : LocalBlockNo(localBlockNo)
   , GlobalBlockId(globalBlockId)
 {
@@ -126,8 +127,8 @@ void SelectTopVolumeContoursBlock::SortBranchByVolume(
   // then it is a leaf-leaf branch
   viskores::cont::Invoker invoke;
 
-  viskores::worklet::scalar_topology::select_top_volume_contours::ClarifyBranchEndSupernodeTypeWorklet
-    clarifyNodeTypeWorklet(totalVolume);
+  viskores::worklet::scalar_topology::select_top_volume_contours::
+    ClarifyBranchEndSupernodeTypeWorklet clarifyNodeTypeWorklet(totalVolume);
 
   invoke(clarifyNodeTypeWorklet,
          lowerEndSuperarcId,
@@ -142,7 +143,8 @@ void SelectTopVolumeContoursBlock::SortBranchByVolume(
     hierarchicalTreeDataSet.GetField("UpperEndValue").GetData();
 
   // Based on the direction info of the branch, store epsilon direction and isovalue of the saddle
-  auto resolveArray = [&](const auto& inArray) {
+  auto resolveArray = [&](const auto& inArray)
+  {
     using InArrayHandleType = std::decay_t<decltype(inArray)>;
     using ValueType = typename InArrayHandleType::ValueType;
 
@@ -150,9 +152,9 @@ void SelectTopVolumeContoursBlock::SortBranchByVolume(
     branchSaddleIsoValue.Allocate(isLowerLeaf.GetNumberOfValues());
     this->BranchSaddleEpsilon.Allocate(isLowerLeaf.GetNumberOfValues());
 
-    viskores::worklet::scalar_topology::select_top_volume_contours::UpdateInfoByBranchDirectionWorklet<
-      ValueType>
-      updateInfoWorklet;
+    viskores::worklet::scalar_topology::select_top_volume_contours::
+      UpdateInfoByBranchDirectionWorklet<ValueType>
+        updateInfoWorklet;
     auto lowerEndValue = hierarchicalTreeDataSet.GetField("LowerEndValue")
                            .GetData()
                            .AsArrayHandle<viskores::cont::ArrayHandle<ValueType>>();
@@ -192,8 +194,10 @@ void SelectTopVolumeContoursBlock::SortBranchByVolume(
   viskores::worklet::contourtree_augmented::PrintHeader(nVolume, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "BranchVolume", branchVolume, -1, resultStream);
-  viskores::worklet::contourtree_augmented::PrintIndices("isLowerLeaf", isLowerLeaf, -1, resultStream);
-  viskores::worklet::contourtree_augmented::PrintIndices("isUpperLeaf", isUpperLeaf, -1, resultStream);
+  viskores::worklet::contourtree_augmented::PrintIndices(
+    "isLowerLeaf", isLowerLeaf, -1, resultStream);
+  viskores::worklet::contourtree_augmented::PrintIndices(
+    "isUpperLeaf", isUpperLeaf, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "LowerEndIntrinsicVol", lowerEndIntrinsicVolume, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
@@ -206,7 +210,8 @@ void SelectTopVolumeContoursBlock::SortBranchByVolume(
     "LowerEndSuperarc", lowerEndSuperarcId, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "UpperEndSuperarc", upperEndSuperarcId, -1, resultStream);
-  viskores::worklet::contourtree_augmented::PrintIndices("BranchRoot", branchRoot, -1, resultStream);
+  viskores::worklet::contourtree_augmented::PrintIndices(
+    "BranchRoot", branchRoot, -1, resultStream);
   resultStream << std::endl;
   VISKORES_LOG_S(viskores::cont::LogLevel::Info, resultStream.str());
 #endif

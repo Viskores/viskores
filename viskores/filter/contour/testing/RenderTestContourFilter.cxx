@@ -45,7 +45,8 @@ void TestContourFilterWedge()
   result.PrintSummary(std::cout);
 
   viskores::rendering::testing::RenderTestOptions testOptions;
-  viskores::rendering::testing::RenderTest(result, "gyroid", "filter/contour-wedge.png", testOptions);
+  viskores::rendering::testing::RenderTest(
+    result, "gyroid", "filter/contour-wedge.png", testOptions);
 }
 
 void TestContourFilterUniform()
@@ -110,8 +111,8 @@ void TestContourFilterUniformBoundaries()
   // sizes were not the same.
 
   viskores::cont::DataSetBuilderUniform dsb;
-  viskores::cont::DataSet dataSet =
-    dsb.Create({ 9, 5, 3 }, viskores::Vec3f_64{ 0.0, 0.0, 0.0 }, viskores::Vec3f_64{ 0.125, 0.25, 0.5 });
+  viskores::cont::DataSet dataSet = dsb.Create(
+    { 9, 5, 3 }, viskores::Vec3f_64{ 0.0, 0.0, 0.0 }, viskores::Vec3f_64{ 0.125, 0.25, 0.5 });
 
   std::string fieldName = "pointvar";
   viskores::filter::field_transform::PointElevation elevation;
@@ -157,7 +158,8 @@ void TestContourFilterTangle()
   viskores::rendering::testing::RenderTestOptions testOptions;
   testOptions.Colors = { { 0.20f, 0.80f, 0.20f } };
   testOptions.EnableAnnotations = false;
-  viskores::rendering::testing::RenderTest(result, "tangle", "filter/contour-tangle.png", testOptions);
+  viskores::rendering::testing::RenderTest(
+    result, "tangle", "filter/contour-tangle.png", testOptions);
 }
 
 void TestContourFilter()

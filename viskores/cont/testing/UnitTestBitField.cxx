@@ -70,7 +70,10 @@
 
 // Test with some trailing bits in partial last word:
 #define NUM_BITS \
-  viskores::Id { 7681 }
+  viskores::Id   \
+  {              \
+    7681         \
+  }
 
 namespace
 {
@@ -167,17 +170,17 @@ void TestBlockAllocation()
   const viskores::BufferSizeType expectedBytes = numBlocks * blockSize;
 
   VISKORES_TEST_ASSERT(bytesInFieldData == expectedBytes,
-                   "The BitField allocation does not round up to the nearest "
-                   "block. This can cause access-by-word to read/write invalid "
-                   "memory.");
+                       "The BitField allocation does not round up to the nearest "
+                       "block. This can cause access-by-word to read/write invalid "
+                       "memory.");
 }
 
 template <typename PortalType>
 VISKORES_EXEC_CONT bool TestBitValue(const char* operation,
-                                 viskores::Id i,
-                                 PortalType portal,
-                                 bool& bit,
-                                 bool originalBit)
+                                     viskores::Id i,
+                                     PortalType portal,
+                                     bool& bit,
+                                     bool originalBit)
 {
   auto expected = bit;
   auto result = portal.GetBitAtomic(i);
@@ -238,10 +241,10 @@ VISKORES_EXEC_CONT bool HelpTestBit(viskores::Id i, PortalType portal)
 
 template <typename WordType, typename PortalType>
 VISKORES_EXEC_CONT bool TestWordValue(const char* operation,
-                                  viskores::Id i,
-                                  const PortalType& portal,
-                                  WordType& word,
-                                  WordType originalWord)
+                                      viskores::Id i,
+                                      const PortalType& portal,
+                                      WordType& word,
+                                      WordType originalWord)
 {
   auto expected = word;
   auto result = portal.template GetWordAtomic<WordType>(i);
@@ -464,44 +467,48 @@ void TestExecutionPortals()
 {
   viskores::cont::BitField field = RandomBitField();
 
-  viskores::cont::TryExecute([&](auto device) {
-    viskores::cont::Token token;
-    HelpTestPortalsExecution(field.PrepareForInPlace(device, token), device);
-    return true;
-  });
+  viskores::cont::TryExecute(
+    [&](auto device)
+    {
+      viskores::cont::Token token;
+      HelpTestPortalsExecution(field.PrepareForInPlace(device, token), device);
+      return true;
+    });
 }
 
 VISKORES_CONT
 void TestFinalWordMask()
 {
-  auto testMask32 = [](viskores::Id numBits, viskores::UInt32 expectedMask) {
+  auto testMask32 = [](viskores::Id numBits, viskores::UInt32 expectedMask)
+  {
     viskores::cont::BitField field;
     field.Allocate(numBits);
     auto mask = field.ReadPortal().GetFinalWordMask<viskores::UInt32>();
 
     VISKORES_TEST_ASSERT(expectedMask == mask,
-                     "Unexpected mask for BitField size ",
-                     numBits,
-                     ": Expected 0x",
-                     std::hex,
-                     expectedMask,
-                     " got 0x",
-                     mask);
+                         "Unexpected mask for BitField size ",
+                         numBits,
+                         ": Expected 0x",
+                         std::hex,
+                         expectedMask,
+                         " got 0x",
+                         mask);
   };
 
-  auto testMask64 = [](viskores::Id numBits, viskores::UInt64 expectedMask) {
+  auto testMask64 = [](viskores::Id numBits, viskores::UInt64 expectedMask)
+  {
     viskores::cont::BitField field;
     field.Allocate(numBits);
     auto mask = field.ReadPortal().GetFinalWordMask<viskores::UInt64>();
 
     VISKORES_TEST_ASSERT(expectedMask == mask,
-                     "Unexpected mask for BitField size ",
-                     numBits,
-                     ": Expected 0x",
-                     std::hex,
-                     expectedMask,
-                     " got 0x",
-                     mask);
+                         "Unexpected mask for BitField size ",
+                         numBits,
+                         ": Expected 0x",
+                         std::hex,
+                         expectedMask,
+                         " got 0x",
+                         mask);
   };
 
   testMask32(0, 0x00000000);
@@ -603,11 +610,11 @@ void TestArrayHandleBitField()
   const viskores::Id numBits = handle.GetNumberOfValues();
 
   VISKORES_TEST_ASSERT(numBits == NUM_BITS,
-                   "ArrayHandleBitField returned the wrong number of values. "
-                   "Expected: ",
-                   NUM_BITS,
-                   " got: ",
-                   numBits);
+                       "ArrayHandleBitField returned the wrong number of values. "
+                       "Expected: ",
+                       NUM_BITS,
+                       " got: ",
+                       numBits);
 
   invoke(ArrayHandleBitFieldChecker{ false }, handle);
   invoke(ArrayHandleBitFieldChecker{ true }, handle);
@@ -682,7 +689,8 @@ static void TestArrayInvokeWorklet2()
   {
     // The worklet flips the bitfield in place after choosing true/false paths
     VISKORES_TEST_ASSERT(condVals.GetBit(i) == !RandomBitFromIndex(i));
-    VISKORES_TEST_ASSERT(outVals.Get(i) == (!condVals.GetBit(i) ? trueVals.Get(i) : falseVals.Get(i)));
+    VISKORES_TEST_ASSERT(outVals.Get(i) ==
+                         (!condVals.GetBit(i) ? trueVals.Get(i) : falseVals.Get(i)));
   }
 }
 

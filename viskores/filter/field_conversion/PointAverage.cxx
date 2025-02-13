@@ -32,11 +32,12 @@ viskores::cont::DataSet PointAverage::DoExecute(const viskores::cont::DataSet& i
   viskores::cont::UnknownArrayHandle inArray = field.GetData();
   viskores::cont::UnknownArrayHandle outArray = inArray.NewInstanceBasic();
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
     auto result = outArray.ExtractArrayFromComponents<T>();
-    using SupportedCellSets =
-      viskores::ListAppend<viskores::List<viskores::cont::CellSetExtrude>, VISKORES_DEFAULT_CELL_SET_LIST>;
+    using SupportedCellSets = viskores::ListAppend<viskores::List<viskores::cont::CellSetExtrude>,
+                                                   VISKORES_DEFAULT_CELL_SET_LIST>;
 
     this->Invoke(viskores::worklet::PointAverage{},
                  cellSet.ResetCellSetList<SupportedCellSets>(),

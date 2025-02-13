@@ -55,7 +55,9 @@ VISKORES_EXEC inline viskores::Id ComputeFlatIndex(const DimVec3& idx, const Dim
   return idx[0] + (dim[0] * (idx[1] + (dim[1] * idx[2])));
 }
 
-VISKORES_EXEC inline Grid ComputeLeafGrid(const DimVec3& idx, const DimVec3& dim, const Grid& l1Grid)
+VISKORES_EXEC inline Grid ComputeLeafGrid(const DimVec3& idx,
+                                          const DimVec3& dim,
+                                          const Grid& l1Grid)
 {
   return { dim,
            0,
@@ -106,10 +108,10 @@ private:
   // should be added to test if the point actually falls on the cell.
   template <typename CellShapeTag, typename CoordsType>
   VISKORES_EXEC static viskores::ErrorCode PointInsideCell(FloatVec3 point,
-                                                   CellShapeTag cellShape,
-                                                   CoordsType cellPoints,
-                                                   FloatVec3& parametricCoordinates,
-                                                   bool& inside)
+                                                           CellShapeTag cellShape,
+                                                           CoordsType cellPoints,
+                                                           FloatVec3& parametricCoordinates,
+                                                           bool& inside)
   {
     auto bounds = viskores::internal::cl_uniform_bins::ComputeCellBounds(cellPoints);
     if (point[0] >= bounds.Min[0] && point[0] <= bounds.Max[0] && point[1] >= bounds.Min[1] &&
@@ -130,15 +132,15 @@ private:
 public:
   template <typename CellSetType>
   VISKORES_CONT CellLocatorTwoLevel(const viskores::internal::cl_uniform_bins::Grid& topLevelGrid,
-                                const viskores::cont::ArrayHandle<DimVec3>& leafDimensions,
-                                const viskores::cont::ArrayHandle<viskores::Id>& leafStartIndex,
-                                const viskores::cont::ArrayHandle<viskores::Id>& cellStartIndex,
-                                const viskores::cont::ArrayHandle<viskores::Id>& cellCount,
-                                const viskores::cont::ArrayHandle<viskores::Id>& cellIds,
-                                const CellSetType& cellSet,
-                                const viskores::cont::CoordinateSystem& coords,
-                                viskores::cont::DeviceAdapterId device,
-                                viskores::cont::Token& token)
+                                    const viskores::cont::ArrayHandle<DimVec3>& leafDimensions,
+                                    const viskores::cont::ArrayHandle<viskores::Id>& leafStartIndex,
+                                    const viskores::cont::ArrayHandle<viskores::Id>& cellStartIndex,
+                                    const viskores::cont::ArrayHandle<viskores::Id>& cellCount,
+                                    const viskores::cont::ArrayHandle<viskores::Id>& cellIds,
+                                    const CellSetType& cellSet,
+                                    const viskores::cont::CoordinateSystem& coords,
+                                    viskores::cont::DeviceAdapterId device,
+                                    viskores::cont::Token& token)
     : TopLevel(topLevelGrid)
     , LeafDimensions(leafDimensions.PrepareForInput(device, token))
     , LeafStartIndex(leafStartIndex.PrepareForInput(device, token))
@@ -160,7 +162,9 @@ public:
   };
 
   VISKORES_EXEC
-  viskores::ErrorCode FindCell(const FloatVec3& point, viskores::Id& cellId, FloatVec3& parametric) const
+  viskores::ErrorCode FindCell(const FloatVec3& point,
+                               viskores::Id& cellId,
+                               FloatVec3& parametric) const
   {
     LastCell lastCell;
     return this->FindCellImpl(point, cellId, parametric, lastCell);
@@ -168,9 +172,9 @@ public:
 
   VISKORES_EXEC
   viskores::ErrorCode FindCell(const FloatVec3& point,
-                           viskores::Id& cellId,
-                           FloatVec3& parametric,
-                           LastCell& lastCell) const
+                               viskores::Id& cellId,
+                               FloatVec3& parametric,
+                               LastCell& lastCell) const
   {
     viskores::Vec3f pc;
     //See if point is inside the last cell.
@@ -198,8 +202,8 @@ public:
 private:
   VISKORES_EXEC
   viskores::ErrorCode PointInCell(const viskores::Vec3f& point,
-                              const viskores::Id& cid,
-                              viskores::Vec3f& parametric) const
+                                  const viskores::Id& cid,
+                                  viskores::Vec3f& parametric) const
   {
     auto indices = this->CellSet.GetIndices(cid);
     auto pts = viskores::make_VecFromPortalPermute(&indices, this->Coords);
@@ -217,9 +221,9 @@ private:
 
   VISKORES_EXEC
   viskores::ErrorCode PointInLeaf(const FloatVec3& point,
-                              const viskores::Id& leafIdx,
-                              viskores::Id& cellId,
-                              FloatVec3& parametric) const
+                                  const viskores::Id& leafIdx,
+                                  viskores::Id& cellId,
+                                  FloatVec3& parametric) const
   {
     viskores::Id start = this->CellStartIndex.Get(leafIdx);
     viskores::Id end = start + this->CellCount.Get(leafIdx);
@@ -243,9 +247,9 @@ private:
 
   VISKORES_EXEC
   viskores::ErrorCode FindCellImpl(const FloatVec3& point,
-                               viskores::Id& cellId,
-                               FloatVec3& parametric,
-                               LastCell& lastCell) const
+                                   viskores::Id& cellId,
+                                   FloatVec3& parametric,
+                                   LastCell& lastCell) const
   {
     using namespace viskores::internal::cl_uniform_bins;
 

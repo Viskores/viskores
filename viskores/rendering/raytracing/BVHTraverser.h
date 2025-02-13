@@ -27,13 +27,13 @@ namespace raytracing
 
 template <typename BVHPortalType, typename Precision>
 VISKORES_EXEC inline bool IntersectAABB(const BVHPortalType& bvh,
-                                    const viskores::Int32& currentNode,
-                                    const viskores::Vec<Precision, 3>& originDir,
-                                    const viskores::Vec<Precision, 3>& invDir,
-                                    const Precision& closestDistance,
-                                    bool& hitLeftChild,
-                                    bool& hitRightChild,
-                                    const Precision& minDistance) //Find hit after this distance
+                                        const viskores::Int32& currentNode,
+                                        const viskores::Vec<Precision, 3>& originDir,
+                                        const viskores::Vec<Precision, 3>& invDir,
+                                        const Precision& closestDistance,
+                                        bool& hitLeftChild,
+                                        bool& hitRightChild,
+                                        const Precision& minDistance) //Find hit after this distance
 {
   viskores::Vec4f_32 first4 = bvh.Get(currentNode);
   viskores::Vec4f_32 second4 = bvh.Get(currentNode + 1);
@@ -47,10 +47,12 @@ VISKORES_EXEC inline bool IntersectAABB(const BVHPortalType& bvh,
   Precision zmax0 = second4[1] * invDir[2] - originDir[2];
 
   Precision min0 = viskores::Max(
-    viskores::Max(viskores::Max(viskores::Min(ymin0, ymax0), viskores::Min(xmin0, xmax0)), viskores::Min(zmin0, zmax0)),
+    viskores::Max(viskores::Max(viskores::Min(ymin0, ymax0), viskores::Min(xmin0, xmax0)),
+                  viskores::Min(zmin0, zmax0)),
     minDistance);
   Precision max0 = viskores::Min(
-    viskores::Min(viskores::Min(viskores::Max(ymin0, ymax0), viskores::Max(xmin0, xmax0)), viskores::Max(zmin0, zmax0)),
+    viskores::Min(viskores::Min(viskores::Max(ymin0, ymax0), viskores::Max(xmin0, xmax0)),
+                  viskores::Max(zmin0, zmax0)),
     closestDistance);
   hitLeftChild = (max0 >= min0);
 
@@ -62,10 +64,12 @@ VISKORES_EXEC inline bool IntersectAABB(const BVHPortalType& bvh,
   Precision zmax1 = third4[3] * invDir[2] - originDir[2];
 
   Precision min1 = viskores::Max(
-    viskores::Max(viskores::Max(viskores::Min(ymin1, ymax1), viskores::Min(xmin1, xmax1)), viskores::Min(zmin1, zmax1)),
+    viskores::Max(viskores::Max(viskores::Min(ymin1, ymax1), viskores::Min(xmin1, xmax1)),
+                  viskores::Min(zmin1, zmax1)),
     minDistance);
   Precision max1 = viskores::Min(
-    viskores::Min(viskores::Min(viskores::Max(ymin1, ymax1), viskores::Max(xmin1, xmax1)), viskores::Max(zmin1, zmax1)),
+    viskores::Min(viskores::Min(viskores::Max(ymin1, ymax1), viskores::Max(xmin1, xmax1)),
+                  viskores::Max(zmin1, zmax1)),
     closestDistance);
   hitRightChild = (max1 >= min1);
   return (min0 > min1);
@@ -116,17 +120,17 @@ public:
               typename InnerNodePortalType,
               typename LeafPortalType>
     VISKORES_EXEC void operator()(const viskores::Vec<Precision, 3>& dir,
-                              const viskores::Vec<Precision, 3>& origin,
-                              Precision& distance,
-                              const Precision& minDistance,
-                              const Precision& maxDistance,
-                              Precision& minU,
-                              Precision& minV,
-                              viskores::Id& hitIndex,
-                              const PointPortalType& points,
-                              LeafType& leafIntersector,
-                              const InnerNodePortalType& flatBVH,
-                              const LeafPortalType& leafs) const
+                                  const viskores::Vec<Precision, 3>& origin,
+                                  Precision& distance,
+                                  const Precision& minDistance,
+                                  const Precision& maxDistance,
+                                  Precision& minU,
+                                  Precision& minV,
+                                  viskores::Id& hitIndex,
+                                  const PointPortalType& points,
+                                  LeafType& leafIntersector,
+                                  const InnerNodePortalType& flatBVH,
+                                  const LeafPortalType& leafs) const
     {
       Precision closestDistance = maxDistance;
       distance = maxDistance;
@@ -220,9 +224,9 @@ public:
 
   template <typename Precision, typename LeafIntersectorType>
   VISKORES_CONT void IntersectRays(Ray<Precision>& rays,
-                               LinearBVH& bvh,
-                               LeafIntersectorType& leafIntersector,
-                               viskores::cont::CoordinateSystem& coordsHandle)
+                                   LinearBVH& bvh,
+                                   LeafIntersectorType& leafIntersector,
+                                   viskores::cont::CoordinateSystem& coordsHandle)
   {
     viskores::worklet::DispatcherMapField<Intersector> intersectDispatch;
     intersectDispatch.Invoke(rays.Dir,

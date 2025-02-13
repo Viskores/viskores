@@ -29,19 +29,21 @@ using MyCommonTypes = viskores::ListAppend<Vec2List, viskores::TypeListCommon>;
 //// END-EXAMPLE CustomTypeLists
 ////
 
-VISKORES_STATIC_ASSERT((std::is_same<viskores::ListAt<Vec2List, 0>, viskores::Vec2f_32>::value));
-VISKORES_STATIC_ASSERT((std::is_same<viskores::ListAt<Vec2List, 1>, viskores::Vec2f_64>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<viskores::ListAt<Vec2List, 0>, viskores::Vec2f_32>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<viskores::ListAt<Vec2List, 1>, viskores::Vec2f_64>::value));
 
 VISKORES_STATIC_ASSERT((std::is_same<MyCommonTypes,
-                                 viskores::List<viskores::Vec2f_32,
-                                            viskores::Vec2f_64,
-                                            viskores::UInt8,
-                                            viskores::Int32,
-                                            viskores::Int64,
-                                            viskores::Float32,
-                                            viskores::Float64,
-                                            viskores::Vec3f_32,
-                                            viskores::Vec3f_64>>::value));
+                                     viskores::List<viskores::Vec2f_32,
+                                                    viskores::Vec2f_64,
+                                                    viskores::UInt8,
+                                                    viskores::Int32,
+                                                    viskores::Int64,
+                                                    viskores::Float32,
+                                                    viskores::Float64,
+                                                    viskores::Vec3f_32,
+                                                    viskores::Vec3f_64>>::value));
 
 } // anonymous namespace
 
@@ -187,7 +189,8 @@ void TestListHas()
   ////
   //// BEGIN-EXAMPLE ListHas
   ////
-  using MyList = viskores::List<viskores::Int8, viskores::Int16, viskores::Int32, viskores::Int64>;
+  using MyList =
+    viskores::List<viskores::Int8, viskores::Int16, viskores::Int32, viskores::Int64>;
 
   constexpr bool hasInt = viskores::ListHas<MyList, int>::value;
   // hasInt is true
@@ -208,7 +211,8 @@ void TestListIndices()
   ////
   using MyList = viskores::List<viskores::Int8, viskores::Int32, viskores::Int64>;
 
-  constexpr viskores::IdComponent indexOfInt8 = viskores::ListIndexOf<MyList, viskores::Int8>::value;
+  constexpr viskores::IdComponent indexOfInt8 =
+    viskores::ListIndexOf<MyList, viskores::Int8>::value;
   // indexOfInt8 is 0
   constexpr viskores::IdComponent indexOfInt32 =
     viskores::ListIndexOf<MyList, viskores::Int32>::value;
@@ -255,13 +259,15 @@ using AllMyTypes = viskores::ListAppend<BigTypes, MediumTypes, SmallTypes>;
 //// END-EXAMPLE ListAppend
 ////
 VISKORES_STATIC_ASSERT(
-  (std::is_same<SmallAndBigTypes,
-                viskores::List<viskores::Int8, viskores::Int64, viskores::Float64>>::value));
-VISKORES_STATIC_ASSERT(
   (std::is_same<
-    AllMyTypes,
-    viskores::List<viskores::Int64, viskores::Float64, viskores::Int32, viskores::Float32, viskores::Int8>>::
-     value));
+    SmallAndBigTypes,
+    viskores::List<viskores::Int8, viskores::Int64, viskores::Float64>>::value));
+VISKORES_STATIC_ASSERT((std::is_same<AllMyTypes,
+                                     viskores::List<viskores::Int64,
+                                                    viskores::Float64,
+                                                    viskores::Int32,
+                                                    viskores::Float32,
+                                                    viskores::Int8>>::value));
 }
 
 namespace TestListIntersect
@@ -269,8 +275,10 @@ namespace TestListIntersect
 ////
 //// BEGIN-EXAMPLE ListIntersect
 ////
-using SignedInts = viskores::List<viskores::Int8, viskores::Int16, viskores::Int32, viskores::Int64>;
-using WordTypes = viskores::List<viskores::Int32, viskores::UInt32, viskores::Int64, viskores::UInt64>;
+using SignedInts =
+  viskores::List<viskores::Int8, viskores::Int16, viskores::Int32, viskores::Int64>;
+using WordTypes =
+  viskores::List<viskores::Int32, viskores::UInt32, viskores::Int64, viskores::UInt64>;
 
 using SignedWords = viskores::ListIntersect<SignedInts, WordTypes>;
 // SignedWords is viskores::List<viskores::Int32, viskores::Int64>
@@ -294,7 +302,8 @@ using MyTuple = viskores::ListApply<MyList, std::tuple>;
 //// END-EXAMPLE ListApply
 ////
 VISKORES_STATIC_ASSERT(
-  (std::is_same<MyTuple, std::tuple<viskores::Id, viskores::Id3, viskores::Vec3f>>::value));
+  (std::is_same<MyTuple,
+                std::tuple<viskores::Id, viskores::Id3, viskores::Vec3f>>::value));
 }
 
 namespace TestListTransform
@@ -312,9 +321,10 @@ using MyVecList = viskores::ListTransform<MyList, MakeVec>;
 ////
 //// END-EXAMPLE ListTransform
 ////
-VISKORES_STATIC_ASSERT((std::is_same<MyVecList,
-                                 viskores::List<viskores::Vec<viskores::Int32, 3>,
-                                            viskores::Vec<viskores::Float32, 3>>>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<MyVecList,
+                viskores::List<viskores::Vec<viskores::Int32, 3>,
+                               viskores::Vec<viskores::Float32, 3>>>::value));
 }
 
 namespace TestListRemoveIf
@@ -322,8 +332,11 @@ namespace TestListRemoveIf
 ////
 //// BEGIN-EXAMPLE ListRemoveIf
 ////
-using MyList =
-  viskores::List<viskores::Int64, viskores::Float64, viskores::Int32, viskores::Float32, viskores::Int8>;
+using MyList = viskores::List<viskores::Int64,
+                              viskores::Float64,
+                              viskores::Int32,
+                              viskores::Float32,
+                              viskores::Int8>;
 
 using FilteredList = viskores::ListRemoveIf<MyList, std::is_integral>;
 // FilteredList is viskores::List<viskores::Float64, viskores::Float32>
@@ -331,7 +344,8 @@ using FilteredList = viskores::ListRemoveIf<MyList, std::is_integral>;
 //// END-EXAMPLE ListRemoveIf
 ////
 VISKORES_STATIC_ASSERT(
-  (std::is_same<FilteredList, viskores::List<viskores::Float64, viskores::Float32>>::value));
+  (std::is_same<FilteredList,
+                viskores::List<viskores::Float64, viskores::Float32>>::value));
 }
 
 namespace TestListCross
@@ -368,22 +382,23 @@ using AllTypes = viskores::ListTransform<CrossTypes, ListPairToType>;
 ////
 //// END-EXAMPLE ListCross
 ////
-VISKORES_STATIC_ASSERT(
-  (std::is_same<CrossTypes,
-                viskores::List<viskores::List<viskores::Int8, std::false_type>,
-                           viskores::List<viskores::Int8, std::true_type>,
-                           viskores::List<viskores::Int32, std::false_type>,
-                           viskores::List<viskores::Int32, std::true_type>,
-                           viskores::List<viskores::Int64, std::false_type>,
-                           viskores::List<viskores::Int64, std::true_type>>>::value));
+VISKORES_STATIC_ASSERT((
+  std::is_same<CrossTypes,
+               viskores::List<viskores::List<viskores::Int8, std::false_type>,
+                              viskores::List<viskores::Int8, std::true_type>,
+                              viskores::List<viskores::Int32, std::false_type>,
+                              viskores::List<viskores::Int32, std::true_type>,
+                              viskores::List<viskores::Int64, std::false_type>,
+                              viskores::List<viskores::Int64, std::true_type>>>::value));
 
-VISKORES_STATIC_ASSERT((std::is_same<AllTypes,
-                                 viskores::List<viskores::Int8,
-                                            viskores::Vec<viskores::Int8, 3>,
-                                            viskores::Int32,
-                                            viskores::Vec<viskores::Int32, 3>,
-                                            viskores::Int64,
-                                            viskores::Vec<viskores::Int64, 3>>>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<AllTypes,
+                viskores::List<viskores::Int8,
+                               viskores::Vec<viskores::Int8, 3>,
+                               viskores::Int32,
+                               viskores::Vec<viskores::Int32, 3>,
+                               viskores::Int64,
+                               viskores::Vec<viskores::Int64, 3>>>::value));
 }
 
 ////
@@ -454,7 +469,7 @@ void TestPrefixSum()
   for (viskores::Id index = 0; index < 10; index++)
   {
     VISKORES_TEST_ASSERT(array.Array[(std::size_t)index] == index + 1,
-                     "Got bad prefix sum.");
+                         "Got bad prefix sum.");
   }
 }
 

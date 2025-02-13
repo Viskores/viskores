@@ -49,7 +49,8 @@ void TryConvertToPointCloud(const viskores::cont::DataSet& dataSet)
     viskores::cont::DataSet pointCloud = convertFilter.Execute(dataSet);
     CheckPointCloudCells(pointCloud, dataSet.GetNumberOfPoints());
 
-    for (viskores::IdComponent coordId = 0; coordId < dataSet.GetNumberOfCoordinateSystems(); ++coordId)
+    for (viskores::IdComponent coordId = 0; coordId < dataSet.GetNumberOfCoordinateSystems();
+         ++coordId)
     {
       const auto& coords = dataSet.GetCoordinateSystem(coordId);
       std::cout << "    coord system " << coords.GetName() << std::endl;
@@ -79,7 +80,8 @@ void TryConvertToPointCloud(const viskores::cont::DataSet& dataSet)
     viskores::cont::DataSet pointCloud = convertFilter.Execute(dataSet);
     CheckPointCloudCells(pointCloud, dataSet.GetNumberOfPoints());
 
-    for (viskores::IdComponent coordId = 0; coordId < dataSet.GetNumberOfCoordinateSystems(); ++coordId)
+    for (viskores::IdComponent coordId = 0; coordId < dataSet.GetNumberOfCoordinateSystems();
+         ++coordId)
     {
       const auto& coords = dataSet.GetCoordinateSystem(coordId);
       std::cout << "    coord system " << coords.GetName() << std::endl;

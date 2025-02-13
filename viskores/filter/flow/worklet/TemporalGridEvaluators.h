@@ -71,8 +71,8 @@ public:
 
   template <typename Point>
   VISKORES_EXEC GridEvaluatorStatus Evaluate(const Point& particle,
-                                         viskores::FloatDefault time,
-                                         viskores::VecVariable<Point, 2>& out) const
+                                             viskores::FloatDefault time,
+                                             viskores::VecVariable<Point, 2>& out) const
   {
     // Validate time is in bounds for the current two slices.
     GridEvaluatorStatus status;
@@ -95,7 +95,7 @@ public:
     // LERP between the two values of calculated fields to obtain the new value
     viskores::FloatDefault proportion = (time - this->TimeOne) / this->TimeDiff;
     VISKORES_ASSERT(e1.GetNumberOfComponents() != 0 &&
-                e1.GetNumberOfComponents() == e2.GetNumberOfComponents());
+                    e1.GetNumberOfComponents() == e2.GetNumberOfComponents());
     out = viskores::VecVariable<Point, 2>{};
     for (viskores::IdComponent index = 0; index < e1.GetNumberOfComponents(); ++index)
       out.Append(viskores::Lerp(e1[index], e2[index], proportion));
@@ -122,11 +122,11 @@ public:
   VISKORES_CONT TemporalGridEvaluator() = default;
 
   VISKORES_CONT TemporalGridEvaluator(const viskores::cont::DataSet& ds1,
-                                  const viskores::FloatDefault t1,
-                                  const FieldType& field1,
-                                  const viskores::cont::DataSet& ds2,
-                                  const viskores::FloatDefault t2,
-                                  const FieldType& field2)
+                                      const viskores::FloatDefault t1,
+                                      const FieldType& field1,
+                                      const viskores::cont::DataSet& ds2,
+                                      const viskores::FloatDefault t2,
+                                      const FieldType& field2)
     : EvaluatorOne(GridEvaluator(ds1, field1))
     , EvaluatorTwo(GridEvaluator(ds2, field2))
     , TimeOne(t1)
@@ -137,9 +137,9 @@ public:
 
 
   VISKORES_CONT TemporalGridEvaluator(GridEvaluator& evaluatorOne,
-                                  const viskores::FloatDefault timeOne,
-                                  GridEvaluator& evaluatorTwo,
-                                  const viskores::FloatDefault timeTwo)
+                                      const viskores::FloatDefault timeOne,
+                                      GridEvaluator& evaluatorTwo,
+                                      const viskores::FloatDefault timeTwo)
     : EvaluatorOne(evaluatorOne)
     , EvaluatorTwo(evaluatorTwo)
     , TimeOne(timeOne)
@@ -148,13 +148,13 @@ public:
   }
 
   VISKORES_CONT TemporalGridEvaluator(const viskores::cont::CoordinateSystem& coordinatesOne,
-                                  const viskores::cont::UnknownCellSet& cellsetOne,
-                                  const FieldType& fieldOne,
-                                  const viskores::FloatDefault timeOne,
-                                  const viskores::cont::CoordinateSystem& coordinatesTwo,
-                                  const viskores::cont::UnknownCellSet& cellsetTwo,
-                                  const FieldType& fieldTwo,
-                                  const viskores::FloatDefault timeTwo)
+                                      const viskores::cont::UnknownCellSet& cellsetOne,
+                                      const FieldType& fieldOne,
+                                      const viskores::FloatDefault timeOne,
+                                      const viskores::cont::CoordinateSystem& coordinatesTwo,
+                                      const viskores::cont::UnknownCellSet& cellsetTwo,
+                                      const FieldType& fieldTwo,
+                                      const viskores::FloatDefault timeTwo)
     : EvaluatorOne(GridEvaluator(coordinatesOne, cellsetOne, fieldOne))
     , EvaluatorTwo(GridEvaluator(coordinatesTwo, cellsetTwo, fieldTwo))
     , TimeOne(timeOne)

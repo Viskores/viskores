@@ -76,7 +76,8 @@ public:
   VISKORES_EXEC_CONT
   viskores::Id operator()(const viskores::Id value) const
   {
-    return static_cast<viskores::Id>(!viskores::worklet::contourtree_augmented::NoSuchElement(value));
+    return static_cast<viskores::Id>(
+      !viskores::worklet::contourtree_augmented::NoSuchElement(value));
   }
 
 private:

@@ -79,7 +79,7 @@ struct TestInterpolateFunctor
       CHECK_CALL(viskores::exec::CellInterpolate(fieldValues, pcoord, shape, interpolatedValue));
 
       VISKORES_TEST_ASSERT(test_equal(fieldValues[pointIndex], interpolatedValue),
-                       "Interpolation at point not point value.");
+                           "Interpolation at point not point value.");
     }
 
     viskores::Vec3f pcoord;
@@ -88,7 +88,7 @@ struct TestInterpolateFunctor
     CHECK_CALL(viskores::exec::CellInterpolate(fieldValues, pcoord, shape, interpolatedValue));
 
     VISKORES_TEST_ASSERT(test_equal(averageValue, interpolatedValue),
-                     "Interpolation at center not average value.");
+                         "Interpolation at center not average value.");
   }
 
   template <typename CellShapeTag, typename IndexVecType, typename FieldPortalType>
@@ -114,11 +114,11 @@ struct TestInterpolateFunctor
       viskores::Vec3f pcoord;
       CHECK_CALL(viskores::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, pcoord));
       FieldType interpolatedValue;
-      CHECK_CALL(
-        viskores::exec::CellInterpolate(pointIndices, fieldValues, pcoord, shape, interpolatedValue));
+      CHECK_CALL(viskores::exec::CellInterpolate(
+        pointIndices, fieldValues, pcoord, shape, interpolatedValue));
 
       VISKORES_TEST_ASSERT(test_equal(fieldValues.Get(pointIndices[pointIndex]), interpolatedValue),
-                       "Interpolation at point not point value.");
+                           "Interpolation at point not point value.");
     }
 
     if (shape.Id != viskores::CELL_SHAPE_POLY_LINE)
@@ -126,11 +126,11 @@ struct TestInterpolateFunctor
       viskores::Vec3f pcoord;
       CHECK_CALL(viskores::exec::ParametricCoordinatesCenter(numPoints, shape, pcoord));
       FieldType interpolatedValue;
-      CHECK_CALL(
-        viskores::exec::CellInterpolate(pointIndices, fieldValues, pcoord, shape, interpolatedValue));
+      CHECK_CALL(viskores::exec::CellInterpolate(
+        pointIndices, fieldValues, pcoord, shape, interpolatedValue));
 
       VISKORES_TEST_ASSERT(test_equal(averageValue, interpolatedValue),
-                       "Interpolation at center not average value.");
+                           "Interpolation at center not average value.");
     }
   }
 
@@ -165,8 +165,10 @@ struct TestInterpolateFunctor
   {
     viskores::IdComponent minPoints;
     viskores::IdComponent maxPoints;
-    GetMinMaxPoints(
-      CellShapeTag(), typename viskores::CellTraits<CellShapeTag>::IsSizeFixed(), minPoints, maxPoints);
+    GetMinMaxPoints(CellShapeTag(),
+                    typename viskores::CellTraits<CellShapeTag>::IsSizeFixed(),
+                    minPoints,
+                    maxPoints);
 
     for (viskores::IdComponent numPoints = minPoints; numPoints <= maxPoints; numPoints++)
     {

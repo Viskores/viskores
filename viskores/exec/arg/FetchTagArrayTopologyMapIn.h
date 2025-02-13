@@ -87,58 +87,63 @@ struct FetchArrayTopologyMapInImplementation
   }
 };
 
-static inline VISKORES_EXEC viskores::VecAxisAlignedPointCoordinates<1> make_VecAxisAlignedPointCoordinates(
-  const viskores::Vec3f& origin,
-  const viskores::Vec3f& spacing,
-  const viskores::Vec<viskores::Id, 1>& logicalId)
+static inline VISKORES_EXEC viskores::VecAxisAlignedPointCoordinates<1>
+make_VecAxisAlignedPointCoordinates(const viskores::Vec3f& origin,
+                                    const viskores::Vec3f& spacing,
+                                    const viskores::Vec<viskores::Id, 1>& logicalId)
 {
-  viskores::Vec3f offsetOrigin(
-    origin[0] + spacing[0] * static_cast<viskores::FloatDefault>(logicalId[0]), origin[1], origin[2]);
+  viskores::Vec3f offsetOrigin(origin[0] +
+                                 spacing[0] * static_cast<viskores::FloatDefault>(logicalId[0]),
+                               origin[1],
+                               origin[2]);
   return viskores::VecAxisAlignedPointCoordinates<1>(offsetOrigin, spacing);
 }
 
-static inline VISKORES_EXEC viskores::VecAxisAlignedPointCoordinates<1> make_VecAxisAlignedPointCoordinates(
-  const viskores::Vec3f& origin,
-  const viskores::Vec3f& spacing,
-  viskores::Id logicalId)
+static inline VISKORES_EXEC viskores::VecAxisAlignedPointCoordinates<1>
+make_VecAxisAlignedPointCoordinates(const viskores::Vec3f& origin,
+                                    const viskores::Vec3f& spacing,
+                                    viskores::Id logicalId)
 {
-  return make_VecAxisAlignedPointCoordinates(origin, spacing, viskores::Vec<viskores::Id, 1>(logicalId));
+  return make_VecAxisAlignedPointCoordinates(
+    origin, spacing, viskores::Vec<viskores::Id, 1>(logicalId));
 }
 
-static inline VISKORES_EXEC viskores::VecAxisAlignedPointCoordinates<2> make_VecAxisAlignedPointCoordinates(
-  const viskores::Vec3f& origin,
-  const viskores::Vec3f& spacing,
-  const viskores::Id2& logicalId)
+static inline VISKORES_EXEC viskores::VecAxisAlignedPointCoordinates<2>
+make_VecAxisAlignedPointCoordinates(const viskores::Vec3f& origin,
+                                    const viskores::Vec3f& spacing,
+                                    const viskores::Id2& logicalId)
 {
-  viskores::Vec3f offsetOrigin(origin[0] + spacing[0] * static_cast<viskores::FloatDefault>(logicalId[0]),
-                           origin[1] + spacing[1] * static_cast<viskores::FloatDefault>(logicalId[1]),
-                           origin[2]);
+  viskores::Vec3f offsetOrigin(
+    origin[0] + spacing[0] * static_cast<viskores::FloatDefault>(logicalId[0]),
+    origin[1] + spacing[1] * static_cast<viskores::FloatDefault>(logicalId[1]),
+    origin[2]);
   return viskores::VecAxisAlignedPointCoordinates<2>(offsetOrigin, spacing);
 }
 
-static inline VISKORES_EXEC viskores::VecAxisAlignedPointCoordinates<3> make_VecAxisAlignedPointCoordinates(
-  const viskores::Vec3f& origin,
-  const viskores::Vec3f& spacing,
-  const viskores::Id3& logicalId)
+static inline VISKORES_EXEC viskores::VecAxisAlignedPointCoordinates<3>
+make_VecAxisAlignedPointCoordinates(const viskores::Vec3f& origin,
+                                    const viskores::Vec3f& spacing,
+                                    const viskores::Id3& logicalId)
 {
-  viskores::Vec3f offsetOrigin(origin[0] + spacing[0] * static_cast<viskores::FloatDefault>(logicalId[0]),
-                           origin[1] + spacing[1] * static_cast<viskores::FloatDefault>(logicalId[1]),
-                           origin[2] + spacing[2] * static_cast<viskores::FloatDefault>(logicalId[2]));
+  viskores::Vec3f offsetOrigin(
+    origin[0] + spacing[0] * static_cast<viskores::FloatDefault>(logicalId[0]),
+    origin[1] + spacing[1] * static_cast<viskores::FloatDefault>(logicalId[1]),
+    origin[2] + spacing[2] * static_cast<viskores::FloatDefault>(logicalId[2]));
   return viskores::VecAxisAlignedPointCoordinates<3>(offsetOrigin, spacing);
 }
 
 template <viskores::IdComponent NumDimensions, typename ThreadIndicesType>
 struct FetchArrayTopologyMapInImplementation<
   viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell,
-                                     viskores::TopologyElementTagPoint,
-                                     NumDimensions>,
+                                         viskores::TopologyElementTagPoint,
+                                         NumDimensions>,
   viskores::internal::ArrayPortalUniformPointCoordinates,
   ThreadIndicesType>
 
 {
   using ConnectivityType = viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell,
-                                                              viskores::TopologyElementTagPoint,
-                                                              NumDimensions>;
+                                                                  viskores::TopologyElementTagPoint,
+                                                                  NumDimensions>;
 
   using ValueType = viskores::VecAxisAlignedPointCoordinates<NumDimensions>;
 
@@ -154,13 +159,15 @@ struct FetchArrayTopologyMapInImplementation<
   }
 };
 
-template <typename PermutationPortal, viskores::IdComponent NumDimensions, typename ThreadIndicesType>
+template <typename PermutationPortal,
+          viskores::IdComponent NumDimensions,
+          typename ThreadIndicesType>
 struct FetchArrayTopologyMapInImplementation<
   viskores::exec::ConnectivityPermutedVisitCellsWithPoints<
     PermutationPortal,
     viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell,
-                                       viskores::TopologyElementTagPoint,
-                                       NumDimensions>>,
+                                           viskores::TopologyElementTagPoint,
+                                           NumDimensions>>,
   viskores::internal::ArrayPortalUniformPointCoordinates,
   ThreadIndicesType>
 
@@ -168,8 +175,8 @@ struct FetchArrayTopologyMapInImplementation<
   using ConnectivityType = viskores::exec::ConnectivityPermutedVisitCellsWithPoints<
     PermutationPortal,
     viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell,
-                                       viskores::TopologyElementTagPoint,
-                                       NumDimensions>>;
+                                           viskores::TopologyElementTagPoint,
+                                           NumDimensions>>;
 
   using ValueType = viskores::VecAxisAlignedPointCoordinates<NumDimensions>;
 
@@ -201,10 +208,10 @@ struct Fetch<viskores::exec::arg::FetchTagArrayTopologyMapIn,
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
   VISKORES_EXEC auto Load(const ThreadIndicesType& indices, const ExecObjectType& field) const
-    -> decltype(
-      detail::FetchArrayTopologyMapInImplementation<typename ThreadIndicesType::Connectivity,
-                                                    ExecObjectType,
-                                                    ThreadIndicesType>::Load(indices, field))
+    -> decltype(detail::FetchArrayTopologyMapInImplementation<
+                typename ThreadIndicesType::Connectivity,
+                ExecObjectType,
+                ThreadIndicesType>::Load(indices, field))
   {
     using Implementation =
       detail::FetchArrayTopologyMapInImplementation<typename ThreadIndicesType::Connectivity,
@@ -218,7 +225,7 @@ struct Fetch<viskores::exec::arg::FetchTagArrayTopologyMapIn,
   template <typename ScatterAndMaskMode>
   VISKORES_EXEC auto Load(
     const viskores::exec::arg::ThreadIndicesTopologyMap<viskores::exec::ConnectivityExtrude,
-                                                    ScatterAndMaskMode>& indices,
+                                                        ScatterAndMaskMode>& indices,
     const ExecObjectType& portal) -> viskores::Vec<typename ExecObjectType::ValueType, 6>
   {
     // std::cout << "opimized fetch for point values" << std::endl;

@@ -31,12 +31,15 @@ public:
     tetrahedralize.SetFieldsToPass({ "pointvar", "cellvar" });
 
     viskores::cont::DataSet output = tetrahedralize.Execute(dataset);
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 20), "Wrong result for Tetrahedralize");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 20),
+                         "Wrong result for Tetrahedralize");
     VISKORES_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 18),
-                     "Wrong number of points for Tetrahedralize");
+                         "Wrong number of points for Tetrahedralize");
 
     viskores::cont::ArrayHandle<viskores::Float32> outData =
-      output.GetField("cellvar").GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>();
+      output.GetField("cellvar")
+        .GetData()
+        .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>();
 
     VISKORES_TEST_ASSERT(outData.ReadPortal().Get(5) == 100.2f, "Wrong cell field data");
     VISKORES_TEST_ASSERT(outData.ReadPortal().Get(6) == 100.2f, "Wrong cell field data");
@@ -54,12 +57,15 @@ public:
     tetrahedralize.SetFieldsToPass({ "pointvar", "cellvar" });
 
     viskores::cont::DataSet output = tetrahedralize.Execute(dataset);
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 11), "Wrong result for Tetrahedralize");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 11),
+                         "Wrong result for Tetrahedralize");
     VISKORES_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 11),
-                     "Wrong number of points for Tetrahedralize");
+                         "Wrong number of points for Tetrahedralize");
 
     viskores::cont::ArrayHandle<viskores::Float32> outData =
-      output.GetField("cellvar").GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>();
+      output.GetField("cellvar")
+        .GetData()
+        .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>();
 
     VISKORES_TEST_ASSERT(outData.ReadPortal().Get(5) == 110.f, "Wrong cell field data");
     VISKORES_TEST_ASSERT(outData.ReadPortal().Get(6) == 110.f, "Wrong cell field data");
@@ -81,8 +87,9 @@ public:
     viskores::filter::geometry_refinement::Tetrahedralize tetrahedralize;
     viskores::cont::DataSet output = tetrahedralize.Execute(dataset);
 
-    VISKORES_TEST_ASSERT(dataset.GetCellSet().GetCellSetBase() == output.GetCellSet().GetCellSetBase(),
-                     "Pointer to the CellSetSingleType has changed.");
+    VISKORES_TEST_ASSERT(dataset.GetCellSet().GetCellSetBase() ==
+                           output.GetCellSet().GetCellSetBase(),
+                         "Pointer to the CellSetSingleType has changed.");
   }
 
   void TestCellSetExplicitTetra() const
@@ -104,12 +111,12 @@ public:
     viskores::cont::UnknownCellSet outputCellSet = output.GetCellSet();
 
     VISKORES_TEST_ASSERT(outputCellSet.IsType<viskores::cont::CellSetSingleType<>>(),
-                     "Output CellSet is not CellSetSingleType");
+                         "Output CellSet is not CellSetSingleType");
     VISKORES_TEST_ASSERT(output.GetNumberOfCells() == 2, "Wrong number of cells");
     VISKORES_TEST_ASSERT(outputCellSet.GetCellShape(0) == viskores::CellShapeTagTetra::Id,
-                     "Cell is not tetra");
+                         "Cell is not tetra");
     VISKORES_TEST_ASSERT(outputCellSet.GetCellShape(1) == viskores::CellShapeTagTetra::Id,
-                     "Cell is not tetra");
+                         "Cell is not tetra");
   }
 
   void operator()() const

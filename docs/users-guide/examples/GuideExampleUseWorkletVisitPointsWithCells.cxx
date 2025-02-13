@@ -27,8 +27,8 @@ public:
 
   template<typename InputCellFieldType, typename OutputFieldType>
   VISKORES_EXEC void operator()(viskores::IdComponent numCells,
-                            const InputCellFieldType& inputCellField,
-                            OutputFieldType& fieldAverage) const
+                                const InputCellFieldType& inputCellField,
+                                OutputFieldType& fieldAverage) const
   {
     fieldAverage = OutputFieldType(0);
 
@@ -79,7 +79,8 @@ struct DemoAverageCellField
     }
 
     // Copy all fields, converting cell fields to point fields.
-    for (viskores::Id fieldIndex = 0; fieldIndex < inData.GetNumberOfFields(); fieldIndex++)
+    for (viskores::Id fieldIndex = 0; fieldIndex < inData.GetNumberOfFields();
+         fieldIndex++)
     {
       viskores::cont::Field inField = inData.GetField(fieldIndex);
       if (inField.GetAssociation() == viskores::cont::Field::Association::Cells)
@@ -127,13 +128,14 @@ void Test()
   std::cout << "Checking cell data converted to points." << std::endl;
   viskores::cont::Field convertedField = resultDataSet.GetField("cellvar");
   VISKORES_TEST_ASSERT(convertedField.GetAssociation() ==
-                     viskores::cont::Field::Association::Cells,
-                   "Result field has wrong association.");
+                         viskores::cont::Field::Association::Cells,
+                       "Result field has wrong association.");
 
   const viskores::Id numPoints = 18;
-  viskores::Float64 expectedData[numPoints] = { 100.1, 100.15, 100.2, 100.1, 100.15, 100.2,
-                                            100.2, 100.25, 100.3, 100.2, 100.25, 100.3,
-                                            100.3, 100.35, 100.4, 100.3, 100.35, 100.4 };
+  viskores::Float64 expectedData[numPoints] = { 100.1,  100.15, 100.2,  100.1,  100.15,
+                                                100.2,  100.2,  100.25, 100.3,  100.2,
+                                                100.25, 100.3,  100.3,  100.35, 100.4,
+                                                100.3,  100.35, 100.4 };
 
   viskores::cont::ArrayHandle<viskores::Float32> outData;
   convertedField.GetData().AsArrayHandle(outData);
@@ -142,12 +144,12 @@ void Test()
   viskores::cont::printSummary_ArrayHandle(outData, std::cout);
   std::cout << std::endl;
   VISKORES_TEST_ASSERT(outPortal.GetNumberOfValues() == numPoints,
-                   "Result array wrong size.");
+                       "Result array wrong size.");
 
   for (viskores::Id pointId = 0; pointId < numPoints; pointId++)
   {
     VISKORES_TEST_ASSERT(test_equal(outPortal.Get(pointId), expectedData[pointId]),
-                     "Got wrong result.");
+                         "Got wrong result.");
   }
 }
 

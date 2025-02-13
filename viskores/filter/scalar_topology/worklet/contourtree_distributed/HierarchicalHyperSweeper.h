@@ -254,7 +254,8 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::InitializeI
   {
     std::stringstream debugStream;
     debugStream << std::endl << "Owned Regular Vertex List" << std::endl;
-    viskores::worklet::contourtree_augmented::PrintHeader(globalIds.GetNumberOfValues(), debugStream);
+    viskores::worklet::contourtree_augmented::PrintHeader(globalIds.GetNumberOfValues(),
+                                                          debugStream);
     viskores::worklet::contourtree_augmented::PrintIndices("GlobalId", globalIds, -1, debugStream);
     VISKORES_LOG_S(viskores::cont::LogLevel::Info, debugStream.str());
   }
@@ -292,7 +293,8 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::InitializeI
   {
     std::stringstream debugStream;
     debugStream << std::endl;
-    viskores::worklet::contourtree_augmented::PrintIndices("Sorted SP", superparents, -1, debugStream);
+    viskores::worklet::contourtree_augmented::PrintIndices(
+      "Sorted SP", superparents, -1, debugStream);
     VISKORES_LOG_S(viskores::cont::LogLevel::Info, debugStream.str());
   }
 #endif
@@ -332,10 +334,10 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::LocalHyperS
 { // LocalHyperSweep()
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
-                          std::string(" Starting Local HyperSweep"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
+                              std::string(" Starting Local HyperSweep"),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   // I.  Iterate over all rounds of the hyperstructure
@@ -343,11 +345,11 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::LocalHyperS
   { // per round
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
-                            std::string(" Round ") + std::to_string(round) +
-                            std::string(" Step 0 Starting Round"),
-                          __FILE__,
-                          __LINE__));
+                   DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
+                                std::string(" Round ") + std::to_string(round) +
+                                std::string(" Step 0 Starting Round"),
+                              __FILE__,
+                              __LINE__));
 #endif
     //  A.  Iterate over all iterations of the round
     auto numIterationsPortal =
@@ -357,12 +359,12 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::LocalHyperS
     { // per iteration
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
-                              std::string(" Round ") + std::to_string(round) +
-                              std::string(" Step 1 Iteration ") + std::to_string(iteration) +
-                              std::string(" Step A Starting Iteration"),
-                            __FILE__,
-                            __LINE__));
+                     DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
+                                  std::string(" Round ") + std::to_string(round) +
+                                  std::string(" Step 1 Iteration ") + std::to_string(iteration) +
+                                  std::string(" Step A Starting Iteration"),
+                                __FILE__,
+                                __LINE__));
 #endif
       //  1.  Establish the range of supernode Ids that we want to process
       //  TODO/FIXME: Use portal? Or is there a more efficient way?
@@ -376,24 +378,24 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::LocalHyperS
 
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
-                              std::string(" Round ") + std::to_string(round) +
-                              std::string(" Step 1 Iteration ") + std::to_string(iteration) +
-                              std::string(" Step B Dependent Weights Computed"),
-                            __FILE__,
-                            __LINE__));
+                     DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
+                                  std::string(" Round ") + std::to_string(round) +
+                                  std::string(" Step 1 Iteration ") + std::to_string(iteration) +
+                                  std::string(" Step B Dependent Weights Computed"),
+                                __FILE__,
+                                __LINE__));
 #endif
       // now call the routine that computes the weights to be transferred and the superarcs to which they transfer
       this->ComputeSuperarcTransferWeights(round, iteration, firstSupernode, lastSupernode);
 
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
-                              std::string(" Round ") + std::to_string(round) +
-                              std::string(" Step 1 Iteration ") + std::to_string(iteration) +
-                              std::string(" Step C Transfer Weights Computed"),
-                            __FILE__,
-                            __LINE__));
+                     DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
+                                  std::string(" Round ") + std::to_string(round) +
+                                  std::string(" Step 1 Iteration ") + std::to_string(iteration) +
+                                  std::string(" Step C Transfer Weights Computed"),
+                                __FILE__,
+                                __LINE__));
 #endif
 
       // transfer the weights
@@ -401,22 +403,22 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::LocalHyperS
 
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
-                              std::string(" Round ") + std::to_string(round) +
-                              std::string(" Step 1 Iteration ") + std::to_string(iteration) +
-                              std::string(" Step D Weights Transferred"),
-                            __FILE__,
-                            __LINE__));
+                     DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
+                                  std::string(" Round ") + std::to_string(round) +
+                                  std::string(" Step 1 Iteration ") + std::to_string(iteration) +
+                                  std::string(" Step D Weights Transferred"),
+                                __FILE__,
+                                __LINE__));
 #endif
     } // per iteration
 
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
-                            std::string(" Round ") + std::to_string(round) +
-                            std::string(" Step 2 Ending Round"),
-                          __FILE__,
-                          __LINE__));
+                   DebugPrint(std::string("Hypersweep Block ") + std::to_string(BlockId) +
+                                std::string(" Round ") + std::to_string(round) +
+                                std::string(" Step 2 Ending Round"),
+                              __FILE__,
+                              __LINE__));
 #endif
   } // per round
 } // LocalHyperSweep()
@@ -448,7 +450,7 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::
                          numSupernodesToProcess); // until lastSuperNode (not inclued)
     // Compute the partial sum for DependentValues[firstSuperNode, lastSupernode) and write to ValuePrefixSum[firstSuperNode, lastSupernode)
     viskores::cont::Algorithm::ScanInclusive(dependentValuesView, // input
-                                         valuePrefixSumView); // result of partial sum
+                                             valuePrefixSumView); // result of partial sum
   }
 
   // Since the prefix sum is over *all* supernodes in the iteration, we need to break it into segments
@@ -567,7 +569,7 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::ComputeSupe
       superSortPermuteView(this->SuperSortPermute, firstSupernode, numSupernodesToProcess);
     auto permutedTransferTarget =
       viskores::cont::make_ArrayHandlePermutation(superSortPermuteView,  // idArray
-                                              this->TransferTarget); // valueArray
+                                                  this->TransferTarget); // valueArray
     viskores::cont::Algorithm::Copy(permutedTransferTarget, sortedTransferTargetView);
     // Note that any values associated with NO_SUCH_ELEMENT will be ignored
     // copy transfer weight in the sorted order
@@ -575,7 +577,7 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::ComputeSupe
       valuePrefixSumView(this->ValuePrefixSum, firstSupernode, numSupernodesToProcess);
     auto permutedDependentValues =
       viskores::cont::make_ArrayHandlePermutation(superSortPermuteView,   // idArray
-                                              this->DependentValues); // valueArray
+                                                  this->DependentValues); // valueArray
     viskores::cont::Algorithm::Copy(permutedDependentValues, valuePrefixSumView);
   }
 } // ComputeSuperarcTransferWeights()
@@ -619,19 +621,19 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::TransferWei
     tempScanInclusiveTarget.Allocate(numSupernodesToProcess);
     // Compute the partial sum for DependentValues[firstSuperNode, lastSupernode) and write to ValuePrefixSum[firstSuperNode, lastSupernode)
     viskores::cont::Algorithm::ScanInclusive(valuePrefixSumView,       // input
-                                         tempScanInclusiveTarget); // result of partial sum
+                                             tempScanInclusiveTarget); // result of partial sum
     // Now copy the values from our prefix sum back
     viskores::cont::Algorithm::Copy(tempScanInclusiveTarget, valuePrefixSumView);
   }
 
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Hypersweep Block ") + std::to_string(this->BlockId) +
-                          std::string(" Round ") + std::to_string(round) +
-                          std::string(" Step 1 Iteration ") + std::to_string(iteration) +
-                          std::string(" Starting Weight Transfer"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(this->BlockId) +
+                              std::string(" Round ") + std::to_string(round) +
+                              std::string(" Step 1 Iteration ") + std::to_string(iteration) +
+                              std::string(" Starting Weight Transfer"),
+                            __FILE__,
+                            __LINE__));
 #endif // DEBUG_PRINT_HYPER_SWEEPER
 
   // 7a. and 7b.
@@ -645,10 +647,10 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::TransferWei
     // 7a. Find the RHE of each group and transfer the prefix sum weight
     // Note that we do not compute the transfer weight separately, we add it in place instead
     // Instantiate the worklet
-    auto supernodeIndex =
-      viskores::cont::make_ArrayHandleCounting(firstSupernode, viskores::Id{ 1 }, numSupernodesToProcess);
+    auto supernodeIndex = viskores::cont::make_ArrayHandleCounting(
+      firstSupernode, viskores::Id{ 1 }, numSupernodesToProcess);
     VISKORES_ASSERT(firstSupernode + numSupernodesToProcess <=
-                this->ValuePrefixSum.GetNumberOfValues());
+                    this->ValuePrefixSum.GetNumberOfValues());
     auto valuePrefixSumView = viskores::cont::make_ArrayHandleView(
       this->ValuePrefixSum, firstSupernode, numSupernodesToProcess);
 
@@ -664,21 +666,21 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::TransferWei
 
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Hypersweep Block ") + std::to_string(this->BlockId) +
-                          std::string(" Round ") + std::to_string(round) +
-                          std::string(" Step 1 Iteration ") + std::to_string(iteration) +
-                          std::string(" Non-Attachment LHE Completed"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(this->BlockId) +
+                              std::string(" Round ") + std::to_string(round) +
+                              std::string(" Step 1 Iteration ") + std::to_string(iteration) +
+                              std::string(" Non-Attachment LHE Completed"),
+                            __FILE__,
+                            __LINE__));
 #endif // DEBUG_PRINT_HYPER_SWEEPER
 
   {
     VISKORES_ASSERT(firstSupernode + 1 + numSupernodesToProcess - 1 <=
-                this->SortedTransferTarget.GetNumberOfValues());
+                    this->SortedTransferTarget.GetNumberOfValues());
     auto sortedTransferTargetView = viskores::cont::make_ArrayHandleView(
       this->SortedTransferTarget, firstSupernode + 1, numSupernodesToProcess - 1);
     VISKORES_ASSERT(firstSupernode + 1 + numSupernodesToProcess - 1 <=
-                this->SortedTransferTarget.GetNumberOfValues());
+                    this->SortedTransferTarget.GetNumberOfValues());
     auto sortedTransferTargetShiftedView = viskores::cont::make_ArrayHandleView(
       this->SortedTransferTarget, firstSupernode, numSupernodesToProcess - 1);
     auto valuePrefixSumPreviousValueView = viskores::cont::make_ArrayHandleView(
@@ -696,19 +698,19 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::TransferWei
 
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Hypersweep Block ") + std::to_string(this->BlockId) +
-                          std::string(" Round ") + std::to_string(round) +
-                          std::string(" Step 1 Iteration ") + std::to_string(iteration) +
-                          std::string(" Non-Attachment RHE Completed"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(this->BlockId) +
+                              std::string(" Round ") + std::to_string(round) +
+                              std::string(" Step 1 Iteration ") + std::to_string(iteration) +
+                              std::string(" Non-Attachment RHE Completed"),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   // 7a (attachment). Find the RHE of each group and transfer the prefix sum weight
   // Note that we do not compute the transfer weight separately, we add it in place instead
   {
-    auto supernodeIndex =
-      viskores::cont::make_ArrayHandleCounting(firstSupernode, viskores::Id{ 1 }, numSupernodesToProcess);
+    auto supernodeIndex = viskores::cont::make_ArrayHandleCounting(
+      firstSupernode, viskores::Id{ 1 }, numSupernodesToProcess);
     auto valuePrefixSumView = viskores::cont::make_ArrayHandleView(
       this->ValuePrefixSum, firstSupernode, numSupernodesToProcess);
 
@@ -725,12 +727,12 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::TransferWei
 
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Hypersweep Block ") + std::to_string(this->BlockId) +
-                          std::string(" Round ") + std::to_string(round) +
-                          std::string(" Step 1 Iteration ") + std::to_string(iteration) +
-                          std::string(" Attachment LHE Completed"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(this->BlockId) +
+                              std::string(" Round ") + std::to_string(round) +
+                              std::string(" Step 1 Iteration ") + std::to_string(iteration) +
+                              std::string(" Attachment LHE Completed"),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   // 7b (i). Now find the LHE of each group and subtract out the prior weight.
@@ -754,12 +756,12 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::TransferWei
 
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Hypersweep Block ") + std::to_string(this->BlockId) +
-                          std::string(" Round ") + std::to_string(round) +
-                          std::string(" Step 1 Iteration ") + std::to_string(iteration) +
-                          std::string(" Attachment RHE Completed"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Hypersweep Block ") + std::to_string(this->BlockId) +
+                              std::string(" Round ") + std::to_string(round) +
+                              std::string(" Step 1 Iteration ") + std::to_string(iteration) +
+                              std::string(" Attachment RHE Completed"),
+                            __FILE__,
+                            __LINE__));
 #endif
 } // TransferWeights()
 
@@ -788,7 +790,7 @@ std::string HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::Debu
   resultStream << std::endl;
 
   viskores::worklet::contourtree_augmented::PrintHeader(this->DependentValues.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Intrinsic", this->IntrinsicValues, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(

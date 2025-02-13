@@ -72,7 +72,9 @@ struct FieldNeighborhood
   /// `GetUnchecked` is useful in circumstances where the bounds have already be checked.
   /// This prevents wasting time repeating checks.
   VISKORES_EXEC
-  ValueType GetUnchecked(viskores::IdComponent i, viskores::IdComponent j, viskores::IdComponent k) const
+  ValueType GetUnchecked(viskores::IdComponent i,
+                         viskores::IdComponent j,
+                         viskores::IdComponent k) const
   {
     return Portal.Get(this->Boundary->NeighborIndexToFlatIndex(i, j, k));
   }
@@ -121,7 +123,9 @@ struct FieldNeighborhood<viskores::internal::ArrayPortalUniformPointCoordinates>
   }
 
   VISKORES_EXEC
-  ValueType GetUnchecked(viskores::IdComponent i, viskores::IdComponent j, viskores::IdComponent k) const
+  ValueType GetUnchecked(viskores::IdComponent i,
+                         viskores::IdComponent j,
+                         viskores::IdComponent k) const
   {
     return Portal.Get(this->Boundary->NeighborIndexToFullIndex(i, j, k));
   }

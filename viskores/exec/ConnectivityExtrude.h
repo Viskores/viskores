@@ -63,7 +63,8 @@ public:
   VISKORES_EXEC
   IndicesType GetIndices(const viskores::Id2& index) const;
   template <typename IndexType>
-  VISKORES_EXEC viskores::IdComponent GetNumberOfIndices(const IndexType& viskoresNotUsed(index)) const
+  VISKORES_EXEC viskores::IdComponent GetNumberOfIndices(
+    const IndexType& viskoresNotUsed(index)) const
   {
     return 6;
   }
@@ -145,7 +146,8 @@ public:
   IndicesType GetIndices(const viskores::Id2& index) const;
 
   template <typename IndexType>
-  VISKORES_EXEC viskores::IdComponent GetNumberOfIndices(const IndexType& viskoresNotUsed(index)) const
+  VISKORES_EXEC viskores::IdComponent GetNumberOfIndices(
+    const IndexType& viskoresNotUsed(index)) const
   {
     return 1;
   }

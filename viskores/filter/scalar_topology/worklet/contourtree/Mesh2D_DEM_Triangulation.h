@@ -125,8 +125,9 @@ public:
 
 // sets outgoing paths for saddles
 template <typename T, typename StorageType>
-void Mesh2D_DEM_Triangulation<T, StorageType>::SetStarts(viskores::cont::ArrayHandle<viskores::Id>& chains,
-                                                         bool ascending)
+void Mesh2D_DEM_Triangulation<T, StorageType>::SetStarts(
+  viskores::cont::ArrayHandle<viskores::Id>& chains,
+  bool ascending)
 {
   // create the neighbourhood mask
   neighbourhoodMask.Allocate(NumVertices);
@@ -199,7 +200,8 @@ void Mesh2D_DEM_Triangulation<T, StorageType>::SetSaddleStarts(
   viskores::cont::Algorithm::CopyIf(vertexIndexArray, isCritical, mergeGraph.valueIndex);
 
   // we initialise the prunesTo array to "NONE"
-  viskores::cont::ArrayHandleConstant<viskores::Id> notAssigned(NO_VERTEX_ASSIGNED, nCriticalPoints);
+  viskores::cont::ArrayHandleConstant<viskores::Id> notAssigned(NO_VERTEX_ASSIGNED,
+                                                                nCriticalPoints);
   viskores::cont::Algorithm::Copy(notAssigned, mergeGraph.prunesTo);
 
   // copy the outdegree from our temporary array
@@ -223,7 +225,8 @@ void Mesh2D_DEM_Triangulation<T, StorageType>::SetSaddleStarts(
   // now we need to compute the firstEdge array from the outdegrees
   viskores::cont::Algorithm::ScanExclusive(mergeGraph.outdegree, mergeGraph.firstEdge);
 
-  viskores::Id nCriticalEdges = viskores::cont::ArrayGetValue(nCriticalPoints - 1, mergeGraph.firstEdge) +
+  viskores::Id nCriticalEdges =
+    viskores::cont::ArrayGetValue(nCriticalPoints - 1, mergeGraph.firstEdge) +
     viskores::cont::ArrayGetValue(nCriticalPoints - 1, mergeGraph.outdegree);
 
   // now we allocate the edge arrays
@@ -236,8 +239,10 @@ void Mesh2D_DEM_Triangulation<T, StorageType>::SetSaddleStarts(
   viskores::worklet::DispatcherMapField<Mesh2D_DEM_SaddleStarter> saddleStarterDispatcher(
     saddleStarter);
 
-  viskores::cont::ArrayHandleZip<viskores::cont::ArrayHandle<viskores::Id>, viskores::cont::ArrayHandle<viskores::Id>>
-    outDegFirstEdge = viskores::cont::make_ArrayHandleZip(mergeGraph.outdegree, mergeGraph.firstEdge);
+  viskores::cont::ArrayHandleZip<viskores::cont::ArrayHandle<viskores::Id>,
+                                 viskores::cont::ArrayHandle<viskores::Id>>
+    outDegFirstEdge =
+      viskores::cont::make_ArrayHandleZip(mergeGraph.outdegree, mergeGraph.firstEdge);
 
   saddleStarterDispatcher.Invoke(criticalVertsIndexArray, // input
                                  outDegFirstEdge,         // input (pair)

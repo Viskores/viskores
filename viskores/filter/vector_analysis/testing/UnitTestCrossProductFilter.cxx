@@ -88,9 +88,9 @@ void CheckResult(const viskores::cont::ArrayHandle<viskores::Vec3f>& field1,
   auto outPortal = outputArray.ReadPortal();
 
   VISKORES_TEST_ASSERT(outputArray.GetNumberOfValues() == field1.GetNumberOfValues(),
-                   "Field sizes wrong");
+                       "Field sizes wrong");
   VISKORES_TEST_ASSERT(outputArray.GetNumberOfValues() == field2.GetNumberOfValues(),
-                   "Field sizes wrong");
+                       "Field sizes wrong");
 
   for (viskores::Id j = 0; j < outputArray.GetNumberOfValues(); j++)
   {
@@ -99,17 +99,20 @@ void CheckResult(const viskores::cont::ArrayHandle<viskores::Vec3f>& field1,
     viskores::Vec3f res = outPortal.Get(j);
 
     //Make sure result is orthogonal each input vector. Need to normalize to compare with zero.
-    viskores::Vec3f v1N(viskores::Normal(v1)), v2N(viskores::Normal(v1)), resN(viskores::Normal(res));
+    viskores::Vec3f v1N(viskores::Normal(v1)), v2N(viskores::Normal(v1)),
+      resN(viskores::Normal(res));
     VISKORES_TEST_ASSERT(test_equal(viskores::Dot(resN, v1N), viskores::FloatDefault(0.0)),
-                     "Wrong result for cross product");
+                         "Wrong result for cross product");
     VISKORES_TEST_ASSERT(test_equal(viskores::Dot(resN, v2N), viskores::FloatDefault(0.0)),
-                     "Wrong result for cross product");
+                         "Wrong result for cross product");
 
     viskores::FloatDefault sinAngle =
       viskores::Magnitude(res) * viskores::RMagnitude(v1) * viskores::RMagnitude(v2);
-    viskores::FloatDefault cosAngle = viskores::Dot(v1, v2) * viskores::RMagnitude(v1) * viskores::RMagnitude(v2);
-    VISKORES_TEST_ASSERT(test_equal(sinAngle * sinAngle + cosAngle * cosAngle, viskores::FloatDefault(1.0)),
-                     "Bad cross product length.");
+    viskores::FloatDefault cosAngle =
+      viskores::Dot(v1, v2) * viskores::RMagnitude(v1) * viskores::RMagnitude(v2);
+    VISKORES_TEST_ASSERT(
+      test_equal(sinAngle * sinAngle + cosAngle * cosAngle, viskores::FloatDefault(1.0)),
+      "Bad cross product length.");
   }
 }
 
@@ -147,17 +150,18 @@ void TestCrossProduct()
 
       // Check to make sure the fields are reported as correct.
       VISKORES_TEST_ASSERT(filter.GetPrimaryFieldName() == "vec1", "Bad field name.");
-      VISKORES_TEST_ASSERT(filter.GetPrimaryFieldAssociation() == viskores::cont::Field::Association::Any,
-                       "Bad field association.");
+      VISKORES_TEST_ASSERT(filter.GetPrimaryFieldAssociation() ==
+                             viskores::cont::Field::Association::Any,
+                           "Bad field association.");
       VISKORES_TEST_ASSERT(filter.GetUseCoordinateSystemAsPrimaryField() == false,
-                       "Bad use coordinates.");
+                           "Bad use coordinates.");
 
       VISKORES_TEST_ASSERT(filter.GetSecondaryFieldName() == "vec2", "Bad field name.");
       VISKORES_TEST_ASSERT(filter.GetSecondaryFieldAssociation() ==
-                         viskores::cont::Field::Association::Points,
-                       "Bad field association.");
+                             viskores::cont::Field::Association::Points,
+                           "Bad field association.");
       VISKORES_TEST_ASSERT(filter.GetUseCoordinateSystemAsSecondaryField() == false,
-                       "Bad use coordinates.");
+                           "Bad use coordinates.");
 
       viskores::cont::DataSet result = filter.Execute(dataSet);
       CheckResult(field1, field2, result);
@@ -172,13 +176,14 @@ void TestCrossProduct()
 
       // Check to make sure the fields are reported as correct.
       VISKORES_TEST_ASSERT(filter.GetUseCoordinateSystemAsPrimaryField() == true,
-                       "Bad use coordinates.");
+                           "Bad use coordinates.");
 
       VISKORES_TEST_ASSERT(filter.GetSecondaryFieldName() == "vec2", "Bad field name.");
-      VISKORES_TEST_ASSERT(filter.GetSecondaryFieldAssociation() == viskores::cont::Field::Association::Any,
-                       "Bad field association.");
+      VISKORES_TEST_ASSERT(filter.GetSecondaryFieldAssociation() ==
+                             viskores::cont::Field::Association::Any,
+                           "Bad field association.");
       VISKORES_TEST_ASSERT(filter.GetUseCoordinateSystemAsSecondaryField() == false,
-                       "Bad use coordinates.");
+                           "Bad use coordinates.");
 
       viskores::cont::DataSet result = filter.Execute(dataSet);
       CheckResult(field1, field2, result);
@@ -193,13 +198,14 @@ void TestCrossProduct()
 
       // Check to make sure the fields are reported as correct.
       VISKORES_TEST_ASSERT(filter.GetPrimaryFieldName() == "vec1", "Bad field name.");
-      VISKORES_TEST_ASSERT(filter.GetPrimaryFieldAssociation() == viskores::cont::Field::Association::Any,
-                       "Bad field association.");
+      VISKORES_TEST_ASSERT(filter.GetPrimaryFieldAssociation() ==
+                             viskores::cont::Field::Association::Any,
+                           "Bad field association.");
       VISKORES_TEST_ASSERT(filter.GetUseCoordinateSystemAsPrimaryField() == false,
-                       "Bad use coordinates.");
+                           "Bad use coordinates.");
 
       VISKORES_TEST_ASSERT(filter.GetUseCoordinateSystemAsSecondaryField() == true,
-                       "Bad use coordinates.");
+                           "Bad use coordinates.");
 
       viskores::cont::DataSet result = filter.Execute(dataSet);
       CheckResult(field1, field2, result);

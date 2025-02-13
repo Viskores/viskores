@@ -208,8 +208,11 @@
 #define VISKORES_LOG_S(level, ...) VISKORES_LOG_IF_S(level, true, __VA_ARGS__)
 #define VISKORES_LOG_F(level, ...) VISKORES_LOG_IF_F(level, true, __VA_ARGS__)
 
-#define VISKORES_LOG_SCOPE(level, ...) \
-  viskores::cont::detail::LogScope VISKORES_ANONYMOUS_VARIABLE { level, __FILE__, __LINE__, __VA_ARGS__ }
+#define VISKORES_LOG_SCOPE(level, ...)                         \
+  viskores::cont::detail::LogScope VISKORES_ANONYMOUS_VARIABLE \
+  {                                                            \
+    level, __FILE__, __LINE__, __VA_ARGS__                     \
+  }
 
 #define VISKORES_LOG_SCOPE_FUNCTION(level) VISKORES_LOG_SCOPE(level, __func__)
 #define VISKORES_LOG_ALWAYS_S(level, ...) VISKORES_LOG_S(level, __VA_ARGS__)
@@ -218,42 +221,44 @@
 // Convenience macros:
 
 // Cast success:
-#define VISKORES_LOG_CAST_SUCC(inObj, outObj)              \
+#define VISKORES_LOG_CAST_SUCC(inObj, outObj)                  \
   VISKORES_LOG_F(viskores::cont::LogLevel::Cast,               \
-             "Cast succeeded: %s (%p) --> %s (%p)",    \
-             viskores::cont::TypeToString(inObj).c_str(),  \
-             &inObj,                                   \
-             viskores::cont::TypeToString(outObj).c_str(), \
-             &outObj)
+                 "Cast succeeded: %s (%p) --> %s (%p)",        \
+                 viskores::cont::TypeToString(inObj).c_str(),  \
+                 &inObj,                                       \
+                 viskores::cont::TypeToString(outObj).c_str(), \
+                 &outObj)
 
 // Cast failure:
-#define VISKORES_LOG_CAST_FAIL(inObj, outType)            \
+#define VISKORES_LOG_CAST_FAIL(inObj, outType)                \
   VISKORES_LOG_F(viskores::cont::LogLevel::Cast,              \
-             "Cast failed: %s (%p) --> %s",           \
-             viskores::cont::TypeToString(inObj).c_str(), \
-             &inObj,                                  \
-             viskores::cont::TypeToString<outType>().c_str())
+                 "Cast failed: %s (%p) --> %s",               \
+                 viskores::cont::TypeToString(inObj).c_str(), \
+                 &inObj,                                      \
+                 viskores::cont::TypeToString<outType>().c_str())
 
 // TryExecute failure
-#define VISKORES_LOG_TRYEXECUTE_FAIL(errorMessage, functorName, deviceId)                           \
-  VISKORES_LOG_S(viskores::cont::LogLevel::Error, "TryExecute encountered an error: " << errorMessage); \
-  VISKORES_LOG_S(viskores::cont::LogLevel::Error, "Failing functor: " << functorName);                  \
+#define VISKORES_LOG_TRYEXECUTE_FAIL(errorMessage, functorName, deviceId)              \
+  VISKORES_LOG_S(viskores::cont::LogLevel::Error,                                      \
+                 "TryExecute encountered an error: " << errorMessage);                 \
+  VISKORES_LOG_S(viskores::cont::LogLevel::Error, "Failing functor: " << functorName); \
   VISKORES_LOG_S(viskores::cont::LogLevel::Error, "Failing device: " << deviceId.GetName())
 
 // Same, but disabling device:
-#define VISKORES_LOG_TRYEXECUTE_DISABLE(errorMessage, functorName, deviceId)                        \
-  VISKORES_LOG_S(viskores::cont::LogLevel::Error, "TryExecute encountered an error: " << errorMessage); \
-  VISKORES_LOG_S(viskores::cont::LogLevel::Error, "Failing functor: " << functorName);                  \
-  VISKORES_LOG_S(viskores::cont::LogLevel::Error, "Failing device: " << deviceId.GetName());            \
+#define VISKORES_LOG_TRYEXECUTE_DISABLE(errorMessage, functorName, deviceId)                 \
+  VISKORES_LOG_S(viskores::cont::LogLevel::Error,                                            \
+                 "TryExecute encountered an error: " << errorMessage);                       \
+  VISKORES_LOG_S(viskores::cont::LogLevel::Error, "Failing functor: " << functorName);       \
+  VISKORES_LOG_S(viskores::cont::LogLevel::Error, "Failing device: " << deviceId.GetName()); \
   VISKORES_LOG_S(viskores::cont::LogLevel::Error, "The failing device has been disabled.")
 
 // Custom log level
-#define VISKORES_DEFINE_USER_LOG_LEVEL(name, offset)                                  \
+#define VISKORES_DEFINE_USER_LOG_LEVEL(name, offset)                                      \
   static constexpr viskores::cont::LogLevel name = static_cast<viskores::cont::LogLevel>( \
-    static_cast<typename std::underlying_type<viskores::cont::LogLevel>::type>(       \
-      viskores::cont::LogLevel::UserFirst) +                                          \
-    offset %                                                                      \
-      static_cast<typename std::underlying_type<viskores::cont::LogLevel>::type>(     \
+    static_cast<typename std::underlying_type<viskores::cont::LogLevel>::type>(           \
+      viskores::cont::LogLevel::UserFirst) +                                              \
+    offset %                                                                              \
+      static_cast<typename std::underlying_type<viskores::cont::LogLevel>::type>(         \
         viskores::cont::LogLevel::UserLast))
 
 #else // VISKORES_ENABLE_LOGGING
@@ -271,17 +276,17 @@
 
 // Always emitted. When logging is disabled, std::cerr is used.
 
-#define VISKORES_LOG_ALWAYS_S(level, ...)                   \
+#define VISKORES_LOG_ALWAYS_S(level, ...)               \
   (static_cast<int>(level) < 0 ? std::cerr : std::cout) \
     << viskores::cont::GetLogLevelName(level) << ": " << __VA_ARGS__ << "\n"
 
 // TryExecute failures are still important enough to log, but we just write to
 // std::cerr when logging is disabled.
-#define VISKORES_LOG_TRYEXECUTE_FAIL(errorMessage, functorName, deviceId)             \
+#define VISKORES_LOG_TRYEXECUTE_FAIL(errorMessage, functorName, deviceId)         \
   std::cerr << "Error: TryExecute encountered an error: " << errorMessage << "\n" \
             << "\t- Failing functor: " << functorName << "\n"                     \
             << "\t- Failing device: " << deviceId.GetName() << "\n\n"
-#define VISKORES_LOG_TRYEXECUTE_DISABLE(errorMessage, functorName, deviceId)          \
+#define VISKORES_LOG_TRYEXECUTE_DISABLE(errorMessage, functorName, deviceId)      \
   std::cerr << "Error: TryExecute encountered an error: " << errorMessage << "\n" \
             << "\t- Failing functor: " << functorName << "\n"                     \
             << "\t- Failing device: " << deviceId.GetName() << "\n"               \

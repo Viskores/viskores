@@ -24,9 +24,10 @@ VISKORES_FILTER_CORE_EXPORT VISKORES_CONT bool viskores::filter::MapFieldPermuta
 
   try
   {
-    viskores::cont::UnknownArrayHandle outputArray =
-      viskores::cont::internal::MapArrayPermutation(inputField.GetData(), permutation, invalidValue);
-    outputField = viskores::cont::Field(inputField.GetName(), inputField.GetAssociation(), outputArray);
+    viskores::cont::UnknownArrayHandle outputArray = viskores::cont::internal::MapArrayPermutation(
+      inputField.GetData(), permutation, invalidValue);
+    outputField =
+      viskores::cont::Field(inputField.GetName(), inputField.GetAssociation(), outputArray);
     return true;
   }
   catch (...)
@@ -46,15 +47,16 @@ VISKORES_FILTER_CORE_EXPORT VISKORES_CONT bool viskores::filter::MapFieldPermuta
 
   try
   {
-    viskores::cont::UnknownArrayHandle outputArray =
-      viskores::cont::internal::MapArrayPermutation(inputCoords.GetData(), permutation, invalidValue);
+    viskores::cont::UnknownArrayHandle outputArray = viskores::cont::internal::MapArrayPermutation(
+      inputCoords.GetData(), permutation, invalidValue);
     outputCoords =
       viskores::cont::Field(inputCoords.GetName(), inputCoords.GetAssociation(), outputArray);
     return true;
   }
   catch (...)
   {
-    VISKORES_LOG_S(viskores::cont::LogLevel::Warn, "Faild to coordinate system " << inputCoords.GetName());
+    VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                   "Faild to coordinate system " << inputCoords.GetName());
     return false;
   }
 }

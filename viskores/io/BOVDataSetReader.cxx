@@ -47,7 +47,9 @@ void ReadBuffer(const std::string& fName, const viskores::Id& sz, std::vector<T>
 }
 
 template <typename T>
-void ReadScalar(const std::string& fName, const viskores::Id& nTuples, viskores::cont::ArrayHandle<T>& var)
+void ReadScalar(const std::string& fName,
+                const viskores::Id& nTuples,
+                viskores::cont::ArrayHandle<T>& var)
 {
   std::vector<T> buff;
   ReadBuffer(fName, nTuples, buff);

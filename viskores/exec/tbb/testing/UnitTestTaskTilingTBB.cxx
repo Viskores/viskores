@@ -15,5 +15,7 @@
 int UnitTestTaskTilingTBB(int argc, char* argv[])
 {
   return viskores::testing::Testing::Run(
-    viskores::exec::internal::testing::TestTaskTiling<viskores::cont::DeviceAdapterTagTBB>, argc, argv);
+    viskores::exec::internal::testing::TestTaskTiling<viskores::cont::DeviceAdapterTagTBB>,
+    argc,
+    argv);
 }

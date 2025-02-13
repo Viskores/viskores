@@ -127,8 +127,8 @@ public:
   {
   }
 
-  VISKORES_CONT SuperArcNodeComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                           viskores::cont::Token& token) const
+  VISKORES_CONT SuperArcNodeComparatorImpl
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     return SuperArcNodeComparatorImpl(this->Superparents, this->JoinSweep, device, token);
   }

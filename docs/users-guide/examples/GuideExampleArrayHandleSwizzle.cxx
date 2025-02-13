@@ -21,14 +21,15 @@ void CheckArray(const ArrayHandleType array)
   VISKORES_TEST_ASSERT(array.GetNumberOfValues() == 3, "Permuted array has wrong size.");
 
   auto portal = array.ReadPortal();
-  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 3, "Permuted portal has wrong size.");
+  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 3,
+                       "Permuted portal has wrong size.");
 
   VISKORES_TEST_ASSERT(test_equal(portal.Get(0), viskores::Vec3f_64(0.2, 0.0, 0.3)),
-                   "Permuted array has wrong value.");
+                       "Permuted array has wrong value.");
   VISKORES_TEST_ASSERT(test_equal(portal.Get(1), viskores::Vec3f_64(1.2, 1.0, 1.3)),
-                   "Permuted array has wrong value.");
+                       "Permuted array has wrong value.");
   VISKORES_TEST_ASSERT(test_equal(portal.Get(2), viskores::Vec3f_64(2.2, 2.0, 2.3)),
-                   "Permuted array has wrong value.");
+                       "Permuted array has wrong value.");
 }
 
 void Test()

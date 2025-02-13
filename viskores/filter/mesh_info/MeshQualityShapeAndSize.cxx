@@ -50,16 +50,17 @@ struct ShapeAndSizeWorklet : MeshQualityWorklet<ShapeAndSizeWorklet>
     return this->AverageVolume;
   }
   template <viskores::IdComponent Dimension>
-  VISKORES_EXEC viskores::Float64 GetAverageSize(viskores::CellTopologicalDimensionsTag<Dimension>) const
+  VISKORES_EXEC viskores::Float64 GetAverageSize(
+    viskores::CellTopologicalDimensionsTag<Dimension>) const
   {
     return 1;
   }
 
   template <typename OutType, typename PointCoordVecType, typename CellShapeType>
   VISKORES_EXEC OutType ComputeMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  CellShapeType shape,
-                                  viskores::ErrorCode& ec) const
+                                      const PointCoordVecType& pts,
+                                      CellShapeType shape,
+                                      viskores::ErrorCode& ec) const
   {
     using DimensionTag = typename viskores::CellTraits<CellShapeType>::TopologicalDimensionsTag;
     return viskores::worklet::cellmetrics::CellShapeAndSizeMetric<OutType>(
@@ -87,7 +88,8 @@ viskores::cont::DataSet MeshQualityShapeAndSize::DoExecute(const viskores::cont:
   ShapeAndSizeWorklet worklet(
     viskores::filter::mesh_info::MeshQualityArea{}.ComputeAverageArea(input),
     viskores::filter::mesh_info::MeshQualityVolume{}.ComputeAverageVolume(input));
-  viskores::cont::UnknownArrayHandle outArray = worklet.Run(input, this->GetFieldFromDataSet(input));
+  viskores::cont::UnknownArrayHandle outArray =
+    worklet.Run(input, this->GetFieldFromDataSet(input));
 
   return this->CreateResultFieldCell(input, this->GetOutputFieldName(), outArray);
 }

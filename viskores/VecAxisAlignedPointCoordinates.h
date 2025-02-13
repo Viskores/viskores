@@ -137,7 +137,7 @@ struct TypeTraits<viskores::VecAxisAlignedPointCoordinates<NumDimensions>>
   static viskores::VecAxisAlignedPointCoordinates<NumDimensions> ZeroInitialization()
   {
     return viskores::VecAxisAlignedPointCoordinates<NumDimensions>(viskores::Vec3f(0, 0, 0),
-                                                               viskores::Vec3f(0, 0, 0));
+                                                                   viskores::Vec3f(0, 0, 0));
   }
 };
 
@@ -167,10 +167,12 @@ struct VecTraits<viskores::VecAxisAlignedPointCoordinates<NumDimensions>>
   template <typename NewComponentType>
   using ReplaceComponentType = viskores::Vec<NewComponentType, NUM_COMPONENTS>;
   template <typename NewComponentType>
-  using ReplaceBaseComponentType = viskores::Vec<viskores::Vec<NewComponentType, 3>, NUM_COMPONENTS>;
+  using ReplaceBaseComponentType =
+    viskores::Vec<viskores::Vec<NewComponentType, 3>, NUM_COMPONENTS>;
 
   template <viskores::IdComponent destSize>
-  VISKORES_EXEC_CONT static void CopyInto(const VecType& src, viskores::Vec<ComponentType, destSize>& dest)
+  VISKORES_EXEC_CONT static void CopyInto(const VecType& src,
+                                          viskores::Vec<ComponentType, destSize>& dest)
   {
     src.CopyInto(dest);
   }

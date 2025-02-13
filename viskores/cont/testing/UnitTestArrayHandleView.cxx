@@ -64,7 +64,7 @@ struct TestViewAsInput
       ViewHandleType view =
         viskores::cont::make_ArrayHandleView(implicit, start_pos, counting_ARRAY_SIZE);
       VISKORES_TEST_ASSERT(view.GetNumberOfComponentsFlat() ==
-                       viskores::VecFlat<ValueType>::NUM_COMPONENTS);
+                           viskores::VecFlat<ValueType>::NUM_COMPONENTS);
       VISKORES_TEST_ASSERT(view.GetNumberOfValues() == counting_ARRAY_SIZE);
 
       viskores::cont::ArrayHandle<ValueType> result;

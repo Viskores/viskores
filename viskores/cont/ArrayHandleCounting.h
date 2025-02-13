@@ -116,7 +116,9 @@ using StorageTagCountingSuperclass =
   viskores::cont::StorageTagImplicit<internal::ArrayPortalCounting<T>>;
 
 template <typename T>
-struct Storage<T, typename std::enable_if<CanCount<T>::value, viskores::cont::StorageTagCounting>::type>
+struct Storage<
+  T,
+  typename std::enable_if<CanCount<T>::value, viskores::cont::StorageTagCounting>::type>
   : Storage<T, StorageTagCountingSuperclass<T>>
 {
 };
@@ -131,9 +133,10 @@ class ArrayHandleCounting
   : public viskores::cont::ArrayHandle<CountingValueType, viskores::cont::StorageTagCounting>
 {
 public:
-  VISKORES_ARRAY_HANDLE_SUBCLASS(ArrayHandleCounting,
-                             (ArrayHandleCounting<CountingValueType>),
-                             (viskores::cont::ArrayHandle<CountingValueType, StorageTagCounting>));
+  VISKORES_ARRAY_HANDLE_SUBCLASS(
+    ArrayHandleCounting,
+    (ArrayHandleCounting<CountingValueType>),
+    (viskores::cont::ArrayHandle<CountingValueType, StorageTagCounting>));
 
   VISKORES_CONT
   ArrayHandleCounting(CountingValueType start, CountingValueType step, viskores::Id length)
@@ -204,7 +207,7 @@ struct VISKORES_CONT_EXPORT ArrayRangeComputeImpl<viskores::cont::StorageTagCoun
       auto lastComponent = Traits::GetComponent(last, cIndex);
       portal.Set(cIndex,
                  viskores::Range(viskores::Min(firstComponent, lastComponent),
-                             viskores::Max(firstComponent, lastComponent)));
+                                 viskores::Max(firstComponent, lastComponent)));
     }
 
     return result;

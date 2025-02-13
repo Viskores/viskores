@@ -31,21 +31,21 @@ const viskores::UInt64 COPY_SIZE_MIN = (1 << 10); // 1 KiB
 const viskores::UInt64 COPY_SIZE_MAX = (1 << 30); // 1 GiB
 
 using TypeList = viskores::List<viskores::UInt8,
-                            viskores::Vec2ui_8,
-                            viskores::Vec3ui_8,
-                            viskores::Vec4ui_8,
-                            viskores::UInt32,
-                            viskores::Vec2ui_32,
-                            viskores::UInt64,
-                            viskores::Vec2ui_64,
-                            viskores::Float32,
-                            viskores::Vec2f_32,
-                            viskores::Float64,
-                            viskores::Vec2f_64,
-                            viskores::Pair<viskores::UInt32, viskores::Float32>,
-                            viskores::Pair<viskores::UInt32, viskores::Float64>,
-                            viskores::Pair<viskores::UInt64, viskores::Float32>,
-                            viskores::Pair<viskores::UInt64, viskores::Float64>>;
+                                viskores::Vec2ui_8,
+                                viskores::Vec3ui_8,
+                                viskores::Vec4ui_8,
+                                viskores::UInt32,
+                                viskores::Vec2ui_32,
+                                viskores::UInt64,
+                                viskores::Vec2ui_64,
+                                viskores::Float32,
+                                viskores::Vec2f_32,
+                                viskores::Float64,
+                                viskores::Vec2f_64,
+                                viskores::Pair<viskores::UInt32, viskores::Float32>,
+                                viskores::Pair<viskores::UInt32, viskores::Float64>,
+                                viskores::Pair<viskores::UInt64, viskores::Float32>,
+                                viskores::Pair<viskores::UInt64, viskores::Float64>>;
 
 template <typename ValueType>
 void CopySpeed(benchmark::State& state)
@@ -77,9 +77,9 @@ void CopySpeed(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(CopySpeed,
-                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
-                                ->ArgName("Bytes"),
-                              TypeList);
+                                    ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                    ->ArgName("Bytes"),
+                                  TypeList);
 
 } // end anon namespace
 

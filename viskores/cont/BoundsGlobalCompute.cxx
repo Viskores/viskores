@@ -43,7 +43,7 @@ viskores::Bounds MergeBoundsGlobal(const viskores::Bounds& local)
 //-----------------------------------------------------------------------------
 VISKORES_CONT
 viskores::Bounds BoundsGlobalCompute(const viskores::cont::DataSet& dataset,
-                                 viskores::Id coordinate_system_index)
+                                     viskores::Id coordinate_system_index)
 {
   return detail::MergeBoundsGlobal(viskores::cont::BoundsCompute(dataset, coordinate_system_index));
 }
@@ -51,21 +51,23 @@ viskores::Bounds BoundsGlobalCompute(const viskores::cont::DataSet& dataset,
 //-----------------------------------------------------------------------------
 VISKORES_CONT
 viskores::Bounds BoundsGlobalCompute(const viskores::cont::PartitionedDataSet& pds,
-                                 viskores::Id coordinate_system_index)
+                                     viskores::Id coordinate_system_index)
 {
   return detail::MergeBoundsGlobal(viskores::cont::BoundsCompute(pds, coordinate_system_index));
 }
 
 //-----------------------------------------------------------------------------
 VISKORES_CONT
-viskores::Bounds BoundsGlobalCompute(const viskores::cont::DataSet& dataset, const std::string& name)
+viskores::Bounds BoundsGlobalCompute(const viskores::cont::DataSet& dataset,
+                                     const std::string& name)
 {
   return detail::MergeBoundsGlobal(viskores::cont::BoundsCompute(dataset, name));
 }
 
 //-----------------------------------------------------------------------------
 VISKORES_CONT
-viskores::Bounds BoundsGlobalCompute(const viskores::cont::PartitionedDataSet& pds, const std::string& name)
+viskores::Bounds BoundsGlobalCompute(const viskores::cont::PartitionedDataSet& pds,
+                                     const std::string& name)
 {
   return detail::MergeBoundsGlobal(viskores::cont::BoundsCompute(pds, name));
 }

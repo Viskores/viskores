@@ -173,7 +173,7 @@ void TestWorkletMapField3d(viskores::cont::DeviceAdapterId id)
   //need to test with ExecObject that has 3d range
   //need to fetch from ExecObject that has 3d range
   viskores::testing::Testing::TryTypes(mapfield3d::DoTestWorklet<TestMapFieldWorklet>(),
-                                   HandleTypesToTest3D());
+                                       HandleTypesToTest3D());
 }
 
 } // mapfield3d namespace
@@ -182,5 +182,6 @@ void TestWorkletMapField3d(viskores::cont::DeviceAdapterId id)
 
 int UnitTestWorkletMapField3d(int argc, char* argv[])
 {
-  return viskores::cont::testing::Testing::RunOnDevice(mapfield3d::TestWorkletMapField3d, argc, argv);
+  return viskores::cont::testing::Testing::RunOnDevice(
+    mapfield3d::TestWorkletMapField3d, argc, argv);
 }

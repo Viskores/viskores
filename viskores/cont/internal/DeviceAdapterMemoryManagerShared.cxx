@@ -23,7 +23,7 @@ viskores::cont::internal::BufferInfo DeviceAdapterMemoryManagerShared::Allocate(
   viskores::BufferSizeType size) const
 {
   return viskores::cont::internal::BufferInfo(viskores::cont::internal::AllocateOnHost(size),
-                                          this->GetDevice());
+                                              this->GetDevice());
 }
 
 viskores::cont::internal::BufferInfo DeviceAdapterMemoryManagerShared::CopyHostToDevice(

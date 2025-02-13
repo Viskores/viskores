@@ -93,10 +93,11 @@ viskores::cont::Token::Reference viskores::cont::Token::GetReference() const
   return this->Internals.get();
 }
 
-void viskores::cont::Token::Attach(std::unique_ptr<viskores::cont::Token::ObjectReference>&& objectRef,
-                               viskores::cont::Token::ReferenceCount* referenceCountPointer,
-                               std::unique_lock<std::mutex>& lock,
-                               std::condition_variable* conditionVariablePointer)
+void viskores::cont::Token::Attach(
+  std::unique_ptr<viskores::cont::Token::ObjectReference>&& objectRef,
+  viskores::cont::Token::ReferenceCount* referenceCountPointer,
+  std::unique_lock<std::mutex>& lock,
+  std::condition_variable* conditionVariablePointer)
 {
   if (!this->Internals)
   {
@@ -135,7 +136,8 @@ inline bool viskores::cont::Token::IsAttached(
   return false;
 }
 
-bool viskores::cont::Token::IsAttached(viskores::cont::Token::ReferenceCount* referenceCountPointer) const
+bool viskores::cont::Token::IsAttached(
+  viskores::cont::Token::ReferenceCount* referenceCountPointer) const
 {
   if (!this->Internals)
   {

@@ -86,7 +86,8 @@ struct CellSetCheck
   using type = typename std::is_base_of<viskores::cont::CellSet, U>::type;
 };
 
-#define VISKORES_IS_CELL_SET(T) VISKORES_STATIC_ASSERT(::viskores::cont::internal::CellSetCheck<T>::type::value)
+#define VISKORES_IS_CELL_SET(T) \
+  VISKORES_STATIC_ASSERT(::viskores::cont::internal::CellSetCheck<T>::type::value)
 
 } // namespace internal
 }

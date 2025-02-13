@@ -85,7 +85,10 @@ public:
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   VISKORES_EXEC_CONT
-  void Set(viskores::Id index, const ValueType& value) const { *(this->BeginIterator + index) = value; }
+  void Set(viskores::Id index, const ValueType& value) const
+  {
+    *(this->BeginIterator + index) = value;
+  }
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   VISKORES_EXEC_CONT

@@ -58,7 +58,8 @@ void TextAnnotationBillboard::Render(const viskores::rendering::Camera& camera,
   MatrixType translateMatrix =
     viskores::Transform3DTranslate(screenPos[0], screenPos[1], -screenPos[2]);
 
-  viskores::Float32 windowAspect = viskores::Float32(canvas.GetWidth()) / viskores::Float32(canvas.GetHeight());
+  viskores::Float32 windowAspect =
+    viskores::Float32(canvas.GetWidth()) / viskores::Float32(canvas.GetHeight());
 
   MatrixType scaleMatrix = viskores::Transform3DScale(1.f / windowAspect, 1.f, 1.f);
 
@@ -79,7 +80,8 @@ void TextAnnotationBillboard::Render(const viskores::rendering::Camera& camera,
     translateMatrix,
     viskores::MatrixMultiply(scaleMatrix, viskores::MatrixMultiply(viewportMatrix, rotateMatrix)));
 
-  VectorType origin = viskores::Transform3DPointPerspective(fullTransformMatrix, VectorType(0, 0, 0));
+  VectorType origin =
+    viskores::Transform3DPointPerspective(fullTransformMatrix, VectorType(0, 0, 0));
   VectorType right = viskores::Transform3DVector(fullTransformMatrix, VectorType(1, 0, 0));
   VectorType up = viskores::Transform3DVector(fullTransformMatrix, VectorType(0, 1, 0));
 

@@ -40,8 +40,8 @@ struct GenerateGhostTypeWorklet : viskores::worklet::WorkletVisitCellsWithPoints
 
   template <typename pointArrayType, typename cellArrayType>
   VISKORES_EXEC void operator()(viskores::IdComponent numPoints,
-                            const pointArrayType pointArray,
-                            cellArrayType& ghostArray) const
+                                const pointArrayType pointArray,
+                                cellArrayType& ghostArray) const
   {
     viskores::Bounds boundsCell = viskores::Bounds();
     for (viskores::IdComponent pointId = 0; pointId < numPoints; pointId++)
@@ -162,7 +162,8 @@ void AmrArrays::ComputeGenerateParentChildInformation()
         .AsCellSet(cellset);
       cellset.GetCellPointIds(0, ptids);
       viskores::Bounds boundsCell = viskores::Bounds();
-      for (viskores::IdComponent pointId = 0; pointId < cellset.GetNumberOfPointsInCell(0); pointId++)
+      for (viskores::IdComponent pointId = 0; pointId < cellset.GetNumberOfPointsInCell(0);
+           pointId++)
       {
         boundsCell.Include(coords.ReadPortal().Get(ptids[pointId]));
       }
@@ -272,22 +273,25 @@ void AmrArrays::GenerateIndexArrays()
   {
     for (unsigned int b = 0; b < this->PartitionIds.at(l).size(); b++)
     {
-      viskores::cont::DataSet partition = this->AmrDataSet.GetPartition(this->PartitionIds.at(l).at(b));
+      viskores::cont::DataSet partition =
+        this->AmrDataSet.GetPartition(this->PartitionIds.at(l).at(b));
 
       viskores::cont::ArrayHandle<viskores::Id> fieldAmrLevel;
       viskores::cont::ArrayCopy(
-        viskores::cont::ArrayHandleConstant<viskores::Id>(l, partition.GetNumberOfCells()), fieldAmrLevel);
+        viskores::cont::ArrayHandleConstant<viskores::Id>(l, partition.GetNumberOfCells()),
+        fieldAmrLevel);
       partition.AddCellField("vtkAmrLevel", fieldAmrLevel);
 
       viskores::cont::ArrayHandle<viskores::Id> fieldBlockId;
       viskores::cont::ArrayCopy(
-        viskores::cont::ArrayHandleConstant<viskores::Id>(b, partition.GetNumberOfCells()), fieldBlockId);
+        viskores::cont::ArrayHandleConstant<viskores::Id>(b, partition.GetNumberOfCells()),
+        fieldBlockId);
       partition.AddCellField("vtkAmrIndex", fieldBlockId);
 
       viskores::cont::ArrayHandle<viskores::Id> fieldPartitionIndex;
       viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(
-                              this->PartitionIds.at(l).at(b), partition.GetNumberOfCells()),
-                            fieldPartitionIndex);
+                                  this->PartitionIds.at(l).at(b), partition.GetNumberOfCells()),
+                                fieldPartitionIndex);
       partition.AddCellField("vtkCompositeIndex", fieldPartitionIndex);
 
       this->AmrDataSet.ReplacePartition(this->PartitionIds.at(l).at(b), partition);

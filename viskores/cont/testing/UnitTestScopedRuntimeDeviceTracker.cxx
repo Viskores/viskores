@@ -32,7 +32,7 @@ void verify_state(viskores::cont::DeviceAdapterId tag,
     if (deviceId != tag)
     {
       VISKORES_TEST_ASSERT(defaults[static_cast<std::size_t>(i)] == tracker.CanRunOn(deviceId),
-                       "ScopedRuntimeDeviceTracker didn't properly setup state correctly");
+                           "ScopedRuntimeDeviceTracker didn't properly setup state correctly");
     }
   }
 }
@@ -59,8 +59,8 @@ void verify_srdt_support(viskores::cont::DeviceAdapterId tag,
   const bool haveSupport = runtime.Exists(tag);
   if (haveSupport)
   {
-    viskores::cont::ScopedRuntimeDeviceTracker tracker(tag,
-                                                   viskores::cont::RuntimeDeviceTrackerMode::Force);
+    viskores::cont::ScopedRuntimeDeviceTracker tracker(
+      tag, viskores::cont::RuntimeDeviceTrackerMode::Force);
     VISKORES_TEST_ASSERT(tracker.CanRunOn(tag) == haveSupport, "");
     verify_state(tag, force);
     std::thread(verify_state_thread, tag, std::ref(force), std::ref(tracker)).join();
@@ -68,16 +68,16 @@ void verify_srdt_support(viskores::cont::DeviceAdapterId tag,
 
   if (haveSupport)
   {
-    viskores::cont::ScopedRuntimeDeviceTracker tracker(tag,
-                                                   viskores::cont::RuntimeDeviceTrackerMode::Enable);
+    viskores::cont::ScopedRuntimeDeviceTracker tracker(
+      tag, viskores::cont::RuntimeDeviceTrackerMode::Enable);
     VISKORES_TEST_ASSERT(tracker.CanRunOn(tag) == haveSupport);
     verify_state(tag, enable);
     std::thread(verify_state_thread, tag, std::ref(enable), std::ref(tracker)).join();
   }
 
   {
-    viskores::cont::ScopedRuntimeDeviceTracker tracker(tag,
-                                                   viskores::cont::RuntimeDeviceTrackerMode::Disable);
+    viskores::cont::ScopedRuntimeDeviceTracker tracker(
+      tag, viskores::cont::RuntimeDeviceTrackerMode::Disable);
     VISKORES_TEST_ASSERT(tracker.CanRunOn(tag) == false, "");
     verify_state(tag, disable);
     std::thread(verify_state_thread, tag, std::ref(disable), std::ref(tracker)).join();

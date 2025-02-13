@@ -40,8 +40,8 @@ struct ExtractEdges
 
     template<typename CellShapeTag>
     VISKORES_EXEC void operator()(CellShapeTag cellShape,
-                              viskores::IdComponent numPointsInCell,
-                              viskores::IdComponent& numEdges) const
+                                  viskores::IdComponent numPointsInCell,
+                                  viskores::IdComponent& numEdges) const
     {
       viskores::ErrorCode status =
         viskores::exec::CellEdgeNumberOfEdges(numPointsInCell, cellShape, numEdges);
@@ -67,9 +67,9 @@ struct ExtractEdges
              typename PointIndexVecType,
              typename EdgeIndexVecType>
     VISKORES_EXEC void operator()(CellShapeTag cellShape,
-                              const PointIndexVecType& globalPointIndicesForCell,
-                              viskores::IdComponent edgeIndex,
-                              EdgeIndexVecType& edgeIndices) const
+                                  const PointIndexVecType& globalPointIndicesForCell,
+                                  viskores::IdComponent edgeIndex,
+                                  EdgeIndexVecType& edgeIndices) const
     {
       ////
       //// END-EXAMPLE ComplexWorklet
@@ -141,9 +141,9 @@ void TryExtractEdges()
   viskores::cont::CellSetSingleType<> edgeCells = extractEdges.Run(dataSet.GetCellSet());
 
   VISKORES_TEST_ASSERT(edgeCells.GetNumberOfPoints() == 11,
-                   "Output has wrong number of points");
+                       "Output has wrong number of points");
   VISKORES_TEST_ASSERT(edgeCells.GetNumberOfCells() == 35,
-                   "Output has wrong number of cells");
+                       "Output has wrong number of cells");
 }
 
 struct ExtractFaces
@@ -158,9 +158,11 @@ struct ExtractFaces
     using InputDomain = _1;
 
     template<typename CellShapeTag>
-    VISKORES_EXEC void operator()(CellShapeTag cellShape, viskores::IdComponent& numFaces) const
+    VISKORES_EXEC void operator()(CellShapeTag cellShape,
+                                  viskores::IdComponent& numFaces) const
     {
-      viskores::ErrorCode status = viskores::exec::CellFaceNumberOfFaces(cellShape, numFaces);
+      viskores::ErrorCode status =
+        viskores::exec::CellFaceNumberOfFaces(cellShape, numFaces);
       if (status != viskores::ErrorCode::Success)
       {
         this->RaiseError(viskores::ErrorString(status));
@@ -180,9 +182,9 @@ struct ExtractFaces
 
     template<typename CellShapeTag>
     VISKORES_EXEC void operator()(CellShapeTag cellShape,
-                              viskores::IdComponent faceIndex,
-                              viskores::IdComponent& numPointsInFace,
-                              viskores::UInt8& faceShape) const
+                                  viskores::IdComponent faceIndex,
+                                  viskores::IdComponent& numPointsInFace,
+                                  viskores::UInt8& faceShape) const
     {
       viskores::exec::CellFaceNumberOfPoints(faceIndex, cellShape, numPointsInFace);
       switch (numPointsInFace)
@@ -212,12 +214,13 @@ struct ExtractFaces
              typename PointIndexVecType,
              typename FaceIndexVecType>
     VISKORES_EXEC void operator()(CellShapeTag cellShape,
-                              const PointIndexVecType& globalPointIndicesForCell,
-                              viskores::IdComponent faceIndex,
-                              FaceIndexVecType& faceIndices) const
+                                  const PointIndexVecType& globalPointIndicesForCell,
+                                  viskores::IdComponent faceIndex,
+                                  FaceIndexVecType& faceIndices) const
     {
       viskores::IdComponent numPointsInFace = faceIndices.GetNumberOfComponents();
-      for (viskores::IdComponent pointInFaceIndex = 0; pointInFaceIndex < numPointsInFace;
+      for (viskores::IdComponent pointInFaceIndex = 0;
+           pointInFaceIndex < numPointsInFace;
            pointInFaceIndex++)
       {
         viskores::IdComponent pointInCellIndex;
@@ -291,17 +294,18 @@ void TryExtractFaces()
   viskores::cont::CellSetExplicit<> faceCells = extractFaces.Run(dataSet.GetCellSet());
 
   VISKORES_TEST_ASSERT(faceCells.GetNumberOfPoints() == 11,
-                   "Output has wrong number of points");
+                       "Output has wrong number of points");
   VISKORES_TEST_ASSERT(faceCells.GetNumberOfCells() == 20,
-                   "Output has wrong number of cells");
+                       "Output has wrong number of cells");
 
-  VISKORES_TEST_ASSERT(faceCells.GetCellShape(0) == viskores::CELL_SHAPE_QUAD, "Face wrong");
+  VISKORES_TEST_ASSERT(faceCells.GetCellShape(0) == viskores::CELL_SHAPE_QUAD,
+                       "Face wrong");
   viskores::Id4 quadIndices;
   faceCells.GetIndices(0, quadIndices);
   VISKORES_TEST_ASSERT(test_equal(quadIndices, viskores::Id4(0, 3, 7, 4)), "Face wrong");
 
   VISKORES_TEST_ASSERT(faceCells.GetCellShape(12) == viskores::CELL_SHAPE_TRIANGLE,
-                   "Face wrong");
+                       "Face wrong");
   viskores::Id3 triIndices;
   faceCells.GetIndices(12, triIndices);
   VISKORES_TEST_ASSERT(test_equal(triIndices, viskores::Id3(8, 10, 6)), "Face wrong");

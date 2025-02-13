@@ -20,7 +20,8 @@ namespace
 {
 template <typename Device>
 using DeviceInvalid = std::integral_constant<bool, !Device::IsEnabled>;
-using EnabledDeviceList = viskores::ListRemoveIf<viskores::cont::DeviceAdapterListCommon, DeviceInvalid>;
+using EnabledDeviceList =
+  viskores::ListRemoveIf<viskores::cont::DeviceAdapterListCommon, DeviceInvalid>;
 
 template <typename Device>
 using DeviceTimerPtr = std::unique_ptr<viskores::cont::DeviceAdapterTimerImplementation<Device>>;
@@ -72,7 +73,8 @@ struct InitFunctor
     // device timer is safe to call. At the same time we still need to make
     // sure that we have the required runtime and not just compile time support
     // this is why we use `DeviceAdapterRuntimeDetector`
-    bool haveRequiredRuntimeSupport = viskores::cont::DeviceAdapterRuntimeDetector<Device>{}.Exists();
+    bool haveRequiredRuntimeSupport =
+      viskores::cont::DeviceAdapterRuntimeDetector<Device>{}.Exists();
     if (haveRequiredRuntimeSupport)
     {
       std::get<Index<Device, EnabledDeviceList>::value>(timerImpls)
@@ -85,9 +87,9 @@ struct ResetFunctor
 {
   template <typename Device>
   VISKORES_CONT void operator()(Device device,
-                            viskores::cont::DeviceAdapterId deviceToRunOn,
-                            const viskores::cont::RuntimeDeviceTracker& tracker,
-                            EnabledTimerImplTuple& timerImpls)
+                                viskores::cont::DeviceAdapterId deviceToRunOn,
+                                const viskores::cont::RuntimeDeviceTracker& tracker,
+                                EnabledTimerImplTuple& timerImpls)
   {
     if ((deviceToRunOn == device || deviceToRunOn == viskores::cont::DeviceAdapterTagAny()) &&
         tracker.CanRunOn(device))
@@ -101,9 +103,9 @@ struct StartFunctor
 {
   template <typename Device>
   VISKORES_CONT void operator()(Device device,
-                            viskores::cont::DeviceAdapterId deviceToRunOn,
-                            const viskores::cont::RuntimeDeviceTracker& tracker,
-                            EnabledTimerImplTuple& timerImpls)
+                                viskores::cont::DeviceAdapterId deviceToRunOn,
+                                const viskores::cont::RuntimeDeviceTracker& tracker,
+                                EnabledTimerImplTuple& timerImpls)
   {
     if ((deviceToRunOn == device || deviceToRunOn == viskores::cont::DeviceAdapterTagAny()) &&
         tracker.CanRunOn(device))
@@ -117,9 +119,9 @@ struct StopFunctor
 {
   template <typename Device>
   VISKORES_CONT void operator()(Device device,
-                            viskores::cont::DeviceAdapterId deviceToRunOn,
-                            const viskores::cont::RuntimeDeviceTracker& tracker,
-                            EnabledTimerImplTuple& timerImpls)
+                                viskores::cont::DeviceAdapterId deviceToRunOn,
+                                const viskores::cont::RuntimeDeviceTracker& tracker,
+                                EnabledTimerImplTuple& timerImpls)
   {
     if ((deviceToRunOn == device || deviceToRunOn == viskores::cont::DeviceAdapterTagAny()) &&
         tracker.CanRunOn(device))
@@ -135,9 +137,9 @@ struct StartedFunctor
 
   template <typename Device>
   VISKORES_CONT void operator()(Device device,
-                            viskores::cont::DeviceAdapterId deviceToRunOn,
-                            const viskores::cont::RuntimeDeviceTracker& tracker,
-                            EnabledTimerImplTuple& timerImpls)
+                                viskores::cont::DeviceAdapterId deviceToRunOn,
+                                const viskores::cont::RuntimeDeviceTracker& tracker,
+                                EnabledTimerImplTuple& timerImpls)
   {
     if ((deviceToRunOn == device || deviceToRunOn == viskores::cont::DeviceAdapterTagAny()) &&
         tracker.CanRunOn(device))
@@ -153,9 +155,9 @@ struct StoppedFunctor
 
   template <typename Device>
   VISKORES_CONT void operator()(Device device,
-                            viskores::cont::DeviceAdapterId deviceToRunOn,
-                            const viskores::cont::RuntimeDeviceTracker& tracker,
-                            EnabledTimerImplTuple& timerImpls)
+                                viskores::cont::DeviceAdapterId deviceToRunOn,
+                                const viskores::cont::RuntimeDeviceTracker& tracker,
+                                EnabledTimerImplTuple& timerImpls)
   {
     if ((deviceToRunOn == device || deviceToRunOn == viskores::cont::DeviceAdapterTagAny()) &&
         tracker.CanRunOn(device))
@@ -171,9 +173,9 @@ struct ReadyFunctor
 
   template <typename Device>
   VISKORES_CONT void operator()(Device device,
-                            viskores::cont::DeviceAdapterId deviceToRunOn,
-                            const viskores::cont::RuntimeDeviceTracker& tracker,
-                            EnabledTimerImplTuple& timerImpls)
+                                viskores::cont::DeviceAdapterId deviceToRunOn,
+                                const viskores::cont::RuntimeDeviceTracker& tracker,
+                                EnabledTimerImplTuple& timerImpls)
   {
     if ((deviceToRunOn == device || deviceToRunOn == viskores::cont::DeviceAdapterTagAny()) &&
         tracker.CanRunOn(device))
@@ -189,9 +191,9 @@ struct ElapsedTimeFunctor
 
   template <typename Device>
   VISKORES_CONT void operator()(Device device,
-                            viskores::cont::DeviceAdapterId deviceToRunOn,
-                            const viskores::cont::RuntimeDeviceTracker& tracker,
-                            EnabledTimerImplTuple& timerImpls)
+                                viskores::cont::DeviceAdapterId deviceToRunOn,
+                                const viskores::cont::RuntimeDeviceTracker& tracker,
+                                EnabledTimerImplTuple& timerImpls)
   {
     if ((deviceToRunOn == device || deviceToRunOn == viskores::cont::DeviceAdapterTagAny()) &&
         tracker.CanRunOn(device))
@@ -245,9 +247,9 @@ Timer::Timer(viskores::cont::DeviceAdapterId device)
   if (!tracker.CanRunOn(device))
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-               "Device '" << device.GetName()
-                          << "' can not run on current Device."
-                             "Thus timer is not usable");
+                   "Device '" << device.GetName()
+                              << "' can not run on current Device."
+                                 "Thus timer is not usable");
   }
 }
 
@@ -266,9 +268,9 @@ void Timer::Reset(viskores::cont::DeviceAdapterId device)
   if (!tracker.CanRunOn(device))
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-               "Device '" << device.GetName()
-                          << "' can not run on current Device."
-                             "Thus timer is not usable");
+                   "Device '" << device.GetName()
+                              << "' can not run on current Device."
+                                 "Thus timer is not usable");
   }
 
   this->Device = device;

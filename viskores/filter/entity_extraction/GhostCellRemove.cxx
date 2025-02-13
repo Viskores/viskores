@@ -49,10 +49,12 @@ private:
 };
 
 template <int DIMS>
-VISKORES_EXEC_CONT viskores::Id3 getLogical(const viskores::Id& index, const viskores::Id3& cellDims);
+VISKORES_EXEC_CONT viskores::Id3 getLogical(const viskores::Id& index,
+                                            const viskores::Id3& cellDims);
 
 template <>
-VISKORES_EXEC_CONT viskores::Id3 getLogical<3>(const viskores::Id& index, const viskores::Id3& cellDims)
+VISKORES_EXEC_CONT viskores::Id3 getLogical<3>(const viskores::Id& index,
+                                               const viskores::Id3& cellDims)
 {
   viskores::Id3 res(0, 0, 0);
   res[0] = index % cellDims[0];
@@ -62,7 +64,8 @@ VISKORES_EXEC_CONT viskores::Id3 getLogical<3>(const viskores::Id& index, const 
 }
 
 template <>
-VISKORES_EXEC_CONT viskores::Id3 getLogical<2>(const viskores::Id& index, const viskores::Id3& cellDims)
+VISKORES_EXEC_CONT viskores::Id3 getLogical<2>(const viskores::Id& index,
+                                               const viskores::Id3& cellDims)
 {
   viskores::Id3 res(0, 0, 0);
   res[0] = index % cellDims[0];
@@ -162,7 +165,9 @@ class Validate : public viskores::worklet::WorkletMapField
 {
 public:
   VISKORES_CONT
-  Validate(const viskores::Id3& cellDims, viskores::UInt8 removeTypes, const viskores::RangeId3& range)
+  Validate(const viskores::Id3& cellDims,
+           viskores::UInt8 removeTypes,
+           const viskores::RangeId3& range)
     : CellDims(cellDims)
     , RemoveVals(removeTypes)
     , Range(range)
@@ -173,7 +178,9 @@ public:
   typedef void ExecutionSignature(_1, InputIndex, _2);
 
   template <typename T>
-  VISKORES_EXEC void operator()(const T& value, const viskores::Id& index, viskores::UInt8& invalid) const
+  VISKORES_EXEC void operator()(const T& value,
+                                const viskores::Id& index,
+                                viskores::UInt8& invalid) const
   {
     if (ShouldRemove(value, this->RemoveVals) &&
         checkRange<DIMS>(Range, getLogical<DIMS>(index, CellDims)))
@@ -218,7 +225,8 @@ bool CanStrip(const viskores::cont::ArrayHandle<T, StorageType>& ghostField,
 
   invoke(Validate<DIMS>(cellDims, removeTypes, range), ghostField, invalidFlags);
 
-  viskores::UInt8 res = viskores::cont::Algorithm::Reduce(invalidFlags, viskores::UInt8(0), viskores::Maximum());
+  viskores::UInt8 res =
+    viskores::cont::Algorithm::Reduce(invalidFlags, viskores::UInt8(0), viskores::Maximum());
   return res == 0;
 }
 
@@ -301,7 +309,8 @@ VISKORES_CONT GhostCellRemove::GhostCellRemove()
 }
 
 //-----------------------------------------------------------------------------
-VISKORES_CONT viskores::cont::DataSet GhostCellRemove::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet GhostCellRemove::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   const viskores::cont::UnknownCellSet& cells = input.GetCellSet();
   const viskores::cont::Field& field =

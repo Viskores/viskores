@@ -82,8 +82,8 @@ public:
 
   template <typename InOutFieldPortalType, typename InFieldPortalType>
   VISKORES_EXEC void operator()(const InOutFieldPortalType& hyperarcsPortal,
-                            const viskores::Id activeVertex,
-                            const InFieldPortalType& activeIndicesPortal) const
+                                const viskores::Id activeVertex,
+                                const InFieldPortalType& activeIndicesPortal) const
   {
     // convert the ID from join tree indices to active graph indices
     viskores::Id joinID = hyperarcsPortal.Get(activeVertex);

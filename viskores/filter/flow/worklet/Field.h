@@ -45,7 +45,8 @@ public:
 
   VISKORES_EXEC Association GetAssociation() const { return this->Assoc; }
 
-  VISKORES_EXEC void GetValue(const viskores::Id cellId, viskores::VecVariable<viskores::Vec3f, 2>& value) const
+  VISKORES_EXEC void GetValue(const viskores::Id cellId,
+                              viskores::VecVariable<viskores::Vec3f, 2>& value) const
   {
     VISKORES_ASSERT(this->Assoc == Association::Cells);
 
@@ -54,10 +55,10 @@ public:
   }
 
   VISKORES_EXEC void GetValue(const viskores::VecVariable<viskores::Id, 8>& indices,
-                          const viskores::Id vertices,
-                          const viskores::Vec3f& parametric,
-                          const viskores::UInt8 cellShape,
-                          viskores::VecVariable<viskores::Vec3f, 2>& value) const
+                              const viskores::Id vertices,
+                              const viskores::Vec3f& parametric,
+                              const viskores::UInt8 cellShape,
+                              viskores::VecVariable<viskores::Vec3f, 2>& value) const
   {
     VISKORES_ASSERT(this->Assoc == Association::Points);
 
@@ -71,10 +72,10 @@ public:
 
   template <typename Point, typename Locator, typename Helper>
   VISKORES_EXEC bool GetValue(const Point& viskoresNotUsed(point),
-                          const viskores::FloatDefault& viskoresNotUsed(time),
-                          viskores::VecVariable<Point, 2>& viskoresNotUsed(out),
-                          const Locator& viskoresNotUsed(locator),
-                          const Helper& viskoresNotUsed(helper)) const
+                              const viskores::FloatDefault& viskoresNotUsed(time),
+                              viskores::VecVariable<Point, 2>& viskoresNotUsed(out),
+                              const Locator& viskoresNotUsed(locator),
+                              const Helper& viskoresNotUsed(helper)) const
   {
     //TODO Raise Error : Velocity Field should not allow this path
     return false;
@@ -145,7 +146,8 @@ public:
 
   VISKORES_EXEC Association GetAssociation() const { return this->Assoc; }
 
-  VISKORES_EXEC void GetValue(const viskores::Id cellId, viskores::VecVariable<viskores::Vec3f, 2>& value) const
+  VISKORES_EXEC void GetValue(const viskores::Id cellId,
+                              viskores::VecVariable<viskores::Vec3f, 2>& value) const
   {
     VISKORES_ASSERT(this->Assoc == Association::Cells);
 
@@ -155,10 +157,10 @@ public:
   }
 
   VISKORES_EXEC void GetValue(const viskores::VecVariable<viskores::Id, 8>& indices,
-                          const viskores::Id vertices,
-                          const viskores::Vec3f& parametric,
-                          const viskores::UInt8 cellShape,
-                          viskores::VecVariable<viskores::Vec3f, 2>& value) const
+                              const viskores::Id vertices,
+                              const viskores::Vec3f& parametric,
+                              const viskores::UInt8 cellShape,
+                              viskores::VecVariable<viskores::Vec3f, 2>& value) const
   {
     VISKORES_ASSERT(this->Assoc == Association::Points);
 
@@ -177,10 +179,10 @@ public:
 
   template <typename Point, typename Locator, typename Helper>
   VISKORES_EXEC bool GetValue(const Point& viskoresNotUsed(point),
-                          const viskores::FloatDefault& viskoresNotUsed(time),
-                          viskores::VecVariable<Point, 2>& viskoresNotUsed(out),
-                          const Locator& viskoresNotUsed(locator),
-                          const Helper& viskoresNotUsed(helper)) const
+                              const viskores::FloatDefault& viskoresNotUsed(time),
+                              viskores::VecVariable<Point, 2>& viskoresNotUsed(out),
+                              const Locator& viskoresNotUsed(locator),
+                              const Helper& viskoresNotUsed(helper)) const
   {
     //TODO : Raise Error : Velocity Field should not allow this path
     return false;

@@ -33,7 +33,8 @@ class ColorTableSamplesRGBA
 {
 public:
   viskores::Range SampleRange = { 1.0, 0.0 };
-  viskores::Int32 NumberOfSamples = 0; // this will not include end padding, NaN, Below or Above Range
+  viskores::Int32 NumberOfSamples =
+    0; // this will not include end padding, NaN, Below or Above Range
   viskores::cont::ArrayHandle<viskores::Vec4ui_8> Samples;
 };
 
@@ -52,7 +53,8 @@ class ColorTableSamplesRGB
 {
 public:
   viskores::Range SampleRange = { 1.0, 0.0 };
-  viskores::Int32 NumberOfSamples = 0; // this will not include end padding, NaN, Below or Above Range
+  viskores::Int32 NumberOfSamples =
+    0; // this will not include end padding, NaN, Below or Above Range
   viskores::cont::ArrayHandle<viskores::Vec3ui_8> Samples;
 };
 }

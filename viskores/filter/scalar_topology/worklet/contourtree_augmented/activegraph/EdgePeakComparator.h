@@ -151,7 +151,7 @@ public:
   }
 
   VISKORES_CONT EdgePeakComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                       viskores::cont::Token& token) const
+                                                           viskores::cont::Token& token) const
   {
     return EdgePeakComparatorImpl(this->EdgeFar, this->EdgeNear, this->JoinGraph, device, token);
   }

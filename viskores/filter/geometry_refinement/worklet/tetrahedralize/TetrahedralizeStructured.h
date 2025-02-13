@@ -48,8 +48,8 @@ public:
   // Each hexahedron cell produces five tetrahedron cells
   template <typename ConnectivityInVec, typename ConnectivityOutVec, typename ThreadIndicesType>
   VISKORES_EXEC void operator()(const ConnectivityInVec& connectivityIn,
-                            ConnectivityOutVec& connectivityOut,
-                            const ThreadIndicesType threadIndices) const
+                                ConnectivityOutVec& connectivityOut,
+                                const ThreadIndicesType threadIndices) const
   {
     VISKORES_STATIC_CONSTEXPR_ARRAY viskores::IdComponent StructuredTetrahedronIndices[2][5][4] = {
       { { 0, 1, 3, 4 }, { 1, 4, 5, 6 }, { 1, 4, 6, 3 }, { 1, 3, 6, 2 }, { 3, 6, 7, 4 } },
@@ -76,8 +76,9 @@ class TetrahedralizeStructured
 {
 public:
   template <typename CellSetType>
-  viskores::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
-                                      viskores::cont::ArrayHandle<viskores::IdComponent>& outCellsPerCell)
+  viskores::cont::CellSetSingleType<> Run(
+    const CellSetType& cellSet,
+    viskores::cont::ArrayHandle<viskores::IdComponent>& outCellsPerCell)
   {
     viskores::cont::CellSetSingleType<> outCellSet;
     viskores::cont::ArrayHandle<viskores::Id> connectivity;

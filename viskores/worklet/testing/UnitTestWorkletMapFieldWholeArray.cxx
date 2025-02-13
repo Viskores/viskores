@@ -24,9 +24,9 @@ public:
 
   template <typename InPortalType, typename InOutPortalType, typename OutPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& index,
-                            const InPortalType& inPortal,
-                            const InOutPortalType& inOutPortal,
-                            const OutPortalType& outPortal) const
+                                const InPortalType& inPortal,
+                                const InOutPortalType& inOutPortal,
+                                const OutPortalType& outPortal) const
   {
     using inT = typename InPortalType::ValueType;
     if (!test_equal(inPortal.Get(index), TestValue(index, inT())))
@@ -77,12 +77,13 @@ struct DoTestWholeArrayWorklet
     outHandle.Allocate(ARRAY_SIZE);
 
     viskores::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(viskores::cont::UnknownArrayHandle(inHandle)
-                        .ResetTypes<viskores::List<T>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>(),
-                      viskores::cont::UnknownArrayHandle(inOutHandle)
-                        .ResetTypes<viskores::List<T>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>(),
-                      viskores::cont::UnknownArrayHandle(outHandle)
-                        .ResetTypes<viskores::List<T>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>());
+    dispatcher.Invoke(
+      viskores::cont::UnknownArrayHandle(inHandle)
+        .ResetTypes<viskores::List<T>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>(),
+      viskores::cont::UnknownArrayHandle(inOutHandle)
+        .ResetTypes<viskores::List<T>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>(),
+      viskores::cont::UnknownArrayHandle(outHandle)
+        .ResetTypes<viskores::List<T>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>());
 
     std::cout << "Check result." << std::endl;
     CheckPortal(inOutHandle.ReadPortal());
@@ -96,7 +97,7 @@ void TestWorkletMapFieldExecArg(viskores::cont::DeviceAdapterId id)
 
   std::cout << "--- Worklet accepting all types." << std::endl;
   viskores::testing::Testing::TryTypes(map_whole_array::DoTestWholeArrayWorklet(),
-                                   viskores::TypeListCommon());
+                                       viskores::TypeListCommon());
 }
 
 } // anonymous namespace

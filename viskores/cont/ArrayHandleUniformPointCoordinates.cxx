@@ -112,7 +112,8 @@ ArrayRangeComputeImpl<viskores::cont::StorageTagUniformPoints>::operator()(
 
   viskores::cont::ArrayHandle<viskores::Range> rangeArray;
   rangeArray.Allocate(3);
-  viskores::cont::ArrayHandle<viskores::Range>::WritePortalType outPortal = rangeArray.WritePortal();
+  viskores::cont::ArrayHandle<viskores::Range>::WritePortalType outPortal =
+    rangeArray.WritePortal();
   outPortal.Set(0, viskores::Range(minimum[0], maximum[0]));
   outPortal.Set(1, viskores::Range(minimum[1], maximum[1]));
   outPortal.Set(2, viskores::Range(minimum[2], maximum[2]));

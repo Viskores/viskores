@@ -289,8 +289,8 @@ inline void ActiveGraph::Initialise(Mesh& mesh, const MeshExtrema& meshExtrema)
     */
   IdArrayType inverseIndex;
   OneIfCritical oneIfCriticalFunctor;
-  auto oneIfCriticalArrayHandle =
-    viskores::cont::ArrayHandleTransform<IdArrayType, OneIfCritical>(outDegrees, oneIfCriticalFunctor);
+  auto oneIfCriticalArrayHandle = viskores::cont::ArrayHandleTransform<IdArrayType, OneIfCritical>(
+    outDegrees, oneIfCriticalFunctor);
   viskores::cont::Algorithm::ScanExclusive(oneIfCriticalArrayHandle, inverseIndex);
 
   // now we can compute how many critical points we carry forward
@@ -395,7 +395,8 @@ inline void ActiveGraph::MakeMergeTree(MergeTree& tree, MeshExtrema& meshExtrema
     // we check just to make absolutely sure we won't get stuck in an infinite loop
     if (this->NumIterations >= maxNumIterations)
     {
-      throw new viskores::cont::ErrorInternal("Bad iteration. Merge tree unable to process all edges.");
+      throw new viskores::cont::ErrorInternal(
+        "Bad iteration. Merge tree unable to process all edges.");
     }
 
     // find & label the extrema with their governing saddles
@@ -534,7 +535,7 @@ inline void ActiveGraph::CompactActiveVertices()
   // Use only the current this->ActiveVertices this->Outdegree to match size on CopyIf
   viskores::cont::ArrayHandle<viskores::Id> outdegreeLookup;
   viskores::cont::Algorithm::Copy(PermuteIndexType(this->ActiveVertices, this->Outdegree),
-                              outdegreeLookup);
+                                  outdegreeLookup);
 
   // compact the this->ActiveVertices array to keep only the ones of interest
   viskores::cont::Algorithm::CopyIf(this->ActiveVertices, outdegreeLookup, newActiveVertices);
@@ -668,8 +669,9 @@ inline void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
 
   IdArrayType newSupernodePosition;
   OneIfSupernode oneIfSupernodeFunctor;
-  auto oneIfSupernodeArrayHandle = viskores::cont::ArrayHandleTransform<IdArrayType, OneIfSupernode>(
-    this->Hyperarcs, oneIfSupernodeFunctor);
+  auto oneIfSupernodeArrayHandle =
+    viskores::cont::ArrayHandleTransform<IdArrayType, OneIfSupernode>(this->Hyperarcs,
+                                                                      oneIfSupernodeFunctor);
   viskores::cont::Algorithm::ScanExclusive(oneIfSupernodeArrayHandle, newSupernodePosition);
 
   this->NumSupernodes = this->GetLastValue(newSupernodePosition) +
@@ -691,8 +693,9 @@ inline void ActiveGraph::FindSuperAndHyperNodes(MergeTree& tree)
     */
   IdArrayType newHypernodePosition;
   OneIfHypernode oneIfHypernodeFunctor;
-  auto oneIfHypernodeArrayHandle = viskores::cont::ArrayHandleTransform<IdArrayType, OneIfHypernode>(
-    this->Hyperarcs, oneIfHypernodeFunctor);
+  auto oneIfHypernodeArrayHandle =
+    viskores::cont::ArrayHandleTransform<IdArrayType, OneIfHypernode>(this->Hyperarcs,
+                                                                      oneIfHypernodeFunctor);
   viskores::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
   this->NumHypernodes = this->GetLastValue(newHypernodePosition) +
@@ -735,9 +738,9 @@ inline void ActiveGraph::SetSuperArcs(MergeTree& tree)
   tree.DebugPrint("Hyperparents Set", __FILE__, __LINE__);
   //      a.      And the super ID array needs setting up
   this->SuperID.ReleaseResources();
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::make_ArrayHandleConstant(NO_SUCH_ELEMENT, this->GlobalIndex.GetNumberOfValues()),
-    this->SuperID);
+  viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
+                                    NO_SUCH_ELEMENT, this->GlobalIndex.GetNumberOfValues()),
+                                  this->SuperID);
   viskores::cont::ArrayHandleIndex supernodeIndex(this->NumSupernodes);
   PermutedIdArrayType permutedSuperID(tree.Supernodes, this->SuperID);
   viskores::cont::Algorithm::Copy(supernodeIndex, permutedSuperID);
@@ -745,8 +748,8 @@ inline void ActiveGraph::SetSuperArcs(MergeTree& tree)
   //      2.      Sort the supernodes into segments according to hyperparent
   //              See comparator for details
   viskores::cont::Algorithm::Sort(tree.Supernodes,
-                              active_graph_inc_ns::HyperArcSuperNodeComparator(
-                                tree.Hyperparents, this->SuperID, tree.IsJoinTree));
+                                  active_graph_inc_ns::HyperArcSuperNodeComparator(
+                                    tree.Hyperparents, this->SuperID, tree.IsJoinTree));
 
   //      3.      Now update the other arrays to match
   IdArrayType hyperParentsTemp;
@@ -799,7 +802,7 @@ inline void ActiveGraph::SetHyperArcs(MergeTree& tree)
 { // SetHyperArcs()
   //      1.      Allocate memory for hypertree
   tree.Hypernodes.Allocate(
-    this->NumHypernodes, // Has been allocated previously.
+    this->NumHypernodes,     // Has been allocated previously.
     viskores::CopyFlag::On); // The values are needed but the size may be too large.
   tree.Hyperarcs.ReleaseResources();
   tree.Hyperarcs.Allocate(this->NumHypernodes); // Has not been allocated yet

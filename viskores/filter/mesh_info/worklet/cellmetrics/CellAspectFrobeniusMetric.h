@@ -54,9 +54,9 @@ using FloatType = viskores::FloatDefault;
 // By default, cells have undefined aspect frobenius unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                            const PointCoordVecType& pts,
-                                            CellShapeType shape,
-                                            viskores::ErrorCode& ec)
+                                                const PointCoordVecType& pts,
+                                                CellShapeType shape,
+                                                viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -71,9 +71,9 @@ VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& num
 //as pentagons or hexagons, or (n<3)-vertex polygons, such as lines or points.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                            const PointCoordVecType& pts,
-                                            viskores::CellShapeTagPolygon,
-                                            viskores::ErrorCode& ec)
+                                                const PointCoordVecType& pts,
+                                                viskores::CellShapeTagPolygon,
+                                                viskores::ErrorCode& ec)
 {
   if (numPts == 3)
     return CellAspectFrobeniusMetric<OutType>(numPts, pts, viskores::CellShapeTagTriangle(), ec);
@@ -87,9 +87,9 @@ VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& num
 //The aspect frobenius metric is not supported for lines/edges.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                            const PointCoordVecType& pts,
-                                            viskores::CellShapeTagLine,
-                                            viskores::ErrorCode& ec)
+                                                const PointCoordVecType& pts,
+                                                viskores::CellShapeTagLine,
+                                                viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -102,9 +102,9 @@ VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& num
 //defined in terms of the aspect frobenius of triangles.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                            const PointCoordVecType& pts,
-                                            viskores::CellShapeTagQuad,
-                                            viskores::ErrorCode& ec)
+                                                const PointCoordVecType& pts,
+                                                viskores::CellShapeTagQuad,
+                                                viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -117,9 +117,9 @@ VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& num
 //defined in terms of the aspect frobenius of tetrahedrons.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                            const PointCoordVecType& pts,
-                                            viskores::CellShapeTagHexahedron,
-                                            viskores::ErrorCode& ec)
+                                                const PointCoordVecType& pts,
+                                                viskores::CellShapeTagHexahedron,
+                                                viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -132,9 +132,9 @@ VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& num
 //defined in terms of the aspect frobenius of tetrahedrons.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                            const PointCoordVecType& pts,
-                                            viskores::CellShapeTagPyramid,
-                                            viskores::ErrorCode& ec)
+                                                const PointCoordVecType& pts,
+                                                viskores::CellShapeTagPyramid,
+                                                viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -147,9 +147,9 @@ VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& num
 //defined in terms of the aspect frobenius of tetrahedrons.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                            const PointCoordVecType& pts,
-                                            viskores::CellShapeTagWedge,
-                                            viskores::ErrorCode& ec)
+                                                const PointCoordVecType& pts,
+                                                viskores::CellShapeTagWedge,
+                                                viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -166,9 +166,9 @@ VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& num
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                            const PointCoordVecType& pts,
-                                            viskores::CellShapeTagTriangle,
-                                            viskores::ErrorCode& ec)
+                                                const PointCoordVecType& pts,
+                                                viskores::CellShapeTagTriangle,
+                                                viskores::ErrorCode& ec)
 {
   if (numPts != 3)
   {
@@ -182,7 +182,8 @@ VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& num
 
   //Sum the length squared of each edge
   FloatType sum = (FloatType)viskores::MagnitudeSquared(TriEdges[0]) +
-    (FloatType)viskores::MagnitudeSquared(TriEdges[1]) + (FloatType)viskores::MagnitudeSquared(TriEdges[2]);
+    (FloatType)viskores::MagnitudeSquared(TriEdges[1]) +
+    (FloatType)viskores::MagnitudeSquared(TriEdges[2]);
 
   //Compute the length of the cross product of the triangle.
   //The result is twice the area of the triangle.
@@ -206,9 +207,9 @@ VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& num
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                            const PointCoordVecType& pts,
-                                            viskores::CellShapeTagTetra,
-                                            viskores::ErrorCode& ec)
+                                                const PointCoordVecType& pts,
+                                                viskores::CellShapeTagTetra,
+                                                viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -226,7 +227,8 @@ VISKORES_EXEC OutType CellAspectFrobeniusMetric(const viskores::IdComponent& num
   };
 
   //Compute the tet volume
-  FloatType denominator = (FloatType)viskores::Dot(TetEdges[0], viskores::Cross(TetEdges[1], TetEdges[2]));
+  FloatType denominator =
+    (FloatType)viskores::Dot(TetEdges[0], viskores::Cross(TetEdges[1], TetEdges[2]));
   denominator *= denominator;
   denominator *= 2.0f;
   const FloatType normal_exp = 1.0f / 3.0f;

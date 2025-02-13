@@ -98,11 +98,11 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertexID,
-                            const viskores::Id& newOutdegree,
-                            const viskores::Id& newFirstEdge,
-                            const InFieldPortalType& activeEdges,
-                            const InFieldPortalType& firstEdge,
-                            const OutFieldPortalType& edgeSorter) const
+                                const viskores::Id& newOutdegree,
+                                const viskores::Id& newFirstEdge,
+                                const InFieldPortalType& activeEdges,
+                                const InFieldPortalType& firstEdge,
+                                const OutFieldPortalType& edgeSorter) const
   {
     // loop through the edges from the vertex
     for (viskores::Id edge = 0; edge < newOutdegree; edge++)

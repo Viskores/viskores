@@ -92,7 +92,8 @@ void TryRemainder()
   viskores::Id3 m3 = AnyRemainder(viskores::Id3(10, 9, 8), viskores::Id3(7, 6, 5));
   VISKORES_TEST_ASSERT(test_equal(m3, viskores::Id3(3, 3, 3)), "Got bad remainder");
 
-  viskores::Vec3f_32 m4 = AnyRemainder(viskores::make_Vec(10, 9, 8), viskores::make_Vec(7, 6, 5));
+  viskores::Vec3f_32 m4 =
+    AnyRemainder(viskores::make_Vec(10, 9, 8), viskores::make_Vec(7, 6, 5));
   VISKORES_TEST_ASSERT(test_equal(m4, viskores::make_Vec(3, 3, 3)), "Got bad remainder");
 }
 
@@ -139,11 +140,11 @@ void TryCustomTypeTraits()
   VISKORES_STATIC_ASSERT(
     (std::is_same<CustomTraits::NumericTag, OriginalTraits::NumericTag>::value));
   VISKORES_STATIC_ASSERT((std::is_same<CustomTraits::DimensionalityTag,
-                                   OriginalTraits::DimensionalityTag>::value));
+                                       OriginalTraits::DimensionalityTag>::value));
 
   VISKORES_TEST_ASSERT(CustomTraits::ZeroInitialization() ==
-                     OriginalTraits::ZeroInitialization(),
-                   "Bad zero initialization.");
+                         OriginalTraits::ZeroInitialization(),
+                       "Bad zero initialization.");
 }
 
 } // namespace TraitsExamples
@@ -170,7 +171,8 @@ struct LessTotalOrder
     {
       using ComponentType = typename viskores::VecTraits<T>::ComponentType;
       const ComponentType& leftValue = viskores::VecTraits<T>::GetComponent(left, index);
-      const ComponentType& rightValue = viskores::VecTraits<T>::GetComponent(right, index);
+      const ComponentType& rightValue =
+        viskores::VecTraits<T>::GetComponent(right, index);
       if (leftValue < rightValue)
       {
         return true;
@@ -199,7 +201,8 @@ struct LessPartialOrder
     {
       using ComponentType = typename viskores::VecTraits<T>::ComponentType;
       const ComponentType& leftValue = viskores::VecTraits<T>::GetComponent(left, index);
-      const ComponentType& rightValue = viskores::VecTraits<T>::GetComponent(right, index);
+      const ComponentType& rightValue =
+        viskores::VecTraits<T>::GetComponent(right, index);
       if (!(leftValue < rightValue))
       {
         return false;
@@ -226,16 +229,24 @@ void TryLess()
   VISKORES_TEST_ASSERT(!partialLess1(1, 1), "Bad less.");
 
   LessTotalOrder<viskores::Id3> totalLess3;
-  VISKORES_TEST_ASSERT(totalLess3(viskores::Id3(1, 2, 3), viskores::Id3(3, 2, 1)), "Bad less.");
-  VISKORES_TEST_ASSERT(!totalLess3(viskores::Id3(3, 2, 1), viskores::Id3(1, 2, 3)), "Bad less.");
-  VISKORES_TEST_ASSERT(!totalLess3(viskores::Id3(1, 2, 3), viskores::Id3(1, 2, 3)), "Bad less.");
-  VISKORES_TEST_ASSERT(totalLess3(viskores::Id3(1, 2, 3), viskores::Id3(2, 3, 4)), "Bad less.");
+  VISKORES_TEST_ASSERT(totalLess3(viskores::Id3(1, 2, 3), viskores::Id3(3, 2, 1)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(!totalLess3(viskores::Id3(3, 2, 1), viskores::Id3(1, 2, 3)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(!totalLess3(viskores::Id3(1, 2, 3), viskores::Id3(1, 2, 3)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(totalLess3(viskores::Id3(1, 2, 3), viskores::Id3(2, 3, 4)),
+                       "Bad less.");
 
   LessPartialOrder<viskores::Id3> partialLess3;
-  VISKORES_TEST_ASSERT(!partialLess3(viskores::Id3(1, 2, 3), viskores::Id3(3, 2, 1)), "Bad less.");
-  VISKORES_TEST_ASSERT(!partialLess3(viskores::Id3(3, 2, 1), viskores::Id3(1, 2, 3)), "Bad less.");
-  VISKORES_TEST_ASSERT(!partialLess3(viskores::Id3(1, 2, 3), viskores::Id3(1, 2, 3)), "Bad less.");
-  VISKORES_TEST_ASSERT(partialLess3(viskores::Id3(1, 2, 3), viskores::Id3(2, 3, 4)), "Bad less.");
+  VISKORES_TEST_ASSERT(!partialLess3(viskores::Id3(1, 2, 3), viskores::Id3(3, 2, 1)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(!partialLess3(viskores::Id3(3, 2, 1), viskores::Id3(1, 2, 3)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(!partialLess3(viskores::Id3(1, 2, 3), viskores::Id3(1, 2, 3)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(partialLess3(viskores::Id3(1, 2, 3), viskores::Id3(2, 3, 4)),
+                       "Bad less.");
 }
 
 template<typename T>
@@ -292,7 +303,7 @@ struct VecTraits<viskores::Id3>
 
   template<viskores::IdComponent DestSize>
   VISKORES_EXEC_CONT static void CopyInto(const viskores::Id3& src,
-                                      viskores::Vec<viskores::Id, DestSize>& dest)
+                                          viskores::Vec<viskores::Id, DestSize>& dest)
   {
     for (viskores::IdComponent index = 0; (index < NUM_COMPONENTS) && (index < DestSize);
          index++)
@@ -322,17 +333,17 @@ void TryCustomVecTriats()
     (std::is_same<CustomTraits::ComponentType, OriginalTraits::ComponentType>::value));
   VISKORES_STATIC_ASSERT(CustomTraits::NUM_COMPONENTS == OriginalTraits::NUM_COMPONENTS);
   VISKORES_STATIC_ASSERT((std::is_same<CustomTraits::HasMultipleComponents,
-                                   OriginalTraits::HasMultipleComponents>::value));
+                                       OriginalTraits::HasMultipleComponents>::value));
   VISKORES_STATIC_ASSERT(
     (std::is_same<CustomTraits::IsSizeStatic, OriginalTraits::IsSizeStatic>::value));
 
   viskores::Id3 value = TestValue(10, viskores::Id3());
   VISKORES_TEST_ASSERT(CustomTraits::GetNumberOfComponents(value) ==
-                     OriginalTraits::GetNumberOfComponents(value),
-                   "Wrong size.");
+                         OriginalTraits::GetNumberOfComponents(value),
+                       "Wrong size.");
   VISKORES_TEST_ASSERT(CustomTraits::GetComponent(value, 1) ==
-                     OriginalTraits::GetComponent(value, 1),
-                   "Wrong component.");
+                         OriginalTraits::GetComponent(value, 1),
+                       "Wrong component.");
 
   CustomTraits::SetComponent(value, 2, 0);
   VISKORES_TEST_ASSERT(value[2] == 0, "Did not set component.");

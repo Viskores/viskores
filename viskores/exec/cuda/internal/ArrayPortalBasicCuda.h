@@ -33,31 +33,38 @@ VISKORES_EXEC_CONT static inline T ArrayPortalBasicReadGet(const T* const data);
 // Currently CUDA doesn't support texture loading of signed char's so that is why
 // You don't see viskores::Int8 in any of the lists.
 
-VISKORES_EXEC_CONT static inline viskores::UInt8 ArrayPortalBasicReadGet(const viskores::UInt8* const data)
+VISKORES_EXEC_CONT static inline viskores::UInt8 ArrayPortalBasicReadGet(
+  const viskores::UInt8* const data)
 {
   return __ldg(data);
 }
-VISKORES_EXEC_CONT static inline viskores::Int16 ArrayPortalBasicReadGet(const viskores::Int16* const data)
+VISKORES_EXEC_CONT static inline viskores::Int16 ArrayPortalBasicReadGet(
+  const viskores::Int16* const data)
 {
   return __ldg(data);
 }
-VISKORES_EXEC_CONT static inline viskores::UInt16 ArrayPortalBasicReadGet(const viskores::UInt16* const data)
+VISKORES_EXEC_CONT static inline viskores::UInt16 ArrayPortalBasicReadGet(
+  const viskores::UInt16* const data)
 {
   return __ldg(data);
 }
-VISKORES_EXEC_CONT static inline viskores::Int32 ArrayPortalBasicReadGet(const viskores::Int32* const data)
+VISKORES_EXEC_CONT static inline viskores::Int32 ArrayPortalBasicReadGet(
+  const viskores::Int32* const data)
 {
   return __ldg(data);
 }
-VISKORES_EXEC_CONT static inline viskores::UInt32 ArrayPortalBasicReadGet(const viskores::UInt32* const data)
+VISKORES_EXEC_CONT static inline viskores::UInt32 ArrayPortalBasicReadGet(
+  const viskores::UInt32* const data)
 {
   return __ldg(data);
 }
-VISKORES_EXEC_CONT static inline viskores::Float32 ArrayPortalBasicReadGet(const viskores::Float32* const data)
+VISKORES_EXEC_CONT static inline viskores::Float32 ArrayPortalBasicReadGet(
+  const viskores::Float32* const data)
 {
   return __ldg(data);
 }
-VISKORES_EXEC_CONT static inline viskores::Float64 ArrayPortalBasicReadGet(const viskores::Float64* const data)
+VISKORES_EXEC_CONT static inline viskores::Float64 ArrayPortalBasicReadGet(
+  const viskores::Float64* const data)
 {
   return __ldg(data);
 }

@@ -91,12 +91,12 @@ public:
             typename MeshSortIndexPortalType,
             typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& from,
-                            const viskores::Id& to,
-                            const InFieldPortalType& bractVertexSupersetPortal,
-                            const MeshSortIndexPortalType& meshSortIndexPortal,
-                            const InFieldPortalType& upNeighbourPortal,
-                            const InFieldPortalType& downNeighbourPortal,
-                            const OutFieldPortalType& newVertexIdPortal) const
+                                const viskores::Id& to,
+                                const InFieldPortalType& bractVertexSupersetPortal,
+                                const MeshSortIndexPortalType& meshSortIndexPortal,
+                                const InFieldPortalType& upNeighbourPortal,
+                                const InFieldPortalType& downNeighbourPortal,
+                                const OutFieldPortalType& newVertexIdPortal) const
   {
     // per vertex
     if (viskores::worklet::contourtree_augmented::NoSuchElement(to))
@@ -113,22 +113,26 @@ public:
     { // from is lower
       if (upNeighbourPortal.Get(from) != to)
       {
-        newVertexIdPortal.Set(from, (viskores::Id)viskores::worklet::contourtree_augmented::ELEMENT_EXISTS);
+        newVertexIdPortal.Set(
+          from, (viskores::Id)viskores::worklet::contourtree_augmented::ELEMENT_EXISTS);
       }
       if (downNeighbourPortal.Get(to) != from)
       {
-        newVertexIdPortal.Set(to, (viskores::Id)viskores::worklet::contourtree_augmented::ELEMENT_EXISTS);
+        newVertexIdPortal.Set(
+          to, (viskores::Id)viskores::worklet::contourtree_augmented::ELEMENT_EXISTS);
       }
     } // from is lower
     else
     { // to is lower
       if (upNeighbourPortal.Get(to) != from)
       {
-        newVertexIdPortal.Set(to, (viskores::Id)viskores::worklet::contourtree_augmented::ELEMENT_EXISTS);
+        newVertexIdPortal.Set(
+          to, (viskores::Id)viskores::worklet::contourtree_augmented::ELEMENT_EXISTS);
       }
       if (downNeighbourPortal.Get(from) != to)
       {
-        newVertexIdPortal.Set(from, (viskores::Id)viskores::worklet::contourtree_augmented::ELEMENT_EXISTS);
+        newVertexIdPortal.Set(
+          from, (viskores::Id)viskores::worklet::contourtree_augmented::ELEMENT_EXISTS);
       }
     } // to is lower
 

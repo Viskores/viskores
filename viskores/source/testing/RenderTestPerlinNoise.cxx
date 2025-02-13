@@ -41,7 +41,8 @@ void TestPerlinNoise()
   options.AllowedPixelErrorRatio = 0.01f;
   options.Threshold = 0.1f;
 
-  viskores::rendering::testing::RenderTest(contours, "perlinnoise", "source/perlin-noise.png", options);
+  viskores::rendering::testing::RenderTest(
+    contours, "perlinnoise", "source/perlin-noise.png", options);
 }
 
 } // anonymous namespace

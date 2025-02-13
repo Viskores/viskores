@@ -88,7 +88,10 @@ struct DrawColorSwatch : public viskores::worklet::WorkletMapField
   using ExecutionSignature = void(_1, _2);
 
   VISKORES_CONT
-  DrawColorSwatch(viskores::Id2 dims, viskores::Id2 xBounds, viskores::Id2 yBounds, const viskores::Vec4f_32 color)
+  DrawColorSwatch(viskores::Id2 dims,
+                  viskores::Id2 xBounds,
+                  viskores::Id2 yBounds,
+                  const viskores::Vec4f_32 color)
     : Color(color)
   {
     ImageWidth = dims[0];
@@ -141,8 +144,8 @@ struct DrawColorBar : public viskores::worklet::WorkletMapField
 
   template <typename FrameBuffer, typename ColorMap>
   VISKORES_EXEC void operator()(const viskores::Id& index,
-                            FrameBuffer& frameBuffer,
-                            const ColorMap& colorMap) const
+                                FrameBuffer& frameBuffer,
+                                const ColorMap& colorMap) const
   {
     // local bar coord
     viskores::Id x = index % BarWidth;
@@ -170,19 +173,20 @@ struct DrawColorBar : public viskores::worklet::WorkletMapField
       constexpr viskores::Float32 intensity = 0.4f;
       constexpr viskores::Float32 inverseIntensity = (1.0f - intensity);
       alpha *= inverseIntensity;
-      viskores::Vec4f_32 blendedColor(1.0f * intensity + (color[0] * conversionToFloatSpace) * alpha,
-                                  1.0f * intensity + (color[1] * conversionToFloatSpace) * alpha,
-                                  1.0f * intensity + (color[2] * conversionToFloatSpace) * alpha,
-                                  1.0f);
+      viskores::Vec4f_32 blendedColor(
+        1.0f * intensity + (color[0] * conversionToFloatSpace) * alpha,
+        1.0f * intensity + (color[1] * conversionToFloatSpace) * alpha,
+        1.0f * intensity + (color[2] * conversionToFloatSpace) * alpha,
+        1.0f);
       frameBuffer.Set(offset, blendedColor);
     }
     else
     {
       // make sure this is opaque
       viskores::Vec4f_32 fColor((color[0] * conversionToFloatSpace),
-                            (color[1] * conversionToFloatSpace),
-                            (color[2] * conversionToFloatSpace),
-                            1.0f);
+                                (color[1] * conversionToFloatSpace),
+                                (color[2] * conversionToFloatSpace),
+                                1.0f);
       frameBuffer.Set(offset, fColor);
     }
   }
@@ -274,10 +278,11 @@ Canvas::DepthBufferType& Canvas::GetDepthBuffer()
 }
 
 viskores::cont::DataSet Canvas::GetDataSet(const std::string& colorFieldName,
-                                       const std::string& depthFieldName) const
+                                           const std::string& depthFieldName) const
 {
   viskores::cont::DataSetBuilderUniform builder;
-  viskores::cont::DataSet dataSet = builder.Create(viskores::Id2(this->GetWidth(), this->GetHeight()));
+  viskores::cont::DataSet dataSet =
+    builder.Create(viskores::Id2(this->GetWidth(), this->GetHeight()));
   if (!colorFieldName.empty())
   {
     dataSet.AddPointField(colorFieldName, this->GetColorBuffer());
@@ -289,7 +294,8 @@ viskores::cont::DataSet Canvas::GetDataSet(const std::string& colorFieldName,
   return dataSet;
 }
 
-viskores::cont::DataSet Canvas::GetDataSet(const char* colorFieldName, const char* depthFieldName) const
+viskores::cont::DataSet Canvas::GetDataSet(const char* colorFieldName,
+                                           const char* depthFieldName) const
 {
   return this->GetDataSet((colorFieldName != nullptr) ? std::string(colorFieldName) : std::string(),
                           (depthFieldName != nullptr) ? std::string(depthFieldName)
@@ -452,16 +458,18 @@ void Canvas::AddColorBar(viskores::Float32 x,
                          const viskores::cont::ColorTable& colorTable,
                          bool horizontal) const
 {
-  this->AddColorBar(
-    viskores::Bounds(viskores::Range(x, x + width), viskores::Range(y, y + height), viskores::Range(0, 0)),
-    colorTable,
-    horizontal);
+  this->AddColorBar(viskores::Bounds(viskores::Range(x, x + width),
+                                     viskores::Range(y, y + height),
+                                     viskores::Range(0, 0)),
+                    colorTable,
+                    horizontal);
 }
 
-viskores::Id2 Canvas::GetScreenPoint(viskores::Float32 x,
-                                 viskores::Float32 y,
-                                 viskores::Float32 z,
-                                 const viskores::Matrix<viskores::Float32, 4, 4>& transform) const
+viskores::Id2 Canvas::GetScreenPoint(
+  viskores::Float32 x,
+  viskores::Float32 y,
+  viskores::Float32 z,
+  const viskores::Matrix<viskores::Float32, 4, 4>& transform) const
 {
   viskores::Vec4f_32 point(x, y, z, 1.0f);
   point = viskores::MatrixMultiply(transform, point);
@@ -470,7 +478,8 @@ viskores::Id2 Canvas::GetScreenPoint(viskores::Float32 x,
   viskores::Float32 width = static_cast<viskores::Float32>(Internals->Width);
   viskores::Float32 height = static_cast<viskores::Float32>(Internals->Height);
   pixelPos[0] = static_cast<viskores::Id>(viskores::Round((1.0f + point[0]) * width * 0.5f + 0.5f));
-  pixelPos[1] = static_cast<viskores::Id>(viskores::Round((1.0f + point[1]) * height * 0.5f + 0.5f));
+  pixelPos[1] =
+    static_cast<viskores::Id>(viskores::Round((1.0f + point[1]) * height * 0.5f + 0.5f));
   return pixelPos;
 }
 
@@ -502,11 +511,12 @@ void Canvas::AddText(const viskores::Vec2f_32& position,
 {
   viskores::Matrix<viskores::Float32, 4, 4> translationMatrix =
     Transform3DTranslate(position[0], position[1], 0.f);
-  viskores::Matrix<viskores::Float32, 4, 4> scaleMatrix = Transform3DScale(1.0f / windowAspect, 1.0f, 1.0f);
+  viskores::Matrix<viskores::Float32, 4, 4> scaleMatrix =
+    Transform3DScale(1.0f / windowAspect, 1.0f, 1.0f);
   viskores::Vec3f_32 rotationAxis(0.0f, 0.0f, 1.0f);
   viskores::Matrix<viskores::Float32, 4, 4> rotationMatrix = Transform3DRotate(angle, rotationAxis);
-  viskores::Matrix<viskores::Float32, 4, 4> transform =
-    viskores::MatrixMultiply(translationMatrix, viskores::MatrixMultiply(scaleMatrix, rotationMatrix));
+  viskores::Matrix<viskores::Float32, 4, 4> transform = viskores::MatrixMultiply(
+    translationMatrix, viskores::MatrixMultiply(scaleMatrix, rotationMatrix));
 
   this->AddText(transform, scale, anchor, color, text, 0.f);
 }
@@ -583,7 +593,8 @@ bool Canvas::LoadFont() const
   {
     alphaPortal.Set(i, rgba[static_cast<std::size_t>(i * 4 + 3)]);
   }
-  Internals->FontTexture = FontTextureType(viskores::Id(textureWidth), viskores::Id(textureHeight), alpha);
+  Internals->FontTexture =
+    FontTextureType(viskores::Id(textureWidth), viskores::Id(textureHeight), alpha);
   Internals->FontTexture.SetFilterMode(TextureFilterMode::Linear);
   Internals->FontTexture.SetWrapMode(TextureWrapMode::Clamp);
   return true;
@@ -599,7 +610,8 @@ const viskores::Matrix<viskores::Float32, 4, 4>& Canvas::GetProjection() const
   return Internals->Projection;
 }
 
-void Canvas::SetViewToWorldSpace(const viskores::rendering::Camera& camera, bool viskoresNotUsed(clip))
+void Canvas::SetViewToWorldSpace(const viskores::rendering::Camera& camera,
+                                 bool viskoresNotUsed(clip))
 {
   Internals->ModelView = camera.CreateViewMatrix();
   Internals->Projection = camera.CreateProjectionMatrix(GetWidth(), GetHeight());

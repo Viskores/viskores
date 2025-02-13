@@ -40,11 +40,12 @@ void TextRenderer::RenderText(const viskores::Vec2f_32& position,
 {
   viskores::Matrix<viskores::Float32, 4, 4> translationMatrix =
     Transform3DTranslate(position[0], position[1], 0.f);
-  viskores::Matrix<viskores::Float32, 4, 4> scaleMatrix = Transform3DScale(1.0f / windowAspect, 1.0f, 1.0f);
+  viskores::Matrix<viskores::Float32, 4, 4> scaleMatrix =
+    Transform3DScale(1.0f / windowAspect, 1.0f, 1.0f);
   viskores::Vec3f_32 rotationAxis(0.0f, 0.0f, 1.0f);
   viskores::Matrix<viskores::Float32, 4, 4> rotationMatrix = Transform3DRotate(angle, rotationAxis);
-  viskores::Matrix<viskores::Float32, 4, 4> transform =
-    viskores::MatrixMultiply(translationMatrix, viskores::MatrixMultiply(scaleMatrix, rotationMatrix));
+  viskores::Matrix<viskores::Float32, 4, 4> transform = viskores::MatrixMultiply(
+    translationMatrix, viskores::MatrixMultiply(scaleMatrix, rotationMatrix));
   RenderText(transform, scale, anchor, color, text);
 }
 
@@ -59,7 +60,8 @@ void TextRenderer::RenderText(const viskores::Vec3f_32& origin,
   viskores::Vec3f_32 n = viskores::Cross(right, up);
   viskores::Normalize(n);
 
-  viskores::Matrix<viskores::Float32, 4, 4> transform = MatrixHelpers::WorldMatrix(origin, right, up, n);
+  viskores::Matrix<viskores::Float32, 4, 4> transform =
+    MatrixHelpers::WorldMatrix(origin, right, up, n);
   transform = viskores::MatrixMultiply(Canvas->GetModelView(), transform);
   transform = viskores::MatrixMultiply(Canvas->GetProjection(), transform);
   RenderText(transform, scale, anchor, color, text);

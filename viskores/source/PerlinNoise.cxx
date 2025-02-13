@@ -33,7 +33,9 @@ struct PerlinNoiseWorklet : public viskores::worklet::WorkletVisitPointsWithCell
   // Adapted from https://adrianb.io/2014/08/09/perlinnoise.html
   // Archive link: https://web.archive.org/web/20210329174559/https://adrianb.io/2014/08/09/perlinnoise.html
   template <typename PointVecType, typename PermsPortal, typename OutType>
-  VISKORES_EXEC void operator()(const PointVecType& pos, const PermsPortal& perms, OutType& noise) const
+  VISKORES_EXEC void operator()(const PointVecType& pos,
+                                const PermsPortal& perms,
+                                OutType& noise) const
   {
     viskores::Id xi = static_cast<viskores::Id>(pos[0]) % this->Repeat;
     viskores::Id yi = static_cast<viskores::Id>(pos[1]) % this->Repeat;
@@ -58,12 +60,12 @@ struct PerlinNoiseWorklet : public viskores::worklet::WorkletVisitPointsWithCell
 
     viskores::FloatDefault x1, x2, y1, y2;
     x1 = viskores::Lerp(this->Gradient(aaa, xf, yf, zf), this->Gradient(baa, xf - 1, yf, zf), u);
-    x2 =
-      viskores::Lerp(this->Gradient(aba, xf, yf - 1, zf), this->Gradient(bba, xf - 1, yf - 1, zf), u);
+    x2 = viskores::Lerp(
+      this->Gradient(aba, xf, yf - 1, zf), this->Gradient(bba, xf - 1, yf - 1, zf), u);
     y1 = viskores::Lerp(x1, x2, v);
 
-    x1 =
-      viskores::Lerp(this->Gradient(aab, xf, yf, zf - 1), this->Gradient(bab, xf - 1, yf, zf - 1), u);
+    x1 = viskores::Lerp(
+      this->Gradient(aab, xf, yf, zf - 1), this->Gradient(bab, xf - 1, yf, zf - 1), u);
     x2 = viskores::Lerp(
       this->Gradient(abb, xf, yf - 1, zf - 1), this->Gradient(bbb, xf - 1, yf - 1, zf - 1), u);
     y2 = viskores::Lerp(x1, x2, v);
@@ -79,9 +81,9 @@ struct PerlinNoiseWorklet : public viskores::worklet::WorkletVisitPointsWithCell
   VISKORES_EXEC viskores::Id Increment(viskores::Id n) const { return (n + 1) % this->Repeat; }
 
   VISKORES_EXEC viskores::FloatDefault Gradient(viskores::Id hash,
-                                        viskores::FloatDefault x,
-                                        viskores::FloatDefault y,
-                                        viskores::FloatDefault z) const
+                                                viskores::FloatDefault x,
+                                                viskores::FloatDefault y,
+                                                viskores::FloatDefault z) const
   {
     switch (hash & 0xF)
     {
@@ -222,8 +224,8 @@ viskores::cont::DataSet PerlinNoise::DoExecute() const
     this->PointDimensions, this->Origin, spacing);
   dataSet.AddCoordinateSystem(viskores::cont::CoordinateSystem("coordinates", coordinates));
 
-  auto tableSize =
-    static_cast<viskores::IdComponent>(viskores::Max(cellDims[0], viskores::Max(cellDims[1], cellDims[2])));
+  auto tableSize = static_cast<viskores::IdComponent>(
+    viskores::Max(cellDims[0], viskores::Max(cellDims[1], cellDims[2])));
 
   viskores::IdComponent seed = this->Seed;
   if (!this->SeedSet)

@@ -121,7 +121,7 @@ public:
   }
 
   VISKORES_CONT PermuteComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                      viskores::cont::Token& token) const
+                                                          viskores::cont::Token& token) const
   {
     return PermuteComparatorImpl(this->LookupArray.PrepareForInput(device, token));
   }

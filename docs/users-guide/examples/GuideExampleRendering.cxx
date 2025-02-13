@@ -52,8 +52,8 @@ void DoBasicRender()
   //// BEGIN-EXAMPLE ActorScene
   ////
   viskores::rendering::Actor actor(surfaceData.GetCellSet(),
-                               surfaceData.GetCoordinateSystem(),
-                               surfaceData.GetField("RandomPointScalars"));
+                                   surfaceData.GetCoordinateSystem(),
+                                   surfaceData.GetField("RandomPointScalars"));
 
   viskores::rendering::Scene scene;
   scene.AddActor(actor);
@@ -123,8 +123,8 @@ void DoPointRender()
 
   // Initialize Viskores rendering classes
   viskores::rendering::Actor actor(surfaceData.GetCellSet(),
-                               surfaceData.GetCoordinateSystem(),
-                               surfaceData.GetField("RandomPointScalars"));
+                                   surfaceData.GetCoordinateSystem(),
+                                   surfaceData.GetField("RandomPointScalars"));
 
   viskores::rendering::Scene scene;
   scene.AddActor(actor);
@@ -174,8 +174,8 @@ void DoEdgeRender()
 
   // Initialize Viskores rendering classes
   viskores::rendering::Actor actor(surfaceData.GetCellSet(),
-                               surfaceData.GetCoordinateSystem(),
-                               surfaceData.GetField("RandomPointScalars"));
+                                   surfaceData.GetCoordinateSystem(),
+                                   surfaceData.GetField("RandomPointScalars"));
 
   viskores::rendering::Scene scene;
   scene.AddActor(actor);

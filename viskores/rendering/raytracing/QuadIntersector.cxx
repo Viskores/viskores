@@ -41,13 +41,13 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
   template <typename PointPortalType>
   VISKORES_EXEC void operator()(const viskores::Vec<viskores::Id, 5> quadId,
-                            viskores::Float32& xmin,
-                            viskores::Float32& ymin,
-                            viskores::Float32& zmin,
-                            viskores::Float32& xmax,
-                            viskores::Float32& ymax,
-                            viskores::Float32& zmax,
-                            const PointPortalType& points) const
+                                viskores::Float32& xmin,
+                                viskores::Float32& ymin,
+                                viskores::Float32& zmin,
+                                viskores::Float32& xmax,
+                                viskores::Float32& ymax,
+                                viskores::Float32& zmax,
+                                const PointPortalType& points) const
   {
     // cast to Float32
     viskores::Vec3f_32 q, r, s, t;
@@ -116,14 +116,14 @@ public:
 
   template <typename vec3, typename Precision>
   VISKORES_EXEC bool quad(const vec3& ray_origin,
-                      const vec3& ray_direction,
-                      const vec3& v00,
-                      const vec3& v10,
-                      const vec3& v11,
-                      const vec3& v01,
-                      Precision& u,
-                      Precision& v,
-                      Precision& t) const
+                          const vec3& ray_direction,
+                          const vec3& v00,
+                          const vec3& v10,
+                          const vec3& v11,
+                          const vec3& v01,
+                          Precision& u,
+                          Precision& v,
+                          Precision& t) const
   {
 
     /* An Eﬃcient Ray-Quadrilateral Intersection Test
@@ -195,13 +195,15 @@ public:
     vec3 E02 = v11 - v00;
     vec3 n = viskores::Cross(E01, E02);
 
-    if ((viskores::Abs(n[0]) >= viskores::Abs(n[1])) && (viskores::Abs(n[0]) >= viskores::Abs(n[2])))
+    if ((viskores::Abs(n[0]) >= viskores::Abs(n[1])) &&
+        (viskores::Abs(n[0]) >= viskores::Abs(n[2])))
     {
 
       alpha_11 = ((E02[1] * E03[2]) - (E02[2] * E03[1])) / n[0];
       beta_11 = ((E01[1] * E02[2]) - (E01[2] * E02[1])) / n[0];
     }
-    else if ((viskores::Abs(n[1]) >= viskores::Abs(n[0])) && (viskores::Abs(n[1]) >= viskores::Abs(n[2])))
+    else if ((viskores::Abs(n[1]) >= viskores::Abs(n[0])) &&
+             (viskores::Abs(n[1]) >= viskores::Abs(n[2])))
     {
 
       alpha_11 = ((E02[2] * E03[0]) - (E02[0] * E03[2])) / n[1];
@@ -306,7 +308,8 @@ public:
   }
 
   template <typename Device>
-  VISKORES_CONT QuadLeafIntersector<Device> PrepareForExecution(Device, viskores::cont::Token& token) const
+  VISKORES_CONT QuadLeafIntersector<Device> PrepareForExecution(Device,
+                                                                viskores::cont::Token& token) const
   {
     return QuadLeafIntersector<Device>(QuadIds, token);
   }
@@ -322,12 +325,12 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
   template <typename Precision, typename PointPortalType, typename IndicesPortalType>
   VISKORES_EXEC inline void operator()(const viskores::Id& hitIndex,
-                                   const viskores::Vec<Precision, 3>& rayDir,
-                                   Precision& normalX,
-                                   Precision& normalY,
-                                   Precision& normalZ,
-                                   const PointPortalType& points,
-                                   const IndicesPortalType& indicesPortal) const
+                                       const viskores::Vec<Precision, 3>& rayDir,
+                                       Precision& normalX,
+                                       Precision& normalY,
+                                       Precision& normalZ,
+                                       const PointPortalType& points,
+                                       const IndicesPortalType& indicesPortal) const
   {
     if (hitIndex < 0)
       return;
@@ -384,11 +387,11 @@ public:
   }
   template <typename ScalarPortalType, typename IndicesPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
-                            const Precision& u,
-                            const Precision& v,
-                            Precision& scalar,
-                            const ScalarPortalType& scalars,
-                            const IndicesPortalType& indicesPortal) const
+                                const Precision& u,
+                                const Precision& v,
+                                Precision& scalar,
+                                const ScalarPortalType& scalars,
+                                const IndicesPortalType& indicesPortal) const
   {
     if (hitIndex < 0)
       return;
@@ -444,9 +447,9 @@ public:
 
   template <typename ScalarPortalType, typename IndicesPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
-                            Precision& scalar,
-                            const ScalarPortalType& scalars,
-                            const IndicesPortalType& indicesPortal) const
+                                Precision& scalar,
+                                const ScalarPortalType& scalars,
+                                const IndicesPortalType& indicesPortal) const
   {
     if (hitIndex < 0)
       return;

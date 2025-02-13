@@ -40,7 +40,7 @@ class VISKORES_ALWAYS_EXPORT UncertainCellSet : public viskores::cont::UnknownCe
   VISKORES_IS_LIST(CellSetList);
 
   VISKORES_STATIC_ASSERT_MSG((!std::is_same<CellSetList, viskores::ListUniversal>::value),
-                         "Cannot use viskores::ListUniversal with UncertainCellSet.");
+                             "Cannot use viskores::ListUniversal with UncertainCellSet.");
 
   using Superclass = UnknownCellSet;
   using Thisclass = UncertainCellSet<CellSetList>;
@@ -93,7 +93,8 @@ VISKORES_CONT viskores::cont::UncertainCellSet<NewCellSetList> UnknownCellSet::R
   return viskores::cont::UncertainCellSet<NewCellSetList>(*this);
 }
 template <typename NewCellSetList>
-VISKORES_CONT viskores::cont::UncertainCellSet<NewCellSetList> UnknownCellSet::ResetCellSetList() const
+VISKORES_CONT viskores::cont::UncertainCellSet<NewCellSetList> UnknownCellSet::ResetCellSetList()
+  const
 {
   return viskores::cont::UncertainCellSet<NewCellSetList>(*this);
 }

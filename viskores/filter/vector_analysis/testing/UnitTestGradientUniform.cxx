@@ -54,8 +54,10 @@ void TestCellGradientUniform3DWithVectorField()
 
   //Verify that we can compute the gradient of a 3 component vector
   const int nVerts = 18;
-  viskores::Float64 vars[nVerts] = { 10.1,  20.1,  30.1,  40.1,  50.2,  60.2,  70.2,  80.2,  90.3,
-                                 100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5, 180.5 };
+  viskores::Float64 vars[nVerts] = {
+    10.1,  20.1,  30.1,  40.1,  50.2,  60.2,  70.2,  80.2,  90.3,
+    100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5, 180.5
+  };
   std::vector<viskores::Vec3f_64> vec(nVerts);
   for (std::size_t i = 0; i < vec.size(); ++i)
   {
@@ -97,13 +99,13 @@ void TestCellGradientUniform3DWithVectorField()
   VISKORES_TEST_ASSERT(test_equal_ArrayHandles(
     result.GetCellField("Vorticity").GetData(),
     viskores::cont::make_ArrayHandle<viskores::Vec3f_64>({ { -30.05, 50.1, -20.05 },
-                                                   { -30.05, 50.1, -20.05 },
-                                                   { -30.1, 50.15, -20.05 },
-                                                   { -30.1, 50.15, -20.05 } })));
+                                                           { -30.05, 50.1, -20.05 },
+                                                           { -30.1, 50.15, -20.05 },
+                                                           { -30.1, 50.15, -20.05 } })));
 
-  VISKORES_TEST_ASSERT(test_equal_ArrayHandles(
-    result.GetCellField("QCriterion").GetData(),
-    viskores::cont::make_ArrayHandle<viskores::Float64>({ -5022.53, -5022.53, -5027.54, -5027.54 })));
+  VISKORES_TEST_ASSERT(test_equal_ArrayHandles(result.GetCellField("QCriterion").GetData(),
+                                               viskores::cont::make_ArrayHandle<viskores::Float64>(
+                                                 { -5022.53, -5022.53, -5027.54, -5027.54 })));
 }
 
 
@@ -116,8 +118,10 @@ void TestPointGradientUniform3DWithVectorField()
 
   //Verify that we can compute the gradient of a 3 component vector
   const int nVerts = 18;
-  viskores::Float64 vars[nVerts] = { 10.1,  20.1,  30.1,  40.1,  50.2,  60.2,  70.2,  80.2,  90.3,
-                                 100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5, 180.5 };
+  viskores::Float64 vars[nVerts] = {
+    10.1,  20.1,  30.1,  40.1,  50.2,  60.2,  70.2,  80.2,  90.3,
+    100.3, 110.3, 120.3, 130.4, 140.4, 150.4, 160.4, 170.5, 180.5
+  };
   std::vector<viskores::Vec3f_64> vec(nVerts);
   for (std::size_t i = 0; i < vec.size(); ++i)
   {
@@ -150,11 +154,11 @@ void TestPointGradientUniform3DWithVectorField()
     viskores::Vec<viskores::Vec3f_64, 3> r = resultArrayHandle.ReadPortal().Get(i);
 
     VISKORES_TEST_ASSERT(test_equal(e[0], r[0]),
-                     "Wrong result for vec field CellGradient filter on 3D uniform data");
+                         "Wrong result for vec field CellGradient filter on 3D uniform data");
     VISKORES_TEST_ASSERT(test_equal(e[1], r[1]),
-                     "Wrong result for vec field CellGradient filter on 3D uniform data");
+                         "Wrong result for vec field CellGradient filter on 3D uniform data");
     VISKORES_TEST_ASSERT(test_equal(e[2], r[2]),
-                     "Wrong result for vec field CellGradient filter on 3D uniform data");
+                         "Wrong result for vec field CellGradient filter on 3D uniform data");
   }
 }
 

@@ -31,7 +31,8 @@ namespace internal
 {
 
 template <typename ParticleType>
-class VISKORES_FILTER_FLOW_EXPORT ParticleMessenger : public viskores::filter::flow::internal::Messenger
+class VISKORES_FILTER_FLOW_EXPORT ParticleMessenger
+  : public viskores::filter::flow::internal::Messenger
 {
   //sendRank, message
   using MsgCommType = std::pair<int, std::vector<int>>;
@@ -44,21 +45,22 @@ class VISKORES_FILTER_FLOW_EXPORT ParticleMessenger : public viskores::filter::f
 
 public:
   VISKORES_CONT ParticleMessenger(viskoresdiy::mpi::communicator& comm,
-                              bool useAsyncComm,
-                              const viskores::filter::flow::internal::BoundsMap& bm,
-                              int msgSz = 1,
-                              int numParticles = 128,
-                              int numBlockIds = 2);
+                                  bool useAsyncComm,
+                                  const viskores::filter::flow::internal::BoundsMap& bm,
+                                  int msgSz = 1,
+                                  int numParticles = 128,
+                                  int numBlockIds = 2);
   VISKORES_CONT ~ParticleMessenger() {}
 
-  VISKORES_CONT void Exchange(const std::vector<ParticleType>& outData,
-                          const std::vector<viskores::Id>& outRanks,
-                          const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& outBlockIDsMap,
-                          viskores::Id numLocalTerm,
-                          std::vector<ParticleType>& inData,
-                          std::unordered_map<viskores::Id, std::vector<viskores::Id>>& inDataBlockIDsMap,
-                          viskores::Id& numTerminateMessages,
-                          bool blockAndWait = false);
+  VISKORES_CONT void Exchange(
+    const std::vector<ParticleType>& outData,
+    const std::vector<viskores::Id>& outRanks,
+    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& outBlockIDsMap,
+    viskores::Id numLocalTerm,
+    std::vector<ParticleType>& inData,
+    std::unordered_map<viskores::Id, std::vector<viskores::Id>>& inDataBlockIDsMap,
+    viskores::Id& numTerminateMessages,
+    bool blockAndWait = false);
 
 protected:
 #ifdef VISKORES_ENABLE_MPI
@@ -90,8 +92,8 @@ protected:
 
   // Send/Recv datasets.
   VISKORES_CONT bool RecvAny(std::vector<MsgCommType>* msgs,
-                         std::vector<ParticleRecvCommType>* recvParticles,
-                         bool blockAndWait);
+                             std::vector<ParticleRecvCommType>* recvParticles,
+                             bool blockAndWait);
   const viskores::filter::flow::internal::BoundsMap& BoundsMap;
 
 #endif

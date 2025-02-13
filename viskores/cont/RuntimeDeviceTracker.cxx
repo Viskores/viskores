@@ -182,7 +182,8 @@ void RuntimeDeviceTracker::ForceDevice(DeviceAdapterId deviceId)
   }
 }
 
-VISKORES_CONT void RuntimeDeviceTracker::CopyStateFrom(const viskores::cont::RuntimeDeviceTracker& tracker)
+VISKORES_CONT void RuntimeDeviceTracker::CopyStateFrom(
+  const viskores::cont::RuntimeDeviceTracker& tracker)
 {
   *(this->Internals) = *tracker.Internals;
 }

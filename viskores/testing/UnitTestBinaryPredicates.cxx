@@ -26,15 +26,16 @@ void BinaryPredicateTest()
   {
     viskores::Equal is_equal;
     VISKORES_TEST_ASSERT(is_equal(viskores::TypeTraits<T>::ZeroInitialization(),
-                              viskores::TypeTraits<T>::ZeroInitialization()),
-                     "Equal wrong.");
+                                  viskores::TypeTraits<T>::ZeroInitialization()),
+                         "Equal wrong.");
     VISKORES_TEST_ASSERT(is_equal(T(1), T(2)) == false, "Equal wrong.");
   }
 
   //test NotEqual
   {
     viskores::NotEqual not_equal;
-    VISKORES_TEST_ASSERT(not_equal(viskores::TypeTraits<T>::ZeroInitialization(), T(1)), "NotEqual wrong.");
+    VISKORES_TEST_ASSERT(not_equal(viskores::TypeTraits<T>::ZeroInitialization(), T(1)),
+                         "NotEqual wrong.");
     VISKORES_TEST_ASSERT(not_equal(T(1), T(1)) == false, "NotEqual wrong.");
   }
 

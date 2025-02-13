@@ -16,6 +16,6 @@ int UnitTestTBBDeviceAdapter(int argc, char* argv[])
 {
   auto& tracker = viskores::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(viskores::cont::DeviceAdapterTagTBB{});
-  return viskores::cont::testing::TestingDeviceAdapter<viskores::cont::DeviceAdapterTagTBB>::Run(argc,
-                                                                                         argv);
+  return viskores::cont::testing::TestingDeviceAdapter<viskores::cont::DeviceAdapterTagTBB>::Run(
+    argc, argv);
 }

@@ -73,7 +73,10 @@ public:
   }
 
   VISKORES_EXEC
-  bool IsWithinTemporalBoundary(const viskores::FloatDefault& viskoresNotUsed(time)) const { return true; }
+  bool IsWithinTemporalBoundary(const viskores::FloatDefault& viskoresNotUsed(time)) const
+  {
+    return true;
+  }
 
   VISKORES_EXEC
   viskores::Bounds GetSpatialBoundary() const { return this->Bounds; }
@@ -88,8 +91,8 @@ public:
 
   template <typename Point>
   VISKORES_EXEC GridEvaluatorStatus HelpEvaluate(const Point& point,
-                                             const viskores::FloatDefault& time,
-                                             viskores::VecVariable<Point, 2>& out) const
+                                                 const viskores::FloatDefault& time,
+                                                 viskores::VecVariable<Point, 2>& out) const
   {
     viskores::Id cellId = -1;
     Point parametric;
@@ -139,9 +142,10 @@ public:
   }
 
   template <typename Point>
-  VISKORES_EXEC GridEvaluatorStatus DeligateEvaluateToField(const Point& point,
-                                                        const viskores::FloatDefault& time,
-                                                        viskores::VecVariable<Point, 2>& out) const
+  VISKORES_EXEC GridEvaluatorStatus
+  DeligateEvaluateToField(const Point& point,
+                          const viskores::FloatDefault& time,
+                          viskores::VecVariable<Point, 2>& out) const
   {
     GridEvaluatorStatus status;
     status.SetOk();
@@ -156,8 +160,8 @@ public:
 
   template <typename Point>
   VISKORES_EXEC GridEvaluatorStatus Evaluate(const Point& point,
-                                         const viskores::FloatDefault& time,
-                                         viskores::VecVariable<Point, 2>& out) const
+                                             const viskores::FloatDefault& time,
+                                             viskores::VecVariable<Point, 2>& out) const
   {
     if (!ExecFieldType::DelegateToField::value)
     {
@@ -244,7 +248,7 @@ public:
 
 private:
   VISKORES_CONT void InitializeLocator(const viskores::cont::CoordinateSystem& coordinates,
-                                   const viskores::cont::UnknownCellSet& cellset)
+                                       const viskores::cont::UnknownCellSet& cellset)
   {
     this->Locator.SetCoordinates(coordinates);
     this->Locator.SetCellSet(cellset);

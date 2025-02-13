@@ -24,11 +24,13 @@ VISKORES_CONT PointElevation::PointElevation()
 }
 
 //-----------------------------------------------------------------------------
-VISKORES_CONT viskores::cont::DataSet PointElevation::DoExecute(const viskores::cont::DataSet& inDataSet)
+VISKORES_CONT viskores::cont::DataSet PointElevation::DoExecute(
+  const viskores::cont::DataSet& inDataSet)
 {
   viskores::cont::ArrayHandle<viskores::Float64> outArray;
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     this->Invoke(
       viskores::worklet::PointElevation{
         this->LowPoint, this->HighPoint, this->RangeLow, this->RangeHigh },

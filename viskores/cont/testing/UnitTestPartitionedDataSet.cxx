@@ -52,15 +52,17 @@ static void PartitionedDataSetTest()
 
   viskores::cont::DataSet TestDSet = pds.GetPartition(0);
   VISKORES_TEST_ASSERT(TDset1.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
-                   "Incorrect number of fields");
-  VISKORES_TEST_ASSERT(TDset1.GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
-                   "Incorrect number of coordinate systems");
+                       "Incorrect number of fields");
+  VISKORES_TEST_ASSERT(TDset1.GetNumberOfCoordinateSystems() ==
+                         TestDSet.GetNumberOfCoordinateSystems(),
+                       "Incorrect number of coordinate systems");
 
   TestDSet = pds.GetPartition(1);
   VISKORES_TEST_ASSERT(TDset2.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
-                   "Incorrect number of fields");
-  VISKORES_TEST_ASSERT(TDset2.GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
-                   "Incorrect number of coordinate systems");
+                       "Incorrect number of fields");
+  VISKORES_TEST_ASSERT(TDset2.GetNumberOfCoordinateSystems() ==
+                         TestDSet.GetNumberOfCoordinateSystems(),
+                       "Incorrect number of coordinate systems");
 
   viskores::Bounds Set1Bounds = TDset1.GetCoordinateSystem(0).GetBounds();
   viskores::Bounds Set2Bounds = TDset2.GetCoordinateSystem(0).GetBounds();
@@ -68,11 +70,12 @@ static void PartitionedDataSetTest()
   GlobalBound.Include(Set1Bounds);
   GlobalBound.Include(Set2Bounds);
 
-  VISKORES_TEST_ASSERT(viskores::cont::BoundsCompute(pds) == GlobalBound, "Global bounds info incorrect");
+  VISKORES_TEST_ASSERT(viskores::cont::BoundsCompute(pds) == GlobalBound,
+                       "Global bounds info incorrect");
   VISKORES_TEST_ASSERT(viskores::cont::BoundsCompute(pds.GetPartition(0)) == Set1Bounds,
-                   "Local bounds info incorrect");
+                       "Local bounds info incorrect");
   VISKORES_TEST_ASSERT(viskores::cont::BoundsCompute(pds.GetPartition(1)) == Set2Bounds,
-                   "Local bounds info incorrect");
+                       "Local bounds info incorrect");
 
   viskores::Range Set1Field1Range;
   viskores::Range Set1Field2Range;
@@ -93,9 +96,9 @@ static void PartitionedDataSetTest()
 
   using viskores::cont::FieldRangeCompute;
   VISKORES_TEST_ASSERT(FieldRangeCompute(pds, "pointvar").ReadPortal().Get(0) == Field1GlobeRange,
-                   "Local field value range info incorrect");
+                       "Local field value range info incorrect");
   VISKORES_TEST_ASSERT(FieldRangeCompute(pds, "cellvar").ReadPortal().Get(0) == Field2GlobeRange,
-                   "Local field value range info incorrect");
+                       "Local field value range info incorrect");
 
   viskores::Range SourceRange; //test the validity of member function GetField(FieldName, BlockId)
   pds.GetFieldFromPartition("cellvar", 0).GetRange(&SourceRange);
@@ -116,7 +119,7 @@ static void PartitionedDataSetTest()
   std::vector<viskores::cont::DataSet> partitions = pds.GetPartitions();
   testblocks1.AppendPartitions(partitions);
   VISKORES_TEST_ASSERT(pds.GetNumberOfPartitions() == testblocks1.GetNumberOfPartitions(),
-                   "inconsistent number of partitions");
+                       "inconsistent number of partitions");
 
   viskores::cont::PartitionedDataSet testblocks2(2);
   testblocks2.InsertPartition(0, TDset1);
@@ -207,9 +210,11 @@ static void PartitionedDataSetFieldTest()
       }
 
       //Check the values.
-      auto portal0 = f0.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>().ReadPortal();
-      auto portal1 =
-        f1.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>().ReadPortal();
+      auto portal0 =
+        f0.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>().ReadPortal();
+      auto portal1 = f1.GetData()
+                       .AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>()
+                       .ReadPortal();
 
       VISKORES_TEST_ASSERT(portal0.GetNumberOfValues() == 2, "Wrong number of values in field");
       VISKORES_TEST_ASSERT(portal1.GetNumberOfValues() == 1, "Wrong number of values in field");

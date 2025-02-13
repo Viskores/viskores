@@ -24,7 +24,7 @@
 
 template <typename T>
 viskores::cont::PartitionedDataSet PartitionedDataSetBuilder(std::size_t partitionNum,
-                                                         std::string fieldName)
+                                                             std::string fieldName)
 {
   viskores::cont::DataSetBuilderUniform dataSetBuilder;
   viskores::cont::DataSet dataSet;
@@ -76,7 +76,7 @@ void Result_Verify(const viskores::cont::PartitionedDataSet& result,
                    std::string fieldName)
 {
   VISKORES_TEST_ASSERT(result.GetNumberOfPartitions() == partitions.GetNumberOfPartitions(),
-                   "result partition number incorrect");
+                       "result partition number incorrect");
   const std::string outputFieldName = filter.GetOutputFieldName();
   for (viskores::Id j = 0; j < result.GetNumberOfPartitions(); j++)
   {
@@ -84,19 +84,20 @@ void Result_Verify(const viskores::cont::PartitionedDataSet& result,
     viskores::cont::DataSet partitionResult = filter.Execute(partitions.GetPartition(j));
 
     VISKORES_TEST_ASSERT(result.GetPartition(j).GetField(outputFieldName).GetNumberOfValues() ==
-                       partitionResult.GetField(outputFieldName).GetNumberOfValues(),
-                     "result vectors' size incorrect");
+                           partitionResult.GetField(outputFieldName).GetNumberOfValues(),
+                         "result vectors' size incorrect");
 
     viskores::cont::ArrayHandle<T> partitionArray;
     result.GetPartition(j).GetField(outputFieldName).GetData().AsArrayHandle(partitionArray);
     viskores::cont::ArrayHandle<T> sDataSetArray;
     partitionResult.GetField(outputFieldName).GetData().AsArrayHandle(sDataSetArray);
 
-    const viskores::Id numValues = result.GetPartition(j).GetField(outputFieldName).GetNumberOfValues();
+    const viskores::Id numValues =
+      result.GetPartition(j).GetField(outputFieldName).GetNumberOfValues();
     for (viskores::Id i = 0; i < numValues; i++)
     {
       VISKORES_TEST_ASSERT(partitionArray.ReadPortal().Get(i) == sDataSetArray.ReadPortal().Get(i),
-                       "result values incorrect");
+                           "result values incorrect");
     }
   }
   return;
@@ -150,9 +151,10 @@ void TestPartitionedDataSetFilters()
       auto portal0 =
         field0.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>().ReadPortal();
       VISKORES_TEST_ASSERT(portal0.GetNumberOfValues() == static_cast<viskores::Id>(ids.size()),
-                       "Wrong number of field values.");
+                           "Wrong number of field values.");
       for (std::size_t i = 0; i < ids.size(); i++)
-        VISKORES_TEST_ASSERT(portal0.Get(static_cast<viskores::Id>(i)) == ids[i], "Wrong field value.");
+        VISKORES_TEST_ASSERT(portal0.Get(static_cast<viskores::Id>(i)) == ids[i],
+                             "Wrong field value.");
     }
     else
     {
@@ -163,10 +165,11 @@ void TestPartitionedDataSetFilters()
     {
       VISKORES_TEST_ASSERT(result.HasGlobalField("scalar"), "Missing field on result");
       auto field1 = result.GetField("scalar");
-      auto portal1 =
-        field1.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>().ReadPortal();
+      auto portal1 = field1.GetData()
+                       .AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>()
+                       .ReadPortal();
       VISKORES_TEST_ASSERT(portal1.GetNumberOfValues() == static_cast<viskores::Id>(scalar.size()),
-                       "Wrong number of field values.");
+                           "Wrong number of field values.");
       VISKORES_TEST_ASSERT(portal1.Get(0) == scalar[0], "Wrong field value.");
     }
     else

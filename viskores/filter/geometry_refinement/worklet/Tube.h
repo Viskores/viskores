@@ -62,14 +62,14 @@ public:
 
     template <typename CellShapeTag, typename PointIndexType, typename InPointsType>
     VISKORES_EXEC void operator()(const CellShapeTag& shapeType,
-                              const viskores::IdComponent& numPoints,
-                              const PointIndexType& ptIndices,
-                              const InPointsType& inPts,
-                              viskores::IdComponent& nonIncidentPtsPerPolyline,
-                              viskores::Id& ptsPerPolyline,
-                              viskores::Id& ptsPerTube,
-                              viskores::Id& numTubeConnIds,
-                              viskores::Id& validCell) const
+                                  const viskores::IdComponent& numPoints,
+                                  const PointIndexType& ptIndices,
+                                  const InPointsType& inPts,
+                                  viskores::IdComponent& nonIncidentPtsPerPolyline,
+                                  viskores::Id& ptsPerPolyline,
+                                  viskores::Id& ptsPerTube,
+                                  viskores::Id& numTubeConnIds,
+                                  viskores::Id& validCell) const
     {
       // We only support polylines that contain 2 or more points.
       viskores::IdComponent numNonCoincidentPoints = 1;
@@ -121,7 +121,8 @@ public:
   //Helper worklet to generate normals at each point in the polyline.
   class GenerateNormals : public viskores::worklet::WorkletVisitCellsWithPoints
   {
-    static constexpr viskores::FloatDefault vecMagnitudeEps = static_cast<viskores::FloatDefault>(1e-3);
+    static constexpr viskores::FloatDefault vecMagnitudeEps =
+      static_cast<viskores::FloatDefault>(1e-3);
 
   public:
     VISKORES_CONT
@@ -150,9 +151,9 @@ public:
 
     template <typename InPointsType, typename PointIndexType>
     VISKORES_EXEC viskores::IdComponent FindValidSegment(const InPointsType& inPts,
-                                                 const PointIndexType& ptIndices,
-                                                 const viskores::IdComponent& numPoints,
-                                                 viskores::IdComponent start) const
+                                                         const PointIndexType& ptIndices,
+                                                         const viskores::IdComponent& numPoints,
+                                                         viskores::IdComponent start) const
     {
       auto ps = inPts.Get(ptIndices[start]);
       viskores::IdComponent end = start + 1;
@@ -172,11 +173,11 @@ public:
               typename InPointsType,
               typename OutNormalType>
     VISKORES_EXEC void operator()(const CellShapeTag& shapeType,
-                              const viskores::IdComponent& numPoints,
-                              const PointIndexType& ptIndices,
-                              const InPointsType& inPts,
-                              const viskores::Id& polylineOffset,
-                              OutNormalType& outNormals) const
+                                  const viskores::IdComponent& numPoints,
+                                  const PointIndexType& ptIndices,
+                                  const InPointsType& inPts,
+                                  const viskores::Id& polylineOffset,
+                                  OutNormalType& outNormals) const
     {
       //Ignore non-polyline and polyline with less than 2 points.
       if (shapeType.Id != viskores::CELL_SHAPE_POLY_LINE || numPoints < 2)
@@ -252,7 +253,8 @@ public:
 
           auto q = viskores::Cross(sNext, sPrev);
 
-          if (viskores::Magnitude(q) <= viskores::Epsilon<viskores::FloatDefault>()) //can't use this segment
+          if (viskores::Magnitude(q) <=
+              viskores::Epsilon<viskores::FloatDefault>()) //can't use this segment
             continue;
           viskores::Normalize(q);
 
@@ -294,7 +296,8 @@ public:
       : Capping(capping)
       , NumSides(n)
       , Radius(r)
-      , Theta(2 * static_cast<viskores::FloatDefault>(viskores::Pi()) / static_cast<viskores::FloatDefault>(n))
+      , Theta(2 * static_cast<viskores::FloatDefault>(viskores::Pi()) /
+              static_cast<viskores::FloatDefault>(n))
     {
     }
 
@@ -331,15 +334,15 @@ public:
               typename OutPointsType,
               typename OutPointSrcIdxType>
     VISKORES_EXEC void operator()(const CellShapeTag& shapeType,
-                              const viskores::IdComponent& numPoints,
-                              const PointIndexType& ptIndices,
-                              const InPointsType& inPts,
-                              const InNormalsType& inNormals,
-                              const viskores::Id& numNonCoincidentPts,
-                              const viskores::Id& tubePointOffsets,
-                              const viskores::Id& polylineOffset,
-                              OutPointsType& outPts,
-                              OutPointSrcIdxType& outPointSrcIdx) const
+                                  const viskores::IdComponent& numPoints,
+                                  const PointIndexType& ptIndices,
+                                  const InPointsType& inPts,
+                                  const InNormalsType& inNormals,
+                                  const viskores::Id& numNonCoincidentPts,
+                                  const viskores::Id& tubePointOffsets,
+                                  const viskores::Id& polylineOffset,
+                                  OutPointsType& outPts,
+                                  OutPointSrcIdxType& outPointSrcIdx) const
     {
       if (shapeType.Id != viskores::CELL_SHAPE_POLY_LINE || numNonCoincidentPts < 2)
         return;
@@ -433,10 +436,11 @@ public:
     }
 
     template <typename PointIndexType, typename InPointsType>
-    VISKORES_EXEC viskores::IdComponent FindNextNonCoincidentPointIndex(const PointIndexType& ptIndices,
-                                                                const InPointsType& inPts,
-                                                                viskores::IdComponent start,
-                                                                viskores::IdComponent numPoints) const
+    VISKORES_EXEC viskores::IdComponent FindNextNonCoincidentPointIndex(
+      const PointIndexType& ptIndices,
+      const InPointsType& inPts,
+      viskores::IdComponent start,
+      viskores::IdComponent numPoints) const
     {
       viskores::Id pIdx = ptIndices[start];
       viskores::Id pNextIdx;
@@ -489,12 +493,12 @@ public:
 
     template <typename CellShapeTag, typename OutConnType, typename OutCellSrcIdxType>
     VISKORES_EXEC void operator()(const CellShapeTag& shapeType,
-                              viskores::Id inCellIndex,
-                              const viskores::IdComponent& numPoints,
-                              const viskores::Id& tubePointOffset,
-                              const viskores::Id& tubeConnOffset,
-                              OutConnType& outConn,
-                              OutCellSrcIdxType& outCellSrcIdx) const
+                                  viskores::Id inCellIndex,
+                                  const viskores::IdComponent& numPoints,
+                                  const viskores::Id& tubePointOffset,
+                                  const viskores::Id& tubeConnOffset,
+                                  OutConnType& outConn,
+                                  OutCellSrcIdxType& outCellSrcIdx) const
     {
       if (shapeType.Id != viskores::CELL_SHAPE_POLY_LINE || numPoints < 2)
         return;
@@ -571,8 +575,8 @@ public:
 
     template <typename SourceArrayType, typename T>
     VISKORES_EXEC void operator()(const viskores::Id& sourceIdx,
-                              const SourceArrayType& sourceArray,
-                              T& output) const
+                                  const SourceArrayType& sourceArray,
+                                  T& output) const
     {
       output = sourceArray.Get(sourceIdx);
     }
@@ -603,9 +607,9 @@ public:
 
   template <typename Storage>
   VISKORES_CONT void Run(const viskores::cont::ArrayHandle<viskores::Vec3f, Storage>& coords,
-                     const viskores::cont::UnknownCellSet& cellset,
-                     viskores::cont::ArrayHandle<viskores::Vec3f>& newPoints,
-                     viskores::cont::CellSetSingleType<>& newCells)
+                         const viskores::cont::UnknownCellSet& cellset,
+                         viskores::cont::ArrayHandle<viskores::Vec3f>& newPoints,
+                         viskores::cont::CellSetSingleType<>& newCells)
   {
     using NormalsType = viskores::cont::ArrayHandle<viskores::Vec3f>;
 
@@ -628,11 +632,13 @@ public:
                         numTubeConnIds,
                         validCell);
 
-    viskores::Id totalPolylinePts = viskores::cont::Algorithm::Reduce(ptsPerPolyline, viskores::Id(0));
+    viskores::Id totalPolylinePts =
+      viskores::cont::Algorithm::Reduce(ptsPerPolyline, viskores::Id(0));
     if (totalPolylinePts == 0)
       throw viskores::cont::ErrorBadValue("Tube filter only supported for polyline data.");
     viskores::Id totalTubePts = viskores::cont::Algorithm::Reduce(ptsPerTube, viskores::Id(0));
-    viskores::Id totalTubeConnIds = viskores::cont::Algorithm::Reduce(numTubeConnIds, viskores::Id(0));
+    viskores::Id totalTubeConnIds =
+      viskores::cont::Algorithm::Reduce(numTubeConnIds, viskores::Id(0));
     //All cells are triangles, so cell count is simple to compute.
     viskores::Id totalTubeCells = totalTubeConnIds / 3;
 

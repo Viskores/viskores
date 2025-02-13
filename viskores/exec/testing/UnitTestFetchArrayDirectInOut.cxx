@@ -40,7 +40,7 @@ struct TestPortal
     VISKORES_TEST_ASSERT(index >= 0, "Bad portal index.");
     VISKORES_TEST_ASSERT(index < this->GetNumberOfValues(), "Bad portal index.");
     VISKORES_TEST_ASSERT(test_equal(value, ValueType(2) * TestValue(index, ValueType())),
-                     "Tried to set invalid value.");
+                         "Tried to set invalid value.");
     g_NumSets++;
   }
 };
@@ -54,8 +54,8 @@ struct FetchArrayDirectInTests
     TestPortal<T> execObject;
 
     using FetchType = viskores::exec::arg::Fetch<viskores::exec::arg::FetchTagArrayDirectInOut,
-                                             viskores::exec::arg::AspectTagDefault,
-                                             TestPortal<T>>;
+                                                 viskores::exec::arg::AspectTagDefault,
+                                                 TestPortal<T>>;
 
     FetchType fetch;
 
@@ -66,7 +66,8 @@ struct FetchArrayDirectInTests
       viskores::exec::arg::ThreadIndicesTesting indices(index);
 
       T value = fetch.Load(indices, execObject);
-      VISKORES_TEST_ASSERT(test_equal(value, TestValue(index, T())), "Got invalid value from Load.");
+      VISKORES_TEST_ASSERT(test_equal(value, TestValue(index, T())),
+                           "Got invalid value from Load.");
 
       value = T(T(2) * value);
 
@@ -74,8 +75,8 @@ struct FetchArrayDirectInTests
     }
 
     VISKORES_TEST_ASSERT(g_NumSets == ARRAY_SIZE,
-                     "Array portal's set not called correct number of times."
-                     "Store method must be wrong.");
+                         "Array portal's set not called correct number of times."
+                         "Store method must be wrong.");
   }
 };
 

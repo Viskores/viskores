@@ -93,9 +93,9 @@ public:
 
   template <typename MeshStructureType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& sortIndex,
-                            const MeshStructureType& meshStructure,
-                            const OutFieldPortalType& neighbourhoodMasksPortal,
-                            const OutFieldPortalType& outDegreesPortal) const
+                                const MeshStructureType& meshStructure,
+                                const OutFieldPortalType& neighbourhoodMasksPortal,
+                                const OutFieldPortalType& outDegreesPortal) const
   {
     const viskores::Pair<viskores::Id, viskores::Id>& maskAndDegree =
       meshStructure.GetNeighbourComponentsMaskAndDegree(sortIndex, this->IsJoinGraph);

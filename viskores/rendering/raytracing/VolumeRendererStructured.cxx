@@ -66,7 +66,8 @@ public:
   }
 
   VISKORES_EXEC
-  inline void GetCellIndices(const viskores::Id3& cell, viskores::Vec<viskores::Id, 8>& cellIndices) const
+  inline void GetCellIndices(const viskores::Id3& cell,
+                             viskores::Vec<viskores::Id, 8>& cellIndices) const
   {
     cellIndices = static_cast<const Derived*>(this)->Conn.GetIndices(cell);
   }
@@ -103,8 +104,9 @@ private:
   using CartesianConstPortal = typename CartesianArrayHandle::ReadPortalType;
 
   CartesianConstPortal Coordinates;
-  viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 3>
-    Conn;
+  viskores::exec::
+    ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 3>
+      Conn;
   viskores::exec::CellLocatorRectilinearGrid Locator;
 
   DefaultConstHandle CoordPortals[3];
@@ -116,11 +118,11 @@ private:
                                 viskores::Vec3f) const
   {
     viskores::Vec3f p0{ CoordPortals[0].Get(cell[0]),
-                    CoordPortals[1].Get(cell[1]),
-                    CoordPortals[2].Get(cell[2]) };
+                        CoordPortals[1].Get(cell[1]),
+                        CoordPortals[2].Get(cell[2]) };
     viskores::Vec3f p1{ CoordPortals[0].Get(cell[0] + 1),
-                    CoordPortals[1].Get(cell[1] + 1),
-                    CoordPortals[2].Get(cell[2] + 1) };
+                        CoordPortals[1].Get(cell[1] + 1),
+                        CoordPortals[2].Get(cell[2] + 1) };
     invSpacing = 1.f / (p1 - p0);
   }
 
@@ -151,8 +153,9 @@ private:
   using UniformConstPortal = typename UniformArrayHandle::ReadPortalType;
 
   UniformConstPortal Coordinates;
-  viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 3>
-    Conn;
+  viskores::exec::
+    ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, 3>
+      Conn;
   viskores::exec::CellLocatorUniformGrid Locator;
 
   viskores::Vec3f_32 InvSpacing{ 0, 0, 0 };
@@ -230,12 +233,12 @@ public:
 
   template <typename ScalarPortalType, typename ColorBufferType>
   VISKORES_EXEC void operator()(const viskores::Vec3f_32& rayDir,
-                            const viskores::Vec3f_32& rayOrigin,
-                            const viskores::Float32& minDistance,
-                            const viskores::Float32& maxDistance,
-                            ColorBufferType& colorBuffer,
-                            ScalarPortalType& scalars,
-                            const viskores::Id& pixelIndex) const
+                                const viskores::Vec3f_32& rayOrigin,
+                                const viskores::Float32& minDistance,
+                                const viskores::Float32& maxDistance,
+                                ColorBufferType& colorBuffer,
+                                ScalarPortalType& scalars,
+                                const viskores::Id& pixelIndex) const
   {
     viskores::Vec4f_32 color;
     BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 0);
@@ -293,8 +296,10 @@ public:
 
     while (Locator.IsInside(sampleLocation) && distance < maxDistance)
     {
-      viskores::Float32 mint = viskores::Min(parametric[0], viskores::Min(parametric[1], parametric[2]));
-      viskores::Float32 maxt = viskores::Max(parametric[0], viskores::Max(parametric[1], parametric[2]));
+      viskores::Float32 mint =
+        viskores::Min(parametric[0], viskores::Min(parametric[1], parametric[2]));
+      viskores::Float32 maxt =
+        viskores::Max(parametric[0], viskores::Max(parametric[1], parametric[2]));
       if (maxt > 1.f || mint < 0.f)
         newCell = true;
       if (newCell)
@@ -418,12 +423,12 @@ public:
 
   template <typename ScalarPortalType, typename ColorBufferType>
   VISKORES_EXEC void operator()(const viskores::Vec3f_32& rayDir,
-                            const viskores::Vec3f_32& rayOrigin,
-                            const viskores::Float32& minDistance,
-                            const viskores::Float32& maxDistance,
-                            ColorBufferType& colorBuffer,
-                            const ScalarPortalType& scalars,
-                            const viskores::Id& pixelIndex) const
+                                const viskores::Vec3f_32& rayOrigin,
+                                const viskores::Float32& minDistance,
+                                const viskores::Float32& maxDistance,
+                                ColorBufferType& colorBuffer,
+                                const ScalarPortalType& scalars,
+                                const viskores::Id& pixelIndex) const
   {
     viskores::Vec4f_32 color;
     BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 0);
@@ -474,8 +479,10 @@ public:
 
     while (Locator.IsInside(sampleLocation) && distance < maxDistance)
     {
-      viskores::Float32 mint = viskores::Min(parametric[0], viskores::Min(parametric[1], parametric[2]));
-      viskores::Float32 maxt = viskores::Max(parametric[0], viskores::Max(parametric[1], parametric[2]));
+      viskores::Float32 mint =
+        viskores::Min(parametric[0], viskores::Min(parametric[1], parametric[2]));
+      viskores::Float32 maxt =
+        viskores::Max(parametric[0], viskores::Max(parametric[1], parametric[2]));
       if (maxt > 1.f || mint < 0.f)
         newCell = true;
       if (newCell)
@@ -487,8 +494,8 @@ public:
         scalar0 = viskores::Float32(scalars.Get(cellId));
         viskores::Float32 normalizedScalar = (scalar0 - MinScalar) * InverseDeltaScalar;
 
-        auto colorIndex =
-          static_cast<viskores::Id>(normalizedScalar * static_cast<viskores::Float32>(ColorMapSize));
+        auto colorIndex = static_cast<viskores::Id>(normalizedScalar *
+                                                    static_cast<viskores::Float32>(ColorMapSize));
         if (colorIndex < 0)
           colorIndex = 0;
         if (colorIndex > ColorMapSize)
@@ -557,16 +564,19 @@ public:
   static viskores::Float32 rcp(viskores::Float32 f) { return 1.0f / f; }
 
   VISKORES_EXEC
-  static viskores::Float32 rcp_safe(viskores::Float32 f) { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
+  static viskores::Float32 rcp_safe(viskores::Float32 f)
+  {
+    return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
+  }
 
   using ControlSignature = void(FieldIn, FieldOut, FieldInOut, FieldInOut, FieldIn);
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   template <typename Precision>
   VISKORES_EXEC void operator()(const viskores::Vec<Precision, 3>& rayDir,
-                            viskores::Float32& minDistance,
-                            viskores::Float32& distance,
-                            viskores::Float32& maxDistance,
-                            const viskores::Vec<Precision, 3>& rayOrigin) const
+                                viskores::Float32& minDistance,
+                                viskores::Float32& distance,
+                                viskores::Float32& maxDistance,
+                                const viskores::Vec<Precision, 3>& rayOrigin) const
   {
     auto dirx = static_cast<viskores::Float32>(rayDir[0]);
     auto diry = static_cast<viskores::Float32>(rayDir[1]);
@@ -592,10 +602,12 @@ public:
 
 
     minDistance = viskores::Max(
-      viskores::Max(viskores::Max(viskores::Min(ymin, ymax), viskores::Min(xmin, xmax)), viskores::Min(zmin, zmax)),
+      viskores::Max(viskores::Max(viskores::Min(ymin, ymax), viskores::Min(xmin, xmax)),
+                    viskores::Min(zmin, zmax)),
       minDistance);
     viskores::Float32 exitDistance =
-      viskores::Min(viskores::Min(viskores::Max(ymin, ymax), viskores::Max(xmin, xmax)), viskores::Max(zmin, zmax));
+      viskores::Min(viskores::Min(viskores::Max(ymin, ymax), viskores::Max(xmin, xmax)),
+                    viskores::Max(zmin, zmax));
     maxDistance = viskores::Min(maxDistance, exitDistance);
     if (maxDistance < minDistance)
     {
@@ -608,7 +620,8 @@ public:
   }
 }; //class CalcRayStart
 
-void VolumeRendererStructured::SetColorMap(const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap)
+void VolumeRendererStructured::SetColorMap(
+  const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap)
 {
   ColorMap = colorMap;
 }
@@ -629,7 +642,8 @@ void VolumeRendererStructured::SetData(const viskores::cont::CoordinateSystem& c
 
 void VolumeRendererStructured::Render(viskores::rendering::raytracing::Ray<viskores::Float32>& rays)
 {
-  auto functor = [&](auto device) {
+  auto functor = [&](auto device)
+  {
     using Device = typename std::decay_t<decltype(device)>;
     VISKORES_IS_DEVICE_ADAPTER_TAG(Device);
 
@@ -704,13 +718,14 @@ void VolumeRendererStructured::RenderOnDevice(viskores::rendering::raytracing::R
 
     if (isAssocPoints)
     {
-      auto sampler = Sampler<Device, UniformLocatorAdapter<Device>>(ColorMap,
-                                                                    viskores::Float32(ScalarRange.Min),
-                                                                    viskores::Float32(ScalarRange.Max),
-                                                                    SampleDistance,
-                                                                    locator,
-                                                                    meshEpsilon,
-                                                                    token);
+      auto sampler =
+        Sampler<Device, UniformLocatorAdapter<Device>>(ColorMap,
+                                                       viskores::Float32(ScalarRange.Min),
+                                                       viskores::Float32(ScalarRange.Max),
+                                                       SampleDistance,
+                                                       locator,
+                                                       meshEpsilon,
+                                                       token);
       invoke(sampler,
              rays.Dir,
              rays.Origin,
@@ -768,14 +783,14 @@ void VolumeRendererStructured::RenderOnDevice(viskores::rendering::raytracing::R
     }
     else
     {
-      auto sampler =
-        SamplerCellAssoc<Device, RectilinearLocatorAdapter<Device>>(ColorMap,
-                                                                    viskores::Float32(ScalarRange.Min),
-                                                                    viskores::Float32(ScalarRange.Max),
-                                                                    SampleDistance,
-                                                                    locator,
-                                                                    meshEpsilon,
-                                                                    token);
+      auto sampler = SamplerCellAssoc<Device, RectilinearLocatorAdapter<Device>>(
+        ColorMap,
+        viskores::Float32(ScalarRange.Min),
+        viskores::Float32(ScalarRange.Max),
+        SampleDistance,
+        locator,
+        meshEpsilon,
+        token);
       invoke(sampler,
              rays.Dir,
              rays.Origin,

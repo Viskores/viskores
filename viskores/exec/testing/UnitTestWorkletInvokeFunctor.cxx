@@ -136,7 +136,8 @@ namespace
 using TestControlSignature = void(TestControlSignatureTagInput, TestControlSignatureTagOutput);
 using TestControlInterface = viskores::internal::FunctionInterface<TestControlSignature>;
 
-using TestExecutionSignature1 = void(viskores::exec::arg::BasicArg<1>, viskores::exec::arg::BasicArg<2>);
+using TestExecutionSignature1 = void(viskores::exec::arg::BasicArg<1>,
+                                     viskores::exec::arg::BasicArg<2>);
 using TestExecutionInterface1 = viskores::internal::FunctionInterface<TestExecutionSignature1>;
 
 using TestExecutionSignature2 = viskores::exec::arg::BasicArg<2>(viskores::exec::arg::BasicArg<1>);
@@ -179,9 +180,9 @@ void CallDoWorkletInvokeFunctor(const Invocation& invocation, viskores::Id index
     TestWorkletProxy(),
     invocation,
     viskores::exec::arg::ThreadIndicesBasic(index,
-                                        invocation.OutputToInputMap.Get(outputIndex),
-                                        invocation.VisitArray.Get(outputIndex),
-                                        outputIndex));
+                                            invocation.OutputToInputMap.Get(outputIndex),
+                                            invocation.VisitArray.Get(outputIndex),
+                                            outputIndex));
 }
 
 void TestDoWorkletInvoke()
@@ -192,17 +193,17 @@ void TestDoWorkletInvoke()
   viskores::Id outputTestValue;
   viskores::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
     viskores::internal::make_FunctionInterface<void>(TestExecObject(&inputTestValue),
-                                                 TestExecObject(&outputTestValue));
+                                                     TestExecObject(&outputTestValue));
 
   std::cout << "  Try void return." << std::endl;
   inputTestValue = 5;
   outputTestValue = static_cast<viskores::Id>(0xDEADDEAD);
   CallDoWorkletInvokeFunctor(viskores::internal::make_Invocation<1>(execObjects,
-                                                                TestControlInterface(),
-                                                                TestExecutionInterface1(),
-                                                                MyOutputToInputMapPortal(),
-                                                                MyVisitArrayPortal(),
-                                                                MyThreadToOutputMapPortal()),
+                                                                    TestControlInterface(),
+                                                                    TestExecutionInterface1(),
+                                                                    MyOutputToInputMapPortal(),
+                                                                    MyVisitArrayPortal(),
+                                                                    MyThreadToOutputMapPortal()),
                              1);
   VISKORES_TEST_ASSERT(inputTestValue == 5, "Input value changed.");
   VISKORES_TEST_ASSERT(outputTestValue == inputTestValue + 100 + 30, "Output value not set right.");
@@ -211,14 +212,15 @@ void TestDoWorkletInvoke()
   inputTestValue = 6;
   outputTestValue = static_cast<viskores::Id>(0xDEADDEAD);
   CallDoWorkletInvokeFunctor(viskores::internal::make_Invocation<1>(execObjects,
-                                                                TestControlInterface(),
-                                                                TestExecutionInterface2(),
-                                                                MyOutputToInputMapPortal(),
-                                                                MyVisitArrayPortal(),
-                                                                MyThreadToOutputMapPortal()),
+                                                                    TestControlInterface(),
+                                                                    TestExecutionInterface2(),
+                                                                    MyOutputToInputMapPortal(),
+                                                                    MyVisitArrayPortal(),
+                                                                    MyThreadToOutputMapPortal()),
                              2);
   VISKORES_TEST_ASSERT(inputTestValue == 6, "Input value changed.");
-  VISKORES_TEST_ASSERT(outputTestValue == inputTestValue + 200 + 30 * 2, "Output value not set right.");
+  VISKORES_TEST_ASSERT(outputTestValue == inputTestValue + 200 + 30 * 2,
+                       "Output value not set right.");
 }
 
 void TestWorkletInvokeFunctor()

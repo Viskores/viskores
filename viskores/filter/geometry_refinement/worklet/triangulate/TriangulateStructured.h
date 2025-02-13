@@ -46,11 +46,12 @@ public:
   // Each quad cell produces 2 triangle cells
   template <typename ConnectivityInVec, typename ConnectivityOutVec>
   VISKORES_EXEC void operator()(const ConnectivityInVec& connectivityIn,
-                            ConnectivityOutVec& connectivityOut,
-                            viskores::IdComponent visitIndex) const
+                                ConnectivityOutVec& connectivityOut,
+                                viskores::IdComponent visitIndex) const
   {
-    VISKORES_STATIC_CONSTEXPR_ARRAY viskores::IdComponent StructuredTriangleIndices[2][3] = { { 0, 1, 2 },
-                                                                                      { 0, 2, 3 } };
+    VISKORES_STATIC_CONSTEXPR_ARRAY viskores::IdComponent StructuredTriangleIndices[2][3] = {
+      { 0, 1, 2 }, { 0, 2, 3 }
+    };
     connectivityOut[0] = connectivityIn[StructuredTriangleIndices[visitIndex][0]];
     connectivityOut[1] = connectivityIn[StructuredTriangleIndices[visitIndex][1]];
     connectivityOut[2] = connectivityIn[StructuredTriangleIndices[visitIndex][2]];
@@ -63,8 +64,9 @@ class TriangulateStructured
 {
 public:
   template <typename CellSetType>
-  viskores::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
-                                      viskores::cont::ArrayHandle<viskores::IdComponent>& outCellsPerCell)
+  viskores::cont::CellSetSingleType<> Run(
+    const CellSetType& cellSet,
+    viskores::cont::ArrayHandle<viskores::IdComponent>& outCellsPerCell)
 
   {
     viskores::cont::CellSetSingleType<> outCellSet;
@@ -79,7 +81,8 @@ public:
       outCellsPerCell);
 
     // Add cells to output cellset
-    outCellSet.Fill(cellSet.GetNumberOfPoints(), viskores::CellShapeTagTriangle::Id, 3, connectivity);
+    outCellSet.Fill(
+      cellSet.GetNumberOfPoints(), viskores::CellShapeTagTriangle::Id, 3, connectivity);
     return outCellSet;
   }
 };

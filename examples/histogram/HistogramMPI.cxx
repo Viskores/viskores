@@ -46,8 +46,8 @@ public:
 
   void SetLocalHistogram(viskores::Id index, const viskores::cont::Field& field)
   {
-    this->SetLocalHistogram(index,
-                            field.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>());
+    this->SetLocalHistogram(
+      index, field.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>());
   }
 
   viskores::cont::ArrayHandle<viskores::Id> ReduceAll(const viskores::Id numBins) const
@@ -57,7 +57,8 @@ public:
     if (comm.size() == 1 && numLocalBlocks <= 1)
     {
       // no reduction necessary.
-      return numLocalBlocks == 0 ? viskores::cont::ArrayHandle<viskores::Id>() : this->LocalBlocks[0];
+      return numLocalBlocks == 0 ? viskores::cont::ArrayHandle<viskores::Id>()
+                                 : this->LocalBlocks[0];
     }
 
 
@@ -129,7 +130,8 @@ VISKORES_CONT viskores::cont::DataSet HistogramMPI::DoExecute(const viskores::co
 
   viskores::cont::ArrayHandle<viskores::Id> binArray;
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     T delta;
 
@@ -144,9 +146,8 @@ VISKORES_CONT viskores::cont::DataSet HistogramMPI::DoExecute(const viskores::co
     this->BinDelta = static_cast<viskores::Float64>(delta);
   };
 
-  fieldArray
-    .CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldScalar, VISKORES_DEFAULT_STORAGE_LIST>(
-      resolveType);
+  fieldArray.CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldScalar,
+                                                  VISKORES_DEFAULT_STORAGE_LIST>(resolveType);
 
   viskores::cont::DataSet output;
   output.AddField(
@@ -186,7 +187,7 @@ inline VISKORES_CONT void HistogramMPI::PreExecute(const viskores::cont::Partiti
 
 //-----------------------------------------------------------------------------
 inline VISKORES_CONT void HistogramMPI::PostExecute(const viskores::cont::PartitionedDataSet&,
-                                                viskores::cont::PartitionedDataSet& result)
+                                                    viskores::cont::PartitionedDataSet& result)
 {
   // iterate and compute HistogramMPI for each local block.
   detail::DistributedHistogram helper(result.GetNumberOfPartitions());
@@ -198,8 +199,8 @@ inline VISKORES_CONT void HistogramMPI::PostExecute(const viskores::cont::Partit
 
   viskores::cont::DataSet output;
   viskores::cont::Field rfield(this->GetOutputFieldName(),
-                           viskores::cont::Field::Association::WholeDataSet,
-                           helper.ReduceAll(this->NumberOfBins));
+                               viskores::cont::Field::Association::WholeDataSet,
+                               helper.ReduceAll(this->NumberOfBins));
   output.AddField(rfield);
 
   result = viskores::cont::PartitionedDataSet(output);

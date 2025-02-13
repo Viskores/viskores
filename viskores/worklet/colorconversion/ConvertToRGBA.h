@@ -48,9 +48,9 @@ struct ConvertToRGBA : public viskores::worklet::WorkletMapField
   VISKORES_EXEC viskores::Vec4ui_8 operator()(const viskores::Vec<T, 3>& in) const
   { //vtkScalarsToColorsRGBToRGBA
     return viskores::Vec<UInt8, 4>(colorconversion::ColorToUChar(in[0]),
-                               colorconversion::ColorToUChar(in[1]),
-                               colorconversion::ColorToUChar(in[2]),
-                               colorconversion::ColorToUChar(this->Alpha));
+                                   colorconversion::ColorToUChar(in[1]),
+                                   colorconversion::ColorToUChar(in[2]),
+                                   colorconversion::ColorToUChar(this->Alpha));
   }
 
   template <typename T>
@@ -58,9 +58,9 @@ struct ConvertToRGBA : public viskores::worklet::WorkletMapField
   { //vtkScalarsToColorsRGBAToRGBA
     const viskores::UInt8 a = colorconversion::ColorToUChar(in[3]);
     return viskores::Vec<UInt8, 4>(colorconversion::ColorToUChar(in[0]),
-                               colorconversion::ColorToUChar(in[1]),
-                               colorconversion::ColorToUChar(in[2]),
-                               static_cast<viskores::UInt8>(a * this->Alpha + 0.5f));
+                                   colorconversion::ColorToUChar(in[1]),
+                                   colorconversion::ColorToUChar(in[2]),
+                                   static_cast<viskores::UInt8>(a * this->Alpha + 0.5f));
   }
 
   const viskores::Float32 Alpha = 1.0f;

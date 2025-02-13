@@ -131,7 +131,7 @@ inline viskores::Range adjustRange(const viskores::Range& r)
   { //We've found it best to offset it in viskores::Float32 space if the numbers
     //lay inside that representable range
     viskores::Float32 frange[2] = { static_cast<viskores::Float32>(r.Min),
-                                static_cast<viskores::Float32>(r.Max) };
+                                    static_cast<viskores::Float32>(r.Max) };
     result.Max = expandRange(frange);
   }
   else
@@ -245,10 +245,10 @@ inline bool outside_range(T&& t, U&& u, V&& v, Args&&... args)
 
 template <typename T>
 inline viskores::cont::ArrayHandle<T> buildSampleHandle(viskores::Int32 numSamples,
-                                                    T start,
-                                                    T end,
-                                                    T inc,
-                                                    bool appendNanAndRangeColors)
+                                                        T start,
+                                                        T end,
+                                                        T inc,
+                                                        bool appendNanAndRangeColors)
 {
 
   //number of samples + end + appendNanAndRangeColors
@@ -281,7 +281,7 @@ inline viskores::cont::ArrayHandle<T> buildSampleHandle(viskores::Int32 numSampl
     //land in the extra 'end' color
     portal.Set(index++, end);
     portal.Set(index++, std::numeric_limits<T>::max()); //above
-    portal.Set(index++, viskores::Nan<T>());                //nan
+    portal.Set(index++, viskores::Nan<T>());            //nan
   }
 
   return handle;
@@ -388,7 +388,8 @@ struct ColorTableInternals
 namespace internal
 {
 std::set<std::string> GetPresetNames();
-bool LoadColorTablePreset(viskores::cont::ColorTable::Preset preset, viskores::cont::ColorTable& table);
+bool LoadColorTablePreset(viskores::cont::ColorTable::Preset preset,
+                          viskores::cont::ColorTable& table);
 bool LoadColorTablePreset(std::string name, viskores::cont::ColorTable& table);
 } // namespace internal
 
@@ -468,7 +469,8 @@ ColorTable::ColorTable(const std::string& name,
   this->SetName(name);
   this->SetColorSpace(colorSpace);
   this->SetNaNColor(nanColor);
-  this->FillColorTableFromDataPointer(static_cast<viskores::Int32>(rgbPoints.size()), rgbPoints.data());
+  this->FillColorTableFromDataPointer(static_cast<viskores::Int32>(rgbPoints.size()),
+                                      rgbPoints.data());
   this->FillOpacityTableFromDataPointer(static_cast<viskores::Int32>(alphaPoints.size()),
                                         alphaPoints.data());
 }
@@ -725,9 +727,9 @@ viskores::Int32 ColorTable::AddPointHSV(viskores::Float64 x, const viskores::Vec
 
 //---------------------------------------------------------------------------
 viskores::Int32 ColorTable::AddSegment(viskores::Float64 x1,
-                                   const viskores::Vec3f_32& rgb1,
-                                   viskores::Float64 x2,
-                                   const viskores::Vec3f_32& rgb2)
+                                       const viskores::Vec3f_32& rgb1,
+                                       viskores::Float64 x2,
+                                       const viskores::Vec3f_32& rgb2)
 {
   if (outside_range(rgb1, rgb2))
   {
@@ -764,9 +766,9 @@ viskores::Int32 ColorTable::AddSegment(viskores::Float64 x1,
 
 //---------------------------------------------------------------------------
 viskores::Int32 ColorTable::AddSegmentHSV(viskores::Float64 x1,
-                                      const viskores::Vec3f_32& hsv1,
-                                      viskores::Float64 x2,
-                                      const viskores::Vec3f_32& hsv2)
+                                          const viskores::Vec3f_32& hsv1,
+                                          viskores::Float64 x2,
+                                          const viskores::Vec3f_32& hsv2)
 {
   return this->AddSegment(x1, hsvTorgb(hsv1), x2, hsvTorgb(hsv2));
 }
@@ -827,8 +829,8 @@ viskores::Int32 ColorTable::UpdatePoint(viskores::Int32 index, const viskores::V
   { //remove the point, and add the new values as the relative location is different
     this->RemovePoint(index);
     viskores::Vec3f_32 newrgb(static_cast<viskores::Float32>(data[1]),
-                          static_cast<viskores::Float32>(data[2]),
-                          static_cast<viskores::Float32>(data[3]));
+                              static_cast<viskores::Float32>(data[2]),
+                              static_cast<viskores::Float32>(data[3]));
     return this->AddPoint(data[0], newrgb);
   }
 }
@@ -867,9 +869,9 @@ viskores::Int32 ColorTable::GetNumberOfPoints() const
 
 //---------------------------------------------------------------------------
 viskores::Int32 ColorTable::AddPointAlpha(viskores::Float64 x,
-                                      viskores::Float32 alpha,
-                                      viskores::Float32 midpoint,
-                                      viskores::Float32 sharpness)
+                                          viskores::Float32 alpha,
+                                          viskores::Float32 midpoint,
+                                          viskores::Float32 sharpness)
 {
   if (outside_range(alpha, midpoint, sharpness))
   {
@@ -912,11 +914,11 @@ viskores::Int32 ColorTable::AddPointAlpha(viskores::Float64 x,
 
 //---------------------------------------------------------------------------
 viskores::Int32 ColorTable::AddSegmentAlpha(viskores::Float64 x1,
-                                        viskores::Float32 alpha1,
-                                        viskores::Float64 x2,
-                                        viskores::Float32 alpha2,
-                                        const viskores::Vec2f_32& mid_sharp1,
-                                        const viskores::Vec2f_32& mid_sharp2)
+                                            viskores::Float32 alpha1,
+                                            viskores::Float64 x2,
+                                            viskores::Float32 alpha2,
+                                            const viskores::Vec2f_32& mid_sharp1,
+                                            const viskores::Vec2f_32& mid_sharp2)
 {
   if (outside_range(alpha1, alpha2, mid_sharp1, mid_sharp2))
   {
@@ -1068,8 +1070,8 @@ bool ColorTable::FillColorTableFromDataPointer(viskores::Int32 n, const viskores
   for (std::size_t i = 0; i < size; ++i)
   { //allows us to support unsorted arrays
     viskores::Vec3f_32 rgb(static_cast<viskores::Float32>(ptr[1]),
-                       static_cast<viskores::Float32>(ptr[2]),
-                       static_cast<viskores::Float32>(ptr[3]));
+                           static_cast<viskores::Float32>(ptr[2]),
+                           static_cast<viskores::Float32>(ptr[3]));
     this->AddPoint(ptr[0], rgb);
     ptr += 4;
   }
@@ -1234,7 +1236,7 @@ void ColorTable::UpdateArrayHandles() const
 
 //---------------------------------------------------------------------------
 viskores::exec::ColorTable ColorTable::PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                       viskores::cont::Token& token) const
+                                                           viskores::cont::Token& token) const
 {
   this->UpdateArrayHandles();
 
@@ -1247,22 +1249,22 @@ viskores::exec::ColorTable ColorTable::PrepareForExecution(viskores::cont::Devic
   execTable.UseClamping = this->Internals->UseClamping;
 
   VISKORES_ASSERT(static_cast<viskores::Id>(this->Internals->ColorNodePos.size()) ==
-              this->Internals->ColorPosHandle.GetNumberOfValues());
+                  this->Internals->ColorPosHandle.GetNumberOfValues());
   execTable.ColorSize =
     static_cast<viskores::Int32>(this->Internals->ColorPosHandle.GetNumberOfValues());
   VISKORES_ASSERT(static_cast<viskores::Id>(execTable.ColorSize) ==
-              this->Internals->ColorRGBHandle.GetNumberOfValues());
+                  this->Internals->ColorRGBHandle.GetNumberOfValues());
   execTable.ColorNodes = this->Internals->ColorPosHandle.PrepareForInput(device, token).GetArray();
   execTable.RGB = this->Internals->ColorRGBHandle.PrepareForInput(device, token).GetArray();
 
   VISKORES_ASSERT(static_cast<viskores::Id>(this->Internals->OpacityNodePos.size()) ==
-              this->Internals->OpacityPosHandle.GetNumberOfValues());
+                  this->Internals->OpacityPosHandle.GetNumberOfValues());
   execTable.OpacitySize =
     static_cast<viskores::Int32>(this->Internals->OpacityPosHandle.GetNumberOfValues());
   VISKORES_ASSERT(static_cast<viskores::Id>(execTable.OpacitySize) ==
-              this->Internals->OpacityAlphaHandle.GetNumberOfValues());
+                  this->Internals->OpacityAlphaHandle.GetNumberOfValues());
   VISKORES_ASSERT(static_cast<viskores::Id>(execTable.OpacitySize) ==
-              this->Internals->OpacityMidSharpHandle.GetNumberOfValues());
+                  this->Internals->OpacityMidSharpHandle.GetNumberOfValues());
   execTable.ONodes = this->Internals->OpacityPosHandle.PrepareForInput(device, token).GetArray();
   execTable.Alpha = this->Internals->OpacityAlphaHandle.PrepareForInput(device, token).GetArray();
   execTable.MidSharp =

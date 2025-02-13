@@ -75,7 +75,10 @@ public:
     this->Measure = measure;
   }
   /// @copydoc SetMeasure
-  VISKORES_CONT viskores::filter::mesh_info::IntegrationType GetMeasure() const { return this->Measure; }
+  VISKORES_CONT viskores::filter::mesh_info::IntegrationType GetMeasure() const
+  {
+    return this->Measure;
+  }
   /// @brief Compute the length of 1D elements.
   VISKORES_CONT void SetMeasureToArcLength()
   {

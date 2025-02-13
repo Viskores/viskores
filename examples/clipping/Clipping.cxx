@@ -24,7 +24,8 @@ int main(int argc, char* argv[])
   if ((argc < 4) || (argc > 5))
   {
     std::cerr << "Usage: " << argv[0] << " in_data.vtk field_name clip_value [out_data.vtk]\n\n";
-    std::cerr << "For example, you could use the example.vtk that comes with the Viskores source:\n\n";
+    std::cerr
+      << "For example, you could use the example.vtk that comes with the Viskores source:\n\n";
     std::cerr << "  " << argv[0]
               << " <path-to-viskores-source>/data/data/third_party/visit/example.vtk temp 3.5\n";
     return 1;

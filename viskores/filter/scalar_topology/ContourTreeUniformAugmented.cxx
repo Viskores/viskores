@@ -103,7 +103,8 @@ const viskores::worklet::contourtree_augmented::ContourTree& ContourTreeAugmente
   return this->ContourTreeData;
 }
 
-const viskores::worklet::contourtree_augmented::IdArrayType& ContourTreeAugmented::GetSortOrder() const
+const viskores::worklet::contourtree_augmented::IdArrayType& ContourTreeAugmented::GetSortOrder()
+  const
 {
   return this->MeshSortOrder;
 }
@@ -153,7 +154,8 @@ viskores::cont::DataSet ContourTreeAugmented::DoExecute(const viskores::cont::Da
   viskores::cont::DataSet result;
 
   // FIXME: reduce the size of lambda.
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
 
     viskores::worklet::ContourTreeAugmented worklet;
@@ -210,9 +212,9 @@ viskores::cont::DataSet ContourTreeAugmented::DoExecute(const viskores::cont::Da
   this->CastAndCallScalarField(field, resolveType);
 
   VISKORES_LOG_S(viskores::cont::LogLevel::Perf,
-             std::endl
-               << "    " << std::setw(38) << std::left << "Contour Tree Filter DoExecute"
-               << ": " << timer.GetElapsedTime() << " seconds");
+                 std::endl
+                   << "    " << std::setw(38) << std::left << "Contour Tree Filter DoExecute"
+                   << ": " << timer.GetElapsedTime() << " seconds");
 
   return result;
 } // ContourTreeAugmented::DoExecute
@@ -248,14 +250,16 @@ VISKORES_CONT void ContourTreeAugmented::PreExecute(const viskores::cont::Partit
   {
     // No block indices set -> compute information automatically later
     this->MultiBlockTreeHelper =
-      std::make_unique<viskores::worklet::contourtree_distributed::MultiBlockContourTreeHelper>(input);
+      std::make_unique<viskores::worklet::contourtree_distributed::MultiBlockContourTreeHelper>(
+        input);
   }
 }
 
 //-----------------------------------------------------------------------------
 template <typename T>
-VISKORES_CONT void ContourTreeAugmented::DoPostExecute(const viskores::cont::PartitionedDataSet& input,
-                                                   viskores::cont::PartitionedDataSet& output)
+VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
+  const viskores::cont::PartitionedDataSet& input,
+  viskores::cont::PartitionedDataSet& output)
 {
   auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
   viskores::Id size = comm.size();
@@ -290,14 +294,15 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(const viskores::cont::Par
     //const viskores::cont::ArrayHandle<T,StorageType> &fieldData = currField.GetData().Cast<viskores::cont::ArrayHandle<T,StorageType> >();
     viskores::cont::ArrayHandle<T> fieldData;
     viskores::cont::ArrayCopy(currField.GetData(), fieldData);
-    auto currContourTreeMesh = viskores::worklet::contourtree_distributed::MultiBlockContourTreeHelper::
-      ComputeLocalContourTreeMesh<T>(globalPointIndexStart,
-                                     pointDimensions,
-                                     globalPointDimensions,
-                                     fieldData,
-                                     MultiBlockTreeHelper->LocalContourTrees[bi],
-                                     MultiBlockTreeHelper->LocalSortOrders[bi],
-                                     compRegularStruct);
+    auto currContourTreeMesh =
+      viskores::worklet::contourtree_distributed::MultiBlockContourTreeHelper::
+        ComputeLocalContourTreeMesh<T>(globalPointIndexStart,
+                                       pointDimensions,
+                                       globalPointDimensions,
+                                       fieldData,
+                                       MultiBlockTreeHelper->LocalContourTrees[bi],
+                                       MultiBlockTreeHelper->LocalSortOrders[bi],
+                                       compRegularStruct);
     localContourTreeMeshes[bi] = currContourTreeMesh;
     // create the local data block structure
     localDataBlocks[bi] = new viskores::worklet::contourtree_distributed::ContourTreeBlockData<T>();
@@ -318,8 +323,8 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(const viskores::cont::Par
 
   // Create the viskoresdiy master
   viskoresdiy::Master master(comm,
-                         1, // Use 1 thread, Viskores will do the treading
-                         -1 // All block in memory
+                             1, // Use 1 thread, Viskores will do the treading
+                             -1 // All block in memory
   );
 
   // Compute the gids for our local blocks
@@ -331,15 +336,15 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(const viskores::cont::Par
   if (this->MultiBlockTreeHelper->BlocksPerDimension[0] == -1)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "BlocksPerDimension not set. Computing block indices "
-               "from information in CellSetStructured.");
+                   "BlocksPerDimension not set. Computing block indices "
+                   "from information in CellSetStructured.");
     diyBounds = viskores::filter::scalar_topology::internal::ComputeBlockIndices(
       input, diyDivisions, viskoresdiyLocalBlockGids);
   }
   else
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "BlocksPerDimension set. Using information provided by caller.");
+                   "BlocksPerDimension set. Using information provided by caller.");
     diyBounds = viskores::filter::scalar_topology::internal::ComputeBlockIndices(
       input,
       this->MultiBlockTreeHelper->BlocksPerDimension,
@@ -413,7 +418,8 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(const viskores::cont::Par
     viskores::worklet::contourtree_augmented::ContourTreeMesh<T> contourTreeMeshOut;
     contourTreeMeshOut.NumVertices = localDataBlocks[0]->NumVertices;
     contourTreeMeshOut.SortOrder = viskores::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
-    contourTreeMeshOut.SortIndices = viskores::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
+    contourTreeMeshOut.SortIndices =
+      viskores::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
     contourTreeMeshOut.SortedValues = localDataBlocks[0]->SortedValue;
     contourTreeMeshOut.GlobalMeshIndex = localDataBlocks[0]->GlobalMeshIndex;
     contourTreeMeshOut.NeighborConnectivity = localDataBlocks[0]->NeighborConnectivity;
@@ -446,8 +452,8 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(const viskores::cont::Par
     // TODO the result we return for the parallel and serial case are different right now. This should be made consistent. However, only in the parallel case are we useing the result output
     viskores::cont::DataSet temp;
     viskores::cont::Field rfield(this->GetOutputFieldName(),
-                             viskores::cont::Field::Association::WholeDataSet,
-                             contourTreeMeshOut.SortedValues);
+                                 viskores::cont::Field::Association::WholeDataSet,
+                                 contourTreeMeshOut.SortedValues);
     temp.AddField(rfield);
     output = viskores::cont::PartitionedDataSet(temp);
   }
@@ -470,8 +476,9 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(const viskores::cont::Par
 }
 
 //-----------------------------------------------------------------------------
-VISKORES_CONT void ContourTreeAugmented::PostExecute(const viskores::cont::PartitionedDataSet& input,
-                                                 viskores::cont::PartitionedDataSet& result)
+VISKORES_CONT void ContourTreeAugmented::PostExecute(
+  const viskores::cont::PartitionedDataSet& input,
+  viskores::cont::PartitionedDataSet& result)
 {
   if (this->MultiBlockTreeHelper)
   {
@@ -488,7 +495,8 @@ VISKORES_CONT void ContourTreeAugmented::PostExecute(const viskores::cont::Parti
       input.GetPartition(0).GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
 
     // To infer and pass on the ValueType of the field.
-    auto PostExecuteCaller = [&](const auto& concrete) {
+    auto PostExecuteCaller = [&](const auto& concrete)
+    {
       using T = typename std::decay_t<decltype(concrete)>::ValueType;
       this->DoPostExecute<T>(input, result);
     };
@@ -496,9 +504,9 @@ VISKORES_CONT void ContourTreeAugmented::PostExecute(const viskores::cont::Parti
 
     this->MultiBlockTreeHelper.reset();
     VISKORES_LOG_S(viskores::cont::LogLevel::Perf,
-               std::endl
-                 << "    " << std::setw(38) << std::left << "Contour Tree Filter PostExecute"
-                 << ": " << timer.GetElapsedTime() << " seconds");
+                   std::endl
+                     << "    " << std::setw(38) << std::left << "Contour Tree Filter PostExecute"
+                     << ": " << timer.GetElapsedTime() << " seconds");
   }
 }
 

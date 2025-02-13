@@ -33,7 +33,7 @@ struct DotProductWorklet : viskores::worklet::WorkletMapField
 
 template <typename PrimaryArrayType>
 viskores::cont::UnknownArrayHandle DoDotProduct(const PrimaryArrayType& primaryArray,
-                                            const viskores::cont::Field& secondaryField)
+                                                const viskores::cont::Field& secondaryField)
 {
   using T = typename PrimaryArrayType::ValueType::ComponentType;
 
@@ -75,7 +75,8 @@ VISKORES_CONT DotProduct::DotProduct()
   this->SetOutputFieldName("dotproduct");
 }
 
-VISKORES_CONT viskores::cont::DataSet DotProduct::DoExecute(const viskores::cont::DataSet& inDataSet)
+VISKORES_CONT viskores::cont::DataSet DotProduct::DoExecute(
+  const viskores::cont::DataSet& inDataSet)
 {
   viskores::cont::Field primaryField = this->GetFieldFromDataSet(0, inDataSet);
   viskores::cont::Field secondaryField = this->GetFieldFromDataSet(1, inDataSet);
@@ -89,9 +90,8 @@ VISKORES_CONT viskores::cont::DataSet DotProduct::DoExecute(const viskores::cont
 
   viskores::cont::UnknownArrayHandle outArray;
 
-  auto resolveArray = [&](const auto& concretePrimaryField) {
-    outArray = DoDotProduct(concretePrimaryField, secondaryField);
-  };
+  auto resolveArray = [&](const auto& concretePrimaryField)
+  { outArray = DoDotProduct(concretePrimaryField, secondaryField); };
   this->CastAndCallVariableVecField(primaryField, resolveArray);
 
   return this->CreateResultField(inDataSet,

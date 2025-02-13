@@ -36,9 +36,9 @@ namespace cellmetrics
 
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellWarpageMetric(const viskores::IdComponent& viskoresNotUsed(numPts),
-                                    const PointCoordVecType& viskoresNotUsed(pts),
-                                    CellShapeType viskoresNotUsed(shape),
-                                    viskores::ErrorCode& viskoresNotUsed(ec))
+                                        const PointCoordVecType& viskoresNotUsed(pts),
+                                        CellShapeType viskoresNotUsed(shape),
+                                        viskores::ErrorCode& viskoresNotUsed(ec))
 {
   //ec = viskores::ErrorCode::InvalidCellMetric;
   return OutType(-1.0);
@@ -46,9 +46,9 @@ VISKORES_EXEC OutType CellWarpageMetric(const viskores::IdComponent& viskoresNot
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellWarpageMetric(const viskores::IdComponent& viskoresNotUsed(numPts),
-                                    const PointCoordVecType& pts,
-                                    viskores::CellShapeTagQuad,
-                                    viskores::ErrorCode& viskoresNotUsed(ec))
+                                        const PointCoordVecType& pts,
+                                        viskores::CellShapeTagQuad,
+                                        viskores::ErrorCode& viskoresNotUsed(ec))
 {
   using Scalar = OutType;
   using CollectionOfPoints = PointCoordVecType;

@@ -95,9 +95,9 @@ std::string& Testing::SetAndGetTestDataBasePath(std::string path)
 
   if (TestDataBasePath.empty())
   {
-    VISKORES_LOG_S(
-      viskores::cont::LogLevel::Error,
-      "TestDataBasePath was never set, was --viskores-data-dir set correctly? (hint: ../data/data)");
+    VISKORES_LOG_S(viskores::cont::LogLevel::Error,
+                   "TestDataBasePath was never set, was --viskores-data-dir set correctly? (hint: "
+                   "../data/data)");
   }
 
   return TestDataBasePath;
@@ -118,9 +118,10 @@ std::string& Testing::SetAndGetRegressionImageBasePath(std::string path)
 
   if (RegressionTestImageBasePath.empty())
   {
-    VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-               "RegressionTestImageBasePath was never set, was --viskores-baseline-dir set correctly? "
-               "(hint: ../data/baseline)");
+    VISKORES_LOG_S(
+      viskores::cont::LogLevel::Error,
+      "RegressionTestImageBasePath was never set, was --viskores-baseline-dir set correctly? "
+      "(hint: ../data/baseline)");
   }
 
   return RegressionTestImageBasePath;
@@ -214,13 +215,13 @@ void Testing::ParseAdditionalTestArgs(int& argc, char* argv[])
   for (const opt::Option* opt = options[TEST_UNKNOWN]; opt != nullptr; opt = opt->next())
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "Unknown option to internal Initialize: " << opt->name << "\n");
+                   "Unknown option to internal Initialize: " << opt->name << "\n");
   }
 
   for (int nonOpt = 0; nonOpt < parse.nonOptionsCount(); ++nonOpt)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "Unknown argument to internal Initialize: " << parse.nonOption(nonOpt) << "\n");
+                   "Unknown argument to internal Initialize: " << parse.nonOption(nonOpt) << "\n");
   }
 }
 

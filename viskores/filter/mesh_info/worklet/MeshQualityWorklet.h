@@ -49,9 +49,9 @@ struct MeshQualityWorklet : viskores::worklet::WorkletVisitCellsWithPoints
 
   template <typename CellShapeType, typename PointCoordVecType, typename OutType>
   VISKORES_EXEC void operator()(CellShapeType shape,
-                            const viskores::IdComponent& numPoints,
-                            const PointCoordVecType& pts,
-                            OutType& metricValue) const
+                                const viskores::IdComponent& numPoints,
+                                const PointCoordVecType& pts,
+                                OutType& metricValue) const
   {
     viskores::UInt8 thisId = shape.Id;
     if (shape.Id == viskores::CELL_SHAPE_POLYGON)
@@ -67,7 +67,7 @@ struct MeshQualityWorklet : viskores::worklet::WorkletVisitCellsWithPoints
     switch (thisId)
     {
       viskoresGenericCellShapeMacro(metricValue = self->template ComputeMetric<OutType>(
-                                  numPoints, pts, CellShapeTag{}, errorCode));
+                                      numPoints, pts, CellShapeTag{}, errorCode));
       default:
         errorCode = viskores::ErrorCode::InvalidShapeId;
         metricValue = OutType(0.0);
@@ -80,26 +80,27 @@ struct MeshQualityWorklet : viskores::worklet::WorkletVisitCellsWithPoints
   }
 
   VISKORES_CONT viskores::cont::UnknownArrayHandle Run(const viskores::cont::DataSet& input,
-                                               const viskores::cont::Field& field) const
+                                                       const viskores::cont::Field& field) const
   {
     if (!field.IsPointField())
     {
       throw viskores::cont::ErrorBadValue("Active field for MeshQuality must be point coordinates. "
-                                      "But the active field is not a point field.");
+                                          "But the active field is not a point field.");
     }
 
     viskores::cont::UnknownArrayHandle outArray;
     viskores::cont::Invoker invoke;
 
-    auto resolveType = [&](const auto& concrete) {
+    auto resolveType = [&](const auto& concrete)
+    {
       using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
       viskores::cont::ArrayHandle<T> result;
       invoke(*reinterpret_cast<const Derived*>(this), input.GetCellSet(), concrete, result);
       outArray = result;
     };
     field.GetData()
-      .CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldVec3, VISKORES_DEFAULT_STORAGE_LIST>(
-        resolveType);
+      .CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldVec3,
+                                            VISKORES_DEFAULT_STORAGE_LIST>(resolveType);
 
     return outArray;
   }

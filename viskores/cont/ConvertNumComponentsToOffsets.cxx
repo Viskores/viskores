@@ -22,10 +22,10 @@ struct CallNumToOffsets
 {
   template <typename BaseType>
   VISKORES_CONT void operator()(BaseType,
-                            const viskores::cont::UnknownArrayHandle& numComponentsArray,
-                            viskores::cont::ArrayHandle<viskores::Id>& offsetsArray,
-                            viskores::cont::DeviceAdapterId device,
-                            bool& converted)
+                                const viskores::cont::UnknownArrayHandle& numComponentsArray,
+                                viskores::cont::ArrayHandle<viskores::Id>& offsetsArray,
+                                viskores::cont::DeviceAdapterId device,
+                                bool& converted)
   {
     if (!numComponentsArray.IsBaseComponentType<BaseType>())
     {

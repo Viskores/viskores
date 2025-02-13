@@ -31,11 +31,12 @@ void PairTestConstructors()
   viskores::Pair<T, U> assignment_pair = no_params_pair;
 
   VISKORES_TEST_ASSERT((no_params_pair == copy_constructor_pair),
-                   "copy constructor doesn't match default constructor");
-  VISKORES_TEST_ASSERT(!(no_params_pair != copy_constructor_pair), "operator != is working properly");
+                       "copy constructor doesn't match default constructor");
+  VISKORES_TEST_ASSERT(!(no_params_pair != copy_constructor_pair),
+                       "operator != is working properly");
 
   VISKORES_TEST_ASSERT((no_params_pair == assignment_pair),
-                   "assignment constructor doesn't match default constructor");
+                       "assignment constructor doesn't match default constructor");
   VISKORES_TEST_ASSERT(!(no_params_pair != assignment_pair), "operator != is working properly");
 }
 
@@ -51,13 +52,15 @@ void PairTestValues()
   viskores::Pair<T, U> assignment_pair = pair_ab;
   viskores::Pair<T, U> make_p = viskores::make_Pair(a, b);
 
-  VISKORES_TEST_ASSERT(!(pair_ab != pair_ab), "operator != isn't working properly for viskores::Pair");
-  VISKORES_TEST_ASSERT((pair_ab == pair_ab), "operator == isn't working properly for viskores::Pair");
+  VISKORES_TEST_ASSERT(!(pair_ab != pair_ab),
+                       "operator != isn't working properly for viskores::Pair");
+  VISKORES_TEST_ASSERT((pair_ab == pair_ab),
+                       "operator == isn't working properly for viskores::Pair");
 
   VISKORES_TEST_ASSERT((pair_ab == copy_constructor_pair),
-                   "copy constructor doesn't match pair constructor");
+                       "copy constructor doesn't match pair constructor");
   VISKORES_TEST_ASSERT((pair_ab == assignment_pair),
-                   "assignment constructor doesn't match pair constructor");
+                       "assignment constructor doesn't match pair constructor");
 
   VISKORES_TEST_ASSERT(copy_constructor_pair.first == a, "first field not set right");
   VISKORES_TEST_ASSERT(assignment_pair.second == b, "second field not set right");
@@ -87,7 +90,8 @@ void PairTestOrdering()
   U b = TestValue(89, U());
 
   U b2(b);
-  viskores::VecTraits<U>::SetComponent(b2, 0, NextValue(viskores::VecTraits<U>::GetComponent(b2, 0)));
+  viskores::VecTraits<U>::SetComponent(
+    b2, 0, NextValue(viskores::VecTraits<U>::GetComponent(b2, 0)));
 
   viskores::Pair<T, U> pair_ab2(a, b2);
   viskores::Pair<T, U> pair_ab(a, b);
@@ -108,7 +112,8 @@ void PairTestOrdering()
   VISKORES_TEST_ASSERT((pair_ab2 != pair_ab), "operator != failed");
 
   T a2(a);
-  viskores::VecTraits<T>::SetComponent(a2, 0, NextValue(viskores::VecTraits<T>::GetComponent(a2, 0)));
+  viskores::VecTraits<T>::SetComponent(
+    a2, 0, NextValue(viskores::VecTraits<T>::GetComponent(a2, 0)));
   viskores::Pair<T, U> pair_a2b(a2, b);
   //this way can verify that if the first argument of the pair is different
   //we respond properly
@@ -142,7 +147,7 @@ void PairTest()
     // always succeed.)
     VISKORES_IS_TRIVIAL(T);
     VISKORES_TEST_ASSERT(viskoresstd::is_trivial<U>::value == viskoresstd::is_trivial<P>::value,
-                     "PairType's triviality differs from ComponentTypes.");
+                         "PairType's triviality differs from ComponentTypes.");
   }
 
   PairTestConstructors<T, U>();
@@ -152,11 +157,12 @@ void PairTest()
   PairTestOrdering<T, U>();
 }
 
-using PairTypesToTry = viskores::List<viskores::Int8,                             // Integer types
-                                  viskores::FloatDefault,                     // Float types
-                                  viskores::Id3,                              // Vec types
-                                  viskores::Pair<viskores::Vec3f_32, viskores::Int64> // Recursive Pairs
-                                  >;
+using PairTypesToTry =
+  viskores::List<viskores::Int8,                                     // Integer types
+                 viskores::FloatDefault,                             // Float types
+                 viskores::Id3,                                      // Vec types
+                 viskores::Pair<viskores::Vec3f_32, viskores::Int64> // Recursive Pairs
+                 >;
 
 template <typename FirstType>
 struct DecideSecondType

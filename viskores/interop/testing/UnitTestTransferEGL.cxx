@@ -24,5 +24,6 @@ int UnitTestTransferEGL(int argc, char* argv[])
   //get glew to bind all the opengl functions
   glewInit();
 
-  return viskores::interop::testing::TestingOpenGLInterop<viskores::cont::DeviceAdapterTagSerial>::Run();
+  return viskores::interop::testing::TestingOpenGLInterop<
+    viskores::cont::DeviceAdapterTagSerial>::Run();
 }

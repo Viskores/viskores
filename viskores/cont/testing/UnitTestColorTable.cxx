@@ -83,22 +83,22 @@ void TestLoadPresets()
     viskores::cont::ColorTable table(rgbspace);
     VISKORES_TEST_ASSERT(table.LoadPreset("Cool to Warm"));
     VISKORES_TEST_ASSERT(table.GetColorSpace() == diverging,
-                     "color space not switched when loading preset");
+                         "color space not switched when loading preset");
     VISKORES_TEST_ASSERT(table.GetRange() == range, "color range not correct after loading preset");
     VISKORES_TEST_ASSERT(table.GetNumberOfPoints() == 3);
 
     VISKORES_TEST_ASSERT(table.LoadPreset(viskores::cont::ColorTable::Preset::CoolToWarmExtended));
     VISKORES_TEST_ASSERT(table.GetColorSpace() == labspace,
-                     "color space not switched when loading preset");
+                         "color space not switched when loading preset");
     VISKORES_TEST_ASSERT(table.GetRange() == range, "color range not correct after loading preset");
     VISKORES_TEST_ASSERT(table.GetNumberOfPoints() == 35);
 
     table.SetColorSpace(hsvspace);
     VISKORES_TEST_ASSERT((table.LoadPreset("no table with this name") == false),
-                     "failed to error out on bad preset table name");
+                         "failed to error out on bad preset table name");
     //verify that after a failure we still have the previous preset loaded
     VISKORES_TEST_ASSERT(table.GetColorSpace() == hsvspace,
-                     "color space not switched when loading preset");
+                         "color space not switched when loading preset");
     VISKORES_TEST_ASSERT(table.GetRange() == range, "color range not correct after failing preset");
     VISKORES_TEST_ASSERT(table.GetNumberOfPoints() == 35);
   }
@@ -110,10 +110,10 @@ void TestLoadPresets()
 
   VISKORES_TEST_ASSERT(names.count("Inferno") == 1, "names should contain inferno");
   VISKORES_TEST_ASSERT(names.count("Black-Body Radiation") == 1,
-                   "names should contain black-body radiation");
+                       "names should contain black-body radiation");
   VISKORES_TEST_ASSERT(names.count("Viridis") == 1, "names should contain viridis");
   VISKORES_TEST_ASSERT(names.count("Black - Blue - White") == 1,
-                   "names should contain black, blue and white");
+                       "names should contain black, blue and white");
   VISKORES_TEST_ASSERT(names.count("Blue to Orange") == 1, "names should contain samsel fire");
   VISKORES_TEST_ASSERT(names.count("Jet") == 1, "names should contain jet");
 
@@ -226,7 +226,7 @@ void TestRescaleRange()
   VISKORES_TEST_ASSERT(table.GetRange() == range, "deep copy not working properly");
   VISKORES_TEST_ASSERT(newTable.GetRange() == normalizedRange, "rescale of range failed");
   VISKORES_TEST_ASSERT(newTable.GetNumberOfPoints() == 3,
-                   "rescaled has incorrect number of control points");
+                       "rescaled has incorrect number of control points");
 
   //Verify that the rescaled color table generates correct colors
   auto field = viskores::cont::make_ArrayHandle({ 0, 10, 20, 30, 40, 50 });
@@ -260,7 +260,7 @@ void TestAddPoints()
 
   VISKORES_TEST_ASSERT(table.GetRange() == range, "adding points to make range expand properly");
   VISKORES_TEST_ASSERT(table.GetNumberOfPoints() == 4,
-                   "adding points caused number of control points to be wrong");
+                       "adding points caused number of control points to be wrong");
 
   viskores::cont::ArrayHandle<viskores::Vec3ui_8> colors;
   auto field = viskores::cont::make_ArrayHandle({ 10.0f, -5.0f, -15.0f });
@@ -279,7 +279,7 @@ void TestAddSegments()
 
   viskores::cont::ColorTable table(viskores::cont::ColorTable::Preset::CoolToWarm);
   VISKORES_TEST_ASSERT(table.GetColorSpace() == diverging,
-                   "color space not switched when loading preset");
+                       "color space not switched when loading preset");
 
 
   //Opacity Ramp from 0 to 1
@@ -335,7 +335,7 @@ void TestRemovePoints()
   VISKORES_TEST_ASSERT(table.RemovePoint(20.) == false, "can't remove a point that doesn't exist");
 
   VISKORES_TEST_ASSERT((table.GetRange() == viskores::Range{ 0.0, 1.0 }),
-                   "removing points didn't update range");
+                       "removing points didn't update range");
   table.RescaleToRange(viskores::Range{ 0.0, 50.0 });
 
   viskores::cont::ArrayHandle<viskores::Vec3ui_8> colors;
@@ -386,10 +386,11 @@ void TestOpacityOnlyPoints()
   VISKORES_TEST_ASSERT(table.RemovePointAlpha(-10.) == true, "failed to remove a existing point");
   VISKORES_TEST_ASSERT(table.RemovePointAlpha(-20.) == true, "failed to remove a existing point");
   VISKORES_TEST_ASSERT(table.RemovePointAlpha(20.) == true, "failed to remove a existing point");
-  VISKORES_TEST_ASSERT(table.RemovePointAlpha(20.) == false, "can't remove a point that doesn't exist");
+  VISKORES_TEST_ASSERT(table.RemovePointAlpha(20.) == false,
+                       "can't remove a point that doesn't exist");
 
   VISKORES_TEST_ASSERT((table.GetRange() == viskores::Range{ 0.0, 1.0 }),
-                   "removing points didn't update range");
+                       "removing points didn't update range");
   table.RescaleToRange(viskores::Range{ 0.0, 50.0 });
 
   viskores::cont::ArrayHandle<viskores::Vec4ui_8> colors;
@@ -415,9 +416,9 @@ void TestWorkletTransport()
 
   viskores::cont::ColorTable table(viskores::cont::ColorTable::Preset::Green);
   VISKORES_TEST_ASSERT((table.GetRange() == viskores::Range{ 0.0, 1.0 }),
-                   "loading linear green table failed with wrong range");
+                       "loading linear green table failed with wrong range");
   VISKORES_TEST_ASSERT((table.GetNumberOfPoints() == 21),
-                   "loading linear green table failed with number of control points");
+                       "loading linear green table failed with number of control points");
 
   auto samples = viskores::cont::make_ArrayHandle({ 0.0, 0.5, 1.0 });
 
@@ -434,9 +435,9 @@ void TestSampling()
 
   viskores::cont::ColorTable table(viskores::cont::ColorTable::Preset::Green);
   VISKORES_TEST_ASSERT((table.GetRange() == viskores::Range{ 0.0, 1.0 }),
-                   "loading linear green table failed with wrong range");
+                       "loading linear green table failed with wrong range");
   VISKORES_TEST_ASSERT((table.GetNumberOfPoints() == 21),
-                   "loading linear green table failed with number of control points");
+                       "loading linear green table failed with number of control points");
 
   viskores::cont::ArrayHandle<viskores::Vec4ui_8> colors;
   constexpr viskores::Id nvals = 3;

@@ -51,12 +51,12 @@ struct TestEqualArrayHandleType1
     for (viskores::IdComponent cIndex = 0; cIndex < array1.GetNumberOfComponentsFlat(); ++cIndex)
     {
       viskores::ListForEach(TestEqualArrayHandleType2{},
-                        viskores::TypeListScalarAll{},
-                        array1.ExtractComponent<T>(cIndex),
-                        array2,
-                        cIndex,
-                        result,
-                        called);
+                            viskores::TypeListScalarAll{},
+                            array1.ExtractComponent<T>(cIndex),
+                            array2,
+                            cIndex,
+                            result,
+                            called);
       if (!result)
       {
         break;

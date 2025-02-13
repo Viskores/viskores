@@ -31,7 +31,8 @@ FilterParticleAdvectionUnsteadyState<Derived>::GetField(const viskores::cont::Da
 
 template <typename Derived>
 VISKORES_CONT typename FilterParticleAdvectionUnsteadyState<Derived>::TerminationType
-FilterParticleAdvectionUnsteadyState<Derived>::GetTermination(const viskores::cont::DataSet& data) const
+FilterParticleAdvectionUnsteadyState<Derived>::GetTermination(
+  const viskores::cont::DataSet& data) const
 {
   const Derived* inst = static_cast<const Derived*>(this);
   return inst->GetTermination(data);
@@ -39,7 +40,8 @@ FilterParticleAdvectionUnsteadyState<Derived>::GetTermination(const viskores::co
 
 template <typename Derived>
 VISKORES_CONT typename FilterParticleAdvectionUnsteadyState<Derived>::AnalysisType
-FilterParticleAdvectionUnsteadyState<Derived>::GetAnalysis(const viskores::cont::DataSet& data) const
+FilterParticleAdvectionUnsteadyState<Derived>::GetAnalysis(
+  const viskores::cont::DataSet& data) const
 {
   const Derived* inst = static_cast<const Derived*>(this);
   return inst->GetAnalysis(data);

@@ -42,28 +42,28 @@ namespace detail
 
 VISKORES_CONT
 inline static viskores::Id TopologyDomainSize(const viskores::cont::CellSet& cellSet,
-                                          viskores::TopologyElementTagPoint)
+                                              viskores::TopologyElementTagPoint)
 {
   return cellSet.GetNumberOfPoints();
 }
 
 VISKORES_CONT
 inline static viskores::Id TopologyDomainSize(const viskores::cont::CellSet& cellSet,
-                                          viskores::TopologyElementTagCell)
+                                              viskores::TopologyElementTagCell)
 {
   return cellSet.GetNumberOfCells();
 }
 
 VISKORES_CONT
 inline static viskores::Id TopologyDomainSize(const viskores::cont::CellSet& cellSet,
-                                          viskores::TopologyElementTagFace)
+                                              viskores::TopologyElementTagFace)
 {
   return cellSet.GetNumberOfFaces();
 }
 
 VISKORES_CONT
 inline static viskores::Id TopologyDomainSize(const viskores::cont::CellSet& cellSet,
-                                          viskores::TopologyElementTagEdge)
+                                              viskores::TopologyElementTagEdge)
 {
   return cellSet.GetNumberOfEdges();
 }
@@ -78,8 +78,9 @@ struct Transport<viskores::cont::arg::TransportTagTopologyFieldIn<TopologyElemen
   VISKORES_IS_ARRAY_HANDLE(ContObjectType);
 
 
-  using ExecObjectType = decltype(
-    std::declval<ContObjectType>().PrepareForInput(Device(), std::declval<viskores::cont::Token&>()));
+  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInput(
+    Device(),
+    std::declval<viskores::cont::Token&>()));
 
   VISKORES_CONT
   ExecObjectType operator()(const ContObjectType& object,

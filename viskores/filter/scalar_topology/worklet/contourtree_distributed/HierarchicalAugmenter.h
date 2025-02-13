@@ -175,13 +175,13 @@ public:
   /// there are other solutions, but the simpler solution is to have a transfer buffer for
   /// the set we want to send - which means another set of parallel arrays
   /// Output arrays used in DIY exchange
-  viskores::worklet::contourtree_distributed::hierarchical_augmenter::HierarchicalAugmenterInOutData<
-    FieldType>
-    OutData;
+  viskores::worklet::contourtree_distributed::hierarchical_augmenter::
+    HierarchicalAugmenterInOutData<FieldType>
+      OutData;
   /// Output arrays used in DIY exchange
-  viskores::worklet::contourtree_distributed::hierarchical_augmenter::HierarchicalAugmenterInOutData<
-    FieldType>
-    InData;
+  viskores::worklet::contourtree_distributed::hierarchical_augmenter::
+    HierarchicalAugmenterInOutData<FieldType>
+      InData;
 
   /// these are essentially temporary local variables, but are placed here to make the DebugPrint()
   /// more comprehensive. They will be allocated where used
@@ -305,10 +305,11 @@ void HierarchicalAugmenter<FieldType>::Initialize(
   if (presimplify)
   { // presimplifying
     viskores::worklet::contourtree_augmented::PrintHeader((*volumeArray).GetNumberOfValues(),
-                                                      presimpStr);
-    viskores::worklet::contourtree_augmented::PrintIndices("Volumes: ", *volumeArray, -1, presimpStr);
-    viskores::worklet::contourtree_augmented::PrintHeader(baseTree->Superparents.GetNumberOfValues(),
-                                                      presimpStr);
+                                                          presimpStr);
+    viskores::worklet::contourtree_augmented::PrintIndices(
+      "Volumes: ", *volumeArray, -1, presimpStr);
+    viskores::worklet::contourtree_augmented::PrintHeader(
+      baseTree->Superparents.GetNumberOfValues(), presimpStr);
     viskores::worklet::contourtree_augmented::PrintIndices(
       "Global Regular", baseTree->RegularNodeGlobalIds, -1, presimpStr);
     viskores::worklet::contourtree_augmented::PrintIndices(
@@ -339,7 +340,7 @@ void HierarchicalAugmenter<FieldType>::Initialize(
       viskores::cont::Algorithm::Copy(tempSupernodeIndex, this->AttachmentIds);
       isAttachmentStream << "Block: " << blockId << std::endl;
       viskores::worklet::contourtree_augmented::PrintHeader(this->AttachmentIds.GetNumberOfValues(),
-                                                        isAttachmentStream);
+                                                            isAttachmentStream);
       viskores::worklet::contourtree_augmented::PrintIndices(
         "Attachment ID", this->AttachmentIds, -1, isAttachmentStream);
 
@@ -350,7 +351,8 @@ void HierarchicalAugmenter<FieldType>::Initialize(
         presimplify ? volumeArray->ReadPortal() : this->BaseTree->WhichRound.ReadPortal();
       auto regNodeGlobalIds = this->BaseTree->RegularNodeGlobalIds.ReadPortal();
       auto attachmentIds = this->AttachmentIds.WritePortal();
-      for (viskores::Id supernode = 0; supernode < this->AttachmentIds.GetNumberOfValues(); supernode++)
+      for (viskores::Id supernode = 0; supernode < this->AttachmentIds.GetNumberOfValues();
+           supernode++)
       { // per supernode
         isAttachmentStream << "Processing supernode " << supernode << std::endl;
         isAttachmentStream << "Regular ID           " << supernodes.Get(supernode) << std::endl;
@@ -380,7 +382,7 @@ void HierarchicalAugmenter<FieldType>::Initialize(
                                << std::endl;
           isAttachmentStream << "Block: " << blockId << std::endl;
           viskores::worklet::contourtree_augmented::PrintHeader(attachmentIds.GetNumberOfValues(),
-                                                            isAttachmentStream);
+                                                                isAttachmentStream);
           viskores::worklet::contourtree_augmented::PrintIndices(
             "Attachment ID", this->AttachmentIds, -1, isAttachmentStream);
         } // passes the predicate
@@ -393,7 +395,7 @@ void HierarchicalAugmenter<FieldType>::Initialize(
 
       isAttachmentStream << "Block: " << blockId << std::endl;
       viskores::worklet::contourtree_augmented::PrintHeader(this->AttachmentIds.GetNumberOfValues(),
-                                                        isAttachmentStream);
+                                                            isAttachmentStream);
       viskores::worklet::contourtree_augmented::PrintIndices(
         "Attachment ID", this->AttachmentIds, -1, isAttachmentStream);
       VISKORES_LOG_S(viskores::cont::LogLevel::Info, isAttachmentStream.str());
@@ -419,7 +421,7 @@ void HierarchicalAugmenter<FieldType>::Initialize(
       std::stringstream debugStream;
       debugStream << "Block: " << blockId << std::endl;
       viskores::worklet::contourtree_augmented::PrintHeader(this->AttachmentIds.GetNumberOfValues(),
-                                                        debugStream);
+                                                            debugStream);
       viskores::worklet::contourtree_augmented::PrintIndices(
         "Attachment ID", this->AttachmentIds, -1, debugStream);
       VISKORES_LOG_S(viskores::cont::LogLevel::Info, debugStream.str());
@@ -439,19 +441,19 @@ void HierarchicalAugmenter<FieldType>::Initialize(
   {
     auto hierarchicalRegularIds =
       viskores::cont::make_ArrayHandlePermutation(this->AttachmentIds, this->BaseTree->Supernodes);
-    auto superparents =
-      viskores::cont::make_ArrayHandlePermutation(hierarchicalRegularIds, this->BaseTree->Superparents);
+    auto superparents = viskores::cont::make_ArrayHandlePermutation(hierarchicalRegularIds,
+                                                                    this->BaseTree->Superparents);
     // globalRegularIDs[attachmentPoint]   = baseTree->regularNodeGlobalIDs[hierarchicalRegularID];
     viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandlePermutation(
-                                  hierarchicalRegularIds, BaseTree->RegularNodeGlobalIds),
-                                this->GlobalRegularIds);
+                                      hierarchicalRegularIds, BaseTree->RegularNodeGlobalIds),
+                                    this->GlobalRegularIds);
     //dataValues[attachmentPoint]     = baseTree->dataValues      [hierarchicalRegularID];
     viskores::cont::Algorithm::Copy(
       viskores::cont::make_ArrayHandlePermutation(hierarchicalRegularIds, BaseTree->DataValues),
       this->DataValues);
     //supernodeIDs[attachmentPoint]    = supernodeID;
     viskores::cont::Algorithm::Copy(this->AttachmentIds, // these are our supernodeIds
-                                this->SupernodeIds);
+                                    this->SupernodeIds);
     //superparentRounds[attachmentPoint]  = baseTree->whichRound      [superparent];
     viskores::cont::Algorithm::Copy(
       viskores::cont::make_ArrayHandlePermutation(superparents, this->BaseTree->WhichRound),
@@ -483,7 +485,7 @@ void HierarchicalAugmenter<FieldType>::Initialize(
     std::stringstream debugStream;
     debugStream << "Block: " << blockId << std::endl;
     viskores::worklet::contourtree_augmented::PrintHeader(this->AttachmentIds.GetNumberOfValues(),
-                                                      debugStream);
+                                                          debugStream);
     viskores::worklet::contourtree_augmented::PrintIndices(
       "Attachment ID", this->AttachmentIds, -1, debugStream);
     viskores::worklet::contourtree_augmented::PrintIndices(
@@ -668,20 +670,20 @@ void HierarchicalAugmenter<FieldType>::BuildAugmentedTree()
   this->PrepareAugmentedTree();
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Block ") + std::to_string(this->BlockId) +
-                          std::string(" Step 1: Augmented Tree Prepared"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Block ") + std::to_string(this->BlockId) +
+                              std::string(" Step 1: Augmented Tree Prepared"),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   // 2.  Copy the hyperstructure, using the old super IDs for now
   this->CopyHyperstructure();
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Block ") + std::to_string(this->BlockId) +
-                          std::string(" Step 2: Hyperstructure Copied"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Block ") + std::to_string(this->BlockId) +
+                              std::string(" Step 2: Hyperstructure Copied"),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   // 3.	Copy superstructure one round at a time, updating the hyperstructure as well
@@ -714,10 +716,11 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   //: note that we use a standard comparator that tie breaks with index. This separates into
   //    segments with identical superparent round, which is all we need for now
   viskores::cont::Algorithm::Copy(
-    viskores::cont::ArrayHandleIndex(this->GlobalRegularIds.GetNumberOfValues()), this->AttachmentIds);
+    viskores::cont::ArrayHandleIndex(this->GlobalRegularIds.GetNumberOfValues()),
+    this->AttachmentIds);
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("Attachment Points List Constructed", __FILE__, __LINE__));
+                 DebugPrint("Attachment Points List Constructed", __FILE__, __LINE__));
 #endif
   // 1a.  We now need to suppress duplicates,
   {
@@ -729,7 +732,7 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               DebugPrint("Attachment Points Sorted on Superparent Round", __FILE__, __LINE__));
+                   DebugPrint("Attachment Points Sorted on Superparent Round", __FILE__, __LINE__));
     const viskores::Id nAttachmentDupIds = this->AttachmentIds.GetNumberOfValues();
 #endif
 
@@ -753,16 +756,16 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   //    We do +2 because the top level is extra, and we need an extra sentinel value at the end
   //    We initialise to NO_SUCH_ELEMENT because we may have rounds with none and we'll need to clean up serially (over the number of rounds, i.e. lg n)
   viskores::cont::Algorithm::Copy(
-    viskores::cont::ArrayHandleConstant<viskores::Id>(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                              this->BaseTree->NumRounds + 2),
+    viskores::cont::ArrayHandleConstant<viskores::Id>(
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT, this->BaseTree->NumRounds + 2),
     this->FirstAttachmentPointInRound);
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("FirstAttachment Array resized to ") +
-                          std::to_string(this->BaseTree->NumRounds + 2),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("FirstAttachment Array resized to ") +
+                              std::to_string(this->BaseTree->NumRounds + 2),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   // Now do a parallel set operation
@@ -784,7 +787,7 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("First Attachment Point Set Where Possible", __FILE__, __LINE__));
+                 DebugPrint("First Attachment Point Set Where Possible", __FILE__, __LINE__));
 #endif
   //     Now clean up by looping through the rounds (serially - this is logarithmic at worst)
   //     We loop backwards so that the next up propagates downwards
@@ -801,16 +804,18 @@ void HierarchicalAugmenter<FieldType>::PrepareAugmentedTree()
   } // per round
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Subsegments Identified", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("Subsegments Identified", __FILE__, __LINE__));
 #endif
   //  3.  Initialise an array to keep track of the mapping from old supernode ID to new supernode ID
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::ArrayHandleConstant<viskores::Id>(viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                                              this->BaseTree->Supernodes.GetNumberOfValues()),
-    this->NewSupernodeIds);
+  viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(
+                                    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                    this->BaseTree->Supernodes.GetNumberOfValues()),
+                                  this->NewSupernodeIds);
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Augmented Tree Prepared", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("Augmented Tree Prepared", __FILE__, __LINE__));
 #endif
 } // PrepareAugmentedTree()
 
@@ -834,8 +839,8 @@ void HierarchicalAugmenter<FieldType>::CopyHyperstructure()
   this->AugmentedTree->FirstSupernodePerIteration.resize(
     this->BaseTree->FirstSupernodePerIteration.size());
   // this loop doesn't need to be parallelised, as it is a small size: we will fill in values later
-  for (viskores::Id roundNumber = 0;
-       roundNumber < static_cast<viskores::Id>(this->AugmentedTree->FirstSupernodePerIteration.size());
+  for (viskores::Id roundNumber = 0; roundNumber <
+       static_cast<viskores::Id>(this->AugmentedTree->FirstSupernodePerIteration.size());
        roundNumber++)
   {
     viskores::cont::Algorithm::Copy(
@@ -847,18 +852,19 @@ void HierarchicalAugmenter<FieldType>::CopyHyperstructure()
 
   // hyperstructure is unchanged, so we can copy it
   viskores::cont::Algorithm::Copy(this->BaseTree->NumHypernodesInRound,
-                              this->AugmentedTree->NumHypernodesInRound);
-  viskores::cont::Algorithm::Copy(this->BaseTree->NumIterations, this->AugmentedTree->NumIterations);
+                                  this->AugmentedTree->NumHypernodesInRound);
+  viskores::cont::Algorithm::Copy(this->BaseTree->NumIterations,
+                                  this->AugmentedTree->NumIterations);
   this->AugmentedTree->FirstHypernodePerIteration.resize(
     this->BaseTree->FirstHypernodePerIteration.size());
   // this loop doesn't need to be parallelised, as it is a small size
-  for (viskores::Id roundNumber = 0;
-       roundNumber < static_cast<viskores::Id>(this->AugmentedTree->FirstHypernodePerIteration.size());
+  for (viskores::Id roundNumber = 0; roundNumber <
+       static_cast<viskores::Id>(this->AugmentedTree->FirstHypernodePerIteration.size());
        roundNumber++)
   { // per round
     // duplicate the existing array
     viskores::cont::Algorithm::Copy(this->BaseTree->FirstHypernodePerIteration[roundNumber],
-                                this->AugmentedTree->FirstHypernodePerIteration[roundNumber]);
+                                    this->AugmentedTree->FirstHypernodePerIteration[roundNumber]);
   } // per round
 
   // WARNING 28/05/2023:  Since this resize is for the full hyperstructure, it should be safe to put here.
@@ -868,13 +874,13 @@ void HierarchicalAugmenter<FieldType>::CopyHyperstructure()
   // 5. Reset hypernodes, hyperarcs and superchildren using supernode IDs
   //    The hyperstructure is unchanged, but uses old supernode IDs
   viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    this->AugmentedTree->Hypernodes,                      // resize array
-    this->BaseTree->Hypernodes.GetNumberOfValues(),       // new size
+    this->AugmentedTree->Hypernodes,                          // resize array
+    this->BaseTree->Hypernodes.GetNumberOfValues(),           // new size
     viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT // set all elements to this value
   );
   viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    this->AugmentedTree->Hyperarcs,                       // resize array
-    this->BaseTree->Hyperarcs.GetNumberOfValues(),        // new size
+    this->AugmentedTree->Hyperarcs,                           // resize array
+    this->BaseTree->Hyperarcs.GetNumberOfValues(),            // new size
     viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT // set all elements to this value
   );
   viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
@@ -884,7 +890,8 @@ void HierarchicalAugmenter<FieldType>::CopyHyperstructure()
   );
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Hyperstructure Copied", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("Hyperstructure Copied", __FILE__, __LINE__));
 #endif
 } // CopyHyperstructure()
 
@@ -928,14 +935,14 @@ void HierarchicalAugmenter<FieldType>::UpdateHyperstructure(viskores::Id roundNu
   // super ID and the next hypernode's super ID
   // This is slightly tricky. Multiple supernodes may share the same hyperparent.
   {
-    viskores::Id superchildrenStartIndex =
-      viskores::cont::ArrayGetValue(0, this->AugmentedTree->FirstSupernodePerIteration[roundNumber]);
+    viskores::Id superchildrenStartIndex = viskores::cont::ArrayGetValue(
+      0, this->AugmentedTree->FirstSupernodePerIteration[roundNumber]);
     viskores::Id superchildrenStopIndex = viskores::cont::ArrayGetValue(
       viskores::cont::ArrayGetValue(roundNumber, this->AugmentedTree->NumIterations),
       this->AugmentedTree->FirstSupernodePerIteration[roundNumber]);
     viskores::Id superchildrenSelectSize = superchildrenStopIndex - superchildrenStartIndex;
     viskores::Id extraSelectSize = ((superchildrenStartIndex + superchildrenSelectSize) <
-                                this->AugmentedTree->Hyperparents.GetNumberOfValues())
+                                    this->AugmentedTree->Hyperparents.GetNumberOfValues())
       ? superchildrenSelectSize + 1
       : superchildrenSelectSize;
 
@@ -959,7 +966,8 @@ void HierarchicalAugmenter<FieldType>::UpdateHyperstructure(viskores::Id roundNu
     );
   }
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, DebugPrint("Hyperstructure Updated", __FILE__, __LINE__));
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 DebugPrint("Hyperstructure Updated", __FILE__, __LINE__));
 #endif
 } // UpdateHyperstructure()
 
@@ -980,7 +988,7 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("Regular Node Sorter Sorted", __FILE__, __LINE__));
+                 DebugPrint("Regular Node Sorter Sorted", __FILE__, __LINE__));
 #endif
 
   //  7.  Cleanup at level = 0.  The principal task here is to insert all of the regular
@@ -1030,9 +1038,9 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
     {
       std::stringstream debugStream;
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 DebugPrint("Regular Node Superparents Found", __FILE__, __LINE__));
-      viskores::worklet::contourtree_augmented::PrintHeader(tempRegularNodesNeeded.GetNumberOfValues(),
-                                                        debugStream);
+                     DebugPrint("Regular Node Superparents Found", __FILE__, __LINE__));
+      viskores::worklet::contourtree_augmented::PrintHeader(
+        tempRegularNodesNeeded.GetNumberOfValues(), debugStream);
       viskores::worklet::contourtree_augmented::PrintIndices(
         "RegularNodesNeeded", tempRegularNodesNeeded, -1, debugStream);
       VISKORES_LOG_S(viskores::cont::LogLevel::Info, debugStream.str());
@@ -1052,7 +1060,7 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("Regular Node List Compressed", __FILE__, __LINE__));
+                 DebugPrint("Regular Node List Compressed", __FILE__, __LINE__));
 #endif
 
   // resize the regular arrays to fit
@@ -1077,8 +1085,8 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
 
   // OK:  we have a complete list of the nodes to transfer. Since we make no guarantees (yet) about sorting, they just copy across
   {
-    viskores::worklet::contourtree_distributed::hierarchical_augmenter::CopyBaseRegularStructureWorklet
-      copyBaseRegularStructureWorklet(numExistingRegular);
+    viskores::worklet::contourtree_distributed::hierarchical_augmenter::
+      CopyBaseRegularStructureWorklet copyBaseRegularStructureWorklet(numExistingRegular);
     // NOTE: We require the input arrays (aside form the input domain) to be permutted by the
     //       regularNodesNeeded input domain so that we can use FieldIn instead of WholeArrayIn
     // NOTE: We require ArrayHandleView for the output arrays of the range [numExistingRegular:end] so
@@ -1090,40 +1098,40 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
     auto baseTreeRegularNodeGlobalIdsPermuted = viskores::cont::make_ArrayHandlePermutation(
       this->RegularNodesNeeded, this->BaseTree->RegularNodeGlobalIds);
     // input baseTree->dataValues permuted by regularNodesNeeded
-    auto baseTreeDataValuesPermuted =
-      viskores::cont::make_ArrayHandlePermutation(this->RegularNodesNeeded, this->BaseTree->DataValues);
+    auto baseTreeDataValuesPermuted = viskores::cont::make_ArrayHandlePermutation(
+      this->RegularNodesNeeded, this->BaseTree->DataValues);
     // input regularSuperparents permuted by regularNodesNeeded
-    auto regularSuperparentsPermuted =
-      viskores::cont::make_ArrayHandlePermutation(this->RegularNodesNeeded, this->RegularSuperparents);
+    auto regularSuperparentsPermuted = viskores::cont::make_ArrayHandlePermutation(
+      this->RegularNodesNeeded, this->RegularSuperparents);
     // input view of augmentedTree->regularNodeGlobalIds[numExistingRegular:]
-    auto augmentedTreeRegularNodeGlobalIdsView =
-      viskores::cont::make_ArrayHandleView(this->AugmentedTree->RegularNodeGlobalIds,
-                                       numExistingRegular, // start writing at numExistingRegular
-                                       numRegNeeded);      // fill until the end
+    auto augmentedTreeRegularNodeGlobalIdsView = viskores::cont::make_ArrayHandleView(
+      this->AugmentedTree->RegularNodeGlobalIds,
+      numExistingRegular, // start writing at numExistingRegular
+      numRegNeeded);      // fill until the end
     // input view of augmentedTree->dataValues[numExistingRegular:]
-    auto augmentedTreeDataValuesView =
-      viskores::cont::make_ArrayHandleView(this->AugmentedTree->DataValues,
-                                       numExistingRegular, // start writing at numExistingRegular
-                                       numRegNeeded);      // fill until the end
+    auto augmentedTreeDataValuesView = viskores::cont::make_ArrayHandleView(
+      this->AugmentedTree->DataValues,
+      numExistingRegular, // start writing at numExistingRegular
+      numRegNeeded);      // fill until the end
     // input view of augmentedTree->superparents[numExistingRegular:]
-    auto augmentedTreeSuperparentsView =
-      viskores::cont::make_ArrayHandleView(this->AugmentedTree->Superparents,
-                                       numExistingRegular, // start writing at numExistingRegular
-                                       numRegNeeded);      // fill until the end
+    auto augmentedTreeSuperparentsView = viskores::cont::make_ArrayHandleView(
+      this->AugmentedTree->Superparents,
+      numExistingRegular, // start writing at numExistingRegular
+      numRegNeeded);      // fill until the end
     // input view of  augmentedTree->regularNodeSortOrder[numExistingRegular:]
-    auto augmentedTreeRegularNodeSortOrderView =
-      viskores::cont::make_ArrayHandleView(this->AugmentedTree->RegularNodeSortOrder,
-                                       numExistingRegular, // start writing at numExistingRegular
-                                       numRegNeeded);      // fill until the end
-    this->Invoke(copyBaseRegularStructureWorklet,          // worklet to call
-                 regularNodesNeededRange,                  // input domain
-                 baseTreeRegularNodeGlobalIdsPermuted,     // input
-                 baseTreeDataValuesPermuted,               // input
-                 regularSuperparentsPermuted,              // input
-                 augmentedTreeRegularNodeGlobalIdsView,    // output
-                 augmentedTreeDataValuesView,              // output
-                 augmentedTreeSuperparentsView,            // output
-                 augmentedTreeRegularNodeSortOrderView     // output
+    auto augmentedTreeRegularNodeSortOrderView = viskores::cont::make_ArrayHandleView(
+      this->AugmentedTree->RegularNodeSortOrder,
+      numExistingRegular,                               // start writing at numExistingRegular
+      numRegNeeded);                                    // fill until the end
+    this->Invoke(copyBaseRegularStructureWorklet,       // worklet to call
+                 regularNodesNeededRange,               // input domain
+                 baseTreeRegularNodeGlobalIdsPermuted,  // input
+                 baseTreeDataValuesPermuted,            // input
+                 regularSuperparentsPermuted,           // input
+                 augmentedTreeRegularNodeGlobalIdsView, // output
+                 augmentedTreeDataValuesView,           // output
+                 augmentedTreeSuperparentsView,         // output
+                 augmentedTreeRegularNodeSortOrderView  // output
     );
   }
 
@@ -1142,7 +1150,7 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint("Base Regular Structure Copied", __FILE__, __LINE__));
+                 DebugPrint("Base Regular Structure Copied", __FILE__, __LINE__));
 #endif
 
 } // CopyBaseRegularStructure()
@@ -1199,10 +1207,10 @@ void HierarchicalAugmenter<FieldType>::RetrieveOldSupernodes(viskores::Id roundN
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
-                          std::string(" Old Supernodes Retrieved"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
+                              std::string(" Old Supernodes Retrieved"),
+                            __FILE__,
+                            __LINE__));
 #endif
 } // RetrieveOldSupernodes()
 
@@ -1297,7 +1305,7 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
   // by allocating space and copying them in: this means another set of arrays for the individual elements.  However, we do not
   // need all of the data elements, since superparentRound is fixed (and equal to roundNumber inside this loop), and whichRound will be reset
   viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleIndex(numSupernodesThisLevel),
-                              this->SupernodeSorter);
+                                  this->SupernodeSorter);
   {
     viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
       this->GlobalRegularIdSet, numSupernodesThisLevel, static_cast<viskores::Id>(0));
@@ -1310,10 +1318,10 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
   }
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
-                          std::string(" Sorter Set Resized"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
+                              std::string(" Sorter Set Resized"),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   // b. Transfer attachment points for level into new supernode array
@@ -1329,12 +1337,12 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
     viskores::Id currRange = firstAttachmentPointInRoundNext - firstAttachmentPointInRoundCurrent;
     auto attachmentPointIdView =
       viskores::cont::make_ArrayHandleView(this->AttachmentIds,                // array to subset
-                                       firstAttachmentPointInRoundCurrent, // start index
-                                       currRange);                         // count
+                                           firstAttachmentPointInRoundCurrent, // start index
+                                           currRange);                         // count
     // Permute the source arrays for the copy
     auto globalRegularIdsPermuted =
       viskores::cont::make_ArrayHandlePermutation(attachmentPointIdView, // index array
-                                              this->GlobalRegularIds // value array
+                                                  this->GlobalRegularIds // value array
       );
     auto dataValuesPermuted =
       viskores::cont::make_ArrayHandlePermutation(attachmentPointIdView, this->DataValues);
@@ -1362,10 +1370,10 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
-                          std::string(" Attachment Points Transferred"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
+                              std::string(" Attachment Points Transferred"),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   // Now we copy in the kept supernodes: this used to mean only the non-attachment points
@@ -1375,7 +1383,7 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
   {
     auto oldRegularIdArr =
       viskores::cont::make_ArrayHandlePermutation(this->KeptSupernodes,        // index
-                                              this->BaseTree->Supernodes); // values
+                                                  this->BaseTree->Supernodes); // values
     // Permute the source arrays for the copy
     auto baseTreeregularNodeGlobalIdsPermuted = viskores::cont::make_ArrayHandlePermutation(
       oldRegularIdArr, this->BaseTree->RegularNodeGlobalIds);
@@ -1384,42 +1392,44 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
 
     // Now use CopySubRange to copy the values into the right places. This allows
     // us to place them in the right place and avoids shrinking the array on Copy
-    viskores::cont::Algorithm::CopySubRange(baseTreeregularNodeGlobalIdsPermuted,
-                                        0,
-                                        baseTreeregularNodeGlobalIdsPermuted.GetNumberOfValues(),
-                                        this->GlobalRegularIdSet,
-                                        numInsertedSupernodes);
+    viskores::cont::Algorithm::CopySubRange(
+      baseTreeregularNodeGlobalIdsPermuted,
+      0,
+      baseTreeregularNodeGlobalIdsPermuted.GetNumberOfValues(),
+      this->GlobalRegularIdSet,
+      numInsertedSupernodes);
     viskores::cont::Algorithm::CopySubRange(baseTreeDataValuesPermuted,
-                                        0,
-                                        baseTreeDataValuesPermuted.GetNumberOfValues(),
-                                        this->DataValueSet,
-                                        numInsertedSupernodes);
+                                            0,
+                                            baseTreeDataValuesPermuted.GetNumberOfValues(),
+                                            this->DataValueSet,
+                                            numInsertedSupernodes);
     viskores::cont::Algorithm::CopySubRange(this->KeptSupernodes,
-                                        0,
-                                        this->KeptSupernodes.GetNumberOfValues(),
-                                        this->SupernodeIdSet,
-                                        numInsertedSupernodes);
+                                            0,
+                                            this->KeptSupernodes.GetNumberOfValues(),
+                                            this->SupernodeIdSet,
+                                            numInsertedSupernodes);
     // For this->SuperparentSet we need to set values to
     // superparentSet[supernodeSetID]  = oldSupernodeID | (isAscending(baseTree->superarcs[oldSupernodeID]) ? IS_ASCENDING: 0x00);
     // so we use an ArrayHanldeDecorator instead to compute the values and copy them in place
     auto setSuperparentSetArrayDecorator = viskores::cont::make_ArrayHandleDecorator(
       this->KeptSupernodes.GetNumberOfValues(),
-      viskores::worklet::contourtree_distributed::hierarchical_augmenter::SetSuperparentSetDecorator{},
+      viskores::worklet::contourtree_distributed::hierarchical_augmenter::
+        SetSuperparentSetDecorator{},
       this->KeptSupernodes,
       this->BaseTree->Superarcs);
     viskores::cont::Algorithm::CopySubRange(setSuperparentSetArrayDecorator,
-                                        0,
-                                        this->KeptSupernodes.GetNumberOfValues(),
-                                        this->SuperparentSet,
-                                        numInsertedSupernodes);
+                                            0,
+                                            this->KeptSupernodes.GetNumberOfValues(),
+                                            this->SuperparentSet,
+                                            numInsertedSupernodes);
   }
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
-                          std::string(" Kept Supernodes Transferred"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
+                              std::string(" Kept Supernodes Transferred"),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   //  c.  Create a permutation array and sort supernode segment by a. superparent, b. value, d. global index to establish segments (reversing as needed)
@@ -1433,10 +1443,10 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
-                          std::string(" Sorter Set Sorted"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
+                              std::string(" Sorter Set Sorted"),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   //  d.  Build the inverse permutation array for lookup purposes:
@@ -1444,7 +1454,8 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
     viskores::worklet::contourtree_distributed::hierarchical_augmenter::
       ResizeArraysBuildNewSupernodeIdsWorklet resizeArraysBuildNewSupernodeIdsWorklet(
         numSupernodesAlready);
-    auto supernodeIndex = viskores::cont::ArrayHandleIndex(this->SupernodeSorter.GetNumberOfValues());
+    auto supernodeIndex =
+      viskores::cont::ArrayHandleIndex(this->SupernodeSorter.GetNumberOfValues());
     // auto supernodeIdSetPermuted =
     //  viskores::cont::make_ArrayHandlePermutation(this->SupernodeSorter, this->SupernodeIdSet);
     auto globalRegularIdSetPermuted =
@@ -1467,10 +1478,10 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
-                          std::string(" Sorting Arrays Built"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
+                              std::string(" Sorting Arrays Built"),
+                            __FILE__,
+                            __LINE__));
 #endif
 } // ResizeArrays()
 
@@ -1482,10 +1493,10 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(viskores::Id roundNumber)
   // retrieve the ID number of the first supernode at this level
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
-                          std::string(" Starting CreateSuperarcs()"),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
+                              std::string(" Starting CreateSuperarcs()"),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   viskores::Id currNumIterations =
@@ -1628,10 +1639,10 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(viskores::Id roundNumber)
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
-                          std::string(" Details Filled in For Supernodes "),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
+                              std::string(" Details Filled in For Supernodes "),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   // Now, in order to set the first supernode per iteration, we do an additional loop
@@ -1710,15 +1721,15 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(viskores::Id roundNumber)
       // so the last iteration will already have the correct sentinel value, and we just need to shrink the array
       this->AugmentedTree->FirstHypernodePerIteration[roundNumber].Allocate(
         iterationArraySize, viskores::CopyFlag::On); // shrink array but keep values
-    }                                            // attachment point round was removed
-  }                                              // at least one iteration
+    }                                                // attachment point round was removed
+  }                                                  // at least one iteration
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
-                          std::string(" Superarcs Created "),
-                        __FILE__,
-                        __LINE__));
+                 DebugPrint(std::string("Round ") + std::to_string(roundNumber) +
+                              std::string(" Superarcs Created "),
+                            __FILE__,
+                            __LINE__));
 #endif
 
   // in the interests of debug, we resize the sorting array to zero here,
@@ -1755,7 +1766,7 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
   resultStream << "========================================" << std::endl;
   resultStream << "Local List of Attachment Points" << std::endl;
   viskores::worklet::contourtree_augmented::PrintHeader(this->GlobalRegularIds.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Global Regular Ids", this->GlobalRegularIds, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintValues(
@@ -1811,19 +1822,19 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
   viskores::worklet::contourtree_augmented::PrintIndices(
     "First Attach / Rd", this->FirstAttachmentPointInRound, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintHeader(this->AttachmentIds.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "AttachmentIds", this->AttachmentIds, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintHeader(this->NewSupernodeIds.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "New Supernode Ids", this->NewSupernodeIds, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintHeader(this->KeptSupernodes.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Kept Supernodes", this->KeptSupernodes, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintHeader(this->SupernodeSorter.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Supernode Sorter", this->SupernodeSorter, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
@@ -1838,7 +1849,7 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
   resultStream << std::endl;
 
   viskores::worklet::contourtree_augmented::PrintHeader(this->SupernodeSorter.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Supernode Id", this->SupernodeSorter, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintArrayHandle(
@@ -1864,8 +1875,8 @@ std::string HierarchicalAugmenter<FieldType>::DebugPrint(std::string message,
   resultStream << std::endl;
   resultStream << std::endl;
 
-  viskores::worklet::contourtree_augmented::PrintHeader(this->RegularSuperparents.GetNumberOfValues(),
-                                                    resultStream);
+  viskores::worklet::contourtree_augmented::PrintHeader(
+    this->RegularSuperparents.GetNumberOfValues(), resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "RegularNodesNeeded", this->RegularNodesNeeded, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
@@ -1890,8 +1901,8 @@ void HierarchicalAugmenter<FieldType>::DebugSave(std::string filename)
   outstream << "Augmented Tree:" << std::endl;
   viskores::worklet::contourtree_augmented::IdArrayType temp;
   viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant<viskores::Id>(
-                                0, this->AugmentedTree->Supernodes.GetNumberOfValues()),
-                              temp);
+                                    0, this->AugmentedTree->Supernodes.GetNumberOfValues()),
+                                  temp);
   std::string dumpVolumesString =
     viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType>::DumpVolumes(
       this->AugmentedTree->Supernodes,
@@ -1903,7 +1914,8 @@ void HierarchicalAugmenter<FieldType>::DebugSave(std::string filename)
   outstream << dumpVolumesString;
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Global Regular IDs", this->GlobalRegularIds, -1, outstream);
-  viskores::worklet::contourtree_augmented::PrintValues("Data Values", this->DataValues, -1, outstream);
+  viskores::worklet::contourtree_augmented::PrintValues(
+    "Data Values", this->DataValues, -1, outstream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Supernode IDs", this->SupernodeIds, -1, outstream);
   viskores::worklet::contourtree_augmented::PrintIndices(

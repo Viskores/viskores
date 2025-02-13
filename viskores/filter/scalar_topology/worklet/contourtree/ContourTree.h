@@ -223,7 +223,8 @@ public:
   void FindDegrees();
 
   // collect the resulting saddle peaks in sort pairs
-  void CollectSaddlePeak(viskores::cont::ArrayHandle<viskores::Pair<viskores::Id, viskores::Id>>& saddlePeak);
+  void CollectSaddlePeak(
+    viskores::cont::ArrayHandle<viskores::Pair<viskores::Id, viskores::Id>>& saddlePeak);
 
   void DebugPrint(const char* message);
 
@@ -245,7 +246,8 @@ public:
   }
 
   template <typename InPortalFieldType>
-  VISKORES_EXEC viskores::Id operator()(const viskores::Id supernode, const InPortalFieldType& superarcs) const
+  VISKORES_EXEC viskores::Id operator()(const viskores::Id supernode,
+                                        const InPortalFieldType& superarcs) const
   {
     if (vertexIsAssigned == false)
     {
@@ -844,7 +846,7 @@ bool operator<(const EdgePair LHS, const EdgePair RHS)
 struct SaddlePeakSort
 {
   VISKORES_EXEC_CONT bool operator()(const viskores::Pair<viskores::Id, viskores::Id>& a,
-                                 const viskores::Pair<viskores::Id, viskores::Id>& b) const
+                                     const viskores::Pair<viskores::Id, viskores::Id>& b) const
   {
     if (a.first < b.first)
       return true;

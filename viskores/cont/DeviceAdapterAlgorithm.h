@@ -58,7 +58,7 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, typename U, class CIn, class COut>
   VISKORES_CONT static void Copy(const viskores::cont::ArrayHandle<T, CIn>& input,
-                             viskores::cont::ArrayHandle<U, COut>& output);
+                                 viskores::cont::ArrayHandle<U, COut>& output);
 
   /// \brief Conditionally copy elements in the input array to the output array.
   ///
@@ -73,8 +73,8 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, typename U, class CIn, class CStencil, class COut>
   VISKORES_CONT static void CopyIf(const viskores::cont::ArrayHandle<T, CIn>& input,
-                               const viskores::cont::ArrayHandle<U, CStencil>& stencil,
-                               viskores::cont::ArrayHandle<T, COut>& output);
+                                   const viskores::cont::ArrayHandle<U, CStencil>& stencil,
+                                   viskores::cont::ArrayHandle<T, COut>& output);
 
   /// \brief Conditionally copy elements in the input array to the output array.
   ///
@@ -89,9 +89,9 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, typename U, class CIn, class CStencil, class COut, class UnaryPredicate>
   VISKORES_CONT static void CopyIf(const viskores::cont::ArrayHandle<T, CIn>& input,
-                               const viskores::cont::ArrayHandle<U, CStencil>& stencil,
-                               viskores::cont::ArrayHandle<T, COut>& output,
-                               UnaryPredicate unary_predicate);
+                                   const viskores::cont::ArrayHandle<U, CStencil>& stencil,
+                                   viskores::cont::ArrayHandle<T, COut>& output,
+                                   UnaryPredicate unary_predicate);
 
   /// \brief Copy the contents of a section of one ArrayHandle to another
   ///
@@ -113,10 +113,10 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, typename U, class CIn, class COut>
   VISKORES_CONT static bool CopySubRange(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                     viskores::Id inputStartIndex,
-                                     viskores::Id numberOfElementsToCopy,
-                                     viskores::cont::ArrayHandle<U, COut>& output,
-                                     viskores::Id outputIndex = 0);
+                                         viskores::Id inputStartIndex,
+                                         viskores::Id numberOfElementsToCopy,
+                                         viskores::cont::ArrayHandle<U, COut>& output,
+                                         viskores::Id outputIndex = 0);
 
   /// \brief Returns the total number of "1" bits in BitField.
   VISKORES_CONT static viskores::Id CountSetBits(const viskores::cont::BitField& bits);
@@ -131,7 +131,9 @@ struct DeviceAdapterAlgorithm
   VISKORES_CONT static void Fill(viskores::cont::BitField& bits, bool value, viskores::Id numBits);
   VISKORES_CONT static void Fill(viskores::cont::BitField& bits, bool value);
   template <typename WordType>
-  VISKORES_CONT static void Fill(viskores::cont::BitField& bits, WordType word, viskores::Id numBits);
+  VISKORES_CONT static void Fill(viskores::cont::BitField& bits,
+                                 WordType word,
+                                 viskores::Id numBits);
   template <typename WordType>
   VISKORES_CONT static void Fill(viskores::cont::BitField& bits, WordType word);
   /// @}
@@ -143,8 +145,8 @@ struct DeviceAdapterAlgorithm
   VISKORES_CONT static void Fill(viskores::cont::ArrayHandle<T, S>& array, const T& value);
   template <typename T, typename S>
   VISKORES_CONT static void Fill(viskores::cont::ArrayHandle<T, S>& array,
-                             const T& value,
-                             const viskores::Id numValues);
+                                 const T& value,
+                                 const viskores::Id numValues);
   /// @}
 
   /// \brief Output is the first index in input for each item in values that wouldn't alter the ordering of input
@@ -158,8 +160,8 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class CIn, class CVal, class COut>
   VISKORES_CONT static void LowerBounds(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                    const viskores::cont::ArrayHandle<T, CVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& output);
+                                        const viskores::cont::ArrayHandle<T, CVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, COut>& output);
 
   /// \brief Output is the first index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -173,9 +175,9 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class CIn, class CVal, class COut, class BinaryCompare>
   VISKORES_CONT static void LowerBounds(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                    const viskores::cont::ArrayHandle<T, CVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& output,
-                                    BinaryCompare binary_compare);
+                                        const viskores::cont::ArrayHandle<T, CVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, COut>& output,
+                                        BinaryCompare binary_compare);
 
   /// \brief A special version of LowerBounds that does an in place operation.
   ///
@@ -185,8 +187,9 @@ struct DeviceAdapterAlgorithm
   /// arrays is limited to viskores::Id.
   ///
   template <class CIn, class COut>
-  VISKORES_CONT static void LowerBounds(const viskores::cont::ArrayHandle<viskores::Id, CIn>& input,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& values_output);
+  VISKORES_CONT static void LowerBounds(
+    const viskores::cont::ArrayHandle<viskores::Id, CIn>& input,
+    viskores::cont::ArrayHandle<viskores::Id, COut>& values_output);
 
   /// \brief Compute a accumulated sum operation on the input ArrayHandle
   ///
@@ -212,8 +215,8 @@ struct DeviceAdapterAlgorithm
   /// \return The total sum.
   template <typename T, typename U, class CIn, class BinaryFunctor>
   VISKORES_CONT static U Reduce(const viskores::cont::ArrayHandle<T, CIn>& input,
-                            U initialValue,
-                            BinaryFunctor binary_functor);
+                                U initialValue,
+                                BinaryFunctor binary_functor);
 
   /// \brief Compute a accumulated sum operation on the input key value pairs
   ///
@@ -231,10 +234,10 @@ struct DeviceAdapterAlgorithm
             class CValOut,
             class BinaryFunctor>
   VISKORES_CONT static void ReduceByKey(const viskores::cont::ArrayHandle<T, CKeyIn>& keys,
-                                    const viskores::cont::ArrayHandle<U, CValIn>& values,
-                                    viskores::cont::ArrayHandle<T, CKeyOut>& keys_output,
-                                    viskores::cont::ArrayHandle<U, CValOut>& values_output,
-                                    BinaryFunctor binary_functor);
+                                        const viskores::cont::ArrayHandle<U, CValIn>& values,
+                                        viskores::cont::ArrayHandle<T, CKeyOut>& keys_output,
+                                        viskores::cont::ArrayHandle<U, CValOut>& values_output,
+                                        BinaryFunctor binary_functor);
 
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
   ///
@@ -250,7 +253,7 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class CIn, class COut>
   VISKORES_CONT static T ScanInclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output);
+                                       viskores::cont::ArrayHandle<T, COut>& output);
 
 
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
@@ -267,8 +270,8 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VISKORES_CONT static T ScanInclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output,
-                                   BinaryFunctor binary_functor);
+                                       viskores::cont::ArrayHandle<T, COut>& output,
+                                       BinaryFunctor binary_functor);
 
   /// \brief Compute a segmented inclusive prefix sum operation on the input key value pairs.
   ///
@@ -285,9 +288,9 @@ struct DeviceAdapterAlgorithm
             typename VOut,
             typename BinaryFunctor>
   VISKORES_CONT static void ScanInclusiveByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                           const viskores::cont::ArrayHandle<U, VIn>& values,
-                                           viskores::cont::ArrayHandle<U, VOut>& values_output,
-                                           BinaryFunctor binary_functor);
+                                               const viskores::cont::ArrayHandle<U, VIn>& values,
+                                               viskores::cont::ArrayHandle<U, VOut>& values_output,
+                                               BinaryFunctor binary_functor);
 
   /// \brief Compute a segmented inclusive prefix sum operation on the input key value pairs.
   ///
@@ -298,8 +301,8 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, typename U, typename KIn, typename VIn, typename VOut>
   VISKORES_CONT static void ScanInclusiveByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                           const viskores::cont::ArrayHandle<U, VIn>& values,
-                                           viskores::cont::ArrayHandle<U, VOut>& values_output);
+                                               const viskores::cont::ArrayHandle<U, VIn>& values,
+                                               viskores::cont::ArrayHandle<U, VOut>& values_output);
 
   /// \brief Compute an exclusive prefix sum operation on the input ArrayHandle.
   ///
@@ -315,7 +318,7 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class CIn, class COut>
   VISKORES_CONT static T ScanExclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output);
+                                       viskores::cont::ArrayHandle<T, COut>& output);
 
   /// \brief Compute an exclusive prefix sum operation on the input ArrayHandle.
   ///
@@ -331,9 +334,9 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VISKORES_CONT static T ScanExclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output,
-                                   BinaryFunctor binaryFunctor,
-                                   const T& initialValue)
+                                       viskores::cont::ArrayHandle<T, COut>& output,
+                                       BinaryFunctor binaryFunctor,
+                                       const T& initialValue)
 
     /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
     ///
@@ -350,10 +353,10 @@ struct DeviceAdapterAlgorithm
               typename VOut,
               class BinaryFunctor>
     VISKORES_CONT static void ScanExclusiveByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                             const viskores::cont::ArrayHandle<U, VIn>& values,
-                                             viskores::cont::ArrayHandle<U, VOut>& output,
-                                             const U& initialValue,
-                                             BinaryFunctor binaryFunctor);
+                                                 const viskores::cont::ArrayHandle<U, VIn>& values,
+                                                 viskores::cont::ArrayHandle<U, VOut>& output,
+                                                 const U& initialValue,
+                                                 BinaryFunctor binaryFunctor);
 
   /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
   ///
@@ -364,8 +367,8 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, typename U, class KIn, typename VIn, typename VOut>
   VISKORES_CONT static void ScanExclusiveByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                           const viskores::cont::ArrayHandle<U, VIn>& values,
-                                           viskores::cont::ArrayHandle<U, VOut>& output);
+                                               const viskores::cont::ArrayHandle<U, VIn>& values,
+                                               viskores::cont::ArrayHandle<U, VOut>& output);
 
   /// \brief Compute an extended prefix sum operation on the input ArrayHandle.
   ///
@@ -393,7 +396,7 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class CIn, class COut>
   VISKORES_CONT static void ScanExtended(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                     viskores::cont::ArrayHandle<T, COut>& output);
+                                         viskores::cont::ArrayHandle<T, COut>& output);
 
   /// \brief Compute an extended prefix sum operation on the input ArrayHandle.
   ///
@@ -418,9 +421,9 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VISKORES_CONT static void ScanExtended(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                     viskores::cont::ArrayHandle<T, COut>& output,
-                                     BinaryFunctor binaryFunctor,
-                                     const T& initialValue);
+                                         viskores::cont::ArrayHandle<T, COut>& output,
+                                         BinaryFunctor binaryFunctor,
+                                         const T& initialValue);
 
   /// \brief Schedule many instances of a function to run on concurrent threads.
   ///
@@ -484,7 +487,7 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class Storage, class BinaryCompare>
   VISKORES_CONT static void Sort(viskores::cont::ArrayHandle<T, Storage>& values,
-                             BinaryCompare binary_compare);
+                                 BinaryCompare binary_compare);
 
   /// \brief Unstable ascending sort of keys and values.
   ///
@@ -493,7 +496,7 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, typename U, class StorageT, class StorageU>
   VISKORES_CONT static void SortByKey(viskores::cont::ArrayHandle<T, StorageT>& keys,
-                                  viskores::cont::ArrayHandle<U, StorageU>& values);
+                                      viskores::cont::ArrayHandle<U, StorageU>& values);
 
   /// \brief Unstable ascending sort of keys and values.
   ///
@@ -504,8 +507,8 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
   VISKORES_CONT static void SortByKey(viskores::cont::ArrayHandle<T, StorageT>& keys,
-                                  viskores::cont::ArrayHandle<U, StorageU>& values,
-                                  BinaryCompare binary_compare)
+                                      viskores::cont::ArrayHandle<U, StorageU>& values,
+                                      BinaryCompare binary_compare)
 
     /// \brief Completes any asynchronous operations running on the device.
     ///
@@ -529,9 +532,9 @@ struct DeviceAdapterAlgorithm
             typename StorageV,
             typename BinaryFunctor>
   VISKORES_CONT static void Transform(const viskores::cont::ArrayHandle<T, StorageT>& input1,
-                                  const viskores::cont::ArrayHandle<U, StorageU>& input2,
-                                  viskores::cont::ArrayHandle<V, StorageV>& output,
-                                  BinaryFunctor binaryFunctor);
+                                      const viskores::cont::ArrayHandle<U, StorageU>& input2,
+                                      viskores::cont::ArrayHandle<V, StorageV>& output,
+                                      BinaryFunctor binaryFunctor);
 
   /// \brief Reduce an array to only the unique values it contains
   ///
@@ -555,7 +558,7 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class Storage, class BinaryCompare>
   VISKORES_CONT static void Unique(viskores::cont::ArrayHandle<T, Storage>& values,
-                               BinaryCompare binary_compare);
+                                   BinaryCompare binary_compare);
 
   /// \brief Output is the last index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -568,8 +571,8 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class CIn, class CVal, class COut>
   VISKORES_CONT static void UpperBounds(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                    const viskores::cont::ArrayHandle<T, CVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& output);
+                                        const viskores::cont::ArrayHandle<T, CVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, COut>& output);
 
   /// \brief Output is the last index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -583,9 +586,9 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, class CIn, class CVal, class COut, class BinaryCompare>
   VISKORES_CONT static void UpperBounds(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                    const viskores::cont::ArrayHandle<T, CVal>& values,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& output,
-                                    BinaryCompare binary_compare);
+                                        const viskores::cont::ArrayHandle<T, CVal>& values,
+                                        viskores::cont::ArrayHandle<viskores::Id, COut>& output,
+                                        BinaryCompare binary_compare);
 
   /// \brief A special version of UpperBounds that does an in place operation.
   ///
@@ -595,8 +598,9 @@ struct DeviceAdapterAlgorithm
   /// of the arrays is limited to viskores::Id.
   ///
   template <class CIn, class COut>
-  VISKORES_CONT static void UpperBounds(const viskores::cont::ArrayHandle<viskores::Id, CIn>& input,
-                                    viskores::cont::ArrayHandle<viskores::Id, COut>& values_output);
+  VISKORES_CONT static void UpperBounds(
+    const viskores::cont::ArrayHandle<viskores::Id, CIn>& input,
+    viskores::cont::ArrayHandle<viskores::Id, COut>& values_output);
 };
 #else  // VISKORES_DOXYGEN_ONLY
   ;
@@ -663,8 +667,9 @@ public:
     assert(this->StartReady);
     if (!this->StartReady)
     {
-      VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-                 "Start() function should be called first then trying to call GetElapsedTime().");
+      VISKORES_LOG_S(
+        viskores::cont::LogLevel::Error,
+        "Start() function should be called first then trying to call GetElapsedTime().");
       return 0;
     }
 
@@ -673,8 +678,8 @@ public:
 
     viskores::Float64 elapsedTime;
     elapsedTime = viskores::Float64(stopTime.Seconds - startTime.Seconds);
-    elapsedTime +=
-      (viskores::Float64(stopTime.Microseconds - startTime.Microseconds) / viskores::Float64(1000000));
+    elapsedTime += (viskores::Float64(stopTime.Microseconds - startTime.Microseconds) /
+                    viskores::Float64(1000000));
 
     return elapsedTime;
   }

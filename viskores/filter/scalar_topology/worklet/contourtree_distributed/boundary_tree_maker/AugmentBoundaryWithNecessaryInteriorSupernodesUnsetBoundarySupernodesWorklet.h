@@ -87,9 +87,9 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& boundaryVertexSortID,
-                            const InFieldPortalType& superparentsPortal,
-                            const InFieldPortalType& supernodesPortal,
-                            const OutFieldPortalType& isNecessaryAndInteriorPortal) const
+                                const InFieldPortalType& superparentsPortal,
+                                const InFieldPortalType& supernodesPortal,
+                                const OutFieldPortalType& isNecessaryAndInteriorPortal) const
   {
     viskores::Id superparent = superparentsPortal.Get(boundaryVertexSortID);
     // if the superparent's supernode is the vertex, they match

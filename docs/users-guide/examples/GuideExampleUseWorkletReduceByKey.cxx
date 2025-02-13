@@ -102,8 +102,8 @@ struct CreateHistogram
 
     template<typename BinCountsPortalType>
     VISKORES_EXEC void operator()(viskores::Id binId,
-                              viskores::IdComponent numValuesInBin,
-                              BinCountsPortalType& binCounts) const
+                                  viskores::IdComponent numValuesInBin,
+                                  BinCountsPortalType& binCounts) const
     {
       binCounts.Set(binId, numValuesInBin);
     }
@@ -113,12 +113,14 @@ struct CreateHistogram
   ////
 
   template<typename InArrayHandleType>
-  VISKORES_CONT viskores::cont::ArrayHandle<viskores::Id> Run(const InArrayHandleType& valuesArray,
-                                                  viskores::Id numBins)
+  VISKORES_CONT viskores::cont::ArrayHandle<viskores::Id> Run(
+    const InArrayHandleType& valuesArray,
+    viskores::Id numBins)
   {
     VISKORES_IS_ARRAY_HANDLE(InArrayHandleType);
 
-    viskores::Range range = viskores::cont::ArrayRangeCompute(valuesArray).ReadPortal().Get(0);
+    viskores::Range range =
+      viskores::cont::ArrayRangeCompute(valuesArray).ReadPortal().Get(0);
     BinScalars bins(range, numBins);
 
     ////
@@ -137,7 +139,7 @@ struct CreateHistogram
 
     viskores::cont::ArrayHandle<viskores::Id> histogram;
     viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(0, numBins),
-                                histogram);
+                                    histogram);
 
     this->Invoke(CountBins{}, keys, histogram);
     ////
@@ -187,7 +189,8 @@ struct CombineSimilarValues
       const OriginalValuesVecType& originalValues) const
     {
       typename OriginalValuesVecType::ComponentType sum = 0;
-      for (viskores::IdComponent index = 0; index < originalValues.GetNumberOfComponents();
+      for (viskores::IdComponent index = 0;
+           index < originalValues.GetNumberOfComponents();
            index++)
       {
         sum = sum + originalValues[index];
@@ -218,7 +221,8 @@ struct CombineSimilarValues
     this->NumBins = numBins;
 
     //// RESUME-EXAMPLE
-    viskores::Range range = viskores::cont::ArrayRangeCompute(inField).ReadPortal().Get(0);
+    viskores::Range range =
+      viskores::cont::ArrayRangeCompute(inField).ReadPortal().Get(0);
     BinScalars bins(range, numBins);
 
     viskores::cont::ArrayHandle<viskores::Id> binIds;

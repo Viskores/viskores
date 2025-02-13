@@ -43,7 +43,8 @@ viskores::worklet::Keys<viskores::Id> MakeKeys(viskores::Id originalArraySize)
 // Make an array of the expected output of mapping the given array using the keys returned from
 // MakeKeys but with a different mechanism.
 template <typename T, typename S>
-viskores::cont::ArrayHandle<T> MakeExpectedOutput(const viskores::cont::ArrayHandle<T, S>& inputArray)
+viskores::cont::ArrayHandle<T> MakeExpectedOutput(
+  const viskores::cont::ArrayHandle<T, S>& inputArray)
 {
   using ComponentType = typename viskores::VecTraits<T>::ComponentType;
 
@@ -57,7 +58,8 @@ viskores::cont::ArrayHandle<T> MakeExpectedOutput(const viskores::cont::ArrayHan
   {
     T sum = viskores::TypeTraits<T>::ZeroInitialization();
     ComponentType num = 0;
-    for (viskores::Id fullI = reducedI; fullI < inputArray.GetNumberOfValues(); fullI += REDUCED_SIZE)
+    for (viskores::Id fullI = reducedI; fullI < inputArray.GetNumberOfValues();
+         fullI += REDUCED_SIZE)
     {
       sum = static_cast<T>(sum + inputPortal.Get(fullI));
       num = static_cast<ComponentType>(num + ComponentType(1));
@@ -98,7 +100,8 @@ void TryArray(const viskores::cont::ArrayHandle<T, S>& inputArray)
   std::cout << "Actual output" << std::endl;
   viskores::cont::printSummary_ArrayHandle(outputArray, std::cout);
 
-  VISKORES_TEST_ASSERT(test_equal_portals(expectedOutputArray.ReadPortal(), outputArray.ReadPortal()));
+  VISKORES_TEST_ASSERT(
+    test_equal_portals(expectedOutputArray.ReadPortal(), outputArray.ReadPortal()));
 }
 
 template <typename T>

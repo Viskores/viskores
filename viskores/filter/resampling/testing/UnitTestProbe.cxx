@@ -52,62 +52,192 @@ viskores::cont::DataSet ConvertDataSetUniformToExplicit(const viskores::cont::Da
 
 const std::vector<viskores::Float32>& GetExpectedPointData()
 {
-  static std::vector<viskores::Float32> expected = {
-    1.05f,         1.155f,        1.26f,         1.365f,        1.47f,         1.575f,
-    1.68f,         viskores::Nan32(), viskores::Nan32(), 1.47f,         1.575f,        1.68f,
-    1.785f,        1.89f,         1.995f,        2.1f,          viskores::Nan32(), viskores::Nan32(),
-    1.89f,         1.995f,        2.1f,          2.205f,        2.31f,         2.415f,
-    2.52f,         viskores::Nan32(), viskores::Nan32(), 2.31f,         2.415f,        2.52f,
-    2.625f,        2.73f,         2.835f,        2.94f,         viskores::Nan32(), viskores::Nan32(),
-    2.73f,         2.835f,        2.94f,         3.045f,        3.15f,         3.255f,
-    3.36f,         viskores::Nan32(), viskores::Nan32(), 3.15f,         3.255f,        3.36f,
-    3.465f,        3.57f,         3.675f,        3.78f,         viskores::Nan32(), viskores::Nan32(),
-    3.57f,         3.675f,        3.78f,         3.885f,        3.99f,         4.095f,
-    4.2f,          viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(),
-    viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(),
-    viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(),
-    viskores::Nan32(), viskores::Nan32(), viskores::Nan32()
-  };
+  static std::vector<viskores::Float32> expected = { 1.05f,
+                                                     1.155f,
+                                                     1.26f,
+                                                     1.365f,
+                                                     1.47f,
+                                                     1.575f,
+                                                     1.68f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     1.47f,
+                                                     1.575f,
+                                                     1.68f,
+                                                     1.785f,
+                                                     1.89f,
+                                                     1.995f,
+                                                     2.1f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     1.89f,
+                                                     1.995f,
+                                                     2.1f,
+                                                     2.205f,
+                                                     2.31f,
+                                                     2.415f,
+                                                     2.52f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     2.31f,
+                                                     2.415f,
+                                                     2.52f,
+                                                     2.625f,
+                                                     2.73f,
+                                                     2.835f,
+                                                     2.94f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     2.73f,
+                                                     2.835f,
+                                                     2.94f,
+                                                     3.045f,
+                                                     3.15f,
+                                                     3.255f,
+                                                     3.36f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     3.15f,
+                                                     3.255f,
+                                                     3.36f,
+                                                     3.465f,
+                                                     3.57f,
+                                                     3.675f,
+                                                     3.78f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     3.57f,
+                                                     3.675f,
+                                                     3.78f,
+                                                     3.885f,
+                                                     3.99f,
+                                                     4.095f,
+                                                     4.2f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32() };
   return expected;
 }
 
 const std::vector<viskores::Float32>& GetExpectedCellData()
 {
-  static std::vector<viskores::Float32> expected = {
-    0.0f,          0.7f,          0.7f,          0.7f,          1.4f,          1.4f,
-    1.4f,          viskores::Nan32(), viskores::Nan32(), 2.1f,          2.8f,          2.8f,
-    2.8f,          3.5f,          3.5f,          3.5f,          viskores::Nan32(), viskores::Nan32(),
-    2.1f,          2.8f,          2.8f,          2.8f,          3.5f,          3.5f,
-    3.5f,          viskores::Nan32(), viskores::Nan32(), 2.1f,          2.8f,          2.8f,
-    2.8f,          3.5f,          3.5f,          3.5f,          viskores::Nan32(), viskores::Nan32(),
-    4.2f,          4.9f,          4.9f,          4.9f,          5.6f,          5.6f,
-    5.6f,          viskores::Nan32(), viskores::Nan32(), 4.2f,          4.9f,          4.9f,
-    4.9f,          5.6f,          5.6f,          5.6f,          viskores::Nan32(), viskores::Nan32(),
-    4.2f,          4.9f,          4.9f,          4.9f,          5.6f,          5.6f,
-    5.6f,          viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(),
-    viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(),
-    viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(), viskores::Nan32(),
-    viskores::Nan32(), viskores::Nan32(), viskores::Nan32()
-  };
+  static std::vector<viskores::Float32> expected = { 0.0f,
+                                                     0.7f,
+                                                     0.7f,
+                                                     0.7f,
+                                                     1.4f,
+                                                     1.4f,
+                                                     1.4f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     2.1f,
+                                                     2.8f,
+                                                     2.8f,
+                                                     2.8f,
+                                                     3.5f,
+                                                     3.5f,
+                                                     3.5f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     2.1f,
+                                                     2.8f,
+                                                     2.8f,
+                                                     2.8f,
+                                                     3.5f,
+                                                     3.5f,
+                                                     3.5f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     2.1f,
+                                                     2.8f,
+                                                     2.8f,
+                                                     2.8f,
+                                                     3.5f,
+                                                     3.5f,
+                                                     3.5f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     4.2f,
+                                                     4.9f,
+                                                     4.9f,
+                                                     4.9f,
+                                                     5.6f,
+                                                     5.6f,
+                                                     5.6f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     4.2f,
+                                                     4.9f,
+                                                     4.9f,
+                                                     4.9f,
+                                                     5.6f,
+                                                     5.6f,
+                                                     5.6f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     4.2f,
+                                                     4.9f,
+                                                     4.9f,
+                                                     4.9f,
+                                                     5.6f,
+                                                     5.6f,
+                                                     5.6f,
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32(),
+                                                     viskores::Nan32() };
   return expected;
 }
 
 const std::vector<viskores::UInt8>& GetExpectedHiddenPoints()
 {
-  static std::vector<viskores::UInt8> expected = { 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2,
-                                               2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0,
-                                               2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0,
-                                               0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2,
-                                               2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
+  static std::vector<viskores::UInt8> expected = {
+    0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2,
+    0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2,
+    0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  };
   return expected;
 }
 
 const std::vector<viskores::UInt8>& GetExpectedHiddenCells()
 {
   static std::vector<viskores::UInt8> expected = { 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2,
-                                               0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2,
-                                               0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2,
-                                               2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
+                                                   0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2,
+                                                   0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2,
+                                                   2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
   return expected;
 }
 
@@ -115,14 +245,14 @@ template <typename T>
 void TestResultArray(const viskores::cont::ArrayHandle<T>& result, const std::vector<T>& expected)
 {
   VISKORES_TEST_ASSERT(result.GetNumberOfValues() == static_cast<viskores::Id>(expected.size()),
-                   "Incorrect field size");
+                       "Incorrect field size");
 
   auto portal = result.ReadPortal();
   viskores::Id size = portal.GetNumberOfValues();
   for (viskores::Id i = 0; i < size; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(portal.Get(i), expected[static_cast<std::size_t>(i)]),
-                     "Incorrect field value");
+                         "Incorrect field value");
   }
 }
 

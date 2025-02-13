@@ -56,12 +56,16 @@ public:
   viskores::Id GetInputRange() const { return this->Offsets.GetNumberOfValues() - 1; }
 
   VISKORES_CONT
-  viskores::cont::ArrayHandle<viskores::Id> GetSortedValuesMap() const { return this->SortedValuesMap; }
+  viskores::cont::ArrayHandle<viskores::Id> GetSortedValuesMap() const
+  {
+    return this->SortedValuesMap;
+  }
 
   VISKORES_CONT
   viskores::cont::ArrayHandle<viskores::Id> GetOffsets() const { return this->Offsets; }
 
-  VISKORES_DEPRECATED(2.2, "Use the `GetOffsets()` array in an `ArrayHandleOffsetsToNumComponents`.")
+  VISKORES_DEPRECATED(2.2,
+                      "Use the `GetOffsets()` array in an `ArrayHandleOffsetsToNumComponents`.")
   VISKORES_CONT
   viskores::cont::ArrayHandle<viskores::IdComponent> GetCounts() const;
 
@@ -73,7 +77,7 @@ public:
     typename viskores::cont::ArrayHandle<viskores::IdComponent>::ReadPortalType>;
 
   VISKORES_CONT ExecLookup PrepareForInput(viskores::cont::DeviceAdapterId device,
-                                       viskores::cont::Token& token) const
+                                           viskores::cont::Token& token) const
   {
     return ExecLookup(this->SortedValuesMap.PrepareForInput(device, token),
                       this->Offsets.PrepareForInput(device, token));
@@ -147,7 +151,7 @@ public:
   ///
   template <typename KeyStorage>
   VISKORES_CONT Keys(const viskores::cont::ArrayHandle<KeyType, KeyStorage>& keys,
-                 viskores::cont::DeviceAdapterId device = viskores::cont::DeviceAdapterTagAny())
+                     viskores::cont::DeviceAdapterId device = viskores::cont::DeviceAdapterTagAny())
   {
     this->BuildArrays(keys, KeysSortType::Unstable, device);
   }
@@ -211,7 +215,7 @@ public:
     typename viskores::cont::ArrayHandle<viskores::IdComponent>::ReadPortalType>;
 
   VISKORES_CONT ExecLookup PrepareForInput(viskores::cont::DeviceAdapterId device,
-                                       viskores::cont::Token& token) const
+                                           viskores::cont::Token& token) const
   {
     return ExecLookup(this->UniqueKeys.PrepareForInput(device, token),
                       this->SortedValuesMap.PrepareForInput(device, token),
@@ -233,11 +237,12 @@ private:
   KeyArrayHandleType UniqueKeys;
 
   template <typename KeyArrayType>
-  VISKORES_CONT void BuildArraysInternal(KeyArrayType& keys, viskores::cont::DeviceAdapterId device);
+  VISKORES_CONT void BuildArraysInternal(KeyArrayType& keys,
+                                         viskores::cont::DeviceAdapterId device);
 
   template <typename KeyArrayType>
   VISKORES_CONT void BuildArraysInternalStable(const KeyArrayType& keys,
-                                           viskores::cont::DeviceAdapterId device);
+                                               viskores::cont::DeviceAdapterId device);
   /// @endcond
 };
 
@@ -291,8 +296,8 @@ namespace arg
 template <typename KeyType>
 struct TypeCheck<viskores::cont::arg::TypeCheckTagKeys, KeyType>
 {
-  static constexpr bool value =
-    std::is_base_of<viskores::worklet::internal::KeysBase, typename std::decay<KeyType>::type>::value;
+  static constexpr bool value = std::is_base_of<viskores::worklet::internal::KeysBase,
+                                                typename std::decay<KeyType>::type>::value;
 };
 
 template <typename KeyType, typename Device>
@@ -319,8 +324,10 @@ struct Transport<viskores::cont::arg::TransportTagKeysIn, KeyType, Device>
   // If you get a compile error here, it means that you have used a KeysIn
   // tag in your ControlSignature that was not marked as the InputDomain.
   template <typename InputDomainType>
-  VISKORES_CONT ExecObjectType
-  operator()(const ContObjectType&, const InputDomainType&, viskores::Id, viskores::Id) const = delete;
+  VISKORES_CONT ExecObjectType operator()(const ContObjectType&,
+                                          const InputDomainType&,
+                                          viskores::Id,
+                                          viskores::Id) const = delete;
 };
 
 template <typename ArrayHandleType, typename Device>
@@ -332,15 +339,16 @@ struct Transport<viskores::cont::arg::TransportTagKeyedValuesIn, ArrayHandleType
 
   using IdArrayType = viskores::cont::ArrayHandle<viskores::Id>;
   using PermutedArrayType = viskores::cont::ArrayHandlePermutation<IdArrayType, ContObjectType>;
-  using GroupedArrayType = viskores::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
+  using GroupedArrayType =
+    viskores::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
 
   using ExecObjectType = typename GroupedArrayType::ReadPortalType;
 
   VISKORES_CONT ExecObjectType operator()(const ContObjectType& object,
-                                      const viskores::worklet::internal::KeysBase& keys,
-                                      viskores::Id,
-                                      viskores::Id,
-                                      viskores::cont::Token& token) const
+                                          const viskores::worklet::internal::KeysBase& keys,
+                                          viskores::Id,
+                                          viskores::Id,
+                                          viskores::cont::Token& token) const
   {
     if (object.GetNumberOfValues() != keys.GetNumberOfValues())
     {
@@ -367,15 +375,16 @@ struct Transport<viskores::cont::arg::TransportTagKeyedValuesInOut, ArrayHandleT
 
   using IdArrayType = viskores::cont::ArrayHandle<viskores::Id>;
   using PermutedArrayType = viskores::cont::ArrayHandlePermutation<IdArrayType, ContObjectType>;
-  using GroupedArrayType = viskores::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
+  using GroupedArrayType =
+    viskores::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
 
   using ExecObjectType = typename GroupedArrayType::WritePortalType;
 
   VISKORES_CONT ExecObjectType operator()(ContObjectType object,
-                                      const viskores::worklet::internal::KeysBase& keys,
-                                      viskores::Id,
-                                      viskores::Id,
-                                      viskores::cont::Token& token) const
+                                          const viskores::worklet::internal::KeysBase& keys,
+                                          viskores::Id,
+                                          viskores::Id,
+                                          viskores::cont::Token& token) const
   {
     if (object.GetNumberOfValues() != keys.GetNumberOfValues())
     {
@@ -402,15 +411,16 @@ struct Transport<viskores::cont::arg::TransportTagKeyedValuesOut, ArrayHandleTyp
 
   using IdArrayType = viskores::cont::ArrayHandle<viskores::Id>;
   using PermutedArrayType = viskores::cont::ArrayHandlePermutation<IdArrayType, ContObjectType>;
-  using GroupedArrayType = viskores::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
+  using GroupedArrayType =
+    viskores::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
 
   using ExecObjectType = typename GroupedArrayType::WritePortalType;
 
   VISKORES_CONT ExecObjectType operator()(ContObjectType object,
-                                      const viskores::worklet::internal::KeysBase& keys,
-                                      viskores::Id,
-                                      viskores::Id,
-                                      viskores::cont::Token& token) const
+                                          const viskores::worklet::internal::KeysBase& keys,
+                                          viskores::Id,
+                                          viskores::Id,
+                                          viskores::cont::Token& token) const
   {
     // The PrepareForOutput for ArrayHandleGroupVecVariable and
     // ArrayHandlePermutation cannot determine the actual size expected for the
@@ -433,12 +443,12 @@ struct Transport<viskores::cont::arg::TransportTagKeyedValuesOut, ArrayHandleTyp
 
 #ifndef viskores_worklet_Keys_cxx
 
-#define VISKORES_KEYS_EXPORT(T)                                                                       \
-  extern template class VISKORES_WORKLET_TEMPLATE_EXPORT viskores::worklet::Keys<T>;                       \
-  extern template VISKORES_WORKLET_TEMPLATE_EXPORT VISKORES_CONT void viskores::worklet::Keys<T>::BuildArrays( \
-    const viskores::cont::ArrayHandle<T>& keys,                                                        \
-    viskores::worklet::KeysSortType sort,                                                              \
-    viskores::cont::DeviceAdapterId device)
+#define VISKORES_KEYS_EXPORT(T)                                                       \
+  extern template class VISKORES_WORKLET_TEMPLATE_EXPORT viskores::worklet::Keys<T>;  \
+  extern template VISKORES_WORKLET_TEMPLATE_EXPORT VISKORES_CONT void                 \
+  viskores::worklet::Keys<T>::BuildArrays(const viskores::cont::ArrayHandle<T>& keys, \
+                                          viskores::worklet::KeysSortType sort,       \
+                                          viskores::cont::DeviceAdapterId device)
 
 VISKORES_KEYS_EXPORT(viskores::UInt8);
 VISKORES_KEYS_EXPORT(viskores::HashType);

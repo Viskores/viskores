@@ -54,7 +54,10 @@ public:
   /// It is possible that the sampling geometry will have points outside the bounds of
   /// the input. When this happens, the field will be set to this "invalid" value.
   /// By default, the invalid value is NaN.
-  VISKORES_CONT void SetInvalidValue(viskores::Float64 invalidValue) { this->InvalidValue = invalidValue; }
+  VISKORES_CONT void SetInvalidValue(viskores::Float64 invalidValue)
+  {
+    this->InvalidValue = invalidValue;
+  }
   /// @copydoc SetInvalidValue
   VISKORES_CONT viskores::Float64 GetInvalidValue() const { return this->InvalidValue; }
 

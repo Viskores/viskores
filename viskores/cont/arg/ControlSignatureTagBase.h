@@ -54,9 +54,10 @@ struct ControlSignatureTagCheck
 /// that a template argument is actually an \c ControlSignature tag. (You can
 /// get weird errors elsewhere in the code when a mistake is made.)
 ///
-#define VISKORES_IS_CONTROL_SIGNATURE_TAG(tag)                                                  \
-  VISKORES_STATIC_ASSERT_MSG(::viskores::cont::arg::internal::ControlSignatureTagCheck<tag>::Valid, \
-                         "Provided a type that is not a valid ControlSignature tag.")
+#define VISKORES_IS_CONTROL_SIGNATURE_TAG(tag)                             \
+  VISKORES_STATIC_ASSERT_MSG(                                              \
+    ::viskores::cont::arg::internal::ControlSignatureTagCheck<tag>::Valid, \
+    "Provided a type that is not a valid ControlSignature tag.")
 }
 }
 } // namespace viskores::cont::arg

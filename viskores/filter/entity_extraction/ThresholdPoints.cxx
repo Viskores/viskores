@@ -123,7 +123,7 @@ VISKORES_CONT void ThresholdPoints::SetThresholdAbove(const viskores::Float64 va
 }
 
 VISKORES_CONT void ThresholdPoints::SetThresholdBetween(const viskores::Float64 value1,
-                                                    const viskores::Float64 value2)
+                                                        const viskores::Float64 value2)
 {
   this->SetLowerThreshold(value1);
   this->SetUpperThreshold(value2);
@@ -131,7 +131,8 @@ VISKORES_CONT void ThresholdPoints::SetThresholdBetween(const viskores::Float64 
 }
 
 //-----------------------------------------------------------------------------
-VISKORES_CONT viskores::cont::DataSet ThresholdPoints::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet ThresholdPoints::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   // extract the input cell set
   const viskores::cont::UnknownCellSet& cells = input.GetCellSet();
@@ -147,7 +148,8 @@ VISKORES_CONT viskores::cont::DataSet ThresholdPoints::DoExecute(const viskores:
   viskores::cont::CellSetSingleType<> outCellSet;
   viskores::worklet::ThresholdPoints worklet;
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     switch (this->ThresholdType)
     {
       case THRESHOLD_BELOW:

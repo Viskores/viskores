@@ -142,7 +142,7 @@ private:
   VISKORES_CONT void PreExecute(const viskores::cont::PartitionedDataSet& input);
 
   VISKORES_CONT void PostExecute(const viskores::cont::PartitionedDataSet& input,
-                             viskores::cont::PartitionedDataSet& output);
+                                 viskores::cont::PartitionedDataSet& output);
   ///
   /// Internal helper function that implements the actual functionality of PostExecute
   ///
@@ -150,7 +150,7 @@ private:
   /// computed on the block to compute the final contour tree.
   template <typename T>
   VISKORES_CONT void DoPostExecute(const viskores::cont::PartitionedDataSet& input,
-                               viskores::cont::PartitionedDataSet& output);
+                                   viskores::cont::PartitionedDataSet& output);
   ///@}
 
   /// Use marching cubes connectivity for computing the contour tree

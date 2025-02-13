@@ -23,7 +23,9 @@ namespace
 
 ////brute force method /////
 template <typename CoordiVecT, typename CoordiPortalT, typename CoordiT>
-VISKORES_EXEC_CONT viskores::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, CoordiT& dis2)
+VISKORES_EXEC_CONT viskores::Id NNSVerify3D(CoordiVecT qc,
+                                            CoordiPortalT coordiPortal,
+                                            CoordiT& dis2)
 {
   dis2 = std::numeric_limits<CoordiT>::max();
   viskores::Id nnpIdx = -1;
@@ -58,9 +60,9 @@ public:
 
   template <typename CoordiVecType, typename CoordiPortalType, typename IdType, typename CoordiType>
   VISKORES_EXEC void operator()(const CoordiVecType& qc,
-                            const CoordiPortalType& coordiPortal,
-                            IdType& nnId,
-                            CoordiType& nnDis) const
+                                const CoordiPortalType& coordiPortal,
+                                IdType& nnId,
+                                CoordiType& nnDis) const
   {
     nnDis = std::numeric_limits<CoordiType>::max();
 
@@ -83,9 +85,9 @@ public:
 
   template <typename CoordiVecType, typename Locator>
   VISKORES_EXEC void operator()(const CoordiVecType& qc,
-                            const Locator& locator,
-                            viskores::Id& nnIdOut,
-                            viskores::FloatDefault& nnDis) const
+                                const Locator& locator,
+                                viskores::Id& nnIdOut,
+                                viskores::FloatDefault& nnDis) const
   {
     locator.FindNearestNeighbor(qc, nnIdOut, nnDis);
   }

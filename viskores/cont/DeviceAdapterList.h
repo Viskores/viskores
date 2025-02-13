@@ -28,10 +28,10 @@ namespace cont
 {
 
 using DeviceAdapterListCommon = viskores::List<viskores::cont::DeviceAdapterTagCuda,
-                                           viskores::cont::DeviceAdapterTagTBB,
-                                           viskores::cont::DeviceAdapterTagOpenMP,
-                                           viskores::cont::DeviceAdapterTagKokkos,
-                                           viskores::cont::DeviceAdapterTagSerial>;
+                                               viskores::cont::DeviceAdapterTagTBB,
+                                               viskores::cont::DeviceAdapterTagOpenMP,
+                                               viskores::cont::DeviceAdapterTagKokkos,
+                                               viskores::cont::DeviceAdapterTagSerial>;
 }
 } // namespace viskores::cont
 

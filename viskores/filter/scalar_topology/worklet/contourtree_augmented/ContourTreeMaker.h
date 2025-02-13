@@ -103,7 +103,8 @@
 
 
 
-namespace contourtree_maker_inc_ns = viskores::worklet::contourtree_augmented::contourtree_maker_inc;
+namespace contourtree_maker_inc_ns =
+  viskores::worklet::contourtree_augmented::contourtree_maker_inc;
 namespace active_graph_inc_ns = viskores::worklet::contourtree_augmented::active_graph_inc;
 
 namespace viskores
@@ -227,8 +228,9 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
     // Raise error if we have done more itertions than there are active nodes to remove
     if (this->ContourTreeResult.NumIterations >= maxNumIterations)
     {
-      throw new viskores::cont::ErrorInternal("Bad iteration. This can happen if the input mesh "
-                                          "defines a contour forest rather than a simple tree.");
+      throw new viskores::cont::ErrorInternal(
+        "Bad iteration. This can happen if the input mesh "
+        "defines a contour forest rather than a simple tree.");
     }
   } // loop until no active vertices remaining
 
@@ -261,10 +263,10 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
 
   // now we sort hypernodes array with a comparator
   viskores::cont::Algorithm::Sort(this->ContourTreeResult.Hypernodes,
-                              contourtree_maker_inc_ns::ContourTreeSuperNodeComparator(
-                                this->ContourTreeResult.Hyperparents,
-                                this->ContourTreeResult.Supernodes,
-                                this->ContourTreeResult.WhenTransferred));
+                                  contourtree_maker_inc_ns::ContourTreeSuperNodeComparator(
+                                    this->ContourTreeResult.Hyperparents,
+                                    this->ContourTreeResult.Supernodes,
+                                    this->ContourTreeResult.WhenTransferred));
 
   // we have to permute a bunch of arrays, so let's have some temporaries to store them
   IdArrayType permutedHyperparents;
@@ -316,15 +318,16 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
   // now swizzle the WhenTransferred value
   IdArrayType permutedWhenTransferred;
   PermuteArrayWithMaskedIndex<viskores::Id>(this->ContourTreeResult.WhenTransferred,
-                                        this->ContourTreeResult.Hypernodes,
-                                        permutedWhenTransferred);
+                                            this->ContourTreeResult.Hypernodes,
+                                            permutedWhenTransferred);
   viskores::cont::Algorithm::Copy(permutedWhenTransferred, this->ContourTreeResult.WhenTransferred);
 
   // now we compress both the hypernodes & Hyperarcs
   IdArrayType newHypernodePosition;
   OneIfHypernode oneIfHypernodeFunctor;
-  auto oneIfHypernodeArrayHandle = viskores::cont::ArrayHandleTransform<IdArrayType, OneIfHypernode>(
-    this->ContourTreeResult.WhenTransferred, oneIfHypernodeFunctor);
+  auto oneIfHypernodeArrayHandle =
+    viskores::cont::ArrayHandleTransform<IdArrayType, OneIfHypernode>(
+      this->ContourTreeResult.WhenTransferred, oneIfHypernodeFunctor);
   viskores::cont::Algorithm::ScanExclusive(oneIfHypernodeArrayHandle, newHypernodePosition);
 
   viskores::Id nHypernodes =
@@ -432,10 +435,11 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
     // permute the ContourTree.Hyperpartens by the ContourTreeFirstSupernodePerIteration
     auto tempContourTreeHyperparentsPermuted = viskores::cont::make_ArrayHandlePermutation(
       this->ContourTreeResult.FirstSupernodePerIteration, this->ContourTreeResult.Hyperparents);
-    viskores::cont::Algorithm::CopySubRange(tempContourTreeHyperparentsPermuted,
-                                        0,                                     // start index
-                                        this->ContourTreeResult.NumIterations, // stop index
-                                        this->ContourTreeResult.FirstHypernodePerIteration // target
+    viskores::cont::Algorithm::CopySubRange(
+      tempContourTreeHyperparentsPermuted,
+      0,                                                 // start index
+      this->ContourTreeResult.NumIterations,             // stop index
+      this->ContourTreeResult.FirstHypernodePerIteration // target
     );
   }
 
@@ -455,9 +459,9 @@ inline void ContourTreeMaker::ComputeHyperAndSuperStructure()
 inline void ContourTreeMaker::ComputeRegularStructure(MeshExtrema& meshExtrema)
 { // ComputeRegularStructure()
   // First step - use the superstructure to set the superparent for all supernodes
-  auto supernodesIndex =
-    viskores::cont::ArrayHandleIndex(this->ContourTreeResult.Supernodes
-                                   .GetNumberOfValues()); // Counting array of length #supernodes to
+  auto supernodesIndex = viskores::cont::ArrayHandleIndex(
+    this->ContourTreeResult.Supernodes
+      .GetNumberOfValues()); // Counting array of length #supernodes to
   auto permutedSuperparents = viskores::cont::make_ArrayHandlePermutation(
     this->ContourTreeResult.Supernodes,
     this->ContourTreeResult.Superparents); // superparents array permmuted by the supernodes array
@@ -517,7 +521,8 @@ inline void InitIdArrayTypeNoSuchElement(IdArrayType& idArray, viskores::Id size
 {
   idArray.Allocate(size);
 
-  viskores::cont::ArrayHandleConstant<viskores::Id> noSuchElementArray((viskores::Id)NO_SUCH_ELEMENT, size);
+  viskores::cont::ArrayHandleConstant<viskores::Id> noSuchElementArray(
+    (viskores::Id)NO_SUCH_ELEMENT, size);
   viskores::cont::Algorithm::Copy(noSuchElementArray, idArray);
 }
 
@@ -559,23 +564,26 @@ inline void ContourTreeMaker::ComputeBoundaryRegularStructure(
   // We have now set the superparent correctly for each node, and need to sort them to get the correct regular arcs
   // DAVID "ContourTreeMaker.h" line 338
   IdArrayType node;
-  viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleIndex(superparents.GetNumberOfValues()),
-                              this->ContourTreeResult.Augmentnodes);
-  viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleIndex(superparents.GetNumberOfValues()), node);
+  viskores::cont::Algorithm::Copy(
+    viskores::cont::ArrayHandleIndex(superparents.GetNumberOfValues()),
+    this->ContourTreeResult.Augmentnodes);
+  viskores::cont::Algorithm::Copy(
+    viskores::cont::ArrayHandleIndex(superparents.GetNumberOfValues()), node);
   viskores::cont::Algorithm::CopyIf(node,
-                                superparents,
-                                this->ContourTreeResult.Augmentnodes,
-                                ContourTreeNoSuchElementSuperParents());
+                                    superparents,
+                                    this->ContourTreeResult.Augmentnodes,
+                                    ContourTreeNoSuchElementSuperParents());
 
   IdArrayType toCompressed;
   InitIdArrayTypeNoSuchElement(toCompressed, superparents.GetNumberOfValues());
   viskores::cont::Algorithm::Copy(
-    viskores::cont::ArrayHandleIndex(this->ContourTreeResult.Augmentnodes.GetNumberOfValues()), node);
+    viskores::cont::ArrayHandleIndex(this->ContourTreeResult.Augmentnodes.GetNumberOfValues()),
+    node);
   auto permutedToCompressed =
     viskores::cont::make_ArrayHandlePermutation(this->ContourTreeResult.Augmentnodes, // index array
-                                            toCompressed);                        // value array
+                                                toCompressed);                        // value array
   viskores::cont::Algorithm::Copy(node,                  // source value array
-                              permutedToCompressed); // target array
+                                  permutedToCompressed); // target array
 
   // Make superparents correspond to nodes
   IdArrayType tmpsuperparents;
@@ -591,8 +599,8 @@ inline void ContourTreeMaker::ComputeBoundaryRegularStructure(
 
   // use a comparator to do the sort
   viskores::cont::Algorithm::Sort(augmentnodes_sorted,
-                              contourtree_maker_inc_ns::ContourTreeNodeComparator(
-                                superparents, this->ContourTreeResult.Superarcs));
+                                  contourtree_maker_inc_ns::ContourTreeNodeComparator(
+                                    superparents, this->ContourTreeResult.Superarcs));
   // now set the arcs based on the array
   InitIdArrayTypeNoSuchElement(this->ContourTreeResult.Augmentarcs,
                                this->ContourTreeResult.Augmentnodes.GetNumberOfValues());
@@ -671,10 +679,10 @@ inline void ContourTreeMaker::AugmentMergeTrees()
   viskores::cont::Algorithm::CopySubRange(
     this->JoinTree.Supernodes, 0, nJoinSupernodes, this->ContourTreeResult.Supernodes, 0);
   viskores::cont::Algorithm::CopySubRange(this->SplitTree.Supernodes,
-                                      0,
-                                      nSplitSupernodes,
-                                      this->ContourTreeResult.Supernodes,
-                                      nJoinSupernodes);
+                                          0,
+                                          nSplitSupernodes,
+                                          this->ContourTreeResult.Supernodes,
+                                          nJoinSupernodes);
 
   // Need to sort before Unique because VISKORES only guarantees to find neighboring duplicates
   // TODO/FIXME: It would be more efficient to do a merge of two sorted lists here, but that operation
@@ -750,8 +758,8 @@ inline void ContourTreeMaker::AugmentMergeTrees()
                this->AugmentedSplitSuperarcs); // (output)
 
   // 12. Lastly, we can initialise all of the remaining arrays
-  viskores::cont::ArrayHandleConstant<viskores::Id> noSuchElementArray((viskores::Id)NO_SUCH_ELEMENT,
-                                                               nSupernodes);
+  viskores::cont::ArrayHandleConstant<viskores::Id> noSuchElementArray(
+    (viskores::Id)NO_SUCH_ELEMENT, nSupernodes);
   viskores::cont::Algorithm::Copy(noSuchElementArray, this->ContourTreeResult.Superarcs);
   viskores::cont::Algorithm::Copy(noSuchElementArray, this->ContourTreeResult.Hyperparents);
   viskores::cont::Algorithm::Copy(noSuchElementArray, this->ContourTreeResult.Hypernodes);
@@ -762,9 +770,9 @@ inline void ContourTreeMaker::AugmentMergeTrees()
   //this->Updegree.Allocate(nSupernodes);
   //this->Downdegree.Allocate(nSupernodes);
   viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, nSupernodes),
-                              this->Updegree);
+                                  this->Updegree);
   viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, nSupernodes),
-                              this->Downdegree);
+                                  this->Downdegree);
 #ifdef DEBUG_PRINT
   DebugPrint("Supernodes Found", __FILE__, __LINE__);
 #endif
@@ -832,14 +840,14 @@ inline void ContourTreeMaker::TransferLeafChains(bool isJoin)
   // TODO below we initialize the outbound and inbound arrays with 0 to ensure consistency of debug output. Check if this is needed.
   IdArrayType outbound;
   viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(
-                                0, this->ContourTreeResult.Supernodes.GetNumberOfValues()),
-                              outbound);
+                                    0, this->ContourTreeResult.Supernodes.GetNumberOfValues()),
+                                  outbound);
   //outbound.Allocate(this->ContourTreeResult.Supernodes.GetNumberOfValues());
   IdArrayType inbound;
   //inbound.Allocate(this->ContourTreeResult.Supernodes.GetNumberOfValues());
   viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(
-                                0, this->ContourTreeResult.Supernodes.GetNumberOfValues()),
-                              inbound);
+                                    0, this->ContourTreeResult.Supernodes.GetNumberOfValues()),
+                                  inbound);
 
 
   // a reference for the inwards array we use to initialise
@@ -862,7 +870,8 @@ inline void ContourTreeMaker::TransferLeafChains(bool isJoin)
 #endif
   // Compute the number of log steps required in this pass
   viskores::Id numLogSteps = 1;
-  for (viskores::Id shifter = this->ActiveSupernodes.GetNumberOfValues(); shifter != 0; shifter >>= 1)
+  for (viskores::Id shifter = this->ActiveSupernodes.GetNumberOfValues(); shifter != 0;
+       shifter >>= 1)
   {
     numLogSteps++;
   }
@@ -912,11 +921,11 @@ inline void ContourTreeMaker::TransferLeafChains(bool isJoin)
                                         inbound,                               // (input)
                                         inwards);                              // (input)
   viskores::cont::TryExecute(task,
-                         this->ActiveSupernodes,                   // (input)
-                         this->ContourTreeResult.Hyperparents,     // (output)
-                         this->ContourTreeResult.Hyperarcs,        // (output)
-                         this->ContourTreeResult.Superarcs,        // (output)
-                         this->ContourTreeResult.WhenTransferred); // (output)
+                             this->ActiveSupernodes,                   // (input)
+                             this->ContourTreeResult.Hyperparents,     // (output)
+                             this->ContourTreeResult.Hyperarcs,        // (output)
+                             this->ContourTreeResult.Superarcs,        // (output)
+                             this->ContourTreeResult.WhenTransferred); // (output)
 #ifdef DEBUG_PRINT
   DebugPrint(isJoin ? "Upper Regular Chains Transferred" : "Lower Regular Chains Transferred",
              __FILE__,
@@ -931,7 +940,8 @@ inline void ContourTreeMaker::CompressTrees()
 
   // Compute the number of log steps required in this pass
   viskores::Id numLogSteps = 1;
-  for (viskores::Id shifter = this->ActiveSupernodes.GetNumberOfValues(); shifter != 0; shifter >>= 1)
+  for (viskores::Id shifter = this->ActiveSupernodes.GetNumberOfValues(); shifter != 0;
+       shifter >>= 1)
   {
     numLogSteps++;
   }
@@ -1006,7 +1016,7 @@ inline void ContourTreeMaker::FindDegrees()
   viskores::cont::Algorithm::Copy(permuteAugmentedJoinSuperarcs, inNeighbour);
   // now sort to group copies together
   viskores::cont::Algorithm::Sort(inNeighbour,
-                              contourtree_maker_inc_ns::MoveNoSuchElementToBackComparator{});
+                                  contourtree_maker_inc_ns::MoveNoSuchElementToBackComparator{});
 
   // there's probably a smarter scatter-gather solution to this, but this should work
   // find the RHE of each segment
@@ -1023,7 +1033,7 @@ inline void ContourTreeMaker::FindDegrees()
   viskores::cont::Algorithm::Copy(permuteAugmentedSplitSuperarcs, inNeighbour);
   // now sort to group copies together
   viskores::cont::Algorithm::Sort(inNeighbour,
-                              contourtree_maker_inc_ns::MoveNoSuchElementToBackComparator{});
+                                  contourtree_maker_inc_ns::MoveNoSuchElementToBackComparator{});
 
   // there's probably a smarter scatter-gather solution to this, but this should work
   // find the RHE of each segment

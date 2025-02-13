@@ -65,7 +65,8 @@ void TestBasicFunctionInterface()
   VISKORES_TEST_ASSERT(ParameterGet<2>(funcInterfaceEmpty) != Arg2, "Arg 2 incorrect.");
   VISKORES_TEST_ASSERT(ParameterGet<3>(funcInterfaceEmpty) != Arg3, "Arg 3 incorrect.");
 
-  auto funcInterface5 = viskores::internal::make_FunctionInterface<void>(Arg1, Arg2, Arg3, Arg4, Arg5);
+  auto funcInterface5 =
+    viskores::internal::make_FunctionInterface<void>(Arg1, Arg2, Arg3, Arg4, Arg5);
   std::cout << "Checking 5 parameter function interface." << std::endl;
   VISKORES_TEST_ASSERT(funcInterface5.GetArity() == 5, "Got wrong number of parameters.");
   VISKORES_TEST_ASSERT(ParameterGet<1>(funcInterface5) == Arg1, "Arg 1 incorrect.");

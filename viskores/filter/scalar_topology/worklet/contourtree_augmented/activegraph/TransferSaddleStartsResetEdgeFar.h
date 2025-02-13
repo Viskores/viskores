@@ -83,8 +83,8 @@ public:
 
   template <typename InOutFieldPortalType, typename InFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& edgeId,
-                            const InFieldPortalType& hyperarcsPortal,
-                            const InOutFieldPortalType& edgeFarPortal) const
+                                const InFieldPortalType& hyperarcsPortal,
+                                const InOutFieldPortalType& edgeFarPortal) const
   {
     edgeFarPortal.Set(edgeId, MaskedIndex(hyperarcsPortal.Get(edgeFarPortal.Get(edgeId))));
 

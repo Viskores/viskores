@@ -66,7 +66,7 @@ bool TransportWholeCellSetIn(Device device)
 
   using ExecObjectType =
     typename viskores::cont::CellSetExplicit<>::template ExecConnectivityType<VisitTopology,
-                                                                          IncidentTopology>;
+                                                                              IncidentTopology>;
 
   viskores::cont::arg::Transport<
     viskores::cont::arg::TransportTagCellSetIn<VisitTopology, IncidentTopology>,

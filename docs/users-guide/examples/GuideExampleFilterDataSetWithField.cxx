@@ -40,10 +40,12 @@ namespace
 {
 
 //// RESUME-EXAMPLE
-class VISKORES_FILTER_ENTITY_EXTRACTION_EXPORT BlankCells : public viskores::filter::Filter
+class VISKORES_FILTER_ENTITY_EXTRACTION_EXPORT BlankCells
+  : public viskores::filter::Filter
 {
 public:
-  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inDataSet) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(
+    const viskores::cont::DataSet& inDataSet) override;
 };
 
 //// PAUSE-EXAMPLE
@@ -70,7 +72,8 @@ namespace
 ////
 //// BEGIN-EXAMPLE BlankCellsFilterDoExecute
 ////
-VISKORES_CONT viskores::cont::DataSet BlankCells::DoExecute(const viskores::cont::DataSet& inData)
+VISKORES_CONT viskores::cont::DataSet BlankCells::DoExecute(
+  const viskores::cont::DataSet& inData)
 {
   viskores::cont::Field inField = this->GetFieldFromDataSet(inData);
   if (!inField.IsCellField())
@@ -82,9 +85,10 @@ VISKORES_CONT viskores::cont::DataSet BlankCells::DoExecute(const viskores::cont
   // a 1 for any cell to keep.
   viskores::cont::ArrayHandle<viskores::FloatDefault> blankingArray;
 
-  auto resolveType = [&](const auto& inFieldArray) {
-    auto transformArray =
-      viskores::cont::make_ArrayHandleTransform(inFieldArray, viskores::NotZeroInitialized{});
+  auto resolveType = [&](const auto& inFieldArray)
+  {
+    auto transformArray = viskores::cont::make_ArrayHandleTransform(
+      inFieldArray, viskores::NotZeroInitialized{});
     viskores::cont::ArrayCopyDevice(transformArray, blankingArray);
   };
 
@@ -159,7 +163,7 @@ static void DoTest()
   std::cout << "Checking output." << std::endl;
   viskores::Id numOutCells = numInCells / 2;
   VISKORES_TEST_ASSERT(outData.GetCellSet().GetNumberOfCells() == numOutCells,
-                   "Unexpected number of cells.");
+                       "Unexpected number of cells.");
 
   viskores::cont::Field outCellField = outData.GetField("field");
   viskores::cont::ArrayHandle<FieldType> outField;

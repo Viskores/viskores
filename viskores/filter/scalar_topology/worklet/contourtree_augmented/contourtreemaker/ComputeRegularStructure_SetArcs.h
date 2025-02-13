@@ -88,11 +88,11 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const InFieldPortalType& arcSorterPortal,
-                            const viskores::Id sortedNode,
-                            const InFieldPortalType& contourTreeSuperparentsPortal,
-                            const InFieldPortalType& contourTreeSuperarcsPortal,
-                            const InFieldPortalType& contourTreeSupernodesPortal,
-                            const OutFieldPortalType& contourTreeArcsPortal) const
+                                const viskores::Id sortedNode,
+                                const InFieldPortalType& contourTreeSuperparentsPortal,
+                                const InFieldPortalType& contourTreeSuperarcsPortal,
+                                const InFieldPortalType& contourTreeSupernodesPortal,
+                                const OutFieldPortalType& contourTreeArcsPortal) const
   {
     // per node
     // convert arcSorter to node ID
@@ -200,12 +200,12 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const InFieldPortalType& arcSorterPortal,
-                            const viskores::Id sortedNode,
-                            const InFieldPortalType& contourTreeSuperparentsPortal,
-                            const InFieldPortalType& contourTreeSuperarcsPortal,
-                            const InFieldPortalType& contourTreeSupernodesPortal,
-                            const InFieldPortalType& toCompressedPortal,
-                            const OutFieldPortalType& contourTreeArcsPortal) const
+                                const viskores::Id sortedNode,
+                                const InFieldPortalType& contourTreeSuperparentsPortal,
+                                const InFieldPortalType& contourTreeSuperarcsPortal,
+                                const InFieldPortalType& contourTreeSupernodesPortal,
+                                const InFieldPortalType& toCompressedPortal,
+                                const OutFieldPortalType& contourTreeArcsPortal) const
   {
     // per node
     // convert arcSorter to node ID

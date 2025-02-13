@@ -49,11 +49,12 @@ public:
   ///   in this @a connectivity array.
   /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T>
-  VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<T>& xVals,
-                                              const std::vector<viskores::UInt8>& shapes,
-                                              const std::vector<viskores::IdComponent>& numIndices,
-                                              const std::vector<viskores::Id>& connectivity,
-                                              const std::string& coordsNm = "coords")
+  VISKORES_CONT static viskores::cont::DataSet Create(
+    const std::vector<T>& xVals,
+    const std::vector<viskores::UInt8>& shapes,
+    const std::vector<viskores::IdComponent>& numIndices,
+    const std::vector<viskores::Id>& connectivity,
+    const std::string& coordsNm = "coords")
   {
     std::vector<T> yVals(xVals.size(), 0), zVals(xVals.size(), 0);
     return DataSetBuilderExplicit::Create(
@@ -80,12 +81,13 @@ public:
   ///   in this @a connectivity array.
   /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T>
-  VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<T>& xVals,
-                                              const std::vector<T>& yVals,
-                                              const std::vector<viskores::UInt8>& shapes,
-                                              const std::vector<viskores::IdComponent>& numIndices,
-                                              const std::vector<viskores::Id>& connectivity,
-                                              const std::string& coordsNm = "coords")
+  VISKORES_CONT static viskores::cont::DataSet Create(
+    const std::vector<T>& xVals,
+    const std::vector<T>& yVals,
+    const std::vector<viskores::UInt8>& shapes,
+    const std::vector<viskores::IdComponent>& numIndices,
+    const std::vector<viskores::Id>& connectivity,
+    const std::string& coordsNm = "coords")
   {
     std::vector<T> zVals(xVals.size(), 0);
     return DataSetBuilderExplicit::Create(
@@ -113,13 +115,14 @@ public:
   ///   in this @a connectivity array.
   /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T>
-  VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<T>& xVals,
-                                              const std::vector<T>& yVals,
-                                              const std::vector<T>& zVals,
-                                              const std::vector<viskores::UInt8>& shapes,
-                                              const std::vector<viskores::IdComponent>& numIndices,
-                                              const std::vector<viskores::Id>& connectivity,
-                                              const std::string& coordsNm = "coords");
+  VISKORES_CONT static viskores::cont::DataSet Create(
+    const std::vector<T>& xVals,
+    const std::vector<T>& yVals,
+    const std::vector<T>& zVals,
+    const std::vector<viskores::UInt8>& shapes,
+    const std::vector<viskores::IdComponent>& numIndices,
+    const std::vector<viskores::Id>& connectivity,
+    const std::string& coordsNm = "coords");
 
   /// \brief Create a 3D `DataSet` with arbitrary cell connectivity.
   ///
@@ -140,11 +143,12 @@ public:
   ///   in this @a connectivity array.
   /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T>
-  VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<viskores::Vec<T, 3>>& coords,
-                                              const std::vector<viskores::UInt8>& shapes,
-                                              const std::vector<viskores::IdComponent>& numIndices,
-                                              const std::vector<viskores::Id>& connectivity,
-                                              const std::string& coordsNm = "coords");
+  VISKORES_CONT static viskores::cont::DataSet Create(
+    const std::vector<viskores::Vec<T, 3>>& coords,
+    const std::vector<viskores::UInt8>& shapes,
+    const std::vector<viskores::IdComponent>& numIndices,
+    const std::vector<viskores::Id>& connectivity,
+    const std::string& coordsNm = "coords");
 
   /// \brief Create a 3D `DataSet` with arbitrary cell connectivity.
   ///
@@ -199,11 +203,12 @@ public:
   ///   in this @a connectivity array.
   /// @param[in] coordsNm (optional) The name to register the coordinates as.
   template <typename T, typename CellShapeTag>
-  VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<viskores::Vec<T, 3>>& coords,
-                                              CellShapeTag tag,
-                                              viskores::IdComponent numberOfPointsPerCell,
-                                              const std::vector<viskores::Id>& connectivity,
-                                              const std::string& coordsNm = "coords");
+  VISKORES_CONT static viskores::cont::DataSet Create(
+    const std::vector<viskores::Vec<T, 3>>& coords,
+    CellShapeTag tag,
+    viskores::IdComponent numberOfPointsPerCell,
+    const std::vector<viskores::Id>& connectivity,
+    const std::string& coordsNm = "coords");
 
   /// \brief Create a 3D `DataSet` with arbitrary cell connectivity for a single cell type.
   ///
@@ -275,8 +280,8 @@ inline VISKORES_CONT viskores::cont::DataSet DataSetBuilderExplicit::Create(
   {
     coordsPortal.Set(static_cast<viskores::Id>(index),
                      viskores::make_Vec(static_cast<viskores::FloatDefault>(xVals[index]),
-                                    static_cast<viskores::FloatDefault>(yVals[index]),
-                                    static_cast<viskores::FloatDefault>(zVals[index])));
+                                        static_cast<viskores::FloatDefault>(yVals[index]),
+                                        static_cast<viskores::FloatDefault>(zVals[index])));
   }
 
   auto shapesArray = viskores::cont::make_ArrayHandle(shapes, viskores::CopyFlag::On);
@@ -402,8 +407,8 @@ public:
   /// @param[in] z The z coordinate of the newly created point.
   /// @returns The index of the newly created point.
   VISKORES_CONT viskores::Id AddPoint(const viskores::FloatDefault& x,
-                              const viskores::FloatDefault& y,
-                              const viskores::FloatDefault& z = 0);
+                                      const viskores::FloatDefault& y,
+                                      const viskores::FloatDefault& z = 0);
 
   /// @brief Add a point to the `DataSet`.
   ///
@@ -433,8 +438,8 @@ public:
   /// @param[in] conn List of indices to the incident points.
   /// @param[in] n The number of incident points (and the length of the `conn` array).
   VISKORES_CONT void AddCell(const viskores::UInt8& shape,
-                         const viskores::Id* conn,
-                         const viskores::IdComponent& n);
+                             const viskores::Id* conn,
+                             const viskores::IdComponent& n);
 
   /// @brief Start adding a cell to the `DataSet`.
   ///

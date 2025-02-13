@@ -94,15 +94,19 @@ public:
 
   ///vertex ID - row * ncols + col
   VISKORES_EXEC
-  inline viskores::Id VertexId(viskores::Id2 pos) const { return pos[1] * this->MeshSize[0] + pos[0]; }
+  inline viskores::Id VertexId(viskores::Id2 pos) const
+  {
+    return pos[1] * this->MeshSize[0] + pos[0];
+  }
 
   /// determine if the vertex is owned by this mesh block or not
   /// The function returns NO_SUCH_ELEMENT if the vertex is not owned by the block and
   /// otherwise it returns global id of the vertex as determined via the IdRelabeler
   VISKORES_EXEC_CONT
-  inline viskores::Id GetVertexOwned(const viskores::Id& meshIndex,
-                                 const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler&
-                                   localToGlobalIdRelabeler) const
+  inline viskores::Id GetVertexOwned(
+    const viskores::Id& meshIndex,
+    const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler& localToGlobalIdRelabeler)
+    const
   {
     // Get the vertex position
     viskores::Id2 pos = this->VertexPos(meshIndex);

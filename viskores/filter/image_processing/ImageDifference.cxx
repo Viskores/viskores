@@ -32,7 +32,10 @@ struct GreaterThanThreshold
     : ThresholdError(thresholdError)
   {
   }
-  VISKORES_EXEC_CONT bool operator()(const viskores::FloatDefault& x) const { return x > ThresholdError; }
+  VISKORES_EXEC_CONT bool operator()(const viskores::FloatDefault& x) const
+  {
+    return x > ThresholdError;
+  }
   viskores::FloatDefault ThresholdError;
 };
 } // anonymous namespace
@@ -44,7 +47,8 @@ VISKORES_CONT ImageDifference::ImageDifference()
   this->SetOutputFieldName("image-diff");
 }
 
-VISKORES_CONT viskores::cont::DataSet ImageDifference::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet ImageDifference::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   this->ImageDiffWithinThreshold = true;
 
@@ -56,14 +60,16 @@ VISKORES_CONT viskores::cont::DataSet ImageDifference::DoExecute(const viskores:
 
   VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Performing Image Difference");
 
-  auto inputCellSet = input.GetCellSet().ResetCellSetList<VISKORES_DEFAULT_CELL_SET_LIST_STRUCTURED>();
+  auto inputCellSet =
+    input.GetCellSet().ResetCellSetList<VISKORES_DEFAULT_CELL_SET_LIST_STRUCTURED>();
 
   const auto& secondaryField = this->GetFieldFromDataSet(1, input);
 
   viskores::cont::UnknownArrayHandle diffOutput;
   viskores::cont::ArrayHandle<viskores::FloatDefault> thresholdOutput;
 
-  auto resolveType = [&](const auto& primaryArray) {
+  auto resolveType = [&](const auto& primaryArray)
+  {
     // use std::decay to remove const ref from the decltype of primaryArray.
     using T = typename std::decay_t<decltype(primaryArray)>::ValueType;
     viskores::cont::ArrayHandle<T> secondaryArray;
@@ -74,7 +80,7 @@ VISKORES_CONT viskores::cont::DataSet ImageDifference::DoExecute(const viskores:
     if (this->AverageRadius > 0)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 "Performing Average with radius: " << this->AverageRadius);
+                     "Performing Average with radius: " << this->AverageRadius);
       auto averageWorklet = viskores::worklet::AveragePointNeighborhood(this->AverageRadius);
       this->Invoke(averageWorklet, inputCellSet, primaryArray, primaryOutput);
       this->Invoke(averageWorklet, inputCellSet, secondaryArray, secondaryOutput);
@@ -91,7 +97,7 @@ VISKORES_CONT viskores::cont::DataSet ImageDifference::DoExecute(const viskores:
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Diffing image in Neighborhood");
       this->Invoke(viskores::worklet::ImageDifferenceNeighborhood(this->PixelShiftRadius,
-                                                              this->PixelDiffThreshold),
+                                                                  this->PixelDiffThreshold),
                    inputCellSet,
                    primaryOutput,
                    secondaryOutput,
@@ -121,13 +127,13 @@ VISKORES_CONT viskores::cont::DataSet ImageDifference::DoExecute(const viskores:
   }
 
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             "Difference within threshold: "
-               << this->ImageDiffWithinThreshold
-               << ", for pixels outside threshold: " << errorPixels.GetNumberOfValues()
-               << ", with a total number of pixels: " << thresholdOutput.GetNumberOfValues()
-               << ", and an allowable pixel error ratio: " << this->AllowedPixelErrorRatio
-               << ", with a total summed threshold error: "
-               << viskores::cont::Algorithm::Reduce(errorPixels, static_cast<FloatDefault>(0)));
+                 "Difference within threshold: "
+                   << this->ImageDiffWithinThreshold
+                   << ", for pixels outside threshold: " << errorPixels.GetNumberOfValues()
+                   << ", with a total number of pixels: " << thresholdOutput.GetNumberOfValues()
+                   << ", and an allowable pixel error ratio: " << this->AllowedPixelErrorRatio
+                   << ", with a total summed threshold error: "
+                   << viskores::cont::Algorithm::Reduce(errorPixels, static_cast<FloatDefault>(0)));
 
   auto outputDataSet = this->CreateResultFieldPoint(input, this->GetOutputFieldName(), diffOutput);
   outputDataSet.AddPointField(this->GetThresholdFieldName(), thresholdOutput);

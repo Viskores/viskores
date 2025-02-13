@@ -59,8 +59,9 @@ struct Transport
   /// either or both of the second two arguments.
   ///
   template <typename InputDomainType>
-  VISKORES_CONT ExecObjectType operator()(const ContObjectType contData,
-                                      const InputDomainType& inputDomain viskores::Id outputSize) const;
+  VISKORES_CONT ExecObjectType
+  operator()(const ContObjectType contData,
+             const InputDomainType& inputDomain viskores::Id outputSize) const;
 };
 #else  // VISKORES_DOXYGEN_ONLY
   ;

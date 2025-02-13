@@ -61,7 +61,8 @@ int main(int argc, char** argv)
 //// BEGIN-EXAMPLE Assert
 ////
 template<typename T>
-VISKORES_CONT T GetArrayValue(viskores::cont::ArrayHandle<T> arrayHandle, viskores::Id index)
+VISKORES_CONT T GetArrayValue(viskores::cont::ArrayHandle<T> arrayHandle,
+                              viskores::Id index)
 {
   VISKORES_ASSERT(index >= 0);
   VISKORES_ASSERT(index < arrayHandle.GetNumberOfValues());
@@ -84,11 +85,12 @@ void TryGetArrayValue()
 template<typename T>
 VISKORES_EXEC_CONT void MyMathFunction(T& value)
 {
-  VISKORES_STATIC_ASSERT((std::is_same<typename viskores::TypeTraits<T>::DimensionalityTag,
-                                   viskores::TypeTraitsScalarTag>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<typename viskores::TypeTraits<T>::DimensionalityTag,
+                  viskores::TypeTraitsScalarTag>::value));
 
   VISKORES_STATIC_ASSERT_MSG(sizeof(T) >= 4,
-                         "MyMathFunction needs types with at least 32 bits.");
+                             "MyMathFunction needs types with at least 32 bits.");
   ////
   //// END-EXAMPLE StaticAssert
   ////

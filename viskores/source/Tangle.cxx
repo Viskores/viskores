@@ -80,8 +80,8 @@ viskores::cont::DataSet Tangle::DoExecute() const
 
   const viskores::Vec3f origin(0.0f, 0.0f, 0.0f);
   const viskores::Vec3f spacing(1.0f / static_cast<viskores::FloatDefault>(cellDims[0]),
-                            1.0f / static_cast<viskores::FloatDefault>(cellDims[1]),
-                            1.0f / static_cast<viskores::FloatDefault>(cellDims[2]));
+                                1.0f / static_cast<viskores::FloatDefault>(cellDims[1]),
+                                1.0f / static_cast<viskores::FloatDefault>(cellDims[2]));
 
   viskores::cont::ArrayHandleUniformPointCoordinates coordinates(
     this->PointDimensions, origin, spacing);

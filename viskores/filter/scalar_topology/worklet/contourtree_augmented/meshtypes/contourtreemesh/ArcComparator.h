@@ -126,7 +126,7 @@ public:
   }
 
   VISKORES_CONT ArcComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                  viskores::cont::Token& token) const
+                                                      viskores::cont::Token& token) const
   {
     return ArcComparatorImpl(this->Arcs, device, token);
   }

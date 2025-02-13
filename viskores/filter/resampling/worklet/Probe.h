@@ -43,9 +43,9 @@ public:
 
     template <typename LocatorType>
     VISKORES_EXEC void operator()(const viskores::Vec3f& point,
-                              const LocatorType& locator,
-                              viskores::Id& cellId,
-                              viskores::Vec3f& pcoords) const
+                                  const LocatorType& locator,
+                                  viskores::Id& cellId,
+                                  viskores::Vec3f& pcoords) const
     {
       locator.FindCell(point, cellId, pcoords);
     }
@@ -91,11 +91,11 @@ public:
               typename CellIdsType,
               typename ParametricCoordsType>
     VISKORES_EXEC void operator()(viskores::Id cellId,
-                              CellShapeTag cellShape,
-                              const CoordsVecType& cellPoints,
-                              const UniformPoints& points,
-                              CellIdsType& cellIds,
-                              ParametricCoordsType& pcoords) const
+                                  CellShapeTag cellShape,
+                                  const CoordsVecType& cellPoints,
+                                  const UniformPoints& points,
+                                  CellIdsType& cellIds,
+                                  ParametricCoordsType& pcoords) const
     {
       // Compute cell bounds
       using CoordsType = typename viskores::VecTraits<CoordsVecType>::ComponentType;
@@ -109,10 +109,10 @@ public:
       }
 
       // Compute points inside cell bounds
-      auto minp =
-        static_cast<viskores::Id3>(viskores::Ceil((cbmin - points.GetOrigin()) / points.GetSpacing()));
-      auto maxp =
-        static_cast<viskores::Id3>(viskores::Floor((cbmax - points.GetOrigin()) / points.GetSpacing()));
+      auto minp = static_cast<viskores::Id3>(
+        viskores::Ceil((cbmin - points.GetOrigin()) / points.GetSpacing()));
+      auto maxp = static_cast<viskores::Id3>(
+        viskores::Floor((cbmax - points.GetOrigin()) / points.GetSpacing()));
 
       // clamp
       minp = viskores::Max(minp, viskores::Id3(0));
@@ -126,9 +126,10 @@ public:
           {
             auto pt = points.Get(viskores::Id3(i, j, k));
             CoordsType pc;
-            viskores::ErrorCode status =
-              viskores::exec::WorldCoordinatesToParametricCoordinates(cellPoints, pt, cellShape, pc);
-            if ((status == viskores::ErrorCode::Success) && viskores::exec::CellInside(pc, cellShape))
+            viskores::ErrorCode status = viskores::exec::WorldCoordinatesToParametricCoordinates(
+              cellPoints, pt, cellShape, pc);
+            if ((status == viskores::ErrorCode::Success) &&
+                viskores::exec::CellInside(pc, cellShape))
             {
               auto pointId = i + points.GetDimensions()[0] * (j + points.GetDimensions()[1] * k);
               cellIds.Set(pointId, cellId);
@@ -198,10 +199,10 @@ public:
 
     template <typename ParametricCoordType, typename CellSetType, typename InputFieldPortalType>
     VISKORES_EXEC void operator()(viskores::Id cellId,
-                              const ParametricCoordType& pc,
-                              const CellSetType& cells,
-                              const InputFieldPortalType& in,
-                              typename InputFieldPortalType::ValueType& out) const
+                                  const ParametricCoordType& pc,
+                                  const CellSetType& cells,
+                                  const InputFieldPortalType& in,
+                                  typename InputFieldPortalType::ValueType& out) const
     {
       if (cellId != -1)
       {
@@ -243,7 +244,10 @@ public:
     using ControlSignature = void(FieldIn cellids, FieldOut hfield);
     using ExecutionSignature = _2(_1);
 
-    VISKORES_EXEC viskores::UInt8 operator()(viskores::Id cellId) const { return (cellId == -1) ? HIDDEN : 0; }
+    VISKORES_EXEC viskores::UInt8 operator()(viskores::Id cellId) const
+    {
+      return (cellId == -1) ? HIDDEN : 0;
+    }
   };
 
   /// Get an array of flags marking the invalid points (points that do not fall inside any of
@@ -264,7 +268,7 @@ public:
 
     template <typename CellIdsVecType>
     VISKORES_EXEC viskores::UInt8 operator()(const CellIdsVecType& cellIds,
-                                     viskores::IdComponent numPoints) const
+                                             viskores::IdComponent numPoints) const
     {
       for (viskores::IdComponent i = 0; i < numPoints; ++i)
       {

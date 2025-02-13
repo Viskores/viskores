@@ -194,7 +194,10 @@ private:
 
       VISKORES_OPENMP_DIRECTIVE(taskgroup)
       {
-        VISKORES_OPENMP_DIRECTIVE(task) { explicitThis->Scan(right); } // end right task
+        VISKORES_OPENMP_DIRECTIVE(task)
+        {
+          explicitThis->Scan(right);
+        } // end right task
 
         Node* left = this->AllocNode();
         left->Parent = node;
@@ -241,7 +244,10 @@ private:
 
         // no taskgroup/sync needed other than the final barrier of the parallel
         // section.
-        VISKORES_OPENMP_DIRECTIVE(task) { explicitThis->UpdateOutput(node->Right); } // end task
+        VISKORES_OPENMP_DIRECTIVE(task)
+        {
+          explicitThis->UpdateOutput(node->Right);
+        } // end task
         this->UpdateOutput(node->Left);
       }
     }

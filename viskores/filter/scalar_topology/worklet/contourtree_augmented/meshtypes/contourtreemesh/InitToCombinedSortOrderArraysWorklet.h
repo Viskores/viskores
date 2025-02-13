@@ -94,9 +94,9 @@ public:
 
   template <typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& overallSortIndexVal,
-                            const viskores::Id& overallSortOrderVal,
-                            const OutFieldPortalType& thisToCombinedSortOrderPortal,
-                            const OutFieldPortalType& otherToCombinedSortOrderPortal) const
+                                const viskores::Id& overallSortOrderVal,
+                                const OutFieldPortalType& thisToCombinedSortOrderPortal,
+                                const OutFieldPortalType& otherToCombinedSortOrderPortal) const
   {
     if (IsThis(overallSortOrderVal))
     {

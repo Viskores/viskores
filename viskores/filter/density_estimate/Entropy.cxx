@@ -31,9 +31,8 @@ VISKORES_CONT viskores::cont::DataSet Entropy::DoExecute(const viskores::cont::D
   viskores::Float64 e = 0;
   auto resolveType = [&](const auto& concrete) { e = worklet.Run(concrete, this->NumberOfBins); };
   const auto& fieldArray = this->GetFieldFromDataSet(inDataSet).GetData();
-  fieldArray
-    .CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldScalar, VISKORES_DEFAULT_STORAGE_LIST>(
-      resolveType);
+  fieldArray.CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldScalar,
+                                                  VISKORES_DEFAULT_STORAGE_LIST>(resolveType);
 
   //the entropy vector only contain one element, the entropy of the input field
   viskores::cont::ArrayHandle<viskores::Float64> entropy;

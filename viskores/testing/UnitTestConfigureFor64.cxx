@@ -32,7 +32,7 @@ void TestTypeSizes()
 {
   VISKORES_TEST_ASSERT(sizeof(viskores::Id) == EXPECTED_SIZE, "viskores::Id an unexpected size.");
   VISKORES_TEST_ASSERT(sizeof(viskores::FloatDefault) == EXPECTED_SIZE,
-                   "viskores::FloatDefault an unexpected size.");
+                       "viskores::FloatDefault an unexpected size.");
 }
 }
 

@@ -67,8 +67,8 @@ void View2D::RenderScreenAnnotations()
   this->HorizontalAxisAnnotation.Render(
     this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
 
-  viskores::Float32 windowaspect =
-    viskores::Float32(this->GetCanvas().GetWidth()) / viskores::Float32(this->GetCanvas().GetHeight());
+  viskores::Float32 windowaspect = viskores::Float32(this->GetCanvas().GetWidth()) /
+    viskores::Float32(this->GetCanvas().GetHeight());
 
   this->VerticalAxisAnnotation.SetColor(AxisColor);
   this->VerticalAxisAnnotation.SetScreenPosition(

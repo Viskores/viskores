@@ -84,7 +84,7 @@ private:
   /// for the same does the trick.
   VISKORES_CONT void PreExecute(const viskores::cont::PartitionedDataSet& input);
   VISKORES_CONT void PostExecute(const viskores::cont::PartitionedDataSet& input,
-                             viskores::cont::PartitionedDataSet& output);
+                                 viskores::cont::PartitionedDataSet& output);
   ///@}
 
   viskores::Id NumberOfBins = 10;

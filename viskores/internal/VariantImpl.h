@@ -58,7 +58,8 @@ struct VariantCopyConstructFunctor
   template <typename T, typename UnionType>
   VISKORES_DEVICE void operator()(const T& src, UnionType& destUnion) const noexcept
   {
-    constexpr viskores::IdComponent Index = viskores::ListIndexOf<VariantUnionToList<UnionType>, T>::value;
+    constexpr viskores::IdComponent Index =
+      viskores::ListIndexOf<VariantUnionToList<UnionType>, T>::value;
     // If we are using this functor, we can assume the union does not hold a valid type.
     new (&VariantUnionGet<Index>(destUnion)) T(src);
   }
@@ -69,7 +70,8 @@ struct VariantCopyFunctor
   template <typename T, typename UnionType>
   VISKORES_DEVICE void operator()(const T& src, UnionType& destUnion) const noexcept
   {
-    constexpr viskores::IdComponent Index = viskores::ListIndexOf<VariantUnionToList<UnionType>, T>::value;
+    constexpr viskores::IdComponent Index =
+      viskores::ListIndexOf<VariantUnionToList<UnionType>, T>::value;
     // If we are using this functor, we can assume the union holds type T.
     this->DoCopy(
       src, VariantUnionGet<Index>(destUnion), typename std::is_copy_assignable<T>::type{});
@@ -115,15 +117,17 @@ struct VariantCheckType
   // like std::decay to remove qualifiers on the type. (We may decide to do that automatically in
   // the future.)
   VISKORES_STATIC_ASSERT_MSG(!std::is_reference<T>::value,
-                         "References are not allowed in Viskores Variant.");
-  VISKORES_STATIC_ASSERT_MSG(!std::is_pointer<T>::value, "Pointers are not allowed in Viskores Variant.");
+                             "References are not allowed in Viskores Variant.");
+  VISKORES_STATIC_ASSERT_MSG(!std::is_pointer<T>::value,
+                             "Pointers are not allowed in Viskores Variant.");
 };
 
 template <typename VariantType>
 struct VariantTriviallyCopyable;
 
 template <typename... Ts>
-struct VariantTriviallyCopyable<viskores::VISKORES_NAMESPACE::Variant<Ts...>> : AllTriviallyCopyable<Ts...>
+struct VariantTriviallyCopyable<viskores::VISKORES_NAMESPACE::Variant<Ts...>>
+  : AllTriviallyCopyable<Ts...>
 {
 };
 
@@ -201,8 +205,9 @@ struct VariantConstructorImpl;
 
 // Can trivially construct, deconstruct, and copy all data. (Probably all trivial classes.)
 template <typename... Ts>
-struct VariantConstructorImpl<viskores::VISKORES_NAMESPACE::Variant<Ts...>, std::true_type, std::true_type>
-  : VariantStorageImpl<Ts...>
+struct VariantConstructorImpl<viskores::VISKORES_NAMESPACE::Variant<Ts...>,
+                              std::true_type,
+                              std::true_type> : VariantStorageImpl<Ts...>
 {
   VariantConstructorImpl() = default;
   ~VariantConstructorImpl() = default;
@@ -407,7 +412,7 @@ public:
   VISKORES_DEVICE TypeAt<I>& Emplace(Args&&... args)
   {
     VISKORES_STATIC_ASSERT_MSG((I >= 0) && (I < NumberOfTypes),
-                           "Variant::Emplace called with invalid index");
+                               "Variant::Emplace called with invalid index");
     return this->EmplaceImpl<TypeAt<I>, I>(std::forward<Args>(args)...);
   }
 
@@ -415,7 +420,7 @@ public:
   VISKORES_DEVICE TypeAt<I>& Emplace(std::initializer_list<U> il, Args&&... args)
   {
     VISKORES_STATIC_ASSERT_MSG((I >= 0) && (I < NumberOfTypes),
-                           "Variant::Emplace called with invalid index");
+                               "Variant::Emplace called with invalid index");
     return this->EmplaceImpl<TypeAt<I>, I>(il, std::forward<Args>(args)...);
   }
 
@@ -497,7 +502,7 @@ private:
   VISKORES_DEVICE T& GetImpl(std::false_type) const
   {
     VISKORES_ASSERT(false &&
-                "Attempted to get a type from a variant that the variant does not contain.");
+                    "Attempted to get a type from a variant that the variant does not contain.");
     // This will cause some _really_ nasty issues if you actually try to use the returned type.
     return *reinterpret_cast<T*>(0);
   }
@@ -521,8 +526,8 @@ public:
 
   template <typename Functor, typename... Args>
   VISKORES_DEVICE auto CastAndCall(Functor&& f,
-                                Args&&... args) noexcept(noexcept(f(std::declval<TypeAt<0>&>(),
-                                                                    args...)))
+                                   Args&&... args) noexcept(noexcept(f(std::declval<TypeAt<0>&>(),
+                                                                       args...)))
   {
     VISKORES_ASSERT(this->IsValid());
     return detail::VariantCastAndCallImpl<sizeof...(Ts)>(

@@ -34,7 +34,8 @@ static inline VISKORES_EXEC bool CellInside(const viskores::Vec<T, 3>&, viskores
 }
 
 template <typename T>
-static inline VISKORES_EXEC bool CellInside(const viskores::Vec<T, 3>& pcoords, viskores::CellShapeTagPolyLine)
+static inline VISKORES_EXEC bool CellInside(const viskores::Vec<T, 3>& pcoords,
+                                            viskores::CellShapeTagPolyLine)
 {
   return pcoords[0] >= T(0) && pcoords[0] <= T(1);
 }
@@ -44,7 +45,7 @@ static inline VISKORES_EXEC bool CellInside(const viskores::Vec<T, 3>& pcoords, 
 ///
 template <typename T>
 static inline VISKORES_EXEC bool CellInside(const viskores::Vec<T, 3>& pcoords,
-                                        viskores::CellShapeTagGeneric shape)
+                                            viskores::CellShapeTagGeneric shape)
 {
   bool result = false;
   switch (shape.Id)

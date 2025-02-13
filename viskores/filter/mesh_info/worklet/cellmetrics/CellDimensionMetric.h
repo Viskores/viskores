@@ -59,9 +59,9 @@ using FloatType = viskores::FloatDefault;
 // Dimension is only defined for Hexahedral cell typesk
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellDimensionMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      CellShapeType shape,
-                                      viskores::ErrorCode&)
+                                          const PointCoordVecType& pts,
+                                          CellShapeType shape,
+                                          viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -71,9 +71,9 @@ VISKORES_EXEC OutType CellDimensionMetric(const viskores::IdComponent& numPts,
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellDimensionMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagHexahedron,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagHexahedron,
+                                          viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(ec);
@@ -279,14 +279,18 @@ VISKORES_EXEC OutType CellDimensionMetric(const viskores::IdComponent& numPts,
     OutType(pts[6][0]) * gradop[6][0] + OutType(pts[7][0]) * gradop[7][0];
   OutType two = (OutType)2.;
   OutType aspect = (OutType).5 * viskores::Pow(volume, two) /
-    (viskores::Pow(gradop[0][0], two) + viskores::Pow(gradop[1][0], two) + viskores::Pow(gradop[2][0], two) +
-     viskores::Pow(gradop[3][0], two) + viskores::Pow(gradop[4][0], two) + viskores::Pow(gradop[5][0], two) +
-     viskores::Pow(gradop[6][0], two) + viskores::Pow(gradop[7][0], two) + viskores::Pow(gradop[0][1], two) +
-     viskores::Pow(gradop[1][1], two) + viskores::Pow(gradop[2][1], two) + viskores::Pow(gradop[3][1], two) +
-     viskores::Pow(gradop[4][1], two) + viskores::Pow(gradop[5][1], two) + viskores::Pow(gradop[6][1], two) +
-     viskores::Pow(gradop[7][1], two) + viskores::Pow(gradop[0][2], two) + viskores::Pow(gradop[1][2], two) +
-     viskores::Pow(gradop[2][2], two) + viskores::Pow(gradop[3][2], two) + viskores::Pow(gradop[4][2], two) +
-     viskores::Pow(gradop[5][2], two) + viskores::Pow(gradop[6][2], two) + viskores::Pow(gradop[7][2], two));
+    (viskores::Pow(gradop[0][0], two) + viskores::Pow(gradop[1][0], two) +
+     viskores::Pow(gradop[2][0], two) + viskores::Pow(gradop[3][0], two) +
+     viskores::Pow(gradop[4][0], two) + viskores::Pow(gradop[5][0], two) +
+     viskores::Pow(gradop[6][0], two) + viskores::Pow(gradop[7][0], two) +
+     viskores::Pow(gradop[0][1], two) + viskores::Pow(gradop[1][1], two) +
+     viskores::Pow(gradop[2][1], two) + viskores::Pow(gradop[3][1], two) +
+     viskores::Pow(gradop[4][1], two) + viskores::Pow(gradop[5][1], two) +
+     viskores::Pow(gradop[6][1], two) + viskores::Pow(gradop[7][1], two) +
+     viskores::Pow(gradop[0][2], two) + viskores::Pow(gradop[1][2], two) +
+     viskores::Pow(gradop[2][2], two) + viskores::Pow(gradop[3][2], two) +
+     viskores::Pow(gradop[4][2], two) + viskores::Pow(gradop[5][2], two) +
+     viskores::Pow(gradop[6][2], two) + viskores::Pow(gradop[7][2], two));
 
   return viskores::Sqrt(aspect);
 }

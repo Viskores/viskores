@@ -81,8 +81,8 @@ public:
 
   template <typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id returnIndex,
-                            const InOutFieldPortalType& upNeighbourPortal,
-                            const InOutFieldPortalType& downNeighbourPortal) const
+                                const InOutFieldPortalType& upNeighbourPortal,
+                                const InOutFieldPortalType& downNeighbourPortal) const
   {
     // per vertex
     // retrieve nbr & see if it's terminal

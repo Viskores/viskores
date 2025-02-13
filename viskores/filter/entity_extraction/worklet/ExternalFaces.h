@@ -63,9 +63,9 @@ struct ExternalFaces
 
     VISKORES_EXEC
     static inline viskores::IdComponent CountExternalFacesOnDimension(viskores::Float64 grid_min,
-                                                                  viskores::Float64 grid_max,
-                                                                  viskores::Float64 cell_min,
-                                                                  viskores::Float64 cell_max)
+                                                                      viskores::Float64 grid_max,
+                                                                      viskores::Float64 cell_min,
+                                                                      viskores::Float64 cell_max)
     {
       viskores::IdComponent count = 0;
 
@@ -90,7 +90,7 @@ struct ExternalFaces
 
     template <typename CellShapeTag, typename PointCoordVecType>
     VISKORES_EXEC viskores::IdComponent operator()(CellShapeTag shape,
-                                           const PointCoordVecType& pointCoordinates) const
+                                                   const PointCoordVecType& pointCoordinates) const
     {
       (void)shape; // C4100 false positive workaround
       VISKORES_ASSERT(shape.Id == CELL_SHAPE_HEXAHEDRON);
@@ -131,7 +131,8 @@ struct ExternalFaces
     using ScatterType = viskores::worklet::ScatterCounting;
 
     VISKORES_CONT
-    BuildConnectivityStructured(const viskores::Vec3f_64& min_point, const viskores::Vec3f_64& max_point)
+    BuildConnectivityStructured(const viskores::Vec3f_64& min_point,
+                                const viskores::Vec3f_64& max_point)
       : MinPoint(min_point)
       , MaxPoint(max_point)
     {
@@ -265,13 +266,13 @@ struct ExternalFaces
               typename PointCoordVecType,
               typename ConnectivityType>
     VISKORES_EXEC void operator()(CellShapeTag shape,
-                              viskores::IdComponent visitIndex,
-                              viskores::Id inputIndex,
-                              const CellSetType& cellSet,
-                              viskores::UInt8& shapeOut,
-                              viskores::IdComponent& numFacePointsOut,
-                              ConnectivityType& faceConnectivity,
-                              const PointCoordVecType& pointCoordinates) const
+                                  viskores::IdComponent visitIndex,
+                                  viskores::Id inputIndex,
+                                  const CellSetType& cellSet,
+                                  viskores::UInt8& shapeOut,
+                                  viskores::IdComponent& numFacePointsOut,
+                                  ConnectivityType& faceConnectivity,
+                                  const PointCoordVecType& pointCoordinates) const
     {
       VISKORES_ASSERT(shape.Id == CELL_SHAPE_HEXAHEDRON);
 
@@ -286,7 +287,8 @@ struct ExternalFaces
       shapeOut = viskores::CELL_SHAPE_QUAD;
       numFacePointsOut = 4;
 
-      for (viskores::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; facePointIndex++)
+      for (viskores::IdComponent facePointIndex = 0; facePointIndex < numFacePoints;
+           facePointIndex++)
       {
         viskores::IdComponent localFaceIndex;
         viskores::ErrorCode status =
@@ -333,8 +335,8 @@ struct ExternalFaces
 
     template <typename CellShapeTag, typename CellNodeVecType, typename CellFaceHashes>
     VISKORES_EXEC void operator()(const CellShapeTag shape,
-                              const CellNodeVecType& cellNodeIds,
-                              CellFaceHashes& cellFaceHashes) const
+                                  const CellNodeVecType& cellNodeIds,
+                                  CellFaceHashes& cellFaceHashes) const
     {
       const viskores::IdComponent numFaces = cellFaceHashes.GetNumberOfComponents();
       for (viskores::IdComponent faceIndex = 0; faceIndex < numFaces; ++faceIndex)
@@ -356,7 +358,7 @@ struct ExternalFaces
 
     template <typename NumFacesPerHashArray>
     VISKORES_EXEC void operator()(const viskores::HashType& faceHash,
-                              NumFacesPerHashArray& numFacesPerHash) const
+                                  NumFacesPerHashArray& numFacesPerHash) const
     {
       // MemoryOrder::Relaxed is safe here, since we're not using the atomics for synchronization.
       numFacesPerHash.Add(faceHash, 1, viskores::MemoryOrder::Relaxed);
@@ -381,7 +383,7 @@ struct ExternalFaces
 
     /// Pack function for both cellIndex and faceIndex
     VISKORES_EXEC inline static constexpr CellAndFaceIdType Pack(const CellIdType& cellIndex,
-                                                             const FaceIdType& faceIndex)
+                                                                 const FaceIdType& faceIndex)
     {
       // Pack the cellIndex in the higher bits, leaving FACE_INDEX_BITS bits for faceIndex
       return static_cast<CellAndFaceIdType>(cellIndex << GetNumFaceIdBits()) |
@@ -392,8 +394,8 @@ struct ExternalFaces
     /// This is templated because we don't want to create a copy of the packedCellAndFaceId value.
     template <typename TCellAndFaceIdType>
     VISKORES_EXEC inline static constexpr void Unpack(const TCellAndFaceIdType& packedCellAndFaceId,
-                                                  CellIdType& cellIndex,
-                                                  FaceIdType& faceIndex)
+                                                      CellIdType& cellIndex,
+                                                      FaceIdType& faceIndex)
     {
       // Extract faceIndex from the lower GetNumFaceIdBits bits
       faceIndex = static_cast<FaceIdType>(packedCellAndFaceId & GetFaceMask());
@@ -415,10 +417,11 @@ struct ExternalFaces
     template <typename CellFaceHashes,
               typename NumFacesPerHashArray,
               typename CellAndFaceIdOfFacePerHashArray>
-    VISKORES_EXEC void operator()(viskores::Id inputIndex,
-                              const CellFaceHashes& cellFaceHashes,
-                              NumFacesPerHashArray& numFacesPerHash,
-                              CellAndFaceIdOfFacePerHashArray& cellAndFaceIdOfFacesPerHash) const
+    VISKORES_EXEC void operator()(
+      viskores::Id inputIndex,
+      const CellFaceHashes& cellFaceHashes,
+      NumFacesPerHashArray& numFacesPerHash,
+      CellAndFaceIdOfFacePerHashArray& cellAndFaceIdOfFacesPerHash) const
     {
       const viskores::IdComponent numFaces = cellFaceHashes.GetNumberOfComponents();
       for (viskores::IdComponent faceIndex = 0; faceIndex < numFaces; ++faceIndex)
@@ -448,10 +451,12 @@ struct ExternalFaces
     using InputDomain = _1;
 
     template <typename CellAndFaceIdOfFacesInHash, typename CellSetType>
-    VISKORES_EXEC viskores::IdComponent operator()(CellAndFaceIdOfFacesInHash& cellAndFaceIdOfFacesInHash,
-                                           const CellSetType& cellSet) const
+    VISKORES_EXEC viskores::IdComponent operator()(
+      CellAndFaceIdOfFacesInHash& cellAndFaceIdOfFacesInHash,
+      const CellSetType& cellSet) const
     {
-      const viskores::IdComponent numFacesInHash = cellAndFaceIdOfFacesInHash.GetNumberOfComponents();
+      const viskores::IdComponent numFacesInHash =
+        cellAndFaceIdOfFacesInHash.GetNumberOfComponents();
 
       static constexpr viskores::IdComponent FACE_CANONICAL_IDS_CACHE_SIZE = 100;
       if (numFacesInHash <= 1)
@@ -468,9 +473,9 @@ struct ExternalFaces
         {
           CellFaceIdPacker::Unpack(cellAndFaceIdOfFacesInHash[faceIndex], myCellId, myFaceId);
           viskores::exec::CellFaceCanonicalId(myFaceId,
-                                          cellSet.GetCellShape(myCellId),
-                                          cellSet.GetIndices(myCellId),
-                                          faceCanonicalIds[faceIndex]);
+                                              cellSet.GetCellShape(myCellId),
+                                              cellSet.GetIndices(myCellId),
+                                              faceCanonicalIds[faceIndex]);
         }
         // Start by assuming all faces are duplicate, then remove two for each duplicate pair found.
         viskores::IdComponent numExternalFaces = 0;
@@ -545,9 +550,9 @@ struct ExternalFaces
             CellFaceIdPacker::Unpack(
               cellAndFaceIdOfFacesInHash[otherIndex], otherCellId, otherFaceId);
             viskores::exec::CellFaceCanonicalId(otherFaceId,
-                                            cellSet.GetCellShape(otherCellId),
-                                            cellSet.GetIndices(otherCellId),
-                                            otherFace);
+                                                cellSet.GetCellShape(otherCellId),
+                                                cellSet.GetIndices(otherCellId),
+                                                otherFace);
             // The first id of the canonical face id is the minimum point id of the face. Since that
             // is the hash function, we already know that all faces have the same minimum point id.
             if (/*myFace[0] == otherFace[0] && */ myFace[1] == otherFace[1] &&
@@ -612,9 +617,9 @@ public:
 
     template <typename CellAndFaceIdOfFacesInHash, typename CellSetType>
     VISKORES_EXEC void operator()(const CellAndFaceIdOfFacesInHash& cellAndFaceIdOfFacesInHash,
-                              const CellSetType& cellSet,
-                              viskores::IdComponent visitIndex,
-                              viskores::IdComponent& numPointsInExternalFace) const
+                                  const CellSetType& cellSet,
+                                  viskores::IdComponent visitIndex,
+                                  viskores::IdComponent& numPointsInExternalFace) const
     {
       // external faces are first, so we can use the visit index directly
       CellFaceIdPacker::CellIdType myCellId;
@@ -642,11 +647,11 @@ public:
 
     template <typename CellAndFaceIdOfFacesInHash, typename CellSetType, typename ConnectivityType>
     VISKORES_EXEC void operator()(const CellAndFaceIdOfFacesInHash& cellAndFaceIdOfFacesInHash,
-                              const CellSetType& cellSet,
-                              viskores::IdComponent visitIndex,
-                              viskores::UInt8& shapeOut,
-                              ConnectivityType& connectivityOut,
-                              viskores::Id& cellIdMapOut) const
+                                  const CellSetType& cellSet,
+                                  viskores::IdComponent visitIndex,
+                                  viskores::UInt8& shapeOut,
+                                  ConnectivityType& connectivityOut,
+                                  viskores::Id& cellIdMapOut) const
     {
       // external faces are first, so we can use the visit index directly
       CellFaceIdPacker::CellIdType myCellId;
@@ -662,7 +667,8 @@ public:
       VISKORES_ASSERT(numFacePoints == connectivityOut.GetNumberOfComponents());
 
       const typename CellSetType::IndicesType inCellIndices = cellSet.GetIndices(myCellId);
-      for (viskores::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; ++facePointIndex)
+      for (viskores::IdComponent facePointIndex = 0; facePointIndex < numFacePoints;
+           ++facePointIndex)
       {
         viskores::IdComponent localFaceIndex;
         const viskores::ErrorCode status =
@@ -721,11 +727,11 @@ public:
 
     template <typename CellShape, typename InPointIndexType, typename OutPointIndexType>
     VISKORES_EXEC void operator()(const CellShape& inShape,
-                              const InPointIndexType& inPoints,
-                              viskores::Id inputIndex,
-                              viskores::UInt8& outShape,
-                              OutPointIndexType& outPoints,
-                              viskores::Id& cellIdMapOut) const
+                                  const InPointIndexType& inPoints,
+                                  viskores::Id inputIndex,
+                                  viskores::UInt8& outShape,
+                                  OutPointIndexType& outPoints,
+                                  viskores::Id& cellIdMapOut) const
     {
       cellIdMapOut = inputIndex;
       outShape = inShape.Id;
@@ -914,12 +920,13 @@ public:
 
         polyDataConnectivity.Allocate(polyDataConnectivitySize);
 
-        invoke(PassPolyDataCells(),
-               scatterPolyDataCells,
-               inCellSet,
-               polyDataShapes,
-               viskores::cont::make_ArrayHandleGroupVecVariable(polyDataConnectivity, polyDataOffsets),
-               polyDataCellIdMap);
+        invoke(
+          PassPolyDataCells(),
+          scatterPolyDataCells,
+          inCellSet,
+          polyDataShapes,
+          viskores::cont::make_ArrayHandleGroupVecVariable(polyDataConnectivity, polyDataOffsets),
+          polyDataCellIdMap);
       }
     }
 
@@ -992,7 +999,8 @@ public:
 
     // Create a scatter counting object to only access the hashes with external faces
     viskores::worklet::ScatterCounting scatterCullInternalFaces(numExternalFacesPerHash);
-    const viskores::Id numberOfExternalFaces = scatterCullInternalFaces.GetOutputRange(numberOfHashes);
+    const viskores::Id numberOfExternalFaces =
+      scatterCullInternalFaces.GetOutputRange(numberOfHashes);
     // Release the resources of externalFacesPerHash that is not needed anymore
     numExternalFacesPerHash.ReleaseResources();
 
@@ -1058,8 +1066,8 @@ public:
       ShapeArrayType joinedShapesArray;
       viskores::cont::ArrayCopy(faceShapesArray, joinedShapesArray);
 
-      viskores::cont::ArrayHandleConcatenate<PointCountArrayType, PointCountArrayType> pointCountArray(
-        numPointsPerExternalFace, polyDataPointCount);
+      viskores::cont::ArrayHandleConcatenate<PointCountArrayType, PointCountArrayType>
+        pointCountArray(numPointsPerExternalFace, polyDataPointCount);
       PointCountArrayType joinedPointCountArray;
       viskores::cont::ArrayCopy(pointCountArray, joinedPointCountArray);
 
@@ -1072,15 +1080,15 @@ public:
       auto adjustedPolyDataOffsets = viskores::cont::make_ArrayHandleTransform(
         polyDataOffsets, BiasFunctor<viskores::Id>(externalFacesConnectivity.GetNumberOfValues()));
 
-      auto offsetsArray = viskores::cont::make_ArrayHandleConcatenate(pointsPerExternalFaceOffsetsTrim,
-                                                                  adjustedPolyDataOffsets);
+      auto offsetsArray = viskores::cont::make_ArrayHandleConcatenate(
+        pointsPerExternalFaceOffsetsTrim, adjustedPolyDataOffsets);
       OffsetsArrayType joinedOffsets;
       // Need to compile a special device copy because the precompiled ArrayCopy does not
       // know how to copy the ArrayHandleTransform.
       viskores::cont::ArrayCopyDevice(offsetsArray, joinedOffsets);
 
       viskores::cont::ArrayHandleConcatenate<viskores::cont::ArrayHandle<viskores::Id>,
-                                         viskores::cont::ArrayHandle<viskores::Id>>
+                                             viskores::cont::ArrayHandle<viskores::Id>>
         cellIdMapArray(faceToCellIdMap, polyDataCellIdMap);
       viskores::cont::ArrayHandle<viskores::Id> joinedCellIdMap;
       viskores::cont::ArrayCopy(cellIdMapArray, joinedCellIdMap);

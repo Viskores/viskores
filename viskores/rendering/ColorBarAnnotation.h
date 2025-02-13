@@ -36,7 +36,10 @@ public:
   ColorBarAnnotation();
 
   VISKORES_CONT
-  void SetColorTable(const viskores::cont::ColorTable& colorTable) { this->ColorTable = colorTable; }
+  void SetColorTable(const viskores::cont::ColorTable& colorTable)
+  {
+    this->ColorTable = colorTable;
+  }
 
   VISKORES_CONT
   void SetRange(const viskores::Range& range, viskores::IdComponent numTicks);

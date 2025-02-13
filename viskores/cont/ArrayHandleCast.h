@@ -102,8 +102,9 @@ struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage, false, CanCastBack
 template <typename TargetT, typename SourceT, typename SourceStorage>
 struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage, true, false>
 {
-  using StorageTagSuperclass = StorageTagTransform<viskores::cont::ArrayHandle<SourceT, SourceStorage>,
-                                                   viskores::cont::internal::Cast<SourceT, TargetT>>;
+  using StorageTagSuperclass =
+    StorageTagTransform<viskores::cont::ArrayHandle<SourceT, SourceStorage>,
+                        viskores::cont::internal::Cast<SourceT, TargetT>>;
   using StorageSuperclass = viskores::cont::internal::Storage<TargetT, StorageTagSuperclass>;
 };
 
@@ -111,9 +112,10 @@ struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage, true, false>
 template <typename TargetT, typename SourceT, typename SourceStorage>
 struct ArrayHandleCastTraits<TargetT, SourceT, SourceStorage, true, true>
 {
-  using StorageTagSuperclass = StorageTagTransform<viskores::cont::ArrayHandle<SourceT, SourceStorage>,
-                                                   viskores::cont::internal::Cast<SourceT, TargetT>,
-                                                   viskores::cont::internal::Cast<TargetT, SourceT>>;
+  using StorageTagSuperclass =
+    StorageTagTransform<viskores::cont::ArrayHandle<SourceT, SourceStorage>,
+                        viskores::cont::internal::Cast<SourceT, TargetT>,
+                        viskores::cont::internal::Cast<TargetT, SourceT>>;
   using StorageSuperclass = viskores::cont::internal::Storage<TargetT, StorageTagSuperclass>;
 };
 
@@ -153,7 +155,7 @@ public:
 
   /// Construct an `ArrayHandleCast` from a source array handle.
   ArrayHandleCast(const viskores::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                                typename ArrayHandleType::StorageTag>& handle)
+                                                    typename ArrayHandleType::StorageTag>& handle)
     : Superclass(Superclass::StorageType::CreateBuffers(handle))
   {
     this->ValidateTypeCast<typename ArrayHandleType::ValueType>();
@@ -193,26 +195,26 @@ private:
     if (RangeLoss && PrecLoss)
     {
       VISKORES_LOG_F(viskores::cont::LogLevel::Warn,
-                 "ArrayHandleCast: Casting ComponentType of "
-                 "%s to %s reduces range and precision.",
-                 viskores::cont::TypeToString<SrcValueType>().c_str(),
-                 viskores::cont::TypeToString<DstValueType>().c_str());
+                     "ArrayHandleCast: Casting ComponentType of "
+                     "%s to %s reduces range and precision.",
+                     viskores::cont::TypeToString<SrcValueType>().c_str(),
+                     viskores::cont::TypeToString<DstValueType>().c_str());
     }
     else if (RangeLoss)
     {
       VISKORES_LOG_F(viskores::cont::LogLevel::Warn,
-                 "ArrayHandleCast: Casting ComponentType of "
-                 "%s to %s reduces range.",
-                 viskores::cont::TypeToString<SrcValueType>().c_str(),
-                 viskores::cont::TypeToString<DstValueType>().c_str());
+                     "ArrayHandleCast: Casting ComponentType of "
+                     "%s to %s reduces range.",
+                     viskores::cont::TypeToString<SrcValueType>().c_str(),
+                     viskores::cont::TypeToString<DstValueType>().c_str());
     }
     else if (PrecLoss)
     {
       VISKORES_LOG_F(viskores::cont::LogLevel::Warn,
-                 "ArrayHandleCast: Casting ComponentType of "
-                 "%s to %s reduces precision.",
-                 viskores::cont::TypeToString<SrcValueType>().c_str(),
-                 viskores::cont::TypeToString<DstValueType>().c_str());
+                     "ArrayHandleCast: Casting ComponentType of "
+                     "%s to %s reduces precision.",
+                     viskores::cont::TypeToString<SrcValueType>().c_str(),
+                     viskores::cont::TypeToString<DstValueType>().c_str());
     }
 #endif // Logging
   }
@@ -282,7 +284,8 @@ struct SerializableTypeString<viskores::cont::ArrayHandleCast<T, AH>>
 };
 
 template <typename T1, typename T2, typename S>
-struct SerializableTypeString<viskores::cont::ArrayHandle<T1, viskores::cont::StorageTagCast<T2, S>>>
+struct SerializableTypeString<
+  viskores::cont::ArrayHandle<T1, viskores::cont::StorageTagCast<T2, S>>>
   : SerializableTypeString<viskores::cont::ArrayHandleCast<T1, viskores::cont::ArrayHandle<T2, S>>>
 {
 };

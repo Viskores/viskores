@@ -71,8 +71,9 @@ protected:
     return val;
   }
 
-  void UpdateActive(const std::vector<ParticleType>& particles,
-                    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& idsMap) override
+  void UpdateActive(
+    const std::vector<ParticleType>& particles,
+    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& idsMap) override
   {
     if (!particles.empty())
     {
@@ -136,8 +137,8 @@ protected:
     if (!this->UseAsynchronousCommunication)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 "Synchronous communication not supported for AdvectAlgorithmThreaded."
-                 "Forcing asynchronous communication.");
+                     "Synchronous communication not supported for AdvectAlgorithmThreaded."
+                     "Forcing asynchronous communication.");
     }
 
     bool useAsync = true;

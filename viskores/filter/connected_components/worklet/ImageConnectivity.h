@@ -48,9 +48,9 @@ public:
             typename NeighborColor,
             typename AtomicCompOut>
   VISKORES_EXEC void operator()(Boundary boundary,
-                            const NeighborComp& neighborComp,
-                            const NeighborColor& neighborColor,
-                            AtomicCompOut& compOut) const
+                                const NeighborComp& neighborComp,
+                                const NeighborColor& neighborColor,
+                                AtomicCompOut& compOut) const
   {
     auto thisColor = neighborColor.Get(0, 0, 0);
 

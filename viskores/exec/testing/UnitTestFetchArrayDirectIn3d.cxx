@@ -85,8 +85,8 @@ struct FetchArrayDirectIn3DTests
     TestPortal<T> execObject;
 
     using FetchType = viskores::exec::arg::Fetch<viskores::exec::arg::FetchTagArrayDirectIn,
-                                             viskores::exec::arg::AspectTagDefault,
-                                             TestPortal<T>>;
+                                                 viskores::exec::arg::AspectTagDefault,
+                                                 TestPortal<T>>;
 
     FetchType fetch;
 
@@ -104,7 +104,7 @@ struct FetchArrayDirectIn3DTests
           viskores::exec::arg::ThreadIndicesBasic3D indices(index3d, index1d, index1d, 0, index1d);
           T value = fetch.Load(indices, execObject);
           VISKORES_TEST_ASSERT(test_equal(value, TestValue(index1d, T())),
-                           "Got invalid value from Load.");
+                               "Got invalid value from Load.");
 
           value = T(T(2) * value);
 

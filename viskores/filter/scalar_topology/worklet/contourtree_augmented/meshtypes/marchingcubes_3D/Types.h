@@ -117,7 +117,7 @@ constexpr viskores::UInt8 CubeVertexPermutations_PermVecLength = 7;
 // Viskores type for the CubeVertexPermutations
 using CubeVertexPermutationsType =
   viskores::cont::ArrayHandleGroupVec<viskores::cont::ArrayHandle<viskores::IdComponent>,
-                                  CubeVertexPermutations_PermVecLength>;
+                                      CubeVertexPermutations_PermVecLength>;
 /* CubeVertexPermutations will be used as a 2D array of [8, 7]
    * The array is flattened here to ease conversion in viskores
    */
@@ -137,7 +137,7 @@ constexpr viskores::UInt8 VertexConnections_VecLength = 2;
 // VISKORES-M type for the LinkVertexConnectionsEighteen and LinkVertexConnectionsSix
 using LinkVertexConnectionsType =
   typename viskores::cont::ArrayHandleGroupVec<viskores::cont::ArrayHandle<viskores::IdComponent>,
-                                           VertexConnections_VecLength>;
+                                               VertexConnections_VecLength>;
 /* LinkVertexConnectionsSix[ will be used as a 2D array of [3, 3]
    * The array is flattened here to ease conversion in viskores
    */
@@ -160,12 +160,13 @@ VISKORES_STATIC_CONSTEXPR_ARRAY viskores::IdComponent
 // VISKORES-M type for the InCubeConnectionsEighteen and InCubeConnectionsSix
 using InCubeConnectionsType = typename viskores::cont::ArrayHandle<viskores::UInt32>;
 VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt8 InCubeConnectionsSix_NumElements = 128;
-VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt32 InCubeConnectionsSix[InCubeConnectionsSix_NumElements] = {
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 1, 0, 2, 0, 7,
-  0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 1, 0, 0, 4, 7, 0, 0, 0, 0, 0, 2, 4, 7, 0, 0, 0, 1, 0, 2, 4, 7,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 1, 0, 2, 4, 7,
-  0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 1, 0, 2, 4, 7, 0, 0, 0, 1, 0, 2, 4, 7, 0, 0, 0, 1, 0, 2, 4, 7
-};
+VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt32
+  InCubeConnectionsSix[InCubeConnectionsSix_NumElements] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 1, 0, 2, 0, 7,
+    0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 1, 0, 0, 4, 7, 0, 0, 0, 0, 0, 2, 4, 7, 0, 0, 0, 1, 0, 2, 4, 7,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 1, 0, 2, 4, 7,
+    0, 0, 0, 0, 0, 0, 4, 4, 0, 0, 0, 1, 0, 2, 4, 7, 0, 0, 0, 1, 0, 2, 4, 7, 0, 0, 0, 1, 0, 2, 4, 7
+  };
 
 VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt8 InCubeConnectionsEighteen_NumElements = 128;
 VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt32

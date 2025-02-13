@@ -54,8 +54,8 @@ public:
   }
 
   VISKORES_EXEC viskores::Int32 PointsInEdge(viskores::Int32 cellShapeId,
-                                     viskores::Int32 edgeIndex,
-                                     viskores::Int32 localPointIndex) const
+                                             viskores::Int32 edgeIndex,
+                                             viskores::Int32 localPointIndex) const
   {
     VISKORES_STATIC_CONSTEXPR_ARRAY viskores::Int32
       pointsInEdge[viskores::NUMBER_OF_CELL_SHAPES][MAX_NUM_EDGES][2] = {
@@ -115,9 +115,10 @@ public:
 } // namespace detail
 
 template <typename CellShapeTag>
-static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(viskores::IdComponent numPoints,
-                                                              CellShapeTag,
-                                                              viskores::IdComponent& numEdges)
+static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(
+  viskores::IdComponent numPoints,
+  CellShapeTag,
+  viskores::IdComponent& numEdges)
 {
   if (numPoints != viskores::CellTraits<CellShapeTag>::NUM_POINTS)
   {
@@ -128,9 +129,10 @@ static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(viskores::
   return viskores::ErrorCode::Success;
 }
 
-static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(viskores::IdComponent numPoints,
-                                                              viskores::CellShapeTagPolygon,
-                                                              viskores::IdComponent& numEdges)
+static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(
+  viskores::IdComponent numPoints,
+  viskores::CellShapeTagPolygon,
+  viskores::IdComponent& numEdges)
 {
   if (numPoints <= 0)
   {
@@ -141,9 +143,10 @@ static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(viskores::
   return viskores::ErrorCode::Success;
 }
 
-static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(viskores::IdComponent numPoints,
-                                                              viskores::CellShapeTagPolyLine,
-                                                              viskores::IdComponent& numEdges)
+static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(
+  viskores::IdComponent numPoints,
+  viskores::CellShapeTagPolyLine,
+  viskores::IdComponent& numEdges)
 {
   if (numPoints <= 0)
   {
@@ -160,9 +163,10 @@ static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(viskores::
 /// @param[in]  shape A tag of type `CellShapeTag*` to identify the shape of the cell.
 ///     This method is overloaded for different shape types.
 /// @param[out] numEdges A reference to return the number of edges.
-static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(viskores::IdComponent numPoints,
-                                                              viskores::CellShapeTagGeneric shape,
-                                                              viskores::IdComponent& numEdges)
+static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(
+  viskores::IdComponent numPoints,
+  viskores::CellShapeTagGeneric shape,
+  viskores::IdComponent& numEdges)
 {
   if (shape.Id == viskores::CELL_SHAPE_POLYGON)
   {
@@ -181,10 +185,10 @@ static inline VISKORES_EXEC viskores::ErrorCode CellEdgeNumberOfEdges(viskores::
 
 template <typename CellShapeTag>
 static inline VISKORES_EXEC viskores::ErrorCode CellEdgeLocalIndex(viskores::IdComponent numPoints,
-                                                           viskores::IdComponent pointIndex,
-                                                           viskores::IdComponent edgeIndex,
-                                                           CellShapeTag shape,
-                                                           viskores::IdComponent& result)
+                                                                   viskores::IdComponent pointIndex,
+                                                                   viskores::IdComponent edgeIndex,
+                                                                   CellShapeTag shape,
+                                                                   viskores::IdComponent& result)
 {
   if ((pointIndex < 0) || (pointIndex > 1))
   {
@@ -211,10 +215,10 @@ static inline VISKORES_EXEC viskores::ErrorCode CellEdgeLocalIndex(viskores::IdC
 }
 
 static inline VISKORES_EXEC viskores::ErrorCode CellEdgeLocalIndex(viskores::IdComponent numPoints,
-                                                           viskores::IdComponent pointIndex,
-                                                           viskores::IdComponent edgeIndex,
-                                                           viskores::CellShapeTagPolygon,
-                                                           viskores::IdComponent& result)
+                                                                   viskores::IdComponent pointIndex,
+                                                                   viskores::IdComponent edgeIndex,
+                                                                   viskores::CellShapeTagPolygon,
+                                                                   viskores::IdComponent& result)
 {
   if (numPoints < 3)
   {
@@ -255,11 +259,12 @@ static inline VISKORES_EXEC viskores::ErrorCode CellEdgeLocalIndex(viskores::IdC
 ///     This method is overloaded for different shape types.
 /// @param[out] result Reference to put the index of the point relative to the cell
 ///     (between 0 and the number of points in the cell).
-static inline VISKORES_EXEC viskores::ErrorCode CellEdgeLocalIndex(viskores::IdComponent numPoints,
-                                                           viskores::IdComponent pointIndex,
-                                                           viskores::IdComponent edgeIndex,
-                                                           viskores::CellShapeTagGeneric shape,
-                                                           viskores::IdComponent& result)
+static inline VISKORES_EXEC viskores::ErrorCode CellEdgeLocalIndex(
+  viskores::IdComponent numPoints,
+  viskores::IdComponent pointIndex,
+  viskores::IdComponent edgeIndex,
+  viskores::CellShapeTagGeneric shape,
+  viskores::IdComponent& result)
 {
   if ((pointIndex < 0) || (pointIndex > 1))
   {
@@ -308,11 +313,13 @@ static inline VISKORES_EXEC viskores::ErrorCode CellEdgeCanonicalId(
   result = { -1, -1 };
 
   viskores::IdComponent localIndex0;
-  VISKORES_RETURN_ON_ERROR(viskores::exec::CellEdgeLocalIndex(numPoints, 0, edgeIndex, shape, localIndex0));
+  VISKORES_RETURN_ON_ERROR(
+    viskores::exec::CellEdgeLocalIndex(numPoints, 0, edgeIndex, shape, localIndex0));
   viskores::Id pointIndex0 = globalPointIndicesVec[localIndex0];
 
   viskores::IdComponent localIndex1;
-  VISKORES_RETURN_ON_ERROR(viskores::exec::CellEdgeLocalIndex(numPoints, 1, edgeIndex, shape, localIndex1));
+  VISKORES_RETURN_ON_ERROR(
+    viskores::exec::CellEdgeLocalIndex(numPoints, 1, edgeIndex, shape, localIndex1));
   viskores::Id pointIndex1 = globalPointIndicesVec[localIndex1];
 
   if (pointIndex0 < pointIndex1)

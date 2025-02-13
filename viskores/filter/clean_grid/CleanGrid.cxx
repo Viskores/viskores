@@ -93,8 +93,8 @@ namespace clean_grid
 {
 //-----------------------------------------------------------------------------
 viskores::cont::DataSet CleanGrid::GenerateOutput(const viskores::cont::DataSet& inData,
-                                              viskores::cont::CellSetExplicit<>& outputCellSet,
-                                              clean_grid::SharedStates& worklets)
+                                                  viskores::cont::CellSetExplicit<>& outputCellSet,
+                                                  clean_grid::SharedStates& worklets)
 {
   using VecId = std::size_t;
   const auto activeCoordIndex = static_cast<VecId>(this->GetActiveCoordinateSystemIndex());
@@ -123,8 +123,8 @@ viskores::cont::DataSet CleanGrid::GenerateOutput(const viskores::cont::DataSet&
     viskores::Float64 delta = this->GetTolerance();
     if (!this->GetToleranceIsAbsolute())
     {
-      delta *=
-        viskores::Magnitude(viskores::make_Vec(bounds.X.Length(), bounds.Y.Length(), bounds.Z.Length()));
+      delta *= viskores::Magnitude(
+        viskores::make_Vec(bounds.X.Length(), bounds.Y.Length(), bounds.Z.Length()));
     }
 
     auto coordArray = activeCoordSystem.GetData();
@@ -148,9 +148,8 @@ viskores::cont::DataSet CleanGrid::GenerateOutput(const viskores::cont::DataSet&
   //
   // For filters that do not need to do interpolation for mapping fields, we provide an overload
   // that does not take the extra arguments and just AddField.
-  auto mapper = [&](auto& outDataSet, const auto& f) {
-    DoMapField(outDataSet, f, *this, worklets);
-  };
+  auto mapper = [&](auto& outDataSet, const auto& f)
+  { DoMapField(outDataSet, f, *this, worklets); };
   return this->CreateResultCoordinateSystem(inData, outputCellSet, activeCoordSystem, mapper);
 }
 

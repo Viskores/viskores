@@ -34,7 +34,7 @@ void ImageReaderPNM::Read()
   if (magicNum != "P6")
   {
     throw viskores::cont::ErrorBadValue("MagicNumber: " + magicNum + " in file: " + this->FileName +
-                                    " did not match: P6");
+                                        " did not match: P6");
   }
 
   viskores::Id width;
@@ -54,8 +54,8 @@ void ImageReaderPNM::Read()
   else
   {
     throw viskores::cont::ErrorBadValue("MaxColorValue: " + std::to_string(maxColorValue) +
-                                    " from file: " + this->FileName +
-                                    " is not in valid range of [1, 65535]");
+                                        " from file: " + this->FileName +
+                                        " is not in valid range of [1, 65535]");
   }
 }
 
@@ -65,7 +65,8 @@ void ImageReaderPNM::DecodeFile(std::ifstream& inStream,
                                 const viskores::Id& width,
                                 const viskores::Id& height)
 {
-  viskores::UInt32 imageSize = static_cast<viskores::UInt32>(width * height * PixelType::BYTES_PER_PIXEL);
+  viskores::UInt32 imageSize =
+    static_cast<viskores::UInt32>(width * height * PixelType::BYTES_PER_PIXEL);
   std::vector<unsigned char> imageData(imageSize);
   inStream.read(reinterpret_cast<char*>(imageData.data()), imageSize);
 

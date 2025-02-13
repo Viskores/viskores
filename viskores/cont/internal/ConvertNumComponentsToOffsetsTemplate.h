@@ -40,7 +40,8 @@ VISKORES_CONT void ConvertNumComponentsToOffsetsTemplate(
 
   VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
-  Algorithm::ScanExtended(device, make_ArrayHandleCast<viskores::Id>(numComponentsArray), offsetsArray);
+  Algorithm::ScanExtended(
+    device, make_ArrayHandleCast<viskores::Id>(numComponentsArray), offsetsArray);
 
   componentsArraySize =
     viskores::cont::ArrayGetValue(offsetsArray.GetNumberOfValues() - 1, offsetsArray);

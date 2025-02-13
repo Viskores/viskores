@@ -84,8 +84,8 @@ public:
 
   template <typename DisplacementType>
   VISKORES_EXEC void operator()(const viskores::Particle& end_point,
-                            const viskores::Particle& start_point,
-                            DisplacementType& res) const
+                                const viskores::Particle& start_point,
+                                DisplacementType& res) const
   {
     res[0] = end_point.GetPosition()[0] - start_point.GetPosition()[0];
     res[1] = end_point.GetPosition()[1] - start_point.GetPosition()[1];
@@ -186,11 +186,12 @@ void Lagrangian::InitializeSeedPositions(const viskores::cont::DataSet& input)
       for (int x = 0; x < this->SeedRes[0]; x++)
       {
         viskores::FloatDefault xi = static_cast<viskores::FloatDefault>(x * x_spacing);
-        portal1.Set(id,
-                    viskores::Particle(Vec3f(static_cast<viskores::FloatDefault>(bounds.X.Min) + xi,
-                                         static_cast<viskores::FloatDefault>(bounds.Y.Min) + yi,
-                                         static_cast<viskores::FloatDefault>(bounds.Z.Min) + zi),
-                                   id));
+        portal1.Set(
+          id,
+          viskores::Particle(Vec3f(static_cast<viskores::FloatDefault>(bounds.X.Min) + xi,
+                                   static_cast<viskores::FloatDefault>(bounds.Y.Min) + yi,
+                                   static_cast<viskores::FloatDefault>(bounds.Z.Min) + zi),
+                             id));
         portal2.Set(id, 1);
         id++;
       }
@@ -230,8 +231,9 @@ VISKORES_CONT viskores::cont::DataSet Lagrangian::DoExecute(const viskores::cont
   viskores::worklet::flow::ParticleAdvection particleadvection;
 
   const auto field = input.GetField(this->GetActiveFieldName());
-  FieldType velocities(field.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>(),
-                       field.GetAssociation());
+  FieldType velocities(
+    field.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>(),
+    field.GetAssociation());
 
   GridEvalType gridEval(coords, cells, velocities);
   Stepper rk4(gridEval, static_cast<viskores::Float32>(this->StepSize));
@@ -267,9 +269,9 @@ VISKORES_CONT viskores::cont::DataSet Lagrangian::DoExecute(const viskores::cont
     viskores::cont::CoordinateSystem outCoords("coords", this->SeedRes, origin, spacing);
     viskores::cont::CellSetStructured<3> outCellSet;
     outCellSet.SetPointDimensions(this->SeedRes);
-    auto fieldmapper = [&](viskores::cont::DataSet& dataset, const viskores::cont::Field& fieldToPass) {
-      MapField(dataset, fieldToPass);
-    };
+    auto fieldmapper =
+      [&](viskores::cont::DataSet& dataset, const viskores::cont::Field& fieldToPass)
+    { MapField(dataset, fieldToPass); };
     outputData = this->CreateResultCoordinateSystem(input, outCellSet, outCoords, fieldmapper);
     outputData.AddPointField("valid", this->BasisParticlesValidity);
     outputData.AddPointField("displacement", basisParticlesDisplacement);

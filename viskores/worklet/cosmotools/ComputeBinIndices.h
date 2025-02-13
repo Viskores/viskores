@@ -84,7 +84,10 @@ public:
   }
 
   VISKORES_EXEC
-  void operator()(const viskores::Id& bin, viskores::Id& xbin, viskores::Id& ybin, viskores::Id& zbin) const
+  void operator()(const viskores::Id& bin,
+                  viskores::Id& xbin,
+                  viskores::Id& ybin,
+                  viskores::Id& zbin) const
   {
     xbin = bin % numBinsX;
     ybin = (bin / numBinsX) % numBinsY;

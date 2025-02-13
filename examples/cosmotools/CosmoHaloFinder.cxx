@@ -116,7 +116,8 @@ int main(int argc, char* argv[])
   }
 
 #ifndef VISKORES_ENABLE_LOGGING
-  std::cout << "Warning: turn on Viskores_ENABLE_LOGGING CMake option to turn on timing." << std::endl;
+  std::cout << "Warning: turn on Viskores_ENABLE_LOGGING CMake option to turn on timing."
+            << std::endl;
 #endif
 
   TestCosmoHaloFinder(argv[1]);

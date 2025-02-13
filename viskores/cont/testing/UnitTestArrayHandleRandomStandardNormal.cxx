@@ -13,7 +13,8 @@
 
 void TestArrayHandleStandardNormal()
 {
-  auto array = viskores::cont::ArrayHandleRandomStandardNormal<viskores::Float32>(50000, { 0xceed });
+  auto array =
+    viskores::cont::ArrayHandleRandomStandardNormal<viskores::Float32>(50000, { 0xceed });
   auto stats = viskores::worklet::DescriptiveStatistics::Run(array);
 
   VISKORES_TEST_ASSERT(test_equal(stats.Mean(), 0, 0.01));

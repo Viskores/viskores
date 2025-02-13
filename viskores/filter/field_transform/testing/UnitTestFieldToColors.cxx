@@ -28,7 +28,8 @@ void TestFieldToColors()
   table.SetAboveRangeColor(viskores::Vec<float, 3>{ 1.0f, 0.0f, 0.0f }); //red
   table.SetBelowRangeColor(viskores::Vec<float, 3>{ 0.0f, 0.0f, 1.0f }); //green
 
-  viskores::cont::DataSet ds = viskores::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
+  viskores::cont::DataSet ds =
+    viskores::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
   ds.AddPointField("faux", data, nvals);
 
   viskores::filter::field_transform::FieldToColors ftc(table);
@@ -52,7 +53,7 @@ void TestFieldToColors()
   {
     auto result = portalRGBA.Get(static_cast<viskores::Id>(i));
     VISKORES_TEST_ASSERT(result == correct_diverging_rgba_values[i],
-                     "incorrect value when interpolating between values");
+                         "incorrect value when interpolating between values");
   }
 
   //Now verify that we can switching our output mode
@@ -64,16 +65,16 @@ void TestFieldToColors()
   Result.GetData().AsArrayHandle(resultRGBHandle);
 
   //values confirmed with ParaView 5.11
-  const viskores::Vec3ui_8 correct_diverging_rgb_values[nvals] = { { 0, 0, 255 },     { 59, 76, 192 },
-                                                               { 124, 159, 249 }, { 192, 212, 245 },
-                                                               { 242, 203, 183 }, { 238, 133, 104 },
-                                                               { 180, 4, 38 },    { 255, 0, 0 } };
+  const viskores::Vec3ui_8 correct_diverging_rgb_values[nvals] = {
+    { 0, 0, 255 },     { 59, 76, 192 },   { 124, 159, 249 }, { 192, 212, 245 },
+    { 242, 203, 183 }, { 238, 133, 104 }, { 180, 4, 38 },    { 255, 0, 0 }
+  };
   auto portalRGB = resultRGBHandle.ReadPortal();
   for (std::size_t i = 0; i < nvals; ++i)
   {
     auto result = portalRGB.Get(static_cast<viskores::Id>(i));
     VISKORES_TEST_ASSERT(result == correct_diverging_rgb_values[i],
-                     "incorrect value when interpolating between values");
+                         "incorrect value when interpolating between values");
   }
 }
 }

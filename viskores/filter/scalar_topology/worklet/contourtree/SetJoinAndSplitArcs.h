@@ -86,11 +86,11 @@ public:
 
   template <typename InFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& regularID,
-                            const InFieldPortalType& joinMergeArcs,
-                            const InFieldPortalType& splitMergeArcs,
-                            const InFieldPortalType& regularToCritical,
-                            viskores::Id& joinArc,
-                            viskores::Id& splitArc) const
+                                const InFieldPortalType& joinMergeArcs,
+                                const InFieldPortalType& splitMergeArcs,
+                                const InFieldPortalType& regularToCritical,
+                                viskores::Id& joinArc,
+                                viskores::Id& splitArc) const
   {
     // use it to grab join arc target
     viskores::Id joinTo = joinMergeArcs.Get(regularID);

@@ -94,8 +94,8 @@ class VISKORES_ALWAYS_EXPORT CellSetExplicit : public CellSet
 
     using ExecConnectivityType =
       viskores::exec::ConnectivityExplicit<typename ShapesArrayType::ReadPortalType,
-                                       typename ConnectivityArrayType::ReadPortalType,
-                                       typename OffsetsArrayType::ReadPortalType>;
+                                           typename ConnectivityArrayType::ReadPortalType,
+                                           typename OffsetsArrayType::ReadPortalType>;
   };
 
   using ConnTypes =
@@ -143,7 +143,8 @@ public:
   /// Returns an array portal that can be used to get the shape id of each cell.
   /// Using the array portal returned from this method to get many shape ids is likely
   /// significantly faster than calling `GetCellShape()` for each cell.
-  VISKORES_CONT typename viskores::cont::ArrayHandle<viskores::UInt8, ShapesStorageTag>::ReadPortalType
+  VISKORES_CONT
+  typename viskores::cont::ArrayHandle<viskores::UInt8, ShapesStorageTag>::ReadPortalType
   ShapesReadPortal() const;
 
   VISKORES_CONT viskores::UInt8 GetCellShape(viskores::Id cellid) const override;
@@ -151,10 +152,12 @@ public:
   /// Retrieves the indices of the points incident to the given cell.
   /// If the provided `viskores::Vec` does not have enough components, the result will be truncated.
   template <viskores::IdComponent NumIndices>
-  VISKORES_CONT void GetIndices(viskores::Id index, viskores::Vec<viskores::Id, NumIndices>& ids) const;
+  VISKORES_CONT void GetIndices(viskores::Id index,
+                                viskores::Vec<viskores::Id, NumIndices>& ids) const;
 
   /// Retrieves the indices of the points incident to the given cell.
-  VISKORES_CONT void GetIndices(viskores::Id index, viskores::cont::ArrayHandle<viskores::Id>& ids) const;
+  VISKORES_CONT void GetIndices(viskores::Id index,
+                                viskores::cont::ArrayHandle<viskores::Id>& ids) const;
 
   /// @brief Start adding cells one at a time.
   ///
@@ -166,7 +169,9 @@ public:
   ///
   /// This can only be called after `AddCell`.
   template <typename IdVecType>
-  VISKORES_CONT void AddCell(viskores::UInt8 cellType, viskores::IdComponent numVertices, const IdVecType& ids);
+  VISKORES_CONT void AddCell(viskores::UInt8 cellType,
+                             viskores::IdComponent numVertices,
+                             const IdVecType& ids);
 
   /// @brief Finish adding cells one at a time.
   VISKORES_CONT void CompleteAddingCells(viskores::Id numPoints);
@@ -213,7 +218,8 @@ public:
   /// `ExplicitCellSet` is capable of providing the inverse connections (cells incident on
   /// each point) on request.
   template <typename VisitTopology, typename IncidentTopology>
-  VISKORES_CONT const typename ConnectivityChooser<VisitTopology, IncidentTopology>::ShapesArrayType&
+  VISKORES_CONT const typename ConnectivityChooser<VisitTopology,
+                                                   IncidentTopology>::ShapesArrayType&
     GetShapesArray(VisitTopology, IncidentTopology) const;
 
   /// Returns the `viskores::cont::ArrayHandle` containing the connectivity information.
@@ -225,7 +231,7 @@ public:
   /// each point) on request.
   template <typename VisitTopology, typename IncidentTopology>
   VISKORES_CONT const typename ConnectivityChooser<VisitTopology,
-                                               IncidentTopology>::ConnectivityArrayType&
+                                                   IncidentTopology>::ConnectivityArrayType&
     GetConnectivityArray(VisitTopology, IncidentTopology) const;
 
   /// Returns the `viskores::cont::ArrayHandle` containing the offsets into theconnectivity information.
@@ -236,7 +242,8 @@ public:
   /// `ExplicitCellSet` is capable of providing the inverse connections (cells incident on
   /// each point) on request.
   template <typename VisitTopology, typename IncidentTopology>
-  VISKORES_CONT const typename ConnectivityChooser<VisitTopology, IncidentTopology>::OffsetsArrayType&
+  VISKORES_CONT const typename ConnectivityChooser<VisitTopology,
+                                                   IncidentTopology>::OffsetsArrayType&
     GetOffsetsArray(VisitTopology, IncidentTopology) const;
 
   template <typename VisitTopology, typename IncidentTopology>
@@ -261,16 +268,16 @@ public:
 
 protected:
   VISKORES_CONT void BuildConnectivity(viskores::cont::DeviceAdapterId,
-                                   viskores::TopologyElementTagCell,
-                                   viskores::TopologyElementTagPoint) const
+                                       viskores::TopologyElementTagCell,
+                                       viskores::TopologyElementTagPoint) const
   {
     VISKORES_ASSERT(this->Data->CellPointIds.ElementsValid);
     // no-op
   }
 
   VISKORES_CONT void BuildConnectivity(viskores::cont::DeviceAdapterId device,
-                                   viskores::TopologyElementTagPoint,
-                                   viskores::TopologyElementTagCell) const
+                                       viskores::TopologyElementTagPoint,
+                                       viskores::TopologyElementTagCell) const
   {
     detail::BuildReverseConnectivity(this->Data->CellPointIds.Connectivity,
                                      this->Data->CellPointIds.Offsets,
@@ -280,18 +287,19 @@ protected:
   }
 
   VISKORES_CONT bool HasConnectivityImpl(viskores::TopologyElementTagCell,
-                                     viskores::TopologyElementTagPoint) const
+                                         viskores::TopologyElementTagPoint) const
   {
     return this->Data->CellPointIds.ElementsValid;
   }
 
   VISKORES_CONT bool HasConnectivityImpl(viskores::TopologyElementTagPoint,
-                                     viskores::TopologyElementTagCell) const
+                                         viskores::TopologyElementTagCell) const
   {
     return this->Data->PointCellIds.ElementsValid;
   }
 
-  VISKORES_CONT void ResetConnectivityImpl(viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint)
+  VISKORES_CONT void ResetConnectivityImpl(viskores::TopologyElementTagCell,
+                                           viskores::TopologyElementTagPoint)
   {
     // Reset entire cell set
     this->Data->CellPointIds = CellPointIdsType{};
@@ -301,7 +309,8 @@ protected:
     this->Data->NumberOfPoints = 0;
   }
 
-  VISKORES_CONT void ResetConnectivityImpl(viskores::TopologyElementTagPoint, viskores::TopologyElementTagCell)
+  VISKORES_CONT void ResetConnectivityImpl(viskores::TopologyElementTagPoint,
+                                           viskores::TopologyElementTagCell)
   {
     this->Data->PointCellIds = PointCellIdsType{};
   }
@@ -365,9 +374,10 @@ namespace detail
 {
 
 template <typename Storage1, typename Storage2, typename Storage3>
-struct CellSetExplicitConnectivityChooser<viskores::cont::CellSetExplicit<Storage1, Storage2, Storage3>,
-                                          viskores::TopologyElementTagCell,
-                                          viskores::TopologyElementTagPoint>
+struct CellSetExplicitConnectivityChooser<
+  viskores::cont::CellSetExplicit<Storage1, Storage2, Storage3>,
+  viskores::TopologyElementTagCell,
+  viskores::TopologyElementTagPoint>
 {
   using ConnectivityType =
     viskores::cont::internal::ConnectivityExplicitInternals<Storage1, Storage2, Storage3>;
@@ -436,11 +446,14 @@ public:
   {
     viskoresdiy::save(bb, cs.GetNumberOfPoints());
     viskoresdiy::save(
-      bb, cs.GetShapesArray(viskores::TopologyElementTagCell{}, viskores::TopologyElementTagPoint{}));
+      bb,
+      cs.GetShapesArray(viskores::TopologyElementTagCell{}, viskores::TopologyElementTagPoint{}));
+    viskoresdiy::save(bb,
+                      cs.GetConnectivityArray(viskores::TopologyElementTagCell{},
+                                              viskores::TopologyElementTagPoint{}));
     viskoresdiy::save(
-      bb, cs.GetConnectivityArray(viskores::TopologyElementTagCell{}, viskores::TopologyElementTagPoint{}));
-    viskoresdiy::save(
-      bb, cs.GetOffsetsArray(viskores::TopologyElementTagCell{}, viskores::TopologyElementTagPoint{}));
+      bb,
+      cs.GetOffsetsArray(viskores::TopologyElementTagCell{}, viskores::TopologyElementTagPoint{}));
   }
 
   static VISKORES_CONT void load(BinaryBuffer& bb, Type& cs)

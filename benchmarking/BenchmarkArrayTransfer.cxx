@@ -129,9 +129,9 @@ void BenchContToExecRead(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchContToExecRead,
-                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
-                                ->ArgName("Bytes"),
-                              TestTypes);
+                                    ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                    ->ArgName("Bytes"),
+                                  TestTypes);
 
 // Writes values to ArrayHandle in execution environment. There is no actual
 // copy between control/execution in this case.
@@ -171,9 +171,9 @@ void BenchContToExecWrite(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchContToExecWrite,
-                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
-                                ->ArgName("Bytes"),
-                              TestTypes);
+                                    ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                    ->ArgName("Bytes"),
+                                  TestTypes);
 
 // Copies NumValues from control environment to execution environment and
 // both reads and writes them.
@@ -220,9 +220,9 @@ void BenchContToExecReadWrite(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchContToExecReadWrite,
-                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
-                                ->ArgName("Bytes"),
-                              TestTypes);
+                                    ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                    ->ArgName("Bytes"),
+                                  TestTypes);
 
 // Copies NumValues from control environment to execution environment and
 // back, then accesses them as read-only.
@@ -275,9 +275,9 @@ void BenchRoundTripRead(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchRoundTripRead,
-                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
-                                ->ArgName("Bytes"),
-                              TestTypes);
+                                    ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                    ->ArgName("Bytes"),
+                                  TestTypes);
 
 // Copies NumValues from control environment to execution environment and
 // back, then reads and writes them in-place.
@@ -331,9 +331,9 @@ void BenchRoundTripReadWrite(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchRoundTripReadWrite,
-                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
-                                ->ArgName("Bytes"),
-                              TestTypes);
+                                    ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                    ->ArgName("Bytes"),
+                                  TestTypes);
 
 // Write NumValues to device allocated memory and copies them back to control
 // for reading.
@@ -384,9 +384,9 @@ void BenchExecToContRead(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchExecToContRead,
-                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
-                                ->ArgName("Bytes"),
-                              TestTypes);
+                                    ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                    ->ArgName("Bytes"),
+                                  TestTypes);
 
 // Write NumValues to device allocated memory and copies them back to control
 // and overwrites them.
@@ -436,9 +436,9 @@ void BenchExecToContWrite(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchExecToContWrite,
-                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
-                                ->ArgName("Bytes"),
-                              TestTypes);
+                                    ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                    ->ArgName("Bytes"),
+                                  TestTypes);
 
 // Write NumValues to device allocated memory and copies them back to control
 // for reading and writing.
@@ -488,9 +488,9 @@ void BenchExecToContReadWrite(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchExecToContReadWrite,
-                                ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
-                                ->ArgName("Bytes"),
-                              TestTypes);
+                                    ->Range(COPY_SIZE_MIN, COPY_SIZE_MAX)
+                                    ->ArgName("Bytes"),
+                                  TestTypes);
 
 } // end anon namespace
 

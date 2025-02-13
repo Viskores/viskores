@@ -76,7 +76,10 @@ public:
 
   // Constructor
   VISKORES_EXEC_CONT
-  ComputeNeighborBins(viskores::Id XNum, viskores::Id YNum, viskores::Id ZNum, viskores::Id NumNeighbors)
+  ComputeNeighborBins(viskores::Id XNum,
+                      viskores::Id YNum,
+                      viskores::Id ZNum,
+                      viskores::Id NumNeighbors)
     : xNum(XNum)
     , yNum(YNum)
     , zNum(ZNum)
@@ -86,8 +89,8 @@ public:
 
   template <typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& i,
-                            const viskores::Id& binId,
-                            OutFieldPortalType& leftNeighbor) const
+                                const viskores::Id& binId,
+                                OutFieldPortalType& leftNeighbor) const
   {
     const viskores::Id xbin = binId % xNum;
     const viskores::Id ybin = (binId / xNum) % yNum;

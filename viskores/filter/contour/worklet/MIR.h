@@ -112,7 +112,7 @@ VISKORES_EXEC_CONT T Scale(const T& val, viskores::Float64 scale)
 
 template <typename T, viskores::IdComponent NumComponents>
 VISKORES_EXEC_CONT viskores::Vec<T, NumComponents> Scale(const viskores::Vec<T, NumComponents>& val,
-                                                 viskores::Float64 scale)
+                                                         viskores::Float64 scale)
 {
   return val * scale;
 }
@@ -122,7 +122,8 @@ class ExecutionConnectivityExplicit
 {
 private:
   using UInt8Portal = typename viskores::cont::ArrayHandle<viskores::UInt8>::WritePortalType;
-  using IdComponentPortal = typename viskores::cont::ArrayHandle<viskores::IdComponent>::WritePortalType;
+  using IdComponentPortal =
+    typename viskores::cont::ArrayHandle<viskores::IdComponent>::WritePortalType;
   using IdPortal = typename viskores::cont::ArrayHandle<viskores::Id>::WritePortalType;
 
 public:
@@ -145,7 +146,10 @@ public:
   }
 
   VISKORES_EXEC
-  void SetCellShape(viskores::Id cellIndex, viskores::UInt8 shape) { this->Shapes.Set(cellIndex, shape); }
+  void SetCellShape(viskores::Id cellIndex, viskores::UInt8 shape)
+  {
+    this->Shapes.Set(cellIndex, shape);
+  }
 
   VISKORES_EXEC
   void SetNumberOfIndices(viskores::Id cellIndex, viskores::IdComponent numIndices)
@@ -192,8 +196,8 @@ public:
   {
   }
 
-  VISKORES_CONT ExecutionConnectivityExplicit PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                              viskores::cont::Token& token) const
+  VISKORES_CONT ExecutionConnectivityExplicit
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     ExecutionConnectivityExplicit execConnectivity(this->Shapes,
                                                    this->NumberOfIndices,
@@ -349,10 +353,10 @@ class MIRParentObject : public viskores::cont::ExecutionAndControlObjectBase
 public:
   VISKORES_CONT MIRParentObject() = default;
   VISKORES_CONT MIRParentObject(viskores::Id numCells,
-                            viskores::cont::ArrayHandle<viskores::Id> celllook,
-                            viskores::cont::ArrayHandle<viskores::Id> cellCol,
-                            viskores::cont::ArrayHandle<viskores::Id> newCellCol,
-                            viskores::cont::ArrayHandle<viskores::Id> newcellLook)
+                                viskores::cont::ArrayHandle<viskores::Id> celllook,
+                                viskores::cont::ArrayHandle<viskores::Id> cellCol,
+                                viskores::cont::ArrayHandle<viskores::Id> newCellCol,
+                                viskores::cont::ArrayHandle<viskores::Id> newcellLook)
     : newCellColors(newCellCol)
     , newCellLookback(newcellLook)
     , numberOfInd(numCells)
@@ -370,8 +374,14 @@ public:
     {
       this->NewCellColors.Set(index, col);
     }
-    VISKORES_EXEC viskores::Id GetParentCellIndex(viskores::Id index) { return this->CellLookback.Get(index); }
-    VISKORES_EXEC viskores::Id GetParentCellColor(viskores::Id index) { return this->CellColors.Get(index); }
+    VISKORES_EXEC viskores::Id GetParentCellIndex(viskores::Id index)
+    {
+      return this->CellLookback.Get(index);
+    }
+    VISKORES_EXEC viskores::Id GetParentCellColor(viskores::Id index)
+    {
+      return this->CellColors.Get(index);
+    }
 
   private:
     typename viskores::cont::ArrayHandle<viskores::Id>::ReadPortalType CellLookback;
@@ -382,7 +392,7 @@ public:
   };
 
   VISKORES_CONT MIRParentPortal PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                viskores::cont::Token& token)
+                                                    viskores::cont::Token& token)
   {
     MIRParentPortal dev;
     dev.CellLookback = this->cellLookback.PrepareForInput(device, token);
@@ -520,7 +530,8 @@ public:
         for (viskores::IdComponent point = 0; point < numberOfPoints;
              point++, inCellInterpPointIndex++, clipIndex++)
         {
-          viskores::IdComponent entry = static_cast<viskores::IdComponent>(MIRData.ValueAt(clipIndex));
+          viskores::IdComponent entry =
+            static_cast<viskores::IdComponent>(MIRData.ValueAt(clipIndex));
           inCellInterpolationKeys.Set(inCellInterpPointIndex, workIndex);
           if (entry <= MIRCases::P7)
           {
@@ -549,11 +560,11 @@ public:
             // where A and C are edge0 mats 1 and 2, and B and D are edge1 mats 1 and 2.
             ei.Weight = viskores::Float64(1) +
               ((static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[0]) -
-                                           newScalars.Get(valPositionStart + edge[0]))) /
+                                               newScalars.Get(valPositionStart + edge[0]))) /
                static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[1]) -
-                                          curScalars.Get(valPositionStart + edge[0]) +
-                                          newScalars.Get(valPositionStart + edge[0]) -
-                                          newScalars.Get(valPositionStart + edge[1])));
+                                              curScalars.Get(valPositionStart + edge[0]) +
+                                              newScalars.Get(valPositionStart + edge[0]) -
+                                              newScalars.Get(valPositionStart + edge[1])));
 
             inCellEdgeReverseConnectivity.Set(inCellEdgeInterpIndex, inCellInterpPointIndex);
             inCellEdgeInterpolation.Set(inCellEdgeInterpIndex, ei);
@@ -565,7 +576,8 @@ public:
       {
         viskores::IdComponent numberOfPoints =
           static_cast<viskores::IdComponent>(MIRData.GetNumberOfIndices(cellShape));
-        viskores::IdComponent colorQ = static_cast<viskores::IdComponent>(MIRData.ValueAt(clipIndex++));
+        viskores::IdComponent colorQ =
+          static_cast<viskores::IdComponent>(MIRData.ValueAt(clipIndex++));
         viskores::Id color = colorQ == viskores::IdComponent(MIRCases::COLOR0)
           ? parentObj.GetParentCellColor(workIndex)
           : target;
@@ -577,7 +589,8 @@ public:
 
         for (viskores::IdComponent point = 0; point < numberOfPoints; point++, clipIndex++)
         {
-          viskores::IdComponent entry = static_cast<viskores::IdComponent>(MIRData.ValueAt(clipIndex));
+          viskores::IdComponent entry =
+            static_cast<viskores::IdComponent>(MIRData.ValueAt(clipIndex));
           if (entry == MIRCases::N0) // case of cell point interpolation
           {
             // Add index of the corresponding cell point.
@@ -611,11 +624,11 @@ public:
 
             ei.Weight = viskores::Float64(1) +
               ((static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[0]) -
-                                           newScalars.Get(valPositionStart + edge[0]))) /
+                                               newScalars.Get(valPositionStart + edge[0]))) /
                static_cast<viskores::Float64>(curScalars.Get(valPositionStart + edge[1]) -
-                                          curScalars.Get(valPositionStart + edge[0]) +
-                                          newScalars.Get(valPositionStart + edge[0]) -
-                                          newScalars.Get(valPositionStart + edge[1])));
+                                              curScalars.Get(valPositionStart + edge[0]) +
+                                              newScalars.Get(valPositionStart + edge[0]) -
+                                              newScalars.Get(valPositionStart + edge[1])));
             //Add to set of new edge points
             //Add reverse connectivity;
             edgePointReverseConnectivity.Set(edgeIndex, connectivityIndex++);
@@ -660,8 +673,8 @@ public:
 
   template <typename ConnectivityDataType>
   VISKORES_EXEC void operator()(const viskores::Id sourceValue,
-                            const viskores::Id destinationIndex,
-                            ConnectivityDataType& destinationData) const
+                                const viskores::Id destinationIndex,
+                                ConnectivityDataType& destinationData) const
   {
     destinationData.Set(destinationIndex, (sourceValue + EdgePointOffset));
   }
@@ -686,7 +699,7 @@ public:
 
   template <typename ConnectivityDataType>
   VISKORES_EXEC void operator()(const viskores::Id destinationIndex,
-                            ConnectivityDataType& destinationData) const
+                                ConnectivityDataType& destinationData) const
   {
     auto sourceValue = destinationData.Get(destinationIndex);
     destinationData.Set(destinationIndex, (sourceValue + InCellPointOffset));
@@ -710,14 +723,14 @@ public:
   }
   template <typename VFList1, typename VFList2, typename CellSet, typename VFLocs, typename IDList>
   viskores::cont::CellSetExplicit<> Run(const CellSet& cellSet,
-                                    const VFList1& prevValues,
-                                    const VFList2& curValues,
-                                    const VFLocs& offsets,
-                                    const IDList& prevIDs,
-                                    const viskores::Id& newID,
-                                    const IDList& prevLookback,
-                                    IDList& newIDs,
-                                    IDList& newLookback)
+                                        const VFList1& prevValues,
+                                        const VFList2& curValues,
+                                        const VFLocs& offsets,
+                                        const IDList& prevIDs,
+                                        const viskores::Id& newID,
+                                        const IDList& prevLookback,
+                                        IDList& newIDs,
+                                        IDList& newLookback)
   {
     // First compute the stats for the MIR algorithm & build the offsets
     //{
@@ -806,18 +819,19 @@ public:
     viskores::cont::Algorithm::SortByKey(
       edgeInterpolation, edgePointReverseConnectivity, EdgeInterpolation::LessThanOp());
     viskores::cont::Algorithm::Copy(edgeInterpolation, this->EdgePointsInterpolation);
-    viskores::cont::Algorithm::Unique(this->EdgePointsInterpolation, EdgeInterpolation::EqualToOp());
+    viskores::cont::Algorithm::Unique(this->EdgePointsInterpolation,
+                                      EdgeInterpolation::EqualToOp());
     viskores::cont::ArrayHandle<viskores::Id> edgeInterpolationIndexToUnique;
     viskores::cont::Algorithm::LowerBounds(this->EdgePointsInterpolation,
-                                       edgeInterpolation,
-                                       edgeInterpolationIndexToUnique,
-                                       EdgeInterpolation::LessThanOp());
+                                           edgeInterpolation,
+                                           edgeInterpolationIndexToUnique,
+                                           EdgeInterpolation::LessThanOp());
 
     viskores::cont::ArrayHandle<viskores::Id> cellInterpolationIndexToUnique;
     viskores::cont::Algorithm::LowerBounds(this->EdgePointsInterpolation,
-                                       cellPointEdgeInterpolation,
-                                       cellInterpolationIndexToUnique,
-                                       EdgeInterpolation::LessThanOp());
+                                           cellPointEdgeInterpolation,
+                                           cellInterpolationIndexToUnique,
+                                           EdgeInterpolation::LessThanOp());
     this->EdgePointsOffset = cellSet.GetNumberOfPoints();
     this->InCellPointsOffset =
       this->EdgePointsOffset + this->EdgePointsInterpolation.GetNumberOfValues();
@@ -886,8 +900,8 @@ public:
 
       template <typename EdgeInterp, typename OutputFieldPortal>
       VISKORES_EXEC void operator()(const EdgeInterp& ei,
-                                OutputFieldPortal& field,
-                                const viskores::Id workIndex) const
+                                    OutputFieldPortal& field,
+                                    const viskores::Id workIndex) const
       {
         using T = typename OutputFieldPortal::ValueType;
         T v1 = field.Get(ei.Vertex1);
@@ -912,7 +926,8 @@ public:
       using ExecutionSignature = void(_2, _3);
 
       template <typename MappedValueVecType, typename MappedValueType>
-      VISKORES_EXEC void operator()(const MappedValueVecType& toReduce, MappedValueType& centroid) const
+      VISKORES_EXEC void operator()(const MappedValueVecType& toReduce,
+                                    MappedValueType& centroid) const
       {
         viskores::IdComponent numValues = toReduce.GetNumberOfComponents();
         MappedValueType sum = toReduce[0];
@@ -927,7 +942,8 @@ public:
     };
 
     template <typename Storage>
-    VISKORES_CONT void operator()(const viskores::cont::ArrayHandle<ValueType, Storage>& field) const
+    VISKORES_CONT void operator()(
+      const viskores::cont::ArrayHandle<ValueType, Storage>& field) const
     {
       viskores::worklet::Keys<viskores::Id> interpolationKeys(InCellInterpolationKeys);
 
@@ -1013,11 +1029,11 @@ public:
 
       template <typename EdgeInterp, typename IDL, typename IDO, typename IdsVec, typename VfsVec>
       VISKORES_EXEC void operator()(const EdgeInterp& ei,
-                                const IDL& lengths,
-                                const IDO& positions,
-                                IdsVec& ids,
-                                VfsVec& vfs,
-                                const viskores::Id workIndex) const
+                                    const IDL& lengths,
+                                    const IDO& positions,
+                                    IdsVec& ids,
+                                    VfsVec& vfs,
+                                    const viskores::Id workIndex) const
       {
         viskores::Vec<viskores::Id, 2> idOff;
         viskores::Vec<viskores::Id, 2> idLen;
@@ -1094,11 +1110,11 @@ public:
       using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex, _5);
       template <typename EdgeInterp, typename IDL, typename IDO, typename IdsVec, typename ELL>
       VISKORES_EXEC void operator()(const EdgeInterp& ei,
-                                IDL& lengths,
-                                const IDO& positions,
-                                const IdsVec& ids,
-                                const viskores::Id workIndex,
-                                ELL& edgelength) const
+                                    IDL& lengths,
+                                    const IDO& positions,
+                                    const IdsVec& ids,
+                                    const viskores::Id workIndex,
+                                    ELL& edgelength) const
       {
         viskores::Vec<viskores::Id, 2> idOff;
         viskores::Vec<viskores::Id, 2> idLen;
@@ -1168,10 +1184,10 @@ public:
                 typename IDOff,
                 typename IdsVec>
       VISKORES_EXEC void operator()(const MappedValueVecType& toReduce,
-                                const IDArr& lengths,
-                                const IDOff& positions,
-                                const IdsVec& ids,
-                                MappedValueType& numIdNeeded) const
+                                    const IDArr& lengths,
+                                    const IDOff& positions,
+                                    const IdsVec& ids,
+                                    MappedValueType& numIdNeeded) const
       {
         viskores::IdComponent numberOfPoints = toReduce.GetNumberOfComponents();
         // ToReduce is simply the indexArray, giving us point information (since this is reduce by key)
@@ -1259,14 +1275,14 @@ public:
                 typename OutID,
                 typename OutVF>
       VISKORES_EXEC void operator()(const MappedValueVecType& toReduce,
-                                const IDArr& lengths,
-                                const IDOff& positions,
-                                const IdsVec& ids,
-                                const VfsVec& vfs,
-                                const IndexIn& localOffset,
-                                IndexOut& globalOffset,
-                                OutID& outIDs,
-                                OutVF& outVFs) const
+                                    const IDArr& lengths,
+                                    const IDOff& positions,
+                                    const IdsVec& ids,
+                                    const VfsVec& vfs,
+                                    const IndexIn& localOffset,
+                                    IndexOut& globalOffset,
+                                    OutID& outIDs,
+                                    OutVF& outVFs) const
       {
 
         globalOffset = localOffset + this->offset;
@@ -1331,7 +1347,8 @@ public:
       const viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>& originalLen,
       const viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>& originalPos,
       const viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>& originalIDs,
-      const viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>& originalVFs) const
+      const viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>&
+        originalVFs) const
     {
       viskores::worklet::Keys<viskores::Id> interpolationKeys(InCellInterpolationKeys);
       viskores::Id numberOfOriginalPos = originalLen.GetNumberOfValues();
@@ -1353,12 +1370,15 @@ public:
       edgeInterpDispatcher_C.Invoke(
         this->EdgeInterpolationArray, lengthArr, posArr, originalIDs, edgeLengths);
 
-      viskores::Id idLengthFromJustEdges = viskores::cont::Algorithm::Reduce(edgeLengths, viskores::Id(0));
+      viskores::Id idLengthFromJustEdges =
+        viskores::cont::Algorithm::Reduce(edgeLengths, viskores::Id(0));
 
       idArr.Allocate(originalIDs.GetNumberOfValues() + idLengthFromJustEdges);
       vfArr.Allocate(originalIDs.GetNumberOfValues() + idLengthFromJustEdges);
-      viskores::cont::Algorithm::CopySubRange(originalIDs, 0, originalIDs.GetNumberOfValues(), idArr);
-      viskores::cont::Algorithm::CopySubRange(originalVFs, 0, originalIDs.GetNumberOfValues(), vfArr);
+      viskores::cont::Algorithm::CopySubRange(
+        originalIDs, 0, originalIDs.GetNumberOfValues(), idArr);
+      viskores::cont::Algorithm::CopySubRange(
+        originalVFs, 0, originalIDs.GetNumberOfValues(), vfArr);
       viskores::cont::Algorithm::ScanExclusive(lengthArr, posArr);
 
       // Accept that you will have to copy data :| Maybe can speed this up with some special logic...
@@ -1386,7 +1406,8 @@ public:
         interpolationKeys, toReduceValues, lengthArr, posArr, idArr, reducedIDCounts);
 
       viskores::cont::ArrayHandle<viskores::Id> reducedIDOffsets;
-      viskores::Id totalIDLen = viskores::cont::Algorithm::ScanExclusive(reducedIDCounts, reducedIDOffsets);
+      viskores::Id totalIDLen =
+        viskores::cont::Algorithm::ScanExclusive(reducedIDCounts, reducedIDOffsets);
 
       PerformInCellInterpolations incellWorklet(originalIDs.GetNumberOfValues() +
                                                 idLengthFromJustEdges);
@@ -1412,15 +1433,15 @@ public:
       viskores::cont::Algorithm::CopySubRange(cellids, 0, totalIDLen, idArr, inCellVFOffset);
       viskores::cont::Algorithm::CopySubRange(cellvfs, 0, totalIDLen, vfArr, inCellVFOffset);
       viskores::cont::Algorithm::CopySubRange(reducedIDCounts,
-                                          0,
-                                          reducedIDCounts.GetNumberOfValues(),
-                                          lengthArr,
-                                          numberOfOriginalPos + numberOfEdgePoints);
+                                              0,
+                                              reducedIDCounts.GetNumberOfValues(),
+                                              lengthArr,
+                                              numberOfOriginalPos + numberOfEdgePoints);
       viskores::cont::Algorithm::CopySubRange(cellOffsets,
-                                          0,
-                                          cellOffsets.GetNumberOfValues(),
-                                          posArr,
-                                          numberOfOriginalPos + numberOfEdgePoints);
+                                              0,
+                                              cellOffsets.GetNumberOfValues(),
+                                              posArr,
+                                              numberOfOriginalPos + numberOfEdgePoints);
 
       *(this->LenOut) = lengthArr;
       *(this->PosOut) = posArr;
@@ -1476,9 +1497,9 @@ public:
 
       template <typename EdgeInterp, typename InOutId, typename InOutWeight>
       VISKORES_EXEC void operator()(const EdgeInterp& ei,
-                                InOutId& field,
-                                InOutWeight& field1,
-                                const viskores::Id workIndex) const
+                                    InOutId& field,
+                                    InOutWeight& field1,
+                                    const viskores::Id workIndex) const
       {
 
         viskores::Vec<viskores::IdComponent, 2> curOff;
@@ -1557,10 +1578,10 @@ public:
                 typename VecId,
                 typename VecWeight>
       VISKORES_EXEC void operator()(const IDs& ids,
-                                const VecOfVecIDs& keysIn,
-                                const VecOfVecWeights& weightsIn,
-                                VecId& centroid,
-                                VecWeight& weight) const
+                                    const VecOfVecIDs& keysIn,
+                                    const VecOfVecWeights& weightsIn,
+                                    VecId& centroid,
+                                    VecWeight& weight) const
       {
         viskores::IdComponent numValues = ids.GetNumberOfComponents();
         viskores::Vec<viskores::IdComponent, 8> curOff;
@@ -1675,22 +1696,25 @@ public:
     WeightArr* Output2;
   };
   void ProcessSimpleMIRField(
-    const viskores::cont::ArrayHandle<viskores::Vec<viskores::Id, 8>, viskores::cont::StorageTagBasic>& orLookback,
-    const viskores::cont::ArrayHandle<viskores::Vec<viskores::Float64, 8>, viskores::cont::StorageTagBasic>&
-      orWeights,
-    viskores::cont::ArrayHandle<viskores::Vec<viskores::Id, 8>, viskores::cont::StorageTagBasic>& newLookback,
-    viskores::cont::ArrayHandle<viskores::Vec<viskores::Float64, 8>, viskores::cont::StorageTagBasic>& newweights)
-    const
+    const viskores::cont::ArrayHandle<viskores::Vec<viskores::Id, 8>,
+                                      viskores::cont::StorageTagBasic>& orLookback,
+    const viskores::cont::ArrayHandle<viskores::Vec<viskores::Float64, 8>,
+                                      viskores::cont::StorageTagBasic>& orWeights,
+    viskores::cont::ArrayHandle<viskores::Vec<viskores::Id, 8>, viskores::cont::StorageTagBasic>&
+      newLookback,
+    viskores::cont::ArrayHandle<viskores::Vec<viskores::Float64, 8>,
+                                viskores::cont::StorageTagBasic>& newweights) const
   {
-    auto worker = InterpolateLookbackField<viskores::cont::ArrayHandle<viskores::Vec<viskores::Id, 8>>,
-                                           viskores::cont::ArrayHandle<viskores::Vec<viskores::Float64, 8>>>(
-      this->EdgePointsInterpolation,
-      this->InCellInterpolationKeys,
-      this->InCellInterpolationInfo,
-      this->EdgePointsOffset,
-      this->InCellPointsOffset,
-      &newLookback,
-      &newweights);
+    auto worker =
+      InterpolateLookbackField<viskores::cont::ArrayHandle<viskores::Vec<viskores::Id, 8>>,
+                               viskores::cont::ArrayHandle<viskores::Vec<viskores::Float64, 8>>>(
+        this->EdgePointsInterpolation,
+        this->InCellInterpolationKeys,
+        this->InCellInterpolationInfo,
+        this->EdgePointsOffset,
+        this->InCellPointsOffset,
+        &newLookback,
+        &newweights);
     worker(orLookback, orWeights);
   }
   void ProcessMIRField(
@@ -1703,20 +1727,20 @@ public:
     viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>& newIDs,
     viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>& newVFs) const
   {
-    auto worker =
-      InterpolateMIRFields<viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>,
-                           viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>,
-                           viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>,
-                           viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>>(
-        this->EdgePointsInterpolation,
-        this->InCellInterpolationKeys,
-        this->InCellInterpolationInfo,
-        this->EdgePointsOffset,
-        this->InCellPointsOffset,
-        &newLen,
-        &newPos,
-        &newIDs,
-        &newVFs);
+    auto worker = InterpolateMIRFields<
+      viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>,
+      viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>,
+      viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagBasic>,
+      viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>>(
+      this->EdgePointsInterpolation,
+      this->InCellInterpolationKeys,
+      this->InCellInterpolationInfo,
+      this->EdgePointsOffset,
+      this->InCellPointsOffset,
+      &newLen,
+      &newPos,
+      &newIDs,
+      &newVFs);
     worker(orLen, orPos, orIDs, orVFs);
   }
 
@@ -1793,10 +1817,14 @@ public:
     }
 
   private:
-    typename viskores::cont::ArrayHandle<IDType, viskores::cont::StorageTagBasic>::ReadPortalType PLens;
-    typename viskores::cont::ArrayHandle<IDType, viskores::cont::StorageTagBasic>::ReadPortalType PPos;
-    typename viskores::cont::ArrayHandle<IDType, viskores::cont::StorageTagBasic>::ReadPortalType PIDs;
-    typename viskores::cont::ArrayHandle<FloatType, viskores::cont::StorageTagBasic>::ReadPortalType PVFs;
+    typename viskores::cont::ArrayHandle<IDType, viskores::cont::StorageTagBasic>::ReadPortalType
+      PLens;
+    typename viskores::cont::ArrayHandle<IDType, viskores::cont::StorageTagBasic>::ReadPortalType
+      PPos;
+    typename viskores::cont::ArrayHandle<IDType, viskores::cont::StorageTagBasic>::ReadPortalType
+      PIDs;
+    typename viskores::cont::ArrayHandle<FloatType, viskores::cont::StorageTagBasic>::ReadPortalType
+      PVFs;
     friend struct MIRObject;
   };
 
@@ -1815,7 +1843,8 @@ public:
   {
   }
 
-  MIRObjectPortal PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token)
+  MIRObjectPortal PrepareForExecution(viskores::cont::DeviceAdapterId device,
+                                      viskores::cont::Token& token)
   {
     MIRObjectPortal portal;
     portal.PLens = this->pointLen.PrepareForInput(device, token);
@@ -1843,10 +1872,10 @@ public:
 
   template <typename LenVec, typename PosVec, typename IdsVec, typename OutVec>
   VISKORES_EXEC void operator()(viskores::IdComponent numCells,
-                            const LenVec& len,
-                            const PosVec& pos,
-                            const IdsVec& ids,
-                            OutVec& outlength) const
+                                const LenVec& len,
+                                const PosVec& pos,
+                                const IdsVec& ids,
+                                OutVec& outlength) const
   {
 
     // This is for the number of VFs in the surrounding cells...
@@ -1914,13 +1943,13 @@ public:
             typename OutVec,
             typename OutVec2>
   VISKORES_EXEC void operator()(viskores::IdComponent numCells,
-                            const LenVec& len,
-                            const PosVec& pos,
-                            const IdsVec& ids,
-                            const VfsVec& vfs,
-                            const PosVec2& posit,
-                            OutVec& outid,
-                            OutVec2& outvf) const
+                                const LenVec& len,
+                                const PosVec& pos,
+                                const IdsVec& ids,
+                                const VfsVec& vfs,
+                                const PosVec2& posit,
+                                OutVec& outid,
+                                OutVec2& outvf) const
   {
 
     // This is for the number of VFs in the surrounding cells...
@@ -2014,12 +2043,12 @@ public:
   }
   template <typename DA, typename prevID, typename OutVec, typename OutVec2, typename pointVec>
   VISKORES_EXEC void operator()(viskores::IdComponent numPoints,
-                            viskores::IdComponent index,
-                            pointVec& pointIDs,
-                            const DA& mirobj,
-                            const prevID& previousID,
-                            OutVec& outVF,
-                            OutVec2& prevOutVF) const
+                                viskores::IdComponent index,
+                                pointVec& pointIDs,
+                                const DA& mirobj,
+                                const prevID& previousID,
+                                OutVec& outVF,
+                                OutVec2& prevOutVF) const
   {
     (void)numPoints;
     outVF = OutVec(0);
@@ -2053,12 +2082,13 @@ public:
   using ExecutionSignature = void(PointCount, CellShape, _2, _3, _4);
   template <typename Arrout, typename PointListIn, typename Dev, typename CellShape>
   VISKORES_EXEC void operator()(const viskores::IdComponent pointCount,
-                            const CellShape& cellShape,
-                            const Dev& mirTable,
-                            const PointListIn& vertPos,
-                            Arrout& volumeOut) const
+                                const CellShape& cellShape,
+                                const Dev& mirTable,
+                                const PointListIn& vertPos,
+                                Arrout& volumeOut) const
   {
-    viskores::IdComponent numFaces = mirTable.GetNumberOfFaces(static_cast<viskores::Id>(cellShape.Id));
+    viskores::IdComponent numFaces =
+      mirTable.GetNumberOfFaces(static_cast<viskores::Id>(cellShape.Id));
 
     viskores::Float64 totVol = viskores::Float64(0);
     viskores::IdComponent offset = mirTable.GetFaceOffset(static_cast<viskores::Id>(cellShape.Id));
@@ -2101,12 +2131,12 @@ public:
   using InputDomain = _1;
   template <typename Colors, typename ORL, typename ORP, typename ORID, typename NLO>
   VISKORES_EXEC void operator()(const viskores::IdComponent numCells,
-                            const viskores::Id cellID,
-                            const Colors& cellCol,
-                            const ORL& orgLen,
-                            const ORP& orgPos,
-                            const ORID& orgID,
-                            NLO& outputLen) const
+                                const viskores::Id cellID,
+                                const Colors& cellCol,
+                                const ORL& orgLen,
+                                const ORP& orgPos,
+                                const ORID& orgID,
+                                NLO& outputLen) const
   {
     // Although I don't doubt for a minute that keys is sorted and hence the output would be too,
     // but this ensures I don't deal with a headache if they change that.
@@ -2202,23 +2232,23 @@ public:
             typename NLen,
             typename OVols>
   VISKORES_EXEC void operator()(const viskores::IdComponent numCells,
-                            const viskores::Id cellID,
-                            const Colors& cellCol,
-                            const Vols& cellVolumes,
-                            const ORL& orgLen,
-                            const ORP& orgPos,
-                            const ORID& orgID,
-                            const ORVF& orgVF,
-                            const CLen& curLen,
-                            const CPos& curPos,
-                            const CID& curID,
-                            const CVF& curVF,
-                            const NLen&,
-                            const NLO& inputPos,
-                            NID& inputIDs,
-                            NVF& inputVFs,
-                            const OVols& orgVols,
-                            TEO& totalErrorOut) const
+                                const viskores::Id cellID,
+                                const Colors& cellCol,
+                                const Vols& cellVolumes,
+                                const ORL& orgLen,
+                                const ORP& orgPos,
+                                const ORID& orgID,
+                                const ORVF& orgVF,
+                                const CLen& curLen,
+                                const CPos& curPos,
+                                const CID& curID,
+                                const CVF& curVF,
+                                const NLen&,
+                                const NLO& inputPos,
+                                NID& inputIDs,
+                                NVF& inputVFs,
+                                const OVols& orgVols,
+                                TEO& totalErrorOut) const
   {
     // Although I don't doubt for a minute that keys is sorted and hence the output would be too,
     // but this ensures I don't deal with a headache if they change that.
@@ -2333,9 +2363,9 @@ struct DestructPointWeightList : public viskores::worklet::WorkletMapField
   using InputDomain = _1;
   template <typename PID, typename PW, typename OV, typename NV>
   VISKORES_EXEC void operator()(const PID& pointIDs,
-                            const PW& pointWeights,
-                            const OV& originalVals,
-                            NV& newVal) const
+                                const PW& pointWeights,
+                                const OV& originalVals,
+                                NV& newVal) const
   {
     // This code assumes that originalVals and newVals come from ArrayHandleRecombineVec.
     // This means that they will have Vec-like values that support Vec operations. It also

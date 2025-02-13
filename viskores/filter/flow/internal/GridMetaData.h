@@ -31,15 +31,15 @@ public:
     if (cellSet.CanConvert<Structured2DType>())
     {
       this->cellSet2D = true;
-      viskores::Id2 dims =
-        cellSet.AsCellSet<Structured2DType>().GetSchedulingRange(viskores::TopologyElementTagPoint());
+      viskores::Id2 dims = cellSet.AsCellSet<Structured2DType>().GetSchedulingRange(
+        viskores::TopologyElementTagPoint());
       this->Dims = viskores::Id3(dims[0], dims[1], 1);
     }
     else
     {
       this->cellSet2D = false;
-      this->Dims =
-        cellSet.AsCellSet<Structured3DType>().GetSchedulingRange(viskores::TopologyElementTagPoint());
+      this->Dims = cellSet.AsCellSet<Structured3DType>().GetSchedulingRange(
+        viskores::TopologyElementTagPoint());
     }
     this->PlaneSize = Dims[0] * Dims[1];
     this->RowSize = Dims[0];

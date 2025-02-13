@@ -120,17 +120,20 @@ public:
     // second comparison is on global regular Id
     if (this->GlobalRegularIdsPortal.Get(left) < this->GlobalRegularIdsPortal.Get(right))
     {
-      return viskores::worklet::contourtree_augmented::IsAscending(this->SuperparentsPortal.Get(left));
+      return viskores::worklet::contourtree_augmented::IsAscending(
+        this->SuperparentsPortal.Get(left));
     }
     if (this->GlobalRegularIdsPortal.Get(left) > this->GlobalRegularIdsPortal.Get(right))
     {
-      return !viskores::worklet::contourtree_augmented::IsAscending(this->SuperparentsPortal.Get(left));
+      return !viskores::worklet::contourtree_augmented::IsAscending(
+        this->SuperparentsPortal.Get(left));
     }
 
     // it now depends on whether they have actual IDs (ie they are on this block anyway)
     if (viskores::worklet::contourtree_augmented::NoSuchElement(this->SupernodeIdsPortal.Get(left)))
     { // left does not exist
-      if (viskores::worklet::contourtree_augmented::NoSuchElement(this->SupernodeIdsPortal.Get(right)))
+      if (viskores::worklet::contourtree_augmented::NoSuchElement(
+            this->SupernodeIdsPortal.Get(right)))
       { // right does not exist
         // neither exists: sort on input indices instead
         return (left < right);
@@ -143,7 +146,8 @@ public:
     }   // left does not exist
     else
     { // left does exist
-      if (viskores::worklet::contourtree_augmented::NoSuchElement(this->SupernodeIdsPortal.Get(right)))
+      if (viskores::worklet::contourtree_augmented::NoSuchElement(
+            this->SupernodeIdsPortal.Get(right)))
       { // right does not exist
         // left exists but right doesn't - sort left lower
         return true;

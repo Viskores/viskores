@@ -24,17 +24,20 @@ CylindricalCoordinateTransform::CylindricalCoordinateTransform()
   this->SetUseCoordinateSystemAsField(true);
 }
 
-viskores::cont::DataSet CylindricalCoordinateTransform::DoExecute(const viskores::cont::DataSet& inDataSet)
+viskores::cont::DataSet CylindricalCoordinateTransform::DoExecute(
+  const viskores::cont::DataSet& inDataSet)
 {
   viskores::cont::UnknownArrayHandle outArray;
 
   const viskores::cont::Field& inField = this->GetFieldFromDataSet(inDataSet);
   if (!inField.IsPointField())
   {
-    throw viskores::cont::ErrorBadValue("CylindricalCoordinateTransform only applies to point data.");
+    throw viskores::cont::ErrorBadValue(
+      "CylindricalCoordinateTransform only applies to point data.");
   }
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     viskores::cont::ArrayHandle<T> result;
@@ -56,9 +59,8 @@ viskores::cont::DataSet CylindricalCoordinateTransform::DoExecute(const viskores
     inDataSet,
     inDataSet.GetCellSet(),
     viskores::cont::CoordinateSystem(coordinateName, outArray),
-    [](viskores::cont::DataSet& out, const viskores::cont::Field& fieldToPass) {
-      out.AddField(fieldToPass);
-    });
+    [](viskores::cont::DataSet& out, const viskores::cont::Field& fieldToPass)
+    { out.AddField(fieldToPass); });
   return outDataSet;
 }
 

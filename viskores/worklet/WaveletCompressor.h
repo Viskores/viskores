@@ -33,9 +33,9 @@ public:
   // Multi-level 1D wavelet decomposition
   template <typename SignalArrayType, typename CoeffArrayType>
   VISKORES_CONT viskores::Id WaveDecompose(const SignalArrayType& sigIn, // Input
-                                   viskores::Id nLevels,             // n levels of DWT
-                                   CoeffArrayType& coeffOut,
-                                   std::vector<viskores::Id>& L)
+                                           viskores::Id nLevels,         // n levels of DWT
+                                           CoeffArrayType& coeffOut,
+                                           std::vector<viskores::Id>& L)
   {
     viskores::Id sigInLen = sigIn.GetNumberOfValues();
     if (nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel(sigInLen))
@@ -97,9 +97,9 @@ public:
   // Multi-level 1D wavelet reconstruction
   template <typename CoeffArrayType, typename SignalArrayType>
   VISKORES_CONT viskores::Id WaveReconstruct(const CoeffArrayType& coeffIn, // Input
-                                     viskores::Id nLevels,              // n levels of DWT
-                                     std::vector<viskores::Id>& L,
-                                     SignalArrayType& sigOut)
+                                             viskores::Id nLevels,          // n levels of DWT
+                                             std::vector<viskores::Id>& L,
+                                             SignalArrayType& sigOut)
   {
     VISKORES_ASSERT(nLevels > 0);
     viskores::Id LLength = nLevels + 2;
@@ -142,13 +142,14 @@ public:
 
   // Multi-level 3D wavelet decomposition
   template <typename InArrayType, typename OutArrayType>
-  VISKORES_CONT viskores::Float64 WaveDecompose3D(InArrayType& sigIn, // Input
-                                          viskores::Id nLevels,   // n levels of DWT
-                                          viskores::Id inX,
-                                          viskores::Id inY,
-                                          viskores::Id inZ,
-                                          OutArrayType& coeffOut,
-                                          bool discardSigIn) // can we discard sigIn on devices?
+  VISKORES_CONT viskores::Float64 WaveDecompose3D(
+    InArrayType& sigIn,   // Input
+    viskores::Id nLevels, // n levels of DWT
+    viskores::Id inX,
+    viskores::Id inY,
+    viskores::Id inZ,
+    OutArrayType& coeffOut,
+    bool discardSigIn) // can we discard sigIn on devices?
   {
     viskores::Id sigInLen = sigIn.GetNumberOfValues();
     VISKORES_ASSERT(inX * inY * inZ == sigInLen);
@@ -198,8 +199,8 @@ public:
   // Multi-level 3D wavelet reconstruction
   template <typename InArrayType, typename OutArrayType>
   VISKORES_CONT viskores::Float64 WaveReconstruct3D(
-    InArrayType& arrIn, // Input
-    viskores::Id nLevels,   // n levels of DWT
+    InArrayType& arrIn,   // Input
+    viskores::Id nLevels, // n levels of DWT
     viskores::Id inX,
     viskores::Id inY,
     viskores::Id inZ,
@@ -280,11 +281,11 @@ public:
   // Multi-level 2D wavelet decomposition
   template <typename InArrayType, typename OutArrayType>
   VISKORES_CONT viskores::Float64 WaveDecompose2D(const InArrayType& sigIn, // Input
-                                          viskores::Id nLevels,         // n levels of DWT
-                                          viskores::Id inX,             // Input X dim
-                                          viskores::Id inY,             // Input Y dim
-                                          OutArrayType& coeffOut,
-                                          std::vector<viskores::Id>& L)
+                                                  viskores::Id nLevels,     // n levels of DWT
+                                                  viskores::Id inX,         // Input X dim
+                                                  viskores::Id inY,         // Input Y dim
+                                                  OutArrayType& coeffOut,
+                                                  std::vector<viskores::Id>& L)
   {
     viskores::Id sigInLen = sigIn.GetNumberOfValues();
     VISKORES_ASSERT(inX * inY == sigInLen);
@@ -341,11 +342,11 @@ public:
   // Multi-level 2D wavelet reconstruction
   template <typename InArrayType, typename OutArrayType>
   VISKORES_CONT viskores::Float64 WaveReconstruct2D(const InArrayType& arrIn, // Input
-                                            viskores::Id nLevels,         // n levels of DWT
-                                            viskores::Id inX,             // Input X dim
-                                            viskores::Id inY,             // Input Y dim
-                                            OutArrayType& arrOut,
-                                            std::vector<viskores::Id>& L)
+                                                    viskores::Id nLevels,     // n levels of DWT
+                                                    viskores::Id inX,         // Input X dim
+                                                    viskores::Id inY,         // Input Y dim
+                                                    OutArrayType& arrOut,
+                                                    std::vector<viskores::Id>& L)
   {
     viskores::Id arrInLen = arrIn.GetNumberOfValues();
     VISKORES_ASSERT(inX * inY == arrInLen);
@@ -428,8 +429,10 @@ public:
 
       WaveletBase::DeviceSort(sortedArray);
 
-      viskores::Id n = coeffLen - static_cast<viskores::Id>(static_cast<viskores::Float64>(coeffLen) / ratio);
-      viskores::Float64 nthVal = static_cast<viskores::Float64>(viskores::cont::ArrayGetValue(n, sortedArray));
+      viskores::Id n =
+        coeffLen - static_cast<viskores::Id>(static_cast<viskores::Float64>(coeffLen) / ratio);
+      viskores::Float64 nthVal =
+        static_cast<viskores::Float64>(viskores::cont::ArrayGetValue(n, sortedArray));
       if (nthVal < 0.0)
       {
         nthVal *= -1.0;
@@ -516,7 +519,10 @@ public:
   }
 
   // Compute the book keeping array L for 2D DWT
-  void ComputeL2(viskores::Id inX, viskores::Id inY, viskores::Id nLev, std::vector<viskores::Id>& L)
+  void ComputeL2(viskores::Id inX,
+                 viskores::Id inY,
+                 viskores::Id nLev,
+                 std::vector<viskores::Id>& L)
   {
     size_t nLevels = static_cast<size_t>(nLev);
     L.resize(nLevels * 6 + 4);
@@ -546,7 +552,11 @@ public:
   }
 
   // Compute the bookkeeping array L for 3D DWT
-  void ComputeL3(viskores::Id inX, viskores::Id inY, viskores::Id inZ, viskores::Id nLev, std::vector<viskores::Id>& L)
+  void ComputeL3(viskores::Id inX,
+                 viskores::Id inY,
+                 viskores::Id inZ,
+                 viskores::Id nLev,
+                 std::vector<viskores::Id>& L)
   {
     size_t n = static_cast<size_t>(nLev);
     L.resize(n * 21 + 6);

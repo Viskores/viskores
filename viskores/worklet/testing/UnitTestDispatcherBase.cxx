@@ -219,7 +219,8 @@ struct Fetch<TestFetchTagOutput, viskores::exec::arg::AspectTagDefault, ut_db::T
   using ValueType = viskores::Id;
 
   VISKORES_EXEC
-  ValueType Load(const viskores::exec::arg::ThreadIndicesBasic&, const ut_db::TestExecObjectOut&) const
+  ValueType Load(const viskores::exec::arg::ThreadIndicesBasic&,
+                 const ut_db::TestExecObjectOut&) const
   {
     // No-op
     return ValueType();
@@ -266,7 +267,9 @@ public:
   using ExecutionSignature = _3(_1, _2, WorkIndex);
 
   template <typename ExecObjectType>
-  VISKORES_EXEC viskores::Id operator()(viskores::Id value, ExecObjectType execObject, viskores::Id index) const
+  VISKORES_EXEC viskores::Id operator()(viskores::Id value,
+                                        ExecObjectType execObject,
+                                        viskores::Id index) const
   {
     VISKORES_ASSERT(value == TestValue(index, viskores::Id()));
     VISKORES_ASSERT(execObject.Value == EXPECTED_EXEC_OBJECT_VALUE);
@@ -358,9 +361,13 @@ void TestBasicInvoke()
   {
     viskores::cont::Token token;
     inputBuffer.SetNumberOfBytes(
-      static_cast<viskores::BufferSizeType>(ARRAY_SIZE * sizeof(viskores::Id)), viskores::CopyFlag::Off, token);
+      static_cast<viskores::BufferSizeType>(ARRAY_SIZE * sizeof(viskores::Id)),
+      viskores::CopyFlag::Off,
+      token);
     outputBuffer.SetNumberOfBytes(
-      static_cast<viskores::BufferSizeType>(ARRAY_SIZE * sizeof(viskores::Id)), viskores::CopyFlag::Off, token);
+      static_cast<viskores::BufferSizeType>(ARRAY_SIZE * sizeof(viskores::Id)),
+      viskores::CopyFlag::Off,
+      token);
     auto inputArray = reinterpret_cast<viskores::Id*>(inputBuffer.WritePointerHost(token));
     auto outputArray = reinterpret_cast<viskores::Id*>(outputBuffer.WritePointerHost(token));
     std::size_t i = 0;
@@ -383,7 +390,7 @@ void TestBasicInvoke()
     for (viskores::Id index = 0; index < ARRAY_SIZE; index++, i++)
     {
       VISKORES_TEST_ASSERT(outputArray[i] == TestValue(index, viskores::Id()) + 1000,
-                       "Got bad value from testing.");
+                           "Got bad value from testing.");
     }
   }
 }
@@ -400,9 +407,13 @@ void TestInvokeWithError()
   {
     viskores::cont::Token token;
     inputBuffer.SetNumberOfBytes(
-      static_cast<viskores::BufferSizeType>(ARRAY_SIZE * sizeof(viskores::Id)), viskores::CopyFlag::Off, token);
+      static_cast<viskores::BufferSizeType>(ARRAY_SIZE * sizeof(viskores::Id)),
+      viskores::CopyFlag::Off,
+      token);
     outputBuffer.SetNumberOfBytes(
-      static_cast<viskores::BufferSizeType>(ARRAY_SIZE * sizeof(viskores::Id)), viskores::CopyFlag::Off, token);
+      static_cast<viskores::BufferSizeType>(ARRAY_SIZE * sizeof(viskores::Id)),
+      viskores::CopyFlag::Off,
+      token);
     auto inputArray = reinterpret_cast<viskores::Id*>(inputBuffer.WritePointerHost(token));
     auto outputArray = reinterpret_cast<viskores::Id*>(outputBuffer.WritePointerHost(token));
     std::size_t i = 0;
@@ -452,7 +463,7 @@ void TestInvokeWithBadDynamicType()
     std::cout << "    Got expected exception." << std::endl;
     std::cout << "    " << error.GetMessage() << std::endl;
     VISKORES_TEST_ASSERT(error.GetMessage().find(" 2 ") != std::string::npos,
-                     "Parameter index not named in error message.");
+                         "Parameter index not named in error message.");
   }
 }
 

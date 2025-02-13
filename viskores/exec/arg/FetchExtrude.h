@@ -43,7 +43,7 @@ struct Fetch<FetchType, viskores::exec::arg::AspectTagIncidentElementIndices, Ex
   template <typename ScatterAndMaskMode>
   VISKORES_EXEC auto Load(
     const viskores::exec::arg::ThreadIndicesTopologyMap<viskores::exec::ConnectivityExtrude,
-                                                    ScatterAndMaskMode>& indices,
+                                                        ScatterAndMaskMode>& indices,
     const ExecObjectType&) const -> viskores::Vec<viskores::Id, 6>
   {
     // std::cout << "opimized fetch for point ids" << std::endl;
@@ -63,7 +63,8 @@ struct Fetch<FetchType, viskores::exec::arg::AspectTagIncidentElementIndices, Ex
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ConnectivityType, typename ScatterAndMaskMode>
   VISKORES_EXEC auto Load(
-    const viskores::exec::arg::ThreadIndicesTopologyMap<ConnectivityType, ScatterAndMaskMode>& indices,
+    const viskores::exec::arg::ThreadIndicesTopologyMap<ConnectivityType, ScatterAndMaskMode>&
+      indices,
     const ExecObjectType&) const -> decltype(indices.GetIndicesIncident())
   {
     return indices.GetIndicesIncident();
@@ -88,7 +89,7 @@ struct Fetch<viskores::exec::arg::FetchTagArrayTopologyMapIn,
   template <typename ScatterAndMaskMode>
   VISKORES_EXEC auto Load(
     const viskores::exec::arg::ThreadIndicesTopologyMap<viskores::exec::ConnectivityExtrude,
-                                                    ScatterAndMaskMode>& indices,
+                                                        ScatterAndMaskMode>& indices,
     const viskores::internal::ArrayPortalXGCCoordinates<T>& portal)
     -> decltype(portal.GetWedge(indices.GetIndicesIncident()))
   {
@@ -98,23 +99,23 @@ struct Fetch<viskores::exec::arg::FetchTagArrayTopologyMapIn,
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
   VISKORES_EXEC auto Load(const ThreadIndicesType& indices,
-                      const viskores::internal::ArrayPortalXGCCoordinates<T>& field) const
-    -> decltype(
-      detail::FetchArrayTopologyMapInImplementation<typename ThreadIndicesType::Connectivity,
-                                                    viskores::internal::ArrayPortalXGCCoordinates<T>,
-                                                    ThreadIndicesType>::Load(indices, field))
+                          const viskores::internal::ArrayPortalXGCCoordinates<T>& field) const
+    -> decltype(detail::FetchArrayTopologyMapInImplementation<
+                typename ThreadIndicesType::Connectivity,
+                viskores::internal::ArrayPortalXGCCoordinates<T>,
+                ThreadIndicesType>::Load(indices, field))
   {
-    using Implementation =
-      detail::FetchArrayTopologyMapInImplementation<typename ThreadIndicesType::Connectivity,
-                                                    viskores::internal::ArrayPortalXGCCoordinates<T>,
-                                                    ThreadIndicesType>;
+    using Implementation = detail::FetchArrayTopologyMapInImplementation<
+      typename ThreadIndicesType::Connectivity,
+      viskores::internal::ArrayPortalXGCCoordinates<T>,
+      ThreadIndicesType>;
     return Implementation::Load(indices, field);
   }
 
   template <typename ThreadIndicesType, typename ValueType>
   VISKORES_EXEC void Store(const ThreadIndicesType&,
-                       const viskores::internal::ArrayPortalXGCCoordinates<T>&,
-                       const ValueType&) const
+                           const viskores::internal::ArrayPortalXGCCoordinates<T>&,
+                           const ValueType&) const
   {
     // Store is a no-op for this fetch.
   }
@@ -130,7 +131,7 @@ struct Fetch<viskores::exec::arg::FetchTagArrayDirectIn,
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
   VISKORES_EXEC auto Load(const ThreadIndicesType& indices,
-                      const viskores::internal::ArrayPortalXGCCoordinates<T>& points)
+                          const viskores::internal::ArrayPortalXGCCoordinates<T>& points)
     -> decltype(points.Get(indices.GetInputIndex()))
   {
     // std::cout << "optimized fetch for point coordinates" << std::endl;
@@ -141,7 +142,7 @@ struct Fetch<viskores::exec::arg::FetchTagArrayDirectIn,
   template <typename ScatterAndMaskMode>
   VISKORES_EXEC auto Load(
     const viskores::exec::arg::ThreadIndicesTopologyMap<viskores::exec::ReverseConnectivityExtrude,
-                                                    ScatterAndMaskMode>& indices,
+                                                        ScatterAndMaskMode>& indices,
     const viskores::internal::ArrayPortalXGCCoordinates<T>& points)
     -> decltype(points.Get(indices.GetIndexLogical()))
   {
@@ -151,8 +152,8 @@ struct Fetch<viskores::exec::arg::FetchTagArrayDirectIn,
 
   template <typename ThreadIndicesType, typename ValueType>
   VISKORES_EXEC void Store(const ThreadIndicesType&,
-                       const viskores::internal::ArrayPortalXGCCoordinates<T>&,
-                       const ValueType&) const
+                           const viskores::internal::ArrayPortalXGCCoordinates<T>&,
+                           const ValueType&) const
   {
     // Store is a no-op for this fetch.
   }

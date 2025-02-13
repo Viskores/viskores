@@ -77,7 +77,7 @@ struct BranchDecompositionBlock
 
   // Data from hierarchical tree needed during reduction
   viskores::cont::ArrayHandleGroupVecVariable<viskores::cont::ArrayHandle<viskores::Id>,
-                                          viskores::cont::ArrayHandle<viskores::Id>>
+                                              viskores::cont::ArrayHandle<viskores::Id>>
     FirstSupernodePerIteration;
 
   // Decomposer used during reduction and output data set

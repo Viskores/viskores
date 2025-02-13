@@ -87,11 +87,12 @@ public:
   FindCriticalPointsSetUpDownNeighboursWorklet() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
-                            const InFieldPortalType& isNecessaryPortal,
-                            const OutFieldPortalType& upNeighbourPortal,
-                            const OutFieldPortalType& downNeighbourPortal,
-                            const OutFieldPortalType& supernodeTypePortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
+    const InFieldPortalType& isNecessaryPortal,
+    const OutFieldPortalType& upNeighbourPortal,
+    const OutFieldPortalType& downNeighbourPortal,
+    const OutFieldPortalType& supernodeTypePortal) const
   { // operator ()
     // per active superarc
     // make local copies of the ends

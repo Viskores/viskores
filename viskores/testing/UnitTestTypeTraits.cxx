@@ -34,14 +34,14 @@ private:
   {
     std::cout << "  scalar" << std::endl;
     VISKORES_TEST_ASSERT(viskores::VecTraits<T>::NUM_COMPONENTS == 1,
-                     "Scalar type does not have one component.");
+                         "Scalar type does not have one component.");
   }
   template <typename T>
   void TestDimensionality(T, viskores::TypeTraitsVectorTag) const
   {
     std::cout << "  vector" << std::endl;
     VISKORES_TEST_ASSERT(viskores::VecTraits<T>::NUM_COMPONENTS > 1,
-                     "Vector type does not have multiple components.");
+                         "Vector type does not have multiple components.");
   }
 
   template <typename T>
@@ -59,7 +59,7 @@ private:
     using VT = typename viskores::VecTraits<T>::ComponentType;
     VT value = VT(2.001);
     VISKORES_TEST_ASSERT(test_equal(float(value), float(2.001)),
-                     "Real does not hold floaing point number.");
+                         "Real does not hold floaing point number.");
   }
 };
 

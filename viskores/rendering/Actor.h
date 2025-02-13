@@ -117,7 +117,8 @@ private:
   struct InternalsType;
   std::unique_ptr<InternalsType> Internals;
 
-  void Init(const viskores::cont::CoordinateSystem& coordinates, const viskores::cont::Field& scalarField);
+  void Init(const viskores::cont::CoordinateSystem& coordinates,
+            const viskores::cont::Field& scalarField);
 
   void Init();
 };

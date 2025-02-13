@@ -86,10 +86,11 @@ public:
   FindCriticalPointsFindTerminalElementsWorklet() {}
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
-                            const InFieldPortalType& supernodeTypePortal,
-                            const InOutFieldPortalType& upNeighbourPortal,
-                            const InOutFieldPortalType& downNeighbourPortal
+  VISKORES_EXEC void operator()(
+    const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
+    const InFieldPortalType& supernodeTypePortal,
+    const InOutFieldPortalType& upNeighbourPortal,
+    const InOutFieldPortalType& downNeighbourPortal
 
   ) const
   { // operator ()

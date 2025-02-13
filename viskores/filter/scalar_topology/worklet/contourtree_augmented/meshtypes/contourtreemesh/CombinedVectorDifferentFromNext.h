@@ -98,7 +98,8 @@ public:
     VISKORES_EXEC_CONT viskores::Id operator()(viskores::Id i) const
     {
       viskores::Id currGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i));
-      viskores::Id nextGlobalIdx = this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i + 1));
+      viskores::Id nextGlobalIdx =
+        this->GetGlobalMeshIndex(this->OverallSortOrderPortal.Get(i + 1));
       return (currGlobalIdx != nextGlobalIdx) ? 1 : 0;
     }
   };

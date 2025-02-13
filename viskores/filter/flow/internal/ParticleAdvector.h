@@ -43,7 +43,7 @@ public:
   }
 
   viskores::cont::PartitionedDataSet Execute(const viskores::cont::ArrayHandle<ParticleType>& seeds,
-                                         viskores::FloatDefault stepSize)
+                                             viskores::FloatDefault stepSize)
   {
     if (!this->UseThreadedAlgorithm)
     {
@@ -60,7 +60,7 @@ public:
 private:
   template <typename AlgorithmType>
   viskores::cont::PartitionedDataSet RunAlgo(const viskores::cont::ArrayHandle<ParticleType>& seeds,
-                                         viskores::FloatDefault stepSize)
+                                             viskores::FloatDefault stepSize)
   {
     AlgorithmType algo(this->BoundsMap, this->Blocks, this->UseAsynchronousCommunication);
     algo.Execute(seeds, stepSize);

@@ -86,9 +86,9 @@ void CheckResult(const viskores::cont::ArrayHandle<viskores::Vec3f>& field1,
   auto outPortal = outputArray.ReadPortal();
 
   VISKORES_TEST_ASSERT(outputArray.GetNumberOfValues() == field1.GetNumberOfValues(),
-                   "Field sizes wrong");
+                       "Field sizes wrong");
   VISKORES_TEST_ASSERT(outputArray.GetNumberOfValues() == field2.GetNumberOfValues(),
-                   "Field sizes wrong");
+                       "Field sizes wrong");
 
   for (viskores::Id j = 0; j < outputArray.GetNumberOfValues(); j++)
   {

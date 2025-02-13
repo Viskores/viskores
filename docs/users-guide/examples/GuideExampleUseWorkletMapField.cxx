@@ -56,12 +56,14 @@ namespace vector_calculus
 {
 
 //// LABEL Export
-class VISKORES_FILTER_VECTOR_CALCULUS_EXPORT FieldMagnitude : public viskores::filter::Filter
+class VISKORES_FILTER_VECTOR_CALCULUS_EXPORT FieldMagnitude
+  : public viskores::filter::Filter
 {
 public:
   VISKORES_CONT FieldMagnitude();
 
-  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inDataSet) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(
+    const viskores::cont::DataSet& inDataSet) override;
 };
 
 } // namespace vector_calculus
@@ -97,7 +99,8 @@ VISKORES_CONT viskores::cont::DataSet FieldMagnitude::DoExecute(
   // Use a C++ lambda expression to provide a callback for CastAndCall. The lambda
   // will capture references to local variables like outFieldArray (using `[&]`)
   // that it can read and write.
-  auto resolveType = [&](const auto& inFieldArray) {
+  auto resolveType = [&](const auto& inFieldArray)
+  {
     using InArrayHandleType = std::decay_t<decltype(inFieldArray)>;
     using ComponentType =
       typename viskores::VecTraits<typename InArrayHandleType::ValueType>::ComponentType;
@@ -144,8 +147,8 @@ struct ReverseArrayCopyWorklet : viskores::worklet::WorkletMapField
 
   template<typename InputType, typename OutputArrayPortalType>
   VISKORES_EXEC void operator()(const InputType& inputValue,
-                            const OutputArrayPortalType& outputArrayPortal,
-                            viskores::Id workIndex) const
+                                const OutputArrayPortalType& outputArrayPortal,
+                                viskores::Id workIndex) const
   {
     viskores::Id outIndex = outputArrayPortal.GetNumberOfValues() - workIndex - 1;
     if (outIndex >= 0)
@@ -192,7 +195,7 @@ void Test()
   magResult.GetField("test_values_magnitude").GetData().AsArrayHandle(outputArray);
 
   VISKORES_TEST_ASSERT(outputArray.GetNumberOfValues() == ARRAY_SIZE,
-                   "Bad output array size.");
+                       "Bad output array size.");
   for (viskores::Id index = 0; index < ARRAY_SIZE; index++)
   {
     viskores::Vec3f testValue = TestValue(index, viskores::Vec3f());
@@ -208,7 +211,7 @@ void Test()
   invoker(viskores::worklet::ReverseArrayCopyWorklet{}, inputArray, outputArray2);
 
   VISKORES_TEST_ASSERT(outputArray2.GetNumberOfValues() == ARRAY_SIZE,
-                   "Bad output array size.");
+                       "Bad output array size.");
   for (viskores::Id index = 0; index < ARRAY_SIZE; index++)
   {
     viskores::Vec3f expectedValue = TestValue(ARRAY_SIZE - index - 1, viskores::Vec3f());

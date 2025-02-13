@@ -48,7 +48,8 @@ public:
   }
 
   VISKORES_EXEC
-  void operator()(viskores::CellShapeTagHexahedron viskoresNotUsed(shapeType), viskores::Id& points) const
+  void operator()(viskores::CellShapeTagHexahedron viskoresNotUsed(shapeType),
+                  viskores::Id& points) const
   {
     points = 0;
   }
@@ -59,7 +60,8 @@ public:
     points = 0;
   }
   VISKORES_EXEC
-  void operator()(viskores::CellShapeTagWedge viskoresNotUsed(shapeType), viskores::Id& points) const
+  void operator()(viskores::CellShapeTagWedge viskoresNotUsed(shapeType),
+                  viskores::Id& points) const
   {
     points = 0;
   }
@@ -77,38 +79,38 @@ public:
 
   template <typename VecType, typename OutputPortal>
   VISKORES_EXEC void operator()(const viskores::Id& viskoresNotUsed(pointOffset),
-                            viskores::CellShapeTagQuad viskoresNotUsed(shapeType),
-                            const VecType& viskoresNotUsed(cellIndices),
-                            const viskores::Id& viskoresNotUsed(cellId),
-                            OutputPortal& viskoresNotUsed(outputIndices)) const
+                                viskores::CellShapeTagQuad viskoresNotUsed(shapeType),
+                                const VecType& viskoresNotUsed(cellIndices),
+                                const viskores::Id& viskoresNotUsed(cellId),
+                                OutputPortal& viskoresNotUsed(outputIndices)) const
   {
   }
 
   template <typename VecType, typename OutputPortal>
   VISKORES_EXEC void operator()(const viskores::Id& viskoresNotUsed(pointOffset),
-                            viskores::CellShapeTagWedge viskoresNotUsed(shapeType),
-                            const VecType& viskoresNotUsed(cellIndices),
-                            const viskores::Id& viskoresNotUsed(cellId),
-                            OutputPortal& viskoresNotUsed(outputIndices)) const
+                                viskores::CellShapeTagWedge viskoresNotUsed(shapeType),
+                                const VecType& viskoresNotUsed(cellIndices),
+                                const viskores::Id& viskoresNotUsed(cellId),
+                                OutputPortal& viskoresNotUsed(outputIndices)) const
   {
   }
 
   template <typename VecType, typename OutputPortal>
   VISKORES_EXEC void operator()(const viskores::Id& viskoresNotUsed(pointOffset),
-                            viskores::CellShapeTagHexahedron viskoresNotUsed(shapeType),
-                            const VecType& viskoresNotUsed(cellIndices),
-                            const viskores::Id& viskoresNotUsed(cellId),
-                            OutputPortal& viskoresNotUsed(outputIndices)) const
+                                viskores::CellShapeTagHexahedron viskoresNotUsed(shapeType),
+                                const VecType& viskoresNotUsed(cellIndices),
+                                const viskores::Id& viskoresNotUsed(cellId),
+                                OutputPortal& viskoresNotUsed(outputIndices)) const
 
   {
   }
 
   template <typename VecType, typename OutputPortal>
   VISKORES_EXEC void operator()(const viskores::Id& pointOffset,
-                            viskores::CellShapeTagGeneric shapeType,
-                            const VecType& cellIndices,
-                            const viskores::Id& cellId,
-                            OutputPortal& outputIndices) const
+                                viskores::CellShapeTagGeneric shapeType,
+                                const VecType& cellIndices,
+                                const viskores::Id& cellId,
+                                OutputPortal& outputIndices) const
   {
 
     if (shapeType.Id == viskores::CELL_SHAPE_LINE)
@@ -199,8 +201,8 @@ public:
 
   template <typename ScalarPortalType>
   VISKORES_EXEC void operator()(const viskores::Id3& cylId,
-                            viskores::Float32& radius,
-                            const ScalarPortalType& scalars) const
+                                viskores::Float32& radius,
+                                const ScalarPortalType& scalars) const
   {
     viskores::Float32 scalar = static_cast<viskores::Float32>(scalars.Get(cylId[0]));
     viskores::Float32 t = (scalar - MinValue) * InverseDelta;

@@ -42,10 +42,10 @@ struct RenderLine : public viskores::worklet::WorkletMapField
 
   template <typename ColorBufferPortal, typename DepthBufferPortal>
   VISKORES_EXEC void operator()(const viskores::Vec3f_32& start,
-                            const viskores::Vec3f_32& end,
-                            const viskores::Vec4f_32& color,
-                            ColorBufferPortal& colorBuffer,
-                            DepthBufferPortal& depthBuffer) const
+                                const viskores::Vec3f_32& end,
+                                const viskores::Vec4f_32& color,
+                                ColorBufferPortal& colorBuffer,
+                                DepthBufferPortal& depthBuffer) const
   {
     viskores::Id x0 = static_cast<viskores::Id>(viskores::Round(start[0]));
     viskores::Id y0 = static_cast<viskores::Id>(viskores::Round(start[1]));
@@ -59,7 +59,8 @@ struct RenderLine : public viskores::worklet::WorkletMapField
 
     const viskores::Id xStart = x0;
     const viskores::Id yStart = y0;
-    const viskores::Float32 pdist = viskores::Sqrt(viskores::Float32(dx * dx) + viskores::Float32(dy * dy));
+    const viskores::Float32 pdist =
+      viskores::Sqrt(viskores::Float32(dx * dx) + viskores::Float32(dy * dy));
 
     while (x0 >= 0 && x0 < this->Width && y0 >= 0 && y0 < this->Height)
     {
@@ -72,7 +73,8 @@ struct RenderLine : public viskores::worklet::WorkletMapField
       // I haven't looked, but the wireframmer probably suffers from this too.
       // Additionally, this should not happen on the CPU. Annotations take
       // far longer than the the geometry.
-      viskores::Float32 t = pdist == 0.f ? 1.0f : viskores::Sqrt(deltaX * deltaX + deltaY * deltaY) / pdist;
+      viskores::Float32 t =
+        pdist == 0.f ? 1.0f : viskores::Sqrt(deltaX * deltaX + deltaY * deltaY) / pdist;
       t = viskores::Min(1.f, viskores::Max(0.f, t));
       viskores::Float32 z = viskores::Lerp(z0, z1, t);
 
@@ -133,11 +135,11 @@ void LineRendererBatcher::BatchLine(const viskores::Vec3f_64& start,
                                     const viskores::rendering::Color& color)
 {
   viskores::Vec3f_32 start32(static_cast<viskores::Float32>(start[0]),
-                         static_cast<viskores::Float32>(start[1]),
-                         static_cast<viskores::Float32>(start[2]));
+                             static_cast<viskores::Float32>(start[1]),
+                             static_cast<viskores::Float32>(start[2]));
   viskores::Vec3f_32 end32(static_cast<viskores::Float32>(end[0]),
-                       static_cast<viskores::Float32>(end[1]),
-                       static_cast<viskores::Float32>(end[2]));
+                           static_cast<viskores::Float32>(end[1]),
+                           static_cast<viskores::Float32>(end[2]));
   this->BatchLine(start32, end32, color);
 }
 
@@ -152,9 +154,11 @@ void LineRendererBatcher::BatchLine(const viskores::Vec3f_32& start,
 
 void LineRendererBatcher::Render(const viskores::rendering::Canvas* canvas) const
 {
-  PointsArrayHandle starts = viskores::cont::make_ArrayHandle(this->Starts, viskores::CopyFlag::Off);
+  PointsArrayHandle starts =
+    viskores::cont::make_ArrayHandle(this->Starts, viskores::CopyFlag::Off);
   PointsArrayHandle ends = viskores::cont::make_ArrayHandle(this->Ends, viskores::CopyFlag::Off);
-  ColorsArrayHandle colors = viskores::cont::make_ArrayHandle(this->Colors, viskores::CopyFlag::Off);
+  ColorsArrayHandle colors =
+    viskores::cont::make_ArrayHandle(this->Colors, viskores::CopyFlag::Off);
 
   viskores::cont::Invoker invoker;
   invoker(RenderLine(canvas->GetWidth(), canvas->GetHeight()),

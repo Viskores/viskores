@@ -38,7 +38,8 @@ namespace testing
 namespace detail
 {
 
-inline void CompareDimensionalityTags(viskores::TypeTraitsScalarTag, viskores::VecTraitsTagSingleComponent)
+inline void CompareDimensionalityTags(viskores::TypeTraitsScalarTag,
+                                      viskores::VecTraitsTagSingleComponent)
 {
   // If we are here, everything is fine.
 }
@@ -47,7 +48,8 @@ inline void CompareDimensionalityTags(viskores::TypeTraitsVectorTag,
 {
   // If we are here, everything is fine.
 }
-inline void CompareDimensionalityTags(viskores::TypeTraitsUnknownTag, viskores::VecTraitsTagSingleComponent)
+inline void CompareDimensionalityTags(viskores::TypeTraitsUnknownTag,
+                                      viskores::VecTraitsTagSingleComponent)
 {
   // If we are here, type traits are probably not defined (and default to unknown). In this case,
   // we expect VecTraits to have the default implementation, in which case it is treated as a
@@ -58,7 +60,7 @@ template <viskores::IdComponent NUM_COMPONENTS, typename T>
 inline void CheckIsStatic(const T&, viskores::VecTraitsTagSizeStatic)
 {
   VISKORES_TEST_ASSERT(viskores::VecTraits<T>::NUM_COMPONENTS == NUM_COMPONENTS,
-                   "Traits returns unexpected number of components");
+                       "Traits returns unexpected number of components");
 }
 
 template <viskores::IdComponent NUM_COMPONENTS, typename T>
@@ -105,7 +107,7 @@ static void TestVecTypeWritableImpl(const T& inVector,
     viskores::Vec<ComponentType, NUM_COMPONENTS> resultCopy;
     Traits::CopyInto(outVector, resultCopy);
     VISKORES_TEST_ASSERT(test_equal(resultCopy, multiplier * vectorCopy),
-                     "Got bad result for scalar multiple");
+                         "Got bad result for scalar multiple");
   }
 
   {
@@ -118,7 +120,7 @@ static void TestVecTypeWritableImpl(const T& inVector,
     viskores::Vec<ComponentType, NUM_COMPONENTS> resultCopy;
     Traits::CopyInto(outVector, resultCopy);
     VISKORES_TEST_ASSERT(test_equal(resultCopy, multiplier * vectorCopy),
-                     "Got bad result for scalar multiple");
+                         "Got bad result for scalar multiple");
   }
 }
 
@@ -144,7 +146,7 @@ static void TestVecTypeImpl(const typename std::remove_const<T>::type& inVector,
   CheckIsStatic<NUM_COMPONENTS>(inVector, typename Traits::IsSizeStatic());
 
   VISKORES_TEST_ASSERT(Traits::GetNumberOfComponents(inVector) == NUM_COMPONENTS,
-                   "Traits returned wrong number of components.");
+                       "Traits returned wrong number of components.");
 
   viskores::Vec<ComponentType, NUM_COMPONENTS> vectorCopy;
   Traits::CopyInto(inVector, vectorCopy);
@@ -171,12 +173,14 @@ static void TestVecTypeImpl(const typename std::remove_const<T>::type& inVector,
 
   // Compiler checks for base component types
   using BaseComponentType = typename viskores::VecTraits<T>::BaseComponentType;
-  VISKORES_STATIC_ASSERT((std::is_same<typename viskores::TypeTraits<BaseComponentType>::DimensionalityTag,
-                                   viskores::TypeTraitsScalarTag>::value) ||
-                     (std::is_same<typename viskores::TypeTraits<BaseComponentType>::DimensionalityTag,
-                                   viskores::TypeTraitsUnknownTag>::value));
-  VISKORES_STATIC_ASSERT((std::is_same<typename viskores::VecTraits<ComponentType>::BaseComponentType,
-                                   BaseComponentType>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<typename viskores::TypeTraits<BaseComponentType>::DimensionalityTag,
+                  viskores::TypeTraitsScalarTag>::value) ||
+    (std::is_same<typename viskores::TypeTraits<BaseComponentType>::DimensionalityTag,
+                  viskores::TypeTraitsUnknownTag>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<typename viskores::VecTraits<ComponentType>::BaseComponentType,
+                  BaseComponentType>::value));
 
   // Compiler checks for replacing component types
   using ReplaceWithVecComponent =
@@ -188,7 +192,8 @@ static void TestVecTypeImpl(const typename std::remove_const<T>::type& inVector,
                   viskores::Vec<char, 2>>::value) ||
     (!std::is_same<typename viskores::TypeTraits<std::remove_pointer_t<T>>::DimensionalityTag,
                    viskores::TypeTraitsVectorTag>::value &&
-     std::is_same<typename viskores::VecTraits<ReplaceWithVecComponent>::ComponentType, char>::value));
+     std::is_same<typename viskores::VecTraits<ReplaceWithVecComponent>::ComponentType,
+                  char>::value));
   VISKORES_STATIC_ASSERT(
     (std::is_same<typename viskores::VecTraits<ReplaceWithVecComponent>::BaseComponentType,
                   char>::value));
@@ -201,9 +206,11 @@ static void TestVecTypeImpl(const typename std::remove_const<T>::type& inVector,
                   viskores::Vec<short, 2>>::value) ||
     (!std::is_same<typename viskores::TypeTraits<std::remove_pointer_t<T>>::DimensionalityTag,
                    viskores::TypeTraitsVectorTag>::value &&
-     std::is_same<typename viskores::VecTraits<ReplaceBaseComponent>::ComponentType, short>::value));
-  VISKORES_STATIC_ASSERT((
-    std::is_same<typename viskores::VecTraits<ReplaceBaseComponent>::BaseComponentType, short>::value));
+     std::is_same<typename viskores::VecTraits<ReplaceBaseComponent>::ComponentType,
+                  short>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<typename viskores::VecTraits<ReplaceBaseComponent>::BaseComponentType,
+                  short>::value));
 }
 
 inline void CheckVecComponentsTag(viskores::VecTraitsTagMultipleComponents)
@@ -247,8 +254,9 @@ static void TestVecType(const T& inVector, T& outVector)
   T* inPointer = const_cast<T*>(&inVector);
   T* outPointer = &outVector;
   detail::TestVecTypeImpl<NUM_COMPONENTS, T*>(inPointer, outPointer);
-  VISKORES_STATIC_ASSERT_MSG((std::is_base_of<viskores::VecTraits<T*>, viskores::VecTraits<const T*>>::value),
-                         "Constant pointer should have same implementation as pointer.");
+  VISKORES_STATIC_ASSERT_MSG(
+    (std::is_base_of<viskores::VecTraits<T*>, viskores::VecTraits<const T*>>::value),
+    "Constant pointer should have same implementation as pointer.");
 }
 
 /// Checks to make sure that the HasMultipleComponents tag is actually for a

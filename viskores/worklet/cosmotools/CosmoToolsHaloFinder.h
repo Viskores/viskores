@@ -79,10 +79,12 @@ void CosmoTools<T, StorageType>::HaloFinder(viskores::cont::ArrayHandle<viskores
   CompositeLocationType location;
   location = make_ArrayHandleCompositeVector(xLoc, yLoc, zLoc);
 
-  viskores::cont::ArrayHandle<viskores::Id> leftNeighbor;  // lower particle id to check for linking length
-  viskores::cont::ArrayHandle<viskores::Id> rightNeighbor; // upper particle id to check for linking length
+  viskores::cont::ArrayHandle<viskores::Id>
+    leftNeighbor; // lower particle id to check for linking length
+  viskores::cont::ArrayHandle<viskores::Id>
+    rightNeighbor; // upper particle id to check for linking length
   viskores::cont::ArrayHandle<viskores::UInt32>
-    activeMask;                             // mask per particle indicating active neighbor bins
+    activeMask; // mask per particle indicating active neighbor bins
   viskores::cont::ArrayHandle<viskores::Id> partId; // index into all particles
   viskores::cont::ArrayHandle<viskores::Id> binId;  // bin id for each particle in each FOF halo
 
@@ -124,7 +126,8 @@ void CosmoTools<T, StorageType>::HaloFinder(viskores::cont::ArrayHandle<viskores
   {
     // Connect each particle to another close particle to build halos
     GraftParticles<T> graftParticles(numBinsX, numBinsY, numBinsZ, NUM_NEIGHBORS, linkLen);
-    viskores::worklet::DispatcherMapField<GraftParticles<T>> graftParticlesDispatcher(graftParticles);
+    viskores::worklet::DispatcherMapField<GraftParticles<T>> graftParticlesDispatcher(
+      graftParticles);
 
     graftParticlesDispatcher.Invoke(indexArray,   // (input) index into particles
                                     partId,       // (input) particle id sorted by bin
@@ -186,10 +189,11 @@ void CosmoTools<T, StorageType>::HaloFinder(viskores::cont::ArrayHandle<viskores
 //
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, typename StorageType>
-void CosmoTools<T, StorageType>::BinParticlesAll(viskores::cont::ArrayHandle<viskores::Id>& partId,
-                                                 viskores::cont::ArrayHandle<viskores::Id>& binId,
-                                                 viskores::cont::ArrayHandle<viskores::Id>& leftNeighbor,
-                                                 viskores::cont::ArrayHandle<viskores::Id>& rightNeighbor)
+void CosmoTools<T, StorageType>::BinParticlesAll(
+  viskores::cont::ArrayHandle<viskores::Id>& partId,
+  viskores::cont::ArrayHandle<viskores::Id>& binId,
+  viskores::cont::ArrayHandle<viskores::Id>& leftNeighbor,
+  viskores::cont::ArrayHandle<viskores::Id>& rightNeighbor)
 {
   // Compute number of bins and ranges for each bin
   viskores::Vec<T, 2> result;
@@ -284,10 +288,11 @@ void CosmoTools<T, StorageType>::BinParticlesAll(viskores::cont::ArrayHandle<vis
 //
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, typename StorageType>
-void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(viskores::cont::ArrayHandle<viskores::Id>& partId,
-                                                        viskores::cont::ArrayHandle<viskores::Id>& haloId,
-                                                        viskores::cont::ArrayHandle<viskores::Id>& mbpId,
-                                                        viskores::cont::ArrayHandle<T>& minPotential)
+void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(
+  viskores::cont::ArrayHandle<viskores::Id>& partId,
+  viskores::cont::ArrayHandle<viskores::Id>& haloId,
+  viskores::cont::ArrayHandle<viskores::Id>& mbpId,
+  viskores::cont::ArrayHandle<T>& minPotential)
 {
   // Sort particles into groups according to halo id using an index into WholeArrays
   DeviceAlgorithm::SortByKey(haloId, partId);
@@ -309,7 +314,8 @@ void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(viskores::cont::ArrayHan
   viskores::cont::ArrayHandle<T> tempT;
 
   // Halo ids have been sorted, reduce to find the number of particles per halo
-  DeviceAlgorithm::ReduceByKey(haloId, constArray, uniqueHaloIds, particlesPerHalo, viskores::Add());
+  DeviceAlgorithm::ReduceByKey(
+    haloId, constArray, uniqueHaloIds, particlesPerHalo, viskores::Add());
 #ifdef DEBUG_PRINT
   DebugPrint("uniqueHaloId", uniqueHaloIds);
   DebugPrint("partPerHalo", particlesPerHalo);
@@ -331,7 +337,7 @@ void CosmoTools<T, StorageType>::MBPCenterFindingByHalo(viskores::cont::ArrayHan
   using IdArrayType = viskores::cont::ArrayHandle<viskores::Id>;
   viskores::cont::ArrayHandleTransform<IdArrayType, ScaleBiasFunctor<viskores::Id>> scaleBias =
     viskores::cont::make_ArrayHandleTransform<IdArrayType>(maxParticle,
-                                                       ScaleBiasFunctor<viskores::Id>(1, -1));
+                                                           ScaleBiasFunctor<viskores::Id>(1, -1));
 
   DeviceAlgorithm::Copy(scaleBias, maxParticle);
 #ifdef DEBUG_PRINT

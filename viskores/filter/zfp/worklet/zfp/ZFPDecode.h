@@ -28,29 +28,35 @@ template <typename Int, typename Scalar>
 inline VISKORES_EXEC Scalar dequantize(const Int& x, const int& e);
 
 template <>
-inline VISKORES_EXEC viskores::Float64 dequantize<viskores::Int64, viskores::Float64>(const viskores::Int64& x,
-                                                                      const viskores::Int32& e)
+inline VISKORES_EXEC viskores::Float64 dequantize<viskores::Int64, viskores::Float64>(
+  const viskores::Int64& x,
+  const viskores::Int32& e)
 {
-  return viskores::Ldexp((viskores::Float64)x, e - (CHAR_BIT * scalar_sizeof<viskores::Float64>() - 2));
+  return viskores::Ldexp((viskores::Float64)x,
+                         e - (CHAR_BIT * scalar_sizeof<viskores::Float64>() - 2));
 }
 
 template <>
-inline VISKORES_EXEC viskores::Float32 dequantize<viskores::Int32, viskores::Float32>(const viskores::Int32& x,
-                                                                      const viskores::Int32& e)
+inline VISKORES_EXEC viskores::Float32 dequantize<viskores::Int32, viskores::Float32>(
+  const viskores::Int32& x,
+  const viskores::Int32& e)
 {
-  return viskores::Ldexp((viskores::Float32)x, e - (CHAR_BIT * scalar_sizeof<viskores::Float32>() - 2));
+  return viskores::Ldexp((viskores::Float32)x,
+                         e - (CHAR_BIT * scalar_sizeof<viskores::Float32>() - 2));
 }
 
 template <>
-inline VISKORES_EXEC viskores::Int32 dequantize<viskores::Int32, viskores::Int32>(const viskores::Int32&,
-                                                                  const viskores::Int32&)
+inline VISKORES_EXEC viskores::Int32 dequantize<viskores::Int32, viskores::Int32>(
+  const viskores::Int32&,
+  const viskores::Int32&)
 {
   return 1;
 }
 
 template <>
-inline VISKORES_EXEC viskores::Int64 dequantize<viskores::Int64, viskores::Int64>(const viskores::Int64&,
-                                                                  const viskores::Int32&)
+inline VISKORES_EXEC viskores::Int64 dequantize<viskores::Int64, viskores::Int64>(
+  const viskores::Int64&,
+  const viskores::Int32&)
 {
   return 1;
 }
@@ -171,9 +177,9 @@ template <viskores::Int32 BlockSize,
           class ReaderType,
           typename UInt>
 VISKORES_EXEC void decode_ints(ReaderType<BlockSize, PortalType>& reader,
-                           viskores::Int32& maxbits,
-                           UInt* data,
-                           const viskores::Int32 intprec)
+                               viskores::Int32& maxbits,
+                               UInt* data,
+                               const viskores::Int32 intprec)
 {
   for (viskores::Int32 i = 0; i < BlockSize; ++i)
   {
@@ -203,9 +209,9 @@ VISKORES_EXEC void decode_ints(ReaderType<BlockSize, PortalType>& reader,
 
 template <viskores::Int32 BlockSize, typename Scalar, typename PortalType>
 VISKORES_EXEC void zfp_decode(Scalar* fblock,
-                          viskores::Int32 maxbits,
-                          viskores::UInt32 blockIdx,
-                          PortalType stream)
+                              viskores::Int32 maxbits,
+                              viskores::UInt32 blockIdx,
+                              PortalType stream)
 {
   zfp::BlockReader<BlockSize, PortalType> reader(stream, maxbits, viskores::Int32(blockIdx));
   using Int = typename zfp::zfp_traits<Scalar>::Int;

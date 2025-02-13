@@ -59,7 +59,8 @@ viskores::cont::DataSet MakeTestDataSet::Make1DUniformDataSet2()
   viskores::cont::DataSet dataSet = dsb.Create(dims);
 
   viskores::Float64 pointvar[dims];
-  constexpr viskores::Float64 dx = viskores::Float64(4.0 * viskores::Pi()) / viskores::Float64(dims - 1);
+  constexpr viskores::Float64 dx =
+    viskores::Float64(4.0 * viskores::Pi()) / viskores::Float64(dims - 1);
 
   viskores::Id idx = 0;
   for (viskores::Id x = 0; x < dims; ++x)
@@ -133,13 +134,12 @@ viskores::cont::DataSet MakeTestDataSet::Make2DUniformDataSet1()
   constexpr viskores::Id nVerts = 25;
   constexpr viskores::Id nCells = 16;
   constexpr viskores::Float32 pointvar[nVerts] = { 100.0f, 78.0f, 49.0f, 17.0f, 1.0f,  94.0f, 71.0f,
-                                               47.0f,  33.0f, 6.0f,  52.0f, 44.0f, 50.0f, 45.0f,
-                                               48.0f,  8.0f,  12.0f, 46.0f, 91.0f, 43.0f, 0.0f,
-                                               5.0f,   51.0f, 76.0f, 83.0f };
-  constexpr viskores::Float32 cellvar[nCells] = {
-    0.0f, 1.0f, 2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f,
-    8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f
-  };
+                                                   47.0f,  33.0f, 6.0f,  52.0f, 44.0f, 50.0f, 45.0f,
+                                                   48.0f,  8.0f,  12.0f, 46.0f, 91.0f, 43.0f, 0.0f,
+                                                   5.0f,   51.0f, 76.0f, 83.0f };
+  constexpr viskores::Float32 cellvar[nCells] = { 0.0f,  1.0f,  2.0f,  3.0f, 4.0f,  5.0f,
+                                                  6.0f,  7.0f,  8.0f,  9.0f, 10.0f, 11.0f,
+                                                  12.0f, 13.0f, 14.0f, 15.0f };
 
   dataSet.AddPointField("pointvar", pointvar, nVerts);
   dataSet.AddCellField("cellvar", cellvar, nCells);
@@ -156,8 +156,10 @@ viskores::cont::DataSet MakeTestDataSet::Make2DUniformDataSet2()
 
   constexpr viskores::Id nVerts = 256;
   viskores::Float64 pointvar[nVerts];
-  constexpr viskores::Float64 dx = viskores::Float64(4.0 * viskores::Pi()) / viskores::Float64(dims[0] - 1);
-  constexpr viskores::Float64 dy = viskores::Float64(2.0 * viskores::Pi()) / viskores::Float64(dims[1] - 1);
+  constexpr viskores::Float64 dx =
+    viskores::Float64(4.0 * viskores::Pi()) / viskores::Float64(dims[0] - 1);
+  constexpr viskores::Float64 dy =
+    viskores::Float64(2.0 * viskores::Pi()) / viskores::Float64(dims[1] - 1);
 
   viskores::Id idx = 0;
   for (viskores::Id y = 0; y < dims[1]; ++y)
@@ -211,8 +213,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DUniformDataSet0()
 
   constexpr int nVerts = 18;
   constexpr viskores::Float32 vars[nVerts] = { 10.1f,  20.1f,  30.1f,  40.1f,  50.2f,  60.2f,
-                                           70.2f,  80.2f,  90.3f,  100.3f, 110.3f, 120.3f,
-                                           130.4f, 140.4f, 150.4f, 160.4f, 170.5f, 180.5f };
+                                               70.2f,  80.2f,  90.3f,  100.3f, 110.3f, 120.3f,
+                                               130.4f, 140.4f, 150.4f, 160.4f, 170.5f, 180.5f };
 
   //Set point and cell scalar
   dataSet.AddPointField("pointvar", vars, nVerts);
@@ -345,7 +347,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DUniformDataSet3(viskores::Id3 dim
 
         if (dims[2] > 1)
         {
-          cv += viskores::Sin(cz) + 1.5 * viskores::Cos(viskores::Sqrt(cx * cx + cy * cy + cz * cz) / 0.75);
+          cv += viskores::Sin(cz) +
+            1.5 * viskores::Cos(viskores::Sqrt(cx * cx + cy * cy + cz * cz) / 0.75);
         }
         pointvar[static_cast<size_t>(idx)] = cv;
         idx++;
@@ -431,8 +434,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DRegularDataSet0()
   const int nVerts = 18;
   viskores::cont::ArrayHandleUniformPointCoordinates coordinates(viskores::Id3(3, 2, 3));
   viskores::Float32 vars[nVerts] = { 10.1f,  20.1f,  30.1f,  40.1f,  50.2f,  60.2f,
-                                 70.2f,  80.2f,  90.3f,  100.3f, 110.3f, 120.3f,
-                                 130.4f, 140.4f, 150.4f, 160.4f, 170.5f, 180.5f };
+                                     70.2f,  80.2f,  90.3f,  100.3f, 110.3f, 120.3f,
+                                     130.4f, 140.4f, 150.4f, 160.4f, 170.5f, 180.5f };
 
   dataSet.AddCoordinateSystem(viskores::cont::CoordinateSystem("coordinates", coordinates));
 
@@ -442,8 +445,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DRegularDataSet0()
 
   //Set cell scalar
   viskores::Float32 cellvar[4] = { 100.1f, 100.2f, 100.3f, 100.4f };
-  dataSet.AddField(
-    make_Field("cellvar", viskores::cont::Field::Association::Cells, cellvar, 4, viskores::CopyFlag::On));
+  dataSet.AddField(make_Field(
+    "cellvar", viskores::cont::Field::Association::Cells, cellvar, 4, viskores::CopyFlag::On));
 
   static constexpr viskores::IdComponent dim = 3;
   viskores::cont::CellSetStructured<dim> cellSet;
@@ -469,8 +472,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DRegularDataSet1()
 
   //Set cell scalar
   viskores::Float32 cellvar[1] = { 100.1f };
-  dataSet.AddField(
-    make_Field("cellvar", viskores::cont::Field::Association::Cells, cellvar, 1, viskores::CopyFlag::On));
+  dataSet.AddField(make_Field(
+    "cellvar", viskores::cont::Field::Association::Cells, cellvar, 1, viskores::CopyFlag::On));
 
   static constexpr viskores::IdComponent dim = 3;
   viskores::cont::CellSetStructured<dim> cellSet;
@@ -597,7 +600,7 @@ viskores::cont::DataSet MakeTestDataSet::Make2DExplicitDataSet0()
 
   // Field data
   viskores::Float32 pointvar[nVerts] = { 100.0f, 78.0f, 49.0f, 17.0f, 94.0f, 71.0f, 47.0f, 33.0f,
-                                     52.0f,  44.0f, 50.0f, 45.0f, 8.0f,  12.0f, 46.0f, 91.0f };
+                                         52.0f,  44.0f, 50.0f, 45.0f, 8.0f,  12.0f, 46.0f, 91.0f };
   viskores::Float32 cellvar[nCells] = { 0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f };
 
   dataSet.AddPointField("pointvar", pointvar, nVerts);
@@ -673,8 +676,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet1()
                                     CoordType(2, 2, 0) };
   viskores::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f };
 
-  dataSet.AddCoordinateSystem(
-    viskores::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, viskores::CopyFlag::On));
+  dataSet.AddCoordinateSystem(viskores::cont::make_CoordinateSystem(
+    "coordinates", coordinates, nVerts, viskores::CopyFlag::On));
   viskores::cont::CellSetExplicit<> cellSet;
   cellSet.PrepareToAddCells(2, 7);
   cellSet.AddCell(viskores::CELL_SHAPE_TRIANGLE, 3, make_Vec<viskores::Id>(0, 1, 2));
@@ -688,8 +691,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet1()
 
   //Set cell scalar
   viskores::Float32 cellvar[2] = { 100.1f, 100.2f };
-  dataSet.AddField(
-    make_Field("cellvar", viskores::cont::Field::Association::Cells, cellvar, 2, viskores::CopyFlag::On));
+  dataSet.AddField(make_Field(
+    "cellvar", viskores::cont::Field::Association::Cells, cellvar, 2, viskores::CopyFlag::On));
 
   return dataSet;
 }
@@ -712,8 +715,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet2()
   };
   viskores::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.2f, 70.2f, 80.3f };
 
-  dataSet.AddCoordinateSystem(
-    viskores::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, viskores::CopyFlag::On));
+  dataSet.AddCoordinateSystem(viskores::cont::make_CoordinateSystem(
+    "coordinates", coordinates, nVerts, viskores::CopyFlag::On));
 
   //Set point scalar
   dataSet.AddField(make_Field(
@@ -721,8 +724,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet2()
 
   //Set cell scalar
   viskores::Float32 cellvar[2] = { 100.1f };
-  dataSet.AddField(
-    make_Field("cellvar", viskores::cont::Field::Association::Cells, cellvar, 1, viskores::CopyFlag::On));
+  dataSet.AddField(make_Field(
+    "cellvar", viskores::cont::Field::Association::Cells, cellvar, 1, viskores::CopyFlag::On));
 
   viskores::cont::CellSetExplicit<> cellSet;
   viskores::Vec<viskores::Id, 8> ids;
@@ -766,10 +769,10 @@ viskores::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet4()
     CoordType(2, 1, 0)  //11
   };
   viskores::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.2f,
-                                 70.2f, 80.3f, 90.f,  10.f,  11.f,  12.f };
+                                     70.2f, 80.3f, 90.f,  10.f,  11.f,  12.f };
 
-  dataSet.AddCoordinateSystem(
-    viskores::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, viskores::CopyFlag::On));
+  dataSet.AddCoordinateSystem(viskores::cont::make_CoordinateSystem(
+    "coordinates", coordinates, nVerts, viskores::CopyFlag::On));
 
   //Set point scalar
   dataSet.AddField(make_Field(
@@ -777,8 +780,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet4()
 
   //Set cell scalar
   viskores::Float32 cellvar[2] = { 100.1f, 110.f };
-  dataSet.AddField(
-    make_Field("cellvar", viskores::cont::Field::Association::Cells, cellvar, 2, viskores::CopyFlag::On));
+  dataSet.AddField(make_Field(
+    "cellvar", viskores::cont::Field::Association::Cells, cellvar, 2, viskores::CopyFlag::On));
 
   viskores::cont::CellSetExplicit<> cellSet;
   viskores::Vec<viskores::Id, 8> ids;
@@ -821,8 +824,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet3()
   };
   viskores::Float32 vars[nVerts] = { 10.1f, 10.1f, 10.2f, 30.2f };
 
-  dataSet.AddCoordinateSystem(
-    viskores::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, viskores::CopyFlag::On));
+  dataSet.AddCoordinateSystem(viskores::cont::make_CoordinateSystem(
+    "coordinates", coordinates, nVerts, viskores::CopyFlag::On));
 
   //Set point scalar
   dataSet.AddField(make_Field(
@@ -830,8 +833,8 @@ viskores::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet3()
 
   //Set cell scalar
   viskores::Float32 cellvar[2] = { 100.1f };
-  dataSet.AddField(
-    make_Field("cellvar", viskores::cont::Field::Association::Cells, cellvar, 1, viskores::CopyFlag::On));
+  dataSet.AddField(make_Field(
+    "cellvar", viskores::cont::Field::Association::Cells, cellvar, 1, viskores::CopyFlag::On));
 
   viskores::cont::CellSetExplicit<> cellSet;
   viskores::Id4 ids;
@@ -870,10 +873,10 @@ viskores::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet5()
     CoordType(1, 2, 0)      //10
   };
   viskores::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.2f,
-                                 70.2f, 80.3f, 90.f,  10.f,  11.f };
+                                     70.2f, 80.3f, 90.f,  10.f,  11.f };
 
-  dataSet.AddCoordinateSystem(
-    viskores::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, viskores::CopyFlag::On));
+  dataSet.AddCoordinateSystem(viskores::cont::make_CoordinateSystem(
+    "coordinates", coordinates, nVerts, viskores::CopyFlag::On));
 
   //Set point scalar
   dataSet.AddField(make_Field(
@@ -1497,14 +1500,14 @@ viskores::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetCowNose()
   };
   const int connectivitySize = 57;
   viskores::Id pointId[connectivitySize] = { 0, 1, 3,  2, 3,  1, 4,  5,  0,  1, 0,  5,  7,  8,  6,
-                                         9, 6, 8,  0, 10, 7, 11, 7,  10, 0, 6,  13, 12, 13, 6,
-                                         1, 5, 14, 1, 14, 2, 0,  3,  15, 0, 13, 4,  6,  16, 12,
-                                         6, 9, 16, 7, 11, 8, 0,  15, 10, 7, 6,  0 };
+                                             9, 6, 8,  0, 10, 7, 11, 7,  10, 0, 6,  13, 12, 13, 6,
+                                             1, 5, 14, 1, 14, 2, 0,  3,  15, 0, 13, 4,  6,  16, 12,
+                                             6, 9, 16, 7, 11, 8, 0,  15, 10, 7, 6,  0 };
 
   // create DataSet
   viskores::cont::DataSet dataSet;
-  dataSet.AddCoordinateSystem(
-    viskores::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, viskores::CopyFlag::On));
+  dataSet.AddCoordinateSystem(viskores::cont::make_CoordinateSystem(
+    "coordinates", coordinates, nVerts, viskores::CopyFlag::On));
 
   viskores::cont::ArrayHandle<viskores::Id> connectivity;
   connectivity.Allocate(connectivitySize);

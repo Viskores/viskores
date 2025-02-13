@@ -41,22 +41,22 @@ public:
   // Function: extend a cube in X direction
   template <typename SigInArrayType, typename ExtensionArrayType>
   viskores::Id Extend3DLeftRight(const SigInArrayType& sigIn, // input
-                             viskores::Id sigDimX,
-                             viskores::Id sigDimY,
-                             viskores::Id sigDimZ,
-                             viskores::Id sigStartX,
-                             viskores::Id sigStartY,
-                             viskores::Id sigStartZ,
-                             viskores::Id sigPretendDimX,
-                             viskores::Id sigPretendDimY,
-                             viskores::Id sigPretendDimZ,
-                             ExtensionArrayType& ext1, // output
-                             ExtensionArrayType& ext2, // output
-                             viskores::Id addLen,
-                             viskores::worklet::wavelets::DWTMode ext1Method,
-                             viskores::worklet::wavelets::DWTMode ext2Method,
-                             bool pretendSigPaddedZero,
-                             bool padZeroAtExt2)
+                                 viskores::Id sigDimX,
+                                 viskores::Id sigDimY,
+                                 viskores::Id sigDimZ,
+                                 viskores::Id sigStartX,
+                                 viskores::Id sigStartY,
+                                 viskores::Id sigStartZ,
+                                 viskores::Id sigPretendDimX,
+                                 viskores::Id sigPretendDimY,
+                                 viskores::Id sigPretendDimZ,
+                                 ExtensionArrayType& ext1, // output
+                                 ExtensionArrayType& ext2, // output
+                                 viskores::Id addLen,
+                                 viskores::worklet::wavelets::DWTMode ext1Method,
+                                 viskores::worklet::wavelets::DWTMode ext2Method,
+                                 bool pretendSigPaddedZero,
+                                 bool padZeroAtExt2)
   {
     // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
     VISKORES_ASSERT(!pretendSigPaddedZero || !padZeroAtExt2);
@@ -194,22 +194,22 @@ public:
   // Function: extend a cube in Y direction
   template <typename SigInArrayType, typename ExtensionArrayType>
   viskores::Id Extend3DTopDown(const SigInArrayType& sigIn, // input
-                           viskores::Id sigDimX,
-                           viskores::Id sigDimY,
-                           viskores::Id sigDimZ,
-                           viskores::Id sigStartX,
-                           viskores::Id sigStartY,
-                           viskores::Id sigStartZ,
-                           viskores::Id sigPretendDimX,
-                           viskores::Id sigPretendDimY,
-                           viskores::Id sigPretendDimZ,
-                           ExtensionArrayType& ext1, // output
-                           ExtensionArrayType& ext2, // output
-                           viskores::Id addLen,
-                           viskores::worklet::wavelets::DWTMode ext1Method,
-                           viskores::worklet::wavelets::DWTMode ext2Method,
-                           bool pretendSigPaddedZero,
-                           bool padZeroAtExt2)
+                               viskores::Id sigDimX,
+                               viskores::Id sigDimY,
+                               viskores::Id sigDimZ,
+                               viskores::Id sigStartX,
+                               viskores::Id sigStartY,
+                               viskores::Id sigStartZ,
+                               viskores::Id sigPretendDimX,
+                               viskores::Id sigPretendDimY,
+                               viskores::Id sigPretendDimZ,
+                               ExtensionArrayType& ext1, // output
+                               ExtensionArrayType& ext2, // output
+                               viskores::Id addLen,
+                               viskores::worklet::wavelets::DWTMode ext1Method,
+                               viskores::worklet::wavelets::DWTMode ext2Method,
+                               bool pretendSigPaddedZero,
+                               bool padZeroAtExt2)
   {
     // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
     VISKORES_ASSERT(!pretendSigPaddedZero || !padZeroAtExt2);
@@ -347,22 +347,22 @@ public:
   // Function: extend a cube in Z direction
   template <typename SigInArrayType, typename ExtensionArrayType>
   viskores::Id Extend3DFrontBack(const SigInArrayType& sigIn, // input
-                             viskores::Id sigDimX,
-                             viskores::Id sigDimY,
-                             viskores::Id sigDimZ,
-                             viskores::Id sigStartX,
-                             viskores::Id sigStartY,
-                             viskores::Id sigStartZ,
-                             viskores::Id sigPretendDimX,
-                             viskores::Id sigPretendDimY,
-                             viskores::Id sigPretendDimZ,
-                             ExtensionArrayType& ext1, // output
-                             ExtensionArrayType& ext2, // output
-                             viskores::Id addLen,
-                             viskores::worklet::wavelets::DWTMode ext1Method,
-                             viskores::worklet::wavelets::DWTMode ext2Method,
-                             bool pretendSigPaddedZero,
-                             bool padZeroAtExt2)
+                                 viskores::Id sigDimX,
+                                 viskores::Id sigDimY,
+                                 viskores::Id sigDimZ,
+                                 viskores::Id sigStartX,
+                                 viskores::Id sigStartY,
+                                 viskores::Id sigStartZ,
+                                 viskores::Id sigPretendDimX,
+                                 viskores::Id sigPretendDimY,
+                                 viskores::Id sigPretendDimZ,
+                                 ExtensionArrayType& ext1, // output
+                                 ExtensionArrayType& ext2, // output
+                                 viskores::Id addLen,
+                                 viskores::worklet::wavelets::DWTMode ext1Method,
+                                 viskores::worklet::wavelets::DWTMode ext2Method,
+                                 bool pretendSigPaddedZero,
+                                 bool padZeroAtExt2)
   {
     // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
     VISKORES_ASSERT(!pretendSigPaddedZero || !padZeroAtExt2);
@@ -524,17 +524,17 @@ public:
   // The output has the same size as the small cube
   template <typename ArrayInType, typename ArrayOutType>
   viskores::Float64 DWT3D(ArrayInType& sigIn,
-                      viskores::Id sigDimX,
-                      viskores::Id sigDimY,
-                      viskores::Id sigDimZ,
-                      viskores::Id sigStartX,
-                      viskores::Id sigStartY,
-                      viskores::Id sigStartZ,
-                      viskores::Id sigPretendDimX,
-                      viskores::Id sigPretendDimY,
-                      viskores::Id sigPretendDimZ,
-                      ArrayOutType& coeffOut,
-                      bool discardSigIn) // discard sigIn on devices
+                          viskores::Id sigDimX,
+                          viskores::Id sigDimY,
+                          viskores::Id sigDimZ,
+                          viskores::Id sigStartX,
+                          viskores::Id sigStartY,
+                          viskores::Id sigStartZ,
+                          viskores::Id sigPretendDimX,
+                          viskores::Id sigPretendDimY,
+                          viskores::Id sigPretendDimZ,
+                          ArrayOutType& coeffOut,
+                          bool discardSigIn) // discard sigIn on devices
   {
     std::vector<viskores::Id> L(27, 0);
 
@@ -760,15 +760,15 @@ public:
   // The output array has the same dimensions as the small cube.
   template <typename ArrayInType, typename ArrayOutType>
   viskores::Float64 IDWT3D(ArrayInType& coeffIn,
-                       viskores::Id inDimX,
-                       viskores::Id inDimY,
-                       viskores::Id inDimZ,
-                       viskores::Id inStartX,
-                       viskores::Id inStartY,
-                       viskores::Id inStartZ,
-                       const std::vector<viskores::Id>& L,
-                       ArrayOutType& sigOut,
-                       bool discardCoeffIn) // can we discard coeffIn?
+                           viskores::Id inDimX,
+                           viskores::Id inDimY,
+                           viskores::Id inDimZ,
+                           viskores::Id inStartX,
+                           viskores::Id inStartY,
+                           viskores::Id inStartZ,
+                           const std::vector<viskores::Id>& L,
+                           ArrayOutType& sigOut,
+                           bool discardCoeffIn) // can we discard coeffIn?
   {
     //VISKORES_ASSERT( L.size() == 27 );
     //VISKORES_ASSERT( inDimX * inDimY * inDimZ == coeffIn.GetNumberOfValues() );
@@ -1004,20 +1004,20 @@ public:
 
   template <typename SigInArrayType, typename ExtensionArrayType>
   viskores::Id Extend2D(const SigInArrayType& sigIn, // Input
-                    viskores::Id sigDimX,
-                    viskores::Id sigDimY,
-                    viskores::Id sigStartX,
-                    viskores::Id sigStartY,
-                    viskores::Id sigPretendDimX,
-                    viskores::Id sigPretendDimY,
-                    ExtensionArrayType& ext1, // left/top extension
-                    ExtensionArrayType& ext2, // right/bottom extension
-                    viskores::Id addLen,
-                    viskores::worklet::wavelets::DWTMode ext1Method,
-                    viskores::worklet::wavelets::DWTMode ext2Method,
-                    bool pretendSigPaddedZero,
-                    bool padZeroAtExt2,
-                    bool modeLR) // true = left-right, false = top-down
+                        viskores::Id sigDimX,
+                        viskores::Id sigDimY,
+                        viskores::Id sigStartX,
+                        viskores::Id sigStartY,
+                        viskores::Id sigPretendDimX,
+                        viskores::Id sigPretendDimY,
+                        ExtensionArrayType& ext1, // left/top extension
+                        ExtensionArrayType& ext2, // right/bottom extension
+                        viskores::Id addLen,
+                        viskores::worklet::wavelets::DWTMode ext1Method,
+                        viskores::worklet::wavelets::DWTMode ext2Method,
+                        bool pretendSigPaddedZero,
+                        bool padZeroAtExt2,
+                        bool modeLR) // true = left-right, false = top-down
   {
     // pretendSigPaddedZero and padZeroAtExt2 cannot happen at the same time
     VISKORES_ASSERT(!pretendSigPaddedZero || !padZeroAtExt2);
@@ -1204,12 +1204,12 @@ public:
   // Extend 1D signal
   template <typename SigInArrayType, typename SigExtendedArrayType>
   viskores::Id Extend1D(const SigInArrayType& sigIn,  // Input
-                    SigExtendedArrayType& sigOut, // Output
-                    viskores::Id addLen,
-                    viskores::worklet::wavelets::DWTMode leftExtMethod,
-                    viskores::worklet::wavelets::DWTMode rightExtMethod,
-                    bool attachZeroRightLeft,
-                    bool attachZeroRightRight)
+                        SigExtendedArrayType& sigOut, // Output
+                        viskores::Id addLen,
+                        viskores::worklet::wavelets::DWTMode leftExtMethod,
+                        viskores::worklet::wavelets::DWTMode rightExtMethod,
+                        bool attachZeroRightLeft,
+                        bool attachZeroRightRight)
   {
     // "right extension" can be attached a zero on either end, but not both ends.
     VISKORES_ASSERT(!attachZeroRightRight || !attachZeroRightLeft);
@@ -1342,7 +1342,8 @@ public:
     }
     else // attachZeroRightLeft mode
     {
-      using ConcatArray = viskores::cont::ArrayHandleConcatenate<SigInArrayType, ExtensionArrayType>;
+      using ConcatArray =
+        viskores::cont::ArrayHandleConcatenate<SigInArrayType, ExtensionArrayType>;
       // attach a zero at the end of sigIn
       ExtensionArrayType singleValArray;
       singleValArray.Allocate(1);
@@ -1407,8 +1408,8 @@ public:
   // It takes care of boundary conditions, etc.
   template <typename SignalArrayType, typename CoeffArrayType>
   viskores::Float64 DWT1D(const SignalArrayType& sigIn, // Input
-                      CoeffArrayType& coeffOut,     // Output: cA followed by cD
-                      std::vector<viskores::Id>& L)     // Output: how many cA and cD.
+                          CoeffArrayType& coeffOut,     // Output: cA followed by cD
+                          std::vector<viskores::Id>& L) // Output: how many cA and cD.
   {
     viskores::Id sigInLen = sigIn.GetNumberOfValues();
     if (GetWaveletMaxLevel(sigInLen) < 1)
@@ -1492,8 +1493,8 @@ public:
   // It takes care of boundary conditions, etc.
   template <typename CoeffArrayType, typename SignalArrayType>
   viskores::Float64 IDWT1D(const CoeffArrayType& coeffIn, // Input, cA followed by cD
-                       std::vector<viskores::Id>& L,      // Input, how many cA and cD
-                       SignalArrayType& sigOut)       // Output
+                           std::vector<viskores::Id>& L,  // Input, how many cA and cD
+                           SignalArrayType& sigOut)       // Output
   {
     viskores::Id filterLen = WaveletBase::filter.GetFilterLength();
     bool doSymConv = false;
@@ -1608,13 +1609,13 @@ public:
       ExtensionArrayType dummyArray;
       dummyArray.Allocate(0);
       Concat1 cALeftOn(dummyArray, cA);
-      cATemp =
-        viskores::cont::make_ArrayHandleConcatenate<Concat1, ExtensionArrayType>(cALeftOn, dummyArray);
+      cATemp = viskores::cont::make_ArrayHandleConcatenate<Concat1, ExtensionArrayType>(cALeftOn,
+                                                                                        dummyArray);
 
       // make cDTemp
       Concat1 cDLeftOn(dummyArray, cD);
-      cDTemp =
-        viskores::cont::make_ArrayHandleConcatenate<Concat1, ExtensionArrayType>(cDLeftOn, dummyArray);
+      cDTemp = viskores::cont::make_ArrayHandleConcatenate<Concat1, ExtensionArrayType>(cDLeftOn,
+                                                                                        dummyArray);
     }
 
     viskores::cont::ArrayHandleConcatenate<Concat2, Concat2> coeffInExtended(cATemp, cDTemp);
@@ -1626,8 +1627,8 @@ public:
     if (filterLen % 2 != 0)
     {
       viskores::worklet::wavelets::InverseTransformOdd inverseXformOdd(filterLen, L[0], cATempLen);
-      viskores::worklet::DispatcherMapField<viskores::worklet::wavelets::InverseTransformOdd> dispatcher(
-        inverseXformOdd);
+      viskores::worklet::DispatcherMapField<viskores::worklet::wavelets::InverseTransformOdd>
+        dispatcher(inverseXformOdd);
       // use a timer
       viskores::cont::Timer timer;
       timer.Start();
@@ -1641,8 +1642,8 @@ public:
     {
       viskores::worklet::wavelets::InverseTransformEven inverseXformEven(
         filterLen, L[0], cATempLen, !doSymConv);
-      viskores::worklet::DispatcherMapField<viskores::worklet::wavelets::InverseTransformEven> dispatcher(
-        inverseXformEven);
+      viskores::worklet::DispatcherMapField<viskores::worklet::wavelets::InverseTransformEven>
+        dispatcher(inverseXformEven);
       // use a timer
       viskores::cont::Timer timer;
       timer.Start();
@@ -1683,14 +1684,14 @@ public:
   // The output has the same size as the small rectangle
   template <typename ArrayInType, typename ArrayOutType>
   viskores::Float64 DWT2D(const ArrayInType& sigIn,
-                      viskores::Id sigDimX,
-                      viskores::Id sigDimY,
-                      viskores::Id sigStartX,
-                      viskores::Id sigStartY,
-                      viskores::Id sigPretendDimX,
-                      viskores::Id sigPretendDimY,
-                      ArrayOutType& coeffOut,
-                      std::vector<viskores::Id>& L)
+                          viskores::Id sigDimX,
+                          viskores::Id sigDimY,
+                          viskores::Id sigStartX,
+                          viskores::Id sigStartY,
+                          viskores::Id sigPretendDimX,
+                          viskores::Id sigPretendDimY,
+                          ArrayOutType& coeffOut,
+                          std::vector<viskores::Id>& L)
   {
     L[0] = WaveletBase::GetApproxLength(sigPretendDimX);
     L[2] = L[0];
@@ -1816,12 +1817,12 @@ public:
   // The output array has the same dimensions as the small rectangle.
   template <typename ArrayInType, typename ArrayOutType>
   viskores::Float64 IDWT2D(const ArrayInType& coeffIn,
-                       viskores::Id inDimX,
-                       viskores::Id inDimY,
-                       viskores::Id inStartX,
-                       viskores::Id inStartY,
-                       const std::vector<viskores::Id>& L,
-                       ArrayOutType& sigOut)
+                           viskores::Id inDimX,
+                           viskores::Id inDimY,
+                           viskores::Id inStartX,
+                           viskores::Id inStartY,
+                           const std::vector<viskores::Id>& L,
+                           ArrayOutType& sigOut)
   {
     viskores::Id inPretendDimX = L[0] + L[4];
     viskores::Id inPretendDimY = L[1] + L[3];

@@ -68,7 +68,7 @@ public:
       [](void* ptr) { delete static_cast<StatValueType*>(ptr); });
 
     viskoresdiy::ContiguousAssigner assigner(/*num ranks*/ comm.size(),
-                                         /*global-num-blocks*/ comm.size());
+                                             /*global-num-blocks*/ comm.size());
     viskoresdiy::RegularDecomposer<viskoresdiy::DiscreteBounds> decomposer(
       /*dims*/ 1, viskoresdiy::interval(0, assigner.nblocks() - 1), assigner.nblocks());
     decomposer.decompose(comm.rank(), assigner, master);
@@ -78,7 +78,8 @@ public:
     *master.block<StatValueType>(0) = statePerRank;
     auto callback = [](StatValueType* result,
                        const viskoresdiy::ReduceProxy& srp,
-                       const viskoresdiy::RegularMergePartners&) {
+                       const viskoresdiy::RegularMergePartners&)
+    {
       const auto selfid = srp.gid();
       // 1. dequeue.
       std::vector<int> incoming;
@@ -154,8 +155,8 @@ VISKORES_CONT StatValueType GetStatValueFromDataSet(const viskores::cont::DataSe
 
 template <typename DataSetType>
 VISKORES_CONT void SaveIntoDataSet(StatValueType& statValue,
-                               DataSetType& output,
-                               viskores::cont::Field::Association association)
+                                   DataSetType& output,
+                                   viskores::cont::Field::Association association)
 {
   output.AddField({ "N", association, SaveDataIntoArray(statValue.N()) });
   output.AddField({ "Min", association, SaveDataIntoArray(statValue.Min()) });

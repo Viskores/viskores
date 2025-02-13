@@ -13,7 +13,8 @@ namespace viskores
 {
 namespace cont
 {
-VISKORES_CONT bool DeviceAdapterRuntimeDetector<viskores::cont::DeviceAdapterTagOpenMP>::Exists() const
+VISKORES_CONT bool DeviceAdapterRuntimeDetector<viskores::cont::DeviceAdapterTagOpenMP>::Exists()
+  const
 {
   return viskores::cont::DeviceAdapterTagOpenMP::IsEnabled;
 }

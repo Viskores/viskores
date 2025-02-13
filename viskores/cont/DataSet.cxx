@@ -22,7 +22,7 @@ namespace
 {
 
 VISKORES_CONT void CheckFieldSize(const viskores::cont::UnknownCellSet& cellSet,
-                              const viskores::cont::Field& field)
+                                  const viskores::cont::Field& field)
 {
   if (!cellSet.IsValid())
   {
@@ -34,20 +34,20 @@ VISKORES_CONT void CheckFieldSize(const viskores::cont::UnknownCellSet& cellSet,
       if (cellSet.GetNumberOfPoints() != field.GetData().GetNumberOfValues())
       {
         VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                   "The size of field `"
-                     << field.GetName() << "` (" << field.GetData().GetNumberOfValues()
-                     << " values) does not match the size of the data set structure ("
-                     << cellSet.GetNumberOfPoints() << " points).");
+                       "The size of field `"
+                         << field.GetName() << "` (" << field.GetData().GetNumberOfValues()
+                         << " values) does not match the size of the data set structure ("
+                         << cellSet.GetNumberOfPoints() << " points).");
       }
       break;
     case viskores::cont::Field::Association::Cells:
       if (cellSet.GetNumberOfCells() != field.GetData().GetNumberOfValues())
       {
         VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                   "The size of field `"
-                     << field.GetName() << "` (" << field.GetData().GetNumberOfValues()
-                     << " values) does not match the size of the data set structure ("
-                     << cellSet.GetNumberOfCells() << " cells).");
+                       "The size of field `"
+                         << field.GetName() << "` (" << field.GetData().GetNumberOfValues()
+                         << " values) does not match the size of the data set structure ("
+                         << cellSet.GetNumberOfCells() << " cells).");
       }
       break;
     default:
@@ -57,7 +57,7 @@ VISKORES_CONT void CheckFieldSize(const viskores::cont::UnknownCellSet& cellSet,
 }
 
 VISKORES_CONT void CheckFieldSizes(const viskores::cont::UnknownCellSet& cellSet,
-                               const viskores::cont::internal::FieldCollection& fields)
+                                   const viskores::cont::internal::FieldCollection& fields)
 {
   viskores::IdComponent numFields = fields.GetNumberOfFields();
   for (viskores::IdComponent fieldIndex = 0; fieldIndex < numFields; ++fieldIndex)
@@ -182,7 +182,7 @@ viskores::IdComponent DataSet::AddCoordinateSystem(const viskores::cont::Coordin
 }
 
 viskores::IdComponent DataSet::AddCoordinateSystem(const std::string& name,
-                                               const viskores::cont::UnknownArrayHandle& data)
+                                                   const viskores::cont::UnknownArrayHandle& data)
 {
   return this->AddCoordinateSystem({ name, data });
 }
@@ -200,7 +200,7 @@ viskores::IdComponent DataSet::AddCoordinateSystem(const std::string& pointField
   if (!this->HasPointField(pointFieldName))
   {
     throw viskores::cont::ErrorBadValue("Cannot set point field named `" + pointFieldName +
-                                    "` as a coordinate system because it does not exist.");
+                                        "` as a coordinate system because it does not exist.");
   }
 
   // Add the field to the list of coordinates.
@@ -292,7 +292,8 @@ viskores::IdComponent DataSet::GetCoordinateSystemIndex(const std::string& name)
   auto nameIter = std::find(this->CoordSystemNames.begin(), this->CoordSystemNames.end(), name);
   if (nameIter != this->CoordSystemNames.end())
   {
-    return static_cast<viskores::IdComponent>(std::distance(this->CoordSystemNames.begin(), nameIter));
+    return static_cast<viskores::IdComponent>(
+      std::distance(this->CoordSystemNames.begin(), nameIter));
   }
   else
   {
@@ -366,16 +367,18 @@ void DataSet::ConvertToExpected()
 namespace mangled_diy_namespace
 {
 
-using SerializedCellSetTypes = viskores::ListAppend<VISKORES_DEFAULT_CELL_SET_LIST,
-                                                viskores::List<viskores::cont::CellSetStructured<1>,
-                                                           viskores::cont::CellSetStructured<2>,
-                                                           viskores::cont::CellSetStructured<3>,
-                                                           viskores::cont::CellSetExplicit<>,
-                                                           viskores::cont::CellSetSingleType<>,
-                                                           viskores::cont::CellSetExtrude>>;
+using SerializedCellSetTypes =
+  viskores::ListAppend<VISKORES_DEFAULT_CELL_SET_LIST,
+                       viskores::List<viskores::cont::CellSetStructured<1>,
+                                      viskores::cont::CellSetStructured<2>,
+                                      viskores::cont::CellSetStructured<3>,
+                                      viskores::cont::CellSetExplicit<>,
+                                      viskores::cont::CellSetSingleType<>,
+                                      viskores::cont::CellSetExtrude>>;
 using DefaultDataSetWithCellTypes = viskores::cont::DataSetWithCellSetTypes<SerializedCellSetTypes>;
 
-void Serialization<viskores::cont::DataSet>::save(BinaryBuffer& bb, const viskores::cont::DataSet& obj)
+void Serialization<viskores::cont::DataSet>::save(BinaryBuffer& bb,
+                                                  const viskores::cont::DataSet& obj)
 {
   viskoresdiy::save(bb, DefaultDataSetWithCellTypes{ obj });
 }

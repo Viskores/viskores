@@ -200,13 +200,13 @@ VISKORES_EXEC_CONT inline viskores::ErrorCode LclErrorToViskoresError(lcl::Error
 } // namespace viskores
 
 #define VISKORES_RETURN_ON_ERROR(call)            \
-  do                                          \
-  {                                           \
-    auto status = (call);                     \
+  do                                              \
+  {                                               \
+    auto status = (call);                         \
     if (status != ::viskores::ErrorCode::Success) \
-    {                                         \
-      return status;                          \
-    }                                         \
+    {                                             \
+      return status;                              \
+    }                                             \
   } while (false)
 
 #endif //viskores_exec_ErrorCode_h

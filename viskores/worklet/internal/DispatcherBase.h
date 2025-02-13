@@ -146,7 +146,8 @@ struct IsDynamicTypeImpl
   using T = viskores::internal::remove_pointer_and_decay<Type>;
   using DynamicTag = typename viskores::cont::internal::DynamicTransformTraits<T>::DynamicTag;
   using type =
-    typename std::is_same<DynamicTag, viskores::cont::internal::DynamicTransformTagCastAndCall>::type;
+    typename std::is_same<DynamicTag,
+                          viskores::cont::internal::DynamicTransformTagCastAndCall>::type;
 };
 template <typename T>
 using IsDynamicType = typename IsDynamicTypeImpl<T>::type;
@@ -161,8 +162,10 @@ struct ZipControlParamImpl<viskores::List<SigTags...>,
   VISKORES_STATIC_ASSERT(sizeof...(SigTags) == sizeof...(Params));
   VISKORES_STATIC_ASSERT(sizeof...(SigTags) == sizeof...(Indices));
 
-  using type = viskores::List<
-    viskores::List<SigTags, Params, std::integral_constant<viskores::IdComponent, (Indices + 1)>>...>;
+  using type =
+    viskores::List<viskores::List<SigTags,
+                                  Params,
+                                  std::integral_constant<viskores::IdComponent, (Indices + 1)>>...>;
 };
 template <typename SigTagList, typename ParamList, typename IndexSequence>
 using ZipControlParam = typename ZipControlParamImpl<SigTagList, ParamList, IndexSequence>::type;
@@ -171,7 +174,8 @@ template <typename WorkletType>
 struct ControlArgumentValidator
 {
   template <typename SigTag, typename Param, viskores::IdComponent Index>
-  void operator()(viskores::List<SigTag, Param, std::integral_constant<viskores::IdComponent, Index>>) const
+  void operator()(
+    viskores::List<SigTag, Param, std::integral_constant<viskores::IdComponent, Index>>) const
   {
     using T = std::remove_pointer_t<Param>;
     using TypeCheckTag = typename SigTag::TypeCheckTag;
@@ -241,9 +245,9 @@ struct DispatcherBaseTryExecuteFunctor
 {
   template <typename Device, typename DispatcherBaseType, typename Invocation, typename RangeType>
   VISKORES_CONT bool operator()(Device device,
-                            const DispatcherBaseType* self,
-                            Invocation& invocation,
-                            const RangeType& dimensions)
+                                const DispatcherBaseType* self,
+                                Invocation& invocation,
+                                const RangeType& dimensions)
   {
     auto outputRange = self->Scatter.GetOutputRange(dimensions);
     self->InvokeTransportParameters(
@@ -290,9 +294,9 @@ struct DispatcherBaseTransportFunctor
   // But for now, just treat all transports as 1D arrays.
   template <typename InputRangeType, typename OutputRangeType>
   VISKORES_CONT DispatcherBaseTransportFunctor(const InputDomainType& inputDomain,
-                                           const InputRangeType& inputRange,
-                                           const OutputRangeType& outputRange,
-                                           viskores::cont::Token& token)
+                                               const InputRangeType& inputRange,
+                                               const OutputRangeType& outputRange,
+                                               viskores::cont::Token& token)
     : InputDomain(inputDomain)
     , InputRange(FlatRange(inputRange))
     , OutputRange(FlatRange(outputRange))
@@ -414,10 +418,10 @@ inline void convert_arg(viskores::cont::internal::DynamicTransformTagCastAndCall
 
   not_nullptr(t, LeftToProcess, 1);
   viskores::cont::CastAndCall(as_ref(t),
-                          convert_arg_wrapper<LeftToProcess, tag_check>(),
-                          trampoline,
-                          popped_sig(),
-                          std::forward<Args>(args)...);
+                              convert_arg_wrapper<LeftToProcess, tag_check>(),
+                              trampoline,
+                              popped_sig(),
+                              std::forward<Args>(args)...);
 }
 
 template <std::size_t LeftToProcess>
@@ -516,7 +520,7 @@ private:
       viskores::internal::FunctionInterface<void(viskores::internal::remove_cvref<Args>...)>;
 
     VISKORES_STATIC_ASSERT_MSG(ParameterInterface::ARITY == NUM_INVOKE_PARAMS,
-                           "Dispatcher Invoke called with wrong number of arguments.");
+                               "Dispatcher Invoke called with wrong number of arguments.");
 
     static_assert(
       std::is_base_of<BaseWorkletType, WorkletType>::value,
@@ -526,7 +530,7 @@ private:
     // defined in the control environment by throwing a nice compile error.
     using ComponentSig = typename ExecutionInterface::ComponentSig;
     viskores::ListForEach(PlaceholderValidator<NUM_INVOKE_PARAMS>{},
-                      viskores::ListTransform<ComponentSig, viskores::internal::meta::Type>{});
+                          viskores::ListTransform<ComponentSig, viskores::internal::meta::Type>{});
 
     //We need to determine if we have the need to do any dynamic
     //transforms. This is fairly simple of a query. We just need to check
@@ -568,19 +572,21 @@ private:
     using ParamZip = detail::ZipControlParam<
       ContSigTypes,
       ParamTypes,
-      viskoresstd::make_integer_sequence<viskores::IdComponent, viskores::ListSize<ParamTypes>::value>>;
+      viskoresstd::make_integer_sequence<viskores::IdComponent,
+                                         viskores::ListSize<ParamTypes>::value>>;
 
     // This will cause compile errors if there is an argument mismatch.
     viskores::ListForEach(detail::ControlArgumentValidator<WorkletType>{}, ParamZip{});
 
     auto fi =
-      viskores::internal::make_FunctionInterface<void, viskores::internal::remove_cvref<Args>...>(args...);
+      viskores::internal::make_FunctionInterface<void, viskores::internal::remove_cvref<Args>...>(
+        args...);
     auto ivc = viskores::internal::Invocation<ParameterInterface,
-                                          ControlInterface,
-                                          ExecutionInterface,
-                                          WorkletType::InputDomain::INDEX,
-                                          viskores::internal::NullType,
-                                          viskores::internal::NullType>(
+                                              ControlInterface,
+                                              ExecutionInterface,
+                                              WorkletType::InputDomain::INDEX,
+                                              viskores::internal::NullType,
+                                              viskores::internal::NullType>(
       fi, viskores::internal::NullType{}, viskores::internal::NullType{});
     static_cast<const DerivedClass*>(this)->DoInvoke(ivc);
   }
@@ -604,8 +610,8 @@ public:
   VISKORES_CONT void Invoke(Args&&... args) const
   {
     VISKORES_LOG_SCOPE(viskores::cont::LogLevel::Perf,
-                   "Invoking Worklet: '%s'",
-                   viskores::cont::TypeToString<DerivedClass>().c_str());
+                       "Invoking Worklet: '%s'",
+                       viskores::cont::TypeToString<DerivedClass>().c_str());
     this->StartInvoke(std::forward<Args>(args)...);
   }
 
@@ -673,10 +679,10 @@ protected:
   {
     bool success =
       viskores::cont::TryExecuteOnDevice(this->Device,
-                                     internal::detail::DispatcherBaseTryExecuteFunctor(),
-                                     this,
-                                     invocation,
-                                     numInstances);
+                                         internal::detail::DispatcherBaseTryExecuteFunctor(),
+                                         this,
+                                         invocation,
+                                         numInstances);
     if (!success)
     {
       throw viskores::cont::ErrorExecution("Failed to execute worklet on any device.");
@@ -694,10 +700,10 @@ protected:
   {
     bool success =
       viskores::cont::TryExecuteOnDevice(this->Device,
-                                     internal::detail::DispatcherBaseTryExecuteFunctor(),
-                                     this,
-                                     invocation,
-                                     dimensions);
+                                         internal::detail::DispatcherBaseTryExecuteFunctor(),
+                                         this,
+                                         invocation,
+                                         dimensions);
     if (!success)
     {
       throw viskores::cont::ErrorExecution("Failed to execute worklet on any device.");
@@ -721,10 +727,10 @@ private:
             typename ThreadRangeType,
             typename DeviceAdapter>
   VISKORES_CONT void InvokeTransportParameters(Invocation& invocation,
-                                           const InputRangeType& inputRange,
-                                           OutputRangeType&& outputRange,
-                                           ThreadRangeType&& threadRange,
-                                           DeviceAdapter device) const
+                                               const InputRangeType& inputRange,
+                                               OutputRangeType&& outputRange,
+                                               ThreadRangeType&& threadRange,
+                                               DeviceAdapter device) const
   {
     // This token represents the scope of the execution objects. It should
     // exist as long as things run on the device.
@@ -764,13 +770,13 @@ private:
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
     viskores::internal::Invocation<ExecObjectParameters,
-                               typename Invocation::ControlInterface,
-                               typename Invocation::ExecutionInterface,
-                               Invocation::InputDomainIndex,
-                               decltype(outputToInputMap.PrepareForInput(device, token)),
-                               decltype(visitArray.PrepareForInput(device, token)),
-                               decltype(threadToOutputMap.PrepareForInput(device, token)),
-                               DeviceAdapter>
+                                   typename Invocation::ControlInterface,
+                                   typename Invocation::ExecutionInterface,
+                                   Invocation::InputDomainIndex,
+                                   decltype(outputToInputMap.PrepareForInput(device, token)),
+                                   decltype(visitArray.PrepareForInput(device, token)),
+                                   decltype(threadToOutputMap.PrepareForInput(device, token)),
+                                   DeviceAdapter>
       changedInvocation(execObjectParameters,
                         outputToInputMap.PrepareForInput(device, token),
                         visitArray.PrepareForInput(device, token),
@@ -780,7 +786,9 @@ private:
   }
 
   template <typename Invocation, typename RangeType, typename DeviceAdapter>
-  VISKORES_CONT void InvokeSchedule(const Invocation& invocation, RangeType range, DeviceAdapter) const
+  VISKORES_CONT void InvokeSchedule(const Invocation& invocation,
+                                    RangeType range,
+                                    DeviceAdapter) const
   {
     using Algorithm = viskores::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     using TaskTypes = typename viskores::cont::DeviceTaskTypes<DeviceAdapter>;

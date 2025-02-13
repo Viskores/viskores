@@ -89,12 +89,12 @@ public:
 
   template <typename InFieldPortalType, typename InIdPortalType, typename PermutePortalType>
   VISKORES_EXEC T operator()(const viskores::Id& i,
-                         const InIdPortalType& partId,
-                         const InFieldPortalType& xLoc,
-                         const InFieldPortalType& yLoc,
-                         const InFieldPortalType& zLoc,
-                         const InIdPortalType& firstParticleId,
-                         const PermutePortalType& lastParticleId) const
+                             const InIdPortalType& partId,
+                             const InFieldPortalType& xLoc,
+                             const InFieldPortalType& yLoc,
+                             const InFieldPortalType& zLoc,
+                             const InIdPortalType& firstParticleId,
+                             const PermutePortalType& lastParticleId) const
   {
     // Worklet index is into array of particle ids sorted by bin
     // Current particle and other particles retrieved from partId array

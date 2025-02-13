@@ -14,8 +14,9 @@
 namespace
 {
 
-viskores::cont::UnknownArrayHandle GenerateArray(const viskores::filter::field_transform::GenerateIds& self,
-                                             viskores::Id size)
+viskores::cont::UnknownArrayHandle GenerateArray(
+  const viskores::filter::field_transform::GenerateIds& self,
+  viskores::Id size)
 {
   viskores::cont::ArrayHandleIndex indexArray(size);
 

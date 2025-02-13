@@ -47,8 +47,8 @@ public:
   /// via the `Set*` method.
   VISKORES_CONT void Initialize(const RuntimeDeviceConfigurationOptions& configOptions);
   VISKORES_CONT void Initialize(const RuntimeDeviceConfigurationOptions& configOptions,
-                            int& argc,
-                            char* argv[]);
+                                int& argc,
+                                char* argv[]);
 
   /// The following public methods should be overriden in each individual device.
   /// A method should return INVALID_FOR_DEVICE if the overriden device does not

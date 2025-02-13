@@ -29,9 +29,10 @@ void TestFilledImage(viskores::cont::DataSet& dataSet,
 
   auto pointField = dataSet.GetPointField(fieldName);
   VISKORES_TEST_ASSERT(pointField.GetNumberOfValues() == canvas.GetWidth() * canvas.GetHeight(),
-                   "wrong image dimensions");
-  VISKORES_TEST_ASSERT(pointField.GetData().template IsType<viskores::cont::ArrayHandle<viskores::Vec4f_32>>(),
-                   "wrong ArrayHandle type");
+                       "wrong image dimensions");
+  VISKORES_TEST_ASSERT(
+    pointField.GetData().template IsType<viskores::cont::ArrayHandle<viskores::Vec4f_32>>(),
+    "wrong ArrayHandle type");
   viskores::cont::ArrayHandle<viskores::Vec4f_32> pixelArray;
   pointField.GetData().AsArrayHandle(pixelArray);
   auto pixelPortal = pixelArray.ReadPortal();
@@ -98,8 +99,10 @@ void TestHDF5Image()
   canvas.AddColorBar(colorBarBounds, viskores::cont::ColorTable("inferno"), false);
   canvas.BlendBackground();
 
-  TestReadAndWriteHDF5(canvas, "hdf5RGB8Test.h5", viskores::io::ImageWriterBase::PixelDepth::PIXEL_8);
-  TestReadAndWriteHDF5(canvas, "hdf5RGB16Test.h5", viskores::io::ImageWriterBase::PixelDepth::PIXEL_16);
+  TestReadAndWriteHDF5(
+    canvas, "hdf5RGB8Test.h5", viskores::io::ImageWriterBase::PixelDepth::PIXEL_8);
+  TestReadAndWriteHDF5(
+    canvas, "hdf5RGB16Test.h5", viskores::io::ImageWriterBase::PixelDepth::PIXEL_16);
 }
 
 } // namespace

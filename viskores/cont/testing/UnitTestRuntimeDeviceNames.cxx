@@ -27,20 +27,18 @@ void TestName(const std::string& name, Tag tag, viskores::cont::DeviceAdapterId 
   VISKORES_TEST_ASSERT(id.GetName() == name, "Id::GetName() failed.");
   VISKORES_TEST_ASSERT(tag.GetName() == name, "Tag::GetName() failed.");
   VISKORES_TEST_ASSERT(viskores::cont::make_DeviceAdapterId(id.GetValue()) == id,
-                   "make_DeviceAdapterId(int8) failed");
+                       "make_DeviceAdapterId(int8) failed");
 
   VISKORES_TEST_ASSERT(info.GetName(id) == name, "RDeviceInfo::GetName(Id) failed.");
   VISKORES_TEST_ASSERT(info.GetName(tag) == name, "RDeviceInfo::GetName(Tag) failed.");
   VISKORES_TEST_ASSERT(info.GetId(name) == id, "RDeviceInfo::GetId(name) failed.");
 
   //check going from name to device id
-  auto lowerCaseFunc = [](char c) {
-    return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-  };
+  auto lowerCaseFunc = [](char c)
+  { return static_cast<char>(std::tolower(static_cast<unsigned char>(c))); };
 
-  auto upperCaseFunc = [](char c) {
-    return static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
-  };
+  auto upperCaseFunc = [](char c)
+  { return static_cast<char>(std::toupper(static_cast<unsigned char>(c))); };
 
   if (id.IsValueValid())
   { //only test make_DeviceAdapterId with valid device ids
@@ -49,12 +47,16 @@ void TestName(const std::string& name, Tag tag, viskores::cont::DeviceAdapterId 
 
     std::string casedName = name;
     std::transform(casedName.begin(), casedName.end(), casedName.begin(), lowerCaseFunc);
-    VISKORES_TEST_ASSERT(
-      viskores::cont::make_DeviceAdapterId(casedName) == id, "make_DeviceAdapterId(", name, ") failed");
+    VISKORES_TEST_ASSERT(viskores::cont::make_DeviceAdapterId(casedName) == id,
+                         "make_DeviceAdapterId(",
+                         name,
+                         ") failed");
 
     std::transform(casedName.begin(), casedName.end(), casedName.begin(), upperCaseFunc);
-    VISKORES_TEST_ASSERT(
-      viskores::cont::make_DeviceAdapterId(casedName) == id, "make_DeviceAdapterId(", name, ") failed");
+    VISKORES_TEST_ASSERT(viskores::cont::make_DeviceAdapterId(casedName) == id,
+                         "make_DeviceAdapterId(",
+                         name,
+                         ") failed");
   }
 }
 

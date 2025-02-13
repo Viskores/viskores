@@ -32,12 +32,12 @@ namespace viskores
 ///
 template <typename T>
 VISKORES_EXEC_CONT viskores::Vec<T, 3> Transform3DPoint(const viskores::Matrix<T, 4, 4>& matrix,
-                                                const viskores::Vec<T, 3>& point)
+                                                        const viskores::Vec<T, 3>& point)
 {
   viskores::Vec<T, 4> homogeneousPoint(point[0], point[1], point[2], T(1));
   return viskores::Vec<T, 3>(viskores::Dot(viskores::MatrixGetRow(matrix, 0), homogeneousPoint),
-                         viskores::Dot(viskores::MatrixGetRow(matrix, 1), homogeneousPoint),
-                         viskores::Dot(viskores::MatrixGetRow(matrix, 2), homogeneousPoint));
+                             viskores::Dot(viskores::MatrixGetRow(matrix, 1), homogeneousPoint),
+                             viskores::Dot(viskores::MatrixGetRow(matrix, 2), homogeneousPoint));
 }
 
 /// \brief Transform a 3D point by a transformation matrix with perspective.
@@ -50,14 +50,16 @@ VISKORES_EXEC_CONT viskores::Vec<T, 3> Transform3DPoint(const viskores::Matrix<T
 /// transformations, but requires some more computations.
 ///
 template <typename T>
-VISKORES_EXEC_CONT viskores::Vec<T, 3> Transform3DPointPerspective(const viskores::Matrix<T, 4, 4>& matrix,
-                                                           const viskores::Vec<T, 3>& point)
+VISKORES_EXEC_CONT viskores::Vec<T, 3> Transform3DPointPerspective(
+  const viskores::Matrix<T, 4, 4>& matrix,
+  const viskores::Vec<T, 3>& point)
 {
   viskores::Vec<T, 4> homogeneousPoint(point[0], point[1], point[2], T(1));
   T inverseW = 1 / viskores::Dot(viskores::MatrixGetRow(matrix, 3), homogeneousPoint);
-  return viskores::Vec<T, 3>(viskores::Dot(viskores::MatrixGetRow(matrix, 0), homogeneousPoint) * inverseW,
-                         viskores::Dot(viskores::MatrixGetRow(matrix, 1), homogeneousPoint) * inverseW,
-                         viskores::Dot(viskores::MatrixGetRow(matrix, 2), homogeneousPoint) * inverseW);
+  return viskores::Vec<T, 3>(
+    viskores::Dot(viskores::MatrixGetRow(matrix, 0), homogeneousPoint) * inverseW,
+    viskores::Dot(viskores::MatrixGetRow(matrix, 1), homogeneousPoint) * inverseW,
+    viskores::Dot(viskores::MatrixGetRow(matrix, 2), homogeneousPoint) * inverseW);
 }
 
 /// \brief Transform a 3D vector by a transformation matrix.
@@ -68,7 +70,7 @@ VISKORES_EXEC_CONT viskores::Vec<T, 3> Transform3DPointPerspective(const viskore
 ///
 template <typename T>
 VISKORES_EXEC_CONT viskores::Vec<T, 3> Transform3DVector(const viskores::Matrix<T, 4, 4>& matrix,
-                                                 const viskores::Vec<T, 3>& vector)
+                                                         const viskores::Vec<T, 3>& vector)
 {
   viskores::Vec<T, 4> homogeneousVector(vector[0], vector[1], vector[2], T(0));
   homogeneousVector = viskores::MatrixMultiply(matrix, homogeneousVector);
@@ -82,8 +84,8 @@ VISKORES_EXEC_CONT viskores::Vec<T, 3> Transform3DVector(const viskores::Matrix<
 ///
 template <typename T>
 VISKORES_EXEC_CONT viskores::Matrix<T, 4, 4> Transform3DScale(const T& scaleX,
-                                                      const T& scaleY,
-                                                      const T& scaleZ)
+                                                              const T& scaleY,
+                                                              const T& scaleZ)
 {
   viskores::Matrix<T, 4, 4> scaleMatrix(T(0));
   scaleMatrix(0, 0) = scaleX;
@@ -118,7 +120,9 @@ VISKORES_EXEC_CONT viskores::Matrix<T, 4, 4> Transform3DScale(const T& scale)
 /// \brief Returns a translation matrix.
 ///
 template <typename T>
-VISKORES_EXEC_CONT viskores::Matrix<T, 4, 4> Transform3DTranslate(const T& x, const T& y, const T& z)
+VISKORES_EXEC_CONT viskores::Matrix<T, 4, 4> Transform3DTranslate(const T& x,
+                                                                  const T& y,
+                                                                  const T& z)
 {
   viskores::Matrix<T, 4, 4> translateMatrix;
   viskores::MatrixIdentity(translateMatrix);
@@ -141,8 +145,9 @@ VISKORES_EXEC_CONT viskores::Matrix<T, 4, 4> Transform3DTranslate(const viskores
 /// rotation will be counterclockwise.
 ///
 template <typename T>
-VISKORES_EXEC_CONT viskores::Matrix<T, 4, 4> Transform3DRotate(T angleDegrees,
-                                                       const viskores::Vec<T, 3>& axisOfRotation)
+VISKORES_EXEC_CONT viskores::Matrix<T, 4, 4> Transform3DRotate(
+  T angleDegrees,
+  const viskores::Vec<T, 3>& axisOfRotation)
 {
   T angleRadians = viskores::Pi_180<T>() * angleDegrees;
   const viskores::Vec<T, 3> normAxis = viskores::Normal(axisOfRotation);

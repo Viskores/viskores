@@ -86,12 +86,12 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& graphVertex,
-                            const InFieldPortalType& hyperarcsPortal,
-                            const InFieldPortalType& newHypernodePositionPortal,
-                            const InFieldPortalType& newSupernodePositionPortal,
-                            const OutFieldPortalType& hyperIdPortal,
-                            const OutFieldPortalType& treeHypernodesPortal,
-                            const OutFieldPortalType& treeSupernodesPortal) const
+                                const InFieldPortalType& hyperarcsPortal,
+                                const InFieldPortalType& newHypernodePositionPortal,
+                                const InFieldPortalType& newSupernodePositionPortal,
+                                const OutFieldPortalType& hyperIdPortal,
+                                const OutFieldPortalType& treeHypernodesPortal,
+                                const OutFieldPortalType& treeSupernodesPortal) const
   {
     // retrieve the ID stored in the hyperarcs array
     viskores::Id graphTarget = hyperarcsPortal.Get(graphVertex);

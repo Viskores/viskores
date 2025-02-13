@@ -32,8 +32,8 @@ void TestStreamline()
   viskores::cont::DataSet dataSet = reader.ReadDataSet();
   viskores::cont::ArrayHandle<viskores::Particle> seedArray =
     viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0),
-                                   viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1),
-                                   viskores::Particle(viskores::Vec3f(.2f, 3.0f, .2f), 2) });
+                                       viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1),
+                                       viskores::Particle(viskores::Vec3f(.2f, 3.0f, .2f), 2) });
 
   viskores::filter::flow::Streamline streamline;
   streamline.SetStepSize(0.1f);
@@ -44,8 +44,9 @@ void TestStreamline()
 
   // Some sort of color map is needed when rendering the coordinates of a dataset
   // so create a zeroed array for the coordinates.
-  std::vector<viskores::FloatDefault> colorMap(static_cast<std::vector<viskores::FloatDefault>::size_type>(
-    result.GetCoordinateSystem().GetNumberOfPoints()));
+  std::vector<viskores::FloatDefault> colorMap(
+    static_cast<std::vector<viskores::FloatDefault>::size_type>(
+      result.GetCoordinateSystem().GetNumberOfPoints()));
   for (std::vector<viskores::FloatDefault>::size_type i = 0; i < colorMap.size(); i++)
   {
     colorMap[i] = static_cast<viskores::FloatDefault>(i);
@@ -64,7 +65,8 @@ void TestStreamline()
   viskores::rendering::testing::RenderTestOptions testOptions;
   testOptions.ColorTable = viskores::cont::ColorTable::Preset::Inferno;
   testOptions.EnableAnnotations = false;
-  viskores::rendering::testing::RenderTest(result, "pointvar", "filter/streamline.png", testOptions);
+  viskores::rendering::testing::RenderTest(
+    result, "pointvar", "filter/streamline.png", testOptions);
 }
 } // namespace
 

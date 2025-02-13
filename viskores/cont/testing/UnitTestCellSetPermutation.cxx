@@ -54,8 +54,8 @@ struct CellsOfPoint : public viskores::worklet::WorkletVisitPointsWithCells
 
   template <typename CellIndicesType, typename CellIdsPortal>
   VISKORES_EXEC void operator()(const CellIndicesType& cellIndices,
-                            viskores::Id offset,
-                            const CellIdsPortal& out) const
+                                viskores::Id offset,
+                                const CellIdsPortal& out) const
   {
     viskores::IdComponent count = cellIndices.GetNumberOfComponents();
     for (viskores::IdComponent i = 0; i < count; ++i)
@@ -67,18 +67,20 @@ struct CellsOfPoint : public viskores::worklet::WorkletVisitPointsWithCells
 
 template <typename CellSetType, typename PermutationArrayHandleType>
 std::vector<viskores::Id> ComputeCellToPointExpected(const CellSetType& cellset,
-                                                 const PermutationArrayHandleType& permutation)
+                                                     const PermutationArrayHandleType& permutation)
 {
   viskores::cont::ArrayHandle<viskores::Id> numIndices;
   viskores::worklet::DispatcherMapTopology<WorkletCellToPoint>().Invoke(cellset, numIndices);
   std::cout << "\n";
 
   viskores::cont::ArrayHandle<viskores::Id> indexOffsets;
-  viskores::Id connectivityLength = viskores::cont::Algorithm::ScanExclusive(numIndices, indexOffsets);
+  viskores::Id connectivityLength =
+    viskores::cont::Algorithm::ScanExclusive(numIndices, indexOffsets);
 
   viskores::cont::ArrayHandle<viskores::Id> connectivity;
   connectivity.Allocate(connectivityLength);
-  viskores::worklet::DispatcherMapTopology<CellsOfPoint>().Invoke(cellset, indexOffsets, connectivity);
+  viskores::worklet::DispatcherMapTopology<CellsOfPoint>().Invoke(
+    cellset, indexOffsets, connectivity);
 
   std::vector<bool> permutationMask(static_cast<std::size_t>(cellset.GetNumberOfCells()), false);
   auto permPortal = permutation.ReadPortal();
@@ -110,8 +112,8 @@ std::vector<viskores::Id> ComputeCellToPointExpected(const CellSetType& cellset,
 }
 
 template <typename CellSetType>
-viskores::cont::CellSetPermutation<CellSetType, viskores::cont::ArrayHandleCounting<viskores::Id>> TestCellSet(
-  const CellSetType& cellset)
+viskores::cont::CellSetPermutation<CellSetType, viskores::cont::ArrayHandleCounting<viskores::Id>>
+TestCellSet(const CellSetType& cellset)
 {
   viskores::Id numberOfCells = cellset.GetNumberOfCells() / 2;
   viskores::cont::ArrayHandleCounting<viskores::Id> permutation(0, 2, numberOfCells);
@@ -122,33 +124,33 @@ viskores::cont::CellSetPermutation<CellSetType, viskores::cont::ArrayHandleCount
   viskores::worklet::DispatcherMapTopology<WorkletPointToCell>().Invoke(cs, result);
 
   VISKORES_TEST_ASSERT(result.GetNumberOfValues() == numberOfCells,
-                   "result length not equal to number of cells");
+                       "result length not equal to number of cells");
   auto resultPortal = result.ReadPortal();
   auto permPortal = permutation.ReadPortal();
   for (viskores::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
     VISKORES_TEST_ASSERT(resultPortal.Get(i) == cellset.GetNumberOfPointsInCell(permPortal.Get(i)),
-                     "incorrect result");
+                         "incorrect result");
   }
 
   std::cout << "\t\tTesting CellToPoint\n";
   viskores::worklet::DispatcherMapTopology<WorkletCellToPoint>().Invoke(cs, result);
 
   VISKORES_TEST_ASSERT(result.GetNumberOfValues() == cellset.GetNumberOfPoints(),
-                   "result length not equal to number of points");
+                       "result length not equal to number of points");
   auto expected = ComputeCellToPointExpected(cellset, permutation);
   resultPortal = result.ReadPortal();
   for (viskores::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
     VISKORES_TEST_ASSERT(resultPortal.Get(i) == expected[static_cast<std::size_t>(i)],
-                     "incorrect result");
+                         "incorrect result");
   }
   std::cout << "Testing resource releasing in CellSetPermutation:\n";
   cs.ReleaseResourcesExecution();
   VISKORES_TEST_ASSERT(cs.GetNumberOfCells() == cellset.GetNumberOfCells() / 2,
-                   "release execution resources should not change the number of cells");
+                       "release execution resources should not change the number of cells");
   VISKORES_TEST_ASSERT(cs.GetNumberOfPoints() == cellset.GetNumberOfPoints(),
-                   "release execution resources should not change the number of points");
+                       "release execution resources should not change the number of points");
 
   return cs;
 }

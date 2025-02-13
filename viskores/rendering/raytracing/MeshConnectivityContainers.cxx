@@ -64,11 +64,12 @@ MeshConnectivityContainerUnstructured::MeshConnectivityContainerUnstructured(
   //
   // Grab the cell arrays
   //
-  CellConn =
-    Cellset.GetConnectivityArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
-  CellOffsets =
-    Cellset.GetOffsetsArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
-  Shapes = Cellset.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+  CellConn = Cellset.GetConnectivityArray(viskores::TopologyElementTagCell(),
+                                          viskores::TopologyElementTagPoint());
+  CellOffsets = Cellset.GetOffsetsArray(viskores::TopologyElementTagCell(),
+                                        viskores::TopologyElementTagPoint());
+  Shapes =
+    Cellset.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
 
   Intersector.SetData(Coords, Triangles);
 }
@@ -103,8 +104,8 @@ MeshConnectivityContainerSingleType::MeshConnectivityContainerSingleType(
 
   this->Intersector.SetUseWaterTight(true);
 
-  this->CellConnectivity =
-    Cellset.GetConnectivityArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+  this->CellConnectivity = Cellset.GetConnectivityArray(viskores::TopologyElementTagCell(),
+                                                        viskores::TopologyElementTagPoint());
   viskores::cont::ArrayHandleConstant<viskores::UInt8> shapes =
     Cellset.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
 

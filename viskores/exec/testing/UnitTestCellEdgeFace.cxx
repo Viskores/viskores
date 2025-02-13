@@ -93,7 +93,8 @@ struct TestCellFacesFunctor
       for (viskores::IdComponent pointIndex = 0; pointIndex < numPointsInFace; pointIndex++)
       {
         viskores::IdComponent localFaceIndex;
-        CHECK_CALL(viskores::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, localFaceIndex));
+        CHECK_CALL(
+          viskores::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, localFaceIndex));
         VISKORES_TEST_ASSERT(localFaceIndex >= 0, "Invalid point index for face.");
         VISKORES_TEST_ASSERT(localFaceIndex < numPoints, "Invalid point index for face.");
         EdgeType edge;
@@ -108,7 +109,8 @@ struct TestCellFacesFunctor
           CHECK_CALL(viskores::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, edge[1]));
         }
         MakeEdgeCanonical(edge);
-        VISKORES_TEST_ASSERT(edgeSet.find(edge) != edgeSet.end(), "Edge in face not in cell's edges");
+        VISKORES_TEST_ASSERT(edgeSet.find(edge) != edgeSet.end(),
+                             "Edge in face not in cell's edges");
         edgesFoundInFaces.insert(edge);
       }
 
@@ -120,7 +122,7 @@ struct TestCellFacesFunctor
       VISKORES_TEST_ASSERT(canonicalFaceId[1] < canonicalFaceId[2], "Bad order.");
     }
     VISKORES_TEST_ASSERT(edgesFoundInFaces.size() == edgeSet.size(),
-                     "Faces did not contain all edges in cell");
+                         "Faces did not contain all edges in cell");
   }
 
   // Case of cells that have 2 dimensions (no faces)
@@ -138,7 +140,8 @@ struct TestCellFacesFunctor
 
     viskores::IdComponent numEdges;
     CHECK_CALL(viskores::exec::CellEdgeNumberOfEdges(numPoints, shape, numEdges));
-    VISKORES_TEST_ASSERT(numEdges == numPoints, "Polygons should have same number of points and edges");
+    VISKORES_TEST_ASSERT(numEdges == numPoints,
+                         "Polygons should have same number of points and edges");
 
     std::set<EdgeType> edgeSet;
     for (viskores::IdComponent edgeIndex = 0; edgeIndex < numEdges; edgeIndex++)

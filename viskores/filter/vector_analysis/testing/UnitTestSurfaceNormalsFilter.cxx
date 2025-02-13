@@ -21,16 +21,16 @@ void VerifyCellNormalValues(const viskores::cont::DataSet& ds)
   ds.GetCellField("Normals").GetData().AsArrayHandle(normals);
 
   viskores::Vec3f expected[8] = { { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f },
-                              { 0.707f, 0.500f, -0.500f },  { 0.000f, -0.707f, -0.707f },
-                              { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
-                              { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f } };
+                                  { 0.707f, 0.500f, -0.500f },  { 0.000f, -0.707f, -0.707f },
+                                  { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
+                                  { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f } };
 
   auto portal = normals.ReadPortal();
   VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect normals array length");
   for (viskores::Id i = 0; i < 8; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(portal.Get(i), expected[i], 0.001),
-                     "result does not match expected value");
+                         "result does not match expected value");
   }
 }
 
@@ -39,23 +39,26 @@ void VerifyPointNormalValues(const viskores::cont::DataSet& ds)
   viskores::cont::ArrayHandle<viskores::Vec3f> normals;
   ds.GetPointField("Normals").GetData().AsArrayHandle(normals);
 
-  viskores::Vec3f expected[8] = { { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
-                              { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },
-                              { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
-                              { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f } };
+  viskores::Vec3f expected[8] = {
+    { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
+    { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },
+    { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
+    { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f }
+  };
 
   auto portal = normals.ReadPortal();
   VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect normals array length");
   for (viskores::Id i = 0; i < 8; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(portal.Get(i), expected[i], 0.001),
-                     "result does not match expected value");
+                         "result does not match expected value");
   }
 }
 
 void TestSurfaceNormals()
 {
-  viskores::cont::DataSet ds = viskores::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
+  viskores::cont::DataSet ds =
+    viskores::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
 
   viskores::filter::vector_analysis::SurfaceNormals filter;
   viskores::cont::DataSet result;

@@ -42,7 +42,7 @@ viskores::Id2 viskores::cont::internal::GetFirstAndLastUnmaskedIndices(
   viskores::cont::DeviceAdapterId device)
 {
   viskores::Id2 initialValue = { std::numeric_limits<viskores::Id>::max(),
-                             std::numeric_limits<viskores::Id>::min() };
+                                 std::numeric_limits<viskores::Id>::min() };
   auto maskValsAndInds = viskores::cont::make_ArrayHandleZip(
     maskArray, viskores::cont::ArrayHandleIndex(maskArray.GetNumberOfValues()));
   auto unmaskedIndices =

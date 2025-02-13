@@ -32,7 +32,9 @@ struct GroupVariableInputWorklet : public viskores::worklet::WorkletMapField
   using ExecutionSignature = void(_1, WorkIndex, _2);
 
   template <typename InputType>
-  VISKORES_EXEC void operator()(const InputType& input, viskores::Id workIndex, viskores::Id& dummyOut) const
+  VISKORES_EXEC void operator()(const InputType& input,
+                                viskores::Id workIndex,
+                                viskores::Id& dummyOut) const
   {
     using ComponentType = typename InputType::ComponentType;
     viskores::IdComponent expectedSize = static_cast<viskores::IdComponent>(workIndex);
@@ -74,7 +76,8 @@ struct TestGroupVecVariableAsInput
 
     viskores::cont::ArrayHandle<viskores::Id> dummyArray;
 
-    auto groupVecArray = viskores::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray);
+    auto groupVecArray =
+      viskores::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetsArray);
 
     VISKORES_TEST_ASSERT(groupVecArray.GetNumberOfValues() == ARRAY_SIZE);
     // Num components is inconsistent, so you should just get 0.

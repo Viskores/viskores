@@ -50,18 +50,18 @@ void TestReadingBOVDataSet()
   // See the .bov file: DATA SIZE: 50 50 50
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == 50 * 50 * 50, "Incorrect number of points");
   VISKORES_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 50 * 50 * 50,
-                   "Incorrect number of points (from cell set)");
+                       "Incorrect number of points (from cell set)");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == 49 * 49 * 49, "Incorrect number of cells");
   // See the .bov file: VARIABLE: "var"
   VISKORES_TEST_ASSERT(ds.HasField("var"), "Should have field 'var', but does not.");
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 2, "There is only one field in noise.bov");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                   "There is only one coordinate system in noise.bov");
+                       "There is only one coordinate system in noise.bov");
 
   auto const& field = ds.GetField("var");
   // I'm pretty sure that all .bov files have their fields associated with points . . .
   VISKORES_TEST_ASSERT(field.GetAssociation() == viskores::cont::Field::Association::Points,
-                   "The field should be associated with points.");
+                       "The field should be associated with points.");
 }
 
 

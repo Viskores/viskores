@@ -52,9 +52,9 @@ namespace cellmetrics
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellConditionMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      CellShapeType shape,
-                                      viskores::ErrorCode&)
+                                          const PointCoordVecType& pts,
+                                          CellShapeType shape,
+                                          viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -67,9 +67,9 @@ VISKORES_EXEC OutType CellConditionMetric(const viskores::IdComponent& numPts,
 // Compute the condition quality metric of a triangular cell.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellConditionMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagTriangle,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagTriangle,
+                                          viskores::ErrorCode& ec)
 {
   if (numPts != 3)
   {
@@ -100,9 +100,9 @@ VISKORES_EXEC OutType CellConditionMetric(const viskores::IdComponent& numPts,
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellConditionMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagQuad,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagQuad,
+                                          viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(ec);
@@ -140,9 +140,9 @@ VISKORES_EXEC OutType CellConditionMetric(const viskores::IdComponent& numPts,
 /// Compute the condition metric of a tetrahedron.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellConditionMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagTetra,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagTetra,
+                                          viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -176,7 +176,8 @@ VISKORES_EXEC OutType CellConditionMetric(const viskores::IdComponent& numPts,
   const Vector C2xC3 = viskores::Cross(C2, C3);
   const Vector C1xC3 = viskores::Cross(C1, C3);
 
-  const Scalar t1 = static_cast<Scalar>(viskores::Dot(C1, C1) + viskores::Dot(C2, C2) + viskores::Dot(C3, C3));
+  const Scalar t1 =
+    static_cast<Scalar>(viskores::Dot(C1, C1) + viskores::Dot(C2, C2) + viskores::Dot(C3, C3));
   const Scalar t2 = static_cast<Scalar>(viskores::Dot(C1xC2, C1xC2) + viskores::Dot(C2xC3, C2xC3) +
                                         viskores::Dot(C1xC3, C1xC3));
 
@@ -187,9 +188,9 @@ VISKORES_EXEC OutType CellConditionMetric(const viskores::IdComponent& numPts,
 // Condition of a hex cell is a deprecated/legacy metric which is identical to the Max Aspect Frobenius metric.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellConditionMetric(const viskores::IdComponent& numPts,
-                                      const PointCoordVecType& pts,
-                                      viskores::CellShapeTagHexahedron,
-                                      viskores::ErrorCode& ec)
+                                          const PointCoordVecType& pts,
+                                          viskores::CellShapeTagHexahedron,
+                                          viskores::ErrorCode& ec)
 {
   return CellMaxAspectFrobeniusMetric<OutType, PointCoordVecType>(
     numPts, pts, viskores::CellShapeTagHexahedron(), ec);

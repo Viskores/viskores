@@ -67,7 +67,7 @@ void ValidatePointTransform(const viskores::cont::CoordinateSystem& coords,
 {
   //verify the result
   VISKORES_TEST_ASSERT(result.HasField(fieldName, viskores::cont::Field::Association::Points),
-                   "Output field missing.");
+                       "Output field missing.");
 
   viskores::cont::ArrayHandle<viskores::Vec3f> resultArrayHandle;
   result.GetField(fieldName, viskores::cont::Field::Association::Points)
@@ -78,7 +78,7 @@ void ValidatePointTransform(const viskores::cont::CoordinateSystem& coords,
 
   auto points = coords.GetDataAsMultiplexer();
   VISKORES_TEST_ASSERT(points.GetNumberOfValues() == resultArrayHandle.GetNumberOfValues(),
-                   "Incorrect number of points in point transform");
+                       "Incorrect number of points in point transform");
 
   auto pointsPortal = points.ReadPortal();
   auto resultsPortal = resultArrayHandle.ReadPortal();
@@ -118,7 +118,8 @@ void TestPointTransformScale(const viskores::cont::DataSet& ds, const viskores::
   filter.SetChangeCoordinateSystem(true);
   viskores::cont::DataSet result = filter.Execute(ds);
 
-  ValidatePointTransform(ds.GetCoordinateSystem(), "scale", result, viskores::Transform3DScale(scale));
+  ValidatePointTransform(
+    ds.GetCoordinateSystem(), "scale", result, viskores::Transform3DScale(scale));
 }
 
 void TestPointTransformRotation(const viskores::cont::DataSet& ds,
@@ -162,9 +163,10 @@ void TestPointTransform()
 
   std::uniform_real_distribution<viskores::FloatDefault> transDist(-100, 100);
   for (int i = 0; i < N; i++)
-    TestPointTransformTranslation(
-      ds,
-      viskores::Vec3f(transDist(randGenerator), transDist(randGenerator), transDist(randGenerator)));
+    TestPointTransformTranslation(ds,
+                                  viskores::Vec3f(transDist(randGenerator),
+                                                  transDist(randGenerator),
+                                                  transDist(randGenerator)));
 
   //Test scaling
   TestPointTransformScale(ds, viskores::Vec3f(1, 1, 1));
@@ -176,9 +178,10 @@ void TestPointTransform()
   for (int i = 0; i < N; i++)
   {
     TestPointTransformScale(ds, viskores::Vec3f(scaleDist(randGenerator)));
-    TestPointTransformScale(
-      ds,
-      viskores::Vec3f(scaleDist(randGenerator), scaleDist(randGenerator), scaleDist(randGenerator)));
+    TestPointTransformScale(ds,
+                            viskores::Vec3f(scaleDist(randGenerator),
+                                            scaleDist(randGenerator),
+                                            scaleDist(randGenerator)));
   }
 
   //Test rotation
@@ -207,10 +210,10 @@ void TestPointTransform()
 
   //Test general
   auto transform = viskores::Transform3DTranslate(viskores::Vec3f{ 1, 1, 1 });
-  transform =
-    viskores::MatrixMultiply(transform, viskores::Transform3DScale(static_cast<viskores::FloatDefault>(1.5f)));
-  transform = viskores::MatrixMultiply(transform,
-                                   viskores::Transform3DRotateX(static_cast<viskores::FloatDefault>(90.f)));
+  transform = viskores::MatrixMultiply(
+    transform, viskores::Transform3DScale(static_cast<viskores::FloatDefault>(1.5f)));
+  transform = viskores::MatrixMultiply(
+    transform, viskores::Transform3DRotateX(static_cast<viskores::FloatDefault>(90.f)));
   TestPointTransformGeneral(ds, transform);
 }
 

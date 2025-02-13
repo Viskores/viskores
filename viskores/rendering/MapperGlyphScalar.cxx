@@ -29,7 +29,8 @@ namespace
 // Packed frame buffer value with color set as black and depth as 1.0f
 constexpr viskores::Int64 ClearValue = 0x3F800000000000FF;
 
-union PackedValue {
+union PackedValue
+{
   struct PackedFloats
   {
     viskores::Float32 Color;
@@ -51,7 +52,10 @@ viskores::UInt32 ScaleColorComponent(viskores::Float32 c)
 }
 
 VISKORES_EXEC_CONT
-viskores::UInt32 PackColor(viskores::Float32 r, viskores::Float32 g, viskores::Float32 b, viskores::Float32 a);
+viskores::UInt32 PackColor(viskores::Float32 r,
+                           viskores::Float32 g,
+                           viskores::Float32 b,
+                           viskores::Float32 a);
 
 VISKORES_EXEC_CONT
 viskores::UInt32 PackColor(const viskores::Vec4f_32& color)
@@ -60,7 +64,10 @@ viskores::UInt32 PackColor(const viskores::Vec4f_32& color)
 }
 
 VISKORES_EXEC_CONT
-viskores::UInt32 PackColor(viskores::Float32 r, viskores::Float32 g, viskores::Float32 b, viskores::Float32 a)
+viskores::UInt32 PackColor(viskores::Float32 r,
+                           viskores::Float32 g,
+                           viskores::Float32 b,
+                           viskores::Float32 a)
 {
   viskores::UInt32 packed = (ScaleColorComponent(r) << 24);
   packed |= (ScaleColorComponent(g) << 16);
@@ -127,9 +134,9 @@ public:
 
   template <typename ColorBufferPortal, typename DepthBufferPortal>
   VISKORES_EXEC void operator()(const viskores::Int64& packedValue,
-                            ColorBufferPortal& colorBuffer,
-                            DepthBufferPortal& depthBuffer,
-                            const viskores::Id& index) const
+                                ColorBufferPortal& colorBuffer,
+                                DepthBufferPortal& depthBuffer,
+                                const viskores::Id& index) const
   {
     PackedValue packed;
     packed.Raw = packedValue;
@@ -165,8 +172,8 @@ public:
 
   template <typename FieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& pointId,
-                            viskores::Float32& normalizedScalar,
-                            const FieldPortalType& field) const
+                                viskores::Float32& normalizedScalar,
+                                const FieldPortalType& field) const
   {
     normalizedScalar = static_cast<viskores::Float32>(field.Get(pointId));
     normalizedScalar = (normalizedScalar - this->MinScalar) * this->InverseScalarDelta;
@@ -203,11 +210,11 @@ public:
 
   template <typename CoordinatesPortal, typename ColorMapPortal, typename FrameBuffer>
   VISKORES_EXEC void operator()(const viskores::Id& pointId,
-                            const viskores::Float32& size,
-                            const viskores::Float32& normalizedScalar,
-                            const CoordinatesPortal& coordsPortal,
-                            const ColorMapPortal& colorMap,
-                            FrameBuffer& frameBuffer) const
+                                const viskores::Float32& size,
+                                const viskores::Float32& normalizedScalar,
+                                const CoordinatesPortal& coordsPortal,
+                                const ColorMapPortal& colorMap,
+                                FrameBuffer& frameBuffer) const
   {
     viskores::Vec3f_32 point = static_cast<viskores::Vec3f_32>(coordsPortal.Get(pointId));
     point = this->TransformWorldToViewport(point);
@@ -252,7 +259,7 @@ private:
 
   template <typename ColorMapPortal>
   VISKORES_EXEC viskores::Vec4f_32 GetColor(viskores::Float32 normalizedScalar,
-                                    const ColorMapPortal& colorMap) const
+                                            const ColorMapPortal& colorMap) const
   {
     viskores::Id colorMapSize = colorMap.GetNumberOfValues() - 1;
     viskores::Id colorIdx = static_cast<viskores::Id>(normalizedScalar * colorMapSize);
@@ -262,10 +269,10 @@ private:
 
   template <typename FrameBuffer>
   VISKORES_EXEC void SetColor(viskores::Id x,
-                          viskores::Id y,
-                          viskores::Float32 depth,
-                          const viskores::Vec4f_32& color,
-                          FrameBuffer& frameBuffer) const
+                              viskores::Id y,
+                              viskores::Float32 depth,
+                              const viskores::Vec4f_32& color,
+                              FrameBuffer& frameBuffer) const
   {
     if (x < 0 || x >= this->Width || y < 0 || y >= this->Height)
     {
@@ -320,13 +327,14 @@ void MapperGlyphScalar::SetGlyphType(viskores::rendering::GlyphType glyphType)
   this->GlyphType = glyphType;
 }
 
-void MapperGlyphScalar::RenderCellsImpl(const viskores::cont::UnknownCellSet& cellset,
-                                        const viskores::cont::CoordinateSystem& coords,
-                                        const viskores::cont::Field& scalarField,
-                                        const viskores::cont::ColorTable& viskoresNotUsed(colorTable),
-                                        const viskores::rendering::Camera& camera,
-                                        const viskores::Range& scalarRange,
-                                        const viskores::cont::Field& viskoresNotUsed(ghostField))
+void MapperGlyphScalar::RenderCellsImpl(
+  const viskores::cont::UnknownCellSet& cellset,
+  const viskores::cont::CoordinateSystem& coords,
+  const viskores::cont::Field& scalarField,
+  const viskores::cont::ColorTable& viskoresNotUsed(colorTable),
+  const viskores::rendering::Camera& camera,
+  const viskores::Range& scalarRange,
+  const viskores::cont::Field& viskoresNotUsed(ghostField))
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
 
@@ -424,8 +432,8 @@ void MapperGlyphScalar::RenderCellsImpl(const viskores::cont::UnknownCellSet& ce
     viskores::Matrix<viskores::Float32, 4, 4> worldToProjection = viskores::MatrixMultiply(
       camera.CreateProjectionMatrix(this->Canvas->GetWidth(), this->Canvas->GetHeight()),
       worldToCamera);
-    viskores::Float32 projectionOffset =
-      viskores::Max(0.03f / static_cast<viskores::Float32>(camera.GetClippingRange().Length()), 1e-4f);
+    viskores::Float32 projectionOffset = viskores::Max(
+      0.03f / static_cast<viskores::Float32>(camera.GetClippingRange().Length()), 1e-4f);
     invoker(
       BillboardGlyphPlotter{
         worldToProjection, this->Canvas->GetWidth(), this->Canvas->GetHeight(), projectionOffset },

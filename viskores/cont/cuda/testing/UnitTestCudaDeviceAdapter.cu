@@ -18,6 +18,7 @@ int UnitTestCudaDeviceAdapter(int argc, char* argv[])
   auto& tracker = viskores::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(viskores::cont::DeviceAdapterTagCuda{});
   int result =
-    viskores::cont::testing::TestingDeviceAdapter<viskores::cont::DeviceAdapterTagCuda>::Run(argc, argv);
+    viskores::cont::testing::TestingDeviceAdapter<viskores::cont::DeviceAdapterTagCuda>::Run(argc,
+                                                                                             argv);
   return viskores::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

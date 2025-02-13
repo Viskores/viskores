@@ -71,16 +71,17 @@ VISKORES_EXEC OutType ComputeTetCondition(const VecType edges[])
   if (det <= viskores::NegativeInfinity<OutType>())
     return viskores::Infinity<OutType>();
 
-  OutType term1 = static_cast<OutType>(
-    viskores::Dot(edges[0], edges[0]) + viskores::Dot(edges[1], edges[1]) + viskores::Dot(edges[2], edges[2]));
+  OutType term1 =
+    static_cast<OutType>(viskores::Dot(edges[0], edges[0]) + viskores::Dot(edges[1], edges[1]) +
+                         viskores::Dot(edges[2], edges[2]));
 
   VecType crosses[3] = { viskores::Cross(edges[0], edges[1]),
                          viskores::Cross(edges[1], edges[2]),
                          viskores::Cross(edges[2], edges[0]) };
 
-  OutType term2 =
-    static_cast<OutType>(viskores::Dot(crosses[0], crosses[0]) + viskores::Dot(crosses[1], crosses[1]) +
-                         viskores::Dot(crosses[2], crosses[2]));
+  OutType term2 = static_cast<OutType>(viskores::Dot(crosses[0], crosses[0]) +
+                                       viskores::Dot(crosses[1], crosses[1]) +
+                                       viskores::Dot(crosses[2], crosses[2]));
 
   return viskores::Sqrt(term1 * term2) / det;
 }
@@ -90,9 +91,9 @@ VISKORES_EXEC OutType ComputeTetCondition(const VecType edges[])
 // By default, cells have undefined aspect frobenius unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent&,
-                                               const PointCoordVecType&,
-                                               CellShapeType,
-                                               viskores::ErrorCode& ec)
+                                                   const PointCoordVecType&,
+                                                   CellShapeType,
+                                                   viskores::ErrorCode& ec)
 {
   ec = viskores::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
@@ -104,9 +105,9 @@ VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent&,
 //as pentagons or hexagons, or (n<3)-vertex polygons, such as lines or points.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                               const PointCoordVecType& pts,
-                                               viskores::CellShapeTagPolygon,
-                                               viskores::ErrorCode& ec)
+                                                   const PointCoordVecType& pts,
+                                                   viskores::CellShapeTagPolygon,
+                                                   viskores::ErrorCode& ec)
 {
   if (numPts == 3)
     return viskores::worklet::cellmetrics::CellAspectFrobeniusMetric<OutType>(
@@ -123,9 +124,9 @@ VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent& 
 //The max aspect frobenius metric is not supported for lines/edges.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent&,
-                                               const PointCoordVecType&,
-                                               viskores::CellShapeTagLine,
-                                               viskores::ErrorCode& ec)
+                                                   const PointCoordVecType&,
+                                                   viskores::CellShapeTagLine,
+                                                   viskores::ErrorCode& ec)
 {
   ec = viskores::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
@@ -136,9 +137,9 @@ VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent&,
 //Thus, this implementation simply calls the aspect frobenius metric.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                               const PointCoordVecType& pts,
-                                               viskores::CellShapeTagTriangle,
-                                               viskores::ErrorCode& ec)
+                                                   const PointCoordVecType& pts,
+                                                   viskores::CellShapeTagTriangle,
+                                                   viskores::ErrorCode& ec)
 {
   if (numPts != 3)
   {
@@ -152,9 +153,9 @@ VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent& 
 //The max aspect frobenius metric is not supported for pyramids.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent&,
-                                               const PointCoordVecType&,
-                                               viskores::CellShapeTagPyramid,
-                                               viskores::ErrorCode& ec)
+                                                   const PointCoordVecType&,
+                                                   viskores::CellShapeTagPyramid,
+                                                   viskores::ErrorCode& ec)
 {
   ec = viskores::ErrorCode::InvalidCellMetric;
   return OutType(0.0);
@@ -173,9 +174,9 @@ VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent&,
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                               const PointCoordVecType& pts,
-                                               viskores::CellShapeTagQuad,
-                                               viskores::ErrorCode& ec)
+                                                   const PointCoordVecType& pts,
+                                                   viskores::CellShapeTagQuad,
+                                                   viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -230,9 +231,9 @@ VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent& 
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                               const PointCoordVecType& pts,
-                                               viskores::CellShapeTagTetra,
-                                               viskores::ErrorCode& ec)
+                                                   const PointCoordVecType& pts,
+                                                   viskores::CellShapeTagTetra,
+                                                   viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -255,9 +256,9 @@ VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent& 
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                               const PointCoordVecType& pts,
-                                               viskores::CellShapeTagHexahedron,
-                                               viskores::ErrorCode& ec)
+                                                   const PointCoordVecType& pts,
+                                                   viskores::CellShapeTagHexahedron,
+                                                   viskores::ErrorCode& ec)
 {
   if (numPts != 8)
   {
@@ -324,9 +325,9 @@ VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent& 
 // Full range: [1,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMaxAspectFrobeniusMetric(const viskores::IdComponent& numPts,
-                                               const PointCoordVecType& pts,
-                                               viskores::CellShapeTagWedge,
-                                               viskores::ErrorCode& ec)
+                                                   const PointCoordVecType& pts,
+                                                   viskores::CellShapeTagWedge,
+                                                   viskores::ErrorCode& ec)
 {
   if (numPts != 6)
   {

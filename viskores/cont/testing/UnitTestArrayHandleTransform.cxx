@@ -50,7 +50,7 @@ struct CheckTransformWorklet : viskores::worklet::WorkletMapField
 
 template <typename OriginalArrayHandleType, typename TransformedArrayHandleType>
 VISKORES_CONT void CheckControlPortals(const OriginalArrayHandleType& originalArray,
-                                   const TransformedArrayHandleType& transformedArray)
+                                       const TransformedArrayHandleType& transformedArray)
 {
   std::cout << "  Verify that the control portal works" << std::endl;
 
@@ -58,13 +58,13 @@ VISKORES_CONT void CheckControlPortals(const OriginalArrayHandleType& originalAr
   using TransformedPortalType = typename TransformedArrayHandleType::ReadPortalType;
 
   VISKORES_TEST_ASSERT(originalArray.GetNumberOfValues() == transformedArray.GetNumberOfValues(),
-                   "Number of values in transformed array incorrect.");
+                       "Number of values in transformed array incorrect.");
 
   OriginalPortalType originalPortal = originalArray.ReadPortal();
   TransformedPortalType transformedPortal = transformedArray.ReadPortal();
 
   VISKORES_TEST_ASSERT(originalPortal.GetNumberOfValues() == transformedPortal.GetNumberOfValues(),
-                   "Number of values in transformed portal incorrect.");
+                       "Number of values in transformed portal incorrect.");
 
   for (viskores::Id index = 0; index < originalArray.GetNumberOfValues(); index++)
   {
@@ -129,7 +129,8 @@ struct TransformTests
     viskores::cont::ArrayHandleTransform<viskores::cont::ArrayHandle<InputValueType>, MySquare>;
 
   using CountingTransformHandle =
-    viskores::cont::ArrayHandleTransform<viskores::cont::ArrayHandleCounting<InputValueType>, MySquare>;
+    viskores::cont::ArrayHandleTransform<viskores::cont::ArrayHandleCounting<InputValueType>,
+                                         MySquare>;
 
   using Device = viskores::cont::DeviceAdapterTagSerial;
   using Algorithm = viskores::cont::DeviceAdapterAlgorithm<Device>;
@@ -140,8 +141,9 @@ struct TransformTests
     viskores::cont::Invoker invoke;
 
     std::cout << "Test a transform handle with a counting handle as the values" << std::endl;
-    viskores::cont::ArrayHandleCounting<InputValueType> counting = viskores::cont::make_ArrayHandleCounting(
-      InputValueType(OutputValueType(0)), InputValueType(1), ARRAY_SIZE);
+    viskores::cont::ArrayHandleCounting<InputValueType> counting =
+      viskores::cont::make_ArrayHandleCounting(
+        InputValueType(OutputValueType(0)), InputValueType(1), ARRAY_SIZE);
     CountingTransformHandle countingTransformed =
       viskores::cont::make_ArrayHandleTransform(counting, functor);
 
@@ -202,7 +204,7 @@ struct TransformTests
         const InputValueType control_value = transformedPortal.Get(i);
         VISKORES_TEST_ASSERT(test_equal(result_v, correct_value), "Transform Handle Failed");
         VISKORES_TEST_ASSERT(test_equal(scaleUp(result_v), control_value),
-                         "Transform Handle Control Failed");
+                             "Transform Handle Control Failed");
       }
     }
   }

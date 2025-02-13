@@ -72,8 +72,9 @@ bool TryExecObjectTransport(Device device)
   TestExecutionObject contObject;
   contObject.Number = EXPECTED_NUMBER;
 
-  viskores::cont::arg::Transport<viskores::cont::arg::TransportTagExecObject, TestExecutionObject, Device>
-    transport;
+  viskores::cont::arg::
+    Transport<viskores::cont::arg::TransportTagExecObject, TestExecutionObject, Device>
+      transport;
 
   viskores::cont::Token token;
 
@@ -88,19 +89,19 @@ bool TryExecObjectTransport(Device device)
 void TestExecObjectTransport()
 {
   std::cout << "Checking ExecObject queries." << std::endl;
-  VISKORES_TEST_ASSERT(!viskores::cont::internal::IsExecutionObjectBase<NotAnExecutionObject>::value,
-                   "Bad query");
-  VISKORES_TEST_ASSERT(viskores::cont::internal::IsExecutionObjectBase<InvalidExecutionObject>::value,
-                   "Bad query");
+  VISKORES_TEST_ASSERT(
+    !viskores::cont::internal::IsExecutionObjectBase<NotAnExecutionObject>::value, "Bad query");
+  VISKORES_TEST_ASSERT(
+    viskores::cont::internal::IsExecutionObjectBase<InvalidExecutionObject>::value, "Bad query");
   VISKORES_TEST_ASSERT(viskores::cont::internal::IsExecutionObjectBase<TestExecutionObject>::value,
-                   "Bad query");
+                       "Bad query");
 
-  VISKORES_TEST_ASSERT(!viskores::cont::internal::HasPrepareForExecution<NotAnExecutionObject>::value,
-                   "Bad query");
-  VISKORES_TEST_ASSERT(!viskores::cont::internal::HasPrepareForExecution<InvalidExecutionObject>::value,
-                   "Bad query");
+  VISKORES_TEST_ASSERT(
+    !viskores::cont::internal::HasPrepareForExecution<NotAnExecutionObject>::value, "Bad query");
+  VISKORES_TEST_ASSERT(
+    !viskores::cont::internal::HasPrepareForExecution<InvalidExecutionObject>::value, "Bad query");
   VISKORES_TEST_ASSERT(viskores::cont::internal::HasPrepareForExecution<TestExecutionObject>::value,
-                   "Bad query");
+                       "Bad query");
 
   VISKORES_TEST_ASSERT(
     viskores::cont::TryExecute([](auto device) { return TryExecObjectTransport(device); }));

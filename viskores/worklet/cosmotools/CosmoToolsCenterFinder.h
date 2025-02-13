@@ -148,7 +148,8 @@ viskores::Id CosmoTools<T, StorageType>::MBPCenterFinderMxN(T* mxnPotential)
   tempBest.ReleaseResources();
 
   viskores::cont::ArrayHandle<viskores::Id> candidate;
-  DeviceAlgorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, nParticles), candidate);
+  DeviceAlgorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, nParticles),
+                        candidate);
 
   SetCandidateParticles<T> setCandidateParticles(cutoffPotential);
   viskores::worklet::DispatcherMapField<SetCandidateParticles<T>> setCandidateParticlesDispatcher(
@@ -194,14 +195,15 @@ viskores::Id CosmoTools<T, StorageType>::MBPCenterFinderMxN(T* mxnPotential)
 //
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, typename StorageType>
-void CosmoTools<T, StorageType>::BinParticlesHalo(viskores::cont::ArrayHandle<viskores::Id>& partId,
-                                                  viskores::cont::ArrayHandle<viskores::Id>& binId,
-                                                  viskores::cont::ArrayHandle<viskores::Id>& uniqueBins,
-                                                  viskores::cont::ArrayHandle<viskores::Id>& partPerBin,
-                                                  viskores::cont::ArrayHandle<viskores::Id>& particleOffset,
-                                                  viskores::cont::ArrayHandle<viskores::Id>& binX,
-                                                  viskores::cont::ArrayHandle<viskores::Id>& binY,
-                                                  viskores::cont::ArrayHandle<viskores::Id>& binZ)
+void CosmoTools<T, StorageType>::BinParticlesHalo(
+  viskores::cont::ArrayHandle<viskores::Id>& partId,
+  viskores::cont::ArrayHandle<viskores::Id>& binId,
+  viskores::cont::ArrayHandle<viskores::Id>& uniqueBins,
+  viskores::cont::ArrayHandle<viskores::Id>& partPerBin,
+  viskores::cont::ArrayHandle<viskores::Id>& particleOffset,
+  viskores::cont::ArrayHandle<viskores::Id>& binX,
+  viskores::cont::ArrayHandle<viskores::Id>& binY,
+  viskores::cont::ArrayHandle<viskores::Id>& binZ)
 {
   // Compute number of bins and ranges for each bin
   viskores::Vec<T, 2> xRange(viskores::cont::ArrayGetValue(0, xLoc));
@@ -300,9 +302,10 @@ void CosmoTools<T, StorageType>::BinParticlesHalo(viskores::cont::ArrayHandle<vi
 //
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T, typename StorageType>
-void CosmoTools<T, StorageType>::MBPCenterFindingByKey(viskores::cont::ArrayHandle<viskores::Id>& keyId,
-                                                       viskores::cont::ArrayHandle<viskores::Id>& partId,
-                                                       viskores::cont::ArrayHandle<T>& minPotential)
+void CosmoTools<T, StorageType>::MBPCenterFindingByKey(
+  viskores::cont::ArrayHandle<viskores::Id>& keyId,
+  viskores::cont::ArrayHandle<viskores::Id>& partId,
+  viskores::cont::ArrayHandle<T>& minPotential)
 {
   // Compute starting and ending indices of each key (bin or halo)
   viskores::cont::ArrayHandleIndex indexArray(nParticles);
@@ -355,7 +358,8 @@ void CosmoTools<T, StorageType>::MBPCenterFindingByKey(viskores::cont::ArrayHand
 
   // Find minimum potential for all particles in a halo
   DeviceAlgorithm::ScanInclusiveByKey(keyId, potential, minPotential, viskores::Minimum());
-  DeviceAlgorithm::ScanInclusiveByKey(keyReverse, minPotReverse, minPotReverse, viskores::Minimum());
+  DeviceAlgorithm::ScanInclusiveByKey(
+    keyReverse, minPotReverse, minPotReverse, viskores::Minimum());
 #ifdef DEBUG_PRINT
   DebugPrint("potential", potential);
   DebugPrint("minPotential", minPotential);
@@ -411,7 +415,8 @@ viskores::Id CosmoTools<T, StorageType>::MBPCenterFinderNxN(T* nxnPotential)
   equalsMinimumPotentialDispatcher.Invoke(particleIndex, potential, minPotential, centerId);
 
   // Fill out entire array with center index
-  viskores::cont::ArrayHandleReverse<viskores::cont::ArrayHandle<viskores::Id>> centerIdReverse(centerId);
+  viskores::cont::ArrayHandleReverse<viskores::cont::ArrayHandle<viskores::Id>> centerIdReverse(
+    centerId);
   DeviceAlgorithm::ScanInclusive(centerId, centerId, viskores::Maximum());
   DeviceAlgorithm::ScanInclusive(centerIdReverse, centerIdReverse, viskores::Maximum());
 

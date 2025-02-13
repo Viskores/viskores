@@ -48,8 +48,9 @@ void CheckResult(const std::vector<viskores::Vec4f>& expectedDiff,
   output.GetPointField("image-diff").GetData().AsArrayHandle(outputArray);
   output.GetPointField("threshold-output").GetData().AsArrayHandle(thresholdArray);
 
-  VISKORES_TEST_ASSERT(outputArray.GetNumberOfValues() == static_cast<viskores::Id>(expectedDiff.size()),
-                   "Field sizes wrong");
+  VISKORES_TEST_ASSERT(outputArray.GetNumberOfValues() ==
+                         static_cast<viskores::Id>(expectedDiff.size()),
+                       "Field sizes wrong");
 
   auto outPortal = outputArray.ReadPortal();
 
@@ -114,7 +115,7 @@ void TestImageDifference()
       { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
     };
     std::vector<viskores::FloatDefault> expectedThreshold = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+                                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     CheckResult(
       expectedDiff, expectedThreshold, result, filter.GetImageDiffWithinThreshold(), true);
   }
@@ -138,7 +139,7 @@ void TestImageDifference()
       { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
     };
     std::vector<viskores::FloatDefault> expectedThreshold = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+                                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     CheckResult(
       expectedDiff, expectedThreshold, result, filter.GetImageDiffWithinThreshold(), true);
   }
@@ -161,7 +162,7 @@ void TestImageDifference()
       { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }
     };
     std::vector<viskores::FloatDefault> expectedThreshold = { 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                                                          2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
+                                                              2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
     CheckResult(
       expectedDiff, expectedThreshold, result, filter.GetImageDiffWithinThreshold(), false);
   }
@@ -185,14 +186,14 @@ void TestImageDifference()
       { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }
     };
     std::vector<viskores::FloatDefault> expectedThreshold = { 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                                                          2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
+                                                              2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
     CheckResult(
       expectedDiff, expectedThreshold, result, filter.GetImageDiffWithinThreshold(), true);
   }
 
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "Non Matching Images (Different R pixel), Large Threshold");
+                   "Non Matching Images (Different R pixel), Large Threshold");
     auto dataSet = FillDataSet(static_cast<viskores::FloatDefault>(3));
     viskores::filter::image_processing::ImageDifference filter;
     filter.SetPrimaryField("primary");
@@ -209,7 +210,7 @@ void TestImageDifference()
       { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }, { 2, 0, 0, 0 }
     };
     std::vector<viskores::FloatDefault> expectedThreshold = { 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                                                          2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
+                                                              2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
     CheckResult(
       expectedDiff, expectedThreshold, result, filter.GetImageDiffWithinThreshold(), true);
   }

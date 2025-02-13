@@ -55,7 +55,8 @@ struct VecFromPortalPermuteTestFunctor
     // expected.
     CheckType(typename TTraits::DimensionalityTag(), viskores::TypeTraitsVectorTag());
     CheckType(typename VTraits::ComponentType(), T());
-    CheckType(typename VTraits::HasMultipleComponents(), viskores::VecTraitsTagMultipleComponents());
+    CheckType(typename VTraits::HasMultipleComponents(),
+              viskores::VecTraitsTagMultipleComponents());
     CheckType(typename VTraits::IsSizeStatic(), viskores::VecTraitsTagSizeVariable());
 
     std::cout << "Checking VecFromPortal contents" << std::endl;
@@ -87,7 +88,8 @@ struct VecFromPortalPermuteTestFunctor
         {
           T expected = TestValue(2 * index + offset, T());
           VISKORES_TEST_ASSERT(test_equal(vec[index], expected), "Wrong value.");
-          VISKORES_TEST_ASSERT(test_equal(VTraits::GetComponent(vec, index), expected), "Wrong value.");
+          VISKORES_TEST_ASSERT(test_equal(VTraits::GetComponent(vec, index), expected),
+                               "Wrong value.");
           VISKORES_TEST_ASSERT(test_equal(copyDirect[index], expected), "Wrong copied value.");
           VISKORES_TEST_ASSERT(test_equal(copyTraits[index], expected), "Wrong copied value.");
         }
@@ -98,7 +100,8 @@ struct VecFromPortalPermuteTestFunctor
 
 void VecFromPortalPermuteTest()
 {
-  viskores::testing::Testing::TryTypes(VecFromPortalPermuteTestFunctor(), viskores::TypeListCommon());
+  viskores::testing::Testing::TryTypes(VecFromPortalPermuteTestFunctor(),
+                                       viskores::TypeListCommon());
 }
 
 } // namespace UnitTestVecFromPortalPermuteNamespace

@@ -27,7 +27,8 @@ public:
   //
   // Extract all nodes using a constant size
   //
-  void ExtractCoordinates(const viskores::cont::CoordinateSystem& coords, const viskores::Float32 size);
+  void ExtractCoordinates(const viskores::cont::CoordinateSystem& coords,
+                          const viskores::Float32 size);
 
   //
   // Set size based on scalar field values. Each is interpolated from min to max

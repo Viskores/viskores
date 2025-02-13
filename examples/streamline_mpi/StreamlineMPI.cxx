@@ -23,7 +23,10 @@
 #include <viskores/thirdparty/diy/diy.h>
 #include <viskores/thirdparty/diy/mpi-cast.h>
 
-void LoadData(std::string& fname, std::vector<viskores::cont::DataSet>& dataSets, int rank, int nRanks)
+void LoadData(std::string& fname,
+              std::vector<viskores::cont::DataSet>& dataSets,
+              int rank,
+              int nRanks)
 {
   std::string buff;
   std::ifstream is;
@@ -96,9 +99,10 @@ int main(int argc, char** argv)
   viskores::filter::flow::ParticleAdvection pa;
 
   viskores::cont::ArrayHandle<viskores::Particle> seedArray;
-  seedArray = viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.1f, .1f, .9f), 0),
-                                             viskores::Particle(viskores::Vec3f(.1f, .6f, .6f), 1),
-                                             viskores::Particle(viskores::Vec3f(.1f, .9f, .1f), 2) });
+  seedArray =
+    viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.1f, .1f, .9f), 0),
+                                       viskores::Particle(viskores::Vec3f(.1f, .6f, .6f), 1),
+                                       viskores::Particle(viskores::Vec3f(.1f, .9f, .1f), 2) });
   pa.SetStepSize(0.001f);
   pa.SetNumberOfSteps(10000);
   pa.SetSeeds(seedArray);

@@ -162,7 +162,8 @@ public:
   using ReadPortalType = viskores::internal::ArrayPortalStrideRead<T>;
   using WritePortalType = viskores::internal::ArrayPortalStrideWrite<T>;
 
-  VISKORES_CONT static StrideInfo& GetInfo(const std::vector<viskores::cont::internal::Buffer>& buffers)
+  VISKORES_CONT static StrideInfo& GetInfo(
+    const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<StrideInfo>();
   }
@@ -179,10 +180,11 @@ public:
     return GetInfo(buffers).NumberOfValues;
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     StrideInfo& info = GetInfo(buffers);
 
@@ -193,7 +195,8 @@ public:
     }
 
     // Find the end index after dealing with the divsor and modulo.
-    auto lengthDivMod = [info](viskores::Id length) -> viskores::Id {
+    auto lengthDivMod = [info](viskores::Id length) -> viskores::Id
+    {
       viskores::Id resultLength = ((length - 1) / info.Divisor) + 1;
       if ((info.Modulo > 0) && (info.Modulo < resultLength))
       {
@@ -259,10 +262,10 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             const T& fillValue,
-                             viskores::Id startIndex,
-                             viskores::Id endIndex,
-                             viskores::cont::Token& token);
+                                 const T& fillValue,
+                                 viskores::Id startIndex,
+                                 viskores::Id endIndex,
+                                 viskores::cont::Token& token);
 
   VISKORES_CONT static ReadPortalType CreateReadPortal(
     const std::vector<viskores::cont::internal::Buffer>& buffers,
@@ -334,10 +337,13 @@ class VISKORES_ALWAYS_EXPORT ArrayHandleStride
 {
 public:
   VISKORES_ARRAY_HANDLE_SUBCLASS(ArrayHandleStride,
-                             (ArrayHandleStride<T>),
-                             (ArrayHandle<T, viskores::cont::StorageTagStride>));
+                                 (ArrayHandleStride<T>),
+                                 (ArrayHandle<T, viskores::cont::StorageTagStride>));
 
-  ArrayHandleStride(viskores::Id stride, viskores::Id offset, viskores::Id modulo = 0, viskores::Id divisor = 1)
+  ArrayHandleStride(viskores::Id stride,
+                    viskores::Id offset,
+                    viskores::Id modulo = 0,
+                    viskores::Id divisor = 1)
     : Superclass(StorageType::CreateBuffers(
         viskores::cont::internal::Buffer{},
         viskores::internal::ArrayStrideInfo(0, stride, offset, modulo, divisor)))
@@ -463,11 +469,11 @@ VISKORES_CONT inline void Storage<T, viskores::cont::StorageTagStride>::Fill(
     auto fillValueArray = viskores::cont::make_ArrayHandle({ fillValue });
     viskores::cont::ArrayHandleStride<T> constantArray(fillValueArray, numFill, 1, 0, 1, 1);
     viskores::cont::ArrayHandleStride<T> outputView(GetBasicArray(buffers),
-                                                numFill,
-                                                info.Stride,
-                                                info.ArrayIndex(startIndex),
-                                                info.Modulo,
-                                                info.Divisor);
+                                                    numFill,
+                                                    info.Stride,
+                                                    info.ArrayIndex(startIndex),
+                                                    info.Modulo,
+                                                    info.Divisor);
     // To prevent circular dependencies, this header file does not actually include
     // UnknownArrayHandle.h. Thus, it is possible to get a compile error on the following
     // line for using a declared but not defined `UnknownArrayHandle`. In the unlikely
@@ -587,8 +593,10 @@ extern template class VISKORES_CONT_TEMPLATE_EXPORT ArrayHandle<viskores::Int32,
 extern template class VISKORES_CONT_TEMPLATE_EXPORT ArrayHandle<viskores::UInt32, StorageTagStride>;
 extern template class VISKORES_CONT_TEMPLATE_EXPORT ArrayHandle<viskores::Int64, StorageTagStride>;
 extern template class VISKORES_CONT_TEMPLATE_EXPORT ArrayHandle<viskores::UInt64, StorageTagStride>;
-extern template class VISKORES_CONT_TEMPLATE_EXPORT ArrayHandle<viskores::Float32, StorageTagStride>;
-extern template class VISKORES_CONT_TEMPLATE_EXPORT ArrayHandle<viskores::Float64, StorageTagStride>;
+extern template class VISKORES_CONT_TEMPLATE_EXPORT
+  ArrayHandle<viskores::Float32, StorageTagStride>;
+extern template class VISKORES_CONT_TEMPLATE_EXPORT
+  ArrayHandle<viskores::Float64, StorageTagStride>;
 
 }
 } // namespace viskores::cont

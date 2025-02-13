@@ -52,9 +52,9 @@ namespace cellmetrics
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellOddyMetric(const viskores::IdComponent& numPts,
-                                 const PointCoordVecType& pts,
-                                 CellShapeType shape,
-                                 viskores::ErrorCode&)
+                                     const PointCoordVecType& pts,
+                                     CellShapeType shape,
+                                     viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -81,18 +81,19 @@ VISKORES_EXEC Scalar GetQuadOddyQi(const Vector& Li, const Vector& LiPlus1, cons
   const Scalar liMagnitudeSquared = static_cast<Scalar>(viskores::MagnitudeSquared(Li));
   const Scalar liPlus1MagnitudeSquared = static_cast<Scalar>(viskores::MagnitudeSquared(LiPlus1));
   const Scalar niPlus1MagnitudeSquared = static_cast<Scalar>(viskores::MagnitudeSquared(NiPlus1));
-  const Scalar q = (((liMagnitudeSquared - liPlus1MagnitudeSquared) *
-                     (liMagnitudeSquared - liPlus1MagnitudeSquared)) +
-                    (four * static_cast<Scalar>(viskores::Dot(Li, LiPlus1) * viskores::Dot(Li, LiPlus1)))) /
+  const Scalar q =
+    (((liMagnitudeSquared - liPlus1MagnitudeSquared) *
+      (liMagnitudeSquared - liPlus1MagnitudeSquared)) +
+     (four * static_cast<Scalar>(viskores::Dot(Li, LiPlus1) * viskores::Dot(Li, LiPlus1)))) /
     (two * niPlus1MagnitudeSquared);
 
   return q;
 }
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellOddyMetric(const viskores::IdComponent& numPts,
-                                 const PointCoordVecType& pts,
-                                 viskores::CellShapeTagQuad,
-                                 viskores::ErrorCode& ec)
+                                     const PointCoordVecType& pts,
+                                     viskores::CellShapeTagQuad,
+                                     viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -113,8 +114,10 @@ VISKORES_EXEC OutType CellOddyMetric(const viskores::IdComponent& numPts,
   const Vector N2 = GetQuadN2<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector N3 = GetQuadN3<Scalar, Vector, CollectionOfPoints>(pts);
 
-  if (viskores::MagnitudeSquared(N0) <= Scalar(0.0) || viskores::MagnitudeSquared(N1) <= Scalar(0.0) ||
-      viskores::MagnitudeSquared(N2) <= Scalar(0.0) || viskores::MagnitudeSquared(N3) <= Scalar(0.0))
+  if (viskores::MagnitudeSquared(N0) <= Scalar(0.0) ||
+      viskores::MagnitudeSquared(N1) <= Scalar(0.0) ||
+      viskores::MagnitudeSquared(N2) <= Scalar(0.0) ||
+      viskores::MagnitudeSquared(N3) <= Scalar(0.0))
   {
     return viskores::Infinity<Scalar>();
   }
@@ -137,9 +140,9 @@ VISKORES_EXEC OutType CellOddyMetric(const viskores::IdComponent& numPts,
 // Full range: [0,FLOAT_MAX]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellOddyMetric(const viskores::IdComponent& numPts,
-                                 const PointCoordVecType& pts,
-                                 viskores::CellShapeTagHexahedron,
-                                 viskores::ErrorCode& ec)
+                                     const PointCoordVecType& pts,
+                                     viskores::CellShapeTagHexahedron,
+                                     viskores::ErrorCode& ec)
 {
   if (numPts != 8)
   {

@@ -88,8 +88,8 @@ public:
 
   template <typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& superarc,
-                            const viskores::Id& dependentWeight,
-                            const OutFieldPortalType& isNecessaryPortal) const
+                                const viskores::Id& dependentWeight,
+                                const OutFieldPortalType& isNecessaryPortal) const
   {
     // skip the stub superarc at the root
     if (viskores::worklet::contourtree_augmented::NoSuchElement(superarc))

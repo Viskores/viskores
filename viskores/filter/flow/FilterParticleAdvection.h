@@ -63,7 +63,7 @@ public:
   /// @copydoc SetSeeds
   template <typename ParticleType>
   VISKORES_CONT void SetSeeds(const std::vector<ParticleType>& seeds,
-                          viskores::CopyFlag copyFlag = viskores::CopyFlag::On)
+                              viskores::CopyFlag copyFlag = viskores::CopyFlag::On)
   {
     this->Seeds = viskores::cont::make_ArrayHandle(seeds, copyFlag);
   }
@@ -75,7 +75,10 @@ public:
   }
 
   VISKORES_CONT
-  void SetSolverRK4() { this->SolverType = viskores::filter::flow::IntegrationSolverType::RK4_TYPE; }
+  void SetSolverRK4()
+  {
+    this->SolverType = viskores::filter::flow::IntegrationSolverType::RK4_TYPE;
+  }
 
   VISKORES_CONT
   void SetSolverEuler()

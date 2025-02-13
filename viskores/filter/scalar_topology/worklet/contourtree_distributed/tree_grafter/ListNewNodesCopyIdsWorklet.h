@@ -85,9 +85,9 @@ public:
 
   template <typename ExecObjectType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                            const viskores::Id& globalId,
-                            const ExecObjectType& findRegularByGlobal,
-                            const OutFieldPortalType& hierarchicalTreeIdPortal) const
+                                const viskores::Id& globalId,
+                                const ExecObjectType& findRegularByGlobal,
+                                const OutFieldPortalType& hierarchicalTreeIdPortal) const
   { // operator ()
     // the lookup to mesh->GetGlobalIDFromMeshIndex is done outside the worklet
     // for all mesh ids so all we need to do here is call FindRegularByGlobal

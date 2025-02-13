@@ -148,8 +148,9 @@ struct TransformFunctorManagerImpl;
 template <typename ProvidedFunctorType>
 struct TransformFunctorManagerImpl<ProvidedFunctorType, std::false_type>
 {
-  VISKORES_STATIC_ASSERT_MSG(!viskores::cont::internal::IsExecutionObjectBase<ProvidedFunctorType>::value,
-                         "Must use an ExecutionAndControlObject instead of an ExecutionObject.");
+  VISKORES_STATIC_ASSERT_MSG(
+    !viskores::cont::internal::IsExecutionObjectBase<ProvidedFunctorType>::value,
+    "Must use an ExecutionAndControlObject instead of an ExecutionObject.");
 
   ProvidedFunctorType Functor;
   using FunctorType = ProvidedFunctorType;
@@ -166,7 +167,7 @@ struct TransformFunctorManagerImpl<ProvidedFunctorType, std::false_type>
   ProvidedFunctorType PrepareForControl() const { return this->Functor; }
 
   VISKORES_CONT ProvidedFunctorType PrepareForExecution(viskores::cont::DeviceAdapterId,
-                                                    viskores::cont::Token&) const
+                                                        viskores::cont::Token&) const
   {
     return this->Functor;
   }
@@ -198,7 +199,7 @@ struct TransformFunctorManagerImpl<ProvidedFunctorType, std::true_type>
   }
 
   VISKORES_CONT auto PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                     viskores::cont::Token& token) const
+                                         viskores::cont::Token& token) const
     -> decltype(viskores::cont::internal::CallPrepareForExecution(this->Functor, device, token))
   {
     return viskores::cont::internal::CallPrepareForExecution(this->Functor, device, token);
@@ -260,8 +261,8 @@ public:
 
   using ReadPortalType =
     viskores::internal::ArrayPortalTransform<ValueType,
-                                         typename ArrayHandleType::ReadPortalType,
-                                         typename FunctorManager::FunctorType>;
+                                             typename ArrayHandleType::ReadPortalType,
+                                             typename FunctorManager::FunctorType>;
 
   VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlat(
     const std::vector<viskores::cont::internal::Buffer>&)
@@ -304,10 +305,12 @@ public:
     const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return viskores::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                   typename ArrayHandleType::StorageTag>(SourceBuffers(buffers));
+                                       typename ArrayHandleType::StorageTag>(
+      SourceBuffers(buffers));
   }
 
-  VISKORES_CONT static FunctorType GetFunctor(const std::vector<viskores::cont::internal::Buffer>& buffers)
+  VISKORES_CONT static FunctorType GetFunctor(
+    const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<FunctorManager>().Functor;
   }
@@ -339,14 +342,14 @@ class Storage<
 public:
   using ReadPortalType =
     viskores::internal::ArrayPortalTransform<ValueType,
-                                         typename ArrayHandleType::ReadPortalType,
-                                         typename FunctorManager::FunctorType,
-                                         typename InverseFunctorManager::FunctorType>;
+                                             typename ArrayHandleType::ReadPortalType,
+                                             typename FunctorManager::FunctorType,
+                                             typename InverseFunctorManager::FunctorType>;
   using WritePortalType =
     viskores::internal::ArrayPortalTransform<ValueType,
-                                         typename ArrayHandleType::WritePortalType,
-                                         typename FunctorManager::FunctorType,
-                                         typename InverseFunctorManager::FunctorType>;
+                                             typename ArrayHandleType::WritePortalType,
+                                             typename FunctorManager::FunctorType,
+                                             typename InverseFunctorManager::FunctorType>;
 
   VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlat(
     const std::vector<viskores::cont::internal::Buffer>&)
@@ -360,10 +363,11 @@ public:
     return SourceStorage::GetNumberOfValues(SourceBuffers(buffers));
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     std::vector<viskores::cont::internal::Buffer> sourceBuffers = SourceBuffers(buffers);
     SourceStorage::ResizeBuffers(numValues, sourceBuffers, preserve, token);
@@ -413,10 +417,12 @@ public:
     const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return viskores::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                   typename ArrayHandleType::StorageTag>(SourceBuffers(buffers));
+                                       typename ArrayHandleType::StorageTag>(
+      SourceBuffers(buffers));
   }
 
-  VISKORES_CONT static FunctorType GetFunctor(const std::vector<viskores::cont::internal::Buffer>& buffers)
+  VISKORES_CONT static FunctorType GetFunctor(
+    const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return buffers[0].GetMetaData<FunctorManager>().Functor;
   }
@@ -477,9 +483,8 @@ public:
 /// ArrayHandleTransform.  It takes in an ArrayHandle and a functor
 /// to apply to each element of the Handle.
 template <typename HandleType, typename FunctorType>
-VISKORES_CONT viskores::cont::ArrayHandleTransform<HandleType, FunctorType> make_ArrayHandleTransform(
-  HandleType handle,
-  FunctorType functor)
+VISKORES_CONT viskores::cont::ArrayHandleTransform<HandleType, FunctorType>
+make_ArrayHandleTransform(HandleType handle, FunctorType functor)
 {
   return ArrayHandleTransform<HandleType, FunctorType>(handle, functor);
 }

@@ -184,14 +184,14 @@ void CellSetExtrude::GetCellPointIds(viskores::Id id, viskores::Id* ptids) const
 
 template <viskores::IdComponent NumIndices>
 VISKORES_CONT void CellSetExtrude::GetIndices(viskores::Id index,
-                                          viskores::Vec<viskores::Id, NumIndices>& ids) const
+                                              viskores::Vec<viskores::Id, NumIndices>& ids) const
 {
   static_assert(NumIndices == 6, "There are always 6 points in a wedge.");
   this->GetCellPointIds(index, ids.data());
 }
 
 VISKORES_CONT void CellSetExtrude::GetIndices(viskores::Id index,
-                                          viskores::cont::ArrayHandle<viskores::Id>& ids) const
+                                              viskores::cont::ArrayHandle<viskores::Id>& ids) const
 {
   ids.Allocate(6);
   auto outIdPortal = ids.WritePortal();
@@ -338,7 +338,8 @@ VISKORES_CONT void CellSetExtrude::BuildReverseConnectivity()
   viskores::cont::ArrayHandle<viskores::Int32> reducedKeys;
   viskores::cont::Algorithm::ReduceByKey(
     pointIdKey,
-    viskores::cont::make_ArrayHandleConstant(viskores::Int32(1), static_cast<viskores::Int32>(rconnSize)),
+    viskores::cont::make_ArrayHandleConstant(viskores::Int32(1),
+                                             static_cast<viskores::Int32>(rconnSize)),
     reducedKeys,
     this->RCounts,
     viskores::Add{});
@@ -352,17 +353,18 @@ VISKORES_CONT void CellSetExtrude::BuildReverseConnectivity()
   this->ReverseConnectivityBuilt = true;
 }
 
-viskores::exec::ConnectivityExtrude CellSetExtrude::PrepareForInput(viskores::cont::DeviceAdapterId device,
-                                                                viskores::TopologyElementTagCell,
-                                                                viskores::TopologyElementTagPoint,
-                                                                viskores::cont::Token& token) const
+viskores::exec::ConnectivityExtrude CellSetExtrude::PrepareForInput(
+  viskores::cont::DeviceAdapterId device,
+  viskores::TopologyElementTagCell,
+  viskores::TopologyElementTagPoint,
+  viskores::cont::Token& token) const
 {
   return viskores::exec::ConnectivityExtrude(this->Connectivity.PrepareForInput(device, token),
-                                         this->NextNode.PrepareForInput(device, token),
-                                         this->NumberOfCellsPerPlane,
-                                         this->NumberOfPointsPerPlane,
-                                         this->NumberOfPlanes,
-                                         this->IsPeriodic);
+                                             this->NextNode.PrepareForInput(device, token),
+                                             this->NumberOfCellsPerPlane,
+                                             this->NumberOfPointsPerPlane,
+                                             this->NumberOfPlanes,
+                                             this->IsPeriodic);
 }
 
 viskores::exec::ReverseConnectivityExtrude CellSetExtrude::PrepareForInput(
@@ -376,13 +378,14 @@ viskores::exec::ReverseConnectivityExtrude CellSetExtrude::PrepareForInput(
     viskores::cont::ScopedRuntimeDeviceTracker tracker(device);
     const_cast<CellSetExtrude*>(this)->BuildReverseConnectivity();
   }
-  return viskores::exec::ReverseConnectivityExtrude(this->RConnectivity.PrepareForInput(device, token),
-                                                this->ROffsets.PrepareForInput(device, token),
-                                                this->RCounts.PrepareForInput(device, token),
-                                                this->PrevNode.PrepareForInput(device, token),
-                                                this->NumberOfCellsPerPlane,
-                                                this->NumberOfPointsPerPlane,
-                                                this->NumberOfPlanes);
+  return viskores::exec::ReverseConnectivityExtrude(
+    this->RConnectivity.PrepareForInput(device, token),
+    this->ROffsets.PrepareForInput(device, token),
+    this->RCounts.PrepareForInput(device, token),
+    this->PrevNode.PrepareForInput(device, token),
+    this->NumberOfCellsPerPlane,
+    this->NumberOfPointsPerPlane,
+    this->NumberOfPlanes);
 }
 
 }

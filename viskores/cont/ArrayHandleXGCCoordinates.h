@@ -66,7 +66,8 @@ struct VISKORES_ALWAYS_EXPORT ArrayPortalXGCCoordinates
   ValueType Get(viskores::Id index) const
   {
     const viskores::Id realIdx = ((index * 2) % this->Portal.GetNumberOfValues()) / 2;
-    const viskores::Id whichPlane = (index * 2) / this->Portal.GetNumberOfValues() + this->PlaneStartId;
+    const viskores::Id whichPlane =
+      (index * 2) / this->Portal.GetNumberOfValues() + this->PlaneStartId;
     return this->Get(viskores::Id2(realIdx, whichPlane));
   }
 
@@ -222,7 +223,8 @@ public:
     return GetMetaData(buffers).PlaneStartId;
   }
 
-  VISKORES_CONT static bool GetUseCylindrical(const std::vector<viskores::cont::internal::Buffer>& buffers)
+  VISKORES_CONT static bool GetUseCylindrical(
+    const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return GetMetaData(buffers).UseCylindrical;
   }
@@ -286,7 +288,8 @@ public:
 
 template <typename T>
 class VISKORES_ALWAYS_EXPORT ArrayHandleXGCCoordinates
-  : public viskores::cont::ArrayHandle<viskores::Vec<T, 3>, viskores::cont::StorageTagXGCCoordinates>
+  : public viskores::cont::ArrayHandle<viskores::Vec<T, 3>,
+                                       viskores::cont::StorageTagXGCCoordinates>
 {
   using AHandleType = viskores::cont::ArrayHandle<viskores::Vec<T, 3>>;
   using OriginalType = viskores::cont::ArrayHandle<T>;
@@ -483,7 +486,8 @@ public:
 };
 
 template <typename T>
-struct Serialization<viskores::cont::ArrayHandle<viskores::Vec<T, 3>, viskores::cont::StorageTagXGCCoordinates>>
+struct Serialization<
+  viskores::cont::ArrayHandle<viskores::Vec<T, 3>, viskores::cont::StorageTagXGCCoordinates>>
   : Serialization<viskores::cont::ArrayHandleXGCCoordinates<T>>
 {
 };

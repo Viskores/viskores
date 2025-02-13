@@ -60,7 +60,8 @@ struct Test
 
     // Prepare array handles:
     Handle keys = viskores::cont::make_ArrayHandle(keyData, ARRAY_SIZE, viskores::CopyFlag::Off);
-    Handle values = viskores::cont::make_ArrayHandle(valueData, ARRAY_SIZE, viskores::CopyFlag::Off);
+    Handle values =
+      viskores::cont::make_ArrayHandle(valueData, ARRAY_SIZE, viskores::CopyFlag::Off);
     DiscardHandle output_keys;
     Handle output_values;
 
@@ -70,12 +71,12 @@ struct Test
     OutputPortal outputs = output_values.WritePortal();
 
     VISKORES_TEST_ASSERT(outputs.GetNumberOfValues() == NUM_KEYS,
-                     "Unexpected number of output values from ReduceByKey.");
+                         "Unexpected number of output values from ReduceByKey.");
 
     for (viskores::Id i = 0; i < NUM_KEYS; ++i)
     {
       VISKORES_TEST_ASSERT(test_equal(outputs.Get(i), refData[i]),
-                       "Unexpected output value after ReduceByKey.");
+                           "Unexpected output value after ReduceByKey.");
     }
   }
 

@@ -22,7 +22,7 @@ void UnaryPredicateTest()
   {
     viskores::IsZeroInitialized is_default;
     VISKORES_TEST_ASSERT(is_default(viskores::TypeTraits<T>::ZeroInitialization()) == true,
-                     "IsZeroInitialized wrong.");
+                         "IsZeroInitialized wrong.");
     VISKORES_TEST_ASSERT(is_default(TestValue(1, T())) == false, "IsZeroInitialized wrong.");
   }
 
@@ -30,7 +30,7 @@ void UnaryPredicateTest()
   {
     viskores::NotZeroInitialized not_default;
     VISKORES_TEST_ASSERT(not_default(viskores::TypeTraits<T>::ZeroInitialization()) == false,
-                     "NotZeroInitialized wrong.");
+                         "NotZeroInitialized wrong.");
     VISKORES_TEST_ASSERT(not_default(TestValue(1, T())) == true, "NotZeroInitialized wrong.");
   }
 }

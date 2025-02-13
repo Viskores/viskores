@@ -72,7 +72,7 @@ public:
     val = GetGaussian(static_cast<viskores::Float64>(x), static_cast<viskores::Float64>(y));
   }
 
-private:                              // see wikipedia page
+private:                                  // see wikipedia page
   const viskores::Id dimX;                // 2D extent
   const viskores::Float64 amp;            // amplitude
   const viskores::Float64 x0, y0;         // center
@@ -131,9 +131,9 @@ public:
 
 private:
   const viskores::Id dimX, dimY, dimZ; // extent
-  T amp;                           // amplitude
-  T sigmaX, sigmaY, sigmaZ;        // spread
-  T sigmaX2, sigmaY2, sigmaZ2;     // sigma * sigma * 2
+  T amp;                               // amplitude
+  T sigmaX, sigmaY, sigmaZ;            // spread
+  T sigmaX2, sigmaY2, sigmaZ2;         // sigma * sigma * 2
 };
 }
 }
@@ -202,7 +202,7 @@ void TestDecomposeReconstruct3D(viskores::Float64 cratio)
   for (viskores::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
     VISKORES_TEST_ASSERT(test_equal(reconstructPortal.Get(i), inputPortal.Get(i)),
-                     "WaveletCompressor 3D failed...");
+                         "WaveletCompressor 3D failed...");
   }
 }
 
@@ -242,7 +242,7 @@ void TestDecomposeReconstruct2D(viskores::Float64 cratio)
   for (viskores::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
     VISKORES_TEST_ASSERT(test_equal(reconstructPortal.Get(i), inputPortal.Get(i)),
-                     "WaveletCompressor 2D failed...");
+                         "WaveletCompressor 2D failed...");
   }
 }
 
@@ -286,7 +286,7 @@ void TestDecomposeReconstruct1D(viskores::Float64 cratio)
   for (viskores::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
   {
     VISKORES_TEST_ASSERT(test_equal(reconstructPortal.Get(i), inputPortal.Get(i)),
-                     "WaveletCompressor 1D failed...");
+                         "WaveletCompressor 1D failed...");
   }
 }
 

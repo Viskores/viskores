@@ -41,9 +41,9 @@ void TestStreamSurface()
   viskores::cont::DataSet ds = CreateDataSet(dims, vecX);
   viskores::cont::ArrayHandle<viskores::Particle> seedArray =
     viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.1f, 1.0f, .2f), 0),
-                                   viskores::Particle(viskores::Vec3f(.1f, 2.0f, .1f), 1),
-                                   viskores::Particle(viskores::Vec3f(.1f, 3.0f, .3f), 2),
-                                   viskores::Particle(viskores::Vec3f(.1f, 3.5f, .2f), 3) });
+                                       viskores::Particle(viskores::Vec3f(.1f, 2.0f, .1f), 1),
+                                       viskores::Particle(viskores::Vec3f(.1f, 3.0f, .3f), 2),
+                                       viskores::Particle(viskores::Vec3f(.1f, 3.5f, .2f), 3) });
 
   viskores::filter::flow::StreamSurface streamSrf;
 
@@ -56,7 +56,7 @@ void TestStreamSurface()
 
   //Validate the result is correct.
   VISKORES_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
+                       "Wrong number of coordinate systems in the output dataset");
 
   viskores::cont::CoordinateSystem coords = output.GetCoordinateSystem();
   VISKORES_TEST_ASSERT(coords.GetNumberOfPoints() == 84, "Wrong number of coordinates");

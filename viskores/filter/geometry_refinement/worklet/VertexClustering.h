@@ -73,8 +73,8 @@ struct SelectRepresentativePoint : public viskores::worklet::WorkletReduceByKey
   {
     template <typename InputPointsArrayType, typename KeyType>
     VISKORES_CONT void operator()(const InputPointsArrayType& points,
-                              const viskores::worklet::Keys<KeyType>& keys,
-                              viskores::cont::UnknownArrayHandle& output) const
+                                  const viskores::worklet::Keys<KeyType>& keys,
+                                  viskores::cont::UnknownArrayHandle& output) const
     {
 
       viskores::cont::ArrayHandle<typename InputPointsArrayType::ValueType> out;
@@ -109,7 +109,8 @@ VISKORES_CONT viskores::cont::ArrayHandle<ValueType> ConcretePermutationArray(
 }
 
 template <typename T, viskores::IdComponent N>
-viskores::cont::ArrayHandle<T> copyFromVec(viskores::cont::ArrayHandle<viskores::Vec<T, N>> const& other)
+viskores::cont::ArrayHandle<T> copyFromVec(
+  viskores::cont::ArrayHandle<viskores::Vec<T, N>> const& other)
 {
   const T* vmem = reinterpret_cast<const T*>(&*other.ReadPortal().GetIteratorBegin());
   viskores::cont::ArrayHandle<T> result =
@@ -185,7 +186,7 @@ struct VertexClustering
     // TODO: Currently only works with Triangle cell types
     template <typename ClusterIdsVecType>
     VISKORES_EXEC void operator()(const ClusterIdsVecType& pointClusterIds,
-                              viskores::Id3& cellClusterId) const
+                                  viskores::Id3& cellClusterId) const
     {
       cellClusterId[0] = pointClusterIds[0];
       cellClusterId[1] = pointClusterIds[1];
@@ -202,8 +203,8 @@ struct VertexClustering
 
     template <typename OutPortalType>
     VISKORES_EXEC void operator()(const viskores::Id& counter,
-                              const viskores::Id& cid,
-                              const OutPortalType& outPortal) const
+                                  const viskores::Id& cid,
+                                  const OutPortalType& outPortal) const
     {
       outPortal.Set(cid, counter);
     }
@@ -234,8 +235,8 @@ struct VertexClustering
 
     template <typename InPortalType>
     VISKORES_EXEC void operator()(const viskores::Id3& cid3,
-                              viskores::Id3& pointId3,
-                              const InPortalType& inPortal) const
+                                  viskores::Id3& pointId3,
+                                  const InPortalType& inPortal) const
     {
       if (cid3[0] == cid3[1] || cid3[0] == cid3[2] || cid3[1] == cid3[2])
       {
@@ -466,7 +467,8 @@ public:
 #endif
 
       // Create a temporary permutation array and use that for unhashing.
-      auto tmpPerm = viskores::cont::make_ArrayHandlePermutation(this->CellIdMap, pointId3HashArray);
+      auto tmpPerm =
+        viskores::cont::make_ArrayHandlePermutation(this->CellIdMap, pointId3HashArray);
 
       // decode
       viskores::worklet::DispatcherMapField<Cid3UnhashWorklet> cid3UnhashDispatcher(

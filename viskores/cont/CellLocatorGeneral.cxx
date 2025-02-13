@@ -46,10 +46,10 @@ VISKORES_CONT void CellLocatorGeneral::Build()
 {
   using StructuredCellSet = viskores::cont::CellSetStructured<3>;
   using UniformCoordinates = viskores::cont::ArrayHandleUniformPointCoordinates;
-  using RectilinearCoordinates =
-    viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>>;
+  using RectilinearCoordinates = viskores::cont::ArrayHandleCartesianProduct<
+    viskores::cont::ArrayHandle<viskores::FloatDefault>,
+    viskores::cont::ArrayHandle<viskores::FloatDefault>,
+    viskores::cont::ArrayHandle<viskores::FloatDefault>>;
 
   viskores::cont::UnknownCellSet cellSet = this->GetCellSet();
   viskores::cont::CoordinateSystem coords = this->GetCoordinates();

@@ -55,7 +55,8 @@ void TestParticleArrayCopy()
       viskores::cont::ArrayHandle<viskores::ParticleStatus> status;
       viskores::cont::ArrayHandle<viskores::FloatDefault> ptime;
 
-      viskores::cont::ParticleArrayCopy<viskores::Particle>(particleAH, pos, ids, steps, status, ptime);
+      viskores::cont::ParticleArrayCopy<viskores::Particle>(
+        particleAH, pos, ids, steps, status, ptime);
 
       auto pPortal = particleAH.ReadPortal();
       for (viskores::Id j = 0; j < N; j++)
@@ -64,7 +65,8 @@ void TestParticleArrayCopy()
         auto pt = pos.ReadPortal().Get(j);
         VISKORES_TEST_ASSERT(p.GetPosition() == pt, "Positions do not match");
         VISKORES_TEST_ASSERT(p.GetID() == ids.ReadPortal().Get(j), "IDs do not match");
-        VISKORES_TEST_ASSERT(p.GetNumberOfSteps() == steps.ReadPortal().Get(j), "Steps do not match");
+        VISKORES_TEST_ASSERT(p.GetNumberOfSteps() == steps.ReadPortal().Get(j),
+                             "Steps do not match");
         VISKORES_TEST_ASSERT(p.GetStatus() == status.ReadPortal().Get(j), "Status do not match");
         VISKORES_TEST_ASSERT(p.GetTime() == ptime.ReadPortal().Get(j), "Times do not match");
       }

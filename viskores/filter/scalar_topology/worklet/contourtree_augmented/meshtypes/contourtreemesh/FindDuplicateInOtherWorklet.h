@@ -87,9 +87,9 @@ public:
             typename OutputArrayPortalType>
 
   VISKORES_EXEC void operator()(const InputType& value,
-                            const InputArrayPortalType& otherArrayPortal,
-                            OutputType& isDuplicate,
-                            OutputArrayPortalType& otherDuplicatePortal) const
+                                const InputArrayPortalType& otherArrayPortal,
+                                OutputType& isDuplicate,
+                                OutputArrayPortalType& otherDuplicatePortal) const
   {
     viskores::Id posInOther = viskores::LowerBound(otherArrayPortal, value);
     if (posInOther < otherArrayPortal.GetNumberOfValues() &&

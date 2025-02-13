@@ -54,7 +54,8 @@ public:
   using CellLocatorExecList =
     viskores::ListTransform<CellExecObjectList, viskores::exec::CellLocatorTwoLevel>;
 
-  using ExecObjType = viskores::ListApply<CellLocatorExecList, viskores::exec::CellLocatorMultiplexer>;
+  using ExecObjType =
+    viskores::ListApply<CellLocatorExecList, viskores::exec::CellLocatorMultiplexer>;
   using LastCell = typename ExecObjType::LastCell;
 
   CellLocatorTwoLevel()

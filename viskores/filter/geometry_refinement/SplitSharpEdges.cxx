@@ -21,8 +21,8 @@ namespace filter
 namespace
 {
 VISKORES_CONT bool DoMapField(viskores::cont::DataSet& result,
-                          const viskores::cont::Field& field,
-                          const viskores::worklet::SplitSharpEdges& worklet)
+                              const viskores::cont::Field& field,
+                              const viskores::worklet::SplitSharpEdges& worklet)
 {
   if (field.IsPointField())
   {
@@ -43,7 +43,8 @@ VISKORES_CONT bool DoMapField(viskores::cont::DataSet& result,
 namespace geometry_refinement
 {
 //-----------------------------------------------------------------------------
-VISKORES_CONT viskores::cont::DataSet SplitSharpEdges::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet SplitSharpEdges::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   const auto& field = this->GetFieldFromDataSet(input);
   const viskores::cont::UnknownCellSet& inCellSet = input.GetCellSet();
@@ -52,9 +53,10 @@ VISKORES_CONT viskores::cont::DataSet SplitSharpEdges::DoExecute(const viskores:
   viskores::cont::ArrayHandle<viskores::Vec3f> newCoords;
   viskores::cont::CellSetExplicit<> newCellset;
   viskores::worklet::SplitSharpEdges worklet;
-  this->CastAndCallVecField<3>(field, [&](const auto& concrete) {
-    worklet.Run(inCellSet, this->FeatureAngle, concrete, oldCoords, newCoords, newCellset);
-  });
+  this->CastAndCallVecField<3>(
+    field,
+    [&](const auto& concrete)
+    { worklet.Run(inCellSet, this->FeatureAngle, concrete, oldCoords, newCoords, newCellset); });
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
   auto output = this->CreateResult(input, newCellset, mapper);

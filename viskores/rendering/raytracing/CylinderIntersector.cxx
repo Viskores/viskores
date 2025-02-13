@@ -41,14 +41,14 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
   template <typename PointPortalType>
   VISKORES_EXEC void operator()(const viskores::Id3 cylId,
-                            const viskores::Float32& radius,
-                            viskores::Float32& xmin,
-                            viskores::Float32& ymin,
-                            viskores::Float32& zmin,
-                            viskores::Float32& xmax,
-                            viskores::Float32& ymax,
-                            viskores::Float32& zmax,
-                            const PointPortalType& points) const
+                                const viskores::Float32& radius,
+                                viskores::Float32& xmin,
+                                viskores::Float32& ymin,
+                                viskores::Float32& zmin,
+                                viskores::Float32& xmax,
+                                viskores::Float32& ymax,
+                                viskores::Float32& zmax,
+                                const PointPortalType& points) const
   {
     // cast to Float32
     viskores::Vec3f_32 point1, point2;
@@ -71,13 +71,13 @@ public:
   }
 
   VISKORES_EXEC void Bounds(const viskores::Vec3f_32& point,
-                        const viskores::Float32& radius,
-                        viskores::Float32& xmin,
-                        viskores::Float32& ymin,
-                        viskores::Float32& zmin,
-                        viskores::Float32& xmax,
-                        viskores::Float32& ymax,
-                        viskores::Float32& zmax) const
+                            const viskores::Float32& radius,
+                            viskores::Float32& xmin,
+                            viskores::Float32& ymin,
+                            viskores::Float32& zmin,
+                            viskores::Float32& xmax,
+                            viskores::Float32& ymax,
+                            viskores::Float32& zmax) const
   {
     viskores::Vec3f_32 temp, p;
     temp[0] = radius;
@@ -165,10 +165,10 @@ public:
 
   template <typename vec3>
   VISKORES_EXEC vec3 cylinder(const vec3& ray_start,
-                          const vec3& ray_direction,
-                          const vec3& p,
-                          const vec3& q,
-                          float r) const
+                              const vec3& ray_direction,
+                              const vec3& p,
+                              const vec3& q,
+                              float r) const
   {
     float t = 0;
     vec3 d = q - p;
@@ -177,7 +177,8 @@ public:
     vec3 s = ray_start - q;
 
     viskores::Float32 mdotm = viskores::Float32(viskores::dot(m, m));
-    vec3 n = ray_direction * (viskores::Max(mdotm, static_cast<viskores::Float32>(viskores::dot(s, s))) + r);
+    vec3 n = ray_direction *
+      (viskores::Max(mdotm, static_cast<viskores::Float32>(viskores::dot(s, s))) + r);
 
     viskores::Float32 mdotd = viskores::Float32(viskores::dot(m, d));
     viskores::Float32 ndotd = viskores::Float32(viskores::dot(n, d));
@@ -311,8 +312,9 @@ public:
   }
 
   template <typename Device>
-  VISKORES_CONT CylinderLeafIntersector<Device> PrepareForExecution(Device,
-                                                                viskores::cont::Token& token) const
+  VISKORES_CONT CylinderLeafIntersector<Device> PrepareForExecution(
+    Device,
+    viskores::cont::Token& token) const
   {
     return CylinderLeafIntersector<Device>(this->CylIds, this->Radii, token);
   }
@@ -328,12 +330,12 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
   template <typename Precision, typename PointPortalType, typename IndicesPortalType>
   VISKORES_EXEC inline void operator()(const viskores::Id& hitIndex,
-                                   const viskores::Vec<Precision, 3>& intersection,
-                                   Precision& normalX,
-                                   Precision& normalY,
-                                   Precision& normalZ,
-                                   const PointPortalType& points,
-                                   const IndicesPortalType& indicesPortal) const
+                                       const viskores::Vec<Precision, 3>& intersection,
+                                       Precision& normalX,
+                                       Precision& normalY,
+                                       Precision& normalZ,
+                                       const PointPortalType& points,
+                                       const IndicesPortalType& indicesPortal) const
   {
     if (hitIndex < 0)
       return;
@@ -396,9 +398,9 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4);
   template <typename ScalarPortalType, typename IndicesPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
-                            Precision& scalar,
-                            const ScalarPortalType& scalars,
-                            const IndicesPortalType& indicesPortal) const
+                                Precision& scalar,
+                                const ScalarPortalType& scalars,
+                                const IndicesPortalType& indicesPortal) const
   {
     if (hitIndex < 0)
       return;
@@ -457,7 +459,8 @@ void CylinderIntersector::IntersectRays(Ray<viskores::Float64>& rays, bool retur
 }
 
 template <typename Precision>
-void CylinderIntersector::IntersectRaysImp(Ray<Precision>& rays, bool viskoresNotUsed(returnCellIndex))
+void CylinderIntersector::IntersectRaysImp(Ray<Precision>& rays,
+                                           bool viskoresNotUsed(returnCellIndex))
 {
 
   detail::CylinderLeafWrapper leafIntersector(this->CylIds, Radii);
@@ -492,7 +495,8 @@ void CylinderIntersector::IntersectionDataImp(Ray<Precision>& rays,
             CylIds);
 
   viskores::worklet::DispatcherMapField<detail::GetScalar<Precision>>(
-    detail::GetScalar<Precision>(viskores::Float32(scalarRange.Min), viskores::Float32(scalarRange.Max)))
+    detail::GetScalar<Precision>(viskores::Float32(scalarRange.Min),
+                                 viskores::Float32(scalarRange.Max)))
     .Invoke(rays.HitIdx,
             rays.Scalar,
             viskores::rendering::raytracing::GetScalarFieldArray(scalarField),

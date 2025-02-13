@@ -46,7 +46,8 @@ void ColorBarAnnotation::SetRange(const viskores::Range& range, viskores::IdComp
 
   for (viskores::IdComponent i = 0; i < numTicks; ++i)
   {
-    viskores::Float64 prop = static_cast<viskores::Float64>(i) / static_cast<viskores::Float64>(numTicks - 1);
+    viskores::Float64 prop =
+      static_cast<viskores::Float64>(i) / static_cast<viskores::Float64>(numTicks - 1);
     viskores::Float64 pos = range.Min + prop * range.Length();
     positions.push_back(pos);
     proportions.push_back(prop);
@@ -95,10 +96,10 @@ void ColorBarAnnotation::Render(const viskores::rendering::Camera& camera,
     }
 
     viskores::rendering::TextAnnotationScreen var(FieldName,
-                                              canvas.GetForegroundColor(),
-                                              .045f, // font scale
-                                              labelPos,
-                                              0.f); // rotation
+                                                  canvas.GetForegroundColor(),
+                                                  .045f, // font scale
+                                                  labelPos,
+                                                  0.f); // rotation
 
     var.Render(camera, worldAnnotator, canvas);
   }

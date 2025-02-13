@@ -87,7 +87,7 @@ public:
 
   template <typename InFieldPortalType, typename SuperarcsPortalType>
   VISKORES_EXEC void operator()(
-    const viskores::Id& from,                                // same as superarc
+    const viskores::Id& from,                            // same as superarc
     const InFieldPortalType& contourTreeSuperarcsPortal, // ContourTree->Superarcs[from]
     const InFieldPortalType& isNecessaryPortal,
     const viskores::Id& activeSuperarcId,

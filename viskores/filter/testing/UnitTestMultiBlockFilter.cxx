@@ -38,7 +38,7 @@ template <typename ArrayType>
 void ValidateField(const ArrayType& truthField, const ArrayType& resultField)
 {
   VISKORES_TEST_ASSERT(truthField.GetNumberOfValues() == resultField.GetNumberOfValues(),
-                   "Wrong number of field values");
+                       "Wrong number of field values");
   const viskores::FloatDefault tol = static_cast<viskores::FloatDefault>(1e-3);
 
   viskores::Id numPts = truthField.GetNumberOfValues();
@@ -46,7 +46,7 @@ void ValidateField(const ArrayType& truthField, const ArrayType& resultField)
   const auto resultPortal = resultField.ReadPortal();
   for (viskores::Id j = 0; j < numPts; j++)
     VISKORES_TEST_ASSERT(ValueDifference(truthPortal.Get(j), resultPortal.Get(j)) < tol,
-                     "Wrong value in field");
+                         "Wrong value in field");
 }
 
 void ValidateResults(const viskores::cont::PartitionedDataSet& truth,
@@ -62,9 +62,9 @@ void ValidateResults(const viskores::cont::PartitionedDataSet& truth,
     auto resultDS = result.GetPartition(i);
 
     VISKORES_TEST_ASSERT(truthDS.GetNumberOfPoints() == resultDS.GetNumberOfPoints(),
-                     "Wrong number of points");
+                         "Wrong number of points");
     VISKORES_TEST_ASSERT(truthDS.GetNumberOfCells() == resultDS.GetNumberOfCells(),
-                     "Wrong number of cells");
+                         "Wrong number of cells");
     VISKORES_TEST_ASSERT(resultDS.HasField(varName), "Missing field");
 
     if (isScalar)

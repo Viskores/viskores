@@ -87,13 +87,13 @@ public:
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id& vertexId,
-                                // FIXME: Remove unused parameter?
-                                const viskores::Id /*activeVertex*/,
-                                const InFieldPortalType& activeEdgesPortal,
-                                const InFieldPortalType& edgeFarPortal,
-                                const InFieldPortalType& firstEdgePortal,
-                                const InFieldPortalType& outdegreePortal,
-                                const InOutFieldPortalType& hyperarcsPortal) const
+                                        // FIXME: Remove unused parameter?
+                                        const viskores::Id /*activeVertex*/,
+                                        const InFieldPortalType& activeEdgesPortal,
+                                        const InFieldPortalType& edgeFarPortal,
+                                        const InFieldPortalType& firstEdgePortal,
+                                        const InFieldPortalType& outdegreePortal,
+                                        const InOutFieldPortalType& hyperarcsPortal) const
   {
     viskores::Id edgeFirst = firstEdgePortal.Get(vertexId);
     // find the sentinel index

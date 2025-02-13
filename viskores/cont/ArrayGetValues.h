@@ -30,9 +30,9 @@ namespace internal
 {
 
 VISKORES_CONT_EXPORT void ArrayGetValuesImpl(const viskores::cont::UnknownArrayHandle& ids,
-                                         const viskores::cont::UnknownArrayHandle& data,
-                                         const viskores::cont::UnknownArrayHandle& output,
-                                         std::false_type extractComponentInefficient);
+                                             const viskores::cont::UnknownArrayHandle& data,
+                                             const viskores::cont::UnknownArrayHandle& output,
+                                             std::false_type extractComponentInefficient);
 
 template <typename IdsArrayHandle, typename DataArrayHandle, typename OutputArrayHandle>
 void ArrayGetValuesImpl(const IdsArrayHandle& ids,
@@ -117,8 +117,8 @@ void ArrayGetValuesImpl(const IdsArrayHandle& ids,
 ///
 template <typename SIds, typename T, typename SData, typename SOut>
 VISKORES_CONT void ArrayGetValues(const viskores::cont::ArrayHandle<viskores::Id, SIds>& ids,
-                              const viskores::cont::ArrayHandle<T, SData>& data,
-                              viskores::cont::ArrayHandle<T, SOut>& output)
+                                  const viskores::cont::ArrayHandle<T, SData>& data,
+                                  viskores::cont::ArrayHandle<T, SOut>& output)
 {
   using DataArrayHandle = viskores::cont::ArrayHandle<T, SData>;
   using InefficientExtract =
@@ -152,8 +152,8 @@ VISKORES_CONT void ArrayGetValues(
 
 template <typename SIds, typename T, typename SData, typename Alloc>
 VISKORES_CONT void ArrayGetValues(const viskores::cont::ArrayHandle<viskores::Id, SIds>& ids,
-                              const viskores::cont::ArrayHandle<T, SData>& data,
-                              std::vector<T, Alloc>& output)
+                                  const viskores::cont::ArrayHandle<T, SData>& data,
+                                  std::vector<T, Alloc>& output)
 {
   const std::size_t numVals = static_cast<std::size_t>(ids.GetNumberOfValues());
 
@@ -167,8 +167,9 @@ VISKORES_CONT void ArrayGetValues(const viskores::cont::ArrayHandle<viskores::Id
 }
 
 template <typename SIds, typename T, typename SData>
-VISKORES_CONT std::vector<T> ArrayGetValues(const viskores::cont::ArrayHandle<viskores::Id, SIds>& ids,
-                                        const viskores::cont::ArrayHandle<T, SData>& data)
+VISKORES_CONT std::vector<T> ArrayGetValues(
+  const viskores::cont::ArrayHandle<viskores::Id, SIds>& ids,
+  const viskores::cont::ArrayHandle<T, SData>& data)
 {
   std::vector<T> result;
   viskores::cont::ArrayGetValues(ids, data, result);
@@ -177,8 +178,8 @@ VISKORES_CONT std::vector<T> ArrayGetValues(const viskores::cont::ArrayHandle<vi
 
 template <typename T, typename Alloc, typename SData, typename SOut>
 VISKORES_CONT void ArrayGetValues(const std::vector<viskores::Id, Alloc>& ids,
-                              const viskores::cont::ArrayHandle<T, SData>& data,
-                              viskores::cont::ArrayHandle<T, SOut>& output)
+                                  const viskores::cont::ArrayHandle<T, SData>& data,
+                                  viskores::cont::ArrayHandle<T, SOut>& output)
 {
   const auto idsAH = viskores::cont::make_ArrayHandle(ids, viskores::CopyFlag::Off);
   ArrayGetValues(idsAH, data, output);
@@ -186,8 +187,8 @@ VISKORES_CONT void ArrayGetValues(const std::vector<viskores::Id, Alloc>& ids,
 
 template <typename T, typename AllocId, typename SData, typename AllocOut>
 VISKORES_CONT void ArrayGetValues(const std::vector<viskores::Id, AllocId>& ids,
-                              const viskores::cont::ArrayHandle<T, SData>& data,
-                              std::vector<T, AllocOut>& output)
+                                  const viskores::cont::ArrayHandle<T, SData>& data,
+                                  std::vector<T, AllocOut>& output)
 {
   const auto idsAH = viskores::cont::make_ArrayHandle(ids, viskores::CopyFlag::Off);
   ArrayGetValues(idsAH, data, output);
@@ -195,7 +196,7 @@ VISKORES_CONT void ArrayGetValues(const std::vector<viskores::Id, AllocId>& ids,
 
 template <typename T, typename Alloc, typename SData>
 VISKORES_CONT std::vector<T> ArrayGetValues(const std::vector<viskores::Id, Alloc>& ids,
-                                        const viskores::cont::ArrayHandle<T, SData>& data)
+                                            const viskores::cont::ArrayHandle<T, SData>& data)
 {
   const auto idsAH = viskores::cont::make_ArrayHandle(ids, viskores::CopyFlag::Off);
   return ArrayGetValues(idsAH, data);
@@ -203,8 +204,8 @@ VISKORES_CONT std::vector<T> ArrayGetValues(const std::vector<viskores::Id, Allo
 
 template <typename T, typename SData, typename SOut>
 VISKORES_CONT void ArrayGetValues(const std::initializer_list<viskores::Id>& ids,
-                              const viskores::cont::ArrayHandle<T, SData>& data,
-                              viskores::cont::ArrayHandle<T, SOut>& output)
+                                  const viskores::cont::ArrayHandle<T, SData>& data,
+                                  viskores::cont::ArrayHandle<T, SOut>& output)
 {
   const auto idsAH = viskores::cont::make_ArrayHandle(
     ids.begin(), static_cast<viskores::Id>(ids.size()), viskores::CopyFlag::Off);
@@ -213,8 +214,8 @@ VISKORES_CONT void ArrayGetValues(const std::initializer_list<viskores::Id>& ids
 
 template <typename T, typename SData, typename Alloc>
 VISKORES_CONT void ArrayGetValues(const std::initializer_list<viskores::Id>& ids,
-                              const viskores::cont::ArrayHandle<T, SData>& data,
-                              std::vector<T, Alloc>& output)
+                                  const viskores::cont::ArrayHandle<T, SData>& data,
+                                  std::vector<T, Alloc>& output)
 {
   const auto idsAH = viskores::cont::make_ArrayHandle(
     ids.begin(), static_cast<viskores::Id>(ids.size()), viskores::CopyFlag::Off);
@@ -222,7 +223,7 @@ VISKORES_CONT void ArrayGetValues(const std::initializer_list<viskores::Id>& ids
 }
 template <typename T, typename SData>
 VISKORES_CONT std::vector<T> ArrayGetValues(const std::initializer_list<viskores::Id>& ids,
-                                        const viskores::cont::ArrayHandle<T, SData>& data)
+                                            const viskores::cont::ArrayHandle<T, SData>& data)
 {
   const auto idsAH = viskores::cont::make_ArrayHandle(
     ids.begin(), static_cast<viskores::Id>(ids.size()), viskores::CopyFlag::Off);
@@ -231,9 +232,9 @@ VISKORES_CONT std::vector<T> ArrayGetValues(const std::initializer_list<viskores
 
 template <typename T, typename SData, typename SOut>
 VISKORES_CONT void ArrayGetValues(const viskores::Id* ids,
-                              const viskores::Id numIds,
-                              const viskores::cont::ArrayHandle<T, SData>& data,
-                              viskores::cont::ArrayHandle<T, SOut>& output)
+                                  const viskores::Id numIds,
+                                  const viskores::cont::ArrayHandle<T, SData>& data,
+                                  viskores::cont::ArrayHandle<T, SOut>& output)
 {
   const auto idsAH = viskores::cont::make_ArrayHandle(ids, numIds, viskores::CopyFlag::Off);
   ArrayGetValues(idsAH, data, output);
@@ -241,17 +242,17 @@ VISKORES_CONT void ArrayGetValues(const viskores::Id* ids,
 
 template <typename T, typename SData, typename Alloc>
 VISKORES_CONT void ArrayGetValues(const viskores::Id* ids,
-                              const viskores::Id numIds,
-                              const viskores::cont::ArrayHandle<T, SData>& data,
-                              std::vector<T, Alloc>& output)
+                                  const viskores::Id numIds,
+                                  const viskores::cont::ArrayHandle<T, SData>& data,
+                                  std::vector<T, Alloc>& output)
 {
   const auto idsAH = viskores::cont::make_ArrayHandle(ids, numIds, viskores::CopyFlag::Off);
   ArrayGetValues(idsAH, data, output);
 }
 template <typename T, typename SData>
 VISKORES_CONT std::vector<T> ArrayGetValues(const viskores::Id* ids,
-                                        const viskores::Id numIds,
-                                        const viskores::cont::ArrayHandle<T, SData>& data)
+                                            const viskores::Id numIds,
+                                            const viskores::cont::ArrayHandle<T, SData>& data)
 {
   const auto idsAH = viskores::cont::make_ArrayHandle(ids, numIds, viskores::CopyFlag::Off);
   return ArrayGetValues(idsAH, data);
@@ -266,7 +267,9 @@ VISKORES_CONT T ArrayGetValue(viskores::Id id, const viskores::cont::ArrayHandle
 }
 
 template <typename T, typename S>
-VISKORES_CONT void ArrayGetValue(viskores::Id id, const viskores::cont::ArrayHandle<T, S>& data, T& val)
+VISKORES_CONT void ArrayGetValue(viskores::Id id,
+                                 const viskores::cont::ArrayHandle<T, S>& data,
+                                 T& val)
 {
   val = ArrayGetValue(id, data);
 }

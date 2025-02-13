@@ -98,7 +98,8 @@ VISKORES_THIRDPARTY_POST_INCLUDE
 #include <vector>
 
 using ValueType = viskores::Float32;
-using BranchType = viskores::worklet::contourtree_augmented::process_contourtree_inc::Branch<ValueType>;
+using BranchType =
+  viskores::worklet::contourtree_augmented::process_contourtree_inc::Branch<ValueType>;
 
 namespace ctaug_ns = viskores::worklet::contourtree_augmented;
 
@@ -153,7 +154,8 @@ private:
   std::vector<std::string> mCLOptions;
 };
 
-inline viskores::Id3 ComputeNumberOfBlocksPerAxis(viskores::Id3 globalSize, viskores::Id numberOfBlocks)
+inline viskores::Id3 ComputeNumberOfBlocksPerAxis(viskores::Id3 globalSize,
+                                                  viskores::Id numberOfBlocks)
 {
   viskores::Id currNumberOfBlocks = numberOfBlocks;
   viskores::Id3 blocksPerAxis{ 1, 1, 1 };
@@ -182,9 +184,8 @@ inline viskores::Id3 ComputeNumberOfBlocksPerAxis(viskores::Id3 globalSize, visk
   return blocksPerAxis;
 }
 
-inline std::tuple<viskores::Id3, viskores::Id3, viskores::Id3> ComputeBlockExtents(viskores::Id3 globalSize,
-                                                                       viskores::Id3 blocksPerAxis,
-                                                                       viskores::Id blockNo)
+inline std::tuple<viskores::Id3, viskores::Id3, viskores::Id3>
+ComputeBlockExtents(viskores::Id3 globalSize, viskores::Id3 blocksPerAxis, viskores::Id blockNo)
 {
   // DEBUG: std::cout << "ComputeBlockExtents("<<globalSize <<", " << blocksPerAxis << ", " << blockNo << ")" << std::endl;
   // DEBUG: std::cout << "Block " << blockNo;
@@ -197,8 +198,9 @@ inline std::tuple<viskores::Id3, viskores::Id3, viskores::Id3> ComputeBlockExten
 
     float dx = float(globalSize[d] - 1) / float(blocksPerAxis[d]);
     blockOrigin[d] = viskores::Id(blockIndex[d] * dx);
-    viskores::Id maxIdx =
-      blockIndex[d] < blocksPerAxis[d] - 1 ? viskores::Id((blockIndex[d] + 1) * dx) : globalSize[d] - 1;
+    viskores::Id maxIdx = blockIndex[d] < blocksPerAxis[d] - 1
+      ? viskores::Id((blockIndex[d] + 1) * dx)
+      : globalSize[d] - 1;
     blockSize[d] = maxIdx - blockOrigin[d] + 1;
     // DEBUG: std::cout << " " << blockIndex[d] <<  dx << " " << blockOrigin[d] << " " << maxIdx << " " << blockSize[d] << "; ";
   }
@@ -207,9 +209,9 @@ inline std::tuple<viskores::Id3, viskores::Id3, viskores::Id3> ComputeBlockExten
 }
 
 inline viskores::cont::DataSet CreateSubDataSet(const viskores::cont::DataSet& ds,
-                                            viskores::Id3 blockOrigin,
-                                            viskores::Id3 blockSize,
-                                            const std::string& fieldName)
+                                                viskores::Id3 blockOrigin,
+                                                viskores::Id3 blockSize,
+                                                const std::string& fieldName)
 {
   viskores::Id3 globalSize;
   ds.GetCellSet().CastAndCallForTypes<VISKORES_DEFAULT_CELL_SET_LIST_STRUCTURED>(
@@ -228,7 +230,8 @@ inline viskores::cont::DataSet CreateSubDataSet(const viskores::cont::DataSet& d
       for (outArrIdx[0] = 0; outArrIdx[0] < blockSize[0]; ++outArrIdx[0])
       {
         viskores::Id3 inArrIdx = outArrIdx + blockOrigin;
-        viskores::Id inIdx = (inArrIdx[2] * globalSize[1] + inArrIdx[1]) * globalSize[0] + inArrIdx[0];
+        viskores::Id inIdx =
+          (inArrIdx[2] * globalSize[1] + inArrIdx[1]) * globalSize[0] + inArrIdx[0];
         viskores::Id outIdx =
           (outArrIdx[2] * blockSize[1] + outArrIdx[1]) * blockSize[0] + outArrIdx[0];
         VISKORES_ASSERT(inIdx >= 0 && inIdx < inDataArrayHandle.GetNumberOfValues());
@@ -333,8 +336,8 @@ int main(int argc, char* argv[])
   if (computeBranchDecomposition && (computeRegularStructure != 1))
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-               "Regular structure is required for branch decomposition."
-               " Disabling branch decomposition");
+                   "Regular structure is required for branch decomposition."
+                   " Disabling branch decomposition");
     computeBranchDecomposition = false;
   }
 
@@ -367,8 +370,8 @@ int main(int argc, char* argv[])
   if ((numLevels > 0) && (!computeBranchDecomposition))
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-               "Iso level selection only available when branch decomposition is enabled. "
-               "Disabling iso value selection");
+                   "Iso level selection only available when branch decomposition is enabled. "
+                   "Disabling iso value selection");
     numLevels = 0;
   }
 
@@ -448,16 +451,17 @@ int main(int argc, char* argv[])
       "    computeIsovalues=" << (numLevels > 0);
     VISKORES_LOG_S(viskores::cont::LogLevel::Info, std::endl << logmessage.str());
     VISKORES_LOG_IF_S(viskores::cont::LogLevel::Info,
-                  numLevels > 0,
-                  std::endl
-                    << "    ------------ Settings Isolevel Selection -----------" << std::endl
-                    << "    levels=" << numLevels << std::endl
-                    << "    eps=" << eps << std::endl
-                    << "    comp" << numComp << std::endl
-                    << "    type=" << contourType << std::endl
-                    << "    method=" << contourSelectMethod << std::endl
-                    << "    mc=" << useMarchingCubes << std::endl
-                    << "    use" << (usePersistenceSorter ? "PersistenceSorter" : "VolumeSorter"));
+                      numLevels > 0,
+                      std::endl
+                        << "    ------------ Settings Isolevel Selection -----------" << std::endl
+                        << "    levels=" << numLevels << std::endl
+                        << "    eps=" << eps << std::endl
+                        << "    comp" << numComp << std::endl
+                        << "    type=" << contourType << std::endl
+                        << "    method=" << contourSelectMethod << std::endl
+                        << "    mc=" << useMarchingCubes << std::endl
+                        << "    use"
+                        << (usePersistenceSorter ? "PersistenceSorter" : "VolumeSorter"));
   }
   currTime = totalTime.GetElapsedTime();
   viskores::Float64 startUpTime = currTime - prevTime;
@@ -544,8 +548,9 @@ int main(int argc, char* argv[])
     bool invalidNumDimensions = (nDims < 2 || nDims > 3);
     // Log any errors if found on rank 0
     VISKORES_LOG_IF_S(viskores::cont::LogLevel::Error,
-                  invalidNumDimensions && (rank == 0),
-                  "The input mesh is " << nDims << "D. The input data must be either 2D or 3D.");
+                      invalidNumDimensions && (rank == 0),
+                      "The input mesh is " << nDims
+                                           << "D. The input data must be either 2D or 3D.");
     // If we found any errors in the setttings than finalize MPI and exit the execution
     if (invalidNumDimensions)
     {
@@ -598,18 +603,18 @@ int main(int argc, char* argv[])
   if (rank == 0)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               std::endl
-                 << "    ---------------- Input Mesh Properties --------------" << std::endl
-                 << "    Number of dimensions: " << nDims);
+                   std::endl
+                     << "    ---------------- Input Mesh Properties --------------" << std::endl
+                     << "    Number of dimensions: " << nDims);
   }
 
   // Check if marching cubes is enabled for non 3D data
   bool invalidMCOption = (useMarchingCubes && nDims != 3);
   VISKORES_LOG_IF_S(viskores::cont::LogLevel::Error,
-                invalidMCOption && (rank == 0),
-                "The input mesh is "
-                  << nDims << "D. "
-                  << "Contour tree using marching cubes is only supported for 3D data.");
+                    invalidMCOption && (rank == 0),
+                    "The input mesh is "
+                      << nDims << "D. "
+                      << "Contour tree using marching cubes is only supported for 3D data.");
 
   // If we found any errors in the setttings than finalize MPI and exit the execution
   if (invalidMCOption)
@@ -620,16 +625,16 @@ int main(int argc, char* argv[])
     return EXIT_SUCCESS;
   }
 
-#ifndef WITH_MPI                              // construct regular, single-block Viskores input dataset
+#ifndef WITH_MPI // construct regular, single-block Viskores input dataset
   viskores::cont::DataSet useDataSet = inDataSet; // Single block dataset
 #else  // Create a multi-block dataset for multi-block DIY-paralle processing
   // Determine split
   viskores::Id3 globalSize = nDims == 3 ? viskores::Id3(static_cast<viskores::Id>(dims[0]),
-                                                static_cast<viskores::Id>(dims[1]),
-                                                static_cast<viskores::Id>(dims[2]))
-                                    : viskores::Id3(static_cast<viskores::Id>(dims[0]),
-                                                static_cast<viskores::Id>(dims[1]),
-                                                static_cast<viskores::Id>(1));
+                                                        static_cast<viskores::Id>(dims[1]),
+                                                        static_cast<viskores::Id>(dims[2]))
+                                        : viskores::Id3(static_cast<viskores::Id>(dims[0]),
+                                                        static_cast<viskores::Id>(dims[1]),
+                                                        static_cast<viskores::Id>(1));
   viskores::Id3 blocksPerDim = ComputeNumberOfBlocksPerAxis(globalSize, numBlocks);
   viskores::Id blocksPerRank = numBlocks / size;
   viskores::Id numRanksWithExtraBlock = numBlocks % size;
@@ -675,7 +680,7 @@ int main(int argc, char* argv[])
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
   viskores::filter::scalar_topology::ContourTreeAugmented filter(useMarchingCubes,
-                                                             computeRegularStructure);
+                                                                 computeRegularStructure);
 
 #ifdef WITH_MPI
   filter.SetBlockIndices(blocksPerDim, localBlockIndices);
@@ -799,9 +804,9 @@ int main(int argc, char* argv[])
         break;
         case 1:
         {
-          viskores::worklet::contourtree_augmented::process_contourtree_inc::PiecewiseLinearFunction<
-            ValueType>
-            plf;
+          viskores::worklet::contourtree_augmented::process_contourtree_inc::
+            PiecewiseLinearFunction<ValueType>
+              plf;
           branchDecompostionRoot->AccumulateIntervals(static_cast<int>(contourType), eps, plf);
           isoValues = plf.nLargest(static_cast<unsigned int>(numLevels));
         }
@@ -862,31 +867,32 @@ int main(int argc, char* argv[])
 #endif
   currTime = totalTime.GetElapsedTime();
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             std::endl
-               << "    -------------------------- Totals " << rank
-               << " -----------------------------" << std::endl
-               << std::setw(42) << std::left << "    Start-up"
-               << ": " << startUpTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Data Read"
-               << ": " << dataReadTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Build VISKORES Dataset"
-               << ": " << buildDatasetTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Compute Contour Tree"
-               << ": " << computeContourTreeTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Compute Branch Decomposition"
-               << ": " << computeBranchDecompTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Total Time"
-               << ": " << currTime << " seconds");
+                 std::endl
+                   << "    -------------------------- Totals " << rank
+                   << " -----------------------------" << std::endl
+                   << std::setw(42) << std::left << "    Start-up"
+                   << ": " << startUpTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Data Read"
+                   << ": " << dataReadTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Build VISKORES Dataset"
+                   << ": " << buildDatasetTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Compute Contour Tree"
+                   << ": " << computeContourTreeTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Compute Branch Decomposition"
+                   << ": " << computeBranchDecompTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Total Time"
+                   << ": " << currTime << " seconds");
 
   const ctaug_ns::ContourTree& ct = filter.GetContourTree();
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             std::endl
-               << "    ---------------- Contour Tree Array Sizes ---------------------" << std::endl
-               << ct.PrintArraySizes());
+                 std::endl
+                   << "    ---------------- Contour Tree Array Sizes ---------------------"
+                   << std::endl
+                   << ct.PrintArraySizes());
   // Print hyperstructure statistics
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             std::endl
-               << ct.PrintHyperStructureStatistics(false) << std::endl);
+                 std::endl
+                   << ct.PrintHyperStructureStatistics(false) << std::endl);
 
   // Flush ouput streams just to make sure everything has been logged (in particular when using MPI)
   std::cout << std::flush;

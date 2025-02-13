@@ -31,10 +31,12 @@ public:
     viskores::cont::DataSet output = triangulate.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 32), "Wrong result for Triangulate");
     VISKORES_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 25),
-                     "Wrong number of points for Triangulate");
+                         "Wrong number of points for Triangulate");
 
     viskores::cont::ArrayHandle<viskores::Float32> outData =
-      output.GetField("cellvar").GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>();
+      output.GetField("cellvar")
+        .GetData()
+        .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>();
 
     VISKORES_TEST_ASSERT(outData.ReadPortal().Get(2) == 1.f, "Wrong cell field data");
     VISKORES_TEST_ASSERT(outData.ReadPortal().Get(3) == 1.f, "Wrong cell field data");
@@ -51,10 +53,12 @@ public:
     viskores::cont::DataSet output = triangulate.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 14), "Wrong result for Triangulate");
     VISKORES_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 16),
-                     "Wrong number of points for Triangulate");
+                         "Wrong number of points for Triangulate");
 
     viskores::cont::ArrayHandle<viskores::Float32> outData =
-      output.GetField("cellvar").GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>();
+      output.GetField("cellvar")
+        .GetData()
+        .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>();
 
     VISKORES_TEST_ASSERT(outData.ReadPortal().Get(1) == 1.f, "Wrong cell field data");
     VISKORES_TEST_ASSERT(outData.ReadPortal().Get(2) == 1.f, "Wrong cell field data");
@@ -75,17 +79,19 @@ public:
     viskores::filter::geometry_refinement::Triangulate triangulate;
     viskores::cont::DataSet output = triangulate.Execute(dataset);
 
-    VISKORES_TEST_ASSERT(dataset.GetCellSet().GetCellSetBase() == output.GetCellSet().GetCellSetBase(),
-                     "Pointer to the CellSetSingleType has changed.");
+    VISKORES_TEST_ASSERT(dataset.GetCellSet().GetCellSetBase() ==
+                           output.GetCellSet().GetCellSetBase(),
+                         "Pointer to the CellSetSingleType has changed.");
   }
 
   void TestCellSetExplicitTriangle() const
   {
     std::vector<viskores::Vec3f_32> coords{ viskores::Vec3f_32(0.0f, 0.0f, 0.0f),
-                                        viskores::Vec3f_32(2.0f, 0.0f, 0.0f),
-                                        viskores::Vec3f_32(2.0f, 4.0f, 0.0f),
-                                        viskores::Vec3f_32(0.0f, 4.0f, 0.0f) };
-    std::vector<viskores::UInt8> shapes{ viskores::CELL_SHAPE_TRIANGLE, viskores::CELL_SHAPE_TRIANGLE };
+                                            viskores::Vec3f_32(2.0f, 0.0f, 0.0f),
+                                            viskores::Vec3f_32(2.0f, 4.0f, 0.0f),
+                                            viskores::Vec3f_32(0.0f, 4.0f, 0.0f) };
+    std::vector<viskores::UInt8> shapes{ viskores::CELL_SHAPE_TRIANGLE,
+                                         viskores::CELL_SHAPE_TRIANGLE };
     std::vector<viskores::IdComponent> indices{ 3, 3 };
     std::vector<viskores::Id> connectivity{ 0, 1, 2, 1, 2, 3 };
 
@@ -97,12 +103,12 @@ public:
     viskores::cont::UnknownCellSet outputCellSet = output.GetCellSet();
 
     VISKORES_TEST_ASSERT(outputCellSet.IsType<viskores::cont::CellSetSingleType<>>(),
-                     "Output CellSet is not CellSetSingleType");
+                         "Output CellSet is not CellSetSingleType");
     VISKORES_TEST_ASSERT(output.GetNumberOfCells() == 2, "Wrong number of cells");
     VISKORES_TEST_ASSERT(outputCellSet.GetCellShape(0) == viskores::CellShapeTagTriangle::Id,
-                     "Cell is not triangular");
+                         "Cell is not triangular");
     VISKORES_TEST_ASSERT(outputCellSet.GetCellShape(1) == viskores::CellShapeTagTriangle::Id,
-                     "Cell is not triangular");
+                         "Cell is not triangular");
   }
 
   void operator()() const

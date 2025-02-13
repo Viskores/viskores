@@ -67,8 +67,9 @@ struct SimpleHistogramStruct
   ////
 
   template<typename InputArray>
-  VISKORES_CONT static viskores::cont::ArrayHandle<viskores::Int32> Run(const InputArray& input,
-                                                            viskores::Id numberOfBins)
+  VISKORES_CONT static viskores::cont::ArrayHandle<viskores::Int32> Run(
+    const InputArray& input,
+    viskores::Id numberOfBins)
   {
     VISKORES_IS_ARRAY_HANDLE(InputArray);
 
@@ -108,7 +109,8 @@ static inline void TrySimpleHistogram()
   viskores::cont::ArrayHandle<viskores::Int32> histogram =
     SimpleHistogramStruct::Run(inputArray, ARRAY_SIZE / 2);
 
-  VISKORES_TEST_ASSERT(histogram.GetNumberOfValues() == ARRAY_SIZE / 2, "Bad array size");
+  VISKORES_TEST_ASSERT(histogram.GetNumberOfValues() == ARRAY_SIZE / 2,
+                       "Bad array size");
   for (viskores::Id index = 0; index < histogram.GetNumberOfValues(); ++index)
   {
     viskores::Int32 binSize = histogram.ReadPortal().Get(index);

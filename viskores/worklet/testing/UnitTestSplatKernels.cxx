@@ -83,8 +83,8 @@ int TestSplatKernels()
   for (int i = 0; i < 100; ++i)
   {
     smoothinglength = 0.01 + i * (10.0 / 100.0);
-    s =
-      IntegralOfKernel(viskores::worklet::splatkernels::Gaussian<3>(smoothinglength), smoothinglength);
+    s = IntegralOfKernel(viskores::worklet::splatkernels::Gaussian<3>(smoothinglength),
+                         smoothinglength);
     VISKORES_TEST_ASSERT(fabs(s - 1.0) < eps, "Gaussian 3D integration failure");
   }
 

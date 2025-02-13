@@ -22,17 +22,18 @@ void CheckArray(const ArrayHandleType array,
                 typename ArrayHandleType::ValueType stepValue,
                 viskores::Id expectedLength)
 {
-  VISKORES_TEST_ASSERT(array.GetNumberOfValues() == expectedLength, "Array has wrong size.");
+  VISKORES_TEST_ASSERT(array.GetNumberOfValues() == expectedLength,
+                       "Array has wrong size.");
 
   typename ArrayHandleType::ReadPortalType portal = array.ReadPortal();
   VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == expectedLength,
-                   "Portal has wrong size.");
+                       "Portal has wrong size.");
 
   typename ArrayHandleType::ValueType expectedValue = startValue;
   for (viskores::Id index = 0; index < expectedLength; index++)
   {
     VISKORES_TEST_ASSERT(test_equal(portal.Get(index), expectedValue),
-                     "Array has wrong value.");
+                         "Array has wrong value.");
     expectedValue = expectedValue + stepValue;
   }
 }

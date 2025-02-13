@@ -88,8 +88,8 @@ public:
   // 1 (inital point) + number of steps taken (p.NumSteps - initalNumSteps)
   template <typename ParticleType>
   VISKORES_EXEC void operator()(const ParticleType& p,
-                            const viskores::Id& initialNumSteps,
-                            viskores::Id& diff) const
+                                const viskores::Id& initialNumSteps,
+                                viskores::Id& diff) const
   {
     diff = 1 + p.GetNumberOfSteps() - initialNumSteps;
   }
@@ -104,7 +104,8 @@ VISKORES_CONT void StreamlineAnalysis<ParticleType>::InitializeAnalysis(
   this->NumParticles = particles.GetNumberOfValues();
 
   //Create ValidPointArray initialized to zero.
-  viskores::cont::ArrayHandleConstant<viskores::Id> validity(0, this->NumParticles * (this->MaxSteps + 1));
+  viskores::cont::ArrayHandleConstant<viskores::Id> validity(
+    0, this->NumParticles * (this->MaxSteps + 1));
   viskores::cont::ArrayCopy(validity, this->Validity);
   //Create StepCountArray initialized to zero.
   viskores::cont::ArrayHandleConstant<viskores::Id> streamLengths(0, this->NumParticles);
@@ -138,8 +139,8 @@ VISKORES_CONT void StreamlineAnalysis<ParticleType>::FinalizeAnalysis(
   viskores::cont::ArrayCopy(connCount, connectivity);
 
   viskores::cont::ArrayHandle<viskores::UInt8> cellTypes;
-  auto polyLineShape =
-    viskores::cont::make_ArrayHandleConstant<viskores::UInt8>(viskores::CELL_SHAPE_POLY_LINE, numSeeds);
+  auto polyLineShape = viskores::cont::make_ArrayHandleConstant<viskores::UInt8>(
+    viskores::CELL_SHAPE_POLY_LINE, numSeeds);
   viskores::cont::ArrayCopy(polyLineShape, cellTypes);
 
   auto offsets = viskores::cont::ConvertNumComponentsToOffsets(numPoints);
@@ -199,7 +200,8 @@ VISKORES_CONT bool StreamlineAnalysis<ParticleType>::MakeDataSet(
         numPtsPerCell[off++] = static_cast<viskores::Id>(res.PolyLines.GetNumberOfPointsInCell(j));
     }
 
-    auto numPointsPerCellArray = viskores::cont::make_ArrayHandle(numPtsPerCell, viskores::CopyFlag::Off);
+    auto numPointsPerCellArray =
+      viskores::cont::make_ArrayHandle(numPtsPerCell, viskores::CopyFlag::Off);
 
     viskores::cont::ArrayHandle<viskores::Id> cellIndex;
     viskores::Id connectivityLen =
@@ -209,8 +211,8 @@ VISKORES_CONT bool StreamlineAnalysis<ParticleType>::MakeDataSet(
     viskores::cont::ArrayCopy(connCount, connectivity);
 
     viskores::cont::ArrayHandle<viskores::UInt8> cellTypes;
-    auto polyLineShape =
-      viskores::cont::make_ArrayHandleConstant<viskores::UInt8>(viskores::CELL_SHAPE_POLY_LINE, totalNumCells);
+    auto polyLineShape = viskores::cont::make_ArrayHandleConstant<viskores::UInt8>(
+      viskores::CELL_SHAPE_POLY_LINE, totalNumCells);
     viskores::cont::ArrayCopy(polyLineShape, cellTypes);
     auto offsets = viskores::cont::ConvertNumComponentsToOffsets(numPointsPerCellArray);
 

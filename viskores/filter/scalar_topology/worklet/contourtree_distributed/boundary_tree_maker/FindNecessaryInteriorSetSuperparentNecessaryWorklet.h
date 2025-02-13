@@ -67,7 +67,8 @@ namespace bract_maker
 
 /// Worklet to transfer the dependent counts for hyperarcs
 /// Part of the BoundaryRestrictedAugmentedContourTree.PropagateBoundaryCounts function
-class FindNecessaryInteriorSetSuperparentNecessaryWorklet : public viskores::worklet::WorkletMapField
+class FindNecessaryInteriorSetSuperparentNecessaryWorklet
+  : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn boundaryIndices,   // (input)
@@ -84,9 +85,9 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& boundaryIndex,
-                            const InFieldPortalType superparentsPortal,
-                            const InFieldPortalType superarcsPortal,
-                            const OutFieldPortalType& isNecessaryPortal) const
+                                const InFieldPortalType superparentsPortal,
+                                const InFieldPortalType superarcsPortal,
+                                const OutFieldPortalType& isNecessaryPortal) const
   {
     // per boundary node
     // find the superparent

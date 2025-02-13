@@ -87,15 +87,16 @@ void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagKokkos>::CopyHos
   viskores::BufferSizeType size = viskores::Min(src.GetSize(), dest.GetSize());
 
   VISKORES_LOG_F(viskores::cont::LogLevel::MemTransfer,
-             "Copying host --> Kokkos dev: %s (%lld bytes)",
-             viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
-             size);
+                 "Copying host --> Kokkos dev: %s (%lld bytes)",
+                 viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
+                 size);
 
   viskores::cont::kokkos::internal::KokkosViewConstCont<viskores::UInt8> srcView(
     static_cast<viskores::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
   viskores::cont::kokkos::internal::KokkosViewExec<viskores::UInt8> destView(
     static_cast<viskores::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
-  Kokkos::deep_copy(viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
+  Kokkos::deep_copy(
+    viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
 }
 
 viskores::cont::internal::BufferInfo
@@ -119,15 +120,16 @@ void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagKokkos>::CopyDev
   viskores::BufferSizeType size = viskores::Min(src.GetSize(), dest.GetSize());
 
   VISKORES_LOG_F(viskores::cont::LogLevel::MemTransfer,
-             "Copying Kokkos dev --> host: %s (%lld bytes)",
-             viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
-             size);
+                 "Copying Kokkos dev --> host: %s (%lld bytes)",
+                 viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
+                 size);
 
   viskores::cont::kokkos::internal::KokkosViewConstExec<viskores::UInt8> srcView(
     static_cast<viskores::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
   viskores::cont::kokkos::internal::KokkosViewCont<viskores::UInt8> destView(
     static_cast<viskores::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
-  Kokkos::deep_copy(viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
+  Kokkos::deep_copy(
+    viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
   viskores::cont::kokkos::internal::GetExecutionSpaceInstance().fence();
 }
 
@@ -151,7 +153,8 @@ void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagKokkos>::CopyDev
     static_cast<viskores::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
   viskores::cont::kokkos::internal::KokkosViewExec<viskores::UInt8> destView(
     static_cast<viskores::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
-  Kokkos::deep_copy(viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
+  Kokkos::deep_copy(
+    viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
 }
 
 // Low level memory management methods
@@ -161,16 +164,15 @@ void* DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagKokkos>::Alloca
   return viskores::cont::kokkos::internal::Allocate(size);
 }
 
-void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagKokkos>::CopyDeviceToDeviceRawPointer(
-  const void* src,
-  void* dest,
-  viskores::BufferSizeType size) const
+void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagKokkos>::
+  CopyDeviceToDeviceRawPointer(const void* src, void* dest, viskores::BufferSizeType size) const
 {
   Kokkos::View<char*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> destView(static_cast<char*>(dest),
                                                                         size);
   Kokkos::View<const char*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> srcView(
     static_cast<const char*>(src), size);
-  Kokkos::deep_copy(viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
+  Kokkos::deep_copy(
+    viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
 }
 
 void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagKokkos>::DeleteRawPointer(

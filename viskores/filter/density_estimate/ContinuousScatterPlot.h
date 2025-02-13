@@ -36,7 +36,8 @@ namespace density_estimate
 /// vol. 14, no. 6, pp. 1428-1435, Nov.-Dec. 2008
 /// doi: 10.1109/TVCG.2008.119.
 
-class VISKORES_FILTER_DENSITY_ESTIMATE_EXPORT ContinuousScatterPlot : public viskores::filter::Filter
+class VISKORES_FILTER_DENSITY_ESTIMATE_EXPORT ContinuousScatterPlot
+  : public viskores::filter::Filter
 {
 public:
   VISKORES_CONT ContinuousScatterPlot() { this->SetOutputFieldName("density"); }

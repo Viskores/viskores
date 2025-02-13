@@ -77,9 +77,10 @@ struct RayTests : public viskores::exec::FunctorBase
       using Ray2 = viskores::Ray2<T>;
 
       Ray2 ray0;
-      VISKORES_MATH_ASSERT(test_equal(ray0.Origin, V2(0., 0.)), "Bad origin for default 2D ray ctor.");
+      VISKORES_MATH_ASSERT(test_equal(ray0.Origin, V2(0., 0.)),
+                           "Bad origin for default 2D ray ctor.");
       VISKORES_MATH_ASSERT(test_equal(ray0.Direction, V2(1., 0.)),
-                       "Bad direction for default 2D ray ctor.");
+                           "Bad direction for default 2D ray ctor.");
 
       // Test intersection
       Ray2 ray1(V2(-1., 0.), V2(+1., +1.));
@@ -111,9 +112,9 @@ struct RayTests : public viskores::exec::FunctorBase
 
       viskores::Ray<T, 3> ray0;
       VISKORES_MATH_ASSERT(test_equal(ray0.Origin, V3(0., 0., 0.)),
-                       "Bad origin for default 3D ray ctor.");
+                           "Bad origin for default 3D ray ctor.");
       VISKORES_MATH_ASSERT(test_equal(ray0.Direction, V3(1., 0., 0.)),
-                       "Bad direction for default 3D ray ctor.");
+                           "Bad direction for default 3D ray ctor.");
     }
   }
 };
@@ -141,9 +142,9 @@ struct LineSegmentTests : public viskores::exec::FunctorBase
 
       viskores::LineSegment<T, 2> seg0;
       VISKORES_MATH_ASSERT(test_equal(seg0.Endpoints[0], V2(0., 0.)),
-                       "Bad origin for default 2D line segment ctor.");
+                           "Bad origin for default 2D line segment ctor.");
       VISKORES_MATH_ASSERT(test_equal(seg0.Endpoints[1], V2(1., 0.)),
-                       "Bad direction for default 2D line segment ctor.");
+                           "Bad direction for default 2D line segment ctor.");
 
       V2 p0(1., 1.);
       V2 p1(3., 3.);
@@ -152,9 +153,10 @@ struct LineSegmentTests : public viskores::exec::FunctorBase
       V2 dir(static_cast<T>(-0.7071068), static_cast<T>(0.7071068));
       viskores::LineSegment<T, 2> seg1(p0, p1);
       Line2 ray = seg1.PerpendicularBisector();
-      VISKORES_MATH_ASSERT(test_equal(ray.Origin, p2), "Perpendicular bisector origin failed in 2D.");
+      VISKORES_MATH_ASSERT(test_equal(ray.Origin, p2),
+                           "Perpendicular bisector origin failed in 2D.");
       VISKORES_MATH_ASSERT(test_equal(ray.Direction, dir),
-                       "Perpendicular bisector direction failed in 2D.");
+                           "Perpendicular bisector direction failed in 2D.");
     }
 
     {
@@ -162,9 +164,9 @@ struct LineSegmentTests : public viskores::exec::FunctorBase
 
       viskores::LineSegment<T, 3> seg0;
       VISKORES_MATH_ASSERT(test_equal(seg0.Endpoints[0], V3(0., 0., 0.)),
-                       "Bad origin for default 3D line segment ctor.");
+                           "Bad origin for default 3D line segment ctor.");
       VISKORES_MATH_ASSERT(test_equal(seg0.Endpoints[1], V3(1., 0., 0.)),
-                       "Bad direction for default 3D line segment ctor.");
+                           "Bad direction for default 3D line segment ctor.");
 
       V3 p0(1., 1., 0.);
       V3 p1(3., 3., 0.);
@@ -173,9 +175,9 @@ struct LineSegmentTests : public viskores::exec::FunctorBase
       viskores::LineSegment<T, 3> seg1(p0, p1);
       viskores::Plane<T> bisector = seg1.PerpendicularBisector();
       VISKORES_MATH_ASSERT(test_equal(bisector.Origin, p2),
-                       "Perpendicular bisector origin failed in 3D.");
+                           "Perpendicular bisector origin failed in 3D.");
       VISKORES_MATH_ASSERT(test_equal(bisector.Normal, p3),
-                       "Perpendicular bisector direction failed in 3D.");
+                           "Perpendicular bisector direction failed in 3D.");
     }
 
     viskores::Vec<T, 3> origin(0., 0., 0.);
@@ -248,51 +250,54 @@ struct PlaneTests : public viskores::exec::FunctorBase
     {
       // Case 1. No intersection
       segment = viskores::LineSegment<T>((p0 = viskores::Vec<T, 3>(1., 1., 1.)),
-                                     (p1 = viskores::Vec<T, 3>(2., 2., 2.)));
+                                         (p1 = viskores::Vec<T, 3>(2., 2., 2.)));
       didIntersect = plane.Intersect(segment, param, nearest, isLineInPlane);
-      VISKORES_MATH_ASSERT(test_equal(didIntersect, false), "Plane and line should not intersect (1).");
+      VISKORES_MATH_ASSERT(test_equal(didIntersect, false),
+                           "Plane and line should not intersect (1).");
       VISKORES_MATH_ASSERT(test_equal(isLineInPlane, false),
-                       "Line improperly reported as in plane (1).");
+                           "Line improperly reported as in plane (1).");
       VISKORES_MATH_ASSERT(test_equal(nearest, p0), "Unexpected nearest point (1).");
       VISKORES_MATH_ASSERT(test_equal(param, 0.0), "Unexpected nearest parameter value (1).");
 
       // Case 2. Degenerate intersection (entire segment lies in plane)
       segment = viskores::LineSegment<T>((p0 = viskores::Vec<T, 3>(1., 1., 0.)),
-                                     (p1 = viskores::Vec<T, 3>(2., 2., 0.)));
+                                         (p1 = viskores::Vec<T, 3>(2., 2., 0.)));
       didIntersect = plane.Intersect(segment, param, nearest, isLineInPlane);
       VISKORES_MATH_ASSERT(test_equal(didIntersect, true), "Plane and line should intersect (2).");
       VISKORES_MATH_ASSERT(test_equal(isLineInPlane, true),
-                       "Line improperly reported as out of plane (2).");
+                           "Line improperly reported as out of plane (2).");
 
       // Case 3. Endpoint intersection
       segment = viskores::LineSegment<T>((p0 = viskores::Vec<T, 3>(1., 1., 1.)),
-                                     (p1 = viskores::Vec<T, 3>(2., 2., 0.)));
+                                         (p1 = viskores::Vec<T, 3>(2., 2., 0.)));
       didIntersect = plane.Intersect(segment, param, nearest, isLineInPlane);
       VISKORES_MATH_ASSERT(test_equal(didIntersect, true), "Plane and line should intersect (3a).");
       VISKORES_MATH_ASSERT(test_equal(isLineInPlane, false),
-                       "Line improperly reported as in plane (3a).");
-      VISKORES_MATH_ASSERT(test_equal(param, 1.0), "Invalid parameter for intersection point (3a).");
+                           "Line improperly reported as in plane (3a).");
+      VISKORES_MATH_ASSERT(test_equal(param, 1.0),
+                           "Invalid parameter for intersection point (3a).");
       VISKORES_MATH_ASSERT(test_equal(nearest, p1), "Invalid intersection point (3a).");
 
       segment = viskores::LineSegment<T>((p0 = viskores::Vec<T, 3>(1., 1., 0.)),
-                                     (p1 = viskores::Vec<T, 3>(2., 2., 1.)));
+                                         (p1 = viskores::Vec<T, 3>(2., 2., 1.)));
       didIntersect = plane.Intersect(segment, param, nearest, isLineInPlane);
       VISKORES_MATH_ASSERT(test_equal(didIntersect, true), "Plane and line should intersect (3b).");
       VISKORES_MATH_ASSERT(test_equal(isLineInPlane, false),
-                       "Line improperly reported as in plane (3b).");
-      VISKORES_MATH_ASSERT(test_equal(param, 0.0), "Invalid parameter for intersection point (3b).");
+                           "Line improperly reported as in plane (3b).");
+      VISKORES_MATH_ASSERT(test_equal(param, 0.0),
+                           "Invalid parameter for intersection point (3b).");
       VISKORES_MATH_ASSERT(test_equal(nearest, p0), "Invalid intersection point (3b).");
 
       // Case 4. General-position intersection
       segment = viskores::LineSegment<T>((p0 = viskores::Vec<T, 3>(-1., -1., -1.)),
-                                     (p1 = viskores::Vec<T, 3>(2., 2., 1.)));
+                                         (p1 = viskores::Vec<T, 3>(2., 2., 1.)));
       didIntersect = plane.Intersect(segment, param, nearest, isLineInPlane);
       VISKORES_MATH_ASSERT(test_equal(didIntersect, true), "Plane and line should intersect (4).");
       VISKORES_MATH_ASSERT(test_equal(isLineInPlane, false),
-                       "Line improperly reported as in plane (4).");
+                           "Line improperly reported as in plane (4).");
       VISKORES_MATH_ASSERT(test_equal(param, 0.5), "Invalid parameter for intersection point (4).");
       VISKORES_MATH_ASSERT(test_equal(nearest, viskores::Vec<T, 3>(0.5, 0.5, 0)),
-                       "Invalid intersection point (4).");
+                           "Invalid intersection point (4).");
     }
 
     // Test plane-plane intersection
@@ -309,18 +314,18 @@ struct PlaneTests : public viskores::exec::FunctorBase
       bool coincident;
       didIntersect = pa.Intersect(pb, ii, coincident);
       VISKORES_MATH_ASSERT(test_equal(didIntersect, false),
-                       "Coincident planes should have degenerate intersection.");
+                           "Coincident planes should have degenerate intersection.");
       VISKORES_MATH_ASSERT(test_equal(coincident, true),
-                       "Coincident planes should be marked coincident.");
+                           "Coincident planes should be marked coincident.");
 
       // Case 2. Offset planes
       p1 = V3(5., 6., 7.);
       pb = PlaneType(p1, nn);
       didIntersect = pa.Intersect(pb, ii, coincident);
       VISKORES_MATH_ASSERT(test_equal(didIntersect, false),
-                       "Offset planes should have degenerate intersection.");
+                           "Offset planes should have degenerate intersection.");
       VISKORES_MATH_ASSERT(test_equal(coincident, false),
-                       "Offset planes should not be marked coincident.");
+                           "Offset planes should not be marked coincident.");
 
       // Case 3. General position
       p1 = V3(1., 2., 0.);
@@ -328,13 +333,13 @@ struct PlaneTests : public viskores::exec::FunctorBase
       pb = PlaneType(p1, n2);
       didIntersect = pa.Intersect(pb, ii, coincident);
       VISKORES_MATH_ASSERT(test_equal(didIntersect, true),
-                       "Proper planes should have non-degenerate intersection.");
+                           "Proper planes should have non-degenerate intersection.");
       VISKORES_MATH_ASSERT(test_equal(coincident, false),
-                       "Proper planes should not be marked coincident.");
+                           "Proper planes should not be marked coincident.");
       VISKORES_MATH_ASSERT(test_equal(ii.Origin, V3(2.5, 3.5, 0)),
-                       "Unexpected intersection-line base point.");
+                           "Unexpected intersection-line base point.");
       VISKORES_MATH_ASSERT(test_equal(ii.Direction, viskores::Normal(V3(1, -1, 0))),
-                       "Unexpected intersection-line direction.");
+                           "Unexpected intersection-line direction.");
     }
   }
 };
@@ -360,21 +365,25 @@ struct SphereTests : public viskores::exec::FunctorBase
       using V2 = viskores::Vec<T, 2>;
       V2 origin(0., 0.);
       viskores::Sphere<T, 2> defaultSphere;
-      VISKORES_MATH_ASSERT(test_equal(defaultSphere.Center, origin), "Default circle not at origin.");
-      VISKORES_MATH_ASSERT(test_equal(defaultSphere.Radius, 1.0), "Default circle not unit radius.");
+      VISKORES_MATH_ASSERT(test_equal(defaultSphere.Center, origin),
+                           "Default circle not at origin.");
+      VISKORES_MATH_ASSERT(test_equal(defaultSphere.Radius, 1.0),
+                           "Default circle not unit radius.");
 
       viskores::Sphere<T, 2> sphere(origin, -2.);
-      VISKORES_MATH_ASSERT(test_equal(sphere.Radius, -1.0), "Negative radius should be reset to -1.");
+      VISKORES_MATH_ASSERT(test_equal(sphere.Radius, -1.0),
+                           "Negative radius should be reset to -1.");
       VISKORES_MATH_ASSERT(test_equal(sphere.IsValid(), false),
-                       "Negative radius should leave sphere invalid.");
+                           "Negative radius should leave sphere invalid.");
 
       sphere = viskores::Circle<T>(origin, 1.0);
       VISKORES_MATH_ASSERT(test_equal(sphere.IsValid(), true), "Circle assignment failed.");
       VISKORES_MATH_ASSERT(test_equal(sphere.Contains(origin), true),
-                       "Circle does not contain its center.");
-      VISKORES_MATH_ASSERT(test_equal(sphere.Classify(V2(1., 0.)), 0), "Circle point not on boundary.");
+                           "Circle does not contain its center.");
+      VISKORES_MATH_ASSERT(test_equal(sphere.Classify(V2(1., 0.)), 0),
+                           "Circle point not on boundary.");
       VISKORES_MATH_ASSERT(test_equal(sphere.Classify(V2(0.75, 0.75)), +1),
-                       "Circle contains a point that should be outside.");
+                           "Circle contains a point that should be outside.");
 
       V2 p0(static_cast<T>(-0.7071), static_cast<T>(-0.7071));
       V2 p1(static_cast<T>(+0.7071), static_cast<T>(-0.7071));
@@ -389,22 +398,22 @@ struct SphereTests : public viskores::exec::FunctorBase
       VISKORES_MATH_ASSERT(test_equal(sphere.IsValid(), true), "Could not create 3-point circle.");
       T tol = static_cast<T>(1e-3); // Use a loose tolerance
       VISKORES_MATH_ASSERT(test_equal(sphere.Center, viskores::Vec<T, 2>(-12.4f, 12.1f)),
-                       "Invalid circle center.");
+                           "Invalid circle center.");
       VISKORES_MATH_ASSERT(test_equal(sphere.Radius, static_cast<T>(17.400291f)),
-                       "Invalid circle radius.");
+                           "Invalid circle radius.");
       VISKORES_MATH_ASSERT(test_equal(sphere.Classify(p3, tol), 0),
-                       "Generator p3 not on circle boundary.");
+                           "Generator p3 not on circle boundary.");
       VISKORES_MATH_ASSERT(test_equal(sphere.Classify(p4, tol), 0),
-                       "Generator p4 not on circle boundary.");
+                           "Generator p4 not on circle boundary.");
       VISKORES_MATH_ASSERT(test_equal(sphere.Classify(p5, tol), 0),
-                       "Generator p5 not on circle boundary.");
+                           "Generator p5 not on circle boundary.");
 
       V2 p6(1, 1);
       V2 p7(4, 4);
       V2 p8(5, 5);
       sphere = make_CircleFrom3Points(p6, p7, p8);
       VISKORES_MATH_ASSERT(test_equal(sphere.IsValid(), false),
-                       "3-point circle construction should fail with points on a line.");
+                           "3-point circle construction should fail with points on a line.");
     }
     {
       using V3 = viskores::Vec<T, 3>;
@@ -417,10 +426,13 @@ struct SphereTests : public viskores::exec::FunctorBase
 
       V3 origin(0., 0., 0.);
       viskores::Sphere<T, 3> defaultSphere;
-      VISKORES_MATH_ASSERT(test_equal(defaultSphere.Center, origin), "Default sphere not at origin.");
-      VISKORES_MATH_ASSERT(test_equal(defaultSphere.Radius, 1.0), "Default sphere not unit radius.");
+      VISKORES_MATH_ASSERT(test_equal(defaultSphere.Center, origin),
+                           "Default sphere not at origin.");
+      VISKORES_MATH_ASSERT(test_equal(defaultSphere.Radius, 1.0),
+                           "Default sphere not unit radius.");
 
-      viskores::Sphere<T, 3> sphere = make_SphereFrom4Points(p0, p1, p2, p3, static_cast<T>(1.0e-6));
+      viskores::Sphere<T, 3> sphere =
+        make_SphereFrom4Points(p0, p1, p2, p3, static_cast<T>(1.0e-6));
       VISKORES_MATH_ASSERT(test_equal(sphere.IsValid(), true), "Easy sphere 1 not valid.");
       VISKORES_MATH_ASSERT(test_equal(sphere.Center, origin), "Easy sphere 1 not at origin.");
       VISKORES_MATH_ASSERT(test_equal(sphere.Radius, 1.0), "Easy sphere 1 not unit radius.");
@@ -440,8 +452,10 @@ struct SphereTests : public viskores::exec::FunctorBase
 
       sphere = make_SphereFrom4Points(fp0, fp1, fp2, fp4, static_cast<T>(1.0e-6));
       VISKORES_MATH_ASSERT(test_equal(sphere.IsValid(), true), "Medium sphere 1 not valid.");
-      VISKORES_MATH_ASSERT(test_equal(sphere.Center, fancyCenter), "Medium sphere 1 not at (1,2,3).");
-      VISKORES_MATH_ASSERT(test_equal(sphere.Radius, fancyRadius), "Medium sphere 1 not radius 2.5.");
+      VISKORES_MATH_ASSERT(test_equal(sphere.Center, fancyCenter),
+                           "Medium sphere 1 not at (1,2,3).");
+      VISKORES_MATH_ASSERT(test_equal(sphere.Radius, fancyRadius),
+                           "Medium sphere 1 not radius 2.5.");
     }
   }
 };

@@ -47,7 +47,9 @@ struct Bounds
 
   /// Construct a bounds with a given range in the x, y, and z dimensions.
   VISKORES_EXEC_CONT
-  Bounds(const viskores::Range& xRange, const viskores::Range& yRange, const viskores::Range& zRange)
+  Bounds(const viskores::Range& xRange,
+         const viskores::Range& yRange,
+         const viskores::Range& zRange)
     : X(xRange)
     , Y(yRange)
     , Z(zRange)
@@ -58,11 +60,11 @@ struct Bounds
   /// directions.
   template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
   VISKORES_EXEC_CONT Bounds(const T1& minX,
-                        const T2& maxX,
-                        const T3& minY,
-                        const T4& maxY,
-                        const T5& minZ,
-                        const T6& maxZ)
+                            const T2& maxX,
+                            const T3& minY,
+                            const T4& maxY,
+                            const T5& minZ,
+                            const T6& maxZ)
     : X(viskores::Range(minX, maxX))
     , Y(viskores::Range(minY, maxY))
     , Z(viskores::Range(minZ, maxZ))
@@ -84,7 +86,8 @@ struct Bounds
   /// point.
   ///
   template <typename T>
-  VISKORES_EXEC_CONT Bounds(const viskores::Vec<T, 3>& minPoint, const viskores::Vec<T, 3>& maxPoint)
+  VISKORES_EXEC_CONT Bounds(const viskores::Vec<T, 3>& minPoint,
+                            const viskores::Vec<T, 3>& maxPoint)
     : X(viskores::Range(minPoint[0], maxPoint[0]))
     , Y(viskores::Range(minPoint[1], maxPoint[1]))
     , Z(viskores::Range(minPoint[2], maxPoint[2]))
@@ -166,7 +169,10 @@ struct Bounds
   /// are empty, the results are undefined.
   ///
   VISKORES_EXEC_CONT
-  viskores::Vec3f_64 MinCorner() const { return viskores::Vec3f_64(this->X.Min, this->Y.Min, this->Z.Min); }
+  viskores::Vec3f_64 MinCorner() const
+  {
+    return viskores::Vec3f_64(this->X.Min, this->Y.Min, this->Z.Min);
+  }
 
   /// \b Returns the max point of the bounds
   ///
@@ -174,7 +180,10 @@ struct Bounds
   /// are empty, the results are undefined.
   ///
   VISKORES_EXEC_CONT
-  viskores::Vec3f_64 MaxCorner() const { return viskores::Vec3f_64(this->X.Max, this->Y.Max, this->Z.Max); }
+  viskores::Vec3f_64 MaxCorner() const
+  {
+    return viskores::Vec3f_64(this->X.Max, this->Y.Max, this->Z.Max);
+  }
 
   /// \b Expand bounds to include a point.
   ///
@@ -221,14 +230,17 @@ struct Bounds
   viskores::Bounds Intersection(const viskores::Bounds& otherBounds) const
   {
     return viskores::Bounds(this->X.Intersection(otherBounds.X),
-                        this->Y.Intersection(otherBounds.Y),
-                        this->Z.Intersection(otherBounds.Z));
+                            this->Y.Intersection(otherBounds.Y),
+                            this->Z.Intersection(otherBounds.Z));
   }
 
   /// \b Operator for union
   ///
   VISKORES_EXEC_CONT
-  viskores::Bounds operator+(const viskores::Bounds& otherBounds) const { return this->Union(otherBounds); }
+  viskores::Bounds operator+(const viskores::Bounds& otherBounds) const
+  {
+    return this->Union(otherBounds);
+  }
 
   VISKORES_EXEC_CONT
   bool operator==(const viskores::Bounds& bounds) const
@@ -265,7 +277,8 @@ struct VISKORES_NEVER_EXPORT VecTraits<viskores::Bounds>
   using IsSizeStatic = viskores::VecTraitsTagSizeStatic;
 
   VISKORES_EXEC_CONT
-  static const ComponentType& GetComponent(const viskores::Bounds& bounds, viskores::IdComponent component)
+  static const ComponentType& GetComponent(const viskores::Bounds& bounds,
+                                           viskores::IdComponent component)
   {
     VISKORES_ASSERT((component >= 0) || (component < 3));
     switch (component)
@@ -323,13 +336,15 @@ struct VISKORES_NEVER_EXPORT VecTraits<viskores::Bounds>
   using ReplaceComponentType = viskores::Vec<NewComponentType, NUM_COMPONENTS>;
   template <typename NewComponentType>
   using ReplaceBaseComponentType =
-    viskores::Vec<NewComponentType, NUM_COMPONENTS * viskores::VecTraits<viskores::Range>::NUM_COMPONENTS>;
+    viskores::Vec<NewComponentType,
+                  NUM_COMPONENTS * viskores::VecTraits<viskores::Range>::NUM_COMPONENTS>;
 
   template <viskores::IdComponent destSize>
   VISKORES_EXEC_CONT static void CopyInto(const viskores::Bounds& src,
-                                      viskores::Vec<ComponentType, destSize>& dest)
+                                          viskores::Vec<ComponentType, destSize>& dest)
   {
-    const viskores::IdComponent maxComponent = (destSize < NUM_COMPONENTS) ? destSize : NUM_COMPONENTS;
+    const viskores::IdComponent maxComponent =
+      (destSize < NUM_COMPONENTS) ? destSize : NUM_COMPONENTS;
     for (viskores::IdComponent component = 0; component < maxComponent; ++component)
     {
       dest[component] = GetComponent(src, component);

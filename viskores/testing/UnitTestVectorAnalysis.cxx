@@ -68,7 +68,7 @@ void TestVector(const VectorType& vector)
 
   ComponentType magnitudeSquared = viskores::MagnitudeSquared(vector);
   VISKORES_TEST_ASSERT(test_equal(magnitude * magnitude, magnitudeSquared),
-                   "Magnitude squared test failed.");
+                       "Magnitude squared test failed.");
 
   if (magnitudeSquared > 0)
   {
@@ -76,12 +76,12 @@ void TestVector(const VectorType& vector)
     VISKORES_TEST_ASSERT(test_equal(1 / magnitude, rmagnitude), "Reciprical magnitude failed.");
 
     VISKORES_TEST_ASSERT(test_equal(viskores::Normal(vector), internal::MyNormal(vector)),
-                     "Normalized vector failed test.");
+                         "Normalized vector failed test.");
 
     VectorType normalizedVector = vector;
     viskores::Normalize(normalizedVector);
     VISKORES_TEST_ASSERT(test_equal(normalizedVector, internal::MyNormal(vector)),
-                     "Inplace Normalized vector failed test.");
+                         "Inplace Normalized vector failed test.");
   }
 }
 
@@ -94,11 +94,12 @@ void TestLerp(const VectorType& a,
   VectorType viskoresLerp = viskores::Lerp(a, b, w);
   VectorType otherLerp = internal::MyLerp(a, b, w);
   VISKORES_TEST_ASSERT(test_equal(viskoresLerp, otherLerp),
-                   "Vectors with Vector weight do not lerp() correctly");
+                       "Vectors with Vector weight do not lerp() correctly");
 
   VectorType lhsS = internal::MyLerp(a, b, wS);
   VectorType rhsS = viskores::Lerp(a, b, wS);
-  VISKORES_TEST_ASSERT(test_equal(lhsS, rhsS), "Vectors with Scalar weight do not lerp() correctly");
+  VISKORES_TEST_ASSERT(test_equal(lhsS, rhsS),
+                       "Vectors with Scalar weight do not lerp() correctly");
 }
 
 template <typename T>
@@ -109,11 +110,11 @@ void TestCross(const viskores::Vec<T, 3>& x, const viskores::Vec<T, 3>& y)
 
   // The cross product result should be perpendicular to input vectors.
   VISKORES_TEST_ASSERT(viskores::Abs(viskores::Dot(cross, x)) <
-                     std::numeric_limits<T>::epsilon() * viskores::MagnitudeSquared(x),
-                   "Cross product not perpendicular.");
+                         std::numeric_limits<T>::epsilon() * viskores::MagnitudeSquared(x),
+                       "Cross product not perpendicular.");
   VISKORES_TEST_ASSERT(viskores::Abs(viskores::Dot(cross, y)) <
-                     std::numeric_limits<T>::epsilon() * viskores::MagnitudeSquared(y),
-                   "Cross product not perpendicular.");
+                         std::numeric_limits<T>::epsilon() * viskores::MagnitudeSquared(y),
+                       "Cross product not perpendicular.");
   // The length of cross product should be the lengths of the input vectors
   // times the sin of the angle between them.
   T sinAngle = viskores::Magnitude(cross) * viskores::RMagnitude(x) * viskores::RMagnitude(y);
@@ -125,13 +126,13 @@ void TestCross(const viskores::Vec<T, 3>& x, const viskores::Vec<T, 3>& y)
   // Test that these are the actual sin and cos of the same angle with a
   // basic trigonometric identity.
   VISKORES_TEST_ASSERT(test_equal(sinAngle * sinAngle + cosAngle * cosAngle, T(1.0)),
-                   "Bad cross product length.");
+                       "Bad cross product length.");
 
   // Test finding the normal to a triangle (similar to cross product).
   Vec3 normal = viskores::TriangleNormal(x, y, Vec3(0, 0, 0));
   VISKORES_TEST_ASSERT(viskores::Abs(viskores::Dot(normal, x - y)) <
-                     std::numeric_limits<T>::epsilon() * viskores::MagnitudeSquared(x),
-                   "Triangle normal is not really normal.");
+                         std::numeric_limits<T>::epsilon() * viskores::MagnitudeSquared(x),
+                       "Triangle normal is not really normal.");
 }
 
 template <typename VectorBasisType>

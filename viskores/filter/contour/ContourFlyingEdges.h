@@ -29,7 +29,8 @@ namespace contour
 /// This implementation only accepts \c CellSetStructured<3> inputs using
 /// \c ArrayHandleUniformPointCoordinates for point coordinates,
 /// and is only used as part of the more general \c Contour filter
-class VISKORES_FILTER_CONTOUR_EXPORT ContourFlyingEdges : public viskores::filter::contour::AbstractContour
+class VISKORES_FILTER_CONTOUR_EXPORT ContourFlyingEdges
+  : public viskores::filter::contour::AbstractContour
 {
 protected:
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& result) override;

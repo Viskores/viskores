@@ -30,7 +30,8 @@ void ValidateDataSet(const viskores::cont::DataSet& ds,
   //Verify basics..
 
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Wrong number of fields.");
-  VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1, "Wrong number of coordinate systems.");
+  VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
+                       "Wrong number of coordinate systems.");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == numPoints, "Wrong number of coordinates.");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == numCells, "Wrong number of cells.");
 
@@ -56,9 +57,9 @@ void ValidateDataSet(const viskores::cont::DataSet& ds,
   //Make sure bounds are correct.
   viskores::Bounds res = ds.GetCoordinateSystem().GetBounds();
   VISKORES_TEST_ASSERT(bounds.Contains(viskores::Vec3f_64(res.X.Min, res.Y.Min, res.Z.Min)) &&
-                     bounds.Contains(viskores::Vec3f_64(res.X.Max, res.Y.Max, res.Z.Max)),
-                   test_equal(bounds, res),
-                   "Bounds of coordinates do not match");
+                         bounds.Contains(viskores::Vec3f_64(res.X.Max, res.Y.Max, res.Z.Max)),
+                       test_equal(bounds, res),
+                       "Bounds of coordinates do not match");
   if (dim == 1)
   {
     viskores::cont::CellSetStructured<1> cellSet;

@@ -54,25 +54,27 @@ void DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagTBB>::ScheduleTask(
   //memory is generally setup in a way that iterating the first range
   //in the tightest loop has the best cache coherence.
   ::tbb::blocked_range3d<viskores::Id> range(0,
-                                         size[2],
-                                         TBB_GRAIN_SIZE_3D[0],
-                                         0,
-                                         size[1],
-                                         TBB_GRAIN_SIZE_3D[1],
-                                         0,
-                                         size[0],
-                                         TBB_GRAIN_SIZE_3D[2]);
-  ::tbb::parallel_for(range, [&](const ::tbb::blocked_range3d<viskores::Id>& r) {
-    for (viskores::Id k = r.pages().begin(); k != r.pages().end(); ++k)
-    {
-      for (viskores::Id j = r.rows().begin(); j != r.rows().end(); ++j)
-      {
-        const viskores::Id start = r.cols().begin();
-        const viskores::Id end = r.cols().end();
-        functor(size, start, end, j, k);
-      }
-    }
-  });
+                                             size[2],
+                                             TBB_GRAIN_SIZE_3D[0],
+                                             0,
+                                             size[1],
+                                             TBB_GRAIN_SIZE_3D[1],
+                                             0,
+                                             size[0],
+                                             TBB_GRAIN_SIZE_3D[2]);
+  ::tbb::parallel_for(range,
+                      [&](const ::tbb::blocked_range3d<viskores::Id>& r)
+                      {
+                        for (viskores::Id k = r.pages().begin(); k != r.pages().end(); ++k)
+                        {
+                          for (viskores::Id j = r.rows().begin(); j != r.rows().end(); ++j)
+                          {
+                            const viskores::Id start = r.cols().begin();
+                            const viskores::Id end = r.cols().end();
+                            functor(size, start, end, j, k);
+                          }
+                        }
+                      });
 
   if (errorMessage.IsErrorRaised())
   {

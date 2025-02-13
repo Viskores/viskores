@@ -40,9 +40,9 @@ void BitField::Allocate(viskores::Id numberOfBits,
   const viskores::BufferSizeType numBytes = blocksNeeded * BlockSize;
 
   VISKORES_LOG_F(viskores::cont::LogLevel::MemCont,
-             "BitField Allocation: %llu bits, blocked up to %s bytes.",
-             static_cast<unsigned long long>(numberOfBits),
-             viskores::cont::GetSizeString(static_cast<viskores::UInt64>(numBytes)).c_str());
+                 "BitField Allocation: %llu bits, blocked up to %s bytes.",
+                 static_cast<unsigned long long>(numberOfBits),
+                 viskores::cont::GetSizeString(static_cast<viskores::UInt64>(numBytes)).c_str());
 
   this->Buffer.SetNumberOfBytes(numBytes, preserve, token);
   this->Buffer.GetMetaData<internal::BitFieldMetaData>().NumberOfBits = numberOfBits;

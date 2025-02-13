@@ -59,7 +59,8 @@ void Test()
   //// END-EXAMPLE ArrayHandleRandomUniformBitsIteration
   ////
   // In case assert is an empty expression.
-  VISKORES_TEST_ASSERT(randomArray0.ReadPortal().Get(5) != randomArray1.ReadPortal().Get(5));
+  VISKORES_TEST_ASSERT(randomArray0.ReadPortal().Get(5) !=
+                       randomArray1.ReadPortal().Get(5));
 
   {
     ////
@@ -93,7 +94,8 @@ void Test()
     auto randomPointsInGaussian = viskores::cont::make_ArrayHandleCompositeVector(
       viskores::cont::ArrayHandleRandomStandardNormal<viskores::FloatDefault>(NumPoints),
       viskores::cont::ArrayHandleRandomStandardNormal<viskores::FloatDefault>(NumPoints),
-      viskores::cont::ArrayHandleRandomStandardNormal<viskores::FloatDefault>(NumPoints));
+      viskores::cont::ArrayHandleRandomStandardNormal<viskores::FloatDefault>(
+        NumPoints));
     ////
     //// END-EXAMPLE ArrayHandleRandomStandardNormal
     ////

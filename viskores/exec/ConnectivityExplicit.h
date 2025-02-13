@@ -61,14 +61,18 @@ public:
   /// The tag type is allways `viskores::CellShapeTagGeneric` and its id is filled with the
   /// identifier for the appropriate shape.
   VISKORES_EXEC
-  CellShapeTag GetCellShape(viskores::Id index) const { return CellShapeTag(this->Shapes.Get(index)); }
+  CellShapeTag GetCellShape(viskores::Id index) const
+  {
+    return CellShapeTag(this->Shapes.Get(index));
+  }
 
   /// Given the index of a visited element, returns the number of incident elements
   /// touching it.
   VISKORES_EXEC
   viskores::IdComponent GetNumberOfIndices(viskores::Id index) const
   {
-    return static_cast<viskores::IdComponent>(this->Offsets.Get(index + 1) - this->Offsets.Get(index));
+    return static_cast<viskores::IdComponent>(this->Offsets.Get(index + 1) -
+                                              this->Offsets.Get(index));
   }
 
   /// @brief Type of variable that lists of incident indices will be put into.

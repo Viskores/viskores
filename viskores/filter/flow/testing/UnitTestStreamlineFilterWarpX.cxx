@@ -75,9 +75,11 @@ void TestFilters()
   Structured3DType castedCells;
   cells.AsCellSet(castedCells);
   auto dims = castedCells.GetSchedulingRange(viskores::TopologyElementTagPoint());
-  viskores::Vec3f spacing = { static_cast<viskores::FloatDefault>(bounds.X.Length()) / (dims[0] - 1),
-                          static_cast<viskores::FloatDefault>(bounds.Y.Length()) / (dims[1] - 1),
-                          static_cast<viskores::FloatDefault>(bounds.Z.Length()) / (dims[2] - 1) };
+  viskores::Vec3f spacing = {
+    static_cast<viskores::FloatDefault>(bounds.X.Length()) / (dims[0] - 1),
+    static_cast<viskores::FloatDefault>(bounds.Y.Length()) / (dims[1] - 1),
+    static_cast<viskores::FloatDefault>(bounds.Z.Length()) / (dims[2] - 1)
+  };
   std::cout << spacing << std::endl;
   constexpr static viskores::FloatDefault SPEED_OF_LIGHT =
     static_cast<viskores::FloatDefault>(2.99792458e8);
@@ -98,9 +100,9 @@ void TestFilters()
   auto output = streamline.Execute(dataset);
 
   VISKORES_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
+                       "Wrong number of coordinate systems in the output dataset");
   VISKORES_TEST_ASSERT(output.GetCoordinateSystem().GetNumberOfPoints() == 2550,
-                   "Wrong number of coordinates");
+                       "Wrong number of coordinates");
   VISKORES_TEST_ASSERT(output.GetCellSet().GetNumberOfCells() == 50, "Wrong number of cells");
 }
 }

@@ -16,6 +16,6 @@ int UnitTestKokkosDeviceAdapter(int argc, char* argv[])
 {
   auto& tracker = viskores::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(viskores::cont::DeviceAdapterTagKokkos{});
-  return viskores::cont::testing::TestingDeviceAdapter<viskores::cont::DeviceAdapterTagKokkos>::Run(argc,
-                                                                                            argv);
+  return viskores::cont::testing::TestingDeviceAdapter<viskores::cont::DeviceAdapterTagKokkos>::Run(
+    argc, argv);
 }

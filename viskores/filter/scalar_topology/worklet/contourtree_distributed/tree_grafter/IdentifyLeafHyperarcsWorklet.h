@@ -107,13 +107,14 @@ public:
   }
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
-                            const InFieldPortalType supernodeTypePortal,
-                            const InFieldPortalType upNeighbourPortal,
-                            const InFieldPortalType downNeighbourPortal,
-                            const OutFieldPortalType& hierarchicalHyperparentPortal,
-                            const OutFieldPortalType& hierarchicalHyperarcPortal,
-                            const OutFieldPortalType& whenTransferredPortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
+    const InFieldPortalType supernodeTypePortal,
+    const InFieldPortalType upNeighbourPortal,
+    const InFieldPortalType downNeighbourPortal,
+    const OutFieldPortalType& hierarchicalHyperparentPortal,
+    const OutFieldPortalType& hierarchicalHyperarcPortal,
+    const OutFieldPortalType& whenTransferredPortal) const
   { // operator ()
     // per active superarc
     // retrieve the supernode IDs for the two ends
@@ -128,9 +129,11 @@ public:
         // in lower leaf rounds, never recognise these
         hierarchicalHyperparentPortal.Set(high, high);
         hierarchicalHyperarcPortal.Set(
-          high, viskores::worklet::contourtree_augmented::MaskedIndex(downNeighbourPortal.Get(high)));
-        whenTransferredPortal.Set(
-          high, this->NumTransferIterations | viskores::worklet::contourtree_augmented::IS_HYPERNODE);
+          high,
+          viskores::worklet::contourtree_augmented::MaskedIndex(downNeighbourPortal.Get(high)));
+        whenTransferredPortal.Set(high,
+                                  this->NumTransferIterations |
+                                    viskores::worklet::contourtree_augmented::IS_HYPERNODE);
         break;
       } // upper end is a leaf
       case (viskores::Id)viskores::worklet::contourtree_augmented::IS_REGULAR:
@@ -150,18 +153,20 @@ public:
             (viskores::Id)viskores::worklet::contourtree_augmented::IS_UPPER_LEAF)
         { // up neighbour is an upper leaf
           hierarchicalHyperparentPortal.Set(high, upNbr);
-          whenTransferredPortal.Set(high,
-                                    this->NumTransferIterations |
-                                      (viskores::Id)viskores::worklet::contourtree_augmented::IS_SUPERNODE);
+          whenTransferredPortal.Set(
+            high,
+            this->NumTransferIterations |
+              (viskores::Id)viskores::worklet::contourtree_augmented::IS_SUPERNODE);
         } // up neighbour is an upper leaf
         // then the down neighbour (cannot both be true)
         else if (supernodeTypePortal.Get(downNbr) ==
                  (viskores::Id)viskores::worklet::contourtree_augmented::IS_LOWER_LEAF)
         { // down neighbour is a lower leaf
           hierarchicalHyperparentPortal.Set(high, downNbr);
-          whenTransferredPortal.Set(high,
-                                    this->NumTransferIterations |
-                                      (viskores::Id)viskores::worklet::contourtree_augmented::IS_SUPERNODE);
+          whenTransferredPortal.Set(
+            high,
+            this->NumTransferIterations |
+              (viskores::Id)viskores::worklet::contourtree_augmented::IS_SUPERNODE);
         } // down neighbour is a lower leaf
         break;
       } // case: upper end is regular
@@ -183,9 +188,10 @@ public:
           low,
           viskores::worklet::contourtree_augmented::MaskedIndex(upNeighbourPortal.Get(low)) |
             (viskores::Id)viskores::worklet::contourtree_augmented::IS_ASCENDING);
-        whenTransferredPortal.Set(low,
-                                  this->NumTransferIterations |
-                                    (viskores::Id)viskores::worklet::contourtree_augmented::IS_HYPERNODE);
+        whenTransferredPortal.Set(
+          low,
+          this->NumTransferIterations |
+            (viskores::Id)viskores::worklet::contourtree_augmented::IS_HYPERNODE);
         break;
       } // lower end is a leaf
       case (viskores::Id)viskores::worklet::contourtree_augmented::IS_REGULAR:
@@ -204,18 +210,20 @@ public:
             (viskores::Id)viskores::worklet::contourtree_augmented::IS_UPPER_LEAF)
         { // up neighbour is an upper leaf
           hierarchicalHyperparentPortal.Set(low, upNbr);
-          whenTransferredPortal.Set(low,
-                                    this->NumTransferIterations |
-                                      (viskores::Id)viskores::worklet::contourtree_augmented::IS_SUPERNODE);
+          whenTransferredPortal.Set(
+            low,
+            this->NumTransferIterations |
+              (viskores::Id)viskores::worklet::contourtree_augmented::IS_SUPERNODE);
         } // up neighbour is an upper leaf
         // then the down neighbour (cannot both be true)
         else if (supernodeTypePortal.Get(downNbr) ==
                  (viskores::Id)viskores::worklet::contourtree_augmented::IS_LOWER_LEAF)
         { // down neighbour is a lower leaf
           hierarchicalHyperparentPortal.Set(low, downNbr);
-          whenTransferredPortal.Set(low,
-                                    this->NumTransferIterations |
-                                      (viskores::Id)viskores::worklet::contourtree_augmented::IS_SUPERNODE);
+          whenTransferredPortal.Set(
+            low,
+            this->NumTransferIterations |
+              (viskores::Id)viskores::worklet::contourtree_augmented::IS_SUPERNODE);
         } // down neighbour is a lower leaf
         break;
       } // lower end is regular

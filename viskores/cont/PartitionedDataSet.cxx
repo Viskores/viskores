@@ -47,7 +47,7 @@ PartitionedDataSet::PartitionedDataSet(viskores::Id size)
 
 VISKORES_CONT
 viskores::cont::Field PartitionedDataSet::GetFieldFromPartition(const std::string& field_name,
-                                                            int partition_index) const
+                                                                int partition_index) const
 {
   assert(partition_index >= 0);
   assert(static_cast<std::size_t>(partition_index) < this->Partitions.size());
@@ -66,7 +66,8 @@ viskores::Id PartitionedDataSet::GetGlobalNumberOfPartitions() const
 #ifdef VISKORES_ENABLE_MPI
   auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
   viskores::Id globalSize = 0;
-  viskoresdiy::mpi::all_reduce(comm, GetNumberOfPartitions(), globalSize, std::plus<viskores::Id>{});
+  viskoresdiy::mpi::all_reduce(
+    comm, GetNumberOfPartitions(), globalSize, std::plus<viskores::Id>{});
   return globalSize;
 #else
   return GetNumberOfPartitions();

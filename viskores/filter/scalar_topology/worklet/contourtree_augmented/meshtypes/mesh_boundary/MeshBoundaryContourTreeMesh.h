@@ -98,10 +98,12 @@ public:
   bool LiesOnBoundary(const viskores::Id index) const
   {
     viskores::Id global_idx = this->GlobalMeshIndexPortal.Get(index);
-    viskores::Id3 mesh_idx{ viskores::Id(global_idx % this->GlobalSize[0]),
-                        viskores::Id((global_idx % (this->GlobalSize[0] * this->GlobalSize[1])) /
-                                 this->GlobalSize[0]),
-                        viskores::Id(global_idx / (this->GlobalSize[0] * this->GlobalSize[1])) };
+    viskores::Id3 mesh_idx{
+      viskores::Id(global_idx % this->GlobalSize[0]),
+      viskores::Id((global_idx % (this->GlobalSize[0] * this->GlobalSize[1])) /
+                   this->GlobalSize[0]),
+      viskores::Id(global_idx / (this->GlobalSize[0] * this->GlobalSize[1]))
+    };
 
     // FIXME: Probably better communicate n_dims in constructor or make it a template parameter
     // Or at least be more consistent in setting this in MinIdx/MaxIdx. Currently MinIdx[2] is 0
@@ -145,8 +147,8 @@ public:
   {
   }
 
-  VISKORES_CONT MeshBoundaryContourTreeMesh PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                            viskores::cont::Token& token) const
+  VISKORES_CONT MeshBoundaryContourTreeMesh
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     return MeshBoundaryContourTreeMesh(
       this->GlobalMeshIndex, this->GlobalSize, this->MinIdx, this->MaxIdx, device, token);

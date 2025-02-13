@@ -67,7 +67,8 @@ void ArrayCopyImpl(const viskores::cont::UnknownArrayHandle& source,
   else
   {
     viskores::cont::UnknownArrayHandle destWrapper(destination);
-    viskores::cont::detail::ArrayCopyImpl(source, destWrapper, std::false_type{}, std::false_type{});
+    viskores::cont::detail::ArrayCopyImpl(
+      source, destWrapper, std::false_type{}, std::false_type{});
     // Destination array should not change, but just in case.
     destWrapper.AsArrayHandle(destination);
   }
@@ -128,7 +129,8 @@ inline void ArrayCopy(const SourceArrayType& source, DestArrayType& destination)
 // Special case where we allow a const UnknownArrayHandle as output.
 /// @copydoc ArrayCopy
 template <typename SourceArrayType>
-inline void ArrayCopy(const SourceArrayType& source, viskores::cont::UnknownArrayHandle& destination)
+inline void ArrayCopy(const SourceArrayType& source,
+                      viskores::cont::UnknownArrayHandle& destination)
 {
   detail::ArrayCopyImpl(source,
                         destination,
@@ -157,7 +159,7 @@ void ArrayCopy(const viskores::cont::UnknownArrayHandle&, const viskores::cont::
 ///
 template <typename T, typename S>
 VISKORES_CONT void ArrayCopyShallowIfPossible(const viskores::cont::UnknownArrayHandle source,
-                                          viskores::cont::ArrayHandle<T, S>& destination)
+                                              viskores::cont::ArrayHandle<T, S>& destination)
 {
   using DestType = viskores::cont::ArrayHandle<T, S>;
   if (source.CanConvert<DestType>())
@@ -183,8 +185,9 @@ struct ArrayCopyConcreteSrc
   void operator()(const viskores::cont::ArrayHandle<T, S>& source, DestArray& destination) const
   {
     using ArrayType = viskores::cont::ArrayHandle<T, S>;
-    this->DoIt(
-      source, destination, viskores::cont::internal::ArrayExtractComponentIsInefficient<ArrayType>{});
+    this->DoIt(source,
+               destination,
+               viskores::cont::internal::ArrayExtractComponentIsInefficient<ArrayType>{});
   }
 
   template <typename T, typename DestArray>
@@ -200,11 +203,12 @@ struct ArrayCopyConcreteSrc
             DestArray& destination,
             std::true_type viskoresNotUsed(isInefficient)) const
   {
-    VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-               "Attempting to copy from an array of type " +
-                 viskores::cont::TypeToString<viskores::cont::ArrayHandle<T, S>>() +
-                 " with ArrayCopy is inefficient. It is highly recommended you use another method "
-                 "such as viskores::cont::ArrayCopyDevice.");
+    VISKORES_LOG_S(
+      viskores::cont::LogLevel::Warn,
+      "Attempting to copy from an array of type " +
+        viskores::cont::TypeToString<viskores::cont::ArrayHandle<T, S>>() +
+        " with ArrayCopy is inefficient. It is highly recommended you use another method "
+        "such as viskores::cont::ArrayCopyDevice.");
     // Still call the precompiled `ArrayCopy`. You will get another warning after this,
     // but it will still technically work, albiet slowly.
     viskores::cont::ArrayCopy(viskores::cont::UnknownArrayHandle{ source }, destination);
@@ -216,8 +220,9 @@ template <>
 struct ArrayCopyConcreteSrc<viskores::cont::StorageTagConstant>
 {
   template <typename T1, typename T2, typename S2>
-  void operator()(const viskores::cont::ArrayHandle<T1, viskores::cont::StorageTagConstant>& source_,
-                  viskores::cont::ArrayHandle<T2, S2>& destination) const
+  void operator()(
+    const viskores::cont::ArrayHandle<T1, viskores::cont::StorageTagConstant>& source_,
+    viskores::cont::ArrayHandle<T2, S2>& destination) const
   {
     viskores::cont::ArrayHandleConstant<T1> source = source_;
     destination.AllocateAndFill(source.GetNumberOfValues(), static_cast<T2>(source.GetValue()));
@@ -265,8 +270,9 @@ struct VISKORES_CONT_EXPORT ArrayCopyConcreteSrc<viskores::cont::StorageTagCount
     }
   }
 
-  void operator()(const viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagCounting>& source,
-                  viskores::cont::ArrayHandle<viskores::Id>& destination) const
+  void operator()(
+    const viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagCounting>& source,
+    viskores::cont::ArrayHandle<viskores::Id>& destination) const
   {
     destination = this->CopyCountingId(source);
   }

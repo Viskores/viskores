@@ -54,13 +54,14 @@ void Validate(viskores::cont::DataSet dataSet)
 {
   const auto cellSet = dataSet.GetCellSet().AsCellSet<viskores::cont::CellSetExplicit<>>();
   const auto coordsArray = dataSet.GetCoordinateSystem().GetDataAsMultiplexer();
-  const auto conn =
-    cellSet.GetConnectivityArray(viskores::TopologyElementTagCell{}, viskores::TopologyElementTagPoint{});
-  const auto offsets =
-    cellSet.GetOffsetsArray(viskores::TopologyElementTagCell{}, viskores::TopologyElementTagPoint{});
+  const auto conn = cellSet.GetConnectivityArray(viskores::TopologyElementTagCell{},
+                                                 viskores::TopologyElementTagPoint{});
+  const auto offsets = cellSet.GetOffsetsArray(viskores::TopologyElementTagCell{},
+                                               viskores::TopologyElementTagPoint{});
   const auto cellArray = viskores::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
   const auto cellNormalsVar = dataSet.GetCellField("normals").GetData();
-  const auto cellNormalsArray = cellNormalsVar.AsArrayHandle<viskores::cont::ArrayHandle<MyNormalT>>();
+  const auto cellNormalsArray =
+    cellNormalsVar.AsArrayHandle<viskores::cont::ArrayHandle<MyNormalT>>();
 
   const auto cellPortal = cellArray.ReadPortal();
   const auto cellNormals = cellNormalsArray.ReadPortal();
@@ -85,9 +86,9 @@ void Validate(viskores::cont::DataSet dataSet)
     const MyNormalT v02 = p2 - p0;
     const MyNormalT triangleNormal = viskores::Cross(v01, v02);
     VISKORES_TEST_ASSERT(viskores::Dot(triangleNormal, cellNormal) > 0,
-                     "Triangle at index ",
-                     cellId,
-                     " incorrectly wound.");
+                         "Triangle at index ",
+                         cellId,
+                         " incorrectly wound.");
   }
 }
 

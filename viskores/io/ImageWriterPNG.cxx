@@ -37,7 +37,9 @@ void ImageWriterPNG::Write(viskores::Id width, viskores::Id height, const ColorA
 }
 
 template <typename PixelType>
-void ImageWriterPNG::WriteToFile(viskores::Id width, viskores::Id height, const ColorArrayType& pixels)
+void ImageWriterPNG::WriteToFile(viskores::Id width,
+                                 viskores::Id height,
+                                 const ColorArrayType& pixels)
 {
   auto pixelPortal = pixels.ReadPortal();
   std::vector<unsigned char> imageData(static_cast<typename std::vector<unsigned char>::size_type>(
@@ -51,7 +53,8 @@ void ImageWriterPNG::WriteToFile(viskores::Id width, viskores::Id height, const 
     for (viskores::Id xIndex = 0; xIndex < width; xIndex++)
     {
       viskores::Id viskoresIndex = yIndex * width + xIndex;
-      PixelType(pixelPortal.Get(viskoresIndex)).FillImageAtIndexWithPixel(imageData.data(), pngIndex);
+      PixelType(pixelPortal.Get(viskoresIndex))
+        .FillImageAtIndexWithPixel(imageData.data(), pngIndex);
       pngIndex++;
     }
   }

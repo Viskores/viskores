@@ -83,8 +83,8 @@ public:
 
   template <typename InFieldPortalType>
   VISKORES_EXEC viskores::Id operator()(const InFieldPortalType newSuperarcPortal,
-                                const InFieldPortalType reverseSorterPortal,
-                                const viskores::Id& vertexSorterIndex) const
+                                        const InFieldPortalType reverseSorterPortal,
+                                        const viskores::Id& vertexSorterIndex) const
   {
     viskores::Id newSuperarcIndex = newSuperarcPortal.Get(vertexSorterIndex);
     if (viskores::worklet::contourtree_augmented::NoSuchElement(newSuperarcIndex))

@@ -23,30 +23,31 @@ namespace UnitTestHintNamespace
 void CheckFind()
 {
   std::cout << "Empty list returns default.\n";
-  VISKORES_TEST_ASSERT(viskores::cont::internal::HintFind<viskores::cont::internal::HintList<>,
-                                                  viskores::cont::internal::HintThreadsPerBlock<128>,
-                                                  viskores::cont::DeviceAdapterTagKokkos>::MaxThreads ==
-                   128);
+  VISKORES_TEST_ASSERT(
+    viskores::cont::internal::HintFind<viskores::cont::internal::HintList<>,
+                                       viskores::cont::internal::HintThreadsPerBlock<128>,
+                                       viskores::cont::DeviceAdapterTagKokkos>::MaxThreads == 128);
 
   std::cout << "Find a hint that matches.\n";
-  VISKORES_TEST_ASSERT(viskores::cont::internal::HintFind<
-                     viskores::cont::internal::HintList<viskores::cont::internal::HintThreadsPerBlock<128>>,
-                     viskores::cont::internal::HintThreadsPerBlock<0>,
-                     viskores::cont::DeviceAdapterTagKokkos>::MaxThreads == 128);
   VISKORES_TEST_ASSERT(
     viskores::cont::internal::HintFind<
-      viskores::cont::internal::HintList<
-        viskores::cont::internal::HintThreadsPerBlock<128,
-                                                  viskores::List<viskores::cont::DeviceAdapterTagKokkos>>>,
+      viskores::cont::internal::HintList<viskores::cont::internal::HintThreadsPerBlock<128>>,
+      viskores::cont::internal::HintThreadsPerBlock<0>,
+      viskores::cont::DeviceAdapterTagKokkos>::MaxThreads == 128);
+  VISKORES_TEST_ASSERT(
+    viskores::cont::internal::HintFind<
+      viskores::cont::internal::HintList<viskores::cont::internal::HintThreadsPerBlock<
+        128,
+        viskores::List<viskores::cont::DeviceAdapterTagKokkos>>>,
       viskores::cont::internal::HintThreadsPerBlock<0>,
       viskores::cont::DeviceAdapterTagKokkos>::MaxThreads == 128);
 
   std::cout << "Skip a hint that does not match.\n";
   VISKORES_TEST_ASSERT(
     (viskores::cont::internal::HintFind<
-       viskores::cont::internal::HintList<
-         viskores::cont::internal::HintThreadsPerBlock<128,
-                                                   viskores::List<viskores::cont::DeviceAdapterTagKokkos>>>,
+       viskores::cont::internal::HintList<viskores::cont::internal::HintThreadsPerBlock<
+         128,
+         viskores::List<viskores::cont::DeviceAdapterTagKokkos>>>,
        viskores::cont::internal::HintThreadsPerBlock<0>,
        viskores::cont::DeviceAdapterTagSerial>::MaxThreads == 0));
 
@@ -54,19 +55,20 @@ void CheckFind()
   {
     using HList = viskores::cont::internal::HintList<
       viskores::cont::internal::HintThreadsPerBlock<64>,
-      viskores::cont::internal::HintThreadsPerBlock<128, viskores::List<viskores::cont::DeviceAdapterTagCuda>>,
-      viskores::cont::internal::HintThreadsPerBlock<256,
-                                                viskores::List<viskores::cont::DeviceAdapterTagKokkos>>>;
+      viskores::cont::internal::
+        HintThreadsPerBlock<128, viskores::List<viskores::cont::DeviceAdapterTagCuda>>,
+      viskores::cont::internal::
+        HintThreadsPerBlock<256, viskores::List<viskores::cont::DeviceAdapterTagKokkos>>>;
     using HInit = viskores::cont::internal::HintThreadsPerBlock<0>;
-    VISKORES_TEST_ASSERT((viskores::cont::internal::
-                        HintFind<HList, HInit, viskores::cont::DeviceAdapterTagSerial>::MaxThreads ==
-                      64));
     VISKORES_TEST_ASSERT(
-      (viskores::cont::internal::HintFind<HList, HInit, viskores::cont::DeviceAdapterTagCuda>::MaxThreads ==
-       128));
-    VISKORES_TEST_ASSERT((viskores::cont::internal::
-                        HintFind<HList, HInit, viskores::cont::DeviceAdapterTagKokkos>::MaxThreads ==
-                      256));
+      (viskores::cont::internal::HintFind<HList, HInit, viskores::cont::DeviceAdapterTagSerial>::
+         MaxThreads == 64));
+    VISKORES_TEST_ASSERT(
+      (viskores::cont::internal::HintFind<HList, HInit, viskores::cont::DeviceAdapterTagCuda>::
+         MaxThreads == 128));
+    VISKORES_TEST_ASSERT(
+      (viskores::cont::internal::HintFind<HList, HInit, viskores::cont::DeviceAdapterTagKokkos>::
+         MaxThreads == 256));
   }
 }
 
@@ -89,7 +91,8 @@ void CheckSchedule()
   // There is no good way to see if the device adapter got or used the hints
   // as device adapters are free to ignore hints. This just tests that the
   // hints can be passed.
-  using Hints = viskores::cont::internal::HintList<viskores::cont::internal::HintThreadsPerBlock<128>>;
+  using Hints =
+    viskores::cont::internal::HintList<viskores::cont::internal::HintThreadsPerBlock<128>>;
   viskores::cont::Algorithm::Schedule(Hints{}, MyFunctor{}, 10);
   viskores::cont::Algorithm::Schedule(Hints{}, MyFunctor{}, viskores::Id3{ 2 });
 }

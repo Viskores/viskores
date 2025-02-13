@@ -85,8 +85,8 @@ public:
 
   void SetLocalHistogram(viskores::Id index, const viskores::cont::Field& field)
   {
-    this->SetLocalHistogram(index,
-                            field.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>());
+    this->SetLocalHistogram(
+      index, field.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>());
   }
 
   viskores::cont::ArrayHandle<viskores::Id> ReduceAll() const
@@ -194,7 +194,8 @@ VISKORES_CONT viskores::cont::DataSet Histogram::DoExecute(const viskores::cont:
 
   viskores::cont::ArrayHandle<viskores::Id> binArray;
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     T delta;
 
@@ -209,9 +210,8 @@ VISKORES_CONT viskores::cont::DataSet Histogram::DoExecute(const viskores::cont:
     this->BinDelta = static_cast<viskores::Float64>(delta);
   };
 
-  fieldArray
-    .CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldScalar, VISKORES_DEFAULT_STORAGE_LIST>(
-      resolveType);
+  fieldArray.CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldScalar,
+                                                  VISKORES_DEFAULT_STORAGE_LIST>(resolveType);
 
   viskores::cont::DataSet output;
   output.AddField(
@@ -252,7 +252,7 @@ VISKORES_CONT void Histogram::PreExecute(const viskores::cont::PartitionedDataSe
 
 //-----------------------------------------------------------------------------
 VISKORES_CONT void Histogram::PostExecute(const viskores::cont::PartitionedDataSet&,
-                                      viskores::cont::PartitionedDataSet& result)
+                                          viskores::cont::PartitionedDataSet& result)
 {
   this->InExecutePartitions = false;
   // iterate and compute histogram for each local block.
@@ -264,8 +264,9 @@ VISKORES_CONT void Histogram::PostExecute(const viskores::cont::PartitionedDataS
   }
 
   viskores::cont::DataSet output;
-  viskores::cont::Field rfield(
-    this->GetOutputFieldName(), viskores::cont::Field::Association::WholeDataSet, helper.ReduceAll());
+  viskores::cont::Field rfield(this->GetOutputFieldName(),
+                               viskores::cont::Field::Association::WholeDataSet,
+                               helper.ReduceAll());
   output.AddField(rfield);
 
   result = viskores::cont::PartitionedDataSet(output);

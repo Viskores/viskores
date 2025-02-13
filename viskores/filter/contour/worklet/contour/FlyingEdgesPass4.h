@@ -49,21 +49,22 @@ struct launchComputePass4
             typename MeshSums,
             typename PointType,
             typename NormalType>
-  VISKORES_CONT bool LaunchXAxis(DeviceAdapterTag device,
-                             viskores::Id viskoresNotUsed(newPointSize),
-                             IVType isoval,
-                             CoordsType coordinateSystem,
-                             const viskores::cont::ArrayHandle<T, StorageTagField>& inputField,
-                             viskores::cont::ArrayHandle<viskores::UInt8> edgeCases,
-                             viskores::cont::CellSetStructured<2>& metaDataMesh2D,
-                             const MeshSums& metaDataSums,
-                             const viskores::cont::ArrayHandle<viskores::Id>& metaDataMin,
-                             const viskores::cont::ArrayHandle<viskores::Id>& metaDataMax,
-                             const viskores::cont::ArrayHandle<viskores::Int32>& metaDataNumTris,
-                             viskores::worklet::contour::CommonState& sharedState,
-                             viskores::cont::ArrayHandle<viskores::Id>& triangle_topology,
-                             PointType& points,
-                             NormalType& normals) const
+  VISKORES_CONT bool LaunchXAxis(
+    DeviceAdapterTag device,
+    viskores::Id viskoresNotUsed(newPointSize),
+    IVType isoval,
+    CoordsType coordinateSystem,
+    const viskores::cont::ArrayHandle<T, StorageTagField>& inputField,
+    viskores::cont::ArrayHandle<viskores::UInt8> edgeCases,
+    viskores::cont::CellSetStructured<2>& metaDataMesh2D,
+    const MeshSums& metaDataSums,
+    const viskores::cont::ArrayHandle<viskores::Id>& metaDataMin,
+    const viskores::cont::ArrayHandle<viskores::Id>& metaDataMax,
+    const viskores::cont::ArrayHandle<viskores::Int32>& metaDataNumTris,
+    viskores::worklet::contour::CommonState& sharedState,
+    viskores::cont::ArrayHandle<viskores::Id>& triangle_topology,
+    PointType& points,
+    NormalType& normals) const
   {
     viskores::cont::Invoker invoke(device);
     if (sharedState.GenerateNormals)
@@ -117,21 +118,22 @@ struct launchComputePass4
             typename MeshSums,
             typename PointType,
             typename NormalType>
-  VISKORES_CONT bool LaunchYAxis(DeviceAdapterTag device,
-                             viskores::Id newPointSize,
-                             IVType isoval,
-                             CoordsType coordinateSystem,
-                             const viskores::cont::ArrayHandle<T, StorageTagField>& inputField,
-                             viskores::cont::ArrayHandle<viskores::UInt8> edgeCases,
-                             viskores::cont::CellSetStructured<2>& metaDataMesh2D,
-                             const MeshSums& metaDataSums,
-                             const viskores::cont::ArrayHandle<viskores::Id>& metaDataMin,
-                             const viskores::cont::ArrayHandle<viskores::Id>& metaDataMax,
-                             const viskores::cont::ArrayHandle<viskores::Int32>& metaDataNumTris,
-                             viskores::worklet::contour::CommonState& sharedState,
-                             viskores::cont::ArrayHandle<viskores::Id>& triangle_topology,
-                             PointType& points,
-                             NormalType& normals) const
+  VISKORES_CONT bool LaunchYAxis(
+    DeviceAdapterTag device,
+    viskores::Id newPointSize,
+    IVType isoval,
+    CoordsType coordinateSystem,
+    const viskores::cont::ArrayHandle<T, StorageTagField>& inputField,
+    viskores::cont::ArrayHandle<viskores::UInt8> edgeCases,
+    viskores::cont::CellSetStructured<2>& metaDataMesh2D,
+    const MeshSums& metaDataSums,
+    const viskores::cont::ArrayHandle<viskores::Id>& metaDataMin,
+    const viskores::cont::ArrayHandle<viskores::Id>& metaDataMax,
+    const viskores::cont::ArrayHandle<viskores::Int32>& metaDataNumTris,
+    viskores::worklet::contour::CommonState& sharedState,
+    viskores::cont::ArrayHandle<viskores::Id>& triangle_topology,
+    PointType& points,
+    NormalType& normals) const
   {
     viskores::cont::Invoker invoke(device);
 

@@ -94,7 +94,8 @@ inline viskores::IdComponent FindSplitAxis(viskores::Id3 globalSize)
   return splitAxis;
 }
 
-inline viskores::Id3 ComputeNumberOfBlocksPerAxis(viskores::Id3 globalSize, viskores::Id numberOfBlocks)
+inline viskores::Id3 ComputeNumberOfBlocksPerAxis(viskores::Id3 globalSize,
+                                                  viskores::Id numberOfBlocks)
 {
   // Split numberOfBlocks into a power of two and a remainder
   viskores::Id powerOfTwoPortion = 1;
@@ -126,9 +127,8 @@ inline viskores::Id3 ComputeNumberOfBlocksPerAxis(viskores::Id3 globalSize, visk
   return blocksPerAxis;
 }
 
-inline std::tuple<viskores::Id3, viskores::Id3, viskores::Id3> ComputeBlockExtents(viskores::Id3 globalSize,
-                                                                       viskores::Id3 blocksPerAxis,
-                                                                       viskores::Id blockNo)
+inline std::tuple<viskores::Id3, viskores::Id3, viskores::Id3>
+ComputeBlockExtents(viskores::Id3 globalSize, viskores::Id3 blocksPerAxis, viskores::Id blockNo)
 {
   // DEBUG: std::cout << "ComputeBlockExtents("<<globalSize <<", " << blocksPerAxis << ", " << blockNo << ")" << std::endl;
   // DEBUG: std::cout << "Block " << blockNo;
@@ -141,8 +141,9 @@ inline std::tuple<viskores::Id3, viskores::Id3, viskores::Id3> ComputeBlockExten
 
     float dx = float(globalSize[d] - 1) / float(blocksPerAxis[d]);
     blockOrigin[d] = viskores::Id(blockIndex[d] * dx);
-    viskores::Id maxIdx =
-      blockIndex[d] < blocksPerAxis[d] - 1 ? viskores::Id((blockIndex[d] + 1) * dx) : globalSize[d] - 1;
+    viskores::Id maxIdx = blockIndex[d] < blocksPerAxis[d] - 1
+      ? viskores::Id((blockIndex[d] + 1) * dx)
+      : globalSize[d] - 1;
     blockSize[d] = maxIdx - blockOrigin[d] + 1;
     // DEBUG: std::cout << " " << blockIndex[d] <<  dx << " " << blockOrigin[d] << " " << maxIdx << " " << blockSize[d] << "; ";
   }
@@ -151,9 +152,9 @@ inline std::tuple<viskores::Id3, viskores::Id3, viskores::Id3> ComputeBlockExten
 }
 
 inline viskores::cont::DataSet CreateSubDataSet(const viskores::cont::DataSet& ds,
-                                            viskores::Id3 blockOrigin,
-                                            viskores::Id3 blockSize,
-                                            const std::string& fieldName)
+                                                viskores::Id3 blockOrigin,
+                                                viskores::Id3 blockSize,
+                                                const std::string& fieldName)
 {
   viskores::Id3 globalSize;
   viskores::cont::CastAndCall(
@@ -172,7 +173,8 @@ inline viskores::cont::DataSet CreateSubDataSet(const viskores::cont::DataSet& d
       for (outArrIdx[0] = 0; outArrIdx[0] < blockSize[0]; ++outArrIdx[0])
       {
         viskores::Id3 inArrIdx = outArrIdx + blockOrigin;
-        viskores::Id inIdx = (inArrIdx[2] * globalSize[1] + inArrIdx[1]) * globalSize[0] + inArrIdx[0];
+        viskores::Id inIdx =
+          (inArrIdx[2] * globalSize[1] + inArrIdx[1]) * globalSize[0] + inArrIdx[0];
         viskores::Id outIdx =
           (outArrIdx[2] * blockSize[1] + outArrIdx[1]) * blockSize[0] + outArrIdx[0];
         VISKORES_ASSERT(inIdx >= 0 && inIdx < inDataArrayHandle.GetNumberOfValues());
@@ -358,14 +360,16 @@ inline viskores::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
     }; // Dummy block structure, since we need block data for DIY
     master.add(comm.rank(), new EmptyBlock, new viskoresdiy::Link);
     // .. Send data to rank 0
-    master.foreach ([result, filter](void*, const viskoresdiy::Master::ProxyWithLink& p) {
-      viskoresdiy::BlockID root{ 0, 0 }; // Rank 0
-      p.enqueue(root, result.GetNumberOfPartitions());
-      for (const viskores::cont::DataSet& curr_ds : result)
+    master.foreach (
+      [result, filter](void*, const viskoresdiy::Master::ProxyWithLink& p)
       {
-        p.enqueue(root, curr_ds);
-      }
-    });
+        viskoresdiy::BlockID root{ 0, 0 }; // Rank 0
+        p.enqueue(root, result.GetNumberOfPartitions());
+        for (const viskores::cont::DataSet& curr_ds : result)
+        {
+          p.enqueue(root, curr_ds);
+        }
+      });
     // Exchange data, i.e., send to rank 0 (pass "true" to exchange data between
     // *all* blocks, not just neighbors)
     master.exchange(true);
@@ -374,21 +378,24 @@ inline viskores::cont::PartitionedDataSet RunContourTreeDUniformDistributed(
     {
       // Receive data on rank zero and return combined results
       viskores::cont::PartitionedDataSet combined_result;
-      master.foreach ([&combined_result, filter, numberOfRanks](
-                        void*, const viskoresdiy::Master::ProxyWithLink& p) {
-        for (int receiveFromRank = 0; receiveFromRank < numberOfRanks; ++receiveFromRank)
+      master.foreach (
+        [&combined_result, filter, numberOfRanks](void*,
+                                                  const viskoresdiy::Master::ProxyWithLink& p)
         {
-          viskores::Id numberOfDataSetsToReceive;
-          p.dequeue({ receiveFromRank, receiveFromRank }, numberOfDataSetsToReceive);
-          for (viskores::Id currReceiveDataSetNo = 0; currReceiveDataSetNo < numberOfDataSetsToReceive;
-               ++currReceiveDataSetNo)
+          for (int receiveFromRank = 0; receiveFromRank < numberOfRanks; ++receiveFromRank)
           {
-            viskores::cont::DataSet dsIncoming;
-            p.dequeue({ receiveFromRank, receiveFromRank }, dsIncoming);
-            combined_result.AppendPartition(dsIncoming);
+            viskores::Id numberOfDataSetsToReceive;
+            p.dequeue({ receiveFromRank, receiveFromRank }, numberOfDataSetsToReceive);
+            for (viskores::Id currReceiveDataSetNo = 0;
+                 currReceiveDataSetNo < numberOfDataSetsToReceive;
+                 ++currReceiveDataSetNo)
+            {
+              viskores::cont::DataSet dsIncoming;
+              p.dequeue({ receiveFromRank, receiveFromRank }, dsIncoming);
+              combined_result.AppendPartition(dsIncoming);
+            }
           }
-        }
-      });
+        });
       return combined_result; // Return combined result on rank 0
     }
     else
@@ -431,7 +438,8 @@ inline void TestContourTreeUniformDistributed8x9(int nBlocks, int rank = 0, int 
     std::cout << "Testing ContourTreeUniformDistributed on 2D 8x9 data set divided into " << nBlocks
               << " blocks." << std::endl;
   }
-  viskores::cont::DataSet in_ds = viskores::cont::testing::MakeTestDataSet().Make2DUniformDataSet3();
+  viskores::cont::DataSet in_ds =
+    viskores::cont::testing::MakeTestDataSet().Make2DUniformDataSet3();
   viskores::cont::PartitionedDataSet result =
     RunContourTreeDUniformDistributed(in_ds, "pointvar", false, nBlocks, rank, size);
 
@@ -461,23 +469,23 @@ inline void TestContourTreeUniformDistributed8x9(int nBlocks, int rank = 0, int 
 
     using Edge = viskores::worklet::contourtree_distributed::Edge;
     VISKORES_TEST_ASSERT(test_equal(treeCompiler.superarcs.size(), 8),
-                     "Wrong result for ContourTreeUniformDistributed filter");
+                         "Wrong result for ContourTreeUniformDistributed filter");
     VISKORES_TEST_ASSERT(treeCompiler.superarcs[0] == Edge{ 10, 20 },
-                     "Wrong result for ContourTreeUniformDistributed filter");
+                         "Wrong result for ContourTreeUniformDistributed filter");
     VISKORES_TEST_ASSERT(treeCompiler.superarcs[1] == Edge{ 20, 34 },
-                     "Wrong result for ContourTreeUniformDistributed filter");
+                         "Wrong result for ContourTreeUniformDistributed filter");
     VISKORES_TEST_ASSERT(treeCompiler.superarcs[2] == Edge{ 20, 38 },
-                     "Wrong result for ContourTreeUniformDistributed filter");
+                         "Wrong result for ContourTreeUniformDistributed filter");
     VISKORES_TEST_ASSERT(treeCompiler.superarcs[3] == Edge{ 20, 61 },
-                     "Wrong result for ContourTreeUniformDistributed filter");
+                         "Wrong result for ContourTreeUniformDistributed filter");
     VISKORES_TEST_ASSERT(treeCompiler.superarcs[4] == Edge{ 23, 34 },
-                     "Wrong result for ContourTreeUniformDistributed filter");
+                         "Wrong result for ContourTreeUniformDistributed filter");
     VISKORES_TEST_ASSERT(treeCompiler.superarcs[5] == Edge{ 24, 34 },
-                     "Wrong result for ContourTreeUniformDistributed filter");
+                         "Wrong result for ContourTreeUniformDistributed filter");
     VISKORES_TEST_ASSERT(treeCompiler.superarcs[6] == Edge{ 50, 61 },
-                     "Wrong result for ContourTreeUniformDistributed filter");
+                         "Wrong result for ContourTreeUniformDistributed filter");
     VISKORES_TEST_ASSERT(treeCompiler.superarcs[7] == Edge{ 61, 71 },
-                     "Wrong result for ContourTreeUniformDistributed filter");
+                         "Wrong result for ContourTreeUniformDistributed filter");
   }
 }
 
@@ -490,7 +498,8 @@ inline void TestContourTreeUniformDistributedBranchDecomposition8x9(int nBlocks,
     std::cout << "Testing Distributed Branch Decomposition on 2D 8x9 data set " << nBlocks
               << " blocks." << std::endl;
   }
-  viskores::cont::DataSet in_ds = viskores::cont::testing::MakeTestDataSet().Make2DUniformDataSet3();
+  viskores::cont::DataSet in_ds =
+    viskores::cont::testing::MakeTestDataSet().Make2DUniformDataSet3();
   bool augmentHierarchicalTree = true;
   bool computeHierarchicalVolumetricBranchDecomposition = true;
   viskores::cont::PartitionedDataSet result =
@@ -584,10 +593,11 @@ inline void TestContourTreeUniformDistributedBranchDecomposition8x9(int nBlocks,
                                          .GetData()
                                          .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
                                          .ReadPortal();
-      auto topVolBranchSaddleIsoValue = ds.GetField("TopVolumeBranchSaddleIsoValue")
-                                          .GetData()
-                                          .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>()
-                                          .ReadPortal();
+      auto topVolBranchSaddleIsoValue =
+        ds.GetField("TopVolumeBranchSaddleIsoValue")
+          .GetData()
+          .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>()
+          .ReadPortal();
 
       viskores::Id nSelectedBranches = topVolBranchGRId.GetNumberOfValues();
       Edge expectedGRIdVolumeAtBranch0(38, 6);
@@ -657,7 +667,8 @@ inline void TestContourTreeUniformDistributed5x6x7(int nBlocks,
               << std::endl;
   }
 
-  viskores::cont::DataSet in_ds = viskores::cont::testing::MakeTestDataSet().Make3DUniformDataSet4();
+  viskores::cont::DataSet in_ds =
+    viskores::cont::testing::MakeTestDataSet().Make3DUniformDataSet4();
   viskores::cont::PartitionedDataSet result =
     RunContourTreeDUniformDistributed(in_ds, "pointvar", marchingCubes, nBlocks, rank, size);
 
@@ -690,25 +701,25 @@ inline void TestContourTreeUniformDistributed5x6x7(int nBlocks,
       std::cout << "         132          138" << std::endl;
 
       VISKORES_TEST_ASSERT(test_equal(treeCompiler.superarcs.size(), 9),
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[0] == Edge{ 0, 112 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[1] == Edge{ 71, 72 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[2] == Edge{ 72, 78 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[3] == Edge{ 72, 101 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[4] == Edge{ 101, 112 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[5] == Edge{ 101, 132 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[6] == Edge{ 107, 112 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[7] == Edge{ 131, 132 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[8] == Edge{ 132, 138 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
     }
     else
     {
@@ -725,29 +736,29 @@ inline void TestContourTreeUniformDistributed5x6x7(int nBlocks,
       std::cout << "         203          209" << std::endl;
 
       VISKORES_TEST_ASSERT(test_equal(treeCompiler.superarcs.size(), 11),
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[0] == Edge{ 0, 203 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[1] == Edge{ 71, 72 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[2] == Edge{ 72, 78 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[3] == Edge{ 72, 101 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[4] == Edge{ 101, 112 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[5] == Edge{ 101, 132 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[6] == Edge{ 107, 112 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[7] == Edge{ 112, 203 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[8] == Edge{ 131, 132 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[9] == Edge{ 132, 138 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
       VISKORES_TEST_ASSERT(treeCompiler.superarcs[10] == Edge{ 203, 209 },
-                       "Wrong result for ContourTreeUniformDistributed filter");
+                           "Wrong result for ContourTreeUniformDistributed filter");
     }
   }
 }
@@ -860,11 +871,11 @@ inline void TestContourTreeFile(std::string ds_filename,
           std::string dumpVolumesString =
             viskores::worklet::contourtree_distributed::HierarchicalContourTree<
               viskores::Float32>::DumpVolumes(supernodes,
-                                          superarcs,
-                                          regularNodeGlobalIds,
-                                          totalVolume,
-                                          intrinsicVolume,
-                                          dependentVolume);
+                                              superarcs,
+                                              regularNodeGlobalIds,
+                                              totalVolume,
+                                              intrinsicVolume,
+                                              dependentVolume);
 
           volumeHelper1.Parse(dumpVolumesString);
         }
@@ -909,7 +920,7 @@ inline void TestContourTreeFile(std::string ds_filename,
       }
 
       VISKORES_TEST_ASSERT(treeCompiler.superarcs == groundTruthSuperarcs,
-                       "Test failed for data set " + ds_filename);
+                           "Test failed for data set " + ds_filename);
     }
   }
 }
@@ -963,11 +974,13 @@ inline void VerifyContourTreePresimplificationOutput(std::string datasetName,
         gtSortedOrder.push_back(branch);
     }
     VISKORES_TEST_ASSERT(sortedOrder.size() == gtSortedOrder.size(),
-                     "Test failed: number of branches does not match for data set " + datasetName);
+                         "Test failed: number of branches does not match for data set " +
+                           datasetName);
     std::sort(sortedOrder.begin(),
               sortedOrder.end(),
               [topVolBranchInnerEnds, topVolBranchVolume, topVolBranchSaddleEpsilon](
-                const viskores::Id& lhs, const viskores::Id& rhs) {
+                const viskores::Id& lhs, const viskores::Id& rhs)
+              {
                 if (topVolBranchInnerEnds.at(lhs) < topVolBranchInnerEnds.at(rhs))
                   return true;
                 if (topVolBranchInnerEnds.at(lhs) > topVolBranchInnerEnds.at(rhs))
@@ -981,7 +994,8 @@ inline void VerifyContourTreePresimplificationOutput(std::string datasetName,
     std::sort(gtSortedOrder.begin(),
               gtSortedOrder.end(),
               [gtBranchInnerEnds, gtBranchVolumes, gtBranchDirections](const viskores::Id& lhs,
-                                                                       const viskores::Id& rhs) {
+                                                                       const viskores::Id& rhs)
+              {
                 if (gtBranchInnerEnds.at(lhs) < gtBranchInnerEnds.at(rhs))
                   return true;
                 if (gtBranchInnerEnds.at(lhs) > gtBranchInnerEnds.at(rhs))
@@ -996,16 +1010,18 @@ inline void VerifyContourTreePresimplificationOutput(std::string datasetName,
     for (size_t branch = 0; branch < sortedOrder.size(); branch++)
     {
       VISKORES_TEST_ASSERT(topVolBranchInnerEnds.at(sortedOrder.at(branch)) ==
-                         gtBranchInnerEnds.at(gtSortedOrder.at(branch)),
-                       "Test failed: branch inner end does not match for data set " + datasetName);
+                             gtBranchInnerEnds.at(gtSortedOrder.at(branch)),
+                           "Test failed: branch inner end does not match for data set " +
+                             datasetName);
 
       VISKORES_TEST_ASSERT(topVolBranchVolume.Get(sortedOrder.at(branch)) ==
-                         gtBranchVolumes.at(gtSortedOrder.at(branch)),
-                       "Test failed: branch volume does not match for data set " + datasetName);
+                             gtBranchVolumes.at(gtSortedOrder.at(branch)),
+                           "Test failed: branch volume does not match for data set " + datasetName);
 
       VISKORES_TEST_ASSERT(topVolBranchSaddleEpsilon.Get(sortedOrder.at(branch)) ==
-                         gtBranchDirections.at(gtSortedOrder.at(branch)),
-                       "Test failed: branch direction does not match for data set " + datasetName);
+                             gtBranchDirections.at(gtSortedOrder.at(branch)),
+                           "Test failed: branch direction does not match for data set " +
+                             datasetName);
     }
   }
 }
@@ -1023,17 +1039,18 @@ inline void RunContourTreePresimplification(std::string fieldName,
 {
   viskores::Id3 globalSize;
 
-  viskores::cont::PartitionedDataSet result = RunContourTreeDUniformDistributed(ds,
-                                                                            fieldName,
-                                                                            marchingCubes,
-                                                                            nBlocks,
-                                                                            rank,
-                                                                            size,
-                                                                            true,
-                                                                            true,
-                                                                            globalSize,
-                                                                            passBlockIndices,
-                                                                            presimplifyThreshold);
+  viskores::cont::PartitionedDataSet result =
+    RunContourTreeDUniformDistributed(ds,
+                                      fieldName,
+                                      marchingCubes,
+                                      nBlocks,
+                                      rank,
+                                      size,
+                                      true,
+                                      true,
+                                      globalSize,
+                                      passBlockIndices,
+                                      presimplifyThreshold);
 
   // Compute branch decomposition
   viskores::cont::PartitionedDataSet bd_result;

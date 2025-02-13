@@ -59,8 +59,8 @@ public:
 
     template <typename CellShapeTag, typename PointsVecType, typename T>
     VISKORES_EXEC void operator()(CellShapeTag,
-                              const PointsVecType& points,
-                              viskores::Vec<T, 3>& normal) const
+                                  const PointsVecType& points,
+                                  viskores::Vec<T, 3>& normal) const
     {
       using CTraits = viskores::CellTraits<CellShapeTag>;
       const auto tag = typename CTraits::TopologicalDimensionsTag();
@@ -69,16 +69,16 @@ public:
 
     template <viskores::IdComponent Dim, typename PointsVecType, typename T>
     VISKORES_EXEC void Compute(viskores::CellTopologicalDimensionsTag<Dim>,
-                           const PointsVecType&,
-                           viskores::Vec<T, 3>& normal) const
+                               const PointsVecType&,
+                               viskores::Vec<T, 3>& normal) const
     {
       normal = viskores::TypeTraits<viskores::Vec<T, 3>>::ZeroInitialization();
     }
 
     template <typename PointsVecType, typename T>
     VISKORES_EXEC void Compute(viskores::CellTopologicalDimensionsTag<2>,
-                           const PointsVecType& points,
-                           viskores::Vec<T, 3>& normal) const
+                               const PointsVecType& points,
+                               viskores::Vec<T, 3>& normal) const
     {
       normal = this->Normal(viskores::Cross(points[2] - points[1], points[0] - points[1]));
     }
@@ -87,8 +87,8 @@ public:
 
     template <typename PointsVecType, typename T>
     VISKORES_EXEC void operator()(viskores::CellShapeTagGeneric shape,
-                              const PointsVecType& points,
-                              viskores::Vec<T, 3>& normal) const
+                                  const PointsVecType& points,
+                                  viskores::Vec<T, 3>& normal) const
     {
       switch (shape.Id)
       {
@@ -147,8 +147,8 @@ public:
 
     template <typename FaceNormalsVecType, typename T>
     VISKORES_EXEC void operator()(viskores::IdComponent numCells,
-                              const FaceNormalsVecType& faceNormals,
-                              viskores::Vec<T, 3>& pointNormal) const
+                                  const FaceNormalsVecType& faceNormals,
+                                  viskores::Vec<T, 3>& pointNormal) const
     {
       if (numCells == 0)
       {
@@ -167,10 +167,10 @@ public:
   };
 
   template <typename CellSetType, typename NormalCompType, typename FaceNormalStorageType>
-  void Run(
-    const CellSetType& cellset,
-    const viskores::cont::ArrayHandle<viskores::Vec<NormalCompType, 3>, FaceNormalStorageType>& faceNormals,
-    viskores::cont::ArrayHandle<viskores::Vec<NormalCompType, 3>>& pointNormals)
+  void Run(const CellSetType& cellset,
+           const viskores::cont::ArrayHandle<viskores::Vec<NormalCompType, 3>,
+                                             FaceNormalStorageType>& faceNormals,
+           viskores::cont::ArrayHandle<viskores::Vec<NormalCompType, 3>>& pointNormals)
   {
     viskores::worklet::DispatcherMapTopology<Worklet>().Invoke(cellset, faceNormals, pointNormals);
   }

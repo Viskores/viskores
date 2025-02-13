@@ -38,7 +38,8 @@ VISKORES_EXEC_CONT Ray<CoordType, Dim, IsTwoSided>::Ray(const LineSegment<CoordT
 }
 
 template <typename CoordType, int Dim, bool IsTwoSided>
-VISKORES_EXEC_CONT Ray<CoordType, Dim, IsTwoSided>::Ray(const Vector& point, const Vector& direction)
+VISKORES_EXEC_CONT Ray<CoordType, Dim, IsTwoSided>::Ray(const Vector& point,
+                                                        const Vector& direction)
   : Origin(point)
   , Direction(viskores::Normal(direction))
 {
@@ -67,9 +68,10 @@ VISKORES_EXEC_CONT CoordType Ray<CoordType, Dim, IsTwoSided>::DistanceTo(const V
 }
 
 template <typename CoordType, int Dim, bool IsTwoSided>
-VISKORES_EXEC_CONT CoordType Ray<CoordType, Dim, IsTwoSided>::DistanceTo(const Vector& point,
-                                                                     CoordType& param,
-                                                                     Vector& projectedPoint) const
+VISKORES_EXEC_CONT CoordType
+Ray<CoordType, Dim, IsTwoSided>::DistanceTo(const Vector& point,
+                                            CoordType& param,
+                                            Vector& projectedPoint) const
 {
   const auto& dir = this->Direction;
   auto mag2 = viskores::MagnitudeSquared(dir);
@@ -158,7 +160,8 @@ VISKORES_EXEC_CONT bool LineSegment<CoordType, Dim>::IsSingular(CoordType tol2) 
 
 template <typename CoordType, int Dim>
 template <int Dim_, typename std::enable_if<Dim_ == 2, int>::type>
-VISKORES_EXEC_CONT Ray<CoordType, Dim, true> LineSegment<CoordType, Dim>::PerpendicularBisector() const
+VISKORES_EXEC_CONT Ray<CoordType, Dim, true> LineSegment<CoordType, Dim>::PerpendicularBisector()
+  const
 {
   const Vector dir = this->Direction();
   const Vector perp(-dir[1], dir[0]);
@@ -174,8 +177,8 @@ VISKORES_EXEC_CONT Plane<CoordType> LineSegment<CoordType, Dim>::PerpendicularBi
 }
 
 template <typename CoordType, int Dim>
-VISKORES_EXEC_CONT typename LineSegment<CoordType, Dim>::Vector LineSegment<CoordType, Dim>::Evaluate(
-  CoordType param) const
+VISKORES_EXEC_CONT typename LineSegment<CoordType, Dim>::Vector
+LineSegment<CoordType, Dim>::Evaluate(CoordType param) const
 {
   auto pointOnLine = this->Endpoints[0] * (1.0f - param) + this->Endpoints[1] * param;
   return pointOnLine;
@@ -191,8 +194,8 @@ VISKORES_EXEC_CONT CoordType LineSegment<CoordType, Dim>::DistanceTo(const Vecto
 
 template <typename CoordType, int Dim>
 VISKORES_EXEC_CONT CoordType LineSegment<CoordType, Dim>::DistanceTo(const Vector& point,
-                                                                 CoordType& param,
-                                                                 Vector& projectedPoint) const
+                                                                     CoordType& param,
+                                                                     Vector& projectedPoint) const
 {
   auto dir = this->Endpoints[1] - this->Endpoints[0];
   auto mag2 = viskores::MagnitudeSquared(dir);
@@ -206,8 +209,8 @@ VISKORES_EXEC_CONT CoordType LineSegment<CoordType, Dim>::DistanceTo(const Vecto
 
   // Find the closest point on the line, then clamp to the line segment
   param = viskores::Clamp(viskores::Dot(point - this->Endpoints[0], dir) / mag2,
-                      static_cast<CoordType>(0.0f),
-                      static_cast<CoordType>(1.0f));
+                          static_cast<CoordType>(0.0f),
+                          static_cast<CoordType>(1.0f));
 
   // Compute the distance between the closest point and the input point.
   projectedPoint = this->Evaluate(param);
@@ -250,7 +253,9 @@ VISKORES_EXEC_CONT VISKORES_EXEC_CONT Plane<CoordType>::Plane()
 }
 
 template <typename CoordType>
-VISKORES_EXEC_CONT Plane<CoordType>::Plane(const Vector& origin, const Vector& normal, CoordType tol2)
+VISKORES_EXEC_CONT Plane<CoordType>::Plane(const Vector& origin,
+                                           const Vector& normal,
+                                           CoordType tol2)
   : Origin(origin)
   , Normal(viskores::Normal(normal))
 {
@@ -280,10 +285,10 @@ VISKORES_EXEC_CONT typename Plane<CoordType>::Vector Plane<CoordType>::ClosestPo
 template <typename CoordType>
 template <bool IsTwoSided>
 VISKORES_EXEC_CONT bool Plane<CoordType>::Intersect(const Ray<CoordType, 3, IsTwoSided>& ray,
-                                                CoordType& parameter,
-                                                Vector& point,
-                                                bool& lineInPlane,
-                                                CoordType tol) const
+                                                    CoordType& parameter,
+                                                    Vector& point,
+                                                    bool& lineInPlane,
+                                                    CoordType tol) const
 {
   CoordType d0 = this->DistanceTo(ray.Origin);
   CoordType dirDot = viskores::Dot(this->Normal, ray.Direction);
@@ -326,8 +331,8 @@ VISKORES_EXEC_CONT bool Plane<CoordType>::Intersect(const Ray<CoordType, 3, IsTw
 
 template <typename CoordType>
 VISKORES_EXEC_CONT bool Plane<CoordType>::Intersect(const LineSegment<CoordType>& segment,
-                                                CoordType& parameter,
-                                                bool& lineInPlane) const
+                                                    CoordType& parameter,
+                                                    bool& lineInPlane) const
 {
   Vector point;
   return this->Intersect(segment, parameter, point, lineInPlane);
@@ -335,9 +340,9 @@ VISKORES_EXEC_CONT bool Plane<CoordType>::Intersect(const LineSegment<CoordType>
 
 template <typename CoordType>
 VISKORES_EXEC_CONT bool Plane<CoordType>::Intersect(const LineSegment<CoordType>& segment,
-                                                CoordType& parameter,
-                                                Vector& point,
-                                                bool& lineInPlane) const
+                                                    CoordType& parameter,
+                                                    Vector& point,
+                                                    bool& lineInPlane) const
 {
   CoordType d0 = this->DistanceTo(segment.Endpoints[0]);
   CoordType d1 = this->DistanceTo(segment.Endpoints[1]);
@@ -390,9 +395,9 @@ VISKORES_EXEC_CONT bool Plane<CoordType>::Intersect(const LineSegment<CoordType>
 
 template <typename CoordType>
 VISKORES_EXEC_CONT bool Plane<CoordType>::Intersect(const Plane<CoordType>& other,
-                                                Ray<CoordType, 3, true>& ray,
-                                                bool& coincident,
-                                                CoordType tol2) const
+                                                    Ray<CoordType, 3, true>& ray,
+                                                    bool& coincident,
+                                                    CoordType tol2) const
 {
   auto dir = viskores::Cross(this->Normal, other.Normal);
   auto mag2 = viskores::MagnitudeSquared(dir);
@@ -515,11 +520,12 @@ VISKORES_EXEC_CONT viskores::Circle<CoordType> make_CircleFrom3Points(
 }
 
 template <typename CoordType>
-VISKORES_EXEC_CONT viskores::Sphere<CoordType, 3> make_SphereFrom4Points(const viskores::Vec<CoordType, 3>& a0,
-                                                                 const viskores::Vec<CoordType, 3>& a1,
-                                                                 const viskores::Vec<CoordType, 3>& a2,
-                                                                 const viskores::Vec<CoordType, 3>& a3,
-                                                                 CoordType tol)
+VISKORES_EXEC_CONT viskores::Sphere<CoordType, 3> make_SphereFrom4Points(
+  const viskores::Vec<CoordType, 3>& a0,
+  const viskores::Vec<CoordType, 3>& a1,
+  const viskores::Vec<CoordType, 3>& a2,
+  const viskores::Vec<CoordType, 3>& a3,
+  CoordType tol)
 {
   // Choose p3 such that the min(p3 - p[012]) is larger than any other choice of p3.
   // From: http://steve.hollasch.net/cgindex/geometry/sphere4pts.html,
@@ -584,9 +590,9 @@ VISKORES_EXEC_CONT viskores::Sphere<CoordType, 3> make_SphereFrom4Points(const v
   // Project points to plane and fit a circle.
   auto p0_p = viskores::Vec<CoordType, 2>{ 0.f }; // This is p0's new coordinate...
   auto p1_p = viskores::Vec<CoordType, 2>(viskores::ProjectedDistance(axes[1], basis[1]),
-                                      viskores::ProjectedDistance(axes[1], basis[2]));
+                                          viskores::ProjectedDistance(axes[1], basis[2]));
   auto p2_p = viskores::Vec<CoordType, 2>(viskores::ProjectedDistance(axes[2], basis[1]),
-                                      viskores::ProjectedDistance(axes[2], basis[2]));
+                                          viskores::ProjectedDistance(axes[2], basis[2]));
 
   auto circle = make_CircleFrom3Points(p0_p, p1_p, p2_p);
   if (!circle.IsValid())
@@ -610,8 +616,8 @@ VISKORES_EXEC_CONT viskores::Sphere<CoordType, 3> make_SphereFrom4Points(const v
   else
   {
     Plane<CoordType> pp3(circleCenterWorld, basis[0]);
-    circlePointInPlaneOfP3 =
-      circleCenterWorld + viskores::Normal(pp3.ClosestPoint(p3) - circleCenterWorld) * circle.Radius;
+    circlePointInPlaneOfP3 = circleCenterWorld +
+      viskores::Normal(pp3.ClosestPoint(p3) - circleCenterWorld) * circle.Radius;
   }
 
   auto bisectorPlane =

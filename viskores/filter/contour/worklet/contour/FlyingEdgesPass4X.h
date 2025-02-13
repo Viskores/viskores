@@ -78,19 +78,19 @@ struct ComputePass4X : public viskores::worklet::WorkletVisitCellsWithPoints
             typename WholeCellIdField,
             typename WholePointField>
   VISKORES_EXEC void operator()(const ThreadIndices& threadIndices,
-                            const FieldInPointId3& axis_sums,
-                            const FieldInPointId& axis_mins,
-                            const FieldInPointId& axis_maxs,
-                            const WholeTriField& cellTriCount,
-                            const WholeEdgeField& edges,
-                            const WholeCoordsField& coords,
-                            const WholeDataField& field,
-                            const WholeConnField& conn,
-                            const WholeEdgeIdField& interpolatedEdgeIds,
-                            const WholeWeightField& weights,
-                            const WholeCellIdField& inputCellIds,
-                            const WholePointField& points,
-                            viskores::Id oidx) const
+                                const FieldInPointId3& axis_sums,
+                                const FieldInPointId& axis_mins,
+                                const FieldInPointId& axis_maxs,
+                                const WholeTriField& cellTriCount,
+                                const WholeEdgeField& edges,
+                                const WholeCoordsField& coords,
+                                const WholeDataField& field,
+                                const WholeConnField& conn,
+                                const WholeEdgeIdField& interpolatedEdgeIds,
+                                const WholeWeightField& weights,
+                                const WholeCellIdField& inputCellIds,
+                                const WholePointField& points,
+                                viskores::Id oidx) const
   {
     using AxisToSum = SumXAxis;
 
@@ -158,17 +158,17 @@ struct ComputePass4X : public viskores::worklet::WorkletVisitCellsWithPoints
             typename WholeCoordsField,
             typename WholePointField>
   VISKORES_EXEC inline void Generate(const viskores::Vec<viskores::UInt8, 3>& boundaryStatus,
-                                 const viskores::Id3& ijk,
-                                 const WholeDataField& field,
-                                 const WholeIEdgeField& interpolatedEdgeIds,
-                                 const WholeWeightField& weights,
-                                 const WholeCoordsField coords,
-                                 const WholePointField& points,
-                                 const viskores::Id4& startPos,
-                                 const viskores::Id3& incs,
-                                 viskores::Id offset,
-                                 viskores::UInt8 const* const edgeUses,
-                                 viskores::Id* edgeIds) const
+                                     const viskores::Id3& ijk,
+                                     const WholeDataField& field,
+                                     const WholeIEdgeField& interpolatedEdgeIds,
+                                     const WholeWeightField& weights,
+                                     const WholeCoordsField coords,
+                                     const WholePointField& points,
+                                     const viskores::Id4& startPos,
+                                     const viskores::Id3& incs,
+                                     viskores::Id offset,
+                                     viskores::UInt8 const* const edgeUses,
+                                     viskores::Id* edgeIds) const
   {
     using AxisToSum = SumXAxis;
 
@@ -266,16 +266,16 @@ struct ComputePass4X : public viskores::worklet::WorkletVisitCellsWithPoints
             typename WholeCoordsField,
             typename WholePointField>
   VISKORES_EXEC inline void InterpolateEdge(const viskores::Id3& ijk,
-                                        viskores::Id currentIdx,
-                                        const viskores::Id3& incs,
-                                        viskores::Id edgeNum,
-                                        viskores::UInt8 const* const edgeUses,
-                                        viskores::Id* edgeIds,
-                                        const WholeField& field,
-                                        const WholeIEdgeField& interpolatedEdgeIds,
-                                        const WholeWeightField& weights,
-                                        const WholeCoordsField& coords,
-                                        const WholePointField& points) const
+                                            viskores::Id currentIdx,
+                                            const viskores::Id3& incs,
+                                            viskores::Id edgeNum,
+                                            viskores::UInt8 const* const edgeUses,
+                                            viskores::Id* edgeIds,
+                                            const WholeField& field,
+                                            const WholeIEdgeField& interpolatedEdgeIds,
+                                            const WholeWeightField& weights,
+                                            const WholeCoordsField& coords,
+                                            const WholePointField& points) const
   {
     using AxisToSum = SumXAxis;
 
@@ -292,7 +292,8 @@ struct ComputePass4X : public viskores::worklet::WorkletVisitCellsWithPoints
     viskores::Id3 offsets1 = data::GetVertOffsets(AxisToSum{}, verts[0]);
     viskores::Id3 offsets2 = data::GetVertOffsets(AxisToSum{}, verts[1]);
 
-    viskores::Id2 iEdge(currentIdx + viskores::Dot(offsets1, incs), currentIdx + viskores::Dot(offsets2, incs));
+    viskores::Id2 iEdge(currentIdx + viskores::Dot(offsets1, incs),
+                        currentIdx + viskores::Dot(offsets2, incs));
 
     interpolatedEdgeIds.Set(writeIndex, iEdge);
 
@@ -313,29 +314,30 @@ struct ComputePass4X : public viskores::worklet::WorkletVisitCellsWithPoints
     const viskores::Id3& ijk0,
     const viskores::Id3& ijk1) const
   {
-    return viskores::Vec3f(
-      coords.GetOrigin()[0] +
-        coords.GetSpacing()[0] *
-          (static_cast<viskores::FloatDefault>(ijk0[0]) +
-           static_cast<viskores::FloatDefault>(t) * static_cast<viskores::FloatDefault>(ijk1[0] - ijk0[0])),
-      coords.GetOrigin()[1] +
-        coords.GetSpacing()[1] *
-          (static_cast<viskores::FloatDefault>(ijk0[1]) +
-           static_cast<viskores::FloatDefault>(t) * static_cast<viskores::FloatDefault>(ijk1[1] - ijk0[1])),
-      coords.GetOrigin()[2] +
-        coords.GetSpacing()[2] *
-          (static_cast<viskores::FloatDefault>(ijk0[2]) +
-           static_cast<viskores::FloatDefault>(t) *
-             static_cast<viskores::FloatDefault>(ijk1[2] - ijk0[2])));
+    return viskores::Vec3f(coords.GetOrigin()[0] +
+                             coords.GetSpacing()[0] *
+                               (static_cast<viskores::FloatDefault>(ijk0[0]) +
+                                static_cast<viskores::FloatDefault>(t) *
+                                  static_cast<viskores::FloatDefault>(ijk1[0] - ijk0[0])),
+                           coords.GetOrigin()[1] +
+                             coords.GetSpacing()[1] *
+                               (static_cast<viskores::FloatDefault>(ijk0[1]) +
+                                static_cast<viskores::FloatDefault>(t) *
+                                  static_cast<viskores::FloatDefault>(ijk1[1] - ijk0[1])),
+                           coords.GetOrigin()[2] +
+                             coords.GetSpacing()[2] *
+                               (static_cast<viskores::FloatDefault>(ijk0[2]) +
+                                static_cast<viskores::FloatDefault>(t) *
+                                  static_cast<viskores::FloatDefault>(ijk1[2] - ijk0[2])));
   }
 
   // Interpolation for explicit coordinates
   //----------------------------------------------------------------------------
   template <typename CoordsPortal>
   inline VISKORES_EXEC viskores::Vec3f InterpolateCoordinate(CoordsPortal coords,
-                                                     T t,
-                                                     const viskores::Id3& ijk0,
-                                                     const viskores::Id3& ijk1) const
+                                                             T t,
+                                                             const viskores::Id3& ijk0,
+                                                             const viskores::Id3& ijk1) const
   {
     return (1.0f - static_cast<viskores::FloatDefault>(t)) *
       coords.Get(ijk0[0] + this->PointDims[0] * ijk0[1] +

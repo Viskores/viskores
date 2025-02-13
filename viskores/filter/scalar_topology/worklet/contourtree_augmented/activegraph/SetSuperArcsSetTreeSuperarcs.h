@@ -85,14 +85,15 @@ public:
   SetSuperArcsSetTreeSuperarcs() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& /*graphVertex*/, // FIXME: Remove unused parameter?
-                            const viskores::Id supernode,
-                            const InFieldPortalType& hyperarcsPortal,
-                            const InFieldPortalType& treeHyperparentsPortal,
-                            const InFieldPortalType& superIDPortal,
-                            const InFieldPortalType& hyperIDPortal,
-                            const OutFieldPortalType& treeSuperarcsPortal,
-                            const OutFieldPortalType& treeFirstSuperchildPortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::Id& /*graphVertex*/, // FIXME: Remove unused parameter?
+    const viskores::Id supernode,
+    const InFieldPortalType& hyperarcsPortal,
+    const InFieldPortalType& treeHyperparentsPortal,
+    const InFieldPortalType& superIDPortal,
+    const InFieldPortalType& hyperIDPortal,
+    const OutFieldPortalType& treeSuperarcsPortal,
+    const OutFieldPortalType& treeFirstSuperchildPortal) const
   {
     // retrieve the hyperparent (which is still a graph index, not a hypernode index)
     viskores::Id hyperparent = treeHyperparentsPortal.Get(supernode);

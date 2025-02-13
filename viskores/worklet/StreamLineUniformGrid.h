@@ -44,10 +44,10 @@ enum StreamLineMode
 // Trilinear interpolation to calculate vector data at position
 template <typename FieldType, typename PortalType>
 VISKORES_EXEC viskores::Vec<FieldType, 3> VecDataAtPos(viskores::Vec<FieldType, 3> pos,
-                                               const viskores::Id3& vdims,
-                                               const viskores::Id& planesize,
-                                               const viskores::Id& rowsize,
-                                               const PortalType& vecdata)
+                                                       const viskores::Id3& vdims,
+                                                       const viskores::Id& planesize,
+                                                       const viskores::Id& rowsize,
+                                                       const PortalType& vecdata)
 {
   // Adjust initial position to be within bounding box of grid
   for (viskores::IdComponent d = 0; d < 3; d++)
@@ -179,12 +179,12 @@ public:
 
   template <typename FieldPortalType, typename IdComponentPortalType, typename FieldVec3PortalType>
   VISKORES_EXEC void operator()(const FieldPortalType& field,
-                            viskores::Id& seedId,
-                            viskores::Vec<FieldType, 3>& seedPos,
-                            IdComponentPortalType& numIndices,
-                            IdComponentPortalType& validPoint,
-                            FieldVec3PortalType& slLists,
-                            viskores::IdComponent visitIndex) const
+                                viskores::Id& seedId,
+                                viskores::Vec<FieldType, 3>& seedPos,
+                                IdComponentPortalType& numIndices,
+                                IdComponentPortalType& validPoint,
+                                FieldVec3PortalType& slLists,
+                                viskores::IdComponent visitIndex) const
   {
     // Set initial offset into the output streams array
     viskores::Vec<FieldType, 3> pos = seedPos;
@@ -319,10 +319,10 @@ public:
   StreamLineFilterUniformGrid() {}
 
   viskores::cont::DataSet Run(const viskores::cont::DataSet& InDataSet,
-                          viskores::Id streamMode,
-                          viskores::Id numSeeds,
-                          viskores::Id maxSteps,
-                          FieldType timeStep)
+                              viskores::Id streamMode,
+                              viskores::Id numSeeds,
+                              viskores::Id maxSteps,
+                              FieldType timeStep)
   {
     using Algorithm = viskores::cont::Algorithm;
 
@@ -365,8 +365,8 @@ public:
     // All cells are polylines
     viskores::cont::ArrayHandle<viskores::UInt8> cellTypes;
     cellTypes.Allocate(numCells);
-    viskores::cont::ArrayHandleConstant<viskores::UInt8> polyLineShape(streamline::CELL_SHAPE_POLY_LINE,
-                                                               numCells);
+    viskores::cont::ArrayHandleConstant<viskores::UInt8> polyLineShape(
+      streamline::CELL_SHAPE_POLY_LINE, numCells);
     Algorithm::Copy(polyLineShape, cellTypes);
 
     // Possible maxSteps points but if less use stencil

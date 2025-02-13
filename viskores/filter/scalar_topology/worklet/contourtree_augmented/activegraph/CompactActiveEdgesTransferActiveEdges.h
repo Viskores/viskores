@@ -88,15 +88,15 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType, typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertexId,
-                            const viskores::Id activeVertex,
-                            const InFieldPortalType& newPositionPortal,
-                            const InFieldPortalType& newOutdegreePortal,
-                            const InFieldPortalType& activeEdgesPortal,
-                            const OutFieldPortalType& newActiveEdgesPortal,
-                            const InOutFieldPortalType& edgeFarPortal,
-                            const InOutFieldPortalType& firstEdgePortal,
-                            const InOutFieldPortalType& outdegreePortal,
-                            const InOutFieldPortalType& hyperarcsPortal) const
+                                const viskores::Id activeVertex,
+                                const InFieldPortalType& newPositionPortal,
+                                const InFieldPortalType& newOutdegreePortal,
+                                const InFieldPortalType& activeEdgesPortal,
+                                const OutFieldPortalType& newActiveEdgesPortal,
+                                const InOutFieldPortalType& edgeFarPortal,
+                                const InOutFieldPortalType& firstEdgePortal,
+                                const InOutFieldPortalType& outdegreePortal,
+                                const InOutFieldPortalType& hyperarcsPortal) const
   {
     viskores::Id edgeFirst = firstEdgePortal.Get(vertexId);
 

@@ -36,11 +36,13 @@ void TextAnnotationScreen::SetPosition(viskores::Float32 xpos, viskores::Float32
   this->SetPosition(viskores::make_Vec(xpos, ypos));
 }
 
-void TextAnnotationScreen::Render(const viskores::rendering::Camera& viskoresNotUsed(camera),
-                                  const viskores::rendering::WorldAnnotator& viskoresNotUsed(annotator),
-                                  viskores::rendering::Canvas& canvas) const
+void TextAnnotationScreen::Render(
+  const viskores::rendering::Camera& viskoresNotUsed(camera),
+  const viskores::rendering::WorldAnnotator& viskoresNotUsed(annotator),
+  viskores::rendering::Canvas& canvas) const
 {
-  viskores::Float32 windowAspect = viskores::Float32(canvas.GetWidth()) / viskores::Float32(canvas.GetHeight());
+  viskores::Float32 windowAspect =
+    viskores::Float32(canvas.GetWidth()) / viskores::Float32(canvas.GetHeight());
 
   canvas.AddText(this->Position,
                  this->Scale,

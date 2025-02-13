@@ -32,10 +32,12 @@ public:
   using ControlSignature = void(CellSetIn, FieldOut);
   using ExecutionSignature = void(Boundary, _2);
 
-  VISKORES_EXEC void operator()(const viskores::exec::BoundaryState& boundary, viskores::UInt8& value) const
+  VISKORES_EXEC void operator()(const viskores::exec::BoundaryState& boundary,
+                                viskores::UInt8& value) const
   {
     const bool notOnBoundary = boundary.IsRadiusInXBoundary(this->NumLayers);
-    value = (notOnBoundary) ? viskores::CellClassification::Normal : viskores::CellClassification::Ghost;
+    value =
+      (notOnBoundary) ? viskores::CellClassification::Normal : viskores::CellClassification::Ghost;
   }
 
 private:
@@ -53,11 +55,13 @@ public:
   using ControlSignature = void(CellSetIn, FieldOut);
   using ExecutionSignature = void(Boundary, _2);
 
-  VISKORES_EXEC void operator()(const viskores::exec::BoundaryState& boundary, viskores::UInt8& value) const
+  VISKORES_EXEC void operator()(const viskores::exec::BoundaryState& boundary,
+                                viskores::UInt8& value) const
   {
     const bool notOnBoundary = boundary.IsRadiusInXBoundary(this->NumLayers) &&
       boundary.IsRadiusInYBoundary(this->NumLayers);
-    value = (notOnBoundary) ? viskores::CellClassification::Normal : viskores::CellClassification::Ghost;
+    value =
+      (notOnBoundary) ? viskores::CellClassification::Normal : viskores::CellClassification::Ghost;
   }
 
 private:
@@ -75,10 +79,12 @@ public:
   using ControlSignature = void(CellSetIn, FieldOut);
   using ExecutionSignature = void(Boundary, _2);
 
-  VISKORES_EXEC void operator()(const viskores::exec::BoundaryState& boundary, viskores::UInt8& value) const
+  VISKORES_EXEC void operator()(const viskores::exec::BoundaryState& boundary,
+                                viskores::UInt8& value) const
   {
     const bool notOnBoundary = boundary.IsRadiusInBoundary(this->NumLayers);
-    value = (notOnBoundary) ? viskores::CellClassification::Normal : viskores::CellClassification::Ghost;
+    value =
+      (notOnBoundary) ? viskores::CellClassification::Normal : viskores::CellClassification::Ghost;
   }
 
 private:
@@ -89,7 +95,8 @@ private:
 namespace mesh_info
 {
 
-VISKORES_CONT viskores::cont::DataSet GhostCellClassify::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet GhostCellClassify::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   const viskores::cont::UnknownCellSet& cellset = input.GetCellSet();
   viskores::cont::ArrayHandle<viskores::UInt8> ghosts;
@@ -99,7 +106,8 @@ VISKORES_CONT viskores::cont::DataSet GhostCellClassify::DoExecute(const viskore
   if (cellset.template IsType<viskores::cont::CellSetStructured<1>>())
   {
     if (numCells <= 2)
-      throw viskores::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
+      throw viskores::cont::ErrorFilterExecution(
+        "insufficient number of cells for GhostCellClassify.");
 
     viskores::cont::CellSetStructured<1> cellset1d =
       cellset.AsCellSet<viskores::cont::CellSetStructured<1>>();
@@ -113,7 +121,8 @@ VISKORES_CONT viskores::cont::DataSet GhostCellClassify::DoExecute(const viskore
   else if (cellset.template IsType<viskores::cont::CellSetStructured<2>>())
   {
     if (numCells <= 4)
-      throw viskores::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
+      throw viskores::cont::ErrorFilterExecution(
+        "insufficient number of cells for GhostCellClassify.");
 
     viskores::cont::CellSetStructured<2> cellset2d =
       cellset.AsCellSet<viskores::cont::CellSetStructured<2>>();
@@ -127,7 +136,8 @@ VISKORES_CONT viskores::cont::DataSet GhostCellClassify::DoExecute(const viskore
   else if (cellset.template IsType<viskores::cont::CellSetStructured<3>>())
   {
     if (numCells <= 8)
-      throw viskores::cont::ErrorFilterExecution("insufficient number of cells for GhostCellClassify.");
+      throw viskores::cont::ErrorFilterExecution(
+        "insufficient number of cells for GhostCellClassify.");
 
     viskores::cont::CellSetStructured<3> cellset3d =
       cellset.AsCellSet<viskores::cont::CellSetStructured<3>>();

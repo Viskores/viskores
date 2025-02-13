@@ -33,7 +33,8 @@ class DeviceAdapterMemoryManagerInvalid
 public:
   VISKORES_CONT virtual ~DeviceAdapterMemoryManagerInvalid() override {}
 
-  VISKORES_CONT virtual viskores::cont::internal::BufferInfo Allocate(viskores::BufferSizeType) const override
+  VISKORES_CONT virtual viskores::cont::internal::BufferInfo Allocate(
+    viskores::BufferSizeType) const override
   {
     throw viskores::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
@@ -49,8 +50,9 @@ public:
     throw viskores::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
 
-  VISKORES_CONT virtual void CopyHostToDevice(const viskores::cont::internal::BufferInfo&,
-                                          const viskores::cont::internal::BufferInfo&) const override
+  VISKORES_CONT virtual void CopyHostToDevice(
+    const viskores::cont::internal::BufferInfo&,
+    const viskores::cont::internal::BufferInfo&) const override
   {
     throw viskores::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
@@ -61,8 +63,9 @@ public:
     throw viskores::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
 
-  VISKORES_CONT virtual void CopyDeviceToHost(const viskores::cont::internal::BufferInfo&,
-                                          const viskores::cont::internal::BufferInfo&) const override
+  VISKORES_CONT virtual void CopyDeviceToHost(
+    const viskores::cont::internal::BufferInfo&,
+    const viskores::cont::internal::BufferInfo&) const override
   {
     throw viskores::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
@@ -73,8 +76,9 @@ public:
     throw viskores::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
 
-  VISKORES_CONT virtual void CopyDeviceToDevice(const viskores::cont::internal::BufferInfo&,
-                                            const viskores::cont::internal::BufferInfo&) const override
+  VISKORES_CONT virtual void CopyDeviceToDevice(
+    const viskores::cont::internal::BufferInfo&,
+    const viskores::cont::internal::BufferInfo&) const override
   {
     throw viskores::cont::ErrorBadDevice("Tried to manage memory on an invalid device.");
   }
@@ -123,13 +127,15 @@ public:
   VISKORES_CONT virtual viskores::cont::internal::RuntimeDeviceConfigReturnCode GetMaxThreads(
     viskores::Id&) const override final
   {
-    throw viskores::cont::ErrorBadDevice("Tried to get the max number of threads on an invalid device");
+    throw viskores::cont::ErrorBadDevice(
+      "Tried to get the max number of threads on an invalid device");
   }
 
   VISKORES_CONT virtual viskores::cont::internal::RuntimeDeviceConfigReturnCode GetMaxDevices(
     viskores::Id&) const override final
   {
-    throw viskores::cont::ErrorBadDevice("Tried to get the max number of devices on an invalid device");
+    throw viskores::cont::ErrorBadDevice(
+      "Tried to get the max number of devices on an invalid device");
   }
 };
 
@@ -152,9 +158,8 @@ struct VISKORES_NEVER_EXPORT InitializeDeviceNames
   template <typename Device>
   VISKORES_CONT void operator()(Device device)
   {
-    auto lowerCaseFunc = [](char c) {
-      return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    };
+    auto lowerCaseFunc = [](char c)
+    { return static_cast<char>(std::tolower(static_cast<unsigned char>(c))); };
 
     auto id = device.GetValue();
 
@@ -210,21 +215,26 @@ struct VISKORES_NEVER_EXPORT InitializeRuntimeDeviceConfigurations
 
   VISKORES_CONT
   InitializeRuntimeDeviceConfigurations(
-    std::unique_ptr<viskores::cont::internal::RuntimeDeviceConfigurationBase>* runtimeConfigurations,
+    std::unique_ptr<viskores::cont::internal::RuntimeDeviceConfigurationBase>*
+      runtimeConfigurations,
     const viskores::cont::internal::RuntimeDeviceConfigurationOptions& configOptions)
     : RuntimeConfigurations(runtimeConfigurations)
     , RuntimeConfigurationOptions(configOptions)
   {
     if (!configOptions.IsInitialized())
     {
-      VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                 "Initializing 'RuntimeDeviceConfigurations' with uninitialized configOptions. Did "
-                 "you call viskores::cont::Initialize?");
+      VISKORES_LOG_S(
+        viskores::cont::LogLevel::Warn,
+        "Initializing 'RuntimeDeviceConfigurations' with uninitialized configOptions. Did "
+        "you call viskores::cont::Initialize?");
     }
   }
 
   template <typename Device>
-  VISKORES_CONT void CreateRuntimeConfiguration(Device device, int& argc, char* argv[], std::true_type)
+  VISKORES_CONT void CreateRuntimeConfiguration(Device device,
+                                                int& argc,
+                                                char* argv[],
+                                                std::true_type)
   {
     auto id = device.GetValue();
 
@@ -416,7 +426,8 @@ DeviceAdapterNameType RuntimeDeviceInformation::GetName(DeviceAdapterId device) 
   }
   else if (id == VISKORES_DEVICE_ADAPTER_UNDEFINED)
   {
-    return viskores::cont::DeviceAdapterTraits<viskores::cont::DeviceAdapterTagUndefined>::GetName();
+    return viskores::cont::DeviceAdapterTraits<
+      viskores::cont::DeviceAdapterTagUndefined>::GetName();
   }
   else if (id == VISKORES_DEVICE_ADAPTER_ANY)
   {
@@ -432,9 +443,8 @@ DeviceAdapterId RuntimeDeviceInformation::GetId(DeviceAdapterNameType name) cons
 {
   // The GetDeviceAdapterId call is case-insensitive so transform the name to be lower case
   // as that is how we cache the case-insensitive version.
-  auto lowerCaseFunc = [](char c) {
-    return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-  };
+  auto lowerCaseFunc = [](char c)
+  { return static_cast<char>(std::tolower(static_cast<unsigned char>(c))); };
   std::transform(name.begin(), name.end(), name.begin(), lowerCaseFunc);
 
   //lower-case the name here

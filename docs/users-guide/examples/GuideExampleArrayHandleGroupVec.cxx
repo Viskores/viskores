@@ -34,7 +34,7 @@ void CheckArray(ArrayHandleType array)
          componentIndex++)
     {
       VISKORES_TEST_ASSERT(portal.Get(vecIndex)[componentIndex] == expectedValue,
-                       "Got bad value.");
+                           "Got bad value.");
       ++expectedValue;
     }
   }

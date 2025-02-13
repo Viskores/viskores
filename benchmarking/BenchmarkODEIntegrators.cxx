@@ -44,8 +44,8 @@ void BenchParticleAdvection(::benchmark::State& state)
 
   viskores::cont::ArrayHandle<viskores::Particle> seedArray =
     viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0),
-                                   viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1),
-                                   viskores::Particle(viskores::Vec3f(.2f, 3.0f, .2f), 2) });
+                                       viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1),
+                                       viskores::Particle(viskores::Vec3f(.2f, 3.0f, .2f), 2) });
 
   viskores::filter::flow::ParticleAdvection particleAdvection;
 
@@ -67,10 +67,10 @@ void BenchParticleAdvection(::benchmark::State& state)
   state.SetComplexityN(state.range(0));
 }
 VISKORES_BENCHMARK_OPTS(BenchParticleAdvection,
-                      ->RangeMultiplier(2)
-                      ->Range(32, 4096)
-                      ->ArgName("Steps")
-                      ->Complexity());
+                          ->RangeMultiplier(2)
+                          ->Range(32, 4096)
+                          ->ArgName("Steps")
+                          ->Complexity());
 
 } // end anon namespace
 

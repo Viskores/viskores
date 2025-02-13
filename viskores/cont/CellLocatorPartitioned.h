@@ -49,7 +49,8 @@ private:
   std::vector<CellLocatorGeneral> LocatorsCont;
   std::vector<viskores::cont::ArrayHandleStride<viskores::UInt8>> GhostsCont;
   viskores::cont::ArrayHandle<viskores::cont::CellLocatorGeneral::ExecObjType> LocatorsExec;
-  viskores::cont::ArrayHandle<viskores::cont::ArrayHandleStride<viskores::UInt8>::ReadPortalType> GhostsExec;
+  viskores::cont::ArrayHandle<viskores::cont::ArrayHandleStride<viskores::UInt8>::ReadPortalType>
+    GhostsExec;
   bool Modified = true;
 };
 } // namespace cont

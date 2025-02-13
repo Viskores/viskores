@@ -60,7 +60,8 @@ struct Fetch<FetchTag, viskores::exec::arg::AspectTagVisitIndex, ExecObjectType>
   using ValueType = viskores::IdComponent;
 
   template <typename ThreadIndicesType>
-  VISKORES_EXEC viskores::IdComponent Load(const ThreadIndicesType& indices, const ExecObjectType&) const
+  VISKORES_EXEC viskores::IdComponent Load(const ThreadIndicesType& indices,
+                                           const ExecObjectType&) const
   {
     return indices.GetVisitIndex();
   }

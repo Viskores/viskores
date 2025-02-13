@@ -56,7 +56,7 @@ public:
       catch (...)
       {
         VISKORES_LOG_F(viskores::cont::LogLevel::Error,
-                   "Error retrieving CUDA device information. Disabling.");
+                       "Error retrieving CUDA device information. Disabling.");
         this->CudaDeviceCount = 0;
       }
     }

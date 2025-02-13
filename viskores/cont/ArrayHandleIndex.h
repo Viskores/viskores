@@ -40,7 +40,8 @@ using StorageTagIndexSuperclass =
   typename viskores::cont::ArrayHandleImplicit<viskores::internal::IndexFunctor>::StorageTag;
 
 template <>
-struct Storage<viskores::Id, viskores::cont::StorageTagIndex> : Storage<viskores::Id, StorageTagIndexSuperclass>
+struct Storage<viskores::Id, viskores::cont::StorageTagIndex>
+  : Storage<viskores::Id, StorageTagIndexSuperclass>
 {
 };
 
@@ -56,7 +57,7 @@ class ArrayHandleIndex : public viskores::cont::ArrayHandle<viskores::Id, Storag
 {
 public:
   VISKORES_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandleIndex,
-                                (viskores::cont::ArrayHandle<viskores::Id, StorageTagIndex>));
+                                    (viskores::cont::ArrayHandle<viskores::Id, StorageTagIndex>));
 
   /// Construct an index array containing values from 0 to `length` - 1.
   VISKORES_CONT
@@ -129,7 +130,8 @@ struct SerializableTypeString<viskores::cont::ArrayHandleIndex>
 };
 
 template <>
-struct SerializableTypeString<viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagIndex>>
+struct SerializableTypeString<
+  viskores::cont::ArrayHandle<viskores::Id, viskores::cont::StorageTagIndex>>
   : SerializableTypeString<viskores::cont::ArrayHandleIndex>
 {
 };

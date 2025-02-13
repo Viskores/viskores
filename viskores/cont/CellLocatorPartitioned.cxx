@@ -70,7 +70,7 @@ const viskores::exec::CellLocatorPartitioned CellLocatorPartitioned::PrepareForE
     portalGhosts.Set(index, this->GhostsCont.at(index).PrepareForInput(device, token));
   }
   return viskores::exec::CellLocatorPartitioned(this->LocatorsExec.PrepareForInput(device, token),
-                                            this->GhostsExec.PrepareForInput(device, token));
+                                                this->GhostsExec.PrepareForInput(device, token));
 }
 
 } // namespace cont

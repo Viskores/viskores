@@ -41,9 +41,9 @@ namespace cellmetrics
 {
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellSkewMetric(const viskores::IdComponent& numPts,
-                                 const PointCoordVecType& pts,
-                                 CellShapeType shape,
-                                 viskores::ErrorCode& ec)
+                                     const PointCoordVecType& pts,
+                                     CellShapeType shape,
+                                     viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -54,9 +54,9 @@ VISKORES_EXEC OutType CellSkewMetric(const viskores::IdComponent& numPts,
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellSkewMetric(const viskores::IdComponent& numPts,
-                                 const PointCoordVecType& pts,
-                                 viskores::CellShapeTagHexahedron,
-                                 viskores::ErrorCode& ec)
+                                     const PointCoordVecType& pts,
+                                     viskores::CellShapeTagHexahedron,
+                                     viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(ec);
@@ -77,15 +77,15 @@ VISKORES_EXEC OutType CellSkewMetric(const viskores::IdComponent& numPts,
   if (Scalar(X3_mag) <= Scalar(0.0))
     return viskores::Infinity<Scalar>();
   Vector x3 = X3 / X3_mag;
-  return static_cast<Scalar>(
-    viskores::Max(viskores::Dot(x1, x2), viskores::Max(viskores::Dot(x1, x3), viskores::Dot(x2, x3))));
+  return static_cast<Scalar>(viskores::Max(
+    viskores::Dot(x1, x2), viskores::Max(viskores::Dot(x1, x3), viskores::Dot(x2, x3))));
 }
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellSkewMetric(const viskores::IdComponent& numPts,
-                                 const PointCoordVecType& pts,
-                                 viskores::CellShapeTagQuad,
-                                 viskores::ErrorCode& ec)
+                                     const PointCoordVecType& pts,
+                                     viskores::CellShapeTagQuad,
+                                     viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(ec);

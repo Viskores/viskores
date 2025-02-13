@@ -32,9 +32,10 @@ void TestFilledImage(viskores::cont::DataSet& dataSet,
 
   auto pointField = dataSet.GetPointField(fieldName);
   VISKORES_TEST_ASSERT(pointField.GetNumberOfValues() == canvas.GetWidth() * canvas.GetHeight(),
-                   "wrong image dimensions");
-  VISKORES_TEST_ASSERT(pointField.GetData().template IsType<viskores::cont::ArrayHandle<viskores::Vec4f_32>>(),
-                   "wrong ArrayHandle type");
+                       "wrong image dimensions");
+  VISKORES_TEST_ASSERT(
+    pointField.GetData().template IsType<viskores::cont::ArrayHandle<viskores::Vec4f_32>>(),
+    "wrong ArrayHandle type");
   auto pixelPortal = pointField.GetData()
                        .template AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec4f_32>>()
                        .ReadPortal();
@@ -136,14 +137,18 @@ void TestBaseImageMethods(const viskores::rendering::Canvas& canvas)
 
 void TestPNMImage(const viskores::rendering::Canvas& canvas)
 {
-  TestReadAndWritePNM(canvas, "pnmRGB8Test.png", viskores::io::ImageWriterBase::PixelDepth::PIXEL_8);
-  TestReadAndWritePNM(canvas, "pnmRGB16Test.png", viskores::io::ImageWriterBase::PixelDepth::PIXEL_16);
+  TestReadAndWritePNM(
+    canvas, "pnmRGB8Test.png", viskores::io::ImageWriterBase::PixelDepth::PIXEL_8);
+  TestReadAndWritePNM(
+    canvas, "pnmRGB16Test.png", viskores::io::ImageWriterBase::PixelDepth::PIXEL_16);
 }
 
 void TestPNGImage(const viskores::rendering::Canvas& canvas)
 {
-  TestReadAndWritePNG(canvas, "pngRGB8Test.png", viskores::io::ImageWriterBase::PixelDepth::PIXEL_8);
-  TestReadAndWritePNG(canvas, "pngRGB16Test.png", viskores::io::ImageWriterBase::PixelDepth::PIXEL_16);
+  TestReadAndWritePNG(
+    canvas, "pngRGB8Test.png", viskores::io::ImageWriterBase::PixelDepth::PIXEL_8);
+  TestReadAndWritePNG(
+    canvas, "pngRGB16Test.png", viskores::io::ImageWriterBase::PixelDepth::PIXEL_16);
 }
 
 void TestImage()

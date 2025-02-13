@@ -31,9 +31,9 @@ public:
     maskPoints.SetFieldsToPass("pointvar");
     viskores::cont::DataSet output = maskPoints.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 12),
-                     "Wrong number of cells for MaskPoints");
+                         "Wrong number of cells for MaskPoints");
     VISKORES_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 12),
-                     "Wrong number of points for MaskPoints");
+                         "Wrong number of points for MaskPoints");
   }
 
   static void TestRegular3D()
@@ -46,9 +46,9 @@ public:
     maskPoints.SetFieldsToPass("pointvar");
     viskores::cont::DataSet output = maskPoints.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 25),
-                     "Wrong number of cells for MaskPoints");
+                         "Wrong number of cells for MaskPoints");
     VISKORES_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 25),
-                     "Wrong number of points for MaskPoints");
+                         "Wrong number of points for MaskPoints");
   }
 
   static void TestExplicit3D()
@@ -62,9 +62,9 @@ public:
     maskPoints.SetFieldsToPass("pointvar");
     viskores::cont::DataSet output = maskPoints.Execute(dataset);
     VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 3),
-                     "Wrong number of cells for MaskPoints");
+                         "Wrong number of cells for MaskPoints");
     VISKORES_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 11),
-                     "Wrong number of points for MaskPoints");
+                         "Wrong number of points for MaskPoints");
   }
 
   void operator()() const

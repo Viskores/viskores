@@ -323,8 +323,8 @@ struct Invocation
   /// \c DeviceAdapterTag is replaced with that provided.
   ///
   template <typename NewDeviceAdapterTag>
-  VISKORES_CONT typename ChangeDeviceAdapterTagType<NewDeviceAdapterTag>::type ChangeDeviceAdapterTag(
-    NewDeviceAdapterTag) const
+  VISKORES_CONT typename ChangeDeviceAdapterTagType<NewDeviceAdapterTag>::type
+  ChangeDeviceAdapterTag(NewDeviceAdapterTag) const
   {
     return typename ChangeDeviceAdapterTagType<NewDeviceAdapterTag>::type(
       this->Parameters, this->OutputToInputMap, this->VisitArray, this->ThreadToOutputMap);
@@ -382,12 +382,12 @@ template <viskores::IdComponent InputDomainIndex,
           typename VisitArrayType,
           typename ThreadToOutputMapType>
 VISKORES_CONT viskores::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     ExecutionInterface,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType,
-                                     ThreadToOutputMapType>
+                                             ControlInterface,
+                                             ExecutionInterface,
+                                             InputDomainIndex,
+                                             OutputToInputMapType,
+                                             VisitArrayType,
+                                             ThreadToOutputMapType>
 make_Invocation(const ParameterInterface& params,
                 ControlInterface,
                 ExecutionInterface,
@@ -396,12 +396,12 @@ make_Invocation(const ParameterInterface& params,
                 ThreadToOutputMapType threadToOutputMap)
 {
   return viskores::internal::Invocation<ParameterInterface,
-                                    ControlInterface,
-                                    ExecutionInterface,
-                                    InputDomainIndex,
-                                    OutputToInputMapType,
-                                    VisitArrayType,
-                                    ThreadToOutputMapType>(
+                                        ControlInterface,
+                                        ExecutionInterface,
+                                        InputDomainIndex,
+                                        OutputToInputMapType,
+                                        VisitArrayType,
+                                        ThreadToOutputMapType>(
     params, outputToInputMap, visitArray, threadToOutputMap);
 }
 template <viskores::IdComponent InputDomainIndex,
@@ -415,11 +415,11 @@ VISKORES_CONT viskores::internal::
                   ExecutionInterface = ExecutionInterface())
 {
   return viskores::internal::make_Invocation<InputDomainIndex>(params,
-                                                           ControlInterface(),
-                                                           ExecutionInterface(),
-                                                           viskores::internal::NullType(),
-                                                           viskores::internal::NullType(),
-                                                           viskores::internal::NullType());
+                                                               ControlInterface(),
+                                                               ExecutionInterface(),
+                                                               viskores::internal::NullType(),
+                                                               viskores::internal::NullType(),
+                                                               viskores::internal::NullType());
 }
 }
 } // namespace viskores::internal

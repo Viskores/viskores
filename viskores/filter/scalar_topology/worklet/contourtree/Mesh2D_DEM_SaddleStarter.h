@@ -103,7 +103,7 @@ public:
 
   viskores::Id nRows; // (input) number of rows in 2D
   viskores::Id nCols; // (input) number of cols in 2D
-  bool ascending; // (input) ascending or descending (join or split)
+  bool ascending;     // (input) ascending or descending (join or split)
 
   // Constructor
   VISKORES_EXEC_CONT
@@ -117,14 +117,14 @@ public:
   // operator() routine that executes the loop
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                            const viskores::Pair<viskores::Id, viskores::Id>& outDegFirstEdge,
-                            const viskores::Id& valueIndex,
-                            const InFieldPortalType& linkMask,
-                            const InFieldPortalType& arcArray,
-                            const InFieldPortalType& inverseIndex,
-                            const OutFieldPortalType& edgeNear,
-                            const OutFieldPortalType& edgeFar,
-                            const OutFieldPortalType& activeEdges) const
+                                const viskores::Pair<viskores::Id, viskores::Id>& outDegFirstEdge,
+                                const viskores::Id& valueIndex,
+                                const InFieldPortalType& linkMask,
+                                const InFieldPortalType& arcArray,
+                                const InFieldPortalType& inverseIndex,
+                                const OutFieldPortalType& edgeNear,
+                                const OutFieldPortalType& edgeFar,
+                                const OutFieldPortalType& activeEdges) const
   {
     viskores::Id outdegree = outDegFirstEdge.first;
     viskores::Id firstEdge = outDegFirstEdge.second;

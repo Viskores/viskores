@@ -37,8 +37,8 @@ void TryInvocation()
   TestExecutionObject execObjectStore(EXPECTED_NUMBER);
 
   using FetchType = viskores::exec::arg::Fetch<viskores::exec::arg::FetchTagExecObject,
-                                           viskores::exec::arg::AspectTagDefault,
-                                           TestExecutionObject>;
+                                               viskores::exec::arg::AspectTagDefault,
+                                               TestExecutionObject>;
 
   FetchType fetch;
 
@@ -54,7 +54,7 @@ void TryInvocation()
 
   // Data in Invocation should not have changed.
   VISKORES_TEST_ASSERT(execObjectStore.Number == EXPECTED_NUMBER,
-                   "Fetch changed read-only execution object.");
+                       "Fetch changed read-only execution object.");
 }
 
 void TestExecObjectFetch()

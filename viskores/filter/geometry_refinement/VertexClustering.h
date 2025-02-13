@@ -52,10 +52,16 @@ public:
   ///
   /// Setting smaller numbers of dimensions produces a smaller output, but with a coarser
   /// representation of the surface.
-  VISKORES_CONT void SetNumberOfDivisions(const viskores::Id3& num) { this->NumberOfDivisions = num; }
+  VISKORES_CONT void SetNumberOfDivisions(const viskores::Id3& num)
+  {
+    this->NumberOfDivisions = num;
+  }
 
   /// @copydoc SetNumberOfDivisions
-  VISKORES_CONT const viskores::Id3& GetNumberOfDivisions() const { return this->NumberOfDivisions; }
+  VISKORES_CONT const viskores::Id3& GetNumberOfDivisions() const
+  {
+    return this->NumberOfDivisions;
+  }
 
 private:
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;

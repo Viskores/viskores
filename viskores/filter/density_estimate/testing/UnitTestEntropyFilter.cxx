@@ -46,8 +46,8 @@ void TestEntropy()
   // Instead of increasing the error threshold, we will just check against the
   // two known values.
   VISKORES_TEST_ASSERT(fabs(entropyFromFilter - 4.59093) < 0.001 ||
-                     fabs(entropyFromFilter - 4.59798) < 0.001,
-                   "Entropy calculation is incorrect");
+                         fabs(entropyFromFilter - 4.59798) < 0.001,
+                       "Entropy calculation is incorrect");
 } // TestFieldEntropy
 }
 

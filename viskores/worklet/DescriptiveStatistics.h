@@ -206,7 +206,8 @@ public:
   struct MakeStatState
   {
     template <typename T>
-    VISKORES_EXEC_CONT viskores::worklet::DescriptiveStatistics::StatState<T> operator()(T value) const
+    VISKORES_EXEC_CONT viskores::worklet::DescriptiveStatistics::StatState<T> operator()(
+      T value) const
     {
       return viskores::worklet::DescriptiveStatistics::StatState<T>{ value };
     }
@@ -233,10 +234,11 @@ public:
   }
 
   template <typename KeyType, typename ValueType, typename KeyInStorage, typename ValueInStorage>
-  VISKORES_CONT static auto Run(const viskores::cont::ArrayHandle<KeyType, KeyInStorage>& keys,
-                            const viskores::cont::ArrayHandle<ValueType, ValueInStorage>& values)
+  VISKORES_CONT static auto Run(
+    const viskores::cont::ArrayHandle<KeyType, KeyInStorage>& keys,
+    const viskores::cont::ArrayHandle<ValueType, ValueInStorage>& values)
     -> viskores::cont::ArrayHandleZip<viskores::cont::ArrayHandle<KeyType>,
-                                  viskores::cont::ArrayHandle<StatState<ValueType>>>
+                                      viskores::cont::ArrayHandle<StatState<ValueType>>>
   {
     using Algorithm = viskores::cont::Algorithm;
 

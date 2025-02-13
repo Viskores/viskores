@@ -31,7 +31,8 @@ void ValidateDataSet(const viskores::cont::DataSet& ds,
   //Verify basics..
 
   VISKORES_TEST_ASSERT(ds.GetNumberOfFields() == 3, "Wrong number of fields.");
-  VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1, "Wrong number of coordinate systems.");
+  VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
+                       "Wrong number of coordinate systems.");
   VISKORES_TEST_ASSERT(ds.GetNumberOfPoints() == numPoints, "Wrong number of coordinates.");
   VISKORES_TEST_ASSERT(ds.GetNumberOfCells() == numCells, "Wrong number of cells.");
 
@@ -216,11 +217,13 @@ void RectilinearTests()
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
 
       std::cout << "  Create with ArrayHandle" << std::endl;
-      dataSet =
-        dataSetBuilder.Create(viskores::cont::make_ArrayHandle(xCoordinates, viskores::CopyFlag::Off),
-                              viskores::cont::make_ArrayHandle(yCoordinates, viskores::CopyFlag::Off));
-      dataSet.AddPointField("pointvar", viskores::cont::make_ArrayHandle(varP2D, viskores::CopyFlag::Off));
-      dataSet.AddCellField("cellvar", viskores::cont::make_ArrayHandle(varC2D, viskores::CopyFlag::Off));
+      dataSet = dataSetBuilder.Create(
+        viskores::cont::make_ArrayHandle(xCoordinates, viskores::CopyFlag::Off),
+        viskores::cont::make_ArrayHandle(yCoordinates, viskores::CopyFlag::Off));
+      dataSet.AddPointField("pointvar",
+                            viskores::cont::make_ArrayHandle(varP2D, viskores::CopyFlag::Off));
+      dataSet.AddCellField("cellvar",
+                           viskores::cont::make_ArrayHandle(varC2D, viskores::CopyFlag::Off));
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
     }
 
@@ -260,17 +263,21 @@ void RectilinearTests()
                                       xCoordinates.data(),
                                       yCoordinates.data(),
                                       zCoordinates.data());
-      dataSet.AddPointField("pointvar", viskores::cont::make_ArrayHandle(varP3D, viskores::CopyFlag::Off));
-      dataSet.AddCellField("cellvar", viskores::cont::make_ArrayHandle(varC3D, viskores::CopyFlag::Off));
+      dataSet.AddPointField("pointvar",
+                            viskores::cont::make_ArrayHandle(varP3D, viskores::CopyFlag::Off));
+      dataSet.AddCellField("cellvar",
+                           viskores::cont::make_ArrayHandle(varC3D, viskores::CopyFlag::Off));
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
 
       std::cout << "  Create with ArrayHandle" << std::endl;
-      dataSet =
-        dataSetBuilder.Create(viskores::cont::make_ArrayHandle(xCoordinates, viskores::CopyFlag::Off),
-                              viskores::cont::make_ArrayHandle(yCoordinates, viskores::CopyFlag::Off),
-                              viskores::cont::make_ArrayHandle(zCoordinates, viskores::CopyFlag::Off));
-      dataSet.AddPointField("pointvar", viskores::cont::make_ArrayHandle(varP3D, viskores::CopyFlag::Off));
-      dataSet.AddCellField("cellvar", viskores::cont::make_ArrayHandle(varC3D, viskores::CopyFlag::Off));
+      dataSet = dataSetBuilder.Create(
+        viskores::cont::make_ArrayHandle(xCoordinates, viskores::CopyFlag::Off),
+        viskores::cont::make_ArrayHandle(yCoordinates, viskores::CopyFlag::Off),
+        viskores::cont::make_ArrayHandle(zCoordinates, viskores::CopyFlag::Off));
+      dataSet.AddPointField("pointvar",
+                            viskores::cont::make_ArrayHandle(varP3D, viskores::CopyFlag::Off));
+      dataSet.AddCellField("cellvar",
+                           viskores::cont::make_ArrayHandle(varC3D, viskores::CopyFlag::Off));
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
     }
   }

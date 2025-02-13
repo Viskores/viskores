@@ -136,7 +136,7 @@ class Storage<T, StorageTagConcatenate<ST1, ST2>>
   {
     Info info = buffers[0].GetMetaData<Info>();
     return std::vector<viskores::cont::internal::Buffer>(buffers.begin() + 1,
-                                                     buffers.begin() + 1 + info.NumBuffers1);
+                                                         buffers.begin() + 1 + info.NumBuffers1);
   }
 
   VISKORES_CONT static std::vector<viskores::cont::internal::Buffer> Buffers2(
@@ -144,7 +144,7 @@ class Storage<T, StorageTagConcatenate<ST1, ST2>>
   {
     Info info = buffers[0].GetMetaData<Info>();
     return std::vector<viskores::cont::internal::Buffer>(buffers.begin() + 1 + info.NumBuffers1,
-                                                     buffers.end());
+                                                         buffers.end());
   }
 
 public:
@@ -152,16 +152,18 @@ public:
 
   using ReadPortalType =
     viskores::internal::ArrayPortalConcatenate<typename SourceStorage1::ReadPortalType,
-                                           typename SourceStorage2::ReadPortalType>;
+                                               typename SourceStorage2::ReadPortalType>;
   using WritePortalType =
     viskores::internal::ArrayPortalConcatenate<typename SourceStorage1::WritePortalType,
-                                           typename SourceStorage2::WritePortalType>;
+                                               typename SourceStorage2::WritePortalType>;
 
   VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlat(
     const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
-    viskores::IdComponent components1 = SourceStorage1::GetNumberOfComponentsFlat(Buffers1(buffers));
-    viskores::IdComponent components2 = SourceStorage2::GetNumberOfComponentsFlat(Buffers2(buffers));
+    viskores::IdComponent components1 =
+      SourceStorage1::GetNumberOfComponentsFlat(Buffers1(buffers));
+    viskores::IdComponent components2 =
+      SourceStorage2::GetNumberOfComponentsFlat(Buffers2(buffers));
     if (components1 == components2)
     {
       return components1;
@@ -181,10 +183,10 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             const T& fillValue,
-                             viskores::Id startIndex,
-                             viskores::Id endIndex,
-                             viskores::cont::Token& token)
+                                 const T& fillValue,
+                                 viskores::Id startIndex,
+                                 viskores::Id endIndex,
+                                 viskores::cont::Token& token)
   {
     viskores::Id size1 = SourceStorage1::GetNumberOfValues(Buffers1(buffers));
     if ((startIndex < size1) && (endIndex <= size1))
@@ -222,7 +224,7 @@ public:
   }
 
   VISKORES_CONT static auto CreateBuffers(const ArrayHandleType1& array1 = ArrayHandleType1{},
-                                      const ArrayHandleType2& array2 = ArrayHandleType2{})
+                                          const ArrayHandleType2& array2 = ArrayHandleType2{})
     -> decltype(viskores::cont::internal::CreateBuffers())
   {
     Info info;
@@ -256,16 +258,16 @@ namespace cont
 template <typename ArrayHandleType1, typename ArrayHandleType2>
 class ArrayHandleConcatenate
   : public viskores::cont::ArrayHandle<typename ArrayHandleType1::ValueType,
-                                   StorageTagConcatenate<typename ArrayHandleType1::StorageTag,
-                                                         typename ArrayHandleType2::StorageTag>>
+                                       StorageTagConcatenate<typename ArrayHandleType1::StorageTag,
+                                                             typename ArrayHandleType2::StorageTag>>
 {
 public:
   VISKORES_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleConcatenate,
     (ArrayHandleConcatenate<ArrayHandleType1, ArrayHandleType2>),
     (viskores::cont::ArrayHandle<typename ArrayHandleType1::ValueType,
-                             StorageTagConcatenate<typename ArrayHandleType1::StorageTag,
-                                                   typename ArrayHandleType2::StorageTag>>));
+                                 StorageTagConcatenate<typename ArrayHandleType1::StorageTag,
+                                                       typename ArrayHandleType2::StorageTag>>));
 
   VISKORES_CONT
   ArrayHandleConcatenate(const ArrayHandleType1& array1, const ArrayHandleType2& array2)
@@ -275,9 +277,8 @@ public:
 };
 
 template <typename ArrayHandleType1, typename ArrayHandleType2>
-VISKORES_CONT ArrayHandleConcatenate<ArrayHandleType1, ArrayHandleType2> make_ArrayHandleConcatenate(
-  const ArrayHandleType1& array1,
-  const ArrayHandleType2& array2)
+VISKORES_CONT ArrayHandleConcatenate<ArrayHandleType1, ArrayHandleType2>
+make_ArrayHandleConcatenate(const ArrayHandleType1& array1, const ArrayHandleType2& array2)
 {
   return ArrayHandleConcatenate<ArrayHandleType1, ArrayHandleType2>(array1, array2);
 }
@@ -306,8 +307,9 @@ struct SerializableTypeString<viskores::cont::ArrayHandleConcatenate<AH1, AH2>>
 template <typename T, typename ST1, typename ST2>
 struct SerializableTypeString<
   viskores::cont::ArrayHandle<T, viskores::cont::StorageTagConcatenate<ST1, ST2>>>
-  : SerializableTypeString<viskores::cont::ArrayHandleConcatenate<viskores::cont::ArrayHandle<T, ST1>,
-                                                              viskores::cont::ArrayHandle<T, ST2>>>
+  : SerializableTypeString<
+      viskores::cont::ArrayHandleConcatenate<viskores::cont::ArrayHandle<T, ST1>,
+                                             viskores::cont::ArrayHandle<T, ST2>>>
 {
 };
 }
@@ -344,9 +346,10 @@ public:
 };
 
 template <typename T, typename ST1, typename ST2>
-struct Serialization<viskores::cont::ArrayHandle<T, viskores::cont::StorageTagConcatenate<ST1, ST2>>>
+struct Serialization<
+  viskores::cont::ArrayHandle<T, viskores::cont::StorageTagConcatenate<ST1, ST2>>>
   : Serialization<viskores::cont::ArrayHandleConcatenate<viskores::cont::ArrayHandle<T, ST1>,
-                                                     viskores::cont::ArrayHandle<T, ST2>>>
+                                                         viskores::cont::ArrayHandle<T, ST2>>>
 {
 };
 

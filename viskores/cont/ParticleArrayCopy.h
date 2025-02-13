@@ -39,7 +39,8 @@ VISKORES_ALWAYS_EXPORT inline void ParticleArrayCopy(
 ///
 template <typename ParticleType>
 VISKORES_ALWAYS_EXPORT inline void ParticleArrayCopy(
-  const std::vector<viskores::cont::ArrayHandle<ParticleType, viskores::cont::StorageTagBasic>>& inputs,
+  const std::vector<viskores::cont::ArrayHandle<ParticleType, viskores::cont::StorageTagBasic>>&
+    inputs,
   viskores::cont::ArrayHandle<viskores::Vec3f, viskores::cont::StorageTagBasic>& outPos);
 
 /// \brief Copy all fields in viskores::Particle to standard types.

@@ -80,14 +80,14 @@ bool DeviceAdapterTimerImplementation<viskores::cont::DeviceAdapterTagCuda>::Rea
 }
 
 
-viskores::Float64 DeviceAdapterTimerImplementation<viskores::cont::DeviceAdapterTagCuda>::GetElapsedTime()
-  const
+viskores::Float64
+DeviceAdapterTimerImplementation<viskores::cont::DeviceAdapterTagCuda>::GetElapsedTime() const
 {
   assert(this->StartReady);
   if (!this->StartReady)
   {
     VISKORES_LOG_F(viskores::cont::LogLevel::Error,
-               "Start() function should be called first then trying to call GetElapsedTime().");
+                   "Start() function should be called first then trying to call GetElapsedTime().");
     return 0;
   }
   if (!this->StopReady)
@@ -98,7 +98,8 @@ viskores::Float64 DeviceAdapterTimerImplementation<viskores::cont::DeviceAdapter
   }
 
   float elapsedTimeMilliseconds;
-  VISKORES_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, this->StartEvent, this->StopEvent));
+  VISKORES_CUDA_CALL(
+    cudaEventElapsedTime(&elapsedTimeMilliseconds, this->StartEvent, this->StopEvent));
   // Reset Stop flag to its original state
   return static_cast<viskores::Float64>(0.001f * elapsedTimeMilliseconds);
 }

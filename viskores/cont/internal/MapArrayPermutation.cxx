@@ -33,8 +33,8 @@ struct MapPermutationWorklet : viskores::worklet::WorkletMapField
 
   template <typename InputPortalType, typename OutputType>
   VISKORES_EXEC void operator()(viskores::Id permutationIndex,
-                            InputPortalType inputPortal,
-                            OutputType& output) const
+                                InputPortalType inputPortal,
+                                OutputType& output) const
   {
     if ((permutationIndex >= 0) && (permutationIndex < inputPortal.GetNumberOfValues()))
     {
@@ -84,13 +84,15 @@ viskores::cont::UnknownArrayHandle MapArrayPermutation(
   if (!permutation.IsBaseComponentType<viskores::Id>())
   {
     throw viskores::cont::ErrorBadType("Permutation array input to MapArrayPermutation must have "
-                                   "values of viskores::Id. Reported type is " +
-                                   permutation.GetBaseComponentTypeName());
+                                       "values of viskores::Id. Reported type is " +
+                                       permutation.GetBaseComponentTypeName());
   }
   viskores::cont::UnknownArrayHandle outputArray = inputArray.NewInstanceBasic();
   outputArray.Allocate(permutation.GetNumberOfValues());
-  inputArray.CastAndCallWithExtractedArray(
-    DoMapFieldPermutation{}, permutation.ExtractComponent<viskores::Id>(0), outputArray, invalidValue);
+  inputArray.CastAndCallWithExtractedArray(DoMapFieldPermutation{},
+                                           permutation.ExtractComponent<viskores::Id>(0),
+                                           outputArray,
+                                           invalidValue);
   return outputArray;
 }
 

@@ -11235,8 +11235,8 @@ public:
     }
 
     VISKORES_EXEC viskores::Id GetCaseIndex(viskores::Id shape,
-                                    viskores::Id caseId,
-                                    viskores::IdComponent numPoints) const
+                                            viskores::Id caseId,
+                                            viskores::IdComponent numPoints) const
     {
       int CellIndexLookup[viskores::NUMBER_OF_CELL_SHAPES] = {
         // This converts the shape id to clipTableIndicies (above) case
@@ -11291,11 +11291,14 @@ public:
       return this->MIRTablesIndicesPortal.Get(index + caseId);
     }
 
-    VISKORES_EXEC viskores::UInt8 ValueAt(viskores::Id idx) const { return this->MIRTablesDataPortal.Get(idx); }
+    VISKORES_EXEC viskores::UInt8 ValueAt(viskores::Id idx) const
+    {
+      return this->MIRTablesDataPortal.Get(idx);
+    }
 
     VISKORES_EXEC viskores::Id GetNumberOfShapes(viskores::Id shape,
-                                         viskores::Id caseId,
-                                         viskores::IdComponent numPoints) const
+                                                 viskores::Id caseId,
+                                                 viskores::IdComponent numPoints) const
     {
       int CellIndexLookup[viskores::NUMBER_OF_CELL_SHAPES] = {
         // This converts the shape id to clipTableIndicies (above) case
@@ -11350,7 +11353,9 @@ public:
       return this->MIRTableSizesPortal.Get(index + caseId);
     }
 
-    VISKORES_EXEC EdgeVec GetEdge(viskores::Id shape, viskores::Id edgeId, viskores::IdComponent numPoints) const
+    VISKORES_EXEC EdgeVec GetEdge(viskores::Id shape,
+                                  viskores::Id edgeId,
+                                  viskores::IdComponent numPoints) const
     {
       viskores::Id index = ((shape * 12) + edgeId) * 2;
       if (shape == 7)
@@ -11408,13 +11413,16 @@ public:
     friend class MIRTables;
   };
   MIRTables()
-    : MIRTablesDataArray(
-        viskores::cont::make_ArrayHandle(MIRInstructions, MIR_TABLES_DATA_SIZE, viskores::CopyFlag::Off))
-    , MIRTablesIndicesArray(
-        viskores::cont::make_ArrayHandle(MIRTableIndicies, MIR_TABLES_IND_SIZE, viskores::CopyFlag::Off))
+    : MIRTablesDataArray(viskores::cont::make_ArrayHandle(MIRInstructions,
+                                                          MIR_TABLES_DATA_SIZE,
+                                                          viskores::CopyFlag::Off))
+    , MIRTablesIndicesArray(viskores::cont::make_ArrayHandle(MIRTableIndicies,
+                                                             MIR_TABLES_IND_SIZE,
+                                                             viskores::CopyFlag::Off))
     , MIREdgesArray(viskores::cont::make_ArrayHandle(MIRCellEdges, 456, viskores::CopyFlag::Off))
-    , MIRSizeArray(
-        viskores::cont::make_ArrayHandle(MIRShapeCount, MIR_TABLES_SHAPE_SIZE, viskores::CopyFlag::Off))
+    , MIRSizeArray(viskores::cont::make_ArrayHandle(MIRShapeCount,
+                                                    MIR_TABLES_SHAPE_SIZE,
+                                                    viskores::CopyFlag::Off))
   {
   }
 

@@ -51,9 +51,9 @@ namespace cellmetrics
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellTaperMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  CellShapeType shape,
-                                  viskores::ErrorCode& ec)
+                                      const PointCoordVecType& pts,
+                                      CellShapeType shape,
+                                      viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -64,9 +64,9 @@ VISKORES_EXEC OutType CellTaperMetric(const viskores::IdComponent& numPts,
 // ========================= 2D cells ==================================
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellTaperMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  viskores::CellShapeTagQuad,
-                                  viskores::ErrorCode& ec)
+                                      const PointCoordVecType& pts,
+                                      viskores::CellShapeTagQuad,
+                                      viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(ec);
@@ -96,9 +96,9 @@ VISKORES_EXEC OutType CellTaperMetric(const viskores::IdComponent& numPts,
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellTaperMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  viskores::CellShapeTagHexahedron,
-                                  viskores::ErrorCode& ec)
+                                      const PointCoordVecType& pts,
+                                      viskores::CellShapeTagHexahedron,
+                                      viskores::ErrorCode& ec)
 {
   UNUSED(numPts);
   UNUSED(ec);

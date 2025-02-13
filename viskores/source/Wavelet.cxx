@@ -70,7 +70,8 @@ struct WaveletField : public viskores::worklet::WorkletVisitPointsWithCells
   }
 
   template <typename ThreadIndexType>
-  VISKORES_EXEC void operator()(const ThreadIndexType& threadIndex, viskores::FloatDefault& scalar) const
+  VISKORES_EXEC void operator()(const ThreadIndexType& threadIndex,
+                                viskores::FloatDefault& scalar) const
   {
     const viskores::Id3 ijk = threadIndex.GetInputIndex3D();
 
@@ -90,8 +91,8 @@ struct WaveletField : public viskores::worklet::WorkletVisitPointsWithCells
     // The vtkRTAnalyticSource documentation says the periodic contributions
     // should be multiplied in, but the implementation adds them. We'll do as
     // they do, not as they say.
-    scalar =
-      this->MaximumValue * viskores::Exp(-gaussSum * this->Temp2) + viskores::ReduceSum(periodicContribs);
+    scalar = this->MaximumValue * viskores::Exp(-gaussSum * this->Temp2) +
+      viskores::ReduceSum(periodicContribs);
   }
 };
 } // namespace wavelet
@@ -146,15 +147,16 @@ viskores::cont::DataSet Wavelet::DoExecute() const
 }
 
 template <viskores::IdComponent Dim>
-viskores::cont::Field Wavelet::GeneratePointField(const viskores::cont::CellSetStructured<Dim>& cellset,
-                                              const std::string& name) const
+viskores::cont::Field Wavelet::GeneratePointField(
+  const viskores::cont::CellSetStructured<Dim>& cellset,
+  const std::string& name) const
 {
   const viskores::Id3 dims{ this->MaximumExtent - this->MinimumExtent + viskores::Id3{ 1 } };
   viskores::Vec3f minPt = viskores::Vec3f(this->MinimumExtent) * this->Spacing;
   viskores::FloatDefault temp2 = 1.f / (2.f * this->StandardDeviation * this->StandardDeviation);
   viskores::Vec3f scale{ computeScaleFactor(this->MinimumExtent[0], this->MaximumExtent[0]),
-                     computeScaleFactor(this->MinimumExtent[1], this->MaximumExtent[1]),
-                     computeScaleFactor(this->MinimumExtent[2], this->MaximumExtent[2]) };
+                         computeScaleFactor(this->MinimumExtent[1], this->MaximumExtent[1]),
+                         computeScaleFactor(this->MinimumExtent[2], this->MaximumExtent[2]) };
 
   viskores::cont::ArrayHandle<viskores::FloatDefault> output;
   wavelet::WaveletField worklet{ this->Center,

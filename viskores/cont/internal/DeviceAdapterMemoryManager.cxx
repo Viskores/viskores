@@ -124,7 +124,10 @@ void HostReallocate(void*& memory,
   memory = container = newBuffer;
 }
 
-VISKORES_CONT void InvalidRealloc(void*&, void*&, viskores::BufferSizeType, viskores::BufferSizeType)
+VISKORES_CONT void InvalidRealloc(void*&,
+                                  void*&,
+                                  viskores::BufferSizeType,
+                                  viskores::BufferSizeType)
 {
   throw viskores::cont::ErrorBadAllocation("User provided memory does not have a reallocater.");
 }
@@ -148,10 +151,10 @@ struct BufferInfoInternals
   std::atomic<CountType> Count;
 
   VISKORES_CONT BufferInfoInternals(void* memory,
-                                void* container,
-                                viskores::BufferSizeType size,
-                                BufferInfo::Deleter deleter,
-                                BufferInfo::Reallocater reallocater)
+                                    void* container,
+                                    viskores::BufferSizeType size,
+                                    BufferInfo::Deleter deleter,
+                                    BufferInfo::Reallocater reallocater)
     : Memory(memory)
     , Container(container)
     , Delete(deleter)
@@ -341,9 +344,10 @@ void* DeviceAdapterMemoryManagerBase::AllocateRawPointer(viskores::BufferSizeTyp
   return this->Allocate(size).TransferOwnership().Memory;
 }
 
-void DeviceAdapterMemoryManagerBase::CopyDeviceToDeviceRawPointer(const void* src,
-                                                                  void* dest,
-                                                                  viskores::BufferSizeType size) const
+void DeviceAdapterMemoryManagerBase::CopyDeviceToDeviceRawPointer(
+  const void* src,
+  void* dest,
+  viskores::BufferSizeType size) const
 {
   this->CopyDeviceToDevice(
     viskores::cont::internal::BufferInfo(

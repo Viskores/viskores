@@ -32,14 +32,14 @@ namespace
 static constexpr viskores::Id ARRAY_SIZE = 10;
 
 viskores::cont::UnknownArrayHandle MakeComparable(const viskores::cont::UnknownArrayHandle& array,
-                                              std::false_type)
+                                                  std::false_type)
 {
   return array;
 }
 
 template <typename T>
 viskores::cont::UnknownArrayHandle MakeComparable(const viskores::cont::ArrayHandle<T>& array,
-                                              std::true_type)
+                                                  std::true_type)
 {
   return array;
 }
@@ -63,7 +63,8 @@ template <typename RefArrayType, typename TestArrayType>
 void TestValues(const RefArrayType& refArray, const TestArrayType& testArray)
 {
   TestValuesImpl(
-    MakeComparable(refArray, typename viskores::cont::internal::ArrayHandleCheck<RefArrayType>::type{}),
+    MakeComparable(refArray,
+                   typename viskores::cont::internal::ArrayHandleCheck<RefArrayType>::type{}),
     MakeComparable(testArray,
                    typename viskores::cont::internal::ArrayHandleCheck<TestArrayType>::type{}));
 }
@@ -81,7 +82,7 @@ template <typename ValueType>
 void TryCopy()
 {
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             "Trying type: " << viskores::testing::TypeName<ValueType>::Name());
+                 "Trying type: " << viskores::testing::TypeName<ValueType>::Name());
   using VTraits = viskores::VecTraits<ValueType>;
 
   {
@@ -158,7 +159,8 @@ void TryCopy()
   {
     std::cout << "concatinate -> basic" << std::endl;
     viskores::cont::ArrayHandle<ValueType> input1 = MakeInputArray<ValueType>();
-    viskores::cont::ArrayHandleConstant<ValueType> input2(TestValue(6, ValueType{}), ARRAY_SIZE / 2);
+    viskores::cont::ArrayHandleConstant<ValueType> input2(TestValue(6, ValueType{}),
+                                                          ARRAY_SIZE / 2);
     auto concatInput = viskores::cont::make_ArrayHandleConcatenate(input1, input2);
     viskores::cont::ArrayHandle<ValueType> output;
     viskores::cont::ArrayCopy(concatInput, output);
@@ -168,8 +170,8 @@ void TryCopy()
   {
     std::cout << "permutation -> basic" << std::endl;
     viskores::cont::ArrayHandle<viskores::Id> indices;
-    viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleCounting<viskores::Id>(0, 2, ARRAY_SIZE / 2),
-                          indices);
+    viskores::cont::ArrayCopy(
+      viskores::cont::make_ArrayHandleCounting<viskores::Id>(0, 2, ARRAY_SIZE / 2), indices);
     auto input = viskores::cont::make_ArrayHandlePermutation(indices, MakeInputArray<ValueType>());
     viskores::cont::ArrayHandle<ValueType> output;
     viskores::cont::ArrayCopy(input, output);
@@ -323,7 +325,8 @@ void TryCopy()
     viskores::cont::UnknownArrayHandle outputUnknown;
     outputUnknown.DeepCopyFrom(input);
     // Should be different arrays with same content.
-    VISKORES_TEST_ASSERT(input != outputUnknown.AsArrayHandle<viskores::cont::ArrayHandle<ValueType>>());
+    VISKORES_TEST_ASSERT(input !=
+                         outputUnknown.AsArrayHandle<viskores::cont::ArrayHandle<ValueType>>());
     TestValues(input, outputUnknown);
   }
 
@@ -346,7 +349,8 @@ void TryCopy()
     viskores::cont::ArrayHandle<ValueType> input = MakeInputArray<ValueType>();
     viskores::cont::UnknownArrayHandle outputUnknown;
     outputUnknown.CopyShallowIfPossible(input);
-    VISKORES_TEST_ASSERT(input == outputUnknown.AsArrayHandle<viskores::cont::ArrayHandle<ValueType>>());
+    VISKORES_TEST_ASSERT(input ==
+                         outputUnknown.AsArrayHandle<viskores::cont::ArrayHandle<ValueType>>());
 
     viskores::cont::ArrayHandle<ValueType> outputArray;
     outputUnknown = outputArray;

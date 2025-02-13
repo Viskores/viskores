@@ -29,10 +29,10 @@ namespace internal
 /// using a device compiler.
 ///
 VISKORES_CONT_EXPORT void ArrayCopyUnknown(const viskores::cont::UnknownArrayHandle& source,
-                                       viskores::cont::UnknownArrayHandle& destination);
+                                           viskores::cont::UnknownArrayHandle& destination);
 
 VISKORES_CONT_EXPORT void ArrayCopyUnknown(const viskores::cont::UnknownArrayHandle& source,
-                                       const viskores::cont::UnknownArrayHandle& destination);
+                                           const viskores::cont::UnknownArrayHandle& destination);
 
 
 } // namespace viskores::cont::internal

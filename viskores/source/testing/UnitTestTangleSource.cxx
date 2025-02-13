@@ -48,7 +48,8 @@ void TangleSourceTest()
     ScalarHandleType handle = dynData.AsArrayHandle<ScalarHandleType>();
     auto data = handle.ReadPortal();
 
-    VISKORES_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 9261), "Incorrect number of scalars.");
+    VISKORES_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 9261),
+                         "Incorrect number of scalars.");
 
     VISKORES_TEST_ASSERT(test_equal(data.Get(0), 24.46), "Incorrect scalar value.");
     VISKORES_TEST_ASSERT(test_equal(data.Get(16), 16.1195), "Incorrect scalar value.");

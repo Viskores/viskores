@@ -46,12 +46,13 @@ public:
     Algorithm::Sort(componentArray);
     Algorithm::Unique(componentArray);
     VISKORES_TEST_ASSERT(componentArray.GetNumberOfValues() == 8,
-                     "Wrong number of connected components");
+                         "Wrong number of connected components");
   }
 
   static void TestExplicitDataSet()
   {
-    viskores::cont::DataSet dataSet = viskores::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
+    viskores::cont::DataSet dataSet =
+      viskores::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
 
     viskores::filter::connected_components::CellSetConnectivity connectivity;
     const viskores::cont::DataSet output = connectivity.Execute(dataSet);
@@ -64,12 +65,13 @@ public:
     Algorithm::Sort(componentArray);
     Algorithm::Unique(componentArray);
     VISKORES_TEST_ASSERT(componentArray.GetNumberOfValues() == 1,
-                     "Wrong number of connected components");
+                         "Wrong number of connected components");
   }
 
   static void TestUniformDataSet()
   {
-    viskores::cont::DataSet dataSet = viskores::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
+    viskores::cont::DataSet dataSet =
+      viskores::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
     viskores::filter::connected_components::CellSetConnectivity connectivity;
     const viskores::cont::DataSet output = connectivity.Execute(dataSet);
 
@@ -81,7 +83,7 @@ public:
     Algorithm::Sort(componentArray);
     Algorithm::Unique(componentArray);
     VISKORES_TEST_ASSERT(componentArray.GetNumberOfValues() == 1,
-                     "Wrong number of connected components");
+                         "Wrong number of connected components");
   }
 
   void operator()() const

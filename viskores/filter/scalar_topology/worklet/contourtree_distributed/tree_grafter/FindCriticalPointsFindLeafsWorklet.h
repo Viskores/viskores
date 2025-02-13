@@ -87,11 +87,12 @@ public:
   FindCriticalPointsFindLeafsWorklet() {}
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
-                            const InFieldPortalType& isNecessaryPortal,
-                            const InFieldPortalType& upNeighbourPortal,
-                            const InFieldPortalType& downNeighbourPortal,
-                            const InOutFieldPortalType& supernodeTypePortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
+    const InFieldPortalType& isNecessaryPortal,
+    const InFieldPortalType& upNeighbourPortal,
+    const InFieldPortalType& downNeighbourPortal,
+    const InOutFieldPortalType& supernodeTypePortal) const
   { // operator ()
     // flag the leaves
     // per active superarc
@@ -107,8 +108,8 @@ public:
         viskores::worklet::contourtree_augmented::NoSuchElement(downNeighbourPortal.Get(lowEnd)) &&
         (!isNecessaryPortal.Get(lowEnd)))
     {
-      supernodeTypePortal.Set(lowEnd,
-                              (viskores::Id)viskores::worklet::contourtree_augmented::IS_LOWER_LEAF);
+      supernodeTypePortal.Set(
+        lowEnd, (viskores::Id)viskores::worklet::contourtree_augmented::IS_LOWER_LEAF);
     }
 
     // symmetrically for the high end
@@ -118,8 +119,8 @@ public:
         viskores::worklet::contourtree_augmented::NoSuchElement(upNeighbourPortal.Get(highEnd)) &&
         (!isNecessaryPortal.Get(highEnd)))
     {
-      supernodeTypePortal.Set(highEnd,
-                              (viskores::Id)viskores::worklet::contourtree_augmented::IS_UPPER_LEAF);
+      supernodeTypePortal.Set(
+        highEnd, (viskores::Id)viskores::worklet::contourtree_augmented::IS_UPPER_LEAF);
     }
 
     // In serial this worklet implements the following operation

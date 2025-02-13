@@ -21,16 +21,17 @@ void CheckArray(const ArrayHandleType array)
   VISKORES_TEST_ASSERT(array.GetNumberOfValues() == 3, "Permuted array has wrong size.");
 
   typename ArrayHandleType::ReadPortalType portal = array.ReadPortal();
-  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 3, "Permuted portal has wrong size.");
+  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 3,
+                       "Permuted portal has wrong size.");
 
   using PairType = viskores::Pair<viskores::Id, viskores::Float64>;
 
   VISKORES_TEST_ASSERT(test_equal(portal.Get(0), PairType(3, 0.0)),
-                   "Zipped array has wrong value.");
+                       "Zipped array has wrong value.");
   VISKORES_TEST_ASSERT(test_equal(portal.Get(1), PairType(0, 0.1)),
-                   "Zipped array has wrong value.");
+                       "Zipped array has wrong value.");
   VISKORES_TEST_ASSERT(test_equal(portal.Get(2), PairType(1, 0.2)),
-                   "Zipped array has wrong value.");
+                       "Zipped array has wrong value.");
 }
 
 void Test()

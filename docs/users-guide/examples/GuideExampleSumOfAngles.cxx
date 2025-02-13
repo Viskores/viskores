@@ -60,10 +60,10 @@ struct SumOfAngles : viskores::worklet::WorkletVisitPointsWithCells
            typename PointCoordsPortalType,
            typename SumType>
   VISKORES_EXEC void operator()(const IncidentCellVecType& incidentCells,
-                            viskores::Id pointIndex,
-                            const CellSetType& cellSet,
-                            const PointCoordsPortalType& pointCoordsPortal,
-                            SumType& outSum) const
+                                viskores::Id pointIndex,
+                                const CellSetType& cellSet,
+                                const PointCoordsPortalType& pointCoordsPortal,
+                                SumType& outSum) const
   {
     using CoordType = typename PointCoordsPortalType::ValueType;
 
@@ -165,8 +165,8 @@ VISKORES_CONT
 static void TrySumOfAngles()
 {
   std::cout << "Read input data" << std::endl;
-  viskores::io::VTKDataSetReader reader(viskores::cont::testing::Testing::GetTestDataBasePath() +
-                                    "unstructured/cow.vtk");
+  viskores::io::VTKDataSetReader reader(
+    viskores::cont::testing::Testing::GetTestDataBasePath() + "unstructured/cow.vtk");
   viskores::cont::DataSet dataSet = reader.ReadDataSet();
 
   std::cout << "Get information out of data" << std::endl;

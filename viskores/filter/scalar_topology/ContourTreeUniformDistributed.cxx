@@ -104,10 +104,11 @@ void SaveAfterFanInResults(
 {
   (void)logLevel; // Suppress unused variable warning if logging is disabled
   VISKORES_LOG_S(logLevel,
-             "Fan In Complete" << std::endl
-                               << "# of CTs: " << blockData->ContourTrees.size() << std::endl
-                               << "# of CTMs: " << blockData->ContourTreeMeshes.size() << std::endl
-                               << "# of IFs: " << blockData->InteriorForests.size() << std::endl);
+                 "Fan In Complete"
+                   << std::endl
+                   << "# of CTs: " << blockData->ContourTrees.size() << std::endl
+                   << "# of CTMs: " << blockData->ContourTreeMeshes.size() << std::endl
+                   << "# of IFs: " << blockData->InteriorForests.size() << std::endl);
 
   char buffer[256];
   std::snprintf(buffer,
@@ -164,8 +165,9 @@ void SaveHierarchicalTreeDot(
 //-----------------------------------------------------------------------------
 // Main constructor
 //-----------------------------------------------------------------------------
-ContourTreeUniformDistributed::ContourTreeUniformDistributed(viskores::cont::LogLevel timingsLogLevel,
-                                                             viskores::cont::LogLevel treeLogLevel)
+ContourTreeUniformDistributed::ContourTreeUniformDistributed(
+  viskores::cont::LogLevel timingsLogLevel,
+  viskores::cont::LogLevel treeLogLevel)
   : UseBoundaryExtremaOnly(true)
   , UseMarchingCubes(false)
   , AugmentHierarchicalTree(false)
@@ -211,7 +213,8 @@ void ContourTreeUniformDistributed::ComputeLocalTree(
   }
   else if (this->UseMarchingCubes) // 3D marching cubes mesh
   {
-    viskores::worklet::contourtree_augmented::DataSetMeshTriangulation3DMarchingCubes mesh(meshSize);
+    viskores::worklet::contourtree_augmented::DataSetMeshTriangulation3DMarchingCubes mesh(
+      meshSize);
     this->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
     auto meshBoundaryExecObject = mesh.GetMeshBoundaryExecutionObject();
     this->ComputeLocalTreeImpl(blockIndex, input, fieldArray, mesh, meshBoundaryExecObject);
@@ -241,7 +244,8 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
 
   // Set up the worklet
   viskores::worklet::ContourTreeAugmented worklet;
-  worklet.TimingsLogLevel = viskores::cont::LogLevel::Off; // turn of the loggin, we do this afterwards
+  worklet.TimingsLogLevel =
+    viskores::cont::LogLevel::Off; // turn of the loggin, we do this afterwards
   worklet.Run(field,
               mesh,
               this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
@@ -251,17 +255,17 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
               meshBoundaryExecObject);
   // Log the contour tree timiing stats
   VISKORES_LOG_S(this->TimingsLogLevel,
-             std::endl
-               << "    ---------------- Contour Tree Worklet Timings ------------------"
-               << std::endl
-               << "    Block Index : " << blockIndex << std::endl
-               << worklet.TimingsLogString);
+                 std::endl
+                   << "    ---------------- Contour Tree Worklet Timings ------------------"
+                   << std::endl
+                   << "    Block Index : " << blockIndex << std::endl
+                   << worklet.TimingsLogString);
   VISKORES_LOG_S(this->TimingsLogLevel,
-             std::endl
-               << "    "
-                  "ComputeLocalTree ContourTree (blockIndex="
-               << blockIndex << ") "
-               << ": " << timer.GetElapsedTime() << " seconds");
+                 std::endl
+                   << "    "
+                      "ComputeLocalTree ContourTree (blockIndex="
+                   << blockIndex << ") "
+                   << ": " << timer.GetElapsedTime() << " seconds");
   timer.Start();
   // Now we compute the BRACT for our data block. We do this here because we know the MeshType
   // here and we don't need to store the mesh separately any more since it is stored in the BRACT
@@ -293,11 +297,11 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
   boundaryTreeMaker.Construct(&localToGlobalIdRelabeler, this->UseBoundaryExtremaOnly);
   // Log timing statistics
   VISKORES_LOG_S(this->TimingsLogLevel,
-             std::endl
-               << "    "
-                  "ComputeLocalTree BoundaryTreeMaker (blockIndex="
-               << blockIndex << ") "
-               << ": " << timer.GetElapsedTime() << " seconds");
+                 std::endl
+                   << "    "
+                      "ComputeLocalTree BoundaryTreeMaker (blockIndex="
+                   << blockIndex << ") "
+                   << ": " << timer.GetElapsedTime() << " seconds");
   timer.Start();
 
   // At this point, I'm reasonably certain that the contour tree has been computed regardless of data push/pull
@@ -423,17 +427,19 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
 
       // Log timing statistics
       VISKORES_LOG_S(this->TimingsLogLevel,
-                 std::endl
-                   << "    " << std::setw(38) << std::left << "ComputeLocalTree Save Dot"
-                   << ": " << timer.GetElapsedTime() << " seconds");
+                     std::endl
+                       << "    " << std::setw(38) << std::left << "ComputeLocalTree Save Dot"
+                       << ": " << timer.GetElapsedTime() << " seconds");
     }
   } // if (this->SaveDotFiles)
 } // ContourTreeUniformDistributed::ComputeLocalTreeImpl
 
 
-viskores::cont::DataSet ContourTreeUniformDistributed::DoExecute(const viskores::cont::DataSet& input)
+viskores::cont::DataSet ContourTreeUniformDistributed::DoExecute(
+  const viskores::cont::DataSet& input)
 {
-  viskores::cont::PartitionedDataSet output = this->Execute(viskores::cont::PartitionedDataSet(input));
+  viskores::cont::PartitionedDataSet output =
+    this->Execute(viskores::cont::PartitionedDataSet(input));
   if (output.GetNumberOfPartitions() > 1)
   {
     throw viskores::cont::ErrorFilterExecution("Expecting at most 1 block.");
@@ -464,7 +470,7 @@ VISKORES_CONT void ContourTreeUniformDistributed::PreExecute(
   if (globalNumberOfPartitions < 2)
   {
     throw viskores::cont::ErrorFilterExecution("ContourTreeUniformDistributed filter expects a "
-                                           "PartitionedDataSet with at least two partitions.");
+                                               "PartitionedDataSet with at least two partitions.");
   }
 
   if (this->BlocksPerDimension[0] != -1)
@@ -476,13 +482,14 @@ VISKORES_CONT void ContourTreeUniformDistributed::PreExecute(
     if (globalNumberOfPartitions !=
         this->BlocksPerDimension[0] * this->BlocksPerDimension[1] * this->BlocksPerDimension[2])
     {
-      throw viskores::cont::ErrorFilterExecution("Global number of blocks in data set does not match "
-                                             "expected value based on BlocksPerDimension");
+      throw viskores::cont::ErrorFilterExecution(
+        "Global number of blocks in data set does not match "
+        "expected value based on BlocksPerDimension");
     }
     if (this->LocalBlockIndices.GetNumberOfValues() != input.GetNumberOfPartitions())
     {
       throw viskores::cont::ErrorFilterExecution("Local number of partitions in data set does not "
-                                             "match number of specified blocks indices.");
+                                                 "match number of specified blocks indices.");
     }
   }
 
@@ -521,23 +528,23 @@ viskores::cont::PartitionedDataSet ContourTreeUniformDistributed::DoExecuteParti
   for (size_t bi = 0; bi < this->LocalContourTrees.size(); bi++)
   {
     VISKORES_LOG_S(this->TreeLogLevel,
-               std::endl
-                 << "    ---------------- Contour Tree Array Sizes ---------------------"
-                 << std::endl
-                 << "    Block Index : " << bi << std::endl
-                 << LocalContourTrees[bi].PrintArraySizes());
+                   std::endl
+                     << "    ---------------- Contour Tree Array Sizes ---------------------"
+                     << std::endl
+                     << "    Block Index : " << bi << std::endl
+                     << LocalContourTrees[bi].PrintArraySizes());
     VISKORES_LOG_S(this->TreeLogLevel,
-               std::endl
-                 << "    ---------------- Boundary Tree Array Sizes ---------------------"
-                 << std::endl
-                 << "    Block Index : " << bi << std::endl
-                 << LocalBoundaryTrees[bi].PrintArraySizes());
+                   std::endl
+                     << "    ---------------- Boundary Tree Array Sizes ---------------------"
+                     << std::endl
+                     << "    Block Index : " << bi << std::endl
+                     << LocalBoundaryTrees[bi].PrintArraySizes());
     VISKORES_LOG_S(this->TreeLogLevel,
-               std::endl
-                 << "    ---------------- Interior Forest Array Sizes ---------------------"
-                 << std::endl
-                 << "    Block Index : " << bi << std::endl
-                 << LocalInteriorForests[bi].PrintArraySizes());
+                   std::endl
+                     << "    ---------------- Interior Forest Array Sizes ---------------------"
+                     << std::endl
+                     << "    Block Index : " << bi << std::endl
+                     << LocalInteriorForests[bi].PrintArraySizes());
     // VISKORES_LOG_S(this->TreeLogLevel,
     //           std::endl
     //           << "    ---------------- Hyperstructure Statistics ---------------------"  << std::endl
@@ -546,9 +553,10 @@ viskores::cont::PartitionedDataSet ContourTreeUniformDistributed::DoExecuteParti
 
   // Log timing statistics
   VISKORES_LOG_S(this->TimingsLogLevel,
-             std::endl
-               << "    " << std::setw(38) << std::left << "Contour Tree Filter PrepareForExecution"
-               << ": " << timer.GetElapsedTime() << " seconds");
+                 std::endl
+                   << "    " << std::setw(38) << std::left
+                   << "Contour Tree Filter PrepareForExecution"
+                   << ": " << timer.GetElapsedTime() << " seconds");
 
   viskores::cont::PartitionedDataSet result;
   this->PostExecute(input, result);
@@ -567,16 +575,17 @@ VISKORES_CONT void ContourTreeUniformDistributed::PostExecute(
   auto field = // TODO/FIXME: Correct for more than one block per rank?
     input.GetPartition(0).GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
 
-  auto PostExecuteCaller = [&](const auto& concrete) {
+  auto PostExecuteCaller = [&](const auto& concrete)
+  {
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     this->DoPostExecute<T>(input, result);
   };
   this->CastAndCallScalarField(field, PostExecuteCaller);
 
   VISKORES_LOG_S(this->TimingsLogLevel,
-             std::endl
-               << "    " << std::setw(38) << std::left << "Contour Tree Filter PostExecute"
-               << ": " << timer.GetElapsedTime() << " seconds");
+                 std::endl
+                   << "    " << std::setw(38) << std::left << "Contour Tree Filter PostExecute"
+                   << ": " << timer.GetElapsedTime() << " seconds");
 }
 
 template <typename FieldType>
@@ -597,11 +606,12 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
 
   using HyperSweepBlock = viskores::worklet::contourtree_distributed::HyperSweepBlock<FieldType>;
   auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
-  viskoresdiy::Master hierarchical_hyper_sweep_master(comm,
-                                                  1,  // Use 1 thread, Viskores will do the treading
-                                                  -1, // All blocks in memory
-                                                  0,  // No create function
-                                                  HyperSweepBlock::Destroy);
+  viskoresdiy::Master hierarchical_hyper_sweep_master(
+    comm,
+    1,  // Use 1 thread, Viskores will do the treading
+    -1, // All blocks in memory
+    0,  // No create function
+    HyperSweepBlock::Destroy);
 
   // Log the time to create the DIY master for the hyper sweep
   timingsStream << "    " << std::setw(38) << std::left << "Create DIY Master (Hypersweep)"
@@ -612,7 +622,8 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
   using DistributedContourTreeBlockData =
     viskores::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>;
   inputContourTreeMaster.foreach (
-    [&](DistributedContourTreeBlockData* currInBlock, const viskoresdiy::Master::ProxyWithLink&) {
+    [&](DistributedContourTreeBlockData* currInBlock, const viskoresdiy::Master::ProxyWithLink&)
+    {
       viskores::Id blockNo = currInBlock->LocalBlockNo;
       //const viskores::cont::DataSet& currDS = hierarchicalTreeOutputDataSet[blockNo];
       auto currOriginalBlock = input.GetPartition(static_cast<viskores::Id>(blockNo));
@@ -677,7 +688,8 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
   timer.Start();
 
   hierarchical_hyper_sweep_master.foreach (
-    [&](HyperSweepBlock* b, const viskoresdiy::Master::ProxyWithLink&) {
+    [&](HyperSweepBlock* b, const viskoresdiy::Master::ProxyWithLink&)
+    {
       std::stringstream localHypersweepTimingsStream;
       viskores::cont::Timer localHypersweepTimer;
       localHypersweepTimer.Start();
@@ -699,8 +711,8 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
         debugStream << std::endl;
         debugStream << "Volumes Before Initialisation" << std::endl;
         debugStream << "Block: " << b->GlobalBlockId << " Size: " << nBlockVertices << std::endl;
-        viskores::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
-                                                          debugStream);
+        viskores::worklet::contourtree_augmented::PrintHeader(
+          b->IntrinsicVolume.GetNumberOfValues(), debugStream);
         viskores::worklet::contourtree_augmented::PrintIndices(
           "Intrinsic", b->IntrinsicVolume, -1, debugStream);
         viskores::worklet::contourtree_augmented::PrintIndices(
@@ -721,8 +733,8 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
 
       // Create mesh and initialize vertex counts
       viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler idRelabeler{ b->Origin,
-                                                                               b->Size,
-                                                                               b->GlobalSize };
+                                                                                   b->Size,
+                                                                                   b->GlobalSize };
 
 #ifdef DEBUG_PRINT_HYPER_SWEEPER
       {
@@ -743,7 +755,8 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
       else
       {
         // For getting owned vertices, it does not make a difference if we are using marching cubes or not.
-        viskores::worklet::contourtree_augmented::DataSetMeshTriangulation3DFreudenthal mesh(b->Size);
+        viskores::worklet::contourtree_augmented::DataSetMeshTriangulation3DFreudenthal mesh(
+          b->Size);
         hyperSweeper.InitializeIntrinsicVertexCount(
           b->HierarchicalContourTree, mesh, idRelabeler, b->IntrinsicVolume);
       }
@@ -755,8 +768,8 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
       {
         std::stringstream debugStream;
         debugStream << "Intrinsic Volume Computed & Copied to Dependent" << std::endl;
-        viskores::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
-                                                          debugStream);
+        viskores::worklet::contourtree_augmented::PrintHeader(
+          b->IntrinsicVolume.GetNumberOfValues(), debugStream);
         viskores::cont::ArrayHandle<viskores::Id> whichTreeSupernodeRegularIDs;
         // we copy the HCT information to a temp array because b->HierarchicalContourTree is a const
         viskores::cont::ArrayHandle<viskores::Id> hctGRIds;
@@ -788,8 +801,8 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
       {
         std::stringstream debugStream;
         debugStream << "Local Hypersweep Complete" << std::endl;
-        viskores::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
-                                                          debugStream);
+        viskores::worklet::contourtree_augmented::PrintHeader(
+          b->IntrinsicVolume.GetNumberOfValues(), debugStream);
         viskores::cont::ArrayHandle<viskores::Id> whichTreeSupernodeRegularIDs;
         // we copy the HCT information to a temp array because b->HierarchicalContourTree is a const
         viskores::cont::ArrayHandle<viskores::Id> hctGRIds;
@@ -816,10 +829,10 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
 
       // Log the timing stats we collected
       VISKORES_LOG_S(this->TimingsLogLevel,
-                 std::endl
-                   << "    ------------ Compute Local Hypersweep (block=" << b->LocalBlockNo
-                   << ")  ------------" << std::endl
-                   << localHypersweepTimingsStream.str());
+                     std::endl
+                       << "    ------------ Compute Local Hypersweep (block=" << b->LocalBlockNo
+                       << ")  ------------" << std::endl
+                       << localHypersweepTimingsStream.str());
     });
 
   // Log time for performing the local hypersweep
@@ -844,7 +857,8 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
   intrinsicVolumes.resize(inputContourTreeMaster.size());
   dependentVolumes.resize(inputContourTreeMaster.size());
   hierarchical_hyper_sweep_master.foreach (
-    [&](HyperSweepBlock* b, const viskoresdiy::Master::ProxyWithLink&) {
+    [&](HyperSweepBlock* b, const viskoresdiy::Master::ProxyWithLink&)
+    {
       intrinsicVolumes[b->LocalBlockNo] = b->IntrinsicVolume;
       dependentVolumes[b->LocalBlockNo] = b->DependentVolume;
 
@@ -855,8 +869,8 @@ inline VISKORES_CONT void ContourTreeUniformDistributed::ComputeVolumeMetric(
           this->TreeLogLevel,
           b->HierarchicalContourTree.DebugPrint("Called from DumpVolumes", __FILE__, __LINE__));*/
         std::ostringstream volumeStream;
-        viskores::worklet::contourtree_augmented::PrintHeader(b->IntrinsicVolume.GetNumberOfValues(),
-                                                          volumeStream);
+        viskores::worklet::contourtree_augmented::PrintHeader(
+          b->IntrinsicVolume.GetNumberOfValues(), volumeStream);
         viskores::worklet::contourtree_augmented::PrintIndices(
           "Intrinsic Volume", b->IntrinsicVolume, -1, volumeStream);
         viskores::worklet::contourtree_augmented::PrintIndices(
@@ -890,10 +904,10 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
   using DistributedContourTreeBlockData =
     viskores::worklet::contourtree_distributed::DistributedContourTreeBlockData<FieldType>;
   viskoresdiy::Master master(comm,
-                         1,  // Use 1 thread, Viskores will do the treading
-                         -1, // All blocks in memory
-                         0,  // No create function (since all blocks in memory)
-                         DistributedContourTreeBlockData::Destroy);
+                             1,  // Use 1 thread, Viskores will do the treading
+                             -1, // All blocks in memory
+                             0,  // No create function (since all blocks in memory)
+                             DistributedContourTreeBlockData::Destroy);
 
   // ... and record time for creating the DIY master
   timingsStream << "    " << std::setw(38) << std::left
@@ -910,8 +924,8 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
   if (this->BlocksPerDimension[0] == -1)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "BlocksPerDimension not set. Computing block indices "
-               "from information in CellSetStructured.");
+                   "BlocksPerDimension not set. Computing block indices "
+                   "from information in CellSetStructured.");
     diyBounds = viskores::filter::scalar_topology::internal::ComputeBlockIndices(
       input, diyDivisions, viskoresdiyLocalBlockGids);
 
@@ -927,13 +941,13 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
   else
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "BlocksPerDimension set. Using information provided by caller.");
+                   "BlocksPerDimension set. Using information provided by caller.");
     diyBounds =
       viskores::filter::scalar_topology::internal::ComputeBlockIndices(input,
-                                                                   this->BlocksPerDimension,
-                                                                   this->LocalBlockIndices,
-                                                                   diyDivisions,
-                                                                   viskoresdiyLocalBlockGids);
+                                                                       this->BlocksPerDimension,
+                                                                       this->LocalBlockIndices,
+                                                                       diyDivisions,
+                                                                       viskoresdiyLocalBlockGids);
   }
   int numDims = diyBounds.min.dimension();
   int globalNumberOfBlocks =
@@ -982,7 +996,7 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
     // GlobalMeshIndex by tranforming those indices with our IdRelabler
     viskores::worklet::contourtree_augmented::IdArrayType localGlobalMeshIndex;
     viskores::cont::ArrayHandlePermutation<viskores::worklet::contourtree_augmented::IdArrayType,
-                                       viskores::worklet::contourtree_augmented::IdArrayType>
+                                           viskores::worklet::contourtree_augmented::IdArrayType>
       permutedSortOrder(this->LocalBoundaryTrees[bi].VertexIndex, sortOrder);
     auto transformedIndex = viskores::cont::make_ArrayHandleTransform(
       permutedSortOrder,
@@ -1022,27 +1036,29 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
   //     should not be significnatly more expensive then doing it all in one loop
   if (this->SaveDotFiles)
   {
-    master.foreach ([&](DistributedContourTreeBlockData* b, const viskoresdiy::Master::ProxyWithLink&) {
-      // save the contour tree mesh
-      std::string contourTreeMeshFileName = std::string("Rank_") +
-        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-        std::to_string(static_cast<int>(b->LocalBlockNo)) +
-        std::string("_Initial_Step_3_BRACT_Mesh.txt");
-      b->ContourTreeMeshes.back().Save(contourTreeMeshFileName.c_str());
+    master.foreach (
+      [&](DistributedContourTreeBlockData* b, const viskoresdiy::Master::ProxyWithLink&)
+      {
+        // save the contour tree mesh
+        std::string contourTreeMeshFileName = std::string("Rank_") +
+          std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+          std::to_string(static_cast<int>(b->LocalBlockNo)) +
+          std::string("_Initial_Step_3_BRACT_Mesh.txt");
+        b->ContourTreeMeshes.back().Save(contourTreeMeshFileName.c_str());
 
-      // save the corresponding .gv file
-      std::string boundaryTreeMeshFileName = std::string("Rank_") +
-        std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
-        std::to_string(static_cast<int>(b->LocalBlockNo)) +
-        std::string("_Initial_Step_5_BRACT_Mesh.gv");
-      std::ofstream boundaryTreeMeshFile(boundaryTreeMeshFileName);
-      boundaryTreeMeshFile
-        << viskores::worklet::contourtree_distributed::ContourTreeMeshDotGraphPrint<FieldType>(
-             std::string("Block ") + std::to_string(static_cast<int>(rank)) +
-               std::string(" Initial Step 5 BRACT Mesh"),
-             b->ContourTreeMeshes.back(),
-             worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
-    }); // master.for_each
+        // save the corresponding .gv file
+        std::string boundaryTreeMeshFileName = std::string("Rank_") +
+          std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+          std::to_string(static_cast<int>(b->LocalBlockNo)) +
+          std::string("_Initial_Step_5_BRACT_Mesh.gv");
+        std::ofstream boundaryTreeMeshFile(boundaryTreeMeshFileName);
+        boundaryTreeMeshFile
+          << viskores::worklet::contourtree_distributed::ContourTreeMeshDotGraphPrint<FieldType>(
+               std::string("Block ") + std::to_string(static_cast<int>(rank)) +
+                 std::string(" Initial Step 5 BRACT Mesh"),
+               b->ContourTreeMeshes.back(),
+               worklet::contourtree_distributed::SHOW_CONTOUR_TREE_MESH_ALL);
+      }); // master.for_each
 
     // Record time for saving debug data
     timingsStream << "    " << std::setw(38) << std::left << "Save block data for debug"
@@ -1115,95 +1131,99 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
   timer.Start();
 
   // ******** 2. Fan out to update all the tree ********
-  master.foreach ([&](DistributedContourTreeBlockData* blockData,
-                      const viskoresdiy::Master::ProxyWithLink&) {
+  master.foreach (
+    [&](DistributedContourTreeBlockData* blockData, const viskoresdiy::Master::ProxyWithLink&)
+    {
 #ifdef DEBUG_PRINT_CTUD
-    // Save the contour tree, contour tree meshes, and interior forest data for debugging
-    viskores::filter::contourtree_distributed_detail::SaveAfterFanInResults(
-      blockData, rank, this->TreeLogLevel);
+      // Save the contour tree, contour tree meshes, and interior forest data for debugging
+      viskores::filter::contourtree_distributed_detail::SaveAfterFanInResults(
+        blockData, rank, this->TreeLogLevel);
 #endif
-    viskores::cont::Timer iterationTimer;
-    iterationTimer.Start();
-    std::stringstream fanoutTimingsStream;
-
-    // Fan out
-    auto nRounds = blockData->ContourTrees.size() - 1;
-
-    blockData->HierarchicalTree.Initialize(static_cast<viskores::Id>(nRounds),
-                                           blockData->ContourTrees[nRounds],
-                                           blockData->ContourTreeMeshes[nRounds - 1]);
-
-    // save the corresponding .gv file
-    if (this->SaveDotFiles)
-    {
-      viskores::filter::scalar_topology::contourtree_distributed_detail::SaveHierarchicalTreeDot(
-        blockData, rank, nRounds);
-    } // if(this->SaveDotFiles)
-
-    fanoutTimingsStream << "    Fan Out Init Hierarchical Tree (block=" << blockData->LocalBlockNo
-                        << ") : " << iterationTimer.GetElapsedTime() << " seconds" << std::endl;
-    iterationTimer.Start();
-
-    for (auto round = nRounds - 1; round > 0; round--)
-    {
+      viskores::cont::Timer iterationTimer;
       iterationTimer.Start();
-      viskores::worklet::contourtree_distributed::
-        TreeGrafter<viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType>, FieldType>
-          grafter(&(blockData->ContourTreeMeshes[round - 1]),
-                  blockData->ContourTrees[round],
-                  &(blockData->InteriorForests[round]));
-      grafter.GraftInteriorForests(static_cast<viskores::Id>(round),
-                                   blockData->HierarchicalTree,
-                                   blockData->ContourTreeMeshes[round - 1].SortedValues);
+      std::stringstream fanoutTimingsStream;
+
+      // Fan out
+      auto nRounds = blockData->ContourTrees.size() - 1;
+
+      blockData->HierarchicalTree.Initialize(static_cast<viskores::Id>(nRounds),
+                                             blockData->ContourTrees[nRounds],
+                                             blockData->ContourTreeMeshes[nRounds - 1]);
+
       // save the corresponding .gv file
       if (this->SaveDotFiles)
       {
         viskores::filter::scalar_topology::contourtree_distributed_detail::SaveHierarchicalTreeDot(
           blockData, rank, nRounds);
       } // if(this->SaveDotFiles)
+
+      fanoutTimingsStream << "    Fan Out Init Hierarchical Tree (block=" << blockData->LocalBlockNo
+                          << ") : " << iterationTimer.GetElapsedTime() << " seconds" << std::endl;
+      iterationTimer.Start();
+
+      for (auto round = nRounds - 1; round > 0; round--)
+      {
+        iterationTimer.Start();
+        viskores::worklet::contourtree_distributed::TreeGrafter<
+          viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType>,
+          FieldType>
+          grafter(&(blockData->ContourTreeMeshes[round - 1]),
+                  blockData->ContourTrees[round],
+                  &(blockData->InteriorForests[round]));
+        grafter.GraftInteriorForests(static_cast<viskores::Id>(round),
+                                     blockData->HierarchicalTree,
+                                     blockData->ContourTreeMeshes[round - 1].SortedValues);
+        // save the corresponding .gv file
+        if (this->SaveDotFiles)
+        {
+          viskores::filter::scalar_topology::contourtree_distributed_detail::
+            SaveHierarchicalTreeDot(blockData, rank, nRounds);
+        } // if(this->SaveDotFiles)
+        // Log the time for each of the iterations of the fan out loop
+        fanoutTimingsStream << "    Fan Out Time (block=" << blockData->LocalBlockNo
+                            << " , round=" << round << ") : " << iterationTimer.GetElapsedTime()
+                            << " seconds" << std::endl;
+      } // for
+
+      // bottom level
+      iterationTimer.Start();
+      viskores::worklet::contourtree_distributed::
+        TreeGrafter<viskores::worklet::contourtree_augmented::DataSetMesh, FieldType>
+          grafter(&(this->LocalMeshes[static_cast<std::size_t>(blockData->LocalBlockNo)]),
+                  blockData->ContourTrees[0],
+                  &(blockData->InteriorForests[0]));
+      viskores::cont::DataSet currBlock = input.GetPartition(blockData->LocalBlockNo);
+      auto currField =
+        currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
+      viskores::cont::ArrayHandle<FieldType> fieldData;
+      viskores::cont::ArrayCopy(currField.GetData(), fieldData);
+
+      viskores::Id3 pointDimensions, globalPointIndexStart;
+      // globalPointDimensions already defined in parent scope
+      currBlock.GetCellSet().CastAndCallForTypes<VISKORES_DEFAULT_CELL_SET_LIST_STRUCTURED>(
+        viskores::worklet::contourtree_augmented::GetLocalAndGlobalPointDimensions(),
+        pointDimensions,
+        globalPointDimensions,
+        globalPointIndexStart);
+
+      auto localToGlobalIdRelabeler =
+        viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
+          globalPointIndexStart, pointDimensions, globalPointDimensions);
+      grafter.GraftInteriorForests(
+        0, blockData->HierarchicalTree, fieldData, &localToGlobalIdRelabeler);
+
       // Log the time for each of the iterations of the fan out loop
       fanoutTimingsStream << "    Fan Out Time (block=" << blockData->LocalBlockNo
-                          << " , round=" << round << ") : " << iterationTimer.GetElapsedTime()
+                          << " , round=" << 0 << ") : " << iterationTimer.GetElapsedTime()
                           << " seconds" << std::endl;
-    } // for
 
-    // bottom level
-    iterationTimer.Start();
-    viskores::worklet::contourtree_distributed::
-      TreeGrafter<viskores::worklet::contourtree_augmented::DataSetMesh, FieldType>
-        grafter(&(this->LocalMeshes[static_cast<std::size_t>(blockData->LocalBlockNo)]),
-                blockData->ContourTrees[0],
-                &(blockData->InteriorForests[0]));
-    viskores::cont::DataSet currBlock = input.GetPartition(blockData->LocalBlockNo);
-    auto currField =
-      currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
-    viskores::cont::ArrayHandle<FieldType> fieldData;
-    viskores::cont::ArrayCopy(currField.GetData(), fieldData);
-
-    viskores::Id3 pointDimensions, globalPointIndexStart;
-    // globalPointDimensions already defined in parent scope
-    currBlock.GetCellSet().CastAndCallForTypes<VISKORES_DEFAULT_CELL_SET_LIST_STRUCTURED>(
-      viskores::worklet::contourtree_augmented::GetLocalAndGlobalPointDimensions(),
-      pointDimensions,
-      globalPointDimensions,
-      globalPointIndexStart);
-
-    auto localToGlobalIdRelabeler = viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
-      globalPointIndexStart, pointDimensions, globalPointDimensions);
-    grafter.GraftInteriorForests(
-      0, blockData->HierarchicalTree, fieldData, &localToGlobalIdRelabeler);
-
-    // Log the time for each of the iterations of the fan out loop
-    fanoutTimingsStream << "    Fan Out Time (block=" << blockData->LocalBlockNo << " , round=" << 0
-                        << ") : " << iterationTimer.GetElapsedTime() << " seconds" << std::endl;
-
-    // Log the timing stats we collected
-    VISKORES_LOG_S(this->TimingsLogLevel,
-               std::endl
-                 << "    ------------ Fan Out (block=" << blockData->LocalBlockNo
-                 << ")  ------------" << std::endl
-                 << fanoutTimingsStream.str());
-  });
+      // Log the timing stats we collected
+      VISKORES_LOG_S(this->TimingsLogLevel,
+                     std::endl
+                       << "    ------------ Fan Out (block=" << blockData->LocalBlockNo
+                       << ")  ------------" << std::endl
+                       << fanoutTimingsStream.str());
+    });
 
   // 2.2 Log timings for fan out
   timingsStream << "    " << std::setw(38) << std::left << "Fan Out Foreach"
@@ -1249,55 +1269,56 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
   if (this->AugmentHierarchicalTree)
   {
     viskores::Id localPresimplifyThreshold = this->PresimplifyThreshold;
-    master.foreach ([globalPointDimensions, localPresimplifyThreshold, unaugmentedDependentVolumes](
-                      DistributedContourTreeBlockData* blockData,
-                      const viskoresdiy::Master::ProxyWithLink&) {
-      // if we don't presimplify then use a NULL pointer for the dependent volume used for pre-simplification
-      viskores::worklet::contourtree_augmented::IdArrayType* volumeArrayForPresimplifiction = NULL;
-      // if we presimplify then get a pointer for the dependent volume for the current block
-      if (localPresimplifyThreshold > 0)
+    master.foreach (
+      [globalPointDimensions, localPresimplifyThreshold, unaugmentedDependentVolumes](
+        DistributedContourTreeBlockData* blockData, const viskoresdiy::Master::ProxyWithLink&)
       {
-        volumeArrayForPresimplifiction =
-          const_cast<viskores::worklet::contourtree_augmented::IdArrayType*>(
-            &unaugmentedDependentVolumes[blockData->LocalBlockNo]);
-      }
-      // Initialize the hierarchical augmenter
-      blockData->HierarchicalAugmenter.Initialize(
-        blockData->GlobalBlockId,
-        &blockData->HierarchicalTree,
-        &blockData->AugmentedTree,
-        blockData->FixedBlockOrigin, // Origin of the data block
-        blockData->FixedBlockSize,   // Extends of the data block
-        globalPointDimensions,       // global point dimensions
-        volumeArrayForPresimplifiction, // DependentVolume if we computed it or NULL if no presimplification is used
-        localPresimplifyThreshold // presimplify if threshold is > 0
-      );
-    });
+        // if we don't presimplify then use a NULL pointer for the dependent volume used for pre-simplification
+        viskores::worklet::contourtree_augmented::IdArrayType* volumeArrayForPresimplifiction =
+          NULL;
+        // if we presimplify then get a pointer for the dependent volume for the current block
+        if (localPresimplifyThreshold > 0)
+        {
+          volumeArrayForPresimplifiction =
+            const_cast<viskores::worklet::contourtree_augmented::IdArrayType*>(
+              &unaugmentedDependentVolumes[blockData->LocalBlockNo]);
+        }
+        // Initialize the hierarchical augmenter
+        blockData->HierarchicalAugmenter.Initialize(
+          blockData->GlobalBlockId,
+          &blockData->HierarchicalTree,
+          &blockData->AugmentedTree,
+          blockData->FixedBlockOrigin, // Origin of the data block
+          blockData->FixedBlockSize,   // Extends of the data block
+          globalPointDimensions,       // global point dimensions
+          volumeArrayForPresimplifiction, // DependentVolume if we computed it or NULL if no presimplification is used
+          localPresimplifyThreshold // presimplify if threshold is > 0
+        );
+      });
 
     timingsStream << "    " << std::setw(38) << std::left << "Initalize Hierarchical Trees"
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     timer.Start();
 
-    viskoresdiy::reduce(master,
-                    assigner,
-                    partners,
-                    viskores::worklet::contourtree_distributed::HierarchicalAugmenterFunctor<FieldType>{
-                      this->TimingsLogLevel });
+    viskoresdiy::reduce(
+      master,
+      assigner,
+      partners,
+      viskores::worklet::contourtree_distributed::HierarchicalAugmenterFunctor<FieldType>{
+        this->TimingsLogLevel });
 
     // Clear all swap data as it is no longer needed
     master.foreach (
-      [](DistributedContourTreeBlockData* blockData, const viskoresdiy::Master::ProxyWithLink&) {
-        blockData->HierarchicalAugmenter.ReleaseSwapArrays();
-      });
+      [](DistributedContourTreeBlockData* blockData, const viskoresdiy::Master::ProxyWithLink&)
+      { blockData->HierarchicalAugmenter.ReleaseSwapArrays(); });
 
     timingsStream << "    " << std::setw(38) << std::left << "Compute/Exchange Attachment Points"
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
     timer.Start();
 
     master.foreach (
-      [](DistributedContourTreeBlockData* blockData, const viskoresdiy::Master::ProxyWithLink&) {
-        blockData->HierarchicalAugmenter.BuildAugmentedTree();
-      });
+      [](DistributedContourTreeBlockData* blockData, const viskoresdiy::Master::ProxyWithLink&)
+      { blockData->HierarchicalAugmenter.BuildAugmentedTree(); });
 
     timingsStream << "    " << std::setw(38) << std::left << "Build Augmented Tree"
                   << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
@@ -1306,82 +1327,88 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
 
   // ******** 4. Create output data set ********
   std::vector<viskores::cont::DataSet> hierarchicalTreeOutputDataSet(master.size());
-  master.foreach ([&](DistributedContourTreeBlockData* blockData,
-                      const viskoresdiy::Master::ProxyWithLink&) {
-    std::stringstream createOutdataTimingsStream;
-    viskores::cont::Timer iterationTimer;
-    iterationTimer.Start();
-
-    // Use the augmented tree if available or otherwise use the unaugmented hierarchical tree from the current block
-    const auto& blockHierarchcialTree = this->AugmentHierarchicalTree
-      ? (*blockData->HierarchicalAugmenter.AugmentedTree)
-      : blockData->HierarchicalTree;
-
-    // Add the information to the output data set
-    blockHierarchcialTree.AddToVISKORESDataSet(hierarchicalTreeOutputDataSet[blockData->LocalBlockNo]);
-
-    // Save information required to set up DIY
-    viskores::cont::ArrayHandle<viskores::Id> viskoresGlobalBlockIdAH;
-    viskoresGlobalBlockIdAH.Allocate(1);
-    auto viskoresGlobalBlockIdWP = viskoresGlobalBlockIdAH.WritePortal();
-    viskoresGlobalBlockIdWP.Set(0, blockData->GlobalBlockId);
-    viskores::cont::Field viskoresGlobalBlockIdField(
-      "viskoresGlobalBlockId", viskores::cont::Field::Association::WholeDataSet, viskoresGlobalBlockIdAH);
-    hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(viskoresGlobalBlockIdField);
-    viskores::cont::ArrayHandle<viskores::Id> viskoresBlocksPerDimensionAH;
-    viskoresBlocksPerDimensionAH.Allocate(3);
-    auto viskoresBlocksPerDimensionWP = viskoresBlocksPerDimensionAH.WritePortal();
-    viskoresBlocksPerDimensionWP.Set(0, this->BlocksPerDimension[0]);
-    viskoresBlocksPerDimensionWP.Set(1, this->BlocksPerDimension[1]);
-    viskoresBlocksPerDimensionWP.Set(2, this->BlocksPerDimension[2]);
-    viskores::cont::Field viskoresBlocksPerDimensionField("viskoresBlocksPerDimension",
-                                                  viskores::cont::Field::Association::WholeDataSet,
-                                                  viskoresBlocksPerDimensionAH);
-    hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(viskoresBlocksPerDimensionField);
-
-    // Copy cell set from input data set. This is mainly to ensure that the output data set
-    // has a defined cell set. Without one, serialization for DIY does not work properly.
-    // Having the extents of the input data set may also help in other use cases.
-    // For example, the ComputeVolume method gets information from this cell set as will
-    // the branch decomposition filter.
-    hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].SetCellSet(
-      input.GetPartition(blockData->LocalBlockNo).GetCellSet());
-
-    // Log the time for each of the iterations of the fan out loop
-    createOutdataTimingsStream << "    Create Output Dataset (block=" << blockData->LocalBlockNo
-                               << ") : " << iterationTimer.GetElapsedTime() << " seconds"
-                               << std::endl;
-    iterationTimer.Start();
-
-    // save the corresponding .gv file
-    if (this->SaveDotFiles)
+  master.foreach (
+    [&](DistributedContourTreeBlockData* blockData, const viskoresdiy::Master::ProxyWithLink&)
     {
-      auto nRounds = blockData->ContourTrees.size() - 1;
-      viskores::filter::scalar_topology::contourtree_distributed_detail::SaveHierarchicalTreeDot(
-        blockData, rank, nRounds);
+      std::stringstream createOutdataTimingsStream;
+      viskores::cont::Timer iterationTimer;
+      iterationTimer.Start();
 
-      createOutdataTimingsStream << "    Save Dot (block=" << blockData->LocalBlockNo
+      // Use the augmented tree if available or otherwise use the unaugmented hierarchical tree from the current block
+      const auto& blockHierarchcialTree = this->AugmentHierarchicalTree
+        ? (*blockData->HierarchicalAugmenter.AugmentedTree)
+        : blockData->HierarchicalTree;
+
+      // Add the information to the output data set
+      blockHierarchcialTree.AddToVISKORESDataSet(
+        hierarchicalTreeOutputDataSet[blockData->LocalBlockNo]);
+
+      // Save information required to set up DIY
+      viskores::cont::ArrayHandle<viskores::Id> viskoresGlobalBlockIdAH;
+      viskoresGlobalBlockIdAH.Allocate(1);
+      auto viskoresGlobalBlockIdWP = viskoresGlobalBlockIdAH.WritePortal();
+      viskoresGlobalBlockIdWP.Set(0, blockData->GlobalBlockId);
+      viskores::cont::Field viskoresGlobalBlockIdField(
+        "viskoresGlobalBlockId",
+        viskores::cont::Field::Association::WholeDataSet,
+        viskoresGlobalBlockIdAH);
+      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(viskoresGlobalBlockIdField);
+      viskores::cont::ArrayHandle<viskores::Id> viskoresBlocksPerDimensionAH;
+      viskoresBlocksPerDimensionAH.Allocate(3);
+      auto viskoresBlocksPerDimensionWP = viskoresBlocksPerDimensionAH.WritePortal();
+      viskoresBlocksPerDimensionWP.Set(0, this->BlocksPerDimension[0]);
+      viskoresBlocksPerDimensionWP.Set(1, this->BlocksPerDimension[1]);
+      viskoresBlocksPerDimensionWP.Set(2, this->BlocksPerDimension[2]);
+      viskores::cont::Field viskoresBlocksPerDimensionField(
+        "viskoresBlocksPerDimension",
+        viskores::cont::Field::Association::WholeDataSet,
+        viskoresBlocksPerDimensionAH);
+      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(
+        viskoresBlocksPerDimensionField);
+
+      // Copy cell set from input data set. This is mainly to ensure that the output data set
+      // has a defined cell set. Without one, serialization for DIY does not work properly.
+      // Having the extents of the input data set may also help in other use cases.
+      // For example, the ComputeVolume method gets information from this cell set as will
+      // the branch decomposition filter.
+      hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].SetCellSet(
+        input.GetPartition(blockData->LocalBlockNo).GetCellSet());
+
+      // Log the time for each of the iterations of the fan out loop
+      createOutdataTimingsStream << "    Create Output Dataset (block=" << blockData->LocalBlockNo
                                  << ") : " << iterationTimer.GetElapsedTime() << " seconds"
                                  << std::endl;
       iterationTimer.Start();
-    } // if(this->SaveDotFiles)
 
-    // Log the timing stats we collected
-    VISKORES_LOG_S(this->TimingsLogLevel,
-               std::endl
-                 << "    ------------ Create Output Data (block=" << blockData->LocalBlockNo
-                 << ")  ------------" << std::endl
-                 << createOutdataTimingsStream.str());
+      // save the corresponding .gv file
+      if (this->SaveDotFiles)
+      {
+        auto nRounds = blockData->ContourTrees.size() - 1;
+        viskores::filter::scalar_topology::contourtree_distributed_detail::SaveHierarchicalTreeDot(
+          blockData, rank, nRounds);
 
-    // Log the stats from the hierarchical contour tree
-    VISKORES_LOG_S(this->TreeLogLevel,
-               std::endl
-                 << "    ------------ Hierarchical Tree Construction Stats ------------"
-                 << std::endl
-                 << std::setw(42) << std::left << "    LocalBlockNo"
-                 << ": " << blockData->LocalBlockNo << std::endl
-                 << blockData->HierarchicalTree.PrintTreeStats() << std::endl);
-  }); // master.foreach
+        createOutdataTimingsStream << "    Save Dot (block=" << blockData->LocalBlockNo
+                                   << ") : " << iterationTimer.GetElapsedTime() << " seconds"
+                                   << std::endl;
+        iterationTimer.Start();
+      } // if(this->SaveDotFiles)
+
+      // Log the timing stats we collected
+      VISKORES_LOG_S(this->TimingsLogLevel,
+                     std::endl
+                       << "    ------------ Create Output Data (block=" << blockData->LocalBlockNo
+                       << ")  ------------" << std::endl
+                       << createOutdataTimingsStream.str());
+
+      // Log the stats from the hierarchical contour tree
+      VISKORES_LOG_S(this->TreeLogLevel,
+                     std::endl
+                       << "    ------------ Hierarchical Tree Construction Stats ------------"
+                       << std::endl
+                       << std::setw(42) << std::left << "    LocalBlockNo"
+                       << ": " << blockData->LocalBlockNo << std::endl
+                       << blockData->HierarchicalTree.PrintTreeStats() << std::endl);
+    }); // master.foreach
 
   // Log total tree computation and augmentation time
   timingsStream << "    " << std::setw(38) << std::left << "Create Output Data"
@@ -1404,15 +1431,18 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
     timer.Start();
 
     master.foreach (
-      [&](DistributedContourTreeBlockData* blockData, const viskoresdiy::Master::ProxyWithLink&) {
+      [&](DistributedContourTreeBlockData* blockData, const viskoresdiy::Master::ProxyWithLink&)
+      {
         // Add the intrinsic and dependent volumes to the output data set
-        viskores::cont::Field intrinsicVolumeField("IntrinsicVolume",
-                                               viskores::cont::Field::Association::WholeDataSet,
-                                               augmentedIntrinsicVolumes[blockData->LocalBlockNo]);
+        viskores::cont::Field intrinsicVolumeField(
+          "IntrinsicVolume",
+          viskores::cont::Field::Association::WholeDataSet,
+          augmentedIntrinsicVolumes[blockData->LocalBlockNo]);
         hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(intrinsicVolumeField);
-        viskores::cont::Field dependentVolumeField("DependentVolume",
-                                               viskores::cont::Field::Association::WholeDataSet,
-                                               augmentedDependentVolumes[blockData->LocalBlockNo]);
+        viskores::cont::Field dependentVolumeField(
+          "DependentVolume",
+          viskores::cont::Field::Association::WholeDataSet,
+          augmentedDependentVolumes[blockData->LocalBlockNo]);
         hierarchicalTreeOutputDataSet[blockData->LocalBlockNo].AddField(dependentVolumeField);
         // Log the time for adding hypersweep data to the output dataset
         timingsStream << "    " << std::setw(38) << std::left << "Add Volume Output Data"
@@ -1421,9 +1451,9 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
   }
 
   VISKORES_LOG_S(this->TimingsLogLevel,
-             std::endl
-               << "    ------------ DoPostExecute Timings ------------" << std::endl
-               << timingsStream.str());
+                 std::endl
+                   << "    ------------ DoPostExecute Timings ------------" << std::endl
+                   << timingsStream.str());
 
   result = viskores::cont::PartitionedDataSet(hierarchicalTreeOutputDataSet);
 } // DoPostExecute

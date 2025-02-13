@@ -32,7 +32,8 @@ bool DoMapField(viskores::cont::DataSet& result,
     viskores::cont::UnknownArrayHandle inputArray = field.GetData();
     viskores::cont::UnknownArrayHandle outputArray = inputArray.NewInstanceBasic();
 
-    auto resolve = [&](const auto& concrete) {
+    auto resolve = [&](const auto& concrete)
+    {
       // use std::decay to remove const ref from the decltype of concrete.
       using BaseT = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
       auto concreteOut = outputArray.ExtractArrayFromComponents<BaseT>();

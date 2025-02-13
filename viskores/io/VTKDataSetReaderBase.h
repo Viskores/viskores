@@ -127,7 +127,7 @@ protected:
   VISKORES_CONT void ReadPoints();
 
   VISKORES_CONT void ReadCells(viskores::cont::ArrayHandle<viskores::Id>& connectivity,
-                           viskores::cont::ArrayHandle<viskores::IdComponent>& numIndices);
+                               viskores::cont::ArrayHandle<viskores::IdComponent>& numIndices);
 
   VISKORES_CONT void ReadShapes(viskores::cont::ArrayHandle<viskores::UInt8>& shapes);
 
@@ -157,20 +157,23 @@ private:
   VISKORES_CONT void OpenFile();
   VISKORES_CONT void ReadHeader();
   VISKORES_CONT void AddField(const std::string& name,
-                          viskores::cont::Field::Association association,
-                          viskores::cont::UnknownArrayHandle& data);
-  VISKORES_CONT void ReadScalars(viskores::cont::Field::Association association, std::size_t numElements);
+                              viskores::cont::Field::Association association,
+                              viskores::cont::UnknownArrayHandle& data);
+  VISKORES_CONT void ReadScalars(viskores::cont::Field::Association association,
+                                 std::size_t numElements);
   VISKORES_CONT void ReadColorScalars(viskores::cont::Field::Association association,
-                                  std::size_t numElements);
+                                      std::size_t numElements);
   VISKORES_CONT void ReadLookupTable();
   VISKORES_CONT void ReadTextureCoordinates(viskores::cont::Field::Association association,
-                                        std::size_t numElements);
-  VISKORES_CONT void ReadVectors(viskores::cont::Field::Association association, std::size_t numElements);
-  VISKORES_CONT void ReadTensors(viskores::cont::Field::Association association, std::size_t numElements);
+                                            std::size_t numElements);
+  VISKORES_CONT void ReadVectors(viskores::cont::Field::Association association,
+                                 std::size_t numElements);
+  VISKORES_CONT void ReadTensors(viskores::cont::Field::Association association,
+                                 std::size_t numElements);
   VISKORES_CONT void ReadFields(viskores::cont::Field::Association association,
-                            std::size_t expectedNumElements);
+                                std::size_t expectedNumElements);
   VISKORES_CONT void ReadGlobalOrPedigreeIds(viskores::cont::Field::Association association,
-                                         std::size_t numElements);
+                                             std::size_t numElements);
 
 protected:
   VISKORES_CONT void ReadGlobalFields(std::vector<viskores::Float32>* visitBounds = nullptr);
@@ -183,8 +186,8 @@ private:
   //can call the methods.
 protected:
   VISKORES_CONT void DoSkipArrayVariant(std::string dataType,
-                                    std::size_t numElements,
-                                    viskores::IdComponent numComponents);
+                                        std::size_t numElements,
+                                        viskores::IdComponent numComponents);
   VISKORES_CONT viskores::cont::UnknownArrayHandle DoReadArrayVariant(
     viskores::cont::Field::Association association,
     std::string dataType,
@@ -228,8 +231,9 @@ protected:
     std::vector<viskores::Vec<viskores::io::internal::DummyBitType, NumComponents>>& buffer)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-               "Support for data type 'bit' is not implemented. Skipping.");
-    this->SkipArray(buffer.size(), viskores::Vec<viskores::io::internal::DummyBitType, NumComponents>());
+                   "Support for data type 'bit' is not implemented. Skipping.");
+    this->SkipArray(buffer.size(),
+                    viskores::Vec<viskores::io::internal::DummyBitType, NumComponents>());
     buffer.clear();
   }
 
@@ -271,8 +275,8 @@ protected:
   }
 
   VISKORES_CONT void SkipArray(std::size_t numElements,
-                           viskores::io::internal::DummyBitType,
-                           viskores::IdComponent numComponents = 1);
+                               viskores::io::internal::DummyBitType,
+                               viskores::IdComponent numComponents = 1);
 
   VISKORES_CONT void SkipStringArray(std::size_t numStrings);
 

@@ -81,23 +81,25 @@ struct CellTraits
 
 // Define traits for every cell type.
 
-#define VISKORES_DEFINE_CELL_TRAITS(name, dimensions, numPoints)                                     \
-  template <>                                                                                    \
-  struct CellTraits<viskores::CellShapeTag##name>                                                    \
-  {                                                                                              \
-    static constexpr viskores::IdComponent TOPOLOGICAL_DIMENSIONS = dimensions;                      \
-    using TopologicalDimensionsTag = viskores::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS>; \
-    using IsSizeFixed = viskores::CellTraitsTagSizeFixed;                                            \
-    static constexpr viskores::IdComponent NUM_POINTS = numPoints;                                   \
+#define VISKORES_DEFINE_CELL_TRAITS(name, dimensions, numPoints)                \
+  template <>                                                                   \
+  struct CellTraits<viskores::CellShapeTag##name>                               \
+  {                                                                             \
+    static constexpr viskores::IdComponent TOPOLOGICAL_DIMENSIONS = dimensions; \
+    using TopologicalDimensionsTag =                                            \
+      viskores::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS>;           \
+    using IsSizeFixed = viskores::CellTraitsTagSizeFixed;                       \
+    static constexpr viskores::IdComponent NUM_POINTS = numPoints;              \
   }
 
-#define VISKORES_DEFINE_CELL_TRAITS_VARIABLE(name, dimensions)                                       \
-  template <>                                                                                    \
-  struct CellTraits<viskores::CellShapeTag##name>                                                    \
-  {                                                                                              \
-    static constexpr viskores::IdComponent TOPOLOGICAL_DIMENSIONS = dimensions;                      \
-    using TopologicalDimensionsTag = viskores::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS>; \
-    using IsSizeFixed = viskores::CellTraitsTagSizeVariable;                                         \
+#define VISKORES_DEFINE_CELL_TRAITS_VARIABLE(name, dimensions)                  \
+  template <>                                                                   \
+  struct CellTraits<viskores::CellShapeTag##name>                               \
+  {                                                                             \
+    static constexpr viskores::IdComponent TOPOLOGICAL_DIMENSIONS = dimensions; \
+    using TopologicalDimensionsTag =                                            \
+      viskores::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS>;           \
+    using IsSizeFixed = viskores::CellTraitsTagSizeVariable;                    \
   }
 
 VISKORES_DEFINE_CELL_TRAITS(Empty, 0, 0);

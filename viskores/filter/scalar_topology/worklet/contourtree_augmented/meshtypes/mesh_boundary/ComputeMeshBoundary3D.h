@@ -85,18 +85,18 @@ public:
 
   template <typename InFieldPortalType, typename MeshBoundaryType>
   VISKORES_EXEC void operator()(const viskores::Id& boundaryId,
-                            const InFieldPortalType sortIndicesPortal,
-                            const MeshBoundaryType& meshBoundary,
-                            viskores::Id& boundaryVertex,
-                            viskores::Id& boundarySortIndex) const
+                                const InFieldPortalType sortIndicesPortal,
+                                const MeshBoundaryType& meshBoundary,
+                                viskores::Id& boundaryVertex,
+                                viskores::Id& boundarySortIndex) const
   {
     auto meshStructure3D = meshBoundary.GetMeshStructure();
     viskores::Id3 meshSize = meshStructure3D.MeshSize;
     // for comments [0]/x -> column, [1]/y -> row, [2]/z -> slice
     // calculate the number of boundary elements - all of the two xy faces
     viskores::Id nBoundary = 2 * meshSize[1] * meshSize[0] // xy faces
-      + 2 * meshSize[1] * (meshSize[2] - 2)            // yz faces - excluding vertices on xy
-      + 2 * (meshSize[0] - 2) * (meshSize[2] - 2);     // xz face interiors
+      + 2 * meshSize[1] * (meshSize[2] - 2)                // yz faces - excluding vertices on xy
+      + 2 * (meshSize[0] - 2) * (meshSize[2] - 2);         // xz face interiors
 
     viskores::Id3 pos{ 0, 0, 0 };
     viskores::Id sliceSize = meshSize[1] * meshSize[0];

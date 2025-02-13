@@ -35,8 +35,9 @@ struct SetGhostCells : viskores::worklet::WorkletCellNeighborhood
   using ExecutionSignature = _3(_2, Boundary);
 
   template<typename BlankedRegionsPortal>
-  VISKORES_EXEC viskores::UInt8 operator()(const BlankedRegionsPortal& blankedRegions,
-                                   const viskores::exec::BoundaryState& location) const
+  VISKORES_EXEC viskores::UInt8 operator()(
+    const BlankedRegionsPortal& blankedRegions,
+    const viskores::exec::BoundaryState& location) const
   {
     viskores::UInt8 cellClassification = viskores::CellClassification::Normal;
 
@@ -47,7 +48,8 @@ struct SetGhostCells : viskores::worklet::WorkletCellNeighborhood
     }
 
     // Mark cells inside specified regions as blanked.
-    for (viskores::Id brIndex = 0; brIndex < blankedRegions.GetNumberOfValues(); ++brIndex)
+    for (viskores::Id brIndex = 0; brIndex < blankedRegions.GetNumberOfValues();
+         ++brIndex)
     {
       viskores::RangeId3 blankedRegion = blankedRegions.Get(brIndex);
       if (blankedRegion.Contains(location.GetCenterIndex()))
@@ -93,11 +95,13 @@ void DoGhostCells()
   for (viskores::Id cellId = 0; cellId < ghostCells.GetNumberOfValues(); ++cellId)
   {
     viskores::UInt8 flags = ghosts.Get(cellId);
-    if ((flags & viskores::CellClassification::Ghost) == viskores::CellClassification::Ghost)
+    if ((flags & viskores::CellClassification::Ghost) ==
+        viskores::CellClassification::Ghost)
     {
       ++numGhosts;
     }
-    if ((flags & viskores::CellClassification::Blanked) == viskores::CellClassification::Blanked)
+    if ((flags & viskores::CellClassification::Blanked) ==
+        viskores::CellClassification::Blanked)
     {
       ++numBlanked;
     }

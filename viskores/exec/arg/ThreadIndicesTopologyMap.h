@@ -103,10 +103,10 @@ public:
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   VISKORES_EXEC ThreadIndicesTopologyMap(viskores::Id threadIndex,
-                                     viskores::Id inputIndex,
-                                     viskores::IdComponent visitIndex,
-                                     viskores::Id outputIndex,
-                                     const ConnectivityType& connectivity)
+                                         viskores::Id inputIndex,
+                                         viskores::IdComponent visitIndex,
+                                         viskores::Id outputIndex,
+                                         const ConnectivityType& connectivity)
     : Superclass(threadIndex, inputIndex, visitIndex, outputIndex)
     // The connectivity is stored in the invocation parameter at the given
     // input domain index. If this class is being used correctly, the type
@@ -172,10 +172,10 @@ public:
     viskores::exec::ConnectivityStructured<VisitTopology, IncidentTopology, Dimension>;
 
   VISKORES_EXEC ThreadIndicesTopologyMap(viskores::Id threadIndex,
-                                     viskores::Id inputIndex,
-                                     viskores::IdComponent visitIndex,
-                                     viskores::Id outputIndex,
-                                     const ConnectivityType& connectivity)
+                                         viskores::Id inputIndex,
+                                         viskores::IdComponent visitIndex,
+                                         viskores::Id outputIndex,
+                                         const ConnectivityType& connectivity)
   {
     this->ThreadIndex = threadIndex;
     this->InputIndex = inputIndex;
@@ -187,8 +187,8 @@ public:
   }
 
   VISKORES_EXEC ThreadIndicesTopologyMap(const viskores::Id3& threadIndex3D,
-                                     viskores::Id threadIndex1D,
-                                     const ConnectivityType& connectivity)
+                                         viskores::Id threadIndex1D,
+                                         const ConnectivityType& connectivity)
   {
     // This constructor handles multidimensional indices on one-to-one input-to-output
     auto logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
@@ -199,11 +199,11 @@ public:
   }
 
   VISKORES_EXEC ThreadIndicesTopologyMap(const viskores::Id3& threadIndex3D,
-                                     viskores::Id threadIndex1D,
-                                     viskores::Id inIndex,
-                                     viskores::IdComponent visitIndex,
-                                     viskores::Id outIndex,
-                                     const ConnectivityType& connectivity)
+                                         viskores::Id threadIndex1D,
+                                         viskores::Id inIndex,
+                                         viskores::IdComponent visitIndex,
+                                         viskores::Id outIndex,
+                                         const ConnectivityType& connectivity)
   {
     // This constructor handles multidimensional indices on many-to-many input-to-output
     auto logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
@@ -332,10 +332,10 @@ public:
   using Connectivity = ConnectivityType;
 
   VISKORES_EXEC ThreadIndicesTopologyMap(viskores::Id threadIndex,
-                                     viskores::Id inputIndex,
-                                     viskores::IdComponent viskoresNotUsed(visitIndex),
-                                     viskores::Id viskoresNotUsed(outputIndex),
-                                     const ConnectivityType& connectivity)
+                                         viskores::Id inputIndex,
+                                         viskores::IdComponent viskoresNotUsed(visitIndex),
+                                         viskores::Id viskoresNotUsed(outputIndex),
+                                         const ConnectivityType& connectivity)
   {
     this->ThreadIndex = threadIndex;
     this->LogicalIndex = connectivity.FlatToLogicalVisitIndex(inputIndex);
@@ -347,8 +347,8 @@ public:
 
 
   VISKORES_EXEC ThreadIndicesTopologyMap(const viskores::Id3& threadIndex3D,
-                                     viskores::Id threadIndex1D,
-                                     const ConnectivityType& connectivity)
+                                         viskores::Id threadIndex1D,
+                                         const ConnectivityType& connectivity)
   {
     // This constructor handles multidimensional indices on one-to-one input-to-output
     auto logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
@@ -359,11 +359,11 @@ public:
   }
 
   VISKORES_EXEC ThreadIndicesTopologyMap(const viskores::Id3& threadIndex3D,
-                                     viskores::Id threadIndex1D,
-                                     viskores::Id viskoresNotUsed(inIndex),
-                                     viskores::IdComponent viskoresNotUsed(visitIndex),
-                                     viskores::Id viskoresNotUsed(outIndex),
-                                     const ConnectivityType& connectivity)
+                                         viskores::Id threadIndex1D,
+                                         viskores::Id viskoresNotUsed(inIndex),
+                                         viskores::IdComponent viskoresNotUsed(visitIndex),
+                                         viskores::Id viskoresNotUsed(outIndex),
+                                         const ConnectivityType& connectivity)
   {
     // This constructor handles multidimensional indices on many-to-many input-to-output
     auto logicalIndex = detail::Deflate(threadIndex3D, LogicalIndexType());
@@ -466,20 +466,22 @@ private:
 
 /// \brief Specialization for permuted structured connectivity types.
 template <typename PermutationPortal, viskores::IdComponent Dimension>
-class ThreadIndicesTopologyMap<viskores::exec::ConnectivityPermutedVisitCellsWithPoints<
-                                 PermutationPortal,
-                                 viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell,
-                                                                    viskores::TopologyElementTagPoint,
-                                                                    Dimension>>,
-                               CustomScatterOrMaskTag>
+class ThreadIndicesTopologyMap<
+  viskores::exec::ConnectivityPermutedVisitCellsWithPoints<
+    PermutationPortal,
+    viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell,
+                                           viskores::TopologyElementTagPoint,
+                                           Dimension>>,
+  CustomScatterOrMaskTag>
 {
   using PermutedConnectivityType = viskores::exec::ConnectivityPermutedVisitCellsWithPoints<
     PermutationPortal,
     viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell,
-                                       viskores::TopologyElementTagPoint,
-                                       Dimension>>;
-  using ConnectivityType = viskores::exec::
-    ConnectivityStructured<viskores::TopologyElementTagCell, viskores::TopologyElementTagPoint, Dimension>;
+                                           viskores::TopologyElementTagPoint,
+                                           Dimension>>;
+  using ConnectivityType = viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell,
+                                                                  viskores::TopologyElementTagPoint,
+                                                                  Dimension>;
 
 public:
   using IndicesIncidentType = typename ConnectivityType::IndicesType;
@@ -488,14 +490,14 @@ public:
   using Connectivity = viskores::exec::ConnectivityPermutedVisitCellsWithPoints<
     PermutationPortal,
     viskores::exec::ConnectivityStructured<viskores::TopologyElementTagCell,
-                                       viskores::TopologyElementTagPoint,
-                                       Dimension>>;
+                                           viskores::TopologyElementTagPoint,
+                                           Dimension>>;
 
   VISKORES_EXEC ThreadIndicesTopologyMap(viskores::Id threadIndex,
-                                     viskores::Id inputIndex,
-                                     viskores::IdComponent visitIndex,
-                                     viskores::Id outputIndex,
-                                     const PermutedConnectivityType& permutation)
+                                         viskores::Id inputIndex,
+                                         viskores::IdComponent visitIndex,
+                                         viskores::Id outputIndex,
+                                         const PermutedConnectivityType& permutation)
   {
     this->ThreadIndex = threadIndex;
     this->InputIndex = inputIndex;

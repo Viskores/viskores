@@ -76,7 +76,7 @@ template <typename FieldType>
 struct DistributedContourTreeBlockData
 {
   // Block metadata
-  int GlobalBlockId;          // Global DIY id of this block
+  int GlobalBlockId;              // Global DIY id of this block
   viskores::Id LocalBlockNo;      // Local block id on this rank
   viskores::Id3 BlockOrigin;      // Origin of the data block
   viskores::Id3 BlockSize;        // Extends of the data block
@@ -85,14 +85,16 @@ struct DistributedContourTreeBlockData
 
   // Fan in data
   std::vector<viskores::worklet::contourtree_augmented::ContourTree> ContourTrees;
-  std::vector<viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType>> ContourTreeMeshes;
+  std::vector<viskores::worklet::contourtree_augmented::ContourTreeMesh<FieldType>>
+    ContourTreeMeshes;
   std::vector<viskores::worklet::contourtree_distributed::InteriorForest> InteriorForests;
 
   // Fan out data
   viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> HierarchicalTree;
 
   // Augmentation phase
-  viskores::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType> HierarchicalAugmenter;
+  viskores::worklet::contourtree_distributed::HierarchicalAugmenter<FieldType>
+    HierarchicalAugmenter;
   viskores::worklet::contourtree_distributed::HierarchicalContourTree<FieldType> AugmentedTree;
 
   // Destroy function allowing DIY to own blocks and clean them up after use

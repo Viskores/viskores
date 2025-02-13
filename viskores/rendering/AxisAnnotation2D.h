@@ -83,7 +83,10 @@ public:
   }
 
   ///\todo: rename, since it might be screen OR world position?
-  void SetScreenPosition(viskores::Float64 x0, viskores::Float64 y0, viskores::Float64 x1, viskores::Float64 y1)
+  void SetScreenPosition(viskores::Float64 x0,
+                         viskores::Float64 y0,
+                         viskores::Float64 x1,
+                         viskores::Float64 y1)
   {
     this->PosX0 = x0;
     this->PosY0 = y0;

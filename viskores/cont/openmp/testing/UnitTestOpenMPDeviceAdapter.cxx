@@ -15,6 +15,6 @@ int UnitTestOpenMPDeviceAdapter(int argc, char* argv[])
 {
   auto& tracker = viskores::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(viskores::cont::DeviceAdapterTagOpenMP{});
-  return viskores::cont::testing::TestingDeviceAdapter<viskores::cont::DeviceAdapterTagOpenMP>::Run(argc,
-                                                                                            argv);
+  return viskores::cont::testing::TestingDeviceAdapter<viskores::cont::DeviceAdapterTagOpenMP>::Run(
+    argc, argv);
 }

@@ -103,14 +103,14 @@ viskores::cont::CellSetSingleType<> execute(
       //
       ComputePass1<IVType> worklet1(isoval, pdims);
       viskores::cont::TryExecuteOnDevice(invoke.GetDevice(),
-                                     launchComputePass1{},
-                                     worklet1,
-                                     inputField,
-                                     edgeCases,
-                                     metaDataMesh2D,
-                                     metaDataSums,
-                                     metaDataMin,
-                                     metaDataMax);
+                                         launchComputePass1{},
+                                         worklet1,
+                                         inputField,
+                                         edgeCases,
+                                         metaDataMesh2D,
+                                         metaDataSums,
+                                         metaDataMin,
+                                         metaDataMax);
     }
 
     //----------------------------------------------------------------------------
@@ -161,21 +161,21 @@ viskores::cont::CellSetSingleType<> execute(
         }
 
         viskores::cont::TryExecuteOnDevice(invoke.GetDevice(),
-                                       pass4,
-                                       newPointSize,
-                                       isoval,
-                                       coordinateSystem,
-                                       inputField,
-                                       edgeCases,
-                                       metaDataMesh2D,
-                                       metaDataSums,
-                                       metaDataMin,
-                                       metaDataMax,
-                                       metaDataNumTris,
-                                       sharedState,
-                                       triangle_topology,
-                                       points,
-                                       normals);
+                                           pass4,
+                                           newPointSize,
+                                           isoval,
+                                           coordinateSystem,
+                                           inputField,
+                                           edgeCases,
+                                           metaDataMesh2D,
+                                           metaDataSums,
+                                           metaDataMin,
+                                           metaDataMax,
+                                           metaDataNumTris,
+                                           sharedState,
+                                           triangle_topology,
+                                           points,
+                                           normals);
       }
     }
   }

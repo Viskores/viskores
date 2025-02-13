@@ -84,8 +84,8 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const InFieldPortalType& inNeighbourPortal,
-                            const viskores::Id joinOrSplitIndex,
-                            const OutFieldPortalType& upOrDownDegreePortal) const
+                                const viskores::Id joinOrSplitIndex,
+                                const OutFieldPortalType& upOrDownDegreePortal) const
   {
     viskores::Id whichJoinOrSplit = inNeighbourPortal.Get(joinOrSplitIndex);
     if (!NoSuchElement(whichJoinOrSplit))

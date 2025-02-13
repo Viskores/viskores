@@ -101,15 +101,15 @@ public:
   AtomicArrayExecutionObject() = default;
 
   VISKORES_CONT AtomicArrayExecutionObject(viskores::cont::ArrayHandle<T> handle,
-                                       viskores::cont::DeviceAdapterId device,
-                                       viskores::cont::Token& token)
+                                           viskores::cont::DeviceAdapterId device,
+                                           viskores::cont::Token& token)
     : Data{ handle.PrepareForInPlace(device, token).GetIteratorBegin() }
     , NumberOfValues{ handle.GetNumberOfValues() }
   {
     using PortalType = decltype(handle.PrepareForInPlace(device, token));
     VISKORES_STATIC_ASSERT_MSG(HasPointerAccess<PortalType>::value,
-                           "Source portal must return a pointer from "
-                           "GetIteratorBegin().");
+                               "Source portal must return a pointer from "
+                               "GetIteratorBegin().");
   }
 
   /// @brief Retrieve the number of values in the atomic array.
@@ -125,14 +125,16 @@ public:
   ///
   VISKORES_SUPPRESS_EXEC_WARNINGS
   VISKORES_EXEC
-  ValueType Get(viskores::Id index, viskores::MemoryOrder order = viskores::MemoryOrder::Acquire) const
+  ValueType Get(viskores::Id index,
+                viskores::MemoryOrder order = viskores::MemoryOrder::Acquire) const
   {
     // We only support 32/64 bit signed/unsigned ints, and viskores::Atomic
     // currently only provides API for unsigned types.
     // We'll cast the signed types to unsigned to work around this.
     using APIType = typename detail::MakeUnsigned<ValueType>::type;
 
-    return static_cast<T>(viskores::AtomicLoad(reinterpret_cast<APIType*>(this->Data + index), order));
+    return static_cast<T>(
+      viskores::AtomicLoad(reinterpret_cast<APIType*>(this->Data + index), order));
   }
 
   /// @brief Peform an atomic addition with sequentially consistent memory
@@ -237,10 +239,11 @@ public:
   ///
   VISKORES_SUPPRESS_EXEC_WARNINGS
   VISKORES_EXEC
-  bool CompareExchange(viskores::Id index,
-                       ValueType* oldValue,
-                       const ValueType& newValue,
-                       viskores::MemoryOrder order = viskores::MemoryOrder::SequentiallyConsistent) const
+  bool CompareExchange(
+    viskores::Id index,
+    ValueType* oldValue,
+    const ValueType& newValue,
+    viskores::MemoryOrder order = viskores::MemoryOrder::SequentiallyConsistent) const
   {
     // We only support 32/64 bit signed/unsigned ints, and viskores::Atomic
     // currently only provides API for unsigned types.
@@ -250,9 +253,9 @@ public:
     using APIType = typename detail::MakeUnsigned<ValueType>::type;
 
     return viskores::AtomicCompareExchange(reinterpret_cast<APIType*>(this->Data + index),
-                                       reinterpret_cast<APIType*>(oldValue),
-                                       static_cast<APIType>(newValue),
-                                       order);
+                                           reinterpret_cast<APIType*>(oldValue),
+                                           static_cast<APIType>(newValue),
+                                           order);
   }
 
 private:

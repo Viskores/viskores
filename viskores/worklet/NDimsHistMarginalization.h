@@ -80,8 +80,8 @@ public:
         numMarginalVariables++;
         const viskores::Id nFieldBins = numBinsPortal.Get(i);
         viskores::worklet::histogram::To1DIndex binWorklet(nFieldBins);
-        viskores::worklet::DispatcherMapField<viskores::worklet::histogram::To1DIndex> to1DIndexDispatcher(
-          binWorklet);
+        viskores::worklet::DispatcherMapField<viskores::worklet::histogram::To1DIndex>
+          to1DIndexDispatcher(binWorklet);
         size_t vecIndex = static_cast<size_t>(i);
         to1DIndexDispatcher.Invoke(binId[vecIndex], bin1DIndex, bin1DIndex);
       }
@@ -93,7 +93,8 @@ public:
           conditionFunc
         };
         conditionalFreqWorklet.setVar(i);
-        viskores::worklet::DispatcherMapField<viskores::worklet::histogram::ConditionalFreq<BinaryCompare>>
+        viskores::worklet::DispatcherMapField<
+          viskores::worklet::histogram::ConditionalFreq<BinaryCompare>>
           cfDispatcher(conditionalFreqWorklet);
         size_t vecIndex = static_cast<size_t>(i);
         cfDispatcher.Invoke(binId[vecIndex], freqs, freqs);
@@ -112,7 +113,8 @@ public:
     // Convert to sparse representation(remove all zero freqncy entities)
     viskores::cont::ArrayHandle<viskores::Id> sparseMarginal1DBinId;
     viskores::cont::Algorithm::CopyIf(bin1DIndex, nonSparseMarginalFreqs, sparseMarginal1DBinId);
-    viskores::cont::Algorithm::CopyIf(nonSparseMarginalFreqs, nonSparseMarginalFreqs, marginalFreqs);
+    viskores::cont::Algorithm::CopyIf(
+      nonSparseMarginalFreqs, nonSparseMarginalFreqs, marginalFreqs);
 
     //convert back to multi variate binId
     marginalBinId.resize(static_cast<size_t>(numMarginalVariables));
@@ -163,8 +165,8 @@ public:
         numMarginalVariables++;
         const viskores::Id nFieldBins = numBinsPortal.Get(i);
         viskores::worklet::histogram::To1DIndex binWorklet(nFieldBins);
-        viskores::worklet::DispatcherMapField<viskores::worklet::histogram::To1DIndex> to1DIndexDispatcher(
-          binWorklet);
+        viskores::worklet::DispatcherMapField<viskores::worklet::histogram::To1DIndex>
+          to1DIndexDispatcher(binWorklet);
         size_t vecIndex = static_cast<size_t>(i);
         to1DIndexDispatcher.Invoke(binId[vecIndex], bin1DIndex, bin1DIndex);
       }
@@ -174,7 +176,8 @@ public:
     viskores::cont::Algorithm::SortByKey(bin1DIndex, freqs);
 
     // Add frequency within same 1d index bin
-    viskores::cont::Algorithm::ReduceByKey(bin1DIndex, freqs, bin1DIndex, marginalFreqs, viskores::Add());
+    viskores::cont::Algorithm::ReduceByKey(
+      bin1DIndex, freqs, bin1DIndex, marginalFreqs, viskores::Add());
 
     //convert back to multi variate binId
     marginalBinId.resize(static_cast<size_t>(numMarginalVariables));

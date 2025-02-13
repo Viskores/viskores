@@ -35,12 +35,13 @@ public:
 
   template <typename Particle>
   VISKORES_EXEC IntegratorStatus CheckStep(const Particle& particle,
-                                       viskores::FloatDefault stepLength,
-                                       viskores::Vec3f& velocity) const
+                                           viskores::FloatDefault stepLength,
+                                           viskores::Vec3f& velocity) const
   {
     auto time = particle.GetTime();
     auto inpos = particle.GetEvaluationPosition(stepLength);
-    viskores::FloatDefault boundary = this->Evaluator.GetTemporalBoundary(static_cast<viskores::Id>(1));
+    viskores::FloatDefault boundary =
+      this->Evaluator.GetTemporalBoundary(static_cast<viskores::Id>(1));
     if ((time + stepLength + viskores::Epsilon<viskores::FloatDefault>() - boundary) > 0.0)
       stepLength = boundary - time;
 
@@ -82,8 +83,9 @@ public:
 
     velocity = (v1 + 2 * v2 + 2 * v3 + v4) / static_cast<viskores::FloatDefault>(6);
 
-    return IntegratorStatus(
-      evalStatus, viskores::MagnitudeSquared(velocity) <= viskores::Epsilon<viskores::FloatDefault>());
+    return IntegratorStatus(evalStatus,
+                            viskores::MagnitudeSquared(velocity) <=
+                              viskores::Epsilon<viskores::FloatDefault>());
   }
 
 private:
@@ -107,7 +109,7 @@ public:
   }
 
   VISKORES_CONT auto PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                     viskores::cont::Token& token) const
+                                         viskores::cont::Token& token) const
     -> ExecRK4Integrator<decltype(this->Evaluator.PrepareForExecution(device, token))>
   {
     auto evaluator = this->Evaluator.PrepareForExecution(device, token);

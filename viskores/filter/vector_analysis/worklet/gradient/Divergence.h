@@ -20,7 +20,8 @@ namespace worklet
 namespace gradient
 {
 
-using DivergenceTypes = viskores::List<viskores::Vec<viskores::Vec3f_32, 3>, viskores::Vec<viskores::Vec3f_64, 3>>;
+using DivergenceTypes =
+  viskores::List<viskores::Vec<viskores::Vec3f_32, 3>, viskores::Vec<viskores::Vec3f_64, 3>>;
 
 
 struct Divergence : public viskores::worklet::WorkletMapField

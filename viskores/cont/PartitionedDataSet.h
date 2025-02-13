@@ -50,7 +50,8 @@ public:
 
   /// Get the field @a field_name from partition @a partition_index.
   VISKORES_CONT
-  viskores::cont::Field GetFieldFromPartition(const std::string& field_name, int partition_index) const;
+  viskores::cont::Field GetFieldFromPartition(const std::string& field_name,
+                                              int partition_index) const;
 
   /// Get number of DataSet objects stored in this PartitionedDataSet.
   VISKORES_CONT
@@ -87,7 +88,10 @@ public:
   VISKORES_CONT void AppendPartitions(const std::vector<viskores::cont::DataSet>& partitions);
 
   /// Methods to Add and Get fields on a PartitionedDataSet
-  VISKORES_CONT viskores::IdComponent GetNumberOfFields() const { return this->Fields.GetNumberOfFields(); }
+  VISKORES_CONT viskores::IdComponent GetNumberOfFields() const
+  {
+    return this->Fields.GetNumberOfFields();
+  }
 
   /// @brief Adds a field that is applied to the meta-partition structure.
   ///
@@ -98,8 +102,8 @@ public:
   ///
   /// The `field` must have an association that applies across all partitions.
   VISKORES_CONT void AddField(const std::string& name,
-                          viskores::cont::Field::Association association,
-                          const viskores::cont::UnknownArrayHandle& data)
+                              viskores::cont::Field::Association association,
+                              const viskores::cont::UnknownArrayHandle& data)
   {
     this->AddField({ name, association, data });
   }
@@ -107,7 +111,7 @@ public:
   /// @brief Add a field with a global association.
   template <typename T, typename Storage>
   VISKORES_CONT void AddGlobalField(const std::string& fieldName,
-                                const viskores::cont::ArrayHandle<T, Storage>& field)
+                                    const viskores::cont::ArrayHandle<T, Storage>& field)
   {
     this->AddField(fieldName, viskores::cont::Field::Association::Global, field);
   }
@@ -115,21 +119,23 @@ public:
   template <typename T>
   VISKORES_CONT void AddGlobalField(const std::string& fieldName, const std::vector<T>& field)
   {
-    this->AddField(
-      make_Field(fieldName, viskores::cont::Field::Association::Global, field, viskores::CopyFlag::On));
+    this->AddField(make_Field(
+      fieldName, viskores::cont::Field::Association::Global, field, viskores::CopyFlag::On));
   }
 
   template <typename T>
-  VISKORES_CONT void AddGlobalField(const std::string& fieldName, const T* field, const viskores::Id& n)
+  VISKORES_CONT void AddGlobalField(const std::string& fieldName,
+                                    const T* field,
+                                    const viskores::Id& n)
   {
-    this->AddField(
-      make_Field(fieldName, viskores::cont::Field::Association::Global, field, n, viskores::CopyFlag::On));
+    this->AddField(make_Field(
+      fieldName, viskores::cont::Field::Association::Global, field, n, viskores::CopyFlag::On));
   }
 
   /// @brief Add a field where each entry is associated with a whole partition.
   template <typename T, typename Storage>
   VISKORES_CONT void AddPartitionsField(const std::string& fieldName,
-                                    const viskores::cont::ArrayHandle<T, Storage>& field)
+                                        const viskores::cont::ArrayHandle<T, Storage>& field)
   {
     this->AddField(fieldName, viskores::cont::Field::Association::Partitions, field);
   }
@@ -137,19 +143,24 @@ public:
   template <typename T>
   VISKORES_CONT void AddPartitionsField(const std::string& fieldName, const std::vector<T>& field)
   {
-    this->AddField(
-      make_Field(fieldName, viskores::cont::Field::Association::Partitions, field, viskores::CopyFlag::On));
+    this->AddField(make_Field(
+      fieldName, viskores::cont::Field::Association::Partitions, field, viskores::CopyFlag::On));
   }
 
   template <typename T>
-  VISKORES_CONT void AddPartitionsField(const std::string& fieldName, const T* field, const viskores::Id& n)
+  VISKORES_CONT void AddPartitionsField(const std::string& fieldName,
+                                        const T* field,
+                                        const viskores::Id& n)
   {
     this->AddField(make_Field(
       fieldName, viskores::cont::Field::Association::Partitions, field, n, viskores::CopyFlag::On));
   }
 
   VISKORES_CONT
-  const viskores::cont::Field& GetField(viskores::Id index) const { return this->Fields.GetField(index); }
+  const viskores::cont::Field& GetField(viskores::Id index) const
+  {
+    return this->Fields.GetField(index);
+  }
 
   VISKORES_CONT
   viskores::cont::Field& GetField(viskores::Id index) { return this->Fields.GetField(index); }
@@ -201,8 +212,9 @@ public:
 
   /// @brief Query whether the partitioned data set has the named field.
   VISKORES_CONT
-  bool HasField(const std::string& name,
-                viskores::cont::Field::Association assoc = viskores::cont::Field::Association::Any) const
+  bool HasField(
+    const std::string& name,
+    viskores::cont::Field::Association assoc = viskores::cont::Field::Association::Any) const
   {
     return this->Fields.HasField(name, assoc);
   }
@@ -249,7 +261,7 @@ private:
   std::vector<viskores::cont::DataSet> Partitions;
 
   viskores::cont::internal::FieldCollection Fields{ viskores::cont::Field::Association::Partitions,
-                                                viskores::cont::Field::Association::Global };
+                                                    viskores::cont::Field::Association::Global };
 };
 }
 } // namespace viskores::cont

@@ -77,7 +77,7 @@ public:
   using InputDomain = _1;
 
   viskores::Id nParticles; // Number of particles in halo
-  T mass;              // Particle mass
+  T mass;                  // Particle mass
 
   // Constructor
   VISKORES_EXEC_CONT
@@ -89,10 +89,10 @@ public:
 
   template <typename InIdPortalType, typename InFieldPortalType>
   VISKORES_EXEC T operator()(const viskores::Id& i,
-                         const InIdPortalType& partId,
-                         const InFieldPortalType& xLoc,
-                         const InFieldPortalType& yLoc,
-                         const InFieldPortalType& zLoc) const
+                             const InIdPortalType& partId,
+                             const InFieldPortalType& xLoc,
+                             const InFieldPortalType& yLoc,
+                             const InFieldPortalType& zLoc) const
   {
     T potential = 0.0f;
     viskores::Id iPartId = partId.Get(i);

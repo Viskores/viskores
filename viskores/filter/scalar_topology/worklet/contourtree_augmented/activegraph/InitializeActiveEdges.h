@@ -96,15 +96,15 @@ public:
 
   template <typename MeshStructureType, typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& outdegree,
-                            const viskores::Id activeIndex,
-                            const MeshStructureType& meshStructure,
-                            const viskores::Id& firstEdgeIndex,
-                            const viskores::Id& sortIndex, // = GlobalIndex.Get(activeIndex)
-                            const InFieldPortalType& extrema,
-                            const InFieldPortalType& neighbourhoodMasks,
-                            const OutFieldPortalType& edgeNear,
-                            const OutFieldPortalType& edgeFar,
-                            const OutFieldPortalType& activeEdges) const
+                                const viskores::Id activeIndex,
+                                const MeshStructureType& meshStructure,
+                                const viskores::Id& firstEdgeIndex,
+                                const viskores::Id& sortIndex, // = GlobalIndex.Get(activeIndex)
+                                const InFieldPortalType& extrema,
+                                const InFieldPortalType& neighbourhoodMasks,
+                                const OutFieldPortalType& edgeNear,
+                                const OutFieldPortalType& edgeFar,
+                                const OutFieldPortalType& activeEdges) const
   {
     if (outdegree != 0)
     {

@@ -53,8 +53,8 @@ struct ShiftScaleToRGB : public viskores::worklet::WorkletMapField
     rgb = (rgb + viskores::Vec3f_32(this->Shift)) * this->Scale;
     colorconversion::Clamp(rgb);
     return viskores::Vec3ui_8{ static_cast<viskores::UInt8>(rgb[0] + 0.5f),
-                           static_cast<viskores::UInt8>(rgb[1] + 0.5f),
-                           static_cast<viskores::UInt8>(rgb[2] + 0.5f) };
+                               static_cast<viskores::UInt8>(rgb[1] + 0.5f),
+                               static_cast<viskores::UInt8>(rgb[2] + 0.5f) };
   }
 
   template <typename T>

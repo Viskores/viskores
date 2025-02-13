@@ -119,7 +119,8 @@ struct VecTraits<viskores::VecVariable<T, MaxSize>>
   }
 
   VISKORES_EXEC_CONT
-  static const ComponentType& GetComponent(const VecType& vector, viskores::IdComponent componentIndex)
+  static const ComponentType& GetComponent(const VecType& vector,
+                                           viskores::IdComponent componentIndex)
   {
     return vector[componentIndex];
   }
@@ -141,12 +142,14 @@ struct VecTraits<viskores::VecVariable<T, MaxSize>>
   using ReplaceComponentType = viskores::VecVariable<NewComponentType, MaxSize>;
 
   template <typename NewComponentType>
-  using ReplaceBaseComponentType = viskores::VecVariable<
-    typename viskores::VecTraits<ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
-    MaxSize>;
+  using ReplaceBaseComponentType =
+    viskores::VecVariable<typename viskores::VecTraits<
+                            ComponentType>::template ReplaceBaseComponentType<NewComponentType>,
+                          MaxSize>;
 
   template <viskores::IdComponent destSize>
-  VISKORES_EXEC_CONT static void CopyInto(const VecType& src, viskores::Vec<ComponentType, destSize>& dest)
+  VISKORES_EXEC_CONT static void CopyInto(const VecType& src,
+                                          viskores::Vec<ComponentType, destSize>& dest)
   {
     src.CopyInto(dest);
   }

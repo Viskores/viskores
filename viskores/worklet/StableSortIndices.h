@@ -138,8 +138,8 @@ struct StableSortIndices
   /// guaranteed to be stable with respect to the original ordering of @a keys.
   template <typename KeyType, typename Storage>
   VISKORES_CONT static void Sort(viskores::cont::DeviceAdapterId device,
-                             const viskores::cont::ArrayHandle<KeyType, Storage>& keys,
-                             IndexArrayType& indices)
+                                 const viskores::cont::ArrayHandle<KeyType, Storage>& keys,
+                                 IndexArrayType& indices)
   {
     using KeyArrayType = viskores::cont::ArrayHandle<KeyType, Storage>;
     using SortPredicate = IndirectSortPredicateExecObject<KeyArrayType>;
@@ -161,7 +161,7 @@ struct StableSortIndices
   /// guaranteed to be stable with respect to the original ordering of @a keys.
   template <typename KeyType, typename Storage>
   VISKORES_CONT static void Sort(const viskores::cont::ArrayHandle<KeyType, Storage>& keys,
-                             IndexArrayType& indices)
+                                 IndexArrayType& indices)
   {
     StableSortIndices::Sort(viskores::cont::DeviceAdapterTagAny(), keys, indices);
   }
@@ -171,8 +171,9 @@ struct StableSortIndices
   ///
   /// This is a convenience overload that generates the index array.
   template <typename KeyType, typename Storage>
-  VISKORES_CONT static IndexArrayType Sort(viskores::cont::DeviceAdapterId device,
-                                       const viskores::cont::ArrayHandle<KeyType, Storage>& keys)
+  VISKORES_CONT static IndexArrayType Sort(
+    viskores::cont::DeviceAdapterId device,
+    const viskores::cont::ArrayHandle<KeyType, Storage>& keys)
   {
     // Generate the initial index array
     IndexArrayType indices;
@@ -191,7 +192,8 @@ struct StableSortIndices
   ///
   /// This is a convenience overload that generates the index array.
   template <typename KeyType, typename Storage>
-  VISKORES_CONT static IndexArrayType Sort(const viskores::cont::ArrayHandle<KeyType, Storage>& keys)
+  VISKORES_CONT static IndexArrayType Sort(
+    const viskores::cont::ArrayHandle<KeyType, Storage>& keys)
   {
     return StableSortIndices::Sort(viskores::cont::DeviceAdapterTagAny(), keys);
   }
@@ -202,8 +204,8 @@ struct StableSortIndices
   ///
   template <typename KeyType, typename Storage>
   VISKORES_CONT static void Unique(viskores::cont::DeviceAdapterId device,
-                               const viskores::cont::ArrayHandle<KeyType, Storage>& keys,
-                               IndexArrayType& indices)
+                                   const viskores::cont::ArrayHandle<KeyType, Storage>& keys,
+                                   IndexArrayType& indices)
   {
     using KeyArrayType = viskores::cont::ArrayHandle<KeyType, Storage>;
     using UniquePredicate = IndirectUniquePredicateExecObject<KeyArrayType>;
@@ -217,7 +219,7 @@ struct StableSortIndices
   ///
   template <typename KeyType, typename Storage>
   VISKORES_CONT static void Unique(const viskores::cont::ArrayHandle<KeyType, Storage>& keys,
-                               IndexArrayType& indices)
+                                   IndexArrayType& indices)
   {
     StableSortIndices::Unique(viskores::cont::DeviceAdapterTagAny(), keys, indices);
   }

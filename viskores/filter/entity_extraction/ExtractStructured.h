@@ -52,7 +52,12 @@ public:
 
   /// @copydoc GetVOI
   VISKORES_CONT
-  void SetVOI(viskores::Id i0, viskores::Id i1, viskores::Id j0, viskores::Id j1, viskores::Id k0, viskores::Id k1)
+  void SetVOI(viskores::Id i0,
+              viskores::Id i1,
+              viskores::Id j0,
+              viskores::Id j1,
+              viskores::Id k0,
+              viskores::Id k1)
   {
     this->VOI = viskores::RangeId3(i0, i1, j0, j1, k0, k1);
   }
@@ -79,7 +84,10 @@ public:
 
   /// @copydoc GetSampleRate
   VISKORES_CONT
-  void SetSampleRate(viskores::Id i, viskores::Id j, viskores::Id k) { this->SampleRate = viskores::Id3(i, j, k); }
+  void SetSampleRate(viskores::Id i, viskores::Id j, viskores::Id k)
+  {
+    this->SampleRate = viskores::Id3(i, j, k);
+  }
 
   /// @copydoc GetSampleRate
   VISKORES_CONT

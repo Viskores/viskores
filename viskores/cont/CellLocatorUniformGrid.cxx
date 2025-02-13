@@ -33,7 +33,8 @@ void CellLocatorUniformGrid::Build()
   {
     this->Is3D = false;
     Structured2DType structuredCellSet = cellSet.AsCellSet<Structured2DType>();
-    viskores::Id2 pointDims = structuredCellSet.GetSchedulingRange(viskores::TopologyElementTagPoint());
+    viskores::Id2 pointDims =
+      structuredCellSet.GetSchedulingRange(viskores::TopologyElementTagPoint());
     this->PointDims = viskores::Id3(pointDims[0], pointDims[1], 1);
   }
   else if (cellSet.CanConvert<Structured3DType>())

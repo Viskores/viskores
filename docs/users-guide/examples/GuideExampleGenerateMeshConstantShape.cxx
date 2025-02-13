@@ -42,8 +42,9 @@ struct CountEdgesWorklet : viskores::worklet::WorkletVisitCellsWithPoints
   using InputDomain = _1;
 
   template<typename CellShapeTag>
-  VISKORES_EXEC_CONT viskores::IdComponent operator()(CellShapeTag cellShape,
-                                              viskores::IdComponent numPointsInCell) const
+  VISKORES_EXEC_CONT viskores::IdComponent operator()(
+    CellShapeTag cellShape,
+    viskores::IdComponent numPointsInCell) const
   {
     viskores::IdComponent numEdges;
     viskores::ErrorCode status =
@@ -76,9 +77,9 @@ public:
 
   template<typename CellShapeTag, typename PointIndexVecType>
   VISKORES_EXEC void operator()(CellShapeTag cellShape,
-                            const PointIndexVecType& globalPointIndicesForCell,
-                            viskores::Id2& connectivityOut,
-                            viskores::IdComponent edgeIndex) const
+                                const PointIndexVecType& globalPointIndicesForCell,
+                                viskores::Id2& connectivityOut,
+                                viskores::IdComponent edgeIndex) const
   {
     viskores::IdComponent numPointsInCell =
       globalPointIndicesForCell.GetNumberOfComponents();
@@ -131,10 +132,12 @@ namespace
 #define VISKORES_FILTER_ENTITY_EXTRACTION_EXPORT
 
 //// RESUME-EXAMPLE
-class VISKORES_FILTER_ENTITY_EXTRACTION_EXPORT ExtractEdges : public viskores::filter::Filter
+class VISKORES_FILTER_ENTITY_EXTRACTION_EXPORT ExtractEdges
+  : public viskores::filter::Filter
 {
 public:
-  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inData) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(
+    const viskores::cont::DataSet& inData) override;
 };
 
 //// PAUSE-EXAMPLE
@@ -194,8 +197,9 @@ inline VISKORES_CONT viskores::cont::DataSet ExtractEdges::DoExecute(
   // This lambda function maps an input field to the output data set. It is
   // used with the CreateResult method.
   //// LABEL FieldMapper
-  auto fieldMapper = [&](viskores::cont::DataSet& outData,
-                         const viskores::cont::Field& inputField) {
+  auto fieldMapper =
+    [&](viskores::cont::DataSet& outData, const viskores::cont::Field& inputField)
+  {
     if (inputField.IsCellField())
     {
       //// LABEL MapField
@@ -231,7 +235,8 @@ namespace
 void CheckOutput(const viskores::cont::CellSetSingleType<>& cellSet)
 {
   std::cout << "Num cells: " << cellSet.GetNumberOfCells() << std::endl;
-  VISKORES_TEST_ASSERT(cellSet.GetNumberOfCells() == 12 + 8 + 6 + 9, "Wrong # of cells.");
+  VISKORES_TEST_ASSERT(cellSet.GetNumberOfCells() == 12 + 8 + 6 + 9,
+                       "Wrong # of cells.");
 
   auto connectivity = cellSet.GetConnectivityArray(viskores::TopologyElementTagCell(),
                                                    viskores::TopologyElementTagPoint());
@@ -263,14 +268,14 @@ void TryFilter()
 
   viskores::cont::Field outCellField = outDataSet.GetField("cellvar");
   VISKORES_TEST_ASSERT(outCellField.GetAssociation() ==
-                     viskores::cont::Field::Association::Cells,
-                   "Cell field not cell field.");
+                         viskores::cont::Field::Association::Cells,
+                       "Cell field not cell field.");
   viskores::cont::ArrayHandle<viskores::Float32> outCellData;
   outCellField.GetData().AsArrayHandle(outCellData);
   std::cout << "Cell field:" << std::endl;
   viskores::cont::printSummary_ArrayHandle(outCellData, std::cout, true);
   VISKORES_TEST_ASSERT(outCellData.GetNumberOfValues() == outCellSet.GetNumberOfCells(),
-                   "Bad size of field.");
+                       "Bad size of field.");
 
   auto cellFieldPortal = outCellData.ReadPortal();
   VISKORES_TEST_ASSERT(test_equal(cellFieldPortal.Get(0), 100.1), "Bad field value.");

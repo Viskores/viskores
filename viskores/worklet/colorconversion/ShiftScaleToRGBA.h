@@ -56,7 +56,9 @@ struct ShiftScaleToRGBA : public viskores::worklet::WorkletMapField
     colorconversion::Clamp(la);
 
     const viskores::UInt8 lc = static_cast<viskores::UInt8>(la[0] + 0.5f);
-    return viskores::Vec4ui_8{ lc, lc, lc, static_cast<viskores::UInt8>((la[1] * this->Alpha) + 0.5f) };
+    return viskores::Vec4ui_8{
+      lc, lc, lc, static_cast<viskores::UInt8>((la[1] * this->Alpha) + 0.5f)
+    };
   }
 
   template <typename T>
@@ -66,9 +68,9 @@ struct ShiftScaleToRGBA : public viskores::worklet::WorkletMapField
     rgb = (rgb + viskores::Vec3f_32(this->Shift)) * this->Scale;
     colorconversion::Clamp(rgb);
     return viskores::Vec4ui_8{ static_cast<viskores::UInt8>(rgb[0] + 0.5f),
-                           static_cast<viskores::UInt8>(rgb[1] + 0.5f),
-                           static_cast<viskores::UInt8>(rgb[2] + 0.5f),
-                           colorconversion::ColorToUChar(this->Alpha) };
+                               static_cast<viskores::UInt8>(rgb[1] + 0.5f),
+                               static_cast<viskores::UInt8>(rgb[2] + 0.5f),
+                               colorconversion::ColorToUChar(this->Alpha) };
   }
 
   template <typename T>
@@ -80,9 +82,9 @@ struct ShiftScaleToRGBA : public viskores::worklet::WorkletMapField
 
     rgba[3] *= this->Alpha;
     return viskores::Vec4ui_8{ static_cast<viskores::UInt8>(rgba[0] + 0.5f),
-                           static_cast<viskores::UInt8>(rgba[1] + 0.5f),
-                           static_cast<viskores::UInt8>(rgba[2] + 0.5f),
-                           static_cast<viskores::UInt8>(rgba[3] + 0.5f) };
+                               static_cast<viskores::UInt8>(rgba[1] + 0.5f),
+                               static_cast<viskores::UInt8>(rgba[2] + 0.5f),
+                               static_cast<viskores::UInt8>(rgba[3] + 0.5f) };
   }
 };
 }

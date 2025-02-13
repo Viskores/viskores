@@ -101,18 +101,20 @@ public:
             typename InFieldPortalType4,
             typename OutFieldPortalType1,
             typename OutFieldPortalType2>
-  VISKORES_EXEC void operator()(const viskores::Id& actualSuperarcIndex,
-                            const InFieldPortalType1& actualSuperarcsPortal,
-                            const InFieldPortalType2& superarcListPortal,
-                            const viskores::Id& upDownVolumeValue, // upDownVolume[superarcID]
-                            const InFieldPortalType3& hierarchicalTreeRegularNodeGlobalIdsPortal,
-                            const InFieldPortalType4& hierarchicalTreeSupernodesPortal,
-                            const OutFieldPortalType1& bestUpDownSupernodePortal,
-                            const OutFieldPortalType2& bestUpDownVolumePortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::Id& actualSuperarcIndex,
+    const InFieldPortalType1& actualSuperarcsPortal,
+    const InFieldPortalType2& superarcListPortal,
+    const viskores::Id& upDownVolumeValue, // upDownVolume[superarcID]
+    const InFieldPortalType3& hierarchicalTreeRegularNodeGlobalIdsPortal,
+    const InFieldPortalType4& hierarchicalTreeSupernodesPortal,
+    const OutFieldPortalType1& bestUpDownSupernodePortal,
+    const OutFieldPortalType2& bestUpDownVolumePortal) const
   {
     // per actual superarc
     viskores::Id superarcId = actualSuperarcsPortal.Get(actualSuperarcIndex);
-    const viskores::worklet::contourtree_augmented::EdgePair& edge = superarcListPortal.Get(superarcId);
+    const viskores::worklet::contourtree_augmented::EdgePair& edge =
+      superarcListPortal.Get(superarcId);
 
     if (IsDown)
     {

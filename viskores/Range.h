@@ -163,13 +163,17 @@ struct Range
   VISKORES_EXEC_CONT
   viskores::Range Intersection(const viskores::Range& otherRange) const
   {
-    return viskores::Range(viskores::Max(this->Min, otherRange.Min), viskores::Min(this->Max, otherRange.Max));
+    return viskores::Range(viskores::Max(this->Min, otherRange.Min),
+                           viskores::Min(this->Max, otherRange.Max));
   }
 
   /// \b Operator for union
   ///
   VISKORES_EXEC_CONT
-  viskores::Range operator+(const viskores::Range& otherRange) const { return this->Union(otherRange); }
+  viskores::Range operator+(const viskores::Range& otherRange) const
+  {
+    return this->Union(otherRange);
+  }
 
   VISKORES_EXEC_CONT
   bool operator==(const viskores::Range& otherRange) const
@@ -206,7 +210,8 @@ struct VISKORES_NEVER_EXPORT VecTraits<viskores::Range>
   using IsSizeStatic = viskores::VecTraitsTagSizeStatic;
 
   VISKORES_EXEC_CONT
-  static const ComponentType& GetComponent(const viskores::Range& range, viskores::IdComponent component)
+  static const ComponentType& GetComponent(const viskores::Range& range,
+                                           viskores::IdComponent component)
   {
     VISKORES_ASSERT((component == 0) || (component == 1));
     return (component == 0) ? range.Min : range.Max;
@@ -219,7 +224,9 @@ struct VISKORES_NEVER_EXPORT VecTraits<viskores::Range>
   }
 
   VISKORES_EXEC_CONT
-  static void SetComponent(viskores::Range& range, viskores::IdComponent component, ComponentType value)
+  static void SetComponent(viskores::Range& range,
+                           viskores::IdComponent component,
+                           ComponentType value)
   {
     VISKORES_ASSERT((component == 0) || (component == 1));
     if (component == 0)
@@ -239,9 +246,10 @@ struct VISKORES_NEVER_EXPORT VecTraits<viskores::Range>
 
   template <viskores::IdComponent destSize>
   VISKORES_EXEC_CONT static void CopyInto(const viskores::Range& src,
-                                      viskores::Vec<ComponentType, destSize>& dest)
+                                          viskores::Vec<ComponentType, destSize>& dest)
   {
-    const viskores::IdComponent maxComponent = (destSize < NUM_COMPONENTS) ? destSize : NUM_COMPONENTS;
+    const viskores::IdComponent maxComponent =
+      (destSize < NUM_COMPONENTS) ? destSize : NUM_COMPONENTS;
     for (viskores::IdComponent component = 0; component < maxComponent; ++component)
     {
       dest[component] = GetComponent(src, component);

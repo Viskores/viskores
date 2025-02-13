@@ -44,10 +44,10 @@ public:
             typename OutCellFieldType3>
 
   VISKORES_EXEC void operator()(const InPointFieldMinType& inPointFieldVecMin,
-                            const InPointFieldMaxType& inPointFieldVecMax,
-                            OutCellFieldType1& outCellFieldCProb,
-                            OutCellFieldType2& outCellFieldNumNonzeroProb,
-                            OutCellFieldType3& outCellFieldEntropy) const
+                                const InPointFieldMaxType& inPointFieldVecMax,
+                                OutCellFieldType1& outCellFieldCProb,
+                                OutCellFieldType2& outCellFieldNumNonzeroProb,
+                                OutCellFieldType3& outCellFieldEntropy) const
   {
     viskores::IdComponent numPoints = inPointFieldVecMin.GetNumberOfComponents();
 
@@ -69,8 +69,10 @@ public:
 
     for (viskores::IdComponent pointIndex = 0; pointIndex < numPoints; ++pointIndex)
     {
-      viskores::FloatDefault minV = static_cast<viskores::FloatDefault>(inPointFieldVecMin[pointIndex]);
-      viskores::FloatDefault maxV = static_cast<viskores::FloatDefault>(inPointFieldVecMax[pointIndex]);
+      viskores::FloatDefault minV =
+        static_cast<viskores::FloatDefault>(inPointFieldVecMin[pointIndex]);
+      viskores::FloatDefault maxV =
+        static_cast<viskores::FloatDefault>(inPointFieldVecMax[pointIndex]);
 
       if (this->m_isovalue <= minV)
       {
@@ -84,7 +86,8 @@ public:
       }
       else
       {
-        positiveProb = static_cast<viskores::FloatDefault>((maxV - (this->m_isovalue)) / (maxV - minV));
+        positiveProb =
+          static_cast<viskores::FloatDefault>((maxV - (this->m_isovalue)) / (maxV - minV));
         negativeProb = 1 - positiveProb;
       }
 
@@ -119,8 +122,9 @@ public:
     outCellFieldEntropy = entropyValue;
   }
 
-  VISKORES_EXEC inline void TraverseBit(viskores::Vec<viskores::Vec2f, 8>& ProbList,
-                                    viskores::Vec<viskores::FloatDefault, 256>& probHistogram) const
+  VISKORES_EXEC inline void TraverseBit(
+    viskores::Vec<viskores::Vec2f, 8>& ProbList,
+    viskores::Vec<viskores::FloatDefault, 256>& probHistogram) const
   {
 
     for (viskores::IdComponent i = 0; i < 256; i++)
@@ -156,7 +160,8 @@ ContourUncertainUniform::ContourUncertainUniform()
 {
   this->SetCrossProbabilityName("cross_probability");
 }
-VISKORES_CONT viskores::cont::DataSet ContourUncertainUniform::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet ContourUncertainUniform::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   viskores::cont::Field minField = this->GetFieldFromDataSet(0, input);
   viskores::cont::Field maxField = this->GetFieldFromDataSet(1, input);
@@ -172,7 +177,8 @@ VISKORES_CONT viskores::cont::DataSet ContourUncertainUniform::DoExecute(const v
   viskores::cont::CellSetStructured<3> cellSet;
   input.GetCellSet().AsCellSet(cellSet);
 
-  auto resolveType = [&](auto concreteMinField) {
+  auto resolveType = [&](auto concreteMinField)
+  {
     using ArrayType = std::decay_t<decltype(concreteMinField)>;
     using ValueType = typename ArrayType::ValueType;
     ArrayType concreteMaxField;

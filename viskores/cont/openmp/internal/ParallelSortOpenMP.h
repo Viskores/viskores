@@ -114,9 +114,10 @@ void parallel_sort_bykey(viskores::cont::ArrayHandle<T, StorageT>& keys,
 
     // Sort the keys and indices:
     ZipHandleType zipHandle = viskores::cont::make_ArrayHandleZip(keys, indexArray);
-    parallel_sort(zipHandle,
-                  viskores::cont::internal::KeyCompare<T, viskores::Id, BinaryCompare>(binary_compare),
-                  viskores::cont::internal::radix::PSortTag());
+    parallel_sort(
+      zipHandle,
+      viskores::cont::internal::KeyCompare<T, viskores::Id, BinaryCompare>(binary_compare),
+      viskores::cont::internal::radix::PSortTag());
 
     // Permute the values to their sorted locations:
     {
@@ -200,16 +201,18 @@ void parallel_sort_bykey(viskores::cont::ArrayHandle<T, StorageT>& keys,
   }
 
   const viskores::Id valuesBytes = static_cast<viskores::Id>(sizeof(T)) * keys.GetNumberOfValues();
-  if (valuesBytes > static_cast<viskores::Id>(viskores::cont::internal::radix::MIN_BYTES_FOR_PARALLEL))
+  if (valuesBytes >
+      static_cast<viskores::Id>(viskores::cont::internal::radix::MIN_BYTES_FOR_PARALLEL))
   {
     parallel_sort_bykey(keys, indexArray, binary_compare);
   }
   else
   {
     ZipHandleType zipHandle = viskores::cont::make_ArrayHandleZip(keys, indexArray);
-    parallel_sort(zipHandle,
-                  viskores::cont::internal::KeyCompare<T, viskores::Id, BinaryCompare>(binary_compare),
-                  viskores::cont::internal::radix::PSortTag());
+    parallel_sort(
+      zipHandle,
+      viskores::cont::internal::KeyCompare<T, viskores::Id, BinaryCompare>(binary_compare),
+      viskores::cont::internal::radix::PSortTag());
   }
 
   // Permute the values to their sorted locations:

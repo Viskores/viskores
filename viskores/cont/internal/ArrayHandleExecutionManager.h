@@ -226,7 +226,9 @@ protected:
   }
 
   VISKORES_CONT
-  void PrepareForInPlaceImpl(bool updateData, void* portalExecutionVoid, viskores::cont::Token& token)
+  void PrepareForInPlaceImpl(bool updateData,
+                             void* portalExecutionVoid,
+                             viskores::cont::Token& token)
   {
     PortalExecution portal = this->Transfer.PrepareForInPlace(updateData, token);
     *reinterpret_cast<PortalExecution*>(portalExecutionVoid) = portal;

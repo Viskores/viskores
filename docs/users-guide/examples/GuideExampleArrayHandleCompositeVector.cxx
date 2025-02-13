@@ -28,13 +28,13 @@ void CheckArray(ArrayHandleType array)
 
   // [(0,3,2,0), (1,1,7,0), (2,4,1,0), (3,1,8,0), (4,5,2,0)].
   VISKORES_TEST_ASSERT(test_equal(portal.Get(0), viskores::make_Vec(0, 3, 2, 0)),
-                   "Bad value in array.");
+                       "Bad value in array.");
   VISKORES_TEST_ASSERT(test_equal(portal.Get(1), viskores::make_Vec(1, 1, 7, 0)),
-                   "Bad value in array.");
+                       "Bad value in array.");
   VISKORES_TEST_ASSERT(test_equal(portal.Get(2), viskores::make_Vec(2, 4, 1, 0)),
-                   "Bad value in array.");
+                       "Bad value in array.");
   VISKORES_TEST_ASSERT(test_equal(portal.Get(3), viskores::make_Vec(3, 1, 8, 0)),
-                   "Bad value in array.");
+                       "Bad value in array.");
 }
 
 void ArrayHandleCompositeVectorBasic()

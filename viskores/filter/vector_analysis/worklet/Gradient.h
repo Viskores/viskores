@@ -86,8 +86,8 @@ struct DeducedPointGrad
   }
 
   template <typename PermIterType>
-  void Go(const viskores::cont::CellSetPermutation<viskores::cont::CellSetStructured<3>, PermIterType>&
-            cellset) const
+  void Go(const viskores::cont::CellSetPermutation<viskores::cont::CellSetStructured<3>,
+                                                   PermIterType>& cellset) const
   {
     viskores::worklet::DispatcherPointNeighborhood<StructuredPointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -106,8 +106,8 @@ struct DeducedPointGrad
   }
 
   template <typename PermIterType>
-  void Go(const viskores::cont::CellSetPermutation<viskores::cont::CellSetStructured<2>, PermIterType>&
-            cellset) const
+  void Go(const viskores::cont::CellSetPermutation<viskores::cont::CellSetStructured<2>,
+                                                   PermIterType>& cellset) const
   {
     viskores::worklet::DispatcherPointNeighborhood<StructuredPointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
@@ -203,14 +203,14 @@ struct GradientOutputFields : public viskores::cont::ExecutionObjectBase
   viskores::exec::GradientOutput<T> PrepareForOutput(viskores::Id size)
   {
     viskores::exec::GradientOutput<T> portal(this->StoreGradient,
-                                         this->ComputeDivergence,
-                                         this->ComputeVorticity,
-                                         this->ComputeQCriterion,
-                                         this->Gradient,
-                                         this->Divergence,
-                                         this->Vorticity,
-                                         this->QCriterion,
-                                         size);
+                                             this->ComputeDivergence,
+                                             this->ComputeVorticity,
+                                             this->ComputeQCriterion,
+                                             this->Gradient,
+                                             this->Divergence,
+                                             this->Vorticity,
+                                             this->QCriterion,
+                                             size);
     return portal;
   }
 
@@ -229,10 +229,11 @@ class PointGradient
 {
 public:
   template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
-  viskores::cont::ArrayHandle<viskores::Vec<T, 3>> Run(const CellSetType& cells,
-                                               const CoordinateSystem& coords,
-                                               const viskores::cont::ArrayHandle<T, S>& field,
-                                               GradientOutputFields<T>& extraOutput)
+  viskores::cont::ArrayHandle<viskores::Vec<T, 3>> Run(
+    const CellSetType& cells,
+    const CoordinateSystem& coords,
+    const viskores::cont::ArrayHandle<T, S>& field,
+    GradientOutputFields<T>& extraOutput)
   {
     //we are using cast and call here as we pass the cells twice to the invoke
     //and want the type resolved once before hand instead of twice
@@ -247,10 +248,11 @@ class CellGradient
 {
 public:
   template <typename CellSetType, typename CoordinateSystem, typename T, typename S>
-  static viskores::cont::ArrayHandle<viskores::Vec<T, 3>> Run(const CellSetType& cells,
-                                                      const CoordinateSystem& coords,
-                                                      const viskores::cont::ArrayHandle<T, S>& field,
-                                                      GradientOutputFields<T>& extraOutput);
+  static viskores::cont::ArrayHandle<viskores::Vec<T, 3>> Run(
+    const CellSetType& cells,
+    const CoordinateSystem& coords,
+    const viskores::cont::ArrayHandle<T, S>& field,
+    GradientOutputFields<T>& extraOutput);
 };
 
 #ifndef VISKORES_GRADIENT_CHECK_WORKLET_INSTANCES
@@ -317,8 +319,8 @@ extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f_32,
   viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic>>::
+                                             viskores::cont::StorageTagBasic,
+                                             viskores::cont::StorageTagBasic>>::
 operator()(const viskores::cont::CellSetStructured<3>&) const;
 VISKORES_INSTANTIATION_END
 VISKORES_INSTANTIATION_BEGIN
@@ -326,8 +328,8 @@ extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f_64,
   viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic>>::
+                                             viskores::cont::StorageTagBasic,
+                                             viskores::cont::StorageTagBasic>>::
 operator()(const viskores::cont::CellSetStructured<3>&) const;
 VISKORES_INSTANTIATION_END
 
@@ -335,7 +337,8 @@ VISKORES_INSTANTIATION_BEGIN
 extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f,
-  viskores::cont::StorageTagUniformPoints>::operator()(const viskores::cont::CellSetStructured<3>&) const;
+  viskores::cont::StorageTagUniformPoints>::operator()(const viskores::cont::CellSetStructured<3>&)
+  const;
 VISKORES_INSTANTIATION_END
 
 
@@ -383,8 +386,8 @@ extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f_32,
   viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic>>::
+                                             viskores::cont::StorageTagBasic,
+                                             viskores::cont::StorageTagBasic>>::
 operator()(const viskores::cont::CellSetStructured<2>&) const;
 VISKORES_INSTANTIATION_END
 VISKORES_INSTANTIATION_BEGIN
@@ -392,8 +395,8 @@ extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f_64,
   viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic>>::
+                                             viskores::cont::StorageTagBasic,
+                                             viskores::cont::StorageTagBasic>>::
 operator()(const viskores::cont::CellSetStructured<2>&) const;
 VISKORES_INSTANTIATION_END
 
@@ -401,7 +404,8 @@ VISKORES_INSTANTIATION_BEGIN
 extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f,
-  viskores::cont::StorageTagUniformPoints>::operator()(const viskores::cont::CellSetStructured<2>&) const;
+  viskores::cont::StorageTagUniformPoints>::operator()(const viskores::cont::CellSetStructured<2>&)
+  const;
 VISKORES_INSTANTIATION_END
 
 
@@ -449,8 +453,8 @@ extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f_32,
   viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic>>::
+                                             viskores::cont::StorageTagBasic,
+                                             viskores::cont::StorageTagBasic>>::
 operator()(const viskores::cont::CellSetExplicit<>&) const;
 VISKORES_INSTANTIATION_END
 VISKORES_INSTANTIATION_BEGIN
@@ -458,8 +462,8 @@ extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f_64,
   viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic>>::
+                                             viskores::cont::StorageTagBasic,
+                                             viskores::cont::StorageTagBasic>>::
 operator()(const viskores::cont::CellSetExplicit<>&) const;
 VISKORES_INSTANTIATION_END
 
@@ -467,7 +471,8 @@ VISKORES_INSTANTIATION_BEGIN
 extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f,
-  viskores::cont::StorageTagUniformPoints>::operator()(const viskores::cont::CellSetExplicit<>&) const;
+  viskores::cont::StorageTagUniformPoints>::operator()(const viskores::cont::CellSetExplicit<>&)
+  const;
 VISKORES_INSTANTIATION_END
 
 
@@ -515,8 +520,8 @@ extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f_32,
   viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic>>::
+                                             viskores::cont::StorageTagBasic,
+                                             viskores::cont::StorageTagBasic>>::
 operator()(const viskores::cont::CellSetSingleType<>&) const;
 VISKORES_INSTANTIATION_END
 VISKORES_INSTANTIATION_BEGIN
@@ -524,8 +529,8 @@ extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f_64,
   viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic,
-                                         viskores::cont::StorageTagBasic>>::
+                                             viskores::cont::StorageTagBasic,
+                                             viskores::cont::StorageTagBasic>>::
 operator()(const viskores::cont::CellSetSingleType<>&) const;
 VISKORES_INSTANTIATION_END
 
@@ -533,7 +538,8 @@ VISKORES_INSTANTIATION_BEGIN
 extern template void viskores::worklet::gradient::DeducedPointGrad<
   viskores::cont::CoordinateSystem,
   viskores::Vec3f,
-  viskores::cont::StorageTagUniformPoints>::operator()(const viskores::cont::CellSetSingleType<>&) const;
+  viskores::cont::StorageTagUniformPoints>::operator()(const viskores::cont::CellSetSingleType<>&)
+  const;
 VISKORES_INSTANTIATION_END
 
 
@@ -598,8 +604,8 @@ viskores::worklet::CellGradient::Run(
   const viskores::cont::ArrayHandle<
     viskores::Vec3f_32,
     viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                           viskores::cont::StorageTagBasic,
-                                           viskores::cont::StorageTagBasic>>&,
+                                               viskores::cont::StorageTagBasic,
+                                               viskores::cont::StorageTagBasic>>&,
   GradientOutputFields<viskores::Vec3f_32>&);
 VISKORES_INSTANTIATION_END
 VISKORES_INSTANTIATION_BEGIN
@@ -610,13 +616,14 @@ viskores::worklet::CellGradient::Run(
   const viskores::cont::ArrayHandle<
     viskores::Vec3f_64,
     viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                           viskores::cont::StorageTagBasic,
-                                           viskores::cont::StorageTagBasic>>&,
+                                               viskores::cont::StorageTagBasic,
+                                               viskores::cont::StorageTagBasic>>&,
   GradientOutputFields<viskores::Vec3f_64>&);
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
-extern template viskores::cont::ArrayHandle<viskores::Vec<viskores::Vec3f, 3>> viskores::worklet::CellGradient::Run(
+extern template viskores::cont::ArrayHandle<viskores::Vec<viskores::Vec3f, 3>>
+viskores::worklet::CellGradient::Run(
   const viskores::cont::UnknownCellSet&,
   const viskores::cont::CoordinateSystem&,
   const viskores::cont::ArrayHandle<viskores::Vec3f, viskores::cont::StorageTagUniformPoints>&,

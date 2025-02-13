@@ -2476,23 +2476,24 @@ public:
     viskores::Id GetCaseIndex(viskores::Id shape, viskores::Id caseId) const
     {
       // index into ClipTablesIndices for each shape
-      VISKORES_STATIC_CONSTEXPR_ARRAY viskores::Int32 CellIndexLookup[viskores::NUMBER_OF_CELL_SHAPES] = {
-        -1,  //  0 = viskores::CELL_SHAPE_EMPTY_CELL
-        0,   //  1 = viskores::CELL_SHAPE_VERTEX
-        -1,  //  2 = viskores::CELL_SHAPE_POLY_VERTEX
-        2,   //  3 = viskores::CELL_SHAPE_LINE
-        -1,  //  4 = viskores::CELL_SHAPE_POLY_LINE
-        6,   //  5 = viskores::CELL_SHAPE_TRIANGLE
-        -1,  //  6 = viskores::CELL_SHAPE_TRIANGLE_STRIP
-        -1,  //  7 = viskores::CELL_SHAPE_POLYGON
-        -1,  //  8 = viskores::CELL_SHAPE_PIXEL
-        14,  //  9 = viskores::CELL_SHAPE_QUAD
-        30,  // 10 = viskores::CELL_SHAPE_TETRA
-        -1,  // 11 = viskores::CELL_SHAPE_VOXEL
-        46,  // 12 = viskores::CELL_SHAPE_HEXAHEDRON
-        302, // 13 = viskores::CELL_SHAPE_WEDGE
-        366  // 14 = viskores::CELL_SHAPE_PYRAMID
-      };
+      VISKORES_STATIC_CONSTEXPR_ARRAY viskores::Int32
+        CellIndexLookup[viskores::NUMBER_OF_CELL_SHAPES] = {
+          -1,  //  0 = viskores::CELL_SHAPE_EMPTY_CELL
+          0,   //  1 = viskores::CELL_SHAPE_VERTEX
+          -1,  //  2 = viskores::CELL_SHAPE_POLY_VERTEX
+          2,   //  3 = viskores::CELL_SHAPE_LINE
+          -1,  //  4 = viskores::CELL_SHAPE_POLY_LINE
+          6,   //  5 = viskores::CELL_SHAPE_TRIANGLE
+          -1,  //  6 = viskores::CELL_SHAPE_TRIANGLE_STRIP
+          -1,  //  7 = viskores::CELL_SHAPE_POLYGON
+          -1,  //  8 = viskores::CELL_SHAPE_PIXEL
+          14,  //  9 = viskores::CELL_SHAPE_QUAD
+          30,  // 10 = viskores::CELL_SHAPE_TETRA
+          -1,  // 11 = viskores::CELL_SHAPE_VOXEL
+          46,  // 12 = viskores::CELL_SHAPE_HEXAHEDRON
+          302, // 13 = viskores::CELL_SHAPE_WEDGE
+          366  // 14 = viskores::CELL_SHAPE_PYRAMID
+        };
 
       viskores::Id index = CellIndexLookup[shape];
       return this->ClipTablesIndicesPortal.Get(index + caseId);
@@ -2519,12 +2520,14 @@ public:
   };
 
   ClipTables()
-    : ClipTablesDataArray(
-        viskores::cont::make_ArrayHandle(ClipTablesData, CLIP_TABLES_DATA_SIZE, viskores::CopyFlag::Off))
+    : ClipTablesDataArray(viskores::cont::make_ArrayHandle(ClipTablesData,
+                                                           CLIP_TABLES_DATA_SIZE,
+                                                           viskores::CopyFlag::Off))
     , ClipTablesIndicesArray(viskores::cont::make_ArrayHandle(ClipTablesIndices,
-                                                          CLIP_TABLES_INDICES_SIZE,
-                                                          viskores::CopyFlag::Off))
-    , CellEdgesArray(viskores::cont::make_ArrayHandle(CellEdges, CELL_EDGES_SIZE, viskores::CopyFlag::Off))
+                                                              CLIP_TABLES_INDICES_SIZE,
+                                                              viskores::CopyFlag::Off))
+    , CellEdgesArray(
+        viskores::cont::make_ArrayHandle(CellEdges, CELL_EDGES_SIZE, viskores::CopyFlag::Off))
   {
   }
 

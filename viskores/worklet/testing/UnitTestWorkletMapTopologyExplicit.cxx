@@ -44,11 +44,11 @@ public:
             typename CellShapeTag,
             typename PointIndexType>
   VISKORES_EXEC void operator()(const InCellType& cellValue,
-                            OutCellType& maxValue,
-                            const InPointVecType& pointValues,
-                            const viskores::IdComponent& numPoints,
-                            const CellShapeTag& viskoresNotUsed(type),
-                            const PointIndexType& viskoresNotUsed(pointIDs)) const
+                                OutCellType& maxValue,
+                                const InPointVecType& pointValues,
+                                const viskores::IdComponent& numPoints,
+                                const CellShapeTag& viskoresNotUsed(type),
+                                const PointIndexType& viskoresNotUsed(pointIDs)) const
   {
     //simple functor that returns the max of cellValue and pointValue
     maxValue = static_cast<OutCellType>(cellValue);
@@ -98,9 +98,9 @@ static void TestMaxPointOrCell()
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(0), 100.1f),
-                   "Wrong result for PointToCellMax worklet");
+                       "Wrong result for PointToCellMax worklet");
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(1), 100.2f),
-                   "Wrong result for PointToCellMax worklet");
+                       "Wrong result for PointToCellMax worklet");
 }
 
 static void TestAvgPointToCell()
@@ -114,16 +114,17 @@ static void TestAvgPointToCell()
   viskores::cont::ArrayHandle<viskores::Float32> result;
 
   viskores::worklet::DispatcherMapTopology<viskores::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(
-    &cellset,
-    dataSet.GetField("pointvar").GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>(),
-    &result);
+  dispatcher.Invoke(&cellset,
+                    dataSet.GetField("pointvar")
+                      .GetData()
+                      .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>(),
+                    &result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(0), 20.1333f),
-                   "Wrong result for PointToCellAverage worklet");
+                       "Wrong result for PointToCellAverage worklet");
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(1), 35.2f),
-                   "Wrong result for PointToCellAverage worklet");
+                       "Wrong result for PointToCellAverage worklet");
 
   std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
   bool exceptionThrown = false;
@@ -161,9 +162,9 @@ static void TestAvgCellToPoint()
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(0), 100.1f),
-                   "Wrong result for CellToPointAverage worklet");
+                       "Wrong result for CellToPointAverage worklet");
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(1), 100.15f),
-                   "Wrong result for CellToPointAverage worklet");
+                       "Wrong result for CellToPointAverage worklet");
 
   std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
   bool exceptionThrown = false;

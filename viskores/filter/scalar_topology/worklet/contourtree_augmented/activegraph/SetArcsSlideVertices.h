@@ -90,11 +90,11 @@ public:
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const InFieldPortalType& treeArcsPortal,
-                            const viskores::Id nodeID,
-                            const InFieldPortalType& meshExtremaPortal,
-                            const InFieldPortalType& treeFirstSuperchildPortal,
-                            const InFieldPortalType& treeSupernodesPortal,
-                            const InOutFieldPortalType& treeSuperparentsPortal) const
+                                const viskores::Id nodeID,
+                                const InFieldPortalType& meshExtremaPortal,
+                                const InFieldPortalType& treeFirstSuperchildPortal,
+                                const InFieldPortalType& treeSupernodesPortal,
+                                const InOutFieldPortalType& treeSuperparentsPortal) const
   {
     // ignore if the flag is already set
     if (IsSupernode(treeArcsPortal.Get(nodeID)))

@@ -94,10 +94,11 @@ public:
     return SourceStorage::CreateBuffers();
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     SourceStorage::ResizeBuffers(numValues, buffers, preserve, token);
   }
@@ -115,10 +116,10 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             const T& fillValue,
-                             viskores::Id startIndex,
-                             viskores::Id endIndex,
-                             viskores::cont::Token& token)
+                                 const T& fillValue,
+                                 viskores::Id startIndex,
+                                 viskores::Id endIndex,
+                                 viskores::cont::Token& token)
   {
     viskores::Id numValues = GetNumberOfValues(buffers);
     SourceStorage::Fill(buffers, fillValue, numValues - endIndex, numValues - startIndex, token);
@@ -152,7 +153,7 @@ public:
 template <typename ArrayHandleType>
 class ArrayHandleReverse
   : public viskores::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                   StorageTagReverse<typename ArrayHandleType::StorageTag>>
+                                       StorageTagReverse<typename ArrayHandleType::StorageTag>>
 
 {
 public:
@@ -160,7 +161,7 @@ public:
     ArrayHandleReverse,
     (ArrayHandleReverse<ArrayHandleType>),
     (viskores::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                             StorageTagReverse<typename ArrayHandleType::StorageTag>>));
+                                 StorageTagReverse<typename ArrayHandleType::StorageTag>>));
 
   ArrayHandleReverse(const ArrayHandleType& handle)
     : Superclass(handle.GetBuffers())

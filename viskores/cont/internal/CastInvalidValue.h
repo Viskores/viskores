@@ -38,7 +38,8 @@ T CastInvalidValue(viskores::Float64 invalidValue)
 {
   using ComponentType = typename viskores::VecTraits<T>::BaseComponentType;
 
-  if (std::is_same<viskores::TypeTraitsIntegerTag, typename viskores::TypeTraits<T>::NumericTag>::value)
+  if (std::is_same<viskores::TypeTraitsIntegerTag,
+                   typename viskores::TypeTraits<T>::NumericTag>::value)
   {
     // Casting to integer types
     if (viskores::IsFinite(invalidValue))

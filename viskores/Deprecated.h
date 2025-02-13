@@ -14,7 +14,8 @@
 #include <viskores/Types.h>
 
 #define VISKORES_DEPRECATED_MAKE_MESSAGE(...) \
-  VISKORES_EXPAND(VISKORES_DEPRECATED_MAKE_MESSAGE_IMPL(__VA_ARGS__, "", viskores::internal::NullType{}))
+  VISKORES_EXPAND(                            \
+    VISKORES_DEPRECATED_MAKE_MESSAGE_IMPL(__VA_ARGS__, "", viskores::internal::NullType{}))
 #define VISKORES_DEPRECATED_MAKE_MESSAGE_IMPL(version, message, ...) \
   message " Deprecated in version " #version "."
 
@@ -132,14 +133,16 @@
 
 // Only actually use the [[deprecated]] attribute if the compiler supports it AND
 // we know how to suppress deprecations when necessary.
-#if defined(VISKORES_DEPRECATED_ATTRIBUTE_SUPPORTED) && defined(VISKORES_DEPRECATED_SUPPRESS_SUPPORTED)
+#if defined(VISKORES_DEPRECATED_ATTRIBUTE_SUPPORTED) && \
+  defined(VISKORES_DEPRECATED_SUPPRESS_SUPPORTED)
 #ifdef VISKORES_MSVC
 #define VISKORES_DEPRECATED(...) [[deprecated(VISKORES_DEPRECATED_MAKE_MESSAGE(__VA_ARGS__))]]
 #else // !MSVC
 // GCC and other compilers support the C++14 attribute [[deprecated]], but there appears to be a
 // bug (or other undesirable behavior) where if you mix [[deprecated]] with __attribute__(()) you
 // get compile errors. To get around this, use __attribute((deprecated)) where supported.
-#define VISKORES_DEPRECATED(...) __attribute__((deprecated(VISKORES_DEPRECATED_MAKE_MESSAGE(__VA_ARGS__))))
+#define VISKORES_DEPRECATED(...) \
+  __attribute__((deprecated(VISKORES_DEPRECATED_MAKE_MESSAGE(__VA_ARGS__))))
 #endif // !MSVC
 #else
 #define VISKORES_DEPRECATED(...)

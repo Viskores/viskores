@@ -19,8 +19,8 @@ namespace cont
 namespace internal
 {
 
-#define VISKORES_STORAGE_INSTANTIATE(Type)                                          \
-  template class VISKORES_CONT_EXPORT Storage<Type, StorageTagBasic>;               \
+#define VISKORES_STORAGE_INSTANTIATE(Type)                                              \
+  template class VISKORES_CONT_EXPORT Storage<Type, StorageTagBasic>;                   \
   template class VISKORES_CONT_EXPORT Storage<viskores::Vec<Type, 2>, StorageTagBasic>; \
   template class VISKORES_CONT_EXPORT Storage<viskores::Vec<Type, 3>, StorageTagBasic>; \
   template class VISKORES_CONT_EXPORT Storage<viskores::Vec<Type, 4>, StorageTagBasic>;
@@ -41,8 +41,8 @@ VISKORES_STORAGE_INSTANTIATE(viskores::Float64)
 
 } // namespace internal
 
-#define VISKORES_ARRAYHANDLE_INSTANTIATE(Type)                                          \
-  template class VISKORES_CONT_EXPORT ArrayHandle<Type, StorageTagBasic>;               \
+#define VISKORES_ARRAYHANDLE_INSTANTIATE(Type)                                              \
+  template class VISKORES_CONT_EXPORT ArrayHandle<Type, StorageTagBasic>;                   \
   template class VISKORES_CONT_EXPORT ArrayHandle<viskores::Vec<Type, 2>, StorageTagBasic>; \
   template class VISKORES_CONT_EXPORT ArrayHandle<viskores::Vec<Type, 3>, StorageTagBasic>; \
   template class VISKORES_CONT_EXPORT ArrayHandle<viskores::Vec<Type, 4>, StorageTagBasic>;

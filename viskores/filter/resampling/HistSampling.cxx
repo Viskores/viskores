@@ -26,9 +26,10 @@ namespace resampling
 {
 namespace
 {
-viskores::cont::ArrayHandle<viskores::FloatDefault> CalculatPdf(viskores::Id totalPoints,
-                                                        viskores::FloatDefault sampleFraction,
-                                                        viskores::cont::ArrayHandle<viskores::Id> binCount)
+viskores::cont::ArrayHandle<viskores::FloatDefault> CalculatPdf(
+  viskores::Id totalPoints,
+  viskores::FloatDefault sampleFraction,
+  viskores::cont::ArrayHandle<viskores::Id> binCount)
 {
   viskores::Id NumBins = binCount.GetNumberOfValues();
   viskores::cont::ArrayHandleIndex indexArray(NumBins);
@@ -85,7 +86,8 @@ viskores::cont::DataSet HistSampling::DoExecute(const viskores::cont::DataSet& i
   // use the acceptance probabilities and random array to create 0-1 array
   // generating random array between 0 to 1
   viskores::cont::ArrayHandle<viskores::Int8> outputArray;
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     viskores::Id NumFieldValues = concrete.GetNumberOfValues();
     auto randArray = viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(
       NumFieldValues, { this->GetSeed() });

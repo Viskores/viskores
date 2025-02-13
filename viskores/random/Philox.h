@@ -18,7 +18,8 @@ namespace random
 {
 namespace detail
 {
-static inline VISKORES_EXEC_CONT viskores::Vec<viskores::UInt32, 2> mulhilo(viskores::UInt32 a, viskores::UInt32 b)
+static inline VISKORES_EXEC_CONT viskores::Vec<viskores::UInt32, 2> mulhilo(viskores::UInt32 a,
+                                                                            viskores::UInt32 b)
 {
   viskores::UInt64 r = static_cast<viskores::UInt64>(a) * b;
   auto lo = static_cast<viskores::UInt32>(r);
@@ -117,7 +118,8 @@ public:
 } // namespace detail
 
 using PhiloxFunctor2x32x7 = detail::philox_functor<viskores::UInt32, 2, 7, 0xD256D193, 0x9E3779B9>;
-using PhiloxFunctor2x32x10 = detail::philox_functor<viskores::UInt32, 2, 10, 0xD256D193, 0x9E3779B9>;
+using PhiloxFunctor2x32x10 =
+  detail::philox_functor<viskores::UInt32, 2, 10, 0xD256D193, 0x9E3779B9>;
 
 } // namespace random
 } // namespace viskores

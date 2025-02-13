@@ -115,11 +115,11 @@ public:
             typename InOutFieldPortalType,
             typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertexID,
-                            const InIndexPortalType& chainExtremum,
-                            const InFieldPortalType& values,
-                            const InIndexPortalType& valueIndex,
-                            const InOutFieldPortalType& prunesTo,
-                            const OutFieldPortalType& outdegree) const
+                                const InIndexPortalType& chainExtremum,
+                                const InFieldPortalType& values,
+                                const InIndexPortalType& valueIndex,
+                                const InOutFieldPortalType& prunesTo,
+                                const OutFieldPortalType& outdegree) const
   {
     VertexValueComparator<InFieldPortalType> lessThan(values);
 

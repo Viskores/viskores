@@ -62,7 +62,8 @@ public:
   using ControlSignature = void(FieldIn, FieldInOut);
   using ExecutionSignature = void(_1, _2);
   template <typename FloatType>
-  VISKORES_EXEC inline void operator()(const viskores::UInt8& status, FloatType& currentDistance) const
+  VISKORES_EXEC inline void operator()(const viskores::UInt8& status,
+                                       FloatType& currentDistance) const
   {
     if (status != RAY_ACTIVE)
       return;
@@ -81,7 +82,8 @@ void RayTracking<FloatType>::Compact(viskores::cont::ArrayHandle<FloatType>& com
   //
   CurrentDistance = compactedDistances;
 
-  viskores::cont::ArrayHandleCast<viskores::Id, viskores::cont::ArrayHandle<viskores::UInt8>> castedMasks(masks);
+  viskores::cont::ArrayHandleCast<viskores::Id, viskores::cont::ArrayHandle<viskores::UInt8>>
+    castedMasks(masks);
 
   bool distance1IsEnter = EnterDist == &Distance1;
 
@@ -188,7 +190,8 @@ viskores::Id ConnectivityTracer::GetNumberOfMeshCells() const
   return CellSet.GetNumberOfCells();
 }
 
-void ConnectivityTracer::SetColorMap(const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap)
+void ConnectivityTracer::SetColorMap(
+  const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap)
 {
   ColorMap = colorMap;
 }
@@ -237,7 +240,7 @@ void ConnectivityTracer::SetEnergyData(const viskores::cont::Field& absorption,
   bool isSupportedField = absorption.GetAssociation() == viskores::cont::Field::Association::Cells;
   if (!isSupportedField)
     throw viskores::cont::ErrorBadValue("Absorption Field '" + absorption.GetName() +
-                                    "' not accociated with cells");
+                                        "' not accociated with cells");
   ScalarField = absorption;
   CellSet = cellSet;
   Coords = coords;
@@ -249,7 +252,7 @@ void ConnectivityTracer::SetEnergyData(const viskores::cont::Field& absorption,
   {
     if (emission.GetAssociation() != viskores::cont::Field::Association::Cells)
       throw viskores::cont::ErrorBadValue("Emission Field '" + emission.GetName() +
-                                      "' not accociated with cells");
+                                          "' not accociated with cells");
     HasEmission = true;
     EmissionField = emission;
   }
@@ -390,14 +393,14 @@ public:
 
   template <typename FloatType, typename PointPortalType>
   VISKORES_EXEC inline void operator()(viskores::Id& currentCell,
-                                   PointPortalType& vertices,
-                                   const viskores::Vec<FloatType, 3>& dir,
-                                   FloatType& enterDistance,
-                                   FloatType& exitDistance,
-                                   viskores::Int32& enterFace,
-                                   viskores::UInt8& rayStatus,
-                                   const viskores::Vec<FloatType, 3>& origin,
-                                   const MeshConnectivity& meshConn) const
+                                       PointPortalType& vertices,
+                                       const viskores::Vec<FloatType, 3>& dir,
+                                       FloatType& enterDistance,
+                                       FloatType& exitDistance,
+                                       viskores::Int32& enterFace,
+                                       viskores::UInt8& rayStatus,
+                                       const viskores::Vec<FloatType, 3>& origin,
+                                       const MeshConnectivity& meshConn) const
   {
     if (enterFace != -1 && rayStatus == RAY_ACTIVE)
     {
@@ -497,15 +500,15 @@ public:
 
   template <typename FloatType, typename PointPortalType, typename LocatorType>
   VISKORES_EXEC inline void operator()(viskores::Id& currentCell,
-                                   PointPortalType& vertices,
-                                   FloatType& enterDistance,
-                                   FloatType& exitDistance,
-                                   viskores::Int32& enterFace,
-                                   viskores::UInt8& rayStatus,
-                                   const viskores::Vec<FloatType, 3>& origin,
-                                   viskores::Vec<FloatType, 3>& rdir,
-                                   const MeshConnectivity& meshConn,
-                                   const LocatorType& locator) const
+                                       PointPortalType& vertices,
+                                       FloatType& enterDistance,
+                                       FloatType& exitDistance,
+                                       viskores::Int32& enterFace,
+                                       viskores::UInt8& rayStatus,
+                                       const viskores::Vec<FloatType, 3>& origin,
+                                       viskores::Vec<FloatType, 3>& rdir,
+                                       const MeshConnectivity& meshConn,
+                                       const LocatorType& locator) const
   {
     // We only process lost rays
     if (rayStatus != RAY_LOST)
@@ -611,9 +614,9 @@ public:
 
   template <typename FloatType>
   VISKORES_EXEC inline void operator()(const viskores::UInt8& rayStatus,
-                                   const FloatType& enterDistance,
-                                   const FloatType& exitDistance,
-                                   FloatType& distance) const
+                                       const FloatType& enterDistance,
+                                       const FloatType& exitDistance,
+                                       FloatType& distance) const
   {
     if (rayStatus != RAY_ACTIVE)
     {
@@ -656,13 +659,13 @@ public:
 
   template <typename FloatType, typename CellDataPortalType, typename RayDataPortalType>
   VISKORES_EXEC inline void operator()(const viskores::UInt8& rayStatus,
-                                   const FloatType& enterDistance,
-                                   const FloatType& exitDistance,
-                                   FloatType& currentDistance,
-                                   const CellDataPortalType& cellData,
-                                   RayDataPortalType& energyBins,
-                                   const viskores::Id& currentCell,
-                                   const viskores::Id& rayIndex) const
+                                       const FloatType& enterDistance,
+                                       const FloatType& exitDistance,
+                                       FloatType& currentDistance,
+                                       const CellDataPortalType& cellData,
+                                       RayDataPortalType& energyBins,
+                                       const viskores::Id& currentCell,
+                                       const viskores::Id& rayIndex) const
   {
     if (rayStatus != RAY_ACTIVE)
     {
@@ -726,15 +729,15 @@ public:
             typename CellEmisPortalType,
             typename RayDataPortalType>
   VISKORES_EXEC inline void operator()(const viskores::UInt8& rayStatus,
-                                   const FloatType& enterDistance,
-                                   const FloatType& exitDistance,
-                                   FloatType& currentDistance,
-                                   const CellAbsPortalType& absorptionData,
-                                   const CellEmisPortalType& emissionData,
-                                   RayDataPortalType& absorptionBins,
-                                   RayDataPortalType& emissionBins,
-                                   const viskores::Id& currentCell,
-                                   const viskores::Id& rayIndex) const
+                                       const FloatType& enterDistance,
+                                       const FloatType& exitDistance,
+                                       FloatType& currentDistance,
+                                       const CellAbsPortalType& absorptionData,
+                                       const CellEmisPortalType& emissionData,
+                                       RayDataPortalType& absorptionBins,
+                                       RayDataPortalType& emissionBins,
+                                       const viskores::Id& currentCell,
+                                       const viskores::Id& rayIndex) const
   {
     if (rayStatus != RAY_ACTIVE)
     {
@@ -911,16 +914,16 @@ public:
             typename ColorMapType,
             typename FrameBufferType>
   VISKORES_EXEC inline void operator()(const viskores::Id& currentCell,
-                                   ScalarPortalType& scalarPortal,
-                                   GhostPortalType& ghostPortal,
-                                   const FloatType& enterDistance,
-                                   const FloatType& exitDistance,
-                                   FloatType& currentDistance,
-                                   viskores::UInt8& rayStatus,
-                                   const ColorMapType& colorMap,
-                                   FrameBufferType& frameBuffer,
-                                   const viskores::Id& pixelIndex,
-                                   const FloatType& maxDistance) const
+                                       ScalarPortalType& scalarPortal,
+                                       GhostPortalType& ghostPortal,
+                                       const FloatType& enterDistance,
+                                       const FloatType& exitDistance,
+                                       FloatType& currentDistance,
+                                       viskores::UInt8& rayStatus,
+                                       const ColorMapType& colorMap,
+                                       FrameBufferType& frameBuffer,
+                                       const viskores::Id& pixelIndex,
+                                       const FloatType& maxDistance) const
   {
 
     if (rayStatus != RAY_ACTIVE)
@@ -1030,19 +1033,19 @@ public:
             typename ColorMapType,
             typename FrameBufferType>
   VISKORES_EXEC inline void operator()(const viskores::Id& currentCell,
-                                   PointPortalType& vertices,
-                                   ScalarPortalType& scalarPortal,
-                                   const FloatType& enterDistance,
-                                   const FloatType& exitDistance,
-                                   FloatType& currentDistance,
-                                   const viskores::Vec3f_32& dir,
-                                   viskores::UInt8& rayStatus,
-                                   const viskores::Id& pixelIndex,
-                                   const viskores::Vec<FloatType, 3>& origin,
-                                   MeshConnectivity& meshConn,
-                                   const ColorMapType& colorMap,
-                                   FrameBufferType& frameBuffer,
-                                   const FloatType& maxDistance) const
+                                       PointPortalType& vertices,
+                                       ScalarPortalType& scalarPortal,
+                                       const FloatType& enterDistance,
+                                       const FloatType& exitDistance,
+                                       FloatType& currentDistance,
+                                       const viskores::Vec3f_32& dir,
+                                       viskores::UInt8& rayStatus,
+                                       const viskores::Id& pixelIndex,
+                                       const viskores::Vec<FloatType, 3>& origin,
+                                       MeshConnectivity& meshConn,
+                                       const ColorMapType& colorMap,
+                                       FrameBufferType& frameBuffer,
+                                       const FloatType& maxDistance) const
   {
 
     if (rayStatus != RAY_ACTIVE)
@@ -1515,7 +1518,8 @@ template void ConnectivityTracer::FullTrace<viskores::Float32>(Ray<viskores::Flo
 template std::vector<PartialComposite<viskores::Float32>>
 ConnectivityTracer::PartialTrace<viskores::Float32>(Ray<viskores::Float32>& rays);
 
-template void ConnectivityTracer::IntegrateMeshSegment<viskores::Float32>(Ray<viskores::Float32>& rays);
+template void ConnectivityTracer::IntegrateMeshSegment<viskores::Float32>(
+  Ray<viskores::Float32>& rays);
 
 template void ConnectivityTracer::FindMeshEntry<viskores::Float32>(Ray<viskores::Float32>& rays);
 
@@ -1524,7 +1528,8 @@ template void ConnectivityTracer::FullTrace<viskores::Float64>(Ray<viskores::Flo
 template std::vector<PartialComposite<viskores::Float64>>
 ConnectivityTracer::PartialTrace<viskores::Float64>(Ray<viskores::Float64>& rays);
 
-template void ConnectivityTracer::IntegrateMeshSegment<viskores::Float64>(Ray<viskores::Float64>& rays);
+template void ConnectivityTracer::IntegrateMeshSegment<viskores::Float64>(
+  Ray<viskores::Float64>& rays);
 
 template void ConnectivityTracer::FindMeshEntry<viskores::Float64>(Ray<viskores::Float64>& rays);
 }

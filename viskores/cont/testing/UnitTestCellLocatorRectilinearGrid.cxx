@@ -26,7 +26,8 @@ namespace
 {
 
 using AxisHandle = viskores::cont::ArrayHandle<viskores::FloatDefault>;
-using RectilinearType = viskores::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
+using RectilinearType =
+  viskores::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
 using RectilinearPortalType = typename RectilinearType::ReadPortalType;
 
 class LocatorWorklet : public viskores::worklet::WorkletMapField
@@ -47,7 +48,7 @@ public:
 
   template <typename PointType>
   VISKORES_EXEC viskores::Id CalculateCellId(const PointType& point,
-                                     const RectilinearPortalType& coordsPortal) const
+                                             const RectilinearPortalType& coordsPortal) const
   {
     auto xAxis = coordsPortal.GetFirstPortal();
     auto yAxis = coordsPortal.GetSecondPortal();
@@ -95,11 +96,11 @@ public:
 
   template <typename PointType, typename LocatorType, typename CoordPortalType>
   VISKORES_EXEC void operator()(const PointType& pointIn,
-                            const LocatorType& locator,
-                            const CoordPortalType& coordsPortal,
-                            viskores::Id& cellId,
-                            PointType& parametric,
-                            bool& match) const
+                                const LocatorType& locator,
+                                const CoordPortalType& coordsPortal,
+                                viskores::Id& cellId,
+                                PointType& parametric,
+                                bool& match) const
   {
     // Note that CoordPortalType is actually a RectilinearPortalType wrapped in an
     // ExecutionWholeArrayConst. We need to get out the actual portal.

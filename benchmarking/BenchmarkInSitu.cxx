@@ -98,7 +98,8 @@ enum class RenderingMode
   Volume = 3,
 };
 
-std::vector<viskores::cont::DataSet> ExtractDataSets(const viskores::cont::PartitionedDataSet& partitions)
+std::vector<viskores::cont::DataSet> ExtractDataSets(
+  const viskores::cont::PartitionedDataSet& partitions)
 {
   return partitions.GetPartitions();
 }
@@ -192,8 +193,8 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vis
 }
 
 viskores::rendering::Canvas* RenderDataSets(const std::vector<viskores::cont::DataSet>& dataSets,
-                                        RenderingMode mode,
-                                        std::string fieldName)
+                                            RenderingMode mode,
+                                            std::string fieldName)
 {
   viskores::rendering::Scene scene;
   viskores::cont::ColorTable colorTable("inferno");
@@ -206,17 +207,17 @@ viskores::rendering::Canvas* RenderDataSets(const std::vector<viskores::cont::Da
   for (auto& dataSet : dataSets)
   {
     scene.AddActor(viskores::rendering::Actor(dataSet.GetCellSet(),
-                                          dataSet.GetCoordinateSystem(),
-                                          dataSet.GetField(fieldName),
-                                          colorTable));
+                                              dataSet.GetCoordinateSystem(),
+                                              dataSet.GetField(fieldName),
+                                              colorTable));
   }
 
-  auto bounds = std::accumulate(dataSets.begin(),
-                                dataSets.end(),
-                                viskores::Bounds(),
-                                [=](const viskores::Bounds& val, const viskores::cont::DataSet& partition) {
-                                  return val + viskores::cont::BoundsCompute(partition);
-                                });
+  auto bounds =
+    std::accumulate(dataSets.begin(),
+                    dataSets.end(),
+                    viskores::Bounds(),
+                    [=](const viskores::Bounds& val, const viskores::cont::DataSet& partition)
+                    { return val + viskores::cont::BoundsCompute(partition); });
   viskores::Vec3f_64 totalExtent(bounds.X.Length(), bounds.Y.Length(), bounds.Z.Length());
   viskores::Float64 mag = viskores::Magnitude(totalExtent);
   viskores::Normalize(totalExtent);
@@ -231,35 +232,40 @@ viskores::rendering::Canvas* RenderDataSets(const std::vector<viskores::cont::Da
 
   viskores::rendering::CanvasRayTracer canvas(ImageSize, ImageSize);
 
-  auto mapper = [=]() -> std::unique_ptr<viskores::rendering::Mapper> {
+  auto mapper = [=]() -> std::unique_ptr<viskores::rendering::Mapper>
+  {
     switch (mode)
     {
       case RenderingMode::Mesh:
       {
-        return std::unique_ptr<viskores::rendering::Mapper>(new viskores::rendering::MapperWireframer());
+        return std::unique_ptr<viskores::rendering::Mapper>(
+          new viskores::rendering::MapperWireframer());
       }
       case RenderingMode::RayTrace:
       {
-        return std::unique_ptr<viskores::rendering::Mapper>(new viskores::rendering::MapperRayTracer());
+        return std::unique_ptr<viskores::rendering::Mapper>(
+          new viskores::rendering::MapperRayTracer());
       }
       case RenderingMode::Volume:
       {
-        return std::unique_ptr<viskores::rendering::Mapper>(new viskores::rendering::MapperVolume());
+        return std::unique_ptr<viskores::rendering::Mapper>(
+          new viskores::rendering::MapperVolume());
       }
       case RenderingMode::None:
       default:
       {
-        return std::unique_ptr<viskores::rendering::Mapper>(new viskores::rendering::MapperRayTracer());
+        return std::unique_ptr<viskores::rendering::Mapper>(
+          new viskores::rendering::MapperRayTracer());
       }
     }
   }();
 
   viskores::rendering::View3D view(scene,
-                               *mapper,
-                               canvas,
-                               camera,
-                               viskores::rendering::Color(0.8f, 0.8f, 0.6f),
-                               viskores::rendering::Color(0.2f, 0.4f, 0.2f));
+                                   *mapper,
+                                   canvas,
+                                   camera,
+                                   viskores::rendering::Color(0.8f, 0.8f, 0.6f),
+                                   viskores::rendering::Color(0.2f, 0.4f, 0.2f));
   view.Paint();
 
   return view.GetCanvas().NewCopy();
@@ -462,7 +468,8 @@ void AddField(viskores::cont::PartitionedDataSet& input,
 }
 
 template <typename DataSetType>
-DataSetType RunStreamlinesHelper(viskores::filter::flow::Streamline& filter, const DataSetType& input)
+DataSetType RunStreamlinesHelper(viskores::filter::flow::Streamline& filter,
+                                 const DataSetType& input)
 {
   auto dataSetBounds = viskores::cont::BoundsCompute(input);
   viskores::cont::ArrayHandle<viskores::Particle> seedArray;
@@ -604,16 +611,18 @@ viskores::Vec3f GetSlicePlaneOrigin(const bool isMultiBlock)
       global.Z.Max = viskores::Min(global.Z.Max, bounds.Z.Max);
     }
     return viskores::Vec3f{ static_cast<viskores::FloatDefault>((global.X.Max - global.X.Min) / 2.),
-                        static_cast<viskores::FloatDefault>((global.Y.Max - global.Y.Min) / 2.),
-                        static_cast<viskores::FloatDefault>((global.Z.Max - global.Z.Min) / 2.) };
+                            static_cast<viskores::FloatDefault>((global.Y.Max - global.Y.Min) / 2.),
+                            static_cast<viskores::FloatDefault>((global.Z.Max - global.Z.Min) /
+                                                                2.) };
   }
   else
   {
     auto data = InputDataSet;
     viskores::Bounds bounds = data.GetCoordinateSystem().GetBounds();
     return viskores::Vec3f{ static_cast<viskores::FloatDefault>((bounds.X.Max - bounds.X.Min) / 2.),
-                        static_cast<viskores::FloatDefault>((bounds.Y.Max - bounds.Y.Min) / 2.),
-                        static_cast<viskores::FloatDefault>((bounds.Z.Max - bounds.Z.Min) / 2.) };
+                            static_cast<viskores::FloatDefault>((bounds.Y.Max - bounds.Y.Min) / 2.),
+                            static_cast<viskores::FloatDefault>((bounds.Z.Max - bounds.Z.Min) /
+                                                                2.) };
   }
 }
 

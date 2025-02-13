@@ -65,7 +65,9 @@ public:
   }
 
   VISKORES_EXEC
-  void operator()(const FieldType& value, const viskores::Id& binIndexIn, viskores::Id& binIndexOut) const
+  void operator()(const FieldType& value,
+                  const viskores::Id& binIndexIn,
+                  viskores::Id& binIndexOut) const
   {
     const viskores::Float64 fvalue = static_cast<viskores::Float64>(value);
     viskores::Id localBinIdx = static_cast<viskores::Id>((fvalue - minValue) / delta);

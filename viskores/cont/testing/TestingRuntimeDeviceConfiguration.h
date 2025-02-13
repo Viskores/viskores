@@ -38,7 +38,7 @@ struct TestingRuntimeDeviceConfiguration
     runtimeDeviceOptions.ViskoresDeviceInstance.SetOption(2);
     runtimeDeviceOptions.Initialize(nullptr);
     VISKORES_TEST_ASSERT(runtimeDeviceOptions.IsInitialized(),
-                     "Failed to default initialize runtime config options.");
+                         "Failed to default initialize runtime config options.");
     return runtimeDeviceOptions;
   }
 

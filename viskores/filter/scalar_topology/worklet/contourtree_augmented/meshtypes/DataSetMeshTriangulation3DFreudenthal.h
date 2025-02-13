@@ -116,14 +116,16 @@ inline DataSetMeshTriangulation3DFreudenthal::DataSetMeshTriangulation3DFreudent
   // Initialize the case tables in viskores
   this->EdgeBoundaryDetectionMasks =
     viskores::cont::make_ArrayHandle(m3d_freudenthal::EdgeBoundaryDetectionMasks,
-                                 m3d_freudenthal::N_INCIDENT_EDGES,
-                                 viskores::CopyFlag::Off);
-  this->NeighbourOffsets = viskores::cont::make_ArrayHandleGroupVec<3>(viskores::cont::make_ArrayHandle(
-    m3d_freudenthal::NeighbourOffsets, m3d_freudenthal::N_INCIDENT_EDGES * 3, viskores::CopyFlag::Off));
+                                     m3d_freudenthal::N_INCIDENT_EDGES,
+                                     viskores::CopyFlag::Off);
+  this->NeighbourOffsets = viskores::cont::make_ArrayHandleGroupVec<3>(
+    viskores::cont::make_ArrayHandle(m3d_freudenthal::NeighbourOffsets,
+                                     m3d_freudenthal::N_INCIDENT_EDGES * 3,
+                                     viskores::CopyFlag::Off));
   this->LinkComponentCaseTable =
     viskores::cont::make_ArrayHandle(m3d_freudenthal::LinkComponentCaseTable,
-                                 m3d_freudenthal::LINK_COMPONENT_CASES,
-                                 viskores::CopyFlag::Off);
+                                     m3d_freudenthal::LINK_COMPONENT_CASES,
+                                     viskores::CopyFlag::Off);
 }
 
 inline void DataSetMeshTriangulation3DFreudenthal::SetPrepareForExecutionBehavior(bool getMax)

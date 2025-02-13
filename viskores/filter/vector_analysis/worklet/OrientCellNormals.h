@@ -55,7 +55,8 @@ class OrientCellNormals
 
   // Returns true if v1 and v2 are pointing in the same hemisphere.
   template <typename T>
-  VISKORES_EXEC static bool SameDirection(const viskores::Vec<T, 3>& v1, const viskores::Vec<T, 3>& v2)
+  VISKORES_EXEC static bool SameDirection(const viskores::Vec<T, 3>& v1,
+                                          const viskores::Vec<T, 3>& v2)
   {
     return viskores::Dot(v1, v2) >= 0;
   }
@@ -84,7 +85,8 @@ public:
     using ExecutionSignature = _3(_1 coord, _2 ranges);
 
     template <typename CoordT, typename RangePortal>
-    VISKORES_EXEC bool operator()(const viskores::Vec<CoordT, 3>& point, const RangePortal& ranges) const
+    VISKORES_EXEC bool operator()(const viskores::Vec<CoordT, 3>& point,
+                                  const RangePortal& ranges) const
     {
       bool isActive = false;
       for (viskores::IdComponent dim = 0; dim < 3; ++dim)
@@ -134,21 +136,22 @@ public:
               typename ActiveCellsBitPortal,
               typename VisitedCellsBitPortal>
     VISKORES_EXEC void operator()(const CellList& cellIds,
-                              const viskores::Vec<CoordComp, 3>& coord,
-                              const RangePortal& ranges,
-                              CellNormalPortal& cellNormals,
-                              ActiveCellsBitPortal& activeCells,
-                              VisitedCellsBitPortal& visitedCells,
-                              bool& pointIsActive,
-                              bool& pointIsVisited) const
+                                  const viskores::Vec<CoordComp, 3>& coord,
+                                  const RangePortal& ranges,
+                                  CellNormalPortal& cellNormals,
+                                  ActiveCellsBitPortal& activeCells,
+                                  VisitedCellsBitPortal& visitedCells,
+                                  bool& pointIsActive,
+                                  bool& pointIsVisited) const
     {
       using NormalType = typename CellNormalPortal::ValueType;
       VISKORES_STATIC_ASSERT_MSG(viskores::VecTraits<NormalType>::NUM_COMPONENTS == 3,
-                             "Cell Normals expected to have 3 components.");
+                                 "Cell Normals expected to have 3 components.");
       using NormalCompType = typename NormalType::ComponentType;
 
       // Find the vector that points out of the dataset from the current point:
-      const NormalType refNormal = [&]() -> NormalType {
+      const NormalType refNormal = [&]() -> NormalType
+      {
         NormalType normal{ NormalCompType{ 0 } };
         NormalCompType numNormals{ 0 };
         for (viskores::IdComponent dim = 0; dim < 3; ++dim)
@@ -215,8 +218,8 @@ public:
 
     template <typename PointList, typename ActivePointsBitPortal, typename VisitedPointsBitPortal>
     VISKORES_EXEC bool operator()(const PointList& pointIds,
-                              ActivePointsBitPortal& activePoints,
-                              VisitedPointsBitPortal& visitedPoints) const
+                                  ActivePointsBitPortal& activePoints,
+                                  VisitedPointsBitPortal& visitedPoints) const
     {
       const viskores::IdComponent numPoints = pointIds.GetNumberOfComponents();
       for (viskores::IdComponent p = 0; p < numPoints; ++p)
@@ -256,9 +259,9 @@ public:
               typename ActiveCellBitPortal,
               typename VisitedCellBitPortal>
     VISKORES_EXEC bool operator()(const CellList& cellIds,
-                              RefCellPortal& refCells,
-                              ActiveCellBitPortal& activeCells,
-                              const VisitedCellBitPortal& visitedCells) const
+                                  RefCellPortal& refCells,
+                                  ActiveCellBitPortal& activeCells,
+                                  const VisitedCellBitPortal& visitedCells) const
     {
       // One of the cells must be marked visited already. Find it and use it as
       // an alignment reference for the others:
@@ -307,8 +310,8 @@ public:
 
     template <typename CellNormalsPortal>
     VISKORES_EXEC bool operator()(const viskores::Id cellId,
-                              const viskores::Id refCellId,
-                              CellNormalsPortal& cellNormals) const
+                                  const viskores::Id refCellId,
+                                  CellNormalsPortal& cellNormals) const
     {
       const auto refNormal = cellNormals.Get(refCellId);
       auto normal = cellNormals.Get(cellId);
@@ -330,7 +333,8 @@ public:
   VISKORES_CONT static void Run(
     const CellSetType& cells,
     const viskores::cont::ArrayHandle<viskores::Vec<CoordsCompType, 3>, CoordsStorageType>& coords,
-    viskores::cont::ArrayHandle<viskores::Vec<CellNormalCompType, 3>, CellNormalStorageType>& cellNormals)
+    viskores::cont::ArrayHandle<viskores::Vec<CellNormalCompType, 3>, CellNormalStorageType>&
+      cellNormals)
   {
     using RangeType = viskores::cont::ArrayHandle<viskores::Range>;
 
@@ -338,9 +342,9 @@ public:
     const viskores::Id numCells = cells.GetNumberOfCells();
 
     VISKORES_LOG_SCOPE(viskores::cont::LogLevel::Perf,
-                   "OrientCellNormals worklet (%lld points, %lld cells)",
-                   static_cast<viskores::Int64>(numPoints),
-                   static_cast<viskores::Int64>(numCells));
+                       "OrientCellNormals worklet (%lld points, %lld cells)",
+                       static_cast<viskores::Int64>(numPoints),
+                       static_cast<viskores::Int64>(numCells));
 
     // active = cells / point to be used in the next worklet invocation mask.
     viskores::cont::BitField activePointBits; // Initialized by MarkSourcePoints
@@ -378,10 +382,11 @@ public:
 
     // 3) For each source point, align the normals of the adjacent cells.
     {
-      viskores::Id numActive = viskores::cont::Algorithm::BitFieldToUnorderedSet(activePointBits, mask);
+      viskores::Id numActive =
+        viskores::cont::Algorithm::BitFieldToUnorderedSet(activePointBits, mask);
       (void)numActive;
       VISKORES_LOG_S(viskores::cont::LogLevel::Perf,
-                 "ProcessSourceCells from " << numActive << " source points.");
+                     "ProcessSourceCells from " << numActive << " source points.");
       invoke(WorkletProcessSourceCells{},
              viskores::worklet::MaskIndices{ mask },
              cells,
@@ -398,10 +403,11 @@ public:
     {
       // 4) Mark unvisited points adjacent to active cells
       {
-        viskores::Id numActive = viskores::cont::Algorithm::BitFieldToUnorderedSet(activeCellBits, mask);
+        viskores::Id numActive =
+          viskores::cont::Algorithm::BitFieldToUnorderedSet(activeCellBits, mask);
         (void)numActive;
         VISKORES_LOG_S(viskores::cont::LogLevel::Perf,
-                   "MarkActivePoints from " << numActive << " active cells.");
+                       "MarkActivePoints from " << numActive << " active cells.");
         invoke(WorkletMarkActivePoints{},
                viskores::worklet::MaskIndices{ mask },
                cells,
@@ -412,10 +418,11 @@ public:
 
       // 5) Mark unvisited cells adjacent to active points
       {
-        viskores::Id numActive = viskores::cont::Algorithm::BitFieldToUnorderedSet(activePointBits, mask);
+        viskores::Id numActive =
+          viskores::cont::Algorithm::BitFieldToUnorderedSet(activePointBits, mask);
         (void)numActive;
         VISKORES_LOG_S(viskores::cont::LogLevel::Perf,
-                   "MarkActiveCells from " << numActive << " active points.");
+                       "MarkActiveCells from " << numActive << " active points.");
         invoke(WorkletMarkActiveCells{},
                viskores::worklet::MaskIndices{ mask },
                cells,
@@ -425,16 +432,18 @@ public:
                activePoints);
       }
 
-      viskores::Id numActiveCells = viskores::cont::Algorithm::BitFieldToUnorderedSet(activeCellBits, mask);
+      viskores::Id numActiveCells =
+        viskores::cont::Algorithm::BitFieldToUnorderedSet(activeCellBits, mask);
 
       if (numActiveCells == 0)
       { // Done!
-        VISKORES_LOG_S(viskores::cont::LogLevel::Perf, "Iteration " << iter << ": Traversal complete.");
+        VISKORES_LOG_S(viskores::cont::LogLevel::Perf,
+                       "Iteration " << iter << ": Traversal complete.");
         break;
       }
 
       VISKORES_LOG_S(viskores::cont::LogLevel::Perf,
-                 "Iteration " << iter << ": Processing " << numActiveCells << " normals.");
+                     "Iteration " << iter << ": Processing " << numActiveCells << " normals.");
 
       // 5) Correct normals for active cells.
       {

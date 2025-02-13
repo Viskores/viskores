@@ -24,7 +24,8 @@ SphericalCoordinateTransform::SphericalCoordinateTransform()
   this->SetUseCoordinateSystemAsField(true);
 }
 
-viskores::cont::DataSet SphericalCoordinateTransform::DoExecute(const viskores::cont::DataSet& inDataSet)
+viskores::cont::DataSet SphericalCoordinateTransform::DoExecute(
+  const viskores::cont::DataSet& inDataSet)
 {
   viskores::cont::UnknownArrayHandle outArray;
 
@@ -34,7 +35,8 @@ viskores::cont::DataSet SphericalCoordinateTransform::DoExecute(const viskores::
     throw viskores::cont::ErrorBadValue("SphericalCoordinateTransform only applies to point data.");
   }
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     viskores::cont::ArrayHandle<T> result;
@@ -56,9 +58,8 @@ viskores::cont::DataSet SphericalCoordinateTransform::DoExecute(const viskores::
     inDataSet,
     inDataSet.GetCellSet(),
     viskores::cont::CoordinateSystem(coordinateName, outArray),
-    [](viskores::cont::DataSet& out, const viskores::cont::Field& fieldToPass) {
-      out.AddField(fieldToPass);
-    });
+    [](viskores::cont::DataSet& out, const viskores::cont::Field& fieldToPass)
+    { out.AddField(fieldToPass); });
   return outDataSet;
 }
 } // namespace field_transform

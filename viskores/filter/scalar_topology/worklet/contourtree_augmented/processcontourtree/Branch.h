@@ -74,12 +74,12 @@ template <typename T>
 class Branch
 {
 public:
-  viskores::Id OriginalId;              // Index of the extremum in the mesh
-  viskores::Id Extremum;                // Index of the extremum in the mesh
+  viskores::Id OriginalId;          // Index of the extremum in the mesh
+  viskores::Id Extremum;            // Index of the extremum in the mesh
   T ExtremumVal;                    // Value at the extremum:w
-  viskores::Id Saddle;                  // Index of the saddle in the mesh (or minimum for root branch)
+  viskores::Id Saddle;              // Index of the saddle in the mesh (or minimum for root branch)
   T SaddleVal;                      // Corresponding value
-  viskores::Id Volume;                  // Volume
+  viskores::Id Volume;              // Volume
   Branch<T>* Parent;                // Pointer to parent, or nullptr if no parent
   std::vector<Branch<T>*> Children; // List of pointers to children
 
@@ -181,8 +181,8 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
     branches[branchID]->OriginalId = static_cast<viskores::Id>(branchID);
     if (!NoSuchElement(branchSaddlePortal.Get(static_cast<viskores::Id>(branchID))))
     {
-      branches[branchID]->Saddle = MaskedIndex(
-        supernodesPortal.Get(MaskedIndex(branchSaddlePortal.Get(static_cast<viskores::Id>(branchID)))));
+      branches[branchID]->Saddle = MaskedIndex(supernodesPortal.Get(
+        MaskedIndex(branchSaddlePortal.Get(static_cast<viskores::Id>(branchID)))));
       viskores::Id branchMin = MaskedIndex(supernodesPortal.Get(
         MaskedIndex(branchMinimumPortal.Get(static_cast<viskores::Id>(branchID)))));
       viskores::Id branchMax = MaskedIndex(supernodesPortal.Get(
@@ -199,10 +199,10 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
     }
     else
     {
-      branches[branchID]->Saddle =
-        supernodesPortal.Get(MaskedIndex(branchMinimumPortal.Get(static_cast<viskores::Id>(branchID))));
-      branches[branchID]->Extremum =
-        supernodesPortal.Get(MaskedIndex(branchMaximumPortal.Get(static_cast<viskores::Id>(branchID))));
+      branches[branchID]->Saddle = supernodesPortal.Get(
+        MaskedIndex(branchMinimumPortal.Get(static_cast<viskores::Id>(branchID))));
+      branches[branchID]->Extremum = supernodesPortal.Get(
+        MaskedIndex(branchMaximumPortal.Get(static_cast<viskores::Id>(branchID))));
     }
 
     if (dataFieldIsSorted)

@@ -265,8 +265,9 @@ inline viskores::Vec3f_32 MshToLab(const viskores::Vec3f_32& msh)
   const viskores::Float32& M = msh[0];
   const viskores::Float32& s = msh[1];
   const viskores::Float32& h = msh[2];
-  viskores::Vec3f_32 r(
-    M * viskores::Cos(s), M * viskores::Sin(s) * viskores::Cos(h), M * viskores::Sin(s) * viskores::Sin(h));
+  viskores::Vec3f_32 r(M * viskores::Cos(s),
+                       M * viskores::Sin(s) * viskores::Cos(h),
+                       M * viskores::Sin(s) * viskores::Sin(h));
   return r;
 }
 
@@ -345,8 +346,8 @@ viskores::Vec3f_32 ColorTable::MapThroughColorSpace(viskores::Float64 value) con
 //---------------------------------------------------------------------------
 VISKORES_EXEC
 viskores::Vec3f_32 ColorTable::MapThroughColorSpace(const viskores::Vec3f_32& rgb1,
-                                                const viskores::Vec3f_32& rgb2,
-                                                viskores::Float32 weight) const
+                                                    const viskores::Vec3f_32& rgb2,
+                                                    viskores::Float32 weight) const
 {
   switch (this->Space)
   {
@@ -540,8 +541,8 @@ viskores::Float32 ColorTable::MapThroughOpacitySpace(viskores::Float64 value) co
 //---------------------------------------------------------------------------
 VISKORES_EXEC
 viskores::Vec3f_32 ColorTable::MapThroughColorSpaceRGB(const viskores::Vec3f_32& rgb1,
-                                                   const viskores::Vec3f_32& rgb2,
-                                                   viskores::Float32 weight) const
+                                                       const viskores::Vec3f_32& rgb2,
+                                                       viskores::Float32 weight) const
 {
   return viskores::Lerp(rgb1, rgb2, weight);
 }
@@ -549,8 +550,8 @@ viskores::Vec3f_32 ColorTable::MapThroughColorSpaceRGB(const viskores::Vec3f_32&
 //---------------------------------------------------------------------------
 VISKORES_EXEC
 viskores::Vec3f_32 ColorTable::MapThroughColorSpaceHSV(const viskores::Vec3f_32& rgb1,
-                                                   const viskores::Vec3f_32& rgb2,
-                                                   viskores::Float32 weight) const
+                                                       const viskores::Vec3f_32& rgb2,
+                                                       viskores::Float32 weight) const
 {
   viskores::Vec3f_32 hsv1, hsv2;
   detail::RGBToHSV(rgb1, hsv1);
@@ -567,8 +568,8 @@ viskores::Vec3f_32 ColorTable::MapThroughColorSpaceHSV(const viskores::Vec3f_32&
 //---------------------------------------------------------------------------
 VISKORES_EXEC
 viskores::Vec3f_32 ColorTable::MapThroughColorSpaceHSVWrap(const viskores::Vec3f_32& rgb1,
-                                                       const viskores::Vec3f_32& rgb2,
-                                                       viskores::Float32 weight) const
+                                                           const viskores::Vec3f_32& rgb2,
+                                                           viskores::Float32 weight) const
 {
   viskores::Vec3f_32 hsv1, hsv2;
   detail::RGBToHSV(rgb1, hsv1);
@@ -595,8 +596,8 @@ viskores::Vec3f_32 ColorTable::MapThroughColorSpaceHSVWrap(const viskores::Vec3f
 //---------------------------------------------------------------------------
 VISKORES_EXEC
 viskores::Vec3f_32 ColorTable::MapThroughColorSpaceLab(const viskores::Vec3f_32& rgb1,
-                                                   const viskores::Vec3f_32& rgb2,
-                                                   viskores::Float32 weight) const
+                                                       const viskores::Vec3f_32& rgb2,
+                                                       viskores::Float32 weight) const
 {
   viskores::Vec3f_32 lab1, lab2;
   detail::RGBToLab(rgb1, lab1);
@@ -610,8 +611,8 @@ viskores::Vec3f_32 ColorTable::MapThroughColorSpaceLab(const viskores::Vec3f_32&
 //---------------------------------------------------------------------------
 VISKORES_EXEC
 viskores::Vec3f_32 ColorTable::MapThroughColorSpaceDiverging(const viskores::Vec3f_32& rgb1,
-                                                         const viskores::Vec3f_32& rgb2,
-                                                         viskores::Float32 weight) const
+                                                             const viskores::Vec3f_32& rgb2,
+                                                             viskores::Float32 weight) const
 {
   viskores::Vec3f_32 lab1, lab2;
   detail::RGBToLab(rgb1, lab1);

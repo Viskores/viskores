@@ -28,18 +28,18 @@ enum class ExplicitDataSetOption
 };
 
 inline viskores::cont::DataSet CreateUniformDataSet(const viskores::Bounds& bounds,
-                                                const viskores::Id3& dims,
-                                                bool addGhost = false)
+                                                    const viskores::Id3& dims,
+                                                    bool addGhost = false)
 {
   viskores::Vec3f origin(static_cast<viskores::FloatDefault>(bounds.X.Min),
-                     static_cast<viskores::FloatDefault>(bounds.Y.Min),
-                     static_cast<viskores::FloatDefault>(bounds.Z.Min));
+                         static_cast<viskores::FloatDefault>(bounds.Y.Min),
+                         static_cast<viskores::FloatDefault>(bounds.Z.Min));
   viskores::Vec3f spacing(static_cast<viskores::FloatDefault>(bounds.X.Length()) /
-                        static_cast<viskores::FloatDefault>((dims[0] - 1)),
-                      static_cast<viskores::FloatDefault>(bounds.Y.Length()) /
-                        static_cast<viskores::FloatDefault>((dims[1] - 1)),
-                      static_cast<viskores::FloatDefault>(bounds.Z.Length()) /
-                        static_cast<viskores::FloatDefault>((dims[2] - 1)));
+                            static_cast<viskores::FloatDefault>((dims[0] - 1)),
+                          static_cast<viskores::FloatDefault>(bounds.Y.Length()) /
+                            static_cast<viskores::FloatDefault>((dims[1] - 1)),
+                          static_cast<viskores::FloatDefault>(bounds.Z.Length()) /
+                            static_cast<viskores::FloatDefault>((dims[2] - 1)));
 
   viskores::cont::DataSetBuilderUniform dataSetBuilder;
   viskores::cont::DataSet ds = dataSetBuilder.Create(dims, origin, spacing);
@@ -53,18 +53,18 @@ inline viskores::cont::DataSet CreateUniformDataSet(const viskores::Bounds& boun
 }
 
 inline viskores::cont::DataSet CreateRectilinearDataSet(const viskores::Bounds& bounds,
-                                                    const viskores::Id3& dims,
-                                                    bool addGhost = false)
+                                                        const viskores::Id3& dims,
+                                                        bool addGhost = false)
 {
   viskores::cont::DataSetBuilderRectilinear dataSetBuilder;
   std::vector<viskores::FloatDefault> xvals, yvals, zvals;
 
   viskores::Vec3f spacing(static_cast<viskores::FloatDefault>(bounds.X.Length()) /
-                        static_cast<viskores::FloatDefault>((dims[0] - 1)),
-                      static_cast<viskores::FloatDefault>(bounds.Y.Length()) /
-                        static_cast<viskores::FloatDefault>((dims[1] - 1)),
-                      static_cast<viskores::FloatDefault>(bounds.Z.Length()) /
-                        static_cast<viskores::FloatDefault>((dims[2] - 1)));
+                            static_cast<viskores::FloatDefault>((dims[0] - 1)),
+                          static_cast<viskores::FloatDefault>(bounds.Y.Length()) /
+                            static_cast<viskores::FloatDefault>((dims[1] - 1)),
+                          static_cast<viskores::FloatDefault>(bounds.Z.Length()) /
+                            static_cast<viskores::FloatDefault>((dims[2] - 1)));
   xvals.resize((size_t)dims[0]);
   xvals[0] = static_cast<viskores::FloatDefault>(bounds.X.Min);
   for (size_t i = 1; i < (size_t)dims[0]; i++)
@@ -117,18 +117,20 @@ inline void MakeExplicitCells(const CellSetType& cellSet,
   for (viskores::Id cellIndex = 0; cellIndex < nCells; cellIndex++)
   {
     auto ptIds = structured.GetPointsOfCell(cellIndex);
-    for (viskores::IdComponent vertexIndex = 0; vertexIndex < nVerts; vertexIndex++, connectionIndex++)
+    for (viskores::IdComponent vertexIndex = 0; vertexIndex < nVerts;
+         vertexIndex++, connectionIndex++)
       connPortal.Set(connectionIndex, ptIds[vertexIndex]);
 
-    shapesPortal.Set(cellIndex, (NDIM == 2 ? viskores::CELL_SHAPE_QUAD : viskores::CELL_SHAPE_HEXAHEDRON));
+    shapesPortal.Set(cellIndex,
+                     (NDIM == 2 ? viskores::CELL_SHAPE_QUAD : viskores::CELL_SHAPE_HEXAHEDRON));
     numIndicesPortal.Set(cellIndex, nVerts);
   }
 }
 
 inline viskores::cont::DataSet CreateExplicitFromStructuredDataSet(const viskores::Bounds& bounds,
-                                                               const viskores::Id3& dims,
-                                                               ExplicitDataSetOption option,
-                                                               bool addGhost = false)
+                                                                   const viskores::Id3& dims,
+                                                                   ExplicitDataSetOption option,
+                                                                   bool addGhost = false)
 {
   using CoordType = viskores::Vec3f;
   auto input = CreateUniformDataSet(bounds, dims, addGhost);
@@ -200,8 +202,8 @@ inline viskores::cont::DataSet CreateExplicitFromStructuredDataSet(const viskore
 }
 
 inline std::vector<viskores::cont::DataSet> CreateAllDataSets(const viskores::Bounds& bounds,
-                                                          const viskores::Id3& dims,
-                                                          bool addGhost)
+                                                              const viskores::Id3& dims,
+                                                              bool addGhost)
 {
   std::vector<viskores::cont::DataSet> dataSets;
 
@@ -244,8 +246,10 @@ inline std::vector<viskores::cont::PartitionedDataSet> CreateAllDataSets(
 }
 
 
-inline std::vector<viskores::cont::PartitionedDataSet>
-CreateAllDataSets(const std::vector<viskores::Bounds>& bounds, const viskores::Id3& dim, bool addGhost)
+inline std::vector<viskores::cont::PartitionedDataSet> CreateAllDataSets(
+  const std::vector<viskores::Bounds>& bounds,
+  const viskores::Id3& dim,
+  bool addGhost)
 {
   std::vector<viskores::Id3> dims(bounds.size(), dim);
   return CreateAllDataSets(bounds, dims, addGhost);

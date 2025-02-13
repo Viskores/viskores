@@ -84,11 +84,11 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& returnIndex,
-                            const InFieldPortalType& newVertexIdPortal,
-                            const viskores::Id& bractSuperarcIdIn,
-                            const InFieldPortalType& downNeighbourPortal,
-                            const InFieldPortalType& upNeighbourPortal,
-                            const OutFieldPortalType& newSuperarcPortal) const
+                                const InFieldPortalType& newVertexIdPortal,
+                                const viskores::Id& bractSuperarcIdIn,
+                                const InFieldPortalType& downNeighbourPortal,
+                                const InFieldPortalType& upNeighbourPortal,
+                                const OutFieldPortalType& newSuperarcPortal) const
   {
     // per vertex
     // skip all unnecessary vertices
@@ -107,7 +107,8 @@ public:
     //  i. points to nothing - copy it
     if (viskores::worklet::contourtree_augmented::NoSuchElement((oldInbound)))
     {
-      newSuperarcPortal.Set(newId, (viskores::Id)viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+      newSuperarcPortal.Set(
+        newId, (viskores::Id)viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
     }
     //  ii. points to a necessary vertex - copy it
     else if (!viskores::worklet::contourtree_augmented::NoSuchElement(

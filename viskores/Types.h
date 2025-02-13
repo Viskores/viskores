@@ -639,7 +639,7 @@ public:
     else
     {
       VISKORES_ASSERT((values.size() == NUM_COMPONENTS) &&
-                  "Vec object initialized wrong number of components.");
+                      "Vec object initialized wrong number of components.");
       for (; src != values.end(); ++src)
       {
         *dest = *src;
@@ -680,7 +680,8 @@ public:
     return NUM_COMPONENTS;
   }
 
-  inline VISKORES_EXEC_CONT constexpr const ComponentType& operator[](viskores::IdComponent idx) const
+  inline VISKORES_EXEC_CONT constexpr const ComponentType& operator[](
+    viskores::IdComponent idx) const
   {
     return this->Components[idx];
   }
@@ -1250,8 +1251,9 @@ using Vec4ui_64 = viskores::Vec<viskores::UInt64, 4>;
 /// same type or compile issues will occur.
 ///
 template <typename T, typename... Ts>
-VISKORES_EXEC_CONT constexpr viskores::Vec<T, viskores::IdComponent(sizeof...(Ts) + 1)> make_Vec(T value0,
-                                                                                     Ts&&... args)
+VISKORES_EXEC_CONT constexpr viskores::Vec<T, viskores::IdComponent(sizeof...(Ts) + 1)> make_Vec(
+  T value0,
+  Ts&&... args)
 {
   return viskores::Vec<T, viskores::IdComponent(sizeof...(Ts) + 1)>(value0, T(args)...);
 }
@@ -1280,8 +1282,8 @@ class VISKORES_ALWAYS_EXPORT VecC : public detail::VecCBase<T, VecC<T>>
   using Superclass = detail::VecCBase<T, VecC<T>>;
 
   VISKORES_STATIC_ASSERT_MSG(std::is_const<T>::value == false,
-                         "You cannot use VecC with a const type as its template argument. "
-                         "Use either const VecC or VecCConst.");
+                             "You cannot use VecC with a const type as its template argument. "
+                             "Use either const VecC or VecCConst.");
 
 public:
 #ifdef VISKORES_DOXYGEN_ONLY
@@ -1374,8 +1376,8 @@ class VISKORES_ALWAYS_EXPORT VecCConst : public detail::VecCBase<T, VecCConst<T>
   using Superclass = detail::VecCBase<T, VecCConst<T>>;
 
   VISKORES_STATIC_ASSERT_MSG(std::is_const<T>::value == false,
-                         "You cannot use VecCConst with a const type as its template argument. "
-                         "Remove the const from the type.");
+                             "You cannot use VecCConst with a const type as its template argument. "
+                             "Remove the const from the type.");
 
 public:
 #ifdef VISKORES_DOXYGEN_ONLY
@@ -1452,7 +1454,8 @@ private:
 /// Creates a \c VecC from an input array.
 ///
 template <typename T>
-static inline VISKORES_EXEC_CONT constexpr viskores::VecC<T> make_VecC(T* array, viskores::IdComponent size)
+static inline VISKORES_EXEC_CONT constexpr viskores::VecC<T> make_VecC(T* array,
+                                                                       viskores::IdComponent size)
 {
   return viskores::VecC<T>(array, size);
 }
@@ -1460,8 +1463,9 @@ static inline VISKORES_EXEC_CONT constexpr viskores::VecC<T> make_VecC(T* array,
 /// Creates a \c VecCConst from a constant input array.
 ///
 template <typename T>
-static inline VISKORES_EXEC_CONT constexpr viskores::VecCConst<T> make_VecC(const T* array,
-                                                                    viskores::IdComponent size)
+static inline VISKORES_EXEC_CONT constexpr viskores::VecCConst<T> make_VecC(
+  const T* array,
+  viskores::IdComponent size)
 {
   return viskores::VecCConst<T>(array, size);
 }
@@ -1480,7 +1484,8 @@ static inline VISKORES_EXEC_CONT auto vec_dot(const T& a, const T& b)
   return result;
 }
 template <typename T, viskores::IdComponent Size>
-static inline VISKORES_EXEC_CONT auto vec_dot(const viskores::Vec<T, Size>& a, const viskores::Vec<T, Size>& b)
+static inline VISKORES_EXEC_CONT auto vec_dot(const viskores::Vec<T, Size>& a,
+                                              const viskores::Vec<T, Size>& b)
 {
   auto result = a[0] * b[0];
   for (viskores::IdComponent i = 1; i < Size; ++i)
@@ -1499,25 +1504,34 @@ static inline VISKORES_EXEC_CONT auto Dot(const T& a, const T& b)
 }
 
 template <typename T>
-static inline VISKORES_EXEC_CONT auto Dot(const viskores::Vec<T, 2>& a, const viskores::Vec<T, 2>& b)
+static inline VISKORES_EXEC_CONT auto Dot(const viskores::Vec<T, 2>& a,
+                                          const viskores::Vec<T, 2>& b)
 {
   return (a[0] * b[0]) + (a[1] * b[1]);
 }
 template <typename T>
-static inline VISKORES_EXEC_CONT auto Dot(const viskores::Vec<T, 3>& a, const viskores::Vec<T, 3>& b)
+static inline VISKORES_EXEC_CONT auto Dot(const viskores::Vec<T, 3>& a,
+                                          const viskores::Vec<T, 3>& b)
 {
   return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
 }
 template <typename T>
-static inline VISKORES_EXEC_CONT auto Dot(const viskores::Vec<T, 4>& a, const viskores::Vec<T, 4>& b)
+static inline VISKORES_EXEC_CONT auto Dot(const viskores::Vec<T, 4>& a,
+                                          const viskores::Vec<T, 4>& b)
 {
   return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]) + (a[3] * b[3]);
 }
 // Integer types of a width less than an integer get implicitly casted to
 // an integer when doing a multiplication.
-#define VISKORES_SCALAR_DOT(stype)                                                          \
-  static inline VISKORES_EXEC_CONT auto dot(stype a, stype b) { return a * b; } /* LEGACY */ \
-  static inline VISKORES_EXEC_CONT auto Dot(stype a, stype b) { return a * b; }
+#define VISKORES_SCALAR_DOT(stype)                            \
+  static inline VISKORES_EXEC_CONT auto dot(stype a, stype b) \
+  {                                                           \
+    return a * b;                                             \
+  } /* LEGACY */                                              \
+  static inline VISKORES_EXEC_CONT auto Dot(stype a, stype b) \
+  {                                                           \
+    return a * b;                                             \
+  }
 VISKORES_SCALAR_DOT(viskores::Int8)
 VISKORES_SCALAR_DOT(viskores::UInt8)
 VISKORES_SCALAR_DOT(viskores::Int16)
@@ -1536,17 +1550,20 @@ static inline VISKORES_EXEC_CONT auto dot(const T& a, const T& b) -> decltype(de
   return viskores::Dot(a, b);
 }
 template <typename T>
-static inline VISKORES_EXEC_CONT auto dot(const viskores::Vec<T, 2>& a, const viskores::Vec<T, 2>& b)
+static inline VISKORES_EXEC_CONT auto dot(const viskores::Vec<T, 2>& a,
+                                          const viskores::Vec<T, 2>& b)
 {
   return viskores::Dot(a, b);
 }
 template <typename T>
-static inline VISKORES_EXEC_CONT auto dot(const viskores::Vec<T, 3>& a, const viskores::Vec<T, 3>& b)
+static inline VISKORES_EXEC_CONT auto dot(const viskores::Vec<T, 3>& a,
+                                          const viskores::Vec<T, 3>& b)
 {
   return viskores::Dot(a, b);
 }
 template <typename T>
-static inline VISKORES_EXEC_CONT auto dot(const viskores::Vec<T, 4>& a, const viskores::Vec<T, 4>& b)
+static inline VISKORES_EXEC_CONT auto dot(const viskores::Vec<T, 4>& a,
+                                          const viskores::Vec<T, 4>& b)
 {
   return viskores::Dot(a, b);
 }
@@ -1618,7 +1635,8 @@ struct Pair;
 /// Helper function for printing out vectors during testing.
 ///
 template <typename T, viskores::IdComponent Size>
-inline VISKORES_CONT std::ostream& operator<<(std::ostream& stream, const viskores::Vec<T, Size>& vec)
+inline VISKORES_CONT std::ostream& operator<<(std::ostream& stream,
+                                              const viskores::Vec<T, Size>& vec)
 {
   stream << "[";
   for (viskores::IdComponent component = 0; component < Size - 1; component++)
@@ -1631,7 +1649,8 @@ inline VISKORES_CONT std::ostream& operator<<(std::ostream& stream, const viskor
 /// Helper function for printing out pairs during testing.
 ///
 template <typename T, typename U>
-inline VISKORES_EXEC_CONT std::ostream& operator<<(std::ostream& stream, const viskores::Pair<T, U>& vec)
+inline VISKORES_EXEC_CONT std::ostream& operator<<(std::ostream& stream,
+                                                   const viskores::Pair<T, U>& vec)
 {
   return stream << "[" << vec.first << "," << vec.second << "]";
 }

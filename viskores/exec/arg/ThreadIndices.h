@@ -58,15 +58,15 @@ struct Fetch<FetchTag, viskores::exec::arg::AspectTagThreadIndices, ExecObjectTy
 
   template <typename ThreadIndicesType>
   VISKORES_EXEC const ThreadIndicesType& Load(const ThreadIndicesType& indices,
-                                          const ExecObjectType&) const
+                                              const ExecObjectType&) const
   {
     return indices;
   }
 
   template <typename ThreadIndicesType>
   VISKORES_EXEC void Store(const ThreadIndicesType&,
-                       const ExecObjectType&,
-                       const ThreadIndicesType&) const
+                           const ExecObjectType&,
+                           const ThreadIndicesType&) const
   {
     // Store is a no-op.
   }

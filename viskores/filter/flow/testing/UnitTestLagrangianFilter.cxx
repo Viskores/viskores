@@ -66,18 +66,20 @@ void TestLagrangianFilterMultiStepInterval()
       if (i % write_interval == 0)
       {
         VISKORES_TEST_ASSERT(extractedBasisFlows.GetNumberOfCoordinateSystems() == 1,
-                         "Wrong number of coordinate systems in the output dataset.");
+                             "Wrong number of coordinate systems in the output dataset.");
         VISKORES_TEST_ASSERT(extractedBasisFlows.GetNumberOfPoints() == 512,
-                         "Wrong number of basis flows extracted.");
-        VISKORES_TEST_ASSERT(extractedBasisFlows.GetNumberOfFields() == 3, "Wrong number of fields.");
+                             "Wrong number of basis flows extracted.");
+        VISKORES_TEST_ASSERT(extractedBasisFlows.GetNumberOfFields() == 3,
+                             "Wrong number of fields.");
       }
       else
       {
         VISKORES_TEST_ASSERT(extractedBasisFlows.GetNumberOfPoints() == 0,
-                         "Output dataset should have no points.");
+                             "Output dataset should have no points.");
         VISKORES_TEST_ASSERT(extractedBasisFlows.GetNumberOfCoordinateSystems() == 0,
-                         "Wrong number of coordinate systems in the output dataset.");
-        VISKORES_TEST_ASSERT(extractedBasisFlows.GetNumberOfFields() == 0, "Wrong number of fields.");
+                             "Wrong number of coordinate systems in the output dataset.");
+        VISKORES_TEST_ASSERT(extractedBasisFlows.GetNumberOfFields() == 0,
+                             "Wrong number of fields.");
       }
     }
   }

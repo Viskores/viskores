@@ -68,9 +68,10 @@ void TestStructured(std::string GhostFieldName = "")
   std::vector<std::vector<viskores::Id>> tests1D = {
     { 8, 0, 0, 1 }, { 5, 0, 0, 1 }, { 10, 0, 0, 1 }, { 20, 0, 0, 1 }
   };
-  std::vector<std::vector<viskores::Id>> tests2D = { { 8, 4, 0, 1 },  { 5, 5, 0, 1 },  { 10, 10, 0, 1 },
-                                                 { 10, 5, 0, 1 }, { 5, 10, 0, 1 }, { 20, 10, 0, 1 },
-                                                 { 10, 20, 0, 1 } };
+  std::vector<std::vector<viskores::Id>> tests2D = { { 8, 4, 0, 1 },   { 5, 5, 0, 1 },
+                                                     { 10, 10, 0, 1 }, { 10, 5, 0, 1 },
+                                                     { 5, 10, 0, 1 },  { 20, 10, 0, 1 },
+                                                     { 10, 20, 0, 1 } };
   std::vector<std::vector<viskores::Id>> tests3D = {
     { 8, 8, 10, 1 },   { 5, 5, 5, 1 },    { 10, 10, 10, 1 },    { 10, 5, 10, 1 },  { 5, 10, 10, 1 },
     { 20, 10, 10, 1 }, { 10, 20, 10, 1 }, { 128, 128, 128, 1 }, { 256, 64, 10, 1 }
@@ -108,11 +109,11 @@ void TestStructured(std::string GhostFieldName = "")
         if (GhostFieldName != "")
           correctFieldName = GhostFieldName;
         VISKORES_TEST_ASSERT(output.HasCellField(correctFieldName),
-                         "Ghost cells array not found in output");
+                             "Ghost cells array not found in output");
         viskores::Id numCells = output.GetNumberOfCells();
         auto fieldArray = output.GetCellField(addGhost.GetGhostCellName()).GetData();
         VISKORES_TEST_ASSERT(fieldArray.GetNumberOfValues() == numCells,
-                         "Wrong number of values in ghost cell array");
+                             "Wrong number of values in ghost cell array");
 
         //Check the number of normal cells.
         viskores::cont::ArrayHandle<viskores::UInt8> ghostArray;
@@ -130,7 +131,8 @@ void TestStructured(std::string GhostFieldName = "")
           requiredNumNormalCells *= (ny - 2 * layer);
         if (nz > 0)
           requiredNumNormalCells *= (nz - 2 * layer);
-        VISKORES_TEST_ASSERT(requiredNumNormalCells == numNormalCells, "Wrong number of normal cells");
+        VISKORES_TEST_ASSERT(requiredNumNormalCells == numNormalCells,
+                             "Wrong number of normal cells");
       }
     }
   }

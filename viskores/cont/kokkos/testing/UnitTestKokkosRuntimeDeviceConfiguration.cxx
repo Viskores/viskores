@@ -36,16 +36,17 @@ TestingRuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagKokkos>::TestR
 
   // Test that args are set and the right arg priority is applied
   viskores::Id testValue;
-  VISKORES_TEST_ASSERT(config.GetThreads(testValue) == internal::RuntimeDeviceConfigReturnCode::SUCCESS,
-                   "Failed to get set threads");
-  VISKORES_TEST_ASSERT(testValue == 8,
-                   "Set threads does not match expected value: 8 != " + std::to_string(testValue));
+  VISKORES_TEST_ASSERT(config.GetThreads(testValue) ==
+                         internal::RuntimeDeviceConfigReturnCode::SUCCESS,
+                       "Failed to get set threads");
+  VISKORES_TEST_ASSERT(
+    testValue == 8, "Set threads does not match expected value: 8 != " + std::to_string(testValue));
   VISKORES_TEST_ASSERT(config.GetDeviceInstance(testValue) ==
-                     internal::RuntimeDeviceConfigReturnCode::SUCCESS,
-                   "Failed to get set device instance");
+                         internal::RuntimeDeviceConfigReturnCode::SUCCESS,
+                       "Failed to get set device instance");
   VISKORES_TEST_ASSERT(testValue == 0,
-                   "Set device instance does not match expected value: 0 != " +
-                     std::to_string(testValue));
+                       "Set device instance does not match expected value: 0 != " +
+                         std::to_string(testValue));
   std::cout
     << "Ensure that with kokkos we can't re-initialize or set values after the first initialize"
     << std::endl;
@@ -54,22 +55,23 @@ TestingRuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagKokkos>::TestR
   deviceOptions.ViskoresDeviceInstance.SetOption(5);
   config.Initialize(deviceOptions);
   VISKORES_TEST_ASSERT(config.SetThreads(1) == internal::RuntimeDeviceConfigReturnCode::NOT_APPLIED,
-                   "Shouldn't be able to set threads after kokkos is initalized");
+                       "Shouldn't be able to set threads after kokkos is initalized");
   VISKORES_TEST_ASSERT(config.SetDeviceInstance(1) ==
-                     internal::RuntimeDeviceConfigReturnCode::NOT_APPLIED,
-                   "Shouldn't be able to set device instnace after kokkos is initalized");
+                         internal::RuntimeDeviceConfigReturnCode::NOT_APPLIED,
+                       "Shouldn't be able to set device instnace after kokkos is initalized");
 
   // make sure all the values are the same
-  VISKORES_TEST_ASSERT(config.GetThreads(testValue) == internal::RuntimeDeviceConfigReturnCode::SUCCESS,
-                   "Failed to get set threads");
-  VISKORES_TEST_ASSERT(testValue == 8,
-                   "Set threads does not match expected value: 8 != " + std::to_string(testValue));
+  VISKORES_TEST_ASSERT(config.GetThreads(testValue) ==
+                         internal::RuntimeDeviceConfigReturnCode::SUCCESS,
+                       "Failed to get set threads");
+  VISKORES_TEST_ASSERT(
+    testValue == 8, "Set threads does not match expected value: 8 != " + std::to_string(testValue));
   VISKORES_TEST_ASSERT(config.GetDeviceInstance(testValue) ==
-                     internal::RuntimeDeviceConfigReturnCode::SUCCESS,
-                   "Failed to get set device instance");
+                         internal::RuntimeDeviceConfigReturnCode::SUCCESS,
+                       "Failed to get set device instance");
   VISKORES_TEST_ASSERT(testValue == 0,
-                   "Set device instance does not match expected value: 0 != " +
-                     std::to_string(testValue));
+                       "Set device instance does not match expected value: 0 != " +
+                         std::to_string(testValue));
 }
 
 } // namespace viskores::cont::testing

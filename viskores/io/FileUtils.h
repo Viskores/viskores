@@ -38,12 +38,12 @@ VISKORES_IO_EXPORT bool CreateDirectoriesFromFilePath(const std::string& filePat
 /// EX: MergePaths("path/to/merge", "some/filename.txt") = "path/to/merge/some/filename.txt"
 /// EX: MergePaths("path/to/merge/", "/some/filename.txt") = "path/to/merge/some/filename.txt"
 VISKORES_IO_EXPORT std::string MergePaths(const std::string& filePathPrefix,
-                                      const std::string& filePathSuffix);
+                                          const std::string& filePathSuffix);
 
 /// \brief Takes the supplied prefix and prepends it to the filename for the provided filePath
 /// EX: PrefixStringToFilename("/some/path/to/filename.txt", "prefix-") = "/some/path/to/prefix-filename.txt"
 VISKORES_IO_EXPORT std::string PrefixStringToFilename(const std::string& filePath,
-                                                  const std::string& prefix);
+                                                      const std::string& prefix);
 
 /// \brief determine which path separator to use for windows given a provided path
 /// Should return one of either '\\' or '/' depending on what the provided path uses.

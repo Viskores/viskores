@@ -27,10 +27,10 @@ namespace io
 ///
 VISKORES_IO_EXPORT
 viskores::UInt32 DecodePNG(std::vector<unsigned char>& out_image,
-                       unsigned long& image_width,
-                       unsigned long& image_height,
-                       const unsigned char* in_png,
-                       std::size_t in_size);
+                           unsigned long& image_width,
+                           unsigned long& image_height,
+                           const unsigned char* in_png,
+                           std::size_t in_size);
 }
 } // viskores::io
 

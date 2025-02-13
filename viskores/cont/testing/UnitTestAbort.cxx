@@ -72,10 +72,10 @@ int TestAbort()
 
     // execution shouldn't reach here
     VISKORES_TEST_FAIL("Error: filter execution was not aborted. Result: ",
-                   result.GetNumberOfPoints(),
-                   " points and ",
-                   result.GetNumberOfCells(),
-                   " triangles");
+                       result.GetNumberOfPoints(),
+                       " points and ",
+                       result.GetNumberOfCells(),
+                       " triangles");
   }
   catch (const viskores::cont::ErrorUserAbort&)
   {

@@ -41,7 +41,8 @@ struct TestLowerBound
 
   static void Run()
   {
-    IdArray needles = viskores::cont::make_ArrayHandle<viskores::Id>({ -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 });
+    IdArray needles =
+      viskores::cont::make_ArrayHandle<viskores::Id>({ -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 });
     IdArray haystack =
       viskores::cont::make_ArrayHandle<viskores::Id>({ -3, -2, -2, -2, 0, 0, 1, 1, 1, 4, 4 });
     IdArray results;

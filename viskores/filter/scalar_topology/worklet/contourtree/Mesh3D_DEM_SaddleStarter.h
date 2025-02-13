@@ -107,11 +107,14 @@ public:
   viskores::Id nRows;   // (input) number of rows in 3D
   viskores::Id nCols;   // (input) number of cols in 3D
   viskores::Id nSlices; // (input) number of cols in 3D
-  bool ascending;   // (input) ascending or descending (join or split)
+  bool ascending;       // (input) ascending or descending (join or split)
 
   // Constructor
   VISKORES_EXEC_CONT
-  Mesh3D_DEM_SaddleStarter(viskores::Id NRows, viskores::Id NCols, viskores::Id NSlices, bool Ascending)
+  Mesh3D_DEM_SaddleStarter(viskores::Id NRows,
+                           viskores::Id NCols,
+                           viskores::Id NSlices,
+                           bool Ascending)
     : nRows(NRows)
     , nCols(NCols)
     , nSlices(NSlices)
@@ -125,16 +128,16 @@ public:
             typename CaseTableType,
             typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                            const viskores::Pair<viskores::Id, viskores::Id>& outDegFirstEdge,
-                            const viskores::Id& valueIndex,
-                            const InFieldPortalType& linkMask,
-                            const InFieldPortalType& arcArray,
-                            const InFieldPortalType& inverseIndex,
-                            const NeighbourTableType& neighbourTable,
-                            const CaseTableType& caseTable,
-                            const OutFieldPortalType& edgeNear,
-                            const OutFieldPortalType& edgeFar,
-                            const OutFieldPortalType& activeEdges) const
+                                const viskores::Pair<viskores::Id, viskores::Id>& outDegFirstEdge,
+                                const viskores::Id& valueIndex,
+                                const InFieldPortalType& linkMask,
+                                const InFieldPortalType& arcArray,
+                                const InFieldPortalType& inverseIndex,
+                                const NeighbourTableType& neighbourTable,
+                                const CaseTableType& caseTable,
+                                const OutFieldPortalType& edgeNear,
+                                const OutFieldPortalType& edgeFar,
+                                const OutFieldPortalType& activeEdges) const
   {
     viskores::Id outdegree = outDegFirstEdge.first;
     viskores::Id firstEdge = outDegFirstEdge.second;

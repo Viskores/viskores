@@ -110,8 +110,8 @@ VISKORES_EXEC Vector GetTetraL5(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VISKORES_EXEC Scalar GetTetraL0Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l0 = static_cast<Scalar>(
-    viskores::Sqrt(viskores::MagnitudeSquared(GetTetraL0<Scalar, Vector, CollectionOfPoints>(pts))));
+  const Scalar l0 = static_cast<Scalar>(viskores::Sqrt(
+    viskores::MagnitudeSquared(GetTetraL0<Scalar, Vector, CollectionOfPoints>(pts))));
   return l0;
 }
 
@@ -124,8 +124,8 @@ VISKORES_EXEC Scalar GetTetraL0Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VISKORES_EXEC Scalar GetTetraL1Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l1 = static_cast<Scalar>(
-    viskores::Sqrt(viskores::MagnitudeSquared(GetTetraL1<Scalar, Vector, CollectionOfPoints>(pts))));
+  const Scalar l1 = static_cast<Scalar>(viskores::Sqrt(
+    viskores::MagnitudeSquared(GetTetraL1<Scalar, Vector, CollectionOfPoints>(pts))));
   return l1;
 }
 
@@ -138,8 +138,8 @@ VISKORES_EXEC Scalar GetTetraL1Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VISKORES_EXEC Scalar GetTetraL2Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l2 = static_cast<Scalar>(
-    viskores::Sqrt(viskores::MagnitudeSquared(GetTetraL2<Scalar, Vector, CollectionOfPoints>(pts))));
+  const Scalar l2 = static_cast<Scalar>(viskores::Sqrt(
+    viskores::MagnitudeSquared(GetTetraL2<Scalar, Vector, CollectionOfPoints>(pts))));
   return l2;
 }
 
@@ -152,8 +152,8 @@ VISKORES_EXEC Scalar GetTetraL2Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VISKORES_EXEC Scalar GetTetraL3Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l3 = static_cast<Scalar>(
-    viskores::Sqrt(viskores::MagnitudeSquared(GetTetraL3<Scalar, Vector, CollectionOfPoints>(pts))));
+  const Scalar l3 = static_cast<Scalar>(viskores::Sqrt(
+    viskores::MagnitudeSquared(GetTetraL3<Scalar, Vector, CollectionOfPoints>(pts))));
   return l3;
 }
 
@@ -166,8 +166,8 @@ VISKORES_EXEC Scalar GetTetraL3Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VISKORES_EXEC Scalar GetTetraL4Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l4 = static_cast<Scalar>(
-    viskores::Sqrt(viskores::MagnitudeSquared(GetTetraL4<Scalar, Vector, CollectionOfPoints>(pts))));
+  const Scalar l4 = static_cast<Scalar>(viskores::Sqrt(
+    viskores::MagnitudeSquared(GetTetraL4<Scalar, Vector, CollectionOfPoints>(pts))));
   return l4;
 }
 
@@ -180,8 +180,8 @@ VISKORES_EXEC Scalar GetTetraL4Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VISKORES_EXEC Scalar GetTetraL5Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l5 = static_cast<Scalar>(
-    viskores::Sqrt(viskores::MagnitudeSquared(GetTetraL5<Scalar, Vector, CollectionOfPoints>(pts))));
+  const Scalar l5 = static_cast<Scalar>(viskores::Sqrt(
+    viskores::MagnitudeSquared(GetTetraL5<Scalar, Vector, CollectionOfPoints>(pts))));
   return l5;
 }
 
@@ -200,7 +200,8 @@ VISKORES_EXEC Scalar GetTetraLMax(const CollectionOfPoints& pts)
   const Scalar l3 = GetTetraL3Magnitude<Scalar, Vector, CollectionOfPoints>(pts);
   const Scalar l4 = GetTetraL4Magnitude<Scalar, Vector, CollectionOfPoints>(pts);
   const Scalar l5 = GetTetraL5Magnitude<Scalar, Vector, CollectionOfPoints>(pts);
-  const Scalar lmax = viskores::Max(l0, viskores::Max(l1, viskores::Max(l2, viskores::Max(l3, viskores::Max(l4, l5)))));
+  const Scalar lmax = viskores::Max(
+    l0, viskores::Max(l1, viskores::Max(l2, viskores::Max(l3, viskores::Max(l4, l5)))));
   return lmax;
 }
 
@@ -219,7 +220,8 @@ VISKORES_EXEC Scalar GetTetraLMin(const CollectionOfPoints& pts)
   const Scalar l3 = GetTetraL3Magnitude<Scalar, Vector, CollectionOfPoints>(pts);
   const Scalar l4 = GetTetraL4Magnitude<Scalar, Vector, CollectionOfPoints>(pts);
   const Scalar l5 = GetTetraL5Magnitude<Scalar, Vector, CollectionOfPoints>(pts);
-  const Scalar lmin = viskores::Min(l0, viskores::Min(l1, viskores::Min(l2, viskores::Min(l3, viskores::Min(l4, l5)))));
+  const Scalar lmin = viskores::Min(
+    l0, viskores::Min(l1, viskores::Min(l2, viskores::Min(l3, viskores::Min(l4, l5)))));
   return lmin;
 }
 
@@ -238,10 +240,14 @@ VISKORES_EXEC Scalar GetTetraArea(const CollectionOfPoints& pts)
   const Vector L3 = GetTetraL3<Scalar, Vector, CollectionOfPoints>(pts);
   const Vector L4 = GetTetraL4<Scalar, Vector, CollectionOfPoints>(pts);
 
-  const Scalar a = static_cast<Scalar>(viskores::Sqrt(viskores::MagnitudeSquared(viskores::Cross(L2, L0))));
-  const Scalar b = static_cast<Scalar>(viskores::Sqrt(viskores::MagnitudeSquared(viskores::Cross(L3, L0))));
-  const Scalar c = static_cast<Scalar>(viskores::Sqrt(viskores::MagnitudeSquared(viskores::Cross(L4, L1))));
-  const Scalar d = static_cast<Scalar>(viskores::Sqrt(viskores::MagnitudeSquared(viskores::Cross(L3, L2))));
+  const Scalar a =
+    static_cast<Scalar>(viskores::Sqrt(viskores::MagnitudeSquared(viskores::Cross(L2, L0))));
+  const Scalar b =
+    static_cast<Scalar>(viskores::Sqrt(viskores::MagnitudeSquared(viskores::Cross(L3, L0))));
+  const Scalar c =
+    static_cast<Scalar>(viskores::Sqrt(viskores::MagnitudeSquared(viskores::Cross(L4, L1))));
+  const Scalar d =
+    static_cast<Scalar>(viskores::Sqrt(viskores::MagnitudeSquared(viskores::Cross(L3, L2))));
   const Scalar hhalf(0.5);
 
   const Scalar area = hhalf * (a + b + c + d);

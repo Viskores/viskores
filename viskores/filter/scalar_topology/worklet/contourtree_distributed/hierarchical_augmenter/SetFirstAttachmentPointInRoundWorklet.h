@@ -80,9 +80,9 @@ public:
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& attachmentPoint,
-                            const InFieldPortalType& attachmentIdsPortal,
-                            const InFieldPortalType& superparentRoundsPortal,
-                            const InOutFieldPortalType& firstAttachmentPointInRoundPortal) const
+                                const InFieldPortalType& attachmentIdsPortal,
+                                const InFieldPortalType& superparentRoundsPortal,
+                                const InOutFieldPortalType& firstAttachmentPointInRoundPortal) const
   {
     // per attachment point
     // retrieve the ID of the attachment point
@@ -100,7 +100,8 @@ public:
       viskores::Id previousAttachmentPointId = attachmentIdsPortal.Get(attachmentPoint - 1);
       // and the corresponding superparent rounds
       viskores::Id superparentRound = superparentRoundsPortal.Get(attachmentPointId);
-      viskores::Id previousSuperparentRound = superparentRoundsPortal.Get(previousAttachmentPointId);
+      viskores::Id previousSuperparentRound =
+        superparentRoundsPortal.Get(previousAttachmentPointId);
       // detect where the segment ID changes & use that to set the value
       if (superparentRound != previousSuperparentRound)
       {

@@ -67,7 +67,7 @@ struct Fetch
   ///
   template <typename ThreadIndicesType>
   VISKORES_EXEC ValueType Load(const ThreadIndicesType& indices,
-                           const ExecObjectType& execObject) const;
+                               const ExecObjectType& execObject) const;
 
   /// \brief Store data from a work instance.
   ///
@@ -80,8 +80,8 @@ struct Fetch
   ///
   template <typename ThreadIndicesType>
   VISKORES_EXEC void Store(const ThreadIndicesType& indices,
-                       const ExecObjectType& execObject,
-                       const ValueType& value) const;
+                           const ExecObjectType& execObject,
+                           const ValueType& value) const;
 };
 #else  // VISKORES_DOXYGEN_ONLY
   ;

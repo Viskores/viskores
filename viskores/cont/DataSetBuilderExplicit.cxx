@@ -48,8 +48,8 @@ viskores::Id DataSetBuilderExplicitIterative::AddPoint(const viskores::Vec3f& pt
 
 VISKORES_CONT
 viskores::Id DataSetBuilderExplicitIterative::AddPoint(const viskores::FloatDefault& x,
-                                                   const viskores::FloatDefault& y,
-                                                   const viskores::FloatDefault& z)
+                                                       const viskores::FloatDefault& y,
+                                                       const viskores::FloatDefault& z)
 {
   points.push_back(viskores::make_Vec(x, y, z));
   viskores::Id id = static_cast<viskores::Id>(points.size());

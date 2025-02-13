@@ -83,9 +83,9 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const InFieldPortalType& contourTreeHyperparentsPortal,
-                            const viskores::Id supernode,
-                            const InFieldPortalType& superSortIndexPortal,
-                            const OutFieldPortalType& contourTreeHypernodesPortal) const
+                                const viskores::Id supernode,
+                                const InFieldPortalType& superSortIndexPortal,
+                                const OutFieldPortalType& contourTreeHypernodesPortal) const
   {
     bool isFirstSuperchild = false;
     viskores::Id hyperparent = contourTreeHyperparentsPortal.Get(supernode);

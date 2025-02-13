@@ -46,7 +46,10 @@ public:
   bool GetMergeDuplicatePoints() const { return this->SharedState.MergeDuplicatePoints; }
 
   //----------------------------------------------------------------------------
-  viskores::cont::ArrayHandle<viskores::Id> GetCellIdMap() const { return this->SharedState.CellIdMap; }
+  viskores::cont::ArrayHandle<viskores::Id> GetCellIdMap() const
+  {
+    return this->SharedState.CellIdMap;
+  }
 
   //----------------------------------------------------------------------------
   template <typename InArrayType, typename OutArrayType>

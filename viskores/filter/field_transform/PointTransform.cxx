@@ -37,11 +37,13 @@ VISKORES_CONT bool PointTransform::GetChangeCoordinateSystem() const
 }
 
 //-----------------------------------------------------------------------------
-VISKORES_CONT viskores::cont::DataSet PointTransform::DoExecute(const viskores::cont::DataSet& inDataSet)
+VISKORES_CONT viskores::cont::DataSet PointTransform::DoExecute(
+  const viskores::cont::DataSet& inDataSet)
 {
   viskores::cont::UnknownArrayHandle outArray;
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     viskores::cont::ArrayHandle<T> result;

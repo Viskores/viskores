@@ -95,8 +95,8 @@ public:
 
 protected:
   virtual viskores::cont::DataSet FilterPoints(const viskores::cont::UnknownCellSet& cellSet,
-                                           const viskores::cont::CoordinateSystem& coords,
-                                           const viskores::cont::Field& scalarField) const;
+                                               const viskores::cont::CoordinateSystem& coords,
+                                               const viskores::cont::Field& scalarField) const;
 
 
   viskores::rendering::CanvasRayTracer* Canvas = nullptr;

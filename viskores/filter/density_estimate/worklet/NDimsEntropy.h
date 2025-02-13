@@ -60,7 +60,8 @@ public:
 
     ///// calculate sum of frequency of the histogram /////
     viskores::Id initFreqSumValue = 0;
-    viskores::Id freqSum = viskores::cont::Algorithm::Reduce(freqs, initFreqSumValue, viskores::Sum());
+    viskores::Id freqSum =
+      viskores::cont::Algorithm::Reduce(freqs, initFreqSumValue, viskores::Sum());
 
     ///// calculate information content of each bin using self-define worklet /////
     viskores::cont::ArrayHandle<viskores::Float64> informationContent;

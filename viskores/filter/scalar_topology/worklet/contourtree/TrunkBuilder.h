@@ -100,8 +100,8 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertexID,
-                            const InFieldPortalType& chainExtremum,
-                            const OutFieldPortalType& prunesTo) const
+                                const InFieldPortalType& chainExtremum,
+                                const OutFieldPortalType& prunesTo) const
   {
     // the chain max of everyone prunes to the global minimum
     viskores::Id chainExt = chainExtremum.Get(vertexID);

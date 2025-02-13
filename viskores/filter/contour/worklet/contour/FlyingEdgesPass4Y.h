@@ -78,17 +78,17 @@ struct ComputePass4Y : public viskores::worklet::WorkletVisitCellsWithPoints
             typename WholeWeightField,
             typename WholeCellIdField>
   VISKORES_EXEC void operator()(const ThreadIndices& threadIndices,
-                            const FieldInPointId3& axis_sums,
-                            const FieldInPointId& axis_mins,
-                            const FieldInPointId& axis_maxs,
-                            const WholeTriField& cellTriCount,
-                            const WholeEdgeField& edges,
-                            const WholeDataField& field,
-                            const WholeConnField& conn,
-                            const WholeEdgeIdField& interpolatedEdgeIds,
-                            const WholeWeightField& weights,
-                            const WholeCellIdField& inputCellIds,
-                            viskores::Id oidx) const
+                                const FieldInPointId3& axis_sums,
+                                const FieldInPointId& axis_mins,
+                                const FieldInPointId& axis_maxs,
+                                const WholeTriField& cellTriCount,
+                                const WholeEdgeField& edges,
+                                const WholeDataField& field,
+                                const WholeConnField& conn,
+                                const WholeEdgeIdField& interpolatedEdgeIds,
+                                const WholeWeightField& weights,
+                                const WholeCellIdField& inputCellIds,
+                                viskores::Id oidx) const
   {
     using AxisToSum = SumYAxis;
 
@@ -149,14 +149,14 @@ struct ComputePass4Y : public viskores::worklet::WorkletVisitCellsWithPoints
   //----------------------------------------------------------------------------
   template <typename WholeDataField, typename WholeIEdgeField, typename WholeWeightField>
   VISKORES_EXEC inline void Generate(const viskores::Vec<viskores::UInt8, 3>& boundaryStatus,
-                                 const WholeDataField& field,
-                                 const WholeIEdgeField& interpolatedEdgeIds,
-                                 const WholeWeightField& weights,
-                                 const viskores::Id4& startPos,
-                                 const viskores::Id3& incs,
-                                 viskores::Id offset,
-                                 viskores::UInt8 const* const edgeUses,
-                                 viskores::Id* edgeIds) const
+                                     const WholeDataField& field,
+                                     const WholeIEdgeField& interpolatedEdgeIds,
+                                     const WholeWeightField& weights,
+                                     const viskores::Id4& startPos,
+                                     const viskores::Id3& incs,
+                                     viskores::Id offset,
+                                     viskores::UInt8 const* const edgeUses,
+                                     viskores::Id* edgeIds) const
   {
     using AxisToSum = SumYAxis;
 
@@ -241,13 +241,13 @@ struct ComputePass4Y : public viskores::worklet::WorkletVisitCellsWithPoints
   //----------------------------------------------------------------------------
   template <typename WholeField, typename WholeIEdgeField, typename WholeWeightField>
   VISKORES_EXEC inline void InterpolateEdge(viskores::Id currentIdx,
-                                        const viskores::Id3& incs,
-                                        viskores::Id edgeNum,
-                                        viskores::UInt8 const* const edgeUses,
-                                        viskores::Id* edgeIds,
-                                        const WholeField& field,
-                                        const WholeIEdgeField& interpolatedEdgeIds,
-                                        const WholeWeightField& weights) const
+                                            const viskores::Id3& incs,
+                                            viskores::Id edgeNum,
+                                            viskores::UInt8 const* const edgeUses,
+                                            viskores::Id* edgeIds,
+                                            const WholeField& field,
+                                            const WholeIEdgeField& interpolatedEdgeIds,
+                                            const WholeWeightField& weights) const
   {
     using AxisToSum = SumYAxis;
 
@@ -264,7 +264,8 @@ struct ComputePass4Y : public viskores::worklet::WorkletVisitCellsWithPoints
     viskores::Id3 offsets1 = data::GetVertOffsets(AxisToSum{}, verts[0]);
     viskores::Id3 offsets2 = data::GetVertOffsets(AxisToSum{}, verts[1]);
 
-    viskores::Id2 iEdge(currentIdx + viskores::Dot(offsets1, incs), currentIdx + viskores::Dot(offsets2, incs));
+    viskores::Id2 iEdge(currentIdx + viskores::Dot(offsets1, incs),
+                        currentIdx + viskores::Dot(offsets2, incs));
 
     interpolatedEdgeIds.Set(writeIndex, iEdge);
 
@@ -304,12 +305,12 @@ struct ComputePass5Y : public viskores::worklet::WorkletMapField
             typename WholeNormalField,
             typename WholeCoordsField>
   VISKORES_EXEC void operator()(const viskores::Id2& interpEdgeIds,
-                            viskores::FloatDefault weight,
-                            viskores::Vec<PT, 3>& outPoint,
-                            const WholeInputField& field,
-                            const WholeCoordsField& coords,
-                            WholeNormalField& normals,
-                            viskores::Id oidx) const
+                                viskores::FloatDefault weight,
+                                viskores::Vec<PT, 3>& outPoint,
+                                const WholeInputField& field,
+                                const WholeCoordsField& coords,
+                                WholeNormalField& normals,
+                                viskores::Id oidx) const
   {
     {
       viskores::Vec3f point1 = coords.Get(interpEdgeIds[0]);
@@ -322,8 +323,8 @@ struct ComputePass5Y : public viskores::worklet::WorkletMapField
     {
       viskores::Vec<T, 3> g0, g1;
       viskores::Id3 ijk{ interpEdgeIds[0] % this->PointDims[0],
-                     (interpEdgeIds[0] / this->PointDims[0]) % this->PointDims[1],
-                     interpEdgeIds[0] / (this->PointDims[0] * this->PointDims[1]) };
+                         (interpEdgeIds[0] / this->PointDims[0]) % this->PointDims[1],
+                         interpEdgeIds[0] / (this->PointDims[0] * this->PointDims[1]) };
 
       viskores::worklet::gradient::StructuredPointGradient gradient;
       viskores::exec::BoundaryState boundary(ijk, this->PointDims);
@@ -337,8 +338,8 @@ struct ComputePass5Y : public viskores::worklet::WorkletMapField
 
       //compute the gradient at point 2. This optimization can be optimized
       boundary.IJK = viskores::Id3{ interpEdgeIds[1] % this->PointDims[0],
-                                (interpEdgeIds[1] / this->PointDims[0]) % this->PointDims[1],
-                                interpEdgeIds[1] / (this->PointDims[0] * this->PointDims[1]) };
+                                    (interpEdgeIds[1] / this->PointDims[0]) % this->PointDims[1],
+                                    interpEdgeIds[1] / (this->PointDims[0] * this->PointDims[1]) };
       gradient(boundary, coord_neighborhood, field_neighborhood, g1);
 
       viskores::Vec3f n = viskores::Lerp(g0, g1, weight);

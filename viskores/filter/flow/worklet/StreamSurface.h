@@ -42,9 +42,9 @@ public:
 
     template <typename CellShapeTag, typename InValidType>
     VISKORES_EXEC void operator()(const CellShapeTag& shapeType,
-                              const viskores::IdComponent& numPoints,
-                              InValidType& invalidCell,
-                              viskores::Id& ptsPerPolyline) const
+                                  const viskores::IdComponent& numPoints,
+                                  InValidType& invalidCell,
+                                  viskores::Id& ptsPerPolyline) const
     {
       // We only support polylines that contain 2 or more points.
       if (shapeType.Id == viskores::CELL_SHAPE_POLY_LINE && numPoints > 1)
@@ -71,8 +71,8 @@ public:
     using InputDomain = _1;
 
     VISKORES_EXEC void operator()(const viskores::Id& numPts0,
-                              const viskores::Id& numPts1,
-                              viskores::Id& outConnCount) const
+                                  const viskores::Id& numPts1,
+                                  viskores::Id& outConnCount) const
     {
       if (numPts0 == numPts1)
         outConnCount = (numPts0 - 1) * 2 * 3;
@@ -104,11 +104,11 @@ public:
 
     template <typename OutConnType>
     VISKORES_EXEC void operator()(const viskores::Id& numPts0,
-                              const viskores::Id& numPts1,
-                              const viskores::Id& offset0,
-                              const viskores::Id& offset1,
-                              const viskores::Id& connOffset,
-                              OutConnType& outConn) const
+                                  const viskores::Id& numPts1,
+                                  const viskores::Id& offset0,
+                                  const viskores::Id& offset1,
+                                  const viskores::Id& connOffset,
+                                  OutConnType& outConn) const
     {
       viskores::Id idx0 = 0, idx1 = 0;
       viskores::Id nextToLastIdx0 = numPts0 - 1;
@@ -245,8 +245,10 @@ public:
     viskores::cont::ArrayHandle<viskores::Id> polylineOffset;
     viskores::cont::Algorithm::ScanExclusive(ptsPerPolyline, polylineOffset);
 
-    auto ptsPerPolyline0 = viskores::cont::make_ArrayHandleView(ptsPerPolyline, 0, numPolylines - 1);
-    auto ptsPerPolyline1 = viskores::cont::make_ArrayHandleView(ptsPerPolyline, 1, numPolylines - 1);
+    auto ptsPerPolyline0 =
+      viskores::cont::make_ArrayHandleView(ptsPerPolyline, 0, numPolylines - 1);
+    auto ptsPerPolyline1 =
+      viskores::cont::make_ArrayHandleView(ptsPerPolyline, 1, numPolylines - 1);
 
     //Count the number of triangles to be generated
     viskores::cont::ArrayHandle<viskores::Id> triangleConnCount, triangleConnOffset;

@@ -67,7 +67,8 @@ namespace contourtree_maker_inc
 {
 
 // Worklet for computing the sort indices from the sort order
-class AugmentMergeTrees_InitNewJoinSplitIDAndSuperparents : public viskores::worklet::WorkletMapField
+class AugmentMergeTrees_InitNewJoinSplitIDAndSuperparents
+  : public viskores::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(
@@ -89,15 +90,15 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& nodeID,
-                            const viskores::Id supernode,
-                            const InFieldPortalType& joinTreeSuperparentsPortal,
-                            const InFieldPortalType& splitTreeSuperparentsPortal,
-                            const InFieldPortalType& joinTreeSupernodesPortal,
-                            const InFieldPortalType& splitTreeSupernodesPortal,
-                            const OutFieldPortalType& joinSuperparentPortal,
-                            const OutFieldPortalType& splitSuperparentPortal,
-                            const OutFieldPortalType& newJoinIDPortal,
-                            const OutFieldPortalType& newSplitIDPortal) const
+                                const viskores::Id supernode,
+                                const InFieldPortalType& joinTreeSuperparentsPortal,
+                                const InFieldPortalType& splitTreeSuperparentsPortal,
+                                const InFieldPortalType& joinTreeSupernodesPortal,
+                                const InFieldPortalType& splitTreeSupernodesPortal,
+                                const OutFieldPortalType& joinSuperparentPortal,
+                                const OutFieldPortalType& splitSuperparentPortal,
+                                const OutFieldPortalType& newJoinIDPortal,
+                                const OutFieldPortalType& newSplitIDPortal) const
   {
     // Transfer the join information
     // look up the join superparent in the join tree

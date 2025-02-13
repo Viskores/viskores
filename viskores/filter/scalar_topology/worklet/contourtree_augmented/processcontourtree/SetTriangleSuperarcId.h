@@ -112,20 +112,20 @@ public:
             typename InArrayPortalType,
             typename OutArrayPortalType>
   VISKORES_EXEC void operator()(const viskores::Id node,
-                            const EndpointsArrayPortalType& endpointsPortal,
-                            const InFieldArrayPortalType& fieldPortal,
-                            const InFieldArrayPortalType& isovaluePortal,
-                            const InArrayPortalType& sortOrder,
-                            const InArrayPortalType& sortIndices,
-                            const InArrayPortalType& contourTreeSuperparentsPortal,
-                            const InArrayPortalType& contourTreeWhenTransferredPortal,
-                            const InArrayPortalType& contourTreeHyperparentsPortal,
-                            const InArrayPortalType& contourTreeHyperarcsPortal,
-                            const InArrayPortalType& contourTreeHypernodesPortal,
-                            const InArrayPortalType& contourTreeSupernodesPortal,
-                            const InArrayPortalType& meshExtremaPeaksPortal,
-                            const InArrayPortalType& meshExtremaPitsPortal,
-                            const OutArrayPortalType& superarcIdsPortal) const
+                                const EndpointsArrayPortalType& endpointsPortal,
+                                const InFieldArrayPortalType& fieldPortal,
+                                const InFieldArrayPortalType& isovaluePortal,
+                                const InArrayPortalType& sortOrder,
+                                const InArrayPortalType& sortIndices,
+                                const InArrayPortalType& contourTreeSuperparentsPortal,
+                                const InArrayPortalType& contourTreeWhenTransferredPortal,
+                                const InArrayPortalType& contourTreeHyperparentsPortal,
+                                const InArrayPortalType& contourTreeHyperarcsPortal,
+                                const InArrayPortalType& contourTreeHypernodesPortal,
+                                const InArrayPortalType& contourTreeSupernodesPortal,
+                                const InArrayPortalType& meshExtremaPeaksPortal,
+                                const InArrayPortalType& meshExtremaPitsPortal,
+                                const OutArrayPortalType& superarcIdsPortal) const
   {
 
     using namespace std;

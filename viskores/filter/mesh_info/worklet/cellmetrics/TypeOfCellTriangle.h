@@ -84,8 +84,8 @@ VISKORES_EXEC Vector GetTriangleL2(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VISKORES_EXEC Scalar GetTriangleL0Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l0 = static_cast<Scalar>(
-    viskores::Sqrt(viskores::MagnitudeSquared(GetTriangleL0<Scalar, Vector, CollectionOfPoints>(pts))));
+  const Scalar l0 = static_cast<Scalar>(viskores::Sqrt(
+    viskores::MagnitudeSquared(GetTriangleL0<Scalar, Vector, CollectionOfPoints>(pts))));
   return l0;
 }
 
@@ -98,8 +98,8 @@ VISKORES_EXEC Scalar GetTriangleL0Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VISKORES_EXEC Scalar GetTriangleL1Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l1 = static_cast<Scalar>(
-    viskores::Sqrt(viskores::MagnitudeSquared(GetTriangleL1<Scalar, Vector, CollectionOfPoints>(pts))));
+  const Scalar l1 = static_cast<Scalar>(viskores::Sqrt(
+    viskores::MagnitudeSquared(GetTriangleL1<Scalar, Vector, CollectionOfPoints>(pts))));
   return l1;
 }
 
@@ -112,8 +112,8 @@ VISKORES_EXEC Scalar GetTriangleL1Magnitude(const CollectionOfPoints& pts)
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VISKORES_EXEC Scalar GetTriangleL2Magnitude(const CollectionOfPoints& pts)
 {
-  const Scalar l2 = static_cast<Scalar>(
-    viskores::Sqrt(viskores::MagnitudeSquared(GetTriangleL2<Scalar, Vector, CollectionOfPoints>(pts))));
+  const Scalar l2 = static_cast<Scalar>(viskores::Sqrt(
+    viskores::MagnitudeSquared(GetTriangleL2<Scalar, Vector, CollectionOfPoints>(pts))));
   return l2;
 }
 

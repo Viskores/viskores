@@ -192,8 +192,8 @@ struct ArrayHandleCartesianProductTraits
   /// The appropriately templated tag.
   ///
   using Tag = viskores::cont::StorageTagCartesianProduct<typename AH1::StorageTag,
-                                                     typename AH2::StorageTag,
-                                                     typename AH3::StorageTag>;
+                                                         typename AH2::StorageTag,
+                                                         typename AH3::StorageTag>;
 
   /// The superclass for ArrayHandleCartesianProduct.
   ///
@@ -221,9 +221,9 @@ class Storage<viskores::Vec<T, 3>, viskores::cont::StorageTagCartesianProduct<ST
     std::size_t subArray)
   {
     Info info = buffers[0].GetMetaData<Info>();
-    return std::vector<viskores::cont::internal::Buffer>(buffers.begin() +
-                                                       info.BufferOffset[subArray - 1],
-                                                     buffers.begin() + info.BufferOffset[subArray]);
+    return std::vector<viskores::cont::internal::Buffer>(
+      buffers.begin() + info.BufferOffset[subArray - 1],
+      buffers.begin() + info.BufferOffset[subArray]);
   }
 
 public:
@@ -231,14 +231,14 @@ public:
 
   using ReadPortalType =
     viskores::internal::ArrayPortalCartesianProduct<viskores::Vec<T, 3>,
-                                                typename Storage1::ReadPortalType,
-                                                typename Storage2::ReadPortalType,
-                                                typename Storage3::ReadPortalType>;
+                                                    typename Storage1::ReadPortalType,
+                                                    typename Storage2::ReadPortalType,
+                                                    typename Storage3::ReadPortalType>;
   using WritePortalType =
     viskores::internal::ArrayPortalCartesianProduct<viskores::Vec<T, 3>,
-                                                typename Storage1::WritePortalType,
-                                                typename Storage2::WritePortalType,
-                                                typename Storage3::WritePortalType>;
+                                                    typename Storage1::WritePortalType,
+                                                    typename Storage2::WritePortalType,
+                                                    typename Storage3::WritePortalType>;
 
   VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlat(
     const std::vector<viskores::cont::internal::Buffer>&)
@@ -255,10 +255,10 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             const viskores::Vec<T, 3>& fillValue,
-                             viskores::Id startIndex,
-                             viskores::Id endIndex,
-                             viskores::cont::Token& token)
+                                 const viskores::Vec<T, 3>& fillValue,
+                                 viskores::Id startIndex,
+                                 viskores::Id endIndex,
+                                 viskores::cont::Token& token)
   {
     if ((startIndex != 0) || (endIndex != GetNumberOfValues(buffers)))
     {
@@ -293,15 +293,18 @@ public:
                            Storage3::CreateWritePortal(GetBuffers(buffers, 3), device, token));
   }
 
-  VISKORES_CONT static Array1 GetArrayHandle1(const std::vector<viskores::cont::internal::Buffer>& buffers)
+  VISKORES_CONT static Array1 GetArrayHandle1(
+    const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return Array1(GetBuffers(buffers, 1));
   }
-  VISKORES_CONT static Array2 GetArrayHandle2(const std::vector<viskores::cont::internal::Buffer>& buffers)
+  VISKORES_CONT static Array2 GetArrayHandle2(
+    const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return Array2(GetBuffers(buffers, 2));
   }
-  VISKORES_CONT static Array3 GetArrayHandle3(const std::vector<viskores::cont::internal::Buffer>& buffers)
+  VISKORES_CONT static Array3 GetArrayHandle3(
+    const std::vector<viskores::cont::internal::Buffer>& buffers)
   {
     return Array3(GetBuffers(buffers, 3));
   }
@@ -432,11 +435,11 @@ struct ArrayExtractComponentImpl<viskores::cont::StorageTagCartesianProduct<STs.
     }
 
     return viskores::cont::ArrayHandleStride<T>(componentArray.GetBasicArray(),
-                                            totalNumValues,
-                                            componentArray.GetStride(),
-                                            componentArray.GetOffset(),
-                                            modulo,
-                                            divisor);
+                                                totalNumValues,
+                                                componentArray.GetStride(),
+                                                componentArray.GetOffset(),
+                                                modulo,
+                                                divisor);
   }
 
   template <typename T, typename ST, typename CartesianArrayType>
@@ -447,8 +450,8 @@ struct ArrayExtractComponentImpl<viskores::cont::StorageTagCartesianProduct<STs.
                              viskores::IdComponent productIndex,
                              viskores::CopyFlag allowCopy) const
   {
-    viskores::cont::ArrayHandleStride<typename viskores::VecTraits<T>::BaseComponentType> strideArray =
-      ArrayExtractComponentImpl<ST>{}(componentArray, subIndex, allowCopy);
+    viskores::cont::ArrayHandleStride<typename viskores::VecTraits<T>::BaseComponentType>
+      strideArray = ArrayExtractComponentImpl<ST>{}(componentArray, subIndex, allowCopy);
     if ((strideArray.GetModulo() != 0) || (strideArray.GetDivisor() != 1))
     {
       // If the sub array has its own modulo and/or divisor, that will likely interfere
@@ -459,8 +462,8 @@ struct ArrayExtractComponentImpl<viskores::cont::StorageTagCartesianProduct<STs.
     }
 
     viskores::Id3 dims = { cartesianArray.GetFirstArray().GetNumberOfValues(),
-                       cartesianArray.GetSecondArray().GetNumberOfValues(),
-                       cartesianArray.GetThirdArray().GetNumberOfValues() };
+                           cartesianArray.GetSecondArray().GetNumberOfValues(),
+                           cartesianArray.GetThirdArray().GetNumberOfValues() };
 
     return this->AdjustStrideForComponent(
       strideArray, dims, productIndex, cartesianArray.GetNumberOfValues());
@@ -468,8 +471,8 @@ struct ArrayExtractComponentImpl<viskores::cont::StorageTagCartesianProduct<STs.
 
   template <typename T>
   viskores::cont::ArrayHandleStride<typename viskores::VecTraits<T>::BaseComponentType> operator()(
-    const viskores::cont::ArrayHandle<viskores::Vec<T, 3>, viskores::cont::StorageTagCartesianProduct<STs...>>&
-      src,
+    const viskores::cont::ArrayHandle<viskores::Vec<T, 3>,
+                                      viskores::cont::StorageTagCartesianProduct<STs...>>& src,
     viskores::IdComponent componentIndex,
     viskores::CopyFlag allowCopy) const
   {
@@ -506,12 +509,14 @@ template <typename S>
 struct ArrayRangeComputeImpl;
 
 template <typename ST1, typename ST2, typename ST3>
-struct VISKORES_CONT_EXPORT ArrayRangeComputeImpl<viskores::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>
+struct VISKORES_CONT_EXPORT
+  ArrayRangeComputeImpl<viskores::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>
 {
   template <typename T>
   VISKORES_CONT viskores::cont::ArrayHandle<viskores::Range> operator()(
     const viskores::cont::ArrayHandle<viskores::Vec<T, 3>,
-                                  viskores::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>& input_,
+                                      viskores::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>&
+      input_,
     const viskores::cont::ArrayHandle<viskores::UInt8>& maskArray,
     bool computeFiniteRange,
     viskores::cont::DeviceAdapterId device) const
@@ -522,11 +527,11 @@ struct VISKORES_CONT_EXPORT ArrayRangeComputeImpl<viskores::cont::StorageTagCart
         input_, maskArray, computeFiniteRange, device);
     }
 
-    const auto& input =
-      static_cast<const viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<T, ST1>,
-                                                                viskores::cont::ArrayHandle<T, ST2>,
-                                                                viskores::cont::ArrayHandle<T, ST3>>&>(
-        input_);
+    const auto& input = static_cast<
+      const viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<T, ST1>,
+                                                        viskores::cont::ArrayHandle<T, ST2>,
+                                                        viskores::cont::ArrayHandle<T, ST3>>&>(
+      input_);
 
     viskores::cont::ArrayHandle<viskores::Range> ranges[3];
     ranges[0] = viskores::cont::internal::ArrayRangeComputeImpl<ST1>{}(
@@ -579,10 +584,12 @@ struct SerializableTypeString<viskores::cont::ArrayHandleCartesianProduct<AH1, A
 
 template <typename T, typename ST1, typename ST2, typename ST3>
 struct SerializableTypeString<
-  viskores::cont::ArrayHandle<viskores::Vec<T, 3>, viskores::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>>
-  : SerializableTypeString<viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<T, ST1>,
-                                                                   viskores::cont::ArrayHandle<T, ST2>,
-                                                                   viskores::cont::ArrayHandle<T, ST3>>>
+  viskores::cont::ArrayHandle<viskores::Vec<T, 3>,
+                              viskores::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>>
+  : SerializableTypeString<
+      viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<T, ST1>,
+                                                  viskores::cont::ArrayHandle<T, ST2>,
+                                                  viskores::cont::ArrayHandle<T, ST3>>>
 {
 };
 }
@@ -623,10 +630,11 @@ public:
 
 template <typename T, typename ST1, typename ST2, typename ST3>
 struct Serialization<
-  viskores::cont::ArrayHandle<viskores::Vec<T, 3>, viskores::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>>
+  viskores::cont::ArrayHandle<viskores::Vec<T, 3>,
+                              viskores::cont::StorageTagCartesianProduct<ST1, ST2, ST3>>>
   : Serialization<viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<T, ST1>,
-                                                          viskores::cont::ArrayHandle<T, ST2>,
-                                                          viskores::cont::ArrayHandle<T, ST3>>>
+                                                              viskores::cont::ArrayHandle<T, ST2>,
+                                                              viskores::cont::ArrayHandle<T, ST3>>>
 {
 };
 } // diy

@@ -199,8 +199,8 @@ class ArrayHandleSwizzle
 
 public:
   VISKORES_ARRAY_HANDLE_SUBCLASS(ArrayHandleSwizzle,
-                             (ArrayHandleSwizzle<ArrayHandleType, OutSize>),
-                             (typename Traits::Superclass));
+                                 (ArrayHandleSwizzle<ArrayHandleType, OutSize>),
+                                 (typename Traits::Superclass));
 
   using MapType = typename Traits::MapType;
 
@@ -234,8 +234,8 @@ VISKORES_CONT ArrayHandleSwizzle<ArrayHandleType, OutSize> make_ArrayHandleSwizz
 /// component of the output should come from.
 template <typename ArrayHandleType, typename... SwizzleIndexTypes>
 VISKORES_CONT auto make_ArrayHandleSwizzle(const ArrayHandleType& array,
-                                       viskores::IdComponent swizzleIndex0,
-                                       SwizzleIndexTypes... swizzleIndices)
+                                           viskores::IdComponent swizzleIndex0,
+                                           SwizzleIndexTypes... swizzleIndices)
 {
   return make_ArrayHandleSwizzle(array, viskores::make_Vec(swizzleIndex0, swizzleIndices...));
 }

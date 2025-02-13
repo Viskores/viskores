@@ -38,9 +38,10 @@ namespace interop
 ///
 ///
 template <typename ValueType, class StorageTag, class DeviceAdapterTag>
-VISKORES_CONT void TransferToOpenGL(const viskores::cont::ArrayHandle<ValueType, StorageTag>& handle,
-                                BufferState& state,
-                                DeviceAdapterTag)
+VISKORES_CONT void TransferToOpenGL(
+  const viskores::cont::ArrayHandle<ValueType, StorageTag>& handle,
+  BufferState& state,
+  DeviceAdapterTag)
 {
   viskores::interop::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL(state);
   toGL.Transfer(handle);
@@ -60,29 +61,34 @@ VISKORES_CONT void TransferToOpenGL(const viskores::cont::ArrayHandle<ValueType,
 /// This function will throw exceptions if the transfer wasn't possible
 ///
 template <typename ValueType, typename StorageTag>
-VISKORES_CONT void TransferToOpenGL(const viskores::cont::ArrayHandle<ValueType, StorageTag>& handle,
-                                BufferState& state)
+VISKORES_CONT void TransferToOpenGL(
+  const viskores::cont::ArrayHandle<ValueType, StorageTag>& handle,
+  BufferState& state)
 {
   // First, try to transfer data that already exists on a device.
-  bool success = viskores::cont::TryExecute([&](auto device) {
-    if (handle.IsOnDevice(device))
+  bool success = viskores::cont::TryExecute(
+    [&](auto device)
     {
-      TransferToOpenGL(handle, state, device);
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  });
+      if (handle.IsOnDevice(device))
+      {
+        TransferToOpenGL(handle, state, device);
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    });
   if (!success)
   {
     // Generally, we are here because the array is not already on a device
     // or for some reason the transfer failed on that device. Try any device.
-    success = viskores::cont::TryExecute([&](auto device) {
-      TransferToOpenGL(handle, state, device);
-      return true;
-    });
+    success = viskores::cont::TryExecute(
+      [&](auto device)
+      {
+        TransferToOpenGL(handle, state, device);
+        return true;
+      });
   }
   if (!success)
   {

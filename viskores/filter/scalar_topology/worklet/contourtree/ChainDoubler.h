@@ -100,7 +100,8 @@ public:
   ChainDoubler() {}
 
   template <typename InOutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& vertexID, const InOutFieldPortalType& chains) const
+  VISKORES_EXEC void operator()(const viskores::Id& vertexID,
+                                const InOutFieldPortalType& chains) const
   {
     viskores::Id next = chains.Get(vertexID);
     viskores::Id doubleNext = chains.Get(next);

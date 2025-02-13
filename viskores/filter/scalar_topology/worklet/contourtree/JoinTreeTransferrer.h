@@ -103,11 +103,11 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                            const viskores::Id& prunesTo,
-                            const InFieldPortalType& valueIndex,
-                            const InFieldPortalType& chainExtremum,
-                            const OutFieldPortalType& saddles,
-                            const OutFieldPortalType& arcArray) const
+                                const viskores::Id& prunesTo,
+                                const InFieldPortalType& valueIndex,
+                                const InFieldPortalType& chainExtremum,
+                                const OutFieldPortalType& saddles,
+                                const OutFieldPortalType& arcArray) const
   {
     // convert vertex & prunesTo to indices in original data
     // and write to saddle array

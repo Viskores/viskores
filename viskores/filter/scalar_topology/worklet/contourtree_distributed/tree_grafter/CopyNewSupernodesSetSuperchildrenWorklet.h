@@ -92,10 +92,10 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& newSupernodeIndex,
-                            const InFieldPortalType& hierarchicalTreeSuperarcsPortal,
-                            const InFieldPortalType& hierarchicalTreeHyperparentsPortal,
-                            const InFieldPortalType& hierarchicalTreeHypernodesPortal,
-                            const OutFieldPortalType hierarchicalTreeSuperchildrenPortal
+                                const InFieldPortalType& hierarchicalTreeSuperarcsPortal,
+                                const InFieldPortalType& hierarchicalTreeHyperparentsPortal,
+                                const InFieldPortalType& hierarchicalTreeHypernodesPortal,
+                                const OutFieldPortalType hierarchicalTreeSuperchildrenPortal
 
   ) const
   { // operator ()

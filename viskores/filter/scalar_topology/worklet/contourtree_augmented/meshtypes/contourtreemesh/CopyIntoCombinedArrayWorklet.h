@@ -93,10 +93,10 @@ public:
             typename ComparisonFunctorType,
             typename OutputArrayPortalType>
   VISKORES_EXEC void operator()(const InputType& value,
-                            viskores::Id idx,
-                            const InputArrayPortalType& otherArrayPortal,
-                            const ComparisonFunctorType& comparisonFunctor,
-                            OutputArrayPortalType& resultArrayPortal) const
+                                viskores::Id idx,
+                                const InputArrayPortalType& otherArrayPortal,
+                                const ComparisonFunctorType& comparisonFunctor,
+                                OutputArrayPortalType& resultArrayPortal) const
   {
     // Find position of value in other array. Note: We use lower and upper bounds for
     // the two different arrays (passed as template bool parameter so that the test

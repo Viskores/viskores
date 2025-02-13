@@ -188,7 +188,8 @@ void DoTest()
 
   std::cout << "Fill buffer" << std::endl;
   {
-    constexpr viskores::BufferSizeType fillValueSize = static_cast<viskores::BufferSizeType>(sizeof(T));
+    constexpr viskores::BufferSizeType fillValueSize =
+      static_cast<viskores::BufferSizeType>(sizeof(T));
     viskores::cont::Token token;
     T fillValue1 = 1.234f;
     T fillValue2 = 5.678f;
@@ -214,11 +215,11 @@ void DoTest()
   void* devicePointer = v.data();
   SetPortal(MakePortal(devicePointer, ARRAY_SIZE));
   buffer.Reset(viskores::cont::internal::BufferInfo(device,
-                                                devicePointer,
-                                                new std::vector<T>(std::move(v)),
-                                                BUFFER_SIZE,
-                                                VectorDeleter,
-                                                VectorReallocator));
+                                                    devicePointer,
+                                                    new std::vector<T>(std::move(v)),
+                                                    BUFFER_SIZE,
+                                                    VectorDeleter,
+                                                    VectorReallocator));
   VISKORES_TEST_ASSERT(buffer.GetNumberOfBytes() == BUFFER_SIZE);
   VISKORES_TEST_ASSERT(!buffer.IsAllocatedOnHost());
   VISKORES_TEST_ASSERT(buffer.IsAllocatedOnDevice(device));

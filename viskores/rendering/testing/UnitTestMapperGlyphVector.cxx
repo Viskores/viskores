@@ -35,9 +35,9 @@ void RenderTests()
   options.Radius = 0.02f;
 
   viskores::rendering::testing::RenderTest(maker.Make3DExplicitDataSetCowNose(),
-                                       "point_vectors",
-                                       "rendering/glyph_vector/points_arrows_cownose.png",
-                                       options);
+                                           "point_vectors",
+                                           "rendering/glyph_vector/points_arrows_cownose.png",
+                                           options);
 }
 
 } //namespace

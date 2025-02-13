@@ -324,11 +324,13 @@ public:
 #ifdef VISKORES_CUDA_DEVICE_PASS
   __device__ ValueType Get(viskores::Id index) const
   {
-    return viskores::exec::cuda::internal::load_through_texture<ValueType>::get(this->BeginIterator +
-                                                                            index);
+    return viskores::exec::cuda::internal::load_through_texture<ValueType>::get(
+      this->BeginIterator + index);
   }
 
-  __device__ void Set(viskores::Id viskoresNotUsed(index), ValueType viskoresNotUsed(value)) const {}
+  __device__ void Set(viskores::Id viskoresNotUsed(index), ValueType viskoresNotUsed(value)) const
+  {
+  }
 
 #else
   ValueType Get(viskores::Id viskoresNotUsed(index)) const { return ValueType(); }

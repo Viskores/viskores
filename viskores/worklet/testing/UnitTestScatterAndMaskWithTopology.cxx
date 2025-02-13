@@ -34,10 +34,10 @@ public:
   using ScatterType = viskores::worklet::ScatterIdentity;
 
   VISKORES_EXEC void operator()(const viskores::Vec<int, 3>& viskoresNotUsed(coords),
-                            const viskores::Id& workIndex,
-                            const viskores::Id& inputIndex,
-                            const viskores::Id& outputIndex,
-                            const viskores::Id& visitIndex) const
+                                const viskores::Id& workIndex,
+                                const viskores::Id& inputIndex,
+                                const viskores::Id& outputIndex,
+                                const viskores::Id& visitIndex) const
   {
     if (workIndex != inputIndex)
     {
@@ -60,10 +60,10 @@ public:
   using ScatterType = viskores::worklet::ScatterUniform<2>;
 
   VISKORES_EXEC void operator()(const viskores::Vec<int, 3>& viskoresNotUsed(coords),
-                            const viskores::Id& workIndex,
-                            const viskores::Id& inputIndex,
-                            const viskores::Id& outputIndex,
-                            const viskores::Id& visitIndex) const
+                                const viskores::Id& workIndex,
+                                const viskores::Id& inputIndex,
+                                const viskores::Id& outputIndex,
+                                const viskores::Id& visitIndex) const
   {
     if ((workIndex / 2) != inputIndex)
     {
@@ -86,10 +86,10 @@ public:
   using MaskType = viskores::worklet::MaskNone;
 
   VISKORES_EXEC void operator()(const viskores::Vec<int, 3>& viskoresNotUsed(coords),
-                            const viskores::Id& workIndex,
-                            const viskores::Id& inputIndex,
-                            const viskores::Id& outputIndex,
-                            const viskores::Id& visitIndex) const
+                                const viskores::Id& workIndex,
+                                const viskores::Id& inputIndex,
+                                const viskores::Id& outputIndex,
+                                const viskores::Id& visitIndex) const
   {
     if (workIndex != inputIndex)
     {
@@ -112,10 +112,10 @@ public:
   using MaskType = viskores::worklet::MaskSelect;
 
   VISKORES_EXEC void operator()(const viskores::Vec<int, 3>& viskoresNotUsed(coords),
-                            const viskores::Id& viskoresNotUsed(workIndex),
-                            const viskores::Id& viskoresNotUsed(inputIndex),
-                            const viskores::Id& viskoresNotUsed(outputIndex),
-                            const viskores::Id& viskoresNotUsed(visitIndex)) const
+                                const viskores::Id& viskoresNotUsed(workIndex),
+                                const viskores::Id& viskoresNotUsed(inputIndex),
+                                const viskores::Id& viskoresNotUsed(outputIndex),
+                                const viskores::Id& viskoresNotUsed(visitIndex)) const
   {
     // This method should never be called
     this->RaiseError("An element was selected, this test selects none.");
@@ -149,8 +149,9 @@ struct DoTestWorklet<TestWorkletMapTopoSelect>
     viskores::cont::DataSet dataSet3D = testDataSet.Make3DUniformDataSet0();
 
     // Start select array with an array of zeros
-    auto selectArrayHandle = viskores::cont::make_ArrayHandleMove(
-      std::vector<viskores::IdComponent>(static_cast<std::size_t>(dataSet3D.GetNumberOfPoints()), 0));
+    auto selectArrayHandle =
+      viskores::cont::make_ArrayHandleMove(std::vector<viskores::IdComponent>(
+        static_cast<std::size_t>(dataSet3D.GetNumberOfPoints()), 0));
 
     viskores::cont::CellSetStructured<3> cellSet =
       dataSet3D.GetCellSet().AsCellSet<viskores::cont::CellSetStructured<3>>();
@@ -168,31 +169,37 @@ void TestWorkletMapField3d(viskores::cont::DeviceAdapterId id)
   using HandleTypesToTest3D =
     viskores::List<viskores::Id, viskores::Vec2i_32, viskores::FloatDefault, viskores::Vec3f_64>;
 
-  using HandleTypesToTest1D =
-    viskores::List<viskores::Int32, viskores::Int64, viskores::UInt32, viskores::UInt64, viskores::Int8, viskores::UInt8, char>;
+  using HandleTypesToTest1D = viskores::List<viskores::Int32,
+                                             viskores::Int64,
+                                             viskores::UInt32,
+                                             viskores::UInt64,
+                                             viskores::Int8,
+                                             viskores::UInt8,
+                                             char>;
 
   std::cout << "Testing WorkletMapTopology with ScatterIdentity on device adapter: " << id.GetName()
             << std::endl;
 
   viskores::testing::Testing::TryTypes(DoTestWorklet<TestWorkletMapTopoIdentity>(),
-                                   HandleTypesToTest3D());
+                                       HandleTypesToTest3D());
 
   std::cout << "Testing WorkletMapTopology with ScatterUniform on device adapter: " << id.GetName()
             << std::endl;
 
   viskores::testing::Testing::TryTypes(DoTestWorklet<TestWorkletMapTopoUniform>(),
-                                   HandleTypesToTest3D());
+                                       HandleTypesToTest3D());
 
   std::cout << "Testing WorkletMapTopology with MaskNone on device adapter: " << id.GetName()
             << std::endl;
 
-  viskores::testing::Testing::TryTypes(DoTestWorklet<TestWorkletMapTopoNone>(), HandleTypesToTest3D());
+  viskores::testing::Testing::TryTypes(DoTestWorklet<TestWorkletMapTopoNone>(),
+                                       HandleTypesToTest3D());
 
   std::cout << "Testing WorkletMapTopology with MaskSelect on device adapter: " << id.GetName()
             << std::endl;
 
   viskores::testing::Testing::TryTypes(DoTestWorklet<TestWorkletMapTopoSelect>(),
-                                   HandleTypesToTest1D());
+                                       HandleTypesToTest1D());
 }
 
 } //  namespace

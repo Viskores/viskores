@@ -138,7 +138,8 @@ viskores::cont::DataSet FieldToColors::DoExecute(const viskores::cont::DataSet& 
 
   //We need to verify if the array is a viskores::Vec
   viskores::cont::UnknownArrayHandle outArray;
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     using IsVec = typename viskores::VecTraits<T>::HasMultipleComponents;

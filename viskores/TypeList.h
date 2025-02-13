@@ -66,24 +66,24 @@ using TypeListFieldVec4 = viskores::List<viskores::Vec4f_32, viskores::Vec4f_64>
 /// Scalars are not included.
 ///
 using TypeListFloatVec = viskores::List<viskores::Vec2f_32,
-                                    viskores::Vec2f_64,
-                                    viskores::Vec3f_32,
-                                    viskores::Vec3f_64,
-                                    viskores::Vec4f_32,
-                                    viskores::Vec4f_64>;
+                                        viskores::Vec2f_64,
+                                        viskores::Vec3f_32,
+                                        viskores::Vec3f_64,
+                                        viskores::Vec4f_32,
+                                        viskores::Vec4f_64>;
 
 /// A list containing common types for values in fields. Specifically contains
 /// floating point scalars and vectors of size 2, 3, and 4 with floating point
 /// components.
 ///
 using TypeListField = viskores::List<viskores::Float32,
-                                 viskores::Float64,
-                                 viskores::Vec2f_32,
-                                 viskores::Vec2f_64,
-                                 viskores::Vec3f_32,
-                                 viskores::Vec3f_64,
-                                 viskores::Vec4f_32,
-                                 viskores::Vec4f_64>;
+                                     viskores::Float64,
+                                     viskores::Vec2f_32,
+                                     viskores::Vec2f_64,
+                                     viskores::Vec3f_32,
+                                     viskores::Vec3f_64,
+                                     viskores::Vec4f_32,
+                                     viskores::Vec4f_64>;
 
 /// A list of all scalars defined in viskores/Types.h. A scalar is a type that
 /// holds a single number. This should containing all true variations of
@@ -94,15 +94,15 @@ using TypeListField = viskores::List<viskores::Float32,
 /// them differently.
 ///
 using TypeListScalarAll = viskores::List<viskores::Int8,
-                                     viskores::UInt8,
-                                     viskores::Int16,
-                                     viskores::UInt16,
-                                     viskores::Int32,
-                                     viskores::UInt32,
-                                     viskores::Int64,
-                                     viskores::UInt64,
-                                     viskores::Float32,
-                                     viskores::Float64>;
+                                         viskores::UInt8,
+                                         viskores::Int16,
+                                         viskores::UInt16,
+                                         viskores::Int32,
+                                         viskores::UInt32,
+                                         viskores::Int64,
+                                         viskores::UInt64,
+                                         viskores::Float32,
+                                         viskores::Float64>;
 
 // A list that containes all the base arithmetric C types (i.e. char, int, float, etc.).
 // The list contains C types that are functionally equivalent but considered different
@@ -118,20 +118,20 @@ using TypeListBaseC = viskores::ListAppend<
 /// integers of 32 or 64 bits, or floating point values of 32 or 64 bits.
 ///
 using TypeListVecCommon = viskores::List<viskores::Vec2ui_8,
-                                     viskores::Vec2i_32,
-                                     viskores::Vec2i_64,
-                                     viskores::Vec2f_32,
-                                     viskores::Vec2f_64,
-                                     viskores::Vec3ui_8,
-                                     viskores::Vec3i_32,
-                                     viskores::Vec3i_64,
-                                     viskores::Vec3f_32,
-                                     viskores::Vec3f_64,
-                                     viskores::Vec4ui_8,
-                                     viskores::Vec4i_32,
-                                     viskores::Vec4i_64,
-                                     viskores::Vec4f_32,
-                                     viskores::Vec4f_64>;
+                                         viskores::Vec2i_32,
+                                         viskores::Vec2i_64,
+                                         viskores::Vec2f_32,
+                                         viskores::Vec2f_64,
+                                         viskores::Vec3ui_8,
+                                         viskores::Vec3i_32,
+                                         viskores::Vec3i_64,
+                                         viskores::Vec3f_32,
+                                         viskores::Vec3f_64,
+                                         viskores::Vec4ui_8,
+                                         viskores::Vec4i_32,
+                                         viskores::Vec4i_64,
+                                         viskores::Vec4f_32,
+                                         viskores::Vec4f_64>;
 
 namespace internal
 {
@@ -141,20 +141,20 @@ namespace internal
 /// to get a list of all vectors up to size 4.
 ///
 using TypeListVecUncommon = viskores::List<viskores::Vec2i_8,
-                                       viskores::Vec2i_16,
-                                       viskores::Vec2ui_16,
-                                       viskores::Vec2ui_32,
-                                       viskores::Vec2ui_64,
-                                       viskores::Vec3i_8,
-                                       viskores::Vec3i_16,
-                                       viskores::Vec3ui_16,
-                                       viskores::Vec3ui_32,
-                                       viskores::Vec3ui_64,
-                                       viskores::Vec4i_8,
-                                       viskores::Vec4i_16,
-                                       viskores::Vec4ui_16,
-                                       viskores::Vec4ui_32,
-                                       viskores::Vec4ui_64>;
+                                           viskores::Vec2i_16,
+                                           viskores::Vec2ui_16,
+                                           viskores::Vec2ui_32,
+                                           viskores::Vec2ui_64,
+                                           viskores::Vec3i_8,
+                                           viskores::Vec3i_16,
+                                           viskores::Vec3ui_16,
+                                           viskores::Vec3ui_32,
+                                           viskores::Vec3ui_64,
+                                           viskores::Vec4i_8,
+                                           viskores::Vec4i_16,
+                                           viskores::Vec4ui_16,
+                                           viskores::Vec4ui_32,
+                                           viskores::Vec4ui_64>;
 
 } // namespace internal
 
@@ -174,12 +174,12 @@ using TypeListAll = viskores::ListAppend<viskores::TypeListScalarAll, viskores::
 /// integers, floating points, and 3 dimensional vectors of floating points.
 ///
 using TypeListCommon = viskores::List<viskores::UInt8,
-                                  viskores::Int32,
-                                  viskores::Int64,
-                                  viskores::Float32,
-                                  viskores::Float64,
-                                  viskores::Vec3f_32,
-                                  viskores::Vec3f_64>;
+                                      viskores::Int32,
+                                      viskores::Int64,
+                                      viskores::Float32,
+                                      viskores::Float64,
+                                      viskores::Vec3f_32,
+                                      viskores::Vec3f_64>;
 
 } // namespace viskores
 

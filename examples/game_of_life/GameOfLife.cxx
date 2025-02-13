@@ -62,8 +62,8 @@ struct UpdateLifeState : public viskores::worklet::WorkletPointNeighborhood
 
   template <typename NeighIn>
   VISKORES_EXEC void operator()(const NeighIn& prevstate,
-                            viskores::UInt8& state,
-                            viskores::Vec4ui_8& color) const
+                                viskores::UInt8& state,
+                                viskores::Vec4ui_8& color) const
   {
     // Any live cell with fewer than two live neighbors dies, as if caused by under-population.
     // Any live cell with two or three live neighbors lives on to the next generation.
@@ -98,7 +98,10 @@ struct UpdateLifeState : public viskores::worklet::WorkletPointNeighborhood
 class GameOfLife : public viskores::filter::Filter
 {
 public:
-  VISKORES_CONT GameOfLife() { this->SetActiveField("state", viskores::cont::Field::Association::Points); }
+  VISKORES_CONT GameOfLife()
+  {
+    this->SetActiveField("state", viskores::cont::Field::Association::Points);
+  }
 
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override
   {
@@ -153,7 +156,10 @@ struct RenderGameOfLife
   viskores::interop::BufferState VBOState;
   viskores::interop::BufferState ColorState;
 
-  RenderGameOfLife(viskores::Int32 width, viskores::Int32 height, viskores::Int32 x, viskores::Int32 y)
+  RenderGameOfLife(viskores::Int32 width,
+                   viskores::Int32 height,
+                   viskores::Int32 x,
+                   viskores::Int32 y)
     : ScreenWidth(width)
     , ScreenHeight(height)
     , ShaderProgramId()
@@ -189,7 +195,7 @@ struct RenderGameOfLife
     viskores::cont::TryExecute(task);
 
     viskores::Float32 mvp[16] = { 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f,
-                              0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 3.5f };
+                                  0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 3.5f };
 
     GLint unifLoc = glGetUniformLocation(this->ShaderProgramId, "MVP");
     glUniformMatrix4fv(unifLoc, 1, GL_FALSE, mvp);
@@ -219,10 +225,10 @@ RenderGameOfLife* gRenderer = nullptr;
 
 
 viskores::UInt32 stamp_acorn(std::vector<viskores::UInt8>& input_state,
-                         viskores::UInt32 i,
-                         viskores::UInt32 j,
-                         viskores::UInt32 width,
-                         viskores::UInt32 height)
+                             viskores::UInt32 i,
+                             viskores::UInt32 j,
+                             viskores::UInt32 width,
+                             viskores::UInt32 height)
 {
   (void)width;
   static viskores::UInt8 acorn[5][9] = {
@@ -328,21 +334,23 @@ int main(int argc, char** argv)
   gRenderer = &renderer;
 
   gTimer.Start();
-  glutDisplayFunc([]() {
-    const viskores::Float32 c = static_cast<viskores::Float32>(gTimer.GetElapsedTime());
-
-    viskores::cont::DataSet oData = gFilter->Execute(*gData);
-    gRenderer->render(oData);
-    glutSwapBuffers();
-
-    *gData = oData;
-
-    if (c > 120)
+  glutDisplayFunc(
+    []()
     {
-      //after 1 minute quit the demo
-      exit(0);
-    }
-  });
+      const viskores::Float32 c = static_cast<viskores::Float32>(gTimer.GetElapsedTime());
+
+      viskores::cont::DataSet oData = gFilter->Execute(*gData);
+      gRenderer->render(oData);
+      glutSwapBuffers();
+
+      *gData = oData;
+
+      if (c > 120)
+      {
+        //after 1 minute quit the demo
+        exit(0);
+      }
+    });
 
   glutIdleFunc([]() { glutPostRedisplay(); });
 

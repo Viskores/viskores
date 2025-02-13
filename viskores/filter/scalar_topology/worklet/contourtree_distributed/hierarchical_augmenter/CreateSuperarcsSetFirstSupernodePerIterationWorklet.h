@@ -59,7 +59,8 @@ namespace hierarchical_augmenter
 {
 
 /// Worklet used in HierarchicalAugmenter::UpdateHyperstructure to set the hyperarcs and hypernodes
-class CreateSuperarcsSetFirstSupernodePerIterationWorklet : public viskores::worklet::WorkletMapField
+class CreateSuperarcsSetFirstSupernodePerIterationWorklet
+  : public viskores::worklet::WorkletMapField
 {
 public:
   /// Control signature for the worklet

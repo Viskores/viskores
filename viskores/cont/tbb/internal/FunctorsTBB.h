@@ -181,7 +181,10 @@ struct CopyIfBody
     }
 
 
-    Range(viskores::Id inputBegin, viskores::Id inputEnd, viskores::Id outputBegin, viskores::Id outputEnd)
+    Range(viskores::Id inputBegin,
+          viskores::Id inputEnd,
+          viskores::Id outputBegin,
+          viskores::Id outputEnd)
       : InputBegin(inputBegin)
       , InputEnd(inputEnd)
       , OutputBegin(outputBegin)
@@ -196,9 +199,9 @@ struct CopyIfBody
       VISKORES_ASSERT("Input begin precedes end" && this->InputBegin <= this->InputEnd);
       VISKORES_ASSERT("Output begin precedes end" && this->OutputBegin <= this->OutputEnd);
       VISKORES_ASSERT("Output not past input" && this->OutputBegin <= this->InputBegin &&
-                  this->OutputEnd <= this->InputEnd);
+                      this->OutputEnd <= this->InputEnd);
       VISKORES_ASSERT("Output smaller than input" &&
-                  (this->OutputEnd - this->OutputBegin) <= (this->InputEnd - this->InputBegin));
+                      (this->OutputEnd - this->OutputBegin) <= (this->InputEnd - this->InputBegin));
     }
 
 
@@ -345,9 +348,9 @@ template <typename InputPortalType,
           typename OutputPortalType,
           typename UnaryPredicateType>
 VISKORES_CONT viskores::Id CopyIfPortals(InputPortalType inputPortal,
-                                 StencilPortalType stencilPortal,
-                                 OutputPortalType outputPortal,
-                                 UnaryPredicateType unaryPredicate)
+                                         StencilPortalType stencilPortal,
+                                         OutputPortalType outputPortal,
+                                         UnaryPredicateType unaryPredicate)
 {
   const viskores::Id inputLength = inputPortal.GetNumberOfValues();
   VISKORES_ASSERT(inputLength == stencilPortal.GetNumberOfValues());
@@ -365,7 +368,7 @@ VISKORES_CONT viskores::Id CopyIfPortals(InputPortalType inputPortal,
 
   body.Ranges.AssertSane();
   VISKORES_ASSERT(body.Ranges.InputBegin == 0 && body.Ranges.InputEnd == inputLength &&
-              body.Ranges.OutputBegin == 0 && body.Ranges.OutputEnd <= inputLength);
+                  body.Ranges.OutputBegin == 0 && body.Ranges.OutputEnd <= inputLength);
 
   return body.Ranges.OutputEnd;
 }
@@ -453,8 +456,8 @@ struct ReduceBody
 
 template <class InputPortalType, typename T, class BinaryOperationType>
 VISKORES_CONT static auto ReducePortals(InputPortalType inputPortal,
-                                    T initialValue,
-                                    BinaryOperationType binaryOperation)
+                                        T initialValue,
+                                        BinaryOperationType binaryOperation)
   -> decltype(binaryOperation(initialValue, inputPortal.Get(0)))
 {
   using ResultType = decltype(binaryOperation(initialValue, inputPortal.Get(0)));
@@ -514,7 +517,10 @@ struct ReduceByKeyBody
     }
 
 
-    Range(viskores::Id inputBegin, viskores::Id inputEnd, viskores::Id outputBegin, viskores::Id outputEnd)
+    Range(viskores::Id inputBegin,
+          viskores::Id inputEnd,
+          viskores::Id outputBegin,
+          viskores::Id outputEnd)
       : InputBegin(inputBegin)
       , InputEnd(inputEnd)
       , OutputBegin(outputBegin)
@@ -529,9 +535,9 @@ struct ReduceByKeyBody
       VISKORES_ASSERT("Input begin precedes end" && this->InputBegin <= this->InputEnd);
       VISKORES_ASSERT("Output begin precedes end" && this->OutputBegin <= this->OutputEnd);
       VISKORES_ASSERT("Output not past input" && this->OutputBegin <= this->InputBegin &&
-                  this->OutputEnd <= this->InputEnd);
+                      this->OutputEnd <= this->InputEnd);
       VISKORES_ASSERT("Output smaller than input" &&
-                  (this->OutputEnd - this->OutputBegin) <= (this->InputEnd - this->InputBegin));
+                      (this->OutputEnd - this->OutputBegin) <= (this->InputEnd - this->InputBegin));
     }
 
 
@@ -785,10 +791,10 @@ template <typename KeysInPortalType,
           typename ValuesOutPortalType,
           typename BinaryOperationType>
 VISKORES_CONT viskores::Id ReduceByKeyPortals(KeysInPortalType keysInPortal,
-                                      ValuesInPortalType valuesInPortal,
-                                      KeysOutPortalType keysOutPortal,
-                                      ValuesOutPortalType valuesOutPortal,
-                                      BinaryOperationType binaryOperation)
+                                              ValuesInPortalType valuesInPortal,
+                                              KeysOutPortalType keysOutPortal,
+                                              ValuesOutPortalType valuesOutPortal,
+                                              BinaryOperationType binaryOperation)
 {
   const viskores::Id inputLength = keysInPortal.GetNumberOfValues();
   VISKORES_ASSERT(inputLength == valuesInPortal.GetNumberOfValues());
@@ -824,7 +830,7 @@ VISKORES_CONT viskores::Id ReduceByKeyPortals(KeysInPortalType keysInPortal,
 
   body.Ranges.AssertSane();
   VISKORES_ASSERT(body.Ranges.InputBegin == 0 && body.Ranges.InputEnd == inputLength &&
-              body.Ranges.OutputBegin == 0 && body.Ranges.OutputEnd <= inputLength);
+                  body.Ranges.OutputBegin == 0 && body.Ranges.OutputEnd <= inputLength);
 
   return body.Ranges.OutputEnd;
 }
@@ -1080,8 +1086,8 @@ class ScatterKernel
 {
 public:
   VISKORES_CONT ScatterKernel(InputPortalType inputPortal,
-                          IndexPortalType indexPortal,
-                          OutputPortalType outputPortal)
+                              IndexPortalType indexPortal,
+                              OutputPortalType outputPortal)
     : ValuesPortal(inputPortal)
     , IndexPortal(indexPortal)
     , OutputPortal(outputPortal)
@@ -1126,8 +1132,8 @@ private:
 
 template <typename InputPortalType, typename IndexPortalType, typename OutputPortalType>
 VISKORES_CONT static void ScatterPortal(InputPortalType inputPortal,
-                                    IndexPortalType indexPortal,
-                                    OutputPortalType outputPortal)
+                                        IndexPortalType indexPortal,
+                                        OutputPortalType outputPortal)
 {
   const viskores::Id size = inputPortal.GetNumberOfValues();
   VISKORES_ASSERT(size == indexPortal.GetNumberOfValues());
@@ -1163,7 +1169,10 @@ struct UniqueBody
 
 
 
-    Range(viskores::Id inputBegin, viskores::Id inputEnd, viskores::Id outputBegin, viskores::Id outputEnd)
+    Range(viskores::Id inputBegin,
+          viskores::Id inputEnd,
+          viskores::Id outputBegin,
+          viskores::Id outputEnd)
       : InputBegin(inputBegin)
       , InputEnd(inputEnd)
       , OutputBegin(outputBegin)
@@ -1179,9 +1188,9 @@ struct UniqueBody
       VISKORES_ASSERT("Input begin precedes end" && this->InputBegin <= this->InputEnd);
       VISKORES_ASSERT("Output begin precedes end" && this->OutputBegin <= this->OutputEnd);
       VISKORES_ASSERT("Output not past input" && this->OutputBegin <= this->InputBegin &&
-                  this->OutputEnd <= this->InputEnd);
+                      this->OutputEnd <= this->InputEnd);
       VISKORES_ASSERT("Output smaller than input" &&
-                  (this->OutputEnd - this->OutputBegin) <= (this->InputEnd - this->InputBegin));
+                      (this->OutputEnd - this->OutputBegin) <= (this->InputEnd - this->InputBegin));
     }
 
 
@@ -1379,7 +1388,7 @@ VISKORES_CONT viskores::Id UniquePortals(PortalType portal, BinaryOperationType 
 
   body.Ranges.AssertSane();
   VISKORES_ASSERT(body.Ranges.InputBegin == 0 && body.Ranges.InputEnd == inputLength &&
-              body.Ranges.OutputBegin == 0 && body.Ranges.OutputEnd <= inputLength);
+                  body.Ranges.OutputBegin == 0 && body.Ranges.OutputEnd <= inputLength);
 
   return body.Ranges.OutputEnd;
 }

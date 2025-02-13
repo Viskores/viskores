@@ -49,7 +49,8 @@ viskores::cont::DataSet MakeWarpTestDataSet()
   dataSet.AddPointField("scalarfactor", scalarFactor);
   dataSet.AddPointField("vec2", vec2);
 
-  vecType normal = viskores::make_Vec<T>(static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(1.0));
+  vecType normal =
+    viskores::make_Vec<T>(static_cast<T>(0.0), static_cast<T>(0.0), static_cast<T>(1.0));
   viskores::cont::ArrayHandleConstant<vecType> vectorAH =
     viskores::cont::make_ArrayHandleConstant(normal, DIM * DIM);
   dataSet.AddPointField("normal", vectorAH);
@@ -85,7 +86,8 @@ void CheckResult(const viskores::filter::field_transform::Warp& filter,
       auto point = outPortal.Get(j * DIM + i);
       VISKORES_TEST_ASSERT(test_equal(point[0], x), "Wrong result of x value for warp scalar");
       VISKORES_TEST_ASSERT(test_equal(point[1], y), "Wrong result of y value for warp scalar");
-      VISKORES_TEST_ASSERT(test_equal(point[2], targetZ), "Wrong result of z value for warp scalar");
+      VISKORES_TEST_ASSERT(test_equal(point[2], targetZ),
+                           "Wrong result of z value for warp scalar");
     }
   }
 }

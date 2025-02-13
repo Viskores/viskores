@@ -23,9 +23,9 @@ namespace io
 {
 
 viskores::UInt32 EncodePNG(std::vector<unsigned char> const& image,
-                       unsigned long width,
-                       unsigned long height,
-                       std::vector<unsigned char>& output_png)
+                           unsigned long width,
+                           unsigned long height,
+                           std::vector<unsigned char>& output_png)
 {
   // The default is 8 bit RGBA; does anyone care to have more options?
   // We can certainly add them in a backwards-compatible way if need be.
@@ -34,21 +34,22 @@ viskores::UInt32 EncodePNG(std::vector<unsigned char> const& image,
   if (error)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-               "LodePNG Encoder error number " << error << ": " << png::lodepng_error_text(error));
+                   "LodePNG Encoder error number " << error << ": "
+                                                   << png::lodepng_error_text(error));
   }
   return error;
 }
 
 
 viskores::UInt32 SavePNG(std::string const& filename,
-                     std::vector<unsigned char> const& image,
-                     unsigned long width,
-                     unsigned long height)
+                         std::vector<unsigned char> const& image,
+                         unsigned long width,
+                         unsigned long height)
 {
   if (!viskores::io::EndsWith(filename, ".png"))
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-               "File " << filename << " does not end with .png; this is required.");
+                   "File " << filename << " does not end with .png; this is required.");
   }
 
   std::vector<unsigned char> output_png;

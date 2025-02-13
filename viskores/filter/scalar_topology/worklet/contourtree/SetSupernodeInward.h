@@ -86,11 +86,11 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& superID,
-                            const InFieldPortalType& inbound,
-                            const InFieldPortalType& outbound,
-                            const InFieldPortalType& indegree,
-                            const InFieldPortalType& outdegree,
-                            const OutFieldPortalType& superarcs) const
+                                const InFieldPortalType& inbound,
+                                const InFieldPortalType& outbound,
+                                const InFieldPortalType& indegree,
+                                const InFieldPortalType& outdegree,
+                                const OutFieldPortalType& superarcs) const
   {
     // test for criticality
     viskores::Id outNeighbour = outbound.Get(superID);

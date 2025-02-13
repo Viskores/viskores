@@ -71,7 +71,8 @@ public:
       validCell = false;
     if (logicalCellId[2] >= CellDims[2])
       validCell = false;
-    viskores::Id minId = viskores::Min(logicalCellId[0], viskores::Min(logicalCellId[1], logicalCellId[2]));
+    viskores::Id minId =
+      viskores::Min(logicalCellId[0], viskores::Min(logicalCellId[1], logicalCellId[2]));
     if (minId < 0)
       validCell = false;
     if (!validCell)
@@ -263,12 +264,12 @@ public:
 
   // Constructor for unstructured connectivity
   VISKORES_CONT MeshConnectivity(const viskores::cont::ArrayHandle<viskores::Id>& faceConnectivity,
-                             const viskores::cont::ArrayHandle<viskores::Id>& faceOffsets,
-                             const viskores::cont::ArrayHandle<viskores::Id>& cellConn,
-                             const viskores::cont::ArrayHandle<viskores::Id>& cellOffsets,
-                             const viskores::cont::ArrayHandle<viskores::UInt8>& shapes,
-                             viskores::cont::DeviceAdapterId device,
-                             viskores::cont::Token& token)
+                                 const viskores::cont::ArrayHandle<viskores::Id>& faceOffsets,
+                                 const viskores::cont::ArrayHandle<viskores::Id>& cellConn,
+                                 const viskores::cont::ArrayHandle<viskores::Id>& cellOffsets,
+                                 const viskores::cont::ArrayHandle<viskores::UInt8>& shapes,
+                                 viskores::cont::DeviceAdapterId device,
+                                 viskores::cont::Token& token)
     : Connectivity(MeshConnectivityUnstructured(faceConnectivity,
                                                 faceOffsets,
                                                 cellConn,
@@ -280,14 +281,15 @@ public:
   }
 
   // Constructor for unstructured connectivity with single cell type
-  VISKORES_CONT MeshConnectivity(const viskores::cont::ArrayHandle<viskores::Id>& faceConn,
-                             const viskores::cont::ArrayHandle<viskores::Id>& cellConn,
-                             const viskores::cont::ArrayHandleCounting<viskores::Id>& cellOffsets,
-                             viskores::Int32 shapeId,
-                             viskores::Int32 numIndices,
-                             viskores::Int32 numFaces,
-                             viskores::cont::DeviceAdapterId device,
-                             viskores::cont::Token& token)
+  VISKORES_CONT MeshConnectivity(
+    const viskores::cont::ArrayHandle<viskores::Id>& faceConn,
+    const viskores::cont::ArrayHandle<viskores::Id>& cellConn,
+    const viskores::cont::ArrayHandleCounting<viskores::Id>& cellOffsets,
+    viskores::Int32 shapeId,
+    viskores::Int32 numIndices,
+    viskores::Int32 numFaces,
+    viskores::cont::DeviceAdapterId device,
+    viskores::cont::Token& token)
     : Connectivity(MeshConnectivitySingleType(faceConn,
                                               cellConn,
                                               cellOffsets,
@@ -302,15 +304,15 @@ public:
   VISKORES_EXEC_CONT
   viskores::Id GetConnectingCell(const viskores::Id& cellId, const viskores::Id& face) const
   {
-    return this->Connectivity.CastAndCall(
-      [=](auto conn) { return conn.GetConnectingCell(cellId, face); });
+    return this->Connectivity.CastAndCall([=](auto conn)
+                                          { return conn.GetConnectingCell(cellId, face); });
   }
 
   VISKORES_EXEC_CONT
   viskores::Int32 GetCellIndices(viskores::Id cellIndices[8], const viskores::Id& cellId) const
   {
-    return this->Connectivity.CastAndCall(
-      [=](auto conn) { return conn.GetCellIndices(cellIndices, cellId); });
+    return this->Connectivity.CastAndCall([=](auto conn)
+                                          { return conn.GetCellIndices(cellIndices, cellId); });
   }
 
   VISKORES_EXEC_CONT

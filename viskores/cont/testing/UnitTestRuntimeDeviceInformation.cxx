@@ -39,7 +39,7 @@ struct DoesExist<false>
     //runtime information for this device should return false
     viskores::cont::RuntimeDeviceInformation runtime;
     VISKORES_TEST_ASSERT(runtime.Exists(DeviceAdapterTag()) == false,
-                     "A backend with zero compile time support, can't have runtime support");
+                         "A backend with zero compile time support, can't have runtime support");
   }
 
   void Exist(viskores::cont::DeviceAdapterTagCuda) const
@@ -50,10 +50,10 @@ struct DoesExist<false>
     viskores::cont::RuntimeDeviceInformation runtime;
 #ifdef VISKORES_ENABLE_CUDA
     VISKORES_TEST_ASSERT(runtime.Exists(viskores::cont::DeviceAdapterTagCuda()) == true,
-                     "with cuda backend enabled, runtime support should be enabled");
+                         "with cuda backend enabled, runtime support should be enabled");
 #else
     VISKORES_TEST_ASSERT(runtime.Exists(viskores::cont::DeviceAdapterTagCuda()) == false,
-                     "with cuda backend disabled, runtime support should be disabled");
+                         "with cuda backend disabled, runtime support should be disabled");
 #endif
   }
 
@@ -66,10 +66,10 @@ struct DoesExist<false>
     viskores::cont::RuntimeDeviceInformation runtime;
 #ifdef VISKORES_ENABLE_KOKKOS
     VISKORES_TEST_ASSERT(runtime.Exists(viskores::cont::DeviceAdapterTagKokkos()) == true,
-                     "with kokkos backend enabled, runtime support should be enabled");
+                         "with kokkos backend enabled, runtime support should be enabled");
 #else
     VISKORES_TEST_ASSERT(runtime.Exists(viskores::cont::DeviceAdapterTagKokkos()) == false,
-                     "with kokkos backend disabled, runtime support should be disabled");
+                         "with kokkos backend disabled, runtime support should be disabled");
 #endif
   }
 #endif
@@ -84,7 +84,7 @@ struct DoesExist<true>
     //runtime information for this device should return true
     viskores::cont::RuntimeDeviceInformation runtime;
     VISKORES_TEST_ASSERT(runtime.Exists(DeviceAdapterTag()) == true,
-                     "A backend with compile time support, should have runtime support");
+                         "A backend with compile time support, should have runtime support");
   }
 };
 

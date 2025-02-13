@@ -34,14 +34,16 @@ struct FetchTagExecObject
 };
 
 template <typename ExecObjectType>
-struct Fetch<viskores::exec::arg::FetchTagExecObject, viskores::exec::arg::AspectTagDefault, ExecObjectType>
+struct Fetch<viskores::exec::arg::FetchTagExecObject,
+             viskores::exec::arg::AspectTagDefault,
+             ExecObjectType>
 {
   using ValueType = ExecObjectType;
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
   VISKORES_EXEC ValueType Load(const ThreadIndicesType& viskoresNotUsed(indices),
-                           const ExecObjectType& execObject) const
+                               const ExecObjectType& execObject) const
   {
     return execObject;
   }

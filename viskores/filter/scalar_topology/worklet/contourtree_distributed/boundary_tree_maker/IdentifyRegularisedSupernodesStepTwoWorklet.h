@@ -85,11 +85,11 @@ public:
 
   template <typename MeshBoundaryType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& boundaryNode,
-                            const viskores::Id& bractVertexSupersetValue,
-                            const viskores::Id& upNeighbourValue,
-                            const viskores::Id& downNeighbourValue,
-                            const MeshBoundaryType& meshBoundary,
-                            const OutFieldPortalType& newVertexIdPortal) const
+                                const viskores::Id& bractVertexSupersetValue,
+                                const viskores::Id& upNeighbourValue,
+                                const viskores::Id& downNeighbourValue,
+                                const MeshBoundaryType& meshBoundary,
+                                const OutFieldPortalType& newVertexIdPortal) const
   {
     // per vertex
     // check for leaf criticality

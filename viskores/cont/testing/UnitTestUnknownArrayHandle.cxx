@@ -71,8 +71,8 @@ struct CheckFunctor
   void operator()(const viskores::cont::ArrayHandle<T, S>& array, bool& called) const
   {
     called = true;
-    std::cout << "  Checking for array type " << viskores::cont::TypeToString<T>() << " with storage "
-              << viskores::cont::TypeToString<S>() << std::endl;
+    std::cout << "  Checking for array type " << viskores::cont::TypeToString<T>()
+              << " with storage " << viskores::cont::TypeToString<S>() << std::endl;
 
     CheckArray(array);
   }
@@ -84,9 +84,9 @@ void BasicUnknownArrayChecks(const viskores::cont::UnknownArrayHandle& array,
   std::cout << "  Checking an UnknownArrayHandle containing " << array.GetArrayTypeName()
             << std::endl;
   VISKORES_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE,
-                   "Dynamic array reports unexpected size.");
+                       "Dynamic array reports unexpected size.");
   VISKORES_TEST_ASSERT(array.GetNumberOfComponentsFlat() == numComponents,
-                   "Dynamic array reports unexpected number of components.");
+                       "Dynamic array reports unexpected number of components.");
 }
 
 void CheckUnknownArrayDefaults(const viskores::cont::UnknownArrayHandle& array,
@@ -100,7 +100,8 @@ void CheckUnknownArrayDefaults(const viskores::cont::UnknownArrayHandle& array,
 }
 
 template <typename TypeList, typename StorageList>
-void CheckUnknownArray(const viskores::cont::UnknownArrayHandle& array, viskores::IdComponent numComponents)
+void CheckUnknownArray(const viskores::cont::UnknownArrayHandle& array,
+                       viskores::IdComponent numComponents)
 {
   VISKORES_IS_LIST(TypeList);
   VISKORES_IS_LIST(StorageList);
@@ -155,13 +156,14 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
 
   viskores::cont::UnknownArrayHandle arrayUnknown = array;
   VISKORES_TEST_ASSERT(!arrayUnknown.IsType<viskores::cont::ArrayHandle<UnusualType>>(),
-                   "Dynamic array reporting is wrong type.");
+                       "Dynamic array reporting is wrong type.");
 
   {
     std::cout << "    Normal get ArrayHandle" << std::endl;
     ArrayHandleType retreivedArray1;
     arrayUnknown.AsArrayHandle(retreivedArray1);
-    VISKORES_TEST_ASSERT(arrayUnknown.CanConvert<ArrayHandleType>(), "Did not query handle correctly.");
+    VISKORES_TEST_ASSERT(arrayUnknown.CanConvert<ArrayHandleType>(),
+                         "Did not query handle correctly.");
     VISKORES_TEST_ASSERT(array == retreivedArray1, "Did not get back same array.");
 
     ArrayHandleType retreivedArray2 = arrayUnknown.AsArrayHandle<ArrayHandleType>();
@@ -190,14 +192,14 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
       ArrayHandleType,
       viskores::cont::ArrayHandleConstant<typename ArrayHandleType::ValueType>>(array);
     VISKORES_TEST_ASSERT(arrayUnknown2.IsType<ArrayHandleType>(),
-                     "Putting in multiplexer did not pull out array.");
+                         "Putting in multiplexer did not pull out array.");
   }
 
   {
     std::cout << "    Make sure multiplex array prefers direct array (1st arg)" << std::endl;
     using MultiplexerType =
       viskores::cont::ArrayHandleMultiplexer<ArrayHandleType,
-                                         viskores::cont::ArrayHandleCast<T, ArrayHandleType>>;
+                                             viskores::cont::ArrayHandleCast<T, ArrayHandleType>>;
     MultiplexerType multiplexArray = arrayUnknown.AsArrayHandle<MultiplexerType>();
 
     VISKORES_TEST_ASSERT(multiplexArray.IsValid());
@@ -207,9 +209,9 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
 
   {
     std::cout << "    Make sure multiplex array prefers direct array (2nd arg)" << std::endl;
-    using MultiplexerType =
-      viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandleCast<T, viskores::cont::ArrayHandle<T>>,
-                                         ArrayHandleType>;
+    using MultiplexerType = viskores::cont::ArrayHandleMultiplexer<
+      viskores::cont::ArrayHandleCast<T, viskores::cont::ArrayHandle<T>>,
+      ArrayHandleType>;
     MultiplexerType multiplexArray = arrayUnknown.AsArrayHandle<MultiplexerType>();
 
     VISKORES_TEST_ASSERT(multiplexArray.IsValid());
@@ -219,8 +221,9 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
 
   {
     std::cout << "    Make sure adding arrays follows nesting of special arrays" << std::endl;
-    viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandle<viskores::Int64>,
-                                       viskores::cont::ArrayHandleCast<viskores::Int64, ArrayHandleType>>
+    viskores::cont::ArrayHandleMultiplexer<
+      viskores::cont::ArrayHandle<viskores::Int64>,
+      viskores::cont::ArrayHandleCast<viskores::Int64, ArrayHandleType>>
       multiplexer(viskores::cont::make_ArrayHandleCast<viskores::Int64>(array));
     auto crazyArray = viskores::cont::make_ArrayHandleCast<viskores::Float64>(multiplexer);
     viskores::cont::UnknownArrayHandle arrayUnknown2(crazyArray);
@@ -236,9 +239,9 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
 
     // Note, this is a bad way to implement this array. You should something like
     // ArrayHandleGroupVec instead.
-    using VariableVecArrayType =
-      viskores::cont::ArrayHandleGroupVecVariable<ArrayHandleType,
-                                              viskores::cont::ArrayHandleCounting<viskores::Id>>;
+    using VariableVecArrayType = viskores::cont::ArrayHandleGroupVecVariable<
+      ArrayHandleType,
+      viskores::cont::ArrayHandleCounting<viskores::Id>>;
     VariableVecArrayType inArray = viskores::cont::make_ArrayHandleGroupVecVariable(
       array, viskores::cont::make_ArrayHandleCounting<viskores::Id>(0, 2, ARRAY_SIZE / 2 + 1));
     VISKORES_TEST_ASSERT(inArray.GetNumberOfValues() == ARRAY_SIZE / 2);
@@ -257,8 +260,8 @@ template <typename T>
 void TryNewInstance(viskores::cont::UnknownArrayHandle originalArray)
 {
   // This check should already have been performed by caller, but just in case.
-  CheckUnknownArray<viskores::List<T>, VISKORES_DEFAULT_STORAGE_LIST>(originalArray,
-                                                              viskores::VecTraits<T>::NUM_COMPONENTS);
+  CheckUnknownArray<viskores::List<T>, VISKORES_DEFAULT_STORAGE_LIST>(
+    originalArray, viskores::VecTraits<T>::NUM_COMPONENTS);
 
   std::cout << "Create new instance of array." << std::endl;
   viskores::cont::UnknownArrayHandle newArray = originalArray.NewInstance();
@@ -274,8 +277,8 @@ void TryNewInstance(viskores::cont::UnknownArrayHandle originalArray)
   {
     staticArray.WritePortal().Set(index, TestValue(index + 100, T()));
   }
-  CheckUnknownArray<viskores::List<T>, VISKORES_DEFAULT_STORAGE_LIST>(originalArray,
-                                                              viskores::VecTraits<T>::NUM_COMPONENTS);
+  CheckUnknownArray<viskores::List<T>, VISKORES_DEFAULT_STORAGE_LIST>(
+    originalArray, viskores::VecTraits<T>::NUM_COMPONENTS);
 
   std::cout << "Set the new static array to expected values and make sure the new" << std::endl
             << "dynamic array points to the same new values." << std::endl;
@@ -283,8 +286,8 @@ void TryNewInstance(viskores::cont::UnknownArrayHandle originalArray)
   {
     staticArray.WritePortal().Set(index, TestValue(index, T()));
   }
-  CheckUnknownArray<viskores::List<T>, VISKORES_DEFAULT_STORAGE_LIST>(newArray,
-                                                              viskores::VecTraits<T>::NUM_COMPONENTS);
+  CheckUnknownArray<viskores::List<T>, VISKORES_DEFAULT_STORAGE_LIST>(
+    newArray, viskores::VecTraits<T>::NUM_COMPONENTS);
 
   std::cout << "Get a new instance as a float array and make sure the type is as expected."
             << std::endl;
@@ -319,11 +322,11 @@ void TryCastAndCallFallback()
   viskores::cont::UnknownArrayHandle array = CreateArrayUnknown(T{});
 
   using FallbackTypes = viskores::List<viskores::FloatDefault,
-                                   viskores::Vec2f,
-                                   viskores::Vec3f,
-                                   viskores::Vec4f,
-                                   viskores::Vec<viskores::Vec2f, 3>,
-                                   viskores::Vec<viskores::Vec<viskores::Vec4f, 3>, 2>>;
+                                       viskores::Vec2f,
+                                       viskores::Vec3f,
+                                       viskores::Vec4f,
+                                       viskores::Vec<viskores::Vec2f, 3>,
+                                       viskores::Vec<viskores::Vec<viskores::Vec4f, 3>, 2>>;
   bool called = false;
   array.CastAndCallForTypesWithFloatFallback<FallbackTypes, viskores::cont::StorageListBasic>(
     CheckActualTypeFunctor<T>{}, called);
@@ -356,18 +359,21 @@ void TryAsMultiplexer(viskores::cont::UnknownArrayHandle sourceArray)
 
   {
     std::cout << "Get multiplex array through direct type." << std::endl;
-    using MultiplexerType = viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandle<T>,
-                                                               viskores::cont::ArrayHandleConstant<T>>;
+    using MultiplexerType =
+      viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandle<T>,
+                                             viskores::cont::ArrayHandleConstant<T>>;
     VISKORES_TEST_ASSERT(sourceArray.CanConvert<MultiplexerType>());
     MultiplexerType multiplexArray = sourceArray.AsArrayHandle<MultiplexerType>();
 
     VISKORES_TEST_ASSERT(multiplexArray.IsValid());
-    VISKORES_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), originalArray.ReadPortal()));
+    VISKORES_TEST_ASSERT(
+      test_equal_portals(multiplexArray.ReadPortal(), originalArray.ReadPortal()));
   }
 
   {
     std::cout << "Get multiplex array through cast type." << std::endl;
-    using CastT = typename viskores::VecTraits<T>::template ReplaceBaseComponentType<viskores::Float64>;
+    using CastT =
+      typename viskores::VecTraits<T>::template ReplaceBaseComponentType<viskores::Float64>;
     using MultiplexerType = viskores::cont::ArrayHandleMultiplexer<
       viskores::cont::ArrayHandle<CastT>,
       viskores::cont::ArrayHandleCast<CastT, viskores::cont::ArrayHandle<T>>>;
@@ -375,7 +381,8 @@ void TryAsMultiplexer(viskores::cont::UnknownArrayHandle sourceArray)
     MultiplexerType multiplexArray = sourceArray.AsArrayHandle<MultiplexerType>();
 
     VISKORES_TEST_ASSERT(multiplexArray.IsValid());
-    VISKORES_TEST_ASSERT(test_equal_portals(multiplexArray.ReadPortal(), originalArray.ReadPortal()));
+    VISKORES_TEST_ASSERT(
+      test_equal_portals(multiplexArray.ReadPortal(), originalArray.ReadPortal()));
   }
 
 #if 0
@@ -430,8 +437,8 @@ template <typename T>
 void TryExtractArray(const viskores::cont::UnknownArrayHandle& originalArray)
 {
   // This check should already have been performed by caller, but just in case.
-  CheckUnknownArray<viskores::List<T>, VISKORES_DEFAULT_STORAGE_LIST>(originalArray,
-                                                              viskores::VecTraits<T>::NUM_COMPONENTS);
+  CheckUnknownArray<viskores::List<T>, VISKORES_DEFAULT_STORAGE_LIST>(
+    originalArray, viskores::VecTraits<T>::NUM_COMPONENTS);
 
   std::cout << "Create new instance of array." << std::endl;
   viskores::cont::UnknownArrayHandle newArray = originalArray.NewInstanceBasic();
@@ -439,8 +446,8 @@ void TryExtractArray(const viskores::cont::UnknownArrayHandle& originalArray)
   std::cout << "Do CastAndCallWithExtractedArray." << std::endl;
   originalArray.CastAndCallWithExtractedArray(SimpleRecombineCopy{}, newArray);
 
-  CheckUnknownArray<viskores::List<T>, VISKORES_DEFAULT_STORAGE_LIST>(newArray,
-                                                              viskores::VecTraits<T>::NUM_COMPONENTS);
+  CheckUnknownArray<viskores::List<T>, VISKORES_DEFAULT_STORAGE_LIST>(
+    newArray, viskores::VecTraits<T>::NUM_COMPONENTS);
 }
 
 template <typename T>
@@ -466,7 +473,7 @@ struct TryBasicViskoresType
 
     VISKORES_TEST_ASSERT(array.GetValueTypeName() == viskores::cont::TypeToString<T>());
     VISKORES_TEST_ASSERT(array.GetStorageTypeName() ==
-                     viskores::cont::TypeToString<viskores::cont::StorageTagBasic>());
+                         viskores::cont::TypeToString<viskores::cont::StorageTagBasic>());
 
     CheckUnknownArray<viskores::TypeListAll, VISKORES_DEFAULT_STORAGE_LIST>(
       array, viskores::VecTraits<T>::NUM_COMPONENTS);
@@ -583,7 +590,8 @@ void TryExtractComponent()
   TryExtractComponent<viskores::cont::ArrayHandle<viskores::Vec<viskores::Vec2f, 3>>>();
 
   std::cout << "  Vec of Vecs of Vecs." << std::endl;
-  TryExtractComponent<viskores::cont::ArrayHandle<viskores::Vec<viskores::Vec<viskores::Id4, 3>, 2>>>();
+  TryExtractComponent<
+    viskores::cont::ArrayHandle<viskores::Vec<viskores::Vec<viskores::Id4, 3>, 2>>>();
 }
 
 void TrySetCastArray()
@@ -594,20 +602,22 @@ void TrySetCastArray()
 
   // The unknownArray should actually hold the original knownArray type even though we gave it
   // a cast array.
-  CheckUnknownArray<viskores::List<viskores::Id>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>(unknownArray, 1);
+  CheckUnknownArray<viskores::List<viskores::Id>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>(
+    unknownArray, 1);
 }
 
 void TrySetMultiplexerArray()
 {
   viskores::cont::ArrayHandle<viskores::Id> knownArray = CreateArray(viskores::Id{});
   viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandle<viskores::Id>,
-                                     viskores::cont::ArrayHandleConstant<viskores::Id>>
+                                         viskores::cont::ArrayHandleConstant<viskores::Id>>
     multiplexerArray(knownArray);
   viskores::cont::UnknownArrayHandle unknownArray(multiplexerArray);
 
   // The unknownArray should actually hold the original knownArray type even though we gave it
   // a multiplexer array.
-  CheckUnknownArray<viskores::List<viskores::Id>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>(unknownArray, 1);
+  CheckUnknownArray<viskores::List<viskores::Id>, viskores::List<VISKORES_DEFAULT_STORAGE_TAG>>(
+    unknownArray, 1);
 }
 
 template <typename T, typename BasicComponentType = typename viskores::VecFlat<T>::ComponentType>
@@ -644,21 +654,21 @@ void TryConvertRuntimeVec()
   std::cout << "    Copy ArrayHandleRuntimeVec to a new instance" << std::endl;
   viskores::cont::UnknownArrayHandle unknownCopy = unknownWithRuntimeVec.NewInstance();
   VISKORES_TEST_ASSERT(unknownWithRuntimeVec.GetNumberOfComponentsFlat() ==
-                   unknownCopy.GetNumberOfComponentsFlat());
+                       unknownCopy.GetNumberOfComponentsFlat());
   viskores::cont::ArrayCopy(unknownWithRuntimeVec, unknownCopy);
   VISKORES_TEST_ASSERT(test_equal_ArrayHandles(inputArray, unknownCopy));
 
   std::cout << "    Copy ArrayHandleRuntimeVec as basic array" << std::endl;
   unknownCopy = unknownWithRuntimeVec.NewInstanceBasic();
   VISKORES_TEST_ASSERT(unknownWithRuntimeVec.GetNumberOfComponentsFlat() ==
-                   unknownCopy.GetNumberOfComponentsFlat());
+                       unknownCopy.GetNumberOfComponentsFlat());
   viskores::cont::ArrayCopy(unknownWithRuntimeVec, unknownCopy);
   VISKORES_TEST_ASSERT(test_equal_ArrayHandles(inputArray, unknownCopy));
 
   std::cout << "    Copy ArrayHandleRuntimeVec to float array" << std::endl;
   unknownCopy = unknownWithRuntimeVec.NewInstanceFloatBasic();
   VISKORES_TEST_ASSERT(unknownWithRuntimeVec.GetNumberOfComponentsFlat() ==
-                   unknownCopy.GetNumberOfComponentsFlat());
+                       unknownCopy.GetNumberOfComponentsFlat());
   viskores::cont::ArrayCopy(unknownWithRuntimeVec, unknownCopy);
   VISKORES_TEST_ASSERT(test_equal_ArrayHandles(inputArray, unknownCopy));
 }

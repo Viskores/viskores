@@ -20,7 +20,8 @@ namespace viskores
 namespace filter
 {
 
-using SupportedTypes = viskores::List<viskores::UInt8, viskores::Int8, viskores::Float32, viskores::Float64>;
+using SupportedTypes =
+  viskores::List<viskores::UInt8, viskores::Int8, viskores::Float32, viskores::Float64>;
 
 namespace contour
 {
@@ -47,7 +48,7 @@ viskores::cont::DataSet ContourFlyingEdges::DoExecute(const viskores::cont::Data
   if (!inCellSet.template IsType<viskores::cont::CellSetStructured<3>>())
   {
     throw viskores::cont::ErrorFilterExecution("This filter is only available for 3-Dimensional "
-                                           "Structured Cell Sets");
+                                               "Structured Cell Sets");
   }
 
   // Get the CellSet's known dynamic type
@@ -60,7 +61,8 @@ viskores::cont::DataSet ContourFlyingEdges::DoExecute(const viskores::cont::Data
 
   viskores::cont::CellSetSingleType<> outputCells;
 
-  auto resolveFieldType = [&](const auto& concrete) {
+  auto resolveFieldType = [&](const auto& concrete)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     using IVType = std::conditional_t<(sizeof(T) > 4), viskores::Float64, viskores::FloatDefault>;

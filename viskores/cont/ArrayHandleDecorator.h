@@ -110,7 +110,8 @@ namespace decor
 // Ensures that all types in variadic container ArrayHandleList are subclasses
 // of ArrayHandleBase.
 template <typename ArrayHandleList>
-using AllAreArrayHandles = viskores::ListAll<ArrayHandleList, viskores::cont::internal::ArrayHandleCheck>;
+using AllAreArrayHandles =
+  viskores::ListAll<ArrayHandleList, viskores::cont::internal::ArrayHandleCheck>;
 
 namespace detail
 {
@@ -143,12 +144,12 @@ template <typename DecoratorImplT, template <typename...> class List, typename..
 struct IsDecoratorAllocatableImpl<DecoratorImplT, List<ArrayTs...>>
 {
 private:
-  template <
-    typename T,
-    typename U = decltype(std::declval<T>().AllocateSourceArrays(0,
-                                                                 viskores::CopyFlag::Off,
-                                                                 std::declval<viskores::cont::Token&>(),
-                                                                 std::declval<ArrayTs&>()...))>
+  template <typename T,
+            typename U = decltype(std::declval<T>().AllocateSourceArrays(
+              0,
+              viskores::CopyFlag::Off,
+              std::declval<viskores::cont::Token&>(),
+              std::declval<ArrayTs&>()...))>
   static std::true_type Exists(int);
   template <typename T>
   static std::false_type Exists(...);
@@ -239,9 +240,10 @@ WritePortal(ArrayT&& array, viskores::cont::DeviceAdapterId device, viskores::co
 }
 
 template <typename ArrayT>
-GetReadPortalType<typename std::decay<ArrayT>::type> ReadPortal(const ArrayT& array,
-                                                                viskores::cont::DeviceAdapterId device,
-                                                                viskores::cont::Token& token)
+GetReadPortalType<typename std::decay<ArrayT>::type> ReadPortal(
+  const ArrayT& array,
+  viskores::cont::DeviceAdapterId device,
+  viskores::cont::Token& token)
 {
   return ArrayT::StorageType::CreateReadPortal(array.GetBuffers(), device, token);
 }
@@ -266,8 +268,9 @@ using IsDecoratorAllocatable =
 // std::true_type/std::false_type depending on whether the decorator impl has a
 // CreateInversePortal method AND any of the arrays are writable.
 template <typename DecoratorImplT, typename PortalList>
-using CanWriteToFunctor = viskores::internal::meta::And<IsFunctorInvertible<DecoratorImplT, PortalList>,
-                                                    AnyPortalIsWritable<PortalList>>;
+using CanWriteToFunctor =
+  viskores::internal::meta::And<IsFunctorInvertible<DecoratorImplT, PortalList>,
+                                AnyPortalIsWritable<PortalList>>;
 
 // The FunctorType for the provided implementation and portal types.
 template <typename DecoratorImplT, typename PortalList>
@@ -298,14 +301,14 @@ using GetInverseFunctorType =
 template <typename... ArrayTs>
 using GetReadPortalList =
   viskores::List<decltype((ReadPortal(std::declval<ArrayTs&>(),
-                                  std::declval<viskores::cont::DeviceAdapterId>(),
-                                  std::declval<viskores::cont::Token&>())))...>;
+                                      std::declval<viskores::cont::DeviceAdapterId>(),
+                                      std::declval<viskores::cont::Token&>())))...>;
 
 template <typename... ArrayTs>
 using GetWritePortalList =
   viskores::List<decltype((WritePortal(std::declval<ArrayTs&>(),
-                                   std::declval<viskores::cont::DeviceAdapterId>(),
-                                   std::declval<viskores::cont::Token&>())))...>;
+                                       std::declval<viskores::cont::DeviceAdapterId>(),
+                                       std::declval<viskores::cont::Token&>())))...>;
 
 template <typename DecoratorImplT, std::size_t NumArrays>
 struct DecoratorMetaData
@@ -334,17 +337,17 @@ struct DecoratorStorageTraits
   using ArrayList = viskores::List<ArrayTs...>;
 
   VISKORES_STATIC_ASSERT_MSG(sizeof...(ArrayTs) > 0,
-                         "Must specify at least one source array handle for "
-                         "ArrayHandleDecorator. Consider using "
-                         "ArrayHandleImplicit instead.");
+                             "Must specify at least one source array handle for "
+                             "ArrayHandleDecorator. Consider using "
+                             "ArrayHandleImplicit instead.");
 
   // Need to check this here, since this traits struct is used in the
   // ArrayHandleDecorator superclass definition before any other
   // static_asserts could be used.
   VISKORES_STATIC_ASSERT_MSG(decor::AllAreArrayHandles<ArrayList>::value,
-                         "Trailing template parameters for "
-                         "ArrayHandleDecorator must be a list of ArrayHandle "
-                         "types.");
+                             "Trailing template parameters for "
+                             "ArrayHandleDecorator must be a list of ArrayHandle "
+                             "types.");
 
   using ArrayTupleType = viskores::Tuple<ArrayTs...>;
 
@@ -422,22 +425,24 @@ struct DecoratorStorageTraits
   }
 
   // Static dispatch for calling AllocateSourceArrays on supported implementations:
-  VISKORES_CONT [[noreturn]] static void CallAllocate(std::false_type,
-                                                  viskores::Id,
-                                                  const std::vector<viskores::cont::internal::Buffer>&,
-                                                  viskores::CopyFlag,
-                                                  viskores::cont::Token&,
-                                                  ArrayTs...)
+  VISKORES_CONT [[noreturn]] static void CallAllocate(
+    std::false_type,
+    viskores::Id,
+    const std::vector<viskores::cont::internal::Buffer>&,
+    viskores::CopyFlag,
+    viskores::cont::Token&,
+    ArrayTs...)
   {
     throw viskores::cont::ErrorBadType("Allocate not supported by this ArrayHandleDecorator.");
   }
 
-  VISKORES_CONT static void CallAllocate(std::true_type,
-                                     viskores::Id newSize,
-                                     const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                     viskores::CopyFlag preserve,
-                                     viskores::cont::Token& token,
-                                     ArrayTs... arrays)
+  VISKORES_CONT static void CallAllocate(
+    std::true_type,
+    viskores::Id newSize,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token,
+    ArrayTs... arrays)
   {
     MetaData& metadata = GetMetaData(buffers);
     metadata.Implementation.AllocateSourceArrays(newSize, preserve, token, arrays...);
@@ -507,12 +512,14 @@ public:
   using WritePortalType = typename Traits::WritePortalType;
 
 private:
-  VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlatImpl(viskores::VecTraitsTagSizeStatic)
+  VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlatImpl(
+    viskores::VecTraitsTagSizeStatic)
   {
     return viskores::VecFlat<DecoratorImplT>::NUM_COMPONENTS;
   }
 
-  VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlatImpl(viskores::VecTraitsTagSizeVariable)
+  VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlatImpl(
+    viskores::VecTraitsTagSizeVariable)
   {
     // Currently only support getting the number of components for statically sized types.
     return 0;
@@ -522,7 +529,8 @@ public:
   VISKORES_CONT static viskores::IdComponent GetNumberOfComponentsFlat(
     const std::vector<viskores::cont::internal::Buffer>&)
   {
-    return GetNumberOfComponentsFlatImpl(typename viskores::VecTraits<DecoratorImplT>::IsSizeStatic{});
+    return GetNumberOfComponentsFlatImpl(
+      typename viskores::VecTraits<DecoratorImplT>::IsSizeStatic{});
   }
 
   VISKORES_CONT static viskores::Id GetNumberOfValues(
@@ -531,10 +539,11 @@ public:
     return Traits::GetMetaData(buffers).NumberOfValues;
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     if (numValues != GetNumberOfValues(buffers))
     {
@@ -565,11 +574,13 @@ public:
       buffers, GetNumberOfValues(buffers), IndexList{}, device, token);
   }
 
-  VISKORES_CONT static std::vector<viskores::cont::internal::Buffer>
-  CreateBuffers(const DecoratorImplT& implementation, viskores::Id numValues, const ArrayTs&... arrays)
+  VISKORES_CONT static std::vector<viskores::cont::internal::Buffer> CreateBuffers(
+    const DecoratorImplT& implementation,
+    viskores::Id numValues,
+    const ArrayTs&... arrays)
   {
     return viskores::cont::internal::CreateBuffers(MetaData(implementation, numValues, arrays...),
-                                               arrays...);
+                                                   arrays...);
   }
 
   VISKORES_CONT static std::vector<viskores::cont::internal::Buffer> CreateBuffers()
@@ -672,9 +683,9 @@ private:
 
 public:
   VISKORES_ARRAY_HANDLE_SUBCLASS(ArrayHandleDecorator,
-                             (ArrayHandleDecorator<typename std::decay<DecoratorImplT>::type,
-                                                   typename std::decay<ArrayTs>::type...>),
-                             (typename Traits::Superclass));
+                                 (ArrayHandleDecorator<typename std::decay<DecoratorImplT>::type,
+                                                       typename std::decay<ArrayTs>::type...>),
+                                 (typename Traits::Superclass));
 
   VISKORES_CONT
   ArrayHandleDecorator(viskores::Id numValues,
@@ -690,18 +701,18 @@ public:
 ///
 template <typename DecoratorImplT, typename... ArrayTs>
 VISKORES_CONT ArrayHandleDecorator<typename std::decay<DecoratorImplT>::type,
-                               typename std::decay<ArrayTs>::type...>
+                                   typename std::decay<ArrayTs>::type...>
 make_ArrayHandleDecorator(viskores::Id numValues, DecoratorImplT&& f, ArrayTs&&... arrays)
 {
   using AHList = viskores::List<typename std::decay<ArrayTs>::type...>;
   VISKORES_STATIC_ASSERT_MSG(sizeof...(ArrayTs) > 0,
-                         "Must specify at least one source array handle for "
-                         "ArrayHandleDecorator. Consider using "
-                         "ArrayHandleImplicit instead.");
+                             "Must specify at least one source array handle for "
+                             "ArrayHandleDecorator. Consider using "
+                             "ArrayHandleImplicit instead.");
   VISKORES_STATIC_ASSERT_MSG(internal::decor::AllAreArrayHandles<AHList>::value,
-                         "Trailing template parameters for "
-                         "ArrayHandleDecorator must be a list of ArrayHandle "
-                         "types.");
+                             "Trailing template parameters for "
+                             "ArrayHandleDecorator must be a list of ArrayHandle "
+                             "types.");
 
   return { numValues, std::forward<DecoratorImplT>(f), std::forward<ArrayTs>(arrays)... };
 }

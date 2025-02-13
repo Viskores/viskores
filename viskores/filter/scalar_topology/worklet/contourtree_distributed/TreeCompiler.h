@@ -126,10 +126,11 @@ public:
   indexType lowEnd, highEnd;
 
   // constructor
-  SupernodeOnSuperarc(indexType GlobalID = viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                      dataType DataValue = viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                      indexType LowEnd = viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
-                      indexType HighEnd = viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT)
+  SupernodeOnSuperarc(
+    indexType GlobalID = viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+    dataType DataValue = viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+    indexType LowEnd = viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+    indexType HighEnd = viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT)
     : globalID(GlobalID)
     , dataValue(DataValue)
     , lowEnd(LowEnd)
@@ -239,19 +240,22 @@ inline void TreeCompiler::AddHierarchicalTree(const viskores::cont::DataSet& add
 
   auto superarcs_array = addedTree.GetField("Superarcs").GetData();
   std::vector<viskores::Id> added_tree_superarcs(superarcs_array.GetNumberOfValues());
-  auto superarcs_handle = viskores::cont::make_ArrayHandle(added_tree_superarcs, viskores::CopyFlag::Off);
+  auto superarcs_handle =
+    viskores::cont::make_ArrayHandle(added_tree_superarcs, viskores::CopyFlag::Off);
   viskores::cont::ArrayCopy(superarcs_array, superarcs_handle);
   superarcs_handle.SyncControlArray(); //Forces values to get updated if copy happened on GPU
 
   auto supernodes_array = addedTree.GetField("Supernodes").GetData();
   std::vector<viskores::Id> added_tree_supernodes(supernodes_array.GetNumberOfValues());
-  auto supernodes_handle = viskores::cont::make_ArrayHandle(added_tree_supernodes, viskores::CopyFlag::Off);
+  auto supernodes_handle =
+    viskores::cont::make_ArrayHandle(added_tree_supernodes, viskores::CopyFlag::Off);
   viskores::cont::ArrayCopy(supernodes_array, supernodes_handle);
   supernodes_handle.SyncControlArray(); //Forces values to get updated if copy happened on GPU
 
   auto superparents_array = addedTree.GetField("Superparents").GetData();
   std::vector<viskores::Id> superparents(superparents_array.GetNumberOfValues());
-  auto superparents_handle = viskores::cont::make_ArrayHandle(superparents, viskores::CopyFlag::Off);
+  auto superparents_handle =
+    viskores::cont::make_ArrayHandle(superparents, viskores::CopyFlag::Off);
   viskores::cont::ArrayCopy(superparents_array, superparents_handle);
   superparents_handle.SyncControlArray(); //Forces values to get updated if copy happened on GPU
 
@@ -285,7 +289,8 @@ inline void TreeCompiler::AddHierarchicalTree(const viskores::cont::DataSet& add
         indexType globalFrom = regularNodeGlobalIds[regularFrom];
         indexType superParentTo = added_tree_superarcs[superparent];
         indexType regularTo =
-          added_tree_supernodes[viskores::worklet::contourtree_augmented::MaskedIndex(superParentTo)];
+          added_tree_supernodes[viskores::worklet::contourtree_augmented::MaskedIndex(
+            superParentTo)];
         indexType globalTo = regularNodeGlobalIds[regularTo];
 
         // test the superTo to see whether we ascend or descend
@@ -425,9 +430,9 @@ inline void TreeCompiler::ReadBinary(FILE* inFile)
   if (nSupernodesRead != nSupernodes)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-               "Error: Expected to read " << nSupernodes << " supernodes but could read only "
-                                          << nSupernodesRead << ". Output will be incorrect!"
-                                          << std::endl);
+                   "Error: Expected to read " << nSupernodes << " supernodes but could read only "
+                                              << nSupernodesRead << ". Output will be incorrect!"
+                                              << std::endl);
   }
 } // ReadBinary()
 

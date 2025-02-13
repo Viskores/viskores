@@ -28,7 +28,8 @@ protected:
 public:
   void ExtractCells(const viskores::cont::UnknownCellSet& cells);
 
-  void ExtractCells(const viskores::cont::UnknownCellSet& cells, const viskores::cont::Field& ghostField);
+  void ExtractCells(const viskores::cont::UnknownCellSet& cells,
+                    const viskores::cont::Field& ghostField);
 
   viskores::cont::ArrayHandle<viskores::Id4> GetTriangles();
   viskores::Id GetNumberOfTriangles() const;

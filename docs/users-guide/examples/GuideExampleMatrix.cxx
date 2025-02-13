@@ -46,7 +46,7 @@ void BuildMatrix()
   viskores::Vec3f_32 multVec = viskores::MatrixMultiply(termVec, matrix);
   //  std::cout << multVec << std::endl;
   VISKORES_TEST_ASSERT(test_equal(multVec, viskores::make_Vec(1.0, 2.1, 3.2)),
-                   "Unexpected product.");
+                       "Unexpected product.");
 }
 
 void Run()

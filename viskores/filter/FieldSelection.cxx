@@ -157,8 +157,9 @@ void FieldSelection::AddField(const std::string& fieldName,
   this->Internals->Fields[FieldDescription(fieldName, association)] = mode;
 }
 
-FieldSelection::Mode FieldSelection::GetFieldMode(const std::string& fieldName,
-                                                  viskores::cont::Field::Association association) const
+FieldSelection::Mode FieldSelection::GetFieldMode(
+  const std::string& fieldName,
+  viskores::cont::Field::Association association) const
 {
   auto iter = this->Internals->Fields.find(FieldDescription(fieldName, association));
   if (iter != this->Internals->Fields.end())

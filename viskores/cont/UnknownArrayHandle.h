@@ -87,7 +87,8 @@ inline auto UnknownAHNumberOfComponentsImpl(void* mem)
 
 // Uses static vec size.
 template <typename T, typename S>
-inline viskores::IdComponent UnknownAHNumberOfComponentsImpl(void*, viskores::VecTraitsTagSizeStatic)
+inline viskores::IdComponent UnknownAHNumberOfComponentsImpl(void*,
+                                                             viskores::VecTraitsTagSizeStatic)
 {
   return viskores::VecTraits<T>::NUM_COMPONENTS;
 }
@@ -95,7 +96,8 @@ inline viskores::IdComponent UnknownAHNumberOfComponentsImpl(void*, viskores::Ve
 // The size of the vecs are not defined at compile time. Assume that the components are not
 // nested and use the flat components query.
 template <typename T, typename S>
-inline viskores::IdComponent UnknownAHNumberOfComponentsImpl(void* mem, viskores::VecTraitsTagSizeVariable)
+inline viskores::IdComponent UnknownAHNumberOfComponentsImpl(void* mem,
+                                                             viskores::VecTraitsTagSizeVariable)
 {
   return UnknownAHNumberOfComponentsFlat<T, S>(mem);
 }
@@ -103,7 +105,8 @@ inline viskores::IdComponent UnknownAHNumberOfComponentsImpl(void* mem, viskores
 template <typename T, typename S>
 viskores::IdComponent UnknownAHNumberOfComponents(void* mem)
 {
-  return UnknownAHNumberOfComponentsImpl<T, S>(mem, typename viskores::VecTraits<T>::IsSizeStatic{});
+  return UnknownAHNumberOfComponentsImpl<T, S>(mem,
+                                               typename viskores::VecTraits<T>::IsSizeStatic{});
 }
 
 template <typename T, typename S>
@@ -136,12 +139,15 @@ void UnknownAHDeepCopy(const void* sourceMem, void* destinationMem)
 }
 
 template <typename T, typename S>
-std::vector<viskores::cont::internal::Buffer>
-UnknownAHExtractComponent(void* mem, viskores::IdComponent componentIndex, viskores::CopyFlag allowCopy)
+std::vector<viskores::cont::internal::Buffer> UnknownAHExtractComponent(
+  void* mem,
+  viskores::IdComponent componentIndex,
+  viskores::CopyFlag allowCopy)
 {
   using AH = viskores::cont::ArrayHandle<T, S>;
   AH* arrayHandle = reinterpret_cast<AH*>(mem);
-  auto componentArray = viskores::cont::ArrayExtractComponent(*arrayHandle, componentIndex, allowCopy);
+  auto componentArray =
+    viskores::cont::ArrayExtractComponent(*arrayHandle, componentIndex, allowCopy);
   return componentArray.GetBuffers();
 }
 
@@ -174,7 +180,8 @@ struct VISKORES_CONT_EXPORT UnknownAHContainer;
 struct MakeUnknownAHContainerFunctor
 {
   template <typename T, typename S>
-  std::shared_ptr<UnknownAHContainer> operator()(const viskores::cont::ArrayHandle<T, S>& array) const;
+  std::shared_ptr<UnknownAHContainer> operator()(
+    const viskores::cont::ArrayHandle<T, S>& array) const;
 };
 
 struct VISKORES_CONT_EXPORT UnknownAHComponentInfo
@@ -252,8 +259,8 @@ struct VISKORES_CONT_EXPORT UnknownAHContainer
   DeepCopyType* DeepCopy;
 
   using ExtractComponentType = std::vector<viskores::cont::internal::Buffer>(void*,
-                                                                         viskores::IdComponent,
-                                                                         viskores::CopyFlag);
+                                                                             viskores::IdComponent,
+                                                                             viskores::CopyFlag);
   ExtractComponentType* ExtractComponent;
 
   using ReleaseResourcesType = void(void*);
@@ -277,10 +284,11 @@ struct VISKORES_CONT_EXPORT UnknownAHContainer
 
   template <typename TargetT, typename SourceT, typename SourceS>
   static std::shared_ptr<UnknownAHContainer> Make(
-    const viskores::cont::ArrayHandle<TargetT, viskores::cont::StorageTagCast<SourceT, SourceS>>& array)
+    const viskores::cont::ArrayHandle<TargetT, viskores::cont::StorageTagCast<SourceT, SourceS>>&
+      array)
   {
-    viskores::cont::ArrayHandleCast<TargetT, viskores::cont::ArrayHandle<SourceT, SourceS>> castArray =
-      array;
+    viskores::cont::ArrayHandleCast<TargetT, viskores::cont::ArrayHandle<SourceT, SourceS>>
+      castArray = array;
     return Make(castArray.GetSourceArray());
   }
 
@@ -288,8 +296,9 @@ struct VISKORES_CONT_EXPORT UnknownAHContainer
   static std::shared_ptr<UnknownAHContainer> Make(
     const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagMultiplexer<Ss...>>& array)
   {
-    auto&& variant = viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandle<T, Ss>...>(array)
-                       .GetArrayHandleVariant();
+    auto&& variant =
+      viskores::cont::ArrayHandleMultiplexer<viskores::cont::ArrayHandle<T, Ss>...>(array)
+        .GetArrayHandleVariant();
     if (variant.IsValid())
     {
       return variant.CastAndCall(MakeUnknownAHContainerFunctor{});
@@ -308,7 +317,8 @@ private:
 };
 
 template <typename T, typename S>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(void*, viskores::VecTraitsTagSizeStatic)
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(void*,
+                                                              viskores::VecTraitsTagSizeStatic)
 {
   return UnknownAHContainer::Make(viskores::cont::ArrayHandleBasic<T>{});
 }
@@ -321,10 +331,11 @@ std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(void* mem,
   {
     // Array can have an inconsistent number of components. Cannot be represented by basic array.
     throw viskores::cont::ErrorBadType("Cannot create a basic array from array with ValueType of " +
-                                   viskores::cont::TypeToString<T>());
+                                       viskores::cont::TypeToString<T>());
   }
   using ComponentType = typename viskores::VecTraits<T>::BaseComponentType;
-  return UnknownAHContainer::Make(viskores::cont::ArrayHandleRuntimeVec<ComponentType>(numComponents));
+  return UnknownAHContainer::Make(
+    viskores::cont::ArrayHandleRuntimeVec<ComponentType>(numComponents));
 }
 template <typename T, typename S>
 std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceBasic(void* mem)
@@ -336,19 +347,21 @@ template <typename T, typename S>
 std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(void*,
                                                                    viskores::VecTraitsTagSizeStatic)
 {
-  using FloatT = typename viskores::VecTraits<T>::template ReplaceBaseComponentType<viskores::FloatDefault>;
+  using FloatT =
+    typename viskores::VecTraits<T>::template ReplaceBaseComponentType<viskores::FloatDefault>;
   return UnknownAHContainer::Make(viskores::cont::ArrayHandleBasic<FloatT>{});
 }
 template <typename T, typename S>
-std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(void* mem,
-                                                                   viskores::VecTraitsTagSizeVariable)
+std::shared_ptr<UnknownAHContainer> UnknownAHNewInstanceFloatBasic(
+  void* mem,
+  viskores::VecTraitsTagSizeVariable)
 {
   viskores::IdComponent numComponents = UnknownAHNumberOfComponentsFlat<T, S>(mem);
   if (numComponents < 1)
   {
     // Array can have an inconsistent number of components. Cannot be represented by basic array.
     throw viskores::cont::ErrorBadType("Cannot create a basic array from array with ValueType of " +
-                                   viskores::cont::TypeToString<T>());
+                                       viskores::cont::TypeToString<T>());
   }
   return UnknownAHContainer::Make(
     viskores::cont::ArrayHandleRuntimeVec<viskores::FloatDefault>(numComponents));
@@ -571,9 +584,9 @@ public:
   ///
   // Defined in UncertainArrayHandle.h
   template <typename NewValueTypeList, typename NewStorageTypeList>
-  VISKORES_CONT viskores::cont::UncertainArrayHandle<NewValueTypeList, NewStorageTypeList> ResetTypes(
-    NewValueTypeList = NewValueTypeList{},
-    NewStorageTypeList = NewStorageTypeList{}) const;
+  VISKORES_CONT viskores::cont::UncertainArrayHandle<NewValueTypeList, NewStorageTypeList>
+    ResetTypes(NewValueTypeList = NewValueTypeList{},
+               NewStorageTypeList = NewStorageTypeList{}) const;
 
   /// @brief Returns the number of values in the array.
   ///
@@ -610,10 +623,11 @@ public:
   ///
   /// The allocation works the same as the `Allocate()` method of `viskores::cont::ArrayHandle`.
   VISKORES_CONT void Allocate(viskores::Id numValues,
-                          viskores::CopyFlag preserve,
-                          viskores::cont::Token& token) const;
+                              viskores::CopyFlag preserve,
+                              viskores::cont::Token& token) const;
   /// @copydoc Allocate
-  VISKORES_CONT void Allocate(viskores::Id numValues, viskores::CopyFlag preserve = viskores::CopyFlag::Off) const;
+  VISKORES_CONT void Allocate(viskores::Id numValues,
+                              viskores::CopyFlag preserve = viskores::CopyFlag::Off) const;
 
   /// @brief Determine if the contained array can be passed to the given array type.
   ///
@@ -668,7 +682,8 @@ public:
   /// @copydoc AsArrayHandle
   template <typename TargetT, typename SourceT, typename SourceS>
   VISKORES_CONT void AsArrayHandle(
-    viskores::cont::ArrayHandle<TargetT, viskores::cont::StorageTagCast<SourceT, SourceS>>& array) const
+    viskores::cont::ArrayHandle<TargetT, viskores::cont::StorageTagCast<SourceT, SourceS>>& array)
+    const
   {
     using ContainedArrayType = viskores::cont::ArrayHandle<SourceT, SourceS>;
     array = viskores::cont::ArrayHandleCast<TargetT, ContainedArrayType>(
@@ -680,7 +695,8 @@ public:
     viskores::cont::ArrayHandle<T, viskores::cont::StorageTagRuntimeVec>& array) const
   {
     using BaseT = typename T::ComponentType;
-    if (this->IsStorageType<viskores::cont::StorageTagBasic>() && this->IsBaseComponentType<BaseT>())
+    if (this->IsStorageType<viskores::cont::StorageTagBasic>() &&
+        this->IsBaseComponentType<BaseT>())
     {
       // Reinterpret the basic array as components, and then wrap that in a runtime vec
       // with the correct amount of components.
@@ -793,7 +809,8 @@ public:
     {
       VISKORES_LOG_CAST_FAIL(*this, ComponentArrayType);
       throwFailedDynamicCast("UnknownArrayHandle with " + this->GetArrayTypeName(),
-                             "component array of " + viskores::cont::TypeToString<BaseComponentType>());
+                             "component array of " +
+                               viskores::cont::TypeToString<BaseComponentType>());
     }
 
     auto buffers = this->Container->ExtractComponent(
@@ -844,8 +861,8 @@ public:
   /// arithmetic for finding the index of each component.
   ///
   template <typename BaseComponentType>
-  VISKORES_CONT viskores::cont::ArrayHandleRecombineVec<BaseComponentType> ExtractArrayFromComponents(
-    viskores::CopyFlag allowCopy = viskores::CopyFlag::On) const
+  VISKORES_CONT viskores::cont::ArrayHandleRecombineVec<BaseComponentType>
+  ExtractArrayFromComponents(viskores::CopyFlag allowCopy = viskores::CopyFlag::On) const
   {
     viskores::cont::ArrayHandleRecombineVec<BaseComponentType> result;
     viskores::IdComponent numComponents = this->GetNumberOfComponentsFlat();
@@ -962,7 +979,9 @@ template <typename T>
 struct UnknownArrayHandleCanConvertTry
 {
   template <typename S>
-  VISKORES_CONT void operator()(S, const viskores::cont::UnknownArrayHandle& array, bool& canConvert) const
+  VISKORES_CONT void operator()(S,
+                                const viskores::cont::UnknownArrayHandle& array,
+                                bool& canConvert) const
   {
     canConvert |= UnknownArrayHandleCanConvert<T, S>{}(array);
   }
@@ -974,7 +993,8 @@ struct UnknownArrayHandleCanConvert<T, viskores::cont::StorageTagMultiplexer<Ss.
   VISKORES_CONT bool operator()(const viskores::cont::UnknownArrayHandle& array) const
   {
     bool canConvert = false;
-    viskores::ListForEach(UnknownArrayHandleCanConvertTry<T>{}, viskores::List<Ss...>{}, array, canConvert);
+    viskores::ListForEach(
+      UnknownArrayHandleCanConvertTry<T>{}, viskores::List<Ss...>{}, array, canConvert);
     return canConvert;
   }
 };
@@ -1006,13 +1026,13 @@ namespace detail
 {
 
 template <typename T,
-          viskores::IdComponent =
-            viskores::VecTraits<typename viskores::internal::UnrollVec<T>::ComponentType>::NUM_COMPONENTS>
+          viskores::IdComponent = viskores::VecTraits<
+            typename viskores::internal::UnrollVec<T>::ComponentType>::NUM_COMPONENTS>
 struct UnknownArrayHandleRuntimeVecAsBasic
 {
   VISKORES_CONT bool operator()(const viskores::cont::UnknownArrayHandle*,
-                            const detail::UnknownAHContainer*,
-                            viskores::cont::ArrayHandle<T>&) const
+                                const detail::UnknownAHContainer*,
+                                viskores::cont::ArrayHandle<T>&) const
   {
     // This version only gets called if T contains a `Vec`-like object that is not a strict `Vec`.
     // This is rare but could happen. In this case, the type cannot be stored in an
@@ -1025,8 +1045,8 @@ template <typename T>
 struct UnknownArrayHandleRuntimeVecAsBasic<T, 1>
 {
   VISKORES_CONT bool operator()(const viskores::cont::UnknownArrayHandle* self,
-                            const detail::UnknownAHContainer* container,
-                            viskores::cont::ArrayHandle<T>& array) const
+                                const detail::UnknownAHContainer* container,
+                                viskores::cont::ArrayHandle<T>& array) const
   {
     using UnrolledVec = viskores::internal::UnrollVec<T>;
     using ComponentType = typename UnrolledVec::ComponentType;
@@ -1037,7 +1057,8 @@ struct UnknownArrayHandleRuntimeVecAsBasic<T, 1>
       // Pull out the components array out of the buffers. The array might not match exactly
       // the array put in, but the buffer should still be consistent with the array (which works
       // because the size of a basic array is based on the number of bytes in the buffer).
-      using RuntimeVecType = typename viskores::cont::ArrayHandleRuntimeVec<ComponentType>::ValueType;
+      using RuntimeVecType =
+        typename viskores::cont::ArrayHandleRuntimeVec<ComponentType>::ValueType;
       using StorageRuntimeVec =
         viskores::cont::internal::Storage<RuntimeVecType, viskores::cont::StorageTagRuntimeVec>;
       StorageRuntimeVec::AsArrayHandleBasic(container->Buffers(container->ArrayHandlePointer),
@@ -1054,7 +1075,8 @@ struct UnknownArrayHandleRuntimeVecAsBasic<T, 1>
 } // namespace detail
 
 template <typename T>
-VISKORES_CONT inline void UnknownArrayHandle::AsArrayHandle(viskores::cont::ArrayHandle<T>& array) const
+VISKORES_CONT inline void UnknownArrayHandle::AsArrayHandle(
+  viskores::cont::ArrayHandle<T>& array) const
 {
   if (!detail::UnknownArrayHandleRuntimeVecAsBasic<T>{}(this, this->Container.get(), array))
   {
@@ -1100,13 +1122,17 @@ void UnknownArrayHandle::AsArrayHandle(
   viskores::cont::ArrayHandle<T, viskores::cont::StorageTagMultiplexer<Ss...>>& array) const
 {
   bool converted = false;
-  viskores::ListForEach(
-    detail::UnknownArrayHandleMultiplexerCastTry{}, viskores::List<Ss...>{}, *this, array, converted);
+  viskores::ListForEach(detail::UnknownArrayHandleMultiplexerCastTry{},
+                        viskores::List<Ss...>{},
+                        *this,
+                        array,
+                        converted);
 
   if (!converted)
   {
     VISKORES_LOG_CAST_FAIL(*this, decltype(array));
-    throwFailedDynamicCast(viskores::cont::TypeToString(*this), viskores::cont::TypeToString(array));
+    throwFailedDynamicCast(viskores::cont::TypeToString(*this),
+                           viskores::cont::TypeToString(array));
   }
 }
 
@@ -1156,7 +1182,8 @@ struct IsUndefinedArrayType
 {
 };
 template <typename T, typename S>
-struct IsUndefinedArrayType<viskores::List<T, S>> : viskores::cont::internal::IsInvalidArrayHandle<T, S>
+struct IsUndefinedArrayType<viskores::List<T, S>>
+  : viskores::cont::internal::IsInvalidArrayHandle<T, S>
 {
 };
 
@@ -1164,10 +1191,11 @@ struct IsUndefinedArrayType<viskores::List<T, S>> : viskores::cont::internal::Is
 
 template <typename ValueTypeList, typename StorageTypeList>
 using ListAllArrayTypes =
-  viskores::ListRemoveIf<viskores::ListCross<ValueTypeList, StorageTypeList>, detail::IsUndefinedArrayType>;
+  viskores::ListRemoveIf<viskores::ListCross<ValueTypeList, StorageTypeList>,
+                         detail::IsUndefinedArrayType>;
 
 VISKORES_CONT_EXPORT void ThrowCastAndCallException(const viskores::cont::UnknownArrayHandle&,
-                                                const std::type_info&);
+                                                    const std::type_info&);
 
 } // namespace internal
 
@@ -1178,11 +1206,11 @@ inline void UnknownArrayHandle::CastAndCallForTypes(Functor&& f, Args&&... args)
 
   bool called = false;
   viskores::ListForEach(detail::UnknownArrayHandleTry{},
-                    crossProduct{},
-                    std::forward<Functor>(f),
-                    called,
-                    *this,
-                    std::forward<Args>(args)...);
+                        crossProduct{},
+                        std::forward<Functor>(f),
+                        called,
+                        *this,
+                        std::forward<Args>(args)...);
   if (!called)
   {
     // throw an exception
@@ -1193,31 +1221,31 @@ inline void UnknownArrayHandle::CastAndCallForTypes(Functor&& f, Args&&... args)
 
 template <typename TypeList, typename StorageTagList, typename Functor, typename... Args>
 VISKORES_CONT void UnknownArrayHandle::CastAndCallForTypesWithFloatFallback(Functor&& functor,
-                                                                        Args&&... args) const
+                                                                            Args&&... args) const
 {
   using crossProduct = internal::ListAllArrayTypes<TypeList, StorageTagList>;
 
   bool called = false;
   viskores::ListForEach(detail::UnknownArrayHandleTry{},
-                    crossProduct{},
-                    std::forward<Functor>(functor),
-                    called,
-                    *this,
-                    std::forward<Args>(args)...);
+                        crossProduct{},
+                        std::forward<Functor>(functor),
+                        called,
+                        *this,
+                        std::forward<Args>(args)...);
   if (!called)
   {
     // Copy to a float array and try again
     VISKORES_LOG_F(viskores::cont::LogLevel::Info,
-               "Cast and call from %s failed. Copying to basic float array.",
-               this->GetArrayTypeName().c_str());
+                   "Cast and call from %s failed. Copying to basic float array.",
+                   this->GetArrayTypeName().c_str());
     viskores::cont::UnknownArrayHandle floatArray = this->NewInstanceFloatBasic();
     floatArray.DeepCopyFrom(*this);
     viskores::ListForEach(detail::UnknownArrayHandleTry{},
-                      crossProduct{},
-                      std::forward<Functor>(functor),
-                      called,
-                      floatArray,
-                      std::forward<Args>(args)...);
+                          crossProduct{},
+                          std::forward<Functor>(functor),
+                          called,
+                          floatArray,
+                          std::forward<Args>(args)...);
   }
   if (!called)
   {
@@ -1286,11 +1314,11 @@ inline void UnknownArrayHandle::CastAndCallWithExtractedArray(Functor&& functor,
 {
   bool called = false;
   viskores::ListForEach(detail::UnknownArrayHandleTryExtract{},
-                    viskores::TypeListScalarAll{},
-                    std::forward<Functor>(functor),
-                    called,
-                    *this,
-                    std::forward<Args>(args)...);
+                        viskores::TypeListScalarAll{},
+                        std::forward<Functor>(functor),
+                        called,
+                        *this,
+                        std::forward<Args>(args)...);
   if (!called)
   {
     // Throw an exception.

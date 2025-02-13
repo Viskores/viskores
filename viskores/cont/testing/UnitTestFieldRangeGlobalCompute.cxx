@@ -32,7 +32,10 @@ static unsigned int uid = 1;
   }
 
 template <typename T>
-viskores::cont::ArrayHandle<T> CreateArray(T min, T max, viskores::Id numVals, viskores::TypeTraitsScalarTag)
+viskores::cont::ArrayHandle<T> CreateArray(T min,
+                                           T max,
+                                           viskores::Id numVals,
+                                           viskores::TypeTraitsScalarTag)
 {
   std::mt19937 gen(uid++);
   std::uniform_real_distribution<double> dis(static_cast<double>(min), static_cast<double>(max));
@@ -49,9 +52,9 @@ viskores::cont::ArrayHandle<T> CreateArray(T min, T max, viskores::Id numVals, v
 
 template <typename T>
 viskores::cont::ArrayHandle<T> CreateArray(const T& min,
-                                       const T& max,
-                                       viskores::Id numVals,
-                                       viskores::TypeTraitsVectorTag)
+                                           const T& max,
+                                           viskores::Id numVals,
+                                           viskores::TypeTraitsVectorTag)
 {
   constexpr int size = T::NUM_COMPONENTS;
   std::mt19937 gen(uid++);
@@ -66,7 +69,8 @@ viskores::cont::ArrayHandle<T> CreateArray(const T& min,
   auto portal = handle.WritePortal();
   std::generate(viskores::cont::ArrayPortalToIteratorBegin(portal),
                 viskores::cont::ArrayPortalToIteratorEnd(portal),
-                [&]() {
+                [&]()
+                {
                   T val;
                   for (int cc = 0; cc < size; ++cc)
                   {
@@ -92,8 +96,8 @@ void Validate(const viskores::cont::ArrayHandle<viskores::Range>& ranges,
   PRINT_INFO(<< "  expecting [" << min << ", " << max << "], got [" << range.Min << ", "
              << range.Max << "]");
   VISKORES_TEST_ASSERT(range.IsNonEmpty() && range.Min >= static_cast<ValueType>(min) &&
-                     range.Max <= static_cast<ValueType>(max),
-                   "Got wrong range.");
+                         range.Max <= static_cast<ValueType>(max),
+                       "Got wrong range.");
 }
 
 template <typename T, int size>
@@ -111,8 +115,8 @@ void Validate(const viskores::cont::ArrayHandle<viskores::Range>& ranges,
     PRINT_INFO(<< "  [" << cc << "] expecting [" << min[cc] << ", " << max[cc] << "], got ["
                << range.Min << ", " << range.Max << "]");
     VISKORES_TEST_ASSERT(range.IsNonEmpty() && range.Min >= static_cast<T>(min[cc]) &&
-                       range.Max <= static_cast<T>(max[cc]),
-                     "Got wrong range.");
+                           range.Max <= static_cast<T>(max[cc]),
+                         "Got wrong range.");
   }
 }
 
@@ -150,7 +154,8 @@ void TryRangeGlobalComputeDS(const ValueType& min, const ValueType& max)
   viskores::cont::DataSet dataset;
   dataset.AddPointField(
     "pointvar",
-    CreateArray(lmin, lmax, ARRAY_SIZE, typename viskores::TypeTraits<ValueType>::DimensionalityTag()));
+    CreateArray(
+      lmin, lmax, ARRAY_SIZE, typename viskores::TypeTraits<ValueType>::DimensionalityTag()));
 
   viskores::cont::ArrayHandle<viskores::Range> ranges =
     viskores::cont::FieldRangeGlobalCompute(dataset, "pointvar");
@@ -161,7 +166,8 @@ template <typename ValueType>
 void TryRangeGlobalComputePDS(const ValueType& min, const ValueType& max)
 {
   viskoresdiy::mpi::communicator comm = viskores::cont::EnvironmentTracker::GetCommunicator();
-  PRINT_INFO("Trying type (PartitionedDataSet): " << viskores::testing::TypeName<ValueType>::Name());
+  PRINT_INFO(
+    "Trying type (PartitionedDataSet): " << viskores::testing::TypeName<ValueType>::Name());
 
   viskores::cont::PartitionedDataSet mb;
   for (int cc = 0; cc < 5; cc++)
@@ -170,11 +176,13 @@ void TryRangeGlobalComputePDS(const ValueType& min, const ValueType& max)
     viskores::cont::DataSet dataset;
     dataset.AddPointField(
       "pointvar",
-      CreateArray(min, max, ARRAY_SIZE, typename viskores::TypeTraits<ValueType>::DimensionalityTag()));
+      CreateArray(
+        min, max, ARRAY_SIZE, typename viskores::TypeTraits<ValueType>::DimensionalityTag()));
     mb.AppendPartition(dataset);
   }
 
-  viskores::cont::ArrayHandle<viskores::Range> ranges = viskores::cont::FieldRangeGlobalCompute(mb, "pointvar");
+  viskores::cont::ArrayHandle<viskores::Range> ranges =
+    viskores::cont::FieldRangeGlobalCompute(mb, "pointvar");
   Validate(ranges, min, max);
 }
 
@@ -189,11 +197,11 @@ static void TestFieldRangeGlobalCompute()
   TryRangeGlobalComputeDS<viskores::Float64>(0, 1000);
   TryRangeGlobalComputeDS<viskores::Int32>(-1024, 1024);
   TryRangeGlobalComputeDS<viskores::Vec3f_32>(viskores::make_Vec(1024, 0, -1024),
-                                          viskores::make_Vec(2048, 2048, 2048));
+                                              viskores::make_Vec(2048, 2048, 2048));
   TryRangeGlobalComputePDS<viskores::Float64>(0, 1000);
   TryRangeGlobalComputePDS<viskores::Int32>(-1024, 1024);
   TryRangeGlobalComputePDS<viskores::Vec3f_32>(viskores::make_Vec(1024, 0, -1024),
-                                           viskores::make_Vec(2048, 2048, 2048));
+                                               viskores::make_Vec(2048, 2048, 2048));
 };
 }
 

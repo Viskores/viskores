@@ -47,7 +47,7 @@ struct AtomicTests
     }
 
     VISKORES_CONT T* PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                     viskores::cont::Token& token) const
+                                         viskores::cont::Token& token) const
     {
       return reinterpret_cast<T*>(this->Array.GetBuffers()[0].WritePointerDevice(device, token));
     }
@@ -142,7 +142,8 @@ struct AtomicTests
     for (viskores::Id arrayIndex = 0; arrayIndex < ARRAY_SIZE; ++arrayIndex)
     {
       T foundValue = portal.Get(arrayIndex);
-      VISKORES_TEST_ASSERT(test_equal(foundValue, expectedValue), foundValue, " != ", expectedValue);
+      VISKORES_TEST_ASSERT(
+        test_equal(foundValue, expectedValue), foundValue, " != ", expectedValue);
     }
   }
 
@@ -163,7 +164,8 @@ struct AtomicTests
   {
     std::cout << "AtomicAnd" << std::endl;
     viskores::cont::ArrayHandleBasic<T> array;
-    viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant<T>(T(-1), ARRAY_SIZE), array);
+    viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant<T>(T(-1), ARRAY_SIZE),
+                              array);
     array.Allocate(ARRAY_SIZE);
 
     this->Invoke(
@@ -318,7 +320,8 @@ struct AtomicTests
     for (viskores::Id arrayIndex = 0; arrayIndex < ARRAY_SIZE; ++arrayIndex)
     {
       T foundValue = portal.Get(arrayIndex);
-      VISKORES_TEST_ASSERT(test_equal(foundValue, expectedValue), foundValue, " != ", expectedValue);
+      VISKORES_TEST_ASSERT(
+        test_equal(foundValue, expectedValue), foundValue, " != ", expectedValue);
     }
   }
 
@@ -346,7 +349,8 @@ struct TestFunctor
 
 void Run()
 {
-  VISKORES_TEST_ASSERT(viskores::ListHas<viskores::AtomicTypesSupported, viskores::AtomicTypePreferred>::value);
+  VISKORES_TEST_ASSERT(
+    viskores::ListHas<viskores::AtomicTypesSupported, viskores::AtomicTypePreferred>::value);
 
   viskores::testing::Testing::TryTypes(TestFunctor{}, viskores::AtomicTypesSupported{});
 }

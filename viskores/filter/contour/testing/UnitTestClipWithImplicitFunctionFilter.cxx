@@ -79,24 +79,25 @@ void TestClipStructuredSphere(viskores::Float64 offset)
   viskores::cont::DataSet outputData = clip.Execute(ds);
 
   VISKORES_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
+                       "Wrong number of coordinate systems in the output dataset");
   VISKORES_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
-                   "Wrong number of fields in the output dataset");
+                       "Wrong number of fields in the output dataset");
   VISKORES_TEST_ASSERT(outputData.GetNumberOfCells() == 8,
-                   "Wrong number of cells in the output dataset");
+                       "Wrong number of cells in the output dataset");
 
   viskores::cont::UnknownArrayHandle temp = outputData.GetField("scalars").GetData();
   viskores::cont::ArrayHandle<viskores::Float32> resultArrayHandle;
   temp.AsArrayHandle(resultArrayHandle);
 
   VISKORES_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 12,
-                   "Wrong number of points in the output dataset");
+                       "Wrong number of points in the output dataset");
 
   viskores::Float32 expected[12] = { 1, 1, 1, 1, 1, 1, 1, 1, 0.25, 0.25, 0.25, 0.25 };
   for (int i = 0; i < 12; ++i)
   {
-    VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for ClipWithImplicitFunction fliter on sturctured quads data");
+    VISKORES_TEST_ASSERT(
+      test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
+      "Wrong result for ClipWithImplicitFunction fliter on sturctured quads data");
   }
 }
 
@@ -119,22 +120,23 @@ void TestClipStructuredInvertedSphere()
   auto outputData = clip.Execute(ds);
 
   VISKORES_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
-                   "Wrong number of fields in the output dataset");
+                       "Wrong number of fields in the output dataset");
   VISKORES_TEST_ASSERT(outputData.GetNumberOfCells() == 4,
-                   "Wrong number of cells in the output dataset");
+                       "Wrong number of cells in the output dataset");
 
   viskores::cont::UnknownArrayHandle temp = outputData.GetField("scalars").GetData();
   viskores::cont::ArrayHandle<viskores::Float32> resultArrayHandle;
   temp.AsArrayHandle(resultArrayHandle);
 
   VISKORES_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 5,
-                   "Wrong number of points in the output dataset");
+                       "Wrong number of points in the output dataset");
 
   viskores::Float32 expected[5] = { 0, 0.25, 0.25, 0.25, 0.25 };
   for (int i = 0; i < 5; ++i)
   {
-    VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for ClipWithImplicitFunction fliter on sturctured quads data");
+    VISKORES_TEST_ASSERT(
+      test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
+      "Wrong result for ClipWithImplicitFunction fliter on sturctured quads data");
   }
 }
 
@@ -157,11 +159,11 @@ void TestClipStructuredInvertedMultiPlane()
   auto outputData = clip.Execute(ds);
 
   VISKORES_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems in the output dataset");
+                       "Wrong number of coordinate systems in the output dataset");
   VISKORES_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
-                   "Wrong number of fields in the output dataset");
+                       "Wrong number of fields in the output dataset");
   VISKORES_TEST_ASSERT(outputData.GetNumberOfCells() == 1,
-                   "Wrong number of cells in the output dataset");
+                       "Wrong number of cells in the output dataset");
   viskores::cont::UnknownArrayHandle temp = outputData.GetField("scalars").GetData();
   viskores::cont::ArrayHandle<viskores::Float32> resultArrayHandle;
   temp.AsArrayHandle(resultArrayHandle);
@@ -169,8 +171,8 @@ void TestClipStructuredInvertedMultiPlane()
   for (int i = 0; i < 4; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for ClipWithImplicitFunction fliter on sturctured data in "
-                     "TestClipStructuredInvertedMultiPlane");
+                         "Wrong result for ClipWithImplicitFunction fliter on sturctured data in "
+                         "TestClipStructuredInvertedMultiPlane");
   }
 }
 

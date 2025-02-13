@@ -45,8 +45,8 @@ template <>
 struct TestEqualImpl<UnusualType, UnusualType>
 {
   VISKORES_EXEC_CONT bool operator()(UnusualType value1,
-                                 UnusualType value2,
-                                 viskores::Float64 tolerance) const
+                                     UnusualType value2,
+                                     viskores::Float64 tolerance) const
   {
     return test_equal(value1.X, value2.X, tolerance);
   }
@@ -72,9 +72,9 @@ struct PassThrough : viskores::worklet::WorkletMapField
 
   template <typename InValue, typename OutValue>
   VISKORES_EXEC void FlatCopy(const InValue& inValue,
-                          viskores::IdComponent& inIndex,
-                          OutValue& outValue,
-                          viskores::IdComponent& outIndex) const
+                              viskores::IdComponent& inIndex,
+                              OutValue& outValue,
+                              viskores::IdComponent& outIndex) const
   {
     using VTraitsIn = viskores::VecTraits<InValue>;
     using VTraitsOut = viskores::VecTraits<OutValue>;
@@ -85,9 +85,9 @@ struct PassThrough : viskores::worklet::WorkletMapField
 
   template <typename InComponent, viskores::IdComponent InN, typename OutValue>
   VISKORES_EXEC void FlatCopy(const viskores::Vec<InComponent, InN>& inValue,
-                          viskores::IdComponent& inIndex,
-                          OutValue& outValue,
-                          viskores::IdComponent& outIndex) const
+                              viskores::IdComponent& inIndex,
+                              OutValue& outValue,
+                              viskores::IdComponent& outIndex) const
   {
     VISKORES_ASSERT(inIndex == 0);
     for (viskores::IdComponent i = 0; i < InN; ++i)
@@ -99,9 +99,9 @@ struct PassThrough : viskores::worklet::WorkletMapField
 
   template <typename InValue, typename OutComponent, viskores::IdComponent OutN>
   VISKORES_EXEC void FlatCopy(const InValue& inValue,
-                          viskores::IdComponent& inIndex,
-                          viskores::Vec<OutComponent, OutN>& outValue,
-                          viskores::IdComponent& outIndex) const
+                              viskores::IdComponent& inIndex,
+                              viskores::Vec<OutComponent, OutN>& outValue,
+                              viskores::IdComponent& outIndex) const
   {
     VISKORES_ASSERT(outIndex == 0);
     for (viskores::IdComponent i = 0; i < OutN; ++i)
@@ -128,15 +128,16 @@ struct TestRuntimeVecAsInput
 
     auto runtimeVecArray = viskores::cont::make_ArrayHandleRuntimeVec(NUM_COMPONENTS, baseArray);
     VISKORES_TEST_ASSERT(runtimeVecArray.GetNumberOfValues() == ARRAY_SIZE,
-                     "Group array reporting wrong array size.");
+                         "Group array reporting wrong array size.");
     VISKORES_TEST_ASSERT(runtimeVecArray.GetNumberOfComponentsFlat() ==
-                     NUM_COMPONENTS * viskores::VecFlat<ComponentType>::NUM_COMPONENTS);
+                         NUM_COMPONENTS * viskores::VecFlat<ComponentType>::NUM_COMPONENTS);
 
     viskores::cont::ArrayHandle<ValueType> resultArray;
 
     viskores::cont::Invoker{}(PassThrough{}, runtimeVecArray, resultArray);
 
-    VISKORES_TEST_ASSERT(resultArray.GetNumberOfValues() == ARRAY_SIZE, "Got bad result array size.");
+    VISKORES_TEST_ASSERT(resultArray.GetNumberOfValues() == ARRAY_SIZE,
+                         "Got bad result array size.");
 
     //verify that the control portal works
     viskores::Id totalIndex = 0;
@@ -144,11 +145,12 @@ struct TestRuntimeVecAsInput
     for (viskores::Id index = 0; index < ARRAY_SIZE; ++index)
     {
       const ValueType result = resultPortal.Get(index);
-      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
+      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+           componentIndex++)
       {
         const ComponentType expectedValue = TestValue(totalIndex, ComponentType());
         VISKORES_TEST_ASSERT(test_equal(result[componentIndex], expectedValue),
-                         "Result array got wrong value.");
+                             "Result array got wrong value.");
         totalIndex++;
       }
     }
@@ -167,7 +169,7 @@ struct TestRuntimeVecAsInput
     for (viskores::Id index = 0; index < flatPortal.GetNumberOfValues(); ++index)
     {
       VISKORES_TEST_ASSERT(test_equal(viskores::make_VecFlat(flatPortal.Get(index)),
-                                  viskores::make_VecFlat(nestedPortal.Get(index))));
+                                      viskores::make_VecFlat(nestedPortal.Get(index))));
     }
 
     runtimeVecArray.ReleaseResources();
@@ -188,15 +190,16 @@ struct TestRuntimeVecAsOutput
 
     viskores::cont::ArrayHandle<ComponentType> resultArray;
 
-    viskores::cont::ArrayHandleRuntimeVec<ComponentType> runtimeVecArray(NUM_COMPONENTS, resultArray);
+    viskores::cont::ArrayHandleRuntimeVec<ComponentType> runtimeVecArray(NUM_COMPONENTS,
+                                                                         resultArray);
 
     viskores::cont::Invoker{}(PassThrough{}, baseArray, runtimeVecArray);
 
     VISKORES_TEST_ASSERT(runtimeVecArray.GetNumberOfValues() == ARRAY_SIZE,
-                     "Group array reporting wrong array size.");
+                         "Group array reporting wrong array size.");
 
     VISKORES_TEST_ASSERT(resultArray.GetNumberOfValues() == ARRAY_SIZE * NUM_COMPONENTS,
-                     "Got bad result array size.");
+                         "Got bad result array size.");
 
     //verify that the control portal works
     viskores::Id totalIndex = 0;
@@ -204,11 +207,12 @@ struct TestRuntimeVecAsOutput
     for (viskores::Id index = 0; index < ARRAY_SIZE; ++index)
     {
       const ValueType expectedValue = TestValue(index, ValueType());
-      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
+      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+           componentIndex++)
       {
         const ComponentType result = resultPortal.Get(totalIndex);
         VISKORES_TEST_ASSERT(test_equal(result, expectedValue[componentIndex]),
-                         "Result array got wrong value.");
+                             "Result array got wrong value.");
         totalIndex++;
       }
     }

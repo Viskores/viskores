@@ -69,7 +69,8 @@ struct TemplatedTests
     constexpr ComponentType ORIGINAL_VALUE = 109;
     FillIterator(array, array + ARRAY_SIZE, ORIGINAL_VALUE);
 
-    ::viskores::cont::internal::ArrayPortalFromIterators<ValueType*> portal(array, array + ARRAY_SIZE);
+    ::viskores::cont::internal::ArrayPortalFromIterators<ValueType*> portal(array,
+                                                                            array + ARRAY_SIZE);
     ::viskores::cont::internal::ArrayPortalFromIterators<const ValueType*> const_portal(
       array, array + ARRAY_SIZE);
 
@@ -78,35 +79,36 @@ struct TemplatedTests
 
     std::cout << "Check that PortalSupports* results are valid:" << std::endl;
     VISKORES_TEST_ASSERT(viskores::internal::PortalSupportsSets<PortalType>::value,
-                     "Writable portals should support Set operations");
+                         "Writable portals should support Set operations");
     VISKORES_TEST_ASSERT(viskores::internal::PortalSupportsGets<PortalType>::value,
-                     "Writable portals should support Get operations");
+                         "Writable portals should support Get operations");
     VISKORES_TEST_ASSERT(!viskores::internal::PortalSupportsSets<PortalConstType>::value,
-                     "Read-only portals should not allow Set operations");
+                         "Read-only portals should not allow Set operations");
     VISKORES_TEST_ASSERT(viskores::internal::PortalSupportsGets<PortalConstType>::value,
-                     "Read-only portals should support Get operations");
+                         "Read-only portals should support Get operations");
 
     std::cout << "  Check that ArrayPortalToIterators is not doing indirection." << std::endl;
     // If you get a compile error here about mismatched types, it might be
     // that ArrayPortalToIterators is not properly overloaded to return the
     // original iterator.
     VISKORES_TEST_ASSERT(viskores::cont::ArrayPortalToIteratorBegin(portal) == array,
-                     "Begin iterator wrong.");
+                         "Begin iterator wrong.");
     VISKORES_TEST_ASSERT(viskores::cont::ArrayPortalToIteratorEnd(portal) == array + ARRAY_SIZE,
-                     "End iterator wrong.");
+                         "End iterator wrong.");
     VISKORES_TEST_ASSERT(viskores::cont::ArrayPortalToIteratorBegin(const_portal) == array,
-                     "Begin const iterator wrong.");
-    VISKORES_TEST_ASSERT(viskores::cont::ArrayPortalToIteratorEnd(const_portal) == array + ARRAY_SIZE,
-                     "End const iterator wrong.");
+                         "Begin const iterator wrong.");
+    VISKORES_TEST_ASSERT(viskores::cont::ArrayPortalToIteratorEnd(const_portal) ==
+                           array + ARRAY_SIZE,
+                         "End const iterator wrong.");
 
     VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE, "Portal array size wrong.");
     VISKORES_TEST_ASSERT(const_portal.GetNumberOfValues() == ARRAY_SIZE,
-                     "Const portal array size wrong.");
+                         "Const portal array size wrong.");
 
     std::cout << "  Check initial value." << std::endl;
     VISKORES_TEST_ASSERT(CheckPortal(portal, ORIGINAL_VALUE), "Portal iterator has bad value.");
     VISKORES_TEST_ASSERT(CheckPortal(const_portal, ORIGINAL_VALUE),
-                     "Const portal iterator has bad value.");
+                         "Const portal iterator has bad value.");
 
     constexpr ComponentType SET_VALUE = 62;
 
@@ -114,16 +116,17 @@ struct TemplatedTests
     for (viskores::Id index = 0; index < ARRAY_SIZE; index++)
     {
       VISKORES_TEST_ASSERT(portal.Get(index) == ExpectedValue(index, ORIGINAL_VALUE),
-                       "Bad portal value.");
+                           "Bad portal value.");
       VISKORES_TEST_ASSERT(const_portal.Get(index) == ExpectedValue(index, ORIGINAL_VALUE),
-                       "Bad const portal value.");
+                           "Bad const portal value.");
 
       portal.Set(index, ExpectedValue(index, SET_VALUE));
     }
 
     std::cout << "  Make sure set has correct value." << std::endl;
     VISKORES_TEST_ASSERT(CheckPortal(portal, SET_VALUE), "Portal iterator has bad value.");
-    VISKORES_TEST_ASSERT(CheckIterator(array, array + ARRAY_SIZE, SET_VALUE), "Array has bad value.");
+    VISKORES_TEST_ASSERT(CheckIterator(array, array + ARRAY_SIZE, SET_VALUE),
+                         "Array has bad value.");
   }
 };
 

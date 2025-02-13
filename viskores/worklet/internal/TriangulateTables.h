@@ -95,7 +95,8 @@ public:
   }
 
   template <typename CellShape>
-  VISKORES_EXEC viskores::IdComponent GetCount(CellShape shape, viskores::IdComponent numPoints) const
+  VISKORES_EXEC viskores::IdComponent GetCount(CellShape shape,
+                                               viskores::IdComponent numPoints) const
   {
     if (shape.Id == viskores::CELL_SHAPE_POLYGON)
     {
@@ -108,7 +109,8 @@ public:
   }
 
   template <typename CellShape>
-  VISKORES_EXEC viskores::IdComponent3 GetIndices(CellShape shape, viskores::IdComponent triangleIndex) const
+  VISKORES_EXEC viskores::IdComponent3 GetIndices(CellShape shape,
+                                                  viskores::IdComponent triangleIndex) const
   {
     viskores::IdComponent3 triIndices;
     if (shape.Id == viskores::CELL_SHAPE_POLYGON)
@@ -136,8 +138,8 @@ private:
 class TriangulateTables : public viskores::cont::ExecutionObjectBase
 {
 public:
-  VISKORES_CONT TriangulateTablesExecutionObject PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                                 viskores::cont::Token& token) const
+  VISKORES_CONT TriangulateTablesExecutionObject
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     return TriangulateTablesExecutionObject(
       this->Counts, this->Offsets, this->Indices, device, token);
@@ -146,14 +148,14 @@ public:
   VISKORES_CONT
   TriangulateTables()
     : Counts(viskores::cont::make_ArrayHandle(viskores::worklet::internal::TriangleCountData,
-                                          viskores::NUMBER_OF_CELL_SHAPES,
-                                          viskores::CopyFlag::Off))
+                                              viskores::NUMBER_OF_CELL_SHAPES,
+                                              viskores::CopyFlag::Off))
     , Offsets(viskores::cont::make_ArrayHandle(viskores::worklet::internal::TriangleOffsetData,
-                                           viskores::NUMBER_OF_CELL_SHAPES,
-                                           viskores::CopyFlag::Off))
+                                               viskores::NUMBER_OF_CELL_SHAPES,
+                                               viskores::CopyFlag::Off))
     , Indices(viskores::cont::make_ArrayHandle(viskores::worklet::internal::TriangleIndexData,
-                                           viskores::Id(9),
-                                           viskores::CopyFlag::Off))
+                                               viskores::Id(9),
+                                               viskores::CopyFlag::Off))
   {
   }
 
@@ -279,7 +281,8 @@ public:
   }
 
   template <typename CellShape>
-  VISKORES_EXEC viskores::IdComponent4 GetIndices(CellShape shape, viskores::IdComponent tetrahedronIndex) const
+  VISKORES_EXEC viskores::IdComponent4 GetIndices(CellShape shape,
+                                                  viskores::IdComponent tetrahedronIndex) const
   {
     viskores::IdComponent4 tetIndices;
     viskores::IdComponent offset = 4 * (this->Offsets.Get(shape.Id) + tetrahedronIndex);
@@ -302,14 +305,14 @@ public:
   VISKORES_CONT
   TetrahedralizeTables()
     : Counts(viskores::cont::make_ArrayHandle(viskores::worklet::internal::TetrahedronCountData,
-                                          viskores::NUMBER_OF_CELL_SHAPES,
-                                          viskores::CopyFlag::Off))
+                                              viskores::NUMBER_OF_CELL_SHAPES,
+                                              viskores::CopyFlag::Off))
     , Offsets(viskores::cont::make_ArrayHandle(viskores::worklet::internal::TetrahedronOffsetData,
-                                           viskores::NUMBER_OF_CELL_SHAPES,
-                                           viskores::CopyFlag::Off))
+                                               viskores::NUMBER_OF_CELL_SHAPES,
+                                               viskores::CopyFlag::Off))
     , Indices(viskores::cont::make_ArrayHandle(viskores::worklet::internal::TetrahedronIndexData,
-                                           viskores::Id(44),
-                                           viskores::CopyFlag::Off))
+                                               viskores::Id(44),
+                                               viskores::CopyFlag::Off))
   {
   }
 

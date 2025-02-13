@@ -31,7 +31,8 @@ enum FilterType
   PATH_PARTICLE
 };
 
-viskores::cont::ArrayHandle<viskores::Vec3f> CreateConstantVectorField(viskores::Id num, const viskores::Vec3f& vec)
+viskores::cont::ArrayHandle<viskores::Vec3f> CreateConstantVectorField(viskores::Id num,
+                                                                       const viskores::Vec3f& vec)
 {
   viskores::cont::ArrayHandleConstant<viskores::Vec3f> vecConst;
   vecConst = viskores::cont::make_ArrayHandleConstant(vec, num);
@@ -63,8 +64,8 @@ void TestStreamline()
     ds.AddPointField(fieldName, vecField);
     viskores::cont::ArrayHandle<viskores::Particle> seedArray =
       viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0),
-                                     viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1),
-                                     viskores::Particle(viskores::Vec3f(.2f, 3.0f, .2f), 2) });
+                                         viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1),
+                                         viskores::Particle(viskores::Vec3f(.2f, 3.0f, .2f), 2) });
 
     viskores::filter::flow::Streamline streamline;
 
@@ -77,7 +78,7 @@ void TestStreamline()
 
     //Validate the result is correct.
     VISKORES_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
-                     "Wrong number of coordinate systems in the output dataset");
+                         "Wrong number of coordinate systems in the output dataset");
 
     viskores::cont::CoordinateSystem coords = output.GetCoordinateSystem();
     VISKORES_TEST_ASSERT(coords.GetNumberOfPoints() == 63, "Wrong number of coordinates");
@@ -112,10 +113,10 @@ void TestPathline()
       ds1.AddPointField(var, vecField1);
       ds2.AddPointField(var, vecField2);
 
-      viskores::cont::ArrayHandle<viskores::Particle> seedArray =
-        viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0),
-                                       viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1),
-                                       viskores::Particle(viskores::Vec3f(.2f, 3.0f, .2f), 2) });
+      viskores::cont::ArrayHandle<viskores::Particle> seedArray = viskores::cont::make_ArrayHandle(
+        { viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0),
+          viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1),
+          viskores::Particle(viskores::Vec3f(.2f, 3.0f, .2f), 2) });
 
       const viskores::FloatDefault stepSize = .1f;
       const viskores::FloatDefault t0 = 0, t1 = 1;
@@ -154,7 +155,7 @@ void TestPathline()
       viskores::cont::CoordinateSystem coords = output.GetCoordinateSystem();
 
       VISKORES_TEST_ASSERT(coords.GetNumberOfPoints() == numExpectedPoints,
-                       "Wrong number of coordinates");
+                           "Wrong number of coordinates");
 
       viskores::cont::UnknownCellSet dcells = output.GetCellSet();
       VISKORES_TEST_ASSERT(dcells.GetNumberOfCells() == 3, "Wrong number of cells");
@@ -208,15 +209,15 @@ void TestAMRStreamline(bool useSL)
 
     //seed 0 goes right through the center of the inner
     viskores::Particle p0(viskores::Vec3f(static_cast<viskores::FloatDefault>(1),
-                                  static_cast<viskores::FloatDefault>(4.5),
-                                  static_cast<viskores::FloatDefault>(4.5)),
-                      0);
+                                          static_cast<viskores::FloatDefault>(4.5),
+                                          static_cast<viskores::FloatDefault>(4.5)),
+                          0);
 
     //seed 1 goes remains entirely in the outer
     viskores::Particle p1(viskores::Vec3f(static_cast<viskores::FloatDefault>(1),
-                                  static_cast<viskores::FloatDefault>(3),
-                                  static_cast<viskores::FloatDefault>(3)),
-                      1);
+                                          static_cast<viskores::FloatDefault>(3),
+                                          static_cast<viskores::FloatDefault>(3)),
+                          1);
 
     viskores::cont::ArrayHandle<viskores::Particle> seedArray;
     seedArray = viskores::cont::make_ArrayHandle({ p0, p1 });
@@ -232,13 +233,14 @@ void TestAMRStreamline(bool useSL)
       filter.SetActiveField(fieldName);
       auto out = filter.Execute(pds);
 
-      VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 2, "Wrong number of partitions in output");
+      VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 2,
+                           "Wrong number of partitions in output");
       auto ds0 = out.GetPartition(0);
       auto ds1 = out.GetPartition(1);
 
       //validate the outer
       VISKORES_TEST_ASSERT(ds0.GetNumberOfCoordinateSystems() == 1,
-                       "Wrong number of coordinate systems in the output dataset");
+                           "Wrong number of coordinate systems in the output dataset");
       auto coords = ds0.GetCoordinateSystem().GetDataAsMultiplexer();
       auto ptPortal = coords.ReadPortal();
       viskores::cont::UnknownCellSet dcells = ds0.GetCellSet();
@@ -259,21 +261,22 @@ void TestAMRStreamline(bool useSL)
         if (j == 0) //this is the seed that goes THROUGH inner.
         {
           VISKORES_TEST_ASSERT(outerBounds.Contains(lastPt),
-                           "End point is NOT inside the outer bounds.");
+                               "End point is NOT inside the outer bounds.");
           VISKORES_TEST_ASSERT(innerBounds.Contains(lastPt),
-                           "End point is NOT inside the inner bounds.");
+                               "End point is NOT inside the inner bounds.");
         }
         else
         {
           VISKORES_TEST_ASSERT(!outerBounds.Contains(lastPt),
-                           "Seed final location is INSIDE the dataset");
-          VISKORES_TEST_ASSERT(lastPt[0] > outerBounds.X.Max, "Seed final location in wrong location");
+                               "Seed final location is INSIDE the dataset");
+          VISKORES_TEST_ASSERT(lastPt[0] > outerBounds.X.Max,
+                               "Seed final location in wrong location");
         }
       }
 
       //validate the inner
       VISKORES_TEST_ASSERT(ds1.GetNumberOfCoordinateSystems() == 1,
-                       "Wrong number of coordinate systems in the output dataset");
+                           "Wrong number of coordinate systems in the output dataset");
       coords = ds1.GetCoordinateSystem().GetDataAsMultiplexer();
       ptPortal = coords.ReadPortal();
       dcells = ds1.GetCellSet();
@@ -290,9 +293,9 @@ void TestAMRStreamline(bool useSL)
 
       //The last point should be OUTSIDE innerBoundsNoGhost but inside innerBounds
       VISKORES_TEST_ASSERT(!innerBoundsNoGhost.Contains(lastPt) && innerBounds.Contains(lastPt),
-                       "Seed final location not contained in bounds correctly.");
+                           "Seed final location not contained in bounds correctly.");
       VISKORES_TEST_ASSERT(lastPt[0] > innerBoundsNoGhost.X.Max,
-                       "Seed final location in wrong location");
+                           "Seed final location in wrong location");
     }
     else
     {
@@ -304,12 +307,14 @@ void TestAMRStreamline(bool useSL)
       filter.SetActiveField(fieldName);
       auto out = filter.Execute(pds);
 
-      VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
+      VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 1,
+                           "Wrong number of partitions in output");
       auto ds = out.GetPartition(0);
       VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                       "Wrong number of coordinate systems in the output dataset");
+                           "Wrong number of coordinate systems in the output dataset");
       viskores::cont::UnknownCellSet dcells = ds.GetCellSet();
-      VISKORES_TEST_ASSERT(dcells.IsType<viskores::cont::CellSetSingleType<>>(), "Wrong cell type.");
+      VISKORES_TEST_ASSERT(dcells.IsType<viskores::cont::CellSetSingleType<>>(),
+                           "Wrong cell type.");
 
       auto coords = ds.GetCoordinateSystem().GetDataAsMultiplexer();
       auto ptPortal = coords.ReadPortal();
@@ -318,9 +323,9 @@ void TestAMRStreamline(bool useSL)
       for (viskores::Id i = 0; i < numSeeds; i++)
       {
         VISKORES_TEST_ASSERT(!outerBounds.Contains(ptPortal.Get(i)),
-                         "Seed final location is INSIDE the dataset");
+                             "Seed final location is INSIDE the dataset");
         VISKORES_TEST_ASSERT(ptPortal.Get(i)[0] > outerBounds.X.Max,
-                         "Seed final location in wrong location");
+                             "Seed final location in wrong location");
       }
     }
   }
@@ -369,8 +374,9 @@ void TestPartitionedDataSet(viskores::Id num, bool useGhost, FilterType fType)
     AddVectorFields(pds, fieldName, vecX);
 
     viskores::cont::ArrayHandle<viskores::Particle> seedArray;
-    seedArray = viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0),
-                                               viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1) });
+    seedArray =
+      viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0),
+                                         viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1) });
     viskores::Id numSeeds = seedArray.GetNumberOfValues();
     if (fType == FilterType::STREAMLINE || fType == FilterType::PATHLINE)
     {
@@ -405,7 +411,7 @@ void TestPartitionedDataSet(viskores::Id num, bool useGhost, FilterType fType)
       {
         auto outputDS = out.GetPartition(i);
         VISKORES_TEST_ASSERT(outputDS.GetNumberOfCoordinateSystems() == 1,
-                         "Wrong number of coordinate systems in the output dataset");
+                             "Wrong number of coordinate systems in the output dataset");
 
         viskores::cont::UnknownCellSet dcells = outputDS.GetCellSet();
         VISKORES_TEST_ASSERT(dcells.GetNumberOfCells() == numSeeds, "Wrong number of cells");
@@ -415,7 +421,8 @@ void TestPartitionedDataSet(viskores::Id num, bool useGhost, FilterType fType)
 
         viskores::cont::CellSetExplicit<> explicitCells;
 
-        VISKORES_TEST_ASSERT(dcells.IsType<viskores::cont::CellSetExplicit<>>(), "Wrong cell type.");
+        VISKORES_TEST_ASSERT(dcells.IsType<viskores::cont::CellSetExplicit<>>(),
+                             "Wrong cell type.");
         explicitCells = dcells.AsCellSet<viskores::cont::CellSetExplicit<>>();
 
         viskores::FloatDefault xMax =
@@ -467,13 +474,15 @@ void TestPartitionedDataSet(viskores::Id num, bool useGhost, FilterType fType)
       }
 
 
-      VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
+      VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 1,
+                           "Wrong number of partitions in output");
       auto ds = out.GetPartition(0);
       //Validate the result is correct.
       VISKORES_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                       "Wrong number of coordinate systems in the output dataset");
+                           "Wrong number of coordinate systems in the output dataset");
 
-      viskores::FloatDefault xMax = static_cast<viskores::FloatDefault>(bounds[bounds.size() - 1].X.Max);
+      viskores::FloatDefault xMax =
+        static_cast<viskores::FloatDefault>(bounds[bounds.size() - 1].X.Max);
       if (useGhost)
         xMax = xMax - 1;
       viskores::Range xMaxRange(xMax, xMax + static_cast<viskores::FloatDefault>(.5));
@@ -641,7 +650,8 @@ void TestStreamlineFilters()
 
   {
     //ARMWind corner case of particle near boundary.
-    std::string file = viskores::cont::testing::Testing::DataPath("rectilinear/amr_wind_flowfield.vtk");
+    std::string file =
+      viskores::cont::testing::Testing::DataPath("rectilinear/amr_wind_flowfield.vtk");
     viskores::FloatDefault stepSize = 0.001f;
     std::vector<viskores::Vec3f> startPoints, endPoints;
 

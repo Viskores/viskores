@@ -27,10 +27,11 @@ void TestOffsetsToNumComponents(const OffsetsArray& offsetsArray,
                                 const ExpectedNumComponents& expectedNumComponents)
 {
   VISKORES_TEST_ASSERT(offsetsArray.GetNumberOfValues() ==
-                   expectedNumComponents.GetNumberOfValues() + 1);
+                       expectedNumComponents.GetNumberOfValues() + 1);
 
   auto numComponents = viskores::cont::make_ArrayHandleOffsetsToNumComponents(offsetsArray);
-  VISKORES_TEST_ASSERT(numComponents.GetNumberOfValues() == expectedNumComponents.GetNumberOfValues());
+  VISKORES_TEST_ASSERT(numComponents.GetNumberOfValues() ==
+                       expectedNumComponents.GetNumberOfValues());
   VISKORES_TEST_ASSERT(
     test_equal_portals(numComponents.ReadPortal(), expectedNumComponents.ReadPortal()));
 }
@@ -55,8 +56,8 @@ void TryFancyOffsets()
 {
   std::cout << "Fancy offset array." << std::endl;
   viskores::cont::ArrayHandleCounting<viskores::Id> offsets(0, 3, ARRAY_SIZE + 1);
-  TestOffsetsToNumComponents(offsets,
-                             viskores::cont::ArrayHandleConstant<viskores::IdComponent>(3, ARRAY_SIZE));
+  TestOffsetsToNumComponents(
+    offsets, viskores::cont::ArrayHandleConstant<viskores::IdComponent>(3, ARRAY_SIZE));
 }
 
 void Run()

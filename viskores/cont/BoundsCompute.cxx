@@ -22,7 +22,8 @@ namespace cont
 
 //-----------------------------------------------------------------------------
 VISKORES_CONT
-viskores::Bounds BoundsCompute(const viskores::cont::DataSet& dataset, viskores::Id coordinate_system_index)
+viskores::Bounds BoundsCompute(const viskores::cont::DataSet& dataset,
+                               viskores::Id coordinate_system_index)
 {
   return dataset.GetNumberOfCoordinateSystems() > coordinate_system_index
     ? dataset.GetCoordinateSystem(coordinate_system_index).GetBounds()
@@ -32,15 +33,14 @@ viskores::Bounds BoundsCompute(const viskores::cont::DataSet& dataset, viskores:
 //-----------------------------------------------------------------------------
 VISKORES_CONT
 viskores::Bounds BoundsCompute(const viskores::cont::PartitionedDataSet& pds,
-                           viskores::Id coordinate_system_index)
+                               viskores::Id coordinate_system_index)
 {
-  return std::accumulate(pds.begin(),
-                         pds.end(),
-                         viskores::Bounds(),
-                         [=](const viskores::Bounds& val, const viskores::cont::DataSet& partition) {
-                           return val +
-                             viskores::cont::BoundsCompute(partition, coordinate_system_index);
-                         });
+  return std::accumulate(
+    pds.begin(),
+    pds.end(),
+    viskores::Bounds(),
+    [=](const viskores::Bounds& val, const viskores::cont::DataSet& partition)
+    { return val + viskores::cont::BoundsCompute(partition, coordinate_system_index); });
 }
 
 //-----------------------------------------------------------------------------
@@ -60,14 +60,14 @@ viskores::Bounds BoundsCompute(const viskores::cont::DataSet& dataset, const std
 
 //-----------------------------------------------------------------------------
 VISKORES_CONT
-viskores::Bounds BoundsCompute(const viskores::cont::PartitionedDataSet& pds, const std::string& name)
+viskores::Bounds BoundsCompute(const viskores::cont::PartitionedDataSet& pds,
+                               const std::string& name)
 {
   return std::accumulate(pds.begin(),
                          pds.end(),
                          viskores::Bounds(),
-                         [=](const viskores::Bounds& val, const viskores::cont::DataSet& partition) {
-                           return val + viskores::cont::BoundsCompute(partition, name);
-                         });
+                         [=](const viskores::Bounds& val, const viskores::cont::DataSet& partition)
+                         { return val + viskores::cont::BoundsCompute(partition, name); });
 }
 }
 }

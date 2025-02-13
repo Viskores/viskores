@@ -61,7 +61,8 @@ public:
   // Returns:
   // Entropy (log2) of the field of the data
   template <typename FieldType, typename Storage>
-  viskores::Float64 Run(viskores::cont::ArrayHandle<FieldType, Storage> fieldArray, viskores::Id numberOfBins)
+  viskores::Float64 Run(viskores::cont::ArrayHandle<FieldType, Storage> fieldArray,
+                        viskores::Id numberOfBins)
   {
     ///// calculate histogram using FieldHistogram worklet /////
     viskores::Range range;
@@ -72,13 +73,14 @@ public:
 
     ///// calculate sum of frequency of the histogram /////
     viskores::Id initFreqSumValue = 0;
-    viskores::Id freqSum = viskores::cont::Algorithm::Reduce(binArray, initFreqSumValue, viskores::Sum());
+    viskores::Id freqSum =
+      viskores::cont::Algorithm::Reduce(binArray, initFreqSumValue, viskores::Sum());
 
     ///// calculate information content of each bin using self-define worklet /////
     viskores::cont::ArrayHandle<viskores::Float64> informationContent;
     SetBinInformationContent binWorklet(static_cast<viskores::Float64>(freqSum));
-    viskores::worklet::DispatcherMapField<SetBinInformationContent> setBinInformationContentDispatcher(
-      binWorklet);
+    viskores::worklet::DispatcherMapField<SetBinInformationContent>
+      setBinInformationContentDispatcher(binWorklet);
     setBinInformationContentDispatcher.Invoke(binArray, informationContent);
 
     ///// calculate entropy by summing up information conetent of all bins /////

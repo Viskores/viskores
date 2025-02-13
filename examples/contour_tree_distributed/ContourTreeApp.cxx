@@ -214,8 +214,8 @@ int main(int argc, char* argv[])
     if (!augmentHierarchicalTree)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                 "Warning: --computeVolumeBranchDecomposition requires augmentation. "
-                 "Enabling --augmentHierarchicalTree option.");
+                     "Warning: --computeVolumeBranchDecomposition requires augmentation. "
+                     "Enabling --augmentHierarchicalTree option.");
       augmentHierarchicalTree = true;
     }
   }
@@ -279,15 +279,15 @@ int main(int argc, char* argv[])
     if (!computeHierarchicalVolumetricBranchDecomposition)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                 "Warning: --numBranches requires computing branch decomposition. "
-                 "Enabling --computeHierarchicalVolumetricBranchDecomposition option.");
+                     "Warning: --numBranches requires computing branch decomposition. "
+                     "Enabling --computeHierarchicalVolumetricBranchDecomposition option.");
       computeHierarchicalVolumetricBranchDecomposition = true;
     }
     if (!augmentHierarchicalTree)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                 "Warning: --numBranches requires augmentation. "
-                 "Enabling --augmentHierarchicalTree option.");
+                     "Warning: --numBranches requires augmentation. "
+                     "Enabling --augmentHierarchicalTree option.");
       augmentHierarchicalTree = true;
     }
   }
@@ -410,29 +410,29 @@ int main(int argc, char* argv[])
   if (rank == 0)
   {
     VISKORES_LOG_S(exampleLogLevel,
-               std::endl
-                 << "    ------------ Settings -----------" << std::endl
-                 << "    filename=" << filename << std::endl
-                 << "    preSplitFiles=" << preSplitFiles << std::endl
-                 << "    device=" << device.GetName() << std::endl
-                 << "    mc=" << useMarchingCubes << std::endl
-                 << "    useFullBoundary=" << !useBoundaryExtremaOnly << std::endl
-                 << "    saveDot=" << saveDotFiles << std::endl
-                 << "    augmentHierarchicalTree=" << augmentHierarchicalTree << std::endl
-                 << "    computeVolumetricBranchDecomposition="
-                 << computeHierarchicalVolumetricBranchDecomposition << std::endl
-                 << "    presimplifyThreshold=" << presimplifyThreshold << std::endl
-                 << "    saveOutputData=" << saveOutputData << std::endl
-                 << "    forwardSummary=" << forwardSummary << std::endl
-                 << "    nblocks=" << numBlocks << std::endl
-                 << "    nbranches=" << numBranches << std::endl
-                 << "    eps=" << eps << std::endl
+                   std::endl
+                     << "    ------------ Settings -----------" << std::endl
+                     << "    filename=" << filename << std::endl
+                     << "    preSplitFiles=" << preSplitFiles << std::endl
+                     << "    device=" << device.GetName() << std::endl
+                     << "    mc=" << useMarchingCubes << std::endl
+                     << "    useFullBoundary=" << !useBoundaryExtremaOnly << std::endl
+                     << "    saveDot=" << saveDotFiles << std::endl
+                     << "    augmentHierarchicalTree=" << augmentHierarchicalTree << std::endl
+                     << "    computeVolumetricBranchDecomposition="
+                     << computeHierarchicalVolumetricBranchDecomposition << std::endl
+                     << "    presimplifyThreshold=" << presimplifyThreshold << std::endl
+                     << "    saveOutputData=" << saveOutputData << std::endl
+                     << "    forwardSummary=" << forwardSummary << std::endl
+                     << "    nblocks=" << numBlocks << std::endl
+                     << "    nbranches=" << numBranches << std::endl
+                     << "    eps=" << eps << std::endl
 #ifdef ENABLE_HDFIO
-                 << "    dataset=" << dataset_name << " (HDF5 only)" << std::endl
-                 << "    blocksPerDim=" << blocksPerDimIn[0] << "," << blocksPerDimIn[1] << ","
-                 << blocksPerDimIn[2] << " (HDF5 only)" << std::endl
-                 << "    selectSize=" << selectSize[0] << "," << selectSize[1] << ","
-                 << selectSize[2] << " (HDF5 only)" << std::endl
+                     << "    dataset=" << dataset_name << " (HDF5 only)" << std::endl
+                     << "    blocksPerDim=" << blocksPerDimIn[0] << "," << blocksPerDimIn[1] << ","
+                     << blocksPerDimIn[2] << " (HDF5 only)" << std::endl
+                     << "    selectSize=" << selectSize[0] << "," << selectSize[1] << ","
+                     << selectSize[2] << " (HDF5 only)" << std::endl
 #endif
     );
   }
@@ -478,26 +478,26 @@ int main(int argc, char* argv[])
 
 
   VISKORES_LOG_S(exampleLogLevel,
-             std::endl
-               << "    ------------ Settings -----------" << std::endl
-               << "    filename=" << filename << std::endl
-               << "    preSplitFiles=" << preSplitFiles << std::endl
-               << "    device=" << device.GetName() << std::endl
-               << "    mc=" << useMarchingCubes << std::endl
-               << "    useFullBoundary=" << !useBoundaryExtremaOnly << std::endl
-               << "    saveDot=" << saveDotFiles << std::endl
-               << "    saveOutputData=" << saveOutputData << std::endl
-               << "    forwardSummary=" << forwardSummary << std::endl
-               << "    numBlocks=" << numBlocks << std::endl
-               << "    augmentHierarchicalTree=" << augmentHierarchicalTree << std::endl
-               << "    numRanks=" << size << std::endl
-               << "    rank=" << rank << std::endl
+                 std::endl
+                   << "    ------------ Settings -----------" << std::endl
+                   << "    filename=" << filename << std::endl
+                   << "    preSplitFiles=" << preSplitFiles << std::endl
+                   << "    device=" << device.GetName() << std::endl
+                   << "    mc=" << useMarchingCubes << std::endl
+                   << "    useFullBoundary=" << !useBoundaryExtremaOnly << std::endl
+                   << "    saveDot=" << saveDotFiles << std::endl
+                   << "    saveOutputData=" << saveOutputData << std::endl
+                   << "    forwardSummary=" << forwardSummary << std::endl
+                   << "    numBlocks=" << numBlocks << std::endl
+                   << "    augmentHierarchicalTree=" << augmentHierarchicalTree << std::endl
+                   << "    numRanks=" << size << std::endl
+                   << "    rank=" << rank << std::endl
 #ifdef ENABLE_HDFIO
-               << "    dataset=" << dataset_name << " (HDF5 only)" << std::endl
-               << "    blocksPerDim=" << blocksPerDimIn[0] << "," << blocksPerDimIn[1] << ","
-               << blocksPerDimIn[2] << " (HDF5 only)" << std::endl
-               << "    selectSize=" << selectSize[0] << "," << selectSize[1] << "," << selectSize[2]
-               << " (HDF5 only)" << std::endl
+                   << "    dataset=" << dataset_name << " (HDF5 only)" << std::endl
+                   << "    blocksPerDim=" << blocksPerDimIn[0] << "," << blocksPerDimIn[1] << ","
+                   << blocksPerDimIn[2] << " (HDF5 only)" << std::endl
+                   << "    selectSize=" << selectSize[0] << "," << selectSize[1] << ","
+                   << selectSize[2] << " (HDF5 only)" << std::endl
 #endif
   );
 
@@ -574,7 +574,7 @@ int main(int argc, char* argv[])
         buildDatasetTime);
 #else
       VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-                 "Can't read HDF5 file. HDF5 reader disabled for this build.");
+                     "Can't read HDF5 file. HDF5 reader disabled for this build.");
       readOk = false;
 #endif
     }
@@ -609,18 +609,18 @@ int main(int argc, char* argv[])
   if (rank == 0)
   {
     VISKORES_LOG_S(exampleLogLevel,
-               std::endl
-                 << "    ---------------- Input Mesh Properties --------------" << std::endl
-                 << "    Number of dimensions: " << nDims);
+                   std::endl
+                     << "    ---------------- Input Mesh Properties --------------" << std::endl
+                     << "    Number of dimensions: " << nDims);
   }
 
   // Check if marching cubes is enabled for non 3D data
   bool invalidMCOption = (useMarchingCubes && nDims != 3);
   VISKORES_LOG_IF_S(viskores::cont::LogLevel::Error,
-                invalidMCOption && (rank == 0),
-                "The input mesh is "
-                  << nDims << "D. "
-                  << "Contour tree using marching cubes is only supported for 3D data.");
+                    invalidMCOption && (rank == 0),
+                    "The input mesh is "
+                      << nDims << "D. "
+                      << "Contour tree using marching cubes is only supported for 3D data.");
 
   // If we found any errors in the settings than finalize MPI and exit the execution
   if (invalidMCOption)
@@ -640,21 +640,22 @@ int main(int argc, char* argv[])
 
   // Log information of the (first) local data block
   // TODO: Get localBlockSize and localBlockOrigins from the cell set to log results
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             "" //<< std::setw(42) << std::left << "blockSize"
-               //<< ":" << localBlockSizesPortal.Get(0) << std::endl
-               //<< std::setw(42) << std::left << "blockOrigin=" << localBlockOriginsPortal.Get(0)
-               //<< std::endl
-               << std::setw(42) << std::left << "blockIndices=" << localBlockIndicesPortal.Get(0)
-               << std::endl
-               << std::setw(42) << std::left << "blocksPerDim=" << blocksPerDim << std::endl
-               << std::setw(42) << std::left << "globalSize=" << globalSize << std::endl
+  VISKORES_LOG_S(
+    viskores::cont::LogLevel::Info,
+    "" //<< std::setw(42) << std::left << "blockSize"
+      //<< ":" << localBlockSizesPortal.Get(0) << std::endl
+      //<< std::setw(42) << std::left << "blockOrigin=" << localBlockOriginsPortal.Get(0)
+      //<< std::endl
+      << std::setw(42) << std::left << "blockIndices=" << localBlockIndicesPortal.Get(0)
+      << std::endl
+      << std::setw(42) << std::left << "blocksPerDim=" << blocksPerDim << std::endl
+      << std::setw(42) << std::left << "globalSize=" << globalSize << std::endl
 
   );
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
   viskores::filter::scalar_topology::ContourTreeUniformDistributed filter(timingsLogLevel,
-                                                                      treeLogLevel);
+                                                                          treeLogLevel);
   filter.SetBlockIndices(blocksPerDim, localBlockIndices);
   filter.SetUseBoundaryExtremaOnly(useBoundaryExtremaOnly);
   filter.SetUseMarchingCubes(useMarchingCubes);
@@ -716,9 +717,8 @@ int main(int argc, char* argv[])
 
           std::ofstream treeStreamIntermediate(branchDecompositionIntermediateFileName.c_str());
 
-          treeStreamIntermediate
-            << viskores::filter::scalar_topology::HierarchicalVolumetricBranchDecomposer::PrintBranches(
-                 ds);
+          treeStreamIntermediate << viskores::filter::scalar_topology::
+              HierarchicalVolumetricBranchDecomposer::PrintBranches(ds);
 
           std::string branchDecompositionFileName = std::string("BranchDecomposition_Rank_") +
             std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
@@ -767,14 +767,16 @@ int main(int argc, char* argv[])
                                         .GetData()
                                         .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
                                         .ReadPortal();
-            auto topVolBranchSaddleEpsilon = ds.GetField("TopVolumeBranchSaddleEpsilon")
-                                               .GetData()
-                                               .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
-                                               .ReadPortal();
-            auto topVolBranchSaddleIsoValue = ds.GetField("TopVolumeBranchSaddleIsoValue")
-                                                .GetData()
-                                                .AsArrayHandle<viskores::cont::ArrayHandle<ValueType>>()
-                                                .ReadPortal();
+            auto topVolBranchSaddleEpsilon =
+              ds.GetField("TopVolumeBranchSaddleEpsilon")
+                .GetData()
+                .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                .ReadPortal();
+            auto topVolBranchSaddleIsoValue =
+              ds.GetField("TopVolumeBranchSaddleIsoValue")
+                .GetData()
+                .AsArrayHandle<viskores::cont::ArrayHandle<ValueType>>()
+                .ReadPortal();
 
             viskores::Id nSelectedBranches = topVolBranchGRId.GetNumberOfValues();
             for (viskores::Id branch = 0; branch < nSelectedBranches; ++branch)
@@ -820,13 +822,13 @@ int main(int argc, char* argv[])
           ds.GetField("DependentVolume").GetData().AsArrayHandle(dependentVolume);
 
           std::string dumpVolumesString =
-            viskores::worklet::contourtree_distributed::HierarchicalContourTree<ValueType>::DumpVolumes(
-              supernodes,
-              superarcs,
-              regularNodeGlobalIds,
-              totalVolume,
-              intrinsicVolume,
-              dependentVolume);
+            viskores::worklet::contourtree_distributed::HierarchicalContourTree<
+              ValueType>::DumpVolumes(supernodes,
+                                      superarcs,
+                                      regularNodeGlobalIds,
+                                      totalVolume,
+                                      intrinsicVolume,
+                                      dependentVolume);
 
           std::string volumesFileName = std::string("TreeWithVolumes_Rank_") +
             std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
@@ -888,29 +890,29 @@ int main(int argc, char* argv[])
   }
   currTime = totalTime.GetElapsedTime();
   VISKORES_LOG_S(timingsLogLevel,
-             std::endl
-               << "    -------------------------- Totals " << rank
-               << " -----------------------------" << std::endl
-               << std::setw(42) << std::left << "    Start-up"
-               << ": " << startUpTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Start-up Sync"
-               << ": " << startUpSyncTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Data Read"
-               << ": " << dataReadTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Build VISKORES Dataset"
-               << ": " << buildDatasetTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Data Read/Build Sync"
-               << ": " << dataReadSyncTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Compute Contour Tree"
-               << ": " << computeContourTreeTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Post filter Sync"
-               << ": " << postFilterSyncTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Branch Decomposition"
-               << ": " << branchDecompTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Save Tree Compiler Data"
-               << ": " << saveOutputDataTime << " seconds" << std::endl
-               << std::setw(42) << std::left << "    Total Time"
-               << ": " << currTime << " seconds");
+                 std::endl
+                   << "    -------------------------- Totals " << rank
+                   << " -----------------------------" << std::endl
+                   << std::setw(42) << std::left << "    Start-up"
+                   << ": " << startUpTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Start-up Sync"
+                   << ": " << startUpSyncTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Data Read"
+                   << ": " << dataReadTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Build VISKORES Dataset"
+                   << ": " << buildDatasetTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Data Read/Build Sync"
+                   << ": " << dataReadSyncTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Compute Contour Tree"
+                   << ": " << computeContourTreeTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Post filter Sync"
+                   << ": " << postFilterSyncTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Branch Decomposition"
+                   << ": " << branchDecompTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Save Tree Compiler Data"
+                   << ": " << saveOutputDataTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Total Time"
+                   << ": " << currTime << " seconds");
 
   // Flush ouput streams just to make sure everything has been logged (in particular when using MPI)
   std::cout << std::flush;

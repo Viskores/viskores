@@ -56,7 +56,8 @@ public:
 
   BoundsMap(const viskores::cont::PartitionedDataSet& pds) { this->Init(pds.GetPartitions()); }
 
-  BoundsMap(const viskores::cont::PartitionedDataSet& pds, const std::vector<viskores::Id>& blockIds)
+  BoundsMap(const viskores::cont::PartitionedDataSet& pds,
+            const std::vector<viskores::Id>& blockIds)
   {
     this->Init(pds.GetPartitions(), blockIds);
   }
@@ -85,10 +86,13 @@ public:
     return it->second;
   }
 
-  std::vector<viskores::Id> FindBlocks(const viskores::Vec3f& p) const { return this->FindBlocks(p, -1); }
+  std::vector<viskores::Id> FindBlocks(const viskores::Vec3f& p) const
+  {
+    return this->FindBlocks(p, -1);
+  }
 
   std::vector<viskores::Id> FindBlocks(const viskores::Vec3f& p,
-                                   const std::vector<viskores::Id>& ignoreBlocks) const
+                                       const std::vector<viskores::Id>& ignoreBlocks) const
   {
     viskores::Id ignoreID = (ignoreBlocks.empty() ? -1 : ignoreBlocks[0]);
     return FindBlocks(p, ignoreID);
@@ -115,7 +119,8 @@ public:
   viskores::Id GetLocalNumBlocks() const { return this->LocalNumBlocks; }
 
 private:
-  void Init(const std::vector<viskores::cont::DataSet>& dataSets, const std::vector<viskores::Id>& blockIds)
+  void Init(const std::vector<viskores::cont::DataSet>& dataSets,
+            const std::vector<viskores::Id>& blockIds)
   {
     if (dataSets.size() != blockIds.size())
       throw viskores::cont::ErrorFilterExecution("Number of datasets and block ids must match");
@@ -135,15 +140,18 @@ private:
 
     viskores::Id globalMinId = 0, globalMaxId = 0;
 
-    viskoresdiy::mpi::all_reduce(comm, locMinId, globalMinId, viskoresdiy::mpi::minimum<viskores::Id>{});
-    viskoresdiy::mpi::all_reduce(comm, locMaxId, globalMaxId, viskoresdiy::mpi::maximum<viskores::Id>{});
+    viskoresdiy::mpi::all_reduce(
+      comm, locMinId, globalMinId, viskoresdiy::mpi::minimum<viskores::Id>{});
+    viskoresdiy::mpi::all_reduce(
+      comm, locMaxId, globalMaxId, viskoresdiy::mpi::maximum<viskores::Id>{});
     if (globalMinId != 0 || (globalMaxId - globalMinId) < 1)
       throw viskores::cont::ErrorFilterExecution("Invalid block ids");
 
     //2. Find out how many blocks everyone has.
     std::vector<viskores::Id> locBlockCounts(comm.size(), 0), globalBlockCounts(comm.size(), 0);
     locBlockCounts[comm.rank()] = this->LocalIDs.size();
-    viskoresdiy::mpi::all_reduce(comm, locBlockCounts, globalBlockCounts, std::plus<viskores::Id>{});
+    viskoresdiy::mpi::all_reduce(
+      comm, locBlockCounts, globalBlockCounts, std::plus<viskores::Id>{});
 
     //note: there might be duplicates...
     viskores::Id globalNumBlocks =
@@ -223,9 +231,9 @@ private:
     std::vector<viskores::Float64> vals2(vals.size());
 
     std::vector<viskores::Float64> localMins((this->TotalNumBlocks * 3),
-                                         std::numeric_limits<viskores::Float64>::max());
+                                             std::numeric_limits<viskores::Float64>::max());
     std::vector<viskores::Float64> localMaxs((this->TotalNumBlocks * 3),
-                                         -std::numeric_limits<viskores::Float64>::max());
+                                             -std::numeric_limits<viskores::Float64>::max());
 
     for (std::size_t i = 0; i < this->LocalIDs.size(); i++)
     {
@@ -249,8 +257,10 @@ private:
 
     viskoresdiy::mpi::communicator comm = viskores::cont::EnvironmentTracker::GetCommunicator();
 
-    viskoresdiy::mpi::all_reduce(comm, localMins, globalMins, viskoresdiy::mpi::minimum<viskores::Float64>{});
-    viskoresdiy::mpi::all_reduce(comm, localMaxs, globalMaxs, viskoresdiy::mpi::maximum<viskores::Float64>{});
+    viskoresdiy::mpi::all_reduce(
+      comm, localMins, globalMins, viskoresdiy::mpi::minimum<viskores::Float64>{});
+    viskoresdiy::mpi::all_reduce(
+      comm, localMaxs, globalMaxs, viskoresdiy::mpi::maximum<viskores::Float64>{});
 #else
     globalMins = localMins;
     globalMaxs = localMaxs;
@@ -263,11 +273,11 @@ private:
     for (auto& block : this->BlockBounds)
     {
       block = viskores::Bounds(globalMins[idx + 0],
-                           globalMaxs[idx + 0],
-                           globalMins[idx + 1],
-                           globalMaxs[idx + 1],
-                           globalMins[idx + 2],
-                           globalMaxs[idx + 2]);
+                               globalMaxs[idx + 0],
+                               globalMins[idx + 1],
+                               globalMaxs[idx + 1],
+                               globalMins[idx + 2],
+                               globalMaxs[idx + 2]);
       this->GlobalBounds.Include(block);
       idx += 3;
     }

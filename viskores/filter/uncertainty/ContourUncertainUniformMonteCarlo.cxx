@@ -49,11 +49,11 @@ public:
             typename OutCellFieldType3>
 
   VISKORES_EXEC void operator()(const InPointFieldMinType& inPointFieldVecMin,
-                            const InPointFieldMaxType& inPointFieldVecMax,
-                            const InRandomNumbersType& randomNumbers,
-                            OutCellFieldType1& outNonCrossProb,
-                            OutCellFieldType2& outCrossProb,
-                            OutCellFieldType3& outEntropyProb) const
+                                const InPointFieldMaxType& inPointFieldVecMax,
+                                const InRandomNumbersType& randomNumbers,
+                                OutCellFieldType1& outNonCrossProb,
+                                OutCellFieldType2& outCrossProb,
+                                OutCellFieldType3& outEntropyProb) const
   {
     viskores::IdComponent numPoints = inPointFieldVecMin.GetNumberOfComponents();
 
@@ -130,7 +130,7 @@ public:
     {
       templog = 0;
       value = static_cast<viskores::FloatDefault>(probHistogram[i] /
-                                              static_cast<viskores::FloatDefault>(numSample));
+                                                  static_cast<viskores::FloatDefault>(numSample));
       if (probHistogram[i] > 0.00001)
       {
         nonZeroCase++;
@@ -180,7 +180,8 @@ VISKORES_CONT viskores::cont::DataSet ContourUncertainUniformMonteCarlo::DoExecu
   viskores::cont::CellSetStructured<3> cellSet;
   input.GetCellSet().AsCellSet(cellSet);
 
-  auto resolveType = [&](auto concreteMinField) {
+  auto resolveType = [&](auto concreteMinField)
+  {
     using ArrayType = std::decay_t<decltype(concreteMinField)>;
     using ValueType = typename ArrayType::ValueType;
     ArrayType concreteMaxField;
@@ -193,18 +194,18 @@ VISKORES_CONT viskores::cont::DataSet ContourUncertainUniformMonteCarlo::DoExecu
     viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault> randomArray(
       cellSet.GetNumberOfCells() * this->IterValue * 8, { 0xceed });
 
-    this->Invoke(
-      viskores::worklet::uniform::ContourUncertainUniformMonteCarlo{ this->IsoValue, this->IterValue },
-      cellSet,
-      concreteMinField,
-      concreteMaxField,
-      viskores::cont::make_ArrayHandleGroupVecVariable(
-        randomArray,
-        viskores::cont::ArrayHandleCounting<viskores::Id>(
-          0, this->IterValue * 8, cellSet.GetNumberOfCells() + 1)),
-      concreteNonCrossProb,
-      concreteCrossProb,
-      concreteEntropyProb);
+    this->Invoke(viskores::worklet::uniform::ContourUncertainUniformMonteCarlo{ this->IsoValue,
+                                                                                this->IterValue },
+                 cellSet,
+                 concreteMinField,
+                 concreteMaxField,
+                 viskores::cont::make_ArrayHandleGroupVecVariable(
+                   randomArray,
+                   viskores::cont::ArrayHandleCounting<viskores::Id>(
+                     0, this->IterValue * 8, cellSet.GetNumberOfCells() + 1)),
+                 concreteNonCrossProb,
+                 concreteCrossProb,
+                 concreteEntropyProb);
 
     crossProbability = concreteCrossProb;
     nonCrossProbability = concreteNonCrossProb;

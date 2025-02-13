@@ -83,7 +83,7 @@ template <typename T>
 struct CheckTriviallyCopyable
 {
   VISKORES_STATIC_ASSERT_MSG(viskoresstd::is_trivially_copyable<T>::value,
-                         "Type must be trivially copyable to be used here.");
+                             "Type must be trivially copyable to be used here.");
   static constexpr bool value = true;
 };
 
@@ -91,7 +91,7 @@ template <typename T>
 struct CheckTriviallyConstructible
 {
   VISKORES_STATIC_ASSERT_MSG(::viskoresstd::is_trivially_constructible<T>::value,
-                         "Type must be trivially constructible to be used here.");
+                             "Type must be trivially constructible to be used here.");
   static constexpr bool value = true;
 };
 
@@ -99,14 +99,15 @@ template <typename T>
 struct CheckTriviallyDestructible
 {
   VISKORES_STATIC_ASSERT_MSG(::viskoresstd::is_trivially_destructible<T>::value,
-                         "Type must be trivially destructible to be used here.");
+                             "Type must be trivially destructible to be used here.");
   static constexpr bool value = true;
 };
 
 template <typename T>
 struct CheckTrivial
 {
-  VISKORES_STATIC_ASSERT_MSG(::viskoresstd::is_trivial<T>::value, "Type must be trivial to be used here.");
+  VISKORES_STATIC_ASSERT_MSG(::viskoresstd::is_trivial<T>::value,
+                             "Type must be trivial to be used here.");
   static constexpr bool value = true;
 };
 
@@ -118,7 +119,8 @@ struct CheckTrivial
   VISKORES_STATIC_ASSERT(::viskoresstd::detail::CheckTriviallyConstructible<__VA_ARGS__>::value)
 #define VISKORES_IS_TRIVIALLY_DESTRUCTIBLE(...) \
   VISKORES_STATIC_ASSERT(::viskoresstd::detail::CheckTriviallyDestructible<__VA_ARGS__>::value)
-#define VISKORES_IS_TRIVIAL(...) VISKORES_STATIC_ASSERT(::viskoresstd::detail::CheckTrivial<__VA_ARGS__>::value)
+#define VISKORES_IS_TRIVIAL(...) \
+  VISKORES_STATIC_ASSERT(::viskoresstd::detail::CheckTrivial<__VA_ARGS__>::value)
 
 } // namespace viskoresstd
 #endif

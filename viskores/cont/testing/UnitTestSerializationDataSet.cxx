@@ -17,10 +17,10 @@ namespace
 
 using FieldTypeList = viskores::List<viskores::Float32, viskores::Vec3f>;
 using CellSetTypes = viskores::List<viskores::cont::CellSetExplicit<>,
-                                viskores::cont::CellSetSingleType<>,
-                                viskores::cont::CellSetStructured<1>,
-                                viskores::cont::CellSetStructured<2>,
-                                viskores::cont::CellSetStructured<3>>;
+                                    viskores::cont::CellSetSingleType<>,
+                                    viskores::cont::CellSetStructured<1>,
+                                    viskores::cont::CellSetStructured<2>,
+                                    viskores::cont::CellSetStructured<3>>;
 
 using DataSetWrapper = viskores::cont::DataSetWithCellSetTypes<CellSetTypes>;
 
@@ -29,7 +29,8 @@ VISKORES_CONT void TestEqualDataSetWrapper(const DataSetWrapper& ds1, const Data
   VISKORES_TEST_ASSERT(test_equal_DataSets(ds1.DataSet, ds2.DataSet, CellSetTypes{}));
 }
 
-VISKORES_CONT void TestEqualDataSet(const viskores::cont::DataSet& ds1, const viskores::cont::DataSet& ds2)
+VISKORES_CONT void TestEqualDataSet(const viskores::cont::DataSet& ds1,
+                                    const viskores::cont::DataSet& ds2)
 {
   VISKORES_TEST_ASSERT(test_equal_DataSets(ds1, ds2, CellSetTypes{}));
 }

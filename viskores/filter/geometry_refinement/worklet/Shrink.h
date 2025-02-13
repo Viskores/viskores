@@ -39,11 +39,11 @@ public:
 
     template <typename CoordsArrayType, typename ShapeIdType, typename ShapeTagType>
     VISKORES_EXEC void operator()(viskores::IdComponent numPointsInCell,
-                              viskores::IdComponent& numPoints,
-                              viskores::Vec3f& centroids,
-                              ShapeIdType& shapes,
-                              const CoordsArrayType& coords,
-                              ShapeTagType cellShape) const
+                                  viskores::IdComponent& numPoints,
+                                  viskores::Vec3f& centroids,
+                                  ShapeIdType& shapes,
+                                  const CoordsArrayType& coords,
+                                  ShapeTagType cellShape) const
     {
       numPoints = numPointsInCell;
       shapes = cellShape.Id;
@@ -81,13 +81,13 @@ public:
 
     template <typename PointIndicesVecType, typename CoordsArrayTypeIn, typename CoordsArrayTypeOut>
     VISKORES_EXEC void operator()(const viskores::Id& offsets,
-                              const viskores::Vec3f& centroids,
-                              viskores::Id& oldPointsMapping,
-                              viskores::Id& newPoints,
-                              CoordsArrayTypeOut& newCoords,
-                              const CoordsArrayTypeIn& coords,
-                              viskores::IdComponent localPtIndex,
-                              const PointIndicesVecType& globalPointIndex) const
+                                  const viskores::Vec3f& centroids,
+                                  viskores::Id& oldPointsMapping,
+                                  viskores::Id& newPoints,
+                                  CoordsArrayTypeOut& newCoords,
+                                  const CoordsArrayTypeIn& coords,
+                                  viskores::IdComponent localPtIndex,
+                                  const PointIndicesVecType& globalPointIndex) const
     {
       newPoints = offsets + localPtIndex;
       oldPointsMapping = globalPointIndex[localPtIndex];
@@ -107,7 +107,8 @@ public:
   void Run(
     const CellSetType& oldCellset,
     const viskores::FloatDefault shinkFactor,
-    const viskores::cont::ArrayHandle<viskores::Vec<CoordsComType, 3>, CoordsInStorageType>& oldCoords,
+    const viskores::cont::ArrayHandle<viskores::Vec<CoordsComType, 3>, CoordsInStorageType>&
+      oldCoords,
     viskores::cont::ArrayHandle<viskores::Vec<CoordsComType, 3>, CoordsOutStorageType>& newCoords,
     viskores::cont::ArrayHandle<viskores::Id, OldPointsMappingType>& oldPointsMapping,
     NewCellSetType& newCellset)

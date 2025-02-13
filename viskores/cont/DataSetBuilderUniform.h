@@ -36,9 +36,9 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const viskores::Id& dimension,
-                                              const T& origin,
-                                              const T& spacing,
-                                              const std::string& coordNm = "coords")
+                                                      const T& origin,
+                                                      const T& spacing,
+                                                      const std::string& coordNm = "coords")
   {
     return DataSetBuilderUniform::CreateDataSet(
       viskores::Id3(dimension, 1, 1),
@@ -55,7 +55,7 @@ public:
   ///   based on the number of points (as opposed to the number of cells).
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   VISKORES_CONT static viskores::cont::DataSet Create(const viskores::Id& dimension,
-                                              const std::string& coordNm = "coords");
+                                                      const std::string& coordNm = "coords");
 
   /// @brief Create a 2D uniform `DataSet`.
   ///
@@ -67,18 +67,19 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const viskores::Id2& dimensions,
-                                              const viskores::Vec<T, 2>& origin,
-                                              const viskores::Vec<T, 2>& spacing,
-                                              const std::string& coordNm = "coords")
+                                                      const viskores::Vec<T, 2>& origin,
+                                                      const viskores::Vec<T, 2>& spacing,
+                                                      const std::string& coordNm = "coords")
   {
-    return DataSetBuilderUniform::CreateDataSet(viskores::Id3(dimensions[0], dimensions[1], 1),
-                                                VecType(static_cast<viskores::FloatDefault>(origin[0]),
-                                                        static_cast<viskores::FloatDefault>(origin[1]),
-                                                        0),
-                                                VecType(static_cast<viskores::FloatDefault>(spacing[0]),
-                                                        static_cast<viskores::FloatDefault>(spacing[1]),
-                                                        1),
-                                                coordNm);
+    return DataSetBuilderUniform::CreateDataSet(
+      viskores::Id3(dimensions[0], dimensions[1], 1),
+      VecType(static_cast<viskores::FloatDefault>(origin[0]),
+              static_cast<viskores::FloatDefault>(origin[1]),
+              0),
+      VecType(static_cast<viskores::FloatDefault>(spacing[0]),
+              static_cast<viskores::FloatDefault>(spacing[1]),
+              1),
+      coordNm);
   }
 
   /// @brief Create a 2D uniform `DataSet`.
@@ -89,7 +90,7 @@ public:
   ///   based on the number of points (as opposed to the number of cells).
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   VISKORES_CONT static viskores::cont::DataSet Create(const viskores::Id2& dimensions,
-                                              const std::string& coordNm = "coords");
+                                                      const std::string& coordNm = "coords");
 
   /// @brief Create a 3D uniform `DataSet`.
   ///
@@ -101,9 +102,9 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const viskores::Id3& dimensions,
-                                              const viskores::Vec<T, 3>& origin,
-                                              const viskores::Vec<T, 3>& spacing,
-                                              const std::string& coordNm = "coords")
+                                                      const viskores::Vec<T, 3>& origin,
+                                                      const viskores::Vec<T, 3>& spacing,
+                                                      const std::string& coordNm = "coords")
   {
     return DataSetBuilderUniform::CreateDataSet(
       viskores::Id3(dimensions[0], dimensions[1], dimensions[2]),
@@ -124,14 +125,14 @@ public:
   ///   based on the number of points (as opposed to the number of cells).
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   VISKORES_CONT static viskores::cont::DataSet Create(const viskores::Id3& dimensions,
-                                              const std::string& coordNm = "coords");
+                                                      const std::string& coordNm = "coords");
 
 private:
   VISKORES_CONT
   static viskores::cont::DataSet CreateDataSet(const viskores::Id3& dimensions,
-                                           const viskores::Vec3f& origin,
-                                           const viskores::Vec3f& spacing,
-                                           const std::string& coordNm);
+                                               const viskores::Vec3f& origin,
+                                               const viskores::Vec3f& spacing,
+                                               const std::string& coordNm);
 };
 
 } // namespace cont

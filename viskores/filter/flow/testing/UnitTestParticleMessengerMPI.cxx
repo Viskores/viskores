@@ -87,15 +87,16 @@ void ValidateReceivedParticles(
     const auto& p = recvP[i].first;
 
     VISKORES_TEST_ASSERT(p.GetPosition() == reqP.GetPosition(),
-                     "Received particle has wrong Position.");
+                         "Received particle has wrong Position.");
     VISKORES_TEST_ASSERT(p.GetTime() == reqP.GetTime(), "Received particle has wrong Time.");
     VISKORES_TEST_ASSERT(p.GetID() == reqP.GetID(), "Received particle has wrong ID.");
     VISKORES_TEST_ASSERT(p.GetNumberOfSteps() == reqP.GetNumberOfSteps(),
-                     "Received particle has wrong NumSteps.");
+                         "Received particle has wrong NumSteps.");
 
     VISKORES_TEST_ASSERT(p.GetPosition() == reqP.GetPosition() && p.GetTime() == reqP.GetTime() &&
-                       p.GetID() == reqP.GetID() && p.GetNumberOfSteps() == reqP.GetNumberOfSteps(),
-                     "Received particle has wrong values.");
+                           p.GetID() == reqP.GetID() &&
+                           p.GetNumberOfSteps() == reqP.GetNumberOfSteps(),
+                         "Received particle has wrong values.");
 
     const auto& reqBids = particleBlockIds[static_cast<std::size_t>(sendRank)][i];
     const auto& bids = recvP[i].second;

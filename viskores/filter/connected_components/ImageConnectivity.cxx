@@ -17,19 +17,23 @@ namespace filter
 {
 namespace connected_components
 {
-VISKORES_CONT viskores::cont::DataSet ImageConnectivity::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet ImageConnectivity::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   const auto& field = this->GetFieldFromDataSet(input);
 
   if (!field.IsPointField())
   {
-    throw viskores::cont::ErrorBadValue("Active field for ImageConnectivity must be a point field.");
+    throw viskores::cont::ErrorBadValue(
+      "Active field for ImageConnectivity must be a point field.");
   }
 
   viskores::cont::ArrayHandle<viskores::Id> component;
 
-  auto resolveType = [&](const auto& concrete) {
-    viskores::worklet::connectivity::ImageConnectivity().Run(input.GetCellSet(), concrete, component);
+  auto resolveType = [&](const auto& concrete)
+  {
+    viskores::worklet::connectivity::ImageConnectivity().Run(
+      input.GetCellSet(), concrete, component);
   };
   this->CastAndCallScalarField(field, resolveType);
 

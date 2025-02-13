@@ -59,24 +59,25 @@ struct DeduceCellType
 
 // Declared outside of class, non-inline so that instantiations can be exported correctly.
 template <typename CellSetType, typename ValueType, typename StorageTagField>
-void DeduceCellType::operator()(const CellSetType& cells,
-                                const viskores::cont::CoordinateSystem& coordinateSystem,
-                                viskores::cont::CellSetSingleType<>& outputCells,
-                                const std::vector<ValueType>& isovalues,
-                                const viskores::cont::ArrayHandle<ValueType, StorageTagField>& input,
-                                viskores::cont::ArrayHandle<viskores::Vec3f>& vertices,
-                                viskores::cont::ArrayHandle<viskores::Vec3f>& normals,
-                                viskores::worklet::contour::CommonState& sharedState) const
+void DeduceCellType::operator()(
+  const CellSetType& cells,
+  const viskores::cont::CoordinateSystem& coordinateSystem,
+  viskores::cont::CellSetSingleType<>& outputCells,
+  const std::vector<ValueType>& isovalues,
+  const viskores::cont::ArrayHandle<ValueType, StorageTagField>& input,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& vertices,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& normals,
+  viskores::worklet::contour::CommonState& sharedState) const
 {
   viskores::cont::CastAndCall(coordinateSystem,
-                          contour::DeduceCoordType{},
-                          cells,
-                          outputCells,
-                          isovalues,
-                          input,
-                          vertices,
-                          normals,
-                          sharedState);
+                              contour::DeduceCoordType{},
+                              cells,
+                              outputCells,
+                              isovalues,
+                              input,
+                              vertices,
+                              normals,
+                              sharedState);
 }
 
 } // namespace contour
@@ -104,7 +105,10 @@ public:
   bool GetMergeDuplicatePoints() const { return this->SharedState.MergeDuplicatePoints; }
 
   //----------------------------------------------------------------------------
-  viskores::cont::ArrayHandle<viskores::Id> GetCellIdMap() const { return this->SharedState.CellIdMap; }
+  viskores::cont::ArrayHandle<viskores::Id> GetCellIdMap() const
+  {
+    return this->SharedState.CellIdMap;
+  }
 
   //----------------------------------------------------------------------------
   template <typename InArrayType, typename OutArrayType>
@@ -138,14 +142,14 @@ public:
 
     viskores::cont::CellSetSingleType<> outputCells;
     viskores::cont::CastAndCall(cells,
-                            contour::DeduceCellType{},
-                            coordinateSystem,
-                            outputCells,
-                            isovalues,
-                            input,
-                            vertices,
-                            normals,
-                            this->SharedState);
+                                contour::DeduceCellType{},
+                                coordinateSystem,
+                                outputCells,
+                                isovalues,
+                                input,
+                                vertices,
+                                normals,
+                                this->SharedState);
     return outputCells;
   }
 
@@ -163,14 +167,14 @@ public:
 
     viskores::cont::CellSetSingleType<> outputCells;
     viskores::cont::CastAndCall(cells,
-                            contour::DeduceCellType{},
-                            coordinateSystem,
-                            outputCells,
-                            isovalues,
-                            input,
-                            vertices,
-                            normals,
-                            this->SharedState);
+                                contour::DeduceCellType{},
+                                coordinateSystem,
+                                outputCells,
+                                isovalues,
+                                input,
+                                vertices,
+                                normals,
+                                this->SharedState);
     return outputCells;
   }
 

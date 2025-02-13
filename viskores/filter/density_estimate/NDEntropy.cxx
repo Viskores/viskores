@@ -42,7 +42,8 @@ VISKORES_CONT viskores::cont::DataSet NDEntropy::DoExecute(const viskores::cont:
   entropyHandle.WritePortal().Set(0, entropy);
 
   viskores::cont::DataSet outputData;
-  outputData.AddField({ "Entropy", viskores::cont::Field::Association::WholeDataSet, entropyHandle });
+  outputData.AddField(
+    { "Entropy", viskores::cont::Field::Association::WholeDataSet, entropyHandle });
   // The output is a "summary" of the input, no need to map fields
   return outputData;
 }

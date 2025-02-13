@@ -84,15 +84,15 @@ public:
 
   template <typename FieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id idx,
-                            const viskores::Id4 indices,
-                            const FieldPortalType& field1,
-                            const FieldPortalType& field2,
-                            const FieldPortalType& field3,
-                            const FieldPortalType& field4,
-                            OutFieldPortalType& outF1,
-                            OutFieldPortalType& outF2,
-                            OutFieldPortalType& outF3,
-                            OutFieldPortalType& outF4) const
+                                const viskores::Id4 indices,
+                                const FieldPortalType& field1,
+                                const FieldPortalType& field2,
+                                const FieldPortalType& field3,
+                                const FieldPortalType& field4,
+                                OutFieldPortalType& outF1,
+                                OutFieldPortalType& outF2,
+                                OutFieldPortalType& outF3,
+                                OutFieldPortalType& outF4) const
   {
     const auto i0 = indices[1];
     const auto i1 = indices[2];
@@ -154,11 +154,11 @@ public:
             typename OutPointsPortalType,
             typename OutNormalsPortalType>
   VISKORES_EXEC void operator()(const viskores::Id idx,
-                            const viskores::Id4 indices,
-                            const PointPortalType& points,
-                            const NormalPortalType& normals,
-                            OutPointsPortalType& outP,
-                            OutNormalsPortalType& outN) const
+                                const viskores::Id4 indices,
+                                const PointPortalType& points,
+                                const NormalPortalType& normals,
+                                OutPointsPortalType& outP,
+                                OutNormalsPortalType& outN) const
   {
     const auto i0 = indices[1];
     const auto i1 = indices[2];
@@ -185,9 +185,8 @@ static TriangleFieldArrays UnpackFields(viskores::cont::ArrayHandle<viskores::Id
 
   const auto numTris = tris.GetNumberOfValues();
 
-  auto isFieldEmpty = [](const viskores::cont::Field& f) -> bool {
-    return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1;
-  };
+  auto isFieldEmpty = [](const viskores::cont::Field& f) -> bool
+  { return f.GetNumberOfValues() == 0 || f.GetData().GetNumberOfComponentsFlat() != 1; };
 
   const bool emptyField1 = isFieldEmpty(fields[0]);
   const bool emptyField2 = isFieldEmpty(fields[1]);

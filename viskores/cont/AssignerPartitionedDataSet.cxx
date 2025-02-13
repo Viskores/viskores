@@ -24,7 +24,8 @@ namespace cont
 {
 
 VISKORES_CONT
-AssignerPartitionedDataSet::AssignerPartitionedDataSet(const viskores::cont::PartitionedDataSet& pds)
+AssignerPartitionedDataSet::AssignerPartitionedDataSet(
+  const viskores::cont::PartitionedDataSet& pds)
   : AssignerPartitionedDataSet(pds.GetNumberOfPartitions())
 {
 }

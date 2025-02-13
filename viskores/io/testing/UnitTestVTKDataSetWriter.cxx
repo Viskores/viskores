@@ -48,8 +48,9 @@ struct CheckSameCoordinateSystem
   }
 
   template <typename T>
-  void operator()(const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagSOA>& originalArray,
-                  const viskores::cont::CoordinateSystem& fileCoords) const
+  void operator()(
+    const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagSOA>& originalArray,
+    const viskores::cont::CoordinateSystem& fileCoords) const
   {
     CheckSameField{}(originalArray, fileCoords);
   }
@@ -57,7 +58,8 @@ struct CheckSameCoordinateSystem
   void operator()(const viskores::cont::ArrayHandleUniformPointCoordinates& originalArray,
                   const viskores::cont::CoordinateSystem& fileCoords) const
   {
-    VISKORES_TEST_ASSERT(fileCoords.GetData().IsType<viskores::cont::ArrayHandleUniformPointCoordinates>());
+    VISKORES_TEST_ASSERT(
+      fileCoords.GetData().IsType<viskores::cont::ArrayHandleUniformPointCoordinates>());
     viskores::cont::ArrayHandleUniformPointCoordinates fileArray =
       fileCoords.GetData().AsArrayHandle<viskores::cont::ArrayHandleUniformPointCoordinates>();
     auto originalPortal = originalArray.ReadPortal();
@@ -68,11 +70,12 @@ struct CheckSameCoordinateSystem
   }
 
   template <typename T>
-  using ArrayHandleRectilinearCoords = viskores::cont::ArrayHandle<
-    T,
-    typename viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<T>,
-                                                     viskores::cont::ArrayHandle<T>,
-                                                     viskores::cont::ArrayHandle<T>>::StorageTag>;
+  using ArrayHandleRectilinearCoords =
+    viskores::cont::ArrayHandle<T,
+                                typename viskores::cont::ArrayHandleCartesianProduct<
+                                  viskores::cont::ArrayHandle<T>,
+                                  viskores::cont::ArrayHandle<T>,
+                                  viskores::cont::ArrayHandle<T>>::StorageTag>;
   template <typename T>
   void operator()(const ArrayHandleRectilinearCoords<T>& originalArray,
                   const viskores::cont::CoordinateSystem& fileCoords) const
@@ -98,8 +101,9 @@ struct CheckSameCoordinateSystem
   void operator()(const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagXGCCoordinates>&,
                   const viskores::cont::CoordinateSystem&) const
   {
-    throw viskores::cont::ErrorBadType("UnitTestVTKDataSetWriter::CheckSameCoordinateSystem() shouldn't"
-                                   " be called on ArrayHandleXGCCoordinates");
+    throw viskores::cont::ErrorBadType(
+      "UnitTestVTKDataSetWriter::CheckSameCoordinateSystem() shouldn't"
+      " be called on ArrayHandleXGCCoordinates");
   }
 #endif
 };
@@ -120,7 +124,8 @@ void CheckWrittenReadData(const viskores::cont::DataSet& originalData,
       // changed name because VTK does not name coordinate systems.
       continue;
     }
-    VISKORES_TEST_ASSERT(fileData.HasField(originalField.GetName(), originalField.GetAssociation()));
+    VISKORES_TEST_ASSERT(
+      fileData.HasField(originalField.GetName(), originalField.GetAssociation()));
     viskores::cont::Field fileField =
       fileData.GetField(originalField.GetName(), originalField.GetAssociation());
     VISKORES_TEST_ASSERT(test_equal_ArrayHandles(originalField.GetData(), fileField.GetData()));
@@ -128,8 +133,8 @@ void CheckWrittenReadData(const viskores::cont::DataSet& originalData,
 
   VISKORES_TEST_ASSERT(fileData.GetNumberOfCoordinateSystems() > 0);
   viskores::cont::CastAndCall(originalData.GetCoordinateSystem().GetData(),
-                          CheckSameCoordinateSystem{},
-                          fileData.GetCoordinateSystem());
+                              CheckSameCoordinateSystem{},
+                              fileData.GetCoordinateSystem());
 }
 
 void TestVTKWriteTestData(const std::string& methodName, const viskores::cont::DataSet& data)

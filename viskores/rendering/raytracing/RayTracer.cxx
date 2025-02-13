@@ -74,12 +74,12 @@ public:
 
     template <typename ColorPortalType, typename Precision, typename ColorMapPortalType>
     VISKORES_EXEC void operator()(const viskores::Id& hitIdx,
-                              const Precision& scalar,
-                              const viskores::Vec<Precision, 3>& normal,
-                              const viskores::Vec<Precision, 3>& intersection,
-                              ColorPortalType& colors,
-                              ColorMapPortalType colorMap,
-                              const viskores::Id& idx) const
+                                  const Precision& scalar,
+                                  const viskores::Vec<Precision, 3>& normal,
+                                  const viskores::Vec<Precision, 3>& intersection,
+                                  ColorPortalType& colors,
+                                  ColorMapPortalType colorMap,
+                                  const viskores::Id& idx) const
     {
       viskores::Vec<Precision, 4> color;
       viskores::Id offset = idx * 4;
@@ -105,7 +105,8 @@ public:
       const Precision one = 1.f;
       cosTheta = viskores::Min(viskores::Max(cosTheta, zero), one);
       //Specular lighting
-      viskores::Vec<Precision, 3> reflect = 2.f * viskores::dot(lightDir, normal) * normal - lightDir;
+      viskores::Vec<Precision, 3> reflect =
+        2.f * viskores::dot(lightDir, normal) * normal - lightDir;
       viskores::Normalize(reflect);
       Precision cosPhi = viskores::dot(reflect, viewDir);
       Precision specularConstant =
@@ -144,10 +145,10 @@ public:
 
     template <typename ColorPortalType, typename Precision, typename ColorMapPortalType>
     VISKORES_EXEC void operator()(const viskores::Id& hitIdx,
-                              const Precision& scalar,
-                              ColorPortalType& colors,
-                              ColorMapPortalType colorMap,
-                              const viskores::Id& idx) const
+                                  const Precision& scalar,
+                                  ColorPortalType& colors,
+                                  ColorMapPortalType colorMap,
+                                  const viskores::Id& idx) const
     {
 
       if (hitIdx < 0)
@@ -176,9 +177,9 @@ public:
 
   template <typename Precision>
   VISKORES_CONT void run(Ray<Precision>& rays,
-                     viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
-                     const viskores::rendering::raytracing::Camera& camera,
-                     bool shade)
+                         viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap,
+                         const viskores::rendering::raytracing::Camera& camera,
+                         bool shade)
   {
     if (shade)
     {
@@ -227,7 +228,8 @@ void RayTracer::AddShapeIntersector(std::shared_ptr<ShapeIntersector> intersecto
   Intersectors.push_back(intersector);
 }
 
-void RayTracer::SetField(const viskores::cont::Field& scalarField, const viskores::Range& scalarRange)
+void RayTracer::SetField(const viskores::cont::Field& scalarField,
+                         const viskores::Range& scalarRange)
 {
   ScalarField = scalarField;
   ScalarRange = scalarRange;

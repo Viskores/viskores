@@ -86,11 +86,11 @@ public:
 
   template <typename InPortalFieldType, typename OutPortalFieldType>
   VISKORES_EXEC void operator()(const viskores::Id& superID,
-                            const InPortalFieldType& updegree,
-                            const InPortalFieldType& downdegree,
-                            const InPortalFieldType& joinArc,
-                            const InPortalFieldType& splitArc,
-                            const OutPortalFieldType& superarc) const
+                                const InPortalFieldType& updegree,
+                                const InPortalFieldType& downdegree,
+                                const InPortalFieldType& joinArc,
+                                const InPortalFieldType& splitArc,
+                                const OutPortalFieldType& superarc) const
   {
     // omit previously processed vertices
     if (superarc.Get(superID) != NO_VERTEX_ASSIGNED)

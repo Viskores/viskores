@@ -25,7 +25,7 @@ static constexpr viskores::Id ARRAY_SIZE = 10;
 
 template <typename T>
 VISKORES_CONT void TestValues(const viskores::cont::ArrayHandle<T>& ah,
-                          const std::initializer_list<T>& expected)
+                              const std::initializer_list<T>& expected)
 {
   auto portal = ah.ReadPortal();
   VISKORES_TEST_ASSERT(expected.size() == static_cast<size_t>(ah.GetNumberOfValues()));
@@ -163,9 +163,10 @@ void TryBounds()
   std::cout << "Trying viskores::Bounds" << std::endl;
 
   viskores::cont::ArrayHandle<viskores::Bounds> values =
-    viskores::cont::make_ArrayHandle<viskores::Bounds>({ { { 0.0, 1.0 }, { 0.0, 1.0 }, { 0.0, 1.0 } },
-                                                 { { 1.0, 2.0 }, { 1.0, 2.0 }, { 1.0, 2.0 } },
-                                                 { { 2.0, 4.0 }, { 2.0, 4.0 }, { 2.0, 4.0 } } });
+    viskores::cont::make_ArrayHandle<viskores::Bounds>(
+      { { { 0.0, 1.0 }, { 0.0, 1.0 }, { 0.0, 1.0 } },
+        { { 1.0, 2.0 }, { 1.0, 2.0 }, { 1.0, 2.0 } },
+        { { 2.0, 4.0 }, { 2.0, 4.0 }, { 2.0, 4.0 } } });
   viskores::Bounds bounds = viskores::cont::ArrayGetValue(1, values);
   VISKORES_TEST_ASSERT(bounds == viskores::Bounds{ { 1.0, 2.0 }, { 1.0, 2.0 }, { 1.0, 2.0 } });
 }

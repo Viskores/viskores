@@ -52,12 +52,14 @@ struct TryArrayInType
     }
 
     using ArrayHandleType = viskores::cont::ArrayHandle<T>;
-    ArrayHandleType handle = viskores::cont::make_ArrayHandle(array, ARRAY_SIZE, viskores::CopyFlag::Off);
+    ArrayHandleType handle =
+      viskores::cont::make_ArrayHandle(array, ARRAY_SIZE, viskores::CopyFlag::Off);
 
     using PortalType = typename ArrayHandleType::ReadPortalType;
 
-    viskores::cont::arg::Transport<viskores::cont::arg::TransportTagArrayIn, ArrayHandleType, Device>
-      transport;
+    viskores::cont::arg::
+      Transport<viskores::cont::arg::TransportTagArrayIn, ArrayHandleType, Device>
+        transport;
 
     viskores::cont::Token token;
 
@@ -78,7 +80,8 @@ bool TryArrayInTransport(Device device)
 
 void TestArrayInTransport()
 {
-  VISKORES_TEST_ASSERT(viskores::cont::TryExecute([](auto device) { return TryArrayInTransport(device); }));
+  VISKORES_TEST_ASSERT(
+    viskores::cont::TryExecute([](auto device) { return TryArrayInTransport(device); }));
 }
 
 } // Anonymous namespace

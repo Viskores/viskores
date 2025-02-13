@@ -36,9 +36,9 @@ struct StructuredPointGradient : public viskores::worklet::WorkletPointNeighborh
 
   template <typename PointsIn, typename FieldIn, typename GradientOutType>
   VISKORES_EXEC void operator()(const viskores::exec::BoundaryState& boundary,
-                            const PointsIn& inputPoints,
-                            const FieldIn& inputField,
-                            GradientOutType& outputGradient) const
+                                const PointsIn& inputPoints,
+                                const FieldIn& inputField,
+                                GradientOutType& outputGradient) const
   {
     using CoordType = typename PointsIn::ValueType;
     using CT = typename viskores::VecTraits<CoordType>::BaseComponentType;
@@ -46,8 +46,8 @@ struct StructuredPointGradient : public viskores::worklet::WorkletPointNeighborh
 
     viskores::Vec<CT, 3> xi, eta, zeta;
     viskores::Vec<bool, 3> onBoundary{ !boundary.IsRadiusInXBoundary(1),
-                                   !boundary.IsRadiusInYBoundary(1),
-                                   !boundary.IsRadiusInZBoundary(1) };
+                                       !boundary.IsRadiusInYBoundary(1),
+                                       !boundary.IsRadiusInZBoundary(1) };
 
     this->Jacobian(inputPoints, onBoundary, xi, eta, zeta); //store the metrics in xi,eta,zeta
 
@@ -128,10 +128,10 @@ struct StructuredPointGradient : public viskores::worklet::WorkletPointNeighborh
   //will be float,3 even when T is a 3 component field
   template <typename PointsIn, typename CT>
   VISKORES_EXEC void Jacobian(const PointsIn& inputPoints,
-                          const viskores::Vec<bool, 3>& onBoundary,
-                          viskores::Vec<CT, 3>& m_xi,
-                          viskores::Vec<CT, 3>& m_eta,
-                          viskores::Vec<CT, 3>& m_zeta) const
+                              const viskores::Vec<bool, 3>& onBoundary,
+                              viskores::Vec<CT, 3>& m_xi,
+                              viskores::Vec<CT, 3>& m_eta,
+                              viskores::Vec<CT, 3>& m_zeta) const
   {
     using CoordType = typename PointsIn::ValueType;
     CoordType xi, eta, zeta;

@@ -30,9 +30,9 @@ struct OddyWorklet : MeshQualityWorklet<OddyWorklet>
 {
   template <typename OutType, typename PointCoordVecType, typename CellShapeType>
   VISKORES_EXEC OutType ComputeMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  CellShapeType shape,
-                                  viskores::ErrorCode& ec) const
+                                      const PointCoordVecType& pts,
+                                      CellShapeType shape,
+                                      viskores::ErrorCode& ec) const
   {
     return viskores::worklet::cellmetrics::CellOddyMetric<OutType>(numPts, pts, shape, ec);
   }

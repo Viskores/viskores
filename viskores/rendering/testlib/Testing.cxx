@@ -83,7 +83,8 @@ TestEqualResult test_equal_images(const viskores::cont::DataSet& dataset,
     VISKORES_LOG_S(viskores::cont::LogLevel::Info, "testing image file: " << fileName);
     TestEqualResult imageResult;
     viskores::cont::DataSet imageDataSet;
-    const std::string testImagePath = viskores::cont::testing::Testing::RegressionImagePath(fileName);
+    const std::string testImagePath =
+      viskores::cont::testing::Testing::RegressionImagePath(fileName);
 
     try
     {
@@ -147,7 +148,7 @@ TestEqualResult test_equal_images(const viskores::cont::DataSet& dataset,
       if (!testResults)
       {
         VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                   "Other image errors: " << testResults.GetMergedMessage());
+                       "Other image errors: " << testResults.GetMergedMessage());
       }
       return imageResult;
     }
@@ -155,7 +156,8 @@ TestEqualResult test_equal_images(const viskores::cont::DataSet& dataset,
     testResults.PushMessage(imageResult.GetMergedMessage());
   }
 
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Test Results: " << testResults.GetMergedMessage());
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 "Test Results: " << testResults.GetMergedMessage());
 
   if (!testResults)
   {

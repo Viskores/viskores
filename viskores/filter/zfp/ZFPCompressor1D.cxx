@@ -18,17 +18,18 @@ namespace filter
 namespace zfp
 {
 //-----------------------------------------------------------------------------
-VISKORES_CONT viskores::cont::DataSet ZFPCompressor1D::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet ZFPCompressor1D::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   const auto& field = this->GetFieldFromDataSet(input);
 
   viskores::cont::ArrayHandle<viskores::Int64> compressed;
   viskores::worklet::ZFP1DCompressor compressor;
   using SupportedTypes = viskores::List<viskores::Int32, viskores::Float32, viskores::Float64>;
-  field.GetData().CastAndCallForTypesWithFloatFallback<SupportedTypes, VISKORES_DEFAULT_STORAGE_LIST>(
-    [&](const auto& concrete) {
-      compressed = compressor.Compress(concrete, rate, field.GetNumberOfValues());
-    });
+  field.GetData()
+    .CastAndCallForTypesWithFloatFallback<SupportedTypes, VISKORES_DEFAULT_STORAGE_LIST>(
+      [&](const auto& concrete)
+      { compressed = compressor.Compress(concrete, rate, field.GetNumberOfValues()); });
 
   // Note: the compressed array is set as a WholeDataSet field. It is really associated with
   // the points, but the size does not match and problems will occur if the user attempts to

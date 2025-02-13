@@ -42,7 +42,7 @@ struct DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagOpenMP>
 public:
   template <typename T, typename U, class CIn, class COut>
   VISKORES_CONT static void Copy(const viskores::cont::ArrayHandle<T, CIn>& input,
-                             viskores::cont::ArrayHandle<U, COut>& output)
+                                 viskores::cont::ArrayHandle<U, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -62,8 +62,8 @@ public:
 
   template <typename T, typename U, class CIn, class CStencil, class COut>
   VISKORES_CONT static void CopyIf(const viskores::cont::ArrayHandle<T, CIn>& input,
-                               const viskores::cont::ArrayHandle<U, CStencil>& stencil,
-                               viskores::cont::ArrayHandle<T, COut>& output)
+                                   const viskores::cont::ArrayHandle<U, CStencil>& stencil,
+                                   viskores::cont::ArrayHandle<T, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -73,9 +73,9 @@ public:
 
   template <typename T, typename U, class CIn, class CStencil, class COut, class UnaryPredicate>
   VISKORES_CONT static void CopyIf(const viskores::cont::ArrayHandle<T, CIn>& input,
-                               const viskores::cont::ArrayHandle<U, CStencil>& stencil,
-                               viskores::cont::ArrayHandle<T, COut>& output,
-                               UnaryPredicate unary_predicate)
+                                   const viskores::cont::ArrayHandle<U, CStencil>& stencil,
+                                   viskores::cont::ArrayHandle<T, COut>& output,
+                                   UnaryPredicate unary_predicate)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -116,10 +116,10 @@ public:
 
   template <typename T, typename U, class CIn, class COut>
   VISKORES_CONT static bool CopySubRange(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                     viskores::Id inputStartIndex,
-                                     viskores::Id numberOfValuesToCopy,
-                                     viskores::cont::ArrayHandle<U, COut>& output,
-                                     viskores::Id outputIndex = 0)
+                                         viskores::Id inputStartIndex,
+                                         viskores::Id numberOfValuesToCopy,
+                                         viskores::cont::ArrayHandle<U, COut>& output,
+                                         viskores::Id outputIndex = 0)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -184,8 +184,8 @@ public:
 
   template <typename T, typename U, class CIn, class BinaryFunctor>
   VISKORES_CONT static U Reduce(const viskores::cont::ArrayHandle<T, CIn>& input,
-                            U initialValue,
-                            BinaryFunctor binary_functor)
+                                U initialValue,
+                                BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -206,10 +206,10 @@ public:
             class CValOut,
             class BinaryFunctor>
   VISKORES_CONT static void ReduceByKey(const viskores::cont::ArrayHandle<T, CKeyIn>& keys,
-                                    const viskores::cont::ArrayHandle<U, CValIn>& values,
-                                    viskores::cont::ArrayHandle<T, CKeyOut>& keys_output,
-                                    viskores::cont::ArrayHandle<U, CValOut>& values_output,
-                                    BinaryFunctor func)
+                                        const viskores::cont::ArrayHandle<U, CValIn>& values,
+                                        viskores::cont::ArrayHandle<T, CKeyOut>& keys_output,
+                                        viskores::cont::ArrayHandle<U, CValOut>& values_output,
+                                        BinaryFunctor func)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -218,7 +218,7 @@ public:
 
   template <typename T, class CIn, class COut>
   VISKORES_CONT static T ScanInclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output)
+                                       viskores::cont::ArrayHandle<T, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -227,8 +227,8 @@ public:
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VISKORES_CONT static T ScanInclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output,
-                                   BinaryFunctor binaryFunctor)
+                                       viskores::cont::ArrayHandle<T, COut>& output,
+                                       BinaryFunctor binaryFunctor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -252,18 +252,19 @@ public:
 
   template <typename T, class CIn, class COut>
   VISKORES_CONT static T ScanExclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output)
+                                       viskores::cont::ArrayHandle<T, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
-    return ScanExclusive(input, output, viskores::Add(), viskores::TypeTraits<T>::ZeroInitialization());
+    return ScanExclusive(
+      input, output, viskores::Add(), viskores::TypeTraits<T>::ZeroInitialization());
   }
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VISKORES_CONT static T ScanExclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output,
-                                   BinaryFunctor binaryFunctor,
-                                   const T& initialValue)
+                                       viskores::cont::ArrayHandle<T, COut>& output,
+                                       BinaryFunctor binaryFunctor,
+                                       const T& initialValue)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -301,7 +302,7 @@ public:
 
   template <typename T, class Storage, class BinaryCompare>
   VISKORES_CONT static void Sort(viskores::cont::ArrayHandle<T, Storage>& values,
-                             BinaryCompare binary_compare)
+                                 BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -310,7 +311,7 @@ public:
 
   template <typename T, typename U, class StorageT, class StorageU>
   VISKORES_CONT static void SortByKey(viskores::cont::ArrayHandle<T, StorageT>& keys,
-                                  viskores::cont::ArrayHandle<U, StorageU>& values)
+                                      viskores::cont::ArrayHandle<U, StorageU>& values)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -319,8 +320,8 @@ public:
 
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
   VISKORES_CONT static void SortByKey(viskores::cont::ArrayHandle<T, StorageT>& keys,
-                                  viskores::cont::ArrayHandle<U, StorageU>& values,
-                                  BinaryCompare binary_compare)
+                                      viskores::cont::ArrayHandle<U, StorageU>& values,
+                                      BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -337,7 +338,7 @@ public:
 
   template <typename T, class Storage, class BinaryCompare>
   VISKORES_CONT static void Unique(viskores::cont::ArrayHandle<T, Storage>& values,
-                               BinaryCompare binary_compare)
+                                   BinaryCompare binary_compare)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -354,10 +355,12 @@ public:
     values.Allocate(outSize, viskores::CopyFlag::On);
   }
 
-  VISKORES_CONT_EXPORT static void ScheduleTask(viskores::exec::openmp::internal::TaskTiling1D& functor,
-                                            viskores::Id size);
-  VISKORES_CONT_EXPORT static void ScheduleTask(viskores::exec::openmp::internal::TaskTiling3D& functor,
-                                            viskores::Id3 size);
+  VISKORES_CONT_EXPORT static void ScheduleTask(
+    viskores::exec::openmp::internal::TaskTiling1D& functor,
+    viskores::Id size);
+  VISKORES_CONT_EXPORT static void ScheduleTask(
+    viskores::exec::openmp::internal::TaskTiling3D& functor,
+    viskores::Id3 size);
 
   template <typename Hints, typename FunctorType>
   VISKORES_CONT static inline void Schedule(Hints, FunctorType functor, viskores::Id numInstances)
@@ -404,9 +407,9 @@ class DeviceTaskTypes<viskores::cont::DeviceAdapterTagOpenMP>
 public:
   template <typename Hints, typename WorkletType, typename InvocationType>
   static viskores::exec::openmp::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
-                                                             const InvocationType& invocation,
-                                                             viskores::Id,
-                                                             Hints = Hints{})
+                                                                 const InvocationType& invocation,
+                                                                 viskores::Id,
+                                                                 Hints = Hints{})
   {
     // Currently ignoring hints.
     return viskores::exec::openmp::internal::TaskTiling1D(worklet, invocation);
@@ -414,9 +417,9 @@ public:
 
   template <typename Hints, typename WorkletType, typename InvocationType>
   static viskores::exec::openmp::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
-                                                             const InvocationType& invocation,
-                                                             viskores::Id3,
-                                                             Hints = Hints{})
+                                                                 const InvocationType& invocation,
+                                                                 viskores::Id3,
+                                                                 Hints = Hints{})
   {
     // Currently ignoring hints.
     return viskores::exec::openmp::internal::TaskTiling3D(worklet, invocation);
@@ -424,8 +427,8 @@ public:
 
   template <typename WorkletType, typename InvocationType, typename RangeType>
   VISKORES_CONT static auto MakeTask(WorkletType& worklet,
-                                 InvocationType& invocation,
-                                 const RangeType& range)
+                                     InvocationType& invocation,
+                                     const RangeType& range)
   {
     return MakeTask<viskores::cont::internal::HintList<>>(worklet, invocation, range);
   }

@@ -379,7 +379,10 @@ VISKORES_EXEC Scalar GetHexLMax(const CollectionOfPoints& pts)
             l4,
             viskores::Max(
               l5,
-              viskores::Max(l6, viskores::Max(l7, viskores::Max(l8, viskores::Max(l9, viskores::Max(l10, l11)))))))))));
+              viskores::Max(
+                l6,
+                viskores::Max(l7,
+                              viskores::Max(l8, viskores::Max(l9, viskores::Max(l10, l11)))))))))));
 
   return lmax;
 }
@@ -418,7 +421,10 @@ VISKORES_EXEC Scalar GetHexLMin(const CollectionOfPoints& pts)
             l4,
             viskores::Min(
               l5,
-              viskores::Min(l6, viskores::Min(l7, viskores::Min(l8, viskores::Min(l9, viskores::Min(l10, l11)))))))))));
+              viskores::Min(
+                l6,
+                viskores::Min(l7,
+                              viskores::Min(l8, viskores::Min(l9, viskores::Min(l10, l11)))))))))));
 
   return lmin;
 }
@@ -616,7 +622,8 @@ VISKORES_EXEC Vector GetHexX3(const CollectionOfPoints& pts)
  *  \return Returns the vector.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
-VISKORES_EXEC viskores::Vec<Vector, 3> GetHexAi(const CollectionOfPoints& pts, const viskores::Id& index)
+VISKORES_EXEC viskores::Vec<Vector, 3> GetHexAi(const CollectionOfPoints& pts,
+                                                const viskores::Id& index)
 {
   const Scalar neg1(-1.0);
   if (index == 0)
@@ -721,12 +728,16 @@ VISKORES_EXEC Scalar GetHexAiNormSquared(const CollectionOfPoints& pts, const vi
  *  \return Returns the vector.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
-VISKORES_EXEC Scalar GetHexAiAdjNormSquared(const CollectionOfPoints& pts, const viskores::Id& index)
+VISKORES_EXEC Scalar GetHexAiAdjNormSquared(const CollectionOfPoints& pts,
+                                            const viskores::Id& index)
 {
   const viskores::Vec<Vector, 3> Ai = GetHexAi<Scalar, Vector, CollectionOfPoints>(pts, index);
-  const Scalar magSquared0 = static_cast<Scalar>(viskores::MagnitudeSquared(viskores::Cross(Ai[0], Ai[1])));
-  const Scalar magSquared1 = static_cast<Scalar>(viskores::MagnitudeSquared(viskores::Cross(Ai[1], Ai[2])));
-  const Scalar magSquared2 = static_cast<Scalar>(viskores::MagnitudeSquared(viskores::Cross(Ai[2], Ai[0])));
+  const Scalar magSquared0 =
+    static_cast<Scalar>(viskores::MagnitudeSquared(viskores::Cross(Ai[0], Ai[1])));
+  const Scalar magSquared1 =
+    static_cast<Scalar>(viskores::MagnitudeSquared(viskores::Cross(Ai[1], Ai[2])));
+  const Scalar magSquared2 =
+    static_cast<Scalar>(viskores::MagnitudeSquared(viskores::Cross(Ai[2], Ai[0])));
 
   const Scalar AiAdjNormSquared = magSquared0 + magSquared1 + magSquared2;
 
@@ -757,7 +768,8 @@ VISKORES_EXEC Scalar GetHexAlphai(const CollectionOfPoints& pts, const viskores:
  *  \return Returns the vector.
  */
 template <typename Scalar, typename Vector, typename CollectionOfPoints>
-VISKORES_EXEC viskores::Vec<Vector, 3> GetHexAiHat(const CollectionOfPoints& pts, const viskores::Id& index)
+VISKORES_EXEC viskores::Vec<Vector, 3> GetHexAiHat(const CollectionOfPoints& pts,
+                                                   const viskores::Id& index)
 {
   const viskores::Vec<Vector, 3> Ai = GetHexAi<Scalar, Vector, CollectionOfPoints>(pts, index);
   const Vector v0hat = Ai[0] / viskores::Sqrt(viskores::MagnitudeSquared(Ai[0]));
@@ -778,7 +790,8 @@ template <typename Scalar, typename Vector, typename CollectionOfPoints>
 VISKORES_EXEC Scalar GetHexAlphaiHat(const CollectionOfPoints& pts, const viskores::Id& index)
 {
   const viskores::Vec<Vector, 3> Ai = GetHexAiHat<Scalar, Vector, CollectionOfPoints>(pts, index);
-  const Scalar hatAlpha_i = static_cast<Scalar>(viskores::Dot(Ai[0], viskores::Cross(Ai[1], Ai[2])));
+  const Scalar hatAlpha_i =
+    static_cast<Scalar>(viskores::Dot(Ai[0], viskores::Cross(Ai[1], Ai[2])));
 
   return hatAlpha_i;
 }

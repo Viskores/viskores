@@ -20,8 +20,8 @@
 namespace
 {
 
-using TimerTestDevices =
-  viskores::ListAppend<VISKORES_DEFAULT_DEVICE_ADAPTER_LIST, viskores::List<viskores::cont::DeviceAdapterTagAny>>;
+using TimerTestDevices = viskores::ListAppend<VISKORES_DEFAULT_DEVICE_ADAPTER_LIST,
+                                              viskores::List<viskores::cont::DeviceAdapterTagAny>>;
 
 constexpr long long waitTimeMilliseconds = 5;
 
@@ -34,7 +34,8 @@ struct Waiter
   {
     // Update when we want to wait to.
     this->ExpectedTimeMilliseconds += waitTimeMilliseconds;
-    viskores::Float64 expectedTimeSeconds = viskores::Float64(this->ExpectedTimeMilliseconds) / 1000;
+    viskores::Float64 expectedTimeSeconds =
+      viskores::Float64(this->ExpectedTimeMilliseconds) / 1000;
 
     long long elapsedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
                                       std::chrono::high_resolution_clock::now() - this->Start)

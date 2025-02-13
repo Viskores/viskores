@@ -58,11 +58,12 @@ class VISKORES_FILTER_SCALAR_TOPOLOGY_EXPORT DistributedBranchDecompositionFilte
 {
 public:
   VISKORES_CONT DistributedBranchDecompositionFilter() = default;
-  VISKORES_CONT DistributedBranchDecompositionFilter(viskores::Id3,
-                                                 viskores::Id3,
-                                                 const viskores::cont::ArrayHandle<viskores::Id3>&,
-                                                 const viskores::cont::ArrayHandle<viskores::Id3>&,
-                                                 const viskores::cont::ArrayHandle<viskores::Id3>&);
+  VISKORES_CONT DistributedBranchDecompositionFilter(
+    viskores::Id3,
+    viskores::Id3,
+    const viskores::cont::ArrayHandle<viskores::Id3>&,
+    const viskores::cont::ArrayHandle<viskores::Id3>&,
+    const viskores::cont::ArrayHandle<viskores::Id3>&);
 
 private:
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet&) override;

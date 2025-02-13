@@ -41,9 +41,10 @@ viskores::cont::ArrayHandle<T> CreateArrayHandle(T min, T max, viskores::Id numV
 }
 
 template <typename T, int size>
-viskores::cont::ArrayHandle<viskores::Vec<T, size>> CreateArrayHandle(const viskores::Vec<T, size>& min,
-                                                              const viskores::Vec<T, size>& max,
-                                                              viskores::Id numVals)
+viskores::cont::ArrayHandle<viskores::Vec<T, size>> CreateArrayHandle(
+  const viskores::Vec<T, size>& min,
+  const viskores::Vec<T, size>& max,
+  viskores::Id numVals)
 {
   std::mt19937 gen(uid++);
   std::uniform_real_distribution<double> dis[size];
@@ -57,7 +58,8 @@ viskores::cont::ArrayHandle<viskores::Vec<T, size>> CreateArrayHandle(const visk
   auto portal = handle.WritePortal();
   std::generate(viskores::cont::ArrayPortalToIteratorBegin(portal),
                 viskores::cont::ArrayPortalToIteratorEnd(portal),
-                [&]() {
+                [&]()
+                {
                   viskores::Vec<T, size> val;
                   for (int cc = 0; cc < size; ++cc)
                   {

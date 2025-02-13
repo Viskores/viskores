@@ -37,8 +37,8 @@ struct BinsBBox
 };
 
 VISKORES_EXEC_CONT static DimVec3 ComputeGridDimension(viskores::Id numberOfCells,
-                                                   const FloatVec3& size,
-                                                   viskores::FloatDefault density)
+                                                       const FloatVec3& size,
+                                                       viskores::FloatDefault density)
 {
   viskores::FloatDefault nsides = 0.0f;
   viskores::FloatDefault volume = 1.0f;
@@ -52,12 +52,12 @@ VISKORES_EXEC_CONT static DimVec3 ComputeGridDimension(viskores::Id numberOfCell
     }
   }
 
-  auto r =
-    viskores::Pow((static_cast<viskores::FloatDefault>(numberOfCells) / (volume * density)), 1.0f / nsides);
+  auto r = viskores::Pow((static_cast<viskores::FloatDefault>(numberOfCells) / (volume * density)),
+                         1.0f / nsides);
   return viskores::Max(DimVec3(1),
-                   DimVec3(static_cast<DimensionType>(size[0] * r),
-                           static_cast<DimensionType>(size[1] * r),
-                           static_cast<DimensionType>(size[2] * r)));
+                       DimVec3(static_cast<DimensionType>(size[0] * r),
+                               static_cast<DimensionType>(size[1] * r),
+                               static_cast<DimensionType>(size[2] * r)));
 }
 
 VISKORES_EXEC static BinsBBox ComputeIntersectingBins(const Bounds cellBounds, const Grid& grid)
@@ -175,8 +175,8 @@ public:
 
   template <typename PointsVecType, typename BinIdsPortalType>
   VISKORES_EXEC void operator()(const PointsVecType& points,
-                            viskores::Id offset,
-                            BinIdsPortalType& binIds) const
+                                viskores::Id offset,
+                                BinIdsPortalType& binIds) const
   {
     auto cellBounds = ComputeCellBounds(points);
     auto binsBBox = ComputeIntersectingBins(cellBounds, this->L1Grid);
@@ -208,8 +208,8 @@ public:
 
   template <typename OutputDimensionsPortal>
   VISKORES_EXEC void operator()(viskores::Id binId,
-                            viskores::Id numCells,
-                            OutputDimensionsPortal& dimensions) const
+                                viskores::Id numCells,
+                                OutputDimensionsPortal& dimensions) const
   {
     dimensions.Set(binId, ComputeGridDimension(numCells, this->Size, this->Density));
   }
@@ -235,8 +235,8 @@ public:
 
   template <typename PointsVecType, typename BinDimensionsPortalType>
   VISKORES_EXEC void operator()(const PointsVecType& points,
-                            const BinDimensionsPortalType& binDimensions,
-                            viskores::Id& numBins) const
+                                const BinDimensionsPortalType& binDimensions,
+                                viskores::Id& numBins) const
   {
     auto cellBounds = ComputeCellBounds(points);
     auto binsBBox = ComputeIntersectingBins(cellBounds, this->L1Grid);
@@ -277,12 +277,12 @@ public:
             typename BinIdsPortalType,
             typename CellIdsPortalType>
   VISKORES_EXEC void operator()(viskores::Id cellId,
-                            const PointsVecType& points,
-                            const BinDimensionsPortalType& binDimensions,
-                            const BinStartsPortalType& binStarts,
-                            viskores::Id offset,
-                            BinIdsPortalType binIds,
-                            CellIdsPortalType cellIds) const
+                                const PointsVecType& points,
+                                const BinDimensionsPortalType& binDimensions,
+                                const BinStartsPortalType& binStarts,
+                                viskores::Id offset,
+                                BinIdsPortalType binIds,
+                                CellIdsPortalType cellIds) const
   {
     auto cellBounds = ComputeCellBounds(points);
     auto binsBBox = ComputeIntersectingBins(cellBounds, this->L1Grid);
@@ -320,10 +320,10 @@ public:
 
   template <typename CellStartsPortalType, typename CellCountsPortalType>
   VISKORES_EXEC void operator()(viskores::Id binIndex,
-                            viskores::Id start,
-                            viskores::Id count,
-                            CellStartsPortalType& cellStarts,
-                            CellCountsPortalType& cellCounts) const
+                                viskores::Id start,
+                                viskores::Id count,
+                                CellStartsPortalType& cellStarts,
+                                CellCountsPortalType& cellCounts) const
   {
     cellStarts.Set(binIndex, start);
     cellCounts.Set(binIndex, count);
@@ -332,7 +332,10 @@ public:
 
 struct DimensionsToCount
 {
-  VISKORES_EXEC viskores::Id operator()(const DimVec3& dim) const { return dim[0] * dim[1] * dim[2]; }
+  VISKORES_EXEC viskores::Id operator()(const DimVec3& dim) const
+  {
+    return dim[0] * dim[1] * dim[2];
+  }
 };
 
 } // anonymous namespace
@@ -390,18 +393,19 @@ VISKORES_CONT void CellLocatorTwoLevel::Build()
   viskores::cont::Algorithm::Sort(binIds);
   viskores::cont::ArrayHandle<viskores::Id> bins;
   viskores::cont::ArrayHandle<viskores::Id> cellsPerBin;
-  viskores::cont::Algorithm::ReduceByKey(binIds,
-                                     viskores::cont::make_ArrayHandleConstant(viskores::Id(1), numPairsL1),
-                                     bins,
-                                     cellsPerBin,
-                                     viskores::Sum());
+  viskores::cont::Algorithm::ReduceByKey(
+    binIds,
+    viskores::cont::make_ArrayHandleConstant(viskores::Id(1), numPairsL1),
+    bins,
+    cellsPerBin,
+    viskores::Sum());
   binIds.ReleaseResources();
 
   // 6: Compute level-2 dimensions
   viskores::Id numberOfBins =
     this->TopLevel.Dimensions[0] * this->TopLevel.Dimensions[1] * this->TopLevel.Dimensions[2];
   viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant(DimVec3(0), numberOfBins),
-                        this->LeafDimensions);
+                            this->LeafDimensions);
   GenerateBinsL1 generateL1(this->TopLevel.BinSize, this->DensityL2);
   invoke(generateL1, bins, cellsPerBin, this->LeafDimensions);
   bins.ReleaseResources();
@@ -436,11 +440,12 @@ VISKORES_CONT void CellLocatorTwoLevel::Build()
 
   // 11: From above, find the cells that each l2 bin intersects
   viskores::cont::Algorithm::SortByKey(binIds, this->CellIds);
-  viskores::cont::Algorithm::ReduceByKey(binIds,
-                                     viskores::cont::make_ArrayHandleConstant(viskores::Id(1), numPairsL2),
-                                     bins,
-                                     cellsPerBin,
-                                     viskores::Sum());
+  viskores::cont::Algorithm::ReduceByKey(
+    binIds,
+    viskores::cont::make_ArrayHandleConstant(viskores::Id(1), numPairsL2),
+    bins,
+    cellsPerBin,
+    viskores::Sum());
   binIds.ReleaseResources();
 
   // 12: Generate the leaf bin arrays
@@ -448,9 +453,9 @@ VISKORES_CONT void CellLocatorTwoLevel::Build()
   viskores::cont::Algorithm::ScanExclusive(cellsPerBin, cellsStart);
 
   viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, numberOfLeaves),
-                        this->CellStartIndex);
+                            this->CellStartIndex);
   viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, numberOfLeaves),
-                        this->CellCount);
+                            this->CellCount);
   invoke(GenerateBinsL2{}, bins, cellsStart, cellsPerBin, this->CellStartIndex, this->CellCount);
 }
 
@@ -459,22 +464,22 @@ struct CellLocatorTwoLevel::MakeExecObject
 {
   template <typename CellSetType>
   VISKORES_CONT void operator()(const CellSetType& cellSet,
-                            viskores::cont::DeviceAdapterId device,
-                            viskores::cont::Token& token,
-                            const CellLocatorTwoLevel& self,
-                            ExecObjType& execObject) const
+                                viskores::cont::DeviceAdapterId device,
+                                viskores::cont::Token& token,
+                                const CellLocatorTwoLevel& self,
+                                ExecObjType& execObject) const
   {
     using CellStructuredType = CellSetContToExec<CellSetType>;
     execObject = viskores::exec::CellLocatorTwoLevel<CellStructuredType>(self.TopLevel,
-                                                                     self.LeafDimensions,
-                                                                     self.LeafStartIndex,
-                                                                     self.CellStartIndex,
-                                                                     self.CellCount,
-                                                                     self.CellIds,
-                                                                     cellSet,
-                                                                     self.GetCoordinates(),
-                                                                     device,
-                                                                     token);
+                                                                         self.LeafDimensions,
+                                                                         self.LeafStartIndex,
+                                                                         self.CellStartIndex,
+                                                                         self.CellCount,
+                                                                         self.CellIds,
+                                                                         cellSet,
+                                                                         self.GetCoordinates(),
+                                                                         device,
+                                                                         token);
   }
 };
 
@@ -484,7 +489,8 @@ CellLocatorTwoLevel::ExecObjType CellLocatorTwoLevel::PrepareForExecution(
 {
   this->Update();
   ExecObjType execObject;
-  viskores::cont::CastAndCall(this->GetCellSet(), MakeExecObject{}, device, token, *this, execObject);
+  viskores::cont::CastAndCall(
+    this->GetCellSet(), MakeExecObject{}, device, token, *this, execObject);
   return execObject;
 }
 

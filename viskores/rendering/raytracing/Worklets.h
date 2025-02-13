@@ -74,8 +74,8 @@ public:
 
   template <typename MaskType>
   VISKORES_EXEC inline void operator()(const FloatType& inValue,
-                                   FloatType& outValue,
-                                   const MaskType& mask) const
+                                       FloatType& outValue,
+                                       const MaskType& mask) const
   {
     if (mask == MaskValue)
       outValue = inValue + Offset;

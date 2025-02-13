@@ -37,29 +37,29 @@ void RenderTests()
   options.RadiusDelta = 4.0f;
   options.Radius = 0.25f;
   viskores::rendering::testing::RenderTest(maker.Make3DUniformDataSet1(),
-                                       "pointvar",
-                                       "rendering/glyph_scalar/variable_regular3D.png",
-                                       options);
+                                           "pointvar",
+                                           "rendering/glyph_scalar/variable_regular3D.png",
+                                           options);
 
   options.GlyphType = viskores::rendering::GlyphType::Sphere;
   viskores::rendering::testing::RenderTest(maker.Make3DUniformDataSet3({ 7 }),
-                                       "pointvar",
-                                       "rendering/glyph_scalar/variable_spheres_regular3D.png",
-                                       options);
+                                           "pointvar",
+                                           "rendering/glyph_scalar/variable_spheres_regular3D.png",
+                                           options);
 
   options.GlyphType = viskores::rendering::GlyphType::Axes;
   viskores::rendering::testing::RenderTest(maker.Make3DUniformDataSet3({ 7 }),
-                                       "pointvar",
-                                       "rendering/glyph_scalar/variable_axes_regular3D.png",
-                                       options);
+                                           "pointvar",
+                                           "rendering/glyph_scalar/variable_axes_regular3D.png",
+                                           options);
 
   options.GlyphType = viskores::rendering::GlyphType::Quad;
   options.Radius = 5.0f;
   options.RadiusDelta = 0.75f;
   viskores::rendering::testing::RenderTest(maker.Make3DUniformDataSet3({ 7 }),
-                                       "pointvar",
-                                       "rendering/glyph_scalar/variable_quads_regular3D.png",
-                                       options);
+                                           "pointvar",
+                                           "rendering/glyph_scalar/variable_quads_regular3D.png",
+                                           options);
 
   // restore defaults
   options.RadiusDelta = 0.5f;

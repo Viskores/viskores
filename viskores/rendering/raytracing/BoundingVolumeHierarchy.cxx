@@ -86,9 +86,9 @@ public:
 
   template <typename InType, typename OutType>
   VISKORES_EXEC void operator()(const viskores::Id& outIndex,
-                            const viskores::Id& inIndex,
-                            const InType& inPortal,
-                            OutType& outPortal) const
+                                const viskores::Id& inIndex,
+                                const InType& inPortal,
+                                OutType& outPortal) const
   {
     outPortal.Set(outIndex, inPortal.Get(inIndex));
   }
@@ -106,8 +106,8 @@ public:
 
   template <typename LeafPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& dataIndex,
-                            LeafPortalType& leafs,
-                            const viskores::Id& index) const
+                                LeafPortalType& leafs,
+                                const viskores::Id& index) const
   {
     const viskores::Id offset = index * 2;
     leafs.Set(offset, 1);             // number of primitives
@@ -189,18 +189,18 @@ public:
             typename AtomicType,
             typename BVHType>
   VISKORES_EXEC_CONT void operator()(const viskores::Id workIndex,
-                                 const InputPortalType& xmin,
-                                 const InputPortalType& ymin,
-                                 const InputPortalType& zmin,
-                                 const InputPortalType& xmax,
-                                 const InputPortalType& ymax,
-                                 const InputPortalType& zmax,
-                                 const OffsetPortalType& leafOffsets,
-                                 const IdPortalType& parents,
-                                 const IdPortalType& leftChildren,
-                                 const IdPortalType& rightChildren,
-                                 AtomicType& counters,
-                                 BVHType& flatBVH) const
+                                     const InputPortalType& xmin,
+                                     const InputPortalType& ymin,
+                                     const InputPortalType& zmin,
+                                     const InputPortalType& xmax,
+                                     const InputPortalType& ymax,
+                                     const InputPortalType& zmax,
+                                     const OffsetPortalType& leafOffsets,
+                                     const IdPortalType& parents,
+                                     const IdPortalType& leftChildren,
+                                     const IdPortalType& rightChildren,
+                                     AtomicType& counters,
+                                     BVHType& flatBVH) const
 
   {
     //move up into the inner nodes
@@ -223,7 +223,8 @@ public:
         //and set it in the current node
         childVector[0] = childVector[0] - LeafCount + 1;
 
-        viskores::Vec4f_32 first4Vec; // = FlatBVH.Get(currentNode); only this one needs effects this
+        viskores::Vec4f_32
+          first4Vec; // = FlatBVH.Get(currentNode); only this one needs effects this
 
         first4Vec[0] = xmin.Get(childVector[0]);
         first4Vec[1] = ymin.Get(childVector[0]);
@@ -370,8 +371,8 @@ private:
 
   template <typename MortonType>
   VISKORES_EXEC inline viskores::Int32 delta(const viskores::Int32& a,
-                                     const viskores::Int32& b,
-                                     const MortonType& mortonCodePortal) const
+                                             const viskores::Int32& b,
+                                             const MortonType& mortonCodePortal) const
   {
     bool tie = false;
     bool outOfRange = (b < 0 || b > LeafCount - 1);
@@ -403,10 +404,10 @@ public:
 
   template <typename MortonType, typename ParentType>
   VISKORES_EXEC void operator()(const viskores::Id& index,
-                            viskores::Id& leftChild,
-                            viskores::Id& rightChild,
-                            const MortonType& mortonCodePortal,
-                            ParentType& parentPortal) const
+                                viskores::Id& leftChild,
+                                viskores::Id& rightChild,
+                                const MortonType& mortonCodePortal,
+                                ParentType& parentPortal) const
   {
     viskores::Int32 idx = viskores::Int32(index);
     //determine range direction
@@ -593,7 +594,8 @@ VISKORES_CONT void LinearBVHBuilder::Build(LinearBVH& linearBVH)
 
 
   // Find the extent of all bounding boxes to generate normalization for morton codes
-  viskores::Vec3f_32 minExtent(viskores::Infinity32(), viskores::Infinity32(), viskores::Infinity32());
+  viskores::Vec3f_32 minExtent(
+    viskores::Infinity32(), viskores::Infinity32(), viskores::Infinity32());
   viskores::Vec3f_32 maxExtent(
     viskores::NegativeInfinity32(), viskores::NegativeInfinity32(), viskores::NegativeInfinity32());
   maxExtent[0] = viskores::cont::Algorithm::Reduce(bvh.AABB.xmaxs, maxExtent[0], MaxValue());
@@ -643,7 +645,8 @@ VISKORES_CONT void LinearBVHBuilder::Build(LinearBVH& linearBVH)
   viskores::cont::ArrayHandleConstant<viskores::Int32> zero(0, bvh.GetNumberOfPrimitives() - 1);
   viskores::cont::Algorithm::Copy(zero, counters);
 
-  viskores::worklet::DispatcherMapField<PropagateAABBs> propDispatch(PropagateAABBs{ primitiveCount });
+  viskores::worklet::DispatcherMapField<PropagateAABBs> propDispatch(
+    PropagateAABBs{ primitiveCount });
 
   propDispatch.Invoke(bvh.AABB.xmins,
                       bvh.AABB.ymins,

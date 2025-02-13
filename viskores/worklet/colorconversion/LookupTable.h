@@ -25,7 +25,8 @@ namespace worklet
 namespace colorconversion
 {
 
-using LookupTableTypes = viskores::List<viskores::Vec3ui_8, viskores::Vec4ui_8, viskores::Vec3f_32, viskores::Vec4f_64>;
+using LookupTableTypes =
+  viskores::List<viskores::Vec3ui_8, viskores::Vec4ui_8, viskores::Vec3f_32, viskores::Vec4f_64>;
 
 struct LookupTable : public viskores::worklet::WorkletMapField
 {
@@ -60,8 +61,8 @@ struct LookupTable : public viskores::worklet::WorkletMapField
 
   template <typename T, typename WholeFieldIn, typename U, int N>
   VISKORES_EXEC void operator()(const T& in,
-                            const WholeFieldIn lookupTable,
-                            viskores::Vec<U, N>& output) const
+                                const WholeFieldIn lookupTable,
+                                viskores::Vec<U, N>& output) const
   {
     viskores::Float64 v = (static_cast<viskores::Float64>(in));
     viskores::Int32 idx = 1;

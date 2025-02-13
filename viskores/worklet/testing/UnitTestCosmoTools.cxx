@@ -152,14 +152,14 @@ viskores::cont::DataSet MakeCosmo_3DDataSet_0()
 
   // Field data
   viskores::Float32 xLocation[nCells] = { 20.8125f, 29.6871f, 29.724f,  29.6783f, 29.7051f,
-                                      20.8172f, 20.8665f, 20.8271f, 20.8592f, 20.819f,
-                                      29.708f,  20.8829f, 20.8379f, 29.7278f };
+                                          20.8172f, 20.8665f, 20.8271f, 20.8592f, 20.819f,
+                                          29.708f,  20.8829f, 20.8379f, 29.7278f };
   viskores::Float32 yLocation[nCells] = { 10.8864f, 15.4445f, 15.4766f, 15.4766f, 15.5052f,
-                                      10.8534f, 10.8679f, 10.8677f, 10.9505f, 10.8949f,
-                                      15.4251f, 10.9144f, 10.877f,  15.5267f };
+                                          10.8534f, 10.8679f, 10.8677f, 10.9505f, 10.8949f,
+                                          15.4251f, 10.9144f, 10.877f,  15.5267f };
   viskores::Float32 zLocation[nCells] = { 0.309784f, 1.55953f,  1.51077f,  1.5324f,   1.52008f,
-                                      0.23461f,  0.254398f, 0.234255f, 0.248716f, 0.304834f,
-                                      1.53951f,  0.261517f, 0.27677f,  1.50798f };
+                                          0.23461f,  0.254398f, 0.234255f, 0.248716f, 0.304834f,
+                                          1.53951f,  0.261517f, 0.27677f,  1.50798f };
 
   viskores::Id haloId[nCells] = { 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1 };
   viskores::Id mbp[nCells] = { 9, 4, 4, 4, 4, 9, 9, 9, 9, 9, 4, 9, 9, 4 };
@@ -316,7 +316,7 @@ void TestCosmo_3DCenterFind()
     xLocArray, yLocArray, zLocArray, nCells, particleMass, mxnResult);
 
   VISKORES_TEST_ASSERT(test_equal(nxnResult.first, mxnResult.first),
-                   "NxN and MxN got different results");
+                       "NxN and MxN got different results");
 }
 
 void TestCosmoTools()

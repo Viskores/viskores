@@ -92,15 +92,15 @@ public:
             typename MeshSortOrderPortalType,
             typename OutFieldPortalType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id& from,
-                                const InFieldPortalType& bractVertexSupersetPortal,
-                                const InFieldPortalType& boundaryIndicesPortal,
-                                const InFieldPortalType& boundaryTreeIdPortal,
-                                const InFieldPortalType& contourtreeSuperparentsPortal,
-                                const InFieldPortalType& contourtreeHyperparentsPortal,
-                                const InFieldPortalType& contourtreeHyperarcsPortal,
-                                const InFieldPortalType& contourtreeSupernodesPortal,
-                                const MeshSortOrderPortalType& meshSortOrderPortal,
-                                const OutFieldPortalType& treeToSupersetPortal) const
+                                        const InFieldPortalType& bractVertexSupersetPortal,
+                                        const InFieldPortalType& boundaryIndicesPortal,
+                                        const InFieldPortalType& boundaryTreeIdPortal,
+                                        const InFieldPortalType& contourtreeSuperparentsPortal,
+                                        const InFieldPortalType& contourtreeHyperparentsPortal,
+                                        const InFieldPortalType& contourtreeHyperarcsPortal,
+                                        const InFieldPortalType& contourtreeSupernodesPortal,
+                                        const MeshSortOrderPortalType& meshSortOrderPortal,
+                                        const OutFieldPortalType& treeToSupersetPortal) const
   {
     // find the sort order, super- and hyper- parent
     // viskores::Id fromIndex = bractVertexSupersetPortal.Get(from);

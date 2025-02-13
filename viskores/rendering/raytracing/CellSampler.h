@@ -64,10 +64,10 @@ VISKORES_EXEC_CONT inline viskores::Int32 GetNumberOfPoints<viskores::CellShapeT
 
 template <typename P, typename S, typename CellShapeTagType>
 VISKORES_EXEC_CONT inline bool Sample(const viskores::Vec<viskores::Vec<P, 3>, 8>& points,
-                                  const viskores::Vec<S, 8>& scalars,
-                                  const viskores::Vec<P, 3>& sampleLocation,
-                                  S& lerpedScalar,
-                                  const CellShapeTagType& shapeTag)
+                                      const viskores::Vec<S, 8>& scalars,
+                                      const viskores::Vec<P, 3>& sampleLocation,
+                                      S& lerpedScalar,
+                                      const CellShapeTagType& shapeTag)
 {
 
   bool validSample = true;
@@ -79,7 +79,8 @@ VISKORES_EXEC_CONT inline bool Sample(const viskores::Vec<viskores::Vec<P, 3>, 8
     scalarVec.Append(scalars[i]);
   }
   viskores::Vec<P, 3> pcoords;
-  viskores::exec::WorldCoordinatesToParametricCoordinates(pointsVec, sampleLocation, shapeTag, pcoords);
+  viskores::exec::WorldCoordinatesToParametricCoordinates(
+    pointsVec, sampleLocation, shapeTag, pcoords);
   P pmin, pmax;
   pmin = viskores::Min(viskores::Min(pcoords[0], pcoords[1]), pcoords[2]);
   pmax = viskores::Max(viskores::Max(pcoords[0], pcoords[1]), pcoords[2]);
@@ -93,10 +94,10 @@ VISKORES_EXEC_CONT inline bool Sample(const viskores::Vec<viskores::Vec<P, 3>, 8
 
 template <typename S, typename P, typename CellShapeTagType>
 VISKORES_EXEC_CONT inline bool Sample(const viskores::VecAxisAlignedPointCoordinates<3>& points,
-                                  const viskores::Vec<S, 8>& scalars,
-                                  const viskores::Vec<P, 3>& sampleLocation,
-                                  S& lerpedScalar,
-                                  const CellShapeTagType& viskoresNotUsed(shapeTag))
+                                      const viskores::Vec<S, 8>& scalars,
+                                      const viskores::Vec<P, 3>& sampleLocation,
+                                      S& lerpedScalar,
+                                      const CellShapeTagType& viskoresNotUsed(shapeTag))
 {
 
   bool validSample = true;
@@ -110,7 +111,8 @@ VISKORES_EXEC_CONT inline bool Sample(const viskores::VecAxisAlignedPointCoordin
   {
     validSample = false;
   }
-  viskores::exec::CellInterpolate(scalars, pcoords, viskores::CellShapeTagHexahedron(), lerpedScalar);
+  viskores::exec::CellInterpolate(
+    scalars, pcoords, viskores::CellShapeTagHexahedron(), lerpedScalar);
   return validSample;
 }
 } // namespace detail
@@ -123,11 +125,12 @@ class CellSampler
 {
 public:
   template <typename P, typename S>
-  VISKORES_EXEC_CONT inline bool SampleCell(const viskores::Vec<viskores::Vec<P, 3>, 8>& viskoresNotUsed(points),
-                                        const viskores::Vec<S, 8>& viskoresNotUsed(scalars),
-                                        const viskores::Vec<P, 3>& viskoresNotUsed(sampleLocation),
-                                        S& viskoresNotUsed(lerpedScalar),
-                                        const viskores::Int32& viskoresNotUsed(cellShape = CellType)) const
+  VISKORES_EXEC_CONT inline bool SampleCell(
+    const viskores::Vec<viskores::Vec<P, 3>, 8>& viskoresNotUsed(points),
+    const viskores::Vec<S, 8>& viskoresNotUsed(scalars),
+    const viskores::Vec<P, 3>& viskoresNotUsed(sampleLocation),
+    S& viskoresNotUsed(lerpedScalar),
+    const viskores::Int32& viskoresNotUsed(cellShape = CellType)) const
   {
     static_assert(CellType != CELL_SHAPE_ZOO && CellType != CELL_SHAPE_STRUCTURED &&
                     CellType != CELL_SHAPE_HEXAHEDRON && CellType != CELL_SHAPE_TETRA &&
@@ -146,10 +149,10 @@ class CellSampler<255>
 public:
   template <typename P, typename S>
   VISKORES_EXEC_CONT inline bool SampleCell(const viskores::Vec<viskores::Vec<P, 3>, 8>& points,
-                                        const viskores::Vec<S, 8>& scalars,
-                                        const viskores::Vec<P, 3>& sampleLocation,
-                                        S& lerpedScalar,
-                                        const viskores::Int32& cellShape) const
+                                            const viskores::Vec<S, 8>& scalars,
+                                            const viskores::Vec<P, 3>& sampleLocation,
+                                            S& lerpedScalar,
+                                            const viskores::Int32& cellShape) const
   {
     bool valid = false;
     if (cellShape == CELL_SHAPE_HEXAHEDRON)
@@ -160,19 +163,19 @@ public:
 
     if (cellShape == CELL_SHAPE_TETRA)
     {
-      valid =
-        detail::Sample(points, scalars, sampleLocation, lerpedScalar, viskores::CellShapeTagTetra());
+      valid = detail::Sample(
+        points, scalars, sampleLocation, lerpedScalar, viskores::CellShapeTagTetra());
     }
 
     if (cellShape == CELL_SHAPE_WEDGE)
     {
-      valid =
-        detail::Sample(points, scalars, sampleLocation, lerpedScalar, viskores::CellShapeTagWedge());
+      valid = detail::Sample(
+        points, scalars, sampleLocation, lerpedScalar, viskores::CellShapeTagWedge());
     }
     if (cellShape == CELL_SHAPE_PYRAMID)
     {
-      valid =
-        detail::Sample(points, scalars, sampleLocation, lerpedScalar, viskores::CellShapeTagPyramid());
+      valid = detail::Sample(
+        points, scalars, sampleLocation, lerpedScalar, viskores::CellShapeTagPyramid());
     }
     return valid;
   }
@@ -256,7 +259,8 @@ public:
     S& lerpedScalar,
     const viskores::Int32& viskoresNotUsed(cellShape = CELL_SHAPE_TETRA)) const
   {
-    return detail::Sample(points, scalars, sampleLocation, lerpedScalar, viskores::CellShapeTagTetra());
+    return detail::Sample(
+      points, scalars, sampleLocation, lerpedScalar, viskores::CellShapeTagTetra());
   }
 };
 
@@ -275,7 +279,8 @@ public:
     S& lerpedScalar,
     const viskores::Int32& viskoresNotUsed(cellShape = CELL_SHAPE_WEDGE)) const
   {
-    return detail::Sample(points, scalars, sampleLocation, lerpedScalar, viskores::CellShapeTagWedge());
+    return detail::Sample(
+      points, scalars, sampleLocation, lerpedScalar, viskores::CellShapeTagWedge());
   }
 };
 }

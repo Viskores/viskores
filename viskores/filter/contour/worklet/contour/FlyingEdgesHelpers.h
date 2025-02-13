@@ -86,14 +86,16 @@ struct select_AxisToSum<viskores::cont::DeviceAdapterTagKokkos>
   using type = SumYAxis;
 };
 
-inline viskores::cont::CellSetStructured<2> make_metaDataMesh2D(SumXAxis, const viskores::Id3& pdims)
+inline viskores::cont::CellSetStructured<2> make_metaDataMesh2D(SumXAxis,
+                                                                const viskores::Id3& pdims)
 {
   viskores::cont::CellSetStructured<2> metaDataMesh;
   metaDataMesh.SetPointDimensions(viskores::Id2{ pdims[1], pdims[2] });
   return metaDataMesh;
 }
 
-inline viskores::cont::CellSetStructured<2> make_metaDataMesh2D(SumYAxis, const viskores::Id3& pdims)
+inline viskores::cont::CellSetStructured<2> make_metaDataMesh2D(SumYAxis,
+                                                                const viskores::Id3& pdims)
 {
   viskores::cont::CellSetStructured<2> metaDataMesh;
   metaDataMesh.SetPointDimensions(viskores::Id2{ pdims[0], pdims[2] });
@@ -112,42 +114,46 @@ VISKORES_EXEC inline viskores::Id3 compute_ijk(SumYAxis, const viskores::Id3& ex
 
 
 VISKORES_EXEC inline viskores::Id3 compute_cdims(SumXAxis,
-                                         const viskores::Id3& executionSpacePDims,
-                                         viskores::Id numOfXPoints)
+                                                 const viskores::Id3& executionSpacePDims,
+                                                 viskores::Id numOfXPoints)
 {
   return viskores::Id3{ numOfXPoints - 1, executionSpacePDims[0] - 1, executionSpacePDims[1] - 1 };
 }
 VISKORES_EXEC inline viskores::Id3 compute_cdims(SumYAxis,
-                                         const viskores::Id3& executionSpacePDims,
-                                         viskores::Id numOfYPoints)
+                                                 const viskores::Id3& executionSpacePDims,
+                                                 viskores::Id numOfYPoints)
 {
   return viskores::Id3{ executionSpacePDims[0] - 1, numOfYPoints - 1, executionSpacePDims[1] - 1 };
 }
 VISKORES_EXEC inline viskores::Id3 compute_pdims(SumXAxis,
-                                         const viskores::Id3& executionSpacePDims,
-                                         viskores::Id numOfXPoints)
+                                                 const viskores::Id3& executionSpacePDims,
+                                                 viskores::Id numOfXPoints)
 {
   return viskores::Id3{ numOfXPoints, executionSpacePDims[0], executionSpacePDims[1] };
 }
 VISKORES_EXEC inline viskores::Id3 compute_pdims(SumYAxis,
-                                         const viskores::Id3& executionSpacePDims,
-                                         viskores::Id numOfYPoints)
+                                                 const viskores::Id3& executionSpacePDims,
+                                                 viskores::Id numOfYPoints)
 {
   return viskores::Id3{ executionSpacePDims[0], numOfYPoints, executionSpacePDims[1] };
 }
 
-VISKORES_EXEC inline viskores::Id compute_start(SumXAxis, const viskores::Id3& ijk, const viskores::Id3& dims)
+VISKORES_EXEC inline viskores::Id compute_start(SumXAxis,
+                                                const viskores::Id3& ijk,
+                                                const viskores::Id3& dims)
 {
   return (dims[0] * ijk[1]) + ((dims[0] * dims[1]) * ijk[2]);
 }
-VISKORES_EXEC inline viskores::Id compute_start(SumYAxis, const viskores::Id3& ijk, const viskores::Id3& dims)
+VISKORES_EXEC inline viskores::Id compute_start(SumYAxis,
+                                                const viskores::Id3& ijk,
+                                                const viskores::Id3& dims)
 {
   return ijk[0] + ((dims[0] * dims[1]) * ijk[2]);
 }
 
 VISKORES_EXEC inline viskores::Id4 compute_neighbor_starts(SumXAxis,
-                                                   const viskores::Id3& ijk,
-                                                   const viskores::Id3& pdims)
+                                                           const viskores::Id3& ijk,
+                                                           const viskores::Id3& pdims)
 {
   //Optimized form of
   // return viskores::Id4 { compute_start(sx, ijk, pdims),
@@ -157,13 +163,13 @@ VISKORES_EXEC inline viskores::Id4 compute_neighbor_starts(SumXAxis,
   const auto sliceSize = (pdims[0] * pdims[1]);
   const auto rowPos = (pdims[0] * ijk[1]);
   return viskores::Id4{ rowPos + (sliceSize * ijk[2]),
-                    rowPos + pdims[0] + (sliceSize * ijk[2]),
-                    rowPos + (sliceSize * (ijk[2] + 1)),
-                    rowPos + pdims[0] + (sliceSize * (ijk[2] + 1)) };
+                        rowPos + pdims[0] + (sliceSize * ijk[2]),
+                        rowPos + (sliceSize * (ijk[2] + 1)),
+                        rowPos + pdims[0] + (sliceSize * (ijk[2] + 1)) };
 }
 VISKORES_EXEC inline viskores::Id4 compute_neighbor_starts(SumYAxis,
-                                                   const viskores::Id3& ijk,
-                                                   const viskores::Id3& pdims)
+                                                           const viskores::Id3& ijk,
+                                                           const viskores::Id3& pdims)
 {
   //Optimized form of
   // return viskores::Id4{ compute_start(sy, ijk, pdims),
@@ -172,9 +178,9 @@ VISKORES_EXEC inline viskores::Id4 compute_neighbor_starts(SumYAxis,
   //                   compute_start(sy, ijk + viskores::Id3{ 1, 0, 1 }, pdims) };
   const auto sliceSize = (pdims[0] * pdims[1]);
   return viskores::Id4{ ijk[0] + (sliceSize * ijk[2]),
-                    ijk[0] + 1 + (sliceSize * ijk[2]),
-                    ijk[0] + (sliceSize * (ijk[2] + 1)),
-                    ijk[0] + 1 + (sliceSize * (ijk[2] + 1)) };
+                        ijk[0] + 1 + (sliceSize * ijk[2]),
+                        ijk[0] + (sliceSize * (ijk[2] + 1)),
+                        ijk[0] + 1 + (sliceSize * (ijk[2] + 1)) };
 }
 
 
@@ -191,8 +197,8 @@ VISKORES_EXEC inline viskores::Id compute_inc(SumYAxis, const viskores::Id3& dim
 //----------------------------------------------------------------------------
 template <typename WholeEdgeField>
 VISKORES_EXEC inline viskores::UInt8 getEdgeCase(const WholeEdgeField& edges,
-                                         const viskores::Id4& startPos,
-                                         viskores::Id inc)
+                                                 const viskores::Id4& startPos,
+                                                 viskores::Id inc)
 {
   viskores::UInt8 e0 = edges.Get(startPos[0] + inc);
   viskores::UInt8 e1 = edges.Get(startPos[1] + inc);
@@ -206,13 +212,13 @@ VISKORES_EXEC inline viskores::UInt8 getEdgeCase(const WholeEdgeField& edges,
 
 template <typename WholeEdgeField, typename FieldInPointId>
 VISKORES_EXEC inline bool computeTrimBounds(viskores::Id rightMax,
-                                        const WholeEdgeField& edges,
-                                        const FieldInPointId& axis_mins,
-                                        const FieldInPointId& axis_maxs,
-                                        const viskores::Id4& startPos,
-                                        viskores::Id inc,
-                                        viskores::Id& left,
-                                        viskores::Id& right)
+                                            const WholeEdgeField& edges,
+                                            const FieldInPointId& axis_mins,
+                                            const FieldInPointId& axis_maxs,
+                                            const viskores::Id4& startPos,
+                                            viskores::Id inc,
+                                            viskores::Id& left,
+                                            viskores::Id& right)
 {
   // find adjusted trim values.
   left = viskores::Min(axis_mins[0], axis_mins[1]);

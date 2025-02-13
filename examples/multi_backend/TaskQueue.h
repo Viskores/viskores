@@ -74,15 +74,17 @@ public:
     {
       //wait for a job to come into the queue
       std::unique_lock<std::mutex> lock(this->Lock);
-      this->CV.wait(lock, [this] {
-        //if we are shutting down we need to always wake up
-        if (this->ShutdownOnceTasksCompleted)
-        {
-          return true;
-        }
-        //if we aren't shutting down sleep when we have no work
-        return this->Queue.size() > 0;
-      });
+      this->CV.wait(lock,
+                    [this]
+                    {
+                      //if we are shutting down we need to always wake up
+                      if (this->ShutdownOnceTasksCompleted)
+                      {
+                        return true;
+                      }
+                      //if we aren't shutting down sleep when we have no work
+                      return this->Queue.size() > 0;
+                    });
 
       //When shutting down we don't check the queue size
       //so make sure we have something to pop

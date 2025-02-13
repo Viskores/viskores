@@ -217,7 +217,8 @@ VISKORES_EXEC_CONT auto ParameterGet(const FunctionInterface<FunctionSignature>&
   -> decltype(detail::ParameterGet(fInterface.Parameters,
                                    viskores::internal::IndexTag<ParameterIndex>{}))
 {
-  return detail::ParameterGet(fInterface.Parameters, viskores::internal::IndexTag<ParameterIndex>{});
+  return detail::ParameterGet(fInterface.Parameters,
+                              viskores::internal::IndexTag<ParameterIndex>{});
 }
 
 

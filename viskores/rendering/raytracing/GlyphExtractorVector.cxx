@@ -52,10 +52,10 @@ public:
 
   template <typename ShapeType, typename VecType, typename OutputPortal>
   VISKORES_EXEC void operator()(const viskores::Id& pointOffset,
-                            ShapeType shape,
-                            const VecType& viskoresNotUsed(cellIndices),
-                            const viskores::Id& cellId,
-                            OutputPortal& outputIndices) const
+                                ShapeType shape,
+                                const VecType& viskoresNotUsed(cellIndices),
+                                const viskores::Id& cellId,
+                                OutputPortal& outputIndices) const
   {
     if (shape.Id == viskores::CELL_SHAPE_VERTEX)
     {
@@ -114,8 +114,8 @@ public:
 
   template <typename FieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& pointId,
-                            viskores::Vec3f_32& size,
-                            const FieldPortalType& field) const
+                                viskores::Vec3f_32& size,
+                                const FieldPortalType& field) const
   {
     using ValueType = typename FieldPortalType::ValueType;
 
@@ -144,8 +144,8 @@ public:
 
   template <typename FieldPortalType, typename MagnitudeFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& pointId,
-                            const FieldPortalType& field,
-                            MagnitudeFieldPortalType& magnitudeField) const
+                                const FieldPortalType& field,
+                                MagnitudeFieldPortalType& magnitudeField) const
   {
     using FieldValueType = typename FieldPortalType::ValueType;
 
@@ -169,8 +169,8 @@ public:
 
   template <typename FieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& pointId,
-                            viskores::Vec3f_32& size,
-                            const FieldPortalType& field) const
+                                viskores::Vec3f_32& size,
+                                const FieldPortalType& field) const
   {
     viskores::Vec3f_32 fieldVal = static_cast<viskores::Vec3f_32>(field.Get(pointId));
     size = viskores::Normal(fieldVal) * this->UniformMagnitude;
@@ -216,7 +216,8 @@ void GlyphExtractorVector::ExtractCells(const viskores::cont::UnknownCellSet& ce
   this->SetVaryingSize(minSize, maxSize, field);
 }
 
-void GlyphExtractorVector::SetUniformSize(const viskores::Float32 size, const viskores::cont::Field& field)
+void GlyphExtractorVector::SetUniformSize(const viskores::Float32 size,
+                                          const viskores::cont::Field& field)
 {
   this->ExtractMagnitudeField(field);
 
@@ -233,7 +234,8 @@ void GlyphExtractorVector::ExtractMagnitudeField(const viskores::cont::Field& fi
   viskores::cont::ArrayHandle<viskores::Float32> magnitudeArray;
   magnitudeArray.Allocate(this->PointIds.GetNumberOfValues());
   viskores::worklet::DispatcherMapField<FieldMagnitude>(FieldMagnitude())
-    .Invoke(this->PointIds, viskores::rendering::raytracing::GetVec3FieldArray(field), magnitudeArray);
+    .Invoke(
+      this->PointIds, viskores::rendering::raytracing::GetVec3FieldArray(field), magnitudeArray);
   this->MagnitudeField = viskores::cont::Field(field);
   this->MagnitudeField.SetData(magnitudeArray);
 }
@@ -260,7 +262,8 @@ void GlyphExtractorVector::SetPointIdsFromCells(const viskores::cont::UnknownCel
     auto cellsExplicit = cells.AsCellSet<viskores::cont::CellSetExplicit<>>();
 
     viskores::cont::ArrayHandle<viskores::Id> points;
-    viskores::worklet::DispatcherMapTopology<CountPoints>(CountPoints()).Invoke(cellsExplicit, points);
+    viskores::worklet::DispatcherMapTopology<CountPoints>(CountPoints())
+      .Invoke(cellsExplicit, points);
 
     viskores::Id totalPoints = 0;
     totalPoints = viskores::cont::Algorithm::Reduce(points, viskores::Id(0));
@@ -304,20 +307,20 @@ void GlyphExtractorVector::SetVaryingSize(const viskores::Float32 minSize,
     Vec3f_64Handle fieldArray;
     field.GetData().AsArrayHandle(fieldArray);
     viskores::Vec3f_64 initVal = viskores::cont::ArrayGetValue(0, fieldArray);
-    minFieldValue =
-      static_cast<viskores::Vec3f_32>(viskores::cont::Algorithm::Reduce(fieldArray, initVal, MinFunctor()));
-    maxFieldValue =
-      static_cast<viskores::Vec3f_32>(viskores::cont::Algorithm::Reduce(fieldArray, initVal, MaxFunctor()));
+    minFieldValue = static_cast<viskores::Vec3f_32>(
+      viskores::cont::Algorithm::Reduce(fieldArray, initVal, MinFunctor()));
+    maxFieldValue = static_cast<viskores::Vec3f_32>(
+      viskores::cont::Algorithm::Reduce(fieldArray, initVal, MaxFunctor()));
   }
   else
   {
     Vec3f_32Handle fieldArray;
     field.GetData().AsArrayHandle(fieldArray);
     viskores::Vec3f_32 initVal = viskores::cont::ArrayGetValue(0, fieldArray);
-    minFieldValue =
-      static_cast<viskores::Vec3f_32>(viskores::cont::Algorithm::Reduce(fieldArray, initVal, MinFunctor()));
-    maxFieldValue =
-      static_cast<viskores::Vec3f_32>(viskores::cont::Algorithm::Reduce(fieldArray, initVal, MaxFunctor()));
+    minFieldValue = static_cast<viskores::Vec3f_32>(
+      viskores::cont::Algorithm::Reduce(fieldArray, initVal, MinFunctor()));
+    maxFieldValue = static_cast<viskores::Vec3f_32>(
+      viskores::cont::Algorithm::Reduce(fieldArray, initVal, MaxFunctor()));
   }
 
   this->ExtractMagnitudeField(field);

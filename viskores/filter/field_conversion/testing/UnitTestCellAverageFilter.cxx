@@ -36,7 +36,7 @@ void TestCellAverageRegular3D()
     for (viskores::Id i = 0; i < 4; ++i)
     {
       VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                       "Wrong result for CellAverage worklet on 3D regular data");
+                           "Wrong result for CellAverage worklet on 3D regular data");
     }
   }
 
@@ -59,7 +59,7 @@ void TestCellAverageRegular3D()
       viskores::Vec3f expectedVec(expected[i][0], expected[i][1], expected[i][2]);
       viskores::Vec3f computedVec(resultPointArray.ReadPortal().Get(i));
       VISKORES_TEST_ASSERT(test_equal(computedVec, expectedVec),
-                       "Wrong result for CellAverage worklet on 3D regular data");
+                           "Wrong result for CellAverage worklet on 3D regular data");
     }
   }
 }
@@ -86,7 +86,7 @@ void TestCellAverageRegular2D()
   for (int i = 0; i < 2; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for CellAverage worklet on 2D regular data");
+                         "Wrong result for CellAverage worklet on 2D regular data");
   }
 }
 
@@ -112,7 +112,7 @@ void TestCellAverageExplicit()
   for (int i = 0; i < 2; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for CellAverage worklet on 3D regular data");
+                         "Wrong result for CellAverage worklet on 3D regular data");
   }
 }
 

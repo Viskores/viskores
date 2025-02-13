@@ -57,7 +57,8 @@ public:
     }
 
     VISKORES_EXEC
-    void operator()(viskores::CellShapeTagHexahedron viskoresNotUsed(shapeType), viskores::Id& quads) const
+    void operator()(viskores::CellShapeTagHexahedron viskoresNotUsed(shapeType),
+                    viskores::Id& quads) const
     {
       quads = 6;
     }
@@ -71,7 +72,8 @@ public:
         quads = 0;
     }
     VISKORES_EXEC
-    void operator()(viskores::CellShapeTagWedge viskoresNotUsed(shapeType), viskores::Id& quads) const
+    void operator()(viskores::CellShapeTagWedge viskoresNotUsed(shapeType),
+                    viskores::Id& quads) const
     {
       quads = 3;
     }
@@ -94,10 +96,10 @@ public:
 #endif
     template <typename CellNodeVecType, typename OutIndicesPortal>
     VISKORES_EXEC void cell2quad(viskores::Id4 idx,
-                             viskores::Vec<Id, 5>& quad,
-                             const viskores::Id offset,
-                             const CellNodeVecType& cellIndices,
-                             OutIndicesPortal& outputIndices) const
+                                 viskores::Vec<Id, 5>& quad,
+                                 const viskores::Id offset,
+                                 const CellNodeVecType& cellIndices,
+                                 OutIndicesPortal& outputIndices) const
     {
 
       quad[1] = cellIndices[viskores::IdComponent(idx[0])];
@@ -109,8 +111,8 @@ public:
 
     template <typename CellNodeVecType, typename OutIndicesPortal>
     VISKORES_EXEC void operator()(const CellNodeVecType& cellIndices,
-                              const viskores::Id& cellIndex,
-                              OutIndicesPortal& outputIndices) const
+                                  const viskores::Id& cellIndex,
+                                  OutIndicesPortal& outputIndices) const
     {
       if (DIM == 2)
       {
@@ -182,13 +184,13 @@ public:
 
     template <typename VecType, typename OutputPortal>
     VISKORES_EXEC void cell2quad(viskores::Id& offset,
-                             const VecType& cellIndices,
-                             const viskores::Id& cellId,
-                             const viskores::Id Id0,
-                             const viskores::Id Id1,
-                             const viskores::Id Id2,
-                             const viskores::Id Id3,
-                             OutputPortal& outputIndices) const
+                                 const VecType& cellIndices,
+                                 const viskores::Id& cellId,
+                                 const viskores::Id Id0,
+                                 const viskores::Id Id1,
+                                 const viskores::Id Id2,
+                                 const viskores::Id Id3,
+                                 OutputPortal& outputIndices) const
     {
       viskores::Vec<viskores::Id, 5> quad;
       quad[0] = cellId;
@@ -201,10 +203,10 @@ public:
 
     template <typename VecType, typename OutputPortal>
     VISKORES_EXEC void operator()(const viskores::Id& pointOffset,
-                              viskores::CellShapeTagWedge viskoresNotUsed(shapeType),
-                              const VecType& cellIndices,
-                              const viskores::Id& cellId,
-                              OutputPortal& outputIndices) const
+                                  viskores::CellShapeTagWedge viskoresNotUsed(shapeType),
+                                  const VecType& cellIndices,
+                                  const viskores::Id& cellId,
+                                  OutputPortal& outputIndices) const
     {
       viskores::Id offset = pointOffset;
 
@@ -214,10 +216,10 @@ public:
     }
     template <typename VecType, typename OutputPortal>
     VISKORES_EXEC void operator()(const viskores::Id& offset,
-                              viskores::CellShapeTagQuad shapeType,
-                              const VecType& cellIndices,
-                              const viskores::Id& cellId,
-                              OutputPortal& outputIndices) const
+                                  viskores::CellShapeTagQuad shapeType,
+                                  const VecType& cellIndices,
+                                  const viskores::Id& cellId,
+                                  OutputPortal& outputIndices) const
     {
       if (shapeType.Id == viskores::CELL_SHAPE_QUAD)
       {
@@ -233,10 +235,10 @@ public:
 
     template <typename VecType, typename OutputPortal>
     VISKORES_EXEC void operator()(const viskores::Id& pointOffset,
-                              viskores::CellShapeTagHexahedron viskoresNotUsed(shapeType),
-                              const VecType& cellIndices,
-                              const viskores::Id& cellId,
-                              OutputPortal& outputIndices) const
+                                  viskores::CellShapeTagHexahedron viskoresNotUsed(shapeType),
+                                  const VecType& cellIndices,
+                                  const viskores::Id& cellId,
+                                  OutputPortal& outputIndices) const
 
     {
       viskores::Id offset = pointOffset;
@@ -250,10 +252,10 @@ public:
 
     template <typename VecType, typename OutputPortal>
     VISKORES_EXEC void operator()(const viskores::Id& pointOffset,
-                              viskores::CellShapeTagGeneric shapeType,
-                              const VecType& cellIndices,
-                              const viskores::Id& cellId,
-                              OutputPortal& outputIndices) const
+                                  viskores::CellShapeTagGeneric shapeType,
+                                  const VecType& cellIndices,
+                                  const viskores::Id& cellId,
+                                  OutputPortal& outputIndices) const
     {
 
       if (shapeType.Id == viskores::CELL_SHAPE_QUAD)

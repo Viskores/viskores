@@ -87,11 +87,11 @@ public:
 
   template <typename InOutFieldPortalType, typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& edgeNo,
-                            const InOutFieldPortalType& edgeSorterPortal,
-                            const InFieldPortalType& edgeFarPortal,
-                            const InFieldPortalType& edgeNearPortal,
-                            const OutFieldPortalType& hyperarcsPortal,
-                            const OutFieldPortalType& outdegreePortal) const
+                                const InOutFieldPortalType& edgeSorterPortal,
+                                const InFieldPortalType& edgeFarPortal,
+                                const InFieldPortalType& edgeNearPortal,
+                                const OutFieldPortalType& hyperarcsPortal,
+                                const OutFieldPortalType& outdegreePortal) const
   {
     // default to true
     bool isBestSaddleEdge = true;

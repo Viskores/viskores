@@ -37,7 +37,7 @@ void TestCellGradientExplicit()
   for (int i = 0; i < 2; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for CellGradient filter on 3D explicit data");
+                         "Wrong result for CellGradient filter on 3D explicit data");
   }
 }
 
@@ -64,7 +64,7 @@ void TestPointGradientExplicit()
   for (int i = 0; i < 2; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                     "Wrong result for CellGradient filter on 3D explicit data");
+                         "Wrong result for CellGradient filter on 3D explicit data");
   }
 }
 

@@ -31,12 +31,12 @@ namespace zfp
 
 template <typename Scalar, typename PortalType>
 VISKORES_EXEC inline void GatherPartial2(Scalar* q,
-                                     const PortalType& scalars,
-                                     viskores::Id offset,
-                                     viskores::Int32 nx,
-                                     viskores::Int32 ny,
-                                     viskores::Int32 sx,
-                                     viskores::Int32 sy)
+                                         const PortalType& scalars,
+                                         viskores::Id offset,
+                                         viskores::Int32 nx,
+                                         viskores::Int32 ny,
+                                         viskores::Int32 sx,
+                                         viskores::Int32 sy)
 {
   viskores::Id x, y;
   for (y = 0; y < ny; y++, offset += sy - nx * sx)
@@ -51,10 +51,10 @@ VISKORES_EXEC inline void GatherPartial2(Scalar* q,
 
 template <typename Scalar, typename PortalType>
 VISKORES_EXEC inline void Gather2(Scalar* fblock,
-                              const PortalType& scalars,
-                              viskores::Id offset,
-                              int sx,
-                              int sy)
+                                  const PortalType& scalars,
+                                  viskores::Id offset,
+                                  int sx,
+                                  int sy)
 {
   viskores::Id counter = 0;
 
@@ -87,8 +87,8 @@ public:
 
   template <class InputScalarPortal, typename BitstreamPortal>
   VISKORES_EXEC void operator()(const viskores::Id blockIdx,
-                            const InputScalarPortal& scalars,
-                            BitstreamPortal& stream) const
+                                const InputScalarPortal& scalars,
+                                BitstreamPortal& stream) const
   {
     using Scalar = typename InputScalarPortal::ValueType;
 
@@ -109,10 +109,12 @@ public:
 
     if (partial)
     {
-      const viskores::Int32 nx =
-        logicalStart[0] + 4 > Dims[0] ? viskores::Int32(Dims[0] - logicalStart[0]) : viskores::Int32(4);
-      const viskores::Int32 ny =
-        logicalStart[1] + 4 > Dims[1] ? viskores::Int32(Dims[1] - logicalStart[1]) : viskores::Int32(4);
+      const viskores::Int32 nx = logicalStart[0] + 4 > Dims[0]
+        ? viskores::Int32(Dims[0] - logicalStart[0])
+        : viskores::Int32(4);
+      const viskores::Int32 ny = logicalStart[1] + 4 > Dims[1]
+        ? viskores::Int32(Dims[1] - logicalStart[1])
+        : viskores::Int32(4);
       GatherPartial2(fblock, scalars, offset, nx, ny, 1, static_cast<viskores::Int32>(Dims[0]));
     }
     else

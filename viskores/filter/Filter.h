@@ -175,7 +175,8 @@ public:
   /// @brief Executes the filter on the input PartitionedDataSet and produces a result PartitionedDataSet.
   ///
   /// On success, this the dataset produced. On error, `viskores::cont::ErrorExecution` will be thrown.
-  VISKORES_CONT viskores::cont::PartitionedDataSet Execute(const viskores::cont::PartitionedDataSet& input);
+  VISKORES_CONT viskores::cont::PartitionedDataSet Execute(
+    const viskores::cont::PartitionedDataSet& input);
 
   /// @brief Specify which fields get passed from input to output.
   ///
@@ -192,7 +193,7 @@ public:
 
   VISKORES_DEPRECATED(2.0)
   VISKORES_CONT void SetFieldsToPass(const viskores::filter::FieldSelection& fieldsToPass,
-                                 viskores::filter::FieldSelection::Mode mode);
+                                     viskores::filter::FieldSelection::Mode mode);
 
   /// @copydoc SetFieldsToPass
   VISKORES_CONT void SetFieldsToPass(
@@ -213,7 +214,7 @@ public:
 
   /// @copydoc SetFieldsToPass
   VISKORES_CONT void SetFieldsToPass(const std::string& fieldname,
-                                 viskores::filter::FieldSelection::Mode mode)
+                                     viskores::filter::FieldSelection::Mode mode)
   {
     this->SetFieldsToPass(fieldname, viskores::cont::Field::Association::Any, mode);
   }
@@ -274,7 +275,7 @@ public:
   VISKORES_CONT const std::string& GetActiveFieldName(viskores::IdComponent index = 0) const
   {
     VISKORES_ASSERT((index >= 0) &&
-                (index < static_cast<viskores::IdComponent>(this->ActiveFieldNames.size())));
+                    (index < static_cast<viskores::IdComponent>(this->ActiveFieldNames.size())));
     return this->ActiveFieldNames[index];
   }
 
@@ -310,7 +311,10 @@ public:
 
   /// Specifies whether to use point coordinates as the input field. When true, the values
   /// for the active field are ignored and the active coordinate system is used instead.
-  VISKORES_CONT void SetUseCoordinateSystemAsField(bool val) { SetUseCoordinateSystemAsField(0, val); }
+  VISKORES_CONT void SetUseCoordinateSystemAsField(bool val)
+  {
+    SetUseCoordinateSystemAsField(0, val);
+  }
 
   /// @copydoc SetUseCoordinateSystemAsField
   VISKORES_CONT void SetUseCoordinateSystemAsField(viskores::IdComponent index, bool val)
@@ -325,7 +329,7 @@ public:
   bool GetUseCoordinateSystemAsField(viskores::IdComponent index = 0) const
   {
     VISKORES_ASSERT((index >= 0) &&
-                (index < static_cast<viskores::IdComponent>(this->ActiveFieldNames.size())));
+                    (index < static_cast<viskores::IdComponent>(this->ActiveFieldNames.size())));
     return this->UseCoordinateSystemAsField[index];
   }
 
@@ -348,8 +352,14 @@ public:
   /// then the derived class should override this method to return false.
   VISKORES_CONT virtual bool CanThread() const;
 
-  VISKORES_CONT void SetThreadsPerCPU(viskores::Id numThreads) { this->NumThreadsPerCPU = numThreads; }
-  VISKORES_CONT void SetThreadsPerGPU(viskores::Id numThreads) { this->NumThreadsPerGPU = numThreads; }
+  VISKORES_CONT void SetThreadsPerCPU(viskores::Id numThreads)
+  {
+    this->NumThreadsPerCPU = numThreads;
+  }
+  VISKORES_CONT void SetThreadsPerGPU(viskores::Id numThreads)
+  {
+    this->NumThreadsPerGPU = numThreads;
+  }
 
   VISKORES_CONT viskores::Id GetThreadsPerCPU() const { return this->NumThreadsPerCPU; }
   VISKORES_CONT viskores::Id GetThreadsPerGPU() const { return this->NumThreadsPerGPU; }
@@ -390,7 +400,8 @@ protected:
   /// `DoExecute`). The returned `DataSet` is filled with the cell set, coordinate system, and
   /// fields of `inDataSet` (as selected by the `FieldsToPass` state of the filter).
   ///
-  VISKORES_CONT viskores::cont::DataSet CreateResult(const viskores::cont::DataSet& inDataSet) const;
+  VISKORES_CONT viskores::cont::DataSet CreateResult(
+    const viskores::cont::DataSet& inDataSet) const;
 
   /// @brief Create the output data set for `DoExecute`
   ///
@@ -404,8 +415,9 @@ protected:
   ///     (as selected by the `FieldsToPass` state of the filter).
   /// @param[in] resultField A `Field` that is added to the returned `DataSet`.
   ///
-  VISKORES_CONT viskores::cont::DataSet CreateResultField(const viskores::cont::DataSet& inDataSet,
-                                                  const viskores::cont::Field& resultField) const;
+  VISKORES_CONT viskores::cont::DataSet CreateResultField(
+    const viskores::cont::DataSet& inDataSet,
+    const viskores::cont::Field& resultField) const;
 
   /// @brief Create the output data set for `DoExecute`
   ///
@@ -430,7 +442,8 @@ protected:
     const viskores::cont::UnknownArrayHandle& resultFieldArray) const
   {
     return this->CreateResultField(
-      inDataSet, viskores::cont::Field{ resultFieldName, resultFieldAssociation, resultFieldArray });
+      inDataSet,
+      viskores::cont::Field{ resultFieldName, resultFieldAssociation, resultFieldArray });
   }
 
   /// @brief Create the output data set for `DoExecute`
@@ -452,10 +465,10 @@ protected:
     const std::string& resultFieldName,
     const viskores::cont::UnknownArrayHandle& resultFieldArray) const
   {
-    return this->CreateResultField(inDataSet,
-                                   viskores::cont::Field{ resultFieldName,
-                                                      viskores::cont::Field::Association::Points,
-                                                      resultFieldArray });
+    return this->CreateResultField(
+      inDataSet,
+      viskores::cont::Field{
+        resultFieldName, viskores::cont::Field::Association::Points, resultFieldArray });
   }
 
   /// @brief Create the output data set for `DoExecute`
@@ -479,8 +492,8 @@ protected:
   {
     return this->CreateResultField(inDataSet,
                                    viskores::cont::Field{ resultFieldName,
-                                                      viskores::cont::Field::Association::Cells,
-                                                      resultFieldArray });
+                                                          viskores::cont::Field::Association::Cells,
+                                                          resultFieldArray });
   }
 
 
@@ -543,9 +556,10 @@ protected:
   ///     the function should do nothing.
   ///
   template <typename FieldMapper>
-  VISKORES_CONT viskores::cont::DataSet CreateResult(const viskores::cont::DataSet& inDataSet,
-                                             const viskores::cont::UnknownCellSet& resultCellSet,
-                                             FieldMapper&& fieldMapper) const
+  VISKORES_CONT viskores::cont::DataSet CreateResult(
+    const viskores::cont::DataSet& inDataSet,
+    const viskores::cont::UnknownCellSet& resultCellSet,
+    FieldMapper&& fieldMapper) const
   {
     viskores::cont::DataSet outDataSet;
     outDataSet.SetCellSet(resultCellSet);
@@ -632,14 +646,16 @@ protected:
   ///
   /// When a filter operates on fields, it should use this method to get the input fields that
   /// the use has selected with `SetActiveField()` and related methods.
-  VISKORES_CONT const viskores::cont::Field& GetFieldFromDataSet(const viskores::cont::DataSet& input) const
+  VISKORES_CONT const viskores::cont::Field& GetFieldFromDataSet(
+    const viskores::cont::DataSet& input) const
   {
     return this->GetFieldFromDataSet(0, input);
   }
 
   /// @copydoc GetFieldFromDataSet
-  VISKORES_CONT const viskores::cont::Field& GetFieldFromDataSet(viskores::IdComponent index,
-                                                         const viskores::cont::DataSet& input) const
+  VISKORES_CONT const viskores::cont::Field& GetFieldFromDataSet(
+    viskores::IdComponent index,
+    const viskores::cont::DataSet& input) const
   {
     if (this->UseCoordinateSystemAsField[index])
     {
@@ -657,7 +673,8 @@ protected:
     }
   }
 
-  VISKORES_CONT virtual viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inData) = 0;
+  VISKORES_CONT virtual viskores::cont::DataSet DoExecute(
+    const viskores::cont::DataSet& inData) = 0;
   VISKORES_CONT virtual viskores::cont::PartitionedDataSet DoExecutePartitions(
     const viskores::cont::PartitionedDataSet& inData);
 
@@ -673,18 +690,18 @@ protected:
   ///
   template <typename Functor, typename... Args>
   VISKORES_CONT void CastAndCallScalarField(const viskores::cont::UnknownArrayHandle& fieldArray,
-                                        Functor&& functor,
-                                        Args&&... args) const
+                                            Functor&& functor,
+                                            Args&&... args) const
   {
-    fieldArray
-      .CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldScalar, VISKORES_DEFAULT_STORAGE_LIST>(
-        std::forward<Functor>(functor), std::forward<Args>(args)...);
+    fieldArray.CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldScalar,
+                                                    VISKORES_DEFAULT_STORAGE_LIST>(
+      std::forward<Functor>(functor), std::forward<Args>(args)...);
   }
   /// @copydoc CastAndCallScalarField
   template <typename Functor, typename... Args>
   VISKORES_CONT void CastAndCallScalarField(const viskores::cont::Field& field,
-                                        Functor&& functor,
-                                        Args&&... args) const
+                                            Functor&& functor,
+                                            Args&&... args) const
   {
     this->CastAndCallScalarField(
       field.GetData(), std::forward<Functor>(functor), std::forward<Args>(args)...);
@@ -704,8 +721,8 @@ protected:
   ///
   template <viskores::IdComponent VecSize, typename Functor, typename... Args>
   VISKORES_CONT void CastAndCallVecField(const viskores::cont::UnknownArrayHandle& fieldArray,
-                                     Functor&& functor,
-                                     Args&&... args) const
+                                         Functor&& functor,
+                                         Args&&... args) const
   {
     using VecList =
       viskores::ListTransform<viskores::TypeListFieldScalar, ScalarToVec<VecSize>::template type>;
@@ -715,8 +732,8 @@ protected:
   /// @copydoc CastAndCallVecField
   template <viskores::IdComponent VecSize, typename Functor, typename... Args>
   VISKORES_CONT void CastAndCallVecField(const viskores::cont::Field& field,
-                                     Functor&& functor,
-                                     Args&&... args) const
+                                         Functor&& functor,
+                                         Args&&... args) const
   {
     this->CastAndCallVecField<VecSize>(
       field.GetData(), std::forward<Functor>(functor), std::forward<Args>(args)...);
@@ -734,17 +751,20 @@ protected:
   /// components and store them in the prealocated output.
   ///
   template <typename Functor, typename... Args>
-  VISKORES_CONT void CastAndCallVariableVecField(const viskores::cont::UnknownArrayHandle& fieldArray,
-                                             Functor&& functor,
-                                             Args&&... args) const
+  VISKORES_CONT void CastAndCallVariableVecField(
+    const viskores::cont::UnknownArrayHandle& fieldArray,
+    Functor&& functor,
+    Args&&... args) const
   {
     if (fieldArray.IsBaseComponentType<viskores::Float32>())
     {
-      functor(fieldArray.ExtractArrayFromComponents<viskores::Float32>(), std::forward<Args>(args)...);
+      functor(fieldArray.ExtractArrayFromComponents<viskores::Float32>(),
+              std::forward<Args>(args)...);
     }
     else if (fieldArray.IsBaseComponentType<viskores::Float64>())
     {
-      functor(fieldArray.ExtractArrayFromComponents<viskores::Float64>(), std::forward<Args>(args)...);
+      functor(fieldArray.ExtractArrayFromComponents<viskores::Float64>(),
+              std::forward<Args>(args)...);
     }
     else
     {
@@ -758,8 +778,8 @@ protected:
   /// @copydoc CastAndCallVariableVecField
   template <typename Functor, typename... Args>
   VISKORES_CONT void CastAndCallVariableVecField(const viskores::cont::Field& field,
-                                             Functor&& functor,
-                                             Args&&... args) const
+                                                 Functor&& functor,
+                                                 Args&&... args) const
   {
     this->CastAndCallVariableVecField(
       field.GetData(), std::forward<Functor>(functor), std::forward<Args>(args)...);
@@ -768,9 +788,9 @@ protected:
 private:
   template <typename FieldMapper>
   VISKORES_CONT void MapFieldsOntoOutput(const viskores::cont::DataSet& input,
-                                     const viskores::filter::FieldSelection& fieldSelection,
-                                     viskores::cont::DataSet& output,
-                                     FieldMapper&& fieldMapper) const
+                                         const viskores::filter::FieldSelection& fieldSelection,
+                                         viskores::cont::DataSet& output,
+                                         FieldMapper&& fieldMapper) const
   {
     // Basic field mapping
     for (viskores::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)
@@ -792,7 +812,8 @@ private:
       }
     }
 
-    for (viskores::IdComponent csIndex = 0; csIndex < input.GetNumberOfCoordinateSystems(); ++csIndex)
+    for (viskores::IdComponent csIndex = 0; csIndex < input.GetNumberOfCoordinateSystems();
+         ++csIndex)
     {
       auto coords = input.GetCoordinateSystem(csIndex);
       if (!output.HasCoordinateSystem(coords.GetName()))
@@ -811,9 +832,9 @@ private:
 
   template <typename FieldMapper>
   VISKORES_CONT void MapFieldsOntoOutput(const viskores::cont::PartitionedDataSet& input,
-                                     const viskores::filter::FieldSelection& fieldSelection,
-                                     viskores::cont::PartitionedDataSet& output,
-                                     FieldMapper&& fieldMapper) const
+                                         const viskores::filter::FieldSelection& fieldSelection,
+                                         viskores::cont::PartitionedDataSet& output,
+                                         FieldMapper&& fieldMapper) const
   {
     for (viskores::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)
     {

@@ -118,7 +118,8 @@ public:
   bool GetConsistency() const { return this->Consistency; }
 
 private:
-  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inputDataSet) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(
+    const viskores::cont::DataSet& inputDataSet) override;
 
   bool GenerateCellNormals = false;
   bool NormalizeCellNormals = true;

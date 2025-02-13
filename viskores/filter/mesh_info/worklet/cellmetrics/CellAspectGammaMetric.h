@@ -51,9 +51,9 @@ namespace cellmetrics
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellAspectGammaMetric(const viskores::IdComponent& numPts,
-                                        const PointCoordVecType& pts,
-                                        CellShapeType shape,
-                                        viskores::ErrorCode&)
+                                            const PointCoordVecType& pts,
+                                            CellShapeType shape,
+                                            viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -65,9 +65,9 @@ VISKORES_EXEC OutType CellAspectGammaMetric(const viskores::IdComponent& numPts,
 // Compute the aspect ratio of a tetrahedron.
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellAspectGammaMetric(const viskores::IdComponent& numPts,
-                                        const PointCoordVecType& pts,
-                                        viskores::CellShapeTagTetra,
-                                        viskores::ErrorCode& ec)
+                                            const PointCoordVecType& pts,
+                                            viskores::CellShapeTagTetra,
+                                            viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -94,9 +94,10 @@ VISKORES_EXEC OutType CellAspectGammaMetric(const viskores::IdComponent& numPts,
   const Scalar l4 = GetTetraL4Magnitude<Scalar, Vector, CollectionOfPoints>(pts);
   const Scalar l5 = GetTetraL5Magnitude<Scalar, Vector, CollectionOfPoints>(pts);
 
-  const Scalar R = viskores::Sqrt((viskores::Pow(l0, 2) + viskores::Pow(l1, 2) + viskores::Pow(l2, 2) +
-                               viskores::Pow(l3, 2) + viskores::Pow(l4, 2) + viskores::Pow(l5, 2)) /
-                              six);
+  const Scalar R =
+    viskores::Sqrt((viskores::Pow(l0, 2) + viskores::Pow(l1, 2) + viskores::Pow(l2, 2) +
+                    viskores::Pow(l3, 2) + viskores::Pow(l4, 2) + viskores::Pow(l5, 2)) /
+                   six);
 
   const Scalar rootTwo(viskores::Sqrt(Scalar(2.0)));
   const Scalar twelve(12.0);

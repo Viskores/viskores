@@ -73,7 +73,8 @@ VISKORES_CONT void CheckInPlaceResult(PortalType portal)
       // This index was part of the permuted array; has a value changed
       T expectedValue = TestValue(permutedIndex, T()) + T(1000);
       T retrievedValue = portal.Get(permutedIndex);
-      VISKORES_TEST_ASSERT(test_equal(expectedValue, retrievedValue), "Permuted set unexpected value.");
+      VISKORES_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
+                           "Permuted set unexpected value.");
     }
     else
     {
@@ -81,7 +82,7 @@ VISKORES_CONT void CheckInPlaceResult(PortalType portal)
       T expectedValue = TestValue(permutedIndex, T());
       T retrievedValue = portal.Get(permutedIndex);
       VISKORES_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
-                       "Permuted array modified value it should not have.");
+                           "Permuted array modified value it should not have.");
     }
   }
 }
@@ -112,7 +113,8 @@ VISKORES_CONT void CheckOutputResult(PortalType portal)
       viskores::Id originalIndex = permutedIndex / 2;
       T expectedValue = TestValue(originalIndex, T());
       T retrievedValue = portal.Get(permutedIndex);
-      VISKORES_TEST_ASSERT(test_equal(expectedValue, retrievedValue), "Permuted set unexpected value.");
+      VISKORES_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
+                           "Permuted set unexpected value.");
     }
     else
     {
@@ -120,7 +122,7 @@ VISKORES_CONT void CheckOutputResult(PortalType portal)
       T expectedValue = TestValue(permutedIndex, T());
       T retrievedValue = portal.Get(permutedIndex);
       VISKORES_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
-                       "Permuted array modified value it should not have.");
+                           "Permuted array modified value it should not have.");
     }
   }
 }
@@ -130,7 +132,8 @@ struct PermutationTests
 {
   using IndexArrayType = viskores::cont::ArrayHandleImplicit<DoubleIndexFunctor>;
   using ValueArrayType = viskores::cont::ArrayHandle<ValueType, viskores::cont::StorageTagBasic>;
-  using PermutationArrayType = viskores::cont::ArrayHandlePermutation<IndexArrayType, ValueArrayType>;
+  using PermutationArrayType =
+    viskores::cont::ArrayHandlePermutation<IndexArrayType, ValueArrayType>;
 
   ValueArrayType MakeValueArray() const
   {
@@ -156,13 +159,13 @@ struct PermutationTests
     PermutationArrayType permutationArray(indexArray, valueArray);
 
     VISKORES_TEST_ASSERT(permutationArray.GetNumberOfValues() == ARRAY_SIZE,
-                     "Permutation array wrong size.");
+                         "Permutation array wrong size.");
     VISKORES_TEST_ASSERT(permutationArray.WritePortal().GetNumberOfValues() == ARRAY_SIZE,
-                     "Permutation portal wrong size.");
+                         "Permutation portal wrong size.");
     VISKORES_TEST_ASSERT(permutationArray.ReadPortal().GetNumberOfValues() == ARRAY_SIZE,
-                     "Permutation portal wrong size.");
+                         "Permutation portal wrong size.");
     VISKORES_TEST_ASSERT(permutationArray.GetNumberOfComponentsFlat() ==
-                     viskores::VecFlat<ValueType>::NUM_COMPONENTS);
+                         viskores::VecFlat<ValueType>::NUM_COMPONENTS);
 
     viskores::cont::Invoker invoke;
 

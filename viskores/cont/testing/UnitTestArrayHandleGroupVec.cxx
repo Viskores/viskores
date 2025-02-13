@@ -48,16 +48,17 @@ struct TestGroupVecAsInput
     viskores::cont::ArrayHandleGroupVec<viskores::cont::ArrayHandle<ComponentType>, NUM_COMPONENTS>
       groupArray(baseArray);
     VISKORES_TEST_ASSERT(groupArray.GetNumberOfValues() == ARRAY_SIZE,
-                     "Group array reporting wrong array size.");
+                         "Group array reporting wrong array size.");
     VISKORES_TEST_ASSERT(groupArray.GetNumberOfComponentsFlat() ==
-                     viskores::VecFlat<ComponentType>::NUM_COMPONENTS * NUM_COMPONENTS);
+                         viskores::VecFlat<ComponentType>::NUM_COMPONENTS * NUM_COMPONENTS);
 
     viskores::cont::ArrayHandle<ValueType> resultArray;
 
     viskores::worklet::DispatcherMapField<PassThrough> dispatcher;
     dispatcher.Invoke(groupArray, resultArray);
 
-    VISKORES_TEST_ASSERT(resultArray.GetNumberOfValues() == ARRAY_SIZE, "Got bad result array size.");
+    VISKORES_TEST_ASSERT(resultArray.GetNumberOfValues() == ARRAY_SIZE,
+                         "Got bad result array size.");
 
     //verify that the control portal works
     viskores::Id totalIndex = 0;
@@ -65,11 +66,12 @@ struct TestGroupVecAsInput
     for (viskores::Id index = 0; index < ARRAY_SIZE; ++index)
     {
       const ValueType result = resultPortal.Get(index);
-      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
+      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+           componentIndex++)
       {
         const ComponentType expectedValue = TestValue(totalIndex, ComponentType());
         VISKORES_TEST_ASSERT(test_equal(result[componentIndex], expectedValue),
-                         "Result array got wrong value.");
+                             "Result array got wrong value.");
         totalIndex++;
       }
     }
@@ -99,10 +101,10 @@ struct TestGroupVecAsOutput
     dispatcher.Invoke(baseArray, groupArray);
 
     VISKORES_TEST_ASSERT(groupArray.GetNumberOfValues() == ARRAY_SIZE,
-                     "Group array reporting wrong array size.");
+                         "Group array reporting wrong array size.");
 
     VISKORES_TEST_ASSERT(resultArray.GetNumberOfValues() == ARRAY_SIZE * NUM_COMPONENTS,
-                     "Got bad result array size.");
+                         "Got bad result array size.");
 
     //verify that the control portal works
     viskores::Id totalIndex = 0;
@@ -110,11 +112,12 @@ struct TestGroupVecAsOutput
     for (viskores::Id index = 0; index < ARRAY_SIZE; ++index)
     {
       const ValueType expectedValue = TestValue(index, ValueType());
-      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
+      for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+           componentIndex++)
       {
         const ComponentType result = resultPortal.Get(totalIndex);
         VISKORES_TEST_ASSERT(test_equal(result, expectedValue[componentIndex]),
-                         "Result array got wrong value.");
+                             "Result array got wrong value.");
         totalIndex++;
       }
     }

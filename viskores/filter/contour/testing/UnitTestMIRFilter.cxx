@@ -20,7 +20,13 @@
 
 #include <stdio.h>
 
-void ConnectionHelperHex(std::vector<viskores::Id>& conn, int x, int y, int z, int mx, int my, int mz)
+void ConnectionHelperHex(std::vector<viskores::Id>& conn,
+                         int x,
+                         int y,
+                         int z,
+                         int mx,
+                         int my,
+                         int mz)
 {
   (void)mz;
   conn.push_back(mx * (my * z + y) + x);
@@ -63,7 +69,8 @@ viskores::cont::DataSet GetTestDataSet()
     viskores::cont::make_ArrayHandle(ofAR, viskores::CopyFlag::On);
   viskores::cont::ArrayHandle<viskores::Id> lengths =
     viskores::cont::make_ArrayHandle(lnAR, viskores::CopyFlag::On);
-  viskores::cont::ArrayHandle<viskores::Id> ids = viskores::cont::make_ArrayHandle(idAR, viskores::CopyFlag::On);
+  viskores::cont::ArrayHandle<viskores::Id> ids =
+    viskores::cont::make_ArrayHandle(idAR, viskores::CopyFlag::On);
   std::vector<viskores::FloatDefault> vfAR{ 1, 1, 1, 1, 1, 1, 1, 1 };
   viskores::cont::ArrayHandle<viskores::FloatDefault> vfs =
     viskores::cont::make_ArrayHandle(vfAR, viskores::CopyFlag::On);
@@ -84,17 +91,21 @@ viskores::cont::DataSet GetTestDataSet()
       for (int x = 0; x < mx; x++)
       {
         viskores::Vec3f_32 point(static_cast<viskores::Float32>(x),
-                             static_cast<viskores::Float32>(y),
-                             static_cast<viskores::Float32>(z));
+                                 static_cast<viskores::Float32>(y),
+                                 static_cast<viskores::Float32>(z));
         points.push_back(point);
       }
     }
   }
   viskores::cont::DataSet ds = dsb.Create(points, shapes, numberofInd, connections);
-  ds.AddField(viskores::cont::Field("scatter_pos", viskores::cont::Field::Association::Cells, offsets));
-  ds.AddField(viskores::cont::Field("scatter_len", viskores::cont::Field::Association::Cells, lengths));
-  ds.AddField(viskores::cont::Field("scatter_ids", viskores::cont::Field::Association::WholeDataSet, ids));
-  ds.AddField(viskores::cont::Field("scatter_vfs", viskores::cont::Field::Association::WholeDataSet, vfs));
+  ds.AddField(
+    viskores::cont::Field("scatter_pos", viskores::cont::Field::Association::Cells, offsets));
+  ds.AddField(
+    viskores::cont::Field("scatter_len", viskores::cont::Field::Association::Cells, lengths));
+  ds.AddField(
+    viskores::cont::Field("scatter_ids", viskores::cont::Field::Association::WholeDataSet, ids));
+  ds.AddField(
+    viskores::cont::Field("scatter_vfs", viskores::cont::Field::Association::WholeDataSet, vfs));
 
   return ds;
 }
@@ -131,12 +142,12 @@ public:
 
   template <typename IdArray, typename DataArray>
   VISKORES_EXEC void operator()(const viskores::Id& offset,
-                            const viskores::FloatDefault& background,
-                            const viskores::FloatDefault& circle_a,
-                            const viskores::FloatDefault& circle_b,
-                            const viskores::FloatDefault& circle_c,
-                            IdArray& matIds,
-                            DataArray& matVFs) const
+                                const viskores::FloatDefault& background,
+                                const viskores::FloatDefault& circle_a,
+                                const viskores::FloatDefault& circle_b,
+                                const viskores::FloatDefault& circle_c,
+                                IdArray& matIds,
+                                DataArray& matVFs) const
   {
     viskores::Id index = offset;
     if (background > viskores::FloatDefault(0.0))
@@ -198,8 +209,10 @@ void TestMIRVenn250()
 
   invoker(MetaDataPopulate{}, offset, backArr, cirAArr, cirBArr, cirCArr, matIds, matVFs);
 
-  data.AddField(viskores::cont::Field("scatter_pos", viskores::cont::Field::Association::Cells, offset));
-  data.AddField(viskores::cont::Field("scatter_len", viskores::cont::Field::Association::Cells, length));
+  data.AddField(
+    viskores::cont::Field("scatter_pos", viskores::cont::Field::Association::Cells, offset));
+  data.AddField(
+    viskores::cont::Field("scatter_len", viskores::cont::Field::Association::Cells, length));
   data.AddField(
     viskores::cont::Field("scatter_ids", viskores::cont::Field::Association::WholeDataSet, matIds));
   data.AddField(

@@ -65,7 +65,10 @@ viskores::UInt32 ScaleColorComponent(viskores::Float32 c)
 }
 
 VISKORES_EXEC_CONT
-viskores::UInt32 PackColor(viskores::Float32 r, viskores::Float32 g, viskores::Float32 b, viskores::Float32 a);
+viskores::UInt32 PackColor(viskores::Float32 r,
+                           viskores::Float32 g,
+                           viskores::Float32 b,
+                           viskores::Float32 a);
 
 VISKORES_EXEC_CONT
 viskores::UInt32 PackColor(const viskores::Vec4f_32& color)
@@ -74,7 +77,10 @@ viskores::UInt32 PackColor(const viskores::Vec4f_32& color)
 }
 
 VISKORES_EXEC_CONT
-viskores::UInt32 PackColor(viskores::Float32 r, viskores::Float32 g, viskores::Float32 b, viskores::Float32 a)
+viskores::UInt32 PackColor(viskores::Float32 r,
+                           viskores::Float32 g,
+                           viskores::Float32 b,
+                           viskores::Float32 a)
 {
   viskores::UInt32 packed = (ScaleColorComponent(r) << 24);
   packed |= (ScaleColorComponent(g) << 16);
@@ -109,7 +115,8 @@ void UnpackColor(viskores::UInt32 color,
   a = viskores::Float32((color & 0x000000FF)) / 255.0f;
 }
 
-union PackedValue {
+union PackedValue
+{
   struct PackedFloats
   {
     viskores::Float32 Color;
@@ -196,8 +203,8 @@ public:
 
   template <typename CoordinatesPortalType, typename ScalarFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id2& edgeIndices,
-                            const CoordinatesPortalType& coordsPortal,
-                            const ScalarFieldPortalType& fieldPortal) const
+                                const CoordinatesPortalType& coordsPortal,
+                                const ScalarFieldPortalType& fieldPortal) const
   {
     viskores::Id point1Idx = edgeIndices[0];
     viskores::Id point2Idx = edgeIndices[1];
@@ -326,8 +333,10 @@ private:
       point[i] = temp[i] / temp[3];
     }
     // Scale to canvas width and height
-    point[0] = (point[0] * 0.5f + 0.5f) * viskores::Float32(SubsetWidth) + viskores::Float32(XOffset);
-    point[1] = (point[1] * 0.5f + 0.5f) * viskores::Float32(SubsetHeight) + viskores::Float32(YOffset);
+    point[0] =
+      (point[0] * 0.5f + 0.5f) * viskores::Float32(SubsetWidth) + viskores::Float32(XOffset);
+    point[1] =
+      (point[1] * 0.5f + 0.5f) * viskores::Float32(SubsetHeight) + viskores::Float32(YOffset);
     // Convert from -1/+1 to 0/+1 range
     point[2] = point[2] * 0.5f + 0.5f;
     // Offset the point to a bit towards the camera. This is to ensure that the front faces of
@@ -338,10 +347,10 @@ private:
 
   VISKORES_EXEC viskores::Vec4f_32 GetColor(viskores::Float64 fieldValue) const
   {
-    viskores::Int32 colorIdx = viskores::Int32((viskores::Float32(fieldValue) - FieldMin) * this->ColorMapSize *
-                                       this->InverseFieldDelta);
-    colorIdx =
-      viskores::Min(viskores::Int32(this->ColorMap.GetNumberOfValues() - 1), viskores::Max(0, colorIdx));
+    viskores::Int32 colorIdx = viskores::Int32((viskores::Float32(fieldValue) - FieldMin) *
+                                               this->ColorMapSize * this->InverseFieldDelta);
+    colorIdx = viskores::Min(viskores::Int32(this->ColorMap.GetNumberOfValues() - 1),
+                             viskores::Max(0, colorIdx));
     return this->ColorMap.Get(colorIdx);
   }
 
@@ -404,9 +413,9 @@ public:
 
   template <typename DepthBufferPortalType, typename ColorBufferPortalType>
   VISKORES_EXEC void operator()(const viskores::Int64& packedValue,
-                            DepthBufferPortalType& depthBuffer,
-                            ColorBufferPortalType& colorBuffer,
-                            const viskores::Id& index) const
+                                DepthBufferPortalType& depthBuffer,
+                                ColorBufferPortalType& colorBuffer,
+                                const viskores::Id& index) const
   {
     PackedValue packed;
     packed.Raw = packedValue;
@@ -555,8 +564,9 @@ private:
                                      token);
       viskores::worklet::DispatcherMapField<EdgePlotter<DeviceTag>> plotterDispatcher(plotter);
       plotterDispatcher.SetDevice(DeviceTag());
-      plotterDispatcher.Invoke(
-        PointIndices, Coordinates, viskores::rendering::raytracing::GetScalarFieldArray(ScalarField));
+      plotterDispatcher.Invoke(PointIndices,
+                               Coordinates,
+                               viskores::rendering::raytracing::GetScalarFieldArray(ScalarField));
     }
 
     BufferConverter converter;

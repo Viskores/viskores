@@ -24,7 +24,8 @@ namespace
 {
 
 // Likely to contain both supported and unsupported types.
-using TypesToTry = viskores::List<viskores::FloatDefault, viskores::UInt32, VISKORES_UNUSED_INT_TYPE, viskores::Int8>;
+using TypesToTry = viskores::
+  List<viskores::FloatDefault, viskores::UInt32, VISKORES_UNUSED_INT_TYPE, viskores::Int8>;
 
 constexpr viskores::Id DIM_SIZE = 4;
 constexpr viskores::Id ARRAY_SIZE = DIM_SIZE * DIM_SIZE * DIM_SIZE;
@@ -58,7 +59,7 @@ template <typename FieldType>
 viskores::cont::DataSet MakeDataSet()
 {
   VISKORES_STATIC_ASSERT((std::is_same<typename viskores::TypeTraits<FieldType>::DimensionalityTag,
-                                   viskores::TypeTraitsScalarTag>::value));
+                                       viskores::TypeTraitsScalarTag>::value));
 
   viskores::cont::DataSet dataset;
 
@@ -66,7 +67,8 @@ viskores::cont::DataSet MakeDataSet()
   cellSet.SetPointDimensions(viskores::Id3(DIM_SIZE));
   dataset.SetCellSet(cellSet);
 
-  dataset.AddCoordinateSystem(viskores::cont::CoordinateSystem("coords", MakeCoordinates<FieldType>()));
+  dataset.AddCoordinateSystem(
+    viskores::cont::CoordinateSystem("coords", MakeCoordinates<FieldType>()));
   dataset.AddPointField("scalars", MakeField<FieldType>());
   dataset.AddPointField("vectors", MakeVecField<FieldType>());
 
@@ -108,35 +110,39 @@ struct TryType
     std::cout << "Check original data." << std::endl;
     CheckCoords{}(
       data.GetCoordinateSystem().GetData().AsArrayHandle<viskores::cont::ArrayHandle<VecType>>());
-    CheckField<FieldType>{}(
-      data.GetPointField("scalars").GetData().AsArrayHandle<viskores::cont::ArrayHandle<FieldType>>());
-    CheckField<VecType>{}(
-      data.GetPointField("vectors").GetData().AsArrayHandle<viskores::cont::ArrayHandle<VecType>>());
+    CheckField<FieldType>{}(data.GetPointField("scalars")
+                              .GetData()
+                              .AsArrayHandle<viskores::cont::ArrayHandle<FieldType>>());
+    CheckField<VecType>{}(data.GetPointField("vectors")
+                            .GetData()
+                            .AsArrayHandle<viskores::cont::ArrayHandle<VecType>>());
 
     VISKORES_TEST_ASSERT((data.GetCoordinateSystem().IsSupportedType() ==
-                      viskores::ListHas<VISKORES_DEFAULT_TYPE_LIST, VecType>::value));
+                          viskores::ListHas<VISKORES_DEFAULT_TYPE_LIST, VecType>::value));
     VISKORES_TEST_ASSERT((data.GetField("scalars").IsSupportedType() ==
-                      viskores::ListHas<VISKORES_DEFAULT_TYPE_LIST, FieldType>::value));
+                          viskores::ListHas<VISKORES_DEFAULT_TYPE_LIST, FieldType>::value));
     VISKORES_TEST_ASSERT((data.GetField("vectors").IsSupportedType() ==
-                      viskores::ListHas<VISKORES_DEFAULT_TYPE_LIST, VecType>::value));
+                          viskores::ListHas<VISKORES_DEFAULT_TYPE_LIST, VecType>::value));
 
     std::cout << "Check as float default." << std::endl;
     CheckCoords{}(data.GetCoordinateSystem()
                     .GetDataAsDefaultFloat()
                     .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>());
-    CheckField<FieldType>{}(data.GetPointField("scalars")
-                              .GetDataAsDefaultFloat()
-                              .AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>());
+    CheckField<FieldType>{}(
+      data.GetPointField("scalars")
+        .GetDataAsDefaultFloat()
+        .AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>());
     CheckField<VecType>{}(data.GetPointField("vectors")
                             .GetDataAsDefaultFloat()
                             .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>());
 
     std::cout << "Check as expected type." << std::endl;
-    viskores::cont::CastAndCall(data.GetCoordinateSystem().GetDataWithExpectedTypes(), CheckCoords{});
+    viskores::cont::CastAndCall(data.GetCoordinateSystem().GetDataWithExpectedTypes(),
+                                CheckCoords{});
     viskores::cont::CastAndCall(data.GetPointField("scalars").GetDataWithExpectedTypes(),
-                            CheckField<FieldType>{});
+                                CheckField<FieldType>{});
     viskores::cont::CastAndCall(data.GetPointField("vectors").GetDataWithExpectedTypes(),
-                            CheckField<VecType>{});
+                                CheckField<VecType>{});
 
     std::cout << "Convert to expected and check." << std::endl;
     data.ConvertToExpected();
@@ -148,14 +154,15 @@ struct TryType
 
 void Run()
 {
-  VISKORES_TEST_ASSERT(viskores::ListHas<VISKORES_DEFAULT_TYPE_LIST, viskores::FloatDefault>::value,
-                   "This test assumes that VISKORES_DEFAULT_TYPE_LIST has viskores::FloatDefault. "
-                   "If there is a reason for this condition, then a special condition needs "
-                   "to be added to skip this test.");
+  VISKORES_TEST_ASSERT(
+    viskores::ListHas<VISKORES_DEFAULT_TYPE_LIST, viskores::FloatDefault>::value,
+    "This test assumes that VISKORES_DEFAULT_TYPE_LIST has viskores::FloatDefault. "
+    "If there is a reason for this condition, then a special condition needs "
+    "to be added to skip this test.");
   VISKORES_TEST_ASSERT(viskores::ListHas<VISKORES_DEFAULT_TYPE_LIST, viskores::Vec3f>::value,
-                   "This test assumes that VISKORES_DEFAULT_TYPE_LIST has viskores::Vec3f. "
-                   "If there is a reason for this condition, then a special condition needs "
-                   "to be added to skip this test.");
+                       "This test assumes that VISKORES_DEFAULT_TYPE_LIST has viskores::Vec3f. "
+                       "If there is a reason for this condition, then a special condition needs "
+                       "to be added to skip this test.");
 
   viskores::testing::Testing::TryTypes(TryType{}, TypesToTry{});
 }

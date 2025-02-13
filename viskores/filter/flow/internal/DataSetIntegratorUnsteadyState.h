@@ -49,7 +49,7 @@ public:
 
   {
     using StepperType = viskores::worklet::flow::Stepper<SolverType<UnsteadyStateGridEvalType>,
-                                                     UnsteadyStateGridEvalType>;
+                                                         UnsteadyStateGridEvalType>;
     WorkletType worklet;
     UnsteadyStateGridEvalType eval(ds1, t1, field1, ds2, t2, field2);
     StepperType stepper(eval, stepSize);
@@ -124,8 +124,9 @@ public:
   {
   }
 
-  VISKORES_CONT inline void DoAdvect(viskores::filter::flow::internal::DSIHelperInfo<ParticleType>& block,
-                                 viskores::FloatDefault stepSize)
+  VISKORES_CONT inline void DoAdvect(
+    viskores::filter::flow::internal::DSIHelperInfo<ParticleType>& block,
+    viskores::FloatDefault stepSize)
   {
     auto copyFlag = (this->CopySeedArray ? viskores::CopyFlag::On : viskores::CopyFlag::Off);
     auto seedArray = viskores::cont::make_ArrayHandle(block.Particles, copyFlag);
@@ -149,8 +150,9 @@ public:
     this->UpdateResult(analysis, block);
   }
 
-  VISKORES_CONT void UpdateResult(AnalysisType& analysis,
-                              viskores::filter::flow::internal::DSIHelperInfo<ParticleType>& dsiInfo)
+  VISKORES_CONT void UpdateResult(
+    AnalysisType& analysis,
+    viskores::filter::flow::internal::DSIHelperInfo<ParticleType>& dsiInfo)
   {
     this->ClassifyParticles(analysis.Particles, dsiInfo);
     if (std::is_same<AnalysisType, viskores::worklet::flow::NoAnalysis<ParticleType>>::value)

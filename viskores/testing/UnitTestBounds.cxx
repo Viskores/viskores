@@ -27,7 +27,7 @@ void TestBounds()
   viskores::Bounds emptyBounds2;
   VISKORES_TEST_ASSERT(!emptyBounds2.IsNonEmpty(), "2nd empty bounds not empty.");
   VISKORES_TEST_ASSERT(!emptyBounds.Union(emptyBounds2).IsNonEmpty(),
-                   "Union of empty bounds not empty.");
+                       "Union of empty bounds not empty.");
   emptyBounds2.Include(emptyBounds);
   VISKORES_TEST_ASSERT(!emptyBounds2.IsNonEmpty(), "Include empty in empty is not empty.");
 
@@ -142,7 +142,8 @@ void TestBounds()
   VISKORES_TEST_ASSERT(VTraits::GetComponent(simpleBounds, 2) == viskores::Range{ 8.0, 16.0 });
   viskores::Vec<viskores::Range, 3> simpleBoundsCopy;
   VTraits::CopyInto(simpleBounds, simpleBoundsCopy);
-  VISKORES_TEST_ASSERT(simpleBoundsCopy == viskores::Vec<viskores::Range, 3>{ { 0, 1 }, { 2, 4 }, { 8, 16 } });
+  VISKORES_TEST_ASSERT(simpleBoundsCopy ==
+                       viskores::Vec<viskores::Range, 3>{ { 0, 1 }, { 2, 4 }, { 8, 16 } });
   VTraits::SetComponent(simpleBounds, 0, { 8.0, 16.0 });
   VTraits::SetComponent(simpleBounds, 2, { 2.0, 4.0 });
   VTraits::SetComponent(simpleBounds, 1, { 0.0, 1.0 });

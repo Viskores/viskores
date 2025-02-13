@@ -16,7 +16,8 @@ namespace
 {
 //-----------------------------------------------------------------------------
 template <typename T, typename S>
-inline void transpose_3x3(viskores::cont::ArrayHandle<viskores::Vec<viskores::Vec<T, 3>, 3>, S>& field)
+inline void transpose_3x3(
+  viskores::cont::ArrayHandle<viskores::Vec<viskores::Vec<T, 3>, 3>, S>& field)
 {
   viskores::worklet::gradient::Transpose3x3<T> transpose;
   transpose.Run(field);
@@ -67,13 +68,14 @@ viskores::cont::DataSet Gradient::DoExecute(const viskores::cont::DataSet& input
   // TODO: there are a humungous number of (weak) symbols in the .o file. Investigate if
   //  they are all legit.
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     viskores::worklet::GradientOutputFields<T> gradientfields(this->GetComputeGradient(),
-                                                          this->GetComputeDivergence(),
-                                                          this->GetComputeVorticity(),
-                                                          this->GetComputeQCriterion());
+                                                              this->GetComputeDivergence(),
+                                                              this->GetComputeVorticity(),
+                                                              this->GetComputeQCriterion());
 
     viskores::cont::ArrayHandle<viskores::Vec<T, 3>> result;
     if (this->ComputePointGradient)
@@ -97,9 +99,11 @@ viskores::cont::DataSet Gradient::DoExecute(const viskores::cont::DataSet& input
     qcriterionArray = gradientfields.QCriterion;
   };
 
-  using SupportedTypes = viskores::List<viskores::Float32, viskores::Float64, viskores::Vec3f_32, viskores::Vec3f_64>;
-  field.GetData().CastAndCallForTypesWithFloatFallback<SupportedTypes, VISKORES_DEFAULT_STORAGE_LIST>(
-    resolveType);
+  using SupportedTypes =
+    viskores::List<viskores::Float32, viskores::Float64, viskores::Vec3f_32, viskores::Vec3f_64>;
+  field.GetData()
+    .CastAndCallForTypesWithFloatFallback<SupportedTypes, VISKORES_DEFAULT_STORAGE_LIST>(
+      resolveType);
 
   // This copies the CellSet and Fields to be passed from inputDataSet to outputDataSet
   viskores::cont::DataSet outputDataSet = this->CreateResult(inputDataSet);
@@ -110,9 +114,9 @@ viskores::cont::DataSet Gradient::DoExecute(const viskores::cont::DataSet& input
     outputName = this->GradientsName;
   }
 
-  viskores::cont::Field::Association fieldAssociation(this->ComputePointGradient
-                                                    ? viskores::cont::Field::Association::Points
-                                                    : viskores::cont::Field::Association::Cells);
+  viskores::cont::Field::Association fieldAssociation(
+    this->ComputePointGradient ? viskores::cont::Field::Association::Points
+                               : viskores::cont::Field::Association::Cells);
 
   outputDataSet.AddField(viskores::cont::Field{ outputName, fieldAssociation, gradientArray });
 

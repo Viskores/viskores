@@ -103,8 +103,10 @@ public:
   bool operator()(const viskores::Id& left, const viskores::Id& right) const
   { // operator()
     // get local references to the edge details
-    viskores::worklet::contourtree_augmented::EdgePair edgeLeft = this->SuperarcListPortal.Get(left);
-    viskores::worklet::contourtree_augmented::EdgePair edgeRight = this->SuperarcListPortal.Get(right);
+    viskores::worklet::contourtree_augmented::EdgePair edgeLeft =
+      this->SuperarcListPortal.Get(left);
+    viskores::worklet::contourtree_augmented::EdgePair edgeRight =
+      this->SuperarcListPortal.Get(right);
 
     if (this->PairsAtLowEnd)
     { // pairs at low end

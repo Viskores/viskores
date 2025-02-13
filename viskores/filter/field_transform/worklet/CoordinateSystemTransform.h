@@ -28,8 +28,8 @@ struct CylToCar : public viskores::worklet::WorkletMapField
   VISKORES_EXEC viskores::Vec<T, 3> operator()(const viskores::Vec<T, 3>& vec) const
   {
     viskores::Vec<T, 3> res(vec[0] * static_cast<T>(viskores::Cos(vec[1])),
-                        vec[0] * static_cast<T>(viskores::Sin(vec[1])),
-                        vec[2]);
+                            vec[0] * static_cast<T>(viskores::Sin(vec[1])),
+                            vec[2]);
     return res;
   }
 };

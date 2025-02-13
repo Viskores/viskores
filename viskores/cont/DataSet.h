@@ -29,7 +29,8 @@ VISKORES_CONT_EXPORT VISKORES_CONT std::string& GlobalGhostCellFieldName() noexc
 
 VISKORES_CONT_EXPORT VISKORES_CONT const std::string& GetGlobalGhostCellFieldName() noexcept;
 
-VISKORES_CONT_EXPORT VISKORES_CONT void SetGlobalGhostCellFieldName(const std::string& name) noexcept;
+VISKORES_CONT_EXPORT VISKORES_CONT void SetGlobalGhostCellFieldName(
+  const std::string& name) noexcept;
 
 /// @brief Contains and manages the geometric data structures that Viskores operates on.
 ///
@@ -93,8 +94,8 @@ public:
   /// all the fields. To retrieve a specific field, retrieve the field by name, not by
   /// integer index.
   VISKORES_CONT void AddField(const std::string& name,
-                          viskores::cont::Field::Association association,
-                          const viskores::cont::UnknownArrayHandle& data);
+                              viskores::cont::Field::Association association,
+                              const viskores::cont::UnknownArrayHandle& data);
 
   ///@{
   /// \brief Retrieves a field by index.
@@ -105,15 +106,19 @@ public:
   /// integer index. This method is most useful for iterating over all the fields of
   /// a `DataSet` (indexed from `0` to `NumberOfFields() - 1`).
   VISKORES_CONT
-  const viskores::cont::Field& GetField(viskores::Id index) const { return this->Fields.GetField(index); }
+  const viskores::cont::Field& GetField(viskores::Id index) const
+  {
+    return this->Fields.GetField(index);
+  }
 
   VISKORES_CONT
   viskores::cont::Field& GetField(viskores::Id index) { return this->Fields.GetField(index); }
   ///@}
 
   VISKORES_CONT
-  bool HasField(const std::string& name,
-                viskores::cont::Field::Association assoc = viskores::cont::Field::Association::Any) const
+  bool HasField(
+    const std::string& name,
+    viskores::cont::Field::Association assoc = viskores::cont::Field::Association::Any) const
   {
     return this->Fields.HasField(name, assoc);
   }
@@ -236,7 +241,7 @@ public:
 
   template <typename T, typename Storage>
   VISKORES_CONT void AddPointField(const std::string& fieldName,
-                               const viskores::cont::ArrayHandle<T, Storage>& field)
+                                   const viskores::cont::ArrayHandle<T, Storage>& field)
   {
     this->AddPointField(fieldName, viskores::cont::UnknownArrayHandle{ field });
   }
@@ -244,15 +249,17 @@ public:
   template <typename T>
   VISKORES_CONT void AddPointField(const std::string& fieldName, const std::vector<T>& field)
   {
-    this->AddField(
-      make_Field(fieldName, viskores::cont::Field::Association::Points, field, viskores::CopyFlag::On));
+    this->AddField(make_Field(
+      fieldName, viskores::cont::Field::Association::Points, field, viskores::CopyFlag::On));
   }
 
   template <typename T>
-  VISKORES_CONT void AddPointField(const std::string& fieldName, const T* field, const viskores::Id& n)
+  VISKORES_CONT void AddPointField(const std::string& fieldName,
+                                   const T* field,
+                                   const viskores::Id& n)
   {
-    this->AddField(
-      make_Field(fieldName, viskores::cont::Field::Association::Points, field, n, viskores::CopyFlag::On));
+    this->AddField(make_Field(
+      fieldName, viskores::cont::Field::Association::Points, field, n, viskores::CopyFlag::On));
   }
   ///@}
 
@@ -271,7 +278,7 @@ public:
 
   template <typename T, typename Storage>
   VISKORES_CONT void AddCellField(const std::string& fieldName,
-                              const viskores::cont::ArrayHandle<T, Storage>& field)
+                                  const viskores::cont::ArrayHandle<T, Storage>& field)
   {
     this->AddCellField(fieldName, viskores::cont::UnknownArrayHandle{ field });
   }
@@ -279,15 +286,17 @@ public:
   template <typename T>
   VISKORES_CONT void AddCellField(const std::string& fieldName, const std::vector<T>& field)
   {
-    this->AddField(
-      make_Field(fieldName, viskores::cont::Field::Association::Cells, field, viskores::CopyFlag::On));
+    this->AddField(make_Field(
+      fieldName, viskores::cont::Field::Association::Cells, field, viskores::CopyFlag::On));
   }
 
   template <typename T>
-  VISKORES_CONT void AddCellField(const std::string& fieldName, const T* field, const viskores::Id& n)
+  VISKORES_CONT void AddCellField(const std::string& fieldName,
+                                  const T* field,
+                                  const viskores::Id& n)
   {
-    this->AddField(
-      make_Field(fieldName, viskores::cont::Field::Association::Cells, field, n, viskores::CopyFlag::On));
+    this->AddField(make_Field(
+      fieldName, viskores::cont::Field::Association::Cells, field, n, viskores::CopyFlag::On));
   }
   ///@}
 
@@ -313,7 +322,7 @@ public:
   /// integer index.
   VISKORES_CONT void SetGhostCellField(const viskores::cont::Field& field);
   VISKORES_CONT void SetGhostCellField(const std::string& fieldName,
-                                   const viskores::cont::UnknownArrayHandle& field);
+                                       const viskores::cont::UnknownArrayHandle& field);
   ///@}
 
   /// \brief Sets the ghost cell levels to the given array.
@@ -329,7 +338,8 @@ public:
 
   VISKORES_DEPRECATED(2.0, "Use SetGhostCellField.")
   VISKORES_CONT
-  void AddGhostCellField(const std::string& fieldName, const viskores::cont::UnknownArrayHandle& field)
+  void AddGhostCellField(const std::string& fieldName,
+                         const viskores::cont::UnknownArrayHandle& field)
   {
     this->SetGhostCellField(fieldName, field);
   }
@@ -359,8 +369,9 @@ public:
   /// The coordinate system will also be added as a point field of the same name.
   ///
   /// \returns the field index assigned to the added coordinate system.
-  VISKORES_CONT viskores::IdComponent AddCoordinateSystem(const std::string& name,
-                                                  const viskores::cont::UnknownArrayHandle& data);
+  VISKORES_CONT viskores::IdComponent AddCoordinateSystem(
+    const std::string& name,
+    const viskores::cont::UnknownArrayHandle& data);
 
   /// \brief Marks the point field with the given name as a coordinate system.
   ///
@@ -440,9 +451,11 @@ public:
 
 private:
   std::vector<std::string> CoordSystemNames;
-  viskores::cont::internal::FieldCollection Fields{ viskores::cont::Field::Association::WholeDataSet,
-                                                viskores::cont::Field::Association::Points,
-                                                viskores::cont::Field::Association::Cells };
+  viskores::cont::internal::FieldCollection Fields{
+    viskores::cont::Field::Association::WholeDataSet,
+    viskores::cont::Field::Association::Points,
+    viskores::cont::Field::Association::Cells
+  };
 
   viskores::cont::UnknownCellSet CellSet;
   std::shared_ptr<std::string> GhostCellName;

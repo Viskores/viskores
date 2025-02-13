@@ -26,7 +26,7 @@ template <typename T, class StorageTag, class DeviceAdapterTag>
 class ArrayTransfer
 {
   VISKORES_STATIC_ASSERT_MSG(sizeof(T) == static_cast<std::size_t>(-1),
-                         "Default implementation of ArrayTransfer no longer available.");
+                             "Default implementation of ArrayTransfer no longer available.");
 };
 
 }

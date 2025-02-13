@@ -91,11 +91,11 @@ public:
   /// to the container when the buffer is released.
   ///
   VISKORES_CONT BufferInfo(viskores::cont::DeviceAdapterId device,
-                       void* memory,
-                       void* container,
-                       viskores::BufferSizeType size,
-                       Deleter deleter,
-                       Reallocater reallocater);
+                           void* memory,
+                           void* container,
+                           viskores::BufferSizeType size,
+                           Deleter deleter,
+                           Reallocater reallocater);
 
   /// Reallocates the buffer to a new size.
   ///
@@ -150,19 +150,21 @@ public:
 
   /// Allocates a buffer of the specified size in bytes and returns a BufferInfo object
   /// containing information about it.
-  VISKORES_CONT virtual viskores::cont::internal::BufferInfo Allocate(viskores::BufferSizeType size) const = 0;
+  VISKORES_CONT virtual viskores::cont::internal::BufferInfo Allocate(
+    viskores::BufferSizeType size) const = 0;
 
   /// Reallocates the provided buffer to a new size. The passed in `BufferInfo` should be
   /// modified to reflect the changes.
   VISKORES_CONT void Reallocate(viskores::cont::internal::BufferInfo& buffer,
-                            viskores::BufferSizeType newSize) const;
+                                viskores::BufferSizeType newSize) const;
 
   /// Manages the provided array. Returns a `BufferInfo` object that contains the data.
-  VISKORES_CONT BufferInfo ManageArray(void* memory,
-                                   void* container,
-                                   viskores::BufferSizeType size,
-                                   viskores::cont::internal::BufferInfo::Deleter deleter,
-                                   viskores::cont::internal::BufferInfo::Reallocater reallocater) const;
+  VISKORES_CONT BufferInfo
+  ManageArray(void* memory,
+              void* container,
+              viskores::BufferSizeType size,
+              viskores::cont::internal::BufferInfo::Deleter deleter,
+              viskores::cont::internal::BufferInfo::Reallocater reallocater) const;
 
   /// Returns the device that this manager is associated with.
   VISKORES_CONT virtual viskores::cont::DeviceAdapterId GetDevice() const = 0;
@@ -174,8 +176,9 @@ public:
 
   /// Copies data from the provided host buffer into the provided pre-allocated device buffer. The
   /// `BufferInfo` object for the device was created by a previous call to this object.
-  VISKORES_CONT virtual void CopyHostToDevice(const viskores::cont::internal::BufferInfo& src,
-                                          const viskores::cont::internal::BufferInfo& dest) const = 0;
+  VISKORES_CONT virtual void CopyHostToDevice(
+    const viskores::cont::internal::BufferInfo& src,
+    const viskores::cont::internal::BufferInfo& dest) const = 0;
 
   /// Copies data from the device buffer provided to the host. The passed in `BufferInfo` object
   /// was created by a previous call to this object.
@@ -184,8 +187,9 @@ public:
 
   /// Copies data from the device buffer provided into the provided pre-allocated host buffer. The
   /// `BufferInfo` object for the device was created by a previous call to this object.
-  VISKORES_CONT virtual void CopyDeviceToHost(const viskores::cont::internal::BufferInfo& src,
-                                          const viskores::cont::internal::BufferInfo& dest) const = 0;
+  VISKORES_CONT virtual void CopyDeviceToHost(
+    const viskores::cont::internal::BufferInfo& src,
+    const viskores::cont::internal::BufferInfo& dest) const = 0;
 
   /// Deep copies data from one device buffer to another device buffer. The passed in `BufferInfo`
   /// object was created by a previous call to this object.
@@ -194,8 +198,9 @@ public:
 
   /// Deep copies data from one device buffer to another device buffer. The passed in `BufferInfo`
   /// objects were created by a previous call to this object.
-  VISKORES_CONT virtual void CopyDeviceToDevice(const viskores::cont::internal::BufferInfo& src,
-                                            const viskores::cont::internal::BufferInfo& dest) const = 0;
+  VISKORES_CONT virtual void CopyDeviceToDevice(
+    const viskores::cont::internal::BufferInfo& src,
+    const viskores::cont::internal::BufferInfo& dest) const = 0;
 
 
   /// \brief Low-level method to allocate memory on the device.
@@ -215,8 +220,8 @@ public:
   /// instead of `BufferInfo` objects. This is a useful low-level mechanism to move
   /// data on a device in memory locations created externally to Viskores.
   VISKORES_CONT virtual void CopyDeviceToDeviceRawPointer(const void* src,
-                                                      void* dest,
-                                                      viskores::BufferSizeType size) const;
+                                                          void* dest,
+                                                          viskores::BufferSizeType size) const;
 
   /// \brief Low-level method to delete memory on the device.
   ///
@@ -241,15 +246,15 @@ class DeviceAdapterMemoryManager;
 VISKORES_CONT_EXPORT VISKORES_CONT void HostDeleter(void*);
 VISKORES_CONT_EXPORT VISKORES_CONT void* HostAllocate(viskores::BufferSizeType);
 VISKORES_CONT_EXPORT VISKORES_CONT void HostReallocate(void*&,
-                                               void*&,
-                                               viskores::BufferSizeType,
-                                               viskores::BufferSizeType);
+                                                       void*&,
+                                                       viskores::BufferSizeType,
+                                                       viskores::BufferSizeType);
 
 
 VISKORES_CONT_EXPORT VISKORES_CONT void InvalidRealloc(void*&,
-                                               void*&,
-                                               viskores::BufferSizeType,
-                                               viskores::BufferSizeType);
+                                                       void*&,
+                                                       viskores::BufferSizeType,
+                                                       viskores::BufferSizeType);
 
 // Deletes a container object by casting it to a pointer of a given type (the template argument)
 // and then using delete[] on the object.
@@ -264,9 +269,9 @@ VISKORES_CONT inline void SimpleArrayDeleter(void* container_)
 // host allocation of viskores::cont::internal::BufferInfo and may be less efficient.
 template <typename T>
 VISKORES_CONT inline void SimpleArrayReallocater(void*& memory,
-                                             void*& container,
-                                             viskores::BufferSizeType oldSize,
-                                             viskores::BufferSizeType newSize)
+                                                 void*& container,
+                                                 viskores::BufferSizeType oldSize,
+                                                 viskores::BufferSizeType newSize)
 {
   VISKORES_ASSERT(memory == container);
   VISKORES_ASSERT(static_cast<std::size_t>(newSize) % sizeof(T) == 0);
@@ -306,9 +311,9 @@ VISKORES_CONT inline void StdVectorDeleter(void* container)
 
 template <typename T, typename Allocator>
 VISKORES_CONT inline void StdVectorReallocater(void*& memory,
-                                           void*& container,
-                                           viskores::BufferSizeType oldSize,
-                                           viskores::BufferSizeType newSize)
+                                               void*& container,
+                                               viskores::BufferSizeType oldSize,
+                                               viskores::BufferSizeType newSize)
 {
   using vector_type = std::vector<T, Allocator>;
   vector_type* vector = reinterpret_cast<vector_type*>(container);

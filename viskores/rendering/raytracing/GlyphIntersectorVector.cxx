@@ -60,14 +60,14 @@ public:
 
   template <typename PointPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& pointId,
-                            const viskores::Vec3f_32& size,
-                            viskores::Float32& xmin,
-                            viskores::Float32& ymin,
-                            viskores::Float32& zmin,
-                            viskores::Float32& xmax,
-                            viskores::Float32& ymax,
-                            viskores::Float32& zmax,
-                            const PointPortalType& points) const
+                                const viskores::Vec3f_32& size,
+                                viskores::Float32& xmin,
+                                viskores::Float32& ymin,
+                                viskores::Float32& zmin,
+                                viskores::Float32& xmax,
+                                viskores::Float32& ymax,
+                                viskores::Float32& zmax,
+                                const PointPortalType& points) const
   {
     viskores::Vec3f_32 point = static_cast<viskores::Vec3f_32>(points.Get(pointId));
     xmin = point[0];
@@ -84,13 +84,13 @@ public:
   }
 
   VISKORES_EXEC inline void CalculateArrowAABB(const viskores::Vec3f_32& point,
-                                           const viskores::Vec3f_32& size,
-                                           viskores::Float32& xmin,
-                                           viskores::Float32& ymin,
-                                           viskores::Float32& zmin,
-                                           viskores::Float32& xmax,
-                                           viskores::Float32& ymax,
-                                           viskores::Float32& zmax) const
+                                               const viskores::Vec3f_32& size,
+                                               viskores::Float32& xmin,
+                                               viskores::Float32& ymin,
+                                               viskores::Float32& zmin,
+                                               viskores::Float32& xmax,
+                                               viskores::Float32& ymax,
+                                               viskores::Float32& zmax) const
   {
     viskores::Vec3f_32 body_pa = point;
     viskores::Vec3f_32 body_pb = body_pa + ARROW_BODY_SIZE * size;
@@ -103,14 +103,14 @@ public:
   }
 
   VISKORES_EXEC inline void CylinderAABB(const viskores::Vec3f_32& pa,
-                                     const viskores::Vec3f_32& pb,
-                                     const viskores::Float32& ra,
-                                     viskores::Float32& xmin,
-                                     viskores::Float32& ymin,
-                                     viskores::Float32& zmin,
-                                     viskores::Float32& xmax,
-                                     viskores::Float32& ymax,
-                                     viskores::Float32& zmax) const
+                                         const viskores::Vec3f_32& pb,
+                                         const viskores::Float32& ra,
+                                         viskores::Float32& xmin,
+                                         viskores::Float32& ymin,
+                                         viskores::Float32& zmin,
+                                         viskores::Float32& xmax,
+                                         viskores::Float32& ymax,
+                                         viskores::Float32& zmax) const
   {
     viskores::Vec3f_32 a = pb - pa;
     viskores::Vec3f_32 e_prime = a * a / viskores::Dot(a, a);
@@ -130,15 +130,15 @@ public:
   }
 
   VISKORES_EXEC inline void ConeAABB(const viskores::Vec3f_32& pa,
-                                 const viskores::Vec3f_32& pb,
-                                 const viskores::Float32& ra,
-                                 const viskores::Float32& rb,
-                                 viskores::Float32& xmin,
-                                 viskores::Float32& ymin,
-                                 viskores::Float32& zmin,
-                                 viskores::Float32& xmax,
-                                 viskores::Float32& ymax,
-                                 viskores::Float32& zmax) const
+                                     const viskores::Vec3f_32& pb,
+                                     const viskores::Float32& ra,
+                                     const viskores::Float32& rb,
+                                     viskores::Float32& xmin,
+                                     viskores::Float32& ymin,
+                                     viskores::Float32& zmin,
+                                     viskores::Float32& xmax,
+                                     viskores::Float32& ymax,
+                                     viskores::Float32& zmax) const
   {
     viskores::Vec3f_32 a = pb - pa;
     viskores::Vec3f_32 e_prime = a * a / viskores::Dot(a, a);
@@ -191,15 +191,15 @@ public:
 
   template <typename PointPortalType, typename LeafPortalType, typename Precision>
   VISKORES_EXEC inline void IntersectLeaf(const viskores::Int32& currentNode,
-                                      const viskores::Vec<Precision, 3>& origin,
-                                      const viskores::Vec<Precision, 3>& dir,
-                                      const PointPortalType& points,
-                                      viskores::Id& hitIndex,
-                                      Precision& closestDistance,
-                                      Precision& minU,
-                                      Precision& minV,
-                                      LeafPortalType leafs,
-                                      const Precision& minDistance) const
+                                          const viskores::Vec<Precision, 3>& origin,
+                                          const viskores::Vec<Precision, 3>& dir,
+                                          const PointPortalType& points,
+                                          viskores::Id& hitIndex,
+                                          Precision& closestDistance,
+                                          Precision& minU,
+                                          Precision& minV,
+                                          LeafPortalType leafs,
+                                          const Precision& minDistance) const
   {
     const viskores::Id glyphCount = leafs.Get(currentNode);
 
@@ -220,15 +220,15 @@ public:
 
   template <typename Precision>
   VISKORES_EXEC inline void IntersectArrow(const viskores::Vec<Precision, 3>& origin,
-                                       const viskores::Vec<Precision, 3>& dir,
-                                       const viskores::Vec<Precision, 3>& point,
-                                       const viskores::Vec<Precision, 3>& size,
-                                       const viskores::Id& pointIndex,
-                                       viskores::Id& hitIndex,
-                                       Precision& closestDistance,
-                                       Precision& minU,
-                                       Precision& minV,
-                                       const Precision& minDistance) const
+                                           const viskores::Vec<Precision, 3>& dir,
+                                           const viskores::Vec<Precision, 3>& point,
+                                           const viskores::Vec<Precision, 3>& size,
+                                           const viskores::Id& pointIndex,
+                                           viskores::Id& hitIndex,
+                                           Precision& closestDistance,
+                                           Precision& minU,
+                                           Precision& minV,
+                                           const Precision& minDistance) const
   {
     using Vec2 = viskores::Vec<Precision, 2>;
     using Vec3 = viskores::Vec<Precision, 3>;
@@ -294,10 +294,10 @@ public:
 
   template <typename Precision>
   VISKORES_EXEC viskores::Vec4f_32 IntersectCylinder(const viskores::Vec<Precision, 3>& ro,
-                                             const viskores::Vec<Precision, 3>& rd,
-                                             const viskores::Vec<Precision, 3>& pa,
-                                             const viskores::Vec<Precision, 3>& pb,
-                                             const Precision& ra) const
+                                                     const viskores::Vec<Precision, 3>& rd,
+                                                     const viskores::Vec<Precision, 3>& pa,
+                                                     const viskores::Vec<Precision, 3>& pb,
+                                                     const Precision& ra) const
   {
     using Vec3 = viskores::Vec<Precision, 3>;
     using Vec4 = viskores::Vec<Precision, 4>;
@@ -333,7 +333,8 @@ public:
     if (viskores::Abs(y) < ch)
     {
       viskores::Vec3f_32 normal = viskores::Normal(oc + t1 * rd - ca * y);
-      return viskores::Vec4f_32(static_cast<viskores::Float32>(t1), normal[0], normal[1], normal[2]);
+      return viskores::Vec4f_32(
+        static_cast<viskores::Float32>(t1), normal[0], normal[1], normal[2]);
     }
 
     // bottom cap
@@ -342,7 +343,8 @@ public:
     if (viskores::Abs(b + a * tp) < h)
     {
       viskores::Vec3f_32 normal = viskores::Normal(ca * sy);
-      return viskores::Vec4f_32(static_cast<viskores::Float32>(tp), normal[0], normal[1], normal[2]);
+      return viskores::Vec4f_32(
+        static_cast<viskores::Float32>(tp), normal[0], normal[1], normal[2]);
     }
 
     // top cap
@@ -351,7 +353,8 @@ public:
     if (viskores::Abs(b + a * tp) < h)
     {
       viskores::Vec3f_32 normal = viskores::Normal(ca * sy);
-      return viskores::Vec4f_32(static_cast<viskores::Float32>(tp), normal[0], normal[1], normal[2]);
+      return viskores::Vec4f_32(
+        static_cast<viskores::Float32>(tp), normal[0], normal[1], normal[2]);
     }
 
     return NO_HIT;
@@ -359,11 +362,11 @@ public:
 
   template <typename Precision>
   VISKORES_EXEC viskores::Vec4f_32 IntersectCone(const viskores::Vec<Precision, 3>& ro,
-                                         const viskores::Vec<Precision, 3>& rd,
-                                         const viskores::Vec<Precision, 3>& pa,
-                                         const viskores::Vec<Precision, 3>& pb,
-                                         const Precision& ra,
-                                         const Precision& rb) const
+                                                 const viskores::Vec<Precision, 3>& rd,
+                                                 const viskores::Vec<Precision, 3>& pa,
+                                                 const viskores::Vec<Precision, 3>& pb,
+                                                 const Precision& ra,
+                                                 const Precision& rb) const
   {
     using Vec3 = viskores::Vec<Precision, 3>;
     using Vec4 = viskores::Vec<Precision, 4>;
@@ -458,8 +461,9 @@ public:
   }
 
   template <typename Device>
-  VISKORES_CONT GlyphVectorLeafIntersector<Device> PrepareForExecution(Device,
-                                                                   viskores::cont::Token& token) const
+  VISKORES_CONT GlyphVectorLeafIntersector<Device> PrepareForExecution(
+    Device,
+    viskores::cont::Token& token) const
   {
     return GlyphVectorLeafIntersector<Device>(this->GlyphType,
                                               this->PointIds,
@@ -497,16 +501,16 @@ public:
             typename IndicesPortalType,
             typename SizesPortalType>
   VISKORES_EXEC inline void operator()(const viskores::Id& hitIndex,
-                                   const viskores::Vec<Precision, 3>& rayDir,
-                                   const viskores::Vec<Precision, 3>& intersection,
-                                   const Precision& u,
-                                   const Precision& v,
-                                   Precision& normalX,
-                                   Precision& normalY,
-                                   Precision& normalZ,
-                                   const PointPortalType& viskoresNotUsed(points),
-                                   const IndicesPortalType& viskoresNotUsed(indicesPortal),
-                                   const SizesPortalType& viskoresNotUsed(sizesPortal)) const
+                                       const viskores::Vec<Precision, 3>& rayDir,
+                                       const viskores::Vec<Precision, 3>& intersection,
+                                       const Precision& u,
+                                       const Precision& v,
+                                       Precision& normalX,
+                                       Precision& normalY,
+                                       Precision& normalZ,
+                                       const PointPortalType& viskoresNotUsed(points),
+                                       const IndicesPortalType& viskoresNotUsed(indicesPortal),
+                                       const SizesPortalType& viskoresNotUsed(sizesPortal)) const
   {
     if (hitIndex < 0)
       return;
@@ -576,9 +580,9 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4);
   template <typename FieldPortalType, typename IndicesPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
-                            Precision& scalar,
-                            const FieldPortalType& scalars,
-                            const IndicesPortalType& indicesPortal) const
+                                Precision& scalar,
+                                const FieldPortalType& scalars,
+                                const IndicesPortalType& indicesPortal) const
   {
     if (hitIndex < 0)
       return;
@@ -687,8 +691,10 @@ void GlyphIntersectorVector::IntersectionDataImp(Ray<Precision>& rays,
 
   viskores::worklet::DispatcherMapField<detail::GetScalars<Precision>>(
     detail::GetScalars<Precision>(viskores::Float32(range.Min), viskores::Float32(range.Max)))
-    .Invoke(
-      rays.HitIdx, rays.Scalar, viskores::rendering::raytracing::GetScalarFieldArray(field), PointIds);
+    .Invoke(rays.HitIdx,
+            rays.Scalar,
+            viskores::rendering::raytracing::GetScalarFieldArray(field),
+            PointIds);
 }
 
 void GlyphIntersectorVector::IntersectionData(Ray<viskores::Float32>& rays,
@@ -710,7 +716,8 @@ viskores::Id GlyphIntersectorVector::GetNumberOfShapes() const
   return PointIds.GetNumberOfValues();
 }
 
-void GlyphIntersectorVector::SetArrowRadii(viskores::Float32 bodyRadius, viskores::Float32 headRadius)
+void GlyphIntersectorVector::SetArrowRadii(viskores::Float32 bodyRadius,
+                                           viskores::Float32 headRadius)
 {
   this->ArrowHeadRadius = headRadius;
   this->ArrowBodyRadius = bodyRadius;

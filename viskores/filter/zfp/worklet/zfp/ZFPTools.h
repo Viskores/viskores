@@ -88,8 +88,9 @@ template <typename T>
 T* GetVISKORESPointer(viskores::cont::ArrayHandle<T>& handle)
 {
   typedef typename viskores::cont::ArrayHandle<T> HandleType;
-  typedef typename HandleType::template ExecutionTypes<viskores::cont::DeviceAdapterTagSerial>::Portal
-    PortalType;
+  typedef
+    typename HandleType::template ExecutionTypes<viskores::cont::DeviceAdapterTagSerial>::Portal
+      PortalType;
   typedef typename viskores::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
   IteratorType iter =
     viskores::cont::ArrayPortalToIterators<PortalType>(handle.WritePortal()).GetBegin();

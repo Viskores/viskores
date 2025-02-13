@@ -66,8 +66,8 @@ public:
 
     template <typename NormalCompType, typename CellPointsType, typename CoordsPortal>
     VISKORES_EXEC void operator()(const viskores::Vec<NormalCompType, 3>& cellNormal,
-                              CellPointsType& cellPoints,
-                              const CoordsPortal& coords) const
+                                  CellPointsType& cellPoints,
+                                  const CoordsPortal& coords) const
     {
       // We only care about triangles:
       if (cellPoints.GetNumberOfComponents() != 3)
@@ -101,9 +101,9 @@ public:
 
     template <typename CellShapeTag>
     VISKORES_EXEC void operator()(const CellShapeTag cellShapeIn,
-                              const viskores::IdComponent cellSizeIn,
-                              viskores::UInt8& cellShapeOut,
-                              viskores::IdComponent& cellSizeOut) const
+                                  const viskores::IdComponent cellSizeIn,
+                                  viskores::UInt8& cellShapeOut,
+                                  viskores::IdComponent& cellSizeOut) const
     {
       cellSizeOut = cellSizeIn;
       cellShapeOut = cellShapeIn.Id;
@@ -120,9 +120,9 @@ public:
 
     template <typename InputIds, typename Coords, typename Normal, typename OutputIds>
     VISKORES_EXEC void operator()(const InputIds& inputIds,
-                              const Coords& coords,
-                              const Normal& normal,
-                              OutputIds& outputIds) const
+                                  const Coords& coords,
+                                  const Normal& normal,
+                                  OutputIds& outputIds) const
     {
       VISKORES_ASSERT(inputIds.GetNumberOfComponents() == outputIds.GetNumberOfComponents());
 
@@ -167,9 +167,9 @@ public:
     // Generic handler:
     template <typename CellSetType, typename CoordsType, typename CellNormalsType>
     VISKORES_CONT void operator()(const CellSetType& cellSet,
-                              const CoordsType& coords,
-                              const CellNormalsType& cellNormals,
-                              ...)
+                                  const CoordsType& coords,
+                                  const CellNormalsType& cellNormals,
+                                  ...)
     {
       const auto numCells = cellSet.GetNumberOfCells();
       if (numCells == 0)
@@ -219,7 +219,8 @@ public:
         viskores::cont::ArrayHandle<viskores::Id> conn;
         conn.Allocate(cellSize * numCells);
 
-        auto offsets = viskores::cont::make_ArrayHandleCounting<viskores::Id>(0, cellSize, numCells);
+        auto offsets =
+          viskores::cont::make_ArrayHandleCounting<viskores::Id>(0, cellSize, numCells);
         auto connGroupVec = viskores::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
 
         WorkletWindToCellNormalsGeneric worklet;
@@ -254,9 +255,9 @@ public:
     // Specialization for CellSetExplicit
     template <typename S, typename C, typename O, typename CoordsType, typename CellNormalsType>
     VISKORES_CONT void operator()(const viskores::cont::CellSetExplicit<S, C, O>& cellSet,
-                              const CoordsType& coords,
-                              const CellNormalsType& cellNormals,
-                              int)
+                                  const CoordsType& coords,
+                                  const CellNormalsType& cellNormals,
+                                  int)
     {
       using WindToCellNormals = viskores::worklet::DispatcherMapField<WorkletWindToCellNormals>;
 
@@ -274,15 +275,15 @@ public:
         viskores::cont::Algorithm::Copy(connIn, conn);
       }
 
-      const auto& offsets =
-        cellSet.GetOffsetsArray(viskores::TopologyElementTagCell{}, viskores::TopologyElementTagPoint{});
+      const auto& offsets = cellSet.GetOffsetsArray(viskores::TopologyElementTagCell{},
+                                                    viskores::TopologyElementTagPoint{});
       auto cells = viskores::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
 
       WindToCellNormals dispatcher;
       dispatcher.Invoke(cellNormals, cells, coords);
 
-      const auto& shapes =
-        cellSet.GetShapesArray(viskores::TopologyElementTagCell{}, viskores::TopologyElementTagPoint{});
+      const auto& shapes = cellSet.GetShapesArray(viskores::TopologyElementTagCell{},
+                                                  viskores::TopologyElementTagPoint{});
       viskores::cont::CellSetExplicit<S, viskores::cont::StorageTagBasic, O> newCells;
       newCells.Fill(cellSet.GetNumberOfPoints(), shapes, conn, offsets);
 
@@ -292,9 +293,9 @@ public:
     // Specialization for CellSetSingleType
     template <typename C, typename CoordsType, typename CellNormalsType>
     VISKORES_CONT void operator()(const viskores::cont::CellSetSingleType<C>& cellSet,
-                              const CoordsType& coords,
-                              const CellNormalsType& cellNormals,
-                              int)
+                                  const CoordsType& coords,
+                                  const CellNormalsType& cellNormals,
+                                  int)
     {
       using WindToCellNormals = viskores::worklet::DispatcherMapField<WorkletWindToCellNormals>;
 
@@ -312,8 +313,8 @@ public:
         viskores::cont::Algorithm::Copy(connIn, conn);
       }
 
-      const auto& offsets =
-        cellSet.GetOffsetsArray(viskores::TopologyElementTagCell{}, viskores::TopologyElementTagPoint{});
+      const auto& offsets = cellSet.GetOffsetsArray(viskores::TopologyElementTagCell{},
+                                                    viskores::TopologyElementTagPoint{});
       auto cells = viskores::cont::make_ArrayHandleGroupVecVariable(conn, offsets);
 
       WindToCellNormals dispatcher;
@@ -331,8 +332,8 @@ public:
 
   template <typename CellSetType, typename CoordsType, typename CellNormalsType>
   VISKORES_CONT static viskores::cont::UnknownCellSet Run(const CellSetType& cellSet,
-                                                  const CoordsType& coords,
-                                                  const CellNormalsType& cellNormals)
+                                                          const CoordsType& coords,
+                                                          const CellNormalsType& cellNormals)
   {
     Launcher launcher;
     // The last arg is just to help with overload resolution on the templated

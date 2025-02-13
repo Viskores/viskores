@@ -44,11 +44,11 @@ public:
             typename CellShapeTag,
             typename PointIndexType>
   VISKORES_EXEC void operator()(const InCellType& cellValue,
-                            OutCellType& maxValue,
-                            const InPointVecType& pointValues,
-                            const viskores::IdComponent& numPoints,
-                            const CellShapeTag& viskoresNotUsed(type),
-                            const PointIndexType& viskoresNotUsed(pointIDs)) const
+                                OutCellType& maxValue,
+                                const InPointVecType& pointValues,
+                                const viskores::IdComponent& numPoints,
+                                const CellShapeTag& viskoresNotUsed(type),
+                                const PointIndexType& viskoresNotUsed(pointIDs)) const
   {
     //simple functor that returns the max of cellValue and pointValue
     maxValue = static_cast<OutCellType>(cellValue);
@@ -110,24 +110,25 @@ static void TestMaxPointOrCell()
   viskores::cont::ArrayHandle<viskores::Float32> result;
 
   viskores::worklet::DispatcherMapTopology<::test_uniform::MaxPointOrCellValue> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar")
-                      .GetData()
-                      .ResetTypes<viskores::TypeListFieldScalar, VISKORES_DEFAULT_STORAGE_LIST>(),
-                    dataSet.GetField("pointvar")
-                      .GetData()
-                      .ResetTypes<viskores::TypeListFieldScalar, VISKORES_DEFAULT_STORAGE_LIST>(),
-                    // We know that the cell set is a structured 2D grid and
-                    // The worklet does not work with general types because
-                    // of the way we get cell indices. We need to make that
-                    // part more flexible.
-                    dataSet.GetCellSet().ResetCellSetList(viskores::cont::CellSetListStructured2D()),
-                    result);
+  dispatcher.Invoke(
+    dataSet.GetField("cellvar")
+      .GetData()
+      .ResetTypes<viskores::TypeListFieldScalar, VISKORES_DEFAULT_STORAGE_LIST>(),
+    dataSet.GetField("pointvar")
+      .GetData()
+      .ResetTypes<viskores::TypeListFieldScalar, VISKORES_DEFAULT_STORAGE_LIST>(),
+    // We know that the cell set is a structured 2D grid and
+    // The worklet does not work with general types because
+    // of the way we get cell indices. We need to make that
+    // part more flexible.
+    dataSet.GetCellSet().ResetCellSetList(viskores::cont::CellSetListStructured2D()),
+    result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(0), 100.1f),
-                   "Wrong result for MaxPointOrCell worklet");
+                       "Wrong result for MaxPointOrCell worklet");
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(1), 200.1f),
-                   "Wrong result for MaxPointOrCell worklet");
+                       "Wrong result for MaxPointOrCell worklet");
 }
 
 static void TestAvgPointToCell()
@@ -147,14 +148,16 @@ static void TestAvgPointToCell()
     // of the way we get cell indices. We need to make that
     // part more flexible.
     &cellset,
-    dataSet.GetField("pointvar").GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>(),
+    dataSet.GetField("pointvar")
+      .GetData()
+      .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>(),
     result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(0), 30.1f),
-                   "Wrong result for PointToCellAverage worklet");
+                       "Wrong result for PointToCellAverage worklet");
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(1), 40.1f),
-                   "Wrong result for PointToCellAverage worklet");
+                       "Wrong result for PointToCellAverage worklet");
 
   std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
   bool exceptionThrown = false;
@@ -194,14 +197,16 @@ static void TestAvgCellToPoint()
     // of the way we get cell indices. We need to make that
     // part more flexible.
     dataSet.GetCellSet().ResetCellSetList(viskores::cont::CellSetListStructured2D()),
-    dataSet.GetField("cellvar").GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>(),
+    dataSet.GetField("cellvar")
+      .GetData()
+      .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>(),
     result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(0), 100.1f),
-                   "Wrong result for CellToPointAverage worklet");
+                       "Wrong result for CellToPointAverage worklet");
   VISKORES_TEST_ASSERT(test_equal(result.ReadPortal().Get(1), 150.1f),
-                   "Wrong result for CellToPointAverage worklet");
+                       "Wrong result for CellToPointAverage worklet");
 
   std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
   bool exceptionThrown = false;

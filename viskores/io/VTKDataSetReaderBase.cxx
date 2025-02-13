@@ -26,7 +26,8 @@
 namespace
 {
 
-inline void PrintVTKDataFileSummary(const viskores::io::internal::VTKDataSetFile& df, std::ostream& out)
+inline void PrintVTKDataFileSummary(const viskores::io::internal::VTKDataSetFile& df,
+                                    std::ostream& out)
 {
   out << "\tFile: " << df.FileName << std::endl;
   out << "\tVersion: " << df.Version[0] << "." << df.Version[0] << std::endl;
@@ -141,7 +142,8 @@ void VTKDataSetReaderBase::ReadCells(viskores::cont::ArrayHandle<viskores::Id>& 
       this->DoReadArrayVariant(viskores::cont::Field::Association::Any, dataType, offsetsSize, 1);
     offsets.CastAndCallForTypes<viskores::List<viskores::Int64, viskores::Int32>,
                                 viskores::List<viskores::cont::StorageTagBasic>>(
-      [&](const auto& offsetsAH) {
+      [&](const auto& offsetsAH)
+      {
         // Convert on host. There will be several other passes of this array on the host anyway.
         numIndices.Allocate(offsetsSize - 1);
         auto offsetPortal = offsetsAH.ReadPortal();
@@ -150,7 +152,7 @@ void VTKDataSetReaderBase::ReadCells(viskores::cont::ArrayHandle<viskores::Id>& 
         {
           numIndicesPortal.Set(cellIndex,
                                static_cast<viskores::IdComponent>(offsetPortal.Get(cellIndex + 1) -
-                                                              offsetPortal.Get(cellIndex)));
+                                                                  offsetPortal.Get(cellIndex)));
         }
       });
 
@@ -302,8 +304,8 @@ void VTKDataSetReaderBase::ReadHeader()
       (this->DataFile->Version[0] == 4 && this->DataFile->Version[1] > 2))
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-               "Reader may not correctly read >v4.2 files. Reading version "
-                 << this->DataFile->Version[0] << "." << this->DataFile->Version[1] << ".\n");
+                   "Reader may not correctly read >v4.2 files. Reading version "
+                     << this->DataFile->Version[0] << "." << this->DataFile->Version[1] << ".\n");
   }
 
   // Read title line
@@ -352,7 +354,8 @@ void VTKDataSetReaderBase::AddField(const std::string& name,
         break;
       default:
         VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                   "Not recording field '" << name << "' because it has an unknown association");
+                       "Not recording field '" << name
+                                               << "' because it has an unknown association");
         break;
     }
   }
@@ -390,7 +393,8 @@ void VTKDataSetReaderBase::ReadScalars(viskores::cont::Field::Association associ
 void VTKDataSetReaderBase::ReadColorScalars(viskores::cont::Field::Association association,
                                             std::size_t numElements)
 {
-  VISKORES_LOG_S(viskores::cont::LogLevel::Warn, "Support for COLOR_SCALARS is not implemented. Skipping.");
+  VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                 "Support for COLOR_SCALARS is not implemented. Skipping.");
 
   std::string dataName;
   viskores::IdComponent numComponents;
@@ -403,7 +407,8 @@ void VTKDataSetReaderBase::ReadColorScalars(viskores::cont::Field::Association a
 
 void VTKDataSetReaderBase::ReadLookupTable()
 {
-  VISKORES_LOG_S(viskores::cont::LogLevel::Warn, "Support for LOOKUP_TABLE is not implemented. Skipping.");
+  VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                 "Support for LOOKUP_TABLE is not implemented. Skipping.");
 
   std::string dataName;
   std::size_t numEntries;
@@ -469,8 +474,8 @@ void VTKDataSetReaderBase::ReadFields(viskores::cont::Field::Association associa
     else
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                 "Field " << arrayName
-                          << "'s size does not match expected number of elements. Skipping");
+                     "Field " << arrayName
+                              << "'s size does not match expected number of elements. Skipping");
     }
   }
 }
@@ -496,7 +501,7 @@ void VTKDataSetReaderBase::ReadGlobalFields(std::vector<viskores::Float32>* visi
     else
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 "Support for global field " << arrayName << " not implemented. Skipping.");
+                     "Support for global field " << arrayName << " not implemented. Skipping.");
       this->DoSkipArrayVariant(dataType, numTuples, numComponents);
     }
   }
@@ -578,8 +583,8 @@ public:
         std::size_t inIndex = static_cast<std::size_t>(permutation.Get(outIndex));
         permutedBuffer[static_cast<std::size_t>(outIndex)] = buffer[inIndex];
       }
-      *this->Data =
-        viskores::cont::make_ArrayHandleRuntimeVecMove(this->NumComponents, std::move(permutedBuffer));
+      *this->Data = viskores::cont::make_ArrayHandleRuntimeVecMove(this->NumComponents,
+                                                                   std::move(permutedBuffer));
     }
   }
 
@@ -603,7 +608,7 @@ void VTKDataSetReaderBase::DoSkipArrayVariant(std::string dataType,
   {
     viskores::io::internal::DataType typeId = viskores::io::internal::DataTypeId(dataType);
     viskores::io::internal::SelectTypeAndCall(typeId,
-                                          SkipArrayVariant(this, numElements, numComponents));
+                                              SkipArrayVariant(this, numElements, numComponents));
   }
 }
 
@@ -620,8 +625,9 @@ viskores::cont::UnknownArrayHandle VTKDataSetReaderBase::DoReadArrayVariant(
   // string requires some special handling
   if (dataType == "string" || dataType == "utf8_string")
   {
-    VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-               "Support for data type 'string' and 'utf8_string' is not implemented. Skipping.");
+    VISKORES_LOG_S(
+      viskores::cont::LogLevel::Warn,
+      "Support for data type 'string' and 'utf8_string' is not implemented. Skipping.");
     const viskores::Id stringCount = numComponents * static_cast<viskores::Id>(numElements);
     this->SkipStringArray(stringCount);
   }
@@ -638,7 +644,7 @@ viskores::cont::UnknownArrayHandle VTKDataSetReaderBase::DoReadArrayVariant(
 void VTKDataSetReaderBase::ReadArray(std::vector<viskores::io::internal::DummyBitType>& buffer)
 {
   VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-             "Support for data type 'bit' is not implemented. Skipping.");
+                 "Support for data type 'bit' is not implemented. Skipping.");
   this->SkipArray(buffer.size(), viskores::io::internal::DummyBitType());
   buffer.clear();
 }

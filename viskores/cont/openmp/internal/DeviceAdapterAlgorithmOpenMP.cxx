@@ -34,7 +34,9 @@ void DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagOpenMP>::ScheduleTas
 
   // Divide n by chunks and round down to nearest power of two. Result is clamped between
   // min and max:
-  auto computeChunkSize = [](viskores::Id n, viskores::Id chunks, viskores::Id min, viskores::Id max) -> viskores::Id {
+  auto computeChunkSize =
+    [](viskores::Id n, viskores::Id chunks, viskores::Id min, viskores::Id max) -> viskores::Id
+  {
     const viskores::Id chunkSize = (n + chunks - 1) / chunks;
     viskores::Id result = 1;
     while (result < chunkSize)
@@ -107,12 +109,13 @@ void DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagOpenMP>::ScheduleTas
   }
 
   const viskores::Id3 numChunks{ openmp::CeilDivide(size[0], chunkDims[0]),
-                             openmp::CeilDivide(size[1], chunkDims[1]),
-                             openmp::CeilDivide(size[2], chunkDims[2]) };
+                                 openmp::CeilDivide(size[1], chunkDims[1]),
+                                 openmp::CeilDivide(size[2], chunkDims[2]) };
   const viskores::Id chunkCount = numChunks[0] * numChunks[1] * numChunks[2];
 
   // Lambda to convert chunkIdx into a start/end {i, j, k}:
-  auto computeIJK = [&](const viskores::Id& chunkIdx, viskores::Id3& start, viskores::Id3& end) {
+  auto computeIJK = [&](const viskores::Id& chunkIdx, viskores::Id3& start, viskores::Id3& end)
+  {
     start[0] = chunkIdx % numChunks[0];
     start[1] = (chunkIdx / numChunks[0]) % numChunks[1];
     start[2] = (chunkIdx / (numChunks[0] * numChunks[1]));

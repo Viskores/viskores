@@ -130,7 +130,7 @@ struct TestDerivativeFunctor
       // polygons with 5 or more points) are not very precise. Thus the
       // tolarance of the test_equal is raised.
       VISKORES_TEST_ASSERT(test_equal(computedGradient, expectedGradient, 0.01),
-                       "Gradient is not as expected.");
+                           "Gradient is not as expected.");
     }
   }
 
@@ -147,7 +147,7 @@ struct TestDerivativeFunctor
       CHECK_CALL(viskores::exec::ParametricCoordinatesPoint(numPoints, pointIndex, shape, pcoords));
       viskores::Vec3f wcoords = ParametricToWorld(pcoords);
       VISKORES_TEST_ASSERT(test_equal(pcoords, WorldToParametric(wcoords)),
-                       "Test world/parametric conversion broken.");
+                           "Test world/parametric conversion broken.");
       worldCoordinates.Append(wcoords);
     }
 
@@ -155,7 +155,9 @@ struct TestDerivativeFunctor
   }
 
   template <typename CellShapeTag>
-  void DoTest(CellShapeTag shape, viskores::IdComponent numPoints, viskores::IdComponent topDim) const
+  void DoTest(CellShapeTag shape,
+              viskores::IdComponent numPoints,
+              viskores::IdComponent topDim) const
   {
     LinearField<FieldType> field;
     viskores::Vec<FieldType, 3> expectedGradient;
@@ -226,8 +228,10 @@ struct TestDerivativeFunctor
   {
     viskores::IdComponent minPoints;
     viskores::IdComponent maxPoints;
-    GetMinMaxPoints(
-      CellShapeTag(), typename viskores::CellTraits<CellShapeTag>::IsSizeFixed(), minPoints, maxPoints);
+    GetMinMaxPoints(CellShapeTag(),
+                    typename viskores::CellTraits<CellShapeTag>::IsSizeFixed(),
+                    minPoints,
+                    maxPoints);
 
     std::cout << "--- Test shape tag directly" << std::endl;
     for (viskores::IdComponent numPoints = minPoints; numPoints <= maxPoints; numPoints++)
@@ -240,7 +244,8 @@ struct TestDerivativeFunctor
     viskores::CellShapeTagGeneric genericShape(CellShapeTag::Id);
     for (viskores::IdComponent numPoints = minPoints; numPoints <= maxPoints; numPoints++)
     {
-      this->DoTest(genericShape, numPoints, viskores::CellTraits<CellShapeTag>::TOPOLOGICAL_DIMENSIONS);
+      this->DoTest(
+        genericShape, numPoints, viskores::CellTraits<CellShapeTag>::TOPOLOGICAL_DIMENSIONS);
     }
   }
 

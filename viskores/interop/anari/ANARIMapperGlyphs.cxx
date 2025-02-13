@@ -45,10 +45,10 @@ public:
             typename OutVertexPortalType,
             typename OutRadiusPortalType>
   VISKORES_EXEC void operator()(const viskores::Id idx,
-                            const InGradientType gradient,
-                            const InPointPortalType& points,
-                            OutVertexPortalType& vertices,
-                            OutRadiusPortalType& radii) const
+                                const InGradientType gradient,
+                                const InPointPortalType& points,
+                                OutVertexPortalType& vertices,
+                                OutRadiusPortalType& radii) const
   {
     auto ng = viskores::Normal(static_cast<viskores::Vec3f_32>(gradient));
     auto pt = points.Get(idx);
@@ -106,13 +106,13 @@ static GlyphArrays MakeGlyphs(viskores::cont::Field gradients,
     filter.SetOutputFieldName("Centers");
     auto centersOutput = filter.Execute(centersInput);
 
-    auto resolveField = [&](const auto& concreteField) {
-      dispatch.Invoke(gradients, concreteField, retval.Vertices, retval.Radii);
-    };
+    auto resolveField = [&](const auto& concreteField)
+    { dispatch.Invoke(gradients, concreteField, retval.Vertices, retval.Radii); };
     centersOutput.GetField("Centers")
       .GetData()
       .CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldVec3,
-                                            viskores::List<viskores::cont::StorageTagBasic>>(resolveField);
+                                            viskores::List<viskores::cont::StorageTagBasic>>(
+        resolveField);
   }
 
   return retval;

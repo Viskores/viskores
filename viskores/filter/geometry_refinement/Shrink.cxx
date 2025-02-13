@@ -16,8 +16,8 @@
 namespace
 {
 VISKORES_CONT bool DoMapField(viskores::cont::DataSet& result,
-                          const viskores::cont::Field& inputField,
-                          const viskores::cont::ArrayHandle<viskores::Id>& outputToInputCellMap)
+                              const viskores::cont::Field& inputField,
+                              const viskores::cont::ArrayHandle<viskores::Id>& outputToInputCellMap)
 {
   if (inputField.IsCellField() || inputField.IsWholeDataSetField())
   {

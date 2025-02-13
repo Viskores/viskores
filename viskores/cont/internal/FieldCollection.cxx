@@ -44,7 +44,7 @@ viskores::cont::Field& FieldCollection::GetField(viskores::Id index)
 }
 
 viskores::Id FieldCollection::GetFieldIndex(const std::string& name,
-                                        viskores::cont::Field::Association assoc) const
+                                            viskores::cont::Field::Association assoc) const
 {
   // Find the field with the given name and association. If the association is
   // `viskores::cont::Field::Association::Any`, then the `Fields` object has a
@@ -57,8 +57,9 @@ viskores::Id FieldCollection::GetFieldIndex(const std::string& name,
   return -1;
 }
 
-const viskores::cont::Field& FieldCollection::GetField(const std::string& name,
-                                                   viskores::cont::Field::Association assoc) const
+const viskores::cont::Field& FieldCollection::GetField(
+  const std::string& name,
+  viskores::cont::Field::Association assoc) const
 {
   auto idx = this->GetFieldIndex(name, assoc);
   if (idx == -1)
@@ -70,7 +71,7 @@ const viskores::cont::Field& FieldCollection::GetField(const std::string& name,
 }
 
 viskores::cont::Field& FieldCollection::GetField(const std::string& name,
-                                             viskores::cont::Field::Association assoc)
+                                                 viskores::cont::Field::Association assoc)
 {
   auto idx = this->GetFieldIndex(name, assoc);
   if (idx == -1)

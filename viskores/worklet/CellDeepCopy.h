@@ -45,9 +45,9 @@ struct CellDeepCopy
 
     template <typename CellShape, typename InPointIndexType, typename OutPointIndexType>
     VISKORES_EXEC void operator()(const CellShape& inShape,
-                              const InPointIndexType& inPoints,
-                              viskores::UInt8& outShape,
-                              OutPointIndexType& outPoints) const
+                                  const InPointIndexType& inPoints,
+                                  viskores::UInt8& outShape,
+                                  OutPointIndexType& outPoints) const
     {
       (void)inShape; //C4100 false positive workaround
       outShape = inShape.Id;

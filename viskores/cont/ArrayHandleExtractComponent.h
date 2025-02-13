@@ -127,18 +127,19 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>&,
-                             const ValueType&,
-                             viskores::Id,
-                             viskores::Id,
-                             viskores::cont::Token&)
+                                 const ValueType&,
+                                 viskores::Id,
+                                 viskores::Id,
+                                 viskores::cont::Token&)
   {
     throw viskores::cont::ErrorBadType("Fill not supported for ArrayHandleExtractComponent.");
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     SourceStorage::ResizeBuffers(numValues, SourceBuffers(buffers), preserve, token);
   }
@@ -162,7 +163,7 @@ public:
   }
 
   VISKORES_CONT static auto CreateBuffers(viskores::IdComponent componentIndex = 0,
-                                      const ArrayHandleType& array = ArrayHandleType{})
+                                          const ArrayHandleType& array = ArrayHandleType{})
     -> decltype(viskores::cont::internal::CreateBuffers())
   {
     return viskores::cont::internal::CreateBuffers(componentIndex, array);
@@ -220,7 +221,7 @@ public:
   VISKORES_CONT ArrayHandleType GetArray() const
   {
     using BaseArray = viskores::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                              typename ArrayHandleType::StorageTag>;
+                                                  typename ArrayHandleType::StorageTag>;
     return ArrayHandleType(BaseArray(StorageType::SourceBuffers(this->GetBuffers())));
   }
 };
@@ -289,7 +290,7 @@ struct SerializableTypeString<viskores::cont::ArrayHandleExtractComponent<AH>>
 template <typename AH>
 struct SerializableTypeString<
   viskores::cont::ArrayHandle<typename viskores::VecTraits<typename AH::ValueType>::ComponentType,
-                          viskores::cont::StorageTagExtractComponent<AH>>>
+                              viskores::cont::StorageTagExtractComponent<AH>>>
   : SerializableTypeString<viskores::cont::ArrayHandleExtractComponent<AH>>
 {
 };
@@ -327,7 +328,7 @@ public:
 template <typename AH>
 struct Serialization<
   viskores::cont::ArrayHandle<typename viskores::VecTraits<typename AH::ValueType>::ComponentType,
-                          viskores::cont::StorageTagExtractComponent<AH>>>
+                              viskores::cont::StorageTagExtractComponent<AH>>>
   : Serialization<viskores::cont::ArrayHandleExtractComponent<AH>>
 {
 };

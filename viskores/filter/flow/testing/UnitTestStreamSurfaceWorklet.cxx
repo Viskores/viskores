@@ -58,10 +58,11 @@ void TestSameNumPolylines()
   viskores::cont::CellSetSingleType<> newCells;
   streamSurfaceWorklet.Run(ds.GetCoordinateSystem(0), ds.GetCellSet(), newPoints, newCells);
 
-  VISKORES_TEST_ASSERT(newPoints.GetNumberOfValues() == ds.GetCoordinateSystem(0).GetNumberOfValues(),
-                   "Wrong number of points in StreamSurface worklet");
+  VISKORES_TEST_ASSERT(newPoints.GetNumberOfValues() ==
+                         ds.GetCoordinateSystem(0).GetNumberOfValues(),
+                       "Wrong number of points in StreamSurface worklet");
   VISKORES_TEST_ASSERT(newCells.GetNumberOfCells() == 12,
-                   "Wrong number of cells in StreamSurface worklet");
+                       "Wrong number of cells in StreamSurface worklet");
 }
 
 void TestUnequalNumPolylines(int unequalType)
@@ -118,10 +119,11 @@ void TestUnequalNumPolylines(int unequalType)
 
   viskores::Id numRequiredCells = (unequalType == 1 ? 18 : 15);
 
-  VISKORES_TEST_ASSERT(newPoints.GetNumberOfValues() == ds.GetCoordinateSystem(0).GetNumberOfValues(),
-                   "Wrong number of points in StreamSurface worklet");
+  VISKORES_TEST_ASSERT(newPoints.GetNumberOfValues() ==
+                         ds.GetCoordinateSystem(0).GetNumberOfValues(),
+                       "Wrong number of points in StreamSurface worklet");
   VISKORES_TEST_ASSERT(newCells.GetNumberOfCells() == numRequiredCells,
-                   "Wrong number of cells in StreamSurface worklet");
+                       "Wrong number of cells in StreamSurface worklet");
 }
 
 void TestStreamSurfaceWorklet()

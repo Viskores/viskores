@@ -20,7 +20,8 @@ namespace viskores
 namespace filter
 {
 
-using SupportedTypes = viskores::List<viskores::UInt8, viskores::Int8, viskores::Float32, viskores::Float64>;
+using SupportedTypes =
+  viskores::List<viskores::UInt8, viskores::Int8, viskores::Float32, viskores::Float64>;
 
 namespace contour
 {

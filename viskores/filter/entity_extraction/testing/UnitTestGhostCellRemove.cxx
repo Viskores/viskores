@@ -20,10 +20,10 @@ namespace
 {
 
 viskores::cont::ArrayHandle<viskores::UInt8> StructuredGhostCellArray(viskores::Id nx,
-                                                              viskores::Id ny,
-                                                              viskores::Id nz,
-                                                              int numLayers,
-                                                              bool addMidGhost = false)
+                                                                      viskores::Id ny,
+                                                                      viskores::Id nz,
+                                                                      int numLayers,
+                                                                      bool addMidGhost = false)
 {
   viskores::Id numCells = nx * ny;
   if (nz > 0)
@@ -81,11 +81,11 @@ viskores::cont::ArrayHandle<viskores::UInt8> StructuredGhostCellArray(viskores::
 }
 
 viskores::cont::DataSet MakeUniform(viskores::Id numI,
-                                viskores::Id numJ,
-                                viskores::Id numK,
-                                int numLayers,
-                                std::string& ghostName,
-                                bool addMidGhost = false)
+                                    viskores::Id numJ,
+                                    viskores::Id numK,
+                                    int numLayers,
+                                    std::string& ghostName,
+                                    bool addMidGhost = false)
 {
   viskores::cont::DataSet ds;
 
@@ -107,11 +107,11 @@ viskores::cont::DataSet MakeUniform(viskores::Id numI,
 }
 
 viskores::cont::DataSet MakeRectilinear(viskores::Id numI,
-                                    viskores::Id numJ,
-                                    viskores::Id numK,
-                                    int numLayers,
-                                    std::string& ghostName,
-                                    bool addMidGhost = false)
+                                        viskores::Id numJ,
+                                        viskores::Id numK,
+                                        int numLayers,
+                                        std::string& ghostName,
+                                        bool addMidGhost = false)
 {
   viskores::cont::DataSet ds;
   auto nx(static_cast<std::size_t>(numI + 1));
@@ -174,16 +174,17 @@ static void MakeExplicitCells(const CellSetType& cellSet,
     for (viskores::IdComponent j = 0; j < NDIM; j++, idx++)
       conn.WritePortal().Set(idx, ptIds[j]);
 
-    shapes.WritePortal().Set(i, (NDIM == 4 ? viskores::CELL_SHAPE_QUAD : viskores::CELL_SHAPE_HEXAHEDRON));
+    shapes.WritePortal().Set(
+      i, (NDIM == 4 ? viskores::CELL_SHAPE_QUAD : viskores::CELL_SHAPE_HEXAHEDRON));
     numIndices.WritePortal().Set(i, NDIM);
   }
 }
 
 viskores::cont::DataSet MakeExplicit(viskores::Id numI,
-                                 viskores::Id numJ,
-                                 viskores::Id numK,
-                                 int numLayers,
-                                 std::string& ghostName)
+                                     viskores::Id numJ,
+                                     viskores::Id numK,
+                                     int numLayers,
+                                     std::string& ghostName)
 {
   using CoordType = viskores::Vec3f_32;
 
@@ -239,13 +240,14 @@ viskores::cont::DataSet MakeExplicit(viskores::Id numI,
 void TestGhostCellRemove()
 {
   // specify some 2d tests: {numI, numJ, numK, numGhostLayers}.
-  std::vector<std::vector<viskores::Id>> tests2D = { { 4, 4, 0, 2 },  { 5, 5, 0, 2 },  { 10, 10, 0, 3 },
-                                                 { 10, 5, 0, 2 }, { 5, 10, 0, 2 }, { 20, 10, 0, 3 },
-                                                 { 10, 20, 0, 3 } };
+  std::vector<std::vector<viskores::Id>> tests2D = { { 4, 4, 0, 2 },   { 5, 5, 0, 2 },
+                                                     { 10, 10, 0, 3 }, { 10, 5, 0, 2 },
+                                                     { 5, 10, 0, 2 },  { 20, 10, 0, 3 },
+                                                     { 10, 20, 0, 3 } };
   std::vector<std::vector<viskores::Id>> tests3D = { { 4, 4, 4, 2 },    { 5, 5, 5, 2 },
-                                                 { 10, 10, 10, 3 }, { 10, 5, 10, 2 },
-                                                 { 5, 10, 10, 2 },  { 20, 10, 10, 3 },
-                                                 { 10, 20, 10, 3 } };
+                                                     { 10, 10, 10, 3 }, { 10, 5, 10, 2 },
+                                                     { 5, 10, 10, 2 },  { 20, 10, 10, 3 },
+                                                     { 10, 20, 10, 3 } };
 
   std::vector<std::vector<viskores::Id>> tests;
 
@@ -297,19 +299,21 @@ void TestGhostCellRemove()
             {
               if (nz == 0)
               {
-                VISKORES_TEST_ASSERT(output.GetCellSet().CanConvert<viskores::cont::CellSetStructured<2>>(),
-                                 "Wrong cell type for explicit conversion");
+                VISKORES_TEST_ASSERT(
+                  output.GetCellSet().CanConvert<viskores::cont::CellSetStructured<2>>(),
+                  "Wrong cell type for explicit conversion");
               }
               else if (nz > 0)
               {
-                VISKORES_TEST_ASSERT(output.GetCellSet().CanConvert<viskores::cont::CellSetStructured<3>>(),
-                                 "Wrong cell type for explicit conversion");
+                VISKORES_TEST_ASSERT(
+                  output.GetCellSet().CanConvert<viskores::cont::CellSetStructured<3>>(),
+                  "Wrong cell type for explicit conversion");
               }
             }
             else
             {
               VISKORES_TEST_ASSERT(output.GetCellSet().IsType<viskores::cont::CellSetExplicit<>>(),
-                               "Wrong cell type for explicit conversion");
+                                   "Wrong cell type for explicit conversion");
             }
           }
 
@@ -326,7 +330,7 @@ void TestGhostCellRemove()
             ghostCellRemoval.SetRemoveGhostField(true);
             auto output = ghostCellRemoval.Execute(ds);
             VISKORES_TEST_ASSERT(output.GetCellSet().IsType<viskores::cont::CellSetExplicit<>>(),
-                             "Wrong cell type for explicit conversion");
+                                 "Wrong cell type for explicit conversion");
           }
         }
       }

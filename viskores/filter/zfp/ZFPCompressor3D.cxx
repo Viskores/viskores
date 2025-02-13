@@ -18,7 +18,8 @@ namespace filter
 namespace zfp
 {
 //-----------------------------------------------------------------------------
-VISKORES_CONT viskores::cont::DataSet ZFPCompressor3D::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet ZFPCompressor3D::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   viskores::cont::CellSetStructured<3> cellSet;
   input.GetCellSet().AsCellSet(cellSet);
@@ -31,9 +32,8 @@ VISKORES_CONT viskores::cont::DataSet ZFPCompressor3D::DoExecute(const viskores:
   this->GetFieldFromDataSet(input)
     .GetData()
     .CastAndCallForTypesWithFloatFallback<SupportedTypes, VISKORES_DEFAULT_STORAGE_LIST>(
-      [&](const auto& concrete) {
-        compressed = compressor.Compress(concrete, rate, pointDimensions);
-      });
+      [&](const auto& concrete)
+      { compressed = compressor.Compress(concrete, rate, pointDimensions); });
 
   // Note: the compressed array is set as a WholeDataSet field. It is really associated with
   // the points, but the size does not match and problems will occur if the user attempts to

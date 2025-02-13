@@ -84,10 +84,10 @@ public:
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& superID,
-                            const viskores::Id /*activeID*/, // FIXME: Remove unused parameter?
-                            const InFieldPortalType& contourTreeSuperarcsPortal,
-                            const InOutFieldPortalType& augmentedJoinSuperarcsPortal,
-                            const InOutFieldPortalType& augmentedSplitSuperarcsPortal) const
+                                const viskores::Id /*activeID*/, // FIXME: Remove unused parameter?
+                                const InFieldPortalType& contourTreeSuperarcsPortal,
+                                const InOutFieldPortalType& augmentedJoinSuperarcsPortal,
+                                const InOutFieldPortalType& augmentedSplitSuperarcsPortal) const
   {
     // per active suoper node
     //      retrieve it's join neighbour j

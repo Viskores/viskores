@@ -23,9 +23,9 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
   template <typename TypeOutPortal>
   VISKORES_EXEC void operator()(const viskores::FloatDefault& targetSampleNum,
-                            const viskores::Id& binIndex,
-                            const viskores::Id& binCount,
-                            TypeOutPortal arrayOutPortal) const
+                                const viskores::Id& binIndex,
+                                const viskores::Id& binCount,
+                                TypeOutPortal arrayOutPortal) const
   {
     if (binCount < 1 || targetSampleNum < 0.000001)
     {
@@ -57,8 +57,8 @@ public:
   using ExecutionSignature = _2(_1, _3, _4);
   template <typename TablePortal, typename FieldType>
   VISKORES_EXEC viskores::FloatDefault operator()(const FieldType& field_value,
-                                          TablePortal table,
-                                          const viskores::FloatDefault& random) const
+                                                  TablePortal table,
+                                                  const viskores::FloatDefault& random) const
   {
     viskores::Id bin = static_cast<viskores::Id>((field_value - m_min) / m_bin_delta);
     if (bin < 0)

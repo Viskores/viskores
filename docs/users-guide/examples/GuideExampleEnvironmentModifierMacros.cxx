@@ -32,7 +32,8 @@ VISKORES_EXEC_CONT ValueType Square(const ValueType& inValue)
 ////
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template<typename Functor>
-VISKORES_EXEC_CONT void OverlyComplicatedForLoop(Functor& functor, viskores::Id numInterations)
+VISKORES_EXEC_CONT void OverlyComplicatedForLoop(Functor& functor,
+                                                 viskores::Id numInterations)
 {
   for (viskores::Id index = 0; index < numInterations; index++)
   {

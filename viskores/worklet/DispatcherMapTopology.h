@@ -29,14 +29,15 @@ class WorkletVisitPointsWithCells;
 ///
 template <typename WorkletType>
 class DispatcherMapTopology
-  : public viskores::worklet::internal::DispatcherBase<DispatcherMapTopology<WorkletType>,
-                                                   WorkletType,
-                                                   viskores::worklet::detail::WorkletMapTopologyBase>
+  : public viskores::worklet::internal::DispatcherBase<
+      DispatcherMapTopology<WorkletType>,
+      WorkletType,
+      viskores::worklet::detail::WorkletMapTopologyBase>
 {
   using Superclass =
     viskores::worklet::internal::DispatcherBase<DispatcherMapTopology<WorkletType>,
-                                            WorkletType,
-                                            viskores::worklet::detail::WorkletMapTopologyBase>;
+                                                WorkletType,
+                                                viskores::worklet::detail::WorkletMapTopologyBase>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:

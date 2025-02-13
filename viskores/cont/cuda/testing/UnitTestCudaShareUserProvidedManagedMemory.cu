@@ -30,17 +30,20 @@ template <typename ValueType>
 ValueType* AllocateManagedPointer(viskores::Id numValues)
 {
   void* result;
-  VISKORES_CUDA_CALL(cudaMallocManaged(&result, static_cast<size_t>(numValues) * sizeof(ValueType)));
+  VISKORES_CUDA_CALL(
+    cudaMallocManaged(&result, static_cast<size_t>(numValues) * sizeof(ValueType)));
   // Some sanity checks:
   VISKORES_TEST_ASSERT(CudaAllocator::IsDevicePointer(result),
-                   "Allocated pointer is not a device pointer.");
-  VISKORES_TEST_ASSERT(CudaAllocator::IsManagedPointer(result), "Allocated pointer is not managed.");
+                       "Allocated pointer is not a device pointer.");
+  VISKORES_TEST_ASSERT(CudaAllocator::IsManagedPointer(result),
+                       "Allocated pointer is not managed.");
   return static_cast<ValueType*>(result);
 }
 
 void DeallocateManagedPointer(void* ptr)
 {
-  VISKORES_TEST_ASSERT(CudaAllocator::IsDevicePointer(ptr), "Pointer to delete is not device pointer.");
+  VISKORES_TEST_ASSERT(CudaAllocator::IsDevicePointer(ptr),
+                       "Pointer to delete is not device pointer.");
   VISKORES_TEST_ASSERT(CudaAllocator::IsManagedPointer(ptr), "Pointer to delete is not managed.");
   VISKORES_CUDA_CALL(cudaFree(ptr));
 }
@@ -52,7 +55,7 @@ ValueType* AllocateDevicePointer(viskores::Id numValues)
   VISKORES_CUDA_CALL(cudaMalloc(&result, static_cast<size_t>(numValues) * sizeof(ValueType)));
   // Some sanity checks:
   VISKORES_TEST_ASSERT(CudaAllocator::IsDevicePointer(result),
-                   "Allocated pointer is not a device pointer.");
+                       "Allocated pointer is not a device pointer.");
   VISKORES_TEST_ASSERT(!CudaAllocator::IsManagedPointer(result), "Allocated pointer is managed.");
   return static_cast<ValueType*>(result);
 }
@@ -60,7 +63,7 @@ ValueType* AllocateDevicePointer(viskores::Id numValues)
 void DeallocateDevicePointer(void* ptr)
 {
   VISKORES_TEST_ASSERT(CudaAllocator::IsDevicePointer(ptr),
-                   "Pointer to delete is not a device pointer.");
+                       "Pointer to delete is not a device pointer.");
   VISKORES_TEST_ASSERT(!CudaAllocator::IsManagedPointer(ptr), "Pointer to delete is managed.");
   VISKORES_CUDA_CALL(cudaFree(ptr));
 }
@@ -70,17 +73,18 @@ viskores::cont::ArrayHandle<ValueType> CreateArrayHandle(viskores::Id numValues,
 {
   if (managed)
   {
-    return viskores::cont::ArrayHandleBasic<ValueType>(
-      AllocateManagedPointer<ValueType>(numValues), numValues, [](void* ptr) {
-        DeallocateManagedPointer(ptr);
-      });
+    return viskores::cont::ArrayHandleBasic<ValueType>(AllocateManagedPointer<ValueType>(numValues),
+                                                       numValues,
+                                                       [](void* ptr)
+                                                       { DeallocateManagedPointer(ptr); });
   }
   else
   {
     return viskores::cont::ArrayHandleBasic<ValueType>(AllocateDevicePointer<ValueType>(numValues),
-                                                   numValues,
-                                                   viskores::cont::DeviceAdapterTagCuda{},
-                                                   [](void* ptr) { DeallocateDevicePointer(ptr); });
+                                                       numValues,
+                                                       viskores::cont::DeviceAdapterTagCuda{},
+                                                       [](void* ptr)
+                                                       { DeallocateDevicePointer(ptr); });
   }
 }
 
@@ -99,7 +103,7 @@ void TestPrepareForInput(bool managed)
   token.DetachFromAll();
 
   VISKORES_TEST_ASSERT(handle.IsOnDevice(viskores::cont::DeviceAdapterTagCuda{}),
-                   "No execution array after PrepareForInput.");
+                       "No execution array after PrepareForInput.");
   if (managed)
   {
     const void* contArray = handle.ReadPortal().GetIteratorBegin();
@@ -124,7 +128,7 @@ void TestPrepareForInPlace(bool managed)
 
   VISKORES_TEST_ASSERT(!handle.IsOnHost(), "Control array still exists after PrepareForInPlace.");
   VISKORES_TEST_ASSERT(handle.IsOnDevice(viskores::cont::DeviceAdapterTagCuda{}),
-                   "No execution array after PrepareForInPlace.");
+                       "No execution array after PrepareForInPlace.");
   if (managed)
   {
     const void* contArray = handle.ReadPortal().GetIteratorBegin();
@@ -150,7 +154,7 @@ void TestPrepareForOutput(bool managed)
 
   VISKORES_TEST_ASSERT(!handle.IsOnHost(), "Control array still exists after PrepareForOutput.");
   VISKORES_TEST_ASSERT(handle.IsOnDevice(viskores::cont::DeviceAdapterTagCuda{}),
-                   "No execution array after PrepareForOutput.");
+                       "No execution array after PrepareForOutput.");
   if (managed)
   {
     const void* contArray = handle.ReadPortal().GetIteratorBegin();
@@ -171,9 +175,9 @@ void TestReleaseResourcesExecution(bool managed)
   handle.ReleaseResourcesExecution();
 
   VISKORES_TEST_ASSERT(handle.IsOnHost(),
-                   "Control array does not exist after ReleaseResourcesExecution.");
+                       "Control array does not exist after ReleaseResourcesExecution.");
   VISKORES_TEST_ASSERT(!handle.IsOnDevice(viskores::cont::DeviceAdapterTagCuda{}),
-                   "Execution array still exists after ReleaseResourcesExecution.");
+                       "Execution array still exists after ReleaseResourcesExecution.");
 
   if (managed)
   {
@@ -264,11 +268,11 @@ struct ArgToTemplateType
 void Launch()
 {
   using Types = viskores::List<viskores::UInt8,
-                           viskores::Vec<viskores::UInt8, 3>,
-                           viskores::Float32,
-                           viskores::Vec<viskores::Float32, 4>,
-                           viskores::Float64,
-                           viskores::Vec<viskores::Float64, 4>>;
+                               viskores::Vec<viskores::UInt8, 3>,
+                               viskores::Float32,
+                               viskores::Vec<viskores::Float32, 4>,
+                               viskores::Float64,
+                               viskores::Vec<viskores::Float64, 4>>;
   viskores::testing::Testing::TryTypes(ArgToTemplateType(), Types());
 }
 

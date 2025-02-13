@@ -176,7 +176,7 @@ bool read3DHDF5File(const int& mpi_rank,
   if (nDims != 3)
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Error,
-               "HDF5 reader for ContourTreeDistributed requires 3D dataset");
+                   "HDF5 reader for ContourTreeDistributed requires 3D dataset");
     return false;
   }
   hsize_t dims[nDims]; // dataset dimensions
@@ -193,8 +193,8 @@ bool read3DHDF5File(const int& mpi_rank,
 
   // Compute the origin and count
   viskores::Id3 blockSize(std::floor(viskores::Id(globalSize[0] / blocksPerDim[0])),
-                      std::floor(viskores::Id(globalSize[1] / blocksPerDim[1])),
-                      std::floor(viskores::Id(globalSize[2] / blocksPerDim[2])));
+                          std::floor(viskores::Id(globalSize[1] / blocksPerDim[1])),
+                          std::floor(viskores::Id(globalSize[2] / blocksPerDim[2])));
   viskores::Id3 blockIndex = to3DIndex(mpi_rank, blocksPerDim);
 
   // compute the offset and count for the block for this rank
@@ -234,8 +234,8 @@ bool read3DHDF5File(const int& mpi_rank,
     count[2] = globalSize[2] - offset[2];
   }
   blockSize = viskores::Id3{ static_cast<viskores::Id>(count[0]),
-                         static_cast<viskores::Id>(count[1]),
-                         static_cast<viskores::Id>(count[2]) };
+                             static_cast<viskores::Id>(count[1]),
+                             static_cast<viskores::Id>(count[2]) };
   /*viskores::Id3 blockOrigin = viskores::Id3{ static_cast<viskores::Id>(offset[0]),
                                      static_cast<viskores::Id>(offset[1]),
                                      static_cast<viskores::Id>(offset[2]) };*/
@@ -314,7 +314,8 @@ bool read3DHDF5File(const int& mpi_rank,
     }
     else
     {
-      VISKORES_LOG_S(viskores::cont::LogLevel::Error, "Data type not supported by the example HDF5 reader");
+      VISKORES_LOG_S(viskores::cont::LogLevel::Error,
+                     "Data type not supported by the example HDF5 reader");
       throw "Data type not supported by the example HDF5 reader";
     }
   }
@@ -337,11 +338,11 @@ bool read3DHDF5File(const int& mpi_rank,
 
   // Swap first and second dimenion here as well for consistency
   const viskores::Vec<ValueType, 3> v_origin{ static_cast<ValueType>(offset[1]),
-                                          static_cast<ValueType>(offset[0]),
-                                          static_cast<ValueType>(offset[2]) };
+                                              static_cast<ValueType>(offset[0]),
+                                              static_cast<ValueType>(offset[2]) };
   const viskores::Id3 v_dims{ static_cast<viskores::Id>(blockSize[1]),
-                          static_cast<viskores::Id>(blockSize[0]),
-                          static_cast<viskores::Id>(blockSize[2]) };
+                              static_cast<viskores::Id>(blockSize[0]),
+                              static_cast<viskores::Id>(blockSize[2]) };
   viskores::Vec<ValueType, 3> v_spacing(1, 1, 1);
   ds = dsb.Create(v_dims, v_origin, v_spacing);
   viskores::cont::CellSetStructured<3> cs;
@@ -359,12 +360,12 @@ bool read3DHDF5File(const int& mpi_rank,
 
   // Log information of the (first) local data block
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-             "" << std::setw(42) << std::left << "blockSize"
-                << ":" << v_dims << std::endl
-                << std::setw(42) << std::left << "blockOrigin=" << v_origin << std::endl
-                << std::setw(42) << std::left << "blockIndices=" << localBlockIndicesPortal.Get(0)
-                << std::endl
-                << std::setw(42) << std::left << "globalSize=" << globalSize << std::endl);
+                 "" << std::setw(42) << std::left << "blockSize"
+                    << ":" << v_dims << std::endl
+                    << std::setw(42) << std::left << "blockOrigin=" << v_origin << std::endl
+                    << std::setw(42) << std::left
+                    << "blockIndices=" << localBlockIndicesPortal.Get(0) << std::endl
+                    << std::setw(42) << std::left << "globalSize=" << globalSize << std::endl);
 
   // Finished data read
   currTime = totalTime.GetElapsedTime();
@@ -453,17 +454,18 @@ bool readPreSplitFiles(const int& rank,
 
     if (blockNo == 0)
     { // First block: Set globalSize
-      globalSize =
-        viskores::Id3{ static_cast<viskores::Id>(global_extents[0]),
-                   static_cast<viskores::Id>(global_extents[1]),
-                   static_cast<viskores::Id>(global_extents.size() > 2 ? global_extents[2] : 1) };
+      globalSize = viskores::Id3{ static_cast<viskores::Id>(global_extents[0]),
+                                  static_cast<viskores::Id>(global_extents[1]),
+                                  static_cast<viskores::Id>(
+                                    global_extents.size() > 2 ? global_extents[2] : 1) };
     }
     else
     { // All other blocks: Consistency check of globalSize
       if (globalSize !=
-          viskores::Id3{ static_cast<viskores::Id>(global_extents[0]),
-                     static_cast<viskores::Id>(global_extents[1]),
-                     static_cast<viskores::Id>(global_extents.size() > 2 ? global_extents[2] : 1) })
+          viskores::Id3{
+            static_cast<viskores::Id>(global_extents[0]),
+            static_cast<viskores::Id>(global_extents[1]),
+            static_cast<viskores::Id>(global_extents.size() > 2 ? global_extents[2] : 1) })
       {
         std::cerr << "Error: Global extents mismatch between blocks!" << std::endl;
         return false;
@@ -542,10 +544,10 @@ bool readPreSplitFiles(const int& rank,
     bool invalidNumDimensions = (nDims < 2 || nDims > 3);
     // Log any errors if found on rank 0
     VISKORES_LOG_IF_S(viskores::cont::LogLevel::Error,
-                  invalidNumDimensions && (rank == 0),
-                  "The input mesh is " << nDims
-                                       << "D. "
-                                          "The input data must be either 2D or 3D.");
+                      invalidNumDimensions && (rank == 0),
+                      "The input mesh is " << nDims
+                                           << "D. "
+                                              "The input data must be either 2D or 3D.");
 
     // If we found any errors in the setttings than finalize MPI and exit the execution
     if (invalidNumDimensions)
@@ -582,7 +584,7 @@ bool readPreSplitFiles(const int& rank,
         static_cast<viskores::Id>(dims[1]),
       };
       const viskores::Vec<ValueType, 2> v_origin{ static_cast<ValueType>(offset[0]),
-                                              static_cast<ValueType>(offset[1]) };
+                                                  static_cast<ValueType>(offset[1]) };
       const viskores::Vec<ValueType, 2> v_spacing{ 1, 1 };
       ds = dsb.Create(v_dims, v_origin, v_spacing);
       viskores::cont::CellSetStructured<2> cs;
@@ -595,11 +597,11 @@ bool readPreSplitFiles(const int& rank,
     {
       VISKORES_ASSERT(nDims == 3);
       const viskores::Id3 v_dims{ static_cast<viskores::Id>(dims[0]),
-                              static_cast<viskores::Id>(dims[1]),
-                              static_cast<viskores::Id>(dims[2]) };
+                                  static_cast<viskores::Id>(dims[1]),
+                                  static_cast<viskores::Id>(dims[2]) };
       const viskores::Vec<ValueType, 3> v_origin{ static_cast<ValueType>(offset[0]),
-                                              static_cast<ValueType>(offset[1]),
-                                              static_cast<ValueType>(offset[2]) };
+                                                  static_cast<ValueType>(offset[1]),
+                                                  static_cast<ValueType>(offset[2]) };
       viskores::Vec<ValueType, 3> v_spacing(1, 1, 1);
       ds = dsb.Create(v_dims, v_origin, v_spacing);
       viskores::cont::CellSetStructured<3> cs;
@@ -613,16 +615,17 @@ bool readPreSplitFiles(const int& rank,
     // and add to partition
     useDataSet.AppendPartition(ds);
 
-    localBlockIndicesPortal.Set(blockNo,
-                                viskores::Id3{ static_cast<viskores::Id>(blockIndex[0]),
-                                           static_cast<viskores::Id>(blockIndex[1]),
-                                           static_cast<viskores::Id>(nDims == 3 ? blockIndex[2] : 0) });
+    localBlockIndicesPortal.Set(
+      blockNo,
+      viskores::Id3{ static_cast<viskores::Id>(blockIndex[0]),
+                     static_cast<viskores::Id>(blockIndex[1]),
+                     static_cast<viskores::Id>(nDims == 3 ? blockIndex[2] : 0) });
 
     if (blockNo == 0)
     {
       blocksPerDim = viskores::Id3{ static_cast<viskores::Id>(bpd[0]),
-                                static_cast<viskores::Id>(bpd[1]),
-                                static_cast<viskores::Id>(nDims == 3 ? bpd[2] : 1) };
+                                    static_cast<viskores::Id>(bpd[1]),
+                                    static_cast<viskores::Id>(nDims == 3 ? bpd[2] : 1) };
     }
   }
   currTime = totalTime.GetElapsedTime();
@@ -733,8 +736,9 @@ bool readSingleBlockFile(const int& rank,
     bool invalidNumDimensions = (nDims < 2 || nDims > 3);
     // Log any errors if found on rank 0
     VISKORES_LOG_IF_S(viskores::cont::LogLevel::Error,
-                  invalidNumDimensions && (rank == 0),
-                  "The input mesh is " << nDims << "D. The input data must be either 2D or 3D.");
+                      invalidNumDimensions && (rank == 0),
+                      "The input mesh is " << nDims
+                                           << "D. The input data must be either 2D or 3D.");
     // If we found any errors in the setttings than finalize MPI and exit the execution
     if (invalidNumDimensions)
     {
@@ -758,14 +762,14 @@ bool readSingleBlockFile(const int& rank,
   } // END ASCII Read
 
   // Create a multi-block dataset for multi-block DIY-paralle processing
-  blocksPerDim =
-    nDims == 3 ? viskores::Id3(1, 1, numBlocks) : viskores::Id3(1, numBlocks, 1); // Decompose the data into
+  blocksPerDim = nDims == 3 ? viskores::Id3(1, 1, numBlocks)
+                            : viskores::Id3(1, numBlocks, 1); // Decompose the data into
   globalSize = nDims == 3 ? viskores::Id3(static_cast<viskores::Id>(dims[0]),
-                                      static_cast<viskores::Id>(dims[1]),
-                                      static_cast<viskores::Id>(dims[2]))
+                                          static_cast<viskores::Id>(dims[1]),
+                                          static_cast<viskores::Id>(dims[2]))
                           : viskores::Id3(static_cast<viskores::Id>(dims[0]),
-                                      static_cast<viskores::Id>(dims[1]),
-                                      static_cast<viskores::Id>(1));
+                                          static_cast<viskores::Id>(dims[1]),
+                                          static_cast<viskores::Id>(1));
   std::cout << blocksPerDim << " " << globalSize << std::endl;
   {
     viskores::Id lastDimSize =
@@ -773,15 +777,15 @@ bool readSingleBlockFile(const int& rank,
     if (size > (lastDimSize / 2.))
     {
       VISKORES_LOG_IF_S(viskores::cont::LogLevel::Error,
-                    rank == 0,
-                    "Number of ranks too large for data. Use " << lastDimSize / 2
-                                                               << "or fewer ranks");
+                        rank == 0,
+                        "Number of ranks too large for data. Use " << lastDimSize / 2
+                                                                   << "or fewer ranks");
       return false;
     }
     viskores::Id standardBlockSize = (viskores::Id)(lastDimSize / numBlocks);
     viskores::Id blockSize = standardBlockSize;
-    viskores::Id blockSliceSize =
-      nDims == 2 ? static_cast<viskores::Id>(dims[0]) : static_cast<viskores::Id>((dims[0] * dims[1]));
+    viskores::Id blockSliceSize = nDims == 2 ? static_cast<viskores::Id>(dims[0])
+                                             : static_cast<viskores::Id>((dims[0] * dims[1]));
     viskores::Id blockNumValues = blockSize * blockSliceSize;
 
     viskores::Id startBlock = blocksPerRank * rank;
@@ -839,7 +843,7 @@ bool readSingleBlockFile(const int& rank,
       }
 
       std::vector<viskores::Float32> subValues((values.begin() + blockStart),
-                                           (values.begin() + blockEnd));
+                                               (values.begin() + blockEnd));
 
       ds.AddPointField("values", subValues);
       useDataSet.AppendPartition(ds);

@@ -104,10 +104,16 @@ public:
   VISKORES_CONT void SetMagnitude(const viskores::Vec3f& magnitude) { this->Magnitude = magnitude; }
   VISKORES_CONT viskores::Vec3f GetMagnitude() const { return this->Magnitude; }
 
-  VISKORES_CONT void SetMinimumExtent(const viskores::Id3& minExtent) { this->MinimumExtent = minExtent; }
+  VISKORES_CONT void SetMinimumExtent(const viskores::Id3& minExtent)
+  {
+    this->MinimumExtent = minExtent;
+  }
   VISKORES_CONT viskores::Id3 GetMinimumExtent() const { return this->MinimumExtent; }
 
-  VISKORES_CONT void SetMaximumExtent(const viskores::Id3& maxExtent) { this->MaximumExtent = maxExtent; }
+  VISKORES_CONT void SetMaximumExtent(const viskores::Id3& maxExtent)
+  {
+    this->MaximumExtent = maxExtent;
+  }
   VISKORES_CONT viskores::Id3 GetMaximumExtent() const { return this->MaximumExtent; }
 
   VISKORES_CONT void SetExtent(const viskores::Id3& minExtent, const viskores::Id3& maxExtent)
@@ -116,21 +122,27 @@ public:
     this->MaximumExtent = maxExtent;
   }
 
-  VISKORES_CONT void SetMaximumValue(const viskores::FloatDefault& maxVal) { this->MaximumValue = maxVal; }
+  VISKORES_CONT void SetMaximumValue(const viskores::FloatDefault& maxVal)
+  {
+    this->MaximumValue = maxVal;
+  }
   VISKORES_CONT viskores::FloatDefault GetMaximumValue() const { return this->MaximumValue; }
 
   VISKORES_CONT void SetStandardDeviation(const viskores::FloatDefault& stdev)
   {
     this->StandardDeviation = stdev;
   }
-  VISKORES_CONT viskores::FloatDefault GetStandardDeviation() const { return this->StandardDeviation; }
+  VISKORES_CONT viskores::FloatDefault GetStandardDeviation() const
+  {
+    return this->StandardDeviation;
+  }
 
 private:
   viskores::cont::DataSet DoExecute() const override;
 
   template <viskores::IdComponent Dim>
   viskores::cont::Field GeneratePointField(const viskores::cont::CellSetStructured<Dim>& cellset,
-                                       const std::string& name) const;
+                                           const std::string& name) const;
 
   template <viskores::IdComponent Dim>
   viskores::cont::DataSet GenerateDataSet(viskores::cont::CoordinateSystem coords) const;

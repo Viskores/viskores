@@ -85,13 +85,14 @@ public:
 
   template <typename InFieldPortalType, typename MeshBoundaryType>
   VISKORES_EXEC void operator()(const viskores::Id& boundaryId,
-                            const InFieldPortalType sortIndicesPortal,
-                            const MeshBoundaryType& meshBoundary,
-                            viskores::Id& boundaryVertex,
-                            viskores::Id& boundarySortIndex) const
+                                const InFieldPortalType sortIndicesPortal,
+                                const MeshBoundaryType& meshBoundary,
+                                viskores::Id& boundaryVertex,
+                                viskores::Id& boundarySortIndex) const
   {
     auto meshStructure2D = meshBoundary.GetMeshStructure();
-    viskores::Id numBoundary = 2 * meshStructure2D.MeshSize[1] + 2 * meshStructure2D.MeshSize[0] - 4;
+    viskores::Id numBoundary =
+      2 * meshStructure2D.MeshSize[1] + 2 * meshStructure2D.MeshSize[0] - 4;
 
     // For comments: [0] -> column, [1] -> row
     // Define the boundaryVertex result

@@ -36,7 +36,7 @@ viskores::exec::internal::ErrorMessageBuffer
 DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagKokkos>::GetErrorMessageBufferInstance()
 {
   return viskores::exec::internal::ErrorMessageBuffer(GetErrorMessageViewInstance().data(),
-                                                  ErrorMessageMaxLength);
+                                                      ErrorMessageMaxLength);
 }
 
 void DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagKokkos>::CheckForErrors()
@@ -58,7 +58,8 @@ void DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagKokkos>::CheckForErr
   }
   else
   {
-    viskores::cont::kokkos::internal::KokkosViewCont<char> hostView(hostBuffer, ErrorMessageMaxLength);
+    viskores::cont::kokkos::internal::KokkosViewCont<char> hostView(hostBuffer,
+                                                                    ErrorMessageMaxLength);
     Kokkos::deep_copy(
       viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), hostView, deviceView);
     viskores::cont::kokkos::internal::GetExecutionSpaceInstance().fence();

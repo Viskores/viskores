@@ -36,22 +36,22 @@ class PartitionedDataSet;
 VISKORES_CONT_EXPORT
 VISKORES_CONT
 viskores::Bounds BoundsGlobalCompute(const viskores::cont::DataSet& dataset,
-                                 viskores::Id coordinate_system_index = 0);
+                                     viskores::Id coordinate_system_index = 0);
 
 VISKORES_CONT_EXPORT
 VISKORES_CONT
 viskores::Bounds BoundsGlobalCompute(const viskores::cont::PartitionedDataSet& pds,
-                                 viskores::Id coordinate_system_index = 0);
+                                     viskores::Id coordinate_system_index = 0);
 
 VISKORES_CONT_EXPORT
 VISKORES_CONT
 viskores::Bounds BoundsGlobalCompute(const viskores::cont::DataSet& dataset,
-                                 const std::string& coordinate_system_name);
+                                     const std::string& coordinate_system_name);
 
 VISKORES_CONT_EXPORT
 VISKORES_CONT
 viskores::Bounds BoundsGlobalCompute(const viskores::cont::PartitionedDataSet& pds,
-                                 const std::string& coordinate_system_name);
+                                     const std::string& coordinate_system_name);
 //@}
 }
 }

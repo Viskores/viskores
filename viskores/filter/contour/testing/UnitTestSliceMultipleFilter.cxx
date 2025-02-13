@@ -24,9 +24,9 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
   template <typename CoordinatesType, typename ScalarType, typename V3Type, typename V4Type>
   VISKORES_EXEC void operator()(const CoordinatesType& coordinates,
-                            ScalarType& scalar,
-                            V3Type& vec3,
-                            V4Type& vec4) const
+                                ScalarType& scalar,
+                                V3Type& vec3,
+                                V4Type& vec4) const
   {
     scalar =
       static_cast<ScalarType>((coordinates[2] * 3 * 3 + coordinates[1] * 3 + coordinates[0]) * 0.1);
@@ -46,9 +46,9 @@ public:
   using InputDomain = _1;
   template <typename PointFieldVecType, typename ScalarType, typename V3Type, typename V4Type>
   VISKORES_EXEC void operator()(const PointFieldVecType& pointFieldVec,
-                            ScalarType& scalar,
-                            V3Type& vec3,
-                            V4Type& vec4) const
+                                ScalarType& scalar,
+                                V3Type& vec3,
+                                V4Type& vec4) const
   {
     //pointFieldVec has 8 values
     scalar = static_cast<ScalarType>(pointFieldVec[0]);
@@ -106,9 +106,10 @@ void TestSliceMultipleFilter()
   sliceMultiple.AddImplicitFunction(plane2);
   sliceMultiple.AddImplicitFunction(plane3);
   auto result = sliceMultiple.Execute(ds);
-  VISKORES_TEST_ASSERT(result.GetNumberOfPoints() == 27, "wrong number of points in merged data set");
+  VISKORES_TEST_ASSERT(result.GetNumberOfPoints() == 27,
+                       "wrong number of points in merged data set");
   VISKORES_TEST_ASSERT(result.GetCoordinateSystem().GetData().GetNumberOfValues() == 27,
-                   "wrong number of scalars in merged data set");
+                       "wrong number of scalars in merged data set");
   viskores::cont::ArrayHandle<viskores::Float64> CheckingScalars;
   viskores::cont::ArrayHandle<viskores::Vec3f_64> CheckingV3;
   viskores::cont::ArrayHandle<viskores::Vec<viskores::Float64, 4>> CheckingV4;
@@ -122,9 +123,9 @@ void TestSliceMultipleFilter()
     test_equal_ArrayHandles(CheckingScalars, result.GetField("pointScalars").GetData()),
     "wrong scalar values");
   VISKORES_TEST_ASSERT(test_equal_ArrayHandles(CheckingV3, result.GetField("pointV3").GetData()),
-                   "wrong pointV3 values");
+                       "wrong pointV3 values");
   VISKORES_TEST_ASSERT(test_equal_ArrayHandles(CheckingV4, result.GetField("pointV4").GetData()),
-                   "wrong pointV4 values");
+                       "wrong pointV4 values");
   VISKORES_TEST_ASSERT(result.GetNumberOfCells() == 24, "wrong number of cells in merged data set");
 }
 } // anonymous namespace

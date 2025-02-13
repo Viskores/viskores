@@ -124,7 +124,8 @@ namespace detail
 // Fence to ensure that previous non-atomic stores are visible to other threads.
 VISKORES_EXEC_CONT inline void AtomicStoreFence(viskores::MemoryOrder order)
 {
-  if ((order == viskores::MemoryOrder::Release) || (order == viskores::MemoryOrder::AcquireAndRelease) ||
+  if ((order == viskores::MemoryOrder::Release) ||
+      (order == viskores::MemoryOrder::AcquireAndRelease) ||
       (order == viskores::MemoryOrder::SequentiallyConsistent))
   {
     __threadfence();
@@ -134,7 +135,8 @@ VISKORES_EXEC_CONT inline void AtomicStoreFence(viskores::MemoryOrder order)
 // Fence to ensure that previous non-atomic stores are visible to other threads.
 VISKORES_EXEC_CONT inline void AtomicLoadFence(viskores::MemoryOrder order)
 {
-  if ((order == viskores::MemoryOrder::Acquire) || (order == viskores::MemoryOrder::AcquireAndRelease) ||
+  if ((order == viskores::MemoryOrder::Acquire) ||
+      (order == viskores::MemoryOrder::AcquireAndRelease) ||
       (order == viskores::MemoryOrder::SequentiallyConsistent))
   {
     __threadfence();
@@ -208,9 +210,9 @@ VISKORES_EXEC_CONT inline T AtomicNotImpl(T* addr, viskores::MemoryOrder order)
 
 template <typename T>
 VISKORES_EXEC_CONT inline bool AtomicCompareExchangeImpl(T* addr,
-                                                     T* expected,
-                                                     T desired,
-                                                     viskores::MemoryOrder order)
+                                                         T* expected,
+                                                         T desired,
+                                                         viskores::MemoryOrder order)
 {
   AtomicStoreFence(order);
   auto result = atomicCAS(addr, *expected, desired);
@@ -227,8 +229,8 @@ VISKORES_EXEC_CONT inline bool AtomicCompareExchangeImpl(T* addr,
 }
 #if __CUDA_ARCH__ < 200
 VISKORES_EXEC_CONT inline viskores::Float32 AtomicAddImpl(viskores::Float32* address,
-                                                  viskores::Float32 value,
-                                                  viskores::MemoryOrder order)
+                                                          viskores::Float32 value,
+                                                          viskores::MemoryOrder order)
 {
   AtomicStoreFence(order);
   viskores::UInt32 assumed;
@@ -246,8 +248,8 @@ VISKORES_EXEC_CONT inline viskores::Float32 AtomicAddImpl(viskores::Float32* add
 #endif
 #if __CUDA_ARCH__ < 600
 VISKORES_EXEC_CONT inline viskores::Float64 AtomicAddImpl(viskores::Float64* address,
-                                                  viskores::Float64 value,
-                                                  viskores::MemoryOrder order)
+                                                          viskores::Float64 value,
+                                                          viskores::MemoryOrder order)
 {
   AtomicStoreFence(order);
   viskores::UInt64 assumed;
@@ -308,7 +310,8 @@ namespace detail
 // Fence to ensure that previous non-atomic stores are visible to other threads.
 VISKORES_EXEC_CONT inline void AtomicStoreFence(viskores::MemoryOrder order)
 {
-  if ((order == viskores::MemoryOrder::Release) || (order == viskores::MemoryOrder::AcquireAndRelease) ||
+  if ((order == viskores::MemoryOrder::Release) ||
+      (order == viskores::MemoryOrder::AcquireAndRelease) ||
       (order == viskores::MemoryOrder::SequentiallyConsistent))
   {
     Kokkos::memory_fence();
@@ -318,7 +321,8 @@ VISKORES_EXEC_CONT inline void AtomicStoreFence(viskores::MemoryOrder order)
 // Fence to ensure that previous non-atomic stores are visible to other threads.
 VISKORES_EXEC_CONT inline void AtomicLoadFence(viskores::MemoryOrder order)
 {
-  if ((order == viskores::MemoryOrder::Acquire) || (order == viskores::MemoryOrder::AcquireAndRelease) ||
+  if ((order == viskores::MemoryOrder::Acquire) ||
+      (order == viskores::MemoryOrder::AcquireAndRelease) ||
       (order == viskores::MemoryOrder::SequentiallyConsistent))
   {
     Kokkos::memory_fence();
@@ -412,9 +416,9 @@ VISKORES_EXEC_CONT inline T AtomicNotImpl(T* addr, viskores::MemoryOrder order)
 
 template <typename T>
 VISKORES_EXEC_CONT inline bool AtomicCompareExchangeImpl(T* addr,
-                                                     T* expected,
-                                                     T desired,
-                                                     viskores::MemoryOrder order)
+                                                         T* expected,
+                                                         T desired,
+                                                         viskores::MemoryOrder order)
 {
   AtomicStoreFence(order);
   T oldValue = Kokkos::atomic_compare_exchange(addr, *expected, desired);
@@ -476,7 +480,8 @@ VISKORES_EXEC_CONT inline T BitCast(T&& src)
 //
 // https://docs.microsoft.com/en-us/windows/desktop/sync/interlocked-variable-access
 
-VISKORES_EXEC_CONT inline viskores::UInt8 AtomicLoadImpl(viskores::UInt8* const addr, viskores::MemoryOrder order)
+VISKORES_EXEC_CONT inline viskores::UInt8 AtomicLoadImpl(viskores::UInt8* const addr,
+                                                         viskores::MemoryOrder order)
 {
   // This assumes that the memory interface is smart enough to load a 32-bit
   // word atomically and a properly aligned 8-bit word from it.
@@ -486,7 +491,8 @@ VISKORES_EXEC_CONT inline viskores::UInt8 AtomicLoadImpl(viskores::UInt8* const 
   std::atomic_thread_fence(internal::StdAtomicMemOrder(order));
   return result;
 }
-VISKORES_EXEC_CONT inline viskores::UInt16 AtomicLoadImpl(viskores::UInt16* const addr, viskores::MemoryOrder order)
+VISKORES_EXEC_CONT inline viskores::UInt16 AtomicLoadImpl(viskores::UInt16* const addr,
+                                                          viskores::MemoryOrder order)
 {
   // This assumes that the memory interface is smart enough to load a 32-bit
   // word atomically and a properly aligned 16-bit word from it.
@@ -496,13 +502,15 @@ VISKORES_EXEC_CONT inline viskores::UInt16 AtomicLoadImpl(viskores::UInt16* cons
   std::atomic_thread_fence(internal::StdAtomicMemOrder(order));
   return result;
 }
-VISKORES_EXEC_CONT inline viskores::UInt32 AtomicLoadImpl(viskores::UInt32* const addr, viskores::MemoryOrder order)
+VISKORES_EXEC_CONT inline viskores::UInt32 AtomicLoadImpl(viskores::UInt32* const addr,
+                                                          viskores::MemoryOrder order)
 {
   auto result = *static_cast<volatile viskores::UInt32* const>(addr);
   std::atomic_thread_fence(internal::StdAtomicMemOrder(order));
   return result;
 }
-VISKORES_EXEC_CONT inline viskores::UInt64 AtomicLoadImpl(viskores::UInt64* const addr, viskores::MemoryOrder order)
+VISKORES_EXEC_CONT inline viskores::UInt64 AtomicLoadImpl(viskores::UInt64* const addr,
+                                                          viskores::MemoryOrder order)
 {
   auto result = *static_cast<volatile viskores::UInt64* const>(addr);
   std::atomic_thread_fence(internal::StdAtomicMemOrder(order));
@@ -510,68 +518,73 @@ VISKORES_EXEC_CONT inline viskores::UInt64 AtomicLoadImpl(viskores::UInt64* cons
 }
 
 VISKORES_EXEC_CONT inline void AtomicStoreImpl(viskores::UInt8* addr,
-                                           viskores::UInt8 val,
-                                           viskores::MemoryOrder viskoresNotUsed(order))
+                                               viskores::UInt8 val,
+                                               viskores::MemoryOrder viskoresNotUsed(order))
 {
   // There doesn't seem to be an atomic store instruction in the windows
   // API, so just exchange and discard the result.
   _InterlockedExchange8(reinterpret_cast<volatile CHAR*>(addr), BitCast<CHAR>(val));
 }
 VISKORES_EXEC_CONT inline void AtomicStoreImpl(viskores::UInt16* addr,
-                                           viskores::UInt16 val,
-                                           viskores::MemoryOrder viskoresNotUsed(order))
+                                               viskores::UInt16 val,
+                                               viskores::MemoryOrder viskoresNotUsed(order))
 {
   // There doesn't seem to be an atomic store instruction in the windows
   // API, so just exchange and discard the result.
   _InterlockedExchange16(reinterpret_cast<volatile SHORT*>(addr), BitCast<SHORT>(val));
 }
 VISKORES_EXEC_CONT inline void AtomicStoreImpl(viskores::UInt32* addr,
-                                           viskores::UInt32 val,
-                                           viskores::MemoryOrder order)
+                                               viskores::UInt32 val,
+                                               viskores::MemoryOrder order)
 {
   std::atomic_thread_fence(internal::StdAtomicMemOrder(order));
   *addr = val;
 }
 VISKORES_EXEC_CONT inline void AtomicStoreImpl(viskores::UInt64* addr,
-                                           viskores::UInt64 val,
-                                           viskores::MemoryOrder order)
+                                               viskores::UInt64 val,
+                                               viskores::MemoryOrder order)
 {
   std::atomic_thread_fence(internal::StdAtomicMemOrder(order));
   *addr = val;
 }
 
-#define VISKORES_ATOMIC_OP(viskoresName, winName, viskoresType, winType, suffix)                             \
-  VISKORES_EXEC_CONT inline viskoresType viskoresName(viskoresType* addr, viskoresType arg, viskores::MemoryOrder order) \
-  {                                                                                              \
-    return BitCast<viskoresType>(                                                                    \
-      winName##suffix(reinterpret_cast<volatile winType*>(addr), BitCast<winType>(arg)));        \
+#define VISKORES_ATOMIC_OP(viskoresName, winName, viskoresType, winType, suffix)          \
+  VISKORES_EXEC_CONT inline viskoresType viskoresName(                                    \
+    viskoresType* addr, viskoresType arg, viskores::MemoryOrder order)                    \
+  {                                                                                       \
+    return BitCast<viskoresType>(                                                         \
+      winName##suffix(reinterpret_cast<volatile winType*>(addr), BitCast<winType>(arg))); \
   }
 
-#define VISKORES_ATOMIC_OPS_FOR_TYPE(viskoresType, winType, suffix)                                     \
-  VISKORES_ATOMIC_OP(AtomicAddImpl, _InterlockedExchangeAdd, viskoresType, winType, suffix)             \
-  VISKORES_ATOMIC_OP(AtomicAndImpl, _InterlockedAnd, viskoresType, winType, suffix)                     \
-  VISKORES_ATOMIC_OP(AtomicOrImpl, _InterlockedOr, viskoresType, winType, suffix)                       \
-  VISKORES_ATOMIC_OP(AtomicXorImpl, _InterlockedXor, viskoresType, winType, suffix)                     \
-  VISKORES_EXEC_CONT inline viskoresType AtomicNotImpl(viskoresType* addr, viskores::MemoryOrder order)         \
-  {                                                                                             \
-    return AtomicXorImpl(addr, static_cast<viskoresType>(~viskoresType{ 0u }), order);                  \
-  }                                                                                             \
-  VISKORES_EXEC_CONT inline bool AtomicCompareExchangeImpl(                                         \
-    viskoresType* addr, viskoresType* expected, viskoresType desired, viskores::MemoryOrder viskoresNotUsed(order)) \
-  {                                                                                             \
-    viskoresType result = BitCast<viskoresType>(                                                        \
-      _InterlockedCompareExchange##suffix(reinterpret_cast<volatile winType*>(addr),            \
-                                          BitCast<winType>(desired),                            \
-                                          BitCast<winType>(*expected)));                        \
-    if (result == *expected)                                                                    \
-    {                                                                                           \
-      return true;                                                                              \
-    }                                                                                           \
-    else                                                                                        \
-    {                                                                                           \
-      *expected = result;                                                                       \
-      return false;                                                                             \
-    }                                                                                           \
+#define VISKORES_ATOMIC_OPS_FOR_TYPE(viskoresType, winType, suffix)                         \
+  VISKORES_ATOMIC_OP(AtomicAddImpl, _InterlockedExchangeAdd, viskoresType, winType, suffix) \
+  VISKORES_ATOMIC_OP(AtomicAndImpl, _InterlockedAnd, viskoresType, winType, suffix)         \
+  VISKORES_ATOMIC_OP(AtomicOrImpl, _InterlockedOr, viskoresType, winType, suffix)           \
+  VISKORES_ATOMIC_OP(AtomicXorImpl, _InterlockedXor, viskoresType, winType, suffix)         \
+  VISKORES_EXEC_CONT inline viskoresType AtomicNotImpl(viskoresType* addr,                  \
+                                                       viskores::MemoryOrder order)         \
+  {                                                                                         \
+    return AtomicXorImpl(addr, static_cast<viskoresType>(~viskoresType{ 0u }), order);      \
+  }                                                                                         \
+  VISKORES_EXEC_CONT inline bool AtomicCompareExchangeImpl(                                 \
+    viskoresType* addr,                                                                     \
+    viskoresType* expected,                                                                 \
+    viskoresType desired,                                                                   \
+    viskores::MemoryOrder viskoresNotUsed(order))                                           \
+  {                                                                                         \
+    viskoresType result = BitCast<viskoresType>(                                            \
+      _InterlockedCompareExchange##suffix(reinterpret_cast<volatile winType*>(addr),        \
+                                          BitCast<winType>(desired),                        \
+                                          BitCast<winType>(*expected)));                    \
+    if (result == *expected)                                                                \
+    {                                                                                       \
+      return true;                                                                          \
+    }                                                                                       \
+    else                                                                                    \
+    {                                                                                       \
+      *expected = result;                                                                   \
+      return false;                                                                         \
+    }                                                                                       \
   }
 
 VISKORES_ATOMIC_OPS_FOR_TYPE(viskores::UInt8, CHAR, 8)
@@ -581,9 +594,10 @@ VISKORES_ATOMIC_OPS_FOR_TYPE(viskores::UInt64, LONG64, 64)
 
 #undef VISKORES_ATOMIC_OPS_FOR_TYPE
 
-VISKORES_EXEC_CONT inline viskores::Float32 AtomicAddImpl(viskores::Float32* address,
-                                                  viskores::Float32 value,
-                                                  viskores::MemoryOrder viskoresNotUsed(order))
+VISKORES_EXEC_CONT inline viskores::Float32 AtomicAddImpl(
+  viskores::Float32* address,
+  viskores::Float32 value,
+  viskores::MemoryOrder viskoresNotUsed(order))
 {
   LONG assumed;
   LONG old = BitCast<LONG>(*address);
@@ -597,18 +611,20 @@ VISKORES_EXEC_CONT inline viskores::Float32 AtomicAddImpl(viskores::Float32* add
   return BitCast<viskores::Float32>(old);
 }
 
-VISKORES_EXEC_CONT inline viskores::Float64 AtomicAddImpl(viskores::Float64* address,
-                                                  viskores::Float64 value,
-                                                  viskores::MemoryOrder viskoresNotUsed(order))
+VISKORES_EXEC_CONT inline viskores::Float64 AtomicAddImpl(
+  viskores::Float64* address,
+  viskores::Float64 value,
+  viskores::MemoryOrder viskoresNotUsed(order))
 {
   LONG64 assumed;
   LONG64 old = BitCast<LONG64>(*address);
   do
   {
     assumed = old;
-    old = _InterlockedCompareExchange64(reinterpret_cast<volatile LONG64*>(address),
-                                        BitCast<LONG64>(BitCast<viskores::Float64>(assumed) + value),
-                                        assumed);
+    old =
+      _InterlockedCompareExchange64(reinterpret_cast<volatile LONG64*>(address),
+                                    BitCast<LONG64>(BitCast<viskores::Float64>(assumed) + value),
+                                    assumed);
   } while (assumed != old);
   return BitCast<viskores::Float64>(old);
 }
@@ -670,15 +686,16 @@ VISKORES_EXEC_CONT inline T AtomicAddImpl(T* addr, T arg, viskores::MemoryOrder 
 
 // TODO: Use enable_if to write one version for both Float32 and Float64.
 VISKORES_EXEC_CONT inline viskores::Float32 AtomicAddImpl(viskores::Float32* addr,
-                                                  viskores::Float32 arg,
-                                                  viskores::MemoryOrder order)
+                                                          viskores::Float32 arg,
+                                                          viskores::MemoryOrder order)
 {
   viskores::UInt32 expected = viskoresstd::bit_cast<viskores::UInt32>(*addr);
   viskores::UInt32 desired;
 
   do
   {
-    desired = viskoresstd::bit_cast<viskores::UInt32>(viskoresstd::bit_cast<viskores::Float32>(expected) + arg);
+    desired = viskoresstd::bit_cast<viskores::UInt32>(
+      viskoresstd::bit_cast<viskores::Float32>(expected) + arg);
   } while (
     !__atomic_compare_exchange_n(reinterpret_cast<viskores::UInt32*>(addr),
                                  &expected, // reloads expected with *addr prior to the operation
@@ -692,15 +709,16 @@ VISKORES_EXEC_CONT inline viskores::Float32 AtomicAddImpl(viskores::Float32* add
 
 // TODO: Use enable_if to write one version for both Float32 and Float64.
 VISKORES_EXEC_CONT inline viskores::Float64 AtomicAddImpl(viskores::Float64* addr,
-                                                  viskores::Float64 arg,
-                                                  viskores::MemoryOrder order)
+                                                          viskores::Float64 arg,
+                                                          viskores::MemoryOrder order)
 {
   viskores::UInt64 expected = viskoresstd::bit_cast<viskores::UInt64>(*addr);
   viskores::UInt64 desired;
 
   do
   {
-    desired = viskoresstd::bit_cast<viskores::UInt64>(viskoresstd::bit_cast<viskores::Float64>(expected) + arg);
+    desired = viskoresstd::bit_cast<viskores::UInt64>(
+      viskoresstd::bit_cast<viskores::Float64>(expected) + arg);
   } while (
     !__atomic_compare_exchange_n(reinterpret_cast<viskores::UInt64*>(addr),
                                  &expected, // reloads expected with *addr prior to the operation
@@ -738,9 +756,9 @@ VISKORES_EXEC_CONT inline T AtomicNotImpl(T* addr, viskores::MemoryOrder order)
 
 template <typename T>
 VISKORES_EXEC_CONT inline bool AtomicCompareExchangeImpl(T* addr,
-                                                     T* expected,
-                                                     T desired,
-                                                     viskores::MemoryOrder order)
+                                                         T* expected,
+                                                         T desired,
+                                                         viskores::MemoryOrder order)
 {
   return __atomic_compare_exchange_n(
     addr, expected, desired, false, GccAtomicMemOrder(order), GccAtomicMemOrder(order));
@@ -784,7 +802,7 @@ using AtomicTypesSupported = viskores::List<viskores::UInt32, viskores::UInt64>;
 ///
 template <typename T>
 VISKORES_EXEC_CONT inline T AtomicLoad(T* const pointer,
-                                   viskores::MemoryOrder order = viskores::MemoryOrder::Acquire)
+                                       viskores::MemoryOrder order = viskores::MemoryOrder::Acquire)
 {
   return detail::AtomicLoadImpl(pointer, order);
 }
@@ -797,16 +815,16 @@ VISKORES_EXEC_CONT inline T AtomicLoad(T* const pointer,
 /// value will be one of the values or the other (as opposed to a mix of bits).
 ///
 template <typename T>
-VISKORES_EXEC_CONT inline void AtomicStore(T* pointer,
-                                       T value,
-                                       viskores::MemoryOrder order = viskores::MemoryOrder::Release)
+VISKORES_EXEC_CONT inline void
+AtomicStore(T* pointer, T value, viskores::MemoryOrder order = viskores::MemoryOrder::Release)
 {
   detail::AtomicStoreImpl(pointer, value, order);
 }
 template <typename T>
-VISKORES_EXEC_CONT inline void AtomicStore(T* pointer,
-                                       detail::OppositeSign<T> value,
-                                       viskores::MemoryOrder order = viskores::MemoryOrder::Release)
+VISKORES_EXEC_CONT inline void AtomicStore(
+  T* pointer,
+  detail::OppositeSign<T> value,
+  viskores::MemoryOrder order = viskores::MemoryOrder::Release)
 {
   detail::AtomicStoreImpl(pointer, static_cast<T>(value), order);
 }
@@ -888,8 +906,10 @@ VISKORES_EXEC_CONT inline T AtomicAnd(
 /// (although it is indeterminate which will be applied first).
 ///
 template <typename T>
-VISKORES_EXEC_CONT inline T
-AtomicOr(T* pointer, T operand, viskores::MemoryOrder order = viskores::MemoryOrder::SequentiallyConsistent)
+VISKORES_EXEC_CONT inline T AtomicOr(
+  T* pointer,
+  T operand,
+  viskores::MemoryOrder order = viskores::MemoryOrder::SequentiallyConsistent)
 {
   return detail::AtomicOrImpl(pointer, operand, order);
 }

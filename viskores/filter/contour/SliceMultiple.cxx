@@ -40,7 +40,9 @@ viskores::cont::DataSet SliceMultiple::DoExecute(const viskores::cont::DataSet& 
 {
   viskores::cont::PartitionedDataSet slices;
   //Executing Slice filter several times and merge results together
-  for (viskores::IdComponent i = 0; i < static_cast<viskores::IdComponent>(this->FunctionList.size()); i++)
+  for (viskores::IdComponent i = 0;
+       i < static_cast<viskores::IdComponent>(this->FunctionList.size());
+       i++)
   {
     viskores::filter::contour::Slice slice;
     slice.SetImplicitFunction(this->GetImplicitFunction(i));

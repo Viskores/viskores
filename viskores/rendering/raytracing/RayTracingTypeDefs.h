@@ -35,9 +35,9 @@ namespace rendering
 
 template <typename ArrayHandleType>
 VISKORES_EXEC inline void BoundsCheck(const ArrayHandleType& handle,
-                                  const viskores::Id& index,
-                                  const char* file,
-                                  int line)
+                                      const viskores::Id& index,
+                                      const char* file,
+                                      int line)
 {
   if (index < 0 || index >= handle.GetNumberOfValues())
     printf("Bad Index %d  at file %s line %d\n", (int)index, file, line);
@@ -71,7 +71,8 @@ inline std::string GetDeviceString<viskores::cont::DeviceAdapterTagSerial>(
 }
 
 template <>
-inline std::string GetDeviceString<viskores::cont::DeviceAdapterTagTBB>(viskores::cont::DeviceAdapterTagTBB)
+inline std::string GetDeviceString<viskores::cont::DeviceAdapterTagTBB>(
+  viskores::cont::DeviceAdapterTagTBB)
 {
   return "tbb";
 }
@@ -139,13 +140,15 @@ using RayStatusType = viskores::List<viskores::UInt8>;
 
 using ScalarRenderingTypes = viskores::List<ScalarF, ScalarD>;
 
-VISKORES_CONT inline viskores::cont::UncertainArrayHandle<ScalarRenderingTypes, VISKORES_DEFAULT_STORAGE_LIST>
+VISKORES_CONT inline viskores::cont::UncertainArrayHandle<ScalarRenderingTypes,
+                                                          VISKORES_DEFAULT_STORAGE_LIST>
 GetScalarFieldArray(const viskores::cont::Field& field)
 {
   return field.GetData().ResetTypes(ScalarRenderingTypes{}, VISKORES_DEFAULT_STORAGE_LIST{});
 }
 
-VISKORES_CONT inline viskores::cont::UncertainArrayHandle<Vec3RenderingTypes, VISKORES_DEFAULT_STORAGE_LIST>
+VISKORES_CONT inline viskores::cont::UncertainArrayHandle<Vec3RenderingTypes,
+                                                          VISKORES_DEFAULT_STORAGE_LIST>
 GetVec3FieldArray(const viskores::cont::Field& field)
 {
   return field.GetData().ResetTypes(Vec3RenderingTypes{}, VISKORES_DEFAULT_STORAGE_LIST{});

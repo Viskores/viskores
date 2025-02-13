@@ -265,10 +265,10 @@ struct DecoratorTests
     // Resize methods:
     template <typename Array1T, typename Array2T>
     VISKORES_CONT void AllocateSourceArrays(viskores::Id numVals,
-                                        viskores::CopyFlag preserve,
-                                        viskores::cont::Token& token,
-                                        Array1T&& array1,
-                                        Array2T&& array2) const
+                                            viskores::CopyFlag preserve,
+                                            viskores::cont::Token& token,
+                                            Array1T&& array1,
+                                            Array2T&& array2) const
     {
       array1.Allocate(numVals, preserve, token);
       array2.Allocate(numVals, preserve, token);
@@ -283,7 +283,8 @@ struct DecoratorTests
     viskores::cont::ArrayHandle<ValueType> ah3;
     ah3.AllocateAndFill(ARRAY_SIZE, ValueType{ ARRAY_SIZE / 2 });
 
-    auto ah3Const = viskores::cont::make_ArrayHandleConstant(ValueType{ ARRAY_SIZE / 2 }, ARRAY_SIZE);
+    auto ah3Const =
+      viskores::cont::make_ArrayHandleConstant(ValueType{ ARRAY_SIZE / 2 }, ARRAY_SIZE);
 
     { // Has a writable handle and an invertible functor:
       auto ahInv =
@@ -294,19 +295,22 @@ struct DecoratorTests
     { // Has no writable handles and an invertible functor:
       auto ahNInv = viskores::cont::make_ArrayHandleDecorator(
         ARRAY_SIZE, InvertibleDecorImpl{}, ah1, ah2, ah3Const);
-      VISKORES_TEST_ASSERT(!viskores::cont::internal::IsWritableArrayHandle<decltype(ahNInv)>::value);
+      VISKORES_TEST_ASSERT(
+        !viskores::cont::internal::IsWritableArrayHandle<decltype(ahNInv)>::value);
     }
 
     { // Has writable handles, but the functor cannot be inverted:
-      auto ahNInv =
-        viskores::cont::make_ArrayHandleDecorator(ARRAY_SIZE, NonInvertibleDecorImpl{}, ah1, ah2, ah3);
-      VISKORES_TEST_ASSERT(!viskores::cont::internal::IsWritableArrayHandle<decltype(ahNInv)>::value);
+      auto ahNInv = viskores::cont::make_ArrayHandleDecorator(
+        ARRAY_SIZE, NonInvertibleDecorImpl{}, ah1, ah2, ah3);
+      VISKORES_TEST_ASSERT(
+        !viskores::cont::internal::IsWritableArrayHandle<decltype(ahNInv)>::value);
     }
 
     { // Has no writable handles and the functor cannot be inverted:
       auto ahNInv = viskores::cont::make_ArrayHandleDecorator(
         ARRAY_SIZE, NonInvertibleDecorImpl{}, ah1, ah2, ah3Const);
-      VISKORES_TEST_ASSERT(!viskores::cont::internal::IsWritableArrayHandle<decltype(ahNInv)>::value);
+      VISKORES_TEST_ASSERT(
+        !viskores::cont::internal::IsWritableArrayHandle<decltype(ahNInv)>::value);
     }
 
     { // Test reading/writing to an invertible handle:
@@ -314,14 +318,14 @@ struct DecoratorTests
       viskores::cont::ArrayHandle<ValueType> ah3Copy;
       viskores::cont::ArrayCopy(ah3, ah3Copy);
 
-      auto ahDecor =
-        viskores::cont::make_ArrayHandleDecorator(ARRAY_SIZE, InvertibleDecorImpl{}, ah1, ah2, ah3Copy);
+      auto ahDecor = viskores::cont::make_ArrayHandleDecorator(
+        ARRAY_SIZE, InvertibleDecorImpl{}, ah1, ah2, ah3Copy);
 
       {
         auto portalDecor = ahDecor.ReadPortal();
         VISKORES_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
         VISKORES_TEST_ASSERT(ahDecor.GetNumberOfComponentsFlat() ==
-                         viskores::VecFlat<ValueType>::NUM_COMPONENTS);
+                             viskores::VecFlat<ValueType>::NUM_COMPONENTS);
         VISKORES_TEST_ASSERT(portalDecor.GetNumberOfValues() == ARRAY_SIZE);
         VISKORES_TEST_ASSERT(portalDecor.Get(0) == ValueType{ 23 });
         VISKORES_TEST_ASSERT(portalDecor.Get(1) == ValueType{ 21 });
@@ -336,14 +340,14 @@ struct DecoratorTests
       }
 
       // Copy a constant array into the decorator. This should modify ah3Copy.
-      viskores::cont::ArrayCopyDevice(viskores::cont::make_ArrayHandleConstant(ValueType{ 25 }, ARRAY_SIZE),
-                                  ahDecor);
+      viskores::cont::ArrayCopyDevice(
+        viskores::cont::make_ArrayHandleConstant(ValueType{ 25 }, ARRAY_SIZE), ahDecor);
 
       { // Accessing portal should give all 25s:
         auto portalDecor = ahDecor.ReadPortal();
         VISKORES_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
         VISKORES_TEST_ASSERT(ahDecor.GetNumberOfComponentsFlat() ==
-                         viskores::VecFlat<ValueType>::NUM_COMPONENTS);
+                             viskores::VecFlat<ValueType>::NUM_COMPONENTS);
         VISKORES_TEST_ASSERT(portalDecor.GetNumberOfValues() == ARRAY_SIZE);
         VISKORES_TEST_ASSERT(portalDecor.Get(0) == ValueType{ 25 });
         VISKORES_TEST_ASSERT(portalDecor.Get(1) == ValueType{ 25 });
@@ -361,7 +365,7 @@ struct DecoratorTests
         auto portalAH3Copy = ah3Copy.ReadPortal();
         VISKORES_TEST_ASSERT(ahDecor.GetNumberOfValues() == ARRAY_SIZE);
         VISKORES_TEST_ASSERT(ahDecor.GetNumberOfComponentsFlat() ==
-                         viskores::VecFlat<ValueType>::NUM_COMPONENTS);
+                             viskores::VecFlat<ValueType>::NUM_COMPONENTS);
         VISKORES_TEST_ASSERT(portalAH3Copy.GetNumberOfValues() == ARRAY_SIZE);
         VISKORES_TEST_ASSERT(portalAH3Copy.Get(0) == ValueType{ 15 });
         VISKORES_TEST_ASSERT(portalAH3Copy.Get(1) == ValueType{ 15 });
@@ -380,8 +384,10 @@ struct DecoratorTests
   template <typename ValueType, typename OperationType>
   void BinaryOperatorTest() const
   {
-    auto ahCount = viskores::cont::make_ArrayHandleCounting(ValueType{ 0 }, ValueType{ 1 }, ARRAY_SIZE);
-    auto ahConst = viskores::cont::make_ArrayHandleConstant(ValueType{ ARRAY_SIZE / 2 }, ARRAY_SIZE);
+    auto ahCount =
+      viskores::cont::make_ArrayHandleCounting(ValueType{ 0 }, ValueType{ 1 }, ARRAY_SIZE);
+    auto ahConst =
+      viskores::cont::make_ArrayHandleConstant(ValueType{ ARRAY_SIZE / 2 }, ARRAY_SIZE);
 
     const OperationType op;
     BinaryOperationDecorImpl<ValueType, OperationType> impl{ op };
@@ -418,8 +424,8 @@ struct DecoratorTests
     auto numIndicesOrig =
       viskores::cont::make_ArrayHandleCounting(ValueType{ 0 }, ValueType{ 1 }, ARRAY_SIZE);
     viskores::cont::ArrayHandle<viskores::Id> scan;
-    viskores::cont::Algorithm::ScanExtended(viskores::cont::make_ArrayHandleCast<viskores::Id>(numIndicesOrig),
-                                        scan);
+    viskores::cont::Algorithm::ScanExtended(
+      viskores::cont::make_ArrayHandleCast<viskores::Id>(numIndicesOrig), scan);
 
     // Some interesting things to notice:
     // - `numIndicesDecor` will have `ARRAY_SIZE` entries, while `scan` has

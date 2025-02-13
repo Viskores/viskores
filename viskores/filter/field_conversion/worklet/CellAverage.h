@@ -30,13 +30,13 @@ public:
 
   template <typename PointValueVecType, typename OutType>
   VISKORES_EXEC void operator()(const viskores::IdComponent& numPoints,
-                            const PointValueVecType& pointValues,
-                            OutType& average) const
+                                const PointValueVecType& pointValues,
+                                OutType& average) const
   {
     using PointValueType = typename PointValueVecType::ComponentType;
 
     VISKORES_ASSERT(viskores::VecTraits<PointValueType>::GetNumberOfComponents(pointValues[0]) ==
-                viskores::VecTraits<OutType>::GetNumberOfComponents(average));
+                    viskores::VecTraits<OutType>::GetNumberOfComponents(average));
 
     average = pointValues[0];
     for (viskores::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)

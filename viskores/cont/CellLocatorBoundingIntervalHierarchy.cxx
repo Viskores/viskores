@@ -35,7 +35,8 @@ namespace cont
 {
 
 using IdArrayHandle = viskores::cont::ArrayHandle<viskores::Id>;
-using IdPermutationArrayHandle = viskores::cont::ArrayHandlePermutation<IdArrayHandle, IdArrayHandle>;
+using IdPermutationArrayHandle =
+  viskores::cont::ArrayHandlePermutation<IdArrayHandle, IdArrayHandle>;
 using CoordsArrayHandle = viskores::cont::ArrayHandle<viskores::FloatDefault>;
 using CoordsPermutationArrayHandle =
   viskores::cont::ArrayHandlePermutation<IdArrayHandle, CoordsArrayHandle>;
@@ -56,11 +57,12 @@ IdArrayHandle CalculateSegmentSizes(const IdArrayHandle& segmentIds, viskores::I
 {
   IdArrayHandle discardKeys;
   IdArrayHandle segmentSizes;
-  viskores::cont::Algorithm::ReduceByKey(segmentIds,
-                                     viskores::cont::ArrayHandleConstant<viskores::Id>(1, numCells),
-                                     discardKeys,
-                                     segmentSizes,
-                                     viskores::Add());
+  viskores::cont::Algorithm::ReduceByKey(
+    segmentIds,
+    viskores::cont::ArrayHandleConstant<viskores::Id>(1, numCells),
+    discardKeys,
+    segmentSizes,
+    viskores::Add());
   return segmentSizes;
 }
 
@@ -93,7 +95,7 @@ void CalculatePlaneSplitCost(viskores::IdComponent planeIndex,
   // Make candidate split plane array
   viskores::cont::ArrayHandle<viskores::FloatDefault> splitPlanes;
   viskores::worklet::spatialstructure::SplitPlaneCalculatorWorklet splitPlaneCalcWorklet(planeIndex,
-                                                                                     numPlanes);
+                                                                                         numPlanes);
   invoker(splitPlaneCalcWorklet, segmentRanges, splitPlanes);
 
   // Check if a point is to the left of the split plane or right
@@ -125,8 +127,11 @@ void CalculatePlaneSplitCost(viskores::IdComponent planeIndex,
     viskores::worklet::spatialstructure::FilterRanges<true> worklet;
     invoker(worklet, coords, splitPlanes, ranges, leqRanges);
 
-    viskores::cont::Algorithm::ReduceByKey(
-      segmentIds, leqRanges, discardKeys, lMaxRanges, viskores::worklet::spatialstructure::RangeAdd());
+    viskores::cont::Algorithm::ReduceByKey(segmentIds,
+                                           leqRanges,
+                                           discardKeys,
+                                           lMaxRanges,
+                                           viskores::worklet::spatialstructure::RangeAdd());
   }
 
   viskores::cont::ArrayHandle<viskores::Range> rMinRanges;
@@ -135,8 +140,11 @@ void CalculatePlaneSplitCost(viskores::IdComponent planeIndex,
     viskores::worklet::spatialstructure::FilterRanges<false> worklet;
     invoker(worklet, coords, splitPlanes, ranges, rRanges);
 
-    viskores::cont::Algorithm::ReduceByKey(
-      segmentIds, rRanges, discardKeys, rMinRanges, viskores::worklet::spatialstructure::RangeAdd());
+    viskores::cont::Algorithm::ReduceByKey(segmentIds,
+                                           rRanges,
+                                           discardKeys,
+                                           rMinRanges,
+                                           viskores::worklet::spatialstructure::RangeAdd());
   }
 
   viskores::cont::ArrayHandle<viskores::FloatDefault> segmentedSplitPlanes;
@@ -244,7 +252,8 @@ void CellLocatorBoundingIntervalHierarchy::Build()
   IdArrayHandle cellIds;
   viskores::cont::Algorithm::Copy(CountingIdArrayHandle(0, 1, numCells), cellIds);
   IdArrayHandle segmentIds;
-  viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, numCells), segmentIds);
+  viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, numCells),
+                                  segmentIds);
   //PRINT_TIMER("1.1", s11);
 
   //START_TIMER(s12);
@@ -299,8 +308,8 @@ void CellLocatorBoundingIntervalHierarchy::Build()
     //START_TIMER(s22);
     // Calculate split costs for NumPlanes split planes, across X, Y and Z dimensions
     viskores::Id numSplitPlanes = numSegments * (this->NumPlanes + 1);
-    viskores::cont::ArrayHandle<viskores::worklet::spatialstructure::SplitProperties> xSplits, ySplits,
-      zSplits;
+    viskores::cont::ArrayHandle<viskores::worklet::spatialstructure::SplitProperties> xSplits,
+      ySplits, zSplits;
     xSplits.Allocate(numSplitPlanes);
     ySplits.Allocate(numSplitPlanes);
     zSplits.Allocate(numSplitPlanes);
@@ -364,7 +373,8 @@ void CellLocatorBoundingIntervalHierarchy::Build()
     viskores::cont::Algorithm::Copy(IdPermutationArrayHandle(segmentIds, splitChoices), choices);
     cellIds = viskores::worklet::spatialstructure::ScatterArray(cellIds, scatterIndices);
     segmentIds = viskores::worklet::spatialstructure::ScatterArray(segmentIds, scatterIndices);
-    newSegmentIds = viskores::worklet::spatialstructure::ScatterArray(newSegmentIds, scatterIndices);
+    newSegmentIds =
+      viskores::worklet::spatialstructure::ScatterArray(newSegmentIds, scatterIndices);
     xRanges = viskores::worklet::spatialstructure::ScatterArray(xRanges, scatterIndices);
     yRanges = viskores::worklet::spatialstructure::ScatterArray(yRanges, scatterIndices);
     zRanges = viskores::worklet::spatialstructure::ScatterArray(zRanges, scatterIndices);
@@ -409,7 +419,8 @@ void CellLocatorBoundingIntervalHierarchy::Build()
     viskores::Id nodesSize = this->Nodes.GetNumberOfValues() + numSegments;
     viskores::cont::ArrayHandle<viskores::exec::CellLocatorBoundingIntervalHierarchyNode> newTree;
     newTree.Allocate(nodesSize);
-    viskores::cont::Algorithm::CopySubRange(this->Nodes, 0, this->Nodes.GetNumberOfValues(), newTree);
+    viskores::cont::Algorithm::CopySubRange(
+      this->Nodes, 0, this->Nodes.GetNumberOfValues(), newTree);
 
     IdArrayHandle nextParentIndices;
     nextParentIndices.Allocate(2 * numNewSegments);
@@ -450,10 +461,10 @@ struct CellLocatorBoundingIntervalHierarchy::MakeExecObject
 {
   template <typename CellSetType>
   VISKORES_CONT void operator()(const CellSetType& cellSet,
-                            viskores::cont::DeviceAdapterId device,
-                            viskores::cont::Token& token,
-                            const CellLocatorBoundingIntervalHierarchy& self,
-                            ExecObjType& execObject) const
+                                viskores::cont::DeviceAdapterId device,
+                                viskores::cont::Token& token,
+                                const CellLocatorBoundingIntervalHierarchy& self,
+                                ExecObjType& execObject) const
   {
     execObject = viskores::exec::CellLocatorBoundingIntervalHierarchy<CellSetType>(
       self.Nodes,
@@ -470,7 +481,8 @@ CellLocatorBoundingIntervalHierarchy::PrepareForExecution(viskores::cont::Device
                                                           viskores::cont::Token& token) const
 {
   ExecObjType execObject;
-  viskores::cont::CastAndCall(this->GetCellSet(), MakeExecObject{}, device, token, *this, execObject);
+  viskores::cont::CastAndCall(
+    this->GetCellSet(), MakeExecObject{}, device, token, *this, execObject);
   return execObject;
 }
 

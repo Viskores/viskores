@@ -50,19 +50,21 @@ struct Transport<viskores::cont::arg::TransportTagArrayInOut, ContObjectType, De
   // is not an array handle as an argument that is expected to be one.
   VISKORES_IS_ARRAY_HANDLE(ContObjectType);
 
-  using ExecObjectType = decltype(
-    std::declval<ContObjectType>().PrepareForInPlace(Device(), std::declval<viskores::cont::Token&>()));
+  using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForInPlace(
+    Device(),
+    std::declval<viskores::cont::Token&>()));
 
   template <typename InputDomainType>
   VISKORES_CONT ExecObjectType operator()(ContObjectType& object,
-                                      const InputDomainType& viskoresNotUsed(inputDomain),
-                                      viskores::Id viskoresNotUsed(inputRange),
-                                      viskores::Id outputRange,
-                                      viskores::cont::Token& token) const
+                                          const InputDomainType& viskoresNotUsed(inputDomain),
+                                          viskores::Id viskoresNotUsed(inputRange),
+                                          viskores::Id outputRange,
+                                          viskores::cont::Token& token) const
   {
     if (object.GetNumberOfValues() != outputRange)
     {
-      throw viskores::cont::ErrorBadValue("Input/output array to worklet invocation the wrong size.");
+      throw viskores::cont::ErrorBadValue(
+        "Input/output array to worklet invocation the wrong size.");
     }
 
     return object.PrepareForInPlace(Device(), token);

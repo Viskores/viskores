@@ -68,7 +68,8 @@ VISKORES_EXEC inline viskores::IdComponent GetNumTrianglesOffset(viskores::UInt8
   return offsets[cellType];
 }
 
-VISKORES_EXEC inline viskores::UInt8 GetNumTriangles(viskores::UInt8 cellType, viskores::UInt8 caseNumber)
+VISKORES_EXEC inline viskores::UInt8 GetNumTriangles(viskores::UInt8 cellType,
+                                                     viskores::UInt8 caseNumber)
 {
   // clang-format off
   VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt8 numTriangles[] = {
@@ -118,7 +119,8 @@ VISKORES_EXEC inline viskores::UInt8 GetNumTriangles(viskores::UInt8 cellType, v
   return numTriangles[offset + caseNumber];
 }
 
-VISKORES_EXEC inline viskores::IdComponent GetTriTableOffset(viskores::UInt8 cellType, viskores::UInt8 caseNumber)
+VISKORES_EXEC inline viskores::IdComponent GetTriTableOffset(viskores::UInt8 cellType,
+                                                             viskores::UInt8 caseNumber)
 {
   // clang-format off
   VISKORES_STATIC_CONSTEXPR_ARRAY viskores::IdComponent triTableOffset[] = {
@@ -192,8 +194,8 @@ VISKORES_EXEC inline viskores::IdComponent GetTriTableOffset(viskores::UInt8 cel
 }
 
 VISKORES_EXEC inline const viskores::UInt8* GetTriangleEdges(viskores::UInt8 cellType,
-                                                     viskores::UInt8 caseNumber,
-                                                     viskores::UInt8 triangleNumber)
+                                                             viskores::UInt8 caseNumber,
+                                                             viskores::UInt8 triangleNumber)
 {
   // clang-format off
   VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt8 triTable[][3] = {

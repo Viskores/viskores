@@ -95,14 +95,14 @@ public:
 
   template <typename InOutFieldPortalType, typename InFieldPortalType>
   VISKORES_EXEC void operator()(const InOutFieldPortalType& contourTreeSuperparentsPortal,
-                            const viskores::Id node,
-                            const InFieldPortalType& contourTreeWhenTransferredPortal,
-                            const InFieldPortalType& contourTreeHyperparentsPortal,
-                            const InFieldPortalType& contourTreeHyperarcsPortal,
-                            const InFieldPortalType& contourTreeHypernodesPortal,
-                            const InFieldPortalType& contourTreeSupernodesPortal,
-                            viskores::Id top,
-                            viskores::Id bottom) const
+                                const viskores::Id node,
+                                const InFieldPortalType& contourTreeWhenTransferredPortal,
+                                const InFieldPortalType& contourTreeHyperparentsPortal,
+                                const InFieldPortalType& contourTreeHyperarcsPortal,
+                                const InFieldPortalType& contourTreeHypernodesPortal,
+                                const InFieldPortalType& contourTreeSupernodesPortal,
+                                viskores::Id top,
+                                viskores::Id bottom) const
   {
     // per node
     // if the superparent is already set, it's a supernode, so skip it.
@@ -424,7 +424,8 @@ public:
 
   // Default Constructor
   VISKORES_EXEC_CONT
-  ComputeRegularStructure_LocateSuperarcsOnBoundary(viskores::Id numHypernodes, viskores::Id numSupernodes)
+  ComputeRegularStructure_LocateSuperarcsOnBoundary(viskores::Id numHypernodes,
+                                                    viskores::Id numSupernodes)
     : NumHypernodes(numHypernodes)
     , NumSupernodes(numSupernodes)
   {
@@ -432,16 +433,16 @@ public:
 
   template <typename InOutFieldPortalType, typename InFieldPortalType, typename MeshBoundaryType>
   VISKORES_EXEC void operator()(const InOutFieldPortalType& contourTreeSuperparentsPortal,
-                            const viskores::Id node,
-                            const InFieldPortalType& contourTreeWhenTransferredPortal,
-                            const InFieldPortalType& contourTreeHyperparentsPortal,
-                            const InFieldPortalType& contourTreeHyperarcsPortal,
-                            const InFieldPortalType& contourTreeHypernodesPortal,
-                            const InFieldPortalType& contourTreeSupernodesPortal,
-                            viskores::Id top,
-                            viskores::Id bottom,
-                            viskores::Id sortOrder,
-                            const MeshBoundaryType& meshBoundary) const
+                                const viskores::Id node,
+                                const InFieldPortalType& contourTreeWhenTransferredPortal,
+                                const InFieldPortalType& contourTreeHyperparentsPortal,
+                                const InFieldPortalType& contourTreeHyperarcsPortal,
+                                const InFieldPortalType& contourTreeHypernodesPortal,
+                                const InFieldPortalType& contourTreeSupernodesPortal,
+                                viskores::Id top,
+                                viskores::Id bottom,
+                                viskores::Id sortOrder,
+                                const MeshBoundaryType& meshBoundary) const
   {
     // per node
     // if the superparent is already set, it's a supernode, so skip it.

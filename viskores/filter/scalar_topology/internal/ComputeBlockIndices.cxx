@@ -120,9 +120,10 @@ namespace scalar_topology
 namespace internal
 {
 
-VISKORES_CONT viskoresdiy::DiscreteBounds ComputeBlockIndices(const viskores::cont::PartitionedDataSet& input,
-                                                      DiscreteBoundsDivisionVector& diyDivisions,
-                                                      std::vector<int>& diyLocalBlockGids)
+VISKORES_CONT viskoresdiy::DiscreteBounds ComputeBlockIndices(
+  const viskores::cont::PartitionedDataSet& input,
+  DiscreteBoundsDivisionVector& diyDivisions,
+  std::vector<int>& diyLocalBlockGids)
 {
   auto firstDS = input.GetPartition(0);
   viskores::Id3 dummy1, firstGlobalPointDimensions, dummy2;
@@ -197,8 +198,9 @@ VISKORES_CONT viskoresdiy::DiscreteBounds ComputeBlockIndices(const viskores::co
   diyLocalBlockGids.clear();
   for (viskores::Id ds_no = 0; ds_no < input.GetNumberOfPartitions(); ++ds_no)
   {
-    diyLocalBlockGids.push_back(viskoresdiy::RegularDecomposer<viskoresdiy::DiscreteBounds>::coords_to_gid(
-      diyBlockCoords[ds_no], diyDivisions));
+    diyLocalBlockGids.push_back(
+      viskoresdiy::RegularDecomposer<viskoresdiy::DiscreteBounds>::coords_to_gid(
+        diyBlockCoords[ds_no], diyDivisions));
   }
 
   return diyBounds;
@@ -242,8 +244,9 @@ VISKORES_CONT viskoresdiy::DiscreteBounds ComputeBlockIndices(
       diyBlockCoords[d] = static_cast<int>(currBlockIndices[d]);
     }
 
-    diyLocalBlockGids.push_back(viskoresdiy::RegularDecomposer<viskoresdiy::DiscreteBounds>::coords_to_gid(
-      diyBlockCoords, diyDivisions));
+    diyLocalBlockGids.push_back(
+      viskoresdiy::RegularDecomposer<viskoresdiy::DiscreteBounds>::coords_to_gid(diyBlockCoords,
+                                                                                 diyDivisions));
   }
 
   return diyBounds;

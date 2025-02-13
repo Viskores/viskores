@@ -105,7 +105,10 @@ public:
     {
     }
 
-    VISKORES_EXEC void operator()(viskores::Id index) const { this->Array.Set(index, this->FillValue); }
+    VISKORES_EXEC void operator()(viskores::Id index) const
+    {
+      this->Array.Set(index, this->FillValue);
+    }
 
     VISKORES_EXEC void operator()(viskores::Id3 index) const
     {
@@ -260,7 +263,10 @@ public:
     {
     }
 
-    VISKORES_EXEC void operator()(viskores::Id index) const { this->Array.Set(index, OFFSET + index); }
+    VISKORES_EXEC void operator()(viskores::Id index) const
+    {
+      this->Array.Set(index, OFFSET + index);
+    }
 
     VISKORES_CONT void SetErrorMessageBuffer(const viskores::exec::internal::ErrorMessageBuffer&) {}
 
@@ -398,11 +404,13 @@ public:
     VISKORES_EXEC_CONT
     viskores::Vec<float, 2> operator()(const T& a, const T& b) const
     {
-      return viskores::make_Vec(viskores::Min(a.value(), b.value()), viskores::Max(a.value(), b.value()));
+      return viskores::make_Vec(viskores::Min(a.value(), b.value()),
+                                viskores::Max(a.value(), b.value()));
     }
 
     VISKORES_EXEC_CONT
-    viskores::Vec<float, 2> operator()(const viskores::Vec<float, 2>& a, const viskores::Vec<float, 2>& b) const
+    viskores::Vec<float, 2> operator()(const viskores::Vec<float, 2>& a,
+                                       const viskores::Vec<float, 2>& b) const
     {
       return viskores::make_Vec(viskores::Min(a[0], b[0]), viskores::Max(a[1], b[1]));
     }
@@ -431,13 +439,13 @@ private:
     constexpr viskores::cont::DeviceAdapterTagUndefined undefinedTag;
 
     VISKORES_TEST_ASSERT(deviceTag.GetValue() == deviceTag.GetValue(),
-                     "Device adapter Id does not equal itself.");
+                         "Device adapter Id does not equal itself.");
     VISKORES_TEST_ASSERT(deviceTag.GetValue() != undefinedTag.GetValue(),
-                     "Device adapter Id not distinguishable from others.");
+                         "Device adapter Id not distinguishable from others.");
 
     using Traits = viskores::cont::DeviceAdapterTraits<DeviceAdapterTag>;
     VISKORES_TEST_ASSERT(Traits::GetName() == Traits::GetName(),
-                     "Device adapter Name does not equal itself.");
+                         "Device adapter Name does not equal itself.");
   }
 
   static VISKORES_CONT void TestMemoryTransfer()
@@ -447,7 +455,8 @@ private:
 
     using T = viskores::Id;
     using PortalType = viskores::cont::internal::ArrayPortalFromIterators<T*>;
-    auto makePortal = [](const viskores::cont::internal::BufferInfo& buffer) {
+    auto makePortal = [](const viskores::cont::internal::BufferInfo& buffer)
+    {
       return PortalType(static_cast<T*>(buffer.GetPointer()),
                         static_cast<T*>(buffer.GetPointer()) +
                           static_cast<std::size_t>(buffer.GetSize()) / sizeof(T));
@@ -477,7 +486,8 @@ private:
     VISKORES_TEST_ASSERT(workingMemory.GetSize() == BUFFER_SIZE);
 
     // Copy data back to host.
-    viskores::cont::internal::BufferInfo hostBufferDest = memoryManager.CopyDeviceToHost(workingMemory);
+    viskores::cont::internal::BufferInfo hostBufferDest =
+      memoryManager.CopyDeviceToHost(workingMemory);
     VISKORES_TEST_ASSERT(hostBufferDest.GetSize() == BUFFER_SIZE);
     CheckPortal(makePortal(hostBufferDest));
 
@@ -529,9 +539,9 @@ private:
       bigArray.PrepareForOutput(bigSize, DeviceAdapterTag{}, token);
       // It does not seem reasonable to get here.  The previous call should fail.
       VISKORES_TEST_FAIL("A ridiculously sized allocation succeeded.  Either there "
-                     "was a failure that was not reported but should have been "
-                     "or the width of viskores::Id is not large enough to express all "
-                     "array sizes.");
+                         "was a failure that was not reported but should have been "
+                         "or the width of viskores::Id is not large enough to express all "
+                         "array sizes.");
     }
     catch (viskores::cont::ErrorBadAllocation&)
     {
@@ -595,7 +605,7 @@ private:
       {
         viskores::Id value = portal.Get(index);
         VISKORES_TEST_ASSERT(value == index + OFFSET,
-                         "Got bad value for single value scheduled kernel.");
+                             "Got bad value for single value scheduled kernel.");
       }
     } //release memory
 
@@ -692,7 +702,8 @@ private:
       for (viskores::Id index = 0; index < maxId; index++)
       {
         viskores::Id value = portal.Get(index);
-        VISKORES_TEST_ASSERT(value == index + OFFSET, "Got bad value for scheduled viskores::Id3 kernels.");
+        VISKORES_TEST_ASSERT(value == index + OFFSET,
+                             "Got bad value for scheduled viskores::Id3 kernels.");
       }
     } //release memory
 
@@ -802,13 +813,14 @@ private:
 
     Algorithm::CopyIf(array, stencil, result);
     VISKORES_TEST_ASSERT(result.GetNumberOfValues() == array.GetNumberOfValues() / 2,
-                     "result of CopyIf has an incorrect size");
+                         "result of CopyIf has an incorrect size");
 
     auto portal = result.ReadPortal();
     for (viskores::Id index = 0; index < result.GetNumberOfValues(); index++)
     {
       const viskores::Id value = portal.Get(index);
-      VISKORES_TEST_ASSERT(value == (OFFSET + (index * 2) + 1), "Incorrect value in CopyIf result.");
+      VISKORES_TEST_ASSERT(value == (OFFSET + (index * 2) + 1),
+                           "Incorrect value in CopyIf result.");
     }
 
     std::cout << "  CopyIf on fancy arrays." << std::endl;
@@ -818,13 +830,14 @@ private:
 
     Algorithm::CopyIf(arrayCast, stencil, resultCast);
     VISKORES_TEST_ASSERT(result.GetNumberOfValues() == array.GetNumberOfValues() / 2,
-                     "result of CopyIf has an incorrect size");
+                         "result of CopyIf has an incorrect size");
 
     portal = result.ReadPortal();
     for (viskores::Id index = 0; index < result.GetNumberOfValues(); index++)
     {
       const viskores::Id value = portal.Get(index);
-      VISKORES_TEST_ASSERT(value == (OFFSET + (index * 2) + 1), "Incorrect value in CopyIf result.");
+      VISKORES_TEST_ASSERT(value == (OFFSET + (index * 2) + 1),
+                           "Incorrect value in CopyIf result.");
     }
 
     std::cout << "  CopyIf on zero size arrays." << std::endl;
@@ -865,7 +878,7 @@ private:
     temp.ReadPortal();                // Forces copy back to control.
     temp.ReleaseResourcesExecution(); // Make sure not counting on execution.
     VISKORES_TEST_ASSERT(temp.GetNumberOfValues() == 50,
-                     "Unique did not resize array (or size did not copy to control).");
+                         "Unique did not resize array (or size did not copy to control).");
 
     auto portal = handle.ReadPortal();
     auto portal1 = handle1.ReadPortal();
@@ -901,7 +914,7 @@ private:
     Algorithm::UpperBounds(tempCast, FloatCastHandle(input), handle1);
 
     VISKORES_TEST_ASSERT(handle.GetNumberOfValues() == RANDOMDATA_SIZE,
-                     "LowerBounds returned incorrect size");
+                         "LowerBounds returned incorrect size");
 
     std::copy(viskores::cont::ArrayPortalToIteratorBegin(handle.ReadPortal()),
               viskores::cont::ArrayPortalToIteratorEnd(handle.ReadPortal()),
@@ -914,7 +927,7 @@ private:
     VISKORES_TEST_ASSERT(randomData[5] == 3, "Got bad value - LowerBounds");
 
     VISKORES_TEST_ASSERT(handle1.GetNumberOfValues() == RANDOMDATA_SIZE,
-                     "UppererBounds returned incorrect size");
+                         "UppererBounds returned incorrect size");
 
     std::copy(viskores::cont::ArrayPortalToIteratorBegin(handle1.ReadPortal()),
               viskores::cont::ArrayPortalToIteratorEnd(handle1.ReadPortal()),
@@ -1025,7 +1038,7 @@ private:
     {
       viskores::Pair<viskores::Id, viskores::Id> kv_sorted = portal.Get(i);
       VISKORES_TEST_ASSERT((OFFSET + (i / (ARRAY_SIZE / 50))) == kv_sorted.first,
-                       "ArrayZipHandle improperly sorted");
+                           "ArrayZipHandle improperly sorted");
     }
 
     std::cout << "-------------------------------------------------" << std::endl;
@@ -1033,8 +1046,8 @@ private:
 
     //verify that we can use ArrayHandlePermutation inplace
     viskores::cont::ArrayHandleIndex index(ARRAY_SIZE);
-    viskores::cont::ArrayHandlePermutation<viskores::cont::ArrayHandleIndex, IdArrayHandle> perm(index,
-                                                                                         sorted);
+    viskores::cont::ArrayHandlePermutation<viskores::cont::ArrayHandleIndex, IdArrayHandle> perm(
+      index, sorted);
 
     //verify we can use a custom operator sort with permutation handle
     Algorithm::Sort(perm, viskores::SortGreater());
@@ -1043,7 +1056,7 @@ private:
     {
       viskores::Id sorted_value = perm_portal.Get(i);
       VISKORES_TEST_ASSERT((OFFSET + ((ARRAY_SIZE - (i + 1)) / (ARRAY_SIZE / 50))) == sorted_value,
-                       "ArrayZipPermutation improperly sorted");
+                           "ArrayZipPermutation improperly sorted");
     }
 
     //verify we can use the default sort with permutation handle
@@ -1053,7 +1066,7 @@ private:
     {
       viskores::Id sorted_value = perm_portal.Get(i);
       VISKORES_TEST_ASSERT((OFFSET + (i / (ARRAY_SIZE / 50))) == sorted_value,
-                       "ArrayZipPermutation improperly sorted");
+                           "ArrayZipPermutation improperly sorted");
     }
   }
 
@@ -1091,7 +1104,7 @@ private:
 
       VISKORES_TEST_ASSERT((sorted_key == (i + 1)), "Got bad SortByKeys key");
       VISKORES_TEST_ASSERT(test_equal(sorted_value, TestValue(ARRAY_SIZE - 1 - i, Vec3())),
-                       "Got bad SortByKeys value");
+                           "Got bad SortByKeys value");
     }
 
     // this will return everything back to what it was before sorting
@@ -1106,7 +1119,8 @@ private:
       viskores::Id sorted_key = keys_portal.Get(i);
 
       VISKORES_TEST_ASSERT((sorted_key == (ARRAY_SIZE - i)), "Got bad SortByKeys key");
-      VISKORES_TEST_ASSERT(test_equal(sorted_value, TestValue(i, Vec3())), "Got bad SortByKeys value");
+      VISKORES_TEST_ASSERT(test_equal(sorted_value, TestValue(i, Vec3())),
+                           "Got bad SortByKeys value");
     }
 
     //this is here to verify we can sort by viskores::Vec
@@ -1121,7 +1135,8 @@ private:
       viskores::Id sorted_key = keys_portal.Get(i);
 
       VISKORES_TEST_ASSERT((sorted_key == (ARRAY_SIZE - i)), "Got bad SortByKeys key");
-      VISKORES_TEST_ASSERT(test_equal(sorted_value, TestValue(i, Vec3())), "Got bad SortByKeys value");
+      VISKORES_TEST_ASSERT(test_equal(sorted_value, TestValue(i, Vec3())),
+                           "Got bad SortByKeys value");
     }
   }
 
@@ -1152,7 +1167,7 @@ private:
     temp.ReadPortal();                // Forces copy back to control.
     temp.ReleaseResourcesExecution(); // Make sure not counting on execution.
     VISKORES_TEST_ASSERT(temp.GetNumberOfValues() == 50,
-                     "Unique did not resize array (or size did not copy to control).");
+                         "Unique did not resize array (or size did not copy to control).");
     auto portal = handle.ReadPortal();
     for (viskores::Id i = 0; i < ARRAY_SIZE; ++i)
     {
@@ -1188,7 +1203,7 @@ private:
     temp.ReadPortal();                // Forces copy back to control.
     temp.ReleaseResourcesExecution(); // Make sure not counting on execution.
     VISKORES_TEST_ASSERT(temp.GetNumberOfValues() == 50,
-                     "Unique did not resize array (or size did not copy to control).");
+                         "Unique did not resize array (or size did not copy to control).");
 
     auto portal = handle.ReadPortal();
     for (viskores::Id i = 0; i < ARRAY_SIZE; ++i)
@@ -1220,7 +1235,7 @@ private:
     input.SyncControlArray();          // Forces copy back to control.
     input.ReleaseResourcesExecution(); // Make sure not counting on execution.
     VISKORES_TEST_ASSERT(input.GetNumberOfValues() == 1,
-                     "Unique did not resize array (or size did not copy to control).");
+                         "Unique did not resize array (or size did not copy to control).");
 
     viskores::Id value = input.ReadPortal().Get(0);
     VISKORES_TEST_ASSERT(value == OFFSET, "Got bad unique value");
@@ -1255,12 +1270,12 @@ private:
     viskores::Id reduce_sum_no_values = Algorithm::Reduce(array, 0);
     VISKORES_TEST_ASSERT(reduce_sum == OFFSET * ARRAY_SIZE, "Got bad sum from Reduce");
     VISKORES_TEST_ASSERT(reduce_sum_with_intial_value == reduce_sum + ARRAY_SIZE,
-                     "Got bad sum from Reduce with initial value");
+                         "Got bad sum from Reduce with initial value");
     VISKORES_TEST_ASSERT(reduce_sum_one_value == OFFSET, "Got bad single sum from Reduce");
     VISKORES_TEST_ASSERT(reduce_sum_no_values == 0, "Got bad empty sum from Reduce");
 
     VISKORES_TEST_ASSERT(reduce_sum == inclusive_sum,
-                     "Got different sums from Reduce and ScanInclusive");
+                         "Got different sums from Reduce and ScanInclusive");
   }
 
   static VISKORES_CONT void TestReduceWithComparisonObject()
@@ -1269,7 +1284,8 @@ private:
     std::cout << "Testing Reduce with comparison object " << std::endl;
 
 
-    std::cout << "  Reduce viskores::Id array with viskores::MinAndMax to compute range." << std::endl;
+    std::cout << "  Reduce viskores::Id array with viskores::MinAndMax to compute range."
+              << std::endl;
     //construct the index array. Assign an abnormally large value
     //to the middle of the array, that should be what we see as our sum.
     std::vector<viskores::Id> testData(ARRAY_SIZE);
@@ -1282,7 +1298,8 @@ private:
     testData[ARRAY_SIZE / 2] = maxValue;
 
     IdArrayHandle input = viskores::cont::make_ArrayHandle(testData, viskores::CopyFlag::Off);
-    viskores::Id2 range = Algorithm::Reduce(input, viskores::Id2(0, 0), viskores::MinAndMax<viskores::Id>());
+    viskores::Id2 range =
+      Algorithm::Reduce(input, viskores::Id2(0, 0), viskores::MinAndMax<viskores::Id>());
 
     VISKORES_TEST_ASSERT(maxValue == range[1], "Got bad value from Reduce with comparison object");
     VISKORES_TEST_ASSERT(0 == range[0], "Got bad value from Reduce with comparison object");
@@ -1295,23 +1312,25 @@ private:
       Algorithm::Reduce(input, pairInit, CustomPairOp());
 
     VISKORES_TEST_ASSERT(maxValue == pairRange.first,
-                     "Got bad value from Reduce with pair comparison object");
+                         "Got bad value from Reduce with pair comparison object");
     VISKORES_TEST_ASSERT(0.0f == pairRange.second,
-                     "Got bad value from Reduce with pair comparison object");
+                         "Got bad value from Reduce with pair comparison object");
 
 
     std::cout << "  Reduce bool array with viskores::LogicalAnd to see if all values are true."
               << std::endl;
     //construct an array of bools and verify that they aren't all true
     auto barray =
-      viskores::cont::make_ArrayHandle({ true, true, true, true, true, true, false, true, true, true,
-                                     true, true, true, true, true, true, true,  true, true, true,
-                                     true, true, true, true, true, true, true,  true, true, true,
-                                     true, true, true, true, true, true, true,  true, true, true,
-                                     true, true, true, true, true, true, true,  true, true, true,
-                                     true, true, true, true, true, true, true,  true, true, true });
+      viskores::cont::make_ArrayHandle({ true, true, true, true, true, true, false, true, true,
+                                         true, true, true, true, true, true, true,  true, true,
+                                         true, true, true, true, true, true, true,  true, true,
+                                         true, true, true, true, true, true, true,  true, true,
+                                         true, true, true, true, true, true, true,  true, true,
+                                         true, true, true, true, true, true, true,  true, true,
+                                         true, true, true, true, true, true });
     bool all_true = Algorithm::Reduce(barray, true, viskores::LogicalAnd());
-    VISKORES_TEST_ASSERT(all_true == false, "reduction with viskores::LogicalAnd should return false");
+    VISKORES_TEST_ASSERT(all_true == false,
+                         "reduction with viskores::LogicalAnd should return false");
 
     std::cout << "  Reduce with custom value type and custom comparison operator." << std::endl;
     //test with a custom value type with the reduction value being a viskores::Vec<float,2>
@@ -1321,11 +1340,12 @@ private:
         13.1f, -2.1f, -11.0f, 13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -2.1f,   -1.0f,
         13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 13.1f,  -211.1f, -1.0f,
         13.1f, -2.1f, -1.0f,  13.1f, -2.1f, -1.0f, 13.1f,  -2.1f, -1.0f, 113.1f, -2.1f,   -1.0f });
-    viskores::Vec2f_32 frange =
-      Algorithm::Reduce(farray, viskores::Vec2f_32(0.0f, 0.0f), CustomMinAndMax<CustomTForReduce>());
+    viskores::Vec2f_32 frange = Algorithm::Reduce(
+      farray, viskores::Vec2f_32(0.0f, 0.0f), CustomMinAndMax<CustomTForReduce>());
     VISKORES_TEST_ASSERT(-211.1f == frange[0],
-                     "Got bad float value from Reduce with comparison object");
-    VISKORES_TEST_ASSERT(413.1f == frange[1], "Got bad float value from Reduce with comparison object");
+                         "Got bad float value from Reduce with comparison object");
+    VISKORES_TEST_ASSERT(413.1f == frange[1],
+                         "Got bad float value from Reduce with comparison object");
   }
 
   static VISKORES_CONT void TestReduceWithFancyArrays()
@@ -1356,7 +1376,7 @@ private:
 
       ResultType expectedResult(OFFSET * ARRAY_SIZE + ARRAY_SIZE, OFFSET * ARRAY_SIZE + ARRAY_SIZE);
       VISKORES_TEST_ASSERT((reduce_sum_with_intial_value == expectedResult),
-                       "Got bad sum from Reduce with initial value");
+                           "Got bad sum from Reduce with initial value");
     }
 
     std::cout << "-------------------------------------------" << std::endl;
@@ -1367,14 +1387,16 @@ private:
       using ValueType = viskores::Float32;
 
       IdArrayHandle indexHandle =
-        viskores::cont::make_ArrayHandle<viskores::Id>({ 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
-                                                 5, 5, 5, 1, 4, 9, 7, 7, 7, 8, 8, 8, 0, 1, 2 });
+        viskores::cont::make_ArrayHandle<viskores::Id>({ 0, 0, 0, 1, 1, 1, 2, 2, 2, 3,
+                                                         3, 3, 4, 4, 4, 5, 5, 5, 1, 4,
+                                                         9, 7, 7, 7, 8, 8, 8, 0, 1, 2 });
       viskores::cont::ArrayHandle<ValueType> valueHandle = viskores::cont::make_ArrayHandle(
         { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, -2.0f });
 
       const ValueType expectedSum = 125;
 
-      viskores::cont::ArrayHandlePermutation<IdArrayHandle, viskores::cont::ArrayHandle<ValueType>> perm;
+      viskores::cont::ArrayHandlePermutation<IdArrayHandle, viskores::cont::ArrayHandle<ValueType>>
+        perm;
       perm = viskores::cont::make_ArrayHandlePermutation(indexHandle, valueHandle);
 
       const ValueType sum = Algorithm::Reduce(perm, ValueType(0.0f));
@@ -1395,8 +1417,8 @@ private:
       viskores::IdComponent expectedKeys[expectedLength] = { 0, 1, 4, 0, 2, -1 };
       viskores::Id expectedValues[expectedLength] = { 10, 2, 0, 3, 10, -42 };
 
-      IdComponentArrayHandle keys =
-        viskores::cont::make_ArrayHandle<viskores::IdComponent>({ 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 });
+      IdComponentArrayHandle keys = viskores::cont::make_ArrayHandle<viskores::IdComponent>(
+        { 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 });
       IdArrayHandle values =
         viskores::cont::make_ArrayHandle<viskores::Id>({ 13, -2, -1, 1, 1, 0, 3, 1, 2, 3, 4, -42 });
 
@@ -1405,10 +1427,10 @@ private:
       Algorithm::ReduceByKey(keys, values, keysOut, valuesOut, viskores::Add());
 
       VISKORES_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
-                       "Got wrong number of output keys");
+                           "Got wrong number of output keys");
 
       VISKORES_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                       "Got wrong number of output values");
+                           "Got wrong number of output values");
 
       auto keys_portal = keysOut.ReadPortal();
       auto values_portal = valuesOut.ReadPortal();
@@ -1427,8 +1449,8 @@ private:
       IdArrayHandle keys = viskores::cont::make_ArrayHandle<viskores::Id>({ 0, 0, 0 });
       viskores::cont::ArrayHandle<viskores::Vec3f_64, StorageTag> values =
         viskores::cont::make_ArrayHandle({ viskores::Vec3f_64(13.1, 13.3, 13.5),
-                                       viskores::Vec3f_64(-2.1, -2.3, -2.5),
-                                       viskores::Vec3f_64(-1.0, -1.0, 1.0) });
+                                           viskores::Vec3f_64(-2.1, -2.3, -2.5),
+                                           viskores::Vec3f_64(-1.0, -1.0, 1.0) });
 
       const viskores::Id expectedLength = 1;
 
@@ -1442,10 +1464,10 @@ private:
       Algorithm::ReduceByKey(keys, values, keysOut, valuesOut, viskores::Multiply());
 
       VISKORES_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
-                       "Got wrong number of output keys");
+                           "Got wrong number of output keys");
 
       VISKORES_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                       "Got wrong number of output values");
+                           "Got wrong number of output values");
 
       auto keys_portal = keysOut.ReadPortal();
       auto values_portal = valuesOut.ReadPortal();
@@ -1464,8 +1486,8 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce By Key with Fancy Arrays" << std::endl;
 
-    IdComponentArrayHandle keys =
-      viskores::cont::make_ArrayHandle<viskores::IdComponent>({ 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 });
+    IdComponentArrayHandle keys = viskores::cont::make_ArrayHandle<viskores::IdComponent>(
+      { 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 });
     IdArrayHandle values =
       viskores::cont::make_ArrayHandle<viskores::Id>({ 13, -2, -1, 1, 1, 0, 3, 1, 2, 3, 4, -42 });
     FloatCastHandle castValues(values);
@@ -1480,10 +1502,10 @@ private:
     Algorithm::ReduceByKey(keys, castValues, keysOut, castValuesOut, viskores::Add());
 
     VISKORES_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output keys");
+                         "Got wrong number of output keys");
 
     VISKORES_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     auto keys_portal = keysOut.ReadPortal();
     auto values_portal = valuesOut.ReadPortal();
     for (viskores::Id i = 0; i < expectedLength; ++i)
@@ -1528,12 +1550,13 @@ private:
     Algorithm::ScanInclusiveByKey(keys, values, valuesOut, viskores::Add());
 
     VISKORES_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     auto values_portal = valuesOut.ReadPortal();
     for (viskores::Id i = 0; i < expectedLength; i++)
     {
       const viskores::Id v = values_portal.Get(i);
-      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v,
+                           "Incorrect scanned value");
     }
   }
   static VISKORES_CONT void TestScanInclusiveByKeyLarge()
@@ -1569,12 +1592,13 @@ private:
     Algorithm::ScanInclusiveByKey(keys, values, valuesOut, viskores::Add());
 
     VISKORES_TEST_ASSERT(valuesOut.GetNumberOfValues() == ARRAY_SIZE,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     auto values_portal = valuesOut.ReadPortal();
     for (auto i = 0; i < ARRAY_SIZE; i++)
     {
       const viskores::Id v = values_portal.Get(i);
-      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v,
+                           "Incorrect scanned value");
     }
   }
   static VISKORES_CONT void TestScanInclusiveByKey()
@@ -1584,7 +1608,8 @@ private:
 
     IdComponentArrayHandle keys =
       viskores::cont::make_ArrayHandle<viskores::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
-    IdArrayHandle values = viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+    IdArrayHandle values =
+      viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 
     const viskores::Id expectedLength = 10;
     viskores::Id expectedValues[expectedLength] = { 1, 2, 3, 1, 2, 1, 1, 2, 3, 4 };
@@ -1593,12 +1618,13 @@ private:
 
     Algorithm::ScanInclusiveByKey(keys, values, valuesOut);
     VISKORES_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     auto valuesPortal = valuesOut.ReadPortal();
     for (auto i = 0; i < expectedLength; i++)
     {
       const viskores::Id v = valuesPortal.Get(i);
-      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v,
+                           "Incorrect scanned value");
     }
   }
   static VISKORES_CONT void TestScanInclusiveByKeyInPlace()
@@ -1609,19 +1635,21 @@ private:
 
     IdComponentArrayHandle keys =
       viskores::cont::make_ArrayHandle<viskores::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
-    IdArrayHandle values = viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+    IdArrayHandle values =
+      viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 
     const viskores::Id expectedLength = 10;
     viskores::Id expectedValues[expectedLength] = { 1, 2, 3, 1, 2, 1, 1, 2, 3, 4 };
 
     Algorithm::ScanInclusiveByKey(keys, values, values);
     VISKORES_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     auto valuesPortal = values.ReadPortal();
     for (auto i = 0; i < expectedLength; i++)
     {
       const viskores::Id v = valuesPortal.Get(i);
-      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v,
+                           "Incorrect scanned value");
     }
   }
   static VISKORES_CONT void TestScanInclusiveByKeyInPlaceWithFancyArray()
@@ -1632,7 +1660,8 @@ private:
 
     IdComponentArrayHandle keys =
       viskores::cont::make_ArrayHandle<viskores::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
-    IdArrayHandle values = viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+    IdArrayHandle values =
+      viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
     FloatCastHandle castValues(values);
 
     const viskores::Id expectedLength = 10;
@@ -1640,12 +1669,13 @@ private:
 
     Algorithm::ScanInclusiveByKey(keys, castValues, castValues);
     VISKORES_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     auto valuesPortal = values.ReadPortal();
     for (auto i = 0; i < expectedLength; i++)
     {
       const viskores::Id v = valuesPortal.Get(i);
-      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v,
+                           "Incorrect scanned value");
     }
   }
 
@@ -1666,7 +1696,7 @@ private:
     Algorithm::ScanExclusiveByKey(keys, values, valuesOut, init, viskores::Add());
 
     VISKORES_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     const viskores::Id v = valuesOut.ReadPortal().Get(0);
     VISKORES_TEST_ASSERT(init == v, "Incorrect scanned value");
   }
@@ -1689,7 +1719,7 @@ private:
     Algorithm::ScanExclusiveByKey(keys, values, valuesOut, init, viskores::Add());
 
     VISKORES_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     auto valuesPortal = valuesOut.ReadPortal();
     for (auto i = 0; i < expectedLength; i++)
     {
@@ -1731,12 +1761,13 @@ private:
     Algorithm::ScanExclusiveByKey(keys, values, valuesOut, init, viskores::Add());
 
     VISKORES_TEST_ASSERT(valuesOut.GetNumberOfValues() == ARRAY_SIZE,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     auto valuesPortal = valuesOut.ReadPortal();
     for (viskores::Id i = 0; i < ARRAY_SIZE; i++)
     {
       const viskores::Id v = valuesPortal.Get(i);
-      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v,
+                           "Incorrect scanned value");
     }
   }
 
@@ -1749,7 +1780,8 @@ private:
 
     IdComponentArrayHandle keys =
       viskores::cont::make_ArrayHandle<viskores::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
-    IdArrayHandle values = viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+    IdArrayHandle values =
+      viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 
     const viskores::Id expectedLength = 10;
     viskores::Id expectedValues[expectedLength] = { 5, 6, 7, 5, 6, 5, 5, 6, 7, 8 };
@@ -1759,12 +1791,13 @@ private:
     Algorithm::ScanExclusiveByKey(keys, values, valuesOut, init, viskores::Add());
 
     VISKORES_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     auto valuesPortal = valuesOut.ReadPortal();
     for (viskores::Id i = 0; i < expectedLength; i++)
     {
       const viskores::Id v = valuesPortal.Get(i);
-      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v,
+                           "Incorrect scanned value");
     }
   }
   static VISKORES_CONT void TestScanExclusiveByKeyInPlace()
@@ -1777,19 +1810,21 @@ private:
 
     IdComponentArrayHandle keys =
       viskores::cont::make_ArrayHandle<viskores::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
-    IdArrayHandle values = viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+    IdArrayHandle values =
+      viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
 
     const viskores::Id expectedLength = 10;
     viskores::Id expectedValues[expectedLength] = { 5, 6, 7, 5, 6, 5, 5, 6, 7, 8 };
 
     Algorithm::ScanExclusiveByKey(keys, values, values, init, viskores::Add());
     VISKORES_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     auto valuesPortal = values.ReadPortal();
     for (auto i = 0; i < expectedLength; i++)
     {
       const viskores::Id v = valuesPortal.Get(i);
-      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v,
+                           "Incorrect scanned value");
     }
   }
   static VISKORES_CONT void TestScanExclusiveByKeyInPlaceWithFancyArray()
@@ -1802,7 +1837,8 @@ private:
 
     IdComponentArrayHandle keys =
       viskores::cont::make_ArrayHandle<viskores::IdComponent>({ 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 });
-    IdArrayHandle values = viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+    IdArrayHandle values =
+      viskores::cont::make_ArrayHandle<viskores::Id>({ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
     FloatCastHandle castValues(values);
 
     const viskores::Id expectedLength = 10;
@@ -1810,12 +1846,13 @@ private:
 
     Algorithm::ScanExclusiveByKey(keys, castValues, castValues, init, viskores::Add());
     VISKORES_TEST_ASSERT(values.GetNumberOfValues() == expectedLength,
-                     "Got wrong number of output values");
+                         "Got wrong number of output values");
     auto valuesPortal = values.ReadPortal();
     for (auto i = 0; i < expectedLength; i++)
     {
       const viskores::Id v = valuesPortal.Get(i);
-      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
+      VISKORES_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v,
+                           "Incorrect scanned value");
     }
   }
 
@@ -1906,12 +1943,13 @@ private:
       {
         testValues[i] = TestValue(1, Vec3());
       }
-      Vec3ArrayHandle values = viskores::cont::make_ArrayHandle(testValues, viskores::CopyFlag::Off);
+      Vec3ArrayHandle values =
+        viskores::cont::make_ArrayHandle(testValues, viskores::CopyFlag::Off);
 
       Vec3 sum = Algorithm::ScanInclusive(values, values);
       std::cout << "Sum that was returned " << sum << std::endl;
       VISKORES_TEST_ASSERT(test_equal(sum, TestValue(1, Vec3()) * ARRAY_SIZE),
-                       "Got bad sum from Inclusive Scan");
+                           "Got bad sum from Inclusive Scan");
     }
   }
 
@@ -1937,7 +1975,7 @@ private:
     IdArrayHandle result;
     viskores::Id sum = Algorithm::ScanInclusive(array, result, viskores::Maximum());
     VISKORES_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE - 1),
-                     "Got bad sum from Inclusive Scan with comparison object");
+                         "Got bad sum from Inclusive Scan with comparison object");
 
     auto array_portal = array.ReadPortal();
     auto result_portal = result.ReadPortal();
@@ -1951,7 +1989,7 @@ private:
     //now try it inline
     sum = Algorithm::ScanInclusive(array, array, viskores::Maximum());
     VISKORES_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE - 1),
-                     "Got bad sum from Inclusive Scan with comparison object");
+                         "Got bad sum from Inclusive Scan with comparison object");
     array_portal = array.ReadPortal();
     for (viskores::Id i = 0; i < ARRAY_SIZE; ++i)
     {
@@ -2024,7 +2062,7 @@ private:
 
       VISKORES_TEST_ASSERT(product == 0.0f, "ScanExclusive product result not 0.0");
       VISKORES_TEST_ASSERT(array.ReadPortal().Get(0) == initialValue,
-                       "ScanExclusive result's first value != initialValue");
+                           "ScanExclusive result's first value != initialValue");
       auto portal = array.ReadPortal();
       for (std::size_t i = 1; i <= mid; ++i)
       {
@@ -2053,11 +2091,12 @@ private:
       {
         testValues[i] = TestValue(1, Vec3());
       }
-      Vec3ArrayHandle values = viskores::cont::make_ArrayHandle(testValues, viskores::CopyFlag::Off);
+      Vec3ArrayHandle values =
+        viskores::cont::make_ArrayHandle(testValues, viskores::CopyFlag::Off);
 
       Vec3 sum = Algorithm::ScanExclusive(values, values);
       VISKORES_TEST_ASSERT(test_equal(sum, (TestValue(1, Vec3()) * ARRAY_SIZE)),
-                       "Got bad sum from Exclusive Scan");
+                           "Got bad sum from Exclusive Scan");
     }
   }
 
@@ -2128,11 +2167,11 @@ private:
       Algorithm::ScanExtended(array, array, viskores::Multiply(), initialValue);
 
       VISKORES_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE + 1,
-                       "ScanExtended output size incorrect.");
+                           "ScanExtended output size incorrect.");
 
       auto portal = array.ReadPortal();
       VISKORES_TEST_ASSERT(portal.Get(0) == initialValue,
-                       "ScanExtended result's first value != initialValue");
+                           "ScanExtended result's first value != initialValue");
 
       for (std::size_t i = 1; i <= mid; ++i)
       {
@@ -2165,8 +2204,8 @@ private:
 
       Algorithm::ScanExtended(values, values);
       VISKORES_TEST_ASSERT(test_equal(viskores::cont::ArrayGetValue(ARRAY_SIZE, values),
-                                  (TestValue(1, Vec3()) * ARRAY_SIZE)),
-                       "Got bad sum from ScanExtended");
+                                      (TestValue(1, Vec3()) * ARRAY_SIZE)),
+                           "Got bad sum from ScanExtended");
     }
   }
 
@@ -2284,14 +2323,16 @@ private:
       testData[i] = TestCopy<T>::get(index);
     }
 
-    viskores::cont::ArrayHandle<T> input = viskores::cont::make_ArrayHandle(testData, viskores::CopyFlag::Off);
+    viskores::cont::ArrayHandle<T> input =
+      viskores::cont::make_ArrayHandle(testData, viskores::CopyFlag::Off);
 
     //make a deep copy of input and place it into temp
     {
       viskores::cont::ArrayHandle<T> temp;
       temp.Allocate(COPY_ARRAY_SIZE * 2);
       Algorithm::Copy(input, temp);
-      VISKORES_TEST_ASSERT(temp.GetNumberOfValues() == COPY_ARRAY_SIZE, "Copy Needs to Resize Array");
+      VISKORES_TEST_ASSERT(temp.GetNumberOfValues() == COPY_ARRAY_SIZE,
+                           "Copy Needs to Resize Array");
 
       const auto& portal = temp.ReadPortal();
 
@@ -2302,7 +2343,7 @@ private:
         viskores::Id randomIndex = distribution(generator);
         T value = portal.Get(randomIndex);
         VISKORES_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
-                         "Got bad value (Copy)");
+                             "Got bad value (Copy)");
       }
     }
 
@@ -2314,14 +2355,14 @@ private:
       tempOut.Allocate(COPY_ARRAY_SIZE);
       Algorithm::Copy(tempIn, tempOut);
       VISKORES_TEST_ASSERT(tempIn.GetNumberOfValues() == tempOut.GetNumberOfValues(),
-                       "Copy sized wrong");
+                           "Copy sized wrong");
 
       // Actually allocate input array to 0 in case that makes a difference.
       tempIn.Allocate(0);
       tempOut.Allocate(COPY_ARRAY_SIZE);
       Algorithm::Copy(tempIn, tempOut);
       VISKORES_TEST_ASSERT(tempIn.GetNumberOfValues() == tempOut.GetNumberOfValues(),
-                       "Copy sized wrong");
+                           "Copy sized wrong");
     }
 
     //CopySubRange tests:
@@ -2339,7 +2380,7 @@ private:
       bool result = Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
       VISKORES_TEST_ASSERT(result == true, "CopySubRange should succeed");
       VISKORES_TEST_ASSERT(output.GetNumberOfValues() == COPY_ARRAY_SIZE,
-                       "CopySubRange needs to allocate output");
+                           "CopySubRange needs to allocate output");
     }
 
     //3. Verify under allocated output gets resized properly
@@ -2349,7 +2390,7 @@ private:
       bool result = Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
       VISKORES_TEST_ASSERT(result == true, "CopySubRange should succeed");
       VISKORES_TEST_ASSERT(output.GetNumberOfValues() == COPY_ARRAY_SIZE,
-                       "CopySubRange needs to re-allocate output");
+                           "CopySubRange needs to re-allocate output");
     }
 
     //4. Verify invalid input length gets shortened
@@ -2358,7 +2399,7 @@ private:
       bool result = Algorithm::CopySubRange(input, 100, COPY_ARRAY_SIZE, output);
       VISKORES_TEST_ASSERT(result == true, "CopySubRange needs to shorten input range");
       VISKORES_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE - 100),
-                       "CopySubRange needs to shorten input range");
+                           "CopySubRange needs to shorten input range");
 
       std::uniform_int_distribution<viskores::Id> distribution(0, COPY_ARRAY_SIZE - 100 - 1);
       viskores::Id numberOfSamples = (COPY_ARRAY_SIZE - 100) / 100;
@@ -2368,7 +2409,7 @@ private:
         viskores::Id randomIndex = distribution(generator);
         T value = outputPortal.Get(randomIndex);
         VISKORES_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex) + 100],
-                         "Got bad value (CopySubRange 2)");
+                             "Got bad value (CopySubRange 2)");
       }
     }
 
@@ -2379,7 +2420,7 @@ private:
       Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
       Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output, COPY_ARRAY_SIZE);
       VISKORES_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE * 2),
-                       "CopySubRange needs to not resize array");
+                           "CopySubRange needs to not resize array");
 
       std::uniform_int_distribution<viskores::Id> distribution(0, COPY_ARRAY_SIZE - 1);
       viskores::Id numberOfSamples = COPY_ARRAY_SIZE / 50;
@@ -2389,10 +2430,10 @@ private:
         viskores::Id randomIndex = distribution(generator);
         T value = portal.Get(randomIndex);
         VISKORES_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
-                         "Got bad value (CopySubRange 5)");
+                             "Got bad value (CopySubRange 5)");
         value = portal.Get(COPY_ARRAY_SIZE + randomIndex);
         VISKORES_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
-                         "Got bad value (CopySubRange 5)");
+                             "Got bad value (CopySubRange 5)");
       }
     }
 
@@ -2404,7 +2445,7 @@ private:
       Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
       Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output, COPY_ARRAY_SIZE);
       VISKORES_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE * 2),
-                       "CopySubRange needs too resize Array");
+                           "CopySubRange needs too resize Array");
       std::uniform_int_distribution<viskores::Id> distribution(0, COPY_ARRAY_SIZE - 1);
       viskores::Id numberOfSamples = COPY_ARRAY_SIZE / 50;
       auto portal = output.ReadPortal();
@@ -2413,10 +2454,10 @@ private:
         viskores::Id randomIndex = distribution(generator);
         T value = portal.Get(randomIndex);
         VISKORES_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
-                         "Got bad value (CopySubRange 6)");
+                             "Got bad value (CopySubRange 6)");
         value = portal.Get(COPY_ARRAY_SIZE + randomIndex);
         VISKORES_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
-                         "Got bad value (CopySubRange 6)");
+                             "Got bad value (CopySubRange 6)");
       }
     }
 
@@ -2494,7 +2535,8 @@ private:
       testData[i] = static_cast<viskores::Id>(OFFSET + (i % 50));
     }
 
-    IdArrayHandle input = viskores::cont::make_ArrayHandle<viskores::Id>(testData, viskores::CopyFlag::Off);
+    IdArrayHandle input =
+      viskores::cont::make_ArrayHandle<viskores::Id>(testData, viskores::CopyFlag::Off);
 
     //make a deep copy of input and place it into temp
     viskores::cont::ArrayHandle<viskores::Float64> temp;
@@ -2589,12 +2631,14 @@ private:
     using WordType = WordTypeDefault;
 
     // Test that everything works correctly with a partial word at the end.
-    static constexpr viskores::Id BitsPerWord = static_cast<viskores::Id>(sizeof(WordType) * CHAR_BIT);
+    static constexpr viskores::Id BitsPerWord =
+      static_cast<viskores::Id>(sizeof(WordType) * CHAR_BIT);
     // +5 to get a partial word:
     static constexpr viskores::Id NumBits = 1024 * BitsPerWord + 5;
     static constexpr viskores::Id NumWords = (NumBits + BitsPerWord - 1) / BitsPerWord;
 
-    auto testIndexArray = [](const BitField& bits) {
+    auto testIndexArray = [](const BitField& bits)
+    {
       const viskores::Id numBits = bits.GetNumberOfBits();
       IndexArray indices;
       Algorithm::BitFieldToUnorderedSet(bits, indices);
@@ -2624,10 +2668,12 @@ private:
         }
       }
 
-      VISKORES_TEST_ASSERT(curIndex == indices.GetNumberOfValues(), "Index array has extra values.");
+      VISKORES_TEST_ASSERT(curIndex == indices.GetNumberOfValues(),
+                           "Index array has extra values.");
     };
 
-    auto testRepeatedMask = [&](WordType mask) {
+    auto testRepeatedMask = [&](WordType mask)
+    {
       std::cout << "Testing BitFieldToUnorderedSet with repeated 32-bit word 0x" << std::hex << mask
                 << std::dec << std::endl;
 
@@ -2644,7 +2690,8 @@ private:
       testIndexArray(bits);
     };
 
-    auto testRandomMask = [&](WordType seed) {
+    auto testRandomMask = [&](WordType seed)
+    {
       std::cout << "Testing BitFieldToUnorderedSet with random sequence seeded with 0x" << std::hex
                 << seed << std::dec << std::endl;
 
@@ -2693,13 +2740,15 @@ private:
     using WordType = WordTypeDefault;
 
     // Test that everything works correctly with a partial word at the end.
-    static constexpr viskores::Id BitsPerWord = static_cast<viskores::Id>(sizeof(WordType) * CHAR_BIT);
+    static constexpr viskores::Id BitsPerWord =
+      static_cast<viskores::Id>(sizeof(WordType) * CHAR_BIT);
     // +5 to get a partial word:
     static constexpr viskores::Id NumFullWords = 1024;
     static constexpr viskores::Id NumBits = NumFullWords * BitsPerWord + 5;
     static constexpr viskores::Id NumWords = (NumBits + BitsPerWord - 1) / BitsPerWord;
 
-    auto verifyPopCount = [](const BitField& bits) {
+    auto verifyPopCount = [](const BitField& bits)
+    {
       viskores::Id refPopCount = 0;
       const viskores::Id numBits = bits.GetNumberOfBits();
       auto portal = bits.ReadPortal();
@@ -2717,7 +2766,8 @@ private:
         refPopCount == popCount, "CountSetBits returned ", popCount, ", expected ", refPopCount);
     };
 
-    auto testRepeatedMask = [&](WordType mask) {
+    auto testRepeatedMask = [&](WordType mask)
+    {
       std::cout << "Testing CountSetBits with repeated word 0x" << std::hex << mask << std::dec
                 << std::endl;
 
@@ -2734,7 +2784,8 @@ private:
       verifyPopCount(bits);
     };
 
-    auto testRandomMask = [&](WordType seed) {
+    auto testRandomMask = [&](WordType seed)
+    {
       std::cout << "Testing CountSetBits with random sequence seeded with 0x" << std::hex << seed
                 << std::dec << std::endl;
 
@@ -2785,7 +2836,8 @@ private:
               << viskores::UInt64{ mask } << std::dec << std::endl;
 
     // Test that everything works correctly with a partial word at the end.
-    static constexpr viskores::Id BitsPerWord = static_cast<viskores::Id>(sizeof(WordType) * CHAR_BIT);
+    static constexpr viskores::Id BitsPerWord =
+      static_cast<viskores::Id>(sizeof(WordType) * CHAR_BIT);
     // +5 to get a partial word:
     static constexpr viskores::Id NumFullWords = 1024;
     static constexpr viskores::Id NumBits = NumFullWords * BitsPerWord + 5;
@@ -2804,16 +2856,16 @@ private:
       for (viskores::Id wordIdx = 0; wordIdx < NumWords; ++wordIdx)
       {
         VISKORES_TEST_ASSERT(portal.GetWord<WordType>(wordIdx) == mask,
-                         "Incorrect word in result BitField; expected 0x",
-                         std::hex,
-                         viskores::UInt64{ mask },
-                         ", got 0x",
-                         viskores::UInt64{ portal.GetWord<WordType>(wordIdx) },
-                         std::dec,
-                         " for word ",
-                         wordIdx,
-                         "/",
-                         NumWords);
+                             "Incorrect word in result BitField; expected 0x",
+                             std::hex,
+                             viskores::UInt64{ mask },
+                             ", got 0x",
+                             viskores::UInt64{ portal.GetWord<WordType>(wordIdx) },
+                             std::dec,
+                             " for word ",
+                             wordIdx,
+                             "/",
+                             NumWords);
       }
     }
 
@@ -2832,16 +2884,16 @@ private:
       for (viskores::Id wordIdx = 0; wordIdx < NumWords; ++wordIdx)
       {
         VISKORES_TEST_ASSERT(portal.GetWord<WordType>(wordIdx) == invWord,
-                         "Incorrect word in result BitField; expected 0x",
-                         std::hex,
-                         viskores::UInt64{ invWord },
-                         ", got 0x",
-                         viskores::UInt64{ portal.GetWord<WordType>(wordIdx) },
-                         std::dec,
-                         " for word ",
-                         wordIdx,
-                         "/",
-                         NumWords);
+                             "Incorrect word in result BitField; expected 0x",
+                             std::hex,
+                             viskores::UInt64{ invWord },
+                             ", got 0x",
+                             viskores::UInt64{ portal.GetWord<WordType>(wordIdx) },
+                             std::dec,
+                             " for word ",
+                             wordIdx,
+                             "/",
+                             NumWords);
       }
     }
   }

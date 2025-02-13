@@ -65,7 +65,7 @@ namespace internal
 namespace
 { // anonymous namespace to restrict defition to this translation unit
 viskores::cont::ArrayHandleGroupVecVariable<viskores::cont::ArrayHandle<viskores::Id>,
-                                        viskores::cont::ArrayHandle<viskores::Id>>
+                                            viskores::cont::ArrayHandle<viskores::Id>>
 CreateFirstsupernodePerIterationArrayHandle(
   const viskores::cont::DataSet& hierarchicalContourTreeDataSet)
 {
@@ -79,7 +79,7 @@ CreateFirstsupernodePerIterationArrayHandle(
     hierarchicalContourTreeDataSet.GetField("FirstSupernodePerIterationOffsets").GetData(),
     FirstSupernodePerIterationOffsets);
   return viskores::cont::make_ArrayHandleGroupVecVariable(FirstSupernodePerIterationComponents,
-                                                      FirstSupernodePerIterationOffsets);
+                                                          FirstSupernodePerIterationOffsets);
 }
 } // anonymous namespace to restrict defition to this translation unit
 

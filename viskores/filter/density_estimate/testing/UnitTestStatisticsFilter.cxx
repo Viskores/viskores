@@ -32,8 +32,8 @@ void TestStatisticsPartial()
   std::cout << "Test statistics for single viskores::cont::DataSet" << std::endl;
   viskores::cont::DataSet dataSet;
   constexpr viskores::FloatDefault N = 1000;
-  auto scalarArrayCounting =
-    viskores::cont::ArrayHandleCounting<viskores::FloatDefault>(0.0f, 1.0f, static_cast<viskores::Id>(N));
+  auto scalarArrayCounting = viskores::cont::ArrayHandleCounting<viskores::FloatDefault>(
+    0.0f, 1.0f, static_cast<viskores::Id>(N));
   viskores::cont::ArrayHandle<viskores::FloatDefault> scalarArray;
   viskores::cont::ArrayCopy(scalarArrayCounting, scalarArray);
   dataSet.AddPointField("scalarField", scalarArray);
@@ -75,7 +75,8 @@ void TestStatisticsPartial()
   viskores::FloatDefault PopulationStddev = getStatsFromDataSet(resultDataSet, "PopulationStddev");
   VISKORES_TEST_ASSERT(test_equal(PopulationStddev, 288.675));
 
-  viskores::FloatDefault PopulationVariance = getStatsFromDataSet(resultDataSet, "PopulationVariance");
+  viskores::FloatDefault PopulationVariance =
+    getStatsFromDataSet(resultDataSet, "PopulationVariance");
   VISKORES_TEST_ASSERT(test_equal(PopulationVariance, 83333.3));
 }
 
@@ -103,7 +104,8 @@ void TestStatisticsPartition()
 
   //adding data sets for testing edge cases
   viskores::cont::DataSet dataSetEmptyField;
-  dataSetEmptyField.AddPointField("scalarField", viskores::cont::ArrayHandle<viskores::FloatDefault>());
+  dataSetEmptyField.AddPointField("scalarField",
+                                  viskores::cont::ArrayHandle<viskores::FloatDefault>());
   dataSetList.push_back(dataSetEmptyField);
 
   viskores::cont::PartitionedDataSet pds(dataSetList);
@@ -160,7 +162,8 @@ void TestStatisticsPartition()
     viskores::cont::DataSet inStats = statisticsFilter.Execute(inPartition);
     viskores::cont::DataSet outStats = outputPDS.GetPartition(partitionId);
 
-    auto checkStats = [&](const std::string& statName) {
+    auto checkStats = [&](const std::string& statName)
+    {
       viskores::FloatDefault inStat = getStatsFromDataSet(inStats, statName);
       viskores::FloatDefault outStat = getStatsFromDataSet(outStats, statName);
       VISKORES_TEST_ASSERT(test_equal(inStat, outStat));

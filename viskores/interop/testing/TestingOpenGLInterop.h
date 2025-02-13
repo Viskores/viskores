@@ -42,7 +42,8 @@ private:
   //fill the array with a collection of values and return it wrapped in
   //an viskores array handle
   template <typename T>
-  static viskores::cont::ArrayHandle<T, StorageTag> FillArray(std::vector<T>& data, std::size_t length)
+  static viskores::cont::ArrayHandle<T, StorageTag> FillArray(std::vector<T>& data,
+                                                              std::size_t length)
   {
     using iterator = typename std::vector<T>::iterator;
     //make sure the data array is exactly the right length
@@ -74,12 +75,13 @@ private:
     {
       std::cout << error.GetMessage() << std::endl;
       VISKORES_TEST_ASSERT(true == false,
-                       "Got an unexpected Out Of Memory error transferring to openGL");
+                           "Got an unexpected Out Of Memory error transferring to openGL");
     }
     catch (viskores::cont::ErrorBadValue& bvError)
     {
       std::cout << bvError.GetMessage() << std::endl;
-      VISKORES_TEST_ASSERT(true == false, "Got an unexpected Bad Value error transferring to openGL");
+      VISKORES_TEST_ASSERT(true == false,
+                           "Got an unexpected Bad Value error transferring to openGL");
     }
 
     // Test device adapter deduction:
@@ -92,12 +94,13 @@ private:
     {
       std::cout << error.GetMessage() << std::endl;
       VISKORES_TEST_ASSERT(true == false,
-                       "Got an unexpected Out Of Memory error transferring to openGL");
+                           "Got an unexpected Out Of Memory error transferring to openGL");
     }
     catch (viskores::cont::ErrorBadValue& bvError)
     {
       std::cout << bvError.GetMessage() << std::endl;
-      VISKORES_TEST_ASSERT(true == false, "Got an unexpected Bad Value error transferring to openGL");
+      VISKORES_TEST_ASSERT(true == false,
+                           "Got an unexpected Bad Value error transferring to openGL");
     }
   }
 
@@ -113,12 +116,13 @@ private:
     {
       std::cout << error.GetMessage() << std::endl;
       VISKORES_TEST_ASSERT(true == false,
-                       "Got an unexpected Out Of Memory error transferring to openGL");
+                           "Got an unexpected Out Of Memory error transferring to openGL");
     }
     catch (viskores::cont::ErrorBadValue& bvError)
     {
       std::cout << bvError.GetMessage() << std::endl;
-      VISKORES_TEST_ASSERT(true == false, "Got an unexpected Bad Value error transferring to openGL");
+      VISKORES_TEST_ASSERT(true == false,
+                           "Got an unexpected Bad Value error transferring to openGL");
     }
 
     // Test device adapter deduction
@@ -131,12 +135,13 @@ private:
     {
       std::cout << error.GetMessage() << std::endl;
       VISKORES_TEST_ASSERT(true == false,
-                       "Got an unexpected Out Of Memory error transferring to openGL");
+                           "Got an unexpected Out Of Memory error transferring to openGL");
     }
     catch (viskores::cont::ErrorBadValue& bvError)
     {
       std::cout << bvError.GetMessage() << std::endl;
-      VISKORES_TEST_ASSERT(true == false, "Got an unexpected Bad Value error transferring to openGL");
+      VISKORES_TEST_ASSERT(true == false,
+                           "Got an unexpected Bad Value error transferring to openGL");
     }
   }
 
@@ -194,7 +199,7 @@ private:
       for (std::size_t i = 0; i < Size; ++i)
       {
         VISKORES_TEST_ASSERT(test_equal(*(expectedValues + i), returnedValues[i]),
-                         "Array Handle failed to transfer properly");
+                             "Array Handle failed to transfer properly");
       }
 
       temp.ReleaseResources();
@@ -211,12 +216,13 @@ private:
       for (std::size_t i = 0; i < Size * 2; ++i)
       {
         VISKORES_TEST_ASSERT(test_equal(*(expectedValues + i), returnedValues[i]),
-                         "Array Handle failed to transfer properly");
+                             "Array Handle failed to transfer properly");
       }
 
       //verify this work for a constant value array handle
       T constantValue = TestValue(2, T()); //verified by die roll
-      viskores::cont::ArrayHandleConstant<T> constant(constantValue, static_cast<viskores::Id>(Size));
+      viskores::cont::ArrayHandleConstant<T> constant(constantValue,
+                                                      static_cast<viskores::Id>(Size));
       SafelyTransferArray(constant, GLHandle);
       is_buffer = glIsBuffer(GLHandle);
       VISKORES_TEST_ASSERT(is_buffer == GL_TRUE, "OpenGL buffer not filled");
@@ -224,7 +230,7 @@ private:
       for (std::size_t i = 0; i < Size; ++i)
       {
         VISKORES_TEST_ASSERT(test_equal(returnedValues[i], constantValue),
-                         "Constant value array failed to transfer properly");
+                             "Constant value array failed to transfer properly");
       }
     }
   };

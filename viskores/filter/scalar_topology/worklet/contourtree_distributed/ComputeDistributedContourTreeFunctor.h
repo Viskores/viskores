@@ -155,11 +155,11 @@ public:
 
 #ifdef DEBUG_PRINT_CTUD
         VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                   "Local block has extents: " << block->BlockOrigin << " " << block->BlockSize
-                                               << std::endl
-                                               << "Combining with block received from ID " << ingid
-                                               << " with extents: " << otherBlockOrigin << " "
-                                               << otherBlockSize << std::endl);
+                       "Local block has extents: " << block->BlockOrigin << " " << block->BlockSize
+                                                   << std::endl
+                                                   << "Combining with block received from ID "
+                                                   << ingid << " with extents: " << otherBlockOrigin
+                                                   << " " << otherBlockSize << std::endl);
 #endif
 
         // Merge the two contour tree meshes
@@ -206,16 +206,16 @@ public:
           std::min(otherBlockOrigin[2], block->BlockOrigin[2]),
         };
         viskores::Id3 currBlockMaxIndex{ // Needed only to compute the block size
-                                     std::max(otherBlockOrigin[0] + otherBlockSize[0],
-                                              block->BlockOrigin[0] + block->BlockSize[0]),
-                                     std::max(otherBlockOrigin[1] + otherBlockSize[1],
-                                              block->BlockOrigin[1] + block->BlockSize[1]),
-                                     std::max(otherBlockOrigin[2] + otherBlockSize[2],
-                                              block->BlockOrigin[2] + block->BlockSize[2])
+                                         std::max(otherBlockOrigin[0] + otherBlockSize[0],
+                                                  block->BlockOrigin[0] + block->BlockSize[0]),
+                                         std::max(otherBlockOrigin[1] + otherBlockSize[1],
+                                                  block->BlockOrigin[1] + block->BlockSize[1]),
+                                         std::max(otherBlockOrigin[2] + otherBlockSize[2],
+                                                  block->BlockOrigin[2] + block->BlockSize[2])
         };
         viskores::Id3 currBlockSize{ currBlockMaxIndex[0] - currBlockOrigin[0],
-                                 currBlockMaxIndex[1] - currBlockOrigin[1],
-                                 currBlockMaxIndex[2] - currBlockOrigin[2] };
+                                     currBlockMaxIndex[1] - currBlockOrigin[1],
+                                     currBlockMaxIndex[2] - currBlockOrigin[2] };
 
         // Compute the contour tree from our merged mesh
         viskores::Id currNumIterations;
@@ -225,8 +225,8 @@ public:
         worklet.TimingsLogLevel =
           viskores::cont::LogLevel::Off; // disable the print logging, we'll print this later
         viskores::Id3 maxIdx{ currBlockOrigin[0] + currBlockSize[0] - 1,
-                          currBlockOrigin[1] + currBlockSize[1] - 1,
-                          currBlockOrigin[2] + currBlockSize[2] - 1 };
+                              currBlockOrigin[1] + currBlockSize[1] - 1,
+                              currBlockOrigin[2] + currBlockSize[2] - 1 };
         auto meshBoundaryExecObj = block->ContourTreeMeshes.back().GetMeshBoundaryExecutionObject(
           this->GlobalSize, currBlockOrigin, maxIdx);
         try
@@ -324,24 +324,24 @@ public:
         // Log the contour tree timiing stats
         (void)rank; // Suppress unused variable warning if logging is disabled.
         VISKORES_LOG_S(this->TimingsLogLevel,
-                   std::endl
-                     << "    ---------------- Contour Tree Worklet Timings ------------------"
-                     << std::endl
-                     << "    Rank    : " << rank << std::endl
-                     << "    DIY Id  : " << selfid << std::endl
-                     << "    In Id   : " << ingid << std::endl
-                     << "    Round   : " << rp.round() << std::endl
-                     << worklet.TimingsLogString);
+                       std::endl
+                         << "    ---------------- Contour Tree Worklet Timings ------------------"
+                         << std::endl
+                         << "    Rank    : " << rank << std::endl
+                         << "    DIY Id  : " << selfid << std::endl
+                         << "    In Id   : " << ingid << std::endl
+                         << "    Round   : " << rp.round() << std::endl
+                         << worklet.TimingsLogString);
         // Log the contour tree size stats
         VISKORES_LOG_S(this->TreeLogLevel,
-                   std::endl
-                     << "    ---------------- Contour Tree Array Sizes ---------------------"
-                     << std::endl
-                     << "    Rank    : " << rank << std::endl
-                     << "    DIY Id  : " << selfid << std::endl
-                     << "    In Id   : " << ingid << std::endl
-                     << "    Round   : " << rp.round() << std::endl
-                     << block->ContourTrees.back().PrintArraySizes());
+                       std::endl
+                         << "    ---------------- Contour Tree Array Sizes ---------------------"
+                         << std::endl
+                         << "    Rank    : " << rank << std::endl
+                         << "    DIY Id  : " << selfid << std::endl
+                         << "    In Id   : " << ingid << std::endl
+                         << "    Round   : " << rp.round() << std::endl
+                         << block->ContourTrees.back().PrintArraySizes());
 
       } // end if (ingid != selfid)
     }   // end for
@@ -357,8 +357,8 @@ public:
     if (rp.round() != 0 && rp.out_link().size() != 0)
     {
       viskores::Id3 maxIdx{ block->BlockOrigin[0] + block->BlockSize[0] - 1,
-                        block->BlockOrigin[1] + block->BlockSize[1] - 1,
-                        block->BlockOrigin[2] + block->BlockSize[2] - 1 };
+                            block->BlockOrigin[1] + block->BlockSize[1] - 1,
+                            block->BlockOrigin[2] + block->BlockSize[2] - 1 };
 
       // Compute BRACT
       viskores::worklet::contourtree_distributed::BoundaryTree boundaryTree;
@@ -435,22 +435,22 @@ public:
 
       // Log the boundary tree size statistics
       VISKORES_LOG_S(this->TreeLogLevel,
-                 std::endl
-                   << "    ---------------- Boundary Tree Array Sizes ---------------------"
-                   << std::endl
-                   << "    Rank    : " << rank << std::endl
-                   << "    DIY Id  : " << selfid << std::endl
-                   << "    Round   : " << rp.round() << std::endl
-                   << boundaryTree.PrintArraySizes());
+                     std::endl
+                       << "    ---------------- Boundary Tree Array Sizes ---------------------"
+                       << std::endl
+                       << "    Rank    : " << rank << std::endl
+                       << "    DIY Id  : " << selfid << std::endl
+                       << "    Round   : " << rp.round() << std::endl
+                       << boundaryTree.PrintArraySizes());
       // Log the interior forest statistics
       VISKORES_LOG_S(this->TreeLogLevel,
-                 std::endl
-                   << "    ---------------- Interior Forest Array Sizes ---------------------"
-                   << std::endl
-                   << "    Rank    : " << rank << std::endl
-                   << "    DIY Id  : " << selfid << std::endl
-                   << "    Round   : " << rp.round() << std::endl
-                   << block->InteriorForests.back().PrintArraySizes());
+                     std::endl
+                       << "    ---------------- Interior Forest Array Sizes ---------------------"
+                       << std::endl
+                       << "    Rank    : " << rank << std::endl
+                       << "    DIY Id  : " << selfid << std::endl
+                       << "    Round   : " << rp.round() << std::endl
+                       << block->InteriorForests.back().PrintArraySizes());
     } // end if (rp.round() != 0 && rp.out_link().size() != 0)
 
     // log the time to compute the boundary tree, interior forest, and contour tree mesh, i.e, the data we need to send
@@ -470,10 +470,10 @@ public:
         rp.enqueue(target, block->BlockSize);
         rp.enqueue(target, block->ContourTreeMeshes.back());
         VISKORES_LOG_S(this->TreeLogLevel,
-                   std::endl
-                     << "FanInEnqueue: Rank=" << rank << "; Round=" << rp.round()
-                     << "; DIY Send Id=" << selfid << "; DIY Target ID=" << target.gid
-                     << std::endl);
+                       std::endl
+                         << "FanInEnqueue: Rank=" << rank << "; Round=" << rp.round()
+                         << "; DIY Send Id=" << selfid << "; DIY Target ID=" << target.gid
+                         << std::endl);
       }
     } // end for
 
@@ -485,12 +485,13 @@ public:
                   << ": " << totalTimer.GetElapsedTime() << " seconds" << std::endl;
     // Record the times we logged
     VISKORES_LOG_S(this->TimingsLogLevel,
-               std::endl
-                 << "    ---------------- Fan In Functor Step ---------------------" << std::endl
-                 << "    Rank    : " << rank << std::endl
-                 << "    DIY Id  : " << selfid << std::endl
-                 << "    Round   : " << rp.round() << std::endl
-                 << timingsStream.str());
+                   std::endl
+                     << "    ---------------- Fan In Functor Step ---------------------"
+                     << std::endl
+                     << "    Rank    : " << rank << std::endl
+                     << "    DIY Id  : " << selfid << std::endl
+                     << "    Round   : " << rp.round() << std::endl
+                     << timingsStream.str());
 
   } //end ComputeDistributedContourTreeFunctor
 

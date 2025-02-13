@@ -30,7 +30,8 @@ VISKORES_STATIC_ASSERT((std::is_same<MakeSequenceId<1>, SequenceId<0>>::value));
 VISKORES_STATIC_ASSERT((std::is_same<MakeSequenceId<2>, SequenceId<0, 1>>::value));
 VISKORES_STATIC_ASSERT((std::is_same<MakeSequenceId<3>, SequenceId<0, 1, 2>>::value));
 VISKORES_STATIC_ASSERT((std::is_same<MakeSequenceId<5>, SequenceId<0, 1, 2, 3, 4>>::value));
-VISKORES_STATIC_ASSERT((std::is_same<MakeSequenceId<8>, SequenceId<0, 1, 2, 3, 4, 5, 6, 7>>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<MakeSequenceId<8>, SequenceId<0, 1, 2, 3, 4, 5, 6, 7>>::value));
 VISKORES_STATIC_ASSERT(
   (std::is_same<MakeSequenceId<13>, SequenceId<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12>>::value));
 VISKORES_STATIC_ASSERT(
@@ -38,130 +39,130 @@ VISKORES_STATIC_ASSERT(
     MakeSequenceId<21>,
     SequenceId<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20>>::value));
 VISKORES_STATIC_ASSERT((std::is_same<MakeSequenceId<34>,
-                                 SequenceId<0,
-                                            1,
-                                            2,
-                                            3,
-                                            4,
-                                            5,
-                                            6,
-                                            7,
-                                            8,
-                                            9,
-                                            10,
-                                            11,
-                                            12,
-                                            13,
-                                            14,
-                                            15,
-                                            16,
-                                            17,
-                                            18,
-                                            19,
-                                            20,
-                                            21,
-                                            22,
-                                            23,
-                                            24,
-                                            25,
-                                            26,
-                                            27,
-                                            28,
-                                            29,
-                                            30,
-                                            31,
-                                            32,
-                                            33>>::value));
+                                     SequenceId<0,
+                                                1,
+                                                2,
+                                                3,
+                                                4,
+                                                5,
+                                                6,
+                                                7,
+                                                8,
+                                                9,
+                                                10,
+                                                11,
+                                                12,
+                                                13,
+                                                14,
+                                                15,
+                                                16,
+                                                17,
+                                                18,
+                                                19,
+                                                20,
+                                                21,
+                                                22,
+                                                23,
+                                                24,
+                                                25,
+                                                26,
+                                                27,
+                                                28,
+                                                29,
+                                                30,
+                                                31,
+                                                32,
+                                                33>>::value));
 VISKORES_STATIC_ASSERT((std::is_same<MakeSequenceId<89>,
-                                 SequenceId<0,
-                                            1,
-                                            2,
-                                            3,
-                                            4,
-                                            5,
-                                            6,
-                                            7,
-                                            8,
-                                            9,
-                                            10,
-                                            11,
-                                            12,
-                                            13,
-                                            14,
-                                            15,
-                                            16,
-                                            17,
-                                            18,
-                                            19,
-                                            20,
-                                            21,
-                                            22,
-                                            23,
-                                            24,
-                                            25,
-                                            26,
-                                            27,
-                                            28,
-                                            29,
-                                            30,
-                                            31,
-                                            32,
-                                            33,
-                                            34,
-                                            35,
-                                            36,
-                                            37,
-                                            38,
-                                            39,
-                                            40,
-                                            41,
-                                            42,
-                                            43,
-                                            44,
-                                            45,
-                                            46,
-                                            47,
-                                            48,
-                                            49,
-                                            50,
-                                            51,
-                                            52,
-                                            53,
-                                            54,
-                                            55,
-                                            56,
-                                            57,
-                                            58,
-                                            59,
-                                            60,
-                                            61,
-                                            62,
-                                            63,
-                                            64,
-                                            65,
-                                            66,
-                                            67,
-                                            68,
-                                            69,
-                                            70,
-                                            71,
-                                            72,
-                                            73,
-                                            74,
-                                            75,
-                                            76,
-                                            77,
-                                            78,
-                                            79,
-                                            80,
-                                            81,
-                                            82,
-                                            83,
-                                            84,
-                                            85,
-                                            86,
-                                            87,
-                                            88>>::value));
+                                     SequenceId<0,
+                                                1,
+                                                2,
+                                                3,
+                                                4,
+                                                5,
+                                                6,
+                                                7,
+                                                8,
+                                                9,
+                                                10,
+                                                11,
+                                                12,
+                                                13,
+                                                14,
+                                                15,
+                                                16,
+                                                17,
+                                                18,
+                                                19,
+                                                20,
+                                                21,
+                                                22,
+                                                23,
+                                                24,
+                                                25,
+                                                26,
+                                                27,
+                                                28,
+                                                29,
+                                                30,
+                                                31,
+                                                32,
+                                                33,
+                                                34,
+                                                35,
+                                                36,
+                                                37,
+                                                38,
+                                                39,
+                                                40,
+                                                41,
+                                                42,
+                                                43,
+                                                44,
+                                                45,
+                                                46,
+                                                47,
+                                                48,
+                                                49,
+                                                50,
+                                                51,
+                                                52,
+                                                53,
+                                                54,
+                                                55,
+                                                56,
+                                                57,
+                                                58,
+                                                59,
+                                                60,
+                                                61,
+                                                62,
+                                                63,
+                                                64,
+                                                65,
+                                                66,
+                                                67,
+                                                68,
+                                                69,
+                                                70,
+                                                71,
+                                                72,
+                                                73,
+                                                74,
+                                                75,
+                                                76,
+                                                77,
+                                                78,
+                                                79,
+                                                80,
+                                                81,
+                                                82,
+                                                83,
+                                                84,
+                                                85,
+                                                86,
+                                                87,
+                                                88>>::value));
 
 template <viskores::IdComponent Index>
 struct TypePlaceholder
@@ -268,8 +269,10 @@ void TestTuple2()
   using TupleType = viskores::Tuple<TypePlaceholder<0>, TypePlaceholder<1>>;
 
   VISKORES_STATIC_ASSERT(viskores::TupleSize<TupleType>::value == 2);
-  VISKORES_STATIC_ASSERT((std::is_same<TypePlaceholder<0>, viskores::TupleElement<0, TupleType>>::value));
-  VISKORES_STATIC_ASSERT((std::is_same<TypePlaceholder<1>, viskores::TupleElement<1, TupleType>>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<TypePlaceholder<0>, viskores::TupleElement<0, TupleType>>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<TypePlaceholder<1>, viskores::TupleElement<1, TupleType>>::value));
 
   TupleType tuple(TestValue(0, viskores::Id()), TestValue(1, viskores::Id()));
 
@@ -285,8 +288,10 @@ void TestTuple2()
 
   auto transformedTuple = tuple.Transform(TransformValues{ 10 });
   using TransformedTupleType = decltype(transformedTuple);
-  VISKORES_STATIC_ASSERT((std::is_same<viskores::TupleElement<0, TransformedTupleType>, viskores::Id>::value));
-  VISKORES_STATIC_ASSERT((std::is_same<viskores::TupleElement<1, TransformedTupleType>, viskores::Id>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<viskores::TupleElement<0, TransformedTupleType>, viskores::Id>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<viskores::TupleElement<1, TransformedTupleType>, viskores::Id>::value));
 
   VISKORES_TEST_ASSERT(viskores::Get<0>(transformedTuple) == TestValue(0, viskores::Id{}) + 10);
   VISKORES_TEST_ASSERT(viskores::Get<1>(transformedTuple) == TestValue(1, viskores::Id{}) + 10);
@@ -295,33 +300,37 @@ void TestTuple2()
 void TestTuple22()
 {
   using TupleType = viskores::Tuple<TypePlaceholder<0>,
-                                TypePlaceholder<1>,
-                                TypePlaceholder<2>,
-                                TypePlaceholder<3>,
-                                TypePlaceholder<4>,
-                                TypePlaceholder<5>,
-                                TypePlaceholder<6>,
-                                TypePlaceholder<7>,
-                                TypePlaceholder<8>,
-                                TypePlaceholder<9>,
-                                TypePlaceholder<10>,
-                                TypePlaceholder<11>,
-                                TypePlaceholder<12>,
-                                TypePlaceholder<13>,
-                                TypePlaceholder<14>,
-                                TypePlaceholder<15>,
-                                TypePlaceholder<16>,
-                                TypePlaceholder<17>,
-                                TypePlaceholder<18>,
-                                TypePlaceholder<19>,
-                                TypePlaceholder<20>,
-                                TypePlaceholder<21>>;
+                                    TypePlaceholder<1>,
+                                    TypePlaceholder<2>,
+                                    TypePlaceholder<3>,
+                                    TypePlaceholder<4>,
+                                    TypePlaceholder<5>,
+                                    TypePlaceholder<6>,
+                                    TypePlaceholder<7>,
+                                    TypePlaceholder<8>,
+                                    TypePlaceholder<9>,
+                                    TypePlaceholder<10>,
+                                    TypePlaceholder<11>,
+                                    TypePlaceholder<12>,
+                                    TypePlaceholder<13>,
+                                    TypePlaceholder<14>,
+                                    TypePlaceholder<15>,
+                                    TypePlaceholder<16>,
+                                    TypePlaceholder<17>,
+                                    TypePlaceholder<18>,
+                                    TypePlaceholder<19>,
+                                    TypePlaceholder<20>,
+                                    TypePlaceholder<21>>;
 
   VISKORES_STATIC_ASSERT(viskores::TupleSize<TupleType>::value == 22);
-  VISKORES_STATIC_ASSERT((std::is_same<TypePlaceholder<0>, viskores::TupleElement<0, TupleType>>::value));
-  VISKORES_STATIC_ASSERT((std::is_same<TypePlaceholder<1>, viskores::TupleElement<1, TupleType>>::value));
-  VISKORES_STATIC_ASSERT((std::is_same<TypePlaceholder<20>, viskores::TupleElement<20, TupleType>>::value));
-  VISKORES_STATIC_ASSERT((std::is_same<TypePlaceholder<21>, viskores::TupleElement<21, TupleType>>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<TypePlaceholder<0>, viskores::TupleElement<0, TupleType>>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<TypePlaceholder<1>, viskores::TupleElement<1, TupleType>>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<TypePlaceholder<20>, viskores::TupleElement<20, TupleType>>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<TypePlaceholder<21>, viskores::TupleElement<21, TupleType>>::value));
 
   TupleType tuple(TestValue(0, viskores::Id()),
                   TestValue(1, viskores::Id()),
@@ -358,10 +367,14 @@ void TestTuple22()
 
   auto transformedTuple = tuple.Transform(TransformValues{ 10 });
   using TransformedTupleType = decltype(transformedTuple);
-  VISKORES_STATIC_ASSERT((std::is_same<viskores::TupleElement<0, TransformedTupleType>, viskores::Id>::value));
-  VISKORES_STATIC_ASSERT((std::is_same<viskores::TupleElement<1, TransformedTupleType>, viskores::Id>::value));
-  VISKORES_STATIC_ASSERT((std::is_same<viskores::TupleElement<20, TransformedTupleType>, viskores::Id>::value));
-  VISKORES_STATIC_ASSERT((std::is_same<viskores::TupleElement<21, TransformedTupleType>, viskores::Id>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<viskores::TupleElement<0, TransformedTupleType>, viskores::Id>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<viskores::TupleElement<1, TransformedTupleType>, viskores::Id>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<viskores::TupleElement<20, TransformedTupleType>, viskores::Id>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<viskores::TupleElement<21, TransformedTupleType>, viskores::Id>::value));
 
   VISKORES_TEST_ASSERT(viskores::Get<0>(transformedTuple) == TestValue(0, viskores::Id{}) + 10);
   VISKORES_TEST_ASSERT(viskores::Get<1>(transformedTuple) == TestValue(1, viskores::Id{}) + 10);

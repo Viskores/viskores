@@ -40,7 +40,8 @@ Messenger::Messenger(viskoresdiy::mpi::communicator& comm, bool useAsyncComm)
   , Rank(comm.rank())
   , UseAsynchronousCommunication(useAsyncComm)
 #else
-Messenger::Messenger(viskoresdiy::mpi::communicator& viskoresNotUsed(comm), bool viskoresNotUsed(useAsyncComm))
+Messenger::Messenger(viskoresdiy::mpi::communicator& viskoresNotUsed(comm),
+                     bool viskoresNotUsed(useAsyncComm))
 #endif
 {
 }
@@ -349,12 +350,14 @@ bool Messenger::RecvDataSync(const std::set<int>& tags,
     int err = MPI_Allreduce(
       MPI_IN_PLACE, maxBuffSize.data(), this->NumRanks, MPI_INT, MPI_MAX, this->MPIComm);
     if (err != MPI_SUCCESS)
-      throw viskores::cont::ErrorFilterExecution("Error in MPI_Isend inside Messenger::RecvDataSync");
+      throw viskores::cont::ErrorFilterExecution(
+        "Error in MPI_Isend inside Messenger::RecvDataSync");
 
     err = MPI_Allreduce(
       MPI_IN_PLACE, numMessages.data(), this->NumRanks, MPI_INT, MPI_SUM, this->MPIComm);
     if (err != MPI_SUCCESS)
-      throw viskores::cont::ErrorFilterExecution("Error in MPI_Isend inside Messenger::RecvDataSync");
+      throw viskores::cont::ErrorFilterExecution(
+        "Error in MPI_Isend inside Messenger::RecvDataSync");
 
     MPI_Status status;
     std::vector<char> recvBuff;
@@ -418,8 +421,9 @@ bool Messenger::RecvDataSync(const std::set<int>& tags,
   return !buffers.empty();
 }
 
-void Messenger::ProcessReceivedBuffers(std::vector<char*>& incomingBuffers,
-                                       std::vector<std::pair<int, viskoresdiy::MemoryBuffer>>& buffers)
+void Messenger::ProcessReceivedBuffers(
+  std::vector<char*>& incomingBuffers,
+  std::vector<std::pair<int, viskoresdiy::MemoryBuffer>>& buffers)
 {
   for (auto& buff : incomingBuffers)
   {

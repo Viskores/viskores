@@ -121,8 +121,9 @@ inline viskores::cont::DataSet MakeSingleTypeDataSet()
 {
   using CoordType = viskores::Vec3f_64;
 
-  viskores::cont::ArrayHandle<CoordType> coords = viskores::cont::make_ArrayHandle<viskores::Vec3f_64>(
-    { { 0, 0, 0 }, { 3, 0, 0 }, { 2, 2, 0 }, { 4, 0, 0 } });
+  viskores::cont::ArrayHandle<CoordType> coords =
+    viskores::cont::make_ArrayHandle<viskores::Vec3f_64>(
+      { { 0, 0, 0 }, { 3, 0, 0 }, { 2, 2, 0 }, { 4, 0, 0 } });
 
   viskores::cont::CellSetSingleType<> cellSet;
   cellSet.PrepareToAddCells(2, 3 * 2);

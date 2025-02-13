@@ -55,8 +55,9 @@ public:
   viskores::cont::Field& GetField(viskores::Id index);
 
   VISKORES_CONT
-  bool HasField(const std::string& name,
-                viskores::cont::Field::Association assoc = viskores::cont::Field::Association::Any) const
+  bool HasField(
+    const std::string& name,
+    viskores::cont::Field::Association assoc = viskores::cont::Field::Association::Any) const
   {
     return (this->GetFieldIndex(name, assoc) != -1);
   }

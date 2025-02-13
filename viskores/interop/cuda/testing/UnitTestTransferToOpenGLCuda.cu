@@ -18,7 +18,7 @@ int UnitTestTransferToOpenGLCuda(int argc, char* argv[])
 {
   viskores::cont::Initialize(argc, argv);
   int result = 1;
-  result =
-    viskores::interop::testing::TestingOpenGLInterop<viskores::cont::cuda::DeviceAdapterTagCuda>::Run();
+  result = viskores::interop::testing::TestingOpenGLInterop<
+    viskores::cont::cuda::DeviceAdapterTagCuda>::Run();
   return viskores::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

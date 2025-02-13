@@ -68,7 +68,7 @@ struct Get3DPointDimensionsFunctor
 {
   template<viskores::IdComponent Dims>
   VISKORES_CONT void operator()(const viskores::cont::CellSetStructured<Dims>& cellSet,
-                            viskores::Id3& outDims) const
+                                viskores::Id3& outDims) const
   {
     viskores::Vec<viskores::Id, Dims> pointDims = cellSet.GetPointDimensions();
     for (viskores::IdComponent d = 0; d < Dims; ++d)
@@ -77,7 +77,8 @@ struct Get3DPointDimensionsFunctor
     }
   }
 
-  VISKORES_CONT void operator()(const viskores::cont::CellSet& cellSet, viskores::Id3& outDims) const
+  VISKORES_CONT void operator()(const viskores::cont::CellSet& cellSet,
+                                viskores::Id3& outDims) const
   {
     outDims[0] = cellSet.GetNumberOfPoints();
   }
@@ -103,9 +104,10 @@ VISKORES_CONT viskores::Id3 Get3DStructuredPointDimensions(
   //// BEGIN-EXAMPLE UncertainCellSet
   ////
   using StructuredCellSetList = viskores::List<viskores::cont::CellSetStructured<1>,
-                                           viskores::cont::CellSetStructured<2>,
-                                           viskores::cont::CellSetStructured<3>>;
-  viskores::cont::UncertainCellSet<StructuredCellSetList> uncertainCellSet(unknownCellSet);
+                                               viskores::cont::CellSetStructured<2>,
+                                               viskores::cont::CellSetStructured<3>>;
+  viskores::cont::UncertainCellSet<StructuredCellSetList> uncertainCellSet(
+    unknownCellSet);
   uncertainCellSet.CastAndCall(Get3DPointDimensionsFunctor{}, dims);
   ////
   //// END-EXAMPLE UncertainCellSet
@@ -144,22 +146,22 @@ void CreateUniformGrid()
   std::cout << bounds << std::endl;
 
   VISKORES_TEST_ASSERT(test_equal(bounds, viskores::Bounds(0, 100, 0, 100, 0, 25)),
-                   "Bad bounds");
+                       "Bad bounds");
   viskores::cont::UnknownCellSet unknownCellSet = dataSet.GetCellSet();
   VISKORES_TEST_ASSERT(can_convert_example::Get3DPointDimensions(unknownCellSet) ==
-                   viskores::Id3(101, 101, 26));
+                       viskores::Id3(101, 101, 26));
   VISKORES_TEST_ASSERT(cast_and_call_for_types_example::Get3DPointDimensions(
-                     unknownCellSet) == viskores::Id3(101, 101, 26));
+                         unknownCellSet) == viskores::Id3(101, 101, 26));
   VISKORES_TEST_ASSERT(cast_and_call_for_types_example::Get3DStructuredPointDimensions(
-                     unknownCellSet) == viskores::Id3(101, 101, 26));
+                         unknownCellSet) == viskores::Id3(101, 101, 26));
 
   viskores::cont::ArrayHandle<viskores::IdComponent> outArray;
   ////
   //// BEGIN-EXAMPLE UnknownCellSetResetCellSetList
   ////
   using StructuredCellSetList = viskores::List<viskores::cont::CellSetStructured<1>,
-                                           viskores::cont::CellSetStructured<2>,
-                                           viskores::cont::CellSetStructured<3>>;
+                                               viskores::cont::CellSetStructured<2>,
+                                               viskores::cont::CellSetStructured<3>>;
   viskores::cont::Invoker invoke;
   invoke(
     MyWorklet{}, unknownCellSet.ResetCellSetList<StructuredCellSetList>(), outArray);
@@ -185,9 +187,10 @@ void CreateUniformGridCustomOriginSpacing()
   ////
   viskores::cont::DataSetBuilderUniform dataSetBuilder;
 
-  viskores::cont::DataSet dataSet = dataSetBuilder.Create(viskores::Id3(101, 101, 26),
-                                                      viskores::Vec3f(-50.0, -50.0, -50.0),
-                                                      viskores::Vec3f(1.0, 1.0, 4.0));
+  viskores::cont::DataSet dataSet =
+    dataSetBuilder.Create(viskores::Id3(101, 101, 26),
+                          viskores::Vec3f(-50.0, -50.0, -50.0),
+                          viskores::Vec3f(1.0, 1.0, 4.0));
   ////
   //// END-EXAMPLE CreateUniformGridCustomOriginSpacing
   ////
@@ -196,7 +199,7 @@ void CreateUniformGridCustomOriginSpacing()
   std::cout << bounds << std::endl;
 
   VISKORES_TEST_ASSERT(test_equal(bounds, viskores::Bounds(-50, 50, -50, 50, -50, 50)),
-                   "Bad bounds");
+                       "Bad bounds");
 }
 
 void CreateRectilinearGrid()
@@ -242,7 +245,8 @@ void CreateRectilinearGrid()
   viskores::Bounds bounds = dataSet.GetCoordinateSystem().GetBounds();
   std::cout << bounds << std::endl;
 
-  VISKORES_TEST_ASSERT(test_equal(bounds, viskores::Bounds(-4, 4, 0, 2, -1, 1)), "Bad bounds");
+  VISKORES_TEST_ASSERT(test_equal(bounds, viskores::Bounds(-4, 4, 0, 2, -1, 1)),
+                       "Bad bounds");
 }
 
 void CreateExplicitGrid()
@@ -312,15 +316,15 @@ void CreateExplicitGrid()
   viskores::cont::CellSetExplicit<> cellSet;
   dataSet.GetCellSet().AsCellSet(cellSet);
   VISKORES_TEST_ASSERT(test_equal(cellSet.GetNumberOfPoints(), 8),
-                   "Data set has wrong number of points.");
+                       "Data set has wrong number of points.");
   VISKORES_TEST_ASSERT(test_equal(cellSet.GetNumberOfCells(), 5),
-                   "Data set has wrong number of cells.");
+                       "Data set has wrong number of cells.");
 
   viskores::Bounds bounds = dataSet.GetCoordinateSystem().GetBounds();
   std::cout << bounds << std::endl;
 
-  VISKORES_TEST_ASSERT(test_equal(bounds, viskores::Bounds(0.2, 1.8, 0.0, 1.2, 0.0, 0.0)),
-                   "Bad bounds");
+  VISKORES_TEST_ASSERT(
+    test_equal(bounds, viskores::Bounds(0.2, 1.8, 0.0, 1.2, 0.0, 0.0)), "Bad bounds");
 
   // Do a simple check of the connectivity by getting the number of cells
   // incident on each point. This array is unlikely to be correct if the
@@ -332,21 +336,21 @@ void CreateExplicitGrid()
   std::cout << std::endl;
   auto numCellsPortal = numCellsPerPoint.ReadPortal();
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(0), 2),
-                   "Wrong number of cells on point 0");
+                       "Wrong number of cells on point 0");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(1), 2),
-                   "Wrong number of cells on point 1");
+                       "Wrong number of cells on point 1");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(2), 4),
-                   "Wrong number of cells on point 2");
+                       "Wrong number of cells on point 2");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(3), 3),
-                   "Wrong number of cells on point 3");
+                       "Wrong number of cells on point 3");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(4), 2),
-                   "Wrong number of cells on point 4");
+                       "Wrong number of cells on point 4");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(5), 2),
-                   "Wrong number of cells on point 5");
+                       "Wrong number of cells on point 5");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(6), 1),
-                   "Wrong number of cells on point 6");
+                       "Wrong number of cells on point 6");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(7), 2),
-                   "Wrong number of cells on point 7");
+                       "Wrong number of cells on point 7");
 }
 
 void CreateExplicitGridIterative()
@@ -415,21 +419,22 @@ void CreateExplicitGridIterative()
   ////
 
   VISKORES_STATIC_ASSERT((std::is_same<decltype(cellSet), decltype(cellSet2)>::value));
-  VISKORES_TEST_ASSERT(cellSet.GetConnectivityArray(viskores::TopologyElementTagCell{},
-                                                viskores::TopologyElementTagPoint{}) ==
-                   cellSet2.GetConnectivityArray(viskores::TopologyElementTagCell{},
-                                                 viskores::TopologyElementTagPoint{}));
+  VISKORES_TEST_ASSERT(
+    cellSet.GetConnectivityArray(viskores::TopologyElementTagCell{},
+                                 viskores::TopologyElementTagPoint{}) ==
+    cellSet2.GetConnectivityArray(viskores::TopologyElementTagCell{},
+                                  viskores::TopologyElementTagPoint{}));
 
   VISKORES_TEST_ASSERT(test_equal(cellSet.GetNumberOfPoints(), 8),
-                   "Data set has wrong number of points.");
+                       "Data set has wrong number of points.");
   VISKORES_TEST_ASSERT(test_equal(cellSet.GetNumberOfCells(), 5),
-                   "Data set has wrong number of cells.");
+                       "Data set has wrong number of cells.");
 
   viskores::Bounds bounds = dataSet.GetCoordinateSystem().GetBounds();
   std::cout << bounds << std::endl;
 
-  VISKORES_TEST_ASSERT(test_equal(bounds, viskores::Bounds(0.2, 1.8, 0.0, 1.2, 0.0, 0.0)),
-                   "Bad bounds");
+  VISKORES_TEST_ASSERT(
+    test_equal(bounds, viskores::Bounds(0.2, 1.8, 0.0, 1.2, 0.0, 0.0)), "Bad bounds");
 
   // Do a simple check of the connectivity by getting the number of cells
   // incident on each point. This array is unlikely to be correct if the
@@ -441,21 +446,21 @@ void CreateExplicitGridIterative()
   std::cout << std::endl;
   auto numCellsPortal = numCellsPerPoint.ReadPortal();
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(0), 2),
-                   "Wrong number of cells on point 0");
+                       "Wrong number of cells on point 0");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(1), 2),
-                   "Wrong number of cells on point 1");
+                       "Wrong number of cells on point 1");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(2), 4),
-                   "Wrong number of cells on point 2");
+                       "Wrong number of cells on point 2");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(3), 3),
-                   "Wrong number of cells on point 3");
+                       "Wrong number of cells on point 3");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(4), 2),
-                   "Wrong number of cells on point 4");
+                       "Wrong number of cells on point 4");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(5), 2),
-                   "Wrong number of cells on point 5");
+                       "Wrong number of cells on point 5");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(6), 1),
-                   "Wrong number of cells on point 6");
+                       "Wrong number of cells on point 6");
   VISKORES_TEST_ASSERT(test_equal(numCellsPortal.Get(7), 2),
-                   "Wrong number of cells on point 7");
+                       "Wrong number of cells on point 7");
 }
 
 ////
@@ -478,7 +483,7 @@ viskores::cont::DataSet AddFieldsExample(const viskores::cont::DataSet& input)
 //// BEGIN-EXAMPLE DataSetCopyStructure
 ////
 viskores::cont::DataSet RemoveFieldExample(const viskores::cont::DataSet& input,
-                                       const std::string& fieldToRemove)
+                                           const std::string& fieldToRemove)
 {
   viskores::cont::DataSet output;
   output.CopyStructure(input);
@@ -566,7 +571,8 @@ void AddFieldData()
   //// BEGIN-EXAMPLE IterateFields
   ////
   std::cout << "Fields in data:";
-  for (viskores::IdComponent fieldId = 0; fieldId < dataSet.GetNumberOfFields(); ++fieldId)
+  for (viskores::IdComponent fieldId = 0; fieldId < dataSet.GetNumberOfFields();
+       ++fieldId)
   {
     viskores::cont::Field field = dataSet.GetField(fieldId);
     std::cout << " " << field.GetName();
@@ -596,7 +602,8 @@ void CreateCellSetPermutation()
   ////
   // Create a simple data set.
   viskores::cont::DataSetBuilderUniform dataSetBuilder;
-  viskores::cont::DataSet originalDataSet = dataSetBuilder.Create(viskores::Id3(33, 33, 26));
+  viskores::cont::DataSet originalDataSet =
+    dataSetBuilder.Create(viskores::Id3(33, 33, 26));
   viskores::cont::CellSetStructured<3> originalCellSet;
   originalDataSet.GetCellSet().AsCellSet(originalCellSet);
 
@@ -607,7 +614,7 @@ void CreateCellSetPermutation()
 
   // Create a permutation of that cell set containing only every 10th cell.
   viskores::cont::CellSetPermutation<viskores::cont::CellSetStructured<3>,
-                                 viskores::cont::ArrayHandleCounting<viskores::Id>>
+                                     viskores::cont::ArrayHandleCounting<viskores::Id>>
     permutedCellSet(permutationArray, originalCellSet);
   ////
   //// END-EXAMPLE CreateCellSetPermutation
@@ -615,9 +622,10 @@ void CreateCellSetPermutation()
 
   std::cout << "Num points: " << permutedCellSet.GetNumberOfPoints() << std::endl;
   VISKORES_TEST_ASSERT(permutedCellSet.GetNumberOfPoints() == 28314,
-                   "Wrong number of points.");
+                       "Wrong number of points.");
   std::cout << "Num cells: " << permutedCellSet.GetNumberOfCells() << std::endl;
-  VISKORES_TEST_ASSERT(permutedCellSet.GetNumberOfCells() == 2560, "Wrong number of cells.");
+  VISKORES_TEST_ASSERT(permutedCellSet.GetNumberOfCells() == 2560,
+                       "Wrong number of cells.");
 }
 
 void CreatePartitionedDataSet()
@@ -641,7 +649,7 @@ void CreatePartitionedDataSet()
   ////
 
   VISKORES_TEST_ASSERT(partitionedData.GetNumberOfPartitions() == 2,
-                   "Incorrect number of blocks");
+                       "Incorrect number of blocks");
 }
 
 void QueryPartitionedDataSet()
@@ -671,8 +679,8 @@ void QueryPartitionedDataSet()
   ////
 
   std::cout << bounds << std::endl;
-  VISKORES_TEST_ASSERT(test_equal(bounds, viskores::Bounds(0.0, 3.0, 0.0, 4.0, 0.0, 1.0)),
-                   "Bad bounds");
+  VISKORES_TEST_ASSERT(
+    test_equal(bounds, viskores::Bounds(0.0, 3.0, 0.0, 4.0, 0.0, 1.0)), "Bad bounds");
 
   std::cout << cellvarRange << std::endl;
   VISKORES_TEST_ASSERT(test_equal(cellvarRange, viskores::Range(0, 130.5)), "Bad range");
@@ -699,7 +707,8 @@ void FilterPartitionedDataSet()
   //// END-EXAMPLE FilterPartitionedDataSet
   ////
 
-  VISKORES_TEST_ASSERT(results.GetNumberOfPartitions() == 2, "Incorrect number of blocks.");
+  VISKORES_TEST_ASSERT(results.GetNumberOfPartitions() == 2,
+                       "Incorrect number of blocks.");
 }
 
 void Test()
@@ -720,5 +729,6 @@ void Test()
 
 int GuideExampleDataSetCreation(int argc, char* argv[])
 {
-  return viskores::cont::testing::Testing::Run(DataSetCreationNamespace::Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(
+    DataSetCreationNamespace::Test, argc, argv);
 }

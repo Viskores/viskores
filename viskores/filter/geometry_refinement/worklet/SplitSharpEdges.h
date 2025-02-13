@@ -35,16 +35,17 @@ namespace internal
 // associated with this point in canonical index
 template <typename PointFromCellSetType>
 VISKORES_EXEC viskores::ErrorCode FindRelatedEdges(const viskores::Id& pointIndex,
-                                           const viskores::Id& cellIndexG,
-                                           const PointFromCellSetType& pFromCellSet,
-                                           viskores::Id2& edge0G,
-                                           viskores::Id2& edge1G)
+                                                   const viskores::Id& cellIndexG,
+                                                   const PointFromCellSetType& pFromCellSet,
+                                                   viskores::Id2& edge0G,
+                                                   viskores::Id2& edge1G)
 {
   typename PointFromCellSetType::CellShapeTag cellShape = pFromCellSet.GetCellShape(cellIndexG);
   typename PointFromCellSetType::IndicesType cellConnections = pFromCellSet.GetIndices(cellIndexG);
   viskores::IdComponent numPointsInCell = pFromCellSet.GetNumberOfIndices(cellIndexG);
   viskores::IdComponent numEdges;
-  VISKORES_RETURN_ON_ERROR(viskores::exec::CellEdgeNumberOfEdges(numPointsInCell, cellShape, numEdges));
+  VISKORES_RETURN_ON_ERROR(
+    viskores::exec::CellEdgeNumberOfEdges(numPointsInCell, cellShape, numEdges));
   viskores::IdComponent edgeIndex = -1;
   // Find the two edges with the pointIndex
   while (true)
@@ -61,7 +62,7 @@ VISKORES_EXEC viskores::ErrorCode FindRelatedEdges(const viskores::Id& pointInde
     VISKORES_RETURN_ON_ERROR(viskores::exec::CellEdgeLocalIndex(
       numPointsInCell, 1, edgeIndex, cellShape, localEdgeIndices[1]));
     viskores::Id2 canonicalEdgeId(cellConnections[localEdgeIndices[0]],
-                              cellConnections[localEdgeIndices[1]]);
+                                  cellConnections[localEdgeIndices[1]]);
     if (canonicalEdgeId[0] == pointIndex || canonicalEdgeId[1] == pointIndex)
     { // Assign value to edge0 first
       if ((edge0G[0] == -1) && (edge0G[1] == -1))
@@ -83,9 +84,9 @@ VISKORES_EXEC viskores::ErrorCode FindRelatedEdges(const viskores::Id& pointInde
 // cell of this edge in local index. If it's a non manifold edge, -1 would be returned.
 template <typename PointFromCellSetType, typename IncidentCellVecType>
 VISKORES_EXEC int FindNeighborCellInLocalIndex(const viskores::Id2& eOI,
-                                           const PointFromCellSetType& pFromCellSet,
-                                           const IncidentCellVecType& incidentCells,
-                                           const viskores::Id currentCellLocalIndex)
+                                               const PointFromCellSetType& pFromCellSet,
+                                               const IncidentCellVecType& incidentCells,
+                                               const viskores::Id currentCellLocalIndex)
 {
   int neighboringCellIndex = -1;
   viskores::IdComponent numberOfIncidentCells = incidentCells.GetNumberOfComponents();
@@ -113,10 +114,12 @@ VISKORES_EXEC int FindNeighborCellInLocalIndex(const viskores::Id2& eOI,
         break;
       }
       viskores::IdComponent2 localEdgeIndices;
-      viskores::exec::CellEdgeLocalIndex(numPointsInCell, 0, edgeIndex, cellShape, localEdgeIndices[0]);
-      viskores::exec::CellEdgeLocalIndex(numPointsInCell, 1, edgeIndex, cellShape, localEdgeIndices[1]);
+      viskores::exec::CellEdgeLocalIndex(
+        numPointsInCell, 0, edgeIndex, cellShape, localEdgeIndices[0]);
+      viskores::exec::CellEdgeLocalIndex(
+        numPointsInCell, 1, edgeIndex, cellShape, localEdgeIndices[1]);
       viskores::Id2 canonicalEdgeId(cellConnections[localEdgeIndices[0]],
-                                cellConnections[localEdgeIndices[1]]);
+                                    cellConnections[localEdgeIndices[1]]);
       if ((canonicalEdgeId[0] == eOI[0] && canonicalEdgeId[1] == eOI[1]) ||
           (canonicalEdgeId[0] == eOI[1] && canonicalEdgeId[1] == eOI[0]))
       {
@@ -131,12 +134,12 @@ VISKORES_EXEC int FindNeighborCellInLocalIndex(const viskores::Id2& eOI,
 // Generalized logic for finding what 'regions' own the connected cells.
 template <typename IncidentCellVecType, typename PointFromCellSetType, typename FaceNormalVecType>
 VISKORES_EXEC bool FindConnectedCellOwnerships(viskores::FloatDefault cosFeatureAngle,
-                                           const IncidentCellVecType& incidentCells,
-                                           viskores::Id pointIndex,
-                                           const PointFromCellSetType& pFromCellSet,
-                                           const FaceNormalVecType& faceNormals,
-                                           viskores::Id visitedCellsRegionIndex[64],
-                                           viskores::Id& regionIndex)
+                                               const IncidentCellVecType& incidentCells,
+                                               viskores::Id pointIndex,
+                                               const PointFromCellSetType& pFromCellSet,
+                                               const FaceNormalVecType& faceNormals,
+                                               viskores::Id visitedCellsRegionIndex[64],
+                                               viskores::Id& regionIndex)
 {
   const viskores::IdComponent numberOfIncidentCells = incidentCells.GetNumberOfComponents();
   VISKORES_ASSERT(numberOfIncidentCells < 64);
@@ -269,11 +272,11 @@ public:
               typename PointFromCellSetType,
               typename FaceNormalVecType>
     VISKORES_EXEC void operator()(const IncidentCellVecType& incidentCells,
-                              viskores::Id pointIndex,
-                              const PointFromCellSetType& pFromCellSet,
-                              const FaceNormalVecType& faceNormals,
-                              viskores::Id& newPointNum,
-                              viskores::Id& cellNum) const
+                                  viskores::Id pointIndex,
+                                  const PointFromCellSetType& pFromCellSet,
+                                  const FaceNormalVecType& faceNormals,
+                                  viskores::Id& newPointNum,
+                                  viskores::Id& cellNum) const
     {
       viskores::Id regionIndex = 0;
       viskores::Id visitedCellsRegionIndex[64] = { 0 };
@@ -340,12 +343,12 @@ public:
               typename FaceNormalVecType,
               typename CellTopologyUpdateTuples>
     VISKORES_EXEC void operator()(const IncidentCellVecType& incidentCells,
-                              viskores::Id pointIndex,
-                              const PointFromCellSetType& pFromCellSet,
-                              const FaceNormalVecType& faceNormals,
-                              const viskores::Id& newPointStartingIndex,
-                              const viskores::Id& pointCellsStartingIndex,
-                              CellTopologyUpdateTuples& cellTopologyUpdateTuples) const
+                                  viskores::Id pointIndex,
+                                  const PointFromCellSetType& pFromCellSet,
+                                  const FaceNormalVecType& faceNormals,
+                                  const viskores::Id& newPointStartingIndex,
+                                  const viskores::Id& pointCellsStartingIndex,
+                                  CellTopologyUpdateTuples& cellTopologyUpdateTuples) const
     {
       viskores::Id regionIndex = 0;
       viskores::Id visitedCellsRegionIndex[64] = { 0 };
@@ -393,14 +396,15 @@ public:
     const CellSetType& oldCellset,
     const viskores::FloatDefault featureAngle,
     const FaceNormalsType& faceNormals,
-    const viskores::cont::ArrayHandle<viskores::Vec<CoordsComType, 3>, CoordsInStorageType>& oldCoords,
+    const viskores::cont::ArrayHandle<viskores::Vec<CoordsComType, 3>, CoordsInStorageType>&
+      oldCoords,
     viskores::cont::ArrayHandle<viskores::Vec<CoordsComType, 3>, CoordsOutStorageType>& newCoords,
     NewCellSetType& newCellset)
   {
     viskores::cont::Invoker invoke;
 
-    const viskores::FloatDefault featureAngleR =
-      featureAngle / static_cast<viskores::FloatDefault>(180.0) * viskores::Pi<viskores::FloatDefault>();
+    const viskores::FloatDefault featureAngleR = featureAngle /
+      static_cast<viskores::FloatDefault>(180.0) * viskores::Pi<viskores::FloatDefault>();
 
     //Launch the first kernel that computes which points need to be split
     viskores::cont::ArrayHandle<viskores::Id> newPointNums, cellNeedUpdateNums;
@@ -420,10 +424,12 @@ public:
 
     //Compute the mapping of new points to old points. This is required for
     //processing additional point fields
-    const viskores::Id totalNewPointsNum = viskores::cont::Algorithm::Reduce(newPointNums, viskores::Id(0));
+    const viskores::Id totalNewPointsNum =
+      viskores::cont::Algorithm::Reduce(newPointNums, viskores::Id(0));
     this->NewPointsIdArray.Allocate(oldCoords.GetNumberOfValues() + totalNewPointsNum);
     viskores::cont::Algorithm::CopySubRange(
-      viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(1), oldCoords.GetNumberOfValues()),
+      viskores::cont::make_ArrayHandleCounting(
+        viskores::Id(0), viskores::Id(1), oldCoords.GetNumberOfValues()),
       0,
       oldCoords.GetNumberOfValues(),
       this->NewPointsIdArray,
@@ -476,11 +482,11 @@ public:
     CellDeepCopy::Run(oldCellset, newCellset, this->NewPointsIdArray.GetNumberOfValues());
     // FIXME: Since the non const get array function is not in CellSetExplict.h,
     // here I just get a non-const copy of the array handle.
-    auto connectivityArrayHandle = newCellset.GetConnectivityArray(viskores::TopologyElementTagCell(),
-                                                                   viskores::TopologyElementTagPoint());
+    auto connectivityArrayHandle = newCellset.GetConnectivityArray(
+      viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
     auto connectivityArrayHandleP = connectivityArrayHandle.WritePortal();
-    auto offsetArrayHandle =
-      newCellset.GetOffsetsArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+    auto offsetArrayHandle = newCellset.GetOffsetsArray(viskores::TopologyElementTagCell(),
+                                                        viskores::TopologyElementTagPoint());
     auto offsetArrayHandleP = offsetArrayHandle.WritePortal();
     for (viskores::Id i = 0; i < cellTopologyUpdateTuples.GetNumberOfValues(); i++)
     {
@@ -500,7 +506,10 @@ public:
     }
   }
 
-  viskores::cont::ArrayHandle<viskores::Id> GetNewPointsIdArray() const { return this->NewPointsIdArray; }
+  viskores::cont::ArrayHandle<viskores::Id> GetNewPointsIdArray() const
+  {
+    return this->NewPointsIdArray;
+  }
 
 private:
   viskores::cont::ArrayHandle<viskores::Id> NewPointsIdArray;

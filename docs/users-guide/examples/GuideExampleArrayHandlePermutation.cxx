@@ -21,11 +21,15 @@ void CheckArray1(const ArrayHandleType array)
   VISKORES_TEST_ASSERT(array.GetNumberOfValues() == 3, "Permuted array has wrong size.");
 
   typename ArrayHandleType::ReadPortalType portal = array.ReadPortal();
-  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 3, "Permuted portal has wrong size.");
+  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 3,
+                       "Permuted portal has wrong size.");
 
-  VISKORES_TEST_ASSERT(test_equal(portal.Get(0), 0.3), "Permuted array has wrong value.");
-  VISKORES_TEST_ASSERT(test_equal(portal.Get(1), 0.0), "Permuted array has wrong value.");
-  VISKORES_TEST_ASSERT(test_equal(portal.Get(2), 0.1), "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(0), 0.3),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(1), 0.0),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(2), 0.1),
+                       "Permuted array has wrong value.");
 }
 
 template<typename ArrayHandleType>
@@ -34,13 +38,19 @@ void CheckArray2(const ArrayHandleType array)
   VISKORES_TEST_ASSERT(array.GetNumberOfValues() == 5, "Permuted array has wrong size.");
 
   typename ArrayHandleType::ReadPortalType portal = array.ReadPortal();
-  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 5, "Permuted portal has wrong size.");
+  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 5,
+                       "Permuted portal has wrong size.");
 
-  VISKORES_TEST_ASSERT(test_equal(portal.Get(0), 0.1), "Permuted array has wrong value.");
-  VISKORES_TEST_ASSERT(test_equal(portal.Get(1), 0.2), "Permuted array has wrong value.");
-  VISKORES_TEST_ASSERT(test_equal(portal.Get(2), 0.2), "Permuted array has wrong value.");
-  VISKORES_TEST_ASSERT(test_equal(portal.Get(3), 0.3), "Permuted array has wrong value.");
-  VISKORES_TEST_ASSERT(test_equal(portal.Get(4), 0.0), "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(0), 0.1),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(1), 0.2),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(2), 0.2),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(3), 0.3),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(4), 0.0),
+                       "Permuted array has wrong value.");
 }
 
 void Test()

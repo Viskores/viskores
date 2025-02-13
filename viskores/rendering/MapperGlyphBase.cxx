@@ -28,7 +28,8 @@ void MapperGlyphBase::SetCanvas(viskores::rendering::Canvas* canvas)
     dynamic_cast<viskores::rendering::CanvasRayTracer*>(canvas);
   if (canvasRT == nullptr)
   {
-    throw viskores::cont::ErrorBadValue("MapperGlyphBase: bad canvas type. Must be CanvasRayTracer");
+    throw viskores::cont::ErrorBadValue(
+      "MapperGlyphBase: bad canvas type. Must be CanvasRayTracer");
   }
 
   this->Canvas = canvasRT;
@@ -155,9 +156,10 @@ void MapperGlyphBase::SetCompositeBackground(bool on)
   this->CompositeBackground = on;
 }
 
-viskores::cont::DataSet MapperGlyphBase::FilterPoints(const viskores::cont::UnknownCellSet& cellSet,
-                                                  const viskores::cont::CoordinateSystem& coords,
-                                                  const viskores::cont::Field& field) const
+viskores::cont::DataSet MapperGlyphBase::FilterPoints(
+  const viskores::cont::UnknownCellSet& cellSet,
+  const viskores::cont::CoordinateSystem& coords,
+  const viskores::cont::Field& field) const
 {
   viskores::cont::DataSet result;
   result.SetCellSet(cellSet);

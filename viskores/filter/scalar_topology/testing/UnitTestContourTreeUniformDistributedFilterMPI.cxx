@@ -57,7 +57,8 @@ namespace
 using viskores::filter::testing::contourtree_uniform_distributed::TestContourTreeFile;
 using viskores::filter::testing::contourtree_uniform_distributed::
   TestContourTreeUniformDistributed5x6x7;
-using viskores::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
+using viskores::filter::testing::contourtree_uniform_distributed::
+  TestContourTreeUniformDistributed8x9;
 
 class TestContourTreeUniformDistributedFilterMPI
 {

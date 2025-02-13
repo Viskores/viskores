@@ -37,7 +37,10 @@ public:
     }
   }
 
-  viskores::Id GetNumberOfIsoValues() const { return static_cast<viskores::Id>(this->IsoValues.size()); }
+  viskores::Id GetNumberOfIsoValues() const
+  {
+    return static_cast<viskores::Id>(this->IsoValues.size());
+  }
 
   /// @brief Set a field value on which to extract a contour.
   ///
@@ -153,15 +156,16 @@ protected:
   /// and \c GetCellIdMap function giving the cell id mapping from input to output
   template <typename WorkletType>
   VISKORES_CONT static bool DoMapField(viskores::cont::DataSet& result,
-                                   const viskores::cont::Field& field,
-                                   WorkletType& worklet)
+                                       const viskores::cont::Field& field,
+                                       WorkletType& worklet)
   {
     if (field.IsPointField())
     {
       viskores::cont::UnknownArrayHandle inputArray = field.GetData();
       viskores::cont::UnknownArrayHandle outputArray = inputArray.NewInstanceBasic();
 
-      auto functor = [&](const auto& concrete) {
+      auto functor = [&](const auto& concrete)
+      {
         using ComponentType = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
         auto fieldArray = outputArray.ExtractArrayFromComponents<ComponentType>();
         worklet.ProcessPointField(concrete, fieldArray);
@@ -184,8 +188,9 @@ protected:
     return false;
   }
 
-  VISKORES_CONT void ExecuteGenerateNormals(viskores::cont::DataSet& output,
-                                        const viskores::cont::ArrayHandle<viskores::Vec3f>& normals)
+  VISKORES_CONT void ExecuteGenerateNormals(
+    viskores::cont::DataSet& output,
+    const viskores::cont::ArrayHandle<viskores::Vec3f>& normals)
   {
     if (this->GenerateNormals)
     {
@@ -204,13 +209,14 @@ protected:
   }
 
   template <typename WorkletType>
-  VISKORES_CONT void ExecuteAddInterpolationEdgeIds(viskores::cont::DataSet& output, WorkletType& worklet)
+  VISKORES_CONT void ExecuteAddInterpolationEdgeIds(viskores::cont::DataSet& output,
+                                                    WorkletType& worklet)
   {
     if (this->AddInterpolationEdgeIds)
     {
       viskores::cont::Field interpolationEdgeIdsField(this->InterpolationEdgeIdsArrayName,
-                                                  viskores::cont::Field::Association::Points,
-                                                  worklet.GetInterpolationEdgeIds());
+                                                      viskores::cont::Field::Association::Points,
+                                                      worklet.GetInterpolationEdgeIds());
       output.AddField(interpolationEdgeIdsField);
     }
   }

@@ -84,7 +84,8 @@ struct CopyIntoCombinedNeighborsWorklet : public viskores::worklet::WorkletMapFi
   using ControlSignature = void(FieldIn, FieldInOut);
 
   template <typename InGroupType, typename OutGroupType>
-  VISKORES_EXEC void operator()(const InGroupType& newNeighbors, OutGroupType& combinedNeighbors) const
+  VISKORES_EXEC void operator()(const InGroupType& newNeighbors,
+                                OutGroupType& combinedNeighbors) const
   {
     viskores::IdComponent groupSize = newNeighbors.GetNumberOfComponents();
     VISKORES_ASSERT(groupSize == combinedNeighbors.GetNumberOfComponents());

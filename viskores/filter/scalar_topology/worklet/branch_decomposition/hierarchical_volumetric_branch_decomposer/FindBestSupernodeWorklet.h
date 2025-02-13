@@ -71,9 +71,9 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   VISKORES_EXEC void operator()(viskores::Id incomingBestVolume,
-                            viskores::Id incomingBestSupernode,
-                            viskores::Id& bestVolume,
-                            viskores::Id& bestSupernode) const
+                                viskores::Id incomingBestSupernode,
+                                viskores::Id& bestVolume,
+                                viskores::Id& bestSupernode) const
   {
     // this is the same test as the SuperArcVolumetricComparator, hard-coded since we're not
     // dealing with an array here

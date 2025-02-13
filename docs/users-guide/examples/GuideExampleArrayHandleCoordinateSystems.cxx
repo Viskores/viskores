@@ -39,30 +39,30 @@ void UniformPointCoordinates()
   ////
 
   VISKORES_TEST_ASSERT(uniformCoordinates.GetNumberOfValues() == 248976,
-                   "Wrong number of values in uniform coordinates.");
-  VISKORES_TEST_ASSERT(
-    test_equal(uniformCoordinates.ReadPortal().Get(0), viskores::Vec3f{ -5.0, -3.0, -3.0 }),
-    "Bad first point coordinate.");
+                       "Wrong number of values in uniform coordinates.");
+  VISKORES_TEST_ASSERT(test_equal(uniformCoordinates.ReadPortal().Get(0),
+                                  viskores::Vec3f{ -5.0, -3.0, -3.0 }),
+                       "Bad first point coordinate.");
   VISKORES_TEST_ASSERT(test_equal(uniformCoordinates.ReadPortal().Get(248975),
-                              viskores::Vec3f{ 5.0, 3.0, 3.0 }),
-                   "Bad last point coordinate.");
+                                  viskores::Vec3f{ 5.0, 3.0, 3.0 }),
+                       "Bad last point coordinate.");
 }
 
 template<typename ArrayHandleType>
 void CheckRectilinearPointCoordinates(ArrayHandleType rectilinearCoordinates)
 {
   VISKORES_TEST_ASSERT(rectilinearCoordinates.GetNumberOfValues() == 12,
-                   "Wrong number of values.");
+                       "Wrong number of values.");
 
   VISKORES_TEST_ASSERT(test_equal(rectilinearCoordinates.ReadPortal().Get(0),
-                              viskores::Vec3f{ 0.0f, 0.0f, 0.0f }),
-                   "Bad value at 0.");
+                                  viskores::Vec3f{ 0.0f, 0.0f, 0.0f }),
+                       "Bad value at 0.");
   VISKORES_TEST_ASSERT(test_equal(rectilinearCoordinates.ReadPortal().Get(4),
-                              viskores::Vec3f{ 1.1f, 2.0f, 0.0f }),
-                   "Bad value at 4.");
+                                  viskores::Vec3f{ 1.1f, 2.0f, 0.0f }),
+                       "Bad value at 4.");
   VISKORES_TEST_ASSERT(test_equal(rectilinearCoordinates.ReadPortal().Get(11),
-                              viskores::Vec3f{ 5.0f, 2.0f, 0.5f }),
-                   "Bad value at 11.");
+                                  viskores::Vec3f{ 5.0f, 2.0f, 0.5f }),
+                       "Bad value at 11.");
 }
 
 void RectilinearPointCoordinates()
@@ -105,8 +105,9 @@ void RectilinearPointCoordinates()
   // [0.0, 2.0, 0.0], [1.1, 2.0, 0.0], [5.0, 2.0, 0.0],
   // [0.0, 0.0, 0.5], [1.1, 0.0, 0.5], [5.0, 0.0, 0.5],
   // [0.0, 2.0, 0.5], [1.1, 2.0, 0.5], [5.0, 2.0, 0.5]
-  viskores::cont::ArrayHandleCartesianProduct<AxisArrayType, AxisArrayType, AxisArrayType>
-    rectilinearCoordinates(xAxisArray, yAxisArray, zAxisArray);
+  viskores::cont::
+    ArrayHandleCartesianProduct<AxisArrayType, AxisArrayType, AxisArrayType>
+      rectilinearCoordinates(xAxisArray, yAxisArray, zAxisArray);
   ////
   //// END-EXAMPLE ArrayHandleCartesianProduct
   ////

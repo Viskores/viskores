@@ -63,8 +63,8 @@ public:
   VISKORES_EXEC viskores::Float64 operator()(const viskores::Vec<T, 3>& vec) const
   {
     return (*this)(viskores::make_Vec(static_cast<viskores::Float64>(vec[0]),
-                                  static_cast<viskores::Float64>(vec[1]),
-                                  static_cast<viskores::Float64>(vec[2])));
+                                      static_cast<viskores::Float64>(vec[1]),
+                                      static_cast<viskores::Float64>(vec[2])));
   }
 
 private:

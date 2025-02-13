@@ -51,8 +51,8 @@ public:
   viskores::Vec3f GetPt()
   {
     return viskores::Vec3f(this->Distributions[0](this->Generator),
-                       this->Distributions[1](this->Generator),
-                       this->Distributions[2](this->Generator));
+                           this->Distributions[1](this->Generator),
+                           this->Distributions[2](this->Generator));
   }
 
 private:
@@ -88,9 +88,9 @@ public:
 
   template <typename LocatorType, typename DeltaArrayType>
   VISKORES_EXEC void operator()(const viskores::Vec3f& inPoint,
-                            const LocatorType& locator,
-                            const DeltaArrayType& dx,
-                            const DeltaArrayType& dy) const
+                                const LocatorType& locator,
+                                const DeltaArrayType& dx,
+                                const DeltaArrayType& dy) const
   {
     viskores::Id cellId;
     viskores::Vec3f pcoords;
@@ -119,8 +119,9 @@ viskores::cont::DataSet CreateExplicitDataSet2D(viskores::Id Nx, viskores::Id Ny
 {
   viskores::Id3 dims(Nx, Ny, 1);
   const viskores::Vec3f origin(0, 0, 0);
-  viskores::Vec3f spacing(
-    1 / static_cast<viskores::FloatDefault>(Nx - 1), 1 / static_cast<viskores::FloatDefault>(Ny - 1), 0);
+  viskores::Vec3f spacing(1 / static_cast<viskores::FloatDefault>(Nx - 1),
+                          1 / static_cast<viskores::FloatDefault>(Ny - 1),
+                          0);
   auto ds = viskores::cont::DataSetBuilderUniform::Create(dims, origin, spacing);
 
   //Turn the grid into an explicit triangle grid.
@@ -130,8 +131,9 @@ viskores::cont::DataSet CreateExplicitDataSet2D(viskores::Id Nx, viskores::Id Ny
   //triDS.PrintSummary(std::cout);
 
   //Randomly tweak each vertex.
-  auto coords =
-    triDS.GetCoordinateSystem().GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>();
+  auto coords = triDS.GetCoordinateSystem()
+                  .GetData()
+                  .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>();
   auto coordsPortal = coords.WritePortal();
   viskores::Id nCoords = coordsPortal.GetNumberOfValues();
 
@@ -151,8 +153,8 @@ viskores::cont::DataSet CreateExplicitDataSet2D(viskores::Id Nx, viskores::Id Ny
 }
 
 viskores::cont::ArrayHandle<viskores::Vec3f> CreateRandomPoints(viskores::Id numPoints,
-                                                        const viskores::cont::DataSet& ds,
-                                                        viskores::Id seed)
+                                                                const viskores::cont::DataSet& ds,
+                                                                viskores::Id seed)
 {
   RandomPointGenerator rpg(ds.GetCoordinateSystem().GetBounds(), seed);
 
@@ -164,7 +166,8 @@ viskores::cont::ArrayHandle<viskores::Vec3f> CreateRandomPoints(viskores::Id num
 }
 
 template <typename LocatorType>
-void RunLocatorBenchmark(const viskores::cont::ArrayHandle<viskores::Vec3f>& points, LocatorType& locator)
+void RunLocatorBenchmark(const viskores::cont::ArrayHandle<viskores::Vec3f>& points,
+                         LocatorType& locator)
 {
   //Call find cell on each point.
   viskores::cont::Invoker invoker;
@@ -290,8 +293,10 @@ void Bench2DCellLocatorTwoLevelIterate(::benchmark::State& state)
     (void)_;
 
     auto points = CreateRandomPoints(numPoints, triDS, seed++);
-    auto dx = viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(numIters, seed++);
-    auto dy = viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(numIters, seed++);
+    auto dx =
+      viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(numIters, seed++);
+    auto dy =
+      viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(numIters, seed++);
 
     timer.Start();
     RunLocatorIterateBenchmark(points, numIters, locator2L, dx, dy, useLastCell);
@@ -332,8 +337,10 @@ void Bench2DCellLocatorUniformBinsIterate(::benchmark::State& state)
     (void)_;
 
     auto points = CreateRandomPoints(numPoints, triDS, seed++);
-    auto dx = viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(numIters, seed++);
-    auto dy = viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(numIters, seed++);
+    auto dx =
+      viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(numIters, seed++);
+    auto dy =
+      viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(numIters, seed++);
 
     timer.Start();
     RunLocatorIterateBenchmark(points, numIters, locatorUB, dx, dy, useLastCell);
@@ -426,9 +433,10 @@ void Bench2DCellLocatorUniformBinsIterateGenerator(::benchmark::internal::Benchm
 VISKORES_BENCHMARK_APPLY(Bench2DCellLocatorTwoLevel, Bench2DCellLocatorTwoLevelGenerator);
 VISKORES_BENCHMARK_APPLY(Bench2DCellLocatorUniformBins, Bench2DCellLocatorUniformBinsGenerator);
 
-VISKORES_BENCHMARK_APPLY(Bench2DCellLocatorTwoLevelIterate, Bench2DCellLocatorTwoLevelIterateGenerator);
+VISKORES_BENCHMARK_APPLY(Bench2DCellLocatorTwoLevelIterate,
+                         Bench2DCellLocatorTwoLevelIterateGenerator);
 VISKORES_BENCHMARK_APPLY(Bench2DCellLocatorUniformBinsIterate,
-                     Bench2DCellLocatorUniformBinsIterateGenerator);
+                         Bench2DCellLocatorUniformBinsIterateGenerator);
 
 } // end anon namespace
 

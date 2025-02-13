@@ -37,7 +37,7 @@ viskores::cont::DataSet MakeContourUncertainUniformTestDataSet()
 
   viskores::IdComponent k = 0;
   viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault> randomArray(25 * 25 * 25 * 2,
-                                                                           { 0xceed });
+                                                                                   { 0xceed });
   auto portal = randomArray.ReadPortal();
 
   for (viskores::Id i = 0; i < numPoints; ++i)
@@ -89,7 +89,8 @@ void TestUncertaintyGeneral(viskores::FloatDefault isoValue)
   viskores::cont::Field NonzeroProb = output.GetField("NonzeroProbablity");
   viskores::cont::ArrayHandle<viskores::Id> NonzeroProbArray;
   NonzeroProb.GetData().AsArrayHandle(NonzeroProbArray);
-  viskores::cont::ArrayHandle<viskores::Id>::ReadPortalType NonzeroPortal = NonzeroProbArray.ReadPortal();
+  viskores::cont::ArrayHandle<viskores::Id>::ReadPortalType NonzeroPortal =
+    NonzeroProbArray.ReadPortal();
 
   // Entropy field (closed form)
   viskores::cont::Field entropy = output.GetField("Entropy");
@@ -135,14 +136,14 @@ void TestUncertaintyGeneral(viskores::FloatDefault isoValue)
     // Maximum Cross Probability Difference: 1
     // Maximum Nonzero Difference: 256
     VISKORES_TEST_ASSERT((viskores::Abs(CrossProbMCValue - CrossProbValue) < 0.1) ||
-                       (viskores::Abs(NonzeroProbMCValue - NonzeroProbValue) < 50) ||
-                       (viskores::Abs(EntropyMCValue - EntropyValue) < 0.5),
-                     viskores::Abs(CrossProbMCValue - CrossProbValue),
-                     ' ',
-                     viskores::Abs(NonzeroProbMCValue - NonzeroProbValue) < 50,
-                     ' ',
-                     viskores::Abs(EntropyMCValue - EntropyValue),
-                     " No Match With Monte Carlo Sampling");
+                           (viskores::Abs(NonzeroProbMCValue - NonzeroProbValue) < 50) ||
+                           (viskores::Abs(EntropyMCValue - EntropyValue) < 0.5),
+                         viskores::Abs(CrossProbMCValue - CrossProbValue),
+                         ' ',
+                         viskores::Abs(NonzeroProbMCValue - NonzeroProbValue) < 50,
+                         ' ',
+                         viskores::Abs(EntropyMCValue - EntropyValue),
+                         " No Match With Monte Carlo Sampling");
   }
 }
 

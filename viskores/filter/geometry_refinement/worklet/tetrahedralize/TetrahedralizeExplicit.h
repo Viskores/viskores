@@ -97,8 +97,9 @@ public:
   };
 
   template <typename CellSetType>
-  viskores::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
-                                      viskores::cont::ArrayHandle<viskores::IdComponent>& outCellsPerCell)
+  viskores::cont::CellSetSingleType<> Run(
+    const CellSetType& cellSet,
+    viskores::cont::ArrayHandle<viskores::IdComponent>& outCellsPerCell)
   {
     viskores::cont::CellSetSingleType<> outCellSet;
 
@@ -120,7 +121,8 @@ public:
            viskores::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
 
     // Add cells to output cellset
-    outCellSet.Fill(cellSet.GetNumberOfPoints(), viskores::CellShapeTagTetra::Id, 4, outConnectivity);
+    outCellSet.Fill(
+      cellSet.GetNumberOfPoints(), viskores::CellShapeTagTetra::Id, 4, outConnectivity);
     return outCellSet;
   }
 };

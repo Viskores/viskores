@@ -20,17 +20,20 @@ namespace
 static constexpr viskores::Id ARRAY_SIZE = 10;
 
 template <typename ArrayPortalType>
-void SetReference(viskores::Id index, viskores::internal::ArrayPortalValueReference<ArrayPortalType> ref)
+void SetReference(viskores::Id index,
+                  viskores::internal::ArrayPortalValueReference<ArrayPortalType> ref)
 {
   using ValueType = typename ArrayPortalType::ValueType;
   ref = TestValue(index, ValueType());
 }
 
 template <typename ArrayPortalType>
-void CheckReference(viskores::Id index, viskores::internal::ArrayPortalValueReference<ArrayPortalType> ref)
+void CheckReference(viskores::Id index,
+                    viskores::internal::ArrayPortalValueReference<ArrayPortalType> ref)
 {
   using ValueType = typename ArrayPortalType::ValueType;
-  VISKORES_TEST_ASSERT(test_equal(ref, TestValue(index, ValueType())), "Got bad value from reference.");
+  VISKORES_TEST_ASSERT(test_equal(ref, TestValue(index, ValueType())),
+                       "Got bad value from reference.");
 }
 
 template <typename ArrayPortalType>
@@ -290,7 +293,8 @@ struct DoTestForType
     std::cout << "Check references in set array." << std::endl;
     for (viskores::Id index = 0; index < ARRAY_SIZE; ++index)
     {
-      CheckReference(index, viskores::internal::ArrayPortalValueReference<PortalType>(portal, index));
+      CheckReference(index,
+                     viskores::internal::ArrayPortalValueReference<PortalType>(portal, index));
     }
 
     std::cout << "Make a scratch buffer for ref-ref operations." << std::endl;
@@ -316,8 +320,8 @@ void DoTest()
   // bytes) get automatically promoted to larger types, so doing somthing like a += operation
   // causes annoying compiler warnings. Float types are also problematic because comparison
   // operations like == can fail even when you expect the values to be the same.
-  viskores::testing::Testing::TryTypes(DoTestForType(),
-                                   viskores::List<viskores::Int32, viskores::UInt64, viskores::Id3>());
+  viskores::testing::Testing::TryTypes(
+    DoTestForType(), viskores::List<viskores::Int32, viskores::UInt64, viskores::Id3>());
 }
 
 } // anonymous namespace

@@ -44,38 +44,41 @@ void verify_neighbors(NeighborhoodType neighbors, viskores::Id index, viskores::
 
   //Verify the boundary flags first
   VISKORES_TEST_ASSERT(((index3d[0] != 0) && (index3d[0] != (POINT_DIMS[0] - 1))) ==
-                     boundary->IsRadiusInXBoundary(1),
-                   "Got invalid X radius boundary");
+                         boundary->IsRadiusInXBoundary(1),
+                       "Got invalid X radius boundary");
   VISKORES_TEST_ASSERT(((index3d[1] != 0) && (index3d[1] != (POINT_DIMS[1] - 1))) ==
-                     boundary->IsRadiusInYBoundary(1),
-                   "Got invalid Y radius boundary");
+                         boundary->IsRadiusInYBoundary(1),
+                       "Got invalid Y radius boundary");
   VISKORES_TEST_ASSERT(((index3d[2] != 0) && (index3d[2] != (POINT_DIMS[2] - 1))) ==
-                     boundary->IsRadiusInZBoundary(1),
-                   "Got invalid Z radius boundary");
+                         boundary->IsRadiusInZBoundary(1),
+                       "Got invalid Z radius boundary");
 
   VISKORES_TEST_ASSERT((index3d[0] != 0) == boundary->IsNeighborInXBoundary(-1),
-                   "Got invalid X negative neighbor boundary");
+                       "Got invalid X negative neighbor boundary");
   VISKORES_TEST_ASSERT((index3d[1] != 0) == boundary->IsNeighborInYBoundary(-1),
-                   "Got invalid Y negative neighbor boundary");
+                       "Got invalid Y negative neighbor boundary");
   VISKORES_TEST_ASSERT((index3d[2] != 0) == boundary->IsNeighborInZBoundary(-1),
-                   "Got invalid Z negative neighbor boundary");
+                       "Got invalid Z negative neighbor boundary");
 
   VISKORES_TEST_ASSERT((index3d[0] != (POINT_DIMS[0] - 1)) == boundary->IsNeighborInXBoundary(1),
-                   "Got invalid X positive neighbor boundary");
+                       "Got invalid X positive neighbor boundary");
   VISKORES_TEST_ASSERT((index3d[1] != (POINT_DIMS[1] - 1)) == boundary->IsNeighborInYBoundary(1),
-                   "Got invalid Y positive neighbor boundary");
+                       "Got invalid Y positive neighbor boundary");
   VISKORES_TEST_ASSERT((index3d[2] != (POINT_DIMS[2] - 1)) == boundary->IsNeighborInZBoundary(1),
-                   "Got invalid Z positive neighbor boundary");
+                       "Got invalid Z positive neighbor boundary");
 
-  VISKORES_TEST_ASSERT(((boundary->MinNeighborIndices(1)[0] == -1) &&
-                    (boundary->MaxNeighborIndices(1)[0] == 1)) == boundary->IsRadiusInXBoundary(1),
-                   "Got invalid min/max X indices");
-  VISKORES_TEST_ASSERT(((boundary->MinNeighborIndices(1)[1] == -1) &&
-                    (boundary->MaxNeighborIndices(1)[1] == 1)) == boundary->IsRadiusInYBoundary(1),
-                   "Got invalid min/max Y indices");
-  VISKORES_TEST_ASSERT(((boundary->MinNeighborIndices(1)[2] == -1) &&
-                    (boundary->MaxNeighborIndices(1)[2] == 1)) == boundary->IsRadiusInZBoundary(1),
-                   "Got invalid min/max Z indices");
+  VISKORES_TEST_ASSERT(
+    ((boundary->MinNeighborIndices(1)[0] == -1) && (boundary->MaxNeighborIndices(1)[0] == 1)) ==
+      boundary->IsRadiusInXBoundary(1),
+    "Got invalid min/max X indices");
+  VISKORES_TEST_ASSERT(
+    ((boundary->MinNeighborIndices(1)[1] == -1) && (boundary->MaxNeighborIndices(1)[1] == 1)) ==
+      boundary->IsRadiusInYBoundary(1),
+    "Got invalid min/max Y indices");
+  VISKORES_TEST_ASSERT(
+    ((boundary->MinNeighborIndices(1)[2] == -1) && (boundary->MaxNeighborIndices(1)[2] == 1)) ==
+      boundary->IsRadiusInZBoundary(1),
+    "Got invalid min/max Z indices");
 
   T forwardX = neighbors.Get(1, 0, 0);
   expected = (index3d[0] == POINT_DIMS[0] - 1) ? TestValue(index, T()) : TestValue(index + 1, T());
@@ -95,8 +98,8 @@ struct FetchArrayNeighborhoodInTests
     TestPortal<T> execObject;
 
     using FetchType = viskores::exec::arg::Fetch<viskores::exec::arg::FetchTagArrayNeighborhoodIn,
-                                             viskores::exec::arg::AspectTagDefault,
-                                             TestPortal<T>>;
+                                                 viskores::exec::arg::AspectTagDefault,
+                                                 TestPortal<T>>;
 
     FetchType fetch;
 
@@ -121,13 +124,14 @@ struct FetchArrayNeighborhoodInTests
           for (viskores::Id i = 0; i < POINT_DIMS[0]; i++, index++)
           {
             index3d[0] = i;
-            viskores::exec::arg::ThreadIndicesPointNeighborhood indices(index3d, index, connectivity);
+            viskores::exec::arg::ThreadIndicesPointNeighborhood indices(
+              index3d, index, connectivity);
 
             auto neighbors = fetch.Load(indices, execObject);
 
             T value = neighbors.Get(0, 0, 0);
             VISKORES_TEST_ASSERT(test_equal(value, TestValue(index, T())),
-                             "Got invalid value from Load.");
+                                 "Got invalid value from Load.");
 
             //We now need to check the neighbors.
             verify_neighbors(neighbors, index, index3d, value);
@@ -142,12 +146,14 @@ struct FetchArrayNeighborhoodInTests
     //Verify that 1D scheduling works with neighborhoods
     for (viskores::Id index = 0; index < (POINT_DIMS[0] * POINT_DIMS[1] * POINT_DIMS[2]); index++)
     {
-      viskores::exec::arg::ThreadIndicesPointNeighborhood indices(index, index, 0, index, connectivity);
+      viskores::exec::arg::ThreadIndicesPointNeighborhood indices(
+        index, index, 0, index, connectivity);
 
       auto neighbors = fetch.Load(indices, execObject);
 
       T value = neighbors.Get(0, 0, 0); //center value
-      VISKORES_TEST_ASSERT(test_equal(value, TestValue(index, T())), "Got invalid value from Load.");
+      VISKORES_TEST_ASSERT(test_equal(value, TestValue(index, T())),
+                           "Got invalid value from Load.");
 
 
       const viskores::Id indexij = index % (POINT_DIMS[0] * POINT_DIMS[1]);

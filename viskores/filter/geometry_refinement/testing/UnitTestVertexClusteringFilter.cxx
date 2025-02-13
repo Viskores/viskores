@@ -30,7 +30,7 @@ void TestVertexClustering()
   clustering.SetFieldsToPass({ "pointvar", "cellvar" });
   viskores::cont::DataSet output = clustering.Execute(dataSet);
   VISKORES_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
-                   "Number of output coordinate systems mismatch");
+                       "Number of output coordinate systems mismatch");
 
   using FieldArrayType = viskores::cont::ArrayHandle<viskores::Float32>;
   FieldArrayType pointvar =
@@ -53,8 +53,8 @@ void TestVertexClustering()
     using CellSetType = viskores::cont::CellSetSingleType<>;
     CellSetType cellSet;
     output.GetCellSet().AsCellSet(cellSet);
-    auto cellArray =
-      cellSet.GetConnectivityArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+    auto cellArray = cellSet.GetConnectivityArray(viskores::TopologyElementTagCell(),
+                                                  viskores::TopologyElementTagPoint());
     std::cerr << "output_pointIds = " << cellArray.GetNumberOfValues() << "\n";
     std::cerr << "output_pointId[] = ";
     viskores::cont::printSummary_ArrayHandle(cellArray, std::cerr, true);
@@ -73,7 +73,7 @@ void TestVertexClustering()
   using PointType = viskores::Vec3f_64;
   auto pointArray = output.GetCoordinateSystem(0).GetDataAsMultiplexer();
   VISKORES_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points,
-                   "Number of output points mismatch");
+                       "Number of output points mismatch");
   auto pointArrayPortal = pointArray.ReadPortal();
   for (viskores::Id i = 0; i < pointArray.GetNumberOfValues(); ++i)
   {

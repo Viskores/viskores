@@ -34,11 +34,15 @@ public:
 
   using ValueType = viskores::IdComponent;
 
-  VISKORES_EXEC_CONT viskores::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues() - 1; }
+  VISKORES_EXEC_CONT viskores::Id GetNumberOfValues() const
+  {
+    return this->Portal.GetNumberOfValues() - 1;
+  }
 
   VISKORES_EXEC_CONT viskores::IdComponent Get(viskores::Id index) const
   {
-    return static_cast<viskores::IdComponent>(this->Portal.Get(index + 1) - this->Portal.Get(index));
+    return static_cast<viskores::IdComponent>(this->Portal.Get(index + 1) -
+                                              this->Portal.Get(index));
   }
 };
 
@@ -60,7 +64,8 @@ namespace internal
 
 template <typename OffsetsStorageTag>
 class VISKORES_ALWAYS_EXPORT
-  Storage<viskores::IdComponent, viskores::cont::StorageTagOffsetsToNumComponents<OffsetsStorageTag>>
+  Storage<viskores::IdComponent,
+          viskores::cont::StorageTagOffsetsToNumComponents<OffsetsStorageTag>>
 {
   using OffsetsStorage = viskores::cont::internal::Storage<viskores::Id, OffsetsStorageTag>;
 
@@ -139,7 +144,7 @@ class VISKORES_ALWAYS_EXPORT ArrayHandleOffsetsToNumComponents
 {
   VISKORES_IS_ARRAY_HANDLE(OffsetsArray);
   VISKORES_STATIC_ASSERT_MSG((std::is_same<typename OffsetsArray::ValueType, viskores::Id>::value),
-                         "Offsets array must have a value type of viskores::Id.");
+                             "Offsets array must have a value type of viskores::Id.");
 
 public:
   VISKORES_ARRAY_HANDLE_SUBCLASS(

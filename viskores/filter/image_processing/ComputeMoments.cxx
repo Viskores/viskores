@@ -27,7 +27,8 @@ VISKORES_CONT ComputeMoments::ComputeMoments()
   this->SetOutputFieldName("moments_");
 }
 
-VISKORES_CONT viskores::cont::DataSet ComputeMoments::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet ComputeMoments::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   const auto& field = this->GetFieldFromDataSet(input);
   if (!field.IsPointField())
@@ -38,9 +39,8 @@ VISKORES_CONT viskores::cont::DataSet ComputeMoments::DoExecute(const viskores::
   viskores::cont::DataSet output = this->CreateResult(input);
   auto worklet = viskores::worklet::moments::ComputeMoments(this->Radius, this->Spacing);
 
-  auto resolveType = [&](const auto& concrete) {
-    worklet.Run(input.GetCellSet(), concrete, this->Order, output);
-  };
+  auto resolveType = [&](const auto& concrete)
+  { worklet.Run(input.GetCellSet(), concrete, this->Order, output); };
   this->CastAndCallVariableVecField(field, resolveType);
 
   return output;

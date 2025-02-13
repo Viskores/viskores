@@ -168,8 +168,8 @@ struct BoundaryState
       }
       else
       {
-        maxIndices[component] = static_cast<viskores::IdComponent>(this->PointDimensions[component] -
-                                                               this->IJK[component] - 1);
+        maxIndices[component] = static_cast<viskores::IdComponent>(
+          this->PointDimensions[component] - this->IJK[component] - 1);
       }
     }
 
@@ -182,17 +182,19 @@ struct BoundaryState
   /// index that is past the minimum x range of the data, the index at the minimum x boundary is
   /// returned.
   ///
-  VISKORES_EXEC viskores::Id3 NeighborIndexToFullIndexClamp(const viskores::IdComponent3& neighbor) const
+  VISKORES_EXEC viskores::Id3 NeighborIndexToFullIndexClamp(
+    const viskores::IdComponent3& neighbor) const
   {
     viskores::Id3 fullIndex = this->IJK + neighbor;
 
-    return viskores::Max(viskores::Id3(0), viskores::Min(this->PointDimensions - viskores::Id3(1), fullIndex));
+    return viskores::Max(viskores::Id3(0),
+                         viskores::Min(this->PointDimensions - viskores::Id3(1), fullIndex));
   }
 
   /// @copydoc NeighborIndexToFullIndexClamp
   VISKORES_EXEC viskores::Id3 NeighborIndexToFullIndexClamp(viskores::IdComponent neighborI,
-                                                    viskores::IdComponent neighborJ,
-                                                    viskores::IdComponent neighborK) const
+                                                            viskores::IdComponent neighborJ,
+                                                            viskores::IdComponent neighborK) const
   {
     return this->NeighborIndexToFullIndexClamp(viskores::make_Vec(neighborI, neighborJ, neighborK));
   }
@@ -208,8 +210,8 @@ struct BoundaryState
 
   /// @copydoc NeighborIndexToFullIndex
   VISKORES_EXEC viskores::Id3 NeighborIndexToFullIndex(viskores::IdComponent neighborI,
-                                               viskores::IdComponent neighborJ,
-                                               viskores::IdComponent neighborK) const
+                                                       viskores::IdComponent neighborJ,
+                                                       viskores::IdComponent neighborK) const
   {
     return this->NeighborIndexToFullIndex(viskores::make_Vec(neighborI, neighborJ, neighborK));
   }
@@ -220,18 +222,19 @@ struct BoundaryState
   /// the minimum x range of the data, the neighbor index of the minimum x
   /// boundary is returned.
   ///
-  VISKORES_EXEC viskores::IdComponent3 ClampNeighborIndex(const viskores::IdComponent3& neighbor) const
+  VISKORES_EXEC viskores::IdComponent3 ClampNeighborIndex(
+    const viskores::IdComponent3& neighbor) const
   {
     const viskores::Id3 fullIndex = this->IJK + neighbor;
-    const viskores::Id3 clampedFullIndex =
-      viskores::Max(viskores::Id3(0), viskores::Min(this->PointDimensions - viskores::Id3(1), fullIndex));
+    const viskores::Id3 clampedFullIndex = viskores::Max(
+      viskores::Id3(0), viskores::Min(this->PointDimensions - viskores::Id3(1), fullIndex));
     return viskores::IdComponent3{ clampedFullIndex - this->IJK };
   }
 
   /// @copydoc ClampNeighborIndex
   VISKORES_EXEC viskores::IdComponent3 ClampNeighborIndex(viskores::IdComponent neighborI,
-                                                  viskores::IdComponent neighborJ,
-                                                  viskores::IdComponent neighborK) const
+                                                          viskores::IdComponent neighborJ,
+                                                          viskores::IdComponent neighborK) const
   {
     return this->ClampNeighborIndex(viskores::make_Vec(neighborI, neighborJ, neighborK));
   }
@@ -242,7 +245,8 @@ struct BoundaryState
   /// neighbor index that is past the minimum x range of the data, the index at the minimum x
   /// boundary is returned.
   ///
-  VISKORES_EXEC viskores::Id NeighborIndexToFlatIndexClamp(const viskores::IdComponent3& neighbor) const
+  VISKORES_EXEC viskores::Id NeighborIndexToFlatIndexClamp(
+    const viskores::IdComponent3& neighbor) const
   {
     viskores::Id3 full = this->NeighborIndexToFullIndexClamp(neighbor);
 
@@ -251,8 +255,8 @@ struct BoundaryState
 
   /// @copydoc NeighborIndexToFlatIndexClamp
   VISKORES_EXEC viskores::Id NeighborIndexToFlatIndexClamp(viskores::IdComponent neighborI,
-                                                   viskores::IdComponent neighborJ,
-                                                   viskores::IdComponent neighborK) const
+                                                           viskores::IdComponent neighborJ,
+                                                           viskores::IdComponent neighborK) const
   {
     return this->NeighborIndexToFlatIndexClamp(viskores::make_Vec(neighborI, neighborJ, neighborK));
   }
@@ -269,8 +273,8 @@ struct BoundaryState
 
   /// @copydoc NeighborIndexToFlatIndex
   VISKORES_EXEC viskores::Id NeighborIndexToFlatIndex(viskores::IdComponent neighborI,
-                                              viskores::IdComponent neighborJ,
-                                              viskores::IdComponent neighborK) const
+                                                      viskores::IdComponent neighborJ,
+                                                      viskores::IdComponent neighborK) const
   {
     return this->NeighborIndexToFlatIndex(viskores::make_Vec(neighborI, neighborJ, neighborK));
   }

@@ -150,7 +150,7 @@ struct TryWholeArrayType
       T expectedValue = TestValue(index, T()) + T(OFFSET);
       T retrievedValue = portal.Get(index);
       VISKORES_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
-                       "In/Out array not set correctly.");
+                           "In/Out array not set correctly.");
     }
   }
 };
@@ -163,8 +163,8 @@ struct TryAtomicArrayType
   {
     using ArrayHandleType = viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>;
 
-    using TransportType =
-      viskores::cont::arg::Transport<viskores::cont::arg::TransportTagAtomicArray, ArrayHandleType, Device>;
+    using TransportType = viskores::cont::arg::
+      Transport<viskores::cont::arg::TransportTagAtomicArray, ArrayHandleType, Device>;
 
     ArrayHandleType array;
     array.Allocate(1);
@@ -181,7 +181,7 @@ struct TryAtomicArrayType
 
     T result = array.ReadPortal().Get(0);
     VISKORES_TEST_ASSERT(result == ((ARRAY_SIZE - 1) * ARRAY_SIZE) / 2,
-                     "Got wrong summation in atomic array.");
+                         "Got wrong summation in atomic array.");
   }
 };
 
@@ -189,7 +189,8 @@ template <typename Device>
 void TryArrayOutTransport(Device)
 {
   viskores::testing::Testing::TryTypes(TryWholeArrayType<Device>(), viskores::TypeListCommon());
-  viskores::testing::Testing::TryTypes(TryAtomicArrayType<Device>(), viskores::cont::AtomicArrayTypeList());
+  viskores::testing::Testing::TryTypes(TryAtomicArrayType<Device>(),
+                                       viskores::cont::AtomicArrayTypeList());
 }
 
 void TestWholeArrayTransport()

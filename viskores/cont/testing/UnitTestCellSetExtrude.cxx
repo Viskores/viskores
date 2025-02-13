@@ -60,9 +60,9 @@ struct CopyReverseCellCount : public viskores::worklet::WorkletVisitPointsWithCe
 
   template <typename CellIndicesType, typename OutVec>
   VISKORES_EXEC viskores::Int32 operator()(viskores::CellShapeTagVertex,
-                                   viskores::IdComponent count,
-                                   CellIndicesType&& cellIndices,
-                                   OutVec& outIndices) const
+                                           viskores::IdComponent count,
+                                           CellIndicesType&& cellIndices,
+                                           OutVec& outIndices) const
   {
     cellIndices.CopyInto(outIndices);
 
@@ -84,9 +84,9 @@ struct CopyReverseCellCountScatter : public viskores::worklet::WorkletVisitPoint
 
   template <typename CellIndicesType, typename OutVec>
   VISKORES_EXEC viskores::Int32 operator()(viskores::CellShapeTagVertex,
-                                   viskores::IdComponent count,
-                                   CellIndicesType&& cellIndices,
-                                   OutVec& outIndices) const
+                                           viskores::IdComponent count,
+                                           CellIndicesType&& cellIndices,
+                                           OutVec& outIndices) const
   {
     cellIndices.CopyInto(outIndices);
 
@@ -106,7 +106,7 @@ void verify_topo(viskores::cont::ArrayHandle<viskores::Vec<T, 6>, S> const& hand
 {
   auto portal = handle.ReadPortal();
   VISKORES_TEST_ASSERT((portal.GetNumberOfValues() * skip) == expectedLen,
-                   "topology portal size is incorrect");
+                       "topology portal size is incorrect");
 
   for (viskores::Id i = 0; i < expectedLen; i += skip)
   {
@@ -133,7 +133,7 @@ void verify_reverse_topo(const viskores::cont::ArrayHandle<viskores::Int32>& cou
 {
   auto countsPortal = counts.ReadPortal();
   VISKORES_TEST_ASSERT((countsPortal.GetNumberOfValues() * skip) == expectedLen,
-                   "topology portal size is incorrect");
+                       "topology portal size is incorrect");
   auto indicesPortal = indices.ReadPortal();
   VISKORES_TEST_ASSERT((indicesPortal.GetNumberOfValues() * skip) == expectedLen);
   for (viskores::Id i = 0; i < expectedLen - 1; i += skip)
@@ -159,7 +159,7 @@ int TestCellSetExtrude()
   auto coords = viskores::cont::make_ArrayHandleXGCCoordinates(points_rz, numPlanes, false);
   auto cells = viskores::cont::make_CellSetExtrude(topology, coords, nextNode);
   VISKORES_TEST_ASSERT(cells.GetNumberOfPoints() == coords.GetNumberOfValues(),
-                   "number of points don't match between cells and coordinates");
+                       "number of points don't match between cells and coordinates");
 
   viskores::cont::Invoker invoke;
 
@@ -197,8 +197,8 @@ int TestCellSetExtrude()
     viskores::cont::ArrayHandle<viskores::Int32> incidentCount;
     viskores::cont::ArrayHandle<viskores::Id2> incidentIndices;
     invoke(CopyReverseCellCountScatter{},
-           CopyTopoScatter::ScatterType(
-             viskores::cont::make_ArrayHandleCounting<viskores::Id>(0, skip, (3 * numPlanes) / skip)),
+           CopyTopoScatter::ScatterType(viskores::cont::make_ArrayHandleCounting<viskores::Id>(
+             0, skip, (3 * numPlanes) / skip)),
            cells,
            incidentCount,
            incidentIndices);

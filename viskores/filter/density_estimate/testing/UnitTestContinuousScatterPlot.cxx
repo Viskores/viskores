@@ -19,33 +19,35 @@ namespace
 {
 
 std::vector<viskores::Vec3f> tetraCoords{ viskores::Vec3f(0.0f, 0.0f, 0.0f),
-                                      viskores::Vec3f(2.0f, 0.0f, 0.0f),
-                                      viskores::Vec3f(2.0f, 2.0f, 0.0f),
-                                      viskores::Vec3f(1.0f, 0.0f, 2.0f) };
+                                          viskores::Vec3f(2.0f, 0.0f, 0.0f),
+                                          viskores::Vec3f(2.0f, 2.0f, 0.0f),
+                                          viskores::Vec3f(1.0f, 0.0f, 2.0f) };
 
 std::vector<viskores::UInt8> tetraShape{ viskores::CELL_SHAPE_TETRA };
 std::vector<viskores::IdComponent> tetraIndex{ 4 };
 std::vector<viskores::Id> tetraConnectivity{ 0, 1, 2, 3 };
 
 std::vector<viskores::Vec3f> multiCoords{
-  viskores::Vec3f(0.0f, 0.0f, 0.0f), viskores::Vec3f(2.0f, 0.0f, 0.0f), viskores::Vec3f(2.0f, 2.0f, 0.0f),
-  viskores::Vec3f(1.0f, 0.0f, 2.0f), viskores::Vec3f(0.0f, 0.0f, 0.0f), viskores::Vec3f(2.0f, 0.0f, 0.0f),
-  viskores::Vec3f(2.0f, 2.0f, 0.0f), viskores::Vec3f(1.0f, 0.0f, 2.0f), viskores::Vec3f(0.0f, 0.0f, 0.0f),
-  viskores::Vec3f(2.0f, 0.0f, 0.0f), viskores::Vec3f(2.0f, 2.0f, 0.0f), viskores::Vec3f(1.0f, 0.0f, 2.0f)
+  viskores::Vec3f(0.0f, 0.0f, 0.0f), viskores::Vec3f(2.0f, 0.0f, 0.0f),
+  viskores::Vec3f(2.0f, 2.0f, 0.0f), viskores::Vec3f(1.0f, 0.0f, 2.0f),
+  viskores::Vec3f(0.0f, 0.0f, 0.0f), viskores::Vec3f(2.0f, 0.0f, 0.0f),
+  viskores::Vec3f(2.0f, 2.0f, 0.0f), viskores::Vec3f(1.0f, 0.0f, 2.0f),
+  viskores::Vec3f(0.0f, 0.0f, 0.0f), viskores::Vec3f(2.0f, 0.0f, 0.0f),
+  viskores::Vec3f(2.0f, 2.0f, 0.0f), viskores::Vec3f(1.0f, 0.0f, 2.0f)
 };
 std::vector<viskores::UInt8> multiShapes{ viskores::CELL_SHAPE_TETRA,
-                                      viskores::CELL_SHAPE_TETRA,
-                                      viskores::CELL_SHAPE_TETRA };
+                                          viskores::CELL_SHAPE_TETRA,
+                                          viskores::CELL_SHAPE_TETRA };
 std::vector<viskores::IdComponent> multiIndices{ 4, 4, 4 };
 std::vector<viskores::Id> multiConnectivity{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
 
 template <typename FieldType1, typename FieldType2>
 viskores::cont::DataSet makeDataSet(const std::vector<viskores::Vec3f>& ds_coords,
-                                const std::vector<viskores::UInt8>& ds_shapes,
-                                const std::vector<viskores::IdComponent>& ds_indices,
-                                const std::vector<viskores::Id>& ds_connectivity,
-                                const FieldType1& scalar1,
-                                const FieldType2& scalar2)
+                                    const std::vector<viskores::UInt8>& ds_shapes,
+                                    const std::vector<viskores::IdComponent>& ds_indices,
+                                    const std::vector<viskores::Id>& ds_connectivity,
+                                    const FieldType1& scalar1,
+                                    const FieldType2& scalar2)
 {
   viskores::cont::DataSetBuilderExplicit dsb;
   viskores::cont::DataSet ds = dsb.Create(ds_coords, ds_shapes, ds_indices, ds_connectivity);
@@ -74,7 +76,7 @@ void testCoordinates(const PositionsPortalType& positionsP,
     VISKORES_TEST_ASSERT(test_equal(positionsP.Get(i)[0], scalar1[i]), "Wrong point coordinates");
     VISKORES_TEST_ASSERT(test_equal(positionsP.Get(i)[1], scalar2[i]), "Wrong point coordinates");
     VISKORES_TEST_ASSERT(test_equal(positionsP.Get(i)[2], 0.0f),
-                     "Z coordinate value in the scatterplot should always be null");
+                         "Z coordinate value in the scatterplot should always be null");
   }
 }
 
@@ -88,12 +90,12 @@ void testDensity(const DensityArrayType& density,
     if (i == centerId)
     {
       VISKORES_TEST_ASSERT(test_equal(density.Get(i), centerDensity),
-                       "Wrong density in the middle point of the cell");
+                           "Wrong density in the middle point of the cell");
     }
     else
     {
       VISKORES_TEST_ASSERT(test_equal(density.Get(i), 0.0f),
-                       "Density on the edge of the tetrahedron should be null");
+                           "Density on the edge of the tetrahedron should be null");
     }
   }
 }
@@ -108,13 +110,14 @@ void testShapes(const CellSetType& cellSet)
 }
 
 template <typename CellSetType>
-void testConnectivity(const CellSetType& cellSet,
-                      const viskores::cont::ArrayHandle<viskores::IdComponent>& expectedConnectivityArray)
+void testConnectivity(
+  const CellSetType& cellSet,
+  const viskores::cont::ArrayHandle<viskores::IdComponent>& expectedConnectivityArray)
 {
   VISKORES_TEST_ASSERT(
-    test_equal_ArrayHandles(
-      cellSet.GetConnectivityArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint()),
-      expectedConnectivityArray),
+    test_equal_ArrayHandles(cellSet.GetConnectivityArray(viskores::TopologyElementTagCell(),
+                                                         viskores::TopologyElementTagPoint()),
+                            expectedConnectivityArray),
     "Wrong connectivity");
 }
 
@@ -140,9 +143,9 @@ void TestSingleTetraProjectionQuadConvex()
   auto scatterPlot = executeFilter(ds);
 
   VISKORES_TEST_ASSERT(test_equal(scatterPlot.GetNumberOfCells(), 4),
-                   "Wrong number of projected triangles in the continuous scatter plot");
+                       "Wrong number of projected triangles in the continuous scatter plot");
   VISKORES_TEST_ASSERT(test_equal(scatterPlot.GetNumberOfPoints(), 5),
-                   "Wrong number of projected points in the continuous scatter plot");
+                       "Wrong number of projected points in the continuous scatter plot");
 
   // Test point positions
   auto positions = scatterPlot.GetCoordinateSystem().GetDataAsMultiplexer();
@@ -151,7 +154,7 @@ void TestSingleTetraProjectionQuadConvex()
 
   // Test intersection point coordinates
   VISKORES_TEST_ASSERT(test_equal(positionsP.Get(4), viskores::Vec3f{ 0.0f, 0.0f, 0.0f }),
-                   "Wrong intersection point coordinates");
+                       "Wrong intersection point coordinates");
 
 
   // Test for triangle shapes
@@ -193,7 +196,7 @@ void TestSingleTetraProjectionQuadSelfIntersect()
   auto scatterPlot = executeFilter(ds);
 
   VISKORES_TEST_ASSERT(test_equal(scatterPlot.GetNumberOfCells(), 4),
-                   "Wrong number of projected triangles in the continuous scatter plot");
+                       "Wrong number of projected triangles in the continuous scatter plot");
 
   // Test point positions
   auto positions = scatterPlot.GetCoordinateSystem().GetDataAsMultiplexer();
@@ -230,7 +233,7 @@ void TestSingleTetraProjectionQuadInverseOrder()
   auto scatterPlot = executeFilter(ds);
 
   VISKORES_TEST_ASSERT(test_equal(scatterPlot.GetNumberOfCells(), 4),
-                   "Wrong number of projected triangles in the continuous scatter plot");
+                       "Wrong number of projected triangles in the continuous scatter plot");
 
   // Test connectivity
   viskores::cont::CellSetSingleType<> cellSet;
@@ -272,7 +275,7 @@ void TestSingleTetraProjectionQuadSelfIntersectSecond()
   auto scatterPlot = executeFilter(ds);
 
   VISKORES_TEST_ASSERT(test_equal(scatterPlot.GetNumberOfCells(), 4),
-                   "Wrong number of projected triangles in the continuous scatter plot");
+                       "Wrong number of projected triangles in the continuous scatter plot");
 
   // Test connectivity
   viskores::cont::CellSetSingleType<> cellSet;
@@ -304,9 +307,9 @@ void TestSingleTetra_projection_triangle_point0Inside()
   auto scatterPlot = executeFilter(ds);
 
   VISKORES_TEST_ASSERT(test_equal(scatterPlot.GetNumberOfCells(), 3),
-                   "Wrong number of projected triangles in the continuous scatter plot");
+                       "Wrong number of projected triangles in the continuous scatter plot");
   VISKORES_TEST_ASSERT(test_equal(scatterPlot.GetNumberOfPoints(), 4),
-                   "Wrong number of projected points in the continuous scatter plot");
+                       "Wrong number of projected points in the continuous scatter plot");
 
   // Test point positions
   auto positions = scatterPlot.GetCoordinateSystem().GetDataAsMultiplexer();
@@ -458,9 +461,9 @@ void TestNullSpatialVolume()
   };
 
   std::vector<viskores::Vec3f> nullCoords{ viskores::Vec3f(1.0f, 1.0f, 1.0f),
-                                       viskores::Vec3f(1.0f, 1.0f, 1.0f),
-                                       viskores::Vec3f(1.0f, 1.0f, 1.0f),
-                                       viskores::Vec3f(1.0f, 1.0f, 1.0f) };
+                                           viskores::Vec3f(1.0f, 1.0f, 1.0f),
+                                           viskores::Vec3f(1.0f, 1.0f, 1.0f),
+                                           viskores::Vec3f(1.0f, 1.0f, 1.0f) };
 
   viskores::cont::DataSet ds =
     makeDataSet(nullCoords, tetraShape, tetraIndex, tetraConnectivity, scalar1, scalar2);
@@ -472,7 +475,8 @@ void TestNullSpatialVolume()
                    .AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>()
                    .ReadPortal();
 
-  VISKORES_TEST_ASSERT(viskores::IsInf(density.Get(0)), "Density should be infinite for a null volume");
+  VISKORES_TEST_ASSERT(viskores::IsInf(density.Get(0)),
+                       "Density should be infinite for a null volume");
 }
 
 void TestNullDataSurface()
@@ -501,19 +505,21 @@ void TestNullDataSurface()
                    .AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>()
                    .ReadPortal();
 
-  VISKORES_TEST_ASSERT(viskores::IsInf(density.Get(4)), "Density should be infinite for a null volume");
+  VISKORES_TEST_ASSERT(viskores::IsInf(density.Get(4)),
+                       "Density should be infinite for a null volume");
 }
 
 void TestMultipleTetra()
 {
   constexpr viskores::FloatDefault multiscalar1[12] = { 3.0f, 3.0f,  4.0f, 1.0f, 0.0f, 1.0f,
-                                                    0.0f, -2.0f, 3.0f, 3.0f, 4.0f, 1.0f };
+                                                        0.0f, -2.0f, 3.0f, 3.0f, 4.0f, 1.0f };
 
   constexpr viskores::FloatDefault multiscalar2[12] = { 1.0f, 0.0f, 2.0f, 2.0f, -1.0f, 0.0f,
-                                                    2.0f, 0.0f, 1.0f, 0.0f, 2.0f,  2.0f };
+                                                        2.0f, 0.0f, 1.0f, 0.0f, 2.0f,  2.0f };
 
   viskores::cont::DataSetBuilderExplicit dsb;
-  viskores::cont::DataSet ds = dsb.Create(multiCoords, multiShapes, multiIndices, multiConnectivity);
+  viskores::cont::DataSet ds =
+    dsb.Create(multiCoords, multiShapes, multiIndices, multiConnectivity);
 
   ds.AddPointField("scalar1", multiscalar1, 12);
   ds.AddPointField("scalar2", multiscalar2, 12);
@@ -522,9 +528,9 @@ void TestMultipleTetra()
   auto scatterPlot = executeFilter(ds);
 
   VISKORES_TEST_ASSERT(test_equal(scatterPlot.GetNumberOfCells(), 10),
-                   "Wrong number of projected triangles in the continuous scatter plot");
+                       "Wrong number of projected triangles in the continuous scatter plot");
   VISKORES_TEST_ASSERT(test_equal(scatterPlot.GetNumberOfPoints(), 13),
-                   "Wrong number of projected points in the continuous scatter plot");
+                       "Wrong number of projected points in the continuous scatter plot");
 
   viskores::cont::CellSetSingleType<> cellSet;
   scatterPlot.GetCellSet().AsCellSet(cellSet);
@@ -534,8 +540,9 @@ void TestMultipleTetra()
 void TestNonTetra()
 {
   std::vector<viskores::Vec3f> wedgeCoords{
-    viskores::Vec3f(0.0f, 0.0f, 0.0f), viskores::Vec3f(2.0f, 0.0f, 0.0f), viskores::Vec3f(2.0f, 4.0f, 0.0f),
-    viskores::Vec3f(0.0f, 4.0f, 0.0f), viskores::Vec3f(1.0f, 0.0f, 3.0f), viskores::Vec3f(1.0f, 4.0f, 3.0f),
+    viskores::Vec3f(0.0f, 0.0f, 0.0f), viskores::Vec3f(2.0f, 0.0f, 0.0f),
+    viskores::Vec3f(2.0f, 4.0f, 0.0f), viskores::Vec3f(0.0f, 4.0f, 0.0f),
+    viskores::Vec3f(1.0f, 0.0f, 3.0f), viskores::Vec3f(1.0f, 4.0f, 3.0f),
   };
 
   constexpr viskores::FloatDefault scalar1[6] = { 0.0f, 3.0f, 3.0f, 2.0f, 2.0f, 1.0f };
@@ -555,9 +562,9 @@ void TestNonTetra()
   auto scatterPlot = executeFilter(ds);
 
   VISKORES_TEST_ASSERT(test_equal(scatterPlot.GetNumberOfCells(), 12),
-                   "Wrong number of projected triangles in the continuous scatter plot");
+                       "Wrong number of projected triangles in the continuous scatter plot");
   VISKORES_TEST_ASSERT(test_equal(scatterPlot.GetNumberOfPoints(), 15),
-                   "Wrong number of projected points in the continuous scatter plot");
+                       "Wrong number of projected points in the continuous scatter plot");
 }
 
 void TestNonPointFields()

@@ -91,11 +91,11 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& supernode,
-                            const bool& isNecessaryAndInterior,
-                            const viskores::Id boundaryNecessaryId,
-                            const InFieldPortalType meshSortOrderPortal,
-                            const OutFieldPortalType& boundaryIndicesPortal,
-                            const OutFieldPortalType& bractVertexSupersetPortal) const
+                                const bool& isNecessaryAndInterior,
+                                const viskores::Id boundaryNecessaryId,
+                                const InFieldPortalType meshSortOrderPortal,
+                                const OutFieldPortalType& boundaryIndicesPortal,
+                                const OutFieldPortalType& bractVertexSupersetPortal) const
   {
     // per supernode
     if (isNecessaryAndInterior)

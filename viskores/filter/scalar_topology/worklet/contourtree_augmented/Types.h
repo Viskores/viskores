@@ -103,7 +103,8 @@ constexpr viskores::Id TRANSFER_TO_SUPERARC = TERMINAL_ELEMENT;
 // clang-format on
 using IdArrayType = viskores::cont::ArrayHandle<viskores::Id>;
 
-using EdgePair = viskores::Pair<viskores::Id, viskores::Id>; // here EdgePair.first=low and EdgePair.second=high
+using EdgePair =
+  viskores::Pair<viskores::Id, viskores::Id>; // here EdgePair.first=low and EdgePair.second=high
 using EdgePairArray = viskores::cont::ArrayHandle<EdgePair>; // Array of edge pairs
 
 
@@ -167,7 +168,8 @@ inline bool TransferToSuperarc(viskores::Id flaggedIndex)
 
 // Debug helper function: Assert that an index array has no element with any flags set
 template <typename S>
-VISKORES_CONT inline void AssertArrayHandleNoFlagsSet(const viskores::cont::ArrayHandle<viskores::Id, S>& ah)
+VISKORES_CONT inline void AssertArrayHandleNoFlagsSet(
+  const viskores::cont::ArrayHandle<viskores::Id, S>& ah)
 {
 #ifndef VISKORES_NO_ASSERT
   auto rp = ah.ReadPortal();
@@ -371,14 +373,16 @@ struct GetPointDimensions
   /// @param[in] cells  The input viskores::cont::CellSetStructured.
   /// @param[out] pointDimensions mesh size (often referred to as columns, rows, and slices)
   ///   with last dimension having a value of 1 for 2D data.
-  void operator()(const viskores::cont::CellSetStructured<2>& cells, viskores::Id3& pointDimensions) const
+  void operator()(const viskores::cont::CellSetStructured<2>& cells,
+                  viskores::Id3& pointDimensions) const
   {
     viskores::Id2 pointDimensions2D = cells.GetPointDimensions();
     pointDimensions[0] = pointDimensions2D[0];
     pointDimensions[1] = pointDimensions2D[1];
     pointDimensions[2] = 1;
   }
-  void operator()(const viskores::cont::CellSetStructured<3>& cells, viskores::Id3& pointDimensions) const
+  void operator()(const viskores::cont::CellSetStructured<3>& cells,
+                  viskores::Id3& pointDimensions) const
   {
     pointDimensions = cells.GetPointDimensions();
   }

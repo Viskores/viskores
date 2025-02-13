@@ -86,8 +86,8 @@ public:
 
   template <typename InFieldPortalType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id& superarcIndex,
-                                const InFieldPortalType& contourtreeSuperarcPortal,
-                                const InFieldPortalType& isNecessaryPortal) const
+                                        const InFieldPortalType& contourtreeSuperarcPortal,
+                                        const InFieldPortalType& isNecessaryPortal) const
   { // operator ()
     // retrieve the target
     viskores::Id superarcTo = viskores::worklet::contourtree_augmented::MaskedIndex(

@@ -33,13 +33,13 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
   template <typename Precision>
   VISKORES_EXEC inline void operator()(const viskores::Id& hitIndex,
-                                   const Precision& distance,
-                                   const viskores::Vec<Precision, 3>& rayDir,
-                                   const viskores::Vec<Precision, 3>& rayOrigin,
-                                   Precision& intersectionX,
-                                   Precision& intersectionY,
-                                   Precision& intersectionZ,
-                                   Precision& maxDistance) const
+                                       const Precision& distance,
+                                       const viskores::Vec<Precision, 3>& rayDir,
+                                       const viskores::Vec<Precision, 3>& rayOrigin,
+                                       Precision& intersectionX,
+                                       Precision& intersectionY,
+                                       Precision& intersectionZ,
+                                       Precision& maxDistance) const
   {
     if (hitIndex < 0)
       return;

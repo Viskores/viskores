@@ -273,8 +273,8 @@ inline void DataSetMesh::SortData(const viskores::cont::ArrayHandle<T, StorageTy
     this->NumVertices); // create sequence 0, 1, .. NumVertices
   viskores::cont::ArrayCopy(initVertexIds, this->SortOrder);
 
-  viskores::cont::Algorithm::Sort(this->SortOrder,
-                              mesh_dem::SimulatedSimplicityIndexComparator<T, StorageType>(values));
+  viskores::cont::Algorithm::Sort(
+    this->SortOrder, mesh_dem::SimulatedSimplicityIndexComparator<T, StorageType>(values));
 
   // now set the index lookup, i.e., initialize the SortIndices member variable
   // In serial this would be

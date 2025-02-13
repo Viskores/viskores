@@ -61,7 +61,8 @@ void BenchAddSeq(benchmark::State& state)
   const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
   const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
 
-  auto ones = viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   viskores::cont::ArrayHandle<ValueType> atomicArray;
   atomicArray.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
@@ -85,10 +86,10 @@ void BenchAddSeq(benchmark::State& state)
   state.SetItemsProcessed(bytesWritten * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchAddSeq,
-                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
-                                           { NUM_WRITES, NUM_WRITES } })
-                                ->ArgNames({ "AtomicsValues", "AtomicOps" }),
-                              viskores::cont::AtomicArrayTypeList);
+                                    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                               { NUM_WRITES, NUM_WRITES } })
+                                    ->ArgNames({ "AtomicsValues", "AtomicOps" }),
+                                  viskores::cont::AtomicArrayTypeList);
 
 // Provides a non-atomic baseline for BenchAddSeq
 struct AddSeqBaselineWorker : public viskores::worklet::WorkletMapField
@@ -111,7 +112,8 @@ void BenchAddSeqBaseline(benchmark::State& state)
   const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
   const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
 
-  auto ones = viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   viskores::cont::ArrayHandle<ValueType> array;
   array.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
@@ -135,10 +137,10 @@ void BenchAddSeqBaseline(benchmark::State& state)
   state.SetItemsProcessed(bytesWritten * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchAddSeqBaseline,
-                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
-                                           { NUM_WRITES, NUM_WRITES } })
-                                ->ArgNames({ "Values", "Ops" }),
-                              viskores::cont::AtomicArrayTypeList);
+                                    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                               { NUM_WRITES, NUM_WRITES } })
+                                    ->ArgNames({ "Values", "Ops" }),
+                                  viskores::cont::AtomicArrayTypeList);
 
 // Benchmarks AtomicArray::Add such that each work index writes to a strided
 // index ( floor(i / stride) + stride * (i % stride)
@@ -171,7 +173,8 @@ void BenchAddStride(benchmark::State& state)
   const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
   const viskores::Id stride = static_cast<viskores::Id>(state.range(2));
 
-  auto ones = viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   viskores::cont::ArrayHandle<ValueType> atomicArray;
   atomicArray.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
@@ -230,7 +233,8 @@ void BenchAddStrideBaseline(benchmark::State& state)
   const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
   const viskores::Id stride = static_cast<viskores::Id>(state.range(2));
 
-  auto ones = viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   viskores::cont::ArrayHandle<ValueType> array;
   array.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
@@ -284,7 +288,8 @@ void BenchCASSeq(benchmark::State& state)
   const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
   const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
 
-  auto ones = viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   viskores::cont::ArrayHandle<ValueType> atomicArray;
   atomicArray.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
@@ -308,10 +313,10 @@ void BenchCASSeq(benchmark::State& state)
   state.SetItemsProcessed(bytesWritten * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchCASSeq,
-                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
-                                           { NUM_WRITES, NUM_WRITES } })
-                                ->ArgNames({ "AtomicsValues", "AtomicOps" }),
-                              viskores::cont::AtomicArrayTypeList);
+                                    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                               { NUM_WRITES, NUM_WRITES } })
+                                    ->ArgNames({ "AtomicsValues", "AtomicOps" }),
+                                  viskores::cont::AtomicArrayTypeList);
 
 // Provides a non-atomic baseline for BenchCASSeq
 struct CASSeqBaselineWorker : public viskores::worklet::WorkletMapField
@@ -336,7 +341,8 @@ void BenchCASSeqBaseline(benchmark::State& state)
   const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
   const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
 
-  auto ones = viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   viskores::cont::ArrayHandle<ValueType> array;
   array.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
@@ -360,10 +366,10 @@ void BenchCASSeqBaseline(benchmark::State& state)
   state.SetItemsProcessed(bytesWritten * iterations);
 }
 VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchCASSeqBaseline,
-                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
-                                           { NUM_WRITES, NUM_WRITES } })
-                                ->ArgNames({ "Values", "Ops" }),
-                              viskores::cont::AtomicArrayTypeList);
+                                    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                               { NUM_WRITES, NUM_WRITES } })
+                                    ->ArgNames({ "Values", "Ops" }),
+                                  viskores::cont::AtomicArrayTypeList);
 
 // Benchmarks AtomicArray::CompareExchange such that each work index writes to
 // a strided index:
@@ -400,7 +406,8 @@ void BenchCASStride(benchmark::State& state)
   const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
   const viskores::Id stride = static_cast<viskores::Id>(state.range(2));
 
-  auto ones = viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   viskores::cont::ArrayHandle<ValueType> atomicArray;
   atomicArray.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
@@ -461,7 +468,8 @@ void BenchCASStrideBaseline(benchmark::State& state)
   const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
   const viskores::Id stride = static_cast<viskores::Id>(state.range(2));
 
-  auto ones = viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
   viskores::cont::ArrayHandle<ValueType> array;
   array.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());

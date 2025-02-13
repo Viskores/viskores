@@ -43,26 +43,26 @@ public:
   // composite vectors to hold array handles
   typename //tell the compiler we have a dependent type
     viskores::cont::ArrayHandleCompositeVector<viskores::cont::ArrayHandle<Precision>,
-                                           viskores::cont::ArrayHandle<Precision>,
-                                           viskores::cont::ArrayHandle<Precision>>
+                                               viskores::cont::ArrayHandle<Precision>,
+                                               viskores::cont::ArrayHandle<Precision>>
       Intersection;
 
   typename //tell the compiler we have a dependent type
     viskores::cont::ArrayHandleCompositeVector<viskores::cont::ArrayHandle<Precision>,
-                                           viskores::cont::ArrayHandle<Precision>,
-                                           viskores::cont::ArrayHandle<Precision>>
+                                               viskores::cont::ArrayHandle<Precision>,
+                                               viskores::cont::ArrayHandle<Precision>>
       Normal;
 
   typename //tell the compiler we have a dependent type
     viskores::cont::ArrayHandleCompositeVector<viskores::cont::ArrayHandle<Precision>,
-                                           viskores::cont::ArrayHandle<Precision>,
-                                           viskores::cont::ArrayHandle<Precision>>
+                                               viskores::cont::ArrayHandle<Precision>,
+                                               viskores::cont::ArrayHandle<Precision>>
       Origin;
 
   typename //tell the compiler we have a dependent type
     viskores::cont::ArrayHandleCompositeVector<viskores::cont::ArrayHandle<Precision>,
-                                           viskores::cont::ArrayHandle<Precision>,
-                                           viskores::cont::ArrayHandle<Precision>>
+                                               viskores::cont::ArrayHandle<Precision>,
+                                               viskores::cont::ArrayHandle<Precision>>
       Dir;
 
   viskores::cont::ArrayHandle<Precision> IntersectionX; //ray Intersection
@@ -89,9 +89,9 @@ public:
   viskores::cont::ArrayHandle<viskores::Id> HitIdx;
   viskores::cont::ArrayHandle<viskores::Id> PixelIdx;
 
-  viskores::cont::ArrayHandle<Precision> MinDistance; // distance to hit
-  viskores::cont::ArrayHandle<Precision> MaxDistance; // distance to hit
-  viskores::cont::ArrayHandle<viskores::UInt8> Status;    // 0 = active 1 = miss 2 = lost
+  viskores::cont::ArrayHandle<Precision> MinDistance;  // distance to hit
+  viskores::cont::ArrayHandle<Precision> MaxDistance;  // distance to hit
+  viskores::cont::ArrayHandle<viskores::UInt8> Status; // 0 = active 1 = miss 2 = lost
 
   std::vector<ChannelBuffer<Precision>> Buffers;
   viskores::Id DebugWidth;

@@ -74,7 +74,8 @@ public:
   /// notation i.e. matrix(row,column).
   ///
   VISKORES_EXEC_CONT
-  const ComponentType& operator()(viskores::IdComponent rowIndex, viskores::IdComponent colIndex) const
+  const ComponentType& operator()(viskores::IdComponent rowIndex,
+                                  viskores::IdComponent colIndex) const
   {
     VISKORES_ASSERT(rowIndex >= 0);
     VISKORES_ASSERT(rowIndex < NUM_ROWS);
@@ -115,8 +116,9 @@ VISKORES_EXEC_CONT const viskores::Vec<T, NumCol>& MatrixGetRow(
 /// matrix.  Might not be as efficient as the `MatrixGetRow()` function.
 ///
 template <typename T, viskores::IdComponent NumRow, viskores::IdComponent NumCol>
-VISKORES_EXEC_CONT viskores::Vec<T, NumRow> MatrixGetColumn(const viskores::Matrix<T, NumRow, NumCol>& matrix,
-                                                    viskores::IdComponent columnIndex)
+VISKORES_EXEC_CONT viskores::Vec<T, NumRow> MatrixGetColumn(
+  const viskores::Matrix<T, NumRow, NumCol>& matrix,
+  viskores::IdComponent columnIndex)
 {
   viskores::Vec<T, NumRow> columnValues;
   for (viskores::IdComponent rowIndex = 0; rowIndex < NumRow; rowIndex++)
@@ -130,8 +132,8 @@ VISKORES_EXEC_CONT viskores::Vec<T, NumRow> MatrixGetColumn(const viskores::Matr
 ///
 template <typename T, viskores::IdComponent NumRow, viskores::IdComponent NumCol>
 VISKORES_EXEC_CONT void MatrixSetRow(viskores::Matrix<T, NumRow, NumCol>& matrix,
-                                 viskores::IdComponent rowIndex,
-                                 const viskores::Vec<T, NumCol>& rowValues)
+                                     viskores::IdComponent rowIndex,
+                                     const viskores::Vec<T, NumCol>& rowValues)
 {
   matrix[rowIndex] = rowValues;
 }
@@ -140,8 +142,8 @@ VISKORES_EXEC_CONT void MatrixSetRow(viskores::Matrix<T, NumRow, NumCol>& matrix
 ///
 template <typename T, viskores::IdComponent NumRow, viskores::IdComponent NumCol>
 VISKORES_EXEC_CONT void MatrixSetColumn(viskores::Matrix<T, NumRow, NumCol>& matrix,
-                                    viskores::IdComponent columnIndex,
-                                    const viskores::Vec<T, NumRow>& columnValues)
+                                        viskores::IdComponent columnIndex,
+                                        const viskores::Vec<T, NumRow>& columnValues)
 {
   for (viskores::IdComponent rowIndex = 0; rowIndex < NumRow; rowIndex++)
   {
@@ -254,11 +256,12 @@ namespace detail
 
 // Used with MatrixLUPFactor.
 template <typename T, viskores::IdComponent Size>
-VISKORES_EXEC_CONT void MatrixLUPFactorFindPivot(viskores::Matrix<T, Size, Size>& A,
-                                             viskores::Vec<viskores::IdComponent, Size>& permutation,
-                                             viskores::IdComponent topCornerIndex,
-                                             T& inversionParity,
-                                             bool& valid)
+VISKORES_EXEC_CONT void MatrixLUPFactorFindPivot(
+  viskores::Matrix<T, Size, Size>& A,
+  viskores::Vec<viskores::IdComponent, Size>& permutation,
+  viskores::IdComponent topCornerIndex,
+  T& inversionParity,
+  bool& valid)
 {
   viskores::IdComponent maxRowIndex = topCornerIndex;
   T maxValue = viskores::Abs(A(maxRowIndex, topCornerIndex));
@@ -297,9 +300,10 @@ VISKORES_EXEC_CONT void MatrixLUPFactorFindPivot(viskores::Matrix<T, Size, Size>
 
 // Used with MatrixLUPFactor
 template <typename T, viskores::IdComponent Size>
-VISKORES_EXEC_CONT void MatrixLUPFactorFindUpperTriangleElements(viskores::Matrix<T, Size, Size>& A,
-                                                             viskores::IdComponent topCornerIndex,
-                                                             bool& valid)
+VISKORES_EXEC_CONT void MatrixLUPFactorFindUpperTriangleElements(
+  viskores::Matrix<T, Size, Size>& A,
+  viskores::IdComponent topCornerIndex,
+  bool& valid)
 {
   // Compute values for upper triangle on row topCornerIndex
   if (A(topCornerIndex, topCornerIndex) == 0)
@@ -361,9 +365,9 @@ VISKORES_EXEC_CONT void MatrixLUPFactorFindUpperTriangleElements(viskores::Matri
 ///
 template <typename T, viskores::IdComponent Size>
 VISKORES_EXEC_CONT void MatrixLUPFactor(viskores::Matrix<T, Size, Size>& A,
-                                    viskores::Vec<viskores::IdComponent, Size>& permutation,
-                                    T& inversionParity,
-                                    bool& valid)
+                                        viskores::Vec<viskores::IdComponent, Size>& permutation,
+                                        T& inversionParity,
+                                        bool& valid)
 {
   // Initialize permutation.
   for (viskores::IdComponent index = 0; index < Size; index++)
@@ -445,9 +449,10 @@ VISKORES_EXEC_CONT viskores::Vec<T, Size> MatrixLUPSolve(
 /// is set to true, false otherwise.
 ///
 template <typename T, viskores::IdComponent Size>
-VISKORES_EXEC_CONT viskores::Vec<T, Size> SolveLinearSystem(const viskores::Matrix<T, Size, Size>& A,
-                                                    const viskores::Vec<T, Size>& b,
-                                                    bool& valid)
+VISKORES_EXEC_CONT viskores::Vec<T, Size> SolveLinearSystem(
+  const viskores::Matrix<T, Size, Size>& A,
+  const viskores::Vec<T, Size>& b,
+  bool& valid)
 {
   // First, we will make an LUP-factorization to help us.
   viskores::Matrix<T, Size, Size> LU = A;
@@ -463,8 +468,9 @@ VISKORES_EXEC_CONT viskores::Vec<T, Size> SolveLinearSystem(const viskores::Matr
 /// the inverse will not be correct and valid will be set to false.
 ///
 template <typename T, viskores::IdComponent Size>
-VISKORES_EXEC_CONT viskores::Matrix<T, Size, Size> MatrixInverse(const viskores::Matrix<T, Size, Size>& A,
-                                                         bool& valid)
+VISKORES_EXEC_CONT viskores::Matrix<T, Size, Size> MatrixInverse(
+  const viskores::Matrix<T, Size, Size>& A,
+  bool& valid)
 {
   // First, we will make an LUP-factorization to help us.
   viskores::Matrix<T, Size, Size> LU = A;
@@ -581,7 +587,8 @@ public:
   static viskores::IdComponent GetNumberOfComponents(const MatrixType&) { return NUM_COMPONENTS; }
 
   VISKORES_EXEC_CONT
-  static const ComponentType& GetComponent(const MatrixType& matrix, viskores::IdComponent component)
+  static const ComponentType& GetComponent(const MatrixType& matrix,
+                                           viskores::IdComponent component)
   {
     viskores::IdComponent colIndex = component % NumCol;
     viskores::IdComponent rowIndex = component / NumCol;
@@ -604,10 +611,10 @@ public:
   using ReplaceComponentType = viskores::Matrix<NewComponentType, NumRow, NumCol>;
 
   template <typename NewComponentType>
-  using ReplaceBaseComponentType =
-    viskores::Matrix<typename viskores::VecTraits<T>::template ReplaceBaseComponentType<NewComponentType>,
-                 NumRow,
-                 NumCol>;
+  using ReplaceBaseComponentType = viskores::Matrix<
+    typename viskores::VecTraits<T>::template ReplaceBaseComponentType<NewComponentType>,
+    NumRow,
+    NumCol>;
 };
 
 //---------------------------------------------------------------------------
@@ -615,7 +622,7 @@ public:
 
 template <typename T, viskores::IdComponent NumRow, viskores::IdComponent NumCol>
 VISKORES_EXEC_CONT bool operator==(const viskores::Matrix<T, NumRow, NumCol>& a,
-                               const viskores::Matrix<T, NumRow, NumCol>& b)
+                                   const viskores::Matrix<T, NumRow, NumCol>& b)
 {
   for (viskores::IdComponent colIndex = 0; colIndex < NumCol; colIndex++)
   {
@@ -629,7 +636,7 @@ VISKORES_EXEC_CONT bool operator==(const viskores::Matrix<T, NumRow, NumCol>& a,
 }
 template <typename T, viskores::IdComponent NumRow, viskores::IdComponent NumCol>
 VISKORES_EXEC_CONT bool operator!=(const viskores::Matrix<T, NumRow, NumCol>& a,
-                               const viskores::Matrix<T, NumRow, NumCol>& b)
+                                   const viskores::Matrix<T, NumRow, NumCol>& b)
 {
   return !(a == b);
 }
@@ -637,7 +644,8 @@ VISKORES_EXEC_CONT bool operator!=(const viskores::Matrix<T, NumRow, NumCol>& a,
 /// Helper function for printing out matricies during testing
 ///
 template <typename T, viskores::IdComponent NumRow, viskores::IdComponent NumCol>
-VISKORES_CONT std::ostream& operator<<(std::ostream& stream, const viskores::Matrix<T, NumRow, NumCol>& mat)
+VISKORES_CONT std::ostream& operator<<(std::ostream& stream,
+                                       const viskores::Matrix<T, NumRow, NumCol>& mat)
 {
   stream << std::endl;
   for (viskores::IdComponent row = 0; row < NumRow; ++row)

@@ -32,9 +32,9 @@ void RenderTests()
   viskores::rendering::testing::RenderTest(
     maker.Make3DRegularDataSet0(), "pointvar", "rendering/raytracer/regular3D.png", options);
   viskores::rendering::testing::RenderTest(maker.Make3DRectilinearDataSet0(),
-                                       "pointvar",
-                                       "rendering/raytracer/rectilinear3D.png",
-                                       options);
+                                           "pointvar",
+                                           "rendering/raytracer/rectilinear3D.png",
+                                           options);
   viskores::rendering::testing::RenderTest(
     maker.Make3DExplicitDataSet4(), "pointvar", "rendering/raytracer/explicit3D.png", options);
 

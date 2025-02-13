@@ -58,15 +58,17 @@ struct CallForBaseTypeFunctor
 };
 
 template <typename Functor, typename... Args>
-void CallForBaseType(Functor&& functor, const viskores::cont::UnknownArrayHandle& array, Args&&... args)
+void CallForBaseType(Functor&& functor,
+                     const viskores::cont::UnknownArrayHandle& array,
+                     Args&&... args)
 {
   bool success = true;
   viskores::ListForEach(CallForBaseTypeFunctor{},
-                    viskores::TypeListScalarAll{},
-                    success,
-                    std::forward<Functor>(functor),
-                    array,
-                    std::forward<Args>(args)...);
+                        viskores::TypeListScalarAll{},
+                        success,
+                        std::forward<Functor>(functor),
+                        array,
+                        std::forward<Args>(args)...);
   if (!success)
   {
     std::ostringstream out;
@@ -80,16 +82,16 @@ void CallForBaseType(Functor&& functor, const viskores::cont::UnknownArrayHandle
 template <typename T>
 using ArrayHandleRectilinearCoordinates =
   viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<T>,
-                                          viskores::cont::ArrayHandle<T>,
-                                          viskores::cont::ArrayHandle<T>>;
+                                              viskores::cont::ArrayHandle<T>,
+                                              viskores::cont::ArrayHandle<T>>;
 
 struct OutputArrayDataFunctor
 {
   template <typename T>
   VISKORES_CONT void operator()(T,
-                            const viskores::cont::UnknownArrayHandle& array,
-                            std::ostream& out,
-                            viskores::io::FileType fileType) const
+                                const viskores::cont::UnknownArrayHandle& array,
+                                std::ostream& out,
+                                viskores::io::FileType fileType) const
   {
     auto componentArray = array.ExtractArrayFromComponents<T>();
     auto portal = componentArray.ReadPortal();
@@ -192,7 +194,9 @@ void WriteDimensions(std::ostream& out, const viskores::cont::CellSetStructured<
   out << (DIM > 2 ? VTraits::GetComponent(pointDimensions, 2) : 1) << "\n";
 }
 
-void WritePoints(std::ostream& out, const viskores::cont::DataSet& dataSet, viskores::io::FileType fileType)
+void WritePoints(std::ostream& out,
+                 const viskores::cont::DataSet& dataSet,
+                 viskores::io::FileType fileType)
 {
   ///\todo: support other coordinate systems
   int cindex = 0;
@@ -293,7 +297,9 @@ void WriteExplicitCellsBinary(std::ostream& out, const CellSetType& cellSet)
 }
 
 template <class CellSetType>
-void WriteExplicitCells(std::ostream& out, const CellSetType& cellSet, viskores::io::FileType fileType)
+void WriteExplicitCells(std::ostream& out,
+                        const CellSetType& cellSet,
+                        viskores::io::FileType fileType)
 {
   switch (fileType)
   {
@@ -404,9 +410,10 @@ void WriteDataSetAsUnstructured(std::ostream& out,
 }
 
 template <viskores::IdComponent DIM>
-void WriteDataSetAsStructuredPoints(std::ostream& out,
-                                    const viskores::cont::ArrayHandleUniformPointCoordinates& points,
-                                    const viskores::cont::CellSetStructured<DIM>& cellSet)
+void WriteDataSetAsStructuredPoints(
+  std::ostream& out,
+  const viskores::cont::ArrayHandleUniformPointCoordinates& points,
+  const viskores::cont::CellSetStructured<DIM>& cellSet)
 {
   out << "DATASET STRUCTURED_POINTS\n";
 
@@ -472,7 +479,9 @@ void WriteDataSetAsStructured(std::ostream& out,
   {
     // uniform is written as "structured points"
     WriteDataSetAsStructuredPoints(
-      out, coordSystem.AsArrayHandle<viskores::cont::ArrayHandleUniformPointCoordinates>(), cellSet);
+      out,
+      coordSystem.AsArrayHandle<viskores::cont::ArrayHandleUniformPointCoordinates>(),
+      cellSet);
   }
   else if (coordSystem.IsType<ArrayHandleRectilinearCoordinates<viskores::Float32>>())
   {
@@ -497,7 +506,9 @@ void WriteDataSetAsStructured(std::ostream& out,
   }
 }
 
-void Write(std::ostream& out, const viskores::cont::DataSet& dataSet, viskores::io::FileType fileType)
+void Write(std::ostream& out,
+           const viskores::cont::DataSet& dataSet,
+           viskores::io::FileType fileType)
 {
   // The Paraview parser cannot handle scientific notation:
   out << std::fixed;

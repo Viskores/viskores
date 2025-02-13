@@ -28,7 +28,9 @@ const viskores::Id ARRAY_SIZE = 10;
 
 using StorageTag = viskores::cont::StorageTagBasic;
 
-viskores::FloatDefault TestValue3Ids(viskores::Id index, viskores::IdComponent inComponentIndex, int inArrayId)
+viskores::FloatDefault TestValue3Ids(viskores::Id index,
+                                     viskores::IdComponent inComponentIndex,
+                                     int inArrayId)
 {
   return (viskores::FloatDefault(index) + 0.1f * viskores::FloatDefault(inComponentIndex) +
           0.01f * viskores::FloatDefault(inArrayId));
@@ -74,7 +76,8 @@ void CheckArray(const viskores::cont::ArrayHandle<ValueType, C>& outArray,
     for (viskores::IdComponent componentIndex = 0; componentIndex < VTraits::NUM_COMPONENTS;
          componentIndex++)
     {
-      viskores::FloatDefault retrievedComponent = VTraits::GetComponent(retreivedValue, componentIndex);
+      viskores::FloatDefault retrievedComponent =
+        VTraits::GetComponent(retreivedValue, componentIndex);
       viskores::FloatDefault expectedComponent =
         TestValue3Ids(index, inComponents[componentIndex], inArrayIds[componentIndex]);
       VISKORES_TEST_ASSERT(retrievedComponent == expectedComponent, "Got bad value.");
@@ -93,7 +96,8 @@ void TryScalarArray()
   int inArrayId = 0;
   InArrayType inArray = MakeInputArray<InValueType>(inArrayId);
 
-  for (viskores::IdComponent inComponentIndex = 0; inComponentIndex < inComponents; inComponentIndex++)
+  for (viskores::IdComponent inComponentIndex = 0; inComponentIndex < inComponents;
+       inComponentIndex++)
   {
     auto c1 = viskores::cont::make_ArrayHandleExtractComponent(inArray, inComponentIndex);
     auto composite = viskores::cont::make_ArrayHandleCompositeVector(c1);
@@ -126,8 +130,9 @@ void TryVector4(viskores::cont::ArrayHandle<T1, StorageTag> array1,
              inComponents[3]++)
         {
           auto c4 = viskores::cont::make_ArrayHandleExtractComponent(array4, inComponents[3]);
-          CheckArray(
-            viskores::cont::make_ArrayHandleCompositeVector(c1, c2, c3, c4), inComponents, arrayIds);
+          CheckArray(viskores::cont::make_ArrayHandleCompositeVector(c1, c2, c3, c4),
+                     inComponents,
+                     arrayIds);
         }
       }
     }
@@ -154,7 +159,8 @@ void TryVector3(viskores::cont::ArrayHandle<T1, StorageTag> array1,
            inComponents[2]++)
       {
         auto c3 = viskores::cont::make_ArrayHandleExtractComponent(array3, inComponents[2]);
-        CheckArray(viskores::cont::make_ArrayHandleCompositeVector(c1, c2, c3), inComponents, arrayIds);
+        CheckArray(
+          viskores::cont::make_ArrayHandleCompositeVector(c1, c2, c3), inComponents, arrayIds);
       }
     }
   }
@@ -269,7 +275,8 @@ void TrySpecialArrays()
   auto compositePortal = compositeArray.ReadPortal();
   for (viskores::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    VISKORES_TEST_ASSERT(test_equal(compositePortal.Get(index), viskores::Id2(index, 295)), "Bad value.");
+    VISKORES_TEST_ASSERT(test_equal(compositePortal.Get(index), viskores::Id2(index, 295)),
+                         "Bad value.");
   }
 }
 

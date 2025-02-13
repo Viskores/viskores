@@ -49,8 +49,14 @@ public:
   VISKORES_CONT viskores::Id3 GetPointDimensions() const { return this->PointDimensions; }
   VISKORES_CONT void SetPointDimensions(viskores::Id3 dims) { this->PointDimensions = dims; }
 
-  VISKORES_CONT viskores::Id3 GetCellDimensions() const { return this->PointDimensions - viskores::Id3(1); }
-  VISKORES_CONT void SetCellDimensions(viskores::Id3 dims) { this->PointDimensions = dims + viskores::Id3(1); }
+  VISKORES_CONT viskores::Id3 GetCellDimensions() const
+  {
+    return this->PointDimensions - viskores::Id3(1);
+  }
+  VISKORES_CONT void SetCellDimensions(viskores::Id3 dims)
+  {
+    this->PointDimensions = dims + viskores::Id3(1);
+  }
 
   VISKORES_CONT viskores::Vec3f GetOrigin() const { return this->Origin; }
   VISKORES_CONT void SetOrigin(const viskores::Vec3f& origin) { this->Origin = origin; }

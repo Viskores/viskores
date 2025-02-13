@@ -131,7 +131,7 @@ VISKORES_CONT_EXPORT viskores::Range ArrayRangeComputeMagnitude(
   viskores::cont::DeviceAdapterId device = viskores::cont::DeviceAdapterTagAny{});
 
 inline viskores::Range ArrayRangeComputeMagnitude(const viskores::cont::UnknownArrayHandle& array,
-                                              viskores::cont::DeviceAdapterId device)
+                                                  viskores::cont::DeviceAdapterId device)
 {
   return ArrayRangeComputeMagnitude(array, false, device);
 }

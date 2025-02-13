@@ -19,9 +19,9 @@ void TestPhiloxRNG2x32x7()
   // test cases from original Random123 implementation
   VISKORES_TEST_ASSERT(f2x32x7({}, {}) == counters_type{ 0x257a3673, 0xcd26be2a });
   VISKORES_TEST_ASSERT(f2x32x7({ 0xffffffff, 0xffffffff }, { 0xffffffff }) ==
-                   counters_type{ 0xab302c4d, 0x3dc9d239 });
+                       counters_type{ 0xab302c4d, 0x3dc9d239 });
   VISKORES_TEST_ASSERT(f2x32x7({ 0x243f6a88, 0x85a308d3 }, { 0x13198a2e }) ==
-                   counters_type{ 0xbedbbe6b, 0xe4c770b3 });
+                       counters_type{ 0xbedbbe6b, 0xe4c770b3 });
 }
 
 void TestPhiloxRNG2x32x10()
@@ -32,9 +32,9 @@ void TestPhiloxRNG2x32x10()
   // test cases from original Random123 implementation
   VISKORES_TEST_ASSERT(f2x32x10({}, {}) == counters_type{ 0xff1dae59, 0x6cd10df2 });
   VISKORES_TEST_ASSERT(f2x32x10({ 0xffffffff, 0xffffffff }, { 0xffffffff }) ==
-                   counters_type{ 0x2c3f628b, 0xab4fd7ad });
+                       counters_type{ 0x2c3f628b, 0xab4fd7ad });
   VISKORES_TEST_ASSERT(f2x32x10({ 0x243f6a88, 0x85a308d3 }, { 0x13198a2e }) ==
-                   counters_type{ 0xdd7ce038, 0xf62a4c12 });
+                       counters_type{ 0xdd7ce038, 0xf62a4c12 });
 }
 
 void TestPhiloxRNG()

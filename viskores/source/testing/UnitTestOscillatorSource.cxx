@@ -52,7 +52,8 @@ void OscillatorSourceTest()
     ScalarHandleType handle = dynData.AsArrayHandle<ScalarHandleType>();
     auto data = handle.ReadPortal();
 
-    VISKORES_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 9261), "Incorrect number of scalars.");
+    VISKORES_TEST_ASSERT(test_equal(data.GetNumberOfValues(), 9261),
+                         "Incorrect number of scalars.");
 
     VISKORES_TEST_ASSERT(test_equal(data.Get(0), -0.0163996), "Incorrect scalar value.");
     VISKORES_TEST_ASSERT(test_equal(data.Get(16), -0.0182232), "Incorrect scalar value.");

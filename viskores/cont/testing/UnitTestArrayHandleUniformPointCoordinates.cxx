@@ -29,11 +29,12 @@ void TestArrayHandleUniformPointCoordinates()
 
   viskores::cont::ArrayHandleUniformPointCoordinates arrayHandle(DIMENSIONS, ORIGIN, SPACING);
   VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == NUM_POINTS,
-                   "Array computed wrong number of points.");
+                       "Array computed wrong number of points.");
 
   std::cout << "Getting array portal." << std::endl;
   auto portal = arrayHandle.ReadPortal();
-  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == NUM_POINTS, "Portal has wrong number of points.");
+  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == NUM_POINTS,
+                       "Portal has wrong number of points.");
   VISKORES_TEST_ASSERT(portal.GetRange3() == DIMENSIONS, "Portal range is wrong.");
 
   std::cout << "Checking computed values of portal." << std::endl;
@@ -50,10 +51,10 @@ void TestArrayHandleUniformPointCoordinates()
       for (blockIndex[0] = 0; blockIndex[0] < DIMENSIONS[0]; blockIndex[0]++)
       {
         VISKORES_TEST_ASSERT(test_equal(expectedValue, portal.Get(flatIndex)),
-                         "Got wrong value for flat index.");
+                             "Got wrong value for flat index.");
 
         VISKORES_TEST_ASSERT(test_equal(expectedValue, portal.Get(blockIndex)),
-                         "Got wrong value for block index.");
+                             "Got wrong value for block index.");
 
         flatIndex++;
         expectedValue[0] += SPACING[0];

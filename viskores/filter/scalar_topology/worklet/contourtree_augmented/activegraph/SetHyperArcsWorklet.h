@@ -83,10 +83,10 @@ public:
 
   template <typename InFieldPortalType, typename InOutFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const InOutFieldPortalType& treeHypernodesPortal,
-                            const viskores::Id hypernode,
-                            const OutFieldPortalType treeHyperarcsPortal,
-                            const InFieldPortalType& graphHyperarcsPortal,
-                            const InFieldPortalType& graphSuperIDPortal) const
+                                const viskores::Id hypernode,
+                                const OutFieldPortalType treeHyperarcsPortal,
+                                const InFieldPortalType& graphHyperarcsPortal,
+                                const InFieldPortalType& graphSuperIDPortal) const
   {
     // reset the hypernode ID to a supernode ID from a graph ID
     viskores::Id graphID = treeHypernodesPortal.Get(hypernode);

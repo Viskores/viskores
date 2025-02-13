@@ -20,16 +20,17 @@ void TestExecutionSignatures()
 {
   VISKORES_IS_EXECUTION_SIGNATURE_TAG(viskores::exec::arg::BasicArg<1>);
 
-  VISKORES_TEST_ASSERT(
-    viskores::exec::arg::internal::ExecutionSignatureTagCheck<viskores::exec::arg::BasicArg<2>>::Valid,
-    "Bad check for BasicArg");
+  VISKORES_TEST_ASSERT(viskores::exec::arg::internal::ExecutionSignatureTagCheck<
+                         viskores::exec::arg::BasicArg<2>>::Valid,
+                       "Bad check for BasicArg");
+
+  VISKORES_TEST_ASSERT(viskores::exec::arg::internal::ExecutionSignatureTagCheck<
+                         viskores::exec::arg::WorkIndex>::Valid,
+                       "Bad check for WorkIndex");
 
   VISKORES_TEST_ASSERT(
-    viskores::exec::arg::internal::ExecutionSignatureTagCheck<viskores::exec::arg::WorkIndex>::Valid,
-    "Bad check for WorkIndex");
-
-  VISKORES_TEST_ASSERT(!viskores::exec::arg::internal::ExecutionSignatureTagCheck<viskores::Id>::Valid,
-                   "Bad check for viskores::Id");
+    !viskores::exec::arg::internal::ExecutionSignatureTagCheck<viskores::Id>::Valid,
+    "Bad check for viskores::Id");
 }
 
 } // anonymous namespace

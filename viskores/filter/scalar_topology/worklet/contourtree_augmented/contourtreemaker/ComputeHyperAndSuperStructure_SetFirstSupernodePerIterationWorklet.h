@@ -82,8 +82,8 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& supernode,
-                            const InFieldPortalType& whenTransferredPortal,
-                            const OutFieldPortalType& firstSupernodePerIterationPortal) const
+                                const InFieldPortalType& whenTransferredPortal,
+                                const OutFieldPortalType& firstSupernodePerIterationPortal) const
   {
     // per supernode
     viskores::Id when =
@@ -94,8 +94,8 @@ public:
     } // zeroth supernode
     else
     {
-      viskores::Id prevWhen =
-        viskores::worklet::contourtree_augmented::MaskedIndex(whenTransferredPortal.Get(supernode - 1));
+      viskores::Id prevWhen = viskores::worklet::contourtree_augmented::MaskedIndex(
+        whenTransferredPortal.Get(supernode - 1));
       if (when != prevWhen)
       { // non-matching supernode
         firstSupernodePerIterationPortal.Set(when, supernode);

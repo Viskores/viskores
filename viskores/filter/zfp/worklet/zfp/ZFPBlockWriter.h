@@ -24,7 +24,8 @@ using Word = viskores::UInt64;
 template <int block_size, typename AtomicPortalType>
 struct BlockWriter
 {
-  union UIntInt {
+  union UIntInt
+  {
     viskores::UInt64 uintpart;
     viskores::Int64 intpart;
   };
@@ -35,7 +36,9 @@ struct BlockWriter
   const int m_maxbits;
   AtomicPortalType& Portal;
 
-  VISKORES_EXEC BlockWriter(AtomicPortalType& portal, const int& maxbits, const viskores::Id& block_idx)
+  VISKORES_EXEC BlockWriter(AtomicPortalType& portal,
+                            const int& maxbits,
+                            const viskores::Id& block_idx)
     : m_current_bit(0)
     , m_maxbits(maxbits)
     , Portal(portal)
@@ -53,7 +56,8 @@ struct BlockWriter
     Portal.Add(index, newval.intpart);
   }
 
-  inline VISKORES_EXEC viskores::UInt64 write_bits(const viskores::UInt64& bits, const unsigned int& n_bits)
+  inline VISKORES_EXEC viskores::UInt64 write_bits(const viskores::UInt64& bits,
+                                                   const unsigned int& n_bits)
   {
     const int wbits = sizeof(Word) * 8;
     unsigned int seg_start = (m_start_bit + m_current_bit) % wbits;

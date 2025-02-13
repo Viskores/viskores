@@ -64,17 +64,17 @@ struct TestObject
   }
 };
 
-#define CHECK_OBJECT(object, expectedTokens, expectedRefs)        \
+#define CHECK_OBJECT(object, expectedTokens, expectedRefs)            \
   VISKORES_TEST_ASSERT(*(object).TokenCount == (expectedTokens),      \
-                   "Expected object to have token count of ",     \
-                   (expectedTokens),                              \
-                   ". It actually was ",                          \
-                   *(object).TokenCount);                         \
+                       "Expected object to have token count of ",     \
+                       (expectedTokens),                              \
+                       ". It actually was ",                          \
+                       *(object).TokenCount);                         \
   VISKORES_TEST_ASSERT(*(object).ReferenceCount == (expectedRefs),    \
-                   "Expected object to have reference count of ", \
-                   (expectedRefs),                                \
-                   ". It actually was ",                          \
-                   *(object).ReferenceCount)
+                       "Expected object to have reference count of ", \
+                       (expectedRefs),                                \
+                       ". It actually was ",                          \
+                       *(object).ReferenceCount)
 
 void TestBasicAttachDetatch()
 {

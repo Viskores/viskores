@@ -31,13 +31,13 @@ viskores::cont::DataSet MakeNormalsTestDataSet()
 
   const int nVerts = 48;
   viskores::Float32 vars[nVerts] = { 60.764f,  107.555f, 80.524f,  63.639f,  131.087f, 83.4f,
-                                 98.161f,  165.608f, 117.921f, 37.353f,  84.145f,  57.114f,
-                                 95.202f,  162.649f, 114.962f, 115.896f, 215.56f,  135.657f,
-                                 150.418f, 250.081f, 170.178f, 71.791f,  139.239f, 91.552f,
-                                 95.202f,  162.649f, 114.962f, 115.896f, 215.56f,  135.657f,
-                                 150.418f, 250.081f, 170.178f, 71.791f,  139.239f, 91.552f,
-                                 60.764f,  107.555f, 80.524f,  63.639f,  131.087f, 83.4f,
-                                 98.161f,  165.608f, 117.921f, 37.353f,  84.145f,  57.114f };
+                                     98.161f,  165.608f, 117.921f, 37.353f,  84.145f,  57.114f,
+                                     95.202f,  162.649f, 114.962f, 115.896f, 215.56f,  135.657f,
+                                     150.418f, 250.081f, 170.178f, 71.791f,  139.239f, 91.552f,
+                                     95.202f,  162.649f, 114.962f, 115.896f, 215.56f,  135.657f,
+                                     150.418f, 250.081f, 170.178f, 71.791f,  139.239f, 91.552f,
+                                     60.764f,  107.555f, 80.524f,  63.639f,  131.087f, 83.4f,
+                                     98.161f,  165.608f, 117.921f, 37.353f,  84.145f,  57.114f };
 
   //Set point and cell scalar
   dataSet.AddPointField("pointvar", vars, nVerts);
@@ -70,8 +70,9 @@ void CheckWinding(const viskores::cont::DataSet& contour)
     {
       viskores::Vec3f pointNormal = normalsPortal.Get(pointIds[i]);
       viskores::FloatDefault normalDirections = viskores::Dot(facetNormal, pointNormal);
-      VISKORES_TEST_ASSERT(normalDirections > 0,
-                       "Triangle winding and computed normal pointing in different directions.");
+      VISKORES_TEST_ASSERT(
+        normalDirections > 0,
+        "Triangle winding and computed normal pointing in different directions.");
     }
   }
 }
@@ -106,7 +107,7 @@ void TestNormals(const viskores::cont::DataSet& dataset, bool structured)
   //Calculated using FlyingEdges and Y axis iteration which causes
   //the points to be in a different order
   const viskores::Id fe_y_alg_ordering[numVerts] = { 0, 1,  3,  5,  4, 6,  2,  7,
-                                                 9, 12, 10, 13, 8, 14, 11, 15 };
+                                                     9, 12, 10, 13, 8, 14, 11, 15 };
 
   //Calculated using normals of the output triangles
   const viskores::Vec3f fast[numVerts] = {
@@ -154,7 +155,7 @@ void TestNormals(const viskores::cont::DataSet& dataset, bool structured)
   auto result = mc.Execute(dataset);
   result.GetField("normals").GetData().AsArrayHandle(normals);
   VISKORES_TEST_ASSERT(normals.GetNumberOfValues() == numVerts,
-                   "Wrong number of values in normals field");
+                       "Wrong number of values in normals field");
 
   //determine if we are using flying edge Y axis algorithm by checking the first normal value that differs
   const bool using_fe_y_alg_ordering =
@@ -165,12 +166,12 @@ void TestNormals(const viskores::cont::DataSet& dataset, bool structured)
     {
       auto expected_v = !using_fe_y_alg_ordering ? expected[i] : expected[fe_y_alg_ordering[i]];
       VISKORES_TEST_ASSERT(test_equal(normalPotals.Get(i), expected_v, 0.001),
-                       "Result (",
-                       normalPotals.Get(i),
-                       ") does not match expected value (",
-                       expected_v,
-                       ") vert ",
-                       i);
+                           "Result (",
+                           normalPotals.Get(i),
+                           ") does not match expected value (",
+                           expected_v,
+                           ") vert ",
+                           i);
     }
   }
   CheckWinding(result);
@@ -194,7 +195,7 @@ void TestNormals(const viskores::cont::DataSet& dataset, bool structured)
   result = mc.Execute(dataset);
   result.GetField("normals").GetData().AsArrayHandle(normals);
   VISKORES_TEST_ASSERT(normals.GetNumberOfValues() == numVerts,
-                   "Wrong number of values in normals field");
+                       "Wrong number of values in normals field");
 
   {
     auto normalPotals = normals.ReadPortal();
@@ -202,12 +203,12 @@ void TestNormals(const viskores::cont::DataSet& dataset, bool structured)
     {
       bool equal = test_equal(normalPotals.Get(i), expected[i], 0.001);
       VISKORES_TEST_ASSERT(equal,
-                       "Result (",
-                       normalPotals.Get(i),
-                       ") does not match expected value (",
-                       expected[i],
-                       ") vert ",
-                       i);
+                           "Result (",
+                           normalPotals.Get(i),
+                           ") does not match expected value (",
+                           expected[i],
+                           ") vert ",
+                           i);
     }
   }
   CheckWinding(result);
@@ -234,5 +235,6 @@ void TestContourNormals()
 
 int UnitTestContourFilterNormals(int argc, char* argv[])
 {
-  return viskores::cont::testing::Testing::Run(viskores_ut_mc_normals::TestContourNormals, argc, argv);
+  return viskores::cont::testing::Testing::Run(
+    viskores_ut_mc_normals::TestContourNormals, argc, argv);
 }

@@ -58,8 +58,8 @@ public:
   /// FieldSelection("field_name", viskores::cont::Field::Association::Points)
   /// \endcode{cpp}
   VISKORES_CONT FieldSelection(const std::string& field,
-                           viskores::cont::Field::Association association,
-                           Mode mode = Mode::Select);
+                               viskores::cont::Field::Association association,
+                               Mode mode = Mode::Select);
 
   /// Use this constructor to create a field selection given the field names.
   /// \code{cpp}
@@ -124,8 +124,9 @@ public:
   }
 
   VISKORES_CONT
-  void AddField(const std::string& fieldName,
-                viskores::cont::Field::Association association = viskores::cont::Field::Association::Any)
+  void AddField(
+    const std::string& fieldName,
+    viskores::cont::Field::Association association = viskores::cont::Field::Association::Any)
   {
     this->AddField(fieldName, association, this->GetMode());
   }
@@ -136,8 +137,8 @@ public:
   }
 
   VISKORES_CONT void AddField(const std::string& fieldName,
-                          viskores::cont::Field::Association association,
-                          Mode mode);
+                              viskores::cont::Field::Association association,
+                              Mode mode);
   ///@}
 
   ///@{

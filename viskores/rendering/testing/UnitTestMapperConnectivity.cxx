@@ -35,13 +35,13 @@ void RenderTests()
   viskores::rendering::testing::RenderTest(
     maker.Make3DRegularDataSet0(), "pointvar", "rendering/connectivity/regular3D.png", testOptions);
   viskores::rendering::testing::RenderTest(maker.Make3DRectilinearDataSet0(),
-                                       "pointvar",
-                                       "rendering/connectivity/rectilinear3D.png",
-                                       testOptions);
+                                           "pointvar",
+                                           "rendering/connectivity/rectilinear3D.png",
+                                           testOptions);
   viskores::rendering::testing::RenderTest(maker.Make3DExplicitDataSetZoo(),
-                                       "pointvar",
-                                       "rendering/connectivity/explicit3D.png",
-                                       testOptions);
+                                           "pointvar",
+                                           "rendering/connectivity/explicit3D.png",
+                                           testOptions);
 }
 
 } //namespace

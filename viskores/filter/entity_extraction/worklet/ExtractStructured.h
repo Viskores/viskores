@@ -87,8 +87,8 @@ struct ExtractCopy : public viskores::worklet::WorkletMapField
 
   template <typename ScalarType, typename WholeFieldIn>
   VISKORES_EXEC void operator()(viskores::Id3& index,
-                            ScalarType& output,
-                            const WholeFieldIn& inputField) const
+                                ScalarType& output,
+                                const WholeFieldIn& inputField) const
   {
     output = inputField.Get(this->ToFlat(index));
   }
@@ -445,10 +445,10 @@ public:
 
   using UniformCoordinatesArrayHandle = viskores::cont::ArrayHandleUniformPointCoordinates;
 
-  using RectilinearCoordinatesArrayHandle =
-    viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>>;
+  using RectilinearCoordinatesArrayHandle = viskores::cont::ArrayHandleCartesianProduct<
+    viskores::cont::ArrayHandle<viskores::FloatDefault>,
+    viskores::cont::ArrayHandle<viskores::FloatDefault>,
+    viskores::cont::ArrayHandle<viskores::FloatDefault>>;
 
 
   UniformCoordinatesArrayHandle MapCoordinatesUniform(
@@ -464,8 +464,8 @@ public:
 
     CoordType outOrigin =
       viskores::make_Vec(inOrigin[0] + static_cast<ValueType>(this->VOI.X.Min) * inSpacing[0],
-                     inOrigin[1] + static_cast<ValueType>(this->VOI.Y.Min) * inSpacing[1],
-                     inOrigin[2] + static_cast<ValueType>(this->VOI.Z.Min) * inSpacing[2]);
+                         inOrigin[1] + static_cast<ValueType>(this->VOI.Y.Min) * inSpacing[1],
+                         inOrigin[2] + static_cast<ValueType>(this->VOI.Z.Min) * inSpacing[2]);
     CoordType outSpacing = inSpacing * static_cast<CoordType>(this->SampleRate);
 
     return { this->OutputDimensions, outOrigin, outSpacing };
@@ -483,8 +483,8 @@ public:
                                          this->ValidPoints.GetThirdArray() };
 
     viskores::cont::ArrayHandle<viskores::FloatDefault> arrays[3] = { coords.GetFirstArray(),
-                                                              coords.GetSecondArray(),
-                                                              coords.GetThirdArray() };
+                                                                      coords.GetSecondArray(),
+                                                                      coords.GetThirdArray() };
 
     viskores::cont::ArrayHandle<viskores::FloatDefault> xyzs[3];
     int dim = 0;
@@ -497,8 +497,8 @@ public:
       }
       else
       {
-        viskores::cont::ArrayCopyDevice(viskores::cont::make_ArrayHandlePermutation(validIds[i], arrays[i]),
-                                    xyzs[i]);
+        viskores::cont::ArrayCopyDevice(
+          viskores::cont::make_ArrayHandlePermutation(validIds[i], arrays[i]), xyzs[i]);
         ++dim;
       }
     }

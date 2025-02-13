@@ -56,10 +56,10 @@ void CudaReallocate(void*& memory,
 
     // Copy the data to the new buffer
     VISKORES_CUDA_CALL(cudaMemcpyAsync(newMemory,
-                                   memory,
-                                   static_cast<std::size_t>(oldSize),
-                                   cudaMemcpyDeviceToDevice,
-                                   cudaStreamPerThread));
+                                       memory,
+                                       static_cast<std::size_t>(oldSize),
+                                       cudaMemcpyDeviceToDevice,
+                                       cudaStreamPerThread));
 
     // Reset the buffer in the passed in info
     memory = container = newMemory;
@@ -141,15 +141,15 @@ void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagCuda>::CopyHostT
     viskores::BufferSizeType size = viskores::Min(src.GetSize(), dest.GetSize());
 
     VISKORES_LOG_F(viskores::cont::LogLevel::MemTransfer,
-               "Copying host --> CUDA dev: %s (%lld bytes)",
-               viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
-               size);
+                   "Copying host --> CUDA dev: %s (%lld bytes)",
+                   viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
+                   size);
 
     VISKORES_CUDA_CALL(cudaMemcpyAsync(dest.GetPointer(),
-                                   src.GetPointer(),
-                                   static_cast<std::size_t>(size),
-                                   cudaMemcpyHostToDevice,
-                                   cudaStreamPerThread));
+                                       src.GetPointer(),
+                                       static_cast<std::size_t>(size),
+                                       cudaMemcpyHostToDevice,
+                                       cudaStreamPerThread));
   }
 }
 
@@ -202,15 +202,15 @@ void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagCuda>::CopyDevic
     viskores::BufferSizeType size = viskores::Min(src.GetSize(), dest.GetSize());
 
     VISKORES_LOG_F(viskores::cont::LogLevel::MemTransfer,
-               "Copying CUDA dev --> host: %s (%lld bytes)",
-               viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
-               size);
+                   "Copying CUDA dev --> host: %s (%lld bytes)",
+                   viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
+                   size);
 
     VISKORES_CUDA_CALL(cudaMemcpyAsync(dest.GetPointer(),
-                                   src.GetPointer(),
-                                   static_cast<std::size_t>(size),
-                                   cudaMemcpyDeviceToHost,
-                                   cudaStreamPerThread));
+                                       src.GetPointer(),
+                                       static_cast<std::size_t>(size),
+                                       cudaMemcpyDeviceToHost,
+                                       cudaStreamPerThread));
   }
 
   //In all cases we have possibly multiple async calls queued up in
@@ -235,13 +235,14 @@ void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagCuda>::CopyDevic
   const viskores::cont::internal::BufferInfo& dest) const
 {
   VISKORES_CUDA_CALL(cudaMemcpyAsync(dest.GetPointer(),
-                                 src.GetPointer(),
-                                 static_cast<std::size_t>(src.GetSize()),
-                                 cudaMemcpyDeviceToDevice,
-                                 cudaStreamPerThread));
+                                     src.GetPointer(),
+                                     static_cast<std::size_t>(src.GetSize()),
+                                     cudaMemcpyDeviceToDevice,
+                                     cudaStreamPerThread));
 }
 
-void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagCuda>::DeleteRawPointer(void* mem) const
+void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagCuda>::DeleteRawPointer(
+  void* mem) const
 {
   CudaDelete(mem);
 };

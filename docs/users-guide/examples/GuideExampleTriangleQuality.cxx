@@ -52,13 +52,14 @@ viskores::cont::ArrayHandle<viskores::Float32> GetTriangleQualityTable()
 }
 
 template<typename T>
-VISKORES_EXEC_CONT viskores::Vec<T, 3> TriangleEdgeLengths(const viskores::Vec<T, 3>& point1,
-                                                   const viskores::Vec<T, 3>& point2,
-                                                   const viskores::Vec<T, 3>& point3)
+VISKORES_EXEC_CONT viskores::Vec<T, 3> TriangleEdgeLengths(
+  const viskores::Vec<T, 3>& point1,
+  const viskores::Vec<T, 3>& point2,
+  const viskores::Vec<T, 3>& point3)
 {
   return viskores::make_Vec(viskores::Magnitude(point1 - point2),
-                        viskores::Magnitude(point2 - point3),
-                        viskores::Magnitude(point3 - point1));
+                            viskores::Magnitude(point2 - point3),
+                            viskores::Magnitude(point3 - point1));
 }
 
 VISKORES_SUPPRESS_EXEC_WARNINGS
@@ -178,8 +179,8 @@ public:
 
   template<typename T>
   VISKORES_EXEC viskores::Float32 GetQuality(const viskores::Vec<T, 3>& point1,
-                                     const viskores::Vec<T, 3>& point2,
-                                     const viskores::Vec<T, 3>& point3) const
+                                             const viskores::Vec<T, 3>& point2,
+                                             const viskores::Vec<T, 3>& point3) const
   {
     return detail::LookupTriangleQuality(this->TablePortal, point1, point2, point3);
   }
@@ -189,7 +190,8 @@ class TriangleQualityTable : public viskores::cont::ExecutionObjectBase
 {
 public:
   VISKORES_CONT TriangleQualityTableExecutionObject
-  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
+  PrepareForExecution(viskores::cont::DeviceAdapterId device,
+                      viskores::cont::Token& token) const
   {
     return TriangleQualityTableExecutionObject(
       detail::GetTriangleQualityTable().PrepareForInput(device, token));
@@ -308,12 +310,12 @@ viskores::cont::ArrayHandle<viskores::Float32> BuildTriangleQualityTable()
   // Repurpose uniform point coordinates to compute triange edge lengths.
   viskores::cont::ArrayHandleUniformPointCoordinates edgeLengths(
     viskores::Id3(detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
-              detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
-              1),
+                  detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
+                  1),
     viskores::Vec3f(0, 0, 1),
     viskores::Vec3f(1.0f / (detail::TRIANGLE_QUALITY_TABLE_DIMENSION - 1),
-                1.0f / (detail::TRIANGLE_QUALITY_TABLE_DIMENSION - 1),
-                1.0f));
+                    1.0f / (detail::TRIANGLE_QUALITY_TABLE_DIMENSION - 1),
+                    1.0f));
 
   viskores::cont::ArrayHandle<viskores::Float32> triQualityArray;
 
@@ -384,7 +386,8 @@ void CheckQualityArray(viskores::cont::ArrayHandle<viskores::Float32> qualities)
   {
     viskores::Float32 q1 = qualityPortal.Get(2 * pairIndex);
     viskores::Float32 q2 = qualityPortal.Get(2 * pairIndex + 1);
-    VISKORES_TEST_ASSERT(test_equal(q1, q2), "Isometric triangles have different quality.");
+    VISKORES_TEST_ASSERT(test_equal(q1, q2),
+                         "Isometric triangles have different quality.");
   }
 
   // Triangle qualities should be monotonically decreasing.
@@ -393,24 +396,26 @@ void CheckQualityArray(viskores::cont::ArrayHandle<viskores::Float32> qualities)
   {
     viskores::Float32 quality = qualityPortal.Get(triIndex);
     VISKORES_TEST_ASSERT(test_equal(quality, lastQuality) || (quality <= lastQuality),
-                     "Triangle quality not monotonically decreasing.");
+                         "Triangle quality not monotonically decreasing.");
     lastQuality = quality;
   }
 
   // The first quality should definitely be better than the last.
   viskores::Float32 firstQuality = qualityPortal.Get(0);
-  VISKORES_TEST_ASSERT(firstQuality > lastQuality, "First quality not better than last.");
+  VISKORES_TEST_ASSERT(firstQuality > lastQuality,
+                       "First quality not better than last.");
 }
 
 VISKORES_CONT
 void TestTriangleQuality()
 {
   std::cout << "Building triangle quality array." << std::endl;
-  viskores::cont::ArrayHandle<viskores::Float32> triQualityTable = BuildTriangleQualityTable();
+  viskores::cont::ArrayHandle<viskores::Float32> triQualityTable =
+    BuildTriangleQualityTable();
   VISKORES_TEST_ASSERT(triQualityTable.GetNumberOfValues() ==
-                     detail::TRIANGLE_QUALITY_TABLE_DIMENSION *
-                       detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
-                   "Bad size for triangle quality array.");
+                         detail::TRIANGLE_QUALITY_TABLE_DIMENSION *
+                           detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
+                       "Bad size for triangle quality array.");
   PrintTriangleQualityTable(triQualityTable.ReadPortal());
 
   std::cout << "Creating a data set." << std::endl;

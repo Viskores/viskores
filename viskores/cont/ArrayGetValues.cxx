@@ -18,16 +18,17 @@
 #include <viskores/TypeList.h>
 
 void viskores::cont::internal::ArrayGetValuesImpl(const viskores::cont::UnknownArrayHandle& ids,
-                                              const viskores::cont::UnknownArrayHandle& data,
-                                              const viskores::cont::UnknownArrayHandle& output,
-                                              std::false_type)
+                                                  const viskores::cont::UnknownArrayHandle& data,
+                                                  const viskores::cont::UnknownArrayHandle& output,
+                                                  std::false_type)
 {
   auto idArray = ids.ExtractComponent<viskores::Id>(0, viskores::CopyFlag::On);
   output.Allocate(ids.GetNumberOfValues());
 
   bool copied = false;
   viskores::ListForEach(
-    [&](auto base) {
+    [&](auto base)
+    {
       using T = decltype(base);
       if (!copied && data.IsBaseComponentType<T>())
       {
@@ -42,15 +43,17 @@ void viskores::cont::internal::ArrayGetValuesImpl(const viskores::cont::UnknownA
           bool copiedComponent = false;
           if (!dataArray.IsOnHost())
           {
-            copiedComponent = viskores::cont::TryExecute([&](auto device) {
-              if (dataArray.IsOnDevice(device))
+            copiedComponent = viskores::cont::TryExecute(
+              [&](auto device)
               {
-                viskores::cont::DeviceAdapterAlgorithm<decltype(device)>::Copy(permutedArray,
-                                                                           outputArray);
-                return true;
-              }
-              return false;
-            });
+                if (dataArray.IsOnDevice(device))
+                {
+                  viskores::cont::DeviceAdapterAlgorithm<decltype(device)>::Copy(permutedArray,
+                                                                                 outputArray);
+                  return true;
+                }
+                return false;
+              });
           }
 
           if (!copiedComponent)
@@ -76,6 +79,6 @@ void viskores::cont::internal::ArrayGetValuesImpl(const viskores::cont::UnknownA
   if (!copied)
   {
     throw viskores::cont::ErrorBadType("Unable to get values from array of type " +
-                                   data.GetArrayTypeName());
+                                       data.GetArrayTypeName());
   }
 }

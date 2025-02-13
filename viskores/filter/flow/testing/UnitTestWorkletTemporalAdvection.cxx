@@ -25,11 +25,12 @@
 #include <viskores/filter/flow/worklet/TemporalGridEvaluators.h>
 
 template <typename ScalarType>
-viskores::cont::DataSet CreateUniformDataSet(const viskores::Bounds& bounds, const viskores::Id3& dims)
+viskores::cont::DataSet CreateUniformDataSet(const viskores::Bounds& bounds,
+                                             const viskores::Id3& dims)
 {
   viskores::Vec<ScalarType, 3> origin(static_cast<ScalarType>(bounds.X.Min),
-                                  static_cast<ScalarType>(bounds.Y.Min),
-                                  static_cast<ScalarType>(bounds.Z.Min));
+                                      static_cast<ScalarType>(bounds.Y.Min),
+                                      static_cast<ScalarType>(bounds.Z.Min));
   viskores::Vec<ScalarType, 3> spacing(
     static_cast<ScalarType>(bounds.X.Length()) / static_cast<ScalarType>((dims[0] - 1)),
     static_cast<ScalarType>(bounds.Y.Length()) / static_cast<ScalarType>((dims[1] - 1)),
@@ -52,9 +53,9 @@ public:
 
   template <typename EvaluatorType>
   VISKORES_EXEC void operator()(viskores::Particle& pointIn,
-                            const EvaluatorType& evaluator,
-                            viskores::worklet::flow::GridEvaluatorStatus& status,
-                            viskores::Vec3f& pointOut) const
+                                const EvaluatorType& evaluator,
+                                viskores::worklet::flow::GridEvaluatorStatus& status,
+                                viskores::Vec3f& pointOut) const
   {
     viskores::VecVariable<viskores::Vec3f, 2> values;
     status = evaluator.Evaluate(pointIn.GetPosition(), 0.5f, values);

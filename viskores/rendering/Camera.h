@@ -53,10 +53,11 @@ class VISKORES_RENDERING_EXPORT Camera
 
     viskores::Matrix<viskores::Float32, 4, 4> CreateViewMatrix() const;
 
-    viskores::Matrix<viskores::Float32, 4, 4> CreateProjectionMatrix(viskores::Id width,
-                                                             viskores::Id height,
-                                                             viskores::Float32 nearPlane,
-                                                             viskores::Float32 farPlane) const;
+    viskores::Matrix<viskores::Float32, 4, 4> CreateProjectionMatrix(
+      viskores::Id width,
+      viskores::Id height,
+      viskores::Float32 nearPlane,
+      viskores::Float32 farPlane) const;
 
     viskores::Vec3f_32 LookAt;
     viskores::Vec3f_32 Position;
@@ -85,10 +86,11 @@ class VISKORES_RENDERING_EXPORT Camera
 
     viskores::Matrix<viskores::Float32, 4, 4> CreateViewMatrix() const;
 
-    viskores::Matrix<viskores::Float32, 4, 4> CreateProjectionMatrix(viskores::Float32 size,
-                                                             viskores::Float32 znear,
-                                                             viskores::Float32 zfar,
-                                                             viskores::Float32 aspect) const;
+    viskores::Matrix<viskores::Float32, 4, 4> CreateProjectionMatrix(
+      viskores::Float32 size,
+      viskores::Float32 znear,
+      viskores::Float32 zfar,
+      viskores::Float32 aspect) const;
 
     viskores::Float32 Left;
     viskores::Float32 Right;
@@ -122,7 +124,7 @@ public:
   viskores::Matrix<viskores::Float32, 4, 4> CreateViewMatrix() const;
 
   viskores::Matrix<viskores::Float32, 4, 4> CreateProjectionMatrix(viskores::Id screenWidth,
-                                                           viskores::Id screenHeight) const;
+                                                                   viskores::Id screenHeight) const;
 
   void GetRealViewport(viskores::Id screenWidth,
                        viskores::Id screenHeight,
@@ -163,7 +165,10 @@ public:
   /// behind the geometry.
   ///
   VISKORES_CONT
-  viskores::Range GetClippingRange() const { return viskores::Range(this->NearPlane, this->FarPlane); }
+  viskores::Range GetClippingRange() const
+  {
+    return viskores::Range(this->NearPlane, this->FarPlane);
+  }
   /// @copydoc GetClippingRange
   VISKORES_CONT
   void SetClippingRange(viskores::Float32 nearPlane, viskores::Float32 farPlane)
@@ -225,7 +230,10 @@ public:
   }
   /// @copydoc GetViewport
   VISKORES_CONT
-  void SetViewport(viskores::Float32 left, viskores::Float32 right, viskores::Float32 bottom, viskores::Float32 top)
+  void SetViewport(viskores::Float32 left,
+                   viskores::Float32 right,
+                   viskores::Float32 bottom,
+                   viskores::Float32 top)
   {
     this->ViewportLeft = left;
     this->ViewportRight = right;
@@ -234,7 +242,10 @@ public:
   }
   /// @copydoc GetViewport
   VISKORES_CONT
-  void SetViewport(viskores::Float64 left, viskores::Float64 right, viskores::Float64 bottom, viskores::Float64 top)
+  void SetViewport(viskores::Float64 left,
+                   viskores::Float64 right,
+                   viskores::Float64 bottom,
+                   viskores::Float64 top)
   {
     this->SetViewport(static_cast<viskores::Float32>(left),
                       static_cast<viskores::Float32>(right),
@@ -286,7 +297,10 @@ public:
   }
   /// @copydoc GetPosition
   VISKORES_CONT
-  void SetPosition(const viskores::Vec3f_64& position) { this->SetPosition(viskores::Vec3f_32(position)); }
+  void SetPosition(const viskores::Vec3f_64& position)
+  {
+    this->SetPosition(viskores::Vec3f_32(position));
+  }
 
   /// @brief The up orientation of the camera in 3D mode
   ///
@@ -325,7 +339,10 @@ public:
   }
   /// @copydoc GetXScale
   VISKORES_CONT
-  void SetXScale(viskores::Float64 xscale) { this->SetXScale(static_cast<viskores::Float32>(xscale)); }
+  void SetXScale(viskores::Float64 xscale)
+  {
+    this->SetXScale(static_cast<viskores::Float32>(xscale));
+  }
 
   /// @brief The field of view angle
   ///
@@ -345,7 +362,10 @@ public:
   }
   /// @copydoc GetFieldOfView
   VISKORES_CONT
-  void SetFieldOfView(viskores::Float64 fov) { this->SetFieldOfView(static_cast<viskores::Float32>(fov)); }
+  void SetFieldOfView(viskores::Float64 fov)
+  {
+    this->SetFieldOfView(static_cast<viskores::Float32>(fov));
+  }
 
   /// @brief Pans the camera
   ///
@@ -448,7 +468,10 @@ public:
   void Roll(viskores::Float32 angleDegrees);
   /// @copydoc Roll
   VISKORES_CONT
-  void Roll(viskores::Float64 angleDegrees) { this->Roll(static_cast<viskores::Float32>(angleDegrees)); }
+  void Roll(viskores::Float64 angleDegrees)
+  {
+    this->Roll(static_cast<viskores::Float32>(angleDegrees));
+  }
 
   /// @brief Rotate the camera about the view up vector centered at the focal point.
   ///
@@ -531,11 +554,11 @@ public:
   viskores::Bounds GetViewRange2D() const
   {
     return viskores::Bounds(this->Camera2D.Left,
-                        this->Camera2D.Right,
-                        this->Camera2D.Bottom,
-                        this->Camera2D.Top,
-                        0.0,
-                        0.0);
+                            this->Camera2D.Right,
+                            this->Camera2D.Bottom,
+                            this->Camera2D.Top,
+                            0.0,
+                            0.0);
   }
   /// @copydoc GetViewRange2D
   VISKORES_CONT

@@ -47,15 +47,15 @@ public:
 
   template <typename PointPortalType, typename LeafPortalType, typename Precision>
   VISKORES_EXEC inline void IntersectLeaf(const viskores::Int32& currentNode,
-                                      const viskores::Vec<Precision, 3>& origin,
-                                      const viskores::Vec<Precision, 3>& dir,
-                                      const PointPortalType& points,
-                                      viskores::Id& hitIndex,
-                                      Precision& closestDistance,
-                                      Precision& minU,
-                                      Precision& minV,
-                                      LeafPortalType leafs,
-                                      const Precision& minDistance) const
+                                          const viskores::Vec<Precision, 3>& origin,
+                                          const viskores::Vec<Precision, 3>& dir,
+                                          const PointPortalType& points,
+                                          viskores::Id& hitIndex,
+                                          Precision& closestDistance,
+                                          Precision& minU,
+                                          Precision& minV,
+                                          LeafPortalType leafs,
+                                          const Precision& minDistance) const
   {
     const viskores::Id triangleCount = leafs.Get(currentNode);
     WaterTight intersector;
@@ -100,15 +100,15 @@ public:
 
   template <typename PointPortalType, typename LeafPortalType, typename Precision>
   VISKORES_EXEC inline void IntersectLeaf(const viskores::Int32& currentNode,
-                                      const viskores::Vec<Precision, 3>& origin,
-                                      const viskores::Vec<Precision, 3>& dir,
-                                      const PointPortalType& points,
-                                      viskores::Id& hitIndex,
-                                      Precision& closestDistance,
-                                      Precision& minU,
-                                      Precision& minV,
-                                      LeafPortalType leafs,
-                                      const Precision& minDistance) const
+                                          const viskores::Vec<Precision, 3>& origin,
+                                          const viskores::Vec<Precision, 3>& dir,
+                                          const PointPortalType& points,
+                                          viskores::Id& hitIndex,
+                                          Precision& closestDistance,
+                                          Precision& minU,
+                                          Precision& minV,
+                                          LeafPortalType leafs,
+                                          const Precision& minDistance) const
   {
     const viskores::Id triangleCount = leafs.Get(currentNode);
     Moller intersector;
@@ -148,8 +148,9 @@ public:
   }
 
   template <typename Device>
-  VISKORES_CONT MollerTriLeafIntersector<Device> PrepareForExecution(Device,
-                                                                 viskores::cont::Token& token) const
+  VISKORES_CONT MollerTriLeafIntersector<Device> PrepareForExecution(
+    Device,
+    viskores::cont::Token& token) const
   {
     return MollerTriLeafIntersector<Device>(this->Triangles, token);
   }
@@ -168,8 +169,9 @@ public:
   }
 
   template <typename Device>
-  VISKORES_CONT WaterTightLeafIntersector<Device> PrepareForExecution(Device,
-                                                                  viskores::cont::Token& token) const
+  VISKORES_CONT WaterTightLeafIntersector<Device> PrepareForExecution(
+    Device,
+    viskores::cont::Token& token) const
   {
     return WaterTightLeafIntersector<Device>(this->Triangles, token);
   }
@@ -210,12 +212,12 @@ public:
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
     template <typename Precision, typename PointPortalType, typename IndicesPortalType>
     VISKORES_EXEC inline void operator()(const viskores::Id& hitIndex,
-                                     const viskores::Vec<Precision, 3>& rayDir,
-                                     Precision& normalX,
-                                     Precision& normalY,
-                                     Precision& normalZ,
-                                     const PointPortalType& points,
-                                     const IndicesPortalType& indicesPortal) const
+                                         const viskores::Vec<Precision, 3>& rayDir,
+                                         Precision& normalX,
+                                         Precision& normalY,
+                                         Precision& normalZ,
+                                         const PointPortalType& points,
+                                         const IndicesPortalType& indicesPortal) const
     {
       if (hitIndex < 0)
         return;
@@ -273,11 +275,11 @@ public:
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
     template <typename ScalarPortalType, typename IndicesPortalType>
     VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
-                              const Precision& u,
-                              const Precision& v,
-                              Precision& lerpedScalar,
-                              const ScalarPortalType& scalars,
-                              const IndicesPortalType& indicesPortal) const
+                                  const Precision& u,
+                                  const Precision& v,
+                                  Precision& lerpedScalar,
+                                  const ScalarPortalType& scalars,
+                                  const IndicesPortalType& indicesPortal) const
     {
       if (hitIndex < 0)
         return;
@@ -330,9 +332,9 @@ public:
     typedef void ExecutionSignature(_1, _2, _3, _4);
     template <typename ScalarPortalType, typename IndicesPortalType>
     VISKORES_EXEC void operator()(const viskores::Id& hitIndex,
-                              Precision& scalar,
-                              const ScalarPortalType& scalars,
-                              const IndicesPortalType& indicesPortal) const
+                                  Precision& scalar,
+                                  const ScalarPortalType& scalars,
+                                  const IndicesPortalType& indicesPortal) const
     {
       if (hitIndex < 0)
         return;
@@ -351,10 +353,10 @@ public:
 
   template <typename Precision>
   VISKORES_CONT void Run(Ray<Precision>& rays,
-                     viskores::cont::ArrayHandle<viskores::Id4> triangles,
-                     viskores::cont::CoordinateSystem coordsHandle,
-                     const viskores::cont::Field scalarField,
-                     const viskores::Range& scalarRange)
+                         viskores::cont::ArrayHandle<viskores::Id4> triangles,
+                         viskores::cont::CoordinateSystem coordsHandle,
+                         const viskores::cont::Field scalarField,
+                         const viskores::Range& scalarRange)
   {
     const bool isSupportedField = scalarField.IsCellField() || scalarField.IsPointField();
     if (!isSupportedField)
@@ -372,7 +374,8 @@ public:
     if (isAssocPoints)
     {
       viskores::worklet::DispatcherMapField<LerpScalar<Precision>>(
-        LerpScalar<Precision>(viskores::Float32(scalarRange.Min), viskores::Float32(scalarRange.Max)))
+        LerpScalar<Precision>(viskores::Float32(scalarRange.Min),
+                              viskores::Float32(scalarRange.Max)))
         .Invoke(rays.HitIdx,
                 rays.U,
                 rays.V,
@@ -383,7 +386,8 @@ public:
     else
     {
       viskores::worklet::DispatcherMapField<NodalScalar<Precision>>(
-        NodalScalar<Precision>(viskores::Float32(scalarRange.Min), viskores::Float32(scalarRange.Max)))
+        NodalScalar<Precision>(viskores::Float32(scalarRange.Min),
+                               viskores::Float32(scalarRange.Max)))
         .Invoke(rays.HitIdx,
                 rays.Scalar,
                 viskores::rendering::raytracing::GetScalarFieldArray(scalarField),
@@ -410,13 +414,13 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
   template <typename PointPortalType>
   VISKORES_EXEC void operator()(const viskores::Id4 indices,
-                            viskores::Float32& xmin,
-                            viskores::Float32& ymin,
-                            viskores::Float32& zmin,
-                            viskores::Float32& xmax,
-                            viskores::Float32& ymax,
-                            viskores::Float32& zmax,
-                            const PointPortalType& points) const
+                                viskores::Float32& xmin,
+                                viskores::Float32& ymin,
+                                viskores::Float32& zmin,
+                                viskores::Float32& xmax,
+                                viskores::Float32& ymax,
+                                viskores::Float32& zmax,
+                                const PointPortalType& points) const
   {
     // cast to Float32
     viskores::Vec3f_32 point;
@@ -499,13 +503,15 @@ viskores::cont::ArrayHandle<viskores::Id4> TriangleIntersector::GetTriangles()
 
 
 
-VISKORES_CONT void TriangleIntersector::IntersectRays(Ray<viskores::Float32>& rays, bool returnCellIndex)
+VISKORES_CONT void TriangleIntersector::IntersectRays(Ray<viskores::Float32>& rays,
+                                                      bool returnCellIndex)
 {
   IntersectRaysImp(rays, returnCellIndex);
 }
 
 
-VISKORES_CONT void TriangleIntersector::IntersectRays(Ray<viskores::Float64>& rays, bool returnCellIndex)
+VISKORES_CONT void TriangleIntersector::IntersectRays(Ray<viskores::Float64>& rays,
+                                                      bool returnCellIndex)
 {
   IntersectRaysImp(rays, returnCellIndex);
 }
@@ -538,23 +544,23 @@ VISKORES_CONT void TriangleIntersector::IntersectRaysImp(Ray<Precision>& rays, b
 }
 
 VISKORES_CONT void TriangleIntersector::IntersectionData(Ray<viskores::Float32>& rays,
-                                                     const viskores::cont::Field scalarField,
-                                                     const viskores::Range& scalarRange)
+                                                         const viskores::cont::Field scalarField,
+                                                         const viskores::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);
 }
 
 VISKORES_CONT void TriangleIntersector::IntersectionData(Ray<viskores::Float64>& rays,
-                                                     const viskores::cont::Field scalarField,
-                                                     const viskores::Range& scalarRange)
+                                                         const viskores::cont::Field scalarField,
+                                                         const viskores::Range& scalarRange)
 {
   IntersectionDataImp(rays, scalarField, scalarRange);
 }
 
 template <typename Precision>
 VISKORES_CONT void TriangleIntersector::IntersectionDataImp(Ray<Precision>& rays,
-                                                        const viskores::cont::Field scalarField,
-                                                        const viskores::Range& scalarRange)
+                                                            const viskores::cont::Field scalarField,
+                                                            const viskores::Range& scalarRange)
 {
   ShapeIntersector::IntersectionPoint(rays);
   detail::TriangleIntersectionData intData;

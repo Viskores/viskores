@@ -46,7 +46,7 @@ void DoGeneralVecTypeTestNegate(const viskores::Vec<ComponentType, Size>&)
     for (viskores::IdComponent componentIndex = 0; componentIndex < Size; componentIndex++)
     {
       VISKORES_TEST_ASSERT(test_equal(-(original[componentIndex]), negative[componentIndex]),
-                       "Vec did not negate correctly.");
+                           "Vec did not negate correctly.");
     }
 
     VISKORES_TEST_ASSERT(test_equal(original, -negative), "Double Vec negative is not positive.");
@@ -108,7 +108,8 @@ void GeneralVecCTypeTest(const viskores::Vec<ComponentType, Size>&)
   VecT aSrc, bSrc, cSrc;
   T a(aSrc), b(bSrc), c(cSrc);
 
-  VISKORES_TEST_ASSERT(a.GetNumberOfComponents() == Size, "GetNumberOfComponents returns wrong size.");
+  VISKORES_TEST_ASSERT(a.GetNumberOfComponents() == Size,
+                       "GetNumberOfComponents returns wrong size.");
 
   for (viskores::IdComponent i = 0; i < Size; ++i)
   {
@@ -230,7 +231,8 @@ void GeneralVecCConstTypeTest(const viskores::Vec<ComponentType, Size>&)
 
   T a(aSrc), b(bSrc), c(cSrc);
 
-  VISKORES_TEST_ASSERT(a.GetNumberOfComponents() == Size, "GetNumberOfComponents returns wrong size.");
+  VISKORES_TEST_ASSERT(a.GetNumberOfComponents() == Size,
+                       "GetNumberOfComponents returns wrong size.");
 
   VISKORES_TEST_ASSERT(test_equal(a, c), "Comparison not working.");
 
@@ -317,8 +319,9 @@ void GeneralVecTypeTest(const viskores::Vec<ComponentType, Size>&)
 
   // Vector types should preserve the trivial properties of their components.
   // This insures that algorithms like std::copy will optimize fully.
-  VISKORES_TEST_ASSERT(viskoresstd::is_trivial<ComponentType>::value == viskoresstd::is_trivial<T>::value,
-                   "VectorType's triviality differs from ComponentType.");
+  VISKORES_TEST_ASSERT(viskoresstd::is_trivial<ComponentType>::value ==
+                         viskoresstd::is_trivial<T>::value,
+                       "VectorType's triviality differs from ComponentType.");
 
   VISKORES_TEST_ASSERT(T::NUM_COMPONENTS == Size, "NUM_COMPONENTS is wrong size.");
 
@@ -326,7 +329,8 @@ void GeneralVecTypeTest(const viskores::Vec<ComponentType, Size>&)
   T a, b, c;
   ComponentType s(5);
 
-  VISKORES_TEST_ASSERT(a.GetNumberOfComponents() == Size, "GetNumberOfComponents returns wrong size.");
+  VISKORES_TEST_ASSERT(a.GetNumberOfComponents() == Size,
+                       "GetNumberOfComponents returns wrong size.");
 
   for (viskores::IdComponent i = 0; i < T::NUM_COMPONENTS; ++i)
   {
@@ -341,11 +345,11 @@ void GeneralVecTypeTest(const viskores::Vec<ComponentType, Size>&)
   ++c[T::NUM_COMPONENTS - 1];
   c[T::NUM_COMPONENTS - 1]++;
   VISKORES_TEST_ASSERT(test_equal(c[T::NUM_COMPONENTS - 1], a[T::NUM_COMPONENTS - 1] + 2),
-                   "Bad increment on component.");
+                       "Bad increment on component.");
   --c[T::NUM_COMPONENTS - 1];
   c[T::NUM_COMPONENTS - 1]--;
   VISKORES_TEST_ASSERT(test_equal(c[T::NUM_COMPONENTS - 1], a[T::NUM_COMPONENTS - 1]),
-                   "Bad decrement on component.");
+                       "Bad decrement on component.");
 
   //make c nearly like a to verify == and != are correct.
   c[T::NUM_COMPONENTS - 1] = ComponentType(c[T::NUM_COMPONENTS - 1] - 1);
@@ -387,10 +391,12 @@ void GeneralVecTypeTest(const viskores::Vec<ComponentType, Size>&)
   {
     correct_mult[i] = ComponentType(s * a[i]);
   }
-  VISKORES_TEST_ASSERT(test_equal(mult, correct_mult), "Scalar and Tuple did not multiply correctly.");
+  VISKORES_TEST_ASSERT(test_equal(mult, correct_mult),
+                       "Scalar and Tuple did not multiply correctly.");
 
   mult = a * s;
-  VISKORES_TEST_ASSERT(test_equal(mult, correct_mult), "Tuple and Scalar to not multiply correctly.");
+  VISKORES_TEST_ASSERT(test_equal(mult, correct_mult),
+                       "Tuple and Scalar to not multiply correctly.");
 
   div = a / ComponentType(2);
   VISKORES_TEST_ASSERT(test_equal(div, b), "Tuple does not divide by Scalar correctly.");
@@ -458,33 +464,37 @@ void TypeTest(const viskores::Vec<Scalar, 2>&)
   Vector b = { 1, 2 };
   Scalar s = 5;
 
-  VISKORES_TEST_ASSERT(a == viskores::make_Vec(Scalar(2), Scalar(4)), "make_Vec creates different object.");
+  VISKORES_TEST_ASSERT(a == viskores::make_Vec(Scalar(2), Scalar(4)),
+                       "make_Vec creates different object.");
   VISKORES_TEST_ASSERT((a == viskores::Vec<Scalar, 2>{ Scalar(2), Scalar(4) }),
-                   "Construct with initializer list creates different object.");
+                       "Construct with initializer list creates different object.");
 
   Vector plus = a + b;
   VISKORES_TEST_ASSERT(test_equal(plus, viskores::make_Vec(3, 6)), "Vectors do not add correctly.");
 
   Vector minus = a - b;
-  VISKORES_TEST_ASSERT(test_equal(minus, viskores::make_Vec(1, 2)), "Vectors to not subtract correctly.");
+  VISKORES_TEST_ASSERT(test_equal(minus, viskores::make_Vec(1, 2)),
+                       "Vectors to not subtract correctly.");
 
   Vector mult = a * b;
-  VISKORES_TEST_ASSERT(test_equal(mult, viskores::make_Vec(2, 8)), "Vectors to not multiply correctly.");
+  VISKORES_TEST_ASSERT(test_equal(mult, viskores::make_Vec(2, 8)),
+                       "Vectors to not multiply correctly.");
 
   Vector div = a / b;
-  VISKORES_TEST_ASSERT(test_equal(div, viskores::make_Vec(2, 2)), "Vectors to not divide correctly.");
+  VISKORES_TEST_ASSERT(test_equal(div, viskores::make_Vec(2, 2)),
+                       "Vectors to not divide correctly.");
 
   mult = s * a;
   VISKORES_TEST_ASSERT(test_equal(mult, viskores::make_Vec(10, 20)),
-                   "Vector and scalar to not multiply correctly.");
+                       "Vector and scalar to not multiply correctly.");
 
   mult = a * s;
   VISKORES_TEST_ASSERT(test_equal(mult, viskores::make_Vec(10, 20)),
-                   "Vector and scalar to not multiply correctly.");
+                       "Vector and scalar to not multiply correctly.");
 
   div = a / Scalar(2);
   VISKORES_TEST_ASSERT(test_equal(div, viskores::make_Vec(1, 2)),
-                   "Vector does not divide by Scalar correctly.");
+                       "Vector does not divide by Scalar correctly.");
 
   Scalar d = static_cast<Scalar>(viskores::Dot(a, b));
   VISKORES_TEST_ASSERT(test_equal(d, Scalar(10)), "Dot(Vector2) wrong");
@@ -536,31 +546,33 @@ void TypeTest(const viskores::Vec<Scalar, 3>&)
   Scalar s = 5;
 
   VISKORES_TEST_ASSERT(a == viskores::make_Vec(Scalar(2), Scalar(4), Scalar(6)),
-                   "make_Vec creates different object.");
+                       "make_Vec creates different object.");
   VISKORES_TEST_ASSERT((a == viskores::Vec<Scalar, 3>{ Scalar(2), Scalar(4), Scalar(6) }),
-                   "Construct with initializer list creates different object.");
+                       "Construct with initializer list creates different object.");
 
   Vector plus = a + b;
-  VISKORES_TEST_ASSERT(test_equal(plus, viskores::make_Vec(3, 6, 9)), "Vectors do not add correctly.");
+  VISKORES_TEST_ASSERT(test_equal(plus, viskores::make_Vec(3, 6, 9)),
+                       "Vectors do not add correctly.");
 
   Vector minus = a - b;
   VISKORES_TEST_ASSERT(test_equal(minus, viskores::make_Vec(1, 2, 3)),
-                   "Vectors to not subtract correctly.");
+                       "Vectors to not subtract correctly.");
 
   Vector mult = a * b;
   VISKORES_TEST_ASSERT(test_equal(mult, viskores::make_Vec(2, 8, 18)),
-                   "Vectors to not multiply correctly.");
+                       "Vectors to not multiply correctly.");
 
   Vector div = a / b;
-  VISKORES_TEST_ASSERT(test_equal(div, viskores::make_Vec(2, 2, 2)), "Vectors to not divide correctly.");
+  VISKORES_TEST_ASSERT(test_equal(div, viskores::make_Vec(2, 2, 2)),
+                       "Vectors to not divide correctly.");
 
   mult = s * a;
   VISKORES_TEST_ASSERT(test_equal(mult, viskores::make_Vec(10, 20, 30)),
-                   "Vector and scalar to not multiply correctly.");
+                       "Vector and scalar to not multiply correctly.");
 
   mult = a * s;
   VISKORES_TEST_ASSERT(test_equal(mult, viskores::make_Vec(10, 20, 30)),
-                   "Vector and scalar to not multiply correctly.");
+                       "Vector and scalar to not multiply correctly.");
 
   div = a / Scalar(2);
   VISKORES_TEST_ASSERT(test_equal(div, b), "Vector does not divide by Scalar correctly.");
@@ -615,31 +627,34 @@ void TypeTest(const viskores::Vec<Scalar, 4>&)
   Scalar s = 5;
 
   VISKORES_TEST_ASSERT(a == viskores::make_Vec(Scalar(2), Scalar(4), Scalar(6), Scalar(8)),
-                   "make_Vec creates different object.");
-  VISKORES_TEST_ASSERT((a == viskores::Vec<Scalar, 4>{ Scalar(2), Scalar(4), Scalar(6), Scalar(8) }),
-                   "Construct with initializer list creates different object.");
+                       "make_Vec creates different object.");
+  VISKORES_TEST_ASSERT(
+    (a == viskores::Vec<Scalar, 4>{ Scalar(2), Scalar(4), Scalar(6), Scalar(8) }),
+    "Construct with initializer list creates different object.");
 
   Vector plus = a + b;
-  VISKORES_TEST_ASSERT(test_equal(plus, viskores::make_Vec(3, 6, 9, 12)), "Vectors do not add correctly.");
+  VISKORES_TEST_ASSERT(test_equal(plus, viskores::make_Vec(3, 6, 9, 12)),
+                       "Vectors do not add correctly.");
 
   Vector minus = a - b;
   VISKORES_TEST_ASSERT(test_equal(minus, viskores::make_Vec(1, 2, 3, 4)),
-                   "Vectors to not subtract correctly.");
+                       "Vectors to not subtract correctly.");
 
   Vector mult = a * b;
   VISKORES_TEST_ASSERT(test_equal(mult, viskores::make_Vec(2, 8, 18, 32)),
-                   "Vectors to not multiply correctly.");
+                       "Vectors to not multiply correctly.");
 
   Vector div = a / b;
-  VISKORES_TEST_ASSERT(test_equal(div, viskores::make_Vec(2, 2, 2, 2)), "Vectors to not divide correctly.");
+  VISKORES_TEST_ASSERT(test_equal(div, viskores::make_Vec(2, 2, 2, 2)),
+                       "Vectors to not divide correctly.");
 
   mult = s * a;
   VISKORES_TEST_ASSERT(test_equal(mult, viskores::make_Vec(10, 20, 30, 40)),
-                   "Vector and scalar to not multiply correctly.");
+                       "Vector and scalar to not multiply correctly.");
 
   mult = a * s;
   VISKORES_TEST_ASSERT(test_equal(mult, viskores::make_Vec(10, 20, 30, 40)),
-                   "Vector and scalar to not multiply correctly.");
+                       "Vector and scalar to not multiply correctly.");
 
   div = a / Scalar(2);
   VISKORES_TEST_ASSERT(test_equal(div, b), "Vector does not divide by Scalar correctly.");
@@ -756,7 +771,7 @@ void TypeTest(Scalar)
   Scalar d = 32;
   auto r = viskores::Dot(c, d);
   VISKORES_TEST_ASSERT((sizeof(r) >= sizeof(int)),
-                   "Dot(Scalar) didn't promote smaller than 32bit types");
+                       "Dot(Scalar) didn't promote smaller than 32bit types");
   if (r != 4096)
   {
     VISKORES_TEST_FAIL("Dot(Scalar) wrong");
@@ -820,23 +835,26 @@ void TypeTest(viskores::Vec<viskores::Vec<Scalar, 2>, 3>)
 
   {
     std::cout << "Checking constexpr construction for Vec3<Vec2>." << std::endl;
-    constexpr Vector constExprVec1(
-      viskores::Vec<Scalar, 2>(1, 2), viskores::Vec<Scalar, 2>(1, 2), viskores::Vec<Scalar, 2>(1, 2));
+    constexpr Vector constExprVec1(viskores::Vec<Scalar, 2>(1, 2),
+                                   viskores::Vec<Scalar, 2>(1, 2),
+                                   viskores::Vec<Scalar, 2>(1, 2));
     constexpr Vector constExprVec2 = { { 1, 2 }, { 1, 2 }, { 1, 2 } };
     constexpr Vector madeVec = viskores::make_Vec(viskores::make_Vec(Scalar(1), Scalar(2)),
-                                              viskores::make_Vec(Scalar(1), Scalar(2)),
-                                              viskores::make_Vec(Scalar(1), Scalar(2)));
+                                                  viskores::make_Vec(Scalar(1), Scalar(2)),
+                                                  viskores::make_Vec(Scalar(1), Scalar(2)));
 
     VISKORES_TEST_ASSERT(test_equal(constExprVec1, madeVec),
-                     "constexpr Vec3<Vec2> failed equality test.");
+                         "constexpr Vec3<Vec2> failed equality test.");
     VISKORES_TEST_ASSERT(test_equal(constExprVec2, madeVec),
-                     "constexpr Vec3<Vec2> failed equality test.");
+                         "constexpr Vec3<Vec2> failed equality test.");
 
     // Check fill constructor.
     Vector fillVec1 = { { Scalar(1), Scalar(2) } };
-    Vector fillVec2(
-      viskores::Vec<Scalar, 2>(1, 2), viskores::Vec<Scalar, 2>(1, 2), viskores::Vec<Scalar, 2>(1, 2));
-    VISKORES_TEST_ASSERT(test_equal(fillVec1, fillVec2), "fill ctor Vec3ofVec2 failed equality test.");
+    Vector fillVec2(viskores::Vec<Scalar, 2>(1, 2),
+                    viskores::Vec<Scalar, 2>(1, 2),
+                    viskores::Vec<Scalar, 2>(1, 2));
+    VISKORES_TEST_ASSERT(test_equal(fillVec1, fillVec2),
+                         "fill ctor Vec3ofVec2 failed equality test.");
   }
 }
 
@@ -846,10 +864,10 @@ void TypeTest(viskores::Vec<viskores::Vec<Scalar, 2>, 5>)
   using Vector = viskores::Vec<viskores::Vec<Scalar, 2>, 5>;
   Vector braceVec = { { 1, 1 }, { 2, 2 }, { 3, 3 }, { 4, 4 }, { 5, 5 } };
   constexpr Vector constExprVec = viskores::make_Vec(viskores::make_Vec(Scalar(1), Scalar(1)),
-                                                 viskores::make_Vec(Scalar(2), Scalar(2)),
-                                                 viskores::make_Vec(Scalar(3), Scalar(3)),
-                                                 viskores::make_Vec(Scalar(4), Scalar(4)),
-                                                 viskores::make_Vec(Scalar(5), Scalar(5)));
+                                                     viskores::make_Vec(Scalar(2), Scalar(2)),
+                                                     viskores::make_Vec(Scalar(3), Scalar(3)),
+                                                     viskores::make_Vec(Scalar(4), Scalar(4)),
+                                                     viskores::make_Vec(Scalar(5), Scalar(5)));
   VISKORES_TEST_ASSERT(test_equal(constExprVec, braceVec), "Vec5<Vec2> failed equality test.");
 }
 
@@ -863,15 +881,15 @@ struct TypeTestFunctor
 };
 
 using TypesToTest = viskores::ListAppend<viskores::testing::Testing::TypeListExemplarTypes,
-                                     viskores::List<viskores::Vec<viskores::FloatDefault, 6>,
-                                                viskores::Id4,
-                                                viskores::Vec<unsigned char, 4>,
-                                                viskores::Vec<viskores::Id, 1>,
-                                                viskores::Id2,
-                                                viskores::Vec<viskores::Float64, 1>,
-                                                viskores::Vec<viskores::Id2, 3>,
-                                                viskores::Vec<viskores::Vec2f_32, 3>,
-                                                viskores::Vec<viskores::Vec2f_32, 5>>>;
+                                         viskores::List<viskores::Vec<viskores::FloatDefault, 6>,
+                                                        viskores::Id4,
+                                                        viskores::Vec<unsigned char, 4>,
+                                                        viskores::Vec<viskores::Id, 1>,
+                                                        viskores::Id2,
+                                                        viskores::Vec<viskores::Float64, 1>,
+                                                        viskores::Vec<viskores::Id2, 3>,
+                                                        viskores::Vec<viskores::Vec2f_32, 3>,
+                                                        viskores::Vec<viskores::Vec2f_32, 5>>>;
 
 void TestTypes()
 {

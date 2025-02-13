@@ -45,10 +45,10 @@ class VISKORES_ALWAYS_EXPORT CellSetSingleType
       >
 {
   using Thisclass = viskores::cont::CellSetSingleType<ConnectivityStorageTag>;
-  using Superclass =
-    viskores::cont::CellSetExplicit<typename viskores::cont::ArrayHandleConstant<viskores::UInt8>::StorageTag,
-                                ConnectivityStorageTag,
-                                typename viskores::cont::ArrayHandleCounting<viskores::Id>::StorageTag>;
+  using Superclass = viskores::cont::CellSetExplicit<
+    typename viskores::cont::ArrayHandleConstant<viskores::UInt8>::StorageTag,
+    ConnectivityStorageTag,
+    typename viskores::cont::ArrayHandleCounting<viskores::Id>::StorageTag>;
 
 public:
   VISKORES_CONT
@@ -118,15 +118,18 @@ public:
   ///
   /// This can only be called after `AddCell`.
   template <typename IdVecType>
-  VISKORES_CONT void AddCell(viskores::UInt8 shapeId, viskores::IdComponent numVertices, const IdVecType& ids)
+  VISKORES_CONT void AddCell(viskores::UInt8 shapeId,
+                             viskores::IdComponent numVertices,
+                             const IdVecType& ids)
   {
     using Traits = viskores::VecTraits<IdVecType>;
     VISKORES_STATIC_ASSERT_MSG((std::is_same<typename Traits::ComponentType, viskores::Id>::value),
-                           "CellSetSingleType::AddCell requires viskores::Id for indices.");
+                               "CellSetSingleType::AddCell requires viskores::Id for indices.");
 
     if (Traits::GetNumberOfComponents(ids) < numVertices)
     {
-      throw viskores::cont::ErrorBadValue("Not enough indices given to CellSetSingleType::AddCell.");
+      throw viskores::cont::ErrorBadValue(
+        "Not enough indices given to CellSetSingleType::AddCell.");
     }
 
     if (this->Data->ConnectivityAdded + numVertices >
@@ -197,10 +200,11 @@ public:
   ///
   /// This method can be used to fill the memory from another system without
   /// copying data.
-  VISKORES_CONT void Fill(viskores::Id numPoints,
-                      viskores::UInt8 shapeId,
-                      viskores::IdComponent numberOfPointsPerCell,
-                      const viskores::cont::ArrayHandle<viskores::Id, ConnectivityStorageTag>& connectivity)
+  VISKORES_CONT void Fill(
+    viskores::Id numPoints,
+    viskores::UInt8 shapeId,
+    viskores::IdComponent numberOfPointsPerCell,
+    const viskores::cont::ArrayHandle<viskores::Id, ConnectivityStorageTag>& connectivity)
   {
     this->Data->NumberOfPoints = numPoints;
     this->CellShapeAsId = shapeId;
@@ -315,7 +319,8 @@ struct SerializableTypeString<viskores::cont::CellSetSingleType<ConnectivityST>>
   static VISKORES_CONT const std::string& Get()
   {
     static std::string name = "CS_Single<" +
-      SerializableTypeString<viskores::cont::ArrayHandle<viskores::Id, ConnectivityST>>::Get() + "_ST>";
+      SerializableTypeString<viskores::cont::ArrayHandle<viskores::Id, ConnectivityST>>::Get() +
+      "_ST>";
 
     return name;
   }
@@ -338,8 +343,9 @@ public:
     viskoresdiy::save(bb, cs.GetNumberOfPoints());
     viskoresdiy::save(bb, cs.GetCellShape(0));
     viskoresdiy::save(bb, cs.GetNumberOfPointsInCell(0));
-    viskoresdiy::save(
-      bb, cs.GetConnectivityArray(viskores::TopologyElementTagCell{}, viskores::TopologyElementTagPoint{}));
+    viskoresdiy::save(bb,
+                      cs.GetConnectivityArray(viskores::TopologyElementTagCell{},
+                                              viskores::TopologyElementTagPoint{}));
   }
 
   static VISKORES_CONT void load(BinaryBuffer& bb, Type& cs)

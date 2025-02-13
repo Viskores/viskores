@@ -88,8 +88,8 @@ public:
   }
 
   VISKORES_EXEC void operator()(const viskores::Id& supernodeType,
-                            const viskores::Id& hierarchicalSuperId,
-                            viskores::Id& whenTransferred) const
+                                const viskores::Id& hierarchicalSuperId,
+                                viskores::Id& whenTransferred) const
   { // operator ()
     if ((supernodeType == viskores::worklet::contourtree_augmented::IS_ATTACHMENT) &&
         viskores::worklet::contourtree_augmented::NoSuchElement(hierarchicalSuperId))

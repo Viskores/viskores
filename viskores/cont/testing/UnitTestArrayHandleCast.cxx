@@ -55,7 +55,7 @@ struct TestCastAsInput
     for (viskores::Id i = 0; i < length; ++i)
     {
       VISKORES_TEST_ASSERT(resultPortal.Get(i) == static_cast<CastToType>(inputPortal.Get(i)),
-                       "Casting ArrayHandle Failed");
+                           "Casting ArrayHandle Failed");
     }
 
     castArray.ReleaseResources();
@@ -87,7 +87,7 @@ struct TestCastAsOutput
     for (viskores::Id i = 0; i < length; ++i)
     {
       VISKORES_TEST_ASSERT(inputPortal.Get(i) == static_cast<viskores::Id>(resultPortal.Get(i)),
-                       "Casting ArrayHandle Failed");
+                           "Casting ArrayHandle Failed");
     }
   }
 };

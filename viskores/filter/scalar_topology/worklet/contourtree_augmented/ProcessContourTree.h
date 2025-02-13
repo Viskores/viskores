@@ -228,7 +228,8 @@ public:
     // auto superarcsPortal = contourTree.Superarcs.ReadPortal();
     auto nodesPortal = contourTree.Nodes.ReadPortal();
     // auto whenTransferredPortal = contourTree.WhenTransferred.ReadPortal();
-    for (viskores::Id sortedNode = 0; sortedNode < contourTree.Arcs.GetNumberOfValues(); sortedNode++)
+    for (viskores::Id sortedNode = 0; sortedNode < contourTree.Arcs.GetNumberOfValues();
+         sortedNode++)
     { // per node in sorted order
       viskores::Id sortID = nodesPortal.Get(sortedNode);
       viskores::Id superparent = superparentsPortal.Get(sortID);
@@ -238,7 +239,8 @@ public:
         firstVertexForSuperparentPortal.Set(superparent, sortedNode);
     } // per node in sorted order
     // now we use that to compute the intrinsic weights
-    for (viskores::Id superarc = 0; superarc < contourTree.Superarcs.GetNumberOfValues(); superarc++)
+    for (viskores::Id superarc = 0; superarc < contourTree.Superarcs.GetNumberOfValues();
+         superarc++)
       if (superarc == contourTree.Superarcs.GetNumberOfValues() - 1)
         superarcIntrinsicWeightPortal.Set(superarc,
                                           contourTree.Arcs.GetNumberOfValues() -
@@ -249,15 +251,15 @@ public:
                                             firstVertexForSuperparentPortal.Get(superarc));
 
     // now initialise the arrays for transfer & dependent weights
-    viskores::cont::ArrayCopy(
-      viskores::cont::ArrayHandleConstant<viskores::Id>(0, contourTree.Superarcs.GetNumberOfValues()),
-      superarcDependentWeight);
-    viskores::cont::ArrayCopy(
-      viskores::cont::ArrayHandleConstant<viskores::Id>(0, contourTree.Supernodes.GetNumberOfValues()),
-      supernodeTransferWeight);
-    viskores::cont::ArrayCopy(
-      viskores::cont::ArrayHandleConstant<viskores::Id>(0, contourTree.Hyperarcs.GetNumberOfValues()),
-      hyperarcDependentWeight);
+    viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(
+                                0, contourTree.Superarcs.GetNumberOfValues()),
+                              superarcDependentWeight);
+    viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(
+                                0, contourTree.Supernodes.GetNumberOfValues()),
+                              supernodeTransferWeight);
+    viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(
+                                0, contourTree.Hyperarcs.GetNumberOfValues()),
+                              hyperarcDependentWeight);
 
     // set up the array which tracks which supernodes to deal with on which iteration
     auto firstSupernodePerIterationPortal = contourTree.FirstSupernodePerIteration.ReadPortal();
@@ -434,8 +436,8 @@ public:
     // II A 1.  Sort the superarcs by lower vertex
     // II A 2.  Per segment, best superarc writes to the best upwards array
     viskores::cont::ArrayHandle<EdgePair> superarcList;
-    viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<EdgePair>(EdgePair(-1, -1), nSuperarcs),
-                          superarcList);
+    viskores::cont::ArrayCopy(
+      viskores::cont::ArrayHandleConstant<EdgePair>(EdgePair(-1, -1), nSuperarcs), superarcList);
     auto superarcListWritePortal = superarcList.WritePortal();
     viskores::Id totalVolume = contourTree.Nodes.GetNumberOfValues();
 #ifdef DEBUG_PRINT
@@ -598,8 +600,8 @@ public:
     for (viskores::Id shifter = nSupernodes; shifter != 0; shifter >>= 1)
       numLogSteps++;
 
-    viskores::worklet::contourtree_augmented::process_contourtree_inc::PointerDoubling pointerDoubling(
-      nSupernodes);
+    viskores::worklet::contourtree_augmented::process_contourtree_inc::PointerDoubling
+      pointerDoubling(nSupernodes);
 
     // use pointer-doubling to build the branches
     for (viskores::Id iteration = 0; iteration < numLogSteps; iteration++)
@@ -617,7 +619,8 @@ public:
 
     // Initialise
     IdArrayType chainToBranch;
-    viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, nSupernodes), chainToBranch);
+    viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, nSupernodes),
+                              chainToBranch);
 
     // Set 1 to every relevant
     viskores::worklet::contourtree_augmented::process_contourtree_inc::PrepareChainToBranch
@@ -792,29 +795,29 @@ public:
 
     // This should be 0 here, because we're not changing the root
     viskores::cont::ArrayHandle<viskores::Id> howManyUsed;
-    viskores::cont::ArrayCopy(
-      viskores::cont::ArrayHandleConstant<viskores::Id>(0, contourTree.Hyperarcs.GetNumberOfValues()),
-      howManyUsed);
+    viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(
+                                0, contourTree.Hyperarcs.GetNumberOfValues()),
+                              howManyUsed);
 
     // Perform a sum hypersweep
     hyperarcScan<decltype(viskores::Sum())>(contourTree.Supernodes,
-                                        contourTree.Hypernodes,
-                                        contourTree.Hyperarcs,
-                                        contourTree.Hyperparents,
-                                        contourTree.Hyperparents,
-                                        contourTree.WhenTransferred,
-                                        howManyUsed,
-                                        nIterations,
-                                        viskores::Sum(),
-                                        sumValues);
+                                            contourTree.Hypernodes,
+                                            contourTree.Hyperarcs,
+                                            contourTree.Hyperparents,
+                                            contourTree.Hyperparents,
+                                            contourTree.WhenTransferred,
+                                            howManyUsed,
+                                            nIterations,
+                                            viskores::Sum(),
+                                            sumValues);
 
     // For every directed arc store the volume of it's associate subtree
     viskores::cont::ArrayHandle<viskores::worklet::contourtree_augmented::EdgeDataVolume> arcs;
     arcs.Allocate(contourTree.Superarcs.GetNumberOfValues() * 2 - 2);
 
     viskores::Id totalVolume = contourTree.Nodes.GetNumberOfValues();
-    viskores::worklet::contourtree_augmented::process_contourtree_inc::InitialiseArcsVolume initArcs(
-      totalVolume);
+    viskores::worklet::contourtree_augmented::process_contourtree_inc::InitialiseArcsVolume
+      initArcs(totalVolume);
     Invoke(initArcs, sumValues, superarcIntrinsicWeight, contourTree.Superarcs, arcs);
 
     // Sort arcs to obtain the best up and down
@@ -895,7 +898,8 @@ public:
     maxParentsPortal.Set(maxPath[0], 0);
 
     viskores::cont::Invoker Invoke;
-    viskores::worklet::contourtree_augmented::process_contourtree_inc::UnmaskArray unmaskArrayWorklet;
+    viskores::worklet::contourtree_augmented::process_contourtree_inc::UnmaskArray
+      unmaskArrayWorklet;
     Invoke(unmaskArrayWorklet, minValues);
     Invoke(unmaskArrayWorklet, maxValues);
 
@@ -946,15 +950,15 @@ public:
 
     // Perform an ordinary hypersweep on those new hyperarcs
     hyperarcScan<decltype(viskores::Minimum())>(contourTree.Supernodes,
-                                            contourTree.Hypernodes,
-                                            minHyperarcs,
-                                            contourTree.Hyperparents,
-                                            minHyperparents,
-                                            contourTree.WhenTransferred,
-                                            minHowManyUsed,
-                                            nIterations,
-                                            viskores::Minimum(),
-                                            minValues);
+                                                contourTree.Hypernodes,
+                                                minHyperarcs,
+                                                contourTree.Hyperparents,
+                                                minHyperparents,
+                                                contourTree.WhenTransferred,
+                                                minHowManyUsed,
+                                                nIterations,
+                                                viskores::Minimum(),
+                                                minValues);
 
     // Prefix sum along the path from the min to the root
     fixPath(viskores::Minimum(), minPath, minValues.WritePortal());
@@ -970,28 +974,28 @@ public:
 
     // Perform an ordinary hypersweep on those new hyperarcs
     hyperarcScan<decltype(viskores::Maximum())>(contourTree.Supernodes,
-                                            contourTree.Hypernodes,
-                                            maxHyperarcs,
-                                            contourTree.Hyperparents,
-                                            maxHyperparents,
-                                            contourTree.WhenTransferred,
-                                            maxHowManyUsed,
-                                            nIterations,
-                                            viskores::Maximum(),
-                                            maxValues);
+                                                contourTree.Hypernodes,
+                                                maxHyperarcs,
+                                                contourTree.Hyperparents,
+                                                maxHyperparents,
+                                                contourTree.WhenTransferred,
+                                                maxHowManyUsed,
+                                                nIterations,
+                                                viskores::Maximum(),
+                                                maxValues);
 
     // Prefix sum along the path from the max to the root
     fixPath(viskores::Maximum(), maxPath, maxValues.WritePortal());
 
     // For every directed edge (a, b) consider that subtree who's root is b and does not contain a.
     // We have so far found the min and max in all sub subtrees, now we compare those to a and incorporate a into that.
-    viskores::worklet::contourtree_augmented::process_contourtree_inc::IncorporateParent<decltype(
-      viskores::Minimum())>
+    viskores::worklet::contourtree_augmented::process_contourtree_inc::IncorporateParent<
+      decltype(viskores::Minimum())>
       incorporateParentMinimumWorklet(minOperator);
     Invoke(incorporateParentMinimumWorklet, minParents, contourTree.Supernodes, minValues);
 
-    viskores::worklet::contourtree_augmented::process_contourtree_inc::IncorporateParent<decltype(
-      viskores::Maximum())>
+    viskores::worklet::contourtree_augmented::process_contourtree_inc::IncorporateParent<
+      decltype(viskores::Maximum())>
       incorporateParentMaximumWorklet(maxOperator);
     Invoke(incorporateParentMaximumWorklet, maxParents, contourTree.Supernodes, maxValues);
 
@@ -1121,7 +1125,7 @@ public:
     // Set the first supernode per iteration
     viskores::cont::ArrayHandle<viskores::Id> firstSupernodePerIteration;
     viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, nIterations + 1),
-                          firstSupernodePerIteration);
+                              firstSupernodePerIteration);
 
     // The first different from the previous is the first in the iteration
     viskores::worklet::contourtree_augmented::process_contourtree_inc::SetFirstSupernodePerIteration
@@ -1144,7 +1148,7 @@ public:
     // Set the first hypernode per iteration
     viskores::cont::ArrayHandle<viskores::Id> firstHypernodePerIteration;
     viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, nIterations + 1),
-                          firstHypernodePerIteration);
+                              firstHypernodePerIteration);
     auto firstHypernodePerIterationPortal = firstHypernodePerIteration.WritePortal();
 
     for (viskores::Id iteration = 0; iteration < nIterations; iteration++)

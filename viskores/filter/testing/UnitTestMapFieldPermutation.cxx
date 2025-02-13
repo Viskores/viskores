@@ -39,13 +39,13 @@ void TryArray(const viskores::cont::ArrayHandle<T, S>& inputArray)
   viskores::cont::Field inputField("my-array", association, inputArray);
 
   viskores::cont::ArrayHandle<viskores::Id> permutationArray;
-  viskores::cont::ArrayCopy(
-    viskores::cont::make_ArrayHandleCounting<viskores::Id>(0, 2, inputArray.GetNumberOfValues() / 2),
-    permutationArray);
+  viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleCounting<viskores::Id>(
+                              0, 2, inputArray.GetNumberOfValues() / 2),
+                            permutationArray);
 
   viskores::cont::ArrayHandle<T> expectedOutputArray;
-  viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandlePermutation(permutationArray, inputArray),
-                        expectedOutputArray);
+  viskores::cont::ArrayCopy(
+    viskores::cont::make_ArrayHandlePermutation(permutationArray, inputArray), expectedOutputArray);
   std::cout << "Expected output" << std::endl;
   viskores::cont::printSummary_ArrayHandle(expectedOutputArray, std::cout);
 
@@ -61,7 +61,8 @@ void TryArray(const viskores::cont::ArrayHandle<T, S>& inputArray)
   std::cout << "Actual output" << std::endl;
   viskores::cont::printSummary_ArrayHandle(outputArray, std::cout);
 
-  VISKORES_TEST_ASSERT(test_equal_portals(expectedOutputArray.ReadPortal(), outputArray.ReadPortal()));
+  VISKORES_TEST_ASSERT(
+    test_equal_portals(expectedOutputArray.ReadPortal(), outputArray.ReadPortal()));
 }
 
 template <typename T>

@@ -217,20 +217,21 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     if (cells.IsType<viskores::cont::CellSetSingleType<>>())
     {
       // 1. Cell Type
-      viskores::cont::CellSetSingleType<> sgl = cells.AsCellSet<viskores::cont::CellSetSingleType<>>();
+      viskores::cont::CellSetSingleType<> sgl =
+        cells.AsCellSet<viskores::cont::CellSetSingleType<>>();
       auto shapes =
         sgl.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(viskores::cont::make_ArrayHandleTransform(shapes, ToAnariCellType{}),
-                                  arrays.CellType);
+      viskores::cont::ArrayCopyDevice(
+        viskores::cont::make_ArrayHandleTransform(shapes, ToAnariCellType{}), arrays.CellType);
 
       // 2. Cell Connectivity
-      auto conn =
-        sgl.GetConnectivityArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+      auto conn = sgl.GetConnectivityArray(viskores::TopologyElementTagCell(),
+                                           viskores::TopologyElementTagPoint());
       viskores::cont::ArrayCopyDevice(conn, arrays.Index);
 
       // 3. Cell Index
-      auto offsets =
-        sgl.GetOffsetsArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+      auto offsets = sgl.GetOffsetsArray(viskores::TopologyElementTagCell(),
+                                         viskores::TopologyElementTagPoint());
       viskores::cont::ArrayCopyDevice(offsets, arrays.CellIndex);
     }
 
@@ -240,17 +241,17 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
       viskores::cont::CellSetExplicit<> exp = cells.AsCellSet<viskores::cont::CellSetExplicit<>>();
       auto shapes =
         exp.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(viskores::cont::make_ArrayHandleTransform(shapes, ToAnariCellType{}),
-                                  arrays.CellType);
+      viskores::cont::ArrayCopyDevice(
+        viskores::cont::make_ArrayHandleTransform(shapes, ToAnariCellType{}), arrays.CellType);
 
       // 2. Cell Connectivity
-      auto conn =
-        exp.GetConnectivityArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+      auto conn = exp.GetConnectivityArray(viskores::TopologyElementTagCell(),
+                                           viskores::TopologyElementTagPoint());
       viskores::cont::ArrayCopyDevice(conn, arrays.Index);
 
       // 3. Cell Index
-      auto offsets =
-        exp.GetOffsetsArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+      auto offsets = exp.GetOffsetsArray(viskores::TopologyElementTagCell(),
+                                         viskores::TopologyElementTagPoint());
       viskores::cont::ArrayCopyDevice(offsets, arrays.CellIndex);
     }
 

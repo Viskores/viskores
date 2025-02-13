@@ -23,7 +23,8 @@ BoundingBoxAnnotation::BoundingBoxAnnotation()
 
 BoundingBoxAnnotation::~BoundingBoxAnnotation() {}
 
-void BoundingBoxAnnotation::Render(const viskores::rendering::Camera&, const WorldAnnotator& annotator)
+void BoundingBoxAnnotation::Render(const viskores::rendering::Camera&,
+                                   const WorldAnnotator& annotator)
 {
   //win->SetupForWorldSpace();
 

@@ -32,7 +32,8 @@ namespace filter
 {
 namespace connected_components
 {
-class VISKORES_FILTER_CONNECTED_COMPONENTS_EXPORT ImageConnectivity : public viskores::filter::Filter
+class VISKORES_FILTER_CONNECTED_COMPONENTS_EXPORT ImageConnectivity
+  : public viskores::filter::Filter
 {
 public:
   VISKORES_CONT ImageConnectivity() { this->SetOutputFieldName("component"); }

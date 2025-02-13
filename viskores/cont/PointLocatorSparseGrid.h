@@ -70,7 +70,7 @@ public:
 
   VISKORES_CONT
   viskores::exec::PointLocatorSparseGrid PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                         viskores::cont::Token& token) const;
+                                                             viskores::cont::Token& token) const;
 
 private:
   bool IsRangeInvalid() const

@@ -48,8 +48,8 @@ public:
 
   /// @brief Translates, or moves, each point in the input field by a given direction.
   VISKORES_CONT void SetTranslation(const viskores::FloatDefault& tx,
-                                const viskores::FloatDefault& ty,
-                                const viskores::FloatDefault& tz)
+                                    const viskores::FloatDefault& ty,
+                                    const viskores::FloatDefault& tz)
   {
     matrix = viskores::Transform3DTranslate(tx, ty, tz);
   }
@@ -62,7 +62,8 @@ public:
   /// @param[in] angleDegrees The amount of rotation to perform, given in degrees.
   /// @param[in] axis The rotation is made around a line that goes through the origin
   ///   and pointing in this direction in the counterclockwise direction.
-  VISKORES_CONT void SetRotation(const viskores::FloatDefault& angleDegrees, const viskores::Vec3f& axis)
+  VISKORES_CONT void SetRotation(const viskores::FloatDefault& angleDegrees,
+                                 const viskores::Vec3f& axis)
   {
     matrix = viskores::Transform3DRotate(angleDegrees, axis);
   }
@@ -78,9 +79,9 @@ public:
   /// @param[in] axisY The Y value of the rotation axis.
   /// @param[in] axisZ The Z value of the rotation axis.
   VISKORES_CONT void SetRotation(const viskores::FloatDefault& angleDegrees,
-                             const viskores::FloatDefault& axisX,
-                             const viskores::FloatDefault& axisY,
-                             const viskores::FloatDefault& axisZ)
+                                 const viskores::FloatDefault& axisX,
+                                 const viskores::FloatDefault& axisY,
+                                 const viskores::FloatDefault& axisZ)
   {
     SetRotation(angleDegrees, { axisX, axisY, axisZ });
   }
@@ -106,12 +107,15 @@ public:
   /// @brief Scale the input field.
   ///
   /// Each coordinate is multiplied by tghe associated scale factor.
-  VISKORES_CONT void SetScale(const viskores::FloatDefault& s) { matrix = viskores::Transform3DScale(s, s, s); }
+  VISKORES_CONT void SetScale(const viskores::FloatDefault& s)
+  {
+    matrix = viskores::Transform3DScale(s, s, s);
+  }
 
   /// @copydoc SetScale
   VISKORES_CONT void SetScale(const viskores::FloatDefault& sx,
-                          const viskores::FloatDefault& sy,
-                          const viskores::FloatDefault& sz)
+                              const viskores::FloatDefault& sy,
+                              const viskores::FloatDefault& sz)
   {
     matrix = viskores::Transform3DScale(sx, sy, sz);
   }

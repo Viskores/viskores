@@ -89,7 +89,7 @@ public:
   /// The functor simply calls the GetVertexOwned functin of the meshStructure for all vertices
   template <typename MeshStructureType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id meshIndex,
-                                const MeshStructureType& meshStructure) const
+                                        const MeshStructureType& meshStructure) const
   {
     return meshStructure.GetVertexOwned(meshIndex, this->LocalToGlobalIdRelabeler);
   }

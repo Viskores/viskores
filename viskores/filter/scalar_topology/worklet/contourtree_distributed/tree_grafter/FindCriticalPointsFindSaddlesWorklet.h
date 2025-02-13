@@ -87,11 +87,12 @@ public:
   FindCriticalPointsFindSaddlesWorklet() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
-                            const InFieldPortalType& isNecessaryPortal,
-                            const InFieldPortalType& upNeighbourPortal,
-                            const InFieldPortalType& downNeighbourPortal,
-                            const OutFieldPortalType& supernodeTypePortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
+    const InFieldPortalType& isNecessaryPortal,
+    const InFieldPortalType& upNeighbourPortal,
+    const InFieldPortalType& downNeighbourPortal,
+    const OutFieldPortalType& supernodeTypePortal) const
   { // operator ()
     // per active superarc
     // retrieve the ends again
@@ -102,13 +103,15 @@ public:
     // which guarantees that it is a saddle (or an attachment - but we exclude that by testing it)
     if (!isNecessaryPortal.Get(lowEnd) && (upNeighbourPortal.Get(lowEnd) != highEnd))
     {
-      supernodeTypePortal.Set(lowEnd, (viskores::Id)viskores::worklet::contourtree_augmented::IS_SADDLE);
+      supernodeTypePortal.Set(lowEnd,
+                              (viskores::Id)viskores::worklet::contourtree_augmented::IS_SADDLE);
     }
 
     // symmetrically for the high end
     if (!isNecessaryPortal.Get(highEnd) && (downNeighbourPortal.Get(highEnd) != lowEnd))
     {
-      supernodeTypePortal.Set(highEnd, (viskores::Id)viskores::worklet::contourtree_augmented::IS_SADDLE);
+      supernodeTypePortal.Set(highEnd,
+                              (viskores::Id)viskores::worklet::contourtree_augmented::IS_SADDLE);
     }
 
     // In serial this worklet implements the following operation

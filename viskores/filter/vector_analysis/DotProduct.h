@@ -47,7 +47,10 @@ public:
   }
 
   /// @copydoc SetPrimaryField
-  VISKORES_CONT const std::string& GetPrimaryFieldName() const { return this->GetActiveFieldName(); }
+  VISKORES_CONT const std::string& GetPrimaryFieldName() const
+  {
+    return this->GetActiveFieldName();
+  }
   /// @copydoc SetPrimaryField
   VISKORES_CONT viskores::cont::Field::Association GetPrimaryFieldAssociation() const
   {
@@ -90,7 +93,10 @@ public:
   }
 
   /// @copydoc SetSecondaryField
-  VISKORES_CONT const std::string& GetSecondaryFieldName() const { return this->GetActiveFieldName(1); }
+  VISKORES_CONT const std::string& GetSecondaryFieldName() const
+  {
+    return this->GetActiveFieldName(1);
+  }
   /// @copydoc SetSecondaryField
   VISKORES_CONT viskores::cont::Field::Association GetSecondaryFieldAssociation() const
   {

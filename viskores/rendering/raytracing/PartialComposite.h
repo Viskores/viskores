@@ -23,11 +23,11 @@ namespace raytracing
 template <typename FloatType>
 struct PartialComposite
 {
-  viskores::cont::ArrayHandle<viskores::Id> PixelIds;   // pixel that owns composite
-  viskores::cont::ArrayHandle<FloatType> Distances; // distance of composite end
-  ChannelBuffer<FloatType> Buffer;              // holds either color or absorption
+  viskores::cont::ArrayHandle<viskores::Id> PixelIds; // pixel that owns composite
+  viskores::cont::ArrayHandle<FloatType> Distances;   // distance of composite end
+  ChannelBuffer<FloatType> Buffer;                    // holds either color or absorption
   // (optional fields)
-  ChannelBuffer<FloatType> Intensities;           // holds the intensity emerging from each ray
+  ChannelBuffer<FloatType> Intensities;               // holds the intensity emerging from each ray
   viskores::cont::ArrayHandle<FloatType> PathLengths; // Total distance traversed through the mesh
 };
 }

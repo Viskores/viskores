@@ -24,8 +24,10 @@ namespace viskores
 namespace rendering
 {
 
-using PartialVector64 = std::vector<viskores::rendering::raytracing::PartialComposite<viskores::Float64>>;
-using PartialVector32 = std::vector<viskores::rendering::raytracing::PartialComposite<viskores::Float32>>;
+using PartialVector64 =
+  std::vector<viskores::rendering::raytracing::PartialComposite<viskores::Float64>>;
+using PartialVector32 =
+  std::vector<viskores::rendering::raytracing::PartialComposite<viskores::Float32>>;
 
 class VISKORES_RENDERING_EXPORT ConnectivityProxy
 {
@@ -69,7 +71,8 @@ public:
   viskores::Range GetScalarFieldRange();
   viskores::Range GetScalarRange();
 
-  void Trace(const viskores::rendering::Camera& camera, viskores::rendering::CanvasRayTracer* canvas);
+  void Trace(const viskores::rendering::Camera& camera,
+             viskores::rendering::CanvasRayTracer* canvas);
   void Trace(viskores::rendering::raytracing::Ray<viskores::Float64>& rays);
   void Trace(viskores::rendering::raytracing::Ray<viskores::Float32>& rays);
 

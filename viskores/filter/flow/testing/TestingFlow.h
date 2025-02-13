@@ -27,17 +27,17 @@ enum FilterType
 };
 
 viskores::cont::ArrayHandle<viskores::Vec3f> CreateConstantVectorField(viskores::Id num,
-                                                               const viskores::Vec3f& vec);
+                                                                       const viskores::Vec3f& vec);
 
 void AddVectorFields(viskores::cont::PartitionedDataSet& pds,
                      const std::string& fieldName,
                      const viskores::Vec3f& vec);
 
 std::vector<viskores::cont::PartitionedDataSet> CreateAllDataSetBounds(viskores::Id nPerRank,
-                                                                   bool useGhost);
+                                                                       bool useGhost);
 
 std::vector<viskores::Range> ExtractMaxXRanges(const viskores::cont::PartitionedDataSet& pds,
-                                           bool useGhost);
+                                               bool useGhost);
 
 template <typename FilterType>
 void SetFilter(FilterType& filter,

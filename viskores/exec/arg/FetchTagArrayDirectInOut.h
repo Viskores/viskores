@@ -50,7 +50,7 @@ struct Fetch<viskores::exec::arg::FetchTagArrayDirectInOut,
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
   VISKORES_EXEC ValueType Load(const ThreadIndicesType& indices,
-                           const ExecObjectType& arrayPortal) const
+                               const ExecObjectType& arrayPortal) const
   {
     return arrayPortal.Get(indices.GetOutputIndex());
   }
@@ -58,8 +58,8 @@ struct Fetch<viskores::exec::arg::FetchTagArrayDirectInOut,
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
   VISKORES_EXEC void Store(const ThreadIndicesType& indices,
-                       const ExecObjectType& arrayPortal,
-                       const ValueType& value) const
+                           const ExecObjectType& arrayPortal,
+                           const ValueType& value) const
   {
     arrayPortal.Set(indices.GetOutputIndex(), value);
   }

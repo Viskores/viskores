@@ -162,7 +162,8 @@ public:
 };
 
 template <>
-struct Serialization<viskores::cont::ArrayHandle<viskores::Vec3f, viskores::cont::StorageTagUniformPoints>>
+struct Serialization<
+  viskores::cont::ArrayHandle<viskores::Vec3f, viskores::cont::StorageTagUniformPoints>>
   : Serialization<viskores::cont::ArrayHandleUniformPointCoordinates>
 {
 };

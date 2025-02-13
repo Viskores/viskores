@@ -33,7 +33,8 @@ struct CreateFieldValueWorklet : public viskores::worklet::WorkletMapField
     viskores::Id x = idx % this->SizePerDim;
     viskores::Id y = (idx / this->SizePerDim) % this->SizePerDim;
     viskores::Id z = idx / this->SizePerDim / this->SizePerDim;
-    viskores::FloatDefault center = static_cast<viskores::FloatDefault>((1.0 * this->SizePerDim) / 2.0);
+    viskores::FloatDefault center =
+      static_cast<viskores::FloatDefault>((1.0 * this->SizePerDim) / 2.0);
     viskores::FloatDefault v = viskores::Pow((static_cast<viskores::FloatDefault>(x) - center), 2) +
       viskores::Pow((static_cast<viskores::FloatDefault>(y) - center), 2) +
       viskores::Pow((static_cast<viskores::FloatDefault>(z) - center), 2);

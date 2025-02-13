@@ -59,7 +59,8 @@ void VerifyRangeScalar(const viskores::cont::ArrayHandle<T, S>& array,
       {
         continue;
       }
-      auto value = static_cast<viskores::Float64>(Traits::GetComponent(portal.Get(index), component));
+      auto value =
+        static_cast<viskores::Float64>(Traits::GetComponent(portal.Get(index), component));
       if (finitesOnly && !viskores::IsFinite(value))
       {
         continue;
@@ -71,7 +72,7 @@ void VerifyRangeScalar(const viskores::cont::ArrayHandle<T, S>& array,
       VISKORES_TEST_ASSERT(!viskores::IsNan(computedRange.Min));
       VISKORES_TEST_ASSERT(!viskores::IsNan(computedRange.Max));
       VISKORES_TEST_ASSERT((!expectedRange.IsNonEmpty() && !computedRange.IsNonEmpty()) ||
-                       (test_equal(expectedRange, computedRange)));
+                           (test_equal(expectedRange, computedRange)));
     }
     catch (const viskores::testing::Testing::TestFailure&)
     {
@@ -122,7 +123,7 @@ void VerifyRangeVector(const viskores::cont::ArrayHandle<T, S>& array,
     VISKORES_TEST_ASSERT(!viskores::IsNan(computedRange.Min));
     VISKORES_TEST_ASSERT(!viskores::IsNan(computedRange.Max));
     VISKORES_TEST_ASSERT((!expectedRange.IsNonEmpty() && !computedRange.IsNonEmpty()) ||
-                     (test_equal(expectedRange, computedRange)));
+                         (test_equal(expectedRange, computedRange)));
   }
   catch (const viskores::testing::Testing::TestFailure&)
   {
@@ -325,7 +326,8 @@ template <typename T>
 void TestCastArray()
 {
   std::cout << "Checking cast array" << std::endl;
-  using CastType = typename viskores::VecTraits<T>::template ReplaceBaseComponentType<viskores::Float64>;
+  using CastType =
+    typename viskores::VecTraits<T>::template ReplaceBaseComponentType<viskores::Float64>;
   viskores::cont::ArrayHandle<T> array;
   FillArray(array, false);
   CheckRange(viskores::cont::make_ArrayHandleCast<CastType>(array));
@@ -450,8 +452,8 @@ void TestIndex()
 void TestUniformPointCoords()
 {
   std::cout << "Checking uniform point coordinates" << std::endl;
-  CheckRange(
-    viskores::cont::ArrayHandleUniformPointCoordinates(viskores::Id3(ARRAY_SIZE, ARRAY_SIZE, ARRAY_SIZE)));
+  CheckRange(viskores::cont::ArrayHandleUniformPointCoordinates(
+    viskores::Id3(ARRAY_SIZE, ARRAY_SIZE, ARRAY_SIZE)));
 }
 
 void TestXGCCoordinates()
@@ -480,7 +482,8 @@ struct DoTestFunctor
     TestGroup<T>(dimensionality);
     TestView<T>();
     TestConstant<T>();
-    TestCounting<T>(typename std::is_signed<typename viskores::VecTraits<T>::ComponentType>::type{});
+    TestCounting<T>(
+      typename std::is_signed<typename viskores::VecTraits<T>::ComponentType>::type{});
   }
 };
 

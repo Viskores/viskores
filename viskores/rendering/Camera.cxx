@@ -58,12 +58,14 @@ viskores::Matrix<viskores::Float32, 4, 4> Camera::Camera3DStruct::CreateProjecti
 
 viskores::Matrix<viskores::Float32, 4, 4> Camera::Camera2DStruct::CreateViewMatrix() const
 {
-  viskores::Vec3f_32 lookAt((this->Left + this->Right) / 2.f, (this->Top + this->Bottom) / 2.f, 0.f);
+  viskores::Vec3f_32 lookAt(
+    (this->Left + this->Right) / 2.f, (this->Top + this->Bottom) / 2.f, 0.f);
   viskores::Vec3f_32 position = lookAt;
   position[2] = 1.f;
   viskores::Vec3f_32 up(0, 1, 0);
   viskores::Matrix<viskores::Float32, 4, 4> V = MatrixHelpers::ViewMatrix(position, lookAt, up);
-  viskores::Matrix<viskores::Float32, 4, 4> scaleMatrix = MatrixHelpers::CreateScale(this->XScale, 1, 1);
+  viskores::Matrix<viskores::Float32, 4, 4> scaleMatrix =
+    MatrixHelpers::CreateScale(this->XScale, 1, 1);
   V = viskores::MatrixMultiply(scaleMatrix, V);
   return V;
 }
@@ -109,8 +111,9 @@ viskores::Matrix<viskores::Float32, 4, 4> Camera::CreateViewMatrix() const
   }
 }
 
-viskores::Matrix<viskores::Float32, 4, 4> Camera::CreateProjectionMatrix(viskores::Id screenWidth,
-                                                                 viskores::Id screenHeight) const
+viskores::Matrix<viskores::Float32, 4, 4> Camera::CreateProjectionMatrix(
+  viskores::Id screenWidth,
+  viskores::Id screenHeight) const
 {
   if (this->ModeType == Camera::Mode::ThreeD)
   {
@@ -227,7 +230,8 @@ void Camera::TrackballRotate(viskores::Float32 startX,
     MatrixHelpers::TrackballMatrix(startX, startY, endX, endY);
 
   //Translate matrix
-  viskores::Matrix<viskores::Float32, 4, 4> translate = viskores::Transform3DTranslate(-this->Camera3D.LookAt);
+  viskores::Matrix<viskores::Float32, 4, 4> translate =
+    viskores::Transform3DTranslate(-this->Camera3D.LookAt);
 
   //Translate matrix
   viskores::Matrix<viskores::Float32, 4, 4> inverseTranslate =
@@ -244,8 +248,8 @@ void Camera::TrackballRotate(viskores::Float32 startX,
   viskores::Matrix<viskores::Float32, 4, 4> fullTransform;
   fullTransform = viskores::MatrixMultiply(
     inverseTranslate,
-    viskores::MatrixMultiply(inverseView,
-                         viskores::MatrixMultiply(rotate, viskores::MatrixMultiply(view, translate))));
+    viskores::MatrixMultiply(
+      inverseView, viskores::MatrixMultiply(rotate, viskores::MatrixMultiply(view, translate))));
   this->Camera3D.Position = viskores::Transform3DPoint(fullTransform, this->Camera3D.Position);
   this->Camera3D.LookAt = viskores::Transform3DPoint(fullTransform, this->Camera3D.LookAt);
   this->Camera3D.ViewUp = viskores::Transform3DVector(fullTransform, this->Camera3D.ViewUp);
@@ -320,7 +324,8 @@ void Camera::ResetToBounds(const viskores::Bounds& dataBounds,
 }
 
 // Enable the ability to pad the data extents in the final view
-void Camera::ResetToBounds(const viskores::Bounds& dataBounds, const viskores::Float64 dataViewPadding)
+void Camera::ResetToBounds(const viskores::Bounds& dataBounds,
+                           const viskores::Float64 dataViewPadding)
 {
   Camera::ResetToBounds(dataBounds, dataViewPadding, dataViewPadding, dataViewPadding);
 }
@@ -343,10 +348,12 @@ void Camera::Azimuth(viskores::Float32 angleDegrees)
 {
   // Translate to the focal point (LookAt), rotate about view up, and
   // translate back again.
-  viskores::Matrix<viskores::Float32, 4, 4> transform = viskores::Transform3DTranslate(this->GetLookAt());
+  viskores::Matrix<viskores::Float32, 4, 4> transform =
+    viskores::Transform3DTranslate(this->GetLookAt());
+  transform = viskores::MatrixMultiply(
+    transform, viskores::Transform3DRotate(angleDegrees, this->GetViewUp()));
   transform =
-    viskores::MatrixMultiply(transform, viskores::Transform3DRotate(angleDegrees, this->GetViewUp()));
-  transform = viskores::MatrixMultiply(transform, viskores::Transform3DTranslate(-this->GetLookAt()));
+    viskores::MatrixMultiply(transform, viskores::Transform3DTranslate(-this->GetLookAt()));
 
   this->SetPosition(viskores::Transform3DPoint(transform, this->GetPosition()));
 }
@@ -358,10 +365,12 @@ void Camera::Elevation(viskores::Float32 angleDegrees)
 
   // Translate to the focal point (LookAt), rotate about the defined axis,
   // and translate back again.
-  viskores::Matrix<viskores::Float32, 4, 4> transform = viskores::Transform3DTranslate(this->GetLookAt());
+  viskores::Matrix<viskores::Float32, 4, 4> transform =
+    viskores::Transform3DTranslate(this->GetLookAt());
   transform =
     viskores::MatrixMultiply(transform, viskores::Transform3DRotate(angleDegrees, axisOfRotation));
-  transform = viskores::MatrixMultiply(transform, viskores::Transform3DTranslate(-this->GetLookAt()));
+  transform =
+    viskores::MatrixMultiply(transform, viskores::Transform3DTranslate(-this->GetLookAt()));
 
   this->SetPosition(viskores::Transform3DPoint(transform, this->GetPosition()));
 }

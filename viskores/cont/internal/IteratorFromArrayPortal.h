@@ -128,43 +128,49 @@ VISKORES_EXEC_CONT IteratorFromArrayPortal<ArrayPortalType> make_IteratorEnd(
 }
 
 template <typename PortalType>
-VISKORES_EXEC_CONT bool operator==(viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-                               viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VISKORES_EXEC_CONT bool operator==(
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index == rhs.Index;
 }
 
 template <typename PortalType>
-VISKORES_EXEC_CONT bool operator!=(viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-                               viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VISKORES_EXEC_CONT bool operator!=(
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index != rhs.Index;
 }
 
 template <typename PortalType>
-VISKORES_EXEC_CONT bool operator<(viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-                              viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VISKORES_EXEC_CONT bool operator<(
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index < rhs.Index;
 }
 
 template <typename PortalType>
-VISKORES_EXEC_CONT bool operator<=(viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-                               viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VISKORES_EXEC_CONT bool operator<=(
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index <= rhs.Index;
 }
 
 template <typename PortalType>
-VISKORES_EXEC_CONT bool operator>(viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-                              viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VISKORES_EXEC_CONT bool operator>(
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index > rhs.Index;
 }
 
 template <typename PortalType>
-VISKORES_EXEC_CONT bool operator>=(viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
-                               viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
+VISKORES_EXEC_CONT bool operator>=(
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& lhs,
+  viskores::cont::internal::IteratorFromArrayPortal<PortalType> const& rhs)
 {
   return lhs.Index >= rhs.Index;
 }

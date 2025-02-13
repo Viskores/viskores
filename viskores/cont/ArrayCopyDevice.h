@@ -32,7 +32,7 @@ namespace detail
 
 template <typename T1, typename S1, typename T2, typename S2>
 VISKORES_CONT void ArrayCopyImpl(const viskores::cont::ArrayHandle<T1, S1>& source,
-                             viskores::cont::ArrayHandle<T2, S2>& destination)
+                                 viskores::cont::ArrayHandle<T2, S2>& destination)
 {
   VISKORES_STATIC_ASSERT((!std::is_same<T1, T2>::value || !std::is_same<S1, S2>::value));
 
@@ -43,7 +43,7 @@ VISKORES_CONT void ArrayCopyImpl(const viskores::cont::ArrayHandle<T1, S1>& sour
 
 template <typename T, typename S>
 VISKORES_CONT void ArrayCopyImpl(const viskores::cont::ArrayHandle<T, S>& source,
-                             viskores::cont::ArrayHandle<T, S>& destination)
+                                 viskores::cont::ArrayHandle<T, S>& destination)
 {
   destination.DeepCopyFrom(source);
 }
@@ -72,8 +72,9 @@ VISKORES_CONT void ArrayCopyImpl(const viskores::cont::ArrayHandle<T, S>& source
 /// @{
 ///
 template <typename InValueType, typename InStorage, typename OutValueType, typename OutStorage>
-VISKORES_CONT void ArrayCopyDevice(const viskores::cont::ArrayHandle<InValueType, InStorage>& source,
-                               viskores::cont::ArrayHandle<OutValueType, OutStorage>& destination)
+VISKORES_CONT void ArrayCopyDevice(
+  const viskores::cont::ArrayHandle<InValueType, InStorage>& source,
+  viskores::cont::ArrayHandle<OutValueType, OutStorage>& destination)
 {
   using InArrayType = viskores::cont::ArrayHandle<InValueType, InStorage>;
   using OutArrayType = viskores::cont::ArrayHandle<OutValueType, OutStorage>;
@@ -90,8 +91,8 @@ VISKORES_CONT void ArrayCopyDevice(const viskores::cont::ArrayHandle<InValueType
 
   // Give a nice error message for case 3:
   VISKORES_STATIC_ASSERT_MSG(IsWritable::value || SameTypes::value,
-                         "Cannot copy to a read-only array with a different "
-                         "type than the source.");
+                             "Cannot copy to a read-only array with a different "
+                             "type than the source.");
 
   // Static dispatch cases 1 & 2
   detail::ArrayCopyImpl(source, destination);

@@ -84,9 +84,9 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& superID,
-                            const InFieldPortalType& superarcs,
-                            const OutFieldPortalType& joinArcs,
-                            const OutFieldPortalType& splitArcs) const
+                                const InFieldPortalType& superarcs,
+                                const OutFieldPortalType& joinArcs,
+                                const OutFieldPortalType& splitArcs) const
   {
     //  retrieve it's join neighbour j
     viskores::Id joinNeighbour = joinArcs.Get(superID);

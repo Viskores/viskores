@@ -97,9 +97,9 @@ struct CellShapeTagViskoresToVtkc;
 /// concept check to make sure that a template argument is a proper cell shape
 /// tag.
 ///
-#define VISKORES_IS_CELL_SHAPE_TAG(tag)                                       \
+#define VISKORES_IS_CELL_SHAPE_TAG(tag)                                           \
   VISKORES_STATIC_ASSERT_MSG(::viskores::internal::CellShapeTagCheck<tag>::value, \
-                         "Provided type is not a valid Viskores cell shape tag.")
+                             "Provided type is not a valid Viskores cell shape tag.")
 
 /// A traits-like class to get an CellShapeId known at compile time to a tag.
 ///
@@ -116,32 +116,32 @@ struct CellShapeIdToTag
 // Define a tag for each cell shape as well as the support structs to go
 // between tags and ids. The following macro is only valid here.
 
-#define VISKORES_DEFINE_CELL_TAG(name, idname)                                            \
-  struct CellShapeTag##name                                                           \
-  {                                                                                   \
+#define VISKORES_DEFINE_CELL_TAG(name, idname)                                                \
+  struct CellShapeTag##name                                                                   \
+  {                                                                                           \
     static constexpr viskores::UInt8 Id = viskores::idname;                                   \
-  };                                                                                  \
-  namespace internal                                                                  \
-  {                                                                                   \
-  template <>                                                                         \
-  struct CellShapeTagCheck<viskores::CellShapeTag##name> : std::true_type                 \
-  {                                                                                   \
-  };                                                                                  \
-  template <>                                                                         \
+  };                                                                                          \
+  namespace internal                                                                          \
+  {                                                                                           \
+  template <>                                                                                 \
+  struct CellShapeTagCheck<viskores::CellShapeTag##name> : std::true_type                     \
+  {                                                                                           \
+  };                                                                                          \
+  template <>                                                                                 \
   struct CellShapeTagViskoresToVtkc<viskores::CellShapeTag##name>                             \
-  {                                                                                   \
-    using Type = lcl::name;                                                           \
-  };                                                                                  \
-  }                                                                                   \
+  {                                                                                           \
+    using Type = lcl::name;                                                                   \
+  };                                                                                          \
+  }                                                                                           \
   static inline VISKORES_EXEC_CONT const char* GetCellShapeName(viskores::CellShapeTag##name) \
-  {                                                                                   \
-    return #name;                                                                     \
-  }                                                                                   \
-  template <>                                                                         \
-  struct CellShapeIdToTag<viskores::idname>                                               \
-  {                                                                                   \
-    using valid = std::true_type;                                                     \
-    using Tag = viskores::CellShapeTag##name;                                             \
+  {                                                                                           \
+    return #name;                                                                             \
+  }                                                                                           \
+  template <>                                                                                 \
+  struct CellShapeIdToTag<viskores::idname>                                                   \
+  {                                                                                           \
+    using valid = std::true_type;                                                             \
+    using Tag = viskores::CellShapeTag##name;                                                 \
   }
 
 VISKORES_DEFINE_CELL_TAG(Empty, CELL_SHAPE_EMPTY);
@@ -184,9 +184,8 @@ namespace internal
 {
 
 template <typename ViskoresCellShapeTag>
-VISKORES_EXEC_CONT inline typename CellShapeTagViskoresToVtkc<ViskoresCellShapeTag>::Type make_LclCellShapeTag(
-  const ViskoresCellShapeTag&,
-  viskores::IdComponent numPoints = 0)
+VISKORES_EXEC_CONT inline typename CellShapeTagViskoresToVtkc<ViskoresCellShapeTag>::Type
+make_LclCellShapeTag(const ViskoresCellShapeTag&, viskores::IdComponent numPoints = 0)
 {
   using VtkcCellShapeTag = typename CellShapeTagViskoresToVtkc<ViskoresCellShapeTag>::Type;
   static_cast<void>(numPoints); // unused
@@ -209,12 +208,12 @@ inline lcl::Cell make_LclCellShapeTag(const viskores::CellShapeTagGeneric& tag,
 
 } // namespace internal
 
-#define viskoresGenericCellShapeMacroCase(cellShapeId, call)                 \
-  case viskores::cellShapeId:                                                \
-  {                                                                      \
+#define viskoresGenericCellShapeMacroCase(cellShapeId, call)                     \
+  case viskores::cellShapeId:                                                    \
+  {                                                                              \
     using CellShapeTag = viskores::CellShapeIdToTag<viskores::cellShapeId>::Tag; \
-    call;                                                                \
-  }                                                                      \
+    call;                                                                        \
+  }                                                                              \
   break
 
 /// \brief A macro used in a \c switch statement to determine cell shape.

@@ -122,11 +122,11 @@ public:
 
   template <typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& superID,
-                            const viskores::Id /*activeID*/, // FIXME: Remove unused parameter?
-                            const OutFieldPortalType& contourTreeHyperparentsPortal,
-                            const OutFieldPortalType& contourTreeHyperarcsPortal,
-                            const OutFieldPortalType& contourTreeSuperarcsPortal,
-                            const OutFieldPortalType& contourTreeWhenTransferredPortal) const
+                                const viskores::Id /*activeID*/, // FIXME: Remove unused parameter?
+                                const OutFieldPortalType& contourTreeHyperparentsPortal,
+                                const OutFieldPortalType& contourTreeHyperarcsPortal,
+                                const OutFieldPortalType& contourTreeSuperarcsPortal,
+                                const OutFieldPortalType& contourTreeWhenTransferredPortal) const
   {
     if ((this->OutdegreePortal.Get(superID) == 0) && (this->IndegreePortal.Get(superID) == 1))
     { // a leaf

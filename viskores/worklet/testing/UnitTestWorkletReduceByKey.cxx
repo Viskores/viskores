@@ -54,12 +54,12 @@ struct CheckKeyValuesWorklet : viskores::worklet::WorkletReduceByKey
             typename ValuesToModifyVecType,
             typename WriteKeysVecType>
   VISKORES_EXEC void operator()(const T& key,
-                            const KeyMirrorVecType& keyMirror,
-                            const IndexValuesVecType& valueIndices,
-                            ValuesToModifyVecType& valuesToModify,
-                            WriteKeysVecType& writeKey,
-                            viskores::Id workIndex,
-                            viskores::IdComponent numValues) const
+                                const KeyMirrorVecType& keyMirror,
+                                const IndexValuesVecType& valueIndices,
+                                ValuesToModifyVecType& valuesToModify,
+                                WriteKeysVecType& writeKey,
+                                viskores::Id workIndex,
+                                viskores::IdComponent numValues) const
   {
     // These tests only work if keys are in sorted order, which is how we group
     // them.
@@ -95,10 +95,10 @@ struct CheckReducedValuesWorklet : viskores::worklet::WorkletReduceByKey
 
   template <typename T>
   VISKORES_EXEC void operator()(const T& key,
-                            T& reducedValueOut,
-                            viskores::Id indexReference,
-                            viskores::Pair<T, T>& copyKeyPair,
-                            viskores::Id workIndex) const
+                                T& reducedValueOut,
+                                viskores::Id indexReference,
+                                viskores::Pair<T, T>& copyKeyPair,
+                                viskores::Id workIndex) const
   {
     // This check only work if keys are in sorted order, which is how we group
     // them.
@@ -170,7 +170,7 @@ void TryKeyType(KeyType)
                                       viskores::cont::make_ArrayHandleZip(keyPairIn, keyPairOut));
 
   VISKORES_TEST_ASSERT(writeKey.GetNumberOfValues() == NUM_UNIQUE,
-                   "Reduced values output not sized correctly.");
+                       "Reduced values output not sized correctly.");
   CheckPortal(writeKey.ReadPortal());
 
   CheckPortal(keyPairOut.ReadPortal());

@@ -102,8 +102,8 @@ public:
   } // constructor
 
   /// Create a AttachmentIdsEqualComparatorImpl object for use in the sort or worklet
-  VISKORES_CONT AttachmentIdsEqualComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                                 viskores::cont::Token& token) const
+  VISKORES_CONT AttachmentIdsEqualComparatorImpl
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token) const
   {
     return AttachmentIdsEqualComparatorImpl(this->GlobalRegularIds.PrepareForInput(device, token));
   }

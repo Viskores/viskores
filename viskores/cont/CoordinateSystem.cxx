@@ -33,7 +33,7 @@ VISKORES_CONT CoordinateSystem::CoordinateSystem(const viskores::cont::Field& sr
 }
 
 VISKORES_CONT CoordinateSystem::CoordinateSystem(std::string name,
-                                             const viskores::cont::UnknownArrayHandle& data)
+                                                 const viskores::cont::UnknownArrayHandle& data)
   : Superclass(name, Association::Points, data)
 {
 }
@@ -51,10 +51,12 @@ CoordinateSystem::CoordinateSystem(std::string name,
 {
 }
 
-VISKORES_CONT viskores::cont::UncertainArrayHandle<viskores::TypeListFieldVec3, VISKORES_DEFAULT_STORAGE_LIST>
+VISKORES_CONT
+viskores::cont::UncertainArrayHandle<viskores::TypeListFieldVec3, VISKORES_DEFAULT_STORAGE_LIST>
 CoordinateSystem::GetData() const
 {
-  return viskores::cont::UncertainArrayHandle<viskores::TypeListFieldVec3, VISKORES_DEFAULT_STORAGE_LIST>(
+  return viskores::cont::UncertainArrayHandle<viskores::TypeListFieldVec3,
+                                              VISKORES_DEFAULT_STORAGE_LIST>(
     this->Superclass::GetData());
 }
 
@@ -88,15 +90,15 @@ template VISKORES_CONT_EXPORT CoordinateSystem::CoordinateSystem(
   const viskores::cont::ArrayHandle<
     viskores::Vec3f_32,
     viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                           viskores::cont::StorageTagBasic,
-                                           viskores::cont::StorageTagBasic>>&);
+                                               viskores::cont::StorageTagBasic,
+                                               viskores::cont::StorageTagBasic>>&);
 template VISKORES_CONT_EXPORT CoordinateSystem::CoordinateSystem(
   std::string name,
   const viskores::cont::ArrayHandle<
     viskores::Vec3f_64,
     viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
-                                           viskores::cont::StorageTagBasic,
-                                           viskores::cont::StorageTagBasic>>&);
+                                               viskores::cont::StorageTagBasic,
+                                               viskores::cont::StorageTagBasic>>&);
 template VISKORES_CONT_EXPORT CoordinateSystem::CoordinateSystem(
   std::string name,
   const viskores::cont::ArrayHandle<
@@ -104,7 +106,8 @@ template VISKORES_CONT_EXPORT CoordinateSystem::CoordinateSystem(
     typename viskores::cont::ArrayHandleCompositeVector<
       viskores::cont::ArrayHandle<viskores::Float32, viskores::cont::StorageTagBasic>,
       viskores::cont::ArrayHandle<viskores::Float32, viskores::cont::StorageTagBasic>,
-      viskores::cont::ArrayHandle<viskores::Float32, viskores::cont::StorageTagBasic>>::StorageTag>&);
+      viskores::cont::ArrayHandle<viskores::Float32,
+                                  viskores::cont::StorageTagBasic>>::StorageTag>&);
 template VISKORES_CONT_EXPORT CoordinateSystem::CoordinateSystem(
   std::string name,
   const viskores::cont::ArrayHandle<
@@ -112,6 +115,7 @@ template VISKORES_CONT_EXPORT CoordinateSystem::CoordinateSystem(
     typename viskores::cont::ArrayHandleCompositeVector<
       viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>,
       viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>,
-      viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>>::StorageTag>&);
+      viskores::cont::ArrayHandle<viskores::Float64,
+                                  viskores::cont::StorageTagBasic>>::StorageTag>&);
 }
 } // namespace viskores::cont

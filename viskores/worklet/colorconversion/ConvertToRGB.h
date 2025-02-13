@@ -42,8 +42,8 @@ struct ConvertToRGB : public viskores::worklet::WorkletMapField
   VISKORES_EXEC viskores::Vec3ui_8 operator()(const viskores::Vec<T, 3>& in) const
   { //vtkScalarsToColorsRGBToRGB
     return viskores::Vec<UInt8, 3>(colorconversion::ColorToUChar(in[0]),
-                               colorconversion::ColorToUChar(in[1]),
-                               colorconversion::ColorToUChar(in[2]));
+                                   colorconversion::ColorToUChar(in[1]),
+                                   colorconversion::ColorToUChar(in[2]));
   }
 
   VISKORES_EXEC viskores::Vec3ui_8 operator()(const viskores::Vec3ui_8& in) const
@@ -55,8 +55,8 @@ struct ConvertToRGB : public viskores::worklet::WorkletMapField
   VISKORES_EXEC viskores::Vec3ui_8 operator()(const viskores::Vec<T, 4>& in) const
   { //vtkScalarsToColorsRGBAToRGB
     return viskores::Vec<UInt8, 3>(colorconversion::ColorToUChar(in[0]),
-                               colorconversion::ColorToUChar(in[1]),
-                               colorconversion::ColorToUChar(in[2]));
+                                   colorconversion::ColorToUChar(in[1]),
+                                   colorconversion::ColorToUChar(in[2]));
   }
 };
 }

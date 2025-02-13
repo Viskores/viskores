@@ -539,7 +539,8 @@ void ParallelRadixSortInternal<PlainType,
 {
   // Compute local histogram
 
-  auto lambda = [=](const size_t my_id) {
+  auto lambda = [=](const size_t my_id)
+  {
     const size_t my_bgn = pos_bgn_[my_id];
     const size_t my_end = pos_end_[my_id];
     size_t* my_histo = histo_[my_id];
@@ -589,7 +590,8 @@ void ParallelRadixSortInternal<PlainType,
                                Base>::Scatter(unsigned int b, UnsignedType* src, UnsignedType* dst)
 {
 
-  auto lambda = [=](const size_t my_id) {
+  auto lambda = [=](const size_t my_id)
+  {
     const size_t my_bgn = pos_bgn_[my_id];
     const size_t my_end = pos_end_[my_id];
     size_t* my_histo = histo_[my_id];
@@ -777,8 +779,8 @@ void PairValueManager<PlainType, ValueType, Base>::Init(size_t max_elems, size_t
   { // This allocation can be quite large, so log it:
     tmp_size = max_elems * sizeof(ValueType);
     VISKORES_LOG_F(viskores::cont::LogLevel::MemCont,
-               "Allocating working memory for radix sort-by-key: %s.",
-               viskores::cont::GetSizeString(tmp_size).c_str());
+                   "Allocating working memory for radix sort-by-key: %s.",
+                   viskores::cont::GetSizeString(tmp_size).c_str());
     tmp_ = new ValueType[max_elems];
   }
 
@@ -798,8 +800,8 @@ void PairValueManager<PlainType, ValueType, Base>::DeleteAll()
 {
   { // This allocation can be quite large, so log it:
     VISKORES_LOG_F(viskores::cont::LogLevel::MemCont,
-               "Freeing working memory for radix sort-by-key: %s.",
-               viskores::cont::GetSizeString(tmp_size).c_str());
+                   "Freeing working memory for radix sort-by-key: %s.",
+                   viskores::cont::GetSizeString(tmp_size).c_str());
     delete[] tmp_;
     tmp_ = NULL;
     tmp_size = 0;
@@ -1013,37 +1015,37 @@ bool use_serial_sort_keys(T* data, size_t num_elems, const CompareType& comp)
 #define VISKORES_INTERNAL_RADIX_SORT_INSTANTIATE(threader_type, key_type)                     \
   VISKORES_CONT_EXPORT void parallel_radix_sort_key_values(                                   \
     key_type* keys, viskores::Id* vals, size_t num_elems, const std::greater<key_type>& comp) \
-  {                                                                                       \
+  {                                                                                           \
     using namespace viskores::cont::internal::radix;                                          \
     PairSort<threader_type, key_type, viskores::Id, std::greater<key_type>> ps;               \
-    ps.InitAndSort(keys, vals, num_elems, threader_type(), comp);                         \
-  }                                                                                       \
+    ps.InitAndSort(keys, vals, num_elems, threader_type(), comp);                             \
+  }                                                                                           \
   VISKORES_CONT_EXPORT void parallel_radix_sort_key_values(                                   \
     key_type* keys, viskores::Id* vals, size_t num_elems, const std::less<key_type>& comp)    \
-  {                                                                                       \
+  {                                                                                           \
     using namespace viskores::cont::internal::radix;                                          \
     PairSort<threader_type, key_type, viskores::Id, std::less<key_type>> ps;                  \
-    ps.InitAndSort(keys, vals, num_elems, threader_type(), comp);                         \
-  }                                                                                       \
+    ps.InitAndSort(keys, vals, num_elems, threader_type(), comp);                             \
+  }                                                                                           \
   VISKORES_CONT_EXPORT void parallel_radix_sort(                                              \
-    key_type* data, size_t num_elems, const std::greater<key_type>& comp)                 \
-  {                                                                                       \
+    key_type* data, size_t num_elems, const std::greater<key_type>& comp)                     \
+  {                                                                                           \
     using namespace viskores::cont::internal::radix;                                          \
-    if (!use_serial_sort_keys(data, num_elems, comp))                                     \
-    {                                                                                     \
-      KeySort<threader_type, key_type, std::greater<key_type>> ks;                        \
-      ks.InitAndSort(data, num_elems, threader_type(), comp);                             \
-    }                                                                                     \
-  }                                                                                       \
+    if (!use_serial_sort_keys(data, num_elems, comp))                                         \
+    {                                                                                         \
+      KeySort<threader_type, key_type, std::greater<key_type>> ks;                            \
+      ks.InitAndSort(data, num_elems, threader_type(), comp);                                 \
+    }                                                                                         \
+  }                                                                                           \
   VISKORES_CONT_EXPORT void parallel_radix_sort(                                              \
-    key_type* data, size_t num_elems, const std::less<key_type>& comp)                    \
-  {                                                                                       \
+    key_type* data, size_t num_elems, const std::less<key_type>& comp)                        \
+  {                                                                                           \
     using namespace viskores::cont::internal::radix;                                          \
-    if (!use_serial_sort_keys(data, num_elems, comp))                                     \
-    {                                                                                     \
-      KeySort<threader_type, key_type, std::less<key_type>> ks;                           \
-      ks.InitAndSort(data, num_elems, threader_type(), comp);                             \
-    }                                                                                     \
+    if (!use_serial_sort_keys(data, num_elems, comp))                                         \
+    {                                                                                         \
+      KeySort<threader_type, key_type, std::less<key_type>> ks;                               \
+      ks.InitAndSort(data, num_elems, threader_type(), comp);                                 \
+    }                                                                                         \
   }
 
 #define VISKORES_INSTANTIATE_RADIX_SORT_FOR_THREADER(ThreaderType)               \

@@ -27,7 +27,7 @@ public:
 
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<T>& xVals,
-                                              const std::string& coordsNm = "coords")
+                                                      const std::string& coordsNm = "coords")
   {
     VISKORES_ASSERT(xVals.size() > 0);
 
@@ -40,9 +40,9 @@ public:
 
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<T>& xVals,
-                                              const std::vector<T>& yVals,
-                                              const viskores::Id2& dims,
-                                              const std::string& coordsNm = "coords")
+                                                      const std::vector<T>& yVals,
+                                                      const viskores::Id2& dims,
+                                                      const std::string& coordsNm = "coords")
   {
     VISKORES_ASSERT(xVals.size() > 0 && xVals.size() == yVals.size());
 
@@ -54,10 +54,10 @@ public:
 
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<T>& xVals,
-                                              const std::vector<T>& yVals,
-                                              const std::vector<T>& zVals,
-                                              const viskores::Id3& dims,
-                                              const std::string& coordsNm = "coords")
+                                                      const std::vector<T>& yVals,
+                                                      const std::vector<T>& zVals,
+                                                      const viskores::Id3& dims,
+                                                      const std::string& coordsNm = "coords")
   {
     VISKORES_ASSERT(xVals.size() > 0 && xVals.size() == yVals.size());
     VISKORES_ASSERT(xVals.size() == zVals.size());
@@ -68,9 +68,10 @@ public:
   }
 
   template <typename T>
-  VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<viskores::Vec<T, 3>>& points,
-                                              const viskores::Id3& dims,
-                                              const std::string& coordsNm = "coords")
+  VISKORES_CONT static viskores::cont::DataSet Create(
+    const std::vector<viskores::Vec<T, 3>>& points,
+    const viskores::Id3& dims,
+    const std::string& coordsNm = "coords")
   {
     auto coords = viskores::cont::make_ArrayHandle(points);
     return DataSetBuilderCurvilinear::Create(coords, dims, 3, coordsNm);
@@ -78,23 +79,23 @@ public:
 
   template <typename CoordsType>
   VISKORES_CONT static viskores::cont::DataSet Create(const CoordsType& coords,
-                                              const viskores::Id3& dims,
-                                              const std::string& coordsNm = "coords")
+                                                      const viskores::Id3& dims,
+                                                      const std::string& coordsNm = "coords")
   {
     return DataSetBuilderCurvilinear::Create(coords, dims, 3, coordsNm);
   }
 
   template <typename CoordsType>
   VISKORES_CONT static viskores::cont::DataSet Create(const CoordsType& coords,
-                                              const viskores::Id2& dims,
-                                              const std::string& coordsNm = "coords")
+                                                      const viskores::Id2& dims,
+                                                      const std::string& coordsNm = "coords")
   {
     return DataSetBuilderCurvilinear::Create(coords, { dims[0], dims[1], 0 }, 2, coordsNm);
   }
 
   template <typename CoordsType>
   VISKORES_CONT static viskores::cont::DataSet Create(const CoordsType& coords,
-                                              const std::string& coordsNm = "coords")
+                                                      const std::string& coordsNm = "coords")
   {
     return DataSetBuilderCurvilinear::Create(
       coords, { coords.GetNumberOfValues(), 0, 0 }, 1, coordsNm);
@@ -103,9 +104,9 @@ public:
 private:
   template <typename CoordsType>
   VISKORES_CONT static viskores::cont::DataSet Create(const CoordsType& coords,
-                                              const viskores::Id3& dims,
-                                              const viskores::Id& cellSetDim,
-                                              const std::string& coordsNm = "coords")
+                                                      const viskores::Id3& dims,
+                                                      const viskores::Id& cellSetDim,
+                                                      const std::string& coordsNm = "coords")
   {
     viskores::cont::DataSet ds;
     ds.AddCoordinateSystem(viskores::cont::CoordinateSystem(coordsNm, coords));

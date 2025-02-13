@@ -181,7 +181,8 @@ struct RangeId2
 
 /// Helper function for printing range during testing
 ///
-static inline VISKORES_CONT std::ostream& operator<<(std::ostream& stream, const viskores::RangeId2& range)
+static inline VISKORES_CONT std::ostream& operator<<(std::ostream& stream,
+                                                     const viskores::RangeId2& range)
 {
   return stream << "{ X:" << range.X << ", Y:" << range.Y << " }";
 }

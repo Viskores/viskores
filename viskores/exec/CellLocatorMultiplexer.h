@@ -27,19 +27,19 @@ struct FindCellFunctor
 {
   template <typename Locator>
   VISKORES_EXEC viskores::ErrorCode operator()(Locator&& locator,
-                                       const viskores::Vec3f& point,
-                                       viskores::Id& cellId,
-                                       viskores::Vec3f& parametric) const
+                                               const viskores::Vec3f& point,
+                                               viskores::Id& cellId,
+                                               viskores::Vec3f& parametric) const
   {
     return locator.FindCell(point, cellId, parametric);
   }
 
   template <typename Locator, typename LastCell>
   VISKORES_EXEC viskores::ErrorCode operator()(Locator&& locator,
-                                       const viskores::Vec3f& point,
-                                       viskores::Id& cellId,
-                                       viskores::Vec3f& parametric,
-                                       LastCell& lastCell) const
+                                               const viskores::Vec3f& point,
+                                               viskores::Id& cellId,
+                                               viskores::Vec3f& parametric,
+                                               LastCell& lastCell) const
   {
     using ConcreteLastCell = typename std::decay_t<Locator>::LastCell;
     if (!lastCell.template IsType<ConcreteLastCell>())
@@ -69,16 +69,16 @@ public:
   }
 
   VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                                     viskores::Id& cellId,
-                                     viskores::Vec3f& parametric) const
+                                             viskores::Id& cellId,
+                                             viskores::Vec3f& parametric) const
   {
     return this->Locators.CastAndCall(detail::FindCellFunctor{}, point, cellId, parametric);
   }
 
   VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                                     viskores::Id& cellId,
-                                     viskores::Vec3f& parametric,
-                                     LastCell& lastCell) const
+                                             viskores::Id& cellId,
+                                             viskores::Vec3f& parametric,
+                                             LastCell& lastCell) const
   {
     return this->Locators.CastAndCall(
       detail::FindCellFunctor{}, point, cellId, parametric, lastCell);

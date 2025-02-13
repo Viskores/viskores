@@ -67,14 +67,13 @@ namespace contourtree_distributed
 template <typename ContourTreeDataFieldType>
 struct HyperSweepBlock
 {
-  HyperSweepBlock(
-    const viskores::Id localBlockNo,
-    const int globalBlockId,
-    const viskores::Id3& origin,
-    const viskores::Id3& size,
-    const viskores::Id3& globalSize,
-    const viskores::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-      hierarchicalContourTree)
+  HyperSweepBlock(const viskores::Id localBlockNo,
+                  const int globalBlockId,
+                  const viskores::Id3& origin,
+                  const viskores::Id3& size,
+                  const viskores::Id3& globalSize,
+                  const viskores::worklet::contourtree_distributed::HierarchicalContourTree<
+                    ContourTreeDataFieldType>& hierarchicalContourTree)
     : LocalBlockNo(localBlockNo)
     , GlobalBlockId(globalBlockId)
     , Origin(origin)
@@ -92,8 +91,8 @@ struct HyperSweepBlock
   viskores::Id3 GlobalSize;
 
   // Hierarchical contour tree for this block
-  const viskores::worklet::contourtree_distributed::HierarchicalContourTree<ContourTreeDataFieldType>&
-    HierarchicalContourTree;
+  const viskores::worklet::contourtree_distributed::HierarchicalContourTree<
+    ContourTreeDataFieldType>& HierarchicalContourTree;
 
   // Computed values
   viskores::cont::ArrayHandle<viskores::Id> IntrinsicVolume;

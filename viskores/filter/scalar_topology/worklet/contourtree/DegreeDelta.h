@@ -87,8 +87,8 @@ public:
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& sortID,
-                            const InFieldPortalType& sortVector,
-                            const OutFieldPortalType& candidate) const
+                                const InFieldPortalType& sortVector,
+                                const OutFieldPortalType& candidate) const
   {
     viskores::Id iCandidate = sortVector.Get(sortID);
     // last element needs to be subtracted from vector size

@@ -84,7 +84,7 @@ public:
   CalculateAttachementCounterWorklet() {}
 
   VISKORES_EXEC viskores::Id operator()(const viskores::Id& supernodeType,
-                                const viskores::Id& hierarchicalSuperId) const
+                                        const viskores::Id& hierarchicalSuperId) const
   { // operator ()
     return (supernodeType == viskores::worklet::contourtree_augmented::IS_ATTACHMENT) &&
       viskores::worklet::contourtree_augmented::NoSuchElement(hierarchicalSuperId);

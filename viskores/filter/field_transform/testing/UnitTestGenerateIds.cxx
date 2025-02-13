@@ -15,15 +15,17 @@
 namespace
 {
 
-void CheckField(const viskores::cont::UnknownArrayHandle& array, viskores::Id expectedSize, bool isFloat)
+void CheckField(const viskores::cont::UnknownArrayHandle& array,
+                viskores::Id expectedSize,
+                bool isFloat)
 {
   VISKORES_TEST_ASSERT(array.GetNumberOfValues() == expectedSize);
   if (isFloat)
   {
     VISKORES_TEST_ASSERT(array.IsBaseComponentType<viskores::FloatDefault>());
-    VISKORES_TEST_ASSERT(
-      test_equal_ArrayHandles(array.AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>(),
-                              viskores::cont::ArrayHandleIndex(expectedSize)));
+    VISKORES_TEST_ASSERT(test_equal_ArrayHandles(
+      array.AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>(),
+      viskores::cont::ArrayHandleIndex(expectedSize)));
   }
   else
   {

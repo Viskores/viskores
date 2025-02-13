@@ -149,7 +149,8 @@ inline MeshStructureFreudenthal2D DataSetMeshTriangulation2DFreudenthal::Prepare
 inline MeshBoundary2DExec DataSetMeshTriangulation2DFreudenthal::GetMeshBoundaryExecutionObject()
   const
 {
-  return MeshBoundary2DExec(viskores::Id2{ this->MeshSize[0], this->MeshSize[1] }, this->SortIndices);
+  return MeshBoundary2DExec(viskores::Id2{ this->MeshSize[0], this->MeshSize[1] },
+                            this->SortIndices);
 }
 
 inline void DataSetMeshTriangulation2DFreudenthal::GetBoundaryVertices(

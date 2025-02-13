@@ -76,8 +76,8 @@ public:
     const viskores::Float32 df = static_cast<viskores::Float32>(d);
     const viskores::Float32 K = 1.0f / (1.0f + 0.2316419f * viskores::Abs(df));
 
-    viskores::Float32 cnd =
-      RSQRT2PI * viskores::Exp(-0.5f * df * df) * (K * (A1 + K * (A2 + K * (A3 + K * (A4 + K * A5)))));
+    viskores::Float32 cnd = RSQRT2PI * viskores::Exp(-0.5f * df * df) *
+      (K * (A1 + K * (A2 + K * (A3 + K * (A4 + K * A5)))));
 
     if (df > 0.0f)
     {
@@ -194,18 +194,19 @@ public:
 
   template <typename ConnectivityInVec, typename ThreadIndicesType, typename IdPairTableType>
   VISKORES_EXEC void operator()(const ConnectivityInVec& connectivity,
-                            const ThreadIndicesType threadIndices,
-                            const IdPairTableType& edgeIds) const
+                                const ThreadIndicesType threadIndices,
+                                const IdPairTableType& edgeIds) const
   {
     const viskores::Id writeOffset = (threadIndices.GetInputIndex() * 12);
 
     const viskores::IdComponent edgeTable[24] = { 0, 1, 1, 2, 3, 2, 0, 3, 4, 5, 5, 6,
-                                              7, 6, 4, 7, 0, 4, 1, 5, 2, 6, 3, 7 };
+                                                  7, 6, 4, 7, 0, 4, 1, 5, 2, 6, 3, 7 };
 
     for (viskores::Id i = 0; i < 12; ++i)
     {
       const viskores::Id offset = (i * 2);
-      const viskores::Id2 edge(connectivity[edgeTable[offset]], connectivity[edgeTable[offset + 1]]);
+      const viskores::Id2 edge(connectivity[edgeTable[offset]],
+                               connectivity[edgeTable[offset + 1]]);
       edgeIds.Set(writeOffset + i, edge);
     }
   }
@@ -223,9 +224,9 @@ public:
 
   template <typename WeightType, typename PortalType, typename U>
   VISKORES_EXEC void operator()(const viskores::Id2& low_high,
-                            const WeightType& weight,
-                            const PortalType& inPortal,
-                            U& result) const
+                                const WeightType& weight,
+                                const PortalType& inPortal,
+                                U& result) const
   {
     using T = typename PortalType::ValueType;
     this->DoIt(low_high, weight, inPortal, result, typename std::is_same<T, U>::type{});
@@ -233,18 +234,21 @@ public:
 
   template <typename WeightType, typename PortalType>
   VISKORES_EXEC void DoIt(const viskores::Id2& low_high,
-                      const WeightType& weight,
-                      const PortalType& inPortal,
-                      typename PortalType::ValueType& result,
-                      std::true_type) const
+                          const WeightType& weight,
+                          const PortalType& inPortal,
+                          typename PortalType::ValueType& result,
+                          std::true_type) const
   {
     //fetch the low / high values from inPortal
     result = viskores::Lerp(inPortal.Get(low_high[0]), inPortal.Get(low_high[1]), weight);
   }
 
   template <typename WeightType, typename PortalType, typename U>
-  VISKORES_EXEC void DoIt(const viskores::Id2&, const WeightType&, const PortalType&, U&, std::false_type)
-    const
+  VISKORES_EXEC void DoIt(const viskores::Id2&,
+                          const WeightType&,
+                          const PortalType&,
+                          U&,
+                          std::false_type) const
   {
     //the inPortal and result need to be the same type so this version only
     //exists to generate code when using dynamic arrays
@@ -260,8 +264,8 @@ public:
 
   template <typename VecType, typename ScalarType, typename FunctionType>
   VISKORES_EXEC void operator()(const VecType& point,
-                            ScalarType& val,
-                            const FunctionType& function) const
+                                ScalarType& val,
+                                const FunctionType& function) const
   {
     val = function.Value(point);
   }
@@ -275,9 +279,9 @@ public:
 
   template <typename VecType, typename ScalarType, typename FType1, typename FType2>
   VISKORES_EXEC void operator()(const VecType& point,
-                            ScalarType& val,
-                            const FType1& function1,
-                            const FType2& function2) const
+                                ScalarType& val,
+                                const FType1& function1,
+                                const FType2& function2) const
   {
     val = function1.Value(point) + function2.Value(point);
   }
@@ -304,17 +308,17 @@ struct JunkArrayHandle : viskores::cont::ArrayHandle<ValueType>
 template <typename ArrayHandleType>
 using BMArrayHandleMultiplexer =
   viskores::cont::ArrayHandleMultiplexer<ArrayHandleType,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 0>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 1>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 2>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 3>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 4>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 5>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 6>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 7>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 8>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 9>,
-                                     ArrayHandlePassThrough<ArrayHandleType>>;
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 0>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 1>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 2>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 3>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 4>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 5>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 6>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 7>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 8>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 9>,
+                                         ArrayHandlePassThrough<ArrayHandleType>>;
 
 template <typename ArrayHandleType>
 BMArrayHandleMultiplexer<ArrayHandleType> make_ArrayHandleMultiplexer0(const ArrayHandleType& array)
@@ -382,16 +386,16 @@ struct BenchBlackScholesImpl
     { // Configure label:
       const viskores::Id numBytes = this->ArraySize * static_cast<viskores::Id>(sizeof(Value));
       std::ostringstream desc;
-      desc << "NumValues:" << this->ArraySize << " (" << viskores::cont::GetHumanReadableSize(numBytes)
-           << ")";
+      desc << "NumValues:" << this->ArraySize << " ("
+           << viskores::cont::GetHumanReadableSize(numBytes) << ")";
       this->State.SetLabel(desc.str());
     }
   }
 
   template <typename BenchArrayType>
   VISKORES_CONT void Run(const BenchArrayType& stockPrice,
-                     const BenchArrayType& optionStrike,
-                     const BenchArrayType& optionYears)
+                         const BenchArrayType& optionStrike,
+                         const BenchArrayType& optionYears)
   {
     static constexpr Value RISKFREE = 0.02f;
     static constexpr Value VOLATILITY = 0.30f;
@@ -480,14 +484,14 @@ struct BenchMathImpl
 
   template <typename InputArrayType, typename BenchArrayType>
   VISKORES_CONT void Run(const InputArrayType& inputHandle,
-                     const BenchArrayType& tempHandle1,
-                     const BenchArrayType& tempHandle2)
+                         const BenchArrayType& tempHandle1,
+                         const BenchArrayType& tempHandle2)
   {
     { // Configure label:
       const viskores::Id numBytes = this->ArraySize * static_cast<viskores::Id>(sizeof(Value));
       std::ostringstream desc;
-      desc << "NumValues:" << this->ArraySize << " (" << viskores::cont::GetHumanReadableSize(numBytes)
-           << ")";
+      desc << "NumValues:" << this->ArraySize << " ("
+           << viskores::cont::GetHumanReadableSize(numBytes) << ")";
       this->State.SetLabel(desc.str());
     }
 
@@ -572,8 +576,8 @@ struct BenchFusedMathImpl
     { // Configure label:
       const viskores::Id numBytes = this->ArraySize * static_cast<viskores::Id>(sizeof(Value));
       std::ostringstream desc;
-      desc << "NumValues:" << this->ArraySize << " (" << viskores::cont::GetHumanReadableSize(numBytes)
-           << ")";
+      desc << "NumValues:" << this->ArraySize << " ("
+           << viskores::cont::GetHumanReadableSize(numBytes) << ")";
       this->State.SetLabel(desc.str());
     }
   }
@@ -695,8 +699,8 @@ struct BenchEdgeInterpImpl
 
   template <typename EdgePairArrayType, typename WeightArrayType, typename FieldArrayType>
   VISKORES_CONT void Run(const EdgePairArrayType& edgePairs,
-                     const WeightArrayType& weights,
-                     const FieldArrayType& field)
+                         const WeightArrayType& weights,
+                         const FieldArrayType& field)
   {
     viskores::cont::ArrayHandle<Value> result;
 

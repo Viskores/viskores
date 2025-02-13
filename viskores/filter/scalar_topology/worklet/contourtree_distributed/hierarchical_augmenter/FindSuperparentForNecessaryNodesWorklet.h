@@ -102,7 +102,7 @@ public:
     const viskores::Id& regularNode,     // InputIndex a.k.a out loop index
     const viskores::Id& globalRegularId, // same as baseTree->regularNodeGlobalIDs[regularNode];
     const viskores::Id& oldSuperparent,  // same as baseTree->superparents[regularNode];
-    const FieldType& dataValue,      // same as baseTree->dataValues[regularNode]
+    const FieldType& dataValue,          // same as baseTree->dataValues[regularNode]
     const InFieldPortalType& baseTreeSuperarcsPortal,
     const InFieldPortalType& newSupernodeIdsPortal,
     const ExecObjectType1& findRegularByGlobal, // Execution object to call FindRegularByGlobal
@@ -139,7 +139,8 @@ public:
       // break the superarc into the flag and the target
       // NOTE that we do not test for NO_SUCH_ELEMENT as all attachment points and the root are guaranteed to be present already,
       // and have therefore been excluded by the if statement already
-      viskores::Id oldSuperTarget = viskores::worklet::contourtree_augmented::MaskedIndex(oldSuperarc);
+      viskores::Id oldSuperTarget =
+        viskores::worklet::contourtree_augmented::MaskedIndex(oldSuperarc);
       bool ascendingSuperarc = viskores::worklet::contourtree_augmented::IsAscending(oldSuperarc);
 
       // convert both from and to into new supernode IDs
@@ -230,8 +231,8 @@ private:
     {
       // convert from global ID to global coords
       viskores::Id3 pos{ globalId % this->MeshGlobalSize[0],
-                     (globalId / this->MeshGlobalSize[0]) % this->MeshGlobalSize[1],
-                     globalId / (this->MeshGlobalSize[0] * this->MeshGlobalSize[1]) };
+                         (globalId / this->MeshGlobalSize[0]) % this->MeshGlobalSize[1],
+                         globalId / (this->MeshGlobalSize[0] * this->MeshGlobalSize[1]) };
 
       // test validity
       if (pos[2] < this->MeshBlockOrigin[2])

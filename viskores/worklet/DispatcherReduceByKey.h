@@ -26,12 +26,13 @@ class WorkletReduceByKey;
 template <typename WorkletType>
 class DispatcherReduceByKey
   : public viskores::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType>,
-                                                   WorkletType,
-                                                   viskores::worklet::WorkletReduceByKey>
+                                                       WorkletType,
+                                                       viskores::worklet::WorkletReduceByKey>
 {
-  using Superclass = viskores::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType>,
-                                                             WorkletType,
-                                                             viskores::worklet::WorkletReduceByKey>;
+  using Superclass =
+    viskores::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType>,
+                                                WorkletType,
+                                                viskores::worklet::WorkletReduceByKey>;
   using ScatterType = typename Superclass::ScatterType;
 
 public:
@@ -53,7 +54,8 @@ public:
     // something other than viskores::worklet::Keys as the input domain, which
     // is illegal.
     VISKORES_STATIC_ASSERT_MSG(
-      (viskores::cont::arg::TypeCheck<viskores::cont::arg::TypeCheckTagKeys, InputDomainType>::value),
+      (viskores::cont::arg::TypeCheck<viskores::cont::arg::TypeCheckTagKeys,
+                                      InputDomainType>::value),
       "Invalid input domain for WorkletReduceByKey.");
 
     // We can pull the input domain parameter (the data specifying the input

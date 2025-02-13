@@ -32,9 +32,10 @@ public:
     thresholdPoints.SetFieldsToPass("pointvar");
     auto output = thresholdPoints.Execute(dataset);
 
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 11), "Wrong result for ThresholdPoints");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 11),
+                         "Wrong result for ThresholdPoints");
     VISKORES_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 25),
-                     "Wrong number of points for ThresholdPoints");
+                         "Wrong number of points for ThresholdPoints");
 
     viskores::cont::Field pointField = output.GetField("pointvar");
     viskores::cont::ArrayHandle<viskores::Float32> pointFieldArray;
@@ -54,9 +55,10 @@ public:
     thresholdPoints.SetFieldsToPass("pointvar");
     auto output = thresholdPoints.Execute(dataset);
 
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27), "Wrong result for ThresholdPoints");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27),
+                         "Wrong result for ThresholdPoints");
     VISKORES_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 27),
-                     "Wrong number of points for ThresholdPoints");
+                         "Wrong number of points for ThresholdPoints");
 
     viskores::cont::Field pointField = output.GetField("pointvar");
     viskores::cont::ArrayHandle<viskores::Float32> pointFieldArray;
@@ -76,9 +78,10 @@ public:
     thresholdPoints.SetFieldsToPass("pointvar");
     auto output = thresholdPoints.Execute(dataset);
 
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 6), "Wrong result for ThresholdPoints");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 6),
+                         "Wrong result for ThresholdPoints");
     VISKORES_TEST_ASSERT(test_equal(output.GetField("pointvar").GetNumberOfValues(), 6),
-                     "Wrong number of points for ThresholdPoints");
+                         "Wrong number of points for ThresholdPoints");
 
     viskores::cont::Field pointField = output.GetField("pointvar");
     viskores::cont::ArrayHandle<viskores::Float32> pointFieldArray;
@@ -98,8 +101,9 @@ public:
     thresholdPoints.SetFieldsToPass("pointvar");
     auto output = thresholdPoints.Execute(dataset);
     VISKORES_TEST_ASSERT(output.GetNumberOfFields() == 2,
-                     "Wrong number of fields in the output dataset");
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 0), "Wrong result for ThresholdPoints");
+                         "Wrong number of fields in the output dataset");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 0),
+                         "Wrong result for ThresholdPoints");
   }
 
   void operator()() const

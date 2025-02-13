@@ -54,8 +54,9 @@ void LogReturnCode(const RuntimeDeviceConfigReturnCode& code,
       (code != RuntimeDeviceConfigReturnCode::SUCCESS))
   {
     VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-               function << " for device: " << deviceName << " had code: "
-                        << RuntimeDeviceConfigReturnCodeToString(code) << " with value: " << value);
+                   function << " for device: " << deviceName
+                            << " had code: " << RuntimeDeviceConfigReturnCodeToString(code)
+                            << " with value: " << value);
   }
 #ifndef VISKORES_ENABLE_LOGGING
   (void)function;
@@ -66,9 +67,9 @@ void LogReturnCode(const RuntimeDeviceConfigReturnCode& code,
 
 template <typename SetFunc>
 VISKORES_CONT void InitializeOption(RuntimeDeviceOption option,
-                                SetFunc setFunc,
-                                const std::string& funcName,
-                                const std::string& deviceName)
+                                    SetFunc setFunc,
+                                    const std::string& funcName,
+                                    const std::string& deviceName)
 {
   if (option.IsSet())
   {

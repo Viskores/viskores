@@ -49,7 +49,8 @@ std::unique_ptr<opt::Option[]> GetOptions(int& argc,
 void TestRuntimeDeviceOptionHappy()
 {
   std::vector<opt::Descriptor> usage;
-  usage.push_back({ TEST, 0, "", "test-option", opt::ViskoresArg::Required, " --test-option <val>" });
+  usage.push_back(
+    { TEST, 0, "", "test-option", opt::ViskoresArg::Required, " --test-option <val>" });
   usage.push_back({ UNKNOWN, 0, "", "", opt::ViskoresArg::UnknownOption, "" });
   usage.push_back({ 0, 0, 0, 0, 0, 0 });
 
@@ -71,7 +72,7 @@ void TestRuntimeDeviceOptionHappy()
     testOption.Initialize(nullptr);
     VISKORES_TEST_ASSERT(testOption.IsSet(), "Option set through env");
     VISKORES_TEST_ASSERT(testOption.GetSource() == internal::RuntimeDeviceOptionSource::ENVIRONMENT,
-                     "Option should be set");
+                         "Option should be set");
     VISKORES_TEST_ASSERT(testOption.GetValue() == 1, "Option value should be 1");
   }
 
@@ -87,8 +88,9 @@ void TestRuntimeDeviceOptionHappy()
 
     testOption.Initialize(options.get());
     VISKORES_TEST_ASSERT(testOption.IsSet(), "Option should be set");
-    VISKORES_TEST_ASSERT(testOption.GetSource() == internal::RuntimeDeviceOptionSource::COMMAND_LINE,
-                     "Option should be set");
+    VISKORES_TEST_ASSERT(testOption.GetSource() ==
+                           internal::RuntimeDeviceOptionSource::COMMAND_LINE,
+                         "Option should be set");
     VISKORES_TEST_ASSERT(testOption.GetValue() == 2, "Option value should be 1");
   }
 
@@ -100,7 +102,7 @@ void TestRuntimeDeviceOptionHappy()
     testOption.SetOption(3);
     VISKORES_TEST_ASSERT(testOption.IsSet(), "Option should be set");
     VISKORES_TEST_ASSERT(testOption.GetSource() == internal::RuntimeDeviceOptionSource::IN_CODE,
-                     "Option should be set");
+                         "Option should be set");
     VISKORES_TEST_ASSERT(testOption.GetValue() == 3, "Option value should be 3");
   }
 
@@ -110,7 +112,8 @@ void TestRuntimeDeviceOptionHappy()
 void TestRuntimeDeviceOptionError()
 {
   std::vector<opt::Descriptor> usage;
-  usage.push_back({ TEST, 0, "", "test-option", opt::ViskoresArg::Required, " --test-option <val>" });
+  usage.push_back(
+    { TEST, 0, "", "test-option", opt::ViskoresArg::Required, " --test-option <val>" });
   usage.push_back({ UNKNOWN, 0, "", "", opt::ViskoresArg::UnknownOption, "" });
   usage.push_back({ 0, 0, 0, 0, 0, 0 });
 
@@ -171,9 +174,9 @@ void TestRuntimeDeviceOptionError()
     catch (const viskores::cont::ErrorBadValue& error)
     {
       VISKORES_TEST_ASSERT(error.GetMessage() ==
-                         "Value '100bad' from source: 'ENVIRONMENT: " + env +
-                           "' has dangling characters, throwing",
-                       "message: " + error.GetMessage());
+                             "Value '100bad' from source: 'ENVIRONMENT: " + env +
+                               "' has dangling characters, throwing",
+                           "message: " + error.GetMessage());
     }
 
     VISKORES_TEST_ASSERT(threw, "Should have thrown");
@@ -184,13 +187,17 @@ void TestRuntimeDeviceOptionError()
 
 void TestConfigOptionValues(const internal::RuntimeDeviceConfigurationOptions& configOptions)
 {
-  VISKORES_TEST_ASSERT(configOptions.IsInitialized(), "runtime config options should be initialized");
+  VISKORES_TEST_ASSERT(configOptions.IsInitialized(),
+                       "runtime config options should be initialized");
 
   VISKORES_TEST_ASSERT(configOptions.ViskoresNumThreads.IsSet(), "num threads should be set");
-  VISKORES_TEST_ASSERT(configOptions.ViskoresDeviceInstance.IsSet(), "device instance should be set");
+  VISKORES_TEST_ASSERT(configOptions.ViskoresDeviceInstance.IsSet(),
+                       "device instance should be set");
 
-  VISKORES_TEST_ASSERT(configOptions.ViskoresNumThreads.GetValue() == 100, "num threads should == 100");
-  VISKORES_TEST_ASSERT(configOptions.ViskoresDeviceInstance.GetValue() == 1, "device instance should == 1");
+  VISKORES_TEST_ASSERT(configOptions.ViskoresNumThreads.GetValue() == 100,
+                       "num threads should == 100");
+  VISKORES_TEST_ASSERT(configOptions.ViskoresDeviceInstance.GetValue() == 1,
+                       "device instance should == 1");
 }
 
 void TestRuntimeDeviceConfigurationOptions()
@@ -214,7 +221,7 @@ void TestRuntimeDeviceConfigurationOptions()
     auto options = GetOptions(argc, argv, usage);
 
     VISKORES_TEST_ASSERT(!configOptions.IsInitialized(),
-                     "runtime config options should not be initialized");
+                         "runtime config options should not be initialized");
     configOptions.Initialize(options.get());
     TestConfigOptionValues(configOptions);
   }

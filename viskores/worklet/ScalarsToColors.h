@@ -20,7 +20,9 @@ namespace worklet
 
 namespace colorconversion
 {
-inline void ComputeShiftScale(const viskores::Range& range, viskores::Float32& shift, viskores::Float32& scale)
+inline void ComputeShiftScale(const viskores::Range& range,
+                              viskores::Float32& shift,
+                              viskores::Float32& scale)
 {
   //This scale logic seems to be unduly complicated
   shift = static_cast<viskores::Float32>(-range.Min);
@@ -75,7 +77,10 @@ public:
 
   viskores::Range GetRange() const { return this->ValueRange; }
 
-  void SetAlpha(viskores::Float32 alpha) { this->Alpha = viskores::Min(viskores::Max(alpha, 0.0f), 1.0f); }
+  void SetAlpha(viskores::Float32 alpha)
+  {
+    this->Alpha = viskores::Min(viskores::Max(alpha, 0.0f), 1.0f);
+  }
 
   viskores::Float32 GetAlpha() const { return this->Alpha; }
 

@@ -65,9 +65,9 @@ struct PassCellShapesNumIndices : viskores::worklet::WorkletVisitCellsWithPoints
 
   template <typename CellShape>
   VISKORES_EXEC void operator()(const CellShape& inShape,
-                            viskores::IdComponent inNumIndices,
-                            viskores::UInt8& outShape,
-                            viskores::IdComponent& outNumIndices) const
+                                viskores::IdComponent inNumIndices,
+                                viskores::UInt8& outShape,
+                                viskores::IdComponent& outNumIndices) const
   {
     outShape = inShape.Id;
     outNumIndices = inNumIndices;
@@ -97,7 +97,8 @@ void MergeShapes(const viskores::cont::PartitionedDataSet& partitionedDataSet,
     viskores::cont::DataSet partition = partitionedDataSet.GetPartition(partitionId);
     viskores::Id numCellsPartition = partition.GetNumberOfCells();
 
-    auto shapesView = viskores::cont::make_ArrayHandleView(shapes, cellStartIndex, numCellsPartition);
+    auto shapesView =
+      viskores::cont::make_ArrayHandleView(shapes, cellStartIndex, numCellsPartition);
     auto numIndicesView =
       viskores::cont::make_ArrayHandleView(numIndices, cellStartIndex, numCellsPartition);
 
@@ -121,7 +122,8 @@ struct PassCellIndices : viskores::worklet::WorkletVisitCellsWithPoints
   }
 
   template <typename InPointIndexType, typename OutPointIndexType>
-  VISKORES_EXEC void operator()(const InPointIndexType& inPoints, OutPointIndexType& outPoints) const
+  VISKORES_EXEC void operator()(const InPointIndexType& inPoints,
+                                OutPointIndexType& outPoints) const
   {
     viskores::IdComponent numPoints = inPoints.GetNumberOfComponents();
     VISKORES_ASSERT(numPoints == outPoints.GetNumberOfComponents());
@@ -210,8 +212,9 @@ viskores::cont::CellSetSingleType<> MergeCellSetsSingleType(
     // Grabing the connectivity and copy it into the larger connectivity array
     viskores::cont::CellSetSingleType<> singleType =
       cellSet.AsCellSet<viskores::cont::CellSetSingleType<>>();
-    const viskores::cont::ArrayHandle<viskores::Id> connPerDataSet = singleType.GetConnectivityArray(
-      viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+    const viskores::cont::ArrayHandle<viskores::Id> connPerDataSet =
+      singleType.GetConnectivityArray(viskores::TopologyElementTagCell(),
+                                      viskores::TopologyElementTagPoint());
     viskores::Id copySize = connPerDataSet.GetNumberOfValues();
     VISKORES_ASSERT(copySize == cellSet.GetNumberOfCells() * numberOfPointsPerCell);
     // Mapping connectivity array per data into proper region of merged connectivity array
@@ -357,9 +360,8 @@ void MergeFieldsAndAddIntoDataSet(viskores::cont::DataSet& outputDataSet,
   // We get fields names in all partitions firstly
   // The inserted map stores the field name and a index of the first partition that owns that field
   viskores::cont::Invoker invoke;
-  auto associationHash = [](viskores::cont::Field::Association const& association) {
-    return static_cast<std::size_t>(association);
-  };
+  auto associationHash = [](viskores::cont::Field::Association const& association)
+  { return static_cast<std::size_t>(association); };
   std::unordered_map<viskores::cont::Field::Association,
                      std::unordered_map<std::string, viskores::Id>,
                      decltype(associationHash)>
@@ -385,8 +387,8 @@ void MergeFieldsAndAddIntoDataSet(viskores::cont::DataSet& outputDataSet,
       if (!isSupported)
       {
         VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                   "Skipping merge of field '" << field.GetName()
-                                               << "' because it has an unsupported association.");
+                       "Skipping merge of field '"
+                         << field.GetName() << "' because it has an unsupported association.");
       }
       //Do not store the field index again if it exists in fieldMap
       if (fieldsMap[association].find(field.GetName()) != fieldsMap[association].end())
@@ -421,7 +423,8 @@ void MergeFieldsAndAddIntoDataSet(viskores::cont::DataSet& outputDataSet,
         mergedFieldArray.Allocate(numCells);
       }
       //Merging each field into the mergedField array
-      auto resolveType = [&](auto& concreteOut) {
+      auto resolveType = [&](auto& concreteOut)
+      {
         viskores::Id offset = 0;
         for (viskores::Id partitionIndex = firstNonEmptyPartitionId; partitionIndex < numOfDataSet;
              ++partitionIndex)
@@ -433,8 +436,8 @@ void MergeFieldsAndAddIntoDataSet(viskores::cont::DataSet& outputDataSet,
           if (partitionedDataSet.GetPartition(partitionIndex).HasField(fieldName, fieldAssociation))
           {
             viskores::cont::UnknownArrayHandle in = partitionedDataSet.GetPartition(partitionIndex)
-                                                  .GetField(fieldName, fieldAssociation)
-                                                  .GetData();
+                                                      .GetField(fieldName, fieldAssociation)
+                                                      .GetData();
             viskores::Id copySize = in.GetNumberOfValues();
             auto viewOut = viskores::cont::make_ArrayHandleView(concreteOut, offset, copySize);
             viskores::cont::ArrayCopy(in, viewOut);
@@ -456,7 +459,8 @@ void MergeFieldsAndAddIntoDataSet(viskores::cont::DataSet& outputDataSet,
             {
               copySize = partitionedDataSet.GetPartition(partitionIndex).GetNumberOfCells();
             }
-            for (viskores::IdComponent component = 0; component < concreteOut.GetNumberOfComponents();
+            for (viskores::IdComponent component = 0;
+                 component < concreteOut.GetNumberOfComponents();
                  ++component)
             {
               //Extracting each component from RecombineVec and copy invalid value into it

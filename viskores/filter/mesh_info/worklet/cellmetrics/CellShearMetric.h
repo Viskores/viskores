@@ -57,9 +57,9 @@ namespace cellmetrics
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellShearMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  CellShapeType shape,
-                                  viskores::ErrorCode&)
+                                      const PointCoordVecType& pts,
+                                      CellShapeType shape,
+                                      viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -71,9 +71,9 @@ VISKORES_EXEC OutType CellShearMetric(const viskores::IdComponent& numPts,
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellShearMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  viskores::CellShapeTagQuad,
-                                  viskores::ErrorCode& ec)
+                                      const PointCoordVecType& pts,
+                                      viskores::CellShapeTagQuad,
+                                      viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -108,9 +108,9 @@ VISKORES_EXEC OutType CellShearMetric(const viskores::IdComponent& numPts,
 
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellShearMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  viskores::CellShapeTagHexahedron,
-                                  viskores::ErrorCode& ec)
+                                      const PointCoordVecType& pts,
+                                      viskores::CellShapeTagHexahedron,
+                                      viskores::ErrorCode& ec)
 {
   if (numPts != 8)
   {
@@ -132,7 +132,10 @@ VISKORES_EXEC OutType CellShearMetric(const viskores::IdComponent& numPts,
 
   const Scalar q = viskores::Min(
     a0,
-    viskores::Min(a1, viskores::Min(a2, viskores::Min(a3, viskores::Min(a4, viskores::Min(a5, viskores::Min(a6, a7)))))));
+    viskores::Min(
+      a1,
+      viskores::Min(
+        a2, viskores::Min(a3, viskores::Min(a4, viskores::Min(a5, viskores::Min(a6, a7)))))));
 
   return q;
 }

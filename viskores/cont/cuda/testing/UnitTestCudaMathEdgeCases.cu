@@ -49,8 +49,8 @@ struct TriggerICE : public viskores::worklet::WorkletMapField
     int signGood = viskores::SignBit(bad);
 
     viskores::Vec<ValueType, 3> coord = { viskores::Abs(bad * sane),
-                                      bad * sane + (ValueType)signBad,
-                                      bad * sane + (ValueType)signGood };
+                                          bad * sane + (ValueType)signBad,
+                                          bad * sane + (ValueType)signGood };
 
     for (int i = 0; i < 10; ++i)
     {
@@ -76,7 +76,9 @@ struct TriggerICE : public viskores::worklet::WorkletMapField
   }
 #else
   template <class ValueType>
-  ValueType operator()(const ValueType& bad, const ValueType& sane, const viskores::Id sequenceId) const
+  ValueType operator()(const ValueType& bad,
+                       const ValueType& sane,
+                       const viskores::Id sequenceId) const
   {
     return bad + sane * static_cast<ValueType>(sequenceId);
   }

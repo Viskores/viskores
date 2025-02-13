@@ -80,7 +80,8 @@ public:
   VISKORES_EXEC_CONT
   CompressRegularisedNodesCopyNecessaryRegularNodesWorklet() {}
 
-  VISKORES_EXEC void operator()(viskores::Id& newVertexIdIn, const viskores::Id& keptInBoundaryTree) const
+  VISKORES_EXEC void operator()(viskores::Id& newVertexIdIn,
+                                const viskores::Id& keptInBoundaryTree) const
   {
     if (!viskores::worklet::contourtree_augmented::NoSuchElement(newVertexIdIn))
     {

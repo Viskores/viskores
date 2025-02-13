@@ -79,7 +79,8 @@ struct AddToArrayElementsWorklet : public viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldInOut, FieldIn);
 
-  VISKORES_EXEC void operator()(viskores::Id& arrayValue, const viskores::IdComponent& addedValue) const
+  VISKORES_EXEC void operator()(viskores::Id& arrayValue,
+                                const viskores::IdComponent& addedValue) const
   {
     arrayValue += addedValue;
   }

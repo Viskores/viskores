@@ -104,7 +104,7 @@ public:
   } // constructor
 
   VISKORES_CONT HyperarcComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                       viskores::cont::Token& token) const
+                                                           viskores::cont::Token& token) const
   {
     return HyperarcComparatorImpl(this->Hyperarcs.PrepareForInput(device, token));
   }

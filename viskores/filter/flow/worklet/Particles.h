@@ -71,7 +71,8 @@ public:
   }
 
   VISKORES_EXEC
-  void StatusUpdate(const viskores::Id& idx, const viskores::worklet::flow::IntegratorStatus& status)
+  void StatusUpdate(const viskores::Id& idx,
+                    const viskores::worklet::flow::IntegratorStatus& status)
   {
     ParticleType p(this->GetParticle(idx));
 
@@ -142,7 +143,7 @@ public:
   }
 
   VISKORES_CONT auto PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                     viskores::cont::Token& token) const
+                                         viskores::cont::Token& token) const
     -> viskores::worklet::flow::ParticleExecutionObject<
       ParticleType,
       decltype(this->Termination.PrepareForExecution(device, token)),

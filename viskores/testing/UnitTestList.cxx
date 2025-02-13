@@ -116,8 +116,8 @@ struct ConstantFunctor
 
 void TryForEach()
 {
-  using TestList =
-    viskores::List<TestClass<1>, TestClass<1>, TestClass<2>, TestClass<3>, TestClass<5>, TestClass<8>>;
+  using TestList = viskores::
+    List<TestClass<1>, TestClass<1>, TestClass<2>, TestClass<3>, TestClass<5>, TestClass<8>>;
   const std::vector<int> expectedList = { 1, 1, 2, 3, 5, 8 };
 
   std::cout << "Check mutable for each" << std::endl;
@@ -136,39 +136,40 @@ void TestLists()
   using SimpleCount = viskores::List<TestClass<1>, TestClass<2>, TestClass<3>, TestClass<4>>;
   using EvenList = viskores::List<TestClass<2>, TestClass<4>, TestClass<6>, TestClass<8>>;
   using LongList = viskores::List<TestClass<1>,
-                              TestClass<2>,
-                              TestClass<3>,
-                              TestClass<4>,
-                              TestClass<5>,
-                              TestClass<6>,
-                              TestClass<7>,
-                              TestClass<8>,
-                              TestClass<9>,
-                              TestClass<10>,
-                              TestClass<11>,
-                              TestClass<12>,
-                              TestClass<13>,
-                              TestClass<14>>;
+                                  TestClass<2>,
+                                  TestClass<3>,
+                                  TestClass<4>,
+                                  TestClass<5>,
+                                  TestClass<6>,
+                                  TestClass<7>,
+                                  TestClass<8>,
+                                  TestClass<9>,
+                                  TestClass<10>,
+                                  TestClass<11>,
+                                  TestClass<12>,
+                                  TestClass<13>,
+                                  TestClass<14>>;
   using RepeatList = viskores::List<TestClass<1>,
-                                TestClass<1>,
-                                TestClass<1>,
-                                TestClass<1>,
-                                TestClass<1>,
-                                TestClass<1>,
-                                TestClass<1>,
-                                TestClass<1>,
-                                TestClass<1>,
-                                TestClass<1>,
-                                TestClass<1>,
-                                TestClass<1>,
-                                TestClass<1>,
-                                TestClass<14>>;
+                                    TestClass<1>,
+                                    TestClass<1>,
+                                    TestClass<1>,
+                                    TestClass<1>,
+                                    TestClass<1>,
+                                    TestClass<1>,
+                                    TestClass<1>,
+                                    TestClass<1>,
+                                    TestClass<1>,
+                                    TestClass<1>,
+                                    TestClass<1>,
+                                    TestClass<1>,
+                                    TestClass<14>>;
 
   TryForEach();
 
   std::cout << "Valid List Tag Checks" << std::endl;
   VISKORES_TEST_ASSERT(viskores::internal::IsList<viskores::List<TestClass<11>>>::value);
-  VISKORES_TEST_ASSERT(viskores::internal::IsList<viskores::List<TestClass<21>, TestClass<22>>>::value);
+  VISKORES_TEST_ASSERT(
+    viskores::internal::IsList<viskores::List<TestClass<21>, TestClass<22>>>::value);
   VISKORES_TEST_ASSERT(viskores::internal::IsList<viskores::ListEmpty>::value);
   VISKORES_TEST_ASSERT(viskores::internal::IsList<viskores::ListUniversal>::value);
 
@@ -177,14 +178,14 @@ void TestLists()
 
   std::cout << "ListAppend" << std::endl;
   CheckList(viskores::List<TestClass<31>,
-                       TestClass<32>,
-                       TestClass<33>,
-                       TestClass<11>,
-                       TestClass<21>,
-                       TestClass<22>>{},
+                           TestClass<32>,
+                           TestClass<33>,
+                           TestClass<11>,
+                           TestClass<21>,
+                           TestClass<22>>{},
             viskores::ListAppend<viskores::List<TestClass<31>, TestClass<32>, TestClass<33>>,
-                             viskores::List<TestClass<11>>,
-                             viskores::List<TestClass<21>, TestClass<22>>>{});
+                                 viskores::List<TestClass<11>>,
+                                 viskores::List<TestClass<21>, TestClass<22>>>{});
 
   std::cout << "ListFill" << std::endl;
   CheckList(viskores::List<int, int, int, int, int>{}, viskores::ListFill<int, 5>{});
@@ -201,10 +202,12 @@ void TestLists()
             viskores::ListIntersect<
               viskores::List<TestClass<1>, TestClass<2>, TestClass<3>, TestClass<4>, TestClass<5>>,
               viskores::List<TestClass<3>, TestClass<5>, TestClass<6>>>{});
-  CheckList(viskores::List<TestClass<1>, TestClass<2>>{},
-            viskores::ListIntersect<viskores::List<TestClass<1>, TestClass<2>>, viskores::ListUniversal>{});
-  CheckList(viskores::List<TestClass<1>, TestClass<2>>{},
-            viskores::ListIntersect<viskores::ListUniversal, viskores::List<TestClass<1>, TestClass<2>>>{});
+  CheckList(
+    viskores::List<TestClass<1>, TestClass<2>>{},
+    viskores::ListIntersect<viskores::List<TestClass<1>, TestClass<2>>, viskores::ListUniversal>{});
+  CheckList(
+    viskores::List<TestClass<1>, TestClass<2>>{},
+    viskores::ListIntersect<viskores::ListUniversal, viskores::List<TestClass<1>, TestClass<2>>>{});
 
   std::cout << "ListSize" << std::endl;
   VISKORES_TEST_ASSERT(viskores::ListSize<viskores::ListEmpty>::value == 0);
@@ -213,13 +216,13 @@ void TestLists()
 
   std::cout << "ListCross" << std::endl;
   CheckList(viskores::List<viskores::List<TestClass<31>, TestClass<11>>,
-                       viskores::List<TestClass<31>, TestClass<12>>,
-                       viskores::List<TestClass<32>, TestClass<11>>,
-                       viskores::List<TestClass<32>, TestClass<12>>,
-                       viskores::List<TestClass<33>, TestClass<11>>,
-                       viskores::List<TestClass<33>, TestClass<12>>>{},
+                           viskores::List<TestClass<31>, TestClass<12>>,
+                           viskores::List<TestClass<32>, TestClass<11>>,
+                           viskores::List<TestClass<32>, TestClass<12>>,
+                           viskores::List<TestClass<33>, TestClass<11>>,
+                           viskores::List<TestClass<33>, TestClass<12>>>{},
             viskores::ListCross<viskores::List<TestClass<31>, TestClass<32>, TestClass<33>>,
-                            viskores::List<TestClass<11>, TestClass<12>>>{});
+                                viskores::List<TestClass<11>, TestClass<12>>>{});
 
   std::cout << "ListAt" << std::endl;
   CheckSame(TestClass<2>{}, viskores::ListAt<EvenList, 0>{});
@@ -294,8 +297,10 @@ void TestLists()
   std::cout << "ListAll" << std::endl;
   VISKORES_TEST_ASSERT(
     (viskores::ListAll<viskores::ListTransform<SimpleCount, EvenPredicate>>::value == false));
-  VISKORES_TEST_ASSERT((viskores::ListAll<viskores::ListTransform<EvenList, EvenPredicate>>::value == true));
-  VISKORES_TEST_ASSERT((viskores::ListAll<viskores::ListTransform<LongList, EvenPredicate>>::value == false));
+  VISKORES_TEST_ASSERT(
+    (viskores::ListAll<viskores::ListTransform<EvenList, EvenPredicate>>::value == true));
+  VISKORES_TEST_ASSERT(
+    (viskores::ListAll<viskores::ListTransform<LongList, EvenPredicate>>::value == false));
   VISKORES_TEST_ASSERT((viskores::ListAll<viskores::List<>>::value == true));
   VISKORES_TEST_ASSERT((viskores::ListAll<SimpleCount, EvenPredicate>::value == false));
   VISKORES_TEST_ASSERT((viskores::ListAll<EvenList, EvenPredicate>::value == true));
@@ -303,10 +308,14 @@ void TestLists()
   VISKORES_TEST_ASSERT((viskores::ListAll<viskores::List<>, EvenPredicate>::value == true));
 
   std::cout << "ListAny" << std::endl;
-  VISKORES_TEST_ASSERT((viskores::ListAny<viskores::ListTransform<SimpleCount, EvenPredicate>>::value == true));
-  VISKORES_TEST_ASSERT((viskores::ListAny<viskores::ListTransform<EvenList, EvenPredicate>>::value == true));
-  VISKORES_TEST_ASSERT((viskores::ListAny<viskores::ListTransform<EvenList, OddPredicate>>::value == false));
-  VISKORES_TEST_ASSERT((viskores::ListAny<viskores::ListTransform<LongList, EvenPredicate>>::value == true));
+  VISKORES_TEST_ASSERT(
+    (viskores::ListAny<viskores::ListTransform<SimpleCount, EvenPredicate>>::value == true));
+  VISKORES_TEST_ASSERT(
+    (viskores::ListAny<viskores::ListTransform<EvenList, EvenPredicate>>::value == true));
+  VISKORES_TEST_ASSERT(
+    (viskores::ListAny<viskores::ListTransform<EvenList, OddPredicate>>::value == false));
+  VISKORES_TEST_ASSERT(
+    (viskores::ListAny<viskores::ListTransform<LongList, EvenPredicate>>::value == true));
   VISKORES_TEST_ASSERT((viskores::ListAny<viskores::List<>>::value == false));
   VISKORES_TEST_ASSERT((viskores::ListAny<SimpleCount, EvenPredicate>::value == true));
   VISKORES_TEST_ASSERT((viskores::ListAny<EvenList, EvenPredicate>::value == true));

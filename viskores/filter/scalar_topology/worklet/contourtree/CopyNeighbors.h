@@ -85,8 +85,8 @@ public:
 
   template <typename InFieldPortalType>
   VISKORES_EXEC viskores::Id operator()(const viskores::Id& activeSupernode,
-                                const InFieldPortalType& activeSupernodes,
-                                const InFieldPortalType& arcs) const
+                                        const InFieldPortalType& activeSupernodes,
+                                        const InFieldPortalType& arcs) const
   {
     viskores::Id sortVector;
     viskores::Id superID = activeSupernodes.Get(activeSupernode);

@@ -39,8 +39,9 @@ void TestPixelTypeOperations(const viskores::UInt16& numPixels = 10)
   }
 
   // Test that the imageData values were set correctly
-  VISKORES_TEST_ASSERT(static_cast<viskores::Id>(imageData.size()) == numPixels * numChannels * numBytes,
-                   "Wrong number of elements");
+  VISKORES_TEST_ASSERT(static_cast<viskores::Id>(imageData.size()) ==
+                         numPixels * numChannels * numBytes,
+                       "Wrong number of elements");
   for (ValType j = 0; j < numBytes; j++)
   {
     for (ValType i = 0; i < numPixels; i++)
@@ -48,9 +49,9 @@ void TestPixelTypeOperations(const viskores::UInt16& numPixels = 10)
       for (ValType k = numChannels * i; k < numChannels * i + numChannels; k++)
       {
         VISKORES_TEST_ASSERT(imageData[k * numBytes + j] == i + j,
-                         "Wrong value at index[" + std::to_string(k * numBytes + j) +
-                           "]: " + std::to_string(imageData[k * numBytes + j]) +
-                           " != " + std::to_string(i + j));
+                             "Wrong value at index[" + std::to_string(k * numBytes + j) +
+                               "]: " + std::to_string(imageData[k * numBytes + j]) +
+                               " != " + std::to_string(i + j));
       }
     }
   }
@@ -59,8 +60,8 @@ void TestPixelTypeOperations(const viskores::UInt16& numPixels = 10)
   for (viskores::Id i = 0; i < numPixels; i++)
   {
     VISKORES_TEST_ASSERT(pixelVector[static_cast<typename std::vector<PixelType>::size_type>(i)] ==
-                       PixelType(imageData.data(), i),
-                     "Incorrect pixel value");
+                           PixelType(imageData.data(), i),
+                         "Incorrect pixel value");
   }
 }
 
@@ -96,15 +97,19 @@ void TestGreyPixelConstructors()
   VISKORES_TEST_ASSERT(viskores::UInt16(1) == pixel_1[0], "Type mis-match");
   VISKORES_TEST_ASSERT(viskores::FloatDefault(0) == pixel_1.Diff(pixel_2), "Incorrect Diff");
   VISKORES_TEST_ASSERT(viskores::FloatDefault(1) == pixel_1.Diff(pixel_3), "Incorrect Diff");
-  VISKORES_TEST_ASSERT(viskores::Vec4f_32(1.0f / 255, 1.0f / 255, 1.0f / 255, 1) == pixel_1.ToVec4f(),
-                   "Incorrect Conversion");
-  VISKORES_TEST_ASSERT(viskores::Vec<viskores::UInt8, 1>(1) == pixel_4, "Bad 1st value 8 bit construct");
-  VISKORES_TEST_ASSERT(viskores::Vec<viskores::UInt8, 1>(2) == pixel_5, "Bad 2nd value 8 bit construct");
+  VISKORES_TEST_ASSERT(viskores::Vec4f_32(1.0f / 255, 1.0f / 255, 1.0f / 255, 1) ==
+                         pixel_1.ToVec4f(),
+                       "Incorrect Conversion");
+  VISKORES_TEST_ASSERT(viskores::Vec<viskores::UInt8, 1>(1) == pixel_4,
+                       "Bad 1st value 8 bit construct");
+  VISKORES_TEST_ASSERT(viskores::Vec<viskores::UInt8, 1>(2) == pixel_5,
+                       "Bad 2nd value 8 bit construct");
   VISKORES_TEST_ASSERT(viskores::Vec<viskores::UInt16, 1>(258) == pixel_6, "Bad 16 bit construct");
   VISKORES_TEST_ASSERT(viskores::Vec4f_32(258.0f / 65535, 258.0f / 65535, 258.0f / 65535, 1) ==
-                     pixel_6.ToVec4f(),
-                   "Incorrect Conversion");
-  VISKORES_TEST_ASSERT(viskores::Vec<viskores::UInt16, 1>(10) == pixel_7, "Bad Vec4f_32 construction");
+                         pixel_6.ToVec4f(),
+                       "Incorrect Conversion");
+  VISKORES_TEST_ASSERT(viskores::Vec<viskores::UInt16, 1>(10) == pixel_7,
+                       "Bad Vec4f_32 construction");
 
   VISKORES_TEST_ASSERT(GreyPixel<16>::GetBitDepth() == 16, "Bad BitDepth");
   VISKORES_TEST_ASSERT(GreyPixel<16>::BIT_DEPTH == 16, "Bad BitDepth");
@@ -137,15 +142,17 @@ void TestRGBPixelConstructors()
   VISKORES_TEST_ASSERT(viskores::FloatDefault(0) == pixel_1.Diff(pixel_2), "Incorrect Diff");
   VISKORES_TEST_ASSERT(viskores::FloatDefault(0) == pixel_1.Diff(pixel_3), "Incorrect Diff");
   VISKORES_TEST_ASSERT(viskores::FloatDefault(3) == pixel_1.Diff(pixel_4), "Incorrect Diff");
-  VISKORES_TEST_ASSERT(viskores::Vec4f_32(1.0f / 255, 1.0f / 255, 1.0f / 255, 1) == pixel_1.ToVec4f(),
-                   "Incorrect Conversion");
+  VISKORES_TEST_ASSERT(viskores::Vec4f_32(1.0f / 255, 1.0f / 255, 1.0f / 255, 1) ==
+                         pixel_1.ToVec4f(),
+                       "Incorrect Conversion");
   VISKORES_TEST_ASSERT(viskores::Vec3ui_8(1, 2, 3) == pixel_5, "Bad 1st value 8 bit construct");
   VISKORES_TEST_ASSERT(viskores::Vec3ui_8(4, 5, 6) == pixel_6, "Bad 2nd value 8 bit construct");
   VISKORES_TEST_ASSERT(viskores::Vec3ui_16(258, 772, 1286) == pixel_7, "Bad 16 bit construct");
   VISKORES_TEST_ASSERT(viskores::Vec4f_32(258.0f / 65535, 772.0f / 65535, 1286.0f / 65535, 1) ==
-                     pixel_7.ToVec4f(),
-                   "Incorrect Conversion");
-  VISKORES_TEST_ASSERT(viskores::Vec<viskores::UInt16, 3>(10, 10, 10) == pixel_8, "Bad Vec4f_32 construction");
+                         pixel_7.ToVec4f(),
+                       "Incorrect Conversion");
+  VISKORES_TEST_ASSERT(viskores::Vec<viskores::UInt16, 3>(10, 10, 10) == pixel_8,
+                       "Bad Vec4f_32 construction");
 
   VISKORES_TEST_ASSERT(RGBPixel<16>::GetBitDepth() == 16, "Bad BitDepth");
   VISKORES_TEST_ASSERT(RGBPixel<16>::BIT_DEPTH == 16, "Bad BitDepth");

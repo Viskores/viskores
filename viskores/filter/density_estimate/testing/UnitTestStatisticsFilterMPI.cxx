@@ -19,7 +19,7 @@
 namespace
 {
 viskores::FloatDefault getStatsFromDataSet(const viskores::cont::PartitionedDataSet& dataset,
-                                       const std::string statName)
+                                           const std::string statName)
 {
   viskores::cont::ArrayHandle<viskores::FloatDefault> array;
   dataset.GetField(statName).GetData().AsArrayHandle(array);
@@ -160,7 +160,8 @@ void TestStatisticsMPIPartitionDataSets()
 
   for (viskores::Id i = 0; i < workloadPerPartition1; i++)
   {
-    writePortal1.Set(i, static_cast<viskores::FloatDefault>(offsetRank + workloadPerPartition0 + i));
+    writePortal1.Set(i,
+                     static_cast<viskores::FloatDefault>(offsetRank + workloadPerPartition0 + i));
   }
 
   dataSet1.AddPointField("scalarField", scalarArray1);

@@ -133,8 +133,9 @@ void Run()
   VISKORES_TEST_ASSERT(!errorMessage.IsErrorRaised(), "Error finding normal.");
   VISKORES_TEST_ASSERT(test_equal(normal, expectedNormal), "Bad normal.");
 
-  normal = CellNormal(
-    viskores::CellShapeTagGeneric(viskores::CELL_SHAPE_TRIANGLE), pointCoordinates, worklet);
+  normal = CellNormal(viskores::CellShapeTagGeneric(viskores::CELL_SHAPE_TRIANGLE),
+                      pointCoordinates,
+                      worklet);
   VISKORES_TEST_ASSERT(!errorMessage.IsErrorRaised(), "Error finding normal.");
   VISKORES_TEST_ASSERT(test_equal(normal, expectedNormal), "Bad normal.");
 

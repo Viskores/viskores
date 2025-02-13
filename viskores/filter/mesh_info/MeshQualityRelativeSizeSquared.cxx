@@ -35,7 +35,8 @@ struct RelativeSizeSquaredWorklet : MeshQualityWorklet<RelativeSizeSquaredWorkle
   viskores::Float64 AverageArea;
   viskores::Float64 AverageVolume;
 
-  VISKORES_CONT RelativeSizeSquaredWorklet(viskores::Float64 averageArea, viskores::Float64 averageVolume)
+  VISKORES_CONT RelativeSizeSquaredWorklet(viskores::Float64 averageArea,
+                                           viskores::Float64 averageVolume)
     : AverageArea(averageArea)
     , AverageVolume(averageVolume)
   {
@@ -50,16 +51,17 @@ struct RelativeSizeSquaredWorklet : MeshQualityWorklet<RelativeSizeSquaredWorkle
     return this->AverageVolume;
   }
   template <viskores::IdComponent Dimension>
-  VISKORES_EXEC viskores::Float64 GetAverageSize(viskores::CellTopologicalDimensionsTag<Dimension>) const
+  VISKORES_EXEC viskores::Float64 GetAverageSize(
+    viskores::CellTopologicalDimensionsTag<Dimension>) const
   {
     return 1;
   }
 
   template <typename OutType, typename PointCoordVecType, typename CellShapeType>
   VISKORES_EXEC OutType ComputeMetric(const viskores::IdComponent& numPts,
-                                  const PointCoordVecType& pts,
-                                  CellShapeType shape,
-                                  viskores::ErrorCode& ec) const
+                                      const PointCoordVecType& pts,
+                                      CellShapeType shape,
+                                      viskores::ErrorCode& ec) const
   {
     using DimensionTag = typename viskores::CellTraits<CellShapeType>::TopologicalDimensionsTag;
     return viskores::worklet::cellmetrics::CellRelativeSizeSquaredMetric<OutType>(
@@ -82,12 +84,14 @@ MeshQualityRelativeSizeSquared::MeshQualityRelativeSizeSquared()
   this->SetOutputFieldName("relativeSizeSquared");
 }
 
-viskores::cont::DataSet MeshQualityRelativeSizeSquared::DoExecute(const viskores::cont::DataSet& input)
+viskores::cont::DataSet MeshQualityRelativeSizeSquared::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   RelativeSizeSquaredWorklet worklet(
     viskores::filter::mesh_info::MeshQualityArea{}.ComputeAverageArea(input),
     viskores::filter::mesh_info::MeshQualityVolume{}.ComputeAverageVolume(input));
-  viskores::cont::UnknownArrayHandle outArray = worklet.Run(input, this->GetFieldFromDataSet(input));
+  viskores::cont::UnknownArrayHandle outArray =
+    worklet.Run(input, this->GetFieldFromDataSet(input));
 
   return this->CreateResultFieldCell(input, this->GetOutputFieldName(), outArray);
 }

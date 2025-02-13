@@ -48,10 +48,11 @@ struct Actor::InternalsType
   }
 
   VISKORES_CONT
-  InternalsType(const viskores::cont::PartitionedDataSet partitionedDataSet,
-                const std::string coordinateName,
-                const std::string fieldName,
-                const viskores::cont::ColorTable& colorTable = viskores::cont::ColorTable::Preset::Default)
+  InternalsType(
+    const viskores::cont::PartitionedDataSet partitionedDataSet,
+    const std::string coordinateName,
+    const std::string fieldName,
+    const viskores::cont::ColorTable& colorTable = viskores::cont::ColorTable::Preset::Default)
     : Data(partitionedDataSet)
     , CoordinateName(coordinateName)
     , FieldName(fieldName)

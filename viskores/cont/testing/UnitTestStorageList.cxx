@@ -41,7 +41,8 @@ struct TestFunctor
 template <viskores::IdComponent N>
 void CheckSame(const viskores::Vec<TypeId, N>& expected, const std::vector<TypeId>& found)
 {
-  VISKORES_TEST_ASSERT(static_cast<viskores::IdComponent>(found.size()) == N, "Got wrong number of items.");
+  VISKORES_TEST_ASSERT(static_cast<viskores::IdComponent>(found.size()) == N,
+                       "Got wrong number of items.");
 
   for (viskores::IdComponent index = 0; index < N; index++)
   {

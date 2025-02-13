@@ -50,13 +50,14 @@ void MapperGlyphVector::SetGlyphType(viskores::rendering::GlyphType glyphType)
   this->GlyphType = glyphType;
 }
 
-void MapperGlyphVector::RenderCellsImpl(const viskores::cont::UnknownCellSet& cellset,
-                                        const viskores::cont::CoordinateSystem& coords,
-                                        const viskores::cont::Field& field,
-                                        const viskores::cont::ColorTable& viskoresNotUsed(colorTable),
-                                        const viskores::rendering::Camera& camera,
-                                        const viskores::Range& viskoresNotUsed(fieldRange),
-                                        const viskores::cont::Field& viskoresNotUsed(ghostField))
+void MapperGlyphVector::RenderCellsImpl(
+  const viskores::cont::UnknownCellSet& cellset,
+  const viskores::cont::CoordinateSystem& coords,
+  const viskores::cont::Field& field,
+  const viskores::cont::ColorTable& viskoresNotUsed(colorTable),
+  const viskores::rendering::Camera& camera,
+  const viskores::Range& viskoresNotUsed(fieldRange),
+  const viskores::cont::Field& viskoresNotUsed(ghostField))
 {
   raytracing::Logger* logger = raytracing::Logger::GetInstance();
 

@@ -45,8 +45,8 @@ public:
   using ExecutionSignature = void(_1, _2, WorkIndex);
   template <typename ShapePortalType>
   VISKORES_EXEC inline void operator()(const ShapePortalType& shapes,
-                                   viskores::Id& faces,
-                                   const viskores::Id& index) const
+                                       viskores::Id& faces,
+                                       const viskores::Id& index) const
   {
     BOUNDS_CHECK(shapes, index);
     viskores::UInt8 shapeType = shapes.Get(index);
@@ -137,13 +137,13 @@ public:
             typename ExternalFaceFlagType,
             typename UniqueFacesType>
   VISKORES_EXEC inline void operator()(const MortonPortalType& mortonCodes,
-                                   FaceIdPairsPortalType& faceIdPairs,
-                                   const viskores::Id& index,
-                                   const ConnPortalType& connectivity,
-                                   const ShapePortalType& shapes,
-                                   const OffsetPortalType& offsets,
-                                   ExternalFaceFlagType& flags,
-                                   UniqueFacesType& uniqueFaces) const
+                                       FaceIdPairsPortalType& faceIdPairs,
+                                       const viskores::Id& index,
+                                       const ConnPortalType& connectivity,
+                                       const ShapePortalType& shapes,
+                                       const OffsetPortalType& offsets,
+                                       ExternalFaceFlagType& flags,
+                                       UniqueFacesType& uniqueFaces) const
   {
     if (index == 0)
     {
@@ -173,8 +173,8 @@ public:
         viskores::Id cellId2 = faceIdPairs.Get(currentIndex)[0];
         BOUNDS_CHECK(shapes, cellId1);
         BOUNDS_CHECK(shapes, cellId2);
-        viskores::Int32 shape1Offset =
-          GetShapeOffset(shapes.Get(cellId1)) + static_cast<viskores::Int32>(faceIdPairs.Get(index)[1]);
+        viskores::Int32 shape1Offset = GetShapeOffset(shapes.Get(cellId1)) +
+          static_cast<viskores::Int32>(faceIdPairs.Get(index)[1]);
         viskores::Int32 shape2Offset = GetShapeOffset(shapes.Get(cellId2)) +
           static_cast<viskores::Int32>(faceIdPairs.Get(currentIndex)[1]);
 
@@ -264,11 +264,11 @@ public:
             typename OutIndicesPortalType,
             typename ShapeOffsetsPortal>
   VISKORES_EXEC inline void operator()(const viskores::Id3& faceIdPair,
-                                   const ShapePortalType& shapes,
-                                   const ShapeOffsetsPortal& shapeOffsets,
-                                   const InIndicesPortalType& indices,
-                                   const OutIndicesPortalType& outputIndices,
-                                   const viskores::Id& outputOffset) const
+                                       const ShapePortalType& shapes,
+                                       const ShapeOffsetsPortal& shapeOffsets,
+                                       const InIndicesPortalType& indices,
+                                       const OutIndicesPortalType& outputIndices,
+                                       const viskores::Id& outputOffset) const
   {
     CellTables tables;
 
@@ -326,8 +326,8 @@ public:
 
   template <typename FaceOffsetsPortalType, typename FaceConnectivityPortalType>
   VISKORES_EXEC inline void operator()(const viskores::Id3& faceIdPair,
-                                   const FaceOffsetsPortalType& faceOffsets,
-                                   FaceConnectivityPortalType& faceConn) const
+                                       const FaceOffsetsPortalType& faceOffsets,
+                                       FaceConnectivityPortalType& faceConn) const
   {
     viskores::Id cellId = faceIdPair[0];
     BOUNDS_CHECK(faceOffsets, cellId);
@@ -372,7 +372,8 @@ public:
   using ControlSignature = void(FieldIn, WholeArrayOut);
   using ExecutionSignature = void(_1, _2);
   template <typename TrianglePortalType>
-  VISKORES_EXEC inline void operator()(const viskores::Id& index, TrianglePortalType& triangles) const
+  VISKORES_EXEC inline void operator()(const viskores::Id& index,
+                                       TrianglePortalType& triangles) const
   {
     // Each one of size segments will process
     // one face of the hex and domain
@@ -475,8 +476,8 @@ public:
   using ExecutionSignature = void(_1, _2, _3);
   template <typename ShapePortalType>
   VISKORES_EXEC inline void operator()(const viskores::Id3& faceIdPair,
-                                   const ShapePortalType& shapes,
-                                   viskores::Id& triangleCount) const
+                                       const ShapePortalType& shapes,
+                                       viskores::Id& triangleCount) const
   {
     CellTables tables;
     viskores::Id cellId = faceIdPair[0];
@@ -503,16 +504,17 @@ template <typename CellSetType,
           typename ConnHandleType,
           typename OffsetsHandleType,
           typename CoordsType>
-VISKORES_CONT void GenerateFaceConnnectivity(const CellSetType cellSet,
-                                         const ShapeHandleType shapes,
-                                         const ConnHandleType conn,
-                                         const OffsetsHandleType shapeOffsets,
-                                         const CoordsType& coords,
-                                         viskores::cont::ArrayHandle<viskores::Id>& faceConnectivity,
-                                         viskores::cont::ArrayHandle<viskores::Id3>& cellFaceId,
-                                         viskores::Float32 BoundingBox[6],
-                                         viskores::cont::ArrayHandle<viskores::Id>& faceOffsets,
-                                         viskores::cont::ArrayHandle<viskores::Int32>& uniqueFaces)
+VISKORES_CONT void GenerateFaceConnnectivity(
+  const CellSetType cellSet,
+  const ShapeHandleType shapes,
+  const ConnHandleType conn,
+  const OffsetsHandleType shapeOffsets,
+  const CoordsType& coords,
+  viskores::cont::ArrayHandle<viskores::Id>& faceConnectivity,
+  viskores::cont::ArrayHandle<viskores::Id3>& cellFaceId,
+  viskores::Float32 BoundingBox[6],
+  viskores::cont::ArrayHandle<viskores::Id>& faceOffsets,
+  viskores::cont::ArrayHandle<viskores::Int32>& uniqueFaces)
 {
 
   viskores::cont::Timer timer;
@@ -597,7 +599,7 @@ VISKORES_CONT void GenerateFaceConnnectivity(const CellSetType cellSet,
 
 template <typename ShapeHandleType, typename OffsetsHandleType, typename ConnHandleType>
 VISKORES_CONT viskores::cont::ArrayHandle<viskores::Vec<Id, 4>> ExtractFaces(
-  viskores::cont::ArrayHandle<viskores::Id3> cellFaceId,    // Map of cell, face, and connecting cell
+  viskores::cont::ArrayHandle<viskores::Id3> cellFaceId, // Map of cell, face, and connecting cell
   viskores::cont::ArrayHandle<viskores::Int32> uniqueFaces, // -1 if the face is unique
   const ShapeHandleType& shapes,
   const ConnHandleType& conn,
@@ -628,7 +630,8 @@ VISKORES_CONT viskores::cont::ArrayHandle<viskores::Vec<Id, 4>> ExtractFaces(
   viskores::cont::Algorithm::ScanExclusive(trianglesPerExternalFace, externalTriangleOffsets);
 
   viskores::Id totalExternalTriangles;
-  totalExternalTriangles = viskores::cont::Algorithm::Reduce(trianglesPerExternalFace, viskores::Id(0));
+  totalExternalTriangles =
+    viskores::cont::Algorithm::Reduce(trianglesPerExternalFace, viskores::Id(0));
   viskores::cont::ArrayHandle<viskores::Id4> externalTriangles;
   //externalTriangles.PrepareForOutput(totalExternalTriangles, DeviceAdapter());
   externalTriangles.Allocate(totalExternalTriangles);
@@ -668,14 +671,16 @@ void MeshConnectivityBuilder::BuildConnectivity(
   BoundingBox[4] = viskores::Float32(coordsBounds.Z.Min);
   BoundingBox[5] = viskores::Float32(coordsBounds.Z.Max);
 
-  const viskores::cont::ArrayHandleConstant<viskores::UInt8> shapes = cellSetUnstructured.GetShapesArray(
-    viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+  const viskores::cont::ArrayHandleConstant<viskores::UInt8> shapes =
+    cellSetUnstructured.GetShapesArray(viskores::TopologyElementTagCell(),
+                                       viskores::TopologyElementTagPoint());
 
   const viskores::cont::ArrayHandle<viskores::Id> conn = cellSetUnstructured.GetConnectivityArray(
     viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
 
-  const viskores::cont::ArrayHandleCounting<viskores::Id> offsets = cellSetUnstructured.GetOffsetsArray(
-    viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+  const viskores::cont::ArrayHandleCounting<viskores::Id> offsets =
+    cellSetUnstructured.GetOffsetsArray(viskores::TopologyElementTagCell(),
+                                        viskores::TopologyElementTagPoint());
   const auto shapeOffsets =
     viskores::cont::make_ArrayHandleView(offsets, 0, offsets.GetNumberOfValues() - 1);
 
@@ -776,9 +781,9 @@ struct StructuredTrianglesFunctor
 {
   template <typename Device>
   VISKORES_CONT bool operator()(Device,
-                            viskores::cont::ArrayHandleCounting<viskores::Id>& counting,
-                            viskores::cont::ArrayHandle<viskores::Id4>& triangles,
-                            viskores::cont::CellSetStructured<3>& cellSet) const
+                                viskores::cont::ArrayHandleCounting<viskores::Id>& counting,
+                                viskores::cont::ArrayHandle<viskores::Id4>& triangles,
+                                viskores::cont::CellSetStructured<3>& cellSet) const
   {
     VISKORES_IS_DEVICE_ADAPTER_TAG(Device);
     viskores::cont::Token token;
@@ -859,8 +864,8 @@ MeshConnectivityContainer* MeshConnectivityBuilder::BuildConnectivity(
     //
     // Now we need to determine what type of cells this holds
     //
-    viskores::cont::ArrayHandleConstant<viskores::UInt8> shapes =
-      singleType.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+    viskores::cont::ArrayHandleConstant<viskores::UInt8> shapes = singleType.GetShapesArray(
+      viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
     viskores::UInt8 shapeType = shapes.ReadPortal().Get(0);
     if (shapeType == CELL_SHAPE_HEXAHEDRON)
       type = UnstructuredSingle;
@@ -891,21 +896,24 @@ MeshConnectivityContainer* MeshConnectivityBuilder::BuildConnectivity(
 
   if (type == Unstructured)
   {
-    viskores::cont::CellSetExplicit<> cells = cellset.AsCellSet<viskores::cont::CellSetExplicit<>>();
+    viskores::cont::CellSetExplicit<> cells =
+      cellset.AsCellSet<viskores::cont::CellSetExplicit<>>();
     this->BuildConnectivity(cells, coordinates.GetDataAsMultiplexer(), coordBounds);
     meshConn = new MeshConnectivityContainerUnstructured(
       cells, coordinates, FaceConnectivity, FaceOffsets, Triangles);
   }
   else if (type == UnstructuredSingle)
   {
-    viskores::cont::CellSetSingleType<> cells = cellset.AsCellSet<viskores::cont::CellSetSingleType<>>();
+    viskores::cont::CellSetSingleType<> cells =
+      cellset.AsCellSet<viskores::cont::CellSetSingleType<>>();
     this->BuildConnectivity(cells, coordinates.GetDataAsMultiplexer(), coordBounds);
     meshConn =
       new MeshConnectivityContainerSingleType(cells, coordinates, FaceConnectivity, Triangles);
   }
   else if (type == Structured)
   {
-    viskores::cont::CellSetStructured<3> cells = cellset.AsCellSet<viskores::cont::CellSetStructured<3>>();
+    viskores::cont::CellSetStructured<3> cells =
+      cellset.AsCellSet<viskores::cont::CellSetStructured<3>>();
     Triangles = this->ExternalTrianglesStructured(cells);
     meshConn = new MeshConnectivityContainerStructured(cells, coordinates, Triangles);
   }

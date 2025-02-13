@@ -31,7 +31,9 @@ struct FetchTagCellSetIn
 };
 
 template <typename ExecObjectType>
-struct Fetch<viskores::exec::arg::FetchTagCellSetIn, viskores::exec::arg::AspectTagDefault, ExecObjectType>
+struct Fetch<viskores::exec::arg::FetchTagCellSetIn,
+             viskores::exec::arg::AspectTagDefault,
+             ExecObjectType>
 {
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>

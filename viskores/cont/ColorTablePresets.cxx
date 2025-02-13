@@ -25,7 +25,8 @@ namespace cont
 namespace internal
 {
 
-static viskores::cont::ColorTable::Preset DEFAULT_PRESET = viskores::cont::ColorTable::Preset::Viridis;
+static viskores::cont::ColorTable::Preset DEFAULT_PRESET =
+  viskores::cont::ColorTable::Preset::Viridis;
 
 std::string GetColorSpaceString(viskores::ColorSpace space)
 {
@@ -51,9 +52,11 @@ viskores::ColorSpace GetColorSpaceEnum(const std::string& colorSpaceString)
   std::string spaceString = colorSpaceString;
 
   //convert to lower case
-  std::transform(spaceString.begin(), spaceString.end(), spaceString.begin(), [](char c) {
-    return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-  });
+  std::transform(spaceString.begin(),
+                 spaceString.end(),
+                 spaceString.begin(),
+                 [](char c)
+                 { return static_cast<char>(std::tolower(static_cast<unsigned char>(c))); });
 
   if (spaceString == "rgb")
   {
@@ -1356,7 +1359,8 @@ namespace internal
 {
 
 VISKORES_CONT_EXPORT
-bool LoadColorTablePreset(viskores::cont::ColorTable::Preset preset, viskores::cont::ColorTable& table)
+bool LoadColorTablePreset(viskores::cont::ColorTable::Preset preset,
+                          viskores::cont::ColorTable& table)
 {
   if (preset == viskores::cont::ColorTable::Preset::Default)
   {
@@ -1402,7 +1406,8 @@ VISKORES_CONT_EXPORT bool LoadColorTablePreset(std::string name, viskores::cont:
     }
   }
   VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-             "Attempted to load color table preset '" << name << "' but no such preset exists.");
+                 "Attempted to load color table preset '" << name
+                                                          << "' but no such preset exists.");
   return false;
 }
 }

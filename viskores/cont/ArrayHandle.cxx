@@ -28,8 +28,9 @@ VISKORES_CONT void ArrayHandleReleaseResourcesExecution(
   }
 }
 
-VISKORES_CONT bool ArrayHandleIsOnDevice(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                     viskores::cont::DeviceAdapterId device)
+VISKORES_CONT bool ArrayHandleIsOnDevice(
+  const std::vector<viskores::cont::internal::Buffer>& buffers,
+  viskores::cont::DeviceAdapterId device)
 {
   for (auto&& buf : buffers)
   {

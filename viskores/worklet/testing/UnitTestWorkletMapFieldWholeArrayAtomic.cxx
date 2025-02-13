@@ -46,10 +46,9 @@ struct DoTestAtomicArrayWorklet
   {
     std::cout << "Create and run dispatcher." << std::endl;
     viskores::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(
-      viskores::cont::ArrayHandleIndex(ARRAY_SIZE),
-      inOutArray
-        .ResetTypes<viskores::cont::AtomicArrayTypeList, viskores::List<viskores::cont::StorageTagBasic>>());
+    dispatcher.Invoke(viskores::cont::ArrayHandleIndex(ARRAY_SIZE),
+                      inOutArray.ResetTypes<viskores::cont::AtomicArrayTypeList,
+                                            viskores::List<viskores::cont::StorageTagBasic>>());
   }
 
   template <typename T>
@@ -64,7 +63,7 @@ struct DoTestAtomicArrayWorklet
     T result = inOutHandle.ReadPortal().Get(0);
 
     VISKORES_TEST_ASSERT(result == (ARRAY_SIZE * (ARRAY_SIZE - 1)) / 2,
-                     "Got wrong summation in atomic array.");
+                         "Got wrong summation in atomic array.");
   }
 };
 
@@ -73,7 +72,7 @@ void TestWorkletMapFieldExecArgAtomic(viskores::cont::DeviceAdapterId id)
   std::cout << "Testing Worklet with AtomicWholeArray on device adapter: " << id.GetName()
             << std::endl;
   viskores::testing::Testing::TryTypes(map_whole_array::DoTestAtomicArrayWorklet(),
-                                   viskores::cont::AtomicArrayTypeList());
+                                       viskores::cont::AtomicArrayTypeList());
 }
 
 } // anonymous namespace

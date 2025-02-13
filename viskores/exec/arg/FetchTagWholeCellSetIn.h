@@ -39,7 +39,7 @@ struct Fetch<viskores::exec::arg::FetchTagWholeCellSetIn,
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
   VISKORES_EXEC ValueType Load(const ThreadIndicesType& viskoresNotUsed(indices),
-                           const ExecObjectType& execObject) const
+                               const ExecObjectType& execObject) const
   {
     return execObject;
   }

@@ -51,7 +51,8 @@ VISKORES_CONT bool MIRFilter::DoMapField(
   if (field.IsPointField())
   {
     viskores::cont::UnknownArrayHandle output = field.GetData().NewInstanceBasic();
-    auto resolve = [&](const auto& concrete) {
+    auto resolve = [&](const auto& concrete)
+    {
       using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
       auto outputArray = output.ExtractArrayFromComponents<T>(viskores::CopyFlag::Off);
       viskores::worklet::DestructPointWeightList destructWeightList;
@@ -80,7 +81,7 @@ VISKORES_CONT viskores::cont::DataSet MIRFilter::DoExecute(const viskores::cont:
   viskores::filter::mesh_info::CellMeasures getSize;
   getSize.SetCellMeasureName("size");
   viskores::cont::ArrayCopyShallowIfPossible(getSize.Execute(input).GetCellField("size").GetData(),
-                                         avgSizeTot);
+                                             avgSizeTot);
   // First, load up all fields...
   viskores::cont::Field or_pos = input.GetField(this->pos_name);
   viskores::cont::Field or_len = input.GetField(this->len_name);
@@ -88,8 +89,8 @@ VISKORES_CONT viskores::cont::DataSet MIRFilter::DoExecute(const viskores::cont:
   viskores::cont::Field or_vfs = input.GetField(this->vf_name);
   // TODO: Check all fields for 'IsCellField'
   viskores::cont::ArrayHandle<viskores::FloatDefault> vfsdata_or, vfsdata;
-  viskores::cont::ArrayHandle<viskores::Id> idsdata_or, idsdata, lendata_or, lendata, posdata_or, posdata,
-    allids;
+  viskores::cont::ArrayHandle<viskores::Id> idsdata_or, idsdata, lendata_or, lendata, posdata_or,
+    posdata, allids;
   or_pos.GetData().AsArrayHandle(posdata_or);
   or_len.GetData().AsArrayHandle(lendata_or);
   or_ids.GetData().AsArrayHandle(idsdata_or);
@@ -155,9 +156,9 @@ VISKORES_CONT viskores::cont::DataSet MIRFilter::DoExecute(const viskores::cont:
     viskores::worklet::MIRObject<viskores::Id, viskores::Float64> mirobj(
       pointlen, pointpos, pointid, pointvf); // This is point VF data...
     viskores::cont::ArrayHandle<viskores::Id> prevMat;
-    viskores::cont::ArrayCopy(
-      viskores::cont::make_ArrayHandleConstant<viskores::Id>(-1, saved.GetCellSet().GetNumberOfCells()),
-      prevMat);
+    viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleConstant<viskores::Id>(
+                                -1, saved.GetCellSet().GetNumberOfCells()),
+                              prevMat);
     viskores::cont::ArrayHandle<viskores::Id> cellLookback;
     viskores::cont::ArrayHandleIndex tmp_ind(saved.GetCellSet().GetNumberOfCells());
     viskores::cont::ArrayCopy(tmp_ind, cellLookback);
@@ -203,14 +204,14 @@ VISKORES_CONT viskores::cont::DataSet MIRFilter::DoExecute(const viskores::cont:
         viskores::cont::ArrayHandle<viskores::Id> newCellLookback, newCellID;
 
         viskores::cont::CellSetExplicit<> out = mir.Run(saved.GetCellSet(),
-                                                    previousMatVF,
-                                                    currentMatVF,
-                                                    cellVFPointOffsets,
-                                                    prevMat,
-                                                    currentMatID,
-                                                    cellLookback,
-                                                    newCellID,
-                                                    newCellLookback);
+                                                        previousMatVF,
+                                                        currentMatVF,
+                                                        cellVFPointOffsets,
+                                                        prevMat,
+                                                        currentMatID,
+                                                        cellLookback,
+                                                        newCellID,
+                                                        newCellLookback);
         viskores::cont::ArrayCopy(newCellLookback, cellLookback);
         viskores::cont::ArrayCopy(newCellID, prevMat);
         auto data = saved.GetCoordinateSystem(0).GetDataAsMultiplexer();
@@ -234,7 +235,8 @@ VISKORES_CONT viskores::cont::DataSet MIRFilter::DoExecute(const viskores::cont:
         //FileSaver fs;
         //fs(("pID" + std::to_string(currentMatID) + ".txt").c_str(), pointIDs);
         //fs(("wID" + std::to_string(currentMatID) + ".txt").c_str(), pointWeights);
-        mirobj = viskores::worklet::MIRObject<viskores::Id, viskores::Float64>(plen, ppos, pids, pvf);
+        mirobj =
+          viskores::worklet::MIRObject<viskores::Id, viskores::Float64>(plen, ppos, pids, pvf);
         saved = viskores::cont::DataSet();
         saved.SetCellSet(out);
         viskores::cont::CoordinateSystem outCo2(inputCoords.GetName(), coords);
@@ -245,8 +247,8 @@ VISKORES_CONT viskores::cont::DataSet MIRFilter::DoExecute(const viskores::cont:
 
     // Hacking workaround to not clone an entire dataset.
     viskores::cont::ArrayHandle<viskores::FloatDefault> avgSize;
-    viskores::cont::ArrayCopyShallowIfPossible(getSize.Execute(saved).GetCellField("size").GetData(),
-                                           avgSize);
+    viskores::cont::ArrayCopyShallowIfPossible(
+      getSize.Execute(saved).GetCellField("size").GetData(), avgSize);
 
     viskores::worklet::CalcError_C calcErrC;
     viskores::worklet::Keys<viskores::Id> cellKeys(cellLookback);
@@ -291,8 +293,8 @@ VISKORES_CONT viskores::cont::DataSet MIRFilter::DoExecute(const viskores::cont:
     this->error_scaling *= this->scaling_decay;
 
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-               "Mir iteration " << currentIterationNum + 1 << "/" << this->max_iter
-                                << "\t Total error: " << totalError);
+                   "Mir iteration " << currentIterationNum + 1 << "/" << this->max_iter
+                                    << "\t Total error: " << totalError);
 
     saved.AddField(viskores::cont::Field(
       this->GetOutputFieldName(), viskores::cont::Field::Association::Cells, prevMat));
@@ -301,9 +303,8 @@ VISKORES_CONT viskores::cont::DataSet MIRFilter::DoExecute(const viskores::cont:
     viskores::cont::ArrayCopy(pointWeights, MIRWeights);
   } while ((++currentIterationNum <= this->max_iter) && totalError >= this->max_error);
 
-  auto mapper = [&](auto& outDataSet, const auto& f) {
-    this->DoMapField(outDataSet, f, filterCellInterp, MIRWeights, MIRIDs);
-  };
+  auto mapper = [&](auto& outDataSet, const auto& f)
+  { this->DoMapField(outDataSet, f, filterCellInterp, MIRWeights, MIRIDs); };
   auto output = this->CreateResultCoordinateSystem(
     input, saved.GetCellSet(), saved.GetCoordinateSystem(), mapper);
   output.AddField(saved.GetField(this->GetOutputFieldName()));

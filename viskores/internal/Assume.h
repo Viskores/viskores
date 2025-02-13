@@ -24,14 +24,14 @@
 // assert that only valid cell types will be used, producing more efficient
 // code.
 //
-#define VISKORES_ASSUME(cond)                                     \
-  VISKORES_SWALLOW_SEMICOLON_PRE_BLOCK                            \
-  {                                                           \
-    const bool c = cond;                                      \
+#define VISKORES_ASSUME(cond)                                         \
+  VISKORES_SWALLOW_SEMICOLON_PRE_BLOCK                                \
+  {                                                                   \
+    const bool c = cond;                                              \
     VISKORES_ASSERT("Bad assumption in VISKORES_ASSUME: " #cond&& c); \
-    VISKORES_ASSUME_IMPL(c);                                      \
-    (void)c; /* Prevents unused var warnings */               \
-  }                                                           \
+    VISKORES_ASSUME_IMPL(c);                                          \
+    (void)c; /* Prevents unused var warnings */                       \
+  }                                                                   \
   VISKORES_SWALLOW_SEMICOLON_POST_BLOCK
 
 // VISKORES_ASSUME_IMPL is compiler-specific:
@@ -49,11 +49,11 @@
   (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
 // Added in 4.5.0:
 #define VISKORES_ASSUME_IMPL(cond) \
-  if (!(cond))                 \
+  if (!(cond))                     \
   __builtin_unreachable()
 #elif defined(VISKORES_CLANG)
 #define VISKORES_ASSUME_IMPL(cond) \
-  if (!(cond))                 \
+  if (!(cond))                     \
   __builtin_unreachable()
 #else
 #define VISKORES_ASSUME_IMPL(cond) (void)0 /* no-op */

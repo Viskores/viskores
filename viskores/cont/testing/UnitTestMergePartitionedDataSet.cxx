@@ -31,13 +31,13 @@ static void MergePartitionedDataSetTest()
   viskores::cont::DataSet mergedDataset = viskores::cont::MergePartitionedDataSet(pds);
 
   VISKORES_TEST_ASSERT(TDset1.GetNumberOfFields() == mergedDataset.GetNumberOfFields(),
-                   "Incorrect number of fields");
+                       "Incorrect number of fields");
   VISKORES_TEST_ASSERT(TDset2.GetNumberOfFields() == mergedDataset.GetNumberOfFields(),
-                   "Incorrect number of fields");
+                       "Incorrect number of fields");
 
   VISKORES_TEST_ASSERT(TDset1.GetNumberOfCoordinateSystems() ==
-                     mergedDataset.GetNumberOfCoordinateSystems(),
-                   "Incorrect number of coordinate systems");
+                         mergedDataset.GetNumberOfCoordinateSystems(),
+                       "Incorrect number of coordinate systems");
 
   viskores::Bounds Set1Bounds = TDset1.GetCoordinateSystem(0).GetBounds();
   viskores::Bounds Set2Bounds = TDset2.GetCoordinateSystem(0).GetBounds();
@@ -46,7 +46,7 @@ static void MergePartitionedDataSetTest()
   GlobalBound.Include(Set2Bounds);
 
   VISKORES_TEST_ASSERT(viskores::cont::BoundsCompute(mergedDataset) == GlobalBound,
-                   "Global bounds info incorrect");
+                       "Global bounds info incorrect");
 
   viskores::Range MergedField1Range;
   viskores::Range MergedField2Range;
@@ -70,15 +70,17 @@ static void MergePartitionedDataSetTest()
   Field2GlobeRange.Include(Set2Field2Range);
 
   using viskores::cont::FieldRangeCompute;
-  VISKORES_TEST_ASSERT(MergedField1Range == Field1GlobeRange, "Local field value range info incorrect");
-  VISKORES_TEST_ASSERT(MergedField2Range == Field2GlobeRange, "Local field value range info incorrect");
+  VISKORES_TEST_ASSERT(MergedField1Range == Field1GlobeRange,
+                       "Local field value range info incorrect");
+  VISKORES_TEST_ASSERT(MergedField2Range == Field2GlobeRange,
+                       "Local field value range info incorrect");
 
   VISKORES_TEST_ASSERT(mergedDataset.GetNumberOfPoints() ==
-                     TDset1.GetNumberOfPoints() + TDset2.GetNumberOfPoints(),
-                   "Incorrect number of points");
+                         TDset1.GetNumberOfPoints() + TDset2.GetNumberOfPoints(),
+                       "Incorrect number of points");
   VISKORES_TEST_ASSERT(mergedDataset.GetNumberOfCells() ==
-                     TDset1.GetNumberOfCells() + TDset2.GetNumberOfCells(),
-                   "Incorrect number of cells");
+                         TDset1.GetNumberOfCells() + TDset2.GetNumberOfCells(),
+                       "Incorrect number of cells");
 }
 
 int UnitTestMergePartitionedDataSet(int argc, char* argv[])

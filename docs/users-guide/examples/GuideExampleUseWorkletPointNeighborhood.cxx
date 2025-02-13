@@ -102,11 +102,15 @@ class BoxFilter : public viskores::filter::Filter
 public:
   VISKORES_CONT BoxFilter() = default;
 
-  VISKORES_CONT void SetKernelSize(viskores::IdComponent size) { this->KernelSize = size; }
+  VISKORES_CONT void SetKernelSize(viskores::IdComponent size)
+  {
+    this->KernelSize = size;
+  }
   VISKORES_CONT viskores::IdComponent GetKernelSize() const { return this->KernelSize; }
 
 protected:
-  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inDataSet) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(
+    const viskores::cont::DataSet& inDataSet) override;
 
 private:
   viskores::IdComponent KernelSize = 3;
@@ -123,7 +127,8 @@ namespace filter
 namespace convolution
 {
 
-VISKORES_CONT cont::DataSet BoxFilter::DoExecute(const viskores::cont::DataSet& inDataSet)
+VISKORES_CONT cont::DataSet BoxFilter::DoExecute(
+  const viskores::cont::DataSet& inDataSet)
 {
   viskores::cont::Field inField = this->GetFieldFromDataSet(inDataSet);
 
@@ -137,7 +142,8 @@ VISKORES_CONT cont::DataSet BoxFilter::DoExecute(const viskores::cont::DataSet& 
 
   viskores::cont::UnknownArrayHandle outFieldArray;
 
-  auto resolve_field = [&](auto inArray) {
+  auto resolve_field = [&](auto inArray)
+  {
     using T = typename std::decay_t<decltype(inArray)>::ValueType;
     viskores::cont::ArrayHandle<T> outArray;
     this->Invoke(

@@ -81,12 +81,12 @@ struct MergeSortedListsWithoutDuplicatesWorklet : public viskores::worklet::Work
 
   template <typename InGroupType, typename OutGroupType>
   VISKORES_EXEC void operator()(const InGroupType& list1,
-                            const InGroupType& list2,
-                            OutGroupType& combinedList,
-                            viskores::IdComponent& numberOfUniqueElements) const
+                                const InGroupType& list2,
+                                OutGroupType& combinedList,
+                                viskores::IdComponent& numberOfUniqueElements) const
   {
     VISKORES_ASSERT(list1.GetNumberOfComponents() + list2.GetNumberOfComponents() <=
-                combinedList.GetNumberOfComponents());
+                    combinedList.GetNumberOfComponents());
 
     numberOfUniqueElements = 0;
 

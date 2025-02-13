@@ -44,10 +44,10 @@ struct Transport<viskores::cont::arg::TransportTagExecObject, ContObjectType, De
   using ExecObjectType = viskores::cont::internal::ExecutionObjectType<ContObjectType, Device>;
   template <typename InputDomainType>
   VISKORES_CONT ExecObjectType operator()(ContObjectType& object,
-                                      const InputDomainType&,
-                                      viskores::Id,
-                                      viskores::Id,
-                                      viskores::cont::Token& token) const
+                                          const InputDomainType&,
+                                          viskores::Id,
+                                          viskores::Id,
+                                          viskores::cont::Token& token) const
   {
     return viskores::cont::internal::CallPrepareForExecution(object, Device{}, token);
   }

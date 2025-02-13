@@ -30,8 +30,8 @@ namespace viskores
 ///
 template <typename ValueType, typename WeightType>
 inline VISKORES_EXEC_CONT ValueType Lerp(const ValueType& value0,
-                                     const ValueType& value1,
-                                     const WeightType& weight)
+                                         const ValueType& value1,
+                                         const WeightType& weight)
 {
   using ScalarType = typename detail::FloatingPointReturnType<ValueType>::Type;
   return static_cast<ValueType>((WeightType(1) - weight) * static_cast<ScalarType>(value0) +
@@ -39,15 +39,15 @@ inline VISKORES_EXEC_CONT ValueType Lerp(const ValueType& value0,
 }
 template <typename ValueType, viskores::IdComponent N, typename WeightType>
 VISKORES_EXEC_CONT viskores::Vec<ValueType, N> Lerp(const viskores::Vec<ValueType, N>& value0,
-                                            const viskores::Vec<ValueType, N>& value1,
-                                            const WeightType& weight)
+                                                    const viskores::Vec<ValueType, N>& value1,
+                                                    const WeightType& weight)
 {
   return (WeightType(1) - weight) * value0 + weight * value1;
 }
 template <typename ValueType, viskores::IdComponent N>
 VISKORES_EXEC_CONT viskores::Vec<ValueType, N> Lerp(const viskores::Vec<ValueType, N>& value0,
-                                            const viskores::Vec<ValueType, N>& value1,
-                                            const viskores::Vec<ValueType, N>& weight)
+                                                    const viskores::Vec<ValueType, N>& value1,
+                                                    const viskores::Vec<ValueType, N>& weight)
 {
   const viskores::Vec<ValueType, N> One(ValueType(1));
   return (One - weight) * value0 + weight * value1;
@@ -200,7 +200,9 @@ VISKORES_EXEC_CONT viskores::Vec<typename detail::FloatingPointReturnType<T>::Ty
 ///
 template <typename T>
 VISKORES_EXEC_CONT viskores::Vec<typename detail::FloatingPointReturnType<T>::Type, 3>
-TriangleNormal(const viskores::Vec<T, 3>& a, const viskores::Vec<T, 3>& b, const viskores::Vec<T, 3>& c)
+TriangleNormal(const viskores::Vec<T, 3>& a,
+               const viskores::Vec<T, 3>& b,
+               const viskores::Vec<T, 3>& c)
 {
   return viskores::Cross(b - a, c - a);
 }
@@ -214,7 +216,8 @@ TriangleNormal(const viskores::Vec<T, 3>& a, const viskores::Vec<T, 3>& b, const
 /// Note that if the vector `u` has zero length, the output
 /// vector will have all its entries equal to NaN.
 template <typename T, int N>
-VISKORES_EXEC_CONT viskores::Vec<T, N> Project(const viskores::Vec<T, N>& v, const viskores::Vec<T, N>& u)
+VISKORES_EXEC_CONT viskores::Vec<T, N> Project(const viskores::Vec<T, N>& v,
+                                               const viskores::Vec<T, N>& u)
 {
   T uu = viskores::Dot(u, u);
   T uv = viskores::Dot(u, v);
@@ -257,8 +260,8 @@ VISKORES_EXEC_CONT T ProjectedDistance(const viskores::Vec<T, N>& v, const visko
 /// See https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process for details.
 template <typename T, int N>
 VISKORES_EXEC_CONT int Orthonormalize(const viskores::Vec<viskores::Vec<T, N>, N>& inputs,
-                                  viskores::Vec<viskores::Vec<T, N>, N>& outputs,
-                                  T tol = static_cast<T>(1e-6))
+                                      viskores::Vec<viskores::Vec<T, N>, N>& outputs,
+                                      T tol = static_cast<T>(1e-6))
 {
   T tolsqr = tol * tol;
   int j = 0; // j is the number of non-zero-length, non-collinear inputs encountered.

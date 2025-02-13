@@ -90,12 +90,12 @@ public:
 
   /// The functor checks the direction of the branch
   VISKORES_EXEC void operator()(const viskores::Id& lowerSuperarcId,
-                            const viskores::Id& lowerIntrinsic,
-                            const viskores::Id& upperSuperarcId,
-                            const viskores::Id& upperIntrinsic,
-                            const viskores::Id& branchRoot,
-                            bool& isLowerLeaf,
-                            bool& isUpperLeaf) const
+                                const viskores::Id& lowerIntrinsic,
+                                const viskores::Id& upperSuperarcId,
+                                const viskores::Id& upperIntrinsic,
+                                const viskores::Id& branchRoot,
+                                bool& isLowerLeaf,
+                                bool& isUpperLeaf) const
   {
     // do nothing: not a "leaf-leaf" branch
     if (!isLowerLeaf || !isUpperLeaf)
@@ -107,13 +107,16 @@ public:
 
     // do something: fake leaf-leaf branch
     // we already exclude the case of only one superarc above
-    viskores::Id maskedLowerId = viskores::worklet::contourtree_augmented::MaskedIndex(lowerSuperarcId);
-    viskores::Id maskedUpperId = viskores::worklet::contourtree_augmented::MaskedIndex(upperSuperarcId);
+    viskores::Id maskedLowerId =
+      viskores::worklet::contourtree_augmented::MaskedIndex(lowerSuperarcId);
+    viskores::Id maskedUpperId =
+      viskores::worklet::contourtree_augmented::MaskedIndex(upperSuperarcId);
     viskores::Id maskedRoot = viskores::worklet::contourtree_augmented::MaskedIndex(branchRoot);
 
     if (maskedLowerId == maskedRoot && maskedUpperId == maskedRoot)
     {
-      const bool isAscending = viskores::worklet::contourtree_augmented::IsAscending(lowerSuperarcId);
+      const bool isAscending =
+        viskores::worklet::contourtree_augmented::IsAscending(lowerSuperarcId);
       if (isAscending)
         isUpperLeaf = false;
       else

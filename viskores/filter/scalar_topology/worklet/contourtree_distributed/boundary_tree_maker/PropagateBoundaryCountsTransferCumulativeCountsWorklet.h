@@ -70,7 +70,8 @@ namespace bract_maker
 ///
 /// 4. The partial sum is now over ALL hypertargets, so within each group we need to subtract the first from the last
 /// To do so, the last hyperarc in each cluster copies its cumulative count to the output array
-class PropagateBoundaryCountsTransferCumulativeCountsWorklet : public viskores::worklet::WorkletMapField
+class PropagateBoundaryCountsTransferCumulativeCountsWorklet
+  : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(
@@ -87,11 +88,12 @@ public:
   PropagateBoundaryCountsTransferCumulativeCountsWorklet() {}
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& hyperarc,
-                            const InFieldPortalType& hyperarcTargetSortPermutationPortal,
-                            const InFieldPortalType& hyperarcsPortal,
-                            const InFieldPortalType& accumulatedBoundaryCountPortal,
-                            const InOutFieldPortalType& supernodeTransferBoundaryCountPortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::Id& hyperarc,
+    const InFieldPortalType& hyperarcTargetSortPermutationPortal,
+    const InFieldPortalType& hyperarcsPortal,
+    const InFieldPortalType& accumulatedBoundaryCountPortal,
+    const InOutFieldPortalType& supernodeTransferBoundaryCountPortal) const
   {
     // per hyperarc
     // retrieve the hypertarget

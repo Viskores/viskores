@@ -96,8 +96,9 @@ public:
     }
   };
   template <typename CellSetType>
-  viskores::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
-                                      viskores::cont::ArrayHandle<viskores::IdComponent>& outCellsPerCell)
+  viskores::cont::CellSetSingleType<> Run(
+    const CellSetType& cellSet,
+    viskores::cont::ArrayHandle<viskores::IdComponent>& outCellsPerCell)
   {
     viskores::cont::CellSetSingleType<> outCellSet;
 

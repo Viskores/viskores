@@ -82,7 +82,8 @@ template <typename Sequence1, typename Sequence2>
 struct CombineSequences;
 
 template <typename T, T... N1s, T... N2s>
-struct CombineSequences<viskoresstd::integer_sequence<T, N1s...>, viskoresstd::integer_sequence<T, N2s...>>
+struct CombineSequences<viskoresstd::integer_sequence<T, N1s...>,
+                        viskoresstd::integer_sequence<T, N2s...>>
 {
   using type = viskoresstd::integer_sequence<T, N1s..., T(sizeof...(N1s)) + N2s...>;
 };
@@ -193,7 +194,8 @@ struct MakeSequenceImpl<T, 15>
 template <typename T>
 struct MakeSequenceImpl<T, 16>
 {
-  using type = viskoresstd::integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>;
+  using type =
+    viskoresstd::integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>;
 };
 
 template <typename T, SeqSizeT Num>

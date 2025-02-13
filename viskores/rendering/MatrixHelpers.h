@@ -21,7 +21,7 @@ namespace rendering
 struct MatrixHelpers
 {
   static VISKORES_CONT void CreateOGLMatrix(const viskores::Matrix<viskores::Float32, 4, 4>& mtx,
-                                        viskores::Float32* oglM)
+                                            viskores::Float32* oglM)
   {
     oglM[0] = mtx[0][0];
     oglM[1] = mtx[1][0];
@@ -41,9 +41,10 @@ struct MatrixHelpers
     oglM[15] = mtx[3][3];
   }
 
-  static VISKORES_CONT viskores::Matrix<viskores::Float32, 4, 4> ViewMatrix(const viskores::Vec3f_32& position,
-                                                                const viskores::Vec3f_32& lookAt,
-                                                                const viskores::Vec3f_32& up)
+  static VISKORES_CONT viskores::Matrix<viskores::Float32, 4, 4> ViewMatrix(
+    const viskores::Vec3f_32& position,
+    const viskores::Vec3f_32& lookAt,
+    const viskores::Vec3f_32& up)
   {
     viskores::Vec3f_32 viewDir = position - lookAt;
     viskores::Vec3f_32 right = viskores::Cross(up, viewDir);
@@ -73,10 +74,11 @@ struct MatrixHelpers
     return matrix;
   }
 
-  static VISKORES_CONT viskores::Matrix<viskores::Float32, 4, 4> WorldMatrix(const viskores::Vec3f_32& neworigin,
-                                                                 const viskores::Vec3f_32& newx,
-                                                                 const viskores::Vec3f_32& newy,
-                                                                 const viskores::Vec3f_32& newz)
+  static VISKORES_CONT viskores::Matrix<viskores::Float32, 4, 4> WorldMatrix(
+    const viskores::Vec3f_32& neworigin,
+    const viskores::Vec3f_32& newx,
+    const viskores::Vec3f_32& newy,
+    const viskores::Vec3f_32& newz)
   {
     viskores::Matrix<viskores::Float32, 4, 4> matrix;
     viskores::MatrixIdentity(matrix);
@@ -98,9 +100,8 @@ struct MatrixHelpers
     return matrix;
   }
 
-  static VISKORES_CONT viskores::Matrix<viskores::Float32, 4, 4> CreateScale(const viskores::Float32 x,
-                                                                 const viskores::Float32 y,
-                                                                 const viskores::Float32 z)
+  static VISKORES_CONT viskores::Matrix<viskores::Float32, 4, 4>
+  CreateScale(const viskores::Float32 x, const viskores::Float32 y, const viskores::Float32 z)
   {
     viskores::Matrix<viskores::Float32, 4, 4> matrix;
     viskores::MatrixIdentity(matrix);
@@ -111,10 +112,11 @@ struct MatrixHelpers
     return matrix;
   }
 
-  static VISKORES_CONT viskores::Matrix<viskores::Float32, 4, 4> TrackballMatrix(viskores::Float32 p1x,
-                                                                     viskores::Float32 p1y,
-                                                                     viskores::Float32 p2x,
-                                                                     viskores::Float32 p2y)
+  static VISKORES_CONT viskores::Matrix<viskores::Float32, 4, 4> TrackballMatrix(
+    viskores::Float32 p1x,
+    viskores::Float32 p1y,
+    viskores::Float32 p2x,
+    viskores::Float32 p2y)
   {
     const viskores::Float32 RADIUS = 0.80f;     //z value lookAt x = y = 0.0
     const viskores::Float32 COMPRESSION = 3.5f; // multipliers for x and y.
@@ -142,7 +144,9 @@ struct MatrixHelpers
     axis[2] *= val;
 
     //quaternion
-    viskores::Float32 q[4] = { axis[0], axis[1], axis[2], static_cast<viskores::Float32>(cos(phi / 2.0f)) };
+    viskores::Float32 q[4] = {
+      axis[0], axis[1], axis[2], static_cast<viskores::Float32>(cos(phi / 2.0f))
+    };
 
     // normalize quaternion to unit magnitude
     t = 1.0f /

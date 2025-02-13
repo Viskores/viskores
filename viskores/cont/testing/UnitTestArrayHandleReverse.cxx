@@ -38,14 +38,15 @@ void TestArrayHandleReverseRead()
   for (viskores::Id index = 0; index < ARRAY_SIZE; index++)
   {
     VISKORES_TEST_ASSERT(reversedPortal.Get(index) == portal.Get(9 - index),
-                     "ArrayHandleReverse does not reverse array");
+                         "ArrayHandleReverse does not reverse array");
   }
 }
 
 void TestArrayHandleReverseWrite()
 {
   std::vector<viskores::Id> ids(ARRAY_SIZE, 0);
-  viskores::cont::ArrayHandle<viskores::Id> handle = viskores::cont::make_ArrayHandle(ids, viskores::CopyFlag::Off);
+  viskores::cont::ArrayHandle<viskores::Id> handle =
+    viskores::cont::make_ArrayHandle(ids, viskores::CopyFlag::Off);
 
   viskores::cont::ArrayHandleReverse<viskores::cont::ArrayHandle<viskores::Id>> reverse =
     viskores::cont::make_ArrayHandleReverse(handle);
@@ -58,7 +59,8 @@ void TestArrayHandleReverseWrite()
   auto portal = handle.ReadPortal();
   for (viskores::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    VISKORES_TEST_ASSERT(portal.Get(index) == (9 - index), "ArrayHandleReverse does not reverse array");
+    VISKORES_TEST_ASSERT(portal.Get(index) == (9 - index),
+                         "ArrayHandleReverse does not reverse array");
   }
 }
 
@@ -84,7 +86,7 @@ void TestArrayHandleReverseScanInclusiveByKey()
   for (int i = 0; i < 10; i++)
   {
     VISKORES_TEST_ASSERT(outputPortal.Get(i) == reversePortal.Get(i),
-                     "ArrayHandleReverse as output of ScanInclusiveByKey");
+                         "ArrayHandleReverse as output of ScanInclusiveByKey");
   }
   std::cout << std::endl;
 }

@@ -115,11 +115,12 @@ struct IsNoExceptHandle
   }
 };
 
-using viskoresComplexCustomTypes = viskores::List<viskores::Vec<viskores::Vec<float, 3>, 3>,
-                                          viskores::Pair<viskores::UInt64, viskores::UInt64>,
-                                          viskores::Bitset<viskores::UInt64>,
-                                          viskores::Bounds,
-                                          viskores::Range>;
+using viskoresComplexCustomTypes =
+  viskores::List<viskores::Vec<viskores::Vec<float, 3>, 3>,
+                 viskores::Pair<viskores::UInt64, viskores::UInt64>,
+                 viskores::Bitset<viskores::UInt64>,
+                 viskores::Bounds,
+                 viskores::Range>;
 }
 
 //-----------------------------------------------------------------------------

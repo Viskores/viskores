@@ -51,10 +51,10 @@ public:
 
   template <typename ShapeType, typename VecType, typename OutputPortal>
   VISKORES_EXEC void operator()(const viskores::Id& pointOffset,
-                            ShapeType shape,
-                            const VecType& viskoresNotUsed(cellIndices),
-                            const viskores::Id& cellId,
-                            OutputPortal& outputIndices) const
+                                ShapeType shape,
+                                const VecType& viskoresNotUsed(cellIndices),
+                                const viskores::Id& cellId,
+                                OutputPortal& outputIndices) const
   {
     if (shape.Id == viskores::CELL_SHAPE_VERTEX)
     {
@@ -92,8 +92,8 @@ public:
 
   template <typename ScalarPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& pointId,
-                            viskores::Float32& size,
-                            const ScalarPortalType& scalars) const
+                                viskores::Float32& size,
+                                const ScalarPortalType& scalars) const
   {
     viskores::Float64 scalar = viskores::Float64(scalars.Get(pointId));
     viskores::Float64 t = (scalar - this->MinValue) * this->InverseDelta;
@@ -122,7 +122,8 @@ void GlyphExtractor::ExtractCoordinates(const viskores::cont::CoordinateSystem& 
   this->SetVaryingSize(minSize, maxSize, field);
 }
 
-void GlyphExtractor::ExtractCells(const viskores::cont::UnknownCellSet& cells, const viskores::Float32 size)
+void GlyphExtractor::ExtractCells(const viskores::cont::UnknownCellSet& cells,
+                                  const viskores::Float32 size)
 {
   this->SetPointIdsFromCells(cells);
   this->SetUniformSize(size);
@@ -164,7 +165,8 @@ void GlyphExtractor::SetPointIdsFromCells(const viskores::cont::UnknownCellSet& 
     auto cellsExplicit = cells.AsCellSet<viskores::cont::CellSetExplicit<>>();
 
     viskores::cont::ArrayHandle<viskores::Id> points;
-    viskores::worklet::DispatcherMapTopology<CountPoints>(CountPoints()).Invoke(cellsExplicit, points);
+    viskores::worklet::DispatcherMapTopology<CountPoints>(CountPoints())
+      .Invoke(cellsExplicit, points);
 
     viskores::Id totalPoints = 0;
     totalPoints = viskores::cont::Algorithm::Reduce(points, viskores::Id(0));
@@ -201,7 +203,8 @@ void GlyphExtractor::SetVaryingSize(const viskores::Float32 minSize,
 
   Sizes.Allocate(this->PointIds.GetNumberOfValues());
   viskores::worklet::DispatcherMapField<GetFieldSize>(GetFieldSize(minSize, maxSize, range))
-    .Invoke(this->PointIds, this->Sizes, viskores::rendering::raytracing::GetScalarFieldArray(field));
+    .Invoke(
+      this->PointIds, this->Sizes, viskores::rendering::raytracing::GetScalarFieldArray(field));
 }
 
 viskores::cont::ArrayHandle<viskores::Id> GlyphExtractor::GetPointIds()

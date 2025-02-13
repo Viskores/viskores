@@ -104,7 +104,8 @@ private:
       viskores::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsBuildRegularChainsJoin,
       viskores::worklet::contourtree_augmented::IdArrayType& meshExtremaPeaksSplit,
       viskores::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsSplit,
-      viskores::worklet::contourtree_augmented::IdArrayType& meshExtremaPeaksBuildRegularChainsSplit,
+      viskores::worklet::contourtree_augmented::IdArrayType&
+        meshExtremaPeaksBuildRegularChainsSplit,
       viskores::worklet::contourtree_augmented::IdArrayType& meshExtremaPitsBuildRegularChainsSplit,
       viskores::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitGlobalIndex,
       viskores::worklet::contourtree_augmented::IdArrayType& activeGraphJoinTreeInitFirstEdge,
@@ -489,8 +490,9 @@ private:
     AssertIdArrayHandles(
       joinGraph.HyperID, tempEmpty, "joinGraph.HyperID (after joinGraph.MakeMergeTree");
     // Make sure the actual join tree data is correct
-    VISKORES_TEST_ASSERT(test_equal(joinGraph.NumIterations, expectedResults.MakeJoinTreeNumIterations),
-                     "Bad joinGraph.NumIterations");
+    VISKORES_TEST_ASSERT(
+      test_equal(joinGraph.NumIterations, expectedResults.MakeJoinTreeNumIterations),
+      "Bad joinGraph.NumIterations");
     AssertIdArrayHandles(joinTree.Arcs, expectedResults.MakeJoinTreeArcs, "Bad joinTree.Arcs");
     AssertIdArrayHandles(
       joinTree.Superparents, expectedResults.MakeJoinTreeSuperparents, "Bad joinTree.Superparents");
@@ -758,21 +760,21 @@ public:
     std::cout << "          13           19" << std::endl;
 
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 7),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), viskores::make_Pair(0, 12)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), viskores::make_Pair(4, 13)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), viskores::make_Pair(12, 13)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), viskores::make_Pair(12, 18)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), viskores::make_Pair(12, 20)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), viskores::make_Pair(13, 14)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), viskores::make_Pair(13, 19)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
   }
 
   void TestContourTree_Mesh3D_Freudenthal() const
@@ -827,25 +829,25 @@ public:
 
     // Make sure the contour tree is correct
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 9),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), viskores::make_Pair(0, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), viskores::make_Pair(31, 42)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), viskores::make_Pair(42, 43)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), viskores::make_Pair(42, 56)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), viskores::make_Pair(56, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), viskores::make_Pair(56, 92)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), viskores::make_Pair(62, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), viskores::make_Pair(81, 92)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), viskores::make_Pair(92, 93)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
   }
 
   void TestContourTree_Mesh3D_MarchingCubes() const
@@ -901,29 +903,30 @@ public:
     std::cout << "         118          124" << std::endl;
 
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 11),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), viskores::make_Pair(0, 118)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), viskores::make_Pair(31, 41)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), viskores::make_Pair(41, 43)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), viskores::make_Pair(41, 56)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), viskores::make_Pair(56, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), viskores::make_Pair(56, 91)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), viskores::make_Pair(62, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), viskores::make_Pair(67, 118)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), viskores::make_Pair(81, 91)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(9), viskores::make_Pair(91, 93)),
-                     "Wrong result for ContourTree filter");
-    VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(10), viskores::make_Pair(118, 124)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
+    VISKORES_TEST_ASSERT(
+      test_equal(saddlePeak.WritePortal().Get(10), viskores::make_Pair(118, 124)),
+      "Wrong result for ContourTree filter");
   }
 
 
@@ -976,7 +979,7 @@ public:
       viskores::cont::make_ArrayHandle(meshExtremaPeaksJoinArr, 125, viskores::CopyFlag::On);
     viskores::worklet::contourtree_augmented::IdArrayType meshExtremaPitsJoin;
     viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, 125),
-                                meshExtremaPitsJoin);
+                                    meshExtremaPitsJoin);
 
     //
     // Join Tree Build Regular chains
@@ -1081,59 +1084,63 @@ public:
     //
     // Active graph join graph initialize GlobalIndex
     viskores::Id activeGraphJoinTreeInitGlobalIndexArr[12] = { 103, 104, 105, 106, 113, 114,
-                                                           115, 116, 121, 122, 123, 124 };
+                                                               115, 116, 121, 122, 123, 124 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitGlobalIndex =
-      viskores::cont::make_ArrayHandle(activeGraphJoinTreeInitGlobalIndexArr, 12, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphJoinTreeInitGlobalIndexArr, 12, viskores::CopyFlag::On);
 
     // Active graph join graph initialize FirstEdge
-    viskores::Id activeGraphJoinTreeInitFirstEdgeArr[12] = {
-      0, 2, 4, 6, 8, 10, 12, 14, 16, 16, 16, 16
-    };
+    viskores::Id activeGraphJoinTreeInitFirstEdgeArr[12] = { 0,  2,  4,  6,  8,  10,
+                                                             12, 14, 16, 16, 16, 16 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitFirstEdge =
-      viskores::cont::make_ArrayHandle(activeGraphJoinTreeInitFirstEdgeArr, 12, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphJoinTreeInitFirstEdgeArr, 12, viskores::CopyFlag::On);
 
     // Active graph join graph initialize Outdegree
     viskores::Id activeGraphJoinTreeInitOutdegreeArr[12] = { 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitOutdegree =
-      viskores::cont::make_ArrayHandle(activeGraphJoinTreeInitOutdegreeArr, 12, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphJoinTreeInitOutdegreeArr, 12, viskores::CopyFlag::On);
 
     // Active graph join graph initialize Hyperarcs
-    viskores::Id activeGraphJoinTreeInitHyperarcsArr[12] = {
-      10, 10, 10, 10, 8, 8, 10, 10, 8, 9, 10, 11
-    };
+    viskores::Id activeGraphJoinTreeInitHyperarcsArr[12] = { 10, 10, 10, 10, 8,  8,
+                                                             10, 10, 8,  9,  10, 11 };
     for (viskores::Id i = 8; i < 12; i++)
     {
       activeGraphJoinTreeInitHyperarcsArr[i] = activeGraphJoinTreeInitHyperarcsArr[i] |
         viskores::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitHyperarcs =
-      viskores::cont::make_ArrayHandle(activeGraphJoinTreeInitHyperarcsArr, 12, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphJoinTreeInitHyperarcsArr, 12, viskores::CopyFlag::On);
 
     // Active graph join graph initialize ActiveVertices
-    viskores::Id activeGraphJoinTreeInitActiveVerticesArr[12] = {
-      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
-    };
+    viskores::Id activeGraphJoinTreeInitActiveVerticesArr[12] = { 0, 1, 2, 3, 4,  5,
+                                                                  6, 7, 8, 9, 10, 11 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitActiveVertices =
       viskores::cont::make_ArrayHandle(
         activeGraphJoinTreeInitActiveVerticesArr, 12, viskores::CopyFlag::On);
 
     // Active graph join graph initialize EdgeNear
     viskores::Id activeGraphJoinTreeInitEdgeNearArr[16] = { 0, 0, 1, 1, 2, 2, 3, 3,
-                                                        4, 4, 5, 5, 6, 6, 7, 7 };
+                                                            4, 4, 5, 5, 6, 6, 7, 7 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitEdgeNear =
-      viskores::cont::make_ArrayHandle(activeGraphJoinTreeInitEdgeNearArr, 16, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphJoinTreeInitEdgeNearArr, 16, viskores::CopyFlag::On);
 
     // Active graph join graph initialize , EdgeFar
     viskores::Id activeGraphJoinTreeInitEdgeFarArr[16] = { 10, 8, 10, 9, 10, 9,  10, 8,
-                                                       8,  9, 8,  9, 10, 11, 10, 11 };
+                                                           8,  9, 8,  9, 10, 11, 10, 11 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitEdgeFar =
-      viskores::cont::make_ArrayHandle(activeGraphJoinTreeInitEdgeFarArr, 16, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphJoinTreeInitEdgeFarArr, 16, viskores::CopyFlag::On);
 
     // Active graph join graph initialize , ActiveEdges
     viskores::Id activeGraphJoinTreeInitActiveEdgesArr[16] = { 0, 1, 2,  3,  4,  5,  6,  7,
-                                                           8, 9, 10, 11, 12, 13, 14, 15 };
+                                                               8, 9, 10, 11, 12, 13, 14, 15 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphJoinTreeInitActiveEdges =
-      viskores::cont::make_ArrayHandle(activeGraphJoinTreeInitActiveEdgesArr, 16, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphJoinTreeInitActiveEdgesArr, 16, viskores::CopyFlag::On);
 
     //
     // Split Graph Initialize
@@ -1141,17 +1148,20 @@ public:
     // Active graph join graph initialize GlobalIndex
     viskores::Id activeGraphSplitTreeInitGlobalIndexArr[8] = { 0, 98, 99, 100, 101, 102, 107, 108 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitGlobalIndex =
-      viskores::cont::make_ArrayHandle(activeGraphSplitTreeInitGlobalIndexArr, 8, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphSplitTreeInitGlobalIndexArr, 8, viskores::CopyFlag::On);
 
     // Active graph join graph initialize FirstEdge
     viskores::Id activeGraphSplitTreeInitFirstEdgeArr[8] = { 0, 0, 0, 2, 4, 6, 8, 10 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitFirstEdge =
-      viskores::cont::make_ArrayHandle(activeGraphSplitTreeInitFirstEdgeArr, 8, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphSplitTreeInitFirstEdgeArr, 8, viskores::CopyFlag::On);
 
     // Active graph join graph initialize Outdegree
     viskores::Id activeGraphSplitTreeInitOutdegreeArr[8] = { 0, 0, 2, 2, 2, 2, 2, 2 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitOutdegree =
-      viskores::cont::make_ArrayHandle(activeGraphSplitTreeInitOutdegreeArr, 8, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphSplitTreeInitOutdegreeArr, 8, viskores::CopyFlag::On);
 
     // Active graph join graph initialize Hyperarcs
     viskores::Id activeGraphSplitTreeInitHyperarcsArr[8] = { 0, 1, 1, 1, 0, 0, 0, 0 };
@@ -1161,7 +1171,8 @@ public:
         viskores::worklet::contourtree_augmented::TERMINAL_ELEMENT;
     }
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitHyperarcs =
-      viskores::cont::make_ArrayHandle(activeGraphSplitTreeInitHyperarcsArr, 8, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphSplitTreeInitHyperarcsArr, 8, viskores::CopyFlag::On);
 
     // Active graph join graph initialize ActiveVertices
     viskores::Id activeGraphSplitTreeInitActiveVerticesArr[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -1172,17 +1183,22 @@ public:
     // Active graph join graph initialize EdgeNear
     viskores::Id activeGraphSplitTreeInitEdgeNearArr[12] = { 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitEdgeNear =
-      viskores::cont::make_ArrayHandle(activeGraphSplitTreeInitEdgeNearArr, 12, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphSplitTreeInitEdgeNearArr, 12, viskores::CopyFlag::On);
 
     // Active graph join graph initialize , EdgeFar
     viskores::Id activeGraphSplitTreeInitEdgeFarArr[12] = { 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1 };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitEdgeFar =
-      viskores::cont::make_ArrayHandle(activeGraphSplitTreeInitEdgeFarArr, 12, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphSplitTreeInitEdgeFarArr, 12, viskores::CopyFlag::On);
 
     // Active graph join graph initialize , ActiveEdges
-    viskores::Id activeGraphSplitTreeInitActiveEdgesArr[12] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    viskores::Id activeGraphSplitTreeInitActiveEdgesArr[12] = {
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+    };
     viskores::worklet::contourtree_augmented::IdArrayType activeGraphSplitTreeInitActiveEdges =
-      viskores::cont::make_ArrayHandle(activeGraphSplitTreeInitActiveEdgesArr, 12, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        activeGraphSplitTreeInitActiveEdgesArr, 12, viskores::CopyFlag::On);
 
     //
     // JoinTree MakeMergeTree
@@ -1314,12 +1330,15 @@ public:
 
     viskores::worklet::contourtree_augmented::IdArrayType makeContourTreeNodes;
 
-    viskores::worklet::contourtree_augmented::IdArrayType makeContourTreeArcs = tempNoSuchElementArray;
+    viskores::worklet::contourtree_augmented::IdArrayType makeContourTreeArcs =
+      tempNoSuchElementArray;
 
     viskores::worklet::contourtree_augmented::IdArrayType makeContourTreeSuperparents =
       tempNoSuchElementArray;
 
-    viskores::Id makeContourTreeSupernodesArr[10] = { 121, 122, 123, 124, 0, 98, 114, 116, 99, 106 };
+    viskores::Id makeContourTreeSupernodesArr[10] = {
+      121, 122, 123, 124, 0, 98, 114, 116, 99, 106
+    };
     viskores::worklet::contourtree_augmented::IdArrayType makeContourTreeSupernodes =
       viskores::cont::make_ArrayHandle(makeContourTreeSupernodesArr, 10, viskores::CopyFlag::On);
 
@@ -1347,11 +1366,12 @@ public:
     viskores::Id makeContourTreeWhenTransferredArr[10] = { 0, 0, 0, 0, 1, 1, 2, 2, 3, 4 };
     for (viskores::Id i = 0; i < 10; i++)
     {
-      makeContourTreeWhenTransferredArr[i] =
-        makeContourTreeWhenTransferredArr[i] | viskores::worklet::contourtree_augmented::IS_HYPERNODE;
+      makeContourTreeWhenTransferredArr[i] = makeContourTreeWhenTransferredArr[i] |
+        viskores::worklet::contourtree_augmented::IS_HYPERNODE;
     }
     viskores::worklet::contourtree_augmented::IdArrayType makeContourTreeWhenTransferred =
-      viskores::cont::make_ArrayHandle(makeContourTreeWhenTransferredArr, 10, viskores::CopyFlag::On);
+      viskores::cont::make_ArrayHandle(
+        makeContourTreeWhenTransferredArr, 10, viskores::CopyFlag::On);
 
     viskores::Id makeContourTreeHypernodesArr[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     viskores::worklet::contourtree_augmented::IdArrayType makeContourTreeHypernodes =
@@ -1428,8 +1448,8 @@ public:
         91,  92,  93,  94,  95,  96,  97,  99,  99,  100, 101, 102, 103, 104, 105, 106, 0,  106,
         106, 107, 109, 108, 111, 110, 113, 112, 115, 114, 114, 116, 116, 117, 118, 119, 120
       };
-      makeRegularStructureArcsArr[106] =
-        makeRegularStructureArcsArr[107] | viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+      makeRegularStructureArcsArr[106] = makeRegularStructureArcsArr[107] |
+        viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
       for (viskores::Id i = 0; i < 106; i++)
       {
         makeRegularStructureArcsArr[i] =
@@ -1440,13 +1460,13 @@ public:
 
       makeRegularStructureSuperparentsArr =
         new viskores::Id[125]{ 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-                           4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-                           4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-                           4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-                           4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 8, 8, 8, 8, 8, 8,
-                           8, 9, 6, 7, 6, 6, 7, 7, 6, 6, 7, 7, 0, 1, 2, 3, 0, 1, 2, 3 };
-      makeRegularStructureSuperparents =
-        viskores::cont::make_ArrayHandle(makeRegularStructureSuperparentsArr, 125, viskores::CopyFlag::On);
+                               4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                               4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                               4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+                               4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 8, 8, 8, 8, 8, 8,
+                               8, 9, 6, 7, 6, 6, 7, 7, 6, 6, 7, 7, 0, 1, 2, 3, 0, 1, 2, 3 };
+      makeRegularStructureSuperparents = viskores::cont::make_ArrayHandle(
+        makeRegularStructureSuperparentsArr, 125, viskores::CopyFlag::On);
       makeRegularStructureSupernodes = makeContourTreeSupernodes;
       makeRegularStructureSuperarcs = makeContourTreeSuperarcs;
       makeRegularStructureAugmentnodes = makeContourTreeAugmentnodes;
@@ -1466,23 +1486,23 @@ public:
 
       makeRegularStructureAugmentnodesArr =
         new viskores::Id[107]{ 0,  1,  2,  3,  4,   5,   6,   7,   8,   9,   10, 11, 12, 13, 14, 15,
-                           16, 17, 18, 19, 20,  21,  22,  23,  24,  25,  26, 27, 28, 29, 30, 31,
-                           32, 33, 34, 35, 36,  37,  38,  39,  40,  41,  42, 43, 44, 45, 46, 47,
-                           48, 49, 50, 51, 52,  53,  54,  55,  56,  57,  58, 59, 60, 61, 62, 63,
-                           64, 65, 66, 67, 68,  69,  70,  71,  72,  73,  74, 75, 76, 77, 78, 79,
-                           80, 81, 82, 83, 84,  85,  86,  87,  88,  89,  90, 91, 92, 93, 94, 95,
-                           96, 97, 98, 99, 106, 114, 116, 121, 122, 123, 124 };
-      makeRegularStructureAugmentnodes =
-        viskores::cont::make_ArrayHandle(makeRegularStructureAugmentnodesArr, 107, viskores::CopyFlag::On);
+                               16, 17, 18, 19, 20,  21,  22,  23,  24,  25,  26, 27, 28, 29, 30, 31,
+                               32, 33, 34, 35, 36,  37,  38,  39,  40,  41,  42, 43, 44, 45, 46, 47,
+                               48, 49, 50, 51, 52,  53,  54,  55,  56,  57,  58, 59, 60, 61, 62, 63,
+                               64, 65, 66, 67, 68,  69,  70,  71,  72,  73,  74, 75, 76, 77, 78, 79,
+                               80, 81, 82, 83, 84,  85,  86,  87,  88,  89,  90, 91, 92, 93, 94, 95,
+                               96, 97, 98, 99, 106, 114, 116, 121, 122, 123, 124 };
+      makeRegularStructureAugmentnodes = viskores::cont::make_ArrayHandle(
+        makeRegularStructureAugmentnodesArr, 107, viskores::CopyFlag::On);
 
       makeRegularStructureAugmentarcsArr =
         new viskores::Id[107]{ 1,  2,  3,  4,   5,  6,   7,   8,   9,   10,  11, 12, 13, 14, 15, 16,
-                           17, 18, 19, 20,  21, 22,  23,  24,  25,  26,  27, 28, 29, 30, 31, 32,
-                           33, 34, 35, 36,  37, 38,  39,  40,  41,  42,  43, 44, 45, 46, 47, 48,
-                           49, 50, 51, 52,  53, 54,  55,  56,  57,  58,  59, 60, 61, 62, 63, 64,
-                           65, 66, 67, 68,  69, 70,  71,  72,  73,  74,  75, 76, 77, 78, 79, 80,
-                           81, 82, 83, 84,  85, 86,  87,  88,  89,  90,  91, 92, 93, 94, 95, 96,
-                           97, 99, 99, 100, 0,  100, 100, 101, 101, 102, 102 };
+                               17, 18, 19, 20,  21, 22,  23,  24,  25,  26,  27, 28, 29, 30, 31, 32,
+                               33, 34, 35, 36,  37, 38,  39,  40,  41,  42,  43, 44, 45, 46, 47, 48,
+                               49, 50, 51, 52,  53, 54,  55,  56,  57,  58,  59, 60, 61, 62, 63, 64,
+                               65, 66, 67, 68,  69, 70,  71,  72,  73,  74,  75, 76, 77, 78, 79, 80,
+                               81, 82, 83, 84,  85, 86,  87,  88,  89,  90,  91, 92, 93, 94, 95, 96,
+                               97, 99, 99, 100, 0,  100, 100, 101, 101, 102, 102 };
       makeRegularStructureAugmentarcsArr[100] = makeRegularStructureAugmentarcsArr[100] |
         viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
       for (viskores::Id i = 0; i < 100; i++)
@@ -1491,8 +1511,8 @@ public:
           viskores::worklet::contourtree_augmented::IS_ASCENDING;
       }
 
-      makeRegularStructureAugmentarcs =
-        viskores::cont::make_ArrayHandle(makeRegularStructureAugmentarcsArr, 107, viskores::CopyFlag::On);
+      makeRegularStructureAugmentarcs = viskores::cont::make_ArrayHandle(
+        makeRegularStructureAugmentarcsArr, 107, viskores::CopyFlag::On);
 
 
       makeRegularStructureHyperparents = makeContourTreeHyperparents;

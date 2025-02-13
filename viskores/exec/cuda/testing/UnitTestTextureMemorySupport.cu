@@ -29,8 +29,10 @@ void TestScalarTextureLoad()
 
   VISKORES_TEST_ASSERT(f::WillUseTexture == 1, "Float32 can be loaded through texture memory");
   VISKORES_TEST_ASSERT(i::WillUseTexture == 1, "Int32 can be loaded through texture memory");
-  VISKORES_TEST_ASSERT(ui::WillUseTexture == 1, "Unsigned Int8 can be loaded through texture memory");
-  VISKORES_TEST_ASSERT(ct::WillUseTexture == 0, "Custom Types can't be loaded through texture memory");
+  VISKORES_TEST_ASSERT(ui::WillUseTexture == 1,
+                       "Unsigned Int8 can be loaded through texture memory");
+  VISKORES_TEST_ASSERT(ct::WillUseTexture == 0,
+                       "Custom Types can't be loaded through texture memory");
 }
 
 void TestVecTextureLoad()

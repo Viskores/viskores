@@ -245,7 +245,8 @@ public:
   struct WholeCellSetIn : viskores::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = viskores::cont::arg::TypeCheckTagCellSet;
-    using TransportTag = viskores::cont::arg::TransportTagCellSetIn<VisitTopology, IncidentTopology>;
+    using TransportTag =
+      viskores::cont::arg::TransportTagCellSetIn<VisitTopology, IncidentTopology>;
     using FetchTag = viskores::exec::arg::FetchTagWholeCellSetIn;
   };
 

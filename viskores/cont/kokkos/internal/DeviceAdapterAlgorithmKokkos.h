@@ -162,7 +162,7 @@ struct ReductionIdentity<viskores::MinAndMax<ResultType>, viskores::Vec<ResultTy
 {
   static constexpr viskores::Vec<ResultType, 2> value =
     viskores::Vec<ResultType, 2>(Kokkos::reduction_identity<ResultType>::min(),
-                             Kokkos::reduction_identity<ResultType>::max());
+                                 Kokkos::reduction_identity<ResultType>::max());
 };
 
 template <typename ResultType>
@@ -191,7 +191,8 @@ private:
     DeviceAdapterAlgorithm<viskores::cont::DeviceAdapterTagKokkos>,
     viskores::cont::DeviceAdapterTagKokkos>;
 
-  VISKORES_CONT_EXPORT static viskores::exec::internal::ErrorMessageBuffer GetErrorMessageBufferInstance();
+  VISKORES_CONT_EXPORT static viskores::exec::internal::ErrorMessageBuffer
+  GetErrorMessageBufferInstance();
   VISKORES_CONT_EXPORT static void CheckForErrors();
 
 public:
@@ -229,19 +230,21 @@ public:
 
   template <typename T>
   VISKORES_CONT static void Copy(const viskores::cont::ArrayHandle<T>& input,
-                             viskores::cont::ArrayHandle<T>& output)
+                                 viskores::cont::ArrayHandle<T>& output)
   {
     const viskores::Id inSize = input.GetNumberOfValues();
 
     viskores::cont::Token token;
 
     auto portalIn = input.PrepareForInput(viskores::cont::DeviceAdapterTagKokkos{}, token);
-    auto portalOut = output.PrepareForOutput(inSize, viskores::cont::DeviceAdapterTagKokkos{}, token);
+    auto portalOut =
+      output.PrepareForOutput(inSize, viskores::cont::DeviceAdapterTagKokkos{}, token);
 
 
     kokkos::internal::KokkosViewConstExec<T> viewIn(portalIn.GetArray(), inSize);
     kokkos::internal::KokkosViewExec<T> viewOut(portalOut.GetArray(), inSize);
-    Kokkos::deep_copy(viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), viewOut, viewIn);
+    Kokkos::deep_copy(
+      viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), viewOut, viewIn);
   }
 
   //----------------------------------------------------------------------------
@@ -251,9 +254,9 @@ private:
 #endif
   template <typename ArrayHandle, typename BinaryOperator, typename ResultType>
   VISKORES_CONT static ResultType ReduceImpl(const ArrayHandle& input,
-                                         BinaryOperator binaryOperator,
-                                         ResultType initialValue,
-                                         std::false_type)
+                                             BinaryOperator binaryOperator,
+                                             ResultType initialValue,
+                                             std::false_type)
   {
     return Superclass::Reduce(input, initialValue, binaryOperator);
   }
@@ -336,9 +339,9 @@ private:
 
   template <typename ArrayHandle, typename BinaryOperator, typename ResultType>
   VISKORES_CONT static ResultType ReduceImpl(const ArrayHandle& input,
-                                         BinaryOperator binaryOperator,
-                                         ResultType initialValue,
-                                         std::true_type)
+                                             BinaryOperator binaryOperator,
+                                             ResultType initialValue,
+                                             std::true_type)
   {
     viskores::cont::Token token;
     auto inputPortal = input.PrepareForInput(viskores::cont::DeviceAdapterTagKokkos{}, token);
@@ -379,8 +382,8 @@ private:
 public:
   template <typename T, typename U, class CIn, class BinaryOperator>
   VISKORES_CONT static U Reduce(const viskores::cont::ArrayHandle<T, CIn>& input,
-                            U initialValue,
-                            BinaryOperator binaryOperator)
+                                U initialValue,
+                                BinaryOperator binaryOperator)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -427,10 +430,10 @@ private:
 
   template <typename T, typename StorageIn, typename StorageOut, typename BinaryOperator>
   VISKORES_CONT static T ScanExclusiveImpl(const viskores::cont::ArrayHandle<T, StorageIn>& input,
-                                       viskores::cont::ArrayHandle<T, StorageOut>& output,
-                                       BinaryOperator binaryOperator,
-                                       const T& initialValue,
-                                       std::false_type)
+                                           viskores::cont::ArrayHandle<T, StorageOut>& output,
+                                           BinaryOperator binaryOperator,
+                                           const T& initialValue,
+                                           std::false_type)
   {
     return Superclass::ScanExclusive(input, output, binaryOperator, initialValue);
   }
@@ -457,7 +460,10 @@ private:
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const BinaryOperator& op, const viskores::Id i, T& update, const bool final) const
+    void operator()(const BinaryOperator& op,
+                    const viskores::Id i,
+                    T& update,
+                    const bool final) const
     {
       auto val = this->PortalIn.Get(i);
       if (i == 0)
@@ -485,10 +491,10 @@ private:
 
   template <typename T, typename StorageIn, typename StorageOut, typename BinaryOperator>
   VISKORES_CONT static T ScanExclusiveImpl(const viskores::cont::ArrayHandle<T, StorageIn>& input,
-                                       viskores::cont::ArrayHandle<T, StorageOut>& output,
-                                       BinaryOperator binaryOperator,
-                                       const T& initialValue,
-                                       std::true_type)
+                                           viskores::cont::ArrayHandle<T, StorageOut>& output,
+                                           BinaryOperator binaryOperator,
+                                           const T& initialValue,
+                                           std::true_type)
   {
     viskores::Id length = input.GetNumberOfValues();
 
@@ -511,9 +517,9 @@ private:
 public:
   template <typename T, class CIn, class COut, class BinaryOperator>
   VISKORES_CONT static T ScanExclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output,
-                                   BinaryOperator binaryOperator,
-                                   const T& initialValue)
+                                       viskores::cont::ArrayHandle<T, COut>& output,
+                                       BinaryOperator binaryOperator,
+                                       const T& initialValue)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -544,11 +550,12 @@ public:
 
   template <typename T, class CIn, class COut>
   VISKORES_CONT static T ScanExclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output)
+                                       viskores::cont::ArrayHandle<T, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
-    return ScanExclusive(input, output, viskores::Sum(), viskores::TypeTraits<T>::ZeroInitialization());
+    return ScanExclusive(
+      input, output, viskores::Sum(), viskores::TypeTraits<T>::ZeroInitialization());
   }
 
   //----------------------------------------------------------------------------
@@ -558,9 +565,9 @@ private:
 #endif
   template <typename T, typename StorageIn, typename StorageOut, typename BinaryOperator>
   VISKORES_CONT static T ScanInclusiveImpl(const viskores::cont::ArrayHandle<T, StorageIn>& input,
-                                       viskores::cont::ArrayHandle<T, StorageOut>& output,
-                                       BinaryOperator binaryOperator,
-                                       std::false_type)
+                                           viskores::cont::ArrayHandle<T, StorageOut>& output,
+                                           BinaryOperator binaryOperator,
+                                           std::false_type)
   {
     return Superclass::ScanInclusive(input, output, binaryOperator);
   }
@@ -584,7 +591,10 @@ private:
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const BinaryOperator& op, const viskores::Id i, T& update, const bool final) const
+    void operator()(const BinaryOperator& op,
+                    const viskores::Id i,
+                    T& update,
+                    const bool final) const
     {
       update = op(update, this->PortalIn.Get(i));
       if (final)
@@ -606,9 +616,9 @@ private:
 
   template <typename T, typename StorageIn, typename StorageOut, typename BinaryOperator>
   VISKORES_CONT static T ScanInclusiveImpl(const viskores::cont::ArrayHandle<T, StorageIn>& input,
-                                       viskores::cont::ArrayHandle<T, StorageOut>& output,
-                                       BinaryOperator binaryOperator,
-                                       std::true_type)
+                                           viskores::cont::ArrayHandle<T, StorageOut>& output,
+                                           BinaryOperator binaryOperator,
+                                           std::true_type)
   {
     viskores::Id length = input.GetNumberOfValues();
 
@@ -631,8 +641,8 @@ private:
 public:
   template <typename T, class CIn, class COut, class BinaryOperator>
   VISKORES_CONT static T ScanInclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output,
-                                   BinaryOperator binaryOperator)
+                                       viskores::cont::ArrayHandle<T, COut>& output,
+                                       BinaryOperator binaryOperator)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -662,7 +672,7 @@ public:
 
   template <typename T, class CIn, class COut>
   VISKORES_CONT static T ScanInclusive(const viskores::cont::ArrayHandle<T, CIn>& input,
-                                   viskores::cont::ArrayHandle<T, COut>& output)
+                                       viskores::cont::ArrayHandle<T, COut>& output)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -687,8 +697,8 @@ public:
 
     constexpr viskores::IdComponent maxThreadsPerBlock =
       viskores::cont::internal::HintFind<Hints,
-                                     viskores::cont::internal::HintThreadsPerBlock<0>,
-                                     viskores::cont::DeviceAdapterTagKokkos>::MaxThreads;
+                                         viskores::cont::internal::HintThreadsPerBlock<0>,
+                                         viskores::cont::DeviceAdapterTagKokkos>::MaxThreads;
 
     Kokkos::RangePolicy<viskores::cont::kokkos::internal::ExecutionSpace,
                         Kokkos::LaunchBounds<maxThreadsPerBlock, 0>,
@@ -715,8 +725,8 @@ public:
 
     constexpr viskores::IdComponent maxThreadsPerBlock =
       viskores::cont::internal::HintFind<Hints,
-                                     viskores::cont::internal::HintThreadsPerBlock<0>,
-                                     viskores::cont::DeviceAdapterTagKokkos>::MaxThreads;
+                                         viskores::cont::internal::HintThreadsPerBlock<0>,
+                                         viskores::cont::DeviceAdapterTagKokkos>::MaxThreads;
 
     Kokkos::MDRangePolicy<viskores::cont::kokkos::internal::ExecutionSpace,
                           Kokkos::LaunchBounds<maxThreadsPerBlock, 0>,
@@ -747,8 +757,8 @@ public:
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
-    viskores::exec::kokkos::internal::TaskBasic1D<Functor, viskores::internal::NullType, Hints> kernel(
-      functor);
+    viskores::exec::kokkos::internal::TaskBasic1D<Functor, viskores::internal::NullType, Hints>
+      kernel(functor);
     ScheduleTask(kernel, numInstances);
   }
 
@@ -763,8 +773,8 @@ public:
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
-    viskores::exec::kokkos::internal::TaskBasic3D<Functor, viskores::internal::NullType, Hints> kernel(
-      functor);
+    viskores::exec::kokkos::internal::TaskBasic3D<Functor, viskores::internal::NullType, Hints>
+      kernel(functor);
     ScheduleTask(kernel, rangeMax);
   }
 
@@ -777,7 +787,9 @@ public:
   //----------------------------------------------------------------------------
 private:
   template <typename T>
-  VISKORES_CONT static void SortImpl(viskores::cont::ArrayHandle<T>& values, viskores::SortLess, std::true_type)
+  VISKORES_CONT static void SortImpl(viskores::cont::ArrayHandle<T>& values,
+                                     viskores::SortLess,
+                                     std::true_type)
   {
     // In Kokkos 3.7, we have noticed some errors when sorting with zero-length arrays (which
     // should do nothing). There is no check, and the bin size computation gets messed up.
@@ -802,8 +814,8 @@ private:
 
   template <typename T>
   VISKORES_CONT static void SortImpl(viskores::cont::ArrayHandle<T>& values,
-                                 viskores::SortLess comp,
-                                 std::false_type)
+                                     viskores::SortLess comp,
+                                     std::false_type)
   {
     Superclass::Sort(values, comp);
   }
@@ -824,7 +836,7 @@ protected:
 
   template <typename T, typename U, typename BinaryCompare>
   VISKORES_CONT static std::enable_if_t<(std::is_same<BinaryCompare, viskores::SortLess>::value ||
-                                     std::is_same<BinaryCompare, viskores::SortGreater>::value)>
+                                         std::is_same<BinaryCompare, viskores::SortGreater>::value)>
   SortByKeyImpl(viskores::cont::ArrayHandle<T>& keys,
                 viskores::cont::ArrayHandle<U>& values,
                 BinaryCompare,
@@ -864,10 +876,10 @@ protected:
             typename ValidKeys,
             typename ValidValues>
   VISKORES_CONT static void SortByKeyImpl(viskores::cont::ArrayHandle<T, StorageT>& keys,
-                                      viskores::cont::ArrayHandle<U, StorageU>& values,
-                                      BinaryCompare binary_compare,
-                                      ValidKeys,
-                                      ValidValues)
+                                          viskores::cont::ArrayHandle<U, StorageU>& values,
+                                          BinaryCompare binary_compare,
+                                          ValidKeys,
+                                          ValidValues)
   {
     // Default to general algorithm
     Superclass::SortByKey(keys, values, binary_compare);
@@ -876,7 +888,7 @@ protected:
 public:
   template <typename T, typename U, class StorageT, class StorageU>
   VISKORES_CONT static void SortByKey(viskores::cont::ArrayHandle<T, StorageT>& keys,
-                                  viskores::cont::ArrayHandle<U, StorageU>& values)
+                                      viskores::cont::ArrayHandle<U, StorageU>& values)
   {
     // Make sure not to use the general algorithm here since
     // it will use Sort algorithm instead of SortByKey
@@ -885,8 +897,8 @@ public:
 
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
   VISKORES_CONT static void SortByKey(viskores::cont::ArrayHandle<T, StorageT>& keys,
-                                  viskores::cont::ArrayHandle<U, StorageU>& values,
-                                  BinaryCompare binary_compare)
+                                      viskores::cont::ArrayHandle<U, StorageU>& values,
+                                      BinaryCompare binary_compare)
   {
     // If T or U are not scalar types, or the BinaryCompare is not supported
     // then the general algorithm is called, otherwise we will run thrust
@@ -905,10 +917,10 @@ public:
 protected:
   template <typename K, typename V, class BinaryFunctor>
   VISKORES_CONT static void ReduceByKeyImpl(const viskores::cont::ArrayHandle<K>& keys,
-                                        const viskores::cont::ArrayHandle<V>& values,
-                                        viskores::cont::ArrayHandle<K>& keys_output,
-                                        viskores::cont::ArrayHandle<V>& values_output,
-                                        BinaryFunctor binary_functor)
+                                            const viskores::cont::ArrayHandle<V>& values,
+                                            viskores::cont::ArrayHandle<K>& keys_output,
+                                            viskores::cont::ArrayHandle<V>& values_output,
+                                            BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -923,8 +935,8 @@ protected:
 
       auto keys_output_portal =
         keys_output.PrepareForOutput(numberOfKeys, viskores::cont::DeviceAdapterTagKokkos{}, token);
-      auto values_output_portal =
-        values_output.PrepareForOutput(numberOfKeys, viskores::cont::DeviceAdapterTagKokkos{}, token);
+      auto values_output_portal = values_output.PrepareForOutput(
+        numberOfKeys, viskores::cont::DeviceAdapterTagKokkos{}, token);
 
       thrust::device_ptr<const K> keys_begin(keys_portal.GetArray());
       thrust::device_ptr<const K> keys_end(keys_portal.GetArray() + numberOfKeys);
@@ -970,8 +982,8 @@ protected:
 
       auto keys_output_portal =
         keys_output.PrepareForOutput(numberOfKeys, viskores::cont::DeviceAdapterTagKokkos{}, token);
-      auto values_output_portal =
-        values_output.PrepareForOutput(numberOfKeys, viskores::cont::DeviceAdapterTagKokkos{}, token);
+      auto values_output_portal = values_output.PrepareForOutput(
+        numberOfKeys, viskores::cont::DeviceAdapterTagKokkos{}, token);
 
       thrust::device_ptr<const K> keys_begin(keys_portal.GetArray());
       thrust::device_ptr<const K> keys_end(keys_portal.GetArray() + numberOfKeys);
@@ -1003,10 +1015,10 @@ protected:
             class VOut,
             class BinaryFunctor>
   VISKORES_CONT static void ReduceByKeyImpl(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                        const viskores::cont::ArrayHandle<U, VIn>& values,
-                                        viskores::cont::ArrayHandle<T, KOut>& keys_output,
-                                        viskores::cont::ArrayHandle<U, VOut>& values_output,
-                                        BinaryFunctor binary_functor)
+                                            const viskores::cont::ArrayHandle<U, VIn>& values,
+                                            viskores::cont::ArrayHandle<T, KOut>& keys_output,
+                                            viskores::cont::ArrayHandle<U, VOut>& values_output,
+                                            BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1022,10 +1034,10 @@ public:
             class VOut,
             class BinaryFunctor>
   VISKORES_CONT static void ReduceByKey(const viskores::cont::ArrayHandle<T, KIn>& keys,
-                                    const viskores::cont::ArrayHandle<U, VIn>& values,
-                                    viskores::cont::ArrayHandle<T, KOut>& keys_output,
-                                    viskores::cont::ArrayHandle<U, VOut>& values_output,
-                                    BinaryFunctor binary_functor)
+                                        const viskores::cont::ArrayHandle<U, VIn>& values,
+                                        viskores::cont::ArrayHandle<T, KOut>& keys_output,
+                                        viskores::cont::ArrayHandle<U, VOut>& values_output,
+                                        BinaryFunctor binary_functor)
   {
     VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Perf);
 
@@ -1048,16 +1060,18 @@ class DeviceTaskTypes<viskores::cont::DeviceAdapterTagKokkos>
 {
 public:
   template <typename Hints, typename WorkletType, typename InvocationType>
-  VISKORES_CONT static viskores::exec::kokkos::internal::TaskBasic1D<WorkletType, InvocationType, Hints>
-  MakeTask(WorkletType& worklet, InvocationType& invocation, viskores::Id, Hints = Hints{})
+  VISKORES_CONT static viskores::exec::kokkos::internal::
+    TaskBasic1D<WorkletType, InvocationType, Hints>
+    MakeTask(WorkletType& worklet, InvocationType& invocation, viskores::Id, Hints = Hints{})
   {
     return viskores::exec::kokkos::internal::TaskBasic1D<WorkletType, InvocationType, Hints>(
       worklet, invocation);
   }
 
   template <typename Hints, typename WorkletType, typename InvocationType>
-  VISKORES_CONT static viskores::exec::kokkos::internal::TaskBasic3D<WorkletType, InvocationType, Hints>
-  MakeTask(WorkletType& worklet, InvocationType& invocation, viskores::Id3, Hints = {})
+  VISKORES_CONT static viskores::exec::kokkos::internal::
+    TaskBasic3D<WorkletType, InvocationType, Hints>
+    MakeTask(WorkletType& worklet, InvocationType& invocation, viskores::Id3, Hints = {})
   {
     return viskores::exec::kokkos::internal::TaskBasic3D<WorkletType, InvocationType, Hints>(
       worklet, invocation);
@@ -1065,8 +1079,8 @@ public:
 
   template <typename WorkletType, typename InvocationType, typename RangeType>
   VISKORES_CONT static auto MakeTask(WorkletType& worklet,
-                                 InvocationType& invocation,
-                                 const RangeType& range)
+                                     InvocationType& invocation,
+                                     const RangeType& range)
   {
     return MakeTask<viskores::cont::internal::HintList<>>(worklet, invocation, range);
   }

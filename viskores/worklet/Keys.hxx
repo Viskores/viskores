@@ -22,8 +22,8 @@ namespace worklet
 template <typename T>
 template <typename KeyArrayType>
 VISKORES_CONT void Keys<T>::BuildArrays(const KeyArrayType& keys,
-                                    KeysSortType sort,
-                                    viskores::cont::DeviceAdapterId device)
+                                        KeysSortType sort,
+                                        viskores::cont::DeviceAdapterId device)
 {
   VISKORES_LOG_SCOPE(viskores::cont::LogLevel::Perf, "Keys::BuildArrays");
 
@@ -49,8 +49,8 @@ VISKORES_CONT void Keys<T>::BuildArrays(const KeyArrayType& keys,
 template <typename T>
 template <typename KeyArrayType>
 VISKORES_CONT void Keys<T>::BuildArraysInPlace(KeyArrayType& keys,
-                                           KeysSortType sort,
-                                           viskores::cont::DeviceAdapterId device)
+                                               KeysSortType sort,
+                                               viskores::cont::DeviceAdapterId device)
 {
   VISKORES_LOG_SCOPE(viskores::cont::LogLevel::Perf, "Keys::BuildArraysInPlace");
 
@@ -75,38 +75,41 @@ VISKORES_CONT void Keys<T>::BuildArraysInPlace(KeyArrayType& keys,
 
 template <typename T>
 template <typename KeyArrayType>
-VISKORES_CONT void Keys<T>::BuildArraysInternal(KeyArrayType& keys, viskores::cont::DeviceAdapterId device)
+VISKORES_CONT void Keys<T>::BuildArraysInternal(KeyArrayType& keys,
+                                                viskores::cont::DeviceAdapterId device)
 {
   VISKORES_LOG_SCOPE(viskores::cont::LogLevel::Perf, "Keys::BuildArraysInternal");
 
   const viskores::Id numKeys = keys.GetNumberOfValues();
 
-  viskores::cont::Algorithm::Copy(device, viskores::cont::ArrayHandleIndex(numKeys), this->SortedValuesMap);
+  viskores::cont::Algorithm::Copy(
+    device, viskores::cont::ArrayHandleIndex(numKeys), this->SortedValuesMap);
 
   // TODO: Do we need the ability to specify a comparison functor for sort?
   viskores::cont::Algorithm::SortByKey(device, keys, this->SortedValuesMap);
 
   // Find the unique keys and the number of values per key.
   viskores::cont::ArrayHandle<viskores::IdComponent> counts;
-  viskores::cont::Algorithm::ReduceByKey(device,
-                                     keys,
-                                     viskores::cont::ArrayHandleConstant<viskores::IdComponent>(1, numKeys),
-                                     this->UniqueKeys,
-                                     counts,
-                                     viskores::Sum());
+  viskores::cont::Algorithm::ReduceByKey(
+    device,
+    keys,
+    viskores::cont::ArrayHandleConstant<viskores::IdComponent>(1, numKeys),
+    this->UniqueKeys,
+    counts,
+    viskores::Sum());
 
   // Get the offsets from the counts with a scan.
   viskores::cont::Algorithm::ScanExtended(
     device, viskores::cont::make_ArrayHandleCast(counts, viskores::Id()), this->Offsets);
 
-  VISKORES_ASSERT(numKeys ==
-              viskores::cont::ArrayGetValue(this->Offsets.GetNumberOfValues() - 1, this->Offsets));
+  VISKORES_ASSERT(
+    numKeys == viskores::cont::ArrayGetValue(this->Offsets.GetNumberOfValues() - 1, this->Offsets));
 }
 
 template <typename T>
 template <typename KeyArrayType>
 VISKORES_CONT void Keys<T>::BuildArraysInternalStable(const KeyArrayType& keys,
-                                                  viskores::cont::DeviceAdapterId device)
+                                                      viskores::cont::DeviceAdapterId device)
 {
   VISKORES_LOG_SCOPE(viskores::cont::LogLevel::Perf, "Keys::BuildArraysInternalStable");
 
@@ -118,19 +121,20 @@ VISKORES_CONT void Keys<T>::BuildArraysInternalStable(const KeyArrayType& keys,
 
   // Find the unique keys and the number of values per key.
   viskores::cont::ArrayHandle<viskores::IdComponent> counts;
-  viskores::cont::Algorithm::ReduceByKey(device,
-                                     sortedKeys,
-                                     viskores::cont::ArrayHandleConstant<viskores::IdComponent>(1, numKeys),
-                                     this->UniqueKeys,
-                                     counts,
-                                     viskores::Sum());
+  viskores::cont::Algorithm::ReduceByKey(
+    device,
+    sortedKeys,
+    viskores::cont::ArrayHandleConstant<viskores::IdComponent>(1, numKeys),
+    this->UniqueKeys,
+    counts,
+    viskores::Sum());
 
   // Get the offsets from the counts with a scan.
   viskores::cont::Algorithm::ScanExtended(
     device, viskores::cont::make_ArrayHandleCast(counts, viskores::Id()), this->Offsets);
 
-  VISKORES_ASSERT(numKeys ==
-              viskores::cont::ArrayGetValue(this->Offsets.GetNumberOfValues() - 1, this->Offsets));
+  VISKORES_ASSERT(
+    numKeys == viskores::cont::ArrayGetValue(this->Offsets.GetNumberOfValues() - 1, this->Offsets));
 }
 }
 }

@@ -67,7 +67,8 @@ namespace bract_maker
 
 /// Worklet to Subtract out the dependent count of the prefix to the entire hyperarc
 /// Part of the BoundaryRestrictedAugmentedContourTree.PropagateBoundaryCounts function
-class PropagateBoundaryCountsSubtractDependentCountsWorklet : public viskores::worklet::WorkletMapField
+class PropagateBoundaryCountsSubtractDependentCountsWorklet
+  : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn supernodeIndex, // (input) index of supernodes for iteration

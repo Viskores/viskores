@@ -236,10 +236,10 @@ public:
   /// @param[in] localToGlobalIdRelabeler This parameter is here only for
   ///            consistency with the DataSetMesh types but is not
   ///            used here and as such can simply be set to nullptr
-  inline viskores::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> GetGlobalIdsFromSortIndices(
-    const IdArrayType& sortIds,
-    const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler* localToGlobalIdRelabeler =
-      nullptr) const
+  inline viskores::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>
+  GetGlobalIdsFromSortIndices(const IdArrayType& sortIds,
+                              const viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler*
+                                localToGlobalIdRelabeler = nullptr) const
   {                                 // GetGlobalIDsFromSortIndices()
     (void)localToGlobalIdRelabeler; // avoid compiler warning
     return viskores::cont::make_ArrayHandlePermutation(sortIds, this->GlobalMeshIndex);
@@ -346,11 +346,12 @@ ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& arcs,
 
 
 template <typename FieldType>
-inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
-                                                   const IdArrayType& arcs,
-                                                   const IdArrayType& inSortOrder,
-                                                   const viskores::cont::ArrayHandle<FieldType>& values,
-                                                   const IdArrayType& inGlobalMeshIndex)
+inline ContourTreeMesh<FieldType>::ContourTreeMesh(
+  const IdArrayType& nodes,
+  const IdArrayType& arcs,
+  const IdArrayType& inSortOrder,
+  const viskores::cont::ArrayHandle<FieldType>& values,
+  const IdArrayType& inGlobalMeshIndex)
   : GlobalMeshIndex(inGlobalMeshIndex)
   , NeighborConnectivity()
   , NeighborOffsets()
@@ -358,7 +359,7 @@ inline ContourTreeMesh<FieldType>::ContourTreeMesh(const IdArrayType& nodes,
   // Initialize the SortedValues array with values permuted by the SortOrder permuted by the nodes, i.e.,
   // this->SortedValues[v] = values[inSortOrder[nodes[v]]];
   viskores::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> permutedSortOrder(nodes,
-                                                                                 inSortOrder);
+                                                                                     inSortOrder);
   auto permutedValues = viskores::cont::make_ArrayHandlePermutation(permutedSortOrder, values);
   viskores::cont::Algorithm::Copy(permutedValues, this->SortedValues);
   // Initalize the SortedIndices as a smart array handle
@@ -517,7 +518,7 @@ inline void ContourTreeMesh<FieldType>::InitializeNeighborConnectivityFromArcs(
   // from: 0 1 1 2 3 3 3 4
   // to:   1 0 3 3 1 2 4 3
   viskores::cont::Algorithm::Sort(this->NeighborConnectivity,
-                              contourtree_mesh_inc_ns::ArcComparator(arcs));
+                                  contourtree_mesh_inc_ns::ArcComparator(arcs));
 
   // We can now obtain counts of the connectivity array by counting the number
   // of consecutive `from` entries with the same value. In our example:
@@ -606,7 +607,10 @@ contourtree_mesh_inc_ns::MeshStructureContourTreeMesh inline ContourTreeMesh<
 // Helper functor, basically negates criterion for CopyIf
 struct IsUnique
 {
-  VISKORES_EXEC_CONT bool operator()(viskores::IdComponent isInOther) const { return isInOther == 0; }
+  VISKORES_EXEC_CONT bool operator()(viskores::IdComponent isInOther) const
+  {
+    return isInOther == 0;
+  }
 };
 
 // Combine two ContourTreeMeshes
@@ -779,7 +783,7 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
 #endif
 
   VISKORES_ASSERT(indicesThisDuplicate.GetNumberOfValues() ==
-              indicesOtherDuplicate.GetNumberOfValues());
+                  indicesOtherDuplicate.GetNumberOfValues());
 
   // Merge the neighbor groups for vertices that occur in both meshes
   // ... compute combined counts (with duplicates)
@@ -791,17 +795,17 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
     viskores::cont::make_ArrayHandlePermutation(indicesOtherDuplicate, neighborCountsOther);
   viskores::cont::ArrayHandle<viskores::IdComponent> combinedCommonNeighborCountSums;
   viskores::cont::Algorithm::Transform(permutedNeighborCountsThis,
-                                   permutedNeighborCountsOther,
-                                   combinedCommonNeighborCountSums,
-                                   viskores::Sum());
+                                       permutedNeighborCountsOther,
+                                       combinedCommonNeighborCountSums,
+                                       viskores::Sum());
 
   // ... merge sorted lists
   // ...... create output arrays/groups
   viskores::Id unpackedCombinedCommonNeighborConnectivitySize;
   IdArrayType unpackedCombinedCommonNeighborOffsets;
   viskores::cont::ConvertNumComponentsToOffsets(combinedCommonNeighborCountSums,
-                                            unpackedCombinedCommonNeighborOffsets,
-                                            unpackedCombinedCommonNeighborConnectivitySize);
+                                                unpackedCombinedCommonNeighborOffsets,
+                                                unpackedCombinedCommonNeighborConnectivitySize);
   IdArrayType unpackedCombinedCommonNeighborConnectivity;
   unpackedCombinedCommonNeighborConnectivity.Allocate(
     unpackedCombinedCommonNeighborConnectivitySize);
@@ -830,8 +834,8 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   viskores::Id packedCombinedCommonNeighborConnectivitySize;
   viskores::cont::ArrayHandle<viskores::Id> packedCombinedCommonNeighborOffsets;
   viskores::cont::ConvertNumComponentsToOffsets(packedCombinedCommonNeighborCounts,
-                                            packedCombinedCommonNeighborOffsets,
-                                            packedCombinedCommonNeighborConnectivitySize);
+                                                packedCombinedCommonNeighborOffsets,
+                                                packedCombinedCommonNeighborConnectivitySize);
 
   // ...... create a new grouped array for the packed connectivity
   viskores::cont::ArrayHandle<viskores::Id> packedCombinedCommonNeighborConnectivity;
@@ -904,8 +908,8 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
     viskores::cont::Algorithm::Copy(GlobalMeshIndex, permutedCombinedGlobalMeshIndex);
   }
   { // make sure arrays used for copy go out of scope
-    auto permutedCombinedGlobalMeshIndex =
-      viskores::cont::make_ArrayHandlePermutation(otherToCombinedSortOrder, combinedGlobalMeshIndex);
+    auto permutedCombinedGlobalMeshIndex = viskores::cont::make_ArrayHandlePermutation(
+      otherToCombinedSortOrder, combinedGlobalMeshIndex);
     viskores::cont::Algorithm::Copy(other.GlobalMeshIndex, permutedCombinedGlobalMeshIndex);
   }
 
@@ -955,10 +959,10 @@ inline void ContourTreeMesh<FieldType>::MergeWith(ContourTreeMesh<FieldType>& ot
   timer.Start();
   // Record the times we logged
   VISKORES_LOG_S(timingsLogLevel,
-             std::endl
-               << "    ---------------- ContourTreeMesh MergeWith ---------------------"
-               << std::endl
-               << timingsMessage << timingsStream.str());
+                 std::endl
+                   << "    ---------------- ContourTreeMesh MergeWith ---------------------"
+                   << std::endl
+                   << timingsMessage << timingsStream.str());
   // Prevent unused parameter warning when compiled without logging
   (void)timingsLogLevel;
   (void)timingsMessage;

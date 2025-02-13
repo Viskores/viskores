@@ -129,8 +129,9 @@ public:
   struct CellSetIn : viskores::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = viskores::cont::arg::TypeCheckTagCellSetStructured;
-    using TransportTag = viskores::cont::arg::TransportTagCellSetIn<viskores::TopologyElementTagPoint,
-                                                                viskores::TopologyElementTagCell>;
+    using TransportTag =
+      viskores::cont::arg::TransportTagCellSetIn<viskores::TopologyElementTagPoint,
+                                                 viskores::TopologyElementTagCell>;
     using FetchTag = viskores::exec::arg::FetchTagCellSetIn;
   };
 

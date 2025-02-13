@@ -55,7 +55,9 @@ VISKORES_EXEC inline viskores::UInt64 ExpandBits64(viskores::UInt32 x)
 
 //Returns 30 bit morton code for coordinates for
 //coordinates in the unit cude
-VISKORES_EXEC inline viskores::UInt32 Morton3D(viskores::Float32& x, viskores::Float32& y, viskores::Float32& z)
+VISKORES_EXEC inline viskores::UInt32 Morton3D(viskores::Float32& x,
+                                               viskores::Float32& y,
+                                               viskores::Float32& z)
 {
   //take the first 10 bits
   x = viskores::Min(viskores::Max(x * 1024.0f, 0.0f), 1023.0f);
@@ -71,7 +73,9 @@ VISKORES_EXEC inline viskores::UInt32 Morton3D(viskores::Float32& x, viskores::F
 
 //Returns 30 bit morton code for coordinates for
 //coordinates in the unit cude
-VISKORES_EXEC inline viskores::UInt64 Morton3D64(viskores::Float32& x, viskores::Float32& y, viskores::Float32& z)
+VISKORES_EXEC inline viskores::UInt64 Morton3D64(viskores::Float32& x,
+                                                 viskores::Float32& y,
+                                                 viskores::Float32& z)
 {
   //take the first 21 bits
   x = viskores::Min(viskores::Max(x * 2097152.0f, 0.0f), 2097151.0f);
@@ -150,12 +154,12 @@ public:
             typename MortonPortalType,
             typename CellFaceIdsPortalType>
   VISKORES_EXEC inline void operator()(const CellShape& cellShape,
-                                   const CellNodeVecType& cellIndices,
-                                   const viskores::Id& cellId,
-                                   const PointPortalType& points,
-                                   const viskores::Id& offset,
-                                   MortonPortalType& mortonCodes,
-                                   CellFaceIdsPortalType& cellFaceIds) const
+                                       const CellNodeVecType& cellIndices,
+                                       const viskores::Id& cellId,
+                                       const PointPortalType& points,
+                                       const viskores::Id& offset,
+                                       MortonPortalType& mortonCodes,
+                                       CellFaceIdsPortalType& cellFaceIds) const
   {
     CellTables tables;
     viskores::Int32 faceCount;

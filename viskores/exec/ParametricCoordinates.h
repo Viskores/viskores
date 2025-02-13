@@ -131,8 +131,8 @@ static inline VISKORES_EXEC viskores::ErrorCode ParametricCoordinatesCenter(
   viskores::ErrorCode status;
   switch (shape.Id)
   {
-    viskoresGenericCellShapeMacro(status =
-                                ParametricCoordinatesCenter(numPoints, CellShapeTag(), pcoords));
+    viskoresGenericCellShapeMacro(
+      status = ParametricCoordinatesCenter(numPoints, CellShapeTag(), pcoords));
     default:
       pcoords = { 0 };
       status = viskores::ErrorCode::InvalidShapeId;
@@ -162,7 +162,8 @@ static inline VISKORES_EXEC viskores::ErrorCode ParametricCoordinatesPoint(
   }
 
   pcoords = viskores::TypeTraits<viskores::Vec<ParametricCoordType, 3>>::ZeroInitialization();
-  return viskores::internal::LclErrorToViskoresError(lcl::parametricPoint(lclTag, pointIndex, pcoords));
+  return viskores::internal::LclErrorToViskoresError(
+    lcl::parametricPoint(lclTag, pointIndex, pcoords));
 }
 
 template <typename ParametricCoordType>
@@ -210,9 +211,11 @@ static inline VISKORES_EXEC viskores::ErrorCode ParametricCoordinatesPoint(
   switch (numPoints)
   {
     case 1:
-      return ParametricCoordinatesPoint(numPoints, pointIndex, viskores::CellShapeTagVertex(), pcoords);
+      return ParametricCoordinatesPoint(
+        numPoints, pointIndex, viskores::CellShapeTagVertex(), pcoords);
     case 2:
-      return ParametricCoordinatesPoint(numPoints, pointIndex, viskores::CellShapeTagLine(), pcoords);
+      return ParametricCoordinatesPoint(
+        numPoints, pointIndex, viskores::CellShapeTagLine(), pcoords);
   }
   pcoords[0] =
     static_cast<ParametricCoordType>(pointIndex) / static_cast<ParametricCoordType>(numPoints - 1);
@@ -231,9 +234,11 @@ static inline VISKORES_EXEC viskores::ErrorCode ParametricCoordinatesPoint(
   switch (numPoints)
   {
     case 1:
-      return ParametricCoordinatesPoint(numPoints, pointIndex, viskores::CellShapeTagVertex(), pcoords);
+      return ParametricCoordinatesPoint(
+        numPoints, pointIndex, viskores::CellShapeTagVertex(), pcoords);
     case 2:
-      return ParametricCoordinatesPoint(numPoints, pointIndex, viskores::CellShapeTagLine(), pcoords);
+      return ParametricCoordinatesPoint(
+        numPoints, pointIndex, viskores::CellShapeTagLine(), pcoords);
     default:
       pcoords = viskores::TypeTraits<viskores::Vec<ParametricCoordType, 3>>::ZeroInitialization();
       return viskores::internal::LclErrorToViskoresError(
@@ -386,7 +391,7 @@ static inline VISKORES_EXEC viskores::ErrorCode ParametricCoordinatesToWorldCoor
   switch (shape.Id)
   {
     viskoresGenericCellShapeMacro(status = ParametricCoordinatesToWorldCoordinates(
-                                pointWCoords, pcoords, CellShapeTag(), result));
+                                    pointWCoords, pcoords, CellShapeTag(), result));
     default:
       result = { 0 };
       status = viskores::ErrorCode::InvalidShapeId;
@@ -583,7 +588,7 @@ static inline VISKORES_EXEC viskores::ErrorCode WorldCoordinatesToParametricCoor
   switch (shape.Id)
   {
     viskoresGenericCellShapeMacro(status = WorldCoordinatesToParametricCoordinates(
-                                pointWCoords, wcoords, CellShapeTag(), result));
+                                    pointWCoords, wcoords, CellShapeTag(), result));
     default:
       result = { 0 };
       status = viskores::ErrorCode::InvalidShapeId;

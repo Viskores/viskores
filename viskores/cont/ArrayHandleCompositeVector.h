@@ -42,9 +42,10 @@ using AllPortalsAreWritable =
 template <typename ExpectedValueType, typename ArrayType>
 struct CheckValueType
 {
-  VISKORES_STATIC_ASSERT_MSG((std::is_same<ExpectedValueType, typename ArrayType::ValueType>::value),
-                         "ArrayHandleCompositeVector must be built from "
-                         "ArrayHandles with the same ValueTypes.");
+  VISKORES_STATIC_ASSERT_MSG(
+    (std::is_same<ExpectedValueType, typename ArrayType::ValueType>::value),
+    "ArrayHandleCompositeVector must be built from "
+    "ArrayHandles with the same ValueTypes.");
 };
 
 template <typename ArrayType0, typename... ArrayTypes>
@@ -72,9 +73,9 @@ struct GetValueType<ArrayType>
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename ValueType, viskores::IdComponent... I, typename... Portals>
 VISKORES_EXEC_CONT void SetToPortalsImpl(viskores::Id index,
-                                     const ValueType& value,
-                                     viskoresstd::integer_sequence<viskores::IdComponent, I...>,
-                                     const Portals&... portals)
+                                         const ValueType& value,
+                                         viskoresstd::integer_sequence<viskores::IdComponent, I...>,
+                                         const Portals&... portals)
 {
   using Traits = viskores::VecTraits<ValueType>;
   (void)std::initializer_list<bool>{ (portals.Set(index, Traits::GetComponent(value, I)),
@@ -83,13 +84,15 @@ VISKORES_EXEC_CONT void SetToPortalsImpl(viskores::Id index,
 
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename ValueType, typename... Portals>
-VISKORES_EXEC_CONT void SetToPortals(viskores::Id index, const ValueType& value, const Portals&... portals)
+VISKORES_EXEC_CONT void SetToPortals(viskores::Id index,
+                                     const ValueType& value,
+                                     const Portals&... portals)
 {
-  SetToPortalsImpl(
-    index,
-    value,
-    viskoresstd::make_integer_sequence<viskores::IdComponent, viskores::IdComponent(sizeof...(Portals))>{},
-    portals...);
+  SetToPortalsImpl(index,
+                   value,
+                   viskoresstd::make_integer_sequence<viskores::IdComponent,
+                                                      viskores::IdComponent(sizeof...(Portals))>{},
+                   portals...);
 }
 
 } // namespace compvec
@@ -120,14 +123,16 @@ public:
   }
 
   VISKORES_EXEC_CONT
-  viskores::Id GetNumberOfValues() const { return viskores::Get<0>(this->Portals).GetNumberOfValues(); }
+  viskores::Id GetNumberOfValues() const
+  {
+    return viskores::Get<0>(this->Portals).GetNumberOfValues();
+  }
 
   VISKORES_EXEC_CONT
   ValueType Get(viskores::Id index) const
   {
-    auto getFromPortals = [index](const auto&... portals) {
-      return ValueType{ portals.Get(index)... };
-    };
+    auto getFromPortals = [index](const auto&... portals)
+    { return ValueType{ portals.Get(index)... }; };
     return this->Portals.Apply(getFromPortals);
   }
 
@@ -138,9 +143,8 @@ public:
     // Note that we are using a lambda function here to implicitly construct a
     // functor to pass to Apply. Some device compilers will not allow passing a
     // function or function pointer to Tuple::Apply.
-    auto setToPortal = [index, &value](const auto&... portals) {
-      compvec::SetToPortals(index, value, portals...);
-    };
+    auto setToPortal = [index, &value](const auto&... portals)
+    { compvec::SetToPortals(index, value, portals...); };
     this->Portals.Apply(setToPortal);
   }
 };
@@ -162,8 +166,8 @@ template <typename ArrayType>
 struct VerifyArrayHandle
 {
   VISKORES_STATIC_ASSERT_MSG(viskores::cont::internal::ArrayHandleCheck<ArrayType>::type::value,
-                         "Template parameters for ArrayHandleCompositeVector "
-                         "must be a list of ArrayHandle types.");
+                             "Template parameters for ArrayHandleCompositeVector "
+                             "must be a list of ArrayHandle types.");
 };
 
 } // end namespace compvec
@@ -212,9 +216,9 @@ class Storage<viskores::Vec<T, static_cast<viskores::IdComponent>(sizeof...(Stor
     std::size_t subArray)
   {
     Info info = buffers[0].GetMetaData<Info>();
-    return std::vector<viskores::cont::internal::Buffer>(buffers.begin() + info.BufferOffset[subArray],
-                                                     buffers.begin() +
-                                                       info.BufferOffset[subArray + 1]);
+    return std::vector<viskores::cont::internal::Buffer>(
+      buffers.begin() + info.BufferOffset[subArray],
+      buffers.begin() + info.BufferOffset[subArray + 1]);
   }
 
   template <std::size_t I>
@@ -227,8 +231,8 @@ class Storage<viskores::Vec<T, static_cast<viskores::IdComponent>(sizeof...(Stor
   using IndexList = viskoresstd::make_index_sequence<sizeof...(StorageTags)>;
 
 public:
-  using ReadPortalType =
-    viskores::internal::ArrayPortalCompositeVector<typename StorageFor<StorageTags>::ReadPortalType...>;
+  using ReadPortalType = viskores::internal::ArrayPortalCompositeVector<
+    typename StorageFor<StorageTags>::ReadPortalType...>;
   using WritePortalType = viskores::internal::ArrayPortalCompositeVector<
     typename StorageFor<StorageTags>::WritePortalType...>;
 
@@ -256,13 +260,13 @@ private:
                        viskores::Id endIndex,
                        viskores::cont::Token& token)
   {
-    auto init_list = { (
-      viskores::tuple_element_t<Is, StorageTuple>::Fill(Buffers<Is>(buffers),
-                                                    fillValue[static_cast<viskores::IdComponent>(Is)],
-                                                    startIndex,
-                                                    endIndex,
-                                                    token),
-      false)... };
+    auto init_list = { (viskores::tuple_element_t<Is, StorageTuple>::Fill(
+                          Buffers<Is>(buffers),
+                          fillValue[static_cast<viskores::IdComponent>(Is)],
+                          startIndex,
+                          endIndex,
+                          token),
+                        false)... };
     (void)init_list;
   }
 
@@ -304,19 +308,20 @@ public:
     return viskores::TupleElement<0, StorageTuple>::GetNumberOfValues(Buffers<0>(buffers));
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     ResizeBuffersImpl(IndexList{}, numValues, buffers, preserve, token);
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>& buffers,
-                             const ValueType& fillValue,
-                             viskores::Id startIndex,
-                             viskores::Id endIndex,
-                             viskores::cont::Token& token)
+                                 const ValueType& fillValue,
+                                 viskores::Id startIndex,
+                                 viskores::Id endIndex,
+                                 viskores::cont::Token& token)
   {
     FillImpl(IndexList{}, buffers, fillValue, startIndex, endIndex, token);
   }
@@ -376,7 +381,8 @@ template <typename T, typename StorageTag>
 struct Storage<T, viskores::cont::StorageTagCompositeVec<StorageTag>> : Storage<T, StorageTag>
 {
   VISKORES_CONT static std::vector<viskores::cont::internal::Buffer> CreateBuffers(
-    const viskores::cont::ArrayHandle<T, StorageTag>& array = viskores::cont::ArrayHandle<T, StorageTag>{})
+    const viskores::cont::ArrayHandle<T, StorageTag>& array =
+      viskores::cont::ArrayHandle<T, StorageTag>{})
   {
     return viskores::cont::internal::CreateBuffers(array);
   }
@@ -412,9 +418,10 @@ class ArrayHandleCompositeVector
                        typename internal::CompositeVectorTraits<ArrayTs...>::StorageTag>
 {
 public:
-  VISKORES_ARRAY_HANDLE_SUBCLASS(ArrayHandleCompositeVector,
-                             (ArrayHandleCompositeVector<ArrayTs...>),
-                             (typename internal::CompositeVectorTraits<ArrayTs...>::Superclass));
+  VISKORES_ARRAY_HANDLE_SUBCLASS(
+    ArrayHandleCompositeVector,
+    (ArrayHandleCompositeVector<ArrayTs...>),
+    (typename internal::CompositeVectorTraits<ArrayTs...>::Superclass));
 
   /// Construct an `ArrayHandleCompositeVector` from a set of component vectors.
   VISKORES_CONT
@@ -453,7 +460,8 @@ namespace detail
 template <typename T>
 struct ExtractComponentCompositeVecFunctor
 {
-  using ResultArray = viskores::cont::ArrayHandleStride<typename viskores::VecTraits<T>::BaseComponentType>;
+  using ResultArray =
+    viskores::cont::ArrayHandleStride<typename viskores::VecTraits<T>::BaseComponentType>;
 
   ResultArray operator()(viskores::IdComponent, viskores::IdComponent, viskores::CopyFlag) const
   {
@@ -489,12 +497,14 @@ struct ArrayExtractComponentImpl<StorageTagCompositeVec<StorageTags...>>
 {
   template <typename VecT>
   auto operator()(
-    const viskores::cont::ArrayHandle<VecT, viskores::cont::StorageTagCompositeVec<StorageTags...>>& src,
+    const viskores::cont::ArrayHandle<VecT, viskores::cont::StorageTagCompositeVec<StorageTags...>>&
+      src,
     viskores::IdComponent componentIndex,
     viskores::CopyFlag allowCopy) const
   {
     using T = typename viskores::VecTraits<VecT>::ComponentType;
-    viskores::cont::ArrayHandleCompositeVector<viskores::cont::ArrayHandle<T, StorageTags>...> array(src);
+    viskores::cont::ArrayHandleCompositeVector<viskores::cont::ArrayHandle<T, StorageTags>...>
+      array(src);
     constexpr viskores::IdComponent NUM_SUB_COMPONENTS = viskores::VecFlat<T>::NUM_COMPONENTS;
 
     return array.GetArrayTuple().Apply(detail::ExtractComponentCompositeVecFunctor<T>{},
@@ -531,7 +541,7 @@ struct SerializableTypeString<viskores::cont::ArrayHandleCompositeVector<AHs...>
 template <typename T, typename... STs>
 struct SerializableTypeString<
   viskores::cont::ArrayHandle<viskores::Vec<T, static_cast<viskores::IdComponent>(sizeof...(STs))>,
-                          viskores::cont::StorageTagCompositeVec<STs...>>>
+                              viskores::cont::StorageTagCompositeVec<STs...>>>
   : SerializableTypeString<
       viskores::cont::ArrayHandleCompositeVector<viskores::cont::ArrayHandle<T, STs>...>>
 {
@@ -598,8 +608,9 @@ public:
 template <typename T, typename... STs>
 struct Serialization<
   viskores::cont::ArrayHandle<viskores::Vec<T, static_cast<viskores::IdComponent>(sizeof...(STs))>,
-                          viskores::cont::StorageTagCompositeVec<STs...>>>
-  : Serialization<viskores::cont::ArrayHandleCompositeVector<viskores::cont::ArrayHandle<T, STs>...>>
+                              viskores::cont::StorageTagCompositeVec<STs...>>>
+  : Serialization<
+      viskores::cont::ArrayHandleCompositeVector<viskores::cont::ArrayHandle<T, STs>...>>
 {
 };
 } // diy

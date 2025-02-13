@@ -37,9 +37,10 @@ template <typename ParticleType>
 class DSIHelperInfo
 {
 public:
-  DSIHelperInfo(const std::vector<ParticleType>& v,
-                const viskores::filter::flow::internal::BoundsMap& boundsMap,
-                const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& particleBlockIDsMap)
+  DSIHelperInfo(
+    const std::vector<ParticleType>& v,
+    const viskores::filter::flow::internal::BoundsMap& boundsMap,
+    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& particleBlockIDsMap)
     : BoundsMap(boundsMap)
     , ParticleBlockIDsMap(particleBlockIDsMap)
     , Particles(v)
@@ -132,8 +133,9 @@ public:
   }
 
 protected:
-  VISKORES_CONT inline void ClassifyParticles(const viskores::cont::ArrayHandle<ParticleType>& particles,
-                                          DSIHelperInfo<ParticleType>& dsiInfo) const;
+  VISKORES_CONT inline void ClassifyParticles(
+    const viskores::cont::ArrayHandle<ParticleType>& particles,
+    DSIHelperInfo<ParticleType>& dsiInfo) const;
 
   //Data members.
   viskores::Id Id;

@@ -61,7 +61,7 @@ public:
   ArrayPortalRuntimeVec() = default;
 
   VISKORES_EXEC_CONT ArrayPortalRuntimeVec(const ComponentsPortalType& componentsPortal,
-                                       viskores::IdComponent numComponents)
+                                           viskores::IdComponent numComponents)
     : ComponentsPortal(componentsPortal)
     , NumberOfComponents(numComponents)
   {
@@ -71,7 +71,8 @@ public:
   /// that can be copied to this portal type. This allows us to do any type
   /// casting that the portals do (like the non-const to const cast).
   template <typename OtherComponentsPortalType>
-  VISKORES_EXEC_CONT ArrayPortalRuntimeVec(const ArrayPortalRuntimeVec<OtherComponentsPortalType>& src)
+  VISKORES_EXEC_CONT ArrayPortalRuntimeVec(
+    const ArrayPortalRuntimeVec<OtherComponentsPortalType>& src)
     : ComponentsPortal(src.GetComponentsPortal())
     , NumberOfComponents(src.GetNumberOfComponents())
   {
@@ -193,20 +194,21 @@ public:
       GetNumberOfComponents(buffers);
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     ComponentsStorage::ResizeBuffers(
       numValues * GetNumberOfComponents(buffers), ComponentsBuffers(buffers), preserve, token);
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>&,
-                             const viskores::VecFromPortal<ComponentsPortal>&,
-                             viskores::Id,
-                             viskores::Id,
-                             viskores::cont::Token&)
+                                 const viskores::VecFromPortal<ComponentsPortal>&,
+                                 viskores::Id,
+                                 viskores::Id,
+                                 viskores::cont::Token&)
   {
     throw viskores::cont::ErrorBadType("Fill not supported for ArrayHandleRuntimeVec.");
   }
@@ -236,11 +238,11 @@ public:
     const ComponentsArray& componentsArray = ComponentsArray{})
   {
     VISKORES_LOG_IF_S(viskores::cont::LogLevel::Warn,
-                  (componentsArray.GetNumberOfValues() % numComponents) != 0,
-                  "Array given to ArrayHandleRuntimeVec has size ("
-                    << componentsArray.GetNumberOfValues()
-                    << ") that is not divisible by the number of components selected ("
-                    << numComponents << ").");
+                      (componentsArray.GetNumberOfValues() % numComponents) != 0,
+                      "Array given to ArrayHandleRuntimeVec has size ("
+                        << componentsArray.GetNumberOfValues()
+                        << ") that is not divisible by the number of components selected ("
+                        << numComponents << ").");
     Info info;
     info.NumberOfComponents = numComponents;
     return viskores::cont::internal::CreateBuffers(info, componentsArray);
@@ -267,30 +269,31 @@ public:
   template <viskores::IdComponent N>
   VISKORES_CONT static void AsArrayHandleBasic(
     const std::vector<viskores::cont::internal::Buffer>& buffers,
-    viskores::cont::ArrayHandle<viskores::Vec<ComponentType, N>, viskores::cont::StorageTagBasic>& dest)
+    viskores::cont::ArrayHandle<viskores::Vec<ComponentType, N>, viskores::cont::StorageTagBasic>&
+      dest)
   {
     if (GetNumberOfComponents(buffers) != N)
     {
       throw viskores::cont::ErrorBadType(
         "Attempted to pull an array of Vecs of the wrong size from an ArrayHandleRuntime.");
     }
-    dest = viskores::cont::ArrayHandle<viskores::Vec<ComponentType, N>, viskores::cont::StorageTagBasic>(
-      ComponentsBuffers(buffers));
+    dest =
+      viskores::cont::ArrayHandle<viskores::Vec<ComponentType, N>, viskores::cont::StorageTagBasic>(
+        ComponentsBuffers(buffers));
   }
 
   template <typename T, viskores::IdComponent NInner, viskores::IdComponent NOuter>
   VISKORES_CONT static void AsArrayHandleBasic(
     const std::vector<viskores::cont::internal::Buffer>& buffers,
-    viskores::cont::ArrayHandle<viskores::Vec<viskores::Vec<T, NInner>, NOuter>, viskores::cont::StorageTagBasic>&
-      dest)
+    viskores::cont::ArrayHandle<viskores::Vec<viskores::Vec<T, NInner>, NOuter>,
+                                viskores::cont::StorageTagBasic>& dest)
   {
     // Flatten the Vec by one level and attempt to get the array handle for that.
     viskores::cont::ArrayHandleBasic<viskores::Vec<T, NInner * NOuter>> squashedArray;
     AsArrayHandleBasic(buffers, squashedArray);
     // Now unsquash the array by stealling the buffers and creating an array of the right type
-    dest =
-      viskores::cont::ArrayHandle<viskores::Vec<viskores::Vec<T, NInner>, NOuter>, viskores::cont::StorageTagBasic>(
-        squashedArray.GetBuffers());
+    dest = viskores::cont::ArrayHandle<viskores::Vec<viskores::Vec<T, NInner>, NOuter>,
+                                       viskores::cont::StorageTagBasic>(squashedArray.GetBuffers());
   }
 };
 
@@ -432,9 +435,9 @@ VISKORES_CONT auto make_ArrayHandleRuntimeVec(
 ///
 template <typename T>
 VISKORES_CONT auto make_ArrayHandleRuntimeVec(viskores::IdComponent numComponents,
-                                          const T* array,
-                                          viskores::Id numberOfValues,
-                                          viskores::CopyFlag copy)
+                                              const T* array,
+                                              viskores::Id numberOfValues,
+                                              viskores::CopyFlag copy)
 {
   return make_ArrayHandleRuntimeVec(numComponents,
                                     viskores::cont::make_ArrayHandle(array, numberOfValues, copy));
@@ -451,18 +454,20 @@ VISKORES_CONT auto make_ArrayHandleRuntimeVecMove(
   T*& array,
   viskores::Id numberOfValues,
   viskores::cont::internal::BufferInfo::Deleter deleter = internal::SimpleArrayDeleter<T>,
-  viskores::cont::internal::BufferInfo::Reallocater reallocater = internal::SimpleArrayReallocater<T>)
+  viskores::cont::internal::BufferInfo::Reallocater reallocater =
+    internal::SimpleArrayReallocater<T>)
 {
   return make_ArrayHandleRuntimeVec(
-    numComponents, viskores::cont::make_ArrayHandleMove(array, numberOfValues, deleter, reallocater));
+    numComponents,
+    viskores::cont::make_ArrayHandleMove(array, numberOfValues, deleter, reallocater));
 }
 
 /// A convenience function for creating an `ArrayHandleRuntimeVec` from an `std::vector`.
 ///
 template <typename T, typename Allocator>
 VISKORES_CONT auto make_ArrayHandleRuntimeVec(viskores::IdComponent numComponents,
-                                          const std::vector<T, Allocator>& array,
-                                          viskores::CopyFlag copy)
+                                              const std::vector<T, Allocator>& array,
+                                              viskores::CopyFlag copy)
 {
   return make_ArrayHandleRuntimeVec(numComponents, viskores::cont::make_ArrayHandle(array, copy));
 }
@@ -471,15 +476,15 @@ VISKORES_CONT auto make_ArrayHandleRuntimeVec(viskores::IdComponent numComponent
 ///
 template <typename T, typename Allocator>
 VISKORES_CONT auto make_ArrayHandleRuntimeVecMove(viskores::IdComponent numComponents,
-                                              std::vector<T, Allocator>&& array)
+                                                  std::vector<T, Allocator>&& array)
 {
   return make_ArrayHandleRuntimeVec(numComponents, make_ArrayHandleMove(std::move(array)));
 }
 
 template <typename T, typename Allocator>
 VISKORES_CONT auto make_ArrayHandleRuntimeVec(viskores::IdComponent numComponents,
-                                          std::vector<T, Allocator>&& array,
-                                          viskores::CopyFlag viskoresNotUsed(copy))
+                                              std::vector<T, Allocator>&& array,
+                                              viskores::CopyFlag viskoresNotUsed(copy))
 {
   return make_ArrayHandleRuntimeVecMove(numComponents, std::move(array));
 }
@@ -497,7 +502,8 @@ struct ArrayExtractComponentImpl<viskores::cont::StorageTagRuntimeVec>
   {
     using ComponentType = typename T::ComponentType;
     viskores::cont::ArrayHandleRuntimeVec<ComponentType> array{ src };
-    constexpr viskores::IdComponent NUM_SUB_COMPONENTS = viskores::VecFlat<ComponentType>::NUM_COMPONENTS;
+    constexpr viskores::IdComponent NUM_SUB_COMPONENTS =
+      viskores::VecFlat<ComponentType>::NUM_COMPONENTS;
     viskores::cont::ArrayHandleStride<typename viskores::VecTraits<T>::BaseComponentType> dest =
       ArrayExtractComponentImpl<viskores::cont::StorageTagBasic>{}(
         array.GetComponentsArray(), componentIndex % NUM_SUB_COMPONENTS, allowCopy);
@@ -538,7 +544,8 @@ struct SerializableTypeString<viskores::cont::ArrayHandleRuntimeVec<T>>
 };
 
 template <typename VecType>
-struct SerializableTypeString<viskores::cont::ArrayHandle<VecType, viskores::cont::StorageTagRuntimeVec>>
+struct SerializableTypeString<
+  viskores::cont::ArrayHandle<VecType, viskores::cont::StorageTagRuntimeVec>>
   : SerializableTypeString<viskores::cont::ArrayHandleRuntimeVec<typename VecType::ComponentType>>
 {
 };

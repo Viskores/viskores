@@ -31,7 +31,8 @@ viskores::cont::DataSet CellAverage::DoExecute(const viskores::cont::DataSet& in
   viskores::cont::UnknownArrayHandle inArray = field.GetData();
   viskores::cont::UnknownArrayHandle outArray = inArray.NewInstanceBasic();
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     using T = typename std::decay_t<decltype(concrete)>::ValueType::ComponentType;
     auto result = outArray.ExtractArrayFromComponents<T>();
     this->Invoke(viskores::worklet::CellAverage{}, inputCellSet, concrete, result);

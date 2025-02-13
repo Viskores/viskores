@@ -99,12 +99,12 @@ public:
 
   template <typename InIdPortalType, typename InFieldPortalType, typename InVectorPortalType>
   VISKORES_EXEC viskores::UInt32 operator()(const viskores::Id& i,
-                                    const viskores::Id& iPartId,
-                                    const viskores::Id& iBinId,
-                                    const InIdPortalType& partIdArray,
-                                    const InFieldPortalType& location,
-                                    const InVectorPortalType& firstPartId,
-                                    const InVectorPortalType& lastPartId) const
+                                            const viskores::Id& iPartId,
+                                            const viskores::Id& iBinId,
+                                            const InIdPortalType& partIdArray,
+                                            const InFieldPortalType& location,
+                                            const InVectorPortalType& firstPartId,
+                                            const InVectorPortalType& lastPartId) const
   {
     const viskores::Id ybin = (iBinId / xNum) % yNum;
     const viskores::Id zbin = iBinId / (xNum * yNum);

@@ -21,17 +21,18 @@ namespace raytracing
 
 void TriangleExtractor::ExtractCells(const viskores::cont::UnknownCellSet& cells)
 {
-  ExtractCells(
-    cells,
-    make_FieldCell(viskores::cont::GetGlobalGhostCellFieldName(),
-                   viskores::cont::ArrayHandleConstant<viskores::UInt8>(0, cells.GetNumberOfCells())));
+  ExtractCells(cells,
+               make_FieldCell(viskores::cont::GetGlobalGhostCellFieldName(),
+                              viskores::cont::ArrayHandleConstant<viskores::UInt8>(
+                                0, cells.GetNumberOfCells())));
 }
 
 void TriangleExtractor::ExtractCells(const viskores::cont::UnknownCellSet& cells,
                                      const viskores::cont::Field& ghostField)
 {
   viskores::Id numberOfTriangles;
-  viskores::rendering::internal::RunTriangulator(cells, this->Triangles, numberOfTriangles, ghostField);
+  viskores::rendering::internal::RunTriangulator(
+    cells, this->Triangles, numberOfTriangles, ghostField);
 }
 
 viskores::cont::ArrayHandle<viskores::Id4> TriangleExtractor::GetTriangles()

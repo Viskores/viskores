@@ -25,8 +25,8 @@ viskores::cont::DataSet Make3DUniformDataSet(viskores::Id size = 64)
   viskores::Float32 center = static_cast<viskores::Float32>(-size) / 2.0f;
   viskores::cont::DataSetBuilderUniform builder;
   viskores::cont::DataSet dataSet = builder.Create(viskores::Id3(size, size, size),
-                                               viskores::Vec3f_32(center, center, center),
-                                               viskores::Vec3f_32(1.0f, 1.0f, 1.0f));
+                                                   viskores::Vec3f_32(center, center, center),
+                                                   viskores::Vec3f_32(1.0f, 1.0f, 1.0f));
   const char* fieldName = "pointvar";
   viskores::Id numValues = dataSet.GetNumberOfPoints();
   viskores::cont::ArrayHandleCounting<viskores::Float32> fieldValues(
@@ -61,8 +61,8 @@ viskores::cont::DataSet Make2DExplicitDataSet()
   pointVar.push_back(13);
   pointVar.push_back(14);
   pointVar.push_back(15);
-  dataSet.AddCoordinateSystem(
-    viskores::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, viskores::CopyFlag::On));
+  dataSet.AddCoordinateSystem(viskores::cont::make_CoordinateSystem(
+    "coordinates", coordinates, nVerts, viskores::CopyFlag::On));
   viskores::cont::CellSetSingleType<> cellSet;
 
   viskores::cont::ArrayHandle<viskores::Id> connectivity;
@@ -102,9 +102,9 @@ void RenderTests()
     viskores::rendering::testing::RenderTest(
       maker.Make3DRegularDataSet0(), "pointvar", "rendering/wireframer/wf_reg3D.png", testOptions);
     viskores::rendering::testing::RenderTest(maker.Make3DRectilinearDataSet0(),
-                                         "pointvar",
-                                         "rendering/wireframer/wf_rect3D.png",
-                                         testOptions);
+                                             "pointvar",
+                                             "rendering/wireframer/wf_rect3D.png",
+                                             testOptions);
     testOptions.ViewDimension = 2;
     viskores::rendering::testing::RenderTest(
       Make2DExplicitDataSet(), "cellVar", "rendering/wireframer/wf_lines2D.png", testOptions);
@@ -121,9 +121,9 @@ void RenderTests()
     viskores::rendering::testing::RenderTest(
       Make3DUniformDataSet(), "pointvar", "rendering/wireframer/wf_uniform3D.png", testOptions);
     viskores::rendering::testing::RenderTest(maker.Make3DExplicitDataSet4(),
-                                         "pointvar",
-                                         "rendering/wireframer/wf_expl3D.png",
-                                         testOptions);
+                                             "pointvar",
+                                             "rendering/wireframer/wf_expl3D.png",
+                                             testOptions);
   }
 
   //
@@ -137,9 +137,10 @@ void RenderTests()
     testOptions.AllowAnyDevice = false;
 
     viskores::cont::DataSet dataSet0 = maker.Make1DUniformDataSet0();
-    viskores::rendering::testing::RenderTest({ { dataSet0, "pointvar" }, { dataSet0, "pointvar2" } },
-                                         "rendering/wireframer/wf_lines1D.png",
-                                         testOptions);
+    viskores::rendering::testing::RenderTest(
+      { { dataSet0, "pointvar" }, { dataSet0, "pointvar2" } },
+      "rendering/wireframer/wf_lines1D.png",
+      testOptions);
 
     //test log y and title
     testOptions.LogY = true;

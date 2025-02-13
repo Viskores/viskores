@@ -65,7 +65,8 @@ using viskores::filter::testing::contourtree_uniform_distributed::TestContourTre
 using viskores::filter::testing::contourtree_uniform_distributed::TestContourTreePresimplification;
 using viskores::filter::testing::contourtree_uniform_distributed::
   TestContourTreeUniformDistributed5x6x7;
-using viskores::filter::testing::contourtree_uniform_distributed::TestContourTreeUniformDistributed8x9;
+using viskores::filter::testing::contourtree_uniform_distributed::
+  TestContourTreeUniformDistributed8x9;
 
 class TestContourTreeUniformDistributedFilter
 {
@@ -146,10 +147,10 @@ public:
       "vanc", // dataset name
       "var",  // field name
       viskores::cont::testing::Testing::RegressionImagePath(
-        "vanc.presimplification.ct_txt"),                             // ground truth file name
-      2,                                                              // nBlocks
+        "vanc.presimplification.ct_txt"),                                 // ground truth file name
+      2,                                                                  // nBlocks
       viskores::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"), // dataset file path
-      1                                                               // presimplifyThreshold
+      1                                                                   // presimplifyThreshold
     );
 #endif
     TestContourTreePresimplification(
@@ -182,10 +183,10 @@ public:
       "5x6x7",    // dataset name
       "pointvar", // field name
       viskores::cont::testing::Testing::RegressionImagePath(
-        "5x6x7.presimplification.ct_txt"),                            // ground truth file name
-      2,                                                              // nBlocks
+        "5x6x7.presimplification.ct_txt"),                                // ground truth file name
+      2,                                                                  // nBlocks
       viskores::cont::testing::MakeTestDataSet().Make3DUniformDataSet4(), // dataset preset,
-      2                                                               // presimplifyThreshold
+      2                                                                   // presimplifyThreshold
     );
     TestContourTreePresimplification(
       "5x6x7",
@@ -231,5 +232,6 @@ public:
 
 int UnitTestContourTreeUniformDistributedFilter(int argc, char* argv[])
 {
-  return viskores::cont::testing::Testing::Run(TestContourTreeUniformDistributedFilter(), argc, argv);
+  return viskores::cont::testing::Testing::Run(
+    TestContourTreeUniformDistributedFilter(), argc, argv);
 }

@@ -67,7 +67,8 @@ namespace hierarchical_hyper_sweeper
 
 /// Worklet used in HierarchicalHyperSweeper.InitializeIntrinsicVertexCount(...) to
 /// subtract out the low end from the superarc regular counts
-class InitializeIntrinsicVertexCountSubtractLowEndWorklet : public viskores::worklet::WorkletMapField
+class InitializeIntrinsicVertexCountSubtractLowEndWorklet
+  : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(WholeArrayIn superparents, WholeArrayInOut superarcRegularCounts);
@@ -80,8 +81,8 @@ public:
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                            const InFieldPortalType superparentsPortal,
-                            const InOutFieldPortalType superarcRegularCountsPortal) const
+                                const InFieldPortalType superparentsPortal,
+                                const InOutFieldPortalType superarcRegularCountsPortal) const
   {
     // per vertex
     // retrieve the superparent

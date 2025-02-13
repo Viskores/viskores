@@ -19,7 +19,8 @@ namespace
 
 using NonDefaultCellSetList =
   viskores::List<viskores::cont::CellSetStructured<1>,
-             viskores::cont::CellSetExplicit<viskores::cont::ArrayHandleConstant<viskores::UInt8>::StorageTag>>;
+                 viskores::cont::CellSetExplicit<
+                   viskores::cont::ArrayHandleConstant<viskores::UInt8>::StorageTag>>;
 
 template <typename ExpectedCellType>
 struct CheckFunctor
@@ -71,8 +72,10 @@ void CheckEmptyUnknownCellSet()
   VISKORES_TEST_ASSERT(gotException, "Empty UnknownCellSet should have thrown on casting");
 
   auto empty2 = empty.NewInstance();
-  VISKORES_TEST_ASSERT(empty.GetCellSetBase() == nullptr, "UnknownCellSet should contain a nullptr");
-  VISKORES_TEST_ASSERT(empty2.GetCellSetBase() == nullptr, "UnknownCellSet should contain a nullptr");
+  VISKORES_TEST_ASSERT(empty.GetCellSetBase() == nullptr,
+                       "UnknownCellSet should contain a nullptr");
+  VISKORES_TEST_ASSERT(empty2.GetCellSetBase() == nullptr,
+                       "UnknownCellSet should contain a nullptr");
 }
 
 template <typename CellSetType, typename CellSetList>
@@ -117,7 +120,7 @@ void TryNewInstance(viskores::cont::UnknownCellSet& originalCellSet)
   VISKORES_TEST_ASSERT(newCellSet.IsType<CellSetType>(), "New cell set wrong type.");
 
   VISKORES_TEST_ASSERT(originalCellSet.GetCellSetBase() != newCellSet.GetCellSetBase(),
-                   "NewInstance did not make a copy.");
+                       "NewInstance did not make a copy.");
 }
 
 template <typename CellSetType, typename CellSetList>
@@ -160,8 +163,8 @@ void TestDynamicCellSet()
   std::cout << "*** 1D Structured Grid ******************" << std::endl;
   TryNonDefaultCellSet(viskores::cont::CellSetStructured<1>());
   std::cout << "*** Explicit Grid Constant Shape ********" << std::endl;
-  TryNonDefaultCellSet(
-    viskores::cont::CellSetExplicit<viskores::cont::ArrayHandleConstant<viskores::UInt8>::StorageTag>());
+  TryNonDefaultCellSet(viskores::cont::CellSetExplicit<
+                       viskores::cont::ArrayHandleConstant<viskores::UInt8>::StorageTag>());
 
   std::cout << std::endl << "Try empty DynamicCellSet." << std::endl;
   CheckEmptyUnknownCellSet();

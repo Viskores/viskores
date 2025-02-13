@@ -33,13 +33,13 @@ public:
 
   template <typename CellValueVecType, typename OutType>
   VISKORES_EXEC void operator()(const viskores::IdComponent& numCells,
-                            const CellValueVecType& cellValues,
-                            OutType& average) const
+                                const CellValueVecType& cellValues,
+                                OutType& average) const
   {
     using CellValueType = typename CellValueVecType::ComponentType;
 
     VISKORES_ASSERT(viskores::VecTraits<CellValueType>::GetNumberOfComponents(cellValues[0]) ==
-                viskores::VecTraits<OutType>::GetNumberOfComponents(average));
+                    viskores::VecTraits<OutType>::GetNumberOfComponents(average));
 
     average = cellValues[0];
     for (viskores::IdComponent cellIndex = 1; cellIndex < numCells; ++cellIndex)

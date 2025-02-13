@@ -52,12 +52,16 @@ public:
     return reinterpret_cast<const Derived*>(this)->Gradient(Vector(x, y, z));
   }
 
-  VISKORES_CONT Derived PrepareForExecution(viskores::cont::DeviceAdapterId, viskores::cont::Token&) const
+  VISKORES_CONT Derived PrepareForExecution(viskores::cont::DeviceAdapterId,
+                                            viskores::cont::Token&) const
   {
     return *reinterpret_cast<const Derived*>(this);
   }
 
-  VISKORES_CONT Derived PrepareForControl() const { return *reinterpret_cast<const Derived*>(this); }
+  VISKORES_CONT Derived PrepareForControl() const
+  {
+    return *reinterpret_cast<const Derived*>(this);
+  }
 };
 
 } // namespace viskores::internal
@@ -155,7 +159,12 @@ public:
   }
 
   /// @brief Construct a box with the specified minimum and maximum point.
-  VISKORES_EXEC_CONT Box(Scalar xmin, Scalar xmax, Scalar ymin, Scalar ymax, Scalar zmin, Scalar zmax)
+  VISKORES_EXEC_CONT Box(Scalar xmin,
+                         Scalar xmax,
+                         Scalar ymin,
+                         Scalar ymax,
+                         Scalar zmin,
+                         Scalar zmax)
     : MinPoint(xmin, ymin, zmin)
     , MaxPoint(xmax, ymax, zmax)
   {
@@ -187,8 +196,8 @@ public:
   VISKORES_EXEC_CONT viskores::Bounds GetBounds() const
   {
     return viskores::Bounds(viskores::Range(this->MinPoint[0], this->MaxPoint[0]),
-                        viskores::Range(this->MinPoint[1], this->MaxPoint[1]),
-                        viskores::Range(this->MinPoint[2], this->MaxPoint[2]));
+                            viskores::Range(this->MinPoint[1], this->MaxPoint[1]),
+                            viskores::Range(this->MinPoint[2], this->MaxPoint[2]));
   }
 
   /// @brief Evaluate the value of the implicit function.
@@ -796,7 +805,10 @@ public:
     VISKORES_ASSERT((idx >= 0) && (idx < MaxNumPlanes));
     return this->Planes[idx];
   }
-  VISKORES_CONT viskores::VecVariable<viskores::Plane, MaxNumPlanes> GetPlanes() const { return this->Planes; }
+  VISKORES_CONT viskores::VecVariable<viskores::Plane, MaxNumPlanes> GetPlanes() const
+  {
+    return this->Planes;
+  }
 
   /// @brief Evaluate the value of the implicit function.
   ///
@@ -964,18 +976,18 @@ public:
 ///
 class ImplicitFunctionGeneral
   : public viskores::ImplicitFunctionMultiplexer<viskores::Box,
-                                             viskores::Cylinder,
-                                             viskores::Frustum,
-                                             viskores::Plane,
-                                             viskores::Sphere,
-                                             viskores::MultiPlane<3>>
+                                                 viskores::Cylinder,
+                                                 viskores::Frustum,
+                                                 viskores::Plane,
+                                                 viskores::Sphere,
+                                                 viskores::MultiPlane<3>>
 {
   using Superclass = viskores::ImplicitFunctionMultiplexer<viskores::Box,
-                                                       viskores::Cylinder,
-                                                       viskores::Frustum,
-                                                       viskores::Plane,
-                                                       viskores::Sphere,
-                                                       viskores::MultiPlane<3>>;
+                                                           viskores::Cylinder,
+                                                           viskores::Frustum,
+                                                           viskores::Plane,
+                                                           viskores::Sphere,
+                                                           viskores::MultiPlane<3>>;
 
 public:
   using Superclass::Superclass;

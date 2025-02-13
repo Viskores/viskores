@@ -29,7 +29,8 @@ namespace connected_components
 /// The result of the filter is a cell field of type `viskores::Id` with the default name of
 /// "component" (which can be changed with the `SetOutputFieldName` method). Each entry in
 /// the cell field will be a number that identifies to which component the cell belongs.
-class VISKORES_FILTER_CONNECTED_COMPONENTS_EXPORT CellSetConnectivity : public viskores::filter::Filter
+class VISKORES_FILTER_CONNECTED_COMPONENTS_EXPORT CellSetConnectivity
+  : public viskores::filter::Filter
 {
 public:
   VISKORES_CONT CellSetConnectivity() { this->SetOutputFieldName("component"); }

@@ -33,10 +33,10 @@ public:
             typename CellSet,
             typename AtomicArray>
   VISKORES_EXEC void operator()(const Point& point,
-                            const T value,
-                            const CellLocatorExecObj& locator,
-                            const CellSet& cellSet,
-                            AtomicArray& density) const
+                                const T value,
+                                const CellLocatorExecObj& locator,
+                                const CellSet& cellSet,
+                                AtomicArray& density) const
   {
     viskores::Id cellId{};
     viskores::Vec3f parametric;
@@ -73,7 +73,8 @@ namespace filter
 namespace density_estimate
 {
 
-VISKORES_CONT viskores::cont::DataSet ParticleDensityCloudInCell::DoExecute(const cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet ParticleDensityCloudInCell::DoExecute(
+  const cont::DataSet& input)
 {
   // Unlike ParticleDensityNGP, particle deposit mass on the grid points, thus it is natural to
   // return the density as PointField;
@@ -87,7 +88,8 @@ VISKORES_CONT viskores::cont::DataSet ParticleDensityCloudInCell::DoExecute(cons
 
   auto coords = input.GetCoordinateSystem().GetDataAsMultiplexer();
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
 
@@ -113,8 +115,8 @@ VISKORES_CONT viskores::cont::DataSet ParticleDensityCloudInCell::DoExecute(cons
 
   if (this->ComputeNumberDensity)
   {
-    resolveType(
-      viskores::cont::make_ArrayHandleConstant(viskores::FloatDefault{ 1 }, input.GetNumberOfPoints()));
+    resolveType(viskores::cont::make_ArrayHandleConstant(viskores::FloatDefault{ 1 },
+                                                         input.GetNumberOfPoints()));
   }
   else
   {

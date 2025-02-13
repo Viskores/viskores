@@ -41,7 +41,7 @@ struct Fetch<viskores::exec::arg::FetchTagArrayNeighborhoodIn,
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <typename ThreadIndicesType>
   VISKORES_EXEC ValueType Load(const ThreadIndicesType& indices,
-                           const ExecObjectType& arrayPortal) const
+                               const ExecObjectType& arrayPortal) const
   {
     return ValueType(arrayPortal, indices.GetBoundaryState());
   }

@@ -57,7 +57,8 @@ public:
   VISKORES_CONT
   viskores::Id GetNumberOfPoints() const { return this->GetNumberOfValues(); }
 
-  VISKORES_CONT viskores::cont::UncertainArrayHandle<viskores::TypeListFieldVec3, VISKORES_DEFAULT_STORAGE_LIST>
+  VISKORES_CONT
+  viskores::cont::UncertainArrayHandle<viskores::TypeListFieldVec3, VISKORES_DEFAULT_STORAGE_LIST>
   GetData() const;
 
 private:
@@ -148,21 +149,23 @@ void CastAndCall(const viskores::cont::CoordinateSystem& coords, Functor&& f, Ar
 }
 
 template <typename T>
-viskores::cont::CoordinateSystem make_CoordinateSystem(std::string name,
-                                                   const std::vector<T>& data,
-                                                   viskores::CopyFlag copy = viskores::CopyFlag::Off)
+viskores::cont::CoordinateSystem make_CoordinateSystem(
+  std::string name,
+  const std::vector<T>& data,
+  viskores::CopyFlag copy = viskores::CopyFlag::Off)
 {
   return viskores::cont::CoordinateSystem(name, viskores::cont::make_ArrayHandle(data, copy));
 }
 
 template <typename T>
-viskores::cont::CoordinateSystem make_CoordinateSystem(std::string name,
-                                                   const T* data,
-                                                   viskores::Id numberOfValues,
-                                                   viskores::CopyFlag copy = viskores::CopyFlag::Off)
+viskores::cont::CoordinateSystem make_CoordinateSystem(
+  std::string name,
+  const T* data,
+  viskores::Id numberOfValues,
+  viskores::CopyFlag copy = viskores::CopyFlag::Off)
 {
-  return viskores::cont::CoordinateSystem(name,
-                                      viskores::cont::make_ArrayHandle(data, numberOfValues, copy));
+  return viskores::cont::CoordinateSystem(
+    name, viskores::cont::make_ArrayHandle(data, numberOfValues, copy));
 }
 
 namespace internal

@@ -171,7 +171,9 @@ inline void PrintHeader(viskores::Id howMany)
 
 // base routines for reading & writing host vectors
 template <typename T, typename StorageType>
-void PrintValues(std::string label, viskores::cont::ArrayHandle<T, StorageType>& dVec, viskores::Id nValues)
+void PrintValues(std::string label,
+                 viskores::cont::ArrayHandle<T, StorageType>& dVec,
+                 viskores::Id nValues)
 {
   // -1 means full size
   if (nValues == -1)

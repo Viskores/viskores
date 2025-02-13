@@ -84,14 +84,15 @@ public:
 
   template <typename InOutFieldPortalType, typename InFieldPortalType>
   VISKORES_EXEC void operator()(const InOutFieldPortalType& edgeFarPortal,
-                            const viskores::Id edge,
-                            const InFieldPortalType& extremaPortal,
-                            const InFieldPortalType& activeIndicesPortal) const
+                                const viskores::Id edge,
+                                const InFieldPortalType& extremaPortal,
+                                const InFieldPortalType& activeIndicesPortal) const
   {
     // first we retrieve the ID of the far end
     viskores::Id currEdgeFar = edgeFarPortal.Get(edge);
     // next we follow up to an extremum
-    currEdgeFar = viskores::worklet::contourtree_augmented::MaskedIndex(extremaPortal.Get(currEdgeFar));
+    currEdgeFar =
+      viskores::worklet::contourtree_augmented::MaskedIndex(extremaPortal.Get(currEdgeFar));
     // now we reverse lookup to get the new ID
     edgeFarPortal.Set(edge, activeIndicesPortal.Get(currEdgeFar));
 

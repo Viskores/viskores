@@ -38,9 +38,10 @@ struct RemoveDegenerateCells
     using InputDomain = _1;
 
     template <viskores::IdComponent dimensionality, typename CellShapeTag, typename PointVecType>
-    VISKORES_EXEC bool CheckForDimensionality(viskores::CellTopologicalDimensionsTag<dimensionality>,
-                                          CellShapeTag,
-                                          PointVecType&& pointIds) const
+    VISKORES_EXEC bool CheckForDimensionality(
+      viskores::CellTopologicalDimensionsTag<dimensionality>,
+      CellShapeTag,
+      PointVecType&& pointIds) const
     {
       const viskores::IdComponent numPoints = pointIds.GetNumberOfComponents();
       viskores::IdComponent numUnduplicatedPoints = 0;
@@ -66,24 +67,25 @@ struct RemoveDegenerateCells
 
     template <typename CellShapeTag, typename PointVecType>
     VISKORES_EXEC bool CheckForDimensionality(viskores::CellTopologicalDimensionsTag<0>,
-                                          CellShapeTag,
-                                          PointVecType&&) const
+                                              CellShapeTag,
+                                              PointVecType&&) const
     {
       return true;
     }
 
     template <typename CellShapeTag, typename PointVecType>
     VISKORES_EXEC bool CheckForDimensionality(viskores::CellTopologicalDimensionsTag<3>,
-                                          CellShapeTag shape,
-                                          PointVecType&& pointIds) const
+                                              CellShapeTag shape,
+                                              PointVecType&& pointIds) const
     {
       viskores::IdComponent numFaces;
       viskores::exec::CellFaceNumberOfFaces(shape, numFaces);
       viskores::Id numValidFaces = 0;
       for (viskores::IdComponent faceId = 0; faceId < numFaces; ++faceId)
       {
-        if (this->CheckForDimensionality(
-              viskores::CellTopologicalDimensionsTag<2>(), viskores::CellShapeTagPolygon(), pointIds))
+        if (this->CheckForDimensionality(viskores::CellTopologicalDimensionsTag<2>(),
+                                         viskores::CellShapeTagPolygon(),
+                                         pointIds))
         {
           ++numValidFaces;
           if (numValidFaces > 2)
@@ -126,9 +128,12 @@ struct RemoveDegenerateCells
     dispatcher.Invoke(cellSet, passFlags);
 
     viskores::cont::ArrayHandleCounting<viskores::Id> indices =
-      viskores::cont::make_ArrayHandleCounting(viskores::Id(0), viskores::Id(1), passFlags.GetNumberOfValues());
+      viskores::cont::make_ArrayHandleCounting(
+        viskores::Id(0), viskores::Id(1), passFlags.GetNumberOfValues());
     viskores::cont::Algorithm::CopyIf(
-      viskores::cont::ArrayHandleIndex(passFlags.GetNumberOfValues()), passFlags, this->ValidCellIds);
+      viskores::cont::ArrayHandleIndex(passFlags.GetNumberOfValues()),
+      passFlags,
+      this->ValidCellIds);
 
     viskores::cont::CellSetPermutation<CellSetType> permutation(this->ValidCellIds, cellSet);
     viskores::cont::CellSetExplicit<> output;
@@ -137,7 +142,8 @@ struct RemoveDegenerateCells
   }
 
   template <typename CellSetList>
-  viskores::cont::CellSetExplicit<> Run(const viskores::cont::UncertainCellSet<CellSetList>& cellSet)
+  viskores::cont::CellSetExplicit<> Run(
+    const viskores::cont::UncertainCellSet<CellSetList>& cellSet)
   {
     viskores::cont::CellSetExplicit<> output;
     cellSet.CastAndCall([&](const auto& concrete) { output = this->Run(concrete); });

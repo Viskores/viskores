@@ -70,7 +70,8 @@ public:
   {
     ValueType result;
     viskores::Id componentsIndex = index * NUM_COMPONENTS;
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         componentIndex++)
     {
       result[componentIndex] = this->ComponentsPortal.Get(componentsIndex);
       componentsIndex++;
@@ -84,7 +85,8 @@ public:
   VISKORES_EXEC_CONT void Set(viskores::Id index, const ValueType& value) const
   {
     viskores::Id componentsIndex = index * NUM_COMPONENTS;
-    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
+    for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
+         componentIndex++)
     {
       this->ComponentsPortal.Set(componentsIndex, value[componentIndex]);
       componentsIndex++;
@@ -114,7 +116,9 @@ struct VISKORES_ALWAYS_EXPORT StorageTagGroupVec
 namespace internal
 {
 
-template <typename ComponentType, viskores::IdComponent NUM_COMPONENTS, typename ComponentsStorageTag>
+template <typename ComponentType,
+          viskores::IdComponent NUM_COMPONENTS,
+          typename ComponentsStorageTag>
 class Storage<viskores::Vec<ComponentType, NUM_COMPONENTS>,
               viskores::cont::StorageTagGroupVec<ComponentsStorageTag, NUM_COMPONENTS>>
 {
@@ -123,20 +127,22 @@ class Storage<viskores::Vec<ComponentType, NUM_COMPONENTS>,
 
 public:
   using ReadPortalType =
-    viskores::internal::ArrayPortalGroupVec<typename ComponentsStorage::ReadPortalType, NUM_COMPONENTS>;
+    viskores::internal::ArrayPortalGroupVec<typename ComponentsStorage::ReadPortalType,
+                                            NUM_COMPONENTS>;
   using WritePortalType =
     viskores::internal::ArrayPortalGroupVec<typename ComponentsStorage::WritePortalType,
-                                        NUM_COMPONENTS>;
+                                            NUM_COMPONENTS>;
 
   VISKORES_CONT static std::vector<viskores::cont::internal::Buffer> CreateBuffers()
   {
     return ComponentsStorage::CreateBuffers();
   }
 
-  VISKORES_CONT static void ResizeBuffers(viskores::Id numValues,
-                                      const std::vector<viskores::cont::internal::Buffer>& buffers,
-                                      viskores::CopyFlag preserve,
-                                      viskores::cont::Token& token)
+  VISKORES_CONT static void ResizeBuffers(
+    viskores::Id numValues,
+    const std::vector<viskores::cont::internal::Buffer>& buffers,
+    viskores::CopyFlag preserve,
+    viskores::cont::Token& token)
   {
     ComponentsStorage::ResizeBuffers(NUM_COMPONENTS * numValues, buffers, preserve, token);
   }
@@ -155,10 +161,10 @@ public:
   }
 
   VISKORES_CONT static void Fill(const std::vector<viskores::cont::internal::Buffer>&,
-                             const ValueType&,
-                             viskores::Id,
-                             viskores::Id,
-                             viskores::cont::Token&)
+                                 const ValueType&,
+                                 viskores::Id,
+                                 viskores::Id,
+                                 viskores::cont::Token&)
   {
     throw viskores::cont::ErrorBadType("Fill not supported for ArrayHandleGroupVec.");
   }
@@ -171,7 +177,7 @@ public:
     if ((ComponentsStorage::GetNumberOfValues(buffers) % NUM_COMPONENTS) != 0)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                 "ArrayHandleGroupVec's components array does not divide evenly into Vecs.");
+                     "ArrayHandleGroupVec's components array does not divide evenly into Vecs.");
     }
     return ReadPortalType(ComponentsStorage::CreateReadPortal(buffers, device, token));
   }
@@ -184,7 +190,7 @@ public:
     if ((ComponentsStorage::GetNumberOfValues(buffers) % NUM_COMPONENTS) != 0)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                 "ArrayHandleGroupVec's components array does not divide evenly into Vecs.");
+                     "ArrayHandleGroupVec's components array does not divide evenly into Vecs.");
     }
     return WritePortalType(ComponentsStorage::CreateWritePortal(buffers, device, token));
   }
@@ -214,7 +220,7 @@ class ArrayHandleGroupVec
   : public viskores::cont::ArrayHandle<
       viskores::Vec<typename ComponentsArrayHandleType::ValueType, NUM_COMPONENTS>,
       viskores::cont::StorageTagGroupVec<typename ComponentsArrayHandleType::StorageTag,
-                                     NUM_COMPONENTS>>
+                                         NUM_COMPONENTS>>
 {
   VISKORES_IS_ARRAY_HANDLE(ComponentsArrayHandleType);
 
@@ -225,7 +231,7 @@ public:
     (viskores::cont::ArrayHandle<
       viskores::Vec<typename ComponentsArrayHandleType::ValueType, NUM_COMPONENTS>,
       viskores::cont::StorageTagGroupVec<typename ComponentsArrayHandleType::StorageTag,
-                                     NUM_COMPONENTS>>));
+                                         NUM_COMPONENTS>>));
 
   using ComponentType = typename ComponentsArrayHandleType::ValueType;
 
@@ -249,8 +255,8 @@ public:
 /// consecutive entries grouped in a Vec.
 ///
 template <viskores::IdComponent NUM_COMPONENTS, typename ArrayHandleType>
-VISKORES_CONT viskores::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS> make_ArrayHandleGroupVec(
-  const ArrayHandleType& array)
+VISKORES_CONT viskores::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS>
+make_ArrayHandleGroupVec(const ArrayHandleType& array)
 {
   return viskores::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS>(array);
 }
@@ -276,7 +282,7 @@ struct ArrayExtractComponentImpl<
     viskores::CopyFlag allowCopy) const
   {
     viskores::cont::ArrayHandleGroupVec<viskores::cont::ArrayHandle<T, ComponentsStorageTag>,
-                                    NUM_COMPONENTS>
+                                        NUM_COMPONENTS>
       srcArray(src);
     constexpr viskores::IdComponent NUM_SUB_COMPONENTS = viskores::VecFlat<T>::NUM_COMPONENTS;
     viskores::cont::ArrayHandleStride<typename viskores::VecTraits<T>::BaseComponentType> dest =
@@ -320,7 +326,8 @@ struct SerializableTypeString<viskores::cont::ArrayHandleGroupVec<AH, NUM_COMPS>
 
 template <typename T, viskores::IdComponent NUM_COMPS, typename ST>
 struct SerializableTypeString<
-  viskores::cont::ArrayHandle<viskores::Vec<T, NUM_COMPS>, viskores::cont::StorageTagGroupVec<ST, NUM_COMPS>>>
+  viskores::cont::ArrayHandle<viskores::Vec<T, NUM_COMPS>,
+                              viskores::cont::StorageTagGroupVec<ST, NUM_COMPS>>>
   : SerializableTypeString<
       viskores::cont::ArrayHandleGroupVec<viskores::cont::ArrayHandle<T, ST>, NUM_COMPS>>
 {
@@ -354,9 +361,10 @@ public:
 };
 
 template <typename T, viskores::IdComponent NUM_COMPS, typename ST>
-struct Serialization<
-  viskores::cont::ArrayHandle<viskores::Vec<T, NUM_COMPS>, viskores::cont::StorageTagGroupVec<ST, NUM_COMPS>>>
-  : Serialization<viskores::cont::ArrayHandleGroupVec<viskores::cont::ArrayHandle<T, ST>, NUM_COMPS>>
+struct Serialization<viskores::cont::ArrayHandle<viskores::Vec<T, NUM_COMPS>,
+                                                 viskores::cont::StorageTagGroupVec<ST, NUM_COMPS>>>
+  : Serialization<
+      viskores::cont::ArrayHandleGroupVec<viskores::cont::ArrayHandle<T, ST>, NUM_COMPS>>
 {
 };
 

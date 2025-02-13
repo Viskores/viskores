@@ -97,7 +97,7 @@ void SelectTopVolumeContoursFunctor::operator()(
 #ifdef DEBUG_PRINT_COMBINED_HIGH_VOLUME_BRANCH
         rp.enqueue(target, b->GlobalBlockId);
         VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                   "Block " << b->GlobalBlockId << " enqueue to Block " << target.gid);
+                       "Block " << b->GlobalBlockId << " enqueue to Block " << target.gid);
 #endif
         auto topVolBranchRootGRIdPortal = b->TopVolumeBranchRootGRId.ReadPortal();
         auto topVolBranchVolumePortal = b->TopVolumeBranchVolume.ReadPortal();
@@ -119,7 +119,8 @@ void SelectTopVolumeContoursFunctor::operator()(
         for (viskores::Id branch = 0; branch < nBranches; ++branch)
           rp.enqueue(target, topVolBranchLowerEndPortal.Get(branch));
 
-        auto resolveArray = [&](const auto& inArray) {
+        auto resolveArray = [&](const auto& inArray)
+        {
           using InArrayHandleType = std::decay_t<decltype(inArray)>;
           using ValueType = typename InArrayHandleType::ValueType;
           auto topVolBranchSaddleIsoValuePortal = inArray.ReadPortal();
@@ -127,7 +128,8 @@ void SelectTopVolumeContoursFunctor::operator()(
             rp.enqueue<ValueType>(target, topVolBranchSaddleIsoValuePortal.Get(branch));
         };
         b->TopVolumeBranchSaddleIsoValue
-          .CastAndCallForTypes<viskores::TypeListScalarAll, viskores::cont::StorageListBasic>(resolveArray);
+          .CastAndCallForTypes<viskores::TypeListScalarAll, viskores::cont::StorageListBasic>(
+            resolveArray);
 
         // rp.enqueue(target, b->TopVolumeBranchRootGRId);
         // rp.enqueue(target, b->TopVolumeBranchVolume);
@@ -147,8 +149,8 @@ void SelectTopVolumeContoursFunctor::operator()(
       int incomingGlobalBlockId;
       rp.dequeue(ingid, incomingGlobalBlockId);
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 "Combining local block " << b->GlobalBlockId << " with incoming block "
-                                          << incomingGlobalBlockId);
+                     "Combining local block " << b->GlobalBlockId << " with incoming block "
+                                              << incomingGlobalBlockId);
 #endif
 
       // dequeue the data from other blocks.
@@ -233,7 +235,8 @@ void SelectTopVolumeContoursFunctor::operator()(
       // Replace with dequeuing ArrayHandles once bug is fixed.
       // rp.dequeue(ingid, incomingTopVolBranchLowerEnd);
 
-      auto resolveArray = [&](auto& inArray) {
+      auto resolveArray = [&](auto& inArray)
+      {
         using InArrayHandleType = std::decay_t<decltype(inArray)>;
         using ValueType = typename InArrayHandleType::ValueType;
         InArrayHandleType incomingTopVolBranchSaddleIsoValue;
@@ -255,7 +258,7 @@ void SelectTopVolumeContoursFunctor::operator()(
 
 #ifdef DEBUG_PRINT_COMBINED_HIGH_VOLUME_BRANCH
         VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                   "nIncoming = " << nIncoming << ", nSelf = " << nSelf);
+                       "nIncoming = " << nIncoming << ", nSelf = " << nSelf);
         {
           std::stringstream rs;
           viskores::worklet::contourtree_augmented::PrintHeader(nIncoming, rs);
@@ -327,19 +330,24 @@ void SelectTopVolumeContoursFunctor::operator()(
 
         // permute the branch information based on sorting
         IdArrayType permutedTopVolBranchGRId;
-        viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id, IdArrayType>(
+        viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id,
+                                                                              IdArrayType>(
           mergedTopVolBranchGRId, sortedBranchId, permutedTopVolBranchGRId);
         IdArrayType permutedTopVolBranchVolume;
-        viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id, IdArrayType>(
+        viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id,
+                                                                              IdArrayType>(
           mergedTopVolBranchVolume, sortedBranchId, permutedTopVolBranchVolume);
         IdArrayType permutedTopVolBranchSaddleEpsilon;
-        viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id, IdArrayType>(
+        viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id,
+                                                                              IdArrayType>(
           mergedTopVolBranchSaddleEpsilon, sortedBranchId, permutedTopVolBranchSaddleEpsilon);
         IdArrayType permutedTopVolBranchUpperEnd;
-        viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id, IdArrayType>(
+        viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id,
+                                                                              IdArrayType>(
           mergedTopVolBranchUpperEnd, sortedBranchId, permutedTopVolBranchUpperEnd);
         IdArrayType permutedTopVolBranchLowerEnd;
-        viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id, IdArrayType>(
+        viskores::worklet::contourtree_augmented::PermuteArrayWithMaskedIndex<viskores::Id,
+                                                                              IdArrayType>(
           mergedTopVolBranchLowerEnd, sortedBranchId, permutedTopVolBranchLowerEnd);
         InArrayHandleType permutedTopVolBranchSaddleIsoValue;
         viskores::worklet::contourtree_augmented::PermuteArrayWithRawIndex<InArrayHandleType>(
@@ -411,9 +419,9 @@ void SelectTopVolumeContoursFunctor::operator()(
           viskores::cont::Algorithm::CopySubRange(
             mergedUniqueBranchVolume, 0, this->nSavedBranches, b->TopVolumeBranchVolume);
           viskores::cont::Algorithm::CopySubRange(mergedUniqueBranchSaddleEpsilon,
-                                              0,
-                                              this->nSavedBranches,
-                                              b->TopVolumeBranchSaddleEpsilon);
+                                                  0,
+                                                  this->nSavedBranches,
+                                                  b->TopVolumeBranchSaddleEpsilon);
           viskores::cont::Algorithm::CopySubRange(
             mergedUniqueBranchUpperEnd, 0, this->nSavedBranches, b->TopVolumeBranchUpperEndGRId);
           viskores::cont::Algorithm::CopySubRange(
@@ -429,15 +437,18 @@ void SelectTopVolumeContoursFunctor::operator()(
           viskores::cont::Algorithm::Copy(mergedUniqueBranchGRId, b->TopVolumeBranchRootGRId);
           viskores::cont::Algorithm::Copy(mergedUniqueBranchVolume, b->TopVolumeBranchVolume);
           viskores::cont::Algorithm::Copy(mergedUniqueBranchSaddleEpsilon,
-                                      b->TopVolumeBranchSaddleEpsilon);
-          viskores::cont::Algorithm::Copy(mergedUniqueBranchUpperEnd, b->TopVolumeBranchUpperEndGRId);
-          viskores::cont::Algorithm::Copy(mergedUniqueBranchLowerEnd, b->TopVolumeBranchLowerEndGRId);
+                                          b->TopVolumeBranchSaddleEpsilon);
+          viskores::cont::Algorithm::Copy(mergedUniqueBranchUpperEnd,
+                                          b->TopVolumeBranchUpperEndGRId);
+          viskores::cont::Algorithm::Copy(mergedUniqueBranchLowerEnd,
+                                          b->TopVolumeBranchLowerEndGRId);
           inArray.Allocate(nMergedUnique);
           viskores::cont::Algorithm::Copy(mergedUniqueBranchSaddleIsoValue, inArray);
         }
       };
       b->TopVolumeBranchSaddleIsoValue
-        .CastAndCallForTypes<viskores::TypeListScalarAll, viskores::cont::StorageListBasic>(resolveArray);
+        .CastAndCallForTypes<viskores::TypeListScalarAll, viskores::cont::StorageListBasic>(
+          resolveArray);
     }
   }
 }

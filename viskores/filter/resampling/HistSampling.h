@@ -44,7 +44,10 @@ public:
   ///
   /// The histogram is used to select the importance of each field value.
   /// More rare field values are more likely to be selected.
-  VISKORES_CONT void SetNumberOfBins(viskores::Id numberOfBins) { this->NumberOfBins = numberOfBins; }
+  VISKORES_CONT void SetNumberOfBins(viskores::Id numberOfBins)
+  {
+    this->NumberOfBins = numberOfBins;
+  }
   /// @copydoc SetNumberOfBins
   VISKORES_CONT viskores::Id GetNumberOfBins() { return this->NumberOfBins; }
 
@@ -53,7 +56,10 @@ public:
   /// A fraction of 1 means that all the points will be sampled and be in the output.
   /// A fraction of 0 means that none of the points will be sampled. A fraction of 0.5 means
   /// that half the points will be selected to be in the output.
-  VISKORES_CONT void SetSampleFraction(viskores::FloatDefault fraction) { this->SampleFraction = fraction; }
+  VISKORES_CONT void SetSampleFraction(viskores::FloatDefault fraction)
+  {
+    this->SampleFraction = fraction;
+  }
   /// @copydoc SetSampleFraction
   VISKORES_CONT viskores::FloatDefault GetSampleFraction() const { return this->SampleFraction; }
 
@@ -63,7 +69,10 @@ public:
     this->SetSampleFraction(samplePercent);
   }
   VISKORES_DEPRECATED(2.2, "Use GetSampleFraction().")
-  VISKORES_CONT viskores::FloatDefault GetSamplePercent() const { return this->GetSampleFraction(); }
+  VISKORES_CONT viskores::FloatDefault GetSamplePercent() const
+  {
+    return this->GetSampleFraction();
+  }
 
   /// @brief Specify the seed used for random number generation.
   ///

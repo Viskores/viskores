@@ -161,7 +161,7 @@ public:
   };
 
   VISKORES_CONT ExecObject PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                           viskores::cont::Token& token) const
+                                               viskores::cont::Token& token) const
   {
     return ExecObject(this->Values.PrepareForInput(device, token),
                       this->Extrema.PrepareForInput(device, token),

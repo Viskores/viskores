@@ -192,7 +192,7 @@ void RunTest()
   viskores::Float64 e = entropyHandle.WritePortal().Get(0);
 
   VISKORES_TEST_ASSERT(fabs(e - 7.457857) < 0.001,
-                   "N-Dimentional entropy filter calculation is incorrect");
+                       "N-Dimentional entropy filter calculation is incorrect");
 }
 
 } // anonymous namespace

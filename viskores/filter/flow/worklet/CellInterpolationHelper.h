@@ -200,10 +200,10 @@ public:
     if (cellSet.CanConvert<Structured2DType>())
     {
       this->Is3D = false;
-      viskores::Id2 cellDims =
-        cellSet.AsCellSet<Structured2DType>().GetSchedulingRange(viskores::TopologyElementTagCell());
-      viskores::Id2 pointDims =
-        cellSet.AsCellSet<Structured2DType>().GetSchedulingRange(viskores::TopologyElementTagPoint());
+      viskores::Id2 cellDims = cellSet.AsCellSet<Structured2DType>().GetSchedulingRange(
+        viskores::TopologyElementTagCell());
+      viskores::Id2 pointDims = cellSet.AsCellSet<Structured2DType>().GetSchedulingRange(
+        viskores::TopologyElementTagPoint());
       this->CellDims = viskores::Id3(cellDims[0], cellDims[1], 0);
       this->PointDims = viskores::Id3(pointDims[0], pointDims[1], 1);
       this->Type = viskores::exec::CellInterpolationHelper::HelperType::STRUCTURED;
@@ -211,19 +211,19 @@ public:
     else if (cellSet.CanConvert<Structured3DType>())
     {
       this->Is3D = true;
-      this->CellDims =
-        cellSet.AsCellSet<Structured3DType>().GetSchedulingRange(viskores::TopologyElementTagCell());
-      this->PointDims =
-        cellSet.AsCellSet<Structured3DType>().GetSchedulingRange(viskores::TopologyElementTagPoint());
+      this->CellDims = cellSet.AsCellSet<Structured3DType>().GetSchedulingRange(
+        viskores::TopologyElementTagCell());
+      this->PointDims = cellSet.AsCellSet<Structured3DType>().GetSchedulingRange(
+        viskores::TopologyElementTagPoint());
       this->Type = viskores::exec::CellInterpolationHelper::HelperType::STRUCTURED;
     }
     else if (cellSet.CanConvert<SingleExplicitType>())
     {
       SingleExplicitType CellSet = cellSet.AsCellSet<SingleExplicitType>();
-      const auto cellShapes =
-        CellSet.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
-      const auto numIndices =
-        CellSet.GetNumIndicesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+      const auto cellShapes = CellSet.GetShapesArray(viskores::TopologyElementTagCell(),
+                                                     viskores::TopologyElementTagPoint());
+      const auto numIndices = CellSet.GetNumIndicesArray(viskores::TopologyElementTagCell(),
+                                                         viskores::TopologyElementTagPoint());
       CellShape = viskores::cont::ArrayGetValue(0, cellShapes);
       PointsPerCell = viskores::cont::ArrayGetValue(0, numIndices);
       Connectivity = CellSet.GetConnectivityArray(viskores::TopologyElementTagCell(),
@@ -232,11 +232,12 @@ public:
     }
     else if (cellSet.CanConvert<ExplicitType>())
     {
-      viskores::cont::CellSetExplicit<> CellSet = cellSet.AsCellSet<viskores::cont::CellSetExplicit<>>();
-      Shape =
-        CellSet.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
-      Offset =
-        CellSet.GetOffsetsArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+      viskores::cont::CellSetExplicit<> CellSet =
+        cellSet.AsCellSet<viskores::cont::CellSetExplicit<>>();
+      Shape = CellSet.GetShapesArray(viskores::TopologyElementTagCell(),
+                                     viskores::TopologyElementTagPoint());
+      Offset = CellSet.GetOffsetsArray(viskores::TopologyElementTagCell(),
+                                       viskores::TopologyElementTagPoint());
       Connectivity = CellSet.GetConnectivityArray(viskores::TopologyElementTagCell(),
                                                   viskores::TopologyElementTagPoint());
       this->Type = viskores::exec::CellInterpolationHelper::HelperType::EXPLICIT;

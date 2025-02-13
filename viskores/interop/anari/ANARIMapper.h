@@ -36,10 +36,11 @@ inline void NoopANARIDeleter(const void*, const void*) {}
 /// changes to the color map or ANARIActor.
 struct VISKORES_ANARI_EXPORT ANARIMapper
 {
-  ANARIMapper(anari_cpp::Device device,
-              const ANARIActor& actor = {},
-              const std::string& name = "<noname>",
-              const viskores::cont::ColorTable& colorTable = viskores::cont::ColorTable::Preset::Default);
+  ANARIMapper(
+    anari_cpp::Device device,
+    const ANARIActor& actor = {},
+    const std::string& name = "<noname>",
+    const viskores::cont::ColorTable& colorTable = viskores::cont::ColorTable::Preset::Default);
   virtual ~ANARIMapper() = default;
 
   anari_cpp::Device GetDevice() const;

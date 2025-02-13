@@ -389,7 +389,10 @@ struct BitFieldToUnorderedSetFunctor : public viskores::exec::FunctorBase
 #endif
   }
 
-  VISKORES_CONT viskores::UInt64 GetPopCount() const { return PopCount.load(std::memory_order_relaxed); }
+  VISKORES_CONT viskores::UInt64 GetPopCount() const
+  {
+    return PopCount.load(std::memory_order_relaxed);
+  }
 
 private:
   VISKORES_EXEC viskores::UInt64 CountChunkBits(viskores::Id wordStart, viskores::Id wordEnd) const
@@ -410,13 +413,16 @@ private:
 
     if (isFinalChunk)
     {
-      tmp += viskores::CountSetBits(this->Input.GetWord(this->FinalWordIndex) & this->FinalWordMask);
+      tmp +=
+        viskores::CountSetBits(this->Input.GetWord(this->FinalWordIndex) & this->FinalWordMask);
     }
 
     return static_cast<viskores::UInt64>(tmp);
   }
 
-  VISKORES_EXEC void ProcessWords(viskores::Id wordStart, viskores::Id wordEnd, viskores::Id outputStartIdx) const
+  VISKORES_EXEC void ProcessWords(viskores::Id wordStart,
+                                  viskores::Id wordEnd,
+                                  viskores::Id outputStartIdx) const
   {
     // Need to mask out trailing bits from the final word:
     const bool isFinalChunk = wordEnd == (this->FinalWordIndex + 1);
@@ -536,7 +542,10 @@ struct CountSetBitsFunctor : public viskores::exec::FunctorBase
     }
   }
 
-  VISKORES_CONT viskores::UInt64 GetPopCount() const { return PopCount.load(std::memory_order_relaxed); }
+  VISKORES_CONT viskores::UInt64 GetPopCount() const
+  {
+    return PopCount.load(std::memory_order_relaxed);
+  }
 
 private:
   VISKORES_EXEC void ExecuteRange(viskores::Id wordStart, viskores::Id wordEnd) const
@@ -569,7 +578,8 @@ private:
 
     if (isFinalChunk)
     {
-      tmp += viskores::CountSetBits(this->Input.GetWord(this->FinalWordIndex) & this->FinalWordMask);
+      tmp +=
+        viskores::CountSetBits(this->Input.GetWord(this->FinalWordIndex) & this->FinalWordMask);
     }
 
     return static_cast<viskores::UInt64>(tmp);
@@ -592,12 +602,14 @@ static constexpr VISKORES_CONT WordType RepeatTo32BitsIfNeeded(WordType pattern)
   return pattern;
 }
 
-static inline constexpr VISKORES_CONT viskores::UInt32 RepeatTo32BitsIfNeeded(viskores::UInt16 pattern)
+static inline constexpr VISKORES_CONT viskores::UInt32 RepeatTo32BitsIfNeeded(
+  viskores::UInt16 pattern)
 {
   return static_cast<viskores::UInt32>(pattern << 16 | pattern);
 }
 
-static inline constexpr VISKORES_CONT viskores::UInt32 RepeatTo32BitsIfNeeded(viskores::UInt8 pattern)
+static inline constexpr VISKORES_CONT viskores::UInt32 RepeatTo32BitsIfNeeded(
+  viskores::UInt8 pattern)
 {
   return RepeatTo32BitsIfNeeded(static_cast<viskores::UInt16>(pattern << 8 | pattern));
 }
@@ -612,7 +624,10 @@ struct FillBitFieldFunctor : public viskores::exec::FunctorBase
   {
   }
 
-  VISKORES_EXEC void operator()(viskores::Id wordIdx) const { this->Portal.SetWord(wordIdx, this->Mask); }
+  VISKORES_EXEC void operator()(viskores::Id wordIdx) const
+  {
+    this->Portal.SetWord(wordIdx, this->Mask);
+  }
 
 private:
   BitsPortal Portal;
@@ -640,8 +655,8 @@ private:
 
 template <typename Iterator, typename IteratorTag>
 VISKORES_EXEC static inline viskores::Id IteratorDistanceImpl(const Iterator& from,
-                                                      const Iterator& to,
-                                                      IteratorTag)
+                                                              const Iterator& to,
+                                                              IteratorTag)
 {
   viskores::Id dist = 0;
   for (auto it = from; it != to; ++it)
@@ -653,8 +668,8 @@ VISKORES_EXEC static inline viskores::Id IteratorDistanceImpl(const Iterator& fr
 
 template <typename Iterator>
 VISKORES_EXEC static inline viskores::Id IteratorDistanceImpl(const Iterator& from,
-                                                      const Iterator& to,
-                                                      std::random_access_iterator_tag)
+                                                              const Iterator& to,
+                                                              std::random_access_iterator_tag)
 {
   return static_cast<viskores::Id>(to - from);
 }
@@ -767,9 +782,9 @@ struct LowerBoundsComparisonKernel
     using InputIteratorsType = viskores::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
     auto resultPos = viskores::LowerBound(inputIterators.GetBegin(),
-                                      inputIterators.GetEnd(),
-                                      this->ValuesPortal.Get(index),
-                                      this->CompareFunctor);
+                                          inputIterators.GetEnd(),
+                                          this->ValuesPortal.Get(index),
+                                          this->CompareFunctor);
 
     viskores::Id resultIndex = IteratorDistance(inputIterators.GetBegin(), resultPos);
     this->OutputPortal.Set(index, resultIndex);
@@ -809,7 +824,9 @@ struct BitonicSortMergeKernel : viskores::exec::FunctorBase
   viskores::Id GroupSize;
 
   VISKORES_CONT
-  BitonicSortMergeKernel(const PortalType& portal, const BinaryCompare& compare, viskores::Id groupSize)
+  BitonicSortMergeKernel(const PortalType& portal,
+                         const BinaryCompare& compare,
+                         viskores::Id groupSize)
     : Portal(portal)
     , Compare(compare)
     , GroupSize(groupSize)
@@ -1116,9 +1133,9 @@ struct UpperBoundsKernelComparisonKernel
     using InputIteratorsType = viskores::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
     auto resultPos = viskores::UpperBound(inputIterators.GetBegin(),
-                                      inputIterators.GetEnd(),
-                                      this->ValuesPortal.Get(index),
-                                      this->CompareFunctor);
+                                          inputIterators.GetEnd(),
+                                          this->ValuesPortal.Get(index),
+                                          this->CompareFunctor);
 
     viskores::Id resultIndex = IteratorDistance(inputIterators.GetBegin(), resultPos);
     this->OutputPortal.Set(index, resultIndex);
@@ -1194,9 +1211,9 @@ struct InclusiveToExtendedKernel : viskores::exec::FunctorBase
     // The output array has one more value than the input, which holds the
     // total sum.
     const ValueType result = (index == 0) ? this->InitialValue
-                                          : (index == this->InPortal.GetNumberOfValues())
-        ? this->FinalValue
-        : this->BinaryOperator(this->InitialValue, this->InPortal.Get(index - 1));
+      : (index == this->InPortal.GetNumberOfValues())
+      ? this->FinalValue
+      : this->BinaryOperator(this->InitialValue, this->InPortal.Get(index - 1));
 
     this->OutPortal.Set(index, result);
   }

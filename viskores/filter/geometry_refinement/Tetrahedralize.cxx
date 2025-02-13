@@ -16,8 +16,8 @@
 namespace
 {
 VISKORES_CONT bool DoMapField(viskores::cont::DataSet& result,
-                          const viskores::cont::Field& field,
-                          const viskores::worklet::Tetrahedralize& worklet)
+                              const viskores::cont::Field& field,
+                              const viskores::worklet::Tetrahedralize& worklet)
 {
   if (field.IsPointField())
   {
@@ -62,7 +62,8 @@ namespace filter
 {
 namespace geometry_refinement
 {
-VISKORES_CONT viskores::cont::DataSet Tetrahedralize::DoExecute(const viskores::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet Tetrahedralize::DoExecute(
+  const viskores::cont::DataSet& input)
 {
   const viskores::cont::UnknownCellSet& inCellSet = input.GetCellSet();
 
@@ -101,10 +102,13 @@ VISKORES_CONT viskores::cont::DataSet Tetrahedralize::DoExecute(const viskores::
                                                              viskores::TopologyElementTagPoint()));
 
       // Copy all fields from the input
-      output = this->CreateResult(input, outCellSet, [&](auto& result, const auto& f) {
-        result.AddField(f);
-        return true;
-      });
+      output = this->CreateResult(input,
+                                  outCellSet,
+                                  [&](auto& result, const auto& f)
+                                  {
+                                    result.AddField(f);
+                                    return true;
+                                  });
     }
   }
 
@@ -112,7 +116,7 @@ VISKORES_CONT viskores::cont::DataSet Tetrahedralize::DoExecute(const viskores::
   {
     viskores::worklet::Tetrahedralize worklet;
     viskores::cont::CastAndCall(inCellSet,
-                            [&](const auto& concrete) { outCellSet = worklet.Run(concrete); });
+                                [&](const auto& concrete) { outCellSet = worklet.Run(concrete); });
 
     auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };
     // create the output dataset (without a CoordinateSystem).
@@ -121,7 +125,8 @@ VISKORES_CONT viskores::cont::DataSet Tetrahedralize::DoExecute(const viskores::
 
   // We did not change the geometry of the input dataset at all. Just attach coordinate system
   // of input dataset to output dataset.
-  for (viskores::IdComponent coordSystemId = 0; coordSystemId < input.GetNumberOfCoordinateSystems();
+  for (viskores::IdComponent coordSystemId = 0;
+       coordSystemId < input.GetNumberOfCoordinateSystems();
        ++coordSystemId)
   {
     output.AddCoordinateSystem(input.GetCoordinateSystem(coordSystemId));

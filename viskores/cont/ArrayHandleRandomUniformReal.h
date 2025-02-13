@@ -30,7 +30,8 @@ struct CanonicalFunctor<viskores::Float64>
   /// random real number in the range of [0, 1).
   // We take 53 bits (number of bits in mantissa in a double) from the 64 bits random source
   // and divide it by (1 << 53).
-  static constexpr viskores::Float64 DIVISOR = static_cast<viskores::Float64>(viskores::UInt64{ 1 } << 53);
+  static constexpr viskores::Float64 DIVISOR =
+    static_cast<viskores::Float64>(viskores::UInt64{ 1 } << 53);
   static constexpr viskores::UInt64 MASK = (viskores::UInt64{ 1 } << 53) - viskores::UInt64{ 1 };
 
   VISKORES_EXEC_CONT
@@ -42,7 +43,8 @@ struct CanonicalFunctor<viskores::Float32>
 {
   // We take 24 bits (number of bits in mantissa in a double) from the 64 bits random source
   // and divide it by (1 << 24).
-  static constexpr viskores::Float32 DIVISOR = static_cast<viskores::Float32>(viskores::UInt32{ 1 } << 24);
+  static constexpr viskores::Float32 DIVISOR =
+    static_cast<viskores::Float32>(viskores::UInt32{ 1 } << 24);
   static constexpr viskores::UInt32 MASK = (viskores::UInt32{ 1 } << 24) - viskores::UInt32{ 1 };
 
   VISKORES_EXEC_CONT
@@ -65,7 +67,7 @@ struct CanonicalFunctor<viskores::Float32>
 template <typename Real = viskores::Float64>
 class VISKORES_ALWAYS_EXPORT ArrayHandleRandomUniformReal
   : public viskores::cont::ArrayHandleTransform<viskores::cont::ArrayHandleRandomUniformBits,
-                                            detail::CanonicalFunctor<Real>>
+                                                detail::CanonicalFunctor<Real>>
 {
 public:
   using SeedType = viskores::Vec<viskores::UInt32, 1>;
@@ -74,7 +76,7 @@ public:
     ArrayHandleRandomUniformReal,
     (ArrayHandleRandomUniformReal<Real>),
     (viskores::cont::ArrayHandleTransform<viskores::cont::ArrayHandleRandomUniformBits,
-                                      detail::CanonicalFunctor<Real>>));
+                                          detail::CanonicalFunctor<Real>>));
 
   /// Construct an `ArrayHandleRandomUniformReal`.
   ///
@@ -83,7 +85,8 @@ public:
   /// between the seed and the length, the type of the seed is a `viskores::Vec` of size 1. To
   /// specify the seed, declare it in braces. For example, to construct a random array of
   /// size 50 with seed 123, use `ArrayHandleRandomUniformReal(50, { 123 })`.
-  explicit ArrayHandleRandomUniformReal(viskores::Id length, SeedType seed = { std::random_device{}() })
+  explicit ArrayHandleRandomUniformReal(viskores::Id length,
+                                        SeedType seed = { std::random_device{}() })
     : Superclass(viskores::cont::ArrayHandleRandomUniformBits{ length, seed },
                  detail::CanonicalFunctor<Real>{})
   {

@@ -51,9 +51,9 @@ namespace cellmetrics
 // By default, cells have zero shape unless the shape type template is specialized below.
 template <typename OutType, typename PointCoordVecType, typename CellShapeType>
 VISKORES_EXEC OutType CellMinAngleMetric(const viskores::IdComponent& numPts,
-                                     const PointCoordVecType& pts,
-                                     CellShapeType shape,
-                                     viskores::ErrorCode&)
+                                         const PointCoordVecType& pts,
+                                         CellShapeType shape,
+                                         viskores::ErrorCode&)
 {
   UNUSED(numPts);
   UNUSED(pts);
@@ -73,9 +73,9 @@ VISKORES_EXEC OutType CellMinAngleMetric(const viskores::IdComponent& numPts,
 // Full range: [0º, 360º]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMinAngleMetric(const viskores::IdComponent& numPts,
-                                     const PointCoordVecType& pts,
-                                     viskores::CellShapeTagTriangle,
-                                     viskores::ErrorCode& ec)
+                                         const PointCoordVecType& pts,
+                                         viskores::CellShapeTagTriangle,
+                                         viskores::ErrorCode& ec)
 {
   if (numPts != 3)
   {
@@ -119,9 +119,9 @@ VISKORES_EXEC OutType CellMinAngleMetric(const viskores::IdComponent& numPts,
 // Full range: [0º, 360º]
 template <typename OutType, typename PointCoordVecType>
 VISKORES_EXEC OutType CellMinAngleMetric(const viskores::IdComponent& numPts,
-                                     const PointCoordVecType& pts,
-                                     viskores::CellShapeTagQuad,
-                                     viskores::ErrorCode& ec)
+                                         const PointCoordVecType& pts,
+                                         viskores::CellShapeTagQuad,
+                                         viskores::ErrorCode& ec)
 {
   if (numPts != 4)
   {
@@ -163,19 +163,23 @@ VISKORES_EXEC OutType CellMinAngleMetric(const viskores::IdComponent& numPts,
   const Scalar oneEightyOverPi = (Scalar)57.2957795131; // ~ 180/pi
   const Scalar threeSixty(360.0);
   const Scalar q0 =
-    (viskores::Pow(neg1, s0) * viskores::ACos(neg1 * (static_cast<Scalar>(viskores::Dot(L0, L1)) / (l0 * l1))) *
+    (viskores::Pow(neg1, s0) *
+     viskores::ACos(neg1 * (static_cast<Scalar>(viskores::Dot(L0, L1)) / (l0 * l1))) *
      oneEightyOverPi) +
     (threeSixty * s0);
   const Scalar q1 =
-    (viskores::Pow(neg1, s1) * viskores::ACos(neg1 * (static_cast<Scalar>(viskores::Dot(L1, L2)) / (l1 * l2))) *
+    (viskores::Pow(neg1, s1) *
+     viskores::ACos(neg1 * (static_cast<Scalar>(viskores::Dot(L1, L2)) / (l1 * l2))) *
      oneEightyOverPi) +
     (threeSixty * s1);
   const Scalar q2 =
-    (viskores::Pow(neg1, s2) * viskores::ACos(neg1 * (static_cast<Scalar>(viskores::Dot(L2, L3)) / (l2 * l3))) *
+    (viskores::Pow(neg1, s2) *
+     viskores::ACos(neg1 * (static_cast<Scalar>(viskores::Dot(L2, L3)) / (l2 * l3))) *
      oneEightyOverPi) +
     (threeSixty * s2);
   const Scalar q3 =
-    (viskores::Pow(neg1, s3) * viskores::ACos(neg1 * (static_cast<Scalar>(viskores::Dot(L3, L0)) / (l3 * l0))) *
+    (viskores::Pow(neg1, s3) *
+     viskores::ACos(neg1 * (static_cast<Scalar>(viskores::Dot(L3, L0)) / (l3 * l0))) *
      oneEightyOverPi) +
     (threeSixty * s3);
 

@@ -85,9 +85,10 @@ public:
   CollapseRegularChainsWorklet() {}
 
   template <typename InOutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
-                            const InOutFieldPortalType& upNeighbourPortal,
-                            const InOutFieldPortalType& downNeighbourPortal) const
+  VISKORES_EXEC void operator()(
+    const viskores::worklet::contourtree_augmented::EdgePair& activeSuperarc,
+    const InOutFieldPortalType& upNeighbourPortal,
+    const InOutFieldPortalType& downNeighbourPortal) const
   { // operator ()
     // per active superarc
     viskores::Id lowEnd = activeSuperarc.first;

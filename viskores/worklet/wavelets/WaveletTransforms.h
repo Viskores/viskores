@@ -112,8 +112,8 @@ public:
 
   template <typename PortalOutType, typename PortalInType>
   VISKORES_EXEC void operator()(PortalOutType& portalOut,
-                            const PortalInType& portalIn,
-                            const viskores::Id& workIndex) const
+                                const PortalInType& portalIn,
+                                const viskores::Id& workIndex) const
   {
     viskores::Id extX, extY, extZ;
     viskores::Id sigPretendX, sigPretendY, sigPretendZ;
@@ -232,7 +232,7 @@ public:
 
 private:
   const viskores::Id extDimX, extDimY, extDimZ, sigDimX, sigDimY, sigDimZ;
-  const viskores::Id sigStartX, sigStartY, sigStartZ;                // defines a small cube to work on
+  const viskores::Id sigStartX, sigStartY, sigStartZ; // defines a small cube to work on
   const viskores::Id sigPretendDimX, sigPretendDimY, sigPretendDimZ; // small cube dims
   const DWTMode mode;
   const ExtensionDirection direction;
@@ -562,8 +562,9 @@ public:
     else if ((dimX1 + dimXa + dimX2 + dimX3) <= inX &&
              inX < (dimX1 + dimXa + dimX2 + dimX3 + dimXd))
     {
-      viskores::Id inX_local = inX - dimX1 - dimX2 - dimX3; // no -dimXa since this is on the same cube
-      cube = 5;                                         // cAcD
+      viskores::Id inX_local =
+        inX - dimX1 - dimX2 - dimX3; // no -dimXa since this is on the same cube
+      cube = 5;                      // cAcD
       idx = (inZ + startZ5) * dimX5 * dimY5 + (inY + startY5) * dimX5 + (inX_local + startX5);
     }
     else if (0 <= inX && inX < dimX1)
@@ -904,10 +905,10 @@ public:
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InPortalType1, typename InPortalType2, typename InPortalType3>
   VISKORES_EXEC_CONT VAL GetVal(const InPortalType1& portal1,
-                            const InPortalType2& portal2,
-                            const InPortalType3& portal3,
-                            viskores::Id inCube,
-                            viskores::Id inIdx) const
+                                const InPortalType2& portal2,
+                                const InPortalType3& portal3,
+                                viskores::Id inCube,
+                                viskores::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -933,12 +934,12 @@ public:
             typename FilterPortalType,
             typename OutputPortalType>
   VISKORES_EXEC_CONT void operator()(const InPortalType1& inPortal1,     // left extension
-                                 const InPortalType2& inPortal2,     // signal
-                                 const InPortalType3& inPortal3,     // right extension
-                                 const FilterPortalType& lowFilter,  // lowFilter
-                                 const FilterPortalType& highFilter, // highFilter
-                                 OutputPortalType& coeffOut,
-                                 const viskores::Id& workIndex) const
+                                     const InPortalType2& inPortal2,     // signal
+                                     const InPortalType3& inPortal3,     // right extension
+                                     const FilterPortalType& lowFilter,  // lowFilter
+                                     const FilterPortalType& highFilter, // highFilter
+                                     OutputPortalType& coeffOut,
+                                     const viskores::Id& workIndex) const
   {
     viskores::Id workX, workY, workZ, output1D;
     this->Output1Dto3D(workIndex, workX, workY, workZ);
@@ -1057,10 +1058,10 @@ public:
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InPortalType1, typename InPortalType2, typename InPortalType3>
   VISKORES_EXEC_CONT VAL GetVal(const InPortalType1& portal1,
-                            const InPortalType2& portal2,
-                            const InPortalType3& portal3,
-                            viskores::Id inCube,
-                            viskores::Id inIdx) const
+                                const InPortalType2& portal2,
+                                const InPortalType3& portal3,
+                                viskores::Id inCube,
+                                viskores::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -1086,12 +1087,12 @@ public:
             typename FilterPortalType,
             typename OutputPortalType>
   VISKORES_EXEC_CONT void operator()(const InPortalType1& inPortal1,     // top extension
-                                 const InPortalType2& inPortal2,     // signal
-                                 const InPortalType3& inPortal3,     // down extension
-                                 const FilterPortalType& lowFilter,  // lowFilter
-                                 const FilterPortalType& highFilter, // highFilter
-                                 OutputPortalType& coeffOut,
-                                 const viskores::Id& workIndex) const
+                                     const InPortalType2& inPortal2,     // signal
+                                     const InPortalType3& inPortal3,     // down extension
+                                     const FilterPortalType& lowFilter,  // lowFilter
+                                     const FilterPortalType& highFilter, // highFilter
+                                     OutputPortalType& coeffOut,
+                                     const viskores::Id& workIndex) const
   {
     viskores::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
@@ -1210,10 +1211,10 @@ public:
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InPortalType1, typename InPortalType2, typename InPortalType3>
   VISKORES_EXEC_CONT VAL GetVal(const InPortalType1& portal1,
-                            const InPortalType2& portal2,
-                            const InPortalType3& portal3,
-                            viskores::Id inCube,
-                            viskores::Id inIdx) const
+                                const InPortalType2& portal2,
+                                const InPortalType3& portal3,
+                                viskores::Id inCube,
+                                viskores::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -1239,12 +1240,12 @@ public:
             typename FilterPortalType,
             typename OutputPortalType>
   VISKORES_EXEC_CONT void operator()(const InPortalType1& inPortal1, // top extension
-                                 const InPortalType2& inPortal2, // signal
-                                 const InPortalType3& inPortal3, // down extension
-                                 const FilterPortalType& lowFilter,
-                                 const FilterPortalType& highFilter,
-                                 OutputPortalType& coeffOut,
-                                 const viskores::Id& workIndex) const
+                                     const InPortalType2& inPortal2, // signal
+                                     const InPortalType3& inPortal3, // down extension
+                                     const FilterPortalType& lowFilter,
+                                     const FilterPortalType& highFilter,
+                                     OutputPortalType& coeffOut,
+                                     const viskores::Id& workIndex) const
   {
     viskores::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
@@ -1392,12 +1393,12 @@ public:
             typename InPortalType4,
             typename InPortalType5>
   VISKORES_EXEC_CONT VAL GetVal(const InPortalType1& ext1,
-                            const InPortalType2& ext2,
-                            const InPortalType3& ext3,
-                            const InPortalType4& ext4,
-                            const InPortalType5& sig5,
-                            viskores::Id inCube,
-                            viskores::Id inIdx) const
+                                const InPortalType2& ext2,
+                                const InPortalType3& ext3,
+                                const InPortalType4& ext4,
+                                const InPortalType5& sig5,
+                                viskores::Id inCube,
+                                viskores::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -1433,14 +1434,14 @@ public:
             typename FilterPortalType,
             typename OutputValueType>
   VISKORES_EXEC void operator()(const InPortalType1& portal1,
-                            const InPortalType2& portal2,
-                            const InPortalType3& portal3,
-                            const InPortalType4& portal4,
-                            const InPortalType5& portal5,
-                            const FilterPortalType& lowFilter,
-                            const FilterPortalType& highFilter,
-                            OutputValueType& coeffOut,
-                            const viskores::Id& workIdx) const
+                                const InPortalType2& portal2,
+                                const InPortalType3& portal3,
+                                const InPortalType4& portal4,
+                                const InPortalType5& portal5,
+                                const FilterPortalType& lowFilter,
+                                const FilterPortalType& highFilter,
+                                OutputValueType& coeffOut,
+                                const viskores::Id& workIdx) const
   {
     viskores::Id workX, workY, workZ;
     viskores::Id k1, k2, xi;
@@ -1623,12 +1624,12 @@ public:
             typename InPortalType4,
             typename InPortalType5>
   VISKORES_EXEC_CONT VAL GetVal(const InPortalType1& ext1,
-                            const InPortalType2& ext2,
-                            const InPortalType3& ext3,
-                            const InPortalType4& ext4,
-                            const InPortalType5& sig5,
-                            viskores::Id inCube,
-                            viskores::Id inIdx) const
+                                const InPortalType2& ext2,
+                                const InPortalType3& ext3,
+                                const InPortalType4& ext4,
+                                const InPortalType5& sig5,
+                                viskores::Id inCube,
+                                viskores::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -1664,14 +1665,14 @@ public:
             typename FilterPortalType,
             typename OutputValueType>
   VISKORES_EXEC void operator()(const InPortalType1& portal1,
-                            const InPortalType2& portal2,
-                            const InPortalType3& portal3,
-                            const InPortalType4& portal4,
-                            const InPortalType5& portal5,
-                            const FilterPortalType& lowFilter,
-                            const FilterPortalType& highFilter,
-                            OutputValueType& coeffOut,
-                            const viskores::Id& workIdx) const
+                                const InPortalType2& portal2,
+                                const InPortalType3& portal3,
+                                const InPortalType4& portal4,
+                                const InPortalType5& portal5,
+                                const FilterPortalType& lowFilter,
+                                const FilterPortalType& highFilter,
+                                OutputValueType& coeffOut,
+                                const viskores::Id& workIdx) const
   {
     viskores::Id workX, workY, workZ;
     viskores::Id k1, k2, yi;
@@ -1856,12 +1857,12 @@ public:
             typename InPortalType4,
             typename InPortalType5>
   VISKORES_EXEC_CONT VAL GetVal(const InPortalType1& ext1,
-                            const InPortalType2& ext2,
-                            const InPortalType3& ext3,
-                            const InPortalType4& ext4,
-                            const InPortalType5& sig5,
-                            viskores::Id inCube,
-                            viskores::Id inIdx) const
+                                const InPortalType2& ext2,
+                                const InPortalType3& ext3,
+                                const InPortalType4& ext4,
+                                const InPortalType5& sig5,
+                                viskores::Id inCube,
+                                viskores::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -1897,14 +1898,14 @@ public:
             typename FilterPortalType,
             typename OutputValueType>
   VISKORES_EXEC void operator()(const InPortalType1& portal1,
-                            const InPortalType2& portal2,
-                            const InPortalType3& portal3,
-                            const InPortalType4& portal4,
-                            const InPortalType5& portal5,
-                            const FilterPortalType& lowFilter,
-                            const FilterPortalType& highFilter,
-                            OutputValueType& coeffOut,
-                            const viskores::Id& workIdx) const
+                                const InPortalType2& portal2,
+                                const InPortalType3& portal3,
+                                const InPortalType4& portal4,
+                                const InPortalType5& portal5,
+                                const FilterPortalType& lowFilter,
+                                const FilterPortalType& highFilter,
+                                OutputValueType& coeffOut,
+                                const viskores::Id& workIdx) const
   {
     viskores::Id workX, workY, workZ;
     viskores::Id k1, k2, zi;
@@ -2293,8 +2294,8 @@ public:
 
   template <typename PortalOutType, typename PortalInType>
   VISKORES_EXEC void operator()(PortalOutType& portalOut,
-                            const PortalInType& portalIn,
-                            const viskores::Id& workIndex) const
+                                const PortalInType& portalIn,
+                                const viskores::Id& workIndex) const
   {
     viskores::Id extX, extY, sigPretendX, sigPretendY;
     sigPretendX = sigPretendY = 0;
@@ -2433,10 +2434,10 @@ public:
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InPortalType1, typename InPortalType2, typename InPortalType3>
   VISKORES_EXEC_CONT VAL GetVal(const InPortalType1& portal1,
-                            const InPortalType2& portal2,
-                            const InPortalType3& portal3,
-                            viskores::Id inMatrix,
-                            viskores::Id inIdx) const
+                                const InPortalType2& portal2,
+                                const InPortalType3& portal3,
+                                viskores::Id inMatrix,
+                                viskores::Id inIdx) const
   {
     if (inMatrix == 1)
     {
@@ -2462,12 +2463,12 @@ public:
             typename FilterPortalType,
             typename OutputPortalType>
   VISKORES_EXEC_CONT void operator()(const InPortalType1& inPortal1, // left/top extension
-                                 const InPortalType2& inPortal2, // signal
-                                 const InPortalType3& inPortal3, // right/bottom extension
-                                 const FilterPortalType& lowFilter,
-                                 const FilterPortalType& highFilter,
-                                 OutputPortalType& coeffOut,
-                                 const viskores::Id& workIndex) const
+                                     const InPortalType2& inPortal2, // signal
+                                     const InPortalType3& inPortal3, // right/bottom extension
+                                     const FilterPortalType& lowFilter,
+                                     const FilterPortalType& highFilter,
+                                     OutputPortalType& coeffOut,
+                                     const viskores::Id& workIndex) const
   {
     viskores::Id workX, workY, output1D;
     Output1Dto2D(workIndex, workX, workY);
@@ -2649,12 +2650,12 @@ public:
             typename InPortalType4,
             typename InPortalTypecAcD>
   VISKORES_EXEC_CONT VAL GetVal(const InPortalType1& ext1,
-                            const InPortalType2& ext2,
-                            const InPortalType3& ext3,
-                            const InPortalType4& ext4,
-                            const InPortalTypecAcD& cAcD,
-                            viskores::Id inMatrix,
-                            viskores::Id inIdx) const
+                                const InPortalType2& ext2,
+                                const InPortalType3& ext3,
+                                const InPortalType4& ext4,
+                                const InPortalTypecAcD& cAcD,
+                                viskores::Id inMatrix,
+                                viskores::Id inIdx) const
   {
     if (inMatrix == 1)
     {
@@ -2690,14 +2691,14 @@ public:
             typename FilterPortalType,
             typename OutputValueType>
   VISKORES_EXEC void operator()(const InPortalType1& portal1,
-                            const InPortalType2& portal2,
-                            const InPortalType3& portal3,
-                            const InPortalType4& portal4,
-                            const InPortalTypecAcD& portalcAcD,
-                            const FilterPortalType& lowFilter,
-                            const FilterPortalType& highFilter,
-                            OutputValueType& coeffOut,
-                            const viskores::Id& workIdx) const
+                                const InPortalType2& portal2,
+                                const InPortalType3& portal3,
+                                const InPortalType4& portal4,
+                                const InPortalTypecAcD& portalcAcD,
+                                const FilterPortalType& lowFilter,
+                                const FilterPortalType& highFilter,
+                                OutputValueType& coeffOut,
+                                const viskores::Id& workIdx) const
   {
     viskores::Id workX, workY;
     viskores::Id k1 = 0, k2 = 0, xi = 0, yi = 0, inputMatrix = 0, inputIdx = 0;
@@ -2901,10 +2902,10 @@ public:
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InputPortalType, typename FilterPortalType, typename OutputPortalType>
   VISKORES_EXEC void operator()(const InputPortalType& signalIn,
-                            const FilterPortalType lowFilter,
-                            const FilterPortalType highFilter,
-                            OutputPortalType& coeffOut,
-                            const viskores::Id& workIndex) const
+                                const FilterPortalType lowFilter,
+                                const FilterPortalType highFilter,
+                                OutputPortalType& coeffOut,
+                                const viskores::Id& workIndex) const
   {
     using OutputValueType = typename OutputPortalType::ValueType;
     if (workIndex < approxLen + detailLen)
@@ -2975,10 +2976,10 @@ public:
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InputPortalType, typename FilterPortalType, typename OutputPortalType>
   VISKORES_EXEC void operator()(const InputPortalType& coeffs,
-                            const FilterPortalType& lowFilter,
-                            const FilterPortalType& highFilter,
-                            OutputPortalType& sigOut,
-                            viskores::Id workIndex) const
+                                const FilterPortalType& lowFilter,
+                                const FilterPortalType& highFilter,
+                                OutputPortalType& sigOut,
+                                viskores::Id workIndex) const
   {
     if (workIndex >= cALen2) // valid calculation region
     {
@@ -3057,10 +3058,10 @@ public:
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InputPortalType, typename FilterPortalType, typename OutputPortalType>
   VISKORES_EXEC void operator()(const InputPortalType& coeffs,
-                            const FilterPortalType& lowFilter,
-                            const FilterPortalType& highFilter,
-                            OutputPortalType& sigOut,
-                            const viskores::Id& workIndex) const
+                                const FilterPortalType& lowFilter,
+                                const FilterPortalType& highFilter,
+                                OutputPortalType& sigOut,
+                                const viskores::Id& workIndex) const
   {
     if (workIndex < cALen2) // valid calculation region
     {
@@ -3112,8 +3113,8 @@ private:
   //const viskores::Id cALen;         // Number of actual cAs (not used)
   const viskores::Id cALen2;        //  = cALen * 2
   const viskores::Id cALenExtended; // Number of cA at the beginning of input, followed by cD
-  bool matlab;                  // followed the naming convention from VAPOR
-                                // It's always false for the 1st 4 filters.
+  bool matlab;                      // followed the naming convention from VAPOR
+                                    // It's always false for the 1st 4 filters.
 };
 
 class ThresholdWorklet : public viskores::worklet::WorkletMapField
@@ -3212,8 +3213,8 @@ public:
 
   template <typename PortalInType, typename PortalOutType>
   VISKORES_EXEC void operator()(const PortalInType& portalIn,
-                            PortalOutType& portalOut,
-                            const viskores::Id& workIndex) const
+                                PortalOutType& portalOut,
+                                const viskores::Id& workIndex) const
   {
     portalOut.Set((startIdx + workIndex), portalIn.Get(workIndex));
   }
@@ -3240,8 +3241,8 @@ public:
 
   template <typename PortalOutType, typename PortalInType>
   VISKORES_EXEC void operator()(PortalOutType& portalOut,
-                            const PortalInType& portalIn,
-                            const viskores::Id& workIndex) const
+                                const PortalInType& portalIn,
+                                const viskores::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(this->addLen - workIndex - 1));
   }
@@ -3268,8 +3269,8 @@ public:
 
   template <typename PortalOutType, typename PortalInType>
   VISKORES_EXEC void operator()(PortalOutType& portalOut,
-                            const PortalInType& portalIn,
-                            const viskores::Id& workIndex) const
+                                const PortalInType& portalIn,
+                                const viskores::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(this->addLen - workIndex));
   }
@@ -3296,8 +3297,8 @@ public:
 
   template <typename PortalOutType, typename PortalInType>
   VISKORES_EXEC_CONT void operator()(PortalOutType& portalOut,
-                                 const PortalInType& portalIn,
-                                 const viskores::Id& workIndex) const
+                                     const PortalInType& portalIn,
+                                     const viskores::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(addLen - workIndex - 1) * (-1.0));
   }
@@ -3324,8 +3325,8 @@ public:
 
   template <typename PortalOutType, typename PortalInType>
   VISKORES_EXEC_CONT void operator()(PortalOutType& portalOut,
-                                 const PortalInType& portalIn,
-                                 const viskores::Id& workIndex) const
+                                     const PortalInType& portalIn,
+                                     const viskores::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(addLen - workIndex) * (-1.0));
   }
@@ -3352,8 +3353,8 @@ public:
 
   template <typename PortalOutType, typename PortalInType>
   VISKORES_EXEC void operator()(PortalOutType& portalOut,
-                            const PortalInType& portalIn,
-                            const viskores::Id& workIndex) const
+                                const PortalInType& portalIn,
+                                const viskores::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(this->sigInLen - workIndex - 1));
   }
@@ -3380,8 +3381,8 @@ public:
 
   template <typename PortalOutType, typename PortalInType>
   VISKORES_EXEC void operator()(PortalOutType& portalOut,
-                            const PortalInType& portalIn,
-                            const viskores::Id& workIndex) const
+                                const PortalInType& portalIn,
+                                const viskores::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(this->sigInLen - workIndex - 2));
   }
@@ -3408,8 +3409,8 @@ public:
 
   template <typename PortalOutType, typename PortalInType>
   VISKORES_EXEC_CONT void operator()(PortalOutType& portalOut,
-                                 const PortalInType& portalIn,
-                                 const viskores::Id& workIndex) const
+                                     const PortalInType& portalIn,
+                                     const viskores::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(sigInLen - workIndex - 1) * (-1.0));
   }
@@ -3436,8 +3437,8 @@ public:
 
   template <typename PortalOutType, typename PortalInType>
   VISKORES_EXEC_CONT void operator()(PortalOutType& portalOut,
-                                 const PortalInType& portalIn,
-                                 const viskores::Id& workIndex) const
+                                     const PortalInType& portalIn,
+                                     const viskores::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(sigInLen - workIndex - 2) * (-1.0));
   }
@@ -3518,7 +3519,7 @@ public:
 private:
   viskores::Id dimX, dimY;
   viskores::Id zeroX, zeroY; // element at (zeroX, zeroY) will be assigned zero.
-                         // each becomes a wild card if negative
+                             // each becomes a wild card if negative
 };
 
 // Assign zero to a plane (2D) in a 3D cube.
@@ -3578,7 +3579,7 @@ public:
 private:
   viskores::Id dimX, dimY, dimZ;
   viskores::Id zeroX, zeroY, zeroZ; // element at (zeroX, zeroY, zeroZ) will be assigned zero.
-                                // each becomes a wild card if negative
+                                    // each becomes a wild card if negative
 };
 
 // Worklet: Copies a small rectangle to become a part of a big rectangle
@@ -3616,12 +3617,15 @@ public:
   }
 
   VISKORES_EXEC_CONT
-  viskores::Id Get1DIdxOfOutputRect(viskores::Id x, viskores::Id y) const { return y * outXLen + x; }
+  viskores::Id Get1DIdxOfOutputRect(viskores::Id x, viskores::Id y) const
+  {
+    return y * outXLen + x;
+  }
 
   template <typename ValueInType, typename PortalOutType>
   VISKORES_EXEC void operator()(const ValueInType& valueIn,
-                            PortalOutType& arrayOut,
-                            const viskores::Id& workIdx) const
+                                PortalOutType& arrayOut,
+                                const viskores::Id& workIdx) const
   {
     viskores::Id xOfIn, yOfIn;
     GetLogicalDimOfInputRect(workIdx, xOfIn, yOfIn);
@@ -3669,7 +3673,10 @@ public:
   }
 
   VISKORES_EXEC_CONT
-  void GetLogicalDimOfInputCube(viskores::Id idx, viskores::Id& x, viskores::Id& y, viskores::Id& z) const
+  void GetLogicalDimOfInputCube(viskores::Id idx,
+                                viskores::Id& x,
+                                viskores::Id& y,
+                                viskores::Id& z) const
   {
     z = idx / (inDimX * inDimY);
     y = (idx - z * inDimX * inDimY) / inDimX;
@@ -3684,12 +3691,13 @@ public:
 
   template <typename ValueInType, typename PortalOutType>
   VISKORES_EXEC void operator()(const ValueInType& valueIn,
-                            PortalOutType& arrayOut,
-                            const viskores::Id& workIdx) const
+                                PortalOutType& arrayOut,
+                                const viskores::Id& workIdx) const
   {
     viskores::Id inX, inY, inZ;
     GetLogicalDimOfInputCube(workIdx, inX, inY, inZ);
-    viskores::Id outputIdx = Get1DIdxOfOutputCube(inX + outStartX, inY + outStartY, inZ + outStartZ);
+    viskores::Id outputIdx =
+      Get1DIdxOfOutputCube(inX + outStartX, inY + outStartY, inZ + outStartZ);
     arrayOut.Set(outputIdx, valueIn);
   }
 

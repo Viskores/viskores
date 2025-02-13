@@ -28,8 +28,8 @@ struct TransferFunction : public viskores::worklet::WorkletMapField
 
   template <typename T>
   VISKORES_EXEC void operator()(const T& in,
-                            const viskores::exec::ColorTable& colorTable,
-                            viskores::Vec3ui_8& output) const
+                                const viskores::exec::ColorTable& colorTable,
+                                viskores::Vec3ui_8& output) const
   {
     viskores::Vec<float, 3> rgb = colorTable.MapThroughColorSpace(static_cast<double>(in));
     output[0] = colorconversion::ColorToUChar(rgb[0]);
@@ -39,8 +39,8 @@ struct TransferFunction : public viskores::worklet::WorkletMapField
 
   template <typename T>
   VISKORES_EXEC void operator()(const T& in,
-                            const viskores::exec::ColorTable& colorTable,
-                            viskores::Vec4ui_8& output) const
+                                const viskores::exec::ColorTable& colorTable,
+                                viskores::Vec4ui_8& output) const
   {
     viskores::Vec<float, 3> rgb = colorTable.MapThroughColorSpace(static_cast<double>(in));
     float alpha = colorTable.MapThroughOpacitySpace(static_cast<double>(in));
@@ -52,16 +52,16 @@ struct TransferFunction : public viskores::worklet::WorkletMapField
 
   template <typename T>
   VISKORES_EXEC void operator()(const T& in,
-                            const viskores::exec::ColorTable& colorTable,
-                            viskores::Vec3f_32& output) const
+                                const viskores::exec::ColorTable& colorTable,
+                                viskores::Vec3f_32& output) const
   {
     output = colorTable.MapThroughColorSpace(static_cast<double>(in));
   }
 
   template <typename T>
   VISKORES_EXEC void operator()(const T& in,
-                            const viskores::exec::ColorTable& colorTable,
-                            viskores::Vec4f_32& output) const
+                                const viskores::exec::ColorTable& colorTable,
+                                viskores::Vec4f_32& output) const
   {
     viskores::Vec3f_32 rgb = colorTable.MapThroughColorSpace(static_cast<viskores::Float64>(in));
     viskores::Float32 alpha = colorTable.MapThroughOpacitySpace(static_cast<viskores::Float64>(in));

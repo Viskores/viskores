@@ -55,8 +55,8 @@ public:
   ///                            the test set
   /// \param distance2 Squared distance between query points and their nearest neighbors.
   VISKORES_EXEC void FindNearestNeighbor(const viskores::Vec3f& queryPoint,
-                                     viskores::Id& nearestNeighborId,
-                                     viskores::FloatDefault& distance2) const
+                                         viskores::Id& nearestNeighborId,
+                                         viskores::FloatDefault& distance2) const
   {
     //std::cout << "FindNeareastNeighbor: " << queryPoint << std::endl;
     viskores::Id3 ijk = (queryPoint - this->Min) / this->Dxdydz;
@@ -69,7 +69,8 @@ public:
     this->FindInCell(queryPoint, ijk, nearestNeighborId, distance2);
 
     // TODO: This might stop looking before the absolute nearest neighbor is found.
-    viskores::Id maxLevel = viskores::Max(viskores::Max(this->Dims[0], this->Dims[1]), this->Dims[2]);
+    viskores::Id maxLevel =
+      viskores::Max(viskores::Max(this->Dims[0], this->Dims[1]), this->Dims[2]);
     viskores::Id level;
     for (level = 1; (nearestNeighborId < 0) && (level < maxLevel); ++level)
     {
@@ -94,11 +95,12 @@ private:
   IdPortalType CellUpper;
 
   VISKORES_EXEC void FindInCell(const viskores::Vec3f& queryPoint,
-                            const viskores::Id3& ijk,
-                            viskores::Id& nearestNeighborId,
-                            viskores::FloatDefault& nearestDistance2) const
+                                const viskores::Id3& ijk,
+                                viskores::Id& nearestNeighborId,
+                                viskores::FloatDefault& nearestDistance2) const
   {
-    viskores::Id cellId = ijk[0] + (ijk[1] * this->Dims[0]) + (ijk[2] * this->Dims[0] * this->Dims[1]);
+    viskores::Id cellId =
+      ijk[0] + (ijk[1] * this->Dims[0]) + (ijk[2] * this->Dims[0] * this->Dims[1]);
     viskores::Id lower = this->CellLower.Get(cellId);
     viskores::Id upper = this->CellUpper.Get(cellId);
     for (viskores::Id index = lower; index < upper; index++)
@@ -115,53 +117,71 @@ private:
   }
 
   VISKORES_EXEC void FindInBox(const viskores::Vec3f& queryPoint,
-                           const viskores::Id3& boxCenter,
-                           viskores::Id level,
-                           viskores::Id& nearestNeighborId,
-                           viskores::FloatDefault& nearestDistance2) const
+                               const viskores::Id3& boxCenter,
+                               viskores::Id level,
+                               viskores::Id& nearestNeighborId,
+                               viskores::FloatDefault& nearestDistance2) const
   {
     if ((boxCenter[0] - level) >= 0)
     {
-      this->FindInXPlane(
-        queryPoint, boxCenter - viskores::Id3(level, 0, 0), level, nearestNeighborId, nearestDistance2);
+      this->FindInXPlane(queryPoint,
+                         boxCenter - viskores::Id3(level, 0, 0),
+                         level,
+                         nearestNeighborId,
+                         nearestDistance2);
     }
     if ((boxCenter[0] + level) < this->Dims[0])
     {
-      this->FindInXPlane(
-        queryPoint, boxCenter + viskores::Id3(level, 0, 0), level, nearestNeighborId, nearestDistance2);
+      this->FindInXPlane(queryPoint,
+                         boxCenter + viskores::Id3(level, 0, 0),
+                         level,
+                         nearestNeighborId,
+                         nearestDistance2);
     }
 
     if ((boxCenter[1] - level) >= 0)
     {
-      this->FindInYPlane(
-        queryPoint, boxCenter - viskores::Id3(0, level, 0), level, nearestNeighborId, nearestDistance2);
+      this->FindInYPlane(queryPoint,
+                         boxCenter - viskores::Id3(0, level, 0),
+                         level,
+                         nearestNeighborId,
+                         nearestDistance2);
     }
     if ((boxCenter[1] + level) < this->Dims[1])
     {
-      this->FindInYPlane(
-        queryPoint, boxCenter + viskores::Id3(0, level, 0), level, nearestNeighborId, nearestDistance2);
+      this->FindInYPlane(queryPoint,
+                         boxCenter + viskores::Id3(0, level, 0),
+                         level,
+                         nearestNeighborId,
+                         nearestDistance2);
     }
 
     if ((boxCenter[2] - level) >= 0)
     {
-      this->FindInZPlane(
-        queryPoint, boxCenter - viskores::Id3(0, 0, level), level, nearestNeighborId, nearestDistance2);
+      this->FindInZPlane(queryPoint,
+                         boxCenter - viskores::Id3(0, 0, level),
+                         level,
+                         nearestNeighborId,
+                         nearestDistance2);
     }
     if ((boxCenter[2] + level) < this->Dims[2])
     {
-      this->FindInZPlane(
-        queryPoint, boxCenter + viskores::Id3(0, 0, level), level, nearestNeighborId, nearestDistance2);
+      this->FindInZPlane(queryPoint,
+                         boxCenter + viskores::Id3(0, 0, level),
+                         level,
+                         nearestNeighborId,
+                         nearestDistance2);
     }
   }
 
   VISKORES_EXEC void FindInPlane(const viskores::Vec3f& queryPoint,
-                             const viskores::Id3& planeCenter,
-                             const viskores::Id3& div,
-                             const viskores::Id3& mod,
-                             const viskores::Id3& origin,
-                             viskores::Id numInPlane,
-                             viskores::Id& nearestNeighborId,
-                             viskores::FloatDefault& nearestDistance2) const
+                                 const viskores::Id3& planeCenter,
+                                 const viskores::Id3& div,
+                                 const viskores::Id3& mod,
+                                 const viskores::Id3& origin,
+                                 viskores::Id numInPlane,
+                                 viskores::Id& nearestNeighborId,
+                                 viskores::FloatDefault& nearestDistance2) const
   {
     for (viskores::Id index = 0; index < numInPlane; ++index)
     {
@@ -176,10 +196,10 @@ private:
   }
 
   VISKORES_EXEC void FindInXPlane(const viskores::Vec3f& queryPoint,
-                              const viskores::Id3& planeCenter,
-                              viskores::Id level,
-                              viskores::Id& nearestNeighborId,
-                              viskores::FloatDefault& nearestDistance2) const
+                                  const viskores::Id3& planeCenter,
+                                  viskores::Id level,
+                                  viskores::Id& nearestNeighborId,
+                                  viskores::FloatDefault& nearestDistance2) const
   {
     viskores::Id yWidth = (2 * level) + 1;
     viskores::Id zWidth = (2 * level) + 1;
@@ -192,10 +212,10 @@ private:
   }
 
   VISKORES_EXEC void FindInYPlane(const viskores::Vec3f& queryPoint,
-                              viskores::Id3 planeCenter,
-                              viskores::Id level,
-                              viskores::Id& nearestNeighborId,
-                              viskores::FloatDefault& nearestDistance2) const
+                                  viskores::Id3 planeCenter,
+                                  viskores::Id level,
+                                  viskores::Id& nearestNeighborId,
+                                  viskores::FloatDefault& nearestDistance2) const
   {
     viskores::Id xWidth = (2 * level) - 1;
     viskores::Id zWidth = (2 * level) + 1;
@@ -208,10 +228,10 @@ private:
   }
 
   VISKORES_EXEC void FindInZPlane(const viskores::Vec3f& queryPoint,
-                              viskores::Id3 planeCenter,
-                              viskores::Id level,
-                              viskores::Id& nearestNeighborId,
-                              viskores::FloatDefault& nearestDistance2) const
+                                  viskores::Id3 planeCenter,
+                                  viskores::Id level,
+                                  viskores::Id& nearestNeighborId,
+                                  viskores::FloatDefault& nearestDistance2) const
   {
     viskores::Id xWidth = (2 * level) - 1;
     viskores::Id yWidth = (2 * level) - 1;

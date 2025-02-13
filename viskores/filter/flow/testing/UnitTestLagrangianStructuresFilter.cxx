@@ -23,12 +23,13 @@ enum class Option
   _3D
 };
 
-void ValidateLCSFilterResult(const viskores::cont::ArrayHandle<viskores::FloatDefault>& viskoresOutput,
-                             const viskores::cont::ArrayHandle<viskores::FloatDefault>& visitOutput,
-                             const viskores::cont::ArrayHandle<viskores::FloatDefault>& expDiff)
+void ValidateLCSFilterResult(
+  const viskores::cont::ArrayHandle<viskores::FloatDefault>& viskoresOutput,
+  const viskores::cont::ArrayHandle<viskores::FloatDefault>& visitOutput,
+  const viskores::cont::ArrayHandle<viskores::FloatDefault>& expDiff)
 {
   VISKORES_TEST_ASSERT(viskoresOutput.GetNumberOfValues() == visitOutput.GetNumberOfValues(),
-                   "Wrong number of values");
+                       "Wrong number of values");
 
   const viskores::FloatDefault tolerance = static_cast<viskores::FloatDefault>(1e-3);
 
@@ -44,7 +45,8 @@ void ValidateLCSFilterResult(const viskores::cont::ArrayHandle<viskores::FloatDe
     auto diff = viskores::Abs(viskores - visit);
     std::stringstream message;
     message << "Calculated o/p is not correct, \n"
-            << "VISKORES : " << viskores << ", VISIT : " << visit << ", RES : " << viskores::Abs(diff - exp);
+            << "VISKORES : " << viskores << ", VISIT : " << visit
+            << ", RES : " << viskores::Abs(diff - exp);
     VISKORES_TEST_ASSERT(viskores::Abs(diff - exp) <= tolerance || diff < tolerance, message.str());
   }
 }

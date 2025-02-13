@@ -79,13 +79,13 @@ void VTKRectilinearGridReader::Read()
 
   if (dim !=
       viskores::Id3(static_cast<viskores::Id>(numPoints[0]),
-                static_cast<viskores::Id>(numPoints[1]),
-                static_cast<viskores::Id>(numPoints[2])))
+                    static_cast<viskores::Id>(numPoints[1]),
+                    static_cast<viskores::Id>(numPoints[2])))
     throw viskores::io::ErrorIO("DIMENSIONS not equal to number of points");
 
   viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                          viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                          viskores::cont::ArrayHandle<viskores::FloatDefault>>
+                                              viskores::cont::ArrayHandle<viskores::FloatDefault>,
+                                              viskores::cont::ArrayHandle<viskores::FloatDefault>>
     coords;
 
   // We need to store all coordinate arrays as FloatDefault.

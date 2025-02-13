@@ -60,7 +60,8 @@ inline const T* IteratorBegin(
 }
 
 template <typename T>
-inline const T* IteratorEnd(const viskores::exec::cuda::internal::ConstArrayPortalFromThrust<T>& portal)
+inline const T* IteratorEnd(
+  const viskores::exec::cuda::internal::ConstArrayPortalFromThrust<T>& portal)
 {
   return portal.GetIteratorEnd();
 }

@@ -49,12 +49,13 @@ using TestTypesListScalar = viskores::List<viskores::Int8, viskores::Id, viskore
 using TestTypesListVec = viskores::List<viskores::Vec3f_32, viskores::Vec3f_64>;
 using TestTypesList = viskores::ListAppend<TestTypesListScalar, TestTypesListVec>;
 
-using StorageListInefficientExtract = viskores::List<
-  viskores::cont::StorageTagCast<viskores::Int8, viskores::cont::StorageTagBasic>,
-  viskores::cont::StorageTagConstant,
-  viskores::cont::StorageTagCounting,
-  viskores::cont::StorageTagIndex,
-  viskores::cont::StorageTagPermutation<viskores::cont::StorageTagBasic, viskores::cont::StorageTagBasic>>;
+using StorageListInefficientExtract =
+  viskores::List<viskores::cont::StorageTagCast<viskores::Int8, viskores::cont::StorageTagBasic>,
+                 viskores::cont::StorageTagConstant,
+                 viskores::cont::StorageTagCounting,
+                 viskores::cont::StorageTagIndex,
+                 viskores::cont::StorageTagPermutation<viskores::cont::StorageTagBasic,
+                                                       viskores::cont::StorageTagBasic>>;
 
 //-----------------------------------------------------------------------------
 struct TestEqualArrayHandle
@@ -67,19 +68,22 @@ public:
   }
 
   template <typename TypeList, typename StorageList>
-  VISKORES_CONT void operator()(const viskores::cont::UncertainArrayHandle<TypeList, StorageList>& array1,
-                            const viskores::cont::UnknownArrayHandle& array2) const
+  VISKORES_CONT void operator()(
+    const viskores::cont::UncertainArrayHandle<TypeList, StorageList>& array1,
+    const viskores::cont::UnknownArrayHandle& array2) const
   {
     // This results in an excessive amount of compiling. However, we do it here to avoid
     // warnings about inefficient copies of the weirder arrays. That slowness might be OK
     // to test arrays, but we want to make sure that the serialization itself does not do
     // that.
-    array1.CastAndCall([array2](const auto& concreteArray1) {
-      using ArrayType = std::decay_t<decltype(concreteArray1)>;
-      ArrayType concreteArray2;
-      array2.AsArrayHandle(concreteArray2);
-      test_equal_ArrayHandles(concreteArray1, concreteArray2);
-    });
+    array1.CastAndCall(
+      [array2](const auto& concreteArray1)
+      {
+        using ArrayType = std::decay_t<decltype(concreteArray1)>;
+        ArrayType concreteArray2;
+        array2.AsArrayHandle(concreteArray2);
+        test_equal_ArrayHandles(concreteArray1, concreteArray2);
+      });
   }
 
   template <typename TypeList1, typename StorageList1, typename TypeList2, typename StorageList2>
@@ -91,11 +95,12 @@ public:
   }
 
   VISKORES_CONT void operator()(const viskores::cont::UnknownArrayHandle& array1,
-                            const viskores::cont::UnknownArrayHandle& array2) const
+                                const viskores::cont::UnknownArrayHandle& array2) const
   {
     bool isInefficient = false;
     viskores::ListForEach(
-      [&](auto type) {
+      [&](auto type)
+      {
         using StorageTag = std::decay_t<decltype(type)>;
         if (array1.IsStorageType<StorageTag>())
         {
@@ -133,8 +138,8 @@ inline viskores::cont::UnknownArrayHandle MakeTestUnknownArrayHandle(
 }
 
 template <typename T, typename S>
-inline viskores::cont::UncertainArrayHandle<viskores::List<T>, viskores::List<S>> MakeTestUncertainArrayHandle(
-  const viskores::cont::ArrayHandle<T, S>& array)
+inline viskores::cont::UncertainArrayHandle<viskores::List<T>, viskores::List<S>>
+MakeTestUncertainArrayHandle(const viskores::cont::ArrayHandle<T, S>& array)
 {
   return array;
 }
@@ -184,8 +189,8 @@ struct TestArrayHandleCartesianProduct
   {
     auto array =
       viskores::cont::make_ArrayHandleCartesianProduct(RandomArrayHandle<T>::Make(ArraySize),
-                                                   RandomArrayHandle<T>::Make(ArraySize),
-                                                   RandomArrayHandle<T>::Make(ArraySize));
+                                                       RandomArrayHandle<T>::Make(ArraySize),
+                                                       RandomArrayHandle<T>::Make(ArraySize));
     RunTest(array);
     RunTest(MakeTestUnknownArrayHandle(array));
     RunTest(MakeTestUncertainArrayHandle(array));
@@ -288,14 +293,18 @@ struct TestArrayHandleGroupVecVariable
     viskores::Id size = 0;
 
     std::vector<viskores::Id> comps(ArraySize);
-    std::generate(comps.begin(), comps.end(), [&size, &rangen]() {
-      auto offset = size;
-      size += rangen();
-      return offset;
-    });
+    std::generate(comps.begin(),
+                  comps.end(),
+                  [&size, &rangen]()
+                  {
+                    auto offset = size;
+                    size += rangen();
+                    return offset;
+                  });
 
     auto array = viskores::cont::make_ArrayHandleGroupVecVariable(
-      RandomArrayHandle<T>::Make(size), viskores::cont::make_ArrayHandle(comps, viskores::CopyFlag::On));
+      RandomArrayHandle<T>::Make(size),
+      viskores::cont::make_ArrayHandle(comps, viskores::CopyFlag::On));
     RunTest(array);
 
     // cannot make a UnknownArrayHandle containing ArrayHandleGroupVecVariable
@@ -368,7 +377,8 @@ struct TestArrayHandleSwizzle
     {
       map[i] = NUM_COMPONENTS - (i + 1);
     }
-    auto array = viskores::cont::make_ArrayHandleSwizzle(RandomArrayHandle<T>::Make(ArraySize), map);
+    auto array =
+      viskores::cont::make_ArrayHandleSwizzle(RandomArrayHandle<T>::Make(ArraySize), map);
     RunTest(array);
   }
 };
@@ -397,7 +407,8 @@ void TestArrayHandleSerialization()
   std::cout << "Testing ArrayHandleBasic\n";
   viskores::testing::Testing::TryTypes(TestArrayHandleBasic(), TestTypesList());
   viskores::testing::Testing::TryTypes(
-    TestArrayHandleBasic(), viskores::List<char, long, long long, unsigned long, unsigned long long>());
+    TestArrayHandleBasic(),
+    viskores::List<char, long, long long, unsigned long, unsigned long long>());
 
   std::cout << "Testing empty ArrayHandleBasic\n";
   viskores::testing::Testing::TryTypes(TestArrayHandleBasicEmpty(), TestTypesList());
@@ -410,7 +421,7 @@ void TestArrayHandleSerialization()
 
   std::cout << "Testing ArrayHandleCartesianProduct\n";
   viskores::testing::Testing::TryTypes(TestArrayHandleCartesianProduct(),
-                                   viskores::List<viskores::Float32, viskores::Float64>());
+                                       viskores::List<viskores::Float32, viskores::Float64>());
 
   std::cout << "Testing TestArrayHandleCast\n";
   viskores::testing::Testing::TryTypes(TestArrayHandleCast(), TestTypesList());

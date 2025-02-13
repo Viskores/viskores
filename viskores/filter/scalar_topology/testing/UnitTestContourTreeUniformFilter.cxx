@@ -90,21 +90,21 @@ public:
     Result.GetData().AsArrayHandle(saddlePeak);
 
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 7),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), viskores::make_Pair(0, 12)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), viskores::make_Pair(4, 13)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), viskores::make_Pair(12, 13)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), viskores::make_Pair(12, 18)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), viskores::make_Pair(12, 20)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), viskores::make_Pair(13, 14)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), viskores::make_Pair(13, 19)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
   }
 
   //
@@ -129,25 +129,25 @@ public:
     Result.GetData().AsArrayHandle(saddlePeak);
 
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 9),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(0), viskores::make_Pair(0, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(1), viskores::make_Pair(31, 42)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(2), viskores::make_Pair(42, 43)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(3), viskores::make_Pair(42, 56)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(4), viskores::make_Pair(56, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(5), viskores::make_Pair(56, 92)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(6), viskores::make_Pair(62, 67)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(7), viskores::make_Pair(81, 92)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
     VISKORES_TEST_ASSERT(test_equal(saddlePeak.WritePortal().Get(8), viskores::make_Pair(92, 93)),
-                     "Wrong result for ContourTree filter");
+                         "Wrong result for ContourTree filter");
   }
 
   void operator()() const

@@ -51,9 +51,9 @@ int main(int argc, char* argv[])
   // Background color:
   viskores::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
   viskores::rendering::Actor actor(tangleData.GetCellSet(),
-                               tangleData.GetCoordinateSystem(),
-                               tangleData.GetField(fieldName),
-                               colorTable);
+                                   tangleData.GetCoordinateSystem(),
+                                   tangleData.GetField(fieldName),
+                                   colorTable);
   viskores::rendering::Scene scene;
   scene.AddActor(actor);
   // 2048x2048 pixels in the canvas:

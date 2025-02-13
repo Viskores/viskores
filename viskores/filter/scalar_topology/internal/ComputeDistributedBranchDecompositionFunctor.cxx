@@ -95,8 +95,8 @@ void ComputeDistributedBranchDecompositionFunctor::operator()(
       int incomingGlobalBlockId;
       rp.dequeue(ingid, incomingGlobalBlockId);
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 "Combining local block " << b->GlobalBlockId << " with incomoing block "
-                                          << incomingGlobalBlockId);
+                     "Combining local block " << b->GlobalBlockId << " with incomoing block "
+                                              << incomingGlobalBlockId);
 #endif
 
       // Receive data from swap partner

@@ -32,9 +32,9 @@ struct CellCentroidCalculator : public viskores::worklet::WorkletVisitCellsWithP
 
   template <typename CellShape, typename InputPointField>
   VISKORES_EXEC void operator()(CellShape shape,
-                            viskores::IdComponent numPoints,
-                            const InputPointField& inputPointField,
-                            typename InputPointField::ComponentType& outputField) const
+                                viskores::IdComponent numPoints,
+                                const InputPointField& inputPointField,
+                                typename InputPointField::ComponentType& outputField) const
   {
     viskores::Vec3f parametricCenter;
     viskores::exec::ParametricCoordinatesCenter(numPoints, shape, parametricCenter);
@@ -49,8 +49,8 @@ struct BoundingIntervalHierarchyTester : public viskores::worklet::WorkletMapFie
 
   template <typename Point, typename BoundingIntervalHierarchyExecObject>
   VISKORES_EXEC viskores::IdComponent operator()(const Point& point,
-                                         const BoundingIntervalHierarchyExecObject& bih,
-                                         const viskores::Id expectedId) const
+                                                 const BoundingIntervalHierarchyExecObject& bih,
+                                                 const viskores::Id expectedId) const
   {
     viskores::Vec3f parametric;
     viskores::Id cellId = -1;
@@ -81,7 +81,8 @@ void TestBoundingIntervalHierarchy(viskores::cont::DataSet dataSet, viskores::Id
     cellSet, vertices, centroids);
 
 
-  viskores::cont::ArrayHandleCounting<viskores::Id> expectedCellIds(0, 1, cellSet.GetNumberOfCells());
+  viskores::cont::ArrayHandleCounting<viskores::Id> expectedCellIds(
+    0, 1, cellSet.GetNumberOfCells());
   viskores::cont::ArrayHandle<viskores::IdComponent> results;
 
   viskores::worklet::DispatcherMapField<BoundingIntervalHierarchyTester>().Invoke(

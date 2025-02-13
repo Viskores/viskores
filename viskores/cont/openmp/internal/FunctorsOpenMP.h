@@ -158,7 +158,7 @@ static void CopyHelper(InPortalT inPortal,
   viskores::Id valuesPerChunk;
 
   VISKORES_OPENMP_DIRECTIVE(parallel default(none) shared(inIter, outIter, valuesPerChunk, numVals)
-                          VISKORES_OPENMP_SHARED_CONST(isSame))
+                              VISKORES_OPENMP_SHARED_CONST(isSame))
   {
 
     VISKORES_OPENMP_DIRECTIVE(single)
@@ -458,14 +458,14 @@ struct ReduceHelper
 #ifdef VISKORES_OPENMP_USE_NATIVE_REDUCTION
 
 // Specialize for viskores functors with OpenMP special cases:
-#define VISKORES_OPENMP_SPECIALIZE_REDUCE1(FunctorType, PragmaString)            \
+#define VISKORES_OPENMP_SPECIALIZE_REDUCE1(FunctorType, PragmaString)        \
   template <typename PortalT, typename ReturnType>                           \
   static ReturnType Execute(                                                 \
     PortalT portal, ReturnType value, FunctorType functorIn, std::true_type) \
   {                                                                          \
-    const viskores::Id numValues = portal.GetNumberOfValues();                   \
+    const viskores::Id numValues = portal.GetNumberOfValues();               \
     internal::WrappedBinaryOperator<ReturnType, FunctorType> f(functorIn);   \
-    _Pragma(#PragmaString) for (viskores::Id i = 0; i < numValues; ++i)          \
+    _Pragma(#PragmaString) for (viskores::Id i = 0; i < numValues; ++i)      \
     {                                                                        \
       value = f(value, portal.Get(i));                                       \
     }                                                                        \
@@ -542,8 +542,9 @@ void ReduceByKeyHelper(KeysInArray keysInArray,
     .GetRuntimeConfiguration(viskores::cont::DeviceAdapterTagOpenMP())
     .GetThreads(numThreads);
 
-  VISKORES_OPENMP_DIRECTIVE(parallel default(none) firstprivate(keysIn, valuesIn, keysOut, valuesOut, f)
-                          shared(numThreads, outIdx) VISKORES_OPENMP_SHARED_CONST(numValues))
+  VISKORES_OPENMP_DIRECTIVE(parallel default(none)
+                              firstprivate(keysIn, valuesIn, keysOut, valuesOut, f)
+                                shared(numThreads, outIdx) VISKORES_OPENMP_SHARED_CONST(numValues))
   {
     int tid = omp_get_thread_num();
 
@@ -762,7 +763,10 @@ private:
 
       VISKORES_OPENMP_DIRECTIVE(taskgroup)
       {
-        VISKORES_OPENMP_DIRECTIVE(task) { explicitThis->Uniquify(right); }
+        VISKORES_OPENMP_DIRECTIVE(task)
+        {
+          explicitThis->Uniquify(right);
+        }
 
         left->InputRange = viskores::Id2(node->InputRange[0], midpoint);
         this->Uniquify(left);

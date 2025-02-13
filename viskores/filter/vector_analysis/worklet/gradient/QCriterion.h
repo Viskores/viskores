@@ -20,7 +20,8 @@ namespace worklet
 namespace gradient
 {
 
-using QCriterionTypes = viskores::List<viskores::Vec<viskores::Vec3f_32, 3>, viskores::Vec<viskores::Vec3f_64, 3>>;
+using QCriterionTypes =
+  viskores::List<viskores::Vec<viskores::Vec3f_32, 3>, viskores::Vec<viskores::Vec3f_64, 3>>;
 
 struct QCriterion : public viskores::worklet::WorkletMapField
 {

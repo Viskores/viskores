@@ -111,9 +111,9 @@ public:
   /// and that the above/below pair ARE in the hierarchical tree
   VISKORES_EXEC
   viskores::Id FindSuperArcForUnknownNode(viskores::Id nodeGlobalId,
-                                      FieldType nodeValue,
-                                      viskores::Id above,
-                                      viskores::Id below) const
+                                          FieldType nodeValue,
+                                          viskores::Id above,
+                                          viskores::Id below) const
   { // FindSuperArcForUnknownNode()
     // the hyperparent which we need to search along
     viskores::Id hyperparent = viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT;

@@ -44,14 +44,15 @@ ArrayExtractComponentFallback(const viskores::cont::ArrayHandle<T, S>& src,
 {
   if (allowCopy != viskores::CopyFlag::On)
   {
-    throw viskores::cont::ErrorBadValue("Cannot extract component of " +
-                                    viskores::cont::TypeToString<viskores::cont::ArrayHandle<T, S>>() +
-                                    " without copying");
+    throw viskores::cont::ErrorBadValue(
+      "Cannot extract component of " +
+      viskores::cont::TypeToString<viskores::cont::ArrayHandle<T, S>>() + " without copying");
   }
   VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-             "Extracting component " << componentIndex << " of "
-                                     << viskores::cont::TypeToString<viskores::cont::ArrayHandle<T, S>>()
-                                     << " requires an inefficient memory copy.");
+                 "Extracting component "
+                   << componentIndex << " of "
+                   << viskores::cont::TypeToString<viskores::cont::ArrayHandle<T, S>>()
+                   << " requires an inefficient memory copy.");
 
   using BaseComponentType = typename viskores::VecTraits<T>::BaseComponentType;
   viskores::Id numValues = src.GetNumberOfValues();
@@ -61,8 +62,9 @@ ArrayExtractComponentFallback(const viskores::cont::ArrayHandle<T, S>& src,
   auto destPortal = dest.WritePortal();
   for (viskores::Id arrayIndex = 0; arrayIndex < numValues; ++arrayIndex)
   {
-    destPortal.Set(arrayIndex,
-                   viskores::internal::GetFlatVecComponent(srcPortal.Get(arrayIndex), componentIndex));
+    destPortal.Set(
+      arrayIndex,
+      viskores::internal::GetFlatVecComponent(srcPortal.Get(arrayIndex), componentIndex));
   }
 
   return viskores::cont::ArrayHandleStride<BaseComponentType>(dest, numValues, 1, 0);
@@ -120,11 +122,11 @@ private:
     // T has a single component but does not equal its own BaseComponentType. A viskores::Vec
     // of size 1 fits into this category.
     return viskores::cont::ArrayHandleStride<TBase>(array.GetBuffers()[1],
-                                                array.GetNumberOfValues(),
-                                                array.GetStride(),
-                                                array.GetOffset(),
-                                                array.GetModulo(),
-                                                array.GetDivisor());
+                                                    array.GetNumberOfValues(),
+                                                    array.GetStride(),
+                                                    array.GetOffset(),
+                                                    array.GetModulo(),
+                                                    array.GetDivisor());
   }
 
   template <typename VecType>
@@ -140,11 +142,12 @@ private:
     constexpr viskores::IdComponent subStride = viskores::internal::TotalNumComponents<T>::value;
     viskores::cont::ArrayHandleStride<VecType> array(src);
     viskores::cont::ArrayHandleStride<T> tmpIn(array.GetBuffers()[1],
-                                           array.GetNumberOfValues(),
-                                           array.GetStride() * N,
-                                           (array.GetOffset() * N) + (componentIndex / subStride),
-                                           array.GetModulo() * N,
-                                           array.GetDivisor());
+                                               array.GetNumberOfValues(),
+                                               array.GetStride() * N,
+                                               (array.GetOffset() * N) +
+                                                 (componentIndex / subStride),
+                                               array.GetModulo() * N,
+                                               array.GetDivisor());
     return (*this)(tmpIn, componentIndex % subStride, allowCopy);
   }
 };
@@ -156,10 +159,10 @@ struct ArrayExtractComponentImpl<viskores::cont::StorageTagBasic>
   auto operator()(const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>& src,
                   viskores::IdComponent componentIndex,
                   viskores::CopyFlag allowCopy) const
-    -> decltype(
-      ArrayExtractComponentImpl<viskores::cont::StorageTagStride>{}(viskores::cont::ArrayHandleStride<T>{},
-                                                                componentIndex,
-                                                                allowCopy))
+    -> decltype(ArrayExtractComponentImpl<viskores::cont::StorageTagStride>{}(
+      viskores::cont::ArrayHandleStride<T>{},
+      componentIndex,
+      allowCopy))
   {
     return ArrayExtractComponentImpl<viskores::cont::StorageTagStride>{}(
       viskores::cont::ArrayHandleStride<T>(src, src.GetNumberOfValues(), 1, 0),
@@ -252,10 +255,10 @@ using ArrayExtractComponentIsInefficient = typename std::is_base_of<
 /// `viskores::cont::internal::ArrayExtractComponentImpl`.
 ///
 template <typename T, typename S>
-viskores::cont::ArrayHandleStride<typename viskores::VecTraits<T>::BaseComponentType> ArrayExtractComponent(
-  const viskores::cont::ArrayHandle<T, S>& src,
-  viskores::IdComponent componentIndex,
-  viskores::CopyFlag allowCopy = viskores::CopyFlag::On)
+viskores::cont::ArrayHandleStride<typename viskores::VecTraits<T>::BaseComponentType>
+ArrayExtractComponent(const viskores::cont::ArrayHandle<T, S>& src,
+                      viskores::IdComponent componentIndex,
+                      viskores::CopyFlag allowCopy = viskores::CopyFlag::On)
 {
   return internal::ArrayExtractComponentImpl<S>{}(src, componentIndex, allowCopy);
 }

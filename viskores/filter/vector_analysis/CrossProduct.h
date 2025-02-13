@@ -46,7 +46,10 @@ public:
   }
 
   /// @copydoc SetPrimaryField
-  VISKORES_CONT const std::string& GetPrimaryFieldName() const { return this->GetActiveFieldName(); }
+  VISKORES_CONT const std::string& GetPrimaryFieldName() const
+  {
+    return this->GetActiveFieldName();
+  }
   /// @copydoc SetPrimaryField
   VISKORES_CONT viskores::cont::Field::Association GetPrimaryFieldAssociation() const
   {
@@ -107,7 +110,10 @@ public:
 
   /// @copydoc SetSecondaryField
   VISKORES_CONT
-  void SetSecondaryCoordinateSystem(viskores::Id index) { this->SetActiveCoordinateSystem(1, index); }
+  void SetSecondaryCoordinateSystem(viskores::Id index)
+  {
+    this->SetActiveCoordinateSystem(1, index);
+  }
   /// @copydoc SetSecondaryField
   VISKORES_CONT viskores::Id GetSecondaryCoordinateSystemIndex() const
   {

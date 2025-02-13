@@ -52,10 +52,10 @@ public:
     auto result = filter.Execute(dataSet);
     {
       VISKORES_TEST_ASSERT(result.GetNumberOfCoordinateSystems() == 1,
-                       "Wrong number of coordinate systems in the output dataset");
+                           "Wrong number of coordinate systems in the output dataset");
       //since normals is on we have one field
       VISKORES_TEST_ASSERT(result.GetNumberOfFields() == 2,
-                       "Wrong number of fields in the output dataset");
+                           "Wrong number of fields in the output dataset");
     }
 
     // let's execute with mapping fields.
@@ -66,7 +66,7 @@ public:
       VISKORES_TEST_ASSERT(isMapped, "mapping should pass");
 
       VISKORES_TEST_ASSERT(result.GetNumberOfFields() == 4,
-                       "Wrong number of fields in the output dataset");
+                           "Wrong number of fields in the output dataset");
 
       //verify the cellvar result
       viskores::cont::ArrayHandle<viskores::FloatDefault> cellFieldArrayOut;
@@ -76,7 +76,7 @@ public:
       {
         std::vector<viskores::Id> correctcellIdStart = { 0, 1, 1, 2, 2, 3, 4, 4, 5, 5, 5, 6, 6, 6 };
         std::vector<viskores::Id> correctcellIdEnd = { 57, 57, 58, 58, 58, 59, 59,
-                                                   60, 61, 61, 62, 62, 63 };
+                                                       60, 61, 61, 62, 62, 63 };
 
         auto id_portal = cellFieldArrayOut.ReadPortal();
         for (std::size_t i = 0; i < correctcellIdStart.size(); ++i)
@@ -84,7 +84,8 @@ public:
           VISKORES_TEST_ASSERT(id_portal.Get(viskores::Id(i)) == correctcellIdStart[i]);
         }
 
-        viskores::Id index = cellFieldArrayOut.GetNumberOfValues() - viskores::Id(correctcellIdEnd.size());
+        viskores::Id index =
+          cellFieldArrayOut.GetNumberOfValues() - viskores::Id(correctcellIdEnd.size());
         for (std::size_t i = 0; i < correctcellIdEnd.size(); ++i, ++index)
         {
           VISKORES_TEST_ASSERT(id_portal.Get(index) == correctcellIdEnd[i]);
@@ -99,7 +100,7 @@ public:
       //verify that the number of points is correct (72)
       //verify that the number of cells is correct (160)
       VISKORES_TEST_ASSERT(coords.GetNumberOfPoints() == 72,
-                       "Should have less coordinates than the unmerged version");
+                           "Should have less coordinates than the unmerged version");
       VISKORES_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
     }
 
@@ -110,7 +111,7 @@ public:
     {
       viskores::cont::CoordinateSystem coords = result.GetCoordinateSystem();
       VISKORES_TEST_ASSERT(coords.GetNumberOfPoints() == numPointsNoMergeDuplicate,
-                       "Shouldn't have less coordinates than the unmerged version");
+                           "Shouldn't have less coordinates than the unmerged version");
 
       //verify that the number of cells is correct (160)
       viskores::cont::UnknownCellSet dcells = result.GetCellSet();
@@ -211,18 +212,19 @@ public:
                          .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>();
 
     VISKORES_TEST_ASSERT(outputSingleCell.GetNumberOfPoints() == 3,
-                     "Wrong number of points in rectilinear contour");
+                         "Wrong number of points in rectilinear contour");
     VISKORES_TEST_ASSERT(outputSingleCell.GetNumberOfCells() == 1,
-                     "Wrong number of cells in rectilinear contour");
-    VISKORES_TEST_ASSERT(outputSingleCell.GetCellSet().GetCellShape(0) == viskores::CELL_SHAPE_TRIANGLE,
-                     "Wrong contour cell shape");
+                         "Wrong number of cells in rectilinear contour");
+    VISKORES_TEST_ASSERT(outputSingleCell.GetCellSet().GetCellShape(0) ==
+                           viskores::CELL_SHAPE_TRIANGLE,
+                         "Wrong contour cell shape");
 
-    auto expectedCoordinates =
-      viskores::cont::make_ArrayHandle<viskores::Vec3f>({ viskores::Vec3f{ 10.0f, -10.0f, 9.66341f },
-                                                  viskores::Vec3f{ 9.30578f, -10.0f, 10.0f },
-                                                  viskores::Vec3f{ 10.0f, -9.78842f, 10.0f } });
+    auto expectedCoordinates = viskores::cont::make_ArrayHandle<viskores::Vec3f>(
+      { viskores::Vec3f{ 10.0f, -10.0f, 9.66341f },
+        viskores::Vec3f{ 9.30578f, -10.0f, 10.0f },
+        viskores::Vec3f{ 10.0f, -9.78842f, 10.0f } });
     VISKORES_TEST_ASSERT(test_equal_ArrayHandles(coordinates, expectedCoordinates),
-                     "Wrong contour coordinates");
+                         "Wrong contour coordinates");
 
     // Generating normals triggers a different worklet for Flying Edges pass 4,
     // But it should not change anything on the contour itself.
@@ -232,7 +234,7 @@ public:
                     .GetData()
                     .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>();
     VISKORES_TEST_ASSERT(test_equal_ArrayHandles(coordinates, expectedCoordinates),
-                     "Wrong contour coordinates");
+                         "Wrong contour coordinates");
 
     // Full contour
     filter.SetIsoValue(3.0);
@@ -240,9 +242,9 @@ public:
     viskores::cont::DataSet output = filter.Execute(rectilinearDataset);
 
     VISKORES_TEST_ASSERT(output.GetNumberOfPoints() == 93,
-                     "Wrong number of points in rectilinear contour");
+                         "Wrong number of points in rectilinear contour");
     VISKORES_TEST_ASSERT(output.GetNumberOfCells() == 144,
-                     "Wrong number of cells in rectilinear contour");
+                         "Wrong number of cells in rectilinear contour");
   }
 
   void operator()() const

@@ -51,10 +51,10 @@ struct ReverseInputToOutputMapWorklet : viskores::worklet::WorkletMapField
 
   template <typename OutputMapType, typename VisitType>
   VISKORES_EXEC void operator()(viskores::Id outputStartIndex,
-                            viskores::Id outputEndIndex,
-                            const OutputMapType& outputToInputMap,
-                            const VisitType& visit,
-                            viskores::Id inputIndex) const
+                                viskores::Id outputEndIndex,
+                                const OutputMapType& outputToInputMap,
+                                const VisitType& visit,
+                                viskores::Id inputIndex) const
   {
     viskores::IdComponent visitIndex = 0;
     for (viskores::Id outputIndex = outputStartIndex; outputIndex < outputEndIndex; outputIndex++)
@@ -86,10 +86,11 @@ struct SubtractToVisitIndexWorklet : viskores::worklet::WorkletMapField
 
   template <typename VisitType>
   VISKORES_EXEC void operator()(viskores::Id inputIndex,
-                            viskores::Id startOfGroup,
-                            const VisitType& visit) const
+                                viskores::Id startOfGroup,
+                                const VisitType& visit) const
   {
-    viskores::IdComponent visitIndex = static_cast<viskores::IdComponent>(inputIndex - startOfGroup);
+    viskores::IdComponent visitIndex =
+      static_cast<viskores::IdComponent>(inputIndex - startOfGroup);
     visit.Set(inputIndex, visitIndex);
   }
 };
@@ -107,9 +108,9 @@ struct ScatterCountingBuilder
 {
   template <typename CountArrayType>
   VISKORES_CONT static void BuildArrays(viskores::worklet::ScatterCounting* self,
-                                    const CountArrayType& countArray,
-                                    viskores::cont::DeviceAdapterId device,
-                                    bool saveInputToOutputMap)
+                                        const CountArrayType& countArray,
+                                        viskores::cont::DeviceAdapterId device,
+                                        bool saveInputToOutputMap)
   {
     VISKORES_IS_ARRAY_HANDLE(CountArrayType);
 
@@ -122,7 +123,9 @@ struct ScatterCountingBuilder
     // map or delete it.
     viskores::cont::ArrayHandle<viskores::Id> inputToOutputMapOffByOne;
     viskores::Id outputSize = viskores::cont::Algorithm::ScanInclusive(
-      device, viskores::cont::make_ArrayHandleCast(countArray, viskores::Id()), inputToOutputMapOffByOne);
+      device,
+      viskores::cont::make_ArrayHandleCast(countArray, viskores::Id()),
+      inputToOutputMapOffByOne);
 
     // We have implemented two different ways to compute the output to input
     // map. The first way is to use a binary search on each output index into
@@ -199,9 +202,10 @@ struct ScatterCountingBuilder
 }
 } // namespace viskores::worklet::detail
 
-void viskores::worklet::ScatterCounting::BuildArrays(const viskores::cont::UnknownArrayHandle& countArray,
-                                                 viskores::cont::DeviceAdapterId device,
-                                                 bool saveInputToOutputMap)
+void viskores::worklet::ScatterCounting::BuildArrays(
+  const viskores::cont::UnknownArrayHandle& countArray,
+  viskores::cont::DeviceAdapterId device,
+  bool saveInputToOutputMap)
 {
   VISKORES_LOG_SCOPE(viskores::cont::LogLevel::Perf, "ScatterCounting::BuildArrays");
 

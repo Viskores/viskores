@@ -37,8 +37,8 @@ public:
   inline VISKORES_EXEC viskores::Vec3f_32 MapThroughColorSpace(viskores::Float64) const;
 
   inline VISKORES_EXEC viskores::Vec3f_32 MapThroughColorSpace(const viskores::Vec3f_32& rgb1,
-                                                       const viskores::Vec3f_32& rgb2,
-                                                       viskores::Float32 weight) const;
+                                                               const viskores::Vec3f_32& rgb2,
+                                                               viskores::Float32 weight) const;
 
   inline VISKORES_EXEC viskores::Float32 MapThroughOpacitySpace(viskores::Float64 value) const;
 
@@ -62,29 +62,31 @@ public:
 
 private:
   inline VISKORES_EXEC void FindColors(viskores::Float64 value,
-                                   viskores::Vec3f_32& first,
-                                   viskores::Vec3f_32& second,
-                                   viskores::Float32& weight) const;
+                                       viskores::Vec3f_32& first,
+                                       viskores::Vec3f_32& second,
+                                       viskores::Float32& weight) const;
 
   inline VISKORES_EXEC viskores::Vec3f_32 MapThroughColorSpaceRGB(const viskores::Vec3f_32& rgb1,
-                                                          const viskores::Vec3f_32& rgb2,
-                                                          viskores::Float32 weight) const;
+                                                                  const viskores::Vec3f_32& rgb2,
+                                                                  viskores::Float32 weight) const;
 
   inline VISKORES_EXEC viskores::Vec3f_32 MapThroughColorSpaceHSV(const viskores::Vec3f_32& rgb1,
-                                                          const viskores::Vec3f_32& rgb2,
-                                                          viskores::Float32 weight) const;
+                                                                  const viskores::Vec3f_32& rgb2,
+                                                                  viskores::Float32 weight) const;
 
-  inline VISKORES_EXEC viskores::Vec3f_32 MapThroughColorSpaceHSVWrap(const viskores::Vec3f_32& rgb1,
-                                                              const viskores::Vec3f_32& rgb2,
-                                                              viskores::Float32 weight) const;
+  inline VISKORES_EXEC viskores::Vec3f_32 MapThroughColorSpaceHSVWrap(
+    const viskores::Vec3f_32& rgb1,
+    const viskores::Vec3f_32& rgb2,
+    viskores::Float32 weight) const;
 
   inline VISKORES_EXEC viskores::Vec3f_32 MapThroughColorSpaceLab(const viskores::Vec3f_32& rgb1,
-                                                          const viskores::Vec3f_32& rgb2,
-                                                          viskores::Float32 weight) const;
+                                                                  const viskores::Vec3f_32& rgb2,
+                                                                  viskores::Float32 weight) const;
 
-  inline VISKORES_EXEC viskores::Vec3f_32 MapThroughColorSpaceDiverging(const viskores::Vec3f_32& rgb1,
-                                                                const viskores::Vec3f_32& rgb2,
-                                                                viskores::Float32 weight) const;
+  inline VISKORES_EXEC viskores::Vec3f_32 MapThroughColorSpaceDiverging(
+    const viskores::Vec3f_32& rgb1,
+    const viskores::Vec3f_32& rgb2,
+    viskores::Float32 weight) const;
 };
 
 }

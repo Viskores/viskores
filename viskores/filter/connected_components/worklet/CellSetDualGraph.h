@@ -37,8 +37,8 @@ struct EdgeCount : public viskores::worklet::WorkletVisitCellsWithPoints
 
   template <typename CellShapeTag>
   VISKORES_EXEC void operator()(CellShapeTag cellShape,
-                            viskores::IdComponent pointCount,
-                            viskores::IdComponent& numEdges) const
+                                viskores::IdComponent pointCount,
+                                viskores::IdComponent& numEdges) const
   {
     viskores::exec::CellEdgeNumberOfEdges(pointCount, cellShape, numEdges);
   }
@@ -59,11 +59,11 @@ struct EdgeExtract : public viskores::worklet::WorkletVisitCellsWithPoints
             typename PointIndexVecType,
             typename EdgeIndexVecType>
   VISKORES_EXEC void operator()(CellShapeTag cellShape,
-                            CellIndexType cellIndex,
-                            const PointIndexVecType& pointIndices,
-                            viskores::IdComponent visitIndex,
-                            CellIndexType& cellIndexOut,
-                            EdgeIndexVecType& edgeIndices) const
+                                CellIndexType cellIndex,
+                                const PointIndexVecType& pointIndices,
+                                viskores::IdComponent visitIndex,
+                                CellIndexType& cellIndexOut,
+                                EdgeIndexVecType& edgeIndices) const
   {
     cellIndexOut = cellIndex;
     viskores::exec::CellEdgeCanonicalId(
@@ -84,10 +84,10 @@ struct CellToCellConnectivity : public viskores::worklet::WorkletMapField
 
   template <typename ConnectivityPortalType, typename CellIdPortalType>
   VISKORES_EXEC void operator()(viskores::Id offset,
-                            viskores::Id index,
-                            const CellIdPortalType& cells,
-                            ConnectivityPortalType& from,
-                            ConnectivityPortalType& to) const
+                                viskores::Id index,
+                                const CellIdPortalType& cells,
+                                ConnectivityPortalType& from,
+                                ConnectivityPortalType& to) const
   {
     from.Set(index * 2, cells.Get(offset));
     to.Set(index * 2, cells.Get(offset + 1));

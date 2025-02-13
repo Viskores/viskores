@@ -46,14 +46,15 @@ bool CheckLocalRuntime()
 
 void DoTest()
 {
-  VISKORES_TEST_ASSERT(CheckLocalRuntime(),
-                   "Runtime check failed on main thread. Did you try to set a device argument?");
+  VISKORES_TEST_ASSERT(
+    CheckLocalRuntime(),
+    "Runtime check failed on main thread. Did you try to set a device argument?");
 
   // Now check on a new thread. The runtime is a thread-local object so that each thread can
   // use its own device. But when you start a thread, you want the default to be what the
   // user selected on the main thread.
   VISKORES_TEST_ASSERT(std::async(std::launch::async, CheckLocalRuntime).get(),
-                   "Runtime loses defaults in spawned thread.");
+                       "Runtime loses defaults in spawned thread.");
 }
 
 } // anonymous namespace

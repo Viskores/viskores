@@ -35,7 +35,8 @@ public:
 
   //Functor
   VISKORES_EXEC
-  viskores::Vec<viskores::FloatDefault, 3> operator()(const viskores::Vec<viskores::FloatDefault, 3>& vec) const
+  viskores::Vec<viskores::FloatDefault, 3> operator()(
+    const viskores::Vec<viskores::FloatDefault, 3>& vec) const
   {
     return viskores::Transform3DPoint(matrix, vec);
   }

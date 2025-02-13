@@ -38,7 +38,8 @@ public:
     extractPoints.SetCompactPoints(true);
 
     viskores::cont::DataSet output = extractPoints.Execute(dataset);
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27),
+                         "Wrong result for ExtractPoints");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
@@ -68,7 +69,8 @@ public:
     extractPoints.SetCompactPoints(true);
 
     viskores::cont::DataSet output = extractPoints.Execute(dataset);
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 98), "Wrong result for ExtractPoints");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 98),
+                         "Wrong result for ExtractPoints");
 
     viskores::cont::ArrayHandle<viskores::Float32> outPointData;
     output.GetField("pointvar").GetData().AsArrayHandle(outPointData);
@@ -99,7 +101,8 @@ public:
     extractPoints.SetExtractInside(true);
 
     viskores::cont::DataSet output = extractPoints.Execute(dataset);
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 27),
+                         "Wrong result for ExtractPoints");
   }
 
   static void TestExplicitByBox0()
@@ -118,7 +121,8 @@ public:
     extractPoints.SetExtractInside(true);
 
     viskores::cont::DataSet output = extractPoints.Execute(dataset);
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8), "Wrong result for ExtractPoints");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 8),
+                         "Wrong result for ExtractPoints");
   }
 
   static void TestExplicitByBox1()
@@ -137,7 +141,8 @@ public:
     extractPoints.SetExtractInside(false);
 
     viskores::cont::DataSet output = extractPoints.Execute(dataset);
-    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 3), "Wrong result for ExtractPoints");
+    VISKORES_TEST_ASSERT(test_equal(output.GetNumberOfCells(), 3),
+                         "Wrong result for ExtractPoints");
   }
 
   void operator()() const

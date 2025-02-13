@@ -25,21 +25,24 @@ namespace cont
 class VISKORES_CONT_EXPORT DataSetBuilderRectilinear
 {
   template <typename T, typename U>
-  VISKORES_CONT static void CopyInto(const std::vector<T>& input, viskores::cont::ArrayHandle<U>& output)
+  VISKORES_CONT static void CopyInto(const std::vector<T>& input,
+                                     viskores::cont::ArrayHandle<U>& output)
   {
-    DataSetBuilderRectilinear::CopyInto(viskores::cont::make_ArrayHandle(input, viskores::CopyFlag::Off),
-                                        output);
+    DataSetBuilderRectilinear::CopyInto(
+      viskores::cont::make_ArrayHandle(input, viskores::CopyFlag::Off), output);
   }
 
   template <typename T, typename U>
   VISKORES_CONT static void CopyInto(const viskores::cont::ArrayHandle<T>& input,
-                                 viskores::cont::ArrayHandle<U>& output)
+                                     viskores::cont::ArrayHandle<U>& output)
   {
     viskores::cont::ArrayCopy(input, output);
   }
 
   template <typename T, typename U>
-  VISKORES_CONT static void CopyInto(const T* input, viskores::Id len, viskores::cont::ArrayHandle<U>& output)
+  VISKORES_CONT static void CopyInto(const T* input,
+                                     viskores::Id len,
+                                     viskores::cont::ArrayHandle<U>& output)
   {
     DataSetBuilderRectilinear::CopyInto(
       viskores::cont::make_ArrayHandle(input, len, viskores::CopyFlag::Off), output);
@@ -60,7 +63,7 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<T>& xvals,
-                                              const std::string& coordNm = "coords")
+                                                      const std::string& coordNm = "coords")
   {
     std::vector<T> yvals(1, 0), zvals(1, 0);
     return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm);
@@ -78,8 +81,8 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(viskores::Id nx,
-                                              T* xvals,
-                                              const std::string& coordNm = "coords")
+                                                      T* xvals,
+                                                      const std::string& coordNm = "coords")
   {
     T yvals = 0, zvals = 0;
     return DataSetBuilderRectilinear::BuildDataSet(nx, 1, 1, xvals, &yvals, &zvals, coordNm);
@@ -97,7 +100,7 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const viskores::cont::ArrayHandle<T>& xvals,
-                                              const std::string& coordNm = "coords")
+                                                      const std::string& coordNm = "coords")
   {
     viskores::cont::ArrayHandle<T> yvals, zvals;
     yvals.Allocate(1);
@@ -119,8 +122,8 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<T>& xvals,
-                                              const std::vector<T>& yvals,
-                                              const std::string& coordNm = "coords")
+                                                      const std::vector<T>& yvals,
+                                                      const std::string& coordNm = "coords")
   {
     std::vector<T> zvals(1, 0);
     return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm);
@@ -140,10 +143,10 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(viskores::Id nx,
-                                              viskores::Id ny,
-                                              T* xvals,
-                                              T* yvals,
-                                              const std::string& coordNm = "coords")
+                                                      viskores::Id ny,
+                                                      T* xvals,
+                                                      T* yvals,
+                                                      const std::string& coordNm = "coords")
   {
     T zvals = 0;
     return DataSetBuilderRectilinear::BuildDataSet(nx, ny, 1, xvals, yvals, &zvals, coordNm);
@@ -162,8 +165,8 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const viskores::cont::ArrayHandle<T>& xvals,
-                                              const viskores::cont::ArrayHandle<T>& yvals,
-                                              const std::string& coordNm = "coords")
+                                                      const viskores::cont::ArrayHandle<T>& yvals,
+                                                      const std::string& coordNm = "coords")
   {
     viskores::cont::ArrayHandle<T> zvals;
     zvals.Allocate(1);
@@ -187,12 +190,12 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(viskores::Id nx,
-                                              viskores::Id ny,
-                                              viskores::Id nz,
-                                              T* xvals,
-                                              T* yvals,
-                                              T* zvals,
-                                              const std::string& coordNm = "coords")
+                                                      viskores::Id ny,
+                                                      viskores::Id nz,
+                                                      T* xvals,
+                                                      T* yvals,
+                                                      T* zvals,
+                                                      const std::string& coordNm = "coords")
   {
     return DataSetBuilderRectilinear::BuildDataSet(nx, ny, nz, xvals, yvals, zvals, coordNm);
   }
@@ -210,9 +213,9 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const std::vector<T>& xvals,
-                                              const std::vector<T>& yvals,
-                                              const std::vector<T>& zvals,
-                                              const std::string& coordNm = "coords")
+                                                      const std::vector<T>& yvals,
+                                                      const std::vector<T>& zvals,
+                                                      const std::string& coordNm = "coords")
   {
     return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm);
   }
@@ -231,9 +234,9 @@ public:
   /// @param[in] coordNm (optional) The name to register the coordinates as.
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet Create(const viskores::cont::ArrayHandle<T>& xvals,
-                                              const viskores::cont::ArrayHandle<T>& yvals,
-                                              const viskores::cont::ArrayHandle<T>& zvals,
-                                              const std::string& coordNm = "coords")
+                                                      const viskores::cont::ArrayHandle<T>& yvals,
+                                                      const viskores::cont::ArrayHandle<T>& zvals,
+                                                      const std::string& coordNm = "coords")
   {
     return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm);
   }
@@ -241,9 +244,9 @@ public:
 private:
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet BuildDataSet(const std::vector<T>& xvals,
-                                                    const std::vector<T>& yvals,
-                                                    const std::vector<T>& zvals,
-                                                    const std::string& coordNm)
+                                                            const std::vector<T>& yvals,
+                                                            const std::vector<T>& zvals,
+                                                            const std::string& coordNm)
   {
     viskores::cont::ArrayHandle<viskores::FloatDefault> Xc, Yc, Zc;
     DataSetBuilderRectilinear::CopyInto(xvals, Xc);
@@ -255,12 +258,12 @@ private:
 
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet BuildDataSet(viskores::Id nx,
-                                                    viskores::Id ny,
-                                                    viskores::Id nz,
-                                                    const T* xvals,
-                                                    const T* yvals,
-                                                    const T* zvals,
-                                                    const std::string& coordNm)
+                                                            viskores::Id ny,
+                                                            viskores::Id nz,
+                                                            const T* xvals,
+                                                            const T* yvals,
+                                                            const T* zvals,
+                                                            const std::string& coordNm)
   {
     viskores::cont::ArrayHandle<viskores::FloatDefault> Xc, Yc, Zc;
     DataSetBuilderRectilinear::CopyInto(xvals, nx, Xc);
@@ -272,16 +275,16 @@ private:
 
   template <typename T>
   VISKORES_CONT static viskores::cont::DataSet BuildDataSet(const viskores::cont::ArrayHandle<T>& X,
-                                                    const viskores::cont::ArrayHandle<T>& Y,
-                                                    const viskores::cont::ArrayHandle<T>& Z,
-                                                    const std::string& coordNm)
+                                                            const viskores::cont::ArrayHandle<T>& Y,
+                                                            const viskores::cont::ArrayHandle<T>& Z,
+                                                            const std::string& coordNm)
   {
     viskores::cont::DataSet dataSet;
 
     //Convert all coordinates to floatDefault.
     viskores::cont::ArrayHandleCartesianProduct<viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>,
-                                            viskores::cont::ArrayHandle<viskores::FloatDefault>>
+                                                viskores::cont::ArrayHandle<viskores::FloatDefault>,
+                                                viskores::cont::ArrayHandle<viskores::FloatDefault>>
       coords;
 
     viskores::cont::ArrayHandle<viskores::FloatDefault> Xc, Yc, Zc;

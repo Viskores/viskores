@@ -30,11 +30,11 @@
 ///
 #define VISKORES_UNREACHABLE(msg)      \
   VISKORES_SWALLOW_SEMICOLON_PRE_BLOCK \
-  {                                \
+  {                                    \
     VISKORES_UNREACHABLE_IMPL();       \
     VISKORES_UNREACHABLE_PRINT(msg);   \
     VISKORES_UNREACHABLE_ABORT();      \
-  }                                \
+  }                                    \
   VISKORES_SWALLOW_SEMICOLON_POST_BLOCK
 
 // VISKORES_UNREACHABLE_IMPL is compiler-specific:
@@ -81,7 +81,7 @@
 #else // NDEBUG || VISKORES_NO_ASSERT
 
 #define VISKORES_UNREACHABLE_IMPL() (void)0
-#define VISKORES_UNREACHABLE_PRINT(msg)                            \
+#define VISKORES_UNREACHABLE_PRINT(msg)                        \
   std::cerr << "Unreachable location reached: " << msg << "\n" \
             << "Location: " << __FILE__ << ":" << __LINE__ << "\n"
 #define VISKORES_UNREACHABLE_ABORT() abort()

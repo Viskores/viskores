@@ -121,9 +121,9 @@ struct sortbykey_tag_type<KeyType,
 
 #define VISKORES_INTERNAL_RADIX_SORT_DECLARE(key_type)                                         \
   VISKORES_CONT_EXPORT void parallel_radix_sort(                                               \
-    key_type* data, size_t num_elems, const std::greater<key_type>& comp);                 \
+    key_type* data, size_t num_elems, const std::greater<key_type>& comp);                     \
   VISKORES_CONT_EXPORT void parallel_radix_sort(                                               \
-    key_type* data, size_t num_elems, const std::less<key_type>& comp);                    \
+    key_type* data, size_t num_elems, const std::less<key_type>& comp);                        \
   VISKORES_CONT_EXPORT void parallel_radix_sort_key_values(                                    \
     key_type* keys, viskores::Id* vals, size_t num_elems, const std::greater<key_type>& comp); \
   VISKORES_CONT_EXPORT void parallel_radix_sort_key_values(                                    \

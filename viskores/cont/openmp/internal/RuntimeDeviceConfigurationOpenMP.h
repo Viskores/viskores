@@ -42,11 +42,13 @@ public:
     return viskores::cont::DeviceAdapterTagOpenMP{};
   }
 
-  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const viskores::Id& value) override final
+  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(
+    const viskores::Id& value) override final
   {
     if (omp_in_parallel())
     {
-      VISKORES_LOG_S(viskores::cont::LogLevel::Error, "OpenMP SetThreads: Error, currently in parallel");
+      VISKORES_LOG_S(viskores::cont::LogLevel::Error,
+                     "OpenMP SetThreads: Error, currently in parallel");
       return RuntimeDeviceConfigReturnCode::NOT_APPLIED;
     }
     if (value > 0)
@@ -54,9 +56,9 @@ public:
       if (value > this->HardwareMaxThreads)
       {
         VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                   "OpenMP: You may be oversubscribing your CPU cores: "
-                     << "process threads available: " << this->HardwareMaxThreads
-                     << ", requested threads: " << value);
+                       "OpenMP: You may be oversubscribing your CPU cores: "
+                         << "process threads available: " << this->HardwareMaxThreads
+                         << ", requested threads: " << value);
       }
       this->CurrentNumThreads = value;
       omp_set_num_threads(this->CurrentNumThreads);
@@ -69,7 +71,8 @@ public:
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(viskores::Id& value) const override final
+  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(
+    viskores::Id& value) const override final
   {
     value = this->CurrentNumThreads;
     return RuntimeDeviceConfigReturnCode::SUCCESS;

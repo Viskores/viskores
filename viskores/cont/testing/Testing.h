@@ -38,14 +38,14 @@
 // that on CUDA and Kokkos we print less actionable information.
 #if defined(VISKORES_ENABLE_CUDA) || defined(VISKORES_ENABLE_KOKKOS)
 #define VISKORES_MATH_ASSERT(condition, message) \
-  {                                          \
-    if (!(condition))                        \
-    {                                        \
-      this->RaiseError(message);             \
-    }                                        \
+  {                                              \
+    if (!(condition))                            \
+    {                                            \
+      this->RaiseError(message);                 \
+    }                                            \
   }
 #else
-#define VISKORES_MATH_ASSERT(condition, message)                                                       \
+#define VISKORES_MATH_ASSERT(condition, message)                                                   \
   {                                                                                                \
     if (!(condition))                                                                              \
     {                                                                                              \
@@ -353,7 +353,7 @@ private:
 
 template <typename CellSet1, typename CellSet2>
 inline VISKORES_CONT TestEqualResult test_equal_CellSets(const CellSet1& cellset1,
-                                                     const CellSet2& cellset2)
+                                                         const CellSet2& cellset2)
 {
   TestEqualResult result;
   detail::TestEqualCellSet{}(cellset1, cellset2, result);
@@ -361,7 +361,7 @@ inline VISKORES_CONT TestEqualResult test_equal_CellSets(const CellSet1& cellset
 }
 
 inline VISKORES_CONT TestEqualResult test_equal_Fields(const viskores::cont::Field& f1,
-                                                   const viskores::cont::Field& f2)
+                                                       const viskores::cont::Field& f2)
 {
   TestEqualResult result;
 
@@ -388,8 +388,8 @@ inline VISKORES_CONT TestEqualResult test_equal_Fields(const viskores::cont::Fie
 
 template <typename CellSetTypes = VISKORES_DEFAULT_CELL_SET_LIST>
 inline VISKORES_CONT TestEqualResult test_equal_DataSets(const viskores::cont::DataSet& ds1,
-                                                     const viskores::cont::DataSet& ds2,
-                                                     CellSetTypes ctypes = CellSetTypes())
+                                                         const viskores::cont::DataSet& ds2,
+                                                         CellSetTypes ctypes = CellSetTypes())
 {
   TestEqualResult result;
   if (ds1.GetNumberOfCoordinateSystems() != ds2.GetNumberOfCoordinateSystems())

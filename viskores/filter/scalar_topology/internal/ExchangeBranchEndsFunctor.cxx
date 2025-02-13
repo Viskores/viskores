@@ -97,8 +97,8 @@ void ExchangeBranchEndsFunctor::operator()(
       int incomingGlobalBlockId;
       rp.dequeue(ingid, incomingGlobalBlockId);
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 "Combining local block " << b->GlobalBlockId << " with incoming block "
-                                          << incomingGlobalBlockId);
+                     "Combining local block " << b->GlobalBlockId << " with incoming block "
+                                              << incomingGlobalBlockId);
 #endif
 
       // Receive data from swap partner
@@ -131,10 +131,13 @@ void ExchangeBranchEndsFunctor::operator()(
       /// We filter out shared branches first
       /// because we need data to be in the same length to apply worklet
       IdArrayType oneIfSharedBranch;
-      viskores::cont::Algorithm::Transform(
-        incomingBranchRootGRId, branchDecomposer.BranchRootGRId, oneIfSharedBranch, viskores::Equal());
+      viskores::cont::Algorithm::Transform(incomingBranchRootGRId,
+                                           branchDecomposer.BranchRootGRId,
+                                           oneIfSharedBranch,
+                                           viskores::Equal());
 
-      viskores::Id nSharedBranches = viskores::cont::Algorithm::Reduce(oneIfSharedBranch, 0, viskores::Sum());
+      viskores::Id nSharedBranches =
+        viskores::cont::Algorithm::Reduce(oneIfSharedBranch, 0, viskores::Sum());
 
 #ifdef DEBUG_PRINT_COMBINED_BLOCK_IDS
       std::stringstream precheckStream;
@@ -144,8 +147,8 @@ void ExchangeBranchEndsFunctor::operator()(
         "SelfBranchRootGRId", branchDecomposer.BranchRootGRId, -1, precheckStream);
       precheckStream << std::endl;
 
-      viskores::worklet::contourtree_augmented::PrintHeader(incomingBranchRootGRId.GetNumberOfValues(),
-                                                        precheckStream);
+      viskores::worklet::contourtree_augmented::PrintHeader(
+        incomingBranchRootGRId.GetNumberOfValues(), precheckStream);
       viskores::worklet::contourtree_augmented::PrintIndices(
         "OtherBranchRootGRId", incomingBranchRootGRId, -1, precheckStream);
       precheckStream << std::endl;
@@ -166,7 +169,8 @@ void ExchangeBranchEndsFunctor::operator()(
       //   1. decide the shared upper node and lower node
       //   2. update local information if necessary
       viskores::cont::ArrayHandleIndex sharedBranchesIndices(nSharedBranches);
-      auto resolveValueType = [&](const auto& inArray) {
+      auto resolveValueType = [&](const auto& inArray)
+      {
         using InArrayHandleType = std::decay_t<decltype(inArray)>;
         using ValueType = typename InArrayHandleType::ValueType;
 
@@ -181,8 +185,8 @@ void ExchangeBranchEndsFunctor::operator()(
           viskores::cont::make_ArrayHandleView(branchDecomposer.LowerEndGRId, 0, nSharedBranches);
         auto otherLowerEndGRId =
           viskores::cont::make_ArrayHandleView(incomingLowerEndGRId, 0, nSharedBranches);
-        auto selfLowerEndSuperarcId =
-          viskores::cont::make_ArrayHandleView(branchDecomposer.LowerEndSuperarcId, 0, nSharedBranches);
+        auto selfLowerEndSuperarcId = viskores::cont::make_ArrayHandleView(
+          branchDecomposer.LowerEndSuperarcId, 0, nSharedBranches);
         auto otherLowerEndSuperarcId =
           viskores::cont::make_ArrayHandleView(incomingLowerEndSuperarcId, 0, nSharedBranches);
         auto selfLowerEndIntrinsicVolume = viskores::cont::make_ArrayHandleView(
@@ -225,8 +229,8 @@ void ExchangeBranchEndsFunctor::operator()(
           viskores::cont::make_ArrayHandleView(branchDecomposer.UpperEndGRId, 0, nSharedBranches);
         auto otherUpperEndGRId =
           viskores::cont::make_ArrayHandleView(incomingUpperEndGRId, 0, nSharedBranches);
-        auto selfUpperEndSuperarcId =
-          viskores::cont::make_ArrayHandleView(branchDecomposer.UpperEndSuperarcId, 0, nSharedBranches);
+        auto selfUpperEndSuperarcId = viskores::cont::make_ArrayHandleView(
+          branchDecomposer.UpperEndSuperarcId, 0, nSharedBranches);
         auto otherUpperEndSuperarcId =
           viskores::cont::make_ArrayHandleView(incomingUpperEndSuperarcId, 0, nSharedBranches);
         auto selfUpperEndIntrinsicVolume = viskores::cont::make_ArrayHandleView(

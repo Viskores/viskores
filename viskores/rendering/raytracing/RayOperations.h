@@ -73,9 +73,9 @@ public:
 
   template <typename Precision, typename DepthPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& pixelId,
-                            Precision& maxDistance,
-                            const Vec<Precision, 3>& origin,
-                            const DepthPortalType& depths) const
+                                Precision& maxDistance,
+                                const Vec<Precision, 3>& origin,
+                                const DepthPortalType& depths) const
   {
     viskores::Vec4f_32 position;
     position[0] = static_cast<viskores::Float32>(pixelId % Width);
@@ -133,9 +133,10 @@ public:
     dispatcher.Invoke(rays.HitIdx, rays.Status);
   }
 
-  VISKORES_RENDERING_EXPORT static void MapCanvasToRays(Ray<viskores::Float32>& rays,
-                                                    const viskores::rendering::Camera& camera,
-                                                    const viskores::rendering::CanvasRayTracer& canvas);
+  VISKORES_RENDERING_EXPORT static void MapCanvasToRays(
+    Ray<viskores::Float32>& rays,
+    const viskores::rendering::Camera& camera,
+    const viskores::rendering::CanvasRayTracer& canvas);
 
   template <typename T>
   static viskores::Id RaysInMesh(Ray<T>& rays)
@@ -149,7 +150,8 @@ public:
     viskores::worklet::DispatcherMapField<ManyMask<viskores::UInt8, 2>> dispatcher{ (
       ManyMask<viskores::UInt8, 2>{ maskValues }) };
     dispatcher.Invoke(rays.Status, masks);
-    viskores::cont::ArrayHandleCast<viskores::Id, viskores::cont::ArrayHandle<viskores::UInt8>> castedMasks(masks);
+    viskores::cont::ArrayHandleCast<viskores::Id, viskores::cont::ArrayHandle<viskores::UInt8>>
+      castedMasks(masks);
     const viskores::Id initVal = 0;
     viskores::Id count = viskores::cont::Algorithm::Reduce(castedMasks, initVal);
 
@@ -171,7 +173,8 @@ public:
     viskores::worklet::DispatcherMapField<Mask<viskores::UInt8>> dispatcher{ (
       Mask<viskores::UInt8>{ statusUInt8 }) };
     dispatcher.Invoke(rays.Status, masks);
-    viskores::cont::ArrayHandleCast<viskores::Id, viskores::cont::ArrayHandle<viskores::UInt8>> castedMasks(masks);
+    viskores::cont::ArrayHandleCast<viskores::Id, viskores::cont::ArrayHandle<viskores::UInt8>>
+      castedMasks(masks);
     const viskores::Id initVal = 0;
     viskores::Id count = viskores::cont::Algorithm::Reduce(castedMasks, initVal);
 
@@ -191,7 +194,8 @@ public:
     viskores::worklet::DispatcherMapField<ManyMask<viskores::UInt8, 3>> dispatcher{ (
       ManyMask<viskores::UInt8, 3>{ maskValues }) };
     dispatcher.Invoke(rays.Status, masks);
-    viskores::cont::ArrayHandleCast<viskores::Id, viskores::cont::ArrayHandle<viskores::UInt8>> castedMasks(masks);
+    viskores::cont::ArrayHandleCast<viskores::Id, viskores::cont::ArrayHandle<viskores::UInt8>>
+      castedMasks(masks);
     const viskores::Id initVal = 0;
     viskores::Id count = viskores::cont::Algorithm::Reduce(castedMasks, initVal);
 
@@ -216,7 +220,8 @@ public:
       viskores::cont::make_ArrayHandleCompositeVector(emptyHandle, emptyHandle, emptyHandle);
     rays.Origin =
       viskores::cont::make_ArrayHandleCompositeVector(emptyHandle, emptyHandle, emptyHandle);
-    rays.Dir = viskores::cont::make_ArrayHandleCompositeVector(emptyHandle, emptyHandle, emptyHandle);
+    rays.Dir =
+      viskores::cont::make_ArrayHandleCompositeVector(emptyHandle, emptyHandle, emptyHandle);
 
     const viskores::Int32 numFloatArrays = 18;
     viskores::cont::ArrayHandle<T>* floatArrayPointers[numFloatArrays];

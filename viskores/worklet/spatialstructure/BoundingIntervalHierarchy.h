@@ -86,14 +86,14 @@ struct CellRangesExtracter : public viskores::worklet::WorkletVisitCellsWithPoin
 
   template <typename CellShape, typename PointIndicesVec, typename PointsPortal>
   VISKORES_EXEC void operator()(CellShape viskoresNotUsed(shape),
-                            const PointIndicesVec& pointIndices,
-                            const PointsPortal& points,
-                            viskores::Range& rangeX,
-                            viskores::Range& rangeY,
-                            viskores::Range& rangeZ,
-                            viskores::FloatDefault& centerX,
-                            viskores::FloatDefault& centerY,
-                            viskores::FloatDefault& centerZ) const
+                                const PointIndicesVec& pointIndices,
+                                const PointsPortal& points,
+                                viskores::Range& rangeX,
+                                viskores::Range& rangeY,
+                                viskores::Range& rangeZ,
+                                viskores::FloatDefault& centerX,
+                                viskores::FloatDefault& centerY,
+                                viskores::FloatDefault& centerZ) const
   {
     viskores::Bounds bounds;
     viskores::VecFromPortalPermute<PointIndicesVec, PointsPortal> cellPoints(&pointIndices, points);
@@ -208,12 +208,12 @@ public:
 
   template <typename SplitPropertiesPortal>
   VISKORES_EXEC void operator()(const viskores::Id& pointsToLeft,
-                            const viskores::Id& pointsToRight,
-                            const viskores::Range& lMaxRanges,
-                            const viskores::Range& rMinRanges,
-                            const viskores::FloatDefault& planeValue,
-                            SplitPropertiesPortal& splits,
-                            viskores::Id inputIndex) const
+                                const viskores::Id& pointsToRight,
+                                const viskores::Range& lMaxRanges,
+                                const viskores::Range& rMinRanges,
+                                const viskores::FloatDefault& planeValue,
+                                SplitPropertiesPortal& splits,
+                                viskores::Id inputIndex) const
   {
     SplitProperties split;
     split.Plane = planeValue;
@@ -224,7 +224,7 @@ public:
     if (lMaxRanges.IsNonEmpty() && rMinRanges.IsNonEmpty())
     {
       split.Cost = viskores::Abs(split.LMax * static_cast<viskores::FloatDefault>(pointsToLeft) -
-                             split.RMin * static_cast<viskores::FloatDefault>(pointsToRight));
+                                 split.RMin * static_cast<viskores::FloatDefault>(pointsToRight));
     }
     else
     {
@@ -264,13 +264,13 @@ public:
 
   template <typename SplitPropertiesPortal>
   VISKORES_EXEC void operator()(viskores::Id index,
-                            const SplitPropertiesPortal& xSplits,
-                            const SplitPropertiesPortal& ySplits,
-                            const SplitPropertiesPortal& zSplits,
-                            const viskores::Id& segmentSize,
-                            TreeNode& node,
-                            viskores::FloatDefault& plane,
-                            viskores::Id& choice) const
+                                const SplitPropertiesPortal& xSplits,
+                                const SplitPropertiesPortal& ySplits,
+                                const SplitPropertiesPortal& zSplits,
+                                const viskores::Id& segmentSize,
+                                TreeNode& node,
+                                viskores::FloatDefault& plane,
+                                viskores::Id& choice) const
   {
     if (segmentSize <= MaxLeafSize)
     {
@@ -343,7 +343,9 @@ public:
   }
 
   template <typename ArrayPortal>
-  VISKORES_EXEC viskores::Id ArgMin(const ArrayPortal& values, viskores::Id start, viskores::Id length) const
+  VISKORES_EXEC viskores::Id ArgMin(const ArrayPortal& values,
+                                    viskores::Id start,
+                                    viskores::Id length) const
   {
     viskores::Id minIdx = start;
     for (viskores::Id i = start; i < (start + length); ++i)
@@ -454,7 +456,9 @@ struct Scatter : public viskores::worklet::WorkletMapField
   using InputDomain = _1;
 
   template <typename InputType, typename OutputPortalType>
-  VISKORES_EXEC void operator()(const InputType& in, const viskores::Id& idx, OutputPortalType& out) const
+  VISKORES_EXEC void operator()(const InputType& in,
+                                const viskores::Id& idx,
+                                OutputPortalType& out) const
   {
     out.Set(idx, in);
   }
@@ -481,7 +485,8 @@ struct NonSplitIndexCalculator : public viskores::worklet::WorkletMapField
   {
   }
 
-  VISKORES_EXEC void operator()(const viskores::Id& inSegmentSize, viskores::Id& outSegmentSize) const
+  VISKORES_EXEC void operator()(const viskores::Id& inSegmentSize,
+                                viskores::Id& outSegmentSize) const
   {
     if (inSegmentSize <= MaxLeafSize)
     {
@@ -510,7 +515,9 @@ struct TreeLevelAdder : public viskores::worklet::WorkletMapField
   using InputDomain = _1;
 
   VISKORES_CONT
-  TreeLevelAdder(viskores::Id cellIdsOffset, viskores::Id treeOffset, viskores::IdComponent maxLeafSize)
+  TreeLevelAdder(viskores::Id cellIdsOffset,
+                 viskores::Id treeOffset,
+                 viskores::IdComponent maxLeafSize)
     : CellIdsOffset(cellIdsOffset)
     , TreeOffset(treeOffset)
     , MaxLeafSize(maxLeafSize)
@@ -519,13 +526,13 @@ struct TreeLevelAdder : public viskores::worklet::WorkletMapField
 
   template <typename BoundingIntervalHierarchyPortal, typename NextParentPortal>
   VISKORES_EXEC void operator()(viskores::Id index,
-                            const TreeNode& split,
-                            viskores::Id start,
-                            viskores::Id count,
-                            viskores::Id numPreviousSplits,
-                            viskores::Id parentIndex,
-                            BoundingIntervalHierarchyPortal& treePortal,
-                            NextParentPortal& nextParentPortal) const
+                                const TreeNode& split,
+                                viskores::Id start,
+                                viskores::Id count,
+                                viskores::Id numPreviousSplits,
+                                viskores::Id parentIndex,
+                                BoundingIntervalHierarchyPortal& treePortal,
+                                NextParentPortal& nextParentPortal) const
   {
     viskores::exec::CellLocatorBoundingIntervalHierarchyNode node;
     node.ParentIndex = parentIndex;
@@ -553,24 +560,25 @@ struct TreeLevelAdder : public viskores::worklet::WorkletMapField
 }; // struct TreeLevelAdder
 
 template <typename T, class BinaryFunctor>
-viskores::cont::ArrayHandle<T> ReverseScanInclusiveByKey(const viskores::cont::ArrayHandle<T>& keys,
-                                                     const viskores::cont::ArrayHandle<T>& values,
-                                                     BinaryFunctor binaryFunctor)
+viskores::cont::ArrayHandle<T> ReverseScanInclusiveByKey(
+  const viskores::cont::ArrayHandle<T>& keys,
+  const viskores::cont::ArrayHandle<T>& values,
+  BinaryFunctor binaryFunctor)
 {
   viskores::cont::ArrayHandle<T> result;
   auto reversedResult = viskores::cont::make_ArrayHandleReverse(result);
 
   viskores::cont::Algorithm::ScanInclusiveByKey(viskores::cont::make_ArrayHandleReverse(keys),
-                                            viskores::cont::make_ArrayHandleReverse(values),
-                                            reversedResult,
-                                            binaryFunctor);
+                                                viskores::cont::make_ArrayHandleReverse(values),
+                                                reversedResult,
+                                                binaryFunctor);
 
   return result;
 }
 
 template <typename T, typename U>
 viskores::cont::ArrayHandle<T> CopyIfArray(const viskores::cont::ArrayHandle<T>& input,
-                                       const viskores::cont::ArrayHandle<U>& stencil)
+                                           const viskores::cont::ArrayHandle<U>& stencil)
 {
   viskores::cont::ArrayHandle<T> result;
   viskores::cont::Algorithm::CopyIf(input, stencil, result);

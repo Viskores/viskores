@@ -28,18 +28,22 @@
 
 struct UpDown
 {
-  VISKORES_EXEC_CONT viskores::Float32 operator()(viskores::Float32 p) const { return p > 0.5 ? 1.0f : -1.0f; }
+  VISKORES_EXEC_CONT viskores::Float32 operator()(viskores::Float32 p) const
+  {
+    return p > 0.5 ? 1.0f : -1.0f;
+  }
 };
 
 viskores::cont::DataSet SpinField(viskores::Id2 dims)
 {
-  auto result =
-    viskores::cont::DataSetBuilderUniform::Create(dims, viskores::Vec2f{ 0, 0 }, viskores::Vec2f{ 1, 1 });
+  auto result = viskores::cont::DataSetBuilderUniform::Create(
+    dims, viskores::Vec2f{ 0, 0 }, viskores::Vec2f{ 1, 1 });
 
   viskores::cont::ArrayHandle<viskores::Float32> spins;
   viskores::cont::ArrayCopy(
     viskores::cont::make_ArrayHandleTransform(
-      viskores::cont::ArrayHandleRandomUniformReal<viskores::Float32>(result.GetNumberOfCells()), UpDown{}),
+      viskores::cont::ArrayHandleRandomUniformReal<viskores::Float32>(result.GetNumberOfCells()),
+      UpDown{}),
     spins);
   result.AddCellField("spins", spins);
 
@@ -56,8 +60,8 @@ struct UpdateSpins : public viskores::worklet::WorkletCellNeighborhood
 
   template <typename NeighIn>
   VISKORES_EXEC_CONT void operator()(const NeighIn& prevspin,
-                                 viskores::Float32 p,
-                                 viskores::Float32& spin) const
+                                     viskores::Float32 p,
+                                     viskores::Float32& spin) const
   {
     // TODO: what is the real value and unit of the change constant J and Boltzmann constant kB?
     const viskores::Float32 J = 1.f;
@@ -101,9 +105,9 @@ int main(int argc, char** argv)
 
   viskores::rendering::Scene scene;
   viskores::rendering::Actor actor(dataSet.GetCellSet(),
-                               dataSet.GetCoordinateSystem(),
-                               dataSet.GetCellField("spins"),
-                               viskores::cont::ColorTable("Cool To Warm"));
+                                   dataSet.GetCoordinateSystem(),
+                                   dataSet.GetCellField("spins"),
+                                   viskores::cont::ColorTable("Cool To Warm"));
   scene.AddActor(actor);
   viskores::rendering::CanvasRayTracer canvas(1024, 1024);
   viskores::rendering::MapperRayTracer mapper;
@@ -115,7 +119,8 @@ int main(int argc, char** argv)
   viskores::cont::Invoker invoker;
   for (viskores::UInt32 i = 1; i < 10; ++i)
   {
-    viskores::cont::ArrayHandleRandomUniformReal<viskores::Float32> prob(dataSet.GetNumberOfCells(), { i });
+    viskores::cont::ArrayHandleRandomUniformReal<viskores::Float32> prob(dataSet.GetNumberOfCells(),
+                                                                         { i });
     invoker(UpdateSpins{}, dataSet.GetCellSet(), spins, prob, spins);
     view.Paint();
     view.SaveAs("spin" + std::to_string(i) + ".png");

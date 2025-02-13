@@ -31,7 +31,8 @@ public:
   using ExecutionSignature = void(_2, _3, Boundary, _4, _5);
   using InputDomain = _1;
 
-  ImageDifferenceNeighborhood(const viskores::IdComponent& radius, const viskores::FloatDefault& threshold)
+  ImageDifferenceNeighborhood(const viskores::IdComponent& radius,
+                              const viskores::FloatDefault& threshold)
     : ShiftRadius(radius)
     , Threshold(threshold)
   {
@@ -92,9 +93,9 @@ public:
 
   template <typename T, viskores::IdComponent Size>
   VISKORES_EXEC void operator()(const viskores::Vec<T, Size>& primary,
-                            const viskores::Vec<T, Size>& secondary,
-                            viskores::Vec<T, Size>& diff,
-                            viskores::FloatDefault& diffThreshold) const
+                                const viskores::Vec<T, Size>& secondary,
+                                viskores::Vec<T, Size>& diff,
+                                viskores::FloatDefault& diffThreshold) const
   {
     diff = viskores::Abs(primary - secondary);
     diffThreshold = static_cast<viskores::FloatDefault>(viskores::Magnitude(diff));

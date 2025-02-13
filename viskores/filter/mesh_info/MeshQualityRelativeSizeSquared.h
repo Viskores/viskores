@@ -43,7 +43,8 @@ namespace mesh_info
 /// For a good quality tetrahedron, it should be in the range [0.3, 1].
 /// For a good quality hexahedron, it should be in the range [0.5, 1].
 /// Poorer quality cells can have a relative size squared as low as 0.
-class VISKORES_FILTER_MESH_INFO_EXPORT MeshQualityRelativeSizeSquared : public viskores::filter::Filter
+class VISKORES_FILTER_MESH_INFO_EXPORT MeshQualityRelativeSizeSquared
+  : public viskores::filter::Filter
 {
 public:
   MeshQualityRelativeSizeSquared();

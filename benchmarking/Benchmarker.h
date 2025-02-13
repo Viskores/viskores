@@ -164,7 +164,8 @@
 /// Run the benchmarks defined in the current file. Benchmarks may be filtered
 /// and modified using the passed arguments; see the Google Benchmark documentation
 /// for more details.
-#define VISKORES_EXECUTE_BENCHMARKS(argc, argv) viskores::bench::detail::ExecuteBenchmarks(argc, argv)
+#define VISKORES_EXECUTE_BENCHMARKS(argc, argv) \
+  viskores::bench::detail::ExecuteBenchmarks(argc, argv)
 
 /// \def VISKORES_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, preamble)
 ///
@@ -239,8 +240,8 @@
 ///                                ->ArgName("MyParam")->Range(32, 1024*1024),
 ///                              viskores::List<viskores::Float32, viskores::Vec3f_32>);
 /// ```
-#define VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchFunc, options, TypeList)                          \
-  VISKORES_BENCHMARK_TEMPLATES_APPLY(                                                            \
+#define VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchFunc, options, TypeList)                      \
+  VISKORES_BENCHMARK_TEMPLATES_APPLY(                                                        \
     BenchFunc,                                                                               \
     [](::benchmark::internal::Benchmark* bm) { bm options->Unit(benchmark::kMillisecond); }, \
     TypeList)
@@ -257,19 +258,22 @@
 /// ```
 ///
 /// See the Google Benchmark documentation for more details on the available options.
-#define VISKORES_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ApplyFunctor, TypeList)                            \
+#define VISKORES_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ApplyFunctor, TypeList)                        \
   namespace                                                                                          \
   { /* A template function cannot be used as a template parameter, so wrap the function with       \
      * a template struct to get it into the GenerateTemplateBenchmarks class. */ \
   template <typename... Ts>                                                                          \
-  struct VISKORES_BENCHMARK_WRAPPER_NAME(BenchFunc)                                                      \
+  struct VISKORES_BENCHMARK_WRAPPER_NAME(BenchFunc)                                                  \
   {                                                                                                  \
-    static ::benchmark::internal::Function* GetFunction() { return BenchFunc<Ts...>; }               \
+    static ::benchmark::internal::Function* GetFunction()                                            \
+    {                                                                                                \
+      return BenchFunc<Ts...>;                                                                       \
+    }                                                                                                \
   };                                                                                                 \
   } /* end anon namespace */                                                                         \
-  int BENCHMARK_PRIVATE_NAME(BenchFunc) =                                                            \
-    viskores::bench::detail::GenerateTemplateBenchmarks<VISKORES_BENCHMARK_WRAPPER_NAME(BenchFunc),          \
-                                                    TypeList>::Register(#BenchFunc, ApplyFunctor)
+  int BENCHMARK_PRIVATE_NAME(BenchFunc) = viskores::bench::detail::                                  \
+    GenerateTemplateBenchmarks<VISKORES_BENCHMARK_WRAPPER_NAME(BenchFunc), TypeList>::Register(      \
+      #BenchFunc, ApplyFunctor)
 
 // Internal use only:
 #define VISKORES_BENCHMARK_WRAPPER_NAME(BenchFunc) \
@@ -322,8 +326,9 @@ public:
   template <typename ApplyFunctor>
   static int Register(const std::string& benchName, ApplyFunctor&& apply)
   {
-    viskores::ListForEach(RegisterImpl<ApplyFunctor>{ benchName, std::forward<ApplyFunctor>(apply) },
-                      viskores::ListTransform<Benchmarks, viskores::internal::meta::Type>{});
+    viskores::ListForEach(
+      RegisterImpl<ApplyFunctor>{ benchName, std::forward<ApplyFunctor>(apply) },
+      viskores::ListTransform<Benchmarks, viskores::internal::meta::Type>{});
     return 0;
   }
 };
@@ -365,8 +370,8 @@ public:
 
 // Returns the number of executed benchmarks:
 static inline viskores::Id ExecuteBenchmarks(int& argc,
-                                         char* argv[],
-                                         const std::string& preamble = std::string{})
+                                             char* argv[],
+                                             const std::string& preamble = std::string{})
 {
   ::benchmark::Initialize(&argc, argv);
   if (::benchmark::ReportUnrecognizedArguments(argc, argv))

@@ -88,10 +88,10 @@ public:
 
   template <typename ExecObjType, typename InFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& globalId,
-                            const ExecObjType& findRegularByGlobal,
-                            const InFieldPortalType& hierarchicalTreeRegular2SupernodePortal,
-                            const InFieldPortalType& hierarchicalTreeSuperparentsPortal,
-                            viskores::Id& superparent) const
+                                const ExecObjType& findRegularByGlobal,
+                                const InFieldPortalType& hierarchicalTreeRegular2SupernodePortal,
+                                const InFieldPortalType& hierarchicalTreeSuperparentsPortal,
+                                viskores::Id& superparent) const
   {
     // per vertex
     // retrieve the regular Id (should ALWAYS exist)

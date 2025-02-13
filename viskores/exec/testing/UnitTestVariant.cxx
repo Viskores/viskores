@@ -98,8 +98,8 @@ void TestSize()
   constexpr size_t variantSize = sizeof(VariantType);
 
   VISKORES_TEST_ASSERT(variantSize <= 16,
-                   "Size of variant should not be larger than biggest type plus and index. ",
-                   variantSize);
+                       "Size of variant should not be larger than biggest type plus and index. ",
+                       variantSize);
 }
 
 void TestIndexing()
@@ -107,35 +107,35 @@ void TestIndexing()
   std::cout << "Test indexing" << std::endl;
 
   using VariantType = viskores::exec::Variant<TypePlaceholder<0>,
-                                          TypePlaceholder<1>,
-                                          TypePlaceholder<2>,
-                                          TypePlaceholder<3>,
-                                          TypePlaceholder<4>,
-                                          TypePlaceholder<5>,
-                                          TypePlaceholder<6>,
-                                          TypePlaceholder<7>,
-                                          TypePlaceholder<8>,
-                                          TypePlaceholder<9>,
-                                          TypePlaceholder<10>,
-                                          TypePlaceholder<11>,
-                                          TypePlaceholder<12>,
-                                          TypePlaceholder<13>,
-                                          TypePlaceholder<14>,
-                                          TypePlaceholder<15>,
-                                          TypePlaceholder<16>,
-                                          TypePlaceholder<17>,
-                                          TypePlaceholder<18>,
-                                          TypePlaceholder<19>,
-                                          TypePlaceholder<20>,
-                                          TypePlaceholder<21>,
-                                          TypePlaceholder<22>,
-                                          TypePlaceholder<23>,
-                                          TypePlaceholder<24>,
-                                          TypePlaceholder<25>,
-                                          TypePlaceholder<26>,
-                                          TypePlaceholder<27>,
-                                          TypePlaceholder<28>,
-                                          TypePlaceholder<29>>;
+                                              TypePlaceholder<1>,
+                                              TypePlaceholder<2>,
+                                              TypePlaceholder<3>,
+                                              TypePlaceholder<4>,
+                                              TypePlaceholder<5>,
+                                              TypePlaceholder<6>,
+                                              TypePlaceholder<7>,
+                                              TypePlaceholder<8>,
+                                              TypePlaceholder<9>,
+                                              TypePlaceholder<10>,
+                                              TypePlaceholder<11>,
+                                              TypePlaceholder<12>,
+                                              TypePlaceholder<13>,
+                                              TypePlaceholder<14>,
+                                              TypePlaceholder<15>,
+                                              TypePlaceholder<16>,
+                                              TypePlaceholder<17>,
+                                              TypePlaceholder<18>,
+                                              TypePlaceholder<19>,
+                                              TypePlaceholder<20>,
+                                              TypePlaceholder<21>,
+                                              TypePlaceholder<22>,
+                                              TypePlaceholder<23>,
+                                              TypePlaceholder<24>,
+                                              TypePlaceholder<25>,
+                                              TypePlaceholder<26>,
+                                              TypePlaceholder<27>,
+                                              TypePlaceholder<28>,
+                                              TypePlaceholder<29>>;
 
   VariantType variant;
 
@@ -256,37 +256,38 @@ void TestTriviallyCopyable()
   VISKORES_STATIC_ASSERT(!viskoresstd::is_trivial<TrivialCopy>::value);
 
   // A variant of trivially constructable things should be trivially constructable
+  VISKORES_STATIC_ASSERT((viskoresstd::is_trivially_constructible<
+                          viskores::exec::detail::VariantUnion<float, int>>::value));
   VISKORES_STATIC_ASSERT(
-    (viskoresstd::is_trivially_constructible<viskores::exec::detail::VariantUnion<float, int>>::value));
-  VISKORES_STATIC_ASSERT((viskoresstd::is_trivially_constructible<viskores::exec::Variant<float, int>>::value));
+    (viskoresstd::is_trivially_constructible<viskores::exec::Variant<float, int>>::value));
 
   // A variant of trivially copyable things should be trivially copyable
   VISKORES_STATIC_ASSERT((viskoresstd::is_trivially_copyable<
-                      viskores::exec::detail::VariantUnion<float, int, TrivialCopy>>::value));
+                          viskores::exec::detail::VariantUnion<float, int, TrivialCopy>>::value));
   VISKORES_STATIC_ASSERT(
     (viskoresstd::is_trivially_copyable<viskores::exec::Variant<float, int, TrivialCopy>>::value));
 
   // A variant of any non-trivially constructable things is not trivially copyable
   VISKORES_STATIC_ASSERT((!viskoresstd::is_trivially_constructible<
-                      viskores::exec::detail::VariantUnion<NonTrivial, float, int>>::value));
+                          viskores::exec::detail::VariantUnion<NonTrivial, float, int>>::value));
   VISKORES_STATIC_ASSERT((!viskoresstd::is_trivially_constructible<
-                      viskores::exec::detail::VariantUnion<float, NonTrivial, int>>::value));
+                          viskores::exec::detail::VariantUnion<float, NonTrivial, int>>::value));
   VISKORES_STATIC_ASSERT((!viskoresstd::is_trivially_constructible<
-                      viskores::exec::detail::VariantUnion<float, int, NonTrivial>>::value));
-  VISKORES_STATIC_ASSERT(
-    (!viskoresstd::is_trivially_constructible<viskores::exec::Variant<NonTrivial, float, int>>::value));
-  VISKORES_STATIC_ASSERT(
-    (!viskoresstd::is_trivially_constructible<viskores::exec::Variant<float, NonTrivial, int>>::value));
-  VISKORES_STATIC_ASSERT(
-    (!viskoresstd::is_trivially_constructible<viskores::exec::Variant<float, int, NonTrivial>>::value));
+                          viskores::exec::detail::VariantUnion<float, int, NonTrivial>>::value));
+  VISKORES_STATIC_ASSERT((!viskoresstd::is_trivially_constructible<
+                          viskores::exec::Variant<NonTrivial, float, int>>::value));
+  VISKORES_STATIC_ASSERT((!viskoresstd::is_trivially_constructible<
+                          viskores::exec::Variant<float, NonTrivial, int>>::value));
+  VISKORES_STATIC_ASSERT((!viskoresstd::is_trivially_constructible<
+                          viskores::exec::Variant<float, int, NonTrivial>>::value));
 
   // A variant of any non-trivially copyable things is not trivially copyable
   VISKORES_STATIC_ASSERT((!viskoresstd::is_trivially_copyable<
-                      viskores::exec::detail::VariantUnion<NonTrivial, float, int>>::value));
+                          viskores::exec::detail::VariantUnion<NonTrivial, float, int>>::value));
   VISKORES_STATIC_ASSERT((!viskoresstd::is_trivially_copyable<
-                      viskores::exec::detail::VariantUnion<float, NonTrivial, int>>::value));
+                          viskores::exec::detail::VariantUnion<float, NonTrivial, int>>::value));
   VISKORES_STATIC_ASSERT((!viskoresstd::is_trivially_copyable<
-                      viskores::exec::detail::VariantUnion<float, int, NonTrivial>>::value));
+                          viskores::exec::detail::VariantUnion<float, int, NonTrivial>>::value));
   VISKORES_STATIC_ASSERT(
     (!viskoresstd::is_trivially_copyable<viskores::exec::Variant<NonTrivial, float, int>>::value));
   VISKORES_STATIC_ASSERT(
@@ -296,8 +297,10 @@ void TestTriviallyCopyable()
 
   // A variant of trivial things should be trivial
   VISKORES_STATIC_ASSERT((viskoresstd::is_trivial<viskores::exec::Variant<float, int>>::value));
-  VISKORES_STATIC_ASSERT((!viskoresstd::is_trivial<viskores::exec::Variant<float, int, TrivialCopy>>::value));
-  VISKORES_STATIC_ASSERT((!viskoresstd::is_trivial<viskores::exec::Variant<float, int, NonTrivial>>::value));
+  VISKORES_STATIC_ASSERT(
+    (!viskoresstd::is_trivial<viskores::exec::Variant<float, int, TrivialCopy>>::value));
+  VISKORES_STATIC_ASSERT(
+    (!viskoresstd::is_trivial<viskores::exec::Variant<float, int, NonTrivial>>::value));
 #endif // VISKORES_USE_STD_IS_TRIVIAL
 }
 
@@ -327,35 +330,35 @@ void TestGet()
   std::cout << "Test Get" << std::endl;
 
   using VariantType = viskores::exec::Variant<TypePlaceholder<0>,
-                                          TypePlaceholder<1>,
-                                          viskores::Id,
-                                          TypePlaceholder<3>,
-                                          TypePlaceholder<4>,
-                                          TypePlaceholder<5>,
-                                          TypePlaceholder<6>,
-                                          TypePlaceholder<7>,
-                                          TypePlaceholder<8>,
-                                          TypePlaceholder<9>,
-                                          TypePlaceholder<10>,
-                                          TypePlaceholder<11>,
-                                          TypePlaceholder<12>,
-                                          TypePlaceholder<13>,
-                                          TypePlaceholder<14>,
-                                          TypePlaceholder<15>,
-                                          TypePlaceholder<16>,
-                                          TypePlaceholder<17>,
-                                          TypePlaceholder<18>,
-                                          TypePlaceholder<19>,
-                                          TypePlaceholder<20>,
-                                          TypePlaceholder<21>,
-                                          TypePlaceholder<22>,
-                                          TypePlaceholder<23>,
-                                          TypePlaceholder<24>,
-                                          TypePlaceholder<25>,
-                                          TypePlaceholder<26>,
-                                          viskores::Float32,
-                                          TypePlaceholder<28>,
-                                          TypePlaceholder<29>>;
+                                              TypePlaceholder<1>,
+                                              viskores::Id,
+                                              TypePlaceholder<3>,
+                                              TypePlaceholder<4>,
+                                              TypePlaceholder<5>,
+                                              TypePlaceholder<6>,
+                                              TypePlaceholder<7>,
+                                              TypePlaceholder<8>,
+                                              TypePlaceholder<9>,
+                                              TypePlaceholder<10>,
+                                              TypePlaceholder<11>,
+                                              TypePlaceholder<12>,
+                                              TypePlaceholder<13>,
+                                              TypePlaceholder<14>,
+                                              TypePlaceholder<15>,
+                                              TypePlaceholder<16>,
+                                              TypePlaceholder<17>,
+                                              TypePlaceholder<18>,
+                                              TypePlaceholder<19>,
+                                              TypePlaceholder<20>,
+                                              TypePlaceholder<21>,
+                                              TypePlaceholder<22>,
+                                              TypePlaceholder<23>,
+                                              TypePlaceholder<24>,
+                                              TypePlaceholder<25>,
+                                              TypePlaceholder<26>,
+                                              viskores::Float32,
+                                              TypePlaceholder<28>,
+                                              TypePlaceholder<29>>;
 
   {
     const viskores::Id expectedValue = TestValue(3, viskores::Id{});
@@ -390,35 +393,35 @@ void TestCastAndCall()
   std::cout << "Test CastAndCall" << std::endl;
 
   using VariantType = viskores::exec::Variant<TypePlaceholder<0>,
-                                          TypePlaceholder<1>,
-                                          TypePlaceholder<2>,
-                                          TypePlaceholder<3>,
-                                          TypePlaceholder<4>,
-                                          TypePlaceholder<5>,
-                                          TypePlaceholder<6>,
-                                          TypePlaceholder<7>,
-                                          TypePlaceholder<8>,
-                                          TypePlaceholder<9>,
-                                          TypePlaceholder<10>,
-                                          TypePlaceholder<11>,
-                                          TypePlaceholder<12>,
-                                          TypePlaceholder<13>,
-                                          TypePlaceholder<14>,
-                                          TypePlaceholder<15>,
-                                          TypePlaceholder<16>,
-                                          TypePlaceholder<17>,
-                                          TypePlaceholder<18>,
-                                          TypePlaceholder<19>,
-                                          TypePlaceholder<20>,
-                                          TypePlaceholder<21>,
-                                          TypePlaceholder<22>,
-                                          TypePlaceholder<23>,
-                                          TypePlaceholder<24>,
-                                          TypePlaceholder<25>,
-                                          TypePlaceholder<26>,
-                                          TypePlaceholder<27>,
-                                          TypePlaceholder<28>,
-                                          TypePlaceholder<29>>;
+                                              TypePlaceholder<1>,
+                                              TypePlaceholder<2>,
+                                              TypePlaceholder<3>,
+                                              TypePlaceholder<4>,
+                                              TypePlaceholder<5>,
+                                              TypePlaceholder<6>,
+                                              TypePlaceholder<7>,
+                                              TypePlaceholder<8>,
+                                              TypePlaceholder<9>,
+                                              TypePlaceholder<10>,
+                                              TypePlaceholder<11>,
+                                              TypePlaceholder<12>,
+                                              TypePlaceholder<13>,
+                                              TypePlaceholder<14>,
+                                              TypePlaceholder<15>,
+                                              TypePlaceholder<16>,
+                                              TypePlaceholder<17>,
+                                              TypePlaceholder<18>,
+                                              TypePlaceholder<19>,
+                                              TypePlaceholder<20>,
+                                              TypePlaceholder<21>,
+                                              TypePlaceholder<22>,
+                                              TypePlaceholder<23>,
+                                              TypePlaceholder<24>,
+                                              TypePlaceholder<25>,
+                                              TypePlaceholder<26>,
+                                              TypePlaceholder<27>,
+                                              TypePlaceholder<28>,
+                                              TypePlaceholder<29>>;
   viskores::FloatDefault result;
 
   VariantType variant0{ TypePlaceholder<0>{} };
@@ -486,10 +489,10 @@ void TestCopyDestroy()
   std::cout << "Test copy destroy" << std::endl;
 
   using VariantType = viskores::exec::Variant<TypePlaceholder<0>,
-                                          TypePlaceholder<1>,
-                                          CountConstructDestruct,
-                                          TypePlaceholder<3>,
-                                          TypePlaceholder<4>>;
+                                              TypePlaceholder<1>,
+                                              CountConstructDestruct,
+                                              TypePlaceholder<3>,
+                                              TypePlaceholder<4>>;
 #ifdef VISKORES_USE_STD_IS_TRIVIAL
   VISKORES_STATIC_ASSERT(!viskoresstd::is_trivially_copyable<VariantType>::value);
 #endif // VISKORES_USE_STD_IS_TRIVIAL
@@ -542,7 +545,8 @@ void TestEmplace()
 {
   std::cout << "Test Emplace" << std::endl;
 
-  using VariantType = viskores::exec::Variant<viskores::Id, viskores::Id3, std::vector<viskores::Id>>;
+  using VariantType =
+    viskores::exec::Variant<viskores::Id, viskores::Id3, std::vector<viskores::Id>>;
 
   VariantType variant;
   variant.Emplace<viskores::Id>(TestValue(0, viskores::Id{}));
@@ -551,21 +555,24 @@ void TestEmplace()
 
   variant.Emplace<1>(TestValue(1, viskores::Id{}));
   VISKORES_TEST_ASSERT(variant.GetIndex() == 1);
-  VISKORES_TEST_ASSERT(variant.Get<viskores::Id3>() == viskores::Id3{ TestValue(1, viskores::Id{}) });
+  VISKORES_TEST_ASSERT(variant.Get<viskores::Id3>() ==
+                       viskores::Id3{ TestValue(1, viskores::Id{}) });
 
-  variant.Emplace<1>(TestValue(2, viskores::Id{}), TestValue(3, viskores::Id{}), TestValue(4, viskores::Id{}));
+  variant.Emplace<1>(
+    TestValue(2, viskores::Id{}), TestValue(3, viskores::Id{}), TestValue(4, viskores::Id{}));
   VISKORES_TEST_ASSERT(variant.GetIndex() == 1);
-  VISKORES_TEST_ASSERT(
-    variant.Get<viskores::Id3>() ==
-    viskores::Id3{ TestValue(2, viskores::Id{}), TestValue(3, viskores::Id{}), TestValue(4, viskores::Id{}) });
+  VISKORES_TEST_ASSERT(variant.Get<viskores::Id3>() ==
+                       viskores::Id3{ TestValue(2, viskores::Id{}),
+                                      TestValue(3, viskores::Id{}),
+                                      TestValue(4, viskores::Id{}) });
 
   variant.Emplace<2>(
     { TestValue(5, viskores::Id{}), TestValue(6, viskores::Id{}), TestValue(7, viskores::Id{}) });
   VISKORES_TEST_ASSERT(variant.GetIndex() == 2);
   VISKORES_TEST_ASSERT(variant.Get<std::vector<viskores::Id>>() ==
-                   std::vector<viskores::Id>{ TestValue(5, viskores::Id{}),
-                                          TestValue(6, viskores::Id{}),
-                                          TestValue(7, viskores::Id{}) });
+                       std::vector<viskores::Id>{ TestValue(5, viskores::Id{}),
+                                                  TestValue(6, viskores::Id{}),
+                                                  TestValue(7, viskores::Id{}) });
 }
 
 void TestConstructDestruct()

@@ -91,7 +91,9 @@ public:
   {
   }
 
-  inline VISKORES_EXEC bool operator()(const viskores::Id& i, const viskores::Id& j, bool ascending) const
+  inline VISKORES_EXEC bool operator()(const viskores::Id& i,
+                                       const viskores::Id& j,
+                                       bool ascending) const
   {
     if (values.Get(i) < values.Get(j))
     {

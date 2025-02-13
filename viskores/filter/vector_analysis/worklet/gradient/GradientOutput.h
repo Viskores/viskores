@@ -99,17 +99,18 @@ struct GradientVecOutputExecutionObject
 
   GradientVecOutputExecutionObject() = default;
 
-  GradientVecOutputExecutionObject(bool g,
-                                   bool d,
-                                   bool v,
-                                   bool q,
-                                   viskores::cont::ArrayHandle<ValueType> gradient,
-                                   viskores::cont::ArrayHandle<BaseTType> divergence,
-                                   viskores::cont::ArrayHandle<viskores::Vec<BaseTType, 3>> vorticity,
-                                   viskores::cont::ArrayHandle<BaseTType> qcriterion,
-                                   viskores::Id size,
-                                   viskores::cont::DeviceAdapterId device,
-                                   viskores::cont::Token& token)
+  GradientVecOutputExecutionObject(
+    bool g,
+    bool d,
+    bool v,
+    bool q,
+    viskores::cont::ArrayHandle<ValueType> gradient,
+    viskores::cont::ArrayHandle<BaseTType> divergence,
+    viskores::cont::ArrayHandle<viskores::Vec<BaseTType, 3>> vorticity,
+    viskores::cont::ArrayHandle<BaseTType> qcriterion,
+    viskores::Id size,
+    viskores::cont::DeviceAdapterId device,
+    viskores::cont::Token& token)
   {
     this->SetGradient = g;
     this->SetDivergence = d;
@@ -187,16 +188,16 @@ struct GradientVecOutput : public viskores::cont::ExecutionObjectBase
     viskores::cont::Token& token) const
   {
     return viskores::exec::GradientVecOutputExecutionObject<T>(this->G,
-                                                           this->D,
-                                                           this->V,
-                                                           this->Q,
-                                                           this->Gradient,
-                                                           this->Divergence,
-                                                           this->Vorticity,
-                                                           this->Qcriterion,
-                                                           this->Size,
-                                                           device,
-                                                           token);
+                                                               this->D,
+                                                               this->V,
+                                                               this->Q,
+                                                               this->Gradient,
+                                                               this->Divergence,
+                                                               this->Vorticity,
+                                                               this->Qcriterion,
+                                                               this->Size,
+                                                               device,
+                                                               token);
   }
 
   GradientVecOutput() = default;
@@ -274,16 +275,16 @@ template <typename ContObjectType, typename Device>
 struct Transport<viskores::cont::arg::TransportTagGradientOut, ContObjectType, Device>
 {
   using ExecObjectFactoryType = viskores::exec::GradientOutput<typename ContObjectType::ValueType>;
-  using ExecObjectType = decltype(
-    std::declval<ExecObjectFactoryType>().PrepareForExecution(Device(),
-                                                              std::declval<viskores::cont::Token&>()));
+  using ExecObjectType = decltype(std::declval<ExecObjectFactoryType>().PrepareForExecution(
+    Device(),
+    std::declval<viskores::cont::Token&>()));
 
   template <typename InputDomainType>
   VISKORES_CONT ExecObjectType operator()(ContObjectType object,
-                                      const InputDomainType& viskoresNotUsed(inputDomain),
-                                      viskores::Id viskoresNotUsed(inputRange),
-                                      viskores::Id outputRange,
-                                      viskores::cont::Token& token) const
+                                          const InputDomainType& viskoresNotUsed(inputDomain),
+                                          viskores::Id viskoresNotUsed(inputRange),
+                                          viskores::Id outputRange,
+                                          viskores::cont::Token& token) const
   {
     ExecObjectFactoryType ExecutionObjectFactory = object.PrepareForOutput(outputRange);
     return ExecutionObjectFactory.PrepareForExecution(Device(), token);

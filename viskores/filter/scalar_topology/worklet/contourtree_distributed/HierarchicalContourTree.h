@@ -305,7 +305,8 @@ void HierarchicalContourTree<FieldType>::Initialize(
   // WARNING! WARNING! WARNING!  This is a departure from the treatment in the contour tree, where the last iteration to the NULL root was
   // treated as an implicit round.
   {
-    viskores::Id tempSizeVal = viskores::cont::ArrayGetValue(this->NumRounds, this->NumIterations) + 1;
+    viskores::Id tempSizeVal =
+      viskores::cont::ArrayGetValue(this->NumRounds, this->NumIterations) + 1;
     viskores::worklet::contourtree_augmented::IdArraySetValue(
       this->NumRounds, tree.NumIterations + 1, this->NumIterations);
     this->FirstSupernodePerIteration.resize(static_cast<std::size_t>(this->NumRounds + 1));
@@ -344,7 +345,8 @@ void HierarchicalContourTree<FieldType>::Initialize(
   this->Hyperparents.Allocate(tree.Hyperparents.GetNumberOfValues());
   {
     auto tempNSE = viskores::cont::ArrayHandleConstant<viskores::Id>(
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT, tree.Supernodes.GetNumberOfValues());
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      tree.Supernodes.GetNumberOfValues());
     viskores::cont::Algorithm::Copy(tempNSE, this->Super2Hypernode);
   }
   this->WhichRound.Allocate(tree.Supernodes.GetNumberOfValues());
@@ -360,8 +362,10 @@ void HierarchicalContourTree<FieldType>::Initialize(
 
   // we want to be able to search by global mesh index.  That means we need to have an index array, sorted indirectly on globalMeshIndex
   viskores::cont::Algorithm::Copy(
-    viskores::cont::ArrayHandleIndex(RegularNodeSortOrder.GetNumberOfValues()), RegularNodeSortOrder);
-  viskores::cont::Algorithm::Sort(RegularNodeSortOrder, PermuteComparator(this->RegularNodeGlobalIds));
+    viskores::cont::ArrayHandleIndex(RegularNodeSortOrder.GetNumberOfValues()),
+    RegularNodeSortOrder);
+  viskores::cont::Algorithm::Sort(RegularNodeSortOrder,
+                                  PermuteComparator(this->RegularNodeGlobalIds));
   viskores::cont::Algorithm::Copy(tree.Superparents, this->Superparents);
 
   // copy in the supernodes
@@ -369,17 +373,18 @@ void HierarchicalContourTree<FieldType>::Initialize(
   viskores::cont::Algorithm::Copy(tree.Superarcs, this->Superarcs);
   viskores::cont::Algorithm::Copy(tree.Hyperparents, this->Hyperparents);
 
-  viskores::cont::Algorithm::Copy(
-    viskores::cont::ArrayHandleConstant<viskores::Id>(numRounds, this->WhichRound.GetNumberOfValues()),
-    this->WhichRound);
+  viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(
+                                    numRounds, this->WhichRound.GetNumberOfValues()),
+                                  this->WhichRound);
   viskores::cont::Algorithm::Copy(tree.WhenTransferred, this->WhichIteration);
 
   // now set the regular to supernode array up: it's already been set to NO_SUCH_ELEMENT
   {
     auto regular2SupernodePermuted =
       viskores::cont::make_ArrayHandlePermutation(this->Supernodes, this->Regular2Supernode);
-    viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleIndex(this->Supernodes.GetNumberOfValues()),
-                                regular2SupernodePermuted);
+    viskores::cont::Algorithm::Copy(
+      viskores::cont::ArrayHandleIndex(this->Supernodes.GetNumberOfValues()),
+      regular2SupernodePermuted);
   }
   // copy in the hypernodes
   viskores::cont::Algorithm::Copy(tree.Hypernodes, this->Hypernodes);
@@ -389,8 +394,9 @@ void HierarchicalContourTree<FieldType>::Initialize(
   {
     auto super2HypernodePermuted =
       viskores::cont::make_ArrayHandlePermutation(this->Hypernodes, this->Super2Hypernode);
-    viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleIndex(this->Hypernodes.GetNumberOfValues()),
-                                super2HypernodePermuted);
+    viskores::cont::Algorithm::Copy(
+      viskores::cont::ArrayHandleIndex(this->Hypernodes.GetNumberOfValues()),
+      super2HypernodePermuted);
   }
   {
     auto initalizeSuperchildrenWorklet = InitalizeSuperchildrenWorklet();
@@ -451,14 +457,16 @@ std::string HierarchicalContourTree<FieldType>::SuperString(const viskores::Id s
   else
   {
     viskores::Id unmaskedSuperId = viskores::worklet::contourtree_augmented::MaskedIndex(superId);
-    viskores::Id tempSupernodeOfSuperId = viskores::cont::ArrayGetValue(unmaskedSuperId, this->Supernodes);
+    viskores::Id tempSupernodeOfSuperId =
+      viskores::cont::ArrayGetValue(unmaskedSuperId, this->Supernodes);
     resultStream << "Super ID:   ";
     viskores::worklet::contourtree_augmented::PrintIndexType(superId, resultStream);
     resultStream << "  Value: "
                  << viskores::cont::ArrayGetValue(tempSupernodeOfSuperId, this->DataValues);
     resultStream << " Global ID: ";
     viskores::worklet::contourtree_augmented::PrintIndexType(
-      viskores::cont::ArrayGetValue(tempSupernodeOfSuperId, this->RegularNodeGlobalIds), resultStream);
+      viskores::cont::ArrayGetValue(tempSupernodeOfSuperId, this->RegularNodeGlobalIds),
+      resultStream);
     resultStream << " Regular Id: ";
     viskores::worklet::contourtree_augmented::PrintIndexType(tempSupernodeOfSuperId, resultStream);
     resultStream << " Superarc:    ";
@@ -494,11 +502,14 @@ std::string HierarchicalContourTree<FieldType>::HyperString(const viskores::Id h
   else
   {
     viskores::Id unmaskedHyperId = viskores::worklet::contourtree_augmented::MaskedIndex(hyperId);
-    viskores::Id hypernodeOfHyperId = viskores::cont::ArrayGetValue(unmaskedHyperId, this->Hypernodes);
-    viskores::Id supernodeOfHyperId = viskores::cont::ArrayGetValue(hypernodeOfHyperId, this->Supernodes);
+    viskores::Id hypernodeOfHyperId =
+      viskores::cont::ArrayGetValue(unmaskedHyperId, this->Hypernodes);
+    viskores::Id supernodeOfHyperId =
+      viskores::cont::ArrayGetValue(hypernodeOfHyperId, this->Supernodes);
     resultStream << "Hyper Id:    ";
     viskores::worklet::contourtree_augmented::PrintIndexType(hyperId, resultStream);
-    resultStream << "  Value: " << viskores::cont::ArrayGetValue(supernodeOfHyperId, this->DataValues);
+    resultStream << "  Value: "
+                 << viskores::cont::ArrayGetValue(supernodeOfHyperId, this->DataValues);
     resultStream << " Global ID: ";
     viskores::worklet::contourtree_augmented::PrintIndexType(
       viskores::cont::ArrayGetValue(supernodeOfHyperId, this->RegularNodeGlobalIds), resultStream);
@@ -550,7 +561,8 @@ std::string HierarchicalContourTree<FieldType>::ProbeHyperPath(const viskores::I
                  << std::endl;
 
     // mask the hypertarget
-    viskores::Id maskedHypertarget = viskores::worklet::contourtree_augmented::MaskedIndex(hypertarget);
+    viskores::Id maskedHypertarget =
+      viskores::worklet::contourtree_augmented::MaskedIndex(hypertarget);
 
     // test for null superarc: can only be root or attachment point
     if (viskores::worklet::contourtree_augmented::NoSuchElement(hypertarget))
@@ -599,9 +611,11 @@ std::string HierarchicalContourTree<FieldType>::ProbeSuperPath(const viskores::I
                  << std::endl;
 
     // mask the supertarget
-    viskores::Id maskedSupertarget = viskores::worklet::contourtree_augmented::MaskedIndex(supertarget);
+    viskores::Id maskedSupertarget =
+      viskores::worklet::contourtree_augmented::MaskedIndex(supertarget);
     // and retrieve it's supertarget
-    viskores::Id nextSupertarget = viskores::cont::ArrayGetValue(maskedSupertarget, this->Superarcs);
+    viskores::Id nextSupertarget =
+      viskores::cont::ArrayGetValue(maskedSupertarget, this->Superarcs);
     viskores::Id maskedNextSupertarget =
       viskores::worklet::contourtree_augmented::MaskedIndex(nextSupertarget);
     resultStream << "Next target: " << this->SuperString(nextSupertarget) << std::endl;
@@ -796,8 +810,8 @@ std::string HierarchicalContourTree<FieldType>::DebugPrint(std::string message,
   resultStream << "----------------------------------------" << std::endl;
   resultStream << std::endl;
 
-  viskores::worklet::contourtree_augmented::PrintHeader(this->RegularNodeGlobalIds.GetNumberOfValues(),
-                                                    resultStream);
+  viskores::worklet::contourtree_augmented::PrintHeader(
+    this->RegularNodeGlobalIds.GetNumberOfValues(), resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Regular Nodes (global ID)", this->RegularNodeGlobalIds, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintValues(
@@ -810,7 +824,7 @@ std::string HierarchicalContourTree<FieldType>::DebugPrint(std::string message,
     "Supernode ID (if any)", this->Regular2Supernode, -1, resultStream);
   resultStream << std::endl;
   viskores::worklet::contourtree_augmented::PrintHeader(this->Supernodes.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Supernodes (regular index)", this->Supernodes, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
@@ -825,7 +839,7 @@ std::string HierarchicalContourTree<FieldType>::DebugPrint(std::string message,
     "Which Iteration", this->WhichIteration, -1, resultStream);
   resultStream << std::endl;
   viskores::worklet::contourtree_augmented::PrintHeader(this->Hypernodes.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "Hypernodes (supernode index)", this->Hypernodes, -1, resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
@@ -844,10 +858,11 @@ std::string HierarchicalContourTree<FieldType>::DebugPrint(std::string message,
     "nHypernodes In Round", this->NumHypernodesInRound, -1, resultStream);
   //resultStream << "Owned Regular Vertices: " << this->NumOwnedRegularVertices << std::endl;
   viskores::worklet::contourtree_augmented::PrintHeader(this->NumIterations.GetNumberOfValues(),
-                                                    resultStream);
+                                                        resultStream);
   viskores::worklet::contourtree_augmented::PrintIndices(
     "nIterations", this->NumIterations, -1, resultStream);
-  for (viskores::Id whichRound = 0; whichRound < this->NumIterations.GetNumberOfValues(); whichRound++)
+  for (viskores::Id whichRound = 0; whichRound < this->NumIterations.GetNumberOfValues();
+       whichRound++)
   { // per round
     resultStream << "Round " << whichRound << std::endl;
     viskores::worklet::contourtree_augmented::PrintHeader(
@@ -977,8 +992,8 @@ void HierarchicalContourTree<FieldType>::ConvertSTLVecOfHandlesToVISKORESCompone
 
   for (viskores::Id i = 0; i < static_cast<viskores::Id>(inputVec.size()); ++i)
   {
-    numComponentsWritePortal.Set(i,
-                                 static_cast<viskores::IdComponent>(inputVec[i].GetNumberOfValues()));
+    numComponentsWritePortal.Set(
+      i, static_cast<viskores::IdComponent>(inputVec[i].GetNumberOfValues()));
   }
 
   // Convert to offsets and store in output array
@@ -1002,15 +1017,15 @@ void HierarchicalContourTree<FieldType>::AddToVISKORESDataSet(viskores::cont::Da
 {
   // Create data set from output
   viskores::cont::Field regularNodeGlobalIdsField("RegularNodeGlobalIds",
-                                              viskores::cont::Field::Association::WholeDataSet,
-                                              this->RegularNodeGlobalIds);
+                                                  viskores::cont::Field::Association::WholeDataSet,
+                                                  this->RegularNodeGlobalIds);
   ds.AddField(regularNodeGlobalIdsField);
   viskores::cont::Field dataValuesField(
     "DataValues", viskores::cont::Field::Association::WholeDataSet, this->DataValues);
   ds.AddField(dataValuesField);
   viskores::cont::Field regularNodeSortOrderField("RegularNodeSortOrder",
-                                              viskores::cont::Field::Association::WholeDataSet,
-                                              this->RegularNodeSortOrder);
+                                                  viskores::cont::Field::Association::WholeDataSet,
+                                                  this->RegularNodeSortOrder);
   ds.AddField(regularNodeSortOrderField);
   viskores::cont::Field regular2SupernodeField(
     "Regular2Supernode", viskores::cont::Field::Association::WholeDataSet, this->Regular2Supernode);
@@ -1040,8 +1055,8 @@ void HierarchicalContourTree<FieldType>::AddToVISKORESDataSet(viskores::cont::Da
   viskores::worklet::contourtree_augmented::IdArrayType firstSupernodePerIterationComponents;
   viskores::cont::ArrayHandle<viskores::Id> firstSupernodePerIterationOffsets;
   ConvertSTLVecOfHandlesToVISKORESComponentsAndOffsetsArray(FirstSupernodePerIteration,
-                                                        firstSupernodePerIterationComponents,
-                                                        firstSupernodePerIterationOffsets);
+                                                            firstSupernodePerIterationComponents,
+                                                            firstSupernodePerIterationOffsets);
   viskores::cont::Field firstSupernodePerIterationComponentsField(
     "FirstSupernodePerIterationComponents",
     viskores::cont::Field::Association::WholeDataSet,

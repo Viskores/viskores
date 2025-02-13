@@ -82,8 +82,8 @@ public:
                      static_cast<viskores::FloatDefault>(bounds.Y.Min),
                      static_cast<viskores::FloatDefault>(bounds.Z.Min) };
     this->Spacing = (viskores::Vec3f{ static_cast<viskores::FloatDefault>(bounds.X.Length()),
-                                  static_cast<viskores::FloatDefault>(bounds.Y.Length()),
-                                  static_cast<viskores::FloatDefault>(bounds.Z.Length()) } /
+                                      static_cast<viskores::FloatDefault>(bounds.Y.Length()),
+                                      static_cast<viskores::FloatDefault>(bounds.Z.Length()) } /
                      Dimension);
   }
   VISKORES_CONT viskores::Bounds GetBounds() const

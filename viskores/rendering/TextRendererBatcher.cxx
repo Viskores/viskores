@@ -42,12 +42,12 @@ struct RenderBitmapFont : public viskores::worklet::WorkletMapField
 
   template <typename ColorBufferPortal, typename FontTexture, typename DepthBufferPortal>
   VISKORES_EXEC void operator()(const viskores::Vec4f_32& screenCoords,
-                            const viskores::Vec4f_32& textureCoords,
-                            const viskores::Vec4f_32& color,
-                            const viskores::Float32& depth,
-                            const FontTexture& fontTexture,
-                            ColorBufferPortal& colorBuffer,
-                            DepthBufferPortal& depthBuffer) const
+                                const viskores::Vec4f_32& textureCoords,
+                                const viskores::Vec4f_32& color,
+                                const viskores::Float32& depth,
+                                const FontTexture& fontTexture,
+                                ColorBufferPortal& colorBuffer,
+                                DepthBufferPortal& depthBuffer) const
   {
     viskores::Float32 x0 = Clamp(screenCoords[0], 0.0f, static_cast<viskores::Float32>(Width - 1));
     viskores::Float32 x1 = Clamp(screenCoords[2], 0.0f, static_cast<viskores::Float32>(Width - 1));
@@ -72,15 +72,15 @@ struct RenderBitmapFont : public viskores::worklet::WorkletMapField
 
   template <typename ColorBufferPortal, typename DepthBufferPortal>
   VISKORES_EXEC void Plot(viskores::Float32 x,
-                      viskores::Float32 y,
-                      viskores::Float32 intensity,
-                      viskores::Vec4f_32 color,
-                      viskores::Float32 depth,
-                      ColorBufferPortal& colorBuffer,
-                      DepthBufferPortal& depthBuffer) const
+                          viskores::Float32 y,
+                          viskores::Float32 intensity,
+                          viskores::Vec4f_32 color,
+                          viskores::Float32 depth,
+                          ColorBufferPortal& colorBuffer,
+                          DepthBufferPortal& depthBuffer) const
   {
-    viskores::Id index =
-      static_cast<viskores::Id>(viskores::Round(y)) * Width + static_cast<viskores::Id>(viskores::Round(x));
+    viskores::Id index = static_cast<viskores::Id>(viskores::Round(y)) * Width +
+      static_cast<viskores::Id>(viskores::Round(x));
     viskores::Vec4f_32 srcColor = colorBuffer.Get(index);
     viskores::Float32 currentDepth = depthBuffer.Get(index);
     bool swap = depth > currentDepth;

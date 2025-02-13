@@ -101,7 +101,7 @@ public:
   viskores::Id nRows;   // (input) number of rows in 3D
   viskores::Id nCols;   // (input) number of cols in 3D
   viskores::Id nSlices; // (input) number of cols in 3D
-  bool ascending;   // (input) ascending or descending (join or split tree)
+  bool ascending;       // (input) ascending or descending (join or split tree)
 
   // Constructor
   VISKORES_EXEC_CONT
@@ -119,12 +119,12 @@ public:
   //template<typename InFieldPortalType>
   template <typename InFieldPortalType, typename NeighbourTableType, typename CaseTableType>
   VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                            const viskores::Id& nbrMask,
-                            const InFieldPortalType& arcArray,
-                            const NeighbourTableType& neighbourTable,
-                            const CaseTableType& caseTable,
-                            viskores::Id& outdegree,
-                            viskores::Id& isCritical) const
+                                const viskores::Id& nbrMask,
+                                const InFieldPortalType& arcArray,
+                                const NeighbourTableType& neighbourTable,
+                                const CaseTableType& caseTable,
+                                viskores::Id& outdegree,
+                                viskores::Id& isCritical) const
   {
     // get the row and column
     viskores::Id row = VERTEX_ROW_3D(vertex, nRows, nCols);

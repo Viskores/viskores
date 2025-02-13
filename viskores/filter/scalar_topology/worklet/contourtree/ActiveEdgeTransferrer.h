@@ -111,15 +111,15 @@ public:
 
   template <typename InFieldPortalType, typename InOutFieldPortalType, typename OutFieldPortalType>
   VISKORES_EXEC void operator()(const viskores::Id& vertexID,
-                            const viskores::Id& newPosition,
-                            const viskores::Id& newOutdegree,
-                            const InFieldPortalType& activeEdges,
-                            const InFieldPortalType& prunesTo,
-                            const InOutFieldPortalType& firstEdge,
-                            const InOutFieldPortalType& outdegree,
-                            const InOutFieldPortalType& chainExtremum,
-                            const InOutFieldPortalType& edgeFar,
-                            const OutFieldPortalType& newActiveEdges) const
+                                const viskores::Id& newPosition,
+                                const viskores::Id& newOutdegree,
+                                const InFieldPortalType& activeEdges,
+                                const InFieldPortalType& prunesTo,
+                                const InOutFieldPortalType& firstEdge,
+                                const InOutFieldPortalType& outdegree,
+                                const InOutFieldPortalType& chainExtremum,
+                                const InOutFieldPortalType& edgeFar,
+                                const OutFieldPortalType& newActiveEdges) const
   {
     // retrieve actual vertex ID & first edge
     viskores::Id edgeFirst = firstEdge.Get(vertexID);

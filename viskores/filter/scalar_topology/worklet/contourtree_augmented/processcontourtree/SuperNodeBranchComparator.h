@@ -123,8 +123,8 @@ public:
   {
   }
 
-  VISKORES_CONT SuperNodeBranchComparatorImpl PrepareForExecution(viskores::cont::DeviceAdapterId device,
-                                                              viskores::cont::Token& token)
+  VISKORES_CONT SuperNodeBranchComparatorImpl
+  PrepareForExecution(viskores::cont::DeviceAdapterId device, viskores::cont::Token& token)
   {
     return SuperNodeBranchComparatorImpl(this->WhichBranch, this->Supernodes, device, token);
   }

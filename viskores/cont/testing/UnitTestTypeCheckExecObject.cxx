@@ -35,15 +35,17 @@ void TestCheckExecObject()
   using viskores::cont::arg::TypeCheckTagExecObject;
 
   VISKORES_TEST_ASSERT((TypeCheck<TypeCheckTagExecObject, TestExecutionObject>::value),
-                   "Type check failed.");
+                       "Type check failed.");
 
   VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagExecObject, TestNotExecutionObject>::value),
-                   "Type check failed.");
+                       "Type check failed.");
 
-  VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagExecObject, viskores::Id>::value), "Type check failed.");
+  VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagExecObject, viskores::Id>::value),
+                       "Type check failed.");
 
-  VISKORES_TEST_ASSERT(!(TypeCheck<TypeCheckTagExecObject, viskores::cont::ArrayHandle<viskores::Id>>::value),
-                   "Type check failed.");
+  VISKORES_TEST_ASSERT(
+    !(TypeCheck<TypeCheckTagExecObject, viskores::cont::ArrayHandle<viskores::Id>>::value),
+    "Type check failed.");
 }
 
 } // anonymous namespace

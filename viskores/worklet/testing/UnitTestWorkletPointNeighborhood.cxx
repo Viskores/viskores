@@ -41,8 +41,8 @@ struct MaxNeighborValue : public viskores::worklet::WorkletPointNeighborhood
 
   template <typename FieldIn, typename FieldOut>
   VISKORES_EXEC void operator()(const viskores::exec::BoundaryState& boundary,
-                            const viskores::exec::FieldNeighborhood<FieldIn>& inputField,
-                            FieldOut& output) const
+                                const viskores::exec::FieldNeighborhood<FieldIn>& inputField,
+                                FieldOut& output) const
   {
     using ValueType = typename FieldIn::ValueType;
 
@@ -188,21 +188,22 @@ struct ScatterUniformNeighbor : public viskores::worklet::WorkletPointNeighborho
 // every other item in the input field.
 struct Subsample : public viskores::worklet::WorkletPointNeighborhood
 {
-  using ControlSignature =
-    void(WholeCellSetIn<viskores::TopologyElementTagPoint, viskores::TopologyElementTagCell> inputTopology,
-         WholeArrayIn inputField,
-         CellSetIn outputTopology,
-         FieldOut sampledField);
+  using ControlSignature = void(WholeCellSetIn<viskores::TopologyElementTagPoint,
+                                               viskores::TopologyElementTagCell> inputTopology,
+                                WholeArrayIn inputField,
+                                CellSetIn outputTopology,
+                                FieldOut sampledField);
   using ExecutionSignature = void(_1, _2, Boundary, _4);
   using InputDomain = _3;
 
   template <typename InFieldPortal, typename T>
-  VISKORES_EXEC void operator()(const viskores::exec::ConnectivityStructured<viskores::TopologyElementTagPoint,
-                                                                     viskores::TopologyElementTagCell,
-                                                                     3>& inputTopology,
-                            const InFieldPortal& inFieldPortal,
-                            const viskores::exec::BoundaryState& boundary,
-                            T& sample) const
+  VISKORES_EXEC void operator()(
+    const viskores::exec::ConnectivityStructured<viskores::TopologyElementTagPoint,
+                                                 viskores::TopologyElementTagCell,
+                                                 3>& inputTopology,
+    const InFieldPortal& inFieldPortal,
+    const viskores::exec::BoundaryState& boundary,
+    T& sample) const
   {
     sample =
       inFieldPortal.Get(inputTopology.LogicalToFlatVisitIndex(2 * boundary.GetCenterIndex()));
@@ -238,7 +239,8 @@ static void TestMaxNeighborValue()
 
   viskores::cont::testing::MakeTestDataSet testDataSet;
 
-  viskores::worklet::DispatcherPointNeighborhood<::test_pointneighborhood::MaxNeighborValue> dispatcher;
+  viskores::worklet::DispatcherPointNeighborhood<::test_pointneighborhood::MaxNeighborValue>
+    dispatcher;
 
   viskores::cont::ArrayHandle<viskores::Float32> output;
 
@@ -250,12 +252,12 @@ static void TestMaxNeighborValue()
                     output);
 
   viskores::Float32 expected3D[18] = { 110.3f, 120.3f, 120.3f, 110.3f, 120.3f, 120.3f,
-                                   170.5f, 180.5f, 180.5f, 170.5f, 180.5f, 180.5f,
-                                   170.5f, 180.5f, 180.5f, 170.5f, 180.5f, 180.5f };
+                                       170.5f, 180.5f, 180.5f, 170.5f, 180.5f, 180.5f,
+                                       170.5f, 180.5f, 180.5f, 170.5f, 180.5f, 180.5f };
   for (int i = 0; i < 18; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(output.ReadPortal().Get(i), expected3D[i]),
-                     "Wrong result for MaxNeighborValue worklet");
+                         "Wrong result for MaxNeighborValue worklet");
   }
 
   viskores::cont::DataSet dataSet2D = testDataSet.Make2DUniformDataSet1();
@@ -266,14 +268,14 @@ static void TestMaxNeighborValue()
                     output);
 
   viskores::Float32 expected2D[25] = { 100.0f, 100.0f, 78.0f, 49.0f, 33.0f, 100.0f, 100.0f,
-                                   78.0f,  50.0f,  48.0f, 94.0f, 94.0f, 91.0f,  91.0f,
-                                   91.0f,  52.0f,  52.0f, 91.0f, 91.0f, 91.0f,  12.0f,
-                                   51.0f,  91.0f,  91.0f, 91.0f };
+                                       78.0f,  50.0f,  48.0f, 94.0f, 94.0f, 91.0f,  91.0f,
+                                       91.0f,  52.0f,  52.0f, 91.0f, 91.0f, 91.0f,  12.0f,
+                                       51.0f,  91.0f,  91.0f, 91.0f };
 
   for (int i = 0; i < 25; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(output.ReadPortal().Get(i), expected2D[i]),
-                     "Wrong result for MaxNeighborValue worklet");
+                         "Wrong result for MaxNeighborValue worklet");
   }
 }
 

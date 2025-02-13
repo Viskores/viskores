@@ -50,12 +50,14 @@ struct TryArrayInOutType
     }
 
     using ArrayHandleType = viskores::cont::ArrayHandle<T>;
-    ArrayHandleType handle = viskores::cont::make_ArrayHandle(array, ARRAY_SIZE, viskores::CopyFlag::Off);
+    ArrayHandleType handle =
+      viskores::cont::make_ArrayHandle(array, ARRAY_SIZE, viskores::CopyFlag::Off);
 
     using PortalType = typename ArrayHandleType::WritePortalType;
 
-    viskores::cont::arg::Transport<viskores::cont::arg::TransportTagArrayInOut, ArrayHandleType, Device>
-      transport;
+    viskores::cont::arg::
+      Transport<viskores::cont::arg::TransportTagArrayInOut, ArrayHandleType, Device>
+        transport;
 
     viskores::cont::Token token;
 
@@ -67,13 +69,13 @@ struct TryArrayInOutType
 
     typename ArrayHandleType::ReadPortalType portal = handle.ReadPortal();
     VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,
-                     "Portal has wrong number of values.");
+                         "Portal has wrong number of values.");
     for (viskores::Id index = 0; index < ARRAY_SIZE; index++)
     {
       T expectedValue = TestValue(index, T()) + TestValue(index, T());
       T retrievedValue = portal.Get(index);
       VISKORES_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
-                       "Functor did not modify in place.");
+                           "Functor did not modify in place.");
     }
   }
 };

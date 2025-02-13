@@ -110,7 +110,9 @@ void CastAndCall(const viskores::cont::CellSetSingleType<ConnectivityStorageTag>
 /// Since the type is already known no deduction is needed.
 /// This specialization is used to simplify numerous worklet algorithms
 template <typename T, typename S, typename U, typename Functor, typename... Args>
-void CastAndCall(const viskores::cont::CellSetExplicit<T, S, U>& cellset, Functor&& f, Args&&... args)
+void CastAndCall(const viskores::cont::CellSetExplicit<T, S, U>& cellset,
+                 Functor&& f,
+                 Args&&... args)
 {
   f(cellset, std::forward<Args>(args)...);
 }

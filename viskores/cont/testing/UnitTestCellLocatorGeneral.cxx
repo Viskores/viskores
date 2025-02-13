@@ -100,9 +100,9 @@ public:
 
   template <typename CellShapeTagType, typename PointsVecType>
   VISKORES_EXEC void operator()(CellShapeTagType cellShape,
-                            PointsVecType points,
-                            const PointType& pc,
-                            PointType& wc) const
+                                PointsVecType points,
+                                const PointType& pc,
+                                PointType& wc) const
   {
     auto status = viskores::exec::CellInterpolate(points, pc, cellShape, wc);
     if (status != viskores::ErrorCode::Success)
@@ -160,9 +160,9 @@ public:
 
   template <typename LocatorType>
   VISKORES_EXEC void operator()(const viskores::Vec3f& point,
-                            const LocatorType& locator,
-                            viskores::Id& cellId,
-                            viskores::Vec3f& pcoords) const
+                                const LocatorType& locator,
+                                viskores::Id& cellId,
+                                viskores::Vec3f& pcoords) const
   {
     viskores::ErrorCode status = locator.FindCell(point, cellId, pcoords);
     if (status != viskores::ErrorCode::Success)
@@ -184,10 +184,10 @@ public:
 
   template <typename LocatorType>
   VISKORES_EXEC void operator()(const viskores::Vec3f& point,
-                            const LocatorType& locator,
-                            viskores::Id& cellId,
-                            viskores::Vec3f& pcoords,
-                            typename LocatorType::LastCell& lastCell) const
+                                const LocatorType& locator,
+                                viskores::Id& cellId,
+                                viskores::Vec3f& pcoords,
+                                typename LocatorType::LastCell& lastCell) const
   {
     viskores::ErrorCode status = locator.FindCell(point, cellId, pcoords, lastCell);
     if (status != viskores::ErrorCode::Success)
@@ -195,12 +195,13 @@ public:
   }
 };
 
-void TestLastCell(viskores::cont::CellLocatorGeneral& locator,
-                  viskores::Id numPoints,
-                  viskores::cont::ArrayHandle<viskores::cont::CellLocatorGeneral::LastCell>& lastCell,
-                  const viskores::cont::ArrayHandle<PointType>& points,
-                  const viskores::cont::ArrayHandle<viskores::Id>& expCellIds,
-                  const viskores::cont::ArrayHandle<PointType>& expPCoords)
+void TestLastCell(
+  viskores::cont::CellLocatorGeneral& locator,
+  viskores::Id numPoints,
+  viskores::cont::ArrayHandle<viskores::cont::CellLocatorGeneral::LastCell>& lastCell,
+  const viskores::cont::ArrayHandle<PointType>& points,
+  const viskores::cont::ArrayHandle<viskores::Id>& expCellIds,
+  const viskores::cont::ArrayHandle<PointType>& expPCoords)
 
 {
   viskores::cont::ArrayHandle<viskores::Id> cellIds;
@@ -218,11 +219,12 @@ void TestLastCell(viskores::cont::CellLocatorGeneral& locator,
   {
     VISKORES_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
     VISKORES_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
-                     "Incorrect parameteric coordinates");
+                         "Incorrect parameteric coordinates");
   }
 }
 
-void TestWithDataSet(viskores::cont::CellLocatorGeneral& locator, const viskores::cont::DataSet& dataset)
+void TestWithDataSet(viskores::cont::CellLocatorGeneral& locator,
+                     const viskores::cont::DataSet& dataset)
 {
   locator.SetCellSet(dataset.GetCellSet());
   locator.SetCoordinates(dataset.GetCoordinateSystem());
@@ -247,7 +249,7 @@ void TestWithDataSet(viskores::cont::CellLocatorGeneral& locator, const viskores
   {
     VISKORES_TEST_ASSERT(cellIdPortal.Get(i) == expCellIdsPortal.Get(i), "Incorrect cell ids");
     VISKORES_TEST_ASSERT(test_equal(pcoordsPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
-                     "Incorrect parameteric coordinates");
+                         "Incorrect parameteric coordinates");
   }
 
   //Test locator using lastCell

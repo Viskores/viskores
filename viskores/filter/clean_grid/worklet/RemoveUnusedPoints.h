@@ -45,7 +45,8 @@ public:
     using ExecutionSignature = void(_1, _2);
 
     template <typename PointMaskPortalType>
-    VISKORES_EXEC void operator()(viskores::Id pointIndex, const PointMaskPortalType& pointMask) const
+    VISKORES_EXEC void operator()(viskores::Id pointIndex,
+                                  const PointMaskPortalType& pointMask) const
     {
       pointMask.Set(pointIndex, 1);
     }
@@ -62,7 +63,8 @@ public:
     using ExecutionSignature = _3(_1, _2);
 
     template <typename IndexMapPortalType>
-    VISKORES_EXEC viskores::Id operator()(viskores::Id pointIndex, const IndexMapPortalType& indexPortal) const
+    VISKORES_EXEC viskores::Id operator()(viskores::Id pointIndex,
+                                          const IndexMapPortalType& indexPortal) const
     {
       return indexPortal.Get(pointIndex);
     }
@@ -74,7 +76,8 @@ public:
 
   template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
   VISKORES_CONT explicit RemoveUnusedPoints(
-    const viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& inCellSet)
+    const viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>&
+      inCellSet)
   {
     this->FindPointsStart();
     this->FindPoints(inCellSet);
@@ -91,7 +94,8 @@ public:
   ///
   template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
   VISKORES_CONT void FindPoints(
-    const viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& inCellSet)
+    const viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>&
+      inCellSet)
   {
     if (this->MaskArray.GetNumberOfValues() < 1)
     {
@@ -123,10 +127,11 @@ public:
   /// the new reduced point arrays.
   ///
   template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
-  VISKORES_CONT
-    viskores::cont::CellSetExplicit<ShapeStorage, VISKORES_DEFAULT_CONNECTIVITY_STORAGE_TAG, OffsetsStorage>
-    MapCellSet(const viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>&
-                 inCellSet) const
+  VISKORES_CONT viskores::cont::
+    CellSetExplicit<ShapeStorage, VISKORES_DEFAULT_CONNECTIVITY_STORAGE_TAG, OffsetsStorage>
+    MapCellSet(
+      const viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>&
+        inCellSet) const
   {
     VISKORES_ASSERT(this->PointScatter);
 
@@ -151,13 +156,13 @@ public:
             typename ConnectivityStorage,
             typename OffsetsStorage,
             typename MapStorage>
-  VISKORES_CONT static viskores::cont::CellSetExplicit<ShapeStorage,
-                                               VISKORES_DEFAULT_CONNECTIVITY_STORAGE_TAG,
-                                               OffsetsStorage>
-  MapCellSet(
-    const viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& inCellSet,
-    const viskores::cont::ArrayHandle<viskores::Id, MapStorage>& inputToOutputPointMap,
-    viskores::Id numberOfPoints)
+  VISKORES_CONT static viskores::cont::
+    CellSetExplicit<ShapeStorage, VISKORES_DEFAULT_CONNECTIVITY_STORAGE_TAG, OffsetsStorage>
+    MapCellSet(
+      const viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>&
+        inCellSet,
+      const viskores::cont::ArrayHandle<viskores::Id, MapStorage>& inputToOutputPointMap,
+      viskores::Id numberOfPoints)
   {
     using VisitTopology = viskores::TopologyElementTagCell;
     using IncidentTopology = viskores::TopologyElementTagPoint;
@@ -171,7 +176,8 @@ public:
                       inputToOutputPointMap,
                       newConnectivityArray);
 
-    viskores::cont::CellSetExplicit<ShapeStorage, NewConnectivityStorage, OffsetsStorage> outCellSet;
+    viskores::cont::CellSetExplicit<ShapeStorage, NewConnectivityStorage, OffsetsStorage>
+      outCellSet;
     outCellSet.Fill(numberOfPoints,
                     inCellSet.GetShapesArray(VisitTopology(), IncidentTopology()),
                     newConnectivityArray,

@@ -16,6 +16,6 @@ int UnitTestSerialDeviceAdapter(int argc, char* argv[])
 {
   auto& tracker = viskores::cont::GetRuntimeDeviceTracker();
   tracker.ForceDevice(viskores::cont::DeviceAdapterTagSerial{});
-  return viskores::cont::testing::TestingDeviceAdapter<viskores::cont::DeviceAdapterTagSerial>::Run(argc,
-                                                                                            argv);
+  return viskores::cont::testing::TestingDeviceAdapter<viskores::cont::DeviceAdapterTagSerial>::Run(
+    argc, argv);
 }

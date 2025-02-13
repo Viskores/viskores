@@ -31,9 +31,9 @@ inline viskores::Id ComputeFlatIndex(const viskores::Id3& idx, const viskores::I
 
 VISKORES_EXEC
 inline viskores::Id3 GetFlatIndex(const viskores::Vec3f& pt,
-                              const viskores::Vec3f& origin,
-                              const viskores::Vec3f& invSpacing,
-                              const viskores::Id3& maxCellIds)
+                                  const viskores::Vec3f& origin,
+                                  const viskores::Vec3f& invSpacing,
+                                  const viskores::Id3& maxCellIds)
 {
   auto temp = pt - origin;
   temp = temp * invSpacing;
@@ -44,11 +44,11 @@ inline viskores::Id3 GetFlatIndex(const viskores::Vec3f& pt,
 
 template <typename PointsVecType>
 VISKORES_EXEC inline void MinMaxIndicesForCellPoints(const PointsVecType& points,
-                                                 const viskores::Vec3f& origin,
-                                                 const viskores::Vec3f& invSpacing,
-                                                 const viskores::Id3& maxCellIds,
-                                                 viskores::Id3& minIdx,
-                                                 viskores::Id3& maxIdx)
+                                                     const viskores::Vec3f& origin,
+                                                     const viskores::Vec3f& invSpacing,
+                                                     const viskores::Id3& maxCellIds,
+                                                     viskores::Id3& minIdx,
+                                                     viskores::Id3& maxIdx)
 {
   auto numPoints = viskores::VecTraits<PointsVecType>::GetNumberOfComponents(points);
 
@@ -121,11 +121,11 @@ public:
 
   template <typename PointsVecType, typename ResultArrayType, typename CellCountType>
   VISKORES_EXEC void operator()(const viskores::Id& cellIdx,
-                            const PointsVecType& points,
-                            const viskores::Id& start,
-                            ResultArrayType& binsPerCell,
-                            ResultArrayType& cellIds,
-                            CellCountType cellCounts) const
+                                const PointsVecType& points,
+                                const viskores::Id& start,
+                                ResultArrayType& binsPerCell,
+                                ResultArrayType& cellIds,
+                                CellCountType cellCounts) const
   {
     viskores::Id3 idx000, idx111;
     MinMaxIndicesForCellPoints(
@@ -290,23 +290,23 @@ struct CellLocatorUniformBins::MakeExecObject
 {
   template <typename CellSetType>
   VISKORES_CONT void operator()(const CellSetType& cellSet,
-                            viskores::cont::DeviceAdapterId device,
-                            viskores::cont::Token& token,
-                            const CellLocatorUniformBins& self,
-                            ExecObjType& execObject) const
+                                viskores::cont::DeviceAdapterId device,
+                                viskores::cont::Token& token,
+                                const CellLocatorUniformBins& self,
+                                ExecObjType& execObject) const
   {
     using CellStructureType = CellSetContToExec<CellSetType>;
 
     execObject = viskores::exec::CellLocatorUniformBins<CellStructureType>(self.UniformDims,
-                                                                       self.Origin,
-                                                                       self.MaxPoint,
-                                                                       self.InvSpacing,
-                                                                       self.MaxCellIds,
-                                                                       self.CellIds,
-                                                                       cellSet,
-                                                                       self.GetCoordinates(),
-                                                                       device,
-                                                                       token);
+                                                                           self.Origin,
+                                                                           self.MaxPoint,
+                                                                           self.InvSpacing,
+                                                                           self.MaxCellIds,
+                                                                           self.CellIds,
+                                                                           cellSet,
+                                                                           self.GetCoordinates(),
+                                                                           device,
+                                                                           token);
   }
 };
 
@@ -316,7 +316,8 @@ CellLocatorUniformBins::ExecObjType CellLocatorUniformBins::PrepareForExecution(
 {
   this->Update();
   ExecObjType execObject;
-  viskores::cont::CastAndCall(this->GetCellSet(), MakeExecObject{}, device, token, *this, execObject);
+  viskores::cont::CastAndCall(
+    this->GetCellSet(), MakeExecObject{}, device, token, *this, execObject);
   return execObject;
 }
 

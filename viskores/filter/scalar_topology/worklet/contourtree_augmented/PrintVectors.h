@@ -274,7 +274,10 @@ inline void PrintIndices(std::string label,
 
 // routine for printing index arrays
 template <typename T>
-inline void PrintArray(std::string label, const T& iVec, viskores::Id nArray, std::ostream& outStream)
+inline void PrintArray(std::string label,
+                       const T& iVec,
+                       viskores::Id nArray,
+                       std::ostream& outStream)
 { // PrintArray()
   // -1 means full size
   if (nArray == -1)

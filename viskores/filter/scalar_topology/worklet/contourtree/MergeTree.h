@@ -265,7 +265,8 @@ void MergeTree<T, StorageType>::ComputeAugmentedSuperarcs()
 // once saddle & extrema are set for a given set of vertices, the merge arcs can be
 // computed for any subset of those vertices that contains all of the critical points
 template <typename T, typename StorageType>
-void MergeTree<T, StorageType>::ComputeAugmentedArcs(viskores::cont::ArrayHandle<viskores::Id>& vertices)
+void MergeTree<T, StorageType>::ComputeAugmentedArcs(
+  viskores::cont::ArrayHandle<viskores::Id>& vertices)
 {
 #ifdef DEBUG_FUNCTION_ENTRY
   std::cout << std::endl;
@@ -281,8 +282,8 @@ void MergeTree<T, StorageType>::ComputeAugmentedArcs(viskores::cont::ArrayHandle
   viskores::cont::ArrayCopy(vertices, vertexSorter);
 
   // We sort by pseudo-maximum to establish the extents
-  viskores::cont::Algorithm::Sort(vertexSorter,
-                              VertexMergeComparator<T, StorageType>(values, extrema, isJoinTree));
+  viskores::cont::Algorithm::Sort(
+    vertexSorter, VertexMergeComparator<T, StorageType>(values, extrema, isJoinTree));
 #ifdef DEBUG_PRINT
   DebugPrint("Sorting Complete");
 #endif
@@ -292,7 +293,8 @@ void MergeTree<T, StorageType>::ComputeAugmentedArcs(viskores::cont::ArrayHandle
 
   viskores::cont::ArrayHandleIndex critVertexIndexArray(nCriticalVerts);
   JoinArcConnector joinArcConnector;
-  viskores::worklet::DispatcherMapField<JoinArcConnector> joinArcConnectorDispatcher(joinArcConnector);
+  viskores::worklet::DispatcherMapField<JoinArcConnector> joinArcConnectorDispatcher(
+    joinArcConnector);
 
   joinArcConnectorDispatcher.Invoke(critVertexIndexArray, // input
                                     vertexSorter,         // input (whole array)
