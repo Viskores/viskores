@@ -1,0 +1,17 @@
+deploy:sync-spack:
+  environment: spackio
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: on_success
+    - when: never
+  image: ghcr.io/viskores/sync:20250212
+  script: >
+    .gitlab/config/SpackCIBridge.py
+    viskores/viskores
+    git@ssh.gitlab.spack.io:viskores/viskores.git
+    https://gitlab.spack.io/
+    viskores/viskores
+    --prereq-check=format
+    --status-context="Frank CI (sanitizers)"
+  dependencies: []
+  needs: []
