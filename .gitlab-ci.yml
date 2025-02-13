@@ -246,4 +246,3 @@ include:
   - local: '/.gitlab/ci/ubuntu1804.yml'
   - local: '/.gitlab/ci/ubuntu2004.yml'
   - local: '/.gitlab/ci/ubuntu2204.yml'
-  - local: '/.gitlab/ci/windows10.yml'
