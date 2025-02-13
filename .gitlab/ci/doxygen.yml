@@ -33,7 +33,7 @@
   interruptible: true
   variables:
     CMAKE_BUILD_TYPE: Release
-    VTKM_SETTINGS: "tbb+openmp+mpi+shared+docs"
+    VISKORES_SETTINGS: "tbb+openmp+mpi+shared+docs"
 
 build:docs-continuous:
   script:

@@ -1,0 +1,53 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
+FROM docker.io/nvidia/cuda:12.2.2-devel-ubuntu22.04
+LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
+
+# Base dependencies for building VTK-m projects
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      curl \
+      g++ \
+      git \
+      git-lfs \
+      make \
+      ninja-build \
+      pkg-config \
+      && \
+    rm -rf /var/lib/apt/lists/*
+
+# kokkos backend requires cmake 3.18
+RUN mkdir /opt/cmake/ && \
+    curl -L https://github.com/Kitware/CMake/releases/download/v3.21.2/cmake-3.21.2-Linux-x86_64.sh > cmake-3.21.2-Linux-x86_64.sh && \
+    sh cmake-3.21.2-Linux-x86_64.sh --prefix=/opt/cmake/ --exclude-subdir --skip-license && \
+    rm cmake-3.21.2-Linux-x86_64.sh && \
+    ln -s /opt/cmake/bin/ctest /opt/cmake/bin/ctest-latest
+
+ENV PATH "/opt/cmake/bin:${PATH}"
+
+# Build and install Kokkos
+ENV KOKKOS_VERSION=4.3.01
+RUN curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz | tar -xzf - && \
+    cmake -S kokkos-$KOKKOS_VERSION -B build \
+       -DCMAKE_BUILD_TYPE=Release \
+       -DCMAKE_CXX_FLAGS=-fPIC \
+       -DCMAKE_CXX_STANDARD=17 \
+       -DKokkos_ENABLE_CUDA=ON \
+       -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \
+       -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+       -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=OFF \
+       -DKokkos_ENABLE_CUDA_UVM=ON \
+       -DKokkos_ARCH_AMPERE80=ON \
+       -DCMAKE_PREFIX_INSTALL=/opt/kokkos/$KOKKOS_VERSION &&\
+    cmake --build build -j -v && \
+    cmake --install build && \
+    rm -rf build kokkos-$KOKKOS_VERSION

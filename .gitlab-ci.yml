@@ -15,67 +15,62 @@
     GIT_CLONE_PATH: $CI_BUILDS_DIR/gitlab-kitware-sciviz-ci
 
 .centos7: &centos7
-  image: "kitware/vtkm:ci-centos7_cuda10.2-20210128"
+  image: "ghcr.io/viskores/viskores:ci-centos7-cuda10.2-20250221"
   extends:
     - .docker_image
 
 .centos8: &centos8
-  image: "kitware/vtkm:ci-centos8-20201016"
+  image: "ghcr.io/viskores/viskores:ci-centos8-20250221"
   extends:
     - .docker_image
 
 .rhel8: &rhel8
-  image: "kitware/vtkm:ci-rhel8_cuda10.2-20201016"
+  image: "ghcr.io/viskores/viskores:ci-rhel8-cuda10.2-20250221"
   extends:
     - .docker_image
 
-.ubuntu1604: &ubuntu1604
-  image: "kitware/vtkm:ci-ubuntu1604-20230906"
-  extends:
-    - .docker_image
-
-.ubuntu1604_cuda: &ubuntu1604_cuda
-  image: "kitware/vtkm:ci-ubuntu1604_cuda9.2-20201016"
-  extends:
-    - .docker_image
-
-.ubuntu1804: &ubuntu1804
-  image: "kitware/vtkm:ci-ubuntu1804-20230906"
-  extends:
-    - .docker_image
-
-.ubuntu1804_cuda: &ubuntu1804_cuda
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11-20230906"
-  extends:
-    - .docker_image
-
-.ubuntu1804_cuda_kokkos: &ubuntu1804_cuda_kokkos
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20230906"
+.ubuntu2004: &ubuntu2204
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-20250221"
   extends:
     - .docker_image
 
 .ubuntu2004_doxygen: &ubuntu2004_doxygen
-  image: "kitware/vtkm:ci-doxygen-20231020"
+  image: "ghcr.io/viskores/viskores:ci-doxygen-20250221"
   extends:
     - .docker_image
 
-.ubuntu2004: &ubuntu2004
-  image: "kitware/vtkm:ci-ubuntu2004-20230906"
+.ubuntu2004_cuda: &ubuntu2004_cuda
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2004-cuda-20250221"
   extends:
     - .docker_image
 
 .ubuntu2004_kokkos: &ubuntu2004_kokkos
-  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20240119"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2004-kokkos-20250221"
+  extends:
+    - .docker_image
+
+.ubuntu2204: &ubuntu2204
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-20250221"
+  extends:
+    - .docker_image
+
+.ubuntu2204_cuda: &ubuntu2204_cuda
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-cuda-20250221"
+  extends:
+    - .docker_image
+
+.ubuntu2204_cuda_kokkos: &ubuntu2204_cuda_kokkos
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-cuda-kokkos-20250221"
   extends:
     - .docker_image
 
 .ubuntu2204_hip_kokkos: &ubuntu2204_hip_kokkos
-  image: "kitware/vtkm:ci-ubuntu2204_hip_kokkos-20240625"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-hip-kokkos-20250221"
   extends:
     - .docker_image
 
 .opensuse: &opensuse
-  image: "kitware/vtkm:ci-opensuse-20231121"
+  image: "ghcr.io/viskores/viskores:ci-opensuse-20250221"
   extends:
     - .docker_image
 
@@ -83,27 +78,27 @@
   rules:
     - if: '$CI_MERGE_REQUEST_ID'
       when: on_success
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m"'
+    - if: '$CI_PROJECT_PATH == "viskores/viskores"'
       when: on_success
     - when: never
 
 .run_only_merge_requests: &run_only_merge_requests
   rules:
-    - if: '$CI_MERGE_REQUEST_ID && $CI_PROJECT_PATH == "vtk/vtk-m"'
+    - if: '$CI_MERGE_REQUEST_ID && $CI_PROJECT_PATH == "viskores/viskores"'
       when: on_success
     - when: never
 
 .run_scheduled: &run_scheduled
   rules:
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_TAG'
+    - if: '$CI_PROJECT_PATH == "viskores/viskores" && $CI_COMMIT_TAG'
       when: on_success
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PROJECT_PATH == "viskores/viskores" && $CI_PIPELINE_SOURCE == "schedule"'
       when: on_success
     - when: never
 
 .run_upstream_branches: &run_upstream_branches
   rules:
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_MERGE_REQUEST_ID == null'
+    - if: '$CI_PROJECT_PATH == "viskores/viskores" && $CI_MERGE_REQUEST_ID == null'
       when: on_success
     - when: never
 
@@ -115,7 +110,7 @@
 
 # General Longer Term Tasks:
 # - Setup clang tidy as sub-pipeline
-# - Setup a machine to replicate the issue in https://gitlab.kitware.com/vtk/vtk-m/-/issues/447
+# - Setup a machine to replicate the issue in https://gitlab.kitware.com/viskores/viskores/-/issues/447
 #   Note: Centos7 doesn't work as they ship separate standard library
 #   headers for each version. We will have to figure out something else
 #   like using spack or building llvm/clang from source
@@ -202,7 +197,7 @@ stages:
       # The artifacts of the build.
       - build/bin/
       - build/include/
-      - build/vtkm/thirdparty/diy/vtkmdiy/
+      - build/viskores/thirdparty/viskores/viskoresdiy/
       - build/lib/
       - build/config/
 
@@ -233,16 +228,11 @@ stages:
     reports:
       junit: build/junit.xml
 
-
 include:
-  - local: '/.gitlab/ci/centos7.yml'
-  - local: '/.gitlab/ci/centos8.yml'
-  - local: '/.gitlab/ci/doxygen.yml'
+  #- local: '/.gitlab/ci/doxygen.yml'
   - local: '/.gitlab/ci/frontier.yml'
-  - local: '/.gitlab/ci/macos.yml'
-  - local: '/.gitlab/ci/opensuse.yml'
-  - local: '/.gitlab/ci/rhel8.yml'
-  - local: '/.gitlab/ci/ubuntu1604.yml'
-  - local: '/.gitlab/ci/ubuntu1804.yml'
+  #- local: '/.gitlab/ci/macos.yml'
+  #- local: '/.gitlab/ci/opensuse.yml'
   - local: '/.gitlab/ci/ubuntu2004.yml'
   - local: '/.gitlab/ci/ubuntu2204.yml'
+  - local: '/.gitlab/ci/sync-spack.yml'

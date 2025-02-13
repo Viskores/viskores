@@ -24,7 +24,7 @@ build:rhel8:
     - .run_automatically
   variables:
     CMAKE_GENERATOR: "Unix Makefiles"
-    VTKM_SETTINGS: "serial+shared+64bit_floats+32bit_ids"
+    VISKORES_SETTINGS: "serial+shared+64bit_floats+32bit_ids"
 
 test:rhel8:
   tags:
@@ -53,7 +53,7 @@ build:rhel8_vtk_types:
     - .run_automatically
   variables:
     CMAKE_GENERATOR: "Unix Makefiles"
-    VTKM_SETTINGS: "serial+vtk_types"
+    VISKORES_SETTINGS: "serial+vtk_types"
 
 test:rhel8_vtk_types:
   tags:

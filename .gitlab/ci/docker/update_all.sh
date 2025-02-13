@@ -12,64 +12,25 @@
 ##
 ##=============================================================================
 
-set -e
-set -x
+set -ex
 
 # data is expected to be a string of the form YYYYMMDD
 readonly date="$(date +%Y%m%d)"
 
-cd centos7/cuda10.2
-sudo docker build -t kitware/viskores:ci-centos7_cuda10.2-$date .
-cd ../..
+podman build -t ghcr.io/viskores/viskores:ci-ubuntu2004-$date -f ubuntu2004.dockerfile .
+podman build -t ghcr.io/viskores/viskores:ci-doxygen-$date -f ubuntu2004_doxygen.dockerfile .
+podman build -t ghcr.io/viskores/viskores:ci-ubuntu2004-cuda18.8-$date -f ubuntu2004_cuda11.8.dockerfile .
+podman build -t ghcr.io/viskores/viskores:ci-ubuntu2004-kokkos-$date -f ubuntu2004_kokkos.dockerfile .
+podman build -t ghcr.io/viskores/viskores:ci-ubuntu2204-$date -f ubuntu2204.dockerfile .
+podman build -t ghcr.io/viskores/viskores:ci-ubuntu2204-cuda12.2-$date -f ubuntu2204_cuda12.2.dockerfile .
+podman build -t ghcr.io/viskores/viskores:ci-ubuntu2204-kokkos-cuda-$date -f ubuntu2204_kokkos_cuda.dockerfile .
+podman build -t ghcr.io/viskores/viskores:ci-ubuntu2204-kokkos-hip-$date -f ubuntu2204_kokkos_hip.dockerfile .
 
-cd centos8/base
-sudo docker build -t kitware/viskores:ci-centos8-$date .
-cd ../..
-
-cd rhel8/cuda10.2
-sudo docker build -t kitware/viskores:ci-rhel8_cuda10.2-$date .
-cd ../..
-
-cd opensuse
-sudo docker build -t kitware/viskores:ci-opensuse-$date .
-cd ..
-
-cd ubuntu1604/base
-sudo docker build -t kitware/viskores:ci-ubuntu1604-$date .
-cd ../..
-
-cd ubuntu1604/cuda9.2
-sudo docker build -t kitware/viskores:ci-ubuntu1604_cuda9.2-$date .
-cd ../..
-
-cd ubuntu1804/base
-sudo docker build -t kitware/viskores:ci-ubuntu1804-$date .
-cd ../..
-
-cd ubuntu1804/cuda
-sudo docker build -t kitware/viskores:ci-ubuntu1804_cuda11.1-$date .
-cd ../..
-
-cd ubuntu1804/kokkos-cuda
-sudo docker build -t kitware/viskores:ci-ubuntu1804_cuda11_kokkos-$date .
-cd ../..
-
-cd ubuntu2004/base/
-sudo docker build -t kitware/viskores:ci-ubuntu2004-$date .
-cd ../..
-
-cd ubuntu2004/doxygen/
-sudo docker build -t kitware/viskores:ci-doxygen-$date .
-cd ../..
-
-cd ubuntu2004/kokkos
-sudo docker build -t kitware/viskores:ci-ubuntu2004_kokkos-$date .
-cd ../..
-
-cd ubuntu2004/kokkos-hip
-sudo docker build -t kitware/viskores:ci-ubuntu2004_hip_kokkos-$date .
-cd ../..
-
-# sudo docker login --username=<docker_hub_name>
-# sudo docker push kitware/viskores
-# sudo docker system prune
+podman push ghcr.io/viskores/viskores:ci-ubuntu2004-$date
+podman push ghcr.io/viskores/viskores:ci-doxygen-$date
+podman push ghcr.io/viskores/viskores:ci-ubuntu2004-cuda18.8-$date
+podman push ghcr.io/viskores/viskores:ci-ubuntu2004-kokkos-$date
+podman push ghcr.io/viskores/viskores:ci-ubuntu2204-$date
+podman push ghcr.io/viskores/viskores:ci-ubuntu2204-cuda12.2-$date
+podman push ghcr.io/viskores/viskores:ci-ubuntu2204-kokkos-cuda-$date
+podman push ghcr.io/viskores/viskores:ci-ubuntu2204-kokkos-hip-$date

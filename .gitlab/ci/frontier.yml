@@ -51,7 +51,7 @@ default:
       git-lfs
       ninja
     OLCF_SERVICE_ACCOUNT: "ums033_auser"
-    VTKM_SETTINGS: kokkos+hip+gfx90a+frontier+ccache+no_rendering
+    VISKORES_SETTINGS: kokkos+hip+gfx90a+frontier+ccache+no_rendering
   interruptible: true
 
 setup_modules:

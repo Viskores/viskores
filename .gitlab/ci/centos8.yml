@@ -25,7 +25,7 @@ build:centos8_sanitizer:
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: "Unix Makefiles"
-    VTKM_SETTINGS: "serial+shared+openmp+asan+leak"
+    VISKORES_SETTINGS: "serial+shared+openmp+asan+leak"
 
 test:centos8_sanitizer:
   tags:
@@ -64,4 +64,4 @@ build:centos8:
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: "Unix Makefiles"
-    VTKM_SETTINGS: "serial+no_testing+min_build"
+    VISKORES_SETTINGS: "serial+no_testing+min_build"

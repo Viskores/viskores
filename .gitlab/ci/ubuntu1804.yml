@@ -27,7 +27,7 @@ build:ubuntu1804_gcc9:
     CC: "gcc-9"
     CXX: "g++-9"
     CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5"
+    VISKORES_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5"
 
 test:ubuntu1804_gcc9:
   tags:
@@ -64,7 +64,7 @@ build:ubuntu1804_gcc7:
     CC: "gcc-7"
     CXX: "g++-7"
     CUDAHOSTCXX: "g++-7"
-    VTKM_SETTINGS: "benchmarks+cuda+turing+mpi+64bit_floats+shared"
+    VISKORES_SETTINGS: "benchmarks+cuda+turing+mpi+64bit_floats+shared"
 
 test:ubuntu1804_gcc7:
   tags:
@@ -101,7 +101,7 @@ build:ubuntu1804_clang_cuda:
     CC: "clang-8"
     CXX: "clang++-8"
     CUDAHOSTCXX: "clang++-8"
-    VTKM_SETTINGS: "cuda+pascal+tbb+examples+shared"
+    VISKORES_SETTINGS: "cuda+pascal+tbb+examples+shared"
 
 test:ubuntu1804_clang_cuda:
   tags:
@@ -134,7 +134,7 @@ build:ubuntu1804_gcc6:
   variables:
     CC: "gcc-6"
     CXX: "g++-6"
-    VTKM_SETTINGS: "openmp+shared+examples"
+    VISKORES_SETTINGS: "openmp+shared+examples"
 
 test:ubuntu1804_gcc6:
   tags:
@@ -169,7 +169,7 @@ build:ubuntu1804_clang8:
     CC: "clang-8"
     CXX: "clang++-8"
     CMAKE_BUILD_TYPE: Debug
-    VTKM_SETTINGS: "tbb+shared+examples"
+    VISKORES_SETTINGS: "tbb+shared+examples"
 
 test:ubuntu1804_clang8:
   tags:
@@ -200,7 +200,7 @@ build:ubuntu1804_kokkos37:
   variables:
     CMAKE_GENERATOR: "Ninja"
     CMAKE_BUILD_TYPE: Release
-    VTKM_SETTINGS: "benchmarks+kokkos+turing+64bit_floats+shared"
+    VISKORES_SETTINGS: "benchmarks+kokkos+turing+64bit_floats+shared"
 
 test:ubuntu1804_kokkos37:
   tags:
@@ -229,7 +229,7 @@ build:ubuntu1804_cuda_perftest:
     - .run_automatically
   variables:
     CMAKE_BUILD_TYPE: Release
-    VTKM_SETTINGS: "benchmarks+ampere+perftest+cuda+mpi+shared"
+    VISKORES_SETTINGS: "benchmarks+ampere+perftest+cuda+mpi+shared"
 
 test:ubuntu1804_cuda_perftest:
   tags:

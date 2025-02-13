@@ -1,0 +1,26 @@
+#  This file is used to define the GitLab CI/CD pipeline for the ADIOS2 project.
+default:
+  interruptible: true
+  tags:
+    - medium
+    - uo
+    - public
+    - x86_64
+
+deploy:sync-spack:
+  environment: spackio
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: on_success
+    - when: never
+  image: ghcr.io/viskores/sync:20250212
+  script: >
+    .gitlab/ci/config/SpackCIBridge.py
+    viskores/viskores
+    git@ssh.gitlab.spack.io:viskores/viskores.git
+    https://gitlab.spack.io/
+    viskores/viskores
+    --prereq-check=format
+    --status-context="Frank CI"
+  dependencies: []
+  needs: []
