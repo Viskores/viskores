@@ -16,8 +16,12 @@ LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 # Base dependencies for building VTK-m projects
 RUN apt-get update && apt-get install -y --no-install-recommends \
       clang \
+      clang-11 \
+      clang-12 \
       curl \
       g++ \
+      g++-10 \
+      g++-11 \
       git \
       libmpich-dev \
       libomp-dev \

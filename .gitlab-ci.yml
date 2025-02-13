@@ -12,70 +12,72 @@
 
 .docker_image: &docker_image
   variables:
-    GIT_CLONE_PATH: $CI_BUILDS_DIR/gitlab-kitware-sciviz-ci
+    GIT_SUBMODULE_STRATEGY: recursive
 
 .centos7: &centos7
-  image: "ghcr.io/viskores/viskores:ci-centos7-cuda10.2-20250221"
+  image: "ghcr.io/viskores/viskores:ci-centos7-cuda10.2-20250221-a"
   extends:
     - .docker_image
 
 .centos8: &centos8
-  image: "ghcr.io/viskores/viskores:ci-centos8-20250221"
+  image: "ghcr.io/viskores/viskores:ci-centos8-20250221-a"
   extends:
     - .docker_image
 
 .rhel8: &rhel8
-  image: "ghcr.io/viskores/viskores:ci-rhel8-cuda10.2-20250221"
+  image: "ghcr.io/viskores/viskores:ci-rhel8-cuda10.2-20250221-a"
   extends:
     - .docker_image
 
 .ubuntu2004: &ubuntu2204
-  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-20250221"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2004-20250221-a"
   extends:
     - .docker_image
 
 .ubuntu2004_doxygen: &ubuntu2004_doxygen
-  image: "ghcr.io/viskores/viskores:ci-doxygen-20250221"
+  image: "ghcr.io/viskores/viskores:ci-doxygen-20250221-a"
   extends:
     - .docker_image
 
 .ubuntu2004_cuda: &ubuntu2004_cuda
-  image: "ghcr.io/viskores/viskores:ci-ubuntu2004-cuda-20250221"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2004-cuda11.8-20250221-a"
   extends:
     - .docker_image
 
 .ubuntu2004_kokkos: &ubuntu2004_kokkos
-  image: "ghcr.io/viskores/viskores:ci-ubuntu2004-kokkos-20250221"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2004-kokkos-20250221-a"
   extends:
     - .docker_image
 
 .ubuntu2204: &ubuntu2204
-  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-20250221"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-20250221-a"
   extends:
     - .docker_image
 
 .ubuntu2204_cuda: &ubuntu2204_cuda
-  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-cuda-20250221"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-cuda12.2-20250221-a"
   extends:
     - .docker_image
 
 .ubuntu2204_cuda_kokkos: &ubuntu2204_cuda_kokkos
-  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-cuda-kokkos-20250221"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-cuda12.2-kokkos-20250221-a"
   extends:
     - .docker_image
 
 .ubuntu2204_hip_kokkos: &ubuntu2204_hip_kokkos
-  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-hip-kokkos-20250221"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-hip-kokkos-20250221-a"
   extends:
     - .docker_image
 
 .opensuse: &opensuse
-  image: "ghcr.io/viskores/viskores:ci-opensuse-20250221"
+  image: "ghcr.io/viskores/viskores:ci-opensuse-20250221-a"
   extends:
     - .docker_image
 
 .run_automatically: &run_automatically
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
     - if: '$CI_MERGE_REQUEST_ID'
       when: on_success
     - if: '$CI_PROJECT_PATH == "viskores/viskores"'

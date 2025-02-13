@@ -109,6 +109,12 @@ foreach(option IN LISTS options)
   elseif(ampere STREQUAL option)
     set(viskores_cuda_arch "ampere")
 
+  elseif(ada_lovelace STREQUAL option)
+    set(viskores_cuda_arch "ada_lovelace")
+
+  elseif(hopper STREQUAL option)
+    set(viskores_cuda_arch "hopper")
+
   elseif(hip STREQUAL option)
     if(CMAKE_VERSION VERSION_LESS_EQUAL 3.20)
       message(FATAL_ERROR "Viskores requires cmake > 3.20 to enable HIP support")

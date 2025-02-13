@@ -100,9 +100,9 @@ build:ubuntu2204_gcc11:
     - .cmake_build_linux
     - .run_automatically
   variables:
-    CC: "gcc-7"
-    CXX: "g++-7"
-    CUDAHOSTCXX: "g++-7"
+    CC: "gcc-11"
+    CXX: "g++-11"
+    CUDAHOSTCXX: "g++-11"
     VISKORES_SETTINGS: "benchmarks+cuda+hopper+mpi+64bit_floats+shared"
 
 test:ubuntu2204_gcc11:
@@ -149,7 +149,7 @@ test:ubuntu2204_clang11_cuda:
     - .run_automatically
     # - .run_upstream_branches
   needs:
-    - build:ubuntu2204_clang_cuda
+    - build:ubuntu2204_clang11_cuda
 
 # Build on ubuntu2204 with OpenMP and test on ubuntu2204
 # Uses gcc 6.5
