@@ -1,0 +1,53 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+      - release*
+  pull_request:
+    branches:
+      - main
+      - release*
+jobs:
+  windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019]
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      CMAKE_GENERATOR: Ninja
+      CMAKE_BUILD_TYPE: Release
+      VISKORES_SETTINGS: serial
+      VCVARSPLATFORM: x64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set general vars
+        run: |
+          "CI_COMMIT_SHA=$env:GITHUB_SHA" >> $env:GITHUB_ENV
+          "CI_PROJECT_DIR=$env:GITHUB_WORKSPACE" >> $env:GITHUB_ENV
+          "$pwd.Path\.gitlab" >> $env:GITHUB_PATH
+
+      - name: Set windows 2019 vars
+        if: ${{ matrix.os == 'windows-2019' }}
+        run: |
+          "VCVARSALL=C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvarsall.bat" >> $env:GITHUB_ENV
+          "VCVARSVERSION=14.42.34433" >> $env:GITHUB_ENV
+
+      - name: Configure
+        run: |
+          cmake --version
+          cmake -V -P .gitlab/ci/config/ninja.cmake
+          Invoke-Expression -Command .gitlab/ci/config/vcvarsall.ps1
+          Get-ChildItem env:
+          cmake -V -P .github/github_ci_setup.cmake
+          ctest -VV -S .gitlab/ci/ctest_configure.cmake
+
+      - name: Build
+        run: ctest -VV -S .gitlab/ci/ctest_build.cmake
+
+      - name: Test
+        run: ctest -VV -S .gitlab/ci/ctest_test.cmake
