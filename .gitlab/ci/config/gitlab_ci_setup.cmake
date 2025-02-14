@@ -65,7 +65,7 @@ if("$ENV{VISKORES_CI_NIGHTLY}" STREQUAL "TRUE")
 endif()
 
 # In Make, default parallelism to number of cores.
-if(CTEST_CMAKE_GENERATOR STREQUAL "Unix Makefiles")
+if(NOT CTEST_CMAKE_GENERATOR STREQUAL "Ninja")
   include(ProcessorCount)
   ProcessorCount(nproc)
 
