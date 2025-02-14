@@ -12,7 +12,7 @@
 
 $erroractionpreference = "stop"
 
-cmd /c "`"$env:VCVARSALL`" $VCVARSPLATFORM -vcvars_ver=$VCVARSVERSION & set" |
+cmd /c """$env:VCVARSALL"" $env:VCVARSPLATFORM -vcvars_ver=$env:VCVARSVERSION && set" |
 foreach {
     if ($_ -match "=") {
         $v = $_.split("=")

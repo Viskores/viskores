@@ -10,13 +10,8 @@
 ##
 ##=============================================================================
 
-if (NOT DEFINED "ENV{GITLAB_CI}")
-  message(FATAL_ERROR
-    "This script assumes it is being run inside of GitLab-CI")
-endif ()
-
 # Set up the source and build paths.
-set(CTEST_SOURCE_DIRECTORY "$ENV{CI_PROJECT_DIR}")
+set(CTEST_SOURCE_DIRECTORY "$ENV{GITHUB_WORKSPACE}")
 set(CTEST_BINARY_DIRECTORY "${CTEST_SOURCE_DIRECTORY}/build")
 
 if ("$ENV{VISKORES_SETTINGS}" STREQUAL "")
@@ -37,7 +32,7 @@ endif ()
 string(TOLOWER ${CTEST_BUILD_CONFIGURATION} build_type)
 set(CTEST_BUILD_NAME "${build_type}+$ENV{VISKORES_SETTINGS}")
 
-set(site_name "$ENV{CI_JOB_NAME}")
+set(site_name "$ENV{GITHUB_JOB}")
 string(REPLACE "docs:" "docs_" site_name "${site_name}")
 string(REPLACE "build" "" site_name "${site_name}")
 string(REPLACE "test" "" site_name "${site_name}")
@@ -54,9 +49,9 @@ endif ()
 
 # Determine the track to submit to.
 set(CTEST_TRACK "merge-requests")
-if("$ENV{CI_COMMIT_REF_NAME}" STREQUAL "master")
+if("$ENV{GITHUB_REF_NAME}" STREQUAL "master")
   set(CTEST_TRACK "master")
-elseif("$ENV{CI_COMMIT_REF_NAME}" STREQUAL "release")
+elseif("$ENV{GITHUB_REF_NAME}" STREQUAL "release")
   set(CTEST_TRACK "release")
 endif()
 
@@ -65,7 +60,7 @@ if("$ENV{VISKORES_CI_NIGHTLY}" STREQUAL "TRUE")
 endif()
 
 # In Make, default parallelism to number of cores.
-if(NOT CTEST_CMAKE_GENERATOR STREQUAL "Ninja")
+if(CTEST_CMAKE_GENERATOR STREQUAL "Unix Makefiles")
   include(ProcessorCount)
   ProcessorCount(nproc)
 
