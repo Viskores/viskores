@@ -48,7 +48,7 @@ The environments are as follows.
 These dual programming environments are partially a convenience to isolate the application from the execution of the worklets and are partially a necessity to support GPU languages with host and device environments.
 The control and execution environments are logically equivalent to the host and device environments, respectively, in CUDA and other associated GPU languages.
 
-.. figure:: images/ViskoresEnvironments.png
+.. figure::  ../../data/users-guide/images/ViskoresEnvironments.png
    :width: 100%
    :name: fig:ViskoresDiagram
 

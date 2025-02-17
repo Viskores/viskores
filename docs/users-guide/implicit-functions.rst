@@ -37,7 +37,7 @@ These are set with the :func:`viskores::Plane::SetOrigin` and :func:`viskores::P
 Planes extend infinitely from the origin point in the direction perpendicular form the Normal.
 An example :class:`viskores::Plane` is shown in :numref:`fig:ImplicitPlane`.
 
-.. figure:: images/ImplicitPlane.png
+.. figure::  ../../data/users-guide/images/ImplicitPlane.png
    :width: 2.5in
    :name: fig:ImplicitPlane
 
@@ -59,7 +59,7 @@ Sphere
 The :class:`viskores::Sphere` is defined by a center location and a radius, which are set with the :func:`viskores::Sphere::SetCenter` and :func:`viskores::Sphere::SetRadius` methods, respectively.
 An example :class:`viskores::Sphere` is shown in :numref:`fig:ImplicitSphere`.
 
-.. figure:: images/ImplicitSphere.png
+.. figure::  ../../data/users-guide/images/ImplicitSphere.png
    :width: 2.5in
    :name: fig:ImplicitSphere
 
@@ -82,7 +82,7 @@ Cylinder
 The cylinder is defined with a center point, a direction of the center axis, and a radius, which are set with :func:`viskores::Cylinder::SetCenter`, :func:`viskores::Cylinder::SetAxis`, and :func:`viskores::Cylinder::SetRadius`, respectively.
 An example :class:`viskores::Cylinder` is shown in :numref:`fig:ImplicitCylinder` with set origin, radius, and axis values.
 
-.. figure:: images/ImplicitCylinder.png
+.. figure::  ../../data/users-guide/images/ImplicitCylinder.png
    :width: 2.5in
    :name: fig:ImplicitCylinder
 
@@ -107,7 +107,7 @@ The :class:`viskores::Box` is the shape enclosed by intersecting axis-parallel l
 Alternately, the :class:`viskores::Box` can be specified with a :class:`viskores::Bounds` object using the :func:`viskores::Box::SetBounds` method.
 An example :class:`viskores::Box` is shown in :numref:`fig:ImplicitBox`.
 
-.. figure:: images/ImplicitBox.png
+.. figure::  ../../data/users-guide/images/ImplicitBox.png
    :width: 2.5in
    :name: fig:ImplicitBox
 
@@ -134,7 +134,7 @@ Alternately, the :class:`viskores::Frustum` can be defined by the 8 points at th
 The points given to :func:`viskores::Frustum::CreateFromPoints` must be in hex-cell order where the first four points are assumed to be a plane, and the last four points are assumed to be a plane.
 An example :class:`viskores::Frustum` is shown in :numref:`fig:ImplicitFrustum`.
 
-.. figure:: images/ImplicitFrustum.png
+.. figure::  ../../data/users-guide/images/ImplicitFrustum.png
    :width: 2.5in
    :name: fig:ImplicitFrustum
 

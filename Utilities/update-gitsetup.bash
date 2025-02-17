@@ -18,7 +18,6 @@ README
 git-gitlab-push
 setup-gitlab
 setup-hooks
-setup-lfs
 setup-ssh
 setup-upstream
 setup-user

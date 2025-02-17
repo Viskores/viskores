@@ -26,7 +26,7 @@ Cell shapes can be specified with either a tag (defined with a struct with a nam
 These shape tags and identifiers are defined in :file:`viskores/CellShape.h` and declared in the ``viskores`` namespace (because they can be used in either the control or the execution environment).
 :numref:`fig:CellShapes` gives both the identifier and the tag names.
 
-.. figure:: images/CellConnections.png
+.. figure::  ../../data/users-guide/images/CellConnections.png
    :width: 100%
    :name: fig:CellShapes
 
@@ -220,7 +220,7 @@ Most cell shapes can be broken into subelements.
 Likewise, 3D cells have loops of edges that form *faces* that encase the cell.
 :numref:`fig:CellConstituents` demonstrates the relationship of these constituent elements for some example cell shapes.
 
-.. figure:: images/CellConstituents.png
+.. figure::  ../../data/users-guide/images/CellConstituents.png
    :width: 50%
    :name: fig:CellConstituents
 
