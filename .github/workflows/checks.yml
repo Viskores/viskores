@@ -10,7 +10,6 @@ on:
       - release*
 jobs:
   format:
-    if: needs.git_checks.outputs.num_code_changes > 0
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/viskores/format:20250212
