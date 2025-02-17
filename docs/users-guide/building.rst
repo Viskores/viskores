@@ -84,7 +84,7 @@ The following example shows the steps for the case where the |Viskores| source i
    cmake-gui ../viskores-v2.1.0
 
 .. _fig:CMakeGUI:
-.. figure:: images/CMakeGUIBoth.png
+.. figure::  ../../data/users-guide/images/CMakeGUIBoth.png
    :width: 100%
    :align: center
 

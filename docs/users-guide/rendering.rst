@@ -199,7 +199,7 @@ This is done by calling the :func:`viskores::rendering::View::Paint` method.
 
 Putting together :numref:`ex:ConstructView`, :numref:`ex:ViewColors`, and :numref:`ex:PaintView`, the final render of a view looks like that in :numref:`fig:ExampleRendering`.
 
-.. figure:: images/BasicRendering.png
+.. figure::  ../../data/users-guide/images/BasicRendering.png
    :width: 100%
    :name: fig:ExampleRendering
 
@@ -244,7 +244,7 @@ Alternatively, perhaps you wish to render just the points of mesh.
 These mappers respectively render the images shown in :numref:`fig:AlternateMappers`.
 Other mappers, such as those that can render translucent volumes, are also available.
 
-.. figure:: images/AlternateRendering.png
+.. figure::  ../../data/users-guide/images/AlternateRendering.png
    :width: 100%
    :name: fig:AlternateMappers
 
@@ -336,7 +336,7 @@ This region is specified by calling :func:`viskores::rendering::Camera::SetViewR
 This method takes the left, right, bottom, and top of the region to view.
 Typically these are set to the range of the geometry in world space as shown in :numref:`fig:CameraViewRange2D`.
 
-.. figure:: images/CameraViewRange2D.png
+.. figure::  ../../data/users-guide/images/CameraViewRange2D.png
    :width: 100%
    :name: fig:CameraViewRange2D
 
@@ -366,7 +366,7 @@ The direction the camera is facing is specified by giving a position to focus on
 This is called either the "look at" point or the focal point and is specified with the :func:`viskores::rendering::Camera::SetLookAt` method.
 :numref:`fig:CameraPositionOrientation3D` shows the relationship between the position and look at points.
 
-.. figure:: images/CameraPositionOrientation.png
+.. figure::  ../../data/users-guide/images/CameraPositionOrientation.png
    :width: 100%
    :name: fig:CameraPositionOrientation3D
 
@@ -424,7 +424,7 @@ Positive values move the camera to the right whereas negative values move the ca
 Both :func:`viskores::rendering::Camera::Elevation` and :func:`viskores::rendering::Camera::Azimuth` specify the amount of rotation in terms of degrees.
 :numref:`fig:CameraMovement` shows the relative movements of :func:`viskores::rendering::Camera::Elevation` and :func:`viskores::rendering::Camera::Azimuth`.
 
-.. figure:: images/CameraMovement.png
+.. figure::  ../../data/users-guide/images/CameraMovement.png
    :width: 100%
    :name: fig:CameraMovement
 

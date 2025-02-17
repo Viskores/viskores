@@ -133,7 +133,7 @@ The shapes that |Viskores| currently supports are listed in :numref:`fig:CreateE
 Each shape is identified using either a numeric identifier, provided by |Viskores| with identifiers of the form ``viskores::CELL_SHAPE_*`` or special tag structures of the form ``viskores::CellSetTag*``.
 Cell shapes are discussed in detail in :chapref:`working-with-cells:Working with Cells`.
 
-.. figure:: images/CellConnections.png
+.. figure::  ../../data/users-guide/images/CellConnections.png
    :width: 100%
    :name: fig:CreateExplicitMeshesCellShapes
 
@@ -175,7 +175,7 @@ Cell shapes are discussed in detail in :chapref:`working-with-cells:Working with
       |                                              | |CellConnectionsPyramid|                     |                                              |
       +----------------------------------------------+----------------------------------------------+----------------------------------------------+
 
-.. figure:: images/ExplicitCellConnections.png
+.. figure::  ../../data/users-guide/images/ExplicitCellConnections.png
    :width: 100%
    :name: fig:ExplicitMesh
 
@@ -325,7 +325,7 @@ Cell sets are returned from a data set wrapped in a :class:`viskores::cont::Unkn
 The arrangement of these points, edges, and faces is defined by the *shape* of the cell, which prescribes a specific ordering of each.
 The basic cell shapes provided by |Viskores| are discussed in detail in :chapref:`working-with-cells:Working with Cells`.
 
-.. figure:: images/CellConstituents.png
+.. figure::  ../../data/users-guide/images/CellConstituents.png
    :width: 50%
    :name: fig:CellTopology
 
@@ -356,7 +356,7 @@ Structured Cell Sets
 The number of points in a :class:`viskores::cont::CellSetStructured` is implicitly :math:`i \times j \times k` and the number of cells is implicitly :math:`(i-1) \times (j-1) \times (k-1)` (for 3D grids).
 :numref:`fig:CellSetStructured` demonstrates this arrangement.
 
-.. figure:: images/StructuredCellSet.png
+.. figure::  ../../data/users-guide/images/StructuredCellSet.png
    :width: 100%
    :name: fig:CellSetStructured
 
@@ -390,7 +390,7 @@ Explicit Cell Sets
 The types of cell sets are listed in :numref:`fig:ExplicitCellSetShapes`.
 
 
-.. figure:: images/CellConnections.png
+.. figure::  ../../data/users-guide/images/CellConnections.png
    :width: 100%
    :name: fig:ExplicitCellSetShapes
 
@@ -403,7 +403,7 @@ The second array has a sequence of point indices that make up each cell.
 The third array identifies an offset into the second array where the point indices for each cell is found plus an extra entry at the end set to the size of the second array.
 :numref:`fig:CellSetExplicit` shows a simple example of an explicit cell set.
 
-.. figure:: images/ExplicitCellConnections.png
+.. figure::  ../../data/users-guide/images/ExplicitCellConnections.png
    :width: 100%
    :name: fig:CellSetExplicit
 
@@ -460,7 +460,7 @@ Cell Set Extrude
 .. doxygenclass:: viskores::cont::CellSetExtrude
    :members:
 
-.. figure:: images/ExtrudedCellSet.png
+.. figure::  ../../data/users-guide/images/ExtrudedCellSet.png
    :width: 100%
    :name: fig:CellSetExtruded
 

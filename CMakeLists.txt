@@ -291,13 +291,12 @@ if (VISKORES_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
   add_compile_definitions(DEBUG_PRINT)
 endif()
 #-----------------------------------------------------------------------------
-# We need to check and see if git lfs is installed so that test data will
-# be available for use
+# We need to check and see if the git submodule has been correctly cloned.
 if (Viskores_ENABLE_TESTING)
   file(STRINGS "${Viskores_SOURCE_DIR}/data/data/sentinel-data" sentinel_data LIMIT_COUNT 1)
   if (NOT sentinel_data STREQUAL "-- DO NOT MODIFY THIS LINE --")
     message(WARNING
-      "Testing is enabled, but the data is not available. Use git lfs in order "
+      "Testing is enabled, but the data is not available. Use git submodule in order "
       "to obtain the testing data.")
     set(Viskores_ENABLE_TESTING off)
   endif()

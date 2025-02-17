@@ -386,7 +386,7 @@ When a reduce by key worklet is invoked, all identical keys are collected and th
 Each worklet invocation is given a |Veclike| containing all values associated with the unique key.
 Reduce by key worklets are very useful for combining like items such as shared topology elements or coincident points.
 
-.. figure:: images/ReduceByKeys.png
+.. figure::  ../../data/users-guide/images/ReduceByKeys.png
    :width: 4in
    :name: fig:ReduceByKey
 

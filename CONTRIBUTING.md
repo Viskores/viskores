@@ -32,24 +32,14 @@ Before you begin, perform initial setup:
     This will prompt for your GitLab user name and configure a remote
     called `gitlab` to refer to it.
 
-5.  (Required to use Git LFS.)
-    [Using the SSH URL for the origin remote] is needed for Git LFS to work.
-    Do not forget to run `$ ./Utilities/SetupForDevelopment.sh` after changing
-    the remote URL.
-
-6.  (Optional but highly recommended.)
-    [Disabling git-lfs in your fork] is needed to add/modify git-lfs files.
-    Find the setting to disable git-lfs in your fork through your fork web UI:
-    Settings/General/Project Features/Git LFS; set it to off; and _save changes_.
-
-7. (Optional but highly recommended.)
+5. (Optional but highly recommended.)
     [Register with the Viskores dashboard] on Kitware's CDash instance to
     better know how your code performs in regression tests. After
     registering and signing in, click on "All Dashboards" link in the upper
     left corner, scroll down and click "Subscribe to this project" on the
     right of Viskores.
 
-8.  (Optional but highly recommended.)
+6.  (Optional but highly recommended.)
     [Sign up for the Viskores mailing list] to communicate with other
     developers and users.
 
@@ -114,11 +104,11 @@ idea of the feature or fix to be developed given just the branch name.
         $ git commit
 
     Caveats:
-      * Data files must be placed under a folder explicitly named 'data'.
-        This is required as Viskores uses Git-LFS to efficiently support data
-        files.
+      * Data files must be placed under a folder explicitly named 'data' at the
+        root level in the source directory. This is required as Viskores uses a
+        git submodule to efficiently support data files.
 
-4.  If you are adding a new feature or making sigificant changes to API,
+4.  If you are adding a new feature or making significant changes to API,
     make sure to add a entry to `docs/changelog`. This allows release
     notes to properly capture all relevant changes.
 
@@ -178,10 +168,9 @@ upper right.
         destination.
       * The `gitlab-push` script also pushes the `master` branch to your
         fork in GitLab to keep it in sync with the upstream `master`.
-      * If you have created or modified Git-LFS files, you will need to
-        push them separately using `git lfs push --all origin`. You will
-        need developer access to the Viskores repository do this. If you do
-        not have developer access, ask the Viskores group for help.
+      * If you have created or modified data files (inside the `data/`
+        directory), you will need to push them separately by opening a pull
+        request at https://github.com/Viskores/viskores-data.
 
     The output will include a link to the topic branch in your fork in
     GitLab and a link to a page for creating a Merge Request.

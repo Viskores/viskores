@@ -148,7 +148,7 @@ We will do this by summing up all the angles incident on each on each point.
 That is, for each point, we will find each incident polygon, then find the part of that polygon using the given point, then computing the angle at that point, and then summing for all such angles.
 So, for example, in the mesh fragment shown in :numref:`fig:PointIncidentAngles` one of the angles attached to the middle point is labeled :math:`\theta_{j}`.
 
-.. figure:: images/PointIncidentAngles.png
+.. figure::  ../../data/users-guide/images/PointIncidentAngles.png
    :width: 25%
    :name: fig:PointIncidentAngles
 

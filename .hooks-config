@@ -3,4 +3,3 @@
 
 [hooks "chain"]
 	pre-commit = utilities/git/pre-commit
-	pre-push = utilities/git/pre-push

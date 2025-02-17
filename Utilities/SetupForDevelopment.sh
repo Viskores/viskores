@@ -3,7 +3,6 @@
 cd "${BASH_SOURCE%/*}/.." &&
 Utilities/GitSetup/setup-user && echo &&
 Utilities/GitSetup/setup-hooks && echo &&
-Utilities/GitSetup/setup-lfs && echo &&
 (Utilities/GitSetup/setup-upstream ||
  echo 'Failed to setup origin.  Run this again to retry.') && echo &&
 (Utilities/GitSetup/setup-gitlab ||
@@ -33,17 +32,3 @@ true
 SetupForDevelopment=1
 # shellcheck disable=SC2154
 git config hooks.SetupForDevelopment "${SetupForDevelopment_VERSION}"
-
-# Setup Viskores-specifc LFS config
-#
-# Only set lfs.url to the ssh url
-OriginURL="$(git remote get-url origin)"
-if [[ "$OriginURL" =~ ^git@gitlab\.kitware\.com:vtk/viskores\.git$ ]]
-then
-  # This setting overrides every remote/url lfs setting
-  git config --local lfs.url "${OriginURL}"
-
-  # Those settings are only available for newer git-lfs releases
-  git config --local remote.lfspushdefault gitlab
-  git config --local remote.lfsdefault origin
-fi
