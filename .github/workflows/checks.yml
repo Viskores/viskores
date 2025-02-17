@@ -16,5 +16,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: CXX
-        working-directory: source
-        run: ./Utilities/Script/format.bash
+        run: ./Utilities/Scripts/format.bash
