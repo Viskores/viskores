@@ -1,0 +1,68 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+      - release*
+  pull_request:
+    branches:
+      - main
+      - release*
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/viskores/format:20250212
+    steps:
+      - uses: actions/checkout@v4
+      - name: CXX
+        run: ./Utilities/Scripts/format.bash
+
+  windows:
+    needs: format
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019]
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      CMAKE_BUILD_TYPE: Release
+      VISKORES_SETTINGS: serial
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - if: matrix.os == 'windows-2019'
+        run: |
+          "CMAKE_GENERATOR=Visual Studio 16 2019" >> $env:GITHUB_ENV
+          "VCVARSALL=C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvarsall.bat" >> $env:GITHUB_ENV
+          "VCVARSPLATFORM=x64" >> $env:GITHUB_ENV
+          "VCVARSVERSION=14.29" >> $env:GITHUB_ENV
+          "CTEST_EXCLUSIONS=UnitTestVTKDataSetReader" >> $env:GITHUB_ENV
+
+      - if: github.event_name == 'pull_request'
+        run: Write-Output ${{ github.event.pull_request.head.sha }} > ORIGINAL_COMMIT_SHA
+
+      - name: Apply GITHUB adaptor
+        run: |
+          cmake --version
+          cmake -V -P .github/ci/github_adaptor.cmake
+
+      - name: Setup Variables
+        run: |
+          Invoke-Expression -Command .github/ci/vcvarsall.ps1
+          Get-ChildItem env:
+          cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
+
+      - run: ctest -VV -S .gitlab/ci/ctest_configure.cmake
+      - run: ctest -VV -S .gitlab/ci/ctest_build.cmake
+      - run: ctest -C $env:CMAKE_BUILD_TYPE -VV -S .gitlab/ci/ctest_test.cmake
