@@ -12,98 +12,91 @@
 
 .docker_image: &docker_image
   variables:
-    GIT_CLONE_PATH: $CI_BUILDS_DIR/gitlab-kitware-sciviz-ci
+    GIT_SUBMODULE_STRATEGY: recursive
+    CCACHE_DIR: "$CI_PROJECT_DIR/.ccache"
 
-.centos7: &centos7
-  image: "kitware/vtkm:ci-centos7_cuda10.2-20210128"
-  extends:
-    - .docker_image
-
-.centos8: &centos8
-  image: "kitware/vtkm:ci-centos8-20201016"
-  extends:
-    - .docker_image
-
-.rhel8: &rhel8
-  image: "kitware/vtkm:ci-rhel8_cuda10.2-20201016"
-  extends:
-    - .docker_image
-
-.ubuntu1604: &ubuntu1604
-  image: "kitware/vtkm:ci-ubuntu1604-20230906"
-  extends:
-    - .docker_image
-
-.ubuntu1604_cuda: &ubuntu1604_cuda
-  image: "kitware/vtkm:ci-ubuntu1604_cuda9.2-20201016"
-  extends:
-    - .docker_image
-
-.ubuntu1804: &ubuntu1804
-  image: "kitware/vtkm:ci-ubuntu1804-20230906"
-  extends:
-    - .docker_image
-
-.ubuntu1804_cuda: &ubuntu1804_cuda
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11-20230906"
-  extends:
-    - .docker_image
-
-.ubuntu1804_cuda_kokkos: &ubuntu1804_cuda_kokkos
-  image: "kitware/vtkm:ci-ubuntu1804_cuda11_kokkos-20230906"
-  extends:
-    - .docker_image
-
-.ubuntu2004_doxygen: &ubuntu2004_doxygen
-  image: "kitware/vtkm:ci-doxygen-20231020"
+.almalinux8: &almalinux8
+  image: "ghcr.io/viskores/viskores:ci-almalinux8-20250225-23651"
   extends:
     - .docker_image
 
 .ubuntu2004: &ubuntu2004
-  image: "kitware/vtkm:ci-ubuntu2004-20230906"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2004-20250224-12297"
+  extends:
+    - .docker_image
+
+.ubuntu2004_doxygen: &ubuntu2004_doxygen
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2004_doxygen-20250224-12297"
+  extends:
+    - .docker_image
+
+.ubuntu2004_cuda: &ubuntu2004_cuda
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2004_cuda11.8-20250224-12297"
   extends:
     - .docker_image
 
 .ubuntu2004_kokkos: &ubuntu2004_kokkos
-  image: "kitware/vtkm:ci-ubuntu2004_kokkos-20240119"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2004_kokkos-20250224-12297"
+  extends:
+    - .docker_image
+
+.ubuntu2204: &ubuntu2204
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204-20250225-24892"
+  extends:
+    - .docker_image
+
+.ubuntu2204_cuda: &ubuntu2204_cuda
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204_cuda12.2-20250224-12297"
+  extends:
+    - .docker_image
+
+.ubuntu2204_cuda_kokkos: &ubuntu2204_cuda_kokkos
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204_kokkos_cuda-20250224-12297"
   extends:
     - .docker_image
 
 .ubuntu2204_hip_kokkos: &ubuntu2204_hip_kokkos
-  image: "kitware/vtkm:ci-ubuntu2204_hip_kokkos-20240625"
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2204_kokkos_hip-20250224-12297"
+  extends:
+    - .docker_image
+
+.ubuntu2404: &ubuntu2404
+  image: "ghcr.io/viskores/viskores:ci-ubuntu2404-20250224-12297"
   extends:
     - .docker_image
 
 .opensuse: &opensuse
-  image: "kitware/vtkm:ci-opensuse-20231121"
+  image: "ghcr.io/viskores/viskores:ci-opensuse-20250221-a"
   extends:
     - .docker_image
 
 .run_automatically: &run_automatically
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
     - if: '$CI_MERGE_REQUEST_ID'
       when: on_success
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m"'
+    - if: '$CI_PROJECT_PATH == "viskores/viskores"'
       when: on_success
     - when: never
 
 .run_only_merge_requests: &run_only_merge_requests
   rules:
-    - if: '$CI_MERGE_REQUEST_ID && $CI_PROJECT_PATH == "vtk/vtk-m"'
+    - if: '$CI_MERGE_REQUEST_ID && $CI_PROJECT_PATH == "viskores/viskores"'
       when: on_success
     - when: never
 
 .run_scheduled: &run_scheduled
   rules:
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_TAG'
+    - if: '$CI_PROJECT_PATH == "viskores/viskores" && $CI_COMMIT_TAG'
       when: on_success
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PROJECT_PATH == "viskores/viskores" && $CI_PIPELINE_SOURCE == "schedule"'
       when: on_success
     - when: never
 
 .run_upstream_branches: &run_upstream_branches
   rules:
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_MERGE_REQUEST_ID == null'
+    - if: '$CI_PROJECT_PATH == "viskores/viskores" && $CI_MERGE_REQUEST_ID == null'
       when: on_success
     - when: never
 
@@ -115,7 +108,7 @@
 
 # General Longer Term Tasks:
 # - Setup clang tidy as sub-pipeline
-# - Setup a machine to replicate the issue in https://gitlab.kitware.com/vtk/vtk-m/-/issues/447
+# - Setup a machine to replicate the issue in https://gitlab.kitware.com/viskores/viskores/-/issues/447
 #   Note: Centos7 doesn't work as they ship separate standard library
 #   headers for each version. We will have to figure out something else
 #   like using spack or building llvm/clang from source
@@ -141,13 +134,21 @@ stages:
   stage: build
   timeout:  2 hours
   interruptible: true
+  cache:
+    key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    fallback_keys:
+      - "$CI_JOB_NAME-main"
+    paths:
+      - "$CI_PROJECT_DIR/.ccache/"
   before_script:
     - *install_cmake
     - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
-    - export PATH=$PWD/.gitlab:$PATH
-    - .gitlab/ci/config/sccache.sh
-    - SCCACHE_IDLE_TIMEOUT=0 sccache --start-server
-    - sccache --show-stats
+    - export PATH="${PWD}/.gitlab:${PATH}"
+    - "CCACHE_INSTALL_DIR=${PWD}/.gitlab cmake -V -P .gitlab/ci/config/ccache.cmake"
+    - export PATH="${PWD}/.gitlab/ccache:${PATH}"
+    - ccache -z
+    - ccache -p
+    - ccache -s
     - .gitlab/ci/config/google_benchmarks.sh
     - "cmake --version"
     - "cmake -V -P .gitlab/ci/config/fetch_vtkm_tags.cmake"
@@ -155,24 +156,13 @@ stages:
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
     - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
-    - sccache --show-stats
+    - "[ -z $NO_TESTING ] && ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
     - cmake -P .gitlab/ci/check_warnings.cmake || exit 47
+  after_script:
+    - export PATH="${PWD}/.gitlab/ccache:${PATH}"
+    - ccache -s
   extends:
-    - .cmake_build_artifacts
     - .warning_policy
-
-.cmake_test_linux: &cmake_test_linux
-  stage: test
-  timeout:  50 minutes
-  interruptible: true
-  before_script:
-    - *install_cmake
-    - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
-    - export PATH=$PWD/.gitlab:$PATH
-  script:
-    - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
-  extends:
-    - .cmake_test_artifacts
 
 .cmake_memcheck_linux: &cmake_memcheck_linux
   stage: test
@@ -202,7 +192,7 @@ stages:
       # The artifacts of the build.
       - build/bin/
       - build/include/
-      - build/vtkm/thirdparty/diy/vtkmdiy/
+      - build/viskores/thirdparty/viskores/viskoresdiy/
       - build/lib/
       - build/config/
 
@@ -233,16 +223,12 @@ stages:
     reports:
       junit: build/junit.xml
 
-
 include:
-  - local: '/.gitlab/ci/centos7.yml'
-  - local: '/.gitlab/ci/centos8.yml'
   - local: '/.gitlab/ci/doxygen.yml'
+  - local: '/.gitlab/ci/almalinux8.yml'
   - local: '/.gitlab/ci/frontier.yml'
-  - local: '/.gitlab/ci/macos.yml'
-  - local: '/.gitlab/ci/opensuse.yml'
-  - local: '/.gitlab/ci/rhel8.yml'
-  - local: '/.gitlab/ci/ubuntu1604.yml'
-  - local: '/.gitlab/ci/ubuntu1804.yml'
+  #- local: '/.gitlab/ci/macos.yml'
+  - local: '/.gitlab/ci/sync-spack.yml'
   - local: '/.gitlab/ci/ubuntu2004.yml'
   - local: '/.gitlab/ci/ubuntu2204.yml'
+  - local: '/.gitlab/ci/ubuntu2404.yml'

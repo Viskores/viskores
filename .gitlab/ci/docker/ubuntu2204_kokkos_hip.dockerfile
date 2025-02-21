@@ -10,7 +10,7 @@
 ##
 ##=============================================================================
 
-FROM rocm/dev-ubuntu-22.04
+FROM docker.io/rocm/dev-ubuntu-22.04
 LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
 # Base dependencies for building VTK-m projects
@@ -59,21 +59,34 @@ ENV CMAKE_PREFIX_PATH "/opt/rocm/lib/cmake:/opt/rocm/lib:${CMAKE_PREFIX_PATH}"
 ENV CMAKE_GENERATOR "Ninja"
 
 ENV KOKKOS_VERSION=3.7.01
-COPY kokkos_cmake_config.cmake kokkos_cmake_config.cmake
 RUN curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz | tar -xzf - && \
-    cmake -S kokkos-$KOKKOS_VERSION -B build -C kokkos_cmake_config.cmake                             \
-       -DCMAKE_PREFIX_INSTALL=/opt/kokkos/$KOKKOS_VERSION                                             \
-       -DKokkos_ARCH_VEGA900=ON                                                                    && \
+    cmake -S kokkos-$KOKKOS_VERSION -B build  \
+       -DCMAKE_PREFIX_INSTALL=/opt/kokkos/$KOKKOS_VERSION \
+       -DCMAKE_BUILD_TYPE="release" \
+       -DCMAKE_C_COMPILER=/opt/rocm/llvm/bin/clang \
+       -DCMAKE_CXX_COMPILER=/opt/rocm/llvm/bin/clang++ \
+       -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+       -DKokkos_ENABLE_SERIAL=ON \
+       -DKokkos_ENABLE_HIP=ON \
+       -DKokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE=OFF \
+       -DKokkos_ARCH_VEGA908=ON                                                                    && \
     cmake --build build -v                                                                         && \
     cmake --install build                                                                          && \
     rm -rf build kokkos-$KOKKOS_VERSION
 
 ENV KOKKOS_VERSION=4.3.01
-COPY kokkos_cmake_config.cmake kokkos_cmake_config.cmake
 RUN curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz | tar -xzf - && \
-    cmake -S kokkos-$KOKKOS_VERSION -B build -C kokkos_cmake_config.cmake                             \
-       -DCMAKE_PREFIX_INSTALL=/opt/kokkos/$KOKKOS_VERSION                                             \
-       -DKokkos_ARCH_VEGA906=ON                                                                    && \
+    cmake -S kokkos-$KOKKOS_VERSION -B build \
+       -DCMAKE_PREFIX_INSTALL=/opt/kokkos/$KOKKOS_VERSION \
+       -DCMAKE_BUILD_TYPE="release" \
+       -DCMAKE_C_COMPILER=/opt/rocm/llvm/bin/clang \
+       -DCMAKE_CXX_COMPILER=/opt/rocm/llvm/bin/clang++ \
+       -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+       -DCMAKE_CXX_STANDARD=17 \
+       -DKokkos_ENABLE_SERIAL=ON \
+       -DKokkos_ENABLE_HIP=ON \
+       -DKokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE=OFF \
+       -DKokkos_ARCH_AMD_GFX908=ON                                                                    && \
     cmake --build build -v                                                                         && \
     cmake --install build                                                                          && \
     rm -rf build kokkos-$KOKKOS_VERSION

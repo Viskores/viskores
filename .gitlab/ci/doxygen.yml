@@ -16,16 +16,16 @@
 
 .build_doxygen_script: &build_doxygen_script
   - cmake --build "${CI_PROJECT_DIR}/build" --target docs/doxygen
-  - cmake --build "${CI_PROJECT_DIR}/build" --target VTKmUsersGuideHTML
-  - cmake --build "${CI_PROJECT_DIR}/build" --target VTKmUsersGuideLaTeX
+  - cmake --build "${CI_PROJECT_DIR}/build" --target ViskoresUsersGuideHTML
+  - cmake --build "${CI_PROJECT_DIR}/build" --target ViskoresUsersGuideLaTeX
 
 .build_docs: &build_docs
   stage: build
   tags:
-    - build
-    - vtkm
-    - docker
-    - linux-x86_64
+    - large
+    - uo
+    - public
+    - x86_64
   before_script:
     - cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
     - ctest -VV -S .gitlab/ci/ctest_configure.cmake
@@ -33,9 +33,9 @@
   interruptible: true
   variables:
     CMAKE_BUILD_TYPE: Release
-    VTKM_SETTINGS: "tbb+openmp+mpi+shared+docs"
+    VISKORES_SETTINGS: "tbb+openmp+mpi+shared+docs"
 
-build:docs-continuous:
+docs-continuous:
   script:
     - *build_doxygen_script
   extends:
@@ -44,7 +44,7 @@ build:docs-continuous:
     - .run_automatically
     - .ubuntu2004_doxygen
 
-build:docs-master:
+docs-master:
   script:
     - *build_doxygen_script
     - *upload_doxygen_script
@@ -52,7 +52,7 @@ build:docs-master:
     name: doxygen-nightly
     url: https://docs-m.vtk.org/nightly/
   rules:
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_REF_NAME == "master"'
+    - if: '$CI_PROJECT_PATH == "viskores/viskores" && $CI_COMMIT_REF_NAME == "master"'
       when: on_success
     - when: never
   extends:
@@ -62,7 +62,7 @@ build:docs-master:
   variables:
     DOXYGEN_UPLOAD_REMOTE_PATH: "nightly"
 
-build:docs-latest:
+docs-latest:
   script:
     - *build_doxygen_script
     - *upload_doxygen_script
@@ -70,7 +70,7 @@ build:docs-latest:
     name: doxygen-latest
     url: https://docs-m.vtk.org/latest/index.html
   rules:
-    - if: '$CI_PROJECT_PATH == "vtk/vtk-m" && $CI_COMMIT_TAG'
+    - if: '$CI_PROJECT_PATH == "viskores/viskores" && $CI_COMMIT_TAG'
       when: on_success
     - when: never
   extends:

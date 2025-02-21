@@ -25,12 +25,12 @@
     LD_LIBRARY_PATH:         "/opt/rocm/lib"
     CXX:                     "hipcc"
 
-build:ubuntu2204_hip_kokkos37:
+ubuntu2204_hip_kokkos37:
   tags:
-    - vtkm
-    - docker
-    - linux-x86_64
-    - radeon
+    - gfx908
+    - uo-gpu
+    - x86_64-amdgpu
+    - instinct
   extends:
     - .ubuntu2204_hip_kokkos
     - .cmake_build_linux
@@ -38,38 +38,20 @@ build:ubuntu2204_hip_kokkos37:
     - .run_automatically
   variables:
     CMAKE_BUILD_TYPE:        "RelWithDebInfo"
-    CMAKE_HIP_ARCHITECTURES: "gfx900"
+    CMAKE_HIP_ARCHITECTURES: "gfx908"
     Kokkos_DIR:              "/opt/kokkos/3.7.01/"
-    VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_rendering+ccache"
+    VISKORES_SETTINGS:       "benchmarks+kokkos+hip+no_rendering+ccache"
+    NO_TESTING:              "ON"
   after_script:
     - ccache -v -s
     - ccache -z
 
-test:ubuntu2204_hip_kokkos37:
+ubuntu2204_hip_kokkos43:
   tags:
-    - vtkm
-    - docker
-    - linux-x86_64
-    - radeon
-  extends:
-    - .ubuntu2204_hip_kokkos
-    - .cmake_test_linux
-    - .run_upstream_branches
-  variables:
-    CTEST_MAX_PARALLELISM: 1
-    CTEST_EXCLUSIONS: "UnitTestWorkletParticleAdvection"
-  dependencies:
-    - build:ubuntu2204_hip_kokkos37
-  needs:
-    - build:ubuntu2204_hip_kokkos37
-  timeout: 3 hours
-
-build:ubuntu2204_hip_kokkos43:
-  tags:
-    - vtkm
-    - docker
-    - linux-x86_64
-    - radeon
+    - gfx908
+    - uo-gpu
+    - x86_64-amdgpu
+    - instinct
   extends:
     - .ubuntu2204_hip_kokkos
     - .cmake_build_linux
@@ -79,7 +61,89 @@ build:ubuntu2204_hip_kokkos43:
     CMAKE_BUILD_TYPE:        "RelWithDebInfo"
     CMAKE_HIP_ARCHITECTURES: "gfx906"
     Kokkos_DIR:              "/opt/kokkos/4.3.01/"
-    VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_rendering+ccache"
+    VISKORES_SETTINGS:       "benchmarks+kokkos+hip+no_rendering+no_testing+ccache"
+    NO_TESTING:              "ON"
   after_script:
     - ccache -v -s
     - ccache -z
+
+ubuntu2204_clang11_cuda:
+  tags:
+    - nvidia-a100
+    - uo-gpu
+    - x86_64-nvidiagpu
+  extends:
+    - .ubuntu2204_cuda
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CC: "clang-11"
+    CXX: "clang++-11"
+    CUDAHOSTCXX: "clang++-11"
+    VISKORES_SETTINGS: "cuda+ampere+tbb+examples+shared+ccache"
+    CTEST_EXCLUSIONS: "UnitTestTimer"
+
+#ubuntu2204_gcc10_cuda:
+#  tags:
+#    - nvidia-h100
+#    - uo-gpu
+#    - x86_64-nvidiagpu
+#  extends:
+#    - .ubuntu2204_cuda
+#    - .cmake_build_linux
+#    - .run_automatically
+#  variables:
+#    CC: "gcc-10"
+#    CXX: "g++-10"
+#    CUDAFLAGS: "-Xcompiler -fno-lto"
+#    CUDAHOSTCXX: "g++-10"
+#    VISKORES_SETTINGS: "cuda+hopper+mpi+64bit_floats+shared+ccache"
+
+ubuntu2204_clang12:
+  tags:
+    - large
+    - uo
+    - public
+    - x86_64
+  extends:
+    - .ubuntu2204
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CC: "clang-12"
+    CXX: "clang++-12"
+    CMAKE_BUILD_TYPE: Debug
+    VISKORES_SETTINGS: "tbb+shared+examples+ccache"
+
+ubuntu2204_kokkos37_cuda:
+  tags:
+    - nvidia-a100
+    - uo-gpu
+    - x86_64-nvidiagpu
+  extends:
+    - .ubuntu2204_cuda_kokkos
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CMAKE_GENERATOR: "Ninja"
+    CMAKE_BUILD_TYPE: Release
+    VISKORES_SETTINGS: "benchmarks+kokkos+ampere+64bit_floats+shared+ccache"
+
+ubuntu2204_gcc12:
+  tags:
+    - large
+    - uo
+    - public
+    - x86_64
+  extends:
+    - .ubuntu2204
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    # Restrict OpenMP number of threads since multiple test stages
+    # execute on the same hardware concurrently
+    OMP_NUM_THREADS: 3
+    CC: "gcc-12"
+    CXX: "g++-12"
+    VISKORES_SETTINGS: "openmp+shared+examples+ccache"
+    CTEST_EXCLUSIONS: "UnitTestArrayPortalValueReference"

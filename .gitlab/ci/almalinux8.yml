@@ -1,0 +1,83 @@
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
+# Build on almalinux8 without tests
+# Uses gcc 8.2.1
+almalinux8:
+  tags:
+    - large
+    - uo
+    - public
+    - x86_64
+  extends:
+    - .almalinux8
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    CMAKE_GENERATOR: "Unix Makefiles"
+    VISKORES_SETTINGS: "serial+no_testing+min_build+ccache"
+
+# Build on almalinux8 with serial and test on almalinux8
+# Uses gcc 8.2.1
+almalinux8:
+  tags:
+    - large
+    - uo
+    - public
+    - x86_64
+  extends:
+    - .almalinux8
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CMAKE_GENERATOR: "Unix Makefiles"
+    VISKORES_SETTINGS: "serial+shared+64bit_floats+32bit_ids+ccache"
+
+# Build on almalinux8 with serial and the VTK-supported types
+# Uses gcc 8.2.1
+almalinux8_vtk_types:
+  tags:
+    - large
+    - uo
+    - public
+    - x86_64
+  extends:
+    - .almalinux8
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CMAKE_GENERATOR: "Unix Makefiles"
+    VISKORES_SETTINGS: "serial+vtk_types+ccache"
+
+# Build on almalinux8 with serial and test on almalinux8
+# Uses gcc 8.2.1
+almalinux8_sanitizer:
+  tags:
+    - large
+    - uo
+    - public
+    - x86_64
+  extends:
+    - .almalinux8
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    CMAKE_GENERATOR: "Unix Makefiles"
+    VISKORES_SETTINGS: "serial+shared+openmp+asan+leak+ccache"
+    OMP_NUM_THREADS: 4
+    CTEST_MEMORYCHECK_TYPE: LeakSanitizer
+    CTEST_EXCLUSIONS: >-
+      smoke_test_cmake_built_against_test_install
+      smoke_test_make_built_against_test_install
+      smoke_test_pkgconfig_make_built_against_test_install
