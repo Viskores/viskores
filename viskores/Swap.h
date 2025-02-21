@@ -15,6 +15,14 @@
 
 #include <algorithm>
 
+// Below there is some code to deal with conflicts between Viskores's Swap and the Swap that comes
+// with CUDA's CUB. We need to make sure that the Swap function gets included so that our
+// defensive code works either way.
+#if defined(VISKORES_CUDA) && defined(VISKORES_CUDA_DEVICE_PASS) && defined(VISKORES_CUDA_VERSION_MAJOR) && \
+  (VISKORES_CUDA_VERSION_MAJOR >= 12)
+#include <cub/thread/thread_sort.cuh>
+#endif
+
 namespace viskores
 {
 

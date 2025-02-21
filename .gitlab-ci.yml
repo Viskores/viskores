@@ -138,13 +138,21 @@ stages:
   stage: build
   timeout:  2 hours
   interruptible: true
+  cache:
+    key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+    fallback_keys:
+      - "$CI_JOB_NAME-main"
+    paths:
+      - .ccache/
+    policy: pull-push
   before_script:
     - *install_cmake
     - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
-    - export PATH=$PWD/.gitlab:$PATH
-    - .gitlab/ci/config/sccache.sh
-    - SCCACHE_IDLE_TIMEOUT=0 sccache --start-server
-    - sccache --show-stats
+    - export PATH="${PWD}/.gitlab:${PATH}"
+    - "CCACHE_INSTALL_DIR=${PWD}/.gitlab cmake -V -P .gitlab/ci/config/ccache.cmake"
+    - export PATH="${PWD}/.gitlab/ccache:${PATH}"
+    - ccache -z
+    - ccache -s
     - .gitlab/ci/config/google_benchmarks.sh
     - "cmake --version"
     - "cmake -V -P .gitlab/ci/config/fetch_vtkm_tags.cmake"
@@ -152,24 +160,13 @@ stages:
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
     - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
-    - sccache --show-stats
-    - cmake -P .gitlab/ci/check_warnings.cmake || exit 47
-  extends:
-    - .cmake_build_artifacts
-    - .warning_policy
-
-.cmake_test_linux: &cmake_test_linux
-  stage: test
-  timeout:  50 minutes
-  interruptible: true
-  before_script:
-    - *install_cmake
-    - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
-    - export PATH=$PWD/.gitlab:$PATH
-  script:
     - "ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
+    - cmake -P .gitlab/ci/check_warnings.cmake || exit 47
+  after_script:
+    - export PATH="${PWD}/.gitlab/ccache:${PATH}"
+    - ccache -s
   extends:
-    - .cmake_test_artifacts
+    - .warning_policy
 
 .cmake_memcheck_linux: &cmake_memcheck_linux
   stage: test

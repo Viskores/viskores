@@ -16,6 +16,7 @@ LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 # Base dependencies for building VTK-m projects
 RUN apt-get update && apt-get install -y --no-install-recommends \
       clang-6.0 \
+      cmake \
       curl \
       g++ \
       g++-9 \
