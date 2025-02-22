@@ -10,76 +10,169 @@
 ##
 ##=============================================================================
 
-.kokkos_rocm_vars: &kokkos_rocm_vars
-  variables:
-    CCACHE_BASEDIR:          "$CI_PROJECT_DIR"
-    CCACHE_COMPILERCHECK:    "content"
-    # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
-    CCACHE_IGNOREOPTIONS:    "-isystem=*"
-    CCACHE_NOHASHDIR:        "true"
-    CCACHE_RESHARE:          "true"
+#.kokkos_rocm_vars: &kokkos_rocm_vars
+#  variables:
+#    CCACHE_BASEDIR:          "$CI_PROJECT_DIR"
+#    CCACHE_COMPILERCHECK:    "content"
+#    # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
+#    CCACHE_IGNOREOPTIONS:    "-isystem=*"
+#    CCACHE_NOHASHDIR:        "true"
+#    CCACHE_RESHARE:          "true"
+#
+#    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
+#    CMAKE_HIP_COMPILER:      "/opt/rocm/llvm/bin/clang++"
+#    Kokkos_CXX_COMPILER:     "/opt/rocm/llvm/bin/clang++"
+#    LD_LIBRARY_PATH:         "/opt/rocm/lib"
+#    CXX:                     "hipcc"
+#
+#Build:ubuntu2204_hip_kokkos37:
+#  tags:
+#    - vtkm
+#    - docker
+#    - linux-x86_64
+#    - radeon
+#  extends:
+#    - .ubuntu2204_hip_kokkos
+#    - .cmake_build_linux
+#    - .kokkos_rocm_vars
+#    - .run_automatically
+#  variables:
+#    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
+#    CMAKE_HIP_ARCHITECTURES: "gfx900"
+#    Kokkos_DIR:              "/opt/kokkos/3.7.01/"
+#    VISKORES_SETTINGS:           "benchmarks+kokkos+hip+no_rendering+ccache"
+#  after_script:
+#    - ccache -v -s
+#    - ccache -z
+#
+#Test:ubuntu2204_hip_kokkos37:
+#  tags:
+#    - vtkm
+#    - docker
+#    - linux-x86_64
+#    - radeon
+#  extends:
+#    - .ubuntu2204_hip_kokkos
+#    - .cmake_test_linux
+#    - .run_upstream_branches
+#  variables:
+#    CTEST_MAX_PARALLELISM: 1
+#    CTEST_EXCLUSIONS: "UnitTestWorkletParticleAdvection"
+#  dependencies:
+#    - build:ubuntu2204_hip_kokkos37
+#  needs:
+#    - build:ubuntu2204_hip_kokkos37
+#  timeout: 3 hours
+#
+#Build:ubuntu2204_hip_kokkos43:
+#  tags:
+#    - vtkm
+#    - docker
+#    - linux-x86_64
+#    - radeon
+#  extends:
+#    - .ubuntu2204_hip_kokkos
+#    - .cmake_build_linux
+#    - .kokkos_rocm_vars
+#    - .run_automatically
+#  variables:
+#    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
+#    CMAKE_HIP_ARCHITECTURES: "gfx906"
+#    Kokkos_DIR:              "/opt/kokkos/4.3.01/"
+#    VISKORES_SETTINGS:           "benchmarks+kokkos+hip+no_rendering+ccache"
+#  after_script:
+#    - ccache -v -s
+#    - ccache -z
 
-    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
-    CMAKE_HIP_COMPILER:      "/opt/rocm/llvm/bin/clang++"
-    Kokkos_CXX_COMPILER:     "/opt/rocm/llvm/bin/clang++"
-    LD_LIBRARY_PATH:         "/opt/rocm/lib"
-    CXX:                     "hipcc"
 
-build:ubuntu2204_hip_kokkos37:
+
+# Build on ubuntu2204 with CUDA + MPI and test on ubuntu2204
+# Uses gcc 7
+# Uses MPICH2
+build:ubuntu2204_gcc11:
   tags:
-    - vtkm
-    - docker
-    - linux-x86_64
-    - radeon
+    - nvidia-a100
+    - uo-gpu
+    - x86_64-nvidiagpu
   extends:
-    - .ubuntu2204_hip_kokkos
+    - .ubuntu2204_cuda
     - .cmake_build_linux
-    - .kokkos_rocm_vars
     - .run_automatically
   variables:
-    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
-    CMAKE_HIP_ARCHITECTURES: "gfx900"
-    Kokkos_DIR:              "/opt/kokkos/3.7.01/"
-    VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_rendering+ccache"
-  after_script:
-    - ccache -v -s
-    - ccache -z
+    CC: "gcc-11"
+    CXX: "g++-11"
+    CUDAHOSTCXX: "g++-11"
+    VISKORES_SETTINGS: "benchmarks+cuda+hopper+mpi+64bit_floats+shared+ccache"
 
-test:ubuntu2204_hip_kokkos37:
+# Build on ubuntu2204 with CUDA+TBB and test on ubuntu2204
+# Uses clang as CUDA host compiler
+# Runs only on nightlies
+build:ubuntu2204_clang11_cuda:
   tags:
-    - vtkm
-    - docker
-    - linux-x86_64
-    - radeon
+    - nvidia-a100
+    - uo-gpu
+    - x86_64-nvidiagpu
   extends:
-    - .ubuntu2204_hip_kokkos
-    - .cmake_test_linux
-    - .run_upstream_branches
-  variables:
-    CTEST_MAX_PARALLELISM: 1
-    CTEST_EXCLUSIONS: "UnitTestWorkletParticleAdvection"
-  dependencies:
-    - build:ubuntu2204_hip_kokkos37
-  needs:
-    - build:ubuntu2204_hip_kokkos37
-  timeout: 3 hours
-
-build:ubuntu2204_hip_kokkos43:
-  tags:
-    - vtkm
-    - docker
-    - linux-x86_64
-    - radeon
-  extends:
-    - .ubuntu2204_hip_kokkos
+    - .ubuntu2204_cuda
     - .cmake_build_linux
-    - .kokkos_rocm_vars
+    - .run_automatically
+    # - .run_upstream_branches
+  variables:
+    CC: "clang-11"
+    CXX: "clang++-11"
+    CUDAHOSTCXX: "clang++-11"
+    VISKORES_SETTINGS: "cuda+ampere+tbb+examples+shared+ccache"
+
+# Build on ubuntu2204 with OpenMP and test on ubuntu2204
+# Uses gcc 6.5
+build:ubuntu2204_gcc10:
+  tags:
+    - large
+    - uo
+    - public
+    - x86_64
+  extends:
+    - .ubuntu2204
+    - .cmake_build_linux
     - .run_automatically
   variables:
-    CMAKE_BUILD_TYPE:        "RelWithDebInfo"
-    CMAKE_HIP_ARCHITECTURES: "gfx906"
-    Kokkos_DIR:              "/opt/kokkos/4.3.01/"
-    VTKM_SETTINGS:           "benchmarks+kokkos+hip+no_rendering+ccache"
-  after_script:
-    - ccache -v -s
-    - ccache -z
+    CC: "gcc-10"
+    CXX: "g++-10"
+    VISKORES_SETTINGS: "openmp+shared+examples+ccache"
+    #Restrict OpenMP number of threads since multiple test stages
+    #execute on the same hardware concurrently
+    OMP_NUM_THREADS: 3
+
+# Build on ubuntu2204 with TBB and test on ubuntu2204
+# Uses clang 8
+build:ubuntu2204_clang12:
+  tags:
+    - large
+    - uo
+    - public
+    - x86_64
+  extends:
+    - .ubuntu2204
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CC: "clang-12"
+    CXX: "clang++-12"
+    CMAKE_BUILD_TYPE: Debug
+    VISKORES_SETTINGS: "tbb+shared+examples+ccache"
+
+# Build on ubuntu2204 with kokkos and test on ubuntu2204
+# Uses CUDA 11
+build:ubuntu2204_kokkos37:
+  tags:
+    - nvidia-h100
+    - uo-gpu
+    - x86_64-nvidiagpu
+  extends:
+    - .ubuntu2204_cuda_kokkos
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CMAKE_GENERATOR: "Ninja"
+    CMAKE_BUILD_TYPE: Release
+    VISKORES_SETTINGS: "benchmarks+kokkos+hopper+64bit_floats+shared+ccache"

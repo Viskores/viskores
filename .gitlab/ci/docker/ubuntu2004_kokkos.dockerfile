@@ -10,7 +10,7 @@
 ##
 ##=============================================================================
 
-FROM ubuntu:20.04
+FROM docker.io/ubuntu:20.04
 LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
 # Base dependencies for building VTK-m projects

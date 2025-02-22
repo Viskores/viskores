@@ -10,19 +10,24 @@
 ##
 ##=============================================================================
 
-version: 2
-jobs:
-  "post-cdash-status":
-    docker:
-      - image: cimg/base:2024.12
-    steps:
-      - checkout
-      - run:
-          name: CDash
-          command: .circleci/post-cdash-status
+FROM docker.io/ubuntu:22.04
+LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
-workflows:
-  version: 2
-  utils:
-    jobs:
-      - "post-cdash-status"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      cmake \
+      curl \
+      g++ \
+      g++-10 \
+      g++-11 \
+      clang-11 \
+      clang-12 \
+      git \
+      libmpich-dev \
+      libomp-dev \
+      libtbb-dev \
+      libhdf5-dev \
+      make \
+      mpich \
+      ninja-build \
+      pkg-config \
+      software-properties-common
