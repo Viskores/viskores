@@ -50,6 +50,7 @@ licenses.
 - - - - - - - - - - - - - - - - - - - - - - - - do not remove this line
 CMake/FindSphinx.cmake
 CMake/FindTBB.cmake
+data/LICENSE.txt
 Utilities
 viskores/cont/tbb/internal/parallel_sort.h
 viskores/cont/tbb/internal/parallel_radix_sort_tbb.h
@@ -58,3 +59,8 @@ viskores/cont/tbb/internal/kxsort.h
 viskores/thirdparty
 version.txt
 .gitlab/cmake
+.gitlab/ccache
+.gitlab/ci/config/SpackCIBridge.py
+pre_build.py
+
+

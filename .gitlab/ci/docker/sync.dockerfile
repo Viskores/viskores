@@ -10,19 +10,10 @@
 ##
 ##=============================================================================
 
-version: 2
-jobs:
-  "post-cdash-status":
-    docker:
-      - image: cimg/base:2024.12
-    steps:
-      - checkout
-      - run:
-          name: CDash
-          command: .circleci/post-cdash-status
+from docker.io/python:3.6.15
+LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
-workflows:
-  version: 2
-  utils:
-    jobs:
-      - "post-cdash-status"
+# run apt install without asking user
+run debian_frontend=noninteractive apt update && \
+    apt -y install --no-install-recommends ssh git && \
+    pip install python-dateutil pygithub

@@ -47,6 +47,8 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # however, that is not always the case, specially in exotic systems such as
   # OLCF Ascent/Summit
   ".*viskores/thirdparty.*"
+
+  ".*warning: template-id not allowed for constructor.*"
 )
 
 list(APPEND CTEST_CUSTOM_WARNING_MATCH

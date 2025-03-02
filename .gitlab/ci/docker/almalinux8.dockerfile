@@ -10,12 +10,10 @@
 ##
 ##=============================================================================
 
-FROM nvidia/cuda:10.2-devel-ubi8
-LABEL maintainer "Robert Maynard<robert.maynard@kitware.com>"
+FROM docker.io/almalinux:8
+LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
-RUN yum install make gcc gcc-c++ curl cuda-compat-10-2 -y
-RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash
-RUN yum install git git-lfs -y
+RUN yum install make gcc gcc-c++ curl libasan libubsan libomp clang python3 -y
 
 # Provide CMake 3.17 so we can re-run tests easily
 # This will be used when we run just the tests

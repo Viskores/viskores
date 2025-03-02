@@ -36,7 +36,7 @@ test:macos_xcode14:
     CXX: g++
     DEVELOPER_DIR: "/Applications/Xcode-14.2.app/Contents/Developer"
     GIT_CLONE_PATH: "$CI_BUILDS_DIR/vtk-m-ci"
-    VTKM_SETTINGS: "64bit_floats+shared+ccache"
+    VISKORES_SETTINGS: "64bit_floats+shared+ccache"
 
 .cmake_build_macos:
   stage: build

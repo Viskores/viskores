@@ -10,7 +10,7 @@
 ##
 ##=============================================================================
 
-FROM nvidia/cuda:11.6.2-devel-ubuntu18.04
+FROM docker.io/nvidia/cuda:12.2.2-devel-ubuntu22.04
 LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
 # Base dependencies for building VTK-m projects
@@ -22,12 +22,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       make \
       ninja-build \
       pkg-config \
+      python3 \
+      python3-scipy \
       && \
     rm -rf /var/lib/apt/lists/*
-
-# Need to run git-lfs install manually on ubuntu based images when using the
-# system packaged version
-RUN git-lfs install
 
 # kokkos backend requires cmake 3.18
 RUN mkdir /opt/cmake/ && \
@@ -39,7 +37,7 @@ RUN mkdir /opt/cmake/ && \
 ENV PATH "/opt/cmake/bin:${PATH}"
 
 # Build and install Kokkos
-ARG KOKKOS_VERSION=3.7.01
+ARG KOKKOS_VERSION=3.7.02
 RUN mkdir -p /opt/kokkos/build && \
     cd /opt/kokkos/build && \
     curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz > kokkos-$KOKKOS_VERSION.tar.gz && \
@@ -57,6 +55,7 @@ RUN mkdir -p /opt/kokkos/build && \
           -DKokkos_ENABLE_CUDA_LDG_INTRINSIC=ON \
           -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=OFF \
           -DKokkos_ENABLE_CUDA_UVM=ON \
-          -DKokkos_ARCH_TURING75=ON && \
+          -DKokkos_ARCH_AMPERE80=ON && \
     cmake --build . -j 8 && \
-    cmake --install .
+    cmake --install . && \
+    cd ..; rm -rf kokkos-$KOKKOS_VERSION.tar.gz kokkos-$KOKKOS_VERSION bld
