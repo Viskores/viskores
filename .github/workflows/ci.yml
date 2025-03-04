@@ -89,7 +89,9 @@ jobs:
     env:
       CMAKE_BUILD_TYPE: Release
       CMAKE_GENERATOR: 'Unix Makefiles'
-      VISKORES_SETTINGS: serial
+      VISKORES_SETTINGS: serial+ccache
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_INSTALL_DIR: ${{ github.workspace }}/.gitlab
       CTEST_EXCLUSIONS: >-
         UnitTestMathSERIAL
         smoke_test_make_built_against_test_install
@@ -106,6 +108,26 @@ jobs:
         with:
           xcode-version: latest-stable
 
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ${{ matrix.os }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ matrix.os }}-ccache-
+
+      - name: Set up ccache
+        run: |
+          cmake --trace-expand -VV -P .gitlab/ci/config/ccache.cmake
+          echo "${CCACHE_INSTALL_DIR}" >> $GITHUB_PATH
+
+      - run: |
+          ls  "${CCACHE_INSTALL_DIR}"
+          env
+          ccache -z
+          ccache -p
+          ccache -s
+
       - name: Apply GITHUB adaptor
         run: |
           cmake --version
@@ -118,3 +140,11 @@ jobs:
       - run: ctest -VV -S .gitlab/ci/ctest_configure.cmake
       - run: ctest -VV -S .gitlab/ci/ctest_build.cmake
       - run: ctest -VV -S .gitlab/ci/ctest_test.cmake
+      - run: ccache -s
+
+      - name: Save cache
+        uses: actions/cache/save@v4
+        if: ${{ github.ref_name == 'main' }}
+        with:
+          path: .ccache
+          key: ${{ matrix.os }}-ccache-${{ github.sha }}
