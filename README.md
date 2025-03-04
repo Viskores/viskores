@@ -1,6 +1,3 @@
-![GitLab tag](https://img.shields.io/gitlab/v/tag/vtk/viskores?color=red&gitlab_url=https%3A%2F%2Fgitlab.kitware.com&include_prereleases&sort=semver)  
-![Spack version](https://img.shields.io/spack/v/viskores.svg)  
-
 # Viskores #
 
 Viskores is a toolkit of scientific visualization algorithms for emerging
