@@ -13,7 +13,17 @@
 FROM docker.io/almalinux:8
 LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
-RUN yum install make gcc gcc-c++ curl libasan libubsan libomp clang python3 -y
+RUN yum install -y \
+    clang \
+    curl \
+    gcc \
+    gcc-c++ \
+    git \
+    libasan \
+    libomp \
+    libubsan \
+    make \
+    python3
 
 # Provide CMake 3.17 so we can re-run tests easily
 # This will be used when we run just the tests

@@ -47,19 +47,44 @@ jobs:
         shell: pwsh
     env:
       CMAKE_BUILD_TYPE: Release
-      VISKORES_SETTINGS: serial
+      VISKORES_SETTINGS: serial+ccache
+      CCACHE_INSTALL_DIR: ${{ github.workspace }}\\.gitlab
+      CCACHE_DIR: ${{ github.workspace }}\\ccache
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-
       - if: matrix.os == 'windows-2019'
         run: |
-          "CMAKE_GENERATOR=Visual Studio 16 2019" >> $env:GITHUB_ENV
+          "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
           "VCVARSALL=C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvarsall.bat" >> $env:GITHUB_ENV
           "VCVARSPLATFORM=x64" >> $env:GITHUB_ENV
           "VCVARSVERSION=14.29" >> $env:GITHUB_ENV
           "CTEST_EXCLUSIONS=UnitTestVTKDataSetReader" >> $env:GITHUB_ENV
+          "$env:CCACHE_INSTALL_DIR\\ccache" >> $env:GITHUB_PATH
+          "${{ github.workspace }}\\.gitlab" >> $env:GITHUB_PATH
+
+      - name: Setup ccache
+        id: setup-ccache
+        run: |
+          mkdir -p $env:CCACHE_DIR
+          echo "Using ccache directory: $env:CCACHE_DIR"
+
+      - name: Cache ccache data
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ matrix.os }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ matrix.os }}-ccache-
+
+      - name: Install ccache
+        run: |
+          cmake -V -P .gitlab/ci/config/ninja.cmake
+          cmake -V -P .gitlab/ci/config/ccache.cmake
+          ccache --version
+          ccache -p
+          ccache -z
 
       - if: github.event_name == 'pull_request'
         run: Write-Output ${{ github.event.pull_request.head.sha }} > ORIGINAL_COMMIT_SHA
@@ -74,10 +99,19 @@ jobs:
           Invoke-Expression -Command .github/ci/vcvarsall.ps1
           Get-ChildItem env:
           cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
-
-      - run: ctest -VV -S .gitlab/ci/ctest_configure.cmake
+          ctest -VV -S .gitlab/ci/ctest_configure.cmake
+        env:
+          CC: cl
+          CXX: cl
       - run: ctest -VV -S .gitlab/ci/ctest_build.cmake
       - run: ctest -C $env:CMAKE_BUILD_TYPE -VV -S .gitlab/ci/ctest_test.cmake
+      - run: ccache -s
+      - name: Save cache
+        uses: actions/cache/save@v4
+        if: ${{ github.ref_name == 'main' }}
+        with:
+          path: .ccache
+          key: ${{ matrix.os }}-ccache-${{ github.sha }}
 
   macos:
     needs: format
@@ -122,7 +156,6 @@ jobs:
           echo "${CCACHE_INSTALL_DIR}" >> $GITHUB_PATH
 
       - run: |
-          ls  "${CCACHE_INSTALL_DIR}"
           env
           ccache -z
           ccache -p
