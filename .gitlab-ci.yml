@@ -16,7 +16,7 @@
     CCACHE_DIR: "$CI_PROJECT_DIR/.ccache"
 
 .almalinux8: &almalinux8
-  image: "ghcr.io/viskores/viskores:ci-almalinux8-20250225-23651"
+  image: "ghcr.io/viskores/viskores:ci-almalinux8-20250305-21932"
   extends:
     - .docker_image
 
@@ -144,6 +144,7 @@ stages:
     - *install_cmake
     - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
     - export PATH="${PWD}/.gitlab:${PATH}"
+    - "cmake -VV -P .gitlab/ci/config/gitlab-bridge-set-vars.cmake"
     - "CCACHE_INSTALL_DIR=${PWD}/.gitlab cmake -V -P .gitlab/ci/config/ccache.cmake"
     - export PATH="${PWD}/.gitlab/ccache:${PATH}"
     - ccache -z
@@ -227,7 +228,6 @@ include:
   - local: '/.gitlab/ci/doxygen.yml'
   - local: '/.gitlab/ci/almalinux8.yml'
   - local: '/.gitlab/ci/frontier.yml'
-  #- local: '/.gitlab/ci/macos.yml'
   - local: '/.gitlab/ci/sync-spack.yml'
   - local: '/.gitlab/ci/ubuntu2004.yml'
   - local: '/.gitlab/ci/ubuntu2204.yml'
