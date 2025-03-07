@@ -96,9 +96,11 @@ endif()
 
 # Override revision (Git Commit) if ORIGINAL_COMMIT_SHA is found in source code
 if (EXISTS "ORIGINAL_COMMIT_SHA")
-  file(READ "ORIGINAL_COMMIT_SHA" commit_sha)
+  file(STRINGS "ORIGINAL_COMMIT_SHA" commit_sha LIMIT_COUNT 1)
   list(APPEND optional_variables "set(CTEST_UPDATE_VERSION_OVERRIDE ${commit_sha})")
 endif()
+
+string(REPLACE ";" "\n" optional_variables "${optional_variables}")
 
 #We need to do write this information out to a file in the build directory
 file(TO_CMAKE_PATH "${CTEST_SOURCE_DIRECTORY}" src_path) #converted so we can run on windows
@@ -121,4 +123,5 @@ set(state
   ${optional_variables}
 "
 )
+message("OUT: ${state}")
 file(WRITE ${CTEST_BINARY_DIRECTORY}/CIState.cmake "${state}")
