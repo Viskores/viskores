@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -8,11 +16,11 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-## This CMake script checks source files for the appropriate VISKORES copyright
-## statement, which is stored in Viskores_SOURCE_DIR/CMake/ViskoresCopyrightStatement.txt.
+## This CMake script checks source files for the appropriate VISKORES license
+## statement, which is stored in Viskores_SOURCE_DIR/CMake/ViskoresLicenseStatement.txt.
 ## To run this script, execute CMake as follows:
 ##
-## cmake -DViskores_SOURCE_DIR=<Viskores_SOURCE_DIR> -P <Viskores_SOURCE_DIR>/CMake/VISKORESCheckCopyright.cmake
+## cmake -DViskores_SOURCE_DIR=<Viskores_SOURCE_DIR> -P <Viskores_SOURCE_DIR>/CMake/VISKORESCheckLicense.cmake
 ##
 
 cmake_minimum_required(VERSION 3.12)
@@ -35,6 +43,7 @@ set(FILES_TO_CHECK
 
 set(EXCEPTIONS
   LICENSE.txt
+  DCO.txt
   README.txt
   docs/users-guide/requirements.txt
   )
@@ -43,19 +52,19 @@ if (NOT Viskores_SOURCE_DIR)
   message(SEND_ERROR "Viskores_SOURCE_DIR not defined.")
 endif (NOT Viskores_SOURCE_DIR)
 
-set(copyright_file ${Viskores_SOURCE_DIR}/CMake/ViskoresCopyrightStatement.txt)
+set(license_statement_file ${Viskores_SOURCE_DIR}/CMake/ViskoresLicenseStatement.txt)
 
-if (NOT EXISTS ${copyright_file})
-  message(SEND_ERROR "Cannot find VISKORESCopyrightStatement.txt.")
-endif (NOT EXISTS ${copyright_file})
+if (NOT EXISTS ${license_statement_file})
+  message(SEND_ERROR "Cannot find VISKORESLicenseStatement.txt.")
+endif (NOT EXISTS ${license_statement_file})
 
-set(license_file ${Viskores_SOURCE_DIR}/LICENSE.txt)
+set(license_file ${Viskores_SOURCE_DIR}/DCO.txt)
 
 if (NOT EXISTS ${license_file})
   message(SEND_ERROR "Cannot find LICENSE.txt.")
 endif (NOT EXISTS ${license_file})
 
-# Get a list of third party files (with different copyrights) from the
+# Get a list of third party files (with different licenses) from the
 # license file.
 file(STRINGS ${license_file} license_lines)
 list(FIND
@@ -76,7 +85,7 @@ find_path(BUILD_DIR CMakeCache.txt .)
 get_filename_component(abs_build_dir ${BUILD_DIR} ABSOLUTE)
 get_filename_component(build_dir_name ${abs_build_dir} NAME)
 set(EXCEPTIONS ${EXCEPTIONS} ${build_dir_name}/*)
-message("Copyright Check Exceptions: ${EXCEPTIONS}")
+message("License Check Exceptions: ${EXCEPTIONS}")
 
 # Gets the current year (if possible).
 function (get_year var)
@@ -84,7 +93,7 @@ function (get_year var)
   set(${var} "${result}" PARENT_SCOPE)
 endfunction (get_year)
 
-set(copyright_file_year 2014)
+set(license_file_year 2014)
 get_year(current_year)
 
 # Escapes ';' characters (list delimiters) and splits the given string into
@@ -95,66 +104,66 @@ function (list_of_lines var string)
   set(${var} "${conditioned_string}" PARENT_SCOPE)
 endfunction (list_of_lines)
 
-# Read in copyright statement file.
-file(READ ${copyright_file} COPYRIGHT_STATEMENT)
+# Read in license statement file.
+file(READ ${license_statement_file} LICENSE_STATEMENT)
 
 # Remove trailing whitespace and ending lines.  They are sometimes hard to
 # see or remove in editors.
-string(REGEX REPLACE "[ \t]*\n" "\n" COPYRIGHT_STATEMENT "${COPYRIGHT_STATEMENT}")
-string(REGEX REPLACE "\n+$" "" COPYRIGHT_STATEMENT "${COPYRIGHT_STATEMENT}")
+string(REGEX REPLACE "[ \t]*\n" "\n" LICENSE_STATEMENT "${LICENSE_STATEMENT}")
+string(REGEX REPLACE "\n+$" "" LICENSE_STATEMENT "${LICENSE_STATEMENT}")
 
-# Get a list of lines in the copyright statement.
-list_of_lines(COPYRIGHT_LINE_LIST "${COPYRIGHT_STATEMENT}")
+# Get a list of lines in the license statement.
+list_of_lines(LICENSE_LINE_LIST "${LICENSE_STATEMENT}")
 
 # Comment regular expression characters that we want to match literally.
-string(REPLACE "." "\\." COPYRIGHT_LINE_LIST "${COPYRIGHT_LINE_LIST}")
-string(REPLACE "(" "\\(" COPYRIGHT_LINE_LIST "${COPYRIGHT_LINE_LIST}")
-string(REPLACE ")" "\\)" COPYRIGHT_LINE_LIST "${COPYRIGHT_LINE_LIST}")
+string(REPLACE "." "\\." LICENSE_LINE_LIST "${LICENSE_LINE_LIST}")
+string(REPLACE "(" "\\(" LICENSE_LINE_LIST "${LICENSE_LINE_LIST}")
+string(REPLACE ")" "\\)" LICENSE_LINE_LIST "${LICENSE_LINE_LIST}")
 
 # Introduce regular expression for years we want to be generic.
 string(REPLACE
-  "${copyright_file_year}"
+  "${license_file_year}"
   "20[0-9][0-9]"
-  COPYRIGHT_LINE_LIST
-  "${COPYRIGHT_LINE_LIST}"
+  LICENSE_LINE_LIST
+  "${LICENSE_LINE_LIST}"
   )
 
-# Replace year in COPYRIGHT_STATEMENT with current year.
+# Replace year in LICENSE_STATEMENT with current year.
 string(REPLACE
-  "${copyright_file_year}"
+  "${license_file_year}"
   "${current_year}"
-  COPYRIGHT_STATEMENT
-  "${COPYRIGHT_STATEMENT}"
+  LICENSE_STATEMENT
+  "${LICENSE_STATEMENT}"
   )
 
-# Print an error concerning the missing copyright in the given file.
-function(missing_copyright filename comment_prefix)
-  message("${filename} does not have the appropriate copyright statement:\n")
+# Print an error concerning the missing license in the given file.
+function(missing_license filename comment_prefix)
+  message("${filename} does not have the appropriate license statement:\n")
 
-  # Condition the copyright statement
+  # Condition the license statement
   string(REPLACE
     "\n"
     "\n${comment_prefix}  "
-    comment_copyright
-    "${COPYRIGHT_STATEMENT}"
+    comment_license
+    "${LICENSE_STATEMENT}"
     )
-  set(comment_copyright "${comment_prefix}  ${comment_copyright}")
+  set(comment_license "${comment_prefix}  ${comment_license}")
   string(REPLACE
     "\n${comment_prefix}  \n"
     "\n${comment_prefix}\n"
-    comment_copyright
-    "${comment_copyright}"
+    comment_license
+    "${comment_license}"
     )
 
   message("${comment_prefix}=============================================================================")
   message("${comment_prefix}")
-  message("${comment_copyright}")
+  message("${comment_license}")
   message("${comment_prefix}")
   message("${comment_prefix}=============================================================================\n")
   message(SEND_ERROR
     "Please add the previous statement to the beginning of ${filename}"
     )
-endfunction(missing_copyright)
+endfunction(missing_license)
 
 # Get an appropriate beginning line comment for the given filename.
 function(get_comment_prefix var filename)
@@ -173,8 +182,8 @@ function(get_comment_prefix var filename)
   endif ()
 endfunction(get_comment_prefix)
 
-# Check the given file for the appropriate copyright statement.
-function(check_copyright filename)
+# Check the given file for the appropriate license statement.
+function(check_license filename)
 
   get_comment_prefix(comment_prefix "${filename}")
 
@@ -186,36 +195,36 @@ function(check_copyright filename)
   list_of_lines(header_lines "${header_contents}")
 
   set(printed)
-  # Check each copyright line.
-  foreach (copyright_line IN LISTS COPYRIGHT_LINE_LIST)
+  # Check each license line.
+  foreach (license_line IN LISTS LICENSE_LINE_LIST)
     set(match)
     # My original algorithm tried to check the order by removing items from
     # header_lines as they were encountered.  Unfortunately, CMake 2.8's
     # list REMOVE_AT command removed the escaping on the ; in one of the
     # header_line's items and cause the compare to fail.
     foreach (header_line IN LISTS header_lines)
-      if (copyright_line)
+      if (license_line)
         string(REGEX MATCH
-          "^${comment_prefix}[ \t]*${copyright_line}[ \t]*$"
+          "^${comment_prefix}[ \t]*${license_line}[ \t]*$"
           match
           "${header_line}"
           )
-      else (copyright_line)
+      else (license_line)
         if (NOT header_line)
           set(match TRUE)
         endif (NOT header_line)
-      endif (copyright_line)
+      endif (license_line)
       if (match)
         break()
       endif (match)
     endforeach (header_line)
     if (NOT match AND NOT printed)
-      message(STATUS "Could not find match for `${copyright_line}'")
-      missing_copyright("${filename}" "${comment_prefix}")
+      message(STATUS "Could not find match for `${license_line}'")
+      missing_license("${filename}" "${comment_prefix}")
       set(printed TRUE)
     endif (NOT match AND NOT printed)
-  endforeach (copyright_line)
-endfunction(check_copyright)
+  endforeach (license_line)
+endfunction(check_license)
 
 foreach (glob_expression ${FILES_TO_CHECK})
   file(GLOB_RECURSE file_list
@@ -233,7 +242,7 @@ foreach (glob_expression ${FILES_TO_CHECK})
     endforeach(exception)
 
     if (NOT skip)
-      check_copyright("${Viskores_SOURCE_DIR}/${file}")
+      check_license("${Viskores_SOURCE_DIR}/${file}")
     endif (NOT skip)
   endforeach (file)
 endforeach (glob_expression)
