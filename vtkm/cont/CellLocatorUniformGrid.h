@@ -19,6 +19,14 @@ namespace vtkm
 namespace cont
 {
 
+/// @brief A cell locator optimized for finding cells in a uniform grid.
+///
+/// This locator is optimized for structured data that has uniform axis-aligned spacing.
+/// For this cell locator to work, it has to be given a cell set of type
+/// `vtkm::cont::CellSetStructured` and a coordinate system using a
+/// `vtkm::cont::ArrayHandleUniformPointCoordinates` for its coordinate system.
+/// If the data set matches this structure, then this locator will be faster than
+/// any others.
 class VTKM_CONT_EXPORT CellLocatorUniformGrid : public vtkm::cont::CellLocatorBase
 {
 public:

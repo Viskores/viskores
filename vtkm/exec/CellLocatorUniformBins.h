@@ -14,6 +14,7 @@
 #include <vtkm/exec/ParametricCoordinates.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/CoordinateSystem.h>
 
 #include <vtkm/TopologyElementTag.h>
@@ -26,6 +27,16 @@ namespace exec
 {
 
 //--------------------------------------------------------------------
+
+/// @brief Structure for locating cells.
+///
+/// Use the `FindCell()` method to identify which cell contains a point in space.
+/// The `FindCell()` method optionally takes a `LastCell` object, which is a
+/// structure nested in this class. The `LastCell` object can help speed locating
+/// cells for successive finds at nearby points.
+///
+/// This class is provided by `vtkm::cont::CellLocatorBoundingIntervalHierarchy`
+/// when passed to a worklet.
 template <typename CellStructureType>
 class VTKM_ALWAYS_EXPORT CellLocatorUniformBins
 {
@@ -68,26 +79,27 @@ public:
   {
   }
 
+  /// @copydoc vtkm::exec::CellLocatorUniformGrid::LastCell
   struct LastCell
   {
     vtkm::Id CellId = -1;
     vtkm::Id BinIdx = -1;
   };
 
-  VTKM_EXEC
-  vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
-                           vtkm::Id& cellId,
-                           vtkm::Vec3f& parametric) const
+  /// @copydoc vtkm::exec::CellLocatorUniformGrid::FindCell
+  VTKM_EXEC vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
+                                     vtkm::Id& cellId,
+                                     vtkm::Vec3f& parametric) const
   {
     LastCell lastCell;
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
-  VTKM_EXEC
-  vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
-                           vtkm::Id& cellId,
-                           vtkm::Vec3f& parametric,
-                           LastCell& lastCell) const
+  /// @copydoc vtkm::exec::CellLocatorUniformGrid::FindCell
+  VTKM_EXEC vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
+                                     vtkm::Id& cellId,
+                                     vtkm::Vec3f& parametric,
+                                     LastCell& lastCell) const
   {
     vtkm::Id binIdx = this->FindBinIdx(point);
 
