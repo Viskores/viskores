@@ -12,7 +12,6 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
-#include <vtkm/Deprecated.h>
 #include <vtkm/Types.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
@@ -23,11 +22,11 @@ namespace vtkm
 namespace cont
 {
 
-/// \brief Base class for all `CellLocator` classes.
+/// @brief Base class for all `CellLocator` classes.
 ///
-/// `CellLocatorBase` uses the curiously recurring template pattern (CRTP). Subclasses
-/// must provide their own type for the template parameter. Subclasses must implement
-/// `Build()` and `PrepareForExecution()` methods.
+/// `CellLocatorBase` subclasses must implement the pure virtual `Build()` method.
+/// They also must provide a `PrepareForExecution()` method to satisfy the
+/// `ExecutionObjectBase` superclass.
 ///
 /// If a derived class changes its state in a way that invalidates its internal search
 /// structure, it should call the protected `SetModified()` method. This will alert the
@@ -61,6 +60,11 @@ public:
   {
     this->Coords = coords;
     this->SetModified();
+  }
+  /// @copydoc GetCoordinates
+  VTKM_CONT void SetCoordinates(const vtkm::cont::UnknownArrayHandle& coords)
+  {
+    this->SetCoordinates({ "coords", coords });
   }
 
   /// @brief Build the search structure used to look up cells.

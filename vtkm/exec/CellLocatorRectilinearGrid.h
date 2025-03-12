@@ -28,6 +28,15 @@ namespace vtkm
 namespace exec
 {
 
+/// @brief Structure for locating cells.
+///
+/// Use the `FindCell()` method to identify which cell contains a point in space.
+/// The `FindCell()` method optionally takes a `LastCell` object, which is a
+/// structure nested in this class. The `LastCell` object can help speed locating
+/// cells for successive finds at nearby points.
+///
+/// This class is provided by `vtkm::cont::CellLocatorRectilinearGrid`
+/// when passed to a worklet.
 class VTKM_ALWAYS_EXPORT CellLocatorRectilinearGrid
 {
 private:
@@ -43,6 +52,7 @@ private:
   VTKM_CONT static vtkm::Id3 ToId3(vtkm::Id&& src) { return vtkm::Id3(src, 1, 1); }
 
 public:
+  /// @copydoc vtkm::exec::CellLocatorUniformGrid::LastCell
   struct LastCell
   {
   };
@@ -92,19 +102,19 @@ public:
     return inside;
   }
 
-  VTKM_EXEC
-  vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
-                           vtkm::Id& cellId,
-                           vtkm::Vec3f& parametric,
-                           LastCell& vtkmNotUsed(lastCell)) const
+  /// @copydoc vtkm::exec::CellLocatorUniformGrid::FindCell
+  VTKM_EXEC vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
+                                     vtkm::Id& cellId,
+                                     vtkm::Vec3f& parametric,
+                                     LastCell& vtkmNotUsed(lastCell)) const
   {
     return this->FindCell(point, cellId, parametric);
   }
 
-  VTKM_EXEC
-  vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
-                           vtkm::Id& cellId,
-                           vtkm::Vec3f& parametric) const
+  /// @copydoc vtkm::exec::CellLocatorUniformGrid::FindCell
+  VTKM_EXEC vtkm::ErrorCode FindCell(const vtkm::Vec3f& point,
+                                     vtkm::Id& cellId,
+                                     vtkm::Vec3f& parametric) const
   {
     if (!this->IsInside(point))
     {

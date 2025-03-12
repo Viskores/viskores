@@ -19,6 +19,12 @@ namespace vtkm
 namespace cont
 {
 
+/// @brief A cell locator optimized for finding cells in a rectilinear grid.
+///
+/// This locator is optimized for structured data that has nonuniform axis-aligned spacing.
+/// For this cell locator to work, it has to be given a cell set of type
+/// `vtkm::cont::CellSetStructured` and a coordinate system using a
+/// `vtkm::cont::ArrayHandleCartesianProduct` for its data.
 class VTKM_CONT_EXPORT CellLocatorRectilinearGrid : public vtkm::cont::CellLocatorBase
 {
   using Structured2DType = vtkm::cont::CellSetStructured<2>;

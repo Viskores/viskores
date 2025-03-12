@@ -14,6 +14,7 @@
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
+#include <vtkm/cont/CellLocatorChooser.h>
 #include <vtkm/cont/CellLocatorGeneral.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
@@ -105,12 +106,14 @@ struct DemoQueryCells
     //// RESUME-EXAMPLE
     ////
     //// BEGIN-EXAMPLE ConstructCellLocator
+    //// BEGIN-EXAMPLE CellLocatorGeneral
     ////
     vtkm::cont::CellLocatorGeneral cellLocator;
     cellLocator.SetCellSet(inDataSet.GetCellSet());
     cellLocator.SetCoordinates(inDataSet.GetCoordinateSystem());
     cellLocator.Update();
     ////
+    //// END-EXAMPLE CellLocatorGeneral
     //// END-EXAMPLE ConstructCellLocator
     ////
 
@@ -130,7 +133,7 @@ struct DemoQueryCells
   }
 };
 
-void TestCellLocator()
+void TestCellLocator1()
 {
   using ValueType = vtkm::Vec3f;
   using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
@@ -162,9 +165,81 @@ void TestCellLocator()
   VTKM_TEST_ASSERT(test_equal_portals(expected.ReadPortal(), interpolated.ReadPortal()));
 }
 
+////
+//// BEGIN-EXAMPLE CellLocatorChooser
+////
+template<typename CellSetType,
+         typename CoordsType,
+         typename QueryPointsType,
+         typename FieldType>
+void QueryCells(const CellSetType& cellSet,
+                const CoordsType& coords,
+                const QueryPointsType& queryPoints,
+                const FieldType& inField,
+                const FieldType& interpolatedField)
+{
+  VTKM_IS_CELL_SET(CellSetType);
+  VTKM_IS_ARRAY_HANDLE(CoordsType);
+  VTKM_IS_ARRAY_HANDLE(QueryPointsType);
+  VTKM_IS_ARRAY_HANDLE(FieldType);
+
+  vtkm::cont::CellLocatorChooser<CellSetType, CoordsType> cellLocator;
+  cellLocator.SetCellSet(cellSet);
+  cellLocator.SetCoordinates(coords);
+  cellLocator.Update();
+
+  vtkm::cont::Invoker invoke;
+  invoke(
+    QueryCellsWorklet{}, queryPoints, cellLocator, cellSet, inField, interpolatedField);
+}
+////
+//// END-EXAMPLE CellLocatorChooser
+////
+
+void TestCellLocator2()
+{
+  using ValueType = vtkm::Vec3f;
+  using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+
+  vtkm::cont::DataSet data = vtkm::cont::DataSetBuilderUniform::Create(DimensionSizes);
+
+  ArrayType inField;
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleUniformPointCoordinates(
+                          DimensionSizes, ValueType(0.0f), ValueType(2.0f)),
+                        inField);
+
+  ArrayType queryPoints;
+
+  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleUniformPointCoordinates(
+                          DimensionSizes - vtkm::Id3(1), ValueType(0.5f)),
+                        queryPoints);
+
+  ArrayType interpolated;
+
+  QueryCells(data.GetCellSet().AsCellSet<vtkm::cont::CellSetStructured<3>>(),
+             data.GetCoordinateSystem()
+               .GetData()
+               .AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>(),
+             queryPoints,
+             inField,
+             interpolated);
+
+  vtkm::cont::ArrayHandleUniformPointCoordinates expected(
+    DimensionSizes - vtkm::Id3(1), ValueType(1.0f), ValueType(2.0f));
+
+  std::cout << "Expected: ";
+  vtkm::cont::printSummary_ArrayHandle(expected, std::cout);
+
+  std::cout << "Interpolated: ";
+  vtkm::cont::printSummary_ArrayHandle(interpolated, std::cout);
+
+  VTKM_TEST_ASSERT(test_equal_portals(expected.ReadPortal(), interpolated.ReadPortal()));
+}
+
 void Run()
 {
-  TestCellLocator();
+  TestCellLocator1();
+  TestCellLocator2();
 }
 
 } // anonymous namespace
