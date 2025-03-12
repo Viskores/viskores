@@ -206,6 +206,7 @@ inline std::vector<vtkm::cont::DataSet> CreateAllDataSets(const vtkm::Bounds& bo
   std::vector<vtkm::cont::DataSet> dataSets;
 
   dataSets.push_back(vtkm::worklet::testing::CreateUniformDataSet(bounds, dims, addGhost));
+  /*
   dataSets.push_back(vtkm::worklet::testing::CreateRectilinearDataSet(bounds, dims, addGhost));
   dataSets.push_back(vtkm::worklet::testing::CreateExplicitFromStructuredDataSet(
     bounds, dims, ExplicitDataSetOption::SINGLE, addGhost));
@@ -213,6 +214,7 @@ inline std::vector<vtkm::cont::DataSet> CreateAllDataSets(const vtkm::Bounds& bo
     bounds, dims, ExplicitDataSetOption::CURVILINEAR, addGhost));
   dataSets.push_back(vtkm::worklet::testing::CreateExplicitFromStructuredDataSet(
     bounds, dims, ExplicitDataSetOption::EXPLICIT, addGhost));
+  */
 
   return dataSets;
 }

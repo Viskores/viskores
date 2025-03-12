@@ -49,7 +49,7 @@ void AddVectorFields(vtkm::cont::PartitionedDataSet& pds,
     ds.AddPointField(fieldName, CreateConstantVectorField(ds.GetNumberOfPoints(), vec));
 }
 
-void TestStreamline()
+void TestStreamline(bool useThreaded)
 {
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Bounds bounds(0, 4, 0, 4, 0, 4);
@@ -68,6 +68,7 @@ void TestStreamline()
 
     vtkm::filter::flow::Streamline streamline;
 
+    streamline.SetUseThreadedAlgorithm(useThreaded);
     streamline.SetStepSize(0.1f);
     streamline.SetNumberOfSteps(20);
     streamline.SetSeeds(seedArray);
@@ -87,7 +88,7 @@ void TestStreamline()
   }
 }
 
-void TestPathline()
+void TestPathline(bool useThreaded)
 {
   const vtkm::Id3 dims(5, 5, 5);
   const vtkm::Vec3f vecX(1, 0, 0);
@@ -126,6 +127,7 @@ void TestPathline()
       if (fType == 0)
       {
         vtkm::filter::flow::Pathline filt;
+        filt.SetUseThreadedAlgorithm(useThreaded);
         filt.SetActiveField(var);
         filt.SetStepSize(stepSize);
         filt.SetNumberOfSteps(numSteps);
@@ -139,6 +141,7 @@ void TestPathline()
       else
       {
         vtkm::filter::flow::PathParticle filt;
+        filt.SetUseThreadedAlgorithm(useThreaded);
         filt.SetActiveField(var);
         filt.SetStepSize(stepSize);
         filt.SetNumberOfSteps(numSteps);
@@ -162,7 +165,7 @@ void TestPathline()
   }
 }
 
-void TestAMRStreamline(bool useSL)
+void TestAMRStreamline(bool useSL, bool useThreaded)
 {
   vtkm::Bounds outerBounds(0, 10, 0, 10, 0, 10);
   vtkm::Id3 outerDims(11, 11, 11);
@@ -225,6 +228,7 @@ void TestAMRStreamline(bool useSL)
     if (useSL)
     {
       vtkm::filter::flow::Streamline filter;
+      filter.SetUseThreadedAlgorithm(useThreaded);
       filter.SetStepSize(0.1f);
       filter.SetNumberOfSteps(100000);
       filter.SetSeeds(seedArray);
@@ -297,6 +301,7 @@ void TestAMRStreamline(bool useSL)
     else
     {
       vtkm::filter::flow::ParticleAdvection filter;
+      filter.SetUseThreadedAlgorithm(useThreaded);
       filter.SetStepSize(0.1f);
       filter.SetNumberOfSteps(100000);
       filter.SetSeeds(seedArray);
@@ -326,7 +331,7 @@ void TestAMRStreamline(bool useSL)
   }
 }
 
-void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
+void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType, bool useThreaded)
 {
   vtkm::Id numDims = 5;
   vtkm::FloatDefault x0 = 0;
@@ -378,6 +383,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
       if (fType == FilterType::STREAMLINE)
       {
         vtkm::filter::flow::Streamline streamline;
+        streamline.SetUseThreadedAlgorithm(useThreaded);
         streamline.SetStepSize(0.1f);
         streamline.SetNumberOfSteps(100000);
         streamline.SetSeeds(seedArray);
@@ -390,6 +396,7 @@ void TestPartitionedDataSet(vtkm::Id num, bool useGhost, FilterType fType)
         AddVectorFields(pds2, fieldName, vecX);
 
         vtkm::filter::flow::Pathline pathline;
+        pathline.SetUseThreadedAlgorithm(useThreaded);
         pathline.SetPreviousTime(0);
         pathline.SetNextTime(1000);
         pathline.SetNextDataSet(pds2);
@@ -587,19 +594,20 @@ void TestStreamlineFilters()
                                      FilterType::STREAMLINE,
                                      FilterType::PATHLINE,
                                      FilterType::PATH_PARTICLE };
-
   for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)
       for (auto ft : fTypes)
-        TestPartitionedDataSet(n, useGhost, ft);
+        TestPartitionedDataSet(n, useGhost, ft, false);
   }
 
-  TestStreamline();
-  TestPathline();
-
+  for (auto useThreaded : flags)
+  {
+    TestStreamline(useThreaded);
+    TestPathline(useThreaded);
+  }
   for (auto useSL : flags)
-    TestAMRStreamline(useSL);
+    TestAMRStreamline(useSL, false);
 
   {
     //Rotate test.

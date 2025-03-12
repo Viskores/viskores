@@ -10,6 +10,7 @@
 
 set(headers
   AdvectAlgorithm.h
+  AdvectAlgorithmTerminator.h
   AdvectAlgorithmThreaded.h
   BoundsMap.h
   DataSetIntegrator.h
@@ -17,9 +18,8 @@ set(headers
   DataSetIntegratorUnsteadyState.h
   GridMetaData.h
   LagrangianStructureHelpers.h
-  Messenger.h
   ParticleAdvector.h
-  ParticleMessenger.h
+  ParticleExchanger.h
   )
 
 # Note: The C++ source files are added to the flow library

@@ -46,7 +46,6 @@ void SetFilter(FilterType& filter,
                const std::string& fieldName,
                vtkm::cont::ArrayHandle<vtkm::Particle> seedArray,
                bool useThreaded,
-               bool useAsyncComm,
                bool useBlockIds,
                const std::vector<vtkm::Id>& blockIds)
 {
@@ -55,10 +54,6 @@ void SetFilter(FilterType& filter,
   filter.SetSeeds(seedArray);
   filter.SetActiveField(fieldName);
   filter.SetUseThreadedAlgorithm(useThreaded);
-  if (useAsyncComm)
-    filter.SetUseAsynchronousCommunication();
-  else
-    filter.SetUseSynchronousCommunication();
 
   if (useBlockIds)
     filter.SetBlockIDs(blockIds);
@@ -75,7 +70,6 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
                             bool useGhost,
                             FilterType fType,
                             bool useThreaded,
-                            bool useAsyncComm,
                             bool useBlockIds,
                             bool duplicateBlocks);
 

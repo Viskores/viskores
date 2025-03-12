@@ -15,7 +15,6 @@
 #include <vtkm/filter/flow/internal/AdvectAlgorithm.h>
 #include <vtkm/filter/flow/internal/BoundsMap.h>
 #include <vtkm/filter/flow/internal/DataSetIntegrator.h>
-#include <vtkm/filter/flow/internal/ParticleMessenger.h>
 
 #include <thread>
 
@@ -35,11 +34,9 @@ public:
   using ParticleType = typename DSIType::PType;
 
   AdvectAlgorithmThreaded(const vtkm::filter::flow::internal::BoundsMap& bm,
-                          std::vector<DSIType>& blocks,
-                          bool useAsyncComm)
-    : AdvectAlgorithm<DSIType>(bm, blocks, useAsyncComm)
+                          std::vector<DSIType>& blocks)
+    : AdvectAlgorithm<DSIType>(bm, blocks)
     , Done(false)
-    , WorkerActivate(false)
   {
     //For threaded algorithm, the particles go out of scope in the Work method.
     //When this happens, they are destructed by the time the Manage thread gets them.
@@ -50,8 +47,6 @@ public:
 
   void Go() override
   {
-    this->ComputeTotalNumParticles();
-
     std::vector<std::thread> workerThreads;
     workerThreads.emplace_back(std::thread(AdvectAlgorithmThreaded::Worker, this));
     this->Manage();
@@ -63,6 +58,28 @@ public:
   }
 
 protected:
+  bool HaveWork() override
+  {
+    std::lock_guard<std::mutex> lock(this->Mutex);
+    return this->AdvectAlgorithm<DSIType>::HaveWork() || this->WorkerActivate;
+  }
+
+  virtual bool GetDone() override
+  {
+    std::lock_guard<std::mutex> lock(this->Mutex);
+#ifndef VTKM_ENABLE_MPI
+    return !this->CheckHaveWork();
+#else
+    return this->Terminator.Done();
+#endif
+  }
+
+  bool WorkerGetDone()
+  {
+    std::lock_guard<std::mutex> lock(this->Mutex);
+    return this->Done;
+  }
+
   bool GetActiveParticles(std::vector<ParticleType>& particles, vtkm::Id& blockId) override
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
@@ -83,12 +100,6 @@ protected:
       this->WorkerActivateCondition.notify_all();
       this->WorkerActivate = true;
     }
-  }
-
-  bool CheckDone()
-  {
-    std::lock_guard<std::mutex> lock(this->Mutex);
-    return this->Done;
   }
 
   void SetDone()
@@ -115,7 +126,7 @@ protected:
 
   void Work()
   {
-    while (!this->CheckDone())
+    while (!this->WorkerGetDone())
     {
       std::vector<ParticleType> v;
       vtkm::Id blockId = -1;
@@ -133,49 +144,19 @@ protected:
 
   void Manage()
   {
-    if (!this->UseAsynchronousCommunication)
-    {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-                 "Synchronous communication not supported for AdvectAlgorithmThreaded."
-                 "Forcing asynchronous communication.");
-    }
-
-    bool useAsync = true;
-    vtkm::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
-      this->Comm, useAsync, this->BoundsMap, 1, 128);
-
-    while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
+    while (!this->GetDone())
     {
       std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> workerResults;
       this->GetWorkerResults(workerResults);
 
       vtkm::Id numTerm = 0;
       for (auto& it : workerResults)
-      {
         for (auto& r : it.second)
           numTerm += this->UpdateResult(r);
-      }
 
-      vtkm::Id numTermMessages = 0;
-      this->Communicate(messenger, numTerm, numTermMessages);
-
-      this->TotalNumTerminatedParticles += (numTerm + numTermMessages);
-      if (this->TotalNumTerminatedParticles > this->TotalNumParticles)
-        throw vtkm::cont::ErrorFilterExecution("Particle count error");
+      this->ExchangeParticles();
     }
-
-    //Let the workers know that we are done.
     this->SetDone();
-  }
-
-  bool GetBlockAndWait(const bool& syncComm, const vtkm::Id& numLocalTerm) override
-  {
-    std::lock_guard<std::mutex> lock(this->Mutex);
-    if (this->Done)
-      return true;
-
-    return (this->AdvectAlgorithm<DSIType>::GetBlockAndWait(syncComm, numLocalTerm) &&
-            !this->WorkerActivate && this->WorkerResults.empty());
   }
 
   void GetWorkerResults(
@@ -191,9 +172,15 @@ protected:
     }
   }
 
+private:
+  bool CheckHaveWork()
+  {
+    return this->AdvectAlgorithm<DSIType>::HaveWork() || this->WorkerActivate;
+  }
+
   std::atomic<bool> Done;
   std::mutex Mutex;
-  bool WorkerActivate;
+  bool WorkerActivate = false;
   std::condition_variable WorkerActivateCondition;
   std::unordered_map<vtkm::Id, std::vector<DSIHelperInfo<ParticleType>>> WorkerResults;
 };

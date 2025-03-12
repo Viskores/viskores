@@ -33,12 +33,10 @@ public:
 
   ParticleAdvector(const vtkm::filter::flow::internal::BoundsMap& bm,
                    const std::vector<DSIType>& blocks,
-                   const bool& useThreaded,
-                   const bool& useAsyncComm)
+                   const bool& useThreaded)
     : Blocks(blocks)
     , BoundsMap(bm)
     , UseThreadedAlgorithm(useThreaded)
-    , UseAsynchronousCommunication(useAsyncComm)
   {
   }
 
@@ -62,7 +60,7 @@ private:
   vtkm::cont::PartitionedDataSet RunAlgo(const vtkm::cont::ArrayHandle<ParticleType>& seeds,
                                          vtkm::FloatDefault stepSize)
   {
-    AlgorithmType algo(this->BoundsMap, this->Blocks, this->UseAsynchronousCommunication);
+    AlgorithmType algo(this->BoundsMap, this->Blocks);
     algo.Execute(seeds, stepSize);
     return algo.GetOutput();
   }
@@ -70,7 +68,6 @@ private:
   std::vector<DSIType> Blocks;
   vtkm::filter::flow::internal::BoundsMap BoundsMap;
   bool UseThreadedAlgorithm;
-  bool UseAsynchronousCommunication = true;
 };
 
 }

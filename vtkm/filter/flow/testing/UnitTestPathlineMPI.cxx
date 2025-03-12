@@ -21,8 +21,7 @@ void DoTest()
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
 
-  FilterType filterType = STREAMLINE;
-  bool useAsyncComm = true;
+  FilterType filterType = PATHLINE;
 
   for (vtkm::Id nPerRank = 1; nPerRank < 3; ++nPerRank)
   {
@@ -35,15 +34,12 @@ void DoTest()
           //Run blockIds with and without block duplication.
           if (useBlockIds && comm.size() > 1)
           {
-            TestPartitionedDataSet(
-              nPerRank, useGhost, filterType, useThreaded, useAsyncComm, useBlockIds, false);
-            TestPartitionedDataSet(
-              nPerRank, useGhost, filterType, useThreaded, useAsyncComm, useBlockIds, true);
+            TestPartitionedDataSet(nPerRank, useGhost, filterType, useThreaded, useBlockIds, false);
+            TestPartitionedDataSet(nPerRank, useGhost, filterType, useThreaded, useBlockIds, true);
           }
           else
           {
-            TestPartitionedDataSet(
-              nPerRank, useGhost, filterType, useThreaded, useAsyncComm, useBlockIds, false);
+            TestPartitionedDataSet(nPerRank, useGhost, filterType, useThreaded, useBlockIds, false);
           }
         }
       }
@@ -53,7 +49,7 @@ void DoTest()
 
 } // anonymous namespace
 
-int UnitTestStreamlineAsynchronousMPI(int argc, char* argv[])
+int UnitTestPathlineMPI(int argc, char* argv[])
 {
   return vtkm::cont::testing::Testing::Run(DoTest, argc, argv);
 }

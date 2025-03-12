@@ -11,10 +11,12 @@
 #ifndef vtk_m_filter_flow_FilterParticleAdvection_h
 #define vtk_m_filter_flow_FilterParticleAdvection_h
 
+#include <vtkm/Deprecated.h>
 #include <vtkm/Particle.h>
 #include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/filter/Filter.h>
 #include <vtkm/filter/flow/FlowTypes.h>
+#include <vtkm/filter/flow/internal/BoundsMap.h>
 #include <vtkm/filter/flow/vtkm_filter_flow_export.h>
 
 namespace vtkm
@@ -89,28 +91,34 @@ public:
   VTKM_CONT
   void SetUseThreadedAlgorithm(bool val) { this->UseThreadedAlgorithm = val; }
 
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous now.")
   VTKM_CONT
-  void SetUseAsynchronousCommunication() { this->UseAsynchronousCommunication = true; }
-  VTKM_CONT
-  bool GetUseAsynchronousCommunication() { return this->UseAsynchronousCommunication; }
+  void SetUseAsynchronousCommunication() {}
 
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous now.")
   VTKM_CONT
-  void SetUseSynchronousCommunication() { this->UseAsynchronousCommunication = false; }
+  bool GetUseAsynchronousCommunication() { return true; }
+
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous now.")
   VTKM_CONT
-  bool GetUseSynchronousCommunication() { return !this->GetUseAsynchronousCommunication(); }
+  void SetUseSynchronousCommunication() {}
+
+  VTKM_DEPRECATED(2.2, "All communication is asynchronous now.")
+  VTKM_CONT
+  bool GetUseSynchronousCommunication() { return false; }
+
 
 protected:
   VTKM_CONT virtual void ValidateOptions() const;
 
   bool BlockIdsSet = false;
   std::vector<vtkm::Id> BlockIds;
-
+  vtkm::filter::flow::internal::BoundsMap BoundsMap;
   vtkm::Id NumberOfSteps = 0;
   vtkm::cont::UnknownArrayHandle Seeds;
   vtkm::filter::flow::IntegrationSolverType SolverType =
     vtkm::filter::flow::IntegrationSolverType::RK4_TYPE;
   vtkm::FloatDefault StepSize = 0;
-  bool UseAsynchronousCommunication = true;
   bool UseThreadedAlgorithm = false;
   vtkm::filter::flow::VectorFieldType VecFieldType =
     vtkm::filter::flow::VectorFieldType::VELOCITY_FIELD_TYPE;

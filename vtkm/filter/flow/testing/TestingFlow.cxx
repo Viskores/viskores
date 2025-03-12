@@ -142,7 +142,6 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
                             bool useGhost,
                             FilterType fType,
                             bool useThreaded,
-                            bool useAsyncComm,
                             bool useBlockIds,
                             bool duplicateBlocks)
 {
@@ -166,11 +165,6 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
       std::cout << " - using ghost cells";
     if (useThreaded)
       std::cout << " - using threaded";
-    if (useAsyncComm)
-      std::cout << " - usingAsyncComm";
-    else
-      std::cout << " - usingSyncComm";
-
     if (useBlockIds)
       std::cout << " - using block IDs";
     if (duplicateBlocks)
@@ -223,15 +217,8 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
     if (fType == STREAMLINE)
     {
       vtkm::filter::flow::Streamline streamline;
-      SetFilter(streamline,
-                stepSize,
-                numSteps,
-                fieldName,
-                seedArray,
-                useThreaded,
-                useAsyncComm,
-                useBlockIds,
-                blockIds);
+      SetFilter(
+        streamline, stepSize, numSteps, fieldName, seedArray, useThreaded, useBlockIds, blockIds);
       auto out = streamline.Execute(pds);
 
       vtkm::Id numOutputs = out.GetNumberOfPartitions();
@@ -255,7 +242,6 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
                 fieldName,
                 seedArray,
                 useThreaded,
-                useAsyncComm,
                 useBlockIds,
                 blockIds);
 
@@ -265,7 +251,11 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
       if (comm.rank() == comm.size() - 1)
       {
         bool checkEnds = out.GetNumberOfPartitions() == static_cast<vtkm::Id>(blockIds.size());
-        VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Wrong number of partitions in output");
+        auto nP = out.GetNumberOfPartitions();
+        if (nP != 1)
+          std::cout << comm.rank() << " numPartitions= " << nP << std::endl;
+        VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 1,
+                         "Wrong number of partitions in output 1");
         ValidateOutput(out.GetPartition(0),
                        numSeeds,
                        xMaxRanges[xMaxRanges.size() - 1],
@@ -274,7 +264,8 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
                        duplicateBlocks);
       }
       else
-        VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 0, "Wrong number of partitions in output");
+        VTKM_TEST_ASSERT(out.GetNumberOfPartitions() == 0,
+                         "Wrong number of partitions in output 0");
     }
     else if (fType == PATHLINE)
     {
@@ -284,15 +275,8 @@ void TestPartitionedDataSet(vtkm::Id nPerRank,
       AddVectorFields(pds2, fieldName, vecX);
 
       vtkm::filter::flow::Pathline pathline;
-      SetFilter(pathline,
-                stepSize,
-                numSteps,
-                fieldName,
-                seedArray,
-                useThreaded,
-                useAsyncComm,
-                useBlockIds,
-                blockIds);
+      SetFilter(
+        pathline, stepSize, numSteps, fieldName, seedArray, useThreaded, useBlockIds, blockIds);
 
       pathline.SetPreviousTime(time0);
       pathline.SetNextTime(time1);
