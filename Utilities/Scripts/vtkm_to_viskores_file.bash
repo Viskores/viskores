@@ -1,5 +1,14 @@
 #!/bin/bash
 
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+
 read -r -d '' SEDRULES << EOF
 s/vtk-m|vtkm|vtk_m/viskores/g
 s/VTK-M|VTK-m|VTKm|Vtk-m|Vtkm/Viskores/g

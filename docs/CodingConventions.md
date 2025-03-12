@@ -10,29 +10,28 @@ coding and because we expect viskores to have continual interaction with VTK.
   + All code contributed to Viskores must be compatible with Viskores’s BSD
     license.
 
-  + Copyright notices should appear at the top of all source,
+  + License notices should appear at the top of all source,
     configuration, and text files. The statement should have the following
     form. Various copyright specific details are referenced in the LICENSE.txt
     file.
 
 ```
-//==========================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//  
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//==========================================================================
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
 ```
 
-  + The CopyrightStatement test checks all files for a similar statement.
+  + The LicenseStatement test checks all files for a similar statement.
     The test will print out a suggested text that can be copied and pasted
     to any file that has a missing copyright statement (with appropriate
     replacement of comment prefix). Exceptions to this copyright statement
     (for example, third-party files with different but compatible
-    statements) can be added to LICENSE.txt.
+    statements) can be added to DCO.txt.
 
   + All include files should use include guards. starting right after the
     copyright statement. The naming convention of the include guard macro

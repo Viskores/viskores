@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -505,7 +513,7 @@ if (Viskores_ENABLE_TESTING)
   #-----------------------------------------------------------------------------
   # Add "meta" tests that check the state of the repository
   # SystemInformation prints out information about the current configuration
-  # CopyrightStatement checks that the copyright statement is in all source files
+  # LicenseStatement checks that the copyright statement is in all source files
   # SourceInBuild checks that all source files are listed in the build
   # SourceInInstall checks that all source files are installed in the build
   add_test(NAME SystemInformation
@@ -513,11 +521,11 @@ if (Viskores_ENABLE_TESTING)
     )
   if(NOT WIN32)
     # Test takes too long on windows
-    add_test(NAME CopyrightStatement
-      COMMAND ${CMAKE_COMMAND} "-DViskores_SOURCE_DIR=${Viskores_SOURCE_DIR}" -P "${Viskores_SOURCE_DIR}/CMake/ViskoresCheckCopyright.cmake"
+    add_test(NAME LicenseStatement
+      COMMAND ${CMAKE_COMMAND} "-DViskores_SOURCE_DIR=${Viskores_SOURCE_DIR}" -P "${Viskores_SOURCE_DIR}/CMake/ViskoresCheckLicense.cmake"
       )
-    # increase timeout since on some machines CopyrightStatement test takes a long time.
-    set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
+    # increase timeout since on some machines LicenseStatement test takes a long time.
+    set_tests_properties(LicenseStatement PROPERTIES TIMEOUT 300)
   endif()
 
   # Setup the infrastructure to allow Viskores to run tests against a temporary
