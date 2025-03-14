@@ -18,6 +18,10 @@
 ##
 ##=============================================================================
 
+default:
+  image:
+    pull_policy: always
+
 .docker_image: &docker_image
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
