@@ -19,15 +19,11 @@
 ##=============================================================================
 
 ubuntu2404_gcc13:
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   extends:
     - .ubuntu2404
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     CC: "gcc-13"
     CXX: "g++-13"
@@ -38,15 +34,11 @@ ubuntu2404_gcc13:
     CTEST_EXCLUSIONS: "UnitTestArrayPortalValueReference|UnitTestParametricCoordinates"
 
 ubuntu2404_gcc14:
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   extends:
     - .ubuntu2404
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     CC: "gcc-14"
     CXX: "g++-14"

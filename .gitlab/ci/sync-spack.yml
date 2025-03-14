@@ -18,17 +18,11 @@
 ##
 ##=============================================================================
 
-#  This file is used to define the GitLab CI/CD pipeline for the ADIOS2 project.
-default:
-  interruptible: true
-  tags:
-    - medium
-    - uo
-    - public
-    - x86_64
-
 deploy:sync-spack:
   environment: spackio
+  interruptible: true
+  extends:
+    - .uo_cpu_tags
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
       when: on_success
