@@ -8,7 +8,7 @@ readonly name="diy"
 readonly ownership="Diy Upstream <kwrobot@kitware.com>"
 readonly subtree="vtkm/thirdparty/$name/vtkm$name"
 readonly repo="https://gitlab.kitware.com/third-party/diy2.git"
-readonly tag="for/vtk-m-20230616-g40ea01f9"
+readonly tag="for/vtk-m-20250321-g40ea01f9"
 readonly paths="
 cmake
 include
