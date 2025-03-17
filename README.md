@@ -74,8 +74,7 @@ VTK-m Requires:
       + MSVC 2015+
       + Intel 17.0.4+
   + [CMake](http://www.cmake.org/download/)
-      + CMake 3.12+
-      + CMake 3.13+ (for CUDA support)
+      + CMake 3.15+
       + CMake 3.24+ (for ROCM+THRUST support)
 
 Optional dependencies are:
