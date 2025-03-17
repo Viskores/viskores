@@ -21,7 +21,7 @@ case "$( uname -s )" in
     Linux)
         readonly -A sumsByVersion=(
             # We require CMake >= 3.13 in the CI to support CUDA builds
-            ['3.13.5']='e2fd0080a6f0fc1ec84647acdcd8e0b4019770f48d83509e6a5b0b6ea27e5864'
+            ['3.15.5']='03cfd669d0f990040ec89bb63a3ae7f6d61fd17c1c4d5e7ec3d1a35fe1f043f0'
             ['3.30.2']='cdd7fb352605cee3ae53b0e18b5929b642900e33d6b0173e19f6d4f2067ebf16'
         )
         shatool="sha256sum"

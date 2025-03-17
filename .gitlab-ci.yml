@@ -126,7 +126,7 @@ stages:
 
 .use_minimum_supported_cmake:
   variables:
-    CMAKE_VERSION: "3.13.5"
+    CMAKE_VERSION: "3.15.5"
 
 .warning_policy:
   allow_failure:
