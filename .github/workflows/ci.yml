@@ -21,13 +21,7 @@
 name: CI
 on:
   push:
-    branches:
-      - main
-      - release*
   pull_request:
-    branches:
-      - main
-      - release*
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -117,7 +111,7 @@ jobs:
           xcode-version: latest-stable
 
       - name: Restore cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.ccache
           key: ${{ matrix.os }}-ccache-${{ github.sha }}
@@ -127,13 +121,14 @@ jobs:
       - name: Set up ccache
         run: |
           cmake --trace-expand -VV -P .gitlab/ci/config/ccache.cmake
-          echo "${CCACHE_INSTALL_DIR}" >> $GITHUB_PATH
+          echo "${CCACHE_INSTALL_DIR}" >> "$GITHUB_PATH"
 
       - run: |
-          ls  "${CCACHE_INSTALL_DIR}"
+          echo "::group::Context"
           env
-          ccache -z
           ccache -p
+          echo "::endgroup::"
+          ccache -z
           ccache -s
 
       - name: Apply GITHUB adaptor
@@ -143,12 +138,11 @@ jobs:
 
       - name: Setup Variables
         run: |
-          env
           cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
       - run: ctest -VV -S .gitlab/ci/ctest_configure.cmake
       - run: ctest -VV -S .gitlab/ci/ctest_build.cmake
+      - run: ccache -s | tee "$GITHUB_STEP_SUMMARY"
       - run: ctest -VV -S .gitlab/ci/ctest_test.cmake
-      - run: ccache -s
 
       - name: Save cache
         uses: actions/cache/save@v4
