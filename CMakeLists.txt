@@ -8,8 +8,7 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-# If you want CUDA support, you will need to have CMake 3.13 on Linux/OSX.
-cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project (VTKm)
 
 # We only allow c++14
