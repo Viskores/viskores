@@ -22,6 +22,8 @@
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
     CCACHE_DIR: "$CI_PROJECT_DIR/.ccache"
+    # This is needed for some CUDA jobs
+    CUDA_MANAGED_FORCE_DEVICE_ALLOC: 1
 
 .almalinux8: &almalinux8
   image: "ghcr.io/viskores/viskores:ci-almalinux8-20250305-21932"
