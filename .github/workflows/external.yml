@@ -1,0 +1,24 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+name: external
+on:
+  push:
+  pull_request_target:
+
+permissions: write-all
+
+jobs:
+  generate_statuses:
+    env:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: vicentebolea/cdash-status@v1
+        with:
+          project: Viskores
