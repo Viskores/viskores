@@ -218,3 +218,7 @@ endif()
 if(sanitizers)
   set(Viskores_USE_SANITIZER "${sanitizers}"  CACHE STRING "" FORCE)
 endif()
+
+if (DEFINED ENV{CTEST_TIMEOUT})
+  set(Viskores_OVERRIDE_CTEST_TIMEOUT "$ENV{CTEST_TIMEOUT}" CACHE STRING "")
+endif()

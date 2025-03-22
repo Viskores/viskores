@@ -23,7 +23,7 @@
 set -ex
 
 # data is expected to be a string of the form YYYYMMDD
-readonly DATESTAMP="$(date +%Y%m%d)-$RANDOM"
+readonly DATESTAMP="$(date +%Y%m%d)"
 images=""
 
 function build_image() {
@@ -38,7 +38,6 @@ function build_image() {
 
 function build_all_images() {
   build_image almalinux8.dockerfile
-  build_image rhel8.dockerfile
   build_image sync.dockerfile
   build_image ubuntu2004_cuda11.8.dockerfile
   build_image ubuntu2004.dockerfile

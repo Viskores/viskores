@@ -29,16 +29,13 @@
 
 .build_docs: &build_docs
   stage: build
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   before_script:
     - cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
     - ctest -VV -S .gitlab/ci/ctest_configure.cmake
   timeout:  30 minutes
   interruptible: true
+  extends:
+    - .uo_cpu_tags
   variables:
     CMAKE_BUILD_TYPE: Release
     VISKORES_SETTINGS: "tbb+openmp+mpi+shared+docs"

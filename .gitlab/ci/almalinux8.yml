@@ -21,15 +21,11 @@
 # Build on almalinux8 without tests
 # Uses gcc 8.2.1
 almalinux8:
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   extends:
     - .almalinux8
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: "Unix Makefiles"
@@ -38,15 +34,11 @@ almalinux8:
 # Build on almalinux8 with serial and test on almalinux8
 # Uses gcc 8.2.1
 almalinux8:
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   extends:
     - .almalinux8
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     CMAKE_GENERATOR: "Unix Makefiles"
     VISKORES_SETTINGS: "serial+shared+64bit_floats+32bit_ids+ccache"
@@ -54,15 +46,11 @@ almalinux8:
 # Build on almalinux8 with serial and the VTK-supported types
 # Uses gcc 8.2.1
 almalinux8_vtk_types:
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   extends:
     - .almalinux8
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     CMAKE_GENERATOR: "Unix Makefiles"
     VISKORES_SETTINGS: "serial+vtk_types+ccache"
@@ -70,15 +58,11 @@ almalinux8_vtk_types:
 # Build on almalinux8 with serial and test on almalinux8
 # Uses gcc 8.2.1
 almalinux8_sanitizer:
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   extends:
     - .almalinux8
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_GENERATOR: "Unix Makefiles"
