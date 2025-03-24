@@ -108,15 +108,11 @@ ubuntu2204_clang11_cuda:
 #    VISKORES_SETTINGS: "cuda+hopper+mpi+64bit_floats+shared+ccache"
 
 ubuntu2204_clang12:
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   extends:
     - .ubuntu2204
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     CC: "clang-12"
     CXX: "clang++-12"
@@ -138,15 +134,11 @@ ubuntu2204_kokkos37_cuda:
     VISKORES_SETTINGS: "benchmarks+kokkos+ampere+64bit_floats+shared+ccache"
 
 ubuntu2204_gcc12:
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   extends:
     - .ubuntu2204
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     # Restrict OpenMP number of threads since multiple test stages
     # execute on the same hardware concurrently

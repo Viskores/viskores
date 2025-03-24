@@ -19,30 +19,22 @@
 ##=============================================================================
 
 ubuntu2004_kokkos37:
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   extends:
     - .ubuntu2004_kokkos
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_PREFIX_PATH: "/opt/anari"
     VISKORES_SETTINGS: "kokkos+shared+64bit_floats+rendering+anari+ccache"
 
 ubuntu2004_gcc9:
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   extends:
     - .ubuntu2004
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     CC: "gcc-9"
     CXX: "g++-9"
@@ -69,15 +61,11 @@ ubuntu2004_gcc9_cuda:
     CTEST_EXCLUSIONS: "UnitTestTimer"
 
 ubuntu2004_clang6:
-  tags:
-    - large
-    - uo
-    - public
-    - x86_64
   extends:
     - .ubuntu2004
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     CC: "clang-6.0"
     CXX: "clang++-6.0"

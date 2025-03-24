@@ -21,7 +21,7 @@
 FROM docker.io/almalinux:8
 LABEL maintainer "Vicente Adolfo Bolea Sanchez<vicente.bolea@gmail.com>"
 
-RUN yum install make gcc gcc-c++ curl libasan libubsan libomp clang python3 -y
+RUN yum install make git gcc gcc-c++ curl libasan libubsan libomp clang python3 -y
 
 # Provide CMake 3.17 so we can re-run tests easily
 # This will be used when we run just the tests
