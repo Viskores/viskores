@@ -52,6 +52,7 @@ vtkm::cont::DataSet Contour::DoExecute(const vtkm::cont::DataSet& inDataSet)
   implementation->SetGenerateNormals(this->GetGenerateNormals());
   implementation->SetAddInterpolationEdgeIds(this->GetAddInterpolationEdgeIds());
   implementation->SetNormalArrayName(this->GetNormalArrayName());
+  implementation->SetInputCellDimension(this->GetInputCellDimension());
   implementation->SetActiveField(this->GetActiveFieldName());
   implementation->SetFieldsToPass(this->GetFieldsToPass());
   implementation->SetNumberOfIsoValues(this->GetNumberOfIsoValues());

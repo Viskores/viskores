@@ -13,7 +13,7 @@
 
 #include <vtkm/filter/contour/ContourMarchingCells.h>
 #include <vtkm/filter/contour/worklet/ContourMarchingCells.h>
-
+#include <vtkm/filter/multi_block/MergeDataSets.h>
 
 namespace vtkm
 {
@@ -23,6 +23,70 @@ namespace contour
 {
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet ContourMarchingCells::DoExecute(const vtkm::cont::DataSet& inDataSet)
+{
+  switch (this->GetInputCellDimension())
+  {
+    case vtkm::filter::contour::ContourDimension::Auto:
+    {
+      vtkm::cont::DataSet output = this->DoExecuteDimension<3>(inDataSet);
+      if (output.GetNumberOfCells() > 0)
+      {
+        return output;
+      }
+      output = this->DoExecuteDimension<2>(inDataSet);
+      if (output.GetNumberOfCells() > 0)
+      {
+        return output;
+      }
+      output = this->DoExecuteDimension<1>(inDataSet);
+      return output;
+    }
+    case vtkm::filter::contour::ContourDimension::All:
+    {
+      vtkm::cont::PartitionedDataSet allData;
+      vtkm::cont::DataSet output = this->DoExecuteDimension<3>(inDataSet);
+      if (output.GetNumberOfCells() > 0)
+      {
+        allData.AppendPartition(output);
+      }
+      output = this->DoExecuteDimension<2>(inDataSet);
+      if (output.GetNumberOfCells() > 0)
+      {
+        allData.AppendPartition(output);
+      }
+      output = this->DoExecuteDimension<1>(inDataSet);
+      if (output.GetNumberOfCells() > 0)
+      {
+        allData.AppendPartition(output);
+      }
+      if (allData.GetNumberOfPartitions() > 1)
+      {
+        vtkm::filter::multi_block::MergeDataSets merge;
+        return merge.Execute(allData).GetPartition(0);
+      }
+      else if (allData.GetNumberOfPartitions() == 1)
+      {
+        return allData.GetPartition(0);
+      }
+      else
+      {
+        return output;
+      }
+    }
+    case vtkm::filter::contour::ContourDimension::Polyhedra:
+      return this->DoExecuteDimension<3>(inDataSet);
+    case vtkm::filter::contour::ContourDimension::Polygons:
+      return this->DoExecuteDimension<2>(inDataSet);
+    case vtkm::filter::contour::ContourDimension::Lines:
+      return this->DoExecuteDimension<1>(inDataSet);
+    default:
+      throw vtkm::cont::ErrorBadValue("Invalid value for ContourDimension.");
+  }
+}
+
+
+template <vtkm::UInt8 Dims>
+vtkm::cont::DataSet ContourMarchingCells::DoExecuteDimension(const vtkm::cont::DataSet& inDataSet)
 {
   vtkm::worklet::ContourMarchingCells worklet;
   worklet.SetMergeDuplicatePoints(this->GetMergeDuplicatePoints());
@@ -59,11 +123,12 @@ vtkm::cont::DataSet ContourMarchingCells::DoExecute(const vtkm::cont::DataSet& i
 
     if (this->GenerateNormals && !this->GetComputeFastNormals())
     {
-      outputCells = worklet.Run(ivalues, inputCells, inputCoords, concrete, vertices, normals);
+      outputCells =
+        worklet.Run<Dims>(ivalues, inputCells, inputCoords, concrete, vertices, normals);
     }
     else
     {
-      outputCells = worklet.Run(ivalues, inputCells, inputCoords, concrete, vertices);
+      outputCells = worklet.Run<Dims>(ivalues, inputCells, inputCoords, concrete, vertices);
     }
   };
 
@@ -76,9 +141,9 @@ vtkm::cont::DataSet ContourMarchingCells::DoExecute(const vtkm::cont::DataSet& i
   this->ExecuteGenerateNormals(output, normals);
   this->ExecuteAddInterpolationEdgeIds(output, worklet);
 
-
   return output;
 }
+
 } // namespace contour
 } // namespace filter
 } // namespace vtkm
