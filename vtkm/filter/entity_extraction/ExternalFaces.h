@@ -64,7 +64,7 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
 
   vtkm::cont::DataSet GenerateOutput(const vtkm::cont::DataSet& input,
-                                     vtkm::cont::CellSetExplicit<>& outCellSet);
+                                     vtkm::cont::UnknownCellSet& outCellSet);
 
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result, const vtkm::cont::Field& field);
 
