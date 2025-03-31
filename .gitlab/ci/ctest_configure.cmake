@@ -46,14 +46,15 @@ ctest_configure(APPEND
 
 # We can now submit because we've configured.
 if(NOT DEFINED ENV{GITLAB_CI_EMULATION})
+  set(CTEST_NOTES_FILES "${CTEST_BINARY_DIRECTORY}/CMakeCache.txt")
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.15)
     ctest_submit(PARTS Update BUILD_ID build_id)
     message(STATUS "Update submission build_id: ${build_id}")
-    ctest_submit(PARTS Configure BUILD_ID build_id)
+    ctest_submit(PARTS Configure Notes BUILD_ID build_id)
     message(STATUS "Configure submission build_id: ${build_id}")
   else()
     ctest_submit(PARTS Update)
-    ctest_submit(PARTS Configure)
+    ctest_submit(PARTS Configure Notes)
   endif()
 endif()
 

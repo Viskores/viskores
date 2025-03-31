@@ -21,6 +21,7 @@
 .docker_image: &docker_image
   variables:
     CCACHE_DIR: "$CI_PROJECT_DIR/.ccache"
+    CCACHE_RESHARE: "true"
     CTEST_TIMEOUT: 1200
     GIT_SUBMODULE_STRATEGY: recursive
   image:
@@ -185,6 +186,7 @@ stages:
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
     - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
+    - "ctest -VV -S .gitlab/ci/ctest_build_notes.cmake"
     - "[ -z $NO_TESTING ] && ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
     - cmake -P .gitlab/ci/check_warnings.cmake || exit 47
   after_script:
