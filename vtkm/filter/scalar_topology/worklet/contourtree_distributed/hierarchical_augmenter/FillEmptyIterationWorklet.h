@@ -38,57 +38,58 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
-#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_augmenter_fill_empty_iteration_worklet_h
+#define vtk_m_worklet_contourtree_distributed_hierarchical_augmenter_fill_empty_iteration_worklet_h
 
-#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
-namespace filter
+namespace worklet
 {
-namespace scalar_topology
+namespace contourtree_distributed
 {
-namespace internal
+namespace hierarchical_augmenter
 {
 
-struct ComputeDistributedBranchDecompositionFunctor
+// Worklet for a rare case where an iteration has no supernode
+// need to update the FirstSupernodePerIteration array to avoid crash
+class FillEmptyIterationWorklet : public vtkm::worklet::WorkletMapField
 {
-  ComputeDistributedBranchDecompositionFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
-    : TimingsLogLevel(timingsLogLevel)
+public:
+  using ControlSignature = void(
+    WholeArrayInOut augmentedTreeFirstSupernodePerIteration // input/output
+  );
+  using ExecutionSignature = void(InputIndex, _1);
+  using InputDomain = _1;
+
+  VTKM_EXEC_CONT
+  FillEmptyIterationWorklet() {}
+
+  /// operator() of the worklet
+  template <typename InOutFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& inputIndex,
+                            InOutFieldPortalType& firstSupernodePerIteration) const
   {
-  }
+    if (inputIndex == 0 || inputIndex == firstSupernodePerIteration.GetNumberOfValues() - 1)
+      return;
+    if (firstSupernodePerIteration.Get(inputIndex) == 0)
+    {
+      vtkm::Id nextSupernode = firstSupernodePerIteration.Get(inputIndex + 1);
+      firstSupernodePerIteration.Set(inputIndex, nextSupernode);
+    }
+  } // operator()()
+};  // FillEmptyIterationWorklet
 
-  void operator()(BranchDecompositionBlock* b,
-                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
-                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
-  ) const;
-
-  const vtkm::cont::LogLevel TimingsLogLevel;
-};
-
-} // namespace internal
-} // namespace scalar_topology
-} // namespace filter
+} // namespace hierarchical_augmenter
+} // namespace contourtree_distributed
+} // namespace worklet
 } // namespace vtkm
 
 #endif

@@ -1024,9 +1024,18 @@ void HierarchicalContourTree<FieldType>::AddToVTKMDataSet(vtkm::cont::DataSet& d
   vtkm::cont::Field superarcsField(
     "Superarcs", vtkm::cont::Field::Association::WholeDataSet, this->Superarcs);
   ds.AddField(superarcsField);
+  vtkm::cont::Field superchildrenField(
+    "Superchildren", vtkm::cont::Field::Association::WholeDataSet, this->Superchildren);
+  ds.AddField(superchildrenField);
   vtkm::cont::Field hyperparentsField(
     "Hyperparents", vtkm::cont::Field::Association::WholeDataSet, this->Hyperparents);
   ds.AddField(hyperparentsField);
+  vtkm::cont::Field hypernodesField(
+    "Hypernodes", vtkm::cont::Field::Association::WholeDataSet, this->Hypernodes);
+  ds.AddField(hypernodesField);
+  vtkm::cont::Field hyperarcsField(
+    "Hyperarcs", vtkm::cont::Field::Association::WholeDataSet, this->Hyperarcs);
+  ds.AddField(hyperarcsField);
   vtkm::cont::Field super2HypernodeField(
     "Super2Hypernode", vtkm::cont::Field::Association::WholeDataSet, this->Super2Hypernode);
   ds.AddField(super2HypernodeField);

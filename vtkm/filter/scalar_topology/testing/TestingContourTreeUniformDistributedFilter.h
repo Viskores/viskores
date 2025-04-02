@@ -63,7 +63,8 @@
 #include <vtkm/filter/MapFieldPermutation.h>
 #include <vtkm/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <vtkm/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
-#include <vtkm/filter/scalar_topology/SelectTopVolumeContoursFilter.h>
+#include <vtkm/filter/scalar_topology/ExtractTopVolumeContoursFilter.h>
+#include <vtkm/filter/scalar_topology/SelectTopVolumeBranchesFilter.h>
 #include <vtkm/filter/scalar_topology/testing/SuperArcHelper.h>
 #include <vtkm/filter/scalar_topology/testing/VolumeHelper.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
@@ -503,14 +504,21 @@ inline void TestContourTreeUniformDistributedBranchDecomposition8x9(int nBlocks,
                                       augmentHierarchicalTree,
                                       computeHierarchicalVolumetricBranchDecomposition);
 
-  using vtkm::filter::scalar_topology::SelectTopVolumeContoursFilter;
+  using vtkm::filter::scalar_topology::SelectTopVolumeBranchesFilter;
 
   vtkm::Id numBranches = 2;
-  SelectTopVolumeContoursFilter tp_filter;
+  SelectTopVolumeBranchesFilter tp_filter;
 
   tp_filter.SetSavedBranches(numBranches);
 
   auto tp_result = tp_filter.Execute(result);
+
+  // add filter for contour extraction
+  using vtkm::filter::scalar_topology::ExtractTopVolumeContoursFilter;
+  ExtractTopVolumeContoursFilter iso_filter;
+
+  iso_filter.SetMarchingCubes(false);
+  auto iso_result = iso_filter.Execute(tp_result);
 
   if (vtkm::cont::EnvironmentTracker::GetCommunicator().rank() == 0)
   {
@@ -641,6 +649,97 @@ inline void TestContourTreeUniformDistributedBranchDecomposition8x9(int nBlocks,
     }
 
     std::cout << "Top Branch Volume: Results Match!" << std::endl;
+
+    if (nBlocks != 2)
+      return;
+
+    for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+    {
+      auto ds = iso_result.GetPartition(ds_no);
+      auto isosurfaceEdgesFrom = ds.GetField("IsosurfaceEdgesFrom")
+                                   .GetData()
+                                   .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f_64>>()
+                                   .ReadPortal();
+      auto isosurfaceEdgesTo = ds.GetField("IsosurfaceEdgesTo")
+                                 .GetData()
+                                 .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f_64>>()
+                                 .ReadPortal();
+      auto isosurfaceEdgesLabels = ds.GetField("IsosurfaceEdgesLabels")
+                                     .GetData()
+                                     .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                     .ReadPortal();
+      auto isosurfaceEdgesOrders = ds.GetField("IsosurfaceEdgesOrders")
+                                     .GetData()
+                                     .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                     .ReadPortal();
+      auto isosurfaceEdgesOffset = ds.GetField("IsosurfaceEdgesOffset")
+                                     .GetData()
+                                     .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                     .ReadPortal();
+      auto isosurfaceIsoValue = ds.GetField("IsosurfaceIsoValue")
+                                  .GetData()
+                                  .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>()
+                                  .ReadPortal();
+      vtkm::Id nIsosurfaceEdges = isosurfaceEdgesFrom.GetNumberOfValues();
+      vtkm::Id isoSurfaceCount = 0;
+      std::vector<vtkm::Id> computed_iso_surface_info;
+
+      for (vtkm::Id edge = 0; edge < nIsosurfaceEdges; ++edge)
+      {
+        while (isoSurfaceCount < isosurfaceEdgesLabels.GetNumberOfValues() &&
+               edge == isosurfaceEdgesOffset.Get(isoSurfaceCount))
+        {
+          computed_iso_surface_info.push_back(isosurfaceEdgesLabels.Get(isoSurfaceCount));
+          computed_iso_surface_info.push_back(isosurfaceEdgesOrders.Get(isoSurfaceCount));
+          computed_iso_surface_info.push_back(
+            static_cast<vtkm::Id>(isosurfaceIsoValue.Get(isoSurfaceCount)));
+          isoSurfaceCount++;
+        }
+      }
+
+      VTKM_TEST_ASSERT(isoSurfaceCount == 2, "Wrong result for isoSurfaceCount");
+
+      std::vector<vtkm::Id> expected_iso_surface_info;
+      vtkm::Vec3f_64 expected_from_edge0, expected_to_edge0;
+
+      switch (ds_no)
+      {
+        case 0:
+          expected_iso_surface_info = { 5, 1, 50, 4, 0, 50 };
+          expected_from_edge0 = vtkm::make_Vec(0.519231, 3, 0);
+          expected_to_edge0 = vtkm::make_Vec(0.5, 2.5, 0);
+          break;
+        case 1:
+          expected_iso_surface_info = { 1, 2, 30, 4, 0, 50 };
+          expected_from_edge0 = vtkm::make_Vec(4.33333, 5, 0);
+          expected_to_edge0 = vtkm::make_Vec(4.61538, 4.61538, 0);
+          break;
+        default:
+          VTKM_TEST_ASSERT(false);
+      }
+
+      if (computed_iso_surface_info != expected_iso_surface_info)
+      {
+        std::cout << "Expected Isosurface Info for block " << ds_no << ":" << std::endl;
+        for (std::size_t i = 0; i < expected_iso_surface_info.size(); i += 3)
+          std::cout << "Isosurface Info:" << std::setw(5) << expected_iso_surface_info[i]
+                    << std::setw(10) << expected_iso_surface_info[i + 1] << std::setw(10)
+                    << expected_iso_surface_info[i + 2] << std::endl;
+        std::cout << "Computed Isosurface Info for block " << ds_no << ":" << std::endl;
+        for (std::size_t i = 0; i < computed_iso_surface_info.size(); i += 3)
+          std::cout << "Isosurface Info:" << std::setw(5) << computed_iso_surface_info[i]
+                    << std::setw(10) << computed_iso_surface_info[i + 1] << std::setw(10)
+                    << computed_iso_surface_info[i + 2] << std::endl;
+        VTKM_TEST_FAIL("Iso Surface Info Don't Match!");
+      }
+
+      VTKM_TEST_ASSERT((ds_no == 0 && nIsosurfaceEdges == 25) ||
+                       (ds_no == 1 && nIsosurfaceEdges == 26));
+      VTKM_TEST_ASSERT(test_equal(isosurfaceEdgesFrom.Get(0), expected_from_edge0));
+      VTKM_TEST_ASSERT(test_equal(isosurfaceEdgesTo.Get(0), expected_to_edge0));
+    }
+
+    std::cout << "Isosurface: Results Match!" << std::endl;
   }
 }
 
@@ -1041,13 +1140,14 @@ inline void RunContourTreePresimplification(std::string fieldName,
   vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter;
   bd_result = bd_filter.Execute(result);
 
-  // Compute SelectTopVolumeContours
-  vtkm::filter::scalar_topology::SelectTopVolumeContoursFilter tp_filter;
+  // Compute SelectTopVolumeBranches
+  vtkm::filter::scalar_topology::SelectTopVolumeBranchesFilter tp_filter;
 
   // numBranches needs to be large enough to include all branches
   // numBranches < numSuperarcs < globalSize
   tp_filter.SetSavedBranches(globalSize[0] * globalSize[1] *
                              (globalSize[2] > 1 ? globalSize[2] : 1));
+  tp_filter.SetPresimplifyThreshold(presimplifyThreshold);
   tp_result = tp_filter.Execute(bd_result);
 }
 

@@ -111,7 +111,7 @@ public:
   using ControlSignature = void(
     FieldIn superarcId,         // (input) actual ID of superarc
     WholeArrayIn branchRoots,   // (array input) branch root (superarc) IDs of all superarcs
-    FieldOut branchEndIndicator // (output) 1 if
+    FieldOut branchEndIndicator // (output) 1 if the superarc is the last of a branch in the array
   );
   using ExecutionSignature = _3(_1, _2);
   using InputDomain = _1;

@@ -38,46 +38,24 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
+//
+//  This code is an extension of the algorithm presented in the paper:
+//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
+//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
+//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
+//  (LDAV), October 2016, Baltimore, Maryland.
+//
+//  The PPP2 algorithm and software were jointly developed by
+//  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
+//  Oliver Ruebel (LBNL)
+//==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_SelectTopVolumeContoursFilter_h
-#define vtk_m_filter_scalar_topology_SelectTopVolumeContoursFilter_h
+#ifndef vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_GetBranchHierarchyWorklet_h
+#define vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_GetBranchHierarchyWorklet_h
 
-#include <vtkm/filter/Filter.h>
-#include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
-#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
-
-namespace vtkm
-{
-namespace filter
-{
-namespace scalar_topology
-{
-/// \brief Compute branch decompostion from distributed contour tree
-
-class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT SelectTopVolumeContoursFilter : public vtkm::filter::Filter
-{
-public:
-  VTKM_CONT SelectTopVolumeContoursFilter() = default;
-
-  VTKM_CONT void SetSavedBranches(const vtkm::Id& numBranches)
-  {
-    this->nSavedBranches = numBranches;
-  }
-
-private:
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet&) override;
-  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
-    const vtkm::cont::PartitionedDataSet& inData) override;
-
-  vtkm::Id nSavedBranches;
-  vtkm::worklet::contourtree_augmented::IdArrayType BranchVolume;
-  vtkm::worklet::contourtree_augmented::IdArrayType BranchSaddleEpsilon;
-  vtkm::worklet::contourtree_augmented::IdArrayType SortedBranchByVolume;
-  vtkm::cont::UnknownArrayHandle BranchSaddleIsoValue;
-};
-
-} // namespace scalar_topology
-} // namespace worklet
-} // namespace vtkm
+#include <vtkm/filter/scalar_topology/worklet/select_top_volume_branches/BranchSaddleIsKnownWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/select_top_volume_branches/CollectOuterSaddleWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/select_top_volume_branches/GetParentBranchWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/select_top_volume_branches/UpdateOuterSaddleWorklet.h>
 
 #endif

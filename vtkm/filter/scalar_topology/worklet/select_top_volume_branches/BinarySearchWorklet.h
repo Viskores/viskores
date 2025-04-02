@@ -50,45 +50,76 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
-#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#ifndef vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_binary_search_worklet_h
+#define vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_binary_search_worklet_h
 
-#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
+#include <vtkm/worklet/WorkletMapField.h>
 
 
 namespace vtkm
 {
-namespace filter
+namespace worklet
 {
 namespace scalar_topology
 {
-namespace internal
+namespace select_top_volume_branches
 {
 
-struct ComputeDistributedBranchDecompositionFunctor
+/// Worklet of a binary search.
+/// This is used to check whether the global regular id in inside the block.
+/// The global regular Ids in block should be sorted beforehand.
+/// This worklet may be reused for many other processes with binary search.
+class BinarySearchWorklet : public vtkm::worklet::WorkletMapField
 {
-  ComputeDistributedBranchDecompositionFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
-    : TimingsLogLevel(timingsLogLevel)
+public:
+  using ControlSignature = void(
+    FieldIn regularId,         // (input) global regular id
+    WholeArrayIn idsArray,     // (array input) all known global regular ids
+    FieldOut inBlockIndicator, // (output) 1 if the regularId is inside the idsArray
+    FieldOut inBlockIdx        // (output) the index of regularId in idsArray
+  );
+  using ExecutionSignature = void(_1, _2, _3, _4);
+  using InputDomain = _1;
+
+  /// Constructor
+  VTKM_EXEC_CONT
+  BinarySearchWorklet() {}
+
+  /// The functor uses binary search to locate regularId in idsArray
+  /// if the search fails, return NO_SUCH_ELEMENT; otherwise, return the location
+  /// idsArray should be sorted
+  template <typename InIdPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& regularId,
+                            const InIdPortalType& idsArray,
+                            vtkm::Id& inBlockIndicator,
+                            vtkm::Id& inBlockIdx) const
   {
+    vtkm::Id head = 0;
+    vtkm::Id tail = idsArray.GetNumberOfValues() - 1;
+    inBlockIndicator = 0;
+    inBlockIdx = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+
+    while (head <= tail)
+    {
+      vtkm::Id mid = (head + tail) >> 1;
+      vtkm::Id midValue = idsArray.Get(mid);
+      if (regularId == midValue)
+      {
+        inBlockIdx = mid;
+        inBlockIndicator = 1;
+        return;
+      }
+      else if (regularId > midValue)
+        head = mid + 1;
+      else
+        tail = mid - 1;
+    }
   }
+}; // BinarySearchWorklet
 
-  void operator()(BranchDecompositionBlock* b,
-                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
-                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
-  ) const;
-
-  const vtkm::cont::LogLevel TimingsLogLevel;
-};
-
-} // namespace internal
+} // namespace select_top_volume_branches
 } // namespace scalar_topology
-} // namespace filter
+} // namespace worklet
 } // namespace vtkm
 
 #endif

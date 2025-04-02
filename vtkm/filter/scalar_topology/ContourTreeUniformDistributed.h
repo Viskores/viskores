@@ -199,7 +199,7 @@ private:
   bool AugmentHierarchicalTree;
 
   /// Threshold to use for volume pre-simplification
-  vtkm::Id PresimplifyThreshold;
+  vtkm::Id PresimplifyThreshold = 0;
 
   /// Save dot files for all tree computations
   bool SaveDotFiles;

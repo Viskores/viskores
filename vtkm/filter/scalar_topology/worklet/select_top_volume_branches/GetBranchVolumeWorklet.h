@@ -50,9 +50,10 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_worklet_select_top_volume_contours_GetBranchVolumeWorklet_h
-#define vtk_m_filter_scalar_topology_worklet_select_top_volume_contours_GetBranchVolumeWorklet_h
+#ifndef vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_GetBranchVolumeWorklet_h
+#define vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_GetBranchVolumeWorklet_h
 
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -61,7 +62,7 @@ namespace worklet
 {
 namespace scalar_topology
 {
-namespace select_top_volume_contours
+namespace select_top_volume_branches
 {
 
 using IdArrayType = vtkm::worklet::contourtree_augmented::IdArrayType;
@@ -108,6 +109,7 @@ public:
   {
     if (isLowerLeaf && isUpperLeaf)
       return totalVolume;
+
     // if the branch is a minimum-saddle branch
     // if the upper end superarc direction is pointing up, then dependent; otherwise, reverse
     if (isLowerLeaf)
@@ -129,7 +131,7 @@ private:
   const vtkm::Id totalVolume;
 }; // GetBranchVolumeWorklet
 
-} // namespace select_top_volume_contours
+} // namespace select_top_volume_branches
 } // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm

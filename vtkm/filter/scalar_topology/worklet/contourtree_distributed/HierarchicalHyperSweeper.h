@@ -206,7 +206,6 @@ private:
 
 }; // class HierarchicalHyperSweeper
 
-
 template <typename SweepValueType, typename ContourTreeFieldType>
 HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::HierarchicalHyperSweeper(
   vtkm::Id blockId,
@@ -368,6 +367,7 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::LocalHyperS
       //  TODO/FIXME: Use portal? Or is there a more efficient way?
       auto firstSupernodePerIterationPortal =
         this->HierarchicalTree.FirstSupernodePerIteration[round].ReadPortal();
+
       vtkm::Id firstSupernode = firstSupernodePerIterationPortal.Get(iteration);
       vtkm::Id lastSupernode = firstSupernodePerIterationPortal.Get(iteration + 1);
 
@@ -432,7 +432,6 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::
     vtkm::Id lastSupernode)
 { // ComputeSuperarcDependentWeights()
   vtkm::Id numSupernodesToProcess = lastSupernode - firstSupernode;
-
   //  2.  Use sorted prefix sum to compute the total weight to contribute to the super/hypertarget
   // Same as std::partial_sum(sweepValues.begin() + firstSupernode, sweepValues.begin() + lastSupernode, valuePrefixSum.begin() + firstSupernode);
   {
@@ -450,7 +449,6 @@ void HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>::
     vtkm::cont::Algorithm::ScanInclusive(dependentValuesView, // input
                                          valuePrefixSumView); // result of partial sum
   }
-
   // Since the prefix sum is over *all* supernodes in the iteration, we need to break it into segments
   // There are two cases we have to worry about:
   // a.  Hyperarcs made up of multiple supernodes

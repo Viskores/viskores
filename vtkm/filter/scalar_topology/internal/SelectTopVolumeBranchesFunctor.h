@@ -50,10 +50,10 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
-#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#ifndef vtk_m_filter_scalar_topology_internal_SelectTopVolumeBranchesFunctor_h
+#define vtk_m_filter_scalar_topology_internal_SelectTopVolumeBranchesFunctor_h
 
-#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
+#include <vtkm/filter/scalar_topology/internal/SelectTopVolumeBranchesBlock.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -71,18 +71,20 @@ namespace scalar_topology
 namespace internal
 {
 
-struct ComputeDistributedBranchDecompositionFunctor
+struct SelectTopVolumeBranchesFunctor
 {
-  ComputeDistributedBranchDecompositionFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
-    : TimingsLogLevel(timingsLogLevel)
+  SelectTopVolumeBranchesFunctor(const vtkm::Id& nSB, const vtkm::cont::LogLevel& timingsLogLevel)
+    : NumSavedBranches(nSB)
+    , TimingsLogLevel(timingsLogLevel)
   {
   }
 
-  void operator()(BranchDecompositionBlock* b,
+  void operator()(SelectTopVolumeBranchesBlock* b,
                   const vtkmdiy::ReduceProxy& rp,     // communication proxy
                   const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
   ) const;
 
+  const vtkm::Id NumSavedBranches;
   const vtkm::cont::LogLevel TimingsLogLevel;
 };
 

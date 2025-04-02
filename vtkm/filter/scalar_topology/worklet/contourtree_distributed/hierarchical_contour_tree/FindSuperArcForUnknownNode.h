@@ -118,6 +118,16 @@ public:
     // the hyperparent which we need to search along
     vtkm::Id hyperparent = vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
 
+    // sanity check: if above / below does not satisfy the condition, return NO_SUCH_ELEMENT
+    FieldType aboveValue = this->DataValues.Get(above);
+    FieldType belowValue = this->DataValues.Get(below);
+    vtkm::Id aboveGlobalId = this->RegularNodeGlobalIds.Get(above);
+    vtkm::Id belowGlobalId = this->RegularNodeGlobalIds.Get(below);
+    if (nodeValue > aboveValue || (nodeValue == aboveValue && nodeGlobalId > aboveGlobalId))
+      return vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+    if (nodeValue < belowValue || (nodeValue == belowValue && nodeGlobalId < belowGlobalId))
+      return vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+
     // to find the superarc, we will first have to convert the above / below to a pair of super/hypernodes
     vtkm::Id aboveSuperparent = this->Superparents.Get(above);
     vtkm::Id belowSuperparent = this->Superparents.Get(below);

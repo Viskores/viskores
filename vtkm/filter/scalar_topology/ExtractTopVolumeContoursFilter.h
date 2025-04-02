@@ -38,29 +38,12 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
-//  The PPP2 algorithm and software were jointly developed by
-//  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
-//  Oliver Ruebel (LBNL)
-//==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
-#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#ifndef vtk_m_filter_scalar_topology_ExtractTopVolumeContoursFilter_h
+#define vtk_m_filter_scalar_topology_ExtractTopVolumeContoursFilter_h
 
-#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
+#include <vtkm/filter/Filter.h>
+#include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
 namespace vtkm
 {
@@ -68,27 +51,42 @@ namespace filter
 {
 namespace scalar_topology
 {
-namespace internal
-{
 
-struct ComputeDistributedBranchDecompositionFunctor
+/// \brief Compute branch decompostion from distributed contour tree
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT ExtractTopVolumeContoursFilter
+  : public vtkm::filter::Filter
 {
-  ComputeDistributedBranchDecompositionFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
-    : TimingsLogLevel(timingsLogLevel)
+public:
+  VTKM_CONT ExtractTopVolumeContoursFilter() = default;
+
+  VTKM_CONT void SetMarchingCubes(const bool& marchingCubes)
   {
+    this->IsMarchingCubes = marchingCubes;
   }
 
-  void operator()(BranchDecompositionBlock* b,
-                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
-                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
-  ) const;
+  VTKM_CONT void SetShiftIsovalueByEpsilon(const bool& shiftIsovalueByEps)
+  {
+    this->IsShiftIsovalueByEpsilon = shiftIsovalueByEps;
+  }
 
-  const vtkm::cont::LogLevel TimingsLogLevel;
+  VTKM_CONT bool GetMarchingCubes() { return this->IsMarchingCubes; }
+  VTKM_CONT bool GetShiftIsovalueByEpsilon() { return this->IsShiftIsovalueByEpsilon; }
+  VTKM_CONT vtkm::cont::LogLevel GetTimingsLogLevel() { return this->TimingsLogLevel; }
+
+private:
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet&) override;
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData) override;
+
+  bool IsMarchingCubes = false;
+  bool IsShiftIsovalueByEpsilon = false;
+
+  /// Log level to be used for outputting timing information. Default is vtkm::cont::LogLevel::Perf
+  vtkm::cont::LogLevel TimingsLogLevel = vtkm::cont::LogLevel::Perf;
 };
 
-} // namespace internal
 } // namespace scalar_topology
-} // namespace filter
+} // namespace worklet
 } // namespace vtkm
 
 #endif

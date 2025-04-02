@@ -38,29 +38,12 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
-//  The PPP2 algorithm and software were jointly developed by
-//  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
-//  Oliver Ruebel (LBNL)
-//==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
-#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#ifndef vtk_m_filter_scalar_topology_SelectTopVolumeBranchesFilter_h
+#define vtk_m_filter_scalar_topology_SelectTopVolumeBranchesFilter_h
 
-#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
+#include <vtkm/filter/Filter.h>
+#include <vtkm/filter/scalar_topology/vtkm_filter_scalar_topology_export.h>
 
 namespace vtkm
 {
@@ -68,27 +51,50 @@ namespace filter
 {
 namespace scalar_topology
 {
-namespace internal
-{
 
-struct ComputeDistributedBranchDecompositionFunctor
+/// \brief Compute branch decompostion from distributed contour tree
+class VTKM_FILTER_SCALAR_TOPOLOGY_EXPORT SelectTopVolumeBranchesFilter : public vtkm::filter::Filter
 {
-  ComputeDistributedBranchDecompositionFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
-    : TimingsLogLevel(timingsLogLevel)
+public:
+  VTKM_CONT SelectTopVolumeBranchesFilter() = default;
+
+  VTKM_CONT void SetSavedBranches(const vtkm::Id& numBranches)
   {
+    this->NumSavedBranches = numBranches;
   }
 
-  void operator()(BranchDecompositionBlock* b,
-                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
-                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
-  ) const;
+  VTKM_CONT void SetPresimplifyThreshold(const vtkm::Id& presimpThres)
+  {
+    this->PresimplifyThreshold = presimpThres;
+  }
 
-  const vtkm::cont::LogLevel TimingsLogLevel;
+  VTKM_CONT vtkm::Id GetSavedBranches() { return this->NumSavedBranches; }
+  VTKM_CONT vtkm::Id GetPresimplifyThreshold() { return this->PresimplifyThreshold; }
+  VTKM_CONT vtkm::cont::LogLevel GetTimingsLogLevel() { return this->TimingsLogLevel; }
+
+private:
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet&) override;
+  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
+    const vtkm::cont::PartitionedDataSet& inData) override;
+
+  vtkm::Id NumSavedBranches = 1;
+  vtkm::Id PresimplifyThreshold = 0;
+  vtkm::cont::ArrayHandle<vtkm::Id> BranchVolume;
+  vtkm::cont::ArrayHandle<vtkm::Id> BranchSaddleEpsilon;
+  vtkm::cont::ArrayHandle<vtkm::Id> SortedBranchByVolume;
+  vtkm::cont::UnknownArrayHandle BranchSaddleIsoValue;
+
+  // the parent branch for top volume branches
+  // we only care about the parent branch for top volume branches at the moment
+  // as a result, the index stored in this array follows the descending order of branch volumes
+  vtkm::cont::ArrayHandle<vtkm::Id> TopVolBranchParent;
+
+  /// Log level to be used for outputting timing information. Default is vtkm::cont::LogLevel::Perf
+  vtkm::cont::LogLevel TimingsLogLevel = vtkm::cont::LogLevel::Perf;
 };
 
-} // namespace internal
 } // namespace scalar_topology
-} // namespace filter
+} // namespace worklet
 } // namespace vtkm
 
 #endif

@@ -50,45 +50,85 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
-#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#ifndef vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_ClarifyBranchEndSupernodeTypeWorklet_h
+#define vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_ClarifyBranchEndSupernodeTypeWorklet_h
 
-#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
-namespace filter
+namespace worklet
 {
 namespace scalar_topology
 {
-namespace internal
+namespace select_top_volume_branches
 {
 
-struct ComputeDistributedBranchDecompositionFunctor
+// For special branches that only have one superarc
+// Clarify which end is leaf and which is saddle
+class ClarifyBranchEndSupernodeTypeWorklet : public vtkm::worklet::WorkletMapField
 {
-  ComputeDistributedBranchDecompositionFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
-    : TimingsLogLevel(timingsLogLevel)
+public:
+  using ControlSignature = void(
+    FieldIn lowerSuperarcId, // (input) lower end superarc ID
+    FieldIn lowerIntrinsic,  // (input) lower end superarc intrisic volume
+    FieldIn upperSuperarcId, // (input) upper end superarc ID
+    FieldIn upperIntrinsic,  // (input) upper end superarc intrisic volume
+    FieldIn branchRoot,      // (input) branch root superarc ID
+    FieldInOut isLowerLeaf,  // (input/output) bool, whether the lower end is a leaf
+    FieldInOut isUpperLeaf   // (input/output) bool, whether the upper end is a leaf
+  );
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
+  using InputDomain = _1;
+
+  /// Constructor
+  VTKM_EXEC_CONT
+  ClarifyBranchEndSupernodeTypeWorklet(const vtkm::Id tVol)
+    : totalVolume(tVol)
   {
   }
 
-  void operator()(BranchDecompositionBlock* b,
-                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
-                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
-  ) const;
+  /// The functor checks the direction of the branch
+  VTKM_EXEC void operator()(const vtkm::Id& lowerSuperarcId,
+                            const vtkm::Id& lowerIntrinsic,
+                            const vtkm::Id& upperSuperarcId,
+                            const vtkm::Id& upperIntrinsic,
+                            const vtkm::Id& branchRoot,
+                            bool& isLowerLeaf,
+                            bool& isUpperLeaf) const
+  {
+    // do nothing: not a "leaf-leaf" branch
+    if (!isLowerLeaf || !isUpperLeaf)
+      return;
 
-  const vtkm::cont::LogLevel TimingsLogLevel;
-};
+    // do nothing: actual leaf-leaf branch
+    if (lowerIntrinsic == totalVolume - 1 && lowerIntrinsic == upperIntrinsic)
+      return;
 
-} // namespace internal
+    // do something: fake leaf-leaf branch
+    // we already exclude the case of only one superarc above
+    vtkm::Id maskedLowerId = vtkm::worklet::contourtree_augmented::MaskedIndex(lowerSuperarcId);
+    vtkm::Id maskedUpperId = vtkm::worklet::contourtree_augmented::MaskedIndex(upperSuperarcId);
+    vtkm::Id maskedRoot = vtkm::worklet::contourtree_augmented::MaskedIndex(branchRoot);
+
+    if (maskedLowerId == maskedRoot && maskedUpperId == maskedRoot)
+    {
+      const bool isAscending = vtkm::worklet::contourtree_augmented::IsAscending(lowerSuperarcId);
+      if (isAscending)
+        isUpperLeaf = false;
+      else
+        isLowerLeaf = false;
+    }
+  }
+
+private:
+  const vtkm::Id totalVolume;
+}; // ClarifyBranchEndSupernodeTypeWorklet
+
+} // namespace select_top_volume_branches
 } // namespace scalar_topology
-} // namespace filter
+} // namespace worklet
 } // namespace vtkm
 
 #endif

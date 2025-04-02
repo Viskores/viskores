@@ -50,10 +50,10 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
-#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#ifndef vtk_m_filter_scalar_topology_internal_UpdateParentBranchFunctor_h
+#define vtk_m_filter_scalar_topology_internal_UpdateParentBranchFunctor_h
 
-#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
+#include <vtkm/filter/scalar_topology/internal/SelectTopVolumeBranchesBlock.h>
 
 // clang-format off
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -70,22 +70,20 @@ namespace scalar_topology
 {
 namespace internal
 {
-
-struct ComputeDistributedBranchDecompositionFunctor
+struct UpdateParentBranchFunctor
 {
-  ComputeDistributedBranchDecompositionFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
+  UpdateParentBranchFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
     : TimingsLogLevel(timingsLogLevel)
   {
   }
 
-  void operator()(BranchDecompositionBlock* b,
+  void operator()(SelectTopVolumeBranchesBlock* b,
                   const vtkmdiy::ReduceProxy& rp,     // communication proxy
                   const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
   ) const;
 
   const vtkm::cont::LogLevel TimingsLogLevel;
 };
-
 } // namespace internal
 } // namespace scalar_topology
 } // namespace filter

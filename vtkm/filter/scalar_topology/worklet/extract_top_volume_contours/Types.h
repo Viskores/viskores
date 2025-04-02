@@ -50,44 +50,27 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_SelectTopVolumeContoursFunctor_h
-#define vtk_m_filter_scalar_topology_internal_SelectTopVolumeContoursFunctor_h
+#ifndef vtk_m_filter_scalar_topology_worklet_extract_top_volume_contours_types_h
+#define vtk_m_filter_scalar_topology_worklet_extract_top_volume_contours_types_h
 
-#include <vtkm/filter/scalar_topology/internal/SelectTopVolumeContoursBlock.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
+#include <vtkm/Types.h>
 
 namespace vtkm
 {
-namespace filter
+namespace worklet
 {
 namespace scalar_topology
 {
-namespace internal
+namespace extract_top_volume_contours
 {
 
-struct SelectTopVolumeContoursFunctor
-{
-  SelectTopVolumeContoursFunctor(const vtkm::Id& nSB)
-    : nSavedBranches(nSB)
-  {
-  }
+constexpr vtkm::Id BRANCH_SADDLE = static_cast<vtkm::Id>(1);  // 1 << 0
+constexpr vtkm::Id BRANCH_COVER = static_cast<vtkm::Id>(2);   // 1 << 1
+constexpr vtkm::Id MAXIMA_CONTOUR = static_cast<vtkm::Id>(4); // 1 << 2
 
-  void operator()(SelectTopVolumeContoursBlock* b,
-                  const vtkmdiy::ReduceProxy& rp // communication proxy
-  ) const;
-
-  const vtkm::Id nSavedBranches;
-};
-
-} // namespace internal
+} // namespace extract_top_volume_contours
 } // namespace scalar_topology
-} // namespace filter
+} // namespace worklet
 } // namespace vtkm
 
 #endif

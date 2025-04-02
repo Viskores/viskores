@@ -50,9 +50,10 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_worklet_select_top_volume_contours_UpdateInfoByBranchDirectionWorklet_h
-#define vtk_m_filter_scalar_topology_worklet_select_top_volume_contours_UpdateInfoByBranchDirectionWorklet_h
+#ifndef vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_AssignValueWorklet_h
+#define vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_AssignValueWorklet_h
 
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -61,62 +62,97 @@ namespace worklet
 {
 namespace scalar_topology
 {
-namespace select_top_volume_contours
+namespace select_top_volume_branches
 {
 
 /// <summary>
-///  1. Get the saddle end isovalue
-///  2. Get Epsilon direction near the branch saddle end
-///  If main branch, epsilon is 0.
-///  Otherwise, -1 if the branch is the lower leaf branch, or 1 if upper leaf branch.
+/// worklet to assign values to arrayhandle with given index
+/// this is different from permutation: we do not want to change the size of valueOut
+/// we also don't want to touch the default values in valueOut
+/// index - value is one to one
 /// </summary>
-template <typename ValueType>
-class UpdateInfoByBranchDirectionWorklet : public vtkm::worklet::WorkletMapField
+class AssignValueByIndex : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(
-    FieldIn isLowerLeaf,    // (input) bool, whether the lower end is a leaf
-    FieldIn isUpperLeaf,    // (input) bool, whether the upper end is a leaf
-    FieldIn upperEndValue,  // (input) value type, the branch upper end value
-    FieldIn lowerEndValue,  // (input) value type, the branch lower end value
-    FieldOut saddleEpsilon, // (output) vtkm::Id, epsilon direction around the saddle isovalue
-    FieldOut saddleValue    // (output) value type, the saddle isovalue
+  using ControlSignature = void(FieldIn index,         // (input) index
+                                FieldIn value,         // (input) value
+                                WholeArrayOut valueOut // (array output) valueOut[index] = value
   );
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
   /// Constructor
   VTKM_EXEC_CONT
-  UpdateInfoByBranchDirectionWorklet()
-  { // constructor
-  } // constructor
+  AssignValueByIndex() {}
 
-  /// The functor returns the isovalue and the epsilon direction around the saddle end of the branch
-  VTKM_EXEC void operator()(const bool isLowerLeaf,
-                            const bool isUpperLeaf,
-                            const ValueType upperEndValue,
-                            const ValueType lowerEndValue,
-                            vtkm::Id& saddleEpsilon,
-                            ValueType& saddleValue) const
+  template <typename ValueType, typename ValueArrayPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& index,
+                            const ValueType& value,
+                            ValueArrayPortalType& valueOut) const
   {
-    // NOTE: for the main branch, the saddle value is undefined,
-    // because both upper and lower ends are leaf nodes.
-    // Let's use upperEndValue here to make the output not random.
-    if (isLowerLeaf && isUpperLeaf)
-    {
-      saddleEpsilon = 0;
-      saddleValue = upperEndValue;
-    }
-    else
-    {
-      saddleEpsilon = isLowerLeaf ? -1 : 1;
-      saddleValue = isLowerLeaf ? upperEndValue : lowerEndValue;
-    }
+    if (vtkm::worklet::contourtree_augmented::NoSuchElement(index))
+      return;
+    valueOut.Set(index, value);
   }
-}; // EpsilonFromBranchDirection
+}; // AssignValueByIndex
 
 
-} // namespace select_top_volume_contours
+/// <summary>
+/// worklet to assign values based on a stencil
+/// </summary>
+class AssignValueWithStencil : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(
+    FieldIn stencil,    // (input) stencil
+    FieldIn value,      // (input) value
+    FieldInOut valueOut // (output) valueOut = stencil ? value : valueOut
+  );
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  /// Constructor
+  VTKM_EXEC_CONT
+  AssignValueWithStencil() {}
+
+  template <typename ValueType>
+  VTKM_EXEC void operator()(const bool stencil, const ValueType& value, ValueType& valueOut) const
+  {
+    if (stencil)
+      valueOut = value;
+  }
+}; // AssignValueWithStencil
+
+
+/// <summary>
+/// worklet to assign values based on the positivity of stencil
+/// </summary>
+class AssignValueByPositivity : public vtkm::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(
+    FieldIn stencil,    // (input) stencil
+    FieldIn value,      // (input) value
+    FieldInOut valueOut // (output) valueOut = stencil > 0 ? value : valueOut
+  );
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  /// Constructor
+  VTKM_EXEC_CONT
+  AssignValueByPositivity() {}
+
+  template <typename ValueType>
+  VTKM_EXEC void operator()(const vtkm::Id stencil,
+                            const ValueType& value,
+                            ValueType& valueOut) const
+  {
+    if (stencil > 0)
+      valueOut = value;
+  }
+}; // AssignValueByPositivity
+
+} // namespace select_top_volume_branches
 } // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm

@@ -50,97 +50,57 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_worklet_branch_decomposition_select_top_volume_contours_BranchVolumeComparator_h
-#define vtk_m_filter_scalar_topology_worklet_branch_decomposition_select_top_volume_contours_BranchVolumeComparator_h
+#ifndef vtk_m_filter_scalar_topology_internal_ExtractTopVolumeContoursBlock_h
+#define vtk_m_filter_scalar_topology_internal_ExtractTopVolumeContoursBlock_h
 
-#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/cont/DataSet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/select_top_volume_branches/TopVolumeBranchData.h>
 
 namespace vtkm
 {
-namespace worklet
+namespace filter
 {
 namespace scalar_topology
 {
-namespace select_top_volume_contours
+namespace internal
 {
 
-using IdArrayType = vtkm::worklet::contourtree_augmented::IdArrayType;
-
-// Implementation of BranchVolumeComparator
-class BranchVolumeComparatorImpl
+struct ExtractTopVolumeContoursBlock
 {
-public:
-  using IdPortalType = typename IdArrayType::ReadPortalType;
+  ExtractTopVolumeContoursBlock(vtkm::Id localBlockNo, int globalBlockId);
 
-  // constructor
-  VTKM_CONT
-  BranchVolumeComparatorImpl(const IdArrayType& branchRoots,
-                             const IdArrayType& branchVolume,
-                             vtkm::cont::DeviceAdapterId device,
-                             vtkm::cont::Token& token)
-    : branchRootsPortal(branchRoots.PrepareForInput(device, token))
-    , branchVolumePortal(branchVolume.PrepareForInput(device, token))
-  { // constructor
-  } // constructor
+  // Block metadata
+  vtkm::Id LocalBlockNo;
+  int GlobalBlockId;
 
-  // () operator - gets called to do comparison
-  VTKM_EXEC
-  bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
-  { // operator()
-    vtkm::Id volumeI = this->branchVolumePortal.Get(i);
-    vtkm::Id volumeJ = this->branchVolumePortal.Get(j);
+  // The data class for branch arrays (e.g., branch root global regular IDs, branch volume, etc.)
+  // we reuse the class TopVolumeBranchData that was used in SelectTopVolumeBranchesFilter,
+  // because we need more than half of the arrays in this class for contour extraction
+  TopVolumeBranchData TopVolumeData;
 
-    // primary sort on branch volume
-    if (volumeI > volumeJ)
-      return true;
-    if (volumeI < volumeJ)
-      return false;
+  // Isosurface output
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> IsosurfaceEdgesFrom;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> IsosurfaceEdgesTo;
+  vtkm::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesOffset;
+  vtkm::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesLabels;
+  vtkm::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesOrders;
+  vtkm::cont::UnknownArrayHandle IsosurfaceIsoValue;
+  // this is a tricky one - it is a part of the isovalue but solely used for simulation of simplicity
+  vtkm::worklet::contourtree_augmented::IdArrayType IsosurfaceGRIds;
 
-    vtkm::Id branchI =
-      vtkm::worklet::contourtree_augmented::MaskedIndex(this->branchRootsPortal.Get(i));
-    vtkm::Id branchJ =
-      vtkm::worklet::contourtree_augmented::MaskedIndex(this->branchRootsPortal.Get(j));
+  // Destroy function allowing DIY to own blocks and clean them up after use
+  static void Destroy(void* b) { delete static_cast<ExtractTopVolumeContoursBlock*>(b); }
 
-    // secondary sort on branch ID
-    return (branchI < branchJ);
-  } // operator()
+  // extract isosurfaces on top branches by volume
+  void ExtractIsosurfaceOnSelectedBranch(const vtkm::cont::DataSet& bdDataSet,
+                                         const bool isMarchingCubes,
+                                         const bool shiftIsovalueByEpsilon,
+                                         const vtkm::cont::LogLevel timingsLogLevel);
+};
 
-private:
-  IdPortalType branchRootsPortal;
-  IdPortalType branchVolumePortal;
-
-}; // BranchVolumeComparatorImpl
-
-/// <summary>
-/// Comparator of branch volume. Higher volume comes first
-/// </summary>
-class BranchVolumeComparator : public vtkm::cont::ExecutionObjectBase
-{
-
-public:
-  // constructor
-  VTKM_CONT
-  BranchVolumeComparator(const IdArrayType& branchRoots, const IdArrayType& branchVolume)
-    : BranchRoots(branchRoots)
-    , BranchVolume(branchVolume)
-  {
-  }
-
-  VTKM_CONT BranchVolumeComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
-                                                           vtkm::cont::Token& token) const
-  {
-    return BranchVolumeComparatorImpl(this->BranchRoots, this->BranchVolume, device, token);
-  }
-
-private:
-  IdArrayType BranchRoots;
-  IdArrayType BranchVolume;
-}; // BranchVolumeComparator
-
-
-} // namespace select_top_volume_contours
+} // namespace internal
 } // namespace scalar_topology
-} // namespace worklet
+} // namespace filter
 } // namespace vtkm
-
 #endif

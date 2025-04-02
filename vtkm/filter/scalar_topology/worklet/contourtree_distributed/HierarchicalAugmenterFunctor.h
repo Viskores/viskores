@@ -109,6 +109,15 @@ public:
       if (ingid != selfid)
       { // Receive and augment
         rp.dequeue(ingid, blockData->HierarchicalAugmenter.InData);
+
+        vtkm::Id exchangeSize =
+          blockData->HierarchicalAugmenter.InData.Superparents.GetNumberOfValues();
+        exchangeSize =
+          std::max(exchangeSize,
+                   blockData->HierarchicalAugmenter.InData.GlobalRegularIds.GetNumberOfValues());
+        timingsStream << "    " << std::setw(38) << std::left << "Retrieved Attachment Points"
+                      << ": " << exchangeSize << std::endl;
+
         blockData->HierarchicalAugmenter.RetrieveInAttachmentPoints();
       }
     }

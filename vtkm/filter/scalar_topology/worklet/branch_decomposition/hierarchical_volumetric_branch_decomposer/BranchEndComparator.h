@@ -87,9 +87,9 @@ public:
                           const IdArrayType& globalRegularIds,
                           vtkm::cont::DeviceAdapterId device,
                           vtkm::cont::Token& token)
-    : branchRootsPortal(branchRoots.PrepareForInput(device, token))
-    , dataValuesPortal(dataValues.PrepareForInput(device, token))
-    , globalRegularIdsPortal(globalRegularIds.PrepareForInput(device, token))
+    : BranchRootsPortal(branchRoots.PrepareForInput(device, token))
+    , DataValuesPortal(dataValues.PrepareForInput(device, token))
+    , GlobalRegularIdsPortal(globalRegularIds.PrepareForInput(device, token))
   { // constructor
   } // constructor
 
@@ -98,9 +98,9 @@ public:
   bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
   { // operator()
     vtkm::Id branchI =
-      vtkm::worklet::contourtree_augmented::MaskedIndex(this->branchRootsPortal.Get(i));
+      vtkm::worklet::contourtree_augmented::MaskedIndex(this->BranchRootsPortal.Get(i));
     vtkm::Id branchJ =
-      vtkm::worklet::contourtree_augmented::MaskedIndex(this->branchRootsPortal.Get(j));
+      vtkm::worklet::contourtree_augmented::MaskedIndex(this->BranchRootsPortal.Get(j));
 
     // primary sort on branch ID
     if (branchI < branchJ)
@@ -112,8 +112,8 @@ public:
       return false;
     }
 
-    ValueType valueI = this->dataValuesPortal.Get(i);
-    ValueType valueJ = this->dataValuesPortal.Get(j);
+    ValueType valueI = this->DataValuesPortal.Get(i);
+    ValueType valueJ = this->DataValuesPortal.Get(j);
 
     // secondary sort on data value
     // if isLower is false, lower value first
@@ -128,9 +128,9 @@ public:
     }
 
     vtkm::Id idI =
-      vtkm::worklet::contourtree_augmented::MaskedIndex(this->globalRegularIdsPortal.Get(i));
+      vtkm::worklet::contourtree_augmented::MaskedIndex(this->GlobalRegularIdsPortal.Get(i));
     vtkm::Id idJ =
-      vtkm::worklet::contourtree_augmented::MaskedIndex(this->globalRegularIdsPortal.Get(j));
+      vtkm::worklet::contourtree_augmented::MaskedIndex(this->GlobalRegularIdsPortal.Get(j));
 
     // third sort on global regular id
     // if isLower is false, lower value first
@@ -149,9 +149,9 @@ public:
   } // operator()
 
 private:
-  IdPortalType branchRootsPortal;
-  ValuePortalType dataValuesPortal;
-  IdPortalType globalRegularIdsPortal;
+  IdPortalType BranchRootsPortal;
+  ValuePortalType DataValuesPortal;
+  IdPortalType GlobalRegularIdsPortal;
 
 }; // BranchEndComparatorImpl
 

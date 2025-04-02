@@ -74,7 +74,8 @@
 
 #include <vtkm/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <vtkm/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
-#include <vtkm/filter/scalar_topology/SelectTopVolumeContoursFilter.h>
+#include <vtkm/filter/scalar_topology/ExtractTopVolumeContoursFilter.h>
+#include <vtkm/filter/scalar_topology/SelectTopVolumeBranchesFilter.h>
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/ProcessContourTree.h>
@@ -272,6 +273,11 @@ int main(int argc, char* argv[])
     }
   }
 
+  bool computeIsosurface = false;
+  // When true, we extract the isosurface at the isovalue STRICTLY above/below the saddle.
+  // i.e., we ignore the simulation of simplicity when extracting isosurfaces.
+  // WARNING: this may return incorrect isosurfaces when using presimplification.
+  bool shiftIsovalueByEpsilon = false;
   vtkm::Id numBranches = 0;
   if (parser.hasOption("--numBranches"))
   {
@@ -291,11 +297,45 @@ int main(int argc, char* argv[])
       augmentHierarchicalTree = true;
     }
   }
-
-  ValueType eps = 0.00001f;
-
-  if (parser.hasOption("--eps"))
-    eps = std::stof(parser.getOption("--eps"));
+  if (parser.hasOption("--computeIsosurface"))
+  {
+    computeIsosurface = true;
+  }
+  if (numBranches == 0 && computeIsosurface)
+  {
+    std::cerr << "Error: --computeIsosurface cannot proceed without specifying --numBranches!"
+              << std::endl;
+    MPI_Finalize();
+    return EXIT_FAILURE;
+  }
+  if (parser.hasOption("--shiftIsovalueByEpsilon"))
+  {
+    shiftIsovalueByEpsilon = true;
+    if (presimplifyThreshold > 0)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "Warning: when presimplifyThreshold > 0, --shiftIsovalueByEpsilon may return "
+                 "incorrect isosurfaces!");
+    }
+  }
+  if (!computeIsosurface && shiftIsovalueByEpsilon)
+  {
+    if (numBranches > 0)
+    {
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 "Warning: --shiftIsovalueByEpsilon requires --computeIsosurface "
+                 "and a nonzero --numBranches! Enabling --computeIsosurface option.");
+      computeIsosurface = true;
+    }
+    else
+    {
+      std::cerr
+        << "Error: --shiftIsovalueByEpsilon cannot proceed without specifying --numBranches!"
+        << std::endl;
+      MPI_Finalize();
+      return EXIT_FAILURE;
+    }
+  }
 
 #ifdef ENABLE_HDFIO
   std::string dataset_name = "data";
@@ -372,8 +412,15 @@ int main(int argc, char* argv[])
       std::cout << "--numBranches    Number of top volume branches to select." << std::endl;
       std::cout << "                 Requires --computeVolumeBranchDecomposition." << std::endl;
       std::cout
-        << "--eps=<float>   Floating point offset awary from the critical point. (default=0.00001)"
-        << std::endl;
+        << "--computeIsosurface  Compute isosurfaces near the saddle end of top volume branches."
+        << std::endl
+        << "                     Requires specifying --numBranches." << std::endl;
+      std::cout << "--shiftIsovalueByEpsilon  If set, the contour isovalues will be strictly "
+                   "above/below the contour,"
+                << "                          which will ignore the simulation of simplicity when "
+                   "extracting contours. "
+                << std::endl
+                << "                          Requires specifying --numBranches." << std::endl;
       std::cout << "--presimplifyThreshold   Integer volume threshold for presimplifying the tree"
                 << std::endl;
       std::cout << "                 Default value is 0, indicating no presimplification"
@@ -421,12 +468,14 @@ int main(int argc, char* argv[])
                  << "    augmentHierarchicalTree=" << augmentHierarchicalTree << std::endl
                  << "    computeVolumetricBranchDecomposition="
                  << computeHierarchicalVolumetricBranchDecomposition << std::endl
+                 << "    numBranches=" << numBranches << std::endl
+                 << "    computeIsosurface=" << computeIsosurface << std::endl
+                 << "    shiftIsovalueByEpsilon=" << shiftIsovalueByEpsilon << std::endl
                  << "    presimplifyThreshold=" << presimplifyThreshold << std::endl
                  << "    saveOutputData=" << saveOutputData << std::endl
                  << "    forwardSummary=" << forwardSummary << std::endl
                  << "    nblocks=" << numBlocks << std::endl
                  << "    nbranches=" << numBranches << std::endl
-                 << "    eps=" << eps << std::endl
 #ifdef ENABLE_HDFIO
                  << "    dataset=" << dataset_name << " (HDF5 only)" << std::endl
                  << "    blocksPerDim=" << blocksPerDimIn[0] << "," << blocksPerDimIn[1] << ","
@@ -490,6 +539,12 @@ int main(int argc, char* argv[])
                << "    forwardSummary=" << forwardSummary << std::endl
                << "    numBlocks=" << numBlocks << std::endl
                << "    augmentHierarchicalTree=" << augmentHierarchicalTree << std::endl
+               << "    computeVolumetricBranchDecomposition="
+               << computeHierarchicalVolumetricBranchDecomposition << std::endl
+               << "    numBranches=" << numBranches << std::endl
+               << "    computeIsosurface=" << computeIsosurface << std::endl
+               << "    shiftIsovalueByEpsilon=" << shiftIsovalueByEpsilon << std::endl
+               << "    presimplifyThreshold=" << presimplifyThreshold << std::endl
                << "    numRanks=" << size << std::endl
                << "    rank=" << rank << std::endl
 #ifdef ENABLE_HDFIO
@@ -668,6 +723,7 @@ int main(int argc, char* argv[])
 
   // Execute the contour tree analysis
   auto result = filter.Execute(useDataSet);
+  const vtkm::Id nPartitions = result.GetNumberOfPartitions();
 
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 computeContourTreeTime = currTime - prevTime;
@@ -685,6 +741,10 @@ int main(int argc, char* argv[])
   {
     vtkm::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter;
     bd_result = bd_filter.Execute(result);
+
+    // We carried over all fields in result to bd_result.
+    // To save memory, we destroy result by replacing it with an empty PartitionedDataset.
+    result = vtkm::cont::PartitionedDataSet{};
   }
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 branchDecompTime = currTime - prevTime;
@@ -692,12 +752,42 @@ int main(int argc, char* argv[])
 
   // Compute SelectTopVolumeContours if needed
   vtkm::cont::PartitionedDataSet tp_result;
+  vtkm::cont::PartitionedDataSet iso_result;
+  bool isTopVolumeBranchValid = true;
   if (numBranches > 0)
   {
-    vtkm::filter::scalar_topology::SelectTopVolumeContoursFilter tp_filter;
+    vtkm::filter::scalar_topology::SelectTopVolumeBranchesFilter tp_filter;
     tp_filter.SetSavedBranches(numBranches);
+    tp_filter.SetPresimplifyThreshold(presimplifyThreshold);
     tp_result = tp_filter.Execute(bd_result);
+
+    // We carried over all fields in bd_result to tp_result.
+    // To save memory, we destroy bd_result by replacing it with an empty PartitionedDataset.
+    bd_result = vtkm::cont::PartitionedDataSet{};
+
+    // detecting whether the dataset is empty
+    // it is relatively safe to assume that the result has at least one partition
+    if (tp_result.GetPartition(0).GetNumberOfFields() < 1)
+    {
+      isTopVolumeBranchValid = false;
+      VTKM_LOG_S(vtkm::cont::LogLevel::Warn,
+                 std::endl
+                   << "Warning: SelectTopVolumeBranchesFilter did not return any valid branches!"
+                   << std::endl
+                   << "Skipping isosurface extraction." << std::endl);
+    }
+    if (isTopVolumeBranchValid && computeIsosurface)
+    {
+      vtkm::filter::scalar_topology::ExtractTopVolumeContoursFilter iso_filter;
+      iso_filter.SetMarchingCubes(useMarchingCubes);
+      iso_filter.SetShiftIsovalueByEpsilon(shiftIsovalueByEpsilon);
+      iso_result = iso_filter.Execute(tp_result);
+    }
   }
+
+  currTime = totalTime.GetElapsedTime();
+  vtkm::Float64 topVolBranchTime = currTime - prevTime;
+  prevTime = currTime;
 
   // Save output
   if (saveOutputData)
@@ -706,9 +796,10 @@ int main(int argc, char* argv[])
     {
       if (computeHierarchicalVolumetricBranchDecomposition)
       {
-        for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+        vtkm::cont::PartitionedDataSet& output_result = numBranches > 0 ? tp_result : bd_result;
+        for (vtkm::Id ds_no = 0; ds_no < nPartitions; ++ds_no)
         {
-          auto ds = bd_result.GetPartition(ds_no);
+          auto ds = output_result.GetPartition(ds_no);
           std::string branchDecompositionIntermediateFileName =
             std::string("BranchDecompositionIntermediate_Rank_") +
             std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
@@ -742,27 +833,32 @@ int main(int argc, char* argv[])
           }
         }
 
-        if (numBranches > 0)
+        if (numBranches > 0 && isTopVolumeBranchValid)
         {
 #ifndef DEBUG_PRINT
           bool print_to_files = (rank == 0);
           vtkm::Id max_blocks_to_print = 1;
 #else
           bool print_to_files = true;
-          vtkm::Id max_blocks_to_print = result.GetNumberOfPartitions();
+          vtkm::Id max_blocks_to_print = nPartitions;
 #endif
 
           for (vtkm::Id ds_no = 0; print_to_files && ds_no < max_blocks_to_print; ++ds_no)
           {
-            auto ds = tp_result.GetPartition(ds_no);
+            auto ds = output_result.GetPartition(ds_no);
+
             std::string topVolumeBranchFileName = std::string("TopVolumeBranch_Rank_") +
               std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
               std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
             std::ofstream topVolumeBranchStream(topVolumeBranchFileName.c_str());
-            auto topVolBranchGRId = ds.GetField("TopVolumeBranchGlobalRegularIds")
-                                      .GetData()
-                                      .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
-                                      .ReadPortal();
+            auto topVolBranchUpperEnd = ds.GetField("TopVolumeBranchUpperEnd")
+                                          .GetData()
+                                          .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                          .ReadPortal();
+            auto topVolBranchLowerEnd = ds.GetField("TopVolumeBranchLowerEnd")
+                                          .GetData()
+                                          .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                          .ReadPortal();
             auto topVolBranchVolume = ds.GetField("TopVolumeBranchVolume")
                                         .GetData()
                                         .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
@@ -776,10 +872,11 @@ int main(int argc, char* argv[])
                                                 .AsArrayHandle<vtkm::cont::ArrayHandle<ValueType>>()
                                                 .ReadPortal();
 
-            vtkm::Id nSelectedBranches = topVolBranchGRId.GetNumberOfValues();
+            vtkm::Id nSelectedBranches = topVolBranchUpperEnd.GetNumberOfValues();
             for (vtkm::Id branch = 0; branch < nSelectedBranches; ++branch)
             {
-              topVolumeBranchStream << std::setw(12) << topVolBranchGRId.Get(branch)
+              topVolumeBranchStream << std::setw(12) << topVolBranchUpperEnd.Get(branch)
+                                    << std::setw(12) << topVolBranchLowerEnd.Get(branch)
                                     << std::setw(14) << topVolBranchVolume.Get(branch)
                                     << std::setw(5) << topVolBranchSaddleEpsilon.Get(branch)
                                     << std::setw(14) << topVolBranchSaddleIsoValue.Get(branch)
@@ -793,18 +890,125 @@ int main(int argc, char* argv[])
 
             for (vtkm::Id branch = 0; branch < nSelectedBranches; ++branch)
             {
-              isoValuesStream << (topVolBranchSaddleIsoValue.Get(branch) +
-                                  (eps * topVolBranchSaddleEpsilon.Get(branch)))
-                              << " ";
+              isoValuesStream << topVolBranchSaddleIsoValue.Get(branch) << " ";
             }
 
             isoValuesStream << std::endl;
+          }
+
+          for (vtkm::Id ds_no = 0; computeIsosurface && ds_no < nPartitions; ++ds_no)
+          {
+            auto ds = iso_result.GetPartition(ds_no);
+
+            std::string isosurfaceFileName = std::string("Isosurface_Rank_") +
+              std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+              std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
+            std::ofstream isosurfaceStream(isosurfaceFileName.c_str());
+
+            auto isosurfaceEdgesFrom = ds.GetField("IsosurfaceEdgesFrom")
+                                         .GetData()
+                                         .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f_64>>()
+                                         .ReadPortal();
+            auto isosurfaceEdgesTo = ds.GetField("IsosurfaceEdgesTo")
+                                       .GetData()
+                                       .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f_64>>()
+                                       .ReadPortal();
+            auto isosurfaceEdgesLabels = ds.GetField("IsosurfaceEdgesLabels")
+                                           .GetData()
+                                           .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                           .ReadPortal();
+            auto isosurfaceEdgesOrders = ds.GetField("IsosurfaceEdgesOrders")
+                                           .GetData()
+                                           .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                           .ReadPortal();
+            auto isosurfaceEdgesOffset = ds.GetField("IsosurfaceEdgesOffset")
+                                           .GetData()
+                                           .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                           .ReadPortal();
+            auto isosurfaceIsoValue = ds.GetField("IsosurfaceIsoValue")
+                                        .GetData()
+                                        .AsArrayHandle<vtkm::cont::ArrayHandle<ValueType>>()
+                                        .ReadPortal();
+            vtkm::Id nIsosurfaceEdges = isosurfaceEdgesFrom.GetNumberOfValues();
+            vtkm::Id isoSurfaceCount = 0;
+
+            if (nDims == 2)
+              for (vtkm::Id edge = 0; edge < nIsosurfaceEdges; ++edge)
+              {
+                while (isoSurfaceCount < isosurfaceEdgesLabels.GetNumberOfValues() &&
+                       edge == isosurfaceEdgesOffset.Get(isoSurfaceCount))
+                {
+                  isosurfaceStream << "Isosurface Info:" << std::setw(5)
+                                   << isosurfaceEdgesLabels.Get(isoSurfaceCount) << std::setw(10)
+                                   << isosurfaceEdgesOrders.Get(isoSurfaceCount) << std::setw(10)
+                                   << isosurfaceIsoValue.Get(isoSurfaceCount) << std::endl;
+                  isoSurfaceCount++;
+                }
+                isosurfaceStream << std::setw(6) << isosurfaceEdgesFrom.Get(edge) << std::setw(6)
+                                 << isosurfaceEdgesTo.Get(edge) << std::endl;
+              }
+            else if (nDims == 3)
+            {
+              VTKM_ASSERT(nIsosurfaceEdges % 3 == 0);
+              for (vtkm::Id edge = 0; edge < nIsosurfaceEdges; edge += 3)
+              {
+                while (isoSurfaceCount < isosurfaceEdgesLabels.GetNumberOfValues() &&
+                       edge == isosurfaceEdgesOffset.Get(isoSurfaceCount))
+                {
+                  isosurfaceStream << "Isosurface Info:" << std::setw(5)
+                                   << isosurfaceEdgesLabels.Get(isoSurfaceCount) << std::setw(10)
+                                   << isosurfaceEdgesOrders.Get(isoSurfaceCount) << std::setw(10)
+                                   << isosurfaceIsoValue.Get(isoSurfaceCount) << std::endl;
+                  isoSurfaceCount++;
+                }
+                isosurfaceStream << std::setw(6) << isosurfaceEdgesFrom.Get(edge) << std::setw(6)
+                                 << isosurfaceEdgesTo.Get(edge) << std::setw(6)
+                                 << isosurfaceEdgesTo.Get(edge + 1) << std::endl;
+              }
+            }
+          }
+
+          for (vtkm::Id ds_no = 0; ds_no < nPartitions; ++ds_no)
+          {
+            auto ds = output_result.GetPartition(ds_no);
+
+            std::string branchDecompositionVolumeFileName =
+              std::string("BranchDecompositionVolume_Rank_") +
+              std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+              std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
+            std::ofstream bdVolStream(branchDecompositionVolumeFileName.c_str());
+
+            auto upperEndGRId = ds.GetField("UpperEndGlobalRegularIds")
+                                  .GetData()
+                                  .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                  .ReadPortal();
+            auto lowerEndGRId = ds.GetField("LowerEndGlobalRegularIds")
+                                  .GetData()
+                                  .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                  .ReadPortal();
+            auto branchSaddleEpsilon = ds.GetField("BranchSaddleEpsilon")
+                                         .GetData()
+                                         .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                         .ReadPortal();
+            auto branchVolume = ds.GetField("BranchVolume")
+                                  .GetData()
+                                  .AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>()
+                                  .ReadPortal();
+            vtkm::Id nBranches = upperEndGRId.GetNumberOfValues();
+
+            for (vtkm::Id branch = 0; branch < nBranches; ++branch)
+            {
+              bdVolStream << std::setw(12) << upperEndGRId.Get(branch) << std::setw(12)
+                          << lowerEndGRId.Get(branch) << std::setw(3)
+                          << branchSaddleEpsilon.Get(branch) << std::setw(18)
+                          << branchVolume.Get(branch) << std::endl;
+            }
           }
         }
       }
       else
       {
-        for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+        for (vtkm::Id ds_no = 0; ds_no < nPartitions; ++ds_no)
         {
           auto ds = result.GetPartition(ds_no);
           vtkm::worklet::contourtree_augmented::IdArrayType supernodes;
@@ -838,7 +1042,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-      for (vtkm::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+      for (vtkm::Id ds_no = 0; ds_no < nPartitions; ++ds_no)
       {
         vtkm::worklet::contourtree_distributed::TreeCompiler treeCompiler;
         treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
@@ -854,7 +1058,6 @@ int main(int argc, char* argv[])
       }
     }
   }
-
 
   currTime = totalTime.GetElapsedTime();
   vtkm::Float64 saveOutputDataTime = currTime - prevTime;
@@ -907,6 +1110,8 @@ int main(int argc, char* argv[])
                << ": " << postFilterSyncTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Branch Decomposition"
                << ": " << branchDecompTime << " seconds" << std::endl
+               << std::setw(42) << std::left << "    Top Volume Branch Extraction"
+               << ": " << topVolBranchTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Save Tree Compiler Data"
                << ": " << saveOutputDataTime << " seconds" << std::endl
                << std::setw(42) << std::left << "    Total Time"
