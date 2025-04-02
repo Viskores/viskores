@@ -50,45 +50,97 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
-#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#ifndef vtk_m_filter_scalar_topology_worklet_branch_decomposition_select_top_volume_branches_BranchVolumeComparator_h
+#define vtk_m_filter_scalar_topology_worklet_branch_decomposition_select_top_volume_branches_BranchVolumeComparator_h
 
-#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
-namespace filter
+namespace worklet
 {
 namespace scalar_topology
 {
-namespace internal
+namespace select_top_volume_branches
 {
 
-struct ComputeDistributedBranchDecompositionFunctor
+using IdArrayType = vtkm::worklet::contourtree_augmented::IdArrayType;
+
+// Implementation of BranchVolumeComparator
+class BranchVolumeComparatorImpl
 {
-  ComputeDistributedBranchDecompositionFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
-    : TimingsLogLevel(timingsLogLevel)
+public:
+  using IdPortalType = typename IdArrayType::ReadPortalType;
+
+  // constructor
+  VTKM_CONT
+  BranchVolumeComparatorImpl(const IdArrayType& branchRoots,
+                             const IdArrayType& branchVolume,
+                             vtkm::cont::DeviceAdapterId device,
+                             vtkm::cont::Token& token)
+    : BranchRootsPortal(branchRoots.PrepareForInput(device, token))
+    , BranchVolumePortal(branchVolume.PrepareForInput(device, token))
+  { // constructor
+  } // constructor
+
+  // () operator - gets called to do comparison
+  VTKM_EXEC
+  bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
+  { // operator()
+    vtkm::Id volumeI = this->BranchVolumePortal.Get(i);
+    vtkm::Id volumeJ = this->BranchVolumePortal.Get(j);
+
+    // primary sort on branch volume
+    if (volumeI > volumeJ)
+      return true;
+    if (volumeI < volumeJ)
+      return false;
+
+    vtkm::Id branchI =
+      vtkm::worklet::contourtree_augmented::MaskedIndex(this->BranchRootsPortal.Get(i));
+    vtkm::Id branchJ =
+      vtkm::worklet::contourtree_augmented::MaskedIndex(this->BranchRootsPortal.Get(j));
+
+    // secondary sort on branch ID
+    return (branchI < branchJ);
+  } // operator()
+
+private:
+  IdPortalType BranchRootsPortal;
+  IdPortalType BranchVolumePortal;
+
+}; // BranchVolumeComparatorImpl
+
+/// <summary>
+/// Comparator of branch volume. Higher volume comes first
+/// </summary>
+class BranchVolumeComparator : public vtkm::cont::ExecutionObjectBase
+{
+
+public:
+  // constructor
+  VTKM_CONT
+  BranchVolumeComparator(const IdArrayType& branchRoots, const IdArrayType& branchVolume)
+    : BranchRoots(branchRoots)
+    , BranchVolume(branchVolume)
   {
   }
 
-  void operator()(BranchDecompositionBlock* b,
-                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
-                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
-  ) const;
+  VTKM_CONT BranchVolumeComparatorImpl PrepareForExecution(vtkm::cont::DeviceAdapterId device,
+                                                           vtkm::cont::Token& token) const
+  {
+    return BranchVolumeComparatorImpl(this->BranchRoots, this->BranchVolume, device, token);
+  }
 
-  const vtkm::cont::LogLevel TimingsLogLevel;
-};
+private:
+  IdArrayType BranchRoots;
+  IdArrayType BranchVolume;
+}; // BranchVolumeComparator
 
-} // namespace internal
+
+} // namespace select_top_volume_branches
 } // namespace scalar_topology
-} // namespace filter
+} // namespace worklet
 } // namespace vtkm
 
 #endif

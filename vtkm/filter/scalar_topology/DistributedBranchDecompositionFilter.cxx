@@ -80,6 +80,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
   timingsStream << "    " << std::setw(60) << std::left
                 << "Create DIY Master and Assigner (Branch Decomposition)"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+
   timer.Start();
 
   // Compute global ids (gids) for our local blocks
@@ -116,6 +117,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
   timingsStream << "    " << std::setw(60) << std::left
                 << "Get DIY Information (Branch Decomposition)"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+
   timer.Start();
 
 
@@ -160,11 +162,6 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
                                wrap,
                                ghosts,
                                diyDivisions);
-
-  // TODO/FIXME: Check what happened here and possibly eliminate!
-  for (vtkm::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
-  {
-  }
 
   timingsStream << "    " << std::setw(60) << std::left
                 << "Create DIY Decomposer and Assigner (Branch Decomposition)"
@@ -237,7 +234,8 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
     branch_decomposition_master,
     assigner,
     partners,
-    vtkm::filter::scalar_topology::internal::ComputeDistributedBranchDecompositionFunctor{});
+    vtkm::filter::scalar_topology::internal::ComputeDistributedBranchDecompositionFunctor(
+      this->TimingsLogLevel));
 
   timingsStream << "    " << std::setw(60) << std::left
                 << "Exchanging best up/down supernode and volume"
@@ -314,12 +312,19 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
       b->VolumetricBranchDecomposer.CollectBranches(ds, b->BranchRoots);
     });
 
+  timingsStream << "    " << std::setw(38) << std::left << "CollectBranchEnds"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
   // Now we have collected the branches, we do a global reduction to exchance branch end information
   // across all compute ranks
-  vtkmdiy::reduce(branch_decomposition_master,
-                  assigner,
-                  partners,
-                  vtkm::filter::scalar_topology::internal::ExchangeBranchEndsFunctor{});
+  auto exchangeBranchEndsFunctor =
+    vtkm::filter::scalar_topology::internal::ExchangeBranchEndsFunctor(this->TimingsLogLevel);
+  vtkmdiy::reduce(branch_decomposition_master, assigner, partners, exchangeBranchEndsFunctor);
+
+  timingsStream << "    " << std::setw(38) << std::left << "ExchangeBranchEnds"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
 
   std::vector<vtkm::cont::DataSet> outputDataSets(input.GetNumberOfPartitions());
   // Copy input data set to output
@@ -346,6 +351,15 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
                                           vtkm::cont::Field::Association::WholeDataSet,
                                           b->VolumetricBranchDecomposer.LowerEndGRId);
       outputDataSets[b->LocalBlockNo].AddField(LowerEndGRIdField);
+
+      vtkm::cont::Field UpperEndLocalIdField("UpperEndLocalIds",
+                                             vtkm::cont::Field::Association::WholeDataSet,
+                                             b->VolumetricBranchDecomposer.UpperEndLocalId);
+      outputDataSets[b->LocalBlockNo].AddField(UpperEndLocalIdField);
+      vtkm::cont::Field LowerEndLocalIdField("LowerEndLocalIds",
+                                             vtkm::cont::Field::Association::WholeDataSet,
+                                             b->VolumetricBranchDecomposer.LowerEndLocalId);
+      outputDataSets[b->LocalBlockNo].AddField(LowerEndLocalIdField);
 
       vtkm::cont::Field UpperEndIntrinsicVolume(
         "UpperEndIntrinsicVolume",
@@ -383,7 +397,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
                                       vtkm::cont::Field::Association::WholeDataSet,
                                       b->VolumetricBranchDecomposer.UpperEndValue);
       outputDataSets[b->LocalBlockNo].AddField(UpperEndValue);
-      vtkm::cont::Field BranchRoot("BranchRoot",
+      vtkm::cont::Field BranchRoot("BranchRootByBranch",
                                    vtkm::cont::Field::Association::WholeDataSet,
                                    b->VolumetricBranchDecomposer.BranchRoot);
       outputDataSets[b->LocalBlockNo].AddField(BranchRoot);
@@ -397,7 +411,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet DistributedBranchDecompositionFilter::D
                 << "Creating Branch Decomposition Output Data"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
 
-  VTKM_LOG_S(vtkm::cont::LogLevel::Perf,
+  VTKM_LOG_S(this->TimingsLogLevel,
              std::endl
                << "-----------  DoExecutePartitions Timings ------------" << std::endl
                << timingsStream.str());

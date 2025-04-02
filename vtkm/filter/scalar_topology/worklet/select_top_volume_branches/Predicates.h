@@ -50,45 +50,45 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
-#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#ifndef vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_predicates_h
+#define vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_predicates_h
 
-#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
+#include <vtkm/Types.h>
 
 namespace vtkm
 {
-namespace filter
+namespace worklet
 {
 namespace scalar_topology
 {
-namespace internal
+namespace select_top_volume_branches
 {
 
-struct ComputeDistributedBranchDecompositionFunctor
+// we use two digits to identify whether the branch is a parent branch of other branches
+// the lowest digit (i.e., 1) is a flag for parent branches of minima-saddle branches
+struct IsExtraMinimum
 {
-  ComputeDistributedBranchDecompositionFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
-    : TimingsLogLevel(timingsLogLevel)
-  {
-  }
+  VTKM_EXEC_CONT
+  IsExtraMinimum() {}
 
-  void operator()(BranchDecompositionBlock* b,
-                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
-                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
-  ) const;
-
-  const vtkm::cont::LogLevel TimingsLogLevel;
+  VTKM_EXEC_CONT
+  bool operator()(const vtkm::Id x) const { return (x & vtkm::Id(1)) != 0; }
 };
 
-} // namespace internal
+// we use two digits to identify whether the branch is a parent branch of other branches
+// the second lowest digit (i.e., 2) is a flag for parent branches of saddle-maxima branches
+struct IsExtraMaximum
+{
+  VTKM_EXEC_CONT
+  IsExtraMaximum() {}
+
+  VTKM_EXEC_CONT
+  bool operator()(const vtkm::Id x) const { return (x & vtkm::Id(2)) != 0; }
+};
+
+} // namespace select_top_volume_branches
 } // namespace scalar_topology
-} // namespace filter
+} // namespace worklet
 } // namespace vtkm
 
 #endif

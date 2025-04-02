@@ -22,10 +22,10 @@ set(headers
   SetSuperparentSetDecorator.h
   AttachmentAndSupernodeComparator.h
   ResizeArraysBuildNewSupernodeIdsWorklet.h
+  FillEmptyIterationWorklet.h
   CreateSuperarcsWorklet.h
   CreateSuperarcsData.h
   CreateSuperarcsSetFirstSupernodePerIterationWorklet.h
-  CreateSuperarcsUpdateFirstSupernodePerIterationWorklet.h
   HierarchicalAugmenterInOutData.h
 )
 

@@ -103,8 +103,8 @@
 #include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/CopyBaseRegularStructureWorklet.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/CreateSuperarcsData.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/CreateSuperarcsSetFirstSupernodePerIterationWorklet.h>
-#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/CreateSuperarcsUpdateFirstSupernodePerIterationWorklet.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/CreateSuperarcsWorklet.h>
+#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/FillEmptyIterationWorklet.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/FindSuperparentForNecessaryNodesWorklet.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/HierarchicalAugmenterInOutData.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/IsAscendingDecorator.h>
@@ -242,7 +242,7 @@ public:
   void CopyBaseRegularStructure();
 
   // subroutines for CopySuperstructure
-  /// gets a list of all the old supernodes to transfer at this level (ie except attachment points
+  /// gets a list of all the old supernodes to transfer at this level (i.e., except attachment points
   void RetrieveOldSupernodes(vtkm::Id roundNumber);
   /// resizes the arrays for the level
   void ResizeArrays(vtkm::Id roundNumber);
@@ -1128,7 +1128,6 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
   }
 
   // Reset the number of regular nodes in round 0
-  /* ----- MINGZHE: DEBUG ----- */
   vtkm::Id regularNodesInRound0 =
     this->AugmentedTree->NumRegularNodesInRound.ReadPortal().Get(0) + numRegNeeded;
   this->AugmentedTree->NumRegularNodesInRound.WritePortal().Set(0, regularNodesInRound0);
@@ -1656,22 +1655,18 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(vtkm::Id roundNumber)
     this->AugmentedTree->Supernodes.GetNumberOfValues(),         // new value
     this->AugmentedTree->FirstSupernodePerIteration[roundNumber] // array
   );
-  // The following loop should be safe in parallel since there should never be two zeros in sequence, i.e., the next
-  // entry after a zero will always be valid, regardless of execution order
+
   // This was added because in rare cases there are no supernodes transferred in an iteration, for example because there
   // are no available upper leaves to prune. If this is case, we are guaranteed that there will be available lower leaves
-  // so the next iteration will have a non-zero number.  We had a major bug from this, and it's cropped back up in the
+  // so the next iteration will have a non-zero number.  We had a major bug from this, and it's cropped back up in the.
   // Hierarchical Augmentation, so I'm expanding the comment just in case.
-  {
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> tempIndex(1, 1, currNumIterations - 1);
-    vtkm::worklet::contourtree_distributed::hierarchical_augmenter::
-      CreateSuperarcsUpdateFirstSupernodePerIterationWorklet
-        createSuperarcsUpdateFirstSupernodePerIterationWorklet;
-    this->Invoke(createSuperarcsUpdateFirstSupernodePerIterationWorklet,
-                 tempIndex,                                                   // input index
-                 this->AugmentedTree->FirstSupernodePerIteration[roundNumber] // input/output
-    );
-  }
+  // Mingzhe: for any empty iteration, augmentedTree->FirstSupernodePerIteration[round] will be 0
+  // Fill the 0 out (except when it is leading) by its following number as necessary
+  // There should never be two consecutive zeros, so running it in parallel should be safe
+  vtkm::worklet::contourtree_distributed::hierarchical_augmenter::FillEmptyIterationWorklet
+    fillEmptyIterationWorklet;
+  this->Invoke(fillEmptyIterationWorklet,
+               this->AugmentedTree->FirstSupernodePerIteration[roundNumber]);
 
   // We have one last bit of cleanup to do.  If there were attachment points,
   // then the round in which they transfer has been removed

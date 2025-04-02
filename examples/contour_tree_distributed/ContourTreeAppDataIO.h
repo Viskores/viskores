@@ -87,7 +87,7 @@
 
 
 /// Convert a 3D index of a cube to rank index
-vtkm::Id to1DIndex(vtkm::Id3 idx, vtkm::Id3 dims)
+inline vtkm::Id to1DIndex(vtkm::Id3 idx, vtkm::Id3 dims)
 {
   // return (idx[2] * dims[0] * dims[1]) + (idx[1] * dims[0]) + idx[0];
   // Swap first and second dimension
@@ -95,7 +95,7 @@ vtkm::Id to1DIndex(vtkm::Id3 idx, vtkm::Id3 dims)
 }
 
 /// Convert the rank index to the index of the cube
-vtkm::Id3 to3DIndex(vtkm::Id idx, vtkm::Id3 dims)
+inline vtkm::Id3 to3DIndex(vtkm::Id idx, vtkm::Id3 dims)
 {
   vtkm::Id3 res;
   res[2] = idx / (dims[0] * dims[1]);
@@ -230,6 +230,19 @@ bool read3DHDF5File(const int& mpi_rank,
     count[1] = globalSize[1] - offset[1];
   }
   if (vtkm::Id(offset[2] + count[2]) > globalSize[2])
+  {
+    count[2] = globalSize[2] - offset[2];
+  }
+  // Check that we cover the end of the dataset
+  if (blockIndex[0] == blocksPerDim[0] - 1 && (vtkm::Id(offset[0] + count[0]) != globalSize[0]))
+  {
+    count[0] = globalSize[0] - offset[0];
+  }
+  if (blockIndex[1] == blocksPerDim[1] - 1 && (vtkm::Id(offset[1] + count[1]) != globalSize[1]))
+  {
+    count[1] = globalSize[1] - offset[1];
+  }
+  if (blockIndex[2] == blocksPerDim[2] - 1 && (vtkm::Id(offset[2] + count[2]) != globalSize[2]))
   {
     count[2] = globalSize[2] - offset[2];
   }

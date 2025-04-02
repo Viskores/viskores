@@ -9,11 +9,23 @@
 ##============================================================================
 
 set(headers
+  Predicates.h
+  TopVolumeBranchData.h
+  AboveThresholdWorklet.h
+  AssignValueWorklet.h
+  BinarySearchWorklet.h
+  BranchSaddleIsKnownWorklet.h
   ClarifyBranchEndSupernodeTypeWorklet.h
+  CollectOuterSaddleWorklet.h
+  UpdateOuterSaddleWorklet.h
   UpdateInfoByBranchDirectionWorklet.h
+  GetParentBranchWorklet.h
+  GetBranchHierarchyWorklet.h
   GetBranchVolumeWorklet.h
+  BranchParentComparator.h
   BranchVolumeComparator.h
-  )
+  BranchDecompositionTreeMaker.h
+)
 #-----------------------------------------------------------------------------
 
 vtkm_declare_headers(${headers})

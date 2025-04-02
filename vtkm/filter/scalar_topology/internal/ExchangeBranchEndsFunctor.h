@@ -73,11 +73,19 @@ namespace internal
 
 struct ExchangeBranchEndsFunctor
 {
+  ExchangeBranchEndsFunctor(vtkm::cont::LogLevel timingsLogLevel = vtkm::cont::LogLevel::Perf)
+    : TimingsLogLevel(timingsLogLevel)
+  {
+  }
+
   VTKM_CONT void operator()(
     BranchDecompositionBlock* b,
     const vtkmdiy::ReduceProxy& rp,     // communication proxy
     const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
   ) const;
+
+private:
+  vtkm::cont::LogLevel TimingsLogLevel;
 };
 
 } // namespace internal

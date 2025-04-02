@@ -182,6 +182,11 @@ public:
   vtkm::worklet::contourtree_augmented::IdArrayType LowerEndIntrinsicVolume;
   vtkm::worklet::contourtree_augmented::IdArrayType UpperEndDependentVolume;
   vtkm::worklet::contourtree_augmented::IdArrayType LowerEndDependentVolume;
+  // This information is only used when extracting isosurfaces
+  // We need the upper and lower end within the block to determine the superarc containing the isovalue
+  // The information should NOT be exchanged between blocks, since it's local id
+  vtkm::worklet::contourtree_augmented::IdArrayType UpperEndLocalId;
+  vtkm::worklet::contourtree_augmented::IdArrayType LowerEndLocalId;
 
   /// routines to compute branch decomposition by volume
   /// WARNING: we now have two types of hierarchical tree sharing a data structure:
@@ -777,6 +782,8 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
       vtkm::cont::make_ArrayHandlePermutation(sortedSuperarcs, actualBranchRoots);
     auto permutedRegularIds =
       vtkm::cont::make_ArrayHandlePermutation(sortedSuperarcs, actualOuterNodeRegularIds);
+    auto permutedLocalIds =
+      vtkm::cont::make_ArrayHandlePermutation(sortedSuperarcs, actualOuterNodeLocalIds);
     auto permutedDataValues =
       vtkm::cont::make_ArrayHandlePermutation(sortedSuperarcs, actualOuterNodeValues);
     auto permutedIntrinsicVolumes =
@@ -824,6 +831,7 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
     {
       vtkm::cont::Algorithm::CopyIf(permutedBranchRoots, oneIfBranchEnd, this->BranchRoot);
       vtkm::cont::Algorithm::CopyIf(branchRootGRIds, oneIfBranchEnd, this->BranchRootGRId);
+      vtkm::cont::Algorithm::CopyIf(permutedLocalIds, oneIfBranchEnd, this->LowerEndLocalId);
       vtkm::cont::Algorithm::CopyIf(
         actualDirectedSuperarcs, oneIfBranchEnd, this->LowerEndSuperarcId);
       vtkm::cont::Algorithm::CopyIf(permutedRegularIds, oneIfBranchEnd, this->LowerEndGRId);
@@ -864,6 +872,7 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
       vtkm::cont::Algorithm::CopyIf(
         actualDirectedSuperarcs, oneIfBranchEnd, this->UpperEndSuperarcId);
       vtkm::cont::Algorithm::CopyIf(permutedRegularIds, oneIfBranchEnd, this->UpperEndGRId);
+      vtkm::cont::Algorithm::CopyIf(permutedLocalIds, oneIfBranchEnd, this->UpperEndLocalId);
       vtkm::cont::Algorithm::CopyIf(
         permutedIntrinsicVolumes, oneIfBranchEnd, this->UpperEndIntrinsicVolume);
       vtkm::cont::Algorithm::CopyIf(

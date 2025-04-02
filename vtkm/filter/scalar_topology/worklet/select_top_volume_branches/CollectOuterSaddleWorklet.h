@@ -38,13 +38,20 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
+//
+//  This code is an extension of the algorithm presented in the paper:
+//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
+//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
+//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
+//  (LDAV), October 2016, Baltimore, Maryland.
+//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_worklet_contourtree_distributed_hierarchical_augmenter_create_auperarcs_update_first_supernode_per_iteration_worklet_h
-#define vtk_m_worklet_contourtree_distributed_hierarchical_augmenter_create_auperarcs_update_first_supernode_per_iteration_worklet_h
+#ifndef vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_CollectOuterSaddleWorklet_h
+#define vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_CollectOuterSaddleWorklet_h
 
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -53,51 +60,63 @@ namespace vtkm
 {
 namespace worklet
 {
-namespace contourtree_distributed
+namespace scalar_topology
 {
-namespace hierarchical_augmenter
+namespace select_top_volume_branches
 {
 
-/// Worklet used in HierarchicalAugmenter::UpdateHyperstructure to set the hyperarcs and hypernodes
-class CreateSuperarcsUpdateFirstSupernodePerIterationWorklet : public vtkm::worklet::WorkletMapField
+/// <summary>
+/// worklet to get the outer saddles of parent branches from branch-decomposition tree
+/// This is to visualize the isosurface belong to the parent branch
+/// that is symmetrical to the outer-most child branch
+/// we collect the first saddle isovalue if branchSaddleEpsilon(parent) < 0
+/// or the last saddle isovalue if branchSaddleEpsilon(parent) > 0
+/// or both if branchSaddleEpsilon(parent) == 0
+/// </summary>
+class CollectOuterSaddle : public vtkm::worklet::WorkletMapField
 {
 public:
-  /// Control signature for the worklet
-  using ControlSignature = void(FieldIn indexArray,
-                                WholeArrayInOut augmentedTreeFirstSupernodePerIteration);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(
+    FieldIn parentSaddleEpsilon, // parent saddle epsilon
+    WholeArrayIn branchParent,   // (array input) parent branch root ID (local)
+    FieldOut IsOuterSaddle       // (output) whether the branch is an outer saddle of the parent
+  );
+  using ExecutionSignature = _3(InputIndex, _1, _2);
   using InputDomain = _1;
 
-  // Default Constructor
+  using IdArrayPortalType = typename IdArrayType::ReadPortalType;
+
+  /// Constructor
   VTKM_EXEC_CONT
-  CreateSuperarcsUpdateFirstSupernodePerIterationWorklet() {}
+  CollectOuterSaddle() {}
 
-  template <typename InOutFieldPortalType>
-  VTKM_EXEC void operator()(
-    const vtkm::Id& iteration,
-    const InOutFieldPortalType& augmentedTreeFirstSupernodePerIterationPortal) const
-  { // operator()()
-    if (augmentedTreeFirstSupernodePerIterationPortal.Get(iteration) == 0)
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& inputIndex,
+                                const vtkm::Id& parentSaddleEpsilon,
+                                const IdArrayPortalType& branchParent) const
+  {
+    const vtkm::Id selfParent = branchParent.Get(inputIndex);
+    vtkm::Id isOuterSaddle = 0;
+    if (vtkm::worklet::contourtree_augmented::NoSuchElement(selfParent))
     {
-      augmentedTreeFirstSupernodePerIterationPortal.Set(
-        iteration, augmentedTreeFirstSupernodePerIterationPortal.Get(iteration + 1));
+      return isOuterSaddle;
     }
-
-    /*
-    for (indexType iteration = 1; iteration < augmentedTree->nIterations[roundNo]; ++iteration)
+    const bool isFirst = (inputIndex == 0) || (branchParent.Get(inputIndex - 1) != selfParent);
+    const bool isLast = (inputIndex == branchParent.GetNumberOfValues() - 1) ||
+      (branchParent.Get(inputIndex + 1) != selfParent);
+    if (isFirst && parentSaddleEpsilon <= 0)
     {
-      if (augmentedTree->firstSupernodePerIteration[roundNo][iteration] == 0)
-      {
-        augmentedTree->firstSupernodePerIteration[roundNo][iteration] =
-          augmentedTree->firstSupernodePerIteration[roundNo][iteration+1];
-      }
+      isOuterSaddle |= 1;
     }
-    */
-  } // operator()()
-};  // CreateSuperarcsUpdateFirstSupernodePerIterationWorklet
+    if (isLast && parentSaddleEpsilon >= 0)
+    {
+      isOuterSaddle |= 2;
+    }
+    return isOuterSaddle;
+  }
+}; // CollectOuterSaddle
 
-} // namespace hierarchical_augmenter
-} // namespace contourtree_distributed
+} // namespace select_top_volume_branches
+} // namespace scalar_topology
 } // namespace worklet
 } // namespace vtkm
 

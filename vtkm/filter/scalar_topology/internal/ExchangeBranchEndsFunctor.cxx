@@ -54,6 +54,7 @@
 #include <vtkm/filter/scalar_topology/worklet/branch_decomposition/hierarchical_volumetric_branch_decomposer/BranchEndGlobalUpdateWorklet.h>
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/Logging.h>
 
 #ifdef DEBUG_PRINT
 #define DEBUG_PRINT_COMBINED_BLOCK_IDS
@@ -75,6 +76,7 @@ void ExchangeBranchEndsFunctor::operator()(
 ) const
 {
   // Get our rank and DIY id
+  const vtkm::Id rank = vtkm::cont::EnvironmentTracker::GetCommunicator().rank();
   const auto selfid = rp.gid();
 
   // Aliases to reduce verbosity
@@ -93,6 +95,7 @@ void ExchangeBranchEndsFunctor::operator()(
     // Otherwise, we may need to process more than one incoming block
     if (ingid != selfid)
     {
+
 #ifdef DEBUG_PRINT_COMBINED_BLOCK_IDS
       int incomingGlobalBlockId;
       rp.dequeue(ingid, incomingGlobalBlockId);
@@ -125,6 +128,20 @@ void ExchangeBranchEndsFunctor::operator()(
       rp.dequeue(ingid, incomingUpperEndDependentVolume);
       IdArrayType incomingLowerEndDependentVolume;
       rp.dequeue(ingid, incomingLowerEndDependentVolume);
+
+      std::stringstream dataSizeStream;
+      // Log the amount of exchanged data
+      dataSizeStream << "    " << std::setw(38) << std::left << "Incoming branch size"
+                     << ": " << incomingBranchRootGRId.GetNumberOfValues() << std::endl;
+
+      VTKM_LOG_S(this->TimingsLogLevel,
+                 std::endl
+                   << "    ---------------- Exchange Branch Ends Step ---------------------"
+                   << std::endl
+                   << "    Rank    : " << rank << std::endl
+                   << "    DIY Id  : " << selfid << std::endl
+                   << "    Inc Id  : " << ingid << std::endl
+                   << dataSizeStream.str());
 
       /// Superarc and Branch IDs are given based on the hierarchical level
       /// Shared branches should lie on the smaller ID side of the branch array consecutively
@@ -307,7 +324,8 @@ void ExchangeBranchEndsFunctor::operator()(
     {
 #ifdef DEBUG_PRINT_COMBINED_BLOCK_IDS
       rp.enqueue(target, b->GlobalBlockId);
-#endif
+#endif // DEBUG_PRINT_COMBINED_BLOCK_IDS
+
       rp.enqueue(target, branchDecomposer.BranchRootGRId);
       rp.enqueue(target, branchDecomposer.UpperEndGRId);
       rp.enqueue(target, branchDecomposer.LowerEndGRId);

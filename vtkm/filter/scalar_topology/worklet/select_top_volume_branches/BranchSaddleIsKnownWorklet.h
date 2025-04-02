@@ -50,45 +50,82 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
-#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#ifndef vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_BranchSaddleIsKnownWorklet_h
+#define vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_BranchSaddleIsKnownWorklet_h
 
-#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
+#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
-namespace filter
+namespace worklet
 {
 namespace scalar_topology
 {
-namespace internal
+namespace select_top_volume_branches
 {
 
-struct ComputeDistributedBranchDecompositionFunctor
+using IdArrayType = vtkm::worklet::contourtree_augmented::IdArrayType;
+
+/// <summary>
+/// worklet to check whether the saddle end of branch is known by the block
+/// if true, we return the saddle end supernode id
+/// if false (or main branch), we return NO_SUCH_ELEMENT
+/// </summary>
+class BranchSaddleIsKnownWorklet : public vtkm::worklet::WorkletMapField
 {
-  ComputeDistributedBranchDecompositionFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
-    : TimingsLogLevel(timingsLogLevel)
+public:
+  using ControlSignature = void(
+    FieldIn lowerEndGRId,      // (input) branch lower end global regular id
+    FieldIn lowerLocalEnd,     // (input) branch local lower end
+    FieldIn lowerLocalEndGRId, // (input) branch local lower end global regular id
+    FieldIn upperEndGRId,      // (input) branch upper end global regular id
+    FieldIn upperLocalEnd,     // (input) branch local upper end
+    FieldIn upperLocalEndGRId, // (input) branch local upper end global regular id
+    FieldIn branchSaddleEps,   // (input) branch saddle epsilon
+    FieldOut branchSaddle      // (output) the branch saddle (if known by the block)
+  );
+  using ExecutionSignature = _8(_1, _2, _3, _4, _5, _6, _7);
+  using InputDomain = _1;
+
+  /// Constructor
+  VTKM_EXEC_CONT
+  BranchSaddleIsKnownWorklet() {}
+
+  /// The functor checks the direction of the branch
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& lowerEndGRId,
+                                const vtkm::Id& lowerLocalEnd,
+                                const vtkm::Id& lowerLocalEndGRId,
+                                const vtkm::Id& upperEndGRId,
+                                const vtkm::Id& upperLocalEnd,
+                                const vtkm::Id& upperLocalEndGRId,
+                                const vtkm::Id& branchSaddleEps) const
   {
+    // if main branch
+    if (branchSaddleEps == 0)
+      return vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+
+    // if the branch is a maximum-saddle branch
+    if (branchSaddleEps > 0)
+      return lowerEndGRId == lowerLocalEndGRId
+        ? lowerLocalEnd
+        : vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+
+    // if the branch is a minimum-saddle branch
+    if (branchSaddleEps < 0)
+      return upperEndGRId == upperLocalEndGRId
+        ? upperLocalEnd
+        : vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
+
+    // in case of fallout, should never reach
+    return vtkm::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
   }
 
-  void operator()(BranchDecompositionBlock* b,
-                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
-                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
-  ) const;
+}; // BranchSaddleIsKnownWorklet
 
-  const vtkm::cont::LogLevel TimingsLogLevel;
-};
-
-} // namespace internal
+} // namespace select_top_volume_branches
 } // namespace scalar_topology
-} // namespace filter
+} // namespace worklet
 } // namespace vtkm
 
 #endif

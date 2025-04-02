@@ -50,11 +50,13 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_SelectTopVolumeContoursBlock_h
-#define vtk_m_filter_scalar_topology_internal_SelectTopVolumeContoursBlock_h
+#ifndef vtk_m_filter_scalar_topology_internal_SelectTopVolumeBranchesBlock_h
+#define vtk_m_filter_scalar_topology_internal_SelectTopVolumeBranchesBlock_h
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <vtkm/filter/scalar_topology/worklet/select_top_volume_branches/BranchDecompositionTreeMaker.h>
+#include <vtkm/filter/scalar_topology/worklet/select_top_volume_branches/TopVolumeBranchData.h>
 
 namespace vtkm
 {
@@ -65,32 +67,35 @@ namespace scalar_topology
 namespace internal
 {
 
-struct SelectTopVolumeContoursBlock
+struct SelectTopVolumeBranchesBlock
 {
-  SelectTopVolumeContoursBlock(vtkm::Id localBlockNo, int globalBlockId);
-
-  void SortBranchByVolume(const vtkm::cont::DataSet& hierarchicalTreeDataSet,
-                          const vtkm::Id totalVolume);
+  SelectTopVolumeBranchesBlock(vtkm::Id localBlockNo, int globalBlockId);
 
   // Block metadata
   vtkm::Id LocalBlockNo;
-  int GlobalBlockId; // TODO/FIXME: Check whether really needed. Possibly only during debugging
+  int GlobalBlockId;
 
-  vtkm::worklet::contourtree_augmented::IdArrayType BranchVolume;
-  vtkm::worklet::contourtree_augmented::IdArrayType BranchSaddleEpsilon;
-  vtkm::worklet::contourtree_augmented::IdArrayType SortedBranchByVolume;
-  vtkm::cont::UnknownArrayHandle BranchSaddleIsoValue;
+  // the data class for branch arrays (e.g., branch root global regular IDs, branch volume, etc.)
+  TopVolumeBranchData TopVolumeData;
 
-  // Output Datasets.
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchRootGRId;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchVolume;
-  vtkm::cont::UnknownArrayHandle TopVolumeBranchSaddleIsoValue;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchSaddleEpsilon;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchUpperEndGRId;
-  vtkm::worklet::contourtree_augmented::IdArrayType TopVolumeBranchLowerEndGRId;
+  // the factory class to compute the relation of top-volume branches
+  BranchDecompositionTreeMaker BDTMaker;
 
   // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b) { delete static_cast<SelectTopVolumeContoursBlock*>(b); }
+  static void Destroy(void* b) { delete static_cast<SelectTopVolumeBranchesBlock*>(b); }
+
+  // compute the volume of local branches, and sort them by volume
+  void SortBranchByVolume(const vtkm::cont::DataSet& bdDataSet, const vtkm::Id totalVolume);
+
+  // choose the top branches by volume
+  void SelectLocalTopVolumeBranches(const vtkm::cont::DataSet& bdDataSet,
+                                    const vtkm::Id nSavedBranches);
+
+  // compute the branch decomposition tree (implicitly) for top branches
+  void ComputeTopVolumeBranchHierarchy(const vtkm::cont::DataSet& bdDataSet);
+
+  // exclude branches whose volume <= presimplifyThreshold
+  vtkm::Id ExcludeTopVolumeBranchByThreshold(const vtkm::Id presimplifyThreshold);
 };
 
 } // namespace internal

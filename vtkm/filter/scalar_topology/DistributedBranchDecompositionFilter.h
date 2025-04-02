@@ -68,6 +68,9 @@ private:
   VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet&) override;
   VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
     const vtkm::cont::PartitionedDataSet& inData) override;
+
+  /// Log level to be used for outputting timing information. Default is vtkm::cont::LogLevel::Perf
+  vtkm::cont::LogLevel TimingsLogLevel = vtkm::cont::LogLevel::Perf;
 };
 
 } // namespace scalar_topology

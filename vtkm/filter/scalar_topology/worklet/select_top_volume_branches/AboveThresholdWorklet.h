@@ -50,45 +50,59 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
-#define vtk_m_filter_scalar_topology_internal_ComputeDistributedBranchDecompositionFunctor_h
+#ifndef vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_above_threshold_worklet_h
+#define vtk_m_filter_scalar_topology_worklet_select_top_volume_branches_above_threshold_worklet_h
 
-#include <vtkm/filter/scalar_topology/internal/BranchDecompositionBlock.h>
-
-// clang-format off
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <vtkm/thirdparty/diy/diy.h>
-VTKM_THIRDPARTY_POST_INCLUDE
-// clang-format on
-
+#include <vtkm/Types.h>
 
 namespace vtkm
 {
-namespace filter
+namespace worklet
 {
 namespace scalar_topology
 {
-namespace internal
+namespace select_top_volume_branches
 {
 
-struct ComputeDistributedBranchDecompositionFunctor
+using IdArrayType = vtkm::worklet::contourtree_augmented::IdArrayType;
+
+/// <summary>
+/// worklet to for the stencil indicating
+/// whether the branch volume is above the threshold
+/// </summary>
+class AboveThresholdWorklet : public vtkm::worklet::WorkletMapField
 {
-  ComputeDistributedBranchDecompositionFunctor(const vtkm::cont::LogLevel& timingsLogLevel)
-    : TimingsLogLevel(timingsLogLevel)
+public:
+  using ControlSignature = void(
+    FieldIn branchVolume,          // (input) lower end superarc ID with direction information
+    FieldOut aboveThresholdStencil // (output) volume of the branch
+  );
+  using ExecutionSignature = _2(_1);
+  using InputDomain = _1;
+
+  /// Constructor
+  VTKM_EXEC_CONT
+  AboveThresholdWorklet(const vtkm::Id presimpThres)
+    : PresimplifyThreshold(presimpThres)
   {
   }
 
-  void operator()(BranchDecompositionBlock* b,
-                  const vtkmdiy::ReduceProxy& rp,     // communication proxy
-                  const vtkmdiy::RegularSwapPartners& // partners of the current block (unused)
-  ) const;
+  /// The functor checks the direction of the branch
+  VTKM_EXEC bool operator()(const vtkm::Id& branchVolume) const
+  {
+    if (branchVolume > this->PresimplifyThreshold)
+      return true;
+    return false;
+  }
 
-  const vtkm::cont::LogLevel TimingsLogLevel;
-};
+private:
+  const vtkm::Id PresimplifyThreshold;
+}; // GetBranchVolumeWorklet
 
-} // namespace internal
+
+} // namespace select_top_volume_branches
 } // namespace scalar_topology
-} // namespace filter
+} // namespace worklet
 } // namespace vtkm
 
 #endif
