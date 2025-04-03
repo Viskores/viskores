@@ -1,0 +1,18 @@
+name: sync-branches
+on:
+  push:
+    branches: release
+
+permissions: write-all
+
+jobs:
+  sync-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - run: |
+          git checkout main
+          git merge -s ours release
+          git push origin main
