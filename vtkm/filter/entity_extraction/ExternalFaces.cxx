@@ -38,7 +38,7 @@ void ExternalFaces::SetPassPolyData(bool value)
 
 //-----------------------------------------------------------------------------
 vtkm::cont::DataSet ExternalFaces::GenerateOutput(const vtkm::cont::DataSet& input,
-                                                  vtkm::cont::CellSetExplicit<>& outCellSet)
+                                                  vtkm::cont::UnknownCellSet& outCellSet)
 {
   //3. Check the fields of the dataset to see what kinds of fields are present, so
   //   we can free the cell mapping array if it won't be needed.
@@ -71,18 +71,16 @@ vtkm::cont::DataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& input)
 
   //2. using the policy convert the dynamic cell set, and run the
   // external faces worklet
-  vtkm::cont::CellSetExplicit<> outCellSet;
+  vtkm::cont::UnknownCellSet outCellSet;
 
   if (cells.CanConvert<vtkm::cont::CellSetStructured<3>>())
   {
-    this->Worklet->Run(cells.AsCellSet<vtkm::cont::CellSetStructured<3>>(),
-                       input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
-                       outCellSet);
+    outCellSet = this->Worklet->Run(cells.AsCellSet<vtkm::cont::CellSetStructured<3>>());
   }
   else
   {
-    this->Worklet->Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED>(),
-                       outCellSet);
+    outCellSet =
+      this->Worklet->Run(cells.ResetCellSetList<VTKM_DEFAULT_CELL_SET_LIST_UNSTRUCTURED>());
   }
 
   // New Filter Design: we generate new output and map the fields first.
