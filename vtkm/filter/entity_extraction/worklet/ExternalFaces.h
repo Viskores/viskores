@@ -43,269 +43,139 @@ namespace worklet
 
 struct ExternalFaces
 {
-  //Worklet that returns the number of external faces for each structured cell
-  class NumExternalFacesPerStructuredCell : public vtkm::worklet::WorkletVisitCellsWithPoints
+  struct ExtractStructuredFace : public vtkm::worklet::WorkletMapField
   {
-  public:
-    using ControlSignature = void(CellSetIn inCellSet,
-                                  FieldOut numFacesInCell,
-                                  FieldInPoint pointCoordinates);
-    using ExecutionSignature = _2(CellShape, _3);
-    using InputDomain = _1;
+    using ControlSignature = void(FieldIn indices, FieldOut cellConnections, FieldOut cellMap);
 
-    VTKM_CONT
-    NumExternalFacesPerStructuredCell(const vtkm::Vec3f_64& min_point,
-                                      const vtkm::Vec3f_64& max_point)
-      : MinPoint(min_point)
-      , MaxPoint(max_point)
+    vtkm::Id3 CellDimensions;
+    vtkm::Id3 PointDimensions;
+    vtkm::Id XYCellSize;
+    vtkm::Id XZCellSize;
+    vtkm::Id YZCellSize;
+    vtkm::Id XYPointSize;
+    vtkm::Id XZPointSize;
+    vtkm::Id YZPointSize;
+
+    VTKM_CONT ExtractStructuredFace(vtkm::Id3 cellDimensions)
+      : CellDimensions(cellDimensions)
+      , PointDimensions(cellDimensions[0] + 1, cellDimensions[1] + 1, cellDimensions[2] + 1)
+      , XYCellSize(CellDimensions[0] * CellDimensions[1])
+      , XZCellSize(CellDimensions[0] * CellDimensions[2])
+      , YZCellSize(CellDimensions[1] * CellDimensions[2])
+      , XYPointSize(PointDimensions[0] * PointDimensions[1])
+      , XZPointSize(PointDimensions[0] * PointDimensions[2])
+      , YZPointSize(PointDimensions[1] * PointDimensions[2])
     {
     }
 
-    VTKM_EXEC
-    static inline vtkm::IdComponent CountExternalFacesOnDimension(vtkm::Float64 grid_min,
-                                                                  vtkm::Float64 grid_max,
-                                                                  vtkm::Float64 cell_min,
-                                                                  vtkm::Float64 cell_max)
+    VTKM_EXEC void operator()(vtkm::Id index, vtkm::Id4& connections, vtkm::Id& cellMap) const
     {
-      vtkm::IdComponent count = 0;
-
-      bool cell_min_at_grid_boundary = cell_min <= grid_min;
-      bool cell_max_at_grid_boundary = cell_max >= grid_max;
-
-      if (cell_min_at_grid_boundary && !cell_max_at_grid_boundary)
+      if (index < this->XYCellSize)
       {
-        count++;
+        this->GetXYLowCell(index, connections, cellMap);
+        return;
       }
-      else if (!cell_min_at_grid_boundary && cell_max_at_grid_boundary)
+      index -= this->XYCellSize;
+      if (index < this->XYCellSize)
       {
-        count++;
+        this->GetXYHighCell(index, connections, cellMap);
+        return;
       }
-      else if (cell_min_at_grid_boundary && cell_max_at_grid_boundary)
+      index -= this->XYCellSize;
+      if (index < this->XZCellSize)
       {
-        count += 2;
+        this->GetXZLowCell(index, connections, cellMap);
+        return;
       }
-
-      return count;
+      index -= this->XZCellSize;
+      if (index < this->XZCellSize)
+      {
+        this->GetXZHighCell(index, connections, cellMap);
+        return;
+      }
+      index -= this->XZCellSize;
+      if (index < this->YZCellSize)
+      {
+        this->GetYZLowCell(index, connections, cellMap);
+        return;
+      }
+      index -= this->YZCellSize;
+      VTKM_ASSERT(index < this->YZCellSize);
+      this->GetYZHighCell(index, connections, cellMap);
     }
 
-    template <typename CellShapeTag, typename PointCoordVecType>
-    VTKM_EXEC vtkm::IdComponent operator()(CellShapeTag shape,
-                                           const PointCoordVecType& pointCoordinates) const
+    VTKM_EXEC void GetXYLowCell(vtkm::Id index, vtkm::Id4& connections, vtkm::Id& cellMap) const
     {
-      (void)shape; // C4100 false positive workaround
-      VTKM_ASSERT(shape.Id == CELL_SHAPE_HEXAHEDRON);
-
-      vtkm::IdComponent count = 0;
-
-      count += CountExternalFacesOnDimension(
-        MinPoint[0], MaxPoint[0], pointCoordinates[0][0], pointCoordinates[1][0]);
-
-      count += CountExternalFacesOnDimension(
-        MinPoint[1], MaxPoint[1], pointCoordinates[0][1], pointCoordinates[3][1]);
-
-      count += CountExternalFacesOnDimension(
-        MinPoint[2], MaxPoint[2], pointCoordinates[0][2], pointCoordinates[4][2]);
-
-      return count;
+      vtkm::Id2 cellIndex{ index % this->CellDimensions[0], index / this->CellDimensions[0] };
+      vtkm::Id pointIndex = cellIndex[0] + (cellIndex[1] * this->PointDimensions[0]);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + this->PointDimensions[0];
+      connections[2] = pointIndex + this->PointDimensions[0] + 1;
+      connections[3] = pointIndex + 1;
+      cellMap = index;
     }
 
-  private:
-    vtkm::Vec3f_64 MinPoint;
-    vtkm::Vec3f_64 MaxPoint;
-  };
-
-
-  //Worklet that finds face connectivity for each structured cell
-  class BuildConnectivityStructured : public vtkm::worklet::WorkletVisitCellsWithPoints
-  {
-  public:
-    using ControlSignature = void(CellSetIn inCellSet,
-                                  WholeCellSetIn<> inputCell,
-                                  FieldOut faceShapes,
-                                  FieldOut facePointCount,
-                                  FieldOut faceConnectivity,
-                                  FieldInPoint pointCoordinates);
-    using ExecutionSignature = void(CellShape, VisitIndex, InputIndex, _2, _3, _4, _5, _6);
-    using InputDomain = _1;
-
-    using ScatterType = vtkm::worklet::ScatterCounting;
-
-    VTKM_CONT
-    BuildConnectivityStructured(const vtkm::Vec3f_64& min_point, const vtkm::Vec3f_64& max_point)
-      : MinPoint(min_point)
-      , MaxPoint(max_point)
+    VTKM_EXEC void GetXYHighCell(vtkm::Id index, vtkm::Id4& connections, vtkm::Id& cellMap) const
     {
+      vtkm::Id2 cellIndex{ index % this->CellDimensions[0], index / this->CellDimensions[0] };
+      vtkm::Id offset = this->XYPointSize * (this->PointDimensions[2] - 1);
+      vtkm::Id pointIndex = offset + cellIndex[0] + (cellIndex[1] * this->PointDimensions[0]);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + 1;
+      connections[2] = pointIndex + this->PointDimensions[0] + 1;
+      connections[3] = pointIndex + this->PointDimensions[0];
+      cellMap = this->XYCellSize * (this->CellDimensions[2] - 1) + index;
     }
 
-    enum FaceType
+    VTKM_EXEC void GetXZLowCell(vtkm::Id index, vtkm::Id4& connections, vtkm::Id& cellMap) const
     {
-      FACE_GRID_MIN,
-      FACE_GRID_MAX,
-      FACE_GRID_MIN_AND_MAX,
-      FACE_NONE
-    };
-
-    VTKM_EXEC
-    static inline bool FoundFaceOnDimension(vtkm::Float64 grid_min,
-                                            vtkm::Float64 grid_max,
-                                            vtkm::Float64 cell_min,
-                                            vtkm::Float64 cell_max,
-                                            vtkm::IdComponent& faceIndex,
-                                            vtkm::IdComponent& count,
-                                            vtkm::IdComponent dimensionFaceOffset,
-                                            vtkm::IdComponent visitIndex)
-    {
-      bool cell_min_at_grid_boundary = cell_min <= grid_min;
-      bool cell_max_at_grid_boundary = cell_max >= grid_max;
-
-      FaceType Faces = FaceType::FACE_NONE;
-
-      if (cell_min_at_grid_boundary && !cell_max_at_grid_boundary)
-      {
-        Faces = FaceType::FACE_GRID_MIN;
-      }
-      else if (!cell_min_at_grid_boundary && cell_max_at_grid_boundary)
-      {
-        Faces = FaceType::FACE_GRID_MAX;
-      }
-      else if (cell_min_at_grid_boundary && cell_max_at_grid_boundary)
-      {
-        Faces = FaceType::FACE_GRID_MIN_AND_MAX;
-      }
-
-      if (Faces == FaceType::FACE_NONE)
-        return false;
-
-      if (Faces == FaceType::FACE_GRID_MIN)
-      {
-        if (visitIndex == count)
-        {
-          faceIndex = dimensionFaceOffset;
-          return true;
-        }
-        else
-        {
-          count++;
-        }
-      }
-      else if (Faces == FaceType::FACE_GRID_MAX)
-      {
-        if (visitIndex == count)
-        {
-          faceIndex = dimensionFaceOffset + 1;
-          return true;
-        }
-        else
-        {
-          count++;
-        }
-      }
-      else if (Faces == FaceType::FACE_GRID_MIN_AND_MAX)
-      {
-        if (visitIndex == count)
-        {
-          faceIndex = dimensionFaceOffset;
-          return true;
-        }
-        count++;
-        if (visitIndex == count)
-        {
-          faceIndex = dimensionFaceOffset + 1;
-          return true;
-        }
-        count++;
-      }
-
-      return false;
+      vtkm::Id2 cellIndex{ index % this->CellDimensions[0], index / this->CellDimensions[0] };
+      vtkm::Id pointIndex = cellIndex[0] + (cellIndex[1] * this->XYPointSize);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + this->XYPointSize;
+      connections[2] = pointIndex + this->XYPointSize + 1;
+      connections[3] = pointIndex + 1;
+      cellMap = cellIndex[0] + (cellIndex[1] * this->XYCellSize);
     }
 
-    template <typename PointCoordVecType>
-    VTKM_EXEC inline vtkm::IdComponent FindFaceIndexForVisit(
-      vtkm::IdComponent visitIndex,
-      const PointCoordVecType& pointCoordinates) const
+    VTKM_EXEC void GetXZHighCell(vtkm::Id index, vtkm::Id4& connections, vtkm::Id& cellMap) const
     {
-      vtkm::IdComponent count = 0;
-      vtkm::IdComponent faceIndex = 0;
-      // Search X dimension
-      if (!FoundFaceOnDimension(MinPoint[0],
-                                MaxPoint[0],
-                                pointCoordinates[0][0],
-                                pointCoordinates[1][0],
-                                faceIndex,
-                                count,
-                                0,
-                                visitIndex))
-      {
-        // Search Y dimension
-        if (!FoundFaceOnDimension(MinPoint[1],
-                                  MaxPoint[1],
-                                  pointCoordinates[0][1],
-                                  pointCoordinates[3][1],
-                                  faceIndex,
-                                  count,
-                                  2,
-                                  visitIndex))
-        {
-          // Search Z dimension
-          FoundFaceOnDimension(MinPoint[2],
-                               MaxPoint[2],
-                               pointCoordinates[0][2],
-                               pointCoordinates[4][2],
-                               faceIndex,
-                               count,
-                               4,
-                               visitIndex);
-        }
-      }
-      return faceIndex;
+      vtkm::Id2 cellIndex{ index % this->CellDimensions[0], index / this->CellDimensions[0] };
+      vtkm::Id offset = this->XYPointSize - this->PointDimensions[0];
+      vtkm::Id pointIndex = offset + cellIndex[0] + (cellIndex[1] * this->XYPointSize);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + 1;
+      connections[2] = pointIndex + this->XYPointSize + 1;
+      connections[3] = pointIndex + this->XYPointSize;
+      cellMap = this->XYCellSize - this->CellDimensions[0] + cellIndex[0] +
+        (cellIndex[1] * this->XYCellSize);
     }
 
-    template <typename CellShapeTag,
-              typename CellSetType,
-              typename PointCoordVecType,
-              typename ConnectivityType>
-    VTKM_EXEC void operator()(CellShapeTag shape,
-                              vtkm::IdComponent visitIndex,
-                              vtkm::Id inputIndex,
-                              const CellSetType& cellSet,
-                              vtkm::UInt8& shapeOut,
-                              vtkm::IdComponent& numFacePointsOut,
-                              ConnectivityType& faceConnectivity,
-                              const PointCoordVecType& pointCoordinates) const
+    VTKM_EXEC void GetYZLowCell(vtkm::Id index, vtkm::Id4& connections, vtkm::Id& cellMap) const
     {
-      VTKM_ASSERT(shape.Id == CELL_SHAPE_HEXAHEDRON);
-
-      vtkm::IdComponent faceIndex = FindFaceIndexForVisit(visitIndex, pointCoordinates);
-
-      vtkm::IdComponent numFacePoints;
-      vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, numFacePoints);
-      VTKM_ASSERT(numFacePoints == faceConnectivity.GetNumberOfComponents());
-
-      typename CellSetType::IndicesType inCellIndices = cellSet.GetIndices(inputIndex);
-
-      shapeOut = vtkm::CELL_SHAPE_QUAD;
-      numFacePointsOut = 4;
-
-      for (vtkm::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; facePointIndex++)
-      {
-        vtkm::IdComponent localFaceIndex;
-        vtkm::ErrorCode status =
-          vtkm::exec::CellFaceLocalIndex(facePointIndex, faceIndex, shape, localFaceIndex);
-        if (status == vtkm::ErrorCode::Success)
-        {
-          faceConnectivity[facePointIndex] = inCellIndices[localFaceIndex];
-        }
-        else
-        {
-          // An error condition, but do we want to crash the operation?
-          faceConnectivity[facePointIndex] = 0;
-        }
-      }
+      vtkm::Id2 cellIndex{ index % this->CellDimensions[1], index / this->CellDimensions[1] };
+      vtkm::Id pointIndex =
+        (cellIndex[0] * this->PointDimensions[0]) + (cellIndex[1] * this->XYPointSize);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + this->XYPointSize;
+      connections[2] = pointIndex + this->XYPointSize + this->PointDimensions[0];
+      connections[3] = pointIndex + this->PointDimensions[0];
+      cellMap = (cellIndex[0] * this->CellDimensions[0]) + (cellIndex[1] * this->XYCellSize);
     }
 
-  private:
-    vtkm::Vec3f_64 MinPoint;
-    vtkm::Vec3f_64 MaxPoint;
+    VTKM_EXEC void GetYZHighCell(vtkm::Id index, vtkm::Id4& connections, vtkm::Id& cellMap) const
+    {
+      vtkm::Id2 cellIndex{ index % this->CellDimensions[1], index / this->CellDimensions[1] };
+      vtkm::Id offset = this->PointDimensions[0] - 1;
+      vtkm::Id pointIndex =
+        offset + (cellIndex[0] * this->PointDimensions[0]) + (cellIndex[1] * this->XYPointSize);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + this->PointDimensions[0];
+      connections[2] = pointIndex + this->XYPointSize + this->PointDimensions[0];
+      connections[3] = pointIndex + this->XYPointSize;
+      cellMap = (this->CellDimensions[0] - 1) + (cellIndex[0] * this->CellDimensions[0]) +
+        (cellIndex[1] * this->XYCellSize);
+    }
   };
 
   // Worklet that returns the number of faces for each cell/shape
@@ -754,6 +624,17 @@ public:
     T Bias;
   };
 
+  VTKM_CONT vtkm::cont::CellSetExplicit<> MakeCellSetExplicit(
+    vtkm::Id numPoints,
+    const vtkm::cont::ArrayHandle<vtkm::UInt8>& shapes,
+    const vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
+    const vtkm::cont::ArrayHandle<vtkm::Id>& offsets)
+  {
+    vtkm::cont::CellSetExplicit<> outCellSet;
+    outCellSet.Fill(numPoints, shapes, connectivity, offsets);
+    return outCellSet;
+  }
+
 public:
   VTKM_CONT
   ExternalFaces()
@@ -775,102 +656,39 @@ public:
   ///
   /// Faster Run() method for uniform and rectilinear grid types.
   /// Uses grid extents to find cells on the boundaries of the grid.
-  template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
-  VTKM_CONT void Run(
-    const vtkm::cont::CellSetStructured<3>& inCellSet,
-    const vtkm::cont::CoordinateSystem& coord,
-    vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& outCellSet)
+  VTKM_CONT vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3>& inCellSet)
   {
     // create an invoker
     vtkm::cont::Invoker invoke;
 
-    vtkm::Vec3f_64 MinPoint;
-    vtkm::Vec3f_64 MaxPoint;
+    vtkm::Id3 cellDimensions = inCellSet.GetCellDimensions();
 
-    vtkm::Id3 PointDimensions = inCellSet.GetPointDimensions();
+    ExtractStructuredFace worklet{ cellDimensions };
 
-    using DefaultHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-    using CartesianArrayHandle =
-      vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
+    vtkm::Id numOutCells =
+      (2 * worklet.XYCellSize) + (2 * worklet.XZCellSize) + (2 * worklet.YZCellSize);
 
-    auto coordData = coord.GetData();
-    if (coordData.CanConvert<CartesianArrayHandle>())
-    {
-      const auto vertices = coordData.AsArrayHandle<CartesianArrayHandle>();
-      const auto vertsSize = vertices.GetNumberOfValues();
-      const auto tmp = vtkm::cont::ArrayGetValues({ 0, vertsSize - 1 }, vertices);
-      MinPoint = tmp[0];
-      MaxPoint = tmp[1];
-    }
-    else
-    {
-      auto vertices = coordData.AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-      auto Coordinates = vertices.ReadPortal();
+    vtkm::cont::ArrayHandle<vtkm::Id> connections;
 
-      MinPoint = Coordinates.GetOrigin();
-      vtkm::Vec3f_64 spacing = Coordinates.GetSpacing();
+    invoke(worklet,
+           vtkm::cont::ArrayHandleIndex(numOutCells),
+           vtkm::cont::make_ArrayHandleGroupVec<4>(connections),
+           this->CellIdMap);
 
-      vtkm::Vec3f_64 unitLength;
-      unitLength[0] = static_cast<vtkm::Float64>(PointDimensions[0] - 1);
-      unitLength[1] = static_cast<vtkm::Float64>(PointDimensions[1] - 1);
-      unitLength[2] = static_cast<vtkm::Float64>(PointDimensions[2] - 1);
-      MaxPoint = MinPoint + spacing * unitLength;
-    }
-
-    // Count the number of external faces per cell
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> numExternalFaces;
-    invoke(NumExternalFacesPerStructuredCell(MinPoint, MaxPoint),
-           inCellSet,
-           numExternalFaces,
-           coordData);
-
-    vtkm::Id numberOfExternalFaces =
-      vtkm::cont::Algorithm::Reduce(numExternalFaces, 0, vtkm::Sum());
-
-    vtkm::worklet::ScatterCounting scatterCellToExternalFace(numExternalFaces);
-
-    // Maps output cells to input cells. Store this for cell field mapping.
-    this->CellIdMap = scatterCellToExternalFace.GetOutputToInputMap();
-
-    numExternalFaces.ReleaseResources();
-
-    vtkm::Id connectivitySize = 4 * numberOfExternalFaces;
-    vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorage> faceConnectivity;
-    vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorage> faceShapes;
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> facePointCount;
-    // Must pre allocate because worklet invocation will not have enough
-    // information to.
-    faceConnectivity.Allocate(connectivitySize);
-
-    // Build connectivity for external faces
-    invoke(BuildConnectivityStructured(MinPoint, MaxPoint),
-           scatterCellToExternalFace,
-           inCellSet,
-           inCellSet,
-           faceShapes,
-           facePointCount,
-           vtkm::cont::make_ArrayHandleGroupVec<4>(faceConnectivity),
-           coordData);
-
-    auto offsets = vtkm::cont::ConvertNumComponentsToOffsets(facePointCount);
-
-    outCellSet.Fill(inCellSet.GetNumberOfPoints(), faceShapes, faceConnectivity, offsets);
+    vtkm::cont::CellSetSingleType<> outCellSet;
+    outCellSet.Fill(inCellSet.GetNumberOfPoints(), vtkm::CELL_SHAPE_QUAD, 4, connections);
+    return outCellSet;
   }
 
   ///////////////////////////////////////////////////
   /// \brief ExternalFaces: Extract Faces on outside of geometry
-  template <typename InCellSetType,
-            typename ShapeStorage,
-            typename ConnectivityStorage,
-            typename OffsetsStorage>
-  VTKM_CONT void Run(
-    const InCellSetType& inCellSet,
-    vtkm::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& outCellSet)
+  template <typename InCellSetType>
+  VTKM_CONT vtkm::cont::CellSetExplicit<> Run(const InCellSetType& inCellSet)
   {
     using PointCountArrayType = vtkm::cont::ArrayHandle<vtkm::IdComponent>;
-    using ShapeArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorage>;
-    using OffsetsArrayType = vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>;
-    using ConnectivityArrayType = vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorage>;
+    using ShapeArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8>;
+    using OffsetsArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
+    using ConnectivityArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
 
     // create an invoker
     vtkm::cont::Invoker invoke;
@@ -928,17 +746,17 @@ public:
       if (!polyDataConnectivitySize)
       {
         // Data has no faces. Output is empty.
+        vtkm::cont::CellSetExplicit<> outCellSet;
         outCellSet.PrepareToAddCells(0, 0);
         outCellSet.CompleteAddingCells(inCellSet.GetNumberOfPoints());
-        return;
+        return outCellSet;
       }
       else
       {
         // Pass only input poly data to output
-        outCellSet.Fill(
-          inCellSet.GetNumberOfPoints(), polyDataShapes, polyDataConnectivity, polyDataOffsets);
         this->CellIdMap = polyDataCellIdMap;
-        return;
+        return MakeCellSetExplicit(
+          inCellSet.GetNumberOfPoints(), polyDataShapes, polyDataConnectivity, polyDataOffsets);
       }
     }
 
@@ -1040,11 +858,11 @@ public:
 
     if (!polyDataConnectivitySize)
     {
-      outCellSet.Fill(inCellSet.GetNumberOfPoints(),
-                      externalFacesShapes,
-                      externalFacesConnectivity,
-                      pointsPerExternalFaceOffsets);
       this->CellIdMap = faceToCellIdMap;
+      return MakeCellSetExplicit(inCellSet.GetNumberOfPoints(),
+                                 externalFacesShapes,
+                                 externalFacesConnectivity,
+                                 pointsPerExternalFaceOffsets);
     }
     else
     {
@@ -1085,9 +903,9 @@ public:
       vtkm::cont::ArrayHandle<vtkm::Id> joinedCellIdMap;
       vtkm::cont::ArrayCopy(cellIdMapArray, joinedCellIdMap);
 
-      outCellSet.Fill(
-        inCellSet.GetNumberOfPoints(), joinedShapesArray, joinedConnectivity, joinedOffsets);
       this->CellIdMap = joinedCellIdMap;
+      return MakeCellSetExplicit(
+        inCellSet.GetNumberOfPoints(), joinedShapesArray, joinedConnectivity, joinedOffsets);
     }
   }
 

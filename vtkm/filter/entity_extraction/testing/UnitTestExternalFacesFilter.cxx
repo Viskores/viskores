@@ -8,6 +8,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -50,6 +51,21 @@ vtkm::cont::DataSet MakeDataTestSet5()
   return MakeTestDataSet().Make3DExplicitDataSet6();
 }
 
+vtkm::cont::DataSet MakeUniformDataTestSet()
+{
+  return MakeTestDataSet().Make3DUniformDataSet1();
+}
+
+vtkm::cont::DataSet MakeCurvilinearDataTestSet()
+{
+  vtkm::cont::DataSet data = MakeUniformDataTestSet();
+  vtkm::cont::ArrayHandle<vtkm::Vec3f> coords;
+  vtkm::cont::CoordinateSystem oldCoords = data.GetCoordinateSystem();
+  vtkm::cont::ArrayCopy(oldCoords.GetData(), coords);
+  data.AddCoordinateSystem(oldCoords.GetName(), coords);
+  return data;
+}
+
 void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
                                    bool compactPoints,
                                    vtkm::Id numExpectedExtFaces,
@@ -63,9 +79,7 @@ void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
   vtkm::cont::DataSet resultds = externalFaces.Execute(ds);
 
   // verify cellset
-  vtkm::cont::CellSetExplicit<> new_cellSet =
-    resultds.GetCellSet().AsCellSet<vtkm::cont::CellSetExplicit<>>();
-  const vtkm::Id numOutputExtFaces = new_cellSet.GetNumberOfCells();
+  const vtkm::Id numOutputExtFaces = resultds.GetNumberOfCells();
   VTKM_TEST_ASSERT(numOutputExtFaces == numExpectedExtFaces, "Number of External Faces mismatch");
 
   // verify fields
@@ -135,6 +149,69 @@ void TestWithMixed2Dand3DMesh()
   TestExternalFacesExplicitGrid(ds, true, 6, 5, false);
 }
 
+void TestExternalFacesStructuredGrid(const vtkm::cont::DataSet& ds, bool compactPoints)
+{
+  // Get the dimensions of the grid.
+  vtkm::cont::CellSetStructured<3> cellSet;
+  ds.GetCellSet().AsCellSet(cellSet);
+  vtkm::Id3 pointDims = cellSet.GetPointDimensions();
+  vtkm::Id3 cellDims = cellSet.GetCellDimensions();
+
+  //Run the External Faces filter
+  vtkm::filter::entity_extraction::ExternalFaces externalFaces;
+  externalFaces.SetCompactPoints(compactPoints);
+  vtkm::cont::DataSet resultds = externalFaces.Execute(ds);
+
+  // verify cellset
+  vtkm::Id numExpectedExtFaces = ((2 * cellDims[0] * cellDims[1]) + // x-y faces
+                                  (2 * cellDims[0] * cellDims[2]) + // x-z faces
+                                  (2 * cellDims[1] * cellDims[2])); // y-z faces
+  const vtkm::Id numOutputExtFaces = resultds.GetNumberOfCells();
+  VTKM_TEST_ASSERT(numOutputExtFaces == numExpectedExtFaces, "Number of External Faces mismatch");
+
+  // verify fields
+  VTKM_TEST_ASSERT(resultds.HasField("pointvar"), "Point field not mapped successfully");
+  VTKM_TEST_ASSERT(resultds.HasField("cellvar"), "Cell field not mapped successfully");
+
+  // verify CompactPoints
+  if (compactPoints)
+  {
+    vtkm::Id numExpectedPoints = ((2 * pointDims[0] * pointDims[1])   // x-y faces
+                                  + (2 * pointDims[0] * pointDims[2]) // x-z faces
+                                  + (2 * pointDims[1] * pointDims[2]) // y-z faces
+                                  - (4 * pointDims[0])                // overcounted x edges
+                                  - (4 * pointDims[1])                // overcounted y edges
+                                  - (4 * pointDims[2])                // overcounted z edges
+                                  + 8);                               // undercounted corners
+    vtkm::Id numOutputPoints = resultds.GetNumberOfPoints();
+    VTKM_TEST_ASSERT(numOutputPoints == numExpectedPoints);
+  }
+  else
+  {
+    VTKM_TEST_ASSERT(resultds.GetNumberOfPoints() == ds.GetNumberOfPoints());
+  }
+}
+
+void TestWithUniformGrid()
+{
+  std::cout << "Testing with uniform grid\n";
+  vtkm::cont::DataSet ds = MakeUniformDataTestSet();
+  std::cout << "Compact Points Off\n";
+  TestExternalFacesStructuredGrid(ds, false);
+  std::cout << "Compact Points On\n";
+  TestExternalFacesStructuredGrid(ds, true);
+}
+
+void TestWithCurvilinearGrid()
+{
+  std::cout << "Testing with curvilinear grid\n";
+  vtkm::cont::DataSet ds = MakeCurvilinearDataTestSet();
+  std::cout << "Compact Points Off\n";
+  TestExternalFacesStructuredGrid(ds, false);
+  std::cout << "Compact Points On\n";
+  TestExternalFacesStructuredGrid(ds, true);
+}
+
 void TestExternalFacesFilter()
 {
   TestWithHeterogeneousMesh();
@@ -142,6 +219,8 @@ void TestExternalFacesFilter()
   TestWithUniformMesh();
   TestWithRectilinearMesh();
   TestWithMixed2Dand3DMesh();
+  TestWithUniformGrid();
+  TestWithCurvilinearGrid();
 }
 
 } // anonymous namespace
