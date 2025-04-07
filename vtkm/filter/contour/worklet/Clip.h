@@ -678,10 +678,10 @@ public:
     // Release batchesWithClippedCellsMask since it's no longer needed.
     batchesWithClippedCellsMask.ReleaseResources();
 
-    // Sort the edge interpolations.
-    vtkm::cont::Algorithm::Sort(edgeInterpolation, EdgeInterpolation::LessThanOp());
     // Copy the edge interpolations to the output.
     vtkm::cont::Algorithm::Copy(edgeInterpolation, this->EdgePointsInterpolation);
+    // Sort the edge interpolations.
+    vtkm::cont::Algorithm::Sort(this->EdgePointsInterpolation, EdgeInterpolation::LessThanOp());
     // Remove duplicates.
     vtkm::cont::Algorithm::Unique(this->EdgePointsInterpolation, EdgeInterpolation::EqualToOp());
     // Get the edge index to unique index.
