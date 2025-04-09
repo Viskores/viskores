@@ -14,6 +14,7 @@ VTK-m 2.3.0 Release Notes
   - Better document the creation of Field and CoordinateSystem.
   - ExternalFaces: Improve performance and memory consumption.
   - Fixed winding of triangles of flying edges on GPUs.
+  - Enable extracting external faces from curvilinear data.
 4. [Control Environment](#Control_Environment)
   - Load options from environment variables.
   - Added log entry when a cast and call fallback is used.
@@ -155,6 +156,14 @@ the face, and that can cause shading problems with some renderers.
 
 This has been fixed to make the windings consistent on the GPU with the CPU
 and the gradients.
+
+## Enable extracting external faces from curvilinear data
+
+The external faces filter was not working with curvilinear data. The
+implementation for structured cells was relying on axis-aligned point
+coordinates, which is not the case for curvilinear grids. The implementation now
+only relies on the indices in the 3D grid, so it works on structured data
+regardless of the point coordinates. This should also speed up the operation.
 
 # Control Environment
 
