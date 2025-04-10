@@ -19,10 +19,12 @@
 #ifndef viskores_filter_flow_FilterParticleAdvection_h
 #define viskores_filter_flow_FilterParticleAdvection_h
 
+#include <viskores/Deprecated.h>
 #include <viskores/Particle.h>
 #include <viskores/cont/ErrorFilterExecution.h>
 #include <viskores/filter/Filter.h>
 #include <viskores/filter/flow/FlowTypes.h>
+#include <viskores/filter/flow/internal/BoundsMap.h>
 #include <viskores/filter/flow/viskores_filter_flow_export.h>
 
 namespace viskores
@@ -100,28 +102,34 @@ public:
   VISKORES_CONT
   void SetUseThreadedAlgorithm(bool val) { this->UseThreadedAlgorithm = val; }
 
+  VISKORES_DEPRECATED(2.2, "All communication is asynchronous now.")
   VISKORES_CONT
-  void SetUseAsynchronousCommunication() { this->UseAsynchronousCommunication = true; }
-  VISKORES_CONT
-  bool GetUseAsynchronousCommunication() { return this->UseAsynchronousCommunication; }
+  void SetUseAsynchronousCommunication() {}
 
+  VISKORES_DEPRECATED(2.2, "All communication is asynchronous now.")
   VISKORES_CONT
-  void SetUseSynchronousCommunication() { this->UseAsynchronousCommunication = false; }
+  bool GetUseAsynchronousCommunication() { return true; }
+
+  VISKORES_DEPRECATED(2.2, "All communication is asynchronous now.")
   VISKORES_CONT
-  bool GetUseSynchronousCommunication() { return !this->GetUseAsynchronousCommunication(); }
+  void SetUseSynchronousCommunication() {}
+
+  VISKORES_DEPRECATED(2.2, "All communication is asynchronous now.")
+  VISKORES_CONT
+  bool GetUseSynchronousCommunication() { return false; }
+
 
 protected:
   VISKORES_CONT virtual void ValidateOptions() const;
 
   bool BlockIdsSet = false;
   std::vector<viskores::Id> BlockIds;
-
+  viskores::filter::flow::internal::BoundsMap BoundsMap;
   viskores::Id NumberOfSteps = 0;
   viskores::cont::UnknownArrayHandle Seeds;
   viskores::filter::flow::IntegrationSolverType SolverType =
     viskores::filter::flow::IntegrationSolverType::RK4_TYPE;
   viskores::FloatDefault StepSize = 0;
-  bool UseAsynchronousCommunication = true;
   bool UseThreadedAlgorithm = false;
   viskores::filter::flow::VectorFieldType VecFieldType =
     viskores::filter::flow::VectorFieldType::VELOCITY_FIELD_TYPE;

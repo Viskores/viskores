@@ -67,13 +67,15 @@ FilterParticleAdvectionSteadyState<Derived>::DoExecutePartitions(
     DataSetIntegratorSteadyState<ParticleType, FieldType, TerminationType, AnalysisType>;
 
   this->ValidateOptions();
+  if (this->BlockIdsSet)
+    this->BoundsMap = viskores::filter::flow::internal::BoundsMap(input, this->BlockIds);
+  else
+    this->BoundsMap = viskores::filter::flow::internal::BoundsMap(input);
 
-
-  viskores::filter::flow::internal::BoundsMap boundsMap(input);
   std::vector<DSIType> dsi;
   for (viskores::Id i = 0; i < input.GetNumberOfPartitions(); i++)
   {
-    viskores::Id blockId = boundsMap.GetLocalBlockId(i);
+    viskores::Id blockId = this->BoundsMap.GetLocalBlockId(i);
     auto dataset = input.GetPartition(i);
 
     // Build the field for the current dataset
@@ -87,7 +89,7 @@ FilterParticleAdvectionSteadyState<Derived>::DoExecutePartitions(
   }
 
   viskores::filter::flow::internal::ParticleAdvector<DSIType> pav(
-    boundsMap, dsi, this->UseThreadedAlgorithm, this->UseAsynchronousCommunication);
+    this->BoundsMap, dsi, this->UseThreadedAlgorithm);
 
   viskores::cont::ArrayHandle<ParticleType> particles;
   this->Seeds.AsArrayHandle(particles);

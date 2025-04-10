@@ -21,6 +21,7 @@
 
 #include <viskores/filter/Filter.h>
 #include <viskores/filter/MapFieldPermutation.h>
+#include <viskores/filter/contour/ContourDimension.h>
 #include <viskores/filter/contour/viskores_filter_contour_export.h>
 #include <viskores/filter/vector_analysis/SurfaceNormals.h>
 
@@ -138,6 +139,65 @@ public:
   VISKORES_CONT
   const std::string& GetNormalArrayName() const { return this->NormalArrayName; }
 
+  /// @brief Specify the dimension of cells on which to operate the contour.
+  ///
+  /// The contour filters operate on cells of a particular dimension
+  /// (i.e., polyhedra, polygons, or lines) and generate simplicies
+  /// of one less dimension (i.e., triangles, lines, or vertices).
+  /// The default is `viskores::filter::contour::ContourDimension::Auto`.
+  VISKORES_CONT void SetInputCellDimension(viskores::filter::contour::ContourDimension dimension)
+  {
+    this->InputCellDimension = dimension;
+  }
+
+  /// @copydoc SetInputCellDimension
+  VISKORES_CONT viskores::filter::contour::ContourDimension GetInputCellDimension() const
+  {
+    return this->InputCellDimension;
+  }
+
+  /// @brief Specifies an automatic selection of the input cell dimension.
+  ///
+  /// This option first tries to contour polyhedra. If any polyhedra have the
+  /// contour, that is used. Otherwise, it tries to contour polygons.
+  /// If that fails, lines are contoured.
+  VISKORES_CONT void SetInputCellDimensionToAuto()
+  {
+    this->SetInputCellDimension(viskores::filter::contour::ContourDimension::Auto);
+  }
+
+  /// @brief Specifies a combination of all possible contours.
+  ///
+  /// This option runs contour on all possible dimension types and then merges all contours together.
+  VISKORES_CONT void SetInputCellDimensionToAll()
+  {
+    this->SetInputCellDimension(viskores::filter::contour::ContourDimension::All);
+  }
+
+  /// @brief Specifies running contours on polyhedra.
+  ///
+  /// This option runs contour on polyhedra, generating triangles.
+  VISKORES_CONT void SetInputCellDimensionToPolyhedra()
+  {
+    this->SetInputCellDimension(viskores::filter::contour::ContourDimension::Polyhedra);
+  }
+
+  /// @brief Specifies running contours on polygons.
+  ///
+  /// This option runs contour on polygons, generating lines.
+  VISKORES_CONT void SetInputCellDimensionToPolygons()
+  {
+    this->SetInputCellDimension(viskores::filter::contour::ContourDimension::Polygons);
+  }
+
+  /// @brief Specifies running contours on lines.
+  ///
+  /// This option runs contour on lines, generating vertices.
+  VISKORES_CONT void SetInputCellDimensionToLines()
+  {
+    this->SetInputCellDimension(viskores::filter::contour::ContourDimension::Lines);
+  }
+
   /// Set whether the points generated should be unique for every triangle
   /// or will duplicate points be merged together. Duplicate points are identified
   /// by the unique edge it was generated from.
@@ -155,7 +215,7 @@ public:
   /// Get whether the points generated should be unique for every triangle
   /// or will duplicate points be merged together.
   VISKORES_CONT
-  bool GetMergeDuplicatePoints() { return this->MergeDuplicatedPoints; }
+  bool GetMergeDuplicatePoints() const { return this->MergeDuplicatedPoints; }
 
 protected:
   /// \brief Map a given field to the output \c DataSet , depending on its type.
@@ -236,6 +296,9 @@ protected:
   std::vector<viskores::Float64> IsoValues;
   bool GenerateNormals = true;
   bool ComputeFastNormals = false;
+
+  viskores::filter::contour::ContourDimension InputCellDimension =
+    viskores::filter::contour::ContourDimension::Auto;
 
   bool AddInterpolationEdgeIds = false;
   bool MergeDuplicatedPoints = true;

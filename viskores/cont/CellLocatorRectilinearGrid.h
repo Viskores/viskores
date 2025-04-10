@@ -27,6 +27,12 @@ namespace viskores
 namespace cont
 {
 
+/// @brief A cell locator optimized for finding cells in a rectilinear grid.
+///
+/// This locator is optimized for structured data that has nonuniform axis-aligned spacing.
+/// For this cell locator to work, it has to be given a cell set of type
+/// `viskores::cont::CellSetStructured` and a coordinate system using a
+/// `viskores::cont::ArrayHandleCartesianProduct` for its data.
 class VISKORES_CONT_EXPORT CellLocatorRectilinearGrid : public viskores::cont::CellLocatorBase
 {
   using Structured2DType = viskores::cont::CellSetStructured<2>;

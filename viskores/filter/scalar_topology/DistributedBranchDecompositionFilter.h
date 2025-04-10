@@ -77,6 +77,9 @@ private:
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet&) override;
   VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
     const viskores::cont::PartitionedDataSet& inData) override;
+
+  /// Log level to be used for outputting timing information. Default is viskores::cont::LogLevel::Perf
+  viskores::cont::LogLevel TimingsLogLevel = viskores::cont::LogLevel::Perf;
 };
 
 } // namespace scalar_topology

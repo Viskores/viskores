@@ -20,7 +20,6 @@
 
 #include <viskores/cont/viskores_cont_export.h>
 
-#include <viskores/Deprecated.h>
 #include <viskores/Types.h>
 #include <viskores/cont/CoordinateSystem.h>
 #include <viskores/cont/ExecutionObjectBase.h>
@@ -31,11 +30,11 @@ namespace viskores
 namespace cont
 {
 
-/// \brief Base class for all `CellLocator` classes.
+/// @brief Base class for all `CellLocator` classes.
 ///
-/// `CellLocatorBase` uses the curiously recurring template pattern (CRTP). Subclasses
-/// must provide their own type for the template parameter. Subclasses must implement
-/// `Build()` and `PrepareForExecution()` methods.
+/// `CellLocatorBase` subclasses must implement the pure virtual `Build()` method.
+/// They also must provide a `PrepareForExecution()` method to satisfy the
+/// `ExecutionObjectBase` superclass.
 ///
 /// If a derived class changes its state in a way that invalidates its internal search
 /// structure, it should call the protected `SetModified()` method. This will alert the
@@ -72,6 +71,11 @@ public:
   {
     this->Coords = coords;
     this->SetModified();
+  }
+  /// @copydoc GetCoordinates
+  VISKORES_CONT void SetCoordinates(const viskores::cont::UnknownArrayHandle& coords)
+  {
+    this->SetCoordinates({ "coords", coords });
   }
 
   /// @brief Build the search structure used to look up cells.

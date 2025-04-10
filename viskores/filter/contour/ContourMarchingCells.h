@@ -41,8 +41,10 @@ class VISKORES_FILTER_CONTOUR_EXPORT ContourMarchingCells
   : public viskores::filter::contour::AbstractContour
 {
 protected:
-  VISKORES_CONT
-  viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& result) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& result) override;
+
+  template <viskores::UInt8 Dims>
+  VISKORES_CONT viskores::cont::DataSet DoExecuteDimension(const viskores::cont::DataSet& result);
 };
 } // namespace contour
 } // namespace filter

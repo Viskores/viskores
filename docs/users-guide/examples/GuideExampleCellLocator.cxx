@@ -22,6 +22,7 @@
 
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/CellLocatorBoundingIntervalHierarchy.h>
+#include <viskores/cont/CellLocatorChooser.h>
 #include <viskores/cont/CellLocatorGeneral.h>
 #include <viskores/cont/DataSetBuilderRectilinear.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
@@ -113,12 +114,14 @@ struct DemoQueryCells
     //// RESUME-EXAMPLE
     ////
     //// BEGIN-EXAMPLE ConstructCellLocator
+    //// BEGIN-EXAMPLE CellLocatorGeneral
     ////
     viskores::cont::CellLocatorGeneral cellLocator;
     cellLocator.SetCellSet(inDataSet.GetCellSet());
     cellLocator.SetCoordinates(inDataSet.GetCoordinateSystem());
     cellLocator.Update();
     ////
+    //// END-EXAMPLE CellLocatorGeneral
     //// END-EXAMPLE ConstructCellLocator
     ////
 
@@ -138,7 +141,7 @@ struct DemoQueryCells
   }
 };
 
-void TestCellLocator()
+void TestCellLocator1()
 {
   using ValueType = viskores::Vec3f;
   using ArrayType = viskores::cont::ArrayHandle<ValueType>;
@@ -172,9 +175,83 @@ void TestCellLocator()
     test_equal_portals(expected.ReadPortal(), interpolated.ReadPortal()));
 }
 
+////
+//// BEGIN-EXAMPLE CellLocatorChooser
+////
+template<typename CellSetType,
+         typename CoordsType,
+         typename QueryPointsType,
+         typename FieldType>
+void QueryCells(const CellSetType& cellSet,
+                const CoordsType& coords,
+                const QueryPointsType& queryPoints,
+                const FieldType& inField,
+                const FieldType& interpolatedField)
+{
+  VISKORES_IS_CELL_SET(CellSetType);
+  VISKORES_IS_ARRAY_HANDLE(CoordsType);
+  VISKORES_IS_ARRAY_HANDLE(QueryPointsType);
+  VISKORES_IS_ARRAY_HANDLE(FieldType);
+
+  viskores::cont::CellLocatorChooser<CellSetType, CoordsType> cellLocator;
+  cellLocator.SetCellSet(cellSet);
+  cellLocator.SetCoordinates(coords);
+  cellLocator.Update();
+
+  viskores::cont::Invoker invoke;
+  invoke(
+    QueryCellsWorklet{}, queryPoints, cellLocator, cellSet, inField, interpolatedField);
+}
+////
+//// END-EXAMPLE CellLocatorChooser
+////
+
+void TestCellLocator2()
+{
+  using ValueType = viskores::Vec3f;
+  using ArrayType = viskores::cont::ArrayHandle<ValueType>;
+
+  viskores::cont::DataSet data =
+    viskores::cont::DataSetBuilderUniform::Create(DimensionSizes);
+
+  ArrayType inField;
+  viskores::cont::ArrayCopy(viskores::cont::ArrayHandleUniformPointCoordinates(
+                              DimensionSizes, ValueType(0.0f), ValueType(2.0f)),
+                            inField);
+
+  ArrayType queryPoints;
+
+  viskores::cont::ArrayCopy(viskores::cont::ArrayHandleUniformPointCoordinates(
+                              DimensionSizes - viskores::Id3(1), ValueType(0.5f)),
+                            queryPoints);
+
+  ArrayType interpolated;
+
+  QueryCells(data.GetCellSet().AsCellSet<viskores::cont::CellSetStructured<3>>(),
+             data.GetCoordinateSystem()
+               .GetData()
+               .AsArrayHandle<viskores::cont::ArrayHandleUniformPointCoordinates>(),
+             queryPoints,
+             inField,
+             interpolated);
+
+  viskores::cont::ArrayHandleUniformPointCoordinates expected(
+    DimensionSizes - viskores::Id3(1), ValueType(1.0f), ValueType(2.0f));
+
+  std::cout << "Expected: ";
+  viskores::cont::printSummary_ArrayHandle(expected, std::cout);
+
+  std::cout << "Interpolated: ";
+  viskores::cont::printSummary_ArrayHandle(interpolated, std::cout);
+
+  VISKORES_TEST_ASSERT(
+    test_equal_portals(expected.ReadPortal(), interpolated.ReadPortal()));
+}
+
 void Run()
 {
-  TestCellLocator();
+  TestCellLocator1();
+  TestCellLocator2();
 }
 
 } // anonymous namespace

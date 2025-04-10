@@ -89,6 +89,7 @@ DistributedBranchDecompositionFilter::DoExecutePartitions(
   timingsStream << "    " << std::setw(60) << std::left
                 << "Create DIY Master and Assigner (Branch Decomposition)"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+
   timer.Start();
 
   // Compute global ids (gids) for our local blocks
@@ -125,6 +126,7 @@ DistributedBranchDecompositionFilter::DoExecutePartitions(
   timingsStream << "    " << std::setw(60) << std::left
                 << "Get DIY Information (Branch Decomposition)"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+
   timer.Start();
 
 
@@ -169,11 +171,6 @@ DistributedBranchDecompositionFilter::DoExecutePartitions(
                                wrap,
                                ghosts,
                                diyDivisions);
-
-  // TODO/FIXME: Check what happened here and possibly eliminate!
-  for (viskores::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
-  {
-  }
 
   timingsStream << "    " << std::setw(60) << std::left
                 << "Create DIY Decomposer and Assigner (Branch Decomposition)"
@@ -251,7 +248,8 @@ DistributedBranchDecompositionFilter::DoExecutePartitions(
     branch_decomposition_master,
     assigner,
     partners,
-    viskores::filter::scalar_topology::internal::ComputeDistributedBranchDecompositionFunctor{});
+    viskores::filter::scalar_topology::internal::ComputeDistributedBranchDecompositionFunctor(
+      this->TimingsLogLevel));
 
   timingsStream << "    " << std::setw(60) << std::left
                 << "Exchanging best up/down supernode and volume"
@@ -330,12 +328,19 @@ DistributedBranchDecompositionFilter::DoExecutePartitions(
       b->VolumetricBranchDecomposer.CollectBranches(ds, b->BranchRoots);
     });
 
+  timingsStream << "    " << std::setw(38) << std::left << "CollectBranchEnds"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
+
   // Now we have collected the branches, we do a global reduction to exchance branch end information
   // across all compute ranks
-  viskoresdiy::reduce(branch_decomposition_master,
-                      assigner,
-                      partners,
-                      viskores::filter::scalar_topology::internal::ExchangeBranchEndsFunctor{});
+  auto exchangeBranchEndsFunctor =
+    viskores::filter::scalar_topology::internal::ExchangeBranchEndsFunctor(this->TimingsLogLevel);
+  viskoresdiy::reduce(branch_decomposition_master, assigner, partners, exchangeBranchEndsFunctor);
+
+  timingsStream << "    " << std::setw(38) << std::left << "ExchangeBranchEnds"
+                << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
+  timer.Start();
 
   std::vector<viskores::cont::DataSet> outputDataSets(input.GetNumberOfPartitions());
   // Copy input data set to output
@@ -363,6 +368,15 @@ DistributedBranchDecompositionFilter::DoExecutePartitions(
                                               viskores::cont::Field::Association::WholeDataSet,
                                               b->VolumetricBranchDecomposer.LowerEndGRId);
       outputDataSets[b->LocalBlockNo].AddField(LowerEndGRIdField);
+
+      viskores::cont::Field UpperEndLocalIdField("UpperEndLocalIds",
+                                                 viskores::cont::Field::Association::WholeDataSet,
+                                                 b->VolumetricBranchDecomposer.UpperEndLocalId);
+      outputDataSets[b->LocalBlockNo].AddField(UpperEndLocalIdField);
+      viskores::cont::Field LowerEndLocalIdField("LowerEndLocalIds",
+                                                 viskores::cont::Field::Association::WholeDataSet,
+                                                 b->VolumetricBranchDecomposer.LowerEndLocalId);
+      outputDataSets[b->LocalBlockNo].AddField(LowerEndLocalIdField);
 
       viskores::cont::Field UpperEndIntrinsicVolume(
         "UpperEndIntrinsicVolume",
@@ -400,7 +414,7 @@ DistributedBranchDecompositionFilter::DoExecutePartitions(
                                           viskores::cont::Field::Association::WholeDataSet,
                                           b->VolumetricBranchDecomposer.UpperEndValue);
       outputDataSets[b->LocalBlockNo].AddField(UpperEndValue);
-      viskores::cont::Field BranchRoot("BranchRoot",
+      viskores::cont::Field BranchRoot("BranchRootByBranch",
                                        viskores::cont::Field::Association::WholeDataSet,
                                        b->VolumetricBranchDecomposer.BranchRoot);
       outputDataSets[b->LocalBlockNo].AddField(BranchRoot);
@@ -414,7 +428,7 @@ DistributedBranchDecompositionFilter::DoExecutePartitions(
                 << "Creating Branch Decomposition Output Data"
                 << ": " << timer.GetElapsedTime() << " seconds" << std::endl;
 
-  VISKORES_LOG_S(viskores::cont::LogLevel::Perf,
+  VISKORES_LOG_S(this->TimingsLogLevel,
                  std::endl
                    << "-----------  DoExecutePartitions Timings ------------" << std::endl
                    << timingsStream.str());

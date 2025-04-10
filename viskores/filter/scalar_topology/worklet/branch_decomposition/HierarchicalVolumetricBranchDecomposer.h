@@ -190,6 +190,11 @@ public:
   viskores::worklet::contourtree_augmented::IdArrayType LowerEndIntrinsicVolume;
   viskores::worklet::contourtree_augmented::IdArrayType UpperEndDependentVolume;
   viskores::worklet::contourtree_augmented::IdArrayType LowerEndDependentVolume;
+  // This information is only used when extracting isosurfaces
+  // We need the upper and lower end within the block to determine the superarc containing the isovalue
+  // The information should NOT be exchanged between blocks, since it's local id
+  viskores::worklet::contourtree_augmented::IdArrayType UpperEndLocalId;
+  viskores::worklet::contourtree_augmented::IdArrayType LowerEndLocalId;
 
   /// routines to compute branch decomposition by volume
   /// WARNING: we now have two types of hierarchical tree sharing a data structure:
@@ -795,6 +800,8 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
       viskores::cont::make_ArrayHandlePermutation(sortedSuperarcs, actualBranchRoots);
     auto permutedRegularIds =
       viskores::cont::make_ArrayHandlePermutation(sortedSuperarcs, actualOuterNodeRegularIds);
+    auto permutedLocalIds =
+      viskores::cont::make_ArrayHandlePermutation(sortedSuperarcs, actualOuterNodeLocalIds);
     auto permutedDataValues =
       viskores::cont::make_ArrayHandlePermutation(sortedSuperarcs, actualOuterNodeValues);
     auto permutedIntrinsicVolumes =
@@ -842,6 +849,7 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
     {
       viskores::cont::Algorithm::CopyIf(permutedBranchRoots, oneIfBranchEnd, this->BranchRoot);
       viskores::cont::Algorithm::CopyIf(branchRootGRIds, oneIfBranchEnd, this->BranchRootGRId);
+      viskores::cont::Algorithm::CopyIf(permutedLocalIds, oneIfBranchEnd, this->LowerEndLocalId);
       viskores::cont::Algorithm::CopyIf(
         actualDirectedSuperarcs, oneIfBranchEnd, this->LowerEndSuperarcId);
       viskores::cont::Algorithm::CopyIf(permutedRegularIds, oneIfBranchEnd, this->LowerEndGRId);
@@ -883,6 +891,7 @@ inline void HierarchicalVolumetricBranchDecomposer::CollectEndsOfBranches(
       viskores::cont::Algorithm::CopyIf(
         actualDirectedSuperarcs, oneIfBranchEnd, this->UpperEndSuperarcId);
       viskores::cont::Algorithm::CopyIf(permutedRegularIds, oneIfBranchEnd, this->UpperEndGRId);
+      viskores::cont::Algorithm::CopyIf(permutedLocalIds, oneIfBranchEnd, this->UpperEndLocalId);
       viskores::cont::Algorithm::CopyIf(
         permutedIntrinsicVolumes, oneIfBranchEnd, this->UpperEndIntrinsicVolume);
       viskores::cont::Algorithm::CopyIf(

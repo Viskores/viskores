@@ -1047,9 +1047,18 @@ void HierarchicalContourTree<FieldType>::AddToVISKORESDataSet(viskores::cont::Da
   viskores::cont::Field superarcsField(
     "Superarcs", viskores::cont::Field::Association::WholeDataSet, this->Superarcs);
   ds.AddField(superarcsField);
+  viskores::cont::Field superchildrenField(
+    "Superchildren", viskores::cont::Field::Association::WholeDataSet, this->Superchildren);
+  ds.AddField(superchildrenField);
   viskores::cont::Field hyperparentsField(
     "Hyperparents", viskores::cont::Field::Association::WholeDataSet, this->Hyperparents);
   ds.AddField(hyperparentsField);
+  viskores::cont::Field hypernodesField(
+    "Hypernodes", viskores::cont::Field::Association::WholeDataSet, this->Hypernodes);
+  ds.AddField(hypernodesField);
+  viskores::cont::Field hyperarcsField(
+    "Hyperarcs", viskores::cont::Field::Association::WholeDataSet, this->Hyperarcs);
+  ds.AddField(hyperarcsField);
   viskores::cont::Field super2HypernodeField(
     "Super2Hypernode", viskores::cont::Field::Association::WholeDataSet, this->Super2Hypernode);
   ds.AddField(super2HypernodeField);

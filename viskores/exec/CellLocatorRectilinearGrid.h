@@ -36,6 +36,15 @@ namespace viskores
 namespace exec
 {
 
+/// @brief Structure for locating cells.
+///
+/// Use the `FindCell()` method to identify which cell contains a point in space.
+/// The `FindCell()` method optionally takes a `LastCell` object, which is a
+/// structure nested in this class. The `LastCell` object can help speed locating
+/// cells for successive finds at nearby points.
+///
+/// This class is provided by `viskores::cont::CellLocatorRectilinearGrid`
+/// when passed to a worklet.
 class VISKORES_ALWAYS_EXPORT CellLocatorRectilinearGrid
 {
 private:
@@ -54,6 +63,7 @@ private:
   VISKORES_CONT static viskores::Id3 ToId3(viskores::Id&& src) { return viskores::Id3(src, 1, 1); }
 
 public:
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::LastCell
   struct LastCell
   {
   };
@@ -104,19 +114,19 @@ public:
     return inside;
   }
 
-  VISKORES_EXEC
-  viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                               viskores::Id& cellId,
-                               viskores::Vec3f& parametric,
-                               LastCell& viskoresNotUsed(lastCell)) const
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
+  VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
+                                             viskores::Id& cellId,
+                                             viskores::Vec3f& parametric,
+                                             LastCell& viskoresNotUsed(lastCell)) const
   {
     return this->FindCell(point, cellId, parametric);
   }
 
-  VISKORES_EXEC
-  viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                               viskores::Id& cellId,
-                               viskores::Vec3f& parametric) const
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
+  VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
+                                             viskores::Id& cellId,
+                                             viskores::Vec3f& parametric) const
   {
     if (!this->IsInside(point))
     {

@@ -153,7 +153,6 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
                             bool useGhost,
                             FilterType fType,
                             bool useThreaded,
-                            bool useAsyncComm,
                             bool useBlockIds,
                             bool duplicateBlocks)
 {
@@ -177,11 +176,6 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
       std::cout << " - using ghost cells";
     if (useThreaded)
       std::cout << " - using threaded";
-    if (useAsyncComm)
-      std::cout << " - usingAsyncComm";
-    else
-      std::cout << " - usingSyncComm";
-
     if (useBlockIds)
       std::cout << " - using block IDs";
     if (duplicateBlocks)
@@ -235,15 +229,8 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
     if (fType == STREAMLINE)
     {
       viskores::filter::flow::Streamline streamline;
-      SetFilter(streamline,
-                stepSize,
-                numSteps,
-                fieldName,
-                seedArray,
-                useThreaded,
-                useAsyncComm,
-                useBlockIds,
-                blockIds);
+      SetFilter(
+        streamline, stepSize, numSteps, fieldName, seedArray, useThreaded, useBlockIds, blockIds);
       auto out = streamline.Execute(pds);
 
       viskores::Id numOutputs = out.GetNumberOfPartitions();
@@ -267,7 +254,6 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
                 fieldName,
                 seedArray,
                 useThreaded,
-                useAsyncComm,
                 useBlockIds,
                 blockIds);
 
@@ -277,8 +263,11 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
       if (comm.rank() == comm.size() - 1)
       {
         bool checkEnds = out.GetNumberOfPartitions() == static_cast<viskores::Id>(blockIds.size());
+        auto nP = out.GetNumberOfPartitions();
+        if (nP != 1)
+          std::cout << comm.rank() << " numPartitions= " << nP << std::endl;
         VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 1,
-                             "Wrong number of partitions in output");
+                             "Wrong number of partitions in output 1");
         ValidateOutput(out.GetPartition(0),
                        numSeeds,
                        xMaxRanges[xMaxRanges.size() - 1],
@@ -288,7 +277,7 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
       }
       else
         VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 0,
-                             "Wrong number of partitions in output");
+                             "Wrong number of partitions in output 0");
     }
     else if (fType == PATHLINE)
     {
@@ -298,15 +287,8 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
       AddVectorFields(pds2, fieldName, vecX);
 
       viskores::filter::flow::Pathline pathline;
-      SetFilter(pathline,
-                stepSize,
-                numSteps,
-                fieldName,
-                seedArray,
-                useThreaded,
-                useAsyncComm,
-                useBlockIds,
-                blockIds);
+      SetFilter(
+        pathline, stepSize, numSteps, fieldName, seedArray, useThreaded, useBlockIds, blockIds);
 
       pathline.SetPreviousTime(time0);
       pathline.SetNextTime(time1);

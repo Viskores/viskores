@@ -211,7 +211,7 @@ private:
   bool AugmentHierarchicalTree;
 
   /// Threshold to use for volume pre-simplification
-  viskores::Id PresimplifyThreshold;
+  viskores::Id PresimplifyThreshold = 0;
 
   /// Save dot files for all tree computations
   bool SaveDotFiles;

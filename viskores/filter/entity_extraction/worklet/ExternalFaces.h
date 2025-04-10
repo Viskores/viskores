@@ -51,271 +51,153 @@ namespace worklet
 
 struct ExternalFaces
 {
-  //Worklet that returns the number of external faces for each structured cell
-  class NumExternalFacesPerStructuredCell : public viskores::worklet::WorkletVisitCellsWithPoints
+  struct ExtractStructuredFace : public viskores::worklet::WorkletMapField
   {
-  public:
-    using ControlSignature = void(CellSetIn inCellSet,
-                                  FieldOut numFacesInCell,
-                                  FieldInPoint pointCoordinates);
-    using ExecutionSignature = _2(CellShape, _3);
-    using InputDomain = _1;
+    using ControlSignature = void(FieldIn indices, FieldOut cellConnections, FieldOut cellMap);
 
-    VISKORES_CONT
-    NumExternalFacesPerStructuredCell(const viskores::Vec3f_64& min_point,
-                                      const viskores::Vec3f_64& max_point)
-      : MinPoint(min_point)
-      , MaxPoint(max_point)
+    viskores::Id3 CellDimensions;
+    viskores::Id3 PointDimensions;
+    viskores::Id XYCellSize;
+    viskores::Id XZCellSize;
+    viskores::Id YZCellSize;
+    viskores::Id XYPointSize;
+    viskores::Id XZPointSize;
+    viskores::Id YZPointSize;
+
+    VISKORES_CONT ExtractStructuredFace(viskores::Id3 cellDimensions)
+      : CellDimensions(cellDimensions)
+      , PointDimensions(cellDimensions[0] + 1, cellDimensions[1] + 1, cellDimensions[2] + 1)
+      , XYCellSize(CellDimensions[0] * CellDimensions[1])
+      , XZCellSize(CellDimensions[0] * CellDimensions[2])
+      , YZCellSize(CellDimensions[1] * CellDimensions[2])
+      , XYPointSize(PointDimensions[0] * PointDimensions[1])
+      , XZPointSize(PointDimensions[0] * PointDimensions[2])
+      , YZPointSize(PointDimensions[1] * PointDimensions[2])
     {
     }
 
-    VISKORES_EXEC
-    static inline viskores::IdComponent CountExternalFacesOnDimension(viskores::Float64 grid_min,
-                                                                      viskores::Float64 grid_max,
-                                                                      viskores::Float64 cell_min,
-                                                                      viskores::Float64 cell_max)
+    VISKORES_EXEC void operator()(viskores::Id index,
+                                  viskores::Id4& connections,
+                                  viskores::Id& cellMap) const
     {
-      viskores::IdComponent count = 0;
-
-      bool cell_min_at_grid_boundary = cell_min <= grid_min;
-      bool cell_max_at_grid_boundary = cell_max >= grid_max;
-
-      if (cell_min_at_grid_boundary && !cell_max_at_grid_boundary)
+      if (index < this->XYCellSize)
       {
-        count++;
+        this->GetXYLowCell(index, connections, cellMap);
+        return;
       }
-      else if (!cell_min_at_grid_boundary && cell_max_at_grid_boundary)
+      index -= this->XYCellSize;
+      if (index < this->XYCellSize)
       {
-        count++;
+        this->GetXYHighCell(index, connections, cellMap);
+        return;
       }
-      else if (cell_min_at_grid_boundary && cell_max_at_grid_boundary)
+      index -= this->XYCellSize;
+      if (index < this->XZCellSize)
       {
-        count += 2;
+        this->GetXZLowCell(index, connections, cellMap);
+        return;
       }
-
-      return count;
+      index -= this->XZCellSize;
+      if (index < this->XZCellSize)
+      {
+        this->GetXZHighCell(index, connections, cellMap);
+        return;
+      }
+      index -= this->XZCellSize;
+      if (index < this->YZCellSize)
+      {
+        this->GetYZLowCell(index, connections, cellMap);
+        return;
+      }
+      index -= this->YZCellSize;
+      VISKORES_ASSERT(index < this->YZCellSize);
+      this->GetYZHighCell(index, connections, cellMap);
     }
 
-    template <typename CellShapeTag, typename PointCoordVecType>
-    VISKORES_EXEC viskores::IdComponent operator()(CellShapeTag shape,
-                                                   const PointCoordVecType& pointCoordinates) const
+    VISKORES_EXEC void GetXYLowCell(viskores::Id index,
+                                    viskores::Id4& connections,
+                                    viskores::Id& cellMap) const
     {
-      (void)shape; // C4100 false positive workaround
-      VISKORES_ASSERT(shape.Id == CELL_SHAPE_HEXAHEDRON);
-
-      viskores::IdComponent count = 0;
-
-      count += CountExternalFacesOnDimension(
-        MinPoint[0], MaxPoint[0], pointCoordinates[0][0], pointCoordinates[1][0]);
-
-      count += CountExternalFacesOnDimension(
-        MinPoint[1], MaxPoint[1], pointCoordinates[0][1], pointCoordinates[3][1]);
-
-      count += CountExternalFacesOnDimension(
-        MinPoint[2], MaxPoint[2], pointCoordinates[0][2], pointCoordinates[4][2]);
-
-      return count;
+      viskores::Id2 cellIndex{ index % this->CellDimensions[0], index / this->CellDimensions[0] };
+      viskores::Id pointIndex = cellIndex[0] + (cellIndex[1] * this->PointDimensions[0]);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + this->PointDimensions[0];
+      connections[2] = pointIndex + this->PointDimensions[0] + 1;
+      connections[3] = pointIndex + 1;
+      cellMap = index;
     }
 
-  private:
-    viskores::Vec3f_64 MinPoint;
-    viskores::Vec3f_64 MaxPoint;
-  };
-
-
-  //Worklet that finds face connectivity for each structured cell
-  class BuildConnectivityStructured : public viskores::worklet::WorkletVisitCellsWithPoints
-  {
-  public:
-    using ControlSignature = void(CellSetIn inCellSet,
-                                  WholeCellSetIn<> inputCell,
-                                  FieldOut faceShapes,
-                                  FieldOut facePointCount,
-                                  FieldOut faceConnectivity,
-                                  FieldInPoint pointCoordinates);
-    using ExecutionSignature = void(CellShape, VisitIndex, InputIndex, _2, _3, _4, _5, _6);
-    using InputDomain = _1;
-
-    using ScatterType = viskores::worklet::ScatterCounting;
-
-    VISKORES_CONT
-    BuildConnectivityStructured(const viskores::Vec3f_64& min_point,
-                                const viskores::Vec3f_64& max_point)
-      : MinPoint(min_point)
-      , MaxPoint(max_point)
+    VISKORES_EXEC void GetXYHighCell(viskores::Id index,
+                                     viskores::Id4& connections,
+                                     viskores::Id& cellMap) const
     {
+      viskores::Id2 cellIndex{ index % this->CellDimensions[0], index / this->CellDimensions[0] };
+      viskores::Id offset = this->XYPointSize * (this->PointDimensions[2] - 1);
+      viskores::Id pointIndex = offset + cellIndex[0] + (cellIndex[1] * this->PointDimensions[0]);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + 1;
+      connections[2] = pointIndex + this->PointDimensions[0] + 1;
+      connections[3] = pointIndex + this->PointDimensions[0];
+      cellMap = this->XYCellSize * (this->CellDimensions[2] - 1) + index;
     }
 
-    enum FaceType
+    VISKORES_EXEC void GetXZLowCell(viskores::Id index,
+                                    viskores::Id4& connections,
+                                    viskores::Id& cellMap) const
     {
-      FACE_GRID_MIN,
-      FACE_GRID_MAX,
-      FACE_GRID_MIN_AND_MAX,
-      FACE_NONE
-    };
-
-    VISKORES_EXEC
-    static inline bool FoundFaceOnDimension(viskores::Float64 grid_min,
-                                            viskores::Float64 grid_max,
-                                            viskores::Float64 cell_min,
-                                            viskores::Float64 cell_max,
-                                            viskores::IdComponent& faceIndex,
-                                            viskores::IdComponent& count,
-                                            viskores::IdComponent dimensionFaceOffset,
-                                            viskores::IdComponent visitIndex)
-    {
-      bool cell_min_at_grid_boundary = cell_min <= grid_min;
-      bool cell_max_at_grid_boundary = cell_max >= grid_max;
-
-      FaceType Faces = FaceType::FACE_NONE;
-
-      if (cell_min_at_grid_boundary && !cell_max_at_grid_boundary)
-      {
-        Faces = FaceType::FACE_GRID_MIN;
-      }
-      else if (!cell_min_at_grid_boundary && cell_max_at_grid_boundary)
-      {
-        Faces = FaceType::FACE_GRID_MAX;
-      }
-      else if (cell_min_at_grid_boundary && cell_max_at_grid_boundary)
-      {
-        Faces = FaceType::FACE_GRID_MIN_AND_MAX;
-      }
-
-      if (Faces == FaceType::FACE_NONE)
-        return false;
-
-      if (Faces == FaceType::FACE_GRID_MIN)
-      {
-        if (visitIndex == count)
-        {
-          faceIndex = dimensionFaceOffset;
-          return true;
-        }
-        else
-        {
-          count++;
-        }
-      }
-      else if (Faces == FaceType::FACE_GRID_MAX)
-      {
-        if (visitIndex == count)
-        {
-          faceIndex = dimensionFaceOffset + 1;
-          return true;
-        }
-        else
-        {
-          count++;
-        }
-      }
-      else if (Faces == FaceType::FACE_GRID_MIN_AND_MAX)
-      {
-        if (visitIndex == count)
-        {
-          faceIndex = dimensionFaceOffset;
-          return true;
-        }
-        count++;
-        if (visitIndex == count)
-        {
-          faceIndex = dimensionFaceOffset + 1;
-          return true;
-        }
-        count++;
-      }
-
-      return false;
+      viskores::Id2 cellIndex{ index % this->CellDimensions[0], index / this->CellDimensions[0] };
+      viskores::Id pointIndex = cellIndex[0] + (cellIndex[1] * this->XYPointSize);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + this->XYPointSize;
+      connections[2] = pointIndex + this->XYPointSize + 1;
+      connections[3] = pointIndex + 1;
+      cellMap = cellIndex[0] + (cellIndex[1] * this->XYCellSize);
     }
 
-    template <typename PointCoordVecType>
-    VISKORES_EXEC inline viskores::IdComponent FindFaceIndexForVisit(
-      viskores::IdComponent visitIndex,
-      const PointCoordVecType& pointCoordinates) const
+    VISKORES_EXEC void GetXZHighCell(viskores::Id index,
+                                     viskores::Id4& connections,
+                                     viskores::Id& cellMap) const
     {
-      viskores::IdComponent count = 0;
-      viskores::IdComponent faceIndex = 0;
-      // Search X dimension
-      if (!FoundFaceOnDimension(MinPoint[0],
-                                MaxPoint[0],
-                                pointCoordinates[0][0],
-                                pointCoordinates[1][0],
-                                faceIndex,
-                                count,
-                                0,
-                                visitIndex))
-      {
-        // Search Y dimension
-        if (!FoundFaceOnDimension(MinPoint[1],
-                                  MaxPoint[1],
-                                  pointCoordinates[0][1],
-                                  pointCoordinates[3][1],
-                                  faceIndex,
-                                  count,
-                                  2,
-                                  visitIndex))
-        {
-          // Search Z dimension
-          FoundFaceOnDimension(MinPoint[2],
-                               MaxPoint[2],
-                               pointCoordinates[0][2],
-                               pointCoordinates[4][2],
-                               faceIndex,
-                               count,
-                               4,
-                               visitIndex);
-        }
-      }
-      return faceIndex;
+      viskores::Id2 cellIndex{ index % this->CellDimensions[0], index / this->CellDimensions[0] };
+      viskores::Id offset = this->XYPointSize - this->PointDimensions[0];
+      viskores::Id pointIndex = offset + cellIndex[0] + (cellIndex[1] * this->XYPointSize);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + 1;
+      connections[2] = pointIndex + this->XYPointSize + 1;
+      connections[3] = pointIndex + this->XYPointSize;
+      cellMap = this->XYCellSize - this->CellDimensions[0] + cellIndex[0] +
+        (cellIndex[1] * this->XYCellSize);
     }
 
-    template <typename CellShapeTag,
-              typename CellSetType,
-              typename PointCoordVecType,
-              typename ConnectivityType>
-    VISKORES_EXEC void operator()(CellShapeTag shape,
-                                  viskores::IdComponent visitIndex,
-                                  viskores::Id inputIndex,
-                                  const CellSetType& cellSet,
-                                  viskores::UInt8& shapeOut,
-                                  viskores::IdComponent& numFacePointsOut,
-                                  ConnectivityType& faceConnectivity,
-                                  const PointCoordVecType& pointCoordinates) const
+    VISKORES_EXEC void GetYZLowCell(viskores::Id index,
+                                    viskores::Id4& connections,
+                                    viskores::Id& cellMap) const
     {
-      VISKORES_ASSERT(shape.Id == CELL_SHAPE_HEXAHEDRON);
-
-      viskores::IdComponent faceIndex = FindFaceIndexForVisit(visitIndex, pointCoordinates);
-
-      viskores::IdComponent numFacePoints;
-      viskores::exec::CellFaceNumberOfPoints(faceIndex, shape, numFacePoints);
-      VISKORES_ASSERT(numFacePoints == faceConnectivity.GetNumberOfComponents());
-
-      typename CellSetType::IndicesType inCellIndices = cellSet.GetIndices(inputIndex);
-
-      shapeOut = viskores::CELL_SHAPE_QUAD;
-      numFacePointsOut = 4;
-
-      for (viskores::IdComponent facePointIndex = 0; facePointIndex < numFacePoints;
-           facePointIndex++)
-      {
-        viskores::IdComponent localFaceIndex;
-        viskores::ErrorCode status =
-          viskores::exec::CellFaceLocalIndex(facePointIndex, faceIndex, shape, localFaceIndex);
-        if (status == viskores::ErrorCode::Success)
-        {
-          faceConnectivity[facePointIndex] = inCellIndices[localFaceIndex];
-        }
-        else
-        {
-          // An error condition, but do we want to crash the operation?
-          faceConnectivity[facePointIndex] = 0;
-        }
-      }
+      viskores::Id2 cellIndex{ index % this->CellDimensions[1], index / this->CellDimensions[1] };
+      viskores::Id pointIndex =
+        (cellIndex[0] * this->PointDimensions[0]) + (cellIndex[1] * this->XYPointSize);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + this->XYPointSize;
+      connections[2] = pointIndex + this->XYPointSize + this->PointDimensions[0];
+      connections[3] = pointIndex + this->PointDimensions[0];
+      cellMap = (cellIndex[0] * this->CellDimensions[0]) + (cellIndex[1] * this->XYCellSize);
     }
 
-  private:
-    viskores::Vec3f_64 MinPoint;
-    viskores::Vec3f_64 MaxPoint;
+    VISKORES_EXEC void GetYZHighCell(viskores::Id index,
+                                     viskores::Id4& connections,
+                                     viskores::Id& cellMap) const
+    {
+      viskores::Id2 cellIndex{ index % this->CellDimensions[1], index / this->CellDimensions[1] };
+      viskores::Id offset = this->PointDimensions[0] - 1;
+      viskores::Id pointIndex =
+        offset + (cellIndex[0] * this->PointDimensions[0]) + (cellIndex[1] * this->XYPointSize);
+      connections[0] = pointIndex;
+      connections[1] = pointIndex + this->PointDimensions[0];
+      connections[2] = pointIndex + this->XYPointSize + this->PointDimensions[0];
+      connections[3] = pointIndex + this->XYPointSize;
+      cellMap = (this->CellDimensions[0] - 1) + (cellIndex[0] * this->CellDimensions[0]) +
+        (cellIndex[1] * this->XYCellSize);
+    }
   };
 
   // Worklet that returns the number of faces for each cell/shape
@@ -768,6 +650,17 @@ public:
     T Bias;
   };
 
+  VISKORES_CONT viskores::cont::CellSetExplicit<> MakeCellSetExplicit(
+    viskores::Id numPoints,
+    const viskores::cont::ArrayHandle<viskores::UInt8>& shapes,
+    const viskores::cont::ArrayHandle<viskores::Id>& connectivity,
+    const viskores::cont::ArrayHandle<viskores::Id>& offsets)
+  {
+    viskores::cont::CellSetExplicit<> outCellSet;
+    outCellSet.Fill(numPoints, shapes, connectivity, offsets);
+    return outCellSet;
+  }
+
 public:
   VISKORES_CONT
   ExternalFaces()
@@ -789,102 +682,40 @@ public:
   ///
   /// Faster Run() method for uniform and rectilinear grid types.
   /// Uses grid extents to find cells on the boundaries of the grid.
-  template <typename ShapeStorage, typename ConnectivityStorage, typename OffsetsStorage>
-  VISKORES_CONT void Run(
-    const viskores::cont::CellSetStructured<3>& inCellSet,
-    const viskores::cont::CoordinateSystem& coord,
-    viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& outCellSet)
+  VISKORES_CONT viskores::cont::CellSetSingleType<> Run(
+    const viskores::cont::CellSetStructured<3>& inCellSet)
   {
     // create an invoker
     viskores::cont::Invoker invoke;
 
-    viskores::Vec3f_64 MinPoint;
-    viskores::Vec3f_64 MaxPoint;
+    viskores::Id3 cellDimensions = inCellSet.GetCellDimensions();
 
-    viskores::Id3 PointDimensions = inCellSet.GetPointDimensions();
+    ExtractStructuredFace worklet{ cellDimensions };
 
-    using DefaultHandle = viskores::cont::ArrayHandle<viskores::FloatDefault>;
-    using CartesianArrayHandle =
-      viskores::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
+    viskores::Id numOutCells =
+      (2 * worklet.XYCellSize) + (2 * worklet.XZCellSize) + (2 * worklet.YZCellSize);
 
-    auto coordData = coord.GetData();
-    if (coordData.CanConvert<CartesianArrayHandle>())
-    {
-      const auto vertices = coordData.AsArrayHandle<CartesianArrayHandle>();
-      const auto vertsSize = vertices.GetNumberOfValues();
-      const auto tmp = viskores::cont::ArrayGetValues({ 0, vertsSize - 1 }, vertices);
-      MinPoint = tmp[0];
-      MaxPoint = tmp[1];
-    }
-    else
-    {
-      auto vertices = coordData.AsArrayHandle<viskores::cont::ArrayHandleUniformPointCoordinates>();
-      auto Coordinates = vertices.ReadPortal();
+    viskores::cont::ArrayHandle<viskores::Id> connections;
 
-      MinPoint = Coordinates.GetOrigin();
-      viskores::Vec3f_64 spacing = Coordinates.GetSpacing();
+    invoke(worklet,
+           viskores::cont::ArrayHandleIndex(numOutCells),
+           viskores::cont::make_ArrayHandleGroupVec<4>(connections),
+           this->CellIdMap);
 
-      viskores::Vec3f_64 unitLength;
-      unitLength[0] = static_cast<viskores::Float64>(PointDimensions[0] - 1);
-      unitLength[1] = static_cast<viskores::Float64>(PointDimensions[1] - 1);
-      unitLength[2] = static_cast<viskores::Float64>(PointDimensions[2] - 1);
-      MaxPoint = MinPoint + spacing * unitLength;
-    }
-
-    // Count the number of external faces per cell
-    viskores::cont::ArrayHandle<viskores::IdComponent> numExternalFaces;
-    invoke(NumExternalFacesPerStructuredCell(MinPoint, MaxPoint),
-           inCellSet,
-           numExternalFaces,
-           coordData);
-
-    viskores::Id numberOfExternalFaces =
-      viskores::cont::Algorithm::Reduce(numExternalFaces, 0, viskores::Sum());
-
-    viskores::worklet::ScatterCounting scatterCellToExternalFace(numExternalFaces);
-
-    // Maps output cells to input cells. Store this for cell field mapping.
-    this->CellIdMap = scatterCellToExternalFace.GetOutputToInputMap();
-
-    numExternalFaces.ReleaseResources();
-
-    viskores::Id connectivitySize = 4 * numberOfExternalFaces;
-    viskores::cont::ArrayHandle<viskores::Id, ConnectivityStorage> faceConnectivity;
-    viskores::cont::ArrayHandle<viskores::UInt8, ShapeStorage> faceShapes;
-    viskores::cont::ArrayHandle<viskores::IdComponent> facePointCount;
-    // Must pre allocate because worklet invocation will not have enough
-    // information to.
-    faceConnectivity.Allocate(connectivitySize);
-
-    // Build connectivity for external faces
-    invoke(BuildConnectivityStructured(MinPoint, MaxPoint),
-           scatterCellToExternalFace,
-           inCellSet,
-           inCellSet,
-           faceShapes,
-           facePointCount,
-           viskores::cont::make_ArrayHandleGroupVec<4>(faceConnectivity),
-           coordData);
-
-    auto offsets = viskores::cont::ConvertNumComponentsToOffsets(facePointCount);
-
-    outCellSet.Fill(inCellSet.GetNumberOfPoints(), faceShapes, faceConnectivity, offsets);
+    viskores::cont::CellSetSingleType<> outCellSet;
+    outCellSet.Fill(inCellSet.GetNumberOfPoints(), viskores::CELL_SHAPE_QUAD, 4, connections);
+    return outCellSet;
   }
 
   ///////////////////////////////////////////////////
   /// \brief ExternalFaces: Extract Faces on outside of geometry
-  template <typename InCellSetType,
-            typename ShapeStorage,
-            typename ConnectivityStorage,
-            typename OffsetsStorage>
-  VISKORES_CONT void Run(
-    const InCellSetType& inCellSet,
-    viskores::cont::CellSetExplicit<ShapeStorage, ConnectivityStorage, OffsetsStorage>& outCellSet)
+  template <typename InCellSetType>
+  VISKORES_CONT viskores::cont::CellSetExplicit<> Run(const InCellSetType& inCellSet)
   {
     using PointCountArrayType = viskores::cont::ArrayHandle<viskores::IdComponent>;
-    using ShapeArrayType = viskores::cont::ArrayHandle<viskores::UInt8, ShapeStorage>;
-    using OffsetsArrayType = viskores::cont::ArrayHandle<viskores::Id, OffsetsStorage>;
-    using ConnectivityArrayType = viskores::cont::ArrayHandle<viskores::Id, ConnectivityStorage>;
+    using ShapeArrayType = viskores::cont::ArrayHandle<viskores::UInt8>;
+    using OffsetsArrayType = viskores::cont::ArrayHandle<viskores::Id>;
+    using ConnectivityArrayType = viskores::cont::ArrayHandle<viskores::Id>;
 
     // create an invoker
     viskores::cont::Invoker invoke;
@@ -943,17 +774,17 @@ public:
       if (!polyDataConnectivitySize)
       {
         // Data has no faces. Output is empty.
+        viskores::cont::CellSetExplicit<> outCellSet;
         outCellSet.PrepareToAddCells(0, 0);
         outCellSet.CompleteAddingCells(inCellSet.GetNumberOfPoints());
-        return;
+        return outCellSet;
       }
       else
       {
         // Pass only input poly data to output
-        outCellSet.Fill(
-          inCellSet.GetNumberOfPoints(), polyDataShapes, polyDataConnectivity, polyDataOffsets);
         this->CellIdMap = polyDataCellIdMap;
-        return;
+        return MakeCellSetExplicit(
+          inCellSet.GetNumberOfPoints(), polyDataShapes, polyDataConnectivity, polyDataOffsets);
       }
     }
 
@@ -1056,11 +887,11 @@ public:
 
     if (!polyDataConnectivitySize)
     {
-      outCellSet.Fill(inCellSet.GetNumberOfPoints(),
-                      externalFacesShapes,
-                      externalFacesConnectivity,
-                      pointsPerExternalFaceOffsets);
       this->CellIdMap = faceToCellIdMap;
+      return MakeCellSetExplicit(inCellSet.GetNumberOfPoints(),
+                                 externalFacesShapes,
+                                 externalFacesConnectivity,
+                                 pointsPerExternalFaceOffsets);
     }
     else
     {
@@ -1101,9 +932,9 @@ public:
       viskores::cont::ArrayHandle<viskores::Id> joinedCellIdMap;
       viskores::cont::ArrayCopy(cellIdMapArray, joinedCellIdMap);
 
-      outCellSet.Fill(
-        inCellSet.GetNumberOfPoints(), joinedShapesArray, joinedConnectivity, joinedOffsets);
       this->CellIdMap = joinedCellIdMap;
+      return MakeCellSetExplicit(
+        inCellSet.GetNumberOfPoints(), joinedShapesArray, joinedConnectivity, joinedOffsets);
     }
   }
 

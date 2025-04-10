@@ -45,6 +45,10 @@ class VISKORES_CONT_EXPORT PointLocatorSparseGrid : public viskores::cont::Point
 public:
   using RangeType = viskores::Vec<viskores::Range, 3>;
 
+  /// @brief Specify the bounds of the space to search for points.
+  ///
+  /// If the spatial range is not set, it will be automatically defined to be
+  /// the space containing the points.
   void SetRange(const RangeType& range)
   {
     if (this->Range != range)
@@ -53,7 +57,7 @@ public:
       this->SetModified();
     }
   }
-
+  /// @copydoc SetRange
   const RangeType& GetRange() const { return this->Range; }
 
   void SetComputeRangeFromCoordinates()
@@ -65,6 +69,14 @@ public:
     }
   }
 
+  /// @brief Specify the number of bins used in the sparse grid to be searched.
+  ///
+  /// Larger dimensions result in smaller bins, which in turn means fewer points are
+  /// in each bin. This means comparing against fewer points. This is good when searching
+  /// for coincident points. However, when searching for nearest points a distance away,
+  /// larger dimensions require searching for more bins.
+  ///
+  /// The default number of bins is 32x32x32.
   void SetNumberOfBins(const viskores::Id3& bins)
   {
     if (this->Dims != bins)
@@ -73,7 +85,7 @@ public:
       this->SetModified();
     }
   }
-
+  /// @copydoc SetNumberOfBins
   const viskores::Id3& GetNumberOfBins() const { return this->Dims; }
 
   VISKORES_CONT

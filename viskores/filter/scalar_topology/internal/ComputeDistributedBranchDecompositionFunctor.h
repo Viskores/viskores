@@ -81,10 +81,17 @@ namespace internal
 
 struct ComputeDistributedBranchDecompositionFunctor
 {
+  ComputeDistributedBranchDecompositionFunctor(const viskores::cont::LogLevel& timingsLogLevel)
+    : TimingsLogLevel(timingsLogLevel)
+  {
+  }
+
   void operator()(BranchDecompositionBlock* b,
                   const viskoresdiy::ReduceProxy& rp,     // communication proxy
                   const viskoresdiy::RegularSwapPartners& // partners of the current block (unused)
   ) const;
+
+  const viskores::cont::LogLevel TimingsLogLevel;
 };
 
 } // namespace internal

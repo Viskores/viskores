@@ -60,6 +60,7 @@ set(headers
   ArrayRangeCompute.h
   ArrayRangeComputeTemplate.h
   ArrayRangeComputeTemplateInstantiationsIncludes.h
+  ArraySetValues.h
   AssignerPartitionedDataSet.h
   AtomicArray.h
   BitField.h
@@ -198,6 +199,7 @@ set(device_sources
   ArrayHandleIndex.cxx
   ArrayHandleUniformPointCoordinates.cxx
   ArrayRangeCompute.cxx
+  ArraySetValues.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
   CellLocatorUniformBins.cxx
   CellLocatorTwoLevel.cxx

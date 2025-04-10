@@ -10,6 +10,7 @@
 
 
 # Check C/CUDA/C++ code with clang-format
+# shellcheck disable=SC2016
 find \
   benchmarking \
   docs/users-guide/examples \
@@ -26,7 +27,8 @@ find \
   -o -iname '*.hxx' \
   \) \
   -not -path '*thirdparty*' \
-  | xargs clang-format -i
+  -print0 \
+  | xargs -n1 -0 bash -c 'test -f $0.in || echo $0' | xargs clang-format-15.0.7 -i
 
 DIFF="$(git diff)"
 if [ -n "${DIFF}" ]

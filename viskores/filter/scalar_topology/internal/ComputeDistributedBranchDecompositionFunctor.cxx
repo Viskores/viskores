@@ -83,7 +83,7 @@ void ComputeDistributedBranchDecompositionFunctor::operator()(
 ) const
 {
   // Get our rank and DIY id
-  //const viskores::Id rank = viskores::cont::EnvironmentTracker::GetCommunicator().rank();
+  const viskores::Id rank = viskores::cont::EnvironmentTracker::GetCommunicator().rank();
   const auto selfid = rp.gid();
 
   // Aliases to reduce verbosity
@@ -117,6 +117,21 @@ void ComputeDistributedBranchDecompositionFunctor::operator()(
       rp.dequeue(ingid, incomingBestDownVolume);
       viskores::cont::ArrayHandle<viskores::Id> incomingBestDownSupernode;
       rp.dequeue(ingid, incomingBestDownSupernode);
+
+      std::stringstream dataSizeStream;
+      // Log the amount of exchanged data
+      dataSizeStream << "    " << std::setw(38) << std::left << "Incoming data size"
+                     << ": " << incomingBestUpSupernode.GetNumberOfValues() << std::endl;
+
+      VISKORES_LOG_S(
+        this->TimingsLogLevel,
+        std::endl
+          << "    ---------------- Compute Branch Decomposition Step ---------------------"
+          << std::endl
+          << "    Rank    : " << rank << std::endl
+          << "    DIY Id  : " << selfid << std::endl
+          << "    Inc Id  : " << ingid << std::endl
+          << dataSizeStream.str());
 
       viskores::Id prefixLength = b->FirstSupernodePerIteration.ReadPortal().Get(rp.round() - 1)[0];
 

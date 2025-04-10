@@ -45,8 +45,9 @@ namespace cont
 ///
 /// The algorithm used in `CellLocatorTwoLevel` is described in the following publication:
 ///
-/// Javor Kalojanov, Markus Billeter, and Philipp Slusallek. "Two-Level Grids for Ray Tracing
-/// on GPUs." _Computer Graphics Forum_, 2011, pages 307-314. DOI 10.1111/j.1467-8659.2011.01862.x
+/// Javor Kalojanov, Markus Billeter, and Philipp Slusallek.
+/// "Two-Level Grids for Ray Tracing on GPUs."
+/// _Computer Graphics Forum_, 2011, pages 307-314. DOI 10.1111/j.1467-8659.2011.01862.x
 ///
 class VISKORES_CONT_EXPORT CellLocatorTwoLevel : public viskores::cont::CellLocatorBase
 {
@@ -72,24 +73,31 @@ public:
   {
   }
 
-  /// Get/Set the desired approximate number of cells per level 1 bin
+  /// @brief Specify the desired approximate number of cells per level 1 bin.
   ///
+  /// The default value is 32.
   void SetDensityL1(viskores::FloatDefault val)
   {
     this->DensityL1 = val;
     this->SetModified();
   }
+  /// @copydoc SetDensityL1
   viskores::FloatDefault GetDensityL1() const { return this->DensityL1; }
 
-  /// Get/Set the desired approximate number of cells per level 1 bin
+  /// @brief Specify the desired approximate number of cells per level 2 bin.
   ///
+  /// This value should be relatively small as it is close to the average number
+  /// of cells that must be checked for each find.
+  /// The default value is 2.
   void SetDensityL2(viskores::FloatDefault val)
   {
     this->DensityL2 = val;
     this->SetModified();
   }
+  /// @copydoc SetDensityL2
   viskores::FloatDefault GetDensityL2() const { return this->DensityL2; }
 
+  /// Print a summary of the state of this locator.
   void PrintSummary(std::ostream& out) const;
 
   ExecObjType PrepareForExecution(viskores::cont::DeviceAdapterId device,

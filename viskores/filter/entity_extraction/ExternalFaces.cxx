@@ -46,7 +46,7 @@ void ExternalFaces::SetPassPolyData(bool value)
 
 //-----------------------------------------------------------------------------
 viskores::cont::DataSet ExternalFaces::GenerateOutput(const viskores::cont::DataSet& input,
-                                                      viskores::cont::CellSetExplicit<>& outCellSet)
+                                                      viskores::cont::UnknownCellSet& outCellSet)
 {
   //3. Check the fields of the dataset to see what kinds of fields are present, so
   //   we can free the cell mapping array if it won't be needed.
@@ -80,18 +80,16 @@ viskores::cont::DataSet ExternalFaces::DoExecute(const viskores::cont::DataSet& 
 
   //2. using the policy convert the dynamic cell set, and run the
   // external faces worklet
-  viskores::cont::CellSetExplicit<> outCellSet;
+  viskores::cont::UnknownCellSet outCellSet;
 
   if (cells.CanConvert<viskores::cont::CellSetStructured<3>>())
   {
-    this->Worklet->Run(cells.AsCellSet<viskores::cont::CellSetStructured<3>>(),
-                       input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
-                       outCellSet);
+    outCellSet = this->Worklet->Run(cells.AsCellSet<viskores::cont::CellSetStructured<3>>());
   }
   else
   {
-    this->Worklet->Run(cells.ResetCellSetList<VISKORES_DEFAULT_CELL_SET_LIST_UNSTRUCTURED>(),
-                       outCellSet);
+    outCellSet =
+      this->Worklet->Run(cells.ResetCellSetList<VISKORES_DEFAULT_CELL_SET_LIST_UNSTRUCTURED>());
   }
 
   // New Filter Design: we generate new output and map the fields first.

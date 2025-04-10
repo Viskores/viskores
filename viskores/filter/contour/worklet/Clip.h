@@ -18,28 +18,28 @@
 #ifndef viskores_m_worklet_Clip_h
 #define viskores_m_worklet_Clip_h
 
-#include <viskores/filter/clean_grid/worklet/RemoveUnusedPoints.h>
-#include <viskores/filter/contour/worklet/clip/ClipTables.h>
-#include <viskores/worklet/Keys.h>
-#include <viskores/worklet/WorkletMapField.h>
-#include <viskores/worklet/WorkletMapTopology.h>
-#include <viskores/worklet/WorkletReduceByKey.h>
+#include <viskores/ImplicitFunction.h>
+#include <viskores/Swap.h>
 
 #include <viskores/cont/Algorithm.h>
-#include <viskores/cont/ArrayCopy.h>
-#include <viskores/cont/ArrayHandlePermutation.h>
-#include <viskores/cont/ArrayHandleView.h>
+#include <viskores/cont/ArrayHandleConcatenate.h>
+#include <viskores/cont/ArrayHandleConstant.h>
+#include <viskores/cont/ArrayHandleCounting.h>
+#include <viskores/cont/ArrayHandleGroupVecVariable.h>
+#include <viskores/cont/ArrayHandleIndex.h>
+#include <viskores/cont/ArrayHandleTransform.h>
+#include <viskores/cont/ArraySetValues.h>
 #include <viskores/cont/CellSetExplicit.h>
-#include <viskores/cont/ConvertNumComponentsToOffsets.h>
 #include <viskores/cont/CoordinateSystem.h>
 #include <viskores/cont/Invoker.h>
-#include <viskores/cont/Timer.h>
-#include <viskores/cont/UnknownArrayHandle.h>
+#include <viskores/cont/Logging.h>
+#include <viskores/cont/RuntimeDeviceTracker.h>
 
-#include <viskores/ImplicitFunction.h>
+#include <viskores/filter/contour/worklet/clip/ClipTables.h>
 
-#include <utility>
-#include <viskores/exec/FunctorBase.h>
+#include <viskores/worklet/MaskSelect.h>
+#include <viskores/worklet/WorkletMapField.h>
+
 
 #if defined(THRUST_MAJOR_VERSION) && THRUST_MAJOR_VERSION == 1 && THRUST_MINOR_VERSION == 8 && \
   THRUST_SUBMINOR_VERSION < 3
@@ -56,733 +56,715 @@ namespace viskores
 {
 namespace worklet
 {
-struct ClipStats
-{
-  viskores::Id NumberOfCells = 0;
-  viskores::Id NumberOfIndices = 0;
-  viskores::Id NumberOfEdgeIndices = 0;
-
-  // Stats for interpolating new points within cell.
-  viskores::Id NumberOfInCellPoints = 0;
-  viskores::Id NumberOfInCellIndices = 0;
-  viskores::Id NumberOfInCellInterpPoints = 0;
-  viskores::Id NumberOfInCellEdgeIndices = 0;
-
-  struct SumOp
-  {
-    VISKORES_EXEC_CONT
-    ClipStats operator()(const ClipStats& stat1, const ClipStats& stat2) const
-    {
-      ClipStats sum = stat1;
-      sum.NumberOfCells += stat2.NumberOfCells;
-      sum.NumberOfIndices += stat2.NumberOfIndices;
-      sum.NumberOfEdgeIndices += stat2.NumberOfEdgeIndices;
-      sum.NumberOfInCellPoints += stat2.NumberOfInCellPoints;
-      sum.NumberOfInCellIndices += stat2.NumberOfInCellIndices;
-      sum.NumberOfInCellInterpPoints += stat2.NumberOfInCellInterpPoints;
-      sum.NumberOfInCellEdgeIndices += stat2.NumberOfInCellEdgeIndices;
-      return sum;
-    }
-  };
-};
-
-struct EdgeInterpolation
-{
-  viskores::Id Vertex1 = -1;
-  viskores::Id Vertex2 = -1;
-  viskores::Float64 Weight = 0;
-
-  struct LessThanOp
-  {
-    VISKORES_EXEC
-    bool operator()(const EdgeInterpolation& v1, const EdgeInterpolation& v2) const
-    {
-      return (v1.Vertex1 < v2.Vertex1) || (v1.Vertex1 == v2.Vertex1 && v1.Vertex2 < v2.Vertex2);
-    }
-  };
-
-  struct EqualToOp
-  {
-    VISKORES_EXEC
-    bool operator()(const EdgeInterpolation& v1, const EdgeInterpolation& v2) const
-    {
-      return v1.Vertex1 == v2.Vertex1 && v1.Vertex2 == v2.Vertex2;
-    }
-  };
-};
-
-namespace internal
-{
-
-template <typename T>
-VISKORES_EXEC_CONT T Scale(const T& val, viskores::Float64 scale)
-{
-  return static_cast<T>(scale * static_cast<viskores::Float64>(val));
-}
-
-template <typename T, viskores::IdComponent NumComponents>
-VISKORES_EXEC_CONT viskores::Vec<T, NumComponents> Scale(const viskores::Vec<T, NumComponents>& val,
-                                                         viskores::Float64 scale)
-{
-  return val * scale;
-}
-
-template <typename Device>
-class ExecutionConnectivityExplicit
-{
-private:
-  using UInt8Portal = typename viskores::cont::ArrayHandle<viskores::UInt8>::WritePortalType;
-  using IdComponentPortal =
-    typename viskores::cont::ArrayHandle<viskores::IdComponent>::WritePortalType;
-  using IdPortal = typename viskores::cont::ArrayHandle<viskores::Id>::WritePortalType;
-
-public:
-  VISKORES_CONT
-  ExecutionConnectivityExplicit() = default;
-
-  VISKORES_CONT
-  ExecutionConnectivityExplicit(viskores::cont::ArrayHandle<viskores::UInt8> shapes,
-                                viskores::cont::ArrayHandle<viskores::IdComponent> numberOfIndices,
-                                viskores::cont::ArrayHandle<viskores::Id> connectivity,
-                                viskores::cont::ArrayHandle<viskores::Id> offsets,
-                                ClipStats stats,
-                                viskores::cont::Token& token)
-    : Shapes(shapes.PrepareForOutput(stats.NumberOfCells, Device(), token))
-    , NumberOfIndices(numberOfIndices.PrepareForOutput(stats.NumberOfCells, Device(), token))
-    , Connectivity(connectivity.PrepareForOutput(stats.NumberOfIndices, Device(), token))
-    , Offsets(offsets.PrepareForOutput(stats.NumberOfCells, Device(), token))
-  {
-  }
-
-  VISKORES_EXEC
-  void SetCellShape(viskores::Id cellIndex, viskores::UInt8 shape)
-  {
-    this->Shapes.Set(cellIndex, shape);
-  }
-
-  VISKORES_EXEC
-  void SetNumberOfIndices(viskores::Id cellIndex, viskores::IdComponent numIndices)
-  {
-    this->NumberOfIndices.Set(cellIndex, numIndices);
-  }
-
-  VISKORES_EXEC
-  void SetIndexOffset(viskores::Id cellIndex, viskores::Id indexOffset)
-  {
-    this->Offsets.Set(cellIndex, indexOffset);
-  }
-
-  VISKORES_EXEC
-  void SetConnectivity(viskores::Id connectivityIndex, viskores::Id pointIndex)
-  {
-    this->Connectivity.Set(connectivityIndex, pointIndex);
-  }
-
-private:
-  UInt8Portal Shapes;
-  IdComponentPortal NumberOfIndices;
-  IdPortal Connectivity;
-  IdPortal Offsets;
-};
-
-class ConnectivityExplicit : viskores::cont::ExecutionObjectBase
-{
-public:
-  VISKORES_CONT
-  ConnectivityExplicit() = default;
-
-  VISKORES_CONT
-  ConnectivityExplicit(const viskores::cont::ArrayHandle<viskores::UInt8>& shapes,
-                       const viskores::cont::ArrayHandle<viskores::IdComponent>& numberOfIndices,
-                       const viskores::cont::ArrayHandle<viskores::Id>& connectivity,
-                       const viskores::cont::ArrayHandle<viskores::Id>& offsets,
-                       const ClipStats& stats)
-    : Shapes(shapes)
-    , NumberOfIndices(numberOfIndices)
-    , Connectivity(connectivity)
-    , Offsets(offsets)
-    , Stats(stats)
-  {
-  }
-
-  template <typename Device>
-  VISKORES_CONT ExecutionConnectivityExplicit<Device> PrepareForExecution(
-    Device,
-    viskores::cont::Token& token) const
-  {
-    ExecutionConnectivityExplicit<Device> execConnectivity(
-      this->Shapes, this->NumberOfIndices, this->Connectivity, this->Offsets, this->Stats, token);
-    return execConnectivity;
-  }
-
-private:
-  viskores::cont::ArrayHandle<viskores::UInt8> Shapes;
-  viskores::cont::ArrayHandle<viskores::IdComponent> NumberOfIndices;
-  viskores::cont::ArrayHandle<viskores::Id> Connectivity;
-  viskores::cont::ArrayHandle<viskores::Id> Offsets;
-  viskores::worklet::ClipStats Stats;
-};
-
-
-} // namespace internal
-
 class Clip
 {
-  // Add support for invert
 public:
-  using TypeClipStats = viskores::List<ClipStats>;
-
-  using TypeEdgeInterp = viskores::List<EdgeInterpolation>;
-
-  class ComputeStats : public viskores::worklet::WorkletVisitCellsWithPoints
+  using BatchesHandle = viskores::cont::ArrayHandleGroupVecVariable<
+    viskores::cont::ArrayHandleIndex,
+    viskores::cont::ArrayHandleConcatenate<viskores::cont::ArrayHandleCounting<viskores::Id>,
+                                           viskores::cont::ArrayHandleConstant<viskores::Id>>>;
+  static BatchesHandle CreateBatches(const viskores::Id& numberOfElements,
+                                     const viskores::Id& batchSize)
   {
-  public:
-    VISKORES_CONT
-    ComputeStats(viskores::Float64 value, bool invert)
-      : Value(value)
-      , Invert(invert)
-    {
-    }
-
-    using ControlSignature =
-      void(CellSetIn, FieldInPoint, ExecObject clippingData, FieldOutCell, FieldOutCell);
-
-    using ExecutionSignature = void(CellShape, PointCount, _2, _3, _4, _5);
-
-    using InputDomain = _1;
-
-    template <typename CellShapeTag, typename ScalarFieldVec, typename DeviceAdapter>
-    VISKORES_EXEC void operator()(
-      CellShapeTag shape,
-      viskores::IdComponent pointCount,
-      const ScalarFieldVec& scalars,
-      const internal::ClipTables::DevicePortal<DeviceAdapter>& clippingData,
-      ClipStats& clipStat,
-      viskores::Id& clipDataIndex) const
-    {
-      (void)shape; // C4100 false positive workaround
-      viskores::Id caseId = 0;
-      for (viskores::IdComponent iter = pointCount - 1; iter >= 0; iter--)
-      {
-        if (!this->Invert && static_cast<viskores::Float64>(scalars[iter]) <= this->Value)
-        {
-          caseId++;
-        }
-        else if (this->Invert && static_cast<viskores::Float64>(scalars[iter]) >= this->Value)
-        {
-          caseId++;
-        }
-        if (iter > 0)
-          caseId *= 2;
-      }
-      viskores::Id index = clippingData.GetCaseIndex(shape.Id, caseId);
-      clipDataIndex = index;
-      viskores::Id numberOfCells = clippingData.ValueAt(index++);
-      clipStat.NumberOfCells = numberOfCells;
-      for (viskores::IdComponent shapes = 0; shapes < numberOfCells; shapes++)
-      {
-        viskores::Id cellShape = clippingData.ValueAt(index++);
-        viskores::Id numberOfIndices = clippingData.ValueAt(index++);
-        if (cellShape == 0)
-        {
-          --clipStat.NumberOfCells;
-          // Shape is 0, which is a case of interpolating new point within a cell
-          // Gather stats for later operation.
-          clipStat.NumberOfInCellPoints = 1;
-          clipStat.NumberOfInCellInterpPoints = numberOfIndices;
-          for (viskores::IdComponent points = 0; points < numberOfIndices; points++, index++)
-          {
-            //Find how many points need to be calculated using edge interpolation.
-            viskores::Id element = clippingData.ValueAt(index);
-            clipStat.NumberOfInCellEdgeIndices += (element < 100) ? 1 : 0;
-          }
-        }
-        else
-        {
-          // Collect number of indices required for storing current shape
-          clipStat.NumberOfIndices += numberOfIndices;
-          // Collect number of new points
-          for (viskores::IdComponent points = 0; points < numberOfIndices; points++, index++)
-          {
-            //Find how many points need to found using edge interpolation.
-            viskores::Id element = clippingData.ValueAt(index);
-            if (element == 255)
-            {
-              clipStat.NumberOfInCellIndices++;
-            }
-            else if (element < 100)
-            {
-              clipStat.NumberOfEdgeIndices++;
-            }
-          }
-        }
-      }
-    }
-
-  private:
-    viskores::Float64 Value;
-    bool Invert;
-  };
-
-  class GenerateCellSet : public viskores::worklet::WorkletVisitCellsWithPoints
-  {
-  public:
-    VISKORES_CONT
-    GenerateCellSet(viskores::Float64 value)
-      : Value(value)
-    {
-    }
-
-    using ControlSignature = void(CellSetIn,
-                                  FieldInPoint,
-                                  FieldInCell clipTableIndices,
-                                  FieldInCell clipStats,
-                                  ExecObject clipTables,
-                                  ExecObject connectivityObject,
-                                  WholeArrayOut pointsOnlyConnectivityIndices,
-                                  WholeArrayOut edgePointReverseConnectivity,
-                                  WholeArrayOut edgePointInterpolation,
-                                  WholeArrayOut inCellReverseConnectivity,
-                                  WholeArrayOut inCellEdgeReverseConnectivity,
-                                  WholeArrayOut inCellEdgeInterpolation,
-                                  WholeArrayOut inCellInterpolationKeys,
-                                  WholeArrayOut inCellInterpolationInfo,
-                                  WholeArrayOut cellMapOutputToInput);
-
-    using ExecutionSignature = void(CellShape,
-                                    WorkIndex,
-                                    PointIndices,
-                                    _2,
-                                    _3,
-                                    _4,
-                                    _5,
-                                    _6,
-                                    _7,
-                                    _8,
-                                    _9,
-                                    _10,
-                                    _11,
-                                    _12,
-                                    _13,
-                                    _14,
-                                    _15);
-
-    template <typename CellShapeTag,
-              typename PointVecType,
-              typename ScalarVecType,
-              typename ConnectivityObject,
-              typename IdArrayType,
-              typename EdgeInterpolationPortalType,
-              typename DeviceAdapter>
-    VISKORES_EXEC void operator()(
-      CellShapeTag shape,
-      viskores::Id workIndex,
-      const PointVecType& points,
-      const ScalarVecType& scalars,
-      viskores::Id clipDataIndex,
-      const ClipStats& clipStats,
-      const internal::ClipTables::DevicePortal<DeviceAdapter>& clippingData,
-      ConnectivityObject& connectivityObject,
-      IdArrayType& pointsOnlyConnectivityIndices,
-      IdArrayType& edgePointReverseConnectivity,
-      EdgeInterpolationPortalType& edgePointInterpolation,
-      IdArrayType& inCellReverseConnectivity,
-      IdArrayType& inCellEdgeReverseConnectivity,
-      EdgeInterpolationPortalType& inCellEdgeInterpolation,
-      IdArrayType& inCellInterpolationKeys,
-      IdArrayType& inCellInterpolationInfo,
-      IdArrayType& cellMapOutputToInput) const
-    {
-      (void)shape;
-      viskores::Id clipIndex = clipDataIndex;
-      // Start index for the cells of this case.
-      viskores::Id cellIndex = clipStats.NumberOfCells;
-      // Start index to store connevtivity of this case.
-      viskores::Id connectivityIndex = clipStats.NumberOfIndices;
-      // Start indices for reverse mapping into connectivity for this case.
-      viskores::Id edgeIndex = clipStats.NumberOfEdgeIndices;
-      viskores::Id inCellIndex = clipStats.NumberOfInCellIndices;
-      viskores::Id inCellPoints = clipStats.NumberOfInCellPoints;
-      // Start Indices to keep track of interpolation points for new cell.
-      viskores::Id inCellInterpPointIndex = clipStats.NumberOfInCellInterpPoints;
-      viskores::Id inCellEdgeInterpIndex = clipStats.NumberOfInCellEdgeIndices;
-      // Start index of connectivityPointsOnly
-      viskores::Id pointsOnlyConnectivityIndicesIndex = connectivityIndex - edgeIndex - inCellIndex;
-
-      // Iterate over the shapes for the current cell and begin to fill connectivity.
-      viskores::Id numberOfCells = clippingData.ValueAt(clipIndex++);
-      for (viskores::Id cell = 0; cell < numberOfCells; ++cell)
-      {
-        viskores::UInt8 cellShape = clippingData.ValueAt(clipIndex++);
-        viskores::IdComponent numberOfPoints = clippingData.ValueAt(clipIndex++);
-        if (cellShape == 0)
-        {
-          // Case for a new cell point.
-
-          // 1. Output the input cell id for which we need to generate new point.
-          // 2. Output number of points used for interpolation.
-          // 3. If vertex
-          //    - Add vertex to connectivity interpolation information.
-          // 4. If edge
-          //    - Add edge interpolation information for new points.
-          //    - Reverse connectivity map for new points.
-          // Make an array which has all the elements that need to be used
-          // for interpolation.
-          for (viskores::IdComponent point = 0; point < numberOfPoints;
-               point++, inCellInterpPointIndex++, clipIndex++)
-          {
-            viskores::IdComponent entry =
-              static_cast<viskores::IdComponent>(clippingData.ValueAt(clipIndex));
-            inCellInterpolationKeys.Set(inCellInterpPointIndex, workIndex);
-            if (entry >= 100)
-            {
-              inCellInterpolationInfo.Set(inCellInterpPointIndex, points[entry - 100]);
-            }
-            else
-            {
-              internal::ClipTables::EdgeVec edge = clippingData.GetEdge(shape.Id, entry);
-              VISKORES_ASSERT(edge[0] != 255);
-              VISKORES_ASSERT(edge[1] != 255);
-              EdgeInterpolation ei;
-              ei.Vertex1 = points[edge[0]];
-              ei.Vertex2 = points[edge[1]];
-              // For consistency purposes keep the points ordered.
-              if (ei.Vertex1 > ei.Vertex2)
-              {
-                this->swap(ei.Vertex1, ei.Vertex2);
-                this->swap(edge[0], edge[1]);
-              }
-              ei.Weight = (static_cast<viskores::Float64>(scalars[edge[0]]) - this->Value) /
-                static_cast<viskores::Float64>(scalars[edge[1]] - scalars[edge[0]]);
-
-              inCellEdgeReverseConnectivity.Set(inCellEdgeInterpIndex, inCellInterpPointIndex);
-              inCellEdgeInterpolation.Set(inCellEdgeInterpIndex, ei);
-              inCellEdgeInterpIndex++;
-            }
-          }
-        }
-        else
-        {
-          // Just a normal cell, generate edge representations,
-
-          // 1. Add cell type to connectivity information.
-          // 2. If vertex
-          //    - Add vertex to connectivity information.
-          // 3. If edge point
-          //    - Add edge to edge points
-          //    - Add edge point index to edge point reverse connectivity.
-          // 4. If cell point
-          //    - Add cell point index to connectivity
-          //      (as there is only one cell point per required cell)
-          // 5. Store input cell index against current cell for mapping cell data.
-          connectivityObject.SetCellShape(cellIndex, cellShape);
-          connectivityObject.SetNumberOfIndices(cellIndex, numberOfPoints);
-          connectivityObject.SetIndexOffset(cellIndex, connectivityIndex);
-          for (viskores::IdComponent point = 0; point < numberOfPoints; point++, clipIndex++)
-          {
-            viskores::IdComponent entry =
-              static_cast<viskores::IdComponent>(clippingData.ValueAt(clipIndex));
-            if (entry == 255) // case of cell point interpolation
-            {
-              // Add index of the corresponding cell point.
-              inCellReverseConnectivity.Set(inCellIndex++, connectivityIndex);
-              connectivityObject.SetConnectivity(connectivityIndex, inCellPoints);
-              connectivityIndex++;
-            }
-            else if (entry >= 100) // existing vertex
-            {
-              pointsOnlyConnectivityIndices.Set(pointsOnlyConnectivityIndicesIndex++,
-                                                connectivityIndex);
-              connectivityObject.SetConnectivity(connectivityIndex++, points[entry - 100]);
-            }
-            else // case of a new edge point
-            {
-              internal::ClipTables::EdgeVec edge = clippingData.GetEdge(shape.Id, entry);
-              VISKORES_ASSERT(edge[0] != 255);
-              VISKORES_ASSERT(edge[1] != 255);
-              EdgeInterpolation ei;
-              ei.Vertex1 = points[edge[0]];
-              ei.Vertex2 = points[edge[1]];
-              // For consistency purposes keep the points ordered.
-              if (ei.Vertex1 > ei.Vertex2)
-              {
-                this->swap(ei.Vertex1, ei.Vertex2);
-                this->swap(edge[0], edge[1]);
-              }
-              ei.Weight = (static_cast<viskores::Float64>(scalars[edge[0]]) - this->Value) /
-                static_cast<viskores::Float64>(scalars[edge[1]] - scalars[edge[0]]);
-              //Add to set of new edge points
-              //Add reverse connectivity;
-              edgePointReverseConnectivity.Set(edgeIndex, connectivityIndex++);
-              edgePointInterpolation.Set(edgeIndex, ei);
-              edgeIndex++;
-            }
-          }
-          cellMapOutputToInput.Set(cellIndex, workIndex);
-          ++cellIndex;
-        }
-      }
-    }
-
-    template <typename T>
-    VISKORES_EXEC void swap(T& v1, T& v2) const
-    {
-      T temp = v1;
-      v1 = v2;
-      v2 = temp;
-    }
-
-  private:
-    viskores::Float64 Value;
-  };
-
-  class ScatterEdgeConnectivity : public viskores::worklet::WorkletMapField
-  {
-  public:
-    VISKORES_CONT
-    ScatterEdgeConnectivity(viskores::Id edgePointOffset)
-      : EdgePointOffset(edgePointOffset)
-    {
-    }
-
-    using ControlSignature = void(FieldIn sourceValue,
-                                  FieldIn destinationIndices,
-                                  WholeArrayOut destinationData);
-
-    using ExecutionSignature = void(_1, _2, _3);
-
-    using InputDomain = _1;
-
-    template <typename ConnectivityDataType>
-    VISKORES_EXEC void operator()(viskores::Id sourceValue,
-                                  viskores::Id destinationIndex,
-                                  ConnectivityDataType& destinationData) const
-    {
-      destinationData.Set(destinationIndex, (sourceValue + EdgePointOffset));
-    }
-
-  private:
-    viskores::Id EdgePointOffset;
-  };
-
-  class ScatterInCellConnectivity : public viskores::worklet::WorkletMapField
-  {
-  public:
-    VISKORES_CONT
-    ScatterInCellConnectivity(viskores::Id inCellPointOffset)
-      : InCellPointOffset(inCellPointOffset)
-    {
-    }
-
-    using ControlSignature = void(FieldIn destinationIndices, WholeArrayOut destinationData);
-
-    using ExecutionSignature = void(_1, _2);
-
-    using InputDomain = _1;
-
-    template <typename ConnectivityDataType>
-    VISKORES_EXEC void operator()(viskores::Id destinationIndex,
-                                  ConnectivityDataType& destinationData) const
-    {
-      auto sourceValue = destinationData.Get(destinationIndex);
-      destinationData.Set(destinationIndex, (sourceValue + InCellPointOffset));
-    }
-
-  private:
-    viskores::Id InCellPointOffset;
-  };
-
-  Clip()
-    : ClipTablesInstance()
-    , EdgePointsInterpolation()
-    , InCellInterpolationKeys()
-    , InCellInterpolationInfo()
-    , CellMapOutputToInput()
-    , EdgePointsOffset()
-    , InCellPointsOffset()
-  {
+    const viskores::Id numberOfBatches = ((numberOfElements - 1) / batchSize) + 1;
+    // create the offsets array
+    const viskores::cont::ArrayHandleCounting<viskores::Id> offsetsExceptLast(
+      0, batchSize, numberOfBatches);
+    const viskores::cont::ArrayHandleConstant<viskores::Id> lastOffset(numberOfElements, 1);
+    const auto offsets = viskores::cont::make_ArrayHandleConcatenate(offsetsExceptLast, lastOffset);
+    // create the indices array
+    const auto indices = viskores::cont::ArrayHandleIndex(numberOfElements);
+    return viskores::cont::make_ArrayHandleGroupVecVariable(indices, offsets);
   }
 
-  template <typename CellSetType, typename ScalarsArrayHandle>
-  viskores::cont::CellSetExplicit<> Run(const CellSetType& cellSet,
-                                        const ScalarsArrayHandle& scalars,
-                                        viskores::Float64 value,
-                                        bool invert)
+  static BatchesHandle CreateBatches(const viskores::Id& numberOfElements)
   {
-    viskores::cont::Invoker invoke;
-
-    // Create the required output fields.
-    viskores::cont::ArrayHandle<ClipStats> clipStats;
-    viskores::cont::ArrayHandle<viskores::Id> clipTableIndices;
-
-    //Send this CellSet to process
-    ComputeStats statsWorklet(value, invert);
-    invoke(statsWorklet, cellSet, scalars, this->ClipTablesInstance, clipStats, clipTableIndices);
-
-    ClipStats zero;
-    viskores::cont::ArrayHandle<ClipStats> cellSetStats;
-    ClipStats total =
-      viskores::cont::Algorithm::ScanExclusive(clipStats, cellSetStats, ClipStats::SumOp(), zero);
-    clipStats.ReleaseResources();
-
-    viskores::cont::ArrayHandle<viskores::UInt8> shapes;
-    viskores::cont::ArrayHandle<viskores::IdComponent> numberOfIndices;
-    viskores::cont::ArrayHandle<viskores::Id> connectivity;
-    viskores::cont::ArrayHandle<viskores::Id> offsets;
-    internal::ConnectivityExplicit connectivityObject(
-      shapes, numberOfIndices, connectivity, offsets, total);
-
-    //Begin Process of Constructing the new CellSet.
-    viskores::cont::ArrayHandle<viskores::Id> pointsOnlyConnectivityIndices;
-    pointsOnlyConnectivityIndices.Allocate(total.NumberOfIndices - total.NumberOfEdgeIndices -
-                                           total.NumberOfInCellIndices);
-
-    viskores::cont::ArrayHandle<viskores::Id> edgePointReverseConnectivity;
-    edgePointReverseConnectivity.Allocate(total.NumberOfEdgeIndices);
-    viskores::cont::ArrayHandle<EdgeInterpolation> edgeInterpolation;
-    edgeInterpolation.Allocate(total.NumberOfEdgeIndices);
-
-    viskores::cont::ArrayHandle<viskores::Id> cellPointReverseConnectivity;
-    cellPointReverseConnectivity.Allocate(total.NumberOfInCellIndices);
-    viskores::cont::ArrayHandle<viskores::Id> cellPointEdgeReverseConnectivity;
-    cellPointEdgeReverseConnectivity.Allocate(total.NumberOfInCellEdgeIndices);
-    viskores::cont::ArrayHandle<EdgeInterpolation> cellPointEdgeInterpolation;
-    cellPointEdgeInterpolation.Allocate(total.NumberOfInCellEdgeIndices);
-
-    this->InCellInterpolationKeys.Allocate(total.NumberOfInCellInterpPoints);
-    this->InCellInterpolationInfo.Allocate(total.NumberOfInCellInterpPoints);
-    this->CellMapOutputToInput.Allocate(total.NumberOfCells);
-
-    //Send this CellSet to process
-    GenerateCellSet cellSetWorklet(value);
-    invoke(cellSetWorklet,
-           cellSet,
-           scalars,
-           clipTableIndices,
-           cellSetStats,
-           this->ClipTablesInstance,
-           connectivityObject,
-           pointsOnlyConnectivityIndices,
-           edgePointReverseConnectivity,
-           edgeInterpolation,
-           cellPointReverseConnectivity,
-           cellPointEdgeReverseConnectivity,
-           cellPointEdgeInterpolation,
-           this->InCellInterpolationKeys,
-           this->InCellInterpolationInfo,
-           this->CellMapOutputToInput);
-    this->InterpolationKeysBuilt = false;
-
-    clipTableIndices.ReleaseResources();
-    cellSetStats.ReleaseResources();
-
-    // extract only the used points from the input
+    auto& tracker = viskores::cont::GetRuntimeDeviceTracker();
+    if (tracker.CanRunOn(viskores::cont::DeviceAdapterTagCuda{}) ||
+        tracker.CanRunOn(viskores::cont::DeviceAdapterTagKokkos{}))
     {
-      viskores::cont::ArrayHandle<viskores::IdComponent> pointMask;
-      pointMask.AllocateAndFill(scalars.GetNumberOfValues(), 0);
+      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                     "Creating batches with batch size 6 for GPUs.");
+      return CreateBatches(numberOfElements, 6);
+    }
+    else
+    {
+      const viskores::Int32 batchSize = viskores::Min(
+        1000, viskores::Max(1, static_cast<viskores::Int32>(numberOfElements / 250000)));
+      VISKORES_LOG_F(
+        viskores::cont::LogLevel::Info, "Creating batches with batch size %d for CPUs.", batchSize);
+      return CreateBatches(numberOfElements, batchSize);
+    }
+  }
 
-      auto pointsOnlyConnectivity =
-        viskores::cont::make_ArrayHandlePermutation(pointsOnlyConnectivityIndices, connectivity);
+  struct PointBatchData
+  {
+    viskores::Id NumberOfKeptPoints = 0;
 
-      invoke(viskores::worklet::RemoveUnusedPoints::GeneratePointMask{},
-             pointsOnlyConnectivity,
-             pointMask);
+    struct SumOp
+    {
+      VISKORES_EXEC_CONT
+      PointBatchData operator()(const PointBatchData& stat1, const PointBatchData& stat2) const
+      {
+        PointBatchData sum = stat1;
+        sum.NumberOfKeptPoints += stat2.NumberOfKeptPoints;
+        return sum;
+      }
+    };
+  };
 
-      viskores::worklet::ScatterCounting scatter(pointMask, true);
-      auto pointMapInputToOutput = scatter.GetInputToOutputMap();
-      this->PointMapOutputToInput = scatter.GetOutputToInputMap();
-      pointMask.ReleaseResources();
+  struct CellBatchData
+  {
+    viskores::Id NumberOfCells = 0;
+    viskores::Id NumberOfCellIndices = 0;
+    viskores::Id NumberOfEdges = 0;
+    viskores::Id NumberOfCentroids = 0;
+    viskores::Id NumberOfCentroidIndices = 0;
 
-      invoke(viskores::worklet::RemoveUnusedPoints::TransformPointIndices{},
-             pointsOnlyConnectivity,
-             pointMapInputToOutput,
-             pointsOnlyConnectivity);
+    struct SumOp
+    {
+      VISKORES_EXEC_CONT
+      CellBatchData operator()(const CellBatchData& stat1, const CellBatchData& stat2) const
+      {
+        CellBatchData sum = stat1;
+        sum.NumberOfCells += stat2.NumberOfCells;
+        sum.NumberOfCellIndices += stat2.NumberOfCellIndices;
+        sum.NumberOfEdges += stat2.NumberOfEdges;
+        sum.NumberOfCentroids += stat2.NumberOfCentroids;
+        sum.NumberOfCentroidIndices += stat2.NumberOfCentroidIndices;
+        return sum;
+      }
+    };
+  };
 
-      pointsOnlyConnectivityIndices.ReleaseResources();
+  struct EdgeInterpolation
+  {
+    viskores::Id Vertex1 = -1;
+    viskores::Id Vertex2 = -1;
+    viskores::Float64 Weight = 0;
 
-      // We want to find the entries in `InCellInterpolationInfo` that point to exisiting points.
-      // `cellPointEdgeReverseConnectivity` map to entries that point to edges.
-      viskores::cont::ArrayHandle<viskores::UInt8> stencil;
-      stencil.AllocateAndFill(this->InCellInterpolationInfo.GetNumberOfValues(), 1);
-      auto edgeOnlyStencilEntries =
-        viskores::cont::make_ArrayHandlePermutation(cellPointEdgeReverseConnectivity, stencil);
-      viskores::cont::Algorithm::Fill(edgeOnlyStencilEntries, viskores::UInt8{});
-      viskores::cont::ArrayHandle<viskores::Id> idxsToPoints;
-      viskores::cont::Algorithm::CopyIf(
-        viskores::cont::ArrayHandleIndex(this->InCellInterpolationInfo.GetNumberOfValues()),
-        stencil,
-        idxsToPoints);
-      stencil.ReleaseResources();
+    struct LessThanOp
+    {
+      VISKORES_EXEC
+      bool operator()(const EdgeInterpolation& v1, const EdgeInterpolation& v2) const
+      {
+        return (v1.Vertex1 < v2.Vertex1) || (v1.Vertex1 == v2.Vertex1 && v1.Vertex2 < v2.Vertex2);
+      }
+    };
 
-      // Remap the point indices in `InCellInterpolationInfo`, to the used-only point indices
-      // computed above.
-      // This only works if the points needed for interpolating centroids are included in the
-      // `connectivity` array. This has been verified to be true for all cases in the clip tables.
-      auto inCellInterpolationInfoPointsOnly =
-        viskores::cont::make_ArrayHandlePermutation(idxsToPoints, this->InCellInterpolationInfo);
-      invoke(viskores::worklet::RemoveUnusedPoints::TransformPointIndices{},
-             inCellInterpolationInfoPointsOnly,
-             pointMapInputToOutput,
-             inCellInterpolationInfoPointsOnly);
+    struct EqualToOp
+    {
+      VISKORES_EXEC
+      bool operator()(const EdgeInterpolation& v1, const EdgeInterpolation& v2) const
+      {
+        return v1.Vertex1 == v2.Vertex1 && v1.Vertex2 == v2.Vertex2;
+      }
+    };
+  };
+
+  /**
+   * This worklet identifies the input points that are kept, i.e. are inside the implicit function.
+   */
+  template <bool Invert>
+  class MarkKeptPoints : public viskores::worklet::WorkletMapField
+  {
+  public:
+    using ControlSignature = void(FieldIn pointBatch,
+                                  FieldOut pointBatchData,
+                                  FieldOut batchWithKeptPointsMask,
+                                  WholeArrayIn scalars,
+                                  WholeArrayOut keptPointsMask);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5);
+
+    VISKORES_CONT
+    explicit MarkKeptPoints(viskores::Float64 isoValue)
+      : IsoValue(isoValue)
+    {
     }
 
-    // Get unique EdgeInterpolation : unique edge points.
-    // LowerBound for edgeInterpolation : get index into new edge points array.
-    // LowerBound for cellPointEdgeInterpolation : get index into new edge points array.
-    viskores::cont::Algorithm::SortByKey(
-      edgeInterpolation, edgePointReverseConnectivity, EdgeInterpolation::LessThanOp());
+    template <typename BatchType, typename PointScalars, typename KeptPointsMask>
+    VISKORES_EXEC void operator()(const BatchType& pointBatch,
+                                  PointBatchData& pointBatchData,
+                                  viskores::UInt8& batchWithKeptPointsMask,
+                                  const PointScalars& scalars,
+                                  KeptPointsMask& keptPointsMask) const
+    {
+      for (viskores::IdComponent id = 0, size = pointBatch.GetNumberOfComponents(); id < size; ++id)
+      {
+        const viskores::Id& pointId = pointBatch[id];
+        const auto scalar = scalars.Get(pointId);
+        const viskores::UInt8 kept = Invert ? scalar < this->IsoValue : scalar >= this->IsoValue;
+        keptPointsMask.Set(pointId, kept);
+        pointBatchData.NumberOfKeptPoints += kept;
+      }
+      batchWithKeptPointsMask = pointBatchData.NumberOfKeptPoints > 0;
+    }
+
+  private:
+    viskores::Float64 IsoValue;
+  };
+
+  class ComputePointMaps : public viskores::worklet::WorkletMapField
+  {
+  public:
+    using ControlSignature = void(FieldIn pointBatch,
+                                  FieldIn pointBatchDataOffsets,
+                                  WholeArrayIn keptPointsMask,
+                                  WholeArrayOut pointsInputToOutput,
+                                  WholeArrayOut pointsOutputToInput);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5);
+
+    using MaskType = viskores::worklet::MaskSelect;
+
+    template <typename BatchType,
+              typename KeptPointsMask,
+              typename PointsInputToOutput,
+              typename PointsOutputToInput>
+    VISKORES_EXEC void operator()(const BatchType& pointBatch,
+                                  const PointBatchData& pointBatchDataOffsets,
+                                  const KeptPointsMask& keptPointsMask,
+                                  PointsInputToOutput& pointsInputToOutput,
+                                  PointsOutputToInput& pointsOutputToInput) const
+    {
+      viskores::Id pointOffset = pointBatchDataOffsets.NumberOfKeptPoints;
+      for (viskores::IdComponent id = 0, size = pointBatch.GetNumberOfComponents(); id < size; ++id)
+      {
+        const viskores::Id& pointId = pointBatch[id];
+        if (keptPointsMask.Get(pointId))
+        {
+          pointsInputToOutput.Set(pointId, pointOffset);
+          pointsOutputToInput.Set(pointOffset, pointId);
+          pointOffset++;
+        }
+      }
+    }
+  };
+
+  template <bool Invert>
+  class ComputeCellStats : public viskores::worklet::WorkletMapField
+  {
+  public:
+    using ControlSignature = void(FieldIn cellBatch,
+                                  FieldOut cellBatchData,
+                                  FieldOut batchWithClippedCellsMask,
+                                  FieldOut batchWithKeptOrClippedCellsMask,
+                                  WholeCellSetIn<> cellSet,
+                                  WholeArrayIn keptPointsMask,
+                                  WholeArrayOut caseIndices);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
+
+    using CT = internal::ClipTables<Invert>;
+
+    template <typename BatchType,
+              typename CellSetType,
+              typename KeptPointsMask,
+              typename CaseIndices>
+    VISKORES_EXEC void operator()(const BatchType& cellBatch,
+                                  CellBatchData& cellBatchData,
+                                  viskores::UInt8& batchWithClippedCellsMask,
+                                  viskores::UInt8& batchWithKeptOrClippedCellsMask,
+                                  const CellSetType& cellSet,
+                                  const KeptPointsMask& keptPointsMask,
+                                  CaseIndices& caseIndices) const
+    {
+      namespace CTI = viskores::worklet::internal::ClipTablesInformation;
+      for (viskores::IdComponent id = 0, size = cellBatch.GetNumberOfComponents(); id < size; ++id)
+      {
+        const viskores::Id& cellId = cellBatch[id];
+        const auto shape = cellSet.GetCellShape(cellId);
+        const auto points = cellSet.GetIndices(cellId);
+        const viskores::IdComponent pointCount = points.GetNumberOfComponents();
+
+        // compute case index
+        viskores::UInt8 caseIndex = 0;
+        for (viskores::IdComponent ptId = pointCount - 1; ptId >= 0; --ptId)
+        {
+          static constexpr auto InvertUint8 = static_cast<viskores::UInt8>(Invert);
+          caseIndex |= (InvertUint8 != keptPointsMask.Get(points[ptId])) << ptId;
+        }
+
+        if (CT::IsCellDiscarded(pointCount, caseIndex)) // discarded cell
+        {
+          // we do that to determine if a cell is discarded using only the caseIndex
+          caseIndices.Set(cellId, CT::GetDiscardedCellCase());
+        }
+        else if (CT::IsCellKept(pointCount, caseIndex)) // kept cell
+        {
+          // we do that to determine if a cell is kept using only the caseIndex
+          caseIndices.Set(cellId, CT::GetKeptCellCase());
+          cellBatchData.NumberOfCells += 1;
+          cellBatchData.NumberOfCellIndices += pointCount;
+        }
+        else // clipped cell
+        {
+          caseIndices.Set(cellId, caseIndex);
+
+          viskores::Id index = CT::GetCaseIndex(shape.Id, caseIndex);
+          const viskores::UInt8 numberOfShapes = CT::ValueAt(index++);
+
+          cellBatchData.NumberOfCells += numberOfShapes;
+          for (viskores::IdComponent shapeId = 0; shapeId < numberOfShapes; ++shapeId)
+          {
+            const viskores::UInt8 cellShape = CT::ValueAt(index++);
+            const viskores::UInt8 numberOfCellIndices = CT::ValueAt(index++);
+
+            for (viskores::IdComponent pointId = 0; pointId < numberOfCellIndices;
+                 pointId++, index++)
+            {
+              // Find how many points need to be calculated using edge interpolation.
+              const viskores::UInt8 pointIndex = CT::ValueAt(index);
+              cellBatchData.NumberOfEdges += (pointIndex >= CTI::E00 && pointIndex <= CTI::E11);
+            }
+            if (cellShape != CTI::ST_PNT) // normal cell
+            {
+              // Collect number of indices required for storing current shape
+              cellBatchData.NumberOfCellIndices += numberOfCellIndices;
+            }
+            else // cellShape == CTI::ST_PNT
+            {
+              --cellBatchData.NumberOfCells; // decrement since this is a centroid shape
+              cellBatchData.NumberOfCentroids++;
+              cellBatchData.NumberOfCentroidIndices += numberOfCellIndices;
+            }
+          }
+        }
+      }
+      batchWithClippedCellsMask = cellBatchData.NumberOfCells > 0 &&
+        (cellBatchData.NumberOfEdges > 0 || cellBatchData.NumberOfCentroids > 0);
+      batchWithKeptOrClippedCellsMask = cellBatchData.NumberOfCells > 0;
+    }
+  };
+
+  template <bool Invert>
+  class ExtractEdges : public viskores::worklet::WorkletMapField
+  {
+  public:
+    VISKORES_CONT
+    explicit ExtractEdges(viskores::Float64 isoValue)
+      : IsoValue(isoValue)
+    {
+    }
+
+    using ControlSignature = void(FieldIn cellBatch,
+                                  FieldIn cellBatchDataOffsets,
+                                  WholeCellSetIn<> cellSet,
+                                  WholeArrayIn scalars,
+                                  WholeArrayIn caseIndices,
+                                  WholeArrayOut edges);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
+
+    using MaskType = viskores::worklet::MaskSelect;
+
+    using CT = internal::ClipTables<Invert>;
+
+    template <typename BatchType,
+              typename CellSetType,
+              typename PointScalars,
+              typename CaseIndices,
+              typename EdgesArray>
+    VISKORES_EXEC void operator()(const BatchType& cellBatch,
+                                  const CellBatchData& cellBatchDataOffsets,
+                                  const CellSetType& cellSet,
+                                  const PointScalars& scalars,
+                                  const CaseIndices& caseIndices,
+                                  EdgesArray& edges) const
+    {
+      namespace CTI = viskores::worklet::internal::ClipTablesInformation;
+      viskores::Id edgeOffset = cellBatchDataOffsets.NumberOfEdges;
+
+      for (viskores::IdComponent id = 0, size = cellBatch.GetNumberOfComponents(); id < size; ++id)
+      {
+        const viskores::Id& cellId = cellBatch[id];
+        const viskores::UInt8 caseIndex = caseIndices.Get(cellId);
+
+        if (caseIndex != CT::GetDiscardedCellCase() &&
+            caseIndex != CT::GetKeptCellCase()) // clipped cell
+        {
+          const auto shape = cellSet.GetCellShape(cellId);
+          const auto points = cellSet.GetIndices(cellId);
+
+          // only clipped cells have edges
+          viskores::Id index = CT::GetCaseIndex(shape.Id, caseIndex);
+          const viskores::UInt8 numberOfShapes = CT::ValueAt(index++);
+
+          for (viskores::IdComponent shapeId = 0; shapeId < numberOfShapes; shapeId++)
+          {
+            /*viskores::UInt8 cellShape = */ CT::ValueAt(index++);
+            const viskores::UInt8 numberOfCellIndices = CT::ValueAt(index++);
+
+            for (viskores::IdComponent pointId = 0; pointId < numberOfCellIndices;
+                 pointId++, index++)
+            {
+              // Find how many points need to be calculated using edge interpolation.
+              const viskores::UInt8 pointIndex = CT::ValueAt(index);
+              if (pointIndex >= CTI::E00 && pointIndex <= CTI::E11)
+              {
+                typename CT::EdgeVec edge = CT::GetEdge(shape.Id, pointIndex - CTI::E00);
+                EdgeInterpolation ei;
+                ei.Vertex1 = points[edge[0]];
+                ei.Vertex2 = points[edge[1]];
+                // For consistency purposes keep the points ordered.
+                if (ei.Vertex1 > ei.Vertex2)
+                {
+                  viskores::Swap(ei.Vertex1, ei.Vertex2);
+                }
+                ei.Weight =
+                  (static_cast<viskores::Float64>(scalars.Get(ei.Vertex1)) - this->IsoValue) /
+                  static_cast<viskores::Float64>(scalars.Get(ei.Vertex2) - scalars.Get(ei.Vertex1));
+                // Add edge to the list of edges.
+                edges.Set(edgeOffset++, ei);
+              }
+            }
+          }
+        }
+      }
+    }
+
+  private:
+    viskores::Float64 IsoValue;
+  };
+
+  template <bool Invert>
+  class GenerateCellSet : public viskores::worklet::WorkletMapField
+  {
+  public:
+    VISKORES_CONT
+    GenerateCellSet(viskores::Id edgePointsOffset, viskores::Id centroidPointsOffset)
+      : EdgePointsOffset(edgePointsOffset)
+      , CentroidPointsOffset(centroidPointsOffset)
+    {
+    }
+
+    using ControlSignature = void(FieldIn cellBatch,
+                                  FieldIn cellBatchDataOffsets,
+                                  WholeCellSetIn<> cellSet,
+                                  WholeArrayIn caseIndices,
+                                  WholeArrayIn pointMapOutputToInput,
+                                  WholeArrayIn edgeIndexToUnique,
+                                  WholeArrayOut centroidOffsets,
+                                  WholeArrayOut centroidConnectivity,
+                                  WholeArrayOut cellMapOutputToInput,
+                                  WholeArrayOut shapes,
+                                  WholeArrayOut offsets,
+                                  WholeArrayOut connectivity);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12);
+
+    using MaskType = viskores::worklet::MaskSelect;
+
+    using CT = internal::ClipTables<Invert>;
+
+    template <typename BatchType,
+              typename CellSetType,
+              typename CaseIndices,
+              typename PointMapInputToOutput,
+              typename EdgeIndexToUnique,
+              typename CentroidOffsets,
+              typename CentroidConnectivity,
+              typename CellMapOutputToInput,
+              typename Shapes,
+              typename Offsets,
+              typename Connectivity>
+    VISKORES_EXEC void operator()(const BatchType& cellBatch,
+                                  const CellBatchData& cellBatchDataOffsets,
+                                  const CellSetType& cellSet,
+                                  const CaseIndices& caseIndices,
+                                  const PointMapInputToOutput pointMapInputToOutput,
+                                  const EdgeIndexToUnique& edgeIndexToUnique,
+                                  CentroidOffsets& centroidOffsets,
+                                  CentroidConnectivity& centroidConnectivity,
+                                  CellMapOutputToInput& cellMapOutputToInput,
+                                  Shapes& shapes,
+                                  Offsets& offsets,
+                                  Connectivity& connectivity) const
+    {
+      namespace CTI = viskores::worklet::internal::ClipTablesInformation;
+      viskores::Id cellsOffset = cellBatchDataOffsets.NumberOfCells;
+      viskores::Id cellIndicesOffset = cellBatchDataOffsets.NumberOfCellIndices;
+      viskores::Id edgeOffset = cellBatchDataOffsets.NumberOfEdges;
+      viskores::Id centroidOffset = cellBatchDataOffsets.NumberOfCentroids;
+      viskores::Id centroidIndicesOffset = cellBatchDataOffsets.NumberOfCentroidIndices;
+
+      for (viskores::IdComponent id = 0, size = cellBatch.GetNumberOfComponents(); id < size; ++id)
+      {
+        const viskores::Id& cellId = cellBatch[id];
+        const viskores::UInt8 caseIndex = caseIndices.Get(cellId);
+        if (caseIndex != CT::GetDiscardedCellCase()) // not discarded cell
+        {
+          const auto shape = cellSet.GetCellShape(cellId);
+          const auto points = cellSet.GetIndices(cellId);
+          if (caseIndex == CT::GetKeptCellCase()) // kept cell
+          {
+            cellMapOutputToInput.Set(cellsOffset, cellId);
+            shapes.Set(cellsOffset, static_cast<viskores::UInt8>(shape.Id));
+            offsets.Set(cellsOffset, cellIndicesOffset);
+            for (viskores::IdComponent pointId = 0; pointId < points.GetNumberOfComponents();
+                 ++pointId)
+            {
+              connectivity.Set(cellIndicesOffset++, pointMapInputToOutput.Get(points[pointId]));
+            }
+          }
+          else // clipped cell
+          {
+            viskores::Id centroidIndex = 0;
+
+            viskores::Id index = CT::GetCaseIndex(shape.Id, caseIndex);
+            const viskores::UInt8 numberOfShapes = CT::ValueAt(index++);
+
+            for (viskores::IdComponent shapeId = 0; shapeId < numberOfShapes; shapeId++)
+            {
+              const viskores::UInt8 cellShape = CT::ValueAt(index++);
+              const viskores::UInt8 numberOfCellIndices = CT::ValueAt(index++);
+
+              if (cellShape != CTI::ST_PNT) // normal cell
+              {
+                // Store the cell data
+                cellMapOutputToInput.Set(cellsOffset, cellId);
+                shapes.Set(cellsOffset, cellShape);
+                offsets.Set(cellsOffset++, cellIndicesOffset);
+
+                for (viskores::IdComponent pointId = 0; pointId < numberOfCellIndices;
+                     pointId++, index++)
+                {
+                  // Find how many points need to be calculated using edge interpolation.
+                  const viskores::UInt8 pointIndex = CT::ValueAt(index);
+                  if (pointIndex <= CTI::P7) // Input Point
+                  {
+                    // We know pt P0 must be > P0 since we already
+                    // assume P0 == 0.  This is why we do not
+                    // bother subtracting P0 from pt here.
+                    connectivity.Set(cellIndicesOffset++,
+                                     pointMapInputToOutput.Get(points[pointIndex]));
+                  }
+                  else if (/*pointIndex >= CTI::E00 &&*/ pointIndex <= CTI::E11) // Mid-Edge Point
+                  {
+                    connectivity.Set(cellIndicesOffset++,
+                                     this->EdgePointsOffset + edgeIndexToUnique.Get(edgeOffset++));
+                  }
+                  else // pointIndex == CTI::N0 // Centroid Point
+                  {
+                    connectivity.Set(cellIndicesOffset++, centroidIndex);
+                  }
+                }
+              }
+              else // cellShape == CTI::ST_PNT
+              {
+                // Store the centroid data
+                centroidIndex = this->CentroidPointsOffset + centroidOffset;
+                centroidOffsets.Set(centroidOffset++, centroidIndicesOffset);
+
+                for (viskores::IdComponent pointId = 0; pointId < numberOfCellIndices;
+                     pointId++, index++)
+                {
+                  // Find how many points need to be calculated using edge interpolation.
+                  const viskores::UInt8 pointIndex = CT::ValueAt(index);
+                  if (pointIndex <= CTI::P7) // Input Point
+                  {
+                    // We know pt P0 must be > P0 since we already
+                    // assume P0 == 0.  This is why we do not
+                    // bother subtracting P0 from pt here.
+                    centroidConnectivity.Set(centroidIndicesOffset++,
+                                             pointMapInputToOutput.Get(points[pointIndex]));
+                  }
+                  else /*pointIndex >= CTI::E00 && pointIndex <= CTI::E11*/ // Mid-Edge Point
+                  {
+                    centroidConnectivity.Set(centroidIndicesOffset++,
+                                             this->EdgePointsOffset +
+                                               edgeIndexToUnique.Get(edgeOffset++));
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+  private:
+    viskores::Id EdgePointsOffset;
+    viskores::Id CentroidPointsOffset;
+  };
+
+  Clip() = default;
+
+  template <bool Invert, typename CellSetType, typename ScalarsArrayHandle>
+  viskores::cont::CellSetExplicit<> Run(const CellSetType& cellSet,
+                                        const ScalarsArrayHandle& scalars,
+                                        viskores::Float64 value)
+  {
+    const viskores::Id numberOfInputPoints = scalars.GetNumberOfValues();
+    const viskores::Id numberOfInputCells = cellSet.GetNumberOfCells();
+
+    // Create an invoker.
+    viskores::cont::Invoker invoke;
+
+    // Create batches of points to process.
+    auto pointBatches = CreateBatches(numberOfInputPoints);
+
+    // Create an array to store the point batch statistics.
+    viskores::cont::ArrayHandle<PointBatchData> pointBatchesData;
+    pointBatchesData.Allocate(pointBatches.GetNumberOfValues());
+
+    // Create a mask to only process the batches that have kept points.
+    viskores::cont::ArrayHandle<viskores::UInt8> batchesWithKeptPointsMask;
+    batchesWithKeptPointsMask.Allocate(pointBatches.GetNumberOfValues());
+
+    // Create an array to store the mask of kept points.
+    viskores::cont::ArrayHandle<viskores::UInt8> keptPointsMask;
+    keptPointsMask.Allocate(numberOfInputPoints);
+
+    // Mark the points that are kept.
+    invoke(MarkKeptPoints<Invert>(value),
+           pointBatches,
+           pointBatchesData,
+           batchesWithKeptPointsMask,
+           scalars,
+           keptPointsMask);
+
+    // Compute the total of pointBatchesData, and convert pointBatchesData to offsets in-place.
+    const PointBatchData pointBatchTotal = viskores::cont::Algorithm::ScanExclusive(
+      pointBatchesData, pointBatchesData, PointBatchData::SumOp(), PointBatchData{});
+
+    // Create arrays to store the point map from input to output, and output to input.
+    viskores::cont::ArrayHandle<viskores::Id> pointMapInputToOutput;
+    pointMapInputToOutput.Allocate(numberOfInputPoints);
+    this->PointMapOutputToInput.Allocate(pointBatchTotal.NumberOfKeptPoints);
+
+    // Compute the point map from input to output, and output to input. (see Scatter Counting)
+    invoke(ComputePointMaps(),
+           viskores::worklet::MaskSelect(batchesWithKeptPointsMask),
+           pointBatches,
+           pointBatchesData, // pointBatchesDataOffsets
+           keptPointsMask,
+           pointMapInputToOutput,
+           this->PointMapOutputToInput);
+    // Release pointBatches related arrays since they are no longer needed.
+    pointBatches.ReleaseResources();
+    pointBatchesData.ReleaseResources();
+    batchesWithKeptPointsMask.ReleaseResources();
+
+    // Create batches of cells to process.
+    auto cellBatches = CreateBatches(numberOfInputCells);
+
+    // Create an array to store the cell batch statistics.
+    viskores::cont::ArrayHandle<CellBatchData> cellBatchesData;
+    cellBatchesData.Allocate(cellBatches.GetNumberOfValues());
+
+    // Create a mask to only process the batches that have clipped cells, to extract the edges.
+    viskores::cont::ArrayHandle<viskores::UInt8> batchesWithClippedCellsMask;
+    batchesWithClippedCellsMask.Allocate(cellBatches.GetNumberOfValues());
+
+    // Create a mask to only process the batches that have kept or clipped cells.
+    viskores::cont::ArrayHandle<viskores::UInt8> batchesWithKeptOrClippedCellsMask;
+    batchesWithKeptOrClippedCellsMask.Allocate(cellBatches.GetNumberOfValues());
+
+    // Create an array to save the caseIndex for each cell.
+    viskores::cont::ArrayHandle<viskores::UInt8> caseIndices;
+    caseIndices.Allocate(numberOfInputCells);
+
+    // Compute the cell statistics of the clip operation.
+    invoke(ComputeCellStats<Invert>(),
+           cellBatches,
+           cellBatchesData,
+           batchesWithClippedCellsMask,
+           batchesWithKeptOrClippedCellsMask,
+           cellSet,
+           keptPointsMask,
+           caseIndices);
+    keptPointsMask.ReleaseResources(); // Release keptPointsMask since it's no longer needed.
+
+    // Compute the total of cellBatchesData, and convert cellBatchesData to offsets in-place.
+    const CellBatchData cellBatchTotal = viskores::cont::Algorithm::ScanExclusive(
+      cellBatchesData, cellBatchesData, CellBatchData::SumOp(), CellBatchData{});
+
+    // Create an array to store the edge interpolations.
+    viskores::cont::ArrayHandle<EdgeInterpolation> edgeInterpolation;
+    edgeInterpolation.Allocate(cellBatchTotal.NumberOfEdges);
+
+    // Extract the edges.
+    invoke(ExtractEdges<Invert>(value),
+           viskores::worklet::MaskSelect(batchesWithClippedCellsMask),
+           cellBatches,
+           cellBatchesData, // cellBatchesDataOffsets
+           cellSet,
+           scalars,
+           caseIndices,
+           edgeInterpolation);
+    // Release batchesWithClippedCellsMask since it's no longer needed.
+    batchesWithClippedCellsMask.ReleaseResources();
+
+    // Copy the edge interpolations to the output.
     viskores::cont::Algorithm::Copy(edgeInterpolation, this->EdgePointsInterpolation);
+    // Sort the edge interpolations.
+    viskores::cont::Algorithm::Sort(this->EdgePointsInterpolation, EdgeInterpolation::LessThanOp());
+    // Remove duplicates.
     viskores::cont::Algorithm::Unique(this->EdgePointsInterpolation,
                                       EdgeInterpolation::EqualToOp());
-
+    // Get the edge index to unique index.
     viskores::cont::ArrayHandle<viskores::Id> edgeInterpolationIndexToUnique;
     viskores::cont::Algorithm::LowerBounds(this->EdgePointsInterpolation,
                                            edgeInterpolation,
                                            edgeInterpolationIndexToUnique,
                                            EdgeInterpolation::LessThanOp());
-    edgeInterpolation.ReleaseResources();
+    edgeInterpolation.ReleaseResources(); // Release edgeInterpolation since it's no longer needed.
 
-    // This only works if the edges in `cellPointEdgeInterpolation` also exist in
-    // `EdgePointsInterpolation`. This has been verified to be true for all cases in the clip
-    // tables.
-    viskores::cont::ArrayHandle<viskores::Id> cellInterpolationIndexToUnique;
-    viskores::cont::Algorithm::LowerBounds(this->EdgePointsInterpolation,
-                                           cellPointEdgeInterpolation,
-                                           cellInterpolationIndexToUnique,
-                                           EdgeInterpolation::LessThanOp());
-    cellPointEdgeInterpolation.ReleaseResources();
+    // Get the number of kept points, unique edge points, centroids, and output points.
+    const viskores::Id numberOfKeptPoints = this->PointMapOutputToInput.GetNumberOfValues();
+    const viskores::Id numberOfUniqueEdgePoints = this->EdgePointsInterpolation.GetNumberOfValues();
+    const viskores::Id numberOfCentroids = cellBatchTotal.NumberOfCentroids;
+    const viskores::Id numberOfOutputPoints =
+      numberOfKeptPoints + numberOfUniqueEdgePoints + numberOfCentroids;
+    // Create the offsets to write the point indices.
+    this->EdgePointsOffset = numberOfKeptPoints;
+    this->CentroidPointsOffset = this->EdgePointsOffset + numberOfUniqueEdgePoints;
 
-    this->EdgePointsOffset = this->PointMapOutputToInput.GetNumberOfValues();
-    this->InCellPointsOffset =
-      this->EdgePointsOffset + this->EdgePointsInterpolation.GetNumberOfValues();
+    // Allocate the centroids.
+    viskores::cont::ArrayHandle<viskores::Id> centroidOffsets;
+    centroidOffsets.Allocate(numberOfCentroids + 1);
+    viskores::cont::ArrayHandle<viskores::Id> centroidConnectivity;
+    centroidConnectivity.Allocate(cellBatchTotal.NumberOfCentroidIndices);
+    this->CentroidPointsInterpolation =
+      viskores::cont::make_ArrayHandleGroupVecVariable(centroidConnectivity, centroidOffsets);
 
-    // Scatter these values into the connectivity array,
-    // scatter indices are given in reverse connectivity.
-    ScatterEdgeConnectivity scatterEdgePointConnectivity(this->EdgePointsOffset);
-    invoke(scatterEdgePointConnectivity,
+    // Allocate the output cell set.
+    viskores::cont::ArrayHandle<viskores::UInt8> shapes;
+    shapes.Allocate(cellBatchTotal.NumberOfCells);
+    viskores::cont::ArrayHandle<viskores::Id> offsets;
+    offsets.Allocate(cellBatchTotal.NumberOfCells + 1);
+    viskores::cont::ArrayHandle<viskores::Id> connectivity;
+    connectivity.Allocate(cellBatchTotal.NumberOfCellIndices);
+
+    // Allocate Cell Map output to Input.
+    this->CellMapOutputToInput.Allocate(cellBatchTotal.NumberOfCells);
+
+    // Generate the output cell set.
+    invoke(GenerateCellSet<Invert>(this->EdgePointsOffset, this->CentroidPointsOffset),
+           viskores::worklet::MaskSelect(batchesWithKeptOrClippedCellsMask),
+           cellBatches,
+           cellBatchesData, // cellBatchesDataOffsets
+           cellSet,
+           caseIndices,
+           pointMapInputToOutput,
            edgeInterpolationIndexToUnique,
-           edgePointReverseConnectivity,
+           centroidOffsets,
+           centroidConnectivity,
+           this->CellMapOutputToInput,
+           shapes,
+           offsets,
            connectivity);
-    invoke(scatterEdgePointConnectivity,
-           cellInterpolationIndexToUnique,
-           cellPointEdgeReverseConnectivity,
-           this->InCellInterpolationInfo);
+    // All no longer needed arrays will be released at the end of this function.
 
-    // Add offset in connectivity of all new in-cell points.
-    ScatterInCellConnectivity scatterInCellPointConnectivity(this->InCellPointsOffset);
-    invoke(scatterInCellPointConnectivity, cellPointReverseConnectivity, connectivity);
+    // Set the last offset to the size of the connectivity.
+    viskores::cont::ArraySetValue(
+      cellBatchTotal.NumberOfCells, cellBatchTotal.NumberOfCellIndices, offsets);
+    viskores::cont::ArraySetValue(
+      numberOfCentroids, cellBatchTotal.NumberOfCentroidIndices, centroidOffsets);
 
     viskores::cont::CellSetExplicit<> output;
-    viskores::Id numberOfPoints = this->PointMapOutputToInput.GetNumberOfValues() +
-      this->EdgePointsInterpolation.GetNumberOfValues() + total.NumberOfInCellPoints;
-
-    viskores::cont::ConvertNumComponentsToOffsets(numberOfIndices, offsets);
-
-    output.Fill(numberOfPoints, shapes, connectivity, offsets);
+    output.Fill(numberOfOutputPoints, shapes, connectivity, offsets);
     return output;
   }
 
-  template <typename CellSetType, typename ImplicitFunction>
+  template <bool Invert, typename CellSetType, typename ImplicitFunction>
   class ClipWithImplicitFunction
   {
   public:
@@ -791,13 +773,11 @@ public:
                              const CellSetType& cellSet,
                              const ImplicitFunction& function,
                              viskores::Float64 offset,
-                             bool invert,
                              viskores::cont::CellSetExplicit<>* result)
       : Clipper(clipper)
       , CellSet(&cellSet)
       , Function(function)
       , Offset(offset)
-      , Invert(invert)
       , Result(result)
     {
     }
@@ -812,7 +792,9 @@ public:
         clipScalars(handle, this->Function);
 
       // Clip at locations where the implicit function evaluates to `Offset`
-      *this->Result = this->Clipper->Run(*this->CellSet, clipScalars, this->Offset, this->Invert);
+      *this->Result = Invert
+        ? this->Clipper->template Run<true>(*this->CellSet, clipScalars, this->Offset)
+        : this->Clipper->template Run<false>(*this->CellSet, clipScalars, this->Offset);
     }
 
   private:
@@ -820,33 +802,30 @@ public:
     const CellSetType* CellSet;
     ImplicitFunction Function;
     viskores::Float64 Offset;
-    bool Invert;
     viskores::cont::CellSetExplicit<>* Result;
   };
 
-  template <typename CellSetType, typename ImplicitFunction>
+  template <bool Invert, typename CellSetType, typename ImplicitFunction>
   viskores::cont::CellSetExplicit<> Run(const CellSetType& cellSet,
                                         const ImplicitFunction& clipFunction,
                                         viskores::Float64 offset,
-                                        const viskores::cont::CoordinateSystem& coords,
-                                        bool invert)
+                                        const viskores::cont::CoordinateSystem& coords)
   {
     viskores::cont::CellSetExplicit<> output;
 
-    ClipWithImplicitFunction<CellSetType, ImplicitFunction> clip(
-      this, cellSet, clipFunction, offset, invert, &output);
+    ClipWithImplicitFunction<Invert, CellSetType, ImplicitFunction> clip(
+      this, cellSet, clipFunction, offset, &output);
 
     CastAndCall(coords, clip);
     return output;
   }
 
-  template <typename CellSetType, typename ImplicitFunction>
+  template <bool Invert, typename CellSetType, typename ImplicitFunction>
   viskores::cont::CellSetExplicit<> Run(const CellSetType& cellSet,
                                         const ImplicitFunction& clipFunction,
-                                        const viskores::cont::CoordinateSystem& coords,
-                                        bool invert)
+                                        const viskores::cont::CoordinateSystem& coords)
   {
-    return this->Run(cellSet, clipFunction, 0.0, coords, invert);
+    return this->Run<Invert>(cellSet, clipFunction, 0.0, coords);
   }
 
   struct PerformEdgeInterpolations : public viskores::worklet::WorkletMapField
@@ -861,8 +840,8 @@ public:
                                   const FieldPortal& originalField,
                                   T& output) const
     {
-      T v1 = originalField.Get(edgeInterp.Vertex1);
-      T v2 = originalField.Get(edgeInterp.Vertex2);
+      const T v1 = originalField.Get(edgeInterp.Vertex1);
+      const T v2 = originalField.Get(edgeInterp.Vertex2);
 
       // Interpolate per-vertex because some vec-like objects do not allow intermediate variables
       using VTraits = viskores::VecTraits<T>;
@@ -872,39 +851,42 @@ public:
       for (viskores::IdComponent component = 0; component < VTraits::GetNumberOfComponents(output);
            ++component)
       {
-        CType c1 = VTraits::GetComponent(v1, component);
-        CType c2 = VTraits::GetComponent(v2, component);
-        CType o = static_cast<CType>(((c1 - c2) * edgeInterp.Weight) + c1);
+        const CType c1 = VTraits::GetComponent(v1, component);
+        const CType c2 = VTraits::GetComponent(v2, component);
+        const CType o = static_cast<CType>(((c1 - c2) * edgeInterp.Weight) + c1);
         VTraits::SetComponent(output, component, o);
       }
     }
   };
 
-  struct PerformInCellInterpolations : public viskores::worklet::WorkletReduceByKey
+  struct PerformCentroidInterpolations : public viskores::worklet::WorkletMapField
   {
-    using ControlSignature = void(KeysIn keys, ValuesIn toReduce, ReducedValuesOut centroids);
-    using ExecutionSignature = void(_2, _3);
+    using ControlSignature = void(FieldIn centroidInterpolation,
+                                  WholeArrayIn outputField,
+                                  FieldOut output);
+    using ExecutionSignature = void(_1, _2, _3);
 
-    template <typename MappedValueVecType, typename MappedValueType>
-    VISKORES_EXEC void operator()(const MappedValueVecType& toReduce,
-                                  MappedValueType& centroid) const
+    template <typename CentroidInterpolation, typename OutputFieldArray, typename OutputFieldValue>
+    VISKORES_EXEC void operator()(const CentroidInterpolation& centroid,
+                                  const OutputFieldArray& outputField,
+                                  OutputFieldValue& output) const
     {
-      const viskores::IdComponent numValues = toReduce.GetNumberOfComponents();
+      const viskores::IdComponent numValues = centroid.GetNumberOfComponents();
 
       // Interpolate per-vertex because some vec-like objects do not allow intermediate variables
-      using VTraits = viskores::VecTraits<MappedValueType>;
+      using VTraits = viskores::VecTraits<OutputFieldValue>;
       using CType = typename VTraits::ComponentType;
-      for (viskores::IdComponent component = 0;
-           component < VTraits::GetNumberOfComponents(centroid);
+      for (viskores::IdComponent component = 0; component < VTraits::GetNumberOfComponents(output);
            ++component)
       {
-        CType sum = VTraits::GetComponent(toReduce[0], component);
-        for (viskores::IdComponent reduceI = 1; reduceI < numValues; ++reduceI)
+        CType sum = VTraits::GetComponent(outputField.Get(centroid[0]), component);
+        for (viskores::IdComponent i = 1; i < numValues; ++i)
         {
-          // static_cast is for when MappedValueType is a small int that gets promoted to int32.
-          sum = static_cast<CType>(sum + VTraits::GetComponent(toReduce[reduceI], component));
+          // static_cast is for when OutputFieldValue is a small int that gets promoted to int32.
+          sum = static_cast<CType>(sum +
+                                   VTraits::GetComponent(outputField.Get(centroid[i]), component));
         }
-        VTraits::SetComponent(centroid, component, static_cast<CType>(sum / numValues));
+        VTraits::SetComponent(output, component, static_cast<CType>(sum / numValues));
       }
     }
   };
@@ -912,40 +894,34 @@ public:
   template <typename InputType, typename OutputType>
   void ProcessPointField(const InputType& input, OutputType& output)
   {
-    if (!this->InterpolationKeysBuilt)
-    {
-      this->InterpolationKeys.BuildArrays(this->InCellInterpolationKeys, KeysSortType::Unstable);
-    }
+    const viskores::Id numberOfKeptPoints = this->PointMapOutputToInput.GetNumberOfValues();
+    const viskores::Id numberOfEdgePoints = this->EdgePointsInterpolation.GetNumberOfValues();
+    const viskores::Id numberOfCentroidPoints =
+      this->CentroidPointsInterpolation.GetNumberOfValues();
 
-    viskores::Id numberOfVertexPoints = this->PointMapOutputToInput.GetNumberOfValues();
-    viskores::Id numberOfEdgePoints = this->EdgePointsInterpolation.GetNumberOfValues();
-    viskores::Id numberOfInCellPoints = this->InterpolationKeys.GetUniqueKeys().GetNumberOfValues();
-
-    output.Allocate(numberOfVertexPoints + numberOfEdgePoints + numberOfInCellPoints);
+    output.Allocate(numberOfKeptPoints + numberOfEdgePoints + numberOfCentroidPoints);
 
     // Copy over the original values that are still part of the output.
     viskores::cont::Algorithm::CopySubRange(
       viskores::cont::make_ArrayHandlePermutation(this->PointMapOutputToInput, input),
       0,
-      numberOfVertexPoints,
+      numberOfKeptPoints,
       output);
 
     // Interpolate all new points that lie on edges of the input mesh.
     viskores::cont::Invoker invoke;
-    invoke(PerformEdgeInterpolations{},
-           this->EdgePointsInterpolation,
-           input,
-           viskores::cont::make_ArrayHandleView(output, numberOfVertexPoints, numberOfEdgePoints));
+    invoke(
+      PerformEdgeInterpolations(),
+      this->EdgePointsInterpolation,
+      input,
+      viskores::cont::make_ArrayHandleView(output, this->EdgePointsOffset, numberOfEdgePoints));
 
-    // Perform a gather on the output to get all the required values for calculation of centroids
-    // using the interpolation info array.
-    auto toReduceValues =
-      viskores::cont::make_ArrayHandlePermutation(this->InCellInterpolationInfo, output);
-    invoke(PerformInCellInterpolations{},
-           this->InterpolationKeys,
-           toReduceValues,
+    // interpolate all new points that lie as centroids of input meshes
+    invoke(PerformCentroidInterpolations(),
+           this->CentroidPointsInterpolation,
+           output,
            viskores::cont::make_ArrayHandleView(
-             output, numberOfVertexPoints + numberOfEdgePoints, numberOfInCellPoints));
+             output, this->CentroidPointsOffset, numberOfCentroidPoints));
   }
 
   viskores::cont::ArrayHandle<viskores::Id> GetCellMapOutputToInput() const
@@ -954,16 +930,14 @@ public:
   }
 
 private:
-  internal::ClipTables ClipTablesInstance;
-  viskores::cont::ArrayHandle<EdgeInterpolation> EdgePointsInterpolation;
-  viskores::cont::ArrayHandle<viskores::Id> InCellInterpolationKeys;
-  viskores::cont::ArrayHandle<viskores::Id> InCellInterpolationInfo;
-  viskores::cont::ArrayHandle<viskores::Id> CellMapOutputToInput;
   viskores::cont::ArrayHandle<viskores::Id> PointMapOutputToInput;
-  viskores::Id EdgePointsOffset;
-  viskores::Id InCellPointsOffset;
-  viskores::worklet::Keys<viskores::Id> InterpolationKeys;
-  bool InterpolationKeysBuilt = false;
+  viskores::cont::ArrayHandle<EdgeInterpolation> EdgePointsInterpolation;
+  viskores::cont::ArrayHandleGroupVecVariable<viskores::cont::ArrayHandle<viskores::Id>,
+                                              viskores::cont::ArrayHandle<viskores::Id>>
+    CentroidPointsInterpolation;
+  viskores::cont::ArrayHandle<viskores::Id> CellMapOutputToInput;
+  viskores::Id EdgePointsOffset = 0;
+  viskores::Id CentroidPointsOffset = 0;
 };
 }
 } // namespace viskores::worklet
@@ -976,7 +950,7 @@ namespace detail
 
 // causes a different code path which does not have the bug
 template <>
-struct is_integral<viskores::worklet::ClipStats> : public true_type
+struct is_integral<viskores::worklet::CellBatchesData> : public true_type
 {
 };
 }

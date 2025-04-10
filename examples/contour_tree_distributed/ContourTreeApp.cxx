@@ -82,7 +82,8 @@
 
 #include <viskores/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <viskores/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
-#include <viskores/filter/scalar_topology/SelectTopVolumeContoursFilter.h>
+#include <viskores/filter/scalar_topology/ExtractTopVolumeContoursFilter.h>
+#include <viskores/filter/scalar_topology/SelectTopVolumeBranchesFilter.h>
 #include <viskores/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ProcessContourTree.h>
@@ -280,6 +281,11 @@ int main(int argc, char* argv[])
     }
   }
 
+  bool computeIsosurface = false;
+  // When true, we extract the isosurface at the isovalue STRICTLY above/below the saddle.
+  // i.e., we ignore the simulation of simplicity when extracting isosurfaces.
+  // WARNING: this may return incorrect isosurfaces when using presimplification.
+  bool shiftIsovalueByEpsilon = false;
   viskores::Id numBranches = 0;
   if (parser.hasOption("--numBranches"))
   {
@@ -299,11 +305,45 @@ int main(int argc, char* argv[])
       augmentHierarchicalTree = true;
     }
   }
-
-  ValueType eps = 0.00001f;
-
-  if (parser.hasOption("--eps"))
-    eps = std::stof(parser.getOption("--eps"));
+  if (parser.hasOption("--computeIsosurface"))
+  {
+    computeIsosurface = true;
+  }
+  if (numBranches == 0 && computeIsosurface)
+  {
+    std::cerr << "Error: --computeIsosurface cannot proceed without specifying --numBranches!"
+              << std::endl;
+    MPI_Finalize();
+    return EXIT_FAILURE;
+  }
+  if (parser.hasOption("--shiftIsovalueByEpsilon"))
+  {
+    shiftIsovalueByEpsilon = true;
+    if (presimplifyThreshold > 0)
+    {
+      VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                     "Warning: when presimplifyThreshold > 0, --shiftIsovalueByEpsilon may return "
+                     "incorrect isosurfaces!");
+    }
+  }
+  if (!computeIsosurface && shiftIsovalueByEpsilon)
+  {
+    if (numBranches > 0)
+    {
+      VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                     "Warning: --shiftIsovalueByEpsilon requires --computeIsosurface "
+                     "and a nonzero --numBranches! Enabling --computeIsosurface option.");
+      computeIsosurface = true;
+    }
+    else
+    {
+      std::cerr
+        << "Error: --shiftIsovalueByEpsilon cannot proceed without specifying --numBranches!"
+        << std::endl;
+      MPI_Finalize();
+      return EXIT_FAILURE;
+    }
+  }
 
 #ifdef ENABLE_HDFIO
   std::string dataset_name = "data";
@@ -380,8 +420,15 @@ int main(int argc, char* argv[])
       std::cout << "--numBranches    Number of top volume branches to select." << std::endl;
       std::cout << "                 Requires --computeVolumeBranchDecomposition." << std::endl;
       std::cout
-        << "--eps=<float>   Floating point offset awary from the critical point. (default=0.00001)"
-        << std::endl;
+        << "--computeIsosurface  Compute isosurfaces near the saddle end of top volume branches."
+        << std::endl
+        << "                     Requires specifying --numBranches." << std::endl;
+      std::cout << "--shiftIsovalueByEpsilon  If set, the contour isovalues will be strictly "
+                   "above/below the contour,"
+                << "                          which will ignore the simulation of simplicity when "
+                   "extracting contours. "
+                << std::endl
+                << "                          Requires specifying --numBranches." << std::endl;
       std::cout << "--presimplifyThreshold   Integer volume threshold for presimplifying the tree"
                 << std::endl;
       std::cout << "                 Default value is 0, indicating no presimplification"
@@ -429,12 +476,14 @@ int main(int argc, char* argv[])
                      << "    augmentHierarchicalTree=" << augmentHierarchicalTree << std::endl
                      << "    computeVolumetricBranchDecomposition="
                      << computeHierarchicalVolumetricBranchDecomposition << std::endl
+                     << "    numBranches=" << numBranches << std::endl
+                     << "    computeIsosurface=" << computeIsosurface << std::endl
+                     << "    shiftIsovalueByEpsilon=" << shiftIsovalueByEpsilon << std::endl
                      << "    presimplifyThreshold=" << presimplifyThreshold << std::endl
                      << "    saveOutputData=" << saveOutputData << std::endl
                      << "    forwardSummary=" << forwardSummary << std::endl
                      << "    nblocks=" << numBlocks << std::endl
                      << "    nbranches=" << numBranches << std::endl
-                     << "    eps=" << eps << std::endl
 #ifdef ENABLE_HDFIO
                      << "    dataset=" << dataset_name << " (HDF5 only)" << std::endl
                      << "    blocksPerDim=" << blocksPerDimIn[0] << "," << blocksPerDimIn[1] << ","
@@ -498,6 +547,12 @@ int main(int argc, char* argv[])
                    << "    forwardSummary=" << forwardSummary << std::endl
                    << "    numBlocks=" << numBlocks << std::endl
                    << "    augmentHierarchicalTree=" << augmentHierarchicalTree << std::endl
+                   << "    computeVolumetricBranchDecomposition="
+                   << computeHierarchicalVolumetricBranchDecomposition << std::endl
+                   << "    numBranches=" << numBranches << std::endl
+                   << "    computeIsosurface=" << computeIsosurface << std::endl
+                   << "    shiftIsovalueByEpsilon=" << shiftIsovalueByEpsilon << std::endl
+                   << "    presimplifyThreshold=" << presimplifyThreshold << std::endl
                    << "    numRanks=" << size << std::endl
                    << "    rank=" << rank << std::endl
 #ifdef ENABLE_HDFIO
@@ -677,6 +732,7 @@ int main(int argc, char* argv[])
 
   // Execute the contour tree analysis
   auto result = filter.Execute(useDataSet);
+  const viskores::Id nPartitions = result.GetNumberOfPartitions();
 
   currTime = totalTime.GetElapsedTime();
   viskores::Float64 computeContourTreeTime = currTime - prevTime;
@@ -694,6 +750,10 @@ int main(int argc, char* argv[])
   {
     viskores::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter;
     bd_result = bd_filter.Execute(result);
+
+    // We carried over all fields in result to bd_result.
+    // To save memory, we destroy result by replacing it with an empty PartitionedDataset.
+    result = viskores::cont::PartitionedDataSet{};
   }
   currTime = totalTime.GetElapsedTime();
   viskores::Float64 branchDecompTime = currTime - prevTime;
@@ -701,12 +761,43 @@ int main(int argc, char* argv[])
 
   // Compute SelectTopVolumeContours if needed
   viskores::cont::PartitionedDataSet tp_result;
+  viskores::cont::PartitionedDataSet iso_result;
+  bool isTopVolumeBranchValid = true;
   if (numBranches > 0)
   {
-    viskores::filter::scalar_topology::SelectTopVolumeContoursFilter tp_filter;
+    viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter tp_filter;
     tp_filter.SetSavedBranches(numBranches);
+    tp_filter.SetPresimplifyThreshold(presimplifyThreshold);
     tp_result = tp_filter.Execute(bd_result);
+
+    // We carried over all fields in bd_result to tp_result.
+    // To save memory, we destroy bd_result by replacing it with an empty PartitionedDataset.
+    bd_result = viskores::cont::PartitionedDataSet{};
+
+    // detecting whether the dataset is empty
+    // it is relatively safe to assume that the result has at least one partition
+    if (tp_result.GetPartition(0).GetNumberOfFields() < 1)
+    {
+      isTopVolumeBranchValid = false;
+      VISKORES_LOG_S(
+        viskores::cont::LogLevel::Warn,
+        std::endl
+          << "Warning: SelectTopVolumeBranchesFilter did not return any valid branches!"
+          << std::endl
+          << "Skipping isosurface extraction." << std::endl);
+    }
+    if (isTopVolumeBranchValid && computeIsosurface)
+    {
+      viskores::filter::scalar_topology::ExtractTopVolumeContoursFilter iso_filter;
+      iso_filter.SetMarchingCubes(useMarchingCubes);
+      iso_filter.SetShiftIsovalueByEpsilon(shiftIsovalueByEpsilon);
+      iso_result = iso_filter.Execute(tp_result);
+    }
   }
+
+  currTime = totalTime.GetElapsedTime();
+  viskores::Float64 topVolBranchTime = currTime - prevTime;
+  prevTime = currTime;
 
   // Save output
   if (saveOutputData)
@@ -715,9 +806,10 @@ int main(int argc, char* argv[])
     {
       if (computeHierarchicalVolumetricBranchDecomposition)
       {
-        for (viskores::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+        viskores::cont::PartitionedDataSet& output_result = numBranches > 0 ? tp_result : bd_result;
+        for (viskores::Id ds_no = 0; ds_no < nPartitions; ++ds_no)
         {
-          auto ds = bd_result.GetPartition(ds_no);
+          auto ds = output_result.GetPartition(ds_no);
           std::string branchDecompositionIntermediateFileName =
             std::string("BranchDecompositionIntermediate_Rank_") +
             std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
@@ -750,27 +842,34 @@ int main(int argc, char* argv[])
           }
         }
 
-        if (numBranches > 0)
+        if (numBranches > 0 && isTopVolumeBranchValid)
         {
 #ifndef DEBUG_PRINT
           bool print_to_files = (rank == 0);
           viskores::Id max_blocks_to_print = 1;
 #else
           bool print_to_files = true;
-          viskores::Id max_blocks_to_print = result.GetNumberOfPartitions();
+          viskores::Id max_blocks_to_print = nPartitions;
 #endif
 
           for (viskores::Id ds_no = 0; print_to_files && ds_no < max_blocks_to_print; ++ds_no)
           {
-            auto ds = tp_result.GetPartition(ds_no);
+            auto ds = output_result.GetPartition(ds_no);
+
             std::string topVolumeBranchFileName = std::string("TopVolumeBranch_Rank_") +
               std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
               std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
             std::ofstream topVolumeBranchStream(topVolumeBranchFileName.c_str());
-            auto topVolBranchGRId = ds.GetField("TopVolumeBranchGlobalRegularIds")
-                                      .GetData()
-                                      .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
-                                      .ReadPortal();
+            auto topVolBranchUpperEnd =
+              ds.GetField("TopVolumeBranchUpperEnd")
+                .GetData()
+                .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                .ReadPortal();
+            auto topVolBranchLowerEnd =
+              ds.GetField("TopVolumeBranchLowerEnd")
+                .GetData()
+                .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                .ReadPortal();
             auto topVolBranchVolume = ds.GetField("TopVolumeBranchVolume")
                                         .GetData()
                                         .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
@@ -786,10 +885,11 @@ int main(int argc, char* argv[])
                 .AsArrayHandle<viskores::cont::ArrayHandle<ValueType>>()
                 .ReadPortal();
 
-            viskores::Id nSelectedBranches = topVolBranchGRId.GetNumberOfValues();
+            viskores::Id nSelectedBranches = topVolBranchUpperEnd.GetNumberOfValues();
             for (viskores::Id branch = 0; branch < nSelectedBranches; ++branch)
             {
-              topVolumeBranchStream << std::setw(12) << topVolBranchGRId.Get(branch)
+              topVolumeBranchStream << std::setw(12) << topVolBranchUpperEnd.Get(branch)
+                                    << std::setw(12) << topVolBranchLowerEnd.Get(branch)
                                     << std::setw(14) << topVolBranchVolume.Get(branch)
                                     << std::setw(5) << topVolBranchSaddleEpsilon.Get(branch)
                                     << std::setw(14) << topVolBranchSaddleIsoValue.Get(branch)
@@ -803,18 +903,130 @@ int main(int argc, char* argv[])
 
             for (viskores::Id branch = 0; branch < nSelectedBranches; ++branch)
             {
-              isoValuesStream << (topVolBranchSaddleIsoValue.Get(branch) +
-                                  (eps * topVolBranchSaddleEpsilon.Get(branch)))
-                              << " ";
+              isoValuesStream << topVolBranchSaddleIsoValue.Get(branch) << " ";
             }
 
             isoValuesStream << std::endl;
+          }
+
+          for (viskores::Id ds_no = 0; computeIsosurface && ds_no < nPartitions; ++ds_no)
+          {
+            auto ds = iso_result.GetPartition(ds_no);
+
+            std::string isosurfaceFileName = std::string("Isosurface_Rank_") +
+              std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+              std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
+            std::ofstream isosurfaceStream(isosurfaceFileName.c_str());
+
+            auto isosurfaceEdgesFrom =
+              ds.GetField("IsosurfaceEdgesFrom")
+                .GetData()
+                .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f_64>>()
+                .ReadPortal();
+            auto isosurfaceEdgesTo =
+              ds.GetField("IsosurfaceEdgesTo")
+                .GetData()
+                .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f_64>>()
+                .ReadPortal();
+            auto isosurfaceEdgesLabels =
+              ds.GetField("IsosurfaceEdgesLabels")
+                .GetData()
+                .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                .ReadPortal();
+            auto isosurfaceEdgesOrders =
+              ds.GetField("IsosurfaceEdgesOrders")
+                .GetData()
+                .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                .ReadPortal();
+            auto isosurfaceEdgesOffset =
+              ds.GetField("IsosurfaceEdgesOffset")
+                .GetData()
+                .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                .ReadPortal();
+            auto isosurfaceIsoValue = ds.GetField("IsosurfaceIsoValue")
+                                        .GetData()
+                                        .AsArrayHandle<viskores::cont::ArrayHandle<ValueType>>()
+                                        .ReadPortal();
+            viskores::Id nIsosurfaceEdges = isosurfaceEdgesFrom.GetNumberOfValues();
+            viskores::Id isoSurfaceCount = 0;
+
+            if (nDims == 2)
+              for (viskores::Id edge = 0; edge < nIsosurfaceEdges; ++edge)
+              {
+                while (isoSurfaceCount < isosurfaceEdgesLabels.GetNumberOfValues() &&
+                       edge == isosurfaceEdgesOffset.Get(isoSurfaceCount))
+                {
+                  isosurfaceStream << "Isosurface Info:" << std::setw(5)
+                                   << isosurfaceEdgesLabels.Get(isoSurfaceCount) << std::setw(10)
+                                   << isosurfaceEdgesOrders.Get(isoSurfaceCount) << std::setw(10)
+                                   << isosurfaceIsoValue.Get(isoSurfaceCount) << std::endl;
+                  isoSurfaceCount++;
+                }
+                isosurfaceStream << std::setw(6) << isosurfaceEdgesFrom.Get(edge) << std::setw(6)
+                                 << isosurfaceEdgesTo.Get(edge) << std::endl;
+              }
+            else if (nDims == 3)
+            {
+              VISKORES_ASSERT(nIsosurfaceEdges % 3 == 0);
+              for (viskores::Id edge = 0; edge < nIsosurfaceEdges; edge += 3)
+              {
+                while (isoSurfaceCount < isosurfaceEdgesLabels.GetNumberOfValues() &&
+                       edge == isosurfaceEdgesOffset.Get(isoSurfaceCount))
+                {
+                  isosurfaceStream << "Isosurface Info:" << std::setw(5)
+                                   << isosurfaceEdgesLabels.Get(isoSurfaceCount) << std::setw(10)
+                                   << isosurfaceEdgesOrders.Get(isoSurfaceCount) << std::setw(10)
+                                   << isosurfaceIsoValue.Get(isoSurfaceCount) << std::endl;
+                  isoSurfaceCount++;
+                }
+                isosurfaceStream << std::setw(6) << isosurfaceEdgesFrom.Get(edge) << std::setw(6)
+                                 << isosurfaceEdgesTo.Get(edge) << std::setw(6)
+                                 << isosurfaceEdgesTo.Get(edge + 1) << std::endl;
+              }
+            }
+          }
+
+          for (viskores::Id ds_no = 0; ds_no < nPartitions; ++ds_no)
+          {
+            auto ds = output_result.GetPartition(ds_no);
+
+            std::string branchDecompositionVolumeFileName =
+              std::string("BranchDecompositionVolume_Rank_") +
+              std::to_string(static_cast<int>(rank)) + std::string("_Block_") +
+              std::to_string(static_cast<int>(ds_no)) + std::string(".txt");
+            std::ofstream bdVolStream(branchDecompositionVolumeFileName.c_str());
+
+            auto upperEndGRId = ds.GetField("UpperEndGlobalRegularIds")
+                                  .GetData()
+                                  .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                                  .ReadPortal();
+            auto lowerEndGRId = ds.GetField("LowerEndGlobalRegularIds")
+                                  .GetData()
+                                  .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                                  .ReadPortal();
+            auto branchSaddleEpsilon = ds.GetField("BranchSaddleEpsilon")
+                                         .GetData()
+                                         .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                                         .ReadPortal();
+            auto branchVolume = ds.GetField("BranchVolume")
+                                  .GetData()
+                                  .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                                  .ReadPortal();
+            viskores::Id nBranches = upperEndGRId.GetNumberOfValues();
+
+            for (viskores::Id branch = 0; branch < nBranches; ++branch)
+            {
+              bdVolStream << std::setw(12) << upperEndGRId.Get(branch) << std::setw(12)
+                          << lowerEndGRId.Get(branch) << std::setw(3)
+                          << branchSaddleEpsilon.Get(branch) << std::setw(18)
+                          << branchVolume.Get(branch) << std::endl;
+            }
           }
         }
       }
       else
       {
-        for (viskores::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+        for (viskores::Id ds_no = 0; ds_no < nPartitions; ++ds_no)
         {
           auto ds = result.GetPartition(ds_no);
           viskores::worklet::contourtree_augmented::IdArrayType supernodes;
@@ -848,7 +1060,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-      for (viskores::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+      for (viskores::Id ds_no = 0; ds_no < nPartitions; ++ds_no)
       {
         viskores::worklet::contourtree_distributed::TreeCompiler treeCompiler;
         treeCompiler.AddHierarchicalTree(result.GetPartition(ds_no));
@@ -864,7 +1076,6 @@ int main(int argc, char* argv[])
       }
     }
   }
-
 
   currTime = totalTime.GetElapsedTime();
   viskores::Float64 saveOutputDataTime = currTime - prevTime;
@@ -917,6 +1128,8 @@ int main(int argc, char* argv[])
                    << ": " << postFilterSyncTime << " seconds" << std::endl
                    << std::setw(42) << std::left << "    Branch Decomposition"
                    << ": " << branchDecompTime << " seconds" << std::endl
+                   << std::setw(42) << std::left << "    Top Volume Branch Extraction"
+                   << ": " << topVolBranchTime << " seconds" << std::endl
                    << std::setw(42) << std::left << "    Save Tree Compiler Data"
                    << ": " << saveOutputDataTime << " seconds" << std::endl
                    << std::setw(42) << std::left << "    Total Time"

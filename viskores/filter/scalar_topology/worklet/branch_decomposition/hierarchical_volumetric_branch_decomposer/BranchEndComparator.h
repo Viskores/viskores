@@ -95,9 +95,9 @@ public:
                           const IdArrayType& globalRegularIds,
                           viskores::cont::DeviceAdapterId device,
                           viskores::cont::Token& token)
-    : branchRootsPortal(branchRoots.PrepareForInput(device, token))
-    , dataValuesPortal(dataValues.PrepareForInput(device, token))
-    , globalRegularIdsPortal(globalRegularIds.PrepareForInput(device, token))
+    : BranchRootsPortal(branchRoots.PrepareForInput(device, token))
+    , DataValuesPortal(dataValues.PrepareForInput(device, token))
+    , GlobalRegularIdsPortal(globalRegularIds.PrepareForInput(device, token))
   { // constructor
   } // constructor
 
@@ -106,9 +106,9 @@ public:
   bool operator()(const viskores::Id& i, const viskores::Id& j) const
   { // operator()
     viskores::Id branchI =
-      viskores::worklet::contourtree_augmented::MaskedIndex(this->branchRootsPortal.Get(i));
+      viskores::worklet::contourtree_augmented::MaskedIndex(this->BranchRootsPortal.Get(i));
     viskores::Id branchJ =
-      viskores::worklet::contourtree_augmented::MaskedIndex(this->branchRootsPortal.Get(j));
+      viskores::worklet::contourtree_augmented::MaskedIndex(this->BranchRootsPortal.Get(j));
 
     // primary sort on branch ID
     if (branchI < branchJ)
@@ -120,8 +120,8 @@ public:
       return false;
     }
 
-    ValueType valueI = this->dataValuesPortal.Get(i);
-    ValueType valueJ = this->dataValuesPortal.Get(j);
+    ValueType valueI = this->DataValuesPortal.Get(i);
+    ValueType valueJ = this->DataValuesPortal.Get(j);
 
     // secondary sort on data value
     // if isLower is false, lower value first
@@ -136,9 +136,9 @@ public:
     }
 
     viskores::Id idI =
-      viskores::worklet::contourtree_augmented::MaskedIndex(this->globalRegularIdsPortal.Get(i));
+      viskores::worklet::contourtree_augmented::MaskedIndex(this->GlobalRegularIdsPortal.Get(i));
     viskores::Id idJ =
-      viskores::worklet::contourtree_augmented::MaskedIndex(this->globalRegularIdsPortal.Get(j));
+      viskores::worklet::contourtree_augmented::MaskedIndex(this->GlobalRegularIdsPortal.Get(j));
 
     // third sort on global regular id
     // if isLower is false, lower value first
@@ -157,9 +157,9 @@ public:
   } // operator()
 
 private:
-  IdPortalType branchRootsPortal;
-  ValuePortalType dataValuesPortal;
-  IdPortalType globalRegularIdsPortal;
+  IdPortalType BranchRootsPortal;
+  ValuePortalType DataValuesPortal;
+  IdPortalType GlobalRegularIdsPortal;
 
 }; // BranchEndComparatorImpl
 

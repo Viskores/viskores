@@ -61,7 +61,6 @@ void SetFilter(FilterType& filter,
                const std::string& fieldName,
                viskores::cont::ArrayHandle<viskores::Particle> seedArray,
                bool useThreaded,
-               bool useAsyncComm,
                bool useBlockIds,
                const std::vector<viskores::Id>& blockIds)
 {
@@ -70,16 +69,12 @@ void SetFilter(FilterType& filter,
   filter.SetSeeds(seedArray);
   filter.SetActiveField(fieldName);
   filter.SetUseThreadedAlgorithm(useThreaded);
-  if (useAsyncComm)
-    filter.SetUseAsynchronousCommunication();
-  else
-    filter.SetUseSynchronousCommunication();
 
   if (useBlockIds)
     filter.SetBlockIDs(blockIds);
 }
 
-void TestAMRStreamline(FilterType fType, bool useThreaded, bool useAsyncComm)
+void TestAMRStreamline(FilterType fType, bool useThreaded)
 {
   auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
   if (comm.rank() == 0)
@@ -98,11 +93,6 @@ void TestAMRStreamline(FilterType fType, bool useThreaded, bool useAsyncComm)
     }
     if (useThreaded)
       std::cout << " - using threaded";
-    if (useAsyncComm)
-      std::cout << " - usingAsyncComm";
-    else
-      std::cout << " - usingSyncComm";
-
     std::cout << " - on an AMR data set" << std::endl;
   }
 
@@ -179,22 +169,13 @@ void TestAMRStreamline(FilterType fType, bool useThreaded, bool useAsyncComm)
       if (fType == STREAMLINE)
       {
         viskores::filter::flow::Streamline streamline;
-        SetFilter(streamline,
-                  stepSize,
-                  numSteps,
-                  fieldName,
-                  seedArray,
-                  useThreaded,
-                  useAsyncComm,
-                  false,
-                  {});
+        SetFilter(streamline, stepSize, numSteps, fieldName, seedArray, useThreaded, false, {});
         out = streamline.Execute(pds);
       }
       else if (fType == PATHLINE)
       {
         viskores::filter::flow::Pathline pathline;
-        SetFilter(
-          pathline, stepSize, numSteps, fieldName, seedArray, useThreaded, useAsyncComm, false, {});
+        SetFilter(pathline, stepSize, numSteps, fieldName, seedArray, useThreaded, false, {});
         //Create timestep 2
         auto pds2 = viskores::cont::PartitionedDataSet(pds);
         pathline.SetPreviousTime(0);
@@ -328,10 +309,7 @@ void DoTest()
   {
     for (auto useThreaded : { true, false })
     {
-      for (auto useAsyncComm : { true, false })
-      {
-        TestAMRStreamline(fType, useThreaded, useAsyncComm);
-      }
+      TestAMRStreamline(fType, useThreaded);
     }
   }
 }

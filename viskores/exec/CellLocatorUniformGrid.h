@@ -35,6 +35,15 @@ namespace viskores
 namespace exec
 {
 
+/// @brief Structure for locating cells.
+///
+/// Use the `FindCell()` method to identify which cell contains a point in space.
+/// The `FindCell()` method optionally takes a `LastCell` object, which is a
+/// structure nested in this class. The `LastCell` object can help speed locating
+/// cells for successive finds at nearby points.
+///
+/// This class is provided by `viskores::cont::CellLocatorUniformGrid` when passed
+/// to a worklet.
 class VISKORES_ALWAYS_EXPORT CellLocatorUniformGrid
 {
 public:
@@ -63,23 +72,45 @@ public:
     return inside;
   }
 
+  /// @brief Structure capturing the location of a cell in the search structure.
+  ///
+  /// An object of this type is passed to and from the `FindCell()` method.
+  /// If `FindCell()` is called successively with points near each other, the
+  /// information in this object can reduce the time to find the cell.
   struct LastCell
   {
   };
 
-  VISKORES_EXEC
-  viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                               viskores::Id& cellId,
-                               viskores::Vec3f& parametric,
-                               LastCell& viskoresNotUsed(lastCell)) const
+  /// @brief Locate the cell containing the provided point.
+  ///
+  /// Given the point coordinate `point`, this method determines which cell
+  /// contains that point. The identification of the cell is returned in
+  /// the `cellId` reference parameter. The method also determines the
+  /// cell's parametric coordinates to the point and returns that in the
+  /// `parametric` reference parameter. This result can be used in functions
+  /// like `viskores::exec::CellInterpolate()`.
+  ///
+  /// `FindCell()` takes an optional `LastCell` parameter. This parameter
+  /// captures the location of the found cell and can be passed to the next
+  /// call of `FindCell()`. If the subsequent `FindCell()` call is for a
+  /// point that is in or near the same cell, the operation may go faster.
+  ///
+  /// This method will return `viskores::ErrorCode::Success` if a cell is found.
+  /// If a cell is not found, `viskores::ErrorCode::CellNotFound` is returned
+  /// and `cellId` is set to `-1`.
+  VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
+                                             viskores::Id& cellId,
+                                             viskores::Vec3f& parametric,
+                                             LastCell& lastCell) const
   {
+    (void)lastCell;
     return this->FindCell(point, cellId, parametric);
   }
 
-  VISKORES_EXEC
-  viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                               viskores::Id& cellId,
-                               viskores::Vec3f& parametric) const
+  /// @copydoc FindCell
+  VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
+                                             viskores::Id& cellId,
+                                             viskores::Vec3f& parametric) const
   {
     if (!this->IsInside(point))
     {
