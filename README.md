@@ -7,8 +7,6 @@ computing by providing abstract models for data and execution that can be
 applied to a variety of algorithms across many different processor
 architectures.
 
-You can find out more about the design of Viskores on the [Viskores Wiki].
-
 ## Current Status
 
 Viskores is a adopting the functionality of [Viskores] as a part of the [High
@@ -44,11 +42,10 @@ the project.
       + Algorithm development with Viskores.
       + Writing new Viskores filters.
 
-  + Community discussion takes place on the [Viskores users email list].
+  + Community discussion takes place on the [Viskores users discussion].
 
-  + Doxygen-generated reference documentation is available for both:
-    + Last Nightly build [Viskores Doxygen nightly]
-    + Last release [Viskores Doxygen latest]
+  + Doxygen-generated reference documentation is available for the tip of the
+    release branch at [Viskores Doxygen latest]
 
 
 ## Contributing ##
@@ -56,7 +53,7 @@ the project.
 There are many ways to contribute to [Viskores], with varying levels of
 effort.
 
-  + Ask a question on the [Viskores users email list].
+  + Ask a question on the [Viskores users discussion].
 
   + Submit new or add to discussions of a feature requests or bugs on the
     [Viskores Issue Tracker].
@@ -275,16 +272,14 @@ See [LICENSE.txt](LICENSE.txt) for details.
 
 [Viskores]:                             https://github.com/Viskores/viskores
 [Viskores Coding Conventions]:          docs/CodingConventions.md
-[Viskores Doxygen latest]:              https://docs-m.vtk.org/latest/index.html
-[Viskores Doxygen nightly]:             https://docs-m.vtk.org/nightly/
+[Viskores Doxygen latest]:              https://viskores.github.io/viskores-doxygen/
 [Viskores download page]:               https://github.com/Viskores/viskores/releases
 [Viskores git repository]:              https://github.com/Viskores/viskores
 [Viskores Issue Tracker]:               https://github.com/Viskores/viskores/issues
 [Viskores Overview]:                    http://m.vtk.org/images/2/29/ViskoresVis2016.pptx
-[Viskores Users Guide]:                 https://github.com/Viskores/viskores-user-guide/-/wikis/home
-[Viskores users email list]:            http://vtk.org/mailman/listinfo/viskores
-[Viskores Wiki]:                        http://m.vtk.org/
-[Viskores Tutorial]:                    http://m.vtk.org/index.php/Tutorial
+[Viskores Users Guide]:                 https://viskores.readthedocs.io/en/latest/
+[Viskores users discussion]:            https://github.com/Viskores/viskores/discussions
+[Viskores Tutorial]:                    tutorial/README.md
 [CONTRIBUTING.md]:                      CONTRIBUTING.md
 [High Performance Software Foundation]: https://hpsf.io/
 [technical charter]:                    docs/technical-charter.pdf
