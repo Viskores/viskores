@@ -20,8 +20,15 @@
 
 .docker_image: &docker_image
   variables:
+    CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
+    CCACHE_COMPILERCHECK: "content"
     CCACHE_DIR: "$CI_PROJECT_DIR/.ccache"
+    CCACHE_HASHDIR: "true"
+    CCACHE_NAMESPACE: "${CI_PROJECT_PATH}/${CI_JOB_NAME}"
     CCACHE_RESHARE: "true"
+    CCACHE_SLOPPINESS: "include_file_mtime,time_macros"
+    CCACHE_REMOTE_ONLY: "true"
+    CCACHE_MAXSIZE: "500MiB"
     CTEST_TIMEOUT: 1200
     GIT_SUBMODULE_STRATEGY: recursive
   image:
@@ -163,12 +170,6 @@ stages:
   stage: build
   timeout:  2 hours
   interruptible: true
-  cache:
-    key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
-    fallback_keys:
-      - "$CI_JOB_NAME-main"
-    paths:
-      - "$CI_PROJECT_DIR/.ccache/"
   before_script:
     - *install_cmake
     - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
@@ -185,7 +186,7 @@ stages:
     - "cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_configure.cmake"
   script:
-    - "ctest -VV -S .gitlab/ci/ctest_build.cmake"
+    - "CCACHE_LOGFILE=${PWD}/build/ccache.log CCACHE_DEBUG=1 ctest -VV -S .gitlab/ci/ctest_build.cmake"
     - "ctest -VV -S .gitlab/ci/ctest_build_notes.cmake"
     - "[ -z $NO_TESTING ] && ctest $CTEST_TIMEOUT -VV -S .gitlab/ci/ctest_test.cmake"
     - cmake -P .gitlab/ci/check_warnings.cmake || exit 47
@@ -194,6 +195,11 @@ stages:
     - ccache -s
   extends:
     - .warning_policy
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      - build/ccache.log
 
 .cmake_memcheck_linux: &cmake_memcheck_linux
   stage: test
