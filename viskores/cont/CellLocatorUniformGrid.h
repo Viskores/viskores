@@ -27,6 +27,14 @@ namespace viskores
 namespace cont
 {
 
+/// @brief A cell locator optimized for finding cells in a uniform grid.
+///
+/// This locator is optimized for structured data that has uniform axis-aligned spacing.
+/// For this cell locator to work, it has to be given a cell set of type
+/// `viskores::cont::CellSetStructured` and a coordinate system using a
+/// `viskores::cont::ArrayHandleUniformPointCoordinates` for its coordinate system.
+/// If the data set matches this structure, then this locator will be faster than
+/// any others.
 class VISKORES_CONT_EXPORT CellLocatorUniformGrid : public viskores::cont::CellLocatorBase
 {
 public:

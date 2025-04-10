@@ -41,12 +41,10 @@ public:
 
   ParticleAdvector(const viskores::filter::flow::internal::BoundsMap& bm,
                    const std::vector<DSIType>& blocks,
-                   const bool& useThreaded,
-                   const bool& useAsyncComm)
+                   const bool& useThreaded)
     : Blocks(blocks)
     , BoundsMap(bm)
     , UseThreadedAlgorithm(useThreaded)
-    , UseAsynchronousCommunication(useAsyncComm)
   {
   }
 
@@ -70,7 +68,7 @@ private:
   viskores::cont::PartitionedDataSet RunAlgo(const viskores::cont::ArrayHandle<ParticleType>& seeds,
                                              viskores::FloatDefault stepSize)
   {
-    AlgorithmType algo(this->BoundsMap, this->Blocks, this->UseAsynchronousCommunication);
+    AlgorithmType algo(this->BoundsMap, this->Blocks);
     algo.Execute(seeds, stepSize);
     return algo.GetOutput();
   }
@@ -78,7 +76,6 @@ private:
   std::vector<DSIType> Blocks;
   viskores::filter::flow::internal::BoundsMap BoundsMap;
   bool UseThreadedAlgorithm;
-  bool UseAsynchronousCommunication = true;
 };
 
 }

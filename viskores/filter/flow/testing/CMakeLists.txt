@@ -45,14 +45,10 @@ viskores_unit_tests(
 #if MPI is enabled.
 if (Viskores_ENABLE_MPI)
   set(mpi_unit_tests
-    UnitTestAdvectionAsynchronousMPI.cxx
-    UnitTestAdvectionSynchronousMPI.cxx
-    UnitTestParticleMessengerMPI.cxx
-    UnitTestPathlineAsynchronousMPI.cxx
-    UnitTestPathlineSynchronousMPI.cxx
+    UnitTestAdvectionMPI.cxx
+    UnitTestPathlineMPI.cxx
     UnitTestStreamlineAMRMPI.cxx
-    UnitTestStreamlineAsynchronousMPI.cxx
-    UnitTestStreamlineSynchronousMPI.cxx
+    UnitTestStreamlineMPI.cxx
     )
   set(mpi_helpers
     TestingFlow.cxx
@@ -64,5 +60,5 @@ if (Viskores_ENABLE_MPI)
     SOURCES ${mpi_unit_tests} ${mpi_helpers}
     USE_VISKORES_JOB_POOL
   )
-  set_tests_properties(UnitTestAdvectionAsynchronousMPI_mpi PROPERTIES TIMEOUT 500)
+  set_tests_properties(UnitTestAdvectionMPI_mpi PROPERTIES TIMEOUT 500)
 endif()

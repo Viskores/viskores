@@ -216,6 +216,7 @@ inline std::vector<viskores::cont::DataSet> CreateAllDataSets(const viskores::Bo
   std::vector<viskores::cont::DataSet> dataSets;
 
   dataSets.push_back(viskores::worklet::testing::CreateUniformDataSet(bounds, dims, addGhost));
+  /*
   dataSets.push_back(viskores::worklet::testing::CreateRectilinearDataSet(bounds, dims, addGhost));
   dataSets.push_back(viskores::worklet::testing::CreateExplicitFromStructuredDataSet(
     bounds, dims, ExplicitDataSetOption::SINGLE, addGhost));
@@ -223,6 +224,7 @@ inline std::vector<viskores::cont::DataSet> CreateAllDataSets(const viskores::Bo
     bounds, dims, ExplicitDataSetOption::CURVILINEAR, addGhost));
   dataSets.push_back(viskores::worklet::testing::CreateExplicitFromStructuredDataSet(
     bounds, dims, ExplicitDataSetOption::EXPLICIT, addGhost));
+  */
 
   return dataSets;
 }

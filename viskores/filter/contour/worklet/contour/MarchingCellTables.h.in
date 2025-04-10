@@ -35,7 +35,7 @@ $# Ignore the following comment. It is meant for the generated file.
 #ifndef viskores_MarchingCellTables_h
 #define viskores_MarchingCellTables_h
 $py(
-shape_names = (
+shape_names = [
   "CELL_SHAPE_EMPTY",
   "CELL_SHAPE_VERTEX",
   "CELL_SHAPE_POLY_VERTEX",
@@ -51,19 +51,54 @@ shape_names = (
   "CELL_SHAPE_HEXAHEDRON",
   "CELL_SHAPE_WEDGE",
   "CELL_SHAPE_PYRAMID",
-)
-shape_tables = {
+]
+shape_tables_2D = {
   "CELL_SHAPE_EMPTY" : [],
   "CELL_SHAPE_VERTEX" : [],
-  # TODO
   "CELL_SHAPE_LINE" : [],
-  # Special implementation
   "CELL_SHAPE_POLY_LINE" : [],
-  # TODO
-  "CELL_SHAPE_TRIANGLE" : [],
+  "CELL_SHAPE_TRIANGLE" : [
+    [],
+    [(0, 2, 255)],
+    [(1, 0, 255)],
+    [(1, 2, 255)],
+    [(2, 1, 255)],
+    [(0, 1, 255)],
+    [(2, 0, 255)],
+    []
+  ],
   # Special implementation
   "CELL_SHAPE_POLYGON" : [],
-  # TODO
+  "CELL_SHAPE_QUAD" : [
+    [],
+    [(0, 3, 255)],
+    [(1, 0, 255)],
+    [(1, 3, 255)],
+    [(2, 1, 255)],
+    [(0, 3, 255), (2, 1, 255)],
+    [(2, 0, 255)],
+    [(2, 3, 255)],
+    [(3, 2, 255)],
+    [(0, 2, 255)],
+    [(1, 0, 255), (3, 2, 255)],
+    [(1, 2, 255)],
+    [(3, 1, 255)],
+    [(0, 1, 255)],
+    [(3, 0, 255)],
+    [],
+  ],
+  "CELL_SHAPE_TETRA" : [],
+  "CELL_SHAPE_HEXAHEDRON" : [],
+  "CELL_SHAPE_WEDGE" : [],
+  "CELL_SHAPE_PYRAMID" : [],
+}
+shape_tables_3D = {
+  "CELL_SHAPE_EMPTY" : [],
+  "CELL_SHAPE_VERTEX" : [],
+  "CELL_SHAPE_LINE" : [],
+  "CELL_SHAPE_POLY_LINE" : [],
+  "CELL_SHAPE_TRIANGLE" : [],
+  "CELL_SHAPE_POLYGON" : [],
   "CELL_SHAPE_QUAD" : [],
   "CELL_SHAPE_TETRA" : [
     [],
@@ -461,111 +496,127 @@ namespace marching_cells
 
 // Make sure the table indices are the same as Viskores's shape IDs.
 $for(shape_index in range(len(shape_names)))\
-$if(shape_names[shape_index] in shape_tables)\
+$if(shape_names[shape_index] in shape_tables_3D)\
 VISKORES_STATIC_ASSERT(viskores::$(shape_names[shape_index]) == $(shape_index));
 $endif\
 $endfor\
 
-VISKORES_EXEC inline viskores::IdComponent GetNumTrianglesOffset(viskores::UInt8 cellType)
+template <viskores::UInt8 Dims>
+class MarchingCellTables;
+
+template <>
+class MarchingCellTables<3>
 {
-  // clang-format off
-  VISKORES_STATIC_CONSTEXPR_ARRAY viskores::IdComponent offsets[] = {
+  VISKORES_EXEC static inline viskores::IdComponent GetNumOutCellsOffset(viskores::UInt8 inCellType)
+  {
+    // clang-format off
+    VISKORES_STATIC_CONSTEXPR_ARRAY viskores::IdComponent offsets[] = {
 $py(offset = 0)\
 $for(shape_name in shape_names)\
-    $(offset), // $(shape_name)
+      $(offset), // $(shape_name)
 $py(
-if shape_name in shape_tables:
-  offset = offset + len(shape_tables[shape_name])
+if shape_name in shape_tables_3D:
+  offset = offset + len(shape_tables_3D[shape_name])
 else:
-  shape_tables[shape_name] = []
+  shape_tables_3D[shape_name] = []
 )\
 $endfor\
-    0 // dummy
-  };
-  // clang-format on
+      $(offset) // table size
+    };
+    // clang-format on
 
-  return offsets[cellType];
-}
+    return offsets[inCellType];
+  }
 
-VISKORES_EXEC inline viskores::UInt8 GetNumTriangles(viskores::UInt8 cellType, viskores::UInt8 caseNumber)
-{
-  // clang-format off
-  VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt8 numTriangles[] = {
-$py(
-def num_triangles_list(shape_name):
-  result = "    "
-  start_case = 0
-  display_case = 0
-  for triangle_list in shape_tables[shape_name]:
-    result = result + str(len(triangle_list)) + ", "
-    display_case += 1
-    if display_case == 16:
-      result = result + "  // cases " + str(start_case) + " - " + str(start_case + display_case - 1) + "\n    "
-      start_case += display_case
-      display_case = 0
-  if display_case == 0:
-    result = result[:-4]
-  else:
-    result += "  // cases " + str(start_case) + " - " + str(start_case + display_case - 1) + "\n"
-  return result
-)\
-$extend(num_triangles_list)\
-$for(shape_name in shape_names)\
-    // $(shape_name)
-$num_triangles_list(shape_name)\
-$endfor\
-    0 // dummy
-  };
-  // clang-format on
-
-  viskores::IdComponent offset = GetNumTrianglesOffset(cellType);
-  return numTriangles[offset + caseNumber];
-}
-
-VISKORES_EXEC inline viskores::IdComponent GetTriTableOffset(viskores::UInt8 cellType, viskores::UInt8 caseNumber)
-{
-  // clang-format off
-  VISKORES_STATIC_CONSTEXPR_ARRAY viskores::IdComponent triTableOffset[] = {
+  VISKORES_EXEC static inline viskores::IdComponent GetOutCellTableOffset(viskores::UInt8 inCellType,
+                                                                  viskores::UInt8 caseNumber)
+  {
+    // clang-format off
+    VISKORES_STATIC_CONSTEXPR_ARRAY viskores::IdComponent tableOffset[] = {
 $py(
 offset = 0
 def table_offset_list(shape_name):
   global offset
-  result = "    "
+  result = "      "
   start_case = 0
   display_case = 0
-  for triangle_list in shape_tables[shape_name]:
+  for triangle_list in shape_tables_3D[shape_name]:
     result = result + str(offset) + ", "
     offset += len(triangle_list)
     display_case += 1
     if display_case == 8:
-      result = result + "  // cases " + str(start_case) + " - " + str(start_case + display_case - 1) + "\n    "
+      result = result + "  // cases " + str(start_case) + " - " + str(start_case + display_case - 1) + "\n      "
       start_case += display_case
       display_case = 0
   if display_case == 0:
-    result = result[:-4]
+    result = result[:-6]
   else:
     result += "  // cases " + str(start_case) + " - " + str(start_case + display_case - 1) + "\n"
   return result
 )\
 $extend(table_offset_list)\
 $for(shape_name in shape_names)\
-    // $(shape_name)
+      // $(shape_name)
 $table_offset_list(shape_name)\
 $endfor\
-    0 // dummy
-  };
-  // clang-format on
+      0 // dummy
+    };
+    // clang-format on
 
-  viskores::IdComponent offset = GetNumTrianglesOffset(cellType);
-  return triTableOffset[offset + caseNumber];
-}
+    viskores::IdComponent offset = GetNumOutCellsOffset(inCellType);
+    return tableOffset[offset + caseNumber];
+  }
 
-VISKORES_EXEC inline const viskores::UInt8* GetTriangleEdges(viskores::UInt8 cellType,
-                                                     viskores::UInt8 caseNumber,
-                                                     viskores::UInt8 triangleNumber)
-{
-  // clang-format off
-  VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt8 triTable[][3] = {
+public:
+  VISKORES_EXEC static inline viskores::UInt8 GetNumOutCells(viskores::UInt8 inCellType, viskores::UInt8 caseNumber)
+  {
+    // clang-format off
+    VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt8 numOutCells[] = {
+$py(
+def num_triangles_list(shape_name):
+  result = "      "
+  start_case = 0
+  display_case = 0
+  for triangle_list in shape_tables_3D[shape_name]:
+    result = result + str(len(triangle_list)) + ", "
+    display_case += 1
+    if display_case == 16:
+      result = result + "  // cases " + str(start_case) + " - " + str(start_case + display_case - 1) + "\n      "
+      start_case += display_case
+      display_case = 0
+  if display_case == 0:
+    result = result[:-6]
+  else:
+    result += "  // cases " + str(start_case) + " - " + str(start_case + display_case - 1) + "\n"
+  return result
+)\
+$extend(num_triangles_list)\
+$for(shape_name in shape_names)\
+      // $(shape_name)
+$num_triangles_list(shape_name)\
+$endfor\
+      0 // dummy
+    };
+    // clang-format on
+
+    viskores::IdComponent offset = GetNumOutCellsOffset(inCellType);
+    if (offset == GetNumOutCellsOffset(inCellType + 1))
+    {
+      // This part of the table is empty.
+      return 0;
+    }
+    else
+    {
+      return numOutCells[offset + caseNumber];
+    }
+  }
+
+  VISKORES_EXEC static inline const viskores::UInt8* GetCellEdges(viskores::UInt8 inCellType,
+                                                          viskores::UInt8 caseNumber,
+                                                          viskores::UInt8 outCellNumber)
+  {
+    // clang-format off
+    VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt8 triTable[][3] = {
 $py(
 def triangles(triangle_list):
   result = ""
@@ -575,20 +626,174 @@ def triangles(triangle_list):
 )\
 $extend(triangles)\
 $for(shape_name in shape_names)\
-    // $(shape_name)
+      // $(shape_name)
 $py(casenum = 0)\
-$for(triangle_list in shape_tables[shape_name])\
-    $triangles(triangle_list)// case $(casenum)
+$for(triangle_list in shape_tables_3D[shape_name])\
+      $triangles(triangle_list)// case $(casenum)
 $py(casenum += 1)\
 $endfor\
 $endfor\
-    { 0, 0, 0 } // dummy
-  };
-  // clang-format on
+      { 0, 0, 0 } // dummy
+    };
+    // clang-format on
 
-  viskores::IdComponent offset = GetTriTableOffset(cellType, caseNumber);
-  return triTable[offset + triangleNumber];
+    viskores::IdComponent offset = GetOutCellTableOffset(inCellType, caseNumber);
+    return triTable[offset + outCellNumber];
+  }
+};
+
+template <>
+class MarchingCellTables<2>
+{
+  VISKORES_EXEC static inline viskores::IdComponent GetNumOutCellsOffset(viskores::UInt8 inCellType)
+  {
+    // clang-format off
+    VISKORES_STATIC_CONSTEXPR_ARRAY viskores::IdComponent offsets[] = {
+$py(offset = 0)\
+$for(shape_name in shape_names)\
+      $(offset), // $(shape_name)
+$py(
+if shape_name in shape_tables_2D:
+  offset = offset + len(shape_tables_2D[shape_name])
+else:
+  shape_tables_2D[shape_name] = []
+)\
+$endfor\
+      $(offset) // table size
+    };
+    // clang-format on
+
+    return offsets[inCellType];
+  }
+
+  VISKORES_EXEC static inline viskores::IdComponent GetOutCellTableOffset(viskores::UInt8 inCellType,
+                                                                  viskores::UInt8 caseNumber)
+  {
+    // clang-format off
+    VISKORES_STATIC_CONSTEXPR_ARRAY viskores::IdComponent tableOffset[] = {
+$py(
+offset = 0
+def table_offset_list(shape_name):
+  global offset
+  result = "      "
+  start_case = 0
+  display_case = 0
+  for line_list in shape_tables_2D[shape_name]:
+    result = result + str(offset) + ", "
+    offset += len(line_list)
+    display_case += 1
+    if display_case == 8:
+      result = result + "  // cases " + str(start_case) + " - " + str(start_case + display_case - 1) + "\n      "
+      start_case += display_case
+      display_case = 0
+  if display_case == 0:
+    result = result[:-6]
+  else:
+    result += "  // cases " + str(start_case) + " - " + str(start_case + display_case - 1) + "\n"
+  return result
+)\
+$extend(table_offset_list)\
+$for(shape_name in shape_names)\
+      // $(shape_name)
+$table_offset_list(shape_name)\
+$endfor\
+      0 // dummy
+    };
+    // clang-format on
+
+    viskores::IdComponent offset = GetNumOutCellsOffset(inCellType);
+    return tableOffset[offset + caseNumber];
+  }
+
+public:
+  VISKORES_EXEC static inline viskores::UInt8 GetNumOutCells(viskores::UInt8 inCellType, viskores::UInt8 caseNumber)
+  {
+    // clang-format off
+    VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt8 numOutCells[] = {
+$py(
+def num_triangles_list(shape_name):
+  result = "      "
+  start_case = 0
+  display_case = 0
+  for line_list in shape_tables_2D[shape_name]:
+    result = result + str(len(line_list)) + ", "
+    display_case += 1
+    if display_case == 16:
+      result = result + "  // cases " + str(start_case) + " - " + str(start_case + display_case - 1) + "\n      "
+      start_case += display_case
+      display_case = 0
+  if display_case == 0:
+    result = result[:-6]
+  else:
+    result += "  // cases " + str(start_case) + " - " + str(start_case + display_case - 1) + "\n"
+  return result
+)\
+$extend(num_triangles_list)\
+$for(shape_name in shape_names)\
+      // $(shape_name)
+$num_triangles_list(shape_name)\
+$endfor\
+      0 // dummy
+    };
+    // clang-format on
+
+    viskores::IdComponent offset = GetNumOutCellsOffset(inCellType);
+    if (offset == GetNumOutCellsOffset(inCellType + 1))
+    {
+      // This part of the table is empty.
+      return 0;
+    }
+    else
+    {
+      return numOutCells[offset + caseNumber];
+    }
+  }
+
+  VISKORES_EXEC static inline const viskores::UInt8* GetCellEdges(viskores::UInt8 inCellType,
+                                                          viskores::UInt8 caseNumber,
+                                                          viskores::UInt8 outCellNumber)
+  {
+    // clang-format off
+    VISKORES_STATIC_CONSTEXPR_ARRAY viskores::UInt8 lineTable[][2] = {
+$py(
+def lines(line_list):
+  result = ""
+  for line in line_list:
+    result += "{ " + str(line[0]) + ", " + str(line[1]) + " }, "
+  return result
+)\
+$extend(lines)\
+$for(shape_name in shape_names)\
+      // $(shape_name)
+$py(casenum = 0)\
+$for(line_list in shape_tables_2D[shape_name])\
+      $lines(line_list)// case $(casenum)
+$py(casenum += 1)\
+$endfor\
+$endfor\
+      { 0, 0 } // dummy
+    };
+    // clang-format on
+
+    viskores::IdComponent offset = GetOutCellTableOffset(inCellType, caseNumber);
+    return lineTable[offset + outCellNumber];
+  }
+};
+
+template <viskores::UInt8 Dims>
+VISKORES_EXEC inline viskores::UInt8 GetNumOutCells(viskores::UInt8 inCellType, viskores::UInt8 caseNumber)
+{
+  return MarchingCellTables<Dims>::GetNumOutCells(inCellType, caseNumber);
 }
+
+template <viskores::UInt8 Dims>
+VISKORES_EXEC inline const viskores::UInt8* GetCellEdges(viskores::UInt8 inCellType,
+                                                 viskores::UInt8 caseNumber,
+                                                 viskores::UInt8 triangleNumber)
+{
+  return MarchingCellTables<Dims>::GetCellEdges(inCellType, caseNumber, triangleNumber);
+}
+
 }
 }
 } // namespace viskores::worklet::marching_cells

@@ -71,7 +71,8 @@
 #include <viskores/filter/MapFieldPermutation.h>
 #include <viskores/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <viskores/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
-#include <viskores/filter/scalar_topology/SelectTopVolumeContoursFilter.h>
+#include <viskores/filter/scalar_topology/ExtractTopVolumeContoursFilter.h>
+#include <viskores/filter/scalar_topology/SelectTopVolumeBranchesFilter.h>
 #include <viskores/filter/scalar_topology/testing/SuperArcHelper.h>
 #include <viskores/filter/scalar_topology/testing/VolumeHelper.h>
 #include <viskores/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
@@ -520,14 +521,21 @@ inline void TestContourTreeUniformDistributedBranchDecomposition8x9(int nBlocks,
                                       augmentHierarchicalTree,
                                       computeHierarchicalVolumetricBranchDecomposition);
 
-  using viskores::filter::scalar_topology::SelectTopVolumeContoursFilter;
+  using viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter;
 
   viskores::Id numBranches = 2;
-  SelectTopVolumeContoursFilter tp_filter;
+  SelectTopVolumeBranchesFilter tp_filter;
 
   tp_filter.SetSavedBranches(numBranches);
 
   auto tp_result = tp_filter.Execute(result);
+
+  // add filter for contour extraction
+  using viskores::filter::scalar_topology::ExtractTopVolumeContoursFilter;
+  ExtractTopVolumeContoursFilter iso_filter;
+
+  iso_filter.SetMarchingCubes(false);
+  auto iso_result = iso_filter.Execute(tp_result);
 
   if (viskores::cont::EnvironmentTracker::GetCommunicator().rank() == 0)
   {
@@ -659,6 +667,97 @@ inline void TestContourTreeUniformDistributedBranchDecomposition8x9(int nBlocks,
     }
 
     std::cout << "Top Branch Volume: Results Match!" << std::endl;
+
+    if (nBlocks != 2)
+      return;
+
+    for (viskores::Id ds_no = 0; ds_no < result.GetNumberOfPartitions(); ++ds_no)
+    {
+      auto ds = iso_result.GetPartition(ds_no);
+      auto isosurfaceEdgesFrom = ds.GetField("IsosurfaceEdgesFrom")
+                                   .GetData()
+                                   .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f_64>>()
+                                   .ReadPortal();
+      auto isosurfaceEdgesTo = ds.GetField("IsosurfaceEdgesTo")
+                                 .GetData()
+                                 .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f_64>>()
+                                 .ReadPortal();
+      auto isosurfaceEdgesLabels = ds.GetField("IsosurfaceEdgesLabels")
+                                     .GetData()
+                                     .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                                     .ReadPortal();
+      auto isosurfaceEdgesOrders = ds.GetField("IsosurfaceEdgesOrders")
+                                     .GetData()
+                                     .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                                     .ReadPortal();
+      auto isosurfaceEdgesOffset = ds.GetField("IsosurfaceEdgesOffset")
+                                     .GetData()
+                                     .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>()
+                                     .ReadPortal();
+      auto isosurfaceIsoValue = ds.GetField("IsosurfaceIsoValue")
+                                  .GetData()
+                                  .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Float32>>()
+                                  .ReadPortal();
+      viskores::Id nIsosurfaceEdges = isosurfaceEdgesFrom.GetNumberOfValues();
+      viskores::Id isoSurfaceCount = 0;
+      std::vector<viskores::Id> computed_iso_surface_info;
+
+      for (viskores::Id edge = 0; edge < nIsosurfaceEdges; ++edge)
+      {
+        while (isoSurfaceCount < isosurfaceEdgesLabels.GetNumberOfValues() &&
+               edge == isosurfaceEdgesOffset.Get(isoSurfaceCount))
+        {
+          computed_iso_surface_info.push_back(isosurfaceEdgesLabels.Get(isoSurfaceCount));
+          computed_iso_surface_info.push_back(isosurfaceEdgesOrders.Get(isoSurfaceCount));
+          computed_iso_surface_info.push_back(
+            static_cast<viskores::Id>(isosurfaceIsoValue.Get(isoSurfaceCount)));
+          isoSurfaceCount++;
+        }
+      }
+
+      VISKORES_TEST_ASSERT(isoSurfaceCount == 2, "Wrong result for isoSurfaceCount");
+
+      std::vector<viskores::Id> expected_iso_surface_info;
+      viskores::Vec3f_64 expected_from_edge0, expected_to_edge0;
+
+      switch (ds_no)
+      {
+        case 0:
+          expected_iso_surface_info = { 5, 1, 50, 4, 0, 50 };
+          expected_from_edge0 = viskores::make_Vec(0.519231, 3, 0);
+          expected_to_edge0 = viskores::make_Vec(0.5, 2.5, 0);
+          break;
+        case 1:
+          expected_iso_surface_info = { 1, 2, 30, 4, 0, 50 };
+          expected_from_edge0 = viskores::make_Vec(4.33333, 5, 0);
+          expected_to_edge0 = viskores::make_Vec(4.61538, 4.61538, 0);
+          break;
+        default:
+          VISKORES_TEST_ASSERT(false);
+      }
+
+      if (computed_iso_surface_info != expected_iso_surface_info)
+      {
+        std::cout << "Expected Isosurface Info for block " << ds_no << ":" << std::endl;
+        for (std::size_t i = 0; i < expected_iso_surface_info.size(); i += 3)
+          std::cout << "Isosurface Info:" << std::setw(5) << expected_iso_surface_info[i]
+                    << std::setw(10) << expected_iso_surface_info[i + 1] << std::setw(10)
+                    << expected_iso_surface_info[i + 2] << std::endl;
+        std::cout << "Computed Isosurface Info for block " << ds_no << ":" << std::endl;
+        for (std::size_t i = 0; i < computed_iso_surface_info.size(); i += 3)
+          std::cout << "Isosurface Info:" << std::setw(5) << computed_iso_surface_info[i]
+                    << std::setw(10) << computed_iso_surface_info[i + 1] << std::setw(10)
+                    << computed_iso_surface_info[i + 2] << std::endl;
+        VISKORES_TEST_FAIL("Iso Surface Info Don't Match!");
+      }
+
+      VISKORES_TEST_ASSERT((ds_no == 0 && nIsosurfaceEdges == 25) ||
+                           (ds_no == 1 && nIsosurfaceEdges == 26));
+      VISKORES_TEST_ASSERT(test_equal(isosurfaceEdgesFrom.Get(0), expected_from_edge0));
+      VISKORES_TEST_ASSERT(test_equal(isosurfaceEdgesTo.Get(0), expected_to_edge0));
+    }
+
+    std::cout << "Isosurface: Results Match!" << std::endl;
   }
 }
 
@@ -1066,13 +1165,14 @@ inline void RunContourTreePresimplification(std::string fieldName,
   viskores::filter::scalar_topology::DistributedBranchDecompositionFilter bd_filter;
   bd_result = bd_filter.Execute(result);
 
-  // Compute SelectTopVolumeContours
-  viskores::filter::scalar_topology::SelectTopVolumeContoursFilter tp_filter;
+  // Compute SelectTopVolumeBranches
+  viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter tp_filter;
 
   // numBranches needs to be large enough to include all branches
   // numBranches < numSuperarcs < globalSize
   tp_filter.SetSavedBranches(globalSize[0] * globalSize[1] *
                              (globalSize[2] > 1 ? globalSize[2] : 1));
+  tp_filter.SetPresimplifyThreshold(presimplifyThreshold);
   tp_result = tp_filter.Execute(bd_result);
 }
 

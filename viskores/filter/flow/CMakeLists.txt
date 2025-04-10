@@ -32,7 +32,6 @@ set(flow_headers
   )
 
 set(flow_sources
-  internal/Messenger.cxx
   FilterParticleAdvection.cxx
   )
 

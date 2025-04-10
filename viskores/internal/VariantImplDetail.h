@@ -48,8 +48,7 @@ namespace detail
 // --------------------------------------------------------------------------------
 // Helper classes to determine if all Variant types are trivial.
 template <typename... Ts>
-using AllTriviallyCopyable =
-  viskores::ListAll<viskores::List<Ts...>, viskoresstd::is_trivially_copyable>;
+using AllTriviallyCopyable = viskores::ListAll<viskores::List<Ts...>, viskoresstd::is_trivially_copyable>;
 
 // Single argument version of is_trivially_constructible
 template <typename T>

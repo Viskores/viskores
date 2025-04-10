@@ -40,6 +40,7 @@ namespace worklet
 namespace contour
 {
 
+template <viskores::UInt8 Dims>
 struct DeduceCoordType
 {
   template <typename CoordinateType, typename CellSetType, typename... Args>
@@ -48,10 +49,11 @@ struct DeduceCoordType
                   viskores::cont::CellSetSingleType<>& result,
                   Args&&... args) const
   {
-    result = marching_cells::execute(cells, coords, std::forward<Args>(args)...);
+    result = marching_cells::execute<Dims>(cells, coords, std::forward<Args>(args)...);
   }
 };
 
+template <viskores::UInt8 Dims>
 struct DeduceCellType
 {
   template <typename CellSetType, typename ValueType, typename StorageTagField>
@@ -66,8 +68,9 @@ struct DeduceCellType
 };
 
 // Declared outside of class, non-inline so that instantiations can be exported correctly.
+template <viskores::UInt8 Dims>
 template <typename CellSetType, typename ValueType, typename StorageTagField>
-void DeduceCellType::operator()(
+void DeduceCellType<Dims>::operator()(
   const CellSetType& cells,
   const viskores::cont::CoordinateSystem& coordinateSystem,
   viskores::cont::CellSetSingleType<>& outputCells,
@@ -78,7 +81,7 @@ void DeduceCellType::operator()(
   viskores::worklet::contour::CommonState& sharedState) const
 {
   viskores::cont::CastAndCall(coordinateSystem,
-                              contour::DeduceCoordType{},
+                              contour::DeduceCoordType<Dims>{},
                               cells,
                               outputCells,
                               isovalues,
@@ -137,7 +140,7 @@ public:
 
 public:
   // Filter called without normals generation
-  template <typename ValueType, typename StorageTagField>
+  template <viskores::UInt8 Dims, typename ValueType, typename StorageTagField>
   VISKORES_CONT viskores::cont::CellSetSingleType<> Run(
     const std::vector<ValueType>& isovalues,
     const viskores::cont::UnknownCellSet& cells,
@@ -150,7 +153,7 @@ public:
 
     viskores::cont::CellSetSingleType<> outputCells;
     viskores::cont::CastAndCall(cells,
-                                contour::DeduceCellType{},
+                                contour::DeduceCellType<Dims>{},
                                 coordinateSystem,
                                 outputCells,
                                 isovalues,
@@ -162,7 +165,7 @@ public:
   }
 
   // Filter called with normals generation
-  template <typename ValueType, typename StorageTagField>
+  template <viskores::UInt8 Dims, typename ValueType, typename StorageTagField>
   VISKORES_CONT viskores::cont::CellSetSingleType<> Run(
     const std::vector<ValueType>& isovalues,
     const viskores::cont::UnknownCellSet& cells,
@@ -175,7 +178,7 @@ public:
 
     viskores::cont::CellSetSingleType<> outputCells;
     viskores::cont::CastAndCall(cells,
-                                contour::DeduceCellType{},
+                                contour::DeduceCellType<Dims>{},
                                 coordinateSystem,
                                 outputCells,
                                 isovalues,
@@ -195,7 +198,7 @@ private:
 } // namespace viskores::worklet
 
 VISKORES_INSTANTIATION_BEGIN
-extern template void viskores::worklet::contour::DeduceCellType::operator()(
+extern template void viskores::worklet::contour::DeduceCellType<2>::operator()(
   const viskores::cont::CellSetStructured<2>& cells,
   const viskores::cont::CoordinateSystem& coordinateSystem,
   viskores::cont::CellSetSingleType<>& outputCells,
@@ -206,7 +209,7 @@ extern template void viskores::worklet::contour::DeduceCellType::operator()(
   viskores::worklet::contour::CommonState& sharedState) const;
 VISKORES_INSTANTIATION_END
 VISKORES_INSTANTIATION_BEGIN
-extern template void viskores::worklet::contour::DeduceCellType::operator()(
+extern template void viskores::worklet::contour::DeduceCellType<2>::operator()(
   const viskores::cont::CellSetStructured<2>& cells,
   const viskores::cont::CoordinateSystem& coordinateSystem,
   viskores::cont::CellSetSingleType<>& outputCells,
@@ -218,7 +221,7 @@ extern template void viskores::worklet::contour::DeduceCellType::operator()(
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
-extern template void viskores::worklet::contour::DeduceCellType::operator()(
+extern template void viskores::worklet::contour::DeduceCellType<3>::operator()(
   const viskores::cont::CellSetStructured<3>& cells,
   const viskores::cont::CoordinateSystem& coordinateSystem,
   viskores::cont::CellSetSingleType<>& outputCells,
@@ -229,7 +232,7 @@ extern template void viskores::worklet::contour::DeduceCellType::operator()(
   viskores::worklet::contour::CommonState& sharedState) const;
 VISKORES_INSTANTIATION_END
 VISKORES_INSTANTIATION_BEGIN
-extern template void viskores::worklet::contour::DeduceCellType::operator()(
+extern template void viskores::worklet::contour::DeduceCellType<3>::operator()(
   const viskores::cont::CellSetStructured<3>& cells,
   const viskores::cont::CoordinateSystem& coordinateSystem,
   viskores::cont::CellSetSingleType<>& outputCells,
@@ -241,7 +244,7 @@ extern template void viskores::worklet::contour::DeduceCellType::operator()(
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
-extern template void viskores::worklet::contour::DeduceCellType::operator()(
+extern template void viskores::worklet::contour::DeduceCellType<3>::operator()(
   const viskores::cont::CellSetExplicit<>& cells,
   const viskores::cont::CoordinateSystem& coordinateSystem,
   viskores::cont::CellSetSingleType<>& outputCells,
@@ -252,7 +255,7 @@ extern template void viskores::worklet::contour::DeduceCellType::operator()(
   viskores::worklet::contour::CommonState& sharedState) const;
 VISKORES_INSTANTIATION_END
 VISKORES_INSTANTIATION_BEGIN
-extern template void viskores::worklet::contour::DeduceCellType::operator()(
+extern template void viskores::worklet::contour::DeduceCellType<3>::operator()(
   const viskores::cont::CellSetExplicit<>& cells,
   const viskores::cont::CoordinateSystem& coordinateSystem,
   viskores::cont::CellSetSingleType<>& outputCells,
@@ -264,7 +267,7 @@ extern template void viskores::worklet::contour::DeduceCellType::operator()(
 VISKORES_INSTANTIATION_END
 
 VISKORES_INSTANTIATION_BEGIN
-extern template void viskores::worklet::contour::DeduceCellType::operator()(
+extern template void viskores::worklet::contour::DeduceCellType<3>::operator()(
   const viskores::cont::CellSetSingleType<>& cells,
   const viskores::cont::CoordinateSystem& coordinateSystem,
   viskores::cont::CellSetSingleType<>& outputCells,
@@ -275,7 +278,99 @@ extern template void viskores::worklet::contour::DeduceCellType::operator()(
   viskores::worklet::contour::CommonState& sharedState) const;
 VISKORES_INSTANTIATION_END
 VISKORES_INSTANTIATION_BEGIN
-extern template void viskores::worklet::contour::DeduceCellType::operator()(
+extern template void viskores::worklet::contour::DeduceCellType<3>::operator()(
+  const viskores::cont::CellSetSingleType<>& cells,
+  const viskores::cont::CoordinateSystem& coordinateSystem,
+  viskores::cont::CellSetSingleType<>& outputCells,
+  const std::vector<viskores::Float64>& isovalues,
+  const viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>& input,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& vertices,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& normals,
+  viskores::worklet::contour::CommonState& sharedState) const;
+VISKORES_INSTANTIATION_END
+
+VISKORES_INSTANTIATION_BEGIN
+extern template void viskores::worklet::contour::DeduceCellType<2>::operator()(
+  const viskores::cont::CellSetExplicit<>& cells,
+  const viskores::cont::CoordinateSystem& coordinateSystem,
+  viskores::cont::CellSetSingleType<>& outputCells,
+  const std::vector<viskores::Float32>& isovalues,
+  const viskores::cont::ArrayHandle<viskores::Float32, viskores::cont::StorageTagBasic>& input,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& vertices,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& normals,
+  viskores::worklet::contour::CommonState& sharedState) const;
+VISKORES_INSTANTIATION_END
+VISKORES_INSTANTIATION_BEGIN
+extern template void viskores::worklet::contour::DeduceCellType<2>::operator()(
+  const viskores::cont::CellSetExplicit<>& cells,
+  const viskores::cont::CoordinateSystem& coordinateSystem,
+  viskores::cont::CellSetSingleType<>& outputCells,
+  const std::vector<viskores::Float64>& isovalues,
+  const viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>& input,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& vertices,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& normals,
+  viskores::worklet::contour::CommonState& sharedState) const;
+VISKORES_INSTANTIATION_END
+
+VISKORES_INSTANTIATION_BEGIN
+extern template void viskores::worklet::contour::DeduceCellType<2>::operator()(
+  const viskores::cont::CellSetSingleType<>& cells,
+  const viskores::cont::CoordinateSystem& coordinateSystem,
+  viskores::cont::CellSetSingleType<>& outputCells,
+  const std::vector<viskores::Float32>& isovalues,
+  const viskores::cont::ArrayHandle<viskores::Float32, viskores::cont::StorageTagBasic>& input,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& vertices,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& normals,
+  viskores::worklet::contour::CommonState& sharedState) const;
+VISKORES_INSTANTIATION_END
+VISKORES_INSTANTIATION_BEGIN
+extern template void viskores::worklet::contour::DeduceCellType<2>::operator()(
+  const viskores::cont::CellSetSingleType<>& cells,
+  const viskores::cont::CoordinateSystem& coordinateSystem,
+  viskores::cont::CellSetSingleType<>& outputCells,
+  const std::vector<viskores::Float64>& isovalues,
+  const viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>& input,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& vertices,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& normals,
+  viskores::worklet::contour::CommonState& sharedState) const;
+VISKORES_INSTANTIATION_END
+
+VISKORES_INSTANTIATION_BEGIN
+extern template void viskores::worklet::contour::DeduceCellType<1>::operator()(
+  const viskores::cont::CellSetExplicit<>& cells,
+  const viskores::cont::CoordinateSystem& coordinateSystem,
+  viskores::cont::CellSetSingleType<>& outputCells,
+  const std::vector<viskores::Float32>& isovalues,
+  const viskores::cont::ArrayHandle<viskores::Float32, viskores::cont::StorageTagBasic>& input,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& vertices,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& normals,
+  viskores::worklet::contour::CommonState& sharedState) const;
+VISKORES_INSTANTIATION_END
+VISKORES_INSTANTIATION_BEGIN
+extern template void viskores::worklet::contour::DeduceCellType<1>::operator()(
+  const viskores::cont::CellSetExplicit<>& cells,
+  const viskores::cont::CoordinateSystem& coordinateSystem,
+  viskores::cont::CellSetSingleType<>& outputCells,
+  const std::vector<viskores::Float64>& isovalues,
+  const viskores::cont::ArrayHandle<viskores::Float64, viskores::cont::StorageTagBasic>& input,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& vertices,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& normals,
+  viskores::worklet::contour::CommonState& sharedState) const;
+VISKORES_INSTANTIATION_END
+
+VISKORES_INSTANTIATION_BEGIN
+extern template void viskores::worklet::contour::DeduceCellType<1>::operator()(
+  const viskores::cont::CellSetSingleType<>& cells,
+  const viskores::cont::CoordinateSystem& coordinateSystem,
+  viskores::cont::CellSetSingleType<>& outputCells,
+  const std::vector<viskores::Float32>& isovalues,
+  const viskores::cont::ArrayHandle<viskores::Float32, viskores::cont::StorageTagBasic>& input,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& vertices,
+  viskores::cont::ArrayHandle<viskores::Vec3f>& normals,
+  viskores::worklet::contour::CommonState& sharedState) const;
+VISKORES_INSTANTIATION_END
+VISKORES_INSTANTIATION_BEGIN
+extern template void viskores::worklet::contour::DeduceCellType<1>::operator()(
   const viskores::cont::CellSetSingleType<>& cells,
   const viskores::cont::CoordinateSystem& coordinateSystem,
   viskores::cont::CellSetSingleType<>& outputCells,

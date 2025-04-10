@@ -101,9 +101,7 @@ public:
       }
 
       viskores::cont::CoordinateSystem coords = result.GetCoordinateSystem();
-      viskores::cont::UnknownCellSet dcells = result.GetCellSet();
-      using CellSetType = viskores::cont::CellSetSingleType<>;
-      const CellSetType& cells = dcells.AsCellSet<CellSetType>();
+      viskores::cont::UnknownCellSet cells = result.GetCellSet();
 
       //verify that the number of points is correct (72)
       //verify that the number of cells is correct (160)
@@ -122,10 +120,7 @@ public:
                            "Shouldn't have less coordinates than the unmerged version");
 
       //verify that the number of cells is correct (160)
-      viskores::cont::UnknownCellSet dcells = result.GetCellSet();
-
-      using CellSetType = viskores::cont::CellSetSingleType<>;
-      const CellSetType& cells = dcells.AsCellSet<CellSetType>();
+      viskores::cont::UnknownCellSet cells = result.GetCellSet();
       VISKORES_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
     }
   }
@@ -166,9 +161,6 @@ public:
     viskores::io::VTKDataSetReader reader(pathname);
 
     viskores::cont::DataSet dataSet = reader.ReadDataSet();
-
-    viskores::cont::CellSetSingleType<> cellSet;
-    dataSet.GetCellSet().AsCellSet(cellSet);
 
     viskores::cont::ArrayHandle<viskores::Float32> fieldArray;
     dataSet.GetPointField("gyroid").GetData().AsArrayHandle(fieldArray);
@@ -255,6 +247,59 @@ public:
                          "Wrong number of cells in rectilinear contour");
   }
 
+  void TestMixedShapes() const
+  {
+    auto pathname =
+      viskores::cont::testing::Testing::DataPath("unstructured/mixed-cell-shapes.vtk");
+    viskores::io::VTKDataSetReader reader(pathname);
+    viskores::cont::DataSet input = reader.ReadDataSet();
+
+    // Single-cell contour
+    viskores::filter::contour::Contour filter;
+    filter.SetActiveField("scalars");
+    filter.SetMergeDuplicatePoints(true);
+    filter.SetIsoValues({ 5.5, 9.5, 11.5, 14.5, 17.5, 20.5, 25.5 });
+
+    {
+      filter.SetInputCellDimensionToAuto();
+      viskores::cont::DataSet output = filter.Execute(input);
+      VISKORES_TEST_ASSERT(output.GetNumberOfPoints() == 18);
+      VISKORES_TEST_ASSERT(output.GetNumberOfCells() == 10);
+      VISKORES_TEST_ASSERT(output.GetCellSet().GetCellShape(0) == viskores::CELL_SHAPE_TRIANGLE);
+    }
+
+    {
+      filter.SetInputCellDimensionToPolyhedra();
+      viskores::cont::DataSet output = filter.Execute(input);
+      VISKORES_TEST_ASSERT(output.GetNumberOfPoints() == 18);
+      VISKORES_TEST_ASSERT(output.GetNumberOfCells() == 10);
+      VISKORES_TEST_ASSERT(output.GetCellSet().GetCellShape(0) == viskores::CELL_SHAPE_TRIANGLE);
+    }
+
+    {
+      filter.SetInputCellDimensionToPolygons();
+      viskores::cont::DataSet output = filter.Execute(input);
+      VISKORES_TEST_ASSERT(output.GetNumberOfPoints() == 16);
+      VISKORES_TEST_ASSERT(output.GetNumberOfCells() == 8);
+      VISKORES_TEST_ASSERT(output.GetCellSet().GetCellShape(0) == viskores::CELL_SHAPE_LINE);
+    }
+
+    {
+      filter.SetInputCellDimensionToLines();
+      viskores::cont::DataSet output = filter.Execute(input);
+      VISKORES_TEST_ASSERT(output.GetNumberOfPoints() == 2);
+      VISKORES_TEST_ASSERT(output.GetNumberOfCells() == 2);
+      VISKORES_TEST_ASSERT(output.GetCellSet().GetCellShape(0) == viskores::CELL_SHAPE_VERTEX);
+    }
+
+    {
+      filter.SetInputCellDimensionToAll();
+      viskores::cont::DataSet output = filter.Execute(input);
+      VISKORES_TEST_ASSERT(output.GetNumberOfPoints() == 36);
+      VISKORES_TEST_ASSERT(output.GetNumberOfCells() == 20);
+    }
+  }
+
   void operator()() const
   {
     this->TestContourUniformGrid<viskores::filter::contour::Contour>(72);
@@ -275,6 +320,8 @@ public:
     this->TestNonUniformStructured<viskores::filter::contour::ContourMarchingCells>();
 
     this->TestUnsupportedFlyingEdges();
+
+    this->TestMixedShapes();
   }
 
 }; // class TestContourFilter

@@ -86,7 +86,10 @@ viskores::cont::DataSet ClipWithField::DoExecute(const viskores::cont::DataSet& 
   viskores::cont::CellSetExplicit<> outputCellSet;
 
   auto resolveFieldType = [&](const auto& concrete)
-  { outputCellSet = worklet.Run(inputCellSet, concrete, this->ClipValue, this->Invert); };
+  {
+    outputCellSet = this->Invert ? worklet.Run<true>(inputCellSet, concrete, this->ClipValue)
+                                 : worklet.Run<false>(inputCellSet, concrete, this->ClipValue);
+  };
   this->CastAndCallScalarField(this->GetFieldFromDataSet(input).GetData(), resolveFieldType);
 
   auto mapper = [&](auto& result, const auto& f) { DoMapField(result, f, worklet); };

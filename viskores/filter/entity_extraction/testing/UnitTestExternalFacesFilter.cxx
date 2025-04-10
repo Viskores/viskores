@@ -16,6 +16,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/testing/MakeTestDataSet.h>
 #include <viskores/cont/testing/Testing.h>
 
@@ -58,6 +59,21 @@ viskores::cont::DataSet MakeDataTestSet5()
   return MakeTestDataSet().Make3DExplicitDataSet6();
 }
 
+viskores::cont::DataSet MakeUniformDataTestSet()
+{
+  return MakeTestDataSet().Make3DUniformDataSet1();
+}
+
+viskores::cont::DataSet MakeCurvilinearDataTestSet()
+{
+  viskores::cont::DataSet data = MakeUniformDataTestSet();
+  viskores::cont::ArrayHandle<viskores::Vec3f> coords;
+  viskores::cont::CoordinateSystem oldCoords = data.GetCoordinateSystem();
+  viskores::cont::ArrayCopy(oldCoords.GetData(), coords);
+  data.AddCoordinateSystem(oldCoords.GetName(), coords);
+  return data;
+}
+
 void TestExternalFacesExplicitGrid(const viskores::cont::DataSet& ds,
                                    bool compactPoints,
                                    viskores::Id numExpectedExtFaces,
@@ -71,9 +87,7 @@ void TestExternalFacesExplicitGrid(const viskores::cont::DataSet& ds,
   viskores::cont::DataSet resultds = externalFaces.Execute(ds);
 
   // verify cellset
-  viskores::cont::CellSetExplicit<> new_cellSet =
-    resultds.GetCellSet().AsCellSet<viskores::cont::CellSetExplicit<>>();
-  const viskores::Id numOutputExtFaces = new_cellSet.GetNumberOfCells();
+  const viskores::Id numOutputExtFaces = resultds.GetNumberOfCells();
   VISKORES_TEST_ASSERT(numOutputExtFaces == numExpectedExtFaces,
                        "Number of External Faces mismatch");
 
@@ -144,6 +158,70 @@ void TestWithMixed2Dand3DMesh()
   TestExternalFacesExplicitGrid(ds, true, 6, 5, false);
 }
 
+void TestExternalFacesStructuredGrid(const viskores::cont::DataSet& ds, bool compactPoints)
+{
+  // Get the dimensions of the grid.
+  viskores::cont::CellSetStructured<3> cellSet;
+  ds.GetCellSet().AsCellSet(cellSet);
+  viskores::Id3 pointDims = cellSet.GetPointDimensions();
+  viskores::Id3 cellDims = cellSet.GetCellDimensions();
+
+  //Run the External Faces filter
+  viskores::filter::entity_extraction::ExternalFaces externalFaces;
+  externalFaces.SetCompactPoints(compactPoints);
+  viskores::cont::DataSet resultds = externalFaces.Execute(ds);
+
+  // verify cellset
+  viskores::Id numExpectedExtFaces = ((2 * cellDims[0] * cellDims[1]) + // x-y faces
+                                      (2 * cellDims[0] * cellDims[2]) + // x-z faces
+                                      (2 * cellDims[1] * cellDims[2])); // y-z faces
+  const viskores::Id numOutputExtFaces = resultds.GetNumberOfCells();
+  VISKORES_TEST_ASSERT(numOutputExtFaces == numExpectedExtFaces,
+                       "Number of External Faces mismatch");
+
+  // verify fields
+  VISKORES_TEST_ASSERT(resultds.HasField("pointvar"), "Point field not mapped successfully");
+  VISKORES_TEST_ASSERT(resultds.HasField("cellvar"), "Cell field not mapped successfully");
+
+  // verify CompactPoints
+  if (compactPoints)
+  {
+    viskores::Id numExpectedPoints = ((2 * pointDims[0] * pointDims[1])   // x-y faces
+                                      + (2 * pointDims[0] * pointDims[2]) // x-z faces
+                                      + (2 * pointDims[1] * pointDims[2]) // y-z faces
+                                      - (4 * pointDims[0])                // overcounted x edges
+                                      - (4 * pointDims[1])                // overcounted y edges
+                                      - (4 * pointDims[2])                // overcounted z edges
+                                      + 8);                               // undercounted corners
+    viskores::Id numOutputPoints = resultds.GetNumberOfPoints();
+    VISKORES_TEST_ASSERT(numOutputPoints == numExpectedPoints);
+  }
+  else
+  {
+    VISKORES_TEST_ASSERT(resultds.GetNumberOfPoints() == ds.GetNumberOfPoints());
+  }
+}
+
+void TestWithUniformGrid()
+{
+  std::cout << "Testing with uniform grid\n";
+  viskores::cont::DataSet ds = MakeUniformDataTestSet();
+  std::cout << "Compact Points Off\n";
+  TestExternalFacesStructuredGrid(ds, false);
+  std::cout << "Compact Points On\n";
+  TestExternalFacesStructuredGrid(ds, true);
+}
+
+void TestWithCurvilinearGrid()
+{
+  std::cout << "Testing with curvilinear grid\n";
+  viskores::cont::DataSet ds = MakeCurvilinearDataTestSet();
+  std::cout << "Compact Points Off\n";
+  TestExternalFacesStructuredGrid(ds, false);
+  std::cout << "Compact Points On\n";
+  TestExternalFacesStructuredGrid(ds, true);
+}
+
 void TestExternalFacesFilter()
 {
   TestWithHeterogeneousMesh();
@@ -151,6 +229,8 @@ void TestExternalFacesFilter()
   TestWithUniformMesh();
   TestWithRectilinearMesh();
   TestWithMixed2Dand3DMesh();
+  TestWithUniformGrid();
+  TestWithCurvilinearGrid();
 }
 
 } // anonymous namespace

@@ -42,7 +42,6 @@ namespace cont
 /// a uniformly dense triangle grid. In some cases the `CellLocatorUniformBins`
 /// produces a more efficient search structure, especially for GPUs where memory
 /// access patterns are critical to performance.
-
 class VISKORES_CONT_EXPORT CellLocatorUniformBins : public viskores::cont::CellLocatorBase
 {
   template <typename CellSetCont>
@@ -61,10 +60,19 @@ public:
     viskores::ListApply<CellLocatorExecList, viskores::exec::CellLocatorMultiplexer>;
   using LastCell = typename ExecObjType::LastCell;
 
-  CellLocatorUniformBins() {}
-  void SetDims(const viskores::Id3& dims) { this->UniformDims = dims; }
-  viskores::Id3 GetDims() const { return this->UniformDims; }
+  CellLocatorUniformBins() = default;
 
+  /// @brief Specify the dimensions of the grid used to establish bins.
+  ///
+  /// This locator will establish a grid over the bounds of the input data
+  /// that contains the number of bins specified by these dimensions in each
+  /// direction. Larger dimensions will reduce the number of cells in each bin,
+  /// but will require more memory. `SetDims()` must be called before `Update()`.
+  VISKORES_CONT void SetDims(const viskores::Id3& dims) { this->UniformDims = dims; }
+  /// @copydoc SetDims
+  VISKORES_CONT viskores::Id3 GetDims() const { return this->UniformDims; }
+
+  /// Print a summary of the state of this locator.
   void PrintSummary(std::ostream& out) const;
 
 public:

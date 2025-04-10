@@ -22,13 +22,13 @@ Although |Viskores| provides a simplified high-level interface for programming, 
    :widths: auto
    :align: center
 
-   +-----------------+-----------------+
+   +-----------------+---------------------+
    | CUDA SDK        | |Viskores|          |
-   +-----------------+-----------------+
-   | 431 LOC         | 265 LOC         |
-   +-----------------+-----------------+
+   +-----------------+---------------------+
+   | 431 LOC         | 265 LOC             |
+   +-----------------+---------------------+
    | |MCCompareCuda| | |MCCompareViskores| |
-   +-----------------+-----------------+
+   +-----------------+---------------------+
 
 |Viskores| simplifies the development of parallel scientific visualization algorithms by providing a framework of supporting functionality that allows developers to focus on visualization operations.
 Consider the listings in :numref:`MCCompare` that compares the size of the implementation for the Marching Cubes algorithm in |Viskores| with the equivalent reference implementation in the CUDA software development kit.

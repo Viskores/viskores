@@ -19,10 +19,16 @@
 #ifndef viskores_filter_flow_internal_AdvectAlgorithm_h
 #define viskores_filter_flow_internal_AdvectAlgorithm_h
 
+
 #include <viskores/cont/PartitionedDataSet.h>
 #include <viskores/filter/flow/internal/BoundsMap.h>
 #include <viskores/filter/flow/internal/DataSetIntegrator.h>
-#include <viskores/filter/flow/internal/ParticleMessenger.h>
+#ifdef VISKORES_ENABLE_MPI
+#include <viskores/filter/flow/internal/AdvectAlgorithmTerminator.h>
+#include <viskores/filter/flow/internal/ParticleExchanger.h>
+#include <viskores/thirdparty/diy/diy.h>
+#include <viskores/thirdparty/diy/mpi-cast.h>
+#endif
 
 namespace viskores
 {
@@ -40,13 +46,15 @@ public:
   using ParticleType = typename DSIType::PType;
 
   AdvectAlgorithm(const viskores::filter::flow::internal::BoundsMap& bm,
-                  std::vector<DSIType>& blocks,
-                  bool useAsyncComm)
+                  std::vector<DSIType>& blocks)
     : Blocks(blocks)
     , BoundsMap(bm)
+#ifdef VISKORES_ENABLE_MPI
+    , Exchanger(this->Comm)
+    , Terminator(this->Comm)
+#endif
     , NumRanks(this->Comm.size())
     , Rank(this->Comm.rank())
-    , UseAsynchronousCommunication(useAsyncComm)
   {
   }
 
@@ -55,6 +63,7 @@ public:
   {
     this->SetStepSize(stepSize);
     this->SetSeeds(seeds);
+
     this->Go();
   }
 
@@ -100,33 +109,43 @@ public:
     this->SetSeedArray(particles, blockIDs);
   }
 
+  virtual bool HaveWork()
+  {
+    const bool haveParticles = !this->Active.empty() || !this->Inactive.empty();
+#ifndef VISKORES_ENABLE_MPI
+    return haveParticles;
+#else
+    return haveParticles || this->Exchanger.HaveWork();
+#endif
+  }
+
+  virtual bool GetDone()
+  {
+#ifndef VISKORES_ENABLE_MPI
+    return !this->HaveWork();
+#else
+    return this->Terminator.Done();
+#endif
+  }
+
   //Advect all the particles.
   virtual void Go()
   {
-    viskores::filter::flow::internal::ParticleMessenger<ParticleType> messenger(
-      this->Comm, this->UseAsynchronousCommunication, this->BoundsMap, 1, 128);
-
-    this->ComputeTotalNumParticles();
-
-    while (this->TotalNumTerminatedParticles < this->TotalNumParticles)
+    while (!this->GetDone())
     {
       std::vector<ParticleType> v;
-      viskores::Id numTerm = 0, blockId = -1;
+      viskores::Id blockId = -1;
+
       if (this->GetActiveParticles(v, blockId))
       {
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
         DSIHelperInfo<ParticleType> bb(v, this->BoundsMap, this->ParticleBlockIDsMap);
         block.Advect(bb, this->StepSize);
-        numTerm = this->UpdateResult(bb);
+        this->UpdateResult(bb);
       }
 
-      viskores::Id numTermMessages = 0;
-      this->Communicate(messenger, numTerm, numTermMessages);
-
-      this->TotalNumTerminatedParticles += (numTerm + numTermMessages);
-      if (this->TotalNumTerminatedParticles > this->TotalNumParticles)
-        throw viskores::cont::ErrorFilterExecution("Particle count error");
+      this->ExchangeParticles();
     }
   }
 
@@ -135,20 +154,6 @@ public:
     this->Active.clear();
     this->Inactive.clear();
     this->ParticleBlockIDsMap.clear();
-  }
-
-  void ComputeTotalNumParticles()
-  {
-    viskores::Id numLocal = static_cast<viskores::Id>(this->Inactive.size());
-    for (const auto& it : this->Active)
-      numLocal += it.second.size();
-
-#ifdef VISKORES_ENABLE_MPI
-    viskoresdiy::mpi::all_reduce(
-      this->Comm, numLocal, this->TotalNumParticles, std::plus<viskores::Id>{});
-#else
-    this->TotalNumParticles = numLocal;
-#endif
   }
 
   DataSetIntegrator<DSIType, ParticleType>& GetDataSet(viskores::Id id)
@@ -223,39 +228,50 @@ public:
     return !particles.empty();
   }
 
-  void Communicate(viskores::filter::flow::internal::ParticleMessenger<ParticleType>& messenger,
-                   viskores::Id numLocalTerminations,
-                   viskores::Id& numTermMessages)
+  void ExchangeParticles()
   {
-    std::vector<ParticleType> outgoing;
-    std::vector<viskores::Id> outgoingRanks;
+#ifndef VISKORES_ENABLE_MPI
+    this->SerialExchange();
+#else
+    // MPI with only 1 rank.
+    if (this->NumRanks == 1)
+      this->SerialExchange();
+    else
+    {
+      std::vector<ParticleType> outgoing;
+      std::vector<viskores::Id> outgoingRanks;
 
-    this->GetOutgoingParticles(outgoing, outgoingRanks);
+      this->GetOutgoingParticles(outgoing, outgoingRanks);
 
-    std::vector<ParticleType> incoming;
-    std::unordered_map<viskores::Id, std::vector<viskores::Id>> incomingBlockIDs;
-    numTermMessages = 0;
-    bool block = false;
-#ifdef VISKORES_ENABLE_MPI
-    block = this->GetBlockAndWait(messenger.UsingSyncCommunication(), numLocalTerminations);
+      std::vector<ParticleType> incoming;
+      std::unordered_map<viskores::Id, std::vector<viskores::Id>> incomingBlockIDs;
+
+      this->Exchanger.Exchange(
+        outgoing, outgoingRanks, this->ParticleBlockIDsMap, incoming, incomingBlockIDs);
+
+      //Cleanup what was sent.
+      for (const auto& p : outgoing)
+        this->ParticleBlockIDsMap.erase(p.GetID());
+
+      this->UpdateActive(incoming, incomingBlockIDs);
+    }
+
+    this->Terminator.Control(this->HaveWork());
 #endif
-
-    messenger.Exchange(outgoing,
-                       outgoingRanks,
-                       this->ParticleBlockIDsMap,
-                       numLocalTerminations,
-                       incoming,
-                       incomingBlockIDs,
-                       numTermMessages,
-                       block);
-
-    //Cleanup what was sent.
-    for (const auto& p : outgoing)
-      this->ParticleBlockIDsMap.erase(p.GetID());
-
-    this->UpdateActive(incoming, incomingBlockIDs);
   }
 
+  void SerialExchange()
+  {
+    for (const auto& p : this->Inactive)
+    {
+      const auto& bid = this->ParticleBlockIDsMap[p.GetID()];
+      VISKORES_ASSERT(!bid.empty());
+      this->Active[bid[0]].emplace_back(std::move(p));
+    }
+    this->Inactive.clear();
+  }
+
+#ifdef VISKORES_ENABLE_MPI
   void GetOutgoingParticles(std::vector<ParticleType>& outgoing,
                             std::vector<viskores::Id>& outgoingRanks)
   {
@@ -276,6 +292,7 @@ public:
       auto ranks = this->BoundsMap.FindRank(bid[0]);
       VISKORES_ASSERT(!ranks.empty());
 
+      //Only 1 rank has the block.
       if (ranks.size() == 1)
       {
         if (ranks[0] == this->Rank)
@@ -291,7 +308,7 @@ public:
       }
       else
       {
-        //Decide where it should go...
+        //Multiple ranks have the block, decide where it should go...
 
         //Random selection:
         viskores::Id outRank = std::rand() % ranks.size();
@@ -315,6 +332,7 @@ public:
     if (!particlesStaying.empty())
       this->UpdateActive(particlesStaying, particlesStayingBlockIDs);
   }
+#endif
 
   virtual void UpdateActive(
     const std::vector<ParticleType>& particles,
@@ -322,17 +340,20 @@ public:
   {
     VISKORES_ASSERT(particles.size() == idsMap.size());
 
-    for (auto pit = particles.begin(); pit != particles.end(); pit++)
+    if (!particles.empty())
     {
-      viskores::Id particleID = pit->GetID();
-      const auto& it = idsMap.find(particleID);
-      VISKORES_ASSERT(it != idsMap.end() && !it->second.empty());
-      viskores::Id blockId = it->second[0];
-      this->Active[blockId].emplace_back(*pit);
-    }
+      for (auto pit = particles.begin(); pit != particles.end(); pit++)
+      {
+        viskores::Id particleID = pit->GetID();
+        const auto& it = idsMap.find(particleID);
+        VISKORES_ASSERT(it != idsMap.end() && !it->second.empty());
+        viskores::Id blockId = it->second[0];
+        this->Active[blockId].emplace_back(*pit);
+      }
 
-    for (const auto& it : idsMap)
-      this->ParticleBlockIDsMap[it.first] = it.second;
+      for (const auto& it : idsMap)
+        this->ParticleBlockIDsMap[it.first] = it.second;
+    }
   }
 
   virtual void UpdateInactive(
@@ -362,37 +383,16 @@ public:
     return numTerm;
   }
 
-
-  virtual bool GetBlockAndWait(const bool& syncComm, const viskores::Id& numLocalTerm)
-  {
-    bool haveNoWork = this->Active.empty() && this->Inactive.empty();
-
-    //Using syncronous communication we should only block and wait if we have no particles
-    if (syncComm)
-    {
-      return haveNoWork;
-    }
-    else
-    {
-      //Otherwise, for asyncronous communication, there are only two cases where blocking would deadlock.
-      //1. There are active particles.
-      //2. numLocalTerm + this->TotalNumberOfTerminatedParticles == this->TotalNumberOfParticles
-      //So, if neither are true, we can safely block and wait for communication to come in.
-
-      if (haveNoWork &&
-          (numLocalTerm + this->TotalNumTerminatedParticles < this->TotalNumParticles))
-        return true;
-
-      return false;
-    }
-  }
-
   //Member data
   // {blockId, std::vector of particles}
   std::unordered_map<viskores::Id, std::vector<ParticleType>> Active;
   std::vector<DSIType> Blocks;
   viskores::filter::flow::internal::BoundsMap BoundsMap;
   viskoresdiy::mpi::communicator Comm = viskores::cont::EnvironmentTracker::GetCommunicator();
+#ifdef VISKORES_ENABLE_MPI
+  ParticleExchanger<ParticleType> Exchanger;
+  AdvectAlgorithmTerminator Terminator;
+#endif
   std::vector<ParticleType> Inactive;
   viskores::Id MaxNumberOfSteps = 0;
   viskores::Id NumRanks;
@@ -400,9 +400,6 @@ public:
   std::unordered_map<viskores::Id, std::vector<viskores::Id>> ParticleBlockIDsMap;
   viskores::Id Rank;
   viskores::FloatDefault StepSize;
-  viskores::Id TotalNumParticles = 0;
-  viskores::Id TotalNumTerminatedParticles = 0;
-  bool UseAsynchronousCommunication = true;
 };
 
 }

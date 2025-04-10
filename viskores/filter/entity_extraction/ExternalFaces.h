@@ -72,7 +72,7 @@ private:
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
 
   viskores::cont::DataSet GenerateOutput(const viskores::cont::DataSet& input,
-                                         viskores::cont::CellSetExplicit<>& outCellSet);
+                                         viskores::cont::UnknownCellSet& outCellSet);
 
   VISKORES_CONT bool MapFieldOntoOutput(viskores::cont::DataSet& result,
                                         const viskores::cont::Field& field);

@@ -471,7 +471,7 @@ inline void ActiveGraph::TransferSaddleStarts()
   // std::partial_sum(viskores::cont::ArrayPortalToIteratorBegin(newOutdegree.WritePortal()),
   //                 viskores::cont::ArrayPortalToIteratorEnd(newOutdegree.WritePortal()) - 1,
   //                 viskores::cont::ArrayPortalToIteratorBegin(newFirstEdge.WritePortal()) + 1);
-  // Viskores version of the prefix sum
+  // VTK:M version of the prefix sum
   viskores::cont::Algorithm::ScanExclusive(newOutdegree, newFirstEdge);
 
   viskores::Id nEdgesToSort = this->GetLastValue(newFirstEdge) + this->GetLastValue(newOutdegree);

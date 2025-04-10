@@ -65,12 +65,15 @@ FilterParticleAdvectionUnsteadyState<Derived>::DoExecutePartitions(
   using DSIType = viskores::filter::flow::internal::
     DataSetIntegratorUnsteadyState<ParticleType, FieldType, TerminationType, AnalysisType>;
 
-  viskores::filter::flow::internal::BoundsMap boundsMap(input);
+  if (this->BlockIdsSet)
+    this->BoundsMap = viskores::filter::flow::internal::BoundsMap(input, this->BlockIds);
+  else
+    this->BoundsMap = viskores::filter::flow::internal::BoundsMap(input);
 
   std::vector<DSIType> dsi;
   for (viskores::Id i = 0; i < input.GetNumberOfPartitions(); i++)
   {
-    viskores::Id blockId = boundsMap.GetLocalBlockId(i);
+    viskores::Id blockId = this->BoundsMap.GetLocalBlockId(i);
     auto ds1 = input.GetPartition(i);
     auto ds2 = this->Input2.GetPartition(i);
 
@@ -95,7 +98,7 @@ FilterParticleAdvectionUnsteadyState<Derived>::DoExecutePartitions(
                      analysis);
   }
   viskores::filter::flow::internal::ParticleAdvector<DSIType> pav(
-    boundsMap, dsi, this->UseThreadedAlgorithm, this->UseAsynchronousCommunication);
+    this->BoundsMap, dsi, this->UseThreadedAlgorithm);
 
   viskores::cont::ArrayHandle<ParticleType> particles;
   this->Seeds.AsArrayHandle(particles);

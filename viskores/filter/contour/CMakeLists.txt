@@ -21,6 +21,7 @@ set(contour_headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   Contour.h
+  ContourDimension.h
   ContourFlyingEdges.h
   ContourMarchingCells.h
   MIRFilter.h

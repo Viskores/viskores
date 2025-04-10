@@ -22,6 +22,7 @@
 #include <viskores/exec/ParametricCoordinates.h>
 
 #include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ArrayHandleGroupVecVariable.h>
 #include <viskores/cont/CoordinateSystem.h>
 
 #include <viskores/TopologyElementTag.h>
@@ -34,6 +35,16 @@ namespace exec
 {
 
 //--------------------------------------------------------------------
+
+/// @brief Structure for locating cells.
+///
+/// Use the `FindCell()` method to identify which cell contains a point in space.
+/// The `FindCell()` method optionally takes a `LastCell` object, which is a
+/// structure nested in this class. The `LastCell` object can help speed locating
+/// cells for successive finds at nearby points.
+///
+/// This class is provided by `viskores::cont::CellLocatorBoundingIntervalHierarchy`
+/// when passed to a worklet.
 template <typename CellStructureType>
 class VISKORES_ALWAYS_EXPORT CellLocatorUniformBins
 {
@@ -77,26 +88,27 @@ public:
   {
   }
 
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::LastCell
   struct LastCell
   {
     viskores::Id CellId = -1;
     viskores::Id BinIdx = -1;
   };
 
-  VISKORES_EXEC
-  viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                               viskores::Id& cellId,
-                               viskores::Vec3f& parametric) const
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
+  VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
+                                             viskores::Id& cellId,
+                                             viskores::Vec3f& parametric) const
   {
     LastCell lastCell;
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
-  VISKORES_EXEC
-  viskores::ErrorCode FindCell(const viskores::Vec3f& point,
-                               viskores::Id& cellId,
-                               viskores::Vec3f& parametric,
-                               LastCell& lastCell) const
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
+  VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
+                                             viskores::Id& cellId,
+                                             viskores::Vec3f& parametric,
+                                             LastCell& lastCell) const
   {
     viskores::Id binIdx = this->FindBinIdx(point);
 

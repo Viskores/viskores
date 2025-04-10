@@ -547,7 +547,7 @@ public:
           }
           else
           {
-            internal::ClipTables::EdgeVec edge =
+            internal::ClipTablesBase::EdgeVec edge =
               MIRData.GetEdge(shape.Id, entry - MIRCases::EA, pointcount);
             if (edge[0] == 255 || edge[1] == 255)
             {
@@ -613,7 +613,7 @@ public:
           }
           else // case of a new edge point
           {
-            internal::ClipTables::EdgeVec edge =
+            internal::ClipTablesBase::EdgeVec edge =
               MIRData.GetEdge(shape.Id, entry - MIRCases::EA, pointcount);
             if (edge[0] == 255 || edge[1] == 255)
             {

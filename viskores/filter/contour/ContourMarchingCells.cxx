@@ -21,7 +21,7 @@
 
 #include <viskores/filter/contour/ContourMarchingCells.h>
 #include <viskores/filter/contour/worklet/ContourMarchingCells.h>
-
+#include <viskores/filter/multi_block/MergeDataSets.h>
 
 namespace viskores
 {
@@ -31,6 +31,71 @@ namespace contour
 {
 //-----------------------------------------------------------------------------
 viskores::cont::DataSet ContourMarchingCells::DoExecute(const viskores::cont::DataSet& inDataSet)
+{
+  switch (this->GetInputCellDimension())
+  {
+    case viskores::filter::contour::ContourDimension::Auto:
+    {
+      viskores::cont::DataSet output = this->DoExecuteDimension<3>(inDataSet);
+      if (output.GetNumberOfCells() > 0)
+      {
+        return output;
+      }
+      output = this->DoExecuteDimension<2>(inDataSet);
+      if (output.GetNumberOfCells() > 0)
+      {
+        return output;
+      }
+      output = this->DoExecuteDimension<1>(inDataSet);
+      return output;
+    }
+    case viskores::filter::contour::ContourDimension::All:
+    {
+      viskores::cont::PartitionedDataSet allData;
+      viskores::cont::DataSet output = this->DoExecuteDimension<3>(inDataSet);
+      if (output.GetNumberOfCells() > 0)
+      {
+        allData.AppendPartition(output);
+      }
+      output = this->DoExecuteDimension<2>(inDataSet);
+      if (output.GetNumberOfCells() > 0)
+      {
+        allData.AppendPartition(output);
+      }
+      output = this->DoExecuteDimension<1>(inDataSet);
+      if (output.GetNumberOfCells() > 0)
+      {
+        allData.AppendPartition(output);
+      }
+      if (allData.GetNumberOfPartitions() > 1)
+      {
+        viskores::filter::multi_block::MergeDataSets merge;
+        return merge.Execute(allData).GetPartition(0);
+      }
+      else if (allData.GetNumberOfPartitions() == 1)
+      {
+        return allData.GetPartition(0);
+      }
+      else
+      {
+        return output;
+      }
+    }
+    case viskores::filter::contour::ContourDimension::Polyhedra:
+      return this->DoExecuteDimension<3>(inDataSet);
+    case viskores::filter::contour::ContourDimension::Polygons:
+      return this->DoExecuteDimension<2>(inDataSet);
+    case viskores::filter::contour::ContourDimension::Lines:
+      return this->DoExecuteDimension<1>(inDataSet);
+    default:
+      throw viskores::cont::ErrorBadValue("Invalid value for ContourDimension.");
+  }
+}
+
+
+template <viskores::UInt8 Dims>
+viskores::cont::DataSet ContourMarchingCells::DoExecuteDimension(
+  const viskores::cont::DataSet& inDataSet)
 {
   viskores::worklet::ContourMarchingCells worklet;
   worklet.SetMergeDuplicatePoints(this->GetMergeDuplicatePoints());
@@ -68,11 +133,12 @@ viskores::cont::DataSet ContourMarchingCells::DoExecute(const viskores::cont::Da
 
     if (this->GenerateNormals && !this->GetComputeFastNormals())
     {
-      outputCells = worklet.Run(ivalues, inputCells, inputCoords, concrete, vertices, normals);
+      outputCells =
+        worklet.Run<Dims>(ivalues, inputCells, inputCoords, concrete, vertices, normals);
     }
     else
     {
-      outputCells = worklet.Run(ivalues, inputCells, inputCoords, concrete, vertices);
+      outputCells = worklet.Run<Dims>(ivalues, inputCells, inputCoords, concrete, vertices);
     }
   };
 
@@ -85,9 +151,9 @@ viskores::cont::DataSet ContourMarchingCells::DoExecute(const viskores::cont::Da
   this->ExecuteGenerateNormals(output, normals);
   this->ExecuteAddInterpolationEdgeIds(output, worklet);
 
-
   return output;
 }
+
 } // namespace contour
 } // namespace filter
 } // namespace viskores

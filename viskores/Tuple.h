@@ -138,8 +138,7 @@ VISKORES_EXEC_CONT auto MakeTuple(Ts&&... args) -> viskores::Tuple<typename std:
 ///
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename... Ts>
-VISKORES_EXEC_CONT auto make_tuple(Ts&&... args)
-  -> decltype(viskores::MakeTuple(std::forward<Ts>(args)...))
+VISKORES_EXEC_CONT auto make_tuple(Ts&&... args) -> decltype(viskores::MakeTuple(std::forward<Ts>(args)...))
 {
   return viskores::MakeTuple(std::forward<Ts>(args)...);
 }

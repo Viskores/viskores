@@ -105,7 +105,7 @@ void TestClipStructuredSphere(viskores::Float64 offset)
   {
     VISKORES_TEST_ASSERT(
       test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-      "Wrong result for ClipWithImplicitFunction fliter on sturctured quads data");
+      "Wrong result for ClipWithImplicitFunction filter on structured quads data");
   }
 }
 
@@ -144,7 +144,7 @@ void TestClipStructuredInvertedSphere()
   {
     VISKORES_TEST_ASSERT(
       test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-      "Wrong result for ClipWithImplicitFunction fliter on sturctured quads data");
+      "Wrong result for ClipWithImplicitFunction filter on sturctured quads data");
   }
 }
 
@@ -179,7 +179,7 @@ void TestClipStructuredInvertedMultiPlane()
   for (int i = 0; i < 4; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
-                         "Wrong result for ClipWithImplicitFunction fliter on sturctured data in "
+                         "Wrong result for ClipWithImplicitFunction filter on sturctured data in "
                          "TestClipStructuredInvertedMultiPlane");
   }
 }

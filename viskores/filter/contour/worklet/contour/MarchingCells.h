@@ -84,20 +84,131 @@ make_ScalarField(const viskores::cont::ArrayHandle<viskores::Int8, S>& ah)
 }
 
 // ---------------------------------------------------------------------------
-template <typename T>
+template <viskores::UInt8 InCellDim>
+struct OutCellTraits;
+
+template <>
+struct OutCellTraits<3>
+{
+  static constexpr viskores::UInt8 NUM_POINTS = 3;
+  static constexpr viskores::UInt8 CELL_SHAPE = viskores::CELL_SHAPE_TRIANGLE;
+};
+
+template <>
+struct OutCellTraits<2>
+{
+  static constexpr viskores::UInt8 NUM_POINTS = 2;
+  static constexpr viskores::UInt8 CELL_SHAPE = viskores::CELL_SHAPE_LINE;
+};
+
+template <>
+struct OutCellTraits<1>
+{
+  static constexpr viskores::UInt8 NUM_POINTS = 1;
+  static constexpr viskores::UInt8 CELL_SHAPE = viskores::CELL_SHAPE_VERTEX;
+};
+
+template <viskores::UInt8 Dims, typename FieldType, typename FieldVecType>
+VISKORES_EXEC viskores::IdComponent TableNumOutCells(viskores::UInt8 shape,
+                                                     FieldType isoValue,
+                                                     const FieldVecType& fieldIn)
+{
+  const viskores::IdComponent numPoints = fieldIn.GetNumberOfComponents();
+  // Compute the Marching Cubes case number for this cell. We need to iterate
+  // the isovalues until the sum >= our visit index. But we need to make
+  // sure the caseNumber is correct before stopping
+  viskores::IdComponent caseNumber = 0;
+  for (viskores::IdComponent point = 0; point < numPoints; ++point)
+  {
+    caseNumber |= (fieldIn[point] > isoValue) << point;
+  }
+
+  return viskores::worklet::marching_cells::GetNumOutCells<Dims>(shape, caseNumber);
+}
+
+template <typename FieldType, typename FieldVecType>
+VISKORES_EXEC viskores::IdComponent NumOutCellsSpecialCases(
+  std::integral_constant<viskores::UInt8, 3>,
+  viskores::UInt8 shape,
+  FieldType isoValue,
+  const FieldVecType& fieldIn)
+{
+  return TableNumOutCells<3>(shape, isoValue, fieldIn);
+}
+
+template <typename FieldType, typename FieldVecType>
+VISKORES_EXEC viskores::IdComponent NumOutCellsSpecialCases(
+  std::integral_constant<viskores::UInt8, 2>,
+  viskores::UInt8 shape,
+  FieldType isoValue,
+  const FieldVecType& fieldIn)
+{
+  if (shape == viskores::CELL_SHAPE_POLYGON)
+  {
+    const viskores::IdComponent numPoints = fieldIn.GetNumberOfComponents();
+    viskores::IdComponent numCrossings = 0;
+    bool lastOver = (fieldIn[numPoints - 1] > isoValue);
+    for (viskores::IdComponent point = 0; point < numPoints; ++point)
+    {
+      bool nextOver = (fieldIn[point] > isoValue);
+      if (lastOver != nextOver)
+      {
+        ++numCrossings;
+      }
+      lastOver = nextOver;
+    }
+    VISKORES_ASSERT((numCrossings % 2) == 0);
+    return numCrossings / 2;
+  }
+  else
+  {
+    return TableNumOutCells<2>(shape, isoValue, fieldIn);
+  }
+}
+
+template <typename FieldType, typename FieldVecType>
+VISKORES_EXEC viskores::IdComponent NumOutCellsSpecialCases(
+  std::integral_constant<viskores::UInt8, 1>,
+  viskores::UInt8 shape,
+  FieldType isoValue,
+  const FieldVecType& fieldIn)
+{
+  if ((shape == viskores::CELL_SHAPE_LINE) || (shape == viskores::CELL_SHAPE_POLY_LINE))
+  {
+    const viskores::IdComponent numPoints = fieldIn.GetNumberOfComponents();
+    viskores::IdComponent numCrossings = 0;
+    bool lastOver = (fieldIn[0] > isoValue);
+    for (viskores::IdComponent point = 1; point < numPoints; ++point)
+    {
+      bool nextOver = (fieldIn[point] > isoValue);
+      if (lastOver != nextOver)
+      {
+        ++numCrossings;
+      }
+      lastOver = nextOver;
+    }
+    return numCrossings;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+// ---------------------------------------------------------------------------
+template <viskores::UInt8 Dims, typename T>
 class ClassifyCell : public viskores::worklet::WorkletVisitCellsWithPoints
 {
 public:
-  using ControlSignature = void(WholeArrayIn isoValues,
+  using ControlSignature = void(WholeArrayIn isovalues,
                                 FieldInPoint fieldIn,
                                 CellSetIn cellSet,
                                 FieldOutCell outNumTriangles);
-  using ExecutionSignature = void(CellShape, PointCount, _1, _2, _4);
+  using ExecutionSignature = void(CellShape, _1, _2, _4);
   using InputDomain = _3;
 
   template <typename CellShapeType, typename IsoValuesType, typename FieldInType>
   VISKORES_EXEC void operator()(CellShapeType shape,
-                                viskores::IdComponent numVertices,
                                 const IsoValuesType& isovalues,
                                 const FieldInType& fieldIn,
                                 viskores::IdComponent& numTriangles) const
@@ -108,13 +219,8 @@ public:
 
     for (viskores::Id i = 0; i < numIsoValues; ++i)
     {
-      viskores::IdComponent caseNumber = 0;
-      for (viskores::IdComponent j = 0; j < numVertices; ++j)
-      {
-        caseNumber |= (fieldIn[j] > isovalues.Get(i)) << j;
-      }
-
-      sum += viskores::worklet::marching_cells::GetNumTriangles(shape.Id, caseNumber);
+      sum += NumOutCellsSpecialCases(
+        std::integral_constant<viskores::UInt8, Dims>{}, shape.Id, isovalues.Get(i), fieldIn);
     }
     numTriangles = sum;
   }
@@ -139,20 +245,23 @@ public:
     ExecObject() = default;
 
     VISKORES_CONT
-    ExecObject(viskores::Id size,
+    ExecObject(viskores::UInt8 numPointsPerOutCell,
+               viskores::Id size,
                viskores::cont::ArrayHandle<viskores::FloatDefault>& interpWeights,
                viskores::cont::ArrayHandle<viskores::Id2>& interpIds,
                viskores::cont::ArrayHandle<viskores::Id>& interpCellIds,
                viskores::cont::ArrayHandle<viskores::UInt8>& interpContourId,
                viskores::cont::DeviceAdapterId device,
                viskores::cont::Token& token)
-      : InterpWeightsPortal(interpWeights.PrepareForOutput(3 * size, device, token))
-      , InterpIdPortal(interpIds.PrepareForOutput(3 * size, device, token))
-      , InterpCellIdPortal(interpCellIds.PrepareForOutput(3 * size, device, token))
-      , InterpContourPortal(interpContourId.PrepareForOutput(3 * size, device, token))
+      : InterpWeightsPortal(
+          interpWeights.PrepareForOutput(numPointsPerOutCell * size, device, token))
+      , InterpIdPortal(interpIds.PrepareForOutput(numPointsPerOutCell * size, device, token))
+      , InterpCellIdPortal(
+          interpCellIds.PrepareForOutput(numPointsPerOutCell * size, device, token))
+      , InterpContourPortal(
+          interpContourId.PrepareForOutput(numPointsPerOutCell * size, device, token))
     {
-      // Interp needs to be 3 times longer than size as they are per point of the
-      // output triangle
+      // Interp needs to be scaled as they are per point of the output cell
     }
     WritePortalType<viskores::FloatDefault> InterpWeightsPortal;
     WritePortalType<viskores::Id2> InterpIdPortal;
@@ -161,12 +270,14 @@ public:
   };
 
   VISKORES_CONT
-  EdgeWeightGenerateMetaData(viskores::Id size,
+  EdgeWeightGenerateMetaData(viskores::UInt8 inCellDimension,
+                             viskores::Id size,
                              viskores::cont::ArrayHandle<viskores::FloatDefault>& interpWeights,
                              viskores::cont::ArrayHandle<viskores::Id2>& interpIds,
                              viskores::cont::ArrayHandle<viskores::Id>& interpCellIds,
                              viskores::cont::ArrayHandle<viskores::UInt8>& interpContourId)
-    : Size(size)
+    : NumPointsPerOutCell(inCellDimension)
+    , Size(size)
     , InterpWeights(interpWeights)
     , InterpIds(interpIds)
     , InterpCellIds(interpCellIds)
@@ -177,7 +288,8 @@ public:
   VISKORES_CONT ExecObject PrepareForExecution(viskores::cont::DeviceAdapterId device,
                                                viskores::cont::Token& token)
   {
-    return ExecObject(this->Size,
+    return ExecObject(this->NumPointsPerOutCell,
+                      this->Size,
                       this->InterpWeights,
                       this->InterpIds,
                       this->InterpCellIds,
@@ -187,6 +299,7 @@ public:
   }
 
 private:
+  viskores::UInt8 NumPointsPerOutCell;
   viskores::Id Size;
   viskores::cont::ArrayHandle<viskores::FloatDefault> InterpWeights;
   viskores::cont::ArrayHandle<viskores::Id2> InterpIds;
@@ -194,10 +307,160 @@ private:
   viskores::cont::ArrayHandle<viskores::UInt8> InterpContourId;
 };
 
+// -----------------------------------------------------------------------------
+template <viskores::UInt8 Dims, typename IsoValuesType, typename FieldVecType>
+VISKORES_EXEC const viskores::UInt8* TableCellEdges(viskores::UInt8 shape,
+                                                    const IsoValuesType& isoValues,
+                                                    const FieldVecType& fieldIn,
+                                                    viskores::IdComponent visitIndex,
+                                                    viskores::IdComponent& contourIndex)
+{
+  const viskores::IdComponent numPoints = fieldIn.GetNumberOfComponents();
+  // Compute the Marching Cubes case number for this cell. We need to iterate
+  // the isovalues until the sum >= our visit index. But we need to make
+  // sure the caseNumber is correct before stopping
+  viskores::IdComponent caseNumber = 0;
+  viskores::IdComponent sum = 0;
+  viskores::IdComponent numIsoValues =
+    static_cast<viskores::IdComponent>(isoValues.GetNumberOfValues());
+
+  for (contourIndex = 0; contourIndex < numIsoValues; ++contourIndex)
+  {
+    const auto value = isoValues.Get(contourIndex);
+    caseNumber = 0;
+    for (viskores::IdComponent point = 0; point < numPoints; ++point)
+    {
+      caseNumber |= (fieldIn[point] > value) << point;
+    }
+
+    sum += viskores::worklet::marching_cells::GetNumOutCells<Dims>(shape, caseNumber);
+    if (sum > visitIndex)
+    {
+      break;
+    }
+  }
+
+  VISKORES_ASSERT(contourIndex < numIsoValues);
+
+  visitIndex = sum - visitIndex - 1;
+
+  return viskores::worklet::marching_cells::GetCellEdges<Dims>(shape, caseNumber, visitIndex);
+}
+
+template <typename IsoValuesType, typename FieldVecType>
+VISKORES_EXEC const viskores::UInt8* CellEdgesSpecialCases(
+  std::integral_constant<viskores::UInt8, 3>,
+  viskores::UInt8 shape,
+  const IsoValuesType& isoValues,
+  const FieldVecType& fieldIn,
+  viskores::IdComponent visitIndex,
+  viskores::IdComponent& contourIndex,
+  viskores::Vec2ui_8& viskoresNotUsed(edgeBuffer))
+{
+  return TableCellEdges<3>(shape, isoValues, fieldIn, visitIndex, contourIndex);
+}
+
+template <typename IsoValuesType, typename FieldVecType>
+VISKORES_EXEC const viskores::UInt8* CellEdgesSpecialCases(
+  std::integral_constant<viskores::UInt8, 2>,
+  viskores::UInt8 shape,
+  const IsoValuesType& isoValues,
+  const FieldVecType& fieldIn,
+  viskores::IdComponent visitIndex,
+  viskores::IdComponent& contourIndex,
+  viskores::Vec2ui_8& edgeBuffer)
+{
+  if (shape == viskores::CELL_SHAPE_POLYGON)
+  {
+    viskores::IdComponent numCrossings = 0;
+    viskores::IdComponent numIsoValues =
+      static_cast<viskores::IdComponent>(isoValues.GetNumberOfValues());
+    const viskores::IdComponent numPoints = fieldIn.GetNumberOfComponents();
+    for (contourIndex = 0; contourIndex < numIsoValues; ++contourIndex)
+    {
+      auto isoValue = isoValues.Get(contourIndex);
+      bool lastOver = (fieldIn[0] > isoValue);
+      for (viskores::IdComponent point = 1; point <= numPoints; ++point)
+      {
+        bool nextOver = (fieldIn[point % numPoints] > isoValue);
+        if (lastOver != nextOver)
+        {
+          // Check to see if we hit the target edge.
+          if (visitIndex == (numCrossings / 2))
+          {
+            if ((numCrossings % 2) == 0)
+            {
+              // Record first point.
+              edgeBuffer[0] = point - 1;
+            }
+            else
+            {
+              // Record second (and final) point.
+              edgeBuffer[1] = point - 1;
+              return &edgeBuffer[0];
+            }
+          }
+          ++numCrossings;
+        }
+        lastOver = nextOver;
+      }
+      VISKORES_ASSERT((numCrossings % 2) == 0);
+    }
+    VISKORES_ASSERT(0 && "Sanity check fail.");
+    edgeBuffer[0] = edgeBuffer[1] = 0;
+    return &edgeBuffer[0];
+  }
+  else
+  {
+    return TableCellEdges<2>(shape, isoValues, fieldIn, visitIndex, contourIndex);
+  }
+}
+
+template <typename IsoValuesType, typename FieldVecType>
+VISKORES_EXEC const viskores::UInt8* CellEdgesSpecialCases(
+  std::integral_constant<viskores::UInt8, 1>,
+  viskores::UInt8 shape,
+  const IsoValuesType& isoValues,
+  const FieldVecType& fieldIn,
+  viskores::IdComponent visitIndex,
+  viskores::IdComponent& contourIndex,
+  viskores::Vec2ui_8& edgeBuffer)
+{
+  VISKORES_ASSERT((shape == viskores::CELL_SHAPE_LINE) ||
+                  (shape == viskores::CELL_SHAPE_POLY_LINE));
+  (void)shape;
+  viskores::IdComponent numCrossings = 0;
+  viskores::IdComponent numIsoValues =
+    static_cast<viskores::IdComponent>(isoValues.GetNumberOfValues());
+  const viskores::IdComponent numPoints = fieldIn.GetNumberOfComponents();
+  for (contourIndex = 0; contourIndex < numIsoValues; ++contourIndex)
+  {
+    auto isoValue = isoValues.Get(contourIndex);
+    bool lastOver = (fieldIn[0] > isoValue);
+    for (viskores::IdComponent point = 1; point < numPoints; ++point)
+    {
+      bool nextOver = (fieldIn[point] > isoValue);
+      if (lastOver != nextOver)
+      {
+        if (visitIndex == numCrossings)
+        {
+          edgeBuffer[0] = point - 1;
+          return &edgeBuffer[0];
+        }
+        ++numCrossings;
+      }
+      lastOver = nextOver;
+    }
+  }
+  VISKORES_ASSERT(0 && "Sanity check fail.");
+  edgeBuffer[0] = 0;
+  return &edgeBuffer[0];
+}
+
 /// \brief Compute the weights for each edge that is used to generate
 /// a point in the resulting iso-surface
 // -----------------------------------------------------------------------------
-template <typename T>
+template <viskores::UInt8 Dims>
 class EdgeWeightGenerate : public viskores::worklet::WorkletVisitCellsWithPoints
 {
 public:
@@ -233,45 +496,28 @@ public:
     viskores::IdComponent visitIndex,
     const IndicesVecType& indices) const
   {
-    const viskores::Id outputPointId = 3 * outputCellId;
+    const viskores::Id outputPointId = OutCellTraits<Dims>::NUM_POINTS * outputCellId;
     using FieldType = typename viskores::VecTraits<FieldInType>::ComponentType;
 
-    viskores::IdComponent sum = 0, caseNumber = 0;
-    viskores::IdComponent i = 0,
-                          numIsoValues =
-                            static_cast<viskores::IdComponent>(isovalues.GetNumberOfValues());
-
-    for (i = 0; i < numIsoValues; ++i)
-    {
-      const FieldType ivalue = isovalues.Get(i);
-      // Compute the Marching Cubes case number for this cell. We need to iterate
-      // the isovalues until the sum >= our visit index. But we need to make
-      // sure the caseNumber is correct before stopping
-      caseNumber = 0;
-      for (viskores::IdComponent j = 0; j < numVertices; ++j)
-      {
-        caseNumber |= (fieldIn[j] > ivalue) << j;
-      }
-
-      sum += GetNumTriangles(shape.Id, caseNumber);
-      if (sum > visitIndex)
-      {
-        break;
-      }
-    }
-
-    visitIndex = sum - visitIndex - 1;
-
     // Interpolate for vertex positions and associated scalar values
-    auto edges =
-      viskores::worklet::marching_cells::GetTriangleEdges(shape.Id, caseNumber, visitIndex);
-    for (viskores::IdComponent triVertex = 0; triVertex < 3; triVertex++)
+    viskores::IdComponent contourIndex;
+    viskores::Vec2ui_8 edgeBuffer;
+    const viskores::UInt8* edges =
+      CellEdgesSpecialCases(std::integral_constant<viskores::UInt8, Dims>{},
+                            shape.Id,
+                            isovalues,
+                            fieldIn,
+                            visitIndex,
+                            contourIndex,
+                            edgeBuffer);
+    for (viskores::IdComponent triVertex = 0; triVertex < OutCellTraits<Dims>::NUM_POINTS;
+         triVertex++)
     {
       viskores::IdComponent2 edgeVertices;
       viskores::Vec<FieldType, 2> fieldValues;
       for (viskores::IdComponent edgePointId = 0; edgePointId < 2; ++edgePointId)
       {
-        viskores::ErrorCode errorCode = viskores::exec::CellEdgeLocalIndex(
+        viskores::ErrorCode errorCode = this->CrossingLocalIndex(
           numVertices, edgePointId, edges[triVertex], shape, edgeVertices[edgePointId]);
         if (errorCode != viskores::ErrorCode::Success)
         {
@@ -285,20 +531,67 @@ public:
       // in a subsequent call, after we have merged duplicate points
       metaData.InterpCellIdPortal.Set(outputPointId + triVertex, inputCellId);
 
-      metaData.InterpContourPortal.Set(outputPointId + triVertex, static_cast<viskores::UInt8>(i));
+      metaData.InterpContourPortal.Set(outputPointId + triVertex,
+                                       static_cast<viskores::UInt8>(contourIndex));
 
       metaData.InterpIdPortal.Set(
         outputPointId + triVertex,
         viskores::Id2(indices[edgeVertices[0]], indices[edgeVertices[1]]));
 
       viskores::FloatDefault interpolant =
-        static_cast<viskores::FloatDefault>(isovalues.Get(i) - fieldValues[0]) /
+        static_cast<viskores::FloatDefault>(isovalues.Get(contourIndex) - fieldValues[0]) /
         static_cast<viskores::FloatDefault>(fieldValues[1] - fieldValues[0]);
 
       metaData.InterpWeightsPortal.Set(outputPointId + triVertex, interpolant);
     }
   }
+
+  template <typename CellShapeTag>
+  static inline VISKORES_EXEC viskores::ErrorCode CrossingLocalIndex(
+    viskores::IdComponent numPoints,
+    viskores::IdComponent pointIndex,
+    viskores::IdComponent edgeIndex,
+    CellShapeTag shape,
+    viskores::IdComponent& result);
 };
+
+template <>
+template <typename CellShapeTag>
+VISKORES_EXEC viskores::ErrorCode EdgeWeightGenerate<1>::CrossingLocalIndex(
+  viskores::IdComponent numPoints,
+  viskores::IdComponent pointIndex,
+  viskores::IdComponent edgeIndex,
+  CellShapeTag shape,
+  viskores::IdComponent& result)
+{
+  VISKORES_ASSERT((shape.Id == viskores::CELL_SHAPE_LINE) ||
+                  (shape.Id == viskores::CELL_SHAPE_POLY_LINE));
+  (void)shape;
+  if ((pointIndex < 0) || (pointIndex > 1))
+  {
+    result = -1;
+    return viskores::ErrorCode::InvalidPointId;
+  }
+  if ((edgeIndex < 0) || (edgeIndex >= (numPoints - 1)))
+  {
+    result = -1;
+    return viskores::ErrorCode::InvalidEdgeId;
+  }
+  result = edgeIndex + pointIndex;
+  return viskores::ErrorCode::Success;
+}
+
+template <viskores::UInt8 Dims>
+template <typename CellShapeTag>
+VISKORES_EXEC viskores::ErrorCode EdgeWeightGenerate<Dims>::CrossingLocalIndex(
+  viskores::IdComponent numPoints,
+  viskores::IdComponent pointIndex,
+  viskores::IdComponent edgeIndex,
+  CellShapeTag shape,
+  viskores::IdComponent& result)
+{
+  return viskores::exec::CellEdgeLocalIndex(numPoints, pointIndex, edgeIndex, shape, result);
+}
 
 // ---------------------------------------------------------------------------
 struct MultiContourLess
@@ -611,7 +904,8 @@ struct GenerateNormals
 };
 
 //----------------------------------------------------------------------------
-template <typename CellSetType,
+template <viskores::UInt8 Dims,
+          typename CellSetType,
           typename CoordinateSystem,
           typename ValueType,
           typename StorageTagField>
@@ -639,7 +933,7 @@ viskores::cont::CellSetSingleType<> execute(
   // for each cell, and the number of vertices to be generated
   viskores::cont::ArrayHandle<viskores::IdComponent> numOutputTrisPerCell;
   {
-    marching_cells::ClassifyCell<ValueType> classifyCell;
+    marching_cells::ClassifyCell<Dims, ValueType> classifyCell;
     invoker(classifyCell, isoValuesHandle, inputField, cells, numOutputTrisPerCell);
   }
 
@@ -647,19 +941,20 @@ viskores::cont::CellSetSingleType<> execute(
   viskores::cont::ArrayHandle<viskores::UInt8> contourIds;
   viskores::cont::ArrayHandle<viskores::Id> originalCellIdsForPoints;
   {
-    auto scatter = EdgeWeightGenerate<ValueType>::MakeScatter(numOutputTrisPerCell);
+    auto scatter = EdgeWeightGenerate<Dims>::MakeScatter(numOutputTrisPerCell);
 
     // Maps output cells to input cells. Store this for cell field mapping.
     sharedState.CellIdMap = scatter.GetOutputToInputMap();
 
     EdgeWeightGenerateMetaData metaData(
+      Dims,
       scatter.GetOutputRange(numOutputTrisPerCell.GetNumberOfValues()),
       sharedState.InterpolationWeights,
       sharedState.InterpolationEdgeIds,
       originalCellIdsForPoints,
       contourIds);
 
-    invoker(EdgeWeightGenerate<ValueType>{},
+    invoker(EdgeWeightGenerate<Dims>{},
             scatter,
             cells,
             //cast to a scalar field if not one, as cellderivative only works on those
@@ -718,7 +1013,10 @@ viskores::cont::CellSetSingleType<> execute(
 
   //assign the connectivity to the cell set
   viskores::cont::CellSetSingleType<> outputCells;
-  outputCells.Fill(vertices.GetNumberOfValues(), viskores::CELL_SHAPE_TRIANGLE, 3, connectivity);
+  outputCells.Fill(vertices.GetNumberOfValues(),
+                   OutCellTraits<Dims>::CELL_SHAPE,
+                   OutCellTraits<Dims>::NUM_POINTS,
+                   connectivity);
 
   //now that the vertices have been generated we can generate the normals
   if (sharedState.GenerateNormals)

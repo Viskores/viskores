@@ -40,7 +40,7 @@
 #endif
 
 #ifdef VISKORES_MSVC
-#include <intrin.h>                    // For bitwise intrinsics (__popcnt, etc)
+#include <intrin.h>                // For bitwise intrinsics (__popcnt, etc)
 #include <viskores/internal/Windows.h> // for types used by MSVC intrinsics.
 #ifndef VISKORES_CUDA
 #include <math.h>
@@ -117,8 +117,7 @@ static constexpr inline VISKORES_EXEC_CONT typename detail::FloatingPointReturnT
 /// Returns the constant Pi one hundred and eightieth.
 ///
 template <typename T = viskores::Float64>
-static constexpr inline VISKORES_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type
-Pi_180()
+static constexpr inline VISKORES_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type Pi_180()
 {
   using FT = typename detail::FloatingPointReturnType<T>::Type;
   return static_cast<FT>(0.01745329251994329547437168059786927);

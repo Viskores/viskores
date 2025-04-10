@@ -38,9 +38,7 @@ contributions to this text:
 
 .. Dave Pugmire filters: Streamlines, point transform, coordinate system transforms, add ghost cells, remove ghost cells.
 
-**Abhishek Yenpure** and **Li-Ta Lo** for their documentation of locator structures..
-
-.. (Chapter~\ref{chap:Locators}).
+**Abhishek Yenpure** and **Li-Ta Lo** for their documentation of locator structures in :chapref:`locators:Locators`.
 
 .. Abhishek Yenpure: General cell locators and BoundingIntervalHierarchy
 .. Li-Ta Lo: General point locators and uniform grid point locator, particle density

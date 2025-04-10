@@ -180,28 +180,31 @@ The contouring/isosurface algorithm is implemented by :class:`viskores::filter::
 :class:`viskores::filter::contour::Contour` also inherits the following methods.
 
 .. doxygenfunction:: viskores::filter::contour::AbstractContour::SetIsoValue(viskores::Float64)
-
 .. doxygenfunction:: viskores::filter::contour::AbstractContour::SetIsoValue(viskores::Id, viskores::Float64)
-
 .. doxygenfunction:: viskores::filter::contour::AbstractContour::SetIsoValues
-
 .. doxygenfunction:: viskores::filter::contour::AbstractContour::GetIsoValue
 
 .. doxygenfunction:: viskores::filter::contour::AbstractContour::SetGenerateNormals
-
 .. doxygenfunction:: viskores::filter::contour::AbstractContour::GetGenerateNormals
 
 .. doxygenfunction:: viskores::filter::contour::AbstractContour::SetComputeFastNormals
-
 .. doxygenfunction:: viskores::filter::contour::AbstractContour::GetComputeFastNormals
 
 .. doxygenfunction:: viskores::filter::contour::AbstractContour::SetNormalArrayName
-
 .. doxygenfunction:: viskores::filter::contour::AbstractContour::GetNormalArrayName
 
-.. doxygenfunction:: viskores::filter::contour::AbstractContour::SetMergeDuplicatePoints
+.. doxygenfunction:: viskores::filter::contour::AbstractContour::SetInputCellDimension
+.. doxygenfunction:: viskores::filter::contour::AbstractContour::GetInputCellDimension
+.. doxygenfunction:: viskores::filter::contour::AbstractContour::SetInputCellDimensionToAuto
+.. doxygenfunction:: viskores::filter::contour::AbstractContour::SetInputCellDimensionToAll
+.. doxygenfunction:: viskores::filter::contour::AbstractContour::SetInputCellDimensionToPolyhedra
+.. doxygenfunction:: viskores::filter::contour::AbstractContour::SetInputCellDimensionToPolygons
+.. doxygenfunction:: viskores::filter::contour::AbstractContour::SetInputCellDimensionToLines
 
+.. doxygenfunction:: viskores::filter::contour::AbstractContour::SetMergeDuplicatePoints
 .. doxygenfunction:: viskores::filter::contour::AbstractContour::GetMergeDuplicatePoints
+
+.. doxygenenum:: viskores::filter::contour::ContourDimension
 
 .. load-example:: Contour
    :file: GuideExampleProvidedFilters.cxx

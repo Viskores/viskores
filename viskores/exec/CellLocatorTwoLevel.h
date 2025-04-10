@@ -98,6 +98,16 @@ namespace exec
 {
 
 //--------------------------------------------------------------------
+
+/// @brief Structure for locating cells.
+///
+/// Use the `FindCell()` method to identify which cell contains a point in space.
+/// The `FindCell()` method optionally takes a `LastCell` object, which is a
+/// structure nested in this class. The `LastCell` object can help speed locating
+/// cells for successive finds at nearby points.
+///
+/// This class is provided by `viskores::cont::CellLocatorTwoLevel`
+/// when passed to a worklet.
 template <typename CellStructureType>
 class VISKORES_ALWAYS_EXPORT CellLocatorTwoLevel
 {
@@ -163,12 +173,14 @@ public:
   {
   }
 
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::LastCell
   struct LastCell
   {
     viskores::Id CellId = -1;
     viskores::Id LeafIdx = -1;
   };
 
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
   VISKORES_EXEC
   viskores::ErrorCode FindCell(const FloatVec3& point,
                                viskores::Id& cellId,
@@ -178,6 +190,7 @@ public:
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
   VISKORES_EXEC
   viskores::ErrorCode FindCell(const FloatVec3& point,
                                viskores::Id& cellId,

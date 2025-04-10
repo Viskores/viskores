@@ -81,11 +81,20 @@ namespace internal
 
 struct ExchangeBranchEndsFunctor
 {
+  ExchangeBranchEndsFunctor(
+    viskores::cont::LogLevel timingsLogLevel = viskores::cont::LogLevel::Perf)
+    : TimingsLogLevel(timingsLogLevel)
+  {
+  }
+
   VISKORES_CONT void operator()(
     BranchDecompositionBlock* b,
     const viskoresdiy::ReduceProxy& rp,     // communication proxy
     const viskoresdiy::RegularSwapPartners& // partners of the current block (unused)
   ) const;
+
+private:
+  viskores::cont::LogLevel TimingsLogLevel;
 };
 
 } // namespace internal

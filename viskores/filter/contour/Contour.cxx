@@ -61,6 +61,7 @@ viskores::cont::DataSet Contour::DoExecute(const viskores::cont::DataSet& inData
   implementation->SetGenerateNormals(this->GetGenerateNormals());
   implementation->SetAddInterpolationEdgeIds(this->GetAddInterpolationEdgeIds());
   implementation->SetNormalArrayName(this->GetNormalArrayName());
+  implementation->SetInputCellDimension(this->GetInputCellDimension());
   implementation->SetActiveField(this->GetActiveFieldName());
   implementation->SetFieldsToPass(this->GetFieldsToPass());
   implementation->SetNumberOfIsoValues(this->GetNumberOfIsoValues());

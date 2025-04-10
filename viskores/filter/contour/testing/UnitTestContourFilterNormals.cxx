@@ -56,8 +56,7 @@ viskores::cont::DataSet MakeNormalsTestDataSet()
 // Verify that the direction of the normals is consistent with the triangle winding.
 void CheckWinding(const viskores::cont::DataSet& contour)
 {
-  viskores::cont::CellSetSingleType<> cellSet;
-  contour.GetCellSet().AsCellSet(cellSet);
+  viskores::cont::UnknownCellSet cellSet = contour.GetCellSet();
 
   viskores::cont::ArrayHandle<viskores::Vec3f> coords;
   contour.GetCoordinateSystem().GetData().AsArrayHandle(coords);
@@ -69,8 +68,9 @@ void CheckWinding(const viskores::cont::DataSet& contour)
 
   for (viskores::Id triId = 0; triId < cellSet.GetNumberOfCells(); ++triId)
   {
+    VISKORES_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(triId) == 3);
     viskores::Id3 pointIds;
-    cellSet.GetIndices(triId, pointIds);
+    cellSet.GetCellPointIds(triId, &pointIds[0]);
 
     viskores::Vec3f facetNormal = viskores::TriangleNormal(
       coordsPortal.Get(pointIds[0]), coordsPortal.Get(pointIds[1]), coordsPortal.Get(pointIds[2]));
