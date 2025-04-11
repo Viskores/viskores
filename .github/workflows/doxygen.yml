@@ -46,6 +46,7 @@ jobs:
           overwrite: true
   push:
     if: github.event_name != 'pull_request'
+    needs: [generate]
     runs-on: ubuntu-latest
     container:
       image: "kitware/vtkm:ci-doxygen-20231020"
