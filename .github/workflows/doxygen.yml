@@ -67,6 +67,6 @@ jobs:
           git config user.name viskores-robot
           git config user.email "${GITHUB_ACTOR}+github-actions[bot]@users.noreply.github.com"
           cp -rf build/docs/doxygen/html/* .
-          git -C doxygen_repo add -A
+          git add -A
           git commit -am "${GITHUB_SHA}"
-          git -C doxygen_repo push
+          git push
