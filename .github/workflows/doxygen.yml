@@ -64,10 +64,9 @@ jobs:
           name: doxygen-pages-${{ github.sha }}
 
       - run: |
-          ls -a .
-          git config user.name viskores-robot
-          git config user.email "${GITHUB_ACTOR}+github-actions[bot]@users.noreply.github.com"
-          cp -rf build/docs/doxygen/html/* .
+          git config --global --add safe.directory "${PWD}"
+          git config --global user.name viskores-robot
+          git config --global user.email "${GITHUB_ACTOR}+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -am "${GITHUB_SHA}"
           git push
