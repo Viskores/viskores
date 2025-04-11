@@ -64,6 +64,7 @@ jobs:
           name: doxygen-pages-${{ github.sha }}
 
       - run: |
+          ls -a .
           git config user.name viskores-robot
           git config user.email "${GITHUB_ACTOR}+github-actions[bot]@users.noreply.github.com"
           cp -rf build/docs/doxygen/html/* .
