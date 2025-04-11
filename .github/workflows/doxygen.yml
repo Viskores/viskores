@@ -45,7 +45,7 @@ jobs:
           path: build/docs/doxygen/html
           overwrite: true
   push:
-    if: github.event_name != 'pull_request'
+    if: github.ref_name == 'release'
     needs: [build]
     runs-on: ubuntu-latest
     container:
