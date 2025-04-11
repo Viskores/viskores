@@ -55,7 +55,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: "https://github.com/Viskores/viskores-doxygen.git"
+          repository: "Viskores/viskores-doxygen"
           token: ${{ secrets.DOXYGEN_TOKEN }}
 
       - uses: actions/download-artifact@v4
