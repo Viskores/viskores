@@ -1,0 +1,71 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+name: Doxygen
+on:
+  push:
+    branches:
+      - main
+      - 'release**'
+  pull_request:
+
+concurrency:
+  group: doxygen-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    container:
+      image: "kitware/vtkm:ci-doxygen-20231020"
+    env:
+      CMAKE_BUILD_TYPE: Release
+      CMAKE_GENERATOR: 'Ninja'
+      VISKORES_SETTINGS: "shared+docs"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - if: github.event_name == 'pull_request'
+        run: echo ${{ github.event.pull_request.head.sha }} > ORIGINAL_COMMIT_SHA
+
+      - run: cmake -V -P .github/ci/github_adaptor.cmake
+      - run: cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
+      - run: ctest -VV -S .gitlab/ci/ctest_configure.cmake
+      - run: cmake --build ./build --target  ViskoresUsersGuideHTML
+      - uses: actions/upload-artifact@v4
+        with:
+          name: doxygen-pages-${{ github.sha }}
+          path: build/docs/doxygen/html
+          overwrite: true
+  push:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    container:
+      image: "kitware/vtkm:ci-doxygen-20231020"
+    environment:
+      name: doxygen
+      url: https://viskores.github.io/viskores-doxygen/
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: "https://github.com/Viskores/viskores-doxygen.git"
+          token: ${{ secrets.DOXYGEN_TOKEN }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: doxygen-pages-${{ github.sha }}
+
+      - run: |
+          git config user.name viskores-robot
+          git config user.email "${GITHUB_ACTOR}+github-actions[bot]@users.noreply.github.com"
+          cp -rf build/docs/doxygen/html/* .
+          git -C doxygen_repo add -A
+          git commit -am "${GITHUB_SHA}"
+          git -C doxygen_repo push
