@@ -1,13 +1,5 @@
 # Contributing to Viskores
 
-We are currently in the process of adopting software from [VTK-m]. During
-this transitional period, we have no formal method of accepting
-contributions outside of our core contributors. For the time being, new
-contributions should be directed at the [VTK-m](https://m.vtk.org) project.
-
-When Viskores is ready to accept its own features, the contributing process
-will be similar to [that of VTK-m's](https://gitlab.kitware.com/vtk/vtk-m/-/blob/main/CONTRIBUTING.md).
-
 The author of all contributions must agree to the [Developer Certificate of
 Origin] sign-off. Any developer who submits a contribution to Viskores
 implicitly agrees to these conditions. That said, contributors remain as
