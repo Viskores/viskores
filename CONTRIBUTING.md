@@ -237,7 +237,7 @@ will be filled out for you.
 
         Cc: @user1 @user2
 
-6.  The "**Assign to**", "**Milestone**", and "**Labels**" fields may be
+6.  The "**Assignees**", "**Milestone**", and "**Labels**" fields may be
     left blank.
 
 7.  Enable the "** Allow edits and access to secrets by maintainers.**" option,
@@ -405,8 +405,8 @@ history.
 ## Merge a Topic ##
 
 After a topic has been reviewed and approved in a GitHub pull request,
-authorized developers may accept the pull request and merge clicking the merge
-button.
+authorized developers may accept the pull request and merge by clicking the
+merge button.
 
 ### Merge Success ###
 
@@ -415,9 +415,8 @@ If the merge succeeds the topic will appear in the upstream repository
 
 ### Merge Failure ###
 
-If the merge fails (likely due to a conflict), a comment will be added
-describing the failure. In the case of a conflict, fetch the latest
-upstream history and rebase on it:
+If the merge fails (likely due to a conflict), fetch the latest upstream
+history and rebase on it:
 
     $ git fetch origin
     $ git rebase origin/main
