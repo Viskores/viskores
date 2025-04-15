@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,10 +15,10 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_examples_multibackend_MultiDeviceGradient_h
-#define vtk_m_examples_multibackend_MultiDeviceGradient_h
+#ifndef viskores_examples_multibackend_MultiDeviceGradient_h
+#define viskores_examples_multibackend_MultiDeviceGradient_h
 
-#include <vtkm/filter/Filter.h>
+#include <viskores/filter/Filter.h>
 
 #include "TaskQueue.h"
 
@@ -22,15 +30,15 @@ using RuntimeTaskQueue = TaskQueue<std::function<void()>>;
 ///
 /// The Policy used with MultiDeviceGradient must include the TBB and CUDA
 /// backends.
-class MultiDeviceGradient : public vtkm::filter::Filter
+class MultiDeviceGradient : public viskores::filter::Filter
 {
 public:
   //Construct a MultiDeviceGradient and worker pool
-  VTKM_CONT
+  VISKORES_CONT
   MultiDeviceGradient();
 
   //Needed so that we can shut down the worker pool properly
-  VTKM_CONT
+  VISKORES_CONT
   ~MultiDeviceGradient();
 
   /// When this flag is on (default is off), the gradient filter will provide a
@@ -41,12 +49,12 @@ public:
 
   /// Will submit each block to a work queue that the threads will
   /// pull work from
-  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
-    const vtkm::cont::PartitionedDataSet& inData) override;
+  VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
+    const viskores::cont::PartitionedDataSet& inData) override;
 
   // All filters must override this method. Our implementation will just wrap this in
   // a partitioned data set.
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inData) override;
 
 private:
   bool ComputePointGradient;

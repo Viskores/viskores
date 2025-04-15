@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -10,17 +18,17 @@
 
 #include "Benchmarker.h"
 
-#include <vtkm/Math.h>
-#include <vtkm/VectorAnalysis.h>
+#include <viskores/Math.h>
+#include <viskores/VectorAnalysis.h>
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/Invoker.h>
-#include <vtkm/cont/Timer.h>
-#include <vtkm/cont/UncertainArrayHandle.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/CellSetStructured.h>
+#include <viskores/cont/Invoker.h>
+#include <viskores/cont/Timer.h>
+#include <viskores/cont/UncertainArrayHandle.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
+#include <viskores/worklet/WorkletMapField.h>
+#include <viskores/worklet/WorkletMapTopology.h>
 
 #include <cctype>
 #include <random>
@@ -31,15 +39,16 @@ namespace
 
 #define CUBE_SIZE 256
 
-using ValueTypes = vtkm::List<vtkm::UInt32, vtkm::Int32, vtkm::Int64, vtkm::Float32, vtkm::Float64>;
+using ValueTypes = viskores::
+  List<viskores::UInt32, viskores::Int32, viskores::Int64, viskores::Float32, viskores::Float64>;
 
 using ValueUncertainHandle =
-  vtkm::cont::UncertainArrayHandle<ValueTypes, vtkm::cont::StorageListBasic>;
+  viskores::cont::UncertainArrayHandle<ValueTypes, viskores::cont::StorageListBasic>;
 
 // Hold configuration state (e.g. active device)
-vtkm::cont::InitializeResult Config;
+viskores::cont::InitializeResult Config;
 
-class AveragePointToCell : public vtkm::worklet::WorkletVisitCellsWithPoints
+class AveragePointToCell : public viskores::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(FieldInPoint inPoints, CellSetIn cellset, FieldOutCell outCells);
@@ -47,12 +56,12 @@ public:
   using InputDomain = _2;
 
   template <typename PointValueVecType, typename OutType>
-  VTKM_EXEC void operator()(const PointValueVecType& pointValues,
-                            const vtkm::IdComponent& numPoints,
-                            OutType& average) const
+  VISKORES_EXEC void operator()(const PointValueVecType& pointValues,
+                                const viskores::IdComponent& numPoints,
+                                OutType& average) const
   {
     OutType sum = static_cast<OutType>(pointValues[0]);
-    for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
+    for (viskores::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
     {
       sum = sum + static_cast<OutType>(pointValues[pointIndex]);
     }
@@ -61,7 +70,7 @@ public:
   }
 };
 
-class AverageCellToPoint : public vtkm::worklet::WorkletVisitPointsWithCells
+class AverageCellToPoint : public viskores::worklet::WorkletVisitPointsWithCells
 {
 public:
   using ControlSignature = void(FieldInCell inCells, CellSetIn topology, FieldOut outPoints);
@@ -69,15 +78,15 @@ public:
   using InputDomain = _2;
 
   template <typename CellVecType, typename OutType>
-  VTKM_EXEC void operator()(const CellVecType& cellValues,
-                            OutType& avgVal,
-                            const vtkm::IdComponent& numCellIDs) const
+  VISKORES_EXEC void operator()(const CellVecType& cellValues,
+                                OutType& avgVal,
+                                const viskores::IdComponent& numCellIDs) const
   {
     //simple functor that returns the average cell Value.
-    avgVal = vtkm::TypeTraits<OutType>::ZeroInitialization();
+    avgVal = viskores::TypeTraits<OutType>::ZeroInitialization();
     if (numCellIDs != 0)
     {
-      for (vtkm::IdComponent cellIndex = 0; cellIndex < numCellIDs; ++cellIndex)
+      for (viskores::IdComponent cellIndex = 0; cellIndex < numCellIDs; ++cellIndex)
       {
         avgVal += static_cast<OutType>(cellValues[cellIndex]);
       }
@@ -88,7 +97,7 @@ public:
 
 // -----------------------------------------------------------------------------
 template <typename T>
-class Classification : public vtkm::worklet::WorkletVisitCellsWithPoints
+class Classification : public viskores::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(FieldInPoint inNodes, CellSetIn cellset, FieldOutCell outCaseId);
@@ -97,16 +106,16 @@ public:
 
   T IsoValue;
 
-  VTKM_CONT
+  VISKORES_CONT
   Classification(T isovalue)
     : IsoValue(isovalue)
   {
   }
 
   template <typename FieldInType>
-  VTKM_EXEC void operator()(const FieldInType& fieldIn, vtkm::IdComponent& caseNumber) const
+  VISKORES_EXEC void operator()(const FieldInType& fieldIn, viskores::IdComponent& caseNumber) const
   {
-    using FieldType = typename vtkm::VecTraits<FieldInType>::ComponentType;
+    using FieldType = typename viskores::VecTraits<FieldInType>::ComponentType;
     const FieldType iso = static_cast<FieldType>(this->IsoValue);
 
     caseNumber = ((fieldIn[0] > iso) | (fieldIn[1] > iso) << 1 | (fieldIn[2] > iso) << 2 |
@@ -151,17 +160,17 @@ struct NumberGenerator<T, typename std::enable_if<!std::is_floating_point<T>::va
 // Like, an additional random value.
 // Not a random value that's somehow "extra random".
 template <typename ArrayT>
-VTKM_CONT typename ArrayT::ValueType FillRandomValues(ArrayT& array,
-                                                      vtkm::Id size,
-                                                      vtkm::Float64 min,
-                                                      vtkm::Float64 max)
+VISKORES_CONT typename ArrayT::ValueType FillRandomValues(ArrayT& array,
+                                                          viskores::Id size,
+                                                          viskores::Float64 min,
+                                                          viskores::Float64 max)
 {
   using ValueType = typename ArrayT::ValueType;
 
   NumberGenerator<ValueType> generator{ static_cast<ValueType>(min), static_cast<ValueType>(max) };
   array.Allocate(size);
   auto portal = array.WritePortal();
-  for (vtkm::Id i = 0; i < size; ++i)
+  for (viskores::Id i = 0; i < size; ++i)
   {
     portal.Set(i, generator.next());
   }
@@ -171,16 +180,16 @@ VTKM_CONT typename ArrayT::ValueType FillRandomValues(ArrayT& array,
 template <typename Value>
 struct BenchCellToPointAvgImpl
 {
-  vtkm::cont::ArrayHandle<Value> Input;
+  viskores::cont::ArrayHandle<Value> Input;
 
   ::benchmark::State& State;
-  vtkm::Id CubeSize;
-  vtkm::Id NumCells;
+  viskores::Id CubeSize;
+  viskores::Id NumCells;
 
-  vtkm::cont::Timer Timer;
-  vtkm::cont::Invoker Invoker;
+  viskores::cont::Timer Timer;
+  viskores::cont::Invoker Invoker;
 
-  VTKM_CONT
+  VISKORES_CONT
   BenchCellToPointAvgImpl(::benchmark::State& state)
     : State{ state }
     , CubeSize{ CUBE_SIZE }
@@ -198,11 +207,11 @@ struct BenchCellToPointAvgImpl
   }
 
   template <typename BenchArrayType>
-  VTKM_CONT void Run(const BenchArrayType& input)
+  VISKORES_CONT void Run(const BenchArrayType& input)
   {
-    vtkm::cont::CellSetStructured<3> cellSet;
-    cellSet.SetPointDimensions(vtkm::Id3{ this->CubeSize, this->CubeSize, this->CubeSize });
-    vtkm::cont::ArrayHandle<Value> result;
+    viskores::cont::CellSetStructured<3> cellSet;
+    cellSet.SetPointDimensions(viskores::Id3{ this->CubeSize, this->CubeSize, this->CubeSize });
+    viskores::cont::ArrayHandle<Value> result;
 
     for (auto _ : this->State)
     {
@@ -226,7 +235,7 @@ void BenchCellToPointAvgStatic(::benchmark::State& state)
   BenchCellToPointAvgImpl<ValueType> impl{ state };
   impl.Run(impl.Input);
 };
-VTKM_BENCHMARK_TEMPLATES(BenchCellToPointAvgStatic, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchCellToPointAvgStatic, ValueTypes);
 
 template <typename ValueType>
 void BenchCellToPointAvgDynamic(::benchmark::State& state)
@@ -234,21 +243,21 @@ void BenchCellToPointAvgDynamic(::benchmark::State& state)
   BenchCellToPointAvgImpl<ValueType> impl{ state };
   impl.Run(ValueUncertainHandle{ impl.Input });
 };
-VTKM_BENCHMARK_TEMPLATES(BenchCellToPointAvgDynamic, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchCellToPointAvgDynamic, ValueTypes);
 
 template <typename Value>
 struct BenchPointToCellAvgImpl
 {
-  vtkm::cont::ArrayHandle<Value> Input;
+  viskores::cont::ArrayHandle<Value> Input;
 
   ::benchmark::State& State;
-  vtkm::Id CubeSize;
-  vtkm::Id NumPoints;
+  viskores::Id CubeSize;
+  viskores::Id NumPoints;
 
-  vtkm::cont::Timer Timer;
-  vtkm::cont::Invoker Invoker;
+  viskores::cont::Timer Timer;
+  viskores::cont::Invoker Invoker;
 
-  VTKM_CONT
+  VISKORES_CONT
   BenchPointToCellAvgImpl(::benchmark::State& state)
     : State{ state }
     , CubeSize{ CUBE_SIZE }
@@ -266,11 +275,11 @@ struct BenchPointToCellAvgImpl
   }
 
   template <typename BenchArrayType>
-  VTKM_CONT void Run(const BenchArrayType& input)
+  VISKORES_CONT void Run(const BenchArrayType& input)
   {
-    vtkm::cont::CellSetStructured<3> cellSet;
-    cellSet.SetPointDimensions(vtkm::Id3{ this->CubeSize, this->CubeSize, this->CubeSize });
-    vtkm::cont::ArrayHandle<Value> result;
+    viskores::cont::CellSetStructured<3> cellSet;
+    cellSet.SetPointDimensions(viskores::Id3{ this->CubeSize, this->CubeSize, this->CubeSize });
+    viskores::cont::ArrayHandle<Value> result;
 
     for (auto _ : this->State)
     {
@@ -294,7 +303,7 @@ void BenchPointToCellAvgStatic(::benchmark::State& state)
   BenchPointToCellAvgImpl<ValueType> impl{ state };
   impl.Run(impl.Input);
 };
-VTKM_BENCHMARK_TEMPLATES(BenchPointToCellAvgStatic, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchPointToCellAvgStatic, ValueTypes);
 
 template <typename ValueType>
 void BenchPointToCellAvgDynamic(::benchmark::State& state)
@@ -302,22 +311,22 @@ void BenchPointToCellAvgDynamic(::benchmark::State& state)
   BenchPointToCellAvgImpl<ValueType> impl{ state };
   impl.Run(ValueUncertainHandle{ impl.Input });
 };
-VTKM_BENCHMARK_TEMPLATES(BenchPointToCellAvgDynamic, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchPointToCellAvgDynamic, ValueTypes);
 
 template <typename Value>
 struct BenchClassificationImpl
 {
-  vtkm::cont::ArrayHandle<Value> Input;
+  viskores::cont::ArrayHandle<Value> Input;
 
   ::benchmark::State& State;
-  vtkm::Id CubeSize;
-  vtkm::Id DomainSize;
+  viskores::Id CubeSize;
+  viskores::Id DomainSize;
   Value IsoValue;
 
-  vtkm::cont::Timer Timer;
-  vtkm::cont::Invoker Invoker;
+  viskores::cont::Timer Timer;
+  viskores::cont::Invoker Invoker;
 
-  VTKM_CONT
+  VISKORES_CONT
   BenchClassificationImpl(::benchmark::State& state)
     : State{ state }
     , CubeSize{ CUBE_SIZE }
@@ -335,11 +344,11 @@ struct BenchClassificationImpl
   }
 
   template <typename BenchArrayType>
-  VTKM_CONT void Run(const BenchArrayType& input)
+  VISKORES_CONT void Run(const BenchArrayType& input)
   {
-    vtkm::cont::CellSetStructured<3> cellSet;
-    cellSet.SetPointDimensions(vtkm::Id3{ this->CubeSize, this->CubeSize, this->CubeSize });
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> result;
+    viskores::cont::CellSetStructured<3> cellSet;
+    cellSet.SetPointDimensions(viskores::Id3{ this->CubeSize, this->CubeSize, this->CubeSize });
+    viskores::cont::ArrayHandle<viskores::IdComponent> result;
 
     Classification<Value> worklet(this->IsoValue);
 
@@ -365,7 +374,7 @@ void BenchClassificationStatic(::benchmark::State& state)
   BenchClassificationImpl<ValueType> impl{ state };
   impl.Run(impl.Input);
 };
-VTKM_BENCHMARK_TEMPLATES(BenchClassificationStatic, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchClassificationStatic, ValueTypes);
 
 template <typename ValueType>
 void BenchClassificationDynamic(::benchmark::State& state)
@@ -373,31 +382,31 @@ void BenchClassificationDynamic(::benchmark::State& state)
   BenchClassificationImpl<ValueType> impl{ state };
   impl.Run(ValueUncertainHandle{ impl.Input });
 };
-VTKM_BENCHMARK_TEMPLATES(BenchClassificationDynamic, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchClassificationDynamic, ValueTypes);
 
 } // end anon namespace
 
 int main(int argc, char* argv[])
 {
-  // Parse VTK-m options:
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  // Parse Viskores options:
+  auto opts = viskores::cont::InitializeOptions::RequireDevice;
 
   std::vector<char*> args(argv, argv + argc);
-  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+  viskores::bench::detail::InitializeArgs(&argc, args, opts);
 
-  // Parse VTK-m options:
-  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+  // Parse Viskores options:
+  Config = viskores::cont::Initialize(argc, args.data(), opts);
 
   // This occurs when it is help
-  if (opts == vtkm::cont::InitializeOptions::None)
+  if (opts == viskores::cont::InitializeOptions::None)
   {
     std::cout << Config.Usage << std::endl;
   }
   else
   {
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+    viskores::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
+  VISKORES_EXECUTE_BENCHMARKS(argc, args.data());
 }

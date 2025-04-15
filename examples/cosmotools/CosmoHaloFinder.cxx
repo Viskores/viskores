@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,14 +15,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/ArrayHandleCast.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/Initialize.h>
+#include <viskores/cont/ArrayHandleCast.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/Initialize.h>
 
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
-#include <vtkm/worklet/CosmoTools.h>
+#include <viskores/worklet/CosmoTools.h>
 
 #include <algorithm>
 #include <fstream>
@@ -22,7 +30,7 @@
 #include <stdexcept>
 #include <string>
 
-static const vtkm::cont::LogLevel CosmoLogLevel = vtkm::cont::LogLevel::UserFirst;
+static const viskores::cont::LogLevel CosmoLogLevel = viskores::cont::LogLevel::UserFirst;
 
 void TestCosmoHaloFinder(const char* fileName)
 {
@@ -47,32 +55,32 @@ void TestCosmoHaloFinder(const char* fileName)
   float* zLocation = new float[size];
   std::cout << "Running Halo Finder on " << nParticles << std::endl;
 
-  for (vtkm::Id p = 0; p < nParticles; p++)
+  for (viskores::Id p = 0; p < nParticles; p++)
   {
     inFile >> xLocation[p] >> yLocation[p] >> zLocation[p];
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> xLocArray =
-    vtkm::cont::make_ArrayHandleMove<vtkm::Float32>(xLocation, nParticles);
-  vtkm::cont::ArrayHandle<vtkm::Float32> yLocArray =
-    vtkm::cont::make_ArrayHandleMove<vtkm::Float32>(yLocation, nParticles);
-  vtkm::cont::ArrayHandle<vtkm::Float32> zLocArray =
-    vtkm::cont::make_ArrayHandleMove<vtkm::Float32>(zLocation, nParticles);
+  viskores::cont::ArrayHandle<viskores::Float32> xLocArray =
+    viskores::cont::make_ArrayHandleMove<viskores::Float32>(xLocation, nParticles);
+  viskores::cont::ArrayHandle<viskores::Float32> yLocArray =
+    viskores::cont::make_ArrayHandleMove<viskores::Float32>(yLocation, nParticles);
+  viskores::cont::ArrayHandle<viskores::Float32> zLocArray =
+    viskores::cont::make_ArrayHandleMove<viskores::Float32>(zLocation, nParticles);
 
   // Output halo id, mbp id and min potential per particle
-  vtkm::cont::ArrayHandle<vtkm::Id> resultHaloId;
-  vtkm::cont::ArrayHandle<vtkm::Id> resultMBP;
-  vtkm::cont::ArrayHandle<vtkm::Float32> resultPot;
+  viskores::cont::ArrayHandle<viskores::Id> resultHaloId;
+  viskores::cont::ArrayHandle<viskores::Id> resultMBP;
+  viskores::cont::ArrayHandle<viskores::Float32> resultPot;
 
   // Create the worklet and run it
-  vtkm::Id minHaloSize = 20;
-  vtkm::Float32 linkingLength = 0.2f;
-  vtkm::Float32 particleMass = 1.08413e+09f;
+  viskores::Id minHaloSize = 20;
+  viskores::Float32 linkingLength = 0.2f;
+  viskores::Float32 particleMass = 1.08413e+09f;
 
   {
-    VTKM_LOG_SCOPE(CosmoLogLevel, "Executing HaloFinder");
+    VISKORES_LOG_SCOPE(CosmoLogLevel, "Executing HaloFinder");
 
-    vtkm::worklet::CosmoTools cosmoTools;
+    viskores::worklet::CosmoTools cosmoTools;
     cosmoTools.RunHaloFinder(xLocArray,
                              yLocArray,
                              zLocArray,
@@ -102,11 +110,11 @@ void TestCosmoHaloFinder(const char* fileName)
 
 int main(int argc, char* argv[])
 {
-  vtkm::cont::SetLogLevelName(CosmoLogLevel, "Cosmo");
-  vtkm::cont::SetStderrLogLevel(CosmoLogLevel);
+  viskores::cont::SetLogLevelName(CosmoLogLevel, "Cosmo");
+  viskores::cont::SetStderrLogLevel(CosmoLogLevel);
 
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = viskores::cont::InitializeOptions::DefaultAnyDevice;
+  viskores::cont::InitializeResult config = viskores::cont::Initialize(argc, argv, opts);
 
   if (argc < 2)
   {
@@ -115,8 +123,9 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-#ifndef VTKM_ENABLE_LOGGING
-  std::cout << "Warning: turn on VTKm_ENABLE_LOGGING CMake option to turn on timing." << std::endl;
+#ifndef VISKORES_ENABLE_LOGGING
+  std::cout << "Warning: turn on Viskores_ENABLE_LOGGING CMake option to turn on timing."
+            << std::endl;
 #endif
 
   TestCosmoHaloFinder(argv[1]);

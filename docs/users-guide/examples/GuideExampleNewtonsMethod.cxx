@@ -1,3 +1,11 @@
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
 //=============================================================================
 //
 //  Copyright (c) Kitware, Inc.
@@ -10,10 +18,10 @@
 //
 //=============================================================================
 
-#include <vtkm/Matrix.h>
-#include <vtkm/NewtonsMethod.h>
+#include <viskores/Matrix.h>
+#include <viskores/NewtonsMethod.h>
 
-#include <vtkm/testing/Testing.h>
+#include <viskores/testing/Testing.h>
 
 namespace
 {
@@ -25,9 +33,9 @@ namespace
 struct FunctionFunctor
 {
   template<typename T>
-  VTKM_EXEC_CONT vtkm::Vec<T, 2> operator()(const vtkm::Vec<T, 2>& x) const
+  VISKORES_EXEC_CONT viskores::Vec<T, 2> operator()(const viskores::Vec<T, 2>& x) const
   {
-    return vtkm::make_Vec(vtkm::Dot(x, x), x[0] * x[1]);
+    return viskores::make_Vec(viskores::Dot(x, x), x[0] * x[1]);
   }
 };
 
@@ -38,9 +46,10 @@ struct FunctionFunctor
 struct JacobianFunctor
 {
   template<typename T>
-  VTKM_EXEC_CONT vtkm::Matrix<T, 2, 2> operator()(const vtkm::Vec<T, 2>& x) const
+  VISKORES_EXEC_CONT viskores::Matrix<T, 2, 2> operator()(
+    const viskores::Vec<T, 2>& x) const
   {
-    vtkm::Matrix<T, 2, 2> jacobian;
+    viskores::Matrix<T, 2, 2> jacobian;
     jacobian(0, 0) = 2 * x[0];
     jacobian(0, 1) = 2 * x[1];
     jacobian(1, 0) = x[1];
@@ -50,7 +59,7 @@ struct JacobianFunctor
   }
 };
 
-VTKM_EXEC
+VISKORES_EXEC
 void SolveNonlinear()
 {
   // Use Newton's method to solve the nonlinear system of equations:
@@ -60,40 +69,40 @@ void SolveNonlinear()
   //
   // There are two possible solutions, which are (x=1,y=1) and (x=-1,y=-1).
   // The one found depends on the starting value.
-  vtkm::NewtonsMethodResult<vtkm::Float32, 2> answer1 =
-    vtkm::NewtonsMethod(JacobianFunctor(),
-                        FunctionFunctor(),
-                        vtkm::make_Vec(2.0f, 1.0f),
-                        vtkm::make_Vec(1.0f, 0.0f));
+  viskores::NewtonsMethodResult<viskores::Float32, 2> answer1 =
+    viskores::NewtonsMethod(JacobianFunctor(),
+                            FunctionFunctor(),
+                            viskores::make_Vec(2.0f, 1.0f),
+                            viskores::make_Vec(1.0f, 0.0f));
   if (!answer1.Valid || !answer1.Converged)
   {
     // Failed to find solution
     //// PAUSE-EXAMPLE
-    VTKM_TEST_FAIL("Could not find answer1");
+    VISKORES_TEST_FAIL("Could not find answer1");
     //// RESUME-EXAMPLE
   }
   // answer1.Solution is [1,1]
 
-  vtkm::NewtonsMethodResult<vtkm::Float32, 2> answer2 =
-    vtkm::NewtonsMethod(JacobianFunctor(),
-                        FunctionFunctor(),
-                        vtkm::make_Vec(2.0f, 1.0f),
-                        vtkm::make_Vec(0.0f, -2.0f));
+  viskores::NewtonsMethodResult<viskores::Float32, 2> answer2 =
+    viskores::NewtonsMethod(JacobianFunctor(),
+                            FunctionFunctor(),
+                            viskores::make_Vec(2.0f, 1.0f),
+                            viskores::make_Vec(0.0f, -2.0f));
   if (!answer2.Valid || !answer2.Converged)
   {
     // Failed to find solution
     //// PAUSE-EXAMPLE
-    VTKM_TEST_FAIL("Could not find answer2");
+    VISKORES_TEST_FAIL("Could not find answer2");
     //// RESUME-EXAMPLE
   }
   // answer2 is [-1,-1]
   //// PAUSE-EXAMPLE
   std::cout << answer1.Solution << " " << answer2.Solution << std::endl;
 
-  VTKM_TEST_ASSERT(test_equal(answer1.Solution, vtkm::make_Vec(1, 1), 0.01),
-                   "Bad answer 1.");
-  VTKM_TEST_ASSERT(test_equal(answer2.Solution, vtkm::make_Vec(-1, -1), 0.01),
-                   "Bad answer 2.");
+  VISKORES_TEST_ASSERT(test_equal(answer1.Solution, viskores::make_Vec(1, 1), 0.01),
+                       "Bad answer 1.");
+  VISKORES_TEST_ASSERT(test_equal(answer2.Solution, viskores::make_Vec(-1, -1), 0.01),
+                       "Bad answer 2.");
   //// RESUME-EXAMPLE
 }
 ////
@@ -109,5 +118,5 @@ void Run()
 
 int GuideExampleNewtonsMethod(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(Run, argc, argv);
+  return viskores::testing::Testing::Run(Run, argc, argv);
 }

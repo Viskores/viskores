@@ -8,14 +8,14 @@ Contributors
 
 .. todo:: Make sure contribution section cross references are correct.
 
-This book includes contributions from the VTK-m community including the
-VTK-m development team and the user community.
+This book includes contributions from the Viskores community including the
+Viskores development team and the user community.
 We would like to thank the following people for their significant
 contributions to this text:
 
 .. NOTE: Also make sure that the contribution list is updated in index.rst
 
-**Vicente Bolea**, **Nickolas Davis**, **Matthew Letter**, and **Nick Thompson** for their help keeping the user's guide up to date with the |VTKm| source code.
+**Vicente Bolea**, **Nickolas Davis**, **Matthew Letter**, and **Nick Thompson** for their help keeping the user's guide up to date with the |Viskores| source code.
 
 **Sujin Philip**, **Robert Maynard**, **James Kress**, **Abhishek Yenpure**, **Mark Kim**, and **Hank Childs** for their descriptions of numerous filters.
 
@@ -28,7 +28,7 @@ contributions to this text:
 
 **Allison Vacanti** for her documentation of..
 
-.. several |VTKm| features in the `Extract Component Arrays`_ and `SwizzleArrays`_ sections as well as select filters.
+.. several |Viskores| features in the `Extract Component Arrays`_ and `SwizzleArrays`_ sections as well as select filters.
 
 .. Allie Vacanti filters: Surface normals.
 
@@ -48,7 +48,7 @@ density filters.
 
 .. ArrayHandleRandomUniformBits.
 
-**James Kress** for his documentation on |VTKm|'s testing classes.
+**James Kress** for his documentation on |Viskores|'s testing classes.
 
 **Manish Mathai** for his documentation of rendering features..
 

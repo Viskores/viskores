@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -8,11 +16,11 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-PROJECT_NAME           = "VTK-m"
+PROJECT_NAME           = "Viskores"
 
-PROJECT_NUMBER         = @VTKm_VERSION@
+PROJECT_NUMBER         = @Viskores_VERSION@
 
-OUTPUT_DIRECTORY       = @VTKm_BINARY_DIR@/docs/doxygen/
+OUTPUT_DIRECTORY       = @Viskores_BINARY_DIR@/docs/doxygen/
 
 CREATE_SUBDIRS         = NO
 
@@ -128,11 +136,11 @@ WARN_LOGFILE           =
 # configuration options related to the input files
 #---------------------------------------------------------------------------
 
-INPUT                  = @VTKm_SOURCE_DIR@/README.md
-INPUT                  += @VTKm_SOURCE_DIR@/CONTRIBUTING.md
-INPUT                  += @VTKm_SOURCE_DIR@/docs/CodingConventions.md
-INPUT                  += @VTKm_SOURCE_DIR@/vtkm
-INPUT                  += @VTKm_BINARY_DIR@/include
+INPUT                  = @Viskores_SOURCE_DIR@/README.md
+INPUT                  += @Viskores_SOURCE_DIR@/CONTRIBUTING.md
+INPUT                  += @Viskores_SOURCE_DIR@/docs/CodingConventions.md
+INPUT                  += @Viskores_SOURCE_DIR@/viskores
+INPUT                  += @Viskores_BINARY_DIR@/include
 
 USE_MDFILE_AS_MAINPAGE = README.md
 
@@ -140,8 +148,8 @@ FILE_PATTERNS          = *.h
 
 RECURSIVE              = YES
 
-EXCLUDE                = @VTKm_SOURCE_DIR@/vtkm/testing/OptionParser.h
-EXCLUDE                += @VTKm_SOURCE_DIR@/vtkm/exec/cuda/internal/ExecutionPolicy.h
+EXCLUDE                = @Viskores_SOURCE_DIR@/viskores/testing/OptionParser.h
+EXCLUDE                += @Viskores_SOURCE_DIR@/viskores/exec/cuda/internal/ExecutionPolicy.h
 
 EXCLUDE_SYMLINKS       = NO
 
@@ -149,21 +157,21 @@ EXCLUDE_PATTERNS       = */benchmarking/*
 EXCLUDE_PATTERNS       += */examples/*
 EXCLUDE_PATTERNS       += */testing/*
 EXCLUDE_PATTERNS       += */thirdparty/*
-EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/filter/*/worklet/*
-EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/rendering/raytracing/*
+EXCLUDE_PATTERNS       += @Viskores_SOURCE_DIR@/viskores/filter/*/worklet/*
+EXCLUDE_PATTERNS       += @Viskores_SOURCE_DIR@/viskores/rendering/raytracing/*
 EXCLUDE_PATTERNS       += UnitTest*
 
-# Before filters existed in VTK-m, users were expected to interact directly
+# Before filters existed in Viskores, users were expected to interact directly
 # with worklets, and several algorithms were written in this way. There are
 # some complex algorithms that never made the jump to filters, but we never
 # threw them out in hopes they become useful. At some point, we should
 # probably delete or remove them, but for now just hide them to keep the
 # documentation from getting messy.
-EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/worklet/colorconversion/*
-EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/worklet/cosmotools/*
-EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/worklet/spatialstructure/*
-EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/worklet/splatkernels/*
-EXCLUDE_PATTERNS       += @VTKm_SOURCE_DIR@/vtkm/worklet/wavelets/*
+EXCLUDE_PATTERNS       += @Viskores_SOURCE_DIR@/viskores/worklet/colorconversion/*
+EXCLUDE_PATTERNS       += @Viskores_SOURCE_DIR@/viskores/worklet/cosmotools/*
+EXCLUDE_PATTERNS       += @Viskores_SOURCE_DIR@/viskores/worklet/spatialstructure/*
+EXCLUDE_PATTERNS       += @Viskores_SOURCE_DIR@/viskores/worklet/splatkernels/*
+EXCLUDE_PATTERNS       += @Viskores_SOURCE_DIR@/viskores/worklet/wavelets/*
 
 EXCLUDE_SYMBOLS        = thrust
 EXCLUDE_SYMBOLS        += benchmarking
@@ -171,7 +179,7 @@ EXCLUDE_SYMBOLS        += detail
 EXCLUDE_SYMBOLS        += internal
 EXCLUDE_SYMBOLS        += kx
 EXCLUDE_SYMBOLS        += placeholders
-EXCLUDE_SYMBOLS        += *VTK_M_*_EXPORT*
+EXCLUDE_SYMBOLS        += *VISKORES_*_EXPORT*
 
 EXAMPLE_PATH           =
 
@@ -217,7 +225,7 @@ IGNORE_PREFIX          =
 # configuration options related to the HTML output
 #---------------------------------------------------------------------------
 
-GENERATE_HTML          = @VTKm_Doxygen_HTML_output@
+GENERATE_HTML          = @Viskores_Doxygen_HTML_output@
 
 HTML_OUTPUT            = html
 
@@ -309,7 +317,7 @@ MAN_LINKS              = NO
 # configuration options related to the XML output
 #---------------------------------------------------------------------------
 
-GENERATE_XML           = @VTKm_ENABLE_USERS_GUIDE@
+GENERATE_XML           = @Viskores_ENABLE_USERS_GUIDE@
 
 XML_OUTPUT             = xml
 
@@ -352,12 +360,12 @@ EXPAND_ONLY_PREDEF     = NO
 
 SEARCH_INCLUDES        = YES
 
-INCLUDE_PATH           = @VTKm_SOURCE_DIR@ @VTKm_BINARY_DIR@/include
+INCLUDE_PATH           = @Viskores_SOURCE_DIR@ @Viskores_BINARY_DIR@/include
 
 INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             = DOXYGEN
-PREDEFINED             += VTKM_DOXYGEN_ONLY
+PREDEFINED             += VISKORES_DOXYGEN_ONLY
 
 EXPAND_AS_DEFINED      =
 
@@ -383,7 +391,7 @@ CLASS_DIAGRAMS         = YES
 
 HIDE_UNDOC_RELATIONS   = YES
 
-HAVE_DOT               = @VTKm_DOXYGEN_HAVE_DOT@
+HAVE_DOT               = @Viskores_DOXYGEN_HAVE_DOT@
 
 CLASS_GRAPH            = YES
 
@@ -403,7 +411,7 @@ GRAPHICAL_HIERARCHY    = NO
 
 DOT_IMAGE_FORMAT       = png
 
-DOT_PATH               = @VTKm_DOXYGEN_DOT_PATH@
+DOT_PATH               = @Viskores_DOXYGEN_DOT_PATH@
 
 DOTFILE_DIRS           =
 

@@ -1,3 +1,11 @@
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
 //=============================================================================
 //
 //  Copyright (c) Kitware, Inc.
@@ -10,15 +18,15 @@
 //
 //=============================================================================
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/Invoker.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/Invoker.h>
 
-#include <vtkm/worklet/WorkletMapTopology.h>
+#include <viskores/worklet/WorkletMapTopology.h>
 
-#include <vtkm/CellShape.h>
-#include <vtkm/Math.h>
-#include <vtkm/VectorAnalysis.h>
+#include <viskores/CellShape.h>
+#include <viskores/Math.h>
+#include <viskores/VectorAnalysis.h>
 
 ////
 //// BEGIN-EXAMPLE TriangleQualityWholeArray
@@ -26,17 +34,17 @@
 namespace detail
 {
 
-static const vtkm::Id TRIANGLE_QUALITY_TABLE_DIMENSION = 8;
-static const vtkm::Id TRIANGLE_QUALITY_TABLE_SIZE =
+static const viskores::Id TRIANGLE_QUALITY_TABLE_DIMENSION = 8;
+static const viskores::Id TRIANGLE_QUALITY_TABLE_SIZE =
   TRIANGLE_QUALITY_TABLE_DIMENSION * TRIANGLE_QUALITY_TABLE_DIMENSION;
 
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Float32> GetTriangleQualityTable()
+VISKORES_CONT
+viskores::cont::ArrayHandle<viskores::Float32> GetTriangleQualityTable()
 {
   // Use these precomputed values for the array. A real application would
   // probably use a larger array, but we are keeping it small for demonstration
   // purposes.
-  static vtkm::Float32 triangleQualityBuffer[TRIANGLE_QUALITY_TABLE_SIZE] = {
+  static viskores::Float32 triangleQualityBuffer[TRIANGLE_QUALITY_TABLE_SIZE] = {
     0, 0,        0,        0,        0,        0,        0,        0,
     0, 0,        0,        0,        0,        0,        0,        0.24431f,
     0, 0,        0,        0,        0,        0,        0.43298f, 0.47059f,
@@ -47,55 +55,56 @@ vtkm::cont::ArrayHandle<vtkm::Float32> GetTriangleQualityTable()
     0, 0.24431f, 0.47059f, 0.66408f, 0.81536f, 0.92071f, 0.98100f, 1
   };
 
-  return vtkm::cont::make_ArrayHandle(
-    triangleQualityBuffer, TRIANGLE_QUALITY_TABLE_SIZE, vtkm::CopyFlag::Off);
+  return viskores::cont::make_ArrayHandle(
+    triangleQualityBuffer, TRIANGLE_QUALITY_TABLE_SIZE, viskores::CopyFlag::Off);
 }
 
 template<typename T>
-VTKM_EXEC_CONT vtkm::Vec<T, 3> TriangleEdgeLengths(const vtkm::Vec<T, 3>& point1,
-                                                   const vtkm::Vec<T, 3>& point2,
-                                                   const vtkm::Vec<T, 3>& point3)
+VISKORES_EXEC_CONT viskores::Vec<T, 3> TriangleEdgeLengths(
+  const viskores::Vec<T, 3>& point1,
+  const viskores::Vec<T, 3>& point2,
+  const viskores::Vec<T, 3>& point3)
 {
-  return vtkm::make_Vec(vtkm::Magnitude(point1 - point2),
-                        vtkm::Magnitude(point2 - point3),
-                        vtkm::Magnitude(point3 - point1));
+  return viskores::make_Vec(viskores::Magnitude(point1 - point2),
+                            viskores::Magnitude(point2 - point3),
+                            viskores::Magnitude(point3 - point1));
 }
 
-VTKM_SUPPRESS_EXEC_WARNINGS
+VISKORES_SUPPRESS_EXEC_WARNINGS
 template<typename PortalType, typename T>
-VTKM_EXEC_CONT static vtkm::Float32 LookupTriangleQuality(
+VISKORES_EXEC_CONT static viskores::Float32 LookupTriangleQuality(
   const PortalType& triangleQualityPortal,
-  const vtkm::Vec<T, 3>& point1,
-  const vtkm::Vec<T, 3>& point2,
-  const vtkm::Vec<T, 3>& point3)
+  const viskores::Vec<T, 3>& point1,
+  const viskores::Vec<T, 3>& point2,
+  const viskores::Vec<T, 3>& point3)
 {
-  vtkm::Vec<T, 3> edgeLengths = TriangleEdgeLengths(point1, point2, point3);
+  viskores::Vec<T, 3> edgeLengths = TriangleEdgeLengths(point1, point2, point3);
 
   // To reduce the size of the table, we just store the quality of triangles
   // with the longest edge of size 1. The table is 2D indexed by the length
   // of the other two edges. Thus, to use the table we have to identify the
   // longest edge and scale appropriately.
-  T smallEdge1 = vtkm::Min(edgeLengths[0], edgeLengths[1]);
-  T tmpEdge = vtkm::Max(edgeLengths[0], edgeLengths[1]);
-  T smallEdge2 = vtkm::Min(edgeLengths[2], tmpEdge);
-  T largeEdge = vtkm::Max(edgeLengths[2], tmpEdge);
+  T smallEdge1 = viskores::Min(edgeLengths[0], edgeLengths[1]);
+  T tmpEdge = viskores::Max(edgeLengths[0], edgeLengths[1]);
+  T smallEdge2 = viskores::Min(edgeLengths[2], tmpEdge);
+  T largeEdge = viskores::Max(edgeLengths[2], tmpEdge);
 
   smallEdge1 /= largeEdge;
   smallEdge2 /= largeEdge;
 
   // Find index into array.
-  vtkm::Id index1 = static_cast<vtkm::Id>(
-    vtkm::Floor(smallEdge1 * (TRIANGLE_QUALITY_TABLE_DIMENSION - 1) + 0.5));
-  vtkm::Id index2 = static_cast<vtkm::Id>(
-    vtkm::Floor(smallEdge2 * (TRIANGLE_QUALITY_TABLE_DIMENSION - 1) + 0.5));
-  vtkm::Id totalIndex = index1 + index2 * TRIANGLE_QUALITY_TABLE_DIMENSION;
+  viskores::Id index1 = static_cast<viskores::Id>(
+    viskores::Floor(smallEdge1 * (TRIANGLE_QUALITY_TABLE_DIMENSION - 1) + 0.5));
+  viskores::Id index2 = static_cast<viskores::Id>(
+    viskores::Floor(smallEdge2 * (TRIANGLE_QUALITY_TABLE_DIMENSION - 1) + 0.5));
+  viskores::Id totalIndex = index1 + index2 * TRIANGLE_QUALITY_TABLE_DIMENSION;
 
   return triangleQualityPortal.Get(totalIndex);
 }
 
 } // namespace detail
 
-struct TriangleQualityWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
+struct TriangleQualityWorklet : viskores::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn cells,
                                 FieldInPoint pointCoordinates,
@@ -107,15 +116,15 @@ struct TriangleQualityWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
   template<typename CellShape,
            typename PointCoordinatesType,
            typename TriangleQualityTablePortalType>
-  VTKM_EXEC vtkm::Float32 operator()(
+  VISKORES_EXEC viskores::Float32 operator()(
     CellShape shape,
     const PointCoordinatesType& pointCoordinates,
     const TriangleQualityTablePortalType& triangleQualityTable) const
   {
-    if (shape.Id != vtkm::CELL_SHAPE_TRIANGLE)
+    if (shape.Id != viskores::CELL_SHAPE_TRIANGLE)
     {
       this->RaiseError("Only triangles are supported for triangle quality.");
-      return vtkm::Nan32();
+      return viskores::Nan32();
     }
     else
     {
@@ -134,18 +143,18 @@ struct TriangleQualityWorklet : vtkm::worklet::WorkletVisitCellsWithPoints
 //// PAUSE-EXAMPLE
 struct DemoTriangleQuality
 {
-  vtkm::cont::Invoker Invoke;
+  viskores::cont::Invoker Invoke;
 
   template<typename CoordinatesType>
-  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Float32> Run(
-    const vtkm::cont::DataSet inputDataSet,
+  VISKORES_CONT viskores::cont::ArrayHandle<viskores::Float32> Run(
+    const viskores::cont::DataSet inputDataSet,
     const CoordinatesType& inputPointCoordinatesField)
   {
     //// RESUME-EXAMPLE
-    vtkm::cont::ArrayHandle<vtkm::Float32> triangleQualityTable =
+    viskores::cont::ArrayHandle<viskores::Float32> triangleQualityTable =
       detail::GetTriangleQualityTable();
 
-    vtkm::cont::ArrayHandle<vtkm::Float32> triangleQualities;
+    viskores::cont::ArrayHandle<viskores::Float32> triangleQualities;
 
     this->Invoke(TriangleQualityWorklet{},
                  inputDataSet.GetCellSet(),
@@ -165,38 +174,39 @@ struct DemoTriangleQuality
 ////
 class TriangleQualityTableExecutionObject
 {
-  using TableArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
+  using TableArrayType = viskores::cont::ArrayHandle<viskores::Float32>;
   using TablePortalType = typename TableArrayType::ReadPortalType;
   TablePortalType TablePortal;
 
 public:
-  VTKM_CONT
+  VISKORES_CONT
   TriangleQualityTableExecutionObject(const TablePortalType& tablePortal)
     : TablePortal(tablePortal)
   {
   }
 
   template<typename T>
-  VTKM_EXEC vtkm::Float32 GetQuality(const vtkm::Vec<T, 3>& point1,
-                                     const vtkm::Vec<T, 3>& point2,
-                                     const vtkm::Vec<T, 3>& point3) const
+  VISKORES_EXEC viskores::Float32 GetQuality(const viskores::Vec<T, 3>& point1,
+                                             const viskores::Vec<T, 3>& point2,
+                                             const viskores::Vec<T, 3>& point3) const
   {
     return detail::LookupTriangleQuality(this->TablePortal, point1, point2, point3);
   }
 };
 
-class TriangleQualityTable : public vtkm::cont::ExecutionObjectBase
+class TriangleQualityTable : public viskores::cont::ExecutionObjectBase
 {
 public:
-  VTKM_CONT TriangleQualityTableExecutionObject
-  PrepareForExecution(vtkm::cont::DeviceAdapterId device, vtkm::cont::Token& token) const
+  VISKORES_CONT TriangleQualityTableExecutionObject
+  PrepareForExecution(viskores::cont::DeviceAdapterId device,
+                      viskores::cont::Token& token) const
   {
     return TriangleQualityTableExecutionObject(
       detail::GetTriangleQualityTable().PrepareForInput(device, token));
   }
 };
 
-struct TriangleQualityWorklet2 : vtkm::worklet::WorkletVisitCellsWithPoints
+struct TriangleQualityWorklet2 : viskores::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn cells,
                                 FieldInPoint pointCoordinates,
@@ -208,15 +218,15 @@ struct TriangleQualityWorklet2 : vtkm::worklet::WorkletVisitCellsWithPoints
   template<typename CellShape,
            typename PointCoordinatesType,
            typename TriangleQualityTableType>
-  VTKM_EXEC vtkm::Float32 operator()(
+  VISKORES_EXEC viskores::Float32 operator()(
     CellShape shape,
     const PointCoordinatesType& pointCoordinates,
     const TriangleQualityTableType& triangleQualityTable) const
   {
-    if (shape.Id != vtkm::CELL_SHAPE_TRIANGLE)
+    if (shape.Id != viskores::CELL_SHAPE_TRIANGLE)
     {
       this->RaiseError("Only triangles are supported for triangle quality.");
-      return vtkm::Nan32();
+      return viskores::Nan32();
     }
     else
     {
@@ -233,17 +243,17 @@ struct TriangleQualityWorklet2 : vtkm::worklet::WorkletVisitCellsWithPoints
 //// PAUSE-EXAMPLE
 struct DemoTriangleQuality2
 {
-  vtkm::cont::Invoker Invoke;
+  viskores::cont::Invoker Invoke;
 
   template<typename CoordinatesType>
-  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Float32> Run(
-    const vtkm::cont::DataSet inputDataSet,
+  VISKORES_CONT viskores::cont::ArrayHandle<viskores::Float32> Run(
+    const viskores::cont::DataSet inputDataSet,
     const CoordinatesType& inputPointCoordinatesField)
   {
     //// RESUME-EXAMPLE
     TriangleQualityTable triangleQualityTable;
 
-    vtkm::cont::ArrayHandle<vtkm::Float32> triangleQualities;
+    viskores::cont::ArrayHandle<viskores::Float32> triangleQualities;
 
     this->Invoke(TriangleQualityWorklet2{},
                  inputDataSet.GetCellSet(),
@@ -258,18 +268,18 @@ struct DemoTriangleQuality2
   }
 };
 
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/DataSetBuilderExplicit.h>
+#include <viskores/cont/ArrayHandleUniformPointCoordinates.h>
+#include <viskores/cont/DataSetBuilderExplicit.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
+#include <viskores/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace TriangleQualityNamespace
 {
 
 template<typename T>
-VTKM_EXEC T TriangleQuality(const vtkm::Vec<T, 3>& edgeLengths)
+VISKORES_EXEC T TriangleQuality(const viskores::Vec<T, 3>& edgeLengths)
 {
   // Heron's formula for triangle area.
   T semiperimeter = (edgeLengths[0] + edgeLengths[1] + edgeLengths[2]) / 2;
@@ -284,49 +294,49 @@ VTKM_EXEC T TriangleQuality(const vtkm::Vec<T, 3>& edgeLengths)
     // quality of 0 for the degenerate triangle.
     return 0;
   }
-  T area = vtkm::Sqrt(areaSquared);
+  T area = viskores::Sqrt(areaSquared);
 
   // Formula for triangle quality.
-  return 4 * area * vtkm::Sqrt(T(3)) / vtkm::MagnitudeSquared(edgeLengths);
+  return 4 * area * viskores::Sqrt(T(3)) / viskores::MagnitudeSquared(edgeLengths);
 }
 
-struct ComputeTriangleQualityValues : vtkm::worklet::WorkletMapField
+struct ComputeTriangleQualityValues : viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
   template<typename T>
-  VTKM_EXEC T operator()(const vtkm::Vec<T, 3>& edgeLengths) const
+  VISKORES_EXEC T operator()(const viskores::Vec<T, 3>& edgeLengths) const
   {
     return TriangleQuality(edgeLengths);
   }
 };
 
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Float32> BuildTriangleQualityTable()
+VISKORES_CONT
+viskores::cont::ArrayHandle<viskores::Float32> BuildTriangleQualityTable()
 {
   // Repurpose uniform point coordinates to compute triange edge lengths.
-  vtkm::cont::ArrayHandleUniformPointCoordinates edgeLengths(
-    vtkm::Id3(detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
-              detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
-              1),
-    vtkm::Vec3f(0, 0, 1),
-    vtkm::Vec3f(1.0f / (detail::TRIANGLE_QUALITY_TABLE_DIMENSION - 1),
-                1.0f / (detail::TRIANGLE_QUALITY_TABLE_DIMENSION - 1),
-                1.0f));
+  viskores::cont::ArrayHandleUniformPointCoordinates edgeLengths(
+    viskores::Id3(detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
+                  detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
+                  1),
+    viskores::Vec3f(0, 0, 1),
+    viskores::Vec3f(1.0f / (detail::TRIANGLE_QUALITY_TABLE_DIMENSION - 1),
+                    1.0f / (detail::TRIANGLE_QUALITY_TABLE_DIMENSION - 1),
+                    1.0f));
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> triQualityArray;
+  viskores::cont::ArrayHandle<viskores::Float32> triQualityArray;
 
-  vtkm::cont::Invoker invoke;
+  viskores::cont::Invoker invoke;
   invoke(ComputeTriangleQualityValues{}, edgeLengths, triQualityArray);
 
   return triQualityArray;
 }
 
 template<typename PortalType>
-VTKM_CONT void PrintTriangleQualityTable(const PortalType& portal)
+VISKORES_CONT void PrintTriangleQualityTable(const PortalType& portal)
 {
-  for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
+  for (viskores::Id index = 0; index < portal.GetNumberOfValues(); index++)
   {
     if (index % detail::TRIANGLE_QUALITY_TABLE_DIMENSION == 0)
     {
@@ -337,30 +347,30 @@ VTKM_CONT void PrintTriangleQualityTable(const PortalType& portal)
   std::cout << std::endl << std::endl;
 }
 
-VTKM_CONT
-vtkm::cont::DataSet BuildDataSet()
+VISKORES_CONT
+viskores::cont::DataSet BuildDataSet()
 {
-  static const vtkm::Id NUM_ROWS = 5;
+  static const viskores::Id NUM_ROWS = 5;
 
-  vtkm::cont::DataSetBuilderExplicitIterative dataSetBuilder;
+  viskores::cont::DataSetBuilderExplicitIterative dataSetBuilder;
   dataSetBuilder.Begin();
 
-  for (vtkm::Id row = 0; row < NUM_ROWS; row++)
+  for (viskores::Id row = 0; row < NUM_ROWS; row++)
   {
-    dataSetBuilder.AddPoint(0, static_cast<vtkm::Float32>(row * row), 0);
-    dataSetBuilder.AddPoint(1, static_cast<vtkm::Float32>(row * row), 0);
+    dataSetBuilder.AddPoint(0, static_cast<viskores::Float32>(row * row), 0);
+    dataSetBuilder.AddPoint(1, static_cast<viskores::Float32>(row * row), 0);
   }
 
-  for (vtkm::Id row = 0; row < NUM_ROWS - 1; row++)
+  for (viskores::Id row = 0; row < NUM_ROWS - 1; row++)
   {
-    vtkm::Id firstPoint = 2 * row;
+    viskores::Id firstPoint = 2 * row;
 
-    dataSetBuilder.AddCell(vtkm::CELL_SHAPE_TRIANGLE);
+    dataSetBuilder.AddCell(viskores::CELL_SHAPE_TRIANGLE);
     dataSetBuilder.AddCellPoint(firstPoint + 0);
     dataSetBuilder.AddCellPoint(firstPoint + 1);
     dataSetBuilder.AddCellPoint(firstPoint + 2);
 
-    dataSetBuilder.AddCell(vtkm::CELL_SHAPE_TRIANGLE);
+    dataSetBuilder.AddCell(viskores::CELL_SHAPE_TRIANGLE);
     dataSetBuilder.AddCellPoint(firstPoint + 1);
     dataSetBuilder.AddCellPoint(firstPoint + 3);
     dataSetBuilder.AddCellPoint(firstPoint + 2);
@@ -369,55 +379,58 @@ vtkm::cont::DataSet BuildDataSet()
   return dataSetBuilder.Create();
 }
 
-VTKM_CONT
-void CheckQualityArray(vtkm::cont::ArrayHandle<vtkm::Float32> qualities)
+VISKORES_CONT
+void CheckQualityArray(viskores::cont::ArrayHandle<viskores::Float32> qualities)
 {
-  vtkm::cont::printSummary_ArrayHandle(qualities, std::cout);
+  viskores::cont::printSummary_ArrayHandle(qualities, std::cout);
   std::cout << std::endl;
 
-  vtkm::cont::ArrayHandle<vtkm::Float32>::ReadPortalType qualityPortal =
+  viskores::cont::ArrayHandle<viskores::Float32>::ReadPortalType qualityPortal =
     qualities.ReadPortal();
 
   // Pairwise triangles should have the same quality.
-  for (vtkm::Id pairIndex = 0; pairIndex < qualities.GetNumberOfValues() / 2;
+  for (viskores::Id pairIndex = 0; pairIndex < qualities.GetNumberOfValues() / 2;
        pairIndex++)
   {
-    vtkm::Float32 q1 = qualityPortal.Get(2 * pairIndex);
-    vtkm::Float32 q2 = qualityPortal.Get(2 * pairIndex + 1);
-    VTKM_TEST_ASSERT(test_equal(q1, q2), "Isometric triangles have different quality.");
+    viskores::Float32 q1 = qualityPortal.Get(2 * pairIndex);
+    viskores::Float32 q2 = qualityPortal.Get(2 * pairIndex + 1);
+    VISKORES_TEST_ASSERT(test_equal(q1, q2),
+                         "Isometric triangles have different quality.");
   }
 
   // Triangle qualities should be monotonically decreasing.
-  vtkm::Float32 lastQuality = 1;
-  for (vtkm::Id triIndex = 0; triIndex < qualities.GetNumberOfValues(); triIndex++)
+  viskores::Float32 lastQuality = 1;
+  for (viskores::Id triIndex = 0; triIndex < qualities.GetNumberOfValues(); triIndex++)
   {
-    vtkm::Float32 quality = qualityPortal.Get(triIndex);
-    VTKM_TEST_ASSERT(test_equal(quality, lastQuality) || (quality <= lastQuality),
-                     "Triangle quality not monotonically decreasing.");
+    viskores::Float32 quality = qualityPortal.Get(triIndex);
+    VISKORES_TEST_ASSERT(test_equal(quality, lastQuality) || (quality <= lastQuality),
+                         "Triangle quality not monotonically decreasing.");
     lastQuality = quality;
   }
 
   // The first quality should definitely be better than the last.
-  vtkm::Float32 firstQuality = qualityPortal.Get(0);
-  VTKM_TEST_ASSERT(firstQuality > lastQuality, "First quality not better than last.");
+  viskores::Float32 firstQuality = qualityPortal.Get(0);
+  VISKORES_TEST_ASSERT(firstQuality > lastQuality,
+                       "First quality not better than last.");
 }
 
-VTKM_CONT
+VISKORES_CONT
 void TestTriangleQuality()
 {
   std::cout << "Building triangle quality array." << std::endl;
-  vtkm::cont::ArrayHandle<vtkm::Float32> triQualityTable = BuildTriangleQualityTable();
-  VTKM_TEST_ASSERT(triQualityTable.GetNumberOfValues() ==
-                     detail::TRIANGLE_QUALITY_TABLE_DIMENSION *
-                       detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
-                   "Bad size for triangle quality array.");
+  viskores::cont::ArrayHandle<viskores::Float32> triQualityTable =
+    BuildTriangleQualityTable();
+  VISKORES_TEST_ASSERT(triQualityTable.GetNumberOfValues() ==
+                         detail::TRIANGLE_QUALITY_TABLE_DIMENSION *
+                           detail::TRIANGLE_QUALITY_TABLE_DIMENSION,
+                       "Bad size for triangle quality array.");
   PrintTriangleQualityTable(triQualityTable.ReadPortal());
 
   std::cout << "Creating a data set." << std::endl;
-  vtkm::cont::DataSet dataSet = BuildDataSet();
+  viskores::cont::DataSet dataSet = BuildDataSet();
 
   std::cout << "Getting triangle quality using whole array argument." << std::endl;
-  vtkm::cont::ArrayHandle<vtkm::Float32> qualities =
+  viskores::cont::ArrayHandle<viskores::Float32> qualities =
     DemoTriangleQuality().Run(dataSet, dataSet.GetCoordinateSystem().GetData());
   CheckQualityArray(qualities);
 
@@ -431,6 +444,6 @@ void TestTriangleQuality()
 
 int GuideExampleTriangleQuality(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(
+  return viskores::cont::testing::Testing::Run(
     TriangleQualityNamespace::TestTriangleQuality, argc, argv);
 }

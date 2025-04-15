@@ -33,7 +33,7 @@ then
     echo
     echo "This script seaches for C++ source files and removes the template"
     echo "arguments of select ControlSignature tags that have changed since"
-    echo "VTK-m 1.3. This script searches through all subdirectories of the"
+    echo "Viskores 1.3. This script searches through all subdirectories of the"
     echo "given directory. Files with the following extensions are processed:"
     echo
     echo "   $extentions_to_change"

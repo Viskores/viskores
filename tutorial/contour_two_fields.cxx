@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -9,19 +17,19 @@
 //============================================================================
 // Example 3: do a contour (but only evaluate two fields), write it out.
 //
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/filter/contour/Contour.h>
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/filter/contour/Contour.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
 int main(int argc, char** argv)
 {
-  vtkm::cont::Initialize(argc, argv);
+  viskores::cont::Initialize(argc, argv);
 
-  vtkm::io::VTKDataSetReader reader("data/kitchen.vtk");
-  vtkm::cont::DataSet ds_from_file = reader.ReadDataSet();
+  viskores::io::VTKDataSetReader reader("data/kitchen.vtk");
+  viskores::cont::DataSet ds_from_file = reader.ReadDataSet();
 
-  vtkm::filter::contour::Contour contour;
+  viskores::filter::contour::Contour contour;
   contour.SetActiveField("c1");
   contour.SetFieldsToPass({ "c1", "ke" });
   contour.SetNumberOfIsoValues(3);
@@ -29,8 +37,8 @@ int main(int argc, char** argv)
   contour.SetIsoValue(1, 0.10);
   contour.SetIsoValue(2, 0.15);
 
-  vtkm::cont::DataSet ds_from_contour = contour.Execute(ds_from_file);
-  vtkm::io::VTKDataSetWriter writer("out_mc_2fields.vtk");
+  viskores::cont::DataSet ds_from_contour = contour.Execute(ds_from_file);
+  viskores::io::VTKDataSetWriter writer("out_mc_2fields.vtk");
   writer.WriteDataSet(ds_from_contour);
 
   return 0;

@@ -1,3 +1,11 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
 ##=============================================================================
 ##
 ##  Copyright (c) Kitware, Inc.
@@ -19,9 +27,9 @@ endif ()
 set(CTEST_SOURCE_DIRECTORY "$ENV{CI_PROJECT_DIR}")
 set(CTEST_BINARY_DIRECTORY "${CTEST_SOURCE_DIRECTORY}/build")
 
-if ("$ENV{VTKM_SETTINGS}" STREQUAL "")
+if ("$ENV{VISKORES_SETTINGS}" STREQUAL "")
   message(FATAL_ERROR
-    "The VTKM_SETTINGS environment variable is required to know what "
+    "The VISKORES_SETTINGS environment variable is required to know what "
     "build options should be used.")
 endif ()
 
@@ -35,7 +43,7 @@ endif ()
 
 # Set the build metadata.
 string(TOLOWER ${CTEST_BUILD_CONFIGURATION} build_type)
-set(CTEST_BUILD_NAME "${build_type}+$ENV{VTKM_SETTINGS}")
+set(CTEST_BUILD_NAME "${build_type}+$ENV{VISKORES_SETTINGS}")
 
 set(site_name "$ENV{CI_JOB_NAME}")
 string(REPLACE "docs:" "docs_" site_name "${site_name}")
@@ -60,7 +68,7 @@ elseif("$ENV{CI_COMMIT_REF_NAME}" STREQUAL "release")
   set(CTEST_TRACK "release")
 endif()
 
-if("$ENV{VTKM_CI_NIGHTLY}" STREQUAL "TRUE")
+if("$ENV{VISKORES_CI_NIGHTLY}" STREQUAL "TRUE")
   set(CTEST_TRACK "Nightly")
 endif()
 
@@ -96,9 +104,11 @@ endif()
 
 # Override revision (Git Commit) if ORIGINAL_COMMIT_SHA is found in source code
 if (EXISTS "ORIGINAL_COMMIT_SHA")
-  file(READ "ORIGINAL_COMMIT_SHA" commit_sha)
+  file(STRINGS "ORIGINAL_COMMIT_SHA" commit_sha LIMIT_COUNT 1)
   list(APPEND optional_variables "set(CTEST_UPDATE_VERSION_OVERRIDE ${commit_sha})")
 endif()
+
+string(REPLACE ";" "\n" optional_variables "${optional_variables}")
 
 #We need to do write this information out to a file in the build directory
 file(TO_CMAKE_PATH "${CTEST_SOURCE_DIRECTORY}" src_path) #converted so we can run on windows
@@ -121,4 +131,5 @@ set(state
   ${optional_variables}
 "
 )
+message("OUT: ${state}")
 file(WRITE ${CTEST_BINARY_DIRECTORY}/CIState.cmake "${state}")

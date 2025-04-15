@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -11,12 +19,12 @@
 #include <cctype>
 #include <iostream>
 
-#include <vtkm/Math.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Initialize.h>
+#include <viskores/Math.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/Initialize.h>
 
-#include <vtkm/source/Oscillator.h>
+#include <viskores/source/Oscillator.h>
 
 #if !defined(_WIN32) || defined(__CYGWIN__)
 #include <unistd.h> /* unlink */
@@ -25,7 +33,7 @@
 #endif
 
 //Suppress warnings about glut being deprecated on OSX
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#if (defined(VISKORES_GCC) || defined(VISKORES_CLANG))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
@@ -50,7 +58,7 @@ static inline std::string& trim(std::string& s)
 
 // ----------------------------------------------------------------------------
 
-void read_oscillators(std::string filePath, vtkm::source::Oscillator& source)
+void read_oscillators(std::string filePath, viskores::source::Oscillator& source)
 {
   std::ifstream in(filePath);
   if (!in)
@@ -206,18 +214,18 @@ void writeData(std::string& basePath,
 
 // ----------------------------------------------------------------------------
 
-void printUsage(const std::string& vtkm_options)
+void printUsage(const std::string& viskores_options)
 {
   std::cout << "Usage: Oscillator [options]\n\n"
             << "Options:\n\n"
             << "  -s, --shape POINT     domain shape [default: 64x64x64]\n"
             << "  -t, --dt FLOAT        time step [default: 0.01]\n"
             << "  -f, --config STRING   oscillator file (required). Available in "
-               "vtk-m/examples/oscillator/inputs\n"
+               "viskores/examples/oscillator/inputs\n"
             << "      --t-end FLOAT     end time [default: 10]\n"
             << "  -o, --output STRING   directory to output data\n"
-            << "General VTK-m Options:\n\n"
-            << vtkm_options << std::endl;
+            << "General Viskores Options:\n\n"
+            << viskores_options << std::endl;
 }
 
 // ----------------------------------------------------------------------------
@@ -235,9 +243,9 @@ int main(int argc, char** argv)
   float currentTime = startTime;
   bool generateOutput = false;
 
-  // Process vtk-m general args
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  auto initializeResults = vtkm::cont::Initialize(argc, argv, opts);
+  // Process viskores general args
+  auto opts = viskores::cont::InitializeOptions::DefaultAnyDevice;
+  auto initializeResults = viskores::cont::Initialize(argc, argv, opts);
   // Process args
   int nbOptions = argc - 1;
   for (int i = 1; i < nbOptions; i += 2)
@@ -301,7 +309,7 @@ int main(int argc, char** argv)
   std::cout << "  - end: " << endTime << std::endl;
   std::cout << "=======================================\n" << std::endl;
 
-  vtkm::source::Oscillator source(vtkm::Id3{ sizeX, sizeY, sizeZ });
+  viskores::source::Oscillator source(viskores::Id3{ sizeX, sizeY, sizeZ });
   read_oscillators(oscillatorConfigFile, source);
 
   std::cout << "=========== start computation ============" << std::endl;
@@ -309,11 +317,11 @@ int main(int argc, char** argv)
   while (currentTime < endTime)
   {
     source.SetTime(currentTime);
-    vtkm::cont::DataSet rdata = source.Execute();
+    viskores::cont::DataSet rdata = source.Execute();
     if (generateOutput)
     {
-      vtkm::cont::ArrayHandleBasic<vtkm::Float64> tmp;
-      rdata.GetField("oscillating", vtkm::cont::Field::Association::Points)
+      viskores::cont::ArrayHandleBasic<viskores::Float64> tmp;
+      rdata.GetField("oscillating", viskores::cont::Field::Association::Points)
         .GetData()
         .AsArrayHandle(tmp);
       const double* values = tmp.GetReadPointer();
@@ -326,6 +334,6 @@ int main(int argc, char** argv)
   std::cout << "=========== computation done ============" << std::endl;
 }
 
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#if (defined(VISKORES_GCC) || defined(VISKORES_CLANG))
 #pragma GCC diagnostic pop
 #endif

@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -11,16 +19,16 @@
 #include "ABCfield.h"
 #include <iostream>
 #include <vector>
-#include <vtkm/Types.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/filter/flow/Lagrangian.h>
+#include <viskores/Types.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/filter/flow/Lagrangian.h>
 
 using namespace std;
 
-vtkm::cont::DataSet make3DUniformDataSet(double time)
+viskores::cont::DataSet make3DUniformDataSet(double time)
 {
   ABCfield field;
 
@@ -35,21 +43,21 @@ vtkm::cont::DataSet make3DUniformDataSet(double time)
 
   int dims[3] = { 16, 16, 16 };
 
-  vtkm::cont::DataSetBuilderUniform dsb;
+  viskores::cont::DataSetBuilderUniform dsb;
 
   double xdiff = (xmax - xmin) / (dims[0] - 1);
   double ydiff = (ymax - ymin) / (dims[1] - 1);
   double zdiff = (zmax - zmin) / (dims[2] - 1);
 
-  vtkm::Id3 DIMS(dims[0], dims[1], dims[2]);
-  vtkm::Vec3f_64 ORIGIN(0, 0, 0);
-  vtkm::Vec3f_64 SPACING(xdiff, ydiff, zdiff);
+  viskores::Id3 DIMS(dims[0], dims[1], dims[2]);
+  viskores::Vec3f_64 ORIGIN(0, 0, 0);
+  viskores::Vec3f_64 SPACING(xdiff, ydiff, zdiff);
 
-  vtkm::cont::DataSet dataset = dsb.Create(DIMS, ORIGIN, SPACING);
+  viskores::cont::DataSet dataset = dsb.Create(DIMS, ORIGIN, SPACING);
 
   int numPoints = dims[0] * dims[1] * dims[2];
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_64> velocityField;
+  viskores::cont::ArrayHandle<viskores::Vec3f_64> velocityField;
   velocityField.Allocate(numPoints);
 
   int count = 0;
@@ -62,7 +70,7 @@ vtkm::cont::DataSet make3DUniformDataSet(double time)
         double vec[3];
         double loc[3] = { i * xdiff + xmin, j * ydiff + ymax, k * zdiff + zmin };
         field.calculateVelocity(loc, time, vec);
-        velocityField.WritePortal().Set(count, vtkm::Vec3f_64(vec[0], vec[1], vec[2]));
+        velocityField.WritePortal().Set(count, viskores::Vec3f_64(vec[0], vec[1], vec[2]));
         count++;
       }
     }
@@ -75,19 +83,19 @@ vtkm::cont::DataSet make3DUniformDataSet(double time)
 int main(int argc, char** argv)
 {
   auto opts =
-    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
-  vtkm::cont::Initialize(argc, argv, opts);
+    viskores::cont::InitializeOptions::DefaultAnyDevice | viskores::cont::InitializeOptions::Strict;
+  viskores::cont::Initialize(argc, argv, opts);
 
-  vtkm::filter::flow::Lagrangian lagrangianFilter;
+  viskores::filter::flow::Lagrangian lagrangianFilter;
   lagrangianFilter.SetResetParticles(true);
-  vtkm::Float32 stepSize = 0.01f;
+  viskores::Float32 stepSize = 0.01f;
   lagrangianFilter.SetStepSize(stepSize);
   lagrangianFilter.SetWriteFrequency(10);
   for (int i = 0; i < 100; i++)
   {
-    vtkm::cont::DataSet inputData = make3DUniformDataSet((double)i * stepSize);
+    viskores::cont::DataSet inputData = make3DUniformDataSet((double)i * stepSize);
     lagrangianFilter.SetActiveField("velocity");
-    vtkm::cont::DataSet extractedBasisFlows = lagrangianFilter.Execute(inputData);
+    viskores::cont::DataSet extractedBasisFlows = lagrangianFilter.Execute(inputData);
   }
   return 0;
 }

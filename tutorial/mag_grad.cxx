@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,42 +15,42 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/VectorAnalysis.h>
+#include <viskores/VectorAnalysis.h>
 
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/Invoker.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/cont/Invoker.h>
 
-#include <vtkm/filter/Filter.h>
-#include <vtkm/filter/vector_analysis/Gradient.h>
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/filter/Filter.h>
+#include <viskores/filter/vector_analysis/Gradient.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
+#include <viskores/worklet/WorkletMapField.h>
 
 // Worklet that does the actual work on the device.
-struct ComputeMagnitude : vtkm::worklet::WorkletMapField
+struct ComputeMagnitude : viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn inputVectors, FieldOut outputMagnitudes);
 
-  VTKM_EXEC void operator()(const vtkm::Vec3f& inVector, vtkm::FloatDefault& outMagnitude) const
+  VISKORES_EXEC void operator()(const viskores::Vec3f& inVector, viskores::FloatDefault& outMagnitude) const
   {
-    outMagnitude = vtkm::Magnitude(inVector);
+    outMagnitude = viskores::Magnitude(inVector);
   }
 };
 
 // The filter class used by external code to run the algorithm. Normally the class definition
 // is in a separate header file.
-class FieldMagnitude : public vtkm::filter::Filter
+class FieldMagnitude : public viskores::filter::Filter
 {
 protected:
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inDataSet) override;
 };
 
 // Implementation for the filter. Normally this is in its own .cxx file.
-VTKM_CONT vtkm::cont::DataSet FieldMagnitude::DoExecute(const vtkm::cont::DataSet& inDataSet)
+VISKORES_CONT viskores::cont::DataSet FieldMagnitude::DoExecute(const viskores::cont::DataSet& inDataSet)
 {
-  const vtkm::cont::Field& inField = this->GetFieldFromDataSet(inDataSet);
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArrayHandle;
+  const viskores::cont::Field& inField = this->GetFieldFromDataSet(inDataSet);
+  viskores::cont::ArrayHandle<viskores::FloatDefault> outArrayHandle;
 
   auto resolveType = [&](const auto& inArrayHandle) {
     this->Invoke(ComputeMagnitude{}, inArrayHandle, outArrayHandle);
@@ -60,21 +68,21 @@ VTKM_CONT vtkm::cont::DataSet FieldMagnitude::DoExecute(const vtkm::cont::DataSe
 
 int main(int argc, char** argv)
 {
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = viskores::cont::InitializeOptions::DefaultAnyDevice;
+  viskores::cont::InitializeResult config = viskores::cont::Initialize(argc, argv, opts);
 
-  vtkm::io::VTKDataSetReader reader("data/kitchen.vtk");
-  vtkm::cont::DataSet ds_from_file = reader.ReadDataSet();
+  viskores::io::VTKDataSetReader reader("data/kitchen.vtk");
+  viskores::cont::DataSet ds_from_file = reader.ReadDataSet();
 
-  vtkm::filter::vector_analysis::Gradient grad;
+  viskores::filter::vector_analysis::Gradient grad;
   grad.SetActiveField("c1");
-  vtkm::cont::DataSet ds_from_grad = grad.Execute(ds_from_file);
+  viskores::cont::DataSet ds_from_grad = grad.Execute(ds_from_file);
 
   FieldMagnitude mag;
   mag.SetActiveField("Gradients");
-  vtkm::cont::DataSet mag_grad = mag.Execute(ds_from_grad);
+  viskores::cont::DataSet mag_grad = mag.Execute(ds_from_grad);
 
-  vtkm::io::VTKDataSetWriter writer("out_mag_grad.vtk");
+  viskores::io::VTKDataSetWriter writer("out_mag_grad.vtk");
   writer.WriteDataSet(mag_grad);
 
   return 0;

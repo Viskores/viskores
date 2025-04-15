@@ -1,7 +1,0 @@
-NAME
-  vtkm_cont_testing
-DEPENDS
-  vtkm_cont
-GROUPS
-  Testing
-NO_TESTING

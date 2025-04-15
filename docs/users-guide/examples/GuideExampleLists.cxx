@@ -1,3 +1,11 @@
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
 //=============================================================================
 //
 //  Copyright (c) Kitware, Inc.
@@ -10,8 +18,8 @@
 //
 //=============================================================================
 
-#include <vtkm/List.h>
-#include <vtkm/TypeList.h>
+#include <viskores/List.h>
+#include <viskores/TypeList.h>
 
 namespace
 {
@@ -20,34 +28,36 @@ namespace
 //// BEGIN-EXAMPLE CustomTypeLists
 ////
 // A list of 2D vector types.
-using Vec2List = vtkm::List<vtkm::Vec2f_32, vtkm::Vec2f_64>;
+using Vec2List = viskores::List<viskores::Vec2f_32, viskores::Vec2f_64>;
 
 // An application that uses 2D geometry might commonly encounter this list of
 // types.
-using MyCommonTypes = vtkm::ListAppend<Vec2List, vtkm::TypeListCommon>;
+using MyCommonTypes = viskores::ListAppend<Vec2List, viskores::TypeListCommon>;
 ////
 //// END-EXAMPLE CustomTypeLists
 ////
 
-VTKM_STATIC_ASSERT((std::is_same<vtkm::ListAt<Vec2List, 0>, vtkm::Vec2f_32>::value));
-VTKM_STATIC_ASSERT((std::is_same<vtkm::ListAt<Vec2List, 1>, vtkm::Vec2f_64>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<viskores::ListAt<Vec2List, 0>, viskores::Vec2f_32>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<viskores::ListAt<Vec2List, 1>, viskores::Vec2f_64>::value));
 
-VTKM_STATIC_ASSERT((std::is_same<MyCommonTypes,
-                                 vtkm::List<vtkm::Vec2f_32,
-                                            vtkm::Vec2f_64,
-                                            vtkm::UInt8,
-                                            vtkm::Int32,
-                                            vtkm::Int64,
-                                            vtkm::Float32,
-                                            vtkm::Float64,
-                                            vtkm::Vec3f_32,
-                                            vtkm::Vec3f_64>>::value));
+VISKORES_STATIC_ASSERT((std::is_same<MyCommonTypes,
+                                     viskores::List<viskores::Vec2f_32,
+                                                    viskores::Vec2f_64,
+                                                    viskores::UInt8,
+                                                    viskores::Int32,
+                                                    viskores::Int64,
+                                                    viskores::Float32,
+                                                    viskores::Float64,
+                                                    viskores::Vec3f_32,
+                                                    viskores::Vec3f_64>>::value));
 
 } // anonymous namespace
 
-#include <vtkm/VecTraits.h>
+#include <viskores/VecTraits.h>
 
-#include <vtkm/testing/Testing.h>
+#include <viskores/testing/Testing.h>
 
 #include <algorithm>
 #include <string>
@@ -56,7 +66,7 @@ VTKM_STATIC_ASSERT((std::is_same<MyCommonTypes,
 ////
 //// BEGIN-EXAMPLE BaseLists
 ////
-#include <vtkm/List.h>
+#include <viskores/List.h>
 //// PAUSE-EXAMPLE
 namespace
 {
@@ -72,13 +82,13 @@ class Xyzzy;
 
 // The names of the following tags are indicative of the lists they contain.
 
-using FooList = vtkm::List<Foo>;
+using FooList = viskores::List<Foo>;
 
-using FooBarList = vtkm::List<Foo, Bar>;
+using FooBarList = viskores::List<Foo, Bar>;
 
-using BazQuxXyzzyList = vtkm::List<Baz, Qux, Xyzzy>;
+using BazQuxXyzzyList = viskores::List<Baz, Qux, Xyzzy>;
 
-using QuxBazBarFooList = vtkm::List<Qux, Baz, Bar, Foo>;
+using QuxBazBarFooList = viskores::List<Qux, Baz, Bar, Foo>;
 ////
 //// END-EXAMPLE BaseLists
 ////
@@ -106,7 +116,7 @@ struct ListFunctor
   template<typename T>
   void operator()(T)
   {
-    this->FoundTags.append(vtkm::testing::TypeName<T>::Name());
+    this->FoundTags.append(viskores::testing::TypeName<T>::Name());
   }
 
   void operator()(Foo) { this->FoundTags.append("Foo"); }
@@ -120,11 +130,11 @@ template<typename List>
 void TryList(List, const char* expectedString)
 {
   ListFunctor checkFunctor;
-  vtkm::ListForEach(checkFunctor, List());
+  viskores::ListForEach(checkFunctor, List());
   std::cout << std::endl
             << "Expected " << expectedString << std::endl
             << "Found    " << checkFunctor.FoundTags << std::endl;
-  VTKM_TEST_ASSERT(checkFunctor.FoundTags == expectedString, "List wrong");
+  VISKORES_TEST_ASSERT(checkFunctor.FoundTags == expectedString, "List wrong");
 }
 
 void TestBaseLists()
@@ -136,24 +146,24 @@ void TestBaseLists()
 }
 
 ////
-//// BEGIN-EXAMPLE VTKM_IS_LIST
+//// BEGIN-EXAMPLE VISKORES_IS_LIST
 ////
 template<typename List>
 class MyImportantClass
 {
-  VTKM_IS_LIST(List);
+  VISKORES_IS_LIST(List);
   // Implementation...
 };
 
 void DoImportantStuff()
 {
-  MyImportantClass<vtkm::List<vtkm::Id>> important1; // This compiles fine
+  MyImportantClass<viskores::List<viskores::Id>> important1; // This compiles fine
   //// PAUSE-EXAMPLE
 #if 0
   //// RESUME-EXAMPLE
-  MyImportantClass<vtkm::Id> important2;  // COMPILE ERROR: vtkm::Id is not a list
+  MyImportantClass<viskores::Id> important2;  // COMPILE ERROR: viskores::Id is not a list
   ////
-  //// END-EXAMPLE VTKM_IS_LIST
+  //// END-EXAMPLE VISKORES_IS_LIST
   ////
   //// PAUSE-EXAMPLE
 #endif
@@ -172,14 +182,14 @@ void TestListSize()
   ////
   //// BEGIN-EXAMPLE ListSize
   ////
-  using MyList = vtkm::List<vtkm::Int8, vtkm::Int32, vtkm::Int64>;
+  using MyList = viskores::List<viskores::Int8, viskores::Int32, viskores::Int64>;
 
-  constexpr vtkm::IdComponent myListSize = vtkm::ListSize<MyList>::value;
+  constexpr viskores::IdComponent myListSize = viskores::ListSize<MyList>::value;
   // myListSize is 3
   ////
   //// END-EXAMPLE ListSize
   ////
-  VTKM_STATIC_ASSERT(myListSize == 3);
+  VISKORES_STATIC_ASSERT(myListSize == 3);
 }
 
 void TestListHas()
@@ -187,18 +197,19 @@ void TestListHas()
   ////
   //// BEGIN-EXAMPLE ListHas
   ////
-  using MyList = vtkm::List<vtkm::Int8, vtkm::Int16, vtkm::Int32, vtkm::Int64>;
+  using MyList =
+    viskores::List<viskores::Int8, viskores::Int16, viskores::Int32, viskores::Int64>;
 
-  constexpr bool hasInt = vtkm::ListHas<MyList, int>::value;
+  constexpr bool hasInt = viskores::ListHas<MyList, int>::value;
   // hasInt is true
 
-  constexpr bool hasFloat = vtkm::ListHas<MyList, float>::value;
+  constexpr bool hasFloat = viskores::ListHas<MyList, float>::value;
   // hasFloat is false
   ////
   //// END-EXAMPLE ListHas
   ////
-  VTKM_STATIC_ASSERT(hasInt);
-  VTKM_STATIC_ASSERT(!hasFloat);
+  VISKORES_STATIC_ASSERT(hasInt);
+  VISKORES_STATIC_ASSERT(!hasFloat);
 }
 
 void TestListIndices()
@@ -206,34 +217,35 @@ void TestListIndices()
   ////
   //// BEGIN-EXAMPLE ListIndices
   ////
-  using MyList = vtkm::List<vtkm::Int8, vtkm::Int32, vtkm::Int64>;
+  using MyList = viskores::List<viskores::Int8, viskores::Int32, viskores::Int64>;
 
-  constexpr vtkm::IdComponent indexOfInt8 = vtkm::ListIndexOf<MyList, vtkm::Int8>::value;
+  constexpr viskores::IdComponent indexOfInt8 =
+    viskores::ListIndexOf<MyList, viskores::Int8>::value;
   // indexOfInt8 is 0
-  constexpr vtkm::IdComponent indexOfInt32 =
-    vtkm::ListIndexOf<MyList, vtkm::Int32>::value;
+  constexpr viskores::IdComponent indexOfInt32 =
+    viskores::ListIndexOf<MyList, viskores::Int32>::value;
   // indexOfInt32 is 1
-  constexpr vtkm::IdComponent indexOfInt64 =
-    vtkm::ListIndexOf<MyList, vtkm::Int64>::value;
+  constexpr viskores::IdComponent indexOfInt64 =
+    viskores::ListIndexOf<MyList, viskores::Int64>::value;
   // indexOfInt64 is 2
-  constexpr vtkm::IdComponent indexOfFloat32 =
-    vtkm::ListIndexOf<MyList, vtkm::Float32>::value;
+  constexpr viskores::IdComponent indexOfFloat32 =
+    viskores::ListIndexOf<MyList, viskores::Float32>::value;
   // indexOfFloat32 is -1 (not in list)
 
-  using T0 = vtkm::ListAt<MyList, 0>; // T0 is vtkm::Int8
-  using T1 = vtkm::ListAt<MyList, 1>; // T1 is vtkm::Int32
-  using T2 = vtkm::ListAt<MyList, 2>; // T2 is vtkm::Int64
+  using T0 = viskores::ListAt<MyList, 0>; // T0 is viskores::Int8
+  using T1 = viskores::ListAt<MyList, 1>; // T1 is viskores::Int32
+  using T2 = viskores::ListAt<MyList, 2>; // T2 is viskores::Int64
   ////
   //// END-EXAMPLE ListIndices
   ////
-  VTKM_TEST_ASSERT(indexOfInt8 == 0);
-  VTKM_TEST_ASSERT(indexOfInt32 == 1);
-  VTKM_TEST_ASSERT(indexOfInt64 == 2);
-  VTKM_TEST_ASSERT(indexOfFloat32 == -1);
+  VISKORES_TEST_ASSERT(indexOfInt8 == 0);
+  VISKORES_TEST_ASSERT(indexOfInt32 == 1);
+  VISKORES_TEST_ASSERT(indexOfInt64 == 2);
+  VISKORES_TEST_ASSERT(indexOfFloat32 == -1);
 
-  VTKM_STATIC_ASSERT((std::is_same<T0, vtkm::Int8>::value));
-  VTKM_STATIC_ASSERT((std::is_same<T1, vtkm::Int32>::value));
-  VTKM_STATIC_ASSERT((std::is_same<T2, vtkm::Int64>::value));
+  VISKORES_STATIC_ASSERT((std::is_same<T0, viskores::Int8>::value));
+  VISKORES_STATIC_ASSERT((std::is_same<T1, viskores::Int32>::value));
+  VISKORES_STATIC_ASSERT((std::is_same<T2, viskores::Int64>::value));
 }
 
 namespace TestListAppend
@@ -241,27 +253,29 @@ namespace TestListAppend
 ////
 //// BEGIN-EXAMPLE ListAppend
 ////
-using BigTypes = vtkm::List<vtkm::Int64, vtkm::Float64>;
-using MediumTypes = vtkm::List<vtkm::Int32, vtkm::Float32>;
-using SmallTypes = vtkm::List<vtkm::Int8>;
+using BigTypes = viskores::List<viskores::Int64, viskores::Float64>;
+using MediumTypes = viskores::List<viskores::Int32, viskores::Float32>;
+using SmallTypes = viskores::List<viskores::Int8>;
 
-using SmallAndBigTypes = vtkm::ListAppend<SmallTypes, BigTypes>;
-// SmallAndBigTypes is vtkm::List<vtkm::Int8, vtkm::Int64, vtkm::Float64>
+using SmallAndBigTypes = viskores::ListAppend<SmallTypes, BigTypes>;
+// SmallAndBigTypes is viskores::List<viskores::Int8, viskores::Int64, viskores::Float64>
 
-using AllMyTypes = vtkm::ListAppend<BigTypes, MediumTypes, SmallTypes>;
+using AllMyTypes = viskores::ListAppend<BigTypes, MediumTypes, SmallTypes>;
 // AllMyTypes is
-// vtkm::List<vtkm::Int64, vtkm::Float64, vtkm::Int32, vtkm::Float32, vtkm::Int8>
+// viskores::List<viskores::Int64, viskores::Float64, viskores::Int32, viskores::Float32, viskores::Int8>
 ////
 //// END-EXAMPLE ListAppend
 ////
-VTKM_STATIC_ASSERT(
-  (std::is_same<SmallAndBigTypes,
-                vtkm::List<vtkm::Int8, vtkm::Int64, vtkm::Float64>>::value));
-VTKM_STATIC_ASSERT(
+VISKORES_STATIC_ASSERT(
   (std::is_same<
-    AllMyTypes,
-    vtkm::List<vtkm::Int64, vtkm::Float64, vtkm::Int32, vtkm::Float32, vtkm::Int8>>::
-     value));
+    SmallAndBigTypes,
+    viskores::List<viskores::Int8, viskores::Int64, viskores::Float64>>::value));
+VISKORES_STATIC_ASSERT((std::is_same<AllMyTypes,
+                                     viskores::List<viskores::Int64,
+                                                    viskores::Float64,
+                                                    viskores::Int32,
+                                                    viskores::Float32,
+                                                    viskores::Int8>>::value));
 }
 
 namespace TestListIntersect
@@ -269,16 +283,18 @@ namespace TestListIntersect
 ////
 //// BEGIN-EXAMPLE ListIntersect
 ////
-using SignedInts = vtkm::List<vtkm::Int8, vtkm::Int16, vtkm::Int32, vtkm::Int64>;
-using WordTypes = vtkm::List<vtkm::Int32, vtkm::UInt32, vtkm::Int64, vtkm::UInt64>;
+using SignedInts =
+  viskores::List<viskores::Int8, viskores::Int16, viskores::Int32, viskores::Int64>;
+using WordTypes =
+  viskores::List<viskores::Int32, viskores::UInt32, viskores::Int64, viskores::UInt64>;
 
-using SignedWords = vtkm::ListIntersect<SignedInts, WordTypes>;
-// SignedWords is vtkm::List<vtkm::Int32, vtkm::Int64>
+using SignedWords = viskores::ListIntersect<SignedInts, WordTypes>;
+// SignedWords is viskores::List<viskores::Int32, viskores::Int64>
 ////
 //// END-EXAMPLE ListIntersect
 ////
-VTKM_STATIC_ASSERT(
-  (std::is_same<SignedWords, vtkm::List<vtkm::Int32, vtkm::Int64>>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<SignedWords, viskores::List<viskores::Int32, viskores::Int64>>::value));
 }
 
 namespace TestListApply
@@ -286,15 +302,16 @@ namespace TestListApply
 ////
 //// BEGIN-EXAMPLE ListApply
 ////
-using MyList = vtkm::List<vtkm::Id, vtkm::Id3, vtkm::Vec3f>;
+using MyList = viskores::List<viskores::Id, viskores::Id3, viskores::Vec3f>;
 
-using MyTuple = vtkm::ListApply<MyList, std::tuple>;
-// MyTuple is std::tuple<vtkm::Id, vtkm::Id3, vtkm::Vec3f>
+using MyTuple = viskores::ListApply<MyList, std::tuple>;
+// MyTuple is std::tuple<viskores::Id, viskores::Id3, viskores::Vec3f>
 ////
 //// END-EXAMPLE ListApply
 ////
-VTKM_STATIC_ASSERT(
-  (std::is_same<MyTuple, std::tuple<vtkm::Id, vtkm::Id3, vtkm::Vec3f>>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<MyTuple,
+                std::tuple<viskores::Id, viskores::Id3, viskores::Vec3f>>::value));
 }
 
 namespace TestListTransform
@@ -302,19 +319,20 @@ namespace TestListTransform
 ////
 //// BEGIN-EXAMPLE ListTransform
 ////
-using MyList = vtkm::List<vtkm::Int32, vtkm::Float32>;
+using MyList = viskores::List<viskores::Int32, viskores::Float32>;
 
 template<typename T>
-using MakeVec = vtkm::Vec<T, 3>;
+using MakeVec = viskores::Vec<T, 3>;
 
-using MyVecList = vtkm::ListTransform<MyList, MakeVec>;
-// MyVecList is vtkm::List<vtkm::Vec<vtkm::Int32, 3>, vtkm::Vec<vtkm::Float32, 3>>
+using MyVecList = viskores::ListTransform<MyList, MakeVec>;
+// MyVecList is viskores::List<viskores::Vec<viskores::Int32, 3>, viskores::Vec<viskores::Float32, 3>>
 ////
 //// END-EXAMPLE ListTransform
 ////
-VTKM_STATIC_ASSERT((std::is_same<MyVecList,
-                                 vtkm::List<vtkm::Vec<vtkm::Int32, 3>,
-                                            vtkm::Vec<vtkm::Float32, 3>>>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<MyVecList,
+                viskores::List<viskores::Vec<viskores::Int32, 3>,
+                               viskores::Vec<viskores::Float32, 3>>>::value));
 }
 
 namespace TestListRemoveIf
@@ -322,16 +340,20 @@ namespace TestListRemoveIf
 ////
 //// BEGIN-EXAMPLE ListRemoveIf
 ////
-using MyList =
-  vtkm::List<vtkm::Int64, vtkm::Float64, vtkm::Int32, vtkm::Float32, vtkm::Int8>;
+using MyList = viskores::List<viskores::Int64,
+                              viskores::Float64,
+                              viskores::Int32,
+                              viskores::Float32,
+                              viskores::Int8>;
 
-using FilteredList = vtkm::ListRemoveIf<MyList, std::is_integral>;
-// FilteredList is vtkm::List<vtkm::Float64, vtkm::Float32>
+using FilteredList = viskores::ListRemoveIf<MyList, std::is_integral>;
+// FilteredList is viskores::List<viskores::Float64, viskores::Float32>
 ////
 //// END-EXAMPLE ListRemoveIf
 ////
-VTKM_STATIC_ASSERT(
-  (std::is_same<FilteredList, vtkm::List<vtkm::Float64, vtkm::Float32>>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<FilteredList,
+                viskores::List<viskores::Float64, viskores::Float32>>::value));
 }
 
 namespace TestListCross
@@ -339,51 +361,52 @@ namespace TestListCross
 ////
 //// BEGIN-EXAMPLE ListCross
 ////
-using BaseTypes = vtkm::List<vtkm::Int8, vtkm::Int32, vtkm::Int64>;
-using BoolCases = vtkm::List<std::false_type, std::true_type>;
+using BaseTypes = viskores::List<viskores::Int8, viskores::Int32, viskores::Int64>;
+using BoolCases = viskores::List<std::false_type, std::true_type>;
 
-using CrossTypes = vtkm::ListCross<BaseTypes, BoolCases>;
+using CrossTypes = viskores::ListCross<BaseTypes, BoolCases>;
 // CrossTypes is
-//   vtkm::List<vtkm::List<vtkm::Int8, std::false_type>,
-//              vtkm::List<vtkm::Int8, std::true_type>,
-//              vtkm::List<vtkm::Int32, std::false_type>,
-//              vtkm::List<vtkm::Int32, std::true_type>,
-//              vtkm::List<vtkm::Int64, std::false_type>,
-//              vtkm::List<vtkm::Int64, std::true_type>>
+//   viskores::List<viskores::List<viskores::Int8, std::false_type>,
+//              viskores::List<viskores::Int8, std::true_type>,
+//              viskores::List<viskores::Int32, std::false_type>,
+//              viskores::List<viskores::Int32, std::true_type>,
+//              viskores::List<viskores::Int64, std::false_type>,
+//              viskores::List<viskores::Int64, std::true_type>>
 
 template<typename TypeAndIsVec>
 using ListPairToType =
-  typename std::conditional<vtkm::ListAt<TypeAndIsVec, 1>::value,
-                            vtkm::Vec<vtkm::ListAt<TypeAndIsVec, 0>, 3>,
-                            vtkm::ListAt<TypeAndIsVec, 0>>::type;
+  typename std::conditional<viskores::ListAt<TypeAndIsVec, 1>::value,
+                            viskores::Vec<viskores::ListAt<TypeAndIsVec, 0>, 3>,
+                            viskores::ListAt<TypeAndIsVec, 0>>::type;
 
-using AllTypes = vtkm::ListTransform<CrossTypes, ListPairToType>;
+using AllTypes = viskores::ListTransform<CrossTypes, ListPairToType>;
 // AllTypes is
-//   vtkm::List<vtkm::Int8,
-//              vtkm::Vec<vtkm::Int8, 3>,
-//              vtkm::Int32,
-//              vtkm::Vec<vtkm::Int32, 3>,
-//              vtkm::Int64,
-//              vtkm::Vec<vtkm::Int64, 3>>
+//   viskores::List<viskores::Int8,
+//              viskores::Vec<viskores::Int8, 3>,
+//              viskores::Int32,
+//              viskores::Vec<viskores::Int32, 3>,
+//              viskores::Int64,
+//              viskores::Vec<viskores::Int64, 3>>
 ////
 //// END-EXAMPLE ListCross
 ////
-VTKM_STATIC_ASSERT(
-  (std::is_same<CrossTypes,
-                vtkm::List<vtkm::List<vtkm::Int8, std::false_type>,
-                           vtkm::List<vtkm::Int8, std::true_type>,
-                           vtkm::List<vtkm::Int32, std::false_type>,
-                           vtkm::List<vtkm::Int32, std::true_type>,
-                           vtkm::List<vtkm::Int64, std::false_type>,
-                           vtkm::List<vtkm::Int64, std::true_type>>>::value));
+VISKORES_STATIC_ASSERT((
+  std::is_same<CrossTypes,
+               viskores::List<viskores::List<viskores::Int8, std::false_type>,
+                              viskores::List<viskores::Int8, std::true_type>,
+                              viskores::List<viskores::Int32, std::false_type>,
+                              viskores::List<viskores::Int32, std::true_type>,
+                              viskores::List<viskores::Int64, std::false_type>,
+                              viskores::List<viskores::Int64, std::true_type>>>::value));
 
-VTKM_STATIC_ASSERT((std::is_same<AllTypes,
-                                 vtkm::List<vtkm::Int8,
-                                            vtkm::Vec<vtkm::Int8, 3>,
-                                            vtkm::Int32,
-                                            vtkm::Vec<vtkm::Int32, 3>,
-                                            vtkm::Int64,
-                                            vtkm::Vec<vtkm::Int64, 3>>>::value));
+VISKORES_STATIC_ASSERT(
+  (std::is_same<AllTypes,
+                viskores::List<viskores::Int8,
+                               viskores::Vec<viskores::Int8, 3>,
+                               viskores::Int32,
+                               viskores::Vec<viskores::Int32, 3>,
+                               viskores::Int64,
+                               viskores::Vec<viskores::Int64, 3>>>::value));
 }
 
 ////
@@ -405,7 +428,7 @@ struct MyArrayImpl : public MyArrayBase
 template<typename T>
 void PrefixSum(std::vector<T>& array)
 {
-  T sum(typename vtkm::VecTraits<T>::ComponentType(0));
+  T sum(typename viskores::VecTraits<T>::ComponentType(0));
   for (typename std::vector<T>::iterator iter = array.begin(); iter != array.end();
        iter++)
   {
@@ -439,7 +462,7 @@ struct PrefixSumFunctor
 void DoPrefixSum(MyArrayBase* array)
 {
   PrefixSumFunctor functor = PrefixSumFunctor(array);
-  vtkm::ListForEach(functor, vtkm::TypeListCommon());
+  viskores::ListForEach(functor, viskores::TypeListCommon());
 }
 ////
 //// END-EXAMPLE ListForEach
@@ -447,14 +470,14 @@ void DoPrefixSum(MyArrayBase* array)
 
 void TestPrefixSum()
 {
-  MyArrayImpl<vtkm::Id> array;
+  MyArrayImpl<viskores::Id> array;
   array.Array.resize(10);
   std::fill(array.Array.begin(), array.Array.end(), 1);
   DoPrefixSum(&array);
-  for (vtkm::Id index = 0; index < 10; index++)
+  for (viskores::Id index = 0; index < 10; index++)
   {
-    VTKM_TEST_ASSERT(array.Array[(std::size_t)index] == index + 1,
-                     "Got bad prefix sum.");
+    VISKORES_TEST_ASSERT(array.Array[(std::size_t)index] == index + 1,
+                         "Got bad prefix sum.");
   }
 }
 
@@ -472,5 +495,5 @@ void Test()
 
 int GuideExampleLists(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(Test, argc, argv);
+  return viskores::testing::Testing::Run(Test, argc, argv);
 }

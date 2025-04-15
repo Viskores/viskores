@@ -1,0 +1,19 @@
+NAME
+  benchmarking
+GROUPS
+  Benchmarking
+DEPENDS
+  viskores_cont
+  viskores_filter_contour
+  viskores_filter_entity_extraction
+  viskores_filter_field_conversion
+  viskores_filter_field_transform
+  viskores_filter_flow
+  viskores_filter_geometry_refinement
+  viskores_filter_mesh_info
+  viskores_filter_vector_analysis
+  viskores_io
+  viskores_source
+OPTIONAL_DEPENDS
+  viskores_rendering
+NO_TESTING

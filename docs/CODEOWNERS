@@ -1,24 +1,23 @@
-# Subsystems have specific owners
-
-
-CMake/                                      @robertmaynard
-data/                                       @dpugmire
-docs/                                       @robertmaynard @kmorel
-examples/                                   @kmorel
-Utilities/                                  @kmorel
-vtkm/                                       @robertmaynard @kmorel
-vtkm/interop/                               @robertmaynard
-vtkm/io/                                    @sujin.philip
-vtkm/rendering/                             @mclarsen
-vtkm/source/                                @robertmaynard @ollielo
-vtkm/testing/                               @sujin.philip
-vtkm/thirdparty/                            @ben.boeckel
-vtkm/worklet/cellmetrics/                   @hankchilds
-vtkm/worklet/contourtree/                   @oruebel @ghweber @sujin.philip
-vtkm/worklet/contourtree_augmented/         @oruebel @ghweber @sujin.philip
-vtkm/worklet/cosmotools/                    @ollielo
-vtkm/worklet/lcs/                           @ayenpure @dpugmire
-vtkm/worklet/moments/                       @ollielo @robertmaynard
-vtkm/worklet/particleadvection              @ayenpure @dpugmire
-vtkm/worklet/spatialstructure               @ayenpure @kmorel
-vtkm/worklet/zfp                            @mclarsen
+.github/                                        @vicentebolea
+.gitlab-ci.yml                                  @vicentebolea
+.gitlab/                                        @vicentebolea
+CMake/                                          @vicentebolea
+data/                                           @dpugmire
+docs/                                           @kmorel
+examples/                                       @kmorel
+Utilities/                                      @kmorel @vicentebolea
+viskores/interop/                               @jeffamstutz
+viskores/io/                                    @kmorel
+viskores/rendering/                             @nicolemarsaglia
+viskores/                                       @kmorel
+viskores/source/                                @ollielo
+viskores/testing/                               @kmorel
+viskores/thirdparty/                            @vicentebolea
+viskores/worklet/cellmetrics/                   @hankchilds
+viskores/worklet/contourtree_augmented/         @oruebel @ghweber
+viskores/worklet/contourtree/                   @oruebel @ghweber
+viskores/worklet/cosmotools/                    @ollielo
+viskores/worklet/lcs/                           @ayenpure @dpugmire
+viskores/worklet/moments/                       @ollielo
+viskores/worklet/particleadvection              @ayenpure @dpugmire
+viskores/worklet/spatialstructure               @ayenpure @kmorel

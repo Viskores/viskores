@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -10,18 +18,18 @@
 
 #include "Benchmarker.h"
 
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/AtomicArray.h>
-#include <vtkm/cont/DeviceAdapterTag.h>
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/Invoker.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/Timer.h>
+#include <viskores/cont/Algorithm.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/AtomicArray.h>
+#include <viskores/cont/DeviceAdapterTag.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/cont/Invoker.h>
+#include <viskores/cont/RuntimeDeviceTracker.h>
+#include <viskores/cont/Timer.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
+#include <viskores/worklet/WorkletMapField.h>
 
-#include <vtkm/TypeTraits.h>
+#include <viskores/TypeTraits.h>
 
 #include <sstream>
 #include <string>
@@ -30,25 +38,25 @@ namespace
 {
 
 // Provide access to the requested device to the benchmark functions:
-vtkm::cont::InitializeResult Config;
+viskores::cont::InitializeResult Config;
 
 // Range for array sizes
-static constexpr vtkm::Id ARRAY_SIZE_MIN = 1;
-static constexpr vtkm::Id ARRAY_SIZE_MAX = 1 << 20;
+static constexpr viskores::Id ARRAY_SIZE_MIN = 1;
+static constexpr viskores::Id ARRAY_SIZE_MAX = 1 << 20;
 
 // This is 32x larger than the largest array size.
-static constexpr vtkm::Id NUM_WRITES = 33554432; // 2^25
+static constexpr viskores::Id NUM_WRITES = 33554432; // 2^25
 
-static constexpr vtkm::Id STRIDE = 32;
+static constexpr viskores::Id STRIDE = 32;
 
 // Benchmarks AtomicArray::Add such that each work index writes to adjacent indices.
-struct AddSeqWorker : public vtkm::worklet::WorkletMapField
+struct AddSeqWorker : public viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, AtomicArrayInOut);
   using ExecutionSignature = void(InputIndex, _1, _2);
 
   template <typename T, typename AtomicPortal>
-  VTKM_EXEC void operator()(const vtkm::Id i, const T& val, AtomicPortal& portal) const
+  VISKORES_EXEC void operator()(const viskores::Id i, const T& val, AtomicPortal& portal) const
   {
     portal.Add(i % portal.GetNumberOfValues(), val);
   }
@@ -57,17 +65,18 @@ struct AddSeqWorker : public vtkm::worklet::WorkletMapField
 template <typename ValueType>
 void BenchAddSeq(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
 
-  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
-  vtkm::cont::ArrayHandle<ValueType> atomicArray;
-  atomicArray.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
+  viskores::cont::ArrayHandle<ValueType> atomicArray;
+  atomicArray.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
 
-  vtkm::cont::Invoker invoker{ device };
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Invoker invoker{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -84,22 +93,22 @@ void BenchAddSeq(benchmark::State& state)
   state.SetItemsProcessed(valsWritten * iterations);
   state.SetItemsProcessed(bytesWritten * iterations);
 }
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchAddSeq,
-                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
-                                           { NUM_WRITES, NUM_WRITES } })
-                                ->ArgNames({ "AtomicsValues", "AtomicOps" }),
-                              vtkm::cont::AtomicArrayTypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchAddSeq,
+                                    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                               { NUM_WRITES, NUM_WRITES } })
+                                    ->ArgNames({ "AtomicsValues", "AtomicOps" }),
+                                  viskores::cont::AtomicArrayTypeList);
 
 // Provides a non-atomic baseline for BenchAddSeq
-struct AddSeqBaselineWorker : public vtkm::worklet::WorkletMapField
+struct AddSeqBaselineWorker : public viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, WholeArrayInOut);
   using ExecutionSignature = void(InputIndex, _1, _2);
 
   template <typename T, typename Portal>
-  VTKM_EXEC void operator()(const vtkm::Id i, const T& val, Portal& portal) const
+  VISKORES_EXEC void operator()(const viskores::Id i, const T& val, Portal& portal) const
   {
-    const vtkm::Id j = i % portal.GetNumberOfValues();
+    const viskores::Id j = i % portal.GetNumberOfValues();
     portal.Set(j, portal.Get(j) + val);
   }
 };
@@ -107,17 +116,18 @@ struct AddSeqBaselineWorker : public vtkm::worklet::WorkletMapField
 template <typename ValueType>
 void BenchAddSeqBaseline(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
 
-  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
-  vtkm::cont::ArrayHandle<ValueType> array;
-  array.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
+  viskores::cont::ArrayHandle<ValueType> array;
+  array.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
 
-  vtkm::cont::Invoker invoker{ device };
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Invoker invoker{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -134,31 +144,31 @@ void BenchAddSeqBaseline(benchmark::State& state)
   state.SetItemsProcessed(valsWritten * iterations);
   state.SetItemsProcessed(bytesWritten * iterations);
 }
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchAddSeqBaseline,
-                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
-                                           { NUM_WRITES, NUM_WRITES } })
-                                ->ArgNames({ "Values", "Ops" }),
-                              vtkm::cont::AtomicArrayTypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchAddSeqBaseline,
+                                    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                               { NUM_WRITES, NUM_WRITES } })
+                                    ->ArgNames({ "Values", "Ops" }),
+                                  viskores::cont::AtomicArrayTypeList);
 
 // Benchmarks AtomicArray::Add such that each work index writes to a strided
 // index ( floor(i / stride) + stride * (i % stride)
-struct AddStrideWorker : public vtkm::worklet::WorkletMapField
+struct AddStrideWorker : public viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, AtomicArrayInOut);
   using ExecutionSignature = void(InputIndex, _1, _2);
 
-  vtkm::Id Stride;
+  viskores::Id Stride;
 
-  AddStrideWorker(vtkm::Id stride)
+  AddStrideWorker(viskores::Id stride)
     : Stride{ stride }
   {
   }
 
   template <typename T, typename AtomicPortal>
-  VTKM_EXEC void operator()(const vtkm::Id i, const T& val, AtomicPortal& portal) const
+  VISKORES_EXEC void operator()(const viskores::Id i, const T& val, AtomicPortal& portal) const
   {
-    const vtkm::Id numVals = portal.GetNumberOfValues();
-    const vtkm::Id j = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
+    const viskores::Id numVals = portal.GetNumberOfValues();
+    const viskores::Id j = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
     portal.Add(j, val);
   }
 };
@@ -166,18 +176,19 @@ struct AddStrideWorker : public vtkm::worklet::WorkletMapField
 template <typename ValueType>
 void BenchAddStride(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
-  const vtkm::Id stride = static_cast<vtkm::Id>(state.range(2));
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
+  const viskores::Id stride = static_cast<viskores::Id>(state.range(2));
 
-  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
-  vtkm::cont::ArrayHandle<ValueType> atomicArray;
-  atomicArray.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
+  viskores::cont::ArrayHandle<ValueType> atomicArray;
+  atomicArray.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
 
-  vtkm::cont::Invoker invoker{ device };
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Invoker invoker{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -194,30 +205,30 @@ void BenchAddStride(benchmark::State& state)
   state.SetItemsProcessed(valsWritten * iterations);
   state.SetItemsProcessed(bytesWritten * iterations);
 }
-VTKM_BENCHMARK_TEMPLATES_OPTS(
+VISKORES_BENCHMARK_TEMPLATES_OPTS(
   BenchAddStride,
     ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX }, { NUM_WRITES, NUM_WRITES }, { STRIDE, STRIDE } })
     ->ArgNames({ "AtomicsValues", "AtomicOps", "Stride" }),
-  vtkm::cont::AtomicArrayTypeList);
+  viskores::cont::AtomicArrayTypeList);
 
 // Non-atomic baseline for AddStride
-struct AddStrideBaselineWorker : public vtkm::worklet::WorkletMapField
+struct AddStrideBaselineWorker : public viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, WholeArrayInOut);
   using ExecutionSignature = void(InputIndex, _1, _2);
 
-  vtkm::Id Stride;
+  viskores::Id Stride;
 
-  AddStrideBaselineWorker(vtkm::Id stride)
+  AddStrideBaselineWorker(viskores::Id stride)
     : Stride{ stride }
   {
   }
 
   template <typename T, typename Portal>
-  VTKM_EXEC void operator()(const vtkm::Id i, const T& val, Portal& portal) const
+  VISKORES_EXEC void operator()(const viskores::Id i, const T& val, Portal& portal) const
   {
-    const vtkm::Id numVals = portal.GetNumberOfValues();
-    const vtkm::Id j = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
+    const viskores::Id numVals = portal.GetNumberOfValues();
+    const viskores::Id j = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
     portal.Set(j, portal.Get(j) + val);
   }
 };
@@ -225,18 +236,19 @@ struct AddStrideBaselineWorker : public vtkm::worklet::WorkletMapField
 template <typename ValueType>
 void BenchAddStrideBaseline(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
-  const vtkm::Id stride = static_cast<vtkm::Id>(state.range(2));
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
+  const viskores::Id stride = static_cast<viskores::Id>(state.range(2));
 
-  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
-  vtkm::cont::ArrayHandle<ValueType> array;
-  array.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
+  viskores::cont::ArrayHandle<ValueType> array;
+  array.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
 
-  vtkm::cont::Invoker invoker{ device };
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Invoker invoker{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -253,23 +265,23 @@ void BenchAddStrideBaseline(benchmark::State& state)
   state.SetItemsProcessed(valsWritten * iterations);
   state.SetItemsProcessed(bytesWritten * iterations);
 }
-VTKM_BENCHMARK_TEMPLATES_OPTS(
+VISKORES_BENCHMARK_TEMPLATES_OPTS(
   BenchAddStrideBaseline,
     ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX }, { NUM_WRITES, NUM_WRITES }, { STRIDE, STRIDE } })
     ->ArgNames({ "Values", "Ops", "Stride" }),
-  vtkm::cont::AtomicArrayTypeList);
+  viskores::cont::AtomicArrayTypeList);
 
 // Benchmarks AtomicArray::CompareExchange such that each work index writes to adjacent
 // indices.
-struct CASSeqWorker : public vtkm::worklet::WorkletMapField
+struct CASSeqWorker : public viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, AtomicArrayInOut);
   using ExecutionSignature = void(InputIndex, _1, _2);
 
   template <typename T, typename AtomicPortal>
-  VTKM_EXEC void operator()(const vtkm::Id i, const T& in, AtomicPortal& portal) const
+  VISKORES_EXEC void operator()(const viskores::Id i, const T& in, AtomicPortal& portal) const
   {
-    const vtkm::Id idx = i % portal.GetNumberOfValues();
+    const viskores::Id idx = i % portal.GetNumberOfValues();
     const T val = static_cast<T>(i) + in;
     T oldVal = portal.Get(idx);
     while (!portal.CompareExchange(idx, &oldVal, oldVal + val))
@@ -280,17 +292,18 @@ struct CASSeqWorker : public vtkm::worklet::WorkletMapField
 template <typename ValueType>
 void BenchCASSeq(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
 
-  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
-  vtkm::cont::ArrayHandle<ValueType> atomicArray;
-  atomicArray.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
+  viskores::cont::ArrayHandle<ValueType> atomicArray;
+  atomicArray.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
 
-  vtkm::cont::Invoker invoker{ device };
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Invoker invoker{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -307,22 +320,22 @@ void BenchCASSeq(benchmark::State& state)
   state.SetItemsProcessed(valsWritten * iterations);
   state.SetItemsProcessed(bytesWritten * iterations);
 }
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchCASSeq,
-                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
-                                           { NUM_WRITES, NUM_WRITES } })
-                                ->ArgNames({ "AtomicsValues", "AtomicOps" }),
-                              vtkm::cont::AtomicArrayTypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchCASSeq,
+                                    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                               { NUM_WRITES, NUM_WRITES } })
+                                    ->ArgNames({ "AtomicsValues", "AtomicOps" }),
+                                  viskores::cont::AtomicArrayTypeList);
 
 // Provides a non-atomic baseline for BenchCASSeq
-struct CASSeqBaselineWorker : public vtkm::worklet::WorkletMapField
+struct CASSeqBaselineWorker : public viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, WholeArrayInOut);
   using ExecutionSignature = void(InputIndex, _1, _2);
 
   template <typename T, typename Portal>
-  VTKM_EXEC void operator()(const vtkm::Id i, const T& in, Portal& portal) const
+  VISKORES_EXEC void operator()(const viskores::Id i, const T& in, Portal& portal) const
   {
-    const vtkm::Id idx = i % portal.GetNumberOfValues();
+    const viskores::Id idx = i % portal.GetNumberOfValues();
     const T val = static_cast<T>(i) + in;
     const T oldVal = portal.Get(idx);
     portal.Set(idx, oldVal + val);
@@ -332,17 +345,18 @@ struct CASSeqBaselineWorker : public vtkm::worklet::WorkletMapField
 template <typename ValueType>
 void BenchCASSeqBaseline(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
 
-  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
-  vtkm::cont::ArrayHandle<ValueType> array;
-  array.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
+  viskores::cont::ArrayHandle<ValueType> array;
+  array.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
 
-  vtkm::cont::Invoker invoker{ device };
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Invoker invoker{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -359,32 +373,32 @@ void BenchCASSeqBaseline(benchmark::State& state)
   state.SetItemsProcessed(valsWritten * iterations);
   state.SetItemsProcessed(bytesWritten * iterations);
 }
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchCASSeqBaseline,
-                                ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
-                                           { NUM_WRITES, NUM_WRITES } })
-                                ->ArgNames({ "Values", "Ops" }),
-                              vtkm::cont::AtomicArrayTypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchCASSeqBaseline,
+                                    ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX },
+                                               { NUM_WRITES, NUM_WRITES } })
+                                    ->ArgNames({ "Values", "Ops" }),
+                                  viskores::cont::AtomicArrayTypeList);
 
 // Benchmarks AtomicArray::CompareExchange such that each work index writes to
 // a strided index:
 // ( floor(i / stride) + stride * (i % stride)
-struct CASStrideWorker : public vtkm::worklet::WorkletMapField
+struct CASStrideWorker : public viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, AtomicArrayInOut);
   using ExecutionSignature = void(InputIndex, _1, _2);
 
-  vtkm::Id Stride;
+  viskores::Id Stride;
 
-  CASStrideWorker(vtkm::Id stride)
+  CASStrideWorker(viskores::Id stride)
     : Stride{ stride }
   {
   }
 
   template <typename T, typename AtomicPortal>
-  VTKM_EXEC void operator()(const vtkm::Id i, const T& in, AtomicPortal& portal) const
+  VISKORES_EXEC void operator()(const viskores::Id i, const T& in, AtomicPortal& portal) const
   {
-    const vtkm::Id numVals = portal.GetNumberOfValues();
-    const vtkm::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
+    const viskores::Id numVals = portal.GetNumberOfValues();
+    const viskores::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
     const T val = static_cast<T>(i) + in;
     T oldVal = portal.Get(idx);
     while (!portal.CompareExchange(idx, &oldVal, oldVal + val))
@@ -395,18 +409,19 @@ struct CASStrideWorker : public vtkm::worklet::WorkletMapField
 template <typename ValueType>
 void BenchCASStride(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
-  const vtkm::Id stride = static_cast<vtkm::Id>(state.range(2));
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
+  const viskores::Id stride = static_cast<viskores::Id>(state.range(2));
 
-  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
-  vtkm::cont::ArrayHandle<ValueType> atomicArray;
-  atomicArray.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
+  viskores::cont::ArrayHandle<ValueType> atomicArray;
+  atomicArray.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
 
-  vtkm::cont::Invoker invoker{ device };
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Invoker invoker{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -423,30 +438,30 @@ void BenchCASStride(benchmark::State& state)
   state.SetItemsProcessed(valsWritten * iterations);
   state.SetItemsProcessed(bytesWritten * iterations);
 }
-VTKM_BENCHMARK_TEMPLATES_OPTS(
+VISKORES_BENCHMARK_TEMPLATES_OPTS(
   BenchCASStride,
     ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX }, { NUM_WRITES, NUM_WRITES }, { STRIDE, STRIDE } })
     ->ArgNames({ "AtomicsValues", "AtomicOps", "Stride" }),
-  vtkm::cont::AtomicArrayTypeList);
+  viskores::cont::AtomicArrayTypeList);
 
 // Non-atomic baseline for CASStride
-struct CASStrideBaselineWorker : public vtkm::worklet::WorkletMapField
+struct CASStrideBaselineWorker : public viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn, AtomicArrayInOut);
   using ExecutionSignature = void(InputIndex, _1, _2);
 
-  vtkm::Id Stride;
+  viskores::Id Stride;
 
-  CASStrideBaselineWorker(vtkm::Id stride)
+  CASStrideBaselineWorker(viskores::Id stride)
     : Stride{ stride }
   {
   }
 
   template <typename T, typename AtomicPortal>
-  VTKM_EXEC void operator()(const vtkm::Id i, const T& in, AtomicPortal& portal) const
+  VISKORES_EXEC void operator()(const viskores::Id i, const T& in, AtomicPortal& portal) const
   {
-    const vtkm::Id numVals = portal.GetNumberOfValues();
-    const vtkm::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
+    const viskores::Id numVals = portal.GetNumberOfValues();
+    const viskores::Id idx = (i / this->Stride + this->Stride * (i % this->Stride)) % numVals;
     const T val = static_cast<T>(i) + in;
     T oldVal = portal.Get(idx);
     portal.Set(idx, oldVal + val);
@@ -456,18 +471,19 @@ struct CASStrideBaselineWorker : public vtkm::worklet::WorkletMapField
 template <typename ValueType>
 void BenchCASStrideBaseline(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numValues = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numWrites = static_cast<vtkm::Id>(state.range(1));
-  const vtkm::Id stride = static_cast<vtkm::Id>(state.range(2));
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numValues = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numWrites = static_cast<viskores::Id>(state.range(1));
+  const viskores::Id stride = static_cast<viskores::Id>(state.range(2));
 
-  auto ones = vtkm::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
+  auto ones =
+    viskores::cont::make_ArrayHandleConstant<ValueType>(static_cast<ValueType>(1), numWrites);
 
-  vtkm::cont::ArrayHandle<ValueType> array;
-  array.AllocateAndFill(numValues, vtkm::TypeTraits<ValueType>::ZeroInitialization());
+  viskores::cont::ArrayHandle<ValueType> array;
+  array.AllocateAndFill(numValues, viskores::TypeTraits<ValueType>::ZeroInitialization());
 
-  vtkm::cont::Invoker invoker{ device };
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Invoker invoker{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -484,35 +500,35 @@ void BenchCASStrideBaseline(benchmark::State& state)
   state.SetItemsProcessed(valsWritten * iterations);
   state.SetItemsProcessed(bytesWritten * iterations);
 }
-VTKM_BENCHMARK_TEMPLATES_OPTS(
+VISKORES_BENCHMARK_TEMPLATES_OPTS(
   BenchCASStrideBaseline,
     ->Ranges({ { ARRAY_SIZE_MIN, ARRAY_SIZE_MAX }, { NUM_WRITES, NUM_WRITES }, { STRIDE, STRIDE } })
     ->ArgNames({ "AtomicsValues", "AtomicOps", "Stride" }),
-  vtkm::cont::AtomicArrayTypeList);
+  viskores::cont::AtomicArrayTypeList);
 
 } // end anon namespace
 
 int main(int argc, char* argv[])
 {
-  // Parse VTK-m options:
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  // Parse Viskores options:
+  auto opts = viskores::cont::InitializeOptions::RequireDevice;
 
   std::vector<char*> args(argv, argv + argc);
-  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+  viskores::bench::detail::InitializeArgs(&argc, args, opts);
 
-  // Parse VTK-m options:
-  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+  // Parse Viskores options:
+  Config = viskores::cont::Initialize(argc, args.data(), opts);
 
   // This occurs when it is help
-  if (opts == vtkm::cont::InitializeOptions::None)
+  if (opts == viskores::cont::InitializeOptions::None)
   {
     std::cout << Config.Usage << std::endl;
   }
   else
   {
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+    viskores::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
+  VISKORES_EXECUTE_BENCHMARKS(argc, args.data());
 }

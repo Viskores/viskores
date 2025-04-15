@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -52,10 +60,10 @@
 ##==============================================================================
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 
-# Find the VTK-m package
-find_package(VTKm REQUIRED QUIET)
+# Find the Viskores package
+find_package(Viskores REQUIRED QUIET)
 
-if(NOT TARGET vtkm::io OR NOT TARGET vtkm::filter_scalar_topology)
+if(NOT TARGET viskores::io OR NOT TARGET viskores::filter_scalar_topology)
   # Libraries needed are not built.
   return()
 endif()
@@ -64,39 +72,39 @@ endif()
 # Serial
 ####################################
 add_executable(ContourTree_Augmented ContourTreeApp.cxx)
-target_link_libraries(ContourTree_Augmented vtkm::filter_scalar_topology vtkm::io)
-vtkm_add_target_information(ContourTree_Augmented
+target_link_libraries(ContourTree_Augmented viskores::filter_scalar_topology viskores::io)
+viskores_add_target_information(ContourTree_Augmented
                             DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
                             DEVICE_SOURCES ContourTreeApp.cxx)
 
-option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
-mark_as_advanced(VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
-if (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
+option (VISKORES_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
+mark_as_advanced(VISKORES_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
+if (VISKORES_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
   target_compile_definitions(ContourTree_Augmented PRIVATE "DEBUG_PRINT")
 endif()
 
-if (TARGET vtkm::tbb)
+if (TARGET viskores::tbb)
   target_compile_definitions(ContourTree_Augmented PRIVATE "ENABLE_SET_NUM_THREADS")
 endif()
 
 ####################################
 # MPI
 ####################################
-if (VTKm_ENABLE_MPI)
+if (Viskores_ENABLE_MPI)
   add_executable(ContourTree_Augmented_MPI ContourTreeApp.cxx)
-  target_link_libraries(ContourTree_Augmented_MPI vtkm::filter_scalar_topology vtkm::io MPI::MPI_CXX)
-  vtkm_add_target_information(ContourTree_Augmented_MPI
+  target_link_libraries(ContourTree_Augmented_MPI viskores::filter_scalar_topology viskores::io MPI::MPI_CXX)
+  viskores_add_target_information(ContourTree_Augmented_MPI
                               MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES ContourTreeApp.cxx)
   target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "WITH_MPI")
 
-  option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
-  mark_as_advanced(VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
-  if (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
+  option (VISKORES_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
+  mark_as_advanced(VISKORES_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
+  if (VISKORES_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
     target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "DEBUG_PRINT")
   endif()
 
-  if (TARGET vtkm::tbb)
+  if (TARGET viskores::tbb)
     target_compile_definitions(ContourTree_Augmented_MPI PRIVATE "ENABLE_SET_NUM_THREADS")
   endif()
 endif()

@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -10,14 +18,14 @@
 
 #include "MultiDeviceGradient.h"
 
-#include <vtkm/cont/Logging.h>
-#include <vtkm/cont/RuntimeDeviceInformation.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/openmp/DeviceAdapterOpenMP.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
+#include <viskores/cont/Logging.h>
+#include <viskores/cont/RuntimeDeviceInformation.h>
+#include <viskores/cont/RuntimeDeviceTracker.h>
+#include <viskores/cont/cuda/DeviceAdapterCuda.h>
+#include <viskores/cont/openmp/DeviceAdapterOpenMP.h>
+#include <viskores/cont/tbb/DeviceAdapterTBB.h>
 
-#include <vtkm/filter/vector_analysis/Gradient.h>
+#include <viskores/filter/vector_analysis/Gradient.h>
 
 namespace
 {
@@ -25,11 +33,11 @@ namespace
 void process_partition_tbb(RuntimeTaskQueue& queue)
 {
   //Step 1. Set the device adapter to this thread to TBB.
-  //This makes sure that any vtkm::filters used by our
+  //This makes sure that any viskores::filters used by our
   //task operate only on TBB. The "global" thread tracker
   //is actually thread-local, so we can use that.
   //
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
+  viskores::cont::GetRuntimeDeviceTracker().ForceDevice(viskores::cont::DeviceAdapterTagTBB{});
 
   while (queue.hasTasks())
   {
@@ -53,11 +61,11 @@ void process_partition_tbb(RuntimeTaskQueue& queue)
 void process_partition_openMP(RuntimeTaskQueue& queue)
 {
   //Step 1. Set the device adapter to this thread to openMP.
-  //This makes sure that any vtkm::filters used by our
+  //This makes sure that any viskores::filters used by our
   //task operate only on openMP. The "global" thread tracker
   //is actually thread-local, so we can use that.
   //
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagOpenMP{});
+  viskores::cont::GetRuntimeDeviceTracker().ForceDevice(viskores::cont::DeviceAdapterTagOpenMP{});
 
   while (queue.hasTasks())
   {
@@ -82,11 +90,11 @@ void process_partition_openMP(RuntimeTaskQueue& queue)
 void process_partition_cuda(RuntimeTaskQueue& queue, int gpuId)
 {
   //Step 1. Set the device adapter to this thread to cuda.
-  //This makes sure that any vtkm::filters used by our
+  //This makes sure that any viskores::filters used by our
   //task operate only on cuda.  The "global" thread tracker
   //is actually thread-local, so we can use that.
   //
-  vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
+  viskores::cont::GetRuntimeDeviceTracker().ForceDevice(viskores::cont::DeviceAdapterTagCuda{});
   (void)gpuId;
 
   while (queue.hasTasks())
@@ -111,16 +119,16 @@ void process_partition_cuda(RuntimeTaskQueue& queue, int gpuId)
 } //namespace
 
 //-----------------------------------------------------------------------------
-VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
+VISKORES_CONT MultiDeviceGradient::MultiDeviceGradient()
   : ComputePointGradient(false)
   , Queue()
   , Workers()
 {
   //Step 1. Determine the number of workers we want
-  auto& tracker = vtkm::cont::GetRuntimeDeviceTracker();
-  const bool runOnCuda = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagCuda{});
-  const bool runOnOpenMP = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagOpenMP{});
-  const bool runOnTbb = tracker.CanRunOn(vtkm::cont::DeviceAdapterTagTBB{});
+  auto& tracker = viskores::cont::GetRuntimeDeviceTracker();
+  const bool runOnCuda = tracker.CanRunOn(viskores::cont::DeviceAdapterTagCuda{});
+  const bool runOnOpenMP = tracker.CanRunOn(viskores::cont::DeviceAdapterTagOpenMP{});
+  const bool runOnTbb = tracker.CanRunOn(viskores::cont::DeviceAdapterTagTBB{});
 
   //Note currently the virtual implementation has some issues
   //In a multi-threaded environment only cuda can be used or
@@ -136,9 +144,9 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
     std::cout << "adding cuda workers" << std::endl;
     try
     {
-      vtkm::Id gpu_count = 0;
-      vtkm::cont::RuntimeDeviceInformation{}
-        .GetRuntimeConfiguration(vtkm::cont::DeviceAdapterTagCuda{})
+      viskores::Id gpu_count = 0;
+      viskores::cont::RuntimeDeviceInformation{}
+        .GetRuntimeConfiguration(viskores::cont::DeviceAdapterTagCuda{})
         .GetMaxDevices(gpu_count);
       for (int i = 0; i < gpu_count; ++i)
       {
@@ -151,10 +159,10 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
         this->Workers.emplace_back(std::bind(process_partition_cuda, std::ref(this->Queue), i));
       }
     }
-    catch (const vtkm::cont::ErrorBadDevice& err)
+    catch (const viskores::cont::ErrorBadDevice& err)
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-                 "Error getting CudaDeviceCount: " << err.GetMessage());
+      VISKORES_LOG_S(viskores::cont::LogLevel::Error,
+                     "Error getting CudaDeviceCount: " << err.GetMessage());
     }
   }
   //Step 3. Launch a worker that will use openMP (if enabled).
@@ -176,7 +184,7 @@ VTKM_CONT MultiDeviceGradient::MultiDeviceGradient()
 }
 
 //-----------------------------------------------------------------------------
-VTKM_CONT MultiDeviceGradient::~MultiDeviceGradient()
+VISKORES_CONT MultiDeviceGradient::~MultiDeviceGradient()
 {
   this->Queue.shutdown();
 
@@ -188,8 +196,8 @@ VTKM_CONT MultiDeviceGradient::~MultiDeviceGradient()
 }
 
 //-----------------------------------------------------------------------------
-VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::DoExecutePartitions(
-  const vtkm::cont::PartitionedDataSet& pds)
+VISKORES_CONT viskores::cont::PartitionedDataSet MultiDeviceGradient::DoExecutePartitions(
+  const viskores::cont::PartitionedDataSet& pds)
 {
   //Step 1. Say that we have no more to submit for this PartitionedDataSet
   //This is needed to happen for each execute as we want to support
@@ -198,14 +206,14 @@ VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::DoExecutePartition
 
   //Step 2. Construct the PartitionedDataSet we are going to fill. The size
   //signature to PartitionedDataSet just reserves size
-  vtkm::cont::PartitionedDataSet output;
+  viskores::cont::PartitionedDataSet output;
   output.AppendPartitions(
-    std::vector<vtkm::cont::DataSet>(static_cast<size_t>(pds.GetNumberOfPartitions())));
-  vtkm::cont::PartitionedDataSet* outPtr = &output;
+    std::vector<viskores::cont::DataSet>(static_cast<size_t>(pds.GetNumberOfPartitions())));
+  viskores::cont::PartitionedDataSet* outPtr = &output;
 
 
   //Step 3. Construct the filter we want to run on each partition
-  vtkm::filter::vector_analysis::Gradient gradient;
+  viskores::filter::vector_analysis::Gradient gradient;
   gradient.SetComputePointGradient(this->GetComputePointGradient());
   gradient.SetActiveField(this->GetActiveFieldName());
 
@@ -214,31 +222,33 @@ VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::DoExecutePartition
   //Point Coordinates is not thread safe.
   auto partition = pds.cbegin();
   {
-    vtkm::cont::DataSet input = *partition;
+    viskores::cont::DataSet input = *partition;
     this->Queue.push( //build a lambda that is the work to do
-      [=]() {
-        vtkm::filter::vector_analysis::Gradient perThreadGrad = gradient;
+      [=]()
+      {
+        viskores::filter::vector_analysis::Gradient perThreadGrad = gradient;
 
-        vtkm::cont::DataSet result = perThreadGrad.Execute(input);
+        viskores::cont::DataSet result = perThreadGrad.Execute(input);
         outPtr->ReplacePartition(0, result);
       });
     this->Queue.waitForAllTasksToComplete();
     partition++;
   }
 
-  vtkm::Id index = 1;
+  viskores::Id index = 1;
   for (; partition != pds.cend(); ++partition)
   {
-    vtkm::cont::DataSet input = *partition;
+    viskores::cont::DataSet input = *partition;
     //Step 4. For each input partition construct a lambda
     //and add it to the queue for workers to take. This
     //will allows us to have multiple works execute in a non
     //blocking manner
     this->Queue.push( //build a lambda that is the work to do
-      [=]() {
-        vtkm::filter::vector_analysis::Gradient perThreadGrad = gradient;
+      [=]()
+      {
+        viskores::filter::vector_analysis::Gradient perThreadGrad = gradient;
 
-        vtkm::cont::DataSet result = perThreadGrad.Execute(input);
+        viskores::cont::DataSet result = perThreadGrad.Execute(input);
         outPtr->ReplacePartition(index, result);
       });
     index++;
@@ -250,9 +260,11 @@ VTKM_CONT vtkm::cont::PartitionedDataSet MultiDeviceGradient::DoExecutePartition
   return output;
 }
 
-VTKM_CONT vtkm::cont::DataSet MultiDeviceGradient::DoExecute(const vtkm::cont::DataSet& inData)
+VISKORES_CONT viskores::cont::DataSet MultiDeviceGradient::DoExecute(
+  const viskores::cont::DataSet& inData)
 {
-  vtkm::cont::PartitionedDataSet outData = this->Execute(vtkm::cont::PartitionedDataSet(inData));
-  VTKM_ASSERT(outData.GetNumberOfPartitions() == 1);
+  viskores::cont::PartitionedDataSet outData =
+    this->Execute(viskores::cont::PartitionedDataSet(inData));
+  VISKORES_ASSERT(outData.GetNumberOfPartitions() == 1);
   return outData.GetPartition(0);
 }

@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,10 +16,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayHandleDiscard.h>
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/Algorithm.h>
+#include <viskores/cont/ArrayHandleCounting.h>
+#include <viskores/cont/ArrayHandleDiscard.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -20,18 +28,19 @@ namespace
 //// BEGIN-EXAMPLE ArrayHandleDiscard
 ////
 template<typename InputArrayType, typename OutputArrayType1, typename OutputArrayType2>
-VTKM_CONT void DoFoo(InputArrayType input,
-                     OutputArrayType1 output1,
-                     OutputArrayType2 output2);
+VISKORES_CONT void DoFoo(InputArrayType input,
+                         OutputArrayType1 output1,
+                         OutputArrayType2 output2);
 
 template<typename InputArrayType>
-VTKM_CONT inline vtkm::cont::ArrayHandle<vtkm::FloatDefault> DoBar(InputArrayType input)
+VISKORES_CONT inline viskores::cont::ArrayHandle<viskores::FloatDefault> DoBar(
+  InputArrayType input)
 {
-  VTKM_IS_ARRAY_HANDLE(InputArrayType);
+  VISKORES_IS_ARRAY_HANDLE(InputArrayType);
 
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> keepOutput;
+  viskores::cont::ArrayHandle<viskores::FloatDefault> keepOutput;
 
-  vtkm::cont::ArrayHandleDiscard<vtkm::FloatDefault> discardOutput;
+  viskores::cont::ArrayHandleDiscard<viskores::FloatDefault> discardOutput;
 
   DoFoo(input, keepOutput, discardOutput);
 
@@ -42,26 +51,26 @@ VTKM_CONT inline vtkm::cont::ArrayHandle<vtkm::FloatDefault> DoBar(InputArrayTyp
 ////
 
 template<typename InputArrayType, typename OutputArrayType1, typename OutputArrayType2>
-VTKM_CONT inline void DoFoo(InputArrayType input,
-                            OutputArrayType1 output1,
-                            OutputArrayType2 output2)
+VISKORES_CONT inline void DoFoo(InputArrayType input,
+                                OutputArrayType1 output1,
+                                OutputArrayType2 output2)
 {
-  vtkm::cont::Algorithm::Copy(input, output1);
-  vtkm::cont::Algorithm::Copy(input, output2);
+  viskores::cont::Algorithm::Copy(input, output1);
+  viskores::cont::Algorithm::Copy(input, output2);
 }
 
 void Test()
 {
-  vtkm::cont::ArrayHandleCounting<vtkm::FloatDefault> inputArray(0, 10, 10);
+  viskores::cont::ArrayHandleCounting<viskores::FloatDefault> inputArray(0, 10, 10);
 
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputArray = DoBar(inputArray);
+  viskores::cont::ArrayHandle<viskores::FloatDefault> outputArray = DoBar(inputArray);
 
-  VTKM_TEST_ASSERT(outputArray.GetNumberOfValues() == 10, "Wrong size.");
+  VISKORES_TEST_ASSERT(outputArray.GetNumberOfValues() == 10, "Wrong size.");
 }
 
 } // anonymous namespace
 
 int GuideExampleArrayHandleDiscard(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

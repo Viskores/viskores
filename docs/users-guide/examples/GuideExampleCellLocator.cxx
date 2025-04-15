@@ -1,3 +1,11 @@
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
 //=============================================================================
 //
 //  Copyright (c) Kitware, Inc.
@@ -10,31 +18,31 @@
 //
 //=============================================================================
 
-#include <vtkm/worklet/WorkletMapField.h>
+#include <viskores/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/CellLocatorBoundingIntervalHierarchy.h>
-#include <vtkm/cont/CellLocatorChooser.h>
-#include <vtkm/cont/CellLocatorGeneral.h>
-#include <vtkm/cont/DataSetBuilderRectilinear.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/CellLocatorBoundingIntervalHierarchy.h>
+#include <viskores/cont/CellLocatorChooser.h>
+#include <viskores/cont/CellLocatorGeneral.h>
+#include <viskores/cont/DataSetBuilderRectilinear.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
 
-#include <vtkm/VecFromPortalPermute.h>
+#include <viskores/VecFromPortalPermute.h>
 
-#include <vtkm/exec/CellInterpolate.h>
+#include <viskores/exec/CellInterpolate.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
 
-constexpr vtkm::Id DimensionSize = 50;
-const vtkm::Id3 DimensionSizes = vtkm::Id3(DimensionSize);
+constexpr viskores::Id DimensionSize = 50;
+const viskores::Id3 DimensionSizes = viskores::Id3(DimensionSize);
 
 ////
 //// BEGIN-EXAMPLE UseCellLocator
 ////
-struct QueryCellsWorklet : public vtkm::worklet::WorkletMapField
+struct QueryCellsWorklet : public viskores::worklet::WorkletMapField
 {
   using ControlSignature =
     void(FieldIn, ExecObject, WholeCellSetIn<Cell, Point>, WholeArrayIn, FieldOut);
@@ -45,23 +53,23 @@ struct QueryCellsWorklet : public vtkm::worklet::WorkletMapField
            typename CellSet,
            typename FieldPortal,
            typename OutType>
-  VTKM_EXEC void operator()(const Point& point,
-                            const CellLocatorExecObject& cellLocator,
-                            const CellSet& cellSet,
-                            const FieldPortal& field,
-                            OutType& out) const
+  VISKORES_EXEC void operator()(const Point& point,
+                                const CellLocatorExecObject& cellLocator,
+                                const CellSet& cellSet,
+                                const FieldPortal& field,
+                                OutType& out) const
   {
     // Use the cell locator to find the cell containing the point and the parametric
     // coordinates within that cell.
-    vtkm::Id cellId;
-    vtkm::Vec3f parametric;
+    viskores::Id cellId;
+    viskores::Vec3f parametric;
     ////
     //// BEGIN-EXAMPLE HandleErrorCode
     ////
-    vtkm::ErrorCode status = cellLocator.FindCell(point, cellId, parametric);
-    if (status != vtkm::ErrorCode::Success)
+    viskores::ErrorCode status = cellLocator.FindCell(point, cellId, parametric);
+    if (status != viskores::ErrorCode::Success)
     {
-      this->RaiseError(vtkm::ErrorString(status));
+      this->RaiseError(viskores::ErrorString(status));
     }
     ////
     //// END-EXAMPLE HandleErrorCode
@@ -75,10 +83,10 @@ struct QueryCellsWorklet : public vtkm::worklet::WorkletMapField
       auto indices = cellSet.GetIndices(cellId);
 
       // Make a Vec-like containing the field data at the cell's points
-      auto fieldValues = vtkm::make_VecFromPortalPermute(&indices, &field);
+      auto fieldValues = viskores::make_VecFromPortalPermute(&indices, &field);
 
       // Do the interpolation
-      vtkm::exec::CellInterpolate(fieldValues, parametric, cellShape, out);
+      viskores::exec::CellInterpolate(fieldValues, parametric, cellShape, out);
     }
     else
     {
@@ -94,21 +102,21 @@ struct QueryCellsWorklet : public vtkm::worklet::WorkletMapField
 //// PAUSE-EXAMPLE
 struct DemoQueryCells
 {
-  vtkm::cont::Invoker Invoke;
+  viskores::cont::Invoker Invoke;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> QueryPoints;
+  viskores::cont::ArrayHandle<viskores::Vec3f> QueryPoints;
 
   template<typename FieldType, typename Storage>
-  VTKM_CONT vtkm::cont::ArrayHandle<FieldType> Run(
-    const vtkm::cont::DataSet& inDataSet,
-    const vtkm::cont::ArrayHandle<FieldType, Storage>& inputField)
+  VISKORES_CONT viskores::cont::ArrayHandle<FieldType> Run(
+    const viskores::cont::DataSet& inDataSet,
+    const viskores::cont::ArrayHandle<FieldType, Storage>& inputField)
   {
     //// RESUME-EXAMPLE
     ////
     //// BEGIN-EXAMPLE ConstructCellLocator
     //// BEGIN-EXAMPLE CellLocatorGeneral
     ////
-    vtkm::cont::CellLocatorGeneral cellLocator;
+    viskores::cont::CellLocatorGeneral cellLocator;
     cellLocator.SetCellSet(inDataSet.GetCellSet());
     cellLocator.SetCoordinates(inDataSet.GetCoordinateSystem());
     cellLocator.Update();
@@ -117,7 +125,7 @@ struct DemoQueryCells
     //// END-EXAMPLE ConstructCellLocator
     ////
 
-    vtkm::cont::ArrayHandle<FieldType> interpolatedField;
+    viskores::cont::ArrayHandle<FieldType> interpolatedField;
 
     this->Invoke(QueryCellsWorklet{},
                  this->QueryPoints,
@@ -135,34 +143,36 @@ struct DemoQueryCells
 
 void TestCellLocator1()
 {
-  using ValueType = vtkm::Vec3f;
-  using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+  using ValueType = viskores::Vec3f;
+  using ArrayType = viskores::cont::ArrayHandle<ValueType>;
 
-  vtkm::cont::DataSet data = vtkm::cont::DataSetBuilderUniform::Create(DimensionSizes);
+  viskores::cont::DataSet data =
+    viskores::cont::DataSetBuilderUniform::Create(DimensionSizes);
 
   ArrayType inField;
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleUniformPointCoordinates(
-                          DimensionSizes, ValueType(0.0f), ValueType(2.0f)),
-                        inField);
+  viskores::cont::ArrayCopy(viskores::cont::ArrayHandleUniformPointCoordinates(
+                              DimensionSizes, ValueType(0.0f), ValueType(2.0f)),
+                            inField);
 
   DemoQueryCells demo;
 
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleUniformPointCoordinates(
-                          DimensionSizes - vtkm::Id3(1), ValueType(0.5f)),
-                        demo.QueryPoints);
+  viskores::cont::ArrayCopy(viskores::cont::ArrayHandleUniformPointCoordinates(
+                              DimensionSizes - viskores::Id3(1), ValueType(0.5f)),
+                            demo.QueryPoints);
 
   ArrayType interpolated = demo.Run(data, inField);
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates expected(
-    DimensionSizes - vtkm::Id3(1), ValueType(1.0f), ValueType(2.0f));
+  viskores::cont::ArrayHandleUniformPointCoordinates expected(
+    DimensionSizes - viskores::Id3(1), ValueType(1.0f), ValueType(2.0f));
 
   std::cout << "Expected: ";
-  vtkm::cont::printSummary_ArrayHandle(expected, std::cout);
+  viskores::cont::printSummary_ArrayHandle(expected, std::cout);
 
   std::cout << "Interpolated: ";
-  vtkm::cont::printSummary_ArrayHandle(interpolated, std::cout);
+  viskores::cont::printSummary_ArrayHandle(interpolated, std::cout);
 
-  VTKM_TEST_ASSERT(test_equal_portals(expected.ReadPortal(), interpolated.ReadPortal()));
+  VISKORES_TEST_ASSERT(
+    test_equal_portals(expected.ReadPortal(), interpolated.ReadPortal()));
 }
 
 ////
@@ -178,17 +188,17 @@ void QueryCells(const CellSetType& cellSet,
                 const FieldType& inField,
                 const FieldType& interpolatedField)
 {
-  VTKM_IS_CELL_SET(CellSetType);
-  VTKM_IS_ARRAY_HANDLE(CoordsType);
-  VTKM_IS_ARRAY_HANDLE(QueryPointsType);
-  VTKM_IS_ARRAY_HANDLE(FieldType);
+  VISKORES_IS_CELL_SET(CellSetType);
+  VISKORES_IS_ARRAY_HANDLE(CoordsType);
+  VISKORES_IS_ARRAY_HANDLE(QueryPointsType);
+  VISKORES_IS_ARRAY_HANDLE(FieldType);
 
-  vtkm::cont::CellLocatorChooser<CellSetType, CoordsType> cellLocator;
+  viskores::cont::CellLocatorChooser<CellSetType, CoordsType> cellLocator;
   cellLocator.SetCellSet(cellSet);
   cellLocator.SetCoordinates(coords);
   cellLocator.Update();
 
-  vtkm::cont::Invoker invoke;
+  viskores::cont::Invoker invoke;
   invoke(
     QueryCellsWorklet{}, queryPoints, cellLocator, cellSet, inField, interpolatedField);
 }
@@ -198,42 +208,44 @@ void QueryCells(const CellSetType& cellSet,
 
 void TestCellLocator2()
 {
-  using ValueType = vtkm::Vec3f;
-  using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+  using ValueType = viskores::Vec3f;
+  using ArrayType = viskores::cont::ArrayHandle<ValueType>;
 
-  vtkm::cont::DataSet data = vtkm::cont::DataSetBuilderUniform::Create(DimensionSizes);
+  viskores::cont::DataSet data =
+    viskores::cont::DataSetBuilderUniform::Create(DimensionSizes);
 
   ArrayType inField;
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleUniformPointCoordinates(
-                          DimensionSizes, ValueType(0.0f), ValueType(2.0f)),
-                        inField);
+  viskores::cont::ArrayCopy(viskores::cont::ArrayHandleUniformPointCoordinates(
+                              DimensionSizes, ValueType(0.0f), ValueType(2.0f)),
+                            inField);
 
   ArrayType queryPoints;
 
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleUniformPointCoordinates(
-                          DimensionSizes - vtkm::Id3(1), ValueType(0.5f)),
-                        queryPoints);
+  viskores::cont::ArrayCopy(viskores::cont::ArrayHandleUniformPointCoordinates(
+                              DimensionSizes - viskores::Id3(1), ValueType(0.5f)),
+                            queryPoints);
 
   ArrayType interpolated;
 
-  QueryCells(data.GetCellSet().AsCellSet<vtkm::cont::CellSetStructured<3>>(),
+  QueryCells(data.GetCellSet().AsCellSet<viskores::cont::CellSetStructured<3>>(),
              data.GetCoordinateSystem()
                .GetData()
-               .AsArrayHandle<vtkm::cont::ArrayHandleUniformPointCoordinates>(),
+               .AsArrayHandle<viskores::cont::ArrayHandleUniformPointCoordinates>(),
              queryPoints,
              inField,
              interpolated);
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates expected(
-    DimensionSizes - vtkm::Id3(1), ValueType(1.0f), ValueType(2.0f));
+  viskores::cont::ArrayHandleUniformPointCoordinates expected(
+    DimensionSizes - viskores::Id3(1), ValueType(1.0f), ValueType(2.0f));
 
   std::cout << "Expected: ";
-  vtkm::cont::printSummary_ArrayHandle(expected, std::cout);
+  viskores::cont::printSummary_ArrayHandle(expected, std::cout);
 
   std::cout << "Interpolated: ";
-  vtkm::cont::printSummary_ArrayHandle(interpolated, std::cout);
+  viskores::cont::printSummary_ArrayHandle(interpolated, std::cout);
 
-  VTKM_TEST_ASSERT(test_equal_portals(expected.ReadPortal(), interpolated.ReadPortal()));
+  VISKORES_TEST_ASSERT(
+    test_equal_portals(expected.ReadPortal(), interpolated.ReadPortal()));
 }
 
 void Run()
@@ -246,5 +258,5 @@ void Run()
 
 int GuideExampleCellLocator(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Run, argc, argv);
+  return viskores::cont::testing::Testing::Run(Run, argc, argv);
 }

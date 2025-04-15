@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,19 +16,19 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/ImplicitFunction.h>
-#include <vtkm/Math.h>
-#include <vtkm/VectorAnalysis.h>
+#include <viskores/ImplicitFunction.h>
+#include <viskores/Math.h>
+#include <viskores/VectorAnalysis.h>
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleMultiplexer.h>
-#include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/Invoker.h>
-#include <vtkm/cont/Timer.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ArrayHandleMultiplexer.h>
+#include <viskores/cont/CellSetStructured.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/cont/Invoker.h>
+#include <viskores/cont/Timer.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
+#include <viskores/worklet/WorkletMapField.h>
+#include <viskores/worklet/WorkletMapTopology.h>
 
 #include "Benchmarker.h"
 
@@ -38,17 +46,17 @@ namespace
 #define ARRAY_SIZE (1 << 22)
 #define CUBE_SIZE 256
 
-using ValueTypes = vtkm::List<vtkm::Float32, vtkm::Float64>;
-using InterpValueTypes = vtkm::List<vtkm::Float32, vtkm::Vec3f_32>;
+using ValueTypes = viskores::List<viskores::Float32, viskores::Float64>;
+using InterpValueTypes = viskores::List<viskores::Float32, viskores::Vec3f_32>;
 
 //==============================================================================
 // Worklets and helpers
 
 // Hold configuration state (e.g. active device)
-vtkm::cont::InitializeResult Config;
+viskores::cont::InitializeResult Config;
 
 template <typename T>
-class BlackScholes : public vtkm::worklet::WorkletMapField
+class BlackScholes : public viskores::worklet::WorkletMapField
 {
   T Riskfree;
   T Volatility;
@@ -63,21 +71,21 @@ public:
   {
   }
 
-  VTKM_EXEC
+  VISKORES_EXEC
   T CumulativeNormalDistribution(T d) const
   {
-    const vtkm::Float32 A1 = 0.31938153f;
-    const vtkm::Float32 A2 = -0.356563782f;
-    const vtkm::Float32 A3 = 1.781477937f;
-    const vtkm::Float32 A4 = -1.821255978f;
-    const vtkm::Float32 A5 = 1.330274429f;
-    const vtkm::Float32 RSQRT2PI = 0.39894228040143267793994605993438f;
+    const viskores::Float32 A1 = 0.31938153f;
+    const viskores::Float32 A2 = -0.356563782f;
+    const viskores::Float32 A3 = 1.781477937f;
+    const viskores::Float32 A4 = -1.821255978f;
+    const viskores::Float32 A5 = 1.330274429f;
+    const viskores::Float32 RSQRT2PI = 0.39894228040143267793994605993438f;
 
-    const vtkm::Float32 df = static_cast<vtkm::Float32>(d);
-    const vtkm::Float32 K = 1.0f / (1.0f + 0.2316419f * vtkm::Abs(df));
+    const viskores::Float32 df = static_cast<viskores::Float32>(d);
+    const viskores::Float32 K = 1.0f / (1.0f + 0.2316419f * viskores::Abs(df));
 
-    vtkm::Float32 cnd =
-      RSQRT2PI * vtkm::Exp(-0.5f * df * df) * (K * (A1 + K * (A2 + K * (A3 + K * (A4 + K * A5)))));
+    viskores::Float32 cnd = RSQRT2PI * viskores::Exp(-0.5f * df * df) *
+      (K * (A1 + K * (A2 + K * (A3 + K * (A4 + K * A5)))));
 
     if (df > 0.0f)
     {
@@ -88,7 +96,7 @@ public:
   }
 
   template <typename U, typename V, typename W>
-  VTKM_EXEC void operator()(const U& sp, const V& os, const W& oy, T& callResult, T& putResult)
+  VISKORES_EXEC void operator()(const U& sp, const V& os, const W& oy, T& callResult, T& putResult)
     const
   {
     const T stockPrice = static_cast<T>(sp);
@@ -96,10 +104,10 @@ public:
     const T optionYears = static_cast<T>(oy);
 
     // Black-Scholes formula for both call and put
-    const T sqrtYears = vtkm::Sqrt(optionYears);
+    const T sqrtYears = viskores::Sqrt(optionYears);
     const T volMultSqY = this->Volatility * sqrtYears;
 
-    const T d1 = (vtkm::Log(stockPrice / optionStrike) +
+    const T d1 = (viskores::Log(stockPrice / optionStrike) +
                   (this->Riskfree + 0.5f * Volatility * Volatility) * optionYears) /
       (volMultSqY);
     const T d2 = d1 - volMultSqY;
@@ -107,85 +115,85 @@ public:
     const T CNDD2 = CumulativeNormalDistribution(d2);
 
     //Calculate Call and Put simultaneously
-    T expRT = vtkm::Exp(-this->Riskfree * optionYears);
+    T expRT = viskores::Exp(-this->Riskfree * optionYears);
     callResult = stockPrice * CNDD1 - optionStrike * expRT * CNDD2;
     putResult = optionStrike * expRT * (1.0f - CNDD2) - stockPrice * (1.0f - CNDD1);
   }
 };
 
-class Mag : public vtkm::worklet::WorkletMapField
+class Mag : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
-  VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& vec, U& result) const
+  VISKORES_EXEC void operator()(const viskores::Vec<T, 3>& vec, U& result) const
   {
-    result = static_cast<U>(vtkm::Magnitude(vec));
+    result = static_cast<U>(viskores::Magnitude(vec));
   }
 };
 
-class Square : public vtkm::worklet::WorkletMapField
+class Square : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
-  VTKM_EXEC void operator()(T input, U& output) const
+  VISKORES_EXEC void operator()(T input, U& output) const
   {
     output = static_cast<U>(input * input);
   }
 };
 
-class Sin : public vtkm::worklet::WorkletMapField
+class Sin : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
-  VTKM_EXEC void operator()(T input, U& output) const
+  VISKORES_EXEC void operator()(T input, U& output) const
   {
-    output = static_cast<U>(vtkm::Sin(input));
+    output = static_cast<U>(viskores::Sin(input));
   }
 };
 
-class Cos : public vtkm::worklet::WorkletMapField
+class Cos : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
-  VTKM_EXEC void operator()(T input, U& output) const
+  VISKORES_EXEC void operator()(T input, U& output) const
   {
-    output = static_cast<U>(vtkm::Cos(input));
+    output = static_cast<U>(viskores::Cos(input));
   }
 };
 
-class FusedMath : public vtkm::worklet::WorkletMapField
+class FusedMath : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
 
   template <typename T>
-  VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& vec, T& result) const
+  VISKORES_EXEC void operator()(const viskores::Vec<T, 3>& vec, T& result) const
   {
-    const T m = vtkm::Magnitude(vec);
-    result = vtkm::Cos(vtkm::Sin(m) * vtkm::Sin(m));
+    const T m = viskores::Magnitude(vec);
+    result = viskores::Cos(viskores::Sin(m) * viskores::Sin(m));
   }
 
   template <typename T, typename U>
-  VTKM_EXEC void operator()(const vtkm::Vec<T, 3>&, U&) const
+  VISKORES_EXEC void operator()(const viskores::Vec<T, 3>&, U&) const
   {
     this->RaiseError("Mixed types unsupported.");
   }
 };
 
-class GenerateEdges : public vtkm::worklet::WorkletVisitCellsWithPoints
+class GenerateEdges : public viskores::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellset, WholeArrayOut edgeIds);
@@ -193,25 +201,26 @@ public:
   using InputDomain = _1;
 
   template <typename ConnectivityInVec, typename ThreadIndicesType, typename IdPairTableType>
-  VTKM_EXEC void operator()(const ConnectivityInVec& connectivity,
-                            const ThreadIndicesType threadIndices,
-                            const IdPairTableType& edgeIds) const
+  VISKORES_EXEC void operator()(const ConnectivityInVec& connectivity,
+                                const ThreadIndicesType threadIndices,
+                                const IdPairTableType& edgeIds) const
   {
-    const vtkm::Id writeOffset = (threadIndices.GetInputIndex() * 12);
+    const viskores::Id writeOffset = (threadIndices.GetInputIndex() * 12);
 
-    const vtkm::IdComponent edgeTable[24] = { 0, 1, 1, 2, 3, 2, 0, 3, 4, 5, 5, 6,
-                                              7, 6, 4, 7, 0, 4, 1, 5, 2, 6, 3, 7 };
+    const viskores::IdComponent edgeTable[24] = { 0, 1, 1, 2, 3, 2, 0, 3, 4, 5, 5, 6,
+                                                  7, 6, 4, 7, 0, 4, 1, 5, 2, 6, 3, 7 };
 
-    for (vtkm::Id i = 0; i < 12; ++i)
+    for (viskores::Id i = 0; i < 12; ++i)
     {
-      const vtkm::Id offset = (i * 2);
-      const vtkm::Id2 edge(connectivity[edgeTable[offset]], connectivity[edgeTable[offset + 1]]);
+      const viskores::Id offset = (i * 2);
+      const viskores::Id2 edge(connectivity[edgeTable[offset]],
+                               connectivity[edgeTable[offset + 1]]);
       edgeIds.Set(writeOffset + i, edge);
     }
   }
 };
 
-class InterpolateField : public vtkm::worklet::WorkletMapField
+class InterpolateField : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn interpolation_ids,
@@ -222,29 +231,32 @@ public:
   using InputDomain = _1;
 
   template <typename WeightType, typename PortalType, typename U>
-  VTKM_EXEC void operator()(const vtkm::Id2& low_high,
-                            const WeightType& weight,
-                            const PortalType& inPortal,
-                            U& result) const
+  VISKORES_EXEC void operator()(const viskores::Id2& low_high,
+                                const WeightType& weight,
+                                const PortalType& inPortal,
+                                U& result) const
   {
     using T = typename PortalType::ValueType;
     this->DoIt(low_high, weight, inPortal, result, typename std::is_same<T, U>::type{});
   }
 
   template <typename WeightType, typename PortalType>
-  VTKM_EXEC void DoIt(const vtkm::Id2& low_high,
-                      const WeightType& weight,
-                      const PortalType& inPortal,
-                      typename PortalType::ValueType& result,
-                      std::true_type) const
+  VISKORES_EXEC void DoIt(const viskores::Id2& low_high,
+                          const WeightType& weight,
+                          const PortalType& inPortal,
+                          typename PortalType::ValueType& result,
+                          std::true_type) const
   {
     //fetch the low / high values from inPortal
-    result = vtkm::Lerp(inPortal.Get(low_high[0]), inPortal.Get(low_high[1]), weight);
+    result = viskores::Lerp(inPortal.Get(low_high[0]), inPortal.Get(low_high[1]), weight);
   }
 
   template <typename WeightType, typename PortalType, typename U>
-  VTKM_EXEC void DoIt(const vtkm::Id2&, const WeightType&, const PortalType&, U&, std::false_type)
-    const
+  VISKORES_EXEC void DoIt(const viskores::Id2&,
+                          const WeightType&,
+                          const PortalType&,
+                          U&,
+                          std::false_type) const
   {
     //the inPortal and result need to be the same type so this version only
     //exists to generate code when using dynamic arrays
@@ -252,32 +264,32 @@ public:
   }
 };
 
-class EvaluateImplicitFunction : public vtkm::worklet::WorkletMapField
+class EvaluateImplicitFunction : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldOut, ExecObject);
   using ExecutionSignature = void(_1, _2, _3);
 
   template <typename VecType, typename ScalarType, typename FunctionType>
-  VTKM_EXEC void operator()(const VecType& point,
-                            ScalarType& val,
-                            const FunctionType& function) const
+  VISKORES_EXEC void operator()(const VecType& point,
+                                ScalarType& val,
+                                const FunctionType& function) const
   {
     val = function.Value(point);
   }
 };
 
-class Evaluate2ImplicitFunctions : public vtkm::worklet::WorkletMapField
+class Evaluate2ImplicitFunctions : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldOut, ExecObject, ExecObject);
   using ExecutionSignature = void(_1, _2, _3, _4);
 
   template <typename VecType, typename ScalarType, typename FType1, typename FType2>
-  VTKM_EXEC void operator()(const VecType& point,
-                            ScalarType& val,
-                            const FType1& function1,
-                            const FType2& function2) const
+  VISKORES_EXEC void operator()(const VecType& point,
+                                ScalarType& val,
+                                const FType1& function1,
+                                const FType2& function2) const
   {
     val = function1.Value(point) + function2.Value(point);
   }
@@ -286,7 +298,7 @@ public:
 struct PassThroughFunctor
 {
   template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& x) const
+  VISKORES_EXEC_CONT T operator()(const T& x) const
   {
     return x;
   }
@@ -294,39 +306,39 @@ struct PassThroughFunctor
 
 template <typename ArrayHandleType>
 using ArrayHandlePassThrough =
-  vtkm::cont::ArrayHandleTransform<ArrayHandleType, PassThroughFunctor, PassThroughFunctor>;
+  viskores::cont::ArrayHandleTransform<ArrayHandleType, PassThroughFunctor, PassThroughFunctor>;
 
-template <typename ValueType, vtkm::IdComponent>
-struct JunkArrayHandle : vtkm::cont::ArrayHandle<ValueType>
+template <typename ValueType, viskores::IdComponent>
+struct JunkArrayHandle : viskores::cont::ArrayHandle<ValueType>
 {
 };
 
 template <typename ArrayHandleType>
 using BMArrayHandleMultiplexer =
-  vtkm::cont::ArrayHandleMultiplexer<ArrayHandleType,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 0>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 1>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 2>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 3>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 4>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 5>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 6>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 7>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 8>,
-                                     JunkArrayHandle<typename ArrayHandleType::ValueType, 9>,
-                                     ArrayHandlePassThrough<ArrayHandleType>>;
+  viskores::cont::ArrayHandleMultiplexer<ArrayHandleType,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 0>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 1>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 2>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 3>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 4>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 5>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 6>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 7>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 8>,
+                                         JunkArrayHandle<typename ArrayHandleType::ValueType, 9>,
+                                         ArrayHandlePassThrough<ArrayHandleType>>;
 
 template <typename ArrayHandleType>
 BMArrayHandleMultiplexer<ArrayHandleType> make_ArrayHandleMultiplexer0(const ArrayHandleType& array)
 {
-  VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+  VISKORES_IS_ARRAY_HANDLE(ArrayHandleType);
   return BMArrayHandleMultiplexer<ArrayHandleType>(array);
 }
 
 template <typename ArrayHandleType>
 BMArrayHandleMultiplexer<ArrayHandleType> make_ArrayHandleMultiplexerN(const ArrayHandleType& array)
 {
-  VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
+  VISKORES_IS_ARRAY_HANDLE(ArrayHandleType);
   return BMArrayHandleMultiplexer<ArrayHandleType>(ArrayHandlePassThrough<ArrayHandleType>(array));
 }
 
@@ -337,19 +349,19 @@ BMArrayHandleMultiplexer<ArrayHandleType> make_ArrayHandleMultiplexerN(const Arr
 template <typename Value>
 struct BenchBlackScholesImpl
 {
-  using ValueArrayHandle = vtkm::cont::ArrayHandle<Value>;
+  using ValueArrayHandle = viskores::cont::ArrayHandle<Value>;
 
   ValueArrayHandle StockPrice;
   ValueArrayHandle OptionStrike;
   ValueArrayHandle OptionYears;
 
   ::benchmark::State& State;
-  vtkm::Id ArraySize;
+  viskores::Id ArraySize;
 
-  vtkm::cont::Timer Timer;
-  vtkm::cont::Invoker Invoker;
+  viskores::cont::Timer Timer;
+  viskores::cont::Invoker Invoker;
 
-  VTKM_CONT
+  VISKORES_CONT
   BenchBlackScholesImpl(::benchmark::State& state)
     : State{ state }
     , ArraySize{ ARRAY_SIZE }
@@ -371,7 +383,7 @@ struct BenchBlackScholesImpl
       auto optionStrikePortal = this->OptionStrike.WritePortal();
       auto optionYearsPortal = this->OptionYears.WritePortal();
 
-      for (vtkm::Id i = 0; i < this->ArraySize; ++i)
+      for (viskores::Id i = 0; i < this->ArraySize; ++i)
       {
         stockPricePortal.Set(i, price_range(rng));
         optionStrikePortal.Set(i, strike_range(rng));
@@ -380,25 +392,25 @@ struct BenchBlackScholesImpl
     }
 
     { // Configure label:
-      const vtkm::Id numBytes = this->ArraySize * static_cast<vtkm::Id>(sizeof(Value));
+      const viskores::Id numBytes = this->ArraySize * static_cast<viskores::Id>(sizeof(Value));
       std::ostringstream desc;
-      desc << "NumValues:" << this->ArraySize << " (" << vtkm::cont::GetHumanReadableSize(numBytes)
-           << ")";
+      desc << "NumValues:" << this->ArraySize << " ("
+           << viskores::cont::GetHumanReadableSize(numBytes) << ")";
       this->State.SetLabel(desc.str());
     }
   }
 
   template <typename BenchArrayType>
-  VTKM_CONT void Run(const BenchArrayType& stockPrice,
-                     const BenchArrayType& optionStrike,
-                     const BenchArrayType& optionYears)
+  VISKORES_CONT void Run(const BenchArrayType& stockPrice,
+                         const BenchArrayType& optionStrike,
+                         const BenchArrayType& optionYears)
   {
     static constexpr Value RISKFREE = 0.02f;
     static constexpr Value VOLATILITY = 0.30f;
 
     BlackScholes<Value> worklet(RISKFREE, VOLATILITY);
-    vtkm::cont::ArrayHandle<Value> callResultHandle;
-    vtkm::cont::ArrayHandle<Value> putResultHandle;
+    viskores::cont::ArrayHandle<Value> callResultHandle;
+    viskores::cont::ArrayHandle<Value> putResultHandle;
 
     for (auto _ : this->State)
     {
@@ -423,7 +435,7 @@ void BenchBlackScholesStatic(::benchmark::State& state)
   BenchBlackScholesImpl<ValueType> impl{ state };
   impl.Run(impl.StockPrice, impl.OptionStrike, impl.OptionYears);
 };
-VTKM_BENCHMARK_TEMPLATES(BenchBlackScholesStatic, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchBlackScholesStatic, ValueTypes);
 
 template <typename ValueType>
 void BenchBlackScholesMultiplexer0(::benchmark::State& state)
@@ -433,7 +445,7 @@ void BenchBlackScholesMultiplexer0(::benchmark::State& state)
            make_ArrayHandleMultiplexer0(impl.OptionStrike),
            make_ArrayHandleMultiplexer0(impl.OptionYears));
 };
-VTKM_BENCHMARK_TEMPLATES(BenchBlackScholesMultiplexer0, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchBlackScholesMultiplexer0, ValueTypes);
 
 template <typename ValueType>
 void BenchBlackScholesMultiplexerN(::benchmark::State& state)
@@ -443,22 +455,22 @@ void BenchBlackScholesMultiplexerN(::benchmark::State& state)
            make_ArrayHandleMultiplexerN(impl.OptionStrike),
            make_ArrayHandleMultiplexerN(impl.OptionYears));
 };
-VTKM_BENCHMARK_TEMPLATES(BenchBlackScholesMultiplexerN, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchBlackScholesMultiplexerN, ValueTypes);
 
 template <typename Value>
 struct BenchMathImpl
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<Value, 3>> InputHandle;
-  vtkm::cont::ArrayHandle<Value> TempHandle1;
-  vtkm::cont::ArrayHandle<Value> TempHandle2;
+  viskores::cont::ArrayHandle<viskores::Vec<Value, 3>> InputHandle;
+  viskores::cont::ArrayHandle<Value> TempHandle1;
+  viskores::cont::ArrayHandle<Value> TempHandle2;
 
   ::benchmark::State& State;
-  vtkm::Id ArraySize;
+  viskores::Id ArraySize;
 
-  vtkm::cont::Timer Timer;
-  vtkm::cont::Invoker Invoker;
+  viskores::cont::Timer Timer;
+  viskores::cont::Invoker Invoker;
 
-  VTKM_CONT
+  VISKORES_CONT
   BenchMathImpl(::benchmark::State& state)
     : State{ state }
     , ArraySize{ ARRAY_SIZE }
@@ -471,23 +483,23 @@ struct BenchMathImpl
 
       this->InputHandle.Allocate(this->ArraySize);
       auto portal = this->InputHandle.WritePortal();
-      for (vtkm::Id i = 0; i < this->ArraySize; ++i)
+      for (viskores::Id i = 0; i < this->ArraySize; ++i)
       {
-        portal.Set(i, vtkm::Vec<Value, 3>{ range(rng), range(rng), range(rng) });
+        portal.Set(i, viskores::Vec<Value, 3>{ range(rng), range(rng), range(rng) });
       }
     }
   }
 
   template <typename InputArrayType, typename BenchArrayType>
-  VTKM_CONT void Run(const InputArrayType& inputHandle,
-                     const BenchArrayType& tempHandle1,
-                     const BenchArrayType& tempHandle2)
+  VISKORES_CONT void Run(const InputArrayType& inputHandle,
+                         const BenchArrayType& tempHandle1,
+                         const BenchArrayType& tempHandle2)
   {
     { // Configure label:
-      const vtkm::Id numBytes = this->ArraySize * static_cast<vtkm::Id>(sizeof(Value));
+      const viskores::Id numBytes = this->ArraySize * static_cast<viskores::Id>(sizeof(Value));
       std::ostringstream desc;
-      desc << "NumValues:" << this->ArraySize << " (" << vtkm::cont::GetHumanReadableSize(numBytes)
-           << ")";
+      desc << "NumValues:" << this->ArraySize << " ("
+           << viskores::cont::GetHumanReadableSize(numBytes) << ")";
       this->State.SetLabel(desc.str());
     }
 
@@ -517,7 +529,7 @@ void BenchMathStatic(::benchmark::State& state)
   BenchMathImpl<ValueType> impl{ state };
   impl.Run(impl.InputHandle, impl.TempHandle1, impl.TempHandle2);
 };
-VTKM_BENCHMARK_TEMPLATES(BenchMathStatic, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchMathStatic, ValueTypes);
 
 template <typename ValueType>
 void BenchMathMultiplexer0(::benchmark::State& state)
@@ -527,7 +539,7 @@ void BenchMathMultiplexer0(::benchmark::State& state)
            make_ArrayHandleMultiplexer0(impl.TempHandle1),
            make_ArrayHandleMultiplexer0(impl.TempHandle2));
 };
-VTKM_BENCHMARK_TEMPLATES(BenchMathMultiplexer0, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchMathMultiplexer0, ValueTypes);
 
 template <typename ValueType>
 void BenchMathMultiplexerN(::benchmark::State& state)
@@ -537,20 +549,20 @@ void BenchMathMultiplexerN(::benchmark::State& state)
            make_ArrayHandleMultiplexerN(impl.TempHandle1),
            make_ArrayHandleMultiplexerN(impl.TempHandle2));
 };
-VTKM_BENCHMARK_TEMPLATES(BenchMathMultiplexerN, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchMathMultiplexerN, ValueTypes);
 
 template <typename Value>
 struct BenchFusedMathImpl
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<Value, 3>> InputHandle;
+  viskores::cont::ArrayHandle<viskores::Vec<Value, 3>> InputHandle;
 
   ::benchmark::State& State;
-  vtkm::Id ArraySize;
+  viskores::Id ArraySize;
 
-  vtkm::cont::Timer Timer;
-  vtkm::cont::Invoker Invoker;
+  viskores::cont::Timer Timer;
+  viskores::cont::Invoker Invoker;
 
-  VTKM_CONT
+  VISKORES_CONT
   BenchFusedMathImpl(::benchmark::State& state)
     : State{ state }
     , ArraySize{ ARRAY_SIZE }
@@ -563,25 +575,25 @@ struct BenchFusedMathImpl
 
       this->InputHandle.Allocate(this->ArraySize);
       auto portal = this->InputHandle.WritePortal();
-      for (vtkm::Id i = 0; i < this->ArraySize; ++i)
+      for (viskores::Id i = 0; i < this->ArraySize; ++i)
       {
-        portal.Set(i, vtkm::Vec<Value, 3>{ range(rng), range(rng), range(rng) });
+        portal.Set(i, viskores::Vec<Value, 3>{ range(rng), range(rng), range(rng) });
       }
     }
 
     { // Configure label:
-      const vtkm::Id numBytes = this->ArraySize * static_cast<vtkm::Id>(sizeof(Value));
+      const viskores::Id numBytes = this->ArraySize * static_cast<viskores::Id>(sizeof(Value));
       std::ostringstream desc;
-      desc << "NumValues:" << this->ArraySize << " (" << vtkm::cont::GetHumanReadableSize(numBytes)
-           << ")";
+      desc << "NumValues:" << this->ArraySize << " ("
+           << viskores::cont::GetHumanReadableSize(numBytes) << ")";
       this->State.SetLabel(desc.str());
     }
   }
 
   template <typename BenchArrayType>
-  VTKM_CONT void Run(const BenchArrayType& inputHandle)
+  VISKORES_CONT void Run(const BenchArrayType& inputHandle)
   {
-    vtkm::cont::ArrayHandle<Value> result;
+    viskores::cont::ArrayHandle<Value> result;
 
     for (auto _ : this->State)
     {
@@ -606,7 +618,7 @@ void BenchFusedMathStatic(::benchmark::State& state)
   BenchFusedMathImpl<ValueType> impl{ state };
   impl.Run(impl.InputHandle);
 };
-VTKM_BENCHMARK_TEMPLATES(BenchFusedMathStatic, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchFusedMathStatic, ValueTypes);
 
 template <typename ValueType>
 void BenchFusedMathMultiplexer0(::benchmark::State& state)
@@ -614,7 +626,7 @@ void BenchFusedMathMultiplexer0(::benchmark::State& state)
   BenchFusedMathImpl<ValueType> impl{ state };
   impl.Run(make_ArrayHandleMultiplexer0(impl.InputHandle));
 };
-VTKM_BENCHMARK_TEMPLATES(BenchFusedMathMultiplexer0, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchFusedMathMultiplexer0, ValueTypes);
 
 template <typename ValueType>
 void BenchFusedMathMultiplexerN(::benchmark::State& state)
@@ -622,22 +634,22 @@ void BenchFusedMathMultiplexerN(::benchmark::State& state)
   BenchFusedMathImpl<ValueType> impl{ state };
   impl.Run(make_ArrayHandleMultiplexerN(impl.InputHandle));
 };
-VTKM_BENCHMARK_TEMPLATES(BenchFusedMathMultiplexerN, ValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchFusedMathMultiplexerN, ValueTypes);
 
 template <typename Value>
 struct BenchEdgeInterpImpl
 {
-  vtkm::cont::ArrayHandle<vtkm::Float32> WeightHandle;
-  vtkm::cont::ArrayHandle<Value> FieldHandle;
-  vtkm::cont::ArrayHandle<vtkm::Id2> EdgePairHandle;
+  viskores::cont::ArrayHandle<viskores::Float32> WeightHandle;
+  viskores::cont::ArrayHandle<Value> FieldHandle;
+  viskores::cont::ArrayHandle<viskores::Id2> EdgePairHandle;
 
   ::benchmark::State& State;
-  vtkm::Id CubeSize;
+  viskores::Id CubeSize;
 
-  vtkm::cont::Timer Timer;
-  vtkm::cont::Invoker Invoker;
+  viskores::cont::Timer Timer;
+  viskores::cont::Invoker Invoker;
 
-  VTKM_CONT
+  VISKORES_CONT
   BenchEdgeInterpImpl(::benchmark::State& state)
     : State{ state }
     , CubeSize{ CUBE_SIZE }
@@ -645,10 +657,10 @@ struct BenchEdgeInterpImpl
     , Invoker{ Config.Device }
   {
     { // Initialize arrays
-      using CT = typename vtkm::VecTraits<Value>::ComponentType;
+      using CT = typename viskores::VecTraits<Value>::ComponentType;
 
       std::mt19937 rng;
-      std::uniform_real_distribution<vtkm::Float32> weight_range(0.0f, 1.0f);
+      std::uniform_real_distribution<viskores::Float32> weight_range(0.0f, 1.0f);
       std::uniform_real_distribution<CT> field_range;
 
       //basically the core challenge is to generate an array whose
@@ -656,10 +668,10 @@ struct BenchEdgeInterpImpl
       //
       //So for this kind of problem we generate the 12 edges of each
       //cell and place them into array.
-      vtkm::cont::CellSetStructured<3> cellSet;
-      cellSet.SetPointDimensions(vtkm::Id3{ this->CubeSize, this->CubeSize, this->CubeSize });
+      viskores::cont::CellSetStructured<3> cellSet;
+      cellSet.SetPointDimensions(viskores::Id3{ this->CubeSize, this->CubeSize, this->CubeSize });
 
-      const vtkm::Id numberOfEdges = cellSet.GetNumberOfCells() * 12;
+      const viskores::Id numberOfEdges = cellSet.GetNumberOfCells() * 12;
 
       this->EdgePairHandle.Allocate(numberOfEdges);
       this->Invoker(GenerateEdges{}, cellSet, this->EdgePairHandle);
@@ -667,7 +679,7 @@ struct BenchEdgeInterpImpl
       { // Per-edge weights
         this->WeightHandle.Allocate(numberOfEdges);
         auto portal = this->WeightHandle.WritePortal();
-        for (vtkm::Id i = 0; i < numberOfEdges; ++i)
+        for (viskores::Id i = 0; i < numberOfEdges; ++i)
         {
           portal.Set(i, weight_range(rng));
         }
@@ -676,7 +688,7 @@ struct BenchEdgeInterpImpl
       { // Point field
         this->FieldHandle.Allocate(cellSet.GetNumberOfPoints());
         auto portal = this->FieldHandle.WritePortal();
-        for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
+        for (viskores::Id i = 0; i < portal.GetNumberOfValues(); ++i)
         {
           portal.Set(i, field_range(rng));
         }
@@ -684,21 +696,21 @@ struct BenchEdgeInterpImpl
     }
 
     { // Configure label:
-      const vtkm::Id numValues = this->FieldHandle.GetNumberOfValues();
-      const vtkm::Id numBytes = numValues * static_cast<vtkm::Id>(sizeof(Value));
+      const viskores::Id numValues = this->FieldHandle.GetNumberOfValues();
+      const viskores::Id numBytes = numValues * static_cast<viskores::Id>(sizeof(Value));
       std::ostringstream desc;
-      desc << "FieldValues:" << numValues << " (" << vtkm::cont::GetHumanReadableSize(numBytes)
+      desc << "FieldValues:" << numValues << " (" << viskores::cont::GetHumanReadableSize(numBytes)
            << ") | CubeSize: " << this->CubeSize;
       this->State.SetLabel(desc.str());
     }
   }
 
   template <typename EdgePairArrayType, typename WeightArrayType, typename FieldArrayType>
-  VTKM_CONT void Run(const EdgePairArrayType& edgePairs,
-                     const WeightArrayType& weights,
-                     const FieldArrayType& field)
+  VISKORES_CONT void Run(const EdgePairArrayType& edgePairs,
+                         const WeightArrayType& weights,
+                         const FieldArrayType& field)
   {
-    vtkm::cont::ArrayHandle<Value> result;
+    viskores::cont::ArrayHandle<Value> result;
 
     for (auto _ : this->State)
     {
@@ -718,38 +730,38 @@ void BenchEdgeInterpStatic(::benchmark::State& state)
   BenchEdgeInterpImpl<ValueType> impl{ state };
   impl.Run(impl.EdgePairHandle, impl.WeightHandle, impl.FieldHandle);
 };
-VTKM_BENCHMARK_TEMPLATES(BenchEdgeInterpStatic, InterpValueTypes);
+VISKORES_BENCHMARK_TEMPLATES(BenchEdgeInterpStatic, InterpValueTypes);
 
 struct ImplicitFunctionBenchData
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> Points;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> Result;
-  vtkm::Sphere Sphere1;
-  vtkm::Sphere Sphere2;
+  viskores::cont::ArrayHandle<viskores::Vec3f> Points;
+  viskores::cont::ArrayHandle<viskores::FloatDefault> Result;
+  viskores::Sphere Sphere1;
+  viskores::Sphere Sphere2;
 };
 
 static ImplicitFunctionBenchData MakeImplicitFunctionBenchData()
 {
-  vtkm::Id count = ARRAY_SIZE;
-  vtkm::FloatDefault bounds[6] = { -2.0f, 2.0f, -2.0f, 2.0f, -2.0f, 2.0f };
+  viskores::Id count = ARRAY_SIZE;
+  viskores::FloatDefault bounds[6] = { -2.0f, 2.0f, -2.0f, 2.0f, -2.0f, 2.0f };
 
   ImplicitFunctionBenchData data;
   data.Points.Allocate(count);
   data.Result.Allocate(count);
 
   std::default_random_engine rangen;
-  std::uniform_real_distribution<vtkm::FloatDefault> distx(bounds[0], bounds[1]);
-  std::uniform_real_distribution<vtkm::FloatDefault> disty(bounds[2], bounds[3]);
-  std::uniform_real_distribution<vtkm::FloatDefault> distz(bounds[4], bounds[5]);
+  std::uniform_real_distribution<viskores::FloatDefault> distx(bounds[0], bounds[1]);
+  std::uniform_real_distribution<viskores::FloatDefault> disty(bounds[2], bounds[3]);
+  std::uniform_real_distribution<viskores::FloatDefault> distz(bounds[4], bounds[5]);
 
   auto portal = data.Points.WritePortal();
-  for (vtkm::Id i = 0; i < count; ++i)
+  for (viskores::Id i = 0; i < count; ++i)
   {
-    portal.Set(i, vtkm::make_Vec(distx(rangen), disty(rangen), distz(rangen)));
+    portal.Set(i, viskores::make_Vec(distx(rangen), disty(rangen), distz(rangen)));
   }
 
-  data.Sphere1 = vtkm::Sphere({ 0.22f, 0.33f, 0.44f }, 0.55f);
-  data.Sphere2 = vtkm::Sphere({ 0.22f, 0.33f, 0.11f }, 0.77f);
+  data.Sphere1 = viskores::Sphere({ 0.22f, 0.33f, 0.44f }, 0.55f);
+  data.Sphere2 = viskores::Sphere({ 0.22f, 0.33f, 0.11f }, 0.77f);
 
   return data;
 }
@@ -758,7 +770,7 @@ void BenchImplicitFunction(::benchmark::State& state)
 {
   using EvalWorklet = EvaluateImplicitFunction;
 
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
   auto data = MakeImplicitFunctionBenchData();
 
@@ -770,8 +782,8 @@ void BenchImplicitFunction(::benchmark::State& state)
 
   EvalWorklet eval;
 
-  vtkm::cont::Timer timer{ device };
-  vtkm::cont::Invoker invoker{ device };
+  viskores::cont::Timer timer{ device };
+  viskores::cont::Invoker invoker{ device };
 
   for (auto _ : state)
   {
@@ -783,13 +795,13 @@ void BenchImplicitFunction(::benchmark::State& state)
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK(BenchImplicitFunction);
+VISKORES_BENCHMARK(BenchImplicitFunction);
 
 void Bench2ImplicitFunctions(::benchmark::State& state)
 {
   using EvalWorklet = Evaluate2ImplicitFunctions;
 
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
   auto data = MakeImplicitFunctionBenchData();
 
@@ -801,8 +813,8 @@ void Bench2ImplicitFunctions(::benchmark::State& state)
 
   EvalWorklet eval;
 
-  vtkm::cont::Timer timer{ device };
-  vtkm::cont::Invoker invoker{ device };
+  viskores::cont::Timer timer{ device };
+  viskores::cont::Invoker invoker{ device };
 
   for (auto _ : state)
   {
@@ -814,31 +826,31 @@ void Bench2ImplicitFunctions(::benchmark::State& state)
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK(Bench2ImplicitFunctions);
+VISKORES_BENCHMARK(Bench2ImplicitFunctions);
 
 } // end anon namespace
 
 int main(int argc, char* argv[])
 {
-  // Parse VTK-m options:
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  // Parse Viskores options:
+  auto opts = viskores::cont::InitializeOptions::RequireDevice;
 
   std::vector<char*> args(argv, argv + argc);
-  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+  viskores::bench::detail::InitializeArgs(&argc, args, opts);
 
-  // Parse VTK-m options:
-  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+  // Parse Viskores options:
+  Config = viskores::cont::Initialize(argc, args.data(), opts);
 
   // This occurs when it is help
-  if (opts == vtkm::cont::InitializeOptions::None)
+  if (opts == viskores::cont::InitializeOptions::None)
   {
     std::cout << Config.Usage << std::endl;
   }
   else
   {
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+    viskores::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
+  VISKORES_EXECUTE_BENCHMARKS(argc, args.data());
 }

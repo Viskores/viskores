@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,9 +16,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandleZip.h>
+#include <viskores/cont/ArrayHandleZip.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -18,19 +26,20 @@ namespace
 template<typename ArrayHandleType>
 void CheckArray(const ArrayHandleType array)
 {
-  VTKM_TEST_ASSERT(array.GetNumberOfValues() == 3, "Permuted array has wrong size.");
+  VISKORES_TEST_ASSERT(array.GetNumberOfValues() == 3, "Permuted array has wrong size.");
 
   typename ArrayHandleType::ReadPortalType portal = array.ReadPortal();
-  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 3, "Permuted portal has wrong size.");
+  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 3,
+                       "Permuted portal has wrong size.");
 
-  using PairType = vtkm::Pair<vtkm::Id, vtkm::Float64>;
+  using PairType = viskores::Pair<viskores::Id, viskores::Float64>;
 
-  VTKM_TEST_ASSERT(test_equal(portal.Get(0), PairType(3, 0.0)),
-                   "Zipped array has wrong value.");
-  VTKM_TEST_ASSERT(test_equal(portal.Get(1), PairType(0, 0.1)),
-                   "Zipped array has wrong value.");
-  VTKM_TEST_ASSERT(test_equal(portal.Get(2), PairType(1, 0.2)),
-                   "Zipped array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(0), PairType(3, 0.0)),
+                       "Zipped array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(1), PairType(0, 0.1)),
+                       "Zipped array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(2), PairType(1, 0.2)),
+                       "Zipped array has wrong value.");
 }
 
 void Test()
@@ -38,13 +47,13 @@ void Test()
   ////
   //// BEGIN-EXAMPLE ArrayHandleZip
   ////
-  using ArrayType1 = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using ArrayType1 = viskores::cont::ArrayHandle<viskores::Id>;
   using PortalType1 = ArrayType1::WritePortalType;
 
-  using ArrayType2 = vtkm::cont::ArrayHandle<vtkm::Float64>;
+  using ArrayType2 = viskores::cont::ArrayHandle<viskores::Float64>;
   using PortalType2 = ArrayType2::WritePortalType;
 
-  // Create an array of vtkm::Id with values [3, 0, 1]
+  // Create an array of viskores::Id with values [3, 0, 1]
   ArrayType1 array1;
   array1.Allocate(3);
   PortalType1 portal1 = array1.WritePortal();
@@ -52,7 +61,7 @@ void Test()
   portal1.Set(1, 0);
   portal1.Set(2, 1);
 
-  // Create a second array of vtkm::Float32 with values [0.0, 0.1, 0.2]
+  // Create a second array of viskores::Float32 with values [0.0, 0.1, 0.2]
   ArrayType2 array2;
   array2.Allocate(3);
   PortalType2 portal2 = array2.WritePortal();
@@ -61,8 +70,8 @@ void Test()
   portal2.Set(2, 0.2);
 
   // Zip the two arrays together to create an array of
-  // vtkm::Pair<vtkm::Id, vtkm::Float64> with values [(3,0.0), (0,0.1), (1,0.2)]
-  vtkm::cont::ArrayHandleZip<ArrayType1, ArrayType2> zipArray(array1, array2);
+  // viskores::Pair<viskores::Id, viskores::Float64> with values [(3,0.0), (0,0.1), (1,0.2)]
+  viskores::cont::ArrayHandleZip<ArrayType1, ArrayType2> zipArray(array1, array2);
   ////
   //// END-EXAMPLE ArrayHandleZip
   ////
@@ -73,7 +82,7 @@ void Test()
     ////
     //// BEGIN-EXAMPLE MakeArrayHandleZip
     ////
-    vtkm::cont::make_ArrayHandleZip(array1, array2)
+    viskores::cont::make_ArrayHandleZip(array1, array2)
     ////
     //// END-EXAMPLE MakeArrayHandleZip
     ////
@@ -84,5 +93,5 @@ void Test()
 
 int GuideExampleArrayHandleZip(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

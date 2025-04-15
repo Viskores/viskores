@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -10,17 +18,17 @@
 
 #include "HistogramMPI.h"
 
-#include <vtkm/filter/density_estimate/worklet/FieldHistogram.h>
+#include <viskores/filter/density_estimate/worklet/FieldHistogram.h>
 
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/AssignerPartitionedDataSet.h>
-#include <vtkm/cont/EnvironmentTracker.h>
-#include <vtkm/cont/ErrorFilterExecution.h>
-#include <vtkm/cont/FieldRangeGlobalCompute.h>
+#include <viskores/cont/Algorithm.h>
+#include <viskores/cont/ArrayPortalToIterators.h>
+#include <viskores/cont/AssignerPartitionedDataSet.h>
+#include <viskores/cont/EnvironmentTracker.h>
+#include <viskores/cont/ErrorFilterExecution.h>
+#include <viskores/cont/FieldRangeGlobalCompute.h>
 
-#include <vtkm/thirdparty/diy/diy.h>
-#include <vtkm/thirdparty/diy/mpi-cast.h>
+#include <viskores/thirdparty/diy/diy.h>
+#include <viskores/thirdparty/diy/mpi-cast.h>
 
 #include <mpi.h>
 
@@ -31,80 +39,81 @@ namespace detail
 
 class DistributedHistogram
 {
-  std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> LocalBlocks;
+  std::vector<viskores::cont::ArrayHandle<viskores::Id>> LocalBlocks;
 
 public:
-  DistributedHistogram(vtkm::Id numLocalBlocks)
+  DistributedHistogram(viskores::Id numLocalBlocks)
     : LocalBlocks(static_cast<size_t>(numLocalBlocks))
   {
   }
 
-  void SetLocalHistogram(vtkm::Id index, const vtkm::cont::ArrayHandle<vtkm::Id>& bins)
+  void SetLocalHistogram(viskores::Id index, const viskores::cont::ArrayHandle<viskores::Id>& bins)
   {
     this->LocalBlocks[static_cast<size_t>(index)] = bins;
   }
 
-  void SetLocalHistogram(vtkm::Id index, const vtkm::cont::Field& field)
+  void SetLocalHistogram(viskores::Id index, const viskores::cont::Field& field)
   {
-    this->SetLocalHistogram(index,
-                            field.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Id>>());
+    this->SetLocalHistogram(
+      index, field.GetData().AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>());
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Id> ReduceAll(const vtkm::Id numBins) const
+  viskores::cont::ArrayHandle<viskores::Id> ReduceAll(const viskores::Id numBins) const
   {
-    const vtkm::Id numLocalBlocks = static_cast<vtkm::Id>(this->LocalBlocks.size());
-    auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+    const viskores::Id numLocalBlocks = static_cast<viskores::Id>(this->LocalBlocks.size());
+    auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
     if (comm.size() == 1 && numLocalBlocks <= 1)
     {
       // no reduction necessary.
-      return numLocalBlocks == 0 ? vtkm::cont::ArrayHandle<vtkm::Id>() : this->LocalBlocks[0];
+      return numLocalBlocks == 0 ? viskores::cont::ArrayHandle<viskores::Id>()
+                                 : this->LocalBlocks[0];
     }
 
 
     // reduce local bins first.
-    vtkm::cont::ArrayHandle<vtkm::Id> local;
+    viskores::cont::ArrayHandle<viskores::Id> local;
     local.Allocate(numBins);
-    std::fill(vtkm::cont::ArrayPortalToIteratorBegin(local.WritePortal()),
-              vtkm::cont::ArrayPortalToIteratorEnd(local.WritePortal()),
-              static_cast<vtkm::Id>(0));
+    std::fill(viskores::cont::ArrayPortalToIteratorBegin(local.WritePortal()),
+              viskores::cont::ArrayPortalToIteratorEnd(local.WritePortal()),
+              static_cast<viskores::Id>(0));
     for (const auto& lbins : this->LocalBlocks)
     {
-      vtkm::cont::Algorithm::Transform(local, lbins, local, vtkm::Add());
+      viskores::cont::Algorithm::Transform(local, lbins, local, viskores::Add());
     }
 
     // now reduce across ranks using MPI.
 
     // converting to std::vector
-    std::vector<vtkm::Id> send_buf(static_cast<std::size_t>(numBins));
-    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(local.ReadPortal()),
-              vtkm::cont::ArrayPortalToIteratorEnd(local.ReadPortal()),
+    std::vector<viskores::Id> send_buf(static_cast<std::size_t>(numBins));
+    std::copy(viskores::cont::ArrayPortalToIteratorBegin(local.ReadPortal()),
+              viskores::cont::ArrayPortalToIteratorEnd(local.ReadPortal()),
               send_buf.begin());
 
-    std::vector<vtkm::Id> recv_buf(static_cast<std::size_t>(numBins));
+    std::vector<viskores::Id> recv_buf(static_cast<std::size_t>(numBins));
     MPI_Reduce(&send_buf[0],
                &recv_buf[0],
                static_cast<int>(numBins),
-               sizeof(vtkm::Id) == 4 ? MPI_INT : MPI_LONG,
+               sizeof(viskores::Id) == 4 ? MPI_INT : MPI_LONG,
                MPI_SUM,
                0,
-               vtkmdiy::mpi::mpi_cast(comm.handle()));
+               viskoresdiy::mpi::mpi_cast(comm.handle()));
 
     if (comm.rank() == 0)
     {
       local.Allocate(numBins);
       std::copy(recv_buf.begin(),
                 recv_buf.end(),
-                vtkm::cont::ArrayPortalToIteratorBegin(local.WritePortal()));
+                viskores::cont::ArrayPortalToIteratorBegin(local.WritePortal()));
       return local;
     }
-    return vtkm::cont::ArrayHandle<vtkm::Id>();
+    return viskores::cont::ArrayHandle<viskores::Id>();
   }
 };
 
 } // namespace detail
 
 //-----------------------------------------------------------------------------
-VTKM_CONT vtkm::cont::DataSet HistogramMPI::DoExecute(const vtkm::cont::DataSet& input)
+VISKORES_CONT viskores::cont::DataSet HistogramMPI::DoExecute(const viskores::cont::DataSet& input)
 {
   const auto& fieldArray = this->GetFieldFromDataSet(input).GetData();
 
@@ -117,23 +126,24 @@ VTKM_CONT vtkm::cont::DataSet HistogramMPI::DoExecute(const vtkm::cont::DataSet&
     }
     else
     {
-      auto handle = vtkm::cont::FieldRangeGlobalCompute(
+      auto handle = viskores::cont::FieldRangeGlobalCompute(
         input, this->GetActiveFieldName(), this->GetActiveFieldAssociation());
       if (handle.GetNumberOfValues() != 1)
       {
-        throw vtkm::cont::ErrorFilterExecution("expecting scalar field.");
+        throw viskores::cont::ErrorFilterExecution("expecting scalar field.");
       }
       this->ComputedRange = handle.ReadPortal().Get(0);
     }
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Id> binArray;
+  viskores::cont::ArrayHandle<viskores::Id> binArray;
 
-  auto resolveType = [&](const auto& concrete) {
+  auto resolveType = [&](const auto& concrete)
+  {
     using T = typename std::decay_t<decltype(concrete)>::ValueType;
     T delta;
 
-    vtkm::worklet::FieldHistogram worklet;
+    viskores::worklet::FieldHistogram worklet;
     worklet.Run(concrete,
                 this->NumberOfBins,
                 static_cast<T>(this->ComputedRange.Min),
@@ -141,23 +151,22 @@ VTKM_CONT vtkm::cont::DataSet HistogramMPI::DoExecute(const vtkm::cont::DataSet&
                 delta,
                 binArray);
 
-    this->BinDelta = static_cast<vtkm::Float64>(delta);
+    this->BinDelta = static_cast<viskores::Float64>(delta);
   };
 
-  fieldArray
-    .CastAndCallForTypesWithFloatFallback<vtkm::TypeListFieldScalar, VTKM_DEFAULT_STORAGE_LIST>(
-      resolveType);
+  fieldArray.CastAndCallForTypesWithFloatFallback<viskores::TypeListFieldScalar,
+                                                  VISKORES_DEFAULT_STORAGE_LIST>(resolveType);
 
-  vtkm::cont::DataSet output;
+  viskores::cont::DataSet output;
   output.AddField(
-    { this->GetOutputFieldName(), vtkm::cont::Field::Association::WholeDataSet, binArray });
+    { this->GetOutputFieldName(), viskores::cont::Field::Association::WholeDataSet, binArray });
 
   // The output is a "summary" of the input, no need to map fields
   return output;
 }
 
-VTKM_CONT vtkm::cont::PartitionedDataSet HistogramMPI::DoExecutePartitions(
-  const vtkm::cont::PartitionedDataSet& input)
+VISKORES_CONT viskores::cont::PartitionedDataSet HistogramMPI::DoExecutePartitions(
+  const viskores::cont::PartitionedDataSet& input)
 {
   this->PreExecute(input);
   auto result = this->Filter::DoExecutePartitions(input);
@@ -166,7 +175,7 @@ VTKM_CONT vtkm::cont::PartitionedDataSet HistogramMPI::DoExecutePartitions(
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void HistogramMPI::PreExecute(const vtkm::cont::PartitionedDataSet& input)
+inline VISKORES_CONT void HistogramMPI::PreExecute(const viskores::cont::PartitionedDataSet& input)
 {
   if (this->Range.IsNonEmpty())
   {
@@ -174,34 +183,34 @@ inline VTKM_CONT void HistogramMPI::PreExecute(const vtkm::cont::PartitionedData
   }
   else
   {
-    auto handle = vtkm::cont::FieldRangeGlobalCompute(
+    auto handle = viskores::cont::FieldRangeGlobalCompute(
       input, this->GetActiveFieldName(), this->GetActiveFieldAssociation());
     if (handle.GetNumberOfValues() != 1)
     {
-      throw vtkm::cont::ErrorFilterExecution("expecting scalar field.");
+      throw viskores::cont::ErrorFilterExecution("expecting scalar field.");
     }
     this->ComputedRange = handle.ReadPortal().Get(0);
   }
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT void HistogramMPI::PostExecute(const vtkm::cont::PartitionedDataSet&,
-                                                vtkm::cont::PartitionedDataSet& result)
+inline VISKORES_CONT void HistogramMPI::PostExecute(const viskores::cont::PartitionedDataSet&,
+                                                    viskores::cont::PartitionedDataSet& result)
 {
   // iterate and compute HistogramMPI for each local block.
   detail::DistributedHistogram helper(result.GetNumberOfPartitions());
-  for (vtkm::Id cc = 0; cc < result.GetNumberOfPartitions(); ++cc)
+  for (viskores::Id cc = 0; cc < result.GetNumberOfPartitions(); ++cc)
   {
     auto& ablock = result.GetPartition(cc);
     helper.SetLocalHistogram(cc, ablock.GetField(this->GetOutputFieldName()));
   }
 
-  vtkm::cont::DataSet output;
-  vtkm::cont::Field rfield(this->GetOutputFieldName(),
-                           vtkm::cont::Field::Association::WholeDataSet,
-                           helper.ReduceAll(this->NumberOfBins));
+  viskores::cont::DataSet output;
+  viskores::cont::Field rfield(this->GetOutputFieldName(),
+                               viskores::cont::Field::Association::WholeDataSet,
+                               helper.ReduceAll(this->NumberOfBins));
   output.AddField(rfield);
 
-  result = vtkm::cont::PartitionedDataSet(output);
+  result = viskores::cont::PartitionedDataSet(output);
 }
 } // namespace example

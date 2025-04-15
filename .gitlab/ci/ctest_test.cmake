@@ -1,3 +1,11 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
 ##=============================================================================
 ##
 ##  Copyright (c) Kitware, Inc.
@@ -61,7 +69,7 @@ ctest_test(APPEND
   )
   message(STATUS "ctest_test RETURN_VALUE: ${test_result}")
 
-if(VTKm_ENABLE_PERFORMANCE_TESTING)
+if(Viskores_ENABLE_PERFORMANCE_TESTING)
   file(GLOB note_files
        "${CTEST_BINARY_DIRECTORY}/benchmark_*.stdout"
        "${CTEST_BINARY_DIRECTORY}/compare_*.stdout"

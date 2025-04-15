@@ -1,9 +1,0 @@
-NAME
-  vtkm_filter_scalar_topology
-GROUPS
-  Filters
-DEPENDS
-  vtkm_filter_core
-TEST_DEPENDS
-  vtkm_io
-  vtkm_source

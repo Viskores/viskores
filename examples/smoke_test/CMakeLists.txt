@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -9,14 +17,14 @@
 ##============================================================================
 
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
-project(VTKmSmokeTest CXX)
+project(ViskoresSmokeTest CXX)
 include(CTest)
 
-find_package(VTKm REQUIRED)
+find_package(Viskores REQUIRED)
 
-if(TARGET vtkm::source)
+if(TARGET viskores::source)
   add_executable(smoke_test smoke_test.cxx)
-  target_link_libraries(smoke_test PRIVATE vtkm::source)
+  target_link_libraries(smoke_test PRIVATE viskores::source)
 
   # Only add this test when this a standalone project
   if (PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)

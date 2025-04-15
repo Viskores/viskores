@@ -174,8 +174,7 @@ demonstrated/tested in `vtkm/testing/TestingGeometry.h`:
   plus the ray's `Direction`, a unit-length vector.
   If the third template parameter (IsTwoSided) is true, then
   the ray serves as an infinite line. Otherwise, the ray will
-
-
+  only report intersections in its positive halfspace.
 + `LineSegment<CoordType, Dimension>`.
   Instances of this struct represent a finite line segment
   in a 2-D plane or in a 3-D space, depending on the integer

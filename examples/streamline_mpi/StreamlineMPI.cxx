@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,22 +16,25 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/Particle.h>
-#include <vtkm/cont/AssignerPartitionedDataSet.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/EnvironmentTracker.h>
-#include <vtkm/cont/Field.h>
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/filter/flow/ParticleAdvection.h>
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/Particle.h>
+#include <viskores/cont/AssignerPartitionedDataSet.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/EnvironmentTracker.h>
+#include <viskores/cont/Field.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/cont/PartitionedDataSet.h>
+#include <viskores/filter/flow/ParticleAdvection.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
 #include <mpi.h>
-#include <vtkm/thirdparty/diy/diy.h>
-#include <vtkm/thirdparty/diy/mpi-cast.h>
+#include <viskores/thirdparty/diy/diy.h>
+#include <viskores/thirdparty/diy/mpi-cast.h>
 
-void LoadData(std::string& fname, std::vector<vtkm::cont::DataSet>& dataSets, int rank, int nRanks)
+void LoadData(std::string& fname,
+              std::vector<viskores::cont::DataSet>& dataSets,
+              int rank,
+              int nRanks)
 {
   std::string buff;
   std::ifstream is;
@@ -57,17 +68,17 @@ void LoadData(std::string& fname, std::vector<vtkm::cont::DataSet>& dataSets, in
     std::getline(is, buff);
     if (i >= b0 && i < b1)
     {
-      vtkm::cont::DataSet ds;
+      viskores::cont::DataSet ds;
       std::string vtkFile = dir + "/" + buff;
-      vtkm::io::VTKDataSetReader reader(vtkFile);
+      viskores::io::VTKDataSetReader reader(vtkFile);
       ds = reader.ReadDataSet();
       auto f = ds.GetField("grad").GetData();
-      vtkm::cont::ArrayHandle<vtkm::Vec<double, 3>> fieldArray;
+      viskores::cont::ArrayHandle<viskores::Vec<double, 3>> fieldArray;
       f.AsArrayHandle(fieldArray);
       int n = fieldArray.GetNumberOfValues();
       auto portal = fieldArray.WritePortal();
       for (int ii = 0; ii < n; ii++)
-        portal.Set(ii, vtkm::Vec<double, 3>(1, 0, 0));
+        portal.Set(ii, viskores::Vec<double, 3>(1, 0, 0));
 
       dataSets.push_back(ds);
     }
@@ -75,7 +86,7 @@ void LoadData(std::string& fname, std::vector<vtkm::cont::DataSet>& dataSets, in
 }
 
 // Example computing streamlines.
-// An example vector field is available in the vtk-m data directory: rotate-vectors.vtk
+// An example vector field is available in the viskores data directory: rotate-vectors.vtk
 // Example usage:
 //   this will advect 200 particles 50 steps using a step size of 0.05
 //
@@ -85,26 +96,27 @@ void LoadData(std::string& fname, std::vector<vtkm::cont::DataSet>& dataSets, in
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
-  auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
   int rank = comm.rank();
   int size = comm.size();
 
   std::string dataFile = argv[1];
-  std::vector<vtkm::cont::DataSet> dataSets;
+  std::vector<viskores::cont::DataSet> dataSets;
   LoadData(dataFile, dataSets, rank, size);
 
-  vtkm::filter::flow::ParticleAdvection pa;
+  viskores::filter::flow::ParticleAdvection pa;
 
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
-  seedArray = vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.1f, .1f, .9f), 0),
-                                             vtkm::Particle(vtkm::Vec3f(.1f, .6f, .6f), 1),
-                                             vtkm::Particle(vtkm::Vec3f(.1f, .9f, .1f), 2) });
+  viskores::cont::ArrayHandle<viskores::Particle> seedArray;
+  seedArray =
+    viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.1f, .1f, .9f), 0),
+                                       viskores::Particle(viskores::Vec3f(.1f, .6f, .6f), 1),
+                                       viskores::Particle(viskores::Vec3f(.1f, .9f, .1f), 2) });
   pa.SetStepSize(0.001f);
   pa.SetNumberOfSteps(10000);
   pa.SetSeeds(seedArray);
   pa.SetActiveField("grad");
 
-  vtkm::cont::PartitionedDataSet pds(dataSets);
+  viskores::cont::PartitionedDataSet pds(dataSets);
   auto output = pa.Execute(pds);
   output.PrintSummary(std::cout);
 

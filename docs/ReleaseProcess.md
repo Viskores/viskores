@@ -4,7 +4,7 @@ Release Process
 ## Prologue
 
 This document is divided in two parts:
- - A overview of the branching and release scheme used in VTK-m.
+ - A overview of the branching and release scheme used in Viskores.
  - A concise instructions to get started with the release process.
 
 The actual release process can be found at
@@ -50,7 +50,7 @@ here:
 
 *   2e9230d (master) Merge branch 'update'
 |\
-| * 59279dd (HEAD -> release, tag: v1.0.1) v1.0.1 2nd release of VTKm
+| * 59279dd (HEAD -> release, tag: v1.0.1) v1.0.1 2nd release of Viskores
 | * b60611b Add release notes for v1.0.1
 | *   9d26451 Merge branch 'master' into update
 | |\
@@ -66,7 +66,7 @@ here:
 * | e53df9e Unrelated commit
 * | ec6b481 Unrelated commit
 |/
-* 0742a47 (tag: v1.0.0) v1.0.0 1st release of VTKm
+* 0742a47 (tag: v1.0.0) v1.0.0 1st release of Viskores
 * 4fe993c Add release notes for v1.0.0
 ```
 
@@ -76,17 +76,17 @@ shown in here:
 ```git
 # git log --graph --decorate --oneline --first-parent release
 
-* 59279dd (HEAD -> release, tag: v1.0.1) v1.0.1 2nd release of VTKm
+* 59279dd (HEAD -> release, tag: v1.0.1) v1.0.1 2nd release of Viskores
 * b60611b Add release notes for v1.0.1
 * 9d26451 Merge branch 'master' into update
 * f2c4eb6 Merge branch 'hotfix' into release
-* 0742a47 (tag: v1.0.0) v1.0.0 1st release of VTKm
+* 0742a47 (tag: v1.0.0) v1.0.0 1st release of Viskores
 * 4fe993c Add release notes for v1.0.0
 ```
 
 # Get started with a new Release
 
-1. Go to `https://gitlab.kitware.com/vtkm/vtk-m/` and open a new issue.
+1. Go to `https://github.com/Viskores/viskores/` and open a new issue.
 2. Generate and copy to clipboard the release script (-rcN is optional):
 ```
 # Download pyexpander (Available in pip)

@@ -1,3 +1,11 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
 ##=============================================================================
 ##
 ##  Copyright (c) Kitware, Inc.
@@ -22,10 +30,10 @@
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 project(MeshQuality CXX)
 
-#Find the VTK-m package
-find_package(VTKm REQUIRED QUIET)
+#Find the Viskores package
+find_package(Viskores REQUIRED QUIET)
 
-if(TARGET vtkm::filter_mesh_info AND TARGET vtkm::io)
+if(TARGET viskores::filter_mesh_info AND TARGET viskores::io)
   add_executable(MeshQuality MeshQuality.cxx)
-  target_link_libraries(MeshQuality PRIVATE vtkm::filter_mesh_info vtkm::io)
+  target_link_libraries(MeshQuality PRIVATE viskores::filter_mesh_info viskores::io)
 endif()

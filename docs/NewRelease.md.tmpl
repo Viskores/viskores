@@ -1,5 +1,5 @@
 <!--
-This template is for tracking a release of VTKm.
+This template is for tracking a release of Viskores.
 
 Process this file with the pyexpander script specifying the desired `version`:
 
@@ -15,13 +15,13 @@ $py(RC="".join(version.partition("-")[1:3]))\
 $if(PATCH == 0 and RC == "")\
 ## Prerequisites
 
-- [ ] Make sure that the current VTK-m release branch builds in VTK.
-- [ ] Make sure that the current VTK-m release branch builds in ECP Ascent.
+- [ ] Make sure that the current Viskores release branch builds in VTK.
+- [ ] Make sure that the current Viskores release branch builds in ECP Ascent.
 
 $endif\
-## Update VTK-m
+## Update Viskores
 
-- [ ] Update `release` branch for **vtk-m** and create update branch
+- [ ] Update `release` branch for **viskores** and create update branch
 ```
 git fetch origin
 git checkout release
@@ -29,7 +29,7 @@ git merge --ff-only origin/release
 git submodule update --recursive --init
 ```
 $if(PATCH == 0 and RC == "-rc1")\
-- [ ] Update `master` branch for **vtk-m** and create update branch
+- [ ] Update `master` branch for **viskores** and create update branch
 ```
 git fetch origin
 git checkout master
@@ -40,7 +40,7 @@ $endif\
 
 ## Create update branch
 
-- [ ] Freeze the release branch (In Gitlab VTK-m page)
+- [ ] Freeze the release branch (In Gitlab Viskores page)
   - Settings/Repository/Protected Branches: Release; "allowed to push:No one"
 - [ ] Create update branch `git checkout -b update-to-$(VERSION)`
 $if(PATCH == 0 and RC == "-rc1")\
@@ -85,13 +85,13 @@ git add version.txt
 
 # Create commit with the following template
 # Nth is counted by the number of final release tags
-git commit -m '$(VERSION)$(RC) is our Nth official release of VTK-m.
+git commit -m '$(VERSION)$(RC) is our Nth official release of Viskores.
 
-The major changes to VTK-m from (previous release) can be found in:
+The major changes to Viskores from (previous release) can be found in:
   docs/changelog/$(VERSION)/release-notes.md' version.txt
 ```
 
-- [ ] `git tag -a -m 'VTKm $(VERSION)$(RC)' v$(VERSION)$(RC) HEAD`
+- [ ] `git tag -a -m 'Viskores $(VERSION)$(RC)' v$(VERSION)$(RC) HEAD`
 - Integrate changes to `release` branch
   - [ ] Create a MR using the [release-mr script][1]
         (see [notes](#notes-about-update-mr)).
@@ -106,14 +106,14 @@ $endif\
   - [ ] `Do: merge`
 - Push tags
   - [ ] `git push origin v$(VERSION)$(RC)`
-- [ ] Unfreeze the release branch (In Gitlab VTK-m page)
+- [ ] Unfreeze the release branch (In Gitlab Viskores page)
   - Settings/Repository/Protected Branches: Release; "allowed to push: Maintainers"
 
 ## Update Packages
-- [ ] Update Spack package: https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/vtk-m/package.py
-- [ ] Update Conda-forge package: https://github.com/conda-forge/vtk-m-feedstock
+- [ ] Update Spack package: https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/viskores/package.py
+- [ ] Update Conda-forge package: https://github.com/conda-forge/viskores-feedstock
 $if(RC == "")\
-- [ ] Update OBS package: https://build.opensuse.org/package/show/science/vtk-m
+- [ ] Update OBS package: https://build.opensuse.org/package/show/science/viskores
 $endif\
 
 ## Post-release
@@ -125,9 +125,9 @@ $endif\
 - [ ] Copy the contents of docs/changelog/$(VERSION)/release-notes.md to
       the GitLab release.
 $if(PATCH == 0 and RC == "")\
-- [ ] Tag new version of the [VTK-m User Guide][2].
+- [ ] Tag new version of the [Viskores User Guide][2].
 $endif\
-- [ ] Post an [Email Announcements](#email-announcements) VTK-m mailing list.
+- [ ] Post an [Email Announcements](#email-announcements) Viskores mailing list.
 $if(RC == "")\
 - [ ] Update this release Date, Delay and End-of-Support fields in `docs/ReleaseRoadmap.md`.
 $endif\
@@ -135,18 +135,18 @@ $if(PATCH == 0)\
 - [ ] Ensure that the content of `version.txt` in master is `$(MAJOR).$(MINOR).9999`.
 $endif\
 
-## Update VTK-m in VTK
+## Update Viskores in VTK
 
-VTK ships a particular VTK-m release in each of its releases, we need to open a
-merge-request update the VTK-m commit in VTK as soon as possible even if the
-newly VTK-m version does not correspond with the scheduled for the following VTK
+VTK ships a particular Viskores release in each of its releases, we need to open a
+merge-request update the Viskores commit in VTK as soon as possible even if the
+newly Viskores version does not correspond with the scheduled for the following VTK
 release, the reason for opening the merge-request is that:
 
 - We can test how compatible it is with VTK giving us the change to address
   those issues in the following releases.
-- We do not forget to update VTK-m commit in VTK when the time comes
+- We do not forget to update Viskores commit in VTK when the time comes
 
- - [ ] Update VTK-m submodule in VTK using: `git submodule update --remote`
+ - [ ] Update Viskores submodule in VTK using: `git submodule update --remote`
 
 ---
 
@@ -159,14 +159,14 @@ Construct a `docs/changelog/$(VERSION)/release-notes.md` file
 Use the following template for `release-notes.md`:
 
 ```md
-VTK-m N Release Notes
+Viskores N Release Notes
 =======================
 
 <!-- if is a patch release -->
 
 | Merge request description                                           | Merge request id |
 | ------------------------------------------------------------------- | ---------------- |
-| Update the link to register with the VTK-m dashboard                | !2629            |
+| Update the link to register with the Viskores dashboard                | !2629            |
 .
 .
 .
@@ -210,20 +210,20 @@ changes in core 1
 For each individual file in `docs/changelog` move them
 to the relevant `release-notes` section.
 
-  - Make sure each title and entry in the table of contents use full vtkm names
-    `vtkm::cont::Field` instead of Field.
+  - Make sure each title and entry in the table of contents use full viskores names
+    `viskores::cont::Field` instead of Field.
   - Make sure each title and entry DOESN'T have a period at the end.
   - Make sure any sub-heading as part of the changelog is transformed from `##`
     to `###`.
   - Entries for `Core` are reserved for large changes that significantly improve
-    VTK-m users life, or are major breaking changes.
+    Viskores users life, or are major breaking changes.
 
 ## Notes about update-mr
 
 [`update-mr` script][1] has the following requirements to work:
 
 1. It needs a token to for authentication (reach @ben.boeckel for this)
-2. It needs `kwrobot.release.vtkm` to have developer perms in your vtk-m repo.
+2. It needs `kwrobot.release.viskores` to have developer perms in your viskores repo.
 
 Lastly, `update-mr` can be used multiple times with different commit in the same
 branch.
@@ -240,7 +240,7 @@ a developing release.
 
 ## Email Announcements
 
-Announce the new VTK-m release on the mailing list. You will need to compute
+Announce the new Viskores release on the mailing list. You will need to compute
 the number of merge requests, changelog entries, and maybe # of authors.
 
 Example to compute the number of unique committers
@@ -259,12 +259,12 @@ A standard template to use is:
 ```
 Hi All,
 
-VTK-m 1.5.0 is now released, and a special thanks to everyone that has
-contributed to VTK-m since our last release. The 1.5.0 release contains
+Viskores 1.5.0 is now released, and a special thanks to everyone that has
+contributed to Viskores since our last release. The 1.5.0 release contains
 over 100000 merge requests, and 100000 entries to the changelog .
 
 Below are all the entries in the changelog, with more details at (
-https://gitlab.kitware.com/vtk/vtk-m/-/tags/v$(VERSION)) or in the vtkm
+https://github.com/Viskores/viskores/-/tags/v$(VERSION)) or in the viskores
 repository at `docs/$(VERSION)/release-notes.md`
 
 $if(int(PATCH) > 0)\
@@ -284,7 +284,7 @@ $endif\
 ```
 
 [1]:  https://gitlab.kitware.com/utils/release-utils/-/blob/master/release-mr.py
-[2]:  https://gitlab.kitware.com/vtk/vtk-m-user-guide
+[2]:  https://github.com/Viskores/viskores-user-guide
 
 @ben.boeckel  
 @vbolea  

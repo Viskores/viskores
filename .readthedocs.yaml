@@ -1,3 +1,11 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
 ##=============================================================================
 ##
 ##  Copyright (c) Kitware, Inc.
@@ -19,21 +27,15 @@ build:
   apt_packages:
   - cmake
   - make
-
-
   tools:
     python: '3.10'
   jobs:
     post_install:
-
-
-
-
-
-
-    - cmake -B build -S . -DVTKm_ENABLE_DOCUMENTATION=ON -DVTKm_ENABLE_USERS_GUIDE=ON -DVTKm_USERS_GUIDE_INCLUDE_TODOS=OFF
-    - cmake --build build --target VTKmDoxygenDocs
-    - cp -f ./build/docs/users-guide/VTKmUsersGuideHTML.cache/conf.py docs/users-guide/conf.py
+    - git submodule init
+    - git submodule update
+    - cmake -B build -S . -DViskores_ENABLE_DOCUMENTATION=ON -DViskores_ENABLE_USERS_GUIDE=ON -DViskores_USERS_GUIDE_INCLUDE_TODOS=OFF
+    - cmake --build build --target ViskoresDoxygenDocs
+    - cp -f ./build/docs/users-guide/ViskoresUsersGuideHTML.cache/conf.py docs/users-guide/conf.py
 
 sphinx:
   configuration: docs/users-guide/conf.py

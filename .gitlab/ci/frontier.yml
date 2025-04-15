@@ -1,3 +1,11 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
 ##=============================================================================
 ##
 ##  Copyright (c) Kitware, Inc.
@@ -48,11 +56,10 @@ default:
       cmake
       rocm/5.4.3
       git
-
-
+      git-lfs
       ninja
     OLCF_SERVICE_ACCOUNT: "ums033_auser"
-    VTKM_SETTINGS: kokkos+hip+gfx90a+frontier+ccache+no_rendering
+    VISKORES_SETTINGS: kokkos+hip+gfx90a+frontier+ccache+no_rendering
   interruptible: true
 
 setup_modules:
@@ -66,8 +73,7 @@ setup_modules:
     GIT_STRATEGY: none
   script:
     - module load DefApps
-
-
+    - module load git-lfs
     - module save
 
 .setup_env_ecpci: &setup_env_ecpci |

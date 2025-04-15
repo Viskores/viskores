@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -10,19 +18,19 @@
 
 #include "Benchmarker.h"
 
-#include <vtkm/TypeTraits.h>
+#include <viskores/TypeTraits.h>
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/Timer.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/cont/Timer.h>
 
-#include <vtkm/source/Tangle.h>
+#include <viskores/source/Tangle.h>
 
-#include <vtkm/rendering/Camera.h>
-#include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/raytracing/Ray.h>
-#include <vtkm/rendering/raytracing/RayTracer.h>
-#include <vtkm/rendering/raytracing/TriangleExtractor.h>
+#include <viskores/rendering/Camera.h>
+#include <viskores/rendering/CanvasRayTracer.h>
+#include <viskores/rendering/raytracing/Ray.h>
+#include <viskores/rendering/raytracing/RayTracer.h>
+#include <viskores/rendering/raytracing/TriangleExtractor.h>
 
 #include <sstream>
 #include <string>
@@ -32,67 +40,68 @@ namespace
 {
 
 // Hold configuration state (e.g. active device)
-vtkm::cont::InitializeResult Config;
+viskores::cont::InitializeResult Config;
 
 void BenchRayTracing(::benchmark::State& state)
 {
-  vtkm::source::Tangle maker;
+  viskores::source::Tangle maker;
   maker.SetPointDimensions({ 128, 128, 128 });
-  vtkm::cont::DataSet dataset = maker.Execute();
-  vtkm::cont::CoordinateSystem coords = dataset.GetCoordinateSystem();
+  viskores::cont::DataSet dataset = maker.Execute();
+  viskores::cont::CoordinateSystem coords = dataset.GetCoordinateSystem();
 
-  vtkm::rendering::Camera camera;
-  vtkm::Bounds bounds = dataset.GetCoordinateSystem().GetBounds();
+  viskores::rendering::Camera camera;
+  viskores::Bounds bounds = dataset.GetCoordinateSystem().GetBounds();
   camera.ResetToBounds(bounds);
 
-  vtkm::cont::UnknownCellSet cellset = dataset.GetCellSet();
+  viskores::cont::UnknownCellSet cellset = dataset.GetCellSet();
 
-  vtkm::rendering::raytracing::TriangleExtractor triExtractor;
+  viskores::rendering::raytracing::TriangleExtractor triExtractor;
   triExtractor.ExtractCells(cellset);
 
-  auto triIntersector = std::make_shared<vtkm::rendering::raytracing::TriangleIntersector>(
-    vtkm::rendering::raytracing::TriangleIntersector());
+  auto triIntersector = std::make_shared<viskores::rendering::raytracing::TriangleIntersector>(
+    viskores::rendering::raytracing::TriangleIntersector());
 
-  vtkm::rendering::raytracing::RayTracer tracer;
+  viskores::rendering::raytracing::RayTracer tracer;
   triIntersector->SetData(coords, triExtractor.GetTriangles());
   tracer.AddShapeIntersector(triIntersector);
 
-  vtkm::rendering::CanvasRayTracer canvas(1920, 1080);
-  vtkm::rendering::raytracing::Camera rayCamera;
-  rayCamera.SetParameters(camera, vtkm::Int32(canvas.GetWidth()), vtkm::Int32(canvas.GetHeight()));
-  vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
+  viskores::rendering::CanvasRayTracer canvas(1920, 1080);
+  viskores::rendering::raytracing::Camera rayCamera;
+  rayCamera.SetParameters(
+    camera, viskores::Int32(canvas.GetWidth()), viskores::Int32(canvas.GetHeight()));
+  viskores::rendering::raytracing::Ray<viskores::Float32> rays;
   rayCamera.CreateRays(rays, coords.GetBounds());
 
   rays.Buffers.at(0).InitConst(0.f);
 
-  vtkm::cont::Field field = dataset.GetField("tangle");
-  vtkm::Range range = field.GetRange().ReadPortal().Get(0);
+  viskores::cont::Field field = dataset.GetField("tangle");
+  viskores::Range range = field.GetRange().ReadPortal().Get(0);
 
   tracer.SetField(field, range);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> temp;
-  vtkm::cont::ColorTable table("cool to warm");
+  viskores::cont::ArrayHandle<viskores::Vec4ui_8> temp;
+  viskores::cont::ColorTable table("cool to warm");
   table.Sample(100, temp);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec4f_32> colors;
+  viskores::cont::ArrayHandle<viskores::Vec4f_32> colors;
   colors.Allocate(100);
   auto portal = colors.WritePortal();
   auto colorPortal = temp.ReadPortal();
-  constexpr vtkm::Float32 conversionToFloatSpace = (1.0f / 255.0f);
-  for (vtkm::Id i = 0; i < 100; ++i)
+  constexpr viskores::Float32 conversionToFloatSpace = (1.0f / 255.0f);
+  for (viskores::Id i = 0; i < 100; ++i)
   {
     auto color = colorPortal.Get(i);
-    vtkm::Vec4f_32 t(color[0] * conversionToFloatSpace,
-                     color[1] * conversionToFloatSpace,
-                     color[2] * conversionToFloatSpace,
-                     color[3] * conversionToFloatSpace);
+    viskores::Vec4f_32 t(color[0] * conversionToFloatSpace,
+                         color[1] * conversionToFloatSpace,
+                         color[2] * conversionToFloatSpace,
+                         color[3] * conversionToFloatSpace);
     portal.Set(i, t);
   }
 
   tracer.SetColorMap(colors);
   tracer.Render(rays);
 
-  vtkm::cont::Timer timer{ Config.Device };
+  viskores::cont::Timer timer{ Config.Device };
   for (auto _ : state)
   {
     (void)_;
@@ -105,30 +114,30 @@ void BenchRayTracing(::benchmark::State& state)
   }
 }
 
-VTKM_BENCHMARK(BenchRayTracing);
+VISKORES_BENCHMARK(BenchRayTracing);
 
-} // end namespace vtkm::benchmarking
+} // end namespace viskores::benchmarking
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto opts = viskores::cont::InitializeOptions::RequireDevice;
 
   std::vector<char*> args(argv, argv + argc);
-  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+  viskores::bench::detail::InitializeArgs(&argc, args, opts);
 
-  // Parse VTK-m options:
-  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+  // Parse Viskores options:
+  Config = viskores::cont::Initialize(argc, args.data(), opts);
 
   // This occurs when it is help
-  if (opts == vtkm::cont::InitializeOptions::None)
+  if (opts == viskores::cont::InitializeOptions::None)
   {
     std::cout << Config.Usage << std::endl;
   }
   else
   {
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+    viskores::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
+  VISKORES_EXECUTE_BENCHMARKS(argc, args.data());
 }

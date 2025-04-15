@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,13 +15,13 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/CellShape.h>
-#include <vtkm/CellTraits.h>
-#include <vtkm/VectorAnalysis.h>
+#include <viskores/CellShape.h>
+#include <viskores/CellTraits.h>
+#include <viskores/VectorAnalysis.h>
 
-#include <vtkm/exec/FunctorBase.h>
+#include <viskores/exec/FunctorBase.h>
 
-#include <vtkm/testing/Testing.h>
+#include <viskores/testing/Testing.h>
 
 namespace CellShapesExamples
 {
@@ -21,15 +29,15 @@ namespace CellShapesExamples
 ////
 //// BEGIN-EXAMPLE CellShapeIdToTag
 ////
-void CellFunction(vtkm::CellShapeTagTriangle)
+void CellFunction(viskores::CellShapeTagTriangle)
 {
   std::cout << "In CellFunction for triangles." << std::endl;
 }
 
 void DoSomethingWithACell()
 {
-  // Calls CellFunction overloaded with a vtkm::CellShapeTagTriangle.
-  CellFunction(vtkm::CellShapeIdToTag<vtkm::CELL_SHAPE_TRIANGLE>::Tag());
+  // Calls CellFunction overloaded with a viskores::CellShapeTagTriangle.
+  CellFunction(viskores::CellShapeIdToTag<viskores::CELL_SHAPE_TRIANGLE>::Tag());
 }
 ////
 //// END-EXAMPLE CellShapeIdToTag
@@ -42,14 +50,14 @@ namespace detail
 {
 
 template<typename PointCoordinatesVector, typename WorkletType>
-VTKM_EXEC_CONT typename PointCoordinatesVector::ComponentType CellNormalImpl(
+VISKORES_EXEC_CONT typename PointCoordinatesVector::ComponentType CellNormalImpl(
   const PointCoordinatesVector& pointCoordinates,
-  vtkm::CellTopologicalDimensionsTag<2>,
+  viskores::CellTopologicalDimensionsTag<2>,
   const WorkletType& worklet)
 {
   if (pointCoordinates.GetNumberOfComponents() >= 3)
   {
-    return vtkm::TriangleNormal(
+    return viskores::TriangleNormal(
       pointCoordinates[0], pointCoordinates[1], pointCoordinates[2]);
   }
   else
@@ -60,11 +68,11 @@ VTKM_EXEC_CONT typename PointCoordinatesVector::ComponentType CellNormalImpl(
 }
 
 template<typename PointCoordinatesVector,
-         vtkm::IdComponent Dimensions,
+         viskores::IdComponent Dimensions,
          typename WorkletType>
-VTKM_EXEC_CONT typename PointCoordinatesVector::ComponentType CellNormalImpl(
+VISKORES_EXEC_CONT typename PointCoordinatesVector::ComponentType CellNormalImpl(
   const PointCoordinatesVector&,
-  vtkm::CellTopologicalDimensionsTag<Dimensions>,
+  viskores::CellTopologicalDimensionsTag<Dimensions>,
   const WorkletType& worklet)
 {
   worklet.RaiseError("Only polygons supported for cell normals.");
@@ -74,26 +82,26 @@ VTKM_EXEC_CONT typename PointCoordinatesVector::ComponentType CellNormalImpl(
 } // namespace detail
 
 template<typename CellShape, typename PointCoordinatesVector, typename WorkletType>
-VTKM_EXEC_CONT typename PointCoordinatesVector::ComponentType CellNormal(
+VISKORES_EXEC_CONT typename PointCoordinatesVector::ComponentType CellNormal(
   CellShape,
   const PointCoordinatesVector& pointCoordinates,
   const WorkletType& worklet)
 {
   return detail::CellNormalImpl(
     pointCoordinates,
-    typename vtkm::CellTraits<CellShape>::TopologicalDimensionsTag(),
+    typename viskores::CellTraits<CellShape>::TopologicalDimensionsTag(),
     worklet);
 }
 
 template<typename PointCoordinatesVector, typename WorkletType>
-VTKM_EXEC_CONT typename PointCoordinatesVector::ComponentType CellNormal(
-  vtkm::CellShapeTagGeneric shape,
+VISKORES_EXEC_CONT typename PointCoordinatesVector::ComponentType CellNormal(
+  viskores::CellShapeTagGeneric shape,
   const PointCoordinatesVector& pointCoordinates,
   const WorkletType& worklet)
 {
   switch (shape.Id)
   {
-    vtkmGenericCellShapeMacro(
+    viskoresGenericCellShapeMacro(
       return CellNormal(CellShapeTag(), pointCoordinates, worklet));
     default:
       worklet.RaiseError("Unknown cell type.");
@@ -104,7 +112,7 @@ VTKM_EXEC_CONT typename PointCoordinatesVector::ComponentType CellNormal(
 //// END-EXAMPLE GenericCellNormal
 ////
 
-struct FakeWorklet : vtkm::exec::FunctorBase
+struct FakeWorklet : viskores::exec::FunctorBase
 {
 };
 
@@ -115,36 +123,37 @@ void Run()
 
   std::cout << "Function with dynamic lookup of cell shape." << std::endl;
 
-  vtkm::Vec<vtkm::Vec3f, 3> pointCoordinates;
-  pointCoordinates[0] = vtkm::Vec3f(0.0f, 0.0f, 0.0f);
-  pointCoordinates[1] = vtkm::Vec3f(1.0f, 0.0f, 0.0f);
-  pointCoordinates[2] = vtkm::Vec3f(0.0f, 1.0f, 0.0f);
+  viskores::Vec<viskores::Vec3f, 3> pointCoordinates;
+  pointCoordinates[0] = viskores::Vec3f(0.0f, 0.0f, 0.0f);
+  pointCoordinates[1] = viskores::Vec3f(1.0f, 0.0f, 0.0f);
+  pointCoordinates[2] = viskores::Vec3f(0.0f, 1.0f, 0.0f);
 
-  vtkm::Vec3f expectedNormal(0.0f, 0.0f, 1.0f);
+  viskores::Vec3f expectedNormal(0.0f, 0.0f, 1.0f);
 
   char errorBuffer[256];
   errorBuffer[0] = '\0';
-  vtkm::exec::internal::ErrorMessageBuffer errorMessage(errorBuffer, 256);
+  viskores::exec::internal::ErrorMessageBuffer errorMessage(errorBuffer, 256);
   FakeWorklet worklet;
   worklet.SetErrorMessageBuffer(errorMessage);
 
-  vtkm::Vec3f normal =
-    CellNormal(vtkm::CellShapeTagTriangle(), pointCoordinates, worklet);
-  VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), "Error finding normal.");
-  VTKM_TEST_ASSERT(test_equal(normal, expectedNormal), "Bad normal.");
+  viskores::Vec3f normal =
+    CellNormal(viskores::CellShapeTagTriangle(), pointCoordinates, worklet);
+  VISKORES_TEST_ASSERT(!errorMessage.IsErrorRaised(), "Error finding normal.");
+  VISKORES_TEST_ASSERT(test_equal(normal, expectedNormal), "Bad normal.");
 
-  normal = CellNormal(
-    vtkm::CellShapeTagGeneric(vtkm::CELL_SHAPE_TRIANGLE), pointCoordinates, worklet);
-  VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), "Error finding normal.");
-  VTKM_TEST_ASSERT(test_equal(normal, expectedNormal), "Bad normal.");
+  normal = CellNormal(viskores::CellShapeTagGeneric(viskores::CELL_SHAPE_TRIANGLE),
+                      pointCoordinates,
+                      worklet);
+  VISKORES_TEST_ASSERT(!errorMessage.IsErrorRaised(), "Error finding normal.");
+  VISKORES_TEST_ASSERT(test_equal(normal, expectedNormal), "Bad normal.");
 
-  CellNormal(vtkm::CellShapeTagLine(), pointCoordinates, worklet);
-  VTKM_TEST_ASSERT(errorMessage.IsErrorRaised(), "Expected error not raised.");
+  CellNormal(viskores::CellShapeTagLine(), pointCoordinates, worklet);
+  VISKORES_TEST_ASSERT(errorMessage.IsErrorRaised(), "Expected error not raised.");
 }
 
 } // namespace CellShapesExamples
 
 int GuideExampleCellShapes(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(CellShapesExamples::Run, argc, argv);
+  return viskores::testing::Testing::Run(CellShapesExamples::Run, argc, argv);
 }

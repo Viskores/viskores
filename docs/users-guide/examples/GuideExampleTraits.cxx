@@ -1,3 +1,11 @@
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
 //=============================================================================
 //
 //  Copyright (c) Kitware, Inc.
@@ -10,17 +18,17 @@
 //
 //=============================================================================
 
-#include <vtkm/TypeTraits.h>
-#include <vtkm/VecTraits.h>
+#include <viskores/TypeTraits.h>
+#include <viskores/VecTraits.h>
 
-#include <vtkm/testing/Testing.h>
+#include <viskores/testing/Testing.h>
 
 ////
 //// BEGIN-EXAMPLE TypeTraits
 ////
-#include <vtkm/TypeTraits.h>
+#include <viskores/TypeTraits.h>
 
-#include <vtkm/Math.h>
+#include <viskores/Math.h>
 //// PAUSE-EXAMPLE
 namespace TraitsExamples
 {
@@ -35,8 +43,8 @@ namespace detail
 template<typename T>
 T AnyRemainderImpl(const T& numerator,
                    const T& denominator,
-                   vtkm::TypeTraitsIntegerTag,
-                   vtkm::TypeTraitsScalarTag)
+                   viskores::TypeTraitsIntegerTag,
+                   viskores::TypeTraitsScalarTag)
 {
   return numerator % denominator;
 }
@@ -44,19 +52,19 @@ T AnyRemainderImpl(const T& numerator,
 template<typename T>
 T AnyRemainderImpl(const T& numerator,
                    const T& denominator,
-                   vtkm::TypeTraitsRealTag,
-                   vtkm::TypeTraitsScalarTag)
+                   viskores::TypeTraitsRealTag,
+                   viskores::TypeTraitsScalarTag)
 {
-  // The VTK-m math library contains a Remainder function that operates on
+  // The Viskores math library contains a Remainder function that operates on
   // floating point numbers.
-  return vtkm::Remainder(numerator, denominator);
+  return viskores::Remainder(numerator, denominator);
 }
 
 template<typename T, typename NumericTag>
 T AnyRemainderImpl(const T& numerator,
                    const T& denominator,
                    NumericTag,
-                   vtkm::TypeTraitsVectorTag)
+                   viskores::TypeTraitsVectorTag)
 {
   T result;
   for (int componentIndex = 0; componentIndex < T::NUM_COMPONENTS; componentIndex++)
@@ -74,8 +82,8 @@ T AnyRemainder(const T& numerator, const T& denominator)
 {
   return detail::AnyRemainderImpl(numerator,
                                   denominator,
-                                  typename vtkm::TypeTraits<T>::NumericTag(),
-                                  typename vtkm::TypeTraits<T>::DimensionalityTag());
+                                  typename viskores::TypeTraits<T>::NumericTag(),
+                                  typename viskores::TypeTraits<T>::DimensionalityTag());
 }
 ////
 //// END-EXAMPLE TypeTraits
@@ -83,17 +91,18 @@ T AnyRemainder(const T& numerator, const T& denominator)
 
 void TryRemainder()
 {
-  vtkm::Id m1 = AnyRemainder(7, 3);
-  VTKM_TEST_ASSERT(m1 == 1, "Got bad remainder");
+  viskores::Id m1 = AnyRemainder(7, 3);
+  VISKORES_TEST_ASSERT(m1 == 1, "Got bad remainder");
 
-  vtkm::Float32 m2 = AnyRemainder(7.0f, 3.0f);
-  VTKM_TEST_ASSERT(test_equal(m2, 1), "Got bad remainder");
+  viskores::Float32 m2 = AnyRemainder(7.0f, 3.0f);
+  VISKORES_TEST_ASSERT(test_equal(m2, 1), "Got bad remainder");
 
-  vtkm::Id3 m3 = AnyRemainder(vtkm::Id3(10, 9, 8), vtkm::Id3(7, 6, 5));
-  VTKM_TEST_ASSERT(test_equal(m3, vtkm::Id3(3, 3, 3)), "Got bad remainder");
+  viskores::Id3 m3 = AnyRemainder(viskores::Id3(10, 9, 8), viskores::Id3(7, 6, 5));
+  VISKORES_TEST_ASSERT(test_equal(m3, viskores::Id3(3, 3, 3)), "Got bad remainder");
 
-  vtkm::Vec3f_32 m4 = AnyRemainder(vtkm::make_Vec(10, 9, 8), vtkm::make_Vec(7, 6, 5));
-  VTKM_TEST_ASSERT(test_equal(m4, vtkm::make_Vec(3, 3, 3)), "Got bad remainder");
+  viskores::Vec3f_32 m4 =
+    AnyRemainder(viskores::make_Vec(10, 9, 8), viskores::make_Vec(7, 6, 5));
+  VISKORES_TEST_ASSERT(test_equal(m4, viskores::make_Vec(3, 3, 3)), "Got bad remainder");
 }
 
 template<typename T>
@@ -105,19 +114,19 @@ struct TypeTraits;
 //// PAUSE-EXAMPLE
 #if 0
 //// RESUME-EXAMPLE
-namespace vtkm {
+namespace viskores {
 //// PAUSE-EXAMPLE
 #endif
 //// RESUME-EXAMPLE
 
 template<>
-struct TypeTraits<vtkm::Float32>
+struct TypeTraits<viskores::Float32>
 {
-  using NumericTag = vtkm::TypeTraitsRealTag;
-  using DimensionalityTag = vtkm::TypeTraitsScalarTag;
+  using NumericTag = viskores::TypeTraitsRealTag;
+  using DimensionalityTag = viskores::TypeTraitsScalarTag;
 
-  VTKM_EXEC_CONT
-  static vtkm::Float32 ZeroInitialization() { return vtkm::Float32(0); }
+  VISKORES_EXEC_CONT
+  static viskores::Float32 ZeroInitialization() { return viskores::Float32(0); }
 };
 
 //// PAUSE-EXAMPLE
@@ -133,17 +142,17 @@ struct TypeTraits<vtkm::Float32>
 
 void TryCustomTypeTraits()
 {
-  using CustomTraits = TraitsExamples::TypeTraits<vtkm::Float32>;
-  using OriginalTraits = vtkm::TypeTraits<vtkm::Float32>;
+  using CustomTraits = TraitsExamples::TypeTraits<viskores::Float32>;
+  using OriginalTraits = viskores::TypeTraits<viskores::Float32>;
 
-  VTKM_STATIC_ASSERT(
+  VISKORES_STATIC_ASSERT(
     (std::is_same<CustomTraits::NumericTag, OriginalTraits::NumericTag>::value));
-  VTKM_STATIC_ASSERT((std::is_same<CustomTraits::DimensionalityTag,
-                                   OriginalTraits::DimensionalityTag>::value));
+  VISKORES_STATIC_ASSERT((std::is_same<CustomTraits::DimensionalityTag,
+                                       OriginalTraits::DimensionalityTag>::value));
 
-  VTKM_TEST_ASSERT(CustomTraits::ZeroInitialization() ==
-                     OriginalTraits::ZeroInitialization(),
-                   "Bad zero initialization.");
+  VISKORES_TEST_ASSERT(CustomTraits::ZeroInitialization() ==
+                         OriginalTraits::ZeroInitialization(),
+                       "Bad zero initialization.");
 }
 
 } // namespace TraitsExamples
@@ -151,7 +160,7 @@ void TryCustomTypeTraits()
 ////
 //// BEGIN-EXAMPLE VecTraits
 ////
-#include <vtkm/VecTraits.h>
+#include <viskores/VecTraits.h>
 //// PAUSE-EXAMPLE
 namespace TraitsExamples
 {
@@ -163,14 +172,15 @@ namespace TraitsExamples
 template<typename T>
 struct LessTotalOrder
 {
-  VTKM_EXEC_CONT
+  VISKORES_EXEC_CONT
   bool operator()(const T& left, const T& right)
   {
-    for (int index = 0; index < vtkm::VecTraits<T>::NUM_COMPONENTS; index++)
+    for (int index = 0; index < viskores::VecTraits<T>::NUM_COMPONENTS; index++)
     {
-      using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
-      const ComponentType& leftValue = vtkm::VecTraits<T>::GetComponent(left, index);
-      const ComponentType& rightValue = vtkm::VecTraits<T>::GetComponent(right, index);
+      using ComponentType = typename viskores::VecTraits<T>::ComponentType;
+      const ComponentType& leftValue = viskores::VecTraits<T>::GetComponent(left, index);
+      const ComponentType& rightValue =
+        viskores::VecTraits<T>::GetComponent(right, index);
       if (leftValue < rightValue)
       {
         return true;
@@ -192,14 +202,15 @@ struct LessTotalOrder
 template<typename T>
 struct LessPartialOrder
 {
-  VTKM_EXEC_CONT
+  VISKORES_EXEC_CONT
   bool operator()(const T& left, const T& right)
   {
-    for (int index = 0; index < vtkm::VecTraits<T>::NUM_COMPONENTS; index++)
+    for (int index = 0; index < viskores::VecTraits<T>::NUM_COMPONENTS; index++)
     {
-      using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
-      const ComponentType& leftValue = vtkm::VecTraits<T>::GetComponent(left, index);
-      const ComponentType& rightValue = vtkm::VecTraits<T>::GetComponent(right, index);
+      using ComponentType = typename viskores::VecTraits<T>::ComponentType;
+      const ComponentType& leftValue = viskores::VecTraits<T>::GetComponent(left, index);
+      const ComponentType& rightValue =
+        viskores::VecTraits<T>::GetComponent(right, index);
       if (!(leftValue < rightValue))
       {
         return false;
@@ -215,27 +226,35 @@ struct LessPartialOrder
 
 void TryLess()
 {
-  LessTotalOrder<vtkm::Id> totalLess1;
-  VTKM_TEST_ASSERT(totalLess1(1, 2), "Bad less.");
-  VTKM_TEST_ASSERT(!totalLess1(2, 1), "Bad less.");
-  VTKM_TEST_ASSERT(!totalLess1(1, 1), "Bad less.");
+  LessTotalOrder<viskores::Id> totalLess1;
+  VISKORES_TEST_ASSERT(totalLess1(1, 2), "Bad less.");
+  VISKORES_TEST_ASSERT(!totalLess1(2, 1), "Bad less.");
+  VISKORES_TEST_ASSERT(!totalLess1(1, 1), "Bad less.");
 
-  LessPartialOrder<vtkm::Id> partialLess1;
-  VTKM_TEST_ASSERT(partialLess1(1, 2), "Bad less.");
-  VTKM_TEST_ASSERT(!partialLess1(2, 1), "Bad less.");
-  VTKM_TEST_ASSERT(!partialLess1(1, 1), "Bad less.");
+  LessPartialOrder<viskores::Id> partialLess1;
+  VISKORES_TEST_ASSERT(partialLess1(1, 2), "Bad less.");
+  VISKORES_TEST_ASSERT(!partialLess1(2, 1), "Bad less.");
+  VISKORES_TEST_ASSERT(!partialLess1(1, 1), "Bad less.");
 
-  LessTotalOrder<vtkm::Id3> totalLess3;
-  VTKM_TEST_ASSERT(totalLess3(vtkm::Id3(1, 2, 3), vtkm::Id3(3, 2, 1)), "Bad less.");
-  VTKM_TEST_ASSERT(!totalLess3(vtkm::Id3(3, 2, 1), vtkm::Id3(1, 2, 3)), "Bad less.");
-  VTKM_TEST_ASSERT(!totalLess3(vtkm::Id3(1, 2, 3), vtkm::Id3(1, 2, 3)), "Bad less.");
-  VTKM_TEST_ASSERT(totalLess3(vtkm::Id3(1, 2, 3), vtkm::Id3(2, 3, 4)), "Bad less.");
+  LessTotalOrder<viskores::Id3> totalLess3;
+  VISKORES_TEST_ASSERT(totalLess3(viskores::Id3(1, 2, 3), viskores::Id3(3, 2, 1)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(!totalLess3(viskores::Id3(3, 2, 1), viskores::Id3(1, 2, 3)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(!totalLess3(viskores::Id3(1, 2, 3), viskores::Id3(1, 2, 3)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(totalLess3(viskores::Id3(1, 2, 3), viskores::Id3(2, 3, 4)),
+                       "Bad less.");
 
-  LessPartialOrder<vtkm::Id3> partialLess3;
-  VTKM_TEST_ASSERT(!partialLess3(vtkm::Id3(1, 2, 3), vtkm::Id3(3, 2, 1)), "Bad less.");
-  VTKM_TEST_ASSERT(!partialLess3(vtkm::Id3(3, 2, 1), vtkm::Id3(1, 2, 3)), "Bad less.");
-  VTKM_TEST_ASSERT(!partialLess3(vtkm::Id3(1, 2, 3), vtkm::Id3(1, 2, 3)), "Bad less.");
-  VTKM_TEST_ASSERT(partialLess3(vtkm::Id3(1, 2, 3), vtkm::Id3(2, 3, 4)), "Bad less.");
+  LessPartialOrder<viskores::Id3> partialLess3;
+  VISKORES_TEST_ASSERT(!partialLess3(viskores::Id3(1, 2, 3), viskores::Id3(3, 2, 1)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(!partialLess3(viskores::Id3(3, 2, 1), viskores::Id3(1, 2, 3)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(!partialLess3(viskores::Id3(1, 2, 3), viskores::Id3(1, 2, 3)),
+                       "Bad less.");
+  VISKORES_TEST_ASSERT(partialLess3(viskores::Id3(1, 2, 3), viskores::Id3(2, 3, 4)),
+                       "Bad less.");
 }
 
 template<typename T>
@@ -247,54 +266,54 @@ struct VecTraits;
 //// PAUSE-EXAMPLE
 #if 0
 //// RESUME-EXAMPLE
-namespace vtkm {
+namespace viskores {
 //// PAUSE-EXAMPLE
 #endif
 //// RESUME-EXAMPLE
 
 template<>
-struct VecTraits<vtkm::Id3>
+struct VecTraits<viskores::Id3>
 {
-  using ComponentType = vtkm::Id;
-  using BaseComponentType = vtkm::Id;
+  using ComponentType = viskores::Id;
+  using BaseComponentType = viskores::Id;
   static const int NUM_COMPONENTS = 3;
-  using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
-  using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
+  using IsSizeStatic = viskores::VecTraitsTagSizeStatic;
+  using HasMultipleComponents = viskores::VecTraitsTagMultipleComponents;
 
-  VTKM_EXEC_CONT
-  static vtkm::IdComponent GetNumberOfComponents(const vtkm::Id3&)
+  VISKORES_EXEC_CONT
+  static viskores::IdComponent GetNumberOfComponents(const viskores::Id3&)
   {
     return NUM_COMPONENTS;
   }
 
-  VTKM_EXEC_CONT
-  static const vtkm::Id& GetComponent(const vtkm::Id3& vector, int component)
+  VISKORES_EXEC_CONT
+  static const viskores::Id& GetComponent(const viskores::Id3& vector, int component)
   {
     return vector[component];
   }
-  VTKM_EXEC_CONT
-  static vtkm::Id& GetComponent(vtkm::Id3& vector, int component)
+  VISKORES_EXEC_CONT
+  static viskores::Id& GetComponent(viskores::Id3& vector, int component)
   {
     return vector[component];
   }
 
-  VTKM_EXEC_CONT
-  static void SetComponent(vtkm::Id3& vector, int component, vtkm::Id value)
+  VISKORES_EXEC_CONT
+  static void SetComponent(viskores::Id3& vector, int component, viskores::Id value)
   {
     vector[component] = value;
   }
 
   template<typename NewComponentType>
-  using ReplaceComponentType = vtkm::Vec<NewComponentType, 3>;
+  using ReplaceComponentType = viskores::Vec<NewComponentType, 3>;
 
   template<typename NewComponentType>
-  using ReplaceBaseComponentType = vtkm::Vec<NewComponentType, 3>;
+  using ReplaceBaseComponentType = viskores::Vec<NewComponentType, 3>;
 
-  template<vtkm::IdComponent DestSize>
-  VTKM_EXEC_CONT static void CopyInto(const vtkm::Id3& src,
-                                      vtkm::Vec<vtkm::Id, DestSize>& dest)
+  template<viskores::IdComponent DestSize>
+  VISKORES_EXEC_CONT static void CopyInto(const viskores::Id3& src,
+                                          viskores::Vec<viskores::Id, DestSize>& dest)
   {
-    for (vtkm::IdComponent index = 0; (index < NUM_COMPONENTS) && (index < DestSize);
+    for (viskores::IdComponent index = 0; (index < NUM_COMPONENTS) && (index < DestSize);
          index++)
     {
       dest[index] = src[index];
@@ -305,7 +324,7 @@ struct VecTraits<vtkm::Id3>
 //// PAUSE-EXAMPLE
 #if 0
 //// RESUME-EXAMPLE
-} // namespace vtkm
+} // namespace viskores
 //// PAUSE-EXAMPLE
 #endif
 //// RESUME-EXAMPLE
@@ -315,32 +334,32 @@ struct VecTraits<vtkm::Id3>
 
 void TryCustomVecTriats()
 {
-  using CustomTraits = TraitsExamples::VecTraits<vtkm::Id3>;
-  using OriginalTraits = vtkm::VecTraits<vtkm::Id3>;
+  using CustomTraits = TraitsExamples::VecTraits<viskores::Id3>;
+  using OriginalTraits = viskores::VecTraits<viskores::Id3>;
 
-  VTKM_STATIC_ASSERT(
+  VISKORES_STATIC_ASSERT(
     (std::is_same<CustomTraits::ComponentType, OriginalTraits::ComponentType>::value));
-  VTKM_STATIC_ASSERT(CustomTraits::NUM_COMPONENTS == OriginalTraits::NUM_COMPONENTS);
-  VTKM_STATIC_ASSERT((std::is_same<CustomTraits::HasMultipleComponents,
-                                   OriginalTraits::HasMultipleComponents>::value));
-  VTKM_STATIC_ASSERT(
+  VISKORES_STATIC_ASSERT(CustomTraits::NUM_COMPONENTS == OriginalTraits::NUM_COMPONENTS);
+  VISKORES_STATIC_ASSERT((std::is_same<CustomTraits::HasMultipleComponents,
+                                       OriginalTraits::HasMultipleComponents>::value));
+  VISKORES_STATIC_ASSERT(
     (std::is_same<CustomTraits::IsSizeStatic, OriginalTraits::IsSizeStatic>::value));
 
-  vtkm::Id3 value = TestValue(10, vtkm::Id3());
-  VTKM_TEST_ASSERT(CustomTraits::GetNumberOfComponents(value) ==
-                     OriginalTraits::GetNumberOfComponents(value),
-                   "Wrong size.");
-  VTKM_TEST_ASSERT(CustomTraits::GetComponent(value, 1) ==
-                     OriginalTraits::GetComponent(value, 1),
-                   "Wrong component.");
+  viskores::Id3 value = TestValue(10, viskores::Id3());
+  VISKORES_TEST_ASSERT(CustomTraits::GetNumberOfComponents(value) ==
+                         OriginalTraits::GetNumberOfComponents(value),
+                       "Wrong size.");
+  VISKORES_TEST_ASSERT(CustomTraits::GetComponent(value, 1) ==
+                         OriginalTraits::GetComponent(value, 1),
+                       "Wrong component.");
 
   CustomTraits::SetComponent(value, 2, 0);
-  VTKM_TEST_ASSERT(value[2] == 0, "Did not set component.");
+  VISKORES_TEST_ASSERT(value[2] == 0, "Did not set component.");
 
-  vtkm::Id2 shortValue;
+  viskores::Id2 shortValue;
   CustomTraits::CopyInto(value, shortValue);
-  VTKM_TEST_ASSERT(test_equal(shortValue[0], value[0]));
-  VTKM_TEST_ASSERT(test_equal(shortValue[1], value[1]));
+  VISKORES_TEST_ASSERT(test_equal(shortValue[0], value[0]));
+  VISKORES_TEST_ASSERT(test_equal(shortValue[1], value[1]));
 }
 
 void Test()
@@ -355,5 +374,5 @@ void Test()
 
 int GuideExampleTraits(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(TraitsExamples::Test, argc, argv);
+  return viskores::testing::Testing::Run(TraitsExamples::Test, argc, argv);
 }

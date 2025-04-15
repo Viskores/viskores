@@ -1,8 +1,0 @@
-NAME
-  vtkm_exec_tbb
-GROUPS
-  Core
-DEPENDS
-  vtkm_exec
-TEST_DEPENDS
-  vtkm_tbb

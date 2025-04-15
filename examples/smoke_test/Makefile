@@ -1,12 +1,12 @@
 ifdef PKG_CONFIG_TEST_ARGS
-  CPPFLAGS = $(shell pkg-config $${PKG_CONFIG_TEST_ARGS} --cflags vtkm)
-  LDLIBS = $(shell pkg-config $${PKG_CONFIG_TEST_ARGS} --libs vtkm)
+  CPPFLAGS = $(shell pkg-config $${PKG_CONFIG_TEST_ARGS} --cflags viskores)
+  LDLIBS = $(shell pkg-config $${PKG_CONFIG_TEST_ARGS} --libs viskores)
 
-else ifdef VTKM_CONFIG_MK_PATH
-  include $(VTKM_CONFIG_MK_PATH)
-  VTKm_DIR = $(VTKM_INSTALL_PREFIX)
-  CPPFLAGS = $(VTKm_INCLUDE_FLAGS)
-  LDLIBS = $(VTKm_LIB_FLAGS)
+else ifdef VISKORES_CONFIG_MK_PATH
+  include $(VISKORES_CONFIG_MK_PATH)
+  Viskores_DIR = $(VISKORES_INSTALL_PREFIX)
+  CPPFLAGS = $(Viskores_INCLUDE_FLAGS)
+  LDLIBS = $(Viskores_LIB_FLAGS)
 
 endif
 

@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,18 +16,18 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#define VTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG
+#define VISKORES_NO_ERROR_ON_MIXED_CUDA_CXX_TAG
 
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleSOA.h>
-#include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/ArrayRangeCompute.h>
-#include <vtkm/cont/DeviceAdapter.h>
+#include <viskores/cont/Algorithm.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ArrayHandleSOA.h>
+#include <viskores/cont/ArrayPortalToIterators.h>
+#include <viskores/cont/ArrayRangeCompute.h>
+#include <viskores/cont/DeviceAdapter.h>
 
-#include <vtkm/exec/FunctorBase.h>
+#include <viskores/exec/FunctorBase.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 #include <algorithm>
 #include <vector>
@@ -28,20 +36,20 @@ namespace
 {
 
 template<typename T>
-vtkm::Float32 TestValue(T index)
+viskores::Float32 TestValue(T index)
 {
-  return static_cast<vtkm::Float32>(1 + 0.001 * index);
+  return static_cast<viskores::Float32>(1 + 0.001 * index);
 }
 
-void CheckArrayValues(const vtkm::cont::ArrayHandle<vtkm::Float32>& array,
-                      vtkm::Float32 factor = 1)
+void CheckArrayValues(const viskores::cont::ArrayHandle<viskores::Float32>& array,
+                      viskores::Float32 factor = 1)
 {
   // So far all the examples are using 50 entries. Could change.
-  VTKM_TEST_ASSERT(array.GetNumberOfValues() == 50, "Wrong number of values");
+  VISKORES_TEST_ASSERT(array.GetNumberOfValues() == 50, "Wrong number of values");
 
-  for (vtkm::Id index = 0; index < array.GetNumberOfValues(); index++)
+  for (viskores::Id index = 0; index < array.GetNumberOfValues(); index++)
   {
-    VTKM_TEST_ASSERT(
+    VISKORES_TEST_ASSERT(
       test_equal(array.ReadPortal().Get(index), TestValue(index) * factor),
       "Bad data value.");
   }
@@ -51,7 +59,7 @@ void CheckArrayValues(const vtkm::cont::ArrayHandle<vtkm::Float32>& array,
 //// BEGIN-EXAMPLE ArrayHandleParameterTemplate
 ////
 template<typename T, typename Storage>
-void Foo(const vtkm::cont::ArrayHandle<T, Storage>& array)
+void Foo(const viskores::cont::ArrayHandle<T, Storage>& array)
 {
   ////
   //// END-EXAMPLE ArrayHandleParameterTemplate
@@ -65,7 +73,7 @@ void Foo(const vtkm::cont::ArrayHandle<T, Storage>& array)
 template<typename ArrayType>
 void Bar(const ArrayType& array)
 {
-  VTKM_IS_ARRAY_HANDLE(ArrayType);
+  VISKORES_IS_ARRAY_HANDLE(ArrayType);
   ////
   //// END-EXAMPLE ArrayHandleFullTemplate
   ////
@@ -77,7 +85,7 @@ void BasicConstruction()
   ////
   //// BEGIN-EXAMPLE CreateArrayHandle
   ////
-  vtkm::cont::ArrayHandle<vtkm::Float32> outputArray;
+  viskores::cont::ArrayHandle<viskores::Float32> outputArray;
   ////
   //// END-EXAMPLE CreateArrayHandle
   ////
@@ -85,7 +93,8 @@ void BasicConstruction()
   ////
   //// BEGIN-EXAMPLE ArrayHandleStorageParameter
   ////
-  vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic> arrayHandle;
+  viskores::cont::ArrayHandle<viskores::Float32, viskores::cont::StorageTagBasic>
+    arrayHandle;
   ////
   //// END-EXAMPLE ArrayHandleStorageParameter
   ////
@@ -99,36 +108,37 @@ void ArrayHandleFromInitializerList()
   ////
   //// BEGIN-EXAMPLE ArrayHandleFromInitializerList
   ////
-  auto fibonacciArray = vtkm::cont::make_ArrayHandle({ 0, 1, 1, 2, 3, 5, 8, 13 });
+  auto fibonacciArray = viskores::cont::make_ArrayHandle({ 0, 1, 1, 2, 3, 5, 8, 13 });
   ////
   //// END-EXAMPLE ArrayHandleFromInitializerList
   ////
 
-  VTKM_TEST_ASSERT(fibonacciArray.GetNumberOfValues() == 8);
+  VISKORES_TEST_ASSERT(fibonacciArray.GetNumberOfValues() == 8);
   auto portal = fibonacciArray.ReadPortal();
-  VTKM_TEST_ASSERT(test_equal(portal.Get(0), 0));
-  VTKM_TEST_ASSERT(test_equal(portal.Get(1), 1));
-  VTKM_TEST_ASSERT(test_equal(portal.Get(2), 1));
-  VTKM_TEST_ASSERT(test_equal(portal.Get(3), 2));
-  VTKM_TEST_ASSERT(test_equal(portal.Get(4), 3));
-  VTKM_TEST_ASSERT(test_equal(portal.Get(5), 5));
-  VTKM_TEST_ASSERT(test_equal(portal.Get(6), 8));
-  VTKM_TEST_ASSERT(test_equal(portal.Get(7), 13));
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(0), 0));
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(1), 1));
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(2), 1));
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(3), 2));
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(4), 3));
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(5), 5));
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(6), 8));
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(7), 13));
 
   ////
   //// BEGIN-EXAMPLE ArrayHandleFromInitializerListTyped
   ////
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> inputArray =
-    vtkm::cont::make_ArrayHandle<vtkm::FloatDefault>({ 1.4142f, 2.7183f, 3.1416f });
+  viskores::cont::ArrayHandle<viskores::FloatDefault> inputArray =
+    viskores::cont::make_ArrayHandle<viskores::FloatDefault>(
+      { 1.4142f, 2.7183f, 3.1416f });
   ////
   //// END-EXAMPLE ArrayHandleFromInitializerListTyped
   ////
 
-  VTKM_TEST_ASSERT(inputArray.GetNumberOfValues() == 3);
+  VISKORES_TEST_ASSERT(inputArray.GetNumberOfValues() == 3);
   auto portal2 = inputArray.ReadPortal();
-  VTKM_TEST_ASSERT(test_equal(portal2.Get(0), 1.4142));
-  VTKM_TEST_ASSERT(test_equal(portal2.Get(1), 2.7183));
-  VTKM_TEST_ASSERT(test_equal(portal2.Get(2), 3.1416));
+  VISKORES_TEST_ASSERT(test_equal(portal2.Get(0), 1.4142));
+  VISKORES_TEST_ASSERT(test_equal(portal2.Get(1), 2.7183));
+  VISKORES_TEST_ASSERT(test_equal(portal2.Get(2), 3.1416));
 }
 
 void ArrayHandleFromCArray()
@@ -136,17 +146,17 @@ void ArrayHandleFromCArray()
   ////
   //// BEGIN-EXAMPLE ArrayHandleFromCArray
   ////
-  vtkm::Float32 dataBuffer[50];
+  viskores::Float32 dataBuffer[50];
   // Populate dataBuffer with meaningful data. Perhaps read data from a file.
   //// PAUSE-EXAMPLE
-  for (vtkm::Id index = 0; index < 50; index++)
+  for (viskores::Id index = 0; index < 50; index++)
   {
     dataBuffer[index] = TestValue(index);
   }
   //// RESUME-EXAMPLE
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> inputArray =
-    vtkm::cont::make_ArrayHandle(dataBuffer, 50, vtkm::CopyFlag::On);
+  viskores::cont::ArrayHandle<viskores::Float32> inputArray =
+    viskores::cont::make_ArrayHandle(dataBuffer, 50, viskores::CopyFlag::On);
   ////
   //// END-EXAMPLE ArrayHandleFromCArray
   ////
@@ -154,7 +164,7 @@ void ArrayHandleFromCArray()
   CheckArrayValues(inputArray);
 }
 
-vtkm::Float32 GetValueForArray(vtkm::Id index)
+viskores::Float32 GetValueForArray(viskores::Id index)
 {
   return TestValue(index);
 }
@@ -167,19 +177,19 @@ void AllocateAndFillArrayHandle()
   ////
   //// BEGIN-EXAMPLE ArrayHandleAllocate
   ////
-  vtkm::cont::ArrayHandle<vtkm::Float32> arrayHandle;
+  viskores::cont::ArrayHandle<viskores::Float32> arrayHandle;
 
-  const vtkm::Id ARRAY_SIZE = 50;
+  const viskores::Id ARRAY_SIZE = 50;
   arrayHandle.Allocate(ARRAY_SIZE);
   ////
   //// END-EXAMPLE ArrayHandleAllocate
   ////
 
   // Usually it is easier to just use the auto keyword.
-  using PortalType = vtkm::cont::ArrayHandle<vtkm::Float32>::WritePortalType;
+  using PortalType = viskores::cont::ArrayHandle<viskores::Float32>::WritePortalType;
   PortalType portal = arrayHandle.WritePortal();
 
-  for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
+  for (viskores::Id index = 0; index < portal.GetNumberOfValues(); index++)
   {
     portal.Set(index, GetValueForArray(index));
   }
@@ -190,8 +200,8 @@ void AllocateAndFillArrayHandle()
   CheckArrayValues(arrayHandle);
 
   {
-    vtkm::cont::ArrayHandle<vtkm::Float32> srcArray = arrayHandle;
-    vtkm::cont::ArrayHandle<vtkm::Float32> destArray;
+    viskores::cont::ArrayHandle<viskores::Float32> srcArray = arrayHandle;
+    viskores::cont::ArrayHandle<viskores::Float32> destArray;
     ////
     //// BEGIN-EXAMPLE ArrayHandleDeepCopy
     ////
@@ -199,19 +209,19 @@ void AllocateAndFillArrayHandle()
     ////
     //// END-EXAMPLE ArrayHandleDeepCopy
     ////
-    VTKM_TEST_ASSERT(srcArray != destArray);
-    VTKM_TEST_ASSERT(test_equal_ArrayHandles(srcArray, destArray));
+    VISKORES_TEST_ASSERT(srcArray != destArray);
+    VISKORES_TEST_ASSERT(test_equal_ArrayHandles(srcArray, destArray));
   }
 
   ////
   //// BEGIN-EXAMPLE ArrayRangeCompute
   ////
-  vtkm::cont::ArrayHandle<vtkm::Range> rangeArray =
-    vtkm::cont::ArrayRangeCompute(arrayHandle);
+  viskores::cont::ArrayHandle<viskores::Range> rangeArray =
+    viskores::cont::ArrayRangeCompute(arrayHandle);
   auto rangePortal = rangeArray.ReadPortal();
-  for (vtkm::Id index = 0; index < rangePortal.GetNumberOfValues(); ++index)
+  for (viskores::Id index = 0; index < rangePortal.GetNumberOfValues(); ++index)
   {
-    vtkm::Range componentRange = rangePortal.Get(index);
+    viskores::Range componentRange = rangePortal.Get(index);
     std::cout << "Values for component " << index << " go from " << componentRange.Min
               << " to " << componentRange.Max << std::endl;
   }
@@ -219,15 +229,16 @@ void AllocateAndFillArrayHandle()
   //// END-EXAMPLE ArrayRangeCompute
   ////
 
-  vtkm::Range range = rangePortal.Get(0);
-  VTKM_TEST_ASSERT(test_equal(range.Min, TestValue(0)), "Bad min value.");
-  VTKM_TEST_ASSERT(test_equal(range.Max, TestValue(ARRAY_SIZE - 1)), "Bad max value.");
+  viskores::Range range = rangePortal.Get(0);
+  VISKORES_TEST_ASSERT(test_equal(range.Min, TestValue(0)), "Bad min value.");
+  VISKORES_TEST_ASSERT(test_equal(range.Max, TestValue(ARRAY_SIZE - 1)),
+                       "Bad max value.");
 
   ////
   //// BEGIN-EXAMPLE ArrayHandleReallocate
   ////
   // Add space for 10 more values at the end of the array.
-  arrayHandle.Allocate(arrayHandle.GetNumberOfValues() + 10, vtkm::CopyFlag::On);
+  arrayHandle.Allocate(arrayHandle.GetNumberOfValues() + 10, viskores::CopyFlag::On);
   ////
   //// END-EXAMPLE ArrayHandleReallocate
   ////
@@ -236,9 +247,9 @@ void AllocateAndFillArrayHandle()
 ////
 //// BEGIN-EXAMPLE ArrayOutOfScope
 ////
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Float32> BadDataLoad()
+VISKORES_CONT viskores::cont::ArrayHandle<viskores::Float32> BadDataLoad()
 {
-  std::vector<vtkm::Float32> dataBuffer;
+  std::vector<viskores::Float32> dataBuffer;
   // Populate dataBuffer with meaningful data. Perhaps read data from a file.
   //// PAUSE-EXAMPLE
   dataBuffer.resize(50);
@@ -248,8 +259,8 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Float32> BadDataLoad()
   }
   //// RESUME-EXAMPLE
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> inputArray =
-    vtkm::cont::make_ArrayHandle(dataBuffer, vtkm::CopyFlag::Off);
+  viskores::cont::ArrayHandle<viskores::Float32> inputArray =
+    viskores::cont::make_ArrayHandle(dataBuffer, viskores::CopyFlag::Off);
   //// PAUSE-EXAMPLE
   CheckArrayValues(inputArray);
   //// RESUME-EXAMPLE
@@ -261,12 +272,12 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Float32> BadDataLoad()
   // ArrayHandle is used.
 }
 
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Float32> SafeDataLoad1()
+VISKORES_CONT viskores::cont::ArrayHandle<viskores::Float32> SafeDataLoad1()
 {
   ////
   //// BEGIN-EXAMPLE ArrayHandleFromVector
   ////
-  std::vector<vtkm::Float32> dataBuffer;
+  std::vector<viskores::Float32> dataBuffer;
   // Populate dataBuffer with meaningful data. Perhaps read data from a file.
   //// PAUSE-EXAMPLE
   dataBuffer.resize(50);
@@ -276,9 +287,9 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Float32> SafeDataLoad1()
   }
   //// RESUME-EXAMPLE
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> inputArray =
+  viskores::cont::ArrayHandle<viskores::Float32> inputArray =
     //// LABEL CopyFlagOn
-    vtkm::cont::make_ArrayHandle(dataBuffer, vtkm::CopyFlag::On);
+    viskores::cont::make_ArrayHandle(dataBuffer, viskores::CopyFlag::On);
   ////
   //// END-EXAMPLE ArrayHandleFromVector
   ////
@@ -287,9 +298,9 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Float32> SafeDataLoad1()
   // This is safe.
 }
 
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Float32> SafeDataLoad2()
+VISKORES_CONT viskores::cont::ArrayHandle<viskores::Float32> SafeDataLoad2()
 {
-  std::vector<vtkm::Float32> dataBuffer;
+  std::vector<viskores::Float32> dataBuffer;
   // Populate dataBuffer with meaningful data. Perhaps read data from a file.
   //// PAUSE-EXAMPLE
   dataBuffer.resize(50);
@@ -299,9 +310,9 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Float32> SafeDataLoad2()
   }
   //// RESUME-EXAMPLE
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> inputArray =
+  viskores::cont::ArrayHandle<viskores::Float32> inputArray =
     //// LABEL MoveVector
-    vtkm::cont::make_ArrayHandleMove(std::move(dataBuffer));
+    viskores::cont::make_ArrayHandleMove(std::move(dataBuffer));
 
   return inputArray;
   // This is safe.
@@ -317,10 +328,10 @@ void ArrayHandleFromVector()
 
 void CheckSafeDataLoad()
 {
-  vtkm::cont::ArrayHandle<vtkm::Float32> inputArray1 = SafeDataLoad1();
+  viskores::cont::ArrayHandle<viskores::Float32> inputArray1 = SafeDataLoad1();
   CheckArrayValues(inputArray1);
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> inputArray2 = SafeDataLoad2();
+  viskores::cont::ArrayHandle<viskores::Float32> inputArray2 = SafeDataLoad2();
   CheckArrayValues(inputArray2);
 }
 
@@ -335,32 +346,32 @@ public:
 
   // There is no specification for creating array portals, but they generally
   // need a constructor like this to be practical.
-  VTKM_EXEC_CONT
-  SimpleScalarArrayPortal(ValueType* array, vtkm::Id numberOfValues)
+  VISKORES_EXEC_CONT
+  SimpleScalarArrayPortal(ValueType* array, viskores::Id numberOfValues)
     : Array(array)
     , NumberOfValues(numberOfValues)
   {
   }
 
-  VTKM_EXEC_CONT
+  VISKORES_EXEC_CONT
   SimpleScalarArrayPortal()
     : Array(NULL)
     , NumberOfValues(0)
   {
   }
 
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
+  VISKORES_EXEC_CONT
+  viskores::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
-  VTKM_EXEC_CONT
-  ValueType Get(vtkm::Id index) const { return this->Array[index]; }
+  VISKORES_EXEC_CONT
+  ValueType Get(viskores::Id index) const { return this->Array[index]; }
 
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, ValueType value) const { this->Array[index] = value; }
+  VISKORES_EXEC_CONT
+  void Set(viskores::Id index, ValueType value) const { this->Array[index] = value; }
 
 private:
   ValueType* Array;
-  vtkm::Id NumberOfValues;
+  viskores::Id NumberOfValues;
 };
 ////
 //// END-EXAMPLE SimpleArrayPortal
@@ -370,13 +381,13 @@ private:
 //// BEGIN-EXAMPLE ArrayPortalToIterators
 ////
 template<typename PortalType>
-VTKM_CONT std::vector<typename PortalType::ValueType> CopyArrayPortalToVector(
+VISKORES_CONT std::vector<typename PortalType::ValueType> CopyArrayPortalToVector(
   const PortalType& portal)
 {
   using ValueType = typename PortalType::ValueType;
   std::vector<ValueType> result(static_cast<std::size_t>(portal.GetNumberOfValues()));
 
-  vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
+  viskores::cont::ArrayPortalToIterators<PortalType> iterators(portal);
 
   std::copy(iterators.GetBegin(), iterators.GetEnd(), result.begin());
 
@@ -391,22 +402,22 @@ void TestArrayPortalToken()
   ////
   //// BEGIN-EXAMPLE ArrayPortalToken
   ////
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> arrayHandle;
+  viskores::cont::ArrayHandle<viskores::FloatDefault> arrayHandle;
   // Fill array with interesting stuff...
   //// PAUSE-EXAMPLE
   arrayHandle.Allocate(10);
   SetPortal(arrayHandle.WritePortal());
   //// RESUME-EXAMPLE
 
-  std::vector<vtkm::FloatDefault> externalData;
+  std::vector<viskores::FloatDefault> externalData;
   externalData.reserve(static_cast<std::size_t>(arrayHandle.GetNumberOfValues()));
   {
-    vtkm::cont::Token token;
+    viskores::cont::Token token;
     auto arrayPortal = arrayHandle.ReadPortal(token);
     // token is attached to arrayHandle. arrayHandle cannot invalidate arrayPortal
     // while token exists.
 
-    for (vtkm::Id index = 0; index < arrayPortal.GetNumberOfValues(); ++index)
+    for (viskores::Id index = 0; index < arrayPortal.GetNumberOfValues(); ++index)
     {
       externalData.push_back(arrayPortal.Get(index));
     }
@@ -423,39 +434,40 @@ void TestArrayPortalToken()
 
 void TestArrayPortalVectors()
 {
-  vtkm::cont::ArrayHandle<vtkm::Float32> inputArray = SafeDataLoad1();
-  std::vector<vtkm::Float32> buffer = CopyArrayPortalToVector(inputArray.ReadPortal());
+  viskores::cont::ArrayHandle<viskores::Float32> inputArray = SafeDataLoad1();
+  std::vector<viskores::Float32> buffer =
+    CopyArrayPortalToVector(inputArray.ReadPortal());
 
-  VTKM_TEST_ASSERT(static_cast<vtkm::Id>(buffer.size()) ==
-                     inputArray.GetNumberOfValues(),
-                   "Vector was sized wrong.");
+  VISKORES_TEST_ASSERT(static_cast<viskores::Id>(buffer.size()) ==
+                         inputArray.GetNumberOfValues(),
+                       "Vector was sized wrong.");
 
-  for (vtkm::Id index = 0; index < inputArray.GetNumberOfValues(); index++)
+  for (viskores::Id index = 0; index < inputArray.GetNumberOfValues(); index++)
   {
-    VTKM_TEST_ASSERT(
+    VISKORES_TEST_ASSERT(
       test_equal(buffer[static_cast<std::size_t>(index)], TestValue(index)),
       "Bad data value.");
   }
 
-  SimpleScalarArrayPortal<vtkm::Float32> portal(&buffer.at(0),
-                                                static_cast<vtkm::Id>(buffer.size()));
+  SimpleScalarArrayPortal<viskores::Float32> portal(
+    &buffer.at(0), static_cast<viskores::Id>(buffer.size()));
 
   ////
   //// BEGIN-EXAMPLE ArrayPortalToIteratorBeginEnd
   ////
-  std::vector<vtkm::Float32> myContainer(
+  std::vector<viskores::Float32> myContainer(
     static_cast<std::size_t>(portal.GetNumberOfValues()));
 
-  std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-            vtkm::cont::ArrayPortalToIteratorEnd(portal),
+  std::copy(viskores::cont::ArrayPortalToIteratorBegin(portal),
+            viskores::cont::ArrayPortalToIteratorEnd(portal),
             myContainer.begin());
   ////
   //// END-EXAMPLE ArrayPortalToIteratorBeginEnd
   ////
 
-  for (vtkm::Id index = 0; index < inputArray.GetNumberOfValues(); index++)
+  for (viskores::Id index = 0; index < inputArray.GetNumberOfValues(); index++)
   {
-    VTKM_TEST_ASSERT(
+    VISKORES_TEST_ASSERT(
       test_equal(myContainer[static_cast<std::size_t>(index)], TestValue(index)),
       "Bad data value.");
   }
@@ -465,24 +477,26 @@ void TestArrayPortalVectors()
 //// BEGIN-EXAMPLE ControlPortals
 ////
 template<typename T, typename Storage>
-void SortCheckArrayHandle(vtkm::cont::ArrayHandle<T, Storage> arrayHandle)
+void SortCheckArrayHandle(viskores::cont::ArrayHandle<T, Storage> arrayHandle)
 {
-  using WritePortalType = typename vtkm::cont::ArrayHandle<T, Storage>::WritePortalType;
-  using ReadPortalType = typename vtkm::cont::ArrayHandle<T, Storage>::ReadPortalType;
+  using WritePortalType =
+    typename viskores::cont::ArrayHandle<T, Storage>::WritePortalType;
+  using ReadPortalType =
+    typename viskores::cont::ArrayHandle<T, Storage>::ReadPortalType;
 
   WritePortalType readwritePortal = arrayHandle.WritePortal();
   // This is actually pretty dumb. Sorting would be generally faster in
   // parallel in the execution environment using the device adapter algorithms.
-  std::sort(vtkm::cont::ArrayPortalToIteratorBegin(readwritePortal),
-            vtkm::cont::ArrayPortalToIteratorEnd(readwritePortal));
+  std::sort(viskores::cont::ArrayPortalToIteratorBegin(readwritePortal),
+            viskores::cont::ArrayPortalToIteratorEnd(readwritePortal));
 
   ReadPortalType readPortal = arrayHandle.ReadPortal();
-  for (vtkm::Id index = 1; index < readPortal.GetNumberOfValues(); index++)
+  for (viskores::Id index = 1; index < readPortal.GetNumberOfValues(); index++)
   {
     if (readPortal.Get(index - 1) > readPortal.Get(index))
     {
       //// PAUSE-EXAMPLE
-      VTKM_TEST_FAIL("Sorting is wrong!");
+      VISKORES_TEST_FAIL("Sorting is wrong!");
       //// RESUME-EXAMPLE
       std::cout << "Sorting is wrong!" << std::endl;
       break;
@@ -502,33 +516,33 @@ void TestControlPortalsExample()
 //// BEGIN-EXAMPLE ExecutionPortals
 ////
 template<typename InputPortalType, typename OutputPortalType>
-struct DoubleFunctor : public vtkm::exec::FunctorBase
+struct DoubleFunctor : public viskores::exec::FunctorBase
 {
   InputPortalType InputPortal;
   OutputPortalType OutputPortal;
 
-  VTKM_CONT
+  VISKORES_CONT
   DoubleFunctor(InputPortalType inputPortal, OutputPortalType outputPortal)
     : InputPortal(inputPortal)
     , OutputPortal(outputPortal)
   {
   }
 
-  VTKM_EXEC
-  void operator()(vtkm::Id index) const
+  VISKORES_EXEC
+  void operator()(viskores::Id index) const
   {
     this->OutputPortal.Set(index, 2 * this->InputPortal.Get(index));
   }
 };
 
 template<typename T, typename Device>
-void DoubleArray(vtkm::cont::ArrayHandle<T> inputArray,
-                 vtkm::cont::ArrayHandle<T> outputArray,
+void DoubleArray(viskores::cont::ArrayHandle<T> inputArray,
+                 viskores::cont::ArrayHandle<T> outputArray,
                  Device)
 {
-  vtkm::Id numValues = inputArray.GetNumberOfValues();
+  viskores::Id numValues = inputArray.GetNumberOfValues();
 
-  vtkm::cont::Token token;
+  viskores::cont::Token token;
   auto inputPortal = inputArray.PrepareForInput(Device{}, token);
   auto outputPortal = outputArray.PrepareForOutput(numValues, Device{}, token);
   // Token is now attached to inputPortal and outputPortal. Those two portals
@@ -538,7 +552,7 @@ void DoubleArray(vtkm::cont::ArrayHandle<T> inputArray,
   DoubleFunctor<decltype(inputPortal), decltype(outputPortal)> functor(inputPortal,
                                                                        outputPortal);
 
-  vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(functor, numValues);
+  viskores::cont::DeviceAdapterAlgorithm<Device>::Schedule(functor, numValues);
 }
 ////
 //// END-EXAMPLE ExecutionPortals
@@ -546,10 +560,10 @@ void DoubleArray(vtkm::cont::ArrayHandle<T> inputArray,
 
 void TestExecutionPortalsExample()
 {
-  vtkm::cont::ArrayHandle<vtkm::Float32> inputArray = SafeDataLoad1();
+  viskores::cont::ArrayHandle<viskores::Float32> inputArray = SafeDataLoad1();
   CheckArrayValues(inputArray);
-  vtkm::cont::ArrayHandle<vtkm::Float32> outputArray;
-  DoubleArray(inputArray, outputArray, vtkm::cont::DeviceAdapterTagSerial());
+  viskores::cont::ArrayHandle<viskores::Float32> outputArray;
+  DoubleArray(inputArray, outputArray, viskores::cont::DeviceAdapterTagSerial());
   CheckArrayValues(outputArray, 2);
 }
 
@@ -558,10 +572,10 @@ void TestExecutionPortalsExample()
 ////
 void LegacyFunction(const int* data);
 
-void UseArrayWithLegacy(const vtkm::cont::ArrayHandle<vtkm::Int32> array)
+void UseArrayWithLegacy(const viskores::cont::ArrayHandle<viskores::Int32> array)
 {
-  vtkm::cont::ArrayHandleBasic<vtkm::Int32> basicArray = array;
-  vtkm::cont::Token token; // Token prevents array from changing while in scope.
+  viskores::cont::ArrayHandleBasic<viskores::Int32> basicArray = array;
+  viskores::cont::Token token; // Token prevents array from changing while in scope.
   const int* cArray = basicArray.GetReadPointer(token);
   LegacyFunction(cArray);
   // When function returns, token goes out of scope and array can be modified.
@@ -577,7 +591,7 @@ void LegacyFunction(const int* data)
 
 void TryUseArrayWithLegacy()
 {
-  vtkm::cont::ArrayHandle<vtkm::Int32> array;
+  viskores::cont::ArrayHandle<viskores::Int32> array;
   array.Allocate(50);
   SetPortal(array.WritePortal());
   UseArrayWithLegacy(array);
@@ -588,9 +602,9 @@ void ArrayHandleFromComponents()
   ////
   //// BEGIN-EXAMPLE ArrayHandleSOAFromComponentArrays
   ////
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> component1;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> component2;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> component3;
+  viskores::cont::ArrayHandle<viskores::FloatDefault> component1;
+  viskores::cont::ArrayHandle<viskores::FloatDefault> component2;
+  viskores::cont::ArrayHandle<viskores::FloatDefault> component3;
   // Fill component arrays...
   //// PAUSE-EXAMPLE
   component1.AllocateAndFill(50, 0);
@@ -598,16 +612,16 @@ void ArrayHandleFromComponents()
   component3.AllocateAndFill(50, 2);
   //// RESUME-EXAMPLE
 
-  vtkm::cont::ArrayHandleSOA<vtkm::Vec3f> soaArray =
-    vtkm::cont::make_ArrayHandleSOA(component1, component2, component3);
+  viskores::cont::ArrayHandleSOA<viskores::Vec3f> soaArray =
+    viskores::cont::make_ArrayHandleSOA(component1, component2, component3);
   ////
   //// END-EXAMPLE ArrayHandleSOAFromComponentArrays
   ////
 
   auto portal = soaArray.ReadPortal();
-  for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); ++index)
+  for (viskores::Id index = 0; index < portal.GetNumberOfValues(); ++index)
   {
-    VTKM_TEST_ASSERT(portal.Get(index) == vtkm::Vec3f{ 0, 1, 2 });
+    VISKORES_TEST_ASSERT(portal.Get(index) == viskores::Vec3f{ 0, 1, 2 });
   }
 }
 
@@ -631,5 +645,5 @@ void Test()
 
 int GuideExampleArrayHandle(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

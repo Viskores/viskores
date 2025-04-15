@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -52,20 +60,20 @@
 //  I/O functions used by the ContourTreeApp for data read.
 //==============================================================================
 
-#ifndef vtk_m_examples_ContourTreeAppDataIO_hxx
-#define vtk_m_examples_ContourTreeAppDataIO_hxx
+#ifndef viskores_examples_ContourTreeAppDataIO_hxx
+#define viskores_examples_ContourTreeAppDataIO_hxx
 
-#include <vtkm/Types.h>
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/cont/Timer.h>
-#include <vtkm/io/BOVDataSetReader.h>
+#include <viskores/Types.h>
+#include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/CellSetStructured.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/PartitionedDataSet.h>
+#include <viskores/cont/Timer.h>
+#include <viskores/io/BOVDataSetReader.h>
 
-#include <vtkm/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 #include <cstdio>
 #include <fstream>
@@ -87,7 +95,7 @@
 
 
 /// Convert a 3D index of a cube to rank index
-inline vtkm::Id to1DIndex(vtkm::Id3 idx, vtkm::Id3 dims)
+inline viskores::Id to1DIndex(viskores::Id3 idx, viskores::Id3 dims)
 {
   // return (idx[2] * dims[0] * dims[1]) + (idx[1] * dims[0]) + idx[0];
   // Swap first and second dimension
@@ -95,9 +103,9 @@ inline vtkm::Id to1DIndex(vtkm::Id3 idx, vtkm::Id3 dims)
 }
 
 /// Convert the rank index to the index of the cube
-inline vtkm::Id3 to3DIndex(vtkm::Id idx, vtkm::Id3 dims)
+inline viskores::Id3 to3DIndex(viskores::Id idx, viskores::Id3 dims)
 {
-  vtkm::Id3 res;
+  viskores::Id3 res;
   res[2] = idx / (dims[0] * dims[1]);
   idx -= (res[2] * dims[0] * dims[1]);
   // Swap index 0 and 1
@@ -119,41 +127,41 @@ inline vtkm::Id3 to3DIndex(vtkm::Id idx, vtkm::Id3 dims)
 /// @param[in] blocksPerDim Number of data blocks to use per dimension
 /// @param[in] selectSize Select subset of this size from the dataset. Set to (-1,-1,-1) to select the full size
 /// @param[out] nDims Number of data dimensions (i.e, 2 or 3)
-/// @param[out] useDataSet VTKm partioned dataset to be used with the distributed contour tree filter
+/// @param[out] useDataSet Viskores partioned dataset to be used with the distributed contour tree filter
 /// @param[out] globalSize Global extends of the input mesh (i.e., number of mesh points in each dimension)
 /// @param[out] localBlockIndices  Array with the (x,y,z) index of each local data block with
 ///                              with respect to blocksPerDim
 /// @param[out] dataReadTime Time to read the data
-/// @param[out] buildDatasetTime Time to construct the VTKm datasets
+/// @param[out] buildDatasetTime Time to construct the Viskores datasets
 /// @returns bool indicating whether the read was successful or not
 template <typename ValueType>
 bool read3DHDF5File(const int& mpi_rank,
                     const std::string& filename,
                     const std::string& dataset_name,
                     const int& blocksPerRank,
-                    vtkm::Id3& blocksPerDim,
-                    const vtkm::Id3& selectSize,
-                    std::vector<vtkm::Float32>::size_type& nDims,
-                    vtkm::cont::PartitionedDataSet& useDataSet,
-                    vtkm::Id3& globalSize,
-                    vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-                    vtkm::Float64& dataReadTime,
-                    vtkm::Float64& buildDatasetTime)
+                    viskores::Id3& blocksPerDim,
+                    const viskores::Id3& selectSize,
+                    std::vector<viskores::Float32>::size_type& nDims,
+                    viskores::cont::PartitionedDataSet& useDataSet,
+                    viskores::Id3& globalSize,
+                    viskores::cont::ArrayHandle<viskores::Id3>& localBlockIndices,
+                    viskores::Float64& dataReadTime,
+                    viskores::Float64& buildDatasetTime)
 {
-  vtkm::cont::Timer totalTime;
+  viskores::cont::Timer totalTime;
   totalTime.Start();
-  vtkm::Float64 prevTime = 0;
-  vtkm::Float64 currTime = 0;
+  viskores::Float64 prevTime = 0;
+  viskores::Float64 currTime = 0;
 
   // TODO not supported yet
   if (blocksPerRank > 1)
   {
-    VTKM_LOG_S(
-      vtkm::cont::LogLevel::Error,
+    VISKORES_LOG_S(
+      viskores::cont::LogLevel::Error,
       "HDF5 reader for ContourTreeDistributed does not support multiple blocks per rank yet");
     return false;
   }
-  vtkm::Id blockNo = 0; // TODO: Update this if we have multiple blocks per rank
+  viskores::Id blockNo = 0; // TODO: Update this if we have multiple blocks per rank
 
   localBlockIndices.Allocate(blocksPerRank);
   auto localBlockIndicesPortal = localBlockIndices.WritePortal();
@@ -175,8 +183,8 @@ bool read3DHDF5File(const int& mpi_rank,
   nDims = H5Sget_simple_extent_ndims(filespace);
   if (nDims != 3)
   {
-    VTKM_LOG_S(vtkm::cont::LogLevel::Error,
-               "HDF5 reader for ContourTreeDistributed requires 3D dataset");
+    VISKORES_LOG_S(viskores::cont::LogLevel::Error,
+                   "HDF5 reader for ContourTreeDistributed requires 3D dataset");
     return false;
   }
   hsize_t dims[nDims]; // dataset dimensions
@@ -192,10 +200,10 @@ bool read3DHDF5File(const int& mpi_rank,
   hsize_t offset[3]; // hyperslab offset in the file
 
   // Compute the origin and count
-  vtkm::Id3 blockSize(std::floor(vtkm::Id(globalSize[0] / blocksPerDim[0])),
-                      std::floor(vtkm::Id(globalSize[1] / blocksPerDim[1])),
-                      std::floor(vtkm::Id(globalSize[2] / blocksPerDim[2])));
-  vtkm::Id3 blockIndex = to3DIndex(mpi_rank, blocksPerDim);
+  viskores::Id3 blockSize(std::floor(viskores::Id(globalSize[0] / blocksPerDim[0])),
+                          std::floor(viskores::Id(globalSize[1] / blocksPerDim[1])),
+                          std::floor(viskores::Id(globalSize[2] / blocksPerDim[2])));
+  viskores::Id3 blockIndex = to3DIndex(mpi_rank, blocksPerDim);
 
   // compute the offset and count for the block for this rank
   offset[0] = blockSize[0] * blockIndex[0];
@@ -221,37 +229,37 @@ bool read3DHDF5File(const int& mpi_rank,
     count[2] = count[2] + 1;
   }
   // Check that we are not running over the end of the dataset
-  if (vtkm::Id(offset[0] + count[0]) > globalSize[0])
+  if (viskores::Id(offset[0] + count[0]) > globalSize[0])
   {
     count[0] = globalSize[0] - offset[0];
   }
-  if (vtkm::Id(offset[1] + count[1]) > globalSize[1])
+  if (viskores::Id(offset[1] + count[1]) > globalSize[1])
   {
     count[1] = globalSize[1] - offset[1];
   }
-  if (vtkm::Id(offset[2] + count[2]) > globalSize[2])
+  if (viskores::Id(offset[2] + count[2]) > globalSize[2])
   {
     count[2] = globalSize[2] - offset[2];
   }
   // Check that we cover the end of the dataset
-  if (blockIndex[0] == blocksPerDim[0] - 1 && (vtkm::Id(offset[0] + count[0]) != globalSize[0]))
+  if (blockIndex[0] == blocksPerDim[0] - 1 && (viskores::Id(offset[0] + count[0]) != globalSize[0]))
   {
     count[0] = globalSize[0] - offset[0];
   }
-  if (blockIndex[1] == blocksPerDim[1] - 1 && (vtkm::Id(offset[1] + count[1]) != globalSize[1]))
+  if (blockIndex[1] == blocksPerDim[1] - 1 && (viskores::Id(offset[1] + count[1]) != globalSize[1]))
   {
     count[1] = globalSize[1] - offset[1];
   }
-  if (blockIndex[2] == blocksPerDim[2] - 1 && (vtkm::Id(offset[2] + count[2]) != globalSize[2]))
+  if (blockIndex[2] == blocksPerDim[2] - 1 && (viskores::Id(offset[2] + count[2]) != globalSize[2]))
   {
     count[2] = globalSize[2] - offset[2];
   }
-  blockSize = vtkm::Id3{ static_cast<vtkm::Id>(count[0]),
-                         static_cast<vtkm::Id>(count[1]),
-                         static_cast<vtkm::Id>(count[2]) };
-  /*vtkm::Id3 blockOrigin = vtkm::Id3{ static_cast<vtkm::Id>(offset[0]),
-                                     static_cast<vtkm::Id>(offset[1]),
-                                     static_cast<vtkm::Id>(offset[2]) };*/
+  blockSize = viskores::Id3{ static_cast<viskores::Id>(count[0]),
+                             static_cast<viskores::Id>(count[1]),
+                             static_cast<viskores::Id>(count[2]) };
+  /*viskores::Id3 blockOrigin = viskores::Id3{ static_cast<viskores::Id>(offset[0]),
+                                     static_cast<viskores::Id>(offset[1]),
+                                     static_cast<viskores::Id>(offset[2]) };*/
 
   // Define the hyperslap to read the data into memory
   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, offset, NULL, count, NULL);
@@ -272,7 +280,7 @@ bool read3DHDF5File(const int& mpi_rank,
         {
           for (hsize_t i = 0; i < count[2]; i++)
           {
-            values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
+            values[to1DIndex(viskores::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
           }
         }
       }
@@ -288,7 +296,7 @@ bool read3DHDF5File(const int& mpi_rank,
         {
           for (hsize_t i = 0; i < count[2]; i++)
           {
-            values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
+            values[to1DIndex(viskores::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
           }
         }
       }
@@ -304,7 +312,7 @@ bool read3DHDF5File(const int& mpi_rank,
         {
           for (hsize_t i = 0; i < count[2]; i++)
           {
-            values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
+            values[to1DIndex(viskores::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
           }
         }
       }
@@ -320,14 +328,15 @@ bool read3DHDF5File(const int& mpi_rank,
         {
           for (hsize_t i = 0; i < count[2]; i++)
           {
-            values[to1DIndex(vtkm::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
+            values[to1DIndex(viskores::Id3(k, j, i), blockSize)] = ValueType(data_out[k][j][i]);
           }
         }
       }
     }
     else
     {
-      VTKM_LOG_S(vtkm::cont::LogLevel::Error, "Data type not supported by the example HDF5 reader");
+      VISKORES_LOG_S(viskores::cont::LogLevel::Error,
+                     "Data type not supported by the example HDF5 reader");
       throw "Data type not supported by the example HDF5 reader";
     }
   }
@@ -336,31 +345,31 @@ bool read3DHDF5File(const int& mpi_rank,
   H5Dclose(dataset);
   H5Fclose(file);
 
-  // Create vtk-m data set
-  vtkm::cont::DataSetBuilderUniform dsb;
-  vtkm::cont::DataSet ds;
-  VTKM_ASSERT(nDims == 3);
+  // Create viskores data set
+  viskores::cont::DataSetBuilderUniform dsb;
+  viskores::cont::DataSet ds;
+  VISKORES_ASSERT(nDims == 3);
 
   // Swap dimensions so that they are from fastest to slowest growing
   // dims[0] -> col; dims[1] -> row, dims[2] ->slice
   // Swap the dimensions to match the pre-split file reader
-  globalSize = vtkm::Id3(globalSize[1], globalSize[0], globalSize[2]);
+  globalSize = viskores::Id3(globalSize[1], globalSize[0], globalSize[2]);
   // Swap also the blocks per dimension accordingly
-  blocksPerDim = vtkm::Id3(blocksPerDim[1], blocksPerDim[0], blocksPerDim[2]);
+  blocksPerDim = viskores::Id3(blocksPerDim[1], blocksPerDim[0], blocksPerDim[2]);
 
   // Swap first and second dimenion here as well for consistency
-  const vtkm::Vec<ValueType, 3> v_origin{ static_cast<ValueType>(offset[1]),
-                                          static_cast<ValueType>(offset[0]),
-                                          static_cast<ValueType>(offset[2]) };
-  const vtkm::Id3 v_dims{ static_cast<vtkm::Id>(blockSize[1]),
-                          static_cast<vtkm::Id>(blockSize[0]),
-                          static_cast<vtkm::Id>(blockSize[2]) };
-  vtkm::Vec<ValueType, 3> v_spacing(1, 1, 1);
+  const viskores::Vec<ValueType, 3> v_origin{ static_cast<ValueType>(offset[1]),
+                                              static_cast<ValueType>(offset[0]),
+                                              static_cast<ValueType>(offset[2]) };
+  const viskores::Id3 v_dims{ static_cast<viskores::Id>(blockSize[1]),
+                              static_cast<viskores::Id>(blockSize[0]),
+                              static_cast<viskores::Id>(blockSize[2]) };
+  viskores::Vec<ValueType, 3> v_spacing(1, 1, 1);
   ds = dsb.Create(v_dims, v_origin, v_spacing);
-  vtkm::cont::CellSetStructured<3> cs;
+  viskores::cont::CellSetStructured<3> cs;
   cs.SetPointDimensions(v_dims);
   cs.SetGlobalPointDimensions(globalSize);
-  cs.SetGlobalPointIndexStart(vtkm::Id3{ v_origin[0], v_origin[1], v_origin[2] });
+  cs.SetGlobalPointIndexStart(viskores::Id3{ v_origin[0], v_origin[1], v_origin[2] });
   ds.SetCellSet(cs);
 
   ds.AddPointField("values", values);
@@ -368,16 +377,16 @@ bool read3DHDF5File(const int& mpi_rank,
   useDataSet.AppendPartition(ds);
 
   // Swap order to match pre-splot
-  localBlockIndicesPortal.Set(blockNo, vtkm::Id3(blockIndex[1], blockIndex[0], blockIndex[2]));
+  localBlockIndicesPortal.Set(blockNo, viskores::Id3(blockIndex[1], blockIndex[0], blockIndex[2]));
 
   // Log information of the (first) local data block
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info,
-             "" << std::setw(42) << std::left << "blockSize"
-                << ":" << v_dims << std::endl
-                << std::setw(42) << std::left << "blockOrigin=" << v_origin << std::endl
-                << std::setw(42) << std::left << "blockIndices=" << localBlockIndicesPortal.Get(0)
-                << std::endl
-                << std::setw(42) << std::left << "globalSize=" << globalSize << std::endl);
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 "" << std::setw(42) << std::left << "blockSize"
+                    << ":" << v_dims << std::endl
+                    << std::setw(42) << std::left << "blockOrigin=" << v_origin << std::endl
+                    << std::setw(42) << std::left
+                    << "blockIndices=" << localBlockIndicesPortal.Get(0) << std::endl
+                    << std::setw(42) << std::left << "globalSize=" << globalSize << std::endl);
 
   // Finished data read
   currTime = totalTime.GetElapsedTime();
@@ -397,30 +406,30 @@ bool read3DHDF5File(const int& mpi_rank,
 /// @param[in] filename Name of the file with %d as placeholder for the integer index of the block
 /// @param[in] blocksPerRank Number of data blocks to process on each rank
 /// @param[out] nDims Number of data dimensions (i.e, 2 or 3)
-/// @param[out] useDataSet VTKm partioned dataset to be used with the distributed contour tree filter
+/// @param[out] useDataSet Viskores partioned dataset to be used with the distributed contour tree filter
 /// @param[out] globalSize Global extends of the input mesh (i.e., number of mesh points in each dimension)
 /// @param[in] blocksPerDim  Number of data blocks used in each data dimension
 /// @param[in] localBlockIndices  Array with the (x,y,z) index of each local data block with
 ///                              with respect to blocksPerDim
 /// @param[in] dataReadTime Time to read the data
-/// @param[in] buildDatasetTime Time to construct the VTKm datasets
+/// @param[in] buildDatasetTime Time to construct the Viskores datasets
 /// @returns bool indicating whether the read was successful or not
 template <typename ValueType>
 bool readPreSplitFiles(const int& rank,
                        const std::string& filename,
                        const int& blocksPerRank,
-                       std::vector<vtkm::Float32>::size_type& nDims,
-                       vtkm::cont::PartitionedDataSet& useDataSet,
-                       vtkm::Id3& globalSize,
-                       vtkm::Id3& blocksPerDim,
-                       vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-                       vtkm::Float64& dataReadTime,
-                       vtkm::Float64& buildDatasetTime)
+                       std::vector<viskores::Float32>::size_type& nDims,
+                       viskores::cont::PartitionedDataSet& useDataSet,
+                       viskores::Id3& globalSize,
+                       viskores::Id3& blocksPerDim,
+                       viskores::cont::ArrayHandle<viskores::Id3>& localBlockIndices,
+                       viskores::Float64& dataReadTime,
+                       viskores::Float64& buildDatasetTime)
 {
-  vtkm::cont::Timer totalTime;
+  viskores::cont::Timer totalTime;
   totalTime.Start();
-  vtkm::Float64 prevTime = 0;
-  vtkm::Float64 currTime = 0;
+  viskores::Float64 prevTime = 0;
+  viskores::Float64 currTime = 0;
 
   localBlockIndices.Allocate(blocksPerRank);
   auto localBlockIndicesPortal = localBlockIndices.WritePortal();
@@ -445,7 +454,7 @@ bool readPreSplitFiles(const int& rank,
     // Read header with dimensions
     std::string line;
     std::string tag;
-    vtkm::Id dimVertices;
+    viskores::Id dimVertices;
 
     getline(inFile, line);
     std::istringstream global_extents_stream(line);
@@ -456,7 +465,7 @@ bool readPreSplitFiles(const int& rank,
       return false;
     }
 
-    std::vector<vtkm::Id> global_extents;
+    std::vector<viskores::Id> global_extents;
     while (global_extents_stream >> dimVertices)
       global_extents.push_back(dimVertices);
 
@@ -466,17 +475,18 @@ bool readPreSplitFiles(const int& rank,
 
     if (blockNo == 0)
     { // First block: Set globalSize
-      globalSize =
-        vtkm::Id3{ static_cast<vtkm::Id>(global_extents[0]),
-                   static_cast<vtkm::Id>(global_extents[1]),
-                   static_cast<vtkm::Id>(global_extents.size() > 2 ? global_extents[2] : 1) };
+      globalSize = viskores::Id3{ static_cast<viskores::Id>(global_extents[0]),
+                                  static_cast<viskores::Id>(global_extents[1]),
+                                  static_cast<viskores::Id>(
+                                    global_extents.size() > 2 ? global_extents[2] : 1) };
     }
     else
     { // All other blocks: Consistency check of globalSize
       if (globalSize !=
-          vtkm::Id3{ static_cast<vtkm::Id>(global_extents[0]),
-                     static_cast<vtkm::Id>(global_extents[1]),
-                     static_cast<vtkm::Id>(global_extents.size() > 2 ? global_extents[2] : 1) })
+          viskores::Id3{
+            static_cast<viskores::Id>(global_extents[0]),
+            static_cast<viskores::Id>(global_extents[1]),
+            static_cast<viskores::Id>(global_extents.size() > 2 ? global_extents[2] : 1) })
       {
         std::cerr << "Error: Global extents mismatch between blocks!" << std::endl;
         return false;
@@ -491,7 +501,7 @@ bool readPreSplitFiles(const int& rank,
       std::cerr << "Error: Expected #OFFSET, got " << tag << std::endl;
       return false;
     }
-    std::vector<vtkm::Id> offset;
+    std::vector<viskores::Id> offset;
     while (offset_stream >> dimVertices)
       offset.push_back(dimVertices);
     // Swap dimensions so that they are from fastest to slowest growing
@@ -506,7 +516,7 @@ bool readPreSplitFiles(const int& rank,
       std::cerr << "Error: Expected #BLOCKS_PER_DIM, got " << tag << std::endl;
       return false;
     }
-    std::vector<vtkm::Id> bpd;
+    std::vector<viskores::Id> bpd;
     while (bpd_stream >> dimVertices)
       bpd.push_back(dimVertices);
     // Swap dimensions so that they are from fastest to slowest growing
@@ -521,7 +531,7 @@ bool readPreSplitFiles(const int& rank,
       std::cerr << "Error: Expected #BLOCK_INDEX, got " << tag << std::endl;
       return false;
     }
-    std::vector<vtkm::Id> blockIndex;
+    std::vector<viskores::Id> blockIndex;
     while (blockIndex_stream >> dimVertices)
       blockIndex.push_back(dimVertices);
     // Swap dimensions so that they are from fastest to slowest growing
@@ -530,7 +540,7 @@ bool readPreSplitFiles(const int& rank,
 
     getline(inFile, line);
     std::istringstream linestream(line);
-    std::vector<vtkm::Id> dims;
+    std::vector<viskores::Id> dims;
     while (linestream >> dimVertices)
     {
       dims.push_back(dimVertices);
@@ -554,11 +564,11 @@ bool readPreSplitFiles(const int& rank,
     // Check that the number of dimensiosn is either 2D or 3D
     bool invalidNumDimensions = (nDims < 2 || nDims > 3);
     // Log any errors if found on rank 0
-    VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
-                  invalidNumDimensions && (rank == 0),
-                  "The input mesh is " << nDims
-                                       << "D. "
-                                          "The input data must be either 2D or 3D.");
+    VISKORES_LOG_IF_S(viskores::cont::LogLevel::Error,
+                      invalidNumDimensions && (rank == 0),
+                      "The input mesh is " << nDims
+                                           << "D. "
+                                              "The input data must be either 2D or 3D.");
 
     // If we found any errors in the setttings than finalize MPI and exit the execution
     if (invalidNumDimensions)
@@ -585,40 +595,40 @@ bool readPreSplitFiles(const int& rank,
     dataReadTime = currTime - prevTime;
     prevTime = currTime;
 
-    // Create vtk-m data set
-    vtkm::cont::DataSetBuilderUniform dsb;
-    vtkm::cont::DataSet ds;
+    // Create viskores data set
+    viskores::cont::DataSetBuilderUniform dsb;
+    viskores::cont::DataSet ds;
     if (nDims == 2)
     {
-      const vtkm::Id2 v_dims{
-        static_cast<vtkm::Id>(dims[0]),
-        static_cast<vtkm::Id>(dims[1]),
+      const viskores::Id2 v_dims{
+        static_cast<viskores::Id>(dims[0]),
+        static_cast<viskores::Id>(dims[1]),
       };
-      const vtkm::Vec<ValueType, 2> v_origin{ static_cast<ValueType>(offset[0]),
-                                              static_cast<ValueType>(offset[1]) };
-      const vtkm::Vec<ValueType, 2> v_spacing{ 1, 1 };
+      const viskores::Vec<ValueType, 2> v_origin{ static_cast<ValueType>(offset[0]),
+                                                  static_cast<ValueType>(offset[1]) };
+      const viskores::Vec<ValueType, 2> v_spacing{ 1, 1 };
       ds = dsb.Create(v_dims, v_origin, v_spacing);
-      vtkm::cont::CellSetStructured<2> cs;
+      viskores::cont::CellSetStructured<2> cs;
       cs.SetPointDimensions(v_dims);
-      cs.SetGlobalPointDimensions(vtkm::Id2{ globalSize[0], globalSize[1] });
-      cs.SetGlobalPointIndexStart(vtkm::Id2{ offset[0], offset[1] });
+      cs.SetGlobalPointDimensions(viskores::Id2{ globalSize[0], globalSize[1] });
+      cs.SetGlobalPointIndexStart(viskores::Id2{ offset[0], offset[1] });
       ds.SetCellSet(cs);
     }
     else
     {
-      VTKM_ASSERT(nDims == 3);
-      const vtkm::Id3 v_dims{ static_cast<vtkm::Id>(dims[0]),
-                              static_cast<vtkm::Id>(dims[1]),
-                              static_cast<vtkm::Id>(dims[2]) };
-      const vtkm::Vec<ValueType, 3> v_origin{ static_cast<ValueType>(offset[0]),
-                                              static_cast<ValueType>(offset[1]),
-                                              static_cast<ValueType>(offset[2]) };
-      vtkm::Vec<ValueType, 3> v_spacing(1, 1, 1);
+      VISKORES_ASSERT(nDims == 3);
+      const viskores::Id3 v_dims{ static_cast<viskores::Id>(dims[0]),
+                                  static_cast<viskores::Id>(dims[1]),
+                                  static_cast<viskores::Id>(dims[2]) };
+      const viskores::Vec<ValueType, 3> v_origin{ static_cast<ValueType>(offset[0]),
+                                                  static_cast<ValueType>(offset[1]),
+                                                  static_cast<ValueType>(offset[2]) };
+      viskores::Vec<ValueType, 3> v_spacing(1, 1, 1);
       ds = dsb.Create(v_dims, v_origin, v_spacing);
-      vtkm::cont::CellSetStructured<3> cs;
+      viskores::cont::CellSetStructured<3> cs;
       cs.SetPointDimensions(v_dims);
       cs.SetGlobalPointDimensions(globalSize);
-      cs.SetGlobalPointIndexStart(vtkm::Id3{ offset[0], offset[1], offset[2] });
+      cs.SetGlobalPointIndexStart(viskores::Id3{ offset[0], offset[1], offset[2] });
       ds.SetCellSet(cs);
     }
 
@@ -626,16 +636,17 @@ bool readPreSplitFiles(const int& rank,
     // and add to partition
     useDataSet.AppendPartition(ds);
 
-    localBlockIndicesPortal.Set(blockNo,
-                                vtkm::Id3{ static_cast<vtkm::Id>(blockIndex[0]),
-                                           static_cast<vtkm::Id>(blockIndex[1]),
-                                           static_cast<vtkm::Id>(nDims == 3 ? blockIndex[2] : 0) });
+    localBlockIndicesPortal.Set(
+      blockNo,
+      viskores::Id3{ static_cast<viskores::Id>(blockIndex[0]),
+                     static_cast<viskores::Id>(blockIndex[1]),
+                     static_cast<viskores::Id>(nDims == 3 ? blockIndex[2] : 0) });
 
     if (blockNo == 0)
     {
-      blocksPerDim = vtkm::Id3{ static_cast<vtkm::Id>(bpd[0]),
-                                static_cast<vtkm::Id>(bpd[1]),
-                                static_cast<vtkm::Id>(nDims == 3 ? bpd[2] : 1) };
+      blocksPerDim = viskores::Id3{ static_cast<viskores::Id>(bpd[0]),
+                                    static_cast<viskores::Id>(bpd[1]),
+                                    static_cast<viskores::Id>(nDims == 3 ? bpd[2] : 1) };
     }
   }
   currTime = totalTime.GetElapsedTime();
@@ -655,13 +666,13 @@ bool readPreSplitFiles(const int& rank,
 /// @param[in] numBlocks Number of blocks to use during computation
 /// @param[in] blocksPerRank Number of data blocks to process on each rank
 /// @param[out] nDims Number of data dimensions (i.e, 2 or 3)
-/// @param[out] useDataSet VTKm partioned dataset to be used with the distributed contour tree filter
+/// @param[out] useDataSet Viskores partioned dataset to be used with the distributed contour tree filter
 /// @param[out] globalSize Global extends of the input mesh (i.e., number of mesh points in each dimension)
 /// @param[in] blocksPerDim  Number of data blocks used in each data dimension
 /// @param[in] localBlockIndices  Array with the (x,y,z) index of each local data block with
 ///                              with respect to blocksPerDim
 /// @param[in] dataReadTime Time to read the data
-/// @param[in] buildDatasetTime Time to construct the VTKm datasets
+/// @param[in] buildDatasetTime Time to construct the Viskores datasets
 /// @returns bool indicating whether the read was successful or not
 template <typename ValueType>
 bool readSingleBlockFile(const int& rank,
@@ -669,42 +680,42 @@ bool readSingleBlockFile(const int& rank,
                          const std::string& filename,
                          const int& numBlocks,
                          const int& blocksPerRank,
-                         std::vector<vtkm::Float32>::size_type& nDims,
-                         vtkm::cont::PartitionedDataSet& useDataSet,
-                         vtkm::Id3& globalSize,
-                         vtkm::Id3& blocksPerDim,
-                         vtkm::cont::ArrayHandle<vtkm::Id3>& localBlockIndices,
-                         vtkm::Float64& dataReadTime,
-                         vtkm::Float64& buildDatasetTime)
+                         std::vector<viskores::Float32>::size_type& nDims,
+                         viskores::cont::PartitionedDataSet& useDataSet,
+                         viskores::Id3& globalSize,
+                         viskores::Id3& blocksPerDim,
+                         viskores::cont::ArrayHandle<viskores::Id3>& localBlockIndices,
+                         viskores::Float64& dataReadTime,
+                         viskores::Float64& buildDatasetTime)
 {
-  vtkm::cont::Timer totalTime;
+  viskores::cont::Timer totalTime;
   totalTime.Start();
-  vtkm::Float64 prevTime = 0;
-  vtkm::Float64 currTime = 0;
+  viskores::Float64 prevTime = 0;
+  viskores::Float64 currTime = 0;
 
   localBlockIndices.Allocate(blocksPerRank);
   auto localBlockIndicesPortal = localBlockIndices.WritePortal();
 
-  vtkm::cont::DataSet inDataSet;
+  viskores::cont::DataSet inDataSet;
   // TODO: Currently FloatDefault would be fine, but it could cause problems if we ever read binary files here.
   std::vector<ValueType> values;
-  std::vector<vtkm::Id> dims;
+  std::vector<viskores::Id> dims;
 
   // Read BOV data file
   if (filename.compare(filename.length() - 3, 3, "bov") == 0)
   {
     std::cout << "Reading BOV file" << std::endl;
-    vtkm::io::BOVDataSetReader reader(filename);
+    viskores::io::BOVDataSetReader reader(filename);
     inDataSet = reader.ReadDataSet();
     nDims = 3;
     currTime = totalTime.GetElapsedTime();
     dataReadTime = currTime - prevTime;
     prevTime = currTime;
     // Copy the data into the values array so we can construct a multiblock dataset
-    vtkm::Id3 pointDimensions;
+    viskores::Id3 pointDimensions;
     auto cellSet = inDataSet.GetCellSet();
-    vtkm::cont::CastAndCall(
-      cellSet, vtkm::worklet::contourtree_augmented::GetPointDimensions(), pointDimensions);
+    viskores::cont::CastAndCall(
+      cellSet, viskores::worklet::contourtree_augmented::GetPointDimensions(), pointDimensions);
     std::cout << "Point dimensions are " << pointDimensions << std::endl;
     dims.resize(3);
     dims[0] = pointDimensions[0];
@@ -712,8 +723,8 @@ bool readSingleBlockFile(const int& rank,
     dims[2] = pointDimensions[2];
     auto tempFieldData = inDataSet.GetField(0).GetData();
     values.resize(static_cast<std::size_t>(tempFieldData.GetNumberOfValues()));
-    auto valuesHandle = vtkm::cont::make_ArrayHandle(values, vtkm::CopyFlag::Off);
-    vtkm::cont::ArrayCopy(tempFieldData, valuesHandle);
+    auto valuesHandle = viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::Off);
+    viskores::cont::ArrayCopy(tempFieldData, valuesHandle);
     valuesHandle.SyncControlArray(); //Forces values to get updated if copy happened on GPU
   }
   // Read ASCII data input
@@ -728,7 +739,7 @@ bool readSingleBlockFile(const int& rank,
     std::string line;
     getline(inFile, line);
     std::istringstream linestream(line);
-    vtkm::Id dimVertices;
+    viskores::Id dimVertices;
     while (linestream >> dimVertices)
     {
       dims.push_back(dimVertices);
@@ -745,9 +756,10 @@ bool readSingleBlockFile(const int& rank,
     // Check the the number of dimensiosn is either 2D or 3D
     bool invalidNumDimensions = (nDims < 2 || nDims > 3);
     // Log any errors if found on rank 0
-    VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
-                  invalidNumDimensions && (rank == 0),
-                  "The input mesh is " << nDims << "D. The input data must be either 2D or 3D.");
+    VISKORES_LOG_IF_S(viskores::cont::LogLevel::Error,
+                      invalidNumDimensions && (rank == 0),
+                      "The input mesh is " << nDims
+                                           << "D. The input data must be either 2D or 3D.");
     // If we found any errors in the setttings than finalize MPI and exit the execution
     if (invalidNumDimensions)
     {
@@ -771,39 +783,39 @@ bool readSingleBlockFile(const int& rank,
   } // END ASCII Read
 
   // Create a multi-block dataset for multi-block DIY-paralle processing
-  blocksPerDim =
-    nDims == 3 ? vtkm::Id3(1, 1, numBlocks) : vtkm::Id3(1, numBlocks, 1); // Decompose the data into
-  globalSize = nDims == 3 ? vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
-                                      static_cast<vtkm::Id>(dims[1]),
-                                      static_cast<vtkm::Id>(dims[2]))
-                          : vtkm::Id3(static_cast<vtkm::Id>(dims[0]),
-                                      static_cast<vtkm::Id>(dims[1]),
-                                      static_cast<vtkm::Id>(1));
+  blocksPerDim = nDims == 3 ? viskores::Id3(1, 1, numBlocks)
+                            : viskores::Id3(1, numBlocks, 1); // Decompose the data into
+  globalSize = nDims == 3 ? viskores::Id3(static_cast<viskores::Id>(dims[0]),
+                                          static_cast<viskores::Id>(dims[1]),
+                                          static_cast<viskores::Id>(dims[2]))
+                          : viskores::Id3(static_cast<viskores::Id>(dims[0]),
+                                          static_cast<viskores::Id>(dims[1]),
+                                          static_cast<viskores::Id>(1));
   std::cout << blocksPerDim << " " << globalSize << std::endl;
   {
-    vtkm::Id lastDimSize =
-      (nDims == 2) ? static_cast<vtkm::Id>(dims[1]) : static_cast<vtkm::Id>(dims[2]);
+    viskores::Id lastDimSize =
+      (nDims == 2) ? static_cast<viskores::Id>(dims[1]) : static_cast<viskores::Id>(dims[2]);
     if (size > (lastDimSize / 2.))
     {
-      VTKM_LOG_IF_S(vtkm::cont::LogLevel::Error,
-                    rank == 0,
-                    "Number of ranks too large for data. Use " << lastDimSize / 2
-                                                               << "or fewer ranks");
+      VISKORES_LOG_IF_S(viskores::cont::LogLevel::Error,
+                        rank == 0,
+                        "Number of ranks too large for data. Use " << lastDimSize / 2
+                                                                   << "or fewer ranks");
       return false;
     }
-    vtkm::Id standardBlockSize = (vtkm::Id)(lastDimSize / numBlocks);
-    vtkm::Id blockSize = standardBlockSize;
-    vtkm::Id blockSliceSize =
-      nDims == 2 ? static_cast<vtkm::Id>(dims[0]) : static_cast<vtkm::Id>((dims[0] * dims[1]));
-    vtkm::Id blockNumValues = blockSize * blockSliceSize;
+    viskores::Id standardBlockSize = (viskores::Id)(lastDimSize / numBlocks);
+    viskores::Id blockSize = standardBlockSize;
+    viskores::Id blockSliceSize = nDims == 2 ? static_cast<viskores::Id>(dims[0])
+                                             : static_cast<viskores::Id>((dims[0] * dims[1]));
+    viskores::Id blockNumValues = blockSize * blockSliceSize;
 
-    vtkm::Id startBlock = blocksPerRank * rank;
-    vtkm::Id endBlock = startBlock + blocksPerRank;
-    for (vtkm::Id blockIndex = startBlock; blockIndex < endBlock; ++blockIndex)
+    viskores::Id startBlock = blocksPerRank * rank;
+    viskores::Id endBlock = startBlock + blocksPerRank;
+    for (viskores::Id blockIndex = startBlock; blockIndex < endBlock; ++blockIndex)
     {
-      vtkm::Id localBlockIndex = blockIndex - startBlock;
-      vtkm::Id blockStart = blockIndex * blockNumValues;
-      vtkm::Id blockEnd = blockStart + blockNumValues;
+      viskores::Id localBlockIndex = blockIndex - startBlock;
+      viskores::Id blockStart = blockIndex * blockNumValues;
+      viskores::Id blockEnd = blockStart + blockNumValues;
       if (blockIndex < (numBlocks - 1)) // add overlap between regions
       {
         blockEnd += blockSliceSize;
@@ -812,47 +824,47 @@ bool readSingleBlockFile(const int& rank,
       {
         blockEnd = lastDimSize * blockSliceSize;
       }
-      vtkm::Id currBlockSize = (vtkm::Id)((blockEnd - blockStart) / blockSliceSize);
+      viskores::Id currBlockSize = (viskores::Id)((blockEnd - blockStart) / blockSliceSize);
 
-      vtkm::cont::DataSetBuilderUniform dsb;
-      vtkm::cont::DataSet ds;
+      viskores::cont::DataSetBuilderUniform dsb;
+      viskores::cont::DataSet ds;
 
       // 2D data
       if (nDims == 2)
       {
-        vtkm::Id2 vdims;
-        vdims[0] = static_cast<vtkm::Id>(dims[0]);
-        vdims[1] = static_cast<vtkm::Id>(currBlockSize);
-        vtkm::Vec<ValueType, 2> origin(0, blockIndex * blockSize);
-        vtkm::Vec<ValueType, 2> spacing(1, 1);
+        viskores::Id2 vdims;
+        vdims[0] = static_cast<viskores::Id>(dims[0]);
+        vdims[1] = static_cast<viskores::Id>(currBlockSize);
+        viskores::Vec<ValueType, 2> origin(0, blockIndex * blockSize);
+        viskores::Vec<ValueType, 2> spacing(1, 1);
         ds = dsb.Create(vdims, origin, spacing);
-        vtkm::cont::CellSetStructured<2> cs;
+        viskores::cont::CellSetStructured<2> cs;
         cs.SetPointDimensions(vdims);
-        cs.SetGlobalPointDimensions(vtkm::Id2{ globalSize[0], globalSize[1] });
-        cs.SetGlobalPointIndexStart(vtkm::Id2{ 0, (blockStart / blockSliceSize) });
+        cs.SetGlobalPointDimensions(viskores::Id2{ globalSize[0], globalSize[1] });
+        cs.SetGlobalPointIndexStart(viskores::Id2{ 0, (blockStart / blockSliceSize) });
         ds.SetCellSet(cs);
-        localBlockIndicesPortal.Set(localBlockIndex, vtkm::Id3(0, blockIndex, 0));
+        localBlockIndicesPortal.Set(localBlockIndex, viskores::Id3(0, blockIndex, 0));
       }
       // 3D data
       else
       {
-        vtkm::Id3 vdims;
-        vdims[0] = static_cast<vtkm::Id>(dims[0]);
-        vdims[1] = static_cast<vtkm::Id>(dims[1]);
-        vdims[2] = static_cast<vtkm::Id>(currBlockSize);
-        vtkm::Vec<ValueType, 3> origin(0, 0, (blockIndex * blockSize));
-        vtkm::Vec<ValueType, 3> spacing(1, 1, 1);
+        viskores::Id3 vdims;
+        vdims[0] = static_cast<viskores::Id>(dims[0]);
+        vdims[1] = static_cast<viskores::Id>(dims[1]);
+        vdims[2] = static_cast<viskores::Id>(currBlockSize);
+        viskores::Vec<ValueType, 3> origin(0, 0, (blockIndex * blockSize));
+        viskores::Vec<ValueType, 3> spacing(1, 1, 1);
         ds = dsb.Create(vdims, origin, spacing);
-        vtkm::cont::CellSetStructured<3> cs;
+        viskores::cont::CellSetStructured<3> cs;
         cs.SetPointDimensions(vdims);
         cs.SetGlobalPointDimensions(globalSize);
-        cs.SetGlobalPointIndexStart(vtkm::Id3(0, 0, blockStart / blockSliceSize));
+        cs.SetGlobalPointIndexStart(viskores::Id3(0, 0, blockStart / blockSliceSize));
         ds.SetCellSet(cs);
-        localBlockIndicesPortal.Set(localBlockIndex, vtkm::Id3(0, 0, blockIndex));
+        localBlockIndicesPortal.Set(localBlockIndex, viskores::Id3(0, 0, blockIndex));
       }
 
-      std::vector<vtkm::Float32> subValues((values.begin() + blockStart),
-                                           (values.begin() + blockEnd));
+      std::vector<viskores::Float32> subValues((values.begin() + blockStart),
+                                               (values.begin() + blockEnd));
 
       ds.AddPointField("values", subValues);
       useDataSet.AppendPartition(ds);

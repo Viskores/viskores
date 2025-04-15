@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -11,19 +19,19 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/io/ImageWriterPNG.h>
-#include <vtkm/worklet/WorkletMapField.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/io/ImageWriterPNG.h>
+#include <viskores/worklet/WorkletMapField.h>
 
 
 // The logistic map is xᵢ₊₁ = rxᵢ(1-xᵢ).
 // If we start this iteration out at (say) x₀ = 0.5, the map has "transients",
 // which we must iterate away to produce the final image.
 template <typename T>
-class LogisticBurnIn : public vtkm::worklet::WorkletMapField
+class LogisticBurnIn : public viskores::worklet::WorkletMapField
 {
 public:
-  LogisticBurnIn(T rmin, vtkm::Id width)
+  LogisticBurnIn(T rmin, viskores::Id width)
     : rmin_(rmin)
     , width_(width)
   {
@@ -32,7 +40,7 @@ public:
   using ControlSignature = void(FieldOut);
   using ExecutionSignature = _1(WorkIndex);
 
-  VTKM_EXEC T operator()(vtkm::Id workIndex) const
+  VISKORES_EXEC T operator()(viskores::Id workIndex) const
   {
     T r = rmin_ + (4.0 - rmin_) * workIndex / (width_ - 1);
     T x = 0.5;
@@ -47,7 +55,7 @@ public:
 
 private:
   T rmin_;
-  vtkm::Id width_;
+  viskores::Id width_;
 };
 
 // After burn-in, the iteration is periodic but in general not convergent,
@@ -55,29 +63,31 @@ private:
 // xᵢ₊ₚ = xᵢ for all i.
 // So color the pixels corresponding to xᵢ, xᵢ₊₁, .. xᵢ₊ₚ.
 template <typename T>
-class LogisticLimitPoints : public vtkm::worklet::WorkletMapField
+class LogisticLimitPoints : public viskores::worklet::WorkletMapField
 {
 public:
-  LogisticLimitPoints(T rmin, vtkm::Id width, vtkm::Id height)
+  LogisticLimitPoints(T rmin, viskores::Id width, viskores::Id height)
     : rmin_(rmin)
     , width_(width)
     , height_(height)
   {
-    orange_ = vtkm::Vec4f(1.0, 0.5, 0.0, 0.0);
+    orange_ = viskores::Vec4f(1.0, 0.5, 0.0, 0.0);
   }
 
   using ControlSignature = void(FieldIn, WholeArrayOut);
   using ExecutionSignature = void(_1, _2, WorkIndex);
 
   template <typename OutputArrayPortalType>
-  VTKM_EXEC void operator()(T x, OutputArrayPortalType& outputArrayPortal, vtkm::Id workIndex) const
+  VISKORES_EXEC void operator()(T x,
+                                OutputArrayPortalType& outputArrayPortal,
+                                viskores::Id workIndex) const
   {
     T r = rmin_ + (4.0 - rmin_) * workIndex / (width_ - 1);
     // We can't display need more limit points than pixels of height:
-    vtkm::Id limit_points = 0;
+    viskores::Id limit_points = 0;
     while (limit_points++ < height_)
     {
-      vtkm::Id j = vtkm::Round(x * (height_ - 1));
+      viskores::Id j = viskores::Round(x * (height_ - 1));
       outputArrayPortal.Set(j * width_ + workIndex, orange_);
       x = r * x * (1 - x);
     }
@@ -85,32 +95,32 @@ public:
 
 private:
   T rmin_;
-  vtkm::Id width_;
-  vtkm::Id height_;
-  vtkm::Vec4f orange_;
+  viskores::Id width_;
+  viskores::Id height_;
+  viskores::Vec4f orange_;
 };
 
 
 int main()
 {
-  vtkm::Id height = 1800;
-  vtkm::Id width = height * 1.618;
-  vtkm::cont::DataSetBuilderUniform dsb;
-  vtkm::cont::DataSet ds = dsb.Create(vtkm::Id2(width, height));
+  viskores::Id height = 1800;
+  viskores::Id width = height * 1.618;
+  viskores::cont::DataSetBuilderUniform dsb;
+  viskores::cont::DataSet ds = dsb.Create(viskores::Id2(width, height));
 
-  vtkm::cont::ArrayHandle<double> x;
+  viskores::cont::ArrayHandle<double> x;
   x.Allocate(width);
-  vtkm::cont::Invoker invoke;
+  viskores::cont::Invoker invoke;
   double rmin = 2.9;
   auto burnIn = LogisticBurnIn<double>(rmin, width);
   invoke(burnIn, x);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec4f> pixels;
+  viskores::cont::ArrayHandle<viskores::Vec4f> pixels;
   pixels.Allocate(width * height);
   auto wp = pixels.WritePortal();
-  for (vtkm::Id i = 0; i < pixels.GetNumberOfValues(); ++i)
+  for (viskores::Id i = 0; i < pixels.GetNumberOfValues(); ++i)
   {
-    wp.Set(i, vtkm::Vec4f(0, 0, 0, 0));
+    wp.Set(i, viskores::Vec4f(0, 0, 0, 0));
   }
   auto limitPoints = LogisticLimitPoints<double>(rmin, width, height);
 
@@ -118,7 +128,7 @@ int main()
   std::string colorFieldName = "pixels";
   ds.AddPointField(colorFieldName, pixels);
   std::string filename = "logistic.png";
-  vtkm::io::ImageWriterPNG writer(filename);
+  viskores::io::ImageWriterPNG writer(filename);
   writer.WriteDataSet(ds, colorFieldName);
   std::cout << "Now open " << filename << "\n";
 }

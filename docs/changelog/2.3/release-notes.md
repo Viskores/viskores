@@ -1,4 +1,4 @@
-VTK-m 2.3.0 Release Notes
+Viskores 2.3.0 Release Notes
 =======================
 
 # Table of Contents
@@ -65,7 +65,7 @@ The following set of improvements have been implemented for the Clip algorithm:
    perform the transformations.
 3. A fast path for discarded and kept cells has been added, which are the most common cell cases.
 4. ClipTables are now more descriptive, and the non-inverted case tables have been imported from VTK, such that both VTK
-   and VTK-m produce the same results.
+   and Viskores produce the same results.
 5. Employ batching of points and cells to use less memory and perform less and faster computations.
 
 The new `Clip` algorithm:
@@ -115,12 +115,12 @@ case, the output cells will be of type `CellSetExplicit` instead of
 
 ## Better document the creation of Field and CoordinateSystem
 
-The constructors for `vtkm::cont::Field` and `vtkm::cont::CoordinateSystem`
+The constructors for `viskores::cont::Field` and `viskores::cont::CoordinateSystem`
 were missing from the built user's guide. The construction of these classes
 from names, associations, and arrays are now provided in the documentation.
 
 Also added new versions of `AddField` and `AddCoordinateSystem` to
-`vtkm::cont::DataSet` that mimic the constructors. This adds some sytatic
+`viskores::cont::DataSet` that mimic the constructors. This adds some sytatic
 sugar so you can just emplace the field instead of constructing and
 passing.
 
@@ -169,9 +169,9 @@ regardless of the point coordinates. This should also speed up the operation.
 
 ## Load options from environment variables
 
-Some common VTK-m options such as the device and log level could be
+Some common Viskores options such as the device and log level could be
 specified on the command line but not through environment variables. It is
-not always possible to set VTK-m command line options, so environment
+not always possible to set Viskores command line options, so environment
 variables are added.
 
 Also added documentation to the user's guide about what options are
@@ -179,11 +179,11 @@ available and how to set them.
 
 ## Added log entry when a cast and call fallback is used
 
-Several places in VTK-m use the `CastAndCallForTypesWithFallback` method in
+Several places in Viskores use the `CastAndCallForTypesWithFallback` method in
 `UnknownArrayHandle`. The method works well for catching both common and
 corner cases. However, there was no way to know if the efficient direct
 method or the (supposedly) less likely fallback of copying data to a float
-array was used. VTK-m now adds a log event, registered at the "INFO" level,
+array was used. Viskores now adds a log event, registered at the "INFO" level,
 whenever data is copied to a fallback float array. This helps developers
 monitor the eficiency of their code.
 
@@ -191,11 +191,11 @@ monitor the eficiency of their code.
 
 ## Automatically initialize Kokkos
 
-Calling `vtkm::cont::Initialize()` is supposed to be optional. However, Kokkos
+Calling `viskores::cont::Initialize()` is supposed to be optional. However, Kokkos
 needs to have `Kokkos::initialize()` called before using some devices such as
-HIP. To make sure that Kokkos is properly initialized, the VTK-m allocation for
+HIP. To make sure that Kokkos is properly initialized, the Viskores allocation for
 the Kokkos device now checks to see if `Kokkos::is_initialized()` is true. If it
-is not, then `vtkm::cont::Initialize()` is called.
+is not, then `viskores::cont::Initialize()` is called.
 
 # Build
 
@@ -212,7 +212,7 @@ Fixes #830
 
 ## Fix include for cub::Swap
 
-A problem we have with the `vtkm::Swap` method is that it can be
+A problem we have with the `viskores::Swap` method is that it can be
 ambiguous with the `cub::Swap` method that is part of the CUDA CUB
 library. We get around this problem by using the CUB version of the
 function when it is available.
@@ -237,7 +237,7 @@ the internals of thrust like this:
 ```
 
 These warnings seem to be caused by the inclusion of `thrust/swap.h`. To
-prevent this, this header file is no longer included from `vtkm/Swap.h`.
+prevent this, this header file is no longer included from `viskores/Swap.h`.
 
 # Others
 

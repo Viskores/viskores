@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,13 +16,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandleCompositeVector.h>
-#include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <viskores/cont/ArrayHandleCompositeVector.h>
+#include <viskores/cont/ArrayHandleConstant.h>
+#include <viskores/cont/ArrayHandleCounting.h>
+#include <viskores/cont/ArrayHandleIndex.h>
+#include <viskores/cont/ArrayHandleUniformPointCoordinates.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -22,19 +30,19 @@ namespace
 template<typename ArrayHandleType>
 void CheckArray(ArrayHandleType array)
 {
-  vtkm::cont::printSummary_ArrayHandle(array, std::cout);
+  viskores::cont::printSummary_ArrayHandle(array, std::cout);
   std::cout << std::endl;
   typename ArrayHandleType::ReadPortalType portal = array.ReadPortal();
 
   // [(0,3,2,0), (1,1,7,0), (2,4,1,0), (3,1,8,0), (4,5,2,0)].
-  VTKM_TEST_ASSERT(test_equal(portal.Get(0), vtkm::make_Vec(0, 3, 2, 0)),
-                   "Bad value in array.");
-  VTKM_TEST_ASSERT(test_equal(portal.Get(1), vtkm::make_Vec(1, 1, 7, 0)),
-                   "Bad value in array.");
-  VTKM_TEST_ASSERT(test_equal(portal.Get(2), vtkm::make_Vec(2, 4, 1, 0)),
-                   "Bad value in array.");
-  VTKM_TEST_ASSERT(test_equal(portal.Get(3), vtkm::make_Vec(3, 1, 8, 0)),
-                   "Bad value in array.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(0), viskores::make_Vec(0, 3, 2, 0)),
+                       "Bad value in array.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(1), viskores::make_Vec(1, 1, 7, 0)),
+                       "Bad value in array.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(2), viskores::make_Vec(2, 4, 1, 0)),
+                       "Bad value in array.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(3), viskores::make_Vec(3, 1, 8, 0)),
+                       "Bad value in array.");
 }
 
 void ArrayHandleCompositeVectorBasic()
@@ -43,11 +51,11 @@ void ArrayHandleCompositeVectorBasic()
   //// BEGIN-EXAMPLE ArrayHandleCompositeVectorBasic
   ////
   // Create an array with [0, 1, 2, 3, 4]
-  using ArrayType1 = vtkm::cont::ArrayHandleIndex;
+  using ArrayType1 = viskores::cont::ArrayHandleIndex;
   ArrayType1 array1(5);
 
   // Create an array with [3, 1, 4, 1, 5]
-  using ArrayType2 = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using ArrayType2 = viskores::cont::ArrayHandle<viskores::Id>;
   ArrayType2 array2;
   array2.Allocate(5);
   ArrayType2::WritePortalType arrayPortal2 = array2.WritePortal();
@@ -58,7 +66,7 @@ void ArrayHandleCompositeVectorBasic()
   arrayPortal2.Set(4, 5);
 
   // Create an array with [2, 7, 1, 8, 2]
-  using ArrayType3 = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using ArrayType3 = viskores::cont::ArrayHandle<viskores::Id>;
   ArrayType3 array3;
   array3.Allocate(5);
   ArrayType2::WritePortalType arrayPortal3 = array3.WritePortal();
@@ -69,12 +77,12 @@ void ArrayHandleCompositeVectorBasic()
   arrayPortal3.Set(4, 2);
 
   // Create an array with [0, 0, 0, 0]
-  using ArrayType4 = vtkm::cont::ArrayHandleConstant<vtkm::Id>;
+  using ArrayType4 = viskores::cont::ArrayHandleConstant<viskores::Id>;
   ArrayType4 array4(0, 5);
 
   // Use ArrayhandleCompositeVector to create the array
   // [(0,3,2,0), (1,1,7,0), (2,4,1,0), (3,1,8,0), (4,5,2,0)].
-  using CompositeArrayType = vtkm::cont::
+  using CompositeArrayType = viskores::cont::
     ArrayHandleCompositeVector<ArrayType1, ArrayType2, ArrayType3, ArrayType4>;
   CompositeArrayType compositeArray(array1, array2, array3, array4);
   ////
@@ -86,7 +94,7 @@ void ArrayHandleCompositeVectorBasic()
     ////
     //// BEGIN-EXAMPLE MakeArrayHandleCompositeVector
     ////
-    vtkm::cont::make_ArrayHandleCompositeVector(array1, array2, array3, array4)
+    viskores::cont::make_ArrayHandleCompositeVector(array1, array2, array3, array4)
     ////
     //// END-EXAMPLE MakeArrayHandleCompositeVector
     ////
@@ -102,5 +110,5 @@ void Test()
 
 int GuideExampleArrayHandleCompositeVector(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

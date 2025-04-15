@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,38 +15,38 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/filter/contour/Contour.h>
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/filter/contour/Contour.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
 int main(int argc, char** argv)
 {
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = viskores::cont::InitializeOptions::DefaultAnyDevice;
+  viskores::cont::InitializeResult config = viskores::cont::Initialize(argc, argv, opts);
 
   try
   {
-    vtkm::io::VTKDataSetReader reader("data/kitchen.vtk");
+    viskores::io::VTKDataSetReader reader("data/kitchen.vtk");
 
-    // PROBLEM! ... we aren't reading from a file, so we have an empty vtkm::cont::DataSet.
-    //vtkm::cont::DataSet ds_from_file = reader.ReadDataSet();
-    vtkm::cont::DataSet ds_from_file;
+    // PROBLEM! ... we aren't reading from a file, so we have an empty viskores::cont::DataSet.
+    //viskores::cont::DataSet ds_from_file = reader.ReadDataSet();
+    viskores::cont::DataSet ds_from_file;
 
-    vtkm::filter::contour::Contour contour;
+    viskores::filter::contour::Contour contour;
     contour.SetActiveField("c1");
     contour.SetNumberOfIsoValues(3);
     contour.SetIsoValue(0, 0.05);
     contour.SetIsoValue(1, 0.10);
     contour.SetIsoValue(2, 0.15);
 
-    vtkm::cont::DataSet ds_from_contour = contour.Execute(ds_from_file);
-    vtkm::io::VTKDataSetWriter writer("out_mc.vtk");
+    viskores::cont::DataSet ds_from_contour = contour.Execute(ds_from_file);
+    viskores::io::VTKDataSetWriter writer("out_mc.vtk");
     writer.WriteDataSet(ds_from_contour);
   }
-  catch (const vtkm::cont::Error& error)
+  catch (const viskores::cont::Error& error)
   {
-    std::cerr << "VTK-m error occurred!: " << error.GetMessage() << std::endl;
+    std::cerr << "Viskores error occurred!: " << error.GetMessage() << std::endl;
     return 1;
   }
 

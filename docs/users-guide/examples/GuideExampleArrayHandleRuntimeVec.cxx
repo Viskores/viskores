@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,18 +16,18 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandleRuntimeVec.h>
-#include <vtkm/cont/ErrorBadType.h>
-#include <vtkm/cont/UnknownArrayHandle.h>
+#include <viskores/cont/ArrayHandleRuntimeVec.h>
+#include <viskores/cont/ErrorBadType.h>
+#include <viskores/cont/UnknownArrayHandle.h>
 
-#include <vtkm/TypeList.h>
+#include <viskores/TypeList.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
 
-constexpr vtkm::Id ARRAY_SIZE = 10;
+constexpr viskores::Id ARRAY_SIZE = 10;
 
 void ReadArray(std::vector<float>& data, int& numComponents)
 {
@@ -33,37 +41,37 @@ void ReadArray(std::vector<float>& data, int& numComponents)
 ////
 void ReadArray(std::vector<float>& data, int& numComponents);
 
-vtkm::cont::UnknownArrayHandle LoadData()
+viskores::cont::UnknownArrayHandle LoadData()
 {
   // Read data from some external source where the vector size is determined at runtime.
-  std::vector<vtkm::Float32> data;
+  std::vector<viskores::Float32> data;
   int numComponents;
   ReadArray(data, numComponents);
 
   // Resulting ArrayHandleRuntimeVec gets wrapped in an UnknownArrayHandle
-  return vtkm::cont::make_ArrayHandleRuntimeVecMove(
-    static_cast<vtkm::IdComponent>(numComponents), std::move(data));
+  return viskores::cont::make_ArrayHandleRuntimeVecMove(
+    static_cast<viskores::IdComponent>(numComponents), std::move(data));
 }
 
-void UseVecArray(const vtkm::cont::UnknownArrayHandle& array)
+void UseVecArray(const viskores::cont::UnknownArrayHandle& array)
 {
-  using ExpectedArrayType = vtkm::cont::ArrayHandle<vtkm::Vec3f_32>;
+  using ExpectedArrayType = viskores::cont::ArrayHandle<viskores::Vec3f_32>;
   if (!array.CanConvert<ExpectedArrayType>())
   {
-    throw vtkm::cont::ErrorBadType("Array unexpected type.");
+    throw viskores::cont::ErrorBadType("Array unexpected type.");
   }
 
   ExpectedArrayType concreteArray = array.AsArrayHandle<ExpectedArrayType>();
   // Do something with concreteArray...
   //// PAUSE-EXAMPLE
-  VTKM_TEST_ASSERT(concreteArray.GetNumberOfValues() == ARRAY_SIZE);
+  VISKORES_TEST_ASSERT(concreteArray.GetNumberOfValues() == ARRAY_SIZE);
   //// RESUME-EXAMPLE
 }
 
 void LoadAndRun()
 {
   // Load data in a routine that does not know component size until runtime.
-  vtkm::cont::UnknownArrayHandle array = LoadData();
+  viskores::cont::UnknownArrayHandle array = LoadData();
 
   // Use the data in a method that requires an array of static size.
   // This will work as long as the `Vec` size matches correctly (3 in this case).
@@ -85,19 +93,20 @@ void WriteData(const T*, std::size_t, int)
 template<typename T>
 void WriteData(const T* data, std::size_t size, int numComponents);
 
-void WriteVTKmArray(const vtkm::cont::UnknownArrayHandle& array)
+void WriteViskoresArray(const viskores::cont::UnknownArrayHandle& array)
 {
   bool writeSuccess = false;
-  auto doWrite = [&](auto componentType) {
+  auto doWrite = [&](auto componentType)
+  {
     using ComponentType = decltype(componentType);
-    using VecArrayType = vtkm::cont::ArrayHandleRuntimeVec<ComponentType>;
+    using VecArrayType = viskores::cont::ArrayHandleRuntimeVec<ComponentType>;
     if (array.CanConvert<VecArrayType>())
     {
       // Get the array as a runtime Vec.
       VecArrayType runtimeVecArray = array.AsArrayHandle<VecArrayType>();
 
       // Get the component array.
-      vtkm::cont::ArrayHandleBasic<ComponentType> componentArray =
+      viskores::cont::ArrayHandleBasic<ComponentType> componentArray =
         runtimeVecArray.GetComponentsArray();
 
       // Use the general function to write the data.
@@ -111,7 +120,7 @@ void WriteVTKmArray(const vtkm::cont::UnknownArrayHandle& array)
 
   // Figure out the base component type, retrieve the data (regardless
   // of vec size), and write out the data.
-  vtkm::ListForEach(doWrite, vtkm::TypeListBaseC{});
+  viskores::ListForEach(doWrite, viskores::TypeListBaseC{});
 }
 ////
 //// END-EXAMPLE GetRuntimeVec
@@ -119,10 +128,10 @@ void WriteVTKmArray(const vtkm::cont::UnknownArrayHandle& array)
 
 void DoWriteTest()
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> array;
+  viskores::cont::ArrayHandle<viskores::Vec3f> array;
   array.Allocate(ARRAY_SIZE);
   SetPortal(array.WritePortal());
-  WriteVTKmArray(array);
+  WriteViskoresArray(array);
 }
 
 void Test()
@@ -135,5 +144,5 @@ void Test()
 
 int GuideExampleArrayHandleRuntimeVec(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

@@ -8,18 +8,18 @@ Worklet Types
 
 :chapref:`simple-worklets:Simple Worklets` introduces worklets and provides a simple example of creating a worklet to run an algorithm on a many core device.
 Different operations in visualization can have different data access patterns, perform different execution flow, and require different provisions.
-|VTKm| manages these different accesses, execution, and provisions by grouping visualization algorithms into common classes of operation and supporting each class with its own worklet type.
+|Viskores| manages these different accesses, execution, and provisions by grouping visualization algorithms into common classes of operation and supporting each class with its own worklet type.
 
 Each worklet type has a generic superclass that worklets of that particular type must inherit.
 This makes the type of the worklet easy to identify.
-The following list describes each worklet type provided by |VTKm| and the superclass that supports it.
+The following list describes each worklet type provided by |Viskores| and the superclass that supports it.
 
 .. index::
    double: worklet; field map
 
 * **Field Map**
-  A worklet deriving :class:`vtkm::worklet::WorkletMapField` performs a basic mapping operation that applies a function (the operator in the worklet) on all the field values at a single point or cell and creates a new field value at that same location.
-  Although the intention is to operate on some variable over a mesh, a :class:`vtkm::worklet::WorkletMapField` may actually be applied to any array.
+  A worklet deriving :class:`viskores::worklet::WorkletMapField` performs a basic mapping operation that applies a function (the operator in the worklet) on all the field values at a single point or cell and creates a new field value at that same location.
+  Although the intention is to operate on some variable over a mesh, a :class:`viskores::worklet::WorkletMapField` may actually be applied to any array.
   Thus, a field map can be used as a basic :index:`map` operation.
 
 .. index::
@@ -28,19 +28,19 @@ The following list describes each worklet type provided by |VTKm| and the superc
    double: worklet; visit points
 
 * **Topology Map**
-  A worklet deriving :class:`vtkm::worklet::WorkletMapTopology` or one of its child classes performs a mapping operation that applies a function (the operator in the worklet) on all elements of a particular type (such as points or cells) and creates a new field for those elements.
+  A worklet deriving :class:`viskores::worklet::WorkletMapTopology` or one of its child classes performs a mapping operation that applies a function (the operator in the worklet) on all elements of a particular type (such as points or cells) and creates a new field for those elements.
   The basic operation is similar to a field map except that in addition to access fields being mapped on, the worklet operation also has access to incident fields.
 
   There are multiple convenience classes available for the most common types of topology mapping.
-  :class:`vtkm::worklet::WorkletVisitCellsWithPoints` calls the worklet operation for each cell and makes every incident point available.
+  :class:`viskores::worklet::WorkletVisitCellsWithPoints` calls the worklet operation for each cell and makes every incident point available.
   This type of map also has access to cell structures and can interpolate point fields.
-  Likewise, :class:`vtkm::worklet::WorkletVisitPointsWithCells` calls the worklet operation for each point and makes every incident cell available.
+  Likewise, :class:`viskores::worklet::WorkletVisitPointsWithCells` calls the worklet operation for each point and makes every incident cell available.
 
 .. index::
    double: worklet; point neighborhood
 
 * **Point Neighborhood**
-  A worklet deriving from :class:`vtkm::worklet::WorkletPointNeighborhood` performs a mapping operation that applies a function (the operator in the worklet) on all points of a structured mesh.
+  A worklet deriving from :class:`viskores::worklet::WorkletPointNeighborhood` performs a mapping operation that applies a function (the operator in the worklet) on all points of a structured mesh.
   The basic operation is similar to a field map except that in addition to having access to the point being operated on, you can get the field values of nearby points within a neighborhood of a given size.
   Point neighborhood worklets can only applied to structured cell sets.
 
@@ -48,7 +48,7 @@ The following list describes each worklet type provided by |VTKm| and the superc
    double: worklet; reduce by key
 
 * **Reduce by Key**
-  A worklet deriving :class:vtkm::worklet::WorkletReduceByKey` operates on an array of keys and one or more associated arrays of values.
+  A worklet deriving :class:viskores::worklet::WorkletReduceByKey` operates on an array of keys and one or more associated arrays of values.
   When a reduce by key worklet is invoked, all identical keys are collected and the worklet is called once for each unique key.
   Each worklet invocation is given a |Veclike| containing all values associated with the unique key.
   Reduce by key worklets are very useful for combining like items such as shared topology elements or coincident points.
@@ -66,10 +66,10 @@ Field Map
    double: worklet; field map
    single: map field
 
-A worklet deriving :class:`vtkm::worklet::WorkletMapField` performs a basic mapping operation that applies a function (the operator in the worklet) on all the field values at a single point or cell and creates a new field value at that same location.
-Although the intention is to operate on some variable over the mesh, a :class:`vtkm::worklet::WorkletMapField` can actually be applied to any array.
+A worklet deriving :class:`viskores::worklet::WorkletMapField` performs a basic mapping operation that applies a function (the operator in the worklet) on all the field values at a single point or cell and creates a new field value at that same location.
+Although the intention is to operate on some variable over the mesh, a :class:`viskores::worklet::WorkletMapField` can actually be applied to any array.
 
-.. doxygenclass:: vtkm::worklet::WorkletMapField
+.. doxygenclass:: viskores::worklet::WorkletMapField
 
 A field map worklet supports the following tags in the parameters of its ``ControlSignature``.
 
@@ -87,7 +87,7 @@ Field maps most commonly perform basic calculator arithmetic, as demonstrated in
    :file: GuideExampleUseWorkletMapField.cxx
    :caption: Implementation and use of a field map worklet.
 
-Although simple, the :class:`vtkm::worklet::WorkletMapField` worklet type can be used (and abused) as a general parallel-for/scheduling mechanism.
+Although simple, the :class:`viskores::worklet::WorkletMapField` worklet type can be used (and abused) as a general parallel-for/scheduling mechanism.
 In particular, the :class:`WorkIndex` execution signature tag can be used to get a unique index, the ``WholeArray*`` tags can be used to get random access to arrays, and the :class:`ExecObject` control signature tag can be used to pass execution objects directly to the worklet.
 Whole arrays and execution objects are talked about in more detail in :chapref:`globals:Global Arrays and Topology` and :chapref:`execution-objects:Execution Objects`, respectively, in more detail, but here is a simple example that uses the random access of :class:`WholeArrayOut` to make a worklet that copies an array in reverse order.
 
@@ -102,7 +102,7 @@ Whole arrays and execution objects are talked about in more detail in :chapref:`
 Topology Map
 ------------------------------
 
-A topology map performs a mapping that it applies a function (the operator in the worklet) on all the elements of a :class:`vtkm::cont::DataSet` of a particular type (i.e. point, edge, face, or cell).
+A topology map performs a mapping that it applies a function (the operator in the worklet) on all the elements of a :class:`viskores::cont::DataSet` of a particular type (i.e. point, edge, face, or cell).
 While operating on the element, the worklet has access to data from all incident elements of another type.
 
 There are several versions of topology maps that differ in what type of element being mapped from and what type of element being mapped to.
@@ -114,11 +114,11 @@ Visit Cells with Points
 .. index::
    double: worklet; visit cells
 
-A worklet deriving :class:`vtkm::worklet::WorkletVisitCellsWithPoints` performs a mapping operation that applies a function (the operator in the worklet) on all the cells of a :class:`vtkm::cont::DataSet`.
+A worklet deriving :class:`viskores::worklet::WorkletVisitCellsWithPoints` performs a mapping operation that applies a function (the operator in the worklet) on all the cells of a :class:`viskores::cont::DataSet`.
 While operating on the cell, the worklet has access to fields associated both with the cell and with all incident points.
 Additionally, the worklet can get information about the structure of the cell and can perform operations like interpolation on it.
 
-.. doxygenclass:: vtkm::worklet::WorkletVisitCellsWithPoints
+.. doxygenclass:: viskores::worklet::WorkletVisitCellsWithPoints
 
 A visit cells with points worklet supports the following tags in the parameters of its ``ControlSignature``.
 
@@ -144,10 +144,10 @@ Visit Points with Cells
 .. index::
    double: worklet; visit points
 
-A worklet deriving :class:`vtkm::worklet::WorkletVisitPointsWithCells` performs a mapping operation that applies a function (the operator in the worklet) on all the points of a :class:`vtkm::cont::DataSet`.
+A worklet deriving :class:`viskores::worklet::WorkletVisitPointsWithCells` performs a mapping operation that applies a function (the operator in the worklet) on all the points of a :class:`viskores::cont::DataSet`.
 While operating on the point, the worklet has access to fields associated both with the point and with all incident cells.
 
-.. doxygenclass:: vtkm::worklet::WorkletVisitPointsWithCells
+.. doxygenclass:: viskores::worklet::WorkletVisitPointsWithCells
 
 A visit points with cells worklet supports the following tags in the parameters of its ``ControlSignature``.
 
@@ -174,32 +174,32 @@ The following example does a simple averaging, but you can also implement other 
    \index{topology map worklet|(}
    \index{map topology|(}
 
-   A worklet deriving :class:`vtkm::worklet::WorkletMapTopology` performs a mapping operation that applies a function (the operator in the worklet) on all the elements of a specified type from a :class:`vtkm::cont::DataSet`.
+   A worklet deriving :class:`viskores::worklet::WorkletMapTopology` performs a mapping operation that applies a function (the operator in the worklet) on all the elements of a specified type from a :class:`viskores::cont::DataSet`.
    While operating on each element, the worklet has access to fields associated both with that element and with all incident elements of a different specified type.
 
-   The :class:`vtkm::worklet::WorkletMapTopology` class is a template with two template parameters.
+   The :class:`viskores::worklet::WorkletMapTopology` class is a template with two template parameters.
    The first template parameter specifies the ``visit'' topology element, and the second parameter specifies the ``incident'' topology element.
    The worklet is scheduled such that each instance is associated with a particular ``visit'' topology element and has access to ``incident'' topology elements.
 
    \index{topology element tag|(}
    \index{tag!topology element|(}
 
-   These visit and incident topology elements are specified with topology element tags, which are defined in the \vtkmheader{vtkm}{TopologyElementTag.h} header file.
-   The available topology element tags are \vtkm{TopologyElementTagCell}, \vtkm{TopologyElementTagPoint}, \vtkm{TopologyElementTagEdge}, and \vtkm{TopologyElementTagFace}, which represent the cell, point, edge, and face elements, respectively.
+   These visit and incident topology elements are specified with topology element tags, which are defined in the \viskoresheader{viskores}{TopologyElementTag.h} header file.
+   The available topology element tags are \viskores{TopologyElementTagCell}, \viskores{TopologyElementTagPoint}, \viskores{TopologyElementTagEdge}, and \viskores{TopologyElementTagFace}, which represent the cell, point, edge, and face elements, respectively.
 
    \index{topology element tag|)}
    \index{tag!topology element|)}
 
-   :class:`vtkm::worklet::WorkletMapTopology` is a generic form of a topology map, and it can perform identically to the aforementioned forms of topology map with the correct template parameters.
+   :class:`viskores::worklet::WorkletMapTopology` is a generic form of a topology map, and it can perform identically to the aforementioned forms of topology map with the correct template parameters.
    For example,
    \begin{quote}
-     :class:`vtkm::worklet::WorkletMapTopology`\tparams{%
-     \vtkm{TopologyElementTagCell}, %
-     \vtkm{TopologyElementTagPoint}}
+     :class:`viskores::worklet::WorkletMapTopology`\tparams{%
+     \viskores{TopologyElementTagCell}, %
+     \viskores{TopologyElementTagPoint}}
    \end{quote}
-   is equivalent to the :class:`vtkm::worklet::WorkletVisitCellsWithPoints` class except the signature tags have different names.
-   The names used in the specific topology map superclasses (such as :class:`vtkm::worklet::WorkletVisitCellsWithPoints`) tend to be easier to read and are thus preferable.
-   However, the generic :class:`vtkm::worklet::WorkletMapTopology` is available for topology combinations without a specific superclass or to support more general mappings in a worklet.
+   is equivalent to the :class:`viskores::worklet::WorkletVisitCellsWithPoints` class except the signature tags have different names.
+   The names used in the specific topology map superclasses (such as :class:`viskores::worklet::WorkletVisitCellsWithPoints`) tend to be easier to read and are thus preferable.
+   However, the generic :class:`viskores::worklet::WorkletMapTopology` is available for topology combinations without a specific superclass or to support more general mappings in a worklet.
 
    The general topology map worklet supports the following tags in the parameters of its ``ControlSignature``, which are equivalent to tags in the other topology maps but with different (more general) names.
 
@@ -254,11 +254,11 @@ The following example does a simple averaging, but you can also implement other 
      Points have vertex shapes, edges have line shapes, and faces have some type of polygonal shape.
 
    \item[\sigtag{IncidentElementCount}]
-     This tag produces a \vtkm{IdComponent} equal to the number of elements incident on the element being visited.
+     This tag produces a \viskores{IdComponent} equal to the number of elements incident on the element being visited.
      The Vecs provided from a \textsignature{FieldInIncident} parameter will be the same size as \sigtag{IncidentElementCount}.
 
    \item[\sigtag{IncidentElementIndices}]
-     This tag produces a |Veclike| object of \vtkm{Id}s giving the indices for all incident elements.
+     This tag produces a |Veclike| object of \viskores{Id}s giving the indices for all incident elements.
      The order of the entries is consistent with the values of all other \textsignature{FieldInIncident} arguments for the same worklet invocation.
 
      \commonexecutionsignaturetags
@@ -276,9 +276,9 @@ Neighborhood Mapping
 .. index::
    double: worklet; neighborhood
 
-|VTKm| provides a pair of worklets that allow easy access to data within a neighborhood of nearby elements.
+|Viskores| provides a pair of worklets that allow easy access to data within a neighborhood of nearby elements.
 This simplifies operations like smoothing a field by blending each value with that of its neighbors.
-This can only be done on data sets with `vtkm::cont::CellSetStructured` cell sets where extended adjacencies are easy to find.
+This can only be done on data sets with `viskores::cont::CellSetStructured` cell sets where extended adjacencies are easy to find.
 There are two flavors of the worklet: a point neighborhood worklet and a cell neighborhood worklet.
 
 Point Neighborhood
@@ -287,10 +287,10 @@ Point Neighborhood
 .. index::
    double: worklet; point neighborhood
 
-A worklet deriving :class:`vtkm::worklet::WorkletPointNeighborhood` performs a mapping operation that applies a function (the operator in the worklet) on all the points of a :class:`vtkm::cont::DataSet`.
+A worklet deriving :class:`viskores::worklet::WorkletPointNeighborhood` performs a mapping operation that applies a function (the operator in the worklet) on all the points of a :class:`viskores::cont::DataSet`.
 While operating on the point, the worklet has access to field values on nearby points within a neighborhood.
 
-.. doxygenclass:: vtkm::worklet::WorkletPointNeighborhood
+.. doxygenclass:: viskores::worklet::WorkletPointNeighborhood
 
 A point neighborhood worklet supports the following tags in the parameters of its ``ControlSignature``.
 
@@ -308,10 +308,10 @@ Cell Neighborhood
 .. index::
    double: worklet; cell neighborhood
 
-A worklet deriving :class:`vtkm::worklet::WorkletCellNeighborhood` performs a mapping operation that applies a function (the operator in the worklet) on all the cells of a :class:`vtkm::cont::DataSet`.
+A worklet deriving :class:`viskores::worklet::WorkletCellNeighborhood` performs a mapping operation that applies a function (the operator in the worklet) on all the cells of a :class:`viskores::cont::DataSet`.
 While operating on the cell, the worklet has access to field values on nearby cells within a neighborhood.
 
-.. doxygenclass:: vtkm::worklet::WorkletCellNeighborhood
+.. doxygenclass:: viskores::worklet::WorkletCellNeighborhood
 
 A cell neighborhood worklet supports the following tags in the parameters of its ``ControlSignature``.
 
@@ -326,16 +326,16 @@ A cell neighborhood worklet supports the following tags in the parameters of its
 Neighborhood Information
 ==============================
 
-As stated earlier in this section, what makes a :class:`vtkm::worklet::WorkletPointNeighborhood` worklet special is its ability to get field information in a neighborhood surrounding a point rather than just the point itself.
+As stated earlier in this section, what makes a :class:`viskores::worklet::WorkletPointNeighborhood` worklet special is its ability to get field information in a neighborhood surrounding a point rather than just the point itself.
 This is done using the special ``FieldInNeighborhood`` in the ``ControlSignature``.
-When you use this tag, rather than getting the single field value for the point, you get a :class:`vtkm::exec::FieldNeighborhood` object.
+When you use this tag, rather than getting the single field value for the point, you get a :class:`viskores::exec::FieldNeighborhood` object.
 
-The :class:`vtkm::exec::FieldNeighborhood` class contains a :func:`vtkm::exec::FieldNeighborhood::Get` method that retrieves a field value relative to the local neighborhood.
-:func:`vtkm::exec::FieldNeighborhood::Get` takes the :math:`i`, :math:`j`, :math:`k` index of the point with respect to the local point.
+The :class:`viskores::exec::FieldNeighborhood` class contains a :func:`viskores::exec::FieldNeighborhood::Get` method that retrieves a field value relative to the local neighborhood.
+:func:`viskores::exec::FieldNeighborhood::Get` takes the :math:`i`, :math:`j`, :math:`k` index of the point with respect to the local point.
 So, calling ``Get(0,0,0)`` retrieves at the point being visited.
 Likewise, ``Get(-1,0,0)`` gets the value to the "left" of the point visited and ``Get(1,0,0)`` gets the value to the "right."
 
-.. doxygenstruct:: vtkm::exec::FieldNeighborhood
+.. doxygenstruct:: viskores::exec::FieldNeighborhood
    :members:
 
 .. load-example:: GetNeighborhoodFieldValue
@@ -343,19 +343,19 @@ Likewise, ``Get(-1,0,0)`` gets the value to the "left" of the point visited and 
    :caption: Retrieve neighborhood field value.
 
 When performing operations on a neighborhood within the mesh, it is often important to know whether the expected neighborhood is contained completely within the mesh or whether the neighborhood extends beyond the borders of the mesh.
-This can be queried using a :class:`vtkm::exec::BoundaryState` object, which is provided when a ``Boundary`` tag is listed in the ``ExecutionSignature``.
+This can be queried using a :class:`viskores::exec::BoundaryState` object, which is provided when a ``Boundary`` tag is listed in the ``ExecutionSignature``.
 
-Generally, :class:`vtkm::exec::BoundaryState` allows you to specify the size of the neighborhood at runtime.
+Generally, :class:`viskores::exec::BoundaryState` allows you to specify the size of the neighborhood at runtime.
 The neighborhood size is specified by a radius.
 The radius specifies the number of items in each direction the neighborhood extends.
 So, for example, a point neighborhood with radius 1 would contain a :math:`3\times3\times3` neighborhood centered around the point.
 Likewise, a point neighborhood with radius 2 would contain a :math:`5\times5\times5` neighborhood centered around the point.
-:class:`vtkm::exec::BoundaryState` provides several methods to determine if the neighborhood is contained in the mesh.
+:class:`viskores::exec::BoundaryState` provides several methods to determine if the neighborhood is contained in the mesh.
 
-.. doxygenstruct:: vtkm::exec::BoundaryState
+.. doxygenstruct:: viskores::exec::BoundaryState
    :members:
 
-The :func:`vtkm::exec::BoundaryState::MinNeighborIndices` and :func:`vtkm::exec::BoundaryState::MaxNeighborIndices` are particularly useful for iterating over the valid portion of the neighborhood.
+The :func:`viskores::exec::BoundaryState::MinNeighborIndices` and :func:`viskores::exec::BoundaryState::MaxNeighborIndices` are particularly useful for iterating over the valid portion of the neighborhood.
 
 .. load-example:: GetNeighborhoodBoundary
    :file: GuideExampleUseWorkletPointNeighborhood.cxx
@@ -381,18 +381,18 @@ Reduce by Key
 .. index::
    double: worklet; reduce by key
 
-A worklet deriving :class:`vtkm::worklet::WorkletReduceByKey` operates on an array of keys and one or more associated arrays of values.
+A worklet deriving :class:`viskores::worklet::WorkletReduceByKey` operates on an array of keys and one or more associated arrays of values.
 When a reduce by key worklet is invoked, all identical keys are collected and the worklet is called once for each unique key.
 Each worklet invocation is given a |Veclike| containing all values associated with the unique key.
 Reduce by key worklets are very useful for combining like items such as shared topology elements or coincident points.
 
-.. figure:: images/ReduceByKeys.png
+.. figure::  ../../data/users-guide/images/ReduceByKeys.png
    :width: 4in
    :name: fig:ReduceByKey
 
    The collection of values for a reduce by key worklet.
 
-:numref:`fig:ReduceByKey` shows a pictorial representation of how |VTKm| collects data for a reduce by key worklet.
+:numref:`fig:ReduceByKey` shows a pictorial representation of how |Viskores| collects data for a reduce by key worklet.
 All calls to a reduce by key worklet has exactly one array of keys.
 The key array in this example has 4 unique keys: 0, 1, 2, 4.
 These 4 unique keys will result in 4 calls to the worklet function.
@@ -406,7 +406,7 @@ The worklet call will be given a |Veclike| containing all values that have the k
 ``WorkletReduceByKey`` Reference
 ===================================
 
-.. doxygenclass:: vtkm::worklet::WorkletReduceByKey
+.. doxygenclass:: viskores::worklet::WorkletReduceByKey
 
 A reduce by key worklet supports the following tags in the parameters of its ``ControlSignature``.
 
@@ -422,12 +422,12 @@ Key Objects
 ==============================
 
 As specified in its documentation, the ``InputDomain`` of a ``WorkletReducedByKey`` has to be a ``KeysIn`` argument.
-Unlike simple mapping worklets, the control environment object passed as the ``KeysIn`` cannot be a simple :class:`vtkm::cont::ArrayHandle`.
-Rather, this argument has to be given a :class:`vtkm::worklet::Keys` object.
+Unlike simple mapping worklets, the control environment object passed as the ``KeysIn`` cannot be a simple :class:`viskores::cont::ArrayHandle`.
+Rather, this argument has to be given a :class:`viskores::worklet::Keys` object.
 This object manages an array of keys by reorganizing (i.e. sorting) the keys and finding duplicated keys that should be merged.
-A :class:`vtkm::worklet::Keys` object can be constructed by simply providing a :class:`vtkm::cont::ArrayHandle` to use as the keys.
+A :class:`viskores::worklet::Keys` object can be constructed by simply providing a :class:`viskores::cont::ArrayHandle` to use as the keys.
 
-.. doxygenclass:: vtkm::worklet::Keys
+.. doxygenclass:: viskores::worklet::Keys
    :members:
 
 Reduce by Key Examples
@@ -435,7 +435,7 @@ Reduce by Key Examples
 
 As stated earlier, the reduce by key worklet is useful for collecting like values.
 To demonstrate the reduce by key worklet, we will create a simple mechanism to generate a :index:`histogram` in parallel.
-(|VTKm| comes with its own histogram implementation, but we create our own version here for a simple example.)
+(|Viskores| comes with its own histogram implementation, but we create our own version here for a simple example.)
 The way we can use the reduce by key worklet to compute a histogram is to first identify which bin of the histogram each value is in, and then use the bin identifiers as the keys to collect the information.
 To help with this example, we will first create a helper class named ``BinScalars`` that helps us manage the bins.
 
@@ -449,13 +449,13 @@ Using this helper class, we can easily create a simple map worklet that takes va
    :file: GuideExampleUseWorkletReduceByKey.cxx
    :caption: A simple map worklet to identify histogram bins, which will be used as keys.
 
-Once you generate an array to be used as keys, you need to make a :class:`vtkm::worklet::Keys` object.
-The :class:`vtkm::worklet::Keys` object is what will be passed to the :class:`vtkm::cont::Invoker` for the argument associated with the ``KeysIn`` ``ControlSignature`` tag.
-This of course happens in the control environment after calling the :class:`vtkm::cont::Invoker` for our worklet for generating the keys.
+Once you generate an array to be used as keys, you need to make a :class:`viskores::worklet::Keys` object.
+The :class:`viskores::worklet::Keys` object is what will be passed to the :class:`viskores::cont::Invoker` for the argument associated with the ``KeysIn`` ``ControlSignature`` tag.
+This of course happens in the control environment after calling the :class:`viskores::cont::Invoker` for our worklet for generating the keys.
 
 .. load-example:: CreateKeysObject
    :file: GuideExampleUseWorkletReduceByKey.cxx
-   :caption: Creating a :class:`vtkm::worklet::Keys` object.
+   :caption: Creating a :class:`viskores::worklet::Keys` object.
 
 Now that we have our keys, we are finally ready for our reduce by key worklet.
 A histogram is simply a count of the number of elements in a bin.
@@ -463,7 +463,7 @@ In this case, we do not really need any values for the keys.
 We just need the size of the bin, which can be identified with the internally calculated ``ValueCount``.
 
 A complication we run into with this histogram filter is that it is possible for a bin to be empty.
-If a bin is empty, there will be no key associated with that bin, and the :class:`vtkm::cont::Invoker` will not call the worklet for that bin/key.
+If a bin is empty, there will be no key associated with that bin, and the :class:`viskores::cont::Invoker` will not call the worklet for that bin/key.
 To manage this case, we have to initialize an array with 0's and then fill in the non-zero entities with our reduce by key worklet.
 We can find the appropriate entry into the array by using the key, which is actually the bin identifier, which doubles as an index into the histogram.
 The following example gives the implementation for the reduce by key worklet that fills in positive values of the histogram.

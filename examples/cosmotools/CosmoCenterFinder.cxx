@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,14 +15,14 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/ArrayHandleCast.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/Initialize.h>
+#include <viskores/cont/ArrayHandleCast.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/Initialize.h>
 
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
-#include <vtkm/worklet/CosmoTools.h>
+#include <viskores/worklet/CosmoTools.h>
 
 #include <algorithm>
 #include <fstream>
@@ -22,7 +30,7 @@
 #include <stdexcept>
 #include <string>
 
-static const vtkm::cont::LogLevel CosmoLogLevel = vtkm::cont::LogLevel::UserFirst;
+static const viskores::cont::LogLevel CosmoLogLevel = viskores::cont::LogLevel::UserFirst;
 
 void TestCosmoCenterFinder(const char* fileName)
 {
@@ -38,7 +46,7 @@ void TestCosmoCenterFinder(const char* fileName)
   }
 
   // Read in number of particles and locations
-  vtkm::Id nParticles;
+  viskores::Id nParticles;
   inFile >> nParticles;
 
   float* xLocation = new float[static_cast<std::size_t>(nParticles)];
@@ -46,42 +54,45 @@ void TestCosmoCenterFinder(const char* fileName)
   float* zLocation = new float[static_cast<std::size_t>(nParticles)];
   std::cout << "Running MBP on " << nParticles << std::endl;
 
-  for (vtkm::Id p = 0; p < nParticles; p++)
+  for (viskores::Id p = 0; p < nParticles; p++)
   {
     inFile >> xLocation[p] >> yLocation[p] >> zLocation[p];
   }
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> xLocArray =
-    vtkm::cont::make_ArrayHandle<vtkm::Float32>(xLocation, nParticles, vtkm::CopyFlag::Off);
-  vtkm::cont::ArrayHandle<vtkm::Float32> yLocArray =
-    vtkm::cont::make_ArrayHandle<vtkm::Float32>(yLocation, nParticles, vtkm::CopyFlag::Off);
-  vtkm::cont::ArrayHandle<vtkm::Float32> zLocArray =
-    vtkm::cont::make_ArrayHandle<vtkm::Float32>(zLocation, nParticles, vtkm::CopyFlag::Off);
+  viskores::cont::ArrayHandle<viskores::Float32> xLocArray =
+    viskores::cont::make_ArrayHandle<viskores::Float32>(
+      xLocation, nParticles, viskores::CopyFlag::Off);
+  viskores::cont::ArrayHandle<viskores::Float32> yLocArray =
+    viskores::cont::make_ArrayHandle<viskores::Float32>(
+      yLocation, nParticles, viskores::CopyFlag::Off);
+  viskores::cont::ArrayHandle<viskores::Float32> zLocArray =
+    viskores::cont::make_ArrayHandle<viskores::Float32>(
+      zLocation, nParticles, viskores::CopyFlag::Off);
 
   // Output MBP particleId pairs array
-  vtkm::Pair<vtkm::Id, vtkm::Float32> nxnResult;
-  vtkm::Pair<vtkm::Id, vtkm::Float32> mxnResult;
+  viskores::Pair<viskores::Id, viskores::Float32> nxnResult;
+  viskores::Pair<viskores::Id, viskores::Float32> mxnResult;
 
-  const vtkm::Float32 particleMass = 1.08413e+09f;
-  vtkm::worklet::CosmoTools cosmoTools;
+  const viskores::Float32 particleMass = 1.08413e+09f;
+  viskores::worklet::CosmoTools cosmoTools;
 
   {
-    VTKM_LOG_SCOPE(CosmoLogLevel, "Executing NxN");
+    VISKORES_LOG_SCOPE(CosmoLogLevel, "Executing NxN");
 
     cosmoTools.RunMBPCenterFinderNxN(
       xLocArray, yLocArray, zLocArray, nParticles, particleMass, nxnResult);
 
-    VTKM_LOG_S(CosmoLogLevel,
-               "NxN MPB = " << nxnResult.first << "  potential = " << nxnResult.second);
+    VISKORES_LOG_S(CosmoLogLevel,
+                   "NxN MPB = " << nxnResult.first << "  potential = " << nxnResult.second);
   }
 
   {
-    VTKM_LOG_SCOPE(CosmoLogLevel, "Executing MxN");
+    VISKORES_LOG_SCOPE(CosmoLogLevel, "Executing MxN");
     cosmoTools.RunMBPCenterFinderMxN(
       xLocArray, yLocArray, zLocArray, nParticles, particleMass, mxnResult);
 
-    VTKM_LOG_S(CosmoLogLevel,
-               "MxN MPB = " << mxnResult.first << "  potential = " << mxnResult.second);
+    VISKORES_LOG_S(CosmoLogLevel,
+                   "MxN MPB = " << mxnResult.first << "  potential = " << mxnResult.second);
   }
 
   if (nxnResult.first == mxnResult.first)
@@ -111,11 +122,11 @@ void TestCosmoCenterFinder(const char* fileName)
 
 int main(int argc, char* argv[])
 {
-  vtkm::cont::SetLogLevelName(CosmoLogLevel, "Cosmo");
-  vtkm::cont::SetStderrLogLevel(CosmoLogLevel);
+  viskores::cont::SetLogLevelName(CosmoLogLevel, "Cosmo");
+  viskores::cont::SetStderrLogLevel(CosmoLogLevel);
 
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = viskores::cont::InitializeOptions::DefaultAnyDevice;
+  viskores::cont::InitializeResult config = viskores::cont::Initialize(argc, argv, opts);
 
   if (argc < 2)
   {
@@ -124,8 +135,9 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-#ifndef VTKM_ENABLE_LOGGING
-  std::cout << "Warning: turn on VTKm_ENABLE_LOGGING CMake option to turn on timing." << std::endl;
+#ifndef VISKORES_ENABLE_LOGGING
+  std::cout << "Warning: turn on Viskores_ENABLE_LOGGING CMake option to turn on timing."
+            << std::endl;
 #endif
 
   TestCosmoCenterFinder(argv[1]);

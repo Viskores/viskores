@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,9 +16,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/Types.h>
+#include <viskores/Types.h>
 
-#include <vtkm/testing/Testing.h>
+#include <viskores/testing/Testing.h>
 
 namespace
 {
@@ -19,7 +27,7 @@ namespace
 //// BEGIN-EXAMPLE EnvironmentModifierMacro
 ////
 template<typename ValueType>
-VTKM_EXEC_CONT ValueType Square(const ValueType& inValue)
+VISKORES_EXEC_CONT ValueType Square(const ValueType& inValue)
 {
   return inValue * inValue;
 }
@@ -30,11 +38,12 @@ VTKM_EXEC_CONT ValueType Square(const ValueType& inValue)
 ////
 //// BEGIN-EXAMPLE SuppressExecWarnings
 ////
-VTKM_SUPPRESS_EXEC_WARNINGS
+VISKORES_SUPPRESS_EXEC_WARNINGS
 template<typename Functor>
-VTKM_EXEC_CONT void OverlyComplicatedForLoop(Functor& functor, vtkm::Id numInterations)
+VISKORES_EXEC_CONT void OverlyComplicatedForLoop(Functor& functor,
+                                                 viskores::Id numInterations)
 {
-  for (vtkm::Id index = 0; index < numInterations; index++)
+  for (viskores::Id index = 0; index < numInterations; index++)
   {
     functor();
   }
@@ -45,30 +54,30 @@ VTKM_EXEC_CONT void OverlyComplicatedForLoop(Functor& functor, vtkm::Id numInter
 
 struct TestFunctor
 {
-  vtkm::Id Count;
+  viskores::Id Count;
 
-  VTKM_CONT
+  VISKORES_CONT
   TestFunctor()
     : Count(0)
   {
   }
 
-  VTKM_CONT
+  VISKORES_CONT
   void operator()() { this->Count++; }
 };
 
 void Test()
 {
-  VTKM_TEST_ASSERT(Square(2) == 4, "Square function doesn't square.");
+  VISKORES_TEST_ASSERT(Square(2) == 4, "Square function doesn't square.");
 
   TestFunctor functor;
   OverlyComplicatedForLoop(functor, 10);
-  VTKM_TEST_ASSERT(functor.Count == 10, "Bad iterations.");
+  VISKORES_TEST_ASSERT(functor.Count == 10, "Bad iterations.");
 }
 
 } // anonymous namespace
 
 int GuideExampleEnvironmentModifierMacros(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(Test, argc, argv);
+  return viskores::testing::Testing::Run(Test, argc, argv);
 }

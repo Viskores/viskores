@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,40 +16,41 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/RuntimeDeviceTracker.h>
+#include <viskores/cont/RuntimeDeviceTracker.h>
 
-#include <vtkm/cont/ArrayCopy.h>
+#include <viskores/cont/ArrayCopy.h>
 
-#include <vtkm/cont/DeviceAdapterTag.h>
+#include <viskores/cont/DeviceAdapterTag.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
 
-static const vtkm::Id ARRAY_SIZE = 10;
+static const viskores::Id ARRAY_SIZE = 10;
 
 void CopyWithRuntime()
 {
   std::cout << "Checking runtime in copy." << std::endl;
 
-  using T = vtkm::Float32;
-  vtkm::cont::ArrayHandle<T> srcArray;
+  using T = viskores::Float32;
+  viskores::cont::ArrayHandle<T> srcArray;
   srcArray.Allocate(ARRAY_SIZE);
   SetPortal(srcArray.WritePortal());
 
-  vtkm::cont::ArrayHandle<T> destArray;
+  viskores::cont::ArrayHandle<T> destArray;
 
   ////
   //// BEGIN-EXAMPLE RestrictCopyDevice
   ////
-  vtkm::cont::ScopedRuntimeDeviceTracker tracker(
-    vtkm::cont::DeviceAdapterTagKokkos(), vtkm::cont::RuntimeDeviceTrackerMode::Disable);
+  viskores::cont::ScopedRuntimeDeviceTracker tracker(
+    viskores::cont::DeviceAdapterTagKokkos(),
+    viskores::cont::RuntimeDeviceTrackerMode::Disable);
 
   ////
   //// BEGIN-EXAMPLE ArrayCopy
   ////
-  vtkm::cont::ArrayCopy(srcArray, destArray);
+  viskores::cont::ArrayCopy(srcArray, destArray);
   ////
   //// END-EXAMPLE ArrayCopy
   ////
@@ -49,7 +58,7 @@ void CopyWithRuntime()
   //// END-EXAMPLE RestrictCopyDevice
   ////
 
-  VTKM_TEST_ASSERT(destArray.GetNumberOfValues() == ARRAY_SIZE, "Bad array size.");
+  VISKORES_TEST_ASSERT(destArray.GetNumberOfValues() == ARRAY_SIZE, "Bad array size.");
   CheckPortal(destArray.ReadPortal());
 }
 
@@ -61,20 +70,20 @@ void ChangeDefaultRuntime()
   std::cout << "Checking changing default runtime." << std::endl;
 
   //// PAUSE-EXAMPLE
-#ifdef VTKM_ENABLE_KOKKOS
+#ifdef VISKORES_ENABLE_KOKKOS
   //// RESUME-EXAMPLE
   ////
   //// BEGIN-EXAMPLE SpecifyDeviceAdapter
   ////
-  vtkm::cont::ScopedRuntimeDeviceTracker(vtkm::cont::DeviceAdapterTagKokkos{});
+  viskores::cont::ScopedRuntimeDeviceTracker(viskores::cont::DeviceAdapterTagKokkos{});
   ////
   //// END-EXAMPLE SpecifyDeviceAdapter
   ////
   //// PAUSE-EXAMPLE
-#endif //VTKM_ENABLE_KOKKOS
+#endif //VISKORES_ENABLE_KOKKOS
   //// RESUME-EXAMPLE
 
-  // VTK-m operations limited to Kokkos devices here...
+  // Viskores operations limited to Kokkos devices here...
 
   // Devices restored as we leave scope.
 }
@@ -92,5 +101,5 @@ void Run()
 
 int GuideExampleRuntimeDeviceTracker(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Run, argc, argv);
+  return viskores::cont::testing::Testing::Run(Run, argc, argv);
 }

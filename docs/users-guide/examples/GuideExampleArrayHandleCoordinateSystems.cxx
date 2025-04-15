@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,11 +16,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCartesianProduct.h>
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ArrayHandleCartesianProduct.h>
+#include <viskores/cont/ArrayHandleUniformPointCoordinates.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -30,39 +38,39 @@ void UniformPointCoordinates()
   // 126 samples), 0.08 unit increments in the y direction (for 76 samples) and
   // 0.24 unit increments in the z direction (for 26 samples). That makes
   // 248,976 values in the array total.
-  vtkm::cont::ArrayHandleUniformPointCoordinates uniformCoordinates(
-    vtkm::Id3(126, 76, 26),
-    vtkm::Vec3f{ -5.0f, -3.0f, -3.0f },
-    vtkm::Vec3f{ 0.08f, 0.08f, 0.24f });
+  viskores::cont::ArrayHandleUniformPointCoordinates uniformCoordinates(
+    viskores::Id3(126, 76, 26),
+    viskores::Vec3f{ -5.0f, -3.0f, -3.0f },
+    viskores::Vec3f{ 0.08f, 0.08f, 0.24f });
   ////
   //// END-EXAMPLE ArrayHandleUniformPointCoordinates
   ////
 
-  VTKM_TEST_ASSERT(uniformCoordinates.GetNumberOfValues() == 248976,
-                   "Wrong number of values in uniform coordinates.");
-  VTKM_TEST_ASSERT(
-    test_equal(uniformCoordinates.ReadPortal().Get(0), vtkm::Vec3f{ -5.0, -3.0, -3.0 }),
-    "Bad first point coordinate.");
-  VTKM_TEST_ASSERT(test_equal(uniformCoordinates.ReadPortal().Get(248975),
-                              vtkm::Vec3f{ 5.0, 3.0, 3.0 }),
-                   "Bad last point coordinate.");
+  VISKORES_TEST_ASSERT(uniformCoordinates.GetNumberOfValues() == 248976,
+                       "Wrong number of values in uniform coordinates.");
+  VISKORES_TEST_ASSERT(test_equal(uniformCoordinates.ReadPortal().Get(0),
+                                  viskores::Vec3f{ -5.0, -3.0, -3.0 }),
+                       "Bad first point coordinate.");
+  VISKORES_TEST_ASSERT(test_equal(uniformCoordinates.ReadPortal().Get(248975),
+                                  viskores::Vec3f{ 5.0, 3.0, 3.0 }),
+                       "Bad last point coordinate.");
 }
 
 template<typename ArrayHandleType>
 void CheckRectilinearPointCoordinates(ArrayHandleType rectilinearCoordinates)
 {
-  VTKM_TEST_ASSERT(rectilinearCoordinates.GetNumberOfValues() == 12,
-                   "Wrong number of values.");
+  VISKORES_TEST_ASSERT(rectilinearCoordinates.GetNumberOfValues() == 12,
+                       "Wrong number of values.");
 
-  VTKM_TEST_ASSERT(test_equal(rectilinearCoordinates.ReadPortal().Get(0),
-                              vtkm::Vec3f{ 0.0f, 0.0f, 0.0f }),
-                   "Bad value at 0.");
-  VTKM_TEST_ASSERT(test_equal(rectilinearCoordinates.ReadPortal().Get(4),
-                              vtkm::Vec3f{ 1.1f, 2.0f, 0.0f }),
-                   "Bad value at 4.");
-  VTKM_TEST_ASSERT(test_equal(rectilinearCoordinates.ReadPortal().Get(11),
-                              vtkm::Vec3f{ 5.0f, 2.0f, 0.5f }),
-                   "Bad value at 11.");
+  VISKORES_TEST_ASSERT(test_equal(rectilinearCoordinates.ReadPortal().Get(0),
+                                  viskores::Vec3f{ 0.0f, 0.0f, 0.0f }),
+                       "Bad value at 0.");
+  VISKORES_TEST_ASSERT(test_equal(rectilinearCoordinates.ReadPortal().Get(4),
+                                  viskores::Vec3f{ 1.1f, 2.0f, 0.0f }),
+                       "Bad value at 4.");
+  VISKORES_TEST_ASSERT(test_equal(rectilinearCoordinates.ReadPortal().Get(11),
+                                  viskores::Vec3f{ 5.0f, 2.0f, 0.5f }),
+                       "Bad value at 11.");
 }
 
 void RectilinearPointCoordinates()
@@ -72,7 +80,7 @@ void RectilinearPointCoordinates()
   ////
   //// BEGIN-EXAMPLE ArrayHandleCartesianProduct
   ////
-  using AxisArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
+  using AxisArrayType = viskores::cont::ArrayHandle<viskores::Float32>;
   using AxisPortalType = AxisArrayType::WritePortalType;
 
   // Create array for x axis coordinates with values [0.0, 1.1, 5.0]
@@ -105,8 +113,9 @@ void RectilinearPointCoordinates()
   // [0.0, 2.0, 0.0], [1.1, 2.0, 0.0], [5.0, 2.0, 0.0],
   // [0.0, 0.0, 0.5], [1.1, 0.0, 0.5], [5.0, 0.0, 0.5],
   // [0.0, 2.0, 0.5], [1.1, 2.0, 0.5], [5.0, 2.0, 0.5]
-  vtkm::cont::ArrayHandleCartesianProduct<AxisArrayType, AxisArrayType, AxisArrayType>
-    rectilinearCoordinates(xAxisArray, yAxisArray, zAxisArray);
+  viskores::cont::
+    ArrayHandleCartesianProduct<AxisArrayType, AxisArrayType, AxisArrayType>
+      rectilinearCoordinates(xAxisArray, yAxisArray, zAxisArray);
   ////
   //// END-EXAMPLE ArrayHandleCartesianProduct
   ////
@@ -116,7 +125,7 @@ void RectilinearPointCoordinates()
     ////
     //// BEGIN-EXAMPLE MakeArrayHandleCartesianProduct
     ////
-    vtkm::cont::make_ArrayHandleCartesianProduct(xAxisArray, yAxisArray, zAxisArray)
+    viskores::cont::make_ArrayHandleCartesianProduct(xAxisArray, yAxisArray, zAxisArray)
     ////
     //// END-EXAMPLE MakeArrayHandleCartesianProduct
     ////
@@ -133,5 +142,5 @@ void Test()
 
 int GuideExampleArrayHandleCoordinateSystems(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

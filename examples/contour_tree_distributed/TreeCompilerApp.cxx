@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -61,13 +69,13 @@
 //==============================================================================
 
 #include <stdio.h>
-#include <vtkm/filter/scalar_topology/worklet/contourtree_distributed/TreeCompiler.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/TreeCompiler.h>
 
 // main routine
 int main(int argc, char** argv)
 { // main()
   // the compiler for putting them together
-  vtkm::worklet::contourtree_distributed::TreeCompiler compiler;
+  viskores::worklet::contourtree_distributed::TreeCompiler compiler;
 
   // we just loop through the arguments, reading them in and adding them
   for (int argument = 1; argument < argc; argument++)

@@ -1,10 +1,10 @@
 .. title page
 
 ==============================
-The VTK-m User's Guide
+The Viskores User's Guide
 ==============================
 
-| **The VTK-m User's Guide**
+| **The Viskores User's Guide**
 | Version |version|
 
 Kenneth Moreland
@@ -23,18 +23,18 @@ David Pugmire,
 Nick Thompson,
 Allison Vacanti,
 Abhishek Yenpure,
-and the |VTKm| community.
+and the |Viskores| community.
 
-Moreland, K. (|report-year|). *The VTK-m User's Guide*, version |release|, Tech report |report-number|, Oak Ridge National Laboratory.
+Moreland, K. (|report-year|). *The Viskores User's Guide*, version |release|, Tech report |report-number|, Oak Ridge National Laboratory.
 
-.. centered:: Join the VTK-m Community at http://m.vtk.org.
+.. centered:: Join the Viskores Community at http://m.vtk.org.
 
 .. todo:: The centered directive is deprecated (https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-centered). Figure out how to add rst-class to center.
 
 .. toctree::
    :numbered:
    :maxdepth: 2
-   :caption: VTK-m User's Guide
+   :caption: Viskores User's Guide
 
    part-getting-started.rst
    part-using.rst

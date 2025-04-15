@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,16 +15,16 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/exec/CellDerivative.h>
-#include <vtkm/exec/CellInterpolate.h>
-#include <vtkm/exec/ParametricCoordinates.h>
+#include <viskores/exec/CellDerivative.h>
+#include <viskores/exec/CellInterpolate.h>
+#include <viskores/exec/ParametricCoordinates.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
+#include <viskores/worklet/WorkletMapField.h>
+#include <viskores/worklet/WorkletMapTopology.h>
 
-#include <vtkm/cont/Invoker.h>
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/Invoker.h>
+#include <viskores/cont/testing/MakeTestDataSet.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -24,7 +32,7 @@ namespace
 ////
 //// BEGIN-EXAMPLE CellCenters
 ////
-struct CellCenters : vtkm::worklet::WorkletVisitCellsWithPoints
+struct CellCenters : viskores::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn inputCells,
                                 FieldInPoint inputField,
@@ -33,20 +41,20 @@ struct CellCenters : vtkm::worklet::WorkletVisitCellsWithPoints
   using InputDomain = _1;
 
   template<typename CellShapeTag, typename FieldInVecType, typename FieldOutType>
-  VTKM_EXEC void operator()(CellShapeTag shape,
-                            vtkm::IdComponent pointCount,
-                            const FieldInVecType& inputField,
-                            FieldOutType& outputField) const
+  VISKORES_EXEC void operator()(CellShapeTag shape,
+                                viskores::IdComponent pointCount,
+                                const FieldInVecType& inputField,
+                                FieldOutType& outputField) const
   {
-    vtkm::Vec3f center;
-    vtkm::ErrorCode status =
-      vtkm::exec::ParametricCoordinatesCenter(pointCount, shape, center);
-    if (status != vtkm::ErrorCode::Success)
+    viskores::Vec3f center;
+    viskores::ErrorCode status =
+      viskores::exec::ParametricCoordinatesCenter(pointCount, shape, center);
+    if (status != viskores::ErrorCode::Success)
     {
-      this->RaiseError(vtkm::ErrorString(status));
+      this->RaiseError(viskores::ErrorString(status));
       return;
     }
-    vtkm::exec::CellInterpolate(inputField, center, shape, outputField);
+    viskores::exec::CellInterpolate(inputField, center, shape, outputField);
   }
 };
 ////
@@ -56,7 +64,7 @@ struct CellCenters : vtkm::worklet::WorkletVisitCellsWithPoints
 ////
 //// BEGIN-EXAMPLE CellLookupInterp
 ////
-struct CellLookupInterp : vtkm::worklet::WorkletMapField
+struct CellLookupInterp : viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(WholeCellSetIn<> inputCells,
                                 WholeArrayIn inputField,
@@ -65,28 +73,29 @@ struct CellLookupInterp : vtkm::worklet::WorkletMapField
   using InputDomain = _3;
 
   template<typename StructureType, typename FieldInPortalType, typename FieldOutType>
-  VTKM_EXEC void operator()(vtkm::Id index,
-                            const StructureType& structure,
-                            const FieldInPortalType& inputField,
-                            FieldOutType& outputField) const
+  VISKORES_EXEC void operator()(viskores::Id index,
+                                const StructureType& structure,
+                                const FieldInPortalType& inputField,
+                                FieldOutType& outputField) const
   {
     // Normally you would use something like a locator to find the index to
     // a cell that matches some query criteria. For demonstration purposes,
     // we are just using a passed in index.
     auto shape = structure.GetCellShape(index);
-    vtkm::IdComponent pointCount = structure.GetNumberOfIndices(index);
+    viskores::IdComponent pointCount = structure.GetNumberOfIndices(index);
 
-    vtkm::Vec3f center;
-    vtkm::ErrorCode status =
-      vtkm::exec::ParametricCoordinatesCenter(pointCount, shape, center);
-    if (status != vtkm::ErrorCode::Success)
+    viskores::Vec3f center;
+    viskores::ErrorCode status =
+      viskores::exec::ParametricCoordinatesCenter(pointCount, shape, center);
+    if (status != viskores::ErrorCode::Success)
     {
-      this->RaiseError(vtkm::ErrorString(status));
+      this->RaiseError(viskores::ErrorString(status));
       return;
     }
 
     auto pointIndices = structure.GetIndices(index);
-    vtkm::exec::CellInterpolate(pointIndices, inputField, center, shape, outputField);
+    viskores::exec::CellInterpolate(
+      pointIndices, inputField, center, shape, outputField);
   }
 };
 ////
@@ -97,40 +106,42 @@ void TryCellCenters()
 {
   std::cout << "Trying CellCenters worklet." << std::endl;
 
-  vtkm::cont::DataSet dataSet =
-    vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet0();
+  viskores::cont::DataSet dataSet =
+    viskores::cont::testing::MakeTestDataSet().Make3DUniformDataSet0();
 
-  using ArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
+  using ArrayType = viskores::cont::ArrayHandle<viskores::Float32>;
   ArrayType centers;
 
-  vtkm::cont::Invoker invoke;
+  viskores::cont::Invoker invoke;
   invoke(CellCenters{},
          dataSet.GetCellSet(),
          dataSet.GetField("pointvar").GetData().AsArrayHandle<ArrayType>(),
          centers);
-  vtkm::cont::printSummary_ArrayHandle(centers, std::cout);
+  viskores::cont::printSummary_ArrayHandle(centers, std::cout);
   std::cout << std::endl;
-  VTKM_TEST_ASSERT(centers.GetNumberOfValues() ==
-                     dataSet.GetCellSet().GetNumberOfCells(),
-                   "Bad number of cells.");
-  VTKM_TEST_ASSERT(test_equal(60.1875, centers.ReadPortal().Get(0)), "Bad first value.");
+  VISKORES_TEST_ASSERT(centers.GetNumberOfValues() ==
+                         dataSet.GetCellSet().GetNumberOfCells(),
+                       "Bad number of cells.");
+  VISKORES_TEST_ASSERT(test_equal(60.1875, centers.ReadPortal().Get(0)),
+                       "Bad first value.");
 
   centers.Fill(0);
   invoke(CellLookupInterp{},
          dataSet.GetCellSet(),
          dataSet.GetField("pointvar").GetData().AsArrayHandle<ArrayType>(),
          centers);
-  vtkm::cont::printSummary_ArrayHandle(centers, std::cout);
+  viskores::cont::printSummary_ArrayHandle(centers, std::cout);
   std::cout << std::endl;
-  VTKM_TEST_ASSERT(centers.GetNumberOfValues() ==
-                     dataSet.GetCellSet().GetNumberOfCells(),
-                   "Bad number of cells.");
-  VTKM_TEST_ASSERT(test_equal(60.1875, centers.ReadPortal().Get(0)), "Bad first value.");
+  VISKORES_TEST_ASSERT(centers.GetNumberOfValues() ==
+                         dataSet.GetCellSet().GetNumberOfCells(),
+                       "Bad number of cells.");
+  VISKORES_TEST_ASSERT(test_equal(60.1875, centers.ReadPortal().Get(0)),
+                       "Bad first value.");
 }
 ////
 //// BEGIN-EXAMPLE CellDerivatives
 ////
-struct CellDerivatives : vtkm::worklet::WorkletVisitCellsWithPoints
+struct CellDerivatives : viskores::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn,
                                 FieldInPoint inputField,
@@ -143,21 +154,22 @@ struct CellDerivatives : vtkm::worklet::WorkletVisitCellsWithPoints
            typename FieldInVecType,
            typename PointCoordVecType,
            typename FieldOutType>
-  VTKM_EXEC void operator()(CellShapeTag shape,
-                            vtkm::IdComponent pointCount,
-                            const FieldInVecType& inputField,
-                            const PointCoordVecType& pointCoordinates,
-                            FieldOutType& outputField) const
+  VISKORES_EXEC void operator()(CellShapeTag shape,
+                                viskores::IdComponent pointCount,
+                                const FieldInVecType& inputField,
+                                const PointCoordVecType& pointCoordinates,
+                                FieldOutType& outputField) const
   {
-    vtkm::Vec3f center;
-    vtkm::ErrorCode status =
-      vtkm::exec::ParametricCoordinatesCenter(pointCount, shape, center);
-    if (status != vtkm::ErrorCode::Success)
+    viskores::Vec3f center;
+    viskores::ErrorCode status =
+      viskores::exec::ParametricCoordinatesCenter(pointCount, shape, center);
+    if (status != viskores::ErrorCode::Success)
     {
-      this->RaiseError(vtkm::ErrorString(status));
+      this->RaiseError(viskores::ErrorString(status));
       return;
     }
-    vtkm::exec::CellDerivative(inputField, pointCoordinates, center, shape, outputField);
+    viskores::exec::CellDerivative(
+      inputField, pointCoordinates, center, shape, outputField);
   }
 };
 ////
@@ -168,29 +180,29 @@ void TryCellDerivatives()
 {
   std::cout << "Trying CellDerivatives worklet." << std::endl;
 
-  vtkm::cont::DataSet dataSet =
-    vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet0();
+  viskores::cont::DataSet dataSet =
+    viskores::cont::testing::MakeTestDataSet().Make3DUniformDataSet0();
 
-  using ArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> derivatives;
+  using ArrayType = viskores::cont::ArrayHandle<viskores::Float32>;
+  viskores::cont::ArrayHandle<viskores::Vec3f_32> derivatives;
 
-  vtkm::cont::Invoker invoke;
-  vtkm::worklet::DispatcherMapTopology<CellDerivatives> dispatcher;
+  viskores::cont::Invoker invoke;
+  viskores::worklet::DispatcherMapTopology<CellDerivatives> dispatcher;
   invoke(CellDerivatives{},
          dataSet.GetCellSet(),
          dataSet.GetField("pointvar").GetData().AsArrayHandle<ArrayType>(),
          dataSet.GetCoordinateSystem().GetData(),
          derivatives);
 
-  vtkm::cont::printSummary_ArrayHandle(derivatives, std::cout);
+  viskores::cont::printSummary_ArrayHandle(derivatives, std::cout);
   std::cout << std::endl;
 
-  VTKM_TEST_ASSERT(derivatives.GetNumberOfValues() ==
-                     dataSet.GetCellSet().GetNumberOfCells(),
-                   "Bad number of cells.");
-  VTKM_TEST_ASSERT(
-    test_equal(vtkm::make_Vec(10.025, 30.075, 60.125), derivatives.ReadPortal().Get(0)),
-    "Bad first value.");
+  VISKORES_TEST_ASSERT(derivatives.GetNumberOfValues() ==
+                         dataSet.GetCellSet().GetNumberOfCells(),
+                       "Bad number of cells.");
+  VISKORES_TEST_ASSERT(test_equal(viskores::make_Vec(10.025, 30.075, 60.125),
+                                  derivatives.ReadPortal().Get(0)),
+                       "Bad first value.");
 }
 
 void Run()
@@ -203,5 +215,5 @@ void Run()
 
 int GuideExampleCellOperations(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Run, argc, argv);
+  return viskores::cont::testing::Testing::Run(Run, argc, argv);
 }

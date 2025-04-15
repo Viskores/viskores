@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,12 +16,12 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandleCompositeVector.h>
-#include <vtkm/cont/ArrayHandleRandomStandardNormal.h>
-#include <vtkm/cont/ArrayHandleRandomUniformBits.h>
-#include <vtkm/cont/ArrayHandleRandomUniformReal.h>
+#include <viskores/cont/ArrayHandleCompositeVector.h>
+#include <viskores/cont/ArrayHandleRandomStandardNormal.h>
+#include <viskores/cont/ArrayHandleRandomUniformBits.h>
+#include <viskores/cont/ArrayHandleRandomUniformReal.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -25,10 +33,10 @@ void Test()
   ////
   // Create an array containing a sequence of random bits seeded
   // by std::random_device.
-  vtkm::cont::ArrayHandleRandomUniformBits randomArray(50);
+  viskores::cont::ArrayHandleRandomUniformBits randomArray(50);
   // Create an array containing a sequence of random bits with
   // a user supplied seed.
-  vtkm::cont::ArrayHandleRandomUniformBits randomArraySeeded(50, { 123 });
+  viskores::cont::ArrayHandleRandomUniformBits randomArraySeeded(50, { 123 });
   ////
   //// END-EXAMPLE ArrayHandleRandomUniformBits
   ////
@@ -45,43 +53,44 @@ void Test()
   //// END-EXAMPLE ArrayHandleRandomUniformBitsFunctional
   ////
   // In case assert is an empty expression.
-  VTKM_TEST_ASSERT(r0 == r1);
+  VISKORES_TEST_ASSERT(r0 == r1);
 
   ////
   //// BEGIN-EXAMPLE ArrayHandleRandomUniformBitsIteration
   ////
   // Create a new insance of ArrayHandleRandomUniformBits
   // for each set of random bits.
-  vtkm::cont::ArrayHandleRandomUniformBits randomArray0(50, { 0 });
-  vtkm::cont::ArrayHandleRandomUniformBits randomArray1(50, { 1 });
+  viskores::cont::ArrayHandleRandomUniformBits randomArray0(50, { 0 });
+  viskores::cont::ArrayHandleRandomUniformBits randomArray1(50, { 1 });
   assert(randomArray0.ReadPortal().Get(5) != randomArray1.ReadPortal().Get(5));
   ////
   //// END-EXAMPLE ArrayHandleRandomUniformBitsIteration
   ////
   // In case assert is an empty expression.
-  VTKM_TEST_ASSERT(randomArray0.ReadPortal().Get(5) != randomArray1.ReadPortal().Get(5));
+  VISKORES_TEST_ASSERT(randomArray0.ReadPortal().Get(5) !=
+                       randomArray1.ReadPortal().Get(5));
 
   {
     ////
     //// BEGIN-EXAMPLE ArrayHandleRandomUniformReal
     ////
-    constexpr vtkm::Id NumPoints = 50;
-    auto randomPointsInBox = vtkm::cont::make_ArrayHandleCompositeVector(
-      vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(NumPoints),
-      vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(NumPoints),
-      vtkm::cont::ArrayHandleRandomUniformReal<vtkm::FloatDefault>(NumPoints));
+    constexpr viskores::Id NumPoints = 50;
+    auto randomPointsInBox = viskores::cont::make_ArrayHandleCompositeVector(
+      viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(NumPoints),
+      viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(NumPoints),
+      viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault>(NumPoints));
     ////
     //// END-EXAMPLE ArrayHandleRandomUniformReal
     ////
 
-    VTKM_TEST_ASSERT(randomPointsInBox.GetNumberOfValues() == NumPoints);
+    VISKORES_TEST_ASSERT(randomPointsInBox.GetNumberOfValues() == NumPoints);
     auto portal = randomPointsInBox.ReadPortal();
-    for (vtkm::Id idx = 0; idx < NumPoints; ++idx)
+    for (viskores::Id idx = 0; idx < NumPoints; ++idx)
     {
-      vtkm::Vec3f value = portal.Get(idx);
-      VTKM_TEST_ASSERT((value[0] >= 0) && (value[0] <= 1));
-      VTKM_TEST_ASSERT((value[1] >= 0) && (value[1] <= 1));
-      VTKM_TEST_ASSERT((value[2] >= 0) && (value[2] <= 1));
+      viskores::Vec3f value = portal.Get(idx);
+      VISKORES_TEST_ASSERT((value[0] >= 0) && (value[0] <= 1));
+      VISKORES_TEST_ASSERT((value[1] >= 0) && (value[1] <= 1));
+      VISKORES_TEST_ASSERT((value[2] >= 0) && (value[2] <= 1));
     }
   }
 
@@ -89,16 +98,17 @@ void Test()
     ////
     //// BEGIN-EXAMPLE ArrayHandleRandomStandardNormal
     ////
-    constexpr vtkm::Id NumPoints = 50;
-    auto randomPointsInGaussian = vtkm::cont::make_ArrayHandleCompositeVector(
-      vtkm::cont::ArrayHandleRandomStandardNormal<vtkm::FloatDefault>(NumPoints),
-      vtkm::cont::ArrayHandleRandomStandardNormal<vtkm::FloatDefault>(NumPoints),
-      vtkm::cont::ArrayHandleRandomStandardNormal<vtkm::FloatDefault>(NumPoints));
+    constexpr viskores::Id NumPoints = 50;
+    auto randomPointsInGaussian = viskores::cont::make_ArrayHandleCompositeVector(
+      viskores::cont::ArrayHandleRandomStandardNormal<viskores::FloatDefault>(NumPoints),
+      viskores::cont::ArrayHandleRandomStandardNormal<viskores::FloatDefault>(NumPoints),
+      viskores::cont::ArrayHandleRandomStandardNormal<viskores::FloatDefault>(
+        NumPoints));
     ////
     //// END-EXAMPLE ArrayHandleRandomStandardNormal
     ////
 
-    VTKM_TEST_ASSERT(randomPointsInGaussian.GetNumberOfValues() == NumPoints);
+    VISKORES_TEST_ASSERT(randomPointsInGaussian.GetNumberOfValues() == NumPoints);
   }
 }
 
@@ -106,5 +116,5 @@ void Test()
 
 int GuideExampleArrayHandleRandom(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

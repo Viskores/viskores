@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -8,12 +16,12 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
-project(VTKmDemo CXX)
+project(ViskoresDemo CXX)
 
-#Find the VTK-m package
-find_package(VTKm REQUIRED QUIET)
+#Find the Viskores package
+find_package(Viskores REQUIRED QUIET)
 
-if(TARGET vtkm::rendering AND TARGET vtkm::filter_contour AND TARGET vtkm::source)
+if(TARGET viskores::rendering AND TARGET viskores::filter_contour AND TARGET viskores::source)
   add_executable(Demo Demo.cxx)
-  target_link_libraries(Demo PRIVATE vtkm::rendering vtkm::filter_contour vtkm::source)
+  target_link_libraries(Demo PRIVATE viskores::rendering viskores::filter_contour viskores::source)
 endif()

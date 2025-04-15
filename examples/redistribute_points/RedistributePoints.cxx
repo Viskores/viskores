@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -10,15 +18,15 @@
 
 #include "RedistributePoints.h"
 
-#include <vtkm/ImplicitFunction.h>
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/AssignerPartitionedDataSet.h>
-#include <vtkm/cont/BoundsGlobalCompute.h>
-#include <vtkm/cont/EnvironmentTracker.h>
-#include <vtkm/cont/Serialization.h>
-#include <vtkm/filter/entity_extraction/ExtractPoints.h>
+#include <viskores/ImplicitFunction.h>
+#include <viskores/cont/Algorithm.h>
+#include <viskores/cont/AssignerPartitionedDataSet.h>
+#include <viskores/cont/BoundsGlobalCompute.h>
+#include <viskores/cont/EnvironmentTracker.h>
+#include <viskores/cont/Serialization.h>
+#include <viskores/filter/entity_extraction/ExtractPoints.h>
 
-#include <vtkm/thirdparty/diy/diy.h>
+#include <viskores/thirdparty/diy/diy.h>
 
 namespace example
 {
@@ -26,9 +34,9 @@ namespace example
 namespace internal
 {
 
-static vtkmdiy::ContinuousBounds convert(const vtkm::Bounds& bds)
+static viskoresdiy::ContinuousBounds convert(const viskores::Bounds& bds)
 {
-  vtkmdiy::ContinuousBounds result(3);
+  viskoresdiy::ContinuousBounds result(3);
   result.min[0] = static_cast<float>(bds.X.Min);
   result.min[1] = static_cast<float>(bds.Y.Min);
   result.min[2] = static_cast<float>(bds.Z.Min);
@@ -42,16 +50,16 @@ static vtkmdiy::ContinuousBounds convert(const vtkm::Bounds& bds)
 template <typename FilterType>
 class Redistributor
 {
-  const vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds>& Decomposer;
+  const viskoresdiy::RegularDecomposer<viskoresdiy::ContinuousBounds>& Decomposer;
   const FilterType& Filter;
 
-  vtkm::cont::DataSet Extract(const vtkm::cont::DataSet& input,
-                              const vtkmdiy::ContinuousBounds& bds) const
+  viskores::cont::DataSet Extract(const viskores::cont::DataSet& input,
+                                  const viskoresdiy::ContinuousBounds& bds) const
   {
     // extract points
-    vtkm::Box box(bds.min[0], bds.max[0], bds.min[1], bds.max[1], bds.min[2], bds.max[2]);
+    viskores::Box box(bds.min[0], bds.max[0], bds.min[1], bds.max[1], bds.min[2], bds.max[2]);
 
-    vtkm::filter::entity_extraction::ExtractPoints extractor;
+    viskores::filter::entity_extraction::ExtractPoints extractor;
     extractor.SetCompactPoints(true);
     extractor.SetImplicitFunction(box);
     return extractor.Execute(input);
@@ -60,15 +68,15 @@ class Redistributor
   class ConcatenateFields
   {
   public:
-    explicit ConcatenateFields(vtkm::Id totalSize)
+    explicit ConcatenateFields(viskores::Id totalSize)
       : TotalSize(totalSize)
       , CurrentIdx(0)
     {
     }
 
-    void Append(const vtkm::cont::Field& field)
+    void Append(const viskores::cont::Field& field)
     {
-      VTKM_ASSERT(this->CurrentIdx + field.GetNumberOfValues() <= this->TotalSize);
+      VISKORES_ASSERT(this->CurrentIdx + field.GetNumberOfValues() <= this->TotalSize);
 
       if (this->Field.GetNumberOfValues() == 0)
       {
@@ -81,45 +89,47 @@ class Redistributor
       }
       else
       {
-        VTKM_ASSERT(this->Field.GetName() == field.GetName() &&
-                    this->Field.GetAssociation() == field.GetAssociation());
+        VISKORES_ASSERT(this->Field.GetName() == field.GetName() &&
+                        this->Field.GetAssociation() == field.GetAssociation());
       }
 
-      field.GetData().CastAndCallForTypes<VTKM_DEFAULT_TYPE_LIST, VTKM_DEFAULT_STORAGE_LIST>(
-        Appender{}, this->Field, this->CurrentIdx);
+      field.GetData()
+        .CastAndCallForTypes<VISKORES_DEFAULT_TYPE_LIST, VISKORES_DEFAULT_STORAGE_LIST>(
+          Appender{}, this->Field, this->CurrentIdx);
       this->CurrentIdx += field.GetNumberOfValues();
     }
 
-    const vtkm::cont::Field& GetResult() const { return this->Field; }
+    const viskores::cont::Field& GetResult() const { return this->Field; }
 
   private:
     struct Appender
     {
       template <typename T, typename S>
-      void operator()(const vtkm::cont::ArrayHandle<T, S>& data,
-                      vtkm::cont::Field& field,
-                      vtkm::Id currentIdx) const
+      void operator()(const viskores::cont::ArrayHandle<T, S>& data,
+                      viskores::cont::Field& field,
+                      viskores::Id currentIdx) const
       {
-        vtkm::cont::ArrayHandle<T> farray =
-          field.GetData().template AsArrayHandle<vtkm::cont::ArrayHandle<T>>();
-        vtkm::cont::Algorithm::CopySubRange(data, 0, data.GetNumberOfValues(), farray, currentIdx);
+        viskores::cont::ArrayHandle<T> farray =
+          field.GetData().template AsArrayHandle<viskores::cont::ArrayHandle<T>>();
+        viskores::cont::Algorithm::CopySubRange(
+          data, 0, data.GetNumberOfValues(), farray, currentIdx);
       }
     };
 
-    vtkm::Id TotalSize;
-    vtkm::Id CurrentIdx;
-    vtkm::cont::Field Field;
+    viskores::Id TotalSize;
+    viskores::Id CurrentIdx;
+    viskores::cont::Field Field;
   };
 
 public:
-  Redistributor(const vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds>& decomposer,
+  Redistributor(const viskoresdiy::RegularDecomposer<viskoresdiy::ContinuousBounds>& decomposer,
                 const FilterType& filter)
     : Decomposer(decomposer)
     , Filter(filter)
   {
   }
 
-  void operator()(vtkm::cont::DataSet* block, const vtkmdiy::ReduceProxy& rp) const
+  void operator()(viskores::cont::DataSet* block, const viskoresdiy::ReduceProxy& rp) const
   {
     if (rp.in_link().size() == 0)
     {
@@ -129,33 +139,33 @@ public:
         {
           auto target = rp.out_link().target(cc);
           // let's get the bounding box for the target block.
-          vtkmdiy::ContinuousBounds bds(3);
+          viskoresdiy::ContinuousBounds bds(3);
           this->Decomposer.fill_bounds(bds, target.gid);
 
           auto extractedDS = this->Extract(*block, bds);
           rp.enqueue(target, extractedDS);
         }
         // clear our dataset.
-        *block = vtkm::cont::DataSet();
+        *block = viskores::cont::DataSet();
       }
     }
     else
     {
-      vtkm::Id numValues = 0;
-      std::vector<vtkm::cont::DataSet> receives;
+      viskores::Id numValues = 0;
+      std::vector<viskores::cont::DataSet> receives;
       for (int cc = 0; cc < rp.in_link().size(); ++cc)
       {
         auto target = rp.in_link().target(cc);
         if (rp.incoming(target.gid).size() > 0)
         {
-          vtkm::cont::DataSet incomingDS;
+          viskores::cont::DataSet incomingDS;
           rp.dequeue(target.gid, incomingDS);
           receives.push_back(incomingDS);
           numValues += receives.back().GetCoordinateSystem(0).GetNumberOfPoints();
         }
       }
 
-      *block = vtkm::cont::DataSet();
+      *block = viskores::cont::DataSet();
       if (receives.size() == 1)
       {
         *block = receives[0];
@@ -167,10 +177,10 @@ public:
         {
           concatCoords.Append(ds.GetCoordinateSystem(0));
         }
-        block->AddCoordinateSystem(vtkm::cont::CoordinateSystem(
+        block->AddCoordinateSystem(viskores::cont::CoordinateSystem(
           concatCoords.GetResult().GetName(), concatCoords.GetResult().GetData()));
 
-        for (vtkm::IdComponent i = 0; i < receives[0].GetNumberOfFields(); ++i)
+        for (viskores::IdComponent i = 0; i < receives[0].GetNumberOfFields(); ++i)
         {
           ConcatenateFields concatField(numValues);
           for (const auto& ds : receives)
@@ -187,47 +197,48 @@ public:
 } // namespace example::internal
 
 
-VTKM_CONT vtkm::cont::PartitionedDataSet RedistributePoints::DoExecutePartitions(
-  const vtkm::cont::PartitionedDataSet& input)
+VISKORES_CONT viskores::cont::PartitionedDataSet RedistributePoints::DoExecutePartitions(
+  const viskores::cont::PartitionedDataSet& input)
 {
-  auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
 
   // let's first get the global bounds of the domain
-  vtkm::Bounds gbounds = vtkm::cont::BoundsGlobalCompute(input);
+  viskores::Bounds gbounds = viskores::cont::BoundsGlobalCompute(input);
 
-  vtkm::cont::AssignerPartitionedDataSet assigner(input.GetNumberOfPartitions());
-  vtkmdiy::RegularDecomposer<vtkmdiy::ContinuousBounds> decomposer(
+  viskores::cont::AssignerPartitionedDataSet assigner(input.GetNumberOfPartitions());
+  viskoresdiy::RegularDecomposer<viskoresdiy::ContinuousBounds> decomposer(
     /*dim*/ 3, internal::convert(gbounds), assigner.nblocks());
 
-  vtkmdiy::Master master(
+  viskoresdiy::Master master(
     comm,
     /*threads*/ 1,
     /*limit*/ -1,
-    []() -> void* { return new vtkm::cont::DataSet(); },
-    [](void* ptr) { delete static_cast<vtkm::cont::DataSet*>(ptr); });
+    []() -> void* { return new viskores::cont::DataSet(); },
+    [](void* ptr) { delete static_cast<viskores::cont::DataSet*>(ptr); });
   decomposer.decompose(comm.rank(), assigner, master);
 
-  assert(static_cast<vtkm::Id>(master.size()) == input.GetNumberOfPartitions());
+  assert(static_cast<viskores::Id>(master.size()) == input.GetNumberOfPartitions());
   // let's populate local blocks
-  master.foreach ([&input](vtkm::cont::DataSet* ds, const vtkmdiy::Master::ProxyWithLink& proxy) {
-    auto lid = proxy.master()->lid(proxy.gid());
-    *ds = input.GetPartition(lid);
-  });
+  master.foreach (
+    [&input](viskores::cont::DataSet* ds, const viskoresdiy::Master::ProxyWithLink& proxy)
+    {
+      auto lid = proxy.master()->lid(proxy.gid());
+      *ds = input.GetPartition(lid);
+    });
 
   internal::Redistributor<RedistributePoints> redistributor(decomposer, *this);
-  vtkmdiy::all_to_all(master, assigner, redistributor, /*k=*/2);
+  viskoresdiy::all_to_all(master, assigner, redistributor, /*k=*/2);
 
-  vtkm::cont::PartitionedDataSet result;
-  master.foreach ([&result](vtkm::cont::DataSet* ds, const vtkmdiy::Master::ProxyWithLink&) {
-    result.AppendPartition(*ds);
-  });
+  viskores::cont::PartitionedDataSet result;
+  master.foreach ([&result](viskores::cont::DataSet* ds, const viskoresdiy::Master::ProxyWithLink&)
+                  { result.AppendPartition(*ds); });
 
   return result;
 }
 
-vtkm::cont::DataSet RedistributePoints::DoExecute(const vtkm::cont::DataSet&)
+viskores::cont::DataSet RedistributePoints::DoExecute(const viskores::cont::DataSet&)
 {
-  throw vtkm::cont::ErrorBadType("RedistributePoints requires PartitionedDataSet.");
+  throw viskores::cont::ErrorBadType("RedistributePoints requires PartitionedDataSet.");
 }
 
 } // namespace example

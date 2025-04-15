@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -63,7 +71,7 @@ set(examples_device
   )
 set(extra_libs)
 
-vtkm_find_gl(OPTIONAL GL GLUT)
+viskores_find_gl(OPTIONAL GL GLUT)
 if(TARGET GLUT::GLUT)
   list(APPEND examples
     GuideExampleRenderingInteractive.cxx
@@ -73,7 +81,7 @@ else()
   message("Not building OpenGL tutorial examples because GL/GLUT not found.")
 endif()
 
-vtkm_unit_tests(
+viskores_unit_tests(
   SOURCES ${examples}
   DEVICE_SOURCES ${examples_device}
   LIBRARIES ${extra_libs}
@@ -81,35 +89,35 @@ vtkm_unit_tests(
   )
 
 # Special example that is an encapsulated program
-# VTKm examples expects vtkm libraries to be namespaced with the prefix vtkm::.
-# However as the examples are also built as just another part of the VTK-m code
+# Viskores examples expects viskores libraries to be namespaced with the prefix viskores::.
+# However as the examples are also built as just another part of the Viskores code
 # those prefix are not added to the targets (This happens during the
 # installation). To workaround this issue here, we create IMPORTED libs linking
-# to the vtkm libraries used by the examples with expected the vtkm:: prefix.
-vtkm_module_get_list(module_list)
+# to the viskores libraries used by the examples with expected the viskores:: prefix.
+viskores_module_get_list(module_list)
 foreach(tgt IN LISTS module_list)
   if(TARGET ${tgt})
     # The reason of creating this phony IMPORTED libraries instead of making
     # ALIAS libraries is that ALIAS libraries are GLOBAL whereas IMPORTED are
     # local at the directory level where they are created. We do not want these
     # phony targets to be visible outside of the example directory.
-    vtkm_target_mangle(tgt_name_mangled ${tgt})
-    add_library("vtkm::${tgt_name_mangled}" INTERFACE IMPORTED)
-    target_link_libraries("vtkm::${tgt_name_mangled}" INTERFACE ${tgt})
+    viskores_target_mangle(tgt_name_mangled ${tgt})
+    add_library("viskores::${tgt_name_mangled}" INTERFACE IMPORTED)
+    target_link_libraries("viskores::${tgt_name_mangled}" INTERFACE ${tgt})
   endif()
 endforeach()
-add_library(vtkm::filter INTERFACE IMPORTED)
-target_link_libraries(vtkm::filter INTERFACE vtkm_filter)
+add_library(viskores::filter INTERFACE IMPORTED)
+target_link_libraries(viskores::filter INTERFACE viskores_filter)
 
-#add the directory that contains the VTK-m config file to the cmake
-#path so that our examples can find VTK-m
-set(CMAKE_PREFIX_PATH ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR})
+#add the directory that contains the Viskores config file to the cmake
+#path so that our examples can find Viskores
+set(CMAKE_PREFIX_PATH ${Viskores_BINARY_DIR}/${Viskores_INSTALL_CONFIG_DIR})
 
-include(VTKmQuickStart.cmake)
-set_target_properties(VTKmQuickStart
+include(ViskoresQuickStart.cmake)
+set_target_properties(ViskoresQuickStart
   PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
+  RUNTIME_OUTPUT_DIRECTORY ${Viskores_EXECUTABLE_OUTPUT_PATH}
   )
-add_test(NAME VTKmQuickStart
-   COMMAND VTKmQuickStart ${VTKm_SOURCE_DIR}/data/data/unstructured/cow.vtk
+add_test(NAME ViskoresQuickStart
+   COMMAND ViskoresQuickStart ${Viskores_SOURCE_DIR}/data/data/unstructured/cow.vtk
    )

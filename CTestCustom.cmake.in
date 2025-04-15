@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -15,7 +23,7 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # disable doxygen warnings about no matching members caused by auto keyword
   ".*warning: no matching file member found for.*"
 
-  # disable doxygen warning from VTKM_DEPRECATED usage
+  # disable doxygen warning from VISKORES_DEPRECATED usage
   ".*warning: Found.*while parsing initializer list!.*"
 
   # disable doxygen warning about potential recursion.
@@ -46,7 +54,9 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # Normally compilers do not generate warnings for includes using -isystem,
   # however, that is not always the case, specially in exotic systems such as
   # OLCF Ascent/Summit
-  ".*vtkm/thirdparty.*"
+  ".*viskores/thirdparty.*"
+
+  ".*warning: template-id not allowed for constructor.*"
 )
 
 list(APPEND CTEST_CUSTOM_WARNING_MATCH
@@ -60,4 +70,4 @@ if (NOT x"@CMAKE_HIP_COMPILER@"x STREQUAL xx)
   set(CTEST_REPEAT_UNTIL_PASS 0)
 endif()
 
-set(VTKm_ENABLE_PERFORMANCE_TESTING "@VTKm_ENABLE_PERFORMANCE_TESTING@")
+set(Viskores_ENABLE_PERFORMANCE_TESTING "@Viskores_ENABLE_PERFORMANCE_TESTING@")

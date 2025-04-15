@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,18 +16,18 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetReader.h>
 
-#include <vtkm/rendering/Actor.h>
-#include <vtkm/rendering/Camera.h>
-#include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/GlyphType.h>
-#include <vtkm/rendering/MapperGlyphScalar.h>
-#include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/MapperWireframer.h>
-#include <vtkm/rendering/View3D.h>
+#include <viskores/rendering/Actor.h>
+#include <viskores/rendering/Camera.h>
+#include <viskores/rendering/CanvasRayTracer.h>
+#include <viskores/rendering/GlyphType.h>
+#include <viskores/rendering/MapperGlyphScalar.h>
+#include <viskores/rendering/MapperRayTracer.h>
+#include <viskores/rendering/MapperWireframer.h>
+#include <viskores/rendering/View3D.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -27,14 +35,14 @@ namespace
 void DoBasicRender()
 {
   // Load some data to render
-  vtkm::cont::DataSet surfaceData;
+  viskores::cont::DataSet surfaceData;
   try
   {
-    vtkm::io::VTKDataSetReader reader(
-      vtkm::cont::testing::Testing::GetTestDataBasePath() + "unstructured/cow.vtk");
+    viskores::io::VTKDataSetReader reader(
+      viskores::cont::testing::Testing::GetTestDataBasePath() + "unstructured/cow.vtk");
     surfaceData = reader.ReadDataSet();
   }
-  catch (vtkm::io::ErrorIO& error)
+  catch (viskores::io::ErrorIO& error)
   {
     std::cout << "Could not read file:" << std::endl << error.GetMessage() << std::endl;
     exit(1);
@@ -44,33 +52,33 @@ void DoBasicRender()
     throw;
   }
 
-  // Initialize VTK-m rendering classes
+  // Initialize Viskores rendering classes
   ////
   //// BEGIN-EXAMPLE ConstructView
   ////
   ////
   //// BEGIN-EXAMPLE ActorScene
   ////
-  vtkm::rendering::Actor actor(surfaceData.GetCellSet(),
-                               surfaceData.GetCoordinateSystem(),
-                               surfaceData.GetField("RandomPointScalars"));
+  viskores::rendering::Actor actor(surfaceData.GetCellSet(),
+                                   surfaceData.GetCoordinateSystem(),
+                                   surfaceData.GetField("RandomPointScalars"));
 
-  vtkm::rendering::Scene scene;
+  viskores::rendering::Scene scene;
   scene.AddActor(actor);
   ////
   //// END-EXAMPLE ActorScene
   ////
 
-  vtkm::rendering::MapperRayTracer mapper;
+  viskores::rendering::MapperRayTracer mapper;
   ////
   //// BEGIN-EXAMPLE Canvas
   ////
-  vtkm::rendering::CanvasRayTracer canvas(1920, 1080);
+  viskores::rendering::CanvasRayTracer canvas(1920, 1080);
   ////
   //// END-EXAMPLE Canvas
   ////
 
-  vtkm::rendering::View3D view(scene, mapper, canvas);
+  viskores::rendering::View3D view(scene, mapper, canvas);
   ////
   //// END-EXAMPLE ConstructView
   ////
@@ -78,8 +86,8 @@ void DoBasicRender()
   ////
   //// BEGIN-EXAMPLE ViewColors
   ////
-  view.SetBackgroundColor(vtkm::rendering::Color(1.0f, 1.0f, 1.0f));
-  view.SetForegroundColor(vtkm::rendering::Color(0.0f, 0.0f, 0.0f));
+  view.SetBackgroundColor(viskores::rendering::Color(1.0f, 1.0f, 1.0f));
+  view.SetForegroundColor(viskores::rendering::Color(0.0f, 0.0f, 0.0f));
   ////
   //// END-EXAMPLE ViewColors
   ////
@@ -104,14 +112,14 @@ void DoBasicRender()
 void DoPointRender()
 {
   // Load some data to render
-  vtkm::cont::DataSet surfaceData;
+  viskores::cont::DataSet surfaceData;
   try
   {
-    vtkm::io::VTKDataSetReader reader(
-      vtkm::cont::testing::Testing::GetTestDataBasePath() + "unstructured/cow.vtk");
+    viskores::io::VTKDataSetReader reader(
+      viskores::cont::testing::Testing::GetTestDataBasePath() + "unstructured/cow.vtk");
     surfaceData = reader.ReadDataSet();
   }
-  catch (vtkm::io::ErrorIO& error)
+  catch (viskores::io::ErrorIO& error)
   {
     std::cout << "Could not read file:" << std::endl << error.GetMessage() << std::endl;
     exit(1);
@@ -121,31 +129,31 @@ void DoPointRender()
     throw;
   }
 
-  // Initialize VTK-m rendering classes
-  vtkm::rendering::Actor actor(surfaceData.GetCellSet(),
-                               surfaceData.GetCoordinateSystem(),
-                               surfaceData.GetField("RandomPointScalars"));
+  // Initialize Viskores rendering classes
+  viskores::rendering::Actor actor(surfaceData.GetCellSet(),
+                                   surfaceData.GetCoordinateSystem(),
+                                   surfaceData.GetField("RandomPointScalars"));
 
-  vtkm::rendering::Scene scene;
+  viskores::rendering::Scene scene;
   scene.AddActor(actor);
 
-  vtkm::rendering::CanvasRayTracer canvas(1920, 1080);
+  viskores::rendering::CanvasRayTracer canvas(1920, 1080);
 
   ////
   //// BEGIN-EXAMPLE MapperGlyphScalar
   ////
-  vtkm::rendering::MapperGlyphScalar mapper;
-  mapper.SetGlyphType(vtkm::rendering::GlyphType::Cube);
+  viskores::rendering::MapperGlyphScalar mapper;
+  mapper.SetGlyphType(viskores::rendering::GlyphType::Cube);
   mapper.SetScaleByValue(true);
   mapper.SetScaleDelta(10.0f);
 
-  vtkm::rendering::View3D view(scene, mapper, canvas);
+  viskores::rendering::View3D view(scene, mapper, canvas);
   ////
   //// END-EXAMPLE MapperGlyphScalar
   ////
 
-  view.SetBackgroundColor(vtkm::rendering::Color(1.0f, 1.0f, 1.0f));
-  view.SetForegroundColor(vtkm::rendering::Color(0.0f, 0.0f, 0.0f));
+  view.SetBackgroundColor(viskores::rendering::Color(1.0f, 1.0f, 1.0f));
+  view.SetForegroundColor(viskores::rendering::Color(0.0f, 0.0f, 0.0f));
 
   view.Paint();
 
@@ -155,14 +163,14 @@ void DoPointRender()
 void DoEdgeRender()
 {
   // Load some data to render
-  vtkm::cont::DataSet surfaceData;
+  viskores::cont::DataSet surfaceData;
   try
   {
-    vtkm::io::VTKDataSetReader reader(
-      vtkm::cont::testing::Testing::GetTestDataBasePath() + "unstructured/cow.vtk");
+    viskores::io::VTKDataSetReader reader(
+      viskores::cont::testing::Testing::GetTestDataBasePath() + "unstructured/cow.vtk");
     surfaceData = reader.ReadDataSet();
   }
-  catch (vtkm::io::ErrorIO& error)
+  catch (viskores::io::ErrorIO& error)
   {
     std::cout << "Could not read file:" << std::endl << error.GetMessage() << std::endl;
     exit(1);
@@ -172,27 +180,27 @@ void DoEdgeRender()
     throw;
   }
 
-  // Initialize VTK-m rendering classes
-  vtkm::rendering::Actor actor(surfaceData.GetCellSet(),
-                               surfaceData.GetCoordinateSystem(),
-                               surfaceData.GetField("RandomPointScalars"));
+  // Initialize Viskores rendering classes
+  viskores::rendering::Actor actor(surfaceData.GetCellSet(),
+                                   surfaceData.GetCoordinateSystem(),
+                                   surfaceData.GetField("RandomPointScalars"));
 
-  vtkm::rendering::Scene scene;
+  viskores::rendering::Scene scene;
   scene.AddActor(actor);
 
-  vtkm::rendering::CanvasRayTracer canvas(1920, 1080);
+  viskores::rendering::CanvasRayTracer canvas(1920, 1080);
 
   ////
   //// BEGIN-EXAMPLE MapperEdge
   ////
-  vtkm::rendering::MapperWireframer mapper;
-  vtkm::rendering::View3D view(scene, mapper, canvas);
+  viskores::rendering::MapperWireframer mapper;
+  viskores::rendering::View3D view(scene, mapper, canvas);
   ////
   //// END-EXAMPLE MapperEdge
   ////
 
-  view.SetBackgroundColor(vtkm::rendering::Color(1.0f, 1.0f, 1.0f));
-  view.SetForegroundColor(vtkm::rendering::Color(0.0f, 0.0f, 0.0f));
+  view.SetBackgroundColor(viskores::rendering::Color(1.0f, 1.0f, 1.0f));
+  view.SetForegroundColor(viskores::rendering::Color(0.0f, 0.0f, 0.0f));
 
   view.Paint();
 
@@ -210,5 +218,5 @@ void DoRender()
 
 int GuideExampleRendering(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(DoRender, argc, argv);
+  return viskores::cont::testing::Testing::Run(DoRender, argc, argv);
 }

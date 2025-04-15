@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -10,18 +18,18 @@
 
 #include "Benchmarker.h"
 
-#include <vtkm/TypeTraits.h>
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/BitField.h>
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/Invoker.h>
-#include <vtkm/cont/Timer.h>
+#include <viskores/TypeTraits.h>
+#include <viskores/cont/Algorithm.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ArrayHandleConstant.h>
+#include <viskores/cont/ArrayHandleIndex.h>
+#include <viskores/cont/BitField.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/cont/Invoker.h>
+#include <viskores/cont/Timer.h>
 
-#include <vtkm/worklet/StableSortIndices.h>
-#include <vtkm/worklet/WorkletMapField.h>
+#include <viskores/worklet/StableSortIndices.h>
+#include <viskores/worklet/WorkletMapField.h>
 
 #include <algorithm>
 #include <cmath>
@@ -29,11 +37,11 @@
 #include <string>
 #include <utility>
 
-#include <vtkmstd/integer_sequence.h>
+#include <viskoresstd/integer_sequence.h>
 
-#include <vtkm/internal/Windows.h>
+#include <viskores/internal/Windows.h>
 
-#ifdef VTKM_ENABLE_OPENMP
+#ifdef VISKORES_ENABLE_OPENMP
 #include <omp.h>
 #endif
 
@@ -44,33 +52,33 @@ namespace
 //
 // Define at compile time:
 //
-//   Being VTKm_BENCHS_RANGE_LOWER_BOUNDARY b0 and,
-//   being VTKm_BENCHS_RANGE_UPPER_BOUNDARY b1
+//   Being Viskores_BENCHS_RANGE_LOWER_BOUNDARY b0 and,
+//   being Viskores_BENCHS_RANGE_UPPER_BOUNDARY b1
 //
 // This will create the following sample sizes b0, b0*2^3, b0*2^6, ..., b1.
 //
-// Notice that setting up VTKm_BENCHS_RANGE_LOWER_BOUNDARY / VTKm_BENCHS_RANGE_UPPER_BOUNDARY
+// Notice that setting up Viskores_BENCHS_RANGE_LOWER_BOUNDARY / Viskores_BENCHS_RANGE_UPPER_BOUNDARY
 // will affect both ShortRange and FullRange.
 //
-#ifndef VTKm_BENCHS_RANGE_LOWER_BOUNDARY
+#ifndef Viskores_BENCHS_RANGE_LOWER_BOUNDARY
 #define FULL_RANGE_LOWER_BOUNDARY (1 << 12)  //  4 KiB
 #define SHORT_RANGE_LOWER_BOUNDARY (1 << 15) // 32 KiB
 
 #else
-#define FULL_RANGE_LOWER_BOUNDARY (VTKm_BENCHS_RANGE_LOWER_BOUNDARY)
-#define SHORT_RANGE_LOWER_BOUNDARY (VTKm_BENCHS_RANGE_LOWER_BOUNDARY)
+#define FULL_RANGE_LOWER_BOUNDARY (Viskores_BENCHS_RANGE_LOWER_BOUNDARY)
+#define SHORT_RANGE_LOWER_BOUNDARY (Viskores_BENCHS_RANGE_LOWER_BOUNDARY)
 
 #endif
 
-#ifndef VTKm_BENCHS_RANGE_UPPER_BOUNDARY
+#ifndef Viskores_BENCHS_RANGE_UPPER_BOUNDARY
 #define FULL_RANGE_UPPER_BOUNDARY (1 << 27)             // 128 MiB
 #define SHORT_RANGE_UPPER_BOUNDARY (1 << 27)            // 128 MiB
 #define BITFIELD_TO_UNORDEREDSET_MAX_SAMPLING (1 << 26) // 64 MiB
 
 #else
-#define FULL_RANGE_UPPER_BOUNDARY (VTKm_BENCHS_RANGE_UPPER_BOUNDARY)
-#define SHORT_RANGE_UPPER_BOUNDARY (VTKm_BENCHS_RANGE_UPPER_BOUNDARY)
-#define BITFIELD_TO_UNORDEREDSET_MAX_SAMPLING (VTKm_BENCHS_RANGE_UPPER_BOUNDARY)
+#define FULL_RANGE_UPPER_BOUNDARY (Viskores_BENCHS_RANGE_UPPER_BOUNDARY)
+#define SHORT_RANGE_UPPER_BOUNDARY (Viskores_BENCHS_RANGE_UPPER_BOUNDARY)
+#define BITFIELD_TO_UNORDEREDSET_MAX_SAMPLING (Viskores_BENCHS_RANGE_UPPER_BOUNDARY)
 
 #endif
 
@@ -94,43 +102,44 @@ static const std::pair<int64_t, int64_t> SmallRange{ SHORT_RANGE_LOWER_BOUNDARY,
                                                      SHORT_RANGE_UPPER_BOUNDARY };
 static constexpr int SmallRangeMultiplier = 1 << 21; // Ensure a sample at 2MiB
 
-#ifndef VTKM_ENABLE_KOKKOS
-using TypeList = vtkm::List<vtkm::UInt8,
-                            vtkm::Float32,
-                            vtkm::Int64,
-                            vtkm::Float64,
-                            vtkm::Vec3f_32,
-                            vtkm::Pair<vtkm::Int32, vtkm::Float64>>;
+#ifndef VISKORES_ENABLE_KOKKOS
+using TypeList = viskores::List<viskores::UInt8,
+                                viskores::Float32,
+                                viskores::Int64,
+                                viskores::Float64,
+                                viskores::Vec3f_32,
+                                viskores::Pair<viskores::Int32, viskores::Float64>>;
 
-using SmallTypeList = vtkm::List<vtkm::UInt8, vtkm::Float32, vtkm::Int64>;
+using SmallTypeList = viskores::List<viskores::UInt8, viskores::Float32, viskores::Int64>;
 #else
 // Kokkos requires 0 == (sizeof(Kokkos::MinMaxScalar<ValueType>) % sizeof(int)
-// so removing vtkm::UInt8
-using TypeList = vtkm::List<vtkm::Float32,
-                            vtkm::Int64,
-                            vtkm::Float64,
-                            vtkm::Vec3f_32,
-                            vtkm::Pair<vtkm::Int32, vtkm::Float64>>;
+// so removing viskores::UInt8
+using TypeList = viskores::List<viskores::Float32,
+                                viskores::Int64,
+                                viskores::Float64,
+                                viskores::Vec3f_32,
+                                viskores::Pair<viskores::Int32, viskores::Float64>>;
 
-using SmallTypeList = vtkm::List<vtkm::Float32, vtkm::Int64>;
+using SmallTypeList = viskores::List<viskores::Float32, viskores::Int64>;
 #endif
 
 // Only 32-bit words are currently supported atomically across devices:
-using AtomicWordTypes = vtkm::List<vtkm::UInt32>;
+using AtomicWordTypes = viskores::List<viskores::UInt32>;
 
 // The Fill algorithm uses different word types:
-using FillWordTypes = vtkm::List<vtkm::UInt8, vtkm::UInt16, vtkm::UInt32, vtkm::UInt64>;
+using FillWordTypes =
+  viskores::List<viskores::UInt8, viskores::UInt16, viskores::UInt32, viskores::UInt64>;
 
-using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
+using IdArrayHandle = viskores::cont::ArrayHandle<viskores::Id>;
 
 // Hold configuration state (e.g. active device)
-vtkm::cont::InitializeResult Config;
+viskores::cont::InitializeResult Config;
 
 // Helper function to convert numBytes to numWords:
 template <typename T>
-vtkm::Id BytesToWords(vtkm::Id numBytes)
+viskores::Id BytesToWords(viskores::Id numBytes)
 {
-  const vtkm::Id wordSize = static_cast<vtkm::Id>(sizeof(T));
+  const viskores::Id wordSize = static_cast<viskores::Id>(sizeof(T));
   return numBytes / wordSize;
 }
 
@@ -139,72 +148,73 @@ vtkm::Id BytesToWords(vtkm::Id numBytes)
 template <typename T>
 struct TestValueFunctor
 {
-  VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const { return static_cast<T>(i + 10); }
+  VISKORES_EXEC_CONT
+  T operator()(viskores::Id i) const { return static_cast<T>(i + 10); }
 };
 
 template <typename T>
-VTKM_EXEC_CONT T TestValue(vtkm::Id index)
+VISKORES_EXEC_CONT T TestValue(viskores::Id index)
 {
   return TestValueFunctor<T>{}(index);
 }
 
 template <typename T, typename U>
-struct TestValueFunctor<vtkm::Pair<T, U>>
+struct TestValueFunctor<viskores::Pair<T, U>>
 {
-  VTKM_EXEC_CONT vtkm::Pair<T, U> operator()(vtkm::Id i) const
+  VISKORES_EXEC_CONT viskores::Pair<T, U> operator()(viskores::Id i) const
   {
-    return vtkm::make_Pair(TestValue<T>(i), TestValue<U>(i + 1));
+    return viskores::make_Pair(TestValue<T>(i), TestValue<U>(i + 1));
   }
 };
 
-template <typename T, vtkm::IdComponent N>
-struct TestValueFunctor<vtkm::Vec<T, N>>
+template <typename T, viskores::IdComponent N>
+struct TestValueFunctor<viskores::Vec<T, N>>
 {
   template <std::size_t... Ns>
-  VTKM_EXEC_CONT vtkm::Vec<T, N> FillVec(vtkm::Id i, vtkmstd::index_sequence<Ns...>) const
+  VISKORES_EXEC_CONT viskores::Vec<T, N> FillVec(viskores::Id i,
+                                                 viskoresstd::index_sequence<Ns...>) const
   {
-    return vtkm::make_Vec(TestValue<T>(i + static_cast<vtkm::Id>(Ns))...);
+    return viskores::make_Vec(TestValue<T>(i + static_cast<viskores::Id>(Ns))...);
   }
 
-  VTKM_EXEC_CONT vtkm::Vec<T, N> operator()(vtkm::Id i) const
+  VISKORES_EXEC_CONT viskores::Vec<T, N> operator()(viskores::Id i) const
   {
-    return FillVec(i, vtkmstd::make_index_sequence<static_cast<std::size_t>(N)>{});
+    return FillVec(i, viskoresstd::make_index_sequence<static_cast<std::size_t>(N)>{});
   }
 };
 
 template <typename ArrayT>
-VTKM_CONT void FillTestValue(ArrayT& array, vtkm::Id numValues)
+VISKORES_CONT void FillTestValue(ArrayT& array, viskores::Id numValues)
 {
   using T = typename ArrayT::ValueType;
-  vtkm::cont::Algorithm::Copy(
-    vtkm::cont::make_ArrayHandleImplicit(TestValueFunctor<T>{}, numValues), array);
+  viskores::cont::Algorithm::Copy(
+    viskores::cont::make_ArrayHandleImplicit(TestValueFunctor<T>{}, numValues), array);
 }
 
 template <typename T>
 struct ModuloTestValueFunctor
 {
-  vtkm::Id Mod;
-  VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const { return TestValue<T>(i % this->Mod); }
+  viskores::Id Mod;
+  VISKORES_EXEC_CONT
+  T operator()(viskores::Id i) const { return TestValue<T>(i % this->Mod); }
 };
 
 template <typename ArrayT>
-VTKM_CONT void FillModuloTestValue(ArrayT& array, vtkm::Id mod, vtkm::Id numValues)
+VISKORES_CONT void FillModuloTestValue(ArrayT& array, viskores::Id mod, viskores::Id numValues)
 {
   using T = typename ArrayT::ValueType;
-  vtkm::cont::Algorithm::Copy(
-    vtkm::cont::make_ArrayHandleImplicit(ModuloTestValueFunctor<T>{ mod }, numValues), array);
+  viskores::cont::Algorithm::Copy(
+    viskores::cont::make_ArrayHandleImplicit(ModuloTestValueFunctor<T>{ mod }, numValues), array);
 }
 
 template <typename T>
 struct BinaryTestValueFunctor
 {
-  vtkm::Id Mod;
-  VTKM_EXEC_CONT
-  T operator()(vtkm::Id i) const
+  viskores::Id Mod;
+  VISKORES_EXEC_CONT
+  T operator()(viskores::Id i) const
   {
-    T zero = vtkm::TypeTraits<T>::ZeroInitialization();
+    T zero = viskores::TypeTraits<T>::ZeroInitialization();
 
     // Always return zero unless 1 == Mod
     if (i == this->Mod)
@@ -221,15 +231,15 @@ struct BinaryTestValueFunctor
 };
 
 template <typename ArrayT>
-VTKM_CONT void FillBinaryTestValue(ArrayT& array, vtkm::Id mod, vtkm::Id numValues)
+VISKORES_CONT void FillBinaryTestValue(ArrayT& array, viskores::Id mod, viskores::Id numValues)
 {
   using T = typename ArrayT::ValueType;
-  vtkm::cont::Algorithm::Copy(
-    vtkm::cont::make_ArrayHandleImplicit(BinaryTestValueFunctor<T>{ mod }, numValues), array);
+  viskores::cont::Algorithm::Copy(
+    viskores::cont::make_ArrayHandleImplicit(BinaryTestValueFunctor<T>{ mod }, numValues), array);
 }
 
 template <typename ArrayT>
-VTKM_CONT void FillRandomTestValue(ArrayT& array, vtkm::Id numValues)
+VISKORES_CONT void FillRandomTestValue(ArrayT& array, viskores::Id numValues)
 {
   using ValueType = typename ArrayT::ValueType;
 
@@ -237,14 +247,14 @@ VTKM_CONT void FillRandomTestValue(ArrayT& array, vtkm::Id numValues)
 
   array.Allocate(numValues);
   auto portal = array.WritePortal();
-  for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
+  for (viskores::Id i = 0; i < portal.GetNumberOfValues(); ++i)
   {
-    portal.Set(i, TestValue<ValueType>(static_cast<vtkm::Id>(rng())));
+    portal.Set(i, TestValue<ValueType>(static_cast<viskores::Id>(rng())));
   }
 }
 
 template <typename ArrayT>
-VTKM_CONT void FillRandomModTestValue(ArrayT& array, vtkm::Id mod, vtkm::Id numValues)
+VISKORES_CONT void FillRandomModTestValue(ArrayT& array, viskores::Id mod, viskores::Id numValues)
 {
   using ValueType = typename ArrayT::ValueType;
 
@@ -252,31 +262,31 @@ VTKM_CONT void FillRandomModTestValue(ArrayT& array, vtkm::Id mod, vtkm::Id numV
 
   array.Allocate(numValues);
   auto portal = array.WritePortal();
-  for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
+  for (viskores::Id i = 0; i < portal.GetNumberOfValues(); ++i)
   {
-    portal.Set(i, TestValue<ValueType>(static_cast<vtkm::Id>(rng()) % mod));
+    portal.Set(i, TestValue<ValueType>(static_cast<viskores::Id>(rng()) % mod));
   }
 }
 
-static inline std::string SizeAndValuesString(vtkm::Id numBytes, vtkm::Id numValues)
+static inline std::string SizeAndValuesString(viskores::Id numBytes, viskores::Id numValues)
 {
   std::ostringstream str;
-  str << vtkm::cont::GetHumanReadableSize(numBytes) << " | " << numValues << " values";
+  str << viskores::cont::GetHumanReadableSize(numBytes) << " | " << numValues << " values";
   return str.str();
 }
 
 template <typename WordType>
-struct GenerateBitFieldWorklet : public vtkm::worklet::WorkletMapField
+struct GenerateBitFieldWorklet : public viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn dummy, BitFieldOut);
   using ExecutionSignature = void(InputIndex, _2);
 
   WordType Exemplar;
-  vtkm::Id Stride;
-  vtkm::Id MaxMaskedWord;
+  viskores::Id Stride;
+  viskores::Id MaxMaskedWord;
 
-  VTKM_CONT
-  GenerateBitFieldWorklet(WordType exemplar, vtkm::Id stride, vtkm::Id maxMaskedWord)
+  VISKORES_CONT
+  GenerateBitFieldWorklet(WordType exemplar, viskores::Id stride, viskores::Id maxMaskedWord)
     : Exemplar(exemplar)
     , Stride(stride)
     , MaxMaskedWord(maxMaskedWord)
@@ -284,7 +294,7 @@ struct GenerateBitFieldWorklet : public vtkm::worklet::WorkletMapField
   }
 
   template <typename BitPortal>
-  VTKM_EXEC void operator()(vtkm::Id wordIdx, BitPortal& portal) const
+  VISKORES_EXEC void operator()(viskores::Id wordIdx, BitPortal& portal) const
   {
     if (wordIdx <= this->MaxMaskedWord && (wordIdx % this->Stride) == 0)
     {
@@ -304,25 +314,25 @@ struct GenerateBitFieldWorklet : public vtkm::worklet::WorkletMapField
 // Stride and maxMaskedWord may be used to test different types of imbalanced
 // loads.
 template <typename WordType>
-VTKM_CONT vtkm::cont::BitField GenerateBitField(WordType exemplar,
-                                                vtkm::Id stride,
-                                                vtkm::Id maxMaskedWord,
-                                                vtkm::Id numWords)
+VISKORES_CONT viskores::cont::BitField GenerateBitField(WordType exemplar,
+                                                        viskores::Id stride,
+                                                        viskores::Id maxMaskedWord,
+                                                        viskores::Id numWords)
 {
   if (stride == 0)
   {
     stride = 1;
   }
 
-  vtkm::Id numBits = numWords * static_cast<vtkm::Id>(sizeof(WordType) * CHAR_BIT);
+  viskores::Id numBits = numWords * static_cast<viskores::Id>(sizeof(WordType) * CHAR_BIT);
 
-  vtkm::cont::BitField bits;
+  viskores::cont::BitField bits;
   bits.Allocate(numBits);
 
   // This array is just to set the input domain appropriately:
-  auto dummy = vtkm::cont::make_ArrayHandleConstant<vtkm::Int32>(0, numWords);
+  auto dummy = viskores::cont::make_ArrayHandleConstant<viskores::Int32>(0, numWords);
 
-  vtkm::cont::Invoker invoker{ Config.Device };
+  viskores::cont::Invoker invoker{ Config.Device };
   invoker(GenerateBitFieldWorklet<WordType>{ exemplar, stride, maxMaskedWord }, dummy, bits);
 
   return bits;
@@ -333,35 +343,36 @@ VTKM_CONT vtkm::cont::BitField GenerateBitField(WordType exemplar,
 
 template <typename WordType>
 void BenchBitFieldToUnorderedSetImpl(benchmark::State& state,
-                                     vtkm::Id numBytes,
+                                     viskores::Id numBytes,
                                      WordType exemplar,
-                                     vtkm::Id stride,
-                                     vtkm::Float32 fillRatio,
+                                     viskores::Id stride,
+                                     viskores::Float32 fillRatio,
                                      const std::string& name)
 {
-  const vtkm::Id numWords = BytesToWords<WordType>(numBytes);
-  const vtkm::Id maxMaskedWord =
-    static_cast<vtkm::Id>(static_cast<vtkm::Float32>(numWords) * fillRatio);
+  const viskores::Id numWords = BytesToWords<WordType>(numBytes);
+  const viskores::Id maxMaskedWord =
+    static_cast<viskores::Id>(static_cast<viskores::Float32>(numWords) * fillRatio);
 
   { // Set label:
-    const vtkm::Id numFilledWords = maxMaskedWord / stride;
-    const vtkm::Id numSetBits = numFilledWords * vtkm::CountSetBits(exemplar);
+    const viskores::Id numFilledWords = maxMaskedWord / stride;
+    const viskores::Id numSetBits = numFilledWords * viskores::CountSetBits(exemplar);
     std::stringstream desc;
-    desc << vtkm::cont::GetHumanReadableSize(numBytes) << " | " << name << " | "
+    desc << viskores::cont::GetHumanReadableSize(numBytes) << " | " << name << " | "
          << "SetBits:" << numSetBits;
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::BitField bits = GenerateBitField<WordType>(exemplar, stride, maxMaskedWord, numWords);
+  viskores::cont::BitField bits =
+    GenerateBitField<WordType>(exemplar, stride, maxMaskedWord, numWords);
 
   IdArrayHandle indices;
 
-  vtkm::cont::Timer timer{ Config.Device };
+  viskores::cont::Timer timer{ Config.Device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::BitFieldToUnorderedSet(Config.Device, bits, indices);
+    viskores::cont::Algorithm::BitFieldToUnorderedSet(Config.Device, bits, indices);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -373,9 +384,9 @@ void BenchBitFieldToUnorderedSetImpl(benchmark::State& state,
 
 void BenchBitFieldToUnorderedSet(benchmark::State& state)
 {
-  using WordType = vtkm::WordTypeDefault;
+  using WordType = viskores::WordTypeDefault;
 
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
   const auto fillPattern = state.range(1);
 
   // Launch the implementation with the appropriate fill pattern:
@@ -406,7 +417,7 @@ void BenchBitFieldToUnorderedSet(benchmark::State& state)
       break;
 
     default:
-      VTKM_UNREACHABLE("Internal error.");
+      VISKORES_UNREACHABLE("Internal error.");
   }
 }
 
@@ -425,28 +436,28 @@ void BenchBitFieldToUnorderedSetGenerator(benchmark::internal::Benchmark* bm)
   }
 }
 
-VTKM_BENCHMARK_APPLY(BenchBitFieldToUnorderedSet, BenchBitFieldToUnorderedSetGenerator);
+VISKORES_BENCHMARK_APPLY(BenchBitFieldToUnorderedSet, BenchBitFieldToUnorderedSetGenerator);
 
 template <typename ValueType>
 void BenchCopy(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
 
-  vtkm::cont::ArrayHandle<ValueType> src;
-  vtkm::cont::ArrayHandle<ValueType> dst;
+  viskores::cont::ArrayHandle<ValueType> src;
+  viskores::cont::ArrayHandle<ValueType> dst;
 
   FillTestValue(src, numValues);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::Copy(device, src, dst);
+    viskores::cont::Algorithm::Copy(device, src, dst);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -457,18 +468,18 @@ void BenchCopy(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
 
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchCopy, ->Ranges({ FullRange })->ArgName("Size"), TypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchCopy, ->Ranges({ FullRange })->ArgName("Size"), TypeList);
 
 template <typename ValueType>
 void BenchCopyIf(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentValid = static_cast<vtkm::Id>(state.range(1));
-  const vtkm::Id numValid = (numValues * percentValid) / 100;
-  const vtkm::Id modulo = numValid != 0 ? numValues / numValid : numValues + 1;
+  const viskores::Id percentValid = static_cast<viskores::Id>(state.range(1));
+  const viskores::Id numValid = (numValues * percentValid) / 100;
+  const viskores::Id modulo = numValid != 0 ? numValues / numValid : numValues + 1;
 
   {
     std::ostringstream desc;
@@ -477,19 +488,19 @@ void BenchCopyIf(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::ArrayHandle<ValueType> src;
-  vtkm::cont::ArrayHandle<vtkm::Id> stencil;
-  vtkm::cont::ArrayHandle<ValueType> dst;
+  viskores::cont::ArrayHandle<ValueType> src;
+  viskores::cont::ArrayHandle<viskores::Id> stencil;
+  viskores::cont::ArrayHandle<ValueType> dst;
 
   FillTestValue(src, numValues);
   FillBinaryTestValue(stencil, modulo, numValues);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::CopyIf(device, src, stencil, dst);
+    viskores::cont::Algorithm::CopyIf(device, src, stencil, dst);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -511,37 +522,38 @@ void BenchCopyIfGenerator(benchmark::internal::Benchmark* bm)
   }
 }
 
-VTKM_BENCHMARK_TEMPLATES_APPLY(BenchCopyIf, BenchCopyIfGenerator, SmallTypeList);
+VISKORES_BENCHMARK_TEMPLATES_APPLY(BenchCopyIf, BenchCopyIfGenerator, SmallTypeList);
 
 template <typename WordType>
 void BenchCountSetBitsImpl(benchmark::State& state,
-                           vtkm::Id numBytes,
+                           viskores::Id numBytes,
                            WordType exemplar,
-                           vtkm::Id stride,
-                           vtkm::Float32 fillRatio,
+                           viskores::Id stride,
+                           viskores::Float32 fillRatio,
                            const std::string& name)
 {
-  const vtkm::Id numWords = BytesToWords<WordType>(numBytes);
-  const vtkm::Id maxMaskedWord =
-    static_cast<vtkm::Id>(static_cast<vtkm::Float32>(numWords) * fillRatio);
+  const viskores::Id numWords = BytesToWords<WordType>(numBytes);
+  const viskores::Id maxMaskedWord =
+    static_cast<viskores::Id>(static_cast<viskores::Float32>(numWords) * fillRatio);
 
   { // Set label:
-    const vtkm::Id numFilledWords = maxMaskedWord / stride;
-    const vtkm::Id numSetBits = numFilledWords * vtkm::CountSetBits(exemplar);
+    const viskores::Id numFilledWords = maxMaskedWord / stride;
+    const viskores::Id numSetBits = numFilledWords * viskores::CountSetBits(exemplar);
     std::stringstream desc;
-    desc << vtkm::cont::GetHumanReadableSize(numBytes) << " | " << name << " | "
+    desc << viskores::cont::GetHumanReadableSize(numBytes) << " | " << name << " | "
          << "SetBits:" << numSetBits;
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::BitField bits = GenerateBitField<WordType>(exemplar, stride, maxMaskedWord, numWords);
+  viskores::cont::BitField bits =
+    GenerateBitField<WordType>(exemplar, stride, maxMaskedWord, numWords);
 
-  vtkm::cont::Timer timer{ Config.Device };
+  viskores::cont::Timer timer{ Config.Device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::Id setBits = vtkm::cont::Algorithm::CountSetBits(Config.Device, bits);
+    viskores::Id setBits = viskores::cont::Algorithm::CountSetBits(Config.Device, bits);
     benchmark::DoNotOptimize(setBits);
     timer.Stop();
 
@@ -554,9 +566,9 @@ void BenchCountSetBitsImpl(benchmark::State& state,
 
 void BenchCountSetBits(benchmark::State& state)
 {
-  using WordType = vtkm::WordTypeDefault;
+  using WordType = viskores::WordTypeDefault;
 
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
   const auto fillPattern = state.range(1);
 
   // Launch the implementation with the appropriate fill pattern:
@@ -587,7 +599,7 @@ void BenchCountSetBits(benchmark::State& state)
       break;
 
     default:
-      VTKM_UNREACHABLE("Internal error.");
+      VISKORES_UNREACHABLE("Internal error.");
   }
 }
 
@@ -601,25 +613,25 @@ void BenchCountSetBitsGenerator(benchmark::internal::Benchmark* bm)
     bm->Ranges({ { FullRange.first, FullRange.second }, { config, config } });
   }
 }
-VTKM_BENCHMARK_APPLY(BenchCountSetBits, BenchCountSetBitsGenerator);
+VISKORES_BENCHMARK_APPLY(BenchCountSetBits, BenchCountSetBitsGenerator);
 
 template <typename ValueType>
 void BenchFillArrayHandle(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
 
-  vtkm::cont::ArrayHandle<ValueType> array;
+  viskores::cont::ArrayHandle<ValueType> array;
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::Fill(device, array, TestValue<ValueType>(19), numValues);
+    viskores::cont::Algorithm::Fill(device, array, TestValue<ValueType>(19), numValues);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -629,28 +641,28 @@ void BenchFillArrayHandle(benchmark::State& state)
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFillArrayHandle,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchFillArrayHandle,
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 void BenchFillBitFieldBool(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numBits = numBytes * CHAR_BIT;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numBits = numBytes * CHAR_BIT;
   const bool value = state.range(1) != 0;
 
-  state.SetLabel(vtkm::cont::GetHumanReadableSize(numBytes));
+  state.SetLabel(viskores::cont::GetHumanReadableSize(numBytes));
 
-  vtkm::cont::BitField bits;
+  viskores::cont::BitField bits;
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::Fill(device, bits, value, numBits);
+    viskores::cont::Algorithm::Fill(device, bits, value, numBits);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -659,28 +671,28 @@ void BenchFillBitFieldBool(benchmark::State& state)
   const int64_t iterations = static_cast<int64_t>(state.iterations());
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
 };
-VTKM_BENCHMARK_OPTS(BenchFillBitFieldBool,
-                      ->Ranges({ { FullRange.first, FullRange.second }, { 0, 1 } })
-                      ->ArgNames({ "Size", "Val" }));
+VISKORES_BENCHMARK_OPTS(BenchFillBitFieldBool,
+                          ->Ranges({ { FullRange.first, FullRange.second }, { 0, 1 } })
+                          ->ArgNames({ "Size", "Val" }));
 
 template <typename WordType>
 void BenchFillBitFieldMask(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numBits = numBytes * CHAR_BIT;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numBits = numBytes * CHAR_BIT;
   const WordType mask = static_cast<WordType>(0x1);
 
-  state.SetLabel(vtkm::cont::GetHumanReadableSize(numBytes));
+  state.SetLabel(viskores::cont::GetHumanReadableSize(numBytes));
 
-  vtkm::cont::BitField bits;
+  viskores::cont::BitField bits;
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::Fill(device, bits, mask, numBits);
+    viskores::cont::Algorithm::Fill(device, bits, mask, numBits);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -689,21 +701,21 @@ void BenchFillBitFieldMask(benchmark::State& state)
   const int64_t iterations = static_cast<int64_t>(state.iterations());
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
 };
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFillBitFieldMask,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              FillWordTypes);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchFillBitFieldMask,
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  FillWordTypes);
 
 template <typename ValueType>
 void BenchLowerBounds(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
-  const vtkm::Id numValuesBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numInputsBytes = static_cast<vtkm::Id>(state.range(1));
+  const viskores::Id numValuesBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numInputsBytes = static_cast<viskores::Id>(state.range(1));
 
-  const vtkm::Id numValues = BytesToWords<ValueType>(numValuesBytes);
-  const vtkm::Id numInputs = BytesToWords<ValueType>(numInputsBytes);
+  const viskores::Id numValues = BytesToWords<ValueType>(numValuesBytes);
+  const viskores::Id numInputs = BytesToWords<ValueType>(numInputsBytes);
 
   {
     std::ostringstream desc;
@@ -711,20 +723,20 @@ void BenchLowerBounds(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::ArrayHandle<ValueType> input;
-  vtkm::cont::ArrayHandle<vtkm::Id> output;
-  vtkm::cont::ArrayHandle<ValueType> values;
+  viskores::cont::ArrayHandle<ValueType> input;
+  viskores::cont::ArrayHandle<viskores::Id> output;
+  viskores::cont::ArrayHandle<ValueType> values;
 
   FillRandomTestValue(input, numInputs);
   FillRandomTestValue(values, numValues);
-  vtkm::cont::Algorithm::Sort(device, values);
+  viskores::cont::Algorithm::Sort(device, values);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::LowerBounds(device, input, values, output);
+    viskores::cont::Algorithm::LowerBounds(device, input, values, output);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -734,31 +746,31 @@ void BenchLowerBounds(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
 
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchLowerBounds,
-                                ->RangeMultiplier(SmallRangeMultiplier)
-                                ->Ranges({ SmallRange, SmallRange })
-                                ->ArgNames({ "Size", "InputSize" }),
-                              TypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchLowerBounds,
+                                    ->RangeMultiplier(SmallRangeMultiplier)
+                                    ->Ranges({ SmallRange, SmallRange })
+                                    ->ArgNames({ "Size", "InputSize" }),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchReduce(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
 
-  vtkm::cont::ArrayHandle<ValueType> array;
+  viskores::cont::ArrayHandle<ValueType> array;
   FillTestValue(array, numValues);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    auto result = vtkm::cont::Algorithm::Reduce(
-      device, array, vtkm::TypeTraits<ValueType>::ZeroInitialization());
+    auto result = viskores::cont::Algorithm::Reduce(
+      device, array, viskores::TypeTraits<ValueType>::ZeroInitialization());
     benchmark::DoNotOptimize(result);
     timer.Stop();
 
@@ -769,21 +781,21 @@ void BenchReduce(benchmark::State& state)
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchReduce,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchReduce,
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchReduceByKey(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentKeys = static_cast<vtkm::Id>(state.range(1));
-  const vtkm::Id numKeys = std::max((numValues * percentKeys) / 100, vtkm::Id{ 1 });
+  const viskores::Id percentKeys = static_cast<viskores::Id>(state.range(1));
+  const viskores::Id numKeys = std::max((numValues * percentKeys) / 100, viskores::Id{ 1 });
 
   {
     std::ostringstream desc;
@@ -792,21 +804,22 @@ void BenchReduceByKey(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::ArrayHandle<ValueType> valuesIn;
-  vtkm::cont::ArrayHandle<ValueType> valuesOut;
-  vtkm::cont::ArrayHandle<vtkm::Id> keysIn;
-  vtkm::cont::ArrayHandle<vtkm::Id> keysOut;
+  viskores::cont::ArrayHandle<ValueType> valuesIn;
+  viskores::cont::ArrayHandle<ValueType> valuesOut;
+  viskores::cont::ArrayHandle<viskores::Id> keysIn;
+  viskores::cont::ArrayHandle<viskores::Id> keysOut;
 
   FillTestValue(valuesIn, numValues);
   FillModuloTestValue(keysIn, numKeys, numValues);
-  vtkm::cont::Algorithm::Sort(device, keysIn);
+  viskores::cont::Algorithm::Sort(device, keysIn);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::ReduceByKey(device, keysIn, valuesIn, keysOut, valuesOut, vtkm::Add{});
+    viskores::cont::Algorithm::ReduceByKey(
+      device, keysIn, valuesIn, keysOut, valuesOut, viskores::Add{});
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -828,28 +841,28 @@ void BenchReduceByKeyGenerator(benchmark::internal::Benchmark* bm)
   }
 }
 
-VTKM_BENCHMARK_TEMPLATES_APPLY(BenchReduceByKey, BenchReduceByKeyGenerator, SmallTypeList);
+VISKORES_BENCHMARK_TEMPLATES_APPLY(BenchReduceByKey, BenchReduceByKeyGenerator, SmallTypeList);
 
 template <typename ValueType>
 void BenchScanExclusive(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
 
-  vtkm::cont::ArrayHandle<ValueType> src;
-  vtkm::cont::ArrayHandle<ValueType> dst;
+  viskores::cont::ArrayHandle<ValueType> src;
+  viskores::cont::ArrayHandle<ValueType> dst;
 
   FillTestValue(src, numValues);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::ScanExclusive(device, src, dst);
+    viskores::cont::Algorithm::ScanExclusive(device, src, dst);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -859,31 +872,31 @@ void BenchScanExclusive(benchmark::State& state)
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchScanExclusive,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchScanExclusive,
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchScanExtended(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
 
-  vtkm::cont::ArrayHandle<ValueType> src;
-  vtkm::cont::ArrayHandle<ValueType> dst;
+  viskores::cont::ArrayHandle<ValueType> src;
+  viskores::cont::ArrayHandle<ValueType> dst;
 
   FillTestValue(src, numValues);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::ScanExtended(device, src, dst);
+    viskores::cont::Algorithm::ScanExtended(device, src, dst);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -893,31 +906,31 @@ void BenchScanExtended(benchmark::State& state)
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchScanExtended,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchScanExtended,
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchScanInclusive(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
 
-  vtkm::cont::ArrayHandle<ValueType> src;
-  vtkm::cont::ArrayHandle<ValueType> dst;
+  viskores::cont::ArrayHandle<ValueType> src;
+  viskores::cont::ArrayHandle<ValueType> dst;
 
   FillTestValue(src, numValues);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::ScanInclusive(device, src, dst);
+    viskores::cont::Algorithm::ScanInclusive(device, src, dst);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -927,34 +940,34 @@ void BenchScanInclusive(benchmark::State& state)
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchScanInclusive,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchScanInclusive,
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchSort(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
 
-  vtkm::cont::ArrayHandle<ValueType> unsorted;
+  viskores::cont::ArrayHandle<ValueType> unsorted;
   FillRandomTestValue(unsorted, numValues);
 
-  vtkm::cont::ArrayHandle<ValueType> array;
+  viskores::cont::ArrayHandle<ValueType> array;
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     // Reset the array to the unsorted state:
-    vtkm::cont::Algorithm::Copy(device, unsorted, array);
+    viskores::cont::Algorithm::Copy(device, unsorted, array);
 
     timer.Start();
-    vtkm::cont::Algorithm::Sort(array);
+    viskores::cont::Algorithm::Sort(array);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -964,21 +977,21 @@ void BenchSort(benchmark::State& state)
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchSort,
-                                ->Range(FullRange.first, FullRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchSort,
+                                    ->Range(FullRange.first, FullRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchSortByKey(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentKeys = static_cast<vtkm::Id>(state.range(1));
-  const vtkm::Id numKeys = std::max((numValues * percentKeys) / 100, vtkm::Id{ 1 });
+  const viskores::Id percentKeys = static_cast<viskores::Id>(state.range(1));
+  const viskores::Id numKeys = std::max((numValues * percentKeys) / 100, viskores::Id{ 1 });
 
   {
     std::ostringstream desc;
@@ -987,25 +1000,25 @@ void BenchSortByKey(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::ArrayHandle<ValueType> valuesUnsorted;
-  vtkm::cont::ArrayHandle<ValueType> values;
-  vtkm::cont::ArrayHandle<vtkm::Id> keysUnsorted;
-  vtkm::cont::ArrayHandle<vtkm::Id> keys;
+  viskores::cont::ArrayHandle<ValueType> valuesUnsorted;
+  viskores::cont::ArrayHandle<ValueType> values;
+  viskores::cont::ArrayHandle<viskores::Id> keysUnsorted;
+  viskores::cont::ArrayHandle<viskores::Id> keys;
 
   FillRandomTestValue(valuesUnsorted, numValues);
 
   FillModuloTestValue(keysUnsorted, numKeys, numValues);
-  vtkm::cont::Algorithm::Sort(device, keysUnsorted);
+  viskores::cont::Algorithm::Sort(device, keysUnsorted);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
-    vtkm::cont::Algorithm::Copy(device, keysUnsorted, keys);
-    vtkm::cont::Algorithm::Copy(device, valuesUnsorted, values);
+    viskores::cont::Algorithm::Copy(device, keysUnsorted, keys);
+    viskores::cont::Algorithm::Copy(device, valuesUnsorted, values);
 
     timer.Start();
-    vtkm::cont::Algorithm::SortByKey(device, keys, values);
+    viskores::cont::Algorithm::SortByKey(device, keys, values);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -1026,31 +1039,32 @@ void BenchSortByKeyGenerator(benchmark::internal::Benchmark* bm)
   }
 }
 
-VTKM_BENCHMARK_TEMPLATES_APPLY(BenchSortByKey, BenchSortByKeyGenerator, SmallTypeList);
+VISKORES_BENCHMARK_TEMPLATES_APPLY(BenchSortByKey, BenchSortByKeyGenerator, SmallTypeList);
 
 template <typename ValueType>
 void BenchStableSortIndices(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
   state.SetLabel(SizeAndValuesString(numBytes, numValues));
 
-  vtkm::cont::ArrayHandle<ValueType> values;
+  viskores::cont::ArrayHandle<ValueType> values;
   FillRandomTestValue(values, numValues);
 
-  vtkm::cont::ArrayHandle<vtkm::Id> indices;
+  viskores::cont::ArrayHandle<viskores::Id> indices;
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     // Reset the indices array:
-    vtkm::cont::Algorithm::Copy(device, vtkm::cont::make_ArrayHandleIndex(numValues), indices);
+    viskores::cont::Algorithm::Copy(
+      device, viskores::cont::make_ArrayHandleIndex(numValues), indices);
 
     timer.Start();
-    vtkm::worklet::StableSortIndices::Sort(device, values, indices);
+    viskores::worklet::StableSortIndices::Sort(device, values, indices);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -1060,20 +1074,20 @@ void BenchStableSortIndices(benchmark::State& state)
   state.SetBytesProcessed(static_cast<int64_t>(numBytes) * iterations);
   state.SetItemsProcessed(static_cast<int64_t>(numValues) * iterations);
 };
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchStableSortIndices,
-                                ->Range(SmallRange.first, SmallRange.second)
-                                ->ArgName("Size"),
-                              TypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchStableSortIndices,
+                                    ->Range(SmallRange.first, SmallRange.second)
+                                    ->ArgName("Size"),
+                                  TypeList);
 
 template <typename ValueType>
 void BenchStableSortIndicesUnique(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentUnique = static_cast<vtkm::Id>(state.range(1));
-  const vtkm::Id numUnique = std::max((numValues * percentUnique) / 100, vtkm::Id{ 1 });
+  const viskores::Id percentUnique = static_cast<viskores::Id>(state.range(1));
+  const viskores::Id numUnique = std::max((numValues * percentUnique) / 100, viskores::Id{ 1 });
 
   {
     std::ostringstream desc;
@@ -1082,25 +1096,25 @@ void BenchStableSortIndicesUnique(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::ArrayHandle<ValueType> values;
+  viskores::cont::ArrayHandle<ValueType> values;
   FillRandomModTestValue(values, numUnique, numValues);
 
   // Prepare IndicesOrig to contain the sorted, non-unique index map:
-  const vtkm::cont::ArrayHandle<vtkm::Id> indicesOrig =
-    vtkm::worklet::StableSortIndices::Sort(device, values);
+  const viskores::cont::ArrayHandle<viskores::Id> indicesOrig =
+    viskores::worklet::StableSortIndices::Sort(device, values);
 
   // Working memory:
-  vtkm::cont::ArrayHandle<vtkm::Id> indices;
+  viskores::cont::ArrayHandle<viskores::Id> indices;
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     // Reset the indices array:
-    vtkm::cont::Algorithm::Copy(device, indicesOrig, indices);
+    viskores::cont::Algorithm::Copy(device, indicesOrig, indices);
 
     timer.Start();
-    vtkm::worklet::StableSortIndices::Unique(device, values, indices);
+    viskores::worklet::StableSortIndices::Unique(device, values, indices);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -1124,19 +1138,19 @@ void BenchmarkStableSortIndicesUniqueGenerator(benchmark::internal::Benchmark* b
   }
 }
 
-VTKM_BENCHMARK_TEMPLATES_APPLY(BenchStableSortIndicesUnique,
-                               BenchmarkStableSortIndicesUniqueGenerator,
-                               SmallTypeList);
+VISKORES_BENCHMARK_TEMPLATES_APPLY(BenchStableSortIndicesUnique,
+                                   BenchmarkStableSortIndicesUniqueGenerator,
+                                   SmallTypeList);
 
 template <typename ValueType>
 void BenchUnique(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numValues = BytesToWords<ValueType>(numBytes);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numValues = BytesToWords<ValueType>(numBytes);
 
-  const vtkm::Id percentUnique = static_cast<vtkm::Id>(state.range(1));
-  const vtkm::Id numUnique = std::max((numValues * percentUnique) / 100, vtkm::Id{ 1 });
+  const viskores::Id percentUnique = static_cast<viskores::Id>(state.range(1));
+  const viskores::Id numUnique = std::max((numValues * percentUnique) / 100, viskores::Id{ 1 });
 
   {
     std::ostringstream desc;
@@ -1145,22 +1159,22 @@ void BenchUnique(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::ArrayHandle<ValueType> valuesOrig;
+  viskores::cont::ArrayHandle<ValueType> valuesOrig;
   FillRandomModTestValue(valuesOrig, numUnique, numValues);
 
   // Presort the input:
-  vtkm::cont::Algorithm::Sort(device, valuesOrig);
+  viskores::cont::Algorithm::Sort(device, valuesOrig);
 
-  vtkm::cont::ArrayHandle<ValueType> values;
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::ArrayHandle<ValueType> values;
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     // Make a working copy of the input:
-    vtkm::cont::Algorithm::Copy(device, valuesOrig, values);
+    viskores::cont::Algorithm::Copy(device, valuesOrig, values);
 
     timer.Start();
-    vtkm::cont::Algorithm::Unique(device, values);
+    viskores::cont::Algorithm::Unique(device, values);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -1181,18 +1195,18 @@ void BenchmarkUniqueGenerator(benchmark::internal::Benchmark* bm)
   }
 }
 
-VTKM_BENCHMARK_TEMPLATES_APPLY(BenchUnique, BenchmarkUniqueGenerator, SmallTypeList);
+VISKORES_BENCHMARK_TEMPLATES_APPLY(BenchUnique, BenchmarkUniqueGenerator, SmallTypeList);
 
 template <typename ValueType>
 void BenchUpperBounds(benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
-  const vtkm::Id numValuesBytes = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numInputsBytes = static_cast<vtkm::Id>(state.range(1));
+  const viskores::Id numValuesBytes = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numInputsBytes = static_cast<viskores::Id>(state.range(1));
 
-  const vtkm::Id numValues = BytesToWords<ValueType>(numValuesBytes);
-  const vtkm::Id numInputs = BytesToWords<ValueType>(numInputsBytes);
+  const viskores::Id numValues = BytesToWords<ValueType>(numValuesBytes);
+  const viskores::Id numInputs = BytesToWords<ValueType>(numInputsBytes);
 
   {
     std::ostringstream desc;
@@ -1200,20 +1214,20 @@ void BenchUpperBounds(benchmark::State& state)
     state.SetLabel(desc.str());
   }
 
-  vtkm::cont::ArrayHandle<ValueType> input;
-  vtkm::cont::ArrayHandle<vtkm::Id> output;
-  vtkm::cont::ArrayHandle<ValueType> values;
+  viskores::cont::ArrayHandle<ValueType> input;
+  viskores::cont::ArrayHandle<viskores::Id> output;
+  viskores::cont::ArrayHandle<ValueType> values;
 
   FillRandomTestValue(input, numInputs);
   FillRandomTestValue(values, numValues);
-  vtkm::cont::Algorithm::Sort(device, values);
+  viskores::cont::Algorithm::Sort(device, values);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
     timer.Start();
-    vtkm::cont::Algorithm::UpperBounds(device, input, values, output);
+    viskores::cont::Algorithm::UpperBounds(device, input, values, output);
     timer.Stop();
 
     state.SetIterationTime(timer.GetElapsedTime());
@@ -1223,34 +1237,34 @@ void BenchUpperBounds(benchmark::State& state)
   state.SetItemsProcessed(static_cast<int64_t>(numInputs) * iterations);
 };
 
-VTKM_BENCHMARK_TEMPLATES_OPTS(BenchUpperBounds,
-                                ->RangeMultiplier(SmallRangeMultiplier)
-                                ->Ranges({ SmallRange, SmallRange })
-                                ->ArgNames({ "Size", "InputSize" }),
-                              SmallTypeList);
+VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchUpperBounds,
+                                    ->RangeMultiplier(SmallRangeMultiplier)
+                                    ->Ranges({ SmallRange, SmallRange })
+                                    ->ArgNames({ "Size", "InputSize" }),
+                                  SmallTypeList);
 
 } // end anon namespace
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto opts = viskores::cont::InitializeOptions::RequireDevice;
 
   std::vector<char*> args(argv, argv + argc);
-  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+  viskores::bench::detail::InitializeArgs(&argc, args, opts);
 
-  // Parse VTK-m options:
-  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+  // Parse Viskores options:
+  Config = viskores::cont::Initialize(argc, args.data(), opts);
 
   // This occurs when it is help
-  if (opts == vtkm::cont::InitializeOptions::None)
+  if (opts == viskores::cont::InitializeOptions::None)
   {
     std::cout << Config.Usage << std::endl;
   }
   else
   {
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+    viskores::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
+  VISKORES_EXECUTE_BENCHMARKS(argc, args.data());
 }

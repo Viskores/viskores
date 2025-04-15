@@ -1,3 +1,11 @@
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
 //=============================================================================
 //
 //  Copyright (c) Kitware, Inc.
@@ -10,14 +18,14 @@
 //
 //=============================================================================
 
-#include <vtkm/Matrix.h>
+#include <viskores/Matrix.h>
 
-#include <vtkm/testing/Testing.h>
+#include <viskores/testing/Testing.h>
 
 namespace
 {
 
-VTKM_CONT
+VISKORES_CONT
 void BuildMatrix()
 {
   std::cout << "Building matrix containing " << std::endl
@@ -27,7 +35,7 @@ void BuildMatrix()
   ////
   //// BEGIN-EXAMPLE BuildMatrix
   ////
-  vtkm::Matrix<vtkm::Float32, 2, 3> matrix;
+  viskores::Matrix<viskores::Float32, 2, 3> matrix;
 
   // Using parenthesis notation.
   matrix(0, 0) = 0.0f;
@@ -42,11 +50,11 @@ void BuildMatrix()
   //// END-EXAMPLE BuildMatrix
   ////
 
-  vtkm::Vec2f_32 termVec(1.0f, 0.1f);
-  vtkm::Vec3f_32 multVec = vtkm::MatrixMultiply(termVec, matrix);
+  viskores::Vec2f_32 termVec(1.0f, 0.1f);
+  viskores::Vec3f_32 multVec = viskores::MatrixMultiply(termVec, matrix);
   //  std::cout << multVec << std::endl;
-  VTKM_TEST_ASSERT(test_equal(multVec, vtkm::make_Vec(1.0, 2.1, 3.2)),
-                   "Unexpected product.");
+  VISKORES_TEST_ASSERT(test_equal(multVec, viskores::make_Vec(1.0, 2.1, 3.2)),
+                       "Unexpected product.");
 }
 
 void Run()
@@ -58,5 +66,5 @@ void Run()
 
 int GuideExampleMatrix(int argc, char* argv[])
 {
-  return vtkm::testing::Testing::Run(Run, argc, argv);
+  return viskores::testing::Testing::Run(Run, argc, argv);
 }

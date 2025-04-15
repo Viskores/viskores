@@ -1,6 +1,6 @@
-# Specifying modules in the VTK-m build system
+# Specifying modules in the Viskores build system
 
-The VTK-m build system comes with a module mechanism that allows a library
+The Viskores build system comes with a module mechanism that allows a library
 or other target be optionally compiled based on CMake configuration
 variables. Additionally, modules can be optionally compiled based on their
 dependencies. That is, a module can be turned on if a module that depends
@@ -11,10 +11,10 @@ module that it depends on cannot be compiled.
 
 All modules have a "name" that is the same as the target created by the
 module (for example, the name of a library). Every module has an associated
-(advanced) CMake variable named `VTKm_MODULE_ENABLE_<name>`. For example,
-the module that builds the `vtkm_filter_entity_extraction` filter has an
+(advanced) CMake variable named `Viskores_MODULE_ENABLE_<name>`. For example,
+the module that builds the `viskores_filter_entity_extraction` filter has an
 associated CMake variable named
-`VTKm_MODULE_ENABLE_vtkm_filter_entity_extraction`. This CMake variable can
+`Viskores_MODULE_ENABLE_viskores_filter_entity_extraction`. This CMake variable can
 be used to control whether the module should be included in the build. It
 can be set to one of the following values.
 
@@ -41,24 +41,24 @@ configuration automatically determine dependencies.
 Modules can also declare themselves as part of a group. Module groups
 provide a way to turn on/off the build of several related modules. For
 example, there is a module group named `FiltersCommon` that contains
-modules with the most commonly used filters in VTK-m.
+modules with the most commonly used filters in Viskores.
 
 Every module group has an associated (advanced) CMake variable named
-`VTKm_GROUP_ENABLE_<name>`. For example, the `FiltersCommon` group has an
-associated CMake variable named `VTKm_GROUP_ENABLE_FiltersCommon`. This
+`Viskores_GROUP_ENABLE_<name>`. For example, the `FiltersCommon` group has an
+associated CMake variable named `Viskores_GROUP_ENABLE_FiltersCommon`. This
 variable can be set to the same `YES`/`WANT`/`DONT_WANT`/`NO`/`DEFAULT`
-values as those for the `VTKm_MODULE_ENABLE` variables described earlier.
+values as those for the `Viskores_MODULE_ENABLE` variables described earlier.
 
 ### Default behavior
 
-If a `VTKm_MODULE_ENABLE_*` variable is set to `DEFAULT`, then the
-configuration first checks all the `VTKm_GROUP_ENABLE_*` variables
+If a `Viskores_MODULE_ENABLE_*` variable is set to `DEFAULT`, then the
+configuration first checks all the `Viskores_GROUP_ENABLE_*` variables
 associated with the groups the module belongs to. It will use the first
 value not set to `DEFAULT` that it encounters.
 
 If all the module's group are also set to `DEFAULT` (or the module does not
 belong to any groups) then the behavior is based on the
-`VTKm_BUILD_ALL_LIBRARIES` CMake variable. If `VTKm_BUILD_ALL_LIBRARIES` is
+`Viskores_BUILD_ALL_LIBRARIES` CMake variable. If `Viskores_BUILD_ALL_LIBRARIES` is
 `ON`, then the default behavior becomes `WANT`. Otherwise, it becomes
 `DONT_WANT`.
 
@@ -71,17 +71,17 @@ difference is that you do _not_ link to the directory with a CMake
 `add_subdirectory` command (or any other command like `include` or
 `subdirs`).
 
-Instead, you simply create a file named `vtkm.module` and place it in the
-same directory with the `CMakeLists.txt` file. The VTK-m configuration will
-automatically find this `vtkm.module` file, recognize the directory as
+Instead, you simply create a file named `viskores.module` and place it in the
+same directory with the `CMakeLists.txt` file. The Viskores configuration will
+automatically find this `viskores.module` file, recognize the directory as
 containing a module, and automatically include the associated
 `CMakeLists.txt` in the build (given that the CMake configuration turns on
 the module to be compiled).
 
-Each `vtkm.module` is a simple text file that contains a list of options.
+Each `viskores.module` is a simple text file that contains a list of options.
 Each option is provided by giving the name of the option followed by the
 arguments for that option. The following options can be defined in a
-`vtkm.module` file. `NAME` is required, but the rest are optional.
+`viskores.module` file. `NAME` is required, but the rest are optional.
 
   * `NAME`: The name of the target created by the module.
   * `GROUPS`: A list of all groups the module belongs to. If a module's
@@ -89,7 +89,7 @@ arguments for that option. The following options can be defined in a
     the groups it belongs to.
   * `DEPENDS`: A list of all modules (or other libraries) on which this
     module depends. Everything in this list is added as a link library to
-    the library created with `vtkm_library`.
+    the library created with `viskores_library`.
   * `PRIVATE_DEPENDS`: Same as `DEPENDS` except that these libraries are
     added as private link libraries.
   * `OPTIONAL_DEPENDS`: A list of all modules that that are not strictly
@@ -105,57 +105,57 @@ arguments for that option. The following options can be defined in a
   * `TESTING_DIR`: Specify the name of the testing subdirectory. If not
     provided, `testing` is used.
 	
-A `vtkm.module` file may also have comments. Everything between a `#` and
+A `viskores.module` file may also have comments. Everything between a `#` and
 the end of the line will be ignored.
 
-As an example, the `vtkm_filter_entity_extraction` module (located in
-`vtkm/filter/entity_extraction` has a `vtkm.module` file that looks like
+As an example, the `viskores_filter_entity_extraction` module (located in
+`viskores/filter/entity_extraction` has a `viskores.module` file that looks like
 the following.
 
 ``` cmake
 NAME
-  vtkm_filter_entity_extraction
+  viskores_filter_entity_extraction
 GROUPS
   FiltersCommon
   Filters
 DEPENDS
-  vtkm_worklet
-  vtkm_filter_core
-  vtkm_filter_clean_grid
+  viskores_worklet
+  viskores_filter_core
+  viskores_filter_clean_grid
 TEST_DEPENDS
-  vtkm_filter_clean_grid
-  vtkm_filter_entity_extraction
-  vtkm_source
+  viskores_filter_clean_grid
+  viskores_filter_entity_extraction
+  viskores_source
 ```
 
 ## Building the module
 
-As mentioned earlier, a VTK-m module directory has its own
+As mentioned earlier, a Viskores module directory has its own
 `CMakeLists.txt`. There does not have to be anything particularly special
 about the `CMakeLists.txt`. If the module is building a library target
-(which is typical), it should use the `vtkm_library` CMake command to do so
+(which is typical), it should use the `viskores_library` CMake command to do so
 to make sure the proper compiler flags are added.
 
 Here is an example portion of the `CMakeLists.txt` for the
-`vtkm_filter_entity_extraction` module. (Mainly, the definition of
+`viskores_filter_entity_extraction` module. (Mainly, the definition of
 variables containing source and header files is left out.)
 
 ``` cmake
-vtkm_library(
-  NAME vtkm_filter_entity_extraction
+viskores_library(
+  NAME viskores_filter_entity_extraction
   HEADERS ${entity_extraction_headers}
   DEVICE_SOURCES ${entity_extraction_sources_device}
-  USE_VTKM_JOB_POOL
+  USE_VISKORES_JOB_POOL
 )
 
-target_link_libraries(vtkm_filter PUBLIC INTERFACE vtkm_filter_entity_extraction)
+target_link_libraries(viskores_filter PUBLIC INTERFACE viskores_filter_entity_extraction)
 ```
 
 Note that if a library created by a module depends on the library created
-by another module, it should be in the `DEPENDS` list of `vtkm.module`. For
-example, the `vtkm.module` contains `vtkm_filter_clean_grid` in its
+by another module, it should be in the `DEPENDS` list of `viskores.module`. For
+example, the `viskores.module` contains `viskores_filter_clean_grid` in its
 `DEPENDS` list, and that library will automatically be added as a target
-link library to `vtkm_filter_entity_extraction`. You should avoid using
+link library to `viskores_filter_entity_extraction`. You should avoid using
 `target_link_libraries` to link one module to another as the modules will
 not be able to guarantee that all the targets will be created correctly.
 
@@ -170,7 +170,7 @@ OK.)
 All modules are expected to have a `testing` subdirectory. This
 subdirectory should contain its own `CMakeLists.txt` that, typically,
 builds a testing executable and adds the appropriate tests. (This is
-usually done with the `vtkm_unit_tests` CMake function.)
+usually done with the `viskores_unit_tests` CMake function.)
 
 However, a module should _not_ include its own `testing` directory with
 `add_subdirectory`. This is because the tests for a module might have
@@ -180,16 +180,16 @@ CMake configuration has the source module turned off? Should the filter
 module be turned off because the tests need the source module? No. Should
 the source module be turned on just because some tests want it? No.
 
-To resolve this issue, VTK-m modules allow for an extended set of
+To resolve this issue, Viskores modules allow for an extended set of
 dependencies for the tests. This is specified with the `TEST_DEPENDS`
-variable in `vtkm.module`. It will then add the test only if all the test
+variable in `viskores.module`. It will then add the test only if all the test
 dependencies are met.
 
 If the dependencies for both the module itself and the module's tests are
 met, then the `testing` subdirectory of the module will be added to the
 build. Like for the module itself, the `CMakeLists.txt` in the `testing`
 directory should build tests just like any other CMake directory. Here is
-an example `CMakeLists.txt` for the `vtkm_filter_entity_extraction` module.
+an example `CMakeLists.txt` for the `viskores_filter_entity_extraction` module.
 
 ``` cmake
 set(unit_tests
@@ -205,15 +205,15 @@ set(unit_tests
   )
 
 set(libraries
-  vtkm_filter_clean_grid
-  vtkm_filter_entity_extraction
-  vtkm_source
+  viskores_filter_clean_grid
+  viskores_filter_entity_extraction
+  viskores_source
   )
 
-vtkm_unit_tests(
+viskores_unit_tests(
   SOURCES ${unit_tests}
   LIBRARIES ${libraries}
-  USE_VTKM_JOB_POOL
+  USE_VISKORES_JOB_POOL
 )
 ```
 
@@ -223,8 +223,8 @@ The easiest way to test if a module is being built (in CMake) is to check
 whether the associated target exists.
 
 ``` cmake
-if(TARGET vtkm_filter_entity_extraction)
-  # Do stuff dependent on vtkm_filter_entity_extraction library/module
+if(TARGET viskores_filter_entity_extraction)
+  # Do stuff dependent on viskores_filter_entity_extraction library/module
 endif()
 ```
 
@@ -238,10 +238,10 @@ Because modules depend on each other, and these dependencies affect whether
 a particular module will be built, it can sometimes be difficult to
 understand why a particular module is or is not built. To help diagnose
 problems with modules, you can turn on extra reporting with the
-`VTKm_VERBOSE_MODULES` CMake variable.
+`Viskores_VERBOSE_MODULES` CMake variable.
 
-When `VTKm_VERBOSE_MODULES` is set to `OFF` (the default), then the parsing
+When `Viskores_VERBOSE_MODULES` is set to `OFF` (the default), then the parsing
 and dependency resolution of the modules is silent unless there is an
-error. When `VTKm_VERBOSE_MODULES` is set to `ON`, then information about
+error. When `Viskores_VERBOSE_MODULES` is set to `ON`, then information about
 what modules are found, which modules are built, and why they are or are
 not built are added as status messages during CMake configuration.

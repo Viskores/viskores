@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -11,11 +19,11 @@
 ////
 //// BEGIN-EXAMPLE BasicInitialize
 ////
-#include <vtkm/cont/Initialize.h>
+#include <viskores/cont/Initialize.h>
 //// PAUSE-EXAMPLE
-#include <vtkm/Version.h>
-#include <vtkm/cont/Logging.h>
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/Version.h>
+#include <viskores/cont/Logging.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -27,10 +35,11 @@ namespace InitExample
 
 int main(int argc, char** argv)
 {
-  vtkm::cont::InitializeOptions options =
-    vtkm::cont::InitializeOptions::ErrorOnBadOption |
-    vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, options);
+  viskores::cont::InitializeOptions options =
+    viskores::cont::InitializeOptions::ErrorOnBadOption |
+    viskores::cont::InitializeOptions::DefaultAnyDevice;
+  viskores::cont::InitializeResult config =
+    viskores::cont::Initialize(argc, argv, options);
 
   if (argc != 2)
   {
@@ -41,7 +50,7 @@ int main(int argc, char** argv)
   }
   std::string filename = argv[1];
 
-  // Do something cool with VTK-m
+  // Do something cool with Viskores
   // ...
 
   return 0;
@@ -58,17 +67,18 @@ namespace LoggingExample
 ////
 //// BEGIN-EXAMPLE InitializeLogging
 ////
-static const vtkm::cont::LogLevel CustomLogLevel = vtkm::cont::LogLevel::UserFirst;
+static const viskores::cont::LogLevel CustomLogLevel =
+  viskores::cont::LogLevel::UserFirst;
 
 int main(int argc, char** argv)
 {
-  vtkm::cont::SetLogLevelName(CustomLogLevel, "custom");
+  viskores::cont::SetLogLevelName(CustomLogLevel, "custom");
 
   // For this example we will set the log level manually.
-  // The user can override this with the --vtkm-log-level command line flag.
-  vtkm::cont::SetStderrLogLevel(CustomLogLevel);
+  // The user can override this with the --viskores-log-level command line flag.
+  viskores::cont::SetStderrLogLevel(CustomLogLevel);
 
-  vtkm::cont::Initialize(argc, argv);
+  viskores::cont::Initialize(argc, argv);
 
   // Do interesting stuff...
   ////
@@ -83,8 +93,8 @@ int main(int argc, char** argv)
 ////
 void TestFunc()
 {
-  VTKM_LOG_SCOPE_FUNCTION(vtkm::cont::LogLevel::Info);
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Showcasing function logging");
+  VISKORES_LOG_SCOPE_FUNCTION(viskores::cont::LogLevel::Info);
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Showcasing function logging");
 }
 ////
 //// END-EXAMPLE ScopedFunctionLogging
@@ -96,16 +106,16 @@ void TestFunc()
 template<typename T>
 void DoSomething(T&& x)
 {
-  VTKM_LOG_S(CustomLogLevel,
-             "Doing something with type " << vtkm::cont::TypeToString<T>());
+  VISKORES_LOG_S(CustomLogLevel,
+                 "Doing something with type " << viskores::cont::TypeToString<T>());
 
-  vtkm::Id arraySize = 100000 * sizeof(T);
-  VTKM_LOG_S(CustomLogLevel,
-             "Size of array is " << vtkm::cont::GetHumanReadableSize(arraySize));
-  VTKM_LOG_S(CustomLogLevel,
-             "More precisely it is " << vtkm::cont::GetSizeString(arraySize, 4));
+  viskores::Id arraySize = 100000 * sizeof(T);
+  VISKORES_LOG_S(CustomLogLevel,
+                 "Size of array is " << viskores::cont::GetHumanReadableSize(arraySize));
+  VISKORES_LOG_S(CustomLogLevel,
+                 "More precisely it is " << viskores::cont::GetSizeString(arraySize, 4));
 
-  VTKM_LOG_S(CustomLogLevel, "Stack location: " << vtkm::cont::GetStackTrace());
+  VISKORES_LOG_S(CustomLogLevel, "Stack location: " << viskores::cont::GetStackTrace());
   ////
   //// END-EXAMPLE HelperLogFunctions
   ////
@@ -118,11 +128,12 @@ void ExampleLogging()
   ////
   //// BEGIN-EXAMPLE BasicLogging
   ////
-  VTKM_LOG_F(vtkm::cont::LogLevel::Info,
-             "Base VTK-m version: %d.%d",
-             VTKM_VERSION_MAJOR,
-             VTKM_VERSION_MINOR);
-  VTKM_LOG_S(vtkm::cont::LogLevel::Info, "Full VTK-m version: " << VTKM_VERSION_FULL);
+  VISKORES_LOG_F(viskores::cont::LogLevel::Info,
+                 "Base Viskores version: %d.%d",
+                 VISKORES_VERSION_MAJOR,
+                 VISKORES_VERSION_MINOR);
+  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                 "Full Viskores version: " << VISKORES_VERSION_FULL);
   ////
   //// END-EXAMPLE BasicLogging
   ////
@@ -130,26 +141,27 @@ void ExampleLogging()
   ////
   //// BEGIN-EXAMPLE ConditionalLogging
   ////
-  for (vtkm::Id i = 0; i < 5; i++)
+  for (viskores::Id i = 0; i < 5; i++)
   {
-    VTKM_LOG_IF_S(vtkm::cont::LogLevel::Info, i % 2 == 0, "Found an even number: " << i);
+    VISKORES_LOG_IF_S(
+      viskores::cont::LogLevel::Info, i % 2 == 0, "Found an even number: " << i);
   }
   ////
   //// END-EXAMPLE ConditionalLogging
   ////
 
-  constexpr vtkm::IdComponent numTrials = 3;
+  constexpr viskores::IdComponent numTrials = 3;
 
   ////
   //// BEGIN-EXAMPLE ScopedLogging
   ////
-  for (vtkm::IdComponent trial = 0; trial < numTrials; ++trial)
+  for (viskores::IdComponent trial = 0; trial < numTrials; ++trial)
   {
-    VTKM_LOG_SCOPE(CustomLogLevel, "Trial %d", trial);
+    VISKORES_LOG_SCOPE(CustomLogLevel, "Trial %d", trial);
 
-    VTKM_LOG_F(CustomLogLevel, "Do thing 1");
+    VISKORES_LOG_F(CustomLogLevel, "Do thing 1");
 
-    VTKM_LOG_F(CustomLogLevel, "Do thing 2");
+    VISKORES_LOG_F(CustomLogLevel, "Do thing 2");
 
     //...
   }
@@ -159,19 +171,19 @@ void ExampleLogging()
 
   TestFunc();
 
-  DoSomething(vtkm::Vec<vtkm::Id3, 3>{});
+  DoSomething(viskores::Vec<viskores::Id3, 3>{});
 
 #if 0
-  Error context was removed in VTK-m 2.0 (and was disabled long before then)
+  Error context was removed in Viskores 2.0 (and was disabled long before then)
   //
   // BEGIN-EXAMPLE LoggingErrorContext
   //
   // This message is only logged if a crash occurs
-  VTKM_LOG_ERROR_CONTEXT("Some variable value", 42);
+  VISKORES_LOG_ERROR_CONTEXT("Some variable value", 42);
   //
   // END-EXAMPLE LoggingErrorContext
   //
-  std::cerr << vtkm::cont::GetLogErrorContext() << "\n";
+  std::cerr << viskores::cont::GetLogErrorContext() << "\n";
 #endif
 }
 } // namespace LoggingExample
@@ -182,7 +194,7 @@ void Test(int argc, char** argv)
   LoggingExample::ExampleLogging();
 
   std::string arg0 = "command-name";
-  std::string arg1 = "--vtkm-device=any";
+  std::string arg1 = "--viskores-device=any";
   std::string arg2 = "filename";
   std::vector<char*> fakeArgv;
   fakeArgv.push_back(const_cast<char*>(arg0.c_str()));

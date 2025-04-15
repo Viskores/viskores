@@ -1,3 +1,11 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
 ##=============================================================================
 ##
 ##  Copyright (c) Kitware, Inc.
@@ -10,20 +18,20 @@
 ##
 ##=============================================================================
 
-## Fetch latests tags from VTK-m main repo
+## Fetch latests tags from Viskores main repo
 
 find_package(Git)
 if(NOT Git_FOUND)
-  message(ERROR "Git not installed, Could not fetch vtk/vtk-m tags")
+  message(ERROR "Git not installed, Could not fetch vtk/viskores tags")
   return()
 endif()
 
-set(REPO_URL "https://gitlab.kitware.com/vtk/vtk-m.git")
+set(REPO_URL "https://gitlab.kitware.com/vtk/viskores.git")
 
 ## Only fetch tags when in a fork in a MR since often times forks do not have
 ## the latest tags from the main repo.
-if(DEFINED ENV{CI_MERGE_REQUEST_ID} AND NOT $ENV{CI_REPOSITORY_URL} MATCHES "vtk/vtk-m\\.git$")
-  message("Fetching vtk/vtk-m repo latest tags")
+if(DEFINED ENV{CI_MERGE_REQUEST_ID} AND NOT $ENV{CI_REPOSITORY_URL} MATCHES "vtk/viskores\\.git$")
+  message("Fetching vtk/viskores repo latest tags")
   execute_process(
     COMMAND
     ${GIT_EXECUTABLE}

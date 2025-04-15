@@ -1,13 +1,13 @@
-# Building VTK-m on HPC systems #
+# Building Viskores on HPC systems #
 
-Instructions for building VTK-m on various HPC systems is included below.
+Instructions for building Viskores on various HPC systems is included below.
 
 
 ## Spock ##
 Spock is a system at the OLCF that is an early access system for Frontier.
 As the software stack on Spock is frequently updated, these directions may be updated from time to time.
 
-Building VTK-m with HIP support for the AMD GPUs with the correct versions of Rocm, Kokkos and a patch to CMake can be done with the following script.
+Building Viskores with HIP support for the AMD GPUs with the correct versions of Rocm, Kokkos and a patch to CMake can be done with the following script.
 
 
 ```sh
@@ -64,7 +64,7 @@ benchmark_src_dir=${home_dir}/benchmark/src
 benchmark_build_dir=${home_dir}/benchmark/build
 benchmark_install_dir=${home_dir}/benchmark/install
 
-# build google benchmark only if you build vtk-m with benchmark ON
+# build google benchmark only if you build viskores with benchmark ON
 if true; then
 curl --insecure -OL https://github.com/google/benchmark/archive/v1.5.2.tar.gz
 mkdir -p benchmark && tar xf v1.5.2.tar.gz && mv benchmark-1.5.2 ${benchmark_src_dir}
@@ -77,32 +77,30 @@ ${cmake_build_dir}/bin/cmake --build ${benchmark_build_dir} -j10
 ${cmake_build_dir}/bin/cmake --install ${benchmark_build_dir} --prefix ${benchmark_install_dir}
 fi
 
-vtkm_src_dir=${home_dir}/vtkm/src
-vtkm_build_dir=${home_dir}/vtkm/build
-vtkm_install_dir=${home_dir}/vtkm/install
+viskores_src_dir=${home_dir}/viskores/src
+viskores_build_dir=${home_dir}/viskores/build
+viskores_install_dir=${home_dir}/viskores/install
 
 if true; then
-git clone -b master https://gitlab.kitware.com/vtk/vtk-m.git ${vtkm_src_dir}
-
-
-rm -rf ${vtkm_build_dir}
-${cmake_build_dir}/bin/cmake -S ${vtkm_src_dir} -B ${vtkm_build_dir} \
+git clone -b master https://github.com/Viskores/viskores.git ${viskores_src_dir}
+rm -rf ${viskores_build_dir}
+${cmake_build_dir}/bin/cmake -S ${viskores_src_dir} -B ${viskores_build_dir} \
   -DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF\
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_SHARED_LIBS=ON\
-  -DVTKm_ENABLE_KOKKOS=ON \
-  -DVTKm_ENABLE_MPI=OFF\
-  -DVTKm_ENABLE_RENDERING=ON \
-  -DVTKm_ENABLE_TESTING=OFF \
-  -DVTKm_ENABLE_BENCHMARKS=ON\
+  -DViskores_ENABLE_KOKKOS=ON \
+  -DViskores_ENABLE_MPI=OFF\
+  -DViskores_ENABLE_RENDERING=ON \
+  -DViskores_ENABLE_TESTING=OFF \
+  -DViskores_ENABLE_BENCHMARKS=ON\
   -DCMAKE_HIP_ARCHITECTURES="gfx908" \
   -DCMAKE_PREFIX_PATH="${kokkos_install_dir};${benchmark_install_dir}" \
-  -DCMAKE_INSTALL_PREFIX=${vtkm_install_dir} \
+  -DCMAKE_INSTALL_PREFIX=${viskores_install_dir} \
   -DCMAKE_HIP_COMPILER_TOOLKIT_ROOT=${rocm_path}\
   -DCMAKE_CXX_COMPILER=${rocm_path}/llvm/bin/clang++ \
   -DCMAKE_C_COMPILER=${rocm_path}/llvm/bin/clang
 
-${cmake_build_dir}/bin/cmake --build ${vtkm_build_dir} -j10
-${cmake_build_dir}/bin/cmake --install ${vtkm_build_dir}
+${cmake_build_dir}/bin/cmake --build ${viskores_build_dir} -j10
+${cmake_build_dir}/bin/cmake --install ${viskores_build_dir}
 fi
 ```

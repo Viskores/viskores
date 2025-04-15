@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,10 +15,10 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef vtk_m_examples_multibackend_TaskQueue_h
-#define vtk_m_examples_multibackend_TaskQueue_h
+#ifndef viskores_examples_multibackend_TaskQueue_h
+#define viskores_examples_multibackend_TaskQueue_h
 
-#include <vtkm/cont/PartitionedDataSet.h>
+#include <viskores/cont/PartitionedDataSet.h>
 
 #include <condition_variable>
 #include <mutex>
@@ -74,15 +82,17 @@ public:
     {
       //wait for a job to come into the queue
       std::unique_lock<std::mutex> lock(this->Lock);
-      this->CV.wait(lock, [this] {
-        //if we are shutting down we need to always wake up
-        if (this->ShutdownOnceTasksCompleted)
-        {
-          return true;
-        }
-        //if we aren't shutting down sleep when we have no work
-        return this->Queue.size() > 0;
-      });
+      this->CV.wait(lock,
+                    [this]
+                    {
+                      //if we are shutting down we need to always wake up
+                      if (this->ShutdownOnceTasksCompleted)
+                      {
+                        return true;
+                      }
+                      //if we aren't shutting down sleep when we have no work
+                      return this->Queue.size() > 0;
+                    });
 
       //When shutting down we don't check the queue size
       //so make sure we have something to pop

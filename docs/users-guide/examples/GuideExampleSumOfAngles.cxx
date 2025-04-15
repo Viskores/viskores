@@ -1,3 +1,11 @@
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
 //=============================================================================
 //
 //  Copyright (c) Kitware, Inc.
@@ -10,21 +18,21 @@
 //
 //=============================================================================
 
-#include <vtkm/worklet/WorkletMapTopology.h>
+#include <viskores/worklet/WorkletMapTopology.h>
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/DataSet.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/CellSetExplicit.h>
+#include <viskores/cont/DataSet.h>
 
-#include <vtkm/exec/CellEdge.h>
+#include <viskores/exec/CellEdge.h>
 
-#include <vtkm/Math.h>
-#include <vtkm/VectorAnalysis.h>
+#include <viskores/Math.h>
+#include <viskores/VectorAnalysis.h>
 
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -42,7 +50,7 @@ namespace
 ////
 //// BEGIN-EXAMPLE SumOfAngles
 ////
-struct SumOfAngles : vtkm::worklet::WorkletVisitPointsWithCells
+struct SumOfAngles : viskores::worklet::WorkletVisitPointsWithCells
 {
   using ControlSignature = void(CellSetIn inputCells,
                                 WholeCellSetIn<>, // Same as inputCells
@@ -59,32 +67,32 @@ struct SumOfAngles : vtkm::worklet::WorkletVisitPointsWithCells
            typename CellSetType,
            typename PointCoordsPortalType,
            typename SumType>
-  VTKM_EXEC void operator()(const IncidentCellVecType& incidentCells,
-                            vtkm::Id pointIndex,
-                            const CellSetType& cellSet,
-                            const PointCoordsPortalType& pointCoordsPortal,
-                            SumType& outSum) const
+  VISKORES_EXEC void operator()(const IncidentCellVecType& incidentCells,
+                                viskores::Id pointIndex,
+                                const CellSetType& cellSet,
+                                const PointCoordsPortalType& pointCoordsPortal,
+                                SumType& outSum) const
   {
     using CoordType = typename PointCoordsPortalType::ValueType;
 
     CoordType thisPoint = pointCoordsPortal.Get(pointIndex);
 
     outSum = 0;
-    for (vtkm::IdComponent incidentCellIndex = 0;
+    for (viskores::IdComponent incidentCellIndex = 0;
          incidentCellIndex < incidentCells.GetNumberOfComponents();
          ++incidentCellIndex)
     {
       // Get information about incident cell.
-      vtkm::Id cellIndex = incidentCells[incidentCellIndex];
+      viskores::Id cellIndex = incidentCells[incidentCellIndex];
       typename CellSetType::CellShapeTag cellShape = cellSet.GetCellShape(cellIndex);
       typename CellSetType::IndicesType cellConnections = cellSet.GetIndices(cellIndex);
-      vtkm::IdComponent numPointsInCell = cellSet.GetNumberOfIndices(cellIndex);
-      vtkm::IdComponent numEdges;
-      vtkm::exec::CellEdgeNumberOfEdges(numPointsInCell, cellShape, numEdges);
+      viskores::IdComponent numPointsInCell = cellSet.GetNumberOfIndices(cellIndex);
+      viskores::IdComponent numEdges;
+      viskores::exec::CellEdgeNumberOfEdges(numPointsInCell, cellShape, numEdges);
 
       // Iterate over all edges and find the first one with pointIndex.
       // Use that to find the first vector.
-      vtkm::IdComponent edgeIndex = -1;
+      viskores::IdComponent edgeIndex = -1;
       CoordType vec1;
       while (true)
       {
@@ -94,10 +102,10 @@ struct SumOfAngles : vtkm::worklet::WorkletVisitPointsWithCells
           this->RaiseError("Bad cell. Could not find two incident edges.");
           return;
         }
-        vtkm::IdComponent2 edge;
-        vtkm::exec::CellEdgeLocalIndex(
+        viskores::IdComponent2 edge;
+        viskores::exec::CellEdgeLocalIndex(
           numPointsInCell, 0, edgeIndex, cellShape, edge[0]);
-        vtkm::exec::CellEdgeLocalIndex(
+        viskores::exec::CellEdgeLocalIndex(
           numPointsInCell, 1, edgeIndex, cellShape, edge[1]);
         if (cellConnections[edge[0]] == pointIndex)
         {
@@ -126,10 +134,10 @@ struct SumOfAngles : vtkm::worklet::WorkletVisitPointsWithCells
           this->RaiseError("Bad cell. Could not find two incident edges.");
           return;
         }
-        vtkm::IdComponent2 edge;
-        vtkm::exec::CellEdgeLocalIndex(
+        viskores::IdComponent2 edge;
+        viskores::exec::CellEdgeLocalIndex(
           numPointsInCell, 0, edgeIndex, cellShape, edge[0]);
-        vtkm::exec::CellEdgeLocalIndex(
+        viskores::exec::CellEdgeLocalIndex(
           numPointsInCell, 1, edgeIndex, cellShape, edge[1]);
         if (cellConnections[edge[0]] == pointIndex)
         {
@@ -149,11 +157,11 @@ struct SumOfAngles : vtkm::worklet::WorkletVisitPointsWithCells
 
       // The dot product of two unit vectors is equal to the cosine of the
       // angle between them.
-      vtkm::Normalize(vec1);
-      vtkm::Normalize(vec2);
-      SumType cosine = static_cast<SumType>(vtkm::Dot(vec1, vec2));
+      viskores::Normalize(vec1);
+      viskores::Normalize(vec2);
+      SumType cosine = static_cast<SumType>(viskores::Dot(vec1, vec2));
 
-      outSum += vtkm::ACos(cosine);
+      outSum += viskores::ACos(cosine);
     }
   }
 };
@@ -161,30 +169,30 @@ struct SumOfAngles : vtkm::worklet::WorkletVisitPointsWithCells
 //// END-EXAMPLE SumOfAngles
 ////
 
-VTKM_CONT
+VISKORES_CONT
 static void TrySumOfAngles()
 {
   std::cout << "Read input data" << std::endl;
-  vtkm::io::VTKDataSetReader reader(vtkm::cont::testing::Testing::GetTestDataBasePath() +
-                                    "unstructured/cow.vtk");
-  vtkm::cont::DataSet dataSet = reader.ReadDataSet();
+  viskores::io::VTKDataSetReader reader(
+    viskores::cont::testing::Testing::GetTestDataBasePath() + "unstructured/cow.vtk");
+  viskores::cont::DataSet dataSet = reader.ReadDataSet();
 
   std::cout << "Get information out of data" << std::endl;
-  vtkm::cont::CellSetExplicit<> cellSet;
+  viskores::cont::CellSetExplicit<> cellSet;
   dataSet.GetCellSet().AsCellSet(cellSet);
 
   auto pointCoordinates = dataSet.GetCoordinateSystem().GetData();
 
   std::cout << "Run algorithm" << std::endl;
-  vtkm::cont::Invoker invoker;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> angleSums;
+  viskores::cont::Invoker invoker;
+  viskores::cont::ArrayHandle<viskores::FloatDefault> angleSums;
   invoker(SumOfAngles{}, cellSet, cellSet, pointCoordinates, angleSums);
 
   std::cout << "Add field to data set" << std::endl;
   dataSet.AddPointField("angle-sum", angleSums);
 
   std::cout << "Write result" << std::endl;
-  vtkm::io::VTKDataSetWriter writer("cow-curvature.vtk");
+  viskores::io::VTKDataSetWriter writer("cow-curvature.vtk");
   writer.WriteDataSet(dataSet);
 }
 
@@ -192,5 +200,5 @@ static void TrySumOfAngles()
 
 int GuideExampleSumOfAngles(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TrySumOfAngles, argc, argv);
+  return viskores::cont::testing::Testing::Run(TrySumOfAngles, argc, argv);
 }

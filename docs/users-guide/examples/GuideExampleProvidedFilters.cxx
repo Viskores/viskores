@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,22 +16,22 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/filter/contour/ClipWithField.h>
-#include <vtkm/filter/contour/ClipWithImplicitFunction.h>
-#include <vtkm/filter/contour/Contour.h>
-#include <vtkm/filter/field_transform/PointElevation.h>
-#include <vtkm/filter/flow/Pathline.h>
-#include <vtkm/filter/flow/StreamSurface.h>
-#include <vtkm/filter/flow/Streamline.h>
-#include <vtkm/filter/geometry_refinement/Tube.h>
-#include <vtkm/filter/geometry_refinement/VertexClustering.h>
+#include <viskores/filter/contour/ClipWithField.h>
+#include <viskores/filter/contour/ClipWithImplicitFunction.h>
+#include <viskores/filter/contour/Contour.h>
+#include <viskores/filter/field_transform/PointElevation.h>
+#include <viskores/filter/flow/Pathline.h>
+#include <viskores/filter/flow/StreamSurface.h>
+#include <viskores/filter/flow/Streamline.h>
+#include <viskores/filter/geometry_refinement/Tube.h>
+#include <viskores/filter/geometry_refinement/VertexClustering.h>
 
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/DataSetBuilderExplicit.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/MakeTestDataSet.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -31,11 +39,11 @@ namespace
 ////
 //// BEGIN-EXAMPLE PointElevation
 ////
-VTKM_CONT
-vtkm::cont::DataSet ComputeAirPressure(vtkm::cont::DataSet dataSet)
+VISKORES_CONT
+viskores::cont::DataSet ComputeAirPressure(viskores::cont::DataSet dataSet)
 {
   //// LABEL Construct
-  vtkm::filter::field_transform::PointElevation elevationFilter;
+  viskores::filter::field_transform::PointElevation elevationFilter;
 
   // Use the elevation filter to estimate atmospheric pressure based on the
   // height of the point coordinates. Atmospheric pressure is 101325 Pa at
@@ -53,7 +61,7 @@ vtkm::cont::DataSet ComputeAirPressure(vtkm::cont::DataSet dataSet)
   elevationFilter.SetOutputFieldName("pressure");
 
   //// LABEL Execute
-  vtkm::cont::DataSet result = elevationFilter.Execute(dataSet);
+  viskores::cont::DataSet result = elevationFilter.Execute(dataSet);
 
   return result;
 }
@@ -65,10 +73,10 @@ void DoPointElevation()
 {
   std::cout << "** Run elevation filter" << std::endl;
 
-  vtkm::cont::testing::MakeTestDataSet makeData;
-  vtkm::cont::DataSet inData = makeData.Make3DRegularDataSet0();
+  viskores::cont::testing::MakeTestDataSet makeData;
+  viskores::cont::DataSet inData = makeData.Make3DRegularDataSet0();
 
-  vtkm::cont::DataSet pressureData = ComputeAirPressure(inData);
+  viskores::cont::DataSet pressureData = ComputeAirPressure(inData);
 
   pressureData.GetField("pressure").PrintSummary(std::cout);
   std::cout << std::endl;
@@ -78,17 +86,17 @@ void DoVertexClustering()
 {
   std::cout << "** Run vertex clustering filter" << std::endl;
 
-  vtkm::cont::testing::MakeTestDataSet makeData;
-  vtkm::cont::DataSet originalSurface = makeData.Make3DExplicitDataSetCowNose();
+  viskores::cont::testing::MakeTestDataSet makeData;
+  viskores::cont::DataSet originalSurface = makeData.Make3DExplicitDataSetCowNose();
 
   ////
   //// BEGIN-EXAMPLE VertexClustering
   ////
-  vtkm::filter::geometry_refinement::VertexClustering vertexClustering;
+  viskores::filter::geometry_refinement::VertexClustering vertexClustering;
 
-  vertexClustering.SetNumberOfDivisions(vtkm::Id3(128, 128, 128));
+  vertexClustering.SetNumberOfDivisions(viskores::Id3(128, 128, 128));
 
-  vtkm::cont::DataSet simplifiedSurface = vertexClustering.Execute(originalSurface);
+  viskores::cont::DataSet simplifiedSurface = vertexClustering.Execute(originalSurface);
   ////
   //// END-EXAMPLE VertexClustering
   ////
@@ -101,8 +109,8 @@ void DoClipWithImplicitFunction()
 {
   std::cout << "** Run clip with implicit function filter" << std::endl;
 
-  vtkm::cont::testing::MakeTestDataSet makeData;
-  vtkm::cont::DataSet inData = makeData.Make3DUniformDataSet0();
+  viskores::cont::testing::MakeTestDataSet makeData;
+  viskores::cont::DataSet inData = makeData.Make3DUniformDataSet0();
 
   ////
   //// BEGIN-EXAMPLE ClipWithImplicitFunction
@@ -111,10 +119,10 @@ void DoClipWithImplicitFunction()
   //// BEGIN-EXAMPLE ImplicitFunctionGeneral
   ////
   // Parameters needed for implicit function
-  vtkm::Sphere implicitFunction(vtkm::make_Vec(1, 0, 1), 0.5);
+  viskores::Sphere implicitFunction(viskores::make_Vec(1, 0, 1), 0.5);
 
   // Create an instance of a clip filter with this implicit function.
-  vtkm::filter::contour::ClipWithImplicitFunction clip;
+  viskores::filter::contour::ClipWithImplicitFunction clip;
   clip.SetImplicitFunction(implicitFunction);
   ////
   //// END-EXAMPLE ImplicitFunctionGeneral
@@ -126,7 +134,7 @@ void DoClipWithImplicitFunction()
   clip.SetInvertClip(true);
 
   // Execute the clip filter
-  vtkm::cont::DataSet outData = clip.Execute(inData);
+  viskores::cont::DataSet outData = clip.Execute(inData);
   ////
   //// END-EXAMPLE ClipWithImplicitFunction
   ////
@@ -139,18 +147,18 @@ void DoContour()
 {
   std::cout << "** Run Contour filter" << std::endl;
 
-  vtkm::cont::testing::MakeTestDataSet makeData;
-  vtkm::cont::DataSet inData = makeData.Make3DRectilinearDataSet0();
+  viskores::cont::testing::MakeTestDataSet makeData;
+  viskores::cont::DataSet inData = makeData.Make3DRectilinearDataSet0();
 
   ////
   //// BEGIN-EXAMPLE Contour
   ////
-  vtkm::filter::contour::Contour contour;
+  viskores::filter::contour::Contour contour;
 
   contour.SetActiveField("pointvar");
   contour.SetIsoValue(10.0);
 
-  vtkm::cont::DataSet isosurface = contour.Execute(inData);
+  viskores::cont::DataSet isosurface = contour.Execute(inData);
   ////
   //// END-EXAMPLE Contour
   ////
@@ -158,37 +166,37 @@ void DoContour()
   isosurface.PrintSummary(std::cout);
   std::cout << std::endl;
 
-  vtkm::filter::contour::Contour filter = contour;
+  viskores::filter::contour::Contour filter = contour;
   ////
   //// BEGIN-EXAMPLE SetActiveFieldWithAssociation
   ////
-  filter.SetActiveField("pointvar", vtkm::cont::Field::Association::Points);
+  filter.SetActiveField("pointvar", viskores::cont::Field::Association::Points);
   ////
   //// END-EXAMPLE SetActiveFieldWithAssociation
   ////
-  vtkm::cont::DataSet other = filter.Execute(inData);
-  VTKM_TEST_ASSERT(isosurface.GetNumberOfCells() == other.GetNumberOfCells());
-  VTKM_TEST_ASSERT(isosurface.GetNumberOfPoints() == other.GetNumberOfPoints());
+  viskores::cont::DataSet other = filter.Execute(inData);
+  VISKORES_TEST_ASSERT(isosurface.GetNumberOfCells() == other.GetNumberOfCells());
+  VISKORES_TEST_ASSERT(isosurface.GetNumberOfPoints() == other.GetNumberOfPoints());
 }
 
 void DoClipWithField()
 {
   std::cout << "** Run clip with field filter" << std::endl;
 
-  vtkm::cont::testing::MakeTestDataSet makeData;
-  vtkm::cont::DataSet inData = makeData.Make3DUniformDataSet0();
+  viskores::cont::testing::MakeTestDataSet makeData;
+  viskores::cont::DataSet inData = makeData.Make3DUniformDataSet0();
 
   ////
   //// BEGIN-EXAMPLE ClipWithField
   ////
   // Create an instance of a clip filter that discards all regions with scalar
   // value less than 25.
-  vtkm::filter::contour::ClipWithField clip;
+  viskores::filter::contour::ClipWithField clip;
   clip.SetClipValue(25.0);
   clip.SetActiveField("pointvar");
 
   // Execute the clip filter
-  vtkm::cont::DataSet outData = clip.Execute(inData);
+  viskores::cont::DataSet outData = clip.Execute(inData);
   ////
   //// END-EXAMPLE ClipWithField
   ////
@@ -201,33 +209,34 @@ void DoStreamlines()
 {
   std::cout << "** Run streamlines filter" << std::endl;
 
-  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
+  viskores::cont::DataSetBuilderUniform dataSetBuilder;
 
-  vtkm::cont::DataSet inData = dataSetBuilder.Create(vtkm::Id3(5, 5, 5));
-  vtkm::Id numPoints = inData.GetCellSet().GetNumberOfPoints();
+  viskores::cont::DataSet inData = dataSetBuilder.Create(viskores::Id3(5, 5, 5));
+  viskores::Id numPoints = inData.GetCellSet().GetNumberOfPoints();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> vectorField;
-  vtkm::cont::ArrayCopy(
-    vtkm::cont::make_ArrayHandleConstant(vtkm::Vec3f(1, 0, 0), numPoints), vectorField);
+  viskores::cont::ArrayHandle<viskores::Vec3f> vectorField;
+  viskores::cont::ArrayCopy(
+    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(1, 0, 0), numPoints),
+    vectorField);
   inData.AddPointField("vectorvar", vectorField);
 
   ////
   //// BEGIN-EXAMPLE Streamlines
   ////
-  vtkm::filter::flow::Streamline streamlines;
+  viskores::filter::flow::Streamline streamlines;
 
   // Specify the seeds.
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  viskores::cont::ArrayHandle<viskores::Particle> seedArray;
   seedArray.Allocate(2);
-  seedArray.WritePortal().Set(0, vtkm::Particle({ 0, 0, 0 }, 0));
-  seedArray.WritePortal().Set(1, vtkm::Particle({ 1, 1, 1 }, 1));
+  seedArray.WritePortal().Set(0, viskores::Particle({ 0, 0, 0 }, 0));
+  seedArray.WritePortal().Set(1, viskores::Particle({ 1, 1, 1 }, 1));
 
   streamlines.SetActiveField("vectorvar");
   streamlines.SetStepSize(0.1f);
   streamlines.SetNumberOfSteps(100);
   streamlines.SetSeeds(seedArray);
 
-  vtkm::cont::DataSet output = streamlines.Execute(inData);
+  viskores::cont::DataSet output = streamlines.Execute(inData);
   ////
   //// END-EXAMPLE Streamlines
   ////
@@ -240,33 +249,34 @@ void DoStreamsurface()
 {
   std::cout << "** Run streamsurface filter" << std::endl;
 
-  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
+  viskores::cont::DataSetBuilderUniform dataSetBuilder;
 
-  vtkm::cont::DataSet inData = dataSetBuilder.Create(vtkm::Id3(5, 5, 5));
-  vtkm::Id numPoints = inData.GetCellSet().GetNumberOfPoints();
+  viskores::cont::DataSet inData = dataSetBuilder.Create(viskores::Id3(5, 5, 5));
+  viskores::Id numPoints = inData.GetCellSet().GetNumberOfPoints();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> vectorField;
-  vtkm::cont::ArrayCopy(
-    vtkm::cont::make_ArrayHandleConstant(vtkm::Vec3f(1, 0, 0), numPoints), vectorField);
+  viskores::cont::ArrayHandle<viskores::Vec3f> vectorField;
+  viskores::cont::ArrayCopy(
+    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(1, 0, 0), numPoints),
+    vectorField);
   inData.AddPointField("vectorvar", vectorField);
 
   ////
   //// BEGIN-EXAMPLE StreamSurface
   ////
-  vtkm::filter::flow::StreamSurface streamSurface;
+  viskores::filter::flow::StreamSurface streamSurface;
 
   // Specify the seeds.
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  viskores::cont::ArrayHandle<viskores::Particle> seedArray;
   seedArray.Allocate(2);
-  seedArray.WritePortal().Set(0, vtkm::Particle({ 0, 0, 0 }, 0));
-  seedArray.WritePortal().Set(1, vtkm::Particle({ 1, 1, 1 }, 1));
+  seedArray.WritePortal().Set(0, viskores::Particle({ 0, 0, 0 }, 0));
+  seedArray.WritePortal().Set(1, viskores::Particle({ 1, 1, 1 }, 1));
 
   streamSurface.SetActiveField("vectorvar");
   streamSurface.SetStepSize(0.1f);
   streamSurface.SetNumberOfSteps(100);
   streamSurface.SetSeeds(seedArray);
 
-  vtkm::cont::DataSet output = streamSurface.Execute(inData);
+  viskores::cont::DataSet output = streamSurface.Execute(inData);
   ////
   //// END-EXAMPLE StreamSurface
   ////
@@ -279,31 +289,31 @@ void DoTube()
 {
   std::cout << "** Run tube filter" << std::endl;
 
-  vtkm::cont::DataSetBuilderExplicitIterative dsb;
-  std::vector<vtkm::Id> ids;
-  vtkm::Id pid;
+  viskores::cont::DataSetBuilderExplicitIterative dsb;
+  std::vector<viskores::Id> ids;
+  viskores::Id pid;
 
 
-  pid = dsb.AddPoint(vtkm::Vec3f(1, 0, 0));
+  pid = dsb.AddPoint(viskores::Vec3f(1, 0, 0));
   ids.push_back(pid);
-  pid = dsb.AddPoint(vtkm::Vec3f(2, 1, 0));
+  pid = dsb.AddPoint(viskores::Vec3f(2, 1, 0));
   ids.push_back(pid);
-  pid = dsb.AddPoint(vtkm::Vec3f(3, 0, 0));
+  pid = dsb.AddPoint(viskores::Vec3f(3, 0, 0));
   ids.push_back(pid);
-  dsb.AddCell(vtkm::CELL_SHAPE_POLY_LINE, ids);
+  dsb.AddCell(viskores::CELL_SHAPE_POLY_LINE, ids);
 
-  vtkm::cont::DataSet inData = dsb.Create();
+  viskores::cont::DataSet inData = dsb.Create();
 
   ////
   //// BEGIN-EXAMPLE Tube
   ////
-  vtkm::filter::geometry_refinement::Tube tubeFilter;
+  viskores::filter::geometry_refinement::Tube tubeFilter;
 
   tubeFilter.SetRadius(0.5f);
   tubeFilter.SetNumberOfSides(7);
   tubeFilter.SetCapping(true);
 
-  vtkm::cont::DataSet output = tubeFilter.Execute(inData);
+  viskores::cont::DataSet output = tubeFilter.Execute(inData);
   ////
   //// END-EXAMPLE Tube
   ////
@@ -316,32 +326,34 @@ void DoPathlines()
 {
   std::cout << "** Run pathlines filter" << std::endl;
 
-  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
+  viskores::cont::DataSetBuilderUniform dataSetBuilder;
 
-  vtkm::cont::DataSet inData1 = dataSetBuilder.Create(vtkm::Id3(5, 5, 5));
-  vtkm::cont::DataSet inData2 = dataSetBuilder.Create(vtkm::Id3(5, 5, 5));
-  vtkm::Id numPoints = inData1.GetCellSet().GetNumberOfPoints();
+  viskores::cont::DataSet inData1 = dataSetBuilder.Create(viskores::Id3(5, 5, 5));
+  viskores::cont::DataSet inData2 = dataSetBuilder.Create(viskores::Id3(5, 5, 5));
+  viskores::Id numPoints = inData1.GetCellSet().GetNumberOfPoints();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> vectorField1;
-  vtkm::cont::ArrayCopy(
-    vtkm::cont::make_ArrayHandleConstant(vtkm::Vec3f(1, 0, 0), numPoints), vectorField1);
+  viskores::cont::ArrayHandle<viskores::Vec3f> vectorField1;
+  viskores::cont::ArrayCopy(
+    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(1, 0, 0), numPoints),
+    vectorField1);
   inData1.AddPointField("vectorvar", vectorField1);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> vectorField2;
-  vtkm::cont::ArrayCopy(
-    vtkm::cont::make_ArrayHandleConstant(vtkm::Vec3f(0, 1, 0), numPoints), vectorField2);
+  viskores::cont::ArrayHandle<viskores::Vec3f> vectorField2;
+  viskores::cont::ArrayCopy(
+    viskores::cont::make_ArrayHandleConstant(viskores::Vec3f(0, 1, 0), numPoints),
+    vectorField2);
   inData2.AddPointField("vectorvar", vectorField2);
 
   ////
   //// BEGIN-EXAMPLE Pathlines
   ////
-  vtkm::filter::flow::Pathline pathlines;
+  viskores::filter::flow::Pathline pathlines;
 
   // Specify the seeds.
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  viskores::cont::ArrayHandle<viskores::Particle> seedArray;
   seedArray.Allocate(2);
-  seedArray.WritePortal().Set(0, vtkm::Particle({ 0, 0, 0 }, 0));
-  seedArray.WritePortal().Set(1, vtkm::Particle({ 1, 1, 1 }, 1));
+  seedArray.WritePortal().Set(0, viskores::Particle({ 0, 0, 0 }, 0));
+  seedArray.WritePortal().Set(1, viskores::Particle({ 1, 1, 1 }, 1));
 
   pathlines.SetActiveField("vectorvar");
   pathlines.SetStepSize(0.1f);
@@ -351,7 +363,7 @@ void DoPathlines()
   pathlines.SetNextTime(1.0f);
   pathlines.SetNextDataSet(inData2);
 
-  vtkm::cont::DataSet pathlineCurves = pathlines.Execute(inData1);
+  viskores::cont::DataSet pathlineCurves = pathlines.Execute(inData1);
   ////
   //// END-EXAMPLE Pathlines
   ////
@@ -364,16 +376,16 @@ void DoCheckFieldPassing()
 {
   std::cout << "** Check field passing" << std::endl;
 
-  vtkm::cont::testing::MakeTestDataSet makeData;
-  vtkm::cont::DataSet inData = makeData.Make3DRectilinearDataSet0();
+  viskores::cont::testing::MakeTestDataSet makeData;
+  viskores::cont::DataSet inData = makeData.Make3DRectilinearDataSet0();
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> scalars;
-  vtkm::cont::ArrayCopy(vtkm::cont::ArrayHandleConstant<vtkm::Float32>(
-                          1, inData.GetCellSet().GetNumberOfPoints()),
-                        scalars);
+  viskores::cont::ArrayHandle<viskores::Float32> scalars;
+  viskores::cont::ArrayCopy(viskores::cont::ArrayHandleConstant<viskores::Float32>(
+                              1, inData.GetCellSet().GetNumberOfPoints()),
+                            scalars);
   inData.AddPointField("scalars", scalars);
 
-  vtkm::filter::field_transform::PointElevation filter;
+  viskores::filter::field_transform::PointElevation filter;
   filter.SetLowPoint(0.0, 0.0, 0.0);
   filter.SetHighPoint(0.0, 0.0, 1.0);
   filter.SetRange(0.0, 1.0);
@@ -389,12 +401,13 @@ void DoCheckFieldPassing()
   filter.SetOutputFieldName("elevation");
 
   {
-    vtkm::cont::DataSet outData = filter.Execute(inData);
-    for (vtkm::IdComponent fieldId = 0; fieldId < inData.GetNumberOfFields(); ++fieldId)
+    viskores::cont::DataSet outData = filter.Execute(inData);
+    for (viskores::IdComponent fieldId = 0; fieldId < inData.GetNumberOfFields();
+         ++fieldId)
     {
-      vtkm::cont::Field inField = inData.GetField(fieldId);
-      VTKM_TEST_ASSERT(outData.HasField(inField.GetName(), inField.GetAssociation()),
-                       "Did not automatically pass all fields.");
+      viskores::cont::Field inField = inData.GetField(fieldId);
+      VISKORES_TEST_ASSERT(outData.HasField(inField.GetName(), inField.GetAssociation()),
+                           "Did not automatically pass all fields.");
     }
   }
 
@@ -402,7 +415,7 @@ void DoCheckFieldPassing()
     ////
     //// BEGIN-EXAMPLE PassNoFields
     ////
-    filter.SetFieldsToPass(vtkm::filter::FieldSelection::Mode::None);
+    filter.SetFieldsToPass(viskores::filter::FieldSelection::Mode::None);
     ////
     //// END-EXAMPLE PassNoFields
     ////
@@ -415,9 +428,9 @@ void DoCheckFieldPassing()
     //// END-EXAMPLE PassNoCoordinates
     ////
 
-    vtkm::cont::DataSet outData = filter.Execute(inData);
-    VTKM_TEST_ASSERT(outData.GetNumberOfFields() == 1,
-                     "Could not turn off passing of fields");
+    viskores::cont::DataSet outData = filter.Execute(inData);
+    VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 1,
+                         "Could not turn off passing of fields");
   }
 
   {
@@ -430,11 +443,11 @@ void DoCheckFieldPassing()
     ////
     filter.SetPassCoordinateSystems(false);
 
-    vtkm::cont::DataSet outData = filter.Execute(inData);
+    viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
-    VTKM_TEST_ASSERT(outData.GetNumberOfFields() == 2,
-                     "Could not set field passing correctly.");
-    VTKM_TEST_ASSERT(outData.HasPointField("pointvar"));
+    VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 2,
+                         "Could not set field passing correctly.");
+    VISKORES_TEST_ASSERT(outData.HasPointField("pointvar"));
   }
 
   {
@@ -447,12 +460,12 @@ void DoCheckFieldPassing()
     ////
     filter.SetPassCoordinateSystems(false);
 
-    vtkm::cont::DataSet outData = filter.Execute(inData);
+    viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
-    VTKM_TEST_ASSERT(outData.GetNumberOfFields() == 3,
-                     "Could not set field passing correctly.");
-    VTKM_TEST_ASSERT(outData.HasPointField("pointvar"));
-    VTKM_TEST_ASSERT(outData.HasCellField("cellvar"));
+    VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 3,
+                         "Could not set field passing correctly.");
+    VISKORES_TEST_ASSERT(outData.HasPointField("pointvar"));
+    VISKORES_TEST_ASSERT(outData.HasCellField("cellvar"));
   }
 
   {
@@ -460,25 +473,25 @@ void DoCheckFieldPassing()
     //// BEGIN-EXAMPLE PassExcludeFields
     ////
     filter.SetFieldsToPass({ "pointvar", "cellvar" },
-                           vtkm::filter::FieldSelection::Mode::Exclude);
+                           viskores::filter::FieldSelection::Mode::Exclude);
     ////
     //// END-EXAMPLE PassExcludeFields
     ////
 
-    vtkm::cont::DataSet outData = filter.Execute(inData);
+    viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
-    VTKM_TEST_ASSERT(outData.GetNumberOfFields() == (inData.GetNumberOfFields() - 1),
-                     "Could not set field passing correctly.");
-    VTKM_TEST_ASSERT(outData.HasField("scalars"));
+    VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == (inData.GetNumberOfFields() - 1),
+                         "Could not set field passing correctly.");
+    VISKORES_TEST_ASSERT(outData.HasField("scalars"));
   }
 
   {
     ////
     //// BEGIN-EXAMPLE FieldSelection
     ////
-    vtkm::filter::FieldSelection fieldSelection;
+    viskores::filter::FieldSelection fieldSelection;
     fieldSelection.AddField("scalars");
-    fieldSelection.AddField("cellvar", vtkm::cont::Field::Association::Cells);
+    fieldSelection.AddField("cellvar", viskores::cont::Field::Association::Cells);
 
     filter.SetFieldsToPass(fieldSelection);
     ////
@@ -486,29 +499,29 @@ void DoCheckFieldPassing()
     ////
     filter.SetPassCoordinateSystems(false);
 
-    vtkm::cont::DataSet outData = filter.Execute(inData);
+    viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
-    VTKM_TEST_ASSERT(outData.GetNumberOfFields() == 3,
-                     "Could not set field passing correctly.");
-    VTKM_TEST_ASSERT(outData.HasField("scalars"));
-    VTKM_TEST_ASSERT(outData.HasCellField("cellvar"));
+    VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 3,
+                         "Could not set field passing correctly.");
+    VISKORES_TEST_ASSERT(outData.HasField("scalars"));
+    VISKORES_TEST_ASSERT(outData.HasCellField("cellvar"));
   }
 
   {
     ////
     //// BEGIN-EXAMPLE PassFieldAndAssociation
     ////
-    filter.SetFieldsToPass("pointvar", vtkm::cont::Field::Association::Points);
+    filter.SetFieldsToPass("pointvar", viskores::cont::Field::Association::Points);
     ////
     //// END-EXAMPLE PassFieldAndAssociation
     ////
     filter.SetPassCoordinateSystems(false);
 
-    vtkm::cont::DataSet outData = filter.Execute(inData);
+    viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
-    VTKM_TEST_ASSERT(outData.GetNumberOfFields() == 2,
-                     "Could not set field passing correctly.");
-    VTKM_TEST_ASSERT(outData.HasPointField("pointvar"));
+    VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 2,
+                         "Could not set field passing correctly.");
+    VISKORES_TEST_ASSERT(outData.HasPointField("pointvar"));
   }
 
   {
@@ -516,21 +529,21 @@ void DoCheckFieldPassing()
     //// BEGIN-EXAMPLE PassListOfFieldsAndAssociations
     ////
     filter.SetFieldsToPass(
-      { vtkm::make_Pair("pointvar", vtkm::cont::Field::Association::Points),
-        vtkm::make_Pair("cellvar", vtkm::cont::Field::Association::Cells),
-        vtkm::make_Pair("scalars", vtkm::cont::Field::Association::Any) });
+      { viskores::make_Pair("pointvar", viskores::cont::Field::Association::Points),
+        viskores::make_Pair("cellvar", viskores::cont::Field::Association::Cells),
+        viskores::make_Pair("scalars", viskores::cont::Field::Association::Any) });
     ////
     //// END-EXAMPLE PassListOfFieldsAndAssociations
     ////
     filter.SetPassCoordinateSystems(false);
 
-    vtkm::cont::DataSet outData = filter.Execute(inData);
+    viskores::cont::DataSet outData = filter.Execute(inData);
     outData.PrintSummary(std::cout);
-    VTKM_TEST_ASSERT(outData.GetNumberOfFields() == 4,
-                     "Could not set field passing correctly.");
-    VTKM_TEST_ASSERT(outData.HasPointField("pointvar"));
-    VTKM_TEST_ASSERT(outData.HasCellField("cellvar"));
-    VTKM_TEST_ASSERT(outData.HasField("scalars"));
+    VISKORES_TEST_ASSERT(outData.GetNumberOfFields() == 4,
+                         "Could not set field passing correctly.");
+    VISKORES_TEST_ASSERT(outData.HasPointField("pointvar"));
+    VISKORES_TEST_ASSERT(outData.HasCellField("cellvar"));
+    VISKORES_TEST_ASSERT(outData.HasField("scalars"));
   }
 }
 
@@ -552,5 +565,5 @@ void Test()
 
 int GuideExampleProvidedFilters(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

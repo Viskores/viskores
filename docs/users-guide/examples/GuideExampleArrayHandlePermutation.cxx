@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,9 +16,9 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandlePermutation.h>
+#include <viskores/cont/ArrayHandlePermutation.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -18,29 +26,39 @@ namespace
 template<typename ArrayHandleType>
 void CheckArray1(const ArrayHandleType array)
 {
-  VTKM_TEST_ASSERT(array.GetNumberOfValues() == 3, "Permuted array has wrong size.");
+  VISKORES_TEST_ASSERT(array.GetNumberOfValues() == 3, "Permuted array has wrong size.");
 
   typename ArrayHandleType::ReadPortalType portal = array.ReadPortal();
-  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 3, "Permuted portal has wrong size.");
+  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 3,
+                       "Permuted portal has wrong size.");
 
-  VTKM_TEST_ASSERT(test_equal(portal.Get(0), 0.3), "Permuted array has wrong value.");
-  VTKM_TEST_ASSERT(test_equal(portal.Get(1), 0.0), "Permuted array has wrong value.");
-  VTKM_TEST_ASSERT(test_equal(portal.Get(2), 0.1), "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(0), 0.3),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(1), 0.0),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(2), 0.1),
+                       "Permuted array has wrong value.");
 }
 
 template<typename ArrayHandleType>
 void CheckArray2(const ArrayHandleType array)
 {
-  VTKM_TEST_ASSERT(array.GetNumberOfValues() == 5, "Permuted array has wrong size.");
+  VISKORES_TEST_ASSERT(array.GetNumberOfValues() == 5, "Permuted array has wrong size.");
 
   typename ArrayHandleType::ReadPortalType portal = array.ReadPortal();
-  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 5, "Permuted portal has wrong size.");
+  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == 5,
+                       "Permuted portal has wrong size.");
 
-  VTKM_TEST_ASSERT(test_equal(portal.Get(0), 0.1), "Permuted array has wrong value.");
-  VTKM_TEST_ASSERT(test_equal(portal.Get(1), 0.2), "Permuted array has wrong value.");
-  VTKM_TEST_ASSERT(test_equal(portal.Get(2), 0.2), "Permuted array has wrong value.");
-  VTKM_TEST_ASSERT(test_equal(portal.Get(3), 0.3), "Permuted array has wrong value.");
-  VTKM_TEST_ASSERT(test_equal(portal.Get(4), 0.0), "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(0), 0.1),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(1), 0.2),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(2), 0.2),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(3), 0.3),
+                       "Permuted array has wrong value.");
+  VISKORES_TEST_ASSERT(test_equal(portal.Get(4), 0.0),
+                       "Permuted array has wrong value.");
 }
 
 void Test()
@@ -48,10 +66,10 @@ void Test()
   ////
   //// BEGIN-EXAMPLE ArrayHandlePermutation
   ////
-  using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using IdArrayType = viskores::cont::ArrayHandle<viskores::Id>;
   using IdPortalType = IdArrayType::WritePortalType;
 
-  using ValueArrayType = vtkm::cont::ArrayHandle<vtkm::Float64>;
+  using ValueArrayType = viskores::cont::ArrayHandle<viskores::Float64>;
   using ValuePortalType = ValueArrayType::WritePortalType;
 
   // Create array with values [0.0, 0.1, 0.2, 0.3]
@@ -70,7 +88,7 @@ void Test()
   idPortal1.Set(0, 3);
   idPortal1.Set(1, 0);
   idPortal1.Set(2, 1);
-  vtkm::cont::ArrayHandlePermutation<IdArrayType, ValueArrayType> permutedArray1(
+  viskores::cont::ArrayHandlePermutation<IdArrayType, ValueArrayType> permutedArray1(
     idArray1, valueArray);
   //// PAUSE-EXAMPLE
   CheckArray1(permutedArray1);
@@ -85,7 +103,7 @@ void Test()
   idPortal2.Set(2, 2);
   idPortal2.Set(3, 3);
   idPortal2.Set(4, 0);
-  vtkm::cont::ArrayHandlePermutation<IdArrayType, ValueArrayType> permutedArray2(
+  viskores::cont::ArrayHandlePermutation<IdArrayType, ValueArrayType> permutedArray2(
     idArray2, valueArray);
   //// PAUSE-EXAMPLE
   CheckArray2(permutedArray2);
@@ -99,7 +117,7 @@ void Test()
     ////
     //// BEGIN-EXAMPLE MakeArrayHandlePermutation
     ////
-    vtkm::cont::make_ArrayHandlePermutation(idArray, valueArray)
+    viskores::cont::make_ArrayHandlePermutation(idArray, valueArray)
     ////
     //// END-EXAMPLE MakeArrayHandlePermutation
     ////
@@ -110,5 +128,5 @@ void Test()
 
 int GuideExampleArrayHandlePermutation(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

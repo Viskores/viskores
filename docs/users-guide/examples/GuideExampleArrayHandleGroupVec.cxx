@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,13 +16,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/ArrayHandleGroupVec.h>
-#include <vtkm/cont/ArrayHandleGroupVecVariable.h>
-#include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/ConvertNumComponentsToOffsets.h>
+#include <viskores/cont/ArrayHandleCounting.h>
+#include <viskores/cont/ArrayHandleGroupVec.h>
+#include <viskores/cont/ArrayHandleGroupVecVariable.h>
+#include <viskores/cont/ArrayHandleIndex.h>
+#include <viskores/cont/ConvertNumComponentsToOffsets.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -22,19 +30,19 @@ namespace
 template<typename ArrayHandleType>
 void CheckArray(ArrayHandleType array)
 {
-  vtkm::cont::printSummary_ArrayHandle(array, std::cout);
+  viskores::cont::printSummary_ArrayHandle(array, std::cout);
   std::cout << std::endl;
   typename ArrayHandleType::ReadPortalType portal = array.ReadPortal();
 
-  vtkm::Id expectedValue = 0;
-  for (vtkm::Id vecIndex = 0; vecIndex < portal.GetNumberOfValues(); ++vecIndex)
+  viskores::Id expectedValue = 0;
+  for (viskores::Id vecIndex = 0; vecIndex < portal.GetNumberOfValues(); ++vecIndex)
   {
-    for (vtkm::IdComponent componentIndex = 0;
+    for (viskores::IdComponent componentIndex = 0;
          componentIndex < portal.Get(vecIndex).GetNumberOfComponents();
          componentIndex++)
     {
-      VTKM_TEST_ASSERT(portal.Get(vecIndex)[componentIndex] == expectedValue,
-                       "Got bad value.");
+      VISKORES_TEST_ASSERT(portal.Get(vecIndex)[componentIndex] == expectedValue,
+                           "Got bad value.");
       ++expectedValue;
     }
   }
@@ -48,19 +56,19 @@ void ArrayHandleGroupVecBasic()
   //// BEGIN-EXAMPLE ArrayHandleGroupVecBasic
   ////
   // Create an array containing [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-  using ArrayType = vtkm::cont::ArrayHandleIndex;
+  using ArrayType = viskores::cont::ArrayHandleIndex;
   ArrayType sourceArray(12);
 
   // Create an array containing [(0,1), (2,3), (4,5), (6,7), (8,9), (10,11)]
-  vtkm::cont::ArrayHandleGroupVec<ArrayType, 2> vec2Array(sourceArray);
+  viskores::cont::ArrayHandleGroupVec<ArrayType, 2> vec2Array(sourceArray);
 
   // Create an array containing [(0,1,2), (3,4,5), (6,7,8), (9,10,11)]
-  vtkm::cont::ArrayHandleGroupVec<ArrayType, 3> vec3Array(sourceArray);
+  viskores::cont::ArrayHandleGroupVec<ArrayType, 3> vec3Array(sourceArray);
   ////
   //// END-EXAMPLE ArrayHandleGroupVecBasic
   ////
   CheckArray(vec2Array);
-  vtkm::cont::printSummary_ArrayHandle(vec3Array, std::cout);
+  viskores::cont::printSummary_ArrayHandle(vec3Array, std::cout);
   std::cout << std::endl;
   CheckArray(vec3Array);
 
@@ -69,7 +77,7 @@ void ArrayHandleGroupVecBasic()
     //// BEGIN-EXAMPLE MakeArrayHandleGroupVec
     ////
     // Create an array containing [(0,1,2,3), (4,5,6,7), (8,9,10,11)]
-    vtkm::cont::make_ArrayHandleGroupVec<4>(sourceArray)
+    viskores::cont::make_ArrayHandleGroupVec<4>(sourceArray)
     ////
     //// END-EXAMPLE MakeArrayHandleGroupVec
     ////
@@ -84,33 +92,33 @@ void ArrayHandleGroupVecVariable()
   //// BEGIN-EXAMPLE ArrayHandleGroupVecVariable
   ////
   // Create an array of counts containing [4, 2, 3, 3]
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> countArray =
-    vtkm::cont::make_ArrayHandle<vtkm::IdComponent>({ 4, 2, 3, 3 });
+  viskores::cont::ArrayHandle<viskores::IdComponent> countArray =
+    viskores::cont::make_ArrayHandle<viskores::IdComponent>({ 4, 2, 3, 3 });
 
   // Convert the count array to an offset array [0, 4, 6, 9, 12]
   // Returns the number of total components: 12
-  vtkm::Id sourceArraySize;
-  using OffsetArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
+  viskores::Id sourceArraySize;
+  using OffsetArrayType = viskores::cont::ArrayHandle<viskores::Id>;
   OffsetArrayType offsetArray =
-    vtkm::cont::ConvertNumComponentsToOffsets(countArray, sourceArraySize);
+    viskores::cont::ConvertNumComponentsToOffsets(countArray, sourceArraySize);
   //// PAUSE-EXAMPLE
-  vtkm::cont::printSummary_ArrayHandle(offsetArray, std::cout);
+  viskores::cont::printSummary_ArrayHandle(offsetArray, std::cout);
   std::cout << std::endl;
-  VTKM_TEST_ASSERT(sourceArraySize == 12, "Bad source array size");
-  VTKM_TEST_ASSERT(offsetArray.GetNumberOfValues() == 5);
-  VTKM_TEST_ASSERT(offsetArray.ReadPortal().Get(0) == 0, "Unexpected offset value");
-  VTKM_TEST_ASSERT(offsetArray.ReadPortal().Get(1) == 4, "Unexpected offset value");
-  VTKM_TEST_ASSERT(offsetArray.ReadPortal().Get(2) == 6, "Unexpected offset value");
-  VTKM_TEST_ASSERT(offsetArray.ReadPortal().Get(3) == 9, "Unexpected offset value");
-  VTKM_TEST_ASSERT(offsetArray.ReadPortal().Get(4) == 12, "Unexpected offset value");
+  VISKORES_TEST_ASSERT(sourceArraySize == 12, "Bad source array size");
+  VISKORES_TEST_ASSERT(offsetArray.GetNumberOfValues() == 5);
+  VISKORES_TEST_ASSERT(offsetArray.ReadPortal().Get(0) == 0, "Unexpected offset value");
+  VISKORES_TEST_ASSERT(offsetArray.ReadPortal().Get(1) == 4, "Unexpected offset value");
+  VISKORES_TEST_ASSERT(offsetArray.ReadPortal().Get(2) == 6, "Unexpected offset value");
+  VISKORES_TEST_ASSERT(offsetArray.ReadPortal().Get(3) == 9, "Unexpected offset value");
+  VISKORES_TEST_ASSERT(offsetArray.ReadPortal().Get(4) == 12, "Unexpected offset value");
   //// RESUME-EXAMPLE
 
   // Create an array containing [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-  using SourceArrayType = vtkm::cont::ArrayHandleIndex;
+  using SourceArrayType = viskores::cont::ArrayHandleIndex;
   SourceArrayType sourceArray(sourceArraySize);
 
   // Create an array containing [(0,1,2,3), (4,5), (6,7,8), (9,10,11)]
-  vtkm::cont::ArrayHandleGroupVecVariable<SourceArrayType, OffsetArrayType>
+  viskores::cont::ArrayHandleGroupVecVariable<SourceArrayType, OffsetArrayType>
     vecVariableArray(sourceArray, offsetArray);
   ////
   //// END-EXAMPLE ArrayHandleGroupVecVariable
@@ -122,7 +130,7 @@ void ArrayHandleGroupVecVariable()
     //// BEGIN-EXAMPLE MakeArrayHandleGroupVecVariable
     ////
     // Create an array containing [(0,1,2,3), (4,5), (6,7,8), (9,10,11)]
-    vtkm::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetArray)
+    viskores::cont::make_ArrayHandleGroupVecVariable(sourceArray, offsetArray)
     ////
     //// END-EXAMPLE MakeArrayHandleGroupVecVariable
     ////
@@ -139,5 +147,5 @@ void Test()
 
 int GuideExampleArrayHandleGroupVec(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

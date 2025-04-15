@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -10,8 +18,8 @@
 
 # This module is always loaded so that the example code is compiled as part
 # of the test build. However, we only really want to build the document if
-# VTKm_ENABLE_USERS_GUIDE is set.
-if (NOT VTKm_ENABLE_USERS_GUIDE)
+# Viskores_ENABLE_USERS_GUIDE is set.
+if (NOT Viskores_ENABLE_USERS_GUIDE)
   return()
 endif()
 
@@ -22,34 +30,34 @@ set(sphinx_docs
 find_package(Sphinx)
 if (NOT Sphinx_FOUND)
   message(FATAL_ERROR
-    "Could not find Sphinx to build User's Guide. If you want to compile Doxygen without the User's Guide, turn off VTKm_ENABLE_USERS_GUIDE.")
+    "Could not find Sphinx to build User's Guide. If you want to compile Doxygen without the User's Guide, turn off Viskores_ENABLE_USERS_GUIDE.")
 endif()
 
-option(VTKm_USERS_GUIDE_INCLUDE_TODOS
-  "When building the VTK-m User's Guide, specify whether to include TODO notes." ON)
-mark_as_advanced(VTKm_USERS_GUIDE_INCLUDE_TODOS)
+option(Viskores_USERS_GUIDE_INCLUDE_TODOS
+  "When building the Viskores User's Guide, specify whether to include TODO notes." ON)
+mark_as_advanced(Viskores_USERS_GUIDE_INCLUDE_TODOS)
 
 # Configuration used in conf.py.
-set(doxygen_xml_output_dir "${VTKm_BINARY_DIR}/docs/doxygen/xml")
+set(doxygen_xml_output_dir "${Viskores_BINARY_DIR}/docs/doxygen/xml")
 set(example_directory "${CMAKE_CURRENT_SOURCE_DIR}/examples")
-if(VTKm_USERS_GUIDE_INCLUDE_TODOS)
+if(Viskores_USERS_GUIDE_INCLUDE_TODOS)
   set(include_todos "True")
 else()
   set(include_todos "False")
 endif()
 
-sphinx_add_docs(VTKmUsersGuideHTML
+sphinx_add_docs(ViskoresUsersGuideHTML
   BUILDER html
   SOURCE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html
   CONF_FILE conf.py
   )
-add_dependencies(VTKmUsersGuideHTML VTKmDoxygenDocs)
+add_dependencies(ViskoresUsersGuideHTML ViskoresDoxygenDocs)
 
-sphinx_add_docs(VTKmUsersGuideLaTeX
+sphinx_add_docs(ViskoresUsersGuideLaTeX
   BUILDER latex
   SOURCE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/latex
   CONF_FILE conf.py
   )
-add_dependencies(VTKmUsersGuideLaTeX VTKmDoxygenDocs)
+add_dependencies(ViskoresUsersGuideLaTeX ViskoresDoxygenDocs)

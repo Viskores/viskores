@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -10,50 +18,50 @@
 
 #include "Benchmarker.h"
 
-#include <vtkm/Particle.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Logging.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/Timer.h>
-#include <vtkm/cont/internal/OptionParser.h>
-#include <vtkm/filter/flow/ParticleAdvection.h>
+#include <viskores/Particle.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/Logging.h>
+#include <viskores/cont/RuntimeDeviceTracker.h>
+#include <viskores/cont/Timer.h>
+#include <viskores/cont/internal/OptionParser.h>
+#include <viskores/filter/flow/ParticleAdvection.h>
 
 namespace
 {
 // Hold configuration state (e.g. active device):
-vtkm::cont::InitializeResult Config;
+viskores::cont::InitializeResult Config;
 
 // Wrapper around RK4:
 void BenchParticleAdvection(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id3 dims(5, 5, 5);
-  const vtkm::Vec3f vecX(1, 0, 0);
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id3 dims(5, 5, 5);
+  const viskores::Vec3f vecX(1, 0, 0);
 
-  vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
+  viskores::Id numPoints = dims[0] * dims[1] * dims[2];
 
-  std::vector<vtkm::Vec3f> vectorField(static_cast<std::size_t>(numPoints)); // 3D
+  std::vector<viskores::Vec3f> vectorField(static_cast<std::size_t>(numPoints)); // 3D
   for (std::size_t i = 0; i < static_cast<std::size_t>(numPoints); i++)
     vectorField[i] = vecX;
 
-  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
+  viskores::cont::DataSetBuilderUniform dataSetBuilder;
 
-  vtkm::cont::DataSet ds = dataSetBuilder.Create(dims);
+  viskores::cont::DataSet ds = dataSetBuilder.Create(dims);
   ds.AddPointField("vector", vectorField);
 
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray =
-    vtkm::cont::make_ArrayHandle({ vtkm::Particle(vtkm::Vec3f(.2f, 1.0f, .2f), 0),
-                                   vtkm::Particle(vtkm::Vec3f(.2f, 2.0f, .2f), 1),
-                                   vtkm::Particle(vtkm::Vec3f(.2f, 3.0f, .2f), 2) });
+  viskores::cont::ArrayHandle<viskores::Particle> seedArray =
+    viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0),
+                                       viskores::Particle(viskores::Vec3f(.2f, 2.0f, .2f), 1),
+                                       viskores::Particle(viskores::Vec3f(.2f, 3.0f, .2f), 2) });
 
-  vtkm::filter::flow::ParticleAdvection particleAdvection;
+  viskores::filter::flow::ParticleAdvection particleAdvection;
 
-  particleAdvection.SetStepSize(vtkm::FloatDefault(1) / state.range(0));
-  particleAdvection.SetNumberOfSteps(static_cast<vtkm::Id>(state.range(0)));
+  particleAdvection.SetStepSize(viskores::FloatDefault(1) / state.range(0));
+  particleAdvection.SetNumberOfSteps(static_cast<viskores::Id>(state.range(0)));
   particleAdvection.SetSeeds(seedArray);
   particleAdvection.SetActiveField("vector");
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -66,23 +74,23 @@ void BenchParticleAdvection(::benchmark::State& state)
   }
   state.SetComplexityN(state.range(0));
 }
-VTKM_BENCHMARK_OPTS(BenchParticleAdvection,
-                      ->RangeMultiplier(2)
-                      ->Range(32, 4096)
-                      ->ArgName("Steps")
-                      ->Complexity());
+VISKORES_BENCHMARK_OPTS(BenchParticleAdvection,
+                          ->RangeMultiplier(2)
+                          ->Range(32, 4096)
+                          ->ArgName("Steps")
+                          ->Complexity());
 
 } // end anon namespace
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
+  auto opts = viskores::cont::InitializeOptions::DefaultAnyDevice;
   std::vector<char*> args(argv, argv + argc);
-  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
-  Config = vtkm::cont::Initialize(argc, args.data(), opts);
-  if (opts != vtkm::cont::InitializeOptions::None)
+  viskores::bench::detail::InitializeArgs(&argc, args, opts);
+  Config = viskores::cont::Initialize(argc, args.data(), opts);
+  if (opts != viskores::cont::InitializeOptions::None)
   {
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+    viskores::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
-  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
+  VISKORES_EXECUTE_BENCHMARKS(argc, args.data());
 }

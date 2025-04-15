@@ -1,8 +1,8 @@
-# BENCHMARKING VTK-m
+# BENCHMARKING Viskores
 
 ## TL;DR
 
-When configuring _VTM-m_ with _CMake_ pass the flag `-DVTKm_ENABLE_BENCHMARKS=1`
+When configuring _VTM-m_ with _CMake_ pass the flag `-DViskores_ENABLE_BENCHMARKS=1`
 . In the build directory you will see the following binaries:
 
     $ ls bin/Benchmark*
@@ -43,7 +43,7 @@ Upon the _Valid devices_ you can chose in which device to run the benchmark by:
 
 ## Run a subset of your benchmarks
 
-_VTK-m_ benchmarks uses [Google Benchmarks] which allows you to choose a subset
+_Viskores_ benchmarks uses [Google Benchmarks] which allows you to choose a subset
 of benchmaks by using the flag `--benchmark_filter=REGEX`
 
 For instance, if you want to run all the benchmarks that writes something you

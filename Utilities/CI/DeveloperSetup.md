@@ -22,7 +22,7 @@ sudo pip install virtualenv
 ```
 
 Next we need to create a new virtual env of python. I personally
-like to setup this in `vtkm/Utilities/CI/env`.
+like to setup this in `viskores/Utilities/CI/env`.
 
 ```
 mkdir env

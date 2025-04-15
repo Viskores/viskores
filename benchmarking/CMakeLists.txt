@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -8,7 +16,7 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-if(NOT vtkm_module_current STREQUAL "benchmarking")
+if(NOT viskores_module_current STREQUAL "benchmarking")
   message(FATAL_ERROR "Benchmarking CMakeLists.txt not loaded by benchmarking module.")
 endif()
 
@@ -19,25 +27,25 @@ find_package(benchmark REQUIRED)
 function(add_benchmark exe_name)
   add_executable(${exe_name} ${exe_name}.cxx)
   target_link_libraries(${exe_name} PRIVATE benchmark::benchmark)
-  vtkm_module_get_property(depends benchmarking DEPENDS)
+  viskores_module_get_property(depends benchmarking DEPENDS)
   target_link_libraries(${exe_name} PRIVATE ${depends})
-  vtkm_module_get_property(optional_depends benchmarking OPTIONAL_DEPENDS)
+  viskores_module_get_property(optional_depends benchmarking OPTIONAL_DEPENDS)
   foreach(dep IN LISTS optional_depends)
     if(TARGET ${dep})
       target_link_libraries(${exe_name} PRIVATE ${dep})
     endif()
   endforeach()
-  vtkm_add_drop_unused_function_flags(${exe_name})
-  vtkm_add_target_information(${exe_name})
+  viskores_add_drop_unused_function_flags(${exe_name})
+  viskores_add_target_information(${exe_name})
 
   set_target_properties(${exe_name} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
+    RUNTIME_OUTPUT_DIRECTORY ${Viskores_EXECUTABLE_OUTPUT_PATH}
     CXX_VISIBILITY_PRESET "hidden"
     CUDA_VISIBILITY_PRESET "hidden"
   )
 
   # At some point, we might not want to compile benchmarks with device compilers.
-  vtkm_add_target_information(${exe_name} DEVICE_SOURCES ${exe_name}.cxx)
+  viskores_add_target_information(${exe_name} DEVICE_SOURCES ${exe_name}.cxx)
 endfunction()
 
 set(benchmarks
@@ -52,26 +60,26 @@ set(benchmarks
   BenchmarkTopologyAlgorithms
   )
 
-if(TARGET vtkm_rendering)
+if(TARGET viskores_rendering)
   list(APPEND benchmarks
     BenchmarkRayTracing
     BenchmarkInSitu
     )
 endif()
 
-set(VTKm_BENCHS_RANGE_LOWER_BOUNDARY 4096 CACHE STRING "Smallest sample for input size bench for BenchmarkDeviceAdapter")
-set(VTKm_BENCHS_RANGE_UPPER_BOUNDARY 134217728 CACHE STRING "Biggest sample for input size bench for BenchmarkDeviceAdapter")
-mark_as_advanced(VTKm_BENCHS_RANGE_LOWER_BOUNDARY VTKm_BENCHS_RANGE_UPPER_BOUNDARY)
+set(Viskores_BENCHS_RANGE_LOWER_BOUNDARY 4096 CACHE STRING "Smallest sample for input size bench for BenchmarkDeviceAdapter")
+set(Viskores_BENCHS_RANGE_UPPER_BOUNDARY 134217728 CACHE STRING "Biggest sample for input size bench for BenchmarkDeviceAdapter")
+mark_as_advanced(Viskores_BENCHS_RANGE_LOWER_BOUNDARY Viskores_BENCHS_RANGE_UPPER_BOUNDARY)
 
 foreach (benchmark ${benchmarks})
   add_benchmark(${benchmark})
 endforeach ()
 
-target_compile_definitions(BenchmarkDeviceAdapter PUBLIC VTKm_BENCHS_RANGE_LOWER_BOUNDARY=${VTKm_BENCHS_RANGE_LOWER_BOUNDARY})
-target_compile_definitions(BenchmarkDeviceAdapter PUBLIC VTKm_BENCHS_RANGE_UPPER_BOUNDARY=${VTKm_BENCHS_RANGE_UPPER_BOUNDARY})
+target_compile_definitions(BenchmarkDeviceAdapter PUBLIC Viskores_BENCHS_RANGE_LOWER_BOUNDARY=${Viskores_BENCHS_RANGE_LOWER_BOUNDARY})
+target_compile_definitions(BenchmarkDeviceAdapter PUBLIC Viskores_BENCHS_RANGE_UPPER_BOUNDARY=${Viskores_BENCHS_RANGE_UPPER_BOUNDARY})
 
-if(VTKm_ENABLE_PERFORMANCE_TESTING)
-  include("${VTKm_SOURCE_DIR}/CMake/testing/VTKmPerformanceTest.cmake")
+if(Viskores_ENABLE_PERFORMANCE_TESTING)
+  include("${Viskores_SOURCE_DIR}/CMake/testing/ViskoresPerformanceTest.cmake")
   add_benchmark_test(BenchmarkFilters
     NAME BenchThreshold
     REGEX BenchThreshold
@@ -105,7 +113,7 @@ if(VTKm_ENABLE_PERFORMANCE_TESTING)
     NAME BenchVertexClustering
     REGEX BenchVertexClustering/NumDivs:256
     )
-  if(TARGET vtkm_rendering)
+  if(TARGET viskores_rendering)
     add_benchmark_test(BenchmarkInSitu REGEX "BenchContour")
   endif()
 endif()

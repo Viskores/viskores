@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -10,50 +18,50 @@
 
 #include "Benchmarker.h"
 
-#include <vtkm/Math.h>
-#include <vtkm/Range.h>
-#include <vtkm/VecTraits.h>
-#include <vtkm/VectorAnalysis.h>
+#include <viskores/Math.h>
+#include <viskores/Range.h>
+#include <viskores/VecTraits.h>
+#include <viskores/VectorAnalysis.h>
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/CellSetSingleType.h>
-#include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/ErrorInternal.h>
-#include <vtkm/cont/Logging.h>
-#include <vtkm/cont/PartitionedDataSet.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/Timer.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ArrayHandleUniformPointCoordinates.h>
+#include <viskores/cont/CellSetExplicit.h>
+#include <viskores/cont/CellSetSingleType.h>
+#include <viskores/cont/CellSetStructured.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/ErrorInternal.h>
+#include <viskores/cont/Logging.h>
+#include <viskores/cont/PartitionedDataSet.h>
+#include <viskores/cont/RuntimeDeviceTracker.h>
+#include <viskores/cont/Timer.h>
 
-#include <vtkm/cont/internal/OptionParser.h>
+#include <viskores/cont/internal/OptionParser.h>
 
-#include <vtkm/filter/FieldSelection.h>
-#include <vtkm/filter/contour/Contour.h>
-#include <vtkm/filter/entity_extraction/ExternalFaces.h>
-#include <vtkm/filter/entity_extraction/Threshold.h>
-#include <vtkm/filter/entity_extraction/ThresholdPoints.h>
-#include <vtkm/filter/field_conversion/CellAverage.h>
-#include <vtkm/filter/field_conversion/PointAverage.h>
-#include <vtkm/filter/field_transform/Warp.h>
-#include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
-#include <vtkm/filter/geometry_refinement/Triangulate.h>
-#include <vtkm/filter/geometry_refinement/VertexClustering.h>
-#include <vtkm/filter/vector_analysis/Gradient.h>
-#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
+#include <viskores/filter/FieldSelection.h>
+#include <viskores/filter/contour/Contour.h>
+#include <viskores/filter/entity_extraction/ExternalFaces.h>
+#include <viskores/filter/entity_extraction/Threshold.h>
+#include <viskores/filter/entity_extraction/ThresholdPoints.h>
+#include <viskores/filter/field_conversion/CellAverage.h>
+#include <viskores/filter/field_conversion/PointAverage.h>
+#include <viskores/filter/field_transform/Warp.h>
+#include <viskores/filter/geometry_refinement/Tetrahedralize.h>
+#include <viskores/filter/geometry_refinement/Triangulate.h>
+#include <viskores/filter/geometry_refinement/VertexClustering.h>
+#include <viskores/filter/vector_analysis/Gradient.h>
+#include <viskores/filter/vector_analysis/VectorMagnitude.h>
 
-#include <vtkm/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetReader.h>
 
-#include <vtkm/source/Wavelet.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
+#include <viskores/source/Wavelet.h>
+#include <viskores/worklet/DispatcherMapField.h>
+#include <viskores/worklet/WorkletMapField.h>
 
 #include <cctype> // for std::tolower
 #include <sstream>
 #include <type_traits>
 
-#ifdef VTKM_ENABLE_OPENMP
+#ifdef VISKORES_ENABLE_OPENMP
 #include <omp.h>
 #endif
 
@@ -81,28 +89,28 @@ namespace
 {
 
 // Hold configuration state (e.g. active device):
-vtkm::cont::InitializeResult Config;
+viskores::cont::InitializeResult Config;
 
 // The input dataset we'll use on the filters:
-vtkm::cont::DataSet* InputDataSet;
-vtkm::cont::DataSet* UnstructuredInputDataSet;
-vtkm::cont::DataSet& GetInputDataSet()
+viskores::cont::DataSet* InputDataSet;
+viskores::cont::DataSet* UnstructuredInputDataSet;
+viskores::cont::DataSet& GetInputDataSet()
 {
   return *InputDataSet;
 }
 
-vtkm::cont::DataSet& GetUnstructuredInputDataSet()
+viskores::cont::DataSet& GetUnstructuredInputDataSet()
 {
   return *UnstructuredInputDataSet;
 }
 
-vtkm::cont::PartitionedDataSet* InputPartitionedData;
-vtkm::cont::PartitionedDataSet* UnstructuredInputPartitionedData;
-vtkm::cont::PartitionedDataSet& GetInputPartitionedData()
+viskores::cont::PartitionedDataSet* InputPartitionedData;
+viskores::cont::PartitionedDataSet* UnstructuredInputPartitionedData;
+viskores::cont::PartitionedDataSet& GetInputPartitionedData()
 {
   return *InputPartitionedData;
 }
-vtkm::cont::PartitionedDataSet& GetUnstructuredInputPartitionedData()
+viskores::cont::PartitionedDataSet& GetUnstructuredInputPartitionedData()
 {
   return *UnstructuredInputPartitionedData;
 }
@@ -118,9 +126,9 @@ bool FileAsInput = false;
 
 bool InputIsStructured()
 {
-  return GetInputDataSet().GetCellSet().IsType<vtkm::cont::CellSetStructured<3>>() ||
-    GetInputDataSet().GetCellSet().IsType<vtkm::cont::CellSetStructured<2>>() ||
-    GetInputDataSet().GetCellSet().IsType<vtkm::cont::CellSetStructured<1>>();
+  return GetInputDataSet().GetCellSet().IsType<viskores::cont::CellSetStructured<3>>() ||
+    GetInputDataSet().GetCellSet().IsType<viskores::cont::CellSetStructured<2>>() ||
+    GetInputDataSet().GetCellSet().IsType<viskores::cont::CellSetStructured<1>>();
 }
 
 enum GradOpts : int
@@ -137,23 +145,23 @@ enum GradOpts : int
 
 void BenchGradient(::benchmark::State& state, int options)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::vector_analysis::Gradient filter;
+  viskores::filter::vector_analysis::Gradient filter;
 
   if (options & ScalarInput)
   {
     // Some outputs require vectors:
     if (options & Divergence || options & Vorticity || options & QCriterion)
     {
-      throw vtkm::cont::ErrorInternal("A requested gradient output is "
-                                      "incompatible with scalar input.");
+      throw viskores::cont::ErrorInternal("A requested gradient output is "
+                                          "incompatible with scalar input.");
     }
-    filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
+    filter.SetActiveField(PointScalarsName, viskores::cont::Field::Association::Points);
   }
   else
   {
-    filter.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::Points);
+    filter.SetActiveField(PointVectorsName, viskores::cont::Field::Association::Points);
   }
 
   filter.SetComputeGradient(static_cast<bool>(options & Gradient));
@@ -171,10 +179,10 @@ void BenchGradient(::benchmark::State& state, int options)
     filter.SetColumnMajorOrdering();
   }
 
-  vtkm::cont::Timer timer{ device };
-  //vtkm::cont::DataSet input = static_cast<bool>(options & Structured) ? GetInputDataSet() : GetUnstructuredInputDataSet();
+  viskores::cont::Timer timer{ device };
+  //viskores::cont::DataSet input = static_cast<bool>(options & Structured) ? GetInputDataSet() : GetUnstructuredInputDataSet();
 
-  vtkm::cont::PartitionedDataSet input;
+  viskores::cont::PartitionedDataSet input;
   if (options & PartitionedInput)
   {
     input = GetInputPartitionedData();
@@ -196,47 +204,52 @@ void BenchGradient(::benchmark::State& state, int options)
   }
 }
 
-#define VTKM_PRIVATE_GRADIENT_BENCHMARK(Name, Opts)                                   \
-  void BenchGradient##Name(::benchmark::State& state) { BenchGradient(state, Opts); } \
-  VTKM_BENCHMARK(BenchGradient##Name)
+#define VISKORES_PRIVATE_GRADIENT_BENCHMARK(Name, Opts) \
+  void BenchGradient##Name(::benchmark::State& state)   \
+  {                                                     \
+    BenchGradient(state, Opts);                         \
+  }                                                     \
+  VISKORES_BENCHMARK(BenchGradient##Name)
 
-VTKM_PRIVATE_GRADIENT_BENCHMARK(Scalar, Gradient | ScalarInput);
-VTKM_PRIVATE_GRADIENT_BENCHMARK(ScalarPartitionedData, Gradient | ScalarInput | PartitionedInput);
-VTKM_PRIVATE_GRADIENT_BENCHMARK(Vector, Gradient);
-VTKM_PRIVATE_GRADIENT_BENCHMARK(VectorPartitionedData, Gradient | PartitionedInput);
-VTKM_PRIVATE_GRADIENT_BENCHMARK(VectorRow, Gradient | RowOrdering);
-VTKM_PRIVATE_GRADIENT_BENCHMARK(Point, PointGradient);
-VTKM_PRIVATE_GRADIENT_BENCHMARK(Divergence, Divergence);
-VTKM_PRIVATE_GRADIENT_BENCHMARK(Vorticity, Vorticity);
-VTKM_PRIVATE_GRADIENT_BENCHMARK(QCriterion, QCriterion);
-VTKM_PRIVATE_GRADIENT_BENCHMARK(All,
-                                Gradient | PointGradient | Divergence | Vorticity | QCriterion);
+VISKORES_PRIVATE_GRADIENT_BENCHMARK(Scalar, Gradient | ScalarInput);
+VISKORES_PRIVATE_GRADIENT_BENCHMARK(ScalarPartitionedData,
+                                    Gradient | ScalarInput | PartitionedInput);
+VISKORES_PRIVATE_GRADIENT_BENCHMARK(Vector, Gradient);
+VISKORES_PRIVATE_GRADIENT_BENCHMARK(VectorPartitionedData, Gradient | PartitionedInput);
+VISKORES_PRIVATE_GRADIENT_BENCHMARK(VectorRow, Gradient | RowOrdering);
+VISKORES_PRIVATE_GRADIENT_BENCHMARK(Point, PointGradient);
+VISKORES_PRIVATE_GRADIENT_BENCHMARK(Divergence, Divergence);
+VISKORES_PRIVATE_GRADIENT_BENCHMARK(Vorticity, Vorticity);
+VISKORES_PRIVATE_GRADIENT_BENCHMARK(QCriterion, QCriterion);
+VISKORES_PRIVATE_GRADIENT_BENCHMARK(All,
+                                    Gradient | PointGradient | Divergence | Vorticity | QCriterion);
 
-#undef VTKM_PRIVATE_GRADIENT_BENCHMARK
+#undef VISKORES_PRIVATE_GRADIENT_BENCHMARK
 
 void BenchThreshold(::benchmark::State& state, bool partitionedInput)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
   // Lookup the point scalar range
-  const auto range = []() -> vtkm::Range {
+  const auto range = []() -> viskores::Range
+  {
     auto ptScalarField =
-      GetInputDataSet().GetField(PointScalarsName, vtkm::cont::Field::Association::Points);
+      GetInputDataSet().GetField(PointScalarsName, viskores::cont::Field::Association::Points);
     return ptScalarField.GetRange().ReadPortal().Get(0);
   }();
 
   // Extract points with values between 25-75% of the range
-  vtkm::Float64 quarter = range.Length() / 4.;
-  vtkm::Float64 mid = range.Center();
+  viskores::Float64 quarter = range.Length() / 4.;
+  viskores::Float64 mid = range.Center();
 
-  vtkm::filter::entity_extraction::Threshold filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
+  viskores::filter::entity_extraction::Threshold filter;
+  filter.SetActiveField(PointScalarsName, viskores::cont::Field::Association::Points);
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
 
   auto input = partitionedInput ? GetInputPartitionedData() : GetInputDataSet();
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -249,40 +262,44 @@ void BenchThreshold(::benchmark::State& state, bool partitionedInput)
   }
 }
 
-#define VTKM_PRIVATE_THRESHOLD_BENCHMARK(Name, Opts)                                    \
-  void BenchThreshold##Name(::benchmark::State& state) { BenchThreshold(state, Opts); } \
-  VTKM_BENCHMARK(BenchThreshold##Name)
+#define VISKORES_PRIVATE_THRESHOLD_BENCHMARK(Name, Opts) \
+  void BenchThreshold##Name(::benchmark::State& state)   \
+  {                                                      \
+    BenchThreshold(state, Opts);                         \
+  }                                                      \
+  VISKORES_BENCHMARK(BenchThreshold##Name)
 
-VTKM_PRIVATE_THRESHOLD_BENCHMARK(BenchThreshold, false);
-VTKM_PRIVATE_THRESHOLD_BENCHMARK(BenchThresholdPartitioned, true);
+VISKORES_PRIVATE_THRESHOLD_BENCHMARK(BenchThreshold, false);
+VISKORES_PRIVATE_THRESHOLD_BENCHMARK(BenchThresholdPartitioned, true);
 
 void BenchThresholdPoints(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
   const bool compactPoints = static_cast<bool>(state.range(0));
   const bool partitionedInput = static_cast<bool>(state.range(1));
 
   // Lookup the point scalar range
-  const auto range = []() -> vtkm::Range {
+  const auto range = []() -> viskores::Range
+  {
     auto ptScalarField =
-      GetInputDataSet().GetField(PointScalarsName, vtkm::cont::Field::Association::Points);
+      GetInputDataSet().GetField(PointScalarsName, viskores::cont::Field::Association::Points);
     return ptScalarField.GetRange().ReadPortal().Get(0);
   }();
 
   // Extract points with values between 25-75% of the range
-  vtkm::Float64 quarter = range.Length() / 4.;
-  vtkm::Float64 mid = range.Center();
+  viskores::Float64 quarter = range.Length() / 4.;
+  viskores::Float64 mid = range.Center();
 
-  vtkm::filter::entity_extraction::ThresholdPoints filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
+  viskores::filter::entity_extraction::ThresholdPoints filter;
+  filter.SetActiveField(PointScalarsName, viskores::cont::Field::Association::Points);
   filter.SetLowerThreshold(mid - quarter);
   filter.SetUpperThreshold(mid + quarter);
   filter.SetCompactPoints(compactPoints);
 
-  vtkm::cont::PartitionedDataSet input;
+  viskores::cont::PartitionedDataSet input;
   input = partitionedInput ? GetInputPartitionedData() : GetInputDataSet();
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -305,16 +322,16 @@ void BenchThresholdPointsGenerator(::benchmark::internal::Benchmark* bm)
   bm->Args({ 1, 1 });
 }
 
-VTKM_BENCHMARK_APPLY(BenchThresholdPoints, BenchThresholdPointsGenerator);
+VISKORES_BENCHMARK_APPLY(BenchThresholdPoints, BenchThresholdPointsGenerator);
 
 void BenchCellAverage(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
-  vtkm::filter::field_conversion::CellAverage filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
+  viskores::filter::field_conversion::CellAverage filter;
+  filter.SetActiveField(PointScalarsName, viskores::cont::Field::Association::Points);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -326,19 +343,19 @@ void BenchCellAverage(::benchmark::State& state)
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK(BenchCellAverage);
+VISKORES_BENCHMARK(BenchCellAverage);
 
 void BenchPointAverage(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
   const bool isPartitioned = static_cast<bool>(state.range(0));
 
-  vtkm::filter::field_conversion::PointAverage filter;
-  filter.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::Cells);
+  viskores::filter::field_conversion::PointAverage filter;
+  filter.SetActiveField(CellScalarsName, viskores::cont::Field::Association::Cells);
 
-  vtkm::cont::PartitionedDataSet input;
+  viskores::cont::PartitionedDataSet input;
   input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -350,23 +367,23 @@ void BenchPointAverage(::benchmark::State& state)
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK_OPTS(BenchPointAverage, ->ArgName("PartitionedInput")->DenseRange(0, 1));
+VISKORES_BENCHMARK_OPTS(BenchPointAverage, ->ArgName("PartitionedInput")->DenseRange(0, 1));
 
 void BenchWarpScalar(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
   const bool isPartitioned = static_cast<bool>(state.range(0));
 
-  vtkm::filter::field_transform::Warp filter;
+  viskores::filter::field_transform::Warp filter;
   filter.SetScaleFactor(2.0f);
   filter.SetUseCoordinateSystemAsField(true);
   filter.SetDirectionField(PointVectorsName);
   filter.SetScaleField(PointScalarsName);
 
-  vtkm::cont::PartitionedDataSet input;
+  viskores::cont::PartitionedDataSet input;
   input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -378,22 +395,22 @@ void BenchWarpScalar(::benchmark::State& state)
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK_OPTS(BenchWarpScalar, ->ArgName("PartitionedInput")->DenseRange(0, 1));
+VISKORES_BENCHMARK_OPTS(BenchWarpScalar, ->ArgName("PartitionedInput")->DenseRange(0, 1));
 
 void BenchWarpVector(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
   const bool isPartitioned = static_cast<bool>(state.range(0));
 
-  vtkm::filter::field_transform::Warp filter;
+  viskores::filter::field_transform::Warp filter;
   filter.SetScaleFactor(2.0f);
   filter.SetUseCoordinateSystemAsField(true);
   filter.SetDirectionField(PointVectorsName);
 
-  vtkm::cont::PartitionedDataSet input;
+  viskores::cont::PartitionedDataSet input;
   input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -405,45 +422,46 @@ void BenchWarpVector(::benchmark::State& state)
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK_OPTS(BenchWarpVector, ->ArgName("PartitionedInput")->DenseRange(0, 1));
+VISKORES_BENCHMARK_OPTS(BenchWarpVector, ->ArgName("PartitionedInput")->DenseRange(0, 1));
 
 void BenchContour(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
-  const bool isStructured = static_cast<vtkm::Id>(state.range(0));
-  const vtkm::Id numIsoVals = static_cast<vtkm::Id>(state.range(1));
+  const bool isStructured = static_cast<viskores::Id>(state.range(0));
+  const viskores::Id numIsoVals = static_cast<viskores::Id>(state.range(1));
   const bool mergePoints = static_cast<bool>(state.range(2));
   const bool normals = static_cast<bool>(state.range(3));
   const bool fastNormals = static_cast<bool>(state.range(4));
   const bool isPartitioned = static_cast<bool>(state.range(5));
 
-  vtkm::filter::contour::Contour filter;
-  filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
+  viskores::filter::contour::Contour filter;
+  filter.SetActiveField(PointScalarsName, viskores::cont::Field::Association::Points);
 
   // Set up some equally spaced contours, with the min/max slightly inside the
   // scalar range:
-  const vtkm::Range scalarRange = []() -> vtkm::Range {
+  const viskores::Range scalarRange = []() -> viskores::Range
+  {
     auto field =
-      GetInputDataSet().GetField(PointScalarsName, vtkm::cont::Field::Association::Points);
+      GetInputDataSet().GetField(PointScalarsName, viskores::cont::Field::Association::Points);
     return field.GetRange().ReadPortal().Get(0);
   }();
-  const auto step = scalarRange.Length() / static_cast<vtkm::Float64>(numIsoVals + 1);
+  const auto step = scalarRange.Length() / static_cast<viskores::Float64>(numIsoVals + 1);
   const auto minIsoVal = scalarRange.Min + (step / 2.);
 
   filter.SetNumberOfIsoValues(numIsoVals);
-  for (vtkm::Id i = 0; i < numIsoVals; ++i)
+  for (viskores::Id i = 0; i < numIsoVals; ++i)
   {
-    filter.SetIsoValue(i, minIsoVal + (step * static_cast<vtkm::Float64>(i)));
+    filter.SetIsoValue(i, minIsoVal + (step * static_cast<viskores::Float64>(i)));
   }
 
   filter.SetMergeDuplicatePoints(mergePoints);
   filter.SetGenerateNormals(normals);
   filter.SetComputeFastNormals(fastNormals);
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
 
-  vtkm::cont::PartitionedDataSet input;
+  viskores::cont::PartitionedDataSet input;
   if (isPartitioned)
   {
     input = isStructured ? GetInputPartitionedData() : GetUnstructuredInputPartitionedData();
@@ -474,7 +492,8 @@ void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
                  "FastNormals",
                  "MultiPartitioned" });
 
-  auto helper = [&](const vtkm::Id numIsoVals) {
+  auto helper = [&](const viskores::Id numIsoVals)
+  {
     bm->Args({ 0, numIsoVals, 0, 0, 0, 0 });
     bm->Args({ 0, numIsoVals, 1, 0, 0, 0 });
     bm->Args({ 0, numIsoVals, 0, 1, 0, 0 });
@@ -499,21 +518,21 @@ void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
   helper(12);
 }
 
-VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
+VISKORES_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
 
 void BenchExternalFaces(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
   const bool compactPoints = static_cast<bool>(state.range(0));
   const bool isPartitioned = false; //static_cast<bool>(state.range(1));
 
-  vtkm::filter::entity_extraction::ExternalFaces filter;
+  viskores::filter::entity_extraction::ExternalFaces filter;
   filter.SetCompactPoints(compactPoints);
 
-  vtkm::cont::PartitionedDataSet input;
+  viskores::cont::PartitionedDataSet input;
   input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -535,11 +554,11 @@ void BenchExternalFacesGenerator(::benchmark::internal::Benchmark* bm)
   bm->Args({ 0, 1 });
   bm->Args({ 1, 1 });
 }
-VTKM_BENCHMARK_APPLY(BenchExternalFaces, BenchExternalFacesGenerator);
+VISKORES_BENCHMARK_APPLY(BenchExternalFaces, BenchExternalFacesGenerator);
 
 void BenchTetrahedralize(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
   const bool isPartitioned = static_cast<bool>(state.range(0));
 
   // This filter only supports structured datasets:
@@ -548,11 +567,11 @@ void BenchTetrahedralize(::benchmark::State& state)
     state.SkipWithError("Tetrahedralize Filter requires structured data.");
   }
 
-  vtkm::filter::geometry_refinement::Tetrahedralize filter;
-  vtkm::cont::PartitionedDataSet input;
+  viskores::filter::geometry_refinement::Tetrahedralize filter;
+  viskores::cont::PartitionedDataSet input;
   input = isPartitioned ? GetInputPartitionedData() : GetInputDataSet();
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -565,12 +584,12 @@ void BenchTetrahedralize(::benchmark::State& state)
   }
 }
 
-VTKM_BENCHMARK_OPTS(BenchTetrahedralize, ->ArgName("PartitionedInput")->DenseRange(0, 1));
+VISKORES_BENCHMARK_OPTS(BenchTetrahedralize, ->ArgName("PartitionedInput")->DenseRange(0, 1));
 
 void BenchVertexClustering(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
-  const vtkm::Id numDivs = static_cast<vtkm::Id>(state.range(0));
+  const viskores::cont::DeviceAdapterId device = Config.Device;
+  const viskores::Id numDivs = static_cast<viskores::Id>(state.range(0));
 
   // This filter only supports unstructured datasets:
   if (FileAsInput && InputIsStructured())
@@ -578,10 +597,10 @@ void BenchVertexClustering(::benchmark::State& state)
     state.SkipWithError("VertexClustering Filter requires unstructured data (use --tetra).");
   }
 
-  vtkm::filter::geometry_refinement::VertexClustering filter;
+  viskores::filter::geometry_refinement::VertexClustering filter;
   filter.SetNumberOfDivisions({ numDivs });
 
-  vtkm::cont::Timer timer{ device };
+  viskores::cont::Timer timer{ device };
   for (auto _ : state)
   {
     (void)_;
@@ -594,22 +613,22 @@ void BenchVertexClustering(::benchmark::State& state)
     state.SetIterationTime(timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK_OPTS(BenchVertexClustering,
-                      ->RangeMultiplier(2)
-                      ->Range(32, 1024)
-                      ->ArgName("NumDivs"));
+VISKORES_BENCHMARK_OPTS(BenchVertexClustering,
+                          ->RangeMultiplier(2)
+                          ->Range(32, 1024)
+                          ->ArgName("NumDivs"));
 
 // Helper for resetting the reverse connectivity table:
 struct PrepareForInput
 {
-  mutable vtkm::cont::Timer Timer;
+  mutable viskores::cont::Timer Timer;
 
   PrepareForInput()
     : Timer{ Config.Device }
   {
   }
 
-  void operator()(const vtkm::cont::CellSet& cellSet) const
+  void operator()(const viskores::cont::CellSet& cellSet) const
   {
     static bool warned{ false };
     if (!warned)
@@ -621,23 +640,25 @@ struct PrepareForInput
   }
 
   template <typename T1, typename T2, typename T3>
-  VTKM_CONT void operator()(const vtkm::cont::CellSetExplicit<T1, T2, T3>& cellSet) const
+  VISKORES_CONT void operator()(const viskores::cont::CellSetExplicit<T1, T2, T3>& cellSet) const
   {
-    vtkm::cont::TryExecuteOnDevice(Config.Device, *this, cellSet);
+    viskores::cont::TryExecuteOnDevice(Config.Device, *this, cellSet);
   }
 
   template <typename T1, typename T2, typename T3, typename DeviceTag>
-  VTKM_CONT bool operator()(DeviceTag, const vtkm::cont::CellSetExplicit<T1, T2, T3>& cellSet) const
+  VISKORES_CONT bool operator()(DeviceTag,
+                                const viskores::cont::CellSetExplicit<T1, T2, T3>& cellSet) const
   {
     // Why does CastAndCall insist on making the cellset const?
-    using CellSetT = vtkm::cont::CellSetExplicit<T1, T2, T3>;
+    using CellSetT = viskores::cont::CellSetExplicit<T1, T2, T3>;
     CellSetT& mcellSet = const_cast<CellSetT&>(cellSet);
-    mcellSet.ResetConnectivity(vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{});
+    mcellSet.ResetConnectivity(viskores::TopologyElementTagPoint{},
+                               viskores::TopologyElementTagCell{});
 
-    vtkm::cont::Token token;
+    viskores::cont::Token token;
     this->Timer.Start();
     auto result = cellSet.PrepareForInput(
-      DeviceTag{}, vtkm::TopologyElementTagPoint{}, vtkm::TopologyElementTagCell{}, token);
+      DeviceTag{}, viskores::TopologyElementTagPoint{}, viskores::TopologyElementTagCell{}, token);
     ::benchmark::DoNotOptimize(result);
     this->Timer.Stop();
 
@@ -657,54 +678,54 @@ void BenchReverseConnectivityGen(::benchmark::State& state)
   for (auto _ : state)
   {
     (void)_;
-    vtkm::cont::CastAndCall(cellset, functor);
+    viskores::cont::CastAndCall(cellset, functor);
     state.SetIterationTime(functor.Timer.GetElapsedTime());
   }
 }
-VTKM_BENCHMARK(BenchReverseConnectivityGen);
+VISKORES_BENCHMARK(BenchReverseConnectivityGen);
 
 // Generates a Vec3 field from point coordinates.
-struct PointVectorGenerator : public vtkm::worklet::WorkletMapField
+struct PointVectorGenerator : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
-  vtkm::Bounds Bounds;
-  vtkm::Vec3f_64 Center;
-  vtkm::Vec3f_64 Scale;
+  viskores::Bounds Bounds;
+  viskores::Vec3f_64 Center;
+  viskores::Vec3f_64 Scale;
 
-  VTKM_CONT
-  PointVectorGenerator(const vtkm::Bounds& bounds)
+  VISKORES_CONT
+  PointVectorGenerator(const viskores::Bounds& bounds)
     : Bounds(bounds)
     , Center(bounds.Center())
-    , Scale((6. * vtkm::Pi()) / bounds.X.Length(),
-            (2. * vtkm::Pi()) / bounds.Y.Length(),
-            (7. * vtkm::Pi()) / bounds.Z.Length())
+    , Scale((6. * viskores::Pi()) / bounds.X.Length(),
+            (2. * viskores::Pi()) / bounds.Y.Length(),
+            (7. * viskores::Pi()) / bounds.Z.Length())
   {
   }
 
   template <typename T>
-  VTKM_EXEC vtkm::Vec<T, 3> operator()(vtkm::Vec<T, 3> val) const
+  VISKORES_EXEC viskores::Vec<T, 3> operator()(viskores::Vec<T, 3> val) const
   {
-    using Vec3T = vtkm::Vec<T, 3>;
-    using Vec3F64 = vtkm::Vec3f_64;
+    using Vec3T = viskores::Vec<T, 3>;
+    using Vec3F64 = viskores::Vec3f_64;
 
     Vec3F64 valF64{ val };
     Vec3F64 periodic = (valF64 - this->Center) * this->Scale;
-    periodic[0] = vtkm::Sin(periodic[0]);
-    periodic[1] = vtkm::Sin(periodic[1]);
-    periodic[2] = vtkm::Cos(periodic[2]);
+    periodic[0] = viskores::Sin(periodic[0]);
+    periodic[1] = viskores::Sin(periodic[1]);
+    periodic[2] = viskores::Cos(periodic[2]);
 
-    if (vtkm::MagnitudeSquared(periodic) > 0.)
+    if (viskores::MagnitudeSquared(periodic) > 0.)
     {
-      vtkm::Normalize(periodic);
+      viskores::Normalize(periodic);
     }
-    if (vtkm::MagnitudeSquared(valF64) > 0.)
+    if (viskores::MagnitudeSquared(valF64) > 0.)
     {
-      vtkm::Normalize(valF64);
+      viskores::Normalize(valF64);
     }
-    return Vec3T{ vtkm::Normal(periodic + valF64) };
+    return Vec3T{ viskores::Normal(periodic + valF64) };
   }
 };
 
@@ -712,10 +733,10 @@ void FindFields()
 {
   if (PointScalarsName.empty())
   {
-    for (vtkm::Id i = 0; i < GetInputDataSet().GetNumberOfFields(); ++i)
+    for (viskores::Id i = 0; i < GetInputDataSet().GetNumberOfFields(); ++i)
     {
       auto field = GetInputDataSet().GetField(i);
-      if (field.GetAssociation() == vtkm::cont::Field::Association::Points &&
+      if (field.GetAssociation() == viskores::cont::Field::Association::Points &&
           field.GetData().GetNumberOfComponentsFlat() == 1)
       {
         PointScalarsName = field.GetName();
@@ -727,10 +748,10 @@ void FindFields()
 
   if (CellScalarsName.empty())
   {
-    for (vtkm::Id i = 0; i < GetInputDataSet().GetNumberOfFields(); ++i)
+    for (viskores::Id i = 0; i < GetInputDataSet().GetNumberOfFields(); ++i)
     {
       auto field = GetInputDataSet().GetField(i);
-      if (field.GetAssociation() == vtkm::cont::Field::Association::Cells &&
+      if (field.GetAssociation() == viskores::cont::Field::Association::Cells &&
           field.GetData().GetNumberOfComponentsFlat() == 1)
       {
         CellScalarsName = field.GetName();
@@ -742,10 +763,10 @@ void FindFields()
 
   if (PointVectorsName.empty())
   {
-    for (vtkm::Id i = 0; i < GetInputDataSet().GetNumberOfFields(); ++i)
+    for (viskores::Id i = 0; i < GetInputDataSet().GetNumberOfFields(); ++i)
     {
       auto field = GetInputDataSet().GetField(i);
-      if (field.GetAssociation() == vtkm::cont::Field::Association::Points &&
+      if (field.GetAssociation() == viskores::cont::Field::Association::Points &&
           field.GetData().GetNumberOfComponentsFlat() == 3)
       {
         PointVectorsName = field.GetName();
@@ -765,13 +786,13 @@ void CreateMissingFields()
     auto coords = GetInputDataSet().GetCoordinateSystem();
     auto bounds = coords.GetBounds();
     auto points = coords.GetData();
-    vtkm::cont::ArrayHandle<vtkm::Vec3f> pvecs;
+    viskores::cont::ArrayHandle<viskores::Vec3f> pvecs;
 
     PointVectorGenerator worklet(bounds);
-    vtkm::worklet::DispatcherMapField<PointVectorGenerator> dispatch(worklet);
+    viskores::worklet::DispatcherMapField<PointVectorGenerator> dispatch(worklet);
     dispatch.Invoke(points, pvecs);
-    GetInputDataSet().AddField(
-      vtkm::cont::Field("GeneratedPointVectors", vtkm::cont::Field::Association::Points, pvecs));
+    GetInputDataSet().AddField(viskores::cont::Field(
+      "GeneratedPointVectors", viskores::cont::Field::Association::Points, pvecs));
     PointVectorsName = "GeneratedPointVectors";
     std::cerr << "[CreateFields] Generated point vectors '" << PointVectorsName
               << "' from coordinate data.\n";
@@ -781,12 +802,12 @@ void CreateMissingFields()
   {
     if (!CellScalarsName.empty())
     { // Generate from found cell field:
-      vtkm::filter::field_conversion::PointAverage avg;
-      avg.SetActiveField(CellScalarsName, vtkm::cont::Field::Association::Cells);
+      viskores::filter::field_conversion::PointAverage avg;
+      avg.SetActiveField(CellScalarsName, viskores::cont::Field::Association::Cells);
       avg.SetOutputFieldName("GeneratedPointScalars");
       auto outds = avg.Execute(GetInputDataSet());
       GetInputDataSet().AddField(
-        outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::Points));
+        outds.GetField("GeneratedPointScalars", viskores::cont::Field::Association::Points));
       PointScalarsName = "GeneratedPointScalars";
       std::cerr << "[CreateFields] Generated point scalars '" << PointScalarsName
                 << "' from cell scalars, '" << CellScalarsName << "'.\n";
@@ -794,13 +815,13 @@ void CreateMissingFields()
     else
     {
       // Compute the magnitude of the vectors:
-      VTKM_ASSERT(!PointVectorsName.empty());
-      vtkm::filter::vector_analysis::VectorMagnitude mag;
-      mag.SetActiveField(PointVectorsName, vtkm::cont::Field::Association::Points);
+      VISKORES_ASSERT(!PointVectorsName.empty());
+      viskores::filter::vector_analysis::VectorMagnitude mag;
+      mag.SetActiveField(PointVectorsName, viskores::cont::Field::Association::Points);
       mag.SetOutputFieldName("GeneratedPointScalars");
       auto outds = mag.Execute(GetInputDataSet());
       GetInputDataSet().AddField(
-        outds.GetField("GeneratedPointScalars", vtkm::cont::Field::Association::Points));
+        outds.GetField("GeneratedPointScalars", viskores::cont::Field::Association::Points));
       PointScalarsName = "GeneratedPointScalars";
       std::cerr << "[CreateFields] Generated point scalars '" << PointScalarsName
                 << "' from point vectors, '" << PointVectorsName << "'.\n";
@@ -809,23 +830,23 @@ void CreateMissingFields()
 
   if (CellScalarsName.empty())
   { // Attempt to construct them from a point field:
-    VTKM_ASSERT(!PointScalarsName.empty());
-    vtkm::filter::field_conversion::CellAverage avg;
-    avg.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
+    VISKORES_ASSERT(!PointScalarsName.empty());
+    viskores::filter::field_conversion::CellAverage avg;
+    avg.SetActiveField(PointScalarsName, viskores::cont::Field::Association::Points);
     avg.SetOutputFieldName("GeneratedCellScalars");
     auto outds = avg.Execute(GetInputDataSet());
     GetInputDataSet().AddField(
-      outds.GetField("GeneratedCellScalars", vtkm::cont::Field::Association::Cells));
+      outds.GetField("GeneratedCellScalars", viskores::cont::Field::Association::Cells));
     CellScalarsName = "GeneratedCellScalars";
     std::cerr << "[CreateFields] Generated cell scalars '" << CellScalarsName
               << "' from point scalars, '" << PointScalarsName << "'.\n";
   }
 }
 
-struct Arg : vtkm::cont::internal::option::Arg
+struct Arg : viskores::cont::internal::option::Arg
 {
-  static vtkm::cont::internal::option::ArgStatus Number(
-    const vtkm::cont::internal::option::Option& option,
+  static viskores::cont::internal::option::ArgStatus Number(
+    const viskores::cont::internal::option::Option& option,
     bool msg)
   {
     bool argIsNum = ((option.arg != nullptr) && (option.arg[0] != '\0'));
@@ -838,7 +859,7 @@ struct Arg : vtkm::cont::internal::option::Arg
 
     if (argIsNum)
     {
-      return vtkm::cont::internal::option::ARG_OK;
+      return viskores::cont::internal::option::ARG_OK;
     }
     else
     {
@@ -847,17 +868,17 @@ struct Arg : vtkm::cont::internal::option::Arg
         std::cerr << "Option " << option.name << " requires a numeric argument." << std::endl;
       }
 
-      return vtkm::cont::internal::option::ARG_ILLEGAL;
+      return viskores::cont::internal::option::ARG_ILLEGAL;
     }
   }
 
-  static vtkm::cont::internal::option::ArgStatus Required(
-    const vtkm::cont::internal::option::Option& option,
+  static viskores::cont::internal::option::ArgStatus Required(
+    const viskores::cont::internal::option::Option& option,
     bool msg)
   {
     if ((option.arg != nullptr) && (option.arg[0] != '\0'))
     {
-      return vtkm::cont::internal::option::ARG_OK;
+      return viskores::cont::internal::option::ARG_OK;
     }
     else
     {
@@ -865,7 +886,7 @@ struct Arg : vtkm::cont::internal::option::Arg
       {
         std::cerr << "Option " << option.name << " requires an argument." << std::endl;
       }
-      return vtkm::cont::internal::option::ARG_ILLEGAL;
+      return viskores::cont::internal::option::ARG_ILLEGAL;
     }
   }
 };
@@ -886,11 +907,11 @@ enum optionIndex
 void InitDataSet(int& argc, char** argv)
 {
   std::string filename;
-  vtkm::Id waveletDim = 256;
-  vtkm::Id numPartitions = 1;
+  viskores::Id waveletDim = 256;
+  viskores::Id numPartitions = 1;
   bool tetra = false;
 
-  namespace option = vtkm::cont::internal::option;
+  namespace option = viskores::cont::internal::option;
 
   std::vector<option::Descriptor> usage;
   std::string usageHeader{ "Usage: " };
@@ -947,7 +968,7 @@ void InitDataSet(int& argc, char** argv)
   usage.push_back({ 0, 0, nullptr, nullptr, nullptr, nullptr });
 
 
-  vtkm::cont::internal::option::Stats stats(usage.data(), argc - 1, argv + 1);
+  viskores::cont::internal::option::Stats stats(usage.data(), argc - 1, argv + 1);
   std::unique_ptr<option::Option[]> options{ new option::Option[stats.options_max] };
   std::unique_ptr<option::Option[]> buffer{ new option::Option[stats.buffer_max] };
   option::Parser commandLineParse(usage.data(), argc - 1, argv + 1, options.get(), buffer.get());
@@ -959,7 +980,7 @@ void InitDataSet(int& argc, char** argv)
     const char* helpstr = "--help";
     char* tmpargv[] = { argv[0], const_cast<char*>(helpstr), nullptr };
     int tmpargc = 2;
-    VTKM_EXECUTE_BENCHMARKS(tmpargc, tmpargv);
+    VISKORES_EXECUTE_BENCHMARKS(tmpargc, tmpargv);
     exit(0);
   }
 
@@ -998,7 +1019,7 @@ void InitDataSet(int& argc, char** argv)
   // Now go back through the arg list and remove anything that is not in the list of
   // unknown options or non-option arguments.
   int destArg = 1;
-  // This is copy/pasted from vtkm::cont::Initialize(), should probably be abstracted eventually:
+  // This is copy/pasted from viskores::cont::Initialize(), should probably be abstracted eventually:
   for (int srcArg = 1; srcArg < argc; ++srcArg)
   {
     std::string thisArg{ argv[srcArg] };
@@ -1045,14 +1066,14 @@ void InitDataSet(int& argc, char** argv)
   argc = destArg;
 
   // Load / generate the dataset
-  vtkm::cont::Timer inputGenTimer{ Config.Device };
+  viskores::cont::Timer inputGenTimer{ Config.Device };
   inputGenTimer.Start();
 
   if (!filename.empty())
   {
     std::cerr << "[InitDataSet] Loading file: " << filename << "\n";
-    vtkm::io::VTKDataSetReader reader(filename);
-    InputDataSet = new vtkm::cont::DataSet;
+    viskores::io::VTKDataSetReader reader(filename);
+    InputDataSet = new viskores::cont::DataSet;
     *InputDataSet = reader.ReadDataSet();
     FileAsInput = true;
   }
@@ -1060,10 +1081,10 @@ void InitDataSet(int& argc, char** argv)
   {
     std::cerr << "[InitDataSet] Generating " << waveletDim << "x" << waveletDim << "x" << waveletDim
               << " wavelet...\n";
-    vtkm::source::Wavelet source;
+    viskores::source::Wavelet source;
     source.SetExtent({ 0 }, { waveletDim - 1 });
 
-    InputDataSet = new vtkm::cont::DataSet;
+    InputDataSet = new viskores::cont::DataSet;
     *InputDataSet = source.Execute();
   }
 
@@ -1072,9 +1093,10 @@ void InitDataSet(int& argc, char** argv)
 
   std::cerr
     << "[InitDataSet] Create UnstructuredInputDataSet from Tetrahedralized InputDataSet...\n";
-  vtkm::filter::geometry_refinement::Tetrahedralize tet;
-  tet.SetFieldsToPass(vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::Mode::All));
-  UnstructuredInputDataSet = new vtkm::cont::DataSet;
+  viskores::filter::geometry_refinement::Tetrahedralize tet;
+  tet.SetFieldsToPass(
+    viskores::filter::FieldSelection(viskores::filter::FieldSelection::Mode::All));
+  UnstructuredInputDataSet = new viskores::cont::DataSet;
   *UnstructuredInputDataSet = tet.Execute(GetInputDataSet());
 
   if (tetra)
@@ -1086,9 +1108,9 @@ void InitDataSet(int& argc, char** argv)
   if (numPartitions > 0)
   {
     std::cerr << "[InitDataSet] Creating " << numPartitions << " partitions." << std::endl;
-    InputPartitionedData = new vtkm::cont::PartitionedDataSet;
-    UnstructuredInputPartitionedData = new vtkm::cont::PartitionedDataSet;
-    for (vtkm::Id i = 0; i < numPartitions; i++)
+    InputPartitionedData = new viskores::cont::PartitionedDataSet;
+    UnstructuredInputPartitionedData = new viskores::cont::PartitionedDataSet;
+    for (viskores::Id i = 0; i < numPartitions; i++)
     {
       GetInputPartitionedData().AppendPartition(GetInputDataSet());
       GetUnstructuredInputPartitionedData().AppendPartition(GetUnstructuredInputDataSet());
@@ -1105,29 +1127,30 @@ void InitDataSet(int& argc, char** argv)
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto opts = viskores::cont::InitializeOptions::RequireDevice;
 
   std::vector<char*> args(argv, argv + argc);
-  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+  viskores::bench::detail::InitializeArgs(&argc, args, opts);
 
-  // Parse VTK-m options:
-  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+  // Parse Viskores options:
+  Config = viskores::cont::Initialize(argc, args.data(), opts);
 
   // This opts changes when it is help
-  if (opts != vtkm::cont::InitializeOptions::None)
+  if (opts != viskores::cont::InitializeOptions::None)
   {
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+    viskores::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
   InitDataSet(argc, args.data());
 
-  const std::string dataSetSummary = []() -> std::string {
+  const std::string dataSetSummary = []() -> std::string
+  {
     std::ostringstream out;
     GetInputDataSet().PrintSummary(out);
     return out.str();
   }();
 
   // handle benchmarking related args and run benchmarks:
-  VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, args.data(), dataSetSummary);
+  VISKORES_EXECUTE_BENCHMARKS_PREAMBLE(argc, args.data(), dataSetSummary);
   delete InputDataSet;
   delete UnstructuredInputDataSet;
   delete InputPartitionedData;

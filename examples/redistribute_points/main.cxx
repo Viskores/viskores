@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,14 +16,14 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/EnvironmentTracker.h>
-#include <vtkm/cont/Initialize.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/EnvironmentTracker.h>
+#include <viskores/cont/Initialize.h>
 
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
-#include <vtkm/thirdparty/diy/diy.h>
+#include <viskores/thirdparty/diy/diy.h>
 
 #include "RedistributePoints.h"
 
@@ -25,13 +33,13 @@ using std::endl;
 
 int main(int argc, char* argv[])
 {
-  // Process vtk-m general args
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  auto config = vtkm::cont::Initialize(argc, argv, opts);
+  // Process viskores general args
+  auto opts = viskores::cont::InitializeOptions::DefaultAnyDevice;
+  auto config = viskores::cont::Initialize(argc, argv, opts);
 
-  vtkmdiy::mpi::environment env(argc, argv);
-  vtkmdiy::mpi::communicator comm;
-  vtkm::cont::EnvironmentTracker::SetCommunicator(comm);
+  viskoresdiy::mpi::environment env(argc, argv);
+  viskoresdiy::mpi::communicator comm;
+  viskores::cont::EnvironmentTracker::SetCommunicator(comm);
 
   if (argc != 3)
   {
@@ -41,10 +49,10 @@ int main(int argc, char* argv[])
     return EXIT_FAILURE;
   }
 
-  vtkm::cont::DataSet input;
+  viskores::cont::DataSet input;
   if (comm.rank() == 0)
   {
-    vtkm::io::VTKDataSetReader reader(argv[1]);
+    viskores::io::VTKDataSetReader reader(argv[1]);
     input = reader.ReadDataSet();
   }
 
@@ -54,7 +62,7 @@ int main(int argc, char* argv[])
   std::ostringstream str;
   str << argv[2] << "-" << comm.rank() << ".vtk";
 
-  vtkm::io::VTKDataSetWriter writer(str.str());
+  viskores::io::VTKDataSetWriter writer(str.str());
   writer.WriteDataSet(output);
   return EXIT_SUCCESS;
 }

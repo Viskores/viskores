@@ -1,9 +1,0 @@
-NAME
-  vtkm_rendering_testing
-GROUPS
-  Testing
-DEPENDS
-  vtkm_cont_testing vtkm_rendering
-PRIVATE_DEPENDS
-  vtkm_io
-NO_TESTING

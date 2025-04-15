@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -10,15 +18,15 @@
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 project(Histogram CXX)
 
-#Find the VTK-m package
-find_package(VTKm REQUIRED QUIET)
-if (VTKm_ENABLE_MPI AND vtkm::filter_density_estimate)
+#Find the Viskores package
+find_package(Viskores REQUIRED QUIET)
+if (Viskores_ENABLE_MPI AND viskores::filter_density_estimate)
   # TODO: this example desperately needs to be updated. The histogram filter has
   # improved immensely since this has originally been written, and the code can
-  # be simplified a lot, which will make it more illustrative of using VTK-m.
+  # be simplified a lot, which will make it more illustrative of using Viskores.
   add_executable(Histogram Histogram.cxx HistogramMPI.h HistogramMPI.cxx)
-  target_link_libraries(Histogram PRIVATE vtkm::filter_density_estimate MPI::MPI_CXX)
-  vtkm_add_target_information(Histogram
+  target_link_libraries(Histogram PRIVATE viskores::filter_density_estimate MPI::MPI_CXX)
+  viskores_add_target_information(Histogram
     DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
     DEVICE_SOURCES HistogramMPI.cxx)
 endif()

@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -52,46 +60,46 @@
 ##==============================================================================
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 
-# Find the VTK-m package
-find_package(VTKm REQUIRED QUIET)
+# Find the Viskores package
+find_package(Viskores REQUIRED QUIET)
 
 ####################################
 # MPI
 ####################################
-if (VTKm_ENABLE_MPI AND TARGET vtkm::filter_scalar_topology AND TARGET vtkm::io)
+if (Viskores_ENABLE_MPI AND TARGET viskores::filter_scalar_topology AND TARGET viskores::io)
   add_executable(ContourTree_Distributed ContourTreeApp.cxx ContourTreeAppDataIO.h)
-  target_link_libraries(ContourTree_Distributed vtkm::filter_scalar_topology vtkm::io MPI::MPI_CXX)
-  vtkm_add_target_information(ContourTree_Distributed
+  target_link_libraries(ContourTree_Distributed viskores::filter_scalar_topology viskores::io MPI::MPI_CXX)
+  viskores_add_target_information(ContourTree_Distributed
                               MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES ContourTreeApp.cxx)
 
-  option (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
-  mark_as_advanced(VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
-  if (VTKM_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
+  option (VISKORES_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT Off)
+  mark_as_advanced(VISKORES_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
+  if (VISKORES_EXAMPLE_CONTOURTREE_ENABLE_DEBUG_PRINT)
     target_compile_definitions(ContourTree_Distributed PRIVATE "DEBUG_PRINT")
     target_compile_definitions(ContourTree_Distributed PRIVATE "DEBUG_PRINT_CTUD")
   endif()
 
-  if (TARGET vtkm::tbb)
+  if (TARGET viskores::tbb)
     target_compile_definitions(ContourTree_Distributed PRIVATE "ENABLE_SET_NUM_THREADS")
   endif()
-  if (VTKm_ENABLE_HDF5_IO)
-    if(VTKm_HDF5_IS_PARALLEL)
+  if (Viskores_ENABLE_HDF5_IO)
+    if(Viskores_HDF5_IS_PARALLEL)
       target_compile_definitions(ContourTree_Distributed PRIVATE "ENABLE_HDFIO")
       target_include_directories(ContourTree_Distributed PRIVATE ${HDF5_INCLUDE_DIR})
       target_link_libraries(ContourTree_Distributed ${HDF5_LIBRARIES})
     else()
-      message(FATAL_ERROR "Compiling distributed contour tree example with HDF5 support requires using a parallel HDF5 library and enabling VTKm_HDF5_IS_PARALLEL")
+      message(FATAL_ERROR "Compiling distributed contour tree example with HDF5 support requires using a parallel HDF5 library and enabling Viskores_HDF5_IS_PARALLEL")
     endif()
   endif ()
 
   add_executable(TreeCompiler TreeCompilerApp.cxx)
-  target_link_libraries(TreeCompiler vtkm::filter_core)
-  vtkm_add_target_information(TreeCompiler DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS DEVICE_SOURCES TreeCompilerApp.cxx)
+  target_link_libraries(TreeCompiler viskores::filter_core)
+  viskores_add_target_information(TreeCompiler DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS DEVICE_SOURCES TreeCompilerApp.cxx)
 
   add_executable(BranchCompiler BranchCompilerApp.cxx)
-  target_link_libraries(BranchCompiler vtkm::filter_scalar_topology)
-  vtkm_add_target_information(BranchCompiler DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS DEVICE_SOURCES BranchCompilerApp.cxx)
+  target_link_libraries(BranchCompiler viskores::filter_scalar_topology)
+  viskores_add_target_information(BranchCompiler DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS DEVICE_SOURCES BranchCompilerApp.cxx)
 
   configure_file(split_data_2d.py split_data_2d.py COPYONLY)
   configure_file(split_data_3d.py split_data_3d.py COPYONLY)

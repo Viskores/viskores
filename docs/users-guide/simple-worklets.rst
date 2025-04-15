@@ -4,7 +4,7 @@ Simple Worklets
 
 .. index:: worklet; creating
 
-The simplest way to implement an algorithm in |VTKm| is to create a *worklet*.
+The simplest way to implement an algorithm in |Viskores| is to create a *worklet*.
 A worklet is fundamentally a functor that operates on an element of data.
 Thus, it is a ``class`` or ``struct`` that has an overloaded parenthesis operator (which must be declared ``const`` for thread safety).
 However, worklets are also embedded with a significant amount of metadata on how the data should be managed and how the execution should be structured.
@@ -54,7 +54,7 @@ The function prototype matches what data are provided when the worklet is invoke
    ``void functionName(int arg1, float arg2);``
 
    has the type ``void(int, float)``.
-   |VTKm| uses function types like this as a :index:`signature` that defines the structure of a function call.
+   |Viskores| uses function types like this as a :index:`signature` that defines the structure of a function call.
 
 .. index:: signature; tags
 
@@ -145,7 +145,7 @@ Thus, the algorithm that the worklet represents is contained in or called from t
 
 There are some constraints on the parenthesis operator.
 First, it must have the same arity as the ``ExecutionSignature``, and the types of the parameters and return must be compatible.
-Second, because it runs in the execution environment, it must be declared with the ``VTKM_EXEC`` (or ``VTKM_EXEC_CONT``) modifier.
+Second, because it runs in the execution environment, it must be declared with the ``VISKORES_EXEC`` (or ``VISKORES_EXEC_CONT``) modifier.
 Third, the method must be declared ``const`` to help preserve thread safety.
 
 
@@ -158,15 +158,15 @@ Invoking a Worklet
 Previously in this chapter we discussed creating a simple worklet.
 In this section we describe how to run the worklet in parallel.
 
-A worklet is run using the :class:`vtkm::cont::Invoker` class.
+A worklet is run using the :class:`viskores::cont::Invoker` class.
 
 .. load-example:: WorkletInvoke
    :file: GuideExampleSimpleAlgorithm.cxx
    :caption: Invoking a worklet.
 
-Using an :class:`vtkm::cont::Invoker` is simple.
-First, an :class:`vtkm::cont::Invoker` can be simply constructed with no arguments (:exlineref:`ex:WorkletInvoke:Construct`).
-Next, the :class:`vtkm::cont::Invoker` is called as if it were a function (:exlineref:`ex:WorkletInvoke:Call`).
+Using an :class:`viskores::cont::Invoker` is simple.
+First, an :class:`viskores::cont::Invoker` can be simply constructed with no arguments (:exlineref:`ex:WorkletInvoke:Construct`).
+Next, the :class:`viskores::cont::Invoker` is called as if it were a function (:exlineref:`ex:WorkletInvoke:Call`).
 
 The first argument to the invoke is always an instance of the worklet.
 The remaining arguments are data that are passed (indirectly) to the worklet.
@@ -174,7 +174,7 @@ Each of these arguments (after the worklet) match a corresponding argument liste
 So in the invocation in :exlineref:`ex:WorkletInvoke:Call`, the second and third arguments correspond the the two ``ControlSignature`` arguments given in :numref:`ex:ControlSignature`.
 ``psiArray`` corresponds to the ``FieldIn`` argument and ``nmsArray`` corresponds to the ``FieldOut`` argument.
 
-.. doxygenstruct:: vtkm::cont::Invoker
+.. doxygenstruct:: viskores::cont::Invoker
    :members:
 
 
@@ -183,7 +183,7 @@ Preview of More Complex Worklets
 ----------------------------------------
 
 This chapter demonstrates the creation of a worklet that performs a very simple math operation in parallel.
-However, we have just scratched the surface of the kinds of algorithms that can be expressed with |VTKm| worklets.
+However, we have just scratched the surface of the kinds of algorithms that can be expressed with |Viskores| worklets.
 There are many more execution patterns and data handling constructs.
 The following example gives a preview of some of the more advanced features of worklets.
 

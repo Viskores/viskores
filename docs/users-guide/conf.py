@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -16,11 +24,11 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "The VTK-m User's Guide"
+project = "The Viskores User's Guide"
 copyright = 'Kitware Inc., National Technology & Engineering Solutions of Sandia LLC, UT-Battelle LLC, Los Alamos National Security LLC'
 author = 'Kenneth Moreland'
-version = '@VTKm_VERSION_FULL@'
-release = '@VTKm_VERSION_MAJOR@.@VTKm_VERSION_MINOR@'
+version = '@Viskores_VERSION_FULL@'
+release = '@Viskores_VERSION_MAJOR@.@Viskores_VERSION_MINOR@'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -74,14 +82,14 @@ numfig_format = {
 today_fmt = '%B %d, %Y'
 
 rst_prolog = '''
-.. |VTKm| replace:: VTK‑m
+.. |Viskores| replace:: Viskores
 .. |Veclike| replace:: ``Vec``-like
 .. |report-year| replace:: 2024
 .. |report-number| replace:: ORNL/TM-2024/3443
 '''
 
-breathe_projects = { 'vtkm': '@doxygen_xml_output_dir@' }
-breathe_default_project = 'vtkm'
+breathe_projects = { 'viskores': '@doxygen_xml_output_dir@' }
+breathe_default_project = 'viskores'
 
 example_directory = '@example_directory@'
 example_command_comment = '////'

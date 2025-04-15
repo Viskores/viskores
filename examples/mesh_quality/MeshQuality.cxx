@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -20,12 +28,12 @@
 
 #include <string>
 #include <vector>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/cont/ErrorExecution.h>
-#include <vtkm/filter/mesh_info/MeshQuality.h>
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/DataSetBuilderExplicit.h>
+#include <viskores/cont/ErrorExecution.h>
+#include <viskores/filter/mesh_info/MeshQuality.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
 
 /**
@@ -41,14 +49,14 @@
  * is provided.
 */
 
-//Adapted from vtkm/cont/testing/MakeTestDataSet.h
+//Adapted from viskores/cont/testing/MakeTestDataSet.h
 //Modified the content of the Make3DExplicitDataSetZoo() function
-inline vtkm::cont::DataSet Make3DExplicitDataSet()
+inline viskores::cont::DataSet Make3DExplicitDataSet()
 {
-  vtkm::cont::DataSet dataSet;
-  vtkm::cont::DataSetBuilderExplicit dsb;
+  viskores::cont::DataSet dataSet;
+  viskores::cont::DataSetBuilderExplicit dsb;
 
-  using CoordType = vtkm::Vec3f_64;
+  using CoordType = viskores::Vec3f_64;
 
   std::vector<CoordType> coords = {
     { 0.00, 0.00, 0.00 }, { 1.00, 0.00, 0.00 }, { 2.00, 0.00, 0.00 }, { 0.00, 0.00, 1.00 },
@@ -61,13 +69,13 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
     { 2.57, 0.42, 0.57 }, { 2.59, 1.43, 0.71 }
   };
 
-  std::vector<vtkm::UInt8> shapes;
-  std::vector<vtkm::IdComponent> numindices;
-  std::vector<vtkm::Id> conn;
+  std::vector<viskores::UInt8> shapes;
+  std::vector<viskores::IdComponent> numindices;
+  std::vector<viskores::Id> conn;
 
   //Construct the shapes/cells of the dataset
   //This is a zoo of points, lines, polygons, and polyhedra
-  shapes.push_back(vtkm::CELL_SHAPE_HEXAHEDRON);
+  shapes.push_back(viskores::CELL_SHAPE_HEXAHEDRON);
   numindices.push_back(8);
   conn.push_back(0);
   conn.push_back(3);
@@ -78,7 +86,7 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
   conn.push_back(10);
   conn.push_back(7);
 
-  shapes.push_back(vtkm::CELL_SHAPE_HEXAHEDRON);
+  shapes.push_back(viskores::CELL_SHAPE_HEXAHEDRON);
   numindices.push_back(8);
   conn.push_back(1);
   conn.push_back(4);
@@ -89,21 +97,21 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
   conn.push_back(11);
   conn.push_back(8);
 
-  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  shapes.push_back(viskores::CELL_SHAPE_TETRA);
   numindices.push_back(4);
   conn.push_back(24);
   conn.push_back(26);
   conn.push_back(25);
   conn.push_back(29);
 
-  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  shapes.push_back(viskores::CELL_SHAPE_TETRA);
   numindices.push_back(4);
   conn.push_back(8);
   conn.push_back(17);
   conn.push_back(11);
   conn.push_back(29);
 
-  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  shapes.push_back(viskores::CELL_SHAPE_PYRAMID);
   numindices.push_back(5);
   conn.push_back(24);
   conn.push_back(17);
@@ -111,7 +119,7 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
   conn.push_back(23);
   conn.push_back(29);
 
-  shapes.push_back(vtkm::CELL_SHAPE_PYRAMID);
+  shapes.push_back(viskores::CELL_SHAPE_PYRAMID);
   numindices.push_back(5);
   conn.push_back(25);
   conn.push_back(22);
@@ -119,7 +127,7 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
   conn.push_back(17);
   conn.push_back(29);
 
-  shapes.push_back(vtkm::CELL_SHAPE_WEDGE);
+  shapes.push_back(viskores::CELL_SHAPE_WEDGE);
   numindices.push_back(6);
   conn.push_back(8);
   conn.push_back(14);
@@ -128,7 +136,7 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
   conn.push_back(13);
   conn.push_back(16);
 
-  shapes.push_back(vtkm::CELL_SHAPE_WEDGE);
+  shapes.push_back(viskores::CELL_SHAPE_WEDGE);
   numindices.push_back(6);
   conn.push_back(11);
   conn.push_back(8);
@@ -137,57 +145,57 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
   conn.push_back(7);
   conn.push_back(16);
 
-  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  shapes.push_back(viskores::CELL_SHAPE_VERTEX);
   numindices.push_back(1);
   conn.push_back(0);
 
-  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  shapes.push_back(viskores::CELL_SHAPE_VERTEX);
   numindices.push_back(1);
   conn.push_back(29);
 
-  shapes.push_back(vtkm::CELL_SHAPE_LINE);
+  shapes.push_back(viskores::CELL_SHAPE_LINE);
   numindices.push_back(2);
   conn.push_back(0);
   conn.push_back(1);
 
-  shapes.push_back(vtkm::CELL_SHAPE_LINE);
+  shapes.push_back(viskores::CELL_SHAPE_LINE);
   numindices.push_back(2);
   conn.push_back(11);
   conn.push_back(15);
 
-  shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
+  shapes.push_back(viskores::CELL_SHAPE_TRIANGLE);
   numindices.push_back(3);
   conn.push_back(2);
   conn.push_back(4);
   conn.push_back(15);
 
-  shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
+  shapes.push_back(viskores::CELL_SHAPE_TRIANGLE);
   numindices.push_back(3);
   conn.push_back(5);
   conn.push_back(6);
   conn.push_back(7);
 
-  shapes.push_back(vtkm::CELL_SHAPE_QUAD);
+  shapes.push_back(viskores::CELL_SHAPE_QUAD);
   numindices.push_back(4);
   conn.push_back(0);
   conn.push_back(3);
   conn.push_back(5);
   conn.push_back(2);
 
-  shapes.push_back(vtkm::CELL_SHAPE_QUAD);
+  shapes.push_back(viskores::CELL_SHAPE_QUAD);
   numindices.push_back(4);
   conn.push_back(5);
   conn.push_back(4);
   conn.push_back(10);
   conn.push_back(11);
 
-  shapes.push_back(vtkm::CELL_SHAPE_POLYGON);
+  shapes.push_back(viskores::CELL_SHAPE_POLYGON);
   numindices.push_back(3);
   conn.push_back(4);
   conn.push_back(7);
   conn.push_back(1);
 
-  shapes.push_back(vtkm::CELL_SHAPE_POLYGON);
+  shapes.push_back(viskores::CELL_SHAPE_POLYGON);
   numindices.push_back(4);
   conn.push_back(1);
   conn.push_back(6);
@@ -200,19 +208,19 @@ inline vtkm::cont::DataSet Make3DExplicitDataSet()
 }
 
 int TestMetrics(const char* outFileName,
-                vtkm::cont::DataSet data,
-                vtkm::filter::mesh_info::MeshQuality& filter)
+                viskores::cont::DataSet data,
+                viskores::filter::mesh_info::MeshQuality& filter)
 {
-  vtkm::cont::DataSet outputData;
+  viskores::cont::DataSet outputData;
   try
   {
-    vtkm::io::VTKDataSetWriter writer("testZoo_withPolygons.vtk");
+    viskores::io::VTKDataSetWriter writer("testZoo_withPolygons.vtk");
     writer.WriteDataSet(data);
 
     outputData = filter.Execute(data);
     std::cout << "filter finished\n";
   }
-  catch (vtkm::cont::ErrorExecution&)
+  catch (viskores::cont::ErrorExecution&)
   {
     //TODO: need to add something else here...
     std::cerr << "Error occured while executing the filter. Exiting" << std::endl;
@@ -220,11 +228,11 @@ int TestMetrics(const char* outFileName,
   }
   try
   {
-    vtkm::io::VTKDataSetWriter writer(outFileName);
+    viskores::io::VTKDataSetWriter writer(outFileName);
     writer.WriteDataSet(outputData);
     std::cout << "finished writing data\n";
   }
-  catch (vtkm::io::ErrorIO&)
+  catch (viskores::io::ErrorIO&)
   {
     //TODO: need to add something else here...
     std::cerr << "Error occured while writing the output data set. Exiting" << std::endl;
@@ -252,26 +260,27 @@ int main(int argc, char* argv[])
       outFileName = argv[argc - 1];
       break;
   }
-  vtkm::cont::DataSet input;
-  vtkm::io::VTKDataSetReader reader(argv[1]);
+  viskores::cont::DataSet input;
+  viskores::io::VTKDataSetReader reader(argv[1]);
 
 
   // A cell metric is now computed for every shape type that exists in the
   // input dataset.
-  vtkm::filter::mesh_info::CellMetric shapeMetric = vtkm::filter::mesh_info::CellMetric::Volume;
+  viskores::filter::mesh_info::CellMetric shapeMetric =
+    viskores::filter::mesh_info::CellMetric::Volume;
 
   try
   {
     input = reader.ReadDataSet(); //FIELD not supported errors here, but doesnt affect data
     //input = Make3DExplicitDataSet();
   }
-  catch (vtkm::io::ErrorIO&)
+  catch (viskores::io::ErrorIO&)
   {
     std::cerr << "Error occured while reading input. Exiting" << std::endl;
     return 1;
   }
 
-  vtkm::filter::mesh_info::MeshQuality filter;
+  viskores::filter::mesh_info::MeshQuality filter;
   filter.SetMetric(shapeMetric);
   TestMetrics(outFileName, input, filter);
   return 0;

@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,17 +16,17 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#ifndef vtk_m_benchmarking_Benchmarker_h
-#define vtk_m_benchmarking_Benchmarker_h
+#ifndef viskores_benchmarking_Benchmarker_h
+#define viskores_benchmarking_Benchmarker_h
 #include <sstream>
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/Logging.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/Timer.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/cont/Logging.h>
+#include <viskores/cont/RuntimeDeviceTracker.h>
+#include <viskores/cont/Timer.h>
 
-#include <vtkm/List.h>
+#include <viskores/List.h>
 
-#include <vtkm/internal/Meta.h>
+#include <viskores/internal/Meta.h>
 
 #include <benchmark/benchmark.h>
 
@@ -27,7 +35,7 @@
 /// \file Benchmarker.h
 /// \brief Benchmarking utilities
 ///
-/// VTK-m's benchmarking framework is built on top of Google Benchmark.
+/// Viskores's benchmarking framework is built on top of Google Benchmark.
 ///
 /// A benchmark is now a single function, which is passed to a macro:
 ///
@@ -39,8 +47,8 @@
 ///   // Optional: Add a descriptive label with additional benchmark details:
 ///   state.SetLabel("Blah blah blah.");
 ///
-///   // Must use a vtkm timer to properly capture eg. CUDA execution times.
-///   vtkm::cont::Timer timer;
+///   // Must use a viskores timer to properly capture eg. CUDA execution times.
+///   viskores::cont::Timer timer;
 ///   for (auto _ : state)
 ///   {
 ///     someClass.Reset();
@@ -57,7 +65,7 @@
 ///   state.SetBytesProcessed(state.iterations() * someClass.GetNumberOfBytes());
 /// }
 /// }
-/// VTKM_BENCHMARK(MyBenchmark);
+/// VISKORES_BENCHMARK(MyBenchmark);
 /// ```
 ///
 /// Google benchmark also makes it easy to implement parameter sweep benchmarks:
@@ -66,12 +74,12 @@
 /// void MyParameterSweep(::benchmark::State& state)
 /// {
 ///   // The current value in the sweep:
-///   const vtkm::Id currentValue = state.range(0);
+///   const viskores::Id currentValue = state.range(0);
 ///
 ///   MyClass someClass;
 ///   someClass.SetSomeParameter(currentValue);
 ///
-///   vtkm::cont::Timer timer;
+///   viskores::cont::Timer timer;
 ///   for (auto _ : state)
 ///   {
 ///     someClass.Reset();
@@ -83,7 +91,7 @@
 ///     state.SetIterationTime(timer.GetElapsedTime());
 ///   }
 /// }
-/// VTKM_BENCHMARK_OPTS(MyBenchmark, ->ArgName("Param")->Range(32, 1024 * 1024));
+/// VISKORES_BENCHMARK_OPTS(MyBenchmark, ->ArgName("Param")->Range(32, 1024 * 1024));
 /// ```
 ///
 /// will generate and launch several benchmarks, exploring the parameter space of
@@ -92,13 +100,13 @@
 /// ::benchmark::internal::Benchmark. See Google Benchmark's documentation for
 /// more details.
 ///
-/// For more complex benchmark configurations, the VTKM_BENCHMARK_APPLY macro
+/// For more complex benchmark configurations, the VISKORES_BENCHMARK_APPLY macro
 ///   accepts a function with the signature
 /// `void Func(::benchmark::internal::Benchmark*)` that may be used to generate
 /// more complex configurations.
 ///
 /// To instantiate a templated benchmark across a list of types, the
-/// VTKM_BENCHMARK_TEMPLATE* macros take a vtkm::List of types as an additional
+/// VISKORES_BENCHMARK_TEMPLATE* macros take a viskores::List of types as an additional
 /// parameter. The templated benchmark function will be instantiated and called
 /// for each type in the list:
 ///
@@ -108,8 +116,8 @@
 /// {
 ///   MyClass<T> someClass;
 ///
-///   // Must use a vtkm timer to properly capture eg. CUDA execution times.
-///   vtkm::cont::Timer timer;
+///   // Must use a viskores timer to properly capture eg. CUDA execution times.
+///   viskores::cont::Timer timer;
 ///   for (auto _ : state)
 ///   {
 ///     someClass.Reset();
@@ -122,11 +130,11 @@
 ///   }
 /// }
 /// }
-/// VTKM_BENCHMARK_TEMPLATE(MyBenchmark, vtkm::List<vtkm::Float32, vtkm::Vec3f_32>);
+/// VISKORES_BENCHMARK_TEMPLATE(MyBenchmark, viskores::List<viskores::Float32, viskores::Vec3f_32>);
 /// ```
 ///
-/// The benchmarks are executed by calling the `VTKM_EXECUTE_BENCHMARKS(argc, argv)`
-/// macro from `main`. There is also a `VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, some_string)`
+/// The benchmarks are executed by calling the `VISKORES_EXECUTE_BENCHMARKS(argc, argv)`
+/// macro from `main`. There is also a `VISKORES_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, some_string)`
 /// macro that appends the contents of `some_string` to the Google Benchmark preamble.
 ///
 /// If a benchmark is not compatible with some configuration, it may call
@@ -157,25 +165,26 @@
 ///   in the table, rather than appending them as a label.
 ///
 /// For more information and examples of practical usage, take a look at the existing benchmarks in
-/// vtk-m/benchmarking/.
+/// viskores/benchmarking/.
 
-/// \def VTKM_EXECUTE_BENCHMARKS(argc, argv)
+/// \def VISKORES_EXECUTE_BENCHMARKS(argc, argv)
 ///
 /// Run the benchmarks defined in the current file. Benchmarks may be filtered
 /// and modified using the passed arguments; see the Google Benchmark documentation
 /// for more details.
-#define VTKM_EXECUTE_BENCHMARKS(argc, argv) vtkm::bench::detail::ExecuteBenchmarks(argc, argv)
+#define VISKORES_EXECUTE_BENCHMARKS(argc, argv) \
+  viskores::bench::detail::ExecuteBenchmarks(argc, argv)
 
-/// \def VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, preamble)
+/// \def VISKORES_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, preamble)
 ///
 /// Run the benchmarks defined in the current file. Benchmarks may be filtered
 /// and modified using the passed arguments; see the Google Benchmark documentation
 /// for more details. The `preamble` string may be used to supply additional
 /// information that will be appended to the output's preamble.
-#define VTKM_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, preamble) \
-  vtkm::bench::detail::ExecuteBenchmarks(argc, argv, preamble)
+#define VISKORES_EXECUTE_BENCHMARKS_PREAMBLE(argc, argv, preamble) \
+  viskores::bench::detail::ExecuteBenchmarks(argc, argv, preamble)
 
-/// \def VTKM_BENCHMARK(BenchFunc)
+/// \def VISKORES_BENCHMARK(BenchFunc)
 ///
 /// Define a simple benchmark. A single benchmark will be generated that executes
 /// `BenchFunc`. `BenchFunc` must have the signature:
@@ -183,27 +192,27 @@
 /// ```
 /// void BenchFunc(::benchmark::State& state)
 /// ```
-#define VTKM_BENCHMARK(BenchFunc) \
+#define VISKORES_BENCHMARK(BenchFunc) \
   BENCHMARK(BenchFunc)->UseManualTime()->Unit(benchmark::kMillisecond)
 
-/// \def VTKM_BENCHMARK_OPTS(BenchFunc, Args)
+/// \def VISKORES_BENCHMARK_OPTS(BenchFunc, Args)
 ///
-/// Similar to `VTKM_BENCHMARK`, but allows additional options to be specified
+/// Similar to `VISKORES_BENCHMARK`, but allows additional options to be specified
 /// on the `::benchmark::internal::Benchmark` object. Example usage:
 ///
 /// ```
-/// VTKM_BENCHMARK_OPTS(MyBenchmark, ->ArgName("MyParam")->Range(32, 1024*1024));
+/// VISKORES_BENCHMARK_OPTS(MyBenchmark, ->ArgName("MyParam")->Range(32, 1024*1024));
 /// ```
 ///
 /// Note the similarity to the raw Google Benchmark usage of
 /// `BENCHMARK(MyBenchmark)->ArgName("MyParam")->Range(32, 1024*1024);`. See
 /// the Google Benchmark documentation for more details on the available options.
-#define VTKM_BENCHMARK_OPTS(BenchFunc, options) \
+#define VISKORES_BENCHMARK_OPTS(BenchFunc, options) \
   BENCHMARK(BenchFunc)->UseManualTime()->Unit(benchmark::kMillisecond) options
 
-/// \def VTKM_BENCHMARK_APPLY(BenchFunc, ConfigFunc)
+/// \def VISKORES_BENCHMARK_APPLY(BenchFunc, ConfigFunc)
 ///
-/// Similar to `VTKM_BENCHMARK`, but allows advanced benchmark configuration
+/// Similar to `VISKORES_BENCHMARK`, but allows advanced benchmark configuration
 /// via a supplied ConfigFunc, similar to Google Benchmark's
 /// `BENCHMARK(BenchFunc)->Apply(ConfigFunc)`. `ConfigFunc` must have the
 /// signature:
@@ -213,41 +222,41 @@
 /// ```
 ///
 /// See the Google Benchmark documentation for more details on the available options.
-#define VTKM_BENCHMARK_APPLY(BenchFunc, applyFunctor) \
+#define VISKORES_BENCHMARK_APPLY(BenchFunc, applyFunctor) \
   BENCHMARK(BenchFunc)->Apply(applyFunctor)->UseManualTime()->Unit(benchmark::kMillisecond)
 
-/// \def VTKM_BENCHMARK_TEMPLATES(BenchFunc, TypeList)
+/// \def VISKORES_BENCHMARK_TEMPLATES(BenchFunc, TypeList)
 ///
 /// Define a family of benchmark that vary by template argument. A single
-/// benchmark will be generated for each type in `TypeList` (a vtkm::List of
+/// benchmark will be generated for each type in `TypeList` (a viskores::List of
 /// types) that executes `BenchFunc<T>`. `BenchFunc` must have the signature:
 ///
 /// ```
 /// template <typename T>
 /// void BenchFunc(::benchmark::State& state)
 /// ```
-#define VTKM_BENCHMARK_TEMPLATES(BenchFunc, TypeList) \
-  VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, vtkm::bench::detail::NullApply, TypeList)
+#define VISKORES_BENCHMARK_TEMPLATES(BenchFunc, TypeList) \
+  VISKORES_BENCHMARK_TEMPLATES_APPLY(BenchFunc, viskores::bench::detail::NullApply, TypeList)
 
-/// \def VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, Args, TypeList)
+/// \def VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchFunc, Args, TypeList)
 ///
-/// Similar to `VTKM_BENCHMARK_TEMPLATES`, but allows additional options to be specified
+/// Similar to `VISKORES_BENCHMARK_TEMPLATES`, but allows additional options to be specified
 /// on the `::benchmark::internal::Benchmark` object. Example usage:
 ///
 /// ```
-/// VTKM_BENCHMARK_TEMPLATES_OPTS(MyBenchmark,
+/// VISKORES_BENCHMARK_TEMPLATES_OPTS(MyBenchmark,
 ///                                ->ArgName("MyParam")->Range(32, 1024*1024),
-///                              vtkm::List<vtkm::Float32, vtkm::Vec3f_32>);
+///                              viskores::List<viskores::Float32, viskores::Vec3f_32>);
 /// ```
-#define VTKM_BENCHMARK_TEMPLATES_OPTS(BenchFunc, options, TypeList)                          \
-  VTKM_BENCHMARK_TEMPLATES_APPLY(                                                            \
+#define VISKORES_BENCHMARK_TEMPLATES_OPTS(BenchFunc, options, TypeList)                      \
+  VISKORES_BENCHMARK_TEMPLATES_APPLY(                                                        \
     BenchFunc,                                                                               \
     [](::benchmark::internal::Benchmark* bm) { bm options->Unit(benchmark::kMillisecond); }, \
     TypeList)
 
-/// \def VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ConfigFunc, TypeList)
+/// \def VISKORES_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ConfigFunc, TypeList)
 ///
-/// Similar to `VTKM_BENCHMARK_TEMPLATES`, but allows advanced benchmark configuration
+/// Similar to `VISKORES_BENCHMARK_TEMPLATES`, but allows advanced benchmark configuration
 /// via a supplied ConfigFunc, similar to Google Benchmark's
 /// `BENCHMARK(BenchFunc)->Apply(ConfigFunc)`. `ConfigFunc` must have the
 /// signature:
@@ -257,25 +266,28 @@
 /// ```
 ///
 /// See the Google Benchmark documentation for more details on the available options.
-#define VTKM_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ApplyFunctor, TypeList)                            \
+#define VISKORES_BENCHMARK_TEMPLATES_APPLY(BenchFunc, ApplyFunctor, TypeList)                        \
   namespace                                                                                          \
   { /* A template function cannot be used as a template parameter, so wrap the function with       \
      * a template struct to get it into the GenerateTemplateBenchmarks class. */ \
   template <typename... Ts>                                                                          \
-  struct VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc)                                                      \
+  struct VISKORES_BENCHMARK_WRAPPER_NAME(BenchFunc)                                                  \
   {                                                                                                  \
-    static ::benchmark::internal::Function* GetFunction() { return BenchFunc<Ts...>; }               \
+    static ::benchmark::internal::Function* GetFunction()                                            \
+    {                                                                                                \
+      return BenchFunc<Ts...>;                                                                       \
+    }                                                                                                \
   };                                                                                                 \
   } /* end anon namespace */                                                                         \
-  int BENCHMARK_PRIVATE_NAME(BenchFunc) =                                                            \
-    vtkm::bench::detail::GenerateTemplateBenchmarks<VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc),          \
-                                                    TypeList>::Register(#BenchFunc, ApplyFunctor)
+  int BENCHMARK_PRIVATE_NAME(BenchFunc) = viskores::bench::detail::                                  \
+    GenerateTemplateBenchmarks<VISKORES_BENCHMARK_WRAPPER_NAME(BenchFunc), TypeList>::Register(      \
+      #BenchFunc, ApplyFunctor)
 
 // Internal use only:
-#define VTKM_BENCHMARK_WRAPPER_NAME(BenchFunc) \
+#define VISKORES_BENCHMARK_WRAPPER_NAME(BenchFunc) \
   BENCHMARK_PRIVATE_CONCAT(_wrapper_, BenchFunc, __LINE__)
 
-namespace vtkm
+namespace viskores
 {
 namespace bench
 {
@@ -284,7 +296,7 @@ namespace detail
 
 static inline void NullApply(::benchmark::internal::Benchmark*) {}
 
-/// Do not use directly. The VTKM_BENCHMARK_TEMPLATES macros should be used
+/// Do not use directly. The VISKORES_BENCHMARK_TEMPLATES macros should be used
 /// instead.
 // TypeLists could be expanded to compute cross products if we ever have that
 // need.
@@ -295,7 +307,7 @@ private:
   template <typename T>
   using MakeBenchType = BenchType<T>;
 
-  using Benchmarks = vtkm::ListTransform<TypeList, MakeBenchType>;
+  using Benchmarks = viskores::ListTransform<TypeList, MakeBenchType>;
 
   template <typename ApplyFunctor>
   struct RegisterImpl
@@ -304,16 +316,16 @@ private:
     ApplyFunctor Apply;
 
     template <typename P>
-    void operator()(vtkm::internal::meta::Type<BenchType<P>>) const
+    void operator()(viskores::internal::meta::Type<BenchType<P>>) const
     {
       std::ostringstream name;
-      name << this->BenchName << "<" << vtkm::cont::TypeToString<P>() << ">";
+      name << this->BenchName << "<" << viskores::cont::TypeToString<P>() << ">";
       auto bm = ::benchmark::internal::RegisterBenchmarkInternal(
         new ::benchmark::internal::FunctionBenchmark(name.str().c_str(),
                                                      BenchType<P>::GetFunction()));
       this->Apply(bm);
 
-      // Always use manual time with vtkm::cont::Timer to capture CUDA times accurately.
+      // Always use manual time with viskores::cont::Timer to capture CUDA times accurately.
       bm->UseManualTime()->Unit(benchmark::kMillisecond);
     }
   };
@@ -322,20 +334,21 @@ public:
   template <typename ApplyFunctor>
   static int Register(const std::string& benchName, ApplyFunctor&& apply)
   {
-    vtkm::ListForEach(RegisterImpl<ApplyFunctor>{ benchName, std::forward<ApplyFunctor>(apply) },
-                      vtkm::ListTransform<Benchmarks, vtkm::internal::meta::Type>{});
+    viskores::ListForEach(
+      RegisterImpl<ApplyFunctor>{ benchName, std::forward<ApplyFunctor>(apply) },
+      viskores::ListTransform<Benchmarks, viskores::internal::meta::Type>{});
     return 0;
   }
 };
 
-class VTKmConsoleReporter : public ::benchmark::ConsoleReporter
+class ViskoresConsoleReporter : public ::benchmark::ConsoleReporter
 {
   std::string UserPreamble;
 
 public:
-  VTKmConsoleReporter() = default;
+  ViskoresConsoleReporter() = default;
 
-  explicit VTKmConsoleReporter(const std::string& preamble)
+  explicit ViskoresConsoleReporter(const std::string& preamble)
     : UserPreamble{ preamble }
   {
   }
@@ -351,8 +364,8 @@ public:
     auto& out = this->GetErrorStream();
 
     // Print list of devices:
-    out << "VTK-m Device State:\n";
-    vtkm::cont::GetRuntimeDeviceTracker().PrintSummary(out);
+    out << "Viskores Device State:\n";
+    viskores::cont::GetRuntimeDeviceTracker().PrintSummary(out);
     if (!this->UserPreamble.empty())
     {
       out << this->UserPreamble << "\n";
@@ -364,9 +377,9 @@ public:
 };
 
 // Returns the number of executed benchmarks:
-static inline vtkm::Id ExecuteBenchmarks(int& argc,
-                                         char* argv[],
-                                         const std::string& preamble = std::string{})
+static inline viskores::Id ExecuteBenchmarks(int& argc,
+                                             char* argv[],
+                                             const std::string& preamble = std::string{})
 {
   ::benchmark::Initialize(&argc, argv);
   if (::benchmark::ReportUnrecognizedArguments(argc, argv))
@@ -374,9 +387,9 @@ static inline vtkm::Id ExecuteBenchmarks(int& argc,
     return 1;
   }
 
-  VTKmConsoleReporter reporter{ preamble };
+  ViskoresConsoleReporter reporter{ preamble };
 
-  vtkm::cont::Timer timer;
+  viskores::cont::Timer timer;
   timer.Start();
   std::size_t num = ::benchmark::RunSpecifiedBenchmarks(&reporter);
   timer.Stop();
@@ -387,10 +400,10 @@ static inline vtkm::Id ExecuteBenchmarks(int& argc,
   reporter.GetErrorStream() << "Ran " << num << " benchmarks in " << timer.GetElapsedTime()
                             << " seconds." << std::endl;
 
-  return static_cast<vtkm::Id>(num);
+  return static_cast<viskores::Id>(num);
 }
 
-void InitializeArgs(int* argc, std::vector<char*>& args, vtkm::cont::InitializeOptions& opts)
+void InitializeArgs(int* argc, std::vector<char*>& args, viskores::cont::InitializeOptions& opts)
 {
   bool isHelp = false;
 
@@ -418,10 +431,10 @@ void InitializeArgs(int* argc, std::vector<char*>& args, vtkm::cont::InitializeO
     return;
   }
 
-  opts = vtkm::cont::InitializeOptions::None;
+  opts = viskores::cont::InitializeOptions::None;
 }
 }
 }
-} // end namespace vtkm::bench::detail
+} // end namespace viskores::bench::detail
 
 #endif

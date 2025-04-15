@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -10,13 +18,13 @@
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 project(Tetrahedra CXX)
 
-#Find the VTK-m package
-find_package(VTKm REQUIRED QUIET)
+#Find the Viskores package
+find_package(Viskores REQUIRED QUIET)
 
-if(TARGET vtkm::filter_geometry_refinement AND TARGET vtkm::io)
+if(TARGET viskores::filter_geometry_refinement AND TARGET viskores::io)
   add_executable(Tetrahedralize Tetrahedralize.cxx)
-  target_link_libraries(Tetrahedralize PRIVATE vtkm::filter_geometry_refinement vtkm::io)
+  target_link_libraries(Tetrahedralize PRIVATE viskores::filter_geometry_refinement viskores::io)
 
   add_executable(Triangulate Triangulate.cxx)
-  target_link_libraries(Triangulate PRIVATE vtkm::filter_geometry_refinement vtkm::io)
+  target_link_libraries(Triangulate PRIVATE viskores::filter_geometry_refinement viskores::io)
 endif()

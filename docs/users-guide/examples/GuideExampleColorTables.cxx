@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,10 +16,10 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ColorTable.h>
-#include <vtkm/rendering/CanvasRayTracer.h>
+#include <viskores/cont/ColorTable.h>
+#include <viskores/rendering/CanvasRayTracer.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 #include <sys/stat.h>
 
@@ -20,8 +28,8 @@
 namespace
 {
 
-static const vtkm::Id TABLE_IMAGE_WIDTH = 150;
-static const vtkm::Id TABLE_IMAGE_HEIGHT = 20;
+static const viskores::Id TABLE_IMAGE_WIDTH = 150;
+static const viskores::Id TABLE_IMAGE_HEIGHT = 20;
 
 std::string FilenameFriendly(const std::string& name)
 {
@@ -45,33 +53,33 @@ void CreateColorTableImage(const std::string& name)
 {
   std::cout << "Creating color table " << name << std::endl;
 
-  vtkm::cont::ColorTable colorTable(name);
+  viskores::cont::ColorTable colorTable(name);
 
   // Create a CanvasRayTracer simply for the color buffer and the ability to
   // write out images.
-  vtkm::rendering::CanvasRayTracer canvas(TABLE_IMAGE_WIDTH, TABLE_IMAGE_HEIGHT);
-  using ColorBufferType = vtkm::rendering::CanvasRayTracer::ColorBufferType;
+  viskores::rendering::CanvasRayTracer canvas(TABLE_IMAGE_WIDTH, TABLE_IMAGE_HEIGHT);
+  using ColorBufferType = viskores::rendering::CanvasRayTracer::ColorBufferType;
   ColorBufferType colorBuffer = canvas.GetColorBuffer();
   ColorBufferType::WritePortalType colorPortal = colorBuffer.WritePortal();
-  VTKM_TEST_ASSERT(colorPortal.GetNumberOfValues() ==
-                     TABLE_IMAGE_WIDTH * TABLE_IMAGE_HEIGHT,
-                   "Wrong size of color buffer.");
+  VISKORES_TEST_ASSERT(colorPortal.GetNumberOfValues() ==
+                         TABLE_IMAGE_WIDTH * TABLE_IMAGE_HEIGHT,
+                       "Wrong size of color buffer.");
 
-  vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> temp;
+  viskores::cont::ArrayHandle<viskores::Vec4ui_8> temp;
   colorTable.Sample(TABLE_IMAGE_WIDTH, temp);
 
-  constexpr vtkm::Float32 conversionToFloatSpace = (1.0f / 255.0f);
+  constexpr viskores::Float32 conversionToFloatSpace = (1.0f / 255.0f);
 
-  for (vtkm::Id j = 0; j < TABLE_IMAGE_HEIGHT; ++j)
+  for (viskores::Id j = 0; j < TABLE_IMAGE_HEIGHT; ++j)
   {
     auto tempPortal = temp.ReadPortal();
-    for (vtkm::Id i = 0; i < TABLE_IMAGE_WIDTH; ++i)
+    for (viskores::Id i = 0; i < TABLE_IMAGE_WIDTH; ++i)
     {
       auto color = tempPortal.Get(i);
-      vtkm::Vec4f_32 t(color[0] * conversionToFloatSpace,
-                       color[1] * conversionToFloatSpace,
-                       color[2] * conversionToFloatSpace,
-                       color[3] * conversionToFloatSpace);
+      viskores::Vec4f_32 t(color[0] * conversionToFloatSpace,
+                           color[1] * conversionToFloatSpace,
+                           color[2] * conversionToFloatSpace,
+                           color[3] * conversionToFloatSpace);
       colorPortal.Set(j * TABLE_IMAGE_WIDTH + i, t);
     }
   }
@@ -81,7 +89,7 @@ void CreateColorTableImage(const std::string& name)
 
 void DoColorTables()
 {
-#ifndef VTKM_MSVC
+#ifndef VISKORES_MSVC
   // Disabled for MSVC because POSIX mkdir is not supported.
   // We can use std::filestyem::create_directories later when we support C++17.
   mkdir("color-tables", S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
@@ -92,7 +100,7 @@ void DoColorTables()
   rstTable << ".. Created by GuideExampleColorTables test.\n";
   rstTable << "\n";
 
-  vtkm::cont::ColorTable table;
+  viskores::cont::ColorTable table;
   std::set<std::string> names = table.GetPresets();
   for (auto& n : names)
   {
@@ -107,5 +115,5 @@ void DoColorTables()
 
 int GuideExampleColorTables(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(DoColorTables, argc, argv);
+  return viskores::cont::testing::Testing::Run(DoColorTables, argc, argv);
 }

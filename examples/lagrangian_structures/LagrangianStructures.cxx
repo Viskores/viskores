@@ -1,3 +1,11 @@
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
 //=============================================================================
 //
 //  Copyright (c) Kitware, Inc.
@@ -14,19 +22,19 @@
 #include <string>
 #include <vector>
 
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Initialize.h>
+#include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/Initialize.h>
 
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
-#include <vtkm/filter/LagrangianStructures.h>
+#include <viskores/filter/LagrangianStructures.h>
 
 int main(int argc, char** argv)
 {
-  vtkm::cont::Initialize(argc, argv);
+  viskores::cont::Initialize(argc, argv);
 
   if (argc < 3)
   {
@@ -36,20 +44,20 @@ int main(int argc, char** argv)
   std::string variableName(argv[2]);
 
   std::cout << "Reading input dataset" << std::endl;
-  vtkm::cont::DataSet input;
-  vtkm::io::VTKDataSetReader reader(datasetName);
+  viskores::cont::DataSet input;
+  viskores::io::VTKDataSetReader reader(datasetName);
   input = reader.ReadDataSet();
   std::cout << "Read input dataset" << std::endl;
 
-  vtkm::filter::LagrangianStructures lcsFilter;
+  viskores::filter::LagrangianStructures lcsFilter;
   lcsFilter.SetStepSize(0.025f);
   lcsFilter.SetNumberOfSteps(500);
   lcsFilter.SetAdvectionTime(0.025f * 500);
   lcsFilter.SetOutputFieldName("gradient");
   lcsFilter.SetActiveField(variableName);
 
-  vtkm::cont::DataSet output = lcsFilter.Execute(input);
-  vtkm::io::VTKDataSetWriter writer("out.vtk");
+  viskores::cont::DataSet output = lcsFilter.Execute(input);
+  viskores::io::VTKDataSetWriter writer("out.vtk");
   writer.WriteDataSet(output);
   std::cout << "Written output dataset" << std::endl;
 

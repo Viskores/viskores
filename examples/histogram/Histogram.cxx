@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -10,18 +18,18 @@
 
 /*
  * This example demonstrates how one can write a filter that uses MPI
- * for hybrid-parallelism. The `vtkm::filter::Histogram` is another approach for
+ * for hybrid-parallelism. The `viskores::filter::Histogram` is another approach for
  * implementing the same that uses DIY. This example doesn't use DIY, instead
  * uses MPI calls directly.
  */
 
 #include "HistogramMPI.h"
 
-#include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/EnvironmentTracker.h>
-#include <vtkm/cont/Initialize.h>
+#include <viskores/cont/ArrayPortalToIterators.h>
+#include <viskores/cont/EnvironmentTracker.h>
+#include <viskores/cont/Initialize.h>
 
-#include <vtkm/thirdparty/diy/diy.h>
+#include <viskores/thirdparty/diy/diy.h>
 
 #include <mpi.h>
 
@@ -34,16 +42,16 @@
 namespace
 {
 template <typename T>
-VTKM_CONT vtkm::cont::ArrayHandle<T> CreateArray(T min, T max, vtkm::Id numVals)
+VISKORES_CONT viskores::cont::ArrayHandle<T> CreateArray(T min, T max, viskores::Id numVals)
 {
   std::mt19937 gen;
   std::uniform_real_distribution<double> dis(static_cast<double>(min), static_cast<double>(max));
 
-  vtkm::cont::ArrayHandle<T> handle;
+  viskores::cont::ArrayHandle<T> handle;
   handle.Allocate(numVals);
 
-  std::generate(vtkm::cont::ArrayPortalToIteratorBegin(handle.WritePortal()),
-                vtkm::cont::ArrayPortalToIteratorEnd(handle.WritePortal()),
+  std::generate(viskores::cont::ArrayPortalToIteratorBegin(handle.WritePortal()),
+                viskores::cont::ArrayPortalToIteratorEnd(handle.WritePortal()),
                 [&]() { return static_cast<T>(dis(gen)); });
   return handle;
 }
@@ -51,18 +59,18 @@ VTKM_CONT vtkm::cont::ArrayHandle<T> CreateArray(T min, T max, vtkm::Id numVals)
 
 int main(int argc, char* argv[])
 {
-  //parse out all vtk-m related command line options
+  //parse out all viskores related command line options
   auto opts =
-    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
-  vtkm::cont::Initialize(argc, argv, opts);
+    viskores::cont::InitializeOptions::DefaultAnyDevice | viskores::cont::InitializeOptions::Strict;
+  viskores::cont::Initialize(argc, argv, opts);
 
   // setup MPI environment.
-  vtkmdiy::mpi::environment env(argc, argv); // will finalize on destruction
+  viskoresdiy::mpi::environment env(argc, argv); // will finalize on destruction
 
-  vtkmdiy::mpi::communicator world; // the default is MPI_COMM_WORLD
+  viskoresdiy::mpi::communicator world; // the default is MPI_COMM_WORLD
 
-  // tell VTK-m the communicator to use.
-  vtkm::cont::EnvironmentTracker::SetCommunicator(world);
+  // tell Viskores the communicator to use.
+  viskores::cont::EnvironmentTracker::SetCommunicator(world);
 
   int rank = world.rank();
   int size = world.size();
@@ -76,28 +84,28 @@ int main(int argc, char* argv[])
     return EXIT_FAILURE;
   }
 
-  const vtkm::Id num_bins = static_cast<vtkm::Id>(std::atoi(argv[1]));
-  const vtkm::Id numVals = 1024;
+  const viskores::Id num_bins = static_cast<viskores::Id>(std::atoi(argv[1]));
+  const viskores::Id numVals = 1024;
 
-  vtkm::cont::PartitionedDataSet pds;
-  vtkm::cont::DataSet ds;
+  viskores::cont::PartitionedDataSet pds;
+  viskores::cont::DataSet ds;
   ds.AddPointField("pointvar", CreateArray(-1024, 1024, numVals));
   pds.AppendPartition(ds);
 
   example::HistogramMPI histogram;
   histogram.SetActiveField("pointvar");
-  histogram.SetNumberOfBins(std::max<vtkm::Id>(1, num_bins));
-  vtkm::cont::PartitionedDataSet result = histogram.Execute(pds);
+  histogram.SetNumberOfBins(std::max<viskores::Id>(1, num_bins));
+  viskores::cont::PartitionedDataSet result = histogram.Execute(pds);
 
-  vtkm::cont::ArrayHandle<vtkm::Id> bins;
+  viskores::cont::ArrayHandle<viskores::Id> bins;
   result.GetPartition(0).GetField("histogram").GetData().AsArrayHandle(bins);
   auto binPortal = bins.ReadPortal();
   if (rank == 0)
   {
     // print histogram.
     std::cout << "Histogram (" << num_bins << ")" << std::endl;
-    vtkm::Id count = 0;
-    for (vtkm::Id cc = 0; cc < num_bins; ++cc)
+    viskores::Id count = 0;
+    for (viskores::Id cc = 0; cc < num_bins; ++cc)
     {
       std::cout << "  bin[" << cc << "] = " << binPortal.Get(cc) << std::endl;
       count += binPortal.Get(cc);

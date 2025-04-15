@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,18 +16,18 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/Assert.h>
-#include <vtkm/StaticAssert.h>
-#include <vtkm/TypeTraits.h>
+#include <viskores/Assert.h>
+#include <viskores/StaticAssert.h>
+#include <viskores/TypeTraits.h>
 
-#include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/Error.h>
-#include <vtkm/cont/ErrorBadValue.h>
+#include <viskores/cont/ArrayHandleCounting.h>
+#include <viskores/cont/Error.h>
+#include <viskores/cont/ErrorBadValue.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
+#include <viskores/worklet/DispatcherMapField.h>
+#include <viskores/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 #include <chrono>
 #include <thread>
@@ -39,14 +47,14 @@ int main(int argc, char** argv)
   //// RESUME-EXAMPLE
   try
   {
-    // Do something cool with VTK-m
+    // Do something cool with Viskores
     // ...
     //// PAUSE-EXAMPLE
     if (argc == 0)
-      throw vtkm::cont::ErrorBadValue("Oh, no!");
+      throw viskores::cont::ErrorBadValue("Oh, no!");
     //// RESUME-EXAMPLE
   }
-  catch (const vtkm::cont::Error& error)
+  catch (const viskores::cont::Error& error)
   {
     std::cout << error.GetMessage() << std::endl;
     return 1;
@@ -61,87 +69,89 @@ int main(int argc, char** argv)
 //// BEGIN-EXAMPLE Assert
 ////
 template<typename T>
-VTKM_CONT T GetArrayValue(vtkm::cont::ArrayHandle<T> arrayHandle, vtkm::Id index)
+VISKORES_CONT T GetArrayValue(viskores::cont::ArrayHandle<T> arrayHandle,
+                              viskores::Id index)
 {
-  VTKM_ASSERT(index >= 0);
-  VTKM_ASSERT(index < arrayHandle.GetNumberOfValues());
+  VISKORES_ASSERT(index >= 0);
+  VISKORES_ASSERT(index < arrayHandle.GetNumberOfValues());
   ////
   //// END-EXAMPLE Assert
   ////
   return arrayHandle.ReadPortal().Get(index);
 }
 
-VTKM_CONT
+VISKORES_CONT
 void TryGetArrayValue()
 {
-  GetArrayValue(vtkm::cont::make_ArrayHandle({ 2.0, 5.0 }), 0);
-  GetArrayValue(vtkm::cont::make_ArrayHandle({ 2.0, 5.0 }), 1);
+  GetArrayValue(viskores::cont::make_ArrayHandle({ 2.0, 5.0 }), 0);
+  GetArrayValue(viskores::cont::make_ArrayHandle({ 2.0, 5.0 }), 1);
 }
 
 ////
 //// BEGIN-EXAMPLE StaticAssert
 ////
 template<typename T>
-VTKM_EXEC_CONT void MyMathFunction(T& value)
+VISKORES_EXEC_CONT void MyMathFunction(T& value)
 {
-  VTKM_STATIC_ASSERT((std::is_same<typename vtkm::TypeTraits<T>::DimensionalityTag,
-                                   vtkm::TypeTraitsScalarTag>::value));
+  VISKORES_STATIC_ASSERT(
+    (std::is_same<typename viskores::TypeTraits<T>::DimensionalityTag,
+                  viskores::TypeTraitsScalarTag>::value));
 
-  VTKM_STATIC_ASSERT_MSG(sizeof(T) >= 4,
-                         "MyMathFunction needs types with at least 32 bits.");
+  VISKORES_STATIC_ASSERT_MSG(sizeof(T) >= 4,
+                             "MyMathFunction needs types with at least 32 bits.");
   ////
   //// END-EXAMPLE StaticAssert
   ////
-  for (vtkm::IdComponent iteration = 0; iteration < 5; iteration++)
+  for (viskores::IdComponent iteration = 0; iteration < 5; iteration++)
   {
     value = value * value;
   }
 }
 
-VTKM_EXEC_CONT
+VISKORES_EXEC_CONT
 void TryMyMathFunction()
 {
-  vtkm::Id value(4);
+  viskores::Id value(4);
   MyMathFunction(value);
 }
 
 ////
 //// BEGIN-EXAMPLE ExecutionErrors
 ////
-struct SquareRoot : vtkm::worklet::WorkletMapField
+struct SquareRoot : viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = _2(_1);
 
   template<typename T>
-  VTKM_EXEC T operator()(T x) const
+  VISKORES_EXEC T operator()(T x) const
   {
     if (x < 0)
     {
       this->RaiseError("Cannot take the square root of a negative number.");
-      return vtkm::Nan<T>();
+      return viskores::Nan<T>();
     }
-    return vtkm::Sqrt(x);
+    return viskores::Sqrt(x);
   }
 };
 ////
 //// END-EXAMPLE ExecutionErrors
 ////
 
-VTKM_CONT
+VISKORES_CONT
 void TrySquareRoot()
 {
-  vtkm::cont::ArrayHandle<vtkm::Float32> output;
+  viskores::cont::ArrayHandle<viskores::Float32> output;
 
-  vtkm::worklet::DispatcherMapField<SquareRoot> dispatcher;
+  viskores::worklet::DispatcherMapField<SquareRoot> dispatcher;
 
   std::cout << "Trying valid input." << std::endl;
-  vtkm::cont::ArrayHandleCounting<vtkm::Float32> validInput(0.0f, 1.0f, 10);
+  viskores::cont::ArrayHandleCounting<viskores::Float32> validInput(0.0f, 1.0f, 10);
   dispatcher.Invoke(validInput, output);
 
   std::cout << "Trying invalid input." << std::endl;
-  vtkm::cont::ArrayHandleCounting<vtkm::Float32> invalidInput(-2.0, 1.0f, 10);
+  viskores::cont::ArrayHandleCounting<viskores::Float32> invalidInput(-2.0, 1.0f, 10);
   bool errorCaught = false;
   try
   {
@@ -151,18 +161,18 @@ void TrySquareRoot()
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     dispatcher.Invoke(invalidInput, output);
   }
-  catch (const vtkm::cont::ErrorExecution& error)
+  catch (const viskores::cont::ErrorExecution& error)
   {
     std::cout << "Caught this error:" << std::endl;
     std::cout << error.GetMessage() << std::endl;
     errorCaught = true;
   }
-  VTKM_TEST_ASSERT(errorCaught, "Did not get expected error.");
+  VISKORES_TEST_ASSERT(errorCaught, "Did not get expected error.");
 }
 
 void Test()
 {
-  VTKM_TEST_ASSERT(ErrorHandlingNamespace::main(0, NULL) != 0, "No error?");
+  VISKORES_TEST_ASSERT(ErrorHandlingNamespace::main(0, NULL) != 0, "No error?");
   TryGetArrayValue();
   TryMyMathFunction();
   TrySquareRoot();
@@ -172,5 +182,5 @@ void Test()
 
 int GuideExampleErrorHandling(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(ErrorHandlingNamespace::Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(ErrorHandlingNamespace::Test, argc, argv);
 }

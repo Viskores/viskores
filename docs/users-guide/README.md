@@ -1,6 +1,6 @@
-# VTK-m User's Guide Source
+# Viskores User's Guide Source
 
-This directory contains the source for building the VTK-m User's Guide. The
+This directory contains the source for building the Viskores User's Guide. The
 document is written for the [Sphinx](https://www.sphinx-doc.org/en/master/)
 document generator.
 
@@ -21,8 +21,8 @@ system.
     Sphinx reStructuredTest to include documentation extracted by Doxygen.
 
 To enable document generation, you first must turn on the CMake option
-`VTKm_ENABLE_DOCUMENTATION`, which turns on the Doxygen documentation. With
-that on, you can then turn on the `VTKm_ENABLE_USERS_GUIDE` CMake option.
+`Viskores_ENABLE_DOCUMENTATION`, which turns on the Doxygen documentation. With
+that on, you can then turn on the `Viskores_ENABLE_USERS_GUIDE` CMake option.
 
 The documentation will be built into HTML format in the
 `docs/users-guide/html` directory in the build. It will also build LaTeX
@@ -32,7 +32,7 @@ be used to generate a pdf form (given the proper LaTeX compiler).
 
 ## Features of the documents
 
-The VTK-m User's Guide is built as a standard [Sphinx] project. However,
+The Viskores User's Guide is built as a standard [Sphinx] project. However,
 there are some features that writers should be aware of.
 
 ### Writing credit
@@ -46,7 +46,7 @@ contribution, you can credit yourself in the `Contributors` section of
 The Sphinx configuration provides some convenient substitutions that can be
 used throughout the document.
 
-  * `|VTKm|` This should be used whenever `VTK-m` is referenced. The
+  * `|Viskores|` This should be used whenever `Viskores` is referenced. The
     substitution contains formatting for the word.
     
 ### Expanded directives
@@ -72,7 +72,7 @@ common gotchas. These are use like other tip boxes.
     
 ### Section references
 
-It is desired for the VTK-m User's Guide to be available both online as web
+It is desired for the Viskores User's Guide to be available both online as web
 pages and as a self-contained document (e.g. pdf). One issue is that
 traditional paper documents work best with numbered references to parts,
 chapters, and sections whereas html documents prefer descriptive links.
@@ -97,14 +97,14 @@ Here are examples of cross references.
     
 ### Example code
 
-The VTK-m User's Guide has numerous code examples. These code examples are
-pulled from source files that are compiled and run as part of VTK-m's
+The Viskores User's Guide has numerous code examples. These code examples are
+pulled from source files that are compiled and run as part of Viskores's
 regression tests. Although these "tests" are not meant to be thorough
 regression tests like the others, they ensure that the documentation stays
 up to date and correct.
 
 Examples are added to the `examples` directory more or less like any other
-unit test in VTK-m (except by convention we start the name with
+unit test in Viskores (except by convention we start the name with
 `GuideExample`). Each of these files can then be scanned to find excerpts
 to include as an example in the guide.
 
@@ -121,7 +121,7 @@ An example can be started with `//// BEGIN-EXAMPLE` and ended with
   ////
   //// BEGIN-EXAMPLE EquilateralTriangle
   ////
-  vtkm::Vec<vtkm::Vec2f_32, 3> equilateralTriangle = { { 0.0f, 0.0f },
+  viskores::Vec<viskores::Vec2f_32, 3> equilateralTriangle = { { 0.0f, 0.0f },
                                                        { 1.0f, 0.0f },
                                                        { 0.5f, 0.8660254f } };
   ////
@@ -131,7 +131,7 @@ An example can be started with `//// BEGIN-EXAMPLE` and ended with
 
 #### Loading examples in the documentation
 
-An example can be loaded into the VTK-m User's Guide using the extended
+An example can be loaded into the Viskores User's Guide using the extended
 reStructuredText `load-example` directive. The directive takes the name of
 the example as its argument. `load-example` should also be given the
 `:file:` and `:caption:` options.
@@ -190,9 +190,9 @@ will not be captured until the line `//// RESUME-EXAMPLE` is encountered.
   bool b5 = range.Contains(0.5); // b3 is true
   bool b6 = range.Contains(0.6); // b4 is true
 
-  range.Include(vtkm::Range(-1, 1)); // range is now [-1 .. 2]
+  range.Include(viskores::Range(-1, 1)); // range is now [-1 .. 2]
   //// PAUSE-EXAMPLE
-  VTKM_TEST_ASSERT(test_equal(range, vtkm::Range(-1, 2)), "Bad range");
+  VISKORES_TEST_ASSERT(test_equal(range, viskores::Range(-1, 2)), "Bad range");
   //// RESUME-EXAMPLE
 ```
 
@@ -207,20 +207,20 @@ the line.
 //// BEGIN-EXAMPLE VecCExample
 ////
 //// LABEL index-to-ijk
-VTKM_EXEC vtkm::VecCConst<vtkm::IdComponent> HexagonIndexToIJK(vtkm::IdComponent index)
+VISKORES_EXEC viskores::VecCConst<viskores::IdComponent> HexagonIndexToIJK(viskores::IdComponent index)
 {
-  static const vtkm::IdComponent HexagonIndexToIJKTable[8][3] = {
+  static const viskores::IdComponent HexagonIndexToIJKTable[8][3] = {
     { 0, 0, 0 }, { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 0 },
     { 0, 0, 1 }, { 1, 0, 1 }, { 1, 1, 1 }, { 0, 1, 1 }
   };
 
-  return vtkm::make_VecC(HexagonIndexToIJKTable[index], 3);
+  return viskores::make_VecC(HexagonIndexToIJKTable[index], 3);
 }
 
 //// LABEL ijk-to-index
-VTKM_EXEC vtkm::IdComponent HexagonIJKToIndex(vtkm::VecCConst<vtkm::IdComponent> ijk)
+VISKORES_EXEC viskores::IdComponent HexagonIJKToIndex(viskores::VecCConst<viskores::IdComponent> ijk)
 {
-  static const vtkm::IdComponent HexagonIJKToIndexTable[2][2][2] = {
+  static const viskores::IdComponent HexagonIJKToIndexTable[2][2][2] = {
     {
       // i=0
       { 0, 4 }, // j=0
@@ -265,7 +265,7 @@ the inverse function (:exlineref:`line %s<VecCExample:ijk-to-index>`).
 
 ### Ingesting Doxygen
 
-The VTK-m User's Guide is built with [Breathe], which allows it to pull in
+The Viskores User's Guide is built with [Breathe], which allows it to pull in
 Doxygen documentation. Use [Breathe's
 directives](https://breathe.readthedocs.io/en/latest/directives.html#directives)
 to include the doxygen documentation.

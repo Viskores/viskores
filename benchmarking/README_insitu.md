@@ -4,7 +4,7 @@ Generally, "BenchmarkInSitu --help" will provide the list of standard benchmarks
 
 As a refresher, GBench iterates a test defined in the application, in this case, Contour, Streamlines, ..., a number of times until two criteria are met, a statistically stable set of samples have been generated, and the test ran for a specified minimum amount of time (by default, 0.5 seconds).
 
-There are three ways to run the InSitu benchmark that control the number of iterations run by GBench. These are independent of the "standard" arguments passed to the benchmark (we'll define the standard arguments as: --vtkm-device, --size, --image-size, plus other not defined by GBench).
+There are three ways to run the InSitu benchmark that control the number of iterations run by GBench. These are independent of the "standard" arguments passed to the benchmark (we'll define the standard arguments as: --viskores-device, --size, --image-size, plus other not defined by GBench).
 
 1. BenchmarkInSitu <standard arguments>
 	- Under this scenario, the iterations are controlled completely by GBench. Generally, each test will be run between 1 and N iterations depending on how long each test runs.

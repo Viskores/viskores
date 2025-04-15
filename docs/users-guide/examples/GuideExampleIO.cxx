@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -11,11 +19,11 @@
 ////
 //// BEGIN-EXAMPLE VTKDataSetWriter
 ////
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
-void SaveDataAsVTKFile(vtkm::cont::DataSet data)
+void SaveDataAsVTKFile(viskores::cont::DataSet data)
 {
-  vtkm::io::VTKDataSetWriter writer("data.vtk");
+  viskores::io::VTKDataSetWriter writer("data.vtk");
 
   writer.WriteDataSet(data);
 }
@@ -26,11 +34,11 @@ void SaveDataAsVTKFile(vtkm::cont::DataSet data)
 ////
 //// BEGIN-EXAMPLE VTKDataSetReader
 ////
-#include <vtkm/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetReader.h>
 
-vtkm::cont::DataSet OpenDataFromVTKFile()
+viskores::cont::DataSet OpenDataFromVTKFile()
 {
-  vtkm::io::VTKDataSetReader reader("data.vtk");
+  viskores::io::VTKDataSetReader reader("data.vtk");
 
   return reader.ReadDataSet();
 }
@@ -41,11 +49,11 @@ vtkm::cont::DataSet OpenDataFromVTKFile()
 ////
 //// BEGIN-EXAMPLE ImageReaderPNG
 ////
-#include <vtkm/io/ImageReaderPNG.h>
+#include <viskores/io/ImageReaderPNG.h>
 
-vtkm::cont::DataSet OpenDataFromPNG()
+viskores::cont::DataSet OpenDataFromPNG()
 {
-  vtkm::io::ImageReaderPNG imageReader("data.png");
+  viskores::io::ImageReaderPNG imageReader("data.png");
   imageReader.SetPointFieldName("pixel_colors");
   return imageReader.ReadDataSet();
 }
@@ -56,11 +64,11 @@ vtkm::cont::DataSet OpenDataFromPNG()
 ////
 //// BEGIN-EXAMPLE ImageReaderPNM
 ////
-#include <vtkm/io/ImageReaderPNM.h>
+#include <viskores/io/ImageReaderPNM.h>
 
-vtkm::cont::DataSet OpenDataFromPNM()
+viskores::cont::DataSet OpenDataFromPNM()
 {
-  vtkm::io::ImageReaderPNM imageReader("data.ppm");
+  viskores::io::ImageReaderPNM imageReader("data.ppm");
   imageReader.SetPointFieldName("pixels");
   return imageReader.ReadDataSet();
 }
@@ -71,12 +79,12 @@ vtkm::cont::DataSet OpenDataFromPNM()
 ////
 //// BEGIN-EXAMPLE ImageWriterPNG
 ////
-#include <vtkm/io/ImageWriterPNG.h>
+#include <viskores/io/ImageWriterPNG.h>
 
-void WriteToPNG(const vtkm::cont::DataSet& dataSet)
+void WriteToPNG(const viskores::cont::DataSet& dataSet)
 {
-  vtkm::io::ImageWriterPNG imageWriter("data.png");
-  imageWriter.SetPixelDepth(vtkm::io::ImageWriterPNG::PixelDepth::PIXEL_16);
+  viskores::io::ImageWriterPNG imageWriter("data.png");
+  imageWriter.SetPixelDepth(viskores::io::ImageWriterPNG::PixelDepth::PIXEL_16);
   imageWriter.WriteDataSet(dataSet);
 }
 ////
@@ -86,22 +94,22 @@ void WriteToPNG(const vtkm::cont::DataSet& dataSet)
 ////
 //// BEGIN-EXAMPLE ImageWriterPNM
 ////
-#include <vtkm/io/ImageWriterPNM.h>
+#include <viskores/io/ImageWriterPNM.h>
 
-void WriteToPNM(const vtkm::cont::DataSet& dataSet)
+void WriteToPNM(const viskores::cont::DataSet& dataSet)
 {
-  vtkm::io::ImageWriterPNM imageWriter("data.ppm");
-  imageWriter.SetPixelDepth(vtkm::io::ImageWriterPNM::PixelDepth::PIXEL_16);
+  viskores::io::ImageWriterPNM imageWriter("data.ppm");
+  imageWriter.SetPixelDepth(viskores::io::ImageWriterPNM::PixelDepth::PIXEL_16);
   imageWriter.WriteDataSet(dataSet);
 }
 ////
 //// END-EXAMPLE ImageWriterPNM
 ////
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
-#include <vtkm/rendering/Canvas.h>
-#include <vtkm/rendering/Color.h>
+#include <viskores/cont/testing/MakeTestDataSet.h>
+#include <viskores/cont/testing/Testing.h>
+#include <viskores/rendering/Canvas.h>
+#include <viskores/rendering/Color.h>
 
 namespace
 {
@@ -109,53 +117,59 @@ namespace
 void TestIO()
 {
   std::cout << "Writing data" << std::endl;
-  vtkm::cont::testing::MakeTestDataSet makeDataSet;
-  vtkm::cont::DataSet createdData = makeDataSet.Make3DExplicitDataSetCowNose();
+  viskores::cont::testing::MakeTestDataSet makeDataSet;
+  viskores::cont::DataSet createdData = makeDataSet.Make3DExplicitDataSetCowNose();
   SaveDataAsVTKFile(createdData);
 
   std::cout << "Reading data" << std::endl;
-  vtkm::cont::DataSet readData = OpenDataFromVTKFile();
+  viskores::cont::DataSet readData = OpenDataFromVTKFile();
 
-  const vtkm::cont::CellSet* createdCellSet = createdData.GetCellSet().GetCellSetBase();
-  const vtkm::cont::CellSet* readCellSet = readData.GetCellSet().GetCellSetBase();
-  VTKM_TEST_ASSERT(createdCellSet->GetNumberOfCells() == readCellSet->GetNumberOfCells(),
-                   "Createded and read data do not match.");
-  VTKM_TEST_ASSERT(createdCellSet->GetNumberOfPoints() ==
-                     readCellSet->GetNumberOfPoints(),
-                   "Createded and read data do not match.");
+  const viskores::cont::CellSet* createdCellSet =
+    createdData.GetCellSet().GetCellSetBase();
+  const viskores::cont::CellSet* readCellSet = readData.GetCellSet().GetCellSetBase();
+  VISKORES_TEST_ASSERT(createdCellSet->GetNumberOfCells() ==
+                         readCellSet->GetNumberOfCells(),
+                       "Createded and read data do not match.");
+  VISKORES_TEST_ASSERT(createdCellSet->GetNumberOfPoints() ==
+                         readCellSet->GetNumberOfPoints(),
+                       "Createded and read data do not match.");
 
   std::cout << "Reading and writing image data" << std::endl;
-  vtkm::Bounds colorBarBounds(-0.8, -0.6, -0.8, 0.8, 0, 0);
-  vtkm::rendering::Canvas canvas(64, 64);
-  canvas.SetBackgroundColor(vtkm::rendering::Color::blue);
+  viskores::Bounds colorBarBounds(-0.8, -0.6, -0.8, 0.8, 0, 0);
+  viskores::rendering::Canvas canvas(64, 64);
+  canvas.SetBackgroundColor(viskores::rendering::Color::blue);
   canvas.Clear();
-  canvas.AddColorBar(colorBarBounds, vtkm::cont::ColorTable("inferno"), false);
+  canvas.AddColorBar(colorBarBounds, viskores::cont::ColorTable("inferno"), false);
   canvas.BlendBackground();
-  vtkm::cont::DataSet imageSource = canvas.GetDataSet("color", nullptr);
+  viskores::cont::DataSet imageSource = canvas.GetDataSet("color", nullptr);
 
   WriteToPNG(imageSource);
   WriteToPNM(imageSource);
 
-  using CheckType = typename vtkm::cont::ArrayHandle<vtkm::Vec4f_32>;
+  using CheckType = typename viskores::cont::ArrayHandle<viskores::Vec4f_32>;
 
   readData = OpenDataFromPNG();
-  VTKM_TEST_ASSERT(readData.HasPointField("pixel_colors"),
-                   "Point Field Not Found: pixel-data");
-  vtkm::cont::Field colorField = readData.GetPointField("pixel_colors");
-  VTKM_TEST_ASSERT(colorField.GetNumberOfValues() == 64 * 64, "wrong image dimensions");
-  VTKM_TEST_ASSERT(colorField.GetData().IsType<CheckType>(), "wrong ArrayHandle type");
+  VISKORES_TEST_ASSERT(readData.HasPointField("pixel_colors"),
+                       "Point Field Not Found: pixel-data");
+  viskores::cont::Field colorField = readData.GetPointField("pixel_colors");
+  VISKORES_TEST_ASSERT(colorField.GetNumberOfValues() == 64 * 64,
+                       "wrong image dimensions");
+  VISKORES_TEST_ASSERT(colorField.GetData().IsType<CheckType>(),
+                       "wrong ArrayHandle type");
 
   readData = OpenDataFromPNM();
-  VTKM_TEST_ASSERT(readData.HasPointField("pixels"),
-                   "Point Field Not Found: pixel-data");
+  VISKORES_TEST_ASSERT(readData.HasPointField("pixels"),
+                       "Point Field Not Found: pixel-data");
   colorField = readData.GetPointField("pixels");
-  VTKM_TEST_ASSERT(colorField.GetNumberOfValues() == 64 * 64, "wrong image dimensions");
-  VTKM_TEST_ASSERT(colorField.GetData().IsType<CheckType>(), "wrong ArrayHandle type");
+  VISKORES_TEST_ASSERT(colorField.GetNumberOfValues() == 64 * 64,
+                       "wrong image dimensions");
+  VISKORES_TEST_ASSERT(colorField.GetData().IsType<CheckType>(),
+                       "wrong ArrayHandle type");
 }
 
 } // namespace
 
 int GuideExampleIO(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(TestIO, argc, argv);
+  return viskores::cont::testing::Testing::Run(TestIO, argc, argv);
 }

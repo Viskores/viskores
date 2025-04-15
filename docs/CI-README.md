@@ -26,37 +26,37 @@ Gitlab CI
 # Kitware Gitlab CI
 
 GitLab CI/CD allows for software development through continous integration, delivery, and deployment.
-VTK-m uses continuous integration to verify every merge request, by running a pipeline of scripts to build, test,
+Viskores uses continuous integration to verify every merge request, by running a pipeline of scripts to build, test,
 the code changes across a wide range of hardware and configurations before merging them into master.
 
-This workflow allow everyone to easily catch build failures, bugs, and errors before VTK-m is deployed in a
-production enviornment. Making sure VTK-m is a robust library provides not only confidence to our users
-but to every VTK-m developer. When the system is working developers can be confident that failures
+This workflow allow everyone to easily catch build failures, bugs, and errors before Viskores is deployed in a
+production enviornment. Making sure Viskores is a robust library provides not only confidence to our users
+but to every Viskores developer. When the system is working developers can be confident that failures
 seen during CI are related to the specific changes they have made.
 
-GitLab CI/CD is configured by a file called `.gitlab-ci.yml` located at the root of the VTK-m repository.
-The scripts set in this file are executed by the [GitLab Runners](https://docs.gitlab.com/runner/) associated with VTK-m.
+GitLab CI/CD is configured by a file called `.gitlab-ci.yml` located at the root of the Viskores repository.
+The scripts set in this file are executed by the [GitLab Runners](https://docs.gitlab.com/runner/) associated with Viskores.
 
 ## Why pipelines
 
-Pipelines are the top-level component of continuous integration. For VTK-m the pipeline contains build and test stages, with the possibilty of adding subsequent stages such as coverage, or memory checking.
+Pipelines are the top-level component of continuous integration. For Viskores the pipeline contains build and test stages, with the possibilty of adding subsequent stages such as coverage, or memory checking.
 
-Decomposing the build and test into separate components comes with some significant benifits for VTK-m developers.
-The most impactful change is that we now have the ability to compile VTK-m on dedicated 'compilation' machines and
+Decomposing the build and test into separate components comes with some significant benifits for Viskores developers.
+The most impactful change is that we now have the ability to compile Viskores on dedicated 'compilation' machines and
 test on machines with less memory or an older CPU improving turnaround time. Additionally since we are heavily
-leveraging docker, VTK-m build stages can be better load balanced across the set of builders as we don't have
+leveraging docker, Viskores build stages can be better load balanced across the set of builders as we don't have
 a tight coupling between a machine and build configuration.
 
 ## Gitlab runner tags
 
-Current gitlab runner tags for VTK-m are:
+Current gitlab runner tags for Viskores are:
 
     - build
         Signifies that this is will be doing compilation
     - test
         Signifies that this is will be running tests
-    - vtkm
-        Allows us to make sure VTK-m ci is only run on VTK-m allocated hardware
+    - viskores
+        Allows us to make sure Viskores ci is only run on Viskores allocated hardware
     - docker
         Used to state that the gitlab-runner must support docker based ci
     - linux
@@ -66,12 +66,12 @@ Current gitlab runner tags for VTK-m are:
         This is currently used for CUDA `build` requests
     - cuda-rt
         Used to state that the runner is required to have the CUDA runtime environment.
-        This is required to `build` and `test` VTK-m when using CUDA 
+        This is required to `build` and `test` Viskores when using CUDA 
     - maxwell
     - pascal
     - turing
         Only used on a `test` stage to signify which GPU hardware is required to
-        run the VTK-m tests
+        run the Viskores tests
 
 # How to use docker builders locally
 
@@ -84,7 +84,7 @@ If you haven't set up docker locally we recommend following the official getting
 
 ## Setting up nvidia runtime
 
-To properly test VTK-m inside docker containers when the CUDA backend is enabled you will need
+To properly test Viskores inside docker containers when the CUDA backend is enabled you will need
 to have installed the nvidia-container-runtime ( https://github.com/NVIDIA/nvidia-container-runtime )
 and be using a recent version of docker ( we recommend docker-ce )
 
@@ -107,21 +107,21 @@ the following to your `/etc/docker/daemon.json`
 
 ## Running docker images
 
-To simplify reproducing docker based CI workers locally, VTK-m has python program that handles all the
+To simplify reproducing docker based CI workers locally, Viskores has python program that handles all the
 work automatically for you.
 
 The program is located in `[Utilities/CI/reproduce_ci_env.py ]` and requires python3 and pyyaml. 
 
 To use the program is really easy! The following two commands will create the `build:rhel8` gitlab-ci
 worker as a docker image and setup a container just as how gitlab-ci would be before the actual
-compilation of VTK-m. Instead of doing the compilation, instead you will be given an interactive shell. 
+compilation of Viskores. Instead of doing the compilation, instead you will be given an interactive shell. 
 
 ```
 ./reproduce_ci_env.py create rhel8
 ./reproduce_ci_env.py run rhel8
 ```
 
-To compile VTK-m from the the interactive shell with the settings of the CI job you would do the following:
+To compile Viskores from the the interactive shell with the settings of the CI job you would do the following:
 ```
 > src]# bash /run-gitlab-stage.sh
 ```
@@ -129,11 +129,11 @@ To compile VTK-m from the the interactive shell with the settings of the CI job 
 # How to Add/Update Kitware Gitlab CI
 
 Adding new build or test stages is necessary when a given combination of compiler, platform,
-and VTK-m options isn't already captured by existing builders. Each definition is composed via 3 components; tags, variables, and extends.
+and Viskores options isn't already captured by existing builders. Each definition is composed via 3 components; tags, variables, and extends.
 
 Tags are used to by gitlab-ci to match a given build to a set of possible execution locations.
 Therefore we encode information such as we require docker or the linux kernel into tags.
-The full set of VTK-m tags each meaning are found under the `runner tags` section of the document.
+The full set of Viskores tags each meaning are found under the `runner tags` section of the document.
 
 Extends is used to compose the execution enviornment of the builder. Basically this means
 setting up the correct build/test enviornment and specifying the CMake scripts that need
@@ -141,7 +141,7 @@ to be executed. So a linux docker based builder would extend the docker image th
 plus `.cmake_build_linux`. A MacOS builder would extend `.cmake_build_macos`.
 
 Variables control stage specific information such as runtime enviornment variables,
-or VTK-m CMake options.
+or Viskores CMake options.
 
 ## How to add a new builder
 
@@ -152,7 +152,7 @@ would go into `.gitlab/ci/ubuntu2004.yml`.
 Variables are used to control the following components:
 
     - Compiler
-    - VTK-m CMake Options
+    - Viskores CMake Options
     - Static / Shared
     - Release / Debug / MinSizeRel
 
@@ -161,7 +161,7 @@ An example defitinon of a builder would look like:
 build:ubuntu2004_$<compiler>:
   tags:
     - build
-    - vtkm
+    - viskores
     - docker
     - linux
   extends:
@@ -172,7 +172,7 @@ build:ubuntu2004_$<compiler>:
     CC: "$<c-compiler-command>"
     CXX: "$<cxx-compiler-command>"
     CMAKE_BUILD_TYPE: "Debug|Release|MinSizeRel"
-    VTKM_SETTINGS: "tbb+openmp+mpi"
+    VISKORES_SETTINGS: "tbb+openmp+mpi"
 ```
 
 If this builder requires a new docker image a coupe of extra steps are required
@@ -195,7 +195,7 @@ files.
 
 ```yml
 .$<platform>_$<device>: &$<platform>_$<device>
-  image: "kitware/vtkm:ci-$<platform>_$<device>-$<YYYYMMDD>"
+  image: "kitware/viskores:ci-$<platform>_$<device>-$<YYYYMMDD>"
   extends:
     - .docker_image
 ```
@@ -221,7 +221,7 @@ test:ubuntu2004_$<compiler>:
     - test
     - cuda-rt
     - turing
-    - vtkm
+    - viskores
     - docker
     - linux
   extends:
@@ -235,7 +235,7 @@ test:ubuntu2004_$<compiler>:
 ## How to update an existing docker image
 
 Updating an image to be used for CI infrastructure can be done by anyone that
-has permissions to the kitware/vtkm dockerhub project, as that is where
+has permissions to the kitware/viskores dockerhub project, as that is where
 images are stored.
 
 Each modification of the docker image requires a new name so that existing open
@@ -250,7 +250,7 @@ Therefore the workflow to update images is
 5. Open a Merge Request
 
 
-To simplify step 3 and 4 of the process, VTK-m has a script (`update_all.sh`) that automates
+To simplify step 3 and 4 of the process, Viskores has a script (`update_all.sh`) that automates
 these stages. This script is required to be run from the `.gitlab/ci/docker` directory, and
 needs to have the date string passed to it. An example of running the script:
 
@@ -264,11 +264,11 @@ sudo ./update_all.sh 20201230
 
 ## OLCF Ascent testing machine
 
-VTK-m provides CI builds that run at the OLCF Ascent testing cluster.  OLCF
+Viskores provides CI builds that run at the OLCF Ascent testing cluster.  OLCF
 Ascent is a scaled down version of OLCF Summit which replicates the same
 provisions of software and architecture found at OLCF Summit, this is very
 useful for us since we are allowed to periodically and automatically branches of
-VTK-m. This is a significant leap compared to our previous workflow in which we
+Viskores. This is a significant leap compared to our previous workflow in which we
 would have someone to manually test at OLCF Summit every few months.
 
 The ECP Gitlab continuous integration infrastructure differs from the Kitware
@@ -278,8 +278,8 @@ Gitlab CI infrastructure at the following points:
   `Gitlab-Runner` daemon whereas ECP Gitlab CI uses the Jacamar CI executer as
   the _backend_ for the `Gitlab-Runner` daemon.
 
-- ECP Gitlab VTK-m project is a mirror Gitlab project of the main Kitware Gitlab
-  VTK-m repository.
+- ECP Gitlab Viskores project is a mirror Gitlab project of the main Kitware Gitlab
+  Viskores repository.
 
 - The runners provided by the ECP Gitlab CI reside inside the OLCF Ascent
   cluster.
@@ -293,8 +293,8 @@ diagram describing the relations between the GitLab CI instance and the job.
 
 Our Ascent Pipeline is composed of two stages:
 
-1. The build stage, which builds VTK-m and runs in the batch nodes
-2. The test stage, which runs VTK-m unit tests and runs at the compute nodes.
+1. The build stage, which builds Viskores and runs in the batch nodes
+2. The test stage, which runs Viskores unit tests and runs at the compute nodes.
 
 Due to the isolated environment in which LFS jobs run at Ascent, we are not able
 to access to our `sccache` file server as we do in our other CI builds, thus,
@@ -302,10 +302,10 @@ for this very site we provide a local installation of `ccache`. This it turns
 out to provided similar hit ratios as `sscache`, since we do not have any other
 CI site that runs a _Power9_ architecture.
 
-Lastly, builds and tests status are reported to our VTK-m CDashboard and are
+Lastly, builds and tests status are reported to our Viskores CDashboard and are
 displayed in the same groups as Kitware Gitlab's builds.
 
-As for the flavor being currently tested at ECP Ascent is VTK-m with CUDA and
+As for the flavor being currently tested at ECP Ascent is Viskores with CUDA and
 GCC8.
 
 For a view of only ascent jobs refer to the following [link][cdash-ascent].
@@ -356,7 +356,7 @@ will not upload the results to the online record repository.
 
 - Python3 with the SciPy package
 - Benchmark tests will be enabled in a CMAKE build that sets both
-  `VTKm_ENABLE_BENCHMARKS` and `VTKm_ENABLE_PERFORMANCE_TESTING`
+  `Viskores_ENABLE_BENCHMARKS` and `Viskores_ENABLE_PERFORMANCE_TESTING`
 
 ### New Gitlab Runner requirements
 
@@ -387,10 +387,10 @@ uploaded reports.
 The following parameters can be modified by editing the corresponding
 environmental variables:
 
-- Alpha value: `VTKm_PERF_ALPHA`
-- Minimum number of repetitions for each benchmark: `VTKm_PERF_REPETITIONS`
-- Minimum time to spend for each benchmark: `VTKm_PERF_MIN_TIME`
-- Statistical distribution to use: `VTKm_PERF_DIST`
+- Alpha value: `Viskores_PERF_ALPHA`
+- Minimum number of repetitions for each benchmark: `Viskores_PERF_REPETITIONS`
+- Minimum time to spend for each benchmark: `Viskores_PERF_MIN_TIME`
+- Statistical distribution to use: `Viskores_PERF_DIST`
 
 Below is an example of this raw output of the comparison of the current commit
 against the baseline results:
@@ -409,4 +409,4 @@ BenchThreshold/manual_time   -0.0071         -0.0057            73            73
 BenchThreshold/manual_time   -0.0050         -0.0041            73            73            92            92
 ```
 
-[cdash-ascent]: https://open.cdash.org/index.php?project=VTKM&filtercount=1&showfilters=1&field1=site&compare1=63&value1=ascent
+[cdash-ascent]: https://open.cdash.org/index.php?project=VISKORES&filtercount=1&showfilters=1&field1=site&compare1=63&value1=ascent

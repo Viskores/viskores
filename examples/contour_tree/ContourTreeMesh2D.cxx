@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -54,11 +62,11 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Initialize.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/Initialize.h>
 
-#include <vtkm/filter/scalar_topology/ContourTreeUniform.h>
+#include <viskores/filter/scalar_topology/ContourTreeUniform.h>
 
 #include <fstream>
 #include <vector>
@@ -68,8 +76,8 @@ int main(int argc, char* argv[])
 {
   std::cout << "ContourTreeMesh2D Example" << std::endl;
 
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = viskores::cont::InitializeOptions::DefaultAnyDevice;
+  viskores::cont::InitializeResult config = viskores::cont::Initialize(argc, argv, opts);
   if (argc != 2)
   {
     std::cout << "Usage: "
@@ -85,13 +93,13 @@ int main(int argc, char* argv[])
     return 0;
 
   // read size of mesh
-  vtkm::Id2 vdims;
+  viskores::Id2 vdims;
   inFile >> vdims[0];
   inFile >> vdims[1];
   std::size_t numVertices = static_cast<std::size_t>(vdims[0] * vdims[1]);
 
   // read data
-  std::vector<vtkm::Float32> values(numVertices);
+  std::vector<viskores::Float32> values(numVertices);
   for (std::size_t vertex = 0; vertex < numVertices; vertex++)
   {
     inFile >> values[vertex];
@@ -99,19 +107,19 @@ int main(int argc, char* argv[])
   inFile.close();
 
   // build the input dataset
-  vtkm::cont::DataSetBuilderUniform dsb;
-  vtkm::cont::DataSet inDataSet = dsb.Create(vdims);
+  viskores::cont::DataSetBuilderUniform dsb;
+  viskores::cont::DataSet inDataSet = dsb.Create(vdims);
 
   inDataSet.AddPointField("values", values);
 
   // Convert 2D mesh of values into contour tree, pairs of vertex ids
-  vtkm::filter::scalar_topology::ContourTreeMesh2D filter;
+  viskores::filter::scalar_topology::ContourTreeMesh2D filter;
   filter.SetActiveField("values");
   // Output data set is pairs of saddle and peak vertex IDs
-  vtkm::cont::DataSet output = filter.Execute(inDataSet);
-  vtkm::cont::Field resultField = output.GetField("saddlePeak");
+  viskores::cont::DataSet output = filter.Execute(inDataSet);
+  viskores::cont::Field resultField = output.GetField("saddlePeak");
   ;
-  vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
+  viskores::cont::ArrayHandle<viskores::Pair<viskores::Id, viskores::Id>> saddlePeak;
   resultField.GetData().AsArrayHandle(saddlePeak);
 
   return 0;

@@ -1,3 +1,11 @@
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
 //==========================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
@@ -15,53 +23,53 @@
 #include <sstream>
 #include <unordered_map>
 
-#include <vtkm/ImplicitFunction.h>
-#include <vtkm/Particle.h>
+#include <viskores/ImplicitFunction.h>
+#include <viskores/Particle.h>
 
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/cont/ArrayCopy.h>
-#include <vtkm/cont/BoundsCompute.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/FieldRangeCompute.h>
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/Logging.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
-#include <vtkm/cont/Timer.h>
+#include <viskores/cont/Algorithm.h>
+#include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/BoundsCompute.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/FieldRangeCompute.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/cont/Logging.h>
+#include <viskores/cont/RuntimeDeviceTracker.h>
+#include <viskores/cont/Timer.h>
 
-#include <vtkm/cont/internal/OptionParser.h>
+#include <viskores/cont/internal/OptionParser.h>
 
-#include <vtkm/filter/contour/Contour.h>
-#include <vtkm/filter/contour/Slice.h>
-#include <vtkm/filter/flow/Streamline.h>
-#include <vtkm/filter/geometry_refinement/Tetrahedralize.h>
-#include <vtkm/filter/geometry_refinement/Tube.h>
-#include <vtkm/filter/vector_analysis/Gradient.h>
+#include <viskores/filter/contour/Contour.h>
+#include <viskores/filter/contour/Slice.h>
+#include <viskores/filter/flow/Streamline.h>
+#include <viskores/filter/geometry_refinement/Tetrahedralize.h>
+#include <viskores/filter/geometry_refinement/Tube.h>
+#include <viskores/filter/vector_analysis/Gradient.h>
 
-#include <vtkm/rendering/Actor.h>
-#include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/MapperVolume.h>
-#include <vtkm/rendering/MapperWireframer.h>
-#include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/View3D.h>
+#include <viskores/rendering/Actor.h>
+#include <viskores/rendering/CanvasRayTracer.h>
+#include <viskores/rendering/MapperRayTracer.h>
+#include <viskores/rendering/MapperVolume.h>
+#include <viskores/rendering/MapperWireframer.h>
+#include <viskores/rendering/Scene.h>
+#include <viskores/rendering/View3D.h>
 
-#include <vtkm/source/PerlinNoise.h>
+#include <viskores/source/PerlinNoise.h>
 
 namespace
 {
 
-const vtkm::Id DEFAULT_DATASET_DIM = 128;
-const vtkm::Id DEFAULT_IMAGE_SIZE = 1024;
+const viskores::Id DEFAULT_DATASET_DIM = 128;
+const viskores::Id DEFAULT_IMAGE_SIZE = 1024;
 
 // Hold configuration state (e.g. active device):
-vtkm::cont::InitializeResult Config;
+viskores::cont::InitializeResult Config;
 // Input dataset dimensions:
-vtkm::Id DataSetDim;
+viskores::Id DataSetDim;
 // Image size:
-vtkm::Id ImageSize;
+viskores::Id ImageSize;
 // The input datasets we'll use on the filters:
-vtkm::cont::DataSet InputDataSet;
-vtkm::cont::PartitionedDataSet PartitionedInputDataSet;
+viskores::cont::DataSet InputDataSet;
+viskores::cont::PartitionedDataSet PartitionedInputDataSet;
 // The point scalars to use:
 std::string PointScalarsName;
 // The point vectors to use:
@@ -78,7 +86,7 @@ std::string PointVectorsName;
 // would lead you to believe (maybe fixed in > 1.7 with warmup time specifier)
 bool benchmark_repetitions = false;
 
-inline void hash_combine(std::size_t& vtkmNotUsed(seed)) {}
+inline void hash_combine(std::size_t& viskoresNotUsed(seed)) {}
 
 template <typename T, typename... Rest>
 inline void hash_combine(std::size_t& seed, const T& v, Rest... rest)
@@ -98,29 +106,30 @@ enum class RenderingMode
   Volume = 3,
 };
 
-std::vector<vtkm::cont::DataSet> ExtractDataSets(const vtkm::cont::PartitionedDataSet& partitions)
+std::vector<viskores::cont::DataSet> ExtractDataSets(
+  const viskores::cont::PartitionedDataSet& partitions)
 {
   return partitions.GetPartitions();
 }
 
 // Mirrors ExtractDataSet(ParitionedDataSet), to keep code simple at use sites
-std::vector<vtkm::cont::DataSet> ExtractDataSets(vtkm::cont::DataSet& dataSet)
+std::vector<viskores::cont::DataSet> ExtractDataSets(viskores::cont::DataSet& dataSet)
 {
-  return std::vector<vtkm::cont::DataSet>{ dataSet };
+  return std::vector<viskores::cont::DataSet>{ dataSet };
 }
 
-void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtkm::Id dim)
+void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, viskores::Id dim)
 {
-  vtkm::cont::PartitionedDataSet partitionedInputDataSet;
-  vtkm::cont::DataSet inputDataSet;
+  viskores::cont::PartitionedDataSet partitionedInputDataSet;
+  viskores::cont::DataSet inputDataSet;
 
   PointScalarsName = "perlinnoise";
   PointVectorsName = "perlinnoisegrad";
 
   // Generate uniform dataset(s)
-  vtkm::source::PerlinNoise noise;
+  viskores::source::PerlinNoise noise;
   noise.SetPointDimensions({ dim, dim, dim });
-  noise.SetSeed(static_cast<vtkm::IdComponent>(cycle));
+  noise.SetSeed(static_cast<viskores::IdComponent>(cycle));
   if (isMultiBlock)
   {
     for (auto i = 0; i < 2; ++i)
@@ -129,9 +138,9 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
       {
         for (auto k = 0; k < 2; ++k)
         {
-          noise.SetOrigin({ static_cast<vtkm::FloatDefault>(i),
-                            static_cast<vtkm::FloatDefault>(j),
-                            static_cast<vtkm::FloatDefault>(k) });
+          noise.SetOrigin({ static_cast<viskores::FloatDefault>(i),
+                            static_cast<viskores::FloatDefault>(j),
+                            static_cast<viskores::FloatDefault>(k) });
           const auto dataset = noise.Execute();
           partitionedInputDataSet.AppendPartition(dataset);
         }
@@ -144,12 +153,12 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
   }
 
   // Generate Perln Noise Gradient point vector field
-  vtkm::filter::vector_analysis::Gradient gradientFilter;
-  gradientFilter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
+  viskores::filter::vector_analysis::Gradient gradientFilter;
+  gradientFilter.SetActiveField(PointScalarsName, viskores::cont::Field::Association::Points);
   gradientFilter.SetComputePointGradient(true);
   gradientFilter.SetOutputFieldName(PointVectorsName);
   gradientFilter.SetFieldsToPass(
-    vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::Mode::All));
+    viskores::filter::FieldSelection(viskores::filter::FieldSelection::Mode::All));
   if (isMultiBlock)
   {
     partitionedInputDataSet = gradientFilter.Execute(partitionedInputDataSet);
@@ -162,9 +171,9 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
   // Run Tetrahedralize filter to convert uniform dataset(s) into unstructured ones
   if (!isStructured)
   {
-    vtkm::filter::geometry_refinement::Tetrahedralize destructizer;
+    viskores::filter::geometry_refinement::Tetrahedralize destructizer;
     destructizer.SetFieldsToPass(
-      vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::Mode::All));
+      viskores::filter::FieldSelection(viskores::filter::FieldSelection::Mode::All));
     if (isMultiBlock)
     {
       partitionedInputDataSet = destructizer.Execute(partitionedInputDataSet);
@@ -177,7 +186,7 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
 
   // Release execution resources to simulate in-situ workload, where the data is
   // not present in the execution environment
-  std::vector<vtkm::cont::DataSet> dataSets =
+  std::vector<viskores::cont::DataSet> dataSets =
     isMultiBlock ? ExtractDataSets(partitionedInputDataSet) : ExtractDataSets(inputDataSet);
   for (auto& dataSet : dataSets)
   {
@@ -191,12 +200,12 @@ void BuildInputDataSet(uint32_t cycle, bool isStructured, bool isMultiBlock, vtk
   InputDataSet = inputDataSet;
 }
 
-vtkm::rendering::Canvas* RenderDataSets(const std::vector<vtkm::cont::DataSet>& dataSets,
-                                        RenderingMode mode,
-                                        std::string fieldName)
+viskores::rendering::Canvas* RenderDataSets(const std::vector<viskores::cont::DataSet>& dataSets,
+                                            RenderingMode mode,
+                                            std::string fieldName)
 {
-  vtkm::rendering::Scene scene;
-  vtkm::cont::ColorTable colorTable("inferno");
+  viskores::rendering::Scene scene;
+  viskores::cont::ColorTable colorTable("inferno");
   if (mode == RenderingMode::Volume)
   {
     colorTable.AddPointAlpha(0.0f, 0.03f);
@@ -205,67 +214,72 @@ vtkm::rendering::Canvas* RenderDataSets(const std::vector<vtkm::cont::DataSet>& 
 
   for (auto& dataSet : dataSets)
   {
-    scene.AddActor(vtkm::rendering::Actor(dataSet.GetCellSet(),
-                                          dataSet.GetCoordinateSystem(),
-                                          dataSet.GetField(fieldName),
-                                          colorTable));
+    scene.AddActor(viskores::rendering::Actor(dataSet.GetCellSet(),
+                                              dataSet.GetCoordinateSystem(),
+                                              dataSet.GetField(fieldName),
+                                              colorTable));
   }
 
-  auto bounds = std::accumulate(dataSets.begin(),
-                                dataSets.end(),
-                                vtkm::Bounds(),
-                                [=](const vtkm::Bounds& val, const vtkm::cont::DataSet& partition) {
-                                  return val + vtkm::cont::BoundsCompute(partition);
-                                });
-  vtkm::Vec3f_64 totalExtent(bounds.X.Length(), bounds.Y.Length(), bounds.Z.Length());
-  vtkm::Float64 mag = vtkm::Magnitude(totalExtent);
-  vtkm::Normalize(totalExtent);
+  auto bounds =
+    std::accumulate(dataSets.begin(),
+                    dataSets.end(),
+                    viskores::Bounds(),
+                    [=](const viskores::Bounds& val, const viskores::cont::DataSet& partition)
+                    { return val + viskores::cont::BoundsCompute(partition); });
+  viskores::Vec3f_64 totalExtent(bounds.X.Length(), bounds.Y.Length(), bounds.Z.Length());
+  viskores::Float64 mag = viskores::Magnitude(totalExtent);
+  viskores::Normalize(totalExtent);
 
   // setup a camera and point it to towards the center of the input data
-  vtkm::rendering::Camera camera;
+  viskores::rendering::Camera camera;
   camera.SetFieldOfView(60.f);
   camera.ResetToBounds(bounds);
   camera.SetLookAt(totalExtent * (mag * .5f));
-  camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
+  camera.SetViewUp(viskores::make_Vec(0.f, 1.f, 0.f));
   camera.SetPosition(totalExtent * (mag * 1.5f));
 
-  vtkm::rendering::CanvasRayTracer canvas(ImageSize, ImageSize);
+  viskores::rendering::CanvasRayTracer canvas(ImageSize, ImageSize);
 
-  auto mapper = [=]() -> std::unique_ptr<vtkm::rendering::Mapper> {
+  auto mapper = [=]() -> std::unique_ptr<viskores::rendering::Mapper>
+  {
     switch (mode)
     {
       case RenderingMode::Mesh:
       {
-        return std::unique_ptr<vtkm::rendering::Mapper>(new vtkm::rendering::MapperWireframer());
+        return std::unique_ptr<viskores::rendering::Mapper>(
+          new viskores::rendering::MapperWireframer());
       }
       case RenderingMode::RayTrace:
       {
-        return std::unique_ptr<vtkm::rendering::Mapper>(new vtkm::rendering::MapperRayTracer());
+        return std::unique_ptr<viskores::rendering::Mapper>(
+          new viskores::rendering::MapperRayTracer());
       }
       case RenderingMode::Volume:
       {
-        return std::unique_ptr<vtkm::rendering::Mapper>(new vtkm::rendering::MapperVolume());
+        return std::unique_ptr<viskores::rendering::Mapper>(
+          new viskores::rendering::MapperVolume());
       }
       case RenderingMode::None:
       default:
       {
-        return std::unique_ptr<vtkm::rendering::Mapper>(new vtkm::rendering::MapperRayTracer());
+        return std::unique_ptr<viskores::rendering::Mapper>(
+          new viskores::rendering::MapperRayTracer());
       }
     }
   }();
 
-  vtkm::rendering::View3D view(scene,
-                               *mapper,
-                               canvas,
-                               camera,
-                               vtkm::rendering::Color(0.8f, 0.8f, 0.6f),
-                               vtkm::rendering::Color(0.2f, 0.4f, 0.2f));
+  viskores::rendering::View3D view(scene,
+                                   *mapper,
+                                   canvas,
+                                   camera,
+                                   viskores::rendering::Color(0.8f, 0.8f, 0.6f),
+                                   viskores::rendering::Color(0.2f, 0.4f, 0.2f));
   view.Paint();
 
   return view.GetCanvas().NewCopy();
 }
 
-void WriteToDisk(const vtkm::rendering::Canvas& canvas,
+void WriteToDisk(const viskores::rendering::Canvas& canvas,
                  RenderingMode mode,
                  std::string bench,
                  bool isStructured,
@@ -284,20 +298,20 @@ void WriteToDisk(const vtkm::rendering::Canvas& canvas,
 
 
 template <typename DataSetType>
-DataSetType RunContourHelper(vtkm::filter::contour::Contour& filter,
-                             vtkm::Id numIsoVals,
+DataSetType RunContourHelper(viskores::filter::contour::Contour& filter,
+                             viskores::Id numIsoVals,
                              const DataSetType& input)
 {
   // Set up some equally spaced contours, with the min/max slightly inside the
   // scalar range:
-  const vtkm::Range scalarRange =
-    vtkm::cont::FieldRangeCompute(input, PointScalarsName).ReadPortal().Get(0);
-  const auto step = scalarRange.Length() / static_cast<vtkm::Float64>(numIsoVals + 1);
+  const viskores::Range scalarRange =
+    viskores::cont::FieldRangeCompute(input, PointScalarsName).ReadPortal().Get(0);
+  const auto step = scalarRange.Length() / static_cast<viskores::Float64>(numIsoVals + 1);
   const auto minIsoVal = scalarRange.Min + (step * 0.5f);
   filter.SetNumberOfIsoValues(numIsoVals);
-  for (vtkm::Id i = 0; i < numIsoVals; ++i)
+  for (viskores::Id i = 0; i < numIsoVals; ++i)
   {
-    filter.SetIsoValue(i, minIsoVal + (step * static_cast<vtkm::Float64>(i)));
+    filter.SetIsoValue(i, minIsoVal + (step * static_cast<viskores::Float64>(i)));
   }
 
   return filter.Execute(input);
@@ -305,17 +319,17 @@ DataSetType RunContourHelper(vtkm::filter::contour::Contour& filter,
 
 void BenchContour(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
-  const vtkm::Id numIsoVals = static_cast<vtkm::Id>(state.range(0));
+  const viskores::Id numIsoVals = static_cast<viskores::Id>(state.range(0));
   const bool isStructured = static_cast<bool>(state.range(1));
   const bool isMultiBlock = static_cast<bool>(state.range(2));
   const RenderingMode renderAlgo = static_cast<RenderingMode>(state.range(3));
 
-  vtkm::cont::Timer totalTimer{ device };
-  vtkm::cont::Timer filterTimer{ device };
-  vtkm::cont::Timer renderTimer{ device };
-  vtkm::cont::Timer writeTimer{ device };
+  viskores::cont::Timer totalTimer{ device };
+  viskores::cont::Timer filterTimer{ device };
+  viskores::cont::Timer renderTimer{ device };
+  viskores::cont::Timer writeTimer{ device };
 
   size_t hash_val = 0;
   hash_combine(hash_val, std::string("BenchContour"), isStructured, isMultiBlock, renderAlgo);
@@ -331,20 +345,20 @@ void BenchContour(::benchmark::State& state)
 
     // Disable the benchmark timers for the updating/creation of the datasets
     state.PauseTiming(); // Stop timers.
-    vtkm::cont::Timer inputGenTimer{ device };
+    viskores::cont::Timer inputGenTimer{ device };
     inputGenTimer.Start();
     BuildInputDataSet(*cycles, isStructured, isMultiBlock, DataSetDim);
     inputGenTimer.Stop();
 
-    vtkm::filter::contour::Contour filter;
-    filter.SetActiveField(PointScalarsName, vtkm::cont::Field::Association::Points);
+    viskores::filter::contour::Contour filter;
+    filter.SetActiveField(PointScalarsName, viskores::cont::Field::Association::Points);
     filter.SetMergeDuplicatePoints(true);
     filter.SetGenerateNormals(true);
     filter.SetComputeFastNormals(true);
     state.ResumeTiming(); // And resume timers.
 
     filterTimer.Start();
-    std::vector<vtkm::cont::DataSet> dataSets;
+    std::vector<viskores::cont::DataSet> dataSets;
     if (isMultiBlock)
     {
       auto input = PartitionedInputDataSet;
@@ -405,53 +419,53 @@ void BenchContourGenerator(::benchmark::internal::Benchmark* bm)
   }
 }
 
-VTKM_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
+VISKORES_BENCHMARK_APPLY(BenchContour, BenchContourGenerator);
 
-void MakeRandomSeeds(vtkm::Id seedCount,
-                     vtkm::Bounds& bounds,
-                     vtkm::cont::ArrayHandle<vtkm::Particle>& seeds)
+void MakeRandomSeeds(viskores::Id seedCount,
+                     viskores::Bounds& bounds,
+                     viskores::cont::ArrayHandle<viskores::Particle>& seeds)
 {
-  std::default_random_engine generator(static_cast<vtkm::UInt32>(255));
-  vtkm::FloatDefault zero(0), one(1);
-  std::uniform_real_distribution<vtkm::FloatDefault> distribution(zero, one);
-  std::vector<vtkm::Particle> points;
+  std::default_random_engine generator(static_cast<viskores::UInt32>(255));
+  viskores::FloatDefault zero(0), one(1);
+  std::uniform_real_distribution<viskores::FloatDefault> distribution(zero, one);
+  std::vector<viskores::Particle> points;
   points.resize(0);
-  for (vtkm::Id i = 0; i < seedCount; i++)
+  for (viskores::Id i = 0; i < seedCount; i++)
   {
-    vtkm::FloatDefault rx = distribution(generator);
-    vtkm::FloatDefault ry = distribution(generator);
-    vtkm::FloatDefault rz = distribution(generator);
-    vtkm::Vec3f p;
-    p[0] = static_cast<vtkm::FloatDefault>(bounds.X.Min + rx * bounds.X.Length());
-    p[1] = static_cast<vtkm::FloatDefault>(bounds.Y.Min + ry * bounds.Y.Length());
-    p[2] = static_cast<vtkm::FloatDefault>(bounds.Z.Min + rz * bounds.Z.Length());
-    points.push_back(vtkm::Particle(p, static_cast<vtkm::Id>(i)));
+    viskores::FloatDefault rx = distribution(generator);
+    viskores::FloatDefault ry = distribution(generator);
+    viskores::FloatDefault rz = distribution(generator);
+    viskores::Vec3f p;
+    p[0] = static_cast<viskores::FloatDefault>(bounds.X.Min + rx * bounds.X.Length());
+    p[1] = static_cast<viskores::FloatDefault>(bounds.Y.Min + ry * bounds.Y.Length());
+    p[2] = static_cast<viskores::FloatDefault>(bounds.Z.Min + rz * bounds.Z.Length());
+    points.push_back(viskores::Particle(p, static_cast<viskores::Id>(i)));
   }
-  vtkm::cont::ArrayHandle<vtkm::Particle> tmp =
-    vtkm::cont::make_ArrayHandle(points, vtkm::CopyFlag::Off);
-  vtkm::cont::ArrayCopy(tmp, seeds);
+  viskores::cont::ArrayHandle<viskores::Particle> tmp =
+    viskores::cont::make_ArrayHandle(points, viskores::CopyFlag::Off);
+  viskores::cont::ArrayCopy(tmp, seeds);
 }
 
-vtkm::Id GetNumberOfPoints(const vtkm::cont::DataSet& input)
+viskores::Id GetNumberOfPoints(const viskores::cont::DataSet& input)
 {
   return input.GetCoordinateSystem().GetNumberOfPoints();
 }
 
-vtkm::Id GetNumberOfPoints(const vtkm::cont::PartitionedDataSet& input)
+viskores::Id GetNumberOfPoints(const viskores::cont::PartitionedDataSet& input)
 {
   return input.GetPartition(0).GetCoordinateSystem().GetNumberOfPoints();
 }
 
-void AddField(vtkm::cont::DataSet& input,
+void AddField(viskores::cont::DataSet& input,
               std::string fieldName,
-              std::vector<vtkm::FloatDefault>& field)
+              std::vector<viskores::FloatDefault>& field)
 {
   input.AddPointField(fieldName, field);
 }
 
-void AddField(vtkm::cont::PartitionedDataSet& input,
+void AddField(viskores::cont::PartitionedDataSet& input,
               std::string fieldName,
-              std::vector<vtkm::FloatDefault>& field)
+              std::vector<viskores::FloatDefault>& field)
 {
   for (auto i = 0; i < input.GetNumberOfPartitions(); ++i)
   {
@@ -462,20 +476,21 @@ void AddField(vtkm::cont::PartitionedDataSet& input,
 }
 
 template <typename DataSetType>
-DataSetType RunStreamlinesHelper(vtkm::filter::flow::Streamline& filter, const DataSetType& input)
+DataSetType RunStreamlinesHelper(viskores::filter::flow::Streamline& filter,
+                                 const DataSetType& input)
 {
-  auto dataSetBounds = vtkm::cont::BoundsCompute(input);
-  vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
+  auto dataSetBounds = viskores::cont::BoundsCompute(input);
+  viskores::cont::ArrayHandle<viskores::Particle> seedArray;
   MakeRandomSeeds(100, dataSetBounds, seedArray);
   filter.SetSeeds(seedArray);
 
   auto result = filter.Execute(input);
   auto numPoints = GetNumberOfPoints(result);
-  std::vector<vtkm::FloatDefault> colorMap(
-    static_cast<std::vector<vtkm::FloatDefault>::size_type>(numPoints));
-  for (std::vector<vtkm::FloatDefault>::size_type i = 0; i < colorMap.size(); i++)
+  std::vector<viskores::FloatDefault> colorMap(
+    static_cast<std::vector<viskores::FloatDefault>::size_type>(numPoints));
+  for (std::vector<viskores::FloatDefault>::size_type i = 0; i < colorMap.size(); i++)
   {
-    colorMap[i] = static_cast<vtkm::FloatDefault>(i);
+    colorMap[i] = static_cast<viskores::FloatDefault>(i);
   }
 
   AddField(result, "pointvar", colorMap);
@@ -484,16 +499,16 @@ DataSetType RunStreamlinesHelper(vtkm::filter::flow::Streamline& filter, const D
 
 void BenchStreamlines(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
   const bool isStructured = static_cast<bool>(state.range(0));
   const bool isMultiBlock = static_cast<bool>(state.range(1));
   const RenderingMode renderAlgo = static_cast<RenderingMode>(state.range(2));
 
-  vtkm::cont::Timer totalTimer{ device };
-  vtkm::cont::Timer filterTimer{ device };
-  vtkm::cont::Timer renderTimer{ device };
-  vtkm::cont::Timer writeTimer{ device };
+  viskores::cont::Timer totalTimer{ device };
+  viskores::cont::Timer filterTimer{ device };
+  viskores::cont::Timer renderTimer{ device };
+  viskores::cont::Timer writeTimer{ device };
 
   size_t hash_val = 0;
   hash_combine(hash_val, std::string("BenchStreamlines"), isStructured, isMultiBlock, renderAlgo);
@@ -509,12 +524,12 @@ void BenchStreamlines(::benchmark::State& state)
 
     // Disable the benchmark timers for the updating/creation of the datasets
     state.PauseTiming(); // Stop timers.
-    vtkm::cont::Timer inputGenTimer{ device };
+    viskores::cont::Timer inputGenTimer{ device };
     inputGenTimer.Start();
     BuildInputDataSet(*cycles, isStructured, isMultiBlock, DataSetDim);
     inputGenTimer.Stop();
 
-    vtkm::filter::flow::Streamline streamline;
+    viskores::filter::flow::Streamline streamline;
     streamline.SetStepSize(0.1f);
     streamline.SetNumberOfSteps(1000);
     streamline.SetActiveField(PointVectorsName);
@@ -522,7 +537,7 @@ void BenchStreamlines(::benchmark::State& state)
 
     filterTimer.Start();
 
-    std::vector<vtkm::cont::DataSet> dataSets;
+    std::vector<viskores::cont::DataSet> dataSets;
     if (isMultiBlock)
     {
       auto input = PartitionedInputDataSet;
@@ -583,54 +598,56 @@ void BenchStreamlinesGenerator(::benchmark::internal::Benchmark* bm)
   }
 }
 
-VTKM_BENCHMARK_APPLY(BenchStreamlines, BenchStreamlinesGenerator);
+VISKORES_BENCHMARK_APPLY(BenchStreamlines, BenchStreamlinesGenerator);
 
-vtkm::Vec3f GetSlicePlaneOrigin(const bool isMultiBlock)
+viskores::Vec3f GetSlicePlaneOrigin(const bool isMultiBlock)
 {
   if (isMultiBlock)
   {
     auto data = PartitionedInputDataSet;
-    vtkm::Bounds global;
+    viskores::Bounds global;
     global = data.GetPartition(0).GetCoordinateSystem().GetBounds();
     for (auto i = 1; i < data.GetNumberOfPartitions(); ++i)
     {
       auto dataset = data.GetPartition(i);
-      vtkm::Bounds bounds = dataset.GetCoordinateSystem().GetBounds();
-      global.X.Min = vtkm::Min(global.X.Min, bounds.X.Min);
-      global.Y.Min = vtkm::Min(global.Y.Min, bounds.Y.Min);
-      global.Z.Min = vtkm::Min(global.Z.Min, bounds.Z.Min);
-      global.X.Max = vtkm::Min(global.X.Max, bounds.X.Max);
-      global.Y.Max = vtkm::Min(global.Y.Max, bounds.Y.Max);
-      global.Z.Max = vtkm::Min(global.Z.Max, bounds.Z.Max);
+      viskores::Bounds bounds = dataset.GetCoordinateSystem().GetBounds();
+      global.X.Min = viskores::Min(global.X.Min, bounds.X.Min);
+      global.Y.Min = viskores::Min(global.Y.Min, bounds.Y.Min);
+      global.Z.Min = viskores::Min(global.Z.Min, bounds.Z.Min);
+      global.X.Max = viskores::Min(global.X.Max, bounds.X.Max);
+      global.Y.Max = viskores::Min(global.Y.Max, bounds.Y.Max);
+      global.Z.Max = viskores::Min(global.Z.Max, bounds.Z.Max);
     }
-    return vtkm::Vec3f{ static_cast<vtkm::FloatDefault>((global.X.Max - global.X.Min) / 2.),
-                        static_cast<vtkm::FloatDefault>((global.Y.Max - global.Y.Min) / 2.),
-                        static_cast<vtkm::FloatDefault>((global.Z.Max - global.Z.Min) / 2.) };
+    return viskores::Vec3f{ static_cast<viskores::FloatDefault>((global.X.Max - global.X.Min) / 2.),
+                            static_cast<viskores::FloatDefault>((global.Y.Max - global.Y.Min) / 2.),
+                            static_cast<viskores::FloatDefault>((global.Z.Max - global.Z.Min) /
+                                                                2.) };
   }
   else
   {
     auto data = InputDataSet;
-    vtkm::Bounds bounds = data.GetCoordinateSystem().GetBounds();
-    return vtkm::Vec3f{ static_cast<vtkm::FloatDefault>((bounds.X.Max - bounds.X.Min) / 2.),
-                        static_cast<vtkm::FloatDefault>((bounds.Y.Max - bounds.Y.Min) / 2.),
-                        static_cast<vtkm::FloatDefault>((bounds.Z.Max - bounds.Z.Min) / 2.) };
+    viskores::Bounds bounds = data.GetCoordinateSystem().GetBounds();
+    return viskores::Vec3f{ static_cast<viskores::FloatDefault>((bounds.X.Max - bounds.X.Min) / 2.),
+                            static_cast<viskores::FloatDefault>((bounds.Y.Max - bounds.Y.Min) / 2.),
+                            static_cast<viskores::FloatDefault>((bounds.Z.Max - bounds.Z.Min) /
+                                                                2.) };
   }
 }
 
 void BenchSlice(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
   const bool isStructured = static_cast<bool>(state.range(0));
   const bool isMultiBlock = static_cast<bool>(state.range(1));
   const RenderingMode renderAlgo = static_cast<RenderingMode>(state.range(2));
 
-  vtkm::filter::contour::Slice filter;
+  viskores::filter::contour::Slice filter;
 
-  vtkm::cont::Timer totalTimer{ device };
-  vtkm::cont::Timer filterTimer{ device };
-  vtkm::cont::Timer renderTimer{ device };
-  vtkm::cont::Timer writeTimer{ device };
+  viskores::cont::Timer totalTimer{ device };
+  viskores::cont::Timer filterTimer{ device };
+  viskores::cont::Timer renderTimer{ device };
+  viskores::cont::Timer writeTimer{ device };
 
   size_t hash_val = 0;
   hash_combine(hash_val, std::string("BenchSlice"), isStructured, isMultiBlock, renderAlgo);
@@ -646,20 +663,20 @@ void BenchSlice(::benchmark::State& state)
 
     // Disable the benchmark timers for the updating/creation of the datasets
     state.PauseTiming(); // Stop timers.
-    vtkm::cont::Timer inputGenTimer{ device };
+    viskores::cont::Timer inputGenTimer{ device };
     inputGenTimer.Start();
     BuildInputDataSet(*cycles, isStructured, isMultiBlock, DataSetDim);
     inputGenTimer.Stop();
     state.ResumeTiming(); // And resume timers.
 
     filterTimer.Start();
-    std::vector<vtkm::cont::DataSet> dataSets;
+    std::vector<viskores::cont::DataSet> dataSets;
     if (isMultiBlock)
     {
       auto input = PartitionedInputDataSet;
-      vtkm::Vec3f origin = GetSlicePlaneOrigin(isMultiBlock);
+      viskores::Vec3f origin = GetSlicePlaneOrigin(isMultiBlock);
       // Set-up implicit function
-      vtkm::Plane plane(origin, vtkm::Plane::Vector{ 1, 1, 1 });
+      viskores::Plane plane(origin, viskores::Plane::Vector{ 1, 1, 1 });
       filter.SetImplicitFunction(plane);
       auto result = filter.Execute(input);
       dataSets = ExtractDataSets(result);
@@ -667,9 +684,9 @@ void BenchSlice(::benchmark::State& state)
     else
     {
       auto input = InputDataSet;
-      vtkm::Vec3f origin = GetSlicePlaneOrigin(isMultiBlock);
+      viskores::Vec3f origin = GetSlicePlaneOrigin(isMultiBlock);
       // Set-up implicit function
-      vtkm::Plane plane(origin, vtkm::Plane::Vector{ 1, 1, 1 });
+      viskores::Plane plane(origin, viskores::Plane::Vector{ 1, 1, 1 });
       filter.SetImplicitFunction(plane);
       auto result = filter.Execute(input);
       dataSets = ExtractDataSets(result);
@@ -722,20 +739,20 @@ void BenchSliceGenerator(::benchmark::internal::Benchmark* bm)
   }
 }
 
-VTKM_BENCHMARK_APPLY(BenchSlice, BenchSliceGenerator);
+VISKORES_BENCHMARK_APPLY(BenchSlice, BenchSliceGenerator);
 
 void BenchMeshRendering(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
   const bool isStructured = static_cast<bool>(state.range(0));
   const bool isMultiBlock = static_cast<bool>(state.range(1));
 
-  vtkm::cont::Timer inputGenTimer{ device };
-  vtkm::cont::Timer renderTimer{ device };
-  vtkm::cont::Timer writeTimer{ device };
+  viskores::cont::Timer inputGenTimer{ device };
+  viskores::cont::Timer renderTimer{ device };
+  viskores::cont::Timer writeTimer{ device };
 
-  vtkm::cont::Timer totalTimer{ device };
+  viskores::cont::Timer totalTimer{ device };
 
   size_t hash_val = 0;
   hash_combine(hash_val, std::string("BenchMeshRendering"), isStructured, isMultiBlock);
@@ -757,7 +774,7 @@ void BenchMeshRendering(::benchmark::State& state)
     inputGenTimer.Stop();
     state.ResumeTiming(); // And resume timers.
 
-    std::vector<vtkm::cont::DataSet> dataSets =
+    std::vector<viskores::cont::DataSet> dataSets =
       isMultiBlock ? ExtractDataSets(PartitionedInputDataSet) : ExtractDataSets(InputDataSet);
 
     renderTimer.Start();
@@ -802,18 +819,18 @@ void BenchMeshRenderingGenerator(::benchmark::internal::Benchmark* bm)
   }
 }
 
-VTKM_BENCHMARK_APPLY(BenchMeshRendering, BenchMeshRenderingGenerator);
+VISKORES_BENCHMARK_APPLY(BenchMeshRendering, BenchMeshRenderingGenerator);
 
 void BenchVolumeRendering(::benchmark::State& state)
 {
-  const vtkm::cont::DeviceAdapterId device = Config.Device;
+  const viskores::cont::DeviceAdapterId device = Config.Device;
 
   const bool isStructured = true;
   const bool isMultiBlock = static_cast<bool>(state.range(0));
 
-  vtkm::cont::Timer totalTimer{ device };
-  vtkm::cont::Timer renderTimer{ device };
-  vtkm::cont::Timer writeTimer{ device };
+  viskores::cont::Timer totalTimer{ device };
+  viskores::cont::Timer renderTimer{ device };
+  viskores::cont::Timer writeTimer{ device };
 
   size_t hash_val = 0;
   hash_combine(hash_val, std::string("BenchVolumeRendering"), isMultiBlock);
@@ -829,14 +846,14 @@ void BenchVolumeRendering(::benchmark::State& state)
 
     // Disable the benchmark timers for the updating/creation of the datasets
     state.PauseTiming(); // Stop timers.
-    vtkm::cont::Timer inputGenTimer{ device };
+    viskores::cont::Timer inputGenTimer{ device };
     inputGenTimer.Start();
     BuildInputDataSet(*cycles, isStructured, isMultiBlock, DataSetDim);
     inputGenTimer.Stop();
     state.ResumeTiming(); // And resume timers.
 
     renderTimer.Start();
-    std::vector<vtkm::cont::DataSet> dataSets =
+    std::vector<viskores::cont::DataSet> dataSets =
       isMultiBlock ? ExtractDataSets(PartitionedInputDataSet) : ExtractDataSets(InputDataSet);
     auto canvas = RenderDataSets(dataSets, RenderingMode::Volume, PointScalarsName);
     renderTimer.Stop();
@@ -875,12 +892,12 @@ void BenchVolumeRenderingGenerator(::benchmark::internal::Benchmark* bm)
   }
 }
 
-VTKM_BENCHMARK_APPLY(BenchVolumeRendering, BenchVolumeRenderingGenerator);
+VISKORES_BENCHMARK_APPLY(BenchVolumeRendering, BenchVolumeRenderingGenerator);
 
-struct Arg : vtkm::cont::internal::option::Arg
+struct Arg : viskores::cont::internal::option::Arg
 {
-  static vtkm::cont::internal::option::ArgStatus Number(
-    const vtkm::cont::internal::option::Option& option,
+  static viskores::cont::internal::option::ArgStatus Number(
+    const viskores::cont::internal::option::Option& option,
     bool msg)
   {
     bool argIsNum = ((option.arg != nullptr) && (option.arg[0] != '\0'));
@@ -893,7 +910,7 @@ struct Arg : vtkm::cont::internal::option::Arg
 
     if (argIsNum)
     {
-      return vtkm::cont::internal::option::ARG_OK;
+      return viskores::cont::internal::option::ARG_OK;
     }
     else
     {
@@ -902,7 +919,7 @@ struct Arg : vtkm::cont::internal::option::Arg
         std::cerr << "Option " << option.name << " requires a numeric argument." << std::endl;
       }
 
-      return vtkm::cont::internal::option::ARG_ILLEGAL;
+      return viskores::cont::internal::option::ARG_ILLEGAL;
     }
   }
 };
@@ -917,7 +934,7 @@ enum OptionIndex
 
 void ParseBenchmarkOptions(int& argc, char** argv)
 {
-  namespace option = vtkm::cont::internal::option;
+  namespace option = viskores::cont::internal::option;
 
   std::vector<option::Descriptor> usage;
   std::string usageHeader{ "Usage: " };
@@ -957,7 +974,7 @@ void ParseBenchmarkOptions(int& argc, char** argv)
     const char* helpstr = "--help";
     char* tmpargv[] = { argv[0], const_cast<char*>(helpstr), nullptr };
     int tmpargc = 2;
-    VTKM_EXECUTE_BENCHMARKS(tmpargc, tmpargv);
+    VISKORES_EXECUTE_BENCHMARKS(tmpargc, tmpargv);
     exit(0);
   }
   if (options[DATASET_DIM])
@@ -985,7 +1002,7 @@ void ParseBenchmarkOptions(int& argc, char** argv)
   // Now go back through the arg list and remove anything that is not in the list of
   // unknown options or non-option arguments.
   int destArg = 1;
-  // This is copy/pasted from vtkm::cont::Initialize(), should probably be abstracted eventually:
+  // This is copy/pasted from viskores::cont::Initialize(), should probably be abstracted eventually:
   for (int srcArg = 1; srcArg < argc; ++srcArg)
   {
     std::string thisArg{ argv[srcArg] };
@@ -1064,19 +1081,19 @@ void AddArg(int& argc, std::vector<char*>& args, const std::string newArg)
 
 int main(int argc, char* argv[])
 {
-  auto opts = vtkm::cont::InitializeOptions::RequireDevice;
+  auto opts = viskores::cont::InitializeOptions::RequireDevice;
 
   std::vector<char*> args(argv, argv + argc);
-  vtkm::bench::detail::InitializeArgs(&argc, args, opts);
+  viskores::bench::detail::InitializeArgs(&argc, args, opts);
 
-  // Parse VTK-m options
-  Config = vtkm::cont::Initialize(argc, args.data(), opts);
+  // Parse Viskores options
+  Config = viskores::cont::Initialize(argc, args.data(), opts);
   ParseBenchmarkOptions(argc, args.data());
 
   // This opts chances when it is help
-  if (opts != vtkm::cont::InitializeOptions::None)
+  if (opts != viskores::cont::InitializeOptions::None)
   {
-    vtkm::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
+    viskores::cont::GetRuntimeDeviceTracker().ForceDevice(Config.Device);
   }
 
   bool benchmark_min_time = false;
@@ -1107,5 +1124,5 @@ int main(int argc, char* argv[])
     }
   }
 
-  VTKM_EXECUTE_BENCHMARKS(argc, args.data());
+  VISKORES_EXECUTE_BENCHMARKS(argc, args.data());
 }

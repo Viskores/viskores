@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -17,23 +25,23 @@
 #include <iostream>
 #include <random>
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Initialize.h>
-#include <vtkm/cont/Timer.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ArrayHandleCounting.h>
+#include <viskores/cont/CellSetStructured.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/Initialize.h>
+#include <viskores/cont/Timer.h>
 
-#include <vtkm/interop/TransferToOpenGL.h>
+#include <viskores/interop/TransferToOpenGL.h>
 
-#include <vtkm/filter/Filter.h>
-#include <vtkm/worklet/WorkletPointNeighborhood.h>
+#include <viskores/filter/Filter.h>
+#include <viskores/worklet/WorkletPointNeighborhood.h>
 
-#include <vtkm/cont/Invoker.h>
-#include <vtkm/cont/TryExecute.h>
+#include <viskores/cont/Invoker.h>
+#include <viskores/cont/TryExecute.h>
 
 //Suppress warnings about glut being deprecated on OSX
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#if (defined(VISKORES_GCC) || defined(VISKORES_CLANG))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
@@ -49,9 +57,9 @@
 
 #include "LoadShaders.h"
 
-struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
+struct UpdateLifeState : public viskores::worklet::WorkletPointNeighborhood
 {
-  using CountingHandle = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
+  using CountingHandle = viskores::cont::ArrayHandleCounting<viskores::Id>;
 
   using ControlSignature = void(CellSetIn,
                                 FieldInNeighborhood prevstate,
@@ -61,9 +69,9 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
   using ExecutionSignature = void(_2, _3, _4);
 
   template <typename NeighIn>
-  VTKM_EXEC void operator()(const NeighIn& prevstate,
-                            vtkm::UInt8& state,
-                            vtkm::Vec4ui_8& color) const
+  VISKORES_EXEC void operator()(const NeighIn& prevstate,
+                                viskores::UInt8& state,
+                                viskores::Vec4ui_8& color) const
   {
     // Any live cell with fewer than two live neighbors dies, as if caused by under-population.
     // Any live cell with two or three live neighbors lives on to the next generation.
@@ -88,26 +96,29 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood
     }
 
     color[0] = 0;
-    color[1] = static_cast<vtkm::UInt8>(state * (100 + (count * 32)));
-    color[2] = (state && !current) ? static_cast<vtkm::UInt8>(100 + (count * 32)) : 0;
+    color[1] = static_cast<viskores::UInt8>(state * (100 + (count * 32)));
+    color[2] = (state && !current) ? static_cast<viskores::UInt8>(100 + (count * 32)) : 0;
     color[3] = 255; //alpha channel
   }
 };
 
 
-class GameOfLife : public vtkm::filter::Filter
+class GameOfLife : public viskores::filter::Filter
 {
 public:
-  VTKM_CONT GameOfLife() { this->SetActiveField("state", vtkm::cont::Field::Association::Points); }
-
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override
+  VISKORES_CONT GameOfLife()
   {
-    vtkm::cont::ArrayHandle<vtkm::UInt8> state;
-    vtkm::cont::ArrayHandle<vtkm::UInt8> prevstate;
-    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
+    this->SetActiveField("state", viskores::cont::Field::Association::Points);
+  }
+
+  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override
+  {
+    viskores::cont::ArrayHandle<viskores::UInt8> state;
+    viskores::cont::ArrayHandle<viskores::UInt8> prevstate;
+    viskores::cont::ArrayHandle<viskores::Vec4ui_8> colors;
 
     //get the coordinate system we are using for the 2D area
-    vtkm::cont::CellSetStructured<2> cells;
+    viskores::cont::CellSetStructured<2> cells;
     input.GetCellSet().AsCellSet(cells);
 
     //get the previous state of the game
@@ -117,19 +128,19 @@ public:
     this->Invoke(UpdateLifeState{}, cells, prevstate, state, colors);
 
     //save the results
-    vtkm::cont::DataSet output =
+    viskores::cont::DataSet output =
       this->CreateResultFieldPoint(input, this->GetActiveFieldName(), state);
-    output.AddField(vtkm::cont::make_FieldPoint("colors", colors));
+    output.AddField(viskores::cont::make_FieldPoint("colors", colors));
     return output;
   }
 };
 
 struct UploadData
 {
-  vtkm::interop::BufferState* ColorState;
-  vtkm::cont::Field Colors;
+  viskores::interop::BufferState* ColorState;
+  viskores::cont::Field Colors;
 
-  UploadData(vtkm::interop::BufferState* cs, vtkm::cont::Field colors)
+  UploadData(viskores::interop::BufferState* cs, viskores::cont::Field colors)
     : ColorState(cs)
     , Colors(colors)
   {
@@ -137,23 +148,26 @@ struct UploadData
   template <typename DeviceAdapterTag>
   bool operator()(DeviceAdapterTag device)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec4ui_8> colors;
+    viskores::cont::ArrayHandle<viskores::Vec4ui_8> colors;
     this->Colors.GetData().AsArrayHandle(colors);
-    vtkm::interop::TransferToOpenGL(colors, *this->ColorState, device);
+    viskores::interop::TransferToOpenGL(colors, *this->ColorState, device);
     return true;
   }
 };
 
 struct RenderGameOfLife
 {
-  vtkm::Int32 ScreenWidth;
-  vtkm::Int32 ScreenHeight;
+  viskores::Int32 ScreenWidth;
+  viskores::Int32 ScreenHeight;
   GLuint ShaderProgramId;
   GLuint VAOId;
-  vtkm::interop::BufferState VBOState;
-  vtkm::interop::BufferState ColorState;
+  viskores::interop::BufferState VBOState;
+  viskores::interop::BufferState ColorState;
 
-  RenderGameOfLife(vtkm::Int32 width, vtkm::Int32 height, vtkm::Int32 x, vtkm::Int32 y)
+  RenderGameOfLife(viskores::Int32 width,
+                   viskores::Int32 height,
+                   viskores::Int32 x,
+                   viskores::Int32 y)
     : ScreenWidth(width)
     , ScreenHeight(height)
     , ShaderProgramId()
@@ -171,25 +185,25 @@ struct RenderGameOfLife
     glViewport(0, 0, this->ScreenWidth, this->ScreenHeight);
 
     //generate coords and render them
-    vtkm::Id3 dimensions(x, y, 1);
-    vtkm::Vec<float, 3> origin(-4.f, -4.f, 0.0f);
-    vtkm::Vec<float, 3> spacing(0.0075f, 0.0075f, 0.0f);
+    viskores::Id3 dimensions(x, y, 1);
+    viskores::Vec<float, 3> origin(-4.f, -4.f, 0.0f);
+    viskores::Vec<float, 3> spacing(0.0075f, 0.0075f, 0.0f);
 
-    vtkm::cont::ArrayHandleUniformPointCoordinates coords(dimensions, origin, spacing);
-    vtkm::interop::TransferToOpenGL(coords, this->VBOState);
+    viskores::cont::ArrayHandleUniformPointCoordinates coords(dimensions, origin, spacing);
+    viskores::interop::TransferToOpenGL(coords, this->VBOState);
   }
 
-  void render(vtkm::cont::DataSet& data)
+  void render(viskores::cont::DataSet& data)
   {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    vtkm::Int32 arraySize = (vtkm::Int32)data.GetNumberOfPoints();
+    viskores::Int32 arraySize = (viskores::Int32)data.GetNumberOfPoints();
 
     UploadData task(&this->ColorState,
-                    data.GetField("colors", vtkm::cont::Field::Association::Points));
-    vtkm::cont::TryExecute(task);
+                    data.GetField("colors", viskores::cont::Field::Association::Points));
+    viskores::cont::TryExecute(task);
 
-    vtkm::Float32 mvp[16] = { 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f,
-                              0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 3.5f };
+    viskores::Float32 mvp[16] = { 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f,
+                                  0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 3.5f };
 
     GLint unifLoc = glGetUniformLocation(this->ShaderProgramId, "MVP");
     glUniformMatrix4fv(unifLoc, 1, GL_FALSE, mvp);
@@ -212,30 +226,30 @@ struct RenderGameOfLife
   }
 };
 
-vtkm::cont::Timer gTimer;
-vtkm::cont::DataSet* gData = nullptr;
+viskores::cont::Timer gTimer;
+viskores::cont::DataSet* gData = nullptr;
 GameOfLife* gFilter = nullptr;
 RenderGameOfLife* gRenderer = nullptr;
 
 
-vtkm::UInt32 stamp_acorn(std::vector<vtkm::UInt8>& input_state,
-                         vtkm::UInt32 i,
-                         vtkm::UInt32 j,
-                         vtkm::UInt32 width,
-                         vtkm::UInt32 height)
+viskores::UInt32 stamp_acorn(std::vector<viskores::UInt8>& input_state,
+                             viskores::UInt32 i,
+                             viskores::UInt32 j,
+                             viskores::UInt32 width,
+                             viskores::UInt32 height)
 {
   (void)width;
-  static vtkm::UInt8 acorn[5][9] = {
+  static viskores::UInt8 acorn[5][9] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 1, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 1, 0, 0, 0, 0 },
     { 0, 1, 1, 0, 0, 1, 1, 1, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
   };
 
-  vtkm::UInt32 uindex = (i * height) + j;
+  viskores::UInt32 uindex = (i * height) + j;
   std::ptrdiff_t index = static_cast<std::ptrdiff_t>(uindex);
-  for (vtkm::UInt32 x = 0; x < 5; ++x)
+  for (viskores::UInt32 x = 0; x < 5; ++x)
   {
     auto iter = input_state.begin() + index + static_cast<std::ptrdiff_t>((x * height));
-    for (vtkm::UInt32 y = 0; y < 9; ++y, ++iter)
+    for (viskores::UInt32 y = 0; y < 9; ++y, ++iter)
     {
       *iter = acorn[x][y];
     }
@@ -243,10 +257,10 @@ vtkm::UInt32 stamp_acorn(std::vector<vtkm::UInt8>& input_state,
   return j + 64;
 }
 
-void populate(std::vector<vtkm::UInt8>& input_state,
-              vtkm::UInt32 width,
-              vtkm::UInt32 height,
-              vtkm::Float32 rate)
+void populate(std::vector<viskores::UInt8>& input_state,
+              viskores::UInt32 width,
+              viskores::UInt32 height,
+              viskores::Float32 rate)
 {
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -255,20 +269,20 @@ void populate(std::vector<vtkm::UInt8>& input_state,
   // Initially fill with random values
   {
     std::size_t index = 0;
-    for (vtkm::UInt32 i = 0; i < width; ++i)
+    for (viskores::UInt32 i = 0; i < width; ++i)
     {
-      for (vtkm::UInt32 j = 0; j < height; ++j, ++index)
+      for (viskores::UInt32 j = 0; j < height; ++j, ++index)
       {
-        vtkm::UInt8 v = d(gen);
+        viskores::UInt8 v = d(gen);
         input_state[index] = v;
       }
     }
   }
 
   //stamp out areas for acorns
-  for (vtkm::UInt32 i = 2; i < (width - 64); i += 64)
+  for (viskores::UInt32 i = 2; i < (width - 64); i += 64)
   {
-    for (vtkm::UInt32 j = 2; j < (height - 64);)
+    for (viskores::UInt32 j = 2; j < (height - 64);)
     {
       j = stamp_acorn(input_state, i, j, width, height);
     }
@@ -278,29 +292,29 @@ void populate(std::vector<vtkm::UInt8>& input_state,
 int main(int argc, char** argv)
 {
   auto opts =
-    vtkm::cont::InitializeOptions::DefaultAnyDevice | vtkm::cont::InitializeOptions::Strict;
-  vtkm::cont::Initialize(argc, argv, opts);
+    viskores::cont::InitializeOptions::DefaultAnyDevice | viskores::cont::InitializeOptions::Strict;
+  viskores::cont::Initialize(argc, argv, opts);
 
   glewExperimental = GL_TRUE;
   glutInit(&argc, argv);
 
-  const vtkm::UInt32 width = 1024;
-  const vtkm::UInt32 height = 768;
+  const viskores::UInt32 width = 1024;
+  const viskores::UInt32 height = 768;
 
-  const vtkm::UInt32 x = 1024;
-  const vtkm::UInt32 y = 1024;
+  const viskores::UInt32 x = 1024;
+  const viskores::UInt32 y = 1024;
 
-  vtkm::Float32 rate = 0.275f; //gives 1 27.5% of the time
+  viskores::Float32 rate = 0.275f; //gives 1 27.5% of the time
   if (argc > 1)
   {
-    rate = static_cast<vtkm::Float32>(std::atof(argv[1]));
+    rate = static_cast<viskores::Float32>(std::atof(argv[1]));
     rate = std::max(0.0001f, rate);
     rate = std::min(0.9f, rate);
   }
 
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
   glutInitWindowSize(width, height);
-  glutCreateWindow("VTK-m Game Of Life");
+  glutCreateWindow("Viskores Game Of Life");
 
   GLenum err = glewInit();
   if (GLEW_OK != err)
@@ -308,16 +322,16 @@ int main(int argc, char** argv)
     std::cout << "glewInit failed\n";
   }
 
-  std::vector<vtkm::UInt8> input_state;
+  std::vector<viskores::UInt8> input_state;
   input_state.resize(static_cast<std::size_t>(x * y), 0);
   populate(input_state, x, y, rate);
 
 
-  vtkm::cont::DataSetBuilderUniform builder;
-  vtkm::cont::DataSet data = builder.Create(vtkm::Id2(x, y));
+  viskores::cont::DataSetBuilderUniform builder;
+  viskores::cont::DataSet data = builder.Create(viskores::Id2(x, y));
 
-  auto stateField = vtkm::cont::make_FieldMove(
-    "state", vtkm::cont::Field::Association::Points, std::move(input_state));
+  auto stateField = viskores::cont::make_FieldMove(
+    "state", viskores::cont::Field::Association::Points, std::move(input_state));
   data.AddField(stateField);
 
   GameOfLife filter;
@@ -328,21 +342,23 @@ int main(int argc, char** argv)
   gRenderer = &renderer;
 
   gTimer.Start();
-  glutDisplayFunc([]() {
-    const vtkm::Float32 c = static_cast<vtkm::Float32>(gTimer.GetElapsedTime());
-
-    vtkm::cont::DataSet oData = gFilter->Execute(*gData);
-    gRenderer->render(oData);
-    glutSwapBuffers();
-
-    *gData = oData;
-
-    if (c > 120)
+  glutDisplayFunc(
+    []()
     {
-      //after 1 minute quit the demo
-      exit(0);
-    }
-  });
+      const viskores::Float32 c = static_cast<viskores::Float32>(gTimer.GetElapsedTime());
+
+      viskores::cont::DataSet oData = gFilter->Execute(*gData);
+      gRenderer->render(oData);
+      glutSwapBuffers();
+
+      *gData = oData;
+
+      if (c > 120)
+      {
+        //after 1 minute quit the demo
+        exit(0);
+      }
+    });
 
   glutIdleFunc([]() { glutPostRedisplay(); });
 
@@ -351,6 +367,6 @@ int main(int argc, char** argv)
   return 0;
 }
 
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#if (defined(VISKORES_GCC) || defined(VISKORES_CLANG))
 #pragma GCC diagnostic pop
 #endif

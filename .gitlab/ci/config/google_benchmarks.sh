@@ -1,5 +1,13 @@
 #!/bin/bash
 
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
 ##=============================================================================
 ##
 ##  Copyright (c) Kitware, Inc.
@@ -20,7 +28,7 @@ readonly url="https://github.com/google/benchmark/archive/$tarball"
 readonly sha256sum="6132883bc8c9b0df5375b16ab520fac1a85dc9e4cf5be59480448ece74b278d4"
 readonly install_dir="$HOME/gbench"
 
-if ! [[ "$VTKM_SETTINGS" =~ "benchmarks" ]]; then
+if ! [[ "$VISKORES_SETTINGS" =~ "benchmarks" ]]; then
   exit 0
 fi
 

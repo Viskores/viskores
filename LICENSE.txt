@@ -1,7 +1,7 @@
-VTKm License Version 2.3
+Viskores License Version 0.1
 ========================================================================
 
-Copyright (c) 2014-2025
+Copyright (c) 2025
 Kitware Inc.,
 National Technology & Engineering Solutions of Sandia, LLC (NTESS),
 UT-Battelle, LLC.,
@@ -43,18 +43,3 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ========================================================================
-
-The following files and directories come from third parties. Check the
-contents of these for details on the specifics of their respective
-licenses.
-- - - - - - - - - - - - - - - - - - - - - - - - do not remove this line
-CMake/FindSphinx.cmake
-CMake/FindTBB.cmake
-Utilities
-vtkm/cont/tbb/internal/parallel_sort.h
-vtkm/cont/tbb/internal/parallel_radix_sort_tbb.h
-vtkm/cont/tbb/internal/ParallelSortTBB.hxx
-vtkm/cont/tbb/internal/kxsort.h
-vtkm/thirdparty
-version.txt
-.gitlab/cmake

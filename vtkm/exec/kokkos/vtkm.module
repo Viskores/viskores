@@ -1,7 +1,0 @@
-NAME
-  vtkm_exec_kokkos
-GROUPS
-  Core
-DEPENDS
-  vtkm_exec
-NO_TESTING

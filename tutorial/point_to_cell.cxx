@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,19 +15,19 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/Initialize.h>
+#include <viskores/cont/Initialize.h>
 
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
-#include <vtkm/worklet/WorkletMapTopology.h>
+#include <viskores/worklet/WorkletMapTopology.h>
 
-namespace vtkm
+namespace viskores
 {
 namespace worklet
 {
 
-struct ConvertPointFieldToCells : vtkm::worklet::WorkletVisitCellsWithPoints
+struct ConvertPointFieldToCells : viskores::worklet::WorkletVisitCellsWithPoints
 {
   using ControlSignature = void(CellSetIn topology,
                                 FieldInPoint inPointField,
@@ -28,47 +36,47 @@ struct ConvertPointFieldToCells : vtkm::worklet::WorkletVisitCellsWithPoints
   using InputDomain = _1;
 
   template <typename InPointFieldVecType, typename OutCellFieldType>
-  VTKM_EXEC void operator()(const InPointFieldVecType& inPointFieldVec,
+  VISKORES_EXEC void operator()(const InPointFieldVecType& inPointFieldVec,
                             OutCellFieldType& outCellField) const
   {
-    vtkm::IdComponent numPoints = inPointFieldVec.GetNumberOfComponents();
+    viskores::IdComponent numPoints = inPointFieldVec.GetNumberOfComponents();
 
     outCellField = OutCellFieldType(0);
-    for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; ++pointIndex)
+    for (viskores::IdComponent pointIndex = 0; pointIndex < numPoints; ++pointIndex)
     {
       outCellField = outCellField + inPointFieldVec[pointIndex];
     }
     outCellField =
-      static_cast<OutCellFieldType>(outCellField / static_cast<vtkm::FloatDefault>(numPoints));
+      static_cast<OutCellFieldType>(outCellField / static_cast<viskores::FloatDefault>(numPoints));
   }
 };
 
 } // namespace worklet
-} // namespace vtkm
+} // namespace viskores
 
-#include <vtkm/filter/Filter.h>
+#include <viskores/filter/Filter.h>
 
-namespace vtkm
+namespace viskores
 {
 namespace filter
 {
 
-struct ConvertPointFieldToCells : vtkm::filter::Filter
+struct ConvertPointFieldToCells : viskores::filter::Filter
 {
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inDataSet) override;
 };
 
-VTKM_CONT cont::DataSet ConvertPointFieldToCells::DoExecute(const vtkm::cont::DataSet& inDataSet)
+VISKORES_CONT cont::DataSet ConvertPointFieldToCells::DoExecute(const viskores::cont::DataSet& inDataSet)
 {
   const auto& inField = this->GetFieldFromDataSet(inDataSet);
 
-  vtkm::cont::UnknownArrayHandle outArray;
+  viskores::cont::UnknownArrayHandle outArray;
   auto resolveType = [&](const auto& inConcrete) {
     using ValueType = typename std::decay_t<decltype(inConcrete)>::ValueType;
 
-    vtkm::cont::ArrayHandle<ValueType> outConcrete;
+    viskores::cont::ArrayHandle<ValueType> outConcrete;
     this->Invoke(
-      vtkm::worklet::ConvertPointFieldToCells{}, inDataSet.GetCellSet(), inConcrete, outConcrete);
+      viskores::worklet::ConvertPointFieldToCells{}, inDataSet.GetCellSet(), inConcrete, outConcrete);
     outArray = outConcrete;
   };
   this->CastAndCallScalarField(inField, resolveType);
@@ -82,23 +90,23 @@ VTKM_CONT cont::DataSet ConvertPointFieldToCells::DoExecute(const vtkm::cont::Da
 }
 
 } // namespace filter
-} // namespace vtkm
+} // namespace viskores
 
 
 int main(int argc, char** argv)
 {
-  auto opts = vtkm::cont::InitializeOptions::DefaultAnyDevice;
-  vtkm::cont::InitializeResult config = vtkm::cont::Initialize(argc, argv, opts);
+  auto opts = viskores::cont::InitializeOptions::DefaultAnyDevice;
+  viskores::cont::InitializeResult config = viskores::cont::Initialize(argc, argv, opts);
 
   const char* input = "data/kitchen.vtk";
-  vtkm::io::VTKDataSetReader reader(input);
-  vtkm::cont::DataSet ds_from_file = reader.ReadDataSet();
+  viskores::io::VTKDataSetReader reader(input);
+  viskores::cont::DataSet ds_from_file = reader.ReadDataSet();
 
-  vtkm::filter::ConvertPointFieldToCells pointToCell;
+  viskores::filter::ConvertPointFieldToCells pointToCell;
   pointToCell.SetActiveField("c1");
-  vtkm::cont::DataSet ds_from_convert = pointToCell.Execute(ds_from_file);
+  viskores::cont::DataSet ds_from_convert = pointToCell.Execute(ds_from_file);
 
-  vtkm::io::VTKDataSetWriter writer("out_point_to_cell.vtk");
+  viskores::io::VTKDataSetWriter writer("out_point_to_cell.vtk");
   writer.WriteDataSet(ds_from_convert);
 
   return 0;

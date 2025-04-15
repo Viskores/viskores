@@ -6,17 +6,17 @@ File I/O
    single: I/O
    single: file I/O
 
-Before |VTKm| can be used to process data, data need to be loaded into the
+Before |Viskores| can be used to process data, data need to be loaded into the
 system.
-|VTKm| comes with a basic file I/O package to get started developing very
+|Viskores| comes with a basic file I/O package to get started developing very
 quickly.
-All the file I/O classes are declared under the ``vtkm::io`` namespace.
+All the file I/O classes are declared under the ``viskores::io`` namespace.
 
 .. didyouknow::
-   Files are just one of many ways to get data in and out of |VTKm|.
-   In later chapters we explore ways to define |VTKm| data structures of
+   Files are just one of many ways to get data in and out of |Viskores|.
+   In later chapters we explore ways to define |Viskores| data structures of
    increasing power and complexity.
-   In particular, :secref:`dataset:Building Data Sets` describes how to build |VTKm| data set objects and Section \ref{sec:ArrayHandle:Adapting} documents how to adapt data structures defined in other libraries to be used directly in |VTKm|.
+   In particular, :secref:`dataset:Building Data Sets` describes how to build |Viskores| data set objects and Section \ref{sec:ArrayHandle:Adapting} documents how to adapt data structures defined in other libraries to be used directly in |Viskores|.
 
 .. todo:: Add custom ArrayHandle section reference above.
 
@@ -28,11 +28,11 @@ Readers
    single: file I/O; read
    single: read file
 
-All reader classes provided by |VTKm| are located in the ``vtkm::io``
+All reader classes provided by |Viskores| are located in the ``viskores::io``
 namespace.
 The general interface for each reader class is to accept a filename in the constructor and to provide a ``ReadDataSet`` method to load the data from disk.
 
-The data in the file are returned in a :class:`vtkm::cont::DataSet` object
+The data in the file are returned in a :class:`viskores::cont::DataSet` object
 as described in :chapref:`dataset:Data Sets`, but it is sufficient to know that a ``DataSet`` can be passed among readers, writers, filters, and rendering units.
 
 Legacy VTK File Reader
@@ -46,9 +46,9 @@ The format of legacy VTK files is well documented in *The VTK User's
 Guide* [as well as online](https://examples.vtk.org/site/VTKFileFormats/).
 Legacy VTK files can also be read and written with tools like ParaView and VisIt.
 
-Legacy VTK files can be read using the :class:`vtkm::io::VTKDataSetReader` class.
+Legacy VTK files can be read using the :class:`viskores::io::VTKDataSetReader` class.
 
-.. doxygenclass:: vtkm::io::VTKDataSetReader
+.. doxygenclass:: viskores::io::VTKDataSetReader
    :members:
 
 .. load-example:: VTKDataSetReader
@@ -58,26 +58,26 @@ Legacy VTK files can be read using the :class:`vtkm::io::VTKDataSetReader` class
 Image Readers
 ==============================
 
-|VTKm| provides classes to read images from some standard image formats.
-These readers will store the data in a :class:`vtkm::cont::DataSet` object with the colors stored as a named point field.
+|Viskores| provides classes to read images from some standard image formats.
+These readers will store the data in a :class:`viskores::cont::DataSet` object with the colors stored as a named point field.
 The colors are read as 4-component RGBA vectors for each pixel.
 Each component in the pixel color is stored as a 32-bit float between 0 and 1.
 
-Portable Network Graphics (PNG) files can be read using the :class:`vtkm::io::ImageReaderPNG` class.
+Portable Network Graphics (PNG) files can be read using the :class:`viskores::io::ImageReaderPNG` class.
 
-.. doxygenclass:: vtkm::io::ImageReaderPNG
+.. doxygenclass:: viskores::io::ImageReaderPNG
    :members:
 
 .. load-example:: ImageReaderPNG
    :file: GuideExampleIO.cxx
    :caption: Reading an image from a PNG file.
 
-Portable anymap (PNM) files can be read using the :class:`vtkm::io::ImageReaderPNM` class.
+Portable anymap (PNM) files can be read using the :class:`viskores::io::ImageReaderPNM` class.
 
-.. doxygenclass:: vtkm::io::ImageReaderPNM
+.. doxygenclass:: viskores::io::ImageReaderPNM
    :members:
 
-Like for PNG files, a :class:`vtkm::io::ImageReaderPNM` is constructed with the name of the file to read from.
+Like for PNG files, a :class:`viskores::io::ImageReaderPNM` is constructed with the name of the file to read from.
 
 .. load-example:: ImageReaderPNM
    :file: GuideExampleIO.cxx
@@ -92,19 +92,19 @@ Writers
    single: file I/O; write
    single: write file
 
-All writer classes provided by |VTKm| are located in the ``vtkm::io`` namespace.
+All writer classes provided by |Viskores| are located in the ``viskores::io`` namespace.
 The general interface for each writer class is to accept a filename in the constructor and to provide a ``WriteDataSet`` method to save data to the disk.
-The ``WriteDataSet`` method takes a :class:`vtkm::cont::DataSet` object as an argument, which contains the data to write to the file.
+The ``WriteDataSet`` method takes a :class:`viskores::cont::DataSet` object as an argument, which contains the data to write to the file.
 
 Legacy VTK File Writer
 ==============================
 
-Legacy VTK files can be written using the :class:`vtkm::io::VTKDataSetWriter` class.
+Legacy VTK files can be written using the :class:`viskores::io::VTKDataSetWriter` class.
 
-.. doxygenclass:: vtkm::io::VTKDataSetWriter
+.. doxygenclass:: viskores::io::VTKDataSetWriter
    :members:
 
-.. doxygenenum:: vtkm::io::FileType
+.. doxygenenum:: viskores::io::FileType
 
 .. load-example:: VTKDataSetWriter
    :file: GuideExampleIO.cxx
@@ -113,29 +113,29 @@ Legacy VTK files can be written using the :class:`vtkm::io::VTKDataSetWriter` cl
 Image Writers
 ==============================
 
-|VTKm| provides classes to some standard image formats.
-These writers store data in a :class:`vtkm::cont::DataSet`.
+|Viskores| provides classes to some standard image formats.
+These writers store data in a :class:`viskores::cont::DataSet`.
 The data must be a 2D structure with the colors stored in a point field.
-(See :chapref:`dataset:Data Sets` for details on :class:`vtkm::cont::DataSet` objects.)
+(See :chapref:`dataset:Data Sets` for details on :class:`viskores::cont::DataSet` objects.)
 
-Portable Network Graphics (PNG) files can be written using the :class:`vtkm::io::ImageWriterPNG` class.
+Portable Network Graphics (PNG) files can be written using the :class:`viskores::io::ImageWriterPNG` class.
 
-.. doxygenclass:: vtkm::io::ImageWriterPNG
+.. doxygenclass:: viskores::io::ImageWriterPNG
    :members:
 
 By default, PNG files are written as RGBA colors using 8-bits for each component.
-You can change the format written using the :func:`vtkm::io::ImageWriterPNG::SetPixelDepth` method.
-This takes an item in the :enum:`vtkm::io::ImageWriterPNG::PixelDepth` enumeration.
+You can change the format written using the :func:`viskores::io::ImageWriterPNG::SetPixelDepth` method.
+This takes an item in the :enum:`viskores::io::ImageWriterPNG::PixelDepth` enumeration.
 
-.. doxygenenum:: vtkm::io::ImageWriterBase::PixelDepth
+.. doxygenenum:: viskores::io::ImageWriterBase::PixelDepth
 
 .. load-example:: ImageWriterPNG
    :file: GuideExampleIO.cxx
    :caption: Writing an image to a PNG file.
 
-Portable anymap (PNM) files can be written using the :class:`vtkm::io::ImageWriterPNM` class.
+Portable anymap (PNM) files can be written using the :class:`viskores::io::ImageWriterPNM` class.
 
-.. doxygenclass:: vtkm::io::ImageWriterPNM
+.. doxygenclass:: viskores::io::ImageWriterPNM
    :members:
 
 .. load-example:: ImageWriterPNM

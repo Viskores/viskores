@@ -1,9 +1,0 @@
-NAME
-  vtkm_cont_kokkos
-GROUPS
-  Core
-DEPENDS
-  vtkm_cont
-TEST_DEPENDS
-  vtkm_worklet
-  vtkm_kokkos

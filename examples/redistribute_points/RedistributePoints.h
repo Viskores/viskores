@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -10,23 +18,23 @@
 #ifndef example_RedistributePoints_h
 #define example_RedistributePoints_h
 
-#include <vtkm/filter/Filter.h>
+#include <viskores/filter/Filter.h>
 
 namespace example
 {
 
-class RedistributePoints : public vtkm::filter::Filter
+class RedistributePoints : public viskores::filter::Filter
 {
 public:
-  VTKM_CONT RedistributePoints() {}
+  VISKORES_CONT RedistributePoints() {}
 
-  VTKM_CONT ~RedistributePoints() {}
+  VISKORES_CONT ~RedistributePoints() {}
 
 protected:
-  VTKM_CONT vtkm::cont::PartitionedDataSet DoExecutePartitions(
-    const vtkm::cont::PartitionedDataSet& input) override;
+  VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
+    const viskores::cont::PartitionedDataSet& input) override;
 
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
 };
 
 } // namespace example

@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,18 +16,18 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/CellClassification.h>
-#include <vtkm/RangeId3.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetBuilderUniform.h>
-#include <vtkm/cont/Field.h>
-#include <vtkm/cont/Invoker.h>
+#include <viskores/CellClassification.h>
+#include <viskores/RangeId3.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/CellSetStructured.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/Field.h>
+#include <viskores/cont/Invoker.h>
 
-#include <vtkm/worklet/WorkletCellNeighborhood.h>
+#include <viskores/worklet/WorkletCellNeighborhood.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -27,7 +35,7 @@ namespace
 ////
 //// BEGIN-EXAMPLE SettingGhostCells
 ////
-struct SetGhostCells : vtkm::worklet::WorkletCellNeighborhood
+struct SetGhostCells : viskores::worklet::WorkletCellNeighborhood
 {
   using ControlSignature = void(CellSetIn cellSet,
                                 WholeArrayIn blankedRegions,
@@ -35,24 +43,26 @@ struct SetGhostCells : vtkm::worklet::WorkletCellNeighborhood
   using ExecutionSignature = _3(_2, Boundary);
 
   template<typename BlankedRegionsPortal>
-  VTKM_EXEC vtkm::UInt8 operator()(const BlankedRegionsPortal& blankedRegions,
-                                   const vtkm::exec::BoundaryState& location) const
+  VISKORES_EXEC viskores::UInt8 operator()(
+    const BlankedRegionsPortal& blankedRegions,
+    const viskores::exec::BoundaryState& location) const
   {
-    vtkm::UInt8 cellClassification = vtkm::CellClassification::Normal;
+    viskores::UInt8 cellClassification = viskores::CellClassification::Normal;
 
     // Mark cells at boundary as ghost cells.
     if (!location.IsRadiusInBoundary(1))
     {
-      cellClassification |= vtkm::CellClassification::Ghost;
+      cellClassification |= viskores::CellClassification::Ghost;
     }
 
     // Mark cells inside specified regions as blanked.
-    for (vtkm::Id brIndex = 0; brIndex < blankedRegions.GetNumberOfValues(); ++brIndex)
+    for (viskores::Id brIndex = 0; brIndex < blankedRegions.GetNumberOfValues();
+         ++brIndex)
     {
-      vtkm::RangeId3 blankedRegion = blankedRegions.Get(brIndex);
+      viskores::RangeId3 blankedRegion = blankedRegions.Get(brIndex);
       if (blankedRegion.Contains(location.GetCenterIndex()))
       {
-        cellClassification |= vtkm::CellClassification::Blanked;
+        cellClassification |= viskores::CellClassification::Blanked;
       }
     }
 
@@ -60,15 +70,15 @@ struct SetGhostCells : vtkm::worklet::WorkletCellNeighborhood
   }
 };
 
-void MakeGhostCells(vtkm::cont::DataSet& dataset,
-                    const std::vector<vtkm::RangeId3> blankedRegions)
+void MakeGhostCells(viskores::cont::DataSet& dataset,
+                    const std::vector<viskores::RangeId3> blankedRegions)
 {
-  vtkm::cont::Invoker invoke;
-  vtkm::cont::ArrayHandle<vtkm::UInt8> ghostCells;
+  viskores::cont::Invoker invoke;
+  viskores::cont::ArrayHandle<viskores::UInt8> ghostCells;
 
   invoke(SetGhostCells{},
          dataset.GetCellSet(),
-         vtkm::cont::make_ArrayHandle(blankedRegions, vtkm::CopyFlag::Off),
+         viskores::cont::make_ArrayHandle(blankedRegions, viskores::CopyFlag::Off),
          ghostCells);
 
   dataset.SetGhostCellField(ghostCells);
@@ -80,32 +90,34 @@ void MakeGhostCells(vtkm::cont::DataSet& dataset,
 void DoGhostCells()
 {
   std::cout << "Do ghost cells\n";
-  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-  vtkm::cont::DataSet dataset = dataSetBuilder.Create({ 11, 11, 11 });
+  viskores::cont::DataSetBuilderUniform dataSetBuilder;
+  viskores::cont::DataSet dataset = dataSetBuilder.Create({ 11, 11, 11 });
   MakeGhostCells(
     dataset, { { { 0, 5 }, { 0, 5 }, { 0, 5 } }, { { 5, 10 }, { 5, 10 }, { 5, 10 } } });
 
-  vtkm::cont::ArrayHandle<vtkm::UInt8> ghostCells;
+  viskores::cont::ArrayHandle<viskores::UInt8> ghostCells;
   dataset.GetGhostCellField().GetData().AsArrayHandle(ghostCells);
   auto ghosts = ghostCells.ReadPortal();
-  vtkm::Id numGhosts = 0;
-  vtkm::Id numBlanked = 0;
-  for (vtkm::Id cellId = 0; cellId < ghostCells.GetNumberOfValues(); ++cellId)
+  viskores::Id numGhosts = 0;
+  viskores::Id numBlanked = 0;
+  for (viskores::Id cellId = 0; cellId < ghostCells.GetNumberOfValues(); ++cellId)
   {
-    vtkm::UInt8 flags = ghosts.Get(cellId);
-    if ((flags & vtkm::CellClassification::Ghost) == vtkm::CellClassification::Ghost)
+    viskores::UInt8 flags = ghosts.Get(cellId);
+    if ((flags & viskores::CellClassification::Ghost) ==
+        viskores::CellClassification::Ghost)
     {
       ++numGhosts;
     }
-    if ((flags & vtkm::CellClassification::Blanked) == vtkm::CellClassification::Blanked)
+    if ((flags & viskores::CellClassification::Blanked) ==
+        viskores::CellClassification::Blanked)
     {
       ++numBlanked;
     }
   }
   std::cout << "Num ghosts: " << numGhosts << "\n";
   std::cout << "Num blanked: " << numBlanked << "\n";
-  VTKM_TEST_ASSERT(numGhosts == 488);
-  VTKM_TEST_ASSERT(numBlanked == 250);
+  VISKORES_TEST_ASSERT(numGhosts == 488);
+  VISKORES_TEST_ASSERT(numBlanked == 250);
 }
 
 void Run()
@@ -117,5 +129,5 @@ void Run()
 
 int GuideExampleFields(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Run, argc, argv);
+  return viskores::cont::testing::Testing::Run(Run, argc, argv);
 }

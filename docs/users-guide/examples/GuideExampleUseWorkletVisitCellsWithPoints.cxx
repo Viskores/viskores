@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,22 +15,22 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/worklet/WorkletMapTopology.h>
+#include <viskores/worklet/WorkletMapTopology.h>
 
-#include <vtkm/cont/DataSet.h>
+#include <viskores/cont/DataSet.h>
 
-#include <vtkm/exec/CellInterpolate.h>
-#include <vtkm/exec/ParametricCoordinates.h>
+#include <viskores/exec/CellInterpolate.h>
+#include <viskores/exec/ParametricCoordinates.h>
 
 ////
 //// BEGIN-EXAMPLE UseWorkletVisitCellsWithPoints
 ////
-namespace vtkm
+namespace viskores
 {
 namespace worklet
 {
 
-struct CellCenter : public vtkm::worklet::WorkletVisitCellsWithPoints
+struct CellCenter : public viskores::worklet::WorkletVisitCellsWithPoints
 {
 public:
   using ControlSignature = void(CellSetIn cellSet,
@@ -33,48 +41,50 @@ public:
   using InputDomain = _1;
 
   template<typename CellShape, typename InputPointFieldType, typename OutputType>
-  VTKM_EXEC void operator()(CellShape shape,
-                            vtkm::IdComponent numPoints,
-                            const InputPointFieldType& inputPointField,
-                            OutputType& centerOut) const
+  VISKORES_EXEC void operator()(CellShape shape,
+                                viskores::IdComponent numPoints,
+                                const InputPointFieldType& inputPointField,
+                                OutputType& centerOut) const
   {
-    vtkm::Vec3f parametricCenter;
-    vtkm::exec::ParametricCoordinatesCenter(numPoints, shape, parametricCenter);
-    vtkm::exec::CellInterpolate(inputPointField, parametricCenter, shape, centerOut);
+    viskores::Vec3f parametricCenter;
+    viskores::exec::ParametricCoordinatesCenter(numPoints, shape, parametricCenter);
+    viskores::exec::CellInterpolate(inputPointField, parametricCenter, shape, centerOut);
   }
 };
 
 } // namespace worklet
-} // namespace vtkm
+} // namespace viskores
 ////
 //// END-EXAMPLE UseWorkletVisitCellsWithPoints
 ////
 
-#include <vtkm/filter/Filter.h>
+#include <viskores/filter/Filter.h>
 
-#define VTKM_FILTER_FIELD_CONVERSION_EXPORT
+#define VISKORES_FILTER_FIELD_CONVERSION_EXPORT
 
 ////
 //// BEGIN-EXAMPLE UseFilterFieldWithCells
 ////
-namespace vtkm
+namespace viskores
 {
 namespace filter
 {
 namespace field_conversion
 {
 
-class VTKM_FILTER_FIELD_CONVERSION_EXPORT CellCenters : public vtkm::filter::Filter
+class VISKORES_FILTER_FIELD_CONVERSION_EXPORT CellCenters
+  : public viskores::filter::Filter
 {
 public:
-  VTKM_CONT CellCenters();
+  VISKORES_CONT CellCenters();
 
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(
+    const viskores::cont::DataSet& inDataSet) override;
 };
 
 } // namespace field_conversion
 } // namespace filter
-} // namespace vtkm
+} // namespace viskores
 ////
 //// END-EXAMPLE UseFilterFieldWithCells
 ////
@@ -82,44 +92,47 @@ public:
 ////
 //// BEGIN-EXAMPLE FilterFieldWithCellsImpl
 ////
-namespace vtkm
+namespace viskores
 {
 namespace filter
 {
 namespace field_conversion
 {
 
-VTKM_CONT
+VISKORES_CONT
 CellCenters::CellCenters()
 {
   this->SetOutputFieldName("");
 }
 
-VTKM_CONT cont::DataSet CellCenters::DoExecute(const vtkm::cont::DataSet& inDataSet)
+VISKORES_CONT cont::DataSet CellCenters::DoExecute(
+  const viskores::cont::DataSet& inDataSet)
 {
-  vtkm::cont::Field inField = this->GetFieldFromDataSet(inDataSet);
+  viskores::cont::Field inField = this->GetFieldFromDataSet(inDataSet);
 
   if (!inField.IsPointField())
   {
-    throw vtkm::cont::ErrorBadType("Cell Centers filter operates on point data.");
+    throw viskores::cont::ErrorBadType("Cell Centers filter operates on point data.");
   }
 
-  vtkm::cont::UnknownArrayHandle outUnknownArray;
+  viskores::cont::UnknownArrayHandle outUnknownArray;
 
-  auto resolveType = [&](const auto& inArray) {
+  auto resolveType = [&](const auto& inArray)
+  {
     using InArrayHandleType = std::decay_t<decltype(inArray)>;
     using ValueType = typename InArrayHandleType::ValueType;
-    vtkm::cont::ArrayHandle<ValueType> outArray;
+    viskores::cont::ArrayHandle<ValueType> outArray;
 
-    this->Invoke(vtkm::worklet::CellCenter{}, inDataSet.GetCellSet(), inArray, outArray);
+    this->Invoke(
+      viskores::worklet::CellCenter{}, inDataSet.GetCellSet(), inArray, outArray);
 
     outUnknownArray = outArray;
   };
 
-  vtkm::cont::UnknownArrayHandle inUnknownArray = inField.GetData();
+  viskores::cont::UnknownArrayHandle inUnknownArray = inField.GetData();
   //// LABEL CastAndCall
-  inUnknownArray.CastAndCallForTypesWithFloatFallback<VTKM_DEFAULT_TYPE_LIST,
-                                                      VTKM_DEFAULT_STORAGE_LIST>(
+  inUnknownArray.CastAndCallForTypesWithFloatFallback<VISKORES_DEFAULT_TYPE_LIST,
+                                                      VISKORES_DEFAULT_STORAGE_LIST>(
     resolveType);
 
   std::string outFieldName = this->GetOutputFieldName();
@@ -133,45 +146,46 @@ VTKM_CONT cont::DataSet CellCenters::DoExecute(const vtkm::cont::DataSet& inData
 
 } // namespace field_conversion
 } // namespace filter
-} // namespace vtkm
+} // namespace viskores
 ////
 //// END-EXAMPLE FilterFieldWithCellsImpl
 ////
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/MakeTestDataSet.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
 
-void CheckCellCenters(const vtkm::cont::DataSet& dataSet)
+void CheckCellCenters(const viskores::cont::DataSet& dataSet)
 {
   std::cout << "Checking cell centers." << std::endl;
-  vtkm::cont::CellSetStructured<3> cellSet;
+  viskores::cont::CellSetStructured<3> cellSet;
   dataSet.GetCellSet().AsCellSet(cellSet);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f> cellCentersArray;
+  viskores::cont::ArrayHandle<viskores::Vec3f> cellCentersArray;
   dataSet.GetCellField("cell_center").GetData().AsArrayHandle(cellCentersArray);
 
-  VTKM_TEST_ASSERT(cellSet.GetNumberOfCells() == cellCentersArray.GetNumberOfValues(),
-                   "Cell centers array has wrong number of values.");
+  VISKORES_TEST_ASSERT(cellSet.GetNumberOfCells() ==
+                         cellCentersArray.GetNumberOfValues(),
+                       "Cell centers array has wrong number of values.");
 
-  vtkm::Id3 cellDimensions = cellSet.GetCellDimensions() - vtkm::Id3(1);
+  viskores::Id3 cellDimensions = cellSet.GetCellDimensions() - viskores::Id3(1);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f>::ReadPortalType cellCentersPortal =
+  viskores::cont::ArrayHandle<viskores::Vec3f>::ReadPortalType cellCentersPortal =
     cellCentersArray.ReadPortal();
 
-  vtkm::Id cellIndex = 0;
-  for (vtkm::Id kIndex = 0; kIndex < cellDimensions[2]; kIndex++)
+  viskores::Id cellIndex = 0;
+  for (viskores::Id kIndex = 0; kIndex < cellDimensions[2]; kIndex++)
   {
-    for (vtkm::Id jIndex = 0; jIndex < cellDimensions[1]; jIndex++)
+    for (viskores::Id jIndex = 0; jIndex < cellDimensions[1]; jIndex++)
     {
-      for (vtkm::Id iIndex = 0; iIndex < cellDimensions[0]; iIndex++)
+      for (viskores::Id iIndex = 0; iIndex < cellDimensions[0]; iIndex++)
       {
-        vtkm::Vec3f center = cellCentersPortal.Get(cellIndex);
-        VTKM_TEST_ASSERT(test_equal(center[0], iIndex + 0.5), "Bad X coord.");
-        VTKM_TEST_ASSERT(test_equal(center[1], jIndex + 0.5), "Bad Y coord.");
-        VTKM_TEST_ASSERT(test_equal(center[2], kIndex + 0.5), "Bad Z coord.");
+        viskores::Vec3f center = cellCentersPortal.Get(cellIndex);
+        VISKORES_TEST_ASSERT(test_equal(center[0], iIndex + 0.5), "Bad X coord.");
+        VISKORES_TEST_ASSERT(test_equal(center[1], jIndex + 0.5), "Bad Y coord.");
+        VISKORES_TEST_ASSERT(test_equal(center[2], kIndex + 0.5), "Bad Z coord.");
         cellIndex++;
       }
     }
@@ -180,16 +194,16 @@ void CheckCellCenters(const vtkm::cont::DataSet& dataSet)
 
 void Test()
 {
-  vtkm::cont::testing::MakeTestDataSet makeTestDataSet;
+  viskores::cont::testing::MakeTestDataSet makeTestDataSet;
 
   std::cout << "Making test data set." << std::endl;
-  vtkm::cont::DataSet dataSet = makeTestDataSet.Make3DUniformDataSet0();
+  viskores::cont::DataSet dataSet = makeTestDataSet.Make3DUniformDataSet0();
 
   std::cout << "Finding cell centers with filter." << std::endl;
-  vtkm::filter::field_conversion::CellCenters cellCentersFilter;
+  viskores::filter::field_conversion::CellCenters cellCentersFilter;
   cellCentersFilter.SetUseCoordinateSystemAsField(true);
   cellCentersFilter.SetOutputFieldName("cell_center");
-  vtkm::cont::DataSet results = cellCentersFilter.Execute(dataSet);
+  viskores::cont::DataSet results = cellCentersFilter.Execute(dataSet);
 
   CheckCellCenters(results);
 }
@@ -198,5 +212,5 @@ void Test()
 
 int GuideExampleUseWorkletVisitCellsWithPoints(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

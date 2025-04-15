@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -7,20 +15,20 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#include <vtkm/cont/Algorithm.h>
-#include <vtkm/worklet/Keys.h>
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/WorkletReduceByKey.h>
+#include <viskores/cont/Algorithm.h>
+#include <viskores/worklet/Keys.h>
+#include <viskores/worklet/WorkletMapField.h>
+#include <viskores/worklet/WorkletReduceByKey.h>
 
-#include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/ArrayRangeCompute.h>
+#include <viskores/cont/ArrayHandleConstant.h>
+#include <viskores/cont/ArrayRangeCompute.h>
 
-#include <vtkm/Math.h>
-#include <vtkm/Range.h>
+#include <viskores/Math.h>
+#include <viskores/Range.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
-namespace vtkm
+namespace viskores
 {
 namespace worklet
 {
@@ -31,33 +39,33 @@ namespace worklet
 class BinScalars
 {
 public:
-  VTKM_EXEC_CONT
-  BinScalars(const vtkm::Range& range, vtkm::Id numBins)
+  VISKORES_EXEC_CONT
+  BinScalars(const viskores::Range& range, viskores::Id numBins)
     : Range(range)
     , NumBins(numBins)
   {
   }
 
-  VTKM_EXEC_CONT
-  BinScalars(const vtkm::Range& range, vtkm::Float64 tolerance)
+  VISKORES_EXEC_CONT
+  BinScalars(const viskores::Range& range, viskores::Float64 tolerance)
     : Range(range)
   {
-    this->NumBins = vtkm::Id(this->Range.Length() / tolerance) + 1;
+    this->NumBins = viskores::Id(this->Range.Length() / tolerance) + 1;
   }
 
-  VTKM_EXEC_CONT
-  vtkm::Id GetBin(vtkm::Float64 value) const
+  VISKORES_EXEC_CONT
+  viskores::Id GetBin(viskores::Float64 value) const
   {
-    vtkm::Float64 ratio = (value - this->Range.Min) / this->Range.Length();
-    vtkm::Id bin = vtkm::Id(ratio * this->NumBins);
-    bin = vtkm::Max(bin, vtkm::Id(0));
-    bin = vtkm::Min(bin, this->NumBins - 1);
+    viskores::Float64 ratio = (value - this->Range.Min) / this->Range.Length();
+    viskores::Id bin = viskores::Id(ratio * this->NumBins);
+    bin = viskores::Max(bin, viskores::Id(0));
+    bin = viskores::Min(bin, this->NumBins - 1);
     return bin;
   }
 
 private:
-  vtkm::Range Range;
-  vtkm::Id NumBins;
+  viskores::Range Range;
+  viskores::Id NumBins;
 };
 ////
 //// END-EXAMPLE BinScalars
@@ -65,12 +73,12 @@ private:
 
 struct CreateHistogram
 {
-  vtkm::cont::Invoker Invoke;
+  viskores::cont::Invoker Invoke;
 
   ////
   //// BEGIN-EXAMPLE IdentifyBins
   ////
-  struct IdentifyBins : vtkm::worklet::WorkletMapField
+  struct IdentifyBins : viskores::worklet::WorkletMapField
   {
     using ControlSignature = void(FieldIn data, FieldOut bins);
     using ExecutionSignature = _2(_1);
@@ -78,14 +86,14 @@ struct CreateHistogram
 
     BinScalars Bins;
 
-    VTKM_CONT
+    VISKORES_CONT
     IdentifyBins(const BinScalars& bins)
       : Bins(bins)
     {
     }
 
-    VTKM_EXEC
-    vtkm::Id operator()(vtkm::Float64 value) const { return Bins.GetBin(value); }
+    VISKORES_EXEC
+    viskores::Id operator()(viskores::Float64 value) const { return Bins.GetBin(value); }
   };
   ////
   //// END-EXAMPLE IdentifyBins
@@ -94,16 +102,16 @@ struct CreateHistogram
   ////
   //// BEGIN-EXAMPLE CountBins
   ////
-  struct CountBins : vtkm::worklet::WorkletReduceByKey
+  struct CountBins : viskores::worklet::WorkletReduceByKey
   {
     using ControlSignature = void(KeysIn keys, WholeArrayOut binCounts);
     using ExecutionSignature = void(_1, ValueCount, _2);
     using InputDomain = _1;
 
     template<typename BinCountsPortalType>
-    VTKM_EXEC void operator()(vtkm::Id binId,
-                              vtkm::IdComponent numValuesInBin,
-                              BinCountsPortalType& binCounts) const
+    VISKORES_EXEC void operator()(viskores::Id binId,
+                                  viskores::IdComponent numValuesInBin,
+                                  BinCountsPortalType& binCounts) const
     {
       binCounts.Set(binId, numValuesInBin);
     }
@@ -113,31 +121,33 @@ struct CreateHistogram
   ////
 
   template<typename InArrayHandleType>
-  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Id> Run(const InArrayHandleType& valuesArray,
-                                                  vtkm::Id numBins)
+  VISKORES_CONT viskores::cont::ArrayHandle<viskores::Id> Run(
+    const InArrayHandleType& valuesArray,
+    viskores::Id numBins)
   {
-    VTKM_IS_ARRAY_HANDLE(InArrayHandleType);
+    VISKORES_IS_ARRAY_HANDLE(InArrayHandleType);
 
-    vtkm::Range range = vtkm::cont::ArrayRangeCompute(valuesArray).ReadPortal().Get(0);
+    viskores::Range range =
+      viskores::cont::ArrayRangeCompute(valuesArray).ReadPortal().Get(0);
     BinScalars bins(range, numBins);
 
     ////
     //// BEGIN-EXAMPLE CreateKeysObject
     ////
-    vtkm::cont::ArrayHandle<vtkm::Id> binIds;
+    viskores::cont::ArrayHandle<viskores::Id> binIds;
     this->Invoke(IdentifyBins(bins), valuesArray, binIds);
 
     ////
     //// BEGIN-EXAMPLE InvokeCountBins
     ////
-    vtkm::worklet::Keys<vtkm::Id> keys(binIds);
+    viskores::worklet::Keys<viskores::Id> keys(binIds);
     ////
     //// END-EXAMPLE CreateKeysObject
     ////
 
-    vtkm::cont::ArrayHandle<vtkm::Id> histogram;
-    vtkm::cont::Algorithm::Copy(vtkm::cont::make_ArrayHandleConstant(0, numBins),
-                                histogram);
+    viskores::cont::ArrayHandle<viskores::Id> histogram;
+    viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(0, numBins),
+                                    histogram);
 
     this->Invoke(CountBins{}, keys, histogram);
     ////
@@ -153,7 +163,7 @@ struct CombineSimilarValues
   ////
   //// BEGIN-EXAMPLE CombineSimilarValues
   ////
-  struct IdentifyBins : vtkm::worklet::WorkletMapField
+  struct IdentifyBins : viskores::worklet::WorkletMapField
   {
     using ControlSignature = void(FieldIn data, FieldOut bins);
     using ExecutionSignature = _2(_1);
@@ -161,20 +171,20 @@ struct CombineSimilarValues
 
     BinScalars Bins;
 
-    VTKM_CONT
+    VISKORES_CONT
     IdentifyBins(const BinScalars& bins)
       : Bins(bins)
     {
     }
 
-    VTKM_EXEC
-    vtkm::Id operator()(vtkm::Float64 value) const { return Bins.GetBin(value); }
+    VISKORES_EXEC
+    viskores::Id operator()(viskores::Float64 value) const { return Bins.GetBin(value); }
   };
 
   ////
   //// BEGIN-EXAMPLE AverageBins
   ////
-  struct BinAverage : vtkm::worklet::WorkletReduceByKey
+  struct BinAverage : viskores::worklet::WorkletReduceByKey
   {
     using ControlSignature = void(KeysIn keys,
                                   ValuesIn originalValues,
@@ -183,11 +193,12 @@ struct CombineSimilarValues
     using InputDomain = _1;
 
     template<typename OriginalValuesVecType>
-    VTKM_EXEC typename OriginalValuesVecType::ComponentType operator()(
+    VISKORES_EXEC typename OriginalValuesVecType::ComponentType operator()(
       const OriginalValuesVecType& originalValues) const
     {
       typename OriginalValuesVecType::ComponentType sum = 0;
-      for (vtkm::IdComponent index = 0; index < originalValues.GetNumberOfComponents();
+      for (viskores::IdComponent index = 0;
+           index < originalValues.GetNumberOfComponents();
            index++)
       {
         sum = sum + originalValues[index];
@@ -204,29 +215,30 @@ struct CombineSimilarValues
   //
 
   //// PAUSE-EXAMPLE
-  vtkm::cont::Invoker Invoke;
-  vtkm::Id NumBins;
+  viskores::cont::Invoker Invoke;
+  viskores::Id NumBins;
 
   template<typename InArrayHandleType>
-  VTKM_CONT vtkm::cont::ArrayHandle<typename InArrayHandleType::ValueType> Run(
+  VISKORES_CONT viskores::cont::ArrayHandle<typename InArrayHandleType::ValueType> Run(
     const InArrayHandleType& inField,
-    vtkm::Id numBins)
+    viskores::Id numBins)
   {
-    VTKM_IS_ARRAY_HANDLE(InArrayHandleType);
+    VISKORES_IS_ARRAY_HANDLE(InArrayHandleType);
     using T = typename InArrayHandleType::ValueType;
 
     this->NumBins = numBins;
 
     //// RESUME-EXAMPLE
-    vtkm::Range range = vtkm::cont::ArrayRangeCompute(inField).ReadPortal().Get(0);
+    viskores::Range range =
+      viskores::cont::ArrayRangeCompute(inField).ReadPortal().Get(0);
     BinScalars bins(range, numBins);
 
-    vtkm::cont::ArrayHandle<vtkm::Id> binIds;
+    viskores::cont::ArrayHandle<viskores::Id> binIds;
     this->Invoke(IdentifyBins(bins), inField, binIds);
 
-    vtkm::worklet::Keys<vtkm::Id> keys(binIds);
+    viskores::worklet::Keys<viskores::Id> keys(binIds);
 
-    vtkm::cont::ArrayHandle<T> combinedValues;
+    viskores::cont::ArrayHandle<T> combinedValues;
 
     this->Invoke(BinAverage{}, keys, inField, combinedValues);
     ////
@@ -238,11 +250,11 @@ struct CombineSimilarValues
 };
 
 } // namespace worklet
-} // namespace vtkm
+} // namespace viskores
 
 void DoWorkletReduceByKeyTest()
 {
-  vtkm::Float64 valueBuffer[52] = {
+  viskores::Float64 valueBuffer[52] = {
     3.568802153, 2.569206462, 3.369894868, 3.05340034,  3.189916551, 3.021942381,
     2.146410817, 3.369740333, 4.034567259, 4.338713076, 3.120994598, 2.448715191,
     2.296382644, 2.26980974,  3.610078207, 1.590680158, 3.820785828, 3.291345926,
@@ -254,23 +266,23 @@ void DoWorkletReduceByKeyTest()
     4.500478394, 3.762309474, 0.0,         6.0
   };
 
-  vtkm::cont::ArrayHandle<vtkm::Float64> valuesArray =
-    vtkm::cont::make_ArrayHandle(valueBuffer, 52, vtkm::CopyFlag::On);
+  viskores::cont::ArrayHandle<viskores::Float64> valuesArray =
+    viskores::cont::make_ArrayHandle(valueBuffer, 52, viskores::CopyFlag::On);
 
-  vtkm::cont::ArrayHandle<vtkm::Id> histogram =
-    vtkm::worklet::CreateHistogram().Run(valuesArray, 10);
+  viskores::cont::ArrayHandle<viskores::Id> histogram =
+    viskores::worklet::CreateHistogram().Run(valuesArray, 10);
 
   std::cout << "Histogram: " << std::endl;
-  vtkm::cont::printSummary_ArrayHandle(histogram, std::cout, true);
+  viskores::cont::printSummary_ArrayHandle(histogram, std::cout, true);
 
-  vtkm::cont::ArrayHandle<vtkm::Float64> combinedArray =
-    vtkm::worklet::CombineSimilarValues().Run(valuesArray, 60);
+  viskores::cont::ArrayHandle<viskores::Float64> combinedArray =
+    viskores::worklet::CombineSimilarValues().Run(valuesArray, 60);
 
   std::cout << "Combined values: " << std::endl;
-  vtkm::cont::printSummary_ArrayHandle(combinedArray, std::cout, true);
+  viskores::cont::printSummary_ArrayHandle(combinedArray, std::cout, true);
 }
 
 int GuideExampleUseWorkletReduceByKey(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(DoWorkletReduceByKeyTest, argc, argv);
+  return viskores::cont::testing::Testing::Run(DoWorkletReduceByKeyTest, argc, argv);
 }

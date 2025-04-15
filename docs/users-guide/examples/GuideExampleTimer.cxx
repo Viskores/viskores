@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,44 +16,44 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/Timer.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/Timer.h>
 
-#include <vtkm/filter/field_transform/PointElevation.h>
+#include <viskores/filter/field_transform/PointElevation.h>
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/MakeTestDataSet.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
 
 void DoTiming()
 {
-  vtkm::cont::DataSet dataSet =
-    vtkm::cont::testing::MakeTestDataSet().Make2DUniformDataSet0();
+  viskores::cont::DataSet dataSet =
+    viskores::cont::testing::MakeTestDataSet().Make2DUniformDataSet0();
   ////
   //// BEGIN-EXAMPLE Timer
   ////
-  vtkm::filter::field_transform::PointElevation elevationFilter;
+  viskores::filter::field_transform::PointElevation elevationFilter;
   elevationFilter.SetUseCoordinateSystemAsField(true);
   elevationFilter.SetOutputFieldName("elevation");
 
-  vtkm::cont::Timer timer;
+  viskores::cont::Timer timer;
 
   timer.Start();
 
-  vtkm::cont::DataSet result = elevationFilter.Execute(dataSet);
+  viskores::cont::DataSet result = elevationFilter.Execute(dataSet);
 
   // This code makes sure data is pulled back to the host in a host/device
   // architecture.
-  vtkm::cont::ArrayHandle<vtkm::Float64> outArray;
+  viskores::cont::ArrayHandle<viskores::Float64> outArray;
   result.GetField("elevation").GetData().AsArrayHandle(outArray);
   outArray.SyncControlArray();
 
   timer.Stop();
 
-  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
+  viskores::Float64 elapsedTime = timer.GetElapsedTime();
 
   std::cout << "Time to run: " << elapsedTime << std::endl;
   ////
@@ -57,5 +65,5 @@ void DoTiming()
 
 int GuideExampleTimer(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(DoTiming, argc, argv);
+  return viskores::cont::testing::Testing::Run(DoTiming, argc, argv);
 }

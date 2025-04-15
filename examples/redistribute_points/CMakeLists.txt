@@ -1,4 +1,12 @@
 ##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##============================================================================
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
@@ -10,13 +18,13 @@
 cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
 project(RedistributePoints CXX)
 
-#Find the VTK-m package
-find_package(VTKm REQUIRED QUIET)
+#Find the Viskores package
+find_package(Viskores REQUIRED QUIET)
 
-if(TARGET vtkm::io AND TARGET vtkm::filter_entity_extraction)
+if(TARGET viskores::io AND TARGET viskores::filter_entity_extraction)
   add_executable(RedistributePoints RedistributePoints.cxx RedistributePoints.h main.cxx)
-  target_link_libraries(RedistributePoints PRIVATE vtkm::io vtkm::filter_entity_extraction)
-  vtkm_add_target_information(RedistributePoints
+  target_link_libraries(RedistributePoints PRIVATE viskores::io viskores::filter_entity_extraction)
+  viskores_add_target_information(RedistributePoints
     DROP_UNUSED_SYMBOLS
     MODIFY_CUDA_FLAGS
     DEVICE_SOURCES RedistributePoints.cxx

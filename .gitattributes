@@ -6,18 +6,13 @@
 *.hxx   our-c-style
 *.cu    our-c-style
 
-
-
-
-
-
 *.cmake          whitespace=tab-in-indent
 *.md             whitespace=tab-in-indent whitespace=-blank-at-eol conflict-marker-size=79 -whitespace
 *.md.tmpl        whitespace=tab-in-indent whitespace=-blank-at-eol conflict-marker-size=79 -whitespace
 *.rst            whitespace=tab-in-indent conflict-marker-size=79
 *.txt            whitespace=tab-in-indent
-vtkm/thirdparty/diy/vtkmdiy/**           -format.clang-format -whitespace
-vtkm/thirdparty/optionparser/vtkmoptionparser/** -format.clang-format -whitespace
-vtkm/thirdparty/lodepng/vtkmlodepng/** -format.clang-format -whitespace
-vtkm/thirdparty/lcl/vtkmlcl/**  -format.clang-format -whitespace
-* !text !filter !merge !diff
+
+viskores/thirdparty/diy/viskoresdiy/**           -format.clang-format -whitespace
+viskores/thirdparty/optionparser/viskoresoptionparser/** -format.clang-format -whitespace
+viskores/thirdparty/lodepng/viskoreslodepng/** -format.clang-format -whitespace
+viskores/thirdparty/lcl/viskoreslcl/**  -format.clang-format -whitespace

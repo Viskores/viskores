@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,25 +16,26 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/WorkletMapField.h>
+#include <viskores/worklet/WorkletMapField.h>
 
-#include <vtkm/filter/Filter.h>
+#include <viskores/filter/Filter.h>
 
-#include <vtkm/cont/Invoker.h>
+#include <viskores/cont/Invoker.h>
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/MakeTestDataSet.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
 
-constexpr vtkm::Id ARRAY_SIZE = 10;
+constexpr viskores::Id ARRAY_SIZE = 10;
 
 ////
 //// BEGIN-EXAMPLE SimpleWorklet
 ////
 //// LABEL Inherit
-struct PoundsPerSquareInchToNewtonsPerSquareMeterWorklet : vtkm::worklet::WorkletMapField
+struct PoundsPerSquareInchToNewtonsPerSquareMeterWorklet
+  : viskores::worklet::WorkletMapField
 {
   //// LABEL ControlSignature
   //// BEGIN-EXAMPLE ControlSignature
@@ -44,7 +53,7 @@ struct PoundsPerSquareInchToNewtonsPerSquareMeterWorklet : vtkm::worklet::Workle
   //// LABEL OperatorStart
   //// BEGIN-EXAMPLE WorkletOperator
   template<typename T>
-  VTKM_EXEC void operator()(const T& psi, T& nsm) const
+  VISKORES_EXEC void operator()(const T& psi, T& nsm) const
   {
     //// END-EXAMPLE WorkletOperator
     // 1 psi = 6894.76 N/m^2
@@ -61,7 +70,7 @@ void DemoWorklet()
   ////
   //// BEGIN-EXAMPLE WorkletInvoke
   ////
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> psiArray;
+  viskores::cont::ArrayHandle<viskores::FloatDefault> psiArray;
   // Fill psiArray with values...
   //// PAUSE-EXAMPLE
   psiArray.Allocate(ARRAY_SIZE);
@@ -69,9 +78,9 @@ void DemoWorklet()
   //// RESUME-EXAMPLE
 
   //// LABEL Construct
-  vtkm::cont::Invoker invoke;
+  viskores::cont::Invoker invoke;
 
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> nsmArray;
+  viskores::cont::ArrayHandle<viskores::FloatDefault> nsmArray;
   //// LABEL Call
   invoke(PoundsPerSquareInchToNewtonsPerSquareMeterWorklet{}, psiArray, nsmArray);
   ////
@@ -81,35 +90,36 @@ void DemoWorklet()
 
 } // anonymous namespace
 
-#define VTKM_FILTER_UNIT_CONVERSION_EXPORT
+#define VISKORES_FILTER_UNIT_CONVERSION_EXPORT
 
 ////
 //// BEGIN-EXAMPLE SimpleField
 ////
-namespace vtkm
+namespace viskores
 {
 namespace filter
 {
 namespace unit_conversion
 {
 
-class VTKM_FILTER_UNIT_CONVERSION_EXPORT PoundsPerSquareInchToNewtonsPerSquareMeterFilter
-  : public vtkm::filter::Filter
+class VISKORES_FILTER_UNIT_CONVERSION_EXPORT
+  PoundsPerSquareInchToNewtonsPerSquareMeterFilter : public viskores::filter::Filter
 {
 public:
-  VTKM_CONT PoundsPerSquareInchToNewtonsPerSquareMeterFilter();
+  VISKORES_CONT PoundsPerSquareInchToNewtonsPerSquareMeterFilter();
 
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet) override;
+  VISKORES_CONT viskores::cont::DataSet DoExecute(
+    const viskores::cont::DataSet& inDataSet) override;
 };
 
 }
 }
-} // namespace vtkm::filter::unit_conversion
+} // namespace viskores::filter::unit_conversion
 ////
 //// END-EXAMPLE SimpleField
 ////
 
-namespace vtkm
+namespace viskores
 {
 namespace filter
 {
@@ -119,7 +129,7 @@ namespace unit_conversion
 ////
 //// BEGIN-EXAMPLE SimpleFieldConstructor
 ////
-VTKM_CONT PoundsPerSquareInchToNewtonsPerSquareMeterFilter::
+VISKORES_CONT PoundsPerSquareInchToNewtonsPerSquareMeterFilter::
   PoundsPerSquareInchToNewtonsPerSquareMeterFilter()
 {
   this->SetOutputFieldName("");
@@ -131,21 +141,22 @@ VTKM_CONT PoundsPerSquareInchToNewtonsPerSquareMeterFilter::
 ////
 //// BEGIN-EXAMPLE SimpleFieldDoExecute
 ////
-VTKM_CONT vtkm::cont::DataSet
+VISKORES_CONT viskores::cont::DataSet
 PoundsPerSquareInchToNewtonsPerSquareMeterFilter::DoExecute(
-  const vtkm::cont::DataSet& inDataSet)
+  const viskores::cont::DataSet& inDataSet)
 {
   //// LABEL InputField
-  vtkm::cont::Field inField = this->GetFieldFromDataSet(inDataSet);
+  viskores::cont::Field inField = this->GetFieldFromDataSet(inDataSet);
 
-  vtkm::cont::UnknownArrayHandle outArray;
+  viskores::cont::UnknownArrayHandle outArray;
 
   //// LABEL Lambda
-  auto resolveType = [&](const auto& inputArray) {
+  auto resolveType = [&](const auto& inputArray)
+  {
     // use std::decay to remove const ref from the decltype of concrete.
     using T = typename std::decay_t<decltype(inputArray)>::ValueType;
     //// LABEL CreateOutputArray
-    vtkm::cont::ArrayHandle<T> result;
+    viskores::cont::ArrayHandle<T> result;
     //// LABEL Invoke
     this->Invoke(
       PoundsPerSquareInchToNewtonsPerSquareMeterWorklet{}, inputArray, result);
@@ -172,23 +183,23 @@ PoundsPerSquareInchToNewtonsPerSquareMeterFilter::DoExecute(
 
 }
 }
-} // namespace vtkm::filter::unit_conversion
+} // namespace viskores::filter::unit_conversion
 
 namespace
 {
 
 void DemoFilter()
 {
-  vtkm::cont::testing::MakeTestDataSet makeData;
-  vtkm::cont::DataSet inData = makeData.Make3DExplicitDataSet0();
+  viskores::cont::testing::MakeTestDataSet makeData;
+  viskores::cont::DataSet inData = makeData.Make3DExplicitDataSet0();
 
-  vtkm::filter::unit_conversion::PoundsPerSquareInchToNewtonsPerSquareMeterFilter
+  viskores::filter::unit_conversion::PoundsPerSquareInchToNewtonsPerSquareMeterFilter
     convertFilter;
   convertFilter.SetActiveField("pointvar");
-  vtkm::cont::DataSet outData = convertFilter.Execute(inData);
+  viskores::cont::DataSet outData = convertFilter.Execute(inData);
 
   outData.PrintSummary(std::cout);
-  VTKM_TEST_ASSERT(outData.HasPointField("pointvar_N/m^2"));
+  VISKORES_TEST_ASSERT(outData.HasPointField("pointvar_N/m^2"));
 }
 
 void Run()
@@ -201,5 +212,5 @@ void Run()
 
 int GuideExampleSimpleAlgorithm(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Run, argc, argv);
+  return viskores::cont::testing::Testing::Run(Run, argc, argv);
 }

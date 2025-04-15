@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -15,17 +23,17 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-#include <vtkm/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetReader.h>
 
-#include <vtkm/rendering/Actor.h>
-#include <vtkm/rendering/Camera.h>
-#include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/View3D.h>
+#include <viskores/rendering/Actor.h>
+#include <viskores/rendering/Camera.h>
+#include <viskores/rendering/CanvasRayTracer.h>
+#include <viskores/rendering/MapperRayTracer.h>
+#include <viskores/rendering/View3D.h>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
-#include <vtkm/internal/Windows.h>
+#include <viskores/internal/Windows.h>
 
 #ifdef __APPLE__
 #include <GLUT/glut.h>
@@ -38,7 +46,7 @@
 namespace
 {
 
-vtkm::rendering::View3D* gViewPointer = NULL;
+viskores::rendering::View3D* gViewPointer = NULL;
 
 int gButtonState[3] = { GLUT_UP, GLUT_UP, GLUT_UP };
 int gMousePositionX;
@@ -47,7 +55,7 @@ bool gNoInteraction;
 
 void DisplayCallback()
 {
-  vtkm::rendering::View3D& view = *gViewPointer;
+  viskores::rendering::View3D& view = *gViewPointer;
 
   ////
   //// BEGIN-EXAMPLE RenderToOpenGL
@@ -55,12 +63,12 @@ void DisplayCallback()
   view.Paint();
 
   // Get the color buffer containing the rendered image.
-  vtkm::cont::ArrayHandle<vtkm::Vec4f_32> colorBuffer =
+  viskores::cont::ArrayHandle<viskores::Vec4f_32> colorBuffer =
     view.GetCanvas().GetColorBuffer();
 
   // Pull the C array out of the arrayhandle.
   const void* colorArray =
-    vtkm::cont::ArrayHandleBasic<vtkm::Vec4f_32>(colorBuffer).GetReadPointer();
+    viskores::cont::ArrayHandleBasic<viskores::Vec4f_32>(colorBuffer).GetReadPointer();
 
   // Write the C array to an OpenGL buffer.
   glDrawPixels((GLint)view.GetCanvas().GetWidth(),
@@ -97,24 +105,24 @@ void MouseButtonCallback(int buttonIndex, int state, int x, int y)
 ////
 //// BEGIN-EXAMPLE MouseRotate
 ////
-void DoMouseRotate(vtkm::rendering::View& view,
-                   vtkm::Id mouseStartX,
-                   vtkm::Id mouseStartY,
-                   vtkm::Id mouseEndX,
-                   vtkm::Id mouseEndY)
+void DoMouseRotate(viskores::rendering::View& view,
+                   viskores::Id mouseStartX,
+                   viskores::Id mouseStartY,
+                   viskores::Id mouseEndX,
+                   viskores::Id mouseEndY)
 {
-  vtkm::Id screenWidth = view.GetCanvas().GetWidth();
-  vtkm::Id screenHeight = view.GetCanvas().GetHeight();
+  viskores::Id screenWidth = view.GetCanvas().GetWidth();
+  viskores::Id screenHeight = view.GetCanvas().GetHeight();
 
   // Convert the mouse position coordinates, given in pixels from 0 to
   // width/height, to normalized screen coordinates from -1 to 1. Note that y
   // screen coordinates are usually given from the top down whereas our
   // geometry transforms are given from bottom up, so you have to reverse the y
   // coordiantes.
-  vtkm::Float32 startX = (2.0f * mouseStartX) / screenWidth - 1.0f;
-  vtkm::Float32 startY = -((2.0f * mouseStartY) / screenHeight - 1.0f);
-  vtkm::Float32 endX = (2.0f * mouseEndX) / screenWidth - 1.0f;
-  vtkm::Float32 endY = -((2.0f * mouseEndY) / screenHeight - 1.0f);
+  viskores::Float32 startX = (2.0f * mouseStartX) / screenWidth - 1.0f;
+  viskores::Float32 startY = -((2.0f * mouseStartY) / screenHeight - 1.0f);
+  viskores::Float32 endX = (2.0f * mouseEndX) / screenWidth - 1.0f;
+  viskores::Float32 endY = -((2.0f * mouseEndY) / screenHeight - 1.0f);
 
   view.GetCamera().TrackballRotate(startX, startY, endX, endY);
 }
@@ -125,27 +133,27 @@ void DoMouseRotate(vtkm::rendering::View& view,
 ////
 //// BEGIN-EXAMPLE MousePan
 ////
-void DoMousePan(vtkm::rendering::View& view,
-                vtkm::Id mouseStartX,
-                vtkm::Id mouseStartY,
-                vtkm::Id mouseEndX,
-                vtkm::Id mouseEndY)
+void DoMousePan(viskores::rendering::View& view,
+                viskores::Id mouseStartX,
+                viskores::Id mouseStartY,
+                viskores::Id mouseEndX,
+                viskores::Id mouseEndY)
 {
-  vtkm::Id screenWidth = view.GetCanvas().GetWidth();
-  vtkm::Id screenHeight = view.GetCanvas().GetHeight();
+  viskores::Id screenWidth = view.GetCanvas().GetWidth();
+  viskores::Id screenHeight = view.GetCanvas().GetHeight();
 
   // Convert the mouse position coordinates, given in pixels from 0 to
   // width/height, to normalized screen coordinates from -1 to 1. Note that y
   // screen coordinates are usually given from the top down whereas our
   // geometry transforms are given from bottom up, so you have to reverse the y
   // coordiantes.
-  vtkm::Float32 startX = (2.0f * mouseStartX) / screenWidth - 1.0f;
-  vtkm::Float32 startY = -((2.0f * mouseStartY) / screenHeight - 1.0f);
-  vtkm::Float32 endX = (2.0f * mouseEndX) / screenWidth - 1.0f;
-  vtkm::Float32 endY = -((2.0f * mouseEndY) / screenHeight - 1.0f);
+  viskores::Float32 startX = (2.0f * mouseStartX) / screenWidth - 1.0f;
+  viskores::Float32 startY = -((2.0f * mouseStartY) / screenHeight - 1.0f);
+  viskores::Float32 endX = (2.0f * mouseEndX) / screenWidth - 1.0f;
+  viskores::Float32 endY = -((2.0f * mouseEndY) / screenHeight - 1.0f);
 
-  vtkm::Float32 deltaX = endX - startX;
-  vtkm::Float32 deltaY = endY - startY;
+  viskores::Float32 deltaX = endX - startX;
+  viskores::Float32 deltaY = endY - startY;
 
   ////
   //// BEGIN-EXAMPLE Pan
@@ -162,19 +170,21 @@ void DoMousePan(vtkm::rendering::View& view,
 ////
 //// BEGIN-EXAMPLE MouseZoom
 ////
-void DoMouseZoom(vtkm::rendering::View& view, vtkm::Id mouseStartY, vtkm::Id mouseEndY)
+void DoMouseZoom(viskores::rendering::View& view,
+                 viskores::Id mouseStartY,
+                 viskores::Id mouseEndY)
 {
-  vtkm::Id screenHeight = view.GetCanvas().GetHeight();
+  viskores::Id screenHeight = view.GetCanvas().GetHeight();
 
   // Convert the mouse position coordinates, given in pixels from 0 to height,
   // to normalized screen coordinates from -1 to 1. Note that y screen
   // coordinates are usually given from the top down whereas our geometry
   // transforms are given from bottom up, so you have to reverse the y
   // coordiantes.
-  vtkm::Float32 startY = -((2.0f * mouseStartY) / screenHeight - 1.0f);
-  vtkm::Float32 endY = -((2.0f * mouseEndY) / screenHeight - 1.0f);
+  viskores::Float32 startY = -((2.0f * mouseStartY) / screenHeight - 1.0f);
+  viskores::Float32 endY = -((2.0f * mouseEndY) / screenHeight - 1.0f);
 
-  vtkm::Float32 zoomFactor = endY - startY;
+  viskores::Float32 zoomFactor = endY - startY;
 
   ////
   //// BEGIN-EXAMPLE Zoom
@@ -213,7 +223,7 @@ void SaveImage()
 {
   std::cout << "Saving image." << std::endl;
 
-  vtkm::rendering::Canvas& canvas = gViewPointer->GetCanvas();
+  viskores::rendering::Canvas& canvas = gViewPointer->GetCanvas();
 
   ////
   //// BEGIN-EXAMPLE SaveCanvasImage
@@ -227,9 +237,9 @@ void SaveImage()
 ////
 //// BEGIN-EXAMPLE ResetCamera
 ////
-void ResetCamera(vtkm::rendering::View& view)
+void ResetCamera(viskores::rendering::View& view)
 {
-  vtkm::Bounds bounds = view.GetScene().GetSpatialBounds();
+  viskores::Bounds bounds = view.GetScene().GetSpatialBounds();
   view.GetCamera().ResetToBounds(bounds);
   //// PAUSE-EXAMPLE
   std::cout << "Position:  " << view.GetCamera().GetPosition() << std::endl;
@@ -243,15 +253,15 @@ void ResetCamera(vtkm::rendering::View& view)
 //// END-EXAMPLE ResetCamera
 ////
 
-void ChangeCamera(vtkm::rendering::Camera& camera)
+void ChangeCamera(viskores::rendering::Camera& camera)
 {
   // Just set some camera parameters for demonstration purposes.
   ////
   //// BEGIN-EXAMPLE CameraPositionOrientation
   ////
-  camera.SetPosition(vtkm::make_Vec(10.0, 6.0, 6.0));
-  camera.SetLookAt(vtkm::make_Vec(0.0, 0.0, 0.0));
-  camera.SetViewUp(vtkm::make_Vec(0.0, 1.0, 0.0));
+  camera.SetPosition(viskores::make_Vec(10.0, 6.0, 6.0));
+  camera.SetLookAt(viskores::make_Vec(0.0, 0.0, 0.0));
+  camera.SetViewUp(viskores::make_Vec(0.0, 1.0, 0.0));
   camera.SetFieldOfView(60.0);
   camera.SetClippingRange(0.1, 100.0);
   ////
@@ -259,15 +269,15 @@ void ChangeCamera(vtkm::rendering::Camera& camera)
   ////
 }
 
-void ObliqueCamera(vtkm::rendering::View& view)
+void ObliqueCamera(viskores::rendering::View& view)
 {
   ////
   //// BEGIN-EXAMPLE AxisAlignedCamera
   ////
-  view.GetCamera().SetPosition(vtkm::make_Vec(0.0, 0.0, 0.0));
-  view.GetCamera().SetLookAt(vtkm::make_Vec(0.0, 0.0, -1.0));
-  view.GetCamera().SetViewUp(vtkm::make_Vec(0.0, 1.0, 0.0));
-  vtkm::Bounds bounds = view.GetScene().GetSpatialBounds();
+  view.GetCamera().SetPosition(viskores::make_Vec(0.0, 0.0, 0.0));
+  view.GetCamera().SetLookAt(viskores::make_Vec(0.0, 0.0, -1.0));
+  view.GetCamera().SetViewUp(viskores::make_Vec(0.0, 1.0, 0.0));
+  viskores::Bounds bounds = view.GetScene().GetSpatialBounds();
   view.GetCamera().ResetToBounds(bounds);
   ////
   //// END-EXAMPLE AxisAlignedCamera
@@ -315,15 +325,15 @@ void KeyPressCallback(unsigned char key, int x, int y)
 
 int go()
 {
-  // Initialize VTK-m rendering classes
-  vtkm::cont::DataSet surfaceData;
+  // Initialize Viskores rendering classes
+  viskores::cont::DataSet surfaceData;
   try
   {
-    vtkm::io::VTKDataSetReader reader(
-      vtkm::cont::testing::Testing::GetTestDataBasePath() + "unstructured/cow.vtk");
+    viskores::io::VTKDataSetReader reader(
+      viskores::cont::testing::Testing::GetTestDataBasePath() + "unstructured/cow.vtk");
     surfaceData = reader.ReadDataSet();
   }
-  catch (vtkm::io::ErrorIO& error)
+  catch (viskores::io::ErrorIO& error)
   {
     std::cout << "Could not read file:" << std::endl << error.GetMessage() << std::endl;
     exit(1);
@@ -336,21 +346,21 @@ int go()
   ////
   //// BEGIN-EXAMPLE SpecifyColorTable
   ////
-  vtkm::rendering::Actor actor(surfaceData.GetCellSet(),
-                               surfaceData.GetCoordinateSystem(),
-                               surfaceData.GetField("RandomPointScalars"),
-                               vtkm::cont::ColorTable("inferno"));
+  viskores::rendering::Actor actor(surfaceData.GetCellSet(),
+                                   surfaceData.GetCoordinateSystem(),
+                                   surfaceData.GetField("RandomPointScalars"),
+                                   viskores::cont::ColorTable("inferno"));
   ////
   //// END-EXAMPLE SpecifyColorTable
   ////
 
-  vtkm::rendering::Scene scene;
+  viskores::rendering::Scene scene;
   scene.AddActor(actor);
 
-  vtkm::rendering::MapperRayTracer mapper;
-  vtkm::rendering::CanvasRayTracer canvas;
+  viskores::rendering::MapperRayTracer mapper;
+  viskores::rendering::CanvasRayTracer canvas;
 
-  gViewPointer = new vtkm::rendering::View3D(scene, mapper, canvas);
+  gViewPointer = new viskores::rendering::View3D(scene, mapper, canvas);
 
   // Start the GLUT rendering system. This function typically does not return.
   glutMainLoop();
@@ -364,7 +374,7 @@ int doMain(int argc, char* argv[])
   glutInit(&argc, argv);
   glutInitWindowSize(960, 600);
   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH);
-  glutCreateWindow("VTK-m Example");
+  glutCreateWindow("Viskores Example");
 
   glutDisplayFunc(DisplayCallback);
   glutReshapeFunc(WindowReshapeCallback);
@@ -381,7 +391,7 @@ int doMain(int argc, char* argv[])
     }
   }
 
-  return vtkm::cont::testing::Testing::Run(go, argc, argv);
+  return viskores::cont::testing::Testing::Run(go, argc, argv);
 }
 
 } // anonymous namespace

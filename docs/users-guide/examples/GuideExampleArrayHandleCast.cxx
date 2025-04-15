@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,11 +16,11 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandleCast.h>
+#include <viskores/cont/ArrayHandleCast.h>
 
 #include <vector>
 
-#include <vtkm/cont/testing/Testing.h>
+#include <viskores/cont/testing/Testing.h>
 
 namespace
 {
@@ -20,16 +28,16 @@ namespace
 template<typename OriginalType, typename ArrayHandleType>
 void CheckArray(const ArrayHandleType array)
 {
-  vtkm::Id length = array.GetNumberOfValues();
+  viskores::Id length = array.GetNumberOfValues();
 
   typename ArrayHandleType::ReadPortalType portal = array.ReadPortal();
-  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == length, "Portal has wrong size.");
+  VISKORES_TEST_ASSERT(portal.GetNumberOfValues() == length, "Portal has wrong size.");
 
-  for (vtkm::Id index = 0; index < length; index++)
+  for (viskores::Id index = 0; index < length; index++)
   {
-    VTKM_TEST_ASSERT(test_equal(portal.Get(index), TestValue(index, OriginalType())),
-                     "Array has wrong value.");
-    VTKM_TEST_ASSERT(
+    VISKORES_TEST_ASSERT(test_equal(portal.Get(index), TestValue(index, OriginalType())),
+                         "Array has wrong value.");
+    VISKORES_TEST_ASSERT(
       !test_equal(portal.Get(index),
                   TestValue(index, typename ArrayHandleType::ValueType())),
       "Array has wrong value.");
@@ -40,13 +48,13 @@ void CheckArray(const ArrayHandleType array)
 //// BEGIN-EXAMPLE ArrayHandleCast
 ////
 template<typename T>
-VTKM_CONT void Foo(const std::vector<T>& inputData)
+VISKORES_CONT void Foo(const std::vector<T>& inputData)
 {
-  vtkm::cont::ArrayHandle<T> originalArray =
-    vtkm::cont::make_ArrayHandle(inputData, vtkm::CopyFlag::On);
+  viskores::cont::ArrayHandle<T> originalArray =
+    viskores::cont::make_ArrayHandle(inputData, viskores::CopyFlag::On);
 
-  vtkm::cont::ArrayHandleCast<vtkm::Float64, vtkm::cont::ArrayHandle<T>> castArray(
-    originalArray);
+  viskores::cont::ArrayHandleCast<viskores::Float64, viskores::cont::ArrayHandle<T>>
+    castArray(originalArray);
   ////
   //// END-EXAMPLE ArrayHandleCast
   ////
@@ -56,7 +64,7 @@ VTKM_CONT void Foo(const std::vector<T>& inputData)
     ////
     //// BEGIN-EXAMPLE MakeArrayHandleCast
     ////
-    vtkm::cont::make_ArrayHandleCast<vtkm::Float64>(originalArray)
+    viskores::cont::make_ArrayHandleCast<viskores::Float64>(originalArray)
     ////
     //// END-EXAMPLE MakeArrayHandleCast
     ////
@@ -66,10 +74,10 @@ VTKM_CONT void Foo(const std::vector<T>& inputData)
 void Test()
 {
   const std::size_t ARRAY_SIZE = 50;
-  std::vector<vtkm::Int32> inputData(ARRAY_SIZE);
+  std::vector<viskores::Int32> inputData(ARRAY_SIZE);
   for (std::size_t index = 0; index < ARRAY_SIZE; index++)
   {
-    inputData[index] = TestValue(vtkm::Id(index), vtkm::Int32());
+    inputData[index] = TestValue(viskores::Id(index), viskores::Int32());
   }
 
   Foo(inputData);
@@ -79,5 +87,5 @@ void Test()
 
 int GuideExampleArrayHandleCast(int argc, char* argv[])
 {
-  return vtkm::cont::testing::Testing::Run(Test, argc, argv);
+  return viskores::cont::testing::Testing::Run(Test, argc, argv);
 }

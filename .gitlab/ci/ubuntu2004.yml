@@ -1,3 +1,11 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
 ##=============================================================================
 ##
 ##  Copyright (c) Kitware, Inc.
@@ -10,30 +18,57 @@
 ##
 ##=============================================================================
 
-build:ubuntu2004_kokkos37:
-  tags:
-    - build
-    - vtkm
-    - docker
-    - linux-x86_64
+ubuntu2004_kokkos37:
   extends:
     - .ubuntu2004_kokkos
     - .cmake_build_linux
     - .run_automatically
+    - .uo_cpu_tags
   variables:
     CMAKE_BUILD_TYPE: RelWithDebInfo
     CMAKE_PREFIX_PATH: "/opt/anari"
-    VTKM_SETTINGS: "kokkos+shared+64bit_floats+rendering+anari"
+    VISKORES_SETTINGS: "kokkos+shared+64bit_floats+rendering+anari+ccache"
 
-test:ubuntu2004_kokkos37:
-  tags:
-    - test
-    - vtkm
-    - docker
-    - linux-x86_64
+ubuntu2004_gcc9:
   extends:
-    - .ubuntu2004_kokkos
-    - .cmake_test_linux
+    - .ubuntu2004
+    - .cmake_build_linux
     - .run_automatically
-  needs:
-    - build:ubuntu2004_kokkos37
+    - .uo_cpu_tags
+  variables:
+    CC: "gcc-9"
+    CXX: "g++-9"
+    CMAKE_BUILD_TYPE: Debug
+    # Restrict OpenMP number of threads since multiple test stages
+    # execute on the same hardware concurrently
+    OMP_NUM_THREADS: 4
+    VISKORES_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5+ccache"
+
+ubuntu2004_gcc9_cuda:
+  tags:
+    - nvidia-a100
+    - uo-gpu
+    - x86_64-nvidiagpu
+  extends:
+    - .ubuntu2004_cuda
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CC: "gcc-9"
+    CXX: "g++-9"
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    VISKORES_SETTINGS: "cuda+ampere+shared+ascent_types+32bit_ids+64bit_floats+ccache"
+    CTEST_EXCLUSIONS: "UnitTestTimer"
+
+ubuntu2004_clang6:
+  extends:
+    - .ubuntu2004
+    - .cmake_build_linux
+    - .run_automatically
+    - .uo_cpu_tags
+  variables:
+    CC: "clang-6.0"
+    CXX: "clang++-6.0"
+    CMAKE_BUILD_TYPE: Debug
+    VISKORES_SETTINGS: "tbb+static+64bit_floats+ccache"
+    CTEST_EXCLUSIONS: "make_built_against_test_install"

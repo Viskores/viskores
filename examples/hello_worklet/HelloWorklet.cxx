@@ -1,4 +1,12 @@
 //============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -8,16 +16,16 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <vtkm/worklet/WorkletMapField.h>
+#include <viskores/worklet/WorkletMapField.h>
 
-#include <vtkm/filter/Filter.h>
+#include <viskores/filter/Filter.h>
 
-#include <vtkm/io/VTKDataSetReader.h>
-#include <vtkm/io/VTKDataSetWriter.h>
+#include <viskores/io/VTKDataSetReader.h>
+#include <viskores/io/VTKDataSetWriter.h>
 
-#include <vtkm/cont/Initialize.h>
+#include <viskores/cont/Initialize.h>
 
-#include <vtkm/VectorAnalysis.h>
+#include <viskores/VectorAnalysis.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -25,40 +33,41 @@
 namespace hello_worklet_example
 {
 
-struct HelloWorklet : public vtkm::worklet::WorkletMapField
+struct HelloWorklet : public viskores::worklet::WorkletMapField
 {
   using ControlSignature = void(FieldIn inVector, FieldOut outMagnitude);
 
   template <typename T>
-  VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& inVector, T& outMagnitude) const
+  VISKORES_EXEC void operator()(const viskores::Vec<T, 3>& inVector, T& outMagnitude) const
   {
-    outMagnitude = vtkm::Magnitude(inVector);
+    outMagnitude = viskores::Magnitude(inVector);
   }
 };
 
 } // namespace hello_worklet_example
 
-namespace vtkm
+namespace viskores
 {
 namespace filter
 {
 
-class HelloField : public vtkm::filter::Filter
+class HelloField : public viskores::filter::Filter
 {
 public:
-  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inDataSet)
+  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& inDataSet)
   {
     // Input field
-    vtkm::cont::Field inField = this->GetFieldFromDataSet(inDataSet);
+    viskores::cont::Field inField = this->GetFieldFromDataSet(inDataSet);
 
     // Holder for output
-    vtkm::cont::UnknownArrayHandle outArray;
+    viskores::cont::UnknownArrayHandle outArray;
 
     hello_worklet_example::HelloWorklet mag;
-    auto resolveType = [&](const auto& inputArray) {
+    auto resolveType = [&](const auto& inputArray)
+    {
       // use std::decay to remove const ref from the decltype of concrete.
       using T = typename std::decay_t<decltype(inputArray)>::ValueType::ComponentType;
-      vtkm::cont::ArrayHandle<T> result;
+      viskores::cont::ArrayHandle<T> result;
       this->Invoke(mag, inputArray, result);
       outArray = result;
     };
@@ -75,21 +84,21 @@ public:
   }
 };
 }
-} // vtkm::filter
+} // viskores::filter
 
 
 int main(int argc, char** argv)
 {
-  vtkm::cont::Initialize(argc, argv);
+  viskores::cont::Initialize(argc, argv);
 
   if ((argc < 3) || (argc > 4))
   {
     std::cerr << "Usage: " << argv[0] << " in_data.vtk field_name [out_data.vtk]\n\n";
     std::cerr << "For example, you could use the simple_unstructured_bin.vtk that comes with the "
-                 "VTK-m source:\n\n";
+                 "Viskores source:\n\n";
     std::cerr
       << "  " << argv[0]
-      << " <path-to-vtkm-source>/data/data/unstructured/simple_unstructured_bin.vtk vectors\n";
+      << " <path-to-viskores-source>/data/data/unstructured/simple_unstructured_bin.vtk vectors\n";
     return 1;
   }
   std::string infilename = argv[1];
@@ -100,14 +109,14 @@ int main(int argc, char** argv)
     outfilename = argv[3];
   }
 
-  vtkm::io::VTKDataSetReader reader(infilename);
-  vtkm::cont::DataSet inputData = reader.ReadDataSet();
+  viskores::io::VTKDataSetReader reader(infilename);
+  viskores::cont::DataSet inputData = reader.ReadDataSet();
 
-  vtkm::filter::HelloField helloField;
+  viskores::filter::HelloField helloField;
   helloField.SetActiveField(infield);
-  vtkm::cont::DataSet outputData = helloField.Execute(inputData);
+  viskores::cont::DataSet outputData = helloField.Execute(inputData);
 
-  vtkm::io::VTKDataSetWriter writer(outfilename);
+  viskores::io::VTKDataSetWriter writer(outfilename);
   writer.WriteDataSet(outputData);
 
   return 0;

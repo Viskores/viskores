@@ -1,0 +1,155 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+##=============================================================================
+##
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##=============================================================================
+
+name: CI
+on:
+  push:
+    branches:
+      - main
+      - 'release**'
+  pull_request:
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/viskores/format:20250212
+    steps:
+      - uses: actions/checkout@v4
+      - name: CXX
+        run: ./Utilities/Scripts/format.bash
+
+  windows:
+    needs: format
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019]
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      CMAKE_BUILD_TYPE: Release
+      VISKORES_SETTINGS: serial
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - if: matrix.os == 'windows-2019'
+        run: |
+          "CMAKE_GENERATOR=Visual Studio 16 2019" >> $env:GITHUB_ENV
+          "VCVARSALL=C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvarsall.bat" >> $env:GITHUB_ENV
+          "VCVARSPLATFORM=x64" >> $env:GITHUB_ENV
+          "VCVARSVERSION=14.29" >> $env:GITHUB_ENV
+          "CTEST_EXCLUSIONS=UnitTestVTKDataSetReader" >> $env:GITHUB_ENV
+
+      - if: github.event_name == 'pull_request'
+        run: Write-Output ${{ github.event.pull_request.head.sha }} > ORIGINAL_COMMIT_SHA
+
+      - name: Apply GITHUB adaptor
+        run: |
+          cmake --version
+          cmake -V -P .github/ci/github_adaptor.cmake
+
+      - name: Setup Variables
+        run: |
+          Invoke-Expression -Command .github/ci/vcvarsall.ps1
+          Get-ChildItem env:
+          cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
+
+      - run: ctest -VV -S .gitlab/ci/ctest_configure.cmake
+      - run: ctest -VV -S .gitlab/ci/ctest_build.cmake
+      - run: ctest -C $env:CMAKE_BUILD_TYPE -VV -S .gitlab/ci/ctest_test.cmake
+
+  macos:
+    needs: format
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14]
+    env:
+      CMAKE_BUILD_TYPE: Release
+      CMAKE_GENERATOR: 'Unix Makefiles'
+      VISKORES_SETTINGS: serial+ccache
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_INSTALL_DIR: ${{ github.workspace }}/.gitlab
+      CTEST_EXCLUSIONS: >-
+        UnitTestMathSERIAL
+        smoke_test_make_built_against_test_install
+        smoke_test_pkgconfig_make_built_against_test_install
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - if: github.event_name == 'pull_request'
+        run: echo ${{ github.event.pull_request.head.sha }} > ORIGINAL_COMMIT_SHA
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ${{ matrix.os }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ matrix.os }}-ccache-
+
+      - name: Set up ccache
+        run: |
+          cmake --trace-expand -VV -P .gitlab/ci/config/ccache.cmake
+          echo "${CCACHE_INSTALL_DIR}" >> "$GITHUB_PATH"
+
+      - run: |
+          echo "::group::Context"
+          env
+          ccache -p
+          echo "::endgroup::"
+          ccache -z
+          ccache -s
+
+      - name: Apply GITHUB adaptor
+        run: |
+          cmake --version
+          cmake -V -P .github/ci/github_adaptor.cmake
+
+      - name: Setup Variables
+        run: |
+          cmake -V -P .gitlab/ci/config/gitlab_ci_setup.cmake
+      - run: ctest -VV -S .gitlab/ci/ctest_configure.cmake
+      - run: ctest -VV -S .gitlab/ci/ctest_build.cmake
+      - run: ccache -s | tee "$GITHUB_STEP_SUMMARY"
+      - run: ctest -VV -S .gitlab/ci/ctest_test.cmake
+
+      - name: Save cache
+        uses: actions/cache/save@v4
+        if: ${{ github.ref_name == 'main' }}
+        with:
+          path: .ccache
+          key: ${{ matrix.os }}-ccache-${{ github.sha }}
