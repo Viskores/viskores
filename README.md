@@ -7,12 +7,6 @@ computing by providing abstract models for data and execution that can be
 applied to a variety of algorithms across many different processor
 architectures.
 
-## Current Status
-
-Viskores is a adopting the functionality of [Viskores] as a part of the [High
-Performance Software Foundation] (HPSF). As this project becomes more
-functional, more details will be added here.
-
 ## Technical Charter
 
 See the [technical charter] and [governance] document for the structure of
