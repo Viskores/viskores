@@ -6,35 +6,14 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##=============================================================================
-##
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##
-##=============================================================================
-
-deploy:sync-spack:
-  environment: spackio
-  interruptible: true
-  extends:
-    - .uo_cpu_tags
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-      when: on_success
-    - when: never
-  image: ghcr.io/viskores/sync:20250212
-  script: >
-    .gitlab/ci/config/SpackCIBridge.py
-    viskores/viskores
-    git@ssh.gitlab.spack.io:viskores/viskores.git
-    https://gitlab.spack.io/
-    viskores/viskores
-    --prereq-check=format
-    --status-context="Frank CI"
-  dependencies: []
-  needs: []
+# Include the github-sync component
+include:
+  - component: $CI_SERVER_FQDN/dav-sdk/gl-gh-sync/github-sync@~latest
+    inputs:
+      github_project: viskores/viskores
+      gitlab_repo: git@ssh.gitlab.spack.io:viskores/viskores.git
+      gitlab_host: https://gitlab.spack.io/
+      gitlab_project: viskores/viskores
+      prereq_check: format
+      status_context: "Frank CI"
+      sync_draft_prs: true
