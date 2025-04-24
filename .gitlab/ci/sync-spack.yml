@@ -8,7 +8,7 @@
 
 # Include the github-sync component
 include:
-  - component: $CI_SERVER_FQDN/dav-sdk/gl-gh-sync/github-sync@~latest
+  - component: $CI_SERVER_FQDN/dav-sdk/gh-gl-sync/github-sync@~latest
     inputs:
       github_project: viskores/viskores
       gitlab_repo: git@ssh.gitlab.spack.io:viskores/viskores.git
