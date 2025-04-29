@@ -27,8 +27,8 @@ default:
 .frontier_gcc_hip:
   variables:
     CCACHE_BASEDIR:          "/lustre/orion/ums033/scratch/"
-    CCACHE_DIR:              "/lustre/orion/ums033/scratch/ums033_auser/ci/vtk-m/ccache"
-    CUSTOM_CI_BUILDS_DIR:    "/lustre/orion/ums033/scratch/ums033_auser/ci/vtk-m/runtime"
+    CCACHE_DIR:              "/lustre/orion/ums033/scratch/ums033_auser/ci/viskores/ccache"
+    CUSTOM_CI_BUILDS_DIR:    "/lustre/orion/ums033/scratch/ums033_auser/ci/viskores/runtime"
 
     # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
     CCACHE_IGNOREOPTIONS:    "-isystem=*"
@@ -41,6 +41,7 @@ default:
 
     # We do not want to use the user's ~/.gitconfig
     GIT_CONFIG_GLOBAL:       "true"
+    GIT_SUBMODULE_STRATEGY: recursive
 
     KOKKOS_OPTS: >-
       -DCMAKE_INSTALL_PREFIX:PATH=$CI_BUILDS_DIR/kokkos_install
@@ -64,11 +65,9 @@ default:
 
 setup_modules:
   stage: .pre
-  extends:
-    - .run_frontier_ci
   tags: [frontier, shell]
   variables:
-    CUSTOM_CI_BUILDS_DIR: "/lustre/orion/ums033/scratch/ums033_auser/ci/vtk-m/runtime"
+    CUSTOM_CI_BUILDS_DIR: "/lustre/orion/ums033/scratch/ums033_auser/ci/viskores/runtime"
     OLCF_SERVICE_ACCOUNT: "ums033_auser"
     GIT_STRATEGY: none
   script:
@@ -87,7 +86,6 @@ build:frontier_gcc_hip:
   tags: [frontier, shell]
   extends:
     - .frontier_gcc_hip
-    - .run_frontier_ci
   before_script:
     - *setup_env_ecpci
     - mkdir -p "$CCACHE_INSTALL_DIR"
@@ -111,7 +109,6 @@ test:frontier_gcc_hip:
   tags: [frontier, slurm]
   extends:
     - .frontier_gcc_hip
-    - .run_frontier_ci
   needs:
     - build:frontier_gcc_hip
   variables:
