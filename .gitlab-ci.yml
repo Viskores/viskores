@@ -124,12 +124,6 @@
       when: on_success
     - when: never
 
-.run_frontier_ci: &run_frontier_ci
-  rules:
-    - if: '$CI_PROJECT_PATH == "ci/ums033/dev/vtk-m"'
-      when: on_success
-    - when: never
-
 .uo_cpu_tags: &uo_cpu_tags
   tags:
     - hpsf
@@ -257,7 +251,6 @@ stages:
 include:
   - local: '/.gitlab/ci/doxygen.yml'
   - local: '/.gitlab/ci/almalinux8.yml'
-  - local: '/.gitlab/ci/frontier.yml'
   - local: '/.gitlab/ci/sync-spack.yml'
   - local: '/.gitlab/ci/ubuntu2004.yml'
   - local: '/.gitlab/ci/ubuntu2204.yml'
