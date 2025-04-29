@@ -27,6 +27,9 @@ default:
   variables:
     CUSTOM_CI_BUILDS_DIR: "/lustre/orion/ums033/scratch/ums033_auser/ci/viskores/runtime"
     OLCF_SERVICE_ACCOUNT: "ums033_auser"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "release"'
 
 # Ad-hoc build that runs in the ECP Hardware, concretely in OLCF Spock.
 .frontier_gcc_hip:
@@ -178,7 +181,10 @@ success:
 failure:
   stage: .post
   rules:
-    - when: on_failure
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_failure
+    - if: '$CI_COMMIT_BRANCH == "release"'
+      when: on_failure
   variables:
     PIPELINE_DESCRITION: Pipeline failed
     PIPELINE_STATE: failure
