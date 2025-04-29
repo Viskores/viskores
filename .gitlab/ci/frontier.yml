@@ -27,9 +27,6 @@ default:
   variables:
     CUSTOM_CI_BUILDS_DIR: "/lustre/orion/ums033/scratch/ums033_auser/ci/viskores/runtime"
     OLCF_SERVICE_ACCOUNT: "ums033_auser"
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_COMMIT_BRANCH == "release"'
 
 # Ad-hoc build that runs in the ECP Hardware, concretely in OLCF Spock.
 .frontier_gcc_hip:
@@ -146,12 +143,18 @@ test:frontier_gcc_hip:
   timeout: 150 minutes
 
 .report-status:
+  rules:
+    - if: $CI_PIPELINE_SOURCE =~ /parent_pipeline|web/
   tags: [ shell ]
   extends:
     .frontier-common
   variables:
     STATUS_PROJECT: Viskores/viskores
     STATUS_NAME: OLCF Frontier
+  before_script: |
+    git fetch
+    source scripts/ci/gitlab-ci/setup-vars.sh
+    git checkout "$CI_COMMIT_REF"
   script: >
     curl -X POST -H "${GITHUB_CURL_HEADERS}"
     "https://api.github.com/repos/${STATUS_PROJECT}/statuses/${CI_COMMIT_SHA}"
@@ -181,9 +184,7 @@ success:
 failure:
   stage: .post
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: on_failure
-    - if: '$CI_COMMIT_BRANCH == "release"'
+    - if: $CI_PIPELINE_SOURCE =~ /parent_pipeline|web/
       when: on_failure
   variables:
     PIPELINE_DESCRITION: Pipeline failed
@@ -193,3 +194,41 @@ failure:
   dependencies:
     - build:frontier_gcc_hip
     - test:frontier_gcc_hip
+
+generate_pipelines:
+  stage: setup
+  extends:
+    .frontier-common
+  tags: [frontier, shell]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  variables:
+    GL_PROJECT_ID: 106
+    # This the commit where the frontier CI was added, we want to avoid testing
+    # commits before this.
+    ROOT_COMMIT_SHA: 5ab1d22e6189a72d22fa0e16fc5aab6fb5b05b96
+  script:
+    - pip install --user urllib3 requests GitPython
+    - >
+      .gitlab/config/generate_pipelines.py
+      -u "https://code.olcf.ornl.gov/"
+      -r "${ROOT_COMMIT_SHA}"
+      -p "${GL_PROJECT_ID}"
+      -n viskores/viskores
+      -f .gitlab/config/dynamic_pipeline.yml.in
+      > generated_pipelines.yml
+
+  artifacts:
+    paths:
+      - generated_pipelines.yml
+
+launch_pipelines:
+  stage: build
+  extends:
+    .frontier-common
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  trigger:
+    include:
+      - artifact: generated_pipelines.yml
+        job: generate_pipelines
