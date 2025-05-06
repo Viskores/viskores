@@ -68,7 +68,7 @@ set (diy_libraries "")
 # Debugging
 if                          (${CMAKE_BUILD_TYPE} STREQUAL "Debug" OR
                              ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
-    list (APPEND diy_definitions "-DVTKMDIY_DEBUG")
+    list (APPEND diy_definitions "-DVISKORESDIY_DEBUG")
 endif                       ()
 
 # Logging
@@ -79,11 +79,11 @@ endif()
 
 # Profiling
 if                          (profile)
-    list (APPEND diy_definitions "-DVTKMDIY_PROFILE")
+    list (APPEND diy_definitions "-DVISKORESDIY_PROFILE")
 endif()
 
 if                          (caliper)
-    list (APPEND diy_definitions "-DVTKMDIY_USE_CALIPER")
+    list (APPEND diy_definitions "-DVISKORESDIY_USE_CALIPER")
 
     find_package            (caliper)
     list (APPEND diy_include_thirdparty_directories $<BUILD_INTERFACE:${caliper_INCLUDE_DIR}>)
@@ -92,7 +92,7 @@ endif()
 
 # Threads
 if                          (NOT threads)
-    list (APPEND diy_definitions "-DVTKMDIY_NO_THREADS")
+    list (APPEND diy_definitions "-DVISKORESDIY_NO_THREADS")
 else                        (NOT threads)
     find_package            (Threads)
     list (APPEND diy_libraries ${CMAKE_THREAD_LIBS_INIT})
@@ -163,7 +163,7 @@ function(add_diy_mpi_library use_mpi)
     set_target_properties(${lib_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_compile_features(${lib_name} PRIVATE cxx_std_14)
     target_compile_definitions(${lib_name}
-        PRIVATE -DVTKMDIY_HAS_MPI=${has_mpi_val}
+        PRIVATE -DVISKORESDIY_HAS_MPI=${has_mpi_val}
         PRIVATE -Ddiy=${diy_prefix}         # mangle diy namespace
         PRIVATE ${diy_definitions})
     target_include_directories(${lib_name} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/include) # for types.hpp
@@ -186,14 +186,14 @@ if (build_diy_mpi_lib)
 
     # To be interchangeable, these libraries should only have PRIVATE properties.
     # Properties that should be public should also be part of the core diy target.
-    list(APPEND diy_definitions -DVTKMDIY_MPI_AS_LIB)
+    list(APPEND diy_definitions -DVISKORESDIY_MPI_AS_LIB)
     list(APPEND diy_include_directories
         "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include/${diy_prefix}/mpi>"
         "$<INSTALL_INTERFACE:${diy_install_include_dir}/${diy_prefix}/mpi>")
 
     # macro required for proper export macros for static vs shared builds
     if (NOT BUILD_SHARED_LIBS)
-        list(APPEND diy_definitions -DVTKMDIY_MPI_STATIC_BUILD)
+        list(APPEND diy_definitions -DVISKORESDIY_MPI_STATIC_BUILD)
     endif()
 
     if (mpi)
@@ -222,12 +222,12 @@ endif ()
 target_link_libraries(${diy_prefix} INTERFACE ${diy_libraries})
 if (NOT build_diy_mpi_lib)
     if (mpi)
-        target_compile_definitions(${diy_prefix} INTERFACE -DVTKMDIY_HAS_MPI=1)
+        target_compile_definitions(${diy_prefix} INTERFACE -DVISKORESDIY_HAS_MPI=1)
         if (TARGET MPI::MPI_CXX)
             target_link_libraries(${diy_prefix} INTERFACE MPI::MPI_CXX)
         endif()
     else()
-        target_compile_definitions(${diy_prefix} INTERFACE -DVTKMDIY_HAS_MPI=0)
+        target_compile_definitions(${diy_prefix} INTERFACE -DVISKORESDIY_HAS_MPI=0)
     endif()
 elseif (NOT build_diy_nompi_lib)
     if (mpi)

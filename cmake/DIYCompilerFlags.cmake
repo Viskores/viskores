@@ -63,7 +63,7 @@ elseif(DIY_COMPILER_IS_GNU OR DIY_COMPILER_IS_CLANG)
 
   #GCC 5, 6 don't properly handle strict-overflow suppression through pragma's.
   #Instead of suppressing around the location of the strict-overflow you
-  #have to suppress around the entry point, or in vtk-m case the worklet
+  #have to suppress around the entry point, or in viskores case the worklet
   #invocation site. This is incredibly tedious and has been fixed in gcc 7
   #
   if(DIY_COMPILER_IS_GNU AND
