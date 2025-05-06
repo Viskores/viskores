@@ -118,7 +118,7 @@ Viskores has been tested on the following configurations:c
   + On Linux
       + GCC 5.4.0, 5.4, 6.5, 7.4, 8.2, 9.2; Clang 5, 8; Intel 17.0.4; 19.0.0
       + CMake 3.12, 3.13, 3.16, 3.17
-      + CUDA 9.2, 10.2, 11.0, 11.1 
+      + CUDA 9.2, 10.2, 11.0, 11.1
       + TBB 4.4 U2, 2017 U7
   + On Windows
       + Visual Studio 2015, 2017

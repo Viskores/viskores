@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  user_guide:
     runs-on: ubuntu-latest
     container:
       image: "kitware/vtkm:ci-doxygen-20231020"
@@ -46,7 +46,7 @@ jobs:
           overwrite: true
   push:
     if: github.ref_name == 'release'
-    needs: [build]
+    needs: [user_guide]
     runs-on: ubuntu-latest
     container:
       image: "kitware/vtkm:ci-doxygen-20231020"

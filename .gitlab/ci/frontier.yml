@@ -23,12 +23,21 @@ default:
     OLCF_ID_TOKEN:
       aud: https://code.olcf.ornl.gov
 
+.frontier-common:
+  variables:
+    CUSTOM_CI_BUILDS_DIR: "/lustre/orion/ums033/scratch/ums033_auser/ci/viskores/runtime"
+    OLCF_SERVICE_ACCOUNT: "ums033_auser"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "release"'
+
 # Ad-hoc build that runs in the ECP Hardware, concretely in OLCF Spock.
 .frontier_gcc_hip:
+  extends:
+    .frontier-common
   variables:
     CCACHE_BASEDIR:          "/lustre/orion/ums033/scratch/"
-    CCACHE_DIR:              "/lustre/orion/ums033/scratch/ums033_auser/ci/vtk-m/ccache"
-    CUSTOM_CI_BUILDS_DIR:    "/lustre/orion/ums033/scratch/ums033_auser/ci/vtk-m/runtime"
+    CCACHE_DIR:              "/lustre/orion/ums033/scratch/ums033_auser/ci/viskores/ccache"
 
     # -isystem= is not affected by CCACHE_BASEDIR, thus we must ignore it
     CCACHE_IGNOREOPTIONS:    "-isystem=*"
@@ -41,6 +50,7 @@ default:
 
     # We do not want to use the user's ~/.gitconfig
     GIT_CONFIG_GLOBAL:       "true"
+    GIT_SUBMODULE_STRATEGY: recursive
 
     KOKKOS_OPTS: >-
       -DCMAKE_INSTALL_PREFIX:PATH=$CI_BUILDS_DIR/kokkos_install
@@ -64,11 +74,9 @@ default:
 
 setup_modules:
   stage: .pre
-  extends:
-    - .run_frontier_ci
   tags: [frontier, shell]
   variables:
-    CUSTOM_CI_BUILDS_DIR: "/lustre/orion/ums033/scratch/ums033_auser/ci/vtk-m/runtime"
+    CUSTOM_CI_BUILDS_DIR: "/lustre/orion/ums033/scratch/ums033_auser/ci/viskores/runtime"
     OLCF_SERVICE_ACCOUNT: "ums033_auser"
     GIT_STRATEGY: none
   script:
@@ -87,7 +95,6 @@ build:frontier_gcc_hip:
   tags: [frontier, shell]
   extends:
     - .frontier_gcc_hip
-    - .run_frontier_ci
   before_script:
     - *setup_env_ecpci
     - mkdir -p "$CCACHE_INSTALL_DIR"
@@ -111,7 +118,6 @@ test:frontier_gcc_hip:
   tags: [frontier, slurm]
   extends:
     - .frontier_gcc_hip
-    - .run_frontier_ci
   needs:
     - build:frontier_gcc_hip
   variables:
@@ -138,3 +144,52 @@ test:frontier_gcc_hip:
     - ctest -VV -S .gitlab/ci/ctest_submit_build.cmake
     - ctest -VV -S .gitlab/ci/ctest_submit_test.cmake
   timeout: 150 minutes
+
+.report-status:
+  tags: [ shell ]
+  extends:
+    .frontier-common
+  variables:
+    STATUS_PROJECT: Viskores/viskores
+    STATUS_NAME: OLCF Frontier
+  script: >
+    curl -X POST -H "${GITHUB_CURL_HEADERS}"
+    "https://api.github.com/repos/${STATUS_PROJECT}/statuses/${CI_COMMIT_SHA}"
+    -d "{\"state\":\"${PIPELINE_STATE}\", \"context\":\"${STATUS_NAME}\",\"target_url\":\"${CI_PIPELINE_URL}\",\"description\":\"${PIPELINE_DESCRITION}\"}"
+  environment:
+    name: report-$CI_COMMIT_SHA
+
+pending:
+  stage: .pre
+  variables:
+    PIPELINE_DESCRITION: Pipeline is running
+    PIPELINE_STATE: pending
+  extends:
+    - .report-status
+
+success:
+  stage: .post
+  variables:
+    PIPELINE_DESCRITION: Pipeline succeeded
+    PIPELINE_STATE: success
+  extends:
+    - .report-status
+  dependencies:
+    - build:frontier_gcc_hip
+    - test:frontier_gcc_hip
+
+failure:
+  stage: .post
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_failure
+    - if: '$CI_COMMIT_BRANCH == "release"'
+      when: on_failure
+  variables:
+    PIPELINE_DESCRITION: Pipeline failed
+    PIPELINE_STATE: failure
+  extends:
+    - .report-status
+  dependencies:
+    - build:frontier_gcc_hip
+    - test:frontier_gcc_hip
