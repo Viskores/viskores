@@ -1,0 +1,2 @@
+# Replace `$Format:…$` placeholders.
+ViskoresDetermineVersion.cmake  export-subst
