@@ -34,23 +34,29 @@ Before you begin, perform initial setup:
 
     The main repository will be configured as your `origin` remote.
 
-4.  Run the developer setup script to prepare your Viskores work tree and
+4.  Viskores data is located in a different repository and is included as
+    a git submodule. You must initialize and update the submodule to clone
+    the data.
+
+        $ git submodule update --init
+
+5.  Run the developer setup script to prepare your Viskores work tree and
     create Git command aliases used below:
 
         $ ./Utilities/SetupForDevelopment.sh
 
-5. (Optional but highly recommended.)
+6. (Optional but highly recommended.)
     Install the official [GitHub CLI utility] on your developing station. This
     tool greatly simplifies interacting with GitHub from the command line.
 
-6. (Optional but highly recommended.)
+7. (Optional but highly recommended.)
     [Register with the Viskores dashboard] on Kitware's CDash instance to
     better know how your code performs in regression tests. After
     registering and signing in, click on "All Dashboards" link in the upper
     left corner, scroll down and click "Subscribe to this project" on the
     right of Viskores.
 
-7.  (Optional but highly recommended.)
+8.  (Optional but highly recommended.)
     [Join us in the Viskores discussions] to communicate with other developers
     and users.
 
