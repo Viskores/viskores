@@ -10,9 +10,9 @@
 
 
 read -r -d '' SEDRULES << EOF
-s/vtk-m|vtkm|vtk_m/viskores/g
-s/VTK-M|VTK-m|VTKm|Vtk-m|Vtkm/Viskores/g
-s/VTKM|VTK_M/VISKORES/g
+s/\b(vtk-m|vtkm|vtk_m)\b/viskores/g
+s/\b(VTK-M|VTK-m|VTKm|Vtk-m|Vtkm)\b/Viskores/g
+s/\b(VTKM|VTK_M)\b/VISKORES/g
 s/vtkmdiy/viskoresdiy/g
 EOF
 
