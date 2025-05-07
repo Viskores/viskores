@@ -114,7 +114,7 @@ private:
     return result;
   }
 
-  viskores::Id FindParametricInterval(const viskores::FloatDefault& t) const
+  VISKORES_EXEC viskores::Id FindParametricInterval(const viskores::FloatDefault& t) const
   {
     viskores::Id n = this->Knots.GetNumberOfValues();
 

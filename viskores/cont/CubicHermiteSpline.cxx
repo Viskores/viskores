@@ -37,8 +37,8 @@ struct CalcNeighborDistanceWorklet : public viskores::worklet::WorkletMapField
 
   template <typename ArrayType>
   VISKORES_EXEC void operator()(const viskores::Id& idx,
-                            viskores::FloatDefault& val,
-                            const ArrayType& data) const
+                                viskores::FloatDefault& val,
+                                const ArrayType& data) const
   {
     if (idx == 0)
       val = 0.0;
@@ -59,26 +59,12 @@ struct CalcTangentsWorklet : public viskores::worklet::WorkletMapField
 
   template <typename TangentArrayType, typename PointArrayType, typename KnotArrayType>
   VISKORES_EXEC void operator()(const viskores::Id& idx,
-                            TangentArrayType& tangent,
-                            const PointArrayType& points,
-                            const KnotArrayType& knots) const
+                                TangentArrayType& tangent,
+                                const PointArrayType& points,
+                                const KnotArrayType& knots) const
   {
-    viskores::Id idx0, idx1;
-    if (idx == 0) // Forward difference
-    {
-      idx0 = 0;
-      idx1 = 1;
-    }
-    else if (idx == NumPoints - 1) // Backward difference
-    {
-      idx0 = NumPoints - 2;
-      idx1 = NumPoints - 1;
-    }
-    else // central difference
-    {
-      idx0 = idx - 1;
-      idx1 = idx + 1;
-    }
+    viskores::Id idx0 = viskores::Max(viskores::Id(0), idx - 1);
+    viskores::Id idx1 = viskores::Min(NumPoints - 1, idx + 1);
 
     auto dX = points.Get(idx1) - points.Get(idx0);
     auto dT = knots.Get(idx1) - knots.Get(idx0);
@@ -99,7 +85,8 @@ VISKORES_CONT viskores::Range CubicHermiteSpline::GetParametricRange()
     n = this->Knots.GetNumberOfValues();
   }
   const auto ids = viskores::cont::make_ArrayHandle<viskores::Id>({ 0, n - 1 });
-  const std::vector<viskores::FloatDefault> output = viskores::cont::ArrayGetValues(ids, this->Knots);
+  const std::vector<viskores::FloatDefault> output =
+    viskores::cont::ArrayGetValues(ids, this->Knots);
   return { output[0], output[1] };
 }
 
@@ -117,7 +104,8 @@ VISKORES_CONT void CubicHermiteSpline::ComputeKnots()
   if (sum == 0.0)
     throw std::invalid_argument("Error: accumulated distance between data is zero.");
 
-  auto divideBy = viskores::cont::make_ArrayHandleConstant(1.0 / sum, this->Knots.GetNumberOfValues());
+  auto divideBy =
+    viskores::cont::make_ArrayHandleConstant(1.0 / sum, this->Knots.GetNumberOfValues());
   viskores::cont::Algorithm::Transform(this->Knots, divideBy, this->Knots, viskores::Product{});
 }
 
@@ -137,7 +125,8 @@ viskores::exec::CubicHermiteSpline CubicHermiteSpline::PrepareForExecution(
 {
   viskores::Id n = this->Data.GetNumberOfValues();
   if (n < 2)
-    throw viskores::cont::ErrorBadValue("At least two points are required for spline interpolation.");
+    throw viskores::cont::ErrorBadValue(
+      "At least two points are required for spline interpolation.");
   if (this->Knots.GetNumberOfValues() == 0)
     this->ComputeKnots();
   if (this->Tangents.GetNumberOfValues() == 0)
