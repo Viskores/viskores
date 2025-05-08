@@ -197,7 +197,7 @@ def create_container(ci_file_path, *args):
 
   runner = subset[job_name]
   src_dir = get_root_dir()
-  gitlab_env = [ k + '="' + v + '"' for k,v in runner['variables'].items()]
+  gitlab_env = [ k + '="' + str(v) + '"' for k,v in runner['variables'].items()]
 
   # propagate any https/http proxy info
   if os.getenv('http_proxy'):
@@ -237,7 +237,7 @@ RUN echo "$before_script" >> /setup-gitlab-env.sh && \
     bash /setup-gitlab-env.sh
 ''')
 
-  docker_content = docker_template.substitute(image=runner['image'],
+  docker_content = docker_template.substitute(image=runner['image']['name'],
                     job_name='local-build'+runner_name,
                     src_dir=src_dir,
                     gitlab_env= " ".join(gitlab_env),
