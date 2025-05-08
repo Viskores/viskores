@@ -116,11 +116,11 @@ void CubicHermiteSplineTest()
   CheckEvaluation(spline, spline.GetKnots(), pts);
 
   //Evaluation at non-knot values.
-  std::vector<viskores::FloatDefault> params = { 0.21, 0.465, 0.501, 0.99832 };
-  std::vector<viskores::Vec3f> result = { { 1.23261, 1.08861, 0.891725 },
-                                          { 2.68524, -0.0560059, -0.855685 },
-                                          { 2.85574, -0.32766, -0.970523 },
-                                          { 5.99045, -0.00959875, 0.00964856 } };
+  std::vector<viskores::FloatDefault> params = { 0.21f, 0.465f, 0.501f, 0.99832f };
+  std::vector<viskores::Vec3f> result = { { 1.23261f, 1.08861f, 0.891725f },
+                                          { 2.68524f, -0.0560059f, -0.855685f },
+                                          { 2.85574f, -0.32766f, -0.970523f },
+                                          { 5.99045f, -0.00959875f, 0.00964856f } };
   CheckEvaluation(spline, params, result);
 
   //Explicitly set knots and check.
