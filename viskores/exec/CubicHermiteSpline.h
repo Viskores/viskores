@@ -109,7 +109,7 @@ private:
     viskores::FloatDefault h10_x_dt = h10 * dt;
     viskores::FloatDefault h11_x_dt = h11 * dt;
 
-    for (viskores::Id i = 0; i < 3; ++i)
+    for (viskores::IdComponent i = 0; i < 3; ++i)
       result[i] = h00 * p0[i] + h10_x_dt * m0[i] + h01 * p1[i] + h11_x_dt * m1[i];
 
     return result;
