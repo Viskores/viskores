@@ -300,11 +300,15 @@ endif()
 #-----------------------------------------------------------------------------
 # We need to check and see if the git submodule has been correctly cloned.
 if (Viskores_ENABLE_TESTING)
-  file(STRINGS "${Viskores_SOURCE_DIR}/data/data/sentinel-data" sentinel_data LIMIT_COUNT 1)
+  if (EXISTS "${Viskores_SOURCE_DIR}/data/data/sentinel-data")
+    file(STRINGS "${Viskores_SOURCE_DIR}/data/data/sentinel-data" sentinel_data LIMIT_COUNT 1)
+  else()
+    set(sentinel_data "Data dir not found")
+  endif()
   if (NOT sentinel_data STREQUAL "-- DO NOT MODIFY THIS LINE --")
     message(WARNING
-      "Testing is enabled, but the data is not available. Use git submodule in order "
-      "to obtain the testing data.")
+      "Testing is enabled, but the data is not available. Use "
+      "`git submodule update --init` to obtain the testing data.")
     set(Viskores_ENABLE_TESTING off)
   endif()
 endif()
