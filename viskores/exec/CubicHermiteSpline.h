@@ -105,6 +105,7 @@ private:
     viskores::FloatDefault h01 = -2 * t3 + 3 * t2;
     viskores::FloatDefault h11 = t3 - t2;
 
+    //pre-calculate terms used in each iteration.
     viskores::FloatDefault h10_x_dt = h10 * dt;
     viskores::FloatDefault h11_x_dt = h11 * dt;
 
