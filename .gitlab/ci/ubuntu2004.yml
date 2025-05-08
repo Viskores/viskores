@@ -49,6 +49,7 @@ ubuntu2004_gcc9_cuda:
     - nvidia-a100
     - uo-gpu
     - x86_64-nvidiagpu
+    - voltar
   extends:
     - .ubuntu2004_cuda
     - .cmake_build_linux
