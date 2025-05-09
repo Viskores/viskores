@@ -131,26 +131,26 @@ void CubicHermiteSplineTest()
   CheckEvaluation(spline, knots, pts);
 
   //Evaluation at non-knot values.
-  params = { 0.84, 1.399, 2.838, 4.930, 5.001, 5.993 };
-  result = { { 0.84, 0.896448, 0.952896 },    { 1.399, 1.14382, 0.745119 },
-             { 2.838, -0.297388, -0.951764 }, { 4.93, -1.03141, 0.990543 },
-             { 5.001, -0.999499, 0.999998 },  { 5.993, -0.00702441, 0.00704873 } };
+  params = { 0.84f, 1.399f, 2.838f, 4.930f, 5.001f, 5.993f };
+  result = { { 0.84f, 0.896448f, 0.952896f },    { 1.399f, 1.14382f, 0.745119f },
+             { 2.838f, -0.297388f, -0.951764f }, { 4.93f, -1.03141f, 0.990543f },
+             { 5.001f, -0.999499f, 0.999998f },  { 5.993f, -0.00702441f, 0.00704873f } };
   CheckEvaluation(spline, params, result);
 
   //Non-uniform knots.
-  knots = { 0, 1, 2, 2.1, 2.2, 2.3, 3 };
+  knots = { 0.f, 1.f, 2.f, 2.1f, 2.2f, 2.3f, 3.f };
   spline = viskores::cont::CubicHermiteSpline();
   spline.SetData(pts);
   spline.SetKnots(knots);
 
   CheckEvaluation(spline, knots, pts);
 
-  params = { 1.5, 2.05, 2.11, 2.299, 2.8 };
-  result = { { 1.39773, 1.23295, 0.727273 },
-             { 2.39773, 0.357954, -0.522727 },
-             { 3.1, -0.59275, -0.981 },
-             { 4.99735, -1.00125, 0.999801 },
-             { 5.75802, -0.293003, 0.344023 } };
+  params = { 1.5f, 2.05f, 2.11f, 2.299f, 2.8 };
+  result = { { 1.39773f, 1.23295f, 0.727273f },
+             { 2.39773f, 0.357954, -0.522727f },
+             { 3.1f, -0.59275f, -0.981f },
+             { 4.99735f, -1.00125f, 0.999801f },
+             { 5.75802f, -0.293003f, 0.344023f } };
   CheckEvaluation(spline, params, result);
 
   //Create a more complex spline from analytical functions.
@@ -174,7 +174,7 @@ void CubicHermiteSplineTest()
   CheckEvaluation(spline, knots, pts);
 
   //Evaluate at a few points and check against analytical results.
-  params = { 0.15, 1.83, 2.38, 3.0291, 3.8829, 4.92, 6.2 };
+  params = { 0.15f, 1.83f, 2.38f, 3.0291f, 3.8829f, 4.92f, 6.2f };
   result.clear();
   for (const auto& p : params)
     result.push_back({ viskores::Cos(p), viskores::Sin(p), viskores::Cos(p) * viskores::Sin(p) });
