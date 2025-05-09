@@ -1,0 +1,14 @@
+default:
+  id_tokens:
+    OLCF_ID_TOKEN:
+      aud: https://code.olcf.ornl.gov
+
+child_pipeline_{branch}:
+  variables:
+    DOWNSTREAM_COMMIT_SHA: '{commit}'
+    DOWNSTREAM_BRANCH_REF: '{branch}'
+  trigger:
+    include:
+      - project: 'ci/ums033/dev/vtk-m'
+        ref: '{branch}'
+        file: '.gitlab/gitlab-ci-frontier.yml'
