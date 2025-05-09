@@ -84,8 +84,8 @@ void SaveSamples(viskores::cont::CubicHermiteSpline& spline)
   fout << "T, X, Y, Z" << std::endl;
   viskores::Id n = 1000;
 
-  viskores::FloatDefault t0 = spline.GetParametricRange().Min;
-  viskores::FloatDefault t1 = spline.GetParametricRange().Max;
+  viskores::FloatDefault t0 = static_cast<vtkm::FloatDefault>(spline.GetParametricRange().Min);
+  viskores::FloatDefault t1 = static_cast<vtkm::FloatDefault>(spline.GetParametricRange().Max);
   auto dt = (t1 - t0) / static_cast<viskores::FloatDefault>(n - 1);
   std::vector<viskores::FloatDefault> params;
   for (viskores::FloatDefault t = t0; t < t1; t += dt)
