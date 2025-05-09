@@ -116,7 +116,12 @@ void ValidateOutput(const viskores::cont::DataSet& out,
   viskores::Id numCells = out.GetNumberOfCells();
 
   if (!blockDuplication)
-    VISKORES_TEST_ASSERT(numCells == numSeeds, "Wrong number of cells");
+  {
+    std::cout << "**** Output data:\n";
+    out.PrintSummary(std::cout);
+    VISKORES_TEST_ASSERT(
+      numCells == numSeeds, "Wrong number of cells (", numCells, " == ", numSeeds, ")");
+  }
 
   auto coords = out.GetCoordinateSystem().GetDataAsMultiplexer();
   auto ptPortal = coords.ReadPortal();
