@@ -68,6 +68,7 @@ void CheckEvaluation(const viskores::cont::CubicHermiteSpline& spline,
     spline, viskores::cont::make_ArrayHandle(params, viskores::CopyFlag::Off), posAnswer);
 }
 
+#if 0
 //convenience function to save samples for debugging.
 void SaveSamples(viskores::cont::CubicHermiteSpline& spline)
 {
@@ -103,6 +104,7 @@ void SaveSamples(viskores::cont::CubicHermiteSpline& spline)
          << std::endl;
   fout.close();
 }
+#endif
 
 void CubicHermiteSplineTest()
 {
