@@ -104,8 +104,8 @@ VISKORES_CONT void CubicHermiteSpline::ComputeKnots()
   if (sum == 0.0)
     throw std::invalid_argument("Error: accumulated distance between data is zero.");
 
-  auto divideBy =
-    viskores::cont::make_ArrayHandleConstant(1.0 / sum, this->Knots.GetNumberOfValues());
+  auto divideBy = viskores::cont::make_ArrayHandleConstant(
+    static_cast<viskores::FloatDefault>(1.0 / sum), this->Knots.GetNumberOfValues());
   viskores::cont::Algorithm::Transform(this->Knots, divideBy, this->Knots, viskores::Product{});
 }
 

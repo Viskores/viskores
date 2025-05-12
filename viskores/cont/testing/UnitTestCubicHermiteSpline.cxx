@@ -147,9 +147,9 @@ void CubicHermiteSplineTest()
 
   CheckEvaluation(spline, knots, pts);
 
-  params = { 1.5f, 2.05f, 2.11f, 2.299f, 2.8 };
+  params = { 1.5f, 2.05f, 2.11f, 2.299f, 2.8f };
   result = { { 1.39773f, 1.23295f, 0.727273f },
-             { 2.39773f, 0.357954, -0.522727f },
+             { 2.39773f, 0.357954f, -0.522727f },
              { 3.1f, -0.59275f, -0.981f },
              { 4.99735f, -1.00125f, 0.999801f },
              { 5.75802f, -0.293003f, 0.344023f } };
@@ -157,7 +157,9 @@ void CubicHermiteSplineTest()
 
   //Create a more complex spline from analytical functions.
   viskores::Id n = 500;
-  viskores::FloatDefault t = 0.0, dt = viskores::TwoPi() / static_cast<viskores::FloatDefault>(n);
+  viskores::FloatDefault t = 0.0,
+                         dt = viskores::TwoPi<viskores::FloatDefault>() /
+    static_cast<viskores::FloatDefault>(n);
 
   pts.clear();
   knots.clear();
