@@ -23,13 +23,13 @@
 #
 # This script is called with a command like:
 #
-# cmake -D Viskores_BINARY_DIR=<top-of-build-tree> -D Viskores_SOURCE_DIR=<top-of-source-tree> -P <this-script>
+# cmake -DViskores_BINARY_DIR=<top-of-build-tree> -DViskores_SOURCE_DIR=<top-of-source-tree> -DViskores_CXX_COMPILER=<C++-compiler-executable> -P <this-script>
 #
 
 set(FILES
-  viskores/internal/Configure.h
+  include/viskores/internal/Configure.h
   CMakeCache.txt
-  CMakeFiles/CMakeError.log
+  CMakeFiles/CMakeConfigureLog.yaml
   )
 
 function(print_file filename)
@@ -62,6 +62,25 @@ message("
 ==============================================================================
 
 git SHA: ${GIT_SHA}")
+
+message("
+
+==============================================================================
+
+")
+
+if(IS_EXECUTABLE "${Viskores_CXX_COMPILER}")
+  message("Compiler: ${Viskores_CXX_COMPILER}")
+  message("Version:")
+  execute_process(
+    COMMAND "${Viskores_CXX_COMPILER}" --version
+    WORKING_DIRECTORY "${Viskores_BINARY_DIR}"
+    OUTPUT_VARIABLE COMPILER_VERSION
+    )
+  message("${COMPILER_VERSION}")
+  else()
+  message("Compiler: No valid compiler given")
+endif()
 
 foreach(filename ${FILES})
   print_file(${filename})
