@@ -44,28 +44,41 @@ public:
   VISKORES_CONT void SetData(const std::vector<viskores::Vec3f>& data,
                              viskores::CopyFlag copy = viskores::CopyFlag::On)
   {
-    this->Data.Allocate(0);
     this->Data = viskores::cont::make_ArrayHandle(data, copy);
+    this->Knots.Allocate(0);
+    this->Tangents.Allocate(0);
   }
 
   VISKORES_CONT void SetKnots(const viskores::cont::ArrayHandle<viskores::FloatDefault>& knots)
   {
+    if (this->Data.GetNumberOfValues() != this->Knots.GetNumberOfValues())
+    {
+      throw viskores::cont::ErrorBadValue(
+        "Size of CubicHermiteSpline Knots array must be the same size as the Data array. Make sure "
+        "you set the Data array before the Knots array.");
+    }
     this->Knots = knots;
   }
   VISKORES_CONT void SetKnots(const std::vector<viskores::FloatDefault>& knots,
                               viskores::CopyFlag copy = viskores::CopyFlag::On)
   {
-    this->Knots = viskores::cont::make_ArrayHandle(knots, copy);
+    this->SetKnots(viskores::cont::make_ArrayHandle(knots, copy));
   }
 
   VISKORES_CONT void SetTangents(const viskores::cont::ArrayHandle<viskores::Vec3f>& tangents)
   {
+    if (this->Data.GetNumberOfValues() != this->Tangents.GetNumberOfValues())
+    {
+      throw viskores::cont::ErrorBadValue("Size of CubicHermiteSpline Tangents array must be the "
+                                          "same size as the Data array. Make sure "
+                                          "you set the Data array before the Tangents array.");
+    }
     this->Tangents = tangents;
   }
   VISKORES_CONT void SetTangents(const std::vector<viskores::Vec3f>& tangents,
                                  viskores::CopyFlag copy = viskores::CopyFlag::On)
   {
-    this->Tangents = viskores::cont::make_ArrayHandle(tangents, copy);
+    this->SetTangents(viskores::cont::make_ArrayHandle(tangents, copy));
   }
 
   VISKORES_CONT viskores::Range GetParametricRange();
