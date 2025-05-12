@@ -54,7 +54,7 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # Normally compilers do not generate warnings for includes using -isystem,
   # however, that is not always the case, specially in exotic systems such as
   # OLCF Ascent/Summit
-  ".*viskores/thirdparty.*"
+  "viskores/thirdparty"
 
   # Disable warning that can happen in the standard lib from the loguru
   # third party library. This is a note that can get flagged because it
