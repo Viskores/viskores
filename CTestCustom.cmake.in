@@ -50,6 +50,10 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # compiler flags there, so I'm just going to suppress those.
   ".*nvlink warning.*SM Arch.*not found in.*"
 
+  # Disable warning from Macos linker that seems to be a side effect of how
+  # GitHub Actions provisions its macos VMs.
+  ".*truncating -dylib_current_version to fit in 32-bit space used by old mach-o format.*"
+
   # Disable warnings about third party libraries.
   # Normally compilers do not generate warnings for includes using -isystem,
   # however, that is not always the case, specially in exotic systems such as
