@@ -51,7 +51,7 @@ public:
 
   VISKORES_CONT void SetKnots(const viskores::cont::ArrayHandle<viskores::FloatDefault>& knots)
   {
-    if (this->Data.GetNumberOfValues() != this->Knots.GetNumberOfValues())
+    if (this->Data.GetNumberOfValues() != knots.GetNumberOfValues())
     {
       throw viskores::cont::ErrorBadValue(
         "Size of CubicHermiteSpline Knots array must be the same size as the Data array. Make sure "
@@ -67,7 +67,7 @@ public:
 
   VISKORES_CONT void SetTangents(const viskores::cont::ArrayHandle<viskores::Vec3f>& tangents)
   {
-    if (this->Data.GetNumberOfValues() != this->Tangents.GetNumberOfValues())
+    if (this->Data.GetNumberOfValues() != tangents.GetNumberOfValues())
     {
       throw viskores::cont::ErrorBadValue("Size of CubicHermiteSpline Tangents array must be the "
                                           "same size as the Data array. Make sure "
