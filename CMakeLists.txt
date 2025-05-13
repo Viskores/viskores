@@ -313,6 +313,9 @@ if (Viskores_ENABLE_TESTING)
   endif()
 endif()
 
+configure_file(CTestCustom.cmake.in
+  ${Viskores_BINARY_DIR}/CTestCustom.cmake @ONLY)
+
 # We include the wrappers unconditionally as Viskores expects the function to
 # always exist (and early terminate when testing is disabled).
 include(testing/ViskoresTestWrappers)
@@ -328,10 +331,6 @@ if (Viskores_ENABLE_TESTING)
     mark_as_advanced(BUILD_TESTING)
   endif()
 
-
-  configure_file(CTestCustom.cmake.in
-    ${Viskores_BINARY_DIR}/CTestCustom.cmake @ONLY)
-
   #-----------------------------------------------------------------------------
   # Find the Python interpreter, which we will use during the build process
   find_package(Python QUIET COMPONENTS Interpreter)
@@ -343,7 +342,6 @@ if (Viskores_ENABLE_TESTING)
 
   # Setup compiler flags for dynamic analysis if needed
   include(testing/ViskoresCompilerDynamicAnalysisFlags)
-
 endif()
 
 #-----------------------------------------------------------------------------
