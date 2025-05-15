@@ -19,11 +19,11 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project (Viskores)
 
-# We only allow c++14
-set(CMAKE_CXX_STANDARD 14)
+# We only allow c++17
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# When using C++14 support make sure you use the standard C++ extensions rather
+# When using C++17 support make sure you use the standard C++ extensions rather
 # than compiler-specific versions of the extensions (to preserve portability).
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -518,7 +518,7 @@ if (Viskores_ENABLE_TESTING)
   # SourceInBuild checks that all source files are listed in the build
   # SourceInInstall checks that all source files are installed in the build
   add_test(NAME SystemInformation
-    COMMAND ${CMAKE_COMMAND} "-DViskores_SOURCE_DIR=${Viskores_SOURCE_DIR}" "-DViskores_BINARY_DIR=${Viskores_BINARY_DIR}" -P "${Viskores_SOURCE_DIR}/CMake/testing/ViskoresSystemInformation.cmake"
+    COMMAND ${CMAKE_COMMAND} "-DViskores_SOURCE_DIR=${Viskores_SOURCE_DIR}" "-DViskores_BINARY_DIR=${Viskores_BINARY_DIR}" "-DViskores_CXX_COMPILER=${CMAKE_CXX_COMPILER}" -P "${Viskores_SOURCE_DIR}/CMake/testing/ViskoresSystemInformation.cmake"
     )
   if(NOT WIN32)
     # Test takes too long on windows
