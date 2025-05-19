@@ -33,6 +33,7 @@ set(flow_headers
 
 set(flow_sources
   FilterParticleAdvection.cxx
+  internal/BoundsMap.cxx
   )
 
 set(flow_device_sources
