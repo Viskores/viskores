@@ -69,6 +69,18 @@ public:
     return this->ThreadToOutputMap;
   }
 
+protected:
+  // Allows to differentiate between MaskSelect and ThreadToOutputMap arrays in constructors.
+  struct ThreadToOutputMapWrapper
+  {
+    ThreadToOutputMapType ThreadToOutputMap;
+  };
+
+  MaskSelect(const ThreadToOutputMapWrapper& threadToOutputMap)
+    : ThreadToOutputMap(threadToOutputMap.ThreadToOutputMap)
+  {
+  }
+
 private:
   ThreadToOutputMapType ThreadToOutputMap;
 
