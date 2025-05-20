@@ -346,10 +346,8 @@ int go()
   ////
   //// BEGIN-EXAMPLE SpecifyColorTable
   ////
-  viskores::rendering::Actor actor(surfaceData.GetCellSet(),
-                                   surfaceData.GetCoordinateSystem(),
-                                   surfaceData.GetField("RandomPointScalars"),
-                                   viskores::cont::ColorTable("inferno"));
+  viskores::rendering::Actor actor(
+    surfaceData, "RandomPointScalars", viskores::cont::ColorTable("inferno"));
   ////
   //// END-EXAMPLE SpecifyColorTable
   ////

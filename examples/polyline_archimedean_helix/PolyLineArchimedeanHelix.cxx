@@ -126,10 +126,7 @@ void TubeThatSpiral(viskores::FloatDefault radius,
   v[v.size() - 1] = v[v.size() - 2];
 
   tubeDataset.AddPointField("Spiral Radius", v);
-  scene.AddActor(viskores::rendering::Actor(tubeDataset.GetCellSet(),
-                                            tubeDataset.GetCoordinateSystem(),
-                                            tubeDataset.GetField("Spiral Radius"),
-                                            colorTable));
+  scene.AddActor(viskores::rendering::Actor(tubeDataset, "Spiral Radius", colorTable));
   viskores::rendering::View3D view(scene, mapper, canvas, camera, bg);
   view.Paint();
   // We can save the file as a .NetBPM:
