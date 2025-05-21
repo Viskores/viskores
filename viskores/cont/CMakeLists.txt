@@ -88,6 +88,7 @@ set(headers
   ColorTableSamples.h
   ConvertNumComponentsToOffsets.h
   CoordinateSystem.h
+  CubicHermiteSpline.h
   DataSet.h
   DataSetBuilderCurvilinear.h
   DataSetBuilderExplicit.h
@@ -207,6 +208,7 @@ set(device_sources
   CellSetExtrude.cxx
   ColorTable.cxx
   ConvertNumComponentsToOffsets.cxx
+  CubicHermiteSpline.cxx
   Field.cxx
   internal/ArrayCopyUnknown.cxx
   internal/ArrayRangeComputeUtils.cxx
