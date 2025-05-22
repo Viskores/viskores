@@ -627,27 +627,33 @@ public:
            scalars,
            keptPointsMask);
 
-    // Compute the total of pointBatchesData, and convert pointBatchesData to offsets in-place.
-    const PointBatchData pointBatchTotal = viskores::cont::Algorithm::ScanExclusive(
-      pointBatchesData, pointBatchesData, PointBatchData::SumOp(), PointBatchData{});
-
-    // Create arrays to store the point map from input to output, and output to input.
     viskores::cont::ArrayHandle<viskores::Id> pointMapInputToOutput;
-    pointMapInputToOutput.Allocate(numberOfInputPoints);
-    this->PointMapOutputToInput.Allocate(pointBatchTotal.NumberOfKeptPoints);
+    { // A new scope is needed so that batchesWithKeptPointsMaskSelect is released at the end.
+      // Create a mask to only process the batches that have kept points.
+      auto batchesWithKeptPointsMaskSelect =
+        viskores::worklet::MaskSelect(batchesWithKeptPointsMask);
+      batchesWithKeptPointsMask.ReleaseResources(); // Release since it's no longer needed.
 
-    // Compute the point map from input to output, and output to input. (see Scatter Counting)
-    invoke(ComputePointMaps(),
-           viskores::worklet::MaskSelect(batchesWithKeptPointsMask),
-           pointBatches,
-           pointBatchesData, // pointBatchesDataOffsets
-           keptPointsMask,
-           pointMapInputToOutput,
-           this->PointMapOutputToInput);
-    // Release pointBatches related arrays since they are no longer needed.
-    pointBatches.ReleaseResources();
-    pointBatchesData.ReleaseResources();
-    batchesWithKeptPointsMask.ReleaseResources();
+      // Compute the total of pointBatchesData, and convert pointBatchesData to offsets in-place.
+      const PointBatchData pointBatchTotal = viskores::cont::Algorithm::ScanExclusive(
+        pointBatchesData, pointBatchesData, PointBatchData::SumOp(), PointBatchData{});
+
+      // Create arrays to store the point map from input to output, and output to input.
+      pointMapInputToOutput.Allocate(numberOfInputPoints);
+      this->PointMapOutputToInput.Allocate(pointBatchTotal.NumberOfKeptPoints);
+
+      // Compute the point map from input to output, and output to input. (see Scatter Counting)
+      invoke(ComputePointMaps(),
+             batchesWithKeptPointsMaskSelect,
+             pointBatches,
+             pointBatchesData, // pointBatchesDataOffsets
+             keptPointsMask,
+             pointMapInputToOutput,
+             this->PointMapOutputToInput);
+      // Release pointBatches related arrays since they are no longer needed.
+      pointBatches.ReleaseResources();
+      pointBatchesData.ReleaseResources();
+    }
 
     // Create batches of cells to process.
     auto cellBatches = CreateBatches(numberOfInputCells);
@@ -677,7 +683,7 @@ public:
            cellSet,
            keptPointsMask,
            caseIndices);
-    keptPointsMask.ReleaseResources(); // Release keptPointsMask since it's no longer needed.
+    keptPointsMask.ReleaseResources(); // Release since it's no longer needed.
 
     // Compute the total of cellBatchesData, and convert cellBatchesData to offsets in-place.
     const CellBatchData cellBatchTotal = viskores::cont::Algorithm::ScanExclusive(
@@ -687,17 +693,22 @@ public:
     viskores::cont::ArrayHandle<EdgeInterpolation> edgeInterpolation;
     edgeInterpolation.Allocate(cellBatchTotal.NumberOfEdges);
 
-    // Extract the edges.
-    invoke(ExtractEdges<Invert>(value),
-           viskores::worklet::MaskSelect(batchesWithClippedCellsMask),
-           cellBatches,
-           cellBatchesData, // cellBatchesDataOffsets
-           cellSet,
-           scalars,
-           caseIndices,
-           edgeInterpolation);
-    // Release batchesWithClippedCellsMask since it's no longer needed.
-    batchesWithClippedCellsMask.ReleaseResources();
+    { // A new scope is needed so that batchesWithClippedCellsMaskSelect is released at the end.
+      // Create a mask to only process the batches that have clipped cells.
+      auto batchesWithClippedCellsMaskSelect =
+        viskores::worklet::MaskSelect(batchesWithClippedCellsMask);
+      batchesWithClippedCellsMask.ReleaseResources(); // Release since it's no longer needed.
+
+      // Extract the edges.
+      invoke(ExtractEdges<Invert>(value),
+             batchesWithClippedCellsMaskSelect,
+             cellBatches,
+             cellBatchesData, // cellBatchesDataOffsets
+             cellSet,
+             scalars,
+             caseIndices,
+             edgeInterpolation);
+    }
 
     // Copy the edge interpolations to the output.
     viskores::cont::Algorithm::Copy(edgeInterpolation, this->EdgePointsInterpolation);
@@ -712,7 +723,7 @@ public:
                                            edgeInterpolation,
                                            edgeInterpolationIndexToUnique,
                                            EdgeInterpolation::LessThanOp());
-    edgeInterpolation.ReleaseResources(); // Release edgeInterpolation since it's no longer needed.
+    edgeInterpolation.ReleaseResources(); // Release since it's no longer needed.
 
     // Get the number of kept points, unique edge points, centroids, and output points.
     const viskores::Id numberOfKeptPoints = this->PointMapOutputToInput.GetNumberOfValues();
@@ -743,9 +754,14 @@ public:
     // Allocate Cell Map output to Input.
     this->CellMapOutputToInput.Allocate(cellBatchTotal.NumberOfCells);
 
+    // Create a mask to only process the batches that have kept or clipped cells.
+    auto batchesWithKeptOrClippedCellsMaskSelect =
+      viskores::worklet::MaskSelect(batchesWithKeptOrClippedCellsMask);
+    batchesWithKeptOrClippedCellsMask.ReleaseResources(); // Release since it's no longer needed.
+
     // Generate the output cell set.
     invoke(GenerateCellSet<Invert>(this->EdgePointsOffset, this->CentroidPointsOffset),
-           viskores::worklet::MaskSelect(batchesWithKeptOrClippedCellsMask),
+           batchesWithKeptOrClippedCellsMaskSelect,
            cellBatches,
            cellBatchesData, // cellBatchesDataOffsets
            cellSet,
