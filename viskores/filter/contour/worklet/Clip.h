@@ -27,6 +27,7 @@
 #include <viskores/cont/ArrayHandleCounting.h>
 #include <viskores/cont/ArrayHandleGroupVecVariable.h>
 #include <viskores/cont/ArrayHandleIndex.h>
+#include <viskores/cont/ArrayHandlePermutation.h>
 #include <viskores/cont/ArrayHandleTransform.h>
 #include <viskores/cont/ArraySetValues.h>
 #include <viskores/cont/CellSetExplicit.h>
@@ -634,9 +635,13 @@ public:
         viskores::worklet::MaskSelect(batchesWithKeptPointsMask);
       batchesWithKeptPointsMask.ReleaseResources(); // Release since it's no longer needed.
 
-      // Compute the total of pointBatchesData, and convert pointBatchesData to offsets in-place.
+      // Extract only the data of batches with kept points.
+      auto filledPointBatchesData = viskores::cont::make_ArrayHandlePermutation(
+        batchesWithKeptPointsMaskSelect.GetThreadToOutputMap(pointBatches.GetNumberOfValues()),
+        pointBatchesData);
+      // Compute the total of filledPointBatchesData, and convert filledPointBatchesData to offsets in-place.
       const PointBatchData pointBatchTotal = viskores::cont::Algorithm::ScanExclusive(
-        pointBatchesData, pointBatchesData, PointBatchData::SumOp(), PointBatchData{});
+        filledPointBatchesData, filledPointBatchesData, PointBatchData::SumOp(), PointBatchData{});
 
       // Create arrays to store the point map from input to output, and output to input.
       pointMapInputToOutput.Allocate(numberOfInputPoints);
@@ -685,9 +690,18 @@ public:
            caseIndices);
     keptPointsMask.ReleaseResources(); // Release since it's no longer needed.
 
-    // Compute the total of cellBatchesData, and convert cellBatchesData to offsets in-place.
+    // Create a mask to only process the batches that have kept or clipped cells.
+    auto batchesWithKeptOrClippedCellsMaskSelect =
+      viskores::worklet::MaskSelect(batchesWithKeptOrClippedCellsMask);
+    batchesWithKeptOrClippedCellsMask.ReleaseResources(); // Release since it's no longer needed.
+
+    // Extract only the data of batches with kept of clipped cells.
+    auto filledCellBatchesData = viskores::cont::make_ArrayHandlePermutation(
+      batchesWithKeptOrClippedCellsMaskSelect.GetThreadToOutputMap(cellBatches.GetNumberOfValues()),
+      cellBatchesData);
+    // Compute the total of filledCellBatchesData, and convert filledCellBatchesData to offsets in-place.
     const CellBatchData cellBatchTotal = viskores::cont::Algorithm::ScanExclusive(
-      cellBatchesData, cellBatchesData, CellBatchData::SumOp(), CellBatchData{});
+      filledCellBatchesData, filledCellBatchesData, CellBatchData::SumOp(), CellBatchData{});
 
     // Create an array to store the edge interpolations.
     viskores::cont::ArrayHandle<EdgeInterpolation> edgeInterpolation;
@@ -753,11 +767,6 @@ public:
 
     // Allocate Cell Map output to Input.
     this->CellMapOutputToInput.Allocate(cellBatchTotal.NumberOfCells);
-
-    // Create a mask to only process the batches that have kept or clipped cells.
-    auto batchesWithKeptOrClippedCellsMaskSelect =
-      viskores::worklet::MaskSelect(batchesWithKeptOrClippedCellsMask);
-    batchesWithKeptOrClippedCellsMask.ReleaseResources(); // Release since it's no longer needed.
 
     // Generate the output cell set.
     invoke(GenerateCellSet<Invert>(this->EdgePointsOffset, this->CentroidPointsOffset),
