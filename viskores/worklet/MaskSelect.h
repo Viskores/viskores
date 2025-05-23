@@ -69,6 +69,12 @@ public:
     return this->ThreadToOutputMap;
   }
 
+protected:
+  MaskSelect(const ThreadToOutputMapType& threadToOutputMap)
+    : ThreadToOutputMap(threadToOutputMap)
+  {
+  }
+
 private:
   ThreadToOutputMapType ThreadToOutputMap;
 
