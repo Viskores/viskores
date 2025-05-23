@@ -66,12 +66,12 @@ See the [CONTRIBUTING.md] for more ways to contribute and instructions.
 
 Viskores Requires:
 
-  + C++14 Compiler. Viskores has been confirmed to work with the following
-      + GCC 5.4+
-      + Clang 5.0+
-      + XCode 5.0+
-      + MSVC 2015+
-      + Intel 17.0.4+
+  + C++17 Compiler. Viskores has been confirmed to work with the following
+      + GCC 8.5+
+      + Clang 6.0+
+      + XCode 16.2+
+      + MSVC 2019+
+      + Intel oneAPI 2025+
   + [CMake](http://www.cmake.org/download/)
       + CMake 3.15+
       + CMake 3.24+ (for ROCM+THRUST support)
