@@ -17,3 +17,4 @@ Advanced Development
    globals.rst
    execution-objects.rst
    locators.rst
+   worklet-in-out.rst
