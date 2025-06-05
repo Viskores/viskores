@@ -50,11 +50,11 @@ BuildThreadToOutputMapWithFind(viskores::Id numThreads,
                                viskores::cont::DeviceAdapterId device);
 
 template <typename MaskArrayType>
-VISKORES_CONT viskores::worklet::MaskSelect::ThreadToOutputMapType
-BuildThreadToOutputMapWithCopy(viskores::Id numThreads,
-                               const viskores::cont::ArrayHandle<viskores::Id>& outputToThreadMap,
-                               const MaskArrayType& maskArray,
-                               viskores::cont::DeviceAdapterId device)
+VISKORES_CONT viskores::worklet::MaskSelect::ThreadToOutputMapType BuildThreadToOutputMapWithCopy(
+  viskores::Id numThreads,
+  const viskores::cont::ArrayHandle<viskores::Id>& outputToThreadMap,
+  const MaskArrayType& maskArray,
+  viskores::cont::DeviceAdapterId device)
 {
   viskores::worklet::MaskSelect::ThreadToOutputMapType threadToOutputMap;
   threadToOutputMap.Allocate(numThreads);
@@ -122,7 +122,7 @@ public:
   template <typename ArrayHandleType>
   MaskSelectTemplate(const ArrayHandleType& maskArray,
                      viskores::cont::DeviceAdapterId device = viskores::cont::DeviceAdapterTagAny())
-  : MaskSelect(ThreadToOutputMapWrapper{ internal::MaskSelectBuild(maskArray, device)} )
+    : MaskSelect(ThreadToOutputMapWrapper{ internal::MaskSelectBuild(maskArray, device) })
   {
   }
 };
