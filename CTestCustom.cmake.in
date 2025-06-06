@@ -60,6 +60,10 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # OLCF Ascent/Summit
   "viskores/thirdparty"
 
+  # Disable a particular warning that comes from DIY and GCC 12. The warning seems incorrect.
+  "12/bits/stl_vector.h:988:50: warning: pointer used after"
+  "12/bits/new_allocator.h:158:33: note: call to"
+
   # Disable warning that can happen in the standard lib from the loguru
   # third party library. This is a note that can get flagged because it
   # happens in a file outside of the thirdparty directory.
