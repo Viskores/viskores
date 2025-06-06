@@ -57,7 +57,11 @@ set(examples_device
   GuideExampleFields.cxx
   GuideExampleFilterDataSetWithField.cxx
   GuideExampleGenerateMeshConstantShape.cxx
+  GuideExampleMaskSelect.cxx
   GuideExamplePointLocator.cxx
+  GuideExampleScatterCounting.cxx
+  GuideExampleScatterPermutation.cxx
+  GuideExampleScatterUniform.cxx
   GuideExampleSimpleAlgorithm.cxx
   GuideExampleSimpleHistogram.cxx
   GuideExampleSumOfAngles.cxx
