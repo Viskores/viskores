@@ -8,7 +8,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-
 # Check C/CUDA/C++ code with clang-format
 # shellcheck disable=SC2016
 find \
