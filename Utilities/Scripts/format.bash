@@ -27,7 +27,7 @@ find \
   \) \
   -not -path '*thirdparty*' \
   -print0 \
-  | xargs -n1 -0 bash -c 'test -f $0.in || echo $0' | xargs clang-format-15.0.7 -i
+  | xargs -n1 -0 bash -c 'test -f $0.in || echo $0' | xargs clang-format-16 -i
 
 DIFF="$(git diff)"
 if [ -n "${DIFF}" ]

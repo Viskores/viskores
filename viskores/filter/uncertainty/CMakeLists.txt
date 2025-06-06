@@ -19,10 +19,12 @@
 set(uncertainty_headers
   ContourUncertainUniform.h
   ContourUncertainUniformMonteCarlo.h
+  FiberUncertainUniform.h
   )
 set(uncertainty_sources_device
   ContourUncertainUniform.cxx
   ContourUncertainUniformMonteCarlo.cxx
+  FiberUncertainUniform.cxx
   )
 
 viskores_library(
