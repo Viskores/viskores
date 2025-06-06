@@ -36,10 +36,7 @@ int main(int argc, char** argv)
 
   //Creating Actor
   viskores::cont::ColorTable colorTable("viridis");
-  viskores::rendering::Actor actor(ds_from_file.GetCellSet(),
-                               ds_from_file.GetCoordinateSystem(),
-                               ds_from_file.GetField("c1"),
-                               colorTable);
+  viskores::rendering::Actor actor(ds_from_file, "c1", colorTable);
 
   //Creating Scene and adding Actor
   viskores::rendering::Scene scene;

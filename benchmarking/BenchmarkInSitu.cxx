@@ -214,10 +214,7 @@ viskores::rendering::Canvas* RenderDataSets(const std::vector<viskores::cont::Da
 
   for (auto& dataSet : dataSets)
   {
-    scene.AddActor(viskores::rendering::Actor(dataSet.GetCellSet(),
-                                              dataSet.GetCoordinateSystem(),
-                                              dataSet.GetField(fieldName),
-                                              colorTable));
+    scene.AddActor(viskores::rendering::Actor(dataSet, fieldName, colorTable));
   }
 
   auto bounds =
