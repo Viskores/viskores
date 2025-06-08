@@ -1,0 +1,193 @@
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//============================================================================
+
+#include <random>
+#include <string>
+
+#include <viskores/cont/CubicHermiteSpline.h>
+#include <viskores/cont/ErrorBadValue.h>
+#include <viskores/cont/Invoker.h>
+#include <viskores/cont/testing/Testing.h>
+#include <viskores/worklet/WorkletMapField.h>
+
+namespace
+{
+
+class SplineEvalWorklet : public viskores::worklet::WorkletMapField
+{
+public:
+  SplineEvalWorklet() {}
+
+  using ControlSignature = void(FieldIn param, ExecObject cubicSpline, FieldOut pos);
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  template <typename ParamType, typename CubicSplineType, typename ResultType>
+  VISKORES_EXEC void operator()(const ParamType& param,
+                                const CubicSplineType& spline,
+                                ResultType& pos) const
+  {
+    auto res = spline.Evaluate(param, pos);
+    if (res != viskores::ErrorCode::Success)
+      this->RaiseError("Spline evaluation failed.");
+  }
+};
+
+void CheckEvaluation(const viskores::cont::CubicHermiteSpline& spline,
+                     const viskores::cont::ArrayHandle<viskores::FloatDefault>& params,
+                     const std::vector<viskores::Vec3f>& posAnswer)
+{
+  viskores::cont::Invoker invoke;
+  viskores::cont::ArrayHandle<viskores::Vec3f> posResult;
+
+  invoke(SplineEvalWorklet{}, params, spline, posResult);
+  VISKORES_TEST_ASSERT(test_equal_ArrayHandles(
+    posResult, viskores::cont::make_ArrayHandle(posAnswer, viskores::CopyFlag::Off)));
+}
+
+void CheckEvaluation(const viskores::cont::CubicHermiteSpline& spline,
+                     const std::vector<viskores::FloatDefault>& params,
+                     const std::vector<viskores::Vec3f>& posAnswer)
+{
+  return CheckEvaluation(
+    spline, viskores::cont::make_ArrayHandle(params, viskores::CopyFlag::Off), posAnswer);
+}
+
+#if 0
+//convenience function to save samples for debugging.
+void SaveSamples(viskores::cont::CubicHermiteSpline& spline)
+{
+  std::ofstream fout("pts.txt");
+  fout << "I, X, Y, Z" << std::endl;
+  const auto pts = spline.GetData().ReadPortal();
+  for (viskores::Id i = 0; i < pts.GetNumberOfValues(); ++i)
+    fout << i << ", " << pts.Get(i)[0] << ", " << pts.Get(i)[1] << ", " << pts.Get(i)[2]
+         << std::endl;
+  fout.close();
+
+  fout = std::ofstream("samples.txt");
+  fout << "T, X, Y, Z" << std::endl;
+  viskores::Id n = 1000;
+
+  viskores::FloatDefault t0 = static_cast<vtkm::FloatDefault>(spline.GetParametricRange().Min);
+  viskores::FloatDefault t1 = static_cast<vtkm::FloatDefault>(spline.GetParametricRange().Max);
+  auto dt = (t1 - t0) / static_cast<viskores::FloatDefault>(n - 1);
+  std::vector<viskores::FloatDefault> params;
+  for (viskores::FloatDefault t = t0; t < t1; t += dt)
+    params.push_back(t);
+
+  viskores::cont::Invoker invoke;
+  viskores::cont::ArrayHandle<viskores::Vec3f> posResults;
+  invoke(SplineEvalWorklet{},
+         viskores::cont::make_ArrayHandle(params, viskores::CopyFlag::Off),
+         spline,
+         posResults);
+
+  auto pos = posResults.ReadPortal();
+  for (viskores::Id i = 0; i < pos.GetNumberOfValues(); i++)
+    fout << params[i] << ", " << pos.Get(i)[0] << ", " << pos.Get(i)[1] << ", " << pos.Get(i)[2]
+         << std::endl;
+  fout.close();
+}
+#endif
+
+void CubicHermiteSplineTest()
+{
+  std::vector<viskores::Vec3f> pts = { { 0, 0, 0 },  { 1, 1, 1 },  { 2, 1, 0 }, { 3, -.5, -1 },
+                                       { 4, -1, 0 }, { 5, -1, 1 }, { 6, 0, 0 } };
+
+  viskores::cont::CubicHermiteSpline spline;
+  spline.SetData(pts);
+  //Evaluation at knots gives the sample pts.
+  CheckEvaluation(spline, spline.GetKnots(), pts);
+  CheckEvaluation(spline, spline.GetKnots(), pts);
+
+  //Evaluation at non-knot values.
+  std::vector<viskores::FloatDefault> params = { 0.21f, 0.465f, 0.501f, 0.99832f };
+  std::vector<viskores::Vec3f> result = { { 1.23261f, 1.08861f, 0.891725f },
+                                          { 2.68524f, -0.0560059f, -0.855685f },
+                                          { 2.85574f, -0.32766f, -0.970523f },
+                                          { 5.99045f, -0.00959875f, 0.00964856f } };
+  CheckEvaluation(spline, params, result);
+
+  //Explicitly set knots and check.
+  std::vector<viskores::FloatDefault> knots = { 0, 1, 2, 3, 4, 5, 6 };
+  spline = viskores::cont::CubicHermiteSpline();
+  spline.SetData(pts);
+  spline.SetKnots(knots);
+  CheckEvaluation(spline, knots, pts);
+
+  //Evaluation at non-knot values.
+  params = { 0.84f, 1.399f, 2.838f, 4.930f, 5.001f, 5.993f };
+  result = { { 0.84f, 0.896448f, 0.952896f },    { 1.399f, 1.14382f, 0.745119f },
+             { 2.838f, -0.297388f, -0.951764f }, { 4.93f, -1.03141f, 0.990543f },
+             { 5.001f, -0.999499f, 0.999998f },  { 5.993f, -0.00702441f, 0.00704873f } };
+  CheckEvaluation(spline, params, result);
+
+  //Non-uniform knots.
+  knots = { 0.f, 1.f, 2.f, 2.1f, 2.2f, 2.3f, 3.f };
+  spline = viskores::cont::CubicHermiteSpline();
+  spline.SetData(pts);
+  spline.SetKnots(knots);
+
+  CheckEvaluation(spline, knots, pts);
+
+  params = { 1.5f, 2.05f, 2.11f, 2.299f, 2.8f };
+  result = { { 1.39773f, 1.23295f, 0.727273f },
+             { 2.39773f, 0.357954f, -0.522727f },
+             { 3.1f, -0.59275f, -0.981f },
+             { 4.99735f, -1.00125f, 0.999801f },
+             { 5.75802f, -0.293003f, 0.344023f } };
+  CheckEvaluation(spline, params, result);
+
+  //Create a more complex spline from analytical functions.
+  viskores::Id n = 500;
+  viskores::FloatDefault t = 0.0,
+                         dt = viskores::TwoPi<viskores::FloatDefault>() /
+    static_cast<viskores::FloatDefault>(n);
+
+  pts.clear();
+  knots.clear();
+  while (t <= viskores::TwoPi())
+  {
+    viskores::FloatDefault x = viskores::Cos(t);
+    viskores::FloatDefault y = viskores::Sin(t);
+    viskores::FloatDefault z = x * y;
+    pts.push_back({ x, y, z });
+    knots.push_back(t);
+    t += dt;
+  }
+  spline = viskores::cont::CubicHermiteSpline();
+  spline.SetData(pts);
+  spline.SetKnots(knots);
+  CheckEvaluation(spline, knots, pts);
+
+  //Evaluate at a few points and check against analytical results.
+  params = { 0.15f, 1.83f, 2.38f, 3.0291f, 3.8829f, 4.92f, 6.2f };
+  result.clear();
+  for (const auto& p : params)
+    result.push_back({ viskores::Cos(p), viskores::Sin(p), viskores::Cos(p) * viskores::Sin(p) });
+  CheckEvaluation(spline, params, result);
+}
+
+} // anonymous namespace
+
+int UnitTestCubicHermiteSpline(int argc, char* argv[])
+{
+  return viskores::cont::testing::Testing::Run(CubicHermiteSplineTest, argc, argv);
+}
