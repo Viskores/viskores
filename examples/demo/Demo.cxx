@@ -58,10 +58,7 @@ int main(int argc, char* argv[])
 
   // Background color:
   viskores::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-  viskores::rendering::Actor actor(tangleData.GetCellSet(),
-                                   tangleData.GetCoordinateSystem(),
-                                   tangleData.GetField(fieldName),
-                                   colorTable);
+  viskores::rendering::Actor actor(tangleData, fieldName, colorTable);
   viskores::rendering::Scene scene;
   scene.AddActor(actor);
   // 2048x2048 pixels in the canvas:
@@ -79,11 +76,11 @@ int main(int argc, char* argv[])
   filter.SetActiveField(fieldName);
   viskores::cont::DataSet isoData = filter.Execute(tangleData);
   // Render a separate image with the output isosurface
-  viskores::rendering::Actor isoActor(
-    isoData.GetCellSet(), isoData.GetCoordinateSystem(), isoData.GetField(fieldName), colorTable);
-  // By default, the actor will automatically scale the scalar range of the color table to match
-  // that of the data. However, we are coloring by the scalar that we just extracted a contour
-  // from, so we want the scalar range to match that of the previous image.
+  viskores::rendering::Actor isoActor(isoData, fieldName, colorTable);
+  // By default, the actor will automatically scale the scalar range of the
+  // color table to match that of the data. However, we are coloring by the
+  // scalar that we just extracted a contour from, so we want the scalar range
+  // to match that of the previous image.
   isoActor.SetScalarRange(actor.GetScalarRange());
   viskores::rendering::Scene isoScene;
   isoScene.AddActor(std::move(isoActor));

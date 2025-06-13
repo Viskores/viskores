@@ -112,10 +112,7 @@ int main(int argc, char** argv)
   dataSet.GetCellField("spins").GetData().AsArrayHandle(spins);
 
   viskores::rendering::Scene scene;
-  viskores::rendering::Actor actor(dataSet.GetCellSet(),
-                                   dataSet.GetCoordinateSystem(),
-                                   dataSet.GetCellField("spins"),
-                                   viskores::cont::ColorTable("Cool To Warm"));
+  viskores::rendering::Actor actor(dataSet, "spins", viskores::cont::ColorTable("Cool To Warm"));
   scene.AddActor(actor);
   viskores::rendering::CanvasRayTracer canvas(1024, 1024);
   viskores::rendering::MapperRayTracer mapper;

@@ -78,8 +78,7 @@ int main(int argc, char* argv[])
   //// BEGIN-EXAMPLE ViskoresQuickStartRender
   ////
   //// LABEL scene-start
-  viskores::rendering::Actor actor(
-    outData.GetCellSet(), outData.GetCoordinateSystem(), outData.GetField("area"));
+  viskores::rendering::Actor actor(outData, "area");
 
   viskores::rendering::Scene scene;
   //// LABEL scene-end
