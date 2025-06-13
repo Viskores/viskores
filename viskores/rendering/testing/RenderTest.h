@@ -26,6 +26,7 @@
 
 #include <viskores/Bounds.h>
 #include <viskores/cont/DeviceAdapterTag.h>
+#include <viskores/cont/Variant.h>
 #include <viskores/cont/testing/MakeTestDataSet.h>
 #include <viskores/rendering/Actor.h>
 #include <viskores/rendering/Camera.h>
@@ -125,6 +126,10 @@ struct RenderTestOptions
   bool RenderCells = false;
 };
 
+using DataSetFieldVector = std::vector<
+  std::pair<viskores::cont::Variant<viskores::cont::DataSet, viskores::cont::PartitionedDataSet>,
+            std::string>>;
+
 VISKORES_RENDERING_TESTING_EXPORT
 void RenderTest(const viskores::cont::DataSet& dataSet,
                 const std::string& fieldName,
@@ -132,7 +137,13 @@ void RenderTest(const viskores::cont::DataSet& dataSet,
                 const RenderTestOptions& options = RenderTestOptions{});
 
 VISKORES_RENDERING_TESTING_EXPORT
-void RenderTest(const std::vector<std::pair<viskores::cont::DataSet, std::string>>& dataSetsFields,
+void RenderTest(const viskores::cont::PartitionedDataSet& dataSet,
+                const std::string& fieldName,
+                const std::string& outputFile,
+                const RenderTestOptions& options = RenderTestOptions{});
+
+VISKORES_RENDERING_TESTING_EXPORT
+void RenderTest(const DataSetFieldVector& dataSetsFields,
                 const std::string& outputFile,
                 const RenderTestOptions& options = RenderTestOptions{});
 
