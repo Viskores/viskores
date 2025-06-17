@@ -88,14 +88,14 @@ public:
   {
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformGrid::LastCell
+  /// @copydoc viskores::exec::CellLocatorUniformBins::LastCell
   struct LastCell
   {
     viskores::Id CellId = -1;
     viskores::Id BinIdx = -1;
   };
 
-  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
+  /// @copydoc viskores::exec::CellLocatorUniformBins::FindCell
   VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
                                              viskores::Id& cellId,
                                              viskores::Vec3f& parametric) const
@@ -104,7 +104,7 @@ public:
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
+  /// @copydoc viskores::exec::CellLocatorUniformBins::FindCell
   VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
                                              viskores::Id& cellId,
                                              viskores::Vec3f& parametric,
@@ -142,6 +142,61 @@ public:
     //LastCell not initialized, or not in the same bin: do a full test.
     //Since already computed the binIdx, re-use it.
     return this->FindCellImpl(point, cellId, parametric, lastCell, binIdx);
+  }
+
+  /// @copydoc viskores::exec::CellLocatorUniformBins::CountAllCells
+  // Count the number of cells that contain the input point.
+  VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
+  {
+    viskores::Id binIdx = this->FindBinIdx(point);
+    if (binIdx == -1)
+      return 0;
+
+    viskores::Id count = 0;
+    auto binIds = this->CellIds.Get(binIdx);
+    viskores::Vec3f pc;
+    for (viskores::IdComponent i = 0; i < binIds.GetNumberOfComponents(); i++)
+    {
+      viskores::Id cid = binIds[i];
+      if (this->PointInCell(point, cid, pc))
+        count++;
+    }
+    return count;
+  }
+
+  /// @copydoc viskores::exec::CellLocatorUniformBins::FindAllCells
+  template <typename CellIdsType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
+                                                 CellIdsType& indices,
+                                                 const viskores::Id& skipCell = -1) const
+  {
+    viskores::IdComponent n = indices.GetNumberOfComponents();
+    if (n == 0)
+      return viskores::ErrorCode::Success;
+
+    for (viskores::Id i = 0; i < n; i++)
+      indices[i] = -1;
+
+    viskores::Id binIdx = this->FindBinIdx(point);
+    if (binIdx == -1)
+      return viskores::ErrorCode::CellNotFound;
+
+    auto binIds = this->CellIds.Get(binIdx);
+    viskores::Vec3f pc;
+    viskores::Id j = 0;
+    for (viskores::IdComponent i = 0; i < binIds.GetNumberOfComponents(); i++)
+    {
+      viskores::Id cid = binIds[i];
+      if (cid != skipCell && this->PointInCell(point, cid, pc))
+      {
+        if (j == n)
+          return viskores::ErrorCode::CellNotFound;
+
+        indices[j] = cid;
+        j++;
+      }
+    }
+    return viskores::ErrorCode::Success;
   }
 
   VISKORES_DEPRECATED(1.6, "Locators are no longer pointers. Use . operator.")
@@ -314,7 +369,6 @@ private:
   CellStructureType CellSet;
   CoordsPortalType Coords;
 };
-
 }
 } // viskores::exec
 

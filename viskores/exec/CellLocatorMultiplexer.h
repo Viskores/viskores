@@ -58,6 +58,26 @@ struct FindCellFunctor
   }
 };
 
+struct CountAllCellsFunctor
+{
+  template <typename Locator>
+  VISKORES_EXEC viskores::Id operator()(Locator&& locator, const viskores::Vec3f& point) const
+  {
+    return locator.CountAllCells(point);
+  }
+};
+
+struct FindAllCellsFunctor
+{
+  template <typename Locator, typename CellIdsType>
+  VISKORES_EXEC viskores::ErrorCode operator()(Locator&& locator,
+                                               const viskores::Vec3f& point,
+                                               CellIdsType& cellIds) const
+  {
+    return locator.FindAllCells(point, cellIds);
+  }
+};
+
 } // namespace detail
 
 template <typename... LocatorTypes>
@@ -90,6 +110,18 @@ public:
   {
     return this->Locators.CastAndCall(
       detail::FindCellFunctor{}, point, cellId, parametric, lastCell);
+  }
+
+  VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
+  {
+    return this->Locators.CastAndCall(detail::CountAllCellsFunctor{}, point);
+  }
+
+  template <typename CellIdsType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
+                                                 CellIdsType& cellIds) const
+  {
+    return this->Locators.CastAndCall(detail::FindAllCellsFunctor{}, point, cellIds);
   }
 };
 

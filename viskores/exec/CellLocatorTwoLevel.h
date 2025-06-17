@@ -220,11 +220,45 @@ public:
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
+  /// @copydoc viskores::exec::CellLocatorUniformBins::CountAllCells
+  // Count the number of cells that contain the input point.
+  VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
+  {
+    LastCell lastCell;
+    viskores::Id cellId;
+    viskores::Vec3f parametric;
+
+    if (this->FindCellImpl(point, cellId, parametric, lastCell) == viskores::ErrorCode::Success)
+      return 1;
+    return 0;
+  }
+
+  template <typename CellIdsType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
+                                                 CellIdsType& cellIds) const
+  {
+    viskores::IdComponent n = cellIds.GetNumberOfComponents();
+    if (n == 0)
+      return viskores::ErrorCode::Success;
+
+    viskores::Id cellId;
+    viskores::Vec3f parametric;
+    if (this->FindCell(point, cellId, parametric) == viskores::ErrorCode::Success)
+    {
+      cellIds[0] = cellId;
+      return viskores::ErrorCode::Success;
+    }
+    else
+    {
+      cellIds[0] = -1;
+      return viskores::ErrorCode::CellNotFound;
+    }
+  }
+
 private:
-  VISKORES_EXEC
-  viskores::ErrorCode PointInCell(const viskores::Vec3f& point,
-                                  const viskores::Id& cid,
-                                  viskores::Vec3f& parametric) const
+  VISKORES_EXEC viskores::ErrorCode PointInCell(const viskores::Vec3f& point,
+                                                const viskores::Id& cid,
+                                                viskores::Vec3f& parametric) const
   {
     auto indices = this->CellSet.GetIndices(cid);
     auto pts = viskores::make_VecFromPortalPermute(&indices, this->Coords);
