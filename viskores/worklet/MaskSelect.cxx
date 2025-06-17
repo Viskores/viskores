@@ -19,9 +19,10 @@
 #include <viskores/worklet/MaskSelectTemplate.h>
 
 VISKORES_CONT viskores::worklet::MaskSelect::ThreadToOutputMapType
-viskores::worklet::internal::BuildThreadToOutputMapWithFind(viskores::Id numThreads,
-                               viskores::cont::ArrayHandle<viskores::Id> outputToThreadMap,
-                               viskores::cont::DeviceAdapterId device)
+viskores::worklet::internal::BuildThreadToOutputMapWithFind(
+  viskores::Id numThreads,
+  viskores::cont::ArrayHandle<viskores::Id> outputToThreadMap,
+  viskores::cont::DeviceAdapterId device)
 {
   viskores::worklet::MaskSelect::ThreadToOutputMapType threadToOutputMap;
 
@@ -38,7 +39,8 @@ viskores::worklet::internal::BuildThreadToOutputMapWithFind(viskores::Id numThre
 }
 
 VISKORES_CONT viskores::worklet::MaskSelect::ThreadToOutputMapType
-viskores::worklet::internal::BuildThreadToOutputMapAllOn(viskores::Id numThreads, viskores::cont::DeviceAdapterId device)
+viskores::worklet::internal::BuildThreadToOutputMapAllOn(viskores::Id numThreads,
+                                                         viskores::cont::DeviceAdapterId device)
 {
   viskores::worklet::MaskSelect::ThreadToOutputMapType threadToOutputMap;
   threadToOutputMap.Allocate(numThreads);
