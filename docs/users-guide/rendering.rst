@@ -33,11 +33,8 @@ The primary intent of the rendering package in |Viskores| is to visually display
 Data are represented in |Viskores| by :class:`viskores::cont::DataSet` objects, which are described in :chapref:`dataset:Data Sets`.
 They are also the object created from :chapref:`io:File I/O` and :chapref:`running-filters:Running Filters`.
 
-To render a :class:`viskores::cont::DataSet`, the data are wrapped in a
-:class:`viskores::rendering::Actor` class. The :class:`viskores::rendering::Actor` holds the
-components of the :class:`viskores::cont::DataSet` to render (a cell set, a
-coordinate system, and a field). A color table can also be optionally be
-specified, but a default color table will be specified otherwise.
+To render a :class:`viskores::cont::DataSet`, the data are wrapped in a :class:`viskores::rendering::Actor` class.
+A color table can also be optionally be specified, but a default color table will be specified otherwise.
 
 .. load-example:: ActorScene
    :file: GuideExampleRendering.cxx
@@ -50,7 +47,7 @@ specified, but a default color table will be specified otherwise.
    double: rendering; scene
 
 :class:`viskores::rendering::Actor` objects are collected together in an object called :class:`viskores::rendering::Scene`.
-       An :class:`viskores::rendering::Actor` is added to a :class:`viskores::rendering::Scene` with the :func:`viskores::rendering::Scene::AddActor` method.
+       A :class:`viskores::rendering::Actor` is added to a :class:`viskores::rendering::Scene` with the :func:`viskores::rendering::Scene::AddActor` method.
 
 .. doxygenclass:: viskores::rendering::Scene
    :members:
