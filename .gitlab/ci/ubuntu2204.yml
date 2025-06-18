@@ -80,6 +80,7 @@ ubuntu2204_clang11_cuda:
     - nvidia-a100
     - uo-gpu
     - x86_64-nvidiagpu
+    - voltar
   extends:
     - .ubuntu2204_cuda
     - .cmake_build_linux
@@ -124,6 +125,7 @@ ubuntu2204_kokkos37_cuda:
     - nvidia-a100
     - uo-gpu
     - x86_64-nvidiagpu
+    - voltar
   extends:
     - .ubuntu2204_cuda_kokkos
     - .cmake_build_linux
