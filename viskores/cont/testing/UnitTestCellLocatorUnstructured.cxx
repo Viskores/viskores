@@ -581,7 +581,6 @@ void TestFindAllCells(LocatorType& locator)
 void TestingCellLocatorUnstructured()
 {
   viskores::UInt32 seed = static_cast<viskores::UInt32>(std::time(nullptr));
-  std::cout << "Seed: " << seed << std::endl;
   RandomGenerator.seed(seed);
 
   //Test viskores::cont::CellLocatorTwoLevel
@@ -591,6 +590,7 @@ void TestingCellLocatorUnstructured()
 
   TestCellLocator(locator2L, viskores::Id3(8), 512);  // 3D dataset
   TestCellLocator(locator2L, viskores::Id2(18), 512); // 2D dataset
+  TestFindAllCells(locator2L);
 
   //Test viskores::cont::CellLocatorUniformBins
   viskores::cont::CellLocatorUniformBins locatorUB;

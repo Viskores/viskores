@@ -114,7 +114,6 @@ class VISKORES_ALWAYS_EXPORT CellLocatorTwoLevel
 private:
   using DimVec3 = viskores::internal::cl_uniform_bins::DimVec3;
   using FloatVec3 = viskores::internal::cl_uniform_bins::FloatVec3;
-
   template <typename T>
   using ReadPortal = typename viskores::cont::ArrayHandle<T>::ReadPortalType;
 
@@ -187,7 +186,7 @@ public:
                                FloatVec3& parametric) const
   {
     LastCell lastCell;
-    return this->FindCellImpl(point, cellId, parametric, lastCell);
+    return this->FindCell(point, cellId, parametric, lastCell);
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
@@ -217,45 +216,113 @@ public:
     }
 
     //Call the full point search.
-    return this->FindCellImpl(point, cellId, parametric, lastCell);
+    viskores::Vec<viskores::Id, 1> cellIdVec = { -1 };
+    auto nCells = this->IterateLeaves(point, IterateMode::FindOne, cellIdVec, parametric, lastCell);
+    if (nCells == 0)
+      return viskores::ErrorCode::CellNotFound;
+
+    cellId = cellIdVec[0];
+    return viskores::ErrorCode::Success;
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformBins::CountAllCells
   // Count the number of cells that contain the input point.
   VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
   {
+    viskores::Vec<viskores::Id, 1> cellIdVec = { -1 };
+    viskores::Vec3f pc;
     LastCell lastCell;
-    viskores::Id cellId;
-    viskores::Vec3f parametric;
 
-    if (this->FindCellImpl(point, cellId, parametric, lastCell) == viskores::ErrorCode::Success)
-      return 1;
-    return 0;
+    return this->IterateLeaves(point, IterateMode::CountAll, cellIdVec, pc, lastCell);
   }
 
-  template <typename CellIdsType>
+  template <typename CellIdVecType>
   VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
-                                                 CellIdsType& cellIds) const
+                                                 CellIdVecType& cellIdVec) const
   {
-    viskores::IdComponent n = cellIds.GetNumberOfComponents();
+    viskores::IdComponent n = cellIdVec.GetNumberOfComponents();
     if (n == 0)
       return viskores::ErrorCode::Success;
 
-    viskores::Id cellId;
-    viskores::Vec3f parametric;
-    if (this->FindCell(point, cellId, parametric) == viskores::ErrorCode::Success)
-    {
-      cellIds[0] = cellId;
-      return viskores::ErrorCode::Success;
-    }
-    else
-    {
-      cellIds[0] = -1;
+    for (viskores::Id i = 0; i < n; i++)
+      cellIdVec[i] = -1;
+
+    viskores::Vec3f pc;
+    LastCell lastCell;
+    viskores::Id nCells = this->IterateLeaves(point, IterateMode::FindAll, cellIdVec, pc, lastCell);
+    if (nCells == 0)
       return viskores::ErrorCode::CellNotFound;
-    }
+
+    return viskores::ErrorCode::Success;
   }
 
 private:
+  // Shared leaf traversal: modes are FindOne, CountAll, FindAll
+  enum class IterateMode
+  {
+    FindOne,
+    CountAll,
+    FindAll
+  };
+
+  template <typename CellIdVecType>
+  VISKORES_EXEC viskores::Id IterateLeaves(const FloatVec3& point,
+                                           const IterateMode& mode,
+                                           CellIdVecType& cellIdVec,
+                                           FloatVec3& parametric,
+                                           LastCell& lastCell) const
+  {
+    using namespace viskores::internal::cl_uniform_bins;
+
+    lastCell.CellId = -1;
+    lastCell.LeafIdx = -1;
+    viskores::Id cellCount = 0;
+
+    DimVec3 binId3 = static_cast<DimVec3>((point - this->TopLevel.Origin) / this->TopLevel.BinSize);
+    if (binId3[0] >= 0 && binId3[0] < this->TopLevel.Dimensions[0] && binId3[1] >= 0 &&
+        binId3[1] < this->TopLevel.Dimensions[1] && binId3[2] >= 0 &&
+        binId3[2] < this->TopLevel.Dimensions[2])
+    {
+      viskores::Id binId = ComputeFlatIndex(binId3, this->TopLevel.Dimensions);
+
+      auto ldim = this->LeafDimensions.Get(binId);
+      if (!ldim[0] || !ldim[1] || !ldim[2])
+      {
+        return 0;
+      }
+
+      auto leafGrid = ComputeLeafGrid(binId3, ldim, this->TopLevel);
+
+      DimVec3 leafId3 = static_cast<DimVec3>((point - leafGrid.Origin) / leafGrid.BinSize);
+      // precision issues may cause leafId3 to be out of range so clamp it
+      leafId3 = viskores::Max(DimVec3(0), viskores::Min(ldim - DimVec3(1), leafId3));
+
+      viskores::Id leafStart = this->LeafStartIndex.Get(binId);
+      viskores::Id leafIdx = leafStart + ComputeFlatIndex(leafId3, leafGrid.Dimensions);
+
+      viskores::Id start = this->CellStartIndex.Get(leafIdx);
+      viskores::Id end = start + this->CellCount.Get(leafIdx);
+      for (viskores::Id i = start; i < end; ++i)
+      {
+        viskores::Id cellId = this->CellIds.Get(i);
+        viskores::Vec3f pc;
+        if (this->PointInCell(point, cellId, pc) == viskores::ErrorCode::Success)
+        {
+          lastCell.CellId = cellId;
+          lastCell.LeafIdx = leafIdx;
+          if (mode != IterateMode::CountAll)
+            cellIdVec[cellCount] = cellId;
+          parametric = pc;
+          cellCount++;
+          if (mode == IterateMode::FindOne)
+            break;
+        }
+      }
+    }
+
+    return cellCount;
+  }
+
   VISKORES_EXEC viskores::ErrorCode PointInCell(const viskores::Vec3f& point,
                                                 const viskores::Id& cid,
                                                 viskores::Vec3f& parametric) const
@@ -292,52 +359,6 @@ private:
       {
         cellId = cid;
         parametric = pc;
-        return viskores::ErrorCode::Success;
-      }
-    }
-
-    return viskores::ErrorCode::CellNotFound;
-  }
-
-
-  VISKORES_EXEC
-  viskores::ErrorCode FindCellImpl(const FloatVec3& point,
-                                   viskores::Id& cellId,
-                                   FloatVec3& parametric,
-                                   LastCell& lastCell) const
-  {
-    using namespace viskores::internal::cl_uniform_bins;
-
-    cellId = -1;
-    lastCell.CellId = -1;
-    lastCell.LeafIdx = -1;
-
-    DimVec3 binId3 = static_cast<DimVec3>((point - this->TopLevel.Origin) / this->TopLevel.BinSize);
-    if (binId3[0] >= 0 && binId3[0] < this->TopLevel.Dimensions[0] && binId3[1] >= 0 &&
-        binId3[1] < this->TopLevel.Dimensions[1] && binId3[2] >= 0 &&
-        binId3[2] < this->TopLevel.Dimensions[2])
-    {
-      viskores::Id binId = ComputeFlatIndex(binId3, this->TopLevel.Dimensions);
-
-      auto ldim = this->LeafDimensions.Get(binId);
-      if (!ldim[0] || !ldim[1] || !ldim[2])
-      {
-        return viskores::ErrorCode::CellNotFound;
-      }
-
-      auto leafGrid = ComputeLeafGrid(binId3, ldim, this->TopLevel);
-
-      DimVec3 leafId3 = static_cast<DimVec3>((point - leafGrid.Origin) / leafGrid.BinSize);
-      // precision issues may cause leafId3 to be out of range so clamp it
-      leafId3 = viskores::Max(DimVec3(0), viskores::Min(ldim - DimVec3(1), leafId3));
-
-      viskores::Id leafStart = this->LeafStartIndex.Get(binId);
-      viskores::Id leafIdx = leafStart + ComputeFlatIndex(leafId3, leafGrid.Dimensions);
-
-      if (this->PointInLeaf(point, leafIdx, cellId, parametric) == viskores::ErrorCode::Success)
-      {
-        lastCell.CellId = cellId;
-        lastCell.LeafIdx = leafIdx;
         return viskores::ErrorCode::Success;
       }
     }
