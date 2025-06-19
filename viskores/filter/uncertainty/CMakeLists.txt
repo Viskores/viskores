@@ -16,18 +16,32 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
+viskores_get_kit_name(kit_name kit_dir)
+
 set(uncertainty_headers
   ContourUncertainUniform.h
   ContourUncertainUniformMonteCarlo.h
+  FiberUncertainUniform.h
+  worklet/FiberUncertainUniform.h
   )
+
 set(uncertainty_sources_device
   ContourUncertainUniform.cxx
   ContourUncertainUniformMonteCarlo.cxx
+  FiberUncertainUniform.cxx
   )
+
+viskores_declare_headers(${uncertainty_headers})
 
 viskores_library(
   NAME viskores_filter_uncertainty
   HEADERS ${uncertainty_headers}
   DEVICE_SOURCES ${uncertainty_sources_device}
   USE_VISKORES_JOB_POOL
+)
+
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/worklet
+  DESTINATION ${Viskores_INSTALL_INCLUDE_DIR}/viskores/filter/uncertainty
+  FILES_MATCHING PATTERN "*.h"
 )
