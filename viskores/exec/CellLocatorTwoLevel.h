@@ -250,6 +250,7 @@ public:
     viskores::Vec3f pc;
     LastCell lastCell;
     viskores::Id nCells = this->IterateLeaves(point, IterateMode::FindAll, cellIdVec, pc, lastCell);
+    VISKORES_ASSERT(n == nCells);
     if (nCells == 0)
       return viskores::ErrorCode::CellNotFound;
 

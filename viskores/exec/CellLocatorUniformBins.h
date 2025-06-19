@@ -101,7 +101,7 @@ public:
                                              viskores::Vec3f& parametric) const
   {
     LastCell lastCell;
-    return this->FindCellImpl(point, cellId, parametric, lastCell);
+    return this->FindCell(point, cellId, parametric, lastCell);
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformBins::FindCell
@@ -141,7 +141,17 @@ public:
 
     //LastCell not initialized, or not in the same bin: do a full test.
     //Since already computed the binIdx, re-use it.
-    return this->FindCellImpl(point, cellId, parametric, lastCell, binIdx);
+    viskores::Vec<viskores::Id, 1> cellIdVec = { -1 };
+    auto nCells = this->IterateBin(point, IterateMode::FindOne, cellIdVec, parametric, binIdx);
+    if (nCells == 1)
+    {
+      cellId = cellIdVec[0];
+      lastCell.BinIdx = binIdx;
+      lastCell.CellId = cellId;
+      return viskores::ErrorCode::Success;
+    }
+
+    return viskores::ErrorCode::CellNotFound;
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformBins::CountAllCells
@@ -152,23 +162,15 @@ public:
     if (binIdx == -1)
       return 0;
 
-    viskores::Id count = 0;
-    auto binIds = this->CellIds.Get(binIdx);
     viskores::Vec3f pc;
-    for (viskores::IdComponent i = 0; i < binIds.GetNumberOfComponents(); i++)
-    {
-      viskores::Id cid = binIds[i];
-      if (this->PointInCell(point, cid, pc))
-        count++;
-    }
-    return count;
+    viskores::Vec<viskores::Id, 1> cellIdVec = { -1 };
+    return this->IterateBin(point, IterateMode::CountAll, cellIdVec, pc, binIdx);
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformBins::FindAllCells
   template <typename CellIdsType>
   VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
-                                                 CellIdsType& indices,
-                                                 const viskores::Id& skipCell = -1) const
+                                                 CellIdsType& indices) const
   {
     viskores::IdComponent n = indices.GetNumberOfComponents();
     if (n == 0)
@@ -187,15 +189,13 @@ public:
     for (viskores::IdComponent i = 0; i < binIds.GetNumberOfComponents(); i++)
     {
       viskores::Id cid = binIds[i];
-      if (cid != skipCell && this->PointInCell(point, cid, pc))
+      if (this->PointInCell(point, cid, pc))
       {
-        if (j == n)
-          return viskores::ErrorCode::CellNotFound;
-
         indices[j] = cid;
         j++;
       }
     }
+    VISKORES_ASSERT(j == n);
     return viskores::ErrorCode::Success;
   }
 
@@ -205,6 +205,13 @@ public:
   VISKORES_EXEC const CellLocatorUniformBins* operator->() const { return this; }
 
 private:
+  enum class IterateMode
+  {
+    FindOne,
+    CountAll,
+    FindAll
+  };
+
   VISKORES_EXEC viskores::Id FindBinIdx(const viskores::Vec3f& point) const
   {
     if (!this->IsInside(point))
@@ -241,41 +248,33 @@ private:
     return true;
   }
 
-  VISKORES_EXEC
-  viskores::ErrorCode FindCellImpl(const viskores::Vec3f& point,
-                                   viskores::Id& cellId,
-                                   viskores::Vec3f& parametric,
-                                   LastCell& lastCell,
-                                   viskores::Id ptBinIdx = -1) const
+  template <typename CellIdVecType>
+  VISKORES_EXEC viskores::Id IterateBin(const viskores::Vec3f& point,
+                                        const IterateMode& mode,
+                                        CellIdVecType& cellIdVec,
+                                        viskores::Vec3f& parametric,
+                                        viskores::Id binIdx) const
   {
-    lastCell.CellId = -1;
-    lastCell.BinIdx = -1;
+    auto binIds = this->CellIds.Get(binIdx);
 
-    //if ptBinIdx is set, use it. Otherwise, compute the bin idx.
-    viskores::Id binIdx = -1;
-    if (ptBinIdx == -1)
-      binIdx = this->FindBinIdx(point);
-    else
-      binIdx = ptBinIdx;
-
-    //point not in a bin. return not found.
-    if (binIdx == -1)
-    {
-      cellId = -1;
-      return viskores::ErrorCode::CellNotFound;
-    }
-
-    //search cells in the bin.
     viskores::Vec3f pc;
-    if (this->PointInBin(point, binIdx, cellId, pc))
+    viskores::Id cellCount = 0;
+    for (viskores::IdComponent i = 0; i < binIds.GetNumberOfComponents(); i++)
     {
-      parametric = pc;
-      lastCell.CellId = cellId;
-      lastCell.BinIdx = binIdx;
-      return viskores::ErrorCode::Success;
+      viskores::Id cid = binIds[i];
+      if (this->PointInCell(point, cid, pc))
+      {
+        if (mode != IterateMode::CountAll)
+          cellIdVec[cellCount] = cid;
+
+        parametric = pc;
+        cellCount++;
+        if (mode == IterateMode::FindOne)
+          break;
+      }
     }
 
-    return viskores::ErrorCode::CellNotFound;
+    return cellCount;
   }
 
   template <typename PointsVecType>
