@@ -236,15 +236,19 @@ public:
 class FindAllCellsWorklet : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn points, ExecObject locator, FieldOut count);
-  using ExecutionSignature = void(_1, _2, _3);
+  using ControlSignature = void(FieldIn points,
+                                ExecObject locator,
+                                FieldOut cellIds,
+                                FieldOut pCoords);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
-  template <typename LocatorType, typename CellIdsType>
+  template <typename LocatorType, typename CellIdVecType, typename ParametricCoordsVecType>
   VISKORES_EXEC void operator()(const viskores::Vec3f& point,
                                 const LocatorType& locator,
-                                CellIdsType& cellIds) const
+                                CellIdVecType& cellIds,
+                                ParametricCoordsVecType pCoords) const
   {
-    locator.FindAllCells(point, cellIds);
+    locator.FindAllCells(point, cellIds, pCoords);
   }
 };
 
@@ -343,11 +347,15 @@ void TestCellLocator(LocatorType& locator,
 
   //create an array to hold all of the found cells.
   viskores::cont::ArrayHandle<viskores::Id> foundCells;
+  viskores::cont::ArrayHandle<viskores::Vec3f> foundpCoords;
   foundCells.AllocateAndFill(numberOfFoundCells, viskores::Id(-1));
+  foundpCoords.Allocate(numberOfFoundCells);
   auto foundCellsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
     foundCells, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
+  auto foundpCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
+    foundpCoords, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
 
-  invoker(FindAllCellsWorklet{}, points, locator, foundCellsVec);
+  invoker(FindAllCellsWorklet{}, points, locator, foundCellsVec, foundpCoordsVec);
   portal = foundCells.ReadPortal();
   for (viskores::Id i = 0; i < numberOfFoundCells; ++i)
   {
@@ -436,12 +444,16 @@ void ValidateFindAllCells(LocatorType& locator,
 
   viskores::Id numberOfFoundCells = viskores::cont::Algorithm::Reduce(cellCounts, viskores::Id(0));
   viskores::cont::ArrayHandle<viskores::Id> cellIds;
+  viskores::cont::ArrayHandle<viskores::Vec3f> pCoords;
   cellIds.AllocateAndFill(numberOfFoundCells, viskores::Id(-1));
+  pCoords.Allocate(numberOfFoundCells);
 
   auto cellIdsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
     cellIds, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
+  auto pCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
+    pCoords, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
 
-  invoker(FindAllCellsWorklet{}, pointsAH, locator, cellIdsVec);
+  invoker(FindAllCellsWorklet{}, pointsAH, locator, cellIdsVec, pCoordsVec);
   auto portal = cellIdsVec.ReadPortal();
   for (viskores::Id i = 0; i < cellIdsVec.GetNumberOfValues(); i++)
   {

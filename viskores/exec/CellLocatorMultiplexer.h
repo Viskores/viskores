@@ -69,12 +69,13 @@ struct CountAllCellsFunctor
 
 struct FindAllCellsFunctor
 {
-  template <typename Locator, typename CellIdsType>
+  template <typename Locator, typename CellIdsType, typename ParametricVecType>
   VISKORES_EXEC viskores::ErrorCode operator()(Locator&& locator,
                                                const viskores::Vec3f& point,
-                                               CellIdsType& cellIds) const
+                                               CellIdsType& cellIds,
+                                               ParametricVecType& parametrics) const
   {
-    return locator.FindAllCells(point, cellIds);
+    return locator.FindAllCells(point, cellIds, parametrics);
   }
 };
 
@@ -117,11 +118,13 @@ public:
     return this->Locators.CastAndCall(detail::CountAllCellsFunctor{}, point);
   }
 
-  template <typename CellIdsType>
+  template <typename CellIdsType, typename ParametricVecType>
   VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
-                                                 CellIdsType& cellIds) const
+                                                 CellIdsType& cellIds,
+                                                 ParametricVecType& parametricCoords) const
   {
-    return this->Locators.CastAndCall(detail::FindAllCellsFunctor{}, point, cellIds);
+    return this->Locators.CastAndCall(
+      detail::FindAllCellsFunctor{}, point, cellIds, parametricCoords);
   }
 };
 
