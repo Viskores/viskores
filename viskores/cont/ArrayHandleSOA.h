@@ -50,10 +50,8 @@ public:
   using ValueType = ValueType_;
 
 private:
-  using ComponentType = typename ComponentPortalType::ValueType;
-
   using VTraits = viskores::VecTraits<ValueType>;
-  VISKORES_STATIC_ASSERT((std::is_same<typename VTraits::ComponentType, ComponentType>::value));
+  using ComponentType = typename VTraits::ComponentType;
   static constexpr viskores::IdComponent NUM_COMPONENTS = VTraits::NUM_COMPONENTS;
 
   ComponentPortalType Portals[NUM_COMPONENTS];
@@ -93,15 +91,19 @@ public:
 private:
   VISKORES_SUPPRESS_EXEC_WARNINGS
   template <std::size_t I>
-  VISKORES_EXEC_CONT ComponentType GetComponent(viskores::Id valueIndex) const
+  VISKORES_EXEC_CONT bool GetComponent(ValueType& value, viskores::Id valueIndex) const
   {
-    return this->Portals[I].Get(valueIndex);
+    VTraits::SetComponent(value, I, this->Portals[I].Get(valueIndex));
+    return true;
   }
 
   template <std::size_t... I>
   VISKORES_EXEC_CONT ValueType Get(viskores::Id valueIndex, viskoresstd::index_sequence<I...>) const
   {
-    return ValueType{ this->GetComponent<I>(valueIndex)... };
+    ValueType value;
+    // Is there a better way to unpack an expression and execute them with no other side effects?
+    (void)std::initializer_list<bool>{ this->GetComponent<I>(value, valueIndex)... };
+    return value;
   }
 
   VISKORES_SUPPRESS_EXEC_WARNINGS
@@ -288,8 +290,9 @@ public:
   /// viskores::cont::ArrayHandle<T> components3;
   /// // Fill arrays...
   ///
-  /// std::array<T, 3> allComponents{ components1, components2, components3 };
-  /// viskores::cont::make_ArrayHandleSOA<viskores::Vec<T, 3>vecarray(allComponents);
+  /// std::array<viskores::cont::ArrayHandle<T>, 3>
+  ///   allComponents{ components1, components2, components3 };
+  /// viskores::cont::ArrayHandleSOA<viskores::Vec<T, 3>> vecarray(allComponents);
   /// @endcode
   ArrayHandleSOA(const std::array<ComponentArrayType, NUM_COMPONENTS>& componentArrays)
   {
@@ -308,8 +311,9 @@ public:
   /// viskores::cont::ArrayHandle<T> components3;
   /// // Fill arrays...
   ///
-  /// std::vector<T> allComponents{ components1, components2, components3 };
-  /// viskores::cont::make_ArrayHandleSOA<viskores::Vec<T, 3>vecarray(allComponents);
+  /// std::vector<viskores::cont::ArrayHandle<T>>
+  ///   allComponents{ components1, components2, components3 };
+  /// viskores::cont::make_ArrayHandleSOA<viskores::Vec<T, 3>> vecarray(allComponents);
   /// @endcode
   ArrayHandleSOA(const std::vector<ComponentArrayType>& componentArrays)
   {
@@ -329,7 +333,7 @@ public:
   /// viskores::cont::ArrayHandle<T> components3;
   /// // Fill arrays...
   ///
-  /// viskores::cont::make_ArrayHandleSOA<viskores::Vec<T, 3> vecarray(
+  /// viskores::cont::ArrayHandleSOA<viskores::Vec<T, 3> vecarray(
   ///   { components1, components2, components3 });
   /// @endcode
   ArrayHandleSOA(std::initializer_list<ComponentArrayType>&& componentArrays)
