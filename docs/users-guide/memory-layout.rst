@@ -167,8 +167,18 @@ This is convenient for operations that want to operate on arrays with an unknown
 Recombined Vec Arrays of Strided Components
 ---------------------------------------------
 
-|Viskores| contains a special array, :class:`viskores::cont::ArrayHandleRecombineVec`, to combine component arrays represented in :class:`viskores::cont::ArrayHandleStride` together to form `Vec` values.
-:class:`viskores::cont::ArrayHandleRecombineVec` is similar to :class:`viskores::cont::ArrayHandleSOA` (see :secref:`memory-layout:Structure of Arrays`) except that (1) it holds stride arrays for its components instead of basic arrays and that (2) the number of components can be specified at runtime.
-:class:`viskores::cont::ArrayHandleRecombineVec` is mainly provided for the implementation of extracting arrays out of a :class:`viskores::cont::UnknownArrayHandle` (see :secref:`unknown-array-handle:Extracting All Components`).
+|Viskores| contains a special array, :class:`viskores::cont::ArrayHandleSOAStride`, to combine component arrays represented in :class:`viskores::cont::ArrayHandleStride` together to form `Vec` values.
+:class:`viskores::cont::ArrayHandleSOAStride` is similar to :class:`viskores::cont::ArrayHandleSOA` (see :secref:`memory-layout:Structure of Arrays`) except that it holds stride arrays for its components instead of basic arrays.
+:class:`viskores::cont::ArrayHandleSOAStride` is mainly provided for the implementation of extracting arrays out of a :class:`viskores::cont::UnknownArrayHandle` (see :secref:`unknown-array-handle:Extracting a Known Value Type from Unknown Storage`).
+
+.. doxygenclass:: viskores::cont::ArrayHandleSOAStride
+   :members:
+
+|Viskores| also contains a similar special array names :class:`viskores::cont::ArrayHandleRecombineVec`.
+This array is similar to :class:`viskores::cont::ArrayHandleSOAStride` except that
+the number of components can be specified at runtime.
+This is useful when you know little or nothing about the value type and storage type but comes with limitations in its use.
+This class is likewise provided for extracting arrays out of a :class:`viskores::cont::UnknownArrayHandle` (see :secref:`unknown-array-handle:Extracting An Unknown Amount of Components`).
 
 .. doxygenclass:: viskores::cont::ArrayHandleRecombineVec
+   :members:
