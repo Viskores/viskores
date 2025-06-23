@@ -173,7 +173,7 @@ inline const char* ErrorString(viskores::ErrorCode code) noexcept
     case viskores::ErrorCode::CellNotFound:
       return "Cell not found";
     case viskores::ErrorCode::InvalidNumberOfIndices:
-      return "Invalid number of indices";      
+      return "Invalid number of indices";
     case viskores::ErrorCode::UnknownError:
       return "Unknown error";
   }
