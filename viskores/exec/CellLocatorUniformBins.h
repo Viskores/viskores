@@ -88,14 +88,14 @@ public:
   {
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformBins::LastCell
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::LastCell
   struct LastCell
   {
     viskores::Id CellId = -1;
     viskores::Id BinIdx = -1;
   };
 
-  /// @copydoc viskores::exec::CellLocatorUniformBins::FindCell
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
   VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
                                              viskores::Id& cellId,
                                              viskores::Vec3f& pCoords) const
@@ -104,7 +104,7 @@ public:
     return this->FindCell(point, cellId, pCoords, lastCell);
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformBins::FindCell
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
   VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
                                              viskores::Id& cellId,
                                              viskores::Vec3f& pCoords,
@@ -156,7 +156,7 @@ public:
     return viskores::ErrorCode::CellNotFound;
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformBins::CountAllCells
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
   // Count the number of cells that contain the input point.
   VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
   {
@@ -169,7 +169,7 @@ public:
     return this->IterateBin(point, IterateMode::CountAll, cellIdVec, pcVec, binIdx);
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformBins::FindAllCells
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
   template <typename CellIdsType, typename ParametricCoordsVecType>
   VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
                                                  CellIdsType& cellIdVec,
@@ -261,7 +261,7 @@ private:
     auto binIds = this->CellIds.Get(binIdx);
 
     viskores::Vec3f pc;
-    viskores::Id cellCount = 0;
+    viskores::IdComponent cellCount = 0;
     for (viskores::IdComponent i = 0; i < binIds.GetNumberOfComponents(); i++)
     {
       viskores::Id cid = binIds[i];
@@ -278,7 +278,7 @@ private:
       }
     }
 
-    return cellCount;
+    return static_cast<viskores::Id>(cellCount);
   }
 
   template <typename PointsVecType>
