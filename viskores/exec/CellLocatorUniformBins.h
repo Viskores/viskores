@@ -111,7 +111,6 @@ public:
                                              LastCell& lastCell) const
   {
     viskores::Id binIdx = this->FindBinIdx(point);
-
     if (binIdx == -1)
     {
       lastCell.CellId = -1;
@@ -137,8 +136,8 @@ public:
         return viskores::ErrorCode::Success;
       }
     }
-    //if cell still not found, drop to the general find cell below.
 
+    //if cell still not found, drop to the general find cell below.
     //LastCell not initialized, or not in the same bin: do a full test.
     //Since already computed the binIdx, re-use it.
     viskores::Vec<viskores::Id, 1> cellIdVec = { -1 };
@@ -153,6 +152,7 @@ public:
       return viskores::ErrorCode::Success;
     }
 
+    cellId = -1;
     return viskores::ErrorCode::CellNotFound;
   }
 

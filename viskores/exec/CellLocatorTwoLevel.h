@@ -220,9 +220,15 @@ public:
     viskores::Vec<viskores::Vec3f, 1> pCoordsVec;
     auto nCells = this->IterateLeaves(point, IterateMode::FindOne, cellIdVec, pCoordsVec, lastCell);
     if (nCells < 0)
+    {
+      cellId = -1;
       return viskores::ErrorCode::InvalidNumberOfIndices;
+    }
     else if (nCells == 0)
+    {
+      cellId = -1;
       return viskores::ErrorCode::CellNotFound;
+    }
     else
     {
       cellId = cellIdVec[0];
