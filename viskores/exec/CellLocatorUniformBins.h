@@ -179,7 +179,7 @@ public:
     if (n == 0)
       return viskores::ErrorCode::Success;
 
-    for (viskores::Id i = 0; i < n; i++)
+    for (viskores::IdComponent i = 0; i < n; i++)
       cellIdVec[i] = -1;
 
     if (n != pCoordsVec.GetNumberOfComponents())
