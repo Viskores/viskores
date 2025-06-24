@@ -231,7 +231,7 @@ public:
     }
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformBins::CountAllCells
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
   // Count the number of cells that contain the input point.
   VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
   {
@@ -241,6 +241,7 @@ public:
 
     return this->IterateLeaves(point, IterateMode::CountAll, cellIdVec, pCoordsVec, lastCell);
   }
+
 
   template <typename CellIdsType, typename ParametricCoordsVecType>
   VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
@@ -291,7 +292,7 @@ private:
 
     lastCell.CellId = -1;
     lastCell.LeafIdx = -1;
-    viskores::Id cellCount = 0;
+    viskores::IdComponent cellCnt = 0;
 
     DimVec3 binId3 = static_cast<DimVec3>((point - this->TopLevel.Origin) / this->TopLevel.BinSize);
     if (binId3[0] >= 0 && binId3[0] < this->TopLevel.Dimensions[0] && binId3[1] >= 0 &&
@@ -327,17 +328,17 @@ private:
           lastCell.LeafIdx = leafIdx;
           if (mode != IterateMode::CountAll)
           {
-            cellIdVec[cellCount] = cellId;
-            pCoordsVec[cellCount] = pc;
+            cellIdVec[cellCnt] = cellId;
+            pCoordsVec[cellCnt] = pc;
           }
-          cellCount++;
+          cellCnt++;
           if (mode == IterateMode::FindOne)
             break;
         }
       }
     }
 
-    return cellCount;
+    return static_cast<viskores::Id>(cellCnt);
   }
 
   VISKORES_EXEC viskores::ErrorCode PointInCell(const viskores::Vec3f& point,
