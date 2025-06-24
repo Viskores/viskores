@@ -231,7 +231,7 @@ public:
     }
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
+  /// @brief Count the cells containing the provided point.
   /// Count the number of cells that contain the input point. This is typically used for non-manifold
   /// meshes with overlapping cells such as block boundaries. This count can be used to
   /// a storage container to use with `FindAllCells`.
@@ -244,7 +244,7 @@ public:
     return this->IterateLeaves(point, IterateMode::CountAll, cellIdVec, pCoordsVec, lastCell);
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
+  /// @brief Locate the cell containing the provided point.
   /// Find all cells containing the given point. This is typically used for non-manifold
   /// meshes with overlapping cells such as block boundaries.
   ///
