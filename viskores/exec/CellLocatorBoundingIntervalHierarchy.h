@@ -98,14 +98,14 @@ public:
   {
   }
 
-  /// @copydoc viskores::exec::CellLocatorBoundingIntervalHierarchy::LastCell
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::LastCell
   struct LastCell
   {
     viskores::Id CellId = -1;
     viskores::Id NodeIdx = -1;
   };
 
-  /// @copydoc viskores::exec::CellLocatorBoundingIntervalHierarchy::FindCell
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
   VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
                                              viskores::Id& cellId,
                                              viskores::Vec3f& parametric) const
@@ -114,7 +114,7 @@ public:
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
-  /// @copydoc viskores::exec::CellLocatorBoundingIntervalHierarchy::FindCell
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
   VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
                                              viskores::Id& cellId,
                                              viskores::Vec3f& parametric,
@@ -152,7 +152,7 @@ public:
     return this->FindCellImpl(point, cellId, parametric, lastCell);
   }
 
-  /// @copydoc viskores::exec::CellLocatorBoundingIntervalHierarchy::CountAllCells
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
   // Count the number of cells that contain the input point.
   VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
   {
@@ -164,7 +164,7 @@ public:
     return 0;
   }
 
-  /// @copydoc viskores::exec::CellLocatorBoundingIntervalHierarchy::CountAllCells
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
   // Count the number of cells that contain the input point.
   template <typename CellIdsType>
   VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
