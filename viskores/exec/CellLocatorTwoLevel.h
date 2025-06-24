@@ -232,7 +232,9 @@ public:
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
-  // Count the number of cells that contain the input point.
+  /// Count the number of cells that contain the input point. This is typically used for non-manifold
+  /// meshes with overlapping cells such as block boundaries. This count can be used to
+  /// a storage container to use with `FindAllCells`.
   VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
   {
     viskores::Vec<viskores::Id, 1> cellIdVec = { -1 };
@@ -242,7 +244,15 @@ public:
     return this->IterateLeaves(point, IterateMode::CountAll, cellIdVec, pCoordsVec, lastCell);
   }
 
-
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
+  /// Find all cells containing the given point. This is typically used for non-manifold
+  /// meshes with overlapping cells such as block boundaries.
+  ///
+  /// The `cellIds` parameter should be a Vec-like object with the number of entries set to the
+  /// same size returned from `CountAllCells`. Often this means calling one worklet to count
+  /// all the cells for some point, allocating the space for each point using a
+  /// `viskores::cont::ArrayHandleGroupVecVariable`, and calling a second worklet to fill each
+  /// Vec with this method.
   template <typename CellIdsType, typename ParametricCoordsVecType>
   VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
                                                  CellIdsType& cellIdVec,

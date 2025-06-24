@@ -164,7 +164,7 @@ public:
     return 0;
   }
 
-  /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
   // Count the number of cells that contain the input point.
   template <typename CellIdsType>
   VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
