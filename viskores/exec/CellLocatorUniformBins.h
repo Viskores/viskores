@@ -156,8 +156,7 @@ public:
     return viskores::ErrorCode::CellNotFound;
   }
 
-  /// @copydoc viskores::exec::CellLocatorTwoLevel::CountAllCells
-  // Count the number of cells that contain the input point.
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
   VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
   {
     viskores::Id binIdx = this->FindBinIdx(point);
@@ -169,7 +168,7 @@ public:
     return this->IterateBin(point, IterateMode::CountAll, cellIdVec, pcVec, binIdx);
   }
 
-  /// @copydoc viskores::exec::CellLocatorTwoLevel::FindAllCells
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
   template <typename CellIdsType, typename ParametricCoordsVecType>
   VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
                                                  CellIdsType& cellIdVec,
