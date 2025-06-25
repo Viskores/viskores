@@ -180,6 +180,35 @@ public:
     return viskores::ErrorCode::Success;
   }
 
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
+  VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
+  {
+    viskores::Id cellId;
+    viskores::Vec3f pCoords;
+    if (this->FindCell(point, cellId, pCoords) == viskores::ErrorCode::Success)
+      return 1;
+    return 0;
+  }
+
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
+  template <typename CellIdsType, typename ParametricCoordsVecType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
+                                                 CellIdsType& cellIdVec,
+                                                 ParametricCoordsVecType& pCoordsVec) const
+  {
+    viskores::IdComponent n = cellIdVec.GetNumberOfComponents();
+    if (pCoordsVec.GetNumberOfComponents() != n)
+      return viskores::ErrorCode::InvalidNumberOfIndices;
+
+    if (n == 0)
+      return viskores::ErrorCode::Success;
+
+    for (viskores::IdComponent i = 0; i < n; i++)
+      cellIdVec[i] = -1;
+
+    return this->FindCell(point, cellIdVec[0], pCoordsVec[0]);
+  }
+
 private:
   viskores::Id PlaneSize;
   viskores::Id RowSize;
