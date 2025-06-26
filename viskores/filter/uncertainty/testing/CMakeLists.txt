@@ -24,6 +24,7 @@ set(libraries
 
 set(unit_tests
   UnitTestContourUncertainUniform.cxx
+  UnitTestFiberUncertainUniform.cxx
   )
 
 viskores_unit_tests(
