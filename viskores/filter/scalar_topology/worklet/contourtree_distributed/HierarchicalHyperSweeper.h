@@ -152,11 +152,10 @@ public:
   /// @param[in] hierarchicalTree the tree that to hypersweeps over
   /// @param[in] intrinsicValues array of values of intrinisic nodes are just being stored here but not modified
   /// @param[in] dependentValues array of values being operated over (same size as supernode set)
-  HierarchicalHyperSweeper<SweepValueType, ContourTreeFieldType>(
-    viskores::Id blockId,
-    const HierarchicalContourTree<ContourTreeFieldType>& hierarchicalTree,
-    const viskores::cont::ArrayHandle<SweepValueType>& intrinsicValues,
-    const viskores::cont::ArrayHandle<SweepValueType>& dependentValues);
+  HierarchicalHyperSweeper(viskores::Id blockId,
+                           const HierarchicalContourTree<ContourTreeFieldType>& hierarchicalTree,
+                           const viskores::cont::ArrayHandle<SweepValueType>& intrinsicValues,
+                           const viskores::cont::ArrayHandle<SweepValueType>& dependentValues);
 
   /// Our routines to initialize the sweep need to be static (or externa)l if we are going to use the constructor
   /// to run the actual hypersweep
