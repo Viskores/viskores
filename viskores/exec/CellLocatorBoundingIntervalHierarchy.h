@@ -133,7 +133,7 @@ public:
     //Check the last cell.
     if ((lastCell.CellId >= 0) && (lastCell.CellId < this->CellSet.GetNumberOfElements()))
     {
-      if (this->PointInCell(point, lastCell.CellId, pCoords) == viskores::ErrorCode::Success)
+      if (this->PointInCell(point, lastCell.CellId, pCoords))
       {
         cellId = lastCell.CellId;
         return viskores::ErrorCode::Success;
@@ -150,10 +150,7 @@ public:
         viskores::IdComponent count = 0;
         viskores::Vec<viskores::Id, 1> cellIdsVec;
         viskores::Vec<viskores::Vec3f, 1> pCoordsVec;
-        auto status =
-          this->FindInLeaf(IterateMode::FindOne, point, pCoordsVec, node, cellIdsVec, count);
-
-        if (cellIdsVec[0] != -1)
+        if (this->FindInLeaf(IterateMode::FindOne, point, pCoordsVec, node, cellIdsVec, count))
         {
           lastCell.CellId = cellIdsVec[0];
           pCoords = pCoordsVec[0];
@@ -211,6 +208,11 @@ public:
     auto status =
       this->FindCellImpl(IterateMode::FindAll, point, cellIdsVec, pCoordsVec, lastCell, count);
 
+    // More than n cells were found.
+    //If the size of cellIdsVec is not big enough to hold the number found, return an error.
+    if (count > n)
+      return viskores::ErrorCode::InvalidNumberOfIndices;
+
     return status;
   }
 
@@ -254,51 +256,41 @@ private:
         break;
 
       // 3) Otherwise, do exactly one step of the state machine
-      viskores::ErrorCode status = viskores::ErrorCode::Success;
       switch (state)
       {
         case FindCellState::EnterNode:
-          status =
-            this->EnterNode(state, mode, point, cellIdsVec, nodeIndex, pCoordsVec, lastCell, count);
+          state = this->EnterNode(mode, point, cellIdsVec, nodeIndex, pCoordsVec, lastCell, count);
           break;
 
         case FindCellState::AscendFromNode:
-          this->AscendFromNode(state, nodeIndex);
+          state = this->AscendFromNode(nodeIndex);
           break;
 
         case FindCellState::DescendLeftChild:
-          this->DescendLeftChild(state, point, nodeIndex);
+          state = this->DescendLeftChild(point, nodeIndex);
           break;
 
         case FindCellState::DescendRightChild:
-          this->DescendRightChild(state, point, nodeIndex);
+          state = this->DescendRightChild(point, nodeIndex);
           break;
       }
-
-      if (status != viskores::ErrorCode::Success)
-        return status;
     }
 
-    if (count > 0)
-      return viskores::ErrorCode::Success;
-    else if (count < 0)
-      return viskores::ErrorCode::InvalidNumberOfIndices;
-    else
+    if (count == 0)
       return viskores::ErrorCode::CellNotFound;
+
+    return viskores::ErrorCode::Success;
   }
 
   template <typename CellIdsType, typename ParametricCoordsVecType>
-  VISKORES_EXEC viskores::ErrorCode EnterNode(FindCellState& state,
-                                              const IterateMode& mode,
-                                              const viskores::Vec3f& point,
-                                              CellIdsType& cellIdsVec,
-                                              viskores::Id nodeIndex,
-                                              ParametricCoordsVecType& pCoordsVec,
-                                              LastCell& lastCell,
-                                              viskores::IdComponent& count) const
+  VISKORES_EXEC FindCellState EnterNode(const IterateMode& mode,
+                                        const viskores::Vec3f& point,
+                                        CellIdsType& cellIdsVec,
+                                        viskores::Id nodeIndex,
+                                        ParametricCoordsVecType& pCoordsVec,
+                                        LastCell& lastCell,
+                                        viskores::IdComponent& count) const
   {
-    VISKORES_ASSERT(state == FindCellState::EnterNode);
-
     viskores::IdComponent n = cellIdsVec.GetNumberOfComponents();
     VISKORES_ASSERT(pCoordsVec.GetNumberOfComponents() == n);
 
@@ -308,27 +300,23 @@ private:
     if (node.ChildIndex < 0)
     {
       // In a leaf node. Look for a containing cell.
-      auto status = this->FindInLeaf(mode, point, pCoordsVec, node, cellIdsVec, count);
-      if (status != viskores::ErrorCode::Success && mode == IterateMode::FindOne)
+      if (this->FindInLeaf(mode, point, pCoordsVec, node, cellIdsVec, count))
       {
         lastCell.NodeIdx = nodeIndex;
         lastCell.CellId = cellIdsVec[0];
-        return status;
       }
-      state = FindCellState::AscendFromNode;
+
+      return FindCellState::AscendFromNode;
     }
     else
     {
-      state = FindCellState::DescendLeftChild;
+      return FindCellState::DescendLeftChild;
     }
-    return viskores::ErrorCode::Success;
   }
 
   VISKORES_EXEC
-  void AscendFromNode(FindCellState& state, viskores::Id& nodeIndex) const
+  FindCellState AscendFromNode(viskores::Id& nodeIndex) const
   {
-    VISKORES_ASSERT(state == FindCellState::AscendFromNode);
-
     viskores::Id childNodeIndex = nodeIndex;
     const viskores::exec::CellLocatorBoundingIntervalHierarchyNode& childNode =
       this->Nodes.Get(childNodeIndex);
@@ -339,22 +327,19 @@ private:
     if (parentNode.ChildIndex == childNodeIndex)
     {
       // Ascending from left child. Descend into the right child.
-      state = FindCellState::DescendRightChild;
+      return FindCellState::DescendRightChild;
     }
     else
     {
       VISKORES_ASSERT(parentNode.ChildIndex + 1 == childNodeIndex);
       // Ascending from right child. Ascend again. (Don't need to change state.)
+      return FindCellState::AscendFromNode;
     }
   }
 
   VISKORES_EXEC
-  void DescendLeftChild(FindCellState& state,
-                        const viskores::Vec3f& point,
-                        viskores::Id& nodeIndex) const
+  FindCellState DescendLeftChild(const viskores::Vec3f& point, viskores::Id& nodeIndex) const
   {
-    VISKORES_ASSERT(state == FindCellState::DescendLeftChild);
-
     const viskores::exec::CellLocatorBoundingIntervalHierarchyNode& node =
       this->Nodes.Get(nodeIndex);
     const viskores::FloatDefault& coordinate = point[node.Dimension];
@@ -362,22 +347,18 @@ private:
     {
       // Left child does contain the point. Do the actual descent.
       nodeIndex = node.ChildIndex;
-      state = FindCellState::EnterNode;
+      return FindCellState::EnterNode;
     }
     else
     {
       // Left child does not contain the point. Skip to the right child.
-      state = FindCellState::DescendRightChild;
+      return FindCellState::DescendRightChild;
     }
   }
 
   VISKORES_EXEC
-  void DescendRightChild(FindCellState& state,
-                         const viskores::Vec3f& point,
-                         viskores::Id& nodeIndex) const
+  FindCellState DescendRightChild(const viskores::Vec3f& point, viskores::Id& nodeIndex) const
   {
-    VISKORES_ASSERT(state == FindCellState::DescendRightChild);
-
     const viskores::exec::CellLocatorBoundingIntervalHierarchyNode& node =
       this->Nodes.Get(nodeIndex);
     const viskores::FloatDefault& coordinate = point[node.Dimension];
@@ -385,17 +366,17 @@ private:
     {
       // Right child does contain the point. Do the actual descent.
       nodeIndex = node.ChildIndex + 1;
-      state = FindCellState::EnterNode;
+      return FindCellState::EnterNode;
     }
     else
     {
       // Right child does not contain the point. Skip to ascent
-      state = FindCellState::AscendFromNode;
+      return FindCellState::AscendFromNode;
     }
   }
 
   template <typename CellIdsType, typename ParametricCoordsVecType>
-  VISKORES_EXEC viskores::ErrorCode FindInLeaf(
+  VISKORES_EXEC bool FindInLeaf(
     const IterateMode& mode,
     const viskores::Vec3f& point,
     ParametricCoordsVecType& pCoordsVec,
@@ -403,59 +384,56 @@ private:
     CellIdsType& cellIdsVec,
     viskores::IdComponent& count) const
   {
+    auto n = cellIdsVec.GetNumberOfComponents();
+
+    bool found = false;
     for (viskores::Id i = node.Leaf.Start; i < node.Leaf.Start + node.Leaf.Size; ++i)
     {
       viskores::Id cid = this->CellIds.Get(i);
       viskores::Vec3f pCoords;
-
-      if (this->PointInCell(point, cid, pCoords) == viskores::ErrorCode::Success)
+      if (this->PointInCell(point, cid, pCoords))
       {
+        found = true;
         if (mode == IterateMode::FindOne || mode == IterateMode::FindAll)
         {
-          cellIdsVec[count] = cid;
-          pCoordsVec[count] = pCoords;
+          //Update vecs if there is room.  If the vecs are too small, it will get reported as an error in FindAllCells()
+          if (count < n)
+          {
+            cellIdsVec[count] = cid;
+            pCoordsVec[count] = pCoords;
+          }
         }
+
         count++;
 
         if (mode == IterateMode::FindOne)
-          return viskores::ErrorCode::Success;
+          break;
       }
     }
-    return viskores::ErrorCode::Success;
+    return found;
   }
 
-
-  VISKORES_EXEC viskores::ErrorCode PointInCell(const viskores::Vec3f& point,
-                                                viskores::Id& cellId,
-                                                viskores::Vec3f& parametric) const
+  VISKORES_EXEC bool PointInCell(const viskores::Vec3f& point,
+                                 viskores::Id& cellId,
+                                 viskores::Vec3f& pCoords) const
   {
     using IndicesType = typename CellSetPortal::IndicesType;
     IndicesType cellPointIndices = this->CellSet.GetIndices(cellId);
     viskores::VecFromPortalPermute<IndicesType, CoordsPortal> cellPoints(&cellPointIndices,
                                                                          this->Coords);
     auto cellShape = this->CellSet.GetCellShape(cellId);
-    bool isInside;
-    VISKORES_RETURN_ON_ERROR(IsPointInCell(point, parametric, cellShape, cellPoints, isInside));
+    auto status = viskores::exec::WorldCoordinatesToParametricCoordinates(
+      cellPoints, point, cellShape, pCoords);
 
-    if (isInside && viskores::exec::CellInside(parametric, cellShape))
-      return viskores::ErrorCode::Success;
+    if (status != viskores::ErrorCode::Success)
+      return false;
 
-    return viskores::ErrorCode::CellNotFound;
+    if (!viskores::exec::CellInside(pCoords, cellShape))
+      return false;
+
+    return true;
   }
 
-  template <typename CoordsType, typename CellShapeTag>
-  VISKORES_EXEC static viskores::ErrorCode IsPointInCell(const viskores::Vec3f& point,
-                                                         viskores::Vec3f& parametric,
-                                                         CellShapeTag cellShape,
-                                                         const CoordsType& cellPoints,
-                                                         bool& isInside)
-  {
-    isInside = false;
-    VISKORES_RETURN_ON_ERROR(viskores::exec::WorldCoordinatesToParametricCoordinates(
-      cellPoints, point, cellShape, parametric));
-    isInside = viskores::exec::CellInside(parametric, cellShape);
-    return viskores::ErrorCode::Success;
-  }
 
   using VisitType = viskores::TopologyElementTagCell;
   using IncidentType = viskores::TopologyElementTagPoint;
