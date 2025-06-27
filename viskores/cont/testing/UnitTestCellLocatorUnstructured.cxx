@@ -289,7 +289,8 @@ void TestCellLocator(LocatorType& locator,
 {
   auto ds = MakeTestDataSet(dim);
 
-  std::cout << "Testing " << DIMENSIONS << "D dataset with " << ds.GetNumberOfCells() << " cells\n";
+  std::cout << "TestCellLocator: " << DIMENSIONS << "D dataset with " << ds.GetNumberOfCells()
+            << " cells\n";
 
   locator.SetCellSet(ds.GetCellSet());
   locator.SetCoordinates(ds.GetCoordinateSystem());
@@ -484,6 +485,8 @@ void ValidateFindAllCells(LocatorType& locator,
 template <typename LocatorType>
 void TestFindAllCells(LocatorType& locator)
 {
+  std::cout << "TestFindAllCells" << std::endl;
+
   std::vector<viskores::Bounds> bounds;
 
   //2D dataset with overlapping cells.
@@ -602,11 +605,13 @@ void TestingCellLocatorUnstructured()
   locator2L.SetDensityL1(64.0f);
   locator2L.SetDensityL2(1.0f);
 
+  std::cout << "Testing CellLocatorTwoLevel" << std::endl;
   TestCellLocator(locator2L, viskores::Id3(8), 512);  // 3D dataset
   TestCellLocator(locator2L, viskores::Id2(18), 512); // 2D dataset
   TestFindAllCells(locator2L);
 
   viskores::cont::CellLocatorBoundingIntervalHierarchy locatorBIH;
+  std::cout << "Testing CellLocatorBoundingIntervalHierarchy" << std::endl;
   TestCellLocator(locatorBIH, viskores::Id3(8), 512);  // 3D dataset
   TestCellLocator(locatorBIH, viskores::Id2(18), 512); // 2D dataset
   TestFindAllCells(locatorBIH);
@@ -614,12 +619,14 @@ void TestingCellLocatorUnstructured()
   //Test viskores::cont::CellLocatorUniformBins
   viskores::cont::CellLocatorUniformBins locatorUB;
   locatorUB.SetDims({ 32, 32, 32 });
+  std::cout << "Testing CellLocatorUniformBins" << std::endl;
+
   TestCellLocator(locatorUB, viskores::Id3(8), 512);  // 3D dataset
   TestCellLocator(locatorUB, viskores::Id2(18), 512); // 2D dataset
 
-
   //Test 2D dataset with 2D bins.
   locatorUB.SetDims({ 32, 32, 1 });
+  std::cout << "Testing CellLocatorUniformBins" << std::endl;
   TestCellLocator(locatorUB, viskores::Id2(18), 512); // 2D dataset
 
   //Test finding all cells.
