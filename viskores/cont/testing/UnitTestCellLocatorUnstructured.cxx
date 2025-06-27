@@ -20,6 +20,7 @@
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandleGroupVecVariable.h>
+#include <viskores/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <viskores/cont/CellLocatorTwoLevel.h>
 #include <viskores/cont/CellLocatorUniformBins.h>
 #include <viskores/cont/ConvertNumComponentsToOffsets.h>
@@ -212,7 +213,8 @@ public:
                                 viskores::Vec3f& pcoords,
                                 typename LocatorType::LastCell& lastCell) const
   {
-    viskores::ErrorCode status = locator.FindCell(point, cellId, pcoords, lastCell);
+    viskores::ErrorCode status;
+    status = locator.FindCell(point, cellId, pcoords, lastCell);
     if (status != viskores::ErrorCode::Success)
       this->RaiseError(viskores::ErrorString(status));
   }
@@ -317,7 +319,6 @@ void TestCellLocator(LocatorType& locator,
   }
 
   //Test locator using lastCell
-
   //Test it with initialized.
   viskores::cont::ArrayHandle<typename LocatorType::LastCell> lastCell;
   lastCell.AllocateAndFill(numberOfPoints, typename LocatorType::LastCell{});
@@ -346,17 +347,18 @@ void TestCellLocator(LocatorType& locator,
   auto numberOfFoundCells = viskores::cont::Algorithm::Reduce(cellCounts, viskores::Id(0));
 
   //create an array to hold all of the found cells.
-  viskores::cont::ArrayHandle<viskores::Id> foundCells;
-  viskores::cont::ArrayHandle<viskores::Vec3f> foundpCoords;
-  foundCells.AllocateAndFill(numberOfFoundCells, viskores::Id(-1));
-  foundpCoords.Allocate(numberOfFoundCells);
-  auto foundCellsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
-    foundCells, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
-  auto foundpCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
-    foundpCoords, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
+  viskores::cont::ArrayHandle<viskores::Id> allCellIds;
+  viskores::cont::ArrayHandle<viskores::Vec3f> pCoords;
+  allCellIds.AllocateAndFill(numberOfFoundCells, viskores::Id(-1));
+  pCoords.Allocate(numberOfFoundCells);
 
-  invoker(FindAllCellsWorklet{}, points, locator, foundCellsVec, foundpCoordsVec);
-  portal = foundCells.ReadPortal();
+  auto cellIdsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
+    allCellIds, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
+  auto pCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
+    pCoords, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
+
+  invoker(FindAllCellsWorklet{}, points, locator, cellIdsVec, pCoordsVec);
+  portal = allCellIds.ReadPortal();
   for (viskores::Id i = 0; i < numberOfFoundCells; ++i)
   {
     VISKORES_TEST_ASSERT(portal.Get(i) == expCellIds.ReadPortal().Get(i),
@@ -604,11 +606,17 @@ void TestingCellLocatorUnstructured()
   TestCellLocator(locator2L, viskores::Id2(18), 512); // 2D dataset
   TestFindAllCells(locator2L);
 
+  viskores::cont::CellLocatorBoundingIntervalHierarchy locatorBIH;
+  TestCellLocator(locatorBIH, viskores::Id3(8), 512);  // 3D dataset
+  TestCellLocator(locatorBIH, viskores::Id2(18), 512); // 2D dataset
+  TestFindAllCells(locatorBIH);
+
   //Test viskores::cont::CellLocatorUniformBins
   viskores::cont::CellLocatorUniformBins locatorUB;
   locatorUB.SetDims({ 32, 32, 32 });
   TestCellLocator(locatorUB, viskores::Id3(8), 512);  // 3D dataset
   TestCellLocator(locatorUB, viskores::Id2(18), 512); // 2D dataset
+
 
   //Test 2D dataset with 2D bins.
   locatorUB.SetDims({ 32, 32, 1 });
