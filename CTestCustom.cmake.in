@@ -91,3 +91,7 @@ if (NOT x"@CMAKE_HIP_COMPILER@"x STREQUAL xx)
 endif()
 
 set(Viskores_ENABLE_PERFORMANCE_TESTING "@Viskores_ENABLE_PERFORMANCE_TESTING@")
+
+# Fail on warnings without stopping the build
+# Set maximum number of warnings to 0 to make the build fail on any warning
+set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 0)
