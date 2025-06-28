@@ -486,7 +486,6 @@ template <typename LocatorType>
 void TestFindAllCells(LocatorType& locator)
 {
   std::cout << "TestFindAllCells" << std::endl;
-
   std::vector<viskores::Bounds> bounds;
 
   //2D dataset with overlapping cells.
