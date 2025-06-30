@@ -418,20 +418,10 @@ struct ArrayExtractComponentImpl<viskores::cont::StorageTagSOAStride>
   template <typename T>
   auto operator()(const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagSOAStride>& src,
                   viskores::IdComponent componentIndex,
-                  viskores::CopyFlag allowCopy) const
-    -> decltype(ArrayExtractComponentImpl<viskores::cont::StorageTagStride>{}(
-      viskores::cont::ArrayHandleBasic<T>{},
-      componentIndex,
-      allowCopy))
+                  viskores::CopyFlag viskoresNotUsed(allowCopy)) const
   {
-    using FirstLevelComponentType = typename viskores::VecTraits<T>::ComponentType;
     viskores::cont::ArrayHandleSOAStride<T> array(src);
-    constexpr viskores::IdComponent NUM_SUB_COMPONENTS =
-      viskores::VecFlat<FirstLevelComponentType>::NUM_COMPONENTS;
-    return ArrayExtractComponentImpl<viskores::cont::StorageTagStride>{}(
-      array.GetArray(componentIndex / NUM_SUB_COMPONENTS),
-      componentIndex % NUM_SUB_COMPONENTS,
-      allowCopy);
+    return array.GetArray(componentIndex);
   }
 };
 
@@ -481,27 +471,72 @@ struct Serialization<viskores::cont::ArrayHandleSOAStride<ValueType>>
     viskores::VecTraits<ValueType>::NUM_COMPONENTS;
   using ComponentType = typename viskores::VecTraits<ValueType>::ComponentType;
 
-  using SubSerialization = Serialization<viskores::cont::ArrayHandleStride<ComponentType>>;
-
   static VISKORES_CONT void save(BinaryBuffer& bb, const BaseType& obj_)
   {
     viskores::cont::ArrayHandleSOAStride<ValueType> obj = obj_;
     for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
          ++componentIndex)
     {
-      SubSerialization::save(bb, obj.GetArray(componentIndex));
+      viskores::cont::ArrayHandleStride<ComponentType> componentArray =
+        obj.GetArray(componentIndex);
+      viskoresdiy::save(bb, componentArray.GetNumberOfValues());
+      viskoresdiy::save(bb, componentArray.GetStride());
+      viskoresdiy::save(bb, componentArray.GetOffset());
+      viskoresdiy::save(bb, componentArray.GetModulo());
+      viskoresdiy::save(bb, componentArray.GetDivisor());
+
+      viskores::cont::internal::Buffer componentBuffer = componentArray.GetBuffers()[1];
+      bool alreadyWritten = false;
+      for (viskores::IdComponent checkIndex = 0; checkIndex < componentIndex; ++checkIndex)
+      {
+        viskores::cont::internal::Buffer checkBuffer = obj.GetArray(checkIndex).GetBuffers()[1];
+        if (checkBuffer == componentBuffer)
+        {
+          viskoresdiy::save(bb, checkIndex);
+          alreadyWritten = true;
+          break;
+        }
+      }
+      if (!alreadyWritten)
+      {
+        viskoresdiy::save(bb, viskores::IdComponent{ -1 });
+        viskoresdiy::save(bb, componentBuffer);
+      }
     }
   }
 
   static VISKORES_CONT void load(BinaryBuffer& bb, BaseType& obj_)
   {
     viskores::cont::ArrayHandleSOAStride<ValueType> obj;
-    std::vector<viskores::cont::internal::Buffer> buffers(NUM_COMPONENTS);
     for (std::size_t componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
     {
-      viskores::cont::ArrayHandleStride<ComponentType> subobj;
-      SubSerialization::load(bb, subobj);
-      obj.SetArray(index, subobj);
+      viskores::Id numValues;
+      viskores::Id stride;
+      viskores::Id offset;
+      viskores::Id modulo;
+      viskores::Id divisor;
+      viskores::cont::internal::Buffer componentBuffer;
+
+      viskoresdiy::load(bb, numValues);
+      viskoresdiy::load(bb, stride);
+      viskoresdiy::load(bb, offset);
+      viskoresdiy::load(bb, modulo);
+      viskoresdiy::load(bb, divisor);
+
+      viskores::IdComponent bufferIndex;
+      viskoresdiy::load(bb, bufferIndex);
+      if (bufferIndex < 0)
+      {
+        viskoresdiy::load(bb, componentBuffer);
+      }
+      else
+      {
+        componentBuffer = obj.GetArray(bufferIndex).GetBuffers()[1];
+      }
+
+      viskores::cont::ArrayHandleStride<ComponentType> componentArray(
+        componentBuffer, numValues, stride, offset, modulo, divisor);
+      obj.SetArray(componentIndex, componentArray);
     }
     obj_ = obj;
   }
