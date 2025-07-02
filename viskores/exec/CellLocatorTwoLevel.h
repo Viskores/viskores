@@ -292,8 +292,7 @@ private:
     using namespace viskores::internal::cl_uniform_bins;
 
     viskores::IdComponent n = cellIdVec.GetNumberOfComponents();
-    if (pCoordsVec.GetNumberOfComponents() != n)
-      return -1;
+    VISKORES_ASSERT(pCoordsVec.GetNumberOfComponents() == n);
 
     lastCell.CellId = -1;
     lastCell.LeafIdx = -1;
