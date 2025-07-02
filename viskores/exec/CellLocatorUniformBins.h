@@ -181,8 +181,7 @@ public:
     for (viskores::IdComponent i = 0; i < n; i++)
       cellIdVec[i] = -1;
 
-    if (n != pCoordsVec.GetNumberOfComponents())
-      return viskores::ErrorCode::InvalidNumberOfIndices;
+    VISKORES_ASSERT(n == pCoordsVec.GetNumberOfComponents());
 
     viskores::Id binIdx = this->FindBinIdx(point);
     if (binIdx == -1)
