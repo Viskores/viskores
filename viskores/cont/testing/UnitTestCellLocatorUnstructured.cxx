@@ -353,10 +353,10 @@ void TestCellLocator(LocatorType& locator,
   allCellIds.AllocateAndFill(numberOfFoundCells, viskores::Id(-1));
   pCoords.Allocate(numberOfFoundCells);
 
-  auto cellIdsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
-    allCellIds, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
-  auto pCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
-    pCoords, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
+  viskores::cont::ArrayHandle<viskores::Id> cellOffsets =
+    viskores::cont::ConvertNumComponentsToOffsets(cellCounts);
+  auto cellIdsVec = viskores::cont::make_ArrayHandleGroupVecVariable(allCellIds, cellOffsets);
+  auto pCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(pCoords, cellOffsets);
 
   invoker(FindAllCellsWorklet{}, points, locator, cellIdsVec, pCoordsVec);
   portal = allCellIds.ReadPortal();
