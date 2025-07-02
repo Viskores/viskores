@@ -253,8 +253,7 @@ private:
                                         viskores::Id binIdx) const
   {
     viskores::IdComponent n = cellIdVec.GetNumberOfComponents();
-    if (pCoordsVec.GetNumberOfComponents() != n)
-      return -1;
+    VISKORES_ASSERT(pCoordsVec.GetNumberOfComponents() == n);
 
     auto binIds = this->CellIds.Get(binIdx);
 
