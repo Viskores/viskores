@@ -238,7 +238,7 @@ public:
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
-  VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
+  VISKORES_EXEC viskores::IdComponent CountAllCells(const viskores::Vec3f& point) const
   {
     viskores::Vec<viskores::Id, 1> cellIdVec = { -1 };
     viskores::Vec<viskores::Vec3f, 1> pCoordsVec;
@@ -264,7 +264,7 @@ public:
       cellIdVec[i] = -1;
 
     LastCell lastCell;
-    viskores::Id nCells =
+    viskores::IdComponent nCells =
       this->IterateLeaves(point, IterateMode::FindAll, cellIdVec, pCoordsVec, lastCell);
     VISKORES_ASSERT(n == nCells);
     if (nCells == 0)

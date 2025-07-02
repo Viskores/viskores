@@ -138,7 +138,7 @@ public:
   /// Count the number of cells that contain the input point. This is typically used for non-manifold
   /// meshes with overlapping cells such as block boundaries. This count can be used to
   /// a storage container to use with `FindAllCells`.
-  VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
+  VISKORES_EXEC viskores::IdComponent CountAllCells(const viskores::Vec3f& point) const
   {
     viskores::Id cellId;
     viskores::Vec3f pCoords;

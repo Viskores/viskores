@@ -181,7 +181,7 @@ public:
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
-  VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
+  VISKORES_EXEC viskores::IdComponent CountAllCells(const viskores::Vec3f& point) const
   {
     viskores::Id cellId;
     viskores::Vec3f pCoords;

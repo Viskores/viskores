@@ -172,7 +172,7 @@ public:
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
-  VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
+  VISKORES_EXEC viskores::IdComponent CountAllCells(const viskores::Vec3f& point) const
   {
     viskores::Vec<viskores::Id, 1> cellIdsVec;
     viskores::Vec<viskores::Vec3f, 1> pCoordsVec;
@@ -182,7 +182,7 @@ public:
     auto status =
       this->FindCellImpl(IterateMode::CountAll, point, cellIdsVec, pCoordsVec, lastCell, count);
     if (status == viskores::ErrorCode::Success)
-      return static_cast<viskores::Id>(count);
+      return count;
 
     return 0;
   }
