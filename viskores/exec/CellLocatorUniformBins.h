@@ -157,7 +157,7 @@ public:
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
-  VISKORES_EXEC viskores::Id CountAllCells(const viskores::Vec3f& point) const
+  VISKORES_EXEC viskores::IdComponent CountAllCells(const viskores::Vec3f& point) const
   {
     viskores::Id binIdx = this->FindBinIdx(point);
     if (binIdx == -1)
@@ -187,7 +187,8 @@ public:
     if (binIdx == -1)
       return viskores::ErrorCode::CellNotFound;
 
-    viskores::Id cnt = this->IterateBin(point, IterateMode::FindAll, cellIdVec, pCoordsVec, binIdx);
+    viskores::IdComponent cnt =
+      this->IterateBin(point, IterateMode::FindAll, cellIdVec, pCoordsVec, binIdx);
     if (cnt < 0)
       return viskores::ErrorCode::InvalidNumberOfIndices;
     else if (cnt == 0)
@@ -246,11 +247,11 @@ private:
   }
 
   template <typename CellIdVecType, typename ParametricCoordsVecType>
-  VISKORES_EXEC viskores::Id IterateBin(const viskores::Vec3f& point,
-                                        const IterateMode& mode,
-                                        CellIdVecType& cellIdVec,
-                                        ParametricCoordsVecType& pCoordsVec,
-                                        viskores::Id binIdx) const
+  VISKORES_EXEC viskores::IdComponent IterateBin(const viskores::Vec3f& point,
+                                                 const IterateMode& mode,
+                                                 CellIdVecType& cellIdVec,
+                                                 ParametricCoordsVecType& pCoordsVec,
+                                                 viskores::Id binIdx) const
   {
     viskores::IdComponent n = cellIdVec.GetNumberOfComponents();
     VISKORES_ASSERT(pCoordsVec.GetNumberOfComponents() == n);
@@ -275,7 +276,7 @@ private:
       }
     }
 
-    return static_cast<viskores::Id>(cellCount);
+    return cellCount;
   }
 
   template <typename PointsVecType>
