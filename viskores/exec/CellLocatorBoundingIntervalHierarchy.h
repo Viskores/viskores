@@ -111,7 +111,7 @@ public:
                                              viskores::Vec3f& pCoords) const
   {
     LastCell lastCell;
-    viskores::Vec<viskores::Id, 1> cellIdsVec;
+    viskores::Vec<viskores::Id, 1> cellIdsVec = { -1 };
     viskores::Vec<viskores::Vec3f, 1> pCoordsVec;
     viskores::IdComponent count = 0;
     auto status =
@@ -148,7 +148,7 @@ public:
       if (node.ChildIndex < 0)
       {
         viskores::IdComponent count = 0;
-        viskores::Vec<viskores::Id, 1> cellIdsVec;
+        viskores::Vec<viskores::Id, 1> cellIdsVec = { -1 };
         viskores::Vec<viskores::Vec3f, 1> pCoordsVec;
         if (this->FindInLeaf(IterateMode::FindOne, point, pCoordsVec, node, cellIdsVec, count))
         {
@@ -174,7 +174,7 @@ public:
   /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
   VISKORES_EXEC viskores::IdComponent CountAllCells(const viskores::Vec3f& point) const
   {
-    viskores::Vec<viskores::Id, 1> cellIdsVec;
+    viskores::Vec<viskores::Id, 1> cellIdsVec = { -1 };
     viskores::Vec<viskores::Vec3f, 1> pCoordsVec;
     viskores::IdComponent count = 0;
     LastCell lastCell;
@@ -387,6 +387,7 @@ private:
     auto n = cellIdsVec.GetNumberOfComponents();
 
     bool found = false;
+
     for (viskores::Id i = node.Leaf.Start; i < node.Leaf.Start + node.Leaf.Size; ++i)
     {
       viskores::Id cid = this->CellIds.Get(i);

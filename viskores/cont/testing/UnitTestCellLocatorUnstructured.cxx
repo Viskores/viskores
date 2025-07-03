@@ -214,10 +214,7 @@ public:
                                 typename LocatorType::LastCell& lastCell) const
   {
     viskores::ErrorCode status;
-    std::cout << __LINE__ << std::endl;
-    std::cout << point << std::endl;
     status = locator.FindCell(point, cellId, pcoords, lastCell);
-    std::cout << __LINE__ << std::endl;
 
     if (status != viskores::ErrorCode::Success)
       this->RaiseError(viskores::ErrorString(status));
