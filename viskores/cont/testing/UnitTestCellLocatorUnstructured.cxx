@@ -435,6 +435,7 @@ void ValidateFindAllCells(LocatorType& locator,
   auto pointsAH =
     viskores::cont::make_ArrayHandle<viskores::Vec3f>(testPts, viskores::CopyFlag::On);
 
+  std::cout << __LINE__ << std::endl;
   viskores::cont::Invoker invoker;
   invoker(CountAllCellsWorklet{}, pointsAH, locator, cellCounts);
   auto cellCountsPortal = cellCounts.ReadPortal();
@@ -444,6 +445,7 @@ void ValidateFindAllCells(LocatorType& locator,
                          "Incorrect number of cells found for point " + std::to_string(i) + " " +
                            std::to_string(cellCountsPortal.Get(i)));
   }
+  std::cout << __LINE__ << std::endl;
 
   viskores::Id numberOfFoundCells = viskores::cont::Algorithm::Reduce(cellCounts, viskores::Id(0));
   viskores::cont::ArrayHandle<viskores::Id> cellIds;
@@ -456,6 +458,7 @@ void ValidateFindAllCells(LocatorType& locator,
   auto pCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
     pCoords, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
 
+  std::cout << __LINE__ << std::endl;
   invoker(FindAllCellsWorklet{}, pointsAH, locator, cellIdsVec, pCoordsVec);
   auto portal = cellIdsVec.ReadPortal();
   for (viskores::Id i = 0; i < cellIdsVec.GetNumberOfValues(); i++)
@@ -480,6 +483,7 @@ void ValidateFindAllCells(LocatorType& locator,
                            "Cell Ids do not match at index " + std::to_string(i));
     }
   }
+  std::cout << __LINE__ << std::endl;
 }
 
 template <typename LocatorType>
@@ -533,7 +537,9 @@ void TestFindAllCells(LocatorType& locator)
   testPts.push_back({ .95f, .95f, 0.0f });
   expCellIds.push_back({ 0, 1, 2, 3 });
 
+  std::cout << __LINE__ << std::endl;
   ValidateFindAllCells(locator, testPts, expCellIds);
+  std::cout << __LINE__ << std::endl;
 
   //3D dataset with overlapping cells.
   bounds.clear();
@@ -591,7 +597,9 @@ void TestFindAllCells(LocatorType& locator)
   testPts.push_back({ 1.25f, 0.95f, 0.95f });
   expCellIds.push_back({ 1, 3, 5, 7 });
 
+  std::cout << __LINE__ << std::endl;
   ValidateFindAllCells(locator, testPts, expCellIds);
+  std::cout << __LINE__ << std::endl;
 }
 
 void TestingCellLocatorUnstructured()
@@ -613,7 +621,9 @@ void TestingCellLocatorUnstructured()
   std::cout << "Testing CellLocatorBoundingIntervalHierarchy" << std::endl;
   TestCellLocator(locatorBIH, viskores::Id3(8), 512);  // 3D dataset
   TestCellLocator(locatorBIH, viskores::Id2(18), 512); // 2D dataset
+  std::cout << __LINE__ << std::endl;
   TestFindAllCells(locatorBIH);
+  std::cout << __LINE__ << std::endl;
 
   //Test viskores::cont::CellLocatorUniformBins
   viskores::cont::CellLocatorUniformBins locatorUB;
