@@ -20,7 +20,6 @@ set(uncertainty_headers
   ContourUncertainUniform.h
   ContourUncertainUniformMonteCarlo.h
   FiberUncertainUniform.h
-  worklet/FiberUncertainUniform.h
   )
 
 set(uncertainty_sources_device
