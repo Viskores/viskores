@@ -143,11 +143,9 @@ For example, a data set can be significantly altered by adding, removing, or rep
 As with any filter, data set filters can be implemented in classes that derive the :class:`viskores::filter::Filter` base class and implement its :func:`viskores::filter::Filter::DoExecute` method.
 
 In this section we provide an example implementation of a data set filter that wraps the functionality of extracting the edges from a data set as line elements.
-Many variations of implementing this functionality are given in Chapter~\ref{chap:GeneratingCellSets}.
+Many variations of implementing this functionality are given in :chapref:`generating-cell-sets:Generating Cell Sets`.
 Suffice it to say that a pair of worklets will be used to create a new :class:`viskores::cont::CellSet`, and this :class:`viskores::cont::CellSet` will be used to create the result :class:`viskores::cont::DataSet`.
-Details on how the worklets work are given in Section \ref{sec:GeneratingCellSets:SingleType}.
-
-.. todo:: Fix reference to generating cell sets.
+Details on how the worklets work are given in :secref:`generating-cell-sets:Single Cell Type`.
 
 Because the operation of this edge extraction depends only on :class:`viskores::cont::CellSet` in a provided :class:`viskores::cont::DataSet`, the filter class is a simple subclass of :class:`viskores::filter::Filter`.
 
