@@ -50,6 +50,7 @@ enum class ErrorCode
   MalformedCellDetected,
   OperationOnEmptyCell,
   CellNotFound,
+  ValueOutOfRange,
 
   UnknownError
 };
@@ -168,6 +169,8 @@ inline const char* ErrorString(viskores::ErrorCode code) noexcept
       return "Operation on empty cell";
     case viskores::ErrorCode::CellNotFound:
       return "Cell not found";
+    case viskores::ErrorCode::ValueOutOfRange:
+      return "Value out of range";
     case viskores::ErrorCode::UnknownError:
       return "Unknown error";
   }
