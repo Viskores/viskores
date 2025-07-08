@@ -254,8 +254,7 @@ public:
                                                  ParametricCoordsVecType& pCoordsVec) const
   {
     viskores::IdComponent n = cellIdVec.GetNumberOfComponents();
-    if (pCoordsVec.GetNumberOfComponents() != n)
-      return viskores::ErrorCode::InvalidNumberOfIndices;
+    VISKORES_ASSERT(pCoordsVec.GetNumberOfComponents() == n);
 
     if (n == 0)
       return viskores::ErrorCode::Success;
