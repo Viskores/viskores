@@ -254,8 +254,7 @@ public:
                                                  ParametricCoordsVecType& pCoordsVec) const
   {
     viskores::IdComponent n = cellIdVec.GetNumberOfComponents();
-    if (pCoordsVec.GetNumberOfComponents() != n)
-      return viskores::ErrorCode::InvalidNumberOfIndices;
+    VISKORES_ASSERT(pCoordsVec.GetNumberOfComponents() == n);
 
     if (n == 0)
       return viskores::ErrorCode::Success;
@@ -283,7 +282,7 @@ private:
   };
 
   template <typename CellIdVecType, typename ParametricCoordsVecType>
-  VISKORES_EXEC viskores::Id IterateLeaves(const FloatVec3& point,
+  VISKORES_EXEC viskores::IdComponent IterateLeaves(const FloatVec3& point,
                                            const IterateMode& mode,
                                            CellIdVecType& cellIdVec,
                                            ParametricCoordsVecType& pCoordsVec,
