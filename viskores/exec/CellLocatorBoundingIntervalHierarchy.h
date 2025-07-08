@@ -396,6 +396,7 @@ private:
       viskores::Vec3f pCoords;
       if (this->PointInCell(point, cid, pCoords))
       {
+        printf("Found: %f %f %f, cid=%d, n=%d\n", point[0], point[1], point[2], cid, count);
         found = true;
         if (mode == IterateMode::FindOne || mode == IterateMode::FindAll)
         {
