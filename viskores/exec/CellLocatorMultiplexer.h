@@ -61,7 +61,8 @@ struct FindCellFunctor
 struct CountAllCellsFunctor
 {
   template <typename Locator>
-  VISKORES_EXEC viskores::IdComponent operator()(Locator&& locator, const viskores::Vec3f& point) const
+  VISKORES_EXEC viskores::IdComponent operator()(Locator&& locator,
+                                                 const viskores::Vec3f& point) const
   {
     return locator.CountAllCells(point);
   }

@@ -283,10 +283,10 @@ private:
 
   template <typename CellIdVecType, typename ParametricCoordsVecType>
   VISKORES_EXEC viskores::IdComponent IterateLeaves(const FloatVec3& point,
-                                           const IterateMode& mode,
-                                           CellIdVecType& cellIdVec,
-                                           ParametricCoordsVecType& pCoordsVec,
-                                           LastCell& lastCell) const
+                                                    const IterateMode& mode,
+                                                    CellIdVecType& cellIdVec,
+                                                    ParametricCoordsVecType& pCoordsVec,
+                                                    LastCell& lastCell) const
   {
     using namespace viskores::internal::cl_uniform_bins;
 
