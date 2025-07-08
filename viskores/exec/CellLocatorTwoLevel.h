@@ -283,7 +283,7 @@ private:
   };
 
   template <typename CellIdVecType, typename ParametricCoordsVecType>
-  VISKORES_EXEC viskores::Id IterateLeaves(const FloatVec3& point,
+  VISKORES_EXEC viskores::IdComponent IterateLeaves(const FloatVec3& point,
                                            const IterateMode& mode,
                                            CellIdVecType& cellIdVec,
                                            ParametricCoordsVecType& pCoordsVec,
