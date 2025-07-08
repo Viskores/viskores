@@ -339,7 +339,9 @@ void TestCellLocator(LocatorType& locator,
 
   //Test CountAllCells and FindAllCells. Should be identical to the tests above.
   viskores::cont::ArrayHandle<viskores::Id> cellCounts;
+  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   invoker(CountAllCellsWorklet{}, points, locator, cellCounts);
+  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   //Expected to find 1 cell for each point.
   auto portal = cellCounts.ReadPortal();
   for (viskores::Id i = 0; i < numberOfPoints; ++i)
@@ -359,7 +361,9 @@ void TestCellLocator(LocatorType& locator,
   auto cellIdsVec = viskores::cont::make_ArrayHandleGroupVecVariable(allCellIds, cellOffsets);
   auto pCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(pCoords, cellOffsets);
 
+  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   invoker(FindAllCellsWorklet{}, points, locator, cellIdsVec, pCoordsVec);
+  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   portal = allCellIds.ReadPortal();
   for (viskores::Id i = 0; i < numberOfFoundCells; ++i)
   {
