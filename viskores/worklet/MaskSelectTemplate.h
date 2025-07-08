@@ -119,6 +119,8 @@ viskores::worklet::MaskSelect::ThreadToOutputMapType MaskSelectBuild(
 class VISKORES_ALWAYS_EXPORT MaskSelectTemplate : public viskores::worklet::MaskSelect
 {
 public:
+  /// Construct a `MaskSelect` object using an array that masks an output
+  /// value with `0` and enables an output value with `1`.
   template <typename ArrayHandleType>
   MaskSelectTemplate(const ArrayHandleType& maskArray,
                      viskores::cont::DeviceAdapterId device = viskores::cont::DeviceAdapterTagAny())

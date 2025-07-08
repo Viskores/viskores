@@ -161,10 +161,9 @@ public:
   viskores::Id NumTransferIterations;
 
   /// constructor
-  TreeGrafter<MeshType, FieldType>(
-    MeshType* mesh,
-    viskores::worklet::contourtree_augmented::ContourTree& contourTree,
-    viskores::worklet::contourtree_distributed::InteriorForest* interiorForest)
+  TreeGrafter(MeshType* mesh,
+              viskores::worklet::contourtree_augmented::ContourTree& contourTree,
+              viskores::worklet::contourtree_distributed::InteriorForest* interiorForest)
     : Mesh(mesh)
     , ContourTree(contourTree)
     , InteriorForest(interiorForest)

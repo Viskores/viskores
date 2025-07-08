@@ -389,12 +389,53 @@ This will ensure that data are not copied so that any data written will go to th
    Pay attention if :func:`viskores::cont::UnknownArrayHandle::ExtractComponent` issues a warning about an inefficient memory copy.
    This is likely a serious performance issue, and the data should be retrieved in a different way (or better yet stored in a different way).
 
-Extracting All Components
-==============================
+Extracting a Known Value Type from Unknown Storage
+====================================================
 
 :numref:`ex:UnknownArrayExtractComponent` accesses the first component of each :class:`viskores::Vec` in an array.
 But in practice you usually want to operate on all components stored in the array.
-A simple solution is to iterate over each component.
+
+If you can narrow down the type of each value in the array (both components and number of components), then you can extract all of the components at once with :func:`viskores::cont::UnknownArrayHandle::ExtractArrayWithValueType`.
+
+.. doxygenfunction:: viskores::cont::UnknownArrayHandle::ExtractArrayWithValueType
+
+.. load-example:: UnknownArrayExtractArrayWithValueType
+   :file: GuideExampleUnknownArrayHandle.cxx
+   :caption: Extracting an array with a known value type but unknown storage.
+
+:func:`viskores::cont::UnknownArrayHandle::ExtractArrayWithValueType` works by extracting each component and building a :class:`viskores::cont::ArrayHandleSOAStride` array from them.
+This array can be used as a drop-in replacement for other array handle types in templated parameters such as the invocation of a worklet.
+An alternate mechanism is to use :func:`viskores::cont::UnknownArrayHandle::AsArrayHandle` to get an array of type :class:`viskores::cont::ArrayHandleSOAStride`.
+
+.. load-example:: UnknownArrayAsSOAStride
+   :file: GuideExampleUnknownArrayHandle.cxx
+   :caption: Extracting an array as a :class:`viskores::cont::ArrayHandleSOAStride`
+
+.. didyouknow::
+   :func:`viskores::cont::UnknownArrayHandle::AsArrayHandle` has special code to extract an array in the same way as :func:`viskores::cont::UnknownArrayHandle::ExtractArrayWithValueType`.
+   The difference between the two is in which storage types will be accepted.
+   :func:`viskores::cont::UnknownArrayHandle::ExtractArrayWithValueType` will technically accept any possible storage type, although some storage types can only be copied with an inefficient serial copy.
+   (A warning will be issued in this case.)
+   :func:`viskores::cont::UnknownArrayHandle::AsArrayHandle` will not convert any of these storage types with an inefficient copy.
+   In contrast, :func:`viskores::cont::UnknownArrayHandle::ExtractArrayWithValueType` does provide an ``allowCopy`` argument that specifies whether the array can only be extracted with a shallow copy (for writing).
+   There are some types that :func:`viskores::cont::UnknownArrayHandle::AsArrayHandle` will allow to have parts be shallow copied.
+
+The important upshot of :func:`viskores::cont::UnknownArrayHandle::AsArrayHandle` having a special condition for :class:`viskores::cont::ArrayHandleSOAStride` to extract arrays is that a cast-and-call operation on the :class:`viskores::cont::UnknownArrayHandle` can have a fallback storage.
+
+.. load-example:: UnknownArrayCastAndCallExtract
+   :file: GuideExampleUnknownArrayHandle.cxx
+   :caption: Extracting an array from a selection of types and any storage.
+
+This approach will also work on other cast-and-call techniques.
+For example, it can be combined with :func:`viskores::cont::UnknownArrayHandle::CastAndCallForTypesWithFloatFallback` to cover cases where the correct type is not tried.
+
+Extracting An Unknown Amount of Components
+============================================
+
+:numref:`ex:UnknownArrayExtractComponent` and :numref:`ex:UnknownArrayAsSOAStride` operate on an array of known value types and :numref:`ex:UnknownArrayCastAndCallExtract` operates on an array that is one of a limited number of value types.
+However, there may be cases where the number of components in a value type cannot be known at compile time.
+For example, an operation may operate on vectors of any size.
+A simple solution may be to iterate over each component.
 
 .. load-example:: UnknownArrayExtractComponentsMultiple
    :file: GuideExampleUnknownArrayHandle.cxx

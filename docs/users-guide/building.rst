@@ -1,6 +1,6 @@
-==============================
+===================================
 Building and Installing |Viskores|
-==============================
+===================================
 
 Before we begin describing how to develop with |Viskores|, we have a brief overview of how to build |Viskores|, optionally install it on your system, and start your own programs that use |Viskores|.
 

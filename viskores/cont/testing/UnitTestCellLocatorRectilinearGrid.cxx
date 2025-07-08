@@ -121,6 +121,27 @@ public:
       return;
     }
     match = (calculated == cellId);
+
+    if (match)
+    {
+      //Make sure CountAllCells and FindAllCells match FindCell.
+      viskores::Id cellCnt = locator.CountAllCells(pointIn);
+      if (status == viskores::ErrorCode::CellNotFound)
+        match = (cellCnt == 0);
+      else
+        match = (cellCnt == 1);
+
+      viskores::Vec<viskores::Id, 1> cellIds;
+      viskores::Vec<viskores::Vec3f, 1> pCoords;
+      auto status2 = locator.FindAllCells(pointIn, cellIds, pCoords);
+      if (status2 == status)
+        match = (cellIds[0] == calculated);
+      else
+      {
+        this->RaiseError(viskores::ErrorString(status2));
+        match = false;
+      }
+    }
   }
 
 private:

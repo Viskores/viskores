@@ -474,6 +474,49 @@ void ExtractUnknownComponent()
   viskores::cont::ArrayHandle<viskores::Vec3f> outArray;
 
   ////
+  //// BEGIN-EXAMPLE UnknownArrayExtractArrayWithValueType
+  ////
+  invoke(
+    MyWorklet{}, unknownArray.ExtractArrayWithValueType<viskores::Vec3f>(), outArray);
+  ////
+  //// END-EXAMPLE UnknownArrayExtractArrayWithValueType
+  ////
+  VISKORES_TEST_ASSERT(test_equal_ArrayHandles(outArray, concreteArray));
+
+  outArray.ReleaseResources();
+  {
+    ////
+    //// BEGIN-EXAMPLE UnknownArrayAsSOAStride
+    ////
+    viskores::cont::ArrayHandleSOAStride<viskores::Vec3f> extractedArray;
+    unknownArray.AsArrayHandle(extractedArray);
+    invoke(MyWorklet{}, extractedArray, outArray);
+    ////
+    //// END-EXAMPLE UnknownArrayAsSOAStride
+    ////
+  }
+  VISKORES_TEST_ASSERT(test_equal_ArrayHandles(outArray, concreteArray));
+
+  outArray.ReleaseResources();
+  {
+    ////
+    //// BEGIN-EXAMPLE UnknownArrayCastAndCallExtract
+    ////
+    auto resolveType = [&](auto extractedArray)
+    { invoke(MyWorklet{}, extractedArray, outArray); };
+
+    unknownArray
+      .CastAndCallForTypes<viskores::TypeListFieldVec3,
+                           viskores::List<viskores::cont::StorageTagSOAStride>>(
+        resolveType);
+    ////
+    //// END-EXAMPLE UnknownArrayCastAndCallExtract
+    ////
+  }
+  VISKORES_TEST_ASSERT(test_equal_ArrayHandles(outArray, concreteArray));
+
+  outArray.ReleaseResources();
+  ////
   //// BEGIN-EXAMPLE UnknownArrayExtractArrayFromComponents
   ////
   invoke(MyWorklet{},

@@ -64,6 +64,13 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   "12/bits/stl_vector.h:988:50: warning: pointer used after"
   "12/bits/new_allocator.h:158:33: note: call to"
 
+  # This is a warning about not being able to write all the information necessary tracing
+  # debugging those variables. This is not an important warning for the builds in our CI.
+  # (Developers can resolve the issue if they need to by using a parameter like
+  # `--param=max-vartrack-size=600000`. See 
+  # https://stackoverflow.com/questions/23499909/adjust-variable-tracking-assignment-length)
+  "note: variable tracking size limit exceeded"
+
   # Disable warning that can happen in the standard lib from the loguru
   # third party library. This is a note that can get flagged because it
   # happens in a file outside of the thirdparty directory.
@@ -84,3 +91,7 @@ if (NOT x"@CMAKE_HIP_COMPILER@"x STREQUAL xx)
 endif()
 
 set(Viskores_ENABLE_PERFORMANCE_TESTING "@Viskores_ENABLE_PERFORMANCE_TESTING@")
+
+# Fail on warnings without stopping the build
+# Set maximum number of warnings to 0 to make the build fail on any warning
+set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 0)

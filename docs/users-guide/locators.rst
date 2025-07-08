@@ -149,7 +149,10 @@ This means that any ``CellLocator`` can be used in worklets as an ``ExecObject``
 See :chapref:`execution-objects:Execution Objects` for information on ``ExecObject`` arguments to worklets.
 
 When a ``CellLocator`` class is passed as an ``ExecObject`` argument to a worklet :class:`viskores::cont::Invoke`, the worklet receives a different object defined in the ``viskores::exec`` namespace.
-This ``CellLocator`` object provides a ``FindCell()`` method that identifies a containing cell given a point location in space.
+This ``CellLocator`` object provides three methods: ``FindCell()``, ``CountAllCells()``, and ``FindAllCells()``.
+The ``FindCell()`` identifies the cell containing a given point location in space.
+The ``CountAllCells()``, and ``FindAllCells()`` methods are useful for some special-case irregular grids with overlapping cells.
+``CountAllCells()`` determines how many cells contain the given point and ``FindAllCells()`` identifies all of the cells that contain the given point.
 
 .. commonerrors::
    Note that the ``CellLocator`` classes in the respective ``viskores::cont`` and ``viskores::exec`` namespaces are different objects with different interfaces despite the similar names.
