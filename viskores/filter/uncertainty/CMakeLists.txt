@@ -19,10 +19,13 @@
 set(uncertainty_headers
   ContourUncertainUniform.h
   ContourUncertainUniformMonteCarlo.h
+  FiberUncertainUniform.h
   )
+
 set(uncertainty_sources_device
   ContourUncertainUniform.cxx
   ContourUncertainUniformMonteCarlo.cxx
+  FiberUncertainUniform.cxx
   )
 
 viskores_library(
@@ -31,3 +34,9 @@ viskores_library(
   DEVICE_SOURCES ${uncertainty_sources_device}
   USE_VISKORES_JOB_POOL
 )
+
+target_link_libraries(viskores_filter_uncertainty PUBLIC INTERFACE
+  viskores_filter_core
+)
+
+add_subdirectory(worklet)
