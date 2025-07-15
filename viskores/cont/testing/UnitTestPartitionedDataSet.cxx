@@ -233,6 +233,39 @@ static void PartitionedDataSetFieldTest()
   }
 }
 
+static void PartitionedDataSetBoundsTest()
+{
+  viskores::cont::testing::MakeTestDataSet testDataSet;
+
+  viskores::cont::DataSet TDset1 = testDataSet.Make3DUniformDataSet0();
+  viskores::cont::DataSet TDset2 = testDataSet.Make3DUniformDataSet1();
+
+  auto bounds1 = TDset1.GetCoordinateSystem().GetBounds();
+  auto bounds2 = TDset2.GetCoordinateSystem().GetBounds();
+  viskores::Bounds pdsBounds;
+  pdsBounds.Include(bounds1);
+  pdsBounds.Include(bounds2);
+
+  viskores::cont::PartitionedDataSet pds({ TDset1, TDset2 });
+
+  //Check that bounds of ALL partitions is correct.
+  VISKORES_TEST_ASSERT(pds.GetBounds() == pdsBounds, "Bounds for partitioned dataset is wrong");
+
+  //Check that the bounds of each partition is correct.
+  auto partitionBounds = pds.GetPartitionBounds();
+  VISKORES_TEST_ASSERT(partitionBounds.size() == 2, "Partition bounds size is wrong");
+  VISKORES_TEST_ASSERT(partitionBounds[0] == bounds1, "Partition bounds[0] is wrong");
+  VISKORES_TEST_ASSERT(partitionBounds[1] == bounds2, "Partition bounds[1] is wrong");
+
+  //Global values should be the same.
+  VISKORES_TEST_ASSERT(pds.GetGlobalBounds() == pdsBounds,
+                       "Bounds for partitioned dataset is wrong");
+  auto globalPartitionBounds = pds.GetGlobalPartitionBounds();
+  VISKORES_TEST_ASSERT(globalPartitionBounds.size() == 2, "Global partition bounds size is wrong");
+  VISKORES_TEST_ASSERT(globalPartitionBounds[0] == bounds1, "Global partition bounds[0] is wrong");
+  VISKORES_TEST_ASSERT(globalPartitionBounds[1] == bounds2, "Global partition bounds[1] is wrong");
+}
+
 void DataSet_Compare(viskores::cont::DataSet& leftDataSet, viskores::cont::DataSet& rightDataSet)
 {
   for (viskores::Id j = 0; j < leftDataSet.GetNumberOfFields(); j++)
@@ -255,6 +288,7 @@ static void PartitionedDataSetTests()
 {
   PartitionedDataSetTest();
   PartitionedDataSetFieldTest();
+  PartitionedDataSetBoundsTest();
 }
 
 int UnitTestPartitionedDataSet(int argc, char* argv[])
