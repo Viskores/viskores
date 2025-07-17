@@ -70,6 +70,24 @@ public:
   VISKORES_CONT
   viskores::Id GetGlobalNumberOfPartitions() const;
 
+  /// Get the bounds of all DataSets in this PartitionedDataSet.
+  VISKORES_CONT
+  viskores::Bounds GetBounds() const;
+
+  /// Get the bounds of all DataSets in this PartitionedDataSet across all MPI ranks.
+  /// @warning This method requires global communication if MPI is enabled.
+  VISKORES_CONT
+  viskores::Bounds GetGlobalBounds() const;
+
+  /// Get the bounds of each DataSet in this PartitionedDataSet.
+  VISKORES_CONT
+  std::vector<viskores::Bounds> GetPartitionBounds() const;
+
+  /// Get the bounds of each DataSet in this PartitionedDataSet across all MPI ranks.
+  /// @warning This method requires global communication if MPI is enabled.
+  VISKORES_CONT
+  std::vector<viskores::Bounds> GetGlobalPartitionBounds() const;
+
   /// Get the DataSet @a partId.
   VISKORES_CONT
   const viskores::cont::DataSet& GetPartition(viskores::Id partId) const;

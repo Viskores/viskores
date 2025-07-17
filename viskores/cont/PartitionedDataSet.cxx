@@ -83,6 +83,93 @@ viskores::Id PartitionedDataSet::GetGlobalNumberOfPartitions() const
 }
 
 VISKORES_CONT
+viskores::Bounds PartitionedDataSet::GetBounds() const
+{
+  viskores::Bounds bounds;
+  for (const auto& partition : this->Partitions)
+    bounds.Include(partition.GetCoordinateSystem().GetBounds());
+
+  return bounds;
+}
+
+VISKORES_CONT
+viskores::Bounds PartitionedDataSet::GetGlobalBounds() const
+{
+  viskores::Bounds localBounds = this->GetBounds();
+
+#ifdef VISKORES_ENABLE_MPI
+  auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
+  std::vector<viskores::Float64> localBoundsArray = { localBounds.X.Min, localBounds.X.Max,
+                                                      localBounds.Y.Min, localBounds.Y.Max,
+                                                      localBounds.Z.Min, localBounds.Z.Max };
+  std::vector<std::vector<viskores::Float64>> globalBoundsArray;
+  viskoresdiy::mpi::all_gather(comm, localBoundsArray, globalBoundsArray);
+  viskores::Bounds globalBounds;
+  for (std::size_t i = 0; i < globalBoundsArray.size(); i++)
+  {
+    viskores::Bounds b(globalBoundsArray[i].data());
+    globalBounds.Include(b);
+  }
+  return globalBounds;
+#else
+  return localBounds;
+#endif
+}
+
+VISKORES_CONT
+std::vector<viskores::Bounds> PartitionedDataSet::GetPartitionBounds() const
+{
+  std::vector<viskores::Bounds> bounds;
+  bounds.reserve(this->Partitions.size());
+  for (const auto& ds : this->Partitions)
+    bounds.push_back(ds.GetCoordinateSystem().GetBounds());
+
+  return bounds;
+}
+
+VISKORES_CONT
+std::vector<viskores::Bounds> PartitionedDataSet::GetGlobalPartitionBounds() const
+{
+  auto localBounds = this->GetPartitionBounds();
+
+#ifdef VISKORES_ENABLE_MPI
+  auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
+  std::vector<viskores::Float64> localBoundsArray;
+  for (const auto& b : localBounds)
+  {
+    localBoundsArray.push_back(b.X.Min);
+    localBoundsArray.push_back(b.X.Max);
+    localBoundsArray.push_back(b.Y.Min);
+    localBoundsArray.push_back(b.Y.Max);
+    localBoundsArray.push_back(b.Z.Min);
+    localBoundsArray.push_back(b.Z.Max);
+  }
+
+  std::vector<std::vector<viskores::Float64>> globalBoundsArray;
+  viskoresdiy::mpi::all_gather(comm, localBoundsArray, globalBoundsArray);
+  std::vector<viskores::Bounds> globalBounds;
+  globalBounds.reserve(globalBoundsArray.size());
+  for (std::size_t i = 0; i < globalBoundsArray.size(); i++)
+  {
+    for (std::size_t j = 0; j < globalBoundsArray[i].size(); j += 6)
+    {
+      viskores::Bounds b(globalBoundsArray[i][j + 0],
+                         globalBoundsArray[i][j + 1],
+                         globalBoundsArray[i][j + 2],
+                         globalBoundsArray[i][j + 3],
+                         globalBoundsArray[i][j + 4],
+                         globalBoundsArray[i][j + 5]);
+      globalBounds.emplace_back(b);
+    }
+  }
+
+  return globalBounds;
+#else
+  return localBounds;
+#endif
+}
+
+VISKORES_CONT
 const viskores::cont::DataSet& PartitionedDataSet::GetPartition(viskores::Id blockId) const
 {
   return this->Partitions[static_cast<std::size_t>(blockId)];
