@@ -17,6 +17,7 @@
 //============================================================================
 
 #include <viskores/Bounds.h>
+#include <viskores/CellShape.h>
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandleGroupVecVariable.h>
@@ -34,8 +35,6 @@
 #include <viskores/worklet/ScatterPermutation.h>
 #include <viskores/worklet/WorkletMapField.h>
 #include <viskores/worklet/WorkletMapTopology.h>
-
-#include <viskores/CellShape.h>
 
 #include <ctime>
 #include <random>
