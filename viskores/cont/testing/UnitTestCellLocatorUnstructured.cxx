@@ -622,7 +622,7 @@ void TestingCellLocatorUnstructured()
   std::cout << "Testing CellLocatorTwoLevel" << std::endl;
   TestCellLocator(locator2L, viskores::Id3(8), 512);  // 3D dataset
   TestCellLocator(locator2L, viskores::Id2(18), 512); // 2D dataset
-  //TestFindAllCells(locator2L);
+  TestFindAllCells(locator2L);
 
   viskores::cont::CellLocatorBoundingIntervalHierarchy locatorBIH;
   std::cout << "Testing CellLocatorBoundingIntervalHierarchy" << std::endl;
@@ -635,18 +635,18 @@ void TestingCellLocatorUnstructured()
   locatorUB.SetDims({ 32, 32, 32 });
   std::cout << "Testing CellLocatorUniformBins" << std::endl;
 
-  //TestCellLocator(locatorUB, viskores::Id3(8), 512);  // 3D dataset
-  //TestCellLocator(locatorUB, viskores::Id2(18), 512); // 2D dataset
+  TestCellLocator(locatorUB, viskores::Id3(8), 512);  // 3D dataset
+  TestCellLocator(locatorUB, viskores::Id2(18), 512); // 2D dataset
 
   //Test 2D dataset with 2D bins.
   locatorUB.SetDims({ 32, 32, 1 });
   std::cout << "Testing CellLocatorUniformBins" << std::endl;
-  //TestCellLocator(locatorUB, viskores::Id2(18), 512); // 2D dataset
+  TestCellLocator(locatorUB, viskores::Id2(18), 512); // 2D dataset
 
   //Test finding all cells.
   locatorUB = viskores::cont::CellLocatorUniformBins();
   locatorUB.SetDims({ 32, 32, 32 });
-  //TestFindAllCells(locatorUB);
+  TestFindAllCells(locatorUB);
 }
 
 int UnitTestCellLocatorUnstructured(int argc, char* argv[])
