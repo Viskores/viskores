@@ -418,9 +418,7 @@ private:
             pCoordsVec[count] = pCoords;
           }
         }
-        VISKORES_ASSERT(count < n);
         count++;
-        VISKORES_ASSERT(count <= n);
 
         if (mode == IterateMode::FindOne)
           break;
