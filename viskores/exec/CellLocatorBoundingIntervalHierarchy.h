@@ -252,6 +252,7 @@ private:
 
     cellIdsVec[0] = -1;
 
+    VISKORES_ASSERT(this->Nodes.GetNumberOfValues() > 0);
     while (true)
     {
       // 1) If we’ve found a cell (and only looking for one), stop immediately
@@ -349,6 +350,8 @@ private:
   {
     const viskores::exec::CellLocatorBoundingIntervalHierarchyNode& node =
       this->Nodes.Get(nodeIndex);
+    VISKORES_ASSERT(node.Dimension >= 0 && node.Dimension < 3);
+
     const viskores::FloatDefault& coordinate = point[node.Dimension];
     if (coordinate <= node.Node.LMax)
     {
@@ -368,6 +371,8 @@ private:
   {
     const viskores::exec::CellLocatorBoundingIntervalHierarchyNode& node =
       this->Nodes.Get(nodeIndex);
+    VISKORES_ASSERT(node.Dimension >= 0 && node.Dimension < 3);
+
     const viskores::FloatDefault& coordinate = point[node.Dimension];
     if (coordinate >= node.Node.RMin)
     {
@@ -404,6 +409,7 @@ private:
         found = true;
         if (mode == IterateMode::FindOne || mode == IterateMode::FindAll)
         {
+          VISKORES_ASSERT(count < n);
           //Update vecs if there is room.  If the vecs are too small, it will get reported as an error in FindAllCells()
           if (count < n)
           {
@@ -411,8 +417,9 @@ private:
             pCoordsVec[count] = pCoords;
           }
         }
-
+        VISKORES_ASSERT(count < n);
         count++;
+        VISKORES_ASSERT(count <= n);
 
         if (mode == IterateMode::FindOne)
           break;
