@@ -249,6 +249,7 @@ private:
   {
     viskores::Id nodeIndex = 0;
     FindCellState state = FindCellState::EnterNode;
+    VISKORES_ASSERT(cellIdsVec.GetNumberOfComponents() > 0);
 
     cellIdsVec[0] = -1;
 
