@@ -213,12 +213,10 @@ public:
                                 typename LocatorType::LastCell& lastCell) const
   {
     viskores::ErrorCode status;
-    //printf("worklet: point= %f %f %f\n", point[0], point[1], point[2]);
     status = locator.FindCell(point, cellId, pcoords, lastCell);
 
     if (status != viskores::ErrorCode::Success)
     {
-      //printf("worklet: ERROR point= %f %f %f\n", point[0], point[1], point[2]);
       this->RaiseError(viskores::ErrorString(status));
     }
   }

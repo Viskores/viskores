@@ -178,7 +178,8 @@ public:
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
-  VISKORES_EXEC viskores::IdComponent CountAllCells(const viskores::Vec3f& point) const
+  VISKORES_EXEC viskores::IdComponent CountAllCells(
+    const viskores::Vec3f& viskoresNotUsed(point)) const
   {
     //There is a memory access error on some GPU devices.
     // Disabling for now.
@@ -202,9 +203,10 @@ public:
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
   template <typename CellIdsType, typename ParametricCoordsVecType>
-  VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
-                                                 CellIdsType& cellIdsVec,
-                                                 ParametricCoordsVecType& pCoordsVec) const
+  VISKORES_EXEC viskores::ErrorCode FindAllCells(
+    const viskores::Vec3f& viskoresNotUsed(point),
+    CellIdsType& viskoresNotUsed(cellIdsVec),
+    ParametricCoordsVecType& viskoresNotUsed(pCoordsVec)) const
   {
     //There is a memory access error on some GPU devices.
     // Disabling for now.
