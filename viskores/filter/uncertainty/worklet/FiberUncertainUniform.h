@@ -42,10 +42,6 @@ namespace detail
 class MultiVariateMonteCarlo : public viskores::worklet::WorkletMapField
 {
 public:
-  // Worklet Input
-  // Fiber(const std::vector<std::pair<double, double>>& minAxis,
-  //      const std::vector<std::pair<double, double>>& maxAxis)
-  //  : InputBottomLeft(minAxis), InputTopRight(maxAxis){};
   MultiVariateMonteCarlo(const viskores::Range& minAxis,
                          const viskores::Range& maxAxis,
                          const viskores::Id numSamples)
@@ -54,22 +50,20 @@ public:
     , InputTopRight(viskores::Pair<viskores::Float64, viskores::Float64>(maxAxis.Min, maxAxis.Max))
     , NumSamples(numSamples){};
 
-  // Input and Output Parameters
   using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut);
 
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
-  // Template
   template <typename MinX, typename MaxX, typename MinY, typename MaxY, typename OutCellFieldType>
-  // Operator
-  VISKORES_EXEC void operator()(const MinX& EnsembleMinX,
-                                const MaxX& EnsembleMaxX,
-                                const MinY& EnsembleMinY,
-                                const MaxY& EnsembleMaxY,
+
+  VISKORES_EXEC void operator()(const MinX& ensembleMinX,
+                                const MaxX& ensembleMaxX,
+                                const MinY& ensembleMinY,
+                                const MaxY& ensembleMaxY,
                                 OutCellFieldType& probability) const
   {
-    // User defined rectangle (trait)
+
     viskores::FloatDefault minX_user = static_cast<viskores::FloatDefault>(InputBottomLeft.first);
 
     viskores::FloatDefault minY_user = static_cast<viskores::FloatDefault>(InputBottomLeft.second);
@@ -78,19 +72,15 @@ public:
 
     viskores::FloatDefault maxY_user = static_cast<viskores::FloatDefault>(InputTopRight.second);
 
-
-
     viskores::FloatDefault N1 = 0.0;
     viskores::FloatDefault N2 = 0.0;
     viskores::Id NonZeroCases = 0;
     viskores::FloatDefault MCProbability = 0.0;
 
-    // Data rectangle
-    viskores::FloatDefault minX_dataset = static_cast<viskores::FloatDefault>(EnsembleMinX);
-    viskores::FloatDefault maxX_dataset = static_cast<viskores::FloatDefault>(EnsembleMaxX);
-    viskores::FloatDefault minY_dataset = static_cast<viskores::FloatDefault>(EnsembleMinY);
-    viskores::FloatDefault maxY_dataset = static_cast<viskores::FloatDefault>(EnsembleMaxY);
-
+    viskores::FloatDefault minX_dataset = static_cast<viskores::FloatDefault>(ensembleMinX);
+    viskores::FloatDefault maxX_dataset = static_cast<viskores::FloatDefault>(ensembleMaxX);
+    viskores::FloatDefault minY_dataset = static_cast<viskores::FloatDefault>(ensembleMinY);
+    viskores::FloatDefault maxY_dataset = static_cast<viskores::FloatDefault>(ensembleMaxY);
 
     viskores::FloatDefault minX_intersection = std::max(minX_user, minX_dataset);
     viskores::FloatDefault minY_intersection = std::max(minY_user, minY_dataset);
@@ -105,10 +95,8 @@ public:
     thrust::uniform_real_distribution<viskores::FloatDefault> distX(minX_dataset, maxX_dataset);
     thrust::uniform_real_distribution<viskores::FloatDefault> distY(minY_dataset, maxY_dataset);
 
-    // Point
     if ((minX_dataset == maxX_dataset) && (minY_dataset == maxY_dataset))
     {
-      // check if point is inside a trait
       if ((minX_dataset <= maxX_user) && (minX_dataset >= minX_user) &&
           (minY_dataset <= maxY_user) && (minY_dataset >= minY_user))
       {
@@ -116,18 +104,15 @@ public:
       }
     }
 
-    // Line
-    // Data as horizontal line
     else if ((minX_dataset < maxX_dataset) && (minY_dataset == maxY_dataset))
     {
-      // Check if line intersects a trait. Might need <= check here
       if ((minX_intersection < maxX_intersection) && (minY_dataset >= minY_user) &&
           (minY_dataset <= maxY_user))
       {
         for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
         {
           N1 = distX(rng);
-          // Increase the case number when the data is located in user rectangle
+
           if ((N1 > minX_user) && (N1 < maxX_user))
           {
             NonZeroCases++;
@@ -135,11 +120,8 @@ public:
         }
       }
     }
-
-    // Data as a vertical line
     else if ((minX_dataset == maxX_dataset) && (minY_dataset < maxY_dataset))
     {
-      // Check if line intersects a trait. Might need <= check here
       if ((minY_intersection < maxY_intersection) && (minX_dataset >= minX_user) &&
           (minX_dataset <= maxX_user))
       {
@@ -147,7 +129,7 @@ public:
         {
 
           N2 = distY(rng);
-          // Increase the case number when the data is located in user rectangle
+
           if ((N2 > minY_user) && (N2 < maxY_user))
           {
             NonZeroCases++;
@@ -172,14 +154,12 @@ public:
 #else
     std::random_device rd;
     std::mt19937 gen(rd());
-    // Generate samples from data rectangle
     std::uniform_real_distribution<viskores::FloatDefault> GenerateN1(minX_dataset, maxX_dataset);
     std::uniform_real_distribution<viskores::FloatDefault> GenerateN2(minY_dataset, maxY_dataset);
 
-    // Point
     if ((minX_dataset == maxX_dataset) && (minY_dataset == maxY_dataset))
     {
-      // Check if point is inside a trait
+
       if ((minX_dataset <= maxX_user) && (minX_dataset >= minX_user) &&
           (minY_dataset <= maxY_user) && (minY_dataset >= minY_user))
       {
@@ -187,18 +167,15 @@ public:
       }
     }
 
-    // Line
-    // Data as horizontal line
     else if ((minX_dataset < maxX_dataset) && (minY_dataset == maxY_dataset))
     {
-      // Check if line intersects a trait. Might need <= check here
       if ((minX_intersection < maxX_intersection) && (minY_dataset >= minY_user) &&
           (minY_dataset <= maxY_user))
       {
         for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
         {
           N1 = GenerateN1(gen);
-          // Increase the case number when the data is located in user rectangle
+
           if ((N1 > minX_user) && (N1 < maxX_user))
           {
             NonZeroCases++;
@@ -207,10 +184,8 @@ public:
       }
     }
 
-    // Data as a vertical line
     else if ((minX_dataset == maxX_dataset) && (minY_dataset < maxY_dataset))
     {
-      // Check if line intersects a trait. Might need <= check here
       if ((minY_intersection < maxY_intersection) && (minX_dataset >= minX_user) &&
           (minX_dataset <= maxX_user))
       {
@@ -218,7 +193,7 @@ public:
         {
 
           N2 = GenerateN2(gen);
-          // Increase the case number when the data is located in user rectangle
+
           if ((N2 > minY_user) && (N2 < maxY_user))
           {
             NonZeroCases++;
@@ -226,8 +201,6 @@ public:
         }
       }
     }
-
-    // Rectangle
     else
     {
       for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
@@ -259,10 +232,6 @@ private:
 class MultiVariateClosedForm : public viskores::worklet::WorkletMapField
 {
 public:
-  // Worklet Input
-  // Fiber(const std::vector<std::pair<double, double>>& minAxis,
-  //      const std::vector<std::pair<double, double>>& maxAxis)
-  //  : InputBottomLeft(minAxis), InputTopRight(maxAxis){};
   MultiVariateClosedForm(const viskores::Range& minAxis, const viskores::Range& maxAxis)
     : InputBottomLeft(
         viskores::Pair<viskores::Float64, viskores::Float64>(minAxis.Min, minAxis.Max))
@@ -270,22 +239,19 @@ public:
   {
   }
 
-  // Input and Output Parameters
   using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut);
 
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
-  // Template
   template <typename MinX, typename MaxX, typename MinY, typename MaxY, typename OutCellFieldType>
-  // Operator
-  VISKORES_EXEC void operator()(const MinX& EnsembleMinX,
-                                const MaxX& EnsembleMaxX,
-                                const MinY& EnsembleMinY,
-                                const MaxY& EnsembleMaxY,
+  VISKORES_EXEC void operator()(const MinX& ensembleMinX,
+                                const MaxX& ensembleMaxX,
+                                const MinY& ensembleMinY,
+                                const MaxY& ensembleMaxY,
                                 OutCellFieldType& probability) const
   {
-    // User defined rectangle (trait)
+
     viskores::FloatDefault minX_user = 0.0;
     minX_user = static_cast<viskores::FloatDefault>(InputBottomLeft.first);
     viskores::FloatDefault minY_user = 0.0;
@@ -310,24 +276,18 @@ public:
     viskores::FloatDefault IntersectionHeight = 0.0;
     viskores::FloatDefault IntersectionWidth = 0.0;
 
-    // Data rectangle
-    minX_dataset = static_cast<viskores::FloatDefault>(EnsembleMinX);
-    maxX_dataset = static_cast<viskores::FloatDefault>(EnsembleMaxX);
-    minY_dataset = static_cast<viskores::FloatDefault>(EnsembleMinY);
-    maxY_dataset = static_cast<viskores::FloatDefault>(EnsembleMaxY);
+    minX_dataset = static_cast<viskores::FloatDefault>(ensembleMinX);
+    maxX_dataset = static_cast<viskores::FloatDefault>(ensembleMaxX);
+    minY_dataset = static_cast<viskores::FloatDefault>(ensembleMinY);
+    maxY_dataset = static_cast<viskores::FloatDefault>(ensembleMaxY);
 
-    // Calculating data and trait intersection limits. For intersection to take place, mixX <= maxX and minY <= maxY condition must satisfy.
     minX_intersection = std::max(minX_user, minX_dataset);
     minY_intersection = std::max(minY_user, minY_dataset);
     maxX_intersection = std::min(maxX_user, maxX_dataset);
     maxY_intersection = std::min(maxY_user, maxY_dataset);
 
-    // Check if data is a point, line, or a rectangle
-
-    // Point
     if ((minX_dataset == maxX_dataset) && (minY_dataset == maxY_dataset))
     {
-      // check if point is inside a trait
       if ((minX_dataset <= maxX_user) && (minX_dataset >= minX_user) &&
           (minY_dataset <= maxY_user) && (minY_dataset >= minY_user))
       {
@@ -338,12 +298,8 @@ public:
         IntersectionProbability = 0.0;
       }
     }
-
-    // Line
-    // Data as horizontal line
     else if ((minX_dataset < maxX_dataset) && (minY_dataset == maxY_dataset))
     {
-      // Check if line intersects a trait. Might need <= check here
       if ((minX_intersection < maxX_intersection) && (minY_dataset >= minY_user) &&
           (minY_dataset <= maxY_user))
       {
@@ -355,11 +311,8 @@ public:
         IntersectionProbability = 0.0;
       }
     }
-
-    // Data as a vertical line
     else if ((minX_dataset == maxX_dataset) && (minY_dataset < maxY_dataset))
     {
-      // Check if line intersects a trait. Might need <= check here
       if ((minY_intersection < maxY_intersection) && (minX_dataset >= minX_user) &&
           (minX_dataset <= maxX_user))
       {
@@ -371,8 +324,6 @@ public:
         IntersectionProbability = 0.0;
       }
     }
-
-    // Rectangle
     else
     {
       IntersectionHeight = maxY_intersection - minY_intersection;
@@ -408,7 +359,6 @@ public:
   {
   }
 
-  // Input and Output Parameters
   using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut);
 
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
@@ -416,14 +366,13 @@ public:
 
   template <typename MinX, typename MaxX, typename MinY, typename MaxY, typename OutCellFieldType>
 
-  VISKORES_EXEC void operator()(const MinX& EnsembleMinX,
-                                const MaxX& EnsembleMaxX,
-                                const MinY& EnsembleMinY,
-                                const MaxY& EnsembleMaxY,
+  VISKORES_EXEC void operator()(const MinX& ensembleMinX,
+                                const MaxX& ensembleMaxX,
+                                const MinY& ensembleMinY,
+                                const MaxY& ensembleMaxY,
                                 OutCellFieldType& probability) const
   {
 
-    // User defined rectangle (trait)
     viskores::FloatDefault minX_user = 0.0;
     minX_user = static_cast<viskores::FloatDefault>(InputBottomLeft.first);
     viskores::FloatDefault minY_user = 0.0;
@@ -438,11 +387,10 @@ public:
     viskores::FloatDefault maxX_dataset = 0.0;
     viskores::FloatDefault maxY_dataset = 0.0;
 
-    // Data rectangle
-    minX_dataset = static_cast<viskores::FloatDefault>(EnsembleMinX);
-    maxX_dataset = static_cast<viskores::FloatDefault>(EnsembleMaxX);
-    minY_dataset = static_cast<viskores::FloatDefault>(EnsembleMinY);
-    maxY_dataset = static_cast<viskores::FloatDefault>(EnsembleMaxY);
+    minX_dataset = static_cast<viskores::FloatDefault>(ensembleMinX);
+    maxX_dataset = static_cast<viskores::FloatDefault>(ensembleMaxX);
+    minY_dataset = static_cast<viskores::FloatDefault>(ensembleMinY);
+    maxY_dataset = static_cast<viskores::FloatDefault>(ensembleMaxY);
 
     viskores::FloatDefault Xmean = 0.0;
     viskores::FloatDefault Ymean = 0.0;
@@ -477,7 +425,6 @@ public:
   {
   }
 
-  // Input and Output Parameters
   using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut);
 
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
@@ -485,14 +432,13 @@ public:
 
   template <typename MinX, typename MaxX, typename MinY, typename MaxY, typename OutCellFieldType>
 
-  VISKORES_EXEC void operator()(const MinX& EnsembleMinX,
-                                const MaxX& EnsembleMaxX,
-                                const MinY& EnsembleMinY,
-                                const MaxY& EnsembleMaxY,
+  VISKORES_EXEC void operator()(const MinX& ensembleMinX,
+                                const MaxX& ensembleMaxX,
+                                const MinY& ensembleMinY,
+                                const MaxY& ensembleMaxY,
                                 OutCellFieldType& probability) const
   {
 
-    // User defined rectangle (trait)
     viskores::FloatDefault minX_user = 0.0;
     minX_user = static_cast<viskores::FloatDefault>(InputBottomLeft.first);
     viskores::FloatDefault minY_user = 0.0;
@@ -507,11 +453,10 @@ public:
     viskores::FloatDefault maxX_dataset = 0.0;
     viskores::FloatDefault maxY_dataset = 0.0;
 
-    // Data rectangle
-    minX_dataset = static_cast<viskores::FloatDefault>(EnsembleMinX);
-    maxX_dataset = static_cast<viskores::FloatDefault>(EnsembleMaxX);
-    minY_dataset = static_cast<viskores::FloatDefault>(EnsembleMinY);
-    maxY_dataset = static_cast<viskores::FloatDefault>(EnsembleMaxY);
+    minX_dataset = static_cast<viskores::FloatDefault>(ensembleMinX);
+    maxX_dataset = static_cast<viskores::FloatDefault>(ensembleMaxX);
+    minY_dataset = static_cast<viskores::FloatDefault>(ensembleMinY);
+    maxY_dataset = static_cast<viskores::FloatDefault>(ensembleMaxY);
 
     if ((maxX_dataset <= maxX_user) && (minX_dataset >= minX_user) && (maxY_dataset <= maxY_user) &&
         (minY_dataset >= minY_user))
