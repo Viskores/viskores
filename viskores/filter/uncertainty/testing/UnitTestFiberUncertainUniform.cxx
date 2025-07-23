@@ -85,7 +85,7 @@ void TestFiberUncertainUniform()
   closedFormFilter.SetMaxX("ensemble_max_x");
   closedFormFilter.SetMinY("ensemble_min_y");
   closedFormFilter.SetMaxY("ensemble_max_y");
-  closedFormFilter->SetApproach(
+  closedFormFilter.SetApproach(
     viskores::filter::uncertainty::FiberUncertainUniform::ApproachEnum::ClosedForm);
 
   viskores::cont::DataSet outputClosed = closedFormFilter.Execute(ds);
@@ -108,7 +108,7 @@ void TestFiberUncertainUniform()
   monteCarloFilter.SetMaxX("ensemble_max_x");
   monteCarloFilter.SetMinY("ensemble_min_y");
   monteCarloFilter.SetMaxY("ensemble_max_y");
-  monteCarloFilter->SetApproach(
+  monteCarloFilter.SetApproach(
     viskores::filter::uncertainty::FiberUncertainUniform::ApproachEnum::MonteCarlo);
 
   monteCarloFilter.SetNumberOfSamples(5000);
