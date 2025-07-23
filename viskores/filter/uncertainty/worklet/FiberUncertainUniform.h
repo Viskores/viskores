@@ -45,9 +45,9 @@ public:
   MultiVariateMonteCarlo(const viskores::Range& minAxis,
                          const viskores::Range& maxAxis,
                          const viskores::Id numSamples)
-    : InputBottomLeft(
+    : inputBottomLeft(
         viskores::Pair<viskores::Float64, viskores::Float64>(minAxis.Min, minAxis.Max))
-    , InputTopRight(viskores::Pair<viskores::Float64, viskores::Float64>(maxAxis.Min, maxAxis.Max))
+    , inputTopRight(viskores::Pair<viskores::Float64, viskores::Float64>(maxAxis.Min, maxAxis.Max))
     , NumSamples(numSamples){};
 
   using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut);
@@ -64,18 +64,18 @@ public:
                                 OutCellFieldType& probability) const
   {
 
-    viskores::FloatDefault minX_user = static_cast<viskores::FloatDefault>(InputBottomLeft.first);
+    viskores::FloatDefault minX_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.first);
 
-    viskores::FloatDefault minY_user = static_cast<viskores::FloatDefault>(InputBottomLeft.second);
+    viskores::FloatDefault minY_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.second);
 
-    viskores::FloatDefault maxX_user = static_cast<viskores::FloatDefault>(InputTopRight.first);
+    viskores::FloatDefault maxX_user = static_cast<viskores::FloatDefault>(this->inputTopRight.first);
 
-    viskores::FloatDefault maxY_user = static_cast<viskores::FloatDefault>(InputTopRight.second);
+    viskores::FloatDefault maxY_user = static_cast<viskores::FloatDefault>(this->inputTopRight.second);
 
-    viskores::FloatDefault N1 = 0.0;
-    viskores::FloatDefault N2 = 0.0;
-    viskores::Id NonZeroCases = 0;
-    viskores::FloatDefault MCProbability = 0.0;
+    viskores::FloatDefault n1 = 0.0;
+    viskores::FloatDefault n2 = 0.0;
+    viskores::Id nonZeroCases = 0;
+    viskores::FloatDefault mcProbability = 0.0;
 
     viskores::FloatDefault minX_dataset = static_cast<viskores::FloatDefault>(ensembleMinX);
     viskores::FloatDefault maxX_dataset = static_cast<viskores::FloatDefault>(ensembleMaxX);
@@ -163,7 +163,7 @@ public:
       if ((minX_dataset <= maxX_user) && (minX_dataset >= minX_user) &&
           (minY_dataset <= maxY_user) && (minY_dataset >= minY_user))
       {
-        NonZeroCases = this->NumSamples;
+        nonZeroCases = this->NumSamples;
       }
     }
 
@@ -174,11 +174,11 @@ public:
       {
         for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
         {
-          N1 = GenerateN1(gen);
+          n1 = GenerateN1(gen);
 
-          if ((N1 > minX_user) && (N1 < maxX_user))
+          if ((n1 > minX_user) && (n1 < maxX_user))
           {
-            NonZeroCases++;
+            nonZeroCases++;
           }
         }
       }
@@ -192,11 +192,11 @@ public:
         for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
         {
 
-          N2 = GenerateN2(gen);
+          n2 = GenerateN2(gen);
 
-          if ((N2 > minY_user) && (N2 < maxY_user))
+          if ((n2 > minY_user) && (n2 < maxY_user))
           {
-            NonZeroCases++;
+            nonZeroCases++;
           }
         }
       }
@@ -205,27 +205,27 @@ public:
     {
       for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
       {
-        N1 = GenerateN1(gen);
-        N2 = GenerateN2(gen);
+        n1 = GenerateN1(gen);
+        n2 = GenerateN2(gen);
         // Increase the case number when the data is located in user rectangle
-        if ((N1 > minX_user) && (N1 < maxX_user) && (N2 > minY_user) && (N2 < maxY_user))
+        if ((n1 > minX_user) && (n1 < maxX_user) && (n2 > minY_user) && (n2 < maxY_user))
         {
-          NonZeroCases++;
+          nonZeroCases++;
         }
       }
     }
 
 #endif
-    MCProbability = static_cast<viskores::FloatDefault>(NonZeroCases) /
+    mcProbability = static_cast<viskores::FloatDefault>(nonZeroCases) /
       static_cast<viskores::FloatDefault>(this->NumSamples);
-    probability = MCProbability;
+    probability = mcProbability;
 
     return;
   }
 
 private:
-  viskores::Pair<viskores::Float64, viskores::Float64> InputBottomLeft;
-  viskores::Pair<viskores::Float64, viskores::Float64> InputTopRight;
+  viskores::Pair<viskores::Float64, viskores::Float64> inputBottomLeft;
+  viskores::Pair<viskores::Float64, viskores::Float64> inputTopRight;
   viskores::Id NumSamples = 1;
 };
 
@@ -233,9 +233,9 @@ class MultiVariateClosedForm : public viskores::worklet::WorkletMapField
 {
 public:
   MultiVariateClosedForm(const viskores::Range& minAxis, const viskores::Range& maxAxis)
-    : InputBottomLeft(
+    : inputBottomLeft(
         viskores::Pair<viskores::Float64, viskores::Float64>(minAxis.Min, minAxis.Max))
-    , InputTopRight(viskores::Pair<viskores::Float64, viskores::Float64>(maxAxis.Min, maxAxis.Max))
+    , inputTopRight(viskores::Pair<viskores::Float64, viskores::Float64>(maxAxis.Min, maxAxis.Max))
   {
   }
 
@@ -253,13 +253,13 @@ public:
   {
 
     viskores::FloatDefault minX_user = 0.0;
-    minX_user = static_cast<viskores::FloatDefault>(InputBottomLeft.first);
+    minX_user = static_cast<viskores::FloatDefault>(inputBottomLeft.first);
     viskores::FloatDefault minY_user = 0.0;
-    minY_user = static_cast<viskores::FloatDefault>(InputBottomLeft.second);
+    minY_user = static_cast<viskores::FloatDefault>(inputBottomLeft.second);
     viskores::FloatDefault maxX_user = 0.0;
-    maxX_user = static_cast<viskores::FloatDefault>(InputTopRight.first);
+    maxX_user = static_cast<viskores::FloatDefault>(inputTopRight.first);
     viskores::FloatDefault maxY_user = 0.0;
-    maxY_user = static_cast<viskores::FloatDefault>(InputTopRight.second);
+    maxY_user = static_cast<viskores::FloatDefault>(inputTopRight.second);
 
     viskores::FloatDefault minX_intersection = 0.0;
     viskores::FloatDefault maxX_intersection = 0.0;
@@ -336,7 +336,6 @@ public:
           (minX_intersection < maxX_intersection) && (minY_intersection < maxY_intersection))
       {
         IntersectionArea = IntersectionHeight * IntersectionWidth;
-        // The portion of trait
         IntersectionProbability = IntersectionArea / DataArea;
       }
     }
@@ -345,17 +344,17 @@ public:
   }
 
 private:
-  viskores::Pair<viskores::Float64, viskores::Float64> InputBottomLeft;
-  viskores::Pair<viskores::Float64, viskores::Float64> InputTopRight;
+  viskores::Pair<viskores::Float64, viskores::Float64> inputBottomLeft;
+  viskores::Pair<viskores::Float64, viskores::Float64> inputTopRight;
 };
 
 class MultiVariateMean : public viskores::worklet::WorkletMapField
 {
 public:
   MultiVariateMean(const viskores::Range& minAxis, const viskores::Range& maxAxis)
-    : InputBottomLeft(
+    : inputBottomLeft(
         viskores::Pair<viskores::Float64, viskores::Float64>(minAxis.Min, minAxis.Max))
-    , InputTopRight(viskores::Pair<viskores::Float64, viskores::Float64>(maxAxis.Min, maxAxis.Max))
+    , inputTopRight(viskores::Pair<viskores::Float64, viskores::Float64>(maxAxis.Min, maxAxis.Max))
   {
   }
 
@@ -374,13 +373,13 @@ public:
   {
 
     viskores::FloatDefault minX_user = 0.0;
-    minX_user = static_cast<viskores::FloatDefault>(InputBottomLeft.first);
+    minX_user = static_cast<viskores::FloatDefault>(inputBottomLeft.first);
     viskores::FloatDefault minY_user = 0.0;
-    minY_user = static_cast<viskores::FloatDefault>(InputBottomLeft.second);
+    minY_user = static_cast<viskores::FloatDefault>(inputBottomLeft.second);
     viskores::FloatDefault maxX_user = 0.0;
-    maxX_user = static_cast<viskores::FloatDefault>(InputTopRight.first);
+    maxX_user = static_cast<viskores::FloatDefault>(inputTopRight.first);
     viskores::FloatDefault maxY_user = 0.0;
-    maxY_user = static_cast<viskores::FloatDefault>(InputTopRight.second);
+    maxY_user = static_cast<viskores::FloatDefault>(inputTopRight.second);
 
     viskores::FloatDefault minX_dataset = 0.0;
     viskores::FloatDefault minY_dataset = 0.0;
@@ -411,17 +410,17 @@ public:
   }
 
 private:
-  viskores::Pair<viskores::Float64, viskores::Float64> InputBottomLeft;
-  viskores::Pair<viskores::Float64, viskores::Float64> InputTopRight;
+  viskores::Pair<viskores::Float64, viskores::Float64> inputBottomLeft;
+  viskores::Pair<viskores::Float64, viskores::Float64> inputTopRight;
 };
 
 class MultiVariateTruth : public viskores::worklet::WorkletMapField
 {
 public:
   MultiVariateTruth(const viskores::Range& minAxis, const viskores::Range& maxAxis)
-    : InputBottomLeft(
+    : inputBottomLeft(
         viskores::Pair<viskores::Float64, viskores::Float64>(minAxis.Min, minAxis.Max))
-    , InputTopRight(viskores::Pair<viskores::Float64, viskores::Float64>(maxAxis.Min, maxAxis.Max))
+    , inputTopRight(viskores::Pair<viskores::Float64, viskores::Float64>(maxAxis.Min, maxAxis.Max))
   {
   }
 
@@ -440,13 +439,13 @@ public:
   {
 
     viskores::FloatDefault minX_user = 0.0;
-    minX_user = static_cast<viskores::FloatDefault>(InputBottomLeft.first);
+    minX_user = static_cast<viskores::FloatDefault>(inputBottomLeft.first);
     viskores::FloatDefault minY_user = 0.0;
-    minY_user = static_cast<viskores::FloatDefault>(InputBottomLeft.second);
+    minY_user = static_cast<viskores::FloatDefault>(inputBottomLeft.second);
     viskores::FloatDefault maxX_user = 0.0;
-    maxX_user = static_cast<viskores::FloatDefault>(InputTopRight.first);
+    maxX_user = static_cast<viskores::FloatDefault>(inputTopRight.first);
     viskores::FloatDefault maxY_user = 0.0;
-    maxY_user = static_cast<viskores::FloatDefault>(InputTopRight.second);
+    maxY_user = static_cast<viskores::FloatDefault>(inputTopRight.second);
 
     viskores::FloatDefault minX_dataset = 0.0;
     viskores::FloatDefault minY_dataset = 0.0;
@@ -472,8 +471,8 @@ public:
   }
 
 private:
-  viskores::Pair<viskores::Float64, viskores::Float64> InputBottomLeft;
-  viskores::Pair<viskores::Float64, viskores::Float64> InputTopRight;
+  viskores::Pair<viskores::Float64, viskores::Float64> inputBottomLeft;
+  viskores::Pair<viskores::Float64, viskores::Float64> inputTopRight;
 };
 
 
