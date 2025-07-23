@@ -253,13 +253,13 @@ public:
   {
 
     viskores::FloatDefault minX_user = 0.0;
-    minX_user = static_cast<viskores::FloatDefault>(inputBottomLeft.first);
+    minX_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.first);
     viskores::FloatDefault minY_user = 0.0;
-    minY_user = static_cast<viskores::FloatDefault>(inputBottomLeft.second);
+    minY_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.second);
     viskores::FloatDefault maxX_user = 0.0;
-    maxX_user = static_cast<viskores::FloatDefault>(inputTopRight.first);
+    maxX_user = static_cast<viskores::FloatDefault>(this->inputTopRight.first);
     viskores::FloatDefault maxY_user = 0.0;
-    maxY_user = static_cast<viskores::FloatDefault>(inputTopRight.second);
+    maxY_user = static_cast<viskores::FloatDefault>(this->inputTopRight.second);
 
     viskores::FloatDefault minX_intersection = 0.0;
     viskores::FloatDefault maxX_intersection = 0.0;
@@ -373,13 +373,13 @@ public:
   {
 
     viskores::FloatDefault minX_user = 0.0;
-    minX_user = static_cast<viskores::FloatDefault>(inputBottomLeft.first);
+    minX_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.first);
     viskores::FloatDefault minY_user = 0.0;
-    minY_user = static_cast<viskores::FloatDefault>(inputBottomLeft.second);
+    minY_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.second);
     viskores::FloatDefault maxX_user = 0.0;
-    maxX_user = static_cast<viskores::FloatDefault>(inputTopRight.first);
+    maxX_user = static_cast<viskores::FloatDefault>(this->inputTopRight.first);
     viskores::FloatDefault maxY_user = 0.0;
-    maxY_user = static_cast<viskores::FloatDefault>(inputTopRight.second);
+    maxY_user = static_cast<viskores::FloatDefault>(this->inputTopRight.second);
 
     viskores::FloatDefault minX_dataset = 0.0;
     viskores::FloatDefault minY_dataset = 0.0;
