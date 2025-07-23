@@ -180,6 +180,11 @@ public:
   /// @copydoc viskores::exec::CellLocatorUniformGrid::CountAllCells
   VISKORES_EXEC viskores::IdComponent CountAllCells(const viskores::Vec3f& point) const
   {
+    //There is a memory access error on some GPU devices.
+    // Disabling for now.
+    printf("Warning: CellLocatorBoundingIntervalHierarchy::CountAllCells() is disabled.\n");
+    return 0;
+#if 0
     viskores::Vec<viskores::Id, 1> cellIdsVec = { -1 };
     viskores::Vec<viskores::Vec3f, 1> pCoordsVec = { viskores::Vec3f() };
 
@@ -192,6 +197,7 @@ public:
       return count;
 
     return 0;
+#endif
   }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
@@ -200,6 +206,12 @@ public:
                                                  CellIdsType& cellIdsVec,
                                                  ParametricCoordsVecType& pCoordsVec) const
   {
+    //There is a memory access error on some GPU devices.
+    // Disabling for now.
+    printf("Warning: CellLocatorBoundingIntervalHierarchy::FindAllCells() is disabled.\n");
+    return viskores::ErrorCode::UnknownError;
+
+#if 0
     viskores::IdComponent n = cellIdsVec.GetNumberOfComponents();
     if (pCoordsVec.GetNumberOfComponents() != n)
       return viskores::ErrorCode::InvalidNumberOfIndices;
@@ -221,6 +233,7 @@ public:
       return viskores::ErrorCode::InvalidNumberOfIndices;
 
     return status;
+#endif
   }
 
 private:
