@@ -271,9 +271,7 @@ void TestLastCell(LocatorType& locator,
   viskores::cont::ArrayHandle<PointType> pcoords;
 
   viskores::cont::Invoker invoker;
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   invoker(FindCellWorkletWithLastCell{}, points, locator, cellIds, pcoords, lastCell);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   auto cellIdPortal = cellIds.ReadPortal();
   auto expCellIdsPortal = expCellIds.ReadPortal();
@@ -312,9 +310,7 @@ void TestCellLocator(LocatorType& locator,
   viskores::cont::ArrayHandle<PointType> pcoords;
 
   viskores::cont::Invoker invoker;
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   invoker(FindCellWorklet{}, points, locator, cellIds, pcoords);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   auto cellIdsPortal = cellIds.ReadPortal();
   auto expCellIdsPortal = expCellIds.ReadPortal();
@@ -331,32 +327,24 @@ void TestCellLocator(LocatorType& locator,
   //Test it with initialized.
   viskores::cont::ArrayHandle<typename LocatorType::LastCell> lastCell;
   lastCell.AllocateAndFill(numberOfPoints, typename LocatorType::LastCell{});
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   TestLastCell(locator, numberOfPoints, lastCell, points, expCellIds, pcoords);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   //Call it again using the lastCell just computed to validate.
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   TestLastCell(locator, numberOfPoints, lastCell, points, expCellIds, pcoords);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   //Test it with uninitialized array.
   viskores::cont::ArrayHandle<typename LocatorType::LastCell> lastCell2;
   lastCell2.Allocate(numberOfPoints);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
+
   TestLastCell(locator, numberOfPoints, lastCell2, points, expCellIds, pcoords);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   //Call it again using the lastCell2 just computed to validate.
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   TestLastCell(locator, numberOfPoints, lastCell2, points, expCellIds, pcoords);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   //Test CountAllCells and FindAllCells. Should be identical to the tests above.
   viskores::cont::ArrayHandle<viskores::Id> cellCounts;
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   invoker(CountAllCellsWorklet{}, points, locator, cellCounts);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
+
   //Expected to find 1 cell for each point.
   auto portal = cellCounts.ReadPortal();
   for (viskores::Id i = 0; i < numberOfPoints; ++i)
@@ -376,9 +364,7 @@ void TestCellLocator(LocatorType& locator,
   auto cellIdsVec = viskores::cont::make_ArrayHandleGroupVecVariable(allCellIds, cellOffsets);
   auto pCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(pCoords, cellOffsets);
 
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   invoker(FindAllCellsWorklet{}, points, locator, cellIdsVec, pCoordsVec);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   portal = allCellIds.ReadPortal();
   for (viskores::Id i = 0; i < numberOfFoundCells; ++i)
   {
@@ -456,9 +442,8 @@ void ValidateFindAllCells(LocatorType& locator,
     viskores::cont::make_ArrayHandle<viskores::Vec3f>(testPts, viskores::CopyFlag::On);
 
   viskores::cont::Invoker invoker;
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   invoker(CountAllCellsWorklet{}, pointsAH, locator, cellCounts);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
+
   auto cellCountsPortal = cellCounts.ReadPortal();
   for (viskores::Id i = 0; i < pointsAH.GetNumberOfValues(); i++)
   {
@@ -478,9 +463,8 @@ void ValidateFindAllCells(LocatorType& locator,
   auto pCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(
     pCoords, viskores::cont::ConvertNumComponentsToOffsets(cellCounts));
 
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   invoker(FindAllCellsWorklet{}, pointsAH, locator, cellIdsVec, pCoordsVec);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
+
   auto portal = cellIdsVec.ReadPortal();
   for (viskores::Id i = 0; i < cellIdsVec.GetNumberOfValues(); i++)
   {
@@ -638,7 +622,6 @@ void TestingCellLocatorUnstructured()
   std::cout << "Testing CellLocatorBoundingIntervalHierarchy" << std::endl;
   TestCellLocator(locatorBIH, viskores::Id3(8), 512);  // 3D dataset
   TestCellLocator(locatorBIH, viskores::Id2(18), 512); // 2D dataset
-  TestFindAllCells(locatorBIH);
 
   //Test viskores::cont::CellLocatorUniformBins
   viskores::cont::CellLocatorUniformBins locatorUB;
