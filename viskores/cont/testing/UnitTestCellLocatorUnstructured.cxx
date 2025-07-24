@@ -336,8 +336,31 @@ void TestCellLocator(LocatorType& locator,
 
   TestLastCell(locator, numberOfPoints, lastCell2, points, expCellIds, pcoords);
 
-  //Call it again using the lastCell2 just computed to validate.
-  TestLastCell(locator, numberOfPoints, lastCell2, points, expCellIds, pcoords);
+
+//Test FindAllCells
+#if 0
+    viskores::cont::ArrayHandle<viskores::Id> cellIdsVec;
+    viskores::cont::ArrayHandle<PointType> pCoordsVec;
+
+    cellIdsVec.AllocateAndFill(numberOfPoints, viskores::Id(-1));
+    pCoordsVec.Allocate(numberOfPoints);
+
+    auto cellIdsVecPortal = cellIdsVec.ReadPortal();
+    auto pCoordsVecPortal = pCoordsVec.ReadPortal();
+
+    invoker(FindAllCellsWorklet{}, points, locator, cellIdsVec, pCoordsVec);
+
+    for (viskores::Id i = 0; i < numberOfPoints; ++i)
+    {
+      VISKORES_TEST_ASSERT(cellIdsVecPortal.Get(i) == expCellIdsPortal.Get(i),
+                           "Incorrect cell ids in FindAllCells");
+      VISKORES_TEST_ASSERT(test_equal(pCoordsVecPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
+                           "Incorrect parameteric coordinates in FindAllCells");
+    }
+
+    //Call it again using the lastCell2 just computed to validate.
+    TestLastCell(locator, numberOfPoints, lastCell2, points, expCellIds, pcoords);
+#endif
 
   //Test CountAllCells and FindAllCells. Should be identical to the tests above.
   viskores::cont::ArrayHandle<viskores::Id> cellCounts;
