@@ -331,26 +331,18 @@ void TestCellLocator(LocatorType& locator,
   //Test it with initialized.
   viskores::cont::ArrayHandle<typename LocatorType::LastCell> lastCell;
   lastCell.AllocateAndFill(numberOfPoints, typename LocatorType::LastCell{});
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   TestLastCell(locator, numberOfPoints, lastCell, points, expCellIds, pcoords);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   //Call it again using the lastCell just computed to validate.
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   TestLastCell(locator, numberOfPoints, lastCell, points, expCellIds, pcoords);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   //Test it with uninitialized array.
   viskores::cont::ArrayHandle<typename LocatorType::LastCell> lastCell2;
   lastCell2.Allocate(numberOfPoints);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   TestLastCell(locator, numberOfPoints, lastCell2, points, expCellIds, pcoords);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   //Call it again using the lastCell2 just computed to validate.
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   TestLastCell(locator, numberOfPoints, lastCell2, points, expCellIds, pcoords);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
 
   //Test CountAllCells and FindAllCells. Should be identical to the tests above.
   viskores::cont::ArrayHandle<viskores::Id> cellCounts;
