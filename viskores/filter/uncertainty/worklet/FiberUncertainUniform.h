@@ -49,20 +49,20 @@ public:
     , inputTopRight(maxAxis.Min, maxAxis.Max)
     , NumSamples(numSamples){};
 
-  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut);
+  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut, WholeArrayIn);
 
-  using ExecutionSignature = void(_1, _2, _3, _4, _5);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
-  template <typename MinX, typename MaxX, typename MinY, typename MaxY, typename OutCellFieldType>
+  template <typename MinX, typename MaxX, typename MinY, typename MaxY, typename OutCellFieldType, typename RandomPortalType>
 
   VISKORES_EXEC void operator()(const MinX& ensembleMinX,
                                 const MaxX& ensembleMaxX,
                                 const MinY& ensembleMinY,
                                 const MaxY& ensembleMaxY,
-                                OutCellFieldType& probability) const
+                                OutCellFieldType& probability,
+                                const RandomPortalType& randomPortal) const
   {
-
     viskores::FloatDefault minX_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.Min);
 
     viskores::FloatDefault minY_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.Max);
@@ -71,8 +71,6 @@ public:
 
     viskores::FloatDefault maxY_user = static_cast<viskores::FloatDefault>(this->inputTopRight.Max);
 
-    viskores::FloatDefault n1 = 0.0;
-    viskores::FloatDefault n2 = 0.0;
     viskores::Id nonZeroCases = 0;
     viskores::FloatDefault mcProbability = 0.0;
 
@@ -86,94 +84,24 @@ public:
     viskores::FloatDefault maxX_intersection = std::min(maxX_user, maxX_dataset);
     viskores::FloatDefault maxY_intersection = std::min(maxY_user, maxY_dataset);
 
-
-// Monte Carlo
-// Trait Coordinates (minX_user,minY_user) & (maxX_user,maxY_user)
-#if defined(VISKORES_CUDA) || defined(VISKORES_KOKKOS_HIP)
-    thrust::minstd_rand rng;
-    thrust::uniform_real_distribution<viskores::FloatDefault> distX(minX_dataset, maxX_dataset);
-    thrust::uniform_real_distribution<viskores::FloatDefault> distY(minY_dataset, maxY_dataset);
-
     if ((minX_dataset == maxX_dataset) && (minY_dataset == maxY_dataset))
     {
-      if ((minX_dataset <= maxX_user) && (minX_dataset >= minX_user) &&
-          (minY_dataset <= maxY_user) && (minY_dataset >= minY_user))
-      {
-        NonZeroCases = this->NumSamples;
-      }
-    }
-
-    else if ((minX_dataset < maxX_dataset) && (minY_dataset == maxY_dataset))
-    {
-      if ((minX_intersection < maxX_intersection) && (minY_dataset >= minY_user) &&
-          (minY_dataset <= maxY_user))
-      {
-        for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
-        {
-          N1 = distX(rng);
-
-          if ((N1 > minX_user) && (N1 < maxX_user))
-          {
-            NonZeroCases++;
-          }
-        }
-      }
-    }
-    else if ((minX_dataset == maxX_dataset) && (minY_dataset < maxY_dataset))
-    {
-      if ((minY_intersection < maxY_intersection) && (minX_dataset >= minX_user) &&
-          (minX_dataset <= maxX_user))
-      {
-        for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
-        {
-
-          N2 = distY(rng);
-
-          if ((N2 > minY_user) && (N2 < maxY_user))
-          {
-            NonZeroCases++;
-          }
-        }
-      }
-    }
-
-    else
-    {
-      for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
-      {
-        N1 = distX(rng);
-        N2 = distY(rng);
-        if ((N1 > minX_user) && (N1 < maxX_user) && (N2 > minY_user) && (N2 < maxY_user))
-        {
-          NonZeroCases++;
-        }
-      }
-    }
-
-#else
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<viskores::FloatDefault> GenerateN1(minX_dataset, maxX_dataset);
-    std::uniform_real_distribution<viskores::FloatDefault> GenerateN2(minY_dataset, maxY_dataset);
-
-    if ((minX_dataset == maxX_dataset) && (minY_dataset == maxY_dataset))
-    {
-
       if ((minX_dataset <= maxX_user) && (minX_dataset >= minX_user) &&
           (minY_dataset <= maxY_user) && (minY_dataset >= minY_user))
       {
         nonZeroCases = this->NumSamples;
       }
     }
-
     else if ((minX_dataset < maxX_dataset) && (minY_dataset == maxY_dataset))
     {
       if ((minX_intersection < maxX_intersection) && (minY_dataset >= minY_user) &&
           (minY_dataset <= maxY_user))
       {
+        viskores::FloatDefault rangeX = maxX_dataset - minX_dataset;
         for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
         {
-          n1 = GenerateN1(gen);
+          viskores::FloatDefault r1 = randomPortal.Get(i);
+          viskores::FloatDefault n1 = minX_dataset + r1 * rangeX;
 
           if ((n1 > minX_user) && (n1 < maxX_user))
           {
@@ -182,16 +110,16 @@ public:
         }
       }
     }
-
     else if ((minX_dataset == maxX_dataset) && (minY_dataset < maxY_dataset))
     {
       if ((minY_intersection < maxY_intersection) && (minX_dataset >= minX_user) &&
           (minX_dataset <= maxX_user))
       {
+        viskores::FloatDefault rangeY = maxY_dataset - minY_dataset;
         for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
         {
-
-          n2 = GenerateN2(gen);
+          viskores::FloatDefault r2 = randomPortal.Get(i + this->NumSamples);
+          viskores::FloatDefault n2 = minY_dataset + r2 * rangeY;
 
           if ((n2 > minY_user) && (n2 < maxY_user))
           {
@@ -202,11 +130,15 @@ public:
     }
     else
     {
+      viskores::FloatDefault rangeX = maxX_dataset - minX_dataset;
+      viskores::FloatDefault rangeY = maxY_dataset - minY_dataset;
       for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
       {
-        n1 = GenerateN1(gen);
-        n2 = GenerateN2(gen);
-        // Increase the case number when the data is located in user rectangle
+        viskores::FloatDefault r1 = randomPortal.Get(i);
+        viskores::FloatDefault r2 = randomPortal.Get(i + this->NumSamples);
+        viskores::FloatDefault n1 = minX_dataset + r1 * rangeX;
+        viskores::FloatDefault n2 = minY_dataset + r2 * rangeY;
+
         if ((n1 > minX_user) && (n1 < maxX_user) && (n2 > minY_user) && (n2 < maxY_user))
         {
           nonZeroCases++;
@@ -214,9 +146,8 @@ public:
       }
     }
 
-#endif
     mcProbability = static_cast<viskores::FloatDefault>(nonZeroCases) /
-      static_cast<viskores::FloatDefault>(this->NumSamples);
+     static_cast<viskores::FloatDefault>(this->NumSamples);
     probability = mcProbability;
 
     return;

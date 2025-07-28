@@ -25,6 +25,7 @@
 
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/Timer.h>
+#include <viskores/cont/ArrayHandleRandomUniformReal.h>
 #include <viskores/filter/uncertainty/FiberUncertainUniform.h>
 #include <viskores/filter/uncertainty/worklet/FiberUncertainUniform.h>
 
@@ -66,21 +67,26 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
     viskores::cont::ArrayCopyShallowIfPossible(ensembleMaxY.GetData(), concreteEnsembleMaxY);
 
     viskores::cont::ArrayHandle<ValueType> probability;
-    // Invoker
 
     if (this->Approach == ApproachEnum::MonteCarlo)
     {
       fieldName = "MonteCarlo";
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
                      "Adopt Monte Carlo with numsamples " << this->NumSamples);
-      this->Invoke(viskores::worklet::detail::MultiVariateMonteCarlo{ this->minAxis,
-                                                                      this->maxAxis,
-                                                                      this->NumSamples },
-                   concreteEnsembleMinX,
-                   concreteEnsembleMaxX,
-                   concreteEnsembleMinY,
-                   concreteEnsembleMaxY,
-                   probability);
+
+      viskores::cont::ArrayHandleRandomUniformReal<ValueType> randomHandle(this->NumSamples * 2);
+
+      viskores::worklet::detail::MultiVariateMonteCarlo worklet { this->minAxis, 
+                                                                  this->maxAxis, 
+                                                                  this->NumSamples };
+
+      this->Invoke(worklet,
+                        concreteEnsembleMinX,
+                        concreteEnsembleMaxX,
+                        concreteEnsembleMinY,
+                        concreteEnsembleMaxY,
+                        probability,
+                        randomHandle);
     }
     else if (this->Approach == ApproachEnum::ClosedForm)
     {
