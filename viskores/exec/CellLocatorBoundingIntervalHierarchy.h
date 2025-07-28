@@ -196,16 +196,16 @@ public:
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::FindAllCells
   template <typename CellIdsType, typename ParametricCoordsVecType>
-  VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& point,
-                                                 CellIdsType& cellIdsVec,
-                                                 ParametricCoordsVecType& pCoordsVec) const
+  VISKORES_EXEC viskores::ErrorCode FindAllCells(const viskores::Vec3f& viskoresNotUsed(point),
+                                                 CellIdsType& viskoresNotUsed(cellIdsVec),
+                                                 ParametricCoordsVecType& viskoresNotUsed(pCoordsVec)) const
   {
     //There is a memory access error on some GPU devices.
     // Disabling for now.
-    //printf("Warning: CellLocatorBoundingIntervalHierarchy::FindAllCells() is disabled.\n");
-    //return viskores::ErrorCode::UnknownError;
+    printf("Warning: CellLocatorBoundingIntervalHierarchy::FindAllCells() is disabled.\n");
+    return viskores::ErrorCode::UnknownError;
 
-#if 1
+#if 0
     viskores::IdComponent n = cellIdsVec.GetNumberOfComponents();
     if (pCoordsVec.GetNumberOfComponents() != n)
       return viskores::ErrorCode::InvalidNumberOfIndices;
