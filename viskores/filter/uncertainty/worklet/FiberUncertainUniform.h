@@ -46,10 +46,10 @@ public:
   using InputDomain = _1;
 
   template <typename MinX,
-            typename MaxX, 
-            typename MinY, 
-            typename MaxY, 
-            typename OutCellFieldType, 
+            typename MaxX,
+            typename MinY,
+            typename MaxY,
+            typename OutCellFieldType,
             typename RandomPortalType>
 
   VISKORES_EXEC void operator()(const MinX& ensembleMinX,
@@ -59,9 +59,11 @@ public:
                                 OutCellFieldType& probability,
                                 const RandomPortalType& randomPortal) const
   {
-    viskores::FloatDefault minX_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.Min);
+    viskores::FloatDefault minX_user =
+      static_cast<viskores::FloatDefault>(this->inputBottomLeft.Min);
 
-    viskores::FloatDefault minY_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.Max);
+    viskores::FloatDefault minY_user =
+      static_cast<viskores::FloatDefault>(this->inputBottomLeft.Max);
 
     viskores::FloatDefault maxX_user = static_cast<viskores::FloatDefault>(this->inputTopRight.Min);
 
@@ -143,7 +145,7 @@ public:
     }
 
     mcProbability = static_cast<viskores::FloatDefault>(nonZeroCases) /
-     static_cast<viskores::FloatDefault>(this->NumSamples);
+      static_cast<viskores::FloatDefault>(this->NumSamples);
     probability = mcProbability;
 
     return;

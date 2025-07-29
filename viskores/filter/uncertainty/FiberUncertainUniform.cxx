@@ -76,17 +76,17 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
 
       viskores::cont::ArrayHandleRandomUniformReal<ValueType> randomHandle(this->NumSamples * 2);
 
-      viskores::worklet::detail::MultiVariateMonteCarlo worklet{ this->minAxis, 
-                                                                 this->maxAxis, 
-                                                                 this->NumSamples};
+      viskores::worklet::detail::MultiVariateMonteCarlo worklet{ this->minAxis,
+                                                                 this->maxAxis,
+                                                                 this->NumSamples };
 
       this->Invoke(worklet,
-                        concreteEnsembleMinX,
-                        concreteEnsembleMaxX,
-                        concreteEnsembleMinY,
-                        concreteEnsembleMaxY,
-                        probability,
-                        randomHandle);
+                   concreteEnsembleMinX,
+                   concreteEnsembleMaxX,
+                   concreteEnsembleMinY,
+                   concreteEnsembleMaxY,
+                   probability,
+                   randomHandle);
     }
     else if (this->Approach == ApproachEnum::ClosedForm)
     {
