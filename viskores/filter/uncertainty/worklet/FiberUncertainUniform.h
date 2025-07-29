@@ -24,15 +24,6 @@
 #include <viskores/filter/uncertainty/worklet/FiberUncertainUniform.h>
 #include <viskores/worklet/WorkletMapField.h>
 
-
-#if defined(VISKORES_CUDA) || defined(VISKORES_KOKKOS_HIP)
-#include <thrust/device_vector.h>
-#include <thrust/random/linear_congruential_engine.h>
-#include <thrust/random/uniform_real_distribution.h>
-#else
-#include <random>
-#endif
-
 namespace viskores
 {
 namespace worklet
