@@ -122,7 +122,6 @@ void TestFiberUncertainUniform()
   std::cout << "Comparing outputs for " << numValues << " values." << std::endl;
   for (viskores::Id i = 0; i < numValues; ++i)
   {
-    viskores::FloatDefault diff = std::fabs(closedPortal.Get(i) - montePortal.Get(i));
     VISKORES_TEST_ASSERT(test_equal(closedPortal.Get(i), montePortal.Get(i), 0.05),
                          "Difference between ClosedForm and MonteCarlo value too large.");
   }
