@@ -23,9 +23,9 @@
 //  on Multi-Core Devices. Oak Ridge National Laboratory (ORNL),
 //  Oak Ridge, TN (United States).
 
+#include <viskores/cont/ArrayHandleRandomUniformReal.h>
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/Timer.h>
-#include <viskores/cont/ArrayHandleRandomUniformReal.h>
 #include <viskores/filter/uncertainty/FiberUncertainUniform.h>
 #include <viskores/filter/uncertainty/worklet/FiberUncertainUniform.h>
 
@@ -76,9 +76,9 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
 
       viskores::cont::ArrayHandleRandomUniformReal<ValueType> randomHandle(this->NumSamples * 2);
 
-      viskores::worklet::detail::MultiVariateMonteCarlo worklet { this->minAxis, 
-                                                                  this->maxAxis, 
-                                                                  this->NumSamples };
+      viskores::worklet::detail::MultiVariateMonteCarlo worklet{ this->minAxis, 
+                                                                 this->maxAxis, 
+                                                                 this->NumSamples};
 
       this->Invoke(worklet,
                         concreteEnsembleMinX,

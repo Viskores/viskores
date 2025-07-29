@@ -54,7 +54,12 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
-  template <typename MinX, typename MaxX, typename MinY, typename MaxY, typename OutCellFieldType, typename RandomPortalType>
+  template <typename MinX,
+            typename MaxX, 
+            typename MinY, 
+            typename MaxY, 
+            typename OutCellFieldType, 
+            typename RandomPortalType>
 
   VISKORES_EXEC void operator()(const MinX& ensembleMinX,
                                 const MaxX& ensembleMaxX,
