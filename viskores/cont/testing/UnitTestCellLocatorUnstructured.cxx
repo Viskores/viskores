@@ -287,7 +287,8 @@ void TestLastCell(LocatorType& locator,
 template <typename LocatorType, viskores::IdComponent DIMENSIONS>
 void TestCellLocator(LocatorType& locator,
                      const viskores::Vec<viskores::Id, DIMENSIONS>& dim,
-                     viskores::Id numberOfPoints)
+                     viskores::Id numberOfPoints,
+                     bool testFindAllCells = true)
 {
   auto ds = MakeTestDataSet(dim);
 
@@ -337,31 +338,6 @@ void TestCellLocator(LocatorType& locator,
   TestLastCell(locator, numberOfPoints, lastCell2, points, expCellIds, pcoords);
 
 
-//Test FindAllCells
-#if 0
-    viskores::cont::ArrayHandle<viskores::Id> cellIdsVec;
-    viskores::cont::ArrayHandle<PointType> pCoordsVec;
-
-    cellIdsVec.AllocateAndFill(numberOfPoints, viskores::Id(-1));
-    pCoordsVec.Allocate(numberOfPoints);
-
-    auto cellIdsVecPortal = cellIdsVec.ReadPortal();
-    auto pCoordsVecPortal = pCoordsVec.ReadPortal();
-
-    invoker(FindAllCellsWorklet{}, points, locator, cellIdsVec, pCoordsVec);
-
-    for (viskores::Id i = 0; i < numberOfPoints; ++i)
-    {
-      VISKORES_TEST_ASSERT(cellIdsVecPortal.Get(i) == expCellIdsPortal.Get(i),
-                           "Incorrect cell ids in FindAllCells");
-      VISKORES_TEST_ASSERT(test_equal(pCoordsVecPortal.Get(i), expPCoordsPortal.Get(i), 1e-3),
-                           "Incorrect parameteric coordinates in FindAllCells");
-    }
-
-    //Call it again using the lastCell2 just computed to validate.
-    TestLastCell(locator, numberOfPoints, lastCell2, points, expCellIds, pcoords);
-#endif
-
   //Test CountAllCells and FindAllCells. Should be identical to the tests above.
   viskores::cont::ArrayHandle<viskores::Id> cellCounts;
   invoker(CountAllCellsWorklet{}, points, locator, cellCounts);
@@ -372,25 +348,29 @@ void TestCellLocator(LocatorType& locator,
   {
     VISKORES_TEST_ASSERT(portal.Get(i) == 1, "Expected to find 1 cell for each point");
   }
-  auto numberOfFoundCells = viskores::cont::Algorithm::Reduce(cellCounts, viskores::Id(0));
 
-  //create an array to hold all of the found cells.
-  viskores::cont::ArrayHandle<viskores::Id> allCellIds;
-  viskores::cont::ArrayHandle<viskores::Vec3f> pCoords;
-  allCellIds.AllocateAndFill(numberOfFoundCells, viskores::Id(-1));
-  pCoords.Allocate(numberOfFoundCells);
-
-  viskores::cont::ArrayHandle<viskores::Id> cellOffsets =
-    viskores::cont::ConvertNumComponentsToOffsets(cellCounts);
-  auto cellIdsVec = viskores::cont::make_ArrayHandleGroupVecVariable(allCellIds, cellOffsets);
-  auto pCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(pCoords, cellOffsets);
-
-  invoker(FindAllCellsWorklet{}, points, locator, cellIdsVec, pCoordsVec);
-  portal = allCellIds.ReadPortal();
-  for (viskores::Id i = 0; i < numberOfFoundCells; ++i)
+  if (testFindAllCells)
   {
-    VISKORES_TEST_ASSERT(portal.Get(i) == expCellIds.ReadPortal().Get(i),
-                         "Found cell id out of range");
+    auto numberOfFoundCells = viskores::cont::Algorithm::Reduce(cellCounts, viskores::Id(0));
+
+    //create an array to hold all of the found cells.
+    viskores::cont::ArrayHandle<viskores::Id> allCellIds;
+    viskores::cont::ArrayHandle<viskores::Vec3f> pCoords;
+    allCellIds.AllocateAndFill(numberOfFoundCells, viskores::Id(-1));
+    pCoords.Allocate(numberOfFoundCells);
+
+    viskores::cont::ArrayHandle<viskores::Id> cellOffsets =
+      viskores::cont::ConvertNumComponentsToOffsets(cellCounts);
+    auto cellIdsVec = viskores::cont::make_ArrayHandleGroupVecVariable(allCellIds, cellOffsets);
+    auto pCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(pCoords, cellOffsets);
+
+    invoker(FindAllCellsWorklet{}, points, locator, cellIdsVec, pCoordsVec);
+    portal = allCellIds.ReadPortal();
+    for (viskores::Id i = 0; i < numberOfFoundCells; ++i)
+    {
+      VISKORES_TEST_ASSERT(portal.Get(i) == expCellIds.ReadPortal().Get(i),
+                           "Found cell id out of range");
+    }
   }
 }
 
@@ -641,8 +621,8 @@ void TestingCellLocatorUnstructured()
 
   viskores::cont::CellLocatorBoundingIntervalHierarchy locatorBIH;
   std::cout << "Testing CellLocatorBoundingIntervalHierarchy" << std::endl;
-  TestCellLocator(locatorBIH, viskores::Id3(8), 512);  // 3D dataset
-  TestCellLocator(locatorBIH, viskores::Id2(18), 512); // 2D dataset
+  TestCellLocator(locatorBIH, viskores::Id3(8), 512, false);  // 3D dataset
+  TestCellLocator(locatorBIH, viskores::Id2(18), 512, false); // 2D dataset
 
   //Test viskores::cont::CellLocatorUniformBins
   viskores::cont::CellLocatorUniformBins locatorUB;
