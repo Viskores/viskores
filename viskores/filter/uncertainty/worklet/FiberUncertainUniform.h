@@ -400,10 +400,8 @@ private:
   viskores::Range inputTopRight;
 };
 
-
-
-
 }
 }
 }
+
 #endif

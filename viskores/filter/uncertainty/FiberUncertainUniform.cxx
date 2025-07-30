@@ -29,7 +29,6 @@
 #include <viskores/filter/uncertainty/FiberUncertainUniform.h>
 #include <viskores/filter/uncertainty/worklet/FiberUncertainUniform.h>
 
-
 namespace viskores
 {
 namespace filter
@@ -41,20 +40,15 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
 {
   std::string fieldName;
 
-
   viskores::cont::Field ensembleMinX = this->GetFieldFromDataSet(0, input);
   viskores::cont::Field ensembleMaxX = this->GetFieldFromDataSet(1, input);
   viskores::cont::Field ensembleMinY = this->GetFieldFromDataSet(2, input);
   viskores::cont::Field ensembleMaxY = this->GetFieldFromDataSet(3, input);
 
-  // Output Field
   viskores::cont::UnknownArrayHandle outputProbability;
 
-
-  //  For Invoker
   auto resolveType = [&](auto concreteEnsembleMinX)
   {
-    //  Obtaining Type
     using ArrayType = std::decay_t<decltype(concreteEnsembleMinX)>;
     using ValueType = typename ArrayType::ValueType;
 

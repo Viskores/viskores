@@ -23,7 +23,6 @@
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/filter/uncertainty/FiberUncertainUniform.h>
 
-
 namespace
 {
 template <typename T>
@@ -96,7 +95,6 @@ void TestFiberUncertainUniform()
   unknownClosed.AsArrayHandle(closedArray);
   auto closedPortal = closedArray.ReadPortal();
 
-  // Run MonteCarlo approach
   viskores::filter::uncertainty::FiberUncertainUniform monteCarloFilter;
   monteCarloFilter.SetMinAxis(viskores::Pair<viskores::FloatDefault, viskores::FloatDefault>(
     static_cast<viskores::FloatDefault>(minAxis.Min),
