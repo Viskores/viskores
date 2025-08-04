@@ -1,0 +1,490 @@
+//============================================================================
+//  The contents of this file are covered by the Viskores license. See
+//  LICENSE.txt for details.
+//
+//  By contributing to this file, all contributors agree to the Developer
+//  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+//============================================================================
+
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//============================================================================
+#ifndef viskores_exec_splineevaluatestructuredgrid_h
+#define viskores_exec_splineevaluatestructuredgrid_h
+
+#include <viskores/Bounds.h>
+#include <viskores/Math.h>
+
+#include <viskores/TopologyElementTag.h>
+#include <viskores/Types.h>
+#include <viskores/VecFromPortalPermute.h>
+
+#include <viskores/cont/ArrayHandleCartesianProduct.h>
+#include <viskores/cont/ArrayHandleUniformPointCoordinates.h>
+#include <viskores/cont/CellSetStructured.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/Field.h>
+
+#include <viskores/exec/CellInside.h>
+#include <viskores/exec/ConnectivityStructured.h>
+#include <viskores/exec/ParametricCoordinates.h>
+
+namespace viskores
+{
+
+namespace exec
+{
+
+class VISKORES_ALWAYS_EXPORT SplineEvaluateStructuredGrid
+{
+
+private:
+  using FieldType = viskores::cont::ArrayHandle<viskores::FloatDefault>;
+  using AxisType = FieldType;
+  using StructuredCellSet3D = viskores::cont::CellSetStructured<3>;
+  using StructuredCellSet2D = viskores::cont::CellSetStructured<2>;
+
+  using UniformCoordsType = viskores::cont::ArrayHandleUniformPointCoordinates;
+
+  using RectilinearCoordsType =
+    viskores::cont::ArrayHandleCartesianProduct<AxisType, AxisType, AxisType>;
+  using FieldPortalType = typename FieldType::ReadPortalType;
+  using AxisPortalType = typename AxisType::ReadPortalType;
+  using UniformCoordsPortalType = typename UniformCoordsType::ReadPortalType;
+  using RectilinearPortalType = typename RectilinearCoordsType::ReadPortalType;
+
+  VISKORES_CONT static viskores::Id3 ToId3(viskores::Id2&& src)
+  {
+    return viskores::Id3(src[0], src[1], 1);
+  }
+  VISKORES_CONT static viskores::Id3 ToId3(viskores::Id&& src) { return viskores::Id3(src, 1, 1); }
+
+
+public:
+  VISKORES_CONT SplineEvaluateStructuredGrid() = default;
+
+  template <typename ArrayPortalType>
+  VISKORES_CONT SplineEvaluateStructuredGrid(const viskores::Vec3f origin,
+                                             const viskores::Vec3f spacing,
+                                             const viskores::Id3 cellDims,
+                                             const ArrayPortalType& field)
+    : Dimensions(cellDims)
+    , Origin(origin)
+    , Spacing(spacing)
+    , Field(field)
+    , IsUniform(true)
+  {
+  }
+
+  template <typename AxisType, typename ArrayPortalType>
+  VISKORES_CONT SplineEvaluateStructuredGrid(
+    viskores::cont::ArrayHandleCartesianProduct<AxisType, AxisType, AxisType> coords,
+    const ArrayPortalType& field)
+    : IsUniform(false)
+    , Field(field)
+  {
+    this->AxisPortals[0] = coords.GetFirstArray().ReadPortal();
+    this->AxisPortals[1] = coords.GetSecondArray().ReadPortal();
+    this->AxisPortals[2] = coords.GetThirdArray().ReadPortal();
+  }
+
+  VISKORES_CONT SplineEvaluateStructuredGrid(const viskores::cont::DataSet& dataSet,
+                                             const viskores::cont::Field& field,
+                                             viskores::cont::DeviceAdapterId device,
+                                             viskores::cont::Token& token)
+    : Bounds(dataSet.GetCoordinateSystem().GetBounds())
+    , DataSet(dataSet)
+    , Field(field.GetData().AsArrayHandle<FieldType>().ReadPortal())
+  {
+    auto coords = this->DataSet.GetCoordinateSystem(0).GetData();
+    auto cellSet = this->DataSet.GetCellSet();
+    this->Is3D = cellSet.IsType<StructuredCellSet3D>();
+
+    if (coords.IsType<UniformCoordsType>())
+    {
+      this->IsUniform = true;
+      std::cout << "Uniform dataset" << std::endl;
+    }
+    else if (coords.IsType<RectilinearCoordsType>())
+    {
+      this->IsUniform = false;
+      std::cout << "Rectilinear dataset" << std::endl;
+    }
+    else
+    {
+      std::cout << "Unknown dataset type" << std::endl;
+    }
+  }
+
+  VISKORES_EXEC viskores::ErrorCode Evaluate(const viskores::Vec3f& point,
+                                             viskores::FloatDefault& value) const
+  {
+    std::cout << "exec::Evaluate: " << point << std::endl;
+    std::cout << "Bounds: " << this->Bounds << std::endl;
+    //if (!this->Bounds.Contains(point))
+    //  return viskores::ErrorCode::CellNotFound;
+
+    if (this->IsUniform)
+    {
+      return this->EvaluateUniform(point, value);
+    }
+    else
+    {
+      return this->EvaluateRectilinear(point, value);
+    }
+  }
+
+private:
+  VISKORES_EXEC viskores::ErrorCode EvaluateUniform(const viskores::Vec3f& point,
+                                                    viskores::FloatDefault& value) const
+  {
+    std::cout << "exec::UniformEvaluate: " << point << std::endl;
+
+    //auto coords = this->DataSet.GetCoordinateSystem(0).GetData().AsArrayHandle<UniformCoordsType>();
+    //auto cellSet = this->DataSet.GetCellSet().AsCellSet<StructuredCellSet3D>();
+
+    //map world to index space.
+    viskores::Vec3f pointIndex;
+    pointIndex[0] = (point[0] - this->Origin[0]) / this->Spacing[0];
+    pointIndex[1] = (point[1] - this->Origin[1]) / this->Spacing[1];
+    pointIndex[2] = (point[2] - this->Origin[2]) / this->Spacing[2];
+
+    //auto cellDims = cellSet.GetCellDimensions();
+    std::cout << "Fix me: " << __LINE__ << std::endl;
+    auto cellDims = this->Dimensions;
+
+    return this->TriCubicEvaluate(cellDims, pointIndex, value);
+  }
+
+  VISKORES_EXEC viskores::Id Clamp(viskores::Id index, viskores::Id max) const
+  {
+    return viskores::Max(viskores::Id(0), viskores::Min(index, max - 1));
+  }
+
+  VISKORES_EXEC viskores::ErrorCode TriCubicEvaluate(const viskores::Id3& dims,
+                                                     const viskores::Vec3f& pointIndex,
+                                                     viskores::FloatDefault& value) const
+  {
+    viskores::Id nx = dims[0], ny = dims[1], nz = dims[2];
+    viskores::FloatDefault x = pointIndex[0], y = pointIndex[1], z = pointIndex[2];
+    // base integer coords
+    viskores::Id ix = static_cast<viskores::Id>(viskores::Floor(x));
+    viskores::Id iy = static_cast<viskores::Id>(viskores::Floor(y));
+    viskores::Id iz = static_cast<viskores::Id>(viskores::Floor(z));
+
+    // fractional offsets
+    viskores::FloatDefault tx = x - ix;
+    viskores::FloatDefault ty = y - iy;
+    viskores::FloatDefault tz = z - iz;
+
+    // Coefficients for tricubic interpolation
+    viskores::FloatDefault P[4 * 4 * 4];
+    viskores::FloatDefault C[4 * 4];
+    viskores::FloatDefault D[4];
+
+    // 1) Gather 4×4×4 neighborhood into P
+    //    P[kk][jj][ii] -> P[(kk*4 + jj)*4 + ii]
+    //    data[z0][y0][x0] -> data[(z0*ny + y0)*nx + x0]
+    for (viskores::Id kk = 0; kk < 4; ++kk)
+    {
+      viskores::Id z0 = this->Clamp(iz - 1 + kk, nz);
+      for (viskores::Id jj = 0; jj < 4; ++jj)
+      {
+        viskores::Id y0 = this->Clamp(iy - 1 + jj, ny);
+        for (viskores::Id ii = 0; ii < 4; ++ii)
+        {
+          viskores::Id x0 = this->Clamp(ix - 1 + ii, nx);
+          // flatten 3D (kk,jj,ii) to 1D:
+          viskores::Id pIndex = (kk * 4 + jj) * 4 + ii;
+          // flatten volume coords: (x0,y0,z0) -> 1D index
+          viskores::Id dIndex = (z0 * ny + y0) * nx + x0;
+          P[pIndex] = this->Field.Get(dIndex);
+        }
+      }
+    }
+
+    // 2) Interpolate in X for each (kk, jj) → C[kk][jj]
+    //    C[kk][jj] -> C[kk*4 + jj]
+    for (viskores::Id kk = 0; kk < 4; ++kk)
+    {
+      for (viskores::Id jj = 0; jj < 4; ++jj)
+      {
+        // base offset for P row
+        viskores::Id baseP = (kk * 4 + jj) * 4;
+        viskores::Id cIndex = kk * 4 + jj;
+        C[cIndex] =
+          this->CubicInterpolate(P[baseP + 0], P[baseP + 1], P[baseP + 2], P[baseP + 3], tx);
+      }
+    }
+
+
+    // 3) Interpolate in Y for each kk → D[kk]
+    //    C[kk][0..3] -> C[kk*4 + 0..3]
+    for (viskores::Id kk = 0; kk < 4; ++kk)
+    {
+      D[kk] =
+        this->CubicInterpolate(C[kk * 4 + 0], C[kk * 4 + 1], C[kk * 4 + 2], C[kk * 4 + 3], ty);
+    }
+
+    // 4) Interpolate in Z across D[0..3]
+    value = this->CubicInterpolate(D[0], D[1], D[2], D[3], tz);
+    return viskores::ErrorCode::Success;
+  }
+
+  // 1D cubic‐convolution (Catmull–Rom) kernel
+  // given four samples p0,p1,p2,p3 and relative t in [0,1]
+  VISKORES_EXEC viskores::FloatDefault CubicInterpolate(viskores::FloatDefault p0,
+                                                        viskores::FloatDefault p1,
+                                                        viskores::FloatDefault p2,
+                                                        viskores::FloatDefault p3,
+                                                        viskores::FloatDefault t) const
+  {
+    // Catmull–Rom basis: a = –0.5
+    const viskores::FloatDefault a = -0.5;
+    viskores::FloatDefault t2 = t * t;
+    viskores::FloatDefault t3 = t2 * t;
+
+    viskores::FloatDefault m0 = (p2 - p0) * 0.5;
+    viskores::FloatDefault m1 = (p3 - p1) * 0.5;
+    viskores::FloatDefault d0 = p1;
+    viskores::FloatDefault d1 = p2;
+
+    // Hermite form: h00, h10, h01, h11
+    viskores::FloatDefault h00 = 2 * t3 - 3 * t2 + 1;
+    viskores::FloatDefault h10 = t3 - 2 * t2 + t;
+    viskores::FloatDefault h01 = -2 * t3 + 3 * t2;
+    viskores::FloatDefault h11 = t3 - t2;
+
+    return h00 * d0 + h10 * m0 + h01 * d1 + h11 * m1;
+  }
+
+  VISKORES_EXEC viskores::Id FindIndex(const AxisPortalType& axis, viskores::FloatDefault val) const
+  {
+    viskores::Id N = axis.GetNumberOfValues();
+    // 1) Binary search for the largest index i with coords[i] <= val
+    viskores::Id left = 0;
+    viskores::Id right = N - 1;
+    while (left <= right)
+    {
+      viskores::Id mid = left + (right - left) / 2;
+      if (axis.Get(mid) <= val)
+      {
+        // mid is still ≤ val, so it might be our i
+        left = mid + 1;
+      }
+      else
+      {
+        // coords[mid] > val, so the index we want is below mid
+        right = mid - 1;
+      }
+    }
+    // when loop ends, `right` is the last index where coords[right] <= val
+    viskores::Id i = right;
+
+    // 2) Clamp i into [1, N-3]
+    if (i < 1)
+      i = 1;
+    else if (i > N - 3)
+      i = N - 3;
+
+    return i;
+  }
+
+  // Clamp i into the valid index range [0, n-1]
+  VISKORES_EXEC viskores::Id Clamp(viskores::Id i, viskores::Id n)
+  {
+    if (i < 0)
+      return 0;
+    else if (i >= n)
+      return n - 1;
+    else
+      return i;
+  }
+
+  VISKORES_EXEC
+  viskores::FloatDefault CubicInterpolateNonUniform(viskores::FloatDefault x0,
+                                                    viskores::FloatDefault x1,
+                                                    viskores::FloatDefault x2,
+                                                    viskores::FloatDefault x3,
+                                                    viskores::FloatDefault p0,
+                                                    viskores::FloatDefault p1,
+                                                    viskores::FloatDefault p2,
+                                                    viskores::FloatDefault p3,
+                                                    viskores::FloatDefault x) const
+  {
+    // 1) Compute interval lengths
+    viskores::FloatDefault h0 = x1 - x0;
+    viskores::FloatDefault h1 = x2 - x1;
+    viskores::FloatDefault h2 = x3 - x2;
+    if (h0 <= 0 || h1 <= 0 || h2 <= 0)
+      throw std::runtime_error(
+        "cubicInterpolateNonUniform: coordinates must be strictly increasing");
+
+    // 2) Compute right‐hand sides for second‐derivative system
+    viskores::FloatDefault rhs1 = 6.0 * ((p2 - p1) / h1 - (p1 - p0) / h0);
+    viskores::FloatDefault rhs2 = 6.0 * ((p3 - p2) / h2 - (p2 - p1) / h1);
+
+    // 3) Build and solve the 2×2 system:
+    //     [2(h0+h1)   h1      ][d2_1] = [rhs1]
+    //     [  h1     2(h1+h2)  ][d2_2]   [rhs2]
+    viskores::FloatDefault a11 = 2.0 * (h0 + h1);
+    viskores::FloatDefault a12 = h1;
+    viskores::FloatDefault a21 = h1;
+    viskores::FloatDefault a22 = 2.0 * (h1 + h2);
+    viskores::FloatDefault det = a11 * a22 - a12 * a21;
+    if (det == 0.0)
+      throw std::runtime_error("cubicInterpolateNonUniform: degenerate knot spacing");
+    viskores::FloatDefault d2_1 = (rhs1 * a22 - a12 * rhs2) / det;
+    viskores::FloatDefault d2_2 = (a11 * rhs2 - rhs1 * a21) / det;
+
+    // 4) Map x into local parameter t ∈ [0,1] on [x1,x2]
+    viskores::FloatDefault t = (x - x1) / h1;
+
+    // 5) Hermite form of the natural cubic on [x1, x2]
+    viskores::FloatDefault A = 1.0 - t;
+    viskores::FloatDefault B = t;
+    viskores::FloatDefault h1_sq = h1 * h1;
+    viskores::FloatDefault term1 = (A * A * A - A) * (h1_sq / 6.0) * d2_1;
+    viskores::FloatDefault term2 = (B * B * B - B) * (h1_sq / 6.0) * d2_2;
+
+    // 6) Combine the linear and curvature parts
+    return A * p1 + B * p2 + term1 + term2;
+  }
+
+  VISKORES_EXEC viskores::ErrorCode EvaluateRectilinear(const viskores::Vec3f& point,
+                                                        viskores::FloatDefault& value) const
+  {
+    std::cout << "exec::RectEvaluate: " << point << std::endl;
+
+    auto x = point[0];
+    auto y = point[1];
+    auto z = point[2];
+
+    viskores::Id nx = this->AxisPortals[0].GetNumberOfValues();
+    viskores::Id ny = this->AxisPortals[1].GetNumberOfValues();
+    viskores::Id nz = this->AxisPortals[2].GetNumberOfValues();
+
+    viskores::Id iu = this->FindIndex(this->AxisPortals[0], point[0]);
+    viskores::Id iv = this->FindIndex(this->AxisPortals[1], point[1]);
+    viskores::Id iw = this->FindIndex(this->AxisPortals[2], point[2]);
+
+    if (nz < 4)
+    {
+      std::cout << "FIX ME: " << __LINE__ << std::endl;
+      value = 0.0f;
+      return viskores::ErrorCode::Success;
+#if 0
+      // --- bicubic: gather a 4×4 patch in X–Y at single k = clamp(iw,0,ny−1) ---
+      double P2d[4 * 4];
+      for (viskores::Id jj = 0; jj < 4; ++jj)
+      {
+        viskores::Id j = clamp(iv - 1 + jj, ny);
+        for (viskores::Id ii = 0; ii < 4; ++ii)
+        {
+          viskores::Id i = clamp(iu - 1 + ii, nx);
+          // flatten (i,j, 0) → data index
+          P2d[jj * 4 + ii] = data.Get((j * nx) + i);
+        }
+      }
+      // 3) bicubic along X → C2[4]
+      double C2[4];
+      for (int jj = 0; jj < 4; ++jj)
+      {
+        auto x0 = xCoords.Get(iu - 1), x1 = xCoords.Get(iu), x2 = xCoords.Get(iu + 1),
+             x3 = xCoords.Get(iu + 2);
+        C2[jj] = cubicInterpolateNonUniform(
+          x0, x1, x2, x3, P2d[jj * 4 + 0], P2d[jj * 4 + 1], P2d[jj * 4 + 2], P2d[jj * 4 + 3], x);
+      }
+      // 4) bicubic along Y on C2 → final
+      auto y0 = yCoords.Get(iv - 1), y1 = yCoords.Get(iv), y2 = yCoords.Get(iv + 1),
+           y3 = yCoords.Get(iv + 2);
+      return cubicInterpolateNonUniform(y0, y1, y2, y3, C2[0], C2[1], C2[2], C2[3], y);
+#endif
+    }
+
+    viskores::FloatDefault P[4 * 4 * 4];
+    for (viskores::Id kk = 0; kk < 4; ++kk)
+    {
+      viskores::Id k = this->Clamp(iw - 1 + kk, nz);
+      for (viskores::Id jj = 0; jj < 4; ++jj)
+      {
+        viskores::Id j = this->Clamp(iv - 1 + jj, ny);
+        for (viskores::Id ii = 0; ii < 4; ++ii)
+        {
+          viskores::Id i = this->Clamp(iu - 1 + ii, nx);
+          auto pIndex = (kk * 4 + jj) * 4 + ii;
+          auto dIndex = (k * ny + j) * nx + i;
+          P[pIndex] = this->Field.Get(dIndex);
+        }
+      }
+    }
+
+    // interpolate in X for each (kk,jj) → Cbuf[16]
+    viskores::FloatDefault Cbuf[4 * 4];
+    for (int kk = 0; kk < 4; ++kk)
+      for (int jj = 0; jj < 4; ++jj)
+      {
+        auto x0 = this->AxisPortals[0].Get(iu - 1);
+        auto x1 = this->AxisPortals[0].Get(iu);
+        auto x2 = this->AxisPortals[0].Get(iu + 1);
+        auto x3 = this->AxisPortals[0].Get(iu + 2);
+        auto p0 = P[(kk * 4 + jj) * 4 + 0];
+        auto p1 = P[(kk * 4 + jj) * 4 + 1];
+        auto p2 = P[(kk * 4 + jj) * 4 + 2];
+        auto p3 = P[(kk * 4 + jj) * 4 + 3];
+        Cbuf[kk * 4 + jj] = this->CubicInterpolateNonUniform(x0, x1, x2, x3, p0, p1, p2, p3, x);
+      }
+
+    // interpolate in Y → D[4]
+    viskores::FloatDefault D[4];
+    for (int kk = 0; kk < 4; ++kk)
+    {
+      auto y0 = this->AxisPortals[1].Get(iv - 1);
+      auto y1 = this->AxisPortals[1].Get(iv);
+      auto y2 = this->AxisPortals[1].Get(iv + 1);
+      auto y3 = this->AxisPortals[1].Get(iv + 2);
+      D[kk] = this->CubicInterpolateNonUniform(
+        y0, y1, y2, y3, Cbuf[kk * 4 + 0], Cbuf[kk * 4 + 1], Cbuf[kk * 4 + 2], Cbuf[kk * 4 + 3], y);
+    }
+
+    // interpolate in Z
+    auto z0 = this->AxisPortals[2].Get(iw - 1);
+    auto z1 = this->AxisPortals[2].Get(iw);
+    auto z2 = this->AxisPortals[2].Get(iw + 1);
+    auto z3 = this->AxisPortals[2].Get(iw + 2);
+    value = this->CubicInterpolateNonUniform(z0, z1, z2, z3, D[0], D[1], D[2], D[3], z);
+
+    return viskores::ErrorCode::Success;
+  }
+
+
+  VISKORES_EXEC
+  inline bool IsInside(const viskores::Vec3f& point) const
+  {
+    bool inside = true;
+    return inside;
+  }
+
+  viskores::Vec3f Origin;
+  viskores::Vec3f Spacing;
+  viskores::Id3 Dimensions;
+
+  AxisPortalType AxisPortals[3];
+
+
+  viskores::Bounds Bounds;
+  viskores::cont::DataSet DataSet;
+  FieldPortalType Field;
+  bool IsUniform = false;
+  bool Is3D = false;
+};
+} //namespace exec
+} //namespace viskores
+
+#endif //viskores_exec_splineevaluatestructuredgrid_h

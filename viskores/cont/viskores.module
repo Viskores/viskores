@@ -13,3 +13,4 @@ TEST_OPTIONAL_DEPENDS
   viskores_filter_field_conversion
 TEST_DEPENDS
   viskores_source
+  viskores_io
