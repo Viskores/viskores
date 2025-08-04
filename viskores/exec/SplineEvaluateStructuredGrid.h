@@ -162,11 +162,6 @@ private:
     return this->TriCubicEvaluate(cellDims, pointIndex, value);
   }
 
-  VISKORES_EXEC viskores::Id Clamp(viskores::Id index, viskores::Id max) const
-  {
-    return viskores::Max(viskores::Id(0), viskores::Min(index, max - 1));
-  }
-
   VISKORES_EXEC viskores::ErrorCode TriCubicEvaluate(const viskores::Id3& dims,
                                                      const viskores::Vec3f& pointIndex,
                                                      viskores::FloatDefault& value) const
@@ -193,13 +188,13 @@ private:
     //    data[z0][y0][x0] -> data[(z0*ny + y0)*nx + x0]
     for (viskores::Id kk = 0; kk < 4; ++kk)
     {
-      viskores::Id z0 = this->Clamp(iz - 1 + kk, nz);
+      viskores::Id z0 = viskores::Clamp(iz - 1 + kk, 0, nz);
       for (viskores::Id jj = 0; jj < 4; ++jj)
       {
-        viskores::Id y0 = this->Clamp(iy - 1 + jj, ny);
+        viskores::Id y0 = viskores::Clamp(iy - 1 + jj, 0, ny);
         for (viskores::Id ii = 0; ii < 4; ++ii)
         {
-          viskores::Id x0 = this->Clamp(ix - 1 + ii, nx);
+          viskores::Id x0 = viskores::Clamp(ix - 1 + ii, 0, nx);
           // flatten 3D (kk,jj,ii) to 1D:
           viskores::Id pIndex = (kk * 4 + jj) * 4 + ii;
           // flatten volume coords: (x0,y0,z0) -> 1D index
@@ -411,13 +406,13 @@ private:
     viskores::FloatDefault P[4 * 4 * 4];
     for (viskores::Id kk = 0; kk < 4; ++kk)
     {
-      viskores::Id k = this->Clamp(iw - 1 + kk, nz);
+      viskores::Id k = viskores::Clamp(iw - 1 + kk, 0, nz);
       for (viskores::Id jj = 0; jj < 4; ++jj)
       {
-        viskores::Id j = this->Clamp(iv - 1 + jj, ny);
+        viskores::Id j = viskores::Clamp(iv - 1 + jj, 0, ny);
         for (viskores::Id ii = 0; ii < 4; ++ii)
         {
-          viskores::Id i = this->Clamp(iu - 1 + ii, nx);
+          viskores::Id i = viskores::Clamp(iu - 1 + ii, 0, nx);
           auto pIndex = (kk * 4 + jj) * 4 + ii;
           auto dIndex = (k * ny + j) * nx + i;
           P[pIndex] = this->Field.Get(dIndex);

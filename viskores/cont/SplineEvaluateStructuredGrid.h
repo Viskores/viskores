@@ -27,7 +27,7 @@ namespace cont
 class VISKORES_CONT_EXPORT SplineEvaluateStructuredGrid : public viskores::cont::ExecutionObjectBase
 {
 public:
-  VISKORES_CONT SplineEvaluateStructuredGrid(viskores::cont::DataSet& dataSet,
+  VISKORES_CONT SplineEvaluateStructuredGrid(const viskores::cont::DataSet& dataSet,
                                              const std::string& fieldName)
     : DataSet(dataSet)
     , FieldName(fieldName)

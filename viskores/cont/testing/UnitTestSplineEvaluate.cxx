@@ -99,36 +99,36 @@ viskores::cont::DataSet MakeDataSet3D(viskores::Id3 dims)
   return ds;
 }
 
-viskores::cont::DataSet MakeRectDataSet3D()
+viskores::cont::DataSet MakeRectDataSet3D(viskores::Id3 dims)
 {
   viskores::cont::DataSetBuilderRectilinear builder;
-  viskores::FloatDefault x = 0;
-  std::vector<viskores::FloatDefault> xcoords;
-  while (x <= 1.0f)
-  {
-    xcoords.push_back(x);
-    x += 0.005f;
-  }
+  std::vector<viskores::FloatDefault> xcoords, ycoords, zcoords;
+  viskores::FloatDefault dx = 1.0f / (dims[0] - 1);
+  viskores::FloatDefault dy = 1.0f / (dims[1] - 1);
+  viskores::FloatDefault dz = 1.0f / (dims[2] - 1);
 
-  auto ycoords = xcoords;
-  auto zcoords = xcoords;
+  viskores::FloatDefault x = 0, y = 0, z = 0;
+  for (viskores::Id i = 0; i < dims[0]; i++, x += dx)
+    xcoords.push_back(x);
+  for (viskores::Id i = 0; i < dims[1]; i++, y += dy)
+    ycoords.push_back(y);
+  for (viskores::Id i = 0; i < dims[2]; i++, z += dz)
+    zcoords.push_back(z);
+
   auto ds = builder.Create(xcoords, ycoords, zcoords);
   viskores::cont::Invoker invoker;
   viskores::cont::ArrayHandle<viskores::FloatDefault> fieldArray;
   invoker(GenerateData(), ds.GetCoordinateSystem(), fieldArray);
   ds.AddPointField("field", fieldArray);
 
-  viskores::io::VTKDataSetWriter writer("testDataSet.vtk");
+  viskores::io::VTKDataSetWriter writer("testRectDataSet.vtk");
   writer.WriteDataSet(ds);
 
   return ds;
 }
 
-void TestTest()
+void RunTest(const viskores::cont::DataSet& ds)
 {
-  //auto ds = MakeDataSet3D(viskores::Id3(10, 10, 10));
-  auto ds = MakeRectDataSet3D();
-
   viskores::cont::SplineEvaluateStructuredGrid eval(ds, "field");
 
   viskores::cont::Invoker invoke;
@@ -154,6 +154,40 @@ void TestTest()
               << " Expected: " << expectedValues[i] << " Diff= " << diff << std::endl;
     //VISKORES_ASSERT(value == expectedValues[i]);
   }
+}
+
+void TestTest()
+{
+  viskores::Id3 dims(100, 100, 100);
+  RunTest(MakeDataSet3D(dims));
+  RunTest(MakeRectDataSet3D(dims));
+
+#if 0
+
+  viskores::cont::Invoker invoke;
+  viskores::cont::ArrayHandle<viskores::Vec3f> points;
+  viskores::cont::ArrayHandle<viskores::FloatDefault> results;
+  EvalWorklet evalWorklet;
+  std::vector<viskores::Vec3f> pointData = { { 0.15235f, 0.1525f, 0.15342f },
+                                             { 0.252351f, 0.3986f, 0.1589f },
+                                             { 0.85219f, 0.15764f, 0.7469f } };
+  std::vector<viskores::FloatDefault> expectedValues;
+  for (const auto& pt : pointData)
+    expectedValues.push_back(EvaluateNormalizedGyroid(pt));
+
+  points = viskores::cont::make_ArrayHandle(pointData, viskores::CopyFlag::On);
+  invoke(evalWorklet, points, eval, results);
+
+  auto portal = results.ReadPortal();
+  for (viskores::Id i = 0; i < portal.GetNumberOfValues(); i++)
+  {
+    auto value = portal.Get(i);
+    auto diff = value - expectedValues[i];
+    std::cout << "Point: " << pointData[i] << " Value: " << value
+              << " Expected: " << expectedValues[i] << " Diff= " << diff << std::endl;
+    //VISKORES_ASSERT(value == expectedValues[i]);
+  }
+#endif
 }
 
 } // anonymous namespace
