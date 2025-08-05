@@ -203,16 +203,11 @@ class VISKORES_ALWAYS_EXPORT SplineEvaluateRectilinearGrid
 private:
   using FieldType = viskores::cont::ArrayHandle<viskores::FloatDefault>;
   using AxisType = FieldType;
-  //using StructuredCellSet3D = viskores::cont::CellSetStructured<3>;
-  //using StructuredCellSet2D = viskores::cont::CellSetStructured<2>;
-
-  //using UniformCoordsType = viskores::cont::ArrayHandleUniformPointCoordinates;
 
   using RectilinearCoordsType =
     viskores::cont::ArrayHandleCartesianProduct<AxisType, AxisType, AxisType>;
   using FieldPortalType = typename FieldType::ReadPortalType;
   using AxisPortalType = typename AxisType::ReadPortalType;
-  //using UniformCoordsPortalType = typename UniformCoordsType::ReadPortalType;
   using RectilinearPortalType = typename RectilinearCoordsType::ReadPortalType;
 
 public:
@@ -251,27 +246,6 @@ public:
   }
 
 private:
-  VISKORES_EXEC viskores::ErrorCode EvaluateUniform(const viskores::Vec3f& point,
-                                                    viskores::FloatDefault& value) const
-  {
-    std::cout << "exec::UniformEvaluate: " << point << std::endl;
-
-    //auto coords = this->DataSet.GetCoordinateSystem(0).GetData().AsArrayHandle<UniformCoordsType>();
-    //auto cellSet = this->DataSet.GetCellSet().AsCellSet<StructuredCellSet3D>();
-
-    //map world to index space.
-    viskores::Vec3f pointIndex;
-    pointIndex[0] = (point[0] - this->Origin[0]) / this->Spacing[0];
-    pointIndex[1] = (point[1] - this->Origin[1]) / this->Spacing[1];
-    pointIndex[2] = (point[2] - this->Origin[2]) / this->Spacing[2];
-
-    //auto cellDims = cellSet.GetCellDimensions();
-    std::cout << "Fix me: " << __LINE__ << std::endl;
-    auto cellDims = this->Dimensions;
-
-    return internal::TriCubicEvaluate(cellDims, pointIndex, this->Field, value);
-  }
-
   VISKORES_EXEC viskores::ErrorCode TriCubicEvaluate2(const viskores::Id3& dims,
                                                       const viskores::Vec3f& pointIndex,
                                                       viskores::FloatDefault& value) const
