@@ -207,15 +207,15 @@ public:
     this->AxisPortals[1] = coords.GetSecondArray().ReadPortal();
     this->AxisPortals[2] = coords.GetThirdArray().ReadPortal();
 
-    viskores::Id nx = this->AxisPortals[0].GetNumberOfValues();
-    viskores::Id ny = this->AxisPortals[1].GetNumberOfValues();
-    viskores::Id nz = this->AxisPortals[2].GetNumberOfValues();
+    this->NumX = this->AxisPortals[0].GetNumberOfValues();
+    this->NumY = this->AxisPortals[1].GetNumberOfValues();
+    this->NumZ = this->AxisPortals[2].GetNumberOfValues();
     this->Bounds = viskores::Bounds(this->AxisPortals[0].Get(0),
-                                    this->AxisPortals[0].Get(nx - 1),
+                                    this->AxisPortals[0].Get(this->NumX - 1),
                                     this->AxisPortals[1].Get(0),
-                                    this->AxisPortals[1].Get(ny - 1),
+                                    this->AxisPortals[1].Get(this->NumY - 1),
                                     this->AxisPortals[2].Get(0),
-                                    this->AxisPortals[2].Get(nz - 1));
+                                    this->AxisPortals[2].Get(this->NumZ - 1));
   }
 
   VISKORES_EXEC viskores::ErrorCode Evaluate(const viskores::Vec3f& point,
@@ -230,9 +230,10 @@ public:
   }
 
 private:
-  VISKORES_EXEC viskores::Id FindIndex(const AxisPortalType& axis, viskores::FloatDefault val) const
+  VISKORES_EXEC viskores::Id FindIndex(const AxisPortalType& axis,
+                                       const viskores::Id& N,
+                                       viskores::FloatDefault val) const
   {
-    viskores::Id N = axis.GetNumberOfValues();
     // 1) Binary search for the largest index i with coords[i] <= val
     viskores::Id left = 0;
     viskores::Id right = N - 1;
@@ -321,15 +322,11 @@ private:
     auto y = point[1];
     auto z = point[2];
 
-    viskores::Id nx = this->AxisPortals[0].GetNumberOfValues();
-    viskores::Id ny = this->AxisPortals[1].GetNumberOfValues();
-    viskores::Id nz = this->AxisPortals[2].GetNumberOfValues();
+    viskores::Id iu = this->FindIndex(this->AxisPortals[0], this->NumX, point[0]);
+    viskores::Id iv = this->FindIndex(this->AxisPortals[1], this->NumY, point[1]);
+    viskores::Id iw = this->FindIndex(this->AxisPortals[2], this->NumZ, point[2]);
 
-    viskores::Id iu = this->FindIndex(this->AxisPortals[0], point[0]);
-    viskores::Id iv = this->FindIndex(this->AxisPortals[1], point[1]);
-    viskores::Id iw = this->FindIndex(this->AxisPortals[2], point[2]);
-
-    if (nz < 4)
+    if (this->NumZ < 4)
     {
       std::cout << "FIX ME: " << __LINE__ << std::endl;
       value = 0.0f;
@@ -366,15 +363,15 @@ private:
     viskores::FloatDefault P[4 * 4 * 4];
     for (viskores::Id kk = 0; kk < 4; ++kk)
     {
-      viskores::Id k = viskores::Clamp(iw - 1 + kk, 0, nz);
+      viskores::Id k = viskores::Clamp(iw - 1 + kk, 0, this->NumZ);
       for (viskores::Id jj = 0; jj < 4; ++jj)
       {
-        viskores::Id j = viskores::Clamp(iv - 1 + jj, 0, ny);
+        viskores::Id j = viskores::Clamp(iv - 1 + jj, 0, this->NumY);
         for (viskores::Id ii = 0; ii < 4; ++ii)
         {
-          viskores::Id i = viskores::Clamp(iu - 1 + ii, 0, nx);
+          viskores::Id i = viskores::Clamp(iu - 1 + ii, 0, this->NumX);
           auto pIndex = (kk * 4 + jj) * 4 + ii;
-          auto dIndex = (k * ny + j) * nx + i;
+          auto dIndex = (k * this->NumY + j) * this->NumX + i;
           P[pIndex] = this->Field.Get(dIndex);
         }
       }
@@ -421,6 +418,9 @@ private:
   AxisPortalType AxisPortals[3];
   viskores::Bounds Bounds;
   FieldPortalType Field;
+  viskores::Id NumX;
+  viskores::Id NumY;
+  viskores::Id NumZ;
 };
 } //namespace exec
 } //namespace viskores
