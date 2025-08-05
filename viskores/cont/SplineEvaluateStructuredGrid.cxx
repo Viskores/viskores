@@ -35,43 +35,41 @@ using RectCoordsType =
                                               viskores::cont::ArrayHandle<viskores::FloatDefault>>;
 
 
-viskores::exec::SplineEvaluateStructuredGrid SplineEvaluateStructuredGrid::PrepareForExecution(
+viskores::exec::SplineEvaluateUniformGrid SplineEvaluateUniformGrid::PrepareForExecution(
   viskores::cont::DeviceAdapterId device,
   viskores::cont::Token& token) const
 {
+  if (!this->DataSet.GetCoordinateSystem(0).GetData().IsType<UniformCoordsType>())
+    throw viskores::cont::ErrorBadType("Coordinates are not uniform type.");
+
   viskores::cont::ArrayHandle<viskores::FloatDefault> fieldArray;
   this->DataSet.GetField(this->FieldName).GetData().AsArrayHandle(fieldArray);
-  auto cellSet = this->DataSet.GetCellSet();
-  bool is3D;
-  if (cellSet.IsType<Structured2DType>())
-    is3D = false;
-  else if (cellSet.IsType<Structured3DType>())
-    is3D = true;
 
-  if (this->DataSet.GetCoordinateSystem(0).GetData().IsType<UniformCoordsType>())
-  {
-    std::cout << __FILE__ << " " << __LINE__ << std::endl;
+  auto coords = this->DataSet.GetCoordinateSystem(0).GetData().AsArrayHandle<UniformCoordsType>();
+  auto origin = coords.GetOrigin();
+  auto spacing = coords.GetSpacing();
+  auto dims = coords.GetDimensions();
 
-    auto coords = this->DataSet.GetCoordinateSystem(0).GetData().AsArrayHandle<UniformCoordsType>();
+  return viskores::exec::SplineEvaluateUniformGrid(
+    origin, spacing, dims, fieldArray.PrepareForInput(device, token));
+}
 
-    auto origin = coords.GetOrigin();
-    auto spacing = coords.GetSpacing();
-    auto dims = coords.GetDimensions();
 
-    return viskores::exec::SplineEvaluateStructuredGrid(
-      origin, spacing, dims, fieldArray.PrepareForInput(device, token));
-  }
-  else if (this->DataSet.GetCoordinateSystem(0).GetData().IsType<RectCoordsType>())
-  {
-    RectCoordsType coords;
-    coords = this->DataSet.GetCoordinateSystem(0).GetData().AsArrayHandle<RectCoordsType>();
+viskores::exec::SplineEvaluateRectilinearGrid SplineEvaluateRectilinearGrid::PrepareForExecution(
+  viskores::cont::DeviceAdapterId device,
+  viskores::cont::Token& token) const
+{
+  if (!this->DataSet.GetCoordinateSystem(0).GetData().IsType<RectCoordsType>())
+    throw viskores::cont::ErrorBadType("Coordinates are not rectilinear type.");
 
-    return viskores::exec::SplineEvaluateStructuredGrid(coords,
-                                                        fieldArray.PrepareForInput(device, token));
-  }
+  viskores::cont::ArrayHandle<viskores::FloatDefault> fieldArray;
+  this->DataSet.GetField(this->FieldName).GetData().AsArrayHandle(fieldArray);
 
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
-  return viskores::exec::SplineEvaluateStructuredGrid();
+  RectCoordsType coords;
+  coords = this->DataSet.GetCoordinateSystem(0).GetData().AsArrayHandle<RectCoordsType>();
+
+  return viskores::exec::SplineEvaluateRectilinearGrid(coords,
+                                                       fieldArray.PrepareForInput(device, token));
 }
 
 } //namespace cont

@@ -24,17 +24,17 @@ namespace viskores
 {
 namespace cont
 {
-class VISKORES_CONT_EXPORT SplineEvaluateStructuredGrid : public viskores::cont::ExecutionObjectBase
+class VISKORES_CONT_EXPORT SplineEvaluateUniformGrid : public viskores::cont::ExecutionObjectBase
 {
 public:
-  VISKORES_CONT SplineEvaluateStructuredGrid(const viskores::cont::DataSet& dataSet,
-                                             const std::string& fieldName)
+  VISKORES_CONT SplineEvaluateUniformGrid(const viskores::cont::DataSet& dataSet,
+                                          const std::string& fieldName)
     : DataSet(dataSet)
     , FieldName(fieldName)
   {
   }
 
-  viskores::exec::SplineEvaluateStructuredGrid PrepareForExecution(
+  viskores::exec::SplineEvaluateUniformGrid PrepareForExecution(
     viskores::cont::DeviceAdapterId device,
     viskores::cont::Token& token) const;
 
@@ -42,6 +42,27 @@ private:
   viskores::cont::DataSet DataSet;
   std::string FieldName;
 };
+
+class VISKORES_CONT_EXPORT SplineEvaluateRectilinearGrid
+  : public viskores::cont::ExecutionObjectBase
+{
+public:
+  VISKORES_CONT SplineEvaluateRectilinearGrid(const viskores::cont::DataSet& dataSet,
+                                              const std::string& fieldName)
+    : DataSet(dataSet)
+    , FieldName(fieldName)
+  {
+  }
+
+  viskores::exec::SplineEvaluateRectilinearGrid PrepareForExecution(
+    viskores::cont::DeviceAdapterId device,
+    viskores::cont::Token& token) const;
+
+private:
+  viskores::cont::DataSet DataSet;
+  std::string FieldName;
+};
+
 }
 } // viskores::cont
 

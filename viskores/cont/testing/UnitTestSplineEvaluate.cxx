@@ -60,7 +60,7 @@ public:
                                 const SplineEvalType& splineEval,
                                 ResultType& result) const
   {
-    auto status = splineEval.Evaluate(pointIn, result);
+    splineEval.Evaluate(pointIn, result);
   }
 };
 
@@ -127,11 +127,36 @@ viskores::cont::DataSet MakeRectDataSet3D(viskores::Id3 dims)
   return ds;
 }
 
-void RunTest(const viskores::cont::DataSet& ds)
+template <typename SplineEvalType>
+void RunTest(SplineEvalType& splineEval,
+             const std::vector<viskores::Vec3f>& points,
+             const std::vector<viskores::FloatDefault>& expectedValues)
 {
-  viskores::cont::SplineEvaluateStructuredGrid eval(ds, "field");
-
   viskores::cont::Invoker invoke;
+  viskores::cont::ArrayHandle<viskores::Vec3f> pointsHandle =
+    viskores::cont::make_ArrayHandle(points, viskores::CopyFlag::On);
+  viskores::cont::ArrayHandle<viskores::FloatDefault> results;
+
+  EvalWorklet evalWorklet;
+  invoke(evalWorklet, pointsHandle, splineEval, results);
+
+  auto portal = results.ReadPortal();
+  for (viskores::Id i = 0; i < portal.GetNumberOfValues(); i++)
+  {
+    auto value = portal.Get(i);
+    auto diff = value - expectedValues[i];
+    std::cout << "Point: " << points[i] << " Value: " << value << " Expected: " << expectedValues[i]
+              << " Diff= " << diff << std::endl;
+  }
+}
+
+void DoSplineEvalTest()
+{
+  viskores::Id3 dims(20, 20, 20);
+
+  auto dsUniform = MakeDataSet3D(dims);
+  auto dsRect = MakeRectDataSet3D(dims);
+
   viskores::cont::ArrayHandle<viskores::Vec3f> points;
   viskores::cont::ArrayHandle<viskores::FloatDefault> results;
   EvalWorklet evalWorklet;
@@ -142,57 +167,15 @@ void RunTest(const viskores::cont::DataSet& ds)
   for (const auto& pt : pointData)
     expectedValues.push_back(EvaluateNormalizedGyroid(pt));
 
-  points = viskores::cont::make_ArrayHandle(pointData, viskores::CopyFlag::On);
-  invoke(evalWorklet, points, eval, results);
+  viskores::cont::SplineEvaluateUniformGrid evalUniform(dsUniform, "field");
+  RunTest(evalUniform, pointData, expectedValues);
 
-  auto portal = results.ReadPortal();
-  for (viskores::Id i = 0; i < portal.GetNumberOfValues(); i++)
-  {
-    auto value = portal.Get(i);
-    auto diff = value - expectedValues[i];
-    std::cout << "Point: " << pointData[i] << " Value: " << value
-              << " Expected: " << expectedValues[i] << " Diff= " << diff << std::endl;
-    //VISKORES_ASSERT(value == expectedValues[i]);
-  }
+  viskores::cont::SplineEvaluateRectilinearGrid evalRect(dsRect, "field");
+  RunTest(evalUniform, pointData, expectedValues);
 }
-
-void TestTest()
-{
-  viskores::Id3 dims(100, 100, 100);
-  RunTest(MakeDataSet3D(dims));
-  RunTest(MakeRectDataSet3D(dims));
-
-#if 0
-
-  viskores::cont::Invoker invoke;
-  viskores::cont::ArrayHandle<viskores::Vec3f> points;
-  viskores::cont::ArrayHandle<viskores::FloatDefault> results;
-  EvalWorklet evalWorklet;
-  std::vector<viskores::Vec3f> pointData = { { 0.15235f, 0.1525f, 0.15342f },
-                                             { 0.252351f, 0.3986f, 0.1589f },
-                                             { 0.85219f, 0.15764f, 0.7469f } };
-  std::vector<viskores::FloatDefault> expectedValues;
-  for (const auto& pt : pointData)
-    expectedValues.push_back(EvaluateNormalizedGyroid(pt));
-
-  points = viskores::cont::make_ArrayHandle(pointData, viskores::CopyFlag::On);
-  invoke(evalWorklet, points, eval, results);
-
-  auto portal = results.ReadPortal();
-  for (viskores::Id i = 0; i < portal.GetNumberOfValues(); i++)
-  {
-    auto value = portal.Get(i);
-    auto diff = value - expectedValues[i];
-    std::cout << "Point: " << pointData[i] << " Value: " << value
-              << " Expected: " << expectedValues[i] << " Diff= " << diff << std::endl;
-    //VISKORES_ASSERT(value == expectedValues[i]);
-  }
-#endif
-}
-
 } // anonymous namespace
 
 int UnitTestSplineEvaluate(int argc, char* argv[])
 {
-  return viskores::cont::testing::Testing::Run(TestTest, argc, argv);
+  return viskores::cont::testing::Testing::Run(DoSplineEvalTest, argc, argv);
 }
