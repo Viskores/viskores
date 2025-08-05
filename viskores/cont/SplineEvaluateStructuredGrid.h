@@ -18,6 +18,7 @@
 #ifndef viskores_cont_SplineEvaluateStructuredGrid_h
 #define viskores_cont_SplineEvaluateStructuredGrid_h
 
+#include <viskores/cont/DataSet.h>
 #include <viskores/exec/SplineEvaluateStructuredGrid.h>
 
 namespace viskores

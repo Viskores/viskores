@@ -19,129 +19,17 @@
 #define viskores_exec_splineevaluatestructuredgrid_h
 
 #include <viskores/Bounds.h>
-#include <viskores/Math.h>
-
-#include <viskores/TopologyElementTag.h>
-#include <viskores/Types.h>
-#include <viskores/VecFromPortalPermute.h>
-
+#include <viskores/ErrorCode.h>
 #include <viskores/cont/ArrayHandleCartesianProduct.h>
 #include <viskores/cont/ArrayHandleUniformPointCoordinates.h>
-#include <viskores/cont/CellSetStructured.h>
-#include <viskores/cont/DataSet.h>
-#include <viskores/cont/Field.h>
-
-#include <viskores/exec/CellInside.h>
-#include <viskores/exec/ConnectivityStructured.h>
-#include <viskores/exec/ParametricCoordinates.h>
 
 namespace viskores
 {
-
 namespace exec
 {
 
-namespace internal
-{
-// 1D cubic‐convolution (Catmull–Rom) kernel
-// given four samples p0,p1,p2,p3 and relative t in [0,1]
-VISKORES_EXEC viskores::FloatDefault CubicInterpolate(viskores::FloatDefault p0,
-                                                      viskores::FloatDefault p1,
-                                                      viskores::FloatDefault p2,
-                                                      viskores::FloatDefault p3,
-                                                      viskores::FloatDefault t)
-{
-  // Catmull–Rom basis with no tension.
-  viskores::FloatDefault t2 = t * t;
-  viskores::FloatDefault t3 = t2 * t;
-
-  viskores::FloatDefault m0 = (p2 - p0) * 0.5f;
-  viskores::FloatDefault m1 = (p3 - p1) * 0.5f;
-  viskores::FloatDefault d0 = p1;
-  viskores::FloatDefault d1 = p2;
-
-  // Hermite form: h00, h10, h01, h11
-  viskores::FloatDefault h00 = 2 * t3 - 3 * t2 + 1;
-  viskores::FloatDefault h10 = t3 - 2 * t2 + t;
-  viskores::FloatDefault h01 = -2 * t3 + 3 * t2;
-  viskores::FloatDefault h11 = t3 - t2;
-
-  return h00 * d0 + h10 * m0 + h01 * d1 + h11 * m1;
-}
-
-template <typename FieldType>
-VISKORES_EXEC viskores::ErrorCode TriCubicEvaluate(const viskores::Id3& dims,
-                                                   const viskores::Vec3f& pointIndex,
-                                                   const FieldType& field,
-                                                   viskores::FloatDefault& value)
-{
-  viskores::Id nx = dims[0], ny = dims[1], nz = dims[2];
-  viskores::FloatDefault x = pointIndex[0], y = pointIndex[1], z = pointIndex[2];
-  // base integer coords
-  viskores::Id ix = static_cast<viskores::Id>(viskores::Floor(x));
-  viskores::Id iy = static_cast<viskores::Id>(viskores::Floor(y));
-  viskores::Id iz = static_cast<viskores::Id>(viskores::Floor(z));
-
-  // fractional offsets
-  viskores::FloatDefault tx = x - ix;
-  viskores::FloatDefault ty = y - iy;
-  viskores::FloatDefault tz = z - iz;
-
-  // Coefficients for tricubic interpolation
-  viskores::FloatDefault P[4 * 4 * 4];
-  viskores::FloatDefault C[4 * 4];
-  viskores::FloatDefault D[4];
-
-  // 1) Gather 4×4×4 neighborhood into P
-  //    P[kk][jj][ii] -> P[(kk*4 + jj)*4 + ii]
-  //    data[z0][y0][x0] -> data[(z0*ny + y0)*nx + x0]
-  for (viskores::Id kk = 0; kk < 4; ++kk)
-  {
-    viskores::Id z0 = viskores::Clamp(iz - 1 + kk, 0, nz);
-    for (viskores::Id jj = 0; jj < 4; ++jj)
-    {
-      viskores::Id y0 = viskores::Clamp(iy - 1 + jj, 0, ny);
-      for (viskores::Id ii = 0; ii < 4; ++ii)
-      {
-        viskores::Id x0 = viskores::Clamp(ix - 1 + ii, 0, nx);
-        // flatten 3D (kk,jj,ii) to 1D:
-        viskores::Id pIndex = (kk * 4 + jj) * 4 + ii;
-        // flatten volume coords: (x0,y0,z0) -> 1D index
-        viskores::Id dIndex = (z0 * ny + y0) * nx + x0;
-        P[pIndex] = field.Get(dIndex);
-      }
-    }
-  }
-
-  // 2) Interpolate in X for each (kk, jj) → C[kk][jj]
-  //    C[kk][jj] -> C[kk*4 + jj]
-  for (viskores::Id kk = 0; kk < 4; ++kk)
-  {
-    for (viskores::Id jj = 0; jj < 4; ++jj)
-    {
-      // base offset for P row
-      viskores::Id baseP = (kk * 4 + jj) * 4;
-      viskores::Id cIndex = kk * 4 + jj;
-      C[cIndex] = CubicInterpolate(P[baseP + 0], P[baseP + 1], P[baseP + 2], P[baseP + 3], tx);
-    }
-  }
-
-  // 3) Interpolate in Y for each kk → D[kk]
-  //    C[kk][0..3] -> C[kk*4 + 0..3]
-  for (viskores::Id kk = 0; kk < 4; ++kk)
-  {
-    D[kk] = CubicInterpolate(C[kk * 4 + 0], C[kk * 4 + 1], C[kk * 4 + 2], C[kk * 4 + 3], ty);
-  }
-
-  // 4) Interpolate in Z across D[0..3]
-  value = CubicInterpolate(D[0], D[1], D[2], D[3], tz);
-  return viskores::ErrorCode::Success;
-}
-} // namespace internal
-
 class VISKORES_ALWAYS_EXPORT SplineEvaluateUniformGrid
 {
-
 private:
   using FieldType = viskores::cont::ArrayHandle<viskores::FloatDefault>;
   using FieldPortalType = typename FieldType::ReadPortalType;
@@ -186,10 +74,107 @@ public:
     std::cout << "Fix me: " << __LINE__ << std::endl;
     auto cellDims = this->Dimensions;
 
-    return internal::TriCubicEvaluate(cellDims, pointIndex, this->Field, value);
+    return this->TriCubicEvaluate(cellDims, pointIndex, this->Field, value);
   }
 
 private:
+  template <typename FieldType>
+  VISKORES_EXEC viskores::ErrorCode TriCubicEvaluate(const viskores::Id3& dims,
+                                                     const viskores::Vec3f& pointIndex,
+                                                     const FieldType& field,
+                                                     viskores::FloatDefault& value) const
+  {
+    viskores::Id nx = dims[0], ny = dims[1], nz = dims[2];
+    viskores::FloatDefault x = pointIndex[0], y = pointIndex[1], z = pointIndex[2];
+    // base integer coords
+    viskores::Id ix = static_cast<viskores::Id>(viskores::Floor(x));
+    viskores::Id iy = static_cast<viskores::Id>(viskores::Floor(y));
+    viskores::Id iz = static_cast<viskores::Id>(viskores::Floor(z));
+
+    // fractional offsets
+    viskores::FloatDefault tx = x - ix;
+    viskores::FloatDefault ty = y - iy;
+    viskores::FloatDefault tz = z - iz;
+
+    // Coefficients for tricubic interpolation
+    viskores::FloatDefault P[4 * 4 * 4];
+    viskores::FloatDefault C[4 * 4];
+    viskores::FloatDefault D[4];
+
+    // 1) Gather 4×4×4 neighborhood into P
+    //    P[kk][jj][ii] -> P[(kk*4 + jj)*4 + ii]
+    //    data[z0][y0][x0] -> data[(z0*ny + y0)*nx + x0]
+    for (viskores::Id kk = 0; kk < 4; ++kk)
+    {
+      viskores::Id z0 = viskores::Clamp(iz - 1 + kk, 0, nz);
+      for (viskores::Id jj = 0; jj < 4; ++jj)
+      {
+        viskores::Id y0 = viskores::Clamp(iy - 1 + jj, 0, ny);
+        for (viskores::Id ii = 0; ii < 4; ++ii)
+        {
+          viskores::Id x0 = viskores::Clamp(ix - 1 + ii, 0, nx);
+          // flatten 3D (kk,jj,ii) to 1D:
+          viskores::Id pIndex = (kk * 4 + jj) * 4 + ii;
+          // flatten volume coords: (x0,y0,z0) -> 1D index
+          viskores::Id dIndex = (z0 * ny + y0) * nx + x0;
+          P[pIndex] = field.Get(dIndex);
+        }
+      }
+    }
+
+    // 2) Interpolate in X for each (kk, jj) → C[kk][jj]
+    //    C[kk][jj] -> C[kk*4 + jj]
+    for (viskores::Id kk = 0; kk < 4; ++kk)
+    {
+      for (viskores::Id jj = 0; jj < 4; ++jj)
+      {
+        // base offset for P row
+        viskores::Id baseP = (kk * 4 + jj) * 4;
+        viskores::Id cIndex = kk * 4 + jj;
+        C[cIndex] =
+          this->CubicInterpolate(P[baseP + 0], P[baseP + 1], P[baseP + 2], P[baseP + 3], tx);
+      }
+    }
+
+    // 3) Interpolate in Y for each kk → D[kk]
+    //    C[kk][0..3] -> C[kk*4 + 0..3]
+    for (viskores::Id kk = 0; kk < 4; ++kk)
+    {
+      D[kk] =
+        this->CubicInterpolate(C[kk * 4 + 0], C[kk * 4 + 1], C[kk * 4 + 2], C[kk * 4 + 3], ty);
+    }
+
+    // 4) Interpolate in Z across D[0..3]
+    value = this->CubicInterpolate(D[0], D[1], D[2], D[3], tz);
+    return viskores::ErrorCode::Success;
+  }
+
+  // 1D cubic‐convolution (Catmull–Rom) kernel
+  // given four samples p0,p1,p2,p3 and relative t in [0,1]
+  VISKORES_EXEC viskores::FloatDefault CubicInterpolate(viskores::FloatDefault p0,
+                                                        viskores::FloatDefault p1,
+                                                        viskores::FloatDefault p2,
+                                                        viskores::FloatDefault p3,
+                                                        viskores::FloatDefault t) const
+  {
+    // Catmull–Rom basis with no tension.
+    viskores::FloatDefault t2 = t * t;
+    viskores::FloatDefault t3 = t2 * t;
+
+    viskores::FloatDefault m0 = (p2 - p0) * 0.5f;
+    viskores::FloatDefault m1 = (p3 - p1) * 0.5f;
+    viskores::FloatDefault d0 = p1;
+    viskores::FloatDefault d1 = p2;
+
+    // Hermite form: h00, h10, h01, h11
+    viskores::FloatDefault h00 = 2 * t3 - 3 * t2 + 1;
+    viskores::FloatDefault h10 = t3 - 2 * t2 + t;
+    viskores::FloatDefault h01 = -2 * t3 + 3 * t2;
+    viskores::FloatDefault h11 = t3 - t2;
+
+    return h00 * d0 + h10 * m0 + h01 * d1 + h11 * m1;
+  }
+
   viskores::Bounds Bounds;
   viskores::Id3 Dimensions;
   FieldPortalType Field;
@@ -199,7 +184,6 @@ private:
 
 class VISKORES_ALWAYS_EXPORT SplineEvaluateRectilinearGrid
 {
-
 private:
   using FieldType = viskores::cont::ArrayHandle<viskores::FloatDefault>;
   using AxisType = FieldType;
@@ -246,103 +230,6 @@ public:
   }
 
 private:
-  VISKORES_EXEC viskores::ErrorCode TriCubicEvaluate2(const viskores::Id3& dims,
-                                                      const viskores::Vec3f& pointIndex,
-                                                      viskores::FloatDefault& value) const
-  {
-    viskores::Id nx = dims[0], ny = dims[1], nz = dims[2];
-    viskores::FloatDefault x = pointIndex[0], y = pointIndex[1], z = pointIndex[2];
-    // base integer coords
-    viskores::Id ix = static_cast<viskores::Id>(viskores::Floor(x));
-    viskores::Id iy = static_cast<viskores::Id>(viskores::Floor(y));
-    viskores::Id iz = static_cast<viskores::Id>(viskores::Floor(z));
-
-    // fractional offsets
-    viskores::FloatDefault tx = x - ix;
-    viskores::FloatDefault ty = y - iy;
-    viskores::FloatDefault tz = z - iz;
-
-    // Coefficients for tricubic interpolation
-    viskores::FloatDefault P[4 * 4 * 4];
-    viskores::FloatDefault C[4 * 4];
-    viskores::FloatDefault D[4];
-
-    // 1) Gather 4×4×4 neighborhood into P
-    //    P[kk][jj][ii] -> P[(kk*4 + jj)*4 + ii]
-    //    data[z0][y0][x0] -> data[(z0*ny + y0)*nx + x0]
-    for (viskores::Id kk = 0; kk < 4; ++kk)
-    {
-      viskores::Id z0 = viskores::Clamp(iz - 1 + kk, 0, nz);
-      for (viskores::Id jj = 0; jj < 4; ++jj)
-      {
-        viskores::Id y0 = viskores::Clamp(iy - 1 + jj, 0, ny);
-        for (viskores::Id ii = 0; ii < 4; ++ii)
-        {
-          viskores::Id x0 = viskores::Clamp(ix - 1 + ii, 0, nx);
-          // flatten 3D (kk,jj,ii) to 1D:
-          viskores::Id pIndex = (kk * 4 + jj) * 4 + ii;
-          // flatten volume coords: (x0,y0,z0) -> 1D index
-          viskores::Id dIndex = (z0 * ny + y0) * nx + x0;
-          P[pIndex] = this->Field.Get(dIndex);
-        }
-      }
-    }
-
-    // 2) Interpolate in X for each (kk, jj) → C[kk][jj]
-    //    C[kk][jj] -> C[kk*4 + jj]
-    for (viskores::Id kk = 0; kk < 4; ++kk)
-    {
-      for (viskores::Id jj = 0; jj < 4; ++jj)
-      {
-        // base offset for P row
-        viskores::Id baseP = (kk * 4 + jj) * 4;
-        viskores::Id cIndex = kk * 4 + jj;
-        C[cIndex] =
-          this->CubicInterpolate(P[baseP + 0], P[baseP + 1], P[baseP + 2], P[baseP + 3], tx);
-      }
-    }
-
-
-    // 3) Interpolate in Y for each kk → D[kk]
-    //    C[kk][0..3] -> C[kk*4 + 0..3]
-    for (viskores::Id kk = 0; kk < 4; ++kk)
-    {
-      D[kk] =
-        this->CubicInterpolate(C[kk * 4 + 0], C[kk * 4 + 1], C[kk * 4 + 2], C[kk * 4 + 3], ty);
-    }
-
-    // 4) Interpolate in Z across D[0..3]
-    value = this->CubicInterpolate(D[0], D[1], D[2], D[3], tz);
-    return viskores::ErrorCode::Success;
-  }
-
-  // 1D cubic‐convolution (Catmull–Rom) kernel
-  // given four samples p0,p1,p2,p3 and relative t in [0,1]
-  VISKORES_EXEC viskores::FloatDefault CubicInterpolate(viskores::FloatDefault p0,
-                                                        viskores::FloatDefault p1,
-                                                        viskores::FloatDefault p2,
-                                                        viskores::FloatDefault p3,
-                                                        viskores::FloatDefault t) const
-  {
-    // Catmull–Rom basis: a = –0.5
-    const viskores::FloatDefault a = -0.5;
-    viskores::FloatDefault t2 = t * t;
-    viskores::FloatDefault t3 = t2 * t;
-
-    viskores::FloatDefault m0 = (p2 - p0) * 0.5;
-    viskores::FloatDefault m1 = (p3 - p1) * 0.5;
-    viskores::FloatDefault d0 = p1;
-    viskores::FloatDefault d1 = p2;
-
-    // Hermite form: h00, h10, h01, h11
-    viskores::FloatDefault h00 = 2 * t3 - 3 * t2 + 1;
-    viskores::FloatDefault h10 = t3 - 2 * t2 + t;
-    viskores::FloatDefault h01 = -2 * t3 + 3 * t2;
-    viskores::FloatDefault h11 = t3 - t2;
-
-    return h00 * d0 + h10 * m0 + h01 * d1 + h11 * m1;
-  }
-
   VISKORES_EXEC viskores::Id FindIndex(const AxisPortalType& axis, viskores::FloatDefault val) const
   {
     viskores::Id N = axis.GetNumberOfValues();
@@ -531,15 +418,8 @@ private:
     return viskores::ErrorCode::Success;
   }
 
-  viskores::Vec3f Origin;
-  viskores::Vec3f Spacing;
-  viskores::Id3 Dimensions;
-
   AxisPortalType AxisPortals[3];
-
-
   viskores::Bounds Bounds;
-  viskores::cont::DataSet DataSet;
   FieldPortalType Field;
 };
 } //namespace exec
