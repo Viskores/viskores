@@ -1,5 +1,8 @@
 # Contributing to Viskores
 
+By contributing to Viskores, you agree to the Developer Certificate of
+Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+
 The author of all contributions must agree to the [Developer Certificate of
 Origin] sign-off. Any developer who submits a contribution to Viskores
 implicitly agrees to these conditions. That said, contributors remain as
