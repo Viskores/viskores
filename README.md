@@ -164,9 +164,12 @@ project. When learning to create your own code, both the [Viskores Tutorial] and
 
 ## License ##
 
-Viskores is distributed under the OSI-approved BSD 3-clause License.
+Viskores is distributed under the OSI-approved BSD-3-Clause License.
 See [LICENSE.txt](LICENSE.txt) for details.
 
+Viskores also uses and includes a data from ECLgraph under another license.
+See for details:
+https://userweb.cs.txstate.edu/~burtscher/research/ECLgraph/license.html
 
 [Viskores]:                             https://github.com/Viskores/viskores
 [Viskores Coding Conventions]:          docs/CodingConventions.md
