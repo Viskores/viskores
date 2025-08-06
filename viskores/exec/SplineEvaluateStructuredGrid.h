@@ -58,11 +58,8 @@ public:
   VISKORES_EXEC viskores::ErrorCode Evaluate(const viskores::Vec3f& point,
                                              viskores::FloatDefault& value) const
   {
-    std::cout << "Bounds: " << this->Bounds << std::endl;
     if (!this->Bounds.Contains(point))
       return viskores::ErrorCode::CellNotFound;
-
-    std::cout << "exec::UniformEvaluate: " << point << std::endl;
 
     //map world to index space.
     viskores::Vec3f pointIndex;
@@ -221,102 +218,8 @@ public:
   VISKORES_EXEC viskores::ErrorCode Evaluate(const viskores::Vec3f& point,
                                              viskores::FloatDefault& value) const
   {
-    std::cout << "exec::Evaluate: " << point << std::endl;
-    std::cout << "Bounds: " << this->Bounds << std::endl;
     if (!this->Bounds.Contains(point))
       return viskores::ErrorCode::CellNotFound;
-
-    return this->EvaluateRectilinear(point, value);
-  }
-
-private:
-  VISKORES_EXEC viskores::Id FindIndex(const AxisPortalType& axis,
-                                       const viskores::Id& N,
-                                       viskores::FloatDefault val) const
-  {
-    // 1) Binary search for the largest index i with coords[i] <= val
-    viskores::Id left = 0;
-    viskores::Id right = N - 1;
-    while (left <= right)
-    {
-      viskores::Id mid = left + (right - left) / 2;
-      if (axis.Get(mid) <= val)
-      {
-        // mid is still ≤ val, so it might be our i
-        left = mid + 1;
-      }
-      else
-      {
-        // coords[mid] > val, so the index we want is below mid
-        right = mid - 1;
-      }
-    }
-    // when loop ends, `right` is the last index where coords[right] <= val
-    viskores::Id i = right;
-
-    // 2) Clamp i into [1, N-3]
-    if (i < 1)
-      i = 1;
-    else if (i > N - 3)
-      i = N - 3;
-
-    return i;
-  }
-
-  VISKORES_EXEC
-  viskores::FloatDefault CubicInterpolateNonUniform(viskores::FloatDefault x0,
-                                                    viskores::FloatDefault x1,
-                                                    viskores::FloatDefault x2,
-                                                    viskores::FloatDefault x3,
-                                                    viskores::FloatDefault p0,
-                                                    viskores::FloatDefault p1,
-                                                    viskores::FloatDefault p2,
-                                                    viskores::FloatDefault p3,
-                                                    viskores::FloatDefault x) const
-  {
-    // 1) Compute interval lengths
-    viskores::FloatDefault h0 = x1 - x0;
-    viskores::FloatDefault h1 = x2 - x1;
-    viskores::FloatDefault h2 = x3 - x2;
-    if (h0 <= 0 || h1 <= 0 || h2 <= 0)
-      throw std::runtime_error(
-        "cubicInterpolateNonUniform: coordinates must be strictly increasing");
-
-    // 2) Compute right‐hand sides for second‐derivative system
-    viskores::FloatDefault rhs1 = 6.0 * ((p2 - p1) / h1 - (p1 - p0) / h0);
-    viskores::FloatDefault rhs2 = 6.0 * ((p3 - p2) / h2 - (p2 - p1) / h1);
-
-    // 3) Build and solve the 2×2 system:
-    //     [2(h0+h1)   h1      ][d2_1] = [rhs1]
-    //     [  h1     2(h1+h2)  ][d2_2]   [rhs2]
-    viskores::FloatDefault a11 = 2.0 * (h0 + h1);
-    viskores::FloatDefault a12 = h1;
-    viskores::FloatDefault a21 = h1;
-    viskores::FloatDefault a22 = 2.0 * (h1 + h2);
-    viskores::FloatDefault det = a11 * a22 - a12 * a21;
-    if (det == 0.0)
-      throw std::runtime_error("cubicInterpolateNonUniform: degenerate knot spacing");
-    viskores::FloatDefault d2_1 = (rhs1 * a22 - a12 * rhs2) / det;
-    viskores::FloatDefault d2_2 = (a11 * rhs2 - rhs1 * a21) / det;
-
-    // 4) Map x into local parameter t ∈ [0,1] on [x1,x2]
-    viskores::FloatDefault t = (x - x1) / h1;
-
-    // 5) Hermite form of the natural cubic on [x1, x2]
-    viskores::FloatDefault A = 1.0 - t;
-    viskores::FloatDefault B = t;
-    viskores::FloatDefault h1_sq = h1 * h1;
-    viskores::FloatDefault term1 = (A * A * A - A) * (h1_sq / 6.0) * d2_1;
-    viskores::FloatDefault term2 = (B * B * B - B) * (h1_sq / 6.0) * d2_2;
-
-    // 6) Combine the linear and curvature parts
-    return A * p1 + B * p2 + term1 + term2;
-  }
-
-  VISKORES_EXEC viskores::ErrorCode EvaluateRectilinear(const viskores::Vec3f& point,
-                                                        viskores::FloatDefault& value) const
-  {
-    std::cout << "exec::RectEvaluate: " << point << std::endl;
 
     auto x = point[0];
     auto y = point[1];
@@ -413,6 +316,90 @@ private:
     value = this->CubicInterpolateNonUniform(z0, z1, z2, z3, D[0], D[1], D[2], D[3], z);
 
     return viskores::ErrorCode::Success;
+  }
+
+private:
+  VISKORES_EXEC viskores::Id FindIndex(const AxisPortalType& axis,
+                                       const viskores::Id& N,
+                                       viskores::FloatDefault val) const
+  {
+    // 1) Binary search for the largest index i with coords[i] <= val
+    viskores::Id left = 0;
+    viskores::Id right = N - 1;
+    while (left <= right)
+    {
+      viskores::Id mid = left + (right - left) / 2;
+      if (axis.Get(mid) <= val)
+      {
+        // mid is still ≤ val, so it might be our i
+        left = mid + 1;
+      }
+      else
+      {
+        // coords[mid] > val, so the index we want is below mid
+        right = mid - 1;
+      }
+    }
+    // when loop ends, `right` is the last index where coords[right] <= val
+    viskores::Id i = right;
+
+    // 2) Clamp i into [1, N-3]
+    if (i < 1)
+      i = 1;
+    else if (i > N - 3)
+      i = N - 3;
+
+    return i;
+  }
+
+  VISKORES_EXEC
+  viskores::FloatDefault CubicInterpolateNonUniform(viskores::FloatDefault x0,
+                                                    viskores::FloatDefault x1,
+                                                    viskores::FloatDefault x2,
+                                                    viskores::FloatDefault x3,
+                                                    viskores::FloatDefault p0,
+                                                    viskores::FloatDefault p1,
+                                                    viskores::FloatDefault p2,
+                                                    viskores::FloatDefault p3,
+                                                    viskores::FloatDefault x) const
+  {
+    // 1) Compute interval lengths
+    viskores::FloatDefault h0 = x1 - x0;
+    viskores::FloatDefault h1 = x2 - x1;
+    viskores::FloatDefault h2 = x3 - x2;
+    if (h0 <= 0 || h1 <= 0 || h2 <= 0)
+      throw std::runtime_error(
+        "cubicInterpolateNonUniform: coordinates must be strictly increasing");
+
+    // 2) Compute right‐hand sides for second‐derivative system
+    viskores::FloatDefault rhs1 = 6.0 * ((p2 - p1) / h1 - (p1 - p0) / h0);
+    viskores::FloatDefault rhs2 = 6.0 * ((p3 - p2) / h2 - (p2 - p1) / h1);
+
+    // 3) Build and solve the 2×2 system:
+    //     [2(h0+h1)   h1      ][d2_1] = [rhs1]
+    //     [  h1     2(h1+h2)  ][d2_2]   [rhs2]
+    viskores::FloatDefault a11 = 2.0 * (h0 + h1);
+    viskores::FloatDefault a12 = h1;
+    viskores::FloatDefault a21 = h1;
+    viskores::FloatDefault a22 = 2.0 * (h1 + h2);
+    viskores::FloatDefault det = a11 * a22 - a12 * a21;
+    if (det == 0.0)
+      throw std::runtime_error("cubicInterpolateNonUniform: degenerate knot spacing");
+    viskores::FloatDefault d2_1 = (rhs1 * a22 - a12 * rhs2) / det;
+    viskores::FloatDefault d2_2 = (a11 * rhs2 - rhs1 * a21) / det;
+
+    // 4) Map x into local parameter t ∈ [0,1] on [x1,x2]
+    viskores::FloatDefault t = (x - x1) / h1;
+
+    // 5) Hermite form of the natural cubic on [x1, x2]
+    viskores::FloatDefault A = 1.0 - t;
+    viskores::FloatDefault B = t;
+    viskores::FloatDefault h1_sq = h1 * h1;
+    viskores::FloatDefault term1 = (A * A * A - A) * (h1_sq / 6.0) * d2_1;
+    viskores::FloatDefault term2 = (B * B * B - B) * (h1_sq / 6.0) * d2_2;
+
+    // 6) Combine the linear and curvature parts
+    return A * p1 + B * p2 + term1 + term2;
   }
 
   AxisPortalType AxisPortals[3];

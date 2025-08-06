@@ -14,3 +14,4 @@ TEST_OPTIONAL_DEPENDS
 TEST_DEPENDS
   viskores_source
   viskores_io
+  viskores_filter_resample
