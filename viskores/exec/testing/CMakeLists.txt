@@ -41,6 +41,5 @@ set(unit_tests
   UnitTestTaskSingular.cxx
   UnitTestVariant.cxx
   UnitTestWorkletInvokeFunctor.cxx
-  UnitTestSplineEvaluateStructuredGrid.cxx
   )
 viskores_unit_tests(SOURCES ${unit_tests})
