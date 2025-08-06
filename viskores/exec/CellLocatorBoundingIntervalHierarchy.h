@@ -152,11 +152,6 @@ public:
         viskores::Vec<viskores::Vec3f, 1> pCoordsVec = { viskores::Vec3f() };
         if (this->FindInLeaf(IterateMode::FindOne, point, pCoordsVec, node, cellIdsVec, count))
         {
-          if (cellIdsVec.GetNumberOfComponents() != 1)
-            printf("ReadError in cellIdsVec: pt= %f %f %f\n", point[0], point[1], point[2]);
-          if (pCoordsVec.GetNumberOfComponents() != 1)
-            printf("ReadError in pCoordsVec: pt= %f %f %f\n", point[0], point[1], point[2]);
-
           lastCell.CellId = cellIdsVec[0];
           pCoords = pCoordsVec[0];
           return viskores::ErrorCode::Success;
