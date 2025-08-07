@@ -249,18 +249,18 @@ static void PartitionedDataSetBoundsTest()
   viskores::cont::PartitionedDataSet pds({ TDset1, TDset2 });
 
   //Check that bounds of ALL partitions is correct.
-  VISKORES_TEST_ASSERT(pds.GetBounds() == pdsBounds, "Bounds for partitioned dataset is wrong");
+  VISKORES_TEST_ASSERT(pds.BoundsCompute() == pdsBounds, "Bounds for partitioned dataset is wrong");
 
   //Check that the bounds of each partition is correct.
-  auto partitionBounds = pds.GetPartitionBounds();
+  auto partitionBounds = pds.PartitionBoundsCompute();
   VISKORES_TEST_ASSERT(partitionBounds.size() == 2, "Partition bounds size is wrong");
   VISKORES_TEST_ASSERT(partitionBounds[0] == bounds1, "Partition bounds[0] is wrong");
   VISKORES_TEST_ASSERT(partitionBounds[1] == bounds2, "Partition bounds[1] is wrong");
 
   //Global values should be the same.
-  VISKORES_TEST_ASSERT(pds.GetGlobalBounds() == pdsBounds,
+  VISKORES_TEST_ASSERT(pds.BoundsGlobalCompute() == pdsBounds,
                        "Bounds for partitioned dataset is wrong");
-  auto globalPartitionBounds = pds.GetGlobalPartitionBounds();
+  auto globalPartitionBounds = pds.PartitionBoundsGlobalCompute();
   VISKORES_TEST_ASSERT(globalPartitionBounds.size() == 2, "Global partition bounds size is wrong");
   VISKORES_TEST_ASSERT(globalPartitionBounds[0] == bounds1, "Global partition bounds[0] is wrong");
   VISKORES_TEST_ASSERT(globalPartitionBounds[1] == bounds2, "Global partition bounds[1] is wrong");
