@@ -142,8 +142,8 @@ std::vector<viskores::Bounds> PartitionedDataSet::AggregatePartitionBounds(
 
   std::vector<std::vector<viskores::Float64>> globalBoundsArray;
   viskoresdiy::mpi::all_gather(comm, localBoundsArray, globalBoundsArray);
-  globalBounds.reserve(globalBoundsArray.size());
   std::vector<viskores::Bounds> globalBounds;
+  globalBounds.reserve(globalBoundsArray.size());
 
   for (std::size_t i = 0; i < globalBoundsArray.size(); i++)
   {
