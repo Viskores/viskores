@@ -131,6 +131,8 @@ set(headers
   Token.h
   TryExecute.h
   SerializableTypeString.h
+  SplineEvaluateRectilinearGrid.h
+  SplineEvaluateUniformGrid.h
   UncertainArrayHandle.h
   UncertainCellSet.h
   UnknownArrayHandle.h
@@ -186,6 +188,8 @@ set(sources
   RuntimeDeviceTracker.cxx
   PartitionedDataSet.cxx
   PointLocatorBase.cxx
+  SplineEvaluateRectilinearGrid.cxx
+  SplineEvaluateUniformGrid.cxx
   Storage.cxx
   Token.cxx
   TryExecute.cxx

@@ -1832,6 +1832,11 @@ static inline VISKORES_EXEC_CONT T Min(const T& x, const T& y)
 ///@{
 /// Clamp \p x to the given range.
 ///
+inline VISKORES_EXEC_CONT viskores::Id Clamp(viskores::Id x, viskores::Id lo, viskores::Id hi)
+{
+  return x > lo ? (x < hi ? x : hi) : lo;
+}
+  
 inline VISKORES_EXEC_CONT viskores::Float32 Clamp(viskores::Float32 x, viskores::Float32 lo, viskores::Float32 hi)
 {
   return x > lo ? (x < hi ? x : hi) : lo;
