@@ -44,14 +44,14 @@ ubuntu2004_gcc9:
     OMP_NUM_THREADS: 4
     VISKORES_SETTINGS: "benchmarks+tbb+openmp+mpi+shared+hdf5+ccache"
 
-ubuntu2004_gcc9_cuda:
+ubuntu2004_gcc9_cuda118:
   tags:
     - nvidia-a100
     - uo-gpu
     - x86_64-nvidiagpu
     - voltar
   extends:
-    - .ubuntu2004_cuda
+    - .ubuntu2004_cuda118
     - .cmake_build_linux
     - .run_automatically
   variables:
