@@ -75,14 +75,14 @@ ubuntu2204_hip_kokkos43:
     - ccache -v -s
     - ccache -z
 
-ubuntu2204_clang11_cuda:
+ubuntu2204_clang11_cuda122:
   tags:
     - nvidia-a100
     - uo-gpu
     - x86_64-nvidiagpu
     - voltar
   extends:
-    - .ubuntu2204_cuda
+    - .ubuntu2204_cuda122
     - .cmake_build_linux
     - .run_automatically
   variables:
@@ -92,13 +92,13 @@ ubuntu2204_clang11_cuda:
     VISKORES_SETTINGS: "cuda+ampere+tbb+examples+shared+ccache"
     CTEST_EXCLUSIONS: "UnitTestTimer"
 
-#ubuntu2204_gcc10_cuda:
+#ubuntu2204_gcc10_cuda122:
 #  tags:
 #    - nvidia-h100
 #    - uo-gpu
 #    - x86_64-nvidiagpu
 #  extends:
-#    - .ubuntu2204_cuda
+#    - .ubuntu2204_cuda122
 #    - .cmake_build_linux
 #    - .run_automatically
 #  variables:
@@ -120,14 +120,14 @@ ubuntu2204_clang12:
     CMAKE_BUILD_TYPE: Debug
     VISKORES_SETTINGS: "tbb+shared+examples+ccache"
 
-ubuntu2204_kokkos37_cuda:
+ubuntu2204_kokkos37_cuda122:
   tags:
     - nvidia-a100
     - uo-gpu
     - x86_64-nvidiagpu
     - voltar
   extends:
-    - .ubuntu2204_cuda_kokkos
+    - .ubuntu2204_cuda122_kokkos
     - .cmake_build_linux
     - .run_automatically
   variables:

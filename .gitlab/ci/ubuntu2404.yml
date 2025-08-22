@@ -47,3 +47,16 @@ ubuntu2404_gcc14:
     # execute on the same hardware concurrently
     OMP_NUM_THREADS: 3
     CTEST_EXCLUSIONS: "UnitTestArrayPortalValueReference"
+
+ubuntu2404_gcc14_cuda130:
+  extends:
+    - .ubuntu2404_cuda130
+    - .cmake_build_linux
+    - .run_automatically
+    - .uo_cpu_tags
+  variables:
+    CC: "gcc-14"
+    CXX: "g++-14"
+    CUDAHOSTCXX: "g++-14"
+    VISKORES_SETTINGS: "no_testing+cuda+turing+tbb+examples+shared+ccache"
+    NO_TESTING: "ON"
