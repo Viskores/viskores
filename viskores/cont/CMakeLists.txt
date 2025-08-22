@@ -38,6 +38,7 @@ set(headers
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
   ArrayHandleIndex.h
+  ArrayHandleIsMonotonic.h
   ArrayHandleMultiplexer.h
   ArrayHandleOffsetsToNumComponents.h
   ArrayHandlePermutation.h

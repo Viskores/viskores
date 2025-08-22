@@ -184,9 +184,9 @@ viskores::cont::ArrayHandle<viskores::FloatDefault> CreateLinearInterpolationRes
   const viskores::cont::ArrayHandle<viskores::Vec3f>& points)
 {
   viskores::cont::DataSetBuilderExplicit builder;
-  std::vector<viskores::Id> ids(points.GetNumberOfValues());
-  std::iota(ids.begin(), ids.end(), 0);
-  auto idsArray = viskores::cont::make_ArrayHandle(ids, viskores::CopyFlag::On);
+  viskores::cont::ArrayHandle<viskores::Id> idsArray;
+  viskores::cont::ArrayCopy(viskores::cont::make_ArrayHandleIndex(points.GetNumberOfValues()),
+                            idsArray);
 
   auto ptDataSet = builder.Create(points, viskores::CellShapeTagVertex(), 1, idsArray);
 
@@ -226,12 +226,9 @@ void CompareToLinear(SplineEvalType& splineEval,
 
     auto diffLinear = viskores::Abs(truth - linearValue);
     auto diffSpline = viskores::Abs(truth - splineValue);
-    auto factor = diffLinear / diffSpline;
 
     // spline interpolation should be better.
-    VISKORES_TEST_ASSERT(factor > 1.0f,
-                         "Interpolation value difference outside of error bounds: " +
-                           std::to_string(factor));
+    VISKORES_TEST_ASSERT(diffSpline <= diffLinear, "Error in spline interpolation");
   }
 }
 

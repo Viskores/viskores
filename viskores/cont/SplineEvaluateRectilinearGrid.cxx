@@ -16,6 +16,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/ArrayHandleIsMonotonic.h>
 #include <viskores/cont/CellSetStructured.h>
 #include <viskores/cont/SplineEvaluateRectilinearGrid.h>
 
@@ -34,14 +36,21 @@ viskores::exec::SplineEvaluateRectilinearGrid SplineEvaluateRectilinearGrid::Pre
   if (!this->DataSet.GetCoordinateSystem(0).GetData().IsType<RectCoordsType>())
     throw viskores::cont::ErrorBadType("Coordinates are not rectilinear type.");
 
-  viskores::cont::ArrayHandle<viskores::FloatDefault> fieldArray;
-  this->DataSet.GetField(this->FieldName).GetData().AsArrayHandle(fieldArray);
-
   RectCoordsType coords;
   coords = this->DataSet.GetCoordinateSystem(0).GetData().template AsArrayHandle<RectCoordsType>();
+  if (!viskores::cont::IsMonotonicIncreasing(coords.GetFirstArray()) ||
+      !viskores::cont::IsMonotonicIncreasing(coords.GetSecondArray()) ||
+      !viskores::cont::IsMonotonicIncreasing(coords.GetThirdArray()))
 
-  return viskores::exec::SplineEvaluateRectilinearGrid(coords.PrepareForInput(device, token),
-                                                       fieldArray.PrepareForInput(device, token));
+  {
+    throw viskores::cont::ErrorBadType("Coordinates are not monotonic increasing.");
+  }
+
+  viskores::cont::ArrayHandle<viskores::FloatDefault> fieldArray;
+  viskores::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(this->FieldName).GetData(),
+                                             fieldArray);
+
+  return viskores::exec::SplineEvaluateRectilinearGrid(coords, fieldArray, device, token);
 }
 
 } //namespace cont

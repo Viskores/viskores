@@ -31,6 +31,7 @@ class VISKORES_ALWAYS_EXPORT SplineEvaluateRectilinearGrid
 private:
   using FieldType = viskores::cont::ArrayHandle<viskores::FloatDefault>;
   using AxisType = FieldType;
+  using RectilinearType = viskores::cont::ArrayHandleCartesianProduct<AxisType, AxisType, AxisType>;
 
   using FieldPortalType = typename FieldType::ReadPortalType;
   using AxisPortalType = typename AxisType::ReadPortalType;
@@ -38,14 +39,17 @@ private:
 public:
   VISKORES_CONT SplineEvaluateRectilinearGrid() = default;
 
-  template <typename CoordsType, typename ArrayPortalType>
-  VISKORES_CONT SplineEvaluateRectilinearGrid(const CoordsType& coords,
-                                              const ArrayPortalType& field)
-    : Field(field)
+  VISKORES_CONT SplineEvaluateRectilinearGrid(const RectilinearType& rectCoords,
+                                              const FieldType& field,
+                                              viskores::cont::DeviceAdapterId device,
+                                              viskores::cont::Token& token)
+    : Field(field.PrepareForInput(device, token))
   {
-    this->AxisPortals[0] = coords.GetFirstPortal();
-    this->AxisPortals[1] = coords.GetSecondPortal();
-    this->AxisPortals[2] = coords.GetThirdPortal();
+    auto coordsExecPortal = rectCoords.PrepareForInput(device, token);
+
+    this->AxisPortals[0] = coordsExecPortal.GetFirstPortal();
+    this->AxisPortals[1] = coordsExecPortal.GetSecondPortal();
+    this->AxisPortals[2] = coordsExecPortal.GetThirdPortal();
 
     this->NumX = this->AxisPortals[0].GetNumberOfValues();
     this->NumY = this->AxisPortals[1].GetNumberOfValues();
@@ -189,11 +193,7 @@ private:
     viskores::Id i = right;
 
     // 2) Clamp i into [1, N-3]
-    if (i < 1)
-      i = 1;
-    else if (i > N - 3)
-      i = N - 3;
-
+    i = viskores::Clamp(i, 1, N - 3);
     return i;
   }
 

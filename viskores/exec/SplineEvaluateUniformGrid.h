@@ -38,15 +38,15 @@ public:
   template <typename ArrayPortalType>
   VISKORES_CONT SplineEvaluateUniformGrid(const viskores::Vec3f origin,
                                           const viskores::Vec3f spacing,
-                                          const viskores::Id3 cellDims,
+                                          const viskores::Id3 pointDims,
                                           const ArrayPortalType& field)
     : Bounds(origin[0],
-             origin[0] + static_cast<viskores::FloatDefault>(cellDims[0] * spacing[0]),
+             origin[0] + static_cast<viskores::FloatDefault>((pointDims[0] - 1) * spacing[0]),
              origin[1],
-             origin[1] + static_cast<viskores::FloatDefault>(cellDims[1] * spacing[1]),
+             origin[1] + static_cast<viskores::FloatDefault>((pointDims[1] - 1) * spacing[1]),
              origin[2],
-             origin[2] + static_cast<viskores::FloatDefault>(cellDims[2] * spacing[2]))
-    , Dimensions(cellDims)
+             origin[2] + static_cast<viskores::FloatDefault>((pointDims[2] - 1) * spacing[2]))
+    , Dimensions(pointDims)
     , Field(field)
     , Origin(origin)
     , Spacing(spacing)

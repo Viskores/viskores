@@ -38,6 +38,7 @@ set(unit_tests
   UnitTestArrayPortalFromIterators.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestArraySetValues.cxx
+  UnitTestArrayHandleIsMonotonic.cxx
   UnitTestBuffer.cxx
   UnitTestComputeRange.cxx
   UnitTestControlSignatureTag.cxx
