@@ -35,9 +35,4 @@ viskores_library(
   USE_VISKORES_JOB_POOL
 )
 
-target_link_libraries(viskores_filter_uncertainty PUBLIC INTERFACE
-  viskores_filter_core
-  viskores_filter_uncertainty
-)
-
 add_subdirectory(worklet)
