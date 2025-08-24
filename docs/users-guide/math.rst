@@ -20,6 +20,17 @@ The :file:`viskores/Math.h` header file contains several math functions that rep
    When writing worklets, you should favor using these math functions provided by |Viskores| over the standard math functions in :file:`viskores/Math.h`.
    |Viskores|'s implementation manages several compiling and efficiency issues when porting.
 
+Comparison and Distance
+==============================
+
+.. doxygenfunction:: Clamp
+
+.. doxygenfunction:: FloatDistance(viskores::Float64, viskores::Float64)
+.. doxygenfunction:: FloatDistance(viskores::Float32, viskores::Float32)
+
+.. doxygenfunction:: Max(const T&, const T&)
+.. doxygenfunction:: Min(const T&, const T&)
+
 Exponentials
 ==============================
 
@@ -239,15 +250,6 @@ Trigonometry
 .. doxygenfunction:: viskores::TanH(const viskores::Vec<T, N>&)
 
 .. doxygenfunction:: TwoPi
-
-Miscellaneous
-==============================
-
-.. doxygenfunction:: FloatDistance(viskores::Float64, viskores::Float64)
-.. doxygenfunction:: FloatDistance(viskores::Float32, viskores::Float32)
-
-.. doxygenfunction:: Max(const T&, const T&)
-.. doxygenfunction:: Min(const T&, const T&)
 
 
 ------------------------------

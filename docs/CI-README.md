@@ -225,7 +225,7 @@ test:ubuntu2004_$<compiler>:
     - docker
     - linux
   extends:
-    - .ubuntu2004_cuda
+    - .ubuntu2004_cuda118
     - .cmake_test_linux
     - .only-default
   needs:
