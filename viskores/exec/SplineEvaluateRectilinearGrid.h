@@ -215,16 +215,16 @@ private:
 
 
     // 2) Compute right‐hand sides for second‐derivative system
-    viskores::FloatDefault rhs1 = 6.0 * ((p2 - p1) / h1 - (p1 - p0) / h0);
-    viskores::FloatDefault rhs2 = 6.0 * ((p3 - p2) / h2 - (p2 - p1) / h1);
+    viskores::FloatDefault rhs1 = 6.0f * ((p2 - p1) / h1 - (p1 - p0) / h0);
+    viskores::FloatDefault rhs2 = 6.0f * ((p3 - p2) / h2 - (p2 - p1) / h1);
 
     // 3) Build and solve the 2×2 system:
     //     [2(h0+h1)   h1      ][d2_1] = [rhs1]
     //     [  h1     2(h1+h2)  ][d2_2]   [rhs2]
-    viskores::FloatDefault a11 = 2.0 * (h0 + h1);
+    viskores::FloatDefault a11 = 2.0f * (h0 + h1);
     viskores::FloatDefault a12 = h1;
     viskores::FloatDefault a21 = h1;
-    viskores::FloatDefault a22 = 2.0 * (h1 + h2);
+    viskores::FloatDefault a22 = 2.0f * (h1 + h2);
     viskores::FloatDefault det = a11 * a22 - a12 * a21;
     VISKORES_ASSERT(det != 0.0f);
 
@@ -235,7 +235,7 @@ private:
     viskores::FloatDefault t = (x - x1) / h1;
 
     // 5) Hermite form of the natural cubic on [x1, x2]
-    viskores::FloatDefault A = 1.0 - t;
+    viskores::FloatDefault A = 1.0f - t;
     viskores::FloatDefault B = t;
     viskores::FloatDefault h1_sq_6 = h1 * h1 / 6.f;
     viskores::FloatDefault term1 = (A * A * A - A) * h1_sq_6 * d2_1;
