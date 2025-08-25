@@ -237,9 +237,9 @@ private:
     // 5) Hermite form of the natural cubic on [x1, x2]
     viskores::FloatDefault A = 1.0 - t;
     viskores::FloatDefault B = t;
-    viskores::FloatDefault h1_sq = h1 * h1;
-    viskores::FloatDefault term1 = (A * A * A - A) * (h1_sq / 6.0) * d2_1;
-    viskores::FloatDefault term2 = (B * B * B - B) * (h1_sq / 6.0) * d2_2;
+    viskores::FloatDefault h1_sq_6 = h1 * h1 / 6.f;
+    viskores::FloatDefault term1 = (A * A * A - A) * h1_sq_6 * d2_1;
+    viskores::FloatDefault term2 = (B * B * B - B) * h1_sq_6 * d2_2;
 
     // 6) Combine the linear and curvature parts
     return A * p1 + B * p2 + term1 + term2;
