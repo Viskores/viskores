@@ -149,6 +149,7 @@ set(template_sources
 set(sources
   ArrayHandle.cxx
   ArrayHandleBasic.cxx
+  ArrayHandleIsMonotonic.cxx
   ArrayHandleSOA.cxx
   ArrayHandleSOAStride.cxx
   ArrayHandleStride.cxx

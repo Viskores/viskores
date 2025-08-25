@@ -56,7 +56,7 @@ struct MonotonicDecreasing : public viskores::worklet::WorkletMapField
 
 
 template <typename T>
-VISKORES_ALWAYS_EXPORT bool IsMonotonicIncreasing(
+VISKORES_CONT bool IsMonotonicIncreasing(
   const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>& input)
 {
   viskores::Id numValues = input.GetNumberOfValues();
@@ -71,7 +71,7 @@ VISKORES_ALWAYS_EXPORT bool IsMonotonicIncreasing(
 }
 
 template <typename T>
-VISKORES_ALWAYS_EXPORT bool IsMonotonicDecreasing(
+VISKORES_CONT bool IsMonotonicDecreasing(
   const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>& input)
 {
   viskores::Id numValues = input.GetNumberOfValues();
