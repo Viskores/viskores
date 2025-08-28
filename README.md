@@ -7,12 +7,6 @@ computing by providing abstract models for data and execution that can be
 applied to a variety of algorithms across many different processor
 architectures.
 
-## Current Status
-
-Viskores is a adopting the functionality of [Viskores] as a part of the [High
-Performance Software Foundation] (HPSF). As this project becomes more
-functional, more details will be added here.
-
 ## Technical Charter
 
 See the [technical charter] and [governance] document for the structure of
@@ -72,12 +66,12 @@ See the [CONTRIBUTING.md] for more ways to contribute and instructions.
 
 Viskores Requires:
 
-  + C++14 Compiler. Viskores has been confirmed to work with the following
-      + GCC 5.4+
-      + Clang 5.0+
-      + XCode 5.0+
-      + MSVC 2015+
-      + Intel 17.0.4+
+  + C++17 Compiler. Viskores has been confirmed to work with the following
+      + GCC 8.5+
+      + Clang 6.0+
+      + XCode 16.2+
+      + MSVC 2019+
+      + Intel oneAPI 2025+
   + [CMake](http://www.cmake.org/download/)
       + CMake 3.15+
       + CMake 3.24+ (for ROCM+THRUST support)
@@ -162,107 +156,11 @@ Viskores examples is to illustrate specific Viskores concepts in a consistent an
 simple format. However, these examples cover only a small portion of the
 capabilities of Viskores.
 
-Below is a simple example of using Viskores to create a simple data set and use Viskores's rendering
-engine to render an image and write that image to a file. It then computes an isosurface on the
-input data set and renders this output data set in a separate image file:
-
-```cpp
-#include <viskores/cont/Initialize.h>
-#include <viskores/source/Tangle.h>
-
-#include <viskores/rendering/Actor.h>
-#include <viskores/rendering/CanvasRayTracer.h>
-#include <viskores/rendering/MapperRayTracer.h>
-#include <viskores/rendering/MapperVolume.h>
-#include <viskores/rendering/MapperWireframer.h>
-#include <viskores/rendering/Scene.h>
-#include <viskores/rendering/View3D.h>
-
-#include <viskores/filter/contour/Contour.h>
-
-using viskores::rendering::CanvasRayTracer;
-using viskores::rendering::MapperRayTracer;
-using viskores::rendering::MapperVolume;
-using viskores::rendering::MapperWireframer;
-
-int main(int argc, char* argv[])
-{
-  viskores::cont::Initialize(argc, argv, viskores::cont::InitializeOptions::Strict);
-
-  auto tangle = viskores::source::Tangle(viskores::Id3{ 50, 50, 50 });
-  viskores::cont::DataSet tangleData = tangle.Execute();
-  std::string fieldName = "tangle";
-
-  // Set up a camera for rendering the input data
-  viskores::rendering::Camera camera;
-  camera.SetLookAt(viskores::Vec3f_32(0.5, 0.5, 0.5));
-  camera.SetViewUp(viskores::make_Vec(0.f, 1.f, 0.f));
-  camera.SetClippingRange(1.f, 10.f);
-  camera.SetFieldOfView(60.f);
-  camera.SetPosition(viskores::Vec3f_32(1.5, 1.5, 1.5));
-  viskores::cont::ColorTable colorTable("inferno");
-
-  // Background color:
-  viskores::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-  viskores::rendering::Actor actor(tangleData.GetCellSet(),
-                               tangleData.GetCoordinateSystem(),
-                               tangleData.GetField(fieldName),
-                               colorTable);
-  viskores::rendering::Scene scene;
-  scene.AddActor(actor);
-  // 2048x2048 pixels in the canvas:
-  CanvasRayTracer canvas(2048, 2048);
-  // Create a view and use it to render the input data using OS Mesa
-
-  viskores::rendering::View3D view(scene, MapperVolume(), canvas, camera, bg);
-  view.Paint();
-  view.SaveAs("volume.png");
-
-  // Compute an isosurface:
-  viskores::filter::contour::Contour filter;
-  // [min, max] of the tangle field is [-0.887, 24.46]:
-  filter.SetIsoValue(3.0);
-  filter.SetActiveField(fieldName);
-  viskores::cont::DataSet isoData = filter.Execute(tangleData);
-  // Render a separate image with the output isosurface
-  viskores::rendering::Actor isoActor(
-    isoData.GetCellSet(), isoData.GetCoordinateSystem(), isoData.GetField(fieldName), colorTable);
-  // By default, the actor will automatically scale the scalar range of the color table to match
-  // that of the data. However, we are coloring by the scalar that we just extracted a contour
-  // from, so we want the scalar range to match that of the previous image.
-  isoActor.SetScalarRange(actor.GetScalarRange());
-  viskores::rendering::Scene isoScene;
-  isoScene.AddActor(isoActor);
-
-  // Wireframe surface:
-  viskores::rendering::View3D isoView(isoScene, MapperWireframer(), canvas, camera, bg);
-  isoView.Paint();
-  isoView.SaveAs("isosurface_wireframer.png");
-
-  // Smooth surface:
-  viskores::rendering::View3D solidView(isoScene, MapperRayTracer(), canvas, camera, bg);
-  solidView.Paint();
-  solidView.SaveAs("isosurface_raytracer.png");
-
-  return 0;
-}
-```
-
-A minimal CMakeLists.txt such as the following one can be used to build this
-example.
-
-```CMake
-cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
-project(ViskoresDemo CXX)
-
-#Find the Viskores package
-find_package(Viskores REQUIRED QUIET)
-
-if(TARGET viskores::rendering)
-  add_executable(Demo Demo.cxx)
-  target_link_libraries(Demo PRIVATE viskores::filter viskores::rendering viskores::source)
-endif()
-```
+A simple starting example is [Demo.cxx](examples/demo/Demo.cxx), which can be
+found in the [examples/demo](examples/demo) directory. It also comes with a
+sample [CMakeLists.txt](examples/demo/CMakeLists.txt) for configuring such a
+project. When learning to create your own code, both the [Viskores Tutorial] and
+[Viskores Users Guide] have many examples to get you started.
 
 ## License ##
 

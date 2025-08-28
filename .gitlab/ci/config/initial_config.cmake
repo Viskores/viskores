@@ -141,7 +141,6 @@ foreach(option IN LISTS options)
     execute_process(
       COMMAND ${CCACHE_COMMAND} "--version"
       OUTPUT_VARIABLE CCACHE_VERSION
-      ECHO_ERROR_VARIABLE
       )
 
     string(REGEX REPLACE "\n" " " CCACHE_VERSION ${CCACHE_VERSION})

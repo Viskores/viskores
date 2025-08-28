@@ -48,6 +48,7 @@ function build_all_images() {
   build_image ubuntu2204_kokkos_cuda.dockerfile
   build_image ubuntu2204_kokkos_hip.dockerfile
   build_image ubuntu2404.dockerfile
+  build_image ubuntu2404_cuda13.0.dockerfile
 }
 
 if [ "$#" -eq 0 ]; then

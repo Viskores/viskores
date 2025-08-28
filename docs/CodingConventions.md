@@ -180,8 +180,7 @@ for (auto v : vector)
     avoided in class, method, and function scopes (fully qualified
     namespace references are preferred).
 
-  + All code must be valid by the C++14 specifications. It must also
-    compile with Microsoft Visual Studio 2015.
+  + All code must be valid by the 7 specifications.
 
   + New code must include regression tests that will run on the dashboards.
     Generally a new class will have an associated "UnitTest" that will test
