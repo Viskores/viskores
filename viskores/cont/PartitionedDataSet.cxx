@@ -18,12 +18,12 @@
 
 #include <viskores/StaticAssert.h>
 #include <viskores/cont/ArrayHandle.h>
+
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/EnvironmentTracker.h>
 #include <viskores/cont/ErrorBadValue.h>
 #include <viskores/cont/PartitionedDataSet.h>
 #include <viskores/internal/Configure.h>
-
 // clang-format off
 VISKORES_THIRDPARTY_PRE_INCLUDE
 #include <viskores/thirdparty/diy/diy.h>
@@ -75,10 +75,91 @@ viskores::Id PartitionedDataSet::GetGlobalNumberOfPartitions() const
   auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
   viskores::Id globalSize = 0;
   viskoresdiy::mpi::all_reduce(
-    comm, GetNumberOfPartitions(), globalSize, std::plus<viskores::Id>{});
+    comm, this->GetNumberOfPartitions(), globalSize, std::plus<viskores::Id>{});
   return globalSize;
 #else
-  return GetNumberOfPartitions();
+  return this->GetNumberOfPartitions();
+#endif
+}
+
+
+VISKORES_CONT
+std::vector<viskores::Bounds> PartitionedDataSet::PartitionBoundsCompute(viskores::Id index) const
+{
+  std::vector<viskores::Bounds> bounds;
+  bounds.reserve(this->Partitions.size());
+  for (const auto& ds : this->Partitions)
+  {
+    if (ds.GetNumberOfCoordinateSystems() > index)
+      bounds.push_back(ds.GetCoordinateSystem(index).GetBounds());
+    else
+    {
+      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                     "Dataset missing coordinate system index " + std::to_string(index));
+    }
+  }
+
+  return bounds;
+}
+
+VISKORES_CONT
+std::vector<viskores::Bounds> PartitionedDataSet::PartitionBoundsCompute(
+  const std::string& name) const
+{
+  std::vector<viskores::Bounds> bounds;
+  bounds.reserve(this->Partitions.size());
+  for (const auto& ds : this->Partitions)
+  {
+    if (ds.HasCoordinateSystem(name))
+      bounds.push_back(ds.GetCoordinateSystem(name).GetBounds());
+    else
+    {
+      VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Dataset missing coordinate system " + name);
+    }
+  }
+
+  return bounds;
+}
+
+VISKORES_CONT
+std::vector<viskores::Bounds> PartitionedDataSet::AggregatePartitionBounds(
+  const std::vector<viskores::Bounds>& localBounds) const
+{
+#ifndef VISKORES_ENABLE_MPI
+  return localBounds;
+#else
+  auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
+  std::vector<viskores::Float64> localBoundsArray;
+  for (const auto& b : localBounds)
+  {
+    localBoundsArray.push_back(b.X.Min);
+    localBoundsArray.push_back(b.X.Max);
+    localBoundsArray.push_back(b.Y.Min);
+    localBoundsArray.push_back(b.Y.Max);
+    localBoundsArray.push_back(b.Z.Min);
+    localBoundsArray.push_back(b.Z.Max);
+  }
+
+  std::vector<std::vector<viskores::Float64>> globalBoundsArray;
+  viskoresdiy::mpi::all_gather(comm, localBoundsArray, globalBoundsArray);
+  std::vector<viskores::Bounds> globalBounds;
+  globalBounds.reserve(globalBoundsArray.size());
+
+  for (std::size_t i = 0; i < globalBoundsArray.size(); i++)
+  {
+    for (std::size_t j = 0; j < globalBoundsArray[i].size(); j += 6)
+    {
+      viskores::Bounds b(globalBoundsArray[i][j + 0],
+                         globalBoundsArray[i][j + 1],
+                         globalBoundsArray[i][j + 2],
+                         globalBoundsArray[i][j + 3],
+                         globalBoundsArray[i][j + 4],
+                         globalBoundsArray[i][j + 5]);
+      globalBounds.emplace_back(b);
+    }
+  }
+
+  return globalBounds;
 #endif
 }
 
