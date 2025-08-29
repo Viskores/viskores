@@ -193,7 +193,9 @@ private:
     viskores::Id i = right;
 
     // 2) Clamp i into [1, N-3]
-    return viskores::Clamp(viskores::Id(i), viskores::Id(1), viskores::Id(N - 3));
+    return viskores::Max(viskores::Id(1), viskores::Min(i, N - 3));
+
+    //return viskores::Clamp(viskores::Id(i), viskores::Id(1), viskores::Id(N - 3));
   }
 
   VISKORES_EXEC
