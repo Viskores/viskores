@@ -38,6 +38,7 @@ set(unit_tests
   UnitTestArrayPortalFromIterators.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestArraySetValues.cxx
+  UnitTestArrayHandleIsMonotonic.cxx
   UnitTestBuffer.cxx
   UnitTestComputeRange.cxx
   UnitTestControlSignatureTag.cxx
@@ -127,6 +128,7 @@ set(unit_tests_device
   UnitTestTransportCellSetIn.cxx
   UnitTestTransportExecObject.cxx
   UnitTestTransportWholeArray.cxx
+  UnitTestSplineEvaluate.cxx
   )
 if(TARGET viskores_filter_field_conversion)
   list(APPEND unit_tests_device
