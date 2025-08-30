@@ -18,7 +18,7 @@
 
 #include <complex>
 #include <viskores/cont/DataSetBuilderExplicit.h>
-#include <viskores/filter/geometry_refinement/worklet/Tube.h>
+#include <viskores/filter/geometry_refinement/Tube.h>
 #include <viskores/io/VTKDataSetWriter.h>
 
 #include <viskores/cont/ColorTable.h>
@@ -66,25 +66,11 @@ void TubeThatSpiral(viskores::FloatDefault radius,
 
   viskores::cont::DataSet ds = dsb.Create();
 
-  viskores::worklet::Tube tubeWorklet(
-    /*capEnds = */ true,
-    /* how smooth the cylinder is; infinitely smooth as n->infty */ numSides,
-    radius);
-
-  // You added lines, but you need to extend it to a tube.
-  // This generates a new pointset, and new cell set.
-  viskores::cont::ArrayHandle<viskores::Vec3f> tubePoints;
-  viskores::cont::CellSetSingleType<> tubeCells;
-  tubeWorklet.Run(ds.GetCoordinateSystem()
-                    .GetData()
-                    .AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>(),
-                  ds.GetCellSet(),
-                  tubePoints,
-                  tubeCells);
-
-  viskores::cont::DataSet tubeDataset;
-  tubeDataset.AddCoordinateSystem(viskores::cont::CoordinateSystem("coords", tubePoints));
-  tubeDataset.SetCellSet(tubeCells);
+  viskores::filter::geometry_refinement::Tube tubeFilter;
+  tubeFilter.SetCapping(true);
+  tubeFilter.SetNumberOfSides(numSides);
+  tubeFilter.SetRadius(radius);
+  viskores::cont::DataSet tubeDataset = tubeFilter.Execute(ds);
 
   viskores::Bounds coordsBounds = tubeDataset.GetCoordinateSystem().GetBounds();
 
@@ -110,7 +96,7 @@ void TubeThatSpiral(viskores::FloatDefault radius,
   viskores::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
 
 
-  std::vector<viskores::FloatDefault> v(static_cast<std::size_t>(tubePoints.GetNumberOfValues()));
+  std::vector<viskores::FloatDefault> v(static_cast<std::size_t>(tubeDataset.GetNumberOfPoints()));
   // The first value is a cap:
   v[0] = 0;
   for (viskores::Id i = 1; i < viskores::Id(v.size()); i += numSides)

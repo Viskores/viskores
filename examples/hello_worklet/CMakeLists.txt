@@ -23,7 +23,8 @@ find_package(Viskores REQUIRED QUIET)
 
 if(TARGET viskores::io)
   add_executable(HelloWorklet HelloWorklet.cxx)
-  target_link_libraries(HelloWorklet PRIVATE viskores::filter_core viskores::io)
+  target_link_libraries(HelloWorklet
+    PRIVATE viskores::filter_core viskores::worklet viskores::io)
 
   viskores_add_target_information(HelloWorklet
     DROP_UNUSED_SYMBOLS
