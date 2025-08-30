@@ -63,7 +63,7 @@ add_executable(two_filters two_filters.cxx)
 target_link_libraries(two_filters viskores::filter_core viskores::filter_contour viskores::io)
 
 add_executable(mag_grad mag_grad.cxx)
-target_link_libraries(mag_grad viskores::filter_core viskores::filter_vector_analysis viskores::io)
+target_link_libraries(mag_grad viskores::filter_core viskores::filter_vector_analysis viskores::io viskores::worklet)
 # Because mag_grad.cxx creates a worklet with code that
 # runs on a GPU, it needs additional information.
 viskores_add_target_information(mag_grad

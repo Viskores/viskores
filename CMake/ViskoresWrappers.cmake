@@ -438,11 +438,18 @@ function(viskores_add_target_information uses_viskores_target)
     endif()
   endforeach()
 
+  foreach(target IN LISTS targets)
+    target_compile_definitions(${target} PRIVATE VISKORES_IS_VISKORES_TARGET)
+  endforeach()
+
   if(Viskores_TI_DROP_UNUSED_SYMBOLS)
     foreach(target IN LISTS targets)
       viskores_add_drop_unused_function_flags(${target})
     endforeach()
   endif()
+
+  set_property(SOURCE ${Viskores_TI_DEVICE_SOURCES}
+    APPEND PROPERTY COMPILE_DEFINITIONS VISKORES_IS_DEVICE_SOURCE)
 
   if(TARGET viskores_cuda OR TARGET viskores::cuda OR TARGET viskores_kokkos_cuda OR TARGET viskores::kokkos_cuda)
     set_source_files_properties(${Viskores_TI_DEVICE_SOURCES} PROPERTIES LANGUAGE "CUDA")
