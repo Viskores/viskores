@@ -6,6 +6,8 @@ DEPENDS
   viskores_optionparser
   viskores_diy
   viskores_lcl
+PRIVATE_DEPENDS
+  viskores_exec
 OPTIONAL_DEPENDS
   viskores_loguru
 TEST_OPTIONAL_DEPENDS
@@ -14,4 +16,4 @@ TEST_OPTIONAL_DEPENDS
 TEST_DEPENDS
   viskores_source
   viskores_filter_resampling
-
+  viskores_worklet
