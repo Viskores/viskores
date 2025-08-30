@@ -23,8 +23,8 @@ find_package(Viskores REQUIRED QUIET)
 
 add_executable(CosmoCenterFinder CosmoCenterFinder.cxx)
 add_executable(CosmoHaloFinder CosmoHaloFinder.cxx)
-target_link_libraries(CosmoCenterFinder PRIVATE viskores::filter_core)
-target_link_libraries(CosmoHaloFinder PRIVATE viskores::filter_core)
+target_link_libraries(CosmoCenterFinder PRIVATE viskores::filter_core viskores::worklet)
+target_link_libraries(CosmoHaloFinder PRIVATE viskores::filter_core viskores::worklet)
 
 viskores_add_target_information(CosmoCenterFinder CosmoHaloFinder
                             DROP_UNUSED_SYMBOLS
