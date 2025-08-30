@@ -6,6 +6,8 @@ DEPENDS
   viskores_filter_image_processing
   viskores_filter_entity_extraction
   viskores_io
+PRIVATE_DEPENDS
+  viskores_worklet
 TEST_DEPENDS
   viskores_rendering_testing
   viskores_source
