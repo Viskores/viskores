@@ -71,3 +71,13 @@ The options are specified as a bit-wise "or" of fields specified in the :enum:`v
 .. load-example:: BasicInitialize
    :file: GuideExampleInitialization.cxx
    :caption: Calling :func:`viskores::cont::Initialize`.
+
+:func:`viskores::cont::Initialize` should be called exactly once before using any other Viskores features.
+Often this is done in the ``main`` function during program initialization as shown in :numref:`ex:BasicInitialize`.
+However, if the program structure does not allow this, you can use the :func:`viskores::cont::IsInitialized` to check to see if :func:`viskores::cont::Initialize` still needs to be installed.
+
+.. doxygenfunction:: viskores::cont::IsInitialized
+
+.. load-example:: CheckInitialization
+   :file: GuideExampleInitialization.cxx
+   :caption: Using :func:`viskores::cont::IsInitialized` to see if initialization still needs to happen.
