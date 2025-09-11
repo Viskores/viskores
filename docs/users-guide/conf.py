@@ -85,7 +85,7 @@ rst_prolog = '''
 .. |Viskores| replace:: Viskores
 .. |Veclike| replace:: ``Vec``-like
 .. |report-year| replace:: 2025
-.. |report-number| replace:: ORNL/TM-2025/4019
+.. |report-number| replace:: ORNL/TM-2025/4175
 '''
 
 breathe_projects = { 'viskores': '@doxygen_xml_output_dir@' }
