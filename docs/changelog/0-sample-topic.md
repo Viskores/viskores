@@ -9,9 +9,9 @@ Tips for writing a good release note:
 
 * Prefer active voice:
 
-  ** Bad: A function to X was added to VTK.
+  ** Bad: A function to X was added to Viskores.
 
-  ** Good: VTK now provides function X.
+  ** Good: Viskores now provides function X.
 
 * Write to the user, not about the user.
 
