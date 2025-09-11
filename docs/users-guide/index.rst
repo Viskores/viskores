@@ -5,7 +5,7 @@ The Viskores User's Guide
 ==============================
 
 | **The Viskores User's Guide**
-| Version |version|
+| Release |version|
 
 Kenneth Moreland
 
@@ -25,9 +25,9 @@ Allison Vacanti,
 Abhishek Yenpure,
 and the |Viskores| community.
 
-Moreland, K. (|report-year|). *The Viskores User's Guide*, version |release|, Tech report |report-number|, Oak Ridge National Laboratory.
+Moreland, K. (|report-year|). *The Viskores User's Guide*, Release |release|, Tech report |report-number|, Oak Ridge National Laboratory.
 
-.. centered:: Join the Viskores Community at http://m.vtk.org.
+.. centered:: Join the Viskores Community at https://github.com/Viskores/viskores.
 
 .. todo:: The centered directive is deprecated (https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-centered). Figure out how to add rst-class to center.
 

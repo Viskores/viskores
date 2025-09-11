@@ -54,7 +54,14 @@ set(unit_tests
   UnitTestDeviceSelectOnThreads.cxx
   UnitTestError.cxx
   UnitTestFieldRangeCompute.cxx
-  UnitTestInitialize.cxx
+  UnitTestInitializeCustomOptions.cxx
+  UnitTestInitializeCustomOptionsWithArgs.cxx
+  UnitTestInitializeRuntimeDeviceConfigurationWithArgs.cxx 
+  UnitTestInitializeMixedOptions.cxx
+  UnitTestInitializeNoOptions.cxx
+  UnitTestInitializeStandardOptions.cxx
+  UnitTestInitializeWithHelp.cxx
+  UnitTestInitializeZeroArgs.cxx
   UnitTestIteratorFromArrayPortal.cxx
   UnitTestLateDeallocate.cxx
   UnitTestLogging.cxx
@@ -102,6 +109,7 @@ set(unit_tests_device
   UnitTestArrayHandleView.cxx
   UnitTestArrayHandleXGCCoordinates.cxx
   UnitTestArrayHandleZip.cxx
+  UnitTestArrayIsMonotonic.cxx
   UnitTestArrayRangeCompute.cxx
   UnitTestBitField.cxx
   UnitTestCellLocatorChooser.cxx
@@ -121,6 +129,7 @@ set(unit_tests_device
   UnitTestImplicitFunction.cxx
   UnitTestParticleArrayCopy.cxx
   UnitTestPointLocatorSparseGrid.cxx
+  UnitTestSplineEvaluate.cxx  
   UnitTestTransportArrayIn.cxx
   UnitTestTransportArrayInOut.cxx
   UnitTestTransportArrayOut.cxx

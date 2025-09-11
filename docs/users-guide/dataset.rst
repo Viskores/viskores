@@ -482,9 +482,7 @@ The :class:`viskores::cont::DataSet` object manages the cell set object with :cl
 When you call :func:`viskores::cont::DataSet::GetCellSet`, it returns a :class:`viskores::cont::UnknownCellSet`.
 
 The :class:`viskores::cont::UnknownCellSet` object provides mechanisms to query the cell set, identify its type, and cast it to one of the concrete ``CellSet`` types.
-See Chapter \ref{chap:UnknownCellSet} for details on working with :class:`viskores::cont::UnknownCellSet`.
-
-.. todo:: Add previous reference to UnknownCellSet chapter.
+See :chapref:`unknown-cell-set:Unknown Cell Sets` for details on working with :class:`viskores::cont::UnknownCellSet`.
 
 
 ------------------------------
