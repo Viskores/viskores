@@ -42,6 +42,8 @@ set(headers
   ParametricCoordinates.h
   PointLocatorSparseGrid.h
   TaskBase.h
+  SplineEvaluateRectilinearGrid.h
+  SplineEvaluateUniformGrid.h
   Variant.h
   )
 
