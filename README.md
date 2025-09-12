@@ -38,6 +38,8 @@ the project.
 
   + Community discussion takes place on the [Viskores users discussion].
 
+  + Join the [Viskores Announcements Mailing List] the get updates and meeting announcements.
+
   + Doxygen-generated reference documentation is available for the tip of the
     release branch at [Viskores Doxygen latest]
 
@@ -177,6 +179,7 @@ See [LICENSE.txt](LICENSE.txt) for details.
 [Viskores Overview]:                    http://m.vtk.org/images/2/29/ViskoresVis2016.pptx
 [Viskores Users Guide]:                 https://viskores.readthedocs.io/en/latest/
 [Viskores users discussion]:            https://github.com/Viskores/viskores/discussions
+[Viskores Announcements Mailing List]:  https://lists.hpsf.io/g/viskores-announcements
 [Viskores Tutorial]:                    tutorial/README.md
 [CONTRIBUTING.md]:                      CONTRIBUTING.md
 [High Performance Software Foundation]: https://hpsf.io/
