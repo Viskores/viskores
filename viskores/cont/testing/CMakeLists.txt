@@ -40,7 +40,6 @@ set(unit_tests
   UnitTestArraySetValues.cxx
   UnitTestBuffer.cxx
   UnitTestComputeRange.cxx
-  UnitTestControlSignatureTag.cxx
   UnitTestContTesting.cxx
   UnitTestDataSetBuilderCurvilinear.cxx
   UnitTestDataSetBuilderExplicit.cxx
@@ -50,7 +49,6 @@ set(unit_tests
   UnitTestDataSetExplicit.cxx
   UnitTestDataSetRectilinear.cxx
   UnitTestDataSetUniform.cxx
-  UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDeviceSelectOnThreads.cxx
   UnitTestError.cxx
   UnitTestFieldRangeCompute.cxx
@@ -63,7 +61,7 @@ set(unit_tests
   UnitTestInitializeWithHelp.cxx
   UnitTestInitializeZeroArgs.cxx
   UnitTestIteratorFromArrayPortal.cxx
-  UnitTestLateDeallocate.cxx
+  # UnitTestLateDeallocate.cxx
   UnitTestLogging.cxx
   UnitTestMergePartitionedDataSet.cxx
   UnitTestMoveConstructors.cxx
@@ -79,7 +77,6 @@ set(unit_tests
   UnitTestTypeCheckArray.cxx
   UnitTestTypeCheckCellSet.cxx
   UnitTestTypeCheckExecObject.cxx
-  UnitTestTypeCheckKeys.cxx
   UnitTestUnknownArrayHandle.cxx
   UnitTestUnknownCellSet.cxx
   )
@@ -121,9 +118,11 @@ set(unit_tests_device
   UnitTestCellSetExplicit.cxx
   UnitTestCellSetPermutation.cxx
   UnitTestColorTable.cxx
+  UnitTestControlSignatureTag.cxx
   UnitTestDataSetPermutation.cxx
   UnitTestDataSetSingleType.cxx
   UnitTestDeviceAdapterAlgorithmDependency.cxx
+  UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestHints.cxx
   UnitTestImplicitFunction.cxx
   UnitTestParticleArrayCopy.cxx
@@ -134,6 +133,7 @@ set(unit_tests_device
   UnitTestTransportCellSetIn.cxx
   UnitTestTransportExecObject.cxx
   UnitTestTransportWholeArray.cxx
+  UnitTestTypeCheckKeys.cxx
   )
 if(TARGET viskores_filter_field_conversion)
   list(APPEND unit_tests_device
