@@ -168,7 +168,7 @@ function(viskores_test_against_install_cmake dir)
 
   set_tests_properties(${build_name} PROPERTIES LABELS ${test_label} )
   set_tests_properties(${build_name} PROPERTIES FIXTURES_REQUIRED viskores_installed)
-  set_tests_properties(${build_name} PROPERTIES TIMEOUT 600)
+  set_tests_properties(${build_name} PROPERTIES TIMEOUT 60)
 endfunction()
 
 # -----------------------------------------------------------------------------
@@ -190,7 +190,7 @@ function(_test_install_make dir name)
   set_tests_properties(${build_name} PROPERTIES ENVIRONMENT "${ARGN}")
   set_tests_properties(${build_name} PROPERTIES LABELS "TEST_INSTALL")
   set_tests_properties(${build_name} PROPERTIES FIXTURES_REQUIRED "viskores_installed;makefile_setup")
-  set_tests_properties(${build_name} PROPERTIES TIMEOUT 600)
+  set_tests_properties(${build_name} PROPERTIES TIMEOUT 60)
 endfunction()
 
 # -----------------------------------------------------------------------------
