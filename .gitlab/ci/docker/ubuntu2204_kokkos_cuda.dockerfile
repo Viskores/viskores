@@ -45,7 +45,7 @@ RUN mkdir /opt/cmake/ && \
 ENV PATH "/opt/cmake/bin:${PATH}"
 
 # Build and install Kokkos
-ARG KOKKOS_VERSION=3.7.02
+ARG KOKKOS_VERSION=4.1.00
 RUN mkdir -p /opt/kokkos/build && \
     cd /opt/kokkos/build && \
     curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz > kokkos-$KOKKOS_VERSION.tar.gz && \
@@ -55,14 +55,10 @@ RUN mkdir -p /opt/kokkos/build && \
     cmake -B . -S ../kokkos-$KOKKOS_VERSION \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
-          -DCMAKE_CXX_FLAGS=-fPIC \
-          -DCMAKE_CXX_STANDARD=14 \
           -DKokkos_ENABLE_CUDA=ON \
           -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \
           -DKokkos_ENABLE_CUDA_LAMBDA=ON \
-          -DKokkos_ENABLE_CUDA_LDG_INTRINSIC=ON \
           -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=OFF \
-          -DKokkos_ENABLE_CUDA_UVM=ON \
           -DKokkos_ARCH_AMPERE80=ON && \
     cmake --build . -j 8 && \
     cmake --install . && \
