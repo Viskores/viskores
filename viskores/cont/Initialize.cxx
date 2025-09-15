@@ -229,12 +229,6 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
       exit(1);
     }
 
-    if (options[opt::OptionIndex::HELP])
-    {
-      std::cerr << config.Usage;
-      exit(0);
-    }
-
     // The RuntimeDeviceConfiguration must be completed before calling GetRuntimeDeviceTracker()
     // for all the devices. This is because GetRuntimeDeviceTracker will construct a given
     // device's DeviceAdapterRuntimeDetector to determine if it exists and this constructor may
@@ -245,6 +239,12 @@ InitializeResult Initialize(int& argc, char* argv[], InitializeOptions opts)
       viskores::cont::RuntimeDeviceInformation runtimeDevice;
       runtimeDevice.GetRuntimeConfiguration(
         viskores::cont::DeviceAdapterTagAny{}, runtimeDeviceOptions, argc, argv);
+    }
+
+    if (options[opt::OptionIndex::HELP])
+    {
+      std::cerr << config.Usage;
+      exit(0);
     }
 
     // Check for device on command line.
