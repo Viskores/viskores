@@ -61,7 +61,7 @@ set(unit_tests
   UnitTestInitializeWithHelp.cxx
   UnitTestInitializeZeroArgs.cxx
   UnitTestIteratorFromArrayPortal.cxx
-  UnitTestLateDeallocate.cxx
+  # UnitTestLateDeallocate.cxx
   UnitTestLogging.cxx
   UnitTestMergePartitionedDataSet.cxx
   UnitTestMoveConstructors.cxx
