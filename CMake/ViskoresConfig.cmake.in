@@ -137,15 +137,6 @@ set(VISKORES_FROM_INSTALL_DIR FALSE)
 if(NOT (PROJECT_NAME STREQUAL "Viskores" OR CMAKE_PROJECT_NAME STREQUAL "Viskores"))
   set(VISKORES_FROM_INSTALL_DIR TRUE)
   include(${Viskores_CONFIG_DIR}/ViskoresTargets.cmake)
-
-  if(DEFINED PACKAGE_FIND_VERSION AND PACKAGE_FIND_VERSION VERSION_LESS 2.0)
-    add_library(viskores_cont ALIAS viskores::cont)
-    add_library(viskores_filter ALIAS viskores::filter)
-    add_library(viskores_io ALIAS viskores::io)
-    add_library(viskores_rendering ALIAS viskores::rendering)
-    add_library(viskores_source ALIAS viskores::source)
-    add_library(viskores_worklet ALIAS viskores::worklet)
-  endif()
 endif()
 
 # Once we can require CMake 3.15 for all cuda builds we can
@@ -178,6 +169,14 @@ if(Viskores_ENABLE_CUDA)
   if (CMAKE_VERSION VERSION_LESS 3.13)
     message(FATAL_ERROR "Viskores with CUDA requires CMake 3.13+")
   endif()
+endif()
+
+if (TARGET viskores::cuda OR TARGET viskores::kokkos_cuda)
+  enable_language(CUDA)
+endif()
+
+if (TARGET viskores::kokkos_hip)
+  enable_language(HIP)
 endif()
 
 # This includes a host of functions used by Viskores CMake.
