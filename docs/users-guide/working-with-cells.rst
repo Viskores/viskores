@@ -237,9 +237,7 @@ As is typical for operations of this nature, one worklet counts the number of ed
 
 .. didyouknow::
    :numref:`ex:CellEdge` demonstrates one of many techniques for creating cell sets in a worklet.
-   Chapter~\ref{chap:GeneratingCellSets} describes this and many more such techniques.
-
-.. todo:: Fix chap:GeneratingCellSets reference above.
+   :chapref:`generating-cell-sets:Generating Cell Sets` describes this and many more such techniques.
 
 .. load-example:: CellEdge
    :file: GuideExampleCellEdgesFaces.cxx
