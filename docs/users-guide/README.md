@@ -82,8 +82,8 @@ references to document parts. Three roles are created: `:partref:`,
 `:chapref:`, and `:secref:` to create cross references to parts, chapters,
 and sections, respectively. They each take a label, and Sphinx is
 configured with numfig and autosection labels. These labels take the form
-<file>:<title> where <file> is the name of the file containing the section
-(without the `.rst` extension) and <title> is the full name of the section.
+`<file>:<title>` where `<file>` is the name of the file containing the section
+(without the `.rst` extension) and `<title>` is the full name of the section.
 
 Here are examples of cross references.
 
