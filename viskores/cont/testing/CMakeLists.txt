@@ -35,7 +35,6 @@ set(unit_tests
   UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandleThreadSafety.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
-  UnitTestArrayIsMonotonic.cxx
   UnitTestArrayPortalFromIterators.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestArraySetValues.cxx
@@ -104,6 +103,7 @@ set(unit_tests_device
   UnitTestArrayHandleView.cxx
   UnitTestArrayHandleXGCCoordinates.cxx
   UnitTestArrayHandleZip.cxx
+  UnitTestArrayIsMonotonic.cxx
   UnitTestArrayRangeCompute.cxx
   UnitTestBitField.cxx
   UnitTestCellLocatorChooser.cxx
