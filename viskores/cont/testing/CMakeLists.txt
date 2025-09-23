@@ -66,6 +66,7 @@ set(unit_tests
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestRuntimeDeviceNames.cxx
   UnitTestScopedRuntimeDeviceTracker.cxx
+  UnitTestSplineEvaluate.cxx  
   UnitTestStorageList.cxx
   UnitTestTimer.cxx
   UnitTestToken.cxx
@@ -128,7 +129,6 @@ set(unit_tests_device
   UnitTestTransportCellSetIn.cxx
   UnitTestTransportExecObject.cxx
   UnitTestTransportWholeArray.cxx
-  UnitTestSplineEvaluate.cxx
   )
 if(TARGET viskores_filter_field_conversion)
   list(APPEND unit_tests_device
