@@ -35,6 +35,7 @@ set(unit_tests
   UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandleThreadSafety.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
+  UnitTestArrayIsMonotonic.cxx
   UnitTestArrayPortalFromIterators.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestArraySetValues.cxx
@@ -119,7 +120,6 @@ set(unit_tests_device
   UnitTestDeviceAdapterAlgorithmDependency.cxx
   UnitTestHints.cxx
   UnitTestImplicitFunction.cxx
-  UnitTestArrayHandleIsMonotonic.cxx
   UnitTestParticleArrayCopy.cxx
   UnitTestPointLocatorSparseGrid.cxx
   UnitTestTransportArrayIn.cxx

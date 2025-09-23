@@ -15,13 +15,10 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef viskores_cont_ArrayHandleIsMonotonic_h
-#define viskores_cont_ArrayHandleIsMonotonic_h
 
 #include <viskores/cont/Algorithm.h>
-#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ArrayIsMonotonic.h>
 #include <viskores/cont/Invoker.h>
-#include <viskores/cont/viskores_cont_export.h>
 #include <viskores/worklet/WorkletMapField.h>
 
 namespace viskores
@@ -66,33 +63,60 @@ struct MonotonicDecreasing : public viskores::worklet::WorkletMapField
 };
 } //anonymous namespace
 
-template <typename T>
-VISKORES_ALWAYS_EXPORT bool IsMonotonicIncreasing(
-  const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>& input)
+
+bool ArrayIsMonotonicIncreasing(const viskores::cont::UnknownArrayHandle& input)
 {
-  if (input.GetNumberOfValues() < 2)
+  if (input.GetNumberOfComponentsFlat() != 1)
+  {
+    throw viskores::cont::ErrorBadType(
+      "ArrayIsMonotonicIncreasing only supported for scalar arrays.");
+  }
+
+  viskores::Id numValues = input.GetNumberOfValues();
+  if (numValues < 2)
     return true;
 
-  viskores::cont::Invoker invoke;
   viskores::cont::ArrayHandle<bool> result;
-  invoke(MonotonicIncreasing{}, input, result);
+
+  auto resolveType = [&](auto recombineVec)
+  {
+    VISKORES_ASSERT(recombineVec.GetNumberOfComponents() == 1);
+    auto componentArray = recombineVec.GetComponentArray(0);
+    viskores::cont::Invoker invoke;
+
+    invoke(MonotonicIncreasing{}, componentArray, result);
+  };
+  input.CastAndCallWithExtractedArray(resolveType);
+
   return viskores::cont::Algorithm::Reduce(result, true, viskores::LogicalAnd());
 }
 
-template <typename T>
-VISKORES_ALWAYS_EXPORT bool IsMonotonicDecreasing(
-  const viskores::cont::ArrayHandle<T, viskores::cont::StorageTagBasic>& input)
+bool ArrayIsMonotonicDecreasing(const viskores::cont::UnknownArrayHandle& input)
 {
-  if (input.GetNumberOfValues() < 2)
+  if (input.GetNumberOfComponentsFlat() != 1)
+  {
+    throw viskores::cont::ErrorBadType(
+      "ArrayIsMonotonicDecreasing only supported for scalar arrays.");
+  }
+  viskores::Id numValues = input.GetNumberOfValues();
+  if (numValues < 2)
     return true;
 
-  viskores::cont::Invoker invoke;
   viskores::cont::ArrayHandle<bool> result;
-  invoke(MonotonicDecreasing{}, input, result);
+
+  auto resolveType = [&](auto recombineVec)
+  {
+    VISKORES_ASSERT(recombineVec.GetNumberOfComponents() == 1);
+    auto componentArray = recombineVec.GetComponentArray(0);
+    viskores::cont::Invoker invoke;
+
+    invoke(MonotonicDecreasing{}, componentArray, result);
+  };
+  input.CastAndCallWithExtractedArray(resolveType);
+
   return viskores::cont::Algorithm::Reduce(result, true, viskores::LogicalAnd());
 }
+
 
 }
 } // namespace viskores::cont
-
-#endif //viskores_cont_ArrayHandleIsMonotonic_h

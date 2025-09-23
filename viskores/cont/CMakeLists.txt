@@ -38,7 +38,6 @@ set(headers
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
   ArrayHandleIndex.h
-  ArrayHandleIsMonotonic.h
   ArrayHandleMultiplexer.h
   ArrayHandleOffsetsToNumComponents.h
   ArrayHandlePermutation.h
@@ -57,6 +56,7 @@ set(headers
   ArrayHandleView.h
   ArrayHandleXGCCoordinates.h
   ArrayHandleZip.h
+  ArrayIsMonotonic.h
   ArrayPortal.h
   ArrayPortalToIterators.h
   ArrayRangeCompute.h
@@ -152,6 +152,7 @@ set(sources
   ArrayHandleSOA.cxx
   ArrayHandleSOAStride.cxx
   ArrayHandleStride.cxx
+  ArrayIsMonotonic.cxx
   AssignerPartitionedDataSet.cxx
   BitField.cxx
   BoundsCompute.cxx
@@ -203,7 +204,6 @@ set(device_sources
   ArrayCopy.cxx
   ArrayGetValues.cxx
   ArrayHandleIndex.cxx
-  ArrayHandleIsMonotonic.cxx
   ArrayHandleUniformPointCoordinates.cxx
   ArrayRangeCompute.cxx
   ArraySetValues.cxx

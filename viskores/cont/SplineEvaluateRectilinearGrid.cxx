@@ -17,7 +17,7 @@
 //============================================================================
 
 #include <viskores/cont/ArrayCopy.h>
-#include <viskores/cont/ArrayHandleIsMonotonic.h>
+#include <viskores/cont/ArrayIsMonotonic.h>
 #include <viskores/cont/CellSetStructured.h>
 #include <viskores/cont/SplineEvaluateRectilinearGrid.h>
 
@@ -38,9 +38,9 @@ viskores::exec::SplineEvaluateRectilinearGrid SplineEvaluateRectilinearGrid::Pre
 
   RectCoordsType coords;
   coords = this->DataSet.GetCoordinateSystem(0).GetData().template AsArrayHandle<RectCoordsType>();
-  if (!viskores::cont::IsMonotonicIncreasing(coords.GetFirstArray()) ||
-      !viskores::cont::IsMonotonicIncreasing(coords.GetSecondArray()) ||
-      !viskores::cont::IsMonotonicIncreasing(coords.GetThirdArray()))
+  if (!viskores::cont::ArrayIsMonotonicIncreasing(coords.GetFirstArray()) ||
+      !viskores::cont::ArrayIsMonotonicIncreasing(coords.GetSecondArray()) ||
+      !viskores::cont::ArrayIsMonotonicIncreasing(coords.GetThirdArray()))
 
   {
     throw viskores::cont::ErrorBadType("Coordinates are not monotonic increasing.");

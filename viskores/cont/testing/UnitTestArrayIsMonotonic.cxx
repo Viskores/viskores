@@ -17,7 +17,7 @@
 //============================================================================
 
 #include <viskores/cont/ArrayHandle.h>
-#include <viskores/cont/ArrayHandleIsMonotonic.h>
+#include <viskores/cont/ArrayIsMonotonic.h>
 #include <viskores/cont/testing/Testing.h>
 
 #include <algorithm>
@@ -29,8 +29,8 @@ template <typename T>
 void CheckArray(const std::vector<T>& input)
 {
   auto array = viskores::cont::make_ArrayHandle(input, viskores::CopyFlag::Off);
-  bool isInc = viskores::cont::IsMonotonicIncreasing(array);
-  bool isDec = viskores::cont::IsMonotonicDecreasing(array);
+  bool isInc = viskores::cont::ArrayIsMonotonicIncreasing(array);
+  bool isDec = viskores::cont::ArrayIsMonotonicDecreasing(array);
 
   if (input.empty() || input.size() == 1)
   {
@@ -46,8 +46,8 @@ void CheckArray(const std::vector<T>& input)
   auto copy = input;
   std::reverse(copy.begin(), copy.end());
   array = viskores::cont::make_ArrayHandle(copy, viskores::CopyFlag::Off);
-  isInc = viskores::cont::IsMonotonicIncreasing(array);
-  isDec = viskores::cont::IsMonotonicDecreasing(array);
+  isInc = viskores::cont::ArrayIsMonotonicIncreasing(array);
+  isDec = viskores::cont::ArrayIsMonotonicDecreasing(array);
 
   VISKORES_TEST_ASSERT(!isInc, "Reversed array is not monotonic decreasing");
   VISKORES_TEST_ASSERT(isDec, "Reversed array is not monotonic increasing");
@@ -74,7 +74,7 @@ void CheckTypes(const std::vector<viskores::Id>& input)
 
 } //namespace anonymous
 
-void TestArrayHandleIsMonotonic()
+void TestArrayIsMonotonic()
 {
   CheckTypes({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
   CheckTypes({ -5, -4, -3, -2, -1, 0, 1, 2, 3, 4 });
@@ -88,7 +88,7 @@ void TestArrayHandleIsMonotonic()
   CheckTypes({ 0 });
 }
 
-int UnitTestArrayHandleIsMonotonic(int argc, char* argv[])
+int UnitTestArrayIsMonotonic(int argc, char* argv[])
 {
-  return viskores::cont::testing::Testing::Run(TestArrayHandleIsMonotonic, argc, argv);
+  return viskores::cont::testing::Testing::Run(TestArrayIsMonotonic, argc, argv);
 }
