@@ -152,7 +152,6 @@ set(sources
   ArrayHandleSOA.cxx
   ArrayHandleSOAStride.cxx
   ArrayHandleStride.cxx
-  ArrayIsMonotonic.cxx
   AssignerPartitionedDataSet.cxx
   BitField.cxx
   BoundsCompute.cxx
@@ -205,6 +204,7 @@ set(device_sources
   ArrayGetValues.cxx
   ArrayHandleIndex.cxx
   ArrayHandleUniformPointCoordinates.cxx
+  ArrayIsMonotonic.cxx
   ArrayRangeCompute.cxx
   ArraySetValues.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
