@@ -16,7 +16,7 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 set(version 1.11.0)
 
