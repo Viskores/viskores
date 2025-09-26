@@ -65,7 +65,6 @@ set(unit_tests
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestRuntimeDeviceNames.cxx
   UnitTestScopedRuntimeDeviceTracker.cxx
-  UnitTestSplineEvaluate.cxx  
   UnitTestStorageList.cxx
   UnitTestTimer.cxx
   UnitTestToken.cxx
@@ -123,6 +122,7 @@ set(unit_tests_device
   UnitTestImplicitFunction.cxx
   UnitTestParticleArrayCopy.cxx
   UnitTestPointLocatorSparseGrid.cxx
+  UnitTestSplineEvaluate.cxx  
   UnitTestTransportArrayIn.cxx
   UnitTestTransportArrayInOut.cxx
   UnitTestTransportArrayOut.cxx
