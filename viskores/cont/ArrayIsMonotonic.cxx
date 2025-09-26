@@ -64,7 +64,7 @@ struct MonotonicDecreasing : public viskores::worklet::WorkletMapField
 } //anonymous namespace
 
 
-bool ArrayIsMonotonicIncreasing(const viskores::cont::UnknownArrayHandle& input)
+VISKORES_CONT bool ArrayIsMonotonicIncreasing(const viskores::cont::UnknownArrayHandle& input)
 {
   if (input.GetNumberOfComponentsFlat() != 1)
   {
@@ -91,7 +91,7 @@ bool ArrayIsMonotonicIncreasing(const viskores::cont::UnknownArrayHandle& input)
   return viskores::cont::Algorithm::Reduce(result, true, viskores::LogicalAnd());
 }
 
-bool ArrayIsMonotonicDecreasing(const viskores::cont::UnknownArrayHandle& input)
+VISKORES_CONT bool ArrayIsMonotonicDecreasing(const viskores::cont::UnknownArrayHandle& input)
 {
   if (input.GetNumberOfComponentsFlat() != 1)
   {
