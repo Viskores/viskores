@@ -225,6 +225,9 @@ The macros :c:macro:`VISKORES_DEFAULT_TYPE_LIST` and :c:macro:`VISKORES_DEFAULT_
 
 .. doxygenfunction:: viskores::cont::UnknownArrayHandle::CastAndCallForTypes
 
+.. doxygendefine:: VISKORES_DEFAULT_TYPE_LIST
+.. doxygendefine:: VISKORES_DEFAULT_STORAGE_LIST
+
 .. load-example:: UsingCastAndCallForTypes
    :file: GuideExampleUnknownArrayHandle.cxx
    :caption: Operating on an :class:`viskores::cont::UnknownArrayHandle` with :func:`viskores::cont::UnknownArrayHandle::CastAndCallForTypes`.

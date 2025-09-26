@@ -123,6 +123,20 @@ void DoSomething(T&& x)
   (void)x;
 }
 
+void CheckInitialization()
+{
+  ////
+  //// BEGIN-EXAMPLE CheckInitialization
+  ////
+  if (!viskores::cont::IsInitialized())
+  {
+    viskores::cont::Initialize();
+  }
+  ////
+  //// END-EXAMPLE CheckInitialization
+  ////
+}
+
 void ExampleLogging()
 {
   ////
@@ -172,25 +186,13 @@ void ExampleLogging()
   TestFunc();
 
   DoSomething(viskores::Vec<viskores::Id3, 3>{});
-
-#if 0
-  Error context was removed in Viskores 2.0 (and was disabled long before then)
-  //
-  // BEGIN-EXAMPLE LoggingErrorContext
-  //
-  // This message is only logged if a crash occurs
-  VISKORES_LOG_ERROR_CONTEXT("Some variable value", 42);
-  //
-  // END-EXAMPLE LoggingErrorContext
-  //
-  std::cerr << viskores::cont::GetLogErrorContext() << "\n";
-#endif
 }
 } // namespace LoggingExample
 
 void Test(int argc, char** argv)
 {
   LoggingExample::main(argc, argv);
+  LoggingExample::CheckInitialization();
   LoggingExample::ExampleLogging();
 
   std::string arg0 = "command-name";

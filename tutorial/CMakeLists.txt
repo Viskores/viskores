@@ -23,7 +23,7 @@
 #file is, we can add the location to look to CMAKE_PREFIX_PATH.
 set(CMAKE_PREFIX_PATH ${Viskores_BINARY_DIR}/${Viskores_INSTALL_CONFIG_DIR})
 
-cmake_minimum_required(VERSION 3.12...3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(Viskores_tut)
 
 #Find the Viskores package

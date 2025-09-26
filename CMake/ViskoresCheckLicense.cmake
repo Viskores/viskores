@@ -23,7 +23,7 @@
 ## cmake -DViskores_SOURCE_DIR=<Viskores_SOURCE_DIR> -P <Viskores_SOURCE_DIR>/CMake/VISKORESCheckLicense.cmake
 ##
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.15)
 
 set(FILES_TO_CHECK
   *.txt
