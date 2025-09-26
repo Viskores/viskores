@@ -40,8 +40,6 @@ set(flow_device_sources
   worklet/Analysis.cxx
   Lagrangian.cxx
   LagrangianStructures.cxx
-  FilterParticleAdvectionSteadyState.cxx
-  FilterParticleAdvectionUnsteadyState.cxx
   StreamSurface.cxx
   Lagrangian.cxx
   LagrangianStructures.cxx
