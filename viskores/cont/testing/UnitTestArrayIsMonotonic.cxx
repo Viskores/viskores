@@ -49,8 +49,8 @@ void CheckArray(const std::vector<T>& input)
   isInc = viskores::cont::ArrayIsMonotonicIncreasing(array);
   isDec = viskores::cont::ArrayIsMonotonicDecreasing(array);
 
-  VISKORES_TEST_ASSERT(!isInc, "Reversed array is not monotonic decreasing");
-  VISKORES_TEST_ASSERT(isDec, "Reversed array is not monotonic increasing");
+  VISKORES_TEST_ASSERT(!isInc, "Reversed array should not be monotonic increasing");
+  VISKORES_TEST_ASSERT(isDec, "Reversed array is not monotonic decreasing");
 }
 
 template <typename OutputType, typename InputType>
