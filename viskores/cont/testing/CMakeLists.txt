@@ -54,7 +54,14 @@ set(unit_tests
   UnitTestDeviceSelectOnThreads.cxx
   UnitTestError.cxx
   UnitTestFieldRangeCompute.cxx
-  UnitTestInitialize.cxx
+  UnitTestInitializeCustomOptions.cxx
+  UnitTestInitializeCustomOptionsWithArgs.cxx
+  UnitTestInitializeRuntimeDeviceConfigurationWithArgs.cxx 
+  UnitTestInitializeMixedOptions.cxx
+  UnitTestInitializeNoOptions.cxx
+  UnitTestInitializeStandardOptions.cxx
+  UnitTestInitializeWithHelp.cxx
+  UnitTestInitializeZeroArgs.cxx
   UnitTestIteratorFromArrayPortal.cxx
   UnitTestLateDeallocate.cxx
   UnitTestLogging.cxx

@@ -19,7 +19,7 @@
 ##=============================================================================
 
 # We need this CMake versions for tests
-cmake_minimum_required(VERSION 3.12..3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 # Read the files from the build directory that contain
 # host information ( name, parallel level, etc )
