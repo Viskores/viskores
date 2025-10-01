@@ -65,8 +65,7 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
     if (this->Approach == ApproachEnum::MonteCarlo)
     {
       fieldName = "MonteCarlo";
-      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                     "Adopt Monte Carlo with numsamples " << this->NumSamples);
+      VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Adopt Monte Carlo with numsamples " << this->NumSamples);
 
       viskores::cont::ArrayHandleRandomUniformReal<ValueType> randomHandle(this->NumSamples * 2);
 
@@ -98,8 +97,7 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
     else if (this->Approach == ApproachEnum::Mean)
     {
       fieldName = "Mean";
-      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                    "Adopt Mean" << std::endl);
+      VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Adopt Mean" << std::endl);
       this->Invoke(viskores::worklet::detail::MultiVariateMean{ this->minAxis, this->maxAxis },
                    concreteEnsembleMinX,
                    concreteEnsembleMaxX,
@@ -110,8 +108,7 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
     else if (this->Approach == ApproachEnum::Truth)
     {
       fieldName = "Truth";
-      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                     "Adopt Truth" << std::endl);
+      VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Adopt Truth" << std::endl);
       this->Invoke(viskores::worklet::detail::MultiVariateTruth{ this->minAxis, this->maxAxis },
                    concreteEnsembleMinX,
                    concreteEnsembleMaxX,
