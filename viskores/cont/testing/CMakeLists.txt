@@ -109,6 +109,7 @@ set(unit_tests_device
   UnitTestArrayHandleView.cxx
   UnitTestArrayHandleXGCCoordinates.cxx
   UnitTestArrayHandleZip.cxx
+  UnitTestArrayIsMonotonic.cxx
   UnitTestArrayRangeCompute.cxx
   UnitTestBitField.cxx
   UnitTestCellLocatorChooser.cxx
@@ -128,6 +129,7 @@ set(unit_tests_device
   UnitTestImplicitFunction.cxx
   UnitTestParticleArrayCopy.cxx
   UnitTestPointLocatorSparseGrid.cxx
+  UnitTestSplineEvaluate.cxx  
   UnitTestTransportArrayIn.cxx
   UnitTestTransportArrayInOut.cxx
   UnitTestTransportArrayOut.cxx
