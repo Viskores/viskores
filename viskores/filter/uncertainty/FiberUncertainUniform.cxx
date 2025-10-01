@@ -85,7 +85,8 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
     else if (this->Approach == ApproachEnum::ClosedForm)
     {
       fieldName = "ClosedForm";
-      std::cout << "Adopt ClosedForm" << std::endl;
+      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                     "Adopt ClosedForm" << std::endl);
       this->Invoke(
         viskores::worklet::detail::MultiVariateClosedForm{ this->minAxis, this->maxAxis },
         concreteEnsembleMinX,
@@ -97,7 +98,8 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
     else if (this->Approach == ApproachEnum::Mean)
     {
       fieldName = "Mean";
-      std::cout << "Adopt Mean" << std::endl;
+      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                    "Adopt Mean" << std::endl);
       this->Invoke(viskores::worklet::detail::MultiVariateMean{ this->minAxis, this->maxAxis },
                    concreteEnsembleMinX,
                    concreteEnsembleMaxX,
@@ -108,7 +110,8 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
     else if (this->Approach == ApproachEnum::Truth)
     {
       fieldName = "Truth";
-      std::cout << "Adopt Truth" << std::endl;
+      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                     "Adopt Truth" << std::endl);
       this->Invoke(viskores::worklet::detail::MultiVariateTruth{ this->minAxis, this->maxAxis },
                    concreteEnsembleMinX,
                    concreteEnsembleMaxX,
