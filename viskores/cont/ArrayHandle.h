@@ -170,9 +170,7 @@ struct GetTypeInParentheses<void(T)>
   VISKORES_IS_ARRAY_HANDLE(Superclass);                                                       \
                                                                                               \
   VISKORES_CONT                                                                               \
-  classname()                                                                                 \
-  {                                                                                           \
-  }                                                                                           \
+  classname() {}                                                                              \
                                                                                               \
   VISKORES_CONT                                                                               \
   classname(const Thisclass& src)                                                             \

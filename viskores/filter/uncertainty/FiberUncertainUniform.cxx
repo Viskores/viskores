@@ -65,7 +65,8 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
     if (this->Approach == ApproachEnum::MonteCarlo)
     {
       fieldName = "MonteCarlo";
-      VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Adopt Monte Carlo with numsamples " << this->NumSamples);
+      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                     "Adopt Monte Carlo with numsamples " << this->NumSamples);
 
       viskores::cont::ArrayHandleRandomUniformReal<ValueType> randomHandle(this->NumSamples * 2);
 
@@ -84,8 +85,7 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
     else if (this->Approach == ApproachEnum::ClosedForm)
     {
       fieldName = "ClosedForm";
-      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                     "Adopt ClosedForm" << std::endl);
+      VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Adopt ClosedForm" << std::endl);
       this->Invoke(
         viskores::worklet::detail::MultiVariateClosedForm{ this->minAxis, this->maxAxis },
         concreteEnsembleMinX,
