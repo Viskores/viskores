@@ -56,6 +56,7 @@ set(headers
   ArrayHandleView.h
   ArrayHandleXGCCoordinates.h
   ArrayHandleZip.h
+  ArrayIsMonotonic.h
   ArrayPortal.h
   ArrayPortalToIterators.h
   ArrayRangeCompute.h
@@ -131,6 +132,8 @@ set(headers
   Token.h
   TryExecute.h
   SerializableTypeString.h
+  SplineEvaluateRectilinearGrid.h
+  SplineEvaluateUniformGrid.h
   UncertainArrayHandle.h
   UncertainCellSet.h
   UnknownArrayHandle.h
@@ -186,6 +189,7 @@ set(sources
   RuntimeDeviceTracker.cxx
   PartitionedDataSet.cxx
   PointLocatorBase.cxx
+  SplineEvaluateUniformGrid.cxx
   Storage.cxx
   Token.cxx
   TryExecute.cxx
@@ -200,6 +204,7 @@ set(device_sources
   ArrayGetValues.cxx
   ArrayHandleIndex.cxx
   ArrayHandleUniformPointCoordinates.cxx
+  ArrayIsMonotonic.cxx
   ArrayRangeCompute.cxx
   ArraySetValues.cxx
   CellLocatorBoundingIntervalHierarchy.cxx
@@ -217,6 +222,7 @@ set(device_sources
   MergePartitionedDataSet.cxx
   PointLocatorSparseGrid.cxx
   RuntimeDeviceInformation.cxx
+  SplineEvaluateRectilinearGrid.cxx
   Timer.cxx
   )
 
