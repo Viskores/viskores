@@ -34,12 +34,14 @@
 #include <viskores/rendering/View2D.h>
 #include <viskores/rendering/View3D.h>
 
+#include <viskores/cont/BoundsGlobalCompute.h>
+#include <viskores/cont/FieldRangeGlobalCompute.h>
 #include <viskores/cont/RuntimeDeviceTracker.h>
 
 namespace
 {
 
-using DataSetFieldVector = std::vector<std::pair<viskores::cont::DataSet, std::string>>;
+using viskores::rendering::testing::DataSetFieldVector;
 
 void SetupView(viskores::rendering::View3D& view,
                const viskores::Bounds& bounds,
@@ -167,6 +169,49 @@ std::unique_ptr<viskores::rendering::Mapper> MakeMapper(
   return std::unique_ptr<viskores::rendering::Mapper>(mapper);
 }
 
+void AddDataToScene(const viskores::cont::DataSet& dataSet,
+                    std::size_t dataFieldId,
+                    const std::string& fieldName,
+                    const viskores::rendering::testing::RenderTestOptions& options,
+                    viskores::rendering::Scene& scene,
+                    viskores::Bounds& bounds,
+                    viskores::Range& fieldRange)
+{
+  if (options.Colors.empty())
+  {
+    scene.AddActor(viskores::rendering::Actor(dataSet, fieldName, options.ColorTable));
+  }
+  else
+  {
+    scene.AddActor(viskores::rendering::Actor(
+      dataSet, fieldName, options.Colors[dataFieldId % options.Colors.size()]));
+  }
+  bounds.Include(dataSet.GetCoordinateSystem().GetBounds());
+  fieldRange.Include(dataSet.GetField(fieldName).GetRange().ReadPortal().Get(0));
+}
+
+void AddDataToScene(const viskores::cont::PartitionedDataSet& dataSet,
+                    std::size_t dataFieldId,
+                    const std::string& fieldName,
+                    const viskores::rendering::testing::RenderTestOptions& options,
+                    viskores::rendering::Scene& scene,
+                    viskores::Bounds& bounds,
+                    viskores::Range& fieldRange)
+{
+  if (options.Colors.empty())
+  {
+    scene.AddActor(viskores::rendering::Actor(dataSet, fieldName, options.ColorTable));
+  }
+  else
+  {
+    scene.AddActor(viskores::rendering::Actor(
+      dataSet, fieldName, options.Colors[dataFieldId % options.Colors.size()]));
+  }
+  bounds.Include(viskores::cont::BoundsGlobalCompute(dataSet));
+  fieldRange.Include(
+    viskores::cont::FieldRangeGlobalCompute(dataSet, fieldName).ReadPortal().Get(0));
+}
+
 void DoRenderTest(viskores::rendering::Canvas& canvas,
                   viskores::rendering::Mapper& mapper,
                   const DataSetFieldVector& dataSetsFields,
@@ -181,19 +226,18 @@ void DoRenderTest(viskores::rendering::Canvas& canvas,
   viskores::Range fieldRange;
   for (std::size_t dataFieldId = 0; dataFieldId < numFields; ++dataFieldId)
   {
-    viskores::cont::DataSet dataSet = dataSetsFields[dataFieldId].first;
-    std::string fieldName = dataSetsFields[dataFieldId].second;
-    if (options.Colors.empty())
+    auto addToScene = [&](auto concreteData)
     {
-      scene.AddActor(viskores::rendering::Actor(dataSet, fieldName, options.ColorTable));
-    }
-    else
-    {
-      scene.AddActor(viskores::rendering::Actor(
-        dataSet, fieldName, options.Colors[dataFieldId % options.Colors.size()]));
-    }
-    bounds.Include(dataSet.GetCoordinateSystem().GetBounds());
-    fieldRange.Include(dataSet.GetField(fieldName).GetRange().ReadPortal().Get(0));
+      AddDataToScene(concreteData,
+                     dataFieldId,
+                     dataSetsFields[dataFieldId].second,
+                     options,
+                     scene,
+                     bounds,
+                     fieldRange);
+    };
+    auto data = dataSetsFields[dataFieldId].first;
+    data.CastAndCall(addToScene);
   }
 
   std::unique_ptr<viskores::rendering::View> viewPointer;
@@ -279,6 +323,14 @@ namespace testing
 {
 
 void RenderTest(const viskores::cont::DataSet& dataSet,
+                const std::string& fieldName,
+                const std::string& outputFile,
+                const RenderTestOptions& options)
+{
+  RenderTest({ { dataSet, fieldName } }, outputFile, options);
+}
+
+void RenderTest(const viskores::cont::PartitionedDataSet& dataSet,
                 const std::string& fieldName,
                 const std::string& outputFile,
                 const RenderTestOptions& options)

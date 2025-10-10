@@ -30,6 +30,7 @@ if (Viskores_ENABLE_RENDERING)
   list(APPEND libraries viskores_rendering_testing viskores_filter_contour)
 
   list(APPEND unit_tests
+    RenderTestAmrSource.cxx
     RenderTestPerlinNoise.cxx
     )
 endif()
