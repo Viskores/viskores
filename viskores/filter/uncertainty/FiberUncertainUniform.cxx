@@ -40,10 +40,10 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
 {
   std::string fieldName;
 
-  viskores::cont::Field ensembleMinX = this->GetFieldFromDataSet(0, input);
-  viskores::cont::Field ensembleMaxX = this->GetFieldFromDataSet(1, input);
-  viskores::cont::Field ensembleMinY = this->GetFieldFromDataSet(2, input);
-  viskores::cont::Field ensembleMaxY = this->GetFieldFromDataSet(3, input);
+  viskores::cont::Field ensembleMin1 = this->GetFieldFromDataSet(0, input);
+  viskores::cont::Field ensembleMax1 = this->GetFieldFromDataSet(1, input);
+  viskores::cont::Field ensembleMin2 = this->GetFieldFromDataSet(2, input);
+  viskores::cont::Field ensembleMax2 = this->GetFieldFromDataSet(3, input);
 
   viskores::cont::UnknownArrayHandle outputProbability;
 
@@ -56,9 +56,9 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
     ArrayType concreteEnsembleMinY;
     ArrayType concreteEnsembleMaxY;
 
-    viskores::cont::ArrayCopyShallowIfPossible(ensembleMaxX.GetData(), concreteEnsembleMaxX);
-    viskores::cont::ArrayCopyShallowIfPossible(ensembleMinY.GetData(), concreteEnsembleMinY);
-    viskores::cont::ArrayCopyShallowIfPossible(ensembleMaxY.GetData(), concreteEnsembleMaxY);
+    viskores::cont::ArrayCopyShallowIfPossible(ensembleMax1.GetData(), concreteEnsembleMaxX);
+    viskores::cont::ArrayCopyShallowIfPossible(ensembleMin2.GetData(), concreteEnsembleMinY);
+    viskores::cont::ArrayCopyShallowIfPossible(ensembleMax2.GetData(), concreteEnsembleMaxY);
 
     viskores::cont::ArrayHandle<ValueType> probability;
 
@@ -123,7 +123,7 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
 
     outputProbability = probability;
   };
-  this->CastAndCallScalarField(ensembleMinX, resolveType);
+  this->CastAndCallScalarField(ensembleMin1, resolveType);
 
   return this->CreateResultFieldPoint(input, fieldName, outputProbability);
 }
