@@ -18,6 +18,7 @@
 #ifndef viskores_exec_CellLocatorBoundingIntervalHierarchy_h
 #define viskores_exec_CellLocatorBoundingIntervalHierarchy_h
 
+#include <viskores/Deprecated.h>
 #include <viskores/TopologyElementTag.h>
 #include <viskores/VecFromPortalPermute.h>
 #include <viskores/cont/ArrayHandle.h>
@@ -76,7 +77,10 @@ struct CellLocatorBoundingIntervalHierarchyNode
 /// This class is provided by `viskores::cont::CellLocatorBoundingIntervalHierarchy`
 /// when passed to a worklet.
 template <typename CellSetType>
-class VISKORES_ALWAYS_EXPORT CellLocatorBoundingIntervalHierarchy
+class VISKORES_DEPRECATED(
+  1.2,
+  "CellLocatorBoundingIntervalHierarchy is deprecated. Use one of the other cell locator types.")
+  VISKORES_ALWAYS_EXPORT CellLocatorBoundingIntervalHierarchy
 {
   using NodeArrayHandle =
     viskores::cont::ArrayHandle<viskores::exec::CellLocatorBoundingIntervalHierarchyNode>;

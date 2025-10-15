@@ -21,7 +21,6 @@
 #include <viskores/worklet/WorkletMapField.h>
 
 #include <viskores/cont/ArrayCopy.h>
-#include <viskores/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <viskores/cont/CellLocatorChooser.h>
 #include <viskores/cont/CellLocatorGeneral.h>
 #include <viskores/cont/DataSetBuilderRectilinear.h>
