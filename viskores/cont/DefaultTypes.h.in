@@ -26,6 +26,8 @@
 //     should directly operate on (where applicable).
 // VISKORES_DEFAULT_STORAGE_LIST - a viskores::List of storage tags for fields that
 //     filters should directly operate on.
+// VISKORES_DEFAULT_STORAGE_LIST_COORDINATES - a viskores::List of storage tags similar to
+//     VISKORES_DEFAULT_STORAGE_LIST but with added storage types common in coordinate systems.
 // VISKORES_DEFAULT_CELL_SET_LIST_STRUCTURED - a viskores::List of viskores::cont::CellSet types
 //     that filters should operate on as a strutured cell set.
 // VISKORES_DEFAULT_CELL_SET_LIST_UNSTRUCTURED - a viskores::List of viskores::cont::CellSet types
@@ -71,6 +73,18 @@
 #define VISKORES_DEFAULT_STORAGE_LIST ::viskores::cont::StorageListCommon
 #endif // VISKORES_DEFAULT_STORAGE_LIST
 
+#ifndef VISKORES_DEFAULT_STORAGE_LIST_COORDINATES
+#include <viskores/cont/StorageList.h>
+
+/// @brief A list of default storage types to use for unknown arrays and coordinate systems.
+///
+/// This macro resolves to a `viskores::List` filled with storage tags for array
+/// containers that are typically expected in coordinate system arrays. This is
+/// similar to `VISKORES_DEFAULT_STORAGE_LIST` but has some added storage types
+/// common for coordinate systems but not other arrays.
+#define VISKORES_DEFAULT_STORAGE_LIST_COORDINATES ::viskores::cont::StorageListCoordinates
+#endif // VISKORES_DEFAULT_STORAGE_LIST_COORDINATES
+
 #ifndef VISKORES_DEFAULT_CELL_SET_LIST_STRUCTURED
 #include <viskores/cont/CellSetList.h>
 
@@ -104,7 +118,8 @@ namespace cont
 namespace internal
 {
 
-using CellSetList = viskores::ListAppend<VISKORES_DEFAULT_CELL_SET_LIST_STRUCTURED, VISKORES_DEFAULT_CELL_SET_LIST_UNSTRUCTURED>;
+using CellSetList = viskores::ListAppend<VISKORES_DEFAULT_CELL_SET_LIST_STRUCTURED,
+                                         VISKORES_DEFAULT_CELL_SET_LIST_UNSTRUCTURED>;
 
 }
 }

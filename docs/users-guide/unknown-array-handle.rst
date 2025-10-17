@@ -227,6 +227,7 @@ The macros :c:macro:`VISKORES_DEFAULT_TYPE_LIST` and :c:macro:`VISKORES_DEFAULT_
 
 .. doxygendefine:: VISKORES_DEFAULT_TYPE_LIST
 .. doxygendefine:: VISKORES_DEFAULT_STORAGE_LIST
+.. doxygendefine:: VISKORES_DEFAULT_STORAGE_LIST_COORDINATES
 
 .. load-example:: UsingCastAndCallForTypes
    :file: GuideExampleUnknownArrayHandle.cxx
