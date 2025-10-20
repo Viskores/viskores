@@ -28,7 +28,7 @@ vtk_contract_test:
   timeout: 2 hours
   interruptible: true
   before_script:
-    - .gitlab/ci/config/cmake.sh "${CMAKE_VERSION:-3.13.5}"
+    - .gitlab/ci/config/cmake.sh
     - export PATH=$PWD/.gitlab/cmake/bin:$PATH
     - cmake --version
     - "cmake -VV -P .gitlab/ci/config/ninja.cmake"

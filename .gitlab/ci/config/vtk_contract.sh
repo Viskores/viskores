@@ -72,8 +72,9 @@ cmake -GNinja \
   -DVTK_GROUP_ENABLE_Qt=NO \
   -DVTK_GROUP_ENABLE_Tk=NO \
   -DVTK_GROUP_ENABLE_Web=NO \
+  -DVTK_MODULE_USE_EXTERNAL_VTK_vtkviskores=ON \
   -DVTK_MODULE_ENABLE_VTK_AcceleratorsVTKmFilters:STRING=YES \
-  -DViskores_DIR="$viskores_install_dir/lib/cmake/viskores" \
+  -DViskores_ROOT="$viskores_install_dir" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX="$vtk_install_dir"
 
