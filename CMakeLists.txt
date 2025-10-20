@@ -429,7 +429,7 @@ install(FILES ${Viskores_BINARY_DIR}/config/viskores_config.mk
 configure_file(${Viskores_SOURCE_DIR}/config/viskores.pc.in
   ${Viskores_BINARY_DIR}/config/viskores.pc @ONLY)
 install(FILES ${Viskores_BINARY_DIR}/config/viskores.pc
-  DESTINATION ${Viskores_INSTALL_SHARE_DIR}
+  DESTINATION ${Viskores_INSTALL_LIB_DIR}/pkgconfig
   )
 
 include(ViskoresInstallCMakePackage)
