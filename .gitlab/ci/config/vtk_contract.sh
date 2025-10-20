@@ -22,28 +22,44 @@
 
 set -xe
 
-# Fetch the latest VTK release tag
-readonly vtk_version="v9.4.0"
+# Build Viskores first with VTK types
+readonly viskores_source_dir="$CI_PROJECT_DIR"
+readonly viskores_build_dir="$HOME/viskores-build"
+readonly viskores_install_dir="$HOME/viskores-install"
+
+# Configure Viskores with VTK types
+cmake -GNinja \
+  -S "$viskores_source_dir" \
+  -B "$viskores_build_dir" \
+  -DBUILD_SHARED_LIBS=ON \
+  -DViskores_USE_DEFAULT_TYPES_FOR_VTK=ON \
+  -DViskores_ENABLE_TESTING=OFF \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX="$viskores_install_dir"
+
+# Build and install Viskores
+cmake --build "$viskores_build_dir" --parallel
+cmake --install "$viskores_build_dir"
+
+# Now build VTK with the Viskores installation
+readonly vtk_version="v9.5.2"
 readonly tarball="$vtk_version.tar.gz"
 readonly url="https://github.com/Kitware/VTK/archive/refs/tags/$tarball"
-readonly source_dir="$HOME/vtk-source"
-readonly build_dir="$HOME/vtk-build"
-readonly install_dir="$HOME/vtk-install"
+readonly vtk_source_dir="$HOME/vtk-source"
+readonly vtk_build_dir="$HOME/vtk-build"
+readonly vtk_install_dir="$HOME/vtk-install"
 
 cd "$HOME"
 
 # Download VTK source
 curl --insecure -OL "$url"
 tar xf "$tarball"
-mv VTK-* "$source_dir"
+mv VTK-* "$vtk_source_dir"
 
-# Create build directory
-mkdir -p "$build_dir"
-
-# Configure VTK with minimal build options
+# Configure VTK with minimal build options and Viskores
 cmake -GNinja \
-  -S "$source_dir" \
-  -B "$build_dir" \
+  -S "$vtk_source_dir" \
+  -B "$vtk_build_dir" \
   -DBUILD_SHARED_LIBS=ON \
   -DVTK_BUILD_TESTING=OFF \
   -DVTK_BUILD_EXAMPLES=OFF \
@@ -57,13 +73,14 @@ cmake -GNinja \
   -DVTK_GROUP_ENABLE_Tk=NO \
   -DVTK_GROUP_ENABLE_Web=NO \
   -DVTK_MODULE_ENABLE_VTK_AcceleratorsVTKmFilters:STRING=YES \
+  -DViskores_DIR="$viskores_install_dir/lib/cmake/viskores" \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX="$install_dir"
+  -DCMAKE_INSTALL_PREFIX="$vtk_install_dir"
 
 # Build VTK
-cmake --build "$build_dir" --parallel
+cmake --build "$vtk_build_dir" --parallel
 
 # Install VTK (optional, but good for verification)
-cmake --install "$build_dir"
+cmake --install "$vtk_build_dir"
 
 echo "VTK contract test build completed successfully"
