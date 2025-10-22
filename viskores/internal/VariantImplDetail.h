@@ -229,7 +229,11 @@ union VariantUnionNTD<T0>
   T0 V0;
   VISKORES_DEVICE VariantUnionNTD(viskores::internal::NullType) { }
   VariantUnionNTD() = default;
+#if (__cplusplus >= 202002L) && defined(VISKORES_ICC)
+  ~VariantUnionNTD() = default;
+#else
   VISKORES_DEVICE ~VariantUnionNTD() { }
+#endif
 };
 
 template <typename T0, typename T1>
@@ -255,7 +259,11 @@ union VariantUnionNTD<T0, T1>
   T1 V1;
   VISKORES_DEVICE VariantUnionNTD(viskores::internal::NullType) { }
   VariantUnionNTD() = default;
+#if (__cplusplus >= 202002L) && defined(VISKORES_ICC)
+  ~VariantUnionNTD() = default;
+#else
   VISKORES_DEVICE ~VariantUnionNTD() { }
+#endif
 };
 
 template <typename T0, typename T1, typename T2>
@@ -283,7 +291,11 @@ union VariantUnionNTD<T0, T1, T2>
   T2 V2;
   VISKORES_DEVICE VariantUnionNTD(viskores::internal::NullType) { }
   VariantUnionNTD() = default;
+#if (__cplusplus >= 202002L) && defined(VISKORES_ICC)
+  ~VariantUnionNTD() = default;
+#else
   VISKORES_DEVICE ~VariantUnionNTD() { }
+#endif
 };
 
 template <typename T0, typename T1, typename T2, typename T3>
@@ -313,7 +325,11 @@ union VariantUnionNTD<T0, T1, T2, T3>
   T3 V3;
   VISKORES_DEVICE VariantUnionNTD(viskores::internal::NullType) { }
   VariantUnionNTD() = default;
+#if (__cplusplus >= 202002L) && defined(VISKORES_ICC)
+  ~VariantUnionNTD() = default;
+#else
   VISKORES_DEVICE ~VariantUnionNTD() { }
+#endif
 };
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4>
@@ -345,7 +361,11 @@ union VariantUnionNTD<T0, T1, T2, T3, T4>
   T4 V4;
   VISKORES_DEVICE VariantUnionNTD(viskores::internal::NullType) { }
   VariantUnionNTD() = default;
+#if (__cplusplus >= 202002L) && defined(VISKORES_ICC)
+  ~VariantUnionNTD() = default;
+#else
   VISKORES_DEVICE ~VariantUnionNTD() { }
+#endif
 };
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5>
@@ -379,7 +399,11 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5>
   T5 V5;
   VISKORES_DEVICE VariantUnionNTD(viskores::internal::NullType) { }
   VariantUnionNTD() = default;
+#if (__cplusplus >= 202002L) && defined(VISKORES_ICC)
+  ~VariantUnionNTD() = default;
+#else
   VISKORES_DEVICE ~VariantUnionNTD() { }
+#endif
 };
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
@@ -415,7 +439,11 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6>
   T6 V6;
   VISKORES_DEVICE VariantUnionNTD(viskores::internal::NullType) { }
   VariantUnionNTD() = default;
+#if (__cplusplus >= 202002L) && defined(VISKORES_ICC)
+  ~VariantUnionNTD() = default;
+#else
   VISKORES_DEVICE ~VariantUnionNTD() { }
+#endif
 };
 
 template <typename T0, typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
@@ -453,7 +481,11 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7>
   T7 V7;
   VISKORES_DEVICE VariantUnionNTD(viskores::internal::NullType) { }
   VariantUnionNTD() = default;
+#if (__cplusplus >= 202002L) && defined(VISKORES_ICC)
+  ~VariantUnionNTD() = default;
+#else
   VISKORES_DEVICE ~VariantUnionNTD() { }
+#endif
 };
 
 
@@ -499,7 +531,11 @@ union VariantUnionNTD<T0, T1, T2, T3, T4, T5, T6, T7, T8, Ts...>
 
   VISKORES_DEVICE VariantUnionNTD(viskores::internal::NullType) { }
   VariantUnionNTD() = default;
+#if (__cplusplus >= 202002L) && defined(VISKORES_ICC)
+  ~VariantUnionNTD() = default;
+#else
   VISKORES_DEVICE ~VariantUnionNTD() { }
+#endif
 };
 
 //clang-format on

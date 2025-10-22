@@ -267,7 +267,11 @@ $for(param_index in range(param_length + 1))\
 $endfor\
   VISKORES_DEVICE VariantUnionNTD(viskores::internal::NullType) { }
   VariantUnionNTD() = default;
+#if (__cplusplus >= 202002L) && defined(VISKORES_ICC)
+  ~VariantUnionNTD() = default;
+#else
   VISKORES_DEVICE ~VariantUnionNTD() { }
+#endif
 };
 
 $endfor\
@@ -304,7 +308,11 @@ $endfor\
 
   VISKORES_DEVICE VariantUnionNTD(viskores::internal::NullType) { }
   VariantUnionNTD() = default;
+#if (__cplusplus >= 202002L) && defined(VISKORES_ICC)
+  ~VariantUnionNTD() = default;
+#else
   VISKORES_DEVICE ~VariantUnionNTD() { }
+#endif
 };
 
 //clang-format on
