@@ -8,11 +8,32 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
+if [ $(echo in | sed -E 's/\b(in)\b/out/') = out ] ; then
+  # GNU extensions
+  wb='\b'
+  we='\b'
+elif [ $(echo in | sed -E 's/[[:<:]](in)[[:>:]]/out/') = out ] ; then
+  # BSD extensions
+  wb='[[:<:]]'
+  we='[[:>:]]'
+else
+  echo "Cannot identify sed regex extensions for word boundaries."
+  exit 1
+fi
 
 read -r -d '' SEDRULES << EOF
-s/\b(vtk-m|vtkm|vtk_m)\b/viskores/g
-s/\b(VTK-M|VTK-m|VTKm|Vtk-m|Vtkm)\b/Viskores/g
-s/\b(VTKM|VTK_M)\b/VISKORES/g
+s/$wb(vtk-m|vtkm|vtk_m)$we/viskores/g
+s/$wb(vtk-m|vtkm|vtk_m)_/viskores_/g
+s/_(vtk-m|vtkm|vtk_m)$we/_viskores/g
+s/_(vtk-m|vtkm|vtk_m)_/_viskores_/g
+s/$wb(VTK-M|VTK-m|VTKm|Vtk-m|Vtkm)$we/Viskores/g
+s/$wb(VTK-M|VTK-m|VTKm|Vtk-m|Vtkm)_/Viskores_/g
+s/_(VTK-M|VTK-m|VTKm|Vtk-m|Vtkm)$we/_Viskores/g
+s/_(VTK-M|VTK-m|VTKm|Vtk-m|Vtkm)_/_Viskores_/g
+s/$wb(VTKM|VTK_M)$we/VISKORES/g
+s/$wb(VTKM|VTK_M)_/VISKORES_/g
+s/_(VTKM|VTK_M)$we/_VISKORES/g
+s/_(VTKM|VTK_M)_/_VISKORES_/g
 s/vtkmdiy/viskoresdiy/g
 EOF
 
