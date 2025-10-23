@@ -72,7 +72,7 @@
 
 .ubuntu2204_cuda122_kokkos: &ubuntu2204_cuda122_kokkos
   image:
-    name: "ghcr.io/viskores/viskores:ci-ubuntu2204_kokkos_cuda-20250320"
+    name: "ghcr.io/viskores/viskores:ci-ubuntu2204_kokkos_cuda-20250915"
   extends:
     - .docker_image
 
