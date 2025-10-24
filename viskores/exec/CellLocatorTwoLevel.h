@@ -118,7 +118,7 @@ private:
   using ReadPortal = typename viskores::cont::ArrayHandle<T>::ReadPortalType;
 
   using CoordsPortalType =
-    typename viskores::cont::CoordinateSystem::MultiplexerArrayType::ReadPortalType;
+    typename viskores::cont::ArrayHandleSOAStride<viskores::Vec3f>::ReadPortalType;
 
   // TODO: This function may return false positives for non 3D cells as the
   // tests are done on the projection of the point on the cell. Extra checks
@@ -168,7 +168,8 @@ public:
                                       viskores::TopologyElementTagCell{},
                                       viskores::TopologyElementTagPoint{},
                                       token))
-    , Coords(coords.GetDataAsMultiplexer().PrepareForInput(device, token))
+    , Coords(coords.GetData().ExtractArrayWithValueType<viskores::Vec3f>().PrepareForInput(device,
+                                                                                           token))
   {
   }
 

@@ -33,12 +33,15 @@ namespace cont
 using StorageListBasic = viskores::List<viskores::cont::StorageTagBasic>;
 
 using StorageListCommon =
+  viskores::List<viskores::cont::StorageTagBasic, viskores::cont::StorageTagSOAStride>;
+
+using StorageListCoordinates =
   viskores::List<viskores::cont::StorageTagBasic,
+                 viskores::cont::StorageTagSOAStride,
                  viskores::cont::StorageTagUniformPoints,
                  viskores::cont::StorageTagCartesianProduct<viskores::cont::StorageTagBasic,
                                                             viskores::cont::StorageTagBasic,
-                                                            viskores::cont::StorageTagBasic>,
-                 viskores::cont::StorageTagSOAStride>;
+                                                            viskores::cont::StorageTagBasic>>;
 
 }
 } // namespace viskores::cont

@@ -96,12 +96,14 @@ private:
       viskores::cont::ArrayHandleCast<viskores::Vec3f, viskores::cont::ArrayHandle<Vec3f_nd, S>>;
   };
 
-  using ArraysFloatDefault = viskores::ListTransform<
-    viskores::ListRemoveIf<VISKORES_DEFAULT_STORAGE_LIST, StorageToArrayDefault::IsInvalid>,
-    StorageToArrayDefault::Transform>;
-  using ArraysFloatNonDefault = viskores::ListTransform<
-    viskores::ListRemoveIf<VISKORES_DEFAULT_STORAGE_LIST, StorageToArrayNonDefault::IsInvalid>,
-    StorageToArrayNonDefault::Transform>;
+  using ArraysFloatDefault =
+    viskores::ListTransform<viskores::ListRemoveIf<VISKORES_DEFAULT_STORAGE_LIST_COORDINATES,
+                                                   StorageToArrayDefault::IsInvalid>,
+                            StorageToArrayDefault::Transform>;
+  using ArraysFloatNonDefault =
+    viskores::ListTransform<viskores::ListRemoveIf<VISKORES_DEFAULT_STORAGE_LIST_COORDINATES,
+                                                   StorageToArrayNonDefault::IsInvalid>,
+                            StorageToArrayNonDefault::Transform>;
 
 public:
   using MultiplexerArrayType = //
