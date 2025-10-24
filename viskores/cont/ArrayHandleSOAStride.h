@@ -55,12 +55,10 @@ class VISKORES_ALWAYS_EXPORT Storage<ValueType, viskores::cont::StorageTagSOAStr
     viskores::cont::internal::Storage<ComponentType, viskores::cont::StorageTagStride>;
 
 public:
-  using ReadPortalType =
-    viskores::internal::ArrayPortalSOA<ValueType,
-                                       viskores::internal::ArrayPortalStrideRead<ComponentType>>;
-  using WritePortalType =
-    viskores::internal::ArrayPortalSOA<ValueType,
-                                       viskores::internal::ArrayPortalStrideWrite<ComponentType>>;
+  using ReadPortalType = viskores::internal::
+    ArrayPortalSOARead<ValueType, viskores::internal::ArrayPortalStrideRead<ComponentType>>;
+  using WritePortalType = viskores::internal::
+    ArrayPortalSOAWrite<ValueType, viskores::internal::ArrayPortalStrideWrite<ComponentType>>;
 
   using ComponentArrayType = viskores::cont::ArrayHandleStride<ComponentType>;
 
@@ -170,7 +168,7 @@ public:
     viskores::cont::Token& token)
   {
     viskores::Id numValues = GetNumberOfValues(buffers);
-    ReadPortalType portal(numValues);
+    ReadPortalType portal;
     for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
          ++componentIndex)
     {
@@ -188,7 +186,7 @@ public:
     viskores::cont::Token& token)
   {
     viskores::Id numValues = GetNumberOfValues(buffers);
-    WritePortalType portal(numValues);
+    WritePortalType portal;
     for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
          ++componentIndex)
     {

@@ -32,10 +32,10 @@ namespace internal
 struct ArrayStrideInfo
 {
   viskores::Id NumberOfValues = 0;
-  viskores::Id Stride = 1;
-  viskores::Id Offset = 0;
-  viskores::Id Modulo = 0;
-  viskores::Id Divisor = 0;
+  viskores::IdComponent Stride = 1;
+  viskores::IdComponent Offset = 0;
+  viskores::IdComponent Modulo = 0;
+  viskores::IdComponent Divisor = 0;
 
   ArrayStrideInfo() = default;
 
