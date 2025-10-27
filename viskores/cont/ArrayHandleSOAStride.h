@@ -39,15 +39,11 @@ struct VISKORES_ALWAYS_EXPORT StorageTagSOAStride
 namespace internal
 {
 
-template <typename ValueType>
-class VISKORES_ALWAYS_EXPORT Storage<ValueType, viskores::cont::StorageTagSOAStride>
+template <typename ComponentType, viskores::IdComponent NUM_COMPONENTS>
+class VISKORES_ALWAYS_EXPORT
+  Storage<viskores::Vec<ComponentType, NUM_COMPONENTS>, viskores::cont::StorageTagSOAStride>
 {
-  using VTraits = viskores::VecTraits<ValueType>;
-  using ComponentType = typename VTraits::ComponentType;
-  static constexpr viskores::IdComponent NUM_COMPONENTS = VTraits::NUM_COMPONENTS;
-  VISKORES_STATIC_ASSERT_MSG(
-    (std::is_same<ComponentType, typename VTraits::BaseComponentType>::value),
-    "ArrayHandleSOAStride currently only supports flat Vec types.");
+  using ValueType = viskores::Vec<ComponentType, NUM_COMPONENTS>;
 
   static constexpr viskores::IdComponent NUM_BUFFERS_PER_COMPONENT = 2;
 
@@ -155,7 +151,7 @@ public:
          ++componentIndex)
     {
       ComponentStorage::Fill(GetComponentBuffers(buffers, componentIndex),
-                             VTraits::GetComponent(fillValue, componentIndex),
+                             fillValue[componentIndex],
                              startIndex,
                              endIndex,
                              token);

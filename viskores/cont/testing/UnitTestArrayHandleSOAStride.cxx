@@ -153,7 +153,7 @@ static void Run()
 {
   std::cout << "-------------------------------------------" << std::endl;
   std::cout << "Testing ArrayHandleSOAStride as Input" << std::endl;
-  viskores::testing::Testing::TryTypes(TestSOASAsInput(), ScalarTypesToTest());
+  // viskores::testing::Testing::TryTypes(TestSOASAsInput(), ScalarTypesToTest());
   viskores::testing::Testing::TryTypes(TestSOASAsInput(), VectorTypesToTest());
 
   std::cout << "-------------------------------------------" << std::endl;
@@ -162,7 +162,7 @@ static void Run()
 
   std::cout << "-------------------------------------------" << std::endl;
   std::cout << "Testing ArrayHandleSOAStride as Output" << std::endl;
-  viskores::testing::Testing::TryTypes(TestSOASAsOutput(), ScalarTypesToTest());
+  // viskores::testing::Testing::TryTypes(TestSOASAsOutput(), ScalarTypesToTest());
   viskores::testing::Testing::TryTypes(TestSOASAsOutput(), VectorTypesToTest());
 }
 
