@@ -29,6 +29,110 @@
 namespace viskores
 {
 
+namespace internal
+{
+
+template <typename T>
+class ArrayPortalSOAStrideRead
+{
+  const T* Array = nullptr;
+  viskores::Id NumberOfValues = 0;
+  viskores::IdComponent Stride = 1;
+  viskores::IdComponent Offset = 0;
+  viskores::IdComponent Modulo = std::numeric_limits<viskores::IdComponent>::max();
+  viskores::IdComponent Divisor = 1;
+
+public:
+  using ValueType = T;
+
+  VISKORES_EXEC_CONT viskores::Id GetNumberOfValues() const { return this->NumberOfValues; }
+
+  VISKORES_EXEC_CONT ValueType Get(viskores::Id index) const
+  {
+    return detail::ArrayPortalBasicReadGet(
+      this->Array + (((index / this->Divisor) % this->Modulo) * this->Stride) + this->Offset);
+  }
+
+  ArrayPortalSOAStrideRead() = default;
+  ArrayPortalSOAStrideRead(ArrayPortalSOAStrideRead&&) = default;
+  ArrayPortalSOAStrideRead(const ArrayPortalSOAStrideRead&) = default;
+  ArrayPortalSOAStrideRead& operator=(ArrayPortalSOAStrideRead&&) = default;
+  ArrayPortalSOAStrideRead& operator=(const ArrayPortalSOAStrideRead&) = default;
+
+  VISKORES_CONT ArrayPortalSOAStrideRead(const T* array,
+                                         viskores::Id numberOfValues,
+                                         viskores::IdComponent stride,
+                                         viskores::IdComponent offset,
+                                         viskores::IdComponent modulo,
+                                         viskores::IdComponent divisor)
+    : Array(array)
+    , NumberOfValues(numberOfValues)
+    , Stride(stride)
+    , Offset(offset)
+    , Modulo((modulo > 0) ? modulo : std::numeric_limits<viskores::IdComponent>::max())
+    , Divisor((divisor > 0) ? divisor : 1)
+  {
+  }
+};
+
+template <typename T>
+class ArrayPortalSOAStrideWrite
+{
+  T* Array = nullptr;
+  viskores::Id NumberOfValues = 0;
+  viskores::IdComponent Stride = 1;
+  viskores::IdComponent Offset = 0;
+  viskores::IdComponent Modulo = std::numeric_limits<viskores::IdComponent>::max();
+  viskores::IdComponent Divisor = 1;
+
+public:
+  using ValueType = T;
+
+  VISKORES_EXEC_CONT viskores::Id GetNumberOfValues() const { return this->NumberOfValues; }
+
+  VISKORES_EXEC_CONT ValueType Get(viskores::Id index) const
+  {
+    VISKORES_ASSERT(index >= 0);
+    VISKORES_ASSERT(index < this->NumberOfValues);
+
+    return detail::ArrayPortalBasicWriteGet(
+      this->Array + (((index / this->Divisor) % this->Modulo) * this->Stride) + this->Offset);
+  }
+
+  VISKORES_EXEC_CONT void Set(viskores::Id index, const ValueType& value) const
+  {
+    VISKORES_ASSERT(index >= 0);
+    VISKORES_ASSERT(index < this->NumberOfValues);
+
+    detail::ArrayPortalBasicWriteSet(
+      this->Array + (((index / this->Divisor) % this->Modulo) * this->Stride) + this->Offset,
+      value);
+  }
+
+  ArrayPortalSOAStrideWrite() = default;
+  ArrayPortalSOAStrideWrite(ArrayPortalSOAStrideWrite&&) = default;
+  ArrayPortalSOAStrideWrite(const ArrayPortalSOAStrideWrite&) = default;
+  ArrayPortalSOAStrideWrite& operator=(ArrayPortalSOAStrideWrite&&) = default;
+  ArrayPortalSOAStrideWrite& operator=(const ArrayPortalSOAStrideWrite&) = default;
+
+  VISKORES_CONT ArrayPortalSOAStrideWrite(T* array,
+                                          viskores::Id numberOfValues,
+                                          viskores::IdComponent stride,
+                                          viskores::IdComponent offset,
+                                          viskores::IdComponent modulo,
+                                          viskores::IdComponent divisor)
+    : Array(array)
+    , NumberOfValues(numberOfValues)
+    , Stride(stride)
+    , Offset(offset)
+    , Modulo((modulo > 0) ? modulo : std::numeric_limits<viskores::IdComponent>::max())
+    , Divisor((divisor > 0) ? divisor : 1)
+  {
+  }
+};
+
+} // namespace internal
+
 namespace cont
 {
 
@@ -51,10 +155,14 @@ class VISKORES_ALWAYS_EXPORT
     viskores::cont::internal::Storage<ComponentType, viskores::cont::StorageTagStride>;
 
 public:
+  // using ReadPortalType =
+  //   ArrayPortalSOARead<ValueType, viskores::internal::ArrayPortalStrideRead<ComponentType>>;
+  // using WritePortalType =
+  //   ArrayPortalSOAWrite<ValueType, viskores::internal::ArrayPortalStrideWrite<ComponentType>>;
   using ReadPortalType = viskores::internal::
-    ArrayPortalSOARead<ValueType, viskores::internal::ArrayPortalStrideRead<ComponentType>>;
+    ArrayPortalSOARead<ValueType, viskores::internal::ArrayPortalSOAStrideRead<ComponentType>>;
   using WritePortalType = viskores::internal::
-    ArrayPortalSOAWrite<ValueType, viskores::internal::ArrayPortalStrideWrite<ComponentType>>;
+    ArrayPortalSOAWrite<ValueType, viskores::internal::ArrayPortalSOAStrideWrite<ComponentType>>;
 
   using ComponentArrayType = viskores::cont::ArrayHandleStride<ComponentType>;
 
@@ -168,8 +276,17 @@ public:
     for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
          ++componentIndex)
     {
-      auto componentPortal = ComponentStorage::CreateReadPortal(
-        GetComponentBuffers(buffers, componentIndex), device, token);
+      // auto componentPortal = ComponentStorage::CreateReadPortal(
+      //   GetComponentBuffers(buffers, componentIndex), device, token);
+      ComponentArrayType componentArray = GetComponentArray(buffers, componentIndex);
+      auto componentPortal = viskores::internal::ArrayPortalSOAStrideRead<ComponentType>(
+        reinterpret_cast<const ComponentType*>(
+          componentArray.GetBasicArray().GetBuffers()[0].ReadPointerDevice(device, token)),
+        numValues,
+        componentArray.GetStride(),
+        componentArray.GetOffset(),
+        componentArray.GetModulo(),
+        componentArray.GetDivisor());
       VISKORES_ASSERT(componentPortal.GetNumberOfValues() == numValues);
       portal.SetPortal(componentIndex, componentPortal);
     }
@@ -186,8 +303,17 @@ public:
     for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
          ++componentIndex)
     {
-      auto componentPortal = ComponentStorage::CreateWritePortal(
-        GetComponentBuffers(buffers, componentIndex), device, token);
+      // auto componentPortal = ComponentStorage::CreateWritePortal(
+      //   GetComponentBuffers(buffers, componentIndex), device, token);
+      ComponentArrayType componentArray = GetComponentArray(buffers, componentIndex);
+      auto componentPortal = viskores::internal::ArrayPortalSOAStrideWrite<ComponentType>(
+        reinterpret_cast<ComponentType*>(
+          componentArray.GetBasicArray().GetBuffers()[0].WritePointerDevice(device, token)),
+        numValues,
+        componentArray.GetStride(),
+        componentArray.GetOffset(),
+        componentArray.GetModulo(),
+        componentArray.GetDivisor());
       VISKORES_ASSERT(componentPortal.GetNumberOfValues() == numValues);
       portal.SetPortal(componentIndex, componentPortal);
     }
