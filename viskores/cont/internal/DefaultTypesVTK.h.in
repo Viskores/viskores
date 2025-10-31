@@ -118,9 +118,9 @@ using CellListAllInVTK = viskores::ListAppend<CellListStructuredInVTK, CellListU
 using CellListAllOutVTK = viskores::ListAppend<CellListStructuredOutVTK, CellListUnstructuredOutVTK>;
 
 #ifdef VISKORES_ADD_XGC_DEFAULT_TYPES
-using StorageListField = viskores::ListAppend<
+using StorageListCoordinates = viskores::ListAppend<
   viskores::List<viskores::cont::StorageTagXGCCoordinates>,
-  viskores::cont::StorageListCommon>;
+  viskores::cont::StorageListCoordinates>;
 #endif
 
 } // end namespace toviskores
@@ -130,7 +130,7 @@ using StorageListField = viskores::ListAppend<
 #define VISKORES_DEFAULT_CELL_SET_LIST_UNSTRUCTURED ::toviskores::CellListUnstructuredInVTK
 
 #ifdef VISKORES_ADD_XGC_DEFAULT_TYPES
-#define VISKORES_DEFAULT_STORAGE_LIST ::toviskores::StorageListField
+#define VISKORES_DEFAULT_STORAGE_LIST_COORDINATES ::toviskores::StorageListCoordinates
 #endif
 
 #endif //viskores_cont_internal_DefaultTypesVTK_h

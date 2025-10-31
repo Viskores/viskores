@@ -65,6 +65,12 @@ namespace internal
 using StorageListAscent = viskores::List<
   // Basic storage should always be included
   viskores::cont::StorageTagBasic,
+  // Catchall for other storage
+  viskores::cont::StorageTagSOAStride>;
+
+using StorageListCoordinatesAscent = viskores::List<
+  // Basic storage should always be included
+  viskores::cont::StorageTagBasic,
   // Support separate arrays for each component
   viskores::cont::StorageTagSOA,
   // Support uniform structured grids
@@ -77,9 +83,13 @@ using StorageListAscent = viskores::List<
   viskores::cont::StorageTagSOAStride>;
 
 }
+
 }
 } // namespace viskores::cont::internal
 
 #define VISKORES_DEFAULT_STORAGE_LIST ::viskores::cont::internal::StorageListAscent
+
+#define VISKORES_DEFAULT_STORAGE_LIST_COORDINATES \
+  ::viskores::cont::internal::StorageListCoordinatesAscent
 
 #endif //viskores_cont_internal_DefaultTypesAscent_h
