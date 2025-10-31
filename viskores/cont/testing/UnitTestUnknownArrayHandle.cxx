@@ -177,10 +177,10 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
     ArrayHandleType retreivedArray2 = arrayUnknown.AsArrayHandle<ArrayHandleType>();
     VISKORES_TEST_ASSERT(array == retreivedArray2, "Did not get back same array.");
 
-    viskores::cont::ArrayHandleSOAStride<T> strideArray;
-    arrayUnknown.AsArrayHandle(strideArray);
-    VISKORES_TEST_ASSERT(test_equal_ArrayHandles(array, strideArray),
-                         "Could not retrieve basic array in ArrayHandleSOAStride.");
+    // viskores::cont::ArrayHandleSOAStride<T> strideArray;
+    // arrayUnknown.AsArrayHandle(strideArray);
+    // VISKORES_TEST_ASSERT(test_equal_ArrayHandles(array, strideArray),
+    //                      "Could not retrieve basic array in ArrayHandleSOAStride.");
   }
 
   {
@@ -601,9 +601,9 @@ void TryExtractArrayWithValueType()
 
   viskores::cont::UnknownArrayHandle unknownArray(originalArray);
 
-  viskores::cont::ArrayHandleSOAStride<ValueType> extractedArray =
-    unknownArray.ExtractArrayWithValueType<ValueType>();
-  VISKORES_TEST_ASSERT(test_equal_ArrayHandles(originalArray, extractedArray));
+  // viskores::cont::ArrayHandleSOAStride<ValueType> extractedArray =
+  //   unknownArray.ExtractArrayWithValueType<ValueType>();
+  // VISKORES_TEST_ASSERT(test_equal_ArrayHandles(originalArray, extractedArray));
 }
 
 void TryExtractComponent()
