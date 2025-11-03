@@ -533,8 +533,6 @@ function(viskores_library)
   # their own version numbers etc.
   if(DEFINED Viskores_CUSTOM_LIBRARY_SUFFIX)
     set(_lib_suffix "${Viskores_CUSTOM_LIBRARY_SUFFIX}")
-  else()
-    set(_lib_suffix "-${Viskores_VERSION_MAJOR}.${Viskores_VERSION_MINOR}")
   endif()
   set_property(TARGET ${lib_name} PROPERTY OUTPUT_NAME ${lib_name}${_lib_suffix})
 
