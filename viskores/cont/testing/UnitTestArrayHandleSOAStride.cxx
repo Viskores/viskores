@@ -19,7 +19,9 @@
 #include <viskores/cont/ArrayHandleSOAStride.h>
 
 #include <viskores/cont/ArrayCopyDevice.h>
+#include <viskores/cont/ArrayExtractComponent.h>
 #include <viskores/cont/ArrayHandleGroupVec.h>
+#include <viskores/cont/ArrayHandleUniformPointCoordinates.h>
 #include <viskores/cont/Invoker.h>
 
 #include <viskores/worklet/WorkletMapField.h>
@@ -84,6 +86,19 @@ struct TestSOASAsInput
   }
 };
 
+void TestSOASADivMod()
+{
+  viskores::cont::ArrayHandleUniformPointCoordinates sourceArray(viskores::Id3{ ARRAY_SIZE });
+  viskores::cont::ArrayHandleSOAStride<viskores::Vec3f> soaStrideArray;
+  for (viskores::IdComponent componentIndex = 0; componentIndex < 3; ++componentIndex)
+  {
+    viskores::cont::ArrayHandleStride<viskores::FloatDefault> componentArray =
+      viskores::cont::ArrayExtractComponent(sourceArray, componentIndex);
+    soaStrideArray.SetArray(componentIndex, componentArray);
+  }
+  VISKORES_TEST_ASSERT(test_equal_ArrayHandles(sourceArray, soaStrideArray));
+}
+
 struct TestSOASAsOutput
 {
   template <typename ValueType>
@@ -140,6 +155,10 @@ static void Run()
   std::cout << "Testing ArrayHandleSOAStride as Input" << std::endl;
   viskores::testing::Testing::TryTypes(TestSOASAsInput(), ScalarTypesToTest());
   viskores::testing::Testing::TryTypes(TestSOASAsInput(), VectorTypesToTest());
+
+  std::cout << "-------------------------------------------" << std::endl;
+  std::cout << "Testing ArrayHandleSOAStride Div and Mod" << std::endl;
+  TestSOASADivMod();
 
   std::cout << "-------------------------------------------" << std::endl;
   std::cout << "Testing ArrayHandleSOAStride as Output" << std::endl;
