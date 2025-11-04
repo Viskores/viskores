@@ -177,6 +177,7 @@ void CheckAsArrayHandle(const ArrayHandleType& array)
     ArrayHandleType retreivedArray2 = arrayUnknown.AsArrayHandle<ArrayHandleType>();
     VISKORES_TEST_ASSERT(array == retreivedArray2, "Did not get back same array.");
 
+    std::cout << "    Get as SOA Stride" << std::endl;
     viskores::cont::ArrayHandleSOAStride<T> strideArray;
     arrayUnknown.AsArrayHandle(strideArray);
     VISKORES_TEST_ASSERT(test_equal_ArrayHandles(array, strideArray),
