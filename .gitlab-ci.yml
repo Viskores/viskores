@@ -54,7 +54,7 @@
 
 .ubuntu2004_kokkos: &ubuntu2004_kokkos
   image:
-    name: "ghcr.io/viskores/viskores:ci-ubuntu2004_kokkos-20250320"
+    name: "ghcr.io/viskores/viskores:ci-ubuntu2004_kokkos-20251106"
   extends:
     - .docker_image
 
