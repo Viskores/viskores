@@ -53,14 +53,16 @@ RUN mkdir -p /opt/kokkos/build && \
     mkdir bld && cd bld && \
     CXX=/opt/kokkos/build/kokkos-$KOKKOS_VERSION/bin/nvcc_wrapper \
     cmake -B . -S ../kokkos-$KOKKOS_VERSION \
+          -DBUILD_SHARED_LIBS=ON \
           -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
           -DCMAKE_CXX_FLAGS=-fPIC \
-          -DKokkos_ENABLE_CUDA=ON \
+          -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
+          -DKokkos_ARCH_AMPERE80=ON \
           -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \
           -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+          -DKokkos_ENABLE_CUDA=ON \
           -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=OFF \
-          -DKokkos_ARCH_AMPERE80=ON && \
+          && \
     cmake --build . -j 8 && \
     cmake --install . && \
     cd ..; rm -rf kokkos-$KOKKOS_VERSION.tar.gz kokkos-$KOKKOS_VERSION bld
