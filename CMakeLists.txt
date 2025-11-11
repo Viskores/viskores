@@ -275,7 +275,7 @@ cmake_dependent_option(
   Viskores_ENABLE_KOKKOS_THRUST
   "Enable Kokkos thrust support (only valid with CUDA and HIP)"
   ON
-  "Viskores_ENABLE_KOKKOS;Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP; NOT Kokkos_ENABLE_HIP AND CMAKE_VERSION VERSION_LESS 3.24"
+  "Viskores_ENABLE_KOKKOS;Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP; NOT Kokkos_ENABLE_HIP OR CMAKE_VERSION VERSION_GREATER_EQUAL 3.24"
   OFF
 )
 
