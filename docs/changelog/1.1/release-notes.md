@@ -6,6 +6,7 @@
    - Enable more types for Clamp function
    - Update to C++17
    - Added CountAllCells and FindAllCells to Cell Locators
+   - Fixed memory_order constants for C++20
 2. [Arrays](#arrays)
    - Added ArrayHandleSOAStride
    - Added template constructor to MaskSelect
@@ -14,6 +15,9 @@
    - Fixed MapperVolume blending
    - Fixed Clip cellOffset increment
    - Fixed CI Warnings
+4. [Build](#build)
+   - Improve compilation of flow filters
+   - pkg-config files now install to libdir/pkgconfig
 
 ## Core
 
@@ -51,6 +55,15 @@ Two new methods have been added to all cell locators:
 
 These functions are intended for use with datasets where cells may overlap and
 are not typically useful for standard non-overlapping meshes.
+
+### Fixed memory_order constants for C++20
+
+C++20 changed the implementation of the `std::memory_order` enum to be scoped.
+As part of that, the contents of the enum have different names. Instead, you
+reference the identifiers as constants in the `std` namespace (which works the
+same with the non-scoped version).
+
+At any rate, the code now works for both C++17 and C++20.
 
 ## Arrays
 
@@ -100,3 +113,20 @@ Additional improvements include:
 ### Fixed CI Warnings
 Addressed multiple compiler warnings identified by the new CI builds of
 Viskores that were not present in previous builds.
+
+## Build
+
+### Improve compilation of flow filters
+
+Several of the flow filters contain multiple flow paths through different
+worklets. This can sometimes overwhelm device compilers. To improve compilation,
+the compilation of worklets for the flow filters is separated into different
+translation units using the Viskores instantiation compile feature. This reduces
+the burden on any particular use of a compiler and helps leverage parallel
+compiling.
+
+### pkg-config files now install to libdir/pkgconfig
+
+Viskores now installs pkg-config files to `${Viskores_INSTALL_LIB_DIR}/pkgconfig` instead of the
+share directory. This is the default location where pkg-config searches for
+.pc files, allowing pkg-config to find Viskores without additional configuration.
