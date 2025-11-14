@@ -55,7 +55,6 @@ RUN mkdir -p /opt/kokkos/build && \
     cmake -B . -S ../kokkos-$KOKKOS_VERSION \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
-          -DCMAKE_CXX_FLAGS=-fPIC \
           -DKokkos_ENABLE_CUDA=ON \
           -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \
           -DKokkos_ENABLE_CUDA_LAMBDA=ON \
