@@ -18,20 +18,9 @@
 #include <scene/World.h>
 
 #include <viskores/cont/ArrayHandleBasic.h>
-#include <viskores/rendering/Actor.h>
-#include <viskores/rendering/MapperRayTracer.h>
-#include <viskores/rendering/MapperVolume.h>
-#include <viskores/rendering/MapperWireframer.h>
-#include <viskores/rendering/Scene.h>
-#include <viskores/rendering/View3D.h>
 
 #include <viskores/cont/Invoker.h>
 #include <viskores/worklet/WorkletMapField.h>
-
-using viskores::rendering::CanvasRayTracer;
-using viskores::rendering::MapperRayTracer;
-using viskores::rendering::MapperVolume;
-using viskores::rendering::MapperWireframer;
 
 namespace viskores_device
 {
@@ -260,12 +249,11 @@ void Frame::renderFrame()
             reportMessage(ANARI_SEVERITY_DEBUG, "skip rendering invalid surface");
             continue;
           }
-          viskores::rendering::Scene scene;
-          scene.AddActor(*surface->actor());
+          // Do we need a copy?
           std::unique_ptr<viskores::rendering::Mapper> mapper{
             surface->geometry()->mapper()->NewCopy()
           };
-          scene.Render(*mapper, this->Canvas, camera);
+          surface->actor()->Render(*mapper, this->Canvas, camera);
         }
 
         for (const auto& volume : volumesToRender)
@@ -275,10 +263,9 @@ void Frame::renderFrame()
             reportMessage(ANARI_SEVERITY_DEBUG, "skip rendering invalid volume");
             continue;
           }
-          viskores::rendering::Scene scene;
-          scene.AddActor(*volume->actor());
+          // Do we need a copy?
           std::unique_ptr<viskores::rendering::Mapper> mapper{ volume->mapper()->NewCopy() };
-          scene.Render(*mapper, this->Canvas, camera);
+          volume->actor()->Render(*mapper, this->Canvas, camera);
         }
       }
 
