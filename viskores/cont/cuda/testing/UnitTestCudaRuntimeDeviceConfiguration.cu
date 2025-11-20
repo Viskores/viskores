@@ -37,6 +37,7 @@ TestingRuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagCuda>::TestRun
   VISKORES_CUDA_CALL(cudaGetDeviceCount(&numDevices));
   viskores::Id selectedDevice = numDevices > 0 ? numDevices - 1 : 0;
   deviceOptions.ViskoresDeviceInstance.SetOption(selectedDevice);
+  deviceOptions.ViskoresUseUnifiedMemory.SetOption(1);
   auto& config =
     RuntimeDeviceInformation{}.GetRuntimeConfiguration(DeviceAdapterTagCuda(), deviceOptions);
   viskores::Id setDevice;
@@ -46,6 +47,13 @@ TestingRuntimeDeviceConfiguration<viskores::cont::DeviceAdapterTagCuda>::TestRun
   VISKORES_TEST_ASSERT(setDevice == selectedDevice,
                        "RTC's setDevice != selectedDevice cuda direct! " +
                          std::to_string(setDevice) + " != " + std::to_string(selectedDevice));
+  viskores::Id useUnifiedMemory;
+  VISKORES_TEST_ASSERT(config.GetUseUnifiedmemory(useUnifiedMemory) ==
+                         internal::RuntimeDeviceConfigReturnCode::SUCCESS,
+                       "Failed to get use unified memory");
+  VISKORES_TEST_ASSERT(useUnifiedMemory == 1,
+                       "RTC's useUnifiedMemory != 1 cuda direct! " + std::to_string(setDevice) +
+                         " != " + std::to_string(selectedDevice));
   viskores::Id maxDevices;
   VISKORES_TEST_ASSERT(config.GetMaxDevices(maxDevices) ==
                          internal::RuntimeDeviceConfigReturnCode::SUCCESS,
