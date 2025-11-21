@@ -25,9 +25,6 @@ struct MatteMaterial : public Material
   void commitParameters() override;
   void finalize() override;
 
-  std::shared_ptr<viskores::rendering::Actor> createActor(
-    const viskores::cont::DataSet& data) override;
-
   Sampler* sampler() const { return this->m_sampler.get(); }
 
   helium::Attribute colorAttribute() const { return this->m_colorAttribute; }
@@ -38,6 +35,10 @@ struct MatteMaterial : public Material
 
   helium::AlphaMode alphaMode() const { return this->m_alphaMode; }
   viskores::Float32 alphaCutoff() const { return this->m_alphaCutoff; }
+
+  void getColors(const viskores::cont::DataSet& data,
+                 viskores::cont::Field& field,
+                 viskores::cont::ColorTable& colorTable) const override;
 
 private:
   helium::ChangeObserverPtr<Sampler> m_sampler;

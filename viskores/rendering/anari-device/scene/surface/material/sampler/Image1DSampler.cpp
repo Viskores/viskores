@@ -161,14 +161,15 @@ void Image1DSampler::finalize()
   }
 }
 
-std::shared_ptr<viskores::rendering::Actor> Image1DSampler::createActor(
-  const viskores::cont::DataSet& data)
+bool Image1DSampler::getColors(const viskores::cont::DataSet& data,
+                               viskores::cont::Field& field,
+                               viskores::cont::ColorTable& colorTable) const
 {
   if (!data.HasField(this->inAttribute()))
   {
     this->reportMessage(
       ANARI_SEVERITY_WARNING, "sampler attribute %s not found", this->inAttribute().c_str());
-    return nullptr;
+    return false;
   }
 
   viskores::cont::Field attribField = data.GetField(this->inAttribute());
@@ -179,7 +180,7 @@ std::shared_ptr<viskores::rendering::Actor> Image1DSampler::createActor(
     {
       this->reportMessage(ANARI_SEVERITY_WARNING,
                           "attribute array type not currently supported for image1D sampler.");
-      return nullptr;
+      return false;
     }
     this->reportMessage(ANARI_SEVERITY_PERFORMANCE_WARNING,
                         "todo: handle vector attributes more efficiently");
@@ -188,13 +189,9 @@ std::shared_ptr<viskores::rendering::Actor> Image1DSampler::createActor(
     attribArray = newArray;
   }
 
-  auto actor = std::make_shared<viskores::rendering::Actor>(
-    data.GetCellSet(),
-    data.GetCoordinateSystem(),
-    viskores::cont::Field{ attribField.GetName(), attribField.GetAssociation(), attribArray },
-    this->colorTable());
-  actor->SetScalarRange({ 0, 1 });
-  return actor;
+  field = viskores::cont::Field{ attribField.GetName(), attribField.GetAssociation(), attribArray };
+  colorTable = this->m_colorTable;
+  return true;
 }
 
 } // namespace viskores_device

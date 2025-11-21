@@ -43,37 +43,27 @@ void MatteMaterial::finalize()
   // no-op
 }
 
-std::shared_ptr<viskores::rendering::Actor> MatteMaterial::createActor(
-  const viskores::cont::DataSet& data)
+void MatteMaterial::getColors(const viskores::cont::DataSet& data,
+                              viskores::cont::Field& field,
+                              viskores::cont::ColorTable& colorTable) const
 {
-  std::shared_ptr<viskores::rendering::Actor> actor;
   if (this->m_sampler && this->m_sampler->isValid())
   {
-    actor = this->m_sampler->createActor(data);
-    if (!actor)
+    if (this->m_sampler->getColors(data, field, colorTable))
     {
-      this->reportMessage(ANARI_SEVERITY_WARNING, "could not create actor for sampler");
+      return;
     }
   }
 
-  if (!actor)
-  {
-    viskores::cont::ColorTable colorTable(viskores::ColorSpace::RGB);
-    viskores::cont::Field colorField;
-    // TODO: Implement sampling and attributes.
-    // This should be the fallback when other coloring is missing.
-    colorTable.AddPoint(0, this->color());
-    colorTable.AddPointAlpha(0, this->opacity());
-    colorField = viskores::cont::Field{ "data",
-                                        viskores::cont::Field::Association::Points,
-                                        viskores::cont::make_ArrayHandleConstant(
-                                          viskores::Float32{ 0.0f }, data.GetNumberOfPoints()) };
-
-    actor = std::make_shared<viskores::rendering::Actor>(
-      data.GetCellSet(), data.GetCoordinateSystem(), colorField, colorTable);
-  }
-
-  return actor;
+  colorTable = viskores::cont::ColorTable(viskores::ColorSpace::RGB);
+  // TODO: Implement sampling and attributes.
+  // This should be the fallback when other coloring is missing.
+  colorTable.AddPoint(0, this->color());
+  colorTable.AddPointAlpha(0, this->opacity());
+  field = viskores::cont::Field{ "data",
+                                 viskores::cont::Field::Association::Points,
+                                 viskores::cont::make_ArrayHandleConstant(
+                                   viskores::Float32{ 0.0f }, data.GetNumberOfPoints()) };
 }
 
 } // namespace viskores_device

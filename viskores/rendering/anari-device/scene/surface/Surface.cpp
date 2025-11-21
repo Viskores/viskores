@@ -31,19 +31,20 @@ void Surface::commitParameters()
 
 void Surface::finalize()
 {
-  if (!m_material)
+  if (!this->m_material || !this->m_material->isValid())
   {
     reportMessage(ANARI_SEVERITY_WARNING, "missing 'material' on ANARISurface");
     return;
   }
 
-  if (!m_geometry)
+  if (!this->m_geometry || !this->m_geometry->isValid())
   {
     reportMessage(ANARI_SEVERITY_WARNING, "missing 'geometry' on ANARISurface");
     return;
   }
 
-  this->m_actor = this->m_material->createActor(this->m_geometry->getDataSet());
+  this->m_dataSet = this->m_geometry->getDataSet();
+  this->m_material->getColors(this->m_dataSet, this->m_field, this->m_colorTable);
 }
 
 const Geometry* Surface::geometry() const
@@ -54,6 +55,12 @@ const Geometry* Surface::geometry() const
 const Material* Surface::material() const
 {
   return m_material.get();
+}
+
+void Surface::render(viskores::rendering::Canvas& canvas,
+                     const viskores::rendering::Camera& camera) const
+{
+  this->m_geometry->render(canvas, camera, this->m_field, this->m_colorTable);
 }
 
 viskores::Bounds Surface::bounds() const

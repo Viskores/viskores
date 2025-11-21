@@ -248,13 +248,24 @@ void TransferFunction1D::finalize()
 
   this->m_colorTable.RescaleToRange(this->m_valueRange);
 
-  this->m_actor = std::make_shared<viskores::rendering::Actor>(dataSet.GetCellSet(),
-                                                               dataSet.GetCoordinateSystem(),
-                                                               dataSet.GetField("data"),
-                                                               this->m_colorTable);
-  this->m_actor->SetScalarRange(this->m_colorTable.GetRange());
   this->m_mapper = std::make_shared<viskores::rendering::MapperVolume>();
   this->m_mapper->SetSampleDistance(sampleDistance);
+}
+
+void TransferFunction1D::render(viskores::rendering::Canvas& canvas,
+                                const viskores::rendering::Camera& camera) const
+{
+  viskores::cont::DataSet dataSet = this->m_spatialField->getDataSet();
+  const viskores::cont::Field& field = dataSet.GetField("data");
+  std::unique_ptr<viskores::rendering::Mapper> mapper{ this->mapper()->NewCopy() };
+  mapper->SetCanvas(&canvas);
+  mapper->SetActiveColorTable(this->m_colorTable);
+  mapper->RenderCells(dataSet.GetCellSet(),
+                      dataSet.GetCoordinateSystem(),
+                      field,
+                      this->m_colorTable,
+                      camera,
+                      field.GetRange().ReadPortal().Get(0));
 }
 
 const SpatialField* TransferFunction1D::spatialField() const
@@ -266,11 +277,6 @@ viskores::Bounds TransferFunction1D::bounds() const
 {
   return isValid() ? this->m_spatialField->getDataSet().GetCoordinateSystem().GetBounds()
                    : viskores::Bounds();
-}
-
-viskores::rendering::Actor* TransferFunction1D::actor() const
-{
-  return this->m_actor.get();
 }
 
 viskores::rendering::MapperVolume* TransferFunction1D::mapper() const

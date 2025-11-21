@@ -11,6 +11,46 @@
 #include "Volume.h"
 #include "TransferFunction1D.h"
 
+namespace
+{
+
+struct UnknownVolume : public viskores_device::Volume
+{
+  UnknownVolume(viskores_device::ViskoresDeviceGlobalState* d);
+
+  viskores::Bounds bounds() const override;
+  viskores::rendering::Mapper* mapper() const override;
+  void render(viskores::rendering::Canvas& canvas,
+              const viskores::rendering::Camera& camera) const override;
+  bool isValid() const override;
+};
+
+UnknownVolume::UnknownVolume(viskores_device::ViskoresDeviceGlobalState* d)
+  : Volume(d)
+{
+}
+
+viskores::Bounds UnknownVolume::bounds() const
+{
+  return viskores::Bounds{};
+}
+
+viskores::rendering::Mapper* UnknownVolume::mapper() const
+{
+  return nullptr;
+}
+
+void UnknownVolume::render(viskores::rendering::Canvas&, const viskores::rendering::Camera&) const
+{
+}
+
+bool UnknownVolume::isValid() const
+{
+  return false;
+}
+
+} // anonymous namespace
+
 namespace viskores_device
 {
 
@@ -37,31 +77,6 @@ void Volume::commitParameters()
 void Volume::finalize()
 {
   // no-op
-}
-
-UnknownVolume::UnknownVolume(ViskoresDeviceGlobalState* d)
-  : Volume(d)
-{
-}
-
-viskores::Bounds UnknownVolume::bounds() const
-{
-  return viskores::Bounds{};
-}
-
-viskores::rendering::Actor* UnknownVolume::actor() const
-{
-  return nullptr;
-}
-
-viskores::rendering::Mapper* UnknownVolume::mapper() const
-{
-  return nullptr;
-}
-
-bool UnknownVolume::isValid() const
-{
-  return false;
 }
 
 } // namespace viskores_device

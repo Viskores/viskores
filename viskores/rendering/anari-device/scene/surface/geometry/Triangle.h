@@ -11,8 +11,6 @@
 #pragma once
 
 #include "Geometry.h"
-// viskores
-#include <viskores/rendering/Actor.h>
 
 namespace viskores_device
 {

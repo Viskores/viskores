@@ -14,7 +14,6 @@
 #include "array/Array1D.h"
 
 // viskores
-#include <viskores/rendering/Actor.h>
 #include <viskores/rendering/MapperPoint.h>
 
 namespace viskores_device

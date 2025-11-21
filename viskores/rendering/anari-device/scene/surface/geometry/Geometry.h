@@ -12,9 +12,9 @@
 
 #include "Object.h"
 #include "array/Array1D.h"
+#include "scene/surface/material/Material.h"
 
 #include <viskores/cont/DataSet.h>
-#include <viskores/rendering/Actor.h>
 #include <viskores/rendering/MapperRayTracer.h>
 
 #include <map>
@@ -35,6 +35,11 @@ struct Geometry : public Object
   // geometry objects and add them to `m_dataSet`.
   void commitParameters() override;
   void finalize() override;
+
+  virtual void render(viskores::rendering::Canvas& canvas,
+                      const viskores::rendering::Camera& camera,
+                      const viskores::cont::Field& field,
+                      const viskores::cont::ColorTable& colorTable) const;
 
   // This struct helps manage a set of parameters providing arrays of data that
   // will be attached to fields on a Viskores dataset created by this geometry.

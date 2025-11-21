@@ -35,10 +35,9 @@ struct Image1DSampler : public Sampler
 
   helium::WrapMode wrapMode() const { return this->m_wrapMode; }
 
-  const viskores::cont::ColorTable& colorTable() const { return this->m_colorTable; }
-
-  std::shared_ptr<viskores::rendering::Actor> createActor(
-    const viskores::cont::DataSet& data) override;
+  bool getColors(const viskores::cont::DataSet& data,
+                 viskores::cont::Field& field,
+                 viskores::cont::ColorTable& colorTable) const override;
 
 private:
   Mat4f_32 m_inTransform;

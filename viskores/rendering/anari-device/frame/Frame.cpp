@@ -249,11 +249,7 @@ void Frame::renderFrame()
             reportMessage(ANARI_SEVERITY_DEBUG, "skip rendering invalid surface");
             continue;
           }
-          // Do we need a copy?
-          std::unique_ptr<viskores::rendering::Mapper> mapper{
-            surface->geometry()->mapper()->NewCopy()
-          };
-          surface->actor()->Render(*mapper, this->Canvas, camera);
+          surface->render(this->Canvas, camera);
         }
 
         for (const auto& volume : volumesToRender)
@@ -263,9 +259,7 @@ void Frame::renderFrame()
             reportMessage(ANARI_SEVERITY_DEBUG, "skip rendering invalid volume");
             continue;
           }
-          // Do we need a copy?
-          std::unique_ptr<viskores::rendering::Mapper> mapper{ volume->mapper()->NewCopy() };
-          volume->actor()->Render(*mapper, this->Canvas, camera);
+          volume->render(this->Canvas, camera);
         }
       }
 
