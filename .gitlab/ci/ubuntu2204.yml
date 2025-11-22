@@ -120,7 +120,7 @@ ubuntu2204_clang12:
     CMAKE_BUILD_TYPE: Debug
     VISKORES_SETTINGS: "tbb+shared+examples+ccache"
 
-ubuntu2204_kokkos37_cuda122:
+ubuntu2204_cuda122_kokkos41:
   tags:
     - nvidia-a100
     - uo-gpu
@@ -133,7 +133,7 @@ ubuntu2204_kokkos37_cuda122:
   variables:
     CMAKE_GENERATOR: "Ninja"
     CMAKE_BUILD_TYPE: Release
-    VISKORES_SETTINGS: "benchmarks+kokkos+ampere+64bit_floats+shared+ccache"
+    VISKORES_SETTINGS: "benchmarks+kokkos+ampere+64bit_floats+static+ccache"
 
 ubuntu2204_gcc12:
   extends:
