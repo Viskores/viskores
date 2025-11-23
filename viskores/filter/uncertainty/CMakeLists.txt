@@ -20,13 +20,13 @@ set(uncertainty_headers
   ContourUncertainUniform.h
   ContourUncertainUniformMonteCarlo.h
   #2 Variate Data
-  2VariateUncertianty.h
+  FiberUncertainUniform.h
   )
 set(uncertainty_sources_device
   ContourUncertainUniform.cxx
   ContourUncertainUniformMonteCarlo.cxx
   #2 Variate 
-  2VariateUncertianty.cxx
+  FiberUncertainUniform.cxx
   )
 
 viskores_library(
