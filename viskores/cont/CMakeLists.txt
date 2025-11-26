@@ -262,9 +262,19 @@ if (Viskores_USE_DEFAULT_TYPES_FOR_ASCENT)
   endif()
 endif()
 
+viskores_option(Viskores_USE_DEFAULT_TYPES_FOR_VISTLE
+  "Compile Viskores algorithms for use with types from Vistle."
+  OFF
+  )
+
+if (Viskores_USE_DEFAULT_TYPES_FOR_VISTLE)
+  set(Viskores_DEFAULT_TYPES_HEADER "internal/DefaultTypesVistle.h.in")
+endif()
+
 mark_as_advanced(
   Viskores_USE_DEFAULT_TYPES_FOR_VTK
   Viskores_USE_DEFAULT_TYPES_FOR_ASCENT
+  Viskores_USE_DEFAULT_TYPES_FOR_VISTLE
   )
 
 if (Viskores_DEFAULT_TYPES_HEADER)
