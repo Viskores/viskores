@@ -201,6 +201,8 @@ void TestConfigOptionValues(const internal::RuntimeDeviceConfigurationOptions& c
   VISKORES_TEST_ASSERT(configOptions.ViskoresNumThreads.IsSet(), "num threads should be set");
   VISKORES_TEST_ASSERT(configOptions.ViskoresDeviceInstance.IsSet(),
                        "device instance should be set");
+  VISKORES_TEST_ASSERT(configOptions.ViskoresUseUnifiedMemory.IsSet(),
+                       "unified memory flag not set");
 
   VISKORES_TEST_ASSERT(configOptions.ViskoresNumThreads.GetValue() == 100,
                        "num threads should == 100");
@@ -224,8 +226,14 @@ void TestRuntimeDeviceConfigurationOptions()
 
     int argc;
     char** argv;
-    viskores::cont::testing::Testing::MakeArgs(
-      argc, argv, "--viskores-num-threads", "100", "--viskores-device-instance", "1");
+    viskores::cont::testing::Testing::MakeArgs(argc,
+                                               argv,
+                                               "--viskores-num-threads",
+                                               "100",
+                                               "--viskores-device-instance",
+                                               "1",
+                                               "--viskores-use-unified-memory",
+                                               "1");
     auto options = GetOptions(argc, argv, usage);
 
     VISKORES_TEST_ASSERT(!configOptions.IsInitialized(),
@@ -237,8 +245,14 @@ void TestRuntimeDeviceConfigurationOptions()
   {
     int argc;
     char** argv;
-    viskores::cont::testing::Testing::MakeArgs(
-      argc, argv, "--viskores-num-threads", "100", "--viskores-device-instance", "1");
+    viskores::cont::testing::Testing::MakeArgs(argc,
+                                               argv,
+                                               "--viskores-num-threads",
+                                               "100",
+                                               "--viskores-device-instance",
+                                               "1",
+                                               "--viskores-use-unified-memory",
+                                               "1");
     internal::RuntimeDeviceConfigurationOptions configOptions(argc, argv);
     TestConfigOptionValues(configOptions);
   }
