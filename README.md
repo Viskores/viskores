@@ -185,3 +185,5 @@ See [LICENSE.txt](LICENSE.txt) for details.
 [High Performance Software Foundation]: https://hpsf.io/
 [technical charter]:                    docs/technical-charter.pdf
 [governance]:                           GOVERNANCE.md
+
+Launch CI
