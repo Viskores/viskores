@@ -23,7 +23,7 @@ find_package(Viskores REQUIRED QUIET)
 
 if(TARGET viskores::io AND TARGET viskores::filter_entity_extraction)
   add_executable(RedistributePoints RedistributePoints.cxx RedistributePoints.h main.cxx)
-  target_link_libraries(RedistributePoints PRIVATE viskores::io viskores::filter_entity_extraction)
+  target_link_libraries(RedistributePoints PRIVATE viskores::io viskores::filter_entity_extraction viskores::worklet)
   viskores_add_target_information(RedistributePoints
     DROP_UNUSED_SYMBOLS
     MODIFY_CUDA_FLAGS
