@@ -85,6 +85,18 @@ public:
   {
     this->ClearParticles();
 
+    //DRP: worklet that counts cells, findallcells.
+    //BlockIDs is a vecvariable.
+    //need an ID to idx array.
+    // idx to id?
+    //Active / Inactive / Terminated are array of indices??
+    // do a scan of particles to find idx where status is XX, YY, ZZ.
+    // Single ArrayHandle of particles:
+    //   For advection, find indices of active particles. Maybe a mask? and advect those.
+    //   Communication: pick out the spatial
+    //   Termination: pick out the terminated
+    //  Or do we want to copy particles between different arrays?
+
     viskores::Id n = seeds.GetNumberOfValues();
     auto portal = seeds.ReadPortal();
 
@@ -388,6 +400,7 @@ public:
   std::unordered_map<viskores::Id, std::vector<ParticleType>> Active;
   std::vector<DSIType> Blocks;
   viskores::filter::flow::internal::BoundsMap BoundsMap;
+  viskores::cont::CellLocatorTwoLevel BoundsLocator;
   viskoresdiy::mpi::communicator Comm = viskores::cont::EnvironmentTracker::GetCommunicator();
 #ifdef VISKORES_ENABLE_MPI
   ParticleExchanger<ParticleType> Exchanger;

@@ -21,6 +21,7 @@
 
 #include <viskores/Deprecated.h>
 #include <viskores/Particle.h>
+#include <viskores/cont/CellLocatorTwoLevel.h>
 #include <viskores/cont/ErrorFilterExecution.h>
 #include <viskores/filter/Filter.h>
 #include <viskores/filter/flow/FlowTypes.h>
@@ -118,13 +119,14 @@ public:
   VISKORES_CONT
   bool GetUseSynchronousCommunication() { return false; }
 
-
 protected:
   VISKORES_CONT virtual void ValidateOptions() const;
+  VISKORES_CONT void BuildBoundsLocator(const viskores::cont::PartitionedDataSet& input);
 
   bool BlockIdsSet = false;
   std::vector<viskores::Id> BlockIds;
   viskores::filter::flow::internal::BoundsMap BoundsMap;
+  viskores::cont::CellLocatorTwoLevel BoundsLocator;
   viskores::Id NumberOfSteps = 0;
   viskores::cont::UnknownArrayHandle Seeds;
   viskores::filter::flow::IntegrationSolverType SolverType =

@@ -65,9 +65,9 @@ public:
     this->Init(pds.GetPartitions(), blockIds);
   }
 
-  VISKORES_CONT viskores::Bounds GetGlobalBounds() const { return this->GlobalBounds; }
+  VISKORES_CONT viskores::Bounds GetGlobalBounds_() const { return this->GlobalBounds; }
 
-  VISKORES_CONT viskores::Bounds GetBlockBounds(viskores::Id idx) const
+  VISKORES_CONT viskores::Bounds GetBlockBounds_(viskores::Id idx) const
   {
     VISKORES_ASSERT(idx >= 0 && static_cast<std::size_t>(idx) < this->BlockBounds.size());
 
@@ -91,7 +91,7 @@ public:
 
   VISKORES_CONT std::vector<viskores::Id> FindBlocks(const viskores::Vec3f& p) const
   {
-    return this->FindBlocks(p, -1);
+    return this->FindBlocks_(p, -1);
   }
 
   VISKORES_CONT std::vector<viskores::Id> FindBlocks(
@@ -99,11 +99,12 @@ public:
     const std::vector<viskores::Id>& ignoreBlocks) const
   {
     viskores::Id ignoreID = (ignoreBlocks.empty() ? -1 : ignoreBlocks[0]);
-    return FindBlocks(p, ignoreID);
+    return FindBlocks_(p, ignoreID);
   }
 
-  VISKORES_CONT std::vector<viskores::Id> FindBlocks(const viskores::Vec3f& p,
-                                                     viskores::Id ignoreBlock) const
+private:
+  VISKORES_CONT std::vector<viskores::Id> FindBlocks_(const viskores::Vec3f& p,
+                                                      viskores::Id ignoreBlock) const
   {
     std::vector<viskores::Id> blockIDs;
     if (this->GlobalBounds.Contains(p))
@@ -120,10 +121,10 @@ public:
     return blockIDs;
   }
 
-  VISKORES_CONT viskores::Id GetTotalNumBlocks() const { return this->TotalNumBlocks; }
-  VISKORES_CONT viskores::Id GetLocalNumBlocks() const { return this->LocalNumBlocks; }
+  //VISKORES_CONT viskores::Id GetTotalNumBlocks() const { return this->TotalNumBlocks; }
+  //VISKORES_CONT viskores::Id GetLocalNumBlocks() const { return this->LocalNumBlocks; }
 
-private:
+
   VISKORES_CONT void Init(const std::vector<viskores::cont::DataSet>& dataSets,
                           const std::vector<viskores::Id>& blockIds);
 

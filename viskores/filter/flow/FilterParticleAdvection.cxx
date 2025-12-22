@@ -31,6 +31,12 @@ namespace filter
 namespace flow
 {
 
+VISKORES_CONT void FilterParticleAdvection::BuildBoundsLocator(
+  const viskores::cont::PartitionedDataSet& input)
+{
+  auto globalBounds = input.GetGlobalPartitionBounds();
+}
+
 VISKORES_CONT viskores::cont::DataSet FilterParticleAdvection::DoExecute(
   const viskores::cont::DataSet& inData)
 {
@@ -67,7 +73,6 @@ VISKORES_CONT void FilterParticleAdvection::ValidateOptions() const
   if (this->StepSize < 0)
     throw viskores::cont::ErrorFilterExecution("StepSize cannot be negative");
 }
-
 }
 }
 } // namespace viskores::filter::flow

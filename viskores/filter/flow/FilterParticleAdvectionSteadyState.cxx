@@ -54,6 +54,44 @@ FilterParticleAdvectionSteadyState<Derived>::GetAnalysis(const viskores::cont::D
   return inst->GetAnalysis(data);
 }
 
+#if 0
+template <typename Derived>
+VISKORES_CONT void FilterParticleAdvectionSteadyState<Derived>::BuildBoundsLocator(
+  const viskores::cont::PartitionedDataSet& input)
+{
+  // Build hexahedrons for each partition.
+  std::vector<viskores::Bounds> partitionBounds;
+  for (const auto& ds : input.GetPartitions())
+    partitionBounds.push_back(ds.GetBounds());
+  int numLocalBlocks = input.GetNumberOfPartitions();
+
+  std::vector<viskores::Bounds> globalPartitionsBounds;
+  //#ifdef VISKORES_ENABLE_MPI
+  const auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
+  int rank = comm.rank(), numRanks = comm.size();
+
+  std::vector<int> blocksPerRank(0, static_cast<size_t>(numRanks));
+  comm.all_gather(numLocalBlocks, blocksPerRank.data(), 1, MPI_INT);
+  //comm.all_gather(numLocalBlocks, blocksPerRank.data(), 1, MPI_INT);
+  viskores::Id totalBlocks =
+    std::accumulate(blocksPerRank.begin(), blocksPerRank.end(), viskores::Id(0));
+  std::vector<std::size_t> offsets(numRanks, 0);
+  for (std::size_t i = 1; i < numRanks; i++)
+    offsets[i] = offsets[i - 1] + blocksPerRank[i - 1];
+
+  //Put local bounds into global vector.
+  globalPartitionsBounds.resize(totalBlocks);
+  for (viskores::Id i = 0; i < numLocalBlocks; i++)
+    globalPartitionsBounds[offsets[rank] + i] = partitionBounds[static_cast<std::size_t>(i)];
+
+  //comm.all_gather(
+  //    globalPartitionsBounds.data(), globalPartitionsBounds.size(), viskores::BoundsType());
+
+  //#endif
+  this->BoundsLocator = viskores::cont::CellLocatorTwoLevel(input);
+}
+#endif
+
 template <typename Derived>
 VISKORES_CONT viskores::cont::PartitionedDataSet
 FilterParticleAdvectionSteadyState<Derived>::DoExecutePartitions(
@@ -67,6 +105,7 @@ FilterParticleAdvectionSteadyState<Derived>::DoExecutePartitions(
     DataSetIntegratorSteadyState<ParticleType, FieldType, TerminationType, AnalysisType>;
 
   this->ValidateOptions();
+  this->BuildBoundsLocator(input);
   if (this->BlockIdsSet)
     this->BoundsMap = viskores::filter::flow::internal::BoundsMap(input, this->BlockIds);
   else
