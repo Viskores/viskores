@@ -21,6 +21,8 @@
 #include <viskores/StaticAssert.h>
 
 #include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/BoundsCompute.h>
+#include <viskores/cont/BoundsGlobalCompute.h>
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/Field.h>
 #include <viskores/cont/internal/FieldCollection.h>
@@ -72,22 +74,49 @@ public:
 
   /// Get the bounds of all DataSets in this PartitionedDataSet.
   VISKORES_CONT
-  viskores::Bounds GetBounds() const;
+  viskores::Bounds BoundsCompute(viskores::Id index = 0) const
+  {
+    return viskores::cont::BoundsCompute(*this, index);
+  }
+
+  VISKORES_CONT
+  viskores::Bounds BoundsCompute(const std::string& name) const
+  {
+    return viskores::cont::BoundsCompute(*this, name);
+  }
 
   /// Get the bounds of all DataSets in this PartitionedDataSet across all MPI ranks.
   /// @warning This method requires global communication if MPI is enabled.
-  VISKORES_CONT
-  viskores::Bounds GetGlobalBounds() const;
+  viskores::Bounds BoundsGlobalCompute(viskores::Id index = 0) const
+  {
+    return viskores::cont::BoundsGlobalCompute(*this, index);
+  }
+
+  viskores::Bounds BoundsGlobalCompute(const std::string& name) const
+  {
+    return viskores::cont::BoundsGlobalCompute(*this, name);
+  }
 
   /// Get the bounds of each DataSet in this PartitionedDataSet.
   VISKORES_CONT
-  std::vector<viskores::Bounds> GetPartitionBounds() const;
+  std::vector<viskores::Bounds> PartitionBoundsCompute(viskores::Id index = 0) const;
+
+  VISKORES_CONT
+  std::vector<viskores::Bounds> PartitionBoundsCompute(const std::string& name) const;
 
   /// Get the bounds of each DataSet in this PartitionedDataSet across all MPI ranks.
   /// @warning This method requires global communication if MPI is enabled.
   VISKORES_CONT
-  std::vector<viskores::Bounds> GetGlobalPartitionBounds() const;
+  std::vector<viskores::Bounds> PartitionBoundsGlobalCompute(viskores::Id index = 0) const
+  {
+    return this->AggregatePartitionBounds(this->PartitionBoundsCompute(index));
+  }
 
+  VISKORES_CONT
+  std::vector<viskores::Bounds> PartitionBoundsGlobalCompute(const std::string& name) const
+  {
+    return this->AggregatePartitionBounds(this->PartitionBoundsCompute(name));
+  }
   /// Get the DataSet @a partId.
   VISKORES_CONT
   const viskores::cont::DataSet& GetPartition(viskores::Id partId) const;
@@ -284,10 +313,13 @@ public:
   /// @}
 
 private:
-  std::vector<viskores::cont::DataSet> Partitions;
+  std::vector<viskores::Bounds> AggregatePartitionBounds(
+    const std::vector<viskores::Bounds>& localBounds) const;
 
   viskores::cont::internal::FieldCollection Fields{ viskores::cont::Field::Association::Partitions,
                                                     viskores::cont::Field::Association::Global };
+
+  std::vector<viskores::cont::DataSet> Partitions;
 };
 }
 } // namespace viskores::cont
