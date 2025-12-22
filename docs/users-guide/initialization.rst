@@ -56,6 +56,11 @@ The following table lists the currently supported options.
      -
      - Selects the device to use when more than one device device of a given type is available.
        The device is specified with a numbered index.
+   * - ``--viskores-use-unified-memory``
+     - ``VISKORES_USE_UNIFIED_MEMORY``
+     - 0
+     - If set to 1, prefer using unified memory to transfer data between host and device.
+       When set to 0, prefer explicit host/device memory management.
 
 :func:`viskores::cont::Initialize` returns a :struct:`viskores::cont::InitializeResult` structure.
 This structure contains information about the supported arguments and options selected during initialization.

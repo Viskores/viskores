@@ -104,6 +104,11 @@ void RuntimeDeviceConfigurationBase::Initialize(
     [&](const viskores::Id& value) { return this->SetDeviceInstance(value); },
     "SetDeviceInstance",
     this->GetDevice().GetName());
+  InitializeOption(
+    configOptions.ViskoresUseUnifiedMemory,
+    [&](const viskores::Id& value) { return this->SetUseUnifiedMemory(value); },
+    "SetUseUnifiedMemory",
+    this->GetDevice().GetName());
   this->InitializeSubsystem();
 }
 
@@ -126,12 +131,24 @@ RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::SetDeviceInstance(
   return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
 }
 
+RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::SetUseUnifiedMemory(
+  const viskores::Id&)
+{
+  return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
+}
+
 RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::GetThreads(viskores::Id&) const
 {
   return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
 }
 
 RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::GetDeviceInstance(viskores::Id&) const
+{
+  return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
+}
+
+RuntimeDeviceConfigReturnCode RuntimeDeviceConfigurationBase::GetUseUnifiedMemory(
+  viskores::Id&) const
 {
   return RuntimeDeviceConfigReturnCode::INVALID_FOR_DEVICE;
 }
