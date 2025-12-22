@@ -48,7 +48,6 @@ viskores_library(
   USE_VISKORES_JOB_POOL
 )
 
-target_link_libraries(viskores_filter_scalar_topology PUBLIC viskores_worklet viskores_filter_core)
 if (Viskores_ENABLE_MPI)
   target_link_libraries(viskores_filter_scalar_topology PUBLIC MPI::MPI_CXX)
 endif ()
