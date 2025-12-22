@@ -170,7 +170,21 @@ protected:
       }
       int size = argv.size();
       Kokkos::initialize(size, argv.data());
-      std::atexit(Kokkos::finalize);
+      std::atexit(
+        []()
+        {
+          // Avoid finalizing Kokkos if something else has finalized.
+          if (Kokkos::is_initialized())
+          {
+            VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Finalizing Kokkos.");
+            Kokkos::finalize();
+          }
+          else
+          {
+            VISKORES_LOG_S(viskores::cont::LogLevel::Info,
+                           "Detected external finalization of Kokkos.");
+          }
+        });
     }
     else
     {
