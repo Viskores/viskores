@@ -39,8 +39,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Mark repository as safe
         run: git config --global --add safe.directory "${GITHUB_WORKSPACE}"
-      - name: CXX
+      - name: Check formatting
         run: ./Utilities/Scripts/format.bash
+      - name: Upload format patch
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatting-patch
+          path: ./format.patch
+          if-no-files-found: ignore
 
   windows:
     needs: format
