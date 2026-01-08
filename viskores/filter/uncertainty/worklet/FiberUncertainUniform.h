@@ -58,7 +58,7 @@ public:
                                 const Max2& ensembleMax2,
                                 OutCellFieldType& probability,
                                 const RandomPortalType& randomPortal) const
-  
+
   {
     Min1 min1_user = static_cast<Min1>(this->RangeAxis1.Min);
     Min2 min2_user = static_cast<Min2>(this->RangeAxis2.Min);

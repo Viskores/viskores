@@ -51,10 +51,7 @@ public:
   VISKORES_CONT FiberUncertainUniform() = default;
 
   /// @brief Sets the trait rectangle's range for the first field.
-  VISKORES_CONT void SetRange1(const viskores::Range& range)
-  {
-    this->RangeAxis1 = range;
-  }
+  VISKORES_CONT void SetRange1(const viskores::Range& range) { this->RangeAxis1 = range; }
 
   /// @copydoc SetRange1
   VISKORES_CONT void SetRange1(viskores::Float64 min, viskores::Float64 max)
@@ -63,10 +60,7 @@ public:
   }
 
   /// @brief Sets the trait rectangle's range for the second field.
-  VISKORES_CONT void SetRange2(const viskores::Range& range)
-  {
-    this->RangeAxis2 = range;
-  }
+  VISKORES_CONT void SetRange2(const viskores::Range& range) { this->RangeAxis2 = range; }
 
   /// @copydoc SetRange2
   VISKORES_CONT void SetRange2(viskores::Float64 min, viskores::Float64 max)

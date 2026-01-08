@@ -98,23 +98,25 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
     {
       fieldName = "Mean";
       VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Adopt Mean" << std::endl);
-      this->Invoke(viskores::worklet::detail::MultiVariateMean{ this->RangeAxis1, this->RangeAxis2 },
-                   concreteEnsembleMin1,
-                   concreteEnsembleMax1,
-                   concreteEnsembleMin2,
-                   concreteEnsembleMax2,
-                   probability);
+      this->Invoke(
+        viskores::worklet::detail::MultiVariateMean{ this->RangeAxis1, this->RangeAxis2 },
+        concreteEnsembleMin1,
+        concreteEnsembleMax1,
+        concreteEnsembleMin2,
+        concreteEnsembleMax2,
+        probability);
     }
     else if (this->Approach == ApproachEnum::Truth)
     {
       fieldName = "Truth";
       VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Adopt Truth" << std::endl);
-      this->Invoke(viskores::worklet::detail::MultiVariateTruth{ this->RangeAxis1, this->RangeAxis2 },
-                   concreteEnsembleMin1,
-                   concreteEnsembleMax1,
-                   concreteEnsembleMin2,
-                   concreteEnsembleMax2,
-                   probability);
+      this->Invoke(
+        viskores::worklet::detail::MultiVariateTruth{ this->RangeAxis1, this->RangeAxis2 },
+        concreteEnsembleMin1,
+        concreteEnsembleMax1,
+        concreteEnsembleMin2,
+        concreteEnsembleMax2,
+        probability);
     }
     else
     {
