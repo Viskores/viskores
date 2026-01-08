@@ -50,46 +50,54 @@ public:
   /// @brief Constructor
   VISKORES_CONT FiberUncertainUniform() = default;
 
-  /// @brief Sets the trait rectangle's bottom left corner.
-  /// Sets the trait rectangle's bottom left corner.
-  VISKORES_CONT void SetMinAxis(
-    const viskores::Pair<viskores::FloatDefault, viskores::FloatDefault>& minCoordinate)
+  /// @brief Sets the trait rectangle's range for the first field.
+  VISKORES_CONT void SetRange1(const viskores::Range& range)
   {
-    this->minAxis = viskores::Range(minCoordinate.first, minCoordinate.second);
+    this->RangeAxis1 = range;
   }
 
-  /// @brief  Sets the trait rectangle's top right corner
-  /// Sets the trait rectangle's top right corner.
-  VISKORES_CONT void SetMaxAxis(
-    const viskores::Pair<viskores::FloatDefault, viskores::FloatDefault>& maxCoordinate)
+  /// @copydoc SetRange1
+  VISKORES_CONT void SetRange1(viskores::Float64 min, viskores::Float64 max)
   {
-    this->maxAxis = viskores::Range(maxCoordinate.first, maxCoordinate.second);
+    this->SetRange1({ min, max });
+  }
+
+  /// @brief Sets the trait rectangle's range for the second field.
+  VISKORES_CONT void SetRange2(const viskores::Range& range)
+  {
+    this->RangeAxis2 = range;
+  }
+
+  /// @copydoc SetRange2
+  VISKORES_CONT void SetRange2(viskores::Float64 min, viskores::Float64 max)
+  {
+    this->SetRange2({ min, max });
   }
 
   /// @brief Sets minimum X.
   /// Sets minimum value of the uniform distribution of the variable X at each grid point.
-  VISKORES_CONT void SetMinX(const std::string& fieldName)
+  VISKORES_CONT void SetField1Min(const std::string& fieldName)
   {
     this->SetActiveField(0, fieldName, viskores::cont::Field::Association::Points);
   }
 
   /// @brief Sets maxmimum X.
   /// Sets maximum value of the uniform distribution of the variable X at each grid point.
-  VISKORES_CONT void SetMaxX(const std::string& fieldName)
+  VISKORES_CONT void SetField1Max(const std::string& fieldName)
   {
     this->SetActiveField(1, fieldName, viskores::cont::Field::Association::Points);
   }
 
   /// @brief Sets minimum Y.
   /// Sets minimum value of the uniform distribution of the variable Y at each grid point.
-  VISKORES_CONT void SetMinY(const std::string& fieldName)
+  VISKORES_CONT void SetField2Min(const std::string& fieldName)
   {
     this->SetActiveField(2, fieldName, viskores::cont::Field::Association::Points);
   }
 
   /// @brief Sets maxmimum Y.
   /// Sets maximum value of the uniform distribution of the variable Y at each grid point.
-  VISKORES_CONT void SetMaxY(const std::string& fieldName)
+  VISKORES_CONT void SetField2Max(const std::string& fieldName)
   {
     this->SetActiveField(3, fieldName, viskores::cont::Field::Association::Points);
   }
@@ -115,8 +123,8 @@ public:
   VISKORES_CONT void SetApproach(ApproachEnum approach) { this->Approach = approach; }
 
 private:
-  viskores::Range minAxis;
-  viskores::Range maxAxis;
+  viskores::Range RangeAxis1;
+  viskores::Range RangeAxis2;
   ApproachEnum Approach = ApproachEnum::ClosedForm;
   viskores::Id NumSamples = 5000;
 

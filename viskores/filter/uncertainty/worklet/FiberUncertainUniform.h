@@ -33,11 +33,11 @@ namespace detail
 class MultiVariateMonteCarlo : public viskores::worklet::WorkletMapField
 {
 public:
-  MultiVariateMonteCarlo(const viskores::Range& minAxis,
-                         const viskores::Range& maxAxis,
+  MultiVariateMonteCarlo(const viskores::Range& rangeAxis1,
+                         const viskores::Range& rangeAxis2,
                          const viskores::Id numSamples)
-    : inputBottomLeft(minAxis.Min, minAxis.Max)
-    , inputTopRight(maxAxis.Min, maxAxis.Max)
+    : RangeAxis1(rangeAxis1)
+    , RangeAxis2(rangeAxis2)
     , NumSamples(numSamples){};
 
   using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut, WholeArrayIn);
@@ -45,81 +45,75 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
-  template <typename MinX,
-            typename MaxX,
-            typename MinY,
-            typename MaxY,
+  template <typename Min1,
+            typename Max1,
+            typename Min2,
+            typename Max2,
             typename OutCellFieldType,
             typename RandomPortalType>
 
-  VISKORES_EXEC void operator()(const MinX& ensembleMinX,
-                                const MaxX& ensembleMaxX,
-                                const MinY& ensembleMinY,
-                                const MaxY& ensembleMaxY,
+  VISKORES_EXEC void operator()(const Min1& ensembleMin1,
+                                const Max1& ensembleMax1,
+                                const Min2& ensembleMin2,
+                                const Max2& ensembleMax2,
                                 OutCellFieldType& probability,
                                 const RandomPortalType& randomPortal) const
+  
   {
-    viskores::FloatDefault minX_user =
-      static_cast<viskores::FloatDefault>(this->inputBottomLeft.Min);
-
-    viskores::FloatDefault minY_user =
-      static_cast<viskores::FloatDefault>(this->inputBottomLeft.Max);
-
-    viskores::FloatDefault maxX_user = static_cast<viskores::FloatDefault>(this->inputTopRight.Min);
-
-    viskores::FloatDefault maxY_user = static_cast<viskores::FloatDefault>(this->inputTopRight.Max);
+    Min1 min1_user = static_cast<Min1>(this->RangeAxis1.Min);
+    Min2 min2_user = static_cast<Min2>(this->RangeAxis2.Min);
+    Max1 max1_user = static_cast<Max1>(this->RangeAxis1.Max);
+    Max2 max2_user = static_cast<Max2>(this->RangeAxis2.Max);
 
     viskores::Id nonZeroCases = 0;
     viskores::FloatDefault mcProbability = 0.0;
 
-    viskores::FloatDefault minX_dataset = static_cast<viskores::FloatDefault>(ensembleMinX);
-    viskores::FloatDefault maxX_dataset = static_cast<viskores::FloatDefault>(ensembleMaxX);
-    viskores::FloatDefault minY_dataset = static_cast<viskores::FloatDefault>(ensembleMinY);
-    viskores::FloatDefault maxY_dataset = static_cast<viskores::FloatDefault>(ensembleMaxY);
+    Min1 min1_intersection = viskores::Max(min1_user, ensembleMin1);
+    Min2 min2_intersection = viskores::Max(min2_user, ensembleMin2);
+    Max1 max1_intersection = viskores::Min(max1_user, ensembleMax1);
+    Max2 max2_intersection = viskores::Min(max2_user, ensembleMax2);
 
-    viskores::FloatDefault minX_intersection = std::max(minX_user, minX_dataset);
-    viskores::FloatDefault minY_intersection = std::max(minY_user, minY_dataset);
-    viskores::FloatDefault maxX_intersection = std::min(maxX_user, maxX_dataset);
-    viskores::FloatDefault maxY_intersection = std::min(maxY_user, maxY_dataset);
-
-    if ((minX_dataset == maxX_dataset) && (minY_dataset == maxY_dataset))
+    // Case where data has no uncertainty
+    if ((ensembleMin1 == ensembleMax1) && (ensembleMin2 == ensembleMax2))
     {
-      if ((minX_dataset <= maxX_user) && (minX_dataset >= minX_user) &&
-          (minY_dataset <= maxY_user) && (minY_dataset >= minY_user))
+      // Check if certain data point is within user-specified trait
+      if ((ensembleMin1 <= max1_user) && (ensembleMin1 >= min1_user) &&
+          (ensembleMin2 <= max2_user) && (ensembleMin2 >= min2_user))
       {
         nonZeroCases = this->NumSamples;
       }
     }
-    else if ((minX_dataset < maxX_dataset) && (minY_dataset == maxY_dataset))
+    // Case where data has uncertainty
+    else if ((ensembleMin1 < ensembleMax1) && (ensembleMin2 == ensembleMax2))
     {
-      if ((minX_intersection < maxX_intersection) && (minY_dataset >= minY_user) &&
-          (minY_dataset <= maxY_user))
+      if ((min1_intersection < max1_intersection) && (ensembleMin2 >= min2_user) &&
+          (ensembleMin2 <= max2_user))
       {
-        viskores::FloatDefault rangeX = maxX_dataset - minX_dataset;
+        viskores::FloatDefault rangeX = ensembleMax1 - ensembleMin1;
         for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
         {
           viskores::FloatDefault r1 = randomPortal.Get(i);
-          viskores::FloatDefault n1 = minX_dataset + r1 * rangeX;
+          viskores::FloatDefault n1 = ensembleMin1 + r1 * rangeX;
 
-          if ((n1 > minX_user) && (n1 < maxX_user))
+          if ((n1 > min1_user) && (n1 < max1_user))
           {
             nonZeroCases++;
           }
         }
       }
     }
-    else if ((minX_dataset == maxX_dataset) && (minY_dataset < maxY_dataset))
+    else if ((ensembleMin1 == ensembleMax1) && (ensembleMin2 < ensembleMax2))
     {
-      if ((minY_intersection < maxY_intersection) && (minX_dataset >= minX_user) &&
-          (minX_dataset <= maxX_user))
+      if ((min2_intersection < max2_intersection) && (ensembleMin1 >= min1_user) &&
+          (ensembleMin1 <= max1_user))
       {
-        viskores::FloatDefault rangeY = maxY_dataset - minY_dataset;
+        viskores::FloatDefault rangeY = ensembleMax2 - ensembleMin2;
         for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
         {
           viskores::FloatDefault r2 = randomPortal.Get(i + this->NumSamples);
-          viskores::FloatDefault n2 = minY_dataset + r2 * rangeY;
+          viskores::FloatDefault n2 = ensembleMin2 + r2 * rangeY;
 
-          if ((n2 > minY_user) && (n2 < maxY_user))
+          if ((n2 > min2_user) && (n2 < max2_user))
           {
             nonZeroCases++;
           }
@@ -128,16 +122,16 @@ public:
     }
     else
     {
-      viskores::FloatDefault rangeX = maxX_dataset - minX_dataset;
-      viskores::FloatDefault rangeY = maxY_dataset - minY_dataset;
+      viskores::FloatDefault rangeX = ensembleMax1 - ensembleMin1;
+      viskores::FloatDefault rangeY = ensembleMax2 - ensembleMin2;
       for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
       {
         viskores::FloatDefault r1 = randomPortal.Get(i);
         viskores::FloatDefault r2 = randomPortal.Get(i + this->NumSamples);
-        viskores::FloatDefault n1 = minX_dataset + r1 * rangeX;
-        viskores::FloatDefault n2 = minY_dataset + r2 * rangeY;
+        viskores::FloatDefault n1 = ensembleMin1 + r1 * rangeX;
+        viskores::FloatDefault n2 = ensembleMin2 + r2 * rangeY;
 
-        if ((n1 > minX_user) && (n1 < maxX_user) && (n2 > minY_user) && (n2 < maxY_user))
+        if ((n1 > min1_user) && (n1 < max1_user) && (n2 > min2_user) && (n2 < max2_user))
         {
           nonZeroCases++;
         }
@@ -152,17 +146,17 @@ public:
   }
 
 private:
-  viskores::Range inputBottomLeft;
-  viskores::Range inputTopRight;
+  viskores::Range RangeAxis1;
+  viskores::Range RangeAxis2;
   viskores::Id NumSamples = 1;
 };
 
 class MultiVariateClosedForm : public viskores::worklet::WorkletMapField
 {
 public:
-  MultiVariateClosedForm(const viskores::Range& minAxis, const viskores::Range& maxAxis)
-    : inputBottomLeft(minAxis.Min, minAxis.Max)
-    , inputTopRight(maxAxis.Min, maxAxis.Max)
+  MultiVariateClosedForm(const viskores::Range& rangeAxis1, const viskores::Range& rangeAxis2)
+    : RangeAxis1(rangeAxis1)
+    , RangeAxis2(rangeAxis2)
   {
   }
 
@@ -171,52 +165,33 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
-  template <typename MinX, typename MaxX, typename MinY, typename MaxY, typename OutCellFieldType>
-  VISKORES_EXEC void operator()(const MinX& ensembleMinX,
-                                const MaxX& ensembleMaxX,
-                                const MinY& ensembleMinY,
-                                const MaxY& ensembleMaxY,
+  template <typename Min1, typename Max1, typename Min2, typename Max2, typename OutCellFieldType>
+  VISKORES_EXEC void operator()(const Min1& ensembleMin1,
+                                const Max1& ensembleMax1,
+                                const Min2& ensembleMin2,
+                                const Max2& ensembleMax2,
                                 OutCellFieldType& probability) const
   {
 
-    viskores::FloatDefault minX_user = 0.0;
-    minX_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.Min);
-    viskores::FloatDefault minY_user = 0.0;
-    minY_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.Max);
-    viskores::FloatDefault maxX_user = 0.0;
-    maxX_user = static_cast<viskores::FloatDefault>(this->inputTopRight.Min);
-    viskores::FloatDefault maxY_user = 0.0;
-    maxY_user = static_cast<viskores::FloatDefault>(this->inputTopRight.Max);
-
-    viskores::FloatDefault minX_intersection = 0.0;
-    viskores::FloatDefault maxX_intersection = 0.0;
-    viskores::FloatDefault minY_intersection = 0.0;
-    viskores::FloatDefault maxY_intersection = 0.0;
-
-    viskores::FloatDefault minX_dataset = 0.0;
-    viskores::FloatDefault minY_dataset = 0.0;
-    viskores::FloatDefault maxX_dataset = 0.0;
-    viskores::FloatDefault maxY_dataset = 0.0;
+    Min1 min1_user = static_cast<Min1>(this->RangeAxis1.Min);
+    Min2 min2_user = static_cast<Min2>(this->RangeAxis2.Min);
+    Max1 max1_user = static_cast<Max1>(this->RangeAxis1.Max);
+    Max2 max2_user = static_cast<Max2>(this->RangeAxis2.Max);
 
     viskores::FloatDefault intersectionArea = 0.0;
     viskores::FloatDefault intersectionProbability = 0.0;
     viskores::FloatDefault intersectionHeight = 0.0;
     viskores::FloatDefault intersectionWidth = 0.0;
 
-    minX_dataset = static_cast<viskores::FloatDefault>(ensembleMinX);
-    maxX_dataset = static_cast<viskores::FloatDefault>(ensembleMaxX);
-    minY_dataset = static_cast<viskores::FloatDefault>(ensembleMinY);
-    maxY_dataset = static_cast<viskores::FloatDefault>(ensembleMaxY);
+    Min1 min1_intersection = viskores::Max(min1_user, ensembleMin1);
+    Min2 min2_intersection = viskores::Max(min2_user, ensembleMin2);
+    Max1 max1_intersection = viskores::Min(max1_user, ensembleMax1);
+    Max2 max2_intersection = viskores::Min(max2_user, ensembleMax2);
 
-    minX_intersection = std::max(minX_user, minX_dataset);
-    minY_intersection = std::max(minY_user, minY_dataset);
-    maxX_intersection = std::min(maxX_user, maxX_dataset);
-    maxY_intersection = std::min(maxY_user, maxY_dataset);
-
-    if ((minX_dataset == maxX_dataset) && (minY_dataset == maxY_dataset))
+    if ((ensembleMin1 == ensembleMax1) && (ensembleMin2 == ensembleMax2))
     {
-      if ((minX_dataset <= maxX_user) && (minX_dataset >= minX_user) &&
-          (minY_dataset <= maxY_user) && (minY_dataset >= minY_user))
+      if ((ensembleMin1 <= max1_user) && (ensembleMin1 >= min1_user) &&
+          (ensembleMin2 <= max2_user) && (ensembleMin2 >= min2_user))
       {
         intersectionProbability = 1.0;
       }
@@ -225,26 +200,26 @@ public:
         intersectionProbability = 0.0;
       }
     }
-    else if ((minX_dataset < maxX_dataset) && (minY_dataset == maxY_dataset))
+    else if ((ensembleMin1 < ensembleMax1) && (ensembleMin2 == ensembleMax2))
     {
-      if ((minX_intersection < maxX_intersection) && (minY_dataset >= minY_user) &&
-          (minY_dataset <= maxY_user))
+      if ((min1_intersection < max1_intersection) && (ensembleMin2 >= min2_user) &&
+          (ensembleMin2 <= max2_user))
       {
         intersectionProbability =
-          (maxX_intersection - minX_intersection) / (maxX_dataset - minX_dataset);
+          (max1_intersection - min1_intersection) / (ensembleMax1 - ensembleMin1);
       }
       else
       {
         intersectionProbability = 0.0;
       }
     }
-    else if ((minX_dataset == maxX_dataset) && (minY_dataset < maxY_dataset))
+    else if ((ensembleMin1 == ensembleMax1) && (ensembleMin2 < ensembleMax2))
     {
-      if ((minY_intersection < maxY_intersection) && (minX_dataset >= minX_user) &&
-          (minX_dataset <= maxX_user))
+      if ((min2_intersection < max2_intersection) && (ensembleMin1 >= min1_user) &&
+          (ensembleMin1 <= max1_user))
       {
         intersectionProbability =
-          (maxY_intersection - minY_intersection) / (maxY_dataset - minY_dataset);
+          (max2_intersection - min2_intersection) / (ensembleMax2 - ensembleMin2);
       }
       else
       {
@@ -253,14 +228,14 @@ public:
     }
     else
     {
-      intersectionHeight = maxY_intersection - minY_intersection;
-      intersectionWidth = maxX_intersection - minX_intersection;
+      intersectionHeight = max2_intersection - min2_intersection;
+      intersectionWidth = max1_intersection - min1_intersection;
 
       viskores::FloatDefault DataArea =
-        (maxX_dataset - minX_dataset) * (maxY_dataset - minY_dataset);
+        (ensembleMax1 - ensembleMin1) * (ensembleMax2 - ensembleMin2);
 
       if ((intersectionHeight > 0) && (intersectionWidth > 0) &&
-          (minX_intersection < maxX_intersection) && (minY_intersection < maxY_intersection))
+          (min1_intersection < max1_intersection) && (min2_intersection < max2_intersection))
       {
         intersectionArea = intersectionHeight * intersectionWidth;
         intersectionProbability = intersectionArea / DataArea;
@@ -271,16 +246,16 @@ public:
   }
 
 private:
-  viskores::Range inputBottomLeft;
-  viskores::Range inputTopRight;
+  viskores::Range RangeAxis1;
+  viskores::Range RangeAxis2;
 };
 
 class MultiVariateMean : public viskores::worklet::WorkletMapField
 {
 public:
-  MultiVariateMean(const viskores::Range& minAxis, const viskores::Range& maxAxis)
-    : inputBottomLeft(minAxis.Min, minAxis.Max)
-    , inputTopRight(maxAxis.Min, maxAxis.Max)
+  MultiVariateMean(const viskores::Range& rangeAxis1, const viskores::Range& rangeAxis2)
+    : RangeAxis1(rangeAxis1)
+    , RangeAxis2(rangeAxis2)
   {
   }
 
@@ -289,41 +264,25 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
-  template <typename MinX, typename MaxX, typename MinY, typename MaxY, typename OutCellFieldType>
+  template <typename Min1, typename Max1, typename Min2, typename Max2, typename OutCellFieldType>
 
-  VISKORES_EXEC void operator()(const MinX& ensembleMinX,
-                                const MaxX& ensembleMaxX,
-                                const MinY& ensembleMinY,
-                                const MaxY& ensembleMaxY,
+  VISKORES_EXEC void operator()(const Min1& ensembleMin1,
+                                const Max1& ensembleMax1,
+                                const Min2& ensembleMin2,
+                                const Max2& ensembleMax2,
                                 OutCellFieldType& probability) const
   {
 
-    viskores::FloatDefault minX_user = 0.0;
-    minX_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.Min);
-    viskores::FloatDefault minY_user = 0.0;
-    minY_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.Max);
-    viskores::FloatDefault maxX_user = 0.0;
-    maxX_user = static_cast<viskores::FloatDefault>(this->inputTopRight.Min);
-    viskores::FloatDefault maxY_user = 0.0;
-    maxY_user = static_cast<viskores::FloatDefault>(this->inputTopRight.Max);
+    Min1 min1_user = static_cast<Min1>(this->RangeAxis1.Min);
+    Min2 min2_user = static_cast<Min2>(this->RangeAxis2.Min);
+    Max1 max1_user = static_cast<Max1>(this->RangeAxis1.Max);
+    Max2 max2_user = static_cast<Max2>(this->RangeAxis2.Max);
 
-    viskores::FloatDefault minX_dataset = 0.0;
-    viskores::FloatDefault minY_dataset = 0.0;
-    viskores::FloatDefault maxX_dataset = 0.0;
-    viskores::FloatDefault maxY_dataset = 0.0;
+    Min1 Xmean = (ensembleMin1 + ensembleMax1) / 2;
+    Min2 Ymean = (ensembleMin2 + ensembleMax2) / 2;
 
-    minX_dataset = static_cast<viskores::FloatDefault>(ensembleMinX);
-    maxX_dataset = static_cast<viskores::FloatDefault>(ensembleMaxX);
-    minY_dataset = static_cast<viskores::FloatDefault>(ensembleMinY);
-    maxY_dataset = static_cast<viskores::FloatDefault>(ensembleMaxY);
-
-    viskores::FloatDefault Xmean = 0.0;
-    viskores::FloatDefault Ymean = 0.0;
-    Xmean = (minX_dataset + maxX_dataset) / 2;
-    Ymean = (minY_dataset + maxY_dataset) / 2;
-
-    if ((Xmean <= maxX_user) && (Xmean >= minX_user) && (Ymean <= maxY_user) &&
-        (Ymean >= minY_user))
+    if ((Xmean <= max1_user) && (Xmean >= min1_user) && (Ymean <= max2_user) &&
+        (Ymean >= min2_user))
     {
       probability = 1.0;
       return;
@@ -336,16 +295,16 @@ public:
   }
 
 private:
-  viskores::Range inputBottomLeft;
-  viskores::Range inputTopRight;
+  viskores::Range RangeAxis1;
+  viskores::Range RangeAxis2;
 };
 
 class MultiVariateTruth : public viskores::worklet::WorkletMapField
 {
 public:
-  MultiVariateTruth(const viskores::Range& minAxis, const viskores::Range& maxAxis)
-    : inputBottomLeft(minAxis.Min, minAxis.Max)
-    , inputTopRight(maxAxis.Min, maxAxis.Max)
+  MultiVariateTruth(const viskores::Range& rangeAxis1, const viskores::Range& rangeAxis2)
+    : RangeAxis1(rangeAxis1)
+    , RangeAxis2(rangeAxis2)
   {
   }
 
@@ -354,36 +313,22 @@ public:
   using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
-  template <typename MinX, typename MaxX, typename MinY, typename MaxY, typename OutCellFieldType>
+  template <typename Min1, typename Max1, typename Min2, typename Max2, typename OutCellFieldType>
 
-  VISKORES_EXEC void operator()(const MinX& ensembleMinX,
-                                const MaxX& ensembleMaxX,
-                                const MinY& ensembleMinY,
-                                const MaxY& ensembleMaxY,
+  VISKORES_EXEC void operator()(const Min1& ensembleMin1,
+                                const Max1& ensembleMax1,
+                                const Min2& ensembleMin2,
+                                const Max2& ensembleMax2,
                                 OutCellFieldType& probability) const
   {
 
-    viskores::FloatDefault minX_user = 0.0;
-    minX_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.Min);
-    viskores::FloatDefault minY_user = 0.0;
-    minY_user = static_cast<viskores::FloatDefault>(this->inputBottomLeft.Max);
-    viskores::FloatDefault maxX_user = 0.0;
-    maxX_user = static_cast<viskores::FloatDefault>(this->inputTopRight.Min);
-    viskores::FloatDefault maxY_user = 0.0;
-    maxY_user = static_cast<viskores::FloatDefault>(this->inputTopRight.Max);
+    Min1 min1_user = static_cast<Min1>(this->RangeAxis1.Min);
+    Min2 min2_user = static_cast<Min2>(this->RangeAxis2.Min);
+    Max1 max1_user = static_cast<Max1>(this->RangeAxis1.Max);
+    Max2 max2_user = static_cast<Max2>(this->RangeAxis2.Max);
 
-    viskores::FloatDefault minX_dataset = 0.0;
-    viskores::FloatDefault minY_dataset = 0.0;
-    viskores::FloatDefault maxX_dataset = 0.0;
-    viskores::FloatDefault maxY_dataset = 0.0;
-
-    minX_dataset = static_cast<viskores::FloatDefault>(ensembleMinX);
-    maxX_dataset = static_cast<viskores::FloatDefault>(ensembleMaxX);
-    minY_dataset = static_cast<viskores::FloatDefault>(ensembleMinY);
-    maxY_dataset = static_cast<viskores::FloatDefault>(ensembleMaxY);
-
-    if ((maxX_dataset <= maxX_user) && (minX_dataset >= minX_user) && (maxY_dataset <= maxY_user) &&
-        (minY_dataset >= minY_user))
+    if ((ensembleMax1 <= max1_user) && (ensembleMin1 >= min1_user) && (ensembleMax2 <= max2_user) &&
+        (ensembleMin2 >= min2_user))
     {
       probability = 1.0;
       return;
@@ -396,8 +341,8 @@ public:
   }
 
 private:
-  viskores::Range inputBottomLeft;
-  viskores::Range inputTopRight;
+  viskores::Range RangeAxis1;
+  viskores::Range RangeAxis2;
 };
 
 }

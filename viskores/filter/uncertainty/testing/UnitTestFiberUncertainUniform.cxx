@@ -33,10 +33,10 @@ viskores::cont::DataSet MakeFiberUncertainUniformDataSet()
   viskores::cont::DataSetBuilderUniform dsBuilder;
   viskores::cont::DataSet ds = dsBuilder.Create(dims);
 
-  std::vector<T> ensembleMinX;
-  std::vector<T> ensembleMaxX;
-  std::vector<T> ensembleMinY;
-  std::vector<T> ensembleMaxY;
+  std::vector<T> ensembleMin1;
+  std::vector<T> ensembleMax1;
+  std::vector<T> ensembleMin2;
+  std::vector<T> ensembleMax2;
 
   viskores::IdComponent k = 0;
   viskores::cont::ArrayHandleRandomUniformReal<viskores::FloatDefault> randomArray(numPoints * 4,
@@ -49,17 +49,17 @@ viskores::cont::DataSet MakeFiberUncertainUniformDataSet()
     viskores::FloatDefault value2 = 10 + (20 * portal.Get(k + 1));
     viskores::FloatDefault value3 = 10 + (20 * portal.Get(k + 2));
     viskores::FloatDefault value4 = 10 + (20 * portal.Get(k + 3));
-    ensembleMinX.push_back(static_cast<T>(viskores::Min(value1, value2)));
-    ensembleMaxX.push_back(static_cast<T>(viskores::Max(value1, value2)));
-    ensembleMinY.push_back(static_cast<T>(viskores::Min(value3, value4)));
-    ensembleMaxY.push_back(static_cast<T>(viskores::Max(value3, value4)));
+    ensembleMin1.push_back(static_cast<T>(viskores::Min(value1, value2)));
+    ensembleMax1.push_back(static_cast<T>(viskores::Max(value1, value2)));
+    ensembleMin2.push_back(static_cast<T>(viskores::Min(value3, value4)));
+    ensembleMax2.push_back(static_cast<T>(viskores::Max(value3, value4)));
     k += 4;
   }
 
-  ds.AddPointField("ensemble_min_x", ensembleMinX);
-  ds.AddPointField("ensemble_max_x", ensembleMaxX);
-  ds.AddPointField("ensemble_min_y", ensembleMinY);
-  ds.AddPointField("ensemble_max_y", ensembleMaxY);
+  ds.AddPointField("ensemble_min_x", ensembleMin1);
+  ds.AddPointField("ensemble_max_x", ensembleMax1);
+  ds.AddPointField("ensemble_min_y", ensembleMin2);
+  ds.AddPointField("ensemble_max_y", ensembleMax2);
 
   return ds;
 }
@@ -68,22 +68,22 @@ void TestFiberUncertainUniform()
 {
   viskores::cont::DataSet ds = MakeFiberUncertainUniformDataSet<viskores::FloatDefault>();
 
-  viskores::Range minAxis(15.0, 15.0);
-  viskores::Range maxAxis(25.0, 25.0);
+  viskores::Range rangeAxis1(15.0, 15.0);
+  viskores::Range rangeAxis2(25.0, 25.0);
 
   const viskores::FloatDefault delta = 0.05f;
 
   viskores::filter::uncertainty::FiberUncertainUniform closedFormFilter;
   closedFormFilter.SetMinAxis(viskores::Pair<viskores::FloatDefault, viskores::FloatDefault>(
-    static_cast<viskores::FloatDefault>(minAxis.Min),
-    static_cast<viskores::FloatDefault>(minAxis.Max)));
+    static_cast<viskores::FloatDefault>(rangeAxis1.Min),
+    static_cast<viskores::FloatDefault>(rangeAxis1.Max)));
   closedFormFilter.SetMaxAxis(viskores::Pair<viskores::FloatDefault, viskores::FloatDefault>(
-    static_cast<viskores::FloatDefault>(maxAxis.Min),
-    static_cast<viskores::FloatDefault>(maxAxis.Max)));
-  closedFormFilter.SetMinX("ensemble_min_x");
-  closedFormFilter.SetMaxX("ensemble_max_x");
-  closedFormFilter.SetMinY("ensemble_min_y");
-  closedFormFilter.SetMaxY("ensemble_max_y");
+    static_cast<viskores::FloatDefault>(rangeAxis2.Min),
+    static_cast<viskores::FloatDefault>(rangeAxis2.Max)));
+  closedFormFilter.SetMin1("ensemble_min_1");
+  closedFormFilter.SetMax1("ensemble_max_1");
+  closedFormFilter.SetMin2("ensemble_min_2");
+  closedFormFilter.SetMax2("ensemble_max_2");
   closedFormFilter.SetApproach(
     viskores::filter::uncertainty::FiberUncertainUniform::ApproachEnum::ClosedForm);
 
@@ -97,15 +97,15 @@ void TestFiberUncertainUniform()
 
   viskores::filter::uncertainty::FiberUncertainUniform monteCarloFilter;
   monteCarloFilter.SetMinAxis(viskores::Pair<viskores::FloatDefault, viskores::FloatDefault>(
-    static_cast<viskores::FloatDefault>(minAxis.Min),
-    static_cast<viskores::FloatDefault>(minAxis.Max)));
+    static_cast<viskores::FloatDefault>(rangeAxis1.Min),
+    static_cast<viskores::FloatDefault>(rangeAxis1.Max)));
   monteCarloFilter.SetMaxAxis(viskores::Pair<viskores::FloatDefault, viskores::FloatDefault>(
-    static_cast<viskores::FloatDefault>(maxAxis.Min),
-    static_cast<viskores::FloatDefault>(maxAxis.Max)));
-  monteCarloFilter.SetMinX("ensemble_min_x");
-  monteCarloFilter.SetMaxX("ensemble_max_x");
-  monteCarloFilter.SetMinY("ensemble_min_y");
-  monteCarloFilter.SetMaxY("ensemble_max_y");
+    static_cast<viskores::FloatDefault>(rangeAxis2.Min),
+    static_cast<viskores::FloatDefault>(rangeAxis2.Max)));
+  monteCarloFilter.SetMin1("ensemble_min_1");
+  monteCarloFilter.SetMax1("ensemble_max_1");
+  monteCarloFilter.SetMin2("ensemble_min_2");
+  monteCarloFilter.SetMax2("ensemble_max_2");
   monteCarloFilter.SetApproach(
     viskores::filter::uncertainty::FiberUncertainUniform::ApproachEnum::MonteCarlo);
 

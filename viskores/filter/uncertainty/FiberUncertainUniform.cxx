@@ -47,18 +47,18 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
 
   viskores::cont::UnknownArrayHandle outputProbability;
 
-  auto resolveType = [&](auto concreteEnsembleMinX)
+  auto resolveType = [&](auto concreteEnsembleMin1)
   {
-    using ArrayType = std::decay_t<decltype(concreteEnsembleMinX)>;
+    using ArrayType = std::decay_t<decltype(concreteEnsembleMin1)>;
     using ValueType = typename ArrayType::ValueType;
 
-    ArrayType concreteEnsembleMaxX;
-    ArrayType concreteEnsembleMinY;
-    ArrayType concreteEnsembleMaxY;
+    ArrayType concreteEnsembleMax1;
+    ArrayType concreteEnsembleMin2;
+    ArrayType concreteEnsembleMax2;
 
-    viskores::cont::ArrayCopyShallowIfPossible(ensembleMax1.GetData(), concreteEnsembleMaxX);
-    viskores::cont::ArrayCopyShallowIfPossible(ensembleMin2.GetData(), concreteEnsembleMinY);
-    viskores::cont::ArrayCopyShallowIfPossible(ensembleMax2.GetData(), concreteEnsembleMaxY);
+    viskores::cont::ArrayCopyShallowIfPossible(ensembleMax1.GetData(), concreteEnsembleMax1);
+    viskores::cont::ArrayCopyShallowIfPossible(ensembleMin2.GetData(), concreteEnsembleMin2);
+    viskores::cont::ArrayCopyShallowIfPossible(ensembleMax2.GetData(), concreteEnsembleMax2);
 
     viskores::cont::ArrayHandle<ValueType> probability;
 
@@ -70,15 +70,15 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
 
       viskores::cont::ArrayHandleRandomUniformReal<ValueType> randomHandle(this->NumSamples * 2);
 
-      viskores::worklet::detail::MultiVariateMonteCarlo worklet{ this->minAxis,
-                                                                 this->maxAxis,
+      viskores::worklet::detail::MultiVariateMonteCarlo worklet{ this->RangeAxis1,
+                                                                 this->RangeAxis2,
                                                                  this->NumSamples };
 
       this->Invoke(worklet,
-                   concreteEnsembleMinX,
-                   concreteEnsembleMaxX,
-                   concreteEnsembleMinY,
-                   concreteEnsembleMaxY,
+                   concreteEnsembleMin1,
+                   concreteEnsembleMax1,
+                   concreteEnsembleMin2,
+                   concreteEnsembleMax2,
                    probability,
                    randomHandle);
     }
@@ -87,33 +87,33 @@ VISKORES_CONT viskores::cont::DataSet FiberUncertainUniform::DoExecute(
       fieldName = "ClosedForm";
       VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Adopt ClosedForm" << std::endl);
       this->Invoke(
-        viskores::worklet::detail::MultiVariateClosedForm{ this->minAxis, this->maxAxis },
-        concreteEnsembleMinX,
-        concreteEnsembleMaxX,
-        concreteEnsembleMinY,
-        concreteEnsembleMaxY,
+        viskores::worklet::detail::MultiVariateClosedForm{ this->RangeAxis1, this->RangeAxis2 },
+        concreteEnsembleMin1,
+        concreteEnsembleMax1,
+        concreteEnsembleMin2,
+        concreteEnsembleMax2,
         probability);
     }
     else if (this->Approach == ApproachEnum::Mean)
     {
       fieldName = "Mean";
       VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Adopt Mean" << std::endl);
-      this->Invoke(viskores::worklet::detail::MultiVariateMean{ this->minAxis, this->maxAxis },
-                   concreteEnsembleMinX,
-                   concreteEnsembleMaxX,
-                   concreteEnsembleMinY,
-                   concreteEnsembleMaxY,
+      this->Invoke(viskores::worklet::detail::MultiVariateMean{ this->RangeAxis1, this->RangeAxis2 },
+                   concreteEnsembleMin1,
+                   concreteEnsembleMax1,
+                   concreteEnsembleMin2,
+                   concreteEnsembleMax2,
                    probability);
     }
     else if (this->Approach == ApproachEnum::Truth)
     {
       fieldName = "Truth";
       VISKORES_LOG_S(viskores::cont::LogLevel::Info, "Adopt Truth" << std::endl);
-      this->Invoke(viskores::worklet::detail::MultiVariateTruth{ this->minAxis, this->maxAxis },
-                   concreteEnsembleMinX,
-                   concreteEnsembleMaxX,
-                   concreteEnsembleMinY,
-                   concreteEnsembleMaxY,
+      this->Invoke(viskores::worklet::detail::MultiVariateTruth{ this->RangeAxis1, this->RangeAxis2 },
+                   concreteEnsembleMin1,
+                   concreteEnsembleMax1,
+                   concreteEnsembleMin2,
+                   concreteEnsembleMax2,
                    probability);
     }
     else
