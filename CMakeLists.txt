@@ -52,11 +52,11 @@ determine_version(${Viskores_SOURCE_DIR} ${GIT_EXECUTABLE} "Viskores")
 if (NOT DEFINED Viskores_INSTALL_INCLUDE_DIR)
   set(Viskores_INSTALL_INCLUDE_DIR "include/viskores-${Viskores_VERSION_MAJOR}.${Viskores_VERSION_MINOR}")
 endif()
-if (NOT DEFINED Viskores_INSTALL_CONFIG_DIR)
-  set(Viskores_INSTALL_CONFIG_DIR "lib/cmake/viskores-${Viskores_VERSION_MAJOR}.${Viskores_VERSION_MINOR}")
-endif()
 if (NOT DEFINED Viskores_INSTALL_LIB_DIR)
   set(Viskores_INSTALL_LIB_DIR "lib")
+endif()
+if (NOT DEFINED Viskores_INSTALL_CONFIG_DIR)
+  set(Viskores_INSTALL_CONFIG_DIR "${Viskores_INSTALL_LIB_DIR}/cmake/viskores-${Viskores_VERSION_MAJOR}.${Viskores_VERSION_MINOR}")
 endif()
 if (NOT DEFINED Viskores_INSTALL_BIN_DIR)
   set(Viskores_INSTALL_BIN_DIR "bin")
@@ -275,7 +275,7 @@ cmake_dependent_option(
   Viskores_ENABLE_KOKKOS_THRUST
   "Enable Kokkos thrust support (only valid with CUDA and HIP)"
   ON
-  "Viskores_ENABLE_KOKKOS;Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP; NOT Kokkos_ENABLE_HIP AND CMAKE_VERSION VERSION_LESS 3.24"
+  "Viskores_ENABLE_KOKKOS;Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP; NOT Kokkos_ENABLE_HIP OR CMAKE_VERSION VERSION_GREATER_EQUAL 3.24"
   OFF
 )
 
@@ -429,7 +429,7 @@ install(FILES ${Viskores_BINARY_DIR}/config/viskores_config.mk
 configure_file(${Viskores_SOURCE_DIR}/config/viskores.pc.in
   ${Viskores_BINARY_DIR}/config/viskores.pc @ONLY)
 install(FILES ${Viskores_BINARY_DIR}/config/viskores.pc
-  DESTINATION ${Viskores_INSTALL_SHARE_DIR}
+  DESTINATION ${Viskores_INSTALL_LIB_DIR}/pkgconfig
   )
 
 include(ViskoresInstallCMakePackage)

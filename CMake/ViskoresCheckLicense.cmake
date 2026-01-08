@@ -46,6 +46,9 @@ set(EXCEPTIONS
   DCO.txt
   README.txt
   docs/users-guide/requirements.txt
+  # Common directories with build files
+  .venv
+  build
   )
 
 if (NOT Viskores_SOURCE_DIR)

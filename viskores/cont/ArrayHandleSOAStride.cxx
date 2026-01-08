@@ -27,6 +27,7 @@ namespace cont
 {
 
 #define VISKORES_ARRAYHANDLE_SOA_STRIDE_INSTANTIATE(Type)                                       \
+  template class VISKORES_CONT_EXPORT ArrayHandle<Type, StorageTagSOAStride>;                   \
   template class VISKORES_CONT_EXPORT ArrayHandle<viskores::Vec<Type, 2>, StorageTagSOAStride>; \
   template class VISKORES_CONT_EXPORT ArrayHandle<viskores::Vec<Type, 3>, StorageTagSOAStride>; \
   template class VISKORES_CONT_EXPORT ArrayHandle<viskores::Vec<Type, 4>, StorageTagSOAStride>;

@@ -29,6 +29,90 @@
 namespace viskores
 {
 
+namespace internal
+{
+
+template <typename T>
+class ArrayPortalSOAStrideRead
+{
+  const T* Array = nullptr;
+  viskores::Id NumberOfValues = 0;
+  viskores::IdComponent Stride = 1;
+
+public:
+  using ValueType = T;
+
+  VISKORES_EXEC_CONT viskores::Id GetNumberOfValues() const { return this->NumberOfValues; }
+
+  VISKORES_EXEC_CONT ValueType Get(viskores::Id index) const
+  {
+    return detail::ArrayPortalBasicReadGet(this->Array + (index * this->Stride));
+  }
+
+  ArrayPortalSOAStrideRead() = default;
+  ArrayPortalSOAStrideRead(ArrayPortalSOAStrideRead&&) = default;
+  ArrayPortalSOAStrideRead(const ArrayPortalSOAStrideRead&) = default;
+  ArrayPortalSOAStrideRead& operator=(ArrayPortalSOAStrideRead&&) = default;
+  ArrayPortalSOAStrideRead& operator=(const ArrayPortalSOAStrideRead&) = default;
+
+  VISKORES_CONT ArrayPortalSOAStrideRead(const T* array,
+                                         viskores::Id numberOfValues,
+                                         viskores::IdComponent stride,
+                                         viskores::IdComponent offset)
+    : Array(array + offset)
+    , NumberOfValues(numberOfValues)
+    , Stride(stride)
+  {
+  }
+};
+
+template <typename T>
+class ArrayPortalSOAStrideWrite
+{
+  T* Array = nullptr;
+  viskores::Id NumberOfValues = 0;
+  viskores::IdComponent Stride = 1;
+
+public:
+  using ValueType = T;
+
+  VISKORES_EXEC_CONT viskores::Id GetNumberOfValues() const { return this->NumberOfValues; }
+
+  VISKORES_EXEC_CONT ValueType Get(viskores::Id index) const
+  {
+    VISKORES_ASSERT(index >= 0);
+    VISKORES_ASSERT(index < this->NumberOfValues);
+
+    return detail::ArrayPortalBasicWriteGet(this->Array + (index * this->Stride));
+  }
+
+  VISKORES_EXEC_CONT void Set(viskores::Id index, const ValueType& value) const
+  {
+    VISKORES_ASSERT(index >= 0);
+    VISKORES_ASSERT(index < this->NumberOfValues);
+
+    detail::ArrayPortalBasicWriteSet(this->Array + (index * this->Stride), value);
+  }
+
+  ArrayPortalSOAStrideWrite() = default;
+  ArrayPortalSOAStrideWrite(ArrayPortalSOAStrideWrite&&) = default;
+  ArrayPortalSOAStrideWrite(const ArrayPortalSOAStrideWrite&) = default;
+  ArrayPortalSOAStrideWrite& operator=(ArrayPortalSOAStrideWrite&&) = default;
+  ArrayPortalSOAStrideWrite& operator=(const ArrayPortalSOAStrideWrite&) = default;
+
+  VISKORES_CONT ArrayPortalSOAStrideWrite(T* array,
+                                          viskores::Id numberOfValues,
+                                          viskores::IdComponent stride,
+                                          viskores::IdComponent offset)
+    : Array(array + offset)
+    , NumberOfValues(numberOfValues)
+    , Stride(stride)
+  {
+  }
+};
+
+} // namespace internal
+
 namespace cont
 {
 
@@ -55,12 +139,10 @@ class VISKORES_ALWAYS_EXPORT Storage<ValueType, viskores::cont::StorageTagSOAStr
     viskores::cont::internal::Storage<ComponentType, viskores::cont::StorageTagStride>;
 
 public:
-  using ReadPortalType =
-    viskores::internal::ArrayPortalSOA<ValueType,
-                                       viskores::internal::ArrayPortalStrideRead<ComponentType>>;
-  using WritePortalType =
-    viskores::internal::ArrayPortalSOA<ValueType,
-                                       viskores::internal::ArrayPortalStrideWrite<ComponentType>>;
+  using ReadPortalType = viskores::internal::
+    ArrayPortalSOARead<ValueType, viskores::internal::ArrayPortalSOAStrideRead<ComponentType>>;
+  using WritePortalType = viskores::internal::
+    ArrayPortalSOAWrite<ValueType, viskores::internal::ArrayPortalSOAStrideWrite<ComponentType>>;
 
   using ComponentArrayType = viskores::cont::ArrayHandleStride<ComponentType>;
 
@@ -107,6 +189,16 @@ public:
                     static_cast<std::size_t>(NUM_COMPONENTS * NUM_BUFFERS_PER_COMPONENT));
     VISKORES_ASSERT(componentIndex >= 0);
     VISKORES_ASSERT(componentIndex < NUM_COMPONENTS);
+
+    if ((componentArray.GetModulo() > 0) &&
+        (componentArray.GetModulo() < componentArray.GetNumberOfValues()))
+    {
+      throw viskores::cont::ErrorBadType("ArrayHandleSOAStride does not support modulo.");
+    }
+    if (componentArray.GetDivisor() > 1)
+    {
+      throw viskores::cont::ErrorBadType("ArrayHandleSOAStride does not support divisor.");
+    }
 
     const std::vector<viskores::cont::internal::Buffer>& componentBuffers =
       componentArray.GetBuffers();
@@ -170,12 +262,27 @@ public:
     viskores::cont::Token& token)
   {
     viskores::Id numValues = GetNumberOfValues(buffers);
-    ReadPortalType portal(numValues);
+    ReadPortalType portal;
     for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
          ++componentIndex)
     {
-      auto componentPortal = ComponentStorage::CreateReadPortal(
-        GetComponentBuffers(buffers, componentIndex), device, token);
+      // auto componentPortal = ComponentStorage::CreateReadPortal(
+      //   GetComponentBuffers(buffers, componentIndex), device, token);
+      ComponentArrayType componentArray = GetComponentArray(buffers, componentIndex);
+      if ((componentArray.GetModulo() > 0) && (componentArray.GetModulo() < numValues))
+      {
+        throw viskores::cont::ErrorBadType("ArrayHandleSOAStride does not support modulo.");
+      }
+      if (componentArray.GetDivisor() > 1)
+      {
+        throw viskores::cont::ErrorBadType("ArrayHandleSOAStride does not support divisor.");
+      }
+      auto componentPortal = viskores::internal::ArrayPortalSOAStrideRead<ComponentType>(
+        reinterpret_cast<const ComponentType*>(
+          componentArray.GetBasicArray().GetBuffers()[0].ReadPointerDevice(device, token)),
+        numValues,
+        componentArray.GetStride(),
+        componentArray.GetOffset());
       VISKORES_ASSERT(componentPortal.GetNumberOfValues() == numValues);
       portal.SetPortal(componentIndex, componentPortal);
     }
@@ -188,12 +295,27 @@ public:
     viskores::cont::Token& token)
   {
     viskores::Id numValues = GetNumberOfValues(buffers);
-    WritePortalType portal(numValues);
+    WritePortalType portal;
     for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
          ++componentIndex)
     {
-      auto componentPortal = ComponentStorage::CreateWritePortal(
-        GetComponentBuffers(buffers, componentIndex), device, token);
+      // auto componentPortal = ComponentStorage::CreateWritePortal(
+      //   GetComponentBuffers(buffers, componentIndex), device, token);
+      ComponentArrayType componentArray = GetComponentArray(buffers, componentIndex);
+      if ((componentArray.GetModulo() > 0) && (componentArray.GetModulo() < numValues))
+      {
+        throw viskores::cont::ErrorBadType("ArrayHandleSOAStride does not support modulo.");
+      }
+      if (componentArray.GetDivisor() > 1)
+      {
+        throw viskores::cont::ErrorBadType("ArrayHandleSOAStride does not support divisor.");
+      }
+      auto componentPortal = viskores::internal::ArrayPortalSOAStrideWrite<ComponentType>(
+        reinterpret_cast<ComponentType*>(
+          componentArray.GetBasicArray().GetBuffers()[0].WritePointerDevice(device, token)),
+        numValues,
+        componentArray.GetStride(),
+        componentArray.GetOffset());
       VISKORES_ASSERT(componentPortal.GetNumberOfValues() == numValues);
       portal.SetPortal(componentIndex, componentPortal);
     }
@@ -563,12 +685,13 @@ namespace viskores
 namespace cont
 {
 
-#define VISKORES_ARRAYHANDLE_SOA_STRIDE_EXPORT(Type)          \
-  extern template class VISKORES_CONT_TEMPLATE_EXPORT         \
-    ArrayHandle<viskores::Vec<Type, 2>, StorageTagSOAStride>; \
-  extern template class VISKORES_CONT_TEMPLATE_EXPORT         \
-    ArrayHandle<viskores::Vec<Type, 3>, StorageTagSOAStride>; \
-  extern template class VISKORES_CONT_TEMPLATE_EXPORT         \
+#define VISKORES_ARRAYHANDLE_SOA_STRIDE_EXPORT(Type)                                          \
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagSOAStride>; \
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT                                         \
+    ArrayHandle<viskores::Vec<Type, 2>, StorageTagSOAStride>;                                 \
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT                                         \
+    ArrayHandle<viskores::Vec<Type, 3>, StorageTagSOAStride>;                                 \
+  extern template class VISKORES_CONT_TEMPLATE_EXPORT                                         \
     ArrayHandle<viskores::Vec<Type, 4>, StorageTagSOAStride>;
 
 VISKORES_ARRAYHANDLE_SOA_STRIDE_EXPORT(char)

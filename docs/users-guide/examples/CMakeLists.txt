@@ -56,7 +56,10 @@ set(examples_device
   GuideExampleErrorHandling.cxx
   GuideExampleFields.cxx
   GuideExampleFilterDataSetWithField.cxx
+  GuideExampleGenerateMeshCombineLike.cxx
   GuideExampleGenerateMeshConstantShape.cxx
+  GuideExampleGenerateMeshHash.cxx
+  GuideExampleGenerateMeshVariableShape.cxx
   GuideExampleMaskSelect.cxx
   GuideExamplePointLocator.cxx
   GuideExampleScatterCounting.cxx

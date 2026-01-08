@@ -959,8 +959,37 @@ public:
     for (viskores::IdComponent componentIndex = 0; componentIndex < VTraits::NUM_COMPONENTS;
          ++componentIndex)
     {
-      strideArray.SetArray(componentIndex,
-                           this->ExtractComponent<ComponentType>(componentIndex, allowCopy));
+      viskores::cont::ArrayHandleStride<ComponentType> componentArray =
+        this->ExtractComponent<ComponentType>(componentIndex, allowCopy);
+      // ArrayHandleSOAStride currently does not support div and mod due to Cuda compile issues.
+      if (((componentArray.GetModulo() > 0) &&
+           (componentArray.GetModulo() < componentArray.GetNumberOfValues())) ||
+          (componentArray.GetDivisor() > 1))
+      {
+        if (allowCopy != viskores::CopyFlag::On)
+        {
+          throw viskores::cont::ErrorBadType("Cannot extract array of type " +
+                                             this->GetArrayTypeName() +
+                                             " without copying because ArrayHandleSOAStride "
+                                             "currently does not support divisor or modulo.");
+        }
+        else
+        {
+          VISKORES_LOG_S(
+            viskores::cont::LogLevel::Warn,
+            "Extracting "
+              << this->GetArrayTypeName()
+              << " to ArrayHandleSOAStride requires full array copy because divisor and "
+                 "modulo not supported there. ExtractComponent or "
+                 "ExtractArrayFromComponents can be used without a copy.");
+          viskores::cont::UnknownArrayHandle arrayCopy;
+          arrayCopy = viskores::cont::ArrayHandle<ValueType>{};
+          arrayCopy.DeepCopyFrom(*this);
+          return arrayCopy.ExtractArrayWithValueType<ValueType>(allowCopy);
+        }
+      }
+
+      strideArray.SetArray(componentIndex, componentArray);
     }
     return strideArray;
   }

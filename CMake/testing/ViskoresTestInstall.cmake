@@ -233,7 +233,7 @@ function(viskores_test_against_install_make dir)
   find_program(pkgconfig_found pkg-config)
   if (pkgconfig_found)
     _test_install_make(${dir} "${dir}_pkgconfig"
-      "PKG_CONFIG_PATH=${viskores_install_dir}/share/viskores-${Viskores_VERSION_MAJOR}.${Viskores_VERSION_MINOR}/"
+      "PKG_CONFIG_PATH=${viskores_install_dir}/lib/pkgconfig"
       "PKG_CONFIG_TEST_ARGS=--define-variable=prefix=${viskores_install_dir}"
       ${env_vars}
     )

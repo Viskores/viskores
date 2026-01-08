@@ -125,6 +125,9 @@ function(do_verify root_dir prefix)
   string(REPLACE ":" ";" directory_exceptions "${DIR_EXCEPTIONS}")
   #by default every header in a testing directory doesn't need to be installed
   list(APPEND directory_exceptions ".*/testing")
+  # ANARI device should only be accessed through ANARI interface.
+  # Headers do not need to be installed.
+  list(APPEND directory_exceptions "rendering/anari-device")
   # These exceptions should be based on the status of the associated
   # cmake option
   if (NOT Viskores_ENABLE_HDF5_IO)
