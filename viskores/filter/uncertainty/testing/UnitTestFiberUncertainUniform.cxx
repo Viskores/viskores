@@ -74,12 +74,10 @@ void TestFiberUncertainUniform()
   const viskores::FloatDefault delta = 0.05f;
 
   viskores::filter::uncertainty::FiberUncertainUniform closedFormFilter;
-  closedFormFilter.SetRange1(rangeAxis1>(
-    static_cast<viskores::FloatDefault>(rangeAxis1.Min),
-    static_cast<viskores::FloatDefault>(rangeAxis1.Max)));
-  closedFormFilter.SetRange2(rangeAxis2>(
-    static_cast<viskores::FloatDefault>(rangeAxis2.Min),
-    static_cast<viskores::FloatDefault>(rangeAxis2.Max)));
+  closedFormFilter.SetRange1(rangeAxis1 > (static_cast<viskores::FloatDefault>(rangeAxis1.Min),
+                                           static_cast<viskores::FloatDefault>(rangeAxis1.Max)));
+  closedFormFilter.SetRange2(rangeAxis2 > (static_cast<viskores::FloatDefault>(rangeAxis2.Min),
+                                           static_cast<viskores::FloatDefault>(rangeAxis2.Max)));
   closedFormFilter.SetField1Min("ensemble_min_1");
   closedFormFilter.SetField1Max("ensemble_max_1");
   closedFormFilter.SetField2Min("ensemble_min_2");
@@ -96,12 +94,10 @@ void TestFiberUncertainUniform()
   auto closedPortal = closedArray.ReadPortal();
 
   viskores::filter::uncertainty::FiberUncertainUniform monteCarloFilter;
-  monteCarloFilter.SetRange1(rangeAxis1>(
-    static_cast<viskores::FloatDefault>(rangeAxis1.Min),
-    static_cast<viskores::FloatDefault>(rangeAxis1.Max)));
-  monteCarloFilter.SetRange2(rangeAxis2>(
-    static_cast<viskores::FloatDefault>(rangeAxis2.Min),
-    static_cast<viskores::FloatDefault>(rangeAxis2.Max)));
+  monteCarloFilter.SetRange1(rangeAxis1 > (static_cast<viskores::FloatDefault>(rangeAxis1.Min),
+                                           static_cast<viskores::FloatDefault>(rangeAxis1.Max)));
+  monteCarloFilter.SetRange2(rangeAxis2 > (static_cast<viskores::FloatDefault>(rangeAxis2.Min),
+                                           static_cast<viskores::FloatDefault>(rangeAxis2.Max)));
   monteCarloFilter.SetField1Min("ensemble_min_1");
   monteCarloFilter.SetField1Max("ensemble_max_1");
   monteCarloFilter.SetField2Min("ensemble_min_2");
