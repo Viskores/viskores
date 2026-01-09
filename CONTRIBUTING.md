@@ -72,10 +72,10 @@ collaboration workflow consists of three main steps:
 
 2.  Code Review (requires [GitHub Access]):
       * [Share a Topic](#share-a-topic)
-      * [Create a pull request](#create-a-merge-request)
-      * [Review a pull request](#review-a-merge-request)
-      * [Reformat a Topic](#reformat-a-topic)
+      * [Create a pull request](#create-a-pull-request)
+      * [Review a pull request](#review-a-pull-request)
       * [Revise a Topic](#revise-a-topic)
+      * [Reformat a Topic](#reformat-a-topic)
 
 3.  Integrate Changes:
       * [Merge a Topic](#merge-a-topic) (requires permission in GitHub)
@@ -399,6 +399,35 @@ To push commits in your topic branch to your fork in GitHub:
 Note: You need have the `-f` or `--force` to overwrite the destination as
 you are revising a previously pushed topic and have rewritten the topic
 history.
+
+## Reformat a Topic ##
+
+In addition to the regular [testing](#testing) of contributed code for
+correctness, GitHub will run a check on your source code to ensure that your new
+code conforms to the coding style of Viskores. In the list of checks on your
+GitHub pull request page, you will see a check named `CI / format
+(pull_request)`.
+
+![CI / format (pull_request) listed in PR checks](docs/pr_checks_format.png)
+
+If this check is failing, click the `CI / format (pull_request)` link to get
+details. You will see details on each of the steps taken when checking the
+format. The step named `Check formatting` will list details on necessary
+formatting changes. The step `Upload format patch` contains a link (shown at the
+bottom of the following image) for a code patch that will correct your
+formatting.
+
+![Format patch download link](docs/format-patch-download.png)
+
+This link will download a `.zip` archive containing a file named `format.patch`.
+You can apply the patch using the `patch` command.
+
+```bash
+patch -p1 < format.patch
+```
+
+With your code modified, you can update your pull request like any other
+revision described in the [Revise a Topic](#revise-a-topic) section.
 
 ## Merge a Topic ##
 
