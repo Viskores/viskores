@@ -334,6 +334,8 @@ class PerspectiveRayGen : public viskores::worklet::WorkletMapField
 public:
   viskores::Int32 w;
   viskores::Int32 h;
+  viskores::Float32 panX;
+  viskores::Float32 panY;
   viskores::Int32 Minx;
   viskores::Int32 Miny;
   viskores::Int32 SubsetWidth;
@@ -347,12 +349,16 @@ public:
                     viskores::Float32 fovY,
                     viskores::Vec3f_32 look,
                     viskores::Vec3f_32 up,
+                    viskores::Float32 panx,
+                    viskores::Float32 pany,
                     viskores::Float32 _zoom,
                     viskores::Int32 subsetWidth,
                     viskores::Int32 minx,
                     viskores::Int32 miny)
     : w(width)
     , h(height)
+    , panX(panx)
+    , panY(pany)
     , Minx(minx)
     , Miny(miny)
     , SubsetWidth(subsetWidth)
@@ -377,6 +383,8 @@ public:
       delta_y[0] = delta_y[0] / _zoom;
       delta_y[1] = delta_y[1] / _zoom;
       delta_y[2] = delta_y[2] / _zoom;
+      panX *= _zoom;
+      panY *= _zoom;
     }
 
     nlook = look;
@@ -401,8 +409,8 @@ public:
     pixelIndex = static_cast<viskores::Id>(j * w + i);
 
     viskores::Vec<Precision, 3> ray_dir = nlook +
-      delta_x * ((2.f * Precision(i) - Precision(w)) / 2.0f) +
-      delta_y * ((2.f * Precision(j) - Precision(h)) / 2.0f);
+      delta_x * ((2.f * Precision(i) - panX * Precision(w) - Precision(w)) / 2.0f) +
+      delta_y * ((2.f * Precision(j) - panY * Precision(h) - Precision(h)) / 2.0f);
     // avoid some numerical issues
     for (viskores::Int32 d = 0; d < 3; ++d)
     {
@@ -456,6 +464,7 @@ void Camera::SetParameters(const viskores::rendering::Camera& camera,
   this->SetUp(camera.GetViewUp());
   this->SetLookAt(camera.GetLookAt());
   this->SetPosition(camera.GetPosition());
+  this->SetPan(camera.GetPan());
   this->SetZoom(camera.GetZoom());
   this->SetFieldOfView(camera.GetFieldOfView());
   this->SetHeight(height);
@@ -763,6 +772,8 @@ VISKORES_CONT void Camera::CreateRaysImpl(Ray<Precision>& rays, const viskores::
                               this->FovY,
                               this->Look,
                               this->Up,
+                              this->XPan,
+                              this->YPan,
                               this->Zoom,
                               this->SubsetWidth,
                               this->SubsetMinX,
