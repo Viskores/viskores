@@ -40,6 +40,8 @@ private:
   viskores::Int32 SubsetMinY = 0;
   viskores::Float32 FovX = 30.f;
   viskores::Float32 FovY = 30.f;
+  viskores::Float32 XPan = 0.f;
+  viskores::Float32 YPan = 0.f;
   viskores::Float32 Zoom = 1.f;
   bool IsViewDirty = true;
 
@@ -76,6 +78,25 @@ public:
 
   VISKORES_CONT
   viskores::Int32 GetSubsetHeight() const;
+
+  VISKORES_CONT
+  void SetPan(const viskores::Float32& xpan, const viskores::Float32& ypan)
+  {
+    this->XPan = xpan;
+    this->YPan = ypan;
+  }
+
+  VISKORES_CONT
+  void SetPan(viskores::Vec2f_32 pan) { this->SetPan(pan[0], pan[1]); }
+
+  VISKORES_CONT
+  viskores::Vec2f_32 GetPan() const
+  {
+    viskores::Vec2f_32 pan;
+    pan[0] = this->XPan;
+    pan[1] = this->YPan;
+    return pan;
+  }
 
   VISKORES_CONT
   void SetZoom(const viskores::Float32& zoom);
