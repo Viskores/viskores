@@ -16,18 +16,7 @@
 ##  PURPOSE.  See the above copyright notice for more information.
 ##============================================================================
 
-set(libraries
-  viskores_filter_core
-  viskores_filter_vector_analysis
+set(headers
+    FiberUncertainUniform.h
   )
-
-set(unit_tests
-  UnitTestContourUncertainUniform.cxx
-  UnitTestFiberUncertainUniform.cxx
-  )
-
-viskores_unit_tests(
-  SOURCES ${unit_tests}
-  LIBRARIES ${libraries}
-  USE_VISKORES_JOB_POOL
-  )
+viskores_declare_headers(${headers})
