@@ -7,6 +7,8 @@ computing by providing abstract models for data and execution that can be
 applied to a variety of algorithms across many different processor
 architectures.
 
+Visit https://viskores.org/ for documentation, community, and more.
+
 ## Technical Charter
 
 See the [technical charter] and [governance] document for the structure of
@@ -14,9 +16,10 @@ the project.
 
 ## Learning Resources ##
 
-  + A high-level overview is given in the IEEE Vis talk "[Viskores:
+  + A high-level overview is given in the IEEE Vis talk "[VTK-m:
     Accelerating the Visualization Toolkit for Massively Threaded
-    Architectures][Viskores Overview]."
+    Architectures][Viskores Overview]." (At the time, Viskores was
+    named VTK-m.)
 
   + The [Viskores Users Guide] provides extensive documentation. It is broken
     into multiple parts for learning and references at multiple different
@@ -176,7 +179,7 @@ See [LICENSE.txt](LICENSE.txt) for details.
 [Viskores download page]:               https://github.com/Viskores/viskores/releases
 [Viskores git repository]:              https://github.com/Viskores/viskores
 [Viskores Issue Tracker]:               https://github.com/Viskores/viskores/issues
-[Viskores Overview]:                    http://m.vtk.org/images/2/29/ViskoresVis2016.pptx
+[Viskores Overview]:                    https://docs.google.com/presentation/d/1xbWdBKZn-l-yuB8IJ9R7yAqU_f2V5BmH/
 [Viskores Users Guide]:                 https://viskores.readthedocs.io/en/latest/
 [Viskores users discussion]:            https://github.com/Viskores/viskores/discussions
 [Viskores Announcements Mailing List]:  https://lists.hpsf.io/g/viskores-announcements
