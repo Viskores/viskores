@@ -68,6 +68,18 @@ void Free(void* ptr)
   }
 }
 
+bool IsUnifiedMemoryPointer(const void* ptr)
+{
+// There seems to be no direct way to query whether a pointer is a unified memory pointer in Kokkos.
+// When we are on an APU, we can assume that all non-null pointers are unified memory pointers, i.e.,
+// accessible by the host and the device.
+#if defined(KOKKOS_ARCH_AMD_GFX942_APU)
+  return ptr != nullptr;
+#else
+  return false;
+#endif
+}
+
 void* Reallocate(void* ptr, std::size_t newSize)
 {
   try

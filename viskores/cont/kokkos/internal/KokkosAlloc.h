@@ -33,6 +33,7 @@ namespace internal
 
 VISKORES_CONT_EXPORT void* Allocate(std::size_t size);
 VISKORES_CONT_EXPORT void Free(void* ptr);
+VISKORES_CONT_EXPORT bool IsUnifiedMemoryPointer(const void* ptr);
 VISKORES_CONT_EXPORT void* Reallocate(void* ptr, std::size_t newSize);
 
 }
