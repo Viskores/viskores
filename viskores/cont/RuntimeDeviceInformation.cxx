@@ -120,6 +120,12 @@ public:
     throw viskores::cont::ErrorBadDevice("Tried to set the device instance on an invalid device");
   }
 
+  VISKORES_CONT virtual viskores::cont::internal::RuntimeDeviceConfigReturnCode SetUseUnifiedMemory(
+    const viskores::Id&) override final
+  {
+    throw viskores::cont::ErrorBadDevice("Tried to set use unified memory on an invalid device");
+  }
+
   VISKORES_CONT virtual viskores::cont::internal::RuntimeDeviceConfigReturnCode GetThreads(
     viskores::Id&) const override final
   {
@@ -130,6 +136,12 @@ public:
     viskores::Id&) const override final
   {
     throw viskores::cont::ErrorBadDevice("Tried to get the device instance on an invalid device");
+  }
+
+  VISKORES_CONT virtual viskores::cont::internal::RuntimeDeviceConfigReturnCode GetUseUnifiedMemory(
+    viskores::Id&) const override final
+  {
+    throw viskores::cont::ErrorBadDevice("Tried to get use unified memory on an invalid device");
   }
 
   VISKORES_CONT virtual viskores::cont::internal::RuntimeDeviceConfigReturnCode GetMaxThreads(
@@ -521,7 +533,7 @@ RuntimeDeviceInformation::GetRuntimeConfiguration(
   DeviceAdapterId device,
   const viskores::cont::internal::RuntimeDeviceConfigurationOptions& configOptions) const
 {
-  int placeholder;
+  int placeholder = 0;
   return this->GetRuntimeConfiguration(device, configOptions, placeholder, nullptr);
 }
 
