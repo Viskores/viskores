@@ -17,6 +17,7 @@
 #include "helium/BaseFrame.h"
 // std
 #include "../ViskoresTypes.h"
+#include <array>
 #include <future>
 #include <vector>
 
@@ -68,7 +69,7 @@ private:
   struct FrameData
   {
     int frameID{ 0 };
-    uint2 size;
+    std::array<unsigned int, 2> size;
   } m_frameData;
 
   anari::DataType m_colorType{ ANARI_UNKNOWN };
