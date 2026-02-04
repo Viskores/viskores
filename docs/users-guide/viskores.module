@@ -13,3 +13,4 @@ TEST_DEPENDS
   viskores_filter_geometry_refinement
   viskores_filter_mesh_info
   viskores_rendering
+  viskores_worklet
