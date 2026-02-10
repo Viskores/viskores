@@ -44,6 +44,7 @@ struct TestingRuntimeDeviceConfiguration
     internal::RuntimeDeviceConfigurationOptions runtimeDeviceOptions{};
     runtimeDeviceOptions.ViskoresNumThreads.SetOption(8);
     runtimeDeviceOptions.ViskoresDeviceInstance.SetOption(2);
+    runtimeDeviceOptions.ViskoresUseUnifiedMemory.SetOption(1);
     runtimeDeviceOptions.Initialize(nullptr);
     VISKORES_TEST_ASSERT(runtimeDeviceOptions.IsInitialized(),
                          "Failed to default initialize runtime config options.");

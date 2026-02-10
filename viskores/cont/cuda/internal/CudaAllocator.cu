@@ -46,10 +46,9 @@ static std::once_flag IsInitializedFlag;
 static bool IsInitialized = false;
 
 // Holds how Viskores currently allocates memory.
-// When Viskores is initialized we set this based on the hardware support ( HardwareSupportsManagedMemory ).
-// The user can explicitly disable managed memory through an enviornment variable
-// or by calling a function on the CudaAllocator.
-// Likewise managed memory can be re-enabled by calling a function on CudaAllocator
+// Managed memory is turned off by default for performance reasons.
+// Use of managed memory can be selected during viskores initialization.
+// It is also possible to change by calling a function on CudaAllocator
 // if and only if the underlying hardware supports pageable managed memory
 static bool ManagedMemoryEnabled = false;
 
@@ -86,7 +85,7 @@ void CudaAllocator::ForceManagedMemoryOff()
   else
   {
     VISKORES_LOG_F(
-      viskores::cont::LogLevel::Warn,
+      viskores::cont::LogLevel::Info,
       "CudaAllocator trying to disable managed memory on hardware that doesn't support it");
   }
 }
@@ -129,6 +128,7 @@ bool CudaAllocator::IsDevicePointer(const void* ptr)
 
 bool CudaAllocator::IsManagedPointer(const void* ptr)
 {
+  // Should we check managed memory pointers regardless of whether it is turned on/off?
   if (!ptr || !ManagedMemoryEnabled)
   {
     return false;
@@ -409,7 +409,8 @@ void CudaAllocator::Initialize()
       }
 
       HardwareSupportsManagedMemory = managedMemorySupported;
-      ManagedMemoryEnabled = managedMemorySupported;
+      // ManagedMemoryEnabled = managedMemorySupported;
+      ManagedMemoryEnabled = false;
 
       VISKORES_LOG_F(viskores::cont::LogLevel::Info,
                      "CudaAllocator hardware %s managed memory",
@@ -429,6 +430,11 @@ void CudaAllocator::Initialize()
         VISKORES_LOG_F(
           viskores::cont::LogLevel::Info,
           "CudaAllocator disabling managed memory due to NO_VISKORES_MANAGED_MEMORY env variable");
+        VISKORES_LOG_F(
+          viskores::cont::LogLevel::Warn,
+          NO_VISKORES_MANAGED_MEMORY
+          " environment variable deprecated. Use --viskores-use-managed-memory 0 command line "
+          "argument or VISKORES_USE_MANAGED_MEMORY=0 environment variable.");
       }
 
       // CUDA does not give any indication of whether it is still running, but we have found from
