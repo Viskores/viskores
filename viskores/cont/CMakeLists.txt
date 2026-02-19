@@ -250,11 +250,6 @@ viskores_option(Viskores_USE_DEFAULT_TYPES_FOR_ASCENT
   )
 if (Viskores_USE_DEFAULT_TYPES_FOR_ASCENT)
   set(Viskores_DEFAULT_TYPES_HEADER "internal/DefaultTypesAscent.h.in")
-  if (Viskores_USE_64BIT_IDS)
-    message(SEND_ERROR
-      "When Viskores_USE_DEFAULT_TYPES_FOR_ASCENT is ON, Viskores_USE_64BIT_IDS must be set to OFF"
-      )
-  endif()
   if (NOT Viskores_USE_DOUBLE_PRECISION)
     message(SEND_ERROR
       "When Viskores_USE_DEFAULT_TYPES_FOR_ASCENT is ON, Viskores_USE_DOUBLE_PRECISION must be set to ON"
