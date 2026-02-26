@@ -160,6 +160,8 @@ namespace viskores
 // Typedefs for basic types.
 //*****************************************************************************
 
+using FakeType = bool;
+
 /// Base type to use for 32-bit floating-point numbers.
 ///
 using Float32 = float;
