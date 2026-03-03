@@ -119,9 +119,10 @@ GROUPS
   FiltersCommon
   Filters
 DEPENDS
-  viskores_worklet
   viskores_filter_core
   viskores_filter_clean_grid
+PRIVATE_DEPENDS
+  viskores_worklet
 TEST_DEPENDS
   viskores_filter_clean_grid
   viskores_filter_entity_extraction
