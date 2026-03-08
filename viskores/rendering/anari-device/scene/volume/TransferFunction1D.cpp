@@ -14,6 +14,11 @@
 #include <viskores/cont/ArrayExtractComponent.h>
 #include <viskores/cont/ArrayHandleConstant.h>
 #include <viskores/cont/ArrayHandleStride.h>
+#include <viskores/rendering/CanvasRayTracer.h>
+#include <viskores/rendering/raytracing/Camera.h>
+#include <viskores/rendering/raytracing/Ray.h>
+#include <viskores/rendering/raytracing/RayOperations.h>
+#include <viskores/rendering/raytracing/VolumeRendererStructured.h>
 
 namespace
 {
@@ -156,11 +161,10 @@ void TransferFunction1D::finalize()
   viskores::Float32 diagonalLength =
     static_cast<viskores::Float32>(viskores::Magnitude(bounds.MaxCorner() - bounds.MinCorner()));
   constexpr viskores::IdComponent numberOfSamples = 200;
-  viskores::Float32 sampleDistance =
-    static_cast<viskores::Float32>(diagonalLength / numberOfSamples);
+  this->m_sampleDistance = static_cast<viskores::Float32>(diagonalLength / numberOfSamples);
 
   // Reset and fill color table
-  this->m_colorTable = viskores::cont::ColorTable(viskores::ColorSpace::RGB);
+  viskores::cont::ColorTable colorTable{ viskores::ColorSpace::RGB };
   bool colorsHaveAlpha = false;
   if (this->m_colorArray)
   {
@@ -180,11 +184,11 @@ void TransferFunction1D::finalize()
     // again.
     if (viskoresColors.IsBaseComponentType<viskores::Float32>())
     {
-      FillColorTable<viskores::Float32>(this->m_colorTable, viskoresColors);
+      FillColorTable<viskores::Float32>(colorTable, viskoresColors);
     }
     else if (viskoresColors.IsBaseComponentType<viskores::Float64>())
     {
-      FillColorTable<viskores::Float64>(this->m_colorTable, viskoresColors);
+      FillColorTable<viskores::Float64>(colorTable, viskoresColors);
     }
     else
     {
@@ -193,8 +197,8 @@ void TransferFunction1D::finalize()
   }
   else
   {
-    this->m_colorTable.AddPoint(0, { m_color[0], m_color[1], m_color[2] });
-    this->m_colorTable.AddPoint(1, { m_color[0], m_color[1], m_color[2] });
+    colorTable.AddPoint(0, { m_color[0], m_color[1], m_color[2] });
+    colorTable.AddPoint(1, { m_color[0], m_color[1], m_color[2] });
   }
 
   if (m_opacityArray)
@@ -209,20 +213,20 @@ void TransferFunction1D::finalize()
       for (size_t index = 0; index < m_opacityArray->size(); ++index)
       {
         float opacity = *m_opacityArray->valueAt<float>(index);
-        this->m_colorTable.AddPointAlpha(index * scale, opacity);
+        colorTable.AddPointAlpha(index * scale, opacity);
       }
     }
     else
     {
-      float opacity = *m_opacityArray->valueAt<float>(0);
-      this->m_colorTable.AddPointAlpha(0, opacity);
-      this->m_colorTable.AddPointAlpha(1, opacity);
+      float opacity = *m_opacityArray->valueAt<float>(1);
+      colorTable.AddPointAlpha(0, opacity);
+      colorTable.AddPointAlpha(1, opacity);
     }
   }
   else if (!colorsHaveAlpha)
   {
-    this->m_colorTable.AddPointAlpha(0, this->m_alpha);
-    this->m_colorTable.AddPointAlpha(1, this->m_alpha);
+    colorTable.AddPointAlpha(0, this->m_alpha);
+    colorTable.AddPointAlpha(1, this->m_alpha);
   }
 
   // The alpha channel provided by ANARI is actually meant to be interpreted as
@@ -236,20 +240,40 @@ void TransferFunction1D::finalize()
   // the ray stepper. However, the units of the color distance might not be the
   // same as the spatial units. This is given by ANARI's unit distance
   // parameter, which can be used to convert the spatial units.
-  viskores::Float32 alphaSampleDistance = sampleDistance / this->m_unitDistance;
-  for (viskores::IdComponent pointId = 0; pointId < this->m_colorTable.GetNumberOfPointsAlpha();
-       ++pointId)
+  viskores::Float32 alphaSampleDistance = this->m_sampleDistance / this->m_unitDistance;
+  for (viskores::IdComponent pointId = 0; pointId < colorTable.GetNumberOfPointsAlpha(); ++pointId)
   {
     viskores::Vec4f_64 alphaPoint;
-    this->m_colorTable.GetPointAlpha(pointId, alphaPoint);
+    colorTable.GetPointAlpha(pointId, alphaPoint);
     alphaPoint[1] = 1.0f - viskores::Exp(-alphaSampleDistance * alphaPoint[1]);
-    this->m_colorTable.UpdatePointAlpha(pointId, alphaPoint);
+    colorTable.UpdatePointAlpha(pointId, alphaPoint);
   }
 
-  this->m_colorTable.RescaleToRange(this->m_valueRange);
+  colorTable.RescaleToRange(this->m_valueRange);
 
-  this->m_mapper = std::make_shared<viskores::rendering::MapperVolume>();
-  this->m_mapper->SetSampleDistance(sampleDistance);
+  // Now that we have the color table, build a simple map array that the render caster
+  // can use to convert fields to colors.
+  constexpr viskores::Float32 conversionToFloatSpace = (1.0f / 255.0f);
+
+  viskores::cont::ArrayHandle<viskores::Vec4ui_8> temp;
+
+  {
+    viskores::cont::ScopedRuntimeDeviceTracker tracker(viskores::cont::DeviceAdapterTagSerial{});
+    colorTable.Sample(1024, temp);
+  }
+
+  this->m_colorMap.Allocate(1024);
+  auto portal = this->m_colorMap.WritePortal();
+  auto colorPortal = temp.ReadPortal();
+  for (viskores::Id i = 0; i < 1024; ++i)
+  {
+    auto color = colorPortal.Get(i);
+    viskores::Vec4f_32 t(color[0] * conversionToFloatSpace,
+                         color[1] * conversionToFloatSpace,
+                         color[2] * conversionToFloatSpace,
+                         color[3] * conversionToFloatSpace);
+    portal.Set(i, t);
+  }
 }
 
 void TransferFunction1D::render(viskores::rendering::Canvas& canvas,
@@ -257,15 +281,48 @@ void TransferFunction1D::render(viskores::rendering::Canvas& canvas,
 {
   viskores::cont::DataSet dataSet = this->m_spatialField->getDataSet();
   const viskores::cont::Field& field = dataSet.GetField("data");
-  std::unique_ptr<viskores::rendering::Mapper> mapper{ this->mapper()->NewCopy() };
-  mapper->SetCanvas(&canvas);
-  mapper->SetActiveColorTable(this->m_colorTable);
-  mapper->RenderCells(dataSet.GetCellSet(),
-                      dataSet.GetCoordinateSystem(),
-                      field,
-                      this->m_colorTable,
-                      camera,
-                      field.GetRange().ReadPortal().Get(0));
+  viskores::cont::CoordinateSystem coords = dataSet.GetCoordinateSystem();
+
+  viskores::cont::CellSetStructured<3> cellSet;
+  try
+  {
+    dataSet.GetCellSet().AsCellSet(cellSet);
+  }
+  catch (viskores::cont::ErrorBadType)
+  {
+    this->reportMessage(ANARI_SEVERITY_ERROR,
+                        "Transfer function 1D volume has bad cell set type from spatial field");
+    return;
+  }
+
+  viskores::rendering::CanvasRayTracer* canvasRT =
+    dynamic_cast<viskores::rendering::CanvasRayTracer*>(&canvas);
+  if (canvasRT == nullptr)
+  {
+    this->reportMessage(ANARI_SEVERITY_ERROR, "Bad canvas detected for TransferFunction1D.");
+    return;
+  }
+
+  viskores::rendering::raytracing::VolumeRendererStructured tracer;
+
+  viskores::rendering::raytracing::Camera rayCamera;
+  viskores::Int32 width = (viskores::Int32)canvas.GetWidth();
+  viskores::Int32 height = (viskores::Int32)canvas.GetHeight();
+  rayCamera.SetParameters(camera, width, height);
+
+  viskores::rendering::raytracing::Ray<viskores::Float32> rays;
+  rayCamera.CreateRays(rays, coords.GetBounds());
+  rays.Buffers.at(0).InitConst(0.f);
+  viskores::rendering::raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvasRT);
+
+  tracer.SetSampleDistance(this->m_sampleDistance);
+
+  tracer.SetData(coords, field, cellSet, this->m_valueRange);
+  tracer.SetColorMap(this->m_colorMap);
+
+  tracer.Render(rays);
+
+  canvasRT->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera, false);
 }
 
 const SpatialField* TransferFunction1D::spatialField() const
@@ -277,11 +334,6 @@ viskores::Bounds TransferFunction1D::bounds() const
 {
   return isValid() ? this->m_spatialField->getDataSet().GetCoordinateSystem().GetBounds()
                    : viskores::Bounds();
-}
-
-viskores::rendering::MapperVolume* TransferFunction1D::mapper() const
-{
-  return this->m_mapper.get();
 }
 
 bool TransferFunction1D::isValid() const

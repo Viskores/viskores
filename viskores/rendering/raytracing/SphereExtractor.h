@@ -19,6 +19,7 @@
 #define viskores_rendering_raytracing_Sphere_Extractor_h
 
 #include <viskores/cont/DataSet.h>
+#include <viskores/rendering/viskores_rendering_export.h>
 
 namespace viskores
 {
@@ -27,7 +28,7 @@ namespace rendering
 namespace raytracing
 {
 
-class SphereExtractor
+class VISKORES_RENDERING_EXPORT SphereExtractor
 {
 protected:
   viskores::cont::ArrayHandle<viskores::Id> PointIds;

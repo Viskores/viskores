@@ -15,7 +15,7 @@
 #include "scene/surface/material/Material.h"
 
 #include <viskores/cont/DataSet.h>
-#include <viskores/rendering/MapperRayTracer.h>
+#include <viskores/rendering/Canvas.h>
 
 #include <map>
 
@@ -29,7 +29,6 @@ struct Geometry : public Object
   static Geometry* createInstance(std::string_view subtype, ViskoresDeviceGlobalState* s);
 
   const viskores::cont::DataSet& getDataSet() const { return this->m_dataSet; }
-  virtual const viskores::rendering::Mapper* mapper() const { return this->m_mapper.get(); }
 
   // The commitParameters and finalize will load parameters common to all
   // geometry objects and add them to `m_dataSet`.
@@ -39,7 +38,7 @@ struct Geometry : public Object
   virtual void render(viskores::rendering::Canvas& canvas,
                       const viskores::rendering::Camera& camera,
                       const viskores::cont::Field& field,
-                      const viskores::cont::ColorTable& colorTable) const;
+                      const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const = 0;
 
   // This struct helps manage a set of parameters providing arrays of data that
   // will be attached to fields on a Viskores dataset created by this geometry.
@@ -78,7 +77,6 @@ struct Geometry : public Object
 
 protected:
   viskores::cont::DataSet m_dataSet;
-  std::shared_ptr<viskores::rendering::Mapper> m_mapper;
   FieldArrayParameters m_primitiveAttributes;
 };
 
@@ -88,6 +86,10 @@ struct UnknownGeometry : public Geometry
   void commitParameters() override;
   void finalize() override;
   bool isValid() const override;
+  virtual void render(viskores::rendering::Canvas&,
+                      const viskores::rendering::Camera&,
+                      const viskores::cont::Field&,
+                      const viskores::cont::ArrayHandle<viskores::Vec4f_32>&) const override;
 };
 
 } // namespace viskores_device

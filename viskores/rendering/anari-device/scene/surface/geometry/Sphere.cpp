@@ -13,6 +13,14 @@
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandleIndex.h>
 #include <viskores/cont/ArrayHandlePermutation.h>
+#include <viskores/cont/ArrayRangeCompute.h>
+#include <viskores/rendering/raytracing/Camera.h>
+#include <viskores/rendering/raytracing/Ray.h>
+#include <viskores/rendering/raytracing/RayOperations.h>
+#include <viskores/rendering/raytracing/RayTracer.h>
+#include <viskores/rendering/raytracing/SphereExtractor.h>
+#include <viskores/rendering/raytracing/SphereIntersector.h>
+
 
 #include <numeric>
 
@@ -60,23 +68,13 @@ void Sphere::finalize()
   {
     this->m_dataSet.AddCoordinateSystem(
       { "coords", this->m_vertexPosition->dataAsViskoresArray() });
+    this->m_dataSet.AddPointField("radius", this->m_vertexRadius->dataAsViskoresArray());
   }
-
-  auto pointMapper = std::make_shared<viskores::rendering::MapperPoint>();
-  pointMapper->SetUsePoints();
 
   if (this->m_vertexRadius)
   {
-    pointMapper->UseVariableRadius(true);
-    this->m_dataSet.AddPointField("data", this->m_vertexRadius->dataAsViskoresArray());
+    this->m_radiusRange = this->m_dataSet.GetField("radius").GetRange().ReadPortal().Get(0);
   }
-  else
-  {
-    pointMapper->UseVariableRadius(false);
-    pointMapper->SetRadius(this->m_globalRadius);
-  }
-
-  this->m_mapper = pointMapper;
 
   auto connIdx = viskores::cont::make_ArrayHandleIndex(numSpheres);
   viskores::cont::ArrayHandle<viskores::Id> conn;
@@ -110,23 +108,85 @@ void Sphere::SetupIndexBased()
     vertices = positionArray.AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>();
   }
 
-  auto permuteArray = viskores::cont::make_ArrayHandlePermutation(indexArray, vertices);
-  this->m_dataSet.AddCoordinateSystem({ "coords", permuteArray });
+  // KEN: Instead of permuting arrays (does that even work?), why not build a set of vertex
+  // cells and use that to permute the values? The underlying raycaster already supports that.
+  auto vertexPermute = viskores::cont::make_ArrayHandlePermutation(indexArray, vertices);
+  this->m_dataSet.AddCoordinateSystem({ "coords", vertexPermute });
 
   // Now handle the radius.
   if (this->m_vertexRadius)
   {
     viskores::cont::ArrayHandle<viskores::FloatDefault> radiusArray;
-    auto tmp = this->m_vertexRadius->dataAsViskoresArray();
-    if (!tmp.IsValueType<viskores::FloatDefault>())
-      viskores::cont::ArrayCopy(tmp, radiusArray);
-    else
-      radiusArray = tmp.AsArrayHandle<viskores::cont::ArrayHandle<viskores::FloatDefault>>();
+    this->m_vertexRadius->dataAsViskoresArray().CopyShallowIfPossible(radiusArray);
 
-    auto permuteArray = viskores::cont::make_ArrayHandlePermutation(indexArray, radiusArray);
+    auto radiusPermute = viskores::cont::make_ArrayHandlePermutation(indexArray, radiusArray);
 
-    this->m_dataSet.AddPointField("data", permuteArray);
+    this->m_dataSet.AddPointField("radius", radiusPermute);
   }
+}
+
+void Sphere::render(viskores::rendering::Canvas& canvas,
+                    const viskores::rendering::Camera& camera,
+                    const viskores::cont::Field& field,
+                    const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const
+{
+  viskores::rendering::raytracing::RayTracer tracer;
+  viskores::rendering::raytracing::SphereExtractor sphereExtractor;
+
+  const viskores::cont::DataSet& data = this->getDataSet();
+  viskores::cont::CoordinateSystem coords = data.GetCoordinateSystem();
+
+  viskores::Bounds shapeBounds;
+  viskores::Range scalarRange = field.GetRange().ReadPortal().Get(0);
+
+  if (this->m_vertexRadius)
+  {
+    // This builds the radius array using an adjustment of the radius based on the desired
+    // min and max radius. However, we want to take the radius at face value, so insert values
+    // that compute back to the original value. This is silly, so we should implement a simple
+    // version that just takes the array.
+    sphereExtractor.ExtractCoordinates(coords,
+                                       this->m_dataSet.GetField("radius"),
+                                       static_cast<viskores::Float32>(this->m_radiusRange.Min),
+                                       static_cast<viskores::Float32>(this->m_radiusRange.Max));
+  }
+  else
+  {
+    sphereExtractor.ExtractCoordinates(coords, this->m_globalRadius);
+  }
+
+  if (sphereExtractor.GetNumberOfSpheres() > 0)
+  {
+    auto sphereIntersector = std::make_shared<viskores::rendering::raytracing::SphereIntersector>();
+    sphereIntersector->SetData(coords, sphereExtractor.GetPointIds(), sphereExtractor.GetRadii());
+    tracer.AddShapeIntersector(sphereIntersector);
+    shapeBounds.Include(sphereIntersector->GetShapeBounds());
+  }
+
+  //
+  // Create rays
+  //
+  viskores::Int32 width = (viskores::Int32)canvas.GetWidth();
+  viskores::Int32 height = (viskores::Int32)canvas.GetHeight();
+
+  viskores::rendering::raytracing::Camera rayCamera;
+  rayCamera.SetParameters(camera, width, height);
+
+  viskores::rendering::raytracing::Ray<viskores::Float32> rays;
+  viskores::rendering::CanvasRayTracer* canvasRT =
+    dynamic_cast<viskores::rendering::CanvasRayTracer*>(&canvas);
+  VISKORES_ASSERT(canvasRT != nullptr);
+
+  rayCamera.CreateRays(rays, shapeBounds);
+  rays.Buffers.at(0).InitConst(0.f);
+  viskores::rendering::raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvasRT);
+
+  tracer.SetField(field, scalarRange);
+  tracer.GetCamera() = rayCamera;
+  tracer.SetColorMap(colorMap);
+  tracer.Render(rays);
+
+  canvasRT->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
 }
 
 } // namespace viskores_device

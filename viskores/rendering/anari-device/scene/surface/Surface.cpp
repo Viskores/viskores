@@ -44,7 +44,7 @@ void Surface::finalize()
   }
 
   this->m_dataSet = this->m_geometry->getDataSet();
-  this->m_material->getColors(this->m_dataSet, this->m_field, this->m_colorTable);
+  this->m_material->getColors(this->m_dataSet, this->m_field, this->m_colorMap);
 }
 
 const Geometry* Surface::geometry() const
@@ -60,7 +60,7 @@ const Material* Surface::material() const
 void Surface::render(viskores::rendering::Canvas& canvas,
                      const viskores::rendering::Camera& camera) const
 {
-  this->m_geometry->render(canvas, camera, this->m_field, this->m_colorTable);
+  this->m_geometry->render(canvas, camera, this->m_field, this->m_colorMap);
 }
 
 viskores::Bounds Surface::bounds() const

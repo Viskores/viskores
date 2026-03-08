@@ -45,7 +45,7 @@ private:
 
   viskores::cont::DataSet m_dataSet;
   viskores::cont::Field m_field;
-  viskores::cont::ColorTable m_colorTable;
+  viskores::cont::ArrayHandle<viskores::Vec4f_32> m_colorMap;
 };
 
 } // namespace viskores_device

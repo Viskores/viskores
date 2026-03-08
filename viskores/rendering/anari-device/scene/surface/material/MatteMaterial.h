@@ -38,7 +38,7 @@ struct MatteMaterial : public Material
 
   void getColors(const viskores::cont::DataSet& data,
                  viskores::cont::Field& field,
-                 viskores::cont::ColorTable& colorTable) const override;
+                 viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const override;
 
 private:
   helium::ChangeObserverPtr<Sampler> m_sampler;

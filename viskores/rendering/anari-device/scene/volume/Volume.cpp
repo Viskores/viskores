@@ -19,7 +19,6 @@ struct UnknownVolume : public viskores_device::Volume
   UnknownVolume(viskores_device::ViskoresDeviceGlobalState* d);
 
   viskores::Bounds bounds() const override;
-  viskores::rendering::Mapper* mapper() const override;
   void render(viskores::rendering::Canvas& canvas,
               const viskores::rendering::Camera& camera) const override;
   bool isValid() const override;
@@ -33,11 +32,6 @@ UnknownVolume::UnknownVolume(viskores_device::ViskoresDeviceGlobalState* d)
 viskores::Bounds UnknownVolume::bounds() const
 {
   return viskores::Bounds{};
-}
-
-viskores::rendering::Mapper* UnknownVolume::mapper() const
-{
-  return nullptr;
 }
 
 void UnknownVolume::render(viskores::rendering::Canvas&, const viskores::rendering::Camera&) const

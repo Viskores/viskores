@@ -18,7 +18,6 @@
 // Viskores
 #include <viskores/Range.h>
 #include <viskores/cont/ColorTable.h>
-#include <viskores/rendering/MapperVolume.h>
 
 namespace viskores_device
 {
@@ -35,7 +34,6 @@ struct TransferFunction1D : public Volume
 
   const SpatialField* spatialField() const;
   viskores::Bounds bounds() const override;
-  viskores::rendering::MapperVolume* mapper() const override;
 
   bool isValid() const override;
 
@@ -47,9 +45,8 @@ private:
   float4 m_color;
   viskores::Float32 m_alpha;
   viskores::Float32 m_unitDistance;
-  viskores::cont::ColorTable m_colorTable;
-
-  std::shared_ptr<viskores::rendering::MapperVolume> m_mapper;
+  viskores::Float32 m_sampleDistance;
+  viskores::cont::ArrayHandle<viskores::Vec4f_32> m_colorMap;
 };
 
 } // namespace viskores_device

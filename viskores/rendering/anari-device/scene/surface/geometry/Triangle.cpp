@@ -15,6 +15,11 @@
 #include <viskores/cont/ArrayHandleRuntimeVec.h>
 #include <viskores/cont/CellSetSingleType.h>
 #include <viskores/cont/UnknownArrayHandle.h>
+#include <viskores/rendering/CanvasRayTracer.h>
+#include <viskores/rendering/raytracing/RayOperations.h>
+#include <viskores/rendering/raytracing/RayTracer.h>
+#include <viskores/rendering/raytracing/TriangleExtractor.h>
+#include <viskores/rendering/raytracing/TriangleIntersector.h>
 // std
 #include <array>
 #include <numeric>
@@ -93,7 +98,6 @@ void Triangle::finalize()
 
   // Reset data
   this->m_dataSet = viskores::cont::DataSet{};
-  this->m_mapper = std::make_shared<viskores::rendering::MapperRayTracer>();
 
   // Get the connection array.
   // Note that ANARI provides the connection array as a series of triples
@@ -114,6 +118,58 @@ void Triangle::finalize()
 
   // We have already checked that the position array exists.
   this->m_dataSet.AddCoordinateSystem("position");
+}
+
+void Triangle::render(viskores::rendering::Canvas& canvas,
+                      const viskores::rendering::Camera& camera,
+                      const viskores::cont::Field& field,
+                      const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const
+{
+  viskores::rendering::raytracing::RayTracer tracer;
+  viskores::rendering::raytracing::TriangleExtractor triExtractor;
+
+  const viskores::cont::DataSet& data = this->getDataSet();
+  viskores::cont::CoordinateSystem coords = data.GetCoordinateSystem();
+
+  viskores::Bounds shapeBounds;
+  viskores::Range scalarRange = field.GetRange().ReadPortal().Get(0);
+
+  triExtractor.ExtractCells(data.GetCellSet());
+
+  if (triExtractor.GetNumberOfTriangles() > 0)
+  {
+    auto triIntersector = std::make_shared<viskores::rendering::raytracing::TriangleIntersector>();
+    triIntersector->SetData(coords, triExtractor.GetTriangles());
+    tracer.AddShapeIntersector(triIntersector);
+    shapeBounds.Include(triIntersector->GetShapeBounds());
+  }
+
+  //
+  // Create rays
+  //
+  viskores::Int32 width = (viskores::Int32)canvas.GetWidth();
+  viskores::Int32 height = (viskores::Int32)canvas.GetHeight();
+
+  viskores::rendering::raytracing::Camera rayCamera;
+  rayCamera.SetParameters(camera, width, height);
+
+  viskores::rendering::raytracing::Ray<viskores::Float32> rays;
+  viskores::rendering::CanvasRayTracer* canvasRT =
+    dynamic_cast<viskores::rendering::CanvasRayTracer*>(&canvas);
+  VISKORES_ASSERT(canvasRT != nullptr);
+
+  rayCamera.CreateRays(rays, shapeBounds);
+  tracer.GetCamera() = rayCamera;
+  rays.Buffers.at(0).InitConst(0.f);
+  viskores::rendering::raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvasRT);
+
+  tracer.SetField(field, scalarRange);
+
+  tracer.SetColorMap(colorMap);
+  tracer.SetShadingOn(true);
+  tracer.Render(rays);
+
+  canvasRT->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
 }
 
 bool Triangle::isValid() const

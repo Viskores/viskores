@@ -35,7 +35,7 @@ struct Sampler : public Object
 
   virtual bool getColors(const viskores::cont::DataSet& data,
                          viskores::cont::Field& field,
-                         viskores::cont::ColorTable& colorTable) const = 0;
+                         viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const = 0;
 
 private:
   Mat4f_32 m_outTransform;

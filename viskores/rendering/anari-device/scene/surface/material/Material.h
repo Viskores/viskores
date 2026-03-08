@@ -27,7 +27,7 @@ struct Material : public Object
 
   virtual void getColors(const viskores::cont::DataSet& data,
                          viskores::cont::Field& field,
-                         viskores::cont::ColorTable& colorTable) const = 0;
+                         viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const = 0;
 };
 
 } // namespace viskores_device

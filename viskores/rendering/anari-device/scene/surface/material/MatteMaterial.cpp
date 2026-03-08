@@ -45,21 +45,21 @@ void MatteMaterial::finalize()
 
 void MatteMaterial::getColors(const viskores::cont::DataSet& data,
                               viskores::cont::Field& field,
-                              viskores::cont::ColorTable& colorTable) const
+                              viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const
 {
   if (this->m_sampler && this->m_sampler->isValid())
   {
-    if (this->m_sampler->getColors(data, field, colorTable))
+    if (this->m_sampler->getColors(data, field, colorMap))
     {
       return;
     }
   }
 
-  colorTable = viskores::cont::ColorTable(viskores::ColorSpace::RGB);
   // TODO: Implement sampling and attributes.
   // This should be the fallback when other coloring is missing.
-  colorTable.AddPoint(0, this->color());
-  colorTable.AddPointAlpha(0, this->opacity());
+  colorMap.Allocate(1);
+  colorMap.WritePortal().Set(
+    0, { this->m_color[0], this->m_color[1], this->m_color[2], this->m_opacity });
   field = viskores::cont::Field{ "data",
                                  viskores::cont::Field::Association::Points,
                                  viskores::cont::make_ArrayHandleConstant(

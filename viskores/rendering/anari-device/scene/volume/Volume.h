@@ -15,7 +15,8 @@
 // Viskores
 #include <viskores/Bounds.h>
 #include <viskores/cont/DataSet.h>
-#include <viskores/rendering/Mapper.h>
+#include <viskores/rendering/Camera.h>
+#include <viskores/rendering/Canvas.h>
 
 namespace viskores_device
 {
@@ -35,7 +36,6 @@ struct Volume : public Object
   uint32_t id() const;
 
   virtual viskores::Bounds bounds() const = 0;
-  virtual viskores::rendering::Mapper* mapper() const = 0;
 
 private:
   uint32_t m_id{ ~0u };

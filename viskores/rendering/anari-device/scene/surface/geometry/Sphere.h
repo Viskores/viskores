@@ -13,9 +13,6 @@
 #include "Geometry.h"
 #include "array/Array1D.h"
 
-// viskores
-#include <viskores/rendering/MapperPoint.h>
-
 namespace viskores_device
 {
 
@@ -26,7 +23,11 @@ struct Sphere : public Geometry
   void commitParameters() override;
   void finalize() override;
 
-  virtual viskores::rendering::Mapper* mapper() const override { return this->m_mapper.get(); }
+  virtual void render(
+    viskores::rendering::Canvas& canvas,
+    const viskores::rendering::Camera& camera,
+    const viskores::cont::Field& field,
+    const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const override;
 
 private:
   void SetupIndexBased();
@@ -36,7 +37,6 @@ private:
   // optional- radius per position
   helium::ChangeObserverPtr<Array1D> m_vertexRadius;
 
-  std::shared_ptr<viskores::rendering::Mapper> m_mapper;
   viskores::cont::ColorTable m_colorTable;
 
   // TODO: Add these later.
@@ -44,6 +44,7 @@ private:
   // std::vector<uint32_t> m_attributeIndex;
 
   float m_globalRadius{ 0.f }; // fallback radius if m_vertexRadius not there.
+  viskores::Range m_radiusRange;
 };
 
 } // namespace viskores_device

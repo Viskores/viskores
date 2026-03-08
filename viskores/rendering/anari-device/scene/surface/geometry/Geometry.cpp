@@ -52,20 +52,6 @@ void Geometry::finalize()
   this->m_primitiveAttributes.setFields(this->m_dataSet);
 }
 
-void Geometry::render(viskores::rendering::Canvas& canvas,
-                      const viskores::rendering::Camera& camera,
-                      const viskores::cont::Field& field,
-                      const viskores::cont::ColorTable& colorTable) const
-{
-  const viskores::cont::DataSet& data = this->getDataSet();
-  viskores::Range scalarRange = field.GetRange().ReadPortal().Get(0);
-  std::unique_ptr<viskores::rendering::Mapper> mapper{ this->mapper()->NewCopy() };
-  mapper->SetCanvas(&canvas);
-  mapper->SetActiveColorTable(colorTable);
-  mapper->RenderCells(
-    data.GetCellSet(), data.GetCoordinateSystem(), field, colorTable, camera, scalarRange);
-}
-
 void Geometry::FieldArrayParameters::setAttributes(Geometry* self,
                                                    std::initializer_list<const char*>&& attributes)
 {
@@ -137,6 +123,14 @@ void UnknownGeometry::finalize()
 bool UnknownGeometry::isValid() const
 {
   return false;
+}
+
+void UnknownGeometry::render(viskores::rendering::Canvas&,
+                             const viskores::rendering::Camera&,
+                             const viskores::cont::Field&,
+                             const viskores::cont::ArrayHandle<viskores::Vec4f_32>&) const
+{
+  // invalid
 }
 
 } // namespace viskores_device
