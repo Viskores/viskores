@@ -41,9 +41,11 @@ public:
 
   VISKORES_CONT SplineEvaluateRectilinearGrid(const RectilinearType& rectCoords,
                                               const FieldType& field,
+                                              const viskores::Bounds& bounds,
                                               viskores::cont::DeviceAdapterId device,
                                               viskores::cont::Token& token)
-    : Field(field.PrepareForInput(device, token))
+    : Bounds(bounds)
+    , Field(field.PrepareForInput(device, token))
   {
     auto coordsExecPortal = rectCoords.PrepareForInput(device, token);
 
@@ -54,12 +56,6 @@ public:
     this->NumX = this->AxisPortals[0].GetNumberOfValues();
     this->NumY = this->AxisPortals[1].GetNumberOfValues();
     this->NumZ = this->AxisPortals[2].GetNumberOfValues();
-    this->Bounds = viskores::Bounds(this->AxisPortals[0].Get(0),
-                                    this->AxisPortals[0].Get(this->NumX - 1),
-                                    this->AxisPortals[1].Get(0),
-                                    this->AxisPortals[1].Get(this->NumY - 1),
-                                    this->AxisPortals[2].Get(0),
-                                    this->AxisPortals[2].Get(this->NumZ - 1));
   }
 
   VISKORES_EXEC viskores::ErrorCode Evaluate(const viskores::Vec3f& point,
