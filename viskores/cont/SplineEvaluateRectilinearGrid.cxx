@@ -36,8 +36,8 @@ viskores::exec::SplineEvaluateRectilinearGrid SplineEvaluateRectilinearGrid::Pre
   if (!this->DataSet.GetCoordinateSystem(0).GetData().IsType<RectCoordsType>())
     throw viskores::cont::ErrorBadType("Coordinates are not rectilinear type.");
 
-  RectCoordsType coords;
-  coords = this->DataSet.GetCoordinateSystem(0).GetData().template AsArrayHandle<RectCoordsType>();
+  viskores::cont::CoordinateSystem coordSystem = this->DataSet.GetCoordinateSystem();
+  RectCoordsType coords = coordSystem.GetData().template AsArrayHandle<RectCoordsType>();
   if (!viskores::cont::ArrayIsMonotonicIncreasing(coords.GetFirstArray()) ||
       !viskores::cont::ArrayIsMonotonicIncreasing(coords.GetSecondArray()) ||
       !viskores::cont::ArrayIsMonotonicIncreasing(coords.GetThirdArray()))
@@ -50,7 +50,8 @@ viskores::exec::SplineEvaluateRectilinearGrid SplineEvaluateRectilinearGrid::Pre
   viskores::cont::ArrayCopyShallowIfPossible(this->DataSet.GetField(this->FieldName).GetData(),
                                              fieldArray);
 
-  return viskores::exec::SplineEvaluateRectilinearGrid(coords, fieldArray, device, token);
+  return viskores::exec::SplineEvaluateRectilinearGrid(
+    coords, fieldArray, coordSystem.GetBounds(), device, token);
 }
 
 } //namespace cont
