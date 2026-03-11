@@ -157,7 +157,8 @@ void Frame::commitParameters()
   m_objIdType = getParam<anari::DataType>("channel.objectId", ANARI_UNKNOWN);
   m_instIdType = getParam<anari::DataType>("channel.instanceId", ANARI_UNKNOWN);
 
-  m_frameData.size = getParam<uint2>("size", uint2(10));
+  m_frameData.size =
+    getParam<std::array<unsigned int, 2>>("size", std::array<unsigned int, 2>{ 10, 10 });
 }
 
 void Frame::finalize()
