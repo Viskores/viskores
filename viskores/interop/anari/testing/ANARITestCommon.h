@@ -78,7 +78,7 @@ static void setColorMap(anari_cpp::Device d, viskores::interop::anari::ANARIMapp
   auto opacityArray = anari_cpp::newArray1D(d, ANARI_FLOAT32, 2);
   auto* opacities = anari_cpp::map<float>(d, opacityArray);
   opacities[0] = 0.f;
-  opacities[1] = 1.f;
+  opacities[1] = 0.999f;
   anari_cpp::unmap(d, opacityArray);
 
   mapper.SetANARIColorMap(colorArray, opacityArray, true);
@@ -89,9 +89,11 @@ static void setColorMap(anari_cpp::Device d, viskores::interop::anari::ANARIMapp
 static anari_cpp::Device loadANARIDevice()
 {
   viskores::testing::FloatingPointExceptionTrapDisable();
-  auto* libraryName = std::getenv("VISKORES_TEST_ANARI_LIBRARY");
+  auto* libraryNameEnv = std::getenv("VISKORES_TEST_ANARI_LIBRARY");
   static bool verbose = std::getenv("VISKORES_TEST_ANARI_VERBOSE") != nullptr;
-  auto lib = anari_cpp::loadLibrary(libraryName ? libraryName : "helide", StatusFunc, &verbose);
+  const char* libraryName = libraryNameEnv ? libraryNameEnv : "viskores";
+  auto lib = anari_cpp::loadLibrary(libraryName, StatusFunc, &verbose);
+  VISKORES_TEST_ASSERT(lib != nullptr, "Cannot load ANARI library `", libraryName, "`");
   auto d = anari_cpp::newDevice(lib, "default");
   anari_cpp::unloadLibrary(lib);
   return d;
