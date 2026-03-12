@@ -50,20 +50,20 @@ public:
 
   void Exchange(const std::vector<ParticleType>& outData,
                 const std::vector<viskores::Id>& outRanks,
-                const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& outBlockIDsMap,
+                const std::vector<viskores::Id>& outBlockIDs,
                 std::vector<ParticleType>& inData,
-                std::unordered_map<viskores::Id, std::vector<viskores::Id>>& inDataBlockIDsMap)
+                std::vector<viskores::Id>& inDataBlockIDs)
   {
-    VISKORES_ASSERT(outData.size() == outRanks.size());
+    VISKORES_ASSERT(outData.size() == outRanks.size() && outData.size() == outBlockIDs.size());
 
     if (this->NumRanks == 1)
-      this->SerialExchange(outData, outBlockIDsMap, inData, inDataBlockIDsMap);
+      this->SerialExchange(outData, outBlockIDs, inData, inDataBlockIDs);
 #ifdef VISKORES_ENABLE_MPI
     else
     {
       this->CleanupSendBuffers(true);
-      this->SendParticles(outData, outRanks, outBlockIDsMap);
-      this->RecvParticles(inData, inDataBlockIDsMap);
+      this->SendParticles(outData, outRanks, outBlockIDs);
+      this->RecvParticles(inData, inDataBlockIDs);
     }
 #endif
   }
@@ -71,21 +71,27 @@ public:
 private:
   void SerialExchange(
     const std::vector<ParticleType>& outData,
-    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& outBlockIDsMap,
+    const std::vector<viskores::Id>& outBlockIDs,
     std::vector<ParticleType>& inData,
-    std::unordered_map<viskores::Id, std::vector<viskores::Id>>& inDataBlockIDsMap)
+    std::vector<viskores::Id>& inDataBlockIDs)
   {
+    VISKORES_ASSERT(outData.size() == outBlockIDs.size());
+
+    inData.clear();
+    inDataBlockIDs.clear();
+    inData.reserve(outData.size());
+    inDataBlockIDs.reserve(outBlockIDs.size());
+
     //Copy output to input.
-    for (const auto& p : outData)
+    for (std::size_t i = 0; i < outData.size(); ++i)
     {
-      const auto& bids = outBlockIDsMap.find(p.GetID())->second;
-      inData.emplace_back(p);
-      inDataBlockIDsMap[p.GetID()] = bids;
+      inData.emplace_back(outData[i]);
+      inDataBlockIDs.emplace_back(outBlockIDs[i]);
     }
   }
 
 #ifdef VISKORES_ENABLE_MPI
-  using ParticleCommType = std::pair<ParticleType, std::vector<viskores::Id>>;
+  using ParticleCommType = std::pair<ParticleType, viskores::Id>;
 
   void CleanupSendBuffers(bool checkRequests)
   {
@@ -141,21 +147,20 @@ private:
   void SendParticles(
     const std::vector<ParticleType>& outData,
     const std::vector<viskores::Id>& outRanks,
-    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& outBlockIDsMap)
+    const std::vector<viskores::Id>& outBlockIDs)
   {
     if (outData.empty())
       return;
 
     //create the send data: vector of particles, vector of vector of blockIds.
     std::size_t n = outData.size();
+    VISKORES_ASSERT(n == outRanks.size() && n == outBlockIDs.size());
     std::unordered_map<int, std::vector<ParticleCommType>> sendData;
 
     // dst, vector of pair(particles, blockIds)
     for (std::size_t i = 0; i < n; i++)
     {
-      const auto& bids = outBlockIDsMap.find(outData[i].GetID())->second;
-      //sendData[outRanks[i]].emplace_back(std::make_pair(std::move(outData[i]), std::move(bids)));
-      sendData[outRanks[i]].emplace_back(std::make_pair(outData[i], bids));
+      sendData[outRanks[i]].emplace_back(std::make_pair(outData[i], outBlockIDs[i]));
     }
 
     //Send to dst, vector<pair<particle, bids>>
@@ -186,10 +191,10 @@ private:
 
   void RecvParticles(
     std::vector<ParticleType>& inData,
-    std::unordered_map<viskores::Id, std::vector<viskores::Id>>& inDataBlockIDsMap) const
+    std::vector<viskores::Id>& inDataBlockIDs) const
   {
-    inData.resize(0);
-    inDataBlockIDsMap.clear();
+    inData.clear();
+    inDataBlockIDs.clear();
 
     std::vector<viskoresdiy::MemoryBuffer> buffers;
 
@@ -237,10 +242,8 @@ private:
       memBuff.reset();
       for (const auto& d : data)
       {
-        const auto& particle = d.first;
-        const auto& bids = d.second;
-        inDataBlockIDsMap[particle.GetID()] = bids;
-        inData.emplace_back(particle);
+        inData.emplace_back(d.first);
+        inDataBlockIDs.emplace_back(d.second);
       }
 
       //Note, we don't terminate the while loop here. We want to go back and

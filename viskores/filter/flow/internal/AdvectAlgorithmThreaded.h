@@ -98,7 +98,7 @@ protected:
 
   void UpdateActive(
     const std::vector<ParticleType>& particles,
-    const std::vector<std::vector<viskores::Id>>& blockIds) override
+    const std::vector<viskores::Id>& blockIds) override
   {
     if (!particles.empty())
     {
