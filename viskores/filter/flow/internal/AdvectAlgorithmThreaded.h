@@ -142,7 +142,7 @@ protected:
       if (this->GetActiveParticles(v, blockId))
       {
         auto& block = this->GetDataSet(blockId);
-        DSIHelperInfo<ParticleType> bb(v, this->BoundsMap, this->ParticleBlockIDsMap);
+        DSIHelperInfo<ParticleType> bb(v, this->BoundsMap);
         block.Advect(bb, this->StepSize);
         this->UpdateWorkerResult(blockId, bb);
       }

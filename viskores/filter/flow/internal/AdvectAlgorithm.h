@@ -140,7 +140,7 @@ public:
       {
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
-        DSIHelperInfo<ParticleType> bb(v, this->BoundsMap, this->ParticleBlockIDsMap);
+        DSIHelperInfo<ParticleType> bb(v, this->BoundsMap);
         block.Advect(bb, this->StepSize);
         this->UpdateResult(bb);
       }
