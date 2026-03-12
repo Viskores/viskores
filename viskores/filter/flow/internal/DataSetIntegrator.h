@@ -64,12 +64,10 @@ public:
   void Clear()
   {
     this->OutParticles = {};
-    this->OutParticleIDs = {};
     this->OutNextCounts = {};
     this->OutNextOffsets = {};
     this->OutFlatNextBlocks = {};
     this->TermIdx = {};
-    this->TermID = {};
   }
 
   void Validate(viskores::Id num)
@@ -79,8 +77,6 @@ public:
 
     //Make sure we didn't miss anything. Every particle goes into a single bucket.
     if ((num != (outCount + termCount)) ||
-        (this->TermIdx.GetNumberOfValues() != this->TermID.GetNumberOfValues()) ||
-        (this->OutParticles.GetNumberOfValues() != this->OutParticleIDs.GetNumberOfValues()) ||
         (this->OutParticles.GetNumberOfValues() != this->OutNextCounts.GetNumberOfValues()) ||
         (this->OutParticles.GetNumberOfValues() != this->OutNextOffsets.GetNumberOfValues()))
     {
@@ -92,11 +88,9 @@ public:
 
   std::vector<ParticleType> Particles;
   viskores::cont::ArrayHandle<ParticleType> OutParticles;
-  viskores::cont::ArrayHandle<viskores::Id> OutParticleIDs;
   viskores::cont::ArrayHandle<viskores::Id> OutNextCounts;
   viskores::cont::ArrayHandle<viskores::Id> OutNextOffsets;
   viskores::cont::ArrayHandle<viskores::Id> OutFlatNextBlocks;
-  viskores::cont::ArrayHandle<viskores::Id> TermID;
   viskores::cont::ArrayHandle<viskores::Id> TermIdx;
 };
 
@@ -290,20 +284,6 @@ public:
   }
 };
 
-template <typename ParticleType>
-class ExtractParticleId : public viskores::worklet::WorkletMapField
-{
-public:
-  using ControlSignature = void(FieldIn particle, FieldOut particleId);
-  using ExecutionSignature = void(_1, _2);
-  using InputDomain = _1;
-
-  VISKORES_EXEC void operator()(const ParticleType& particle, viskores::Id& particleId) const
-  {
-    particleId = particle.GetID();
-  }
-};
-
 } // namespace detail
 
 template <typename Derived, typename ParticleType>
@@ -403,24 +383,17 @@ VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyPart
   invoke(detail::ClassificationMasks{}, termInitial, nextCounts, termMask, outMask);
   invoke(detail::SetTerminateStatus<ParticleType>{}, termInitial, nextCounts, particles);
 
-  viskores::cont::ArrayHandle<viskores::Id> particleIds;
-  invoke(detail::ExtractParticleId<ParticleType>{}, particles, particleIds);
-
   viskores::cont::ArrayHandleIndex allIndices(numParticles);
-  viskores::cont::ArrayHandle<viskores::Id> termIdxAH, termIdAH;
+  viskores::cont::ArrayHandle<viskores::Id> termIdxAH;
   viskores::cont::Algorithm::CopyIf(allIndices, termMask, termIdxAH, detail::IsNonZero{});
-  viskores::cont::Algorithm::CopyIf(particleIds, termMask, termIdAH, detail::IsNonZero{});
   dsiInfo.TermIdx = termIdxAH;
-  dsiInfo.TermID = termIdAH;
 
   viskores::cont::ArrayHandle<ParticleType> outParticlesAH;
-  viskores::cont::ArrayHandle<viskores::Id> outParticleIdsAH, outCountsAH, outOffsetsAH;
+  viskores::cont::ArrayHandle<viskores::Id> outCountsAH, outOffsetsAH;
   viskores::cont::Algorithm::CopyIf(particles, outMask, outParticlesAH, detail::IsNonZero{});
-  viskores::cont::Algorithm::CopyIf(particleIds, outMask, outParticleIdsAH, detail::IsNonZero{});
   viskores::cont::Algorithm::CopyIf(nextCounts, outMask, outCountsAH, detail::IsNonZero{});
   viskores::cont::Algorithm::CopyIf(nextOffsets, outMask, outOffsetsAH, detail::IsNonZero{});
   dsiInfo.OutParticles = outParticlesAH;
-  dsiInfo.OutParticleIDs = outParticleIdsAH;
   dsiInfo.OutNextCounts = outCountsAH;
   dsiInfo.OutNextOffsets = outOffsetsAH;
   dsiInfo.OutFlatNextBlocks = flatNextBlocks;

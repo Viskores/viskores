@@ -98,12 +98,12 @@ protected:
 
   void UpdateActive(
     const std::vector<ParticleType>& particles,
-    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& idsMap) override
+    const std::vector<std::vector<viskores::Id>>& blockIds) override
   {
     if (!particles.empty())
     {
       std::lock_guard<std::mutex> lock(this->Mutex);
-      this->AdvectAlgorithm<DSIType>::UpdateActive(particles, idsMap);
+      this->AdvectAlgorithm<DSIType>::UpdateActive(particles, blockIds);
 
       //Let workers know there is new work
       this->WorkerActivateCondition.notify_all();
