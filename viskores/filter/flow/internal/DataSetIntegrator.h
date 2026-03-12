@@ -20,6 +20,7 @@
 #define viskores_filter_flow_internal_DataSetIntegrator_h
 
 #include <viskores/cont/Algorithm.h>
+#include <viskores/cont/ArrayHandle.h>
 #include <viskores/cont/ArrayHandleIndex.h>
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/EnvironmentTracker.h>
@@ -60,59 +61,43 @@ public:
   {
   }
 
-  struct ParticleBlockIds
-  {
-    void Clear()
-    {
-      this->Particles.clear();
-      this->BlockIDs.clear();
-    }
-
-    void Add(const ParticleType& p, const std::vector<viskores::Id>& bids)
-    {
-      this->Particles.emplace_back(p);
-      this->BlockIDs[p.GetID()] = bids;
-    }
-
-    std::vector<ParticleType> Particles;
-    std::unordered_map<viskores::Id, std::vector<viskores::Id>> BlockIDs;
-  };
-
   void Clear()
   {
-    this->InBounds.Clear();
-    this->OutOfBounds.Clear();
-    this->TermIdx.clear();
-    this->TermID.clear();
+    this->OutParticles = {};
+    this->OutParticleIDs = {};
+    this->OutNextCounts = {};
+    this->OutNextOffsets = {};
+    this->OutFlatNextBlocks = {};
+    this->TermIdx = {};
+    this->TermID = {};
   }
 
   void Validate(viskores::Id num)
   {
+    const viskores::Id outCount = this->OutParticles.GetNumberOfValues();
+    const viskores::Id termCount = this->TermIdx.GetNumberOfValues();
+
     //Make sure we didn't miss anything. Every particle goes into a single bucket.
-    if ((static_cast<std::size_t>(num) !=
-         (this->InBounds.Particles.size() + this->OutOfBounds.Particles.size() +
-          this->TermIdx.size())) ||
-        (this->InBounds.Particles.size() != this->InBounds.BlockIDs.size()) ||
-        (this->OutOfBounds.Particles.size() != this->OutOfBounds.BlockIDs.size()) ||
-        (this->TermIdx.size() != this->TermID.size()))
+    if ((num != (outCount + termCount)) ||
+        (this->TermIdx.GetNumberOfValues() != this->TermID.GetNumberOfValues()) ||
+        (this->OutParticles.GetNumberOfValues() != this->OutParticleIDs.GetNumberOfValues()) ||
+        (this->OutParticles.GetNumberOfValues() != this->OutNextCounts.GetNumberOfValues()) ||
+        (this->OutParticles.GetNumberOfValues() != this->OutNextOffsets.GetNumberOfValues()))
     {
       throw viskores::cont::ErrorFilterExecution("Particle count mismatch after classification");
     }
   }
 
-  void AddTerminated(viskores::Id idx, viskores::Id pID)
-  {
-    this->TermIdx.emplace_back(idx);
-    this->TermID.emplace_back(pID);
-  }
-
   viskores::filter::flow::internal::BoundsMap BoundsMap;
 
-  ParticleBlockIds InBounds;
-  ParticleBlockIds OutOfBounds;
   std::vector<ParticleType> Particles;
-  std::vector<viskores::Id> TermID;
-  std::vector<viskores::Id> TermIdx;
+  viskores::cont::ArrayHandle<ParticleType> OutParticles;
+  viskores::cont::ArrayHandle<viskores::Id> OutParticleIDs;
+  viskores::cont::ArrayHandle<viskores::Id> OutNextCounts;
+  viskores::cont::ArrayHandle<viskores::Id> OutNextOffsets;
+  viskores::cont::ArrayHandle<viskores::Id> OutFlatNextBlocks;
+  viskores::cont::ArrayHandle<viskores::Id> TermID;
+  viskores::cont::ArrayHandle<viskores::Id> TermIdx;
 };
 
 namespace detail
@@ -425,20 +410,8 @@ VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyPart
   viskores::cont::ArrayHandle<viskores::Id> termIdxAH, termIdAH;
   viskores::cont::Algorithm::CopyIf(allIndices, termMask, termIdxAH, detail::IsNonZero{});
   viskores::cont::Algorithm::CopyIf(particleIds, termMask, termIdAH, detail::IsNonZero{});
-
-  dsiInfo.TermIdx.clear();
-  dsiInfo.TermID.clear();
-  dsiInfo.TermIdx.reserve(static_cast<std::size_t>(termIdxAH.GetNumberOfValues()));
-  dsiInfo.TermID.reserve(static_cast<std::size_t>(termIdAH.GetNumberOfValues()));
-
-  auto termIdxPortal = termIdxAH.ReadPortal();
-  auto termIdPortal = termIdAH.ReadPortal();
-  const viskores::Id numTerminated = termIdxAH.GetNumberOfValues();
-  for (viskores::Id i = 0; i < numTerminated; ++i)
-  {
-    dsiInfo.TermIdx.emplace_back(termIdxPortal.Get(i));
-    dsiInfo.TermID.emplace_back(termIdPortal.Get(i));
-  }
+  dsiInfo.TermIdx = termIdxAH;
+  dsiInfo.TermID = termIdAH;
 
   viskores::cont::ArrayHandle<ParticleType> outParticlesAH;
   viskores::cont::ArrayHandle<viskores::Id> outParticleIdsAH, outCountsAH, outOffsetsAH;
@@ -446,33 +419,11 @@ VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyPart
   viskores::cont::Algorithm::CopyIf(particleIds, outMask, outParticleIdsAH, detail::IsNonZero{});
   viskores::cont::Algorithm::CopyIf(nextCounts, outMask, outCountsAH, detail::IsNonZero{});
   viskores::cont::Algorithm::CopyIf(nextOffsets, outMask, outOffsetsAH, detail::IsNonZero{});
-
-  dsiInfo.OutOfBounds.Particles.clear();
-  dsiInfo.OutOfBounds.BlockIDs.clear();
-  dsiInfo.OutOfBounds.Particles.reserve(static_cast<std::size_t>(outParticlesAH.GetNumberOfValues()));
-
-  auto outParticlesPortal = outParticlesAH.ReadPortal();
-  auto outParticleIdsPortal = outParticleIdsAH.ReadPortal();
-  auto outCountsPortal = outCountsAH.ReadPortal();
-  auto outOffsetsPortal = outOffsetsAH.ReadPortal();
-  auto flatNextPortal = flatNextBlocks.ReadPortal();
-
-  const viskores::Id numOutgoing = outParticlesAH.GetNumberOfValues();
-  for (viskores::Id i = 0; i < numOutgoing; ++i)
-  {
-    const ParticleType particle = outParticlesPortal.Get(i);
-    const viskores::Id particleId = outParticleIdsPortal.Get(i);
-    const viskores::Id count = outCountsPortal.Get(i);
-    const viskores::Id offset = outOffsetsPortal.Get(i);
-
-    std::vector<viskores::Id> nextIds;
-    nextIds.reserve(static_cast<std::size_t>(count));
-    for (viskores::Id j = 0; j < count; ++j)
-      nextIds.emplace_back(flatNextPortal.Get(offset + j));
-
-    dsiInfo.OutOfBounds.Particles.emplace_back(particle);
-    dsiInfo.OutOfBounds.BlockIDs[particleId] = std::move(nextIds);
-  }
+  dsiInfo.OutParticles = outParticlesAH;
+  dsiInfo.OutParticleIDs = outParticleIdsAH;
+  dsiInfo.OutNextCounts = outCountsAH;
+  dsiInfo.OutNextOffsets = outOffsetsAH;
+  dsiInfo.OutFlatNextBlocks = flatNextBlocks;
 
   dsiInfo.Validate(numParticles);
 }

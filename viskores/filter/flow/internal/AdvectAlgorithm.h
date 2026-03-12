@@ -356,28 +356,53 @@ public:
     }
   }
 
-  virtual void UpdateInactive(
-    const std::vector<ParticleType>& particles,
-    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& idsMap)
+  virtual void UpdateInactive(const DSIHelperInfo<ParticleType>& stuff)
   {
-    VISKORES_ASSERT(particles.size() == idsMap.size());
+    const viskores::Id numOutgoing = stuff.OutParticles.GetNumberOfValues();
+    if (numOutgoing == 0)
+      return;
 
-    this->Inactive.insert(this->Inactive.end(), particles.begin(), particles.end());
-    for (const auto& it : idsMap)
-      this->ParticleBlockIDsMap[it.first] = it.second;
+    VISKORES_ASSERT(numOutgoing == stuff.OutParticleIDs.GetNumberOfValues() &&
+                    numOutgoing == stuff.OutNextCounts.GetNumberOfValues() &&
+                    numOutgoing == stuff.OutNextOffsets.GetNumberOfValues());
+
+    this->Inactive.reserve(this->Inactive.size() + static_cast<std::size_t>(numOutgoing));
+
+    auto outParticlesPortal = stuff.OutParticles.ReadPortal();
+    auto outParticleIdsPortal = stuff.OutParticleIDs.ReadPortal();
+    auto outCountsPortal = stuff.OutNextCounts.ReadPortal();
+    auto outOffsetsPortal = stuff.OutNextOffsets.ReadPortal();
+    auto flatNextPortal = stuff.OutFlatNextBlocks.ReadPortal();
+
+    for (viskores::Id i = 0; i < numOutgoing; ++i)
+    {
+      const auto particle = outParticlesPortal.Get(i);
+      const viskores::Id particleId = outParticleIdsPortal.Get(i);
+      const viskores::Id count = outCountsPortal.Get(i);
+      const viskores::Id offset = outOffsetsPortal.Get(i);
+
+      VISKORES_ASSERT(count > 0);
+      this->Inactive.emplace_back(particle);
+
+      auto& nextIds = this->ParticleBlockIDsMap[particleId];
+      nextIds.clear();
+      nextIds.reserve(static_cast<std::size_t>(count));
+      for (viskores::Id j = 0; j < count; ++j)
+        nextIds.emplace_back(flatNextPortal.Get(offset + j));
+    }
   }
 
   viskores::Id UpdateResult(const DSIHelperInfo<ParticleType>& stuff)
   {
-    this->UpdateActive(stuff.InBounds.Particles, stuff.InBounds.BlockIDs);
-    this->UpdateInactive(stuff.OutOfBounds.Particles, stuff.OutOfBounds.BlockIDs);
+    this->UpdateInactive(stuff);
 
-    viskores::Id numTerm = static_cast<viskores::Id>(stuff.TermID.size());
+    const viskores::Id numTerm = stuff.TermID.GetNumberOfValues();
     //Update terminated particles.
     if (numTerm > 0)
     {
-      for (const auto& id : stuff.TermID)
-        this->ParticleBlockIDsMap.erase(id);
+      auto termIdPortal = stuff.TermID.ReadPortal();
+      for (viskores::Id i = 0; i < numTerm; ++i)
+        this->ParticleBlockIDsMap.erase(termIdPortal.Get(i));
     }
 
     return numTerm;

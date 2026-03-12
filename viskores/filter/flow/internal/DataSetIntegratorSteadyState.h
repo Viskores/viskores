@@ -145,10 +145,9 @@ public:
     this->ClassifyParticles(analysis.Particles, dsiInfo);
     if (std::is_same<AnalysisType, viskores::worklet::flow::NoAnalysis<ParticleType>>::value)
     {
-      if (dsiInfo.TermIdx.empty())
+      if (dsiInfo.TermIdx.GetNumberOfValues() == 0)
         return;
-      auto indicesAH = viskores::cont::make_ArrayHandle(dsiInfo.TermIdx, viskores::CopyFlag::Off);
-      auto termPerm = viskores::cont::make_ArrayHandlePermutation(indicesAH, analysis.Particles);
+      auto termPerm = viskores::cont::make_ArrayHandlePermutation(dsiInfo.TermIdx, analysis.Particles);
       viskores::cont::ArrayHandle<ParticleType> termParticles;
       viskores::cont::Algorithm::Copy(termPerm, termParticles);
       analysis.FinalizeAnalysis(termParticles);
