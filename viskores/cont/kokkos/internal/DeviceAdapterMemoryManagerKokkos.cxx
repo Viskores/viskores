@@ -21,6 +21,12 @@
 #include <viskores/cont/kokkos/internal/KokkosAlloc.h>
 #include <viskores/cont/kokkos/internal/KokkosTypes.h>
 
+#ifdef KOKKOS_ARCH_AMD_GFX942_APU
+// Defined when CPU and GPU are using the same physical memory, which is different
+// than unified memory.
+#define VISKORES_PHYSICALLY_SHARED_MEMORY
+#endif
+
 namespace
 {
 
@@ -81,50 +87,45 @@ DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagKokkos>::CopyHostToDe
 {
   VISKORES_ASSERT(src.GetDevice() == viskores::cont::DeviceAdapterTagUndefined{});
 
-  if (viskores::cont::kokkos::internal::IsUnifiedMemoryPointer(src.GetPointer()))
-  {
-    // Since unified memory is accessible from both the host and device, a shallow copy
-    // is sufficient.
-    return viskores::cont::internal::BufferInfo(src, viskores::cont::DeviceAdapterTagKokkos{});
-  }
-  else
-  {
-    // Make a new buffer
-    viskores::cont::internal::BufferInfo dest = this->Allocate(src.GetSize());
-    this->CopyHostToDevice(src, dest);
+#ifdef VISKORES_PHYSICALLY_SHARED_MEMORY
+  // Since host and device share the same physical memory, a shallow copy of the pointer is enough.
+  return viskores::cont::internal::BufferInfo(src, viskores::cont::DeviceAdapterTagKokkos{});
+#else
+  // Make a new buffer
+  viskores::cont::internal::BufferInfo dest = this->Allocate(src.GetSize());
+  this->CopyHostToDevice(src, dest);
 
-    return dest;
-  }
+  return dest;
+#endif
 }
 
 void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagKokkos>::CopyHostToDevice(
   const viskores::cont::internal::BufferInfo& src,
   const viskores::cont::internal::BufferInfo& dest) const
 {
-
-  if (viskores::cont::kokkos::internal::IsUnifiedMemoryPointer(src.GetPointer()) &&
-      src.GetPointer() == dest.GetPointer())
+#ifdef VISKORES_PHYSICALLY_SHARED_MEMORY
+  if (src.GetPointer() == dest.GetPointer())
   {
-    // Since unified memory is accessible from both the host and device and the pointers
-    // are the same, there is no need to copy the data.
+    // Since the host and device share the same physical memory and the pointers are the same,
+    // there is no need to copy the data.
+    return;
   }
-  else
-  {
-    viskores::BufferSizeType size = viskores::Min(src.GetSize(), dest.GetSize());
+#endif
 
-    VISKORES_LOG_F(viskores::cont::LogLevel::MemTransfer,
-                   "Copying host --> Kokkos dev: %s (%lld bytes)",
-                   viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
-                   size);
+  viskores::BufferSizeType size = viskores::Min(src.GetSize(), dest.GetSize());
 
-    viskores::cont::kokkos::internal::KokkosViewConstCont<viskores::UInt8> srcView(
-      static_cast<viskores::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
-    viskores::cont::kokkos::internal::KokkosViewExec<viskores::UInt8> destView(
-      static_cast<viskores::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
+  VISKORES_LOG_F(viskores::cont::LogLevel::MemTransfer,
+                 "Copying host --> Kokkos dev: %s (%lld bytes)",
+                 viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
+                 size);
 
-    Kokkos::deep_copy(
-      viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
-  }
+  viskores::cont::kokkos::internal::KokkosViewConstCont<viskores::UInt8> srcView(
+    static_cast<viskores::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
+  viskores::cont::kokkos::internal::KokkosViewExec<viskores::UInt8> destView(
+    static_cast<viskores::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
+
+  Kokkos::deep_copy(
+    viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
 }
 
 viskores::cont::internal::BufferInfo
@@ -135,22 +136,18 @@ DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagKokkos>::CopyDeviceTo
 
   viskores::cont::internal::BufferInfo dest;
 
-  if (viskores::cont::kokkos::internal::IsUnifiedMemoryPointer(src.GetPointer()))
-  {
-    // Since unified memory is accessible from both the host and device, a shallow copy
-    // is sufficient.
-    dest = viskores::cont::internal::BufferInfo(src, viskores::cont::DeviceAdapterTagUndefined{});
+#ifdef VISKORES_PHYSICALLY_SHARED_MEMORY
+  // Since the host and device share the same physical memory, a shallow copy of the pointer is enough.
+  dest = viskores::cont::internal::BufferInfo(src, viskores::cont::DeviceAdapterTagUndefined{});
 
-    // Make sure device has finished using the memory, before control accesses it.
-    viskores::cont::kokkos::internal::GetExecutionSpaceInstance().fence();
-  }
-  else
-  {
-    // Make a new buffer
-    dest = viskores::cont::internal::AllocateOnHost(src.GetSize());
+  // Make sure device has finished using the memory, before control accesses it.
+  viskores::cont::kokkos::internal::GetExecutionSpaceInstance().fence();
+#else
+  // Make a new buffer
+  dest = viskores::cont::internal::AllocateOnHost(src.GetSize());
 
-    this->CopyDeviceToHost(src, dest);
-  }
+  this->CopyDeviceToHost(src, dest);
+#endif
 
   return dest;
 }
@@ -159,29 +156,31 @@ void DeviceAdapterMemoryManager<viskores::cont::DeviceAdapterTagKokkos>::CopyDev
   const viskores::cont::internal::BufferInfo& src,
   const viskores::cont::internal::BufferInfo& dest) const
 {
-  if (viskores::cont::kokkos::internal::IsUnifiedMemoryPointer(dest.GetPointer()) &&
-      src.GetPointer() == dest.GetPointer())
+#ifdef VISKORES_PHYSICALLY_SHARED_MEMORY
+  if (src.GetPointer() == dest.GetPointer())
   {
-    // Since unified memory is accessible from both the host and device and the pointers
-    // are the same, there is no need to copy the data.
+    // Since the host and device share the same physical memory and the pointers are the same,
+    // there is no need to copy the data. But we still have to make sure device has finished
+    // using the memory, before control accesses it.
+    viskores::cont::kokkos::internal::GetExecutionSpaceInstance().fence();
+    return;
   }
-  else
-  {
-    viskores::BufferSizeType size = viskores::Min(src.GetSize(), dest.GetSize());
+#endif
 
-    VISKORES_LOG_F(viskores::cont::LogLevel::MemTransfer,
-                   "Copying Kokkos dev --> host: %s (%lld bytes)",
-                   viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
-                   size);
+  viskores::BufferSizeType size = viskores::Min(src.GetSize(), dest.GetSize());
 
-    viskores::cont::kokkos::internal::KokkosViewConstExec<viskores::UInt8> srcView(
-      static_cast<viskores::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
-    viskores::cont::kokkos::internal::KokkosViewCont<viskores::UInt8> destView(
-      static_cast<viskores::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
+  VISKORES_LOG_F(viskores::cont::LogLevel::MemTransfer,
+                 "Copying Kokkos dev --> host: %s (%lld bytes)",
+                 viskores::cont::GetHumanReadableSize(static_cast<std::size_t>(size)).c_str(),
+                 size);
 
-    Kokkos::deep_copy(
-      viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
-  }
+  viskores::cont::kokkos::internal::KokkosViewConstExec<viskores::UInt8> srcView(
+    static_cast<viskores::UInt8*>(src.GetPointer()), static_cast<std::size_t>(size));
+  viskores::cont::kokkos::internal::KokkosViewCont<viskores::UInt8> destView(
+    static_cast<viskores::UInt8*>(dest.GetPointer()), static_cast<std::size_t>(size));
+
+  Kokkos::deep_copy(
+    viskores::cont::kokkos::internal::GetExecutionSpaceInstance(), destView, srcView);
 
   // Make sure device has finished using the memory, before control accesses it.
   viskores::cont::kokkos::internal::GetExecutionSpaceInstance().fence();
