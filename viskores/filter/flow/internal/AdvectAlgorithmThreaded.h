@@ -25,6 +25,7 @@
 #include <viskores/filter/flow/internal/DataSetIntegrator.h>
 
 #include <thread>
+#include <utility>
 
 namespace viskores
 {
@@ -126,11 +127,11 @@ protected:
     this->WorkerActivateCondition.wait(lock, [this] { return WorkerActivate || Done; });
   }
 
-  void UpdateWorkerResult(viskores::Id blockId, DSIHelperInfo<ParticleType>& b)
+  void UpdateWorkerResult(viskores::Id blockId, DSIHelperInfo<ParticleType>&& b)
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
     auto& it = this->WorkerResults[blockId];
-    it.emplace_back(b);
+    it.emplace_back(std::move(b));
   }
 
   void Work()
@@ -142,9 +143,9 @@ protected:
       if (this->GetActiveParticles(v, blockId))
       {
         auto& block = this->GetDataSet(blockId);
-        DSIHelperInfo<ParticleType> bb(v, this->BoundsMap);
+        DSIHelperInfo<ParticleType> bb(std::move(v), this->BoundsMap);
         block.Advect(bb, this->StepSize);
-        this->UpdateWorkerResult(blockId, bb);
+        this->UpdateWorkerResult(blockId, std::move(bb));
       }
       else
         this->WorkerWait();
@@ -176,7 +177,7 @@ protected:
     std::lock_guard<std::mutex> lock(this->Mutex);
     if (!this->WorkerResults.empty())
     {
-      results = this->WorkerResults;
+      results = std::move(this->WorkerResults);
       this->WorkerResults.clear();
     }
   }

@@ -42,6 +42,8 @@
 #include <viskores/thirdparty/diy/diy.h>
 #include <viskores/worklet/WorkletMapField.h>
 
+#include <utility>
+
 namespace viskores
 {
 namespace filter
@@ -58,9 +60,22 @@ public:
   DSIHelperInfo(
     const std::vector<ParticleType>& v,
     const viskores::filter::flow::internal::BoundsMap& boundsMap)
-    : BoundsMap(boundsMap)
+    : BoundsMapPtr(&boundsMap)
     , Particles(v)
   {
+  }
+
+  DSIHelperInfo(std::vector<ParticleType>&& v,
+                const viskores::filter::flow::internal::BoundsMap& boundsMap)
+    : BoundsMapPtr(&boundsMap)
+    , Particles(std::move(v))
+  {
+  }
+
+  const viskores::filter::flow::internal::BoundsMap& GetBoundsMap() const
+  {
+    VISKORES_ASSERT(this->BoundsMapPtr != nullptr);
+    return *this->BoundsMapPtr;
   }
 
   void Clear()
@@ -83,7 +98,7 @@ public:
     }
   }
 
-  viskores::filter::flow::internal::BoundsMap BoundsMap;
+  const viskores::filter::flow::internal::BoundsMap* BoundsMapPtr = nullptr;
 
   std::vector<ParticleType> Particles;
   viskores::cont::ArrayHandle<ParticleType> OutParticles;
@@ -130,15 +145,21 @@ template <typename ParticleType>
 class CountCandidateBlocks : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn particle, ExecObject locator, FieldOut count);
-  using ExecutionSignature = void(_1, _2, _3);
+  using ControlSignature = void(FieldIn particle, FieldIn terminated, ExecObject locator, FieldOut count);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
   template <typename LocatorType>
   VISKORES_EXEC void operator()(const ParticleType& particle,
+                                const viskores::UInt8& terminated,
                                 const LocatorType& locator,
                                 viskores::Id& count) const
   {
+    if (terminated != 0)
+    {
+      count = 0;
+      return;
+    }
     count = locator.CountAllCells(particle.GetPosition());
   }
 };
@@ -147,16 +168,20 @@ template <typename ParticleType>
 class FindCandidateBlocks : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn particle, ExecObject locator, FieldOut cellIds, FieldOut pCoords);
-  using ExecutionSignature = void(_1, _2, _3, _4);
+  using ControlSignature =
+    void(FieldIn particle, FieldIn terminated, ExecObject locator, FieldOut cellIds, FieldOut pCoords);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
   template <typename LocatorType, typename CellIdsVecType, typename PCoordsVecType>
   VISKORES_EXEC void operator()(const ParticleType& particle,
+                                const viskores::UInt8& terminated,
                                 const LocatorType& locator,
                                 CellIdsVecType& cellIds,
                                 PCoordsVecType& pCoords) const
   {
+    if (terminated != 0)
+      return;
     locator.FindAllCells(particle.GetPosition(), cellIds, pCoords);
   }
 };
@@ -283,6 +308,9 @@ public:
   }
 
 protected:
+  VISKORES_CONT inline const viskores::cont::ArrayHandle<viskores::UInt8>& GetBlockOwnedByRankArray(
+    const viskores::filter::flow::internal::BoundsMap& boundsMap) const;
+
   VISKORES_CONT inline void ClassifyParticles(
     viskores::cont::ArrayHandle<ParticleType>& particles,
     DSIHelperInfo<ParticleType>& dsiInfo) const;
@@ -293,7 +321,35 @@ protected:
   viskoresdiy::mpi::communicator Comm = viskores::cont::EnvironmentTracker::GetCommunicator();
   viskores::Id Rank;
   bool CopySeedArray = false;
+  mutable const viskores::filter::flow::internal::BoundsMap* CachedOwnedByRankBoundsMap = nullptr;
+  mutable viskores::cont::ArrayHandle<viskores::UInt8> BlockOwnedByRankAH;
 };
+
+template <typename Derived, typename ParticleType>
+VISKORES_CONT inline const viskores::cont::ArrayHandle<viskores::UInt8>&
+DataSetIntegrator<Derived, ParticleType>::GetBlockOwnedByRankArray(
+  const viskores::filter::flow::internal::BoundsMap& boundsMap) const
+{
+  const viskores::Id numBlocks = boundsMap.GetTotalNumBlocks();
+  if (this->CachedOwnedByRankBoundsMap == &boundsMap &&
+      this->BlockOwnedByRankAH.GetNumberOfValues() == numBlocks)
+  {
+    return this->BlockOwnedByRankAH;
+  }
+
+  std::vector<viskores::UInt8> blockOwnedByRank(static_cast<std::size_t>(numBlocks), viskores::UInt8{ 0 });
+  for (viskores::Id blockId = 0; blockId < numBlocks; ++blockId)
+  {
+    const auto& ranks = boundsMap.FindRankRef(blockId);
+    if (std::find(ranks.begin(), ranks.end(), static_cast<int>(this->Rank)) != ranks.end())
+      blockOwnedByRank[static_cast<std::size_t>(blockId)] = viskores::UInt8{ 1 };
+  }
+
+  this->BlockOwnedByRankAH =
+    viskores::cont::make_ArrayHandle(blockOwnedByRank, viskores::CopyFlag::On);
+  this->CachedOwnedByRankBoundsMap = &boundsMap;
+  return this->BlockOwnedByRankAH;
+}
 
 template <typename Derived, typename ParticleType>
 VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyParticles(
@@ -302,19 +358,8 @@ VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyPart
 {
   dsiInfo.Clear();
   const viskores::Id numParticles = particles.GetNumberOfValues();
-
-  std::vector<viskores::UInt8> blockOwnedByRank;
-  const viskores::Id numBlocks = dsiInfo.BoundsMap.GetTotalNumBlocks();
-  blockOwnedByRank.resize(static_cast<std::size_t>(numBlocks), viskores::UInt8{ 0 });
-  for (viskores::Id blockId = 0; blockId < numBlocks; ++blockId)
-  {
-    const auto& ranks = dsiInfo.BoundsMap.FindRankRef(blockId);
-    if (std::find(ranks.begin(), ranks.end(), static_cast<int>(this->Rank)) != ranks.end())
-      blockOwnedByRank[static_cast<std::size_t>(blockId)] = viskores::UInt8{ 1 };
-  }
-
-  auto blockOwnedByRankAH =
-    viskores::cont::make_ArrayHandle(blockOwnedByRank, viskores::CopyFlag::On);
+  const auto& boundsMap = dsiInfo.GetBoundsMap();
+  const auto& blockOwnedByRankAH = this->GetBlockOwnedByRankArray(boundsMap);
 
   viskores::cont::Invoker invoke;
 
@@ -324,7 +369,8 @@ VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyPart
   viskores::cont::ArrayHandle<viskores::Id> candidateCountsAH;
   invoke(detail::CountCandidateBlocks<ParticleType>{},
          particles,
-         dsiInfo.BoundsMap.GetLocator(),
+         termInitial,
+         boundsMap.GetLocator(),
          candidateCountsAH);
 
   const viskores::Id totalCandidates =
@@ -342,7 +388,8 @@ VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyPart
     viskores::cont::make_ArrayHandleGroupVecVariable(allCandidatePCoordsAH, candidateOffsetsAH);
   invoke(detail::FindCandidateBlocks<ParticleType>{},
          particles,
-         dsiInfo.BoundsMap.GetLocator(),
+         termInitial,
+         boundsMap.GetLocator(),
          candidateCellIDsVec,
          candidatePCoordsVec);
 

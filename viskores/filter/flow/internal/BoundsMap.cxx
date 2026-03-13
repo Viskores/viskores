@@ -62,8 +62,11 @@ void BoundsMap::Init(const std::vector<viskores::cont::DataSet>& dataSets,
     comm, locMinId, globalMinId, viskoresdiy::mpi::minimum<viskores::Id>{});
   viskoresdiy::mpi::all_reduce(
     comm, locMaxId, globalMaxId, viskoresdiy::mpi::maximum<viskores::Id>{});
-  if (globalMinId != 0 || (globalMaxId - globalMinId) < 1)
-    throw viskores::cont::ErrorFilterExecution("Invalid block ids");
+  if (globalMinId < 0)
+  {
+    throw viskores::cont::ErrorFilterExecution(
+      "Invalid block ids. IDs must be non-negative and dense in [0, N-1).");
+  }
 
   //2. Find out how many blocks everyone has.
   std::vector<viskores::Id> locBlockCounts(comm.size(), 0), globalBlockCounts(comm.size(), 0);
@@ -108,7 +111,19 @@ void BoundsMap::Init(const std::vector<viskores::cont::DataSet>& dataSets,
   //6. there might be duplicates, so count number of UNIQUE blocks.
   std::set<viskores::Id> globalUniqueBlockIds;
   globalUniqueBlockIds.insert(globalBlockIds.begin(), globalBlockIds.end());
-  this->TotalNumBlocks = globalUniqueBlockIds.size();
+  if (!globalUniqueBlockIds.empty())
+  {
+    const viskores::Id minId = *globalUniqueBlockIds.begin();
+    const viskores::Id maxId = *globalUniqueBlockIds.rbegin();
+    const viskores::Id uniqueCount = static_cast<viskores::Id>(globalUniqueBlockIds.size());
+    const viskores::Id expectedDenseCount = maxId - minId + 1;
+    if (minId != 0 || expectedDenseCount != uniqueCount)
+    {
+      throw viskores::cont::ErrorFilterExecution(
+        "Invalid block ids. IDs must be non-negative and dense in [0, N).");
+    }
+  }
+  this->TotalNumBlocks = static_cast<viskores::Id>(globalUniqueBlockIds.size());
 
   for (int rank = 0; rank < comm.size(); rank++)
   {
@@ -204,17 +219,17 @@ viskores::Id3 BoundsMap::GetLocatorDims() const
   const viskores::Float64 dx = this->GlobalBounds.X.Max - this->GlobalBounds.X.Min;
   const viskores::Float64 dy = this->GlobalBounds.Y.Max - this->GlobalBounds.Y.Min;
   const viskores::Float64 dz = this->GlobalBounds.Z.Max - this->GlobalBounds.Z.Min;
-  const viskores::Float64 ex = std::max(dx, viskores::Float64{ 0 });
-  const viskores::Float64 ey = std::max(dy, viskores::Float64{ 0 });
-  const viskores::Float64 ez = std::max(dz, viskores::Float64{ 0 });
+  const viskores::Float64 ex = std::max<viskores::Float64>(dx, 0.f);
+  const viskores::Float64 ey = std::max<viskores::Float64>(dy, 0.f);
+  const viskores::Float64 ez = std::max<viskores::Float64>(dz, 0.f);
 
   // Keep the number of bins close to the number of block cells while respecting box aspect ratio.
   const viskores::Float64 volume = ex * ey * ez;
   viskores::Id3 dims{ 1, 1, 1 };
-  if (volume > viskores::Float64{ 0 })
+  if (volume > 0.f)
   {
-    const viskores::Float64 targetBins = std::max(viskores::Float64{ 1 },
-                                                  static_cast<viskores::Float64>(this->TotalNumBlocks));
+    const viskores::Float64 targetBins =
+      std::max(viskores::Float64{ 1 }, static_cast<viskores::Float64>(this->TotalNumBlocks));
     const viskores::Float64 scale = std::cbrt(targetBins / volume);
     dims[0] = std::max<viskores::Id>(1, static_cast<viskores::Id>(std::ceil(ex * scale)));
     dims[1] = std::max<viskores::Id>(1, static_cast<viskores::Id>(std::ceil(ey * scale)));
@@ -222,21 +237,18 @@ viskores::Id3 BoundsMap::GetLocatorDims() const
   }
   else
   {
-    const viskores::Id n = std::max<viskores::Id>(
-      1, static_cast<viskores::Id>(std::ceil(std::cbrt(static_cast<viskores::Float64>(this->TotalNumBlocks)))));
+    const viskores::Id n =
+      std::max<viskores::Id>(1,
+                             static_cast<viskores::Id>(std::ceil(
+                               std::cbrt(static_cast<viskores::Float64>(this->TotalNumBlocks)))));
     dims = viskores::Id3{ n, n, n };
-    if (ex == viskores::Float64{ 0 })
+    if (ex == 0.f)
       dims[0] = 1;
-    if (ey == viskores::Float64{ 0 })
+    if (ey == 0.f)
       dims[1] = 1;
-    if (ez == viskores::Float64{ 0 })
+    if (ez == 0.f)
       dims[2] = 1;
   }
-
-  const viskores::Id maxDim = 256;
-  dims[0] = std::min(dims[0], maxDim);
-  dims[1] = std::min(dims[1], maxDim);
-  dims[2] = std::min(dims[2], maxDim);
 
   return dims;
 }
@@ -274,7 +286,8 @@ void BoundsMap::BuildLocator()
     const bool varyY = (ymax - ymin) > eps;
     const bool varyZ = (zmax - zmin) > eps;
 
-    auto pushPoint = [&points](viskores::Float64 x, viskores::Float64 y, viskores::Float64 z) {
+    auto pushPoint = [&points](viskores::Float64 x, viskores::Float64 y, viskores::Float64 z)
+    {
       points.emplace_back(static_cast<viskores::FloatDefault>(x),
                           static_cast<viskores::FloatDefault>(y),
                           static_cast<viskores::FloatDefault>(z));
@@ -358,7 +371,8 @@ void BoundsMap::BuildLocator()
     }
   }
 
-  auto boundsDS = viskores::cont::DataSetBuilderExplicit::Create(points, shapes, numIndices, connectivity);
+  auto boundsDS =
+    viskores::cont::DataSetBuilderExplicit::Create(points, shapes, numIndices, connectivity);
 
   this->Locator = viskores::cont::CellLocatorUniformBins{};
   this->Locator.SetDims(this->GetLocatorDims());

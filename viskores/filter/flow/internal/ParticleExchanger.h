@@ -43,7 +43,7 @@ public:
   {
   }
 #ifdef VISKORES_ENABLE_MPI
-  ~ParticleExchanger() {} //{ this->CleanupSendBuffers(false); }
+  ~ParticleExchanger() { this->WaitAllSendsAndCleanup(); }
 #endif
 
   bool HaveWork() const { return !this->SendBuffers.empty(); }
@@ -92,6 +92,37 @@ private:
 
 #ifdef VISKORES_ENABLE_MPI
   using ParticleCommType = std::pair<ParticleType, viskores::Id>;
+
+  void WaitAllSendsAndCleanup() noexcept
+  {
+    if (this->SendBuffers.empty())
+      return;
+
+    int finalized = 0;
+    MPI_Finalized(&finalized);
+    if (finalized == 0)
+    {
+      std::vector<MPI_Request> requests;
+      requests.reserve(this->SendBuffers.size());
+      for (const auto& entry : this->SendBuffers)
+        requests.push_back(entry.first);
+
+      if (!requests.empty())
+      {
+        int err = MPI_Waitall(
+          static_cast<int>(requests.size()), requests.data(), MPI_STATUSES_IGNORE);
+        if (err != MPI_SUCCESS)
+        {
+          VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                         "MPI_Waitall failed in ParticleExchanger destructor.");
+        }
+      }
+    }
+
+    for (auto& entry : this->SendBuffers)
+      delete entry.second;
+    this->SendBuffers.clear();
+  }
 
   void CleanupSendBuffers(bool checkRequests)
   {

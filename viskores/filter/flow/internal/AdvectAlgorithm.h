@@ -28,6 +28,8 @@
 #include <viskores/filter/flow/internal/BoundsMap.h>
 #include <viskores/filter/flow/internal/DataSetIntegrator.h>
 #include <viskores/worklet/WorkletMapField.h>
+
+#include <utility>
 #ifdef VISKORES_ENABLE_MPI
 #include <viskores/filter/flow/internal/AdvectAlgorithmTerminator.h>
 #include <viskores/filter/flow/internal/ParticleExchanger.h>
@@ -296,7 +298,7 @@ public:
       {
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
-        DSIHelperInfo<ParticleType> bb(v, this->BoundsMap);
+        DSIHelperInfo<ParticleType> bb(std::move(v), this->BoundsMap);
         block.Advect(bb, this->StepSize);
         this->UpdateResult(bb);
       }
@@ -528,8 +530,8 @@ public:
   //Member data
   // {blockId, std::vector of particles}
   std::unordered_map<viskores::Id, std::vector<ParticleType>> Active;
-  std::vector<DSIType> Blocks;
-  viskores::filter::flow::internal::BoundsMap BoundsMap;
+  std::vector<DSIType>& Blocks;
+  const viskores::filter::flow::internal::BoundsMap& BoundsMap;
   viskoresdiy::mpi::communicator Comm = viskores::cont::EnvironmentTracker::GetCommunicator();
 #ifdef VISKORES_ENABLE_MPI
   ParticleExchanger<ParticleType> Exchanger;
