@@ -20,6 +20,7 @@
 #include <viskores/Particle.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/ErrorFilterExecution.h>
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/filter/flow/ParticleAdvection.h>
 #include <viskores/filter/flow/PathParticle.h>
@@ -56,6 +57,65 @@ void AddVectorFields(viskores::cont::PartitionedDataSet& pds,
 {
   for (auto& ds : pds)
     ds.AddPointField(fieldName, CreateConstantVectorField(ds.GetNumberOfPoints(), vec));
+}
+
+void TestBlockIdValidation()
+{
+  const viskores::Id3 dims(5, 5, 5);
+  std::vector<viskores::Bounds> bounds = {
+    viskores::Bounds(0, 4, 0, 4, 0, 4),
+    viskores::Bounds(4, 8, 0, 4, 0, 4)
+  };
+  auto allPDS = viskores::worklet::testing::CreateAllDataSets(bounds, dims, false);
+  viskores::cont::PartitionedDataSet pds = allPDS[0];
+
+  const std::string fieldName = "vec";
+  AddVectorFields(pds, fieldName, viskores::Vec3f(1, 0, 0));
+
+  auto seedArray =
+    viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0) });
+
+  {
+    viskores::cont::PartitionedDataSet singleBlockPDS;
+    singleBlockPDS.AppendPartition(pds.GetPartition(0));
+
+    bool threw = false;
+    try
+    {
+      viskores::filter::flow::Streamline streamline;
+      streamline.SetStepSize(0.1f);
+      streamline.SetNumberOfSteps(20);
+      streamline.SetSeeds(seedArray);
+      streamline.SetActiveField(fieldName);
+      streamline.SetBlockIDs({ 0 });
+      auto out = streamline.Execute(singleBlockPDS);
+      VISKORES_TEST_ASSERT(out.GetNumberOfPartitions() == 1, "Single dense block ID should work.");
+    }
+    catch (const viskores::cont::ErrorFilterExecution&)
+    {
+      threw = true;
+    }
+    VISKORES_TEST_ASSERT(!threw, "Single dense block ID {0} should not throw.");
+  }
+
+  {
+    bool threw = false;
+    try
+    {
+      viskores::filter::flow::Streamline streamline;
+      streamline.SetStepSize(0.1f);
+      streamline.SetNumberOfSteps(20);
+      streamline.SetSeeds(seedArray);
+      streamline.SetActiveField(fieldName);
+      streamline.SetBlockIDs({ 0, 2 });
+      streamline.Execute(pds);
+    }
+    catch (const viskores::cont::ErrorFilterExecution&)
+    {
+      threw = true;
+    }
+    VISKORES_TEST_ASSERT(threw, "Sparse block IDs should throw.");
+  }
 }
 
 void TestStreamline(bool useThreaded)
@@ -611,6 +671,9 @@ void TestStreamlineFilters()
                                      FilterType::STREAMLINE,
                                      FilterType::PATHLINE,
                                      FilterType::PATH_PARTICLE };
+
+  TestBlockIdValidation();
+
   for (int n = 1; n < 3; n++)
   {
     for (auto useGhost : flags)
