@@ -19,6 +19,7 @@
 #include "TestingFlow.h"
 
 #include <viskores/CellClassification.h>
+#include <viskores/cont/ErrorFilterExecution.h>
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/filter/flow/ParticleAdvection.h>
 #include <viskores/filter/flow/Pathline.h>
@@ -306,4 +307,60 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
                        duplicateBlocks);
     }
   }
+}
+
+void TestSparseBlockIdsRejected(FilterType fType, bool useThreaded)
+{
+  auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
+  if (comm.size() < 2)
+    return;
+
+  auto allPDS = CreateAllDataSetBounds(1, false);
+  auto allPDS2 = CreateAllDataSetBounds(1, false);
+
+  viskores::cont::PartitionedDataSet pds;
+  viskores::cont::PartitionedDataSet pds2;
+  pds.AppendPartition(allPDS[0].GetPartition(comm.rank()));
+  pds2.AppendPartition(allPDS2[0].GetPartition(comm.rank()));
+
+  std::string fieldName = "vec";
+  AddVectorFields(pds, fieldName, viskores::Vec3f(1, 0, 0));
+  AddVectorFields(pds2, fieldName, viskores::Vec3f(1, 0, 0));
+
+  viskores::cont::ArrayHandle<viskores::Particle> seedArray =
+    viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(.2f, 1.0f, .2f), 0) });
+
+  const std::vector<viskores::Id> sparseBlockIds = { static_cast<viskores::Id>(comm.rank() * 2) };
+  bool threw = false;
+  try
+  {
+    if (fType == STREAMLINE)
+    {
+      viskores::filter::flow::Streamline streamline;
+      SetFilter(streamline, 0.1f, 1000, fieldName, seedArray, useThreaded, true, sparseBlockIds);
+      streamline.Execute(pds);
+    }
+    else if (fType == PARTICLE_ADVECTION)
+    {
+      viskores::filter::flow::ParticleAdvection particleAdvection;
+      SetFilter(
+        particleAdvection, 0.1f, 1000, fieldName, seedArray, useThreaded, true, sparseBlockIds);
+      particleAdvection.Execute(pds);
+    }
+    else if (fType == PATHLINE)
+    {
+      viskores::filter::flow::Pathline pathline;
+      SetFilter(pathline, 0.1f, 1000, fieldName, seedArray, useThreaded, true, sparseBlockIds);
+      pathline.SetPreviousTime(0);
+      pathline.SetNextTime(1);
+      pathline.SetNextDataSet(pds2);
+      pathline.Execute(pds);
+    }
+  }
+  catch (const viskores::cont::ErrorFilterExecution&)
+  {
+    threw = true;
+  }
+
+  VISKORES_TEST_ASSERT(threw, "Sparse block IDs should be rejected.");
 }

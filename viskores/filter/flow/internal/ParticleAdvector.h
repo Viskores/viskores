@@ -40,8 +40,8 @@ public:
   using ParticleType = typename DSIType::PType;
 
   ParticleAdvector(const viskores::filter::flow::internal::BoundsMap& bm,
-                   const std::vector<DSIType>& blocks,
-                   const bool& useThreaded)
+                   std::vector<DSIType>& blocks,
+                   bool useThreaded)
     : Blocks(blocks)
     , BoundsMap(bm)
     , UseThreadedAlgorithm(useThreaded)
@@ -78,8 +78,8 @@ private:
     return algo.GetOutput();
   }
 
-  std::vector<DSIType> Blocks;
-  viskores::filter::flow::internal::BoundsMap BoundsMap;
+  std::vector<DSIType>& Blocks;
+  const viskores::filter::flow::internal::BoundsMap& BoundsMap;
   bool UseThreadedAlgorithm;
 };
 

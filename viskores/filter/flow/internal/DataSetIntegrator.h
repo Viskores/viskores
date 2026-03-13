@@ -19,9 +19,15 @@
 #ifndef viskores_filter_flow_internal_DataSetIntegrator_h
 #define viskores_filter_flow_internal_DataSetIntegrator_h
 
+#include <viskores/cont/Algorithm.h>
+#include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ArrayHandleGroupVecVariable.h>
+#include <viskores/cont/ArrayHandleIndex.h>
+#include <viskores/cont/ConvertNumComponentsToOffsets.h>
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/EnvironmentTracker.h>
 #include <viskores/cont/ErrorFilterExecution.h>
+#include <viskores/cont/Invoker.h>
 #include <viskores/cont/ParticleArrayCopy.h>
 #include <viskores/filter/flow/FlowTypes.h>
 #include <viskores/filter/flow/internal/BoundsMap.h>
@@ -34,6 +40,9 @@
 #include <viskores/cont/Variant.h>
 
 #include <viskores/thirdparty/diy/diy.h>
+#include <viskores/worklet/WorkletMapField.h>
+
+#include <utility>
 
 namespace viskores
 {
@@ -50,69 +59,224 @@ class DSIHelperInfo
 public:
   DSIHelperInfo(
     const std::vector<ParticleType>& v,
-    const viskores::filter::flow::internal::BoundsMap& boundsMap,
-    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& particleBlockIDsMap)
-    : BoundsMap(boundsMap)
-    , ParticleBlockIDsMap(particleBlockIDsMap)
+    const viskores::filter::flow::internal::BoundsMap& boundsMap)
+    : BoundsMapPtr(&boundsMap)
     , Particles(v)
   {
   }
 
-  struct ParticleBlockIds
+  DSIHelperInfo(std::vector<ParticleType>&& v,
+                const viskores::filter::flow::internal::BoundsMap& boundsMap)
+    : BoundsMapPtr(&boundsMap)
+    , Particles(std::move(v))
   {
-    void Clear()
-    {
-      this->Particles.clear();
-      this->BlockIDs.clear();
-    }
+  }
 
-    void Add(const ParticleType& p, const std::vector<viskores::Id>& bids)
-    {
-      this->Particles.emplace_back(p);
-      this->BlockIDs[p.GetID()] = std::move(bids);
-    }
-
-    std::vector<ParticleType> Particles;
-    std::unordered_map<viskores::Id, std::vector<viskores::Id>> BlockIDs;
-  };
+  const viskores::filter::flow::internal::BoundsMap& GetBoundsMap() const
+  {
+    VISKORES_ASSERT(this->BoundsMapPtr != nullptr);
+    return *this->BoundsMapPtr;
+  }
 
   void Clear()
   {
-    this->InBounds.Clear();
-    this->OutOfBounds.Clear();
-    this->TermIdx.clear();
-    this->TermID.clear();
+    this->OutParticles = {};
+    this->OutNextBlockIDs = {};
+    this->TermIdx = {};
   }
 
   void Validate(viskores::Id num)
   {
+    const viskores::Id outCount = this->OutParticles.GetNumberOfValues();
+    const viskores::Id termCount = this->TermIdx.GetNumberOfValues();
+
     //Make sure we didn't miss anything. Every particle goes into a single bucket.
-    if ((static_cast<std::size_t>(num) !=
-         (this->InBounds.Particles.size() + this->OutOfBounds.Particles.size() +
-          this->TermIdx.size())) ||
-        (this->InBounds.Particles.size() != this->InBounds.BlockIDs.size()) ||
-        (this->OutOfBounds.Particles.size() != this->OutOfBounds.BlockIDs.size()) ||
-        (this->TermIdx.size() != this->TermID.size()))
+    if ((num != (outCount + termCount)) ||
+        (this->OutParticles.GetNumberOfValues() != this->OutNextBlockIDs.GetNumberOfValues()))
     {
       throw viskores::cont::ErrorFilterExecution("Particle count mismatch after classification");
     }
   }
 
-  void AddTerminated(viskores::Id idx, viskores::Id pID)
+  const viskores::filter::flow::internal::BoundsMap* BoundsMapPtr = nullptr;
+
+  std::vector<ParticleType> Particles;
+  viskores::cont::ArrayHandle<ParticleType> OutParticles;
+  viskores::cont::ArrayHandle<viskores::Id> OutNextBlockIDs;
+  viskores::cont::ArrayHandle<viskores::Id> TermIdx;
+};
+
+namespace detail
+{
+
+struct IsNonZero
+{
+  template <typename T>
+  VISKORES_EXEC_CONT bool operator()(const T& x) const
   {
-    this->TermIdx.emplace_back(idx);
-    this->TermID.emplace_back(pID);
+    return x != T(0);
+  }
+};
+
+template <typename ParticleType>
+class ResetParticleStatus : public viskores::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldInOut particle, FieldOut terminated);
+  using ExecutionSignature = void(_1, _2);
+  using InputDomain = _1;
+
+  VISKORES_EXEC void operator()(ParticleType& particle, viskores::UInt8& terminated) const
+  {
+    auto status = particle.GetStatus();
+    if (status.CheckTerminate())
+    {
+      terminated = 1;
+    }
+    else
+    {
+      terminated = 0;
+      particle.SetStatus(viskores::ParticleStatus{});
+    }
+  }
+};
+
+template <typename ParticleType>
+class CountCandidateBlocks : public viskores::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn particle, FieldIn terminated, ExecObject locator, FieldOut count);
+  using ExecutionSignature = void(_1, _2, _3, _4);
+  using InputDomain = _1;
+
+  template <typename LocatorType>
+  VISKORES_EXEC void operator()(const ParticleType& particle,
+                                const viskores::UInt8& terminated,
+                                const LocatorType& locator,
+                                viskores::Id& count) const
+  {
+    if (terminated != 0)
+    {
+      count = 0;
+      return;
+    }
+    count = locator.CountAllCells(particle.GetPosition());
+  }
+};
+
+template <typename ParticleType>
+class FindCandidateBlocks : public viskores::worklet::WorkletMapField
+{
+public:
+  using ControlSignature =
+    void(FieldIn particle, FieldIn terminated, ExecObject locator, FieldOut cellIds, FieldOut pCoords);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
+  using InputDomain = _1;
+
+  template <typename LocatorType, typename CellIdsVecType, typename PCoordsVecType>
+  VISKORES_EXEC void operator()(const ParticleType& particle,
+                                const viskores::UInt8& terminated,
+                                const LocatorType& locator,
+                                CellIdsVecType& cellIds,
+                                PCoordsVecType& pCoords) const
+  {
+    if (terminated != 0)
+      return;
+    locator.FindAllCells(particle.GetPosition(), cellIds, pCoords);
+  }
+};
+
+class SelectNextBlock : public viskores::worklet::WorkletMapField
+{
+public:
+  VISKORES_CONT SelectNextBlock(viskores::Id currentBlockId)
+    : CurrentBlockId(currentBlockId)
+  {
   }
 
-  viskores::filter::flow::internal::BoundsMap BoundsMap;
-  std::unordered_map<viskores::Id, std::vector<viskores::Id>> ParticleBlockIDsMap;
+  using ControlSignature = void(FieldIn terminated,
+                                FieldIn candidateCellIds,
+                                WholeArrayIn blockOwnedByRank,
+                                FieldOut nextBlockId);
+  using ExecutionSignature = void(_1, _2, _3, _4);
+  using InputDomain = _1;
 
-  ParticleBlockIds InBounds;
-  ParticleBlockIds OutOfBounds;
-  std::vector<ParticleType> Particles;
-  std::vector<viskores::Id> TermID;
-  std::vector<viskores::Id> TermIdx;
+  template <typename CandidateCellIdsType, typename OwnedPortalType>
+  VISKORES_EXEC void operator()(const viskores::UInt8& terminated,
+                                const CandidateCellIdsType& candidateCellIds,
+                                const OwnedPortalType& blockOwnedByRank,
+                                viskores::Id& nextBlockId) const
+  {
+    nextBlockId = -1;
+    if (terminated != 0)
+      return;
+
+    viskores::Id firstAny = -1;
+    viskores::Id firstLocal = -1;
+    const viskores::IdComponent n = candidateCellIds.GetNumberOfComponents();
+    for (viskores::IdComponent i = 0; i < n; ++i)
+    {
+      const viskores::Id cid = candidateCellIds[i];
+      if (cid < 0 || cid == this->CurrentBlockId)
+        continue;
+
+      if (firstAny < 0 || cid < firstAny)
+        firstAny = cid;
+
+      if (blockOwnedByRank.Get(cid) != viskores::UInt8{ 0 } && (firstLocal < 0 || cid < firstLocal))
+        firstLocal = cid;
+    }
+
+    nextBlockId = (firstLocal >= 0 ? firstLocal : firstAny);
+  }
+
+private:
+  viskores::Id CurrentBlockId;
 };
+
+class ClassificationMasks : public viskores::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn terminated,
+                                FieldIn nextBlockId,
+                                FieldOut termMask,
+                                FieldOut outMask);
+  using ExecutionSignature = void(_1, _2, _3, _4);
+  using InputDomain = _1;
+
+  VISKORES_EXEC void operator()(const viskores::UInt8& terminated,
+                                const viskores::Id& nextBlockId,
+                                viskores::UInt8& termMask,
+                                viskores::UInt8& outMask) const
+  {
+    const bool isTerminated = (terminated != 0) || (nextBlockId < 0);
+    termMask = static_cast<viskores::UInt8>(isTerminated);
+    outMask = static_cast<viskores::UInt8>((terminated == 0) && (nextBlockId >= 0));
+  }
+};
+
+template <typename ParticleType>
+class SetTerminateStatus : public viskores::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn terminated, FieldIn nextBlockId, FieldInOut particle);
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  VISKORES_EXEC void operator()(const viskores::UInt8& terminated,
+                                const viskores::Id& nextBlockId,
+                                ParticleType& particle) const
+  {
+    if (terminated != 0 || nextBlockId >= 0)
+      return;
+
+    auto status = particle.GetStatus();
+    status.SetTerminate();
+    particle.SetStatus(status);
+  }
+};
+
+} // namespace detail
 
 template <typename Derived, typename ParticleType>
 class DataSetIntegrator
@@ -144,8 +308,11 @@ public:
   }
 
 protected:
+  VISKORES_CONT inline const viskores::cont::ArrayHandle<viskores::UInt8>& GetBlockOwnedByRankArray(
+    const viskores::filter::flow::internal::BoundsMap& boundsMap) const;
+
   VISKORES_CONT inline void ClassifyParticles(
-    const viskores::cont::ArrayHandle<ParticleType>& particles,
+    viskores::cont::ArrayHandle<ParticleType>& particles,
     DSIHelperInfo<ParticleType>& dsiInfo) const;
 
   //Data members.
@@ -154,91 +321,103 @@ protected:
   viskoresdiy::mpi::communicator Comm = viskores::cont::EnvironmentTracker::GetCommunicator();
   viskores::Id Rank;
   bool CopySeedArray = false;
+  mutable const viskores::filter::flow::internal::BoundsMap* CachedOwnedByRankBoundsMap = nullptr;
+  mutable viskores::cont::ArrayHandle<viskores::UInt8> BlockOwnedByRankAH;
 };
 
 template <typename Derived, typename ParticleType>
-VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyParticles(
-  const viskores::cont::ArrayHandle<ParticleType>& particles,
-  DSIHelperInfo<ParticleType>& dsiInfo) const
+VISKORES_CONT inline const viskores::cont::ArrayHandle<viskores::UInt8>&
+DataSetIntegrator<Derived, ParticleType>::GetBlockOwnedByRankArray(
+  const viskores::filter::flow::internal::BoundsMap& boundsMap) const
 {
-  /*
- each particle: --> T,I,A
- if T: update TermIdx, TermID
- if A: update IdMapA;
- if I: update IdMapI;
-   */
-  dsiInfo.Clear();
-
-  auto portal = particles.WritePortal();
-  viskores::Id n = portal.GetNumberOfValues();
-
-  for (viskores::Id i = 0; i < n; i++)
+  const viskores::Id numBlocks = boundsMap.GetTotalNumBlocks();
+  if (this->CachedOwnedByRankBoundsMap == &boundsMap &&
+      this->BlockOwnedByRankAH.GetNumberOfValues() == numBlocks)
   {
-    auto p = portal.Get(i);
-
-    //Terminated.
-    if (p.GetStatus().CheckTerminate())
-    {
-      dsiInfo.AddTerminated(i, p.GetID());
-    }
-    else
-    {
-      //Didn't terminate.
-      //Get the blockIDs.
-      const auto& it = dsiInfo.ParticleBlockIDsMap.find(p.GetID());
-      VISKORES_ASSERT(it != dsiInfo.ParticleBlockIDsMap.end());
-      auto currBIDs = it->second;
-      VISKORES_ASSERT(!currBIDs.empty());
-
-      std::vector<viskores::Id> newIDs;
-      if (p.GetStatus().CheckSpatialBounds() && !p.GetStatus().CheckTookAnySteps())
-      {
-        //particle is OUTSIDE but didn't take any steps.
-        //this means that the particle wasn't in the block.
-        //assign newIDs to currBIDs[1:]
-        newIDs.assign(std::next(currBIDs.begin(), 1), currBIDs.end());
-      }
-      else
-      {
-        //Otherwise, get new blocks from the current position.
-        newIDs = dsiInfo.BoundsMap.FindBlocks(p.GetPosition(), currBIDs);
-      }
-
-      //reset the particle status.
-      p.GetStatus() = viskores::ParticleStatus();
-
-      if (newIDs.empty()) //No blocks, we're done.
-      {
-        p.GetStatus().SetTerminate();
-        dsiInfo.AddTerminated(i, p.GetID());
-      }
-      else
-      {
-        //If we have more than one blockId, we want to minimize communication
-        //and put any blocks owned by this rank first.
-        if (newIDs.size() > 1)
-        {
-          for (auto idit = newIDs.begin(); idit != newIDs.end(); idit++)
-          {
-            viskores::Id bid = *idit;
-            auto ranks = dsiInfo.BoundsMap.FindRank(bid);
-            if (std::find(ranks.begin(), ranks.end(), this->Rank) != ranks.end())
-            {
-              newIDs.erase(idit);
-              newIDs.insert(newIDs.begin(), bid);
-              break;
-            }
-          }
-        }
-
-        dsiInfo.OutOfBounds.Add(p, newIDs);
-      }
-    }
-    portal.Set(i, p);
+    return this->BlockOwnedByRankAH;
   }
 
-  //Make sure everything is copacetic.
-  dsiInfo.Validate(n);
+  std::vector<viskores::UInt8> blockOwnedByRank(static_cast<std::size_t>(numBlocks), viskores::UInt8{ 0 });
+  for (viskores::Id blockId = 0; blockId < numBlocks; ++blockId)
+  {
+    const auto& ranks = boundsMap.FindRankRef(blockId);
+    if (std::find(ranks.begin(), ranks.end(), static_cast<int>(this->Rank)) != ranks.end())
+      blockOwnedByRank[static_cast<std::size_t>(blockId)] = viskores::UInt8{ 1 };
+  }
+
+  this->BlockOwnedByRankAH =
+    viskores::cont::make_ArrayHandle(blockOwnedByRank, viskores::CopyFlag::On);
+  this->CachedOwnedByRankBoundsMap = &boundsMap;
+  return this->BlockOwnedByRankAH;
+}
+
+template <typename Derived, typename ParticleType>
+VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyParticles(
+  viskores::cont::ArrayHandle<ParticleType>& particles,
+  DSIHelperInfo<ParticleType>& dsiInfo) const
+{
+  dsiInfo.Clear();
+  const viskores::Id numParticles = particles.GetNumberOfValues();
+  const auto& boundsMap = dsiInfo.GetBoundsMap();
+  const auto& blockOwnedByRankAH = this->GetBlockOwnedByRankArray(boundsMap);
+
+  viskores::cont::Invoker invoke;
+
+  viskores::cont::ArrayHandle<viskores::UInt8> termInitial;
+  invoke(detail::ResetParticleStatus<ParticleType>{}, particles, termInitial);
+
+  viskores::cont::ArrayHandle<viskores::Id> candidateCountsAH;
+  invoke(detail::CountCandidateBlocks<ParticleType>{},
+         particles,
+         termInitial,
+         boundsMap.GetLocator(),
+         candidateCountsAH);
+
+  const viskores::Id totalCandidates =
+    viskores::cont::Algorithm::Reduce(candidateCountsAH, viskores::Id(0));
+  auto candidateOffsetsAH = viskores::cont::ConvertNumComponentsToOffsets(candidateCountsAH);
+
+  viskores::cont::ArrayHandle<viskores::Id> allCandidateCellIDsAH;
+  viskores::cont::ArrayHandle<viskores::Vec3f> allCandidatePCoordsAH;
+  allCandidateCellIDsAH.AllocateAndFill(totalCandidates, viskores::Id(-1));
+  allCandidatePCoordsAH.Allocate(totalCandidates);
+
+  auto candidateCellIDsVec =
+    viskores::cont::make_ArrayHandleGroupVecVariable(allCandidateCellIDsAH, candidateOffsetsAH);
+  auto candidatePCoordsVec =
+    viskores::cont::make_ArrayHandleGroupVecVariable(allCandidatePCoordsAH, candidateOffsetsAH);
+  invoke(detail::FindCandidateBlocks<ParticleType>{},
+         particles,
+         termInitial,
+         boundsMap.GetLocator(),
+         candidateCellIDsVec,
+         candidatePCoordsVec);
+
+  viskores::cont::ArrayHandle<viskores::Id> nextBlockIDsAH;
+  invoke(detail::SelectNextBlock{ this->Id },
+         termInitial,
+         candidateCellIDsVec,
+         blockOwnedByRankAH,
+         nextBlockIDsAH);
+
+  viskores::cont::ArrayHandle<viskores::UInt8> termMask, outMask;
+  invoke(detail::ClassificationMasks{}, termInitial, nextBlockIDsAH, termMask, outMask);
+  invoke(detail::SetTerminateStatus<ParticleType>{}, termInitial, nextBlockIDsAH, particles);
+
+  viskores::cont::ArrayHandleIndex allIndices(numParticles);
+  viskores::cont::ArrayHandle<viskores::Id> termIdxAH;
+  viskores::cont::Algorithm::CopyIf(allIndices, termMask, termIdxAH, detail::IsNonZero{});
+  dsiInfo.TermIdx = termIdxAH;
+
+  viskores::cont::ArrayHandle<ParticleType> outParticlesAH;
+  viskores::cont::ArrayHandle<viskores::Id> outNextBlockIDsAH;
+  viskores::cont::Algorithm::CopyIf(particles, outMask, outParticlesAH, detail::IsNonZero{});
+  viskores::cont::Algorithm::CopyIf(
+    nextBlockIDsAH, outMask, outNextBlockIDsAH, detail::IsNonZero{});
+  dsiInfo.OutParticles = outParticlesAH;
+  dsiInfo.OutNextBlockIDs = outNextBlockIDsAH;
+
+  dsiInfo.Validate(numParticles);
 }
 
 }
