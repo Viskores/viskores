@@ -18,6 +18,7 @@
 #ifndef viskores_cont_cuda_internal_RuntimeDeviceConfigurationCuda_h
 #define viskores_cont_cuda_internal_RuntimeDeviceConfigurationCuda_h
 
+#include <viskores/cont/cuda/internal/CudaAllocator.h>
 #include <viskores/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
 #include <viskores/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <viskores/cont/internal/RuntimeDeviceConfiguration.h>
@@ -75,8 +76,8 @@ public:
     return viskores::cont::DeviceAdapterTagCuda{};
   }
 
-  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(
-    const viskores::Id& value) override final
+  VISKORES_CONT RuntimeDeviceConfigReturnCode
+  SetDeviceInstance(const viskores::Id& value) override final
   {
     if (value >= this->CudaDeviceCount)
     {
@@ -90,8 +91,8 @@ public:
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetDeviceInstance(
-    viskores::Id& value) const override final
+  VISKORES_CONT RuntimeDeviceConfigReturnCode
+  GetDeviceInstance(viskores::Id& value) const override final
   {
     int tmp;
     VISKORES_CUDA_CALL(cudaGetDevice(&tmp));
@@ -99,8 +100,28 @@ public:
     return RuntimeDeviceConfigReturnCode::SUCCESS;
   }
 
-  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetMaxDevices(
-    viskores::Id& value) const override final
+  VISKORES_CONT RuntimeDeviceConfigReturnCode
+  SetUseUnifiedMemory(const viskores::Id& value) override final
+  {
+    if (value)
+    {
+      viskores::cont::cuda::internal::CudaAllocator::ForceManagedMemoryOn();
+    }
+    else
+    {
+      viskores::cont::cuda::internal::CudaAllocator::ForceManagedMemoryOff();
+    }
+  }
+
+  VISKORES_CONT RuntimeDeviceConfigReturnCode
+  GetUseUnifiedMemory(viskores::Id& value) const override final
+  {
+    value = viskores::cont::cuda::internal::CudaAllocator::UsingManagedMemory();
+    return RuntimeDeviceConfigReturnCode::SUCCESS;
+  }
+
+  VISKORES_CONT RuntimeDeviceConfigReturnCode
+  GetMaxDevices(viskores::Id& value) const override final
   {
     value = this->CudaDeviceCount;
     return RuntimeDeviceConfigReturnCode::SUCCESS;
