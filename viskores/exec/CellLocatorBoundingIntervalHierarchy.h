@@ -109,6 +109,26 @@ public:
     viskores::Id NodeIdx = -1;
   };
 
+  /// @brief Locate the id of the cell containing the provided point.
+  ///
+  /// This method returns the same cell id as `FindCell()` without requiring
+  /// the caller to provide parametric coordinates.
+  VISKORES_EXEC viskores::ErrorCode FindCellId(const viskores::Vec3f& point,
+                                               viskores::Id& cellId) const
+  {
+    viskores::Vec3f pCoords;
+    return this->FindCell(point, cellId, pCoords);
+  }
+
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCellId
+  VISKORES_EXEC viskores::ErrorCode FindCellId(const viskores::Vec3f& point,
+                                               viskores::Id& cellId,
+                                               LastCell& lastCell) const
+  {
+    viskores::Vec3f pCoords;
+    return this->FindCell(point, cellId, pCoords, lastCell);
+  }
+
   /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
   VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
                                              viskores::Id& cellId,
@@ -227,6 +247,21 @@ public:
 
     return status;
 #endif
+  }
+
+  /// @brief Locate all cell ids containing the provided point.
+  ///
+  /// This method returns the same cell ids as `FindAllCells()` without
+  /// requiring parametric coordinates.
+  ///
+  ///
+  /// @note This locator currently returns `viskores::ErrorCode::Unsupported`
+  /// for `FindAllCellIds()`.
+  template <typename CellIdsType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCellIds(const viskores::Vec3f& viskoresNotUsed(point),
+                                                   CellIdsType& viskoresNotUsed(cellIdsVec)) const
+  {
+    return viskores::ErrorCode::Unsupported;
   }
 
 private:

@@ -36,6 +36,23 @@ namespace viskores
 namespace cont
 {
 
+namespace detail
+{
+
+VISKORES_DEPRECATED_SUPPRESS_BEGIN
+template <typename CellSetList>
+struct CellLocatorBoundingIntervalHierarchyExecList;
+
+template <typename... CellSetTypes>
+struct CellLocatorBoundingIntervalHierarchyExecList<viskores::List<CellSetTypes...>>
+{
+  using type =
+    viskores::List<viskores::exec::CellLocatorBoundingIntervalHierarchy<CellSetTypes>...>;
+};
+VISKORES_DEPRECATED_SUPPRESS_END
+
+} // namespace detail
+
 /// @brief A cell locator that performs a recursive division of space.
 ///
 /// `CellLocatorBoundingIntervalHierarchy` creates a search structure by recursively
@@ -56,8 +73,7 @@ public:
   using SupportedCellSets = VISKORES_DEFAULT_CELL_SET_LIST;
 
   using CellLocatorExecList =
-    viskores::ListTransform<SupportedCellSets,
-                            viskores::exec::CellLocatorBoundingIntervalHierarchy>;
+    typename detail::CellLocatorBoundingIntervalHierarchyExecList<SupportedCellSets>::type;
 
   using ExecObjType =
     viskores::ListApply<CellLocatorExecList, viskores::exec::CellLocatorMultiplexer>;
