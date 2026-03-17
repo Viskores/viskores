@@ -106,10 +106,12 @@ jobs:
     env:
       CMAKE_BUILD_TYPE: Release
       CMAKE_GENERATOR: 'Unix Makefiles'
-      VISKORES_SETTINGS: serial+ccache
+      CMAKE_PREFIX_PATH: /opt/homebrew/opt/libomp
+      VISKORES_SETTINGS: openmp+ccache
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_INSTALL_DIR: ${{ github.workspace }}/.gitlab
       CTEST_EXCLUSIONS: >-
+        UnitTestMathOPENMP
         UnitTestMathSERIAL
         smoke_test_make_built_against_test_install
         smoke_test_pkgconfig_make_built_against_test_install
@@ -124,6 +126,8 @@ jobs:
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
+
+      - run: brew install libomp
 
       - name: Restore cache
         uses: actions/cache@v4
