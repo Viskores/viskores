@@ -12,8 +12,8 @@
 
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandleIndex.h>
-#include <viskores/cont/ArrayHandlePermutation.h>
 #include <viskores/cont/ArrayRangeCompute.h>
+#include <viskores/filter/MapFieldPermutation.h>
 #include <viskores/rendering/raytracing/Camera.h>
 #include <viskores/rendering/raytracing/Ray.h>
 #include <viskores/rendering/raytracing/RayOperations.h>
@@ -30,9 +30,12 @@ namespace viskores_device
 Sphere::Sphere(ViskoresDeviceGlobalState* s)
   : Geometry(s)
   , m_index(this)
-  , m_vertexPosition(this)
-  , m_vertexRadius(this)
 {
+  this->m_vertexAttributes.setAttributes(
+    this,
+    { "position", "radius", "color", "attribute0", "attribute1", "attribute2", "attribute3" });
+  this->m_vertexAttributes.setAnariAssociation("vertex");
+  this->m_vertexAttributes.setViskoresAssociation(viskores::cont::Field::Association::Points);
 }
 
 void Sphere::commitParameters()
@@ -40,15 +43,15 @@ void Sphere::commitParameters()
   this->Geometry::commitParameters();
 
   m_index = getParamObject<Array1D>("primitive.index");
-  m_vertexPosition = getParamObject<Array1D>("vertex.position");
-  m_vertexRadius = getParamObject<Array1D>("vertex.radius");
+  this->m_vertexAttributes.commitParameters();
 }
 
 void Sphere::finalize()
 {
   this->Geometry::finalize();
 
-  if (!m_vertexPosition)
+  helium::ChangeObserverPtr<Array1D>& positionArray = this->m_vertexAttributes.getParam("position");
+  if (!positionArray)
   {
     reportMessage(ANARI_SEVERITY_WARNING,
                   "missing required parameter 'vertex.position' on sphere geometry");
@@ -56,7 +59,7 @@ void Sphere::finalize()
   }
 
   m_globalRadius = getParam<float>("radius", 0.01f);
-  const auto numSpheres = m_index ? m_index->size() : m_vertexPosition->size();
+  const auto numSpheres = m_index ? m_index->size() : positionArray->size();
 
   this->m_dataSet = viskores::cont::DataSet{};
 
@@ -66,12 +69,13 @@ void Sphere::finalize()
   }
   else
   {
-    this->m_dataSet.AddCoordinateSystem(
-      { "coords", this->m_vertexPosition->dataAsViskoresArray() });
-    this->m_dataSet.AddPointField("radius", this->m_vertexRadius->dataAsViskoresArray());
+    this->m_vertexAttributes.setFields(this->m_dataSet);
   }
+  this->m_dataSet.AddCoordinateSystem("position");
+  // At this point, this->m_dataSet should have fields for all vertex arrays
+  // passed through ANARI properties.
 
-  if (this->m_vertexRadius)
+  if (this->m_dataSet.HasField("radius"))
   {
     this->m_radiusRange = this->m_dataSet.GetField("radius").GetRange().ReadPortal().Get(0);
   }
@@ -91,37 +95,19 @@ void Sphere::SetupIndexBased()
   viskores::cont::ArrayHandle<viskores::Vec3f> vertices;
 
   auto viskoresArray = this->m_index->dataAsViskoresArray();
-  if (!viskoresArray.IsValueType<viskores::Id>())
-    viskores::cont::ArrayCopy(viskoresArray, indexArray);
-  else
+  viskoresArray.CopyShallowIfPossible(indexArray);
+
+  // KEN: Instead of permuting arrays, why not build a set of vertex cells and use
+  // that to permute the values? The underlying raycaster already supports that.
+
+  // Fill a temporary dataset with unpermuted arrays.
+  viskores::cont::DataSet unpermutedData;
+  this->m_vertexAttributes.setFields(unpermutedData);
+
+  for (viskores::IdComponent fieldI = 0; fieldI < unpermutedData.GetNumberOfFields(); ++fieldI)
   {
-    indexArray = viskoresArray.AsArrayHandle<viskores::cont::ArrayHandle<viskores::Id>>();
-  }
-
-  auto positionArray = m_vertexPosition->dataAsViskoresArray();
-  if (!positionArray.IsValueType<viskores::Vec3f>())
-  {
-    viskores::cont::ArrayCopy(positionArray, vertices);
-  }
-  else
-  {
-    vertices = positionArray.AsArrayHandle<viskores::cont::ArrayHandle<viskores::Vec3f>>();
-  }
-
-  // KEN: Instead of permuting arrays (does that even work?), why not build a set of vertex
-  // cells and use that to permute the values? The underlying raycaster already supports that.
-  auto vertexPermute = viskores::cont::make_ArrayHandlePermutation(indexArray, vertices);
-  this->m_dataSet.AddCoordinateSystem({ "coords", vertexPermute });
-
-  // Now handle the radius.
-  if (this->m_vertexRadius)
-  {
-    viskores::cont::ArrayHandle<viskores::FloatDefault> radiusArray;
-    this->m_vertexRadius->dataAsViskoresArray().CopyShallowIfPossible(radiusArray);
-
-    auto radiusPermute = viskores::cont::make_ArrayHandlePermutation(indexArray, radiusArray);
-
-    this->m_dataSet.AddPointField("radius", radiusPermute);
+    viskores::cont::Field unpermutedField = unpermutedData.GetField(fieldI);
+    viskores::filter::MapFieldPermutation(unpermutedField, indexArray, this->m_dataSet);
   }
 }
 
@@ -139,7 +125,7 @@ void Sphere::render(viskores::rendering::Canvas& canvas,
   viskores::Bounds shapeBounds;
   viskores::Range scalarRange = field.GetRange().ReadPortal().Get(0);
 
-  if (this->m_vertexRadius)
+  if (this->m_dataSet.HasField("radius"))
   {
     // This builds the radius array using an adjustment of the radius based on the desired
     // min and max radius. However, we want to take the radius at face value, so insert values

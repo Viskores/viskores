@@ -33,9 +33,7 @@ private:
   void SetupIndexBased();
 
   helium::ChangeObserverPtr<Array1D> m_index;
-  helium::ChangeObserverPtr<Array1D> m_vertexPosition;
-  // optional- radius per position
-  helium::ChangeObserverPtr<Array1D> m_vertexRadius;
+  FieldArrayParameters m_vertexAttributes;
 
   viskores::cont::ColorTable m_colorTable;
 
