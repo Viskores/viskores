@@ -230,22 +230,18 @@ void TransferFunction1D::finalize()
   }
 
   // The alpha channel provided by ANARI is actually meant to be interpreted as
-  // a transparency coefficient whereas the Viskores volume mapper uses the
-  // alpha channel as the opacity between two samples. The relationship between
-  // the two is:
+  // the opacity after traveling `unitDistance` whereas the Viskores volume
+  // mapper uses the alpha channel as the opacity between two samples. The
+  // relationship between the two is:
   //
-  // opacity = 1 - exp(-transparency * distance)
+  // opacity_sample = 1 - (1 - opacity_unitDistance)^(sampleDistance/unitDistance)
   //
-  // Generally, the distance here will be the uniform sample distance used in
-  // the ray stepper. However, the units of the color distance might not be the
-  // same as the spatial units. This is given by ANARI's unit distance
-  // parameter, which can be used to convert the spatial units.
-  viskores::Float32 alphaSampleDistance = this->m_sampleDistance / this->m_unitDistance;
+  viskores::Float64 correctionExponent = this->m_sampleDistance / this->m_unitDistance;
   for (viskores::IdComponent pointId = 0; pointId < colorTable.GetNumberOfPointsAlpha(); ++pointId)
   {
     viskores::Vec4f_64 alphaPoint;
     colorTable.GetPointAlpha(pointId, alphaPoint);
-    alphaPoint[1] = 1.0f - viskores::Exp(-alphaSampleDistance * alphaPoint[1]);
+    alphaPoint[1] = 1.0 - viskores::Pow(1.0 - alphaPoint[1], correctionExponent);
     colorTable.UpdatePointAlpha(pointId, alphaPoint);
   }
 
