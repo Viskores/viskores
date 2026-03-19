@@ -134,6 +134,33 @@ ubuntu2204_kokkos37_cuda122:
     CMAKE_GENERATOR: "Ninja"
     CMAKE_BUILD_TYPE: Release
     VISKORES_SETTINGS: "benchmarks+kokkos+ampere+64bit_floats+shared+ccache"
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      - build/**/*.pc
+      - build/**/*.mk
+
+ubuntu2204_kokkos37_cuda122_static:
+  tags:
+    - nvidia-a100
+    - uo-gpu
+    - x86_64-nvidiagpu
+    - voltar
+  extends:
+    - .ubuntu2204_cuda122_kokkos
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CMAKE_GENERATOR: "Ninja"
+    CMAKE_BUILD_TYPE: Release
+    VISKORES_SETTINGS: "benchmarks+kokkos+ampere+64bit_floats+static+ccache"
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      - build/**/*.pc
+      - build/**/*.mk
 
 ubuntu2204_gcc12:
   extends:
