@@ -19,8 +19,8 @@
 #define viskores_rendering_raytracing_Ray_Operations_h
 
 #include <viskores/Matrix.h>
-#include <viskores/rendering/Camera.h>
 #include <viskores/rendering/CanvasRayTracer.h>
+#include <viskores/rendering/raytracing/Camera.h>
 #include <viskores/rendering/raytracing/ChannelBufferOperations.h>
 #include <viskores/rendering/raytracing/Ray.h>
 #include <viskores/rendering/raytracing/Worklets.h>
@@ -143,7 +143,7 @@ public:
 
   VISKORES_RENDERING_EXPORT static void MapCanvasToRays(
     Ray<viskores::Float32>& rays,
-    const viskores::rendering::Camera& camera,
+    const viskores::rendering::raytracing::Camera& camera,
     const viskores::rendering::CanvasRayTracer& canvas);
 
   template <typename T>
