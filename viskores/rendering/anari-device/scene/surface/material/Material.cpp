@@ -24,8 +24,9 @@ struct UnknownMaterial : viskores_device::Material
 
   bool isValid() const override;
 
-  std::shared_ptr<viskores::rendering::Actor> createActor(
-    const viskores::cont::DataSet& data) override;
+  void getColors(const viskores::cont::DataSet& data,
+                 viskores::cont::Field& field,
+                 viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const override;
 };
 
 UnknownMaterial::UnknownMaterial(viskores_device::ViskoresDeviceGlobalState* d)
@@ -47,10 +48,11 @@ bool UnknownMaterial::isValid() const
   return false;
 }
 
-std::shared_ptr<viskores::rendering::Actor> UnknownMaterial::createActor(
-  const viskores::cont::DataSet&)
+void UnknownMaterial::getColors(const viskores::cont::DataSet&,
+                                viskores::cont::Field&,
+                                viskores::cont::ArrayHandle<viskores::Vec4f_32>&) const
 {
-  return nullptr;
+  // invalid
 }
 
 } // anonymous namespace

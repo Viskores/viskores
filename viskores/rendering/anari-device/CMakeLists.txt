@@ -31,13 +31,10 @@ set (sources
   scene/light/Light.cpp
   scene/surface/Surface.cpp
   scene/surface/geometry/Geometry.cpp
-  scene/surface/geometry/Triangle.cpp
-  scene/surface/geometry/Sphere.cpp
   scene/surface/material/Material.cpp
   scene/surface/material/MatteMaterial.cpp
   scene/surface/material/sampler/Image1DSampler.cpp
   scene/surface/material/sampler/Sampler.cpp
-  scene/volume/TransferFunction1D.cpp
   scene/volume/Volume.cpp
   scene/volume/spatial_field/SpatialField.cpp
   scene/volume/spatial_field/StructuredRegularField.cpp
@@ -46,6 +43,9 @@ set (sources
 set(device_sources
   array/ArrayConversion.cpp
   frame/Frame.cpp
+  scene/surface/geometry/Sphere.cpp
+  scene/surface/geometry/Triangle.cpp
+  scene/volume/TransferFunction1D.cpp
   )
 
 viskores_library(

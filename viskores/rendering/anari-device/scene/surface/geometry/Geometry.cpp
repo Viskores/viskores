@@ -15,6 +15,8 @@
 
 #include "array/ArrayConversion.h"
 
+#include <viskores/cont/FieldRangeCompute.h>
+
 namespace viskores_device
 {
 
@@ -121,6 +123,14 @@ void UnknownGeometry::finalize()
 bool UnknownGeometry::isValid() const
 {
   return false;
+}
+
+void UnknownGeometry::render(viskores::rendering::Canvas&,
+                             const viskores::rendering::Camera&,
+                             const viskores::cont::Field&,
+                             const viskores::cont::ArrayHandle<viskores::Vec4f_32>&) const
+{
+  // invalid
 }
 
 } // namespace viskores_device

@@ -22,8 +22,9 @@ struct UnknownSampler : viskores_device::Sampler
 
   bool isValid() const override;
 
-  std::shared_ptr<viskores::rendering::Actor> createActor(
-    const viskores::cont::DataSet& data) override;
+  bool getColors(const viskores::cont::DataSet& data,
+                 viskores::cont::Field& field,
+                 viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const override;
 };
 
 UnknownSampler::UnknownSampler(viskores_device::ViskoresDeviceGlobalState* d)
@@ -45,10 +46,12 @@ bool UnknownSampler::isValid() const
   return false;
 }
 
-std::shared_ptr<viskores::rendering::Actor> UnknownSampler::createActor(
-  const viskores::cont::DataSet&)
+bool UnknownSampler::getColors(const viskores::cont::DataSet&,
+                               viskores::cont::Field&,
+                               viskores::cont::ArrayHandle<viskores::Vec4f_32>&) const
 {
-  return nullptr;
+  // invalid
+  return false;
 }
 
 } // anonymous namespace
