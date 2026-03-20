@@ -115,8 +115,6 @@ set(device_sources
   ScalarRenderer.cxx
   TextRendererBatcher.cxx
 
-  internal/RunTriangulator.cxx
-
   raytracing/BoundingVolumeHierarchy.cxx
   raytracing/Camera.cxx
   raytracing/ChannelBuffer.cxx
@@ -132,6 +130,7 @@ set(device_sources
   raytracing/QuadIntersector.cxx
   raytracing/RayOperations.cxx
   raytracing/RayTracer.cxx
+  raytracing/RunTriangulator.cxx
   raytracing/ScalarRenderer.cxx
   raytracing/ShapeIntersector.cxx
   raytracing/SphereExtractor.cxx

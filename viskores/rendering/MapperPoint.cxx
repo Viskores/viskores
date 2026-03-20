@@ -21,11 +21,11 @@
 #include <viskores/cont/Timer.h>
 
 #include <viskores/rendering/CanvasRayTracer.h>
-#include <viskores/rendering/internal/RunTriangulator.h>
 #include <viskores/rendering/raytracing/Camera.h>
 #include <viskores/rendering/raytracing/Logger.h>
 #include <viskores/rendering/raytracing/RayOperations.h>
 #include <viskores/rendering/raytracing/RayTracer.h>
+#include <viskores/rendering/raytracing/RunTriangulator.h>
 #include <viskores/rendering/raytracing/SphereExtractor.h>
 #include <viskores/rendering/raytracing/SphereIntersector.h>
 
