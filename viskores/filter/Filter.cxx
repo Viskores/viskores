@@ -115,6 +115,12 @@ viskores::cont::PartitionedDataSet Filter::DoExecutePartitions(
     viskores::filter::DataSetQueue outputQueue;
 
     viskores::Id numThreads = this->DetermineNumberOfThreads(input);
+    viskores::cont::ScopedRuntimeDeviceTracker tracker;
+    if (numThreads > 1)
+    {
+      tracker.DisableDevice(viskores::cont::DeviceAdapterTagOpenMP{});
+      tracker.DisableDevice(viskores::cont::DeviceAdapterTagTBB{});
+    }
 
     //Run 'numThreads' filters.
     std::vector<std::future<void>> futures(static_cast<std::size_t>(numThreads));
@@ -203,10 +209,8 @@ viskores::Id Filter::DetermineNumberOfThreads(const viskores::cont::PartitionedD
     availThreads = 1;
 #endif
   }
-  else if (tracker.CanRunOn(viskores::cont::DeviceAdapterTagSerial{}))
-    availThreads = 1;
   else
-    availThreads = this->NumThreadsPerCPU;
+    availThreads = 1;
 
   viskores::Id numThreads = std::min<viskores::Id>(numDS, availThreads);
   return numThreads;
