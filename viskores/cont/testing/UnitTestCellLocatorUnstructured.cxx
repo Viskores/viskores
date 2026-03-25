@@ -21,6 +21,7 @@
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandleGroupVecVariable.h>
+#include <viskores/cont/CellLocatorBoundingIntervalHierarchy.h>
 #include <viskores/cont/CellLocatorTwoLevel.h>
 #include <viskores/cont/CellLocatorUniformBins.h>
 #include <viskores/cont/ConvertNumComponentsToOffsets.h>
@@ -635,6 +636,12 @@ void TestingCellLocatorUnstructured()
   locatorUB = viskores::cont::CellLocatorUniformBins();
   locatorUB.SetDims({ 32, 32, 32 });
   TestFindAllCells(locatorUB);
+
+  viskores::cont::CellLocatorBoundingIntervalHierarchy locatorBIH;
+  std::cout << "Testing CellLocatorBoundingIntervalHierarchy" << std::endl;
+  TestCellLocator(locatorBIH, viskores::Id3(8), 512);  // 3D dataset
+  TestCellLocator(locatorBIH, viskores::Id2(18), 512); // 2D dataset
+  TestFindAllCells(locatorBIH);
 }
 
 int UnitTestCellLocatorUnstructured(int argc, char* argv[])
