@@ -17,7 +17,7 @@
 //============================================================================
 
 // viskores::anari
-#include <viskores/interop/anari/ANARIMapperGlyphs.h>
+#include <viskores/interop/anari/ANARIMapperPoints.h>
 #include <viskores/interop/anari/ANARIMapperTriangles.h>
 #include <viskores/interop/anari/ANARIMapperVolume.h>
 #include <viskores/interop/anari/ANARIScene.h>
@@ -74,8 +74,8 @@ void RenderTests()
   mIso.SetName("isosurface");
   mIso.SetCalculateNormals(true);
 
-  auto& mGrad = scene.AddMapper(viskores::interop::anari::ANARIMapperGlyphs(d));
-  mGrad.SetName("gradient");
+  auto& mGrad = scene.AddMapper(viskores::interop::anari::ANARIMapperPoints(d));
+  mGrad.SetName("point");
 
   // Render a frame ///////////////////////////////////////////////////////////
 
@@ -91,8 +91,7 @@ void RenderTests()
   mVol.SetActor({ tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle.GetField("tangle") });
   mIso.SetActor(
     { tangleIso.GetCellSet(), tangleIso.GetCoordinateSystem(), tangleIso.GetField("tangle") });
-  mGrad.SetActor(
-    { tangleGrad.GetCellSet(), tangleGrad.GetCoordinateSystem(), tangleGrad.GetField("Gradient") });
+  mGrad.SetActor({ tangleGrad.GetCellSet(), tangleGrad.GetCoordinateSystem() });
 
   setColorMap(d, mVol);
   setColorMap(d, mIso);
