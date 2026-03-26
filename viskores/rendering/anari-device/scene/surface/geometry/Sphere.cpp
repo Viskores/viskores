@@ -155,8 +155,7 @@ void Sphere::render(viskores::rendering::Canvas& canvas,
   viskores::Int32 width = (viskores::Int32)canvas.GetWidth();
   viskores::Int32 height = (viskores::Int32)canvas.GetHeight();
 
-  viskores::rendering::raytracing::Camera rayCamera;
-  rayCamera.SetParameters(camera, width, height);
+  viskores::rendering::raytracing::Camera rayCamera = camera.CreateRaytracingCamera(width, height);
 
   viskores::rendering::raytracing::Ray<viskores::Float32> rays;
   viskores::rendering::CanvasRayTracer* canvasRT =
@@ -165,7 +164,8 @@ void Sphere::render(viskores::rendering::Canvas& canvas,
 
   rayCamera.CreateRays(rays, shapeBounds);
   rays.Buffers.at(0).InitConst(0.f);
-  viskores::rendering::raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvasRT);
+  viskores::rendering::raytracing::RayOperations::MapCanvasToRays(
+    rays, camera.CreateRaytracingCamera(width, height), *canvasRT);
 
   tracer.SetField(field, scalarRange);
   tracer.GetCamera() = rayCamera;
