@@ -20,9 +20,16 @@
 #define viskores_filter_flow_internal_AdvectAlgorithm_h
 
 
+#include <viskores/cont/Algorithm.h>
+#include <viskores/cont/ArrayHandleGroupVecVariable.h>
+#include <viskores/cont/ConvertNumComponentsToOffsets.h>
+#include <viskores/cont/Invoker.h>
 #include <viskores/cont/PartitionedDataSet.h>
 #include <viskores/filter/flow/internal/BoundsMap.h>
 #include <viskores/filter/flow/internal/DataSetIntegrator.h>
+#include <viskores/worklet/WorkletMapField.h>
+
+#include <utility>
 #ifdef VISKORES_ENABLE_MPI
 #include <viskores/filter/flow/internal/AdvectAlgorithmTerminator.h>
 #include <viskores/filter/flow/internal/ParticleExchanger.h>
@@ -39,11 +46,114 @@ namespace flow
 namespace internal
 {
 
+namespace detail
+{
+
+template <typename ParticleType>
+class CountSeedBlocks : public viskores::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn particle, ExecObject locator, FieldOut count);
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  template <typename LocatorType>
+  VISKORES_EXEC void operator()(const ParticleType& particle,
+                                const LocatorType& locator,
+                                viskores::Id& count) const
+  {
+    count = locator.CountAllCells(particle.GetPosition());
+  }
+};
+
+template <typename ParticleType>
+class FindSeedBlocks : public viskores::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn particle, ExecObject locator, FieldOut cellIds, FieldOut pCoords);
+  using ExecutionSignature = void(_1, _2, _3, _4);
+  using InputDomain = _1;
+
+  template <typename LocatorType, typename CellIdsVecType, typename PCoordsVecType>
+  VISKORES_EXEC void operator()(const ParticleType& particle,
+                                const LocatorType& locator,
+                                CellIdsVecType& cellIds,
+                                PCoordsVecType& pCoords) const
+  {
+    locator.FindAllCells(particle.GetPosition(), cellIds, pCoords);
+  }
+};
+
+class SelectFirstSeedBlock : public viskores::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn cellIds, FieldOut blockId);
+  using ExecutionSignature = void(_1, _2);
+  using InputDomain = _1;
+
+  template <typename CellIdsVecType>
+  VISKORES_EXEC void operator()(const CellIdsVecType& cellIds, viskores::Id& blockId) const
+  {
+    blockId = -1;
+    const viskores::IdComponent numIds = cellIds.GetNumberOfComponents();
+    for (viskores::IdComponent i = 0; i < numIds; ++i)
+    {
+      const viskores::Id cid = cellIds[i];
+      if (cid >= 0 && (blockId < 0 || cid < blockId))
+        blockId = cid;
+    }
+  }
+};
+
+class KeepSeedOnRank : public viskores::worklet::WorkletMapField
+{
+public:
+  VISKORES_CONT KeepSeedOnRank(viskores::Id rank)
+    : Rank(rank)
+  {
+  }
+
+  using ControlSignature = void(FieldIn blockId, WholeArrayIn blockPrimaryRanks, FieldOut keepMask);
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  template <typename PrimaryRankPortalType>
+  VISKORES_EXEC void operator()(const viskores::Id& blockId,
+                                const PrimaryRankPortalType& blockPrimaryRanks,
+                                viskores::UInt8& keepMask) const
+  {
+    keepMask = viskores::UInt8{ 0 };
+    if (blockId < 0)
+      return;
+
+    keepMask = static_cast<viskores::UInt8>(blockPrimaryRanks.Get(blockId) == this->Rank);
+  }
+
+private:
+  viskores::Id Rank;
+};
+
+struct IsSelected
+{
+  template <typename T>
+  VISKORES_EXEC_CONT bool operator()(const T& x) const
+  {
+    return x != T(0);
+  }
+};
+
+} // namespace detail
+
 template <typename DSIType>
 class AdvectAlgorithm
 {
 public:
   using ParticleType = typename DSIType::PType;
+  struct PendingParticle
+  {
+    ParticleType Particle;
+    viskores::Id BlockID;
+  };
 
   AdvectAlgorithm(const viskores::filter::flow::internal::BoundsMap& bm,
                   std::vector<DSIType>& blocks)
@@ -85,27 +195,75 @@ public:
   {
     this->ClearParticles();
 
-    viskores::Id n = seeds.GetNumberOfValues();
-    auto portal = seeds.ReadPortal();
+    const viskores::Id numSeeds = seeds.GetNumberOfValues();
+    if (numSeeds == 0)
+      return;
 
-    std::vector<std::vector<viskores::Id>> blockIDs;
-    std::vector<ParticleType> particles;
-    for (viskores::Id i = 0; i < n; i++)
+    const viskores::Id numBlocks = this->BoundsMap.GetTotalNumBlocks();
+    if (numBlocks <= 0)
+      return;
+
+    viskores::cont::Invoker invoke;
+
+    viskores::cont::ArrayHandle<viskores::Id> hitCountsAH;
+    invoke(detail::CountSeedBlocks<ParticleType>{}, seeds, this->BoundsMap.GetLocator(), hitCountsAH);
+
+    const viskores::Id totalHits = viskores::cont::Algorithm::Reduce(hitCountsAH, viskores::Id(0));
+    auto hitOffsetsAH = viskores::cont::ConvertNumComponentsToOffsets(hitCountsAH);
+
+    viskores::cont::ArrayHandle<viskores::Id> allHitCellIdsAH;
+    viskores::cont::ArrayHandle<viskores::Vec3f> allHitPCoordsAH;
+    allHitCellIdsAH.AllocateAndFill(totalHits, viskores::Id(-1));
+    allHitPCoordsAH.Allocate(totalHits);
+
+    auto hitCellIdsVec = viskores::cont::make_ArrayHandleGroupVecVariable(allHitCellIdsAH, hitOffsetsAH);
+    auto hitPCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(allHitPCoordsAH, hitOffsetsAH);
+    invoke(detail::FindSeedBlocks<ParticleType>{},
+           seeds,
+           this->BoundsMap.GetLocator(),
+           hitCellIdsVec,
+           hitPCoordsVec);
+
+    viskores::cont::ArrayHandle<viskores::Id> seedBlockIDsAH;
+    invoke(detail::SelectFirstSeedBlock{}, hitCellIdsVec, seedBlockIDsAH);
+
+    std::vector<viskores::Id> blockPrimaryRanks(static_cast<std::size_t>(numBlocks), -1);
+    for (viskores::Id blockId = 0; blockId < numBlocks; ++blockId)
     {
-      const ParticleType p = portal.Get(i);
-      std::vector<viskores::Id> ids = this->BoundsMap.FindBlocks(p.GetPosition());
-
-      //Note: For duplicate blocks, this will give the seeds to the rank that are first in the list.
-      if (!ids.empty())
-      {
-        auto ranks = this->BoundsMap.FindRank(ids[0]);
-        if (!ranks.empty() && this->Rank == ranks[0])
-        {
-          particles.emplace_back(p);
-          blockIDs.emplace_back(ids);
-        }
-      }
+      const auto& ranks = this->BoundsMap.FindRankRef(blockId);
+      if (!ranks.empty())
+        blockPrimaryRanks[static_cast<std::size_t>(blockId)] = static_cast<viskores::Id>(ranks[0]);
     }
+
+    auto blockPrimaryRanksAH =
+      viskores::cont::make_ArrayHandle(blockPrimaryRanks, viskores::CopyFlag::On);
+
+    viskores::cont::ArrayHandle<viskores::UInt8> keepMaskAH;
+    invoke(detail::KeepSeedOnRank{ this->Rank },
+           seedBlockIDsAH,
+           blockPrimaryRanksAH,
+           keepMaskAH);
+
+    viskores::cont::ArrayHandle<ParticleType> particlesAH;
+    viskores::cont::ArrayHandle<viskores::Id> blockIDsAH;
+    viskores::cont::Algorithm::CopyIf(seeds, keepMaskAH, particlesAH, detail::IsSelected{});
+    viskores::cont::Algorithm::CopyIf(
+      seedBlockIDsAH, keepMaskAH, blockIDsAH, detail::IsSelected{});
+
+    const viskores::Id numOwnedSeeds = particlesAH.GetNumberOfValues();
+    std::vector<viskores::Id> blockIDs;
+    std::vector<ParticleType> particles;
+    particles.reserve(static_cast<std::size_t>(numOwnedSeeds));
+    blockIDs.reserve(static_cast<std::size_t>(numOwnedSeeds));
+
+    auto particlesPortal = particlesAH.ReadPortal();
+    auto blockIDsPortal = blockIDsAH.ReadPortal();
+    for (viskores::Id i = 0; i < numOwnedSeeds; ++i)
+    {
+      particles.emplace_back(particlesPortal.Get(i));
+      blockIDs.emplace_back(blockIDsPortal.Get(i));
+    }
+
     this->SetSeedArray(particles, blockIDs);
   }
 
@@ -140,7 +298,7 @@ public:
       {
         //make this a pointer to avoid the copy?
         auto& block = this->GetDataSet(blockId);
-        DSIHelperInfo<ParticleType> bb(v, this->BoundsMap, this->ParticleBlockIDsMap);
+        DSIHelperInfo<ParticleType> bb(std::move(v), this->BoundsMap);
         block.Advect(bb, this->StepSize);
         this->UpdateResult(bb);
       }
@@ -153,7 +311,6 @@ public:
   {
     this->Active.clear();
     this->Inactive.clear();
-    this->ParticleBlockIDsMap.clear();
   }
 
   DataSetIntegrator<DSIType, ParticleType>& GetDataSet(viskores::Id id)
@@ -166,22 +323,17 @@ public:
   }
 
   virtual void SetSeedArray(const std::vector<ParticleType>& particles,
-                            const std::vector<std::vector<viskores::Id>>& blockIds)
+                            const std::vector<viskores::Id>& blockIds)
   {
     VISKORES_ASSERT(particles.size() == blockIds.size());
 
-    auto pit = particles.begin();
-    auto bit = blockIds.begin();
-    while (pit != particles.end() && bit != blockIds.end())
+    for (std::size_t i = 0; i < particles.size(); ++i)
     {
-      viskores::Id blockId0 = (*bit)[0];
-      this->ParticleBlockIDsMap[pit->GetID()] = *bit;
+      viskores::Id blockId0 = blockIds[i];
       if (this->Active.find(blockId0) == this->Active.end())
-        this->Active[blockId0] = { *pit };
+        this->Active[blockId0] = { particles[i] };
       else
-        this->Active[blockId0].emplace_back(*pit);
-      pit++;
-      bit++;
+        this->Active[blockId0].emplace_back(particles[i]);
     }
   }
 
@@ -240,18 +392,14 @@ public:
     {
       std::vector<ParticleType> outgoing;
       std::vector<viskores::Id> outgoingRanks;
+      std::vector<viskores::Id> outgoingBlockIDs;
 
-      this->GetOutgoingParticles(outgoing, outgoingRanks);
+      this->GetOutgoingParticles(outgoing, outgoingRanks, outgoingBlockIDs);
 
       std::vector<ParticleType> incoming;
-      std::unordered_map<viskores::Id, std::vector<viskores::Id>> incomingBlockIDs;
+      std::vector<viskores::Id> incomingBlockIDs;
 
-      this->Exchanger.Exchange(
-        outgoing, outgoingRanks, this->ParticleBlockIDsMap, incoming, incomingBlockIDs);
-
-      //Cleanup what was sent.
-      for (const auto& p : outgoing)
-        this->ParticleBlockIDsMap.erase(p.GetID());
+      this->Exchanger.Exchange(outgoing, outgoingRanks, outgoingBlockIDs, incoming, incomingBlockIDs);
 
       this->UpdateActive(incoming, incomingBlockIDs);
     }
@@ -262,48 +410,49 @@ public:
 
   void SerialExchange()
   {
-    for (const auto& p : this->Inactive)
+    for (auto& pending : this->Inactive)
     {
-      const auto& bid = this->ParticleBlockIDsMap[p.GetID()];
-      VISKORES_ASSERT(!bid.empty());
-      this->Active[bid[0]].emplace_back(std::move(p));
+      this->Active[pending.BlockID].emplace_back(std::move(pending.Particle));
     }
     this->Inactive.clear();
   }
 
 #ifdef VISKORES_ENABLE_MPI
   void GetOutgoingParticles(std::vector<ParticleType>& outgoing,
-                            std::vector<viskores::Id>& outgoingRanks)
+                            std::vector<viskores::Id>& outgoingRanks,
+                            std::vector<viskores::Id>& outgoingBlockIDs)
   {
     outgoing.clear();
     outgoingRanks.clear();
+    outgoingBlockIDs.clear();
 
     outgoing.reserve(this->Inactive.size());
     outgoingRanks.reserve(this->Inactive.size());
+    outgoingBlockIDs.reserve(this->Inactive.size());
 
     std::vector<ParticleType> particlesStaying;
-    std::unordered_map<viskores::Id, std::vector<viskores::Id>> particlesStayingBlockIDs;
+    std::vector<viskores::Id> particlesStayingBlockIDs;
     //Send out Everything.
-    for (const auto& p : this->Inactive)
+    for (auto& pending : this->Inactive)
     {
-      const auto& bid = this->ParticleBlockIDsMap[p.GetID()];
-      VISKORES_ASSERT(!bid.empty());
-
-      auto ranks = this->BoundsMap.FindRank(bid[0]);
+      viskores::Id bid = pending.BlockID;
+      const auto& ranks = this->BoundsMap.FindRankRef(bid);
       VISKORES_ASSERT(!ranks.empty());
 
       //Only 1 rank has the block.
       if (ranks.size() == 1)
       {
-        if (ranks[0] == this->Rank)
+        viskores::Id outRank = static_cast<viskores::Id>(ranks[0]);
+        if (outRank == this->Rank)
         {
-          particlesStaying.emplace_back(p);
-          particlesStayingBlockIDs[p.GetID()] = this->ParticleBlockIDsMap[p.GetID()];
+          particlesStaying.emplace_back(std::move(pending.Particle));
+          particlesStayingBlockIDs.emplace_back(bid);
         }
         else
         {
-          outgoing.emplace_back(p);
-          outgoingRanks.emplace_back(ranks[0]);
+          outgoing.emplace_back(std::move(pending.Particle));
+          outgoingRanks.emplace_back(outRank);
+          outgoingBlockIDs.emplace_back(bid);
         }
       }
       else
@@ -311,22 +460,25 @@ public:
         //Multiple ranks have the block, decide where it should go...
 
         //Random selection:
-        viskores::Id outRank = std::rand() % ranks.size();
+        viskores::Id outRank =
+          static_cast<viskores::Id>(ranks[static_cast<std::size_t>(std::rand() % ranks.size())]);
         if (outRank == this->Rank)
         {
-          particlesStayingBlockIDs[p.GetID()] = this->ParticleBlockIDsMap[p.GetID()];
-          particlesStaying.emplace_back(p);
+          particlesStayingBlockIDs.emplace_back(bid);
+          particlesStaying.emplace_back(std::move(pending.Particle));
         }
         else
         {
-          outgoing.emplace_back(p);
+          outgoing.emplace_back(std::move(pending.Particle));
           outgoingRanks.emplace_back(outRank);
+          outgoingBlockIDs.emplace_back(bid);
         }
       }
     }
 
     this->Inactive.clear();
-    VISKORES_ASSERT(outgoing.size() == outgoingRanks.size());
+    VISKORES_ASSERT(outgoing.size() == outgoingRanks.size() &&
+                    outgoing.size() == outgoingBlockIDs.size());
 
     VISKORES_ASSERT(particlesStaying.size() == particlesStayingBlockIDs.size());
     if (!particlesStaying.empty())
@@ -336,68 +488,58 @@ public:
 
   virtual void UpdateActive(
     const std::vector<ParticleType>& particles,
-    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& idsMap)
+    const std::vector<viskores::Id>& blockIds)
   {
-    VISKORES_ASSERT(particles.size() == idsMap.size());
+    VISKORES_ASSERT(particles.size() == blockIds.size());
 
     if (!particles.empty())
     {
-      for (auto pit = particles.begin(); pit != particles.end(); pit++)
-      {
-        viskores::Id particleID = pit->GetID();
-        const auto& it = idsMap.find(particleID);
-        VISKORES_ASSERT(it != idsMap.end() && !it->second.empty());
-        viskores::Id blockId = it->second[0];
-        this->Active[blockId].emplace_back(*pit);
-      }
-
-      for (const auto& it : idsMap)
-        this->ParticleBlockIDsMap[it.first] = it.second;
+      for (std::size_t i = 0; i < particles.size(); ++i)
+        this->Active[blockIds[i]].emplace_back(particles[i]);
     }
   }
 
-  virtual void UpdateInactive(
-    const std::vector<ParticleType>& particles,
-    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& idsMap)
+  virtual void UpdateInactive(const DSIHelperInfo<ParticleType>& stuff)
   {
-    VISKORES_ASSERT(particles.size() == idsMap.size());
+    const viskores::Id numOutgoing = stuff.OutParticles.GetNumberOfValues();
+    if (numOutgoing == 0)
+      return;
 
-    this->Inactive.insert(this->Inactive.end(), particles.begin(), particles.end());
-    for (const auto& it : idsMap)
-      this->ParticleBlockIDsMap[it.first] = it.second;
+    VISKORES_ASSERT(numOutgoing == stuff.OutNextBlockIDs.GetNumberOfValues());
+
+    this->Inactive.reserve(this->Inactive.size() + static_cast<std::size_t>(numOutgoing));
+
+    auto outParticlesPortal = stuff.OutParticles.ReadPortal();
+    auto outNextBlockIDsPortal = stuff.OutNextBlockIDs.ReadPortal();
+
+    for (viskores::Id i = 0; i < numOutgoing; ++i)
+    {
+      PendingParticle pending;
+      pending.Particle = outParticlesPortal.Get(i);
+      pending.BlockID = outNextBlockIDsPortal.Get(i);
+      this->Inactive.emplace_back(std::move(pending));
+    }
   }
 
   viskores::Id UpdateResult(const DSIHelperInfo<ParticleType>& stuff)
   {
-    this->UpdateActive(stuff.InBounds.Particles, stuff.InBounds.BlockIDs);
-    this->UpdateInactive(stuff.OutOfBounds.Particles, stuff.OutOfBounds.BlockIDs);
-
-    viskores::Id numTerm = static_cast<viskores::Id>(stuff.TermID.size());
-    //Update terminated particles.
-    if (numTerm > 0)
-    {
-      for (const auto& id : stuff.TermID)
-        this->ParticleBlockIDsMap.erase(id);
-    }
-
-    return numTerm;
+    this->UpdateInactive(stuff);
+    return stuff.TermIdx.GetNumberOfValues();
   }
 
   //Member data
   // {blockId, std::vector of particles}
   std::unordered_map<viskores::Id, std::vector<ParticleType>> Active;
-  std::vector<DSIType> Blocks;
-  viskores::filter::flow::internal::BoundsMap BoundsMap;
+  std::vector<DSIType>& Blocks;
+  const viskores::filter::flow::internal::BoundsMap& BoundsMap;
   viskoresdiy::mpi::communicator Comm = viskores::cont::EnvironmentTracker::GetCommunicator();
 #ifdef VISKORES_ENABLE_MPI
   ParticleExchanger<ParticleType> Exchanger;
   AdvectAlgorithmTerminator Terminator;
 #endif
-  std::vector<ParticleType> Inactive;
+  std::vector<PendingParticle> Inactive;
   viskores::Id MaxNumberOfSteps = 0;
   viskores::Id NumRanks;
-  //{particleId : {block IDs}}
-  std::unordered_map<viskores::Id, std::vector<viskores::Id>> ParticleBlockIDsMap;
   viskores::Id Rank;
   viskores::FloatDefault StepSize;
 };
