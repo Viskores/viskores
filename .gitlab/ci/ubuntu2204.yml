@@ -134,6 +134,12 @@ ubuntu2204_cuda122_kokkos41:
     CMAKE_GENERATOR: "Ninja"
     CMAKE_BUILD_TYPE: Release
     VISKORES_SETTINGS: "benchmarks+kokkos+ampere+64bit_floats+static+ccache"
+  artifacts:
+    expire_in: 24 hours
+    when: always
+    paths:
+      - build/**/*.pc
+      - build/**/*.mk
 
 ubuntu2204_gcc12:
   extends:
