@@ -54,6 +54,15 @@ void AppendOptionDescriptors(std::vector<option::Descriptor>& usage,
       option::ViskoresArg::Required,
       "  --viskores-device-instance <dev> \tSets the device instance to use when using "
       "kokkos/cuda" });
+  usage.push_back(
+    { useOptionIndex ? static_cast<uint32_t>(option::OptionIndex::USE_UNIFIED_MEMORY) : 3,
+      0,
+      "",
+      "viskores-use-unified-memory",
+      option::ViskoresArg::Required,
+      "  --viskores-use-unified-memory <flag> \tIf set to 1, prefer using unified memory to "
+      "transfer between host and device. When set to 0, prefer explicit host/device memory "
+      "management." });
 }
 } // anonymous namespace
 
@@ -62,6 +71,8 @@ RuntimeDeviceConfigurationOptions::RuntimeDeviceConfigurationOptions(const bool&
                        "VISKORES_NUM_THREADS")
   , ViskoresDeviceInstance(useOptionIndex ? option::OptionIndex::DEVICE_INSTANCE : 2,
                            "VISKORES_DEVICE_INSTANCE")
+  , ViskoresUseUnifiedMemory(useOptionIndex ? option::OptionIndex::USE_UNIFIED_MEMORY : 3,
+                             "VISKORES_USE_UNIFIED_MEMORY")
   , Initialized(false)
 {
 }
@@ -110,6 +121,7 @@ void RuntimeDeviceConfigurationOptions::Initialize(const option::Option* options
 {
   this->ViskoresNumThreads.Initialize(options);
   this->ViskoresDeviceInstance.Initialize(options);
+  this->ViskoresUseUnifiedMemory.Initialize(options);
   this->Initialized = true;
 }
 
