@@ -32,8 +32,8 @@ namespace internal
 struct ArrayStrideInfo
 {
   viskores::Id NumberOfValues = 0;
+  viskores::Id Offset = 0;
   viskores::IdComponent Stride = 1;
-  viskores::IdComponent Offset = 0;
   viskores::IdComponent Modulo = 0;
   viskores::IdComponent Divisor = 0;
 
@@ -45,8 +45,8 @@ struct ArrayStrideInfo
                   viskores::Id modulo,
                   viskores::Id divisor)
     : NumberOfValues(numValues)
-    , Stride(stride)
     , Offset(offset)
+    , Stride(stride)
     , Modulo(modulo)
     , Divisor(divisor)
   {

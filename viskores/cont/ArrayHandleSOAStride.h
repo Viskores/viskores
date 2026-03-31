@@ -58,7 +58,7 @@ public:
   VISKORES_CONT ArrayPortalSOAStrideRead(const T* array,
                                          viskores::Id numberOfValues,
                                          viskores::IdComponent stride,
-                                         viskores::IdComponent offset)
+                                         viskores::Id offset)
     : Array(array + offset)
     , NumberOfValues(numberOfValues)
     , Stride(stride)
@@ -103,7 +103,7 @@ public:
   VISKORES_CONT ArrayPortalSOAStrideWrite(T* array,
                                           viskores::Id numberOfValues,
                                           viskores::IdComponent stride,
-                                          viskores::IdComponent offset)
+                                          viskores::Id offset)
     : Array(array + offset)
     , NumberOfValues(numberOfValues)
     , Stride(stride)
