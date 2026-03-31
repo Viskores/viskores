@@ -633,10 +633,10 @@ struct Serialization<viskores::cont::ArrayHandleSOAStride<ValueType>>
     for (std::size_t componentIndex = 0; componentIndex < NUM_COMPONENTS; ++componentIndex)
     {
       viskores::Id numValues;
-      viskores::Id stride;
+      viskores::IdComponent stride;
       viskores::Id offset;
-      viskores::Id modulo;
-      viskores::Id divisor;
+      viskores::IdComponent modulo;
+      viskores::IdComponent divisor;
       viskores::cont::internal::Buffer componentBuffer;
 
       viskoresdiy::load(bb, numValues);
