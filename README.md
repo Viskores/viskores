@@ -1,3 +1,5 @@
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Viskores/viskores/badge)](https://scorecard.dev/viewer/?uri=github.com/Viskores/viskores)
+
 # Viskores #
 
 Viskores is a toolkit of scientific visualization algorithms for emerging
