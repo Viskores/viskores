@@ -138,7 +138,7 @@ struct is_non_const_reference;
 
 template <typename T>
 struct is_non_const_reference<viskores::internal::ArrayPortalValueReference<T>>
-  : thrust::detail::true_type
+  : ::thrust::detail::true_type
 {
 };
 }
