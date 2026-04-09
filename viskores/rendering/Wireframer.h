@@ -383,12 +383,12 @@ private:
     do
     {
       UnpackColor(current.Ints.Color, srcColor);
-      viskores::Float32 inverseIntensity = (1.0f - intensity);
-      viskores::Float32 alpha = srcColor[3] * inverseIntensity;
-      blendedColor[0] = color[0] * intensity + srcColor[0] * alpha;
-      blendedColor[1] = color[1] * intensity + srcColor[1] * alpha;
-      blendedColor[2] = color[2] * intensity + srcColor[2] * alpha;
-      blendedColor[3] = alpha + intensity;
+      viskores::Float32 drawAlpha = color[3] * intensity;
+      viskores::Float32 inverseDrawAlpha = (1.0f - drawAlpha);
+      blendedColor[0] = color[0] * drawAlpha + srcColor[0] * inverseDrawAlpha;
+      blendedColor[1] = color[1] * drawAlpha + srcColor[1] * inverseDrawAlpha;
+      blendedColor[2] = color[2] * drawAlpha + srcColor[2] * inverseDrawAlpha;
+      blendedColor[3] = drawAlpha + srcColor[3] * inverseDrawAlpha;
       next.Ints.Color = PackColor(blendedColor);
       FrameBuffer.CompareExchange(index, &current.Raw, next.Raw);
     } while (current.Floats.Depth > next.Floats.Depth);

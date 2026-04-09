@@ -17,6 +17,7 @@
 //============================================================================
 
 #include <viskores/rendering/LineRendererBatcher.h>
+#include <viskores/rendering/CanvasRayTracer.h>
 
 #include <viskores/worklet/WorkletMapField.h>
 
@@ -34,8 +35,9 @@ struct RenderLine : public viskores::worklet::WorkletMapField
   using ColorBufferType = viskores::rendering::Canvas::ColorBufferType;
   using DepthBufferType = viskores::rendering::Canvas::DepthBufferType;
 
-  using ControlSignature = void(FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayInOut);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5);
+  using ControlSignature =
+    void(FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayInOut, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
   VISKORES_CONT
@@ -48,12 +50,13 @@ struct RenderLine : public viskores::worklet::WorkletMapField
   {
   }
 
-  template <typename ColorBufferPortal, typename DepthBufferPortal>
+  template <typename ColorBufferPortal, typename DepthBufferPortal, typename TranslucentDepthPortal>
   VISKORES_EXEC void operator()(const viskores::Vec3f_32& start,
                                 const viskores::Vec3f_32& end,
                                 const viskores::Vec4f_32& color,
                                 ColorBufferPortal& colorBuffer,
-                                DepthBufferPortal& depthBuffer) const
+                                DepthBufferPortal& depthBuffer,
+                                const TranslucentDepthPortal& translucentDepthBuffer) const
   {
     viskores::Id x0 = static_cast<viskores::Id>(viskores::Round(start[0]));
     viskores::Id y0 = static_cast<viskores::Id>(viskores::Round(start[1]));
@@ -89,24 +92,31 @@ struct RenderLine : public viskores::worklet::WorkletMapField
       viskores::Id index = y0 * this->Width + x0;
       viskores::Vec4f_32 currentColor = colorBuffer.Get(index);
       viskores::Float32 currentZ = depthBuffer.Get(index);
-      bool blend = currentColor[3] < 1.f && z > currentZ;
-      if (currentZ > z || blend)
+      viskores::Float32 translucentZ = translucentDepthBuffer.Get(index);
+      bool hasTranslucentOccluder =
+        (translucentZ >= 0.f) && (translucentZ < VISKORES_DEFAULT_CANVAS_DEPTH);
+      bool blendBehind = hasTranslucentOccluder && z > translucentZ && z <= currentZ;
+      bool drawInFront = (z <= currentZ) && (!hasTranslucentOccluder || z <= translucentZ);
+      bool blendFront = currentColor[3] < 1.f && drawInFront;
+      if (drawInFront || blendBehind)
       {
         viskores::Vec4f_32 writeColor = color;
         viskores::Float32 depth = z;
 
-        if (blend)
+        if (blendBehind || blendFront)
         {
           // If there is any transparency, all alphas
           // have been pre-mulitplied
-          viskores::Float32 alpha = (1.f - currentColor[3]);
-          writeColor[0] = currentColor[0] + color[0] * alpha;
-          writeColor[1] = currentColor[1] + color[1] * alpha;
-          writeColor[2] = currentColor[2] + color[2] * alpha;
-          writeColor[3] = 1.f * alpha + currentColor[3]; // we are always drawing opaque lines
-          // keep the current z. Line z interpolation is not accurate
-          // Matt: this is correct. Interpolation is wrong
-          depth = currentZ;
+          viskores::Float32 drawAlpha = color[3] * (1.f - currentColor[3]);
+          writeColor[0] = currentColor[0] + color[0] * drawAlpha;
+          writeColor[1] = currentColor[1] + color[1] * drawAlpha;
+          writeColor[2] = currentColor[2] + color[2] * drawAlpha;
+          writeColor[3] = drawAlpha + currentColor[3];
+          if (blendBehind)
+          {
+            // keep the current z when the line is behind translucent geometry
+            depth = currentZ;
+          }
         }
 
         depthBuffer.Set(index, depth);
@@ -168,13 +178,19 @@ void LineRendererBatcher::Render(const viskores::rendering::Canvas* canvas) cons
   ColorsArrayHandle colors =
     viskores::cont::make_ArrayHandle(this->Colors, viskores::CopyFlag::Off);
 
+  const viskores::rendering::CanvasRayTracer* rayCanvas =
+    dynamic_cast<const viskores::rendering::CanvasRayTracer*>(canvas);
+  const auto& translucentDepthBuffer =
+    rayCanvas ? rayCanvas->GetTranslucentDepthBuffer() : canvas->GetDepthBuffer();
+
   viskores::cont::Invoker invoker;
   invoker(RenderLine(canvas->GetWidth(), canvas->GetHeight()),
           starts,
           ends,
           colors,
           canvas->GetColorBuffer(),
-          canvas->GetDepthBuffer());
+          canvas->GetDepthBuffer(),
+          translucentDepthBuffer);
 }
 }
 } // namespace viskores::rendering
