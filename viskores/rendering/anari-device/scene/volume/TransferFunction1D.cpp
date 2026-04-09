@@ -305,15 +305,15 @@ void TransferFunction1D::render(viskores::rendering::Canvas& canvas,
 
   viskores::rendering::raytracing::VolumeRendererStructured tracer;
 
-  viskores::rendering::raytracing::Camera rayCamera;
   viskores::Int32 width = (viskores::Int32)canvas.GetWidth();
   viskores::Int32 height = (viskores::Int32)canvas.GetHeight();
-  rayCamera.SetParameters(camera, width, height);
+  viskores::rendering::raytracing::Camera rayCamera = camera.CreateRaytracingCamera(width, height);
 
   viskores::rendering::raytracing::Ray<viskores::Float32> rays;
   rayCamera.CreateRays(rays, coords.GetBounds());
   rays.Buffers.at(0).InitConst(0.f);
-  viskores::rendering::raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvasRT);
+  viskores::rendering::raytracing::RayOperations::MapCanvasToRays(
+    rays, camera.CreateRaytracingCamera(width, height), *canvasRT);
 
   tracer.SetSampleDistance(this->m_sampleDistance);
 
