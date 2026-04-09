@@ -16,8 +16,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <viskores/rendering/TextRendererBatcher.h>
 #include <viskores/rendering/CanvasRayTracer.h>
+#include <viskores/rendering/TextRendererBatcher.h>
 
 #include <viskores/worklet/WorkletMapField.h>
 
@@ -34,8 +34,14 @@ struct RenderBitmapFont : public viskores::worklet::WorkletMapField
   using DepthBufferType = viskores::rendering::Canvas::DepthBufferType;
   using FontTextureType = viskores::rendering::Canvas::FontTextureType;
 
-  using ControlSignature =
-    void(FieldIn, FieldIn, FieldIn, FieldIn, ExecObject, WholeArrayInOut, WholeArrayInOut, WholeArrayIn);
+  using ControlSignature = void(FieldIn,
+                                FieldIn,
+                                FieldIn,
+                                FieldIn,
+                                ExecObject,
+                                WholeArrayInOut,
+                                WholeArrayInOut,
+                                WholeArrayIn);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
   using InputDomain = _1;
 
