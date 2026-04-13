@@ -50,14 +50,15 @@ public:
   {
   }
 
-  using ControlSignature = void(FieldIn,
-                                WholeArrayInOut,
-                                FieldIn,
-                                FieldIn,
-                                FieldIn,
-                                WholeArrayInOut,
-                                WholeArrayInOut,
-                                WholeArrayInOut);
+  using ControlSignature =
+    void(FieldIn,
+         WholeArrayInOut,
+         FieldIn,
+         FieldIn,
+         FieldIn,
+         WholeArrayInOut,
+         WholeArrayInOut,
+         WholeArrayInOut);
   using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
   template <typename Precision,
             typename ColorPortalType,
@@ -124,9 +125,9 @@ public:
     }
 
     // if transparency exists, all alphas have been pre-multiplied
-    const bool blendBehindTranslucent = !this->WriteTranslucentDepth && hasProjectedDepth &&
-      hasTranslucentDepth && (depth > translucentDepth) && (depth <= currentDepth) &&
-      (bufferColor[3] > 0.f);
+    const bool blendBehindTranslucent =
+      !this->WriteTranslucentDepth && hasProjectedDepth && hasTranslucentDepth &&
+      (depth > translucentDepth) && (depth <= currentDepth) && (bufferColor[3] > 0.f);
     viskores::Float32 alpha = blendBehindTranslucent ? (1.f - bufferColor[3]) : (1.f - color[3]);
     if (blendBehindTranslucent)
     {

@@ -16,8 +16,8 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <viskores/rendering/CanvasRayTracer.h>
 #include <viskores/rendering/LineRendererBatcher.h>
+#include <viskores/rendering/CanvasRayTracer.h>
 
 #include <viskores/worklet/WorkletMapField.h>
 
