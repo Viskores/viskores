@@ -1,0 +1,3 @@
+[[IgnoredVulns]]
+id = "OSV-2021-991"
+reason = "The documentation of this vulnerability (https://osv.dev/vulnerability/OSV-2021-991) points to https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=36110 as the OSS-Fuzz report. According to on of the comments on this report, this was a false positive (https://github.com/fmtlib/fmt/issues/2685)."
