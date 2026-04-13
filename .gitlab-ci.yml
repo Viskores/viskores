@@ -20,9 +20,9 @@
 
 .docker_image: &docker_image
   variables:
-    CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
+    CCACHE_BASEDIR: "/tmp"
     CCACHE_COMPILERCHECK: "content"
-    CCACHE_DIR: "$CI_PROJECT_DIR/.ccache"
+    CCACHE_DIR: "/tmp/.ccache"
     CCACHE_HASHDIR: "true"
     CCACHE_NAMESPACE: "${CI_PROJECT_PATH}/${CI_JOB_NAME}"
     CCACHE_SLOPPINESS: "include_file_mtime,time_macros"
@@ -183,11 +183,12 @@ stages:
     fallback_keys:
       - "$CI_JOB_NAME-main"
     paths:
-      - "$CI_PROJECT_DIR/.ccache/"
+      - "$CCACHE_DIR/"
   before_script:
     - *install_cmake
     - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
     - export PATH="${PWD}/.gitlab:${PATH}"
+    - export CTEST_BINARY_DIRECTORY=/tmp/build
     - "cmake -VV -P .gitlab/ci/config/gitlab-bridge-set-vars.cmake"
     - "CCACHE_INSTALL_DIR=${PWD}/.gitlab cmake -V -P .gitlab/ci/config/ccache.cmake"
     - export PATH="${PWD}/.gitlab/ccache:${PATH}"
