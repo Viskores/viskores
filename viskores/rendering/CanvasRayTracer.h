@@ -39,25 +39,16 @@ public:
   ~CanvasRayTracer();
 
   viskores::rendering::Canvas* NewCopy() const override;
-  void Clear() override;
 
   void WriteToCanvas(const viskores::rendering::raytracing::Ray<viskores::Float32>& rays,
                      const viskores::cont::ArrayHandle<viskores::Float32>& colors,
                      const viskores::rendering::Camera& camera,
-                     bool writeDepth = true,
-                     bool writeTranslucentDepth = false);
+                     bool writeDepth = true);
 
   void WriteToCanvas(const viskores::rendering::raytracing::Ray<viskores::Float64>& rays,
                      const viskores::cont::ArrayHandle<viskores::Float64>& colors,
                      const viskores::rendering::Camera& camera,
-                     bool writeDepth = true,
-                     bool writeTranslucentDepth = false);
-
-  DepthBufferType& GetTranslucentDepthBuffer();
-  const DepthBufferType& GetTranslucentDepthBuffer() const;
-
-private:
-  DepthBufferType TranslucentDepthBuffer;
+                     bool writeDepth = true);
 }; // class CanvasRayTracer
 }
 } // namespace viskores::rendering

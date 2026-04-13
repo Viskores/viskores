@@ -48,8 +48,6 @@ using CartesianArrayHandle =
 namespace
 {
 
-constexpr viskores::Float32 VOLUME_FRONT_DEPTH_ALPHA_EPSILON = 0.001f;
-
 template <typename Device, typename Derived>
 class LocatorAdapterBase
 {
@@ -238,22 +236,18 @@ public:
     }
   }
 
-  using ControlSignature =
-    void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut, WholeArrayInOut, WholeArrayIn);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
+  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
   template <typename ScalarPortalType, typename ColorBufferType>
   VISKORES_EXEC void operator()(const viskores::Vec3f_32& rayDir,
                                 const viskores::Vec3f_32& rayOrigin,
                                 const viskores::Float32& minDistance,
                                 const viskores::Float32& maxDistance,
-                                viskores::Float32& rayDepth,
                                 ColorBufferType& colorBuffer,
                                 ScalarPortalType& scalars,
                                 const viskores::Id& pixelIndex) const
   {
-    rayDepth = -1.f;
-
     viskores::Vec4f_32 color;
     BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 0);
     color[0] = colorBuffer.Get(pixelIndex * 4 + 0);
@@ -369,12 +363,6 @@ public:
       color[2] = color[2] + sampleColor[2] * alpha;
       color[3] = alpha + color[3];
 
-      //weed out noise when ray first intersects
-      if (rayDepth < 0.f && alpha >= VOLUME_FRONT_DEPTH_ALPHA_EPSILON)
-      {
-        rayDepth = distance;
-      }
-
       // terminate the ray early if it became completely opaque.
       if (color[3] >= 1.f)
         break;
@@ -438,22 +426,18 @@ public:
       InverseDeltaScalar = 1.f / (maxScalar - minScalar);
     }
   }
-  using ControlSignature =
-    void(FieldIn, FieldIn, FieldIn, FieldIn, FieldOut, WholeArrayInOut, WholeArrayIn);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
+  using ControlSignature = void(FieldIn, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayIn);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
   template <typename ScalarPortalType, typename ColorBufferType>
   VISKORES_EXEC void operator()(const viskores::Vec3f_32& rayDir,
                                 const viskores::Vec3f_32& rayOrigin,
                                 const viskores::Float32& minDistance,
                                 const viskores::Float32& maxDistance,
-                                viskores::Float32& rayDepth,
                                 ColorBufferType& colorBuffer,
                                 const ScalarPortalType& scalars,
                                 const viskores::Id& pixelIndex) const
   {
-    rayDepth = -1.f;
-
     viskores::Vec4f_32 color;
     BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 0);
     color[0] = colorBuffer.Get(pixelIndex * 4 + 0);
@@ -535,11 +519,6 @@ public:
       color[1] = color[1] + sampleColor[1] * alpha;
       color[2] = color[2] + sampleColor[2] * alpha;
       color[3] = alpha + color[3];
-
-      if (rayDepth < 0.f && alpha >= VOLUME_FRONT_DEPTH_ALPHA_EPSILON)
-      {
-        rayDepth = distance;
-      }
 
       // terminate the ray early if it became completely opaque.
       if (color[3] >= 1.f)
@@ -760,7 +739,6 @@ void VolumeRendererStructured::RenderOnDevice(viskores::rendering::raytracing::R
              rays.Origin,
              rays.MinDistance,
              rays.MaxDistance,
-             rays.Distance,
              rays.Buffers.at(0).Buffer,
              viskores::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }
@@ -779,7 +757,6 @@ void VolumeRendererStructured::RenderOnDevice(viskores::rendering::raytracing::R
              rays.Origin,
              rays.MinDistance,
              rays.MaxDistance,
-             rays.Distance,
              rays.Buffers.at(0).Buffer,
              viskores::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }
@@ -809,7 +786,6 @@ void VolumeRendererStructured::RenderOnDevice(viskores::rendering::raytracing::R
              rays.Origin,
              rays.MinDistance,
              rays.MaxDistance,
-             rays.Distance,
              rays.Buffers.at(0).Buffer,
              viskores::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }
@@ -828,7 +804,6 @@ void VolumeRendererStructured::RenderOnDevice(viskores::rendering::raytracing::R
              rays.Origin,
              rays.MinDistance,
              rays.MaxDistance,
-             rays.Distance,
              rays.Buffers.at(0).Buffer,
              viskores::rendering::raytracing::GetScalarFieldArray(*this->ScalarField));
     }

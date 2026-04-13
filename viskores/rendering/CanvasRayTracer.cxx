@@ -18,7 +18,6 @@
 
 #include <viskores/rendering/CanvasRayTracer.h>
 
-#include <viskores/cont/Algorithm.h>
 #include <viskores/cont/TryExecute.h>
 #include <viskores/rendering/Canvas.h>
 #include <viskores/rendering/Color.h>
@@ -37,29 +36,18 @@ class SurfaceConverter : public viskores::worklet::WorkletMapField
 {
   viskores::Matrix<viskores::Float32, 4, 4> ViewProjMat;
   bool WriteDepth;
-  bool WriteTranslucentDepth;
 
 public:
   VISKORES_CONT
-  SurfaceConverter(const viskores::Matrix<viskores::Float32, 4, 4> viewProjMat,
-                   bool writeDepth,
-                   bool writeTranslucentDepth)
+  SurfaceConverter(const viskores::Matrix<viskores::Float32, 4, 4> viewProjMat, bool writeDepth)
     : ViewProjMat(viewProjMat)
     , WriteDepth(writeDepth)
-    , WriteTranslucentDepth(writeTranslucentDepth)
   {
   }
 
   using ControlSignature =
-    void(FieldIn,
-         WholeArrayInOut,
-         FieldIn,
-         FieldIn,
-         FieldIn,
-         WholeArrayInOut,
-         WholeArrayInOut,
-         WholeArrayInOut);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex);
+    void(FieldIn, WholeArrayInOut, FieldIn, FieldIn, FieldIn, WholeArrayInOut, WholeArrayInOut);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
   template <typename Precision,
             typename ColorPortalType,
             typename DepthBufferPortalType,
@@ -71,21 +59,18 @@ public:
                                 const viskores::Vec<Precision, 3>& dir,
                                 DepthBufferPortalType& depthBuffer,
                                 ColorBufferPortalType& colorBuffer,
-                                DepthBufferPortalType& translucentDepthBuffer,
                                 const viskores::Id& index) const
   {
-    viskores::Float32 depth = viskores::NegativeInfinity32();
-    const bool hasProjectedDepth = (inDepth >= Precision{ 0 });
-    if (hasProjectedDepth)
+    viskores::Vec<Precision, 3> intersection = origin + inDepth * dir;
+
+    viskores::Vec4f_32 point;
+    point[0] = static_cast<viskores::Float32>(intersection[0]);
+    point[1] = static_cast<viskores::Float32>(intersection[1]);
+    point[2] = static_cast<viskores::Float32>(intersection[2]);
+    point[3] = 1.f;
+
+    viskores::Float32 depth;
     {
-      viskores::Vec<Precision, 3> intersection = origin + inDepth * dir;
-
-      viskores::Vec4f_32 point;
-      point[0] = static_cast<viskores::Float32>(intersection[0]);
-      point[1] = static_cast<viskores::Float32>(intersection[1]);
-      point[2] = static_cast<viskores::Float32>(intersection[2]);
-      point[3] = 1.f;
-
       viskores::Vec4f_32 newpoint;
       newpoint = viskores::MatrixMultiply(this->ViewProjMat, point);
       if (newpoint[3] > 0)
@@ -95,7 +80,7 @@ public:
       else
       {
         // This condition can happen when the ray is at the origin (inDepth = 0), which is a
-        // singularity in the projection matrix. I'm not sure this is the righg think to do since
+        // singularity in the projection matrix. I'm not sure this is the right think to do since
         // it looks like depth is supposed to be between 0 and 1. It seems wrong that you would
         // ever get a ray in front of the near plane, so the "right" solution may be to fix this
         // elsewhere.
@@ -110,39 +95,13 @@ public:
     color[3] = static_cast<viskores::Float32>(colorBufferIn.Get(index * 4 + 3));
     // blend the mapped color with existing canvas color
     viskores::Vec4f_32 bufferColor = colorBuffer.Get(pixelIndex);
-    viskores::Float32 currentDepth = depthBuffer.Get(pixelIndex);
-    viskores::Float32 translucentDepth = translucentDepthBuffer.Get(pixelIndex);
-    const bool hasTranslucentDepth =
-      (translucentDepth >= 0.f) && (translucentDepth < VISKORES_DEFAULT_CANVAS_DEPTH);
-
-    if (this->WriteTranslucentDepth && hasProjectedDepth && color[3] > 0.f)
-    {
-      if (!hasTranslucentDepth || depth < translucentDepth)
-      {
-        translucentDepthBuffer.Set(pixelIndex, depth);
-        translucentDepth = depth;
-      }
-    }
 
     // if transparency exists, all alphas have been pre-multiplied
-    const bool blendBehindTranslucent =
-      !this->WriteTranslucentDepth && hasProjectedDepth && hasTranslucentDepth &&
-      (depth > translucentDepth) && (depth <= currentDepth) && (bufferColor[3] > 0.f);
-    viskores::Float32 alpha = blendBehindTranslucent ? (1.f - bufferColor[3]) : (1.f - color[3]);
-    if (blendBehindTranslucent)
-    {
-      color[0] = bufferColor[0] + color[0] * alpha;
-      color[1] = bufferColor[1] + color[1] * alpha;
-      color[2] = bufferColor[2] + color[2] * alpha;
-      color[3] = bufferColor[3] + color[3] * alpha;
-    }
-    else
-    {
-      color[0] = color[0] + bufferColor[0] * alpha;
-      color[1] = color[1] + bufferColor[1] * alpha;
-      color[2] = color[2] + bufferColor[2] * alpha;
-      color[3] = color[3] + bufferColor[3] * alpha;
-    }
+    viskores::Float32 alpha = (1.f - color[3]);
+    color[0] = color[0] + bufferColor[0] * alpha;
+    color[1] = color[1] + bufferColor[1] * alpha;
+    color[2] = color[2] + bufferColor[2] * alpha;
+    color[3] = color[3] + bufferColor[3] * alpha;
 
     // clamp
     for (viskores::Int32 i = 0; i < 4; ++i)
@@ -152,14 +111,9 @@ public:
     // The existing depth should already been feed into the ray mapper
     // so no color contribution will exist past the existing depth.
 
-    if (this->WriteDepth && hasProjectedDepth && (depth <= currentDepth))
+    if (this->WriteDepth)
     {
       depthBuffer.Set(pixelIndex, depth);
-    }
-    if (!this->WriteTranslucentDepth && hasProjectedDepth && (color[3] >= 1.f) &&
-        hasTranslucentDepth && (depth <= translucentDepth))
-    {
-      translucentDepthBuffer.Set(pixelIndex, -1.f);
     }
     colorBuffer.Set(pixelIndex, color);
   }
@@ -170,28 +124,24 @@ VISKORES_CONT void WriteToCanvas(const viskores::rendering::raytracing::Ray<Prec
                                  const viskores::cont::ArrayHandle<Precision>& colors,
                                  const viskores::rendering::Camera& camera,
                                  bool writeDepth,
-                                 bool writeTranslucentDepth,
                                  viskores::rendering::CanvasRayTracer* canvas)
 {
   viskores::Matrix<viskores::Float32, 4, 4> viewProjMat =
     viskores::MatrixMultiply(camera.CreateProjectionMatrix(canvas->GetWidth(), canvas->GetHeight()),
                              camera.CreateViewMatrix());
 
-  viskores::worklet::DispatcherMapField<SurfaceConverter>(
-    SurfaceConverter(viewProjMat, writeDepth, writeTranslucentDepth))
+  viskores::worklet::DispatcherMapField<SurfaceConverter>(SurfaceConverter(viewProjMat, writeDepth))
     .Invoke(rays.PixelIdx,
             colors,
             rays.Distance,
             rays.Origin,
             rays.Dir,
             canvas->GetDepthBuffer(),
-            canvas->GetColorBuffer(),
-            canvas->GetTranslucentDepthBuffer());
+            canvas->GetColorBuffer());
 
   //Force the transfer so the vectors contain data from device
   canvas->GetColorBuffer().WritePortal().Get(0);
   canvas->GetDepthBuffer().WritePortal().Get(0);
-  canvas->GetTranslucentDepthBuffer().WritePortal().Get(0);
 }
 
 } // namespace internal
@@ -199,56 +149,31 @@ VISKORES_CONT void WriteToCanvas(const viskores::rendering::raytracing::Ray<Prec
 CanvasRayTracer::CanvasRayTracer(viskores::Id width, viskores::Id height)
   : Canvas(width, height)
 {
-  this->TranslucentDepthBuffer.Allocate(width * height);
-  this->Clear();
 }
 
 CanvasRayTracer::~CanvasRayTracer() {}
-
-void CanvasRayTracer::Clear()
-{
-  Canvas::Clear();
-  const viskores::Id numValues = this->GetWidth() * this->GetHeight();
-  if (this->TranslucentDepthBuffer.GetNumberOfValues() != numValues)
-  {
-    this->TranslucentDepthBuffer.Allocate(numValues);
-  }
-  viskores::cont::Algorithm::Fill(this->TranslucentDepthBuffer, -1.f);
-}
 
 void CanvasRayTracer::WriteToCanvas(
   const viskores::rendering::raytracing::Ray<viskores::Float32>& rays,
   const viskores::cont::ArrayHandle<viskores::Float32>& colors,
   const viskores::rendering::Camera& camera,
-  bool writeDepth,
-  bool writeTranslucentDepth)
+  bool writeDepth)
 {
-  internal::WriteToCanvas(rays, colors, camera, writeDepth, writeTranslucentDepth, this);
+  internal::WriteToCanvas(rays, colors, camera, writeDepth, this);
 }
 
 void CanvasRayTracer::WriteToCanvas(
   const viskores::rendering::raytracing::Ray<viskores::Float64>& rays,
   const viskores::cont::ArrayHandle<viskores::Float64>& colors,
   const viskores::rendering::Camera& camera,
-  bool writeDepth,
-  bool writeTranslucentDepth)
+  bool writeDepth)
 {
-  internal::WriteToCanvas(rays, colors, camera, writeDepth, writeTranslucentDepth, this);
+  internal::WriteToCanvas(rays, colors, camera, writeDepth, this);
 }
 
 viskores::rendering::Canvas* CanvasRayTracer::NewCopy() const
 {
   return new viskores::rendering::CanvasRayTracer(*this);
-}
-
-CanvasRayTracer::DepthBufferType& CanvasRayTracer::GetTranslucentDepthBuffer()
-{
-  return this->TranslucentDepthBuffer;
-}
-
-const CanvasRayTracer::DepthBufferType& CanvasRayTracer::GetTranslucentDepthBuffer() const
-{
-  return this->TranslucentDepthBuffer;
 }
 }
 }

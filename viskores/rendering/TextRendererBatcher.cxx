@@ -17,7 +17,6 @@
 //============================================================================
 
 #include <viskores/rendering/TextRendererBatcher.h>
-#include <viskores/rendering/CanvasRayTracer.h>
 
 #include <viskores/worklet/WorkletMapField.h>
 
@@ -35,8 +34,8 @@ struct RenderBitmapFont : public viskores::worklet::WorkletMapField
   using FontTextureType = viskores::rendering::Canvas::FontTextureType;
 
   using ControlSignature =
-    void(FieldIn, FieldIn, FieldIn, FieldIn, ExecObject, WholeArrayInOut, WholeArrayInOut, WholeArrayIn);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
+    void(FieldIn, FieldIn, FieldIn, FieldIn, ExecObject, WholeArrayInOut, WholeArrayInOut);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 
   VISKORES_CONT
@@ -49,18 +48,14 @@ struct RenderBitmapFont : public viskores::worklet::WorkletMapField
   {
   }
 
-  template <typename ColorBufferPortal,
-            typename FontTexture,
-            typename DepthBufferPortal,
-            typename TranslucentDepthPortal>
+  template <typename ColorBufferPortal, typename FontTexture, typename DepthBufferPortal>
   VISKORES_EXEC void operator()(const viskores::Vec4f_32& screenCoords,
                                 const viskores::Vec4f_32& textureCoords,
                                 const viskores::Vec4f_32& color,
                                 const viskores::Float32& depth,
                                 const FontTexture& fontTexture,
                                 ColorBufferPortal& colorBuffer,
-                                DepthBufferPortal& depthBuffer,
-                                const TranslucentDepthPortal& translucentDepthBuffer) const
+                                DepthBufferPortal& depthBuffer) const
   {
     viskores::Float32 x0 = Clamp(screenCoords[0], 0.0f, static_cast<viskores::Float32>(Width - 1));
     viskores::Float32 x1 = Clamp(screenCoords[2], 0.0f, static_cast<viskores::Float32>(Width - 1));
@@ -78,31 +73,25 @@ struct RenderBitmapFont : public viskores::worklet::WorkletMapField
         viskores::Float32 u = viskores::Lerp(textureCoords[0], textureCoords[2], tu);
         viskores::Float32 v = viskores::Lerp(textureCoords[1], textureCoords[3], tv);
         viskores::Float32 intensity = fontTexture.GetColor(u, v)[0] * 0.25f;
-        Plot(x, y, intensity, color, depth, colorBuffer, depthBuffer, translucentDepthBuffer);
+        Plot(x, y, intensity, color, depth, colorBuffer, depthBuffer);
       }
     }
   }
 
-  template <typename ColorBufferPortal, typename DepthBufferPortal, typename TranslucentDepthPortal>
+  template <typename ColorBufferPortal, typename DepthBufferPortal>
   VISKORES_EXEC void Plot(viskores::Float32 x,
                           viskores::Float32 y,
                           viskores::Float32 intensity,
                           viskores::Vec4f_32 color,
                           viskores::Float32 depth,
                           ColorBufferPortal& colorBuffer,
-                          DepthBufferPortal& depthBuffer,
-                          const TranslucentDepthPortal& translucentDepthBuffer) const
+                          DepthBufferPortal& depthBuffer) const
   {
     viskores::Id index = static_cast<viskores::Id>(viskores::Round(y)) * Width +
       static_cast<viskores::Id>(viskores::Round(x));
     viskores::Vec4f_32 srcColor = colorBuffer.Get(index);
     viskores::Float32 currentDepth = depthBuffer.Get(index);
-    viskores::Float32 translucentDepth = translucentDepthBuffer.Get(index);
-    bool hasTranslucentOccluder =
-      (translucentDepth >= 0.f) && (translucentDepth < VISKORES_DEFAULT_CANVAS_DEPTH);
-    viskores::Float32 frontDepth =
-      hasTranslucentOccluder ? viskores::Min(currentDepth, translucentDepth) : currentDepth;
-    bool swap = depth > frontDepth;
+    bool swap = depth > currentDepth;
 
     intensity = intensity * color[3];
     color = intensity * color;
@@ -171,11 +160,6 @@ void TextRendererBatcher::Render(const viskores::rendering::Canvas* canvas) cons
   viskores::cont::ArrayHandle<viskores::Float32> depths =
     viskores::cont::make_ArrayHandle(this->Depths, viskores::CopyFlag::Off);
 
-  const viskores::rendering::CanvasRayTracer* rayCanvas =
-    dynamic_cast<const viskores::rendering::CanvasRayTracer*>(canvas);
-  const auto& translucentDepthBuffer =
-    rayCanvas ? rayCanvas->GetTranslucentDepthBuffer() : canvas->GetDepthBuffer();
-
   viskores::cont::Invoker invoker;
   invoker(RenderBitmapFont(canvas->GetWidth(), canvas->GetHeight()),
           screenCoords,
@@ -184,8 +168,7 @@ void TextRendererBatcher::Render(const viskores::rendering::Canvas* canvas) cons
           depths,
           this->FontTexture.GetExecObjectFactory(),
           canvas->GetColorBuffer(),
-          canvas->GetDepthBuffer(),
-          translucentDepthBuffer);
+          canvas->GetDepthBuffer());
 }
 }
 } // namespace viskores::rendering
