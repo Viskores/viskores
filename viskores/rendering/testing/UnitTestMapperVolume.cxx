@@ -78,7 +78,8 @@ void TestVolumeRenderOccludesAnnotations()
   const viskores::Float32 annotationOffset = 0.2f * diagonal;
   const viskores::Float32 annotationHalfLength = 0.35f * diagonal;
 
-  auto renderVolume = [&](viskores::rendering::CanvasRayTracer& targetCanvas) {
+  auto renderVolume = [&](viskores::rendering::CanvasRayTracer& targetCanvas)
+  {
     targetCanvas.Clear();
     mapper.SetCanvas(&targetCanvas);
     mapper.RenderCells(
@@ -87,7 +88,8 @@ void TestVolumeRenderOccludesAnnotations()
 
   auto drawAnnotationLine = [&](viskores::rendering::CanvasRayTracer& targetCanvas,
                                 const viskores::Vec3f_32& lineCenter,
-                                const viskores::rendering::Color& color) {
+                                const viskores::rendering::Color& color)
+  {
     targetCanvas.SetViewToWorldSpace(camera, true);
     std::unique_ptr<viskores::rendering::WorldAnnotator> annotator(
       targetCanvas.CreateWorldAnnotator());
@@ -99,8 +101,9 @@ void TestVolumeRenderOccludesAnnotations()
     annotator->EndLineRenderingBatch();
   };
 
-  auto writeCanvasImage = [&](viskores::rendering::CanvasRayTracer& targetCanvas,
-                              const std::string& fileName) {
+  auto writeCanvasImage =
+    [&](viskores::rendering::CanvasRayTracer& targetCanvas, const std::string& fileName)
+  {
     targetCanvas.RefreshColorBuffer();
     viskores::io::WriteImageFile(targetCanvas.GetDataSet("color", ""),
                                  viskores::cont::testing::Testing::WriteDirPath(
@@ -109,7 +112,8 @@ void TestVolumeRenderOccludesAnnotations()
   };
 
   auto countChangedPixels = [&](const viskores::rendering::CanvasRayTracer& lhs,
-                                const viskores::rendering::CanvasRayTracer& rhs) {
+                                const viskores::rendering::CanvasRayTracer& rhs)
+  {
     const auto lhsPortal = lhs.GetColorBuffer().ReadPortal();
     const auto rhsPortal = rhs.GetColorBuffer().ReadPortal();
     viskores::Id changedPixels = 0;
@@ -132,19 +136,20 @@ void TestVolumeRenderOccludesAnnotations()
 
   viskores::rendering::CanvasRayTracer behindCanvas(128, 128);
   renderVolume(behindCanvas);
-  drawAnnotationLine(
-    behindCanvas, center + viewDir * annotationOffset, viskores::rendering::Color(1.f, 0.f, 0.f, 1.f));
+  drawAnnotationLine(behindCanvas,
+                     center + viewDir * annotationOffset,
+                     viskores::rendering::Color(1.f, 0.f, 0.f, 1.f));
   writeCanvasImage(behindCanvas, "rendering/volume/annotation-occlusion-behind.png");
 
   viskores::rendering::CanvasRayTracer frontCanvas(128, 128);
   renderVolume(frontCanvas);
-  drawAnnotationLine(
-    frontCanvas, center - viewDir * annotationOffset, viskores::rendering::Color(0.f, 1.f, 0.f, 1.f));
+  drawAnnotationLine(frontCanvas,
+                     center - viewDir * annotationOffset,
+                     viskores::rendering::Color(0.f, 1.f, 0.f, 1.f));
   writeCanvasImage(frontCanvas, "rendering/volume/annotation-occlusion-front.png");
 
-  VISKORES_TEST_ASSERT(
-    countChangedPixels(frontCanvas, baseCanvas) > 0,
-    "The control annotation line did not render in front of the volume.");
+  VISKORES_TEST_ASSERT(countChangedPixels(frontCanvas, baseCanvas) > 0,
+                       "The control annotation line did not render in front of the volume.");
   VISKORES_TEST_ASSERT(
     countChangedPixels(frontCanvas, behindCanvas) > 0,
     "An annotation drawn behind a pure volume render matched the front-of-volume result.");
