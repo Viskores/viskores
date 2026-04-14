@@ -1,3 +1,4 @@
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/12506/badge)](https://www.bestpractices.dev/projects/12506)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Viskores/viskores/badge)](https://scorecard.dev/viewer/?uri=github.com/Viskores/viskores)
 
 # Viskores #
