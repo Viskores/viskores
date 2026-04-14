@@ -100,7 +100,7 @@ void TestClipStructuredSphere(viskores::Float64 offset)
   VISKORES_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 12,
                        "Wrong number of points in the output dataset");
 
-  viskores::Float32 expected[12] = { 1, 1, 1, 1, 1, 1, 1, 1, 0.25, 0.25, 0.25, 0.25 };
+  viskores::Float32 expected[12] = { 1, 1, 1, 1, 1, 1, 1, 1, 1.75, 1.75, 1.75, 1.75 };
   for (int i = 0; i < 12; ++i)
   {
     VISKORES_TEST_ASSERT(
@@ -139,7 +139,7 @@ void TestClipStructuredInvertedSphere()
   VISKORES_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 5,
                        "Wrong number of points in the output dataset");
 
-  viskores::Float32 expected[5] = { 0, 0.25, 0.25, 0.25, 0.25 };
+  viskores::Float32 expected[5] = { 0, 1.75, 1.75, 1.75, 1.75 };
   for (int i = 0; i < 5; ++i)
   {
     VISKORES_TEST_ASSERT(
