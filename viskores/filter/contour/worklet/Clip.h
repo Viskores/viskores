@@ -316,12 +316,12 @@ public:
               const viskores::UInt8 pointIndex = CT::ValueAt(index);
               cellBatchData.NumberOfEdges += (pointIndex >= CTI::E00 && pointIndex <= CTI::E11);
             }
-            if (cellShape != CTI::ST_PNT) // normal cell
+            if (cellShape != viskores::CELL_SHAPE_EMPTY) // normal cell
             {
               // Collect number of indices required for storing current shape
               cellBatchData.NumberOfCellIndices += numberOfCellIndices;
             }
-            else // cellShape == CTI::ST_PNT
+            else // cellShape == viskores::CELL_SHAPE_EMPTY
             {
               --cellBatchData.NumberOfCells; // decrement since this is a centroid shape
               cellBatchData.NumberOfCentroids++;
@@ -519,7 +519,7 @@ public:
               const viskores::UInt8 cellShape = CT::ValueAt(index++);
               const viskores::UInt8 numberOfCellIndices = CT::ValueAt(index++);
 
-              if (cellShape != CTI::ST_PNT) // normal cell
+              if (cellShape != viskores::CELL_SHAPE_EMPTY) // normal cell
               {
                 // Store the cell data
                 cellMapOutputToInput.Set(cellOffset, cellId);
@@ -552,7 +552,7 @@ public:
                   ++cellIndicesOffset; // increment cell indices offset
                 }
               }
-              else // cellShape == CTI::ST_PNT
+              else // cellShape == viskores::CELL_SHAPE_EMPTY
               {
                 // Store the centroid data
                 centroidIndex = this->CentroidPointsOffset + centroidOffset;
