@@ -198,7 +198,7 @@ public:
       /* case 1 */ 1,
       viskores::CELL_SHAPE_LINE, 2, P0, E00,
       /* case 2 */ 1,
-      viskores::CELL_SHAPE_LINE, 2, P1, E00,
+      viskores::CELL_SHAPE_LINE, 2, E00, P1,
       /* case 3 */ 1,
       viskores::CELL_SHAPE_LINE, 2, P0, P1,
       // viskores::CELL_SHAPE_TRIANGLE
@@ -2840,7 +2840,7 @@ public:
       /* case 1 */ 1,
       viskores::CELL_SHAPE_LINE, 2, E00, P1,
       /* case 2 */ 1,
-      viskores::CELL_SHAPE_LINE, 2, E00, P0,
+      viskores::CELL_SHAPE_LINE, 2, P0, E00,
       /* case 3 */ 0,
       // viskores::CELL_SHAPE_TRIANGLE
       /* case 0 */ 1,
