@@ -25,7 +25,11 @@ endif ()
 
 # Set up the source and build paths.
 set(CTEST_SOURCE_DIRECTORY "$ENV{CI_PROJECT_DIR}")
-set(CTEST_BINARY_DIRECTORY "${CTEST_SOURCE_DIRECTORY}/build")
+if (DEFINED ENV{CTEST_BINARY_DIRECTORY})
+  set(CTEST_BINARY_DIRECTORY "$ENV{CTEST_BINARY_DIRECTORY}")
+else ()
+  set(CTEST_BINARY_DIRECTORY "${CTEST_SOURCE_DIRECTORY}/build")
+endif ()
 
 if ("$ENV{VISKORES_SETTINGS}" STREQUAL "")
   message(FATAL_ERROR
@@ -132,4 +136,4 @@ set(state
 "
 )
 message("OUT: ${state}")
-file(WRITE ${CTEST_BINARY_DIRECTORY}/CIState.cmake "${state}")
+file(WRITE ${CTEST_SOURCE_DIRECTORY}/build/CIState.cmake "${state}")
