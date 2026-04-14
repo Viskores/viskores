@@ -140,7 +140,7 @@ public:
       X, X, X, X, X, X, X, X, X, X, X, X, // viskores::CELL_SHAPE_POLYGON
       X, X, X, X, X, X, X, X, X, X, X, X,
       X, X, X, X, X, X, X, X, X, X, X, X, // viskores::CELL_SHAPE_PIXEL
-      0, 1, 1, 2, 3, 2, 0, 3, X, X, X, X,
+      0, 1, 1, 2, 2, 3, 3, 0, X, X, X, X,
       X, X, X, X, X, X, X, X, X, X, X, X, // viskores::CELL_SHAPE_QUAD
       0, 1, 1, 2, 2, 0, 0, 3, 1, 3, 2, 3,
       X, X, X, X, X, X, X, X, X, X, X, X, // viskores::CELL_SHAPE_TETRA
