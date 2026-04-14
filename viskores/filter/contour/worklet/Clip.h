@@ -404,14 +404,22 @@ public:
                 EdgeInterpolation ei;
                 ei.Vertex1 = points[edge[0]];
                 ei.Vertex2 = points[edge[1]];
-                // For consistency purposes keep the points ordered.
+                auto point1ToPoint2 =
+                  static_cast<viskores::Float64>(scalars.Get(ei.Vertex1) - scalars.Get(ei.Vertex2));
+                if (point1ToPoint2 < 0)
+                {
+                  viskores::Swap(ei.Vertex1, ei.Vertex2);
+                  point1ToPoint2 = -point1ToPoint2;
+                }
+                auto point1ToIso =
+                  0.0 - (static_cast<viskores::Float64>(scalars.Get(ei.Vertex1) - this->IsoValue));
+                ei.Weight = point1ToPoint2 != 0 ? point1ToIso / point1ToPoint2 : 0;
+                // swap because edges are expected to be smallest,largest, t
                 if (ei.Vertex1 > ei.Vertex2)
                 {
                   viskores::Swap(ei.Vertex1, ei.Vertex2);
+                  ei.Weight = 1.0 - ei.Weight;
                 }
-                ei.Weight =
-                  (static_cast<viskores::Float64>(scalars.Get(ei.Vertex1)) - this->IsoValue) /
-                  static_cast<viskores::Float64>(scalars.Get(ei.Vertex2) - scalars.Get(ei.Vertex1));
                 // Add edge to the list of edges.
                 edges.Set(edgeOffset, ei);
                 ++edgeOffset; // increment edge offset
@@ -872,8 +880,18 @@ public:
                                   const FieldPortal& originalField,
                                   T& output) const
     {
-      const T v1 = originalField.Get(edgeInterp.Vertex1);
-      const T v2 = originalField.Get(edgeInterp.Vertex2);
+      auto vertex1 = edgeInterp.Vertex1;
+      auto vertex2 = edgeInterp.Vertex2;
+      auto weight = edgeInterp.Weight;
+      // edges are expected to be smallest,largest, t, and t may be swapped to satisfy that
+      // therefore, swap because t is expected to be in [0,1]
+      if (weight < 0 || weight > 1)
+      {
+        viskores::Swap(vertex1, vertex2);
+        weight = 1.0 - weight;
+      }
+      const T v1 = originalField.Get(vertex1);
+      const T v2 = originalField.Get(vertex2);
 
       // Interpolate per-vertex because some vec-like objects do not allow intermediate variables
       using VTraits = viskores::VecTraits<T>;
@@ -885,7 +903,7 @@ public:
       {
         const CType c1 = VTraits::GetComponent(v1, component);
         const CType c2 = VTraits::GetComponent(v2, component);
-        const CType o = static_cast<CType>(((c1 - c2) * edgeInterp.Weight) + c1);
+        const CType o = static_cast<CType>(c1 + weight * (c2 - c1));
         VTraits::SetComponent(output, component, o);
       }
     }
