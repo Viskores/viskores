@@ -59,12 +59,12 @@ density filters.
 Funding
 ------------------------------
 
-.. |LogoSpacing| image:: images/LogoSpacing.png
-.. |DOELogo| image:: images/DOELogo.png
-.. |ORNLLogo| image:: images/ORNLLogo.png
-.. |LANLLogo| image:: images/LANLLogo.png
-.. |SandiaLogo| image:: images/SandiaLogo.png
-.. |KitwareLogo| image:: images/KitwareLogo.png
+.. |LogoSpacing| image:: ../../data/users-guide/images/LogoSpacing.png
+.. |DOELogo| image:: ../../data/users-guide/images/DOELogo.png
+.. |ORNLLogo| image:: ../../data/users-guide/images/ORNLLogo.png
+.. |LANLLogo| image:: ../../data/users-guide/images/LANLLogo.png
+.. |SandiaLogo| image:: ../../data/users-guide/images/SandiaLogo.png
+.. |KitwareLogo| image:: ../../data/users-guide/images/KitwareLogo.png
 
 .. centered:: |DOELogo|
               |LogoSpacing|

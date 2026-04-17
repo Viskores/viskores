@@ -12,9 +12,9 @@ To address these issues we created |Viskores|: the visualization toolkit for mul
 |Viskores| also provides support for finding and building links across topologies, making it possible to perform operations that determine manifold surfaces, interpolate generated values, and find adjacencies.
 Although |Viskores| provides a simplified high-level interface for programming, its template-based code removes the overhead of abstraction.
 
-.. |MCCompareCuda| image:: images/MCCompareCuda.png
+.. |MCCompareCuda| image:: ../../data/users-guide/images/MCCompareCuda.png
                    :width: 75px
-.. |MCCompareViskores| image:: images/MCCompareViskores.png
+.. |MCCompareViskores| image:: ../../data/users-guide/images/MCCompareViskores.png
                    :width: 75px
 
 .. table:: Comparison of Marching Cubes implementations.

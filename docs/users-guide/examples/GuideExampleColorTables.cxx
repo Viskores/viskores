@@ -105,7 +105,8 @@ void DoColorTables()
   for (auto& n : names)
   {
     CreateColorTableImage(n);
-    rstTable << ".. |" << FilenameFriendly(n) << "| image:: images/color-tables/"
+    rstTable << ".. |" << FilenameFriendly(n)
+             << "| image:: ../../data/users-guide/images/color-tables/"
              << FilenameFriendly(n) << ".png\n";
   }
 #endif
