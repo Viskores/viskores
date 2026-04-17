@@ -24,13 +24,51 @@ Cell Shape Tags and Ids
 
 Cell shapes can be specified with either a tag (defined with a struct with a name like ``CellShapeTag*``) or an enumerated identifier (defined with a constant number with a name like ``CELL_SHAPE_*``).
 These shape tags and identifiers are defined in :file:`viskores/CellShape.h` and declared in the ``viskores`` namespace (because they can be used in either the control or the execution environment).
-:numref:`fig:CellShapes` gives both the identifier and the tag names.
+:numref:`tab:CellShapes` gives both the identifier and the tag names.
 
-.. figure::  ../../data/users-guide/images/CellConnections.png
+.. .. figure::  ../../data/users-guide/images/CellConnections.png
+..    :width: 100%
+..    :name: fig:CellShapes
+
+..    Basic Cell Shapes.
+
+.. |CellConnectionsVertex| image:: ../../data/users-guide/images/CellConnectionsVertex.png
+.. |CellConnectionsLine| image:: ../../data/users-guide/images/CellConnectionsLine.png
+.. |CellConnectionsPolyLine| image:: ../../data/users-guide/images/CellConnectionsPolyLine.png
+.. |CellConnectionsTriangle| image:: ../../data/users-guide/images/CellConnectionsTriangle.png
+.. |CellConnectionsPolygon| image:: ../../data/users-guide/images/CellConnectionsPolygon.png
+.. |CellConnectionsQuadrilateral| image:: ../../data/users-guide/images/CellConnectionsQuadrilateral.png
+.. |CellConnectionsTetrahedron| image:: ../../data/users-guide/images/CellConnectionsTetrahedron.png
+.. |CellConnectionsHexahedron| image:: ../../data/users-guide/images/CellConnectionsHexahedron.png
+.. |CellConnectionsWedge| image:: ../../data/users-guide/images/CellConnectionsWedge.png
+.. |CellConnectionsPyramid| image:: ../../data/users-guide/images/CellConnectionsPyramid.png
+
+.. table:: Basic Cell Shapes
+   :name: tab:CellShapes
    :width: 100%
-   :name: fig:CellShapes
+   :class: layout-only
 
-   Basic Cell Shapes.
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_VERTEX`        | :enumerator:`viskores::CELL_SHAPE_Line`          |
+   | :struct:`viskores::CellShapeTagVertex`           | :struct:`viskores::CellShapeTagLine`             |
+   | |CellConnectionsVertex|                          | |CellConnectionsLine|                            |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_POLY_LINE`     | :enumerator:`viskores::CELL_SHAPE_TRIANGLE`      |
+   | :struct:`viskores::CellShapeTagPolyLine`         | :struct:`viskores::CellShapeTagTriangle`         |
+   | |CellConnectionsPolyLine|                        | |CellConnectionsTriangle|                        |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_POLYGON`       | :enumerator:`viskores::CELL_SHAPE_QUADRILATERAL` |
+   | :struct:`viskores::CellShapeTagPolygon`          | :struct:`viskores::CellShapeTagQuadrilateral`    |
+   | |CellConnectionsPolygon|                         | |CellConnectionsQuadrilateral|                   |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_TETRAHEDRON`   | :enumerator:`viskores::CELL_SHAPE_HEXAHEDRON`    |
+   | :struct:`viskores::CellShapeTagTetrahedron`      | :struct:`viskores::CellShapeTagHexahedron`       |
+   | |CellConnectionsTetrahedron|                     | |CellConnectionsHexahedron|                      |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_WEDGE`         | :enumerator:`viskores::CELL_SHAPE_PYRAMID`       |
+   | :struct:`viskores::CellShapeTagWedge`            | :struct:`viskores::CellShapeTagPyramid`          |
+   | |CellConnectionsWedge|                           | |CellConnectionsPyramid|                         |
+   +--------------------------------------------------+--------------------------------------------------+
 
 .. doxygenstruct:: viskores::CellShapeTagVertex
    :members:
@@ -208,7 +246,7 @@ Edges and Faces
 
 As explained earlier in this chapter, a cell is defined by a collection of points and a shape identifier that describes how the points come together to form the structure of the cell.
 The cell shapes supported by |Viskores| are documented in :secref:`working-with-cells:Cell Shape Tags and Ids`.
-It contains :numref:`fig:CellShapes`, which shows how the points for each shape form the structure of the cell.
+It contains :numref:`tab:CellShapes`, which shows how the points for each shape form the structure of the cell.
 
 .. index::
    single: edge

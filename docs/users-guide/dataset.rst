@@ -129,51 +129,53 @@ An explicit mesh is an arbitrary collection of cells with arbitrary connections.
 It can have multiple different types of cells.
 Explicit meshes are also known as unstructured grids.
 Explicit meshes can contain cells of different shapes.
-The shapes that |Viskores| currently supports are listed in :numref:`fig:CreateExplicitMeshesCellShapes`.
+The shapes that |Viskores| currently supports are listed in :numref:`tab:CreateExplicitMeshesCellShapes`.
 Each shape is identified using either a numeric identifier, provided by |Viskores| with identifiers of the form ``viskores::CELL_SHAPE_*`` or special tag structures of the form ``viskores::CellSetTag*``.
 Cell shapes are discussed in detail in :chapref:`working-with-cells:Working with Cells`.
 
-.. figure::  ../../data/users-guide/images/CellConnections.png
+.. .. figure::  ../../data/users-guide/images/CellConnections.png
+..    :width: 100%
+..    :name: fig:CreateExplicitMeshesCellShapes
+
+..    Basic Cell Shapes.
+
+.. |CellConnectionsVertex| image:: ../../data/users-guide/images/CellConnectionsVertex.png
+.. |CellConnectionsLine| image:: ../../data/users-guide/images/CellConnectionsLine.png
+.. |CellConnectionsPolyLine| image:: ../../data/users-guide/images/CellConnectionsPolyLine.png
+.. |CellConnectionsTriangle| image:: ../../data/users-guide/images/CellConnectionsTriangle.png
+.. |CellConnectionsPolygon| image:: ../../data/users-guide/images/CellConnectionsPolygon.png
+.. |CellConnectionsQuadrilateral| image:: ../../data/users-guide/images/CellConnectionsQuadrilateral.png
+.. |CellConnectionsTetrahedron| image:: ../../data/users-guide/images/CellConnectionsTetrahedron.png
+.. |CellConnectionsHexahedron| image:: ../../data/users-guide/images/CellConnectionsHexahedron.png
+.. |CellConnectionsWedge| image:: ../../data/users-guide/images/CellConnectionsWedge.png
+.. |CellConnectionsPyramid| image:: ../../data/users-guide/images/CellConnectionsPyramid.png
+
+.. table:: Basic Cell Shapes
+   :name: tab:CreateExplicitMeshesCellShapes
    :width: 100%
-   :name: fig:CreateExplicitMeshesCellShapes
+   :class: layout-only
 
-   Basic Cell Shapes.
-
-.. todo:: Add ``viskores::CellShapeTagPolyLine`` to this figure.
-
-..
-   .. |CellConnectionsVertex| image:: images/CellConnectionsVertex.png
-   .. |CellConnectionsLine| image:: images/CellConnectionsLine.png
-   .. |CellConnectionsPolyLine| image:: images/CellConnectionsPolyLine.png
-   .. |CellConnectionsTriangle| image:: images/CellConnectionsTriangle.png
-   .. |CellConnectionsPolygon| image:: images/CellConnectionsPolygon.png
-   .. |CellConnectionsQuadrilateral| image:: images/CellConnectionsQuadrilateral.png
-   .. |CellConnectionsTetrahedron| image:: images/CellConnectionsTetrahedron.png
-   .. |CellConnectionsHexahedron| image:: images/CellConnectionsHexahedron.png
-   .. |CellConnectionsWedge| image:: images/CellConnectionsWedge.png
-   .. |CellConnectionsPyramid| image:: images/CellConnectionsPyramid.png
-
-   .. table:: Basic Cell Shapes
-      :name: ExplicitCellShapes
-      :width: 100%
-
-      +----------------------------------------------+----------------------------------------------+----------------------------------------------+
-      | :enumerator:`viskores::CELL_SHAPE_VERTEX`        | :enumerator:`viskores::CELL_SHAPE_Line`          | :enumerator:`viskores::CELL_SHAPE_POLY_LINE`     |
-      | :struct:`viskores::CellShapeTagVertex`           | :struct:`viskores::CellShapeTagLine`             | :struct:`viskores::CellShapeTagPolyLine`         |
-      | |CellConnectionsVertex|                      | |CellConnectionsLine|                        | |CellConnectionsPolyLine|                    |
-      +----------------------------------------------+----------------------------------------------+----------------------------------------------+
-      | :enumerator:`viskores::CELL_SHAPE_TRIANGLE`      | :enumerator:`viskores::CELL_SHAPE_POLYGON`       | :enumerator:`viskores::CELL_SHAPE_QUADRILATERAL` |
-      | :struct:`viskores::CellShapeTagTriangle`         | :struct:`viskores::CellShapeTagPolygon`          | :struct:`viskores::CellShapeTagQuadrilateral`    |
-      | |CellConnectionsTriangle|                    | |CellConnectionsPolygon|                     | |CellConnectionsQuadrilateral|               |
-      +----------------------------------------------+----------------------------------------------+----------------------------------------------+
-      | :enumerator:`viskores::CELL_SHAPE_TETRAHEDRON`   | :enumerator:`viskores::CELL_SHAPE_HEXAHEDRON`    | :enumerator:`viskores::CELL_SHAPE_WEDGE`         |
-      | :struct:`viskores::CellShapeTagTetrahedron`      | :struct:`viskores::CellShapeTagHexahedron`       | :struct:`viskores::CellShapeTagWedge`            |
-      | |CellConnectionsTetrahedron|                 | |CellConnectionsHexahedron|                  | |CellConnectionsWedge|                       |
-      +----------------------------------------------+----------------------------------------------+----------------------------------------------+
-      |                                              | :enumerator:`viskores::CELL_SHAPE_PYRAMID`       |                                              |
-      |                                              | :struct:`viskores::CellShapeTagPyramid`          |                                              |
-      |                                              | |CellConnectionsPyramid|                     |                                              |
-      +----------------------------------------------+----------------------------------------------+----------------------------------------------+
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_VERTEX`        | :enumerator:`viskores::CELL_SHAPE_Line`          |
+   | :struct:`viskores::CellShapeTagVertex`           | :struct:`viskores::CellShapeTagLine`             |
+   | |CellConnectionsVertex|                          | |CellConnectionsLine|                            |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_POLY_LINE`     | :enumerator:`viskores::CELL_SHAPE_TRIANGLE`      |
+   | :struct:`viskores::CellShapeTagPolyLine`         | :struct:`viskores::CellShapeTagTriangle`         |
+   | |CellConnectionsPolyLine|                        | |CellConnectionsTriangle|                        |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_POLYGON`       | :enumerator:`viskores::CELL_SHAPE_QUADRILATERAL` |
+   | :struct:`viskores::CellShapeTagPolygon`          | :struct:`viskores::CellShapeTagQuadrilateral`    |
+   | |CellConnectionsPolygon|                         | |CellConnectionsQuadrilateral|                   |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_TETRAHEDRON`   | :enumerator:`viskores::CELL_SHAPE_HEXAHEDRON`    |
+   | :struct:`viskores::CellShapeTagTetrahedron`      | :struct:`viskores::CellShapeTagHexahedron`       |
+   | |CellConnectionsTetrahedron|                     | |CellConnectionsHexahedron|                      |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_WEDGE`         | :enumerator:`viskores::CELL_SHAPE_PYRAMID`       |
+   | :struct:`viskores::CellShapeTagWedge`            | :struct:`viskores::CellShapeTagPyramid`          |
+   | |CellConnectionsWedge|                           | |CellConnectionsPyramid|                         |
+   +--------------------------------------------------+--------------------------------------------------+
 
 .. figure::  ../../data/users-guide/images/ExplicitCellConnections.png
    :width: 100%
@@ -188,7 +190,7 @@ The cells of an explicit mesh are defined with the following 3 arrays, which are
 Shapes
   An array of ids identifying the shape of the cell.
   Each value is a :type:`viskores::UInt8` and should be set to one of the ``viskores::CELL_SHAPE_*`` constants.
-  The shapes and their identifiers are shown in :numref:`fig:CreateExplicitMeshesCellShapes`.
+  The shapes and their identifiers are shown in :numref:`tab:CreateExplicitMeshesCellShapes`.
   The size of this array is equal to the number of cells in the set.
 
 .. index:: explicit mesh ; connectivity
@@ -196,7 +198,7 @@ Shapes
 Connectivity
   An array that lists all the points that comprise each cell.
   Each entry in the array is a :type:`viskores::Id` giving the point id associated with a vertex of a cell.
-  The points for each cell are given in a prescribed order for each shape, which is also shown in :numref:`fig:CreateExplicitMeshesCellShapes`.
+  The points for each cell are given in a prescribed order for each shape, which is also shown in :numref:`tab:CreateExplicitMeshesCellShapes`.
   The point indices are stored consecutively from the first cell to the last.
 
 .. index:: explicit mesh ; offsets
@@ -387,18 +389,45 @@ Explicit Cell Sets
 .. doxygenclass:: viskores::cont::CellSetExplicit
    :members:
 
-The types of cell sets are listed in :numref:`fig:ExplicitCellSetShapes`.
+The types of cell sets are listed in :numref:`tab:ExplicitCellSetShapes`.
 
 
-.. figure::  ../../data/users-guide/images/CellConnections.png
+.. .. figure::  ../../data/users-guide/images/CellConnections.png
+..    :width: 100%
+..    :name: fig:ExplicitCellSetShapes
+
+..    Basic Cell Shapes in a :class:`viskores::cont::CellSetExplicit`.
+
+.. table:: Basic Cell Shapes in a :class:`viskores::cont::CellSetExplicit`.
+   :name: tab:ExplicitCellSetShapes
    :width: 100%
-   :name: fig:ExplicitCellSetShapes
+   :class: layout-only
 
-   Basic Cell Shapes in a :class:`viskores::cont::CellSetExplicit`.
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_VERTEX`        | :enumerator:`viskores::CELL_SHAPE_Line`          |
+   | :struct:`viskores::CellShapeTagVertex`           | :struct:`viskores::CellShapeTagLine`             |
+   | |CellConnectionsVertex|                          | |CellConnectionsLine|                            |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_POLY_LINE`     | :enumerator:`viskores::CELL_SHAPE_TRIANGLE`      |
+   | :struct:`viskores::CellShapeTagPolyLine`         | :struct:`viskores::CellShapeTagTriangle`         |
+   | |CellConnectionsPolyLine|                        | |CellConnectionsTriangle|                        |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_POLYGON`       | :enumerator:`viskores::CELL_SHAPE_QUADRILATERAL` |
+   | :struct:`viskores::CellShapeTagPolygon`          | :struct:`viskores::CellShapeTagQuadrilateral`    |
+   | |CellConnectionsPolygon|                         | |CellConnectionsQuadrilateral|                   |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_TETRAHEDRON`   | :enumerator:`viskores::CELL_SHAPE_HEXAHEDRON`    |
+   | :struct:`viskores::CellShapeTagTetrahedron`      | :struct:`viskores::CellShapeTagHexahedron`       |
+   | |CellConnectionsTetrahedron|                     | |CellConnectionsHexahedron|                      |
+   +--------------------------------------------------+--------------------------------------------------+
+   | :enumerator:`viskores::CELL_SHAPE_WEDGE`         | :enumerator:`viskores::CELL_SHAPE_PYRAMID`       |
+   | :struct:`viskores::CellShapeTagWedge`            | :struct:`viskores::CellShapeTagPyramid`          |
+   | |CellConnectionsWedge|                           | |CellConnectionsPyramid|                         |
+   +--------------------------------------------------+--------------------------------------------------+
 
 An explicit cell set is defined with a minimum of three arrays.
 The first array identifies the shape of each cell.
-(Identifiers for cell shapes are shown in :numref:`fig:ExplicitCellSetShapes`.)
+(Identifiers for cell shapes are shown in :numref:`tab:ExplicitCellSetShapes`.)
 The second array has a sequence of point indices that make up each cell.
 The third array identifies an offset into the second array where the point indices for each cell is found plus an extra entry at the end set to the size of the second array.
 :numref:`fig:CellSetExplicit` shows a simple example of an explicit cell set.
