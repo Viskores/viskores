@@ -81,8 +81,7 @@ public:
   static BatchesHandle CreateBatches(const viskores::Id& numberOfElements)
   {
     auto& tracker = viskores::cont::GetRuntimeDeviceTracker();
-    if (tracker.CanRunOn(viskores::cont::DeviceAdapterTagCuda{}) ||
-        tracker.CanRunOn(viskores::cont::DeviceAdapterTagKokkos{}))
+    if (tracker.CanRunOn(viskores::cont::DeviceAdapterTagCuda{}))
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
                      "Creating batches with batch size 6 for GPUs.");
@@ -92,8 +91,9 @@ public:
     {
       const viskores::Int32 batchSize = viskores::Min(
         1000, viskores::Max(1, static_cast<viskores::Int32>(numberOfElements / 250000)));
-      VISKORES_LOG_F(
-        viskores::cont::LogLevel::Info, "Creating batches with batch size %d for CPUs.", batchSize);
+      VISKORES_LOG_F(viskores::cont::LogLevel::Info,
+                     "Creating batches with batch size %d for non-CUDA devices.",
+                     batchSize);
       return CreateBatches(numberOfElements, batchSize);
     }
   }
