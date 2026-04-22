@@ -8,10 +8,17 @@
 ##
 ##=============================================================================
 
-[build-system]
-requires = [
-  "setuptools>=61",
-  "wheel",
-  "numpy",
-]
-build-backend = "setuptools.build_meta"
+NAME
+  viskores_python_bindings
+GROUPS
+  PythonBindings
+PRIVATE_DEPENDS
+  viskores_cont
+  viskores_source
+  viskores_filter_core
+  viskores_filter_contour
+  viskores_filter_field_conversion
+  viskores_filter_scalar_topology
+  viskores_filter_vector_analysis
+  viskores_rendering
+NO_TESTING

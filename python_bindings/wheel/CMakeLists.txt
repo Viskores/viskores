@@ -1,3 +1,13 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(ViskoresPythonWheel LANGUAGES CXX)
 
@@ -29,14 +39,14 @@ get_filename_component(Viskores_PYTHON_EXTENSION_BASENAME
 get_filename_component(Viskores_PYTHON_EXTENSION_SUFFIX
   "${VISKORES_PYTHON_EXTENSION_FILENAME}" LAST_EXT)
 
-add_library(_viskores MODULE ../viskores_module.cxx)
-target_compile_features(_viskores PRIVATE cxx_std_17)
-target_compile_definitions(_viskores PRIVATE PY_SSIZE_T_CLEAN)
-target_include_directories(_viskores
+add_library(viskores_python_bindings MODULE ../viskores_python_bindings.cxx)
+target_compile_features(viskores_python_bindings PRIVATE cxx_std_17)
+target_compile_definitions(viskores_python_bindings PRIVATE PY_SSIZE_T_CLEAN)
+target_include_directories(viskores_python_bindings
   PRIVATE
     ${Viskores_PYTHON_NUMPY_INCLUDE_DIR}
 )
-target_link_libraries(_viskores
+target_link_libraries(viskores_python_bindings
   PRIVATE
     Python::Module
     $<$<BOOL:${Viskores_ENABLE_OPENMP}>:OpenMP::OpenMP_CXX>
@@ -49,7 +59,7 @@ target_link_libraries(_viskores
     viskores::filter_vector_analysis
     viskores::rendering
 )
-set_target_properties(_viskores PROPERTIES
+set_target_properties(viskores_python_bindings PROPERTIES
   PREFIX ""
   OUTPUT_NAME "${Viskores_PYTHON_EXTENSION_BASENAME}"
   SUFFIX "${Viskores_PYTHON_EXTENSION_SUFFIX}"

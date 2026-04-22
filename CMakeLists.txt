@@ -254,6 +254,7 @@ viskores_module_force_group(Testing
   )
 viskores_module_force_group(Benchmarking ENABLE_OPTION Viskores_ENABLE_BENCHMARKS)
 viskores_module_force_group(ANARI ENABLE_OPTION Viskores_ENABLE_ANARI)
+viskores_module_force_group(PythonBindings ENABLE_OPTION Viskores_ENABLE_PYTHON_BINDINGS)
 
 # The tutorial requires several common filters. This logic might need to
 # become more complicated (or less compliated if we decide to always
@@ -380,7 +381,7 @@ add_subdirectory(viskoresstd)
 #-----------------------------------------------------------------------------
 # Process modules
 viskores_modules_scan(
-  SCAN_DIRECTORIES viskores benchmarking docs
+  SCAN_DIRECTORIES viskores benchmarking docs python_bindings
   PROVIDED_MODULES all_modules
   )
 viskores_modules_build(
@@ -565,10 +566,6 @@ endif()
 #-----------------------------------------------------------------------------
 # Build examples
 add_subdirectory(examples)
-
-if (Viskores_ENABLE_PYTHON_BINDINGS)
-  add_subdirectory(python_bindings)
-endif()
 
 if (Viskores_INSTALL_EXAMPLES)
   include(GNUInstallDirs)
