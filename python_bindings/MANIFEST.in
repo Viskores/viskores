@@ -1,0 +1,7 @@
+include pyproject.toml
+include setup.py
+include viskores_module.cxx
+recursive-include viskores *.py
+recursive-include examples *.py
+recursive-include tests *.py
+include wheel/CMakeLists.txt

@@ -105,6 +105,7 @@ viskores_option(Viskores_ENABLE_MPI "Enable MPI support" OFF)
 viskores_option(Viskores_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
 viskores_option(Viskores_ENABLE_EXAMPLES "Build examples" OFF)
 viskores_option(Viskores_ENABLE_TUTORIALS "Build tutorials" OFF)
+viskores_option(Viskores_ENABLE_PYTHON_BINDINGS "Build Python bindings" OFF)
 if (NOT DEFINED Viskores_ENABLE_TESTING)
     if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
       viskores_option(Viskores_ENABLE_TESTING "Enable Viskores Testing" ON)
@@ -564,6 +565,10 @@ endif()
 #-----------------------------------------------------------------------------
 # Build examples
 add_subdirectory(examples)
+
+if (Viskores_ENABLE_PYTHON_BINDINGS)
+  add_subdirectory(python_bindings)
+endif()
 
 if (Viskores_INSTALL_EXAMPLES)
   include(GNUInstallDirs)
