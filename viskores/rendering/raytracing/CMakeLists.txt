@@ -44,6 +44,7 @@ set(headers
   RayOperations.h
   RayTracer.h
   RayTracingTypeDefs.h
+  RunTriangulator.h
   Sampler.h
   ScalarRenderer.h
   ShapeIntersector.h
@@ -52,6 +53,7 @@ set(headers
   TriangleExtractor.h
   TriangleIntersections.h
   TriangleIntersector.h
+  Triangulator.h
   VolumeRendererStructured.h
   Worklets.h
   )

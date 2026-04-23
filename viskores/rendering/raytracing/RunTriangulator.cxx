@@ -16,7 +16,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
-#include <viskores/rendering/internal/RunTriangulator.h>
+#include <viskores/rendering/raytracing/RunTriangulator.h>
 
 #include <viskores/cont/TryExecute.h>
 #include <viskores/rendering/Triangulator.h>
@@ -25,7 +25,7 @@ namespace viskores
 {
 namespace rendering
 {
-namespace internal
+namespace raytracing
 {
 
 void RunTriangulator(const viskores::cont::UnknownCellSet& cellSet,
@@ -36,6 +36,7 @@ void RunTriangulator(const viskores::cont::UnknownCellSet& cellSet,
   viskores::rendering::Triangulator triangulator;
   triangulator.Run(cellSet, indices, numberOfTriangles, ghostField);
 }
+
 }
 }
 } // namespace viskores::rendering::internal

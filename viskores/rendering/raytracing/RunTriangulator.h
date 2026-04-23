@@ -15,8 +15,8 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
-#ifndef viskores_rendering_internal_RunTriangulator_h
-#define viskores_rendering_internal_RunTriangulator_h
+#ifndef viskores_rendering_raytracing_RunTriangulator_h
+#define viskores_rendering_raytracing_RunTriangulator_h
 
 #include <viskores/rendering/viskores_rendering_export.h>
 
@@ -29,7 +29,7 @@ namespace viskores
 {
 namespace rendering
 {
-namespace internal
+namespace raytracing
 {
 
 /// This is a wrapper around the Triangulator worklet so that the
@@ -44,6 +44,6 @@ void RunTriangulator(const viskores::cont::UnknownCellSet& cellSet,
                      const viskores::cont::Field& ghostField = viskores::cont::Field());
 }
 }
-} // namespace viskores::rendering::internal
+} // namespace viskores::rendering::raytracing
 
-#endif //viskores_rendering_internal_RunTriangulator_h
+#endif //viskores_rendering_raytracing_RunTriangulator_h
