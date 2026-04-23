@@ -57,6 +57,7 @@ public:
 
   RuntimeDeviceOption ViskoresNumThreads;
   RuntimeDeviceOption ViskoresDeviceInstance;
+  RuntimeDeviceOption ViskoresUseUnifiedMemory;
 
 protected:
   /// Sets the option indices and environment varaible names for the viskores supported options.
