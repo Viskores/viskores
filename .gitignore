@@ -1,3 +1,5 @@
 .DS_Store
 *vscode
 .anari_deps
+__pycache__/
+*.py[cod]

@@ -16,7 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from setuptools import Extension, setup
+from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 
 
@@ -83,10 +83,18 @@ setup(
     name="viskores",
     version=read_version(),
     description="Python bindings for Viskores",
-    packages=["viskores"],
+    packages=find_packages(where="."),
     package_dir={"": "."},
-    ext_modules=[Extension("viskores._viskores", sources=[])],
+    ext_modules=[Extension("viskores._viskores", sources=[], py_limited_api=True)],
     cmdclass={"build_ext": CMakeBuildExt},
+    options={"bdist_wheel": {"py_limited_api": "cp312"}},
     install_requires=["numpy"],
+    extras_require={
+        "demo": [
+            "pyglet",
+            "PyOpenGL",
+            "PyOpenGL_accelerate",
+        ]
+    },
     zip_safe=False,
 )

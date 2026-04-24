@@ -1,150 +1,203 @@
 # Python Bindings
 
-This directory contains an initial Python binding layer for Viskores.
+This directory contains the Viskores Python package and its CMake build logic.
+The current binding implementation uses `nanobind`, including the active
+ndarray conversion layer, and the extension is built in `nanobind` stable-ABI
+(`abi3`) mode.
 
-Current scope:
-- Create uniform datasets from Python.
-- Create Tangle source datasets from Python.
-- Add point and cell fields from NumPy `float32` or `float64` arrays.
-- Split uniform datasets into block-partitioned datasets.
-- Run a small set of filters end to end:
-  - `cell_average`
-  - `point_average`
-  - `vector_magnitude`
-  - `gradient`
-  - `contour`
-- Run contour-tree workflows needed by the example ports:
-  - `contour_tree_augmented`
-  - `contour_tree_distributed`
-  - `distributed_branch_decomposition`
-  - `select_top_volume_branches`
-  - `extract_top_volume_contours`
-- Use Python-side wrappers for the `demo` example source, contour, and rendering flow.
-- Read result fields back as NumPy arrays.
+Current Python surface includes:
+- core data objects such as `viskores.cont.DataSet`
+- sources such as `viskores.source.Tangle`
+- filters in namespace-style submodules such as `viskores.filter.contour`
+- rendering classes in `viskores.rendering`
+- OpenGL interop entry points in `viskores.interop`
 
-Build example:
+## Recommended Workflow
+
+Build the Python bindings against the same Python interpreter that you will use
+to run them. A virtual environment is the simplest way to keep that consistent.
+
+### 1. Create a Virtual Environment
+
+With a Homebrew Python on macOS:
 
 ```bash
-cmake -S . -B build-python \
+python3 -m venv viskores-build/.venv
+viskores-build/.venv/bin/python -m ensurepip --upgrade
+viskores-build/.venv/bin/python -m pip install numpy pyglet PyOpenGL PyOpenGL_accelerate
+```
+
+Run these commands from the repository root so the relative
+`viskores-build/.venv` path resolves inside the build tree.
+The extension is built in `abi3` mode, so it is not tied to one specific
+Python minor version in the way a normal CPython extension is. The current
+wheel/import path has been validated on Python `3.12`, `3.13`, and `3.14`.
+
+If you want to run the current `GameOfLife.py` OpenGL window on macOS, the
+virtual-environment commands above are sufficient on the Python side. `pyglet`
+provides the native window and event loop, while `PyOpenGL` handles the raw GL
+calls used by the demo. On Linux, you may still need the usual system OpenGL
+development/runtime packages from your distribution.
+
+### 2. Configure Viskores with Python Bindings
+
+Configure Viskores to use the Python from the virtual environment:
+
+```bash
+cmake -S . -B viskores-build \
+  -DPython_EXECUTABLE=$PWD/viskores-build/.venv/bin/python \
   -DViskores_ENABLE_PYTHON_BINDINGS=ON \
-  -DViskores_ENABLE_TESTING=OFF \
-  -DViskores_ENABLE_EXAMPLES=OFF \
-  -DViskores_ENABLE_TUTORIALS=OFF
-cmake --build build-python --target _viskores
-PYTHONPATH=build-python/python_bindings python3 python_bindings/examples/basic_pipeline.py
-PYTHONPATH=build-python/python_bindings python3 python_bindings/examples/demo/Demo.py
+  -DViskores_ENABLE_RENDERING=ON \
+  -DViskores_ENABLE_TESTING=ON
 ```
 
-The Python package is staged into `build-python/python_bindings/viskores`.
-
-## Running `Demo.py` from a Viskores build
-
-If you want to run the Python demo directly from a Viskores build tree with
-Python bindings enabled:
+If your macOS build needs Homebrew OpenMP, add:
 
 ```bash
-cmake -S . -B build-python \
-  -DViskores_ENABLE_PYTHON_BINDINGS=ON \
-  -DViskores_ENABLE_TESTING=OFF \
-  -DViskores_ENABLE_EXAMPLES=OFF \
-  -DViskores_ENABLE_TUTORIALS=OFF
-cmake --build build-python --target _viskores
-
-PYTHONPATH=$PWD/build-python/python_bindings \
-python3 python_bindings/examples/demo/Demo.py
+-DOpenMP_ROOT=/opt/homebrew/opt/libomp
 ```
 
-For a smaller test run:
+Then build the bindings:
 
 ```bash
-PYTHONPATH=$PWD/build-python/python_bindings \
-python3 python_bindings/examples/demo/Demo.py --dims 8 8 8 --iso-value 3.0
+cmake --build viskores-build --target viskores_python_bindings -j 4
 ```
 
-This writes `volume.png`, `isosurface_wireframer.png`, and
-`isosurface_raytracer.png` in the current working directory.
+The built package is staged in:
 
-## Building a wheel
+```bash
+viskores-build/python_bindings
+```
 
-You can also build a wheel that contains only the Python bindings and expects
-Viskores to already be installed on the target system.
+### 3. Sanity Check the Package
 
-Point CMake at an installed Viskores package configuration with either
-`Viskores_DIR` or `CMAKE_PREFIX_PATH`, then run:
+Use the same virtual environment to import the package directly from the build
+tree:
+
+```bash
+PYTHONPATH=$PWD/viskores-build/python_bindings \
+$PWD/viskores-build/.venv/bin/python -c "import viskores, viskores.rendering, viskores.interop; print('ok')"
+```
+
+If you enabled testing, you can also run the Python binding tests:
+
+```bash
+ctest --test-dir viskores-build -R '^(PythonBindingsSmokeTest|(UnitTestPythonWrapper|PythonWrapper).*)$' --output-on-failure
+```
+
+The Python binding tests live under `python_bindings/testing/` and are
+registered with CTest automatically when both
+`Viskores_ENABLE_PYTHON_BINDINGS=ON` and `Viskores_ENABLE_TESTING=ON` are
+enabled.
+
+### 4. Build a Wheel
+
+From the repository root:
 
 ```bash
 cd python_bindings
-python3 -m pip wheel . -w dist --no-build-isolation --no-deps
+Viskores_DIR=$PWD/../viskores-build/lib/cmake/viskores-1.1 \
+../viskores-build/.venv/bin/python setup.py bdist_wheel
 ```
 
-For example, when building against an existing Viskores build tree:
+This writes the wheel to:
 
 ```bash
-CMAKE_PREFIX_PATH=$PWD/build-python \
-python3 -m pip wheel ./python_bindings -w python_bindings/dist --no-build-isolation --no-deps
+python_bindings/dist/
 ```
 
-If the referenced Viskores installation was built with OpenMP, you may also
-need to help CMake find the OpenMP runtime. On macOS with Homebrew `libomp`:
+For example, the current build produced:
 
 ```bash
-OpenMP_ROOT=/opt/homebrew/opt/libomp \
-CMAKE_PREFIX_PATH=$PWD/install \
-python3 -m pip wheel ./python_bindings -w python_bindings/dist --no-build-isolation --no-deps
+python_bindings/dist/viskores-1.1.9999-cp312-abi3-macosx_26_0_arm64.whl
 ```
 
-On Linux this is often unnecessary if OpenMP is installed in the default
-compiler search paths. If it is not, point `OpenMP_ROOT` or your compiler
-environment at the OpenMP installation used for the Viskores build.
+The wheel is now tagged as an `abi3` wheel rather than a Python-minor-version-
+specific wheel.
 
-This creates a wheel in `python_bindings/dist/` containing `viskores/__init__.py` and the
-compiled `_viskores` extension module. The wheel does not bundle the Viskores
-libraries themselves.
+## Running the Demos
 
-## Running `Demo.py` from an installed wheel in a virtual environment
+For applications that want Viskores runtime option parsing and backend
+selection, call `viskores.cont.Initialize(...)` explicitly near startup, just as
+the C++ examples do. In Python, pass a mutable `sys.argv`-style list including
+the program name:
 
-Build the wheel against an installed Viskores tree:
+```python
+import sys
+import viskores.cont
+
+viskores.cont.Initialize(sys.argv)
+```
+
+This strips Viskores-specific arguments from the list in place and returns a
+`viskores.cont.InitializeResult`.
+
+### Demo.py
+
+`Demo.py` is the Python counterpart to `examples/demo/Demo.cxx`.
+
+Run it from a directory where you want the output images written:
 
 ```bash
-OpenMP_ROOT=/opt/homebrew/opt/libomp \
-CMAKE_PREFIX_PATH=$PWD/install \
-python3 -m pip wheel ./python_bindings -w python_bindings/dist --no-build-isolation --no-deps
+cd /tmp
+PYTHONPATH=/path/to/viskores-build/python_bindings \
+/path/to/viskores-build/.venv/bin/python \
+  /path/to/viskores/python_bindings/examples/demo/Demo.py
 ```
 
-On Linux, if no extra OpenMP hint is needed, the same command is usually just:
+For a quicker test:
 
 ```bash
-CMAKE_PREFIX_PATH=$PWD/install \
-python3 -m pip wheel ./python_bindings -w python_bindings/dist --no-build-isolation --no-deps
+cd /tmp
+PYTHONPATH=/path/to/viskores-build/python_bindings \
+/path/to/viskores-build/.venv/bin/python \
+  /path/to/viskores/python_bindings/examples/demo/Demo.py --dims 8 8 8 --iso-value 3.0
 ```
 
-Create a virtual environment and install the wheel with `uv`:
+This writes:
+- `volume.png`
+- `isosurface_wireframer.png`
+- `isosurface_raytracer.png`
+
+### GameOfLife.py
+
+`GameOfLife.py` is the Python port of `examples/game_of_life/GameOfLife.cxx`.
+
+Run it with a native window:
 
 ```bash
-uv venv .venv --system-site-packages
-uv pip install --python .venv/bin/python --no-deps \
-  python_bindings/dist/viskores-*.whl
+PYTHONPATH=$PWD/viskores-build/python_bindings \
+$PWD/viskores-build/.venv/bin/python python_bindings/examples/game_of_life/GameOfLife.py
 ```
 
-Then run the demo from that environment:
+As in the C++ demo, you can optionally pass the initial live-cell rate:
 
 ```bash
-.venv/bin/python python_bindings/examples/demo/Demo.py
+PYTHONPATH=$PWD/viskores-build/python_bindings \
+$PWD/viskores-build/.venv/bin/python python_bindings/examples/game_of_life/GameOfLife.py 0.3
 ```
 
-For example:
+The current Python demo now uses a native `pyglet` window plus Viskores OpenGL
+upload through `viskores.interop`.
 
-```bash
-.venv/bin/python python_bindings/examples/demo/Demo.py --dims 8 8 8 --iso-value 3.0
+## Python OpenGL Interop Surface
+
+The binding layer now exposes:
+
+```python
+from viskores.interop import (
+    BufferState,
+    TransferToOpenGL,
+)
 ```
 
-If Viskores remains installed at the same location used when the wheel was
-built, macOS and Linux should resolve the Viskores shared libraries through the
-embedded rpath and no extra environment variables should be needed.
+This is the Viskores side of the C++ OpenGL upload path. `GameOfLife.py` now
+uses that surface together with a `pyglet` window and PyOpenGL. Use the OpenGL
+constants from `OpenGL.GL`, not from `viskores.interop`.
 
-If the Viskores install tree is moved after building the wheel, you may need to
-rebuild the wheel against the new install location or set a runtime library
-path variable as a fallback:
+## Notes
 
-- macOS: `DYLD_LIBRARY_PATH`
-- Linux: `LD_LIBRARY_PATH`
+- Build the bindings with the same Python you intend to use at runtime.
+- `numpy` is required both to build and to use the bindings.
+- `pyglet`, `PyOpenGL`, and `PyOpenGL_accelerate` are required for the current
+  windowed `GameOfLife.py` demo.
