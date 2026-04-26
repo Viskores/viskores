@@ -27,6 +27,8 @@
 
 #ifdef _WIN32
 #include <direct.h>
+#else
+#include <unistd.h>
 #endif
 
 
@@ -123,6 +125,35 @@ bool CreateDirectoriesFromFilePath(const std::string& filePath)
     default:
       return false;
   }
+}
+
+bool IsAbsolutePath(const std::string& filePath)
+{
+  if (filePath.empty())
+    return false;
+#ifdef _WIN32
+  if (filePath.size() > 2 && filePath[1] == ':' && (filePath[2] == '/' || filePath[2] == '\\'))
+    return true;
+  return (filePath[0] == '/' || filePath[0] == '\\');
+#else
+  return filePath[0] == '/';
+#endif
+}
+
+std::string MakeAbsolutePath(const std::string& filePath)
+{
+  if (IsAbsolutePath(filePath))
+    return filePath;
+
+  char currentDirectory[4096];
+#ifdef _WIN32
+  if (_getcwd(currentDirectory, sizeof(currentDirectory)) == nullptr)
+#else
+  if (getcwd(currentDirectory, sizeof(currentDirectory)) == nullptr)
+#endif
+    throw viskores::cont::ErrorBadValue("Unable to get current working directory");
+
+  return MergePaths(currentDirectory, filePath);
 }
 
 std::string MergePaths(const std::string& filePathPrefix, const std::string& filePathSuffix)
