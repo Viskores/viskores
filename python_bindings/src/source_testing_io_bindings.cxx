@@ -11,12 +11,16 @@
 
 #include <nanobind/stl/string.h>
 
-#if VISKORES_PYTHON_ENABLE_FILTER_SCALAR_TOPOLOGY
+#if VISKORES_PYTHON_ENABLE_TESTING_UTILS && VISKORES_PYTHON_ENABLE_FILTER_SCALAR_TOPOLOGY && \
+  __has_include(<viskores/filter/scalar_topology/testing/SuperArcHelper.h>)
+#define VISKORES_PYTHON_ENABLE_SCALAR_TOPOLOGY_TESTING_HELPERS 1
 #include <viskores/filter/scalar_topology/testing/SuperArcHelper.h>
 #include <viskores/filter/scalar_topology/testing/VolumeHelper.h>
 #include <viskores/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/BranchCompiler.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/TreeCompiler.h>
+#else
+#define VISKORES_PYTHON_ENABLE_SCALAR_TOPOLOGY_TESTING_HELPERS 0
 #endif
 
 namespace viskores::python::bindings
@@ -79,7 +83,7 @@ void RegisterNanobindTestingClasses(nb::module_& m,
 
 #undef VISKORES_NB_MAKE_TEST_DATASET_METHOD
 
-#if VISKORES_PYTHON_ENABLE_FILTER_SCALAR_TOPOLOGY
+#if VISKORES_PYTHON_ENABLE_SCALAR_TOPOLOGY_TESTING_HELPERS
   erase_existing_name("CompileDistributedContourTreeSuperarcs");
   m.attr("CompileDistributedContourTreeSuperarcs") = nb::cpp_function(
     [](nb::handle partitionedObject) {

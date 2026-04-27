@@ -289,6 +289,10 @@ if (Viskores_ENABLE_TESTING)
     "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_coordinate_system_class.py"
   )
   viskores_add_python_binding_test(
+    UnitTestPythonWrapperDataSetBuilders
+    "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_dataset_builders.py"
+  )
+  viskores_add_python_binding_test(
     UnitTestPythonWrapperCellSetClass
     "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_cell_set_class.py"
   )

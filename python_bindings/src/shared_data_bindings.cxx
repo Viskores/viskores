@@ -50,6 +50,10 @@ std::string DataSetCellSetTypeName(const viskores::cont::DataSet& dataSet)
   {
     return "explicit";
   }
+  if (cellSet.CanConvert<viskores::cont::CellSetStructured<1>>())
+  {
+    return "structured1d";
+  }
   if (cellSet.CanConvert<viskores::cont::CellSetStructured<2>>())
   {
     return "structured2d";
@@ -181,6 +185,55 @@ std::vector<viskores::Id> ParseIdSequence(nb::handle object)
   return values;
 }
 
+viskores::cont::ArrayHandle<viskores::FloatDefault> ParseRectilinearAxis(nb::handle object,
+                                                                         const char* name)
+{
+  if (!object.is_valid() || object.is_none())
+  {
+    std::ostringstream message;
+    message << name << " coordinate values are required.";
+    throw std::runtime_error(message.str());
+  }
+
+  if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))
+  {
+    std::ostringstream message;
+    message << name << " coordinate values must be a one-dimensional numeric sequence.";
+    throw std::runtime_error(message.str());
+  }
+
+  nb::sequence sequence = nb::borrow<nb::sequence>(object);
+  const size_t size = static_cast<size_t>(nb::len(sequence));
+  if (size == 0)
+  {
+    std::ostringstream message;
+    message << name << " coordinate values must not be empty.";
+    throw std::runtime_error(message.str());
+  }
+
+  std::vector<viskores::FloatDefault> values(size);
+  for (size_t index = 0; index < size; ++index)
+  {
+    values[index] = static_cast<viskores::FloatDefault>(nb::cast<double>(sequence[index]));
+  }
+  return viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On);
+}
+
+viskores::IdComponent GetDimensionsRank(nb::handle object)
+{
+  if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))
+  {
+    throw std::runtime_error("dimensions must be a sequence of 1, 2, or 3 integers.");
+  }
+
+  const size_t size = static_cast<size_t>(nb::len(nb::borrow<nb::sequence>(object)));
+  if ((size < 1) || (size > 3))
+  {
+    throw std::runtime_error("dimensions must contain 1, 2, or 3 integers.");
+  }
+  return static_cast<viskores::IdComponent>(size);
+}
+
 template <typename ArrayType>
 void RegisterArrayHandleSOAClass(nb::module_& m,
                                  const std::function<void(const char*)>& erase_existing_name,
@@ -266,7 +319,8 @@ nb::object ExtractArrayFromComponentsObject(const viskores::cont::UnknownArrayHa
 template <typename ComponentType, viskores::IdComponent NumberOfComponents>
 bool TryArrayCopyToSOA(const viskores::cont::UnknownArrayHandle& source, nb::handle destination)
 {
-  using ArrayType = viskores::cont::ArrayHandleSOA<viskores::Vec<ComponentType, NumberOfComponents>>;
+  using ArrayType =
+    viskores::cont::ArrayHandleSOA<viskores::Vec<ComponentType, NumberOfComponents>>;
   ArrayType* typedDestination = nullptr;
   if (!nb::try_cast(destination, typedDestination))
   {
@@ -289,7 +343,8 @@ bool TryArrayCopyToSOAComponent(const viskores::cont::UnknownArrayHandle& source
 template <typename ComponentType, viskores::IdComponent NumberOfComponents>
 bool TryPythonObjectToSOAUnknownArray(nb::handle object, viskores::cont::UnknownArrayHandle& array)
 {
-  using ArrayType = viskores::cont::ArrayHandleSOA<viskores::Vec<ComponentType, NumberOfComponents>>;
+  using ArrayType =
+    viskores::cont::ArrayHandleSOA<viskores::Vec<ComponentType, NumberOfComponents>>;
   ArrayType* typedArray = nullptr;
   if (!nb::try_cast(object, typedArray))
   {
@@ -399,7 +454,8 @@ template <typename ComponentType, viskores::IdComponent NumberOfComponents>
 bool TrySetCoordinateSystemDataSOA(viskores::cont::CoordinateSystem& coordinateSystem,
                                    nb::handle values)
 {
-  using ArrayType = viskores::cont::ArrayHandleSOA<viskores::Vec<ComponentType, NumberOfComponents>>;
+  using ArrayType =
+    viskores::cont::ArrayHandleSOA<viskores::Vec<ComponentType, NumberOfComponents>>;
   ArrayType* typedValues = nullptr;
   if (!nb::try_cast(values, typedValues))
   {
@@ -440,12 +496,13 @@ bool TrySetCoordinateSystemDataFromPythonObject(viskores::cont::CoordinateSystem
 }
 
 template <typename CoordinateComponentType>
-bool TryCreateExplicitDataSetWithCoordinateType(const viskores::cont::UnknownArrayHandle& coords,
-                                                const std::vector<viskores::UInt8>& shapes,
-                                                const std::vector<viskores::IdComponent>& numIndices,
-                                                const std::vector<viskores::Id>& connectivity,
-                                                const std::string& coordName,
-                                                nb::object& output)
+bool TryCreateExplicitDataSetWithCoordinateType(
+  const viskores::cont::UnknownArrayHandle& coords,
+  const std::vector<viskores::UInt8>& shapes,
+  const std::vector<viskores::IdComponent>& numIndices,
+  const std::vector<viskores::Id>& connectivity,
+  const std::string& coordName,
+  nb::object& output)
 {
   using CoordinateArrayType =
     viskores::cont::ArrayHandle<viskores::Vec<CoordinateComponentType, 3>>;
@@ -486,7 +543,8 @@ nb::object CreateExplicitDataSetFromPythonObjects(nb::handle coordsObject,
     {
       return output;
     }
-    throw std::runtime_error("Explicit coordinates must have shape (N, 3) and dtype float32 or float64.");
+    throw std::runtime_error(
+      "Explicit coordinates must have shape (N, 3) and dtype float32 or float64.");
   }
 
   try
@@ -500,7 +558,8 @@ nb::object CreateExplicitDataSetFromPythonObjects(nb::handle coordsObject,
     {
       return output;
     }
-    throw std::runtime_error("Explicit coordinates must have shape (N, 3) and dtype float32 or float64.");
+    throw std::runtime_error(
+      "Explicit coordinates must have shape (N, 3) and dtype float32 or float64.");
   }
   catch (const nb::cast_error&)
   {
@@ -508,6 +567,79 @@ nb::object CreateExplicitDataSetFromPythonObjects(nb::handle coordsObject,
 
   return WrapDataSet(viskores::cont::DataSetBuilderExplicit::Create(
     ParseVec3Sequence(coordsObject), shapes, numIndices, connectivity, coordName));
+}
+
+template <typename CoordinateComponentType>
+bool TryCreateCurvilinearDataSetWithCoordinateType(const viskores::cont::UnknownArrayHandle& coords,
+                                                   const viskores::Id3& dimensions,
+                                                   viskores::IdComponent dimensionRank,
+                                                   const std::string& coordName,
+                                                   nb::object& output)
+{
+  using CoordinateArrayType =
+    viskores::cont::ArrayHandle<viskores::Vec<CoordinateComponentType, 3>>;
+  if (!coords.CanConvert<CoordinateArrayType>())
+  {
+    return false;
+  }
+
+  CoordinateArrayType coordsArray;
+  coords.AsArrayHandle(coordsArray);
+  if (dimensionRank == 1)
+  {
+    output = WrapDataSet(viskores::cont::DataSetBuilderCurvilinear::Create(coordsArray, coordName));
+  }
+  else if (dimensionRank == 2)
+  {
+    output = WrapDataSet(viskores::cont::DataSetBuilderCurvilinear::Create(
+      coordsArray, viskores::Id2(dimensions[0], dimensions[1]), coordName));
+  }
+  else if (dimensionRank == 3)
+  {
+    output = WrapDataSet(
+      viskores::cont::DataSetBuilderCurvilinear::Create(coordsArray, dimensions, coordName));
+  }
+  else
+  {
+    throw std::runtime_error("dimensions must contain 1, 2, or 3 integers.");
+  }
+  return true;
+}
+
+nb::object CreateCurvilinearDataSetFromPythonObjects(nb::handle coordsObject,
+                                                     nb::handle dimensionsObject,
+                                                     const std::string& coordName)
+{
+  const auto dimensions = ParseDimensions(dimensionsObject);
+  const auto dimensionRank = GetDimensionsRank(dimensionsObject);
+  const auto coords = PythonObjectToUnknownArray(coordsObject);
+
+  viskores::Id expectedPoints = 1;
+  for (viskores::IdComponent index = 0; index < dimensionRank; ++index)
+  {
+    if (dimensions[index] < 1)
+    {
+      throw std::runtime_error("Curvilinear dimensions must be positive.");
+    }
+    expectedPoints *= dimensions[index];
+  }
+  if (coords.GetNumberOfValues() != expectedPoints)
+  {
+    throw std::runtime_error(
+      "Curvilinear coordinate count must match the product of the requested dimensions.");
+  }
+
+  nb::object output;
+  if (TryCreateCurvilinearDataSetWithCoordinateType<viskores::Float32>(
+        coords, dimensions, dimensionRank, coordName, output) ||
+      TryCreateCurvilinearDataSetWithCoordinateType<viskores::Float64>(
+        coords, dimensions, dimensionRank, coordName, output))
+  {
+    return output;
+  }
+
+  throw std::runtime_error(
+    "Curvilinear coordinates must have shape (N, 3) and dtype float32 or float64.");
 }
 
 } // namespace
@@ -606,8 +738,7 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
     m, erase_existing_name, "ArrayHandleSOAVec4ui_64");
 
   erase_existing_name("ArrayHandleSOAVec3f");
-  m.attr("ArrayHandleSOAVec3f") =
-    std::is_same<viskores::FloatDefault, viskores::Float32>::value
+  m.attr("ArrayHandleSOAVec3f") = std::is_same<viskores::FloatDefault, viskores::Float32>::value
     ? m.attr("ArrayHandleSOAVec3f_32")
     : m.attr("ArrayHandleSOAVec3f_64");
 
@@ -666,11 +797,10 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
     nb::arg("copy") = true);
 
   erase_existing_name("ArrayCopy");
-  m.attr("ArrayCopy") = nb::cpp_function(
-    [](nb::handle source, nb::handle destination)
-    { ArrayCopyToPythonDestination(source, destination); },
-    nb::arg("source"),
-    nb::arg("destination"));
+  m.attr("ArrayCopy") = nb::cpp_function([](nb::handle source, nb::handle destination)
+                                         { ArrayCopyToPythonDestination(source, destination); },
+                                         nb::arg("source"),
+                                         nb::arg("destination"));
 
   erase_existing_name("CellSet");
   nb::class_<viskores::cont::UnknownCellSet>(m, "CellSet")
@@ -961,6 +1091,78 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
       nb::arg("shapes"),
       nb::arg("num_indices"),
       nb::arg("connectivity"),
+      nb::arg("coord_name") = "coords");
+
+  erase_existing_name("DataSetBuilderCurvilinear");
+  nb::class_<viskores::cont::DataSetBuilderCurvilinear>(m, "DataSetBuilderCurvilinear")
+    .def(nb::init<>())
+    .def_static(
+      "Create",
+      [](nb::object coordsObject, nb::object dimensionsObject, const std::string& coordName)
+      {
+        return CreateCurvilinearDataSetFromPythonObjects(coordsObject, dimensionsObject, coordName);
+      },
+      nb::arg("coords"),
+      nb::arg("dimensions"),
+      nb::arg("coord_name") = "coords");
+
+  erase_existing_name("DataSetBuilderUniform");
+  nb::class_<viskores::cont::DataSetBuilderUniform>(m, "DataSetBuilderUniform")
+    .def(nb::init<>())
+    .def_static(
+      "Create",
+      [](nb::object dimensions, nb::object origin, nb::object spacing, const std::string& coordName)
+      {
+        const auto parsedDimensions = ParseDimensions(dimensions);
+        const auto parsedOrigin = ParseVec3(origin, viskores::Vec3f(0.0f, 0.0f, 0.0f));
+        const auto parsedSpacing = ParseVec3(spacing, viskores::Vec3f(1.0f, 1.0f, 1.0f));
+        return WrapDataSet(viskores::cont::DataSetBuilderUniform::Create(
+          parsedDimensions, parsedOrigin, parsedSpacing, coordName));
+      },
+      nb::arg("dimensions"),
+      nb::arg("origin") = nb::none(),
+      nb::arg("spacing") = nb::none(),
+      nb::arg("coord_name") = "coords");
+
+  erase_existing_name("DataSetBuilderRectilinear");
+  nb::class_<viskores::cont::DataSetBuilderRectilinear>(m, "DataSetBuilderRectilinear")
+    .def(nb::init<>())
+    .def_static(
+      "Create",
+      [](nb::object xObject, nb::object yObject, nb::object zObject, const std::string& coordName)
+      {
+        auto actualCoordName = coordName;
+        if (nb::isinstance<nb::str>(yObject) && zObject.is_none() && coordName == "coords")
+        {
+          actualCoordName = nb::cast<std::string>(yObject);
+          yObject = nb::none();
+        }
+        if (nb::isinstance<nb::str>(zObject) && coordName == "coords")
+        {
+          actualCoordName = nb::cast<std::string>(zObject);
+          zObject = nb::none();
+        }
+
+        auto x = ParseRectilinearAxis(xObject, "x");
+        if (yObject.is_none())
+        {
+          return WrapDataSet(viskores::cont::DataSetBuilderRectilinear::Create(x, actualCoordName));
+        }
+
+        auto y = ParseRectilinearAxis(yObject, "y");
+        if (zObject.is_none())
+        {
+          return WrapDataSet(
+            viskores::cont::DataSetBuilderRectilinear::Create(x, y, actualCoordName));
+        }
+
+        auto z = ParseRectilinearAxis(zObject, "z");
+        return WrapDataSet(
+          viskores::cont::DataSetBuilderRectilinear::Create(x, y, z, actualCoordName));
+      },
+      nb::arg("x"),
+      nb::arg("y") = nb::none(),
+      nb::arg("z") = nb::none(),
       nb::arg("coord_name") = "coords");
 
   erase_existing_name("DataSetBuilderExplicitIterative");

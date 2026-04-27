@@ -73,13 +73,18 @@
 #include <viskores/cont/CellSetExplicit.h>
 #include <viskores/cont/CellSetStructured.h>
 #include <viskores/cont/DataSet.h>
+#include <viskores/cont/DataSetBuilderCurvilinear.h>
 #include <viskores/cont/DataSetBuilderExplicit.h>
 #include <viskores/cont/DataSetBuilderRectilinear.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
 #include <viskores/cont/Initialize.h>
 #include <viskores/cont/PartitionedDataSet.h>
 #if VISKORES_PYTHON_ENABLE_TESTING_UTILS
+#if __has_include(<viskores/cont/testing/MakeTestDataSet.h>)
 #include <viskores/cont/testing/MakeTestDataSet.h>
+#else
+#include <viskores/cont/testlib/MakeTestDataSet.h>
+#endif
 #endif
 #if VISKORES_PYTHON_ENABLE_RENDERING
 #include <viskores/cont/ColorTable.h>
