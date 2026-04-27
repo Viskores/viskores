@@ -79,6 +79,27 @@ get_filename_component(Viskores_PYTHON_EXTENSION_BASENAME
 get_filename_component(Viskores_PYTHON_EXTENSION_SUFFIX
   "${VISKORES_PYTHON_EXTENSION_FILENAME}" LAST_EXT)
 
+function(viskores_python_remove_inactive_extension_files output_dir stable_abi)
+  file(GLOB inactive_extension_candidates
+    "${output_dir}/_viskores.*${CMAKE_SHARED_MODULE_SUFFIX}"
+    "${output_dir}/_viskores.*${CMAKE_SHARED_LIBRARY_SUFFIX}"
+  )
+  foreach(inactive_extension IN LISTS inactive_extension_candidates)
+    get_filename_component(inactive_extension_name "${inactive_extension}" NAME)
+    if (stable_abi)
+      if (NOT inactive_extension_name MATCHES "\\.abi3\\.")
+        file(REMOVE "${inactive_extension}")
+      endif()
+    elseif (inactive_extension_name MATCHES "\\.abi3\\.")
+      file(REMOVE "${inactive_extension}")
+    endif()
+  endforeach()
+endfunction()
+viskores_python_remove_inactive_extension_files(
+  "${VISKORES_PYTHON_EXTENSION_OUTPUT_DIR}"
+  "${VISKORES_PYTHON_STABLE_ABI}"
+)
+
 nanobind_add_module(viskores_python_bindings ${Viskores_PYTHON_NANOBIND_STABLE_ABI} NOMINSIZE
   ../viskores_python_bindings.cxx
   ../src/common_support_bindings.cxx

@@ -64,10 +64,10 @@
 #define VISKORES_PYTHON_ENABLE_TESTING_UTILS 0
 #endif
 
-#include <viskores/Types.h>
-#include <viskores/ImplicitFunction.h>
 #include <viskores/CellClassification.h>
+#include <viskores/ImplicitFunction.h>
 #include <viskores/Range.h>
+#include <viskores/Types.h>
 #include <viskores/cont/ArrayHandleBasic.h>
 #include <viskores/cont/CastAndCall.h>
 #include <viskores/cont/CellSetExplicit.h>
@@ -101,8 +101,8 @@
 #include <viskores/filter/field_conversion/PointAverage.h>
 #endif
 #if VISKORES_PYTHON_ENABLE_FILTER_FIELD_TRANSFORM
-#include <viskores/filter/field_transform/CylindricalCoordinateTransform.h>
 #include <viskores/filter/field_transform/CompositeVectors.h>
+#include <viskores/filter/field_transform/CylindricalCoordinateTransform.h>
 #include <viskores/filter/field_transform/FieldToColors.h>
 #include <viskores/filter/field_transform/GenerateIds.h>
 #include <viskores/filter/field_transform/LogValues.h>
@@ -134,10 +134,10 @@
 #include <viskores/filter/connected_components/ImageConnectivity.h>
 #endif
 #if VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
+#include <viskores/filter/entity_extraction/ExternalFaces.h>
 #include <viskores/filter/entity_extraction/ExtractGeometry.h>
 #include <viskores/filter/entity_extraction/ExtractPoints.h>
 #include <viskores/filter/entity_extraction/ExtractStructured.h>
-#include <viskores/filter/entity_extraction/ExternalFaces.h>
 #include <viskores/filter/entity_extraction/GhostCellRemove.h>
 #include <viskores/filter/entity_extraction/Mask.h>
 #include <viskores/filter/entity_extraction/MaskPoints.h>
@@ -154,8 +154,8 @@
 #include <viskores/filter/geometry_refinement/Shrink.h>
 #include <viskores/filter/geometry_refinement/SplitSharpEdges.h>
 #include <viskores/filter/geometry_refinement/Tetrahedralize.h>
-#include <viskores/filter/geometry_refinement/Tube.h>
 #include <viskores/filter/geometry_refinement/Triangulate.h>
+#include <viskores/filter/geometry_refinement/Tube.h>
 #include <viskores/filter/geometry_refinement/VertexClustering.h>
 #endif
 #if VISKORES_PYTHON_ENABLE_FILTER_RESAMPLING
@@ -219,15 +219,18 @@
 #include <viskores/rendering/View3D.h>
 #endif
 #if VISKORES_PYTHON_ENABLE_SOURCE
-#include <viskores/source/PerlinNoise.h>
 #include <viskores/source/Oscillator.h>
+#include <viskores/source/PerlinNoise.h>
 #include <viskores/source/Tangle.h>
 #include <viskores/source/Wavelet.h>
 #endif
 
+#include <cstdint>
+#include <cstring>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #if defined(__clang__)

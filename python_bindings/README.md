@@ -99,6 +99,52 @@ registered with CTest automatically when both
 `Viskores_ENABLE_PYTHON_BINDINGS=ON` and `Viskores_ENABLE_TESTING=ON` are
 enabled.
 
+## Array Interoperability
+
+The Python package accepts NumPy arrays for fields and coordinates. The binding
+converts C-contiguous CPU arrays with these NumPy dtypes:
+
+- `int8`, `uint8`, `int16`, `uint16`, `int32`, `uint32`, `int64`, `uint64`
+- `float32`, `float64`
+
+One-dimensional arrays become scalar Viskores arrays. Two-dimensional arrays
+with shape `N x 1`, `N x 2`, `N x 3`, or `N x 4` become scalar or fixed-size
+vector arrays. For example:
+
+```python
+import numpy as np
+from viskores.cont import Association, Field
+
+values = np.arange(12, dtype=np.float32).reshape(4, 3)
+field = Field("velocity", Association.POINTS, values)
+```
+
+Use `viskores.cont.array_from_numpy` when you want an explicit
+`UnknownArrayHandle`:
+
+```python
+from viskores.cont import array_from_numpy, asnumpy
+
+array = array_from_numpy(values)
+round_trip = asnumpy(array)
+```
+
+By default, NumPy input is copied into Viskores-owned memory. Passing
+`copy=False` creates a Viskores array that aliases the NumPy buffer, so the
+NumPy array must outlive the Viskores array:
+
+```python
+array = array_from_numpy(values, copy=False)
+view = array.AsNumPy(copy=False)
+```
+
+The `copy=False` NumPy export path is available for basic scalar and fixed-size
+vector arrays and returns a read-only NumPy view. Other storage layouts export
+through a copy. Low-level `ArrayHandleSOA*` and `ArrayHandleRecombineVec*`
+classes are also exposed for workflows that need to preserve or test specific
+Viskores storage layouts, while `array_from_numpy` and `asnumpy` are the
+recommended high-level entry points.
+
 ### 4. Build a Wheel
 
 From the repository root:

@@ -23,29 +23,28 @@ namespace viskores::python::bindings
 
 void SetPythonError(const std::exception& error);
 
-nb::object UnknownArrayToNumPyArray(const viskores::cont::UnknownArrayHandle& array);
+nb::object UnknownArrayToNumPyArray(const viskores::cont::UnknownArrayHandle& array,
+                                    bool copy = true);
 nb::object FieldToNumPyArray(const viskores::cont::Field& field);
-viskores::cont::UnknownArrayHandle NumPyArrayToUnknownArray(nb::handle object);
+viskores::cont::UnknownArrayHandle NumPyArrayToUnknownArray(nb::handle object, bool copy = true);
 std::vector<viskores::Float64> ParseIsoValues(nb::handle object);
 nb::object IdArrayToNumPy(const viskores::cont::ArrayHandle<viskores::Id>& array);
 nb::object VectorToNumPy(const std::vector<viskores::FloatDefault>& values);
 viskores::cont::ArrayHandle<viskores::Id3> ParseId3Array(nb::handle object);
 nb::object CreateId3ArrayObject(const viskores::cont::ArrayHandle<viskores::Id3>& array);
 viskores::cont::DataSet MakeGhostCellDataSetImpl(const std::string& datasetType,
-                                               viskores::Id nx,
-                                               viskores::Id ny,
-                                               viskores::Id nz,
-                                               int numLayers,
-                                               const std::string& ghostName,
-                                               bool addMidGhost);
+                                                 viskores::Id nx,
+                                                 viskores::Id ny,
+                                                 viskores::Id nz,
+                                                 int numLayers,
+                                                 const std::string& ghostName,
+                                                 bool addMidGhost);
 #if VISKORES_PYTHON_ENABLE_FILTER_SCALAR_TOPOLOGY
 nb::object EdgePairArrayToNumPy(
   const viskores::worklet::contourtree_augmented::EdgePairArray& saddlePeak);
 viskores::Id3 ComputeNumberOfBlocksPerAxis(viskores::Id3 globalSize, viskores::Id numberOfBlocks);
-std::tuple<viskores::Id3, viskores::Id3, viskores::Id3> ComputeBlockExtents(
-  viskores::Id3 globalSize,
-  viskores::Id3 blocksPerDim,
-  viskores::Id blockNo);
+std::tuple<viskores::Id3, viskores::Id3, viskores::Id3>
+ComputeBlockExtents(viskores::Id3 globalSize, viskores::Id3 blocksPerDim, viskores::Id blockNo);
 viskores::cont::DataSet CreateSubDataSet(const viskores::cont::DataSet& ds,
                                          viskores::Id3 blockOrigin,
                                          viskores::Id3 blockSize,
@@ -58,9 +57,8 @@ viskores::cont::Field::Association ParseAssociation(
 viskores::Id3 ParseDimensions(nb::handle object);
 viskores::Vec3f ParseVec3(nb::handle object, const viskores::Vec3f& defaultValue);
 viskores::RangeId3 ParseRangeId3(nb::handle object);
-viskores::Range ParseRange(
-  nb::handle object,
-  const viskores::Range& defaultValue = viskores::Range());
+viskores::Range ParseRange(nb::handle object,
+                           const viskores::Range& defaultValue = viskores::Range());
 viskores::Vec3f_32 ParseColorTableColor(nb::handle object);
 viskores::rendering::Color ParseColor(
   nb::handle object,
@@ -99,27 +97,22 @@ nb::object ExecuteFilterToPython(FilterType& filter, nb::handle dataObject)
   return ExecuteFilterOnPythonDataObject<FilterType>(filter, dataObject);
 }
 
-void RegisterNanobindSharedDataClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindTestingClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindSourceClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindIOClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindSharedDataClasses(nb::module_& m,
+                                       const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindTestingClasses(nb::module_& m,
+                                    const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindSourceClasses(nb::module_& m,
+                                   const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindIOClasses(nb::module_& m,
+                               const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindFieldConversionClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindVectorAnalysisClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindContourClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindContourClasses(nb::module_& m,
+                                    const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindFieldTransformClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name);
@@ -138,27 +131,21 @@ void RegisterNanobindGeometryRefinementClasses(
 void RegisterNanobindImageProcessingClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindResamplingClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindResamplingClasses(nb::module_& m,
+                                       const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindScalarTopologyClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindHelperFunctions(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindInteropClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindColorTableClass(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindCameraClass(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindRenderingClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindHelperFunctions(nb::module_& m,
+                                     const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindInteropClasses(nb::module_& m,
+                                    const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindColorTableClass(nb::module_& m,
+                                     const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindCameraClass(nb::module_& m,
+                                 const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindRenderingClasses(nb::module_& m,
+                                      const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindImplicitFunctionClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name);

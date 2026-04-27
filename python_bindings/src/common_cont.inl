@@ -18,13 +18,107 @@ nb::object CreateOwnedNumPyArray(std::vector<ComponentType>&& values,
                                  std::initializer_list<size_t> shape)
 {
   auto* heapValues = new std::vector<ComponentType>(std::move(values));
-  nb::capsule owner(heapValues, [](void* ptr) noexcept {
-    delete static_cast<std::vector<ComponentType>*>(ptr);
-  });
+  nb::capsule owner(
+    heapValues, [](void* ptr) noexcept { delete static_cast<std::vector<ComponentType>*>(ptr); });
 
-  nb::ndarray<nb::numpy, ComponentType, nb::c_contig> array(
-    heapValues->data(), shape, owner);
+  nb::ndarray<nb::numpy, ComponentType, nb::c_contig> array(heapValues->data(), shape, owner);
   return array.cast();
+}
+
+template <typename ValueType, typename ComponentType = ValueType>
+struct BasicArrayViewOwner
+{
+  viskores::cont::ArrayHandleBasic<ValueType> Array;
+  viskores::cont::Token Token;
+  const ComponentType* Data = nullptr;
+
+  explicit BasicArrayViewOwner(const viskores::cont::ArrayHandleBasic<ValueType>& array)
+    : Array(array)
+    , Data(reinterpret_cast<const ComponentType*>(this->Array.GetReadPointer(this->Token)))
+  {
+  }
+};
+
+template <typename ValueType, typename ComponentType = ValueType>
+nb::object CreateBasicNumPyView(const viskores::cont::ArrayHandleBasic<ValueType>& array,
+                                std::initializer_list<size_t> shape)
+{
+  auto* owner = new BasicArrayViewOwner<ValueType, ComponentType>(array);
+  nb::capsule capsule(owner,
+                      [](void* ptr) noexcept
+                      { delete static_cast<BasicArrayViewOwner<ValueType, ComponentType>*>(ptr); });
+  nb::ndarray<nb::numpy, const ComponentType, nb::c_contig> view(owner->Data, shape, capsule);
+  return view.cast();
+}
+
+template <typename ComponentType>
+bool TryBasicUnknownArrayToNumPyView(const viskores::cont::UnknownArrayHandle& array,
+                                     nb::object& output)
+{
+  const viskores::Id numberOfValues = array.GetNumberOfValues();
+  const viskores::IdComponent numberOfComponents = array.GetNumberOfComponentsFlat();
+  if (numberOfComponents <= 0)
+  {
+    throw std::runtime_error("Cannot export arrays with variable component counts to NumPy.");
+  }
+
+  if (numberOfComponents == 1)
+  {
+    using ArrayType = viskores::cont::ArrayHandleBasic<ComponentType>;
+    if (array.IsType<ArrayType>())
+    {
+      ArrayType basicArray;
+      array.AsArrayHandle(basicArray);
+      output =
+        CreateBasicNumPyView<ComponentType>(basicArray, { static_cast<size_t>(numberOfValues) });
+      return true;
+    }
+    return false;
+  }
+
+  if (numberOfComponents == 2)
+  {
+    using VecType = viskores::Vec<ComponentType, 2>;
+    using ArrayType = viskores::cont::ArrayHandleBasic<VecType>;
+    if (array.IsType<ArrayType>())
+    {
+      ArrayType basicArray;
+      array.AsArrayHandle(basicArray);
+      output = CreateBasicNumPyView<VecType, ComponentType>(
+        basicArray,
+        { static_cast<size_t>(numberOfValues), static_cast<size_t>(numberOfComponents) });
+      return true;
+    }
+  }
+  else if (numberOfComponents == 3)
+  {
+    using VecType = viskores::Vec<ComponentType, 3>;
+    using ArrayType = viskores::cont::ArrayHandleBasic<VecType>;
+    if (array.IsType<ArrayType>())
+    {
+      ArrayType basicArray;
+      array.AsArrayHandle(basicArray);
+      output = CreateBasicNumPyView<VecType, ComponentType>(
+        basicArray,
+        { static_cast<size_t>(numberOfValues), static_cast<size_t>(numberOfComponents) });
+      return true;
+    }
+  }
+  else if (numberOfComponents == 4)
+  {
+    using VecType = viskores::Vec<ComponentType, 4>;
+    using ArrayType = viskores::cont::ArrayHandleBasic<VecType>;
+    if (array.IsType<ArrayType>())
+    {
+      ArrayType basicArray;
+      array.AsArrayHandle(basicArray);
+      output = CreateBasicNumPyView<VecType, ComponentType>(
+        basicArray,
+        { static_cast<size_t>(numberOfValues), static_cast<size_t>(numberOfComponents) });
+      return true;
+    }
+  }
+  return false;
 }
 
 template <typename ComponentType>
@@ -46,12 +140,10 @@ nb::object CopyUnknownArrayToNumPy(const viskores::cont::UnknownArrayHandle& arr
     {
       outputData[index] = portal.Get(index);
     }
-    return CreateOwnedNumPyArray(std::move(outputData),
-                                 { static_cast<size_t>(numberOfValues) });
+    return CreateOwnedNumPyArray(std::move(outputData), { static_cast<size_t>(numberOfValues) });
   }
 
-  std::vector<ComponentType> outputData(
-    static_cast<size_t>(numberOfValues * numberOfComponents));
+  std::vector<ComponentType> outputData(static_cast<size_t>(numberOfValues * numberOfComponents));
   for (viskores::IdComponent componentIndex = 0; componentIndex < numberOfComponents;
        ++componentIndex)
   {
@@ -65,6 +157,28 @@ nb::object CopyUnknownArrayToNumPy(const viskores::cont::UnknownArrayHandle& arr
   return CreateOwnedNumPyArray(
     std::move(outputData),
     { static_cast<size_t>(numberOfValues), static_cast<size_t>(numberOfComponents) });
+}
+
+template <typename ComponentType>
+bool TryUnknownArrayToNumPy(const viskores::cont::UnknownArrayHandle& array,
+                            bool copy,
+                            nb::object& output)
+{
+  if (!array.IsBaseComponentType<ComponentType>())
+  {
+    return false;
+  }
+  if (!copy)
+  {
+    if (TryBasicUnknownArrayToNumPyView<ComponentType>(array, output))
+    {
+      return true;
+    }
+    throw std::runtime_error(
+      "copy=False requires an ArrayHandleBasic scalar or fixed-size vector array.");
+  }
+  output = CopyUnknownArrayToNumPy<ComponentType>(array);
+  return true;
 }
 
 nb::object CreateId3ArrayObject(const viskores::cont::ArrayHandle<viskores::Id3>& array)
@@ -250,7 +364,8 @@ bool ParseImplicitFunction(nb::handle object, viskores::ImplicitFunctionGeneral&
 }
 #endif
 
-viskores::Id2 ParseSize2D(nb::handle object, const viskores::Id2& defaultValue = viskores::Id2(1024, 1024))
+viskores::Id2 ParseSize2D(nb::handle object,
+                          const viskores::Id2& defaultValue = viskores::Id2(1024, 1024))
 {
   if (!object.is_valid() || object.is_none())
   {
@@ -277,167 +392,141 @@ viskores::Id2 ParseSize2D(nb::handle object, const viskores::Id2& defaultValue =
   return dims;
 }
 
-template <typename VecType, typename ComponentType>
-viskores::cont::UnknownArrayHandle BuildVectorArray(const ComponentType* rawData,
-                                                    size_t numberOfTuples,
-                                                    size_t numberOfComponents)
+template <typename ValueType>
+void CheckNumPyArrayAlignment(const void* data)
 {
-  std::vector<VecType> values(numberOfTuples);
-  for (size_t tupleIndex = 0; tupleIndex < numberOfTuples; ++tupleIndex)
+  const auto address = reinterpret_cast<std::uintptr_t>(data);
+  if ((address % alignof(ValueType)) != 0)
   {
-    for (size_t componentIndex = 0; componentIndex < numberOfComponents; ++componentIndex)
-    {
-      values[static_cast<std::size_t>(tupleIndex)][static_cast<viskores::IdComponent>(componentIndex)] =
-        static_cast<ComponentType>(rawData[(tupleIndex * numberOfComponents) + componentIndex]);
-    }
+    throw std::runtime_error(
+      "NumPy array data is not aligned for the requested Viskores value type.");
   }
-  return viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On);
 }
 
-viskores::cont::UnknownArrayHandle NumPyArrayToUnknownArray(nb::handle object)
+template <typename ValueType>
+viskores::cont::UnknownArrayHandle BuildArrayHandleFromNumPyBytes(
+  const nb::ndarray<nb::ro, nb::numpy, nb::c_contig, nb::device::cpu>& array,
+  nb::handle ownerObject,
+  size_t numberOfValues,
+  bool copy)
+{
+  CheckNumPyArrayAlignment<ValueType>(array.data());
+
+  if (copy)
+  {
+    std::vector<ValueType> values(numberOfValues);
+    const size_t numberOfBytes = sizeof(ValueType) * numberOfValues;
+    if (numberOfBytes > 0)
+    {
+      std::memcpy(values.data(), array.data(), numberOfBytes);
+    }
+    return viskores::cont::make_ArrayHandleMove(std::move(values));
+  }
+
+  auto* owner = new nb::object(nb::borrow(ownerObject));
+  auto* data = reinterpret_cast<ValueType*>(const_cast<void*>(array.data()));
+  return viskores::cont::ArrayHandleBasic<ValueType>(
+    data,
+    owner,
+    static_cast<viskores::Id>(numberOfValues),
+    [](void* ptr) { delete static_cast<nb::object*>(ptr); },
+    viskores::cont::internal::InvalidRealloc);
+}
+
+template <typename ComponentType, viskores::IdComponent NumberOfComponents>
+viskores::cont::UnknownArrayHandle BuildVectorArrayFromNumPyBytes(
+  const nb::ndarray<nb::ro, nb::numpy, nb::c_contig, nb::device::cpu>& array,
+  nb::handle ownerObject,
+  size_t numberOfTuples,
+  bool copy)
+{
+  using VecType = viskores::Vec<ComponentType, NumberOfComponents>;
+  static_assert(sizeof(VecType) == (sizeof(ComponentType) * NumberOfComponents),
+                "Viskores Vec must be tightly packed for NumPy interop.");
+  return BuildArrayHandleFromNumPyBytes<VecType>(array, ownerObject, numberOfTuples, copy);
+}
+
+template <typename ComponentType>
+bool TryNumPyArrayToUnknownArray(
+  const nb::ndarray<nb::ro, nb::numpy, nb::c_contig, nb::device::cpu>& array,
+  nb::handle ownerObject,
+  bool copy,
+  viskores::cont::UnknownArrayHandle& result)
+{
+  if (array.dtype() != nb::dtype<ComponentType>())
+  {
+    return false;
+  }
+
+  if (array.ndim() == 1)
+  {
+    result =
+      BuildArrayHandleFromNumPyBytes<ComponentType>(array, ownerObject, array.shape(0), copy);
+    return true;
+  }
+  if (array.ndim() == 2)
+  {
+    const size_t numberOfTuples = array.shape(0);
+    const size_t numberOfComponents = array.shape(1);
+    switch (numberOfComponents)
+    {
+      case 1:
+        result =
+          BuildArrayHandleFromNumPyBytes<ComponentType>(array, ownerObject, numberOfTuples, copy);
+        return true;
+      case 2:
+        result = BuildVectorArrayFromNumPyBytes<ComponentType, 2>(
+          array, ownerObject, numberOfTuples, copy);
+        return true;
+      case 3:
+        result = BuildVectorArrayFromNumPyBytes<ComponentType, 3>(
+          array, ownerObject, numberOfTuples, copy);
+        return true;
+      case 4:
+        result = BuildVectorArrayFromNumPyBytes<ComponentType, 4>(
+          array, ownerObject, numberOfTuples, copy);
+        return true;
+      default:
+        throw std::runtime_error("Only 1D arrays or Nx{1,2,3,4} arrays are currently supported.");
+    }
+  }
+  throw std::runtime_error("Only 1D arrays or 2D arrays can be added as fields.");
+}
+
+viskores::cont::UnknownArrayHandle NumPyArrayToUnknownArray(nb::handle object, bool copy)
 {
   using AnyArray = nb::ndarray<nb::ro, nb::numpy, nb::c_contig, nb::device::cpu>;
   AnyArray array = nb::cast<AnyArray>(object);
 
-  const auto dtype = array.dtype();
-  const auto code = static_cast<nb::dlpack::dtype_code>(dtype.code);
-  const auto bits = dtype.bits;
-  const auto lanes = dtype.lanes;
-  const bool isFloat32 = (code == nb::dlpack::dtype_code::Float) && (bits == 32) && (lanes == 1);
-  const bool isFloat64 = (code == nb::dlpack::dtype_code::Float) && (bits == 64) && (lanes == 1);
-  const bool isInt32 = (code == nb::dlpack::dtype_code::Int) && (bits == 32) && (lanes == 1);
-  const bool isUInt32 = (code == nb::dlpack::dtype_code::UInt) && (bits == 32) && (lanes == 1);
-  const bool isInt64 = (code == nb::dlpack::dtype_code::Int) && (bits == 64) && (lanes == 1);
-  const bool isUInt64 = (code == nb::dlpack::dtype_code::UInt) && (bits == 64) && (lanes == 1);
-  const bool isUInt8 = (code == nb::dlpack::dtype_code::UInt) && (bits == 8) && (lanes == 1);
-
-  const auto loadValue = [&](size_t linearIndex) -> viskores::FloatDefault {
-    if (isFloat32)
-    {
-      return static_cast<viskores::FloatDefault>(
-        reinterpret_cast<const float*>(array.data())[linearIndex]);
-    }
-    return static_cast<viskores::FloatDefault>(
-      reinterpret_cast<const double*>(array.data())[linearIndex]);
-  };
-
   viskores::cont::UnknownArrayHandle result;
-  if (array.ndim() == 1)
+  if (TryNumPyArrayToUnknownArray<viskores::Float32>(array, object, copy, result) ||
+      TryNumPyArrayToUnknownArray<viskores::Float64>(array, object, copy, result) ||
+      TryNumPyArrayToUnknownArray<viskores::Int8>(array, object, copy, result) ||
+      TryNumPyArrayToUnknownArray<viskores::UInt8>(array, object, copy, result) ||
+      TryNumPyArrayToUnknownArray<viskores::Int16>(array, object, copy, result) ||
+      TryNumPyArrayToUnknownArray<viskores::UInt16>(array, object, copy, result) ||
+      TryNumPyArrayToUnknownArray<viskores::Int32>(array, object, copy, result) ||
+      TryNumPyArrayToUnknownArray<viskores::UInt32>(array, object, copy, result) ||
+      TryNumPyArrayToUnknownArray<viskores::Int64>(array, object, copy, result) ||
+      TryNumPyArrayToUnknownArray<viskores::UInt64>(array, object, copy, result))
   {
-    const auto size = array.shape(0);
-    if (isFloat32 || isFloat64)
-    {
-      std::vector<viskores::FloatDefault> values(size);
-      for (size_t index = 0; index < size; ++index)
-      {
-        values[index] = loadValue(index);
-      }
-      result = viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On);
-    }
-    else if (isUInt8)
-    {
-      const auto* begin = reinterpret_cast<const viskores::UInt8*>(array.data());
-      std::vector<viskores::UInt8> values(begin, begin + size);
-      result = viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On);
-    }
-    else if (isInt32)
-    {
-      const auto* begin = reinterpret_cast<const viskores::Int32*>(array.data());
-      std::vector<viskores::Int32> values(begin, begin + size);
-      result = viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On);
-    }
-    else if (isUInt32)
-    {
-      const auto* begin = reinterpret_cast<const viskores::UInt32*>(array.data());
-      std::vector<viskores::UInt32> values(begin, begin + size);
-      result = viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On);
-    }
-    else if (isInt64)
-    {
-      const auto* begin = reinterpret_cast<const viskores::Int64*>(array.data());
-      std::vector<viskores::Int64> values(begin, begin + size);
-      result = viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On);
-    }
-    else if (isUInt64)
-    {
-      const auto* begin = reinterpret_cast<const viskores::UInt64*>(array.data());
-      std::vector<viskores::UInt64> values(begin, begin + size);
-      result = viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On);
-    }
-    else
-    {
-      throw std::runtime_error(
-        "Only float32, float64, uint8, int32, uint32, int64, and uint64 1D arrays are currently supported.");
-    }
+    return result;
   }
-  else if (array.ndim() == 2)
-  {
-    const size_t numberOfTuples = array.shape(0);
-    const size_t numberOfComponents = array.shape(1);
-    if (isFloat32 || isFloat64)
-    {
-      std::vector<viskores::FloatDefault> flatValues(
-        numberOfTuples * numberOfComponents);
-      for (size_t index = 0; index < (numberOfTuples * numberOfComponents); ++index)
-      {
-        flatValues[index] = loadValue(index);
-      }
-      switch (numberOfComponents)
-      {
-        case 2:
-          result = BuildVectorArray<viskores::Vec2f, viskores::FloatDefault>(
-            flatValues.data(), numberOfTuples, numberOfComponents);
-          break;
-        case 3:
-          result = BuildVectorArray<viskores::Vec3f, viskores::FloatDefault>(
-            flatValues.data(), numberOfTuples, numberOfComponents);
-          break;
-        case 4:
-          result = BuildVectorArray<viskores::Vec4f, viskores::FloatDefault>(
-            flatValues.data(), numberOfTuples, numberOfComponents);
-          break;
-        default:
-          throw std::runtime_error("Only 1D arrays or Nx{2,3,4} arrays are currently supported.");
-      }
-    }
-    else if (isUInt8)
-    {
-      const auto* rawData = reinterpret_cast<const viskores::UInt8*>(array.data());
-      switch (numberOfComponents)
-      {
-        case 2:
-          result = BuildVectorArray<viskores::Vec2ui_8, viskores::UInt8>(
-            rawData, numberOfTuples, numberOfComponents);
-          break;
-        case 3:
-          result = BuildVectorArray<viskores::Vec3ui_8, viskores::UInt8>(
-            rawData, numberOfTuples, numberOfComponents);
-          break;
-        case 4:
-          result = BuildVectorArray<viskores::Vec4ui_8, viskores::UInt8>(
-            rawData, numberOfTuples, numberOfComponents);
-          break;
-        default:
-          throw std::runtime_error("Only 1D arrays or Nx{2,3,4} arrays are currently supported.");
-      }
-    }
-    else
-    {
-      throw std::runtime_error(
-        "Only float32, float64, and uint8 Nx{2,3,4} arrays are currently supported.");
-    }
-  }
-  else
-  {
-    throw std::runtime_error("Only 1D arrays or 2D arrays can be added as fields.");
-  }
-  return result;
+
+  throw std::runtime_error("Only int8, uint8, int16, uint16, int32, uint32, int64, uint64, "
+                           "float32, and float64 NumPy arrays are currently supported.");
 }
 
-nb::object UnknownArrayToNumPyArray(const viskores::cont::UnknownArrayHandle& defaultArray)
+nb::object UnknownArrayToNumPyArray(const viskores::cont::UnknownArrayHandle& defaultArray,
+                                    bool copy)
 {
-  if (defaultArray.IsType<viskores::cont::ArrayHandle<viskores::Pair<viskores::Id, viskores::Id>>>())
+  if (defaultArray
+        .IsType<viskores::cont::ArrayHandle<viskores::Pair<viskores::Id, viskores::Id>>>())
   {
+    if (!copy)
+    {
+      throw std::runtime_error("copy=False is not supported for viskores::Pair arrays.");
+    }
     viskores::cont::ArrayHandle<viskores::Pair<viskores::Id, viskores::Id>> pairArray;
     defaultArray.AsArrayHandle(pairArray);
     const auto portal = pairArray.ReadPortal();
@@ -448,37 +537,23 @@ nb::object UnknownArrayToNumPyArray(const viskores::cont::UnknownArrayHandle& de
       outputData[(index * 2) + 0] = value.first;
       outputData[(index * 2) + 1] = value.second;
     }
-    return CreateOwnedNumPyArray(
-      std::move(outputData),
-      { static_cast<size_t>(pairArray.GetNumberOfValues()), 2 });
+    return CreateOwnedNumPyArray(std::move(outputData),
+                                 { static_cast<size_t>(pairArray.GetNumberOfValues()), 2 });
   }
-  if (defaultArray.IsBaseComponentType<viskores::Float64>())
+
+  nb::object output;
+  if (TryUnknownArrayToNumPy<viskores::Float32>(defaultArray, copy, output) ||
+      TryUnknownArrayToNumPy<viskores::Float64>(defaultArray, copy, output) ||
+      TryUnknownArrayToNumPy<viskores::Int8>(defaultArray, copy, output) ||
+      TryUnknownArrayToNumPy<viskores::UInt8>(defaultArray, copy, output) ||
+      TryUnknownArrayToNumPy<viskores::Int16>(defaultArray, copy, output) ||
+      TryUnknownArrayToNumPy<viskores::UInt16>(defaultArray, copy, output) ||
+      TryUnknownArrayToNumPy<viskores::Int32>(defaultArray, copy, output) ||
+      TryUnknownArrayToNumPy<viskores::UInt32>(defaultArray, copy, output) ||
+      TryUnknownArrayToNumPy<viskores::Int64>(defaultArray, copy, output) ||
+      TryUnknownArrayToNumPy<viskores::UInt64>(defaultArray, copy, output))
   {
-    return CopyUnknownArrayToNumPy<viskores::Float64>(defaultArray);
-  }
-  if (defaultArray.IsBaseComponentType<viskores::Float32>())
-  {
-    return CopyUnknownArrayToNumPy<viskores::Float32>(defaultArray);
-  }
-  if (defaultArray.IsBaseComponentType<viskores::Id>())
-  {
-    return CopyUnknownArrayToNumPy<viskores::Id>(defaultArray);
-  }
-  if (defaultArray.IsBaseComponentType<viskores::Int32>())
-  {
-    return CopyUnknownArrayToNumPy<viskores::Int32>(defaultArray);
-  }
-  if (defaultArray.IsBaseComponentType<viskores::UInt32>())
-  {
-    return CopyUnknownArrayToNumPy<viskores::UInt32>(defaultArray);
-  }
-  if (defaultArray.IsBaseComponentType<viskores::UInt64>())
-  {
-    return CopyUnknownArrayToNumPy<viskores::UInt64>(defaultArray);
-  }
-  if (defaultArray.IsBaseComponentType<viskores::UInt8>())
-  {
-    return CopyUnknownArrayToNumPy<viskores::UInt8>(defaultArray);
+    return output;
   }
   throw std::runtime_error("Unsupported field component type for NumPy export.");
 }
@@ -502,9 +577,8 @@ nb::object FloatArrayToNumPy(const viskores::cont::ArrayHandle<viskores::FloatDe
 
 nb::object VectorToNumPy(const std::vector<viskores::FloatDefault>& values)
 {
-  return CreateOwnedNumPyArray(
-    std::vector<viskores::FloatDefault>(values.begin(), values.end()),
-    { values.size() });
+  return CreateOwnedNumPyArray(std::vector<viskores::FloatDefault>(values.begin(), values.end()),
+                               { values.size() });
 }
 
 viskores::cont::ArrayHandle<viskores::Id3> ParseId3Array(nb::handle object)
@@ -528,11 +602,9 @@ viskores::cont::ArrayHandle<viskores::Id3> ParseId3Array(nb::handle object)
     for (size_t col = 0; col < 3; ++col)
     {
       const size_t linearIndex = (row * 3) + col;
-      values[row][static_cast<viskores::IdComponent>(col)] =
-        isInt64
-          ? static_cast<viskores::Id>(
-              reinterpret_cast<const long long*>(array.data())[linearIndex])
-          : static_cast<viskores::Id>(reinterpret_cast<const int*>(array.data())[linearIndex]);
+      values[row][static_cast<viskores::IdComponent>(col)] = isInt64
+        ? static_cast<viskores::Id>(reinterpret_cast<const long long*>(array.data())[linearIndex])
+        : static_cast<viskores::Id>(reinterpret_cast<const int*>(array.data())[linearIndex]);
     }
   }
   return viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On);
@@ -606,10 +678,10 @@ viskores::Vec3f_32 ParseColorTableColor(nb::handle object)
 
 #if VISKORES_PYTHON_ENABLE_TESTING_UTILS
 viskores::cont::ArrayHandle<viskores::UInt8> MakeStructuredGhostCellArray(viskores::Id nx,
-                                                                        viskores::Id ny,
-                                                                        viskores::Id nz,
-                                                                        int numLayers,
-                                                                        bool addMidGhost = false)
+                                                                          viskores::Id ny,
+                                                                          viskores::Id nz,
+                                                                          int numLayers,
+                                                                          bool addMidGhost = false)
 {
   viskores::Id numCells = nx * ny;
   if (nz > 0)
@@ -676,10 +748,10 @@ viskores::cont::ArrayHandle<viskores::UInt8> MakeStructuredGhostCellArray(viskor
 
 template <class CellSetType, viskores::IdComponent NDIM>
 void MakeExplicitCells(const CellSetType& cellSet,
-                         viskores::Vec<viskores::Id, NDIM>& dims,
-                         viskores::cont::ArrayHandle<viskores::IdComponent>& numIndices,
-                         viskores::cont::ArrayHandle<viskores::UInt8>& shapes,
-                         viskores::cont::ArrayHandle<viskores::Id>& conn)
+                       viskores::Vec<viskores::Id, NDIM>& dims,
+                       viskores::cont::ArrayHandle<viskores::IdComponent>& numIndices,
+                       viskores::cont::ArrayHandle<viskores::UInt8>& shapes,
+                       viskores::cont::ArrayHandle<viskores::Id>& conn)
 {
   using Connectivity = viskores::internal::ConnectivityStructuredInternals<NDIM>;
 
@@ -697,7 +769,8 @@ void MakeExplicitCells(const CellSetType& cellSet,
   for (viskores::Id cellIndex = 0; cellIndex < numberOfCells; ++cellIndex)
   {
     auto pointIds = structured.GetPointsOfCell(cellIndex);
-    for (viskores::IdComponent component = 0; component < pointIds.GetNumberOfComponents(); ++component, ++index)
+    for (viskores::IdComponent component = 0; component < pointIds.GetNumberOfComponents();
+         ++component, ++index)
     {
       conn.WritePortal().Set(index, pointIds[component]);
     }
@@ -709,14 +782,15 @@ void MakeExplicitCells(const CellSetType& cellSet,
 }
 
 viskores::cont::DataSet MakeGhostCellDataSetImpl(const std::string& datasetType,
-                                               viskores::Id nx,
-                                               viskores::Id ny,
-                                               viskores::Id nz,
-                                               int numLayers,
-                                               const std::string& ghostName,
-                                               bool addMidGhost)
+                                                 viskores::Id nx,
+                                                 viskores::Id ny,
+                                                 viskores::Id nz,
+                                                 int numLayers,
+                                                 const std::string& ghostName,
+                                                 bool addMidGhost)
 {
-  auto applyGhostField = [&](viskores::cont::DataSet& dataSet) {
+  auto applyGhostField = [&](viskores::cont::DataSet& dataSet)
+  {
     auto ghosts = MakeStructuredGhostCellArray(nx, ny, nz, numLayers, addMidGhost);
     if (ghostName == "default")
     {
@@ -730,9 +804,9 @@ viskores::cont::DataSet MakeGhostCellDataSetImpl(const std::string& datasetType,
 
   if (datasetType == "uniform")
   {
-    viskores::cont::DataSet dataSet =
-      (nz == 0) ? viskores::cont::DataSetBuilderUniform::Create(viskores::Id2(nx + 1, ny + 1))
-                : viskores::cont::DataSetBuilderUniform::Create(viskores::Id3(nx + 1, ny + 1, nz + 1));
+    viskores::cont::DataSet dataSet = (nz == 0)
+      ? viskores::cont::DataSetBuilderUniform::Create(viskores::Id2(nx + 1, ny + 1))
+      : viskores::cont::DataSetBuilderUniform::Create(viskores::Id3(nx + 1, ny + 1, nz + 1));
     applyGhostField(dataSet);
     return dataSet;
   }
@@ -809,7 +883,8 @@ viskores::cont::DataSet MakeGhostCellDataSetImpl(const std::string& datasetType,
     }
     else
     {
-      throw std::runtime_error("Unable to create explicit ghost test dataset from non-structured input.");
+      throw std::runtime_error(
+        "Unable to create explicit ghost test dataset from non-structured input.");
     }
 
     applyGhostField(dataSet);

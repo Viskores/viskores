@@ -56,6 +56,28 @@ endif()
 
 set(Viskores_PYTHON_PACKAGE_DIR "${Viskores_BINARY_DIR}/python_bindings/viskores")
 file(MAKE_DIRECTORY "${Viskores_PYTHON_PACKAGE_DIR}")
+
+function(viskores_python_remove_inactive_extension_files output_dir stable_abi)
+  file(GLOB inactive_extension_candidates
+    "${output_dir}/_viskores.*${CMAKE_SHARED_MODULE_SUFFIX}"
+    "${output_dir}/_viskores.*${CMAKE_SHARED_LIBRARY_SUFFIX}"
+  )
+  foreach(inactive_extension IN LISTS inactive_extension_candidates)
+    get_filename_component(inactive_extension_name "${inactive_extension}" NAME)
+    if (stable_abi)
+      if (NOT inactive_extension_name MATCHES "\\.abi3\\.")
+        file(REMOVE "${inactive_extension}")
+      endif()
+    elseif (inactive_extension_name MATCHES "\\.abi3\\.")
+      file(REMOVE "${inactive_extension}")
+    endif()
+  endforeach()
+endfunction()
+viskores_python_remove_inactive_extension_files(
+  "${Viskores_PYTHON_PACKAGE_DIR}"
+  "${VISKORES_PYTHON_STABLE_ABI}"
+)
+
 file(GLOB_RECURSE Viskores_PYTHON_PACKAGE_FILES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/viskores/*.py"
 )
@@ -257,6 +279,10 @@ if (Viskores_ENABLE_TESTING)
   viskores_add_python_binding_test(
     UnitTestPythonWrapperFieldClass
     "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_field_class.py"
+  )
+  viskores_add_python_binding_test(
+    UnitTestPythonWrapperNumPyInterop
+    "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_numpy_interop.py"
   )
   viskores_add_python_binding_test(
     UnitTestPythonWrapperCoordinateSystemClass
