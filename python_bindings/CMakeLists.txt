@@ -123,6 +123,11 @@ target_include_directories(viskores_python_bindings
     ${Viskores_PYTHON_NUMPY_INCLUDE_DIR}
 )
 target_link_libraries(viskores_python_bindings PRIVATE viskores_cont)
+if (TARGET viskores_openmp)
+  target_link_libraries(viskores_python_bindings PRIVATE viskores_openmp)
+elseif (TARGET viskores::openmp)
+  target_link_libraries(viskores_python_bindings PRIVATE viskores::openmp)
+endif()
 
 set(Viskores_PYTHON_BINDING_DEFINITIONS)
 
