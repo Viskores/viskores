@@ -62,16 +62,16 @@ viskores::cont::ArrayHandle<viskores::Vec3f> ParseProbeGeometryPoints(nb::handle
 } // namespace
 
 #if VISKORES_PYTHON_ENABLE_FILTER_RESAMPLING
-void RegisterNanobindResamplingClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name)
+void RegisterNanobindResamplingClasses(nb::module_& m,
+                                       const std::function<void(const char*)>& erase_existing_name)
 {
   erase_existing_name("Probe");
-  nb::class_<viskores::filter::resampling::Probe>(m, "Probe")
+  nb::class_<viskores::filter::resampling::Probe>(m, "Probe", doc::ClassDoc("Probe"))
     .def(nb::init<>())
     .def(
       "SetGeometry",
-      [](viskores::filter::resampling::Probe& self, nb::handle geometryObject) {
+      [](viskores::filter::resampling::Probe& self, nb::handle geometryObject)
+      {
         viskores::cont::DataSet* geometry = nullptr;
         if (nb::try_cast(geometryObject, geometry))
         {
@@ -82,55 +82,62 @@ void RegisterNanobindResamplingClasses(
       },
       nb::arg("geometry"))
     .def("GetGeometry", &viskores::filter::resampling::Probe::GetGeometry)
-    .def("SetInvalidValue",
-         [](viskores::filter::resampling::Probe& self, double invalidValue) {
-           self.SetInvalidValue(invalidValue);
-         },
-         nb::arg("invalid_value"))
+    .def(
+      "SetInvalidValue",
+      [](viskores::filter::resampling::Probe& self, double invalidValue)
+      { self.SetInvalidValue(invalidValue); },
+      nb::arg("invalid_value"))
     .def("GetInvalidValue", &viskores::filter::resampling::Probe::GetInvalidValue)
-    .def("SetFieldsToPass",
-         [](viskores::filter::resampling::Probe& self, nb::object fieldsObject) {
-           SetFieldsToPassForResampling(self, fieldsObject);
-         },
-         nb::arg("fields"))
-    .def("Execute", &ExecuteFilterToPython<viskores::filter::resampling::Probe>, nb::arg("data"));
+    .def(
+      "SetFieldsToPass",
+      [](viskores::filter::resampling::Probe& self, nb::object fieldsObject)
+      { SetFieldsToPassForResampling(self, fieldsObject); },
+      nb::arg("fields"))
+    .def("Execute",
+         &ExecuteFilterToPython<viskores::filter::resampling::Probe>,
+         nb::arg("data"),
+         doc::ExecuteFilter);
 
   erase_existing_name("HistSampling");
-  nb::class_<viskores::filter::resampling::HistSampling>(m, "HistSampling")
+  nb::class_<viskores::filter::resampling::HistSampling>(
+    m, "HistSampling", doc::ClassDoc("HistSampling"))
     .def(nb::init<>())
-    .def("SetActiveField",
-         [](viskores::filter::resampling::HistSampling& self,
-            const char* name,
-            nb::object associationObject) {
-           self.SetActiveField(
-             name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-         },
-         nb::arg("name"),
-         nb::arg("association") = nb::none())
+    .def(
+      "SetActiveField",
+      [](viskores::filter::resampling::HistSampling& self,
+         const char* name,
+         nb::object associationObject)
+      {
+        self.SetActiveField(
+          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
+      },
+      nb::arg("name"),
+      nb::arg("association") = nb::none())
     .def("GetActiveFieldName", &viskores::filter::resampling::HistSampling::GetActiveFieldName)
     .def("GetActiveFieldAssociation",
          &viskores::filter::resampling::HistSampling::GetActiveFieldAssociation)
-    .def("SetNumberOfBins",
-         [](viskores::filter::resampling::HistSampling& self, long long numberOfBins) {
-           self.SetNumberOfBins(static_cast<viskores::Id>(numberOfBins));
-         },
-         nb::arg("number_of_bins"))
+    .def(
+      "SetNumberOfBins",
+      [](viskores::filter::resampling::HistSampling& self, long long numberOfBins)
+      { self.SetNumberOfBins(static_cast<viskores::Id>(numberOfBins)); },
+      nb::arg("number_of_bins"))
     .def("GetNumberOfBins", &viskores::filter::resampling::HistSampling::GetNumberOfBins)
-    .def("SetSampleFraction",
-         [](viskores::filter::resampling::HistSampling& self, double fraction) {
-           self.SetSampleFraction(static_cast<viskores::FloatDefault>(fraction));
-         },
-         nb::arg("fraction"))
+    .def(
+      "SetSampleFraction",
+      [](viskores::filter::resampling::HistSampling& self, double fraction)
+      { self.SetSampleFraction(static_cast<viskores::FloatDefault>(fraction)); },
+      nb::arg("fraction"))
     .def("GetSampleFraction", &viskores::filter::resampling::HistSampling::GetSampleFraction)
-    .def("SetSeed",
-         [](viskores::filter::resampling::HistSampling& self, unsigned long seed) {
-           self.SetSeed(static_cast<viskores::UInt32>(seed));
-         },
-         nb::arg("seed"))
+    .def(
+      "SetSeed",
+      [](viskores::filter::resampling::HistSampling& self, unsigned long seed)
+      { self.SetSeed(static_cast<viskores::UInt32>(seed)); },
+      nb::arg("seed"))
     .def("GetSeed", &viskores::filter::resampling::HistSampling::GetSeed)
     .def("Execute",
          &ExecuteFilterToPython<viskores::filter::resampling::HistSampling>,
-         nb::arg("data"));
+         nb::arg("data"),
+         doc::ExecuteFilter);
 }
 #else
 void RegisterNanobindResamplingClasses(nb::module_&, const std::function<void(const char*)>&) {}

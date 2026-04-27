@@ -29,8 +29,8 @@ NanobindBufferStateHolder::NanobindBufferStateHolder(unsigned long handle)
 
 NanobindBufferStateHolder::NanobindBufferStateHolder(unsigned long handle, unsigned long bufferType)
   : HandleStorage(static_cast<GLuint>(handle))
-  , State(std::make_shared<viskores::interop::BufferState>(
-      this->HandleStorage, static_cast<GLenum>(bufferType)))
+  , State(std::make_shared<viskores::interop::BufferState>(this->HandleStorage,
+                                                           static_cast<GLenum>(bufferType)))
 {
 }
 
@@ -45,7 +45,10 @@ void NanobindBufferStateHolder::SetHandle(unsigned long handle)
   this->HandleStorage = static_cast<GLuint>(handle);
 }
 
-bool NanobindBufferStateHolder::HasType() const { return this->State->HasType(); }
+bool NanobindBufferStateHolder::HasType() const
+{
+  return this->State->HasType();
+}
 
 unsigned long NanobindBufferStateHolder::GetType() const
 {
@@ -57,9 +60,15 @@ void NanobindBufferStateHolder::SetType(unsigned long bufferType)
   this->State->SetType(static_cast<GLenum>(bufferType));
 }
 
-long long NanobindBufferStateHolder::GetSize() const { return this->State->GetSize(); }
+long long NanobindBufferStateHolder::GetSize() const
+{
+  return this->State->GetSize();
+}
 
-long long NanobindBufferStateHolder::GetCapacity() const { return this->State->GetCapacity(); }
+long long NanobindBufferStateHolder::GetCapacity() const
+{
+  return this->State->GetCapacity();
+}
 
 std::string NanobindBufferStateHolder::Repr() const
 {
@@ -86,21 +95,23 @@ void RegisterNanobindHelperFunctions(nb::module_& m,
        nb::object dimensions,
        long long ghostLayers,
        const char* ghostName,
-       bool addMidGhost) {
+       bool addMidGhost)
+    {
       const viskores::Id3 dims = ParseDimensions(dimensions);
       return WrapDataSet(MakeGhostCellDataSetImpl(datasetType,
-                                                dims[0],
-                                                dims[1],
-                                                dims[2],
-                                                static_cast<int>(ghostLayers),
-                                                ghostName,
-                                                addMidGhost));
+                                                  dims[0],
+                                                  dims[1],
+                                                  dims[2],
+                                                  static_cast<int>(ghostLayers),
+                                                  ghostName,
+                                                  addMidGhost));
     },
     nb::arg("dataset_type"),
     nb::arg("dimensions"),
     nb::arg("ghost_layers"),
     nb::arg("ghost_name") = "default",
-    nb::arg("add_mid_ghost") = false);
+    nb::arg("add_mid_ghost") = false,
+    doc::MakeGhostCellDataSet);
 #endif
 
 #if VISKORES_PYTHON_ENABLE_INTEROP
@@ -110,7 +121,8 @@ void RegisterNanobindHelperFunctions(nb::module_& m,
        nb::object stateObject,
        nb::object fieldNameObject,
        nb::object associationObject,
-       int coordinateSystemIndex) {
+       int coordinateSystemIndex)
+    {
       std::shared_ptr<viskores::interop::BufferState> state;
       NanobindBufferStateHolder* holder = nullptr;
       if (nb::try_cast(stateObject, holder))
@@ -157,7 +169,8 @@ void RegisterNanobindHelperFunctions(nb::module_& m,
     nb::arg("state"),
     nb::arg("field_name") = nb::none(),
     nb::arg("association") = nb::none(),
-    nb::arg("coordinate_system_index") = 0);
+    nb::arg("coordinate_system_index") = 0,
+    doc::TransferToOpenGL);
 #endif
 }
 #else
@@ -169,22 +182,23 @@ void RegisterNanobindInteropClasses(nb::module_& m,
                                     const std::function<void(const char*)>& erase_existing_name)
 {
   erase_existing_name("BufferState");
-  nb::class_<NanobindBufferStateHolder>(m, "BufferState")
-    .def("__init__",
-         [](NanobindBufferStateHolder* self, nb::object handleObject, nb::object bufferTypeObject) {
-           const unsigned long handle = handleObject.is_none()
-                                          ? 0UL
-                                          : nb::cast<unsigned long>(handleObject);
-           if (bufferTypeObject.is_none())
-           {
-             new (self) NanobindBufferStateHolder(handle);
-             return;
-           }
-           const unsigned long bufferType = nb::cast<unsigned long>(bufferTypeObject);
-           new (self) NanobindBufferStateHolder(handle, bufferType);
-         },
-         nb::arg("handle") = nb::none(),
-         nb::arg("buffer_type") = nb::none())
+  nb::class_<NanobindBufferStateHolder>(m, "BufferState", doc::ClassDoc("BufferState"))
+    .def(
+      "__init__",
+      [](NanobindBufferStateHolder* self, nb::object handleObject, nb::object bufferTypeObject)
+      {
+        const unsigned long handle =
+          handleObject.is_none() ? 0UL : nb::cast<unsigned long>(handleObject);
+        if (bufferTypeObject.is_none())
+        {
+          new (self) NanobindBufferStateHolder(handle);
+          return;
+        }
+        const unsigned long bufferType = nb::cast<unsigned long>(bufferTypeObject);
+        new (self) NanobindBufferStateHolder(handle, bufferType);
+      },
+      nb::arg("handle") = nb::none(),
+      nb::arg("buffer_type") = nb::none())
     .def("GetHandle", &NanobindBufferStateHolder::GetHandle)
     .def("SetHandle", &NanobindBufferStateHolder::SetHandle, nb::arg("handle"))
     .def("HasType", &NanobindBufferStateHolder::HasType)

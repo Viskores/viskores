@@ -240,7 +240,7 @@ void RegisterArrayHandleSOAClass(nb::module_& m,
                                  const char* name)
 {
   erase_existing_name(name);
-  nb::class_<ArrayType>(m, name)
+  nb::class_<ArrayType>(m, name, doc::ClassDoc(name))
     .def(nb::init<>())
     .def("__repr__",
          [name](const ArrayType& self)
@@ -266,7 +266,7 @@ void RegisterArrayHandleRecombineVecClass(
   using ArrayType = viskores::cont::ArrayHandleRecombineVec<ComponentType>;
 
   erase_existing_name(name);
-  nb::class_<ArrayType>(m, name)
+  nb::class_<ArrayType>(m, name, doc::ClassDoc(name))
     .def("__repr__",
          [name](const ArrayType& self)
          {
@@ -648,7 +648,8 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
                                        const std::function<void(const char*)>& erase_existing_name)
 {
   erase_existing_name("UnknownArrayHandle");
-  nb::class_<viskores::cont::UnknownArrayHandle>(m, "UnknownArrayHandle")
+  nb::class_<viskores::cont::UnknownArrayHandle>(
+    m, "UnknownArrayHandle", doc::ClassDoc("UnknownArrayHandle"))
     .def(nb::init<>())
     .def("__repr__",
          [](const viskores::cont::UnknownArrayHandle& self)
@@ -773,7 +774,8 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
   m.attr("array_from_numpy") = nb::cpp_function([](nb::object values, bool copy)
                                                 { return NumPyArrayToUnknownArray(values, copy); },
                                                 nb::arg("values"),
-                                                nb::arg("copy") = true);
+                                                nb::arg("copy") = true,
+                                                doc::ArrayFromNumPy);
 
   erase_existing_name("asnumpy");
   m.attr("asnumpy") = nb::cpp_function(
@@ -794,16 +796,18 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
       return nb::module_::import_("numpy").attr("asarray")(object);
     },
     nb::arg("object"),
-    nb::arg("copy") = true);
+    nb::arg("copy") = true,
+    doc::AsNumPy);
 
   erase_existing_name("ArrayCopy");
   m.attr("ArrayCopy") = nb::cpp_function([](nb::handle source, nb::handle destination)
                                          { ArrayCopyToPythonDestination(source, destination); },
                                          nb::arg("source"),
-                                         nb::arg("destination"));
+                                         nb::arg("destination"),
+                                         doc::ArrayCopy);
 
   erase_existing_name("CellSet");
-  nb::class_<viskores::cont::UnknownCellSet>(m, "CellSet")
+  nb::class_<viskores::cont::UnknownCellSet>(m, "CellSet", doc::ClassDoc("CellSet"))
     .def(nb::init<>())
     .def("__repr__",
          [](const viskores::cont::UnknownCellSet& self)
@@ -836,7 +840,7 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
       nb::arg("cell_id"));
 
   erase_existing_name("Field");
-  nb::class_<viskores::cont::Field>(m, "Field")
+  nb::class_<viskores::cont::Field>(m, "Field", doc::ClassDoc("Field"))
     .def(nb::init<>())
     .def(
       "__init__",
@@ -876,7 +880,8 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
     .def("GetRange", [](const viskores::cont::Field& self) { return FieldRangeList(self); });
 
   erase_existing_name("CoordinateSystem");
-  nb::class_<viskores::cont::CoordinateSystem, viskores::cont::Field>(m, "CoordinateSystem")
+  nb::class_<viskores::cont::CoordinateSystem, viskores::cont::Field>(
+    m, "CoordinateSystem", doc::ClassDoc("CoordinateSystem"))
     .def(nb::init<>())
     .def(
       "__init__",
@@ -943,7 +948,7 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
          { return BoundsTuple(self.GetBounds()); });
 
   erase_existing_name("DataSet");
-  nb::class_<viskores::cont::DataSet>(m, "DataSet")
+  nb::class_<viskores::cont::DataSet>(m, "DataSet", doc::ClassDoc("DataSet"))
     .def(nb::init<>())
     .def("__repr__", [](const viskores::cont::DataSet& self) { return DataSetRepr(self); })
     .def(
@@ -1074,7 +1079,8 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
     .def("GetNumberOfCells", &viskores::cont::DataSet::GetNumberOfCells);
 
   erase_existing_name("DataSetBuilderExplicit");
-  nb::class_<viskores::cont::DataSetBuilderExplicit>(m, "DataSetBuilderExplicit")
+  nb::class_<viskores::cont::DataSetBuilderExplicit>(
+    m, "DataSetBuilderExplicit", doc::ClassDoc("DataSetBuilderExplicit"))
     .def(nb::init<>())
     .def_static(
       "Create",
@@ -1094,7 +1100,8 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
       nb::arg("coord_name") = "coords");
 
   erase_existing_name("DataSetBuilderCurvilinear");
-  nb::class_<viskores::cont::DataSetBuilderCurvilinear>(m, "DataSetBuilderCurvilinear")
+  nb::class_<viskores::cont::DataSetBuilderCurvilinear>(
+    m, "DataSetBuilderCurvilinear", doc::ClassDoc("DataSetBuilderCurvilinear"))
     .def(nb::init<>())
     .def_static(
       "Create",
@@ -1107,7 +1114,8 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
       nb::arg("coord_name") = "coords");
 
   erase_existing_name("DataSetBuilderUniform");
-  nb::class_<viskores::cont::DataSetBuilderUniform>(m, "DataSetBuilderUniform")
+  nb::class_<viskores::cont::DataSetBuilderUniform>(
+    m, "DataSetBuilderUniform", doc::ClassDoc("DataSetBuilderUniform"))
     .def(nb::init<>())
     .def_static(
       "Create",
@@ -1125,7 +1133,8 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
       nb::arg("coord_name") = "coords");
 
   erase_existing_name("DataSetBuilderRectilinear");
-  nb::class_<viskores::cont::DataSetBuilderRectilinear>(m, "DataSetBuilderRectilinear")
+  nb::class_<viskores::cont::DataSetBuilderRectilinear>(
+    m, "DataSetBuilderRectilinear", doc::ClassDoc("DataSetBuilderRectilinear"))
     .def(nb::init<>())
     .def_static(
       "Create",
@@ -1166,7 +1175,8 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
       nb::arg("coord_name") = "coords");
 
   erase_existing_name("DataSetBuilderExplicitIterative");
-  nb::class_<viskores::cont::DataSetBuilderExplicitIterative>(m, "DataSetBuilderExplicitIterative")
+  nb::class_<viskores::cont::DataSetBuilderExplicitIterative>(
+    m, "DataSetBuilderExplicitIterative", doc::ClassDoc("DataSetBuilderExplicitIterative"))
     .def(nb::init<>())
     .def("Begin",
          &viskores::cont::DataSetBuilderExplicitIterative::Begin,
@@ -1192,7 +1202,8 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
          { return WrapDataSet(self.Create()); });
 
   erase_existing_name("PartitionedDataSet");
-  nb::class_<viskores::cont::PartitionedDataSet>(m, "PartitionedDataSet")
+  nb::class_<viskores::cont::PartitionedDataSet>(
+    m, "PartitionedDataSet", doc::ClassDoc("PartitionedDataSet"))
     .def(nb::init<>())
     .def("__repr__",
          [](const viskores::cont::PartitionedDataSet& self)
@@ -1248,21 +1259,24 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
     },
     nb::arg("name"),
     nb::arg("association"),
-    nb::arg("values"));
+    nb::arg("values"),
+    doc::MakeField);
 
   erase_existing_name("make_FieldPoint");
   m.attr("make_FieldPoint") = nb::cpp_function(
     [](const std::string& name, nb::object values)
     { return viskores::cont::make_FieldPoint(name, PythonObjectToUnknownArray(values)); },
     nb::arg("name"),
-    nb::arg("values"));
+    nb::arg("values"),
+    doc::MakeFieldPoint);
 
   erase_existing_name("make_FieldCell");
   m.attr("make_FieldCell") = nb::cpp_function(
     [](const std::string& name, nb::object values)
     { return viskores::cont::make_FieldCell(name, PythonObjectToUnknownArray(values)); },
     nb::arg("name"),
-    nb::arg("values"));
+    nb::arg("values"),
+    doc::MakeFieldCell);
 
   erase_existing_name("make_FieldWholeDataSet");
   m.attr("make_FieldWholeDataSet") = nb::cpp_function(
@@ -1272,7 +1286,8 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
         name, viskores::cont::Field::Association::WholeDataSet, PythonObjectToUnknownArray(values));
     },
     nb::arg("name"),
-    nb::arg("values"));
+    nb::arg("values"),
+    doc::MakeFieldWholeDataSet);
 }
 
 } // namespace viskores::python::bindings

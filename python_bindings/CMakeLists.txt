@@ -274,6 +274,11 @@ if (Viskores_ENABLE_TESTING)
   )
 
   viskores_add_python_binding_test(
+    UnitTestPythonWrapperDocstrings
+    "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_docstrings.py"
+  )
+
+  viskores_add_python_binding_test(
     UnitTestPythonWrapperInitialize
     "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_initialize.py"
   )

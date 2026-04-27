@@ -230,6 +230,8 @@
 #include <viskores/source/Wavelet.h>
 #endif
 
+#include "pyviskores_docstrings.h"
+
 #include <cstdint>
 #include <cstring>
 #include <memory>
