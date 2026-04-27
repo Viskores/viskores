@@ -156,6 +156,94 @@ $ cmake --build -j .              # Runs make (or other build program)
 A more detailed description of building Viskores is available in the [Viskores
 Users Guide].
 
+## Python Bindings ##
+
+Viskores also provides a Python package under [`python_bindings/`](python_bindings).
+The current binding implementation uses `nanobind` and mirrors the Viskores C++
+namespace structure as closely as practical. The active runtime binding layer
+also uses `nanobind` ndarray conversion rather than the direct NumPy C API.
+The default build produces a normal Python-minor-version-specific extension so
+the repository can keep its CMake 3.15 baseline.
+
+Recommended flow:
+
+1. Create a virtual environment and install the Python runtime packages you want
+   for the demos:
+
+```sh
+python3 -m venv viskores-build/.venv
+viskores-build/.venv/bin/python -m ensurepip --upgrade
+viskores-build/.venv/bin/python -m pip install numpy pyglet PyOpenGL PyOpenGL_accelerate
+```
+
+Run these commands from the repository root so the relative
+`viskores-build/.venv` path resolves inside the build tree.
+
+2. Configure Viskores to build the Python bindings with that same interpreter:
+
+```sh
+cmake -S . -B viskores-build \
+  -DPython_EXECUTABLE=$PWD/viskores-build/.venv/bin/python \
+  -DViskores_ENABLE_PYTHON_BINDINGS=ON \
+  -DViskores_ENABLE_RENDERING=ON
+cmake --build viskores-build --target viskores_python_bindings -j 4
+```
+
+An optional stable-ABI (`abi3`) build is available with
+`-DVISKORES_PYTHON_STABLE_ABI=ON`. That mode currently requires Python `3.12`
+or newer and CMake `3.26` or newer for `Python::SABIModule`; leave it off when
+building with the repository's CMake `3.15` baseline.
+
+3. Run the Python demos from the build tree:
+
+```sh
+PYTHONPATH=$PWD/viskores-build/python_bindings \
+$PWD/viskores-build/.venv/bin/python python_bindings/examples/demo/Demo.py
+
+PYTHONPATH=$PWD/viskores-build/python_bindings \
+$PWD/viskores-build/.venv/bin/python python_bindings/examples/game_of_life/GameOfLife.py
+```
+
+4. Build a wheel, if desired:
+
+```sh
+cd python_bindings
+Viskores_DIR=$PWD/../viskores-build/lib/cmake/viskores-1.1 \
+../viskores-build/.venv/bin/python setup.py bdist_wheel
+```
+
+To build an `abi3` wheel, use a CMake `3.26` or newer environment and set
+`VISKORES_PYTHON_STABLE_ABI=ON` for the wheel build.
+
+The wheel is written to:
+
+```sh
+python_bindings/dist/
+```
+
+For example, a Python `3.14` build produces a Python-minor-version-specific
+wheel:
+
+```sh
+python_bindings/dist/viskores-1.1.9999-cp314-cp314-macosx_26_0_arm64.whl
+```
+
+Python applications can also call `viskores.cont.Initialize(sys.argv)` to get
+the same Viskores runtime argument parsing and backend selection support that
+the C++ examples use.
+
+If `Viskores_ENABLE_TESTING=ON` is also enabled, the Python wrapper tests under
+`python_bindings/testing/` are registered with CTest automatically and can be
+run with:
+
+```sh
+ctest --test-dir viskores-build -R '^(PythonBindingsSmokeTest|(UnitTestPythonWrapper|PythonWrapper).*)$' --output-on-failure
+```
+
+For more detailed instructions, including `GameOfLife.py` options and notes on
+the Python OpenGL interop surface, see
+[`python_bindings/README.md`](python_bindings/README.md).
+
 
 ## Example ##
 
