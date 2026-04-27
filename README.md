@@ -162,7 +162,8 @@ Viskores also provides a Python package under [`python_bindings/`](python_bindin
 The current binding implementation uses `nanobind` and mirrors the Viskores C++
 namespace structure as closely as practical. The active runtime binding layer
 also uses `nanobind` ndarray conversion rather than the direct NumPy C API.
-The extension is now built in `nanobind` stable-ABI (`abi3`) mode.
+The default build produces a normal Python-minor-version-specific extension so
+the repository can keep its CMake 3.15 baseline.
 
 Recommended flow:
 
@@ -177,10 +178,6 @@ viskores-build/.venv/bin/python -m pip install numpy pyglet PyOpenGL PyOpenGL_ac
 
 Run these commands from the repository root so the relative
 `viskores-build/.venv` path resolves inside the build tree.
-The bindings are built in `abi3` mode, so the extension is not tied to one
-specific Python minor version in the way a normal CPython extension is. The
-current wheel/import path has been validated on Python `3.12`, `3.13`, and
-`3.14`.
 
 2. Configure Viskores to build the Python bindings with that same interpreter:
 
@@ -191,6 +188,11 @@ cmake -S . -B viskores-build \
   -DViskores_ENABLE_RENDERING=ON
 cmake --build viskores-build --target viskores_python_bindings -j 4
 ```
+
+An optional stable-ABI (`abi3`) build is available with
+`-DVISKORES_PYTHON_STABLE_ABI=ON`. That mode currently requires Python `3.12`
+or newer and CMake `3.26` or newer for `Python::SABIModule`; leave it off when
+building with the repository's CMake `3.15` baseline.
 
 3. Run the Python demos from the build tree:
 
@@ -210,16 +212,20 @@ Viskores_DIR=$PWD/../viskores-build/lib/cmake/viskores-1.1 \
 ../viskores-build/.venv/bin/python setup.py bdist_wheel
 ```
 
+To build an `abi3` wheel, use a CMake `3.26` or newer environment and set
+`VISKORES_PYTHON_STABLE_ABI=ON` for the wheel build.
+
 The wheel is written to:
 
 ```sh
 python_bindings/dist/
 ```
 
-For example, the current build produced:
+For example, a Python `3.14` build produces a Python-minor-version-specific
+wheel:
 
 ```sh
-python_bindings/dist/viskores-1.1.9999-cp312-abi3-macosx_26_0_arm64.whl
+python_bindings/dist/viskores-1.1.9999-cp314-cp314-macosx_26_0_arm64.whl
 ```
 
 Python applications can also call `viskores.cont.Initialize(sys.argv)` to get

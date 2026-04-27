@@ -13,5 +13,6 @@ requires = [
   "setuptools>=61",
   "wheel",
   "numpy",
+  "nanobind",
 ]
 build-backend = "setuptools.build_meta"

@@ -6,7 +6,13 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-find_package(Python REQUIRED COMPONENTS Interpreter Development.Module Development.SABIModule)
+option(VISKORES_PYTHON_STABLE_ABI "Build Python bindings with the CPython stable ABI" OFF)
+
+set(Viskores_PYTHON_COMPONENTS Interpreter Development)
+if (VISKORES_PYTHON_STABLE_ABI AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.26)
+  list(APPEND Viskores_PYTHON_COMPONENTS Development.SABIModule)
+endif()
+find_package(Python REQUIRED COMPONENTS ${Viskores_PYTHON_COMPONENTS})
 
 execute_process(
   COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
@@ -22,6 +28,21 @@ find_package(nanobind CONFIG REQUIRED
   PATHS "${Viskores_PYTHON_NANOBIND_CMAKE_DIR}"
   NO_DEFAULT_PATH
 )
+
+set(Viskores_PYTHON_NANOBIND_STABLE_ABI)
+if (VISKORES_PYTHON_STABLE_ABI)
+  if (Python_VERSION VERSION_LESS 3.12)
+    message(FATAL_ERROR
+      "VISKORES_PYTHON_STABLE_ABI requires Python 3.12 or newer.")
+  endif()
+  if (NOT TARGET Python::SABIModule)
+    message(FATAL_ERROR
+      "VISKORES_PYTHON_STABLE_ABI requires CMake FindPython support for "
+      "Python::SABIModule. Use CMake 3.26 or newer, or configure with "
+      "-DVISKORES_PYTHON_STABLE_ABI=OFF.")
+  endif()
+  set(Viskores_PYTHON_NANOBIND_STABLE_ABI STABLE_ABI)
+endif()
 
 execute_process(
   COMMAND "${Python_EXECUTABLE}" -c "import numpy; print(numpy.get_include())"
@@ -53,7 +74,7 @@ add_custom_command(
 )
 add_custom_target(viskores_python_package_sync DEPENDS "${Viskores_PYTHON_PACKAGE_STAMP}")
 
-nanobind_add_module(viskores_python_bindings STABLE_ABI NOMINSIZE
+nanobind_add_module(viskores_python_bindings ${Viskores_PYTHON_NANOBIND_STABLE_ABI} NOMINSIZE
   viskores_python_bindings.cxx
   src/common_support_bindings.cxx
   src/shared_data_bindings.cxx

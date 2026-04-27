@@ -11,7 +11,13 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(ViskoresPythonWheel LANGUAGES CXX)
 
-find_package(Python REQUIRED COMPONENTS Interpreter Development.Module Development.SABIModule)
+option(VISKORES_PYTHON_STABLE_ABI "Build Python bindings with the CPython stable ABI" OFF)
+
+set(Viskores_PYTHON_COMPONENTS Interpreter Development)
+if (VISKORES_PYTHON_STABLE_ABI AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.26)
+  list(APPEND Viskores_PYTHON_COMPONENTS Development.SABIModule)
+endif()
+find_package(Python REQUIRED COMPONENTS ${Viskores_PYTHON_COMPONENTS})
 
 execute_process(
   COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
@@ -28,6 +34,22 @@ find_package(nanobind CONFIG REQUIRED
   NO_DEFAULT_PATH
 )
 find_package(Viskores REQUIRED CONFIG)
+
+set(Viskores_PYTHON_NANOBIND_STABLE_ABI)
+if (VISKORES_PYTHON_STABLE_ABI)
+  if (Python_VERSION VERSION_LESS 3.12)
+    message(FATAL_ERROR
+      "VISKORES_PYTHON_STABLE_ABI requires Python 3.12 or newer.")
+  endif()
+  if (NOT TARGET Python::SABIModule)
+    message(FATAL_ERROR
+      "VISKORES_PYTHON_STABLE_ABI requires CMake FindPython support for "
+      "Python::SABIModule. Use CMake 3.26 or newer, or configure with "
+      "-DVISKORES_PYTHON_STABLE_ABI=OFF.")
+  endif()
+  set(Viskores_PYTHON_NANOBIND_STABLE_ABI STABLE_ABI)
+endif()
+
 if (Viskores_ENABLE_OPENMP)
   find_package(OpenMP REQUIRED COMPONENTS CXX)
 endif()
@@ -57,7 +79,7 @@ get_filename_component(Viskores_PYTHON_EXTENSION_BASENAME
 get_filename_component(Viskores_PYTHON_EXTENSION_SUFFIX
   "${VISKORES_PYTHON_EXTENSION_FILENAME}" LAST_EXT)
 
-nanobind_add_module(viskores_python_bindings STABLE_ABI NOMINSIZE
+nanobind_add_module(viskores_python_bindings ${Viskores_PYTHON_NANOBIND_STABLE_ABI} NOMINSIZE
   ../viskores_python_bindings.cxx
   ../src/common_support_bindings.cxx
   ../src/shared_data_bindings.cxx

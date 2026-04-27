@@ -2,8 +2,9 @@
 
 This directory contains the Viskores Python package and its CMake build logic.
 The current binding implementation uses `nanobind`, including the active
-ndarray conversion layer, and the extension is built in `nanobind` stable-ABI
-(`abi3`) mode.
+ndarray conversion layer. By default, the extension is built as a normal
+Python-minor-version-specific extension so the repository can keep its CMake
+3.15 baseline.
 
 Current Python surface includes:
 - core data objects such as `viskores.cont.DataSet`
@@ -29,9 +30,6 @@ viskores-build/.venv/bin/python -m pip install numpy pyglet PyOpenGL PyOpenGL_ac
 
 Run these commands from the repository root so the relative
 `viskores-build/.venv` path resolves inside the build tree.
-The extension is built in `abi3` mode, so it is not tied to one specific
-Python minor version in the way a normal CPython extension is. The current
-wheel/import path has been validated on Python `3.12`, `3.13`, and `3.14`.
 
 If you want to run the current `GameOfLife.py` OpenGL window on macOS, the
 virtual-environment commands above are sufficient on the Python side. `pyglet`
@@ -50,6 +48,17 @@ cmake -S . -B viskores-build \
   -DViskores_ENABLE_RENDERING=ON \
   -DViskores_ENABLE_TESTING=ON
 ```
+
+The optional stable-ABI (`abi3`) build path is available by adding:
+
+```bash
+-DVISKORES_PYTHON_STABLE_ABI=ON
+```
+
+That mode currently requires Python `3.12` or newer and CMake FindPython
+support for `Python::SABIModule`, which is available in CMake `3.26` or newer.
+Leave `VISKORES_PYTHON_STABLE_ABI` off when building with the repository's
+CMake `3.15` baseline.
 
 If your macOS build needs Homebrew OpenMP, add:
 
@@ -100,20 +109,30 @@ Viskores_DIR=$PWD/../viskores-build/lib/cmake/viskores-1.1 \
 ../viskores-build/.venv/bin/python setup.py bdist_wheel
 ```
 
+To build an `abi3` wheel, use a CMake `3.26` or newer environment and enable
+the matching setup/CMake option:
+
+```bash
+VISKORES_PYTHON_STABLE_ABI=ON \
+Viskores_DIR=$PWD/../viskores-build/lib/cmake/viskores-1.1 \
+../viskores-build/.venv/bin/python setup.py bdist_wheel
+```
+
 This writes the wheel to:
 
 ```bash
 python_bindings/dist/
 ```
 
-For example, the current build produced:
+For example, a Python `3.14` build produces a wheel tagged for that Python
+minor version:
 
 ```bash
-python_bindings/dist/viskores-1.1.9999-cp312-abi3-macosx_26_0_arm64.whl
+python_bindings/dist/viskores-1.1.9999-cp314-cp314-macosx_26_0_arm64.whl
 ```
 
-The wheel is now tagged as an `abi3` wheel rather than a Python-minor-version-
-specific wheel.
+With `VISKORES_PYTHON_STABLE_ABI=ON`, the wheel is tagged as an `abi3` wheel
+rather than a Python-minor-version-specific wheel.
 
 ## Running the Demos
 

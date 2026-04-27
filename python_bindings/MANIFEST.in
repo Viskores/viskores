@@ -10,8 +10,10 @@
 
 include pyproject.toml
 include setup.py
+include version.txt
 include viskores_python_bindings.cxx
 recursive-include viskores *.py
+recursive-include src *.cxx *.h *.inl
 recursive-include examples *.py
-recursive-include tests *.py
+recursive-include testing *.py
 include wheel/CMakeLists.txt

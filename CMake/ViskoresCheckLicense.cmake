@@ -46,6 +46,7 @@ set(EXCEPTIONS
   DCO.txt
   README.txt
   docs/users-guide/requirements.txt
+  python_bindings/version.txt
   # Common directories with build files
   .venv
   build

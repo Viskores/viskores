@@ -24,8 +24,23 @@ ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parent
 
 
+def env_flag(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
+
+
 def read_version() -> str:
-    return REPO_ROOT.joinpath("version.txt").read_text(encoding="utf-8").strip()
+    for version_file in (REPO_ROOT / "version.txt", ROOT / "version.txt"):
+        if version_file.exists():
+            return version_file.read_text(encoding="utf-8").strip()
+    if "VISKORES_VERSION" in os.environ:
+        return os.environ["VISKORES_VERSION"]
+    raise FileNotFoundError("Could not find version.txt for Viskores Python package.")
+
+
+STABLE_ABI = env_flag("VISKORES_PYTHON_STABLE_ABI")
 
 
 class CMakeBuildExt(build_ext):
@@ -57,6 +72,7 @@ class CMakeBuildExt(build_ext):
             f"-DPython_EXECUTABLE={sys.executable}",
             f"-DVISKORES_PYTHON_EXTENSION_OUTPUT_DIR={extdir}",
             f"-DVISKORES_PYTHON_EXTENSION_FILENAME={ext_fullpath.name}",
+            f"-DVISKORES_PYTHON_STABLE_ABI={'ON' if STABLE_ABI else 'OFF'}",
         ]
 
         viskores_dir = os.environ.get("Viskores_DIR") or os.environ.get("VISKORES_DIR")
@@ -85,9 +101,9 @@ setup(
     description="Python bindings for Viskores",
     packages=find_packages(where="."),
     package_dir={"": "."},
-    ext_modules=[Extension("viskores._viskores", sources=[], py_limited_api=True)],
+    ext_modules=[Extension("viskores._viskores", sources=[], py_limited_api=STABLE_ABI)],
     cmdclass={"build_ext": CMakeBuildExt},
-    options={"bdist_wheel": {"py_limited_api": "cp312"}},
+    options={"bdist_wheel": {"py_limited_api": "cp312"}} if STABLE_ABI else {},
     install_requires=["numpy"],
     extras_require={
         "demo": [
