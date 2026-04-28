@@ -68,6 +68,28 @@ def soa_class_name(dtype, components):
     return f"ArrayHandleSOAVec{components}{suffix}"
 
 
+def group_vec_class_name(dtype):
+    dtype = np.dtype(dtype)
+    if dtype == np.float32:
+        suffix = "Float32"
+    elif dtype == np.float64:
+        suffix = "Float64"
+    elif dtype.kind == "i":
+        suffix = f"Int{dtype.itemsize * 8}"
+    elif dtype.kind == "u":
+        suffix = f"UInt{dtype.itemsize * 8}"
+    else:
+        raise AssertionError(f"unexpected dtype {dtype}")
+    return f"ArrayHandleGroupVecVariable{suffix}"
+
+
+def assert_group_values(groups, expected):
+    assert isinstance(groups, list)
+    assert len(groups) == len(expected)
+    for actual, expected_group in zip(groups, expected):
+        np.testing.assert_array_equal(actual, expected_group)
+
+
 def check_soa_dtype(dtype, components):
     values = np.arange(12, dtype=dtype).reshape(12 // components, components)
     destination_class = getattr(viskores_cont, soa_class_name(dtype, components))
@@ -83,6 +105,30 @@ def check_soa_dtype(dtype, components):
         destination,
     )
     np.testing.assert_array_equal(field.GetData(), values)
+
+
+def check_group_vec_dtype(dtype):
+    components = np.arange(9, dtype=dtype)
+    offsets = np.array([0, 4, 6, 9], dtype=np.int64)
+    expected = [components[0:4], components[4:6], components[6:9]]
+
+    group_vec_class = getattr(viskores_cont, group_vec_class_name(dtype))
+    group_vec = group_vec_class(components, offsets)
+    assert "ArrayHandleGroupVecVariable" in repr(group_vec)
+    assert len(group_vec) == 3
+    assert group_vec.GetNumberOfValues() == 3
+    assert group_vec.GetNumberOfComponentsFlat() == 0
+    np.testing.assert_array_equal(group_vec.GetComponentsArray().AsNumPy(), components)
+    np.testing.assert_array_equal(group_vec.GetOffsetsArray().AsNumPy(), offsets)
+    np.testing.assert_array_equal(group_vec[0], expected[0])
+    np.testing.assert_array_equal(group_vec[-1], expected[-1])
+    assert_group_values(group_vec.AsList(), expected)
+    assert_group_values(group_vec.AsNumPy(), expected)
+    assert_group_values(asnumpy(group_vec), expected)
+
+    field = Field(f"group_vec_{np.dtype(dtype).name}", Association.WHOLE_DATASET, group_vec)
+    assert field.GetNumberOfValues() == 3
+    assert_group_values(field.GetData(), expected)
 
 
 def main():
@@ -101,9 +147,15 @@ def main():
 
     for dtype in dtypes:
         check_scalar_dtype(dtype)
+        check_group_vec_dtype(dtype)
         for components in (2, 3, 4):
             check_vector_dtype(dtype, components)
             check_soa_dtype(dtype, components)
+
+    id_group = viskores_cont.ArrayHandleGroupVecVariableId(
+        np.arange(3, dtype=np.int64), np.array([0, 1, 3], dtype=np.int64)
+    )
+    assert_group_values(id_group.AsList(), [np.array([0], dtype=np.int64), np.array([1, 2])])
 
     source = np.arange(6, dtype=np.float32).reshape(3, 2)
     copied = array_from_numpy(source)

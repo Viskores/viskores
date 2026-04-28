@@ -52,6 +52,14 @@ types.)doc";
 This array handle recombines separate component arrays into vector values for
 use by Viskores algorithms while retaining Python/NumPy interoperation.)doc";
   }
+  if (StartsWith(name, "ArrayHandleGroupVecVariable"))
+  {
+    return R"doc(Viskores ArrayHandleGroupVecVariable wrapper.
+
+ArrayHandleGroupVecVariable groups a flat component array with an offsets array
+to represent values with variable component counts. Python exposes it as a
+Viskores array handle plus a ragged list of NumPy arrays.)doc";
+  }
   if (name == "CellSet")
   {
     return R"doc(Type-erased Viskores cell set.
@@ -561,7 +569,8 @@ inline constexpr const char* AsNumPy =
   R"doc(Return a NumPy view or copy for a Viskores array-like object.
 
 The object may be an UnknownArrayHandle, a supported concrete Viskores array, a
-Field, or any object accepted by numpy.asarray.)doc";
+Field, or any object accepted by numpy.asarray. Variable-length grouped arrays
+are returned as a list of NumPy arrays.)doc";
 
 inline constexpr const char* ArrayCopy =
   R"doc(Copy values between a Viskores array-like source and a Python destination.)doc";

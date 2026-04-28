@@ -14,6 +14,7 @@
 #include <nanobind/stl/vector.h>
 
 #include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/ArrayHandleGroupVecVariable.h>
 #include <viskores/cont/ArrayHandleSOA.h>
 
 namespace viskores::python::bindings
@@ -21,6 +22,9 @@ namespace viskores::python::bindings
 
 namespace
 {
+
+bool TryPythonObjectToRegisteredArray(nb::handle object, viskores::cont::UnknownArrayHandle& array);
+viskores::cont::UnknownArrayHandle PythonObjectToUnknownArray(nb::handle object);
 
 nb::object NumPyObjectFromUnknownArray(const viskores::cont::UnknownArrayHandle& array)
 {
@@ -285,6 +289,139 @@ void RegisterArrayHandleRecombineVecClass(
 }
 
 template <typename ComponentType>
+viskores::cont::ArrayHandle<ComponentType> ParseGroupVecVariableComponents(nb::handle object)
+{
+  viskores::cont::UnknownArrayHandle unknown = PythonObjectToUnknownArray(object);
+  if (unknown.GetNumberOfComponentsFlat() != 1)
+  {
+    throw std::runtime_error("ArrayHandleGroupVecVariable components must be a 1D scalar array.");
+  }
+  if (!unknown.IsBaseComponentType<ComponentType>())
+  {
+    throw std::runtime_error(
+      "ArrayHandleGroupVecVariable components do not match the requested component type.");
+  }
+
+  viskores::cont::ArrayHandle<ComponentType> components;
+  viskores::cont::ArrayCopy(unknown, components);
+  return components;
+}
+
+void ValidateGroupVecVariableOffsets(
+  const viskores::cont::ArrayHandle<viskores::Id>& offsets,
+  viskores::Id numberOfComponents)
+{
+  const viskores::Id numberOfOffsets = offsets.GetNumberOfValues();
+  if (numberOfOffsets < 1)
+  {
+    throw std::runtime_error(
+      "ArrayHandleGroupVecVariable offsets must contain at least one value.");
+  }
+
+  auto offsetsPortal = offsets.ReadPortal();
+  viskores::Id previous = offsetsPortal.Get(0);
+  if (previous != 0)
+  {
+    throw std::runtime_error("ArrayHandleGroupVecVariable offsets must start with 0.");
+  }
+
+  for (viskores::Id index = 1; index < numberOfOffsets; ++index)
+  {
+    const viskores::Id current = offsetsPortal.Get(index);
+    if (current < previous)
+    {
+      throw std::runtime_error("ArrayHandleGroupVecVariable offsets must be nondecreasing.");
+    }
+    if (current > numberOfComponents)
+    {
+      throw std::runtime_error(
+        "ArrayHandleGroupVecVariable offsets cannot exceed the number of components.");
+    }
+    previous = current;
+  }
+}
+
+viskores::cont::ArrayHandle<viskores::Id> ParseGroupVecVariableOffsets(nb::handle object,
+                                                                       viskores::Id components)
+{
+  viskores::cont::ArrayHandle<viskores::Id> offsets;
+  viskores::cont::UnknownArrayHandle unknown;
+  if (TryPythonObjectToRegisteredArray(object, unknown) &&
+      unknown.GetNumberOfComponentsFlat() == 1 &&
+      unknown.IsBaseComponentType<viskores::Id>())
+  {
+    viskores::cont::ArrayCopy(unknown, offsets);
+  }
+  else
+  {
+    std::vector<viskores::Id> offsetValues = ParseIdSequence(object);
+    offsets = viskores::cont::make_ArrayHandle(offsetValues, viskores::CopyFlag::On);
+  }
+
+  ValidateGroupVecVariableOffsets(offsets, components);
+  return offsets;
+}
+
+template <typename ComponentType>
+void RegisterArrayHandleGroupVecVariableClass(
+  nb::module_& m,
+  const std::function<void(const char*)>& erase_existing_name,
+  const char* name)
+{
+  using ComponentsArrayType = viskores::cont::ArrayHandle<ComponentType>;
+  using OffsetsArrayType = viskores::cont::ArrayHandle<viskores::Id>;
+  using ArrayType =
+    viskores::cont::ArrayHandleGroupVecVariable<ComponentsArrayType, OffsetsArrayType>;
+
+  erase_existing_name(name);
+  nb::class_<ArrayType>(m, name, doc::ClassDoc(name))
+    .def("__init__",
+         [](ArrayType* self, nb::object componentsObject, nb::object offsetsObject)
+         {
+           ComponentsArrayType components =
+             ParseGroupVecVariableComponents<ComponentType>(componentsObject);
+           OffsetsArrayType offsets =
+             ParseGroupVecVariableOffsets(offsetsObject, components.GetNumberOfValues());
+           new (self) ArrayType(components, offsets);
+         },
+         nb::arg("components"),
+         nb::arg("offsets"))
+    .def("__repr__",
+         [name](const ArrayType& self)
+         {
+           std::ostringstream stream;
+           stream << "viskores.cont." << name << "(values=" << self.GetNumberOfValues()
+                  << ", components=" << self.GetNumberOfComponentsFlat() << ")";
+           return stream.str();
+         })
+    .def("__len__", [](const ArrayType& self) { return self.GetNumberOfValues(); })
+    .def("__getitem__",
+         [](const ArrayType& self, viskores::Id index)
+         {
+           return GroupVecVariableValueToNumPyArray(
+             viskores::cont::UnknownArrayHandle{ self }, index);
+         },
+         nb::arg("index"))
+    .def("GetNumberOfValues", &ArrayType::GetNumberOfValues)
+    .def("GetNumberOfComponentsFlat", &ArrayType::GetNumberOfComponentsFlat)
+    .def("GetComponentsArray",
+         [](const ArrayType& self)
+         { return viskores::cont::UnknownArrayHandle{ self.GetComponentsArray() }; })
+    .def("GetOffsetsArray",
+         [](const ArrayType& self)
+         { return viskores::cont::UnknownArrayHandle{ self.GetOffsetsArray() }; })
+    .def(
+      "AsList",
+      [](const ArrayType& self)
+      { return GroupVecVariableToPythonList(viskores::cont::UnknownArrayHandle{ self }); })
+    .def(
+      "AsNumPy",
+      [](const ArrayType& self, bool copy)
+      { return GroupVecVariableToPythonList(viskores::cont::UnknownArrayHandle{ self }, copy); },
+      nb::arg("copy") = true);
+}
+
+template <typename ComponentType>
 bool TryExtractArrayFromComponents(const viskores::cont::UnknownArrayHandle& array,
                                    nb::object& output)
 {
@@ -379,6 +516,23 @@ bool TryPythonObjectToRecombineVecUnknownArray(nb::handle object,
   return true;
 }
 
+template <typename ComponentType>
+bool TryPythonObjectToGroupVecVariableUnknownArray(nb::handle object,
+                                                   viskores::cont::UnknownArrayHandle& array)
+{
+  using ArrayType = viskores::cont::ArrayHandleGroupVecVariable<
+    viskores::cont::ArrayHandle<ComponentType>,
+    viskores::cont::ArrayHandle<viskores::Id>>;
+  ArrayType* typedArray = nullptr;
+  if (!nb::try_cast(object, typedArray))
+  {
+    return false;
+  }
+
+  array = viskores::cont::UnknownArrayHandle(*typedArray);
+  return true;
+}
+
 bool TryPythonObjectToRegisteredArray(nb::handle object, viskores::cont::UnknownArrayHandle& array)
 {
   viskores::cont::UnknownArrayHandle* unknownArray = nullptr;
@@ -407,7 +561,17 @@ bool TryPythonObjectToRegisteredArray(nb::handle object, viskores::cont::Unknown
       TryPythonObjectToRecombineVecUnknownArray<viskores::Int32>(object, array) ||
       TryPythonObjectToRecombineVecUnknownArray<viskores::UInt32>(object, array) ||
       TryPythonObjectToRecombineVecUnknownArray<viskores::Int64>(object, array) ||
-      TryPythonObjectToRecombineVecUnknownArray<viskores::UInt64>(object, array))
+      TryPythonObjectToRecombineVecUnknownArray<viskores::UInt64>(object, array) ||
+      TryPythonObjectToGroupVecVariableUnknownArray<viskores::Float32>(object, array) ||
+      TryPythonObjectToGroupVecVariableUnknownArray<viskores::Float64>(object, array) ||
+      TryPythonObjectToGroupVecVariableUnknownArray<viskores::Int8>(object, array) ||
+      TryPythonObjectToGroupVecVariableUnknownArray<viskores::UInt8>(object, array) ||
+      TryPythonObjectToGroupVecVariableUnknownArray<viskores::Int16>(object, array) ||
+      TryPythonObjectToGroupVecVariableUnknownArray<viskores::UInt16>(object, array) ||
+      TryPythonObjectToGroupVecVariableUnknownArray<viskores::Int32>(object, array) ||
+      TryPythonObjectToGroupVecVariableUnknownArray<viskores::UInt32>(object, array) ||
+      TryPythonObjectToGroupVecVariableUnknownArray<viskores::Int64>(object, array) ||
+      TryPythonObjectToGroupVecVariableUnknownArray<viskores::UInt64>(object, array))
   {
     return true;
   }
@@ -769,6 +933,38 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
     std::is_same<viskores::FloatDefault, viskores::Float32>::value
     ? m.attr("ArrayHandleRecombineVecFloat32")
     : m.attr("ArrayHandleRecombineVecFloat64");
+
+  RegisterArrayHandleGroupVecVariableClass<viskores::Float32>(
+    m, erase_existing_name, "ArrayHandleGroupVecVariableFloat32");
+  RegisterArrayHandleGroupVecVariableClass<viskores::Float64>(
+    m, erase_existing_name, "ArrayHandleGroupVecVariableFloat64");
+  RegisterArrayHandleGroupVecVariableClass<viskores::Int8>(
+    m, erase_existing_name, "ArrayHandleGroupVecVariableInt8");
+  RegisterArrayHandleGroupVecVariableClass<viskores::UInt8>(
+    m, erase_existing_name, "ArrayHandleGroupVecVariableUInt8");
+  RegisterArrayHandleGroupVecVariableClass<viskores::Int16>(
+    m, erase_existing_name, "ArrayHandleGroupVecVariableInt16");
+  RegisterArrayHandleGroupVecVariableClass<viskores::UInt16>(
+    m, erase_existing_name, "ArrayHandleGroupVecVariableUInt16");
+  RegisterArrayHandleGroupVecVariableClass<viskores::Int32>(
+    m, erase_existing_name, "ArrayHandleGroupVecVariableInt32");
+  RegisterArrayHandleGroupVecVariableClass<viskores::UInt32>(
+    m, erase_existing_name, "ArrayHandleGroupVecVariableUInt32");
+  RegisterArrayHandleGroupVecVariableClass<viskores::Int64>(
+    m, erase_existing_name, "ArrayHandleGroupVecVariableInt64");
+  RegisterArrayHandleGroupVecVariableClass<viskores::UInt64>(
+    m, erase_existing_name, "ArrayHandleGroupVecVariableUInt64");
+
+  erase_existing_name("ArrayHandleGroupVecVariableFloatDefault");
+  m.attr("ArrayHandleGroupVecVariableFloatDefault") =
+    std::is_same<viskores::FloatDefault, viskores::Float32>::value
+    ? m.attr("ArrayHandleGroupVecVariableFloat32")
+    : m.attr("ArrayHandleGroupVecVariableFloat64");
+
+  erase_existing_name("ArrayHandleGroupVecVariableId");
+  m.attr("ArrayHandleGroupVecVariableId") = std::is_same<viskores::Id, viskores::Int32>::value
+    ? m.attr("ArrayHandleGroupVecVariableInt32")
+    : m.attr("ArrayHandleGroupVecVariableInt64");
 
   erase_existing_name("array_from_numpy");
   m.attr("array_from_numpy") = nb::cpp_function([](nb::object values, bool copy)

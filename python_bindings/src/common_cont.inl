@@ -160,6 +160,97 @@ nb::object CopyUnknownArrayToNumPy(const viskores::cont::UnknownArrayHandle& arr
 }
 
 template <typename ComponentType>
+using BasicGroupVecVariableArray = viskores::cont::ArrayHandleGroupVecVariable<
+  viskores::cont::ArrayHandle<ComponentType>,
+  viskores::cont::ArrayHandle<viskores::Id>>;
+
+template <typename ArrayType>
+nb::object GroupVecVariableValueToNumPy(const ArrayType& array, viskores::Id index)
+{
+  using ComponentType = typename ArrayType::ComponentType;
+  const viskores::Id numberOfValues = array.GetNumberOfValues();
+  if (index < 0)
+  {
+    index += numberOfValues;
+  }
+  if (index < 0 || index >= numberOfValues)
+  {
+    throw nb::index_error("ArrayHandleGroupVecVariable index out of range.");
+  }
+
+  const auto componentsPortal = array.GetComponentsArray().ReadPortal();
+  const auto offsetsPortal = array.GetOffsetsArray().ReadPortal();
+  const viskores::Id begin = offsetsPortal.Get(index);
+  const viskores::Id end = offsetsPortal.Get(index + 1);
+  if (end < begin)
+  {
+    throw std::runtime_error("ArrayHandleGroupVecVariable offsets are not nondecreasing.");
+  }
+
+  std::vector<ComponentType> values(static_cast<std::size_t>(end - begin));
+  for (viskores::Id component = begin; component < end; ++component)
+  {
+    values[static_cast<std::size_t>(component - begin)] = componentsPortal.Get(component);
+  }
+  return CreateOwnedNumPyArray(std::move(values), { static_cast<std::size_t>(end - begin) });
+}
+
+template <typename ArrayType>
+nb::list GroupVecVariableToList(const ArrayType& array)
+{
+  nb::list output;
+  const viskores::Id numberOfValues = array.GetNumberOfValues();
+  for (viskores::Id index = 0; index < numberOfValues; ++index)
+  {
+    output.append(GroupVecVariableValueToNumPy(array, index));
+  }
+  return output;
+}
+
+template <typename ComponentType>
+bool TryGroupVecVariableToPythonList(const viskores::cont::UnknownArrayHandle& array,
+                                     bool copy,
+                                     nb::object& output)
+{
+  using ArrayType = BasicGroupVecVariableArray<ComponentType>;
+  if (!array.IsType<ArrayType>())
+  {
+    return false;
+  }
+  if (!copy)
+  {
+    throw std::runtime_error("copy=False is not supported for ArrayHandleGroupVecVariable.");
+  }
+
+  ArrayType typedArray;
+  array.AsArrayHandle(typedArray);
+  output = GroupVecVariableToList(typedArray);
+  return true;
+}
+
+template <typename ComponentType>
+bool TryGroupVecVariableValueToNumPyArray(const viskores::cont::UnknownArrayHandle& array,
+                                          viskores::Id index,
+                                          bool copy,
+                                          nb::object& output)
+{
+  using ArrayType = BasicGroupVecVariableArray<ComponentType>;
+  if (!array.IsType<ArrayType>())
+  {
+    return false;
+  }
+  if (!copy)
+  {
+    throw std::runtime_error("copy=False is not supported for ArrayHandleGroupVecVariable.");
+  }
+
+  ArrayType typedArray;
+  array.AsArrayHandle(typedArray);
+  output = GroupVecVariableValueToNumPy(typedArray, index);
+  return true;
+}
+
+template <typename ComponentType>
 bool TryUnknownArrayToNumPy(const viskores::cont::UnknownArrayHandle& array,
                             bool copy,
                             nb::object& output)
@@ -541,6 +632,31 @@ nb::object UnknownArrayToNumPyArray(const viskores::cont::UnknownArrayHandle& de
                                  { static_cast<size_t>(pairArray.GetNumberOfValues()), 2 });
   }
 
+  nb::object variableComponentOutput;
+  if (TryGroupVecVariableToPythonList<viskores::Float32>(
+        defaultArray, copy, variableComponentOutput) ||
+      TryGroupVecVariableToPythonList<viskores::Float64>(
+        defaultArray, copy, variableComponentOutput) ||
+      TryGroupVecVariableToPythonList<viskores::Int8>(
+        defaultArray, copy, variableComponentOutput) ||
+      TryGroupVecVariableToPythonList<viskores::UInt8>(
+        defaultArray, copy, variableComponentOutput) ||
+      TryGroupVecVariableToPythonList<viskores::Int16>(
+        defaultArray, copy, variableComponentOutput) ||
+      TryGroupVecVariableToPythonList<viskores::UInt16>(
+        defaultArray, copy, variableComponentOutput) ||
+      TryGroupVecVariableToPythonList<viskores::Int32>(
+        defaultArray, copy, variableComponentOutput) ||
+      TryGroupVecVariableToPythonList<viskores::UInt32>(
+        defaultArray, copy, variableComponentOutput) ||
+      TryGroupVecVariableToPythonList<viskores::Int64>(
+        defaultArray, copy, variableComponentOutput) ||
+      TryGroupVecVariableToPythonList<viskores::UInt64>(
+        defaultArray, copy, variableComponentOutput))
+  {
+    return variableComponentOutput;
+  }
+
   nb::object output;
   if (TryUnknownArrayToNumPy<viskores::Float32>(defaultArray, copy, output) ||
       TryUnknownArrayToNumPy<viskores::Float64>(defaultArray, copy, output) ||
@@ -556,6 +672,46 @@ nb::object UnknownArrayToNumPyArray(const viskores::cont::UnknownArrayHandle& de
     return output;
   }
   throw std::runtime_error("Unsupported field component type for NumPy export.");
+}
+
+nb::object GroupVecVariableToPythonList(const viskores::cont::UnknownArrayHandle& array, bool copy)
+{
+  nb::object output;
+  if (TryGroupVecVariableToPythonList<viskores::Float32>(array, copy, output) ||
+      TryGroupVecVariableToPythonList<viskores::Float64>(array, copy, output) ||
+      TryGroupVecVariableToPythonList<viskores::Int8>(array, copy, output) ||
+      TryGroupVecVariableToPythonList<viskores::UInt8>(array, copy, output) ||
+      TryGroupVecVariableToPythonList<viskores::Int16>(array, copy, output) ||
+      TryGroupVecVariableToPythonList<viskores::UInt16>(array, copy, output) ||
+      TryGroupVecVariableToPythonList<viskores::Int32>(array, copy, output) ||
+      TryGroupVecVariableToPythonList<viskores::UInt32>(array, copy, output) ||
+      TryGroupVecVariableToPythonList<viskores::Int64>(array, copy, output) ||
+      TryGroupVecVariableToPythonList<viskores::UInt64>(array, copy, output))
+  {
+    return output;
+  }
+  throw std::runtime_error("Unsupported ArrayHandleGroupVecVariable component type.");
+}
+
+nb::object GroupVecVariableValueToNumPyArray(const viskores::cont::UnknownArrayHandle& array,
+                                             viskores::Id index,
+                                             bool copy)
+{
+  nb::object output;
+  if (TryGroupVecVariableValueToNumPyArray<viskores::Float32>(array, index, copy, output) ||
+      TryGroupVecVariableValueToNumPyArray<viskores::Float64>(array, index, copy, output) ||
+      TryGroupVecVariableValueToNumPyArray<viskores::Int8>(array, index, copy, output) ||
+      TryGroupVecVariableValueToNumPyArray<viskores::UInt8>(array, index, copy, output) ||
+      TryGroupVecVariableValueToNumPyArray<viskores::Int16>(array, index, copy, output) ||
+      TryGroupVecVariableValueToNumPyArray<viskores::UInt16>(array, index, copy, output) ||
+      TryGroupVecVariableValueToNumPyArray<viskores::Int32>(array, index, copy, output) ||
+      TryGroupVecVariableValueToNumPyArray<viskores::UInt32>(array, index, copy, output) ||
+      TryGroupVecVariableValueToNumPyArray<viskores::Int64>(array, index, copy, output) ||
+      TryGroupVecVariableValueToNumPyArray<viskores::UInt64>(array, index, copy, output))
+  {
+    return output;
+  }
+  throw std::runtime_error("Unsupported ArrayHandleGroupVecVariable component type.");
 }
 
 nb::object FieldToNumPyArray(const viskores::cont::Field& field)

@@ -25,6 +25,11 @@ void SetPythonError(const std::exception& error);
 
 nb::object UnknownArrayToNumPyArray(const viskores::cont::UnknownArrayHandle& array,
                                     bool copy = true);
+nb::object GroupVecVariableToPythonList(const viskores::cont::UnknownArrayHandle& array,
+                                        bool copy = true);
+nb::object GroupVecVariableValueToNumPyArray(const viskores::cont::UnknownArrayHandle& array,
+                                             viskores::Id index,
+                                             bool copy = true);
 nb::object FieldToNumPyArray(const viskores::cont::Field& field);
 viskores::cont::UnknownArrayHandle NumPyArrayToUnknownArray(nb::handle object, bool copy = true);
 std::vector<viskores::Float64> ParseIsoValues(nb::handle object);
