@@ -11,6 +11,9 @@
 
 #include <nanobind/stl/string.h>
 
+#include <stdexcept>
+#include <vector>
+
 namespace viskores::python::bindings
 {
 
@@ -18,11 +21,108 @@ namespace viskores::python::bindings
 namespace
 {
 
+using ContourTreeAugmentedFilter = viskores::filter::scalar_topology::ContourTreeAugmented;
+using ContourTreeType = viskores::worklet::contourtree_augmented::ContourTree;
+using IdArrayType = viskores::worklet::contourtree_augmented::IdArrayType;
+
+const ContourTreeType& RequireComputedContourTree(ContourTreeAugmentedFilter& self)
+{
+  const ContourTreeType& contourTree = self.GetContourTree();
+  if (contourTree.Superarcs.GetNumberOfValues() == 0)
+  {
+    throw std::runtime_error("ContourTreeAugmented has no computed contour tree. Call Execute first.");
+  }
+  return contourTree;
+}
+
+const ContourTreeType& RequireComputedAugmentedContourTree(ContourTreeAugmentedFilter& self)
+{
+  const ContourTreeType& contourTree = RequireComputedContourTree(self);
+  if (contourTree.Nodes.GetNumberOfValues() == 0 || contourTree.Superparents.GetNumberOfValues() == 0)
+  {
+    throw std::runtime_error(
+      "ContourTreeAugmented regular structure is not available. Execute with "
+      "compute_regular_structure=1 before requesting superarc membership or volume arrays.");
+  }
+  return contourTree;
+}
+
+viskores::Id PublicIndex(viskores::Id value)
+{
+  using namespace viskores::worklet::contourtree_augmented;
+  return NoSuchElement(value) ? static_cast<viskores::Id>(NO_SUCH_ELEMENT) : MaskedIndex(value);
+}
+
+nb::object IdVectorToNumPy(std::vector<viskores::Id>&& values)
+{
+  IdArrayType array = viskores::cont::make_ArrayHandle(values, viskores::CopyFlag::On);
+  return IdArrayToNumPy(array);
+}
+
+struct VolumeArrays
+{
+  IdArrayType IntrinsicVolume;
+  IdArrayType DependentVolume;
+  IdArrayType SupernodeTransferWeight;
+  IdArrayType HyperarcDependentWeight;
+};
+
+VolumeArrays ComputeVolumeArrays(ContourTreeAugmentedFilter& self)
+{
+  VolumeArrays arrays;
+  viskores::worklet::contourtree_augmented::ProcessContourTree::ComputeVolumeWeightsSerial(
+    RequireComputedAugmentedContourTree(self),
+    self.GetNumIterations(),
+    arrays.IntrinsicVolume,
+    arrays.DependentVolume,
+    arrays.SupernodeTransferWeight,
+    arrays.HyperarcDependentWeight);
+  return arrays;
+}
+
+nb::object GetPointSuperarcIds(ContourTreeAugmentedFilter& self)
+{
+  const ContourTreeType& contourTree = RequireComputedAugmentedContourTree(self);
+  const viskores::Id numberOfPoints = contourTree.Superparents.GetNumberOfValues();
+  std::vector<viskores::Id> pointSuperarcs(static_cast<std::size_t>(numberOfPoints),
+                                           viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+
+  auto superparentsPortal = contourTree.Superparents.ReadPortal();
+  auto sortOrderPortal = self.GetSortOrder().ReadPortal();
+  for (viskores::Id sortId = 0; sortId < numberOfPoints; ++sortId)
+  {
+    const viskores::Id pointId = sortOrderPortal.Get(sortId);
+    if (pointId < 0 || pointId >= numberOfPoints)
+    {
+      throw std::runtime_error("ContourTreeAugmented sort order contains an invalid point id.");
+    }
+    pointSuperarcs[static_cast<std::size_t>(pointId)] =
+      PublicIndex(superparentsPortal.Get(sortId));
+  }
+
+  return IdVectorToNumPy(std::move(pointSuperarcs));
+}
+
+nb::object GetSupernodePointIds(ContourTreeAugmentedFilter& self)
+{
+  const ContourTreeType& contourTree = RequireComputedContourTree(self);
+  const viskores::Id numberOfSupernodes = contourTree.Supernodes.GetNumberOfValues();
+  std::vector<viskores::Id> pointIds(static_cast<std::size_t>(numberOfSupernodes));
+
+  auto supernodesPortal = contourTree.Supernodes.ReadPortal();
+  auto sortOrderPortal = self.GetSortOrder().ReadPortal();
+  for (viskores::Id supernode = 0; supernode < numberOfSupernodes; ++supernode)
+  {
+    pointIds[static_cast<std::size_t>(supernode)] =
+      sortOrderPortal.Get(PublicIndex(supernodesPortal.Get(supernode)));
+  }
+
+  return IdVectorToNumPy(std::move(pointIds));
+}
+
 nb::dict ComputeVolumeBranchDecompositionDict(
   viskores::filter::scalar_topology::ContourTreeAugmented& self)
 {
-  using IdArrayType = viskores::worklet::contourtree_augmented::IdArrayType;
-
   IdArrayType superarcIntrinsicWeight;
   IdArrayType superarcDependentWeight;
   IdArrayType supernodeTransferWeight;
@@ -80,7 +180,6 @@ nb::object ComputeRelevantValuesForArray(
     return VectorToNumPy({});
   }
 
-  using IdArrayType = viskores::worklet::contourtree_augmented::IdArrayType;
   IdArrayType superarcIntrinsicWeight;
   IdArrayType superarcDependentWeight;
   IdArrayType supernodeTransferWeight;
@@ -231,6 +330,30 @@ void RegisterNanobindScalarTopologyClasses(
          { return IdArrayToNumPy(self.GetSortOrder()); })
     .def("GetNumIterations",
          &viskores::filter::scalar_topology::ContourTreeAugmented::GetNumIterations)
+    .def("GetSupernodes",
+         [](viskores::filter::scalar_topology::ContourTreeAugmented& self)
+         { return IdArrayToNumPy(RequireComputedContourTree(self).Supernodes); })
+    .def("GetSuperarcs",
+         [](viskores::filter::scalar_topology::ContourTreeAugmented& self)
+         { return IdArrayToNumPy(RequireComputedContourTree(self).Superarcs); })
+    .def("GetIntrinsicVolume",
+         [](viskores::filter::scalar_topology::ContourTreeAugmented& self)
+         {
+           VolumeArrays arrays = ComputeVolumeArrays(self);
+           return IdArrayToNumPy(arrays.IntrinsicVolume);
+         })
+    .def("GetDependentVolume",
+         [](viskores::filter::scalar_topology::ContourTreeAugmented& self)
+         {
+           VolumeArrays arrays = ComputeVolumeArrays(self);
+           return IdArrayToNumPy(arrays.DependentVolume);
+         })
+    .def("GetPointSuperarcIds",
+         [](viskores::filter::scalar_topology::ContourTreeAugmented& self)
+         { return GetPointSuperarcIds(self); })
+    .def("GetSupernodePointIds",
+         [](viskores::filter::scalar_topology::ContourTreeAugmented& self)
+         { return GetSupernodePointIds(self); })
     .def("GetSortedSuperarcs",
          [](viskores::filter::scalar_topology::ContourTreeAugmented& self)
          {

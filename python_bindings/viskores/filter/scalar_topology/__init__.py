@@ -9,8 +9,10 @@
 ##=============================================================================
 
 from ... import _viskores
+from . import helper
 
 __all__ = []
+__all__.append("helper")
 
 for _name in (
     "ContourTreeMesh2D",
