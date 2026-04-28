@@ -23,13 +23,13 @@ to run them. A virtual environment is the simplest way to keep that consistent.
 With a Homebrew Python on macOS:
 
 ```bash
-python3 -m venv viskores-build/.venv
-viskores-build/.venv/bin/python -m ensurepip --upgrade
-viskores-build/.venv/bin/python -m pip install numpy pyglet PyOpenGL PyOpenGL_accelerate
+python3 -m venv ../viskores-build/.venv
+../viskores-build/.venv/bin/python -m ensurepip --upgrade
+../viskores-build/.venv/bin/python -m pip install numpy pyglet PyOpenGL PyOpenGL_accelerate
 ```
 
 Run these commands from the repository root so the relative
-`viskores-build/.venv` path resolves inside the build tree.
+`../viskores-build/.venv` path resolves inside the build tree.
 
 If you want to run the current `GameOfLife.py` OpenGL window on macOS, the
 virtual-environment commands above are sufficient on the Python side. `pyglet`
@@ -42,8 +42,8 @@ development/runtime packages from your distribution.
 Configure Viskores to use the Python from the virtual environment:
 
 ```bash
-cmake -S . -B viskores-build \
-  -DPython_EXECUTABLE=$PWD/viskores-build/.venv/bin/python \
+cmake -S . -B ../viskores-build \
+  -DPython_EXECUTABLE=$PWD/../viskores-build/.venv/bin/python \
   -DViskores_ENABLE_PYTHON_BINDINGS=ON \
   -DViskores_ENABLE_RENDERING=ON \
   -DViskores_ENABLE_TESTING=ON
@@ -69,13 +69,13 @@ If your macOS build needs Homebrew OpenMP, add:
 Then build the bindings:
 
 ```bash
-cmake --build viskores-build --target viskores_python_bindings -j 4
+cmake --build ../viskores-build --target viskores_python_bindings -j 4
 ```
 
 The built package is staged in:
 
 ```bash
-viskores-build/python_bindings
+../viskores-build/python_bindings
 ```
 
 ### 3. Sanity Check the Package
@@ -84,14 +84,14 @@ Use the same virtual environment to import the package directly from the build
 tree:
 
 ```bash
-PYTHONPATH=$PWD/viskores-build/python_bindings \
-$PWD/viskores-build/.venv/bin/python -c "import viskores, viskores.rendering, viskores.interop; print('ok')"
+PYTHONPATH=$PWD/../viskores-build/python_bindings \
+$PWD/../viskores-build/.venv/bin/python -c "import viskores, viskores.rendering, viskores.interop; print('ok')"
 ```
 
 If you enabled testing, you can also run the Python binding tests:
 
 ```bash
-ctest --test-dir viskores-build -R '^(PythonBindingsSmokeTest|(UnitTestPythonWrapper|PythonWrapper).*)$' --output-on-failure
+ctest --test-dir ../viskores-build -R '^(PythonBindingsSmokeTest|(UnitTestPythonWrapper|PythonWrapper).*)$' --output-on-failure
 ```
 
 The Python binding tests live under `python_bindings/testing/` and are
@@ -151,8 +151,8 @@ From the repository root:
 
 ```bash
 cd python_bindings
-Viskores_DIR=$PWD/../viskores-build/lib/cmake/viskores-1.1 \
-../viskores-build/.venv/bin/python setup.py bdist_wheel
+Viskores_DIR=$PWD/../../viskores-build/lib/cmake/viskores-1.1 \
+../../viskores-build/.venv/bin/python setup.py bdist_wheel
 ```
 
 To build an `abi3` wheel, use a CMake `3.26` or newer environment and enable
@@ -160,21 +160,24 @@ the matching setup/CMake option:
 
 ```bash
 VISKORES_PYTHON_STABLE_ABI=ON \
-Viskores_DIR=$PWD/../viskores-build/lib/cmake/viskores-1.1 \
-../viskores-build/.venv/bin/python setup.py bdist_wheel
+Viskores_DIR=$PWD/../../viskores-build/lib/cmake/viskores-1.1 \
+../../viskores-build/.venv/bin/python setup.py bdist_wheel
 ```
 
 This writes the wheel to:
 
 ```bash
-python_bindings/dist/
+../viskores-build/python_bindings/dist/
 ```
+
+Set `VISKORES_PYTHON_BUILD_ROOT` or pass the standard `bdist_wheel --dist-dir`
+option if your build tree uses a different location.
 
 For example, a Python `3.14` build produces a wheel tagged for that Python
 minor version:
 
 ```bash
-python_bindings/dist/viskores-1.1.9999-cp314-cp314-macosx_26_0_arm64.whl
+../viskores-build/python_bindings/dist/viskores-1.1.9999-cp314-cp314-macosx_26_0_arm64.whl
 ```
 
 With `VISKORES_PYTHON_STABLE_ABI=ON`, the wheel is tagged as an `abi3` wheel
@@ -231,15 +234,15 @@ This writes:
 Run it with a native window:
 
 ```bash
-PYTHONPATH=$PWD/viskores-build/python_bindings \
-$PWD/viskores-build/.venv/bin/python python_bindings/examples/game_of_life/GameOfLife.py
+PYTHONPATH=$PWD/../viskores-build/python_bindings \
+$PWD/../viskores-build/.venv/bin/python python_bindings/examples/game_of_life/GameOfLife.py
 ```
 
 As in the C++ demo, you can optionally pass the initial live-cell rate:
 
 ```bash
-PYTHONPATH=$PWD/viskores-build/python_bindings \
-$PWD/viskores-build/.venv/bin/python python_bindings/examples/game_of_life/GameOfLife.py 0.3
+PYTHONPATH=$PWD/../viskores-build/python_bindings \
+$PWD/../viskores-build/.venv/bin/python python_bindings/examples/game_of_life/GameOfLife.py 0.3
 ```
 
 The current Python demo now uses a native `pyglet` window plus Viskores OpenGL

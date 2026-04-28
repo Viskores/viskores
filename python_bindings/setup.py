@@ -18,10 +18,24 @@ from pathlib import Path
 
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
+from setuptools.command.egg_info import egg_info
+
+try:
+    from setuptools.command.bdist_wheel import bdist_wheel
+except ModuleNotFoundError:
+    from wheel.bdist_wheel import bdist_wheel
 
 
 ROOT = Path(__file__).resolve().parent
 REPO_ROOT = ROOT.parent
+BUILD_ROOT = Path(
+    os.environ.get(
+        "VISKORES_PYTHON_BUILD_ROOT",
+        REPO_ROOT.with_name(f"{REPO_ROOT.name}-build"),
+    )
+).resolve()
+BUILD_BASE = BUILD_ROOT / "python_bindings" / "setuptools"
+WHEEL_DIST_DIR = BUILD_ROOT / "python_bindings" / "dist"
 
 
 def env_flag(name: str, default: bool = False) -> bool:
@@ -95,6 +109,28 @@ class CMakeBuildExt(build_ext):
         subprocess.check_call(build_args, cwd=ROOT)
 
 
+class ViskoresBdistWheel(bdist_wheel):
+    def finalize_options(self) -> None:
+        if self.dist_dir is None:
+            self.dist_dir = str(WHEEL_DIST_DIR)
+        super().finalize_options()
+
+
+class ViskoresEggInfo(egg_info):
+    def finalize_options(self) -> None:
+        if self.egg_base is None:
+            self.egg_base = str(BUILD_BASE)
+        Path(self.egg_base).mkdir(parents=True, exist_ok=True)
+        super().finalize_options()
+
+
+setup_options = {
+    "build": {"build_base": str(BUILD_BASE)},
+}
+if STABLE_ABI:
+    setup_options["bdist_wheel"] = {"py_limited_api": "cp312"}
+
+
 setup(
     name="viskores",
     version=read_version(),
@@ -102,8 +138,12 @@ setup(
     packages=find_packages(where="."),
     package_dir={"": "."},
     ext_modules=[Extension("viskores._viskores", sources=[], py_limited_api=STABLE_ABI)],
-    cmdclass={"build_ext": CMakeBuildExt},
-    options={"bdist_wheel": {"py_limited_api": "cp312"}} if STABLE_ABI else {},
+    cmdclass={
+        "build_ext": CMakeBuildExt,
+        "bdist_wheel": ViskoresBdistWheel,
+        "egg_info": ViskoresEggInfo,
+    },
+    options=setup_options,
     install_requires=["numpy"],
     extras_require={
         "demo": [
