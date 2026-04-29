@@ -1,0 +1,77 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::filter::field_transform::CompositeVectors
+  pythonName: CompositeVectors
+  binding: manual
+  reason: Requires variable field list handling.
+
+- class: viskores::filter::field_transform::CylindricalCoordinateTransform
+  fieldInputs:
+    - ActiveFieldName
+  directMethods:
+    - SetCartesianToCylindrical
+    - SetCylindricalToCartesian
+  methodAdapters:
+    - CoordinateSystem
+    - Execute
+
+- class: viskores::filter::field_transform::FieldToColors
+  pythonName: FieldToColors
+  binding: manual
+  reason: Requires color-table parsing.
+
+- class: viskores::filter::field_transform::GenerateIds
+  properties:
+    - PointFieldName
+    - CellFieldName
+    - GeneratePointIds
+    - GenerateCellIds
+    - UseFloat
+  methodAdapters:
+    - Execute
+
+- class: viskores::filter::field_transform::LogValues
+  fieldInputs:
+    - ActiveFieldName
+  properties:
+    - OutputFieldName
+    - MinValue
+  directMethods:
+    - SetBaseValueToE
+    - SetBaseValueTo2
+    - SetBaseValueTo10
+  methodAdapters:
+    - Execute
+
+- class: viskores::filter::field_transform::PointElevation
+  pythonName: PointElevation
+  binding: manual
+  reason: Requires vec3 property parsing.
+
+- class: viskores::filter::field_transform::PointTransform
+  pythonName: PointTransform
+  binding: manual
+  reason: Requires vec3 property parsing.
+
+- class: viskores::filter::field_transform::SphericalCoordinateTransform
+  fieldInputs:
+    - ActiveFieldName
+  directMethods:
+    - SetCartesianToSpherical
+    - SetSphericalToCartesian
+  methodAdapters:
+    - CoordinateSystem
+    - Execute
+
+- class: viskores::filter::field_transform::Warp
+  pythonName: Warp
+  binding: manual
+  reason: Requires vec3 property parsing.

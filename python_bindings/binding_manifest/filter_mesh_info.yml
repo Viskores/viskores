@@ -1,0 +1,112 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::filter::mesh_info::CellMeasures
+  pythonName: CellMeasures
+  binding: deferred
+
+- class: viskores::filter::mesh_info::GhostCellClassify
+  properties:
+    - GhostCellName
+  methodAdapters:
+    - Execute
+
+- class: viskores::filter::mesh_info::MeshQuality
+  pythonName: MeshQuality
+  binding: manual
+  reason: Uses generic MeshQuality metric selection instead of binding each metric subclass.
+
+- class: viskores::filter::mesh_info::MeshQualityArea
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityAspectGamma
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityAspectRatio
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityCondition
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityDiagonalRatio
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityDimension
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityJacobian
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityMaxAngle
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityMaxDiagonal
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityMinAngle
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityMinDiagonal
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityOddy
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityRelativeSizeSquared
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityScaledJacobian
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityShape
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityShapeAndSize
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityShear
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualitySkew
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityStretch
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityTaper
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityVolume
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+
+- class: viskores::filter::mesh_info::MeshQualityWarpage
+  binding: excluded
+  reason: Covered by generic MeshQuality metric selection in the initial Python API.

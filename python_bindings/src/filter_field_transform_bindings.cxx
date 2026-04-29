@@ -21,24 +21,6 @@ void RegisterNanobindFieldTransformClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-  auto generateIds =
-    BindClassWithDefaultConstructor<field_transform::GenerateIds>(
-      m, erase_existing_name, "GenerateIds");
-  generateIds
-    .def("SetPointFieldName", &field_transform::GenerateIds::SetPointFieldName)
-    .def("GetPointFieldName", &field_transform::GenerateIds::GetPointFieldName)
-    .def("SetCellFieldName", &field_transform::GenerateIds::SetCellFieldName)
-    .def("GetCellFieldName", &field_transform::GenerateIds::GetCellFieldName)
-    .def("SetGeneratePointIds",
-         &field_transform::GenerateIds::SetGeneratePointIds)
-    .def("GetGeneratePointIds",
-         &field_transform::GenerateIds::GetGeneratePointIds)
-    .def("SetGenerateCellIds", &field_transform::GenerateIds::SetGenerateCellIds)
-    .def("GetGenerateCellIds", &field_transform::GenerateIds::GetGenerateCellIds)
-    .def("SetUseFloat", &field_transform::GenerateIds::SetUseFloat)
-    .def("GetUseFloat", &field_transform::GenerateIds::GetUseFloat);
-  BindFilterExecuteMethod<field_transform::GenerateIds>(generateIds);
-
   auto compositeVectors =
     BindClassWithDefaultConstructor<field_transform::CompositeVectors>(
       m, erase_existing_name, "CompositeVectors");
@@ -77,23 +59,6 @@ void RegisterNanobindFieldTransformClasses(
     .def("GetNumberOfFields",
          &field_transform::CompositeVectors::GetNumberOfFields);
   BindFilterExecuteMethod<field_transform::CompositeVectors>(compositeVectors);
-
-  auto logValues =
-    BindClassWithDefaultConstructor<field_transform::LogValues>(
-      m, erase_existing_name, "LogValues");
-  BindFilterActiveFieldNameMethods<field_transform::LogValues>(logValues);
-  BindFilterOutputFieldMethods<field_transform::LogValues>(logValues);
-  BindCastedProperty<field_transform::LogValues, viskores::FloatDefault, double>(
-    logValues,
-    "SetMinValue",
-    "GetMinValue",
-    &field_transform::LogValues::SetMinValue,
-    &field_transform::LogValues::GetMinValue);
-  logValues
-    .def("SetBaseValueToE", &field_transform::LogValues::SetBaseValueToE)
-    .def("SetBaseValueTo2", &field_transform::LogValues::SetBaseValueTo2)
-    .def("SetBaseValueTo10", &field_transform::LogValues::SetBaseValueTo10);
-  BindFilterExecuteMethod<field_transform::LogValues>(logValues);
 
   auto pointElevation =
     BindClassWithDefaultConstructor<field_transform::PointElevation>(
@@ -153,43 +118,6 @@ void RegisterNanobindFieldTransformClasses(
          nb::arg("enabled"))
     .def("GetChangeCoordinateSystem", &field_transform::PointTransform::GetChangeCoordinateSystem);
   BindFilterExecuteMethod<field_transform::PointTransform>(pointTransform);
-
-  auto cylindricalCoordinateTransform =
-    BindClassWithDefaultConstructor<
-      field_transform::CylindricalCoordinateTransform>(
-      m, erase_existing_name, "CylindricalCoordinateTransform");
-  BindFilterActiveFieldNameMethods<
-    field_transform::CylindricalCoordinateTransform>(
-    cylindricalCoordinateTransform);
-  BindFilterCoordinateSystemFieldMethods<
-    field_transform::CylindricalCoordinateTransform>(
-    cylindricalCoordinateTransform);
-  cylindricalCoordinateTransform
-    .def(
-      "SetCartesianToCylindrical",
-      &field_transform::CylindricalCoordinateTransform::SetCartesianToCylindrical)
-    .def(
-      "SetCylindricalToCartesian",
-      &field_transform::CylindricalCoordinateTransform::
-        SetCylindricalToCartesian);
-  BindFilterExecuteMethod<field_transform::CylindricalCoordinateTransform>(
-    cylindricalCoordinateTransform);
-
-  auto sphericalCoordinateTransform =
-    BindClassWithDefaultConstructor<
-      field_transform::SphericalCoordinateTransform>(
-      m, erase_existing_name, "SphericalCoordinateTransform");
-  BindFilterActiveFieldNameMethods<
-    field_transform::SphericalCoordinateTransform>(sphericalCoordinateTransform);
-  BindFilterCoordinateSystemFieldMethods<
-    field_transform::SphericalCoordinateTransform>(sphericalCoordinateTransform);
-  sphericalCoordinateTransform
-    .def("SetCartesianToSpherical",
-         &field_transform::SphericalCoordinateTransform::SetCartesianToSpherical)
-    .def("SetSphericalToCartesian",
-         &field_transform::SphericalCoordinateTransform::SetSphericalToCartesian);
-  BindFilterExecuteMethod<field_transform::SphericalCoordinateTransform>(
-    sphericalCoordinateTransform);
 
   erase_existing_name("FieldToColors");
   auto fieldToColors = nb::class_<field_transform::FieldToColors>(

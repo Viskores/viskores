@@ -18,6 +18,11 @@ def main():
     dataset = make_3d_uniform_dataset0()
 
     cell_average = CellAverage()
+    assert not cell_average.GetUseCoordinateSystemAsField()
+    assert cell_average.GetActiveCoordinateSystemIndex() == 0
+    cell_average.SetActiveCoordinateSystem(0)
+    assert cell_average.GetActiveCoordinateSystemIndex() == 0
+
     cell_average.SetOutputFieldName("avgvals")
     cell_average.SetActiveField("pointvar")
     result = cell_average.Execute(dataset)
@@ -27,6 +32,7 @@ def main():
 
     cell_average.SetOutputFieldName("avgpos")
     cell_average.SetUseCoordinateSystemAsField(True)
+    assert cell_average.GetUseCoordinateSystemAsField()
     result = cell_average.Execute(dataset)
 
     expected_positions = np.array(

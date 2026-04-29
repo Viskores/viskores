@@ -1,0 +1,51 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::filter::contour::AbstractContour
+  binding: excluded
+  reason: Abstract implementation base for contour filters.
+
+- class: viskores::filter::contour::ClipWithField
+  pythonName: ClipWithField
+  binding: manual
+  reason: Requires threshold and active-field handling.
+
+- class: viskores::filter::contour::ClipWithImplicitFunction
+  pythonName: ClipWithImplicitFunction
+  binding: manual
+  reason: Requires implicit-function parsing.
+
+- class: viskores::filter::contour::Contour
+  pythonName: Contour
+  binding: manual
+  reason: Requires isovalue overloads.
+
+- class: viskores::filter::contour::ContourFlyingEdges
+  binding: excluded
+  reason: Covered by Contour in the initial Python API.
+
+- class: viskores::filter::contour::ContourMarchingCells
+  pythonName: ContourMarchingCells
+  binding: deferred
+
+- class: viskores::filter::contour::MIRFilter
+  pythonName: MIRFilter
+  binding: manual
+  reason: Requires MIR-specific material field names and iteration/error controls.
+
+- class: viskores::filter::contour::Slice
+  pythonName: Slice
+  binding: manual
+  reason: Requires implicit-function parsing.
+
+- class: viskores::filter::contour::SliceMultiple
+  pythonName: SliceMultiple
+  binding: manual
+  reason: Requires implicit-function parsing.

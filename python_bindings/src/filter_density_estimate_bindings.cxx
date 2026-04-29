@@ -18,14 +18,6 @@ namespace
 {
 
 template <typename FilterType, typename ClassType>
-ClassType& BindDensityActiveFieldMethods(ClassType& cls)
-{
-  BindFilterActiveFieldMethods<FilterType>(cls);
-  BindFilterActiveFieldAssociationMethod<FilterType>(cls);
-  return cls;
-}
-
-template <typename FilterType, typename ClassType>
 ClassType& BindParticleDensityGridMethods(ClassType& cls)
 {
   cls
@@ -73,30 +65,6 @@ void RegisterNanobindDensityEstimateClasses(
   BindFilterExecuteMethod<density::ContinuousScatterPlot>(
     continuousScatterPlot);
 
-  auto entropy =
-    BindClassWithDefaultConstructor<density::Entropy>(
-      m, erase_existing_name, "Entropy");
-  BindDensityActiveFieldMethods<density::Entropy>(entropy);
-  BindFilterOutputFieldMethods<density::Entropy>(entropy);
-  entropy
-    .def("SetNumberOfBins", &density::Entropy::SetNumberOfBins)
-    .def("GetNumberOfBins", &density::Entropy::GetNumberOfBins);
-  BindFilterExecuteMethod<density::Entropy>(entropy);
-
-  auto histogram =
-    BindClassWithDefaultConstructor<density::Histogram>(
-      m, erase_existing_name, "Histogram");
-  BindDensityActiveFieldMethods<density::Histogram>(histogram);
-  BindFilterOutputFieldMethods<density::Histogram>(histogram);
-  histogram
-    .def("SetNumberOfBins", &density::Histogram::SetNumberOfBins)
-    .def("GetNumberOfBins", &density::Histogram::GetNumberOfBins)
-    .def("SetRange", &density::Histogram::SetRange, nb::arg("range"))
-    .def("GetRange", &density::Histogram::GetRange)
-    .def("GetBinDelta", &density::Histogram::GetBinDelta)
-    .def("GetComputedRange", &density::Histogram::GetComputedRange);
-  BindFilterExecuteMethod<density::Histogram>(histogram);
-
   auto ndEntropy =
     BindClassWithDefaultConstructor<density::NDEntropy>(
       m, erase_existing_name, "NDEntropy");
@@ -128,12 +96,6 @@ void RegisterNanobindDensityEstimateClasses(
          &density::NDHistogram::GetDataRange,
          nb::arg("field_index"));
   BindFilterExecuteMethod<density::NDHistogram>(ndHistogram);
-
-  auto statistics =
-    BindClassWithDefaultConstructor<density::Statistics>(
-      m, erase_existing_name, "Statistics");
-  BindDensityActiveFieldMethods<density::Statistics>(statistics);
-  BindFilterExecuteMethod<density::Statistics>(statistics);
 
   auto particleDensityNearestGridPoint =
     BindClassWithDefaultConstructor<

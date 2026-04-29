@@ -1,0 +1,42 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::filter::image_processing::ComputeMoments
+  pythonName: ComputeMoments
+  binding: manual
+  reason: Requires radius and spacing parsing.
+
+- class: viskores::filter::image_processing::ImageDifference
+  fieldInputs:
+    - PrimaryField
+    - SecondaryField
+  properties:
+    - OutputFieldName
+    - ThresholdFieldName
+    - AverageRadius
+    - PixelShiftRadius
+    - AllowedPixelErrorRatio
+    - PixelDiffThreshold
+  directMethods:
+    - GetImageDiffWithinThreshold
+  methodAdapters:
+    - Execute
+
+- class: viskores::filter::image_processing::ImageMedian
+  fieldInputs:
+    - ActiveField
+  properties:
+    - OutputFieldName
+  directMethods:
+    - GetActiveFieldAssociation
+    - Perform3x3
+    - Perform5x5
+  methodAdapters:
+    - Execute

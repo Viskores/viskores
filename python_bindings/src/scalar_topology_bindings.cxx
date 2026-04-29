@@ -261,48 +261,6 @@ void RegisterNanobindScalarTopologyClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-  erase_existing_name("ContourTreeMesh2D");
-  nb::class_<viskores::filter::scalar_topology::ContourTreeMesh2D>(
-    m, "ContourTreeMesh2D", doc::ClassDoc("ContourTreeMesh2D"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::scalar_topology::ContourTreeMesh2D& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def("GetActiveFieldName",
-         &viskores::filter::scalar_topology::ContourTreeMesh2D::GetActiveFieldName)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::scalar_topology::ContourTreeMesh2D>,
-         doc::ExecuteFilter);
-
-  erase_existing_name("ContourTreeMesh3D");
-  nb::class_<viskores::filter::scalar_topology::ContourTreeMesh3D>(
-    m, "ContourTreeMesh3D", doc::ClassDoc("ContourTreeMesh3D"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::scalar_topology::ContourTreeMesh3D& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def("GetActiveFieldName",
-         &viskores::filter::scalar_topology::ContourTreeMesh3D::GetActiveFieldName)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::scalar_topology::ContourTreeMesh3D>,
-         doc::ExecuteFilter);
-
   erase_existing_name("ContourTreeAugmented");
   nb::class_<viskores::filter::scalar_topology::ContourTreeAugmented>(
     m, "ContourTreeAugmented", doc::ClassDoc("ContourTreeAugmented"))
@@ -463,53 +421,6 @@ void RegisterNanobindScalarTopologyClasses(
       nb::arg("local_block_indices"))
     .def("Execute",
          &ExecuteFilterToPython<viskores::filter::scalar_topology::ContourTreeUniformDistributed>,
-         doc::ExecuteFilter);
-
-  erase_existing_name("DistributedBranchDecompositionFilter");
-  nb::class_<viskores::filter::scalar_topology::DistributedBranchDecompositionFilter>(
-    m,
-    "DistributedBranchDecompositionFilter",
-    doc::ClassDoc("DistributedBranchDecompositionFilter"))
-    .def(nb::init<>())
-    .def("Execute",
-         &ExecuteFilterToPython<
-           viskores::filter::scalar_topology::DistributedBranchDecompositionFilter>,
-         doc::ExecuteFilter);
-
-  erase_existing_name("SelectTopVolumeBranchesFilter");
-  nb::class_<viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter>(
-    m, "SelectTopVolumeBranchesFilter", doc::ClassDoc("SelectTopVolumeBranchesFilter"))
-    .def(nb::init<>())
-    .def(
-      "SetSavedBranches",
-      [](viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter& self, long long value)
-      { self.SetSavedBranches(static_cast<viskores::Id>(value)); },
-      nb::arg("value"))
-    .def(
-      "SetPresimplifyThreshold",
-      [](viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter& self, long long value)
-      { self.SetPresimplifyThreshold(static_cast<viskores::Id>(value)); },
-      nb::arg("value"))
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter>,
-         doc::ExecuteFilter);
-
-  erase_existing_name("ExtractTopVolumeContoursFilter");
-  nb::class_<viskores::filter::scalar_topology::ExtractTopVolumeContoursFilter>(
-    m, "ExtractTopVolumeContoursFilter", doc::ClassDoc("ExtractTopVolumeContoursFilter"))
-    .def(nb::init<>())
-    .def(
-      "SetMarchingCubes",
-      [](viskores::filter::scalar_topology::ExtractTopVolumeContoursFilter& self, bool value)
-      { self.SetMarchingCubes(value); },
-      nb::arg("value"))
-    .def(
-      "SetShiftIsovalueByEpsilon",
-      [](viskores::filter::scalar_topology::ExtractTopVolumeContoursFilter& self, bool value)
-      { self.SetShiftIsovalueByEpsilon(value); },
-      nb::arg("value"))
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::scalar_topology::ExtractTopVolumeContoursFilter>,
          doc::ExecuteFilter);
 }
 #else

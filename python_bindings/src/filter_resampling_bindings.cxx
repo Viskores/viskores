@@ -61,31 +61,6 @@ void RegisterNanobindResamplingClasses(nb::module_& m,
   BindFilterFieldsToPassMethod<viskores::filter::resampling::Probe>(probe);
   BindFilterExecuteMethod<viskores::filter::resampling::Probe>(probe);
 
-  auto histSampling = BindClassWithDefaultConstructor<viskores::filter::resampling::HistSampling>(
-    m, erase_existing_name, "HistSampling");
-  BindFilterActiveFieldMethods<viskores::filter::resampling::HistSampling>(histSampling);
-  histSampling
-    .def("GetActiveFieldAssociation",
-         &viskores::filter::resampling::HistSampling::GetActiveFieldAssociation)
-    .def(
-      "SetNumberOfBins",
-      [](viskores::filter::resampling::HistSampling& self, long long numberOfBins)
-      { self.SetNumberOfBins(static_cast<viskores::Id>(numberOfBins)); },
-      nb::arg("number_of_bins"))
-    .def("GetNumberOfBins", &viskores::filter::resampling::HistSampling::GetNumberOfBins)
-    .def(
-      "SetSampleFraction",
-      [](viskores::filter::resampling::HistSampling& self, double fraction)
-      { self.SetSampleFraction(static_cast<viskores::FloatDefault>(fraction)); },
-      nb::arg("fraction"))
-    .def("GetSampleFraction", &viskores::filter::resampling::HistSampling::GetSampleFraction)
-    .def(
-      "SetSeed",
-      [](viskores::filter::resampling::HistSampling& self, unsigned long seed)
-      { self.SetSeed(static_cast<viskores::UInt32>(seed)); },
-      nb::arg("seed"))
-    .def("GetSeed", &viskores::filter::resampling::HistSampling::GetSeed);
-  BindFilterExecuteMethod<viskores::filter::resampling::HistSampling>(histSampling);
 }
 #else
 void RegisterNanobindResamplingClasses(nb::module_&, const std::function<void(const char*)>&) {}

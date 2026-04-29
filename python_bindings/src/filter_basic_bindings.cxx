@@ -46,19 +46,6 @@ ClassType& BindSetContourImplicitFunction(ClassType& cls)
 }
 #endif
 
-#if VISKORES_PYTHON_ENABLE_FILTER_VECTOR_ANALYSIS
-template <typename FilterType, typename ClassType>
-ClassType& BindTwoFieldVectorFilterMethods(ClassType& cls)
-{
-  BindFilterPrimaryFieldMethods<FilterType>(cls);
-  BindFilterPrimaryCoordinateSystemMethods<FilterType>(cls);
-  BindFilterSecondaryFieldMethods<FilterType>(cls);
-  BindFilterSecondaryCoordinateSystemMethods<FilterType>(cls);
-  BindFilterExecuteMethod<FilterType>(cls);
-  return cls;
-}
-#endif
-
 } // namespace
 
 #if VISKORES_PYTHON_ENABLE_FILTER_FIELD_CONVERSION
@@ -66,19 +53,8 @@ void RegisterNanobindFieldConversionClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-  auto cellAverage =
-    BindClassWithDefaultConstructor<field_conversion::CellAverage>(
-      m, erase_existing_name, "CellAverage");
-  BindFieldFilterMethods<field_conversion::CellAverage>(cellAverage);
-  BindActiveFieldRepr<field_conversion::CellAverage>(
-    cellAverage, "viskores.filter.field_conversion.CellAverage");
-
-  auto pointAverage =
-    BindClassWithDefaultConstructor<field_conversion::PointAverage>(
-      m, erase_existing_name, "PointAverage");
-  BindFieldFilterMethods<field_conversion::PointAverage>(pointAverage);
-  BindActiveFieldRepr<field_conversion::PointAverage>(
-    pointAverage, "viskores.filter.field_conversion.PointAverage");
+  (void)m;
+  (void)erase_existing_name;
 }
 #else
 void RegisterNanobindFieldConversionClasses(nb::module_&, const std::function<void(const char*)>&)
@@ -91,11 +67,6 @@ void RegisterNanobindVectorAnalysisClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-  auto vectorMagnitude =
-    BindClassWithDefaultConstructor<vector_analysis::VectorMagnitude>(
-      m, erase_existing_name, "VectorMagnitude");
-  BindFieldFilterMethods<vector_analysis::VectorMagnitude>(vectorMagnitude);
-
   auto gradient = BindClassWithDefaultConstructor<vector_analysis::Gradient>(
     m, erase_existing_name, "Gradient");
   BindFieldFilterMethods<vector_analysis::Gradient>(gradient);
@@ -122,48 +93,6 @@ void RegisterNanobindVectorAnalysisClasses(
          &vector_analysis::Gradient::SetColumnMajorOrdering)
     .def("SetRowMajorOrdering", &vector_analysis::Gradient::SetRowMajorOrdering);
 
-  auto crossProduct =
-    BindClassWithDefaultConstructor<vector_analysis::CrossProduct>(
-      m, erase_existing_name, "CrossProduct");
-  BindTwoFieldVectorFilterMethods<vector_analysis::CrossProduct>(crossProduct);
-
-  auto dotProduct = BindClassWithDefaultConstructor<vector_analysis::DotProduct>(
-    m, erase_existing_name, "DotProduct");
-  BindTwoFieldVectorFilterMethods<vector_analysis::DotProduct>(dotProduct);
-
-  auto surfaceNormals =
-    BindClassWithDefaultConstructor<vector_analysis::SurfaceNormals>(
-      m, erase_existing_name, "SurfaceNormals");
-  surfaceNormals
-    .def("SetGenerateCellNormals",
-         &vector_analysis::SurfaceNormals::SetGenerateCellNormals)
-    .def("GetGenerateCellNormals",
-         &vector_analysis::SurfaceNormals::GetGenerateCellNormals)
-    .def("SetNormalizeCellNormals",
-         &vector_analysis::SurfaceNormals::SetNormalizeCellNormals)
-    .def("GetNormalizeCellNormals",
-         &vector_analysis::SurfaceNormals::GetNormalizeCellNormals)
-    .def("SetGeneratePointNormals",
-         &vector_analysis::SurfaceNormals::SetGeneratePointNormals)
-    .def("GetGeneratePointNormals",
-         &vector_analysis::SurfaceNormals::GetGeneratePointNormals)
-    .def("SetCellNormalsName",
-         &vector_analysis::SurfaceNormals::SetCellNormalsName)
-    .def("GetCellNormalsName",
-         &vector_analysis::SurfaceNormals::GetCellNormalsName)
-    .def("SetPointNormalsName",
-         &vector_analysis::SurfaceNormals::SetPointNormalsName)
-    .def("GetPointNormalsName",
-         &vector_analysis::SurfaceNormals::GetPointNormalsName)
-    .def("SetAutoOrientNormals",
-         &vector_analysis::SurfaceNormals::SetAutoOrientNormals)
-    .def("GetAutoOrientNormals",
-         &vector_analysis::SurfaceNormals::GetAutoOrientNormals)
-    .def("SetFlipNormals", &vector_analysis::SurfaceNormals::SetFlipNormals)
-    .def("GetFlipNormals", &vector_analysis::SurfaceNormals::GetFlipNormals)
-    .def("SetConsistency", &vector_analysis::SurfaceNormals::SetConsistency)
-    .def("GetConsistency", &vector_analysis::SurfaceNormals::GetConsistency);
-  BindFilterExecuteMethod<vector_analysis::SurfaceNormals>(surfaceNormals);
 }
 #else
 void RegisterNanobindVectorAnalysisClasses(nb::module_&, const std::function<void(const char*)>&) {}

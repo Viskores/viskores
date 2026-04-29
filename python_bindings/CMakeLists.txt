@@ -97,12 +97,34 @@ add_custom_command(
 add_custom_target(viskores_python_package_sync DEPENDS "${Viskores_PYTHON_PACKAGE_STAMP}")
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/binding_sources.cmake")
+set(Viskores_PYTHON_BINDING_MANIFEST
+  "${CMAKE_CURRENT_SOURCE_DIR}/binding_manifest")
+file(GLOB Viskores_PYTHON_BINDING_MANIFEST_FILES CONFIGURE_DEPENDS
+  "${Viskores_PYTHON_BINDING_MANIFEST}/*.yml")
+set(Viskores_PYTHON_GENERATED_BINDING_SOURCE
+  "${Viskores_BINARY_DIR}/python_bindings/generated/generated_filter_bindings.cxx")
+add_custom_command(
+  OUTPUT "${Viskores_PYTHON_GENERATED_BINDING_SOURCE}"
+  COMMAND
+    "${Python_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tools/binding_manifest.py"
+    --manifest "${Viskores_PYTHON_BINDING_MANIFEST}"
+    --source-root "${CMAKE_CURRENT_SOURCE_DIR}/.."
+    generate
+    --output "${Viskores_PYTHON_GENERATED_BINDING_SOURCE}"
+  DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/tools/binding_manifest.py"
+    ${Viskores_PYTHON_BINDING_MANIFEST_FILES}
+)
+list(APPEND Viskores_PYTHON_BINDING_SOURCES
+  "${Viskores_PYTHON_GENERATED_BINDING_SOURCE}")
 nanobind_add_module(viskores_python_bindings ${Viskores_PYTHON_NANOBIND_STABLE_ABI} NOMINSIZE
   ${Viskores_PYTHON_BINDING_SOURCES}
 )
 target_compile_features(viskores_python_bindings PRIVATE cxx_std_17)
 target_include_directories(viskores_python_bindings
   PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
     ${Viskores_PYTHON_NUMPY_INCLUDE_DIR}
 )
 target_link_libraries(viskores_python_bindings PRIVATE viskores_cont)
@@ -254,6 +276,17 @@ if (Viskores_ENABLE_TESTING)
   )
   set_tests_properties(PythonBindingsSmokeTest PROPERTIES
     ENVIRONMENT "PYTHONPATH=${Viskores_BINARY_DIR}/python_bindings"
+  )
+
+  add_test(
+    NAME PythonBindingManifestAudit
+    COMMAND
+      "${Python_EXECUTABLE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/tools/binding_manifest.py"
+      --manifest "${Viskores_PYTHON_BINDING_MANIFEST}"
+      --source-root "${CMAKE_CURRENT_SOURCE_DIR}/.."
+      report
+      --fail-on-missing
   )
 
   viskores_add_python_binding_test(

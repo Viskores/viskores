@@ -1,0 +1,35 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::filter::field_conversion::CellAverage
+  pythonName: CellAverage
+  pythonModule: viskores.filter.field_conversion
+  guard: VISKORES_PYTHON_ENABLE_FILTER_FIELD_CONVERSION
+  fieldInputs:
+    - ActiveField
+  properties:
+    - OutputFieldName
+  methodAdapters:
+    - CoordinateSystem
+    - Execute
+  repr: ActiveField
+
+- class: viskores::filter::field_conversion::PointAverage
+  pythonName: PointAverage
+  pythonModule: viskores.filter.field_conversion
+  guard: VISKORES_PYTHON_ENABLE_FILTER_FIELD_CONVERSION
+  fieldInputs:
+    - ActiveField
+  properties:
+    - OutputFieldName
+  methodAdapters:
+    - CoordinateSystem
+    - Execute
+  repr: ActiveField

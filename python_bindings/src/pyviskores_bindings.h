@@ -386,16 +386,43 @@ ClassType& BindFilterOutputFieldMethods(ClassType& cls)
   return cls;
 }
 
+template <typename ClassType, typename Setter, typename Getter>
+ClassType& BindFilterUseCoordinateSystemAsFieldMethods(ClassType& cls,
+                                                       const char* setName,
+                                                       Setter setter,
+                                                       const char* getName,
+                                                       Getter getter)
+{
+  cls.def(setName, setter, nb::arg("enabled")).def(getName, getter);
+  return cls;
+}
+
+template <typename ClassType, typename Setter, typename Getter>
+ClassType& BindFilterCoordinateSystemIndexMethods(ClassType& cls,
+                                                  const char* setName,
+                                                  Setter setter,
+                                                  const char* getName,
+                                                  Getter getter)
+{
+  cls.def(setName, setter, nb::arg("index")).def(getName, getter);
+  return cls;
+}
+
 template <typename FilterType, typename ClassType>
 ClassType& BindFilterCoordinateSystemFieldMethods(ClassType& cls)
 {
-  cls
-    .def(
-      "SetUseCoordinateSystemAsField",
-      [](FilterType& self, bool enabled) { self.SetUseCoordinateSystemAsField(enabled); },
-      nb::arg("enabled"))
-    .def("GetUseCoordinateSystemAsField",
-         [](const FilterType& self) { return self.GetUseCoordinateSystemAsField(); });
+  BindFilterUseCoordinateSystemAsFieldMethods(
+    cls,
+    "SetUseCoordinateSystemAsField",
+    [](FilterType& self, bool enabled) { self.SetUseCoordinateSystemAsField(enabled); },
+    "GetUseCoordinateSystemAsField",
+    [](const FilterType& self) { return self.GetUseCoordinateSystemAsField(); });
+  BindFilterCoordinateSystemIndexMethods(
+    cls,
+    "SetActiveCoordinateSystem",
+    [](FilterType& self, viskores::Id index) { self.SetActiveCoordinateSystem(index); },
+    "GetActiveCoordinateSystemIndex",
+    [](const FilterType& self) { return self.GetActiveCoordinateSystemIndex(); });
   return cls;
 }
 
@@ -451,30 +478,6 @@ ClassType& BindFilterSecondaryFieldMethods(ClassType& cls)
 }
 
 template <typename FilterType, typename ClassType>
-ClassType& BindFilterPrimaryCoordinateSystemMethods(ClassType& cls)
-{
-  cls.def("SetUseCoordinateSystemAsPrimaryField",
-          &FilterType::SetUseCoordinateSystemAsPrimaryField)
-    .def("GetUseCoordinateSystemAsPrimaryField",
-         &FilterType::GetUseCoordinateSystemAsPrimaryField)
-    .def("SetPrimaryCoordinateSystem", &FilterType::SetPrimaryCoordinateSystem)
-    .def("GetPrimaryCoordinateSystemIndex", &FilterType::GetPrimaryCoordinateSystemIndex);
-  return cls;
-}
-
-template <typename FilterType, typename ClassType>
-ClassType& BindFilterSecondaryCoordinateSystemMethods(ClassType& cls)
-{
-  cls.def("SetUseCoordinateSystemAsSecondaryField",
-          &FilterType::SetUseCoordinateSystemAsSecondaryField)
-    .def("GetUseCoordinateSystemAsSecondaryField",
-         &FilterType::GetUseCoordinateSystemAsSecondaryField)
-    .def("SetSecondaryCoordinateSystem", &FilterType::SetSecondaryCoordinateSystem)
-    .def("GetSecondaryCoordinateSystemIndex", &FilterType::GetSecondaryCoordinateSystemIndex);
-  return cls;
-}
-
-template <typename FilterType, typename ClassType>
 ClassType& BindFilterExecuteMethod(ClassType& cls)
 {
   cls.def("Execute", &ExecuteFilterToPython<FilterType>, nb::arg("data"), doc::ExecuteFilter);
@@ -512,6 +515,8 @@ void RegisterNanobindSourceClasses(nb::module_& m,
                                    const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindIOClasses(nb::module_& m,
                                const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindGeneratedClasses(nb::module_& m,
+                                      const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindFieldConversionClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name);

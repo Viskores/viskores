@@ -1,0 +1,86 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::io::BOVDataSetReader
+  pythonName: BOVDataSetReader
+  binding: deferred
+
+- class: viskores::io::ImageReaderBase
+  binding: excluded
+  reason: Abstract implementation base for image readers.
+
+- class: viskores::io::ImageReaderHDF5
+  pythonName: ImageReaderHDF5
+  binding: deferred
+
+- class: viskores::io::ImageReaderPNG
+  pythonName: ImageReaderPNG
+  binding: deferred
+
+- class: viskores::io::ImageReaderPNM
+  pythonName: ImageReaderPNM
+  binding: deferred
+
+- class: viskores::io::ImageWriterBase
+  binding: excluded
+  reason: Abstract implementation base for image writers.
+
+- class: viskores::io::ImageWriterHDF5
+  pythonName: ImageWriterHDF5
+  binding: manual
+  reason: Requires optional color-field WriteDataSet wrapper and pixel-depth conversion.
+
+- class: viskores::io::ImageWriterPNG
+  pythonName: ImageWriterPNG
+  binding: manual
+  reason: Requires optional color-field WriteDataSet wrapper and pixel-depth conversion.
+
+- class: viskores::io::ImageWriterPNM
+  pythonName: ImageWriterPNM
+  binding: manual
+  reason: Requires optional color-field WriteDataSet wrapper and pixel-depth conversion.
+
+- class: viskores::io::VTKDataSetReader
+  pythonName: VTKDataSetReader
+  binding: deferred
+
+- class: viskores::io::VTKDataSetReaderBase
+  binding: excluded
+  reason: Abstract implementation base for VTK dataset readers.
+
+- class: viskores::io::VTKDataSetWriter
+  pythonName: VTKDataSetWriter
+  binding: manual
+  reason: Requires file-type controls.
+
+- class: viskores::io::VTKPolyDataReader
+  binding: excluded
+  reason: Covered by VTKDataSetReader in the initial Python API.
+
+- class: viskores::io::VTKRectilinearGridReader
+  binding: excluded
+  reason: Covered by VTKDataSetReader in the initial Python API.
+
+- class: viskores::io::VTKStructuredGridReader
+  binding: excluded
+  reason: Covered by VTKDataSetReader in the initial Python API.
+
+- class: viskores::io::VTKStructuredPointsReader
+  binding: excluded
+  reason: Covered by VTKDataSetReader in the initial Python API.
+
+- class: viskores::io::VTKUnstructuredGridReader
+  binding: excluded
+  reason: Covered by VTKDataSetReader in the initial Python API.
+
+- class: viskores::io::VTKVisItFileReader
+  pythonName: VTKVisItFileReader
+  binding: manual
+  reason: Requires partitioned dataset wrapping.

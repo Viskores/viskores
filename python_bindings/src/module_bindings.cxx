@@ -605,6 +605,8 @@ void RegisterNanobindModule(nb::module_& m)
   RegisterNanobindSourceClasses(m, erase_existing_name);
 #endif
 
+  RegisterNanobindGeneratedClasses(m, erase_existing_name);
+
 #if VISKORES_PYTHON_ENABLE_FILTER_FIELD_CONVERSION
   RegisterNanobindFieldConversionClasses(m, erase_existing_name);
 #endif

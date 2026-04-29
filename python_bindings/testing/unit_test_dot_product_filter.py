@@ -67,6 +67,8 @@ def main():
         filter_obj = DotProduct()
         filter_obj.SetUseCoordinateSystemAsPrimaryField(True)
         filter_obj.SetPrimaryCoordinateSystem(1)
+        assert filter_obj.GetUseCoordinateSystemAsPrimaryField()
+        assert filter_obj.GetPrimaryCoordinateSystemIndex() == 1
         filter_obj.SetSecondaryField("vec2")
         result = filter_obj.Execute(dataset)
         check_result(field1, field2, result)
@@ -75,6 +77,8 @@ def main():
         filter_obj.SetPrimaryField("vec1")
         filter_obj.SetUseCoordinateSystemAsSecondaryField(True)
         filter_obj.SetSecondaryCoordinateSystem(2)
+        assert filter_obj.GetUseCoordinateSystemAsSecondaryField()
+        assert filter_obj.GetSecondaryCoordinateSystemIndex() == 2
         result = filter_obj.Execute(dataset)
         check_result(field1, field2, result)
 

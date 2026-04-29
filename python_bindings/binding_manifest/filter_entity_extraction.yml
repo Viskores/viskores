@@ -1,0 +1,63 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::filter::entity_extraction::ExternalFaces
+  properties:
+    - CompactPoints
+    - PassPolyData
+  methodAdapters:
+    - FieldsToPass
+    - Execute
+
+- class: viskores::filter::entity_extraction::ExtractGeometry
+  pythonName: ExtractGeometry
+  binding: manual
+  reason: Requires implicit-function parsing.
+
+- class: viskores::filter::entity_extraction::ExtractPoints
+  pythonName: ExtractPoints
+  binding: manual
+  reason: Requires implicit-function parsing.
+
+- class: viskores::filter::entity_extraction::ExtractStructured
+  pythonName: ExtractStructured
+  binding: manual
+  reason: Requires VOI and sample-rate argument parsing.
+
+- class: viskores::filter::entity_extraction::GhostCellRemove
+  fieldInputs:
+    - ActiveFieldName
+  properties:
+    - RemoveGhostField
+    - TypesToRemove
+    - UseGhostCellsAsField
+  directMethods:
+    - SetTypesToRemoveToAll
+    - AreAllTypesRemoved
+  methodAdapters:
+    - Execute
+
+- class: viskores::filter::entity_extraction::Mask
+  pythonName: Mask
+  binding: deferred
+
+- class: viskores::filter::entity_extraction::MaskPoints
+  pythonName: MaskPoints
+  binding: deferred
+
+- class: viskores::filter::entity_extraction::Threshold
+  pythonName: Threshold
+  binding: manual
+  reason: Requires threshold overloads.
+
+- class: viskores::filter::entity_extraction::ThresholdPoints
+  pythonName: ThresholdPoints
+  binding: manual
+  reason: Requires threshold overloads.

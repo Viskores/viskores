@@ -18,6 +18,14 @@ def main():
     dataset = make_vec_pointvar_dataset0()
 
     filt = VectorMagnitude()
+    assert not filt.GetUseCoordinateSystemAsField()
+    assert filt.GetActiveCoordinateSystemIndex() == 0
+    filt.SetUseCoordinateSystemAsField(True)
+    filt.SetActiveCoordinateSystem(0)
+    assert filt.GetUseCoordinateSystemAsField()
+    assert filt.GetActiveCoordinateSystemIndex() == 0
+    filt.SetUseCoordinateSystemAsField(False)
+
     filt.SetActiveField("vec_pointvar")
     result = filt.Execute(dataset)
 

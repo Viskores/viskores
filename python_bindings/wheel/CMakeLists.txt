@@ -103,6 +103,27 @@ viskores_python_remove_inactive_extension_files(
 include("${CMAKE_CURRENT_LIST_DIR}/../binding_sources.cmake")
 set(Viskores_PYTHON_WHEEL_BINDING_SOURCES ${Viskores_PYTHON_BINDING_SOURCES})
 list(TRANSFORM Viskores_PYTHON_WHEEL_BINDING_SOURCES PREPEND "../")
+set(Viskores_PYTHON_BINDING_MANIFEST
+  "${CMAKE_CURRENT_LIST_DIR}/../binding_manifest")
+file(GLOB Viskores_PYTHON_BINDING_MANIFEST_FILES CONFIGURE_DEPENDS
+  "${Viskores_PYTHON_BINDING_MANIFEST}/*.yml")
+set(Viskores_PYTHON_GENERATED_BINDING_SOURCE
+  "${CMAKE_CURRENT_BINARY_DIR}/generated/generated_filter_bindings.cxx")
+add_custom_command(
+  OUTPUT "${Viskores_PYTHON_GENERATED_BINDING_SOURCE}"
+  COMMAND
+    "${Python_EXECUTABLE}"
+    "${CMAKE_CURRENT_LIST_DIR}/../tools/binding_manifest.py"
+    --manifest "${Viskores_PYTHON_BINDING_MANIFEST}"
+    --source-root "${CMAKE_CURRENT_LIST_DIR}/../.."
+    generate
+    --output "${Viskores_PYTHON_GENERATED_BINDING_SOURCE}"
+  DEPENDS
+    "${CMAKE_CURRENT_LIST_DIR}/../tools/binding_manifest.py"
+    ${Viskores_PYTHON_BINDING_MANIFEST_FILES}
+)
+list(APPEND Viskores_PYTHON_WHEEL_BINDING_SOURCES
+  "${Viskores_PYTHON_GENERATED_BINDING_SOURCE}")
 nanobind_add_module(viskores_python_bindings ${Viskores_PYTHON_NANOBIND_STABLE_ABI} NOMINSIZE
   ${Viskores_PYTHON_WHEEL_BINDING_SOURCES}
 )
@@ -110,6 +131,7 @@ target_compile_features(viskores_python_bindings PRIVATE cxx_std_17)
 target_compile_definitions(viskores_python_bindings PRIVATE PY_SSIZE_T_CLEAN)
 target_include_directories(viskores_python_bindings
   PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src"
     ${Viskores_PYTHON_NUMPY_INCLUDE_DIR}
 )
 target_link_libraries(viskores_python_bindings PRIVATE viskores::cont)

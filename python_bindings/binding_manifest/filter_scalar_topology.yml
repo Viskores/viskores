@@ -1,0 +1,52 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::filter::scalar_topology::ContourTreeAugmented
+  header: viskores/filter/scalar_topology/ContourTreeUniformAugmented.h
+  pythonName: ContourTreeAugmented
+  binding: manual
+  reason: Requires contour-tree result array accessors beyond common filter methods.
+
+- class: viskores::filter::scalar_topology::ContourTreeMesh2D
+  header: viskores/filter/scalar_topology/ContourTreeUniform.h
+  fieldInputs:
+    - ActiveField
+  methodAdapters:
+    - Execute
+
+- class: viskores::filter::scalar_topology::ContourTreeMesh3D
+  header: viskores/filter/scalar_topology/ContourTreeUniform.h
+  fieldInputs:
+    - ActiveField
+  methodAdapters:
+    - Execute
+
+- class: viskores::filter::scalar_topology::ContourTreeUniformDistributed
+  pythonName: ContourTreeUniformDistributed
+  binding: manual
+  reason: Requires distributed-specific options.
+
+- class: viskores::filter::scalar_topology::DistributedBranchDecompositionFilter
+  methodAdapters:
+    - Execute
+
+- class: viskores::filter::scalar_topology::ExtractTopVolumeContoursFilter
+  properties:
+    - MarchingCubes
+    - ShiftIsovalueByEpsilon
+  methodAdapters:
+    - Execute
+
+- class: viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter
+  properties:
+    - SavedBranches
+    - PresimplifyThreshold
+  methodAdapters:
+    - Execute

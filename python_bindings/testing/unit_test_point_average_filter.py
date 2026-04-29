@@ -18,6 +18,14 @@ def main():
     dataset = make_3d_uniform_dataset0()
 
     point_average = PointAverage()
+    assert not point_average.GetUseCoordinateSystemAsField()
+    assert point_average.GetActiveCoordinateSystemIndex() == 0
+    point_average.SetUseCoordinateSystemAsField(True)
+    point_average.SetActiveCoordinateSystem(0)
+    assert point_average.GetUseCoordinateSystemAsField()
+    assert point_average.GetActiveCoordinateSystemIndex() == 0
+    point_average.SetUseCoordinateSystemAsField(False)
+
     point_average.SetOutputFieldName("avgvals")
     point_average.SetActiveField("cellvar")
     result = point_average.Execute(dataset)

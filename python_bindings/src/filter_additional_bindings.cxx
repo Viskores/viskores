@@ -15,10 +15,7 @@ namespace viskores::python::bindings
 {
 
 namespace entity = viskores::filter::entity_extraction;
-namespace clean_grid = viskores::filter::clean_grid;
 namespace mesh_info = viskores::filter::mesh_info;
-namespace connected = viskores::filter::connected_components;
-namespace multi_block = viskores::filter::multi_block;
 
 namespace
 {
@@ -171,18 +168,6 @@ void RegisterNanobindEntityExtractionClasses(
       nb::arg("upper"));
   BindFilterExecuteMethod<entity::ThresholdPoints>(thresholdPoints);
 
-  auto externalFaces =
-    BindClassWithDefaultConstructor<entity::ExternalFaces>(
-      m, erase_existing_name, "ExternalFaces");
-  BindFilterFieldsToPassMethod<entity::ExternalFaces>(
-    externalFaces);
-  externalFaces
-    .def("SetCompactPoints", &entity::ExternalFaces::SetCompactPoints, nb::arg("enabled"))
-    .def("GetCompactPoints", &entity::ExternalFaces::GetCompactPoints)
-    .def("SetPassPolyData", &entity::ExternalFaces::SetPassPolyData, nb::arg("enabled"))
-    .def("GetPassPolyData", &entity::ExternalFaces::GetPassPolyData);
-  BindFilterExecuteMethod<entity::ExternalFaces>(externalFaces);
-
   auto extractStructured =
     BindClassWithDefaultConstructor<entity::ExtractStructured>(
       m, erase_existing_name, "ExtractStructured");
@@ -270,34 +255,6 @@ void RegisterNanobindEntityExtractionClasses(
     .def("GetExtractOnlyBoundaryCells", &entity::ExtractGeometry::GetExtractOnlyBoundaryCells);
   BindFilterExecuteMethod<entity::ExtractGeometry>(extractGeometry);
 
-  auto ghostCellRemove =
-    BindClassWithDefaultConstructor<entity::GhostCellRemove>(
-      m, erase_existing_name, "GhostCellRemove");
-  BindFilterActiveFieldNameMethods<entity::GhostCellRemove>(
-    ghostCellRemove);
-  ghostCellRemove
-    .def("SetRemoveGhostField", &entity::GhostCellRemove::SetRemoveGhostField, nb::arg("enabled"))
-    .def("GetRemoveGhostField", &entity::GhostCellRemove::GetRemoveGhostField);
-  BindCastedProperty<entity::GhostCellRemove,
-                     viskores::UInt8,
-                     unsigned long>(ghostCellRemove,
-                                    "SetTypesToRemove",
-                                    "GetTypesToRemove",
-                                    &entity::GhostCellRemove::
-                                      SetTypesToRemove,
-                                    &entity::GhostCellRemove::
-                                      GetTypesToRemove);
-  ghostCellRemove
-    .def("SetTypesToRemoveToAll",
-         &entity::GhostCellRemove::SetTypesToRemoveToAll)
-    .def("AreAllTypesRemoved",
-         &entity::GhostCellRemove::AreAllTypesRemoved);
-  ghostCellRemove
-    .def("SetUseGhostCellsAsField",
-         &entity::GhostCellRemove::SetUseGhostCellsAsField,
-         nb::arg("enabled"))
-    .def("GetUseGhostCellsAsField", &entity::GhostCellRemove::GetUseGhostCellsAsField);
-  BindFilterExecuteMethod<entity::GhostCellRemove>(ghostCellRemove);
 }
 #else
 void RegisterNanobindEntityExtractionClasses(nb::module_&, const std::function<void(const char*)>&)
@@ -305,54 +262,11 @@ void RegisterNanobindEntityExtractionClasses(nb::module_&, const std::function<v
 }
 #endif
 
-#if VISKORES_PYTHON_ENABLE_FILTER_CLEAN_GRID || VISKORES_PYTHON_ENABLE_FILTER_MESH_INFO || \
-  VISKORES_PYTHON_ENABLE_FILTER_CONNECTED_COMPONENTS || VISKORES_PYTHON_ENABLE_FILTER_MULTI_BLOCK
+#if VISKORES_PYTHON_ENABLE_FILTER_MESH_INFO
 void RegisterNanobindAdditionalFilterClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-#if VISKORES_PYTHON_ENABLE_FILTER_CLEAN_GRID
-  auto cleanGrid = BindClassWithDefaultConstructor<clean_grid::CleanGrid>(
-    m, erase_existing_name, "CleanGrid");
-  BindFilterFieldsToPassMethod<clean_grid::CleanGrid>(cleanGrid);
-  cleanGrid
-    .def("SetCompactPointFields",
-         &clean_grid::CleanGrid::SetCompactPointFields,
-         nb::arg("enabled"))
-    .def("GetCompactPointFields", &clean_grid::CleanGrid::GetCompactPointFields)
-    .def("SetMergePoints", &clean_grid::CleanGrid::SetMergePoints, nb::arg("enabled"))
-    .def("GetMergePoints", &clean_grid::CleanGrid::GetMergePoints);
-  cleanGrid
-    .def(
-      "SetTolerance",
-      [](clean_grid::CleanGrid& self, double value) { self.SetTolerance(value); },
-      nb::arg("value"))
-    .def("GetTolerance", &clean_grid::CleanGrid::GetTolerance);
-  cleanGrid
-    .def("SetToleranceIsAbsolute",
-         &clean_grid::CleanGrid::SetToleranceIsAbsolute,
-         nb::arg("enabled"))
-    .def("GetToleranceIsAbsolute", &clean_grid::CleanGrid::GetToleranceIsAbsolute)
-    .def("SetRemoveDegenerateCells",
-         &clean_grid::CleanGrid::SetRemoveDegenerateCells,
-         nb::arg("enabled"))
-    .def("GetRemoveDegenerateCells", &clean_grid::CleanGrid::GetRemoveDegenerateCells)
-    .def("SetFastMerge", &clean_grid::CleanGrid::SetFastMerge, nb::arg("enabled"))
-    .def("GetFastMerge", &clean_grid::CleanGrid::GetFastMerge);
-  BindFilterExecuteMethod<clean_grid::CleanGrid>(cleanGrid);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_MESH_INFO
-  auto ghostCellClassify =
-    BindClassWithDefaultConstructor<mesh_info::GhostCellClassify>(
-      m, erase_existing_name, "GhostCellClassify");
-  ghostCellClassify
-    .def("SetGhostCellName",
-         &mesh_info::GhostCellClassify::SetGhostCellName,
-         nb::arg("field_name"))
-    .def("GetGhostCellName", &mesh_info::GhostCellClassify::GetGhostCellName);
-  BindFilterExecuteMethod<mesh_info::GhostCellClassify>(ghostCellClassify);
-
   auto cellMeasures =
     BindClassWithDefaultConstructor<mesh_info::CellMeasures>(
       m, erase_existing_name, "CellMeasures");
@@ -389,40 +303,6 @@ void RegisterNanobindAdditionalFilterClasses(
   meshQuality
     .def("GetMetricName", &mesh_info::MeshQuality::GetMetricName);
   BindFilterExecuteMethod<mesh_info::MeshQuality>(meshQuality);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_CONNECTED_COMPONENTS
-  auto cellSetConnectivity =
-    BindClassWithDefaultConstructor<
-      connected::CellSetConnectivity>(
-      m, erase_existing_name, "CellSetConnectivity");
-  BindFilterOutputFieldMethods<connected::CellSetConnectivity>(
-    cellSetConnectivity);
-  BindFilterExecuteMethod<connected::CellSetConnectivity>(
-    cellSetConnectivity);
-
-  auto imageConnectivity =
-    BindClassWithDefaultConstructor<connected::ImageConnectivity>(
-      m, erase_existing_name, "ImageConnectivity");
-  BindFilterActiveFieldNameMethods<connected::ImageConnectivity>(
-    imageConnectivity);
-  BindFilterOutputFieldMethods<connected::ImageConnectivity>(
-    imageConnectivity);
-  BindFilterExecuteMethod<connected::ImageConnectivity>(
-    imageConnectivity);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_MULTI_BLOCK
-  auto mergeDataSets =
-    BindClassWithDefaultConstructor<multi_block::MergeDataSets>(
-      m, erase_existing_name, "MergeDataSets");
-  mergeDataSets
-    .def("SetInvalidValue",
-         &multi_block::MergeDataSets::SetInvalidValue,
-         nb::arg("invalid_value"))
-    .def("GetInvalidValue", &multi_block::MergeDataSets::GetInvalidValue);
-  BindFilterExecuteMethod<multi_block::MergeDataSets>(mergeDataSets);
-#endif
 }
 #else
 void RegisterNanobindAdditionalFilterClasses(nb::module_&, const std::function<void(const char*)>&)
