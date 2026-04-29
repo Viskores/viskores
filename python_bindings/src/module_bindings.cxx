@@ -182,6 +182,26 @@ void RegisterNanobindRangeClass(nb::module_& m,
     .def(nb::self != nb::self);
 }
 
+viskores::Vec3f ParseVec3OrDefault(nb::object object, const viskores::Vec3f& defaultValue)
+{
+  return object.is_none() ? defaultValue : ParseVec3(object, defaultValue);
+}
+
+template <typename TargetType, typename ClassType, typename Setter>
+ClassType& BindVec3Setter(ClassType& cls,
+                          const char* setName,
+                          Setter setter,
+                          const viskores::Vec3f& defaultValue,
+                          const char* argName)
+{
+  cls.def(
+    setName,
+    [setter, defaultValue](TargetType& self, nb::object valueObject)
+    { (self.*setter)(ParseVec3(valueObject, defaultValue)); },
+    nb::arg(argName));
+  return cls;
+}
+
 } // namespace
 
 #if VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
@@ -189,9 +209,8 @@ void RegisterNanobindImplicitFunctionClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-  erase_existing_name("Box");
-  nb::class_<viskores::Box>(m, "Box", doc::ClassDoc("Box"))
-    .def(nb::init<>())
+  auto box = BindClassWithDefaultConstructor<viskores::Box>(m, erase_existing_name, "Box");
+  box
     .def(
       "__init__",
       [](viskores::Box* self, nb::object minPointObject, nb::object maxPointObject)
@@ -205,25 +224,17 @@ void RegisterNanobindImplicitFunctionClasses(
                                  ParseVec3(maxPointObject, viskores::Vec3f(0.5f, 0.5f, 0.5f)));
       },
       nb::arg("min_point"),
-      nb::arg("max_point"))
-    .def(
-      "SetMinPoint",
-      [](viskores::Box& self, nb::object pointObject)
-      { self.SetMinPoint(ParseVec3(pointObject, self.GetMinPoint())); },
-      nb::arg("point"))
-    .def("GetMinPoint",
-         [](const viskores::Box& self) { return Vec3ToTuple(self.GetMinPoint()); })
-    .def(
-      "SetMaxPoint",
-      [](viskores::Box& self, nb::object pointObject)
-      { self.SetMaxPoint(ParseVec3(pointObject, self.GetMaxPoint())); },
-      nb::arg("point"))
-    .def("GetMaxPoint",
-         [](const viskores::Box& self) { return Vec3ToTuple(self.GetMaxPoint()); });
+      nb::arg("max_point"));
+  BindVec3Property<viskores::Box>(
+    box, "SetMinPoint", "GetMinPoint", &viskores::Box::SetMinPoint, &viskores::Box::GetMinPoint,
+    "point");
+  BindVec3Property<viskores::Box>(
+    box, "SetMaxPoint", "GetMaxPoint", &viskores::Box::SetMaxPoint, &viskores::Box::GetMaxPoint,
+    "point");
 
-  erase_existing_name("Sphere");
-  nb::class_<viskores::Sphere>(m, "Sphere", doc::ClassDoc("Sphere"))
-    .def(nb::init<>())
+  auto sphere =
+    BindClassWithDefaultConstructor<viskores::Sphere>(m, erase_existing_name, "Sphere");
+  sphere
     .def(
       "__init__",
       [](viskores::Sphere* self, double radius)
@@ -233,37 +244,30 @@ void RegisterNanobindImplicitFunctionClasses(
       "__init__",
       [](viskores::Sphere* self, nb::object centerObject, double radius)
       {
-        auto center = centerObject.is_none()
-          ? viskores::Vec3f(0.0f, 0.0f, 0.0f)
-          : ParseVec3(centerObject, viskores::Vec3f(0.0f, 0.0f, 0.0f));
+        auto center = ParseVec3OrDefault(centerObject, viskores::Vec3f(0.0f, 0.0f, 0.0f));
         new (self) viskores::Sphere(center, static_cast<viskores::FloatDefault>(radius));
       },
       nb::arg("center") = nb::none(),
-      nb::arg("radius") = 0.5)
-    .def(
-      "SetCenter",
-      [](viskores::Sphere& self, nb::object centerObject)
-      { self.SetCenter(ParseVec3(centerObject, self.GetCenter())); },
-      nb::arg("center"))
-    .def("GetCenter",
-         [](const viskores::Sphere& self)
-         { return Vec3ToTuple(self.GetCenter()); })
-    .def(
-      "SetRadius",
-      [](viskores::Sphere& self, double radius)
-      { self.SetRadius(static_cast<viskores::FloatDefault>(radius)); },
-      nb::arg("radius"))
-    .def("GetRadius", &viskores::Sphere::GetRadius);
+      nb::arg("radius") = 0.5);
+  BindVec3Property<viskores::Sphere>(
+    sphere, "SetCenter", "GetCenter", &viskores::Sphere::SetCenter, &viskores::Sphere::GetCenter,
+    "center");
+  BindCastedProperty<viskores::Sphere, viskores::FloatDefault, double>(
+    sphere,
+    "SetRadius",
+    "GetRadius",
+    &viskores::Sphere::SetRadius,
+    &viskores::Sphere::GetRadius,
+    "radius");
 
-  erase_existing_name("Cylinder");
-  nb::class_<viskores::Cylinder>(m, "Cylinder", doc::ClassDoc("Cylinder"))
-    .def(nb::init<>())
+  auto cylinder =
+    BindClassWithDefaultConstructor<viskores::Cylinder>(m, erase_existing_name, "Cylinder");
+  cylinder
     .def(
       "__init__",
       [](viskores::Cylinder* self, nb::object axisObject, double radius)
       {
-        auto axis = axisObject.is_none() ? viskores::Vec3f(0.0f, 1.0f, 0.0f)
-                                         : ParseVec3(axisObject, viskores::Vec3f(0.0f, 1.0f, 0.0f));
+        auto axis = ParseVec3OrDefault(axisObject, viskores::Vec3f(0.0f, 1.0f, 0.0f));
         new (self) viskores::Cylinder(axis, static_cast<viskores::FloatDefault>(radius));
       },
       nb::arg("axis"),
@@ -272,42 +276,35 @@ void RegisterNanobindImplicitFunctionClasses(
       "__init__",
       [](viskores::Cylinder* self, nb::object centerObject, nb::object axisObject, double radius)
       {
-        auto center = centerObject.is_none()
-          ? viskores::Vec3f(0.0f, 0.0f, 0.0f)
-          : ParseVec3(centerObject, viskores::Vec3f(0.0f, 0.0f, 0.0f));
-        auto axis = axisObject.is_none() ? viskores::Vec3f(0.0f, 1.0f, 0.0f)
-                                         : ParseVec3(axisObject, viskores::Vec3f(0.0f, 1.0f, 0.0f));
+        auto center = ParseVec3OrDefault(centerObject, viskores::Vec3f(0.0f, 0.0f, 0.0f));
+        auto axis = ParseVec3OrDefault(axisObject, viskores::Vec3f(0.0f, 1.0f, 0.0f));
         new (self) viskores::Cylinder(center, axis, static_cast<viskores::FloatDefault>(radius));
       },
       nb::arg("center") = nb::none(),
       nb::arg("axis") = nb::none(),
-      nb::arg("radius") = 0.5)
-    .def(
-      "SetCenter",
-      [](viskores::Cylinder& self, nb::object centerObject)
-      { self.SetCenter(ParseVec3(centerObject, viskores::Vec3f(0.0f, 0.0f, 0.0f))); },
-      nb::arg("center"))
-    .def(
-      "SetAxis",
-      [](viskores::Cylinder& self, nb::object axisObject)
-      { self.SetAxis(ParseVec3(axisObject, viskores::Vec3f(0.0f, 1.0f, 0.0f))); },
-      nb::arg("axis"))
-    .def(
-      "SetRadius",
-      [](viskores::Cylinder& self, double radius)
-      { self.SetRadius(static_cast<viskores::FloatDefault>(radius)); },
-      nb::arg("radius"));
+      nb::arg("radius") = 0.5);
+  BindVec3Setter<viskores::Cylinder>(
+    cylinder,
+    "SetCenter",
+    &viskores::Cylinder::SetCenter,
+    viskores::Vec3f(0.0f, 0.0f, 0.0f),
+    "center");
+  BindVec3Setter<viskores::Cylinder>(
+    cylinder,
+    "SetAxis",
+    &viskores::Cylinder::SetAxis,
+    viskores::Vec3f(0.0f, 1.0f, 0.0f),
+    "axis");
+  BindCastedSetter<viskores::Cylinder, viskores::FloatDefault, double>(
+    cylinder, "SetRadius", &viskores::Cylinder::SetRadius, "radius");
 
-  erase_existing_name("Plane");
-  nb::class_<viskores::Plane>(m, "Plane", doc::ClassDoc("Plane"))
-    .def(nb::init<>())
+  auto plane = BindClassWithDefaultConstructor<viskores::Plane>(m, erase_existing_name, "Plane");
+  plane
     .def(
       "__init__",
       [](viskores::Plane* self, nb::object normalObject)
       {
-        auto normal = normalObject.is_none()
-          ? viskores::Vec3f(0.0f, 0.0f, 1.0f)
-          : ParseVec3(normalObject, viskores::Vec3f(0.0f, 0.0f, 1.0f));
+        auto normal = ParseVec3OrDefault(normalObject, viskores::Vec3f(0.0f, 0.0f, 1.0f));
         new (self) viskores::Plane(normal);
       },
       nb::arg("normal"))
@@ -315,32 +312,18 @@ void RegisterNanobindImplicitFunctionClasses(
       "__init__",
       [](viskores::Plane* self, nb::object originObject, nb::object normalObject)
       {
-        auto origin = originObject.is_none()
-          ? viskores::Vec3f(0.0f, 0.0f, 0.0f)
-          : ParseVec3(originObject, viskores::Vec3f(0.0f, 0.0f, 0.0f));
-        auto normal = normalObject.is_none()
-          ? viskores::Vec3f(0.0f, 0.0f, 1.0f)
-          : ParseVec3(normalObject, viskores::Vec3f(0.0f, 0.0f, 1.0f));
+        auto origin = ParseVec3OrDefault(originObject, viskores::Vec3f(0.0f, 0.0f, 0.0f));
+        auto normal = ParseVec3OrDefault(normalObject, viskores::Vec3f(0.0f, 0.0f, 1.0f));
         new (self) viskores::Plane(origin, normal);
       },
       nb::arg("origin") = nb::none(),
-      nb::arg("normal") = nb::none())
-    .def(
-      "SetOrigin",
-      [](viskores::Plane& self, nb::object pointObject)
-      { self.SetOrigin(ParseVec3(pointObject, self.GetOrigin())); },
-      nb::arg("point"))
-    .def("GetOrigin",
-         [](const viskores::Plane& self)
-         { return Vec3ToTuple(self.GetOrigin()); })
-    .def(
-      "SetNormal",
-      [](viskores::Plane& self, nb::object pointObject)
-      { self.SetNormal(ParseVec3(pointObject, self.GetNormal())); },
-      nb::arg("point"))
-    .def("GetNormal",
-         [](const viskores::Plane& self)
-         { return Vec3ToTuple(self.GetNormal()); });
+      nb::arg("normal") = nb::none());
+  BindVec3Property<viskores::Plane>(
+    plane, "SetOrigin", "GetOrigin", &viskores::Plane::SetOrigin, &viskores::Plane::GetOrigin,
+    "point");
+  BindVec3Property<viskores::Plane>(
+    plane, "SetNormal", "GetNormal", &viskores::Plane::SetNormal, &viskores::Plane::GetNormal,
+    "point");
 }
 #else
 void RegisterNanobindImplicitFunctionClasses(nb::module_&, const std::function<void(const char*)>&)

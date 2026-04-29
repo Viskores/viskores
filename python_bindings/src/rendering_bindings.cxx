@@ -16,44 +16,89 @@ namespace viskores::python::bindings
 {
 
 #if VISKORES_PYTHON_ENABLE_RENDERING
+namespace cont = viskores::cont;
+namespace rendering = viskores::rendering;
+
+template <typename MapperType, typename ClassType>
+ClassType& BindMapperCompositeBackground(ClassType& cls)
+{
+  cls.def("SetCompositeBackground", &MapperType::SetCompositeBackground, nb::arg("enabled"));
+  return cls;
+}
+
+template <typename MapperType, typename ClassType, typename Setter>
+ClassType& BindMapperFloat32Setter(ClassType& cls,
+                                   const char* name,
+                                   Setter setter,
+                                   const char* argName)
+{
+  BindCastedSetter<MapperType, viskores::Float32, double>(cls, name, setter, argName);
+  return cls;
+}
+
+template <typename MapperType, typename ClassType>
+ClassType& BindMapperRadiusControls(ClassType& cls)
+{
+  cls.def("UseVariableRadius", &MapperType::UseVariableRadius, nb::arg("enabled"));
+  BindMapperFloat32Setter<MapperType>(cls, "SetRadius", &MapperType::SetRadius, "radius");
+  BindMapperFloat32Setter<MapperType>(
+    cls, "SetRadiusDelta", &MapperType::SetRadiusDelta, "delta");
+  return cls;
+}
+
+template <typename MapperType, typename ClassType>
+ClassType& BindMapperGlyphSizeControls(ClassType& cls)
+{
+  BindCastedProperty<MapperType, viskores::Float32, double>(
+    cls, "SetBaseSize", "GetBaseSize", &MapperType::SetBaseSize, &MapperType::GetBaseSize, "size");
+  BindCastedProperty<MapperType, viskores::Float32, double>(
+    cls,
+    "SetScaleDelta",
+    "GetScaleDelta",
+    &MapperType::SetScaleDelta,
+    &MapperType::GetScaleDelta,
+    "delta");
+  return cls;
+}
+
 void RegisterNanobindColorTableClass(nb::module_& m,
                                      const std::function<void(const char*)>& erase_existing_name)
 {
   erase_existing_name("ColorTable");
-  nb::class_<viskores::cont::ColorTable>(m, "ColorTable", doc::ClassDoc("ColorTable"))
+  nb::class_<cont::ColorTable>(m, "ColorTable", doc::ClassDoc("ColorTable"))
     .def(nb::init<const std::string&>(), nb::arg("name") = "Default")
     .def("__repr__",
-         [](const viskores::cont::ColorTable& self)
+         [](const cont::ColorTable& self)
          {
            std::ostringstream stream;
            stream << "viskores.cont.ColorTable(name=\"" << self.GetName() << "\")";
            return stream.str();
          })
-    .def("GetName", &viskores::cont::ColorTable::GetName)
-    .def("SetName", &viskores::cont::ColorTable::SetName)
-    .def("GetRange", &viskores::cont::ColorTable::GetRange)
-    .def("GetNumberOfPoints", &viskores::cont::ColorTable::GetNumberOfPoints)
-    .def("SetClampingOn", &viskores::cont::ColorTable::SetClampingOn)
-    .def("SetClampingOff", &viskores::cont::ColorTable::SetClampingOff)
-    .def("GetClamping", &viskores::cont::ColorTable::GetClamping)
+    .def("GetName", &cont::ColorTable::GetName)
+    .def("SetName", &cont::ColorTable::SetName)
+    .def("GetRange", &cont::ColorTable::GetRange)
+    .def("GetNumberOfPoints", &cont::ColorTable::GetNumberOfPoints)
+    .def("SetClampingOn", &cont::ColorTable::SetClampingOn)
+    .def("SetClampingOff", &cont::ColorTable::SetClampingOff)
+    .def("GetClamping", &cont::ColorTable::GetClamping)
     .def(
       "SetBelowRangeColor",
-      [](viskores::cont::ColorTable& self, nb::object colorObject)
+      [](cont::ColorTable& self, nb::object colorObject)
       { self.SetBelowRangeColor(ParseColorTableColor(colorObject)); },
       nb::arg("color"))
     .def(
       "SetAboveRangeColor",
-      [](viskores::cont::ColorTable& self, nb::object colorObject)
+      [](cont::ColorTable& self, nb::object colorObject)
       { self.SetAboveRangeColor(ParseColorTableColor(colorObject)); },
       nb::arg("color"))
     .def(
       "RescaleToRange",
-      [](viskores::cont::ColorTable& self, nb::object rangeObject)
+      [](cont::ColorTable& self, nb::object rangeObject)
       { self.RescaleToRange(ParseRange(rangeObject)); },
       nb::arg("range"))
     .def(
       "AddPointAlpha",
-      [](viskores::cont::ColorTable& self, double x, double alpha)
+      [](cont::ColorTable& self, double x, double alpha)
       { return self.AddPointAlpha(x, static_cast<viskores::Float32>(alpha)); },
       nb::arg("x"),
       nb::arg("alpha"));
@@ -63,73 +108,73 @@ void RegisterNanobindCameraClass(nb::module_& m,
                                  const std::function<void(const char*)>& erase_existing_name)
 {
   erase_existing_name("CameraMode");
-  nb::enum_<viskores::rendering::Camera::Mode>(m, "CameraMode")
-    .value("TwoD", viskores::rendering::Camera::Mode::TwoD)
-    .value("ThreeD", viskores::rendering::Camera::Mode::ThreeD);
+  nb::enum_<rendering::Camera::Mode>(m, "CameraMode")
+    .value("TwoD", rendering::Camera::Mode::TwoD)
+    .value("ThreeD", rendering::Camera::Mode::ThreeD);
 
-  erase_existing_name("Camera");
-  nb::class_<viskores::rendering::Camera>(m, "Camera", doc::ClassDoc("Camera"))
-    .def(nb::init<>())
-    .def("GetMode", &viskores::rendering::Camera::GetMode)
-    .def("SetMode", &viskores::rendering::Camera::SetMode, nb::arg("mode"))
-    .def("SetModeTo2D", &viskores::rendering::Camera::SetModeTo2D)
-    .def("SetModeTo3D", &viskores::rendering::Camera::SetModeTo3D)
+  auto camera =
+    BindClassWithDefaultConstructor<rendering::Camera>(m, erase_existing_name, "Camera");
+  camera
+    .def("GetMode", &rendering::Camera::GetMode)
+    .def("SetMode", &rendering::Camera::SetMode, nb::arg("mode"))
+    .def("SetModeTo2D", &rendering::Camera::SetModeTo2D)
+    .def("SetModeTo3D", &rendering::Camera::SetModeTo3D)
     .def("GetLookAt",
-         [](const viskores::rendering::Camera& self)
+         [](const rendering::Camera& self)
          { return Vec3ToTuple(self.GetLookAt()); })
     .def(
       "SetLookAt",
-      [](viskores::rendering::Camera& self, nb::object valueObject)
+      [](rendering::Camera& self, nb::object valueObject)
       { self.SetLookAt(ParseVec3(valueObject, self.GetLookAt())); },
       nb::arg("value"))
     .def("GetViewUp",
-         [](const viskores::rendering::Camera& self)
+         [](const rendering::Camera& self)
          { return Vec3ToTuple(self.GetViewUp()); })
     .def(
       "SetViewUp",
-      [](viskores::rendering::Camera& self, nb::object valueObject)
+      [](rendering::Camera& self, nb::object valueObject)
       { self.SetViewUp(ParseVec3(valueObject, self.GetViewUp())); },
       nb::arg("value"))
     .def("GetPosition",
-         [](const viskores::rendering::Camera& self)
+         [](const rendering::Camera& self)
          { return Vec3ToTuple(self.GetPosition()); })
     .def(
       "SetPosition",
-      [](viskores::rendering::Camera& self, nb::object valueObject)
+      [](rendering::Camera& self, nb::object valueObject)
       { self.SetPosition(ParseVec3(valueObject, self.GetPosition())); },
       nb::arg("value"))
-    .def("GetClippingRange", &viskores::rendering::Camera::GetClippingRange)
+    .def("GetClippingRange", &rendering::Camera::GetClippingRange)
     .def(
       "SetClippingRange",
-      [](viskores::rendering::Camera& self, double nearPlane, double farPlane)
+      [](rendering::Camera& self, double nearPlane, double farPlane)
       { self.SetClippingRange(nearPlane, farPlane); },
       nb::arg("near_plane"),
       nb::arg("far_plane"))
     .def(
       "ResetToBounds",
-      [](viskores::rendering::Camera& self, nb::object boundsObject)
+      [](rendering::Camera& self, nb::object boundsObject)
       { self.ResetToBounds(ParseBounds(boundsObject)); },
       nb::arg("bounds"))
     .def(
       "Azimuth",
-      [](viskores::rendering::Camera& self, double angle) { self.Azimuth(angle); },
+      [](rendering::Camera& self, double angle) { self.Azimuth(angle); },
       nb::arg("angle"))
     .def(
       "Elevation",
-      [](viskores::rendering::Camera& self, double angle) { self.Elevation(angle); },
+      [](rendering::Camera& self, double angle) { self.Elevation(angle); },
       nb::arg("angle"))
-    .def("GetFieldOfView", &viskores::rendering::Camera::GetFieldOfView)
+    .def("GetFieldOfView", &rendering::Camera::GetFieldOfView)
     .def(
       "SetFieldOfView",
-      [](viskores::rendering::Camera& self, double value) { self.SetFieldOfView(value); },
+      [](rendering::Camera& self, double value) { self.SetFieldOfView(value); },
       nb::arg("value"))
-    .def("GetXScale", &viskores::rendering::Camera::GetXScale)
+    .def("GetXScale", &rendering::Camera::GetXScale)
     .def(
       "SetXScale",
-      [](viskores::rendering::Camera& self, double value) { self.SetXScale(value); },
+      [](rendering::Camera& self, double value) { self.SetXScale(value); },
       nb::arg("value"))
     .def("GetViewRange2D",
-         [](const viskores::rendering::Camera& self)
+         [](const rendering::Camera& self)
          {
            viskores::Float32 left = 0.0f;
            viskores::Float32 right = 0.0f;
@@ -140,7 +185,7 @@ void RegisterNanobindCameraClass(nb::module_& m,
          })
     .def(
       "SetViewRange2D",
-      [](viskores::rendering::Camera& self, double left, double right, double bottom, double top)
+      [](rendering::Camera& self, double left, double right, double bottom, double top)
       { self.SetViewRange2D(left, right, bottom, top); },
       nb::arg("left"),
       nb::arg("right"),
@@ -152,52 +197,52 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
                                       const std::function<void(const char*)>& erase_existing_name)
 {
   erase_existing_name("GlyphType");
-  nb::enum_<viskores::rendering::GlyphType>(m, "GlyphType")
-    .value("Arrow", viskores::rendering::GlyphType::Arrow)
-    .value("Axes", viskores::rendering::GlyphType::Axes)
-    .value("Cube", viskores::rendering::GlyphType::Cube)
-    .value("Quad", viskores::rendering::GlyphType::Quad)
-    .value("Sphere", viskores::rendering::GlyphType::Sphere);
+  nb::enum_<rendering::GlyphType>(m, "GlyphType")
+    .value("Arrow", rendering::GlyphType::Arrow)
+    .value("Axes", rendering::GlyphType::Axes)
+    .value("Cube", rendering::GlyphType::Cube)
+    .value("Quad", rendering::GlyphType::Quad)
+    .value("Sphere", rendering::GlyphType::Sphere);
 
   auto make_actor_with_field = [](const auto& dataObject, const std::string& fieldName)
-  { return std::make_shared<viskores::rendering::Actor>(dataObject, fieldName); };
+  { return std::make_shared<rendering::Actor>(dataObject, fieldName); };
   auto make_actor_with_field_and_color_table =
     [](const auto& dataObject,
        const std::string& fieldName,
-       const std::shared_ptr<viskores::cont::ColorTable>& colorTable)
-  { return std::make_shared<viskores::rendering::Actor>(dataObject, fieldName, *colorTable); };
+       const std::shared_ptr<cont::ColorTable>& colorTable)
+  { return std::make_shared<rendering::Actor>(dataObject, fieldName, *colorTable); };
   auto make_actor_with_coordinate =
     [](const auto& dataObject, const std::string& coordinateName, const std::string& fieldName)
-  { return std::make_shared<viskores::rendering::Actor>(dataObject, coordinateName, fieldName); };
+  { return std::make_shared<rendering::Actor>(dataObject, coordinateName, fieldName); };
   auto make_actor_with_coordinate_and_color_table =
     [](const auto& dataObject,
        const std::string& coordinateName,
        const std::string& fieldName,
-       const std::shared_ptr<viskores::cont::ColorTable>& colorTable)
+       const std::shared_ptr<cont::ColorTable>& colorTable)
   {
-    return std::make_shared<viskores::rendering::Actor>(
+    return std::make_shared<rendering::Actor>(
       dataObject, coordinateName, fieldName, *colorTable);
   };
 
   erase_existing_name("Actor");
-  nb::class_<viskores::rendering::Actor>(m, "Actor", doc::ClassDoc("Actor"))
+  nb::class_<rendering::Actor>(m, "Actor", doc::ClassDoc("Actor"))
     .def(
       "__init__",
-      [make_actor_with_field](viskores::rendering::Actor* self,
-                              const std::shared_ptr<viskores::cont::DataSet>& dataSet,
+      [make_actor_with_field](rendering::Actor* self,
+                              const std::shared_ptr<cont::DataSet>& dataSet,
                               const std::string& fieldName)
-      { new (self) viskores::rendering::Actor(*make_actor_with_field(*dataSet, fieldName)); },
+      { new (self) rendering::Actor(*make_actor_with_field(*dataSet, fieldName)); },
       nb::arg("dataset"),
       nb::arg("field_name"))
     .def(
       "__init__",
       [make_actor_with_field_and_color_table](
-        viskores::rendering::Actor* self,
-        const std::shared_ptr<viskores::cont::DataSet>& dataSet,
+        rendering::Actor* self,
+        const std::shared_ptr<cont::DataSet>& dataSet,
         const std::string& fieldName,
-        const std::shared_ptr<viskores::cont::ColorTable>& colorTable)
+        const std::shared_ptr<cont::ColorTable>& colorTable)
       {
-        new (self) viskores::rendering::Actor(
+        new (self) rendering::Actor(
           *make_actor_with_field_and_color_table(*dataSet, fieldName, colorTable));
       },
       nb::arg("dataset"),
@@ -205,12 +250,12 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
       nb::arg("color_table"))
     .def(
       "__init__",
-      [make_actor_with_coordinate](viskores::rendering::Actor* self,
-                                   const std::shared_ptr<viskores::cont::DataSet>& dataSet,
+      [make_actor_with_coordinate](rendering::Actor* self,
+                                   const std::shared_ptr<cont::DataSet>& dataSet,
                                    const std::string& coordinateName,
                                    const std::string& fieldName)
       {
-        new (self) viskores::rendering::Actor(
+        new (self) rendering::Actor(
           *make_actor_with_coordinate(*dataSet, coordinateName, fieldName));
       },
       nb::arg("dataset"),
@@ -219,13 +264,13 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
     .def(
       "__init__",
       [make_actor_with_coordinate_and_color_table](
-        viskores::rendering::Actor* self,
-        const std::shared_ptr<viskores::cont::DataSet>& dataSet,
+        rendering::Actor* self,
+        const std::shared_ptr<cont::DataSet>& dataSet,
         const std::string& coordinateName,
         const std::string& fieldName,
-        const std::shared_ptr<viskores::cont::ColorTable>& colorTable)
+        const std::shared_ptr<cont::ColorTable>& colorTable)
       {
-        new (self) viskores::rendering::Actor(*make_actor_with_coordinate_and_color_table(
+        new (self) rendering::Actor(*make_actor_with_coordinate_and_color_table(
           *dataSet, coordinateName, fieldName, colorTable));
       },
       nb::arg("dataset"),
@@ -234,21 +279,21 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
       nb::arg("color_table"))
     .def(
       "__init__",
-      [make_actor_with_field](viskores::rendering::Actor* self,
-                              const std::shared_ptr<viskores::cont::PartitionedDataSet>& dataSet,
+      [make_actor_with_field](rendering::Actor* self,
+                              const std::shared_ptr<cont::PartitionedDataSet>& dataSet,
                               const std::string& fieldName)
-      { new (self) viskores::rendering::Actor(*make_actor_with_field(*dataSet, fieldName)); },
+      { new (self) rendering::Actor(*make_actor_with_field(*dataSet, fieldName)); },
       nb::arg("dataset"),
       nb::arg("field_name"))
     .def(
       "__init__",
       [make_actor_with_field_and_color_table](
-        viskores::rendering::Actor* self,
-        const std::shared_ptr<viskores::cont::PartitionedDataSet>& dataSet,
+        rendering::Actor* self,
+        const std::shared_ptr<cont::PartitionedDataSet>& dataSet,
         const std::string& fieldName,
-        const std::shared_ptr<viskores::cont::ColorTable>& colorTable)
+        const std::shared_ptr<cont::ColorTable>& colorTable)
       {
-        new (self) viskores::rendering::Actor(
+        new (self) rendering::Actor(
           *make_actor_with_field_and_color_table(*dataSet, fieldName, colorTable));
       },
       nb::arg("dataset"),
@@ -257,12 +302,12 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
     .def(
       "__init__",
       [make_actor_with_coordinate](
-        viskores::rendering::Actor* self,
-        const std::shared_ptr<viskores::cont::PartitionedDataSet>& dataSet,
+        rendering::Actor* self,
+        const std::shared_ptr<cont::PartitionedDataSet>& dataSet,
         const std::string& coordinateName,
         const std::string& fieldName)
       {
-        new (self) viskores::rendering::Actor(
+        new (self) rendering::Actor(
           *make_actor_with_coordinate(*dataSet, coordinateName, fieldName));
       },
       nb::arg("dataset"),
@@ -271,13 +316,13 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
     .def(
       "__init__",
       [make_actor_with_coordinate_and_color_table](
-        viskores::rendering::Actor* self,
-        const std::shared_ptr<viskores::cont::PartitionedDataSet>& dataSet,
+        rendering::Actor* self,
+        const std::shared_ptr<cont::PartitionedDataSet>& dataSet,
         const std::string& coordinateName,
         const std::string& fieldName,
-        const std::shared_ptr<viskores::cont::ColorTable>& colorTable)
+        const std::shared_ptr<cont::ColorTable>& colorTable)
       {
-        new (self) viskores::rendering::Actor(*make_actor_with_coordinate_and_color_table(
+        new (self) rendering::Actor(*make_actor_with_coordinate_and_color_table(
           *dataSet, coordinateName, fieldName, colorTable));
       },
       nb::arg("dataset"),
@@ -286,66 +331,66 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
       nb::arg("color_table"))
     .def("__repr__", []() { return "viskores.rendering.Actor()"; })
     .def("GetColorTable",
-         [](const viskores::rendering::Actor& self)
-         { return std::make_shared<viskores::cont::ColorTable>(self.GetColorTable()); })
+         [](const rendering::Actor& self)
+         { return std::make_shared<cont::ColorTable>(self.GetColorTable()); })
     .def("GetScalarRange",
-         [](const viskores::rendering::Actor& self)
+         [](const rendering::Actor& self)
          {
            const auto range = self.GetScalarRange();
            return nb::make_tuple(range.Min, range.Max);
          })
     .def(
       "SetScalarRange",
-      [](viskores::rendering::Actor& self, nb::object rangeObject)
+      [](rendering::Actor& self, nb::object rangeObject)
       { self.SetScalarRange(ParseRange(rangeObject)); },
       nb::arg("range"))
     .def(
       "SetScalarRange",
-      [](viskores::rendering::Actor& self, double minValue, double maxValue)
+      [](rendering::Actor& self, double minValue, double maxValue)
       { self.SetScalarRange(viskores::Range(minValue, maxValue)); },
       nb::arg("min_value"),
       nb::arg("max_value"));
 
   erase_existing_name("Scene");
-  nb::class_<viskores::rendering::Scene>(m, "Scene", doc::ClassDoc("Scene"))
+  nb::class_<rendering::Scene>(m, "Scene", doc::ClassDoc("Scene"))
     .def(nb::init<>())
     .def(
       "AddActor",
-      [](viskores::rendering::Scene& self, const std::shared_ptr<viskores::rendering::Actor>& actor)
+      [](rendering::Scene& self, const std::shared_ptr<rendering::Actor>& actor)
       { self.AddActor(*actor); },
       nb::arg("actor"))
-    .def("GetNumberOfActors", &viskores::rendering::Scene::GetNumberOfActors)
+    .def("GetNumberOfActors", &rendering::Scene::GetNumberOfActors)
     .def(
       "GetActor",
-      [](const viskores::rendering::Scene& self, long index)
+      [](const rendering::Scene& self, long index)
       {
-        return std::make_shared<viskores::rendering::Actor>(
+        return std::make_shared<rendering::Actor>(
           self.GetActor(static_cast<viskores::IdComponent>(index)));
       },
       nb::arg("index"));
 
   erase_existing_name("Canvas");
-  nb::class_<viskores::rendering::Canvas>(m, "Canvas", doc::ClassDoc("Canvas"))
+  nb::class_<rendering::Canvas>(m, "Canvas", doc::ClassDoc("Canvas"))
     .def(nb::init<viskores::IdComponent, viskores::IdComponent>(),
          nb::arg("width") = 1024,
          nb::arg("height") = 1024)
-    .def("GetWidth", &viskores::rendering::Canvas::GetWidth)
-    .def("GetHeight", &viskores::rendering::Canvas::GetHeight)
+    .def("GetWidth", &rendering::Canvas::GetWidth)
+    .def("GetHeight", &rendering::Canvas::GetHeight)
     .def("GetColorBuffer",
-         [](const viskores::rendering::Canvas& self)
+         [](const rendering::Canvas& self)
          {
            return UnknownArrayToNumPyArray(
-             viskores::cont::UnknownArrayHandle(self.GetColorBuffer()));
+             cont::UnknownArrayHandle(self.GetColorBuffer()));
          })
     .def("GetDepthBuffer",
-         [](const viskores::rendering::Canvas& self)
+         [](const rendering::Canvas& self)
          {
            return UnknownArrayToNumPyArray(
-             viskores::cont::UnknownArrayHandle(self.GetDepthBuffer()));
+             cont::UnknownArrayHandle(self.GetDepthBuffer()));
          })
     .def(
       "GetDataSet",
-      [](viskores::rendering::Canvas& self,
+      [](rendering::Canvas& self,
          const std::string& colorFieldName,
          nb::object depthFieldName)
       {
@@ -359,13 +404,13 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
       nb::arg("depth_field_name") = std::string("depth"))
     .def(
       "SetBackgroundColor",
-      [](viskores::rendering::Canvas& self, nb::object colorObject)
+      [](rendering::Canvas& self, nb::object colorObject)
       { self.SetBackgroundColor(ParseColor(colorObject, self.GetBackgroundColor())); },
       nb::arg("color"))
-    .def("Clear", &viskores::rendering::Canvas::Clear)
+    .def("Clear", &rendering::Canvas::Clear)
     .def(
       "AddLine",
-      [](viskores::rendering::Canvas& self,
+      [](rendering::Canvas& self,
          double x0,
          double y0,
          double x1,
@@ -378,7 +423,7 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
                      x1,
                      y1,
                      static_cast<viskores::Float32>(lineWidth),
-                     ParseColor(colorObject, viskores::rendering::Color(0, 0, 0, 1)));
+                     ParseColor(colorObject, rendering::Color(0, 0, 0, 1)));
       },
       nb::arg("x0"),
       nb::arg("y0"),
@@ -388,9 +433,9 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
       nb::arg("color"))
     .def(
       "AddColorBar",
-      [](viskores::rendering::Canvas& self,
+      [](rendering::Canvas& self,
          nb::object boundsObject,
-         const std::shared_ptr<viskores::cont::ColorTable>& colorTable,
+         const std::shared_ptr<cont::ColorTable>& colorTable,
          bool horizontal)
       {
         self.AddColorBar(ParseBounds(boundsObject), *colorTable, horizontal);
@@ -398,220 +443,124 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
       nb::arg("bounds"),
       nb::arg("color_table"),
       nb::arg("horizontal"))
-    .def("BlendBackground", &viskores::rendering::Canvas::BlendBackground)
-    .def("SaveAs", &viskores::rendering::Canvas::SaveAs, nb::arg("file_name"));
+    .def("BlendBackground", &rendering::Canvas::BlendBackground)
+    .def("SaveAs", &rendering::Canvas::SaveAs, nb::arg("file_name"));
 
   erase_existing_name("CanvasRayTracer");
-  nb::class_<viskores::rendering::CanvasRayTracer, viskores::rendering::Canvas>(
+  nb::class_<rendering::CanvasRayTracer, rendering::Canvas>(
     m, "CanvasRayTracer", doc::ClassDoc("CanvasRayTracer"))
     .def(nb::init<viskores::IdComponent, viskores::IdComponent>(),
          nb::arg("width") = 1024,
          nb::arg("height") = 1024);
 
-  erase_existing_name("MapperVolume");
-  nb::class_<viskores::rendering::MapperVolume>(m, "MapperVolume", doc::ClassDoc("MapperVolume"))
-    .def(nb::init<>())
-    .def(
-      "SetSampleDistance",
-      [](viskores::rendering::MapperVolume& self, double distance)
-      { self.SetSampleDistance(static_cast<viskores::Float32>(distance)); },
-      nb::arg("distance"))
-    .def(
-      "SetCompositeBackground",
-      [](viskores::rendering::MapperVolume& self, bool enabled)
-      { self.SetCompositeBackground(enabled); },
-      nb::arg("enabled"));
+  auto mapperVolume = BindClassWithDefaultConstructor<rendering::MapperVolume>(
+    m, erase_existing_name, "MapperVolume");
+  BindMapperFloat32Setter<rendering::MapperVolume>(
+    mapperVolume, "SetSampleDistance", &rendering::MapperVolume::SetSampleDistance, "distance");
+  BindMapperCompositeBackground<rendering::MapperVolume>(mapperVolume);
 
-  erase_existing_name("MapperPoint");
-  nb::class_<viskores::rendering::MapperPoint>(m, "MapperPoint", doc::ClassDoc("MapperPoint"))
-    .def(nb::init<>())
-    .def("SetUseCells", &viskores::rendering::MapperPoint::SetUseCells)
-    .def("SetUsePoints", &viskores::rendering::MapperPoint::SetUsePoints)
-    .def(
-      "UseVariableRadius",
-      [](viskores::rendering::MapperPoint& self, bool enabled) { self.UseVariableRadius(enabled); },
-      nb::arg("enabled"))
-    .def(
-      "SetRadius",
-      [](viskores::rendering::MapperPoint& self, double radius)
-      { self.SetRadius(static_cast<viskores::Float32>(radius)); },
-      nb::arg("radius"))
-    .def(
-      "SetRadiusDelta",
-      [](viskores::rendering::MapperPoint& self, double delta)
-      { self.SetRadiusDelta(static_cast<viskores::Float32>(delta)); },
-      nb::arg("delta"))
-    .def(
-      "SetCompositeBackground",
-      [](viskores::rendering::MapperPoint& self, bool enabled)
-      { self.SetCompositeBackground(enabled); },
-      nb::arg("enabled"));
+  auto mapperPoint =
+    BindClassWithDefaultConstructor<rendering::MapperPoint>(m, erase_existing_name, "MapperPoint");
+  mapperPoint
+    .def("SetUseCells", &rendering::MapperPoint::SetUseCells)
+    .def("SetUsePoints", &rendering::MapperPoint::SetUsePoints);
+  BindMapperRadiusControls<rendering::MapperPoint>(mapperPoint);
+  BindMapperCompositeBackground<rendering::MapperPoint>(mapperPoint);
 
-  erase_existing_name("MapperQuad");
-  nb::class_<viskores::rendering::MapperQuad>(m, "MapperQuad", doc::ClassDoc("MapperQuad"))
-    .def(nb::init<>())
-    .def(
-      "SetCompositeBackground",
-      [](viskores::rendering::MapperQuad& self, bool enabled)
-      { self.SetCompositeBackground(enabled); },
-      nb::arg("enabled"));
+  auto mapperQuad =
+    BindClassWithDefaultConstructor<rendering::MapperQuad>(m, erase_existing_name, "MapperQuad");
+  BindMapperCompositeBackground<rendering::MapperQuad>(mapperQuad);
 
-  erase_existing_name("MapperConnectivity");
-  nb::class_<viskores::rendering::MapperConnectivity>(
-    m, "MapperConnectivity", doc::ClassDoc("MapperConnectivity"))
-    .def(nb::init<>())
-    .def(
-      "SetSampleDistance",
-      [](viskores::rendering::MapperConnectivity& self, double distance)
-      { self.SetSampleDistance(static_cast<viskores::Float32>(distance)); },
-      nb::arg("distance"));
+  auto mapperConnectivity =
+    BindClassWithDefaultConstructor<rendering::MapperConnectivity>(
+      m, erase_existing_name, "MapperConnectivity");
+  BindMapperFloat32Setter<rendering::MapperConnectivity>(mapperConnectivity,
+                                                         "SetSampleDistance",
+                                                         &rendering::MapperConnectivity::
+                                                           SetSampleDistance,
+                                                         "distance");
 
-  erase_existing_name("MapperCylinder");
-  nb::class_<viskores::rendering::MapperCylinder>(
-    m, "MapperCylinder", doc::ClassDoc("MapperCylinder"))
-    .def(nb::init<>())
-    .def(
-      "UseVariableRadius",
-      [](viskores::rendering::MapperCylinder& self, bool enabled)
-      { self.UseVariableRadius(enabled); },
-      nb::arg("enabled"))
-    .def(
-      "SetRadius",
-      [](viskores::rendering::MapperCylinder& self, double radius)
-      { self.SetRadius(static_cast<viskores::Float32>(radius)); },
-      nb::arg("radius"))
-    .def(
-      "SetRadiusDelta",
-      [](viskores::rendering::MapperCylinder& self, double delta)
-      { self.SetRadiusDelta(static_cast<viskores::Float32>(delta)); },
-      nb::arg("delta"))
-    .def(
-      "SetCompositeBackground",
-      [](viskores::rendering::MapperCylinder& self, bool enabled)
-      { self.SetCompositeBackground(enabled); },
-      nb::arg("enabled"));
+  auto mapperCylinder =
+    BindClassWithDefaultConstructor<rendering::MapperCylinder>(
+      m, erase_existing_name, "MapperCylinder");
+  BindMapperRadiusControls<rendering::MapperCylinder>(mapperCylinder);
+  BindMapperCompositeBackground<rendering::MapperCylinder>(mapperCylinder);
 
-  erase_existing_name("MapperGlyphScalar");
-  nb::class_<viskores::rendering::MapperGlyphScalar>(
-    m, "MapperGlyphScalar", doc::ClassDoc("MapperGlyphScalar"))
-    .def(nb::init<>())
-    .def("GetGlyphType", &viskores::rendering::MapperGlyphScalar::GetGlyphType)
+  auto mapperGlyphScalar =
+    BindClassWithDefaultConstructor<rendering::MapperGlyphScalar>(
+      m, erase_existing_name, "MapperGlyphScalar");
+  mapperGlyphScalar
+    .def("GetGlyphType", &rendering::MapperGlyphScalar::GetGlyphType)
     .def(
-      "SetGlyphType", &viskores::rendering::MapperGlyphScalar::SetGlyphType, nb::arg("glyph_type"))
-    .def("SetUseCells", &viskores::rendering::MapperGlyphScalar::SetUseCells)
-    .def("SetUsePoints", &viskores::rendering::MapperGlyphScalar::SetUsePoints)
+      "SetGlyphType", &rendering::MapperGlyphScalar::SetGlyphType, nb::arg("glyph_type"))
+    .def("SetUseCells", &rendering::MapperGlyphScalar::SetUseCells)
+    .def("SetUsePoints", &rendering::MapperGlyphScalar::SetUsePoints)
     .def("SetScaleByValue",
-         &viskores::rendering::MapperGlyphScalar::SetScaleByValue,
+         &rendering::MapperGlyphScalar::SetScaleByValue,
          nb::arg("enabled"))
-    .def("GetScaleByValue", &viskores::rendering::MapperGlyphScalar::GetScaleByValue)
-    .def(
-      "SetBaseSize",
-      [](viskores::rendering::MapperGlyphScalar& self, double size)
-      { self.SetBaseSize(static_cast<viskores::Float32>(size)); },
-      nb::arg("size"))
-    .def("GetBaseSize", &viskores::rendering::MapperGlyphScalar::GetBaseSize)
-    .def(
-      "SetScaleDelta",
-      [](viskores::rendering::MapperGlyphScalar& self, double delta)
-      { self.SetScaleDelta(static_cast<viskores::Float32>(delta)); },
-      nb::arg("delta"))
-    .def("GetScaleDelta", &viskores::rendering::MapperGlyphScalar::GetScaleDelta)
-    .def(
-      "SetCompositeBackground",
-      [](viskores::rendering::MapperGlyphScalar& self, bool enabled)
-      { self.SetCompositeBackground(enabled); },
-      nb::arg("enabled"));
+    .def("GetScaleByValue", &rendering::MapperGlyphScalar::GetScaleByValue);
+  BindMapperGlyphSizeControls<rendering::MapperGlyphScalar>(mapperGlyphScalar);
+  BindMapperCompositeBackground<rendering::MapperGlyphScalar>(mapperGlyphScalar);
 
-  erase_existing_name("MapperGlyphVector");
-  nb::class_<viskores::rendering::MapperGlyphVector>(
-    m, "MapperGlyphVector", doc::ClassDoc("MapperGlyphVector"))
-    .def(nb::init<>())
-    .def("GetGlyphType", &viskores::rendering::MapperGlyphVector::GetGlyphType)
+  auto mapperGlyphVector =
+    BindClassWithDefaultConstructor<rendering::MapperGlyphVector>(
+      m, erase_existing_name, "MapperGlyphVector");
+  mapperGlyphVector
+    .def("GetGlyphType", &rendering::MapperGlyphVector::GetGlyphType)
     .def(
-      "SetGlyphType", &viskores::rendering::MapperGlyphVector::SetGlyphType, nb::arg("glyph_type"))
-    .def("SetUseCells", &viskores::rendering::MapperGlyphVector::SetUseCells)
-    .def("SetUsePoints", &viskores::rendering::MapperGlyphVector::SetUsePoints)
+      "SetGlyphType", &rendering::MapperGlyphVector::SetGlyphType, nb::arg("glyph_type"))
+    .def("SetUseCells", &rendering::MapperGlyphVector::SetUseCells)
+    .def("SetUsePoints", &rendering::MapperGlyphVector::SetUsePoints)
     .def("SetScaleByValue",
-         &viskores::rendering::MapperGlyphVector::SetScaleByValue,
+         &rendering::MapperGlyphVector::SetScaleByValue,
          nb::arg("enabled"))
-    .def("GetScaleByValue", &viskores::rendering::MapperGlyphVector::GetScaleByValue)
-    .def(
-      "SetBaseSize",
-      [](viskores::rendering::MapperGlyphVector& self, double size)
-      { self.SetBaseSize(static_cast<viskores::Float32>(size)); },
-      nb::arg("size"))
-    .def("GetBaseSize", &viskores::rendering::MapperGlyphVector::GetBaseSize)
-    .def(
-      "SetScaleDelta",
-      [](viskores::rendering::MapperGlyphVector& self, double delta)
-      { self.SetScaleDelta(static_cast<viskores::Float32>(delta)); },
-      nb::arg("delta"))
-    .def("GetScaleDelta", &viskores::rendering::MapperGlyphVector::GetScaleDelta)
-    .def(
-      "SetCompositeBackground",
-      [](viskores::rendering::MapperGlyphVector& self, bool enabled)
-      { self.SetCompositeBackground(enabled); },
-      nb::arg("enabled"));
+    .def("GetScaleByValue", &rendering::MapperGlyphVector::GetScaleByValue);
+  BindMapperGlyphSizeControls<rendering::MapperGlyphVector>(mapperGlyphVector);
+  BindMapperCompositeBackground<rendering::MapperGlyphVector>(mapperGlyphVector);
 
-  erase_existing_name("MapperWireframer");
-  nb::class_<viskores::rendering::MapperWireframer>(
-    m, "MapperWireframer", doc::ClassDoc("MapperWireframer"))
-    .def(nb::init<>())
-    .def("GetShowInternalZones", &viskores::rendering::MapperWireframer::GetShowInternalZones)
-    .def(
-      "SetShowInternalZones",
-      [](viskores::rendering::MapperWireframer& self, bool enabled)
-      { self.SetShowInternalZones(enabled); },
-      nb::arg("enabled"))
-    .def("GetIsOverlay", &viskores::rendering::MapperWireframer::GetIsOverlay)
-    .def(
-      "SetIsOverlay",
-      [](viskores::rendering::MapperWireframer& self, bool enabled) { self.SetIsOverlay(enabled); },
-      nb::arg("enabled"))
-    .def(
-      "SetCompositeBackground",
-      [](viskores::rendering::MapperWireframer& self, bool enabled)
-      { self.SetCompositeBackground(enabled); },
-      nb::arg("enabled"));
+  auto mapperWireframer =
+    BindClassWithDefaultConstructor<rendering::MapperWireframer>(
+      m, erase_existing_name, "MapperWireframer");
+  mapperWireframer
+    .def("GetShowInternalZones", &rendering::MapperWireframer::GetShowInternalZones)
+    .def("SetShowInternalZones",
+         &rendering::MapperWireframer::SetShowInternalZones,
+         nb::arg("enabled"))
+    .def("GetIsOverlay", &rendering::MapperWireframer::GetIsOverlay)
+    .def("SetIsOverlay", &rendering::MapperWireframer::SetIsOverlay, nb::arg("enabled"));
+  BindMapperCompositeBackground<rendering::MapperWireframer>(mapperWireframer);
 
-  erase_existing_name("MapperRayTracer");
-  nb::class_<viskores::rendering::MapperRayTracer>(
-    m, "MapperRayTracer", doc::ClassDoc("MapperRayTracer"))
-    .def(nb::init<>())
-    .def(
-      "SetCompositeBackground",
-      [](viskores::rendering::MapperRayTracer& self, bool enabled)
-      { self.SetCompositeBackground(enabled); },
-      nb::arg("enabled"))
-    .def(
-      "SetShadingOn",
-      [](viskores::rendering::MapperRayTracer& self, bool enabled) { self.SetShadingOn(enabled); },
-      nb::arg("enabled"));
+  auto mapperRayTracer =
+    BindClassWithDefaultConstructor<rendering::MapperRayTracer>(
+      m, erase_existing_name, "MapperRayTracer");
+  BindMapperCompositeBackground<rendering::MapperRayTracer>(mapperRayTracer);
+  mapperRayTracer.def(
+    "SetShadingOn", &rendering::MapperRayTracer::SetShadingOn, nb::arg("enabled"));
 
   erase_existing_name("ScalarRendererResult");
-  nb::class_<viskores::rendering::ScalarRenderer::Result>(
+  nb::class_<rendering::ScalarRenderer::Result>(
     m, "ScalarRendererResult", doc::ClassDoc("ScalarRendererResult"))
     .def_prop_ro("Width",
-                 [](const viskores::rendering::ScalarRenderer::Result& self) { return self.Width; })
+                 [](const rendering::ScalarRenderer::Result& self) { return self.Width; })
     .def_prop_ro(
-      "Height", [](const viskores::rendering::ScalarRenderer::Result& self) { return self.Height; })
+      "Height", [](const rendering::ScalarRenderer::Result& self) { return self.Height; })
     .def_prop_ro(
       "Depths",
-      [](const viskores::rendering::ScalarRenderer::Result& self)
-      { return UnknownArrayToNumPyArray(viskores::cont::UnknownArrayHandle(self.Depths)); })
+      [](const rendering::ScalarRenderer::Result& self)
+      { return UnknownArrayToNumPyArray(cont::UnknownArrayHandle(self.Depths)); })
     .def_prop_ro("Scalars",
-                 [](const viskores::rendering::ScalarRenderer::Result& self)
+                 [](const rendering::ScalarRenderer::Result& self)
                  {
                    nb::list output;
                    for (const auto& values : self.Scalars)
                    {
                      output.append(
-                       UnknownArrayToNumPyArray(viskores::cont::UnknownArrayHandle(values)));
+                       UnknownArrayToNumPyArray(cont::UnknownArrayHandle(values)));
                    }
                    return output;
                  })
     .def_prop_ro("ScalarNames",
-                 [](const viskores::rendering::ScalarRenderer::Result& self)
+                 [](const rendering::ScalarRenderer::Result& self)
                  {
                    nb::list output;
                    for (const auto& name : self.ScalarNames)
@@ -621,7 +570,7 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
                    return output;
                  })
     .def_prop_ro("Ranges",
-                 [](const viskores::rendering::ScalarRenderer::Result& self)
+                 [](const rendering::ScalarRenderer::Result& self)
                  {
                    nb::dict output;
                    for (const auto& [name, range] : self.Ranges)
@@ -631,44 +580,44 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
                    return output;
                  })
     .def("ToDataSet",
-         [](viskores::rendering::ScalarRenderer::Result& self)
+         [](rendering::ScalarRenderer::Result& self)
          { return WrapDataSet(self.ToDataSet()); });
 
   erase_existing_name("ScalarRenderer");
-  nb::class_<viskores::rendering::ScalarRenderer>(
+  nb::class_<rendering::ScalarRenderer>(
     m, "ScalarRenderer", doc::ClassDoc("ScalarRenderer"))
     .def(nb::init<>())
     .def(
       "SetInput",
-      [](viskores::rendering::ScalarRenderer& self,
-         const std::shared_ptr<viskores::cont::DataSet>& dataSet) { self.SetInput(*dataSet); },
+      [](rendering::ScalarRenderer& self,
+         const std::shared_ptr<cont::DataSet>& dataSet) { self.SetInput(*dataSet); },
       nb::arg("dataset"))
-    .def("SetWidth", &viskores::rendering::ScalarRenderer::SetWidth, nb::arg("width"))
-    .def("SetHeight", &viskores::rendering::ScalarRenderer::SetHeight, nb::arg("height"))
-    .def("SetDefaultValue", &viskores::rendering::ScalarRenderer::SetDefaultValue, nb::arg("value"))
+    .def("SetWidth", &rendering::ScalarRenderer::SetWidth, nb::arg("width"))
+    .def("SetHeight", &rendering::ScalarRenderer::SetHeight, nb::arg("height"))
+    .def("SetDefaultValue", &rendering::ScalarRenderer::SetDefaultValue, nb::arg("value"))
     .def(
       "Render",
-      [](viskores::rendering::ScalarRenderer& self,
-         const std::shared_ptr<viskores::rendering::Camera>& camera)
+      [](rendering::ScalarRenderer& self,
+         const std::shared_ptr<rendering::Camera>& camera)
       { return self.Render(*camera); },
       nb::arg("camera"));
 
   erase_existing_name("View3D");
-  nb::class_<viskores::rendering::View3D>(m, "View3D", doc::ClassDoc("View3D"))
+  nb::class_<rendering::View3D>(m, "View3D", doc::ClassDoc("View3D"))
     .def(
       "__init__",
-      [](viskores::rendering::View3D* self,
-         const std::shared_ptr<viskores::rendering::Scene>& scene,
+      [](rendering::View3D* self,
+         const std::shared_ptr<rendering::Scene>& scene,
          nb::object mapperObject,
-         const std::shared_ptr<viskores::rendering::CanvasRayTracer>& canvas,
+         const std::shared_ptr<rendering::CanvasRayTracer>& canvas,
          nb::object cameraObject,
          nb::object backgroundObject,
          nb::object foregroundObject)
       {
         const auto background =
-          ParseColor(backgroundObject, viskores::rendering::Color(0, 0, 0, 1));
+          ParseColor(backgroundObject, rendering::Color(0, 0, 0, 1));
         const auto foreground =
-          ParseColor(foregroundObject, viskores::rendering::Color(1, 1, 1, 1));
+          ParseColor(foregroundObject, rendering::Color(1, 1, 1, 1));
         auto mapper = RequireMapper(mapperObject);
         if (!mapper)
         {
@@ -676,7 +625,7 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
         }
         if (cameraObject.is_none())
         {
-          new (self) viskores::rendering::View3D(*scene, *mapper, *canvas, background, foreground);
+          new (self) rendering::View3D(*scene, *mapper, *canvas, background, foreground);
         }
         else
         {
@@ -686,7 +635,7 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
             throw std::runtime_error("Expected a viskores.rendering.Camera instance.");
           }
           new (self)
-            viskores::rendering::View3D(*scene, *mapper, *canvas, *camera, background, foreground);
+            rendering::View3D(*scene, *mapper, *canvas, *camera, background, foreground);
         }
       },
       nb::arg("scene"),
@@ -695,8 +644,8 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
       nb::arg("camera") = nb::none(),
       nb::arg("background") = nb::none(),
       nb::arg("foreground") = nb::none())
-    .def("Paint", &viskores::rendering::View3D::Paint)
-    .def("SaveAs", &viskores::rendering::View3D::SaveAs, nb::arg("file_name"));
+    .def("Paint", &rendering::View3D::Paint)
+    .def("SaveAs", &rendering::View3D::SaveAs, nb::arg("file_name"));
 }
 #else
 void RegisterNanobindColorTableClass(nb::module_&, const std::function<void(const char*)>&) {}
