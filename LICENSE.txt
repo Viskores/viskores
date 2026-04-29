@@ -1,7 +1,7 @@
 Viskores License Version 1.1
 ========================================================================
 
-Copyright (c) 2025
+Copyright (c) 2026
 Kitware Inc.,
 National Technology & Engineering Solutions of Sandia, LLC (NTESS),
 UT-Battelle, LLC.,
