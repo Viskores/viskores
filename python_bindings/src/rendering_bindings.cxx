@@ -62,9 +62,18 @@ void RegisterNanobindColorTableClass(nb::module_& m,
 void RegisterNanobindCameraClass(nb::module_& m,
                                  const std::function<void(const char*)>& erase_existing_name)
 {
+  erase_existing_name("CameraMode");
+  nb::enum_<viskores::rendering::Camera::Mode>(m, "CameraMode")
+    .value("TwoD", viskores::rendering::Camera::Mode::TwoD)
+    .value("ThreeD", viskores::rendering::Camera::Mode::ThreeD);
+
   erase_existing_name("Camera");
   nb::class_<viskores::rendering::Camera>(m, "Camera", doc::ClassDoc("Camera"))
     .def(nb::init<>())
+    .def("GetMode", &viskores::rendering::Camera::GetMode)
+    .def("SetMode", &viskores::rendering::Camera::SetMode, nb::arg("mode"))
+    .def("SetModeTo2D", &viskores::rendering::Camera::SetModeTo2D)
+    .def("SetModeTo3D", &viskores::rendering::Camera::SetModeTo3D)
     .def("GetLookAt",
          [](const viskores::rendering::Camera& self)
          {
@@ -139,7 +148,30 @@ void RegisterNanobindCameraClass(nb::module_& m,
     .def(
       "SetFieldOfView",
       [](viskores::rendering::Camera& self, double value) { self.SetFieldOfView(value); },
-      nb::arg("value"));
+      nb::arg("value"))
+    .def("GetXScale", &viskores::rendering::Camera::GetXScale)
+    .def(
+      "SetXScale",
+      [](viskores::rendering::Camera& self, double value) { self.SetXScale(value); },
+      nb::arg("value"))
+    .def("GetViewRange2D",
+         [](const viskores::rendering::Camera& self)
+         {
+           viskores::Float32 left = 0.0f;
+           viskores::Float32 right = 0.0f;
+           viskores::Float32 bottom = 0.0f;
+           viskores::Float32 top = 0.0f;
+           self.GetViewRange2D(left, right, bottom, top);
+           return nb::make_tuple(left, right, bottom, top);
+         })
+    .def(
+      "SetViewRange2D",
+      [](viskores::rendering::Camera& self, double left, double right, double bottom, double top)
+      { self.SetViewRange2D(left, right, bottom, top); },
+      nb::arg("left"),
+      nb::arg("right"),
+      nb::arg("bottom"),
+      nb::arg("top"));
 }
 
 void RegisterNanobindRenderingClasses(nb::module_& m,

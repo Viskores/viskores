@@ -15,6 +15,7 @@ __all__ = []
 for _name in (
     "Actor",
     "Camera",
+    "CameraMode",
     "Canvas",
     "CanvasRayTracer",
     "GlyphType",

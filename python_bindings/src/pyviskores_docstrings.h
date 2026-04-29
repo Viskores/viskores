@@ -205,7 +205,7 @@ color conversion.)doc";
     return R"doc(Viskores rendering camera.
 
 Camera stores view position, look-at point, view-up vector, clipping range,
-projection settings, and related rendering controls.)doc";
+projection settings, 2D view ranges, and related rendering controls.)doc";
   }
   if (name == "Actor")
   {

@@ -7,7 +7,7 @@
 ##============================================================================
 
 from viskores import Range
-from viskores.rendering import Camera
+from viskores.rendering import Camera, CameraMode
 
 
 def main():
@@ -23,6 +23,22 @@ def main():
     assert camera.GetPosition() == (1.0, 2.0, 3.0)
     assert camera.GetClippingRange() == Range(1.0, 10.0)
     assert camera.GetFieldOfView() == 60.0
+
+    assert camera.GetMode() == CameraMode.ThreeD
+
+    camera.SetModeTo2D()
+    assert camera.GetMode() == CameraMode.TwoD
+
+    camera.SetViewRange2D(-0.5, 4.5, -0.5, 4.5)
+    assert camera.GetMode() == CameraMode.TwoD
+    assert camera.GetViewRange2D() == (-0.5, 4.5, -0.5, 4.5)
+
+    camera.SetXScale(2.0)
+    assert camera.GetXScale() == 2.0
+    assert camera.GetMode() == CameraMode.TwoD
+
+    camera.SetMode(CameraMode.ThreeD)
+    assert camera.GetMode() == CameraMode.ThreeD
 
 
 if __name__ == "__main__":

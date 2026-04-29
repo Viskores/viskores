@@ -18,6 +18,7 @@ from viskores.cont import (
     DataSetBuilderExplicitIterative,
     DataSetBuilderRectilinear,
     DataSetBuilderUniform,
+    create_uniform_dataset,
 )
 
 
@@ -79,6 +80,83 @@ def test_uniform_builder_3d():
         coord_name="volume_coords",
         bounds=(1.0, 2.0, 2.0, 4.0, -1.0, 3.5),
     )
+
+
+def test_create_uniform_dataset_with_shaped_fields():
+    point_scalars = np.arange(12, dtype=np.float32).reshape(4, 3)
+    point_vectors = np.arange(36, dtype=np.float64).reshape(4, 3, 3)
+    cell_scalars = np.arange(6, dtype=np.int32).reshape(3, 2)
+
+    dataset = create_uniform_dataset(
+        (4, 3),
+        point_fields={
+            "point_scalars": point_scalars,
+            "point_vectors": point_vectors,
+        },
+        cell_fields={"cell_scalars": cell_scalars},
+    )
+
+    assert_dataset_shape(
+        dataset,
+        points=12,
+        cells=6,
+        cell_set_type="structured2d",
+        coord_name="coords",
+        bounds=(0.0, 3.0, 0.0, 2.0, 0.0, 0.0),
+    )
+    assert dataset.HasField("point_scalars", association="points")
+    assert dataset.HasField("point_vectors", association="points")
+    assert dataset.HasField("cell_scalars", association="cells")
+    np.testing.assert_array_equal(
+        dataset.GetField("point_scalars", association="points"),
+        point_scalars.reshape(-1),
+    )
+    np.testing.assert_array_equal(
+        dataset.GetField("point_vectors", association="points"),
+        point_vectors.reshape(-1, 3),
+    )
+    np.testing.assert_array_equal(
+        dataset.GetField("cell_scalars", association="cells"),
+        cell_scalars.reshape(-1),
+    )
+
+    point_scalars[0, 0] = 123.0
+    cell_scalars[0, 0] = 99
+    assert dataset.GetField("point_scalars", association="points")[0] == 123.0
+    assert dataset.GetField("cell_scalars", association="cells")[0] == 99
+
+
+def test_create_uniform_dataset_infers_dimensions_from_shaped_field():
+    values = np.arange(6, dtype=np.float32).reshape(2, 3)
+    dataset = create_uniform_dataset(point_fields={"values": values})
+    assert_dataset_shape(
+        dataset,
+        points=6,
+        cells=2,
+        cell_set_type="structured2d",
+        coord_name="coords",
+        bounds=(0.0, 1.0, 0.0, 2.0, 0.0, 0.0),
+    )
+    np.testing.assert_array_equal(dataset.GetField("values"), values.reshape(-1))
+
+
+def test_create_uniform_dataset_rejects_bad_field_shapes():
+    try:
+        create_uniform_dataset((4, 3), point_fields={"bad": np.zeros((4, 4), dtype=np.float32)})
+    except ValueError as error:
+        assert "point field 'bad' has shape (4, 4)" in str(error)
+    else:
+        raise AssertionError("Expected create_uniform_dataset to reject a bad point field shape.")
+
+    try:
+        create_uniform_dataset(
+            (4, 3),
+            point_fields={"bad": np.zeros((4, 3), dtype=np.float32).T},
+        )
+    except ValueError as error:
+        assert "point field 'bad' must be C-contiguous" in str(error)
+    else:
+        raise AssertionError("Expected create_uniform_dataset to reject a non-contiguous field.")
 
 
 def test_rectilinear_builder_1d():
@@ -240,6 +318,9 @@ def main():
     test_uniform_builder_1d()
     test_uniform_builder_2d()
     test_uniform_builder_3d()
+    test_create_uniform_dataset_with_shaped_fields()
+    test_create_uniform_dataset_infers_dimensions_from_shaped_field()
+    test_create_uniform_dataset_rejects_bad_field_shapes()
     test_rectilinear_builder_1d()
     test_rectilinear_builder_2d()
     test_rectilinear_builder_3d()
