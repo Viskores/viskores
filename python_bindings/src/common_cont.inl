@@ -51,6 +51,40 @@ nb::object CreateBasicNumPyView(const viskores::cont::ArrayHandleBasic<ValueType
   return view.cast();
 }
 
+template <typename ComponentType, viskores::IdComponent NumberOfComponents>
+bool TryBasicVecUnknownArrayToNumPyView(const viskores::cont::UnknownArrayHandle& array,
+                                        nb::object& output)
+{
+  using VecType = viskores::Vec<ComponentType, NumberOfComponents>;
+  using ArrayType = viskores::cont::ArrayHandleBasic<VecType>;
+  if (!array.IsType<ArrayType>())
+  {
+    return false;
+  }
+
+  ArrayType basicArray;
+  array.AsArrayHandle(basicArray);
+  output = CreateBasicNumPyView<VecType, ComponentType>(
+    basicArray,
+    { static_cast<size_t>(array.GetNumberOfValues()),
+      static_cast<size_t>(array.GetNumberOfComponentsFlat()) });
+  return true;
+}
+
+template <typename ComponentType>
+struct TryBasicVecUnknownArrayToNumPyViewFunctor
+{
+  const viskores::cont::UnknownArrayHandle& Array;
+  nb::object& Output;
+
+  template <viskores::IdComponent NumberOfComponents>
+  bool operator()() const
+  {
+    return TryBasicVecUnknownArrayToNumPyView<ComponentType, NumberOfComponents>(
+      this->Array, this->Output);
+  }
+};
+
 template <typename ComponentType>
 bool TryBasicUnknownArrayToNumPyView(const viskores::cont::UnknownArrayHandle& array,
                                      nb::object& output)
@@ -76,49 +110,8 @@ bool TryBasicUnknownArrayToNumPyView(const viskores::cont::UnknownArrayHandle& a
     return false;
   }
 
-  if (numberOfComponents == 2)
-  {
-    using VecType = viskores::Vec<ComponentType, 2>;
-    using ArrayType = viskores::cont::ArrayHandleBasic<VecType>;
-    if (array.IsType<ArrayType>())
-    {
-      ArrayType basicArray;
-      array.AsArrayHandle(basicArray);
-      output = CreateBasicNumPyView<VecType, ComponentType>(
-        basicArray,
-        { static_cast<size_t>(numberOfValues), static_cast<size_t>(numberOfComponents) });
-      return true;
-    }
-  }
-  else if (numberOfComponents == 3)
-  {
-    using VecType = viskores::Vec<ComponentType, 3>;
-    using ArrayType = viskores::cont::ArrayHandleBasic<VecType>;
-    if (array.IsType<ArrayType>())
-    {
-      ArrayType basicArray;
-      array.AsArrayHandle(basicArray);
-      output = CreateBasicNumPyView<VecType, ComponentType>(
-        basicArray,
-        { static_cast<size_t>(numberOfValues), static_cast<size_t>(numberOfComponents) });
-      return true;
-    }
-  }
-  else if (numberOfComponents == 4)
-  {
-    using VecType = viskores::Vec<ComponentType, 4>;
-    using ArrayType = viskores::cont::ArrayHandleBasic<VecType>;
-    if (array.IsType<ArrayType>())
-    {
-      ArrayType basicArray;
-      array.AsArrayHandle(basicArray);
-      output = CreateBasicNumPyView<VecType, ComponentType>(
-        basicArray,
-        { static_cast<size_t>(numberOfValues), static_cast<size_t>(numberOfComponents) });
-      return true;
-    }
-  }
-  return false;
+  return TryCompiledVecComponentCount(
+    numberOfComponents, TryBasicVecUnknownArrayToNumPyViewFunctor<ComponentType>{ array, output });
 }
 
 template <typename ComponentType>
@@ -272,10 +265,108 @@ bool TryUnknownArrayToNumPy(const viskores::cont::UnknownArrayHandle& array,
   return true;
 }
 
+struct TryGroupVecVariableToPythonListFunctor
+{
+  const viskores::cont::UnknownArrayHandle& Array;
+  bool Copy;
+  nb::object& Output;
+
+  template <typename ComponentType>
+  bool operator()() const
+  {
+    return TryGroupVecVariableToPythonList<ComponentType>(this->Array, this->Copy, this->Output);
+  }
+};
+
+struct TryGroupVecVariableValueToNumPyArrayFunctor
+{
+  const viskores::cont::UnknownArrayHandle& Array;
+  viskores::Id Index;
+  bool Copy;
+  nb::object& Output;
+
+  template <typename ComponentType>
+  bool operator()() const
+  {
+    return TryGroupVecVariableValueToNumPyArray<ComponentType>(
+      this->Array, this->Index, this->Copy, this->Output);
+  }
+};
+
+struct TryUnknownArrayToNumPyFunctor
+{
+  const viskores::cont::UnknownArrayHandle& Array;
+  bool Copy;
+  nb::object& Output;
+
+  template <typename ComponentType>
+  bool operator()() const
+  {
+    return TryUnknownArrayToNumPy<ComponentType>(this->Array, this->Copy, this->Output);
+  }
+};
+
 nb::object CreateId3ArrayObject(const viskores::cont::ArrayHandle<viskores::Id3>& array)
 {
   viskores::cont::UnknownArrayHandle unknown(array);
   return CopyUnknownArrayToNumPy<viskores::Id>(unknown);
+}
+
+nb::sequence RequireSequence(nb::handle object, const char* message)
+{
+  if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))
+  {
+    throw std::runtime_error(message);
+  }
+  return nb::borrow<nb::sequence>(object);
+}
+
+size_t RequireSequenceSize(nb::sequence sequence,
+                           size_t minSize,
+                           size_t maxSize,
+                           const char* message)
+{
+  const size_t size = static_cast<size_t>(nb::len(sequence));
+  if ((size < minSize) || (size > maxSize))
+  {
+    throw std::runtime_error(message);
+  }
+  return size;
+}
+
+template <typename VecType, typename ValueType, typename CastType>
+std::pair<VecType, viskores::IdComponent> ParsePartialVec(nb::handle object,
+                                                          const VecType& defaultValue,
+                                                          size_t minSize,
+                                                          size_t maxSize,
+                                                          const char* message)
+{
+  nb::sequence sequence = RequireSequence(object, message);
+  const size_t size = RequireSequenceSize(sequence, minSize, maxSize, message);
+
+  VecType value = defaultValue;
+  const size_t vectorSize = static_cast<size_t>(value.GetNumberOfComponents());
+  const size_t componentsToCopy = (size < vectorSize) ? size : vectorSize;
+  for (size_t index = 0; index < componentsToCopy; ++index)
+  {
+    value[static_cast<viskores::IdComponent>(index)] =
+      static_cast<ValueType>(nb::cast<CastType>(sequence[index]));
+  }
+  return { value, static_cast<viskores::IdComponent>(size) };
+}
+
+template <typename ValueType, typename CastType, std::size_t Size>
+std::array<ValueType, Size> ParseFixedNumericSequence(nb::handle object, const char* message)
+{
+  nb::sequence sequence = RequireSequence(object, message);
+  RequireSequenceSize(sequence, Size, Size, message);
+
+  std::array<ValueType, Size> values{};
+  for (size_t index = 0; index < Size; ++index)
+  {
+    values[index] = static_cast<ValueType>(nb::cast<CastType>(sequence[index]));
+  }
+  return values;
 }
 
 Association ParseAssociation(nb::handle object, Association defaultValue)
@@ -321,25 +412,13 @@ Association ParseAssociation(nb::handle object, Association defaultValue)
 
 viskores::Id3 ParseDimensions(nb::handle object)
 {
-  if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))
-  {
-    throw std::runtime_error("dimensions must be a sequence of 1, 2, or 3 integers.");
-  }
+  return ParseDimensionsAndRank(object).first;
+}
 
-  nb::sequence sequence = nb::borrow<nb::sequence>(object);
-  const size_t size = static_cast<size_t>(nb::len(sequence));
-  if ((size < 1) || (size > 3))
-  {
-    throw std::runtime_error("dimensions must contain 1, 2, or 3 integers.");
-  }
-
-  viskores::Id3 dims(1, 1, 1);
-  for (size_t index = 0; index < size; ++index)
-  {
-    dims[static_cast<viskores::IdComponent>(index)] =
-      static_cast<viskores::Id>(nb::cast<long long>(sequence[index]));
-  }
-  return dims;
+std::pair<viskores::Id3, viskores::IdComponent> ParseDimensionsAndRank(nb::handle object)
+{
+  return ParsePartialVec<viskores::Id3, viskores::Id, long long>(
+    object, viskores::Id3(1, 1, 1), 1, 3, "dimensions must contain 1, 2, or 3 integers.");
 }
 
 viskores::Vec3f ParseVec3(nb::handle object, const viskores::Vec3f& defaultValue)
@@ -349,46 +428,16 @@ viskores::Vec3f ParseVec3(nb::handle object, const viskores::Vec3f& defaultValue
     return defaultValue;
   }
 
-  if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))
-  {
-    throw std::runtime_error("Expected a sequence of 1, 2, or 3 floats.");
-  }
-
-  nb::sequence sequence = nb::borrow<nb::sequence>(object);
-  const size_t size = static_cast<size_t>(nb::len(sequence));
-  if ((size < 1) || (size > 3))
-  {
-    throw std::runtime_error("Expected a sequence of 1, 2, or 3 floats.");
-  }
-
-  viskores::Vec3f value = defaultValue;
-  for (size_t index = 0; index < size; ++index)
-  {
-    value[static_cast<viskores::IdComponent>(index)] =
-      static_cast<viskores::FloatDefault>(nb::cast<double>(sequence[index]));
-  }
-  return value;
+  return ParsePartialVec<viskores::Vec3f, viskores::FloatDefault, double>(
+           object, defaultValue, 1, 3, "Expected a sequence of 1, 2, or 3 floats.")
+    .first;
 }
 
 viskores::RangeId3 ParseRangeId3(nb::handle object)
 {
-  if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))
-  {
-    throw std::runtime_error("Expected a sequence of 6 integers.");
-  }
-
-  nb::sequence sequence = nb::borrow<nb::sequence>(object);
-  if (nb::len(sequence) != 6)
-  {
-    throw std::runtime_error("Expected a sequence of 6 integers.");
-  }
-
-  viskores::Id values[6];
-  for (size_t index = 0; index < 6; ++index)
-  {
-    values[index] = static_cast<viskores::Id>(nb::cast<long long>(sequence[index]));
-  }
-  return viskores::RangeId3(values);
+  const auto values = ParseFixedNumericSequence<viskores::Id, long long, 6>(
+    object, "Expected a sequence of 6 integers.");
+  return viskores::RangeId3(values.data());
 }
 
 viskores::Range ParseRange(nb::handle object, const viskores::Range& defaultValue)
@@ -404,23 +453,19 @@ viskores::Range ParseRange(nb::handle object, const viskores::Range& defaultValu
     return rangeValue;
   }
 
-  if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))
-  {
-    throw std::runtime_error("Expected a sequence of 2 floats.");
-  }
-
-  nb::sequence sequence = nb::borrow<nb::sequence>(object);
-  if (nb::len(sequence) != 2)
-  {
-    throw std::runtime_error("Expected a sequence of 2 floats.");
-  }
-
-  const auto minValue = nb::cast<double>(sequence[0]);
-  const auto maxValue = nb::cast<double>(sequence[1]);
-  return viskores::Range(minValue, maxValue);
+  const auto values =
+    ParseFixedNumericSequence<double, double, 2>(object, "Expected a sequence of 2 floats.");
+  return viskores::Range(values[0], values[1]);
 }
 
-#if VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
+viskores::Bounds ParseBounds(nb::handle object)
+{
+  const auto values =
+    ParseFixedNumericSequence<double, double, 6>(object, "Expected a sequence of 6 floats.");
+  return viskores::Bounds(values[0], values[1], values[2], values[3], values[4], values[5]);
+}
+
+#if VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
 bool ParseImplicitFunction(nb::handle object, viskores::ImplicitFunctionGeneral& function)
 {
   viskores::Box box;
@@ -463,24 +508,9 @@ viskores::Id2 ParseSize2D(nb::handle object,
     return defaultValue;
   }
 
-  if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))
-  {
-    throw std::runtime_error("Expected a sequence of 2 integers.");
-  }
-
-  nb::sequence sequence = nb::borrow<nb::sequence>(object);
-  if (nb::len(sequence) != 2)
-  {
-    throw std::runtime_error("Expected a sequence of 2 integers.");
-  }
-
-  viskores::Id2 dims;
-  for (size_t index = 0; index < 2; ++index)
-  {
-    dims[static_cast<viskores::IdComponent>(index)] =
-      static_cast<viskores::Id>(nb::cast<long long>(sequence[index]));
-  }
-  return dims;
+  return ParsePartialVec<viskores::Id2, viskores::Id, long long>(
+           object, defaultValue, 2, 2, "Expected a sequence of 2 integers.")
+    .first;
 }
 
 template <typename ValueType>
@@ -538,6 +568,24 @@ viskores::cont::UnknownArrayHandle BuildVectorArrayFromNumPyBytes(
 }
 
 template <typename ComponentType>
+struct TryBuildVectorArrayFromNumPyBytesFunctor
+{
+  const nb::ndarray<nb::ro, nb::numpy, nb::c_contig, nb::device::cpu>& Array;
+  nb::handle OwnerObject;
+  size_t NumberOfTuples;
+  bool Copy;
+  viskores::cont::UnknownArrayHandle& Result;
+
+  template <viskores::IdComponent NumberOfComponents>
+  bool operator()() const
+  {
+    this->Result = BuildVectorArrayFromNumPyBytes<ComponentType, NumberOfComponents>(
+      this->Array, this->OwnerObject, this->NumberOfTuples, this->Copy);
+    return true;
+  }
+};
+
+template <typename ComponentType>
 bool TryNumPyArrayToUnknownArray(
   const nb::ndarray<nb::ro, nb::numpy, nb::c_contig, nb::device::cpu>& array,
   nb::handle ownerObject,
@@ -559,30 +607,38 @@ bool TryNumPyArrayToUnknownArray(
   {
     const size_t numberOfTuples = array.shape(0);
     const size_t numberOfComponents = array.shape(1);
-    switch (numberOfComponents)
+    if (numberOfComponents == 1)
     {
-      case 1:
-        result =
-          BuildArrayHandleFromNumPyBytes<ComponentType>(array, ownerObject, numberOfTuples, copy);
-        return true;
-      case 2:
-        result = BuildVectorArrayFromNumPyBytes<ComponentType, 2>(
-          array, ownerObject, numberOfTuples, copy);
-        return true;
-      case 3:
-        result = BuildVectorArrayFromNumPyBytes<ComponentType, 3>(
-          array, ownerObject, numberOfTuples, copy);
-        return true;
-      case 4:
-        result = BuildVectorArrayFromNumPyBytes<ComponentType, 4>(
-          array, ownerObject, numberOfTuples, copy);
-        return true;
-      default:
-        throw std::runtime_error("Only 1D arrays or Nx{1,2,3,4} arrays are currently supported.");
+      result =
+        BuildArrayHandleFromNumPyBytes<ComponentType>(array, ownerObject, numberOfTuples, copy);
+      return true;
     }
+    if (TryCompiledVecComponentCount(
+          static_cast<viskores::IdComponent>(numberOfComponents),
+          TryBuildVectorArrayFromNumPyBytesFunctor<ComponentType>{
+            array, ownerObject, numberOfTuples, copy, result }))
+    {
+      return true;
+    }
+    throw std::runtime_error("Only 1D arrays or Nx{1,2,3,4} arrays are currently supported.");
   }
   throw std::runtime_error("Only 1D arrays or 2D arrays can be added as fields.");
 }
+
+struct TryNumPyArrayToUnknownArrayFunctor
+{
+  const nb::ndarray<nb::ro, nb::numpy, nb::c_contig, nb::device::cpu>& Array;
+  nb::handle OwnerObject;
+  bool Copy;
+  viskores::cont::UnknownArrayHandle& Result;
+
+  template <typename ComponentType>
+  bool operator()() const
+  {
+    return TryNumPyArrayToUnknownArray<ComponentType>(
+      this->Array, this->OwnerObject, this->Copy, this->Result);
+  }
+};
 
 viskores::cont::UnknownArrayHandle NumPyArrayToUnknownArray(nb::handle object, bool copy)
 {
@@ -590,16 +646,7 @@ viskores::cont::UnknownArrayHandle NumPyArrayToUnknownArray(nb::handle object, b
   AnyArray array = nb::cast<AnyArray>(object);
 
   viskores::cont::UnknownArrayHandle result;
-  if (TryNumPyArrayToUnknownArray<viskores::Float32>(array, object, copy, result) ||
-      TryNumPyArrayToUnknownArray<viskores::Float64>(array, object, copy, result) ||
-      TryNumPyArrayToUnknownArray<viskores::Int8>(array, object, copy, result) ||
-      TryNumPyArrayToUnknownArray<viskores::UInt8>(array, object, copy, result) ||
-      TryNumPyArrayToUnknownArray<viskores::Int16>(array, object, copy, result) ||
-      TryNumPyArrayToUnknownArray<viskores::UInt16>(array, object, copy, result) ||
-      TryNumPyArrayToUnknownArray<viskores::Int32>(array, object, copy, result) ||
-      TryNumPyArrayToUnknownArray<viskores::UInt32>(array, object, copy, result) ||
-      TryNumPyArrayToUnknownArray<viskores::Int64>(array, object, copy, result) ||
-      TryNumPyArrayToUnknownArray<viskores::UInt64>(array, object, copy, result))
+  if (TryRegisteredScalarTypes(TryNumPyArrayToUnknownArrayFunctor{ array, object, copy, result }))
   {
     return result;
   }
@@ -633,41 +680,14 @@ nb::object UnknownArrayToNumPyArray(const viskores::cont::UnknownArrayHandle& de
   }
 
   nb::object variableComponentOutput;
-  if (TryGroupVecVariableToPythonList<viskores::Float32>(
-        defaultArray, copy, variableComponentOutput) ||
-      TryGroupVecVariableToPythonList<viskores::Float64>(
-        defaultArray, copy, variableComponentOutput) ||
-      TryGroupVecVariableToPythonList<viskores::Int8>(
-        defaultArray, copy, variableComponentOutput) ||
-      TryGroupVecVariableToPythonList<viskores::UInt8>(
-        defaultArray, copy, variableComponentOutput) ||
-      TryGroupVecVariableToPythonList<viskores::Int16>(
-        defaultArray, copy, variableComponentOutput) ||
-      TryGroupVecVariableToPythonList<viskores::UInt16>(
-        defaultArray, copy, variableComponentOutput) ||
-      TryGroupVecVariableToPythonList<viskores::Int32>(
-        defaultArray, copy, variableComponentOutput) ||
-      TryGroupVecVariableToPythonList<viskores::UInt32>(
-        defaultArray, copy, variableComponentOutput) ||
-      TryGroupVecVariableToPythonList<viskores::Int64>(
-        defaultArray, copy, variableComponentOutput) ||
-      TryGroupVecVariableToPythonList<viskores::UInt64>(
-        defaultArray, copy, variableComponentOutput))
+  if (TryRegisteredScalarTypes(
+        TryGroupVecVariableToPythonListFunctor{ defaultArray, copy, variableComponentOutput }))
   {
     return variableComponentOutput;
   }
 
   nb::object output;
-  if (TryUnknownArrayToNumPy<viskores::Float32>(defaultArray, copy, output) ||
-      TryUnknownArrayToNumPy<viskores::Float64>(defaultArray, copy, output) ||
-      TryUnknownArrayToNumPy<viskores::Int8>(defaultArray, copy, output) ||
-      TryUnknownArrayToNumPy<viskores::UInt8>(defaultArray, copy, output) ||
-      TryUnknownArrayToNumPy<viskores::Int16>(defaultArray, copy, output) ||
-      TryUnknownArrayToNumPy<viskores::UInt16>(defaultArray, copy, output) ||
-      TryUnknownArrayToNumPy<viskores::Int32>(defaultArray, copy, output) ||
-      TryUnknownArrayToNumPy<viskores::UInt32>(defaultArray, copy, output) ||
-      TryUnknownArrayToNumPy<viskores::Int64>(defaultArray, copy, output) ||
-      TryUnknownArrayToNumPy<viskores::UInt64>(defaultArray, copy, output))
+  if (TryRegisteredScalarTypes(TryUnknownArrayToNumPyFunctor{ defaultArray, copy, output }))
   {
     return output;
   }
@@ -677,16 +697,7 @@ nb::object UnknownArrayToNumPyArray(const viskores::cont::UnknownArrayHandle& de
 nb::object GroupVecVariableToPythonList(const viskores::cont::UnknownArrayHandle& array, bool copy)
 {
   nb::object output;
-  if (TryGroupVecVariableToPythonList<viskores::Float32>(array, copy, output) ||
-      TryGroupVecVariableToPythonList<viskores::Float64>(array, copy, output) ||
-      TryGroupVecVariableToPythonList<viskores::Int8>(array, copy, output) ||
-      TryGroupVecVariableToPythonList<viskores::UInt8>(array, copy, output) ||
-      TryGroupVecVariableToPythonList<viskores::Int16>(array, copy, output) ||
-      TryGroupVecVariableToPythonList<viskores::UInt16>(array, copy, output) ||
-      TryGroupVecVariableToPythonList<viskores::Int32>(array, copy, output) ||
-      TryGroupVecVariableToPythonList<viskores::UInt32>(array, copy, output) ||
-      TryGroupVecVariableToPythonList<viskores::Int64>(array, copy, output) ||
-      TryGroupVecVariableToPythonList<viskores::UInt64>(array, copy, output))
+  if (TryRegisteredScalarTypes(TryGroupVecVariableToPythonListFunctor{ array, copy, output }))
   {
     return output;
   }
@@ -698,16 +709,8 @@ nb::object GroupVecVariableValueToNumPyArray(const viskores::cont::UnknownArrayH
                                              bool copy)
 {
   nb::object output;
-  if (TryGroupVecVariableValueToNumPyArray<viskores::Float32>(array, index, copy, output) ||
-      TryGroupVecVariableValueToNumPyArray<viskores::Float64>(array, index, copy, output) ||
-      TryGroupVecVariableValueToNumPyArray<viskores::Int8>(array, index, copy, output) ||
-      TryGroupVecVariableValueToNumPyArray<viskores::UInt8>(array, index, copy, output) ||
-      TryGroupVecVariableValueToNumPyArray<viskores::Int16>(array, index, copy, output) ||
-      TryGroupVecVariableValueToNumPyArray<viskores::UInt16>(array, index, copy, output) ||
-      TryGroupVecVariableValueToNumPyArray<viskores::Int32>(array, index, copy, output) ||
-      TryGroupVecVariableValueToNumPyArray<viskores::UInt32>(array, index, copy, output) ||
-      TryGroupVecVariableValueToNumPyArray<viskores::Int64>(array, index, copy, output) ||
-      TryGroupVecVariableValueToNumPyArray<viskores::UInt64>(array, index, copy, output))
+  if (TryRegisteredScalarTypes(
+        TryGroupVecVariableValueToNumPyArrayFunctor{ array, index, copy, output }))
   {
     return output;
   }
@@ -809,245 +812,13 @@ std::shared_ptr<viskores::cont::ColorTable> RequireColorTable(nb::handle object)
 
 viskores::Vec3f_32 ParseColorTableColor(nb::handle object)
 {
-  if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))
-  {
-    throw std::runtime_error("Expected a sequence of 3 or 4 numeric values.");
-  }
-
-  nb::sequence sequence = nb::borrow<nb::sequence>(object);
-  const size_t size = static_cast<size_t>(nb::len(sequence));
-  if ((size < 3) || (size > 4))
-  {
-    throw std::runtime_error("Expected a sequence of 3 or 4 numeric values.");
-  }
-
-  viskores::Vec3f_32 value(0.0f, 0.0f, 0.0f);
-  for (size_t index = 0; index < 3; ++index)
-  {
-    value[static_cast<viskores::IdComponent>(index)] =
-      static_cast<viskores::Float32>(nb::cast<double>(sequence[index]));
-  }
-  return value;
-}
-
-#endif
-
-#if VISKORES_PYTHON_ENABLE_TESTING_UTILS
-viskores::cont::ArrayHandle<viskores::UInt8> MakeStructuredGhostCellArray(viskores::Id nx,
-                                                                          viskores::Id ny,
-                                                                          viskores::Id nz,
-                                                                          int numLayers,
-                                                                          bool addMidGhost = false)
-{
-  viskores::Id numCells = nx * ny;
-  if (nz > 0)
-  {
-    numCells *= nz;
-  }
-
-  constexpr viskores::UInt8 normalCell = viskores::CellClassification::Normal;
-  constexpr viskores::UInt8 duplicateCell = viskores::CellClassification::Ghost;
-
-  viskores::cont::ArrayHandle<viskores::UInt8> ghosts;
-  ghosts.Allocate(numCells);
-  auto portal = ghosts.WritePortal();
-  for (viskores::Id i = 0; i < numCells; ++i)
-  {
-    portal.Set(i, (numLayers == 0) ? normalCell : duplicateCell);
-  }
-
-  if (numLayers > 0)
-  {
-    if (nz == 0)
-    {
-      for (viskores::Id i = numLayers; i < nx - numLayers; ++i)
-      {
-        for (viskores::Id j = numLayers; j < ny - numLayers; ++j)
-        {
-          portal.Set(j * nx + i, normalCell);
-        }
-      }
-    }
-    else
-    {
-      for (viskores::Id i = numLayers; i < nx - numLayers; ++i)
-      {
-        for (viskores::Id j = numLayers; j < ny - numLayers; ++j)
-        {
-          for (viskores::Id k = numLayers; k < nz - numLayers; ++k)
-          {
-            portal.Set(k * nx * ny + j * nx + i, normalCell);
-          }
-        }
-      }
-    }
-  }
-
-  if (addMidGhost)
-  {
-    if (nz == 0)
-    {
-      viskores::Id mi = numLayers + (nx - numLayers) / 2;
-      viskores::Id mj = numLayers + (ny - numLayers) / 2;
-      portal.Set(mj * nx + mi, duplicateCell);
-    }
-    else
-    {
-      viskores::Id mi = numLayers + (nx - numLayers) / 2;
-      viskores::Id mj = numLayers + (ny - numLayers) / 2;
-      viskores::Id mk = numLayers + (nz - numLayers) / 2;
-      portal.Set(mk * nx * ny + mj * nx + mi, duplicateCell);
-    }
-  }
-  return ghosts;
-}
-
-template <class CellSetType, viskores::IdComponent NDIM>
-void MakeExplicitCells(const CellSetType& cellSet,
-                       viskores::Vec<viskores::Id, NDIM>& dims,
-                       viskores::cont::ArrayHandle<viskores::IdComponent>& numIndices,
-                       viskores::cont::ArrayHandle<viskores::UInt8>& shapes,
-                       viskores::cont::ArrayHandle<viskores::Id>& conn)
-{
-  using Connectivity = viskores::internal::ConnectivityStructuredInternals<NDIM>;
-
-  viskores::Id numberOfCells = cellSet.GetNumberOfCells();
-  viskores::Id connectivityLength = (NDIM == 2 ? numberOfCells * 4 : numberOfCells * 8);
-
-  conn.Allocate(connectivityLength);
-  shapes.Allocate(numberOfCells);
-  numIndices.Allocate(numberOfCells);
-
-  Connectivity structured;
-  structured.SetPointDimensions(dims);
-
-  viskores::Id index = 0;
-  for (viskores::Id cellIndex = 0; cellIndex < numberOfCells; ++cellIndex)
-  {
-    auto pointIds = structured.GetPointsOfCell(cellIndex);
-    for (viskores::IdComponent component = 0; component < pointIds.GetNumberOfComponents();
-         ++component, ++index)
-    {
-      conn.WritePortal().Set(index, pointIds[component]);
-    }
-
-    shapes.WritePortal().Set(
-      cellIndex, (NDIM == 2 ? viskores::CELL_SHAPE_QUAD : viskores::CELL_SHAPE_HEXAHEDRON));
-    numIndices.WritePortal().Set(cellIndex, (NDIM == 2 ? 4 : 8));
-  }
-}
-
-viskores::cont::DataSet MakeGhostCellDataSetImpl(const std::string& datasetType,
-                                                 viskores::Id nx,
-                                                 viskores::Id ny,
-                                                 viskores::Id nz,
-                                                 int numLayers,
-                                                 const std::string& ghostName,
-                                                 bool addMidGhost)
-{
-  auto applyGhostField = [&](viskores::cont::DataSet& dataSet)
-  {
-    auto ghosts = MakeStructuredGhostCellArray(nx, ny, nz, numLayers, addMidGhost);
-    if (ghostName == "default")
-    {
-      dataSet.SetGhostCellField(ghosts);
-    }
-    else
-    {
-      dataSet.SetGhostCellField(ghostName, ghosts);
-    }
-  };
-
-  if (datasetType == "uniform")
-  {
-    viskores::cont::DataSet dataSet = (nz == 0)
-      ? viskores::cont::DataSetBuilderUniform::Create(viskores::Id2(nx + 1, ny + 1))
-      : viskores::cont::DataSetBuilderUniform::Create(viskores::Id3(nx + 1, ny + 1, nz + 1));
-    applyGhostField(dataSet);
-    return dataSet;
-  }
-
-  if (datasetType == "rectilinear")
-  {
-    std::vector<float> x(static_cast<std::size_t>(nx + 1));
-    std::vector<float> y(static_cast<std::size_t>(ny + 1));
-    for (std::size_t index = 0; index < x.size(); ++index)
-    {
-      x[index] = static_cast<float>(index);
-    }
-    for (std::size_t index = 0; index < y.size(); ++index)
-    {
-      y[index] = static_cast<float>(index);
-    }
-
-    viskores::cont::DataSet dataSet;
-    if (nz == 0)
-    {
-      dataSet = viskores::cont::DataSetBuilderRectilinear::Create(x, y);
-    }
-    else
-    {
-      std::vector<float> z(static_cast<std::size_t>(nz + 1));
-      for (std::size_t index = 0; index < z.size(); ++index)
-      {
-        z[index] = static_cast<float>(index);
-      }
-      dataSet = viskores::cont::DataSetBuilderRectilinear::Create(x, y, z);
-    }
-    applyGhostField(dataSet);
-    return dataSet;
-  }
-
-  if (datasetType == "explicit")
-  {
-    viskores::cont::DataSet uniformDataSet =
-      MakeGhostCellDataSetImpl("uniform", nx, ny, nz, numLayers, ghostName, false);
-
-    using CoordType = viskores::Vec3f_32;
-    auto coordData = uniformDataSet.GetCoordinateSystem(0).GetDataAsMultiplexer();
-    viskores::Id numberOfPoints = coordData.GetNumberOfValues();
-    viskores::cont::ArrayHandle<CoordType> explicitCoords;
-    explicitCoords.Allocate(numberOfPoints);
-    auto explicitPortal = explicitCoords.WritePortal();
-    auto coordPortal = coordData.ReadPortal();
-    for (viskores::Id index = 0; index < numberOfPoints; ++index)
-    {
-      explicitPortal.Set(index, coordPortal.Get(index));
-    }
-
-    viskores::cont::UnknownCellSet cellSet = uniformDataSet.GetCellSet();
-    viskores::cont::ArrayHandle<viskores::Id> conn;
-    viskores::cont::ArrayHandle<viskores::IdComponent> numIndices;
-    viskores::cont::ArrayHandle<viskores::UInt8> shapes;
-    viskores::cont::DataSet dataSet;
-
-    if (cellSet.IsType<viskores::cont::CellSetStructured<2>>())
-    {
-      viskores::Id2 dims(nx, ny);
-      MakeExplicitCells(
-        cellSet.AsCellSet<viskores::cont::CellSetStructured<2>>(), dims, numIndices, shapes, conn);
-      dataSet = viskores::cont::DataSetBuilderExplicit::Create(
-        explicitCoords, viskores::CellShapeTagQuad(), 4, conn, "coordinates");
-    }
-    else if (cellSet.IsType<viskores::cont::CellSetStructured<3>>())
-    {
-      viskores::Id3 dims(nx, ny, nz);
-      MakeExplicitCells(
-        cellSet.AsCellSet<viskores::cont::CellSetStructured<3>>(), dims, numIndices, shapes, conn);
-      dataSet = viskores::cont::DataSetBuilderExplicit::Create(
-        explicitCoords, viskores::CellShapeTagHexahedron(), 8, conn, "coordinates");
-    }
-    else
-    {
-      throw std::runtime_error(
-        "Unable to create explicit ghost test dataset from non-structured input.");
-    }
-
-    applyGhostField(dataSet);
-    return dataSet;
-  }
-
-  throw std::runtime_error("dataset_type must be one of: uniform, rectilinear, explicit.");
+  return ParsePartialVec<viskores::Vec3f_32, viskores::Float32, double>(
+           object,
+           viskores::Vec3f_32(0.0f, 0.0f, 0.0f),
+           3,
+           4,
+           "Expected a sequence of 3 or 4 numeric values.")
+    .first;
 }
 
 #endif

@@ -100,26 +100,11 @@ viskores_python_remove_inactive_extension_files(
   "${VISKORES_PYTHON_STABLE_ABI}"
 )
 
+include("${CMAKE_CURRENT_LIST_DIR}/../binding_sources.cmake")
+set(Viskores_PYTHON_WHEEL_BINDING_SOURCES ${Viskores_PYTHON_BINDING_SOURCES})
+list(TRANSFORM Viskores_PYTHON_WHEEL_BINDING_SOURCES PREPEND "../")
 nanobind_add_module(viskores_python_bindings ${Viskores_PYTHON_NANOBIND_STABLE_ABI} NOMINSIZE
-  ../viskores_python_bindings.cxx
-  ../src/common_support_bindings.cxx
-  ../src/shared_data_bindings.cxx
-  ../src/source_testing_io_bindings.cxx
-  ../src/filter_basic_bindings.cxx
-  ../src/filter_helper_bindings.cxx
-  ../src/filter_field_transform_bindings.cxx
-  ../src/filter_density_estimate_bindings.cxx
-  ../src/filter_image_processing_bindings.cxx
-  ../src/filter_additional_bindings.cxx
-  ../src/filter_geometry_refinement_bindings.cxx
-  ../src/filter_resampling_bindings.cxx
-  ../src/scalar_topology_helper_bindings.cxx
-  ../src/scalar_topology_bindings.cxx
-  ../src/interop_support_bindings.cxx
-  ../src/interop_helper_bindings.cxx
-  ../src/rendering_support_bindings.cxx
-  ../src/rendering_bindings.cxx
-  ../src/module_bindings.cxx
+  ${Viskores_PYTHON_WHEEL_BINDING_SOURCES}
 )
 target_compile_features(viskores_python_bindings PRIVATE cxx_std_17)
 target_compile_definitions(viskores_python_bindings PRIVATE PY_SSIZE_T_CLEAN)

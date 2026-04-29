@@ -628,18 +628,6 @@ inline constexpr const char* CompatibilityContour =
 inline constexpr const char* TransferToOpenGL =
   R"doc(Transfer Viskores data into an OpenGL buffer state for interoperation.)doc";
 
-inline constexpr const char* MakeGhostCellDataSet =
-  R"doc(Create a DataSet with ghost-cell data for tests and examples.)doc";
-
-inline constexpr const char* CompileDistributedContourTreeSuperarcs =
-  R"doc(Compile superarcs from distributed contour-tree partitions for testing.)doc";
-
-inline constexpr const char* CanonicalizeDistributedBranchDecomposition =
-  R"doc(Return a canonical text representation of distributed branch decomposition results.)doc";
-
-inline constexpr const char* CanonicalizeDistributedAugmentedTreeVolumes =
-  R"doc(Return canonical augmented-tree volume text for distributed contour-tree tests.)doc";
-
 } // namespace doc
 } // namespace viskores::python::bindings
 

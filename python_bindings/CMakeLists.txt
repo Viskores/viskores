@@ -96,26 +96,9 @@ add_custom_command(
 )
 add_custom_target(viskores_python_package_sync DEPENDS "${Viskores_PYTHON_PACKAGE_STAMP}")
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/binding_sources.cmake")
 nanobind_add_module(viskores_python_bindings ${Viskores_PYTHON_NANOBIND_STABLE_ABI} NOMINSIZE
-  viskores_python_bindings.cxx
-  src/common_support_bindings.cxx
-  src/shared_data_bindings.cxx
-  src/source_testing_io_bindings.cxx
-  src/filter_basic_bindings.cxx
-  src/filter_helper_bindings.cxx
-  src/filter_field_transform_bindings.cxx
-  src/filter_density_estimate_bindings.cxx
-  src/filter_image_processing_bindings.cxx
-  src/filter_additional_bindings.cxx
-  src/filter_geometry_refinement_bindings.cxx
-  src/filter_resampling_bindings.cxx
-  src/scalar_topology_helper_bindings.cxx
-  src/scalar_topology_bindings.cxx
-  src/interop_support_bindings.cxx
-  src/interop_helper_bindings.cxx
-  src/rendering_support_bindings.cxx
-  src/rendering_bindings.cxx
-  src/module_bindings.cxx
+  ${Viskores_PYTHON_BINDING_SOURCES}
 )
 target_compile_features(viskores_python_bindings PRIVATE cxx_std_17)
 target_include_directories(viskores_python_bindings

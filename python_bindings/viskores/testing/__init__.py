@@ -15,19 +15,3 @@ __all__ = []
 if hasattr(_viskores, "MakeTestDataSet"):
     MakeTestDataSet = _viskores.MakeTestDataSet
     __all__.append("MakeTestDataSet")
-
-if hasattr(_viskores, "MakeGhostCellDataSet"):
-    MakeGhostCellDataSet = _viskores.MakeGhostCellDataSet
-    __all__.append("MakeGhostCellDataSet")
-
-if hasattr(_viskores, "CompileDistributedContourTreeSuperarcs"):
-    CompileDistributedContourTreeSuperarcs = _viskores.CompileDistributedContourTreeSuperarcs
-    __all__.append("CompileDistributedContourTreeSuperarcs")
-
-if hasattr(_viskores, "CanonicalizeDistributedBranchDecomposition"):
-    CanonicalizeDistributedBranchDecomposition = _viskores.CanonicalizeDistributedBranchDecomposition
-    __all__.append("CanonicalizeDistributedBranchDecomposition")
-
-if hasattr(_viskores, "CanonicalizeDistributedAugmentedTreeVolumes"):
-    CanonicalizeDistributedAugmentedTreeVolumes = _viskores.CanonicalizeDistributedAugmentedTreeVolumes
-    __all__.append("CanonicalizeDistributedAugmentedTreeVolumes")

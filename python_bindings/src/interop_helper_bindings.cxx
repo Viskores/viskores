@@ -84,37 +84,10 @@ std::string NanobindBufferStateHolder::Repr() const
 }
 #endif
 
-#if VISKORES_PYTHON_ENABLE_INTEROP || VISKORES_PYTHON_ENABLE_TESTING_UTILS
+#if VISKORES_PYTHON_ENABLE_INTEROP
 void RegisterNanobindHelperFunctions(nb::module_& m,
                                      const std::function<void(const char*)>& erase_existing_name)
 {
-#if VISKORES_PYTHON_ENABLE_TESTING_UTILS
-  erase_existing_name("MakeGhostCellDataSet");
-  m.attr("MakeGhostCellDataSet") = nb::cpp_function(
-    [](const std::string& datasetType,
-       nb::object dimensions,
-       long long ghostLayers,
-       const char* ghostName,
-       bool addMidGhost)
-    {
-      const viskores::Id3 dims = ParseDimensions(dimensions);
-      return WrapDataSet(MakeGhostCellDataSetImpl(datasetType,
-                                                  dims[0],
-                                                  dims[1],
-                                                  dims[2],
-                                                  static_cast<int>(ghostLayers),
-                                                  ghostName,
-                                                  addMidGhost));
-    },
-    nb::arg("dataset_type"),
-    nb::arg("dimensions"),
-    nb::arg("ghost_layers"),
-    nb::arg("ghost_name") = "default",
-    nb::arg("add_mid_ghost") = false,
-    doc::MakeGhostCellDataSet);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_INTEROP
   erase_existing_name("TransferToOpenGL");
   m.attr("TransferToOpenGL") = nb::cpp_function(
     [](nb::object sourceObject,
@@ -171,7 +144,6 @@ void RegisterNanobindHelperFunctions(nb::module_& m,
     nb::arg("association") = nb::none(),
     nb::arg("coordinate_system_index") = 0,
     doc::TransferToOpenGL);
-#endif
 }
 #else
 void RegisterNanobindHelperFunctions(nb::module_&, const std::function<void(const char*)>&) {}

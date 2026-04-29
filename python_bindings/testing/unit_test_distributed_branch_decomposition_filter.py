@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 
 import viskores.cont
+from distributed_topology_helpers import canonicalize_distributed_branch_decomposition
 from viskores.filter.scalar_topology import (
     ContourTreeUniformDistributed,
     DistributedBranchDecompositionFilter,
@@ -20,7 +21,7 @@ from viskores.filter.scalar_topology import (
     SelectTopVolumeBranchesFilter,
 )
 from viskores.io import VTKDataSetReader
-from viskores.testing import CanonicalizeDistributedBranchDecomposition, MakeTestDataSet
+from viskores.testing import MakeTestDataSet
 
 
 def repo_root() -> Path:
@@ -130,7 +131,7 @@ def check_vanc_branch_compile():
 
     for num_blocks in (2, 4, 8, 16):
         branch_result, _, _ = run_branch_pipeline(dataset, "var", num_blocks)
-        assert CanonicalizeDistributedBranchDecomposition(branch_result) == expected
+        assert canonicalize_distributed_branch_decomposition(branch_result) == expected
 
 
 def main():

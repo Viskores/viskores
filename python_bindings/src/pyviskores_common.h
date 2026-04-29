@@ -64,7 +64,6 @@
 #define VISKORES_PYTHON_ENABLE_TESTING_UTILS 0
 #endif
 
-#include <viskores/CellClassification.h>
 #include <viskores/ImplicitFunction.h>
 #include <viskores/Range.h>
 #include <viskores/Types.h>

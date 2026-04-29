@@ -14,39 +14,14 @@
 namespace viskores::python::bindings
 {
 
+namespace entity = viskores::filter::entity_extraction;
+namespace clean_grid = viskores::filter::clean_grid;
+namespace mesh_info = viskores::filter::mesh_info;
+namespace connected = viskores::filter::connected_components;
+namespace multi_block = viskores::filter::multi_block;
+
 namespace
 {
-
-template <typename FilterType>
-void SetFieldsToPass(FilterType& filter, nb::object fieldsObject)
-{
-  auto& selection = filter.GetFieldsToPass();
-  selection.ClearFields();
-  selection.SetMode(viskores::filter::FieldSelection::Mode::Select);
-
-  if (nb::isinstance<nb::str>(fieldsObject))
-  {
-    selection.AddField(nb::cast<std::string>(fieldsObject));
-    return;
-  }
-
-  if (!nb::isinstance<nb::sequence>(fieldsObject) || nb::isinstance<nb::str>(fieldsObject))
-  {
-    throw std::runtime_error("fields must be a string or sequence");
-  }
-
-  nb::sequence sequence = nb::borrow<nb::sequence>(fieldsObject);
-  const size_t size = static_cast<size_t>(nb::len(sequence));
-  for (size_t index = 0; index < size; ++index)
-  {
-    nb::handle item = sequence[index];
-    if (!nb::isinstance<nb::str>(item))
-    {
-      throw std::runtime_error("fields must contain only strings.");
-    }
-    selection.AddField(nb::cast<std::string>(item));
-  }
-}
 
 template <typename FilterType>
 void SetImplicitFunction(FilterType& filter, nb::object functionObject)
@@ -54,7 +29,8 @@ void SetImplicitFunction(FilterType& filter, nb::object functionObject)
   viskores::ImplicitFunctionGeneral function;
   if (!ParseImplicitFunction(functionObject, function))
   {
-    throw std::runtime_error("Implicit function must be a viskores.Box or viskores.Sphere.");
+    throw std::runtime_error("Implicit function must be a viskores.Box, viskores.Cylinder, "
+                             "viskores.Plane, or viskores.Sphere.");
   }
   filter.SetImplicitFunction(function);
 }
@@ -66,225 +42,155 @@ void RegisterNanobindEntityExtractionClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-  erase_existing_name("Threshold");
-  nb::class_<viskores::filter::entity_extraction::Threshold>(
-    m, "Threshold", doc::ClassDoc("Threshold"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::entity_extraction::Threshold& self, const char* name)
-      { self.SetActiveField(name); },
-      nb::arg("name"))
-    .def("GetActiveFieldName", &viskores::filter::entity_extraction::Threshold::GetActiveFieldName)
-    .def("SetOutputFieldName", &viskores::filter::entity_extraction::Threshold::SetOutputFieldName)
-    .def("GetOutputFieldName", &viskores::filter::entity_extraction::Threshold::GetOutputFieldName)
-    .def(
-      "SetFieldsToPass",
-      [](viskores::filter::entity_extraction::Threshold& self, nb::object fieldsObject)
-      { SetFieldsToPass(self, fieldsObject); },
-      nb::arg("fields"))
+  auto threshold =
+    BindClassWithDefaultConstructor<entity::Threshold>(
+      m, erase_existing_name, "Threshold");
+  BindFilterActiveFieldNameMethods<entity::Threshold>(threshold);
+  BindFilterOutputFieldMethods<entity::Threshold>(threshold);
+  BindFilterFieldsToPassMethod<entity::Threshold>(threshold);
+  threshold
     .def(
       "SetLowerThreshold",
-      [](viskores::filter::entity_extraction::Threshold& self, double value)
+      [](entity::Threshold& self, double value)
       { self.SetLowerThreshold(value); },
       nb::arg("value"))
-    .def("GetLowerThreshold", &viskores::filter::entity_extraction::Threshold::GetLowerThreshold)
+    .def("GetLowerThreshold", &entity::Threshold::GetLowerThreshold)
     .def(
       "SetUpperThreshold",
-      [](viskores::filter::entity_extraction::Threshold& self, double value)
+      [](entity::Threshold& self, double value)
       { self.SetUpperThreshold(value); },
       nb::arg("value"))
-    .def("GetUpperThreshold", &viskores::filter::entity_extraction::Threshold::GetUpperThreshold)
+    .def("GetUpperThreshold", &entity::Threshold::GetUpperThreshold)
     .def(
       "SetThresholdBelow",
-      [](viskores::filter::entity_extraction::Threshold& self, double value)
+      [](entity::Threshold& self, double value)
       { self.SetThresholdBelow(value); },
       nb::arg("value"))
     .def(
       "SetThresholdAbove",
-      [](viskores::filter::entity_extraction::Threshold& self, double value)
+      [](entity::Threshold& self, double value)
       { self.SetThresholdAbove(value); },
       nb::arg("value"))
     .def(
       "SetThresholdBetween",
-      [](viskores::filter::entity_extraction::Threshold& self, double lower, double upper)
+      [](entity::Threshold& self, double lower, double upper)
       { self.SetThresholdBetween(lower, upper); },
       nb::arg("lower"),
       nb::arg("upper"))
-    .def(
-      "SetComponentToTest",
-      [](viskores::filter::entity_extraction::Threshold& self, long value)
-      { self.SetComponentToTest(static_cast<viskores::IdComponent>(value)); },
-      nb::arg("component"))
     .def("SetComponentToTestToAny",
-         &viskores::filter::entity_extraction::Threshold::SetComponentToTestToAny)
+         &entity::Threshold::SetComponentToTestToAny)
     .def("SetComponentToTestToAll",
-         &viskores::filter::entity_extraction::Threshold::SetComponentToTestToAll)
-    .def(
-      "SetAllInRange",
-      [](viskores::filter::entity_extraction::Threshold& self, bool enabled)
-      { self.SetAllInRange(enabled); },
-      nb::arg("enabled"))
-    .def("GetAllInRange", &viskores::filter::entity_extraction::Threshold::GetAllInRange)
-    .def(
-      "SetInvert",
-      [](viskores::filter::entity_extraction::Threshold& self, bool enabled)
-      { self.SetInvert(enabled); },
-      nb::arg("enabled"))
-    .def("GetInvert", &viskores::filter::entity_extraction::Threshold::GetInvert)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::entity_extraction::Threshold>,
-         doc::ExecuteFilter);
+         &entity::Threshold::SetComponentToTestToAll);
+  BindCastedSetter<entity::Threshold,
+                   viskores::IdComponent,
+                   long>(threshold,
+                         "SetComponentToTest",
+                         &entity::Threshold::SetComponentToTest,
+                         "component");
+  threshold
+    .def("SetAllInRange", &entity::Threshold::SetAllInRange, nb::arg("enabled"))
+    .def("GetAllInRange", &entity::Threshold::GetAllInRange)
+    .def("SetInvert", &entity::Threshold::SetInvert, nb::arg("enabled"))
+    .def("GetInvert", &entity::Threshold::GetInvert);
+  BindFilterExecuteMethod<entity::Threshold>(threshold);
 
-  erase_existing_name("Mask");
-  nb::class_<viskores::filter::entity_extraction::Mask>(m, "Mask", doc::ClassDoc("Mask"))
-    .def(nb::init<>())
-    .def(
-      "SetFieldsToPass",
-      [](viskores::filter::entity_extraction::Mask& self, nb::object fieldsObject)
-      { SetFieldsToPass(self, fieldsObject); },
-      nb::arg("fields"))
-    .def(
-      "SetCompactPoints",
-      [](viskores::filter::entity_extraction::Mask& self, bool enabled)
-      { self.SetCompactPoints(enabled); },
-      nb::arg("enabled"))
-    .def("GetCompactPoints", &viskores::filter::entity_extraction::Mask::GetCompactPoints)
-    .def(
-      "SetStride",
-      [](viskores::filter::entity_extraction::Mask& self, long long stride)
-      {
-        viskores::Id strideValue = static_cast<viskores::Id>(stride);
-        self.SetStride(strideValue);
-      },
-      nb::arg("stride"))
-    .def("GetStride", &viskores::filter::entity_extraction::Mask::GetStride)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::entity_extraction::Mask>,
-         doc::ExecuteFilter);
+  auto mask =
+    BindClassWithDefaultConstructor<entity::Mask>(
+      m, erase_existing_name, "Mask");
+  BindFilterFieldsToPassMethod<entity::Mask>(mask);
+  mask
+    .def("SetCompactPoints", &entity::Mask::SetCompactPoints, nb::arg("enabled"))
+    .def("GetCompactPoints", &entity::Mask::GetCompactPoints);
+  BindCastedProperty<entity::Mask, viskores::Id, long long>(
+    mask,
+    "SetStride",
+    "GetStride",
+    &entity::Mask::SetStride,
+    &entity::Mask::GetStride,
+    "stride");
+  BindFilterExecuteMethod<entity::Mask>(mask);
 
-  erase_existing_name("MaskPoints");
-  nb::class_<viskores::filter::entity_extraction::MaskPoints>(
-    m, "MaskPoints", doc::ClassDoc("MaskPoints"))
-    .def(nb::init<>())
-    .def(
-      "SetFieldsToPass",
-      [](viskores::filter::entity_extraction::MaskPoints& self, nb::object fieldsObject)
-      { SetFieldsToPass(self, fieldsObject); },
-      nb::arg("fields"))
-    .def(
-      "SetCompactPoints",
-      [](viskores::filter::entity_extraction::MaskPoints& self, bool enabled)
-      { self.SetCompactPoints(enabled); },
-      nb::arg("enabled"))
-    .def("GetCompactPoints", &viskores::filter::entity_extraction::MaskPoints::GetCompactPoints)
-    .def(
-      "SetStride",
-      [](viskores::filter::entity_extraction::MaskPoints& self, long long stride)
-      { self.SetStride(static_cast<viskores::Id>(stride)); },
-      nb::arg("stride"))
-    .def("GetStride", &viskores::filter::entity_extraction::MaskPoints::GetStride)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::entity_extraction::MaskPoints>,
-         doc::ExecuteFilter);
+  auto maskPoints =
+    BindClassWithDefaultConstructor<entity::MaskPoints>(
+      m, erase_existing_name, "MaskPoints");
+  BindFilterFieldsToPassMethod<entity::MaskPoints>(maskPoints);
+  maskPoints
+    .def("SetCompactPoints", &entity::MaskPoints::SetCompactPoints, nb::arg("enabled"))
+    .def("GetCompactPoints", &entity::MaskPoints::GetCompactPoints);
+  BindCastedProperty<entity::MaskPoints, viskores::Id, long long>(
+    maskPoints,
+    "SetStride",
+    "GetStride",
+    &entity::MaskPoints::SetStride,
+    &entity::MaskPoints::GetStride,
+    "stride");
+  BindFilterExecuteMethod<entity::MaskPoints>(maskPoints);
 
-  erase_existing_name("ThresholdPoints");
-  nb::class_<viskores::filter::entity_extraction::ThresholdPoints>(
-    m, "ThresholdPoints", doc::ClassDoc("ThresholdPoints"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::entity_extraction::ThresholdPoints& self, const char* name)
-      { self.SetActiveField(name); },
-      nb::arg("name"))
-    .def("GetActiveFieldName",
-         &viskores::filter::entity_extraction::ThresholdPoints::GetActiveFieldName)
-    .def("SetOutputFieldName",
-         &viskores::filter::entity_extraction::ThresholdPoints::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::entity_extraction::ThresholdPoints::GetOutputFieldName)
-    .def(
-      "SetFieldsToPass",
-      [](viskores::filter::entity_extraction::ThresholdPoints& self, nb::object fieldsObject)
-      { SetFieldsToPass(self, fieldsObject); },
-      nb::arg("fields"))
-    .def(
-      "SetCompactPoints",
-      [](viskores::filter::entity_extraction::ThresholdPoints& self, bool enabled)
-      { self.SetCompactPoints(enabled); },
-      nb::arg("enabled"))
-    .def("GetCompactPoints",
-         &viskores::filter::entity_extraction::ThresholdPoints::GetCompactPoints)
+  auto thresholdPoints =
+    BindClassWithDefaultConstructor<entity::ThresholdPoints>(
+      m, erase_existing_name, "ThresholdPoints");
+  BindFilterActiveFieldNameMethods<entity::ThresholdPoints>(
+    thresholdPoints);
+  BindFilterOutputFieldMethods<entity::ThresholdPoints>(
+    thresholdPoints);
+  BindFilterFieldsToPassMethod<entity::ThresholdPoints>(
+    thresholdPoints);
+  thresholdPoints
+    .def("SetCompactPoints", &entity::ThresholdPoints::SetCompactPoints, nb::arg("enabled"))
+    .def("GetCompactPoints", &entity::ThresholdPoints::GetCompactPoints);
+  thresholdPoints
     .def(
       "SetLowerThreshold",
-      [](viskores::filter::entity_extraction::ThresholdPoints& self, double value)
+      [](entity::ThresholdPoints& self, double value)
       { self.SetLowerThreshold(value); },
       nb::arg("value"))
     .def("GetLowerThreshold",
-         &viskores::filter::entity_extraction::ThresholdPoints::GetLowerThreshold)
+         &entity::ThresholdPoints::GetLowerThreshold)
     .def(
       "SetUpperThreshold",
-      [](viskores::filter::entity_extraction::ThresholdPoints& self, double value)
+      [](entity::ThresholdPoints& self, double value)
       { self.SetUpperThreshold(value); },
       nb::arg("value"))
     .def("GetUpperThreshold",
-         &viskores::filter::entity_extraction::ThresholdPoints::GetUpperThreshold)
+         &entity::ThresholdPoints::GetUpperThreshold)
     .def(
       "SetThresholdBelow",
-      [](viskores::filter::entity_extraction::ThresholdPoints& self, double value)
+      [](entity::ThresholdPoints& self, double value)
       { self.SetThresholdBelow(value); },
       nb::arg("value"))
     .def(
       "SetThresholdAbove",
-      [](viskores::filter::entity_extraction::ThresholdPoints& self, double value)
+      [](entity::ThresholdPoints& self, double value)
       { self.SetThresholdAbove(value); },
       nb::arg("value"))
     .def(
       "SetThresholdBetween",
-      [](viskores::filter::entity_extraction::ThresholdPoints& self, double lower, double upper)
+      [](entity::ThresholdPoints& self, double lower, double upper)
       { self.SetThresholdBetween(lower, upper); },
       nb::arg("lower"),
-      nb::arg("upper"))
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::entity_extraction::ThresholdPoints>,
-         doc::ExecuteFilter);
+      nb::arg("upper"));
+  BindFilterExecuteMethod<entity::ThresholdPoints>(thresholdPoints);
 
-  erase_existing_name("ExternalFaces");
-  nb::class_<viskores::filter::entity_extraction::ExternalFaces>(
-    m, "ExternalFaces", doc::ClassDoc("ExternalFaces"))
-    .def(nb::init<>())
-    .def(
-      "SetFieldsToPass",
-      [](viskores::filter::entity_extraction::ExternalFaces& self, nb::object fieldsObject)
-      { SetFieldsToPass(self, fieldsObject); },
-      nb::arg("fields"))
-    .def(
-      "SetCompactPoints",
-      [](viskores::filter::entity_extraction::ExternalFaces& self, bool enabled)
-      { self.SetCompactPoints(enabled); },
-      nb::arg("enabled"))
-    .def("GetCompactPoints", &viskores::filter::entity_extraction::ExternalFaces::GetCompactPoints)
-    .def(
-      "SetPassPolyData",
-      [](viskores::filter::entity_extraction::ExternalFaces& self, bool enabled)
-      { self.SetPassPolyData(enabled); },
-      nb::arg("enabled"))
-    .def("GetPassPolyData", &viskores::filter::entity_extraction::ExternalFaces::GetPassPolyData)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::entity_extraction::ExternalFaces>,
-         doc::ExecuteFilter);
+  auto externalFaces =
+    BindClassWithDefaultConstructor<entity::ExternalFaces>(
+      m, erase_existing_name, "ExternalFaces");
+  BindFilterFieldsToPassMethod<entity::ExternalFaces>(
+    externalFaces);
+  externalFaces
+    .def("SetCompactPoints", &entity::ExternalFaces::SetCompactPoints, nb::arg("enabled"))
+    .def("GetCompactPoints", &entity::ExternalFaces::GetCompactPoints)
+    .def("SetPassPolyData", &entity::ExternalFaces::SetPassPolyData, nb::arg("enabled"))
+    .def("GetPassPolyData", &entity::ExternalFaces::GetPassPolyData);
+  BindFilterExecuteMethod<entity::ExternalFaces>(externalFaces);
 
-  erase_existing_name("ExtractStructured");
-  nb::class_<viskores::filter::entity_extraction::ExtractStructured>(
-    m, "ExtractStructured", doc::ClassDoc("ExtractStructured"))
-    .def(nb::init<>())
-    .def(
-      "SetFieldsToPass",
-      [](viskores::filter::entity_extraction::ExtractStructured& self, nb::object fieldsObject)
-      { SetFieldsToPass(self, fieldsObject); },
-      nb::arg("fields"))
+  auto extractStructured =
+    BindClassWithDefaultConstructor<entity::ExtractStructured>(
+      m, erase_existing_name, "ExtractStructured");
+  BindFilterFieldsToPassMethod<entity::ExtractStructured>(
+    extractStructured);
+  extractStructured
     .def("SetVOI",
-         [](viskores::filter::entity_extraction::ExtractStructured& self, nb::args args)
+         [](entity::ExtractStructured& self, nb::args args)
          {
            if (args.size() == 1)
            {
@@ -304,7 +210,7 @@ void RegisterNanobindEntityExtractionClasses(
            self.SetVOI(values[0], values[1], values[2], values[3], values[4], values[5]);
          })
     .def("SetSampleRate",
-         [](viskores::filter::entity_extraction::ExtractStructured& self, nb::args args)
+         [](entity::ExtractStructured& self, nb::args args)
          {
            if (args.size() == 1)
            {
@@ -323,115 +229,75 @@ void RegisterNanobindEntityExtractionClasses(
            }
            self.SetSampleRate(values[0], values[1], values[2]);
          })
-    .def(
-      "SetIncludeBoundary",
-      [](viskores::filter::entity_extraction::ExtractStructured& self, bool enabled)
-      { self.SetIncludeBoundary(enabled); },
-      nb::arg("enabled"))
-    .def("GetIncludeBoundary",
-         &viskores::filter::entity_extraction::ExtractStructured::GetIncludeBoundary)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::entity_extraction::ExtractStructured>,
-         doc::ExecuteFilter);
+    .def("SetIncludeBoundary", &entity::ExtractStructured::SetIncludeBoundary, nb::arg("enabled"))
+    .def("GetIncludeBoundary", &entity::ExtractStructured::GetIncludeBoundary);
+  BindFilterExecuteMethod<entity::ExtractStructured>(
+    extractStructured);
 
-  erase_existing_name("ExtractPoints");
-  nb::class_<viskores::filter::entity_extraction::ExtractPoints>(
-    m, "ExtractPoints", doc::ClassDoc("ExtractPoints"))
-    .def(nb::init<>())
+  auto extractPoints =
+    BindClassWithDefaultConstructor<entity::ExtractPoints>(
+      m, erase_existing_name, "ExtractPoints");
+  extractPoints
     .def(
       "SetImplicitFunction",
-      [](viskores::filter::entity_extraction::ExtractPoints& self, nb::object functionObject)
+      [](entity::ExtractPoints& self, nb::object functionObject)
       { SetImplicitFunction(self, functionObject); },
       nb::arg("function"))
-    .def(
-      "SetExtractInside",
-      [](viskores::filter::entity_extraction::ExtractPoints& self, bool enabled)
-      { self.SetExtractInside(enabled); },
-      nb::arg("enabled"))
-    .def("GetExtractInside", &viskores::filter::entity_extraction::ExtractPoints::GetExtractInside)
-    .def(
-      "SetCompactPoints",
-      [](viskores::filter::entity_extraction::ExtractPoints& self, bool enabled)
-      { self.SetCompactPoints(enabled); },
-      nb::arg("enabled"))
-    .def("GetCompactPoints", &viskores::filter::entity_extraction::ExtractPoints::GetCompactPoints)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::entity_extraction::ExtractPoints>,
-         doc::ExecuteFilter);
+    .def("SetExtractInside", &entity::ExtractPoints::SetExtractInside, nb::arg("enabled"))
+    .def("GetExtractInside", &entity::ExtractPoints::GetExtractInside)
+    .def("SetCompactPoints", &entity::ExtractPoints::SetCompactPoints, nb::arg("enabled"))
+    .def("GetCompactPoints", &entity::ExtractPoints::GetCompactPoints);
+  BindFilterExecuteMethod<entity::ExtractPoints>(extractPoints);
 
-  erase_existing_name("ExtractGeometry");
-  nb::class_<viskores::filter::entity_extraction::ExtractGeometry>(
-    m, "ExtractGeometry", doc::ClassDoc("ExtractGeometry"))
-    .def(nb::init<>())
+  auto extractGeometry =
+    BindClassWithDefaultConstructor<entity::ExtractGeometry>(
+      m, erase_existing_name, "ExtractGeometry");
+  extractGeometry
     .def(
       "SetImplicitFunction",
-      [](viskores::filter::entity_extraction::ExtractGeometry& self, nb::object functionObject)
+      [](entity::ExtractGeometry& self, nb::object functionObject)
       { SetImplicitFunction(self, functionObject); },
       nb::arg("function"))
-    .def(
-      "SetExtractInside",
-      [](viskores::filter::entity_extraction::ExtractGeometry& self, bool enabled)
-      { self.SetExtractInside(enabled); },
-      nb::arg("enabled"))
-    .def("GetExtractInside",
-         &viskores::filter::entity_extraction::ExtractGeometry::GetExtractInside)
-    .def(
-      "SetExtractBoundaryCells",
-      [](viskores::filter::entity_extraction::ExtractGeometry& self, bool enabled)
-      { self.SetExtractBoundaryCells(enabled); },
-      nb::arg("enabled"))
-    .def("GetExtractBoundaryCells",
-         &viskores::filter::entity_extraction::ExtractGeometry::GetExtractBoundaryCells)
-    .def(
-      "SetExtractOnlyBoundaryCells",
-      [](viskores::filter::entity_extraction::ExtractGeometry& self, bool enabled)
-      { self.SetExtractOnlyBoundaryCells(enabled); },
-      nb::arg("enabled"))
-    .def("GetExtractOnlyBoundaryCells",
-         &viskores::filter::entity_extraction::ExtractGeometry::GetExtractOnlyBoundaryCells)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::entity_extraction::ExtractGeometry>,
-         doc::ExecuteFilter);
+    .def("SetExtractInside", &entity::ExtractGeometry::SetExtractInside, nb::arg("enabled"))
+    .def("GetExtractInside", &entity::ExtractGeometry::GetExtractInside)
+    .def("SetExtractBoundaryCells",
+         &entity::ExtractGeometry::SetExtractBoundaryCells,
+         nb::arg("enabled"))
+    .def("GetExtractBoundaryCells", &entity::ExtractGeometry::GetExtractBoundaryCells)
+    .def("SetExtractOnlyBoundaryCells",
+         &entity::ExtractGeometry::SetExtractOnlyBoundaryCells,
+         nb::arg("enabled"))
+    .def("GetExtractOnlyBoundaryCells", &entity::ExtractGeometry::GetExtractOnlyBoundaryCells);
+  BindFilterExecuteMethod<entity::ExtractGeometry>(extractGeometry);
 
-  erase_existing_name("GhostCellRemove");
-  nb::class_<viskores::filter::entity_extraction::GhostCellRemove>(
-    m, "GhostCellRemove", doc::ClassDoc("GhostCellRemove"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::entity_extraction::GhostCellRemove& self, const char* name)
-      { self.SetActiveField(name); },
-      nb::arg("name"))
-    .def("GetActiveFieldName",
-         &viskores::filter::entity_extraction::GhostCellRemove::GetActiveFieldName)
-    .def(
-      "SetRemoveGhostField",
-      [](viskores::filter::entity_extraction::GhostCellRemove& self, bool enabled)
-      { self.SetRemoveGhostField(enabled); },
-      nb::arg("enabled"))
-    .def("GetRemoveGhostField",
-         &viskores::filter::entity_extraction::GhostCellRemove::GetRemoveGhostField)
-    .def(
-      "SetTypesToRemove",
-      [](viskores::filter::entity_extraction::GhostCellRemove& self, unsigned long value)
-      { self.SetTypesToRemove(static_cast<viskores::UInt8>(value)); },
-      nb::arg("value"))
-    .def("GetTypesToRemove",
-         &viskores::filter::entity_extraction::GhostCellRemove::GetTypesToRemove)
+  auto ghostCellRemove =
+    BindClassWithDefaultConstructor<entity::GhostCellRemove>(
+      m, erase_existing_name, "GhostCellRemove");
+  BindFilterActiveFieldNameMethods<entity::GhostCellRemove>(
+    ghostCellRemove);
+  ghostCellRemove
+    .def("SetRemoveGhostField", &entity::GhostCellRemove::SetRemoveGhostField, nb::arg("enabled"))
+    .def("GetRemoveGhostField", &entity::GhostCellRemove::GetRemoveGhostField);
+  BindCastedProperty<entity::GhostCellRemove,
+                     viskores::UInt8,
+                     unsigned long>(ghostCellRemove,
+                                    "SetTypesToRemove",
+                                    "GetTypesToRemove",
+                                    &entity::GhostCellRemove::
+                                      SetTypesToRemove,
+                                    &entity::GhostCellRemove::
+                                      GetTypesToRemove);
+  ghostCellRemove
     .def("SetTypesToRemoveToAll",
-         &viskores::filter::entity_extraction::GhostCellRemove::SetTypesToRemoveToAll)
+         &entity::GhostCellRemove::SetTypesToRemoveToAll)
     .def("AreAllTypesRemoved",
-         &viskores::filter::entity_extraction::GhostCellRemove::AreAllTypesRemoved)
-    .def(
-      "SetUseGhostCellsAsField",
-      [](viskores::filter::entity_extraction::GhostCellRemove& self, bool enabled)
-      { self.SetUseGhostCellsAsField(enabled); },
-      nb::arg("enabled"))
-    .def("GetUseGhostCellsAsField",
-         &viskores::filter::entity_extraction::GhostCellRemove::GetUseGhostCellsAsField)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::entity_extraction::GhostCellRemove>,
-         doc::ExecuteFilter);
+         &entity::GhostCellRemove::AreAllTypesRemoved);
+  ghostCellRemove
+    .def("SetUseGhostCellsAsField",
+         &entity::GhostCellRemove::SetUseGhostCellsAsField,
+         nb::arg("enabled"))
+    .def("GetUseGhostCellsAsField", &entity::GhostCellRemove::GetUseGhostCellsAsField);
+  BindFilterExecuteMethod<entity::GhostCellRemove>(ghostCellRemove);
 }
 #else
 void RegisterNanobindEntityExtractionClasses(nb::module_&, const std::function<void(const char*)>&)
@@ -446,151 +312,116 @@ void RegisterNanobindAdditionalFilterClasses(
   const std::function<void(const char*)>& erase_existing_name)
 {
 #if VISKORES_PYTHON_ENABLE_FILTER_CLEAN_GRID
-  erase_existing_name("CleanGrid");
-  nb::class_<viskores::filter::clean_grid::CleanGrid>(m, "CleanGrid", doc::ClassDoc("CleanGrid"))
-    .def(nb::init<>())
-    .def(
-      "SetFieldsToPass",
-      [](viskores::filter::clean_grid::CleanGrid& self, nb::object fieldsObject)
-      { SetFieldsToPass(self, fieldsObject); },
-      nb::arg("fields"))
-    .def(
-      "SetCompactPointFields",
-      [](viskores::filter::clean_grid::CleanGrid& self, bool enabled)
-      { self.SetCompactPointFields(enabled); },
-      nb::arg("enabled"))
-    .def("GetCompactPointFields", &viskores::filter::clean_grid::CleanGrid::GetCompactPointFields)
-    .def(
-      "SetMergePoints",
-      [](viskores::filter::clean_grid::CleanGrid& self, bool enabled)
-      { self.SetMergePoints(enabled); },
-      nb::arg("enabled"))
-    .def("GetMergePoints", &viskores::filter::clean_grid::CleanGrid::GetMergePoints)
+  auto cleanGrid = BindClassWithDefaultConstructor<clean_grid::CleanGrid>(
+    m, erase_existing_name, "CleanGrid");
+  BindFilterFieldsToPassMethod<clean_grid::CleanGrid>(cleanGrid);
+  cleanGrid
+    .def("SetCompactPointFields",
+         &clean_grid::CleanGrid::SetCompactPointFields,
+         nb::arg("enabled"))
+    .def("GetCompactPointFields", &clean_grid::CleanGrid::GetCompactPointFields)
+    .def("SetMergePoints", &clean_grid::CleanGrid::SetMergePoints, nb::arg("enabled"))
+    .def("GetMergePoints", &clean_grid::CleanGrid::GetMergePoints);
+  cleanGrid
     .def(
       "SetTolerance",
-      [](viskores::filter::clean_grid::CleanGrid& self, double value) { self.SetTolerance(value); },
+      [](clean_grid::CleanGrid& self, double value) { self.SetTolerance(value); },
       nb::arg("value"))
-    .def("GetTolerance", &viskores::filter::clean_grid::CleanGrid::GetTolerance)
-    .def(
-      "SetToleranceIsAbsolute",
-      [](viskores::filter::clean_grid::CleanGrid& self, bool enabled)
-      { self.SetToleranceIsAbsolute(enabled); },
-      nb::arg("enabled"))
-    .def("GetToleranceIsAbsolute", &viskores::filter::clean_grid::CleanGrid::GetToleranceIsAbsolute)
-    .def(
-      "SetRemoveDegenerateCells",
-      [](viskores::filter::clean_grid::CleanGrid& self, bool enabled)
-      { self.SetRemoveDegenerateCells(enabled); },
-      nb::arg("enabled"))
-    .def("GetRemoveDegenerateCells",
-         &viskores::filter::clean_grid::CleanGrid::GetRemoveDegenerateCells)
-    .def(
-      "SetFastMerge",
-      [](viskores::filter::clean_grid::CleanGrid& self, bool enabled)
-      { self.SetFastMerge(enabled); },
-      nb::arg("enabled"))
-    .def("GetFastMerge", &viskores::filter::clean_grid::CleanGrid::GetFastMerge)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::clean_grid::CleanGrid>,
-         doc::ExecuteFilter);
+    .def("GetTolerance", &clean_grid::CleanGrid::GetTolerance);
+  cleanGrid
+    .def("SetToleranceIsAbsolute",
+         &clean_grid::CleanGrid::SetToleranceIsAbsolute,
+         nb::arg("enabled"))
+    .def("GetToleranceIsAbsolute", &clean_grid::CleanGrid::GetToleranceIsAbsolute)
+    .def("SetRemoveDegenerateCells",
+         &clean_grid::CleanGrid::SetRemoveDegenerateCells,
+         nb::arg("enabled"))
+    .def("GetRemoveDegenerateCells", &clean_grid::CleanGrid::GetRemoveDegenerateCells)
+    .def("SetFastMerge", &clean_grid::CleanGrid::SetFastMerge, nb::arg("enabled"))
+    .def("GetFastMerge", &clean_grid::CleanGrid::GetFastMerge);
+  BindFilterExecuteMethod<clean_grid::CleanGrid>(cleanGrid);
 #endif
 
 #if VISKORES_PYTHON_ENABLE_FILTER_MESH_INFO
-  erase_existing_name("GhostCellClassify");
-  nb::class_<viskores::filter::mesh_info::GhostCellClassify>(
-    m, "GhostCellClassify", doc::ClassDoc("GhostCellClassify"))
-    .def(nb::init<>())
+  auto ghostCellClassify =
+    BindClassWithDefaultConstructor<mesh_info::GhostCellClassify>(
+      m, erase_existing_name, "GhostCellClassify");
+  ghostCellClassify
     .def("SetGhostCellName",
-         &viskores::filter::mesh_info::GhostCellClassify::SetGhostCellName,
+         &mesh_info::GhostCellClassify::SetGhostCellName,
          nb::arg("field_name"))
-    .def("GetGhostCellName", &viskores::filter::mesh_info::GhostCellClassify::GetGhostCellName)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::mesh_info::GhostCellClassify>,
-         doc::ExecuteFilter);
+    .def("GetGhostCellName", &mesh_info::GhostCellClassify::GetGhostCellName);
+  BindFilterExecuteMethod<mesh_info::GhostCellClassify>(ghostCellClassify);
 
-  erase_existing_name("CellMeasures");
-  nb::class_<viskores::filter::mesh_info::CellMeasures>(
-    m, "CellMeasures", doc::ClassDoc("CellMeasures"))
-    .def(nb::init<>())
-    .def(
-      "SetMeasure",
-      [](viskores::filter::mesh_info::CellMeasures& self, long value)
-      { self.SetMeasure(static_cast<viskores::filter::mesh_info::IntegrationType>(value)); },
-      nb::arg("measure"))
-    .def("GetMeasure", &viskores::filter::mesh_info::CellMeasures::GetMeasure)
-    .def("SetMeasureToArcLength", &viskores::filter::mesh_info::CellMeasures::SetMeasureToArcLength)
-    .def("SetMeasureToArea", &viskores::filter::mesh_info::CellMeasures::SetMeasureToArea)
-    .def("SetMeasureToVolume", &viskores::filter::mesh_info::CellMeasures::SetMeasureToVolume)
-    .def("SetMeasureToAll", &viskores::filter::mesh_info::CellMeasures::SetMeasureToAll)
+  auto cellMeasures =
+    BindClassWithDefaultConstructor<mesh_info::CellMeasures>(
+      m, erase_existing_name, "CellMeasures");
+  BindCastedProperty<mesh_info::CellMeasures,
+                     mesh_info::IntegrationType,
+                     long>(cellMeasures,
+                           "SetMeasure",
+                           "GetMeasure",
+                           &mesh_info::CellMeasures::SetMeasure,
+                           &mesh_info::CellMeasures::GetMeasure,
+                           "measure");
+  cellMeasures
+    .def("SetMeasureToArcLength", &mesh_info::CellMeasures::SetMeasureToArcLength)
+    .def("SetMeasureToArea", &mesh_info::CellMeasures::SetMeasureToArea)
+    .def("SetMeasureToVolume", &mesh_info::CellMeasures::SetMeasureToVolume)
+    .def("SetMeasureToAll", &mesh_info::CellMeasures::SetMeasureToAll)
     .def("SetCellMeasureName",
-         &viskores::filter::mesh_info::CellMeasures::SetCellMeasureName,
+         &mesh_info::CellMeasures::SetCellMeasureName,
          nb::arg("name"))
-    .def("GetCellMeasureName", &viskores::filter::mesh_info::CellMeasures::GetCellMeasureName)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::mesh_info::CellMeasures>,
-         doc::ExecuteFilter);
+    .def("GetCellMeasureName", &mesh_info::CellMeasures::GetCellMeasureName);
+  BindFilterExecuteMethod<mesh_info::CellMeasures>(cellMeasures);
 
-  erase_existing_name("MeshQuality");
-  nb::class_<viskores::filter::mesh_info::MeshQuality>(
-    m, "MeshQuality", doc::ClassDoc("MeshQuality"))
-    .def(nb::init<>())
-    .def(
-      "SetMetric",
-      [](viskores::filter::mesh_info::MeshQuality& self, long value)
-      { self.SetMetric(static_cast<viskores::filter::mesh_info::CellMetric>(value)); },
-      nb::arg("metric"))
-    .def("GetMetric", &viskores::filter::mesh_info::MeshQuality::GetMetric)
-    .def("GetMetricName", &viskores::filter::mesh_info::MeshQuality::GetMetricName)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::mesh_info::MeshQuality>,
-         doc::ExecuteFilter);
+  auto meshQuality =
+    BindClassWithDefaultConstructor<mesh_info::MeshQuality>(
+      m, erase_existing_name, "MeshQuality");
+  BindCastedProperty<mesh_info::MeshQuality,
+                     mesh_info::CellMetric,
+                     long>(meshQuality,
+                           "SetMetric",
+                           "GetMetric",
+                           &mesh_info::MeshQuality::SetMetric,
+                           &mesh_info::MeshQuality::GetMetric,
+                           "metric");
+  meshQuality
+    .def("GetMetricName", &mesh_info::MeshQuality::GetMetricName);
+  BindFilterExecuteMethod<mesh_info::MeshQuality>(meshQuality);
 #endif
 
 #if VISKORES_PYTHON_ENABLE_FILTER_CONNECTED_COMPONENTS
-  erase_existing_name("CellSetConnectivity");
-  nb::class_<viskores::filter::connected_components::CellSetConnectivity>(
-    m, "CellSetConnectivity", doc::ClassDoc("CellSetConnectivity"))
-    .def(nb::init<>())
-    .def("SetOutputFieldName",
-         &viskores::filter::connected_components::CellSetConnectivity::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::connected_components::CellSetConnectivity::GetOutputFieldName)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::connected_components::CellSetConnectivity>,
-         doc::ExecuteFilter);
+  auto cellSetConnectivity =
+    BindClassWithDefaultConstructor<
+      connected::CellSetConnectivity>(
+      m, erase_existing_name, "CellSetConnectivity");
+  BindFilterOutputFieldMethods<connected::CellSetConnectivity>(
+    cellSetConnectivity);
+  BindFilterExecuteMethod<connected::CellSetConnectivity>(
+    cellSetConnectivity);
 
-  erase_existing_name("ImageConnectivity");
-  nb::class_<viskores::filter::connected_components::ImageConnectivity>(
-    m, "ImageConnectivity", doc::ClassDoc("ImageConnectivity"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::connected_components::ImageConnectivity& self, const char* name)
-      { self.SetActiveField(name); },
-      nb::arg("name"))
-    .def("GetActiveFieldName",
-         &viskores::filter::connected_components::ImageConnectivity::GetActiveFieldName)
-    .def("SetOutputFieldName",
-         &viskores::filter::connected_components::ImageConnectivity::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::connected_components::ImageConnectivity::GetOutputFieldName)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::connected_components::ImageConnectivity>,
-         doc::ExecuteFilter);
+  auto imageConnectivity =
+    BindClassWithDefaultConstructor<connected::ImageConnectivity>(
+      m, erase_existing_name, "ImageConnectivity");
+  BindFilterActiveFieldNameMethods<connected::ImageConnectivity>(
+    imageConnectivity);
+  BindFilterOutputFieldMethods<connected::ImageConnectivity>(
+    imageConnectivity);
+  BindFilterExecuteMethod<connected::ImageConnectivity>(
+    imageConnectivity);
 #endif
 
 #if VISKORES_PYTHON_ENABLE_FILTER_MULTI_BLOCK
-  erase_existing_name("MergeDataSets");
-  nb::class_<viskores::filter::multi_block::MergeDataSets>(
-    m, "MergeDataSets", doc::ClassDoc("MergeDataSets"))
-    .def(nb::init<>())
+  auto mergeDataSets =
+    BindClassWithDefaultConstructor<multi_block::MergeDataSets>(
+      m, erase_existing_name, "MergeDataSets");
+  mergeDataSets
     .def("SetInvalidValue",
-         &viskores::filter::multi_block::MergeDataSets::SetInvalidValue,
+         &multi_block::MergeDataSets::SetInvalidValue,
          nb::arg("invalid_value"))
-    .def("GetInvalidValue", &viskores::filter::multi_block::MergeDataSets::GetInvalidValue)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::multi_block::MergeDataSets>,
-         doc::ExecuteFilter);
+    .def("GetInvalidValue", &multi_block::MergeDataSets::GetInvalidValue);
+  BindFilterExecuteMethod<multi_block::MergeDataSets>(mergeDataSets);
 #endif
 }
 #else

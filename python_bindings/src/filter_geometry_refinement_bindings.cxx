@@ -14,115 +14,47 @@
 namespace viskores::python::bindings
 {
 
-namespace
-{
-
-template <typename FilterType>
-void SetSelectedFields(FilterType& self, nb::object fieldsObject)
-{
-  auto& selection = self.GetFieldsToPass();
-  selection.ClearFields();
-  selection.SetMode(viskores::filter::FieldSelection::Mode::Select);
-
-  if (nb::isinstance<nb::str>(fieldsObject))
-  {
-    selection.AddField(nb::cast<std::string>(fieldsObject));
-    return;
-  }
-
-  if (!nb::isinstance<nb::sequence>(fieldsObject) || nb::isinstance<nb::str>(fieldsObject))
-  {
-    throw std::runtime_error("fields must be a string or sequence");
-  }
-
-  nb::sequence sequence = nb::borrow<nb::sequence>(fieldsObject);
-  const size_t size = static_cast<size_t>(nb::len(sequence));
-  for (size_t index = 0; index < size; ++index)
-  {
-    nb::handle item = sequence[index];
-    if (!nb::isinstance<nb::str>(item))
-    {
-      throw std::runtime_error("fields must contain only strings.");
-    }
-    selection.AddField(nb::cast<std::string>(item));
-  }
-}
-
-} // namespace
-
 #if VISKORES_PYTHON_ENABLE_FILTER_GEOMETRY_REFINEMENT
 void RegisterNanobindGeometryRefinementClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-  erase_existing_name("Tetrahedralize");
-  nb::class_<viskores::filter::geometry_refinement::Tetrahedralize>(
-    m, "Tetrahedralize", doc::ClassDoc("Tetrahedralize"))
-    .def(nb::init<>())
-    .def(
-      "SetFieldsToPass",
-      [](viskores::filter::geometry_refinement::Tetrahedralize& self, nb::object fieldsObject)
-      { SetSelectedFields(self, fieldsObject); },
-      nb::arg("fields"))
-    .def(
-      "Execute",
-      [](viskores::filter::geometry_refinement::Tetrahedralize& self, nb::object dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+  auto tetrahedralize =
+    BindClassWithDefaultConstructor<viskores::filter::geometry_refinement::Tetrahedralize>(
+      m, erase_existing_name, "Tetrahedralize");
+  BindFilterFieldsToPassMethod<viskores::filter::geometry_refinement::Tetrahedralize>(
+    tetrahedralize);
+  BindFilterExecuteMethod<viskores::filter::geometry_refinement::Tetrahedralize>(tetrahedralize);
 
-  erase_existing_name("Triangulate");
-  nb::class_<viskores::filter::geometry_refinement::Triangulate>(
-    m, "Triangulate", doc::ClassDoc("Triangulate"))
-    .def(nb::init<>())
-    .def(
-      "SetFieldsToPass",
-      [](viskores::filter::geometry_refinement::Triangulate& self, nb::object fieldsObject)
-      { SetSelectedFields(self, fieldsObject); },
-      nb::arg("fields"))
-    .def(
-      "Execute",
-      [](viskores::filter::geometry_refinement::Triangulate& self, nb::object dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+  auto triangulate =
+    BindClassWithDefaultConstructor<viskores::filter::geometry_refinement::Triangulate>(
+      m, erase_existing_name, "Triangulate");
+  BindFilterFieldsToPassMethod<viskores::filter::geometry_refinement::Triangulate>(triangulate);
+  BindFilterExecuteMethod<viskores::filter::geometry_refinement::Triangulate>(triangulate);
 
-  erase_existing_name("Shrink");
-  nb::class_<viskores::filter::geometry_refinement::Shrink>(m, "Shrink", doc::ClassDoc("Shrink"))
-    .def(nb::init<>())
-    .def("SetShrinkFactor", &viskores::filter::geometry_refinement::Shrink::SetShrinkFactor)
-    .def("GetShrinkFactor", &viskores::filter::geometry_refinement::Shrink::GetShrinkFactor)
-    .def(
-      "SetFieldsToPass",
-      [](viskores::filter::geometry_refinement::Shrink& self, nb::object fieldsObject)
-      { SetSelectedFields(self, fieldsObject); },
-      nb::arg("fields"))
-    .def(
-      "Execute",
-      [](viskores::filter::geometry_refinement::Shrink& self, nb::object dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+  auto shrink =
+    BindClassWithDefaultConstructor<viskores::filter::geometry_refinement::Shrink>(
+      m, erase_existing_name, "Shrink");
+  shrink.def("SetShrinkFactor", &viskores::filter::geometry_refinement::Shrink::SetShrinkFactor)
+    .def("GetShrinkFactor", &viskores::filter::geometry_refinement::Shrink::GetShrinkFactor);
+  BindFilterFieldsToPassMethod<viskores::filter::geometry_refinement::Shrink>(shrink);
+  BindFilterExecuteMethod<viskores::filter::geometry_refinement::Shrink>(shrink);
 
-  erase_existing_name("ConvertToPointCloud");
-  nb::class_<viskores::filter::geometry_refinement::ConvertToPointCloud>(
-    m, "ConvertToPointCloud", doc::ClassDoc("ConvertToPointCloud"))
-    .def(nb::init<>())
+  auto convertToPointCloud =
+    BindClassWithDefaultConstructor<viskores::filter::geometry_refinement::ConvertToPointCloud>(
+      m, erase_existing_name, "ConvertToPointCloud");
+  convertToPointCloud
     .def("SetAssociateFieldsWithCells",
          &viskores::filter::geometry_refinement::ConvertToPointCloud::SetAssociateFieldsWithCells)
     .def("GetAssociateFieldsWithCells",
-         &viskores::filter::geometry_refinement::ConvertToPointCloud::GetAssociateFieldsWithCells)
-    .def(
-      "Execute",
-      [](viskores::filter::geometry_refinement::ConvertToPointCloud& self, nb::object dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+         &viskores::filter::geometry_refinement::ConvertToPointCloud::GetAssociateFieldsWithCells);
+  BindFilterExecuteMethod<viskores::filter::geometry_refinement::ConvertToPointCloud>(
+    convertToPointCloud);
 
-  erase_existing_name("VertexClustering");
-  nb::class_<viskores::filter::geometry_refinement::VertexClustering>(
-    m, "VertexClustering", doc::ClassDoc("VertexClustering"))
-    .def(nb::init<>())
+  auto vertexClustering =
+    BindClassWithDefaultConstructor<viskores::filter::geometry_refinement::VertexClustering>(
+      m, erase_existing_name, "VertexClustering");
+  vertexClustering
     .def(
       "SetNumberOfDivisions",
       [](viskores::filter::geometry_refinement::VertexClustering& self, nb::object divisions)
@@ -130,64 +62,37 @@ void RegisterNanobindGeometryRefinementClasses(
       nb::arg("divisions"))
     .def("GetNumberOfDivisions",
          [](const viskores::filter::geometry_refinement::VertexClustering& self)
-         {
-           const auto divisions = self.GetNumberOfDivisions();
-           return nb::make_tuple(divisions[0], divisions[1], divisions[2]);
-         })
-    .def(
-      "SetFieldsToPass",
-      [](viskores::filter::geometry_refinement::VertexClustering& self, nb::object fieldsObject)
-      { SetSelectedFields(self, fieldsObject); },
-      nb::arg("fields"))
-    .def(
-      "Execute",
-      [](viskores::filter::geometry_refinement::VertexClustering& self, nb::object dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+         { return Vec3ToTuple(self.GetNumberOfDivisions()); });
+  BindFilterFieldsToPassMethod<viskores::filter::geometry_refinement::VertexClustering>(
+    vertexClustering);
+  BindFilterExecuteMethod<viskores::filter::geometry_refinement::VertexClustering>(
+    vertexClustering);
 
-  erase_existing_name("SplitSharpEdges");
-  nb::class_<viskores::filter::geometry_refinement::SplitSharpEdges>(
-    m, "SplitSharpEdges", doc::ClassDoc("SplitSharpEdges"))
-    .def(nb::init<>())
+  auto splitSharpEdges =
+    BindClassWithDefaultConstructor<viskores::filter::geometry_refinement::SplitSharpEdges>(
+      m, erase_existing_name, "SplitSharpEdges");
+  splitSharpEdges
     .def("SetFeatureAngle",
          &viskores::filter::geometry_refinement::SplitSharpEdges::SetFeatureAngle)
     .def("GetFeatureAngle",
-         &viskores::filter::geometry_refinement::SplitSharpEdges::GetFeatureAngle)
-    .def(
-      "SetActiveField",
-      [](viskores::filter::geometry_refinement::SplitSharpEdges& self,
-         const char* name,
-         nb::object associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def(
-      "Execute",
-      [](viskores::filter::geometry_refinement::SplitSharpEdges& self, nb::object dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+         &viskores::filter::geometry_refinement::SplitSharpEdges::GetFeatureAngle);
+  BindFilterActiveFieldMethods<viskores::filter::geometry_refinement::SplitSharpEdges>(
+    splitSharpEdges);
+  BindFilterExecuteMethod<viskores::filter::geometry_refinement::SplitSharpEdges>(splitSharpEdges);
 
-  erase_existing_name("Tube");
-  nb::class_<viskores::filter::geometry_refinement::Tube>(m, "Tube", doc::ClassDoc("Tube"))
-    .def(nb::init<>())
-    .def("SetRadius", &viskores::filter::geometry_refinement::Tube::SetRadius, nb::arg("radius"))
+  auto tube =
+    BindClassWithDefaultConstructor<viskores::filter::geometry_refinement::Tube>(
+      m, erase_existing_name, "Tube");
+  tube.def("SetRadius", &viskores::filter::geometry_refinement::Tube::SetRadius, nb::arg("radius"))
     .def(
       "SetNumberOfSides",
       [](viskores::filter::geometry_refinement::Tube& self, long long value)
       { self.SetNumberOfSides(static_cast<viskores::Id>(value)); },
       nb::arg("number_of_sides"))
-    .def("SetCapping", &viskores::filter::geometry_refinement::Tube::SetCapping, nb::arg("enabled"))
-    .def(
-      "Execute",
-      [](viskores::filter::geometry_refinement::Tube& self, nb::object dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+    .def("SetCapping",
+         &viskores::filter::geometry_refinement::Tube::SetCapping,
+         nb::arg("enabled"));
+  BindFilterExecuteMethod<viskores::filter::geometry_refinement::Tube>(tube);
 }
 #else
 void RegisterNanobindGeometryRefinementClasses(nb::module_&,

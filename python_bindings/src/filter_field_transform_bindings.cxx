@@ -14,42 +14,40 @@
 namespace viskores::python::bindings
 {
 
+namespace field_transform = viskores::filter::field_transform;
+
 #if VISKORES_PYTHON_ENABLE_FILTER_FIELD_TRANSFORM
 void RegisterNanobindFieldTransformClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-  erase_existing_name("GenerateIds");
-  nb::class_<viskores::filter::field_transform::GenerateIds>(
-    m, "GenerateIds", doc::ClassDoc("GenerateIds"))
-    .def(nb::init<>())
-    .def("SetPointFieldName", &viskores::filter::field_transform::GenerateIds::SetPointFieldName)
-    .def("GetPointFieldName", &viskores::filter::field_transform::GenerateIds::GetPointFieldName)
-    .def("SetCellFieldName", &viskores::filter::field_transform::GenerateIds::SetCellFieldName)
-    .def("GetCellFieldName", &viskores::filter::field_transform::GenerateIds::GetCellFieldName)
+  auto generateIds =
+    BindClassWithDefaultConstructor<field_transform::GenerateIds>(
+      m, erase_existing_name, "GenerateIds");
+  generateIds
+    .def("SetPointFieldName", &field_transform::GenerateIds::SetPointFieldName)
+    .def("GetPointFieldName", &field_transform::GenerateIds::GetPointFieldName)
+    .def("SetCellFieldName", &field_transform::GenerateIds::SetCellFieldName)
+    .def("GetCellFieldName", &field_transform::GenerateIds::GetCellFieldName)
     .def("SetGeneratePointIds",
-         &viskores::filter::field_transform::GenerateIds::SetGeneratePointIds)
+         &field_transform::GenerateIds::SetGeneratePointIds)
     .def("GetGeneratePointIds",
-         &viskores::filter::field_transform::GenerateIds::GetGeneratePointIds)
-    .def("SetGenerateCellIds", &viskores::filter::field_transform::GenerateIds::SetGenerateCellIds)
-    .def("GetGenerateCellIds", &viskores::filter::field_transform::GenerateIds::GetGenerateCellIds)
-    .def("SetUseFloat", &viskores::filter::field_transform::GenerateIds::SetUseFloat)
-    .def("GetUseFloat", &viskores::filter::field_transform::GenerateIds::GetUseFloat)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::field_transform::GenerateIds>,
-         doc::ExecuteFilter);
+         &field_transform::GenerateIds::GetGeneratePointIds)
+    .def("SetGenerateCellIds", &field_transform::GenerateIds::SetGenerateCellIds)
+    .def("GetGenerateCellIds", &field_transform::GenerateIds::GetGenerateCellIds)
+    .def("SetUseFloat", &field_transform::GenerateIds::SetUseFloat)
+    .def("GetUseFloat", &field_transform::GenerateIds::GetUseFloat);
+  BindFilterExecuteMethod<field_transform::GenerateIds>(generateIds);
 
-  erase_existing_name("CompositeVectors");
-  nb::class_<viskores::filter::field_transform::CompositeVectors>(
-    m, "CompositeVectors", doc::ClassDoc("CompositeVectors"))
-    .def(nb::init<>())
-    .def("SetOutputFieldName",
-         &viskores::filter::field_transform::CompositeVectors::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::field_transform::CompositeVectors::GetOutputFieldName)
+  auto compositeVectors =
+    BindClassWithDefaultConstructor<field_transform::CompositeVectors>(
+      m, erase_existing_name, "CompositeVectors");
+  BindFilterOutputFieldMethods<field_transform::CompositeVectors>(
+    compositeVectors);
+  compositeVectors
     .def(
       "SetFieldNameList",
-      [](viskores::filter::field_transform::CompositeVectors& self,
+      [](field_transform::CompositeVectors& self,
          nb::object fieldNamesObject,
          nb::object associationObject)
       {
@@ -77,99 +75,71 @@ void RegisterNanobindFieldTransformClasses(
       nb::arg("field_names"),
       nb::arg("association") = nb::none())
     .def("GetNumberOfFields",
-         &viskores::filter::field_transform::CompositeVectors::GetNumberOfFields)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::field_transform::CompositeVectors>,
-         doc::ExecuteFilter);
+         &field_transform::CompositeVectors::GetNumberOfFields);
+  BindFilterExecuteMethod<field_transform::CompositeVectors>(compositeVectors);
 
-  erase_existing_name("LogValues");
-  nb::class_<viskores::filter::field_transform::LogValues>(
-    m, "LogValues", doc::ClassDoc("LogValues"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::field_transform::LogValues& self, const char* name)
-      { self.SetActiveField(name); },
-      nb::arg("name"))
-    .def("GetActiveFieldName", &viskores::filter::field_transform::LogValues::GetActiveFieldName)
-    .def("SetOutputFieldName", &viskores::filter::field_transform::LogValues::SetOutputFieldName)
-    .def("GetOutputFieldName", &viskores::filter::field_transform::LogValues::GetOutputFieldName)
-    .def(
-      "SetMinValue",
-      [](viskores::filter::field_transform::LogValues& self, double value)
-      { self.SetMinValue(static_cast<viskores::FloatDefault>(value)); },
-      nb::arg("value"))
-    .def("GetMinValue", &viskores::filter::field_transform::LogValues::GetMinValue)
-    .def("SetBaseValueToE", &viskores::filter::field_transform::LogValues::SetBaseValueToE)
-    .def("SetBaseValueTo2", &viskores::filter::field_transform::LogValues::SetBaseValueTo2)
-    .def("SetBaseValueTo10", &viskores::filter::field_transform::LogValues::SetBaseValueTo10)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::field_transform::LogValues>,
-         doc::ExecuteFilter);
+  auto logValues =
+    BindClassWithDefaultConstructor<field_transform::LogValues>(
+      m, erase_existing_name, "LogValues");
+  BindFilterActiveFieldNameMethods<field_transform::LogValues>(logValues);
+  BindFilterOutputFieldMethods<field_transform::LogValues>(logValues);
+  BindCastedProperty<field_transform::LogValues, viskores::FloatDefault, double>(
+    logValues,
+    "SetMinValue",
+    "GetMinValue",
+    &field_transform::LogValues::SetMinValue,
+    &field_transform::LogValues::GetMinValue);
+  logValues
+    .def("SetBaseValueToE", &field_transform::LogValues::SetBaseValueToE)
+    .def("SetBaseValueTo2", &field_transform::LogValues::SetBaseValueTo2)
+    .def("SetBaseValueTo10", &field_transform::LogValues::SetBaseValueTo10);
+  BindFilterExecuteMethod<field_transform::LogValues>(logValues);
 
-  erase_existing_name("PointElevation");
-  nb::class_<viskores::filter::field_transform::PointElevation>(
-    m, "PointElevation", doc::ClassDoc("PointElevation"))
-    .def(nb::init<>())
-    .def("SetOutputFieldName",
-         &viskores::filter::field_transform::PointElevation::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::field_transform::PointElevation::GetOutputFieldName)
-    .def(
-      "SetUseCoordinateSystemAsField",
-      [](viskores::filter::field_transform::PointElevation& self, bool enabled)
-      { self.SetUseCoordinateSystemAsField(enabled); },
-      nb::arg("enabled"))
-    .def("GetUseCoordinateSystemAsField",
-         &viskores::filter::field_transform::PointElevation::GetUseCoordinateSystemAsField)
+  auto pointElevation =
+    BindClassWithDefaultConstructor<field_transform::PointElevation>(
+      m, erase_existing_name, "PointElevation");
+  BindFilterOutputFieldMethods<field_transform::PointElevation>(pointElevation);
+  BindFilterCoordinateSystemFieldMethods<field_transform::PointElevation>(
+    pointElevation);
+  pointElevation
     .def(
       "SetLowPoint",
-      [](viskores::filter::field_transform::PointElevation& self, nb::object pointObject)
+      [](field_transform::PointElevation& self, nb::object pointObject)
       { self.SetLowPoint(ParseVec3(pointObject, viskores::Vec3f_32{ 0.f, 0.f, 0.f })); },
       nb::arg("point"))
     .def(
       "SetHighPoint",
-      [](viskores::filter::field_transform::PointElevation& self, nb::object pointObject)
+      [](field_transform::PointElevation& self, nb::object pointObject)
       { self.SetHighPoint(ParseVec3(pointObject, viskores::Vec3f_32{ 0.f, 0.f, 1.f })); },
       nb::arg("point"))
     .def(
       "SetRange",
-      [](viskores::filter::field_transform::PointElevation& self, double low, double high)
+      [](field_transform::PointElevation& self, double low, double high)
       { self.SetRange(low, high); },
       nb::arg("low"),
-      nb::arg("high"))
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::field_transform::PointElevation>,
-         doc::ExecuteFilter);
+      nb::arg("high"));
+  BindFilterExecuteMethod<field_transform::PointElevation>(pointElevation);
 
-  erase_existing_name("PointTransform");
-  nb::class_<viskores::filter::field_transform::PointTransform>(
-    m, "PointTransform", doc::ClassDoc("PointTransform"))
-    .def(nb::init<>())
-    .def("SetOutputFieldName",
-         &viskores::filter::field_transform::PointTransform::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::field_transform::PointTransform::GetOutputFieldName)
-    .def(
-      "SetUseCoordinateSystemAsField",
-      [](viskores::filter::field_transform::PointTransform& self, bool enabled)
-      { self.SetUseCoordinateSystemAsField(enabled); },
-      nb::arg("enabled"))
-    .def("GetUseCoordinateSystemAsField",
-         &viskores::filter::field_transform::PointTransform::GetUseCoordinateSystemAsField)
+  auto pointTransform =
+    BindClassWithDefaultConstructor<field_transform::PointTransform>(
+      m, erase_existing_name, "PointTransform");
+  BindFilterOutputFieldMethods<field_transform::PointTransform>(pointTransform);
+  BindFilterCoordinateSystemFieldMethods<field_transform::PointTransform>(
+    pointTransform);
+  pointTransform
     .def(
       "SetTranslation",
-      [](viskores::filter::field_transform::PointTransform& self, nb::object valueObject)
+      [](field_transform::PointTransform& self, nb::object valueObject)
       { self.SetTranslation(ParseVec3(valueObject, viskores::Vec3f_32{ 0.f, 0.f, 0.f })); },
       nb::arg("translation"))
     .def(
       "SetScale",
-      [](viskores::filter::field_transform::PointTransform& self, nb::object valueObject)
+      [](field_transform::PointTransform& self, nb::object valueObject)
       { self.SetScale(ParseVec3(valueObject, viskores::Vec3f_32{ 1.f, 1.f, 1.f })); },
       nb::arg("scale"))
     .def(
       "SetRotation",
-      [](viskores::filter::field_transform::PointTransform& self,
+      [](field_transform::PointTransform& self,
          double angle,
          nb::object axisObject)
       {
@@ -178,83 +148,59 @@ void RegisterNanobindFieldTransformClasses(
       },
       nb::arg("angle"),
       nb::arg("axis"))
-    .def(
-      "SetChangeCoordinateSystem",
-      [](viskores::filter::field_transform::PointTransform& self, bool enabled)
-      { self.SetChangeCoordinateSystem(enabled); },
-      nb::arg("enabled"))
-    .def("GetChangeCoordinateSystem",
-         &viskores::filter::field_transform::PointTransform::GetChangeCoordinateSystem)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::field_transform::PointTransform>,
-         doc::ExecuteFilter);
+    .def("SetChangeCoordinateSystem",
+         &field_transform::PointTransform::SetChangeCoordinateSystem,
+         nb::arg("enabled"))
+    .def("GetChangeCoordinateSystem", &field_transform::PointTransform::GetChangeCoordinateSystem);
+  BindFilterExecuteMethod<field_transform::PointTransform>(pointTransform);
 
-  erase_existing_name("CylindricalCoordinateTransform");
-  nb::class_<viskores::filter::field_transform::CylindricalCoordinateTransform>(
-    m, "CylindricalCoordinateTransform", doc::ClassDoc("CylindricalCoordinateTransform"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::field_transform::CylindricalCoordinateTransform& self, const char* name)
-      { self.SetActiveField(name); },
-      nb::arg("name"))
-    .def("GetActiveFieldName",
-         &viskores::filter::field_transform::CylindricalCoordinateTransform::GetActiveFieldName)
-    .def(
-      "SetUseCoordinateSystemAsField",
-      [](viskores::filter::field_transform::CylindricalCoordinateTransform& self, bool enabled)
-      { self.SetUseCoordinateSystemAsField(enabled); },
-      nb::arg("enabled"))
-    .def("GetUseCoordinateSystemAsField",
-         &viskores::filter::field_transform::CylindricalCoordinateTransform::
-           GetUseCoordinateSystemAsField)
+  auto cylindricalCoordinateTransform =
+    BindClassWithDefaultConstructor<
+      field_transform::CylindricalCoordinateTransform>(
+      m, erase_existing_name, "CylindricalCoordinateTransform");
+  BindFilterActiveFieldNameMethods<
+    field_transform::CylindricalCoordinateTransform>(
+    cylindricalCoordinateTransform);
+  BindFilterCoordinateSystemFieldMethods<
+    field_transform::CylindricalCoordinateTransform>(
+    cylindricalCoordinateTransform);
+  cylindricalCoordinateTransform
     .def(
       "SetCartesianToCylindrical",
-      &viskores::filter::field_transform::CylindricalCoordinateTransform::SetCartesianToCylindrical)
+      &field_transform::CylindricalCoordinateTransform::SetCartesianToCylindrical)
     .def(
       "SetCylindricalToCartesian",
-      &viskores::filter::field_transform::CylindricalCoordinateTransform::SetCylindricalToCartesian)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::field_transform::CylindricalCoordinateTransform>,
-         doc::ExecuteFilter);
+      &field_transform::CylindricalCoordinateTransform::
+        SetCylindricalToCartesian);
+  BindFilterExecuteMethod<field_transform::CylindricalCoordinateTransform>(
+    cylindricalCoordinateTransform);
 
-  erase_existing_name("SphericalCoordinateTransform");
-  nb::class_<viskores::filter::field_transform::SphericalCoordinateTransform>(
-    m, "SphericalCoordinateTransform", doc::ClassDoc("SphericalCoordinateTransform"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::field_transform::SphericalCoordinateTransform& self, const char* name)
-      { self.SetActiveField(name); },
-      nb::arg("name"))
-    .def("GetActiveFieldName",
-         &viskores::filter::field_transform::SphericalCoordinateTransform::GetActiveFieldName)
-    .def(
-      "SetUseCoordinateSystemAsField",
-      [](viskores::filter::field_transform::SphericalCoordinateTransform& self, bool enabled)
-      { self.SetUseCoordinateSystemAsField(enabled); },
-      nb::arg("enabled"))
-    .def("GetUseCoordinateSystemAsField",
-         &viskores::filter::field_transform::SphericalCoordinateTransform::
-           GetUseCoordinateSystemAsField)
+  auto sphericalCoordinateTransform =
+    BindClassWithDefaultConstructor<
+      field_transform::SphericalCoordinateTransform>(
+      m, erase_existing_name, "SphericalCoordinateTransform");
+  BindFilterActiveFieldNameMethods<
+    field_transform::SphericalCoordinateTransform>(sphericalCoordinateTransform);
+  BindFilterCoordinateSystemFieldMethods<
+    field_transform::SphericalCoordinateTransform>(sphericalCoordinateTransform);
+  sphericalCoordinateTransform
     .def("SetCartesianToSpherical",
-         &viskores::filter::field_transform::SphericalCoordinateTransform::SetCartesianToSpherical)
+         &field_transform::SphericalCoordinateTransform::SetCartesianToSpherical)
     .def("SetSphericalToCartesian",
-         &viskores::filter::field_transform::SphericalCoordinateTransform::SetSphericalToCartesian)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::field_transform::SphericalCoordinateTransform>,
-         doc::ExecuteFilter);
+         &field_transform::SphericalCoordinateTransform::SetSphericalToCartesian);
+  BindFilterExecuteMethod<field_transform::SphericalCoordinateTransform>(
+    sphericalCoordinateTransform);
 
   erase_existing_name("FieldToColors");
-  nb::class_<viskores::filter::field_transform::FieldToColors>(
-    m, "FieldToColors", doc::ClassDoc("FieldToColors"))
+  auto fieldToColors = nb::class_<field_transform::FieldToColors>(
+                         m, "FieldToColors", doc::ClassDoc("FieldToColors"))
     .def(
       "__init__",
-      [](viskores::filter::field_transform::FieldToColors* self, nb::object colorTableObject)
+      [](field_transform::FieldToColors* self, nb::object colorTableObject)
       {
         if (colorTableObject.is_none())
         {
-          new (self) viskores::filter::field_transform::FieldToColors();
+          new (self) field_transform::FieldToColors();
         }
         else
         {
@@ -263,24 +209,17 @@ void RegisterNanobindFieldTransformClasses(
           {
             throw nb::python_error();
           }
-          new (self) viskores::filter::field_transform::FieldToColors(*colorTable);
+          new (self) field_transform::FieldToColors(*colorTable);
         }
       },
-      nb::arg("color_table") = nb::none())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::field_transform::FieldToColors& self, const char* name)
-      { self.SetActiveField(name); },
-      nb::arg("name"))
-    .def("GetActiveFieldName",
-         &viskores::filter::field_transform::FieldToColors::GetActiveFieldName)
-    .def("SetOutputFieldName",
-         &viskores::filter::field_transform::FieldToColors::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::field_transform::FieldToColors::GetOutputFieldName)
+      nb::arg("color_table") = nb::none());
+  BindFilterActiveFieldNameMethods<field_transform::FieldToColors>(
+    fieldToColors);
+  BindFilterOutputFieldMethods<field_transform::FieldToColors>(fieldToColors);
+  fieldToColors
     .def(
       "SetColorTable",
-      [](viskores::filter::field_transform::FieldToColors& self, nb::object colorTableObject)
+      [](field_transform::FieldToColors& self, nb::object colorTableObject)
       {
         auto colorTable = RequireColorTable(colorTableObject);
         if (!colorTable)
@@ -290,92 +229,63 @@ void RegisterNanobindFieldTransformClasses(
         self.SetColorTable(*colorTable);
       },
       nb::arg("color_table"))
-    .def("SetOutputToRGB", &viskores::filter::field_transform::FieldToColors::SetOutputToRGB)
-    .def("SetOutputToRGBA", &viskores::filter::field_transform::FieldToColors::SetOutputToRGBA)
+    .def("SetOutputToRGB", &field_transform::FieldToColors::SetOutputToRGB)
+    .def("SetOutputToRGBA", &field_transform::FieldToColors::SetOutputToRGBA)
     .def("SetMappingToScalar",
-         &viskores::filter::field_transform::FieldToColors::SetMappingToScalar)
+         &field_transform::FieldToColors::SetMappingToScalar)
     .def("SetMappingToMagnitude",
-         &viskores::filter::field_transform::FieldToColors::SetMappingToMagnitude)
-    .def("SetMappingToComponent",
-         &viskores::filter::field_transform::FieldToColors::SetMappingToComponent)
-    .def(
-      "SetMappingComponent",
-      [](viskores::filter::field_transform::FieldToColors& self, long component)
-      { self.SetMappingComponent(static_cast<viskores::IdComponent>(component)); },
-      nb::arg("component"))
-    .def(
-      "SetNumberOfSamplingPoints",
-      [](viskores::filter::field_transform::FieldToColors& self, long count)
-      { self.SetNumberOfSamplingPoints(static_cast<viskores::Int32>(count)); },
-      nb::arg("count"))
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::field_transform::FieldToColors>,
-         doc::ExecuteFilter);
+         &field_transform::FieldToColors::SetMappingToMagnitude)
+    .def("SetMappingToComponent", &field_transform::FieldToColors::SetMappingToComponent);
+  BindCastedSetter<field_transform::FieldToColors, viskores::IdComponent, long>(
+    fieldToColors,
+    "SetMappingComponent",
+    &field_transform::FieldToColors::SetMappingComponent,
+    "component");
+  BindCastedSetter<field_transform::FieldToColors, viskores::Int32, long>(
+    fieldToColors,
+    "SetNumberOfSamplingPoints",
+    &field_transform::FieldToColors::SetNumberOfSamplingPoints,
+    "count");
+  BindFilterExecuteMethod<field_transform::FieldToColors>(fieldToColors);
 
-  erase_existing_name("Warp");
-  nb::class_<viskores::filter::field_transform::Warp>(m, "Warp", doc::ClassDoc("Warp"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::field_transform::Warp& self, const char* name)
-      { self.SetActiveField(name); },
-      nb::arg("name"))
-    .def("GetActiveFieldName", &viskores::filter::field_transform::Warp::GetActiveFieldName)
-    .def("SetOutputFieldName", &viskores::filter::field_transform::Warp::SetOutputFieldName)
-    .def("GetOutputFieldName", &viskores::filter::field_transform::Warp::GetOutputFieldName)
-    .def(
-      "SetUseCoordinateSystemAsField",
-      [](viskores::filter::field_transform::Warp& self, bool enabled)
-      { self.SetUseCoordinateSystemAsField(enabled); },
-      nb::arg("enabled"))
-    .def("GetUseCoordinateSystemAsField",
-         &viskores::filter::field_transform::Warp::GetUseCoordinateSystemAsField)
-    .def("SetDirectionField", &viskores::filter::field_transform::Warp::SetDirectionField)
-    .def("GetDirectionFieldName", &viskores::filter::field_transform::Warp::GetDirectionFieldName)
+  auto warp =
+    BindClassWithDefaultConstructor<field_transform::Warp>(
+      m, erase_existing_name, "Warp");
+  BindFilterActiveFieldNameMethods<field_transform::Warp>(warp);
+  BindFilterOutputFieldMethods<field_transform::Warp>(warp);
+  BindFilterCoordinateSystemFieldMethods<field_transform::Warp>(warp);
+  warp
+    .def("SetDirectionField", &field_transform::Warp::SetDirectionField)
+    .def("GetDirectionFieldName", &field_transform::Warp::GetDirectionFieldName)
     .def(
       "SetConstantDirection",
-      [](viskores::filter::field_transform::Warp& self, nb::object directionObject)
+      [](field_transform::Warp& self, nb::object directionObject)
       {
         self.SetConstantDirection(ParseVec3(directionObject, viskores::Vec3f_32{ 0.f, 0.f, 1.f }));
       },
       nb::arg("direction"))
     .def("GetConstantDirection",
-         [](const viskores::filter::field_transform::Warp& self)
-         {
-           const auto direction = self.GetConstantDirection();
-           return nb::make_tuple(direction[0], direction[1], direction[2]);
-         })
-    .def(
-      "SetUseConstantDirection",
-      [](viskores::filter::field_transform::Warp& self, bool enabled)
-      { self.SetUseConstantDirection(enabled); },
-      nb::arg("enabled"))
-    .def("GetUseConstantDirection",
-         &viskores::filter::field_transform::Warp::GetUseConstantDirection)
-    .def("SetScaleField", &viskores::filter::field_transform::Warp::SetScaleField)
-    .def("GetScaleFieldName", &viskores::filter::field_transform::Warp::GetScaleFieldName)
-    .def(
-      "SetUseScaleField",
-      [](viskores::filter::field_transform::Warp& self, bool enabled)
-      { self.SetUseScaleField(enabled); },
-      nb::arg("enabled"))
-    .def("GetUseScaleField", &viskores::filter::field_transform::Warp::GetUseScaleField)
-    .def(
-      "SetScaleFactor",
-      [](viskores::filter::field_transform::Warp& self, double scale)
-      { self.SetScaleFactor(static_cast<viskores::FloatDefault>(scale)); },
-      nb::arg("scale"))
-    .def("GetScaleFactor", &viskores::filter::field_transform::Warp::GetScaleFactor)
-    .def(
-      "SetChangeCoordinateSystem",
-      [](viskores::filter::field_transform::Warp& self, bool enabled)
-      { self.SetChangeCoordinateSystem(enabled); },
-      nb::arg("enabled"))
-    .def("GetChangeCoordinateSystem",
-         &viskores::filter::field_transform::Warp::GetChangeCoordinateSystem)
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::field_transform::Warp>,
-         doc::ExecuteFilter);
+         [](const field_transform::Warp& self)
+         { return Vec3ToTuple(self.GetConstantDirection()); })
+    .def("SetUseConstantDirection", &field_transform::Warp::SetUseConstantDirection, nb::arg("enabled"))
+    .def("GetUseConstantDirection", &field_transform::Warp::GetUseConstantDirection)
+    .def("SetScaleField", &field_transform::Warp::SetScaleField)
+    .def("GetScaleFieldName", &field_transform::Warp::GetScaleFieldName)
+    .def("SetUseScaleField", &field_transform::Warp::SetUseScaleField, nb::arg("enabled"))
+    .def("GetUseScaleField", &field_transform::Warp::GetUseScaleField);
+  BindCastedProperty<field_transform::Warp, viskores::FloatDefault, double>(
+    warp,
+    "SetScaleFactor",
+    "GetScaleFactor",
+    &field_transform::Warp::SetScaleFactor,
+    &field_transform::Warp::GetScaleFactor,
+    "scale");
+  warp
+    .def("SetChangeCoordinateSystem",
+         &field_transform::Warp::SetChangeCoordinateSystem,
+         nb::arg("enabled"))
+    .def("GetChangeCoordinateSystem", &field_transform::Warp::GetChangeCoordinateSystem);
+  BindFilterExecuteMethod<field_transform::Warp>(warp);
 }
 #else
 void RegisterNanobindFieldTransformClasses(nb::module_&, const std::function<void(const char*)>&) {}

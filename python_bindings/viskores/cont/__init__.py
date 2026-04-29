@@ -42,6 +42,17 @@ if hasattr(_viskores, "ColorTable"):
     ColorTable = _viskores.ColorTable
     __all__.append("ColorTable")
 
+for _name in sorted(dir(_viskores)):
+    if _name.startswith(
+        (
+            "ArrayHandleGroupVecVariable",
+            "ArrayHandleRecombineVec",
+            "ArrayHandleSOAVec",
+        )
+    ):
+        globals()[_name] = getattr(_viskores, _name)
+        __all__.append(_name)
+
 for _name in (
     "DeviceAdapterId",
     "Initialize",
@@ -49,60 +60,6 @@ for _name in (
     "InitializeResult",
     "IsInitialized",
     "ArrayCopy",
-    "ArrayHandleRecombineVecFloat32",
-    "ArrayHandleRecombineVecFloat64",
-    "ArrayHandleRecombineVecFloatDefault",
-    "ArrayHandleRecombineVecInt8",
-    "ArrayHandleRecombineVecUInt8",
-    "ArrayHandleRecombineVecInt16",
-    "ArrayHandleRecombineVecUInt16",
-    "ArrayHandleRecombineVecInt32",
-    "ArrayHandleRecombineVecUInt32",
-    "ArrayHandleRecombineVecInt64",
-    "ArrayHandleRecombineVecUInt64",
-    "ArrayHandleGroupVecVariableFloat32",
-    "ArrayHandleGroupVecVariableFloat64",
-    "ArrayHandleGroupVecVariableFloatDefault",
-    "ArrayHandleGroupVecVariableInt8",
-    "ArrayHandleGroupVecVariableUInt8",
-    "ArrayHandleGroupVecVariableInt16",
-    "ArrayHandleGroupVecVariableUInt16",
-    "ArrayHandleGroupVecVariableInt32",
-    "ArrayHandleGroupVecVariableUInt32",
-    "ArrayHandleGroupVecVariableInt64",
-    "ArrayHandleGroupVecVariableUInt64",
-    "ArrayHandleGroupVecVariableId",
-    "ArrayHandleSOAVec2f_32",
-    "ArrayHandleSOAVec2f_64",
-    "ArrayHandleSOAVec3f_32",
-    "ArrayHandleSOAVec3f_64",
-    "ArrayHandleSOAVec4f_32",
-    "ArrayHandleSOAVec4f_64",
-    "ArrayHandleSOAVec3f",
-    "ArrayHandleSOAVec2i_8",
-    "ArrayHandleSOAVec2i_16",
-    "ArrayHandleSOAVec2i_32",
-    "ArrayHandleSOAVec2i_64",
-    "ArrayHandleSOAVec3i_8",
-    "ArrayHandleSOAVec3i_16",
-    "ArrayHandleSOAVec3i_32",
-    "ArrayHandleSOAVec3i_64",
-    "ArrayHandleSOAVec4i_8",
-    "ArrayHandleSOAVec4i_16",
-    "ArrayHandleSOAVec4i_32",
-    "ArrayHandleSOAVec4i_64",
-    "ArrayHandleSOAVec2ui_8",
-    "ArrayHandleSOAVec2ui_16",
-    "ArrayHandleSOAVec2ui_32",
-    "ArrayHandleSOAVec2ui_64",
-    "ArrayHandleSOAVec3ui_8",
-    "ArrayHandleSOAVec3ui_16",
-    "ArrayHandleSOAVec3ui_32",
-    "ArrayHandleSOAVec3ui_64",
-    "ArrayHandleSOAVec4ui_8",
-    "ArrayHandleSOAVec4ui_16",
-    "ArrayHandleSOAVec4ui_32",
-    "ArrayHandleSOAVec4ui_64",
     "CellSet",
     "CoordinateSystem",
     "DataSet",
@@ -126,10 +83,15 @@ for _name in (
 ):
     if hasattr(_viskores, _name):
         globals()[_name] = getattr(_viskores, _name)
-        __all__.append(_name)
+        if _name not in __all__:
+            __all__.append(_name)
 
 
 _create_uniform_dataset = create_uniform_dataset
+
+# Keep this in sync with the fixed-width Vec instantiations in the C++ bindings.
+# Broader arbitrary-width input support should be revisited after the first API pass.
+_COMPILED_VECTOR_WIDTHS = (1, 2, 3, 4)
 
 
 def _normalize_dimensions(dimensions):
@@ -199,14 +161,14 @@ def _prepare_uniform_field_array(field_name, values, grid_shape, association):
     if (
         array.ndim == len(expected_grid_shape) + 1
         and field_shape[:-1] == expected_grid_shape
-        and field_shape[-1] in (1, 2, 3, 4)
+        and field_shape[-1] in _COMPILED_VECTOR_WIDTHS
     ):
         return array.reshape(number_of_values, field_shape[-1])
 
     if (
         array.ndim == 2
         and field_shape[0] == number_of_values
-        and field_shape[1] in (1, 2, 3, 4)
+        and field_shape[1] in _COMPILED_VECTOR_WIDTHS
     ):
         return array
 

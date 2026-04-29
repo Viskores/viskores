@@ -12,6 +12,8 @@
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/string.h>
 
+#include <array>
+
 #include <viskores/cont/ArrayHandleGroupVecVariable.h>
 
 namespace viskores::python::bindings

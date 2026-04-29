@@ -17,29 +17,16 @@ void RegisterNanobindImageProcessingClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-  erase_existing_name("ComputeMoments");
-  nb::class_<viskores::filter::image_processing::ComputeMoments>(
-    m, "ComputeMoments", doc::ClassDoc("ComputeMoments"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::image_processing::ComputeMoments& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def("GetActiveFieldName",
-         &viskores::filter::image_processing::ComputeMoments::GetActiveFieldName)
-    .def("GetActiveFieldAssociation",
-         &viskores::filter::image_processing::ComputeMoments::GetActiveFieldAssociation)
-    .def("SetOutputFieldName",
-         &viskores::filter::image_processing::ComputeMoments::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::image_processing::ComputeMoments::GetOutputFieldName)
+  auto computeMoments =
+    BindClassWithDefaultConstructor<viskores::filter::image_processing::ComputeMoments>(
+      m, erase_existing_name, "ComputeMoments");
+  BindFilterActiveFieldMethods<viskores::filter::image_processing::ComputeMoments>(
+    computeMoments);
+  BindFilterActiveFieldAssociationMethod<viskores::filter::image_processing::ComputeMoments>(
+    computeMoments);
+  BindFilterOutputFieldMethods<viskores::filter::image_processing::ComputeMoments>(
+    computeMoments);
+  computeMoments
     .def("SetRadius",
          &viskores::filter::image_processing::ComputeMoments::SetRadius,
          nb::arg("radius"))
@@ -49,52 +36,19 @@ void RegisterNanobindImageProcessingClasses(
       { self.SetSpacing(ParseVec3(spacingObject, viskores::Vec3f(1.0f, 1.0f, 1.0f))); },
       nb::arg("spacing"))
     .def(
-      "SetOrder", &viskores::filter::image_processing::ComputeMoments::SetOrder, nb::arg("order"))
-    .def(
-      "Execute",
-      [](viskores::filter::image_processing::ComputeMoments& self, nb::handle dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+      "SetOrder", &viskores::filter::image_processing::ComputeMoments::SetOrder, nb::arg("order"));
+  BindFilterExecuteMethod<viskores::filter::image_processing::ComputeMoments>(computeMoments);
 
-  erase_existing_name("ImageDifference");
-  nb::class_<viskores::filter::image_processing::ImageDifference>(
-    m, "ImageDifference", doc::ClassDoc("ImageDifference"))
-    .def(nb::init<>())
-    .def(
-      "SetPrimaryField",
-      [](viskores::filter::image_processing::ImageDifference& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetPrimaryField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def("GetPrimaryFieldName",
-         &viskores::filter::image_processing::ImageDifference::GetPrimaryFieldName)
-    .def("GetPrimaryFieldAssociation",
-         &viskores::filter::image_processing::ImageDifference::GetPrimaryFieldAssociation)
-    .def(
-      "SetSecondaryField",
-      [](viskores::filter::image_processing::ImageDifference& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetSecondaryField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def("GetSecondaryFieldName",
-         &viskores::filter::image_processing::ImageDifference::GetSecondaryFieldName)
-    .def("GetSecondaryFieldAssociation",
-         &viskores::filter::image_processing::ImageDifference::GetSecondaryFieldAssociation)
-    .def("SetOutputFieldName",
-         &viskores::filter::image_processing::ImageDifference::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::image_processing::ImageDifference::GetOutputFieldName)
+  auto imageDifference =
+    BindClassWithDefaultConstructor<viskores::filter::image_processing::ImageDifference>(
+      m, erase_existing_name, "ImageDifference");
+  BindFilterPrimaryFieldMethods<viskores::filter::image_processing::ImageDifference>(
+    imageDifference);
+  BindFilterSecondaryFieldMethods<viskores::filter::image_processing::ImageDifference>(
+    imageDifference);
+  BindFilterOutputFieldMethods<viskores::filter::image_processing::ImageDifference>(
+    imageDifference);
+  imageDifference
     .def("SetThresholdFieldName",
          &viskores::filter::image_processing::ImageDifference::SetThresholdFieldName,
          nb::arg("name"))
@@ -120,42 +74,20 @@ void RegisterNanobindImageProcessingClasses(
     .def("GetPixelDiffThreshold",
          &viskores::filter::image_processing::ImageDifference::GetPixelDiffThreshold)
     .def("GetImageDiffWithinThreshold",
-         &viskores::filter::image_processing::ImageDifference::GetImageDiffWithinThreshold)
-    .def(
-      "Execute",
-      [](viskores::filter::image_processing::ImageDifference& self, nb::handle dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+         &viskores::filter::image_processing::ImageDifference::GetImageDiffWithinThreshold);
+  BindFilterExecuteMethod<viskores::filter::image_processing::ImageDifference>(imageDifference);
 
-  erase_existing_name("ImageMedian");
-  nb::class_<viskores::filter::image_processing::ImageMedian>(
-    m, "ImageMedian", doc::ClassDoc("ImageMedian"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::image_processing::ImageMedian& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def("GetActiveFieldName", &viskores::filter::image_processing::ImageMedian::GetActiveFieldName)
-    .def("GetActiveFieldAssociation",
-         &viskores::filter::image_processing::ImageMedian::GetActiveFieldAssociation)
-    .def("SetOutputFieldName", &viskores::filter::image_processing::ImageMedian::SetOutputFieldName)
-    .def("GetOutputFieldName", &viskores::filter::image_processing::ImageMedian::GetOutputFieldName)
+  auto imageMedian =
+    BindClassWithDefaultConstructor<viskores::filter::image_processing::ImageMedian>(
+      m, erase_existing_name, "ImageMedian");
+  BindFilterActiveFieldMethods<viskores::filter::image_processing::ImageMedian>(imageMedian);
+  BindFilterActiveFieldAssociationMethod<viskores::filter::image_processing::ImageMedian>(
+    imageMedian);
+  BindFilterOutputFieldMethods<viskores::filter::image_processing::ImageMedian>(imageMedian);
+  imageMedian
     .def("Perform3x3", &viskores::filter::image_processing::ImageMedian::Perform3x3)
-    .def("Perform5x5", &viskores::filter::image_processing::ImageMedian::Perform5x5)
-    .def(
-      "Execute",
-      [](viskores::filter::image_processing::ImageMedian& self, nb::handle dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+    .def("Perform5x5", &viskores::filter::image_processing::ImageMedian::Perform5x5);
+  BindFilterExecuteMethod<viskores::filter::image_processing::ImageMedian>(imageMedian);
 }
 #else
 void RegisterNanobindImageProcessingClasses(nb::module_&, const std::function<void(const char*)>&)

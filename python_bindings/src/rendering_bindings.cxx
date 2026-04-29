@@ -76,10 +76,7 @@ void RegisterNanobindCameraClass(nb::module_& m,
     .def("SetModeTo3D", &viskores::rendering::Camera::SetModeTo3D)
     .def("GetLookAt",
          [](const viskores::rendering::Camera& self)
-         {
-           const auto value = self.GetLookAt();
-           return nb::make_tuple(value[0], value[1], value[2]);
-         })
+         { return Vec3ToTuple(self.GetLookAt()); })
     .def(
       "SetLookAt",
       [](viskores::rendering::Camera& self, nb::object valueObject)
@@ -87,10 +84,7 @@ void RegisterNanobindCameraClass(nb::module_& m,
       nb::arg("value"))
     .def("GetViewUp",
          [](const viskores::rendering::Camera& self)
-         {
-           const auto value = self.GetViewUp();
-           return nb::make_tuple(value[0], value[1], value[2]);
-         })
+         { return Vec3ToTuple(self.GetViewUp()); })
     .def(
       "SetViewUp",
       [](viskores::rendering::Camera& self, nb::object valueObject)
@@ -98,10 +92,7 @@ void RegisterNanobindCameraClass(nb::module_& m,
       nb::arg("value"))
     .def("GetPosition",
          [](const viskores::rendering::Camera& self)
-         {
-           const auto value = self.GetPosition();
-           return nb::make_tuple(value[0], value[1], value[2]);
-         })
+         { return Vec3ToTuple(self.GetPosition()); })
     .def(
       "SetPosition",
       [](viskores::rendering::Camera& self, nb::object valueObject)
@@ -117,24 +108,7 @@ void RegisterNanobindCameraClass(nb::module_& m,
     .def(
       "ResetToBounds",
       [](viskores::rendering::Camera& self, nb::object boundsObject)
-      {
-        if (!nb::isinstance<nb::sequence>(boundsObject) || nb::isinstance<nb::str>(boundsObject))
-        {
-          throw std::runtime_error("Expected a sequence of 6 floats.");
-        }
-        nb::sequence sequence = nb::borrow<nb::sequence>(boundsObject);
-        if (nb::len(sequence) != 6)
-        {
-          throw std::runtime_error("Expected a sequence of 6 floats.");
-        }
-        double values[6];
-        for (size_t index = 0; index < 6; ++index)
-        {
-          values[index] = nb::cast<double>(sequence[index]);
-        }
-        self.ResetToBounds(
-          viskores::Bounds(values[0], values[1], values[2], values[3], values[4], values[5]));
-      },
+      { self.ResetToBounds(ParseBounds(boundsObject)); },
       nb::arg("bounds"))
     .def(
       "Azimuth",
@@ -419,24 +393,7 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
          const std::shared_ptr<viskores::cont::ColorTable>& colorTable,
          bool horizontal)
       {
-        if (!nb::isinstance<nb::sequence>(boundsObject) || nb::isinstance<nb::str>(boundsObject))
-        {
-          throw std::runtime_error("Expected a sequence of 6 floats.");
-        }
-        nb::sequence sequence = nb::borrow<nb::sequence>(boundsObject);
-        if (nb::len(sequence) != 6)
-        {
-          throw std::runtime_error("Expected a sequence of 6 floats.");
-        }
-        double values[6];
-        for (size_t index = 0; index < 6; ++index)
-        {
-          values[index] = nb::cast<double>(sequence[index]);
-        }
-        self.AddColorBar(
-          viskores::Bounds(values[0], values[1], values[2], values[3], values[4], values[5]),
-          *colorTable,
-          horizontal);
+        self.AddColorBar(ParseBounds(boundsObject), *colorTable, horizontal);
       },
       nb::arg("bounds"),
       nb::arg("color_table"),

@@ -11,13 +11,13 @@
 from pathlib import Path
 
 import viskores.cont
+from distributed_topology_helpers import (
+    canonicalize_distributed_augmented_tree_volumes,
+    compile_distributed_contour_tree_superarcs,
+)
 from viskores.filter.scalar_topology import ContourTreeUniformDistributed
 from viskores.io import VTKDataSetReader
-from viskores.testing import (
-    CanonicalizeDistributedAugmentedTreeVolumes,
-    CompileDistributedContourTreeSuperarcs,
-    MakeTestDataSet,
-)
+from viskores.testing import MakeTestDataSet
 
 
 def repo_root() -> Path:
@@ -68,7 +68,7 @@ def check_8x9():
     ]
     for num_blocks in (8, 16):
         result = run_distributed_filter(dataset, "pointvar", num_blocks)
-        assert CompileDistributedContourTreeSuperarcs(result) == expected
+        assert compile_distributed_contour_tree_superarcs(result) == expected
 
 
 def check_5x6x7():
@@ -99,9 +99,9 @@ def check_5x6x7():
     ]
     for num_blocks in (8, 16):
         result = run_distributed_filter(dataset, "pointvar", num_blocks, use_marching_cubes=False)
-        assert CompileDistributedContourTreeSuperarcs(result) == expected_freudenthal
+        assert compile_distributed_contour_tree_superarcs(result) == expected_freudenthal
         result = run_distributed_filter(dataset, "pointvar", num_blocks, use_marching_cubes=True)
-        assert CompileDistributedContourTreeSuperarcs(result) == expected_marching_cubes
+        assert compile_distributed_contour_tree_superarcs(result) == expected_marching_cubes
 
 
 def check_vanc():
@@ -110,7 +110,7 @@ def check_vanc():
     expected = read_edge_file(root / "data/baseline/vanc.ct_txt")
     for num_blocks in (8, 16):
         result = run_distributed_filter(dataset, "var", num_blocks)
-        assert CompileDistributedContourTreeSuperarcs(result) == expected
+        assert compile_distributed_contour_tree_superarcs(result) == expected
 
 
 def check_vanc_augmented_hierarchical_tree():
@@ -127,7 +127,7 @@ def check_vanc_augmented_hierarchical_tree():
             augment_hierarchical_tree=True,
             pass_block_indices=pass_block_indices,
         )
-        assert CanonicalizeDistributedAugmentedTreeVolumes(result, (21, 18, 1)) == expected
+        assert canonicalize_distributed_augmented_tree_volumes(result, (21, 18, 1)) == expected
 
 
 def main():

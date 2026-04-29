@@ -212,22 +212,14 @@ void RegisterNanobindImplicitFunctionClasses(
       { self.SetMinPoint(ParseVec3(pointObject, self.GetMinPoint())); },
       nb::arg("point"))
     .def("GetMinPoint",
-         [](const viskores::Box& self)
-         {
-           return nb::make_tuple(
-             self.GetMinPoint()[0], self.GetMinPoint()[1], self.GetMinPoint()[2]);
-         })
+         [](const viskores::Box& self) { return Vec3ToTuple(self.GetMinPoint()); })
     .def(
       "SetMaxPoint",
       [](viskores::Box& self, nb::object pointObject)
       { self.SetMaxPoint(ParseVec3(pointObject, self.GetMaxPoint())); },
       nb::arg("point"))
     .def("GetMaxPoint",
-         [](const viskores::Box& self)
-         {
-           return nb::make_tuple(
-             self.GetMaxPoint()[0], self.GetMaxPoint()[1], self.GetMaxPoint()[2]);
-         });
+         [](const viskores::Box& self) { return Vec3ToTuple(self.GetMaxPoint()); });
 
   erase_existing_name("Sphere");
   nb::class_<viskores::Sphere>(m, "Sphere", doc::ClassDoc("Sphere"))
@@ -255,7 +247,7 @@ void RegisterNanobindImplicitFunctionClasses(
       nb::arg("center"))
     .def("GetCenter",
          [](const viskores::Sphere& self)
-         { return nb::make_tuple(self.GetCenter()[0], self.GetCenter()[1], self.GetCenter()[2]); })
+         { return Vec3ToTuple(self.GetCenter()); })
     .def(
       "SetRadius",
       [](viskores::Sphere& self, double radius)
@@ -340,7 +332,7 @@ void RegisterNanobindImplicitFunctionClasses(
       nb::arg("point"))
     .def("GetOrigin",
          [](const viskores::Plane& self)
-         { return nb::make_tuple(self.GetOrigin()[0], self.GetOrigin()[1], self.GetOrigin()[2]); })
+         { return Vec3ToTuple(self.GetOrigin()); })
     .def(
       "SetNormal",
       [](viskores::Plane& self, nb::object pointObject)
@@ -348,7 +340,7 @@ void RegisterNanobindImplicitFunctionClasses(
       nb::arg("point"))
     .def("GetNormal",
          [](const viskores::Plane& self)
-         { return nb::make_tuple(self.GetNormal()[0], self.GetNormal()[1], self.GetNormal()[2]); });
+         { return Vec3ToTuple(self.GetNormal()); });
 }
 #else
 void RegisterNanobindImplicitFunctionClasses(nb::module_&, const std::function<void(const char*)>&)
@@ -682,7 +674,7 @@ void RegisterNanobindModule(nb::module_& m)
   RegisterNanobindInteropClasses(m, erase_existing_name);
 #endif
 
-#if VISKORES_PYTHON_ENABLE_INTEROP || VISKORES_PYTHON_ENABLE_TESTING_UTILS
+#if VISKORES_PYTHON_ENABLE_INTEROP
   RegisterNanobindHelperFunctions(m, erase_existing_name);
 #endif
 

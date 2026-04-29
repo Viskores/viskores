@@ -12,352 +12,156 @@
 namespace viskores::python::bindings
 {
 
+namespace density = viskores::filter::density_estimate;
+
+namespace
+{
+
+template <typename FilterType, typename ClassType>
+ClassType& BindDensityActiveFieldMethods(ClassType& cls)
+{
+  BindFilterActiveFieldMethods<FilterType>(cls);
+  BindFilterActiveFieldAssociationMethod<FilterType>(cls);
+  return cls;
+}
+
+template <typename FilterType, typename ClassType>
+ClassType& BindParticleDensityGridMethods(ClassType& cls)
+{
+  cls
+    .def("SetComputeNumberDensity", &FilterType::SetComputeNumberDensity)
+    .def("GetComputeNumberDensity", &FilterType::GetComputeNumberDensity)
+    .def("SetDivideByVolume", &FilterType::SetDivideByVolume)
+    .def("GetDivideByVolume", &FilterType::GetDivideByVolume)
+    .def(
+      "SetBounds",
+      [](FilterType& self, nb::handle boundsObject)
+      { self.SetBounds(ParseBounds(boundsObject)); },
+      nb::arg("bounds"))
+    .def("GetBounds",
+         [](const FilterType& self)
+         { return BoundsToTuple(self.GetBounds()); });
+  BindId3Property<FilterType>(
+    cls, "SetDimension", "GetDimension", &FilterType::SetDimension, &FilterType::GetDimension);
+  BindVec3Property<FilterType>(
+    cls, "SetOrigin", "GetOrigin", &FilterType::SetOrigin, &FilterType::GetOrigin, "origin");
+  BindVec3Property<FilterType>(
+    cls, "SetSpacing", "GetSpacing", &FilterType::SetSpacing, &FilterType::GetSpacing, "spacing");
+  return cls;
+}
+
+} // namespace
+
 #if VISKORES_PYTHON_ENABLE_FILTER_DENSITY_ESTIMATE
 void RegisterNanobindDensityEstimateClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-  erase_existing_name("ContinuousScatterPlot");
-  nb::class_<viskores::filter::density_estimate::ContinuousScatterPlot>(
-    m, "ContinuousScatterPlot", doc::ClassDoc("ContinuousScatterPlot"))
-    .def(nb::init<>())
+  auto continuousScatterPlot =
+    BindClassWithDefaultConstructor<density::ContinuousScatterPlot>(
+      m, erase_existing_name, "ContinuousScatterPlot");
+  continuousScatterPlot
     .def(
       "SetActiveFieldsPair",
-      [](viskores::filter::density_estimate::ContinuousScatterPlot& self,
+      [](density::ContinuousScatterPlot& self,
          const char* fieldName1,
          const char* fieldName2) { self.SetActiveFieldsPair(fieldName1, fieldName2); },
       nb::arg("field_name_1"),
-      nb::arg("field_name_2"))
-    .def("SetOutputFieldName",
-         &viskores::filter::density_estimate::ContinuousScatterPlot::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::density_estimate::ContinuousScatterPlot::GetOutputFieldName)
-    .def(
-      "Execute",
-      [](viskores::filter::density_estimate::ContinuousScatterPlot& self, nb::handle dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+      nb::arg("field_name_2"));
+  BindFilterOutputFieldMethods<density::ContinuousScatterPlot>(
+    continuousScatterPlot);
+  BindFilterExecuteMethod<density::ContinuousScatterPlot>(
+    continuousScatterPlot);
 
-  erase_existing_name("Entropy");
-  nb::class_<viskores::filter::density_estimate::Entropy>(m, "Entropy", doc::ClassDoc("Entropy"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::density_estimate::Entropy& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def("GetActiveFieldName", &viskores::filter::density_estimate::Entropy::GetActiveFieldName)
-    .def("GetActiveFieldAssociation",
-         &viskores::filter::density_estimate::Entropy::GetActiveFieldAssociation)
-    .def("SetOutputFieldName", &viskores::filter::density_estimate::Entropy::SetOutputFieldName)
-    .def("GetOutputFieldName", &viskores::filter::density_estimate::Entropy::GetOutputFieldName)
-    .def("SetNumberOfBins", &viskores::filter::density_estimate::Entropy::SetNumberOfBins)
-    .def("GetNumberOfBins", &viskores::filter::density_estimate::Entropy::GetNumberOfBins)
-    .def(
-      "Execute",
-      [](viskores::filter::density_estimate::Entropy& self, nb::handle dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+  auto entropy =
+    BindClassWithDefaultConstructor<density::Entropy>(
+      m, erase_existing_name, "Entropy");
+  BindDensityActiveFieldMethods<density::Entropy>(entropy);
+  BindFilterOutputFieldMethods<density::Entropy>(entropy);
+  entropy
+    .def("SetNumberOfBins", &density::Entropy::SetNumberOfBins)
+    .def("GetNumberOfBins", &density::Entropy::GetNumberOfBins);
+  BindFilterExecuteMethod<density::Entropy>(entropy);
 
-  erase_existing_name("Histogram");
-  nb::class_<viskores::filter::density_estimate::Histogram>(
-    m, "Histogram", doc::ClassDoc("Histogram"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::density_estimate::Histogram& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def("GetActiveFieldName", &viskores::filter::density_estimate::Histogram::GetActiveFieldName)
-    .def("GetActiveFieldAssociation",
-         &viskores::filter::density_estimate::Histogram::GetActiveFieldAssociation)
-    .def("SetOutputFieldName", &viskores::filter::density_estimate::Histogram::SetOutputFieldName)
-    .def("GetOutputFieldName", &viskores::filter::density_estimate::Histogram::GetOutputFieldName)
-    .def("SetNumberOfBins", &viskores::filter::density_estimate::Histogram::SetNumberOfBins)
-    .def("GetNumberOfBins", &viskores::filter::density_estimate::Histogram::GetNumberOfBins)
-    .def("SetRange", &viskores::filter::density_estimate::Histogram::SetRange, nb::arg("range"))
-    .def("GetRange", &viskores::filter::density_estimate::Histogram::GetRange)
-    .def("GetBinDelta", &viskores::filter::density_estimate::Histogram::GetBinDelta)
-    .def("GetComputedRange", &viskores::filter::density_estimate::Histogram::GetComputedRange)
-    .def(
-      "Execute",
-      [](viskores::filter::density_estimate::Histogram& self, nb::handle dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+  auto histogram =
+    BindClassWithDefaultConstructor<density::Histogram>(
+      m, erase_existing_name, "Histogram");
+  BindDensityActiveFieldMethods<density::Histogram>(histogram);
+  BindFilterOutputFieldMethods<density::Histogram>(histogram);
+  histogram
+    .def("SetNumberOfBins", &density::Histogram::SetNumberOfBins)
+    .def("GetNumberOfBins", &density::Histogram::GetNumberOfBins)
+    .def("SetRange", &density::Histogram::SetRange, nb::arg("range"))
+    .def("GetRange", &density::Histogram::GetRange)
+    .def("GetBinDelta", &density::Histogram::GetBinDelta)
+    .def("GetComputedRange", &density::Histogram::GetComputedRange);
+  BindFilterExecuteMethod<density::Histogram>(histogram);
 
-  erase_existing_name("NDEntropy");
-  nb::class_<viskores::filter::density_estimate::NDEntropy>(
-    m, "NDEntropy", doc::ClassDoc("NDEntropy"))
-    .def(nb::init<>())
+  auto ndEntropy =
+    BindClassWithDefaultConstructor<density::NDEntropy>(
+      m, erase_existing_name, "NDEntropy");
+  ndEntropy
     .def(
       "AddFieldAndBin",
-      [](viskores::filter::density_estimate::NDEntropy& self,
+      [](density::NDEntropy& self,
          const char* fieldName,
          viskores::Id numBins) { self.AddFieldAndBin(fieldName, numBins); },
       nb::arg("field_name"),
-      nb::arg("num_bins"))
-    .def(
-      "Execute",
-      [](viskores::filter::density_estimate::NDEntropy& self, nb::handle dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+      nb::arg("num_bins"));
+  BindFilterExecuteMethod<density::NDEntropy>(ndEntropy);
 
-  erase_existing_name("NDHistogram");
-  nb::class_<viskores::filter::density_estimate::NDHistogram>(
-    m, "NDHistogram", doc::ClassDoc("NDHistogram"))
-    .def(nb::init<>())
+  auto ndHistogram =
+    BindClassWithDefaultConstructor<density::NDHistogram>(
+      m, erase_existing_name, "NDHistogram");
+  ndHistogram
     .def(
       "AddFieldAndBin",
-      [](viskores::filter::density_estimate::NDHistogram& self,
+      [](density::NDHistogram& self,
          const char* fieldName,
          viskores::Id numBins) { self.AddFieldAndBin(fieldName, numBins); },
       nb::arg("field_name"),
       nb::arg("num_bins"))
     .def("GetBinDelta",
-         &viskores::filter::density_estimate::NDHistogram::GetBinDelta,
+         &density::NDHistogram::GetBinDelta,
          nb::arg("field_index"))
     .def("GetDataRange",
-         &viskores::filter::density_estimate::NDHistogram::GetDataRange,
-         nb::arg("field_index"))
-    .def(
-      "Execute",
-      [](viskores::filter::density_estimate::NDHistogram& self, nb::handle dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+         &density::NDHistogram::GetDataRange,
+         nb::arg("field_index"));
+  BindFilterExecuteMethod<density::NDHistogram>(ndHistogram);
 
-  erase_existing_name("Statistics");
-  nb::class_<viskores::filter::density_estimate::Statistics>(
-    m, "Statistics", doc::ClassDoc("Statistics"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::density_estimate::Statistics& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def("GetActiveFieldName", &viskores::filter::density_estimate::Statistics::GetActiveFieldName)
-    .def("GetActiveFieldAssociation",
-         &viskores::filter::density_estimate::Statistics::GetActiveFieldAssociation)
-    .def(
-      "Execute",
-      [](viskores::filter::density_estimate::Statistics& self, nb::handle dataObject)
-      { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+  auto statistics =
+    BindClassWithDefaultConstructor<density::Statistics>(
+      m, erase_existing_name, "Statistics");
+  BindDensityActiveFieldMethods<density::Statistics>(statistics);
+  BindFilterExecuteMethod<density::Statistics>(statistics);
 
-  erase_existing_name("ParticleDensityNearestGridPoint");
-  nb::class_<viskores::filter::density_estimate::ParticleDensityNearestGridPoint>(
-    m, "ParticleDensityNearestGridPoint", doc::ClassDoc("ParticleDensityNearestGridPoint"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::density_estimate::ParticleDensityNearestGridPoint& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def("GetActiveFieldName",
-         &viskores::filter::density_estimate::ParticleDensityNearestGridPoint::GetActiveFieldName)
-    .def("SetOutputFieldName",
-         &viskores::filter::density_estimate::ParticleDensityNearestGridPoint::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::density_estimate::ParticleDensityNearestGridPoint::GetOutputFieldName)
-    .def(
-      "SetComputeNumberDensity",
-      &viskores::filter::density_estimate::ParticleDensityNearestGridPoint::SetComputeNumberDensity)
-    .def(
-      "GetComputeNumberDensity",
-      &viskores::filter::density_estimate::ParticleDensityNearestGridPoint::GetComputeNumberDensity)
-    .def("SetDivideByVolume",
-         &viskores::filter::density_estimate::ParticleDensityNearestGridPoint::SetDivideByVolume)
-    .def("GetDivideByVolume",
-         &viskores::filter::density_estimate::ParticleDensityNearestGridPoint::GetDivideByVolume)
-    .def(
-      "SetDimension",
-      [](viskores::filter::density_estimate::ParticleDensityNearestGridPoint& self,
-         nb::handle dimensionObject) { self.SetDimension(ParseDimensions(dimensionObject)); },
-      nb::arg("dimension"))
-    .def("GetDimension",
-         [](const viskores::filter::density_estimate::ParticleDensityNearestGridPoint& self)
-         {
-           auto dimension = self.GetDimension();
-           return nb::make_tuple(dimension[0], dimension[1], dimension[2]);
-         })
-    .def(
-      "SetOrigin",
-      [](viskores::filter::density_estimate::ParticleDensityNearestGridPoint& self,
-         nb::handle originObject) { self.SetOrigin(ParseVec3(originObject, self.GetOrigin())); },
-      nb::arg("origin"))
-    .def("GetOrigin",
-         [](const viskores::filter::density_estimate::ParticleDensityNearestGridPoint& self)
-         {
-           auto origin = self.GetOrigin();
-           return nb::make_tuple(origin[0], origin[1], origin[2]);
-         })
-    .def(
-      "SetSpacing",
-      [](viskores::filter::density_estimate::ParticleDensityNearestGridPoint& self,
-         nb::handle spacingObject)
-      { self.SetSpacing(ParseVec3(spacingObject, self.GetSpacing())); },
-      nb::arg("spacing"))
-    .def("GetSpacing",
-         [](const viskores::filter::density_estimate::ParticleDensityNearestGridPoint& self)
-         {
-           auto spacing = self.GetSpacing();
-           return nb::make_tuple(spacing[0], spacing[1], spacing[2]);
-         })
-    .def(
-      "SetBounds",
-      [](viskores::filter::density_estimate::ParticleDensityNearestGridPoint& self,
-         nb::handle boundsObject)
-      {
-        const auto boundsTuple = nb::cast<nb::tuple>(boundsObject);
-        if (boundsTuple.size() != 6)
-        {
-          throw std::runtime_error("bounds must have six values");
-        }
-        self.SetBounds(viskores::Bounds(nb::cast<viskores::Float64>(boundsTuple[0]),
-                                        nb::cast<viskores::Float64>(boundsTuple[1]),
-                                        nb::cast<viskores::Float64>(boundsTuple[2]),
-                                        nb::cast<viskores::Float64>(boundsTuple[3]),
-                                        nb::cast<viskores::Float64>(boundsTuple[4]),
-                                        nb::cast<viskores::Float64>(boundsTuple[5])));
-      },
-      nb::arg("bounds"))
-    .def("GetBounds",
-         [](const viskores::filter::density_estimate::ParticleDensityNearestGridPoint& self)
-         {
-           const auto bounds = self.GetBounds();
-           return nb::make_tuple(
-             bounds.X.Min, bounds.X.Max, bounds.Y.Min, bounds.Y.Max, bounds.Z.Min, bounds.Z.Max);
-         })
-    .def(
-      "Execute",
-      [](viskores::filter::density_estimate::ParticleDensityNearestGridPoint& self,
-         nb::handle dataObject) { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+  auto particleDensityNearestGridPoint =
+    BindClassWithDefaultConstructor<
+      density::ParticleDensityNearestGridPoint>(
+      m, erase_existing_name, "ParticleDensityNearestGridPoint");
+  BindFilterActiveFieldMethods<
+    density::ParticleDensityNearestGridPoint>(
+    particleDensityNearestGridPoint);
+  BindFilterOutputFieldMethods<
+    density::ParticleDensityNearestGridPoint>(
+    particleDensityNearestGridPoint);
+  BindParticleDensityGridMethods<
+    density::ParticleDensityNearestGridPoint>(
+    particleDensityNearestGridPoint);
+  BindFilterExecuteMethod<density::ParticleDensityNearestGridPoint>(
+    particleDensityNearestGridPoint);
 
-  erase_existing_name("ParticleDensityCloudInCell");
-  nb::class_<viskores::filter::density_estimate::ParticleDensityCloudInCell>(
-    m, "ParticleDensityCloudInCell", doc::ClassDoc("ParticleDensityCloudInCell"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::density_estimate::ParticleDensityCloudInCell& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def("GetActiveFieldName",
-         &viskores::filter::density_estimate::ParticleDensityCloudInCell::GetActiveFieldName)
-    .def("SetOutputFieldName",
-         &viskores::filter::density_estimate::ParticleDensityCloudInCell::SetOutputFieldName)
-    .def("GetOutputFieldName",
-         &viskores::filter::density_estimate::ParticleDensityCloudInCell::GetOutputFieldName)
-    .def("SetComputeNumberDensity",
-         &viskores::filter::density_estimate::ParticleDensityCloudInCell::SetComputeNumberDensity)
-    .def("GetComputeNumberDensity",
-         &viskores::filter::density_estimate::ParticleDensityCloudInCell::GetComputeNumberDensity)
-    .def("SetDivideByVolume",
-         &viskores::filter::density_estimate::ParticleDensityCloudInCell::SetDivideByVolume)
-    .def("GetDivideByVolume",
-         &viskores::filter::density_estimate::ParticleDensityCloudInCell::GetDivideByVolume)
-    .def(
-      "SetDimension",
-      [](viskores::filter::density_estimate::ParticleDensityCloudInCell& self,
-         nb::handle dimensionObject) { self.SetDimension(ParseDimensions(dimensionObject)); },
-      nb::arg("dimension"))
-    .def("GetDimension",
-         [](const viskores::filter::density_estimate::ParticleDensityCloudInCell& self)
-         {
-           auto dimension = self.GetDimension();
-           return nb::make_tuple(dimension[0], dimension[1], dimension[2]);
-         })
-    .def(
-      "SetOrigin",
-      [](viskores::filter::density_estimate::ParticleDensityCloudInCell& self,
-         nb::handle originObject) { self.SetOrigin(ParseVec3(originObject, self.GetOrigin())); },
-      nb::arg("origin"))
-    .def("GetOrigin",
-         [](const viskores::filter::density_estimate::ParticleDensityCloudInCell& self)
-         {
-           auto origin = self.GetOrigin();
-           return nb::make_tuple(origin[0], origin[1], origin[2]);
-         })
-    .def(
-      "SetSpacing",
-      [](viskores::filter::density_estimate::ParticleDensityCloudInCell& self,
-         nb::handle spacingObject)
-      { self.SetSpacing(ParseVec3(spacingObject, self.GetSpacing())); },
-      nb::arg("spacing"))
-    .def("GetSpacing",
-         [](const viskores::filter::density_estimate::ParticleDensityCloudInCell& self)
-         {
-           auto spacing = self.GetSpacing();
-           return nb::make_tuple(spacing[0], spacing[1], spacing[2]);
-         })
-    .def(
-      "SetBounds",
-      [](viskores::filter::density_estimate::ParticleDensityCloudInCell& self,
-         nb::handle boundsObject)
-      {
-        const auto boundsTuple = nb::cast<nb::tuple>(boundsObject);
-        if (boundsTuple.size() != 6)
-        {
-          throw std::runtime_error("bounds must have six values");
-        }
-        self.SetBounds(viskores::Bounds(nb::cast<viskores::Float64>(boundsTuple[0]),
-                                        nb::cast<viskores::Float64>(boundsTuple[1]),
-                                        nb::cast<viskores::Float64>(boundsTuple[2]),
-                                        nb::cast<viskores::Float64>(boundsTuple[3]),
-                                        nb::cast<viskores::Float64>(boundsTuple[4]),
-                                        nb::cast<viskores::Float64>(boundsTuple[5])));
-      },
-      nb::arg("bounds"))
-    .def("GetBounds",
-         [](const viskores::filter::density_estimate::ParticleDensityCloudInCell& self)
-         {
-           const auto bounds = self.GetBounds();
-           return nb::make_tuple(
-             bounds.X.Min, bounds.X.Max, bounds.Y.Min, bounds.Y.Max, bounds.Z.Min, bounds.Z.Max);
-         })
-    .def(
-      "Execute",
-      [](viskores::filter::density_estimate::ParticleDensityCloudInCell& self,
-         nb::handle dataObject) { return ExecuteFilterToPython(self, dataObject); },
-      nb::arg("data"),
-      doc::ExecuteFilter);
+  auto particleDensityCloudInCell =
+    BindClassWithDefaultConstructor<density::ParticleDensityCloudInCell>(
+      m, erase_existing_name, "ParticleDensityCloudInCell");
+  BindFilterActiveFieldMethods<density::ParticleDensityCloudInCell>(
+    particleDensityCloudInCell);
+  BindFilterOutputFieldMethods<density::ParticleDensityCloudInCell>(
+    particleDensityCloudInCell);
+  BindParticleDensityGridMethods<density::ParticleDensityCloudInCell>(
+    particleDensityCloudInCell);
+  BindFilterExecuteMethod<density::ParticleDensityCloudInCell>(
+    particleDensityCloudInCell);
 }
 #else
 void RegisterNanobindDensityEstimateClasses(nb::module_&, const std::function<void(const char*)>&)
