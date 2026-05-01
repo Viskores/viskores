@@ -105,6 +105,7 @@ viskores_option(Viskores_ENABLE_MPI "Enable MPI support" OFF)
 viskores_option(Viskores_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
 viskores_option(Viskores_ENABLE_EXAMPLES "Build examples" OFF)
 viskores_option(Viskores_ENABLE_TUTORIALS "Build tutorials" OFF)
+viskores_option(Viskores_ENABLE_PYTHON_BINDINGS "Build Python bindings" OFF)
 if (NOT DEFINED Viskores_ENABLE_TESTING)
     if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
       viskores_option(Viskores_ENABLE_TESTING "Enable Viskores Testing" ON)
@@ -253,6 +254,7 @@ viskores_module_force_group(Testing
   )
 viskores_module_force_group(Benchmarking ENABLE_OPTION Viskores_ENABLE_BENCHMARKS)
 viskores_module_force_group(ANARI ENABLE_OPTION Viskores_ENABLE_ANARI)
+viskores_module_force_group(PythonBindings ENABLE_OPTION Viskores_ENABLE_PYTHON_BINDINGS)
 
 # The tutorial requires several common filters. This logic might need to
 # become more complicated (or less compliated if we decide to always
@@ -379,7 +381,7 @@ add_subdirectory(viskoresstd)
 #-----------------------------------------------------------------------------
 # Process modules
 viskores_modules_scan(
-  SCAN_DIRECTORIES viskores benchmarking docs
+  SCAN_DIRECTORIES viskores benchmarking docs python_bindings
   PROVIDED_MODULES all_modules
   )
 viskores_modules_build(

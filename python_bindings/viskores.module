@@ -1,0 +1,6 @@
+NAME
+  viskores_python_bindings
+GROUPS
+  PythonBindings
+DEPENDS
+  viskores_cont
