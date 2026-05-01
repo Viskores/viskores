@@ -69,6 +69,17 @@ Current low-risk cleanup targets are:
 - revisit manual bindings whose only remaining blockers are tuple conversion,
   range/bounds conversion, or Python ownership wrappers
 
+## Documentation Follow-Up
+
+The manifest currently carries short class-level `doc` strings so class
+docstrings are generated from manifest data rather than hardcoded in C++. This
+should be treated as a fallback mechanism, not the final documentation source.
+Long term, prefer extracting class and method docstrings from the C++ Doxygen
+documentation, most likely from Doxygen XML so overloads, namespaces, templates,
+and inherited documentation can be matched robustly to manifest entries.
+Manifest `doc` fields should remain useful for Python-specific behavior,
+binding deviations, or undocumented C++ symbols.
+
 `Actor.GetScalarRange()` has been aligned with C++ and now returns
 `viskores.Range`.
 

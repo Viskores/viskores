@@ -30,7 +30,11 @@ wrapping. Classes with `binding: excluded` are intentionally not exposed.
 - `binding`: Optional binding state. Valid values are `manual` and `excluded`.
   Omit this field for generated bindings.
 - `doc`: Optional class docstring. The generator emits these into the class-doc
-  lookup used by generated and manual bindings that call `doc::ClassDoc`.
+  lookup used by generated and manual bindings that call `doc::ClassDoc`. This
+  is intended as a short-term fallback for Python-specific text or undocumented
+  classes. Long term, prefer extracting class and method docstrings from the C++
+  Doxygen documentation, most likely through Doxygen XML, and use manifest docs
+  only as overrides.
 - `base`: Optional generated Python base class. Use
   `viskores::filter::Filter` for generated filters that should inherit common
   filter methods such as `Execute`, active-field selection, output-field naming,
