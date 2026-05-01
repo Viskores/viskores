@@ -18,8 +18,6 @@ for _name in (
     "Gradient",
     "SurfaceNormals",
     "VectorMagnitude",
-    "gradient",
-    "vector_magnitude",
 ):
     if hasattr(_viskores, _name):
         globals()[_name] = getattr(_viskores, _name)

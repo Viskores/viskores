@@ -19,101 +19,14 @@ namespace viskores::python::bindings
 namespace cont = viskores::cont;
 namespace rendering = viskores::rendering;
 
-template <typename MapperType, typename ClassType>
-ClassType& BindMapperCompositeBackground(ClassType& cls)
-{
-  cls.def("SetCompositeBackground", &MapperType::SetCompositeBackground, nb::arg("enabled"));
-  return cls;
-}
-
-template <typename MapperType, typename ClassType, typename Setter>
-ClassType& BindMapperFloat32Setter(ClassType& cls,
-                                   const char* name,
-                                   Setter setter,
-                                   const char* argName)
-{
-  BindCastedSetter<MapperType, viskores::Float32, double>(cls, name, setter, argName);
-  return cls;
-}
-
-template <typename MapperType, typename ClassType>
-ClassType& BindMapperRadiusControls(ClassType& cls)
-{
-  cls.def("UseVariableRadius", &MapperType::UseVariableRadius, nb::arg("enabled"));
-  BindMapperFloat32Setter<MapperType>(cls, "SetRadius", &MapperType::SetRadius, "radius");
-  BindMapperFloat32Setter<MapperType>(
-    cls, "SetRadiusDelta", &MapperType::SetRadiusDelta, "delta");
-  return cls;
-}
-
-template <typename MapperType, typename ClassType>
-ClassType& BindMapperGlyphSizeControls(ClassType& cls)
-{
-  BindCastedProperty<MapperType, viskores::Float32, double>(
-    cls, "SetBaseSize", "GetBaseSize", &MapperType::SetBaseSize, &MapperType::GetBaseSize, "size");
-  BindCastedProperty<MapperType, viskores::Float32, double>(
-    cls,
-    "SetScaleDelta",
-    "GetScaleDelta",
-    &MapperType::SetScaleDelta,
-    &MapperType::GetScaleDelta,
-    "delta");
-  return cls;
-}
-
-void RegisterNanobindColorTableClass(nb::module_& m,
-                                     const std::function<void(const char*)>& erase_existing_name)
-{
-  erase_existing_name("ColorTable");
-  nb::class_<cont::ColorTable>(m, "ColorTable", doc::ClassDoc("ColorTable"))
-    .def(nb::init<const std::string&>(), nb::arg("name") = "Default")
-    .def("__repr__",
-         [](const cont::ColorTable& self)
-         {
-           std::ostringstream stream;
-           stream << "viskores.cont.ColorTable(name=\"" << self.GetName() << "\")";
-           return stream.str();
-         })
-    .def("GetName", &cont::ColorTable::GetName)
-    .def("SetName", &cont::ColorTable::SetName)
-    .def("GetRange", &cont::ColorTable::GetRange)
-    .def("GetNumberOfPoints", &cont::ColorTable::GetNumberOfPoints)
-    .def("SetClampingOn", &cont::ColorTable::SetClampingOn)
-    .def("SetClampingOff", &cont::ColorTable::SetClampingOff)
-    .def("GetClamping", &cont::ColorTable::GetClamping)
-    .def(
-      "SetBelowRangeColor",
-      [](cont::ColorTable& self, nb::object colorObject)
-      { self.SetBelowRangeColor(ParseColorTableColor(colorObject)); },
-      nb::arg("color"))
-    .def(
-      "SetAboveRangeColor",
-      [](cont::ColorTable& self, nb::object colorObject)
-      { self.SetAboveRangeColor(ParseColorTableColor(colorObject)); },
-      nb::arg("color"))
-    .def(
-      "RescaleToRange",
-      [](cont::ColorTable& self, nb::object rangeObject)
-      { self.RescaleToRange(ParseRange(rangeObject)); },
-      nb::arg("range"))
-    .def(
-      "AddPointAlpha",
-      [](cont::ColorTable& self, double x, double alpha)
-      { return self.AddPointAlpha(x, static_cast<viskores::Float32>(alpha)); },
-      nb::arg("x"),
-      nb::arg("alpha"));
-}
-
 void RegisterNanobindCameraClass(nb::module_& m,
                                  const std::function<void(const char*)>& erase_existing_name)
 {
-  erase_existing_name("CameraMode");
-  nb::enum_<rendering::Camera::Mode>(m, "CameraMode")
-    .value("TwoD", rendering::Camera::Mode::TwoD)
-    .value("ThreeD", rendering::Camera::Mode::ThreeD);
-
   auto camera =
     BindClassWithDefaultConstructor<rendering::Camera>(m, erase_existing_name, "Camera");
+  nb::enum_<rendering::Camera::Mode>(camera, "Mode")
+    .value("TwoD", rendering::Camera::Mode::TwoD)
+    .value("ThreeD", rendering::Camera::Mode::ThreeD);
   camera
     .def("GetMode", &rendering::Camera::GetMode)
     .def("SetMode", &rendering::Camera::SetMode, nb::arg("mode"))
@@ -196,21 +109,13 @@ void RegisterNanobindCameraClass(nb::module_& m,
 void RegisterNanobindRenderingClasses(nb::module_& m,
                                       const std::function<void(const char*)>& erase_existing_name)
 {
-  erase_existing_name("GlyphType");
-  nb::enum_<rendering::GlyphType>(m, "GlyphType")
-    .value("Arrow", rendering::GlyphType::Arrow)
-    .value("Axes", rendering::GlyphType::Axes)
-    .value("Cube", rendering::GlyphType::Cube)
-    .value("Quad", rendering::GlyphType::Quad)
-    .value("Sphere", rendering::GlyphType::Sphere);
-
   auto make_actor_with_field = [](const auto& dataObject, const std::string& fieldName)
   { return std::make_shared<rendering::Actor>(dataObject, fieldName); };
   auto make_actor_with_field_and_color_table =
     [](const auto& dataObject,
        const std::string& fieldName,
-       const std::shared_ptr<cont::ColorTable>& colorTable)
-  { return std::make_shared<rendering::Actor>(dataObject, fieldName, *colorTable); };
+       const cont::ColorTable& colorTable)
+  { return std::make_shared<rendering::Actor>(dataObject, fieldName, colorTable); };
   auto make_actor_with_coordinate =
     [](const auto& dataObject, const std::string& coordinateName, const std::string& fieldName)
   { return std::make_shared<rendering::Actor>(dataObject, coordinateName, fieldName); };
@@ -218,10 +123,10 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
     [](const auto& dataObject,
        const std::string& coordinateName,
        const std::string& fieldName,
-       const std::shared_ptr<cont::ColorTable>& colorTable)
+       const cont::ColorTable& colorTable)
   {
     return std::make_shared<rendering::Actor>(
-      dataObject, coordinateName, fieldName, *colorTable);
+      dataObject, coordinateName, fieldName, colorTable);
   };
 
   erase_existing_name("Actor");
@@ -240,7 +145,7 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
         rendering::Actor* self,
         const std::shared_ptr<cont::DataSet>& dataSet,
         const std::string& fieldName,
-        const std::shared_ptr<cont::ColorTable>& colorTable)
+        const cont::ColorTable& colorTable)
       {
         new (self) rendering::Actor(
           *make_actor_with_field_and_color_table(*dataSet, fieldName, colorTable));
@@ -268,7 +173,7 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
         const std::shared_ptr<cont::DataSet>& dataSet,
         const std::string& coordinateName,
         const std::string& fieldName,
-        const std::shared_ptr<cont::ColorTable>& colorTable)
+        const cont::ColorTable& colorTable)
       {
         new (self) rendering::Actor(*make_actor_with_coordinate_and_color_table(
           *dataSet, coordinateName, fieldName, colorTable));
@@ -291,7 +196,7 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
         rendering::Actor* self,
         const std::shared_ptr<cont::PartitionedDataSet>& dataSet,
         const std::string& fieldName,
-        const std::shared_ptr<cont::ColorTable>& colorTable)
+        const cont::ColorTable& colorTable)
       {
         new (self) rendering::Actor(
           *make_actor_with_field_and_color_table(*dataSet, fieldName, colorTable));
@@ -320,7 +225,7 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
         const std::shared_ptr<cont::PartitionedDataSet>& dataSet,
         const std::string& coordinateName,
         const std::string& fieldName,
-        const std::shared_ptr<cont::ColorTable>& colorTable)
+        const cont::ColorTable& colorTable)
       {
         new (self) rendering::Actor(*make_actor_with_coordinate_and_color_table(
           *dataSet, coordinateName, fieldName, colorTable));
@@ -332,13 +237,10 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
     .def("__repr__", []() { return "viskores.rendering.Actor()"; })
     .def("GetColorTable",
          [](const rendering::Actor& self)
-         { return std::make_shared<cont::ColorTable>(self.GetColorTable()); })
+         { return cont::ColorTable(self.GetColorTable()); })
     .def("GetScalarRange",
          [](const rendering::Actor& self)
-         {
-           const auto range = self.GetScalarRange();
-           return nb::make_tuple(range.Min, range.Max);
-         })
+         { return self.GetScalarRange(); })
     .def(
       "SetScalarRange",
       [](rendering::Actor& self, nb::object rangeObject)
@@ -435,10 +337,10 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
       "AddColorBar",
       [](rendering::Canvas& self,
          nb::object boundsObject,
-         const std::shared_ptr<cont::ColorTable>& colorTable,
+         const cont::ColorTable& colorTable,
          bool horizontal)
       {
-        self.AddColorBar(ParseBounds(boundsObject), *colorTable, horizontal);
+        self.AddColorBar(ParseBounds(boundsObject), colorTable, horizontal);
       },
       nb::arg("bounds"),
       nb::arg("color_table"),
@@ -446,100 +348,12 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
     .def("BlendBackground", &rendering::Canvas::BlendBackground)
     .def("SaveAs", &rendering::Canvas::SaveAs, nb::arg("file_name"));
 
-  erase_existing_name("CanvasRayTracer");
-  nb::class_<rendering::CanvasRayTracer, rendering::Canvas>(
-    m, "CanvasRayTracer", doc::ClassDoc("CanvasRayTracer"))
-    .def(nb::init<viskores::IdComponent, viskores::IdComponent>(),
-         nb::arg("width") = 1024,
-         nb::arg("height") = 1024);
+  erase_existing_name("ScalarRenderer");
+  auto scalarRenderer =
+    nb::class_<rendering::ScalarRenderer>(m, "ScalarRenderer", doc::ClassDoc("ScalarRenderer"));
 
-  auto mapperVolume = BindClassWithDefaultConstructor<rendering::MapperVolume>(
-    m, erase_existing_name, "MapperVolume");
-  BindMapperFloat32Setter<rendering::MapperVolume>(
-    mapperVolume, "SetSampleDistance", &rendering::MapperVolume::SetSampleDistance, "distance");
-  BindMapperCompositeBackground<rendering::MapperVolume>(mapperVolume);
-
-  auto mapperPoint =
-    BindClassWithDefaultConstructor<rendering::MapperPoint>(m, erase_existing_name, "MapperPoint");
-  mapperPoint
-    .def("SetUseCells", &rendering::MapperPoint::SetUseCells)
-    .def("SetUsePoints", &rendering::MapperPoint::SetUsePoints);
-  BindMapperRadiusControls<rendering::MapperPoint>(mapperPoint);
-  BindMapperCompositeBackground<rendering::MapperPoint>(mapperPoint);
-
-  auto mapperQuad =
-    BindClassWithDefaultConstructor<rendering::MapperQuad>(m, erase_existing_name, "MapperQuad");
-  BindMapperCompositeBackground<rendering::MapperQuad>(mapperQuad);
-
-  auto mapperConnectivity =
-    BindClassWithDefaultConstructor<rendering::MapperConnectivity>(
-      m, erase_existing_name, "MapperConnectivity");
-  BindMapperFloat32Setter<rendering::MapperConnectivity>(mapperConnectivity,
-                                                         "SetSampleDistance",
-                                                         &rendering::MapperConnectivity::
-                                                           SetSampleDistance,
-                                                         "distance");
-
-  auto mapperCylinder =
-    BindClassWithDefaultConstructor<rendering::MapperCylinder>(
-      m, erase_existing_name, "MapperCylinder");
-  BindMapperRadiusControls<rendering::MapperCylinder>(mapperCylinder);
-  BindMapperCompositeBackground<rendering::MapperCylinder>(mapperCylinder);
-
-  auto mapperGlyphScalar =
-    BindClassWithDefaultConstructor<rendering::MapperGlyphScalar>(
-      m, erase_existing_name, "MapperGlyphScalar");
-  mapperGlyphScalar
-    .def("GetGlyphType", &rendering::MapperGlyphScalar::GetGlyphType)
-    .def(
-      "SetGlyphType", &rendering::MapperGlyphScalar::SetGlyphType, nb::arg("glyph_type"))
-    .def("SetUseCells", &rendering::MapperGlyphScalar::SetUseCells)
-    .def("SetUsePoints", &rendering::MapperGlyphScalar::SetUsePoints)
-    .def("SetScaleByValue",
-         &rendering::MapperGlyphScalar::SetScaleByValue,
-         nb::arg("enabled"))
-    .def("GetScaleByValue", &rendering::MapperGlyphScalar::GetScaleByValue);
-  BindMapperGlyphSizeControls<rendering::MapperGlyphScalar>(mapperGlyphScalar);
-  BindMapperCompositeBackground<rendering::MapperGlyphScalar>(mapperGlyphScalar);
-
-  auto mapperGlyphVector =
-    BindClassWithDefaultConstructor<rendering::MapperGlyphVector>(
-      m, erase_existing_name, "MapperGlyphVector");
-  mapperGlyphVector
-    .def("GetGlyphType", &rendering::MapperGlyphVector::GetGlyphType)
-    .def(
-      "SetGlyphType", &rendering::MapperGlyphVector::SetGlyphType, nb::arg("glyph_type"))
-    .def("SetUseCells", &rendering::MapperGlyphVector::SetUseCells)
-    .def("SetUsePoints", &rendering::MapperGlyphVector::SetUsePoints)
-    .def("SetScaleByValue",
-         &rendering::MapperGlyphVector::SetScaleByValue,
-         nb::arg("enabled"))
-    .def("GetScaleByValue", &rendering::MapperGlyphVector::GetScaleByValue);
-  BindMapperGlyphSizeControls<rendering::MapperGlyphVector>(mapperGlyphVector);
-  BindMapperCompositeBackground<rendering::MapperGlyphVector>(mapperGlyphVector);
-
-  auto mapperWireframer =
-    BindClassWithDefaultConstructor<rendering::MapperWireframer>(
-      m, erase_existing_name, "MapperWireframer");
-  mapperWireframer
-    .def("GetShowInternalZones", &rendering::MapperWireframer::GetShowInternalZones)
-    .def("SetShowInternalZones",
-         &rendering::MapperWireframer::SetShowInternalZones,
-         nb::arg("enabled"))
-    .def("GetIsOverlay", &rendering::MapperWireframer::GetIsOverlay)
-    .def("SetIsOverlay", &rendering::MapperWireframer::SetIsOverlay, nb::arg("enabled"));
-  BindMapperCompositeBackground<rendering::MapperWireframer>(mapperWireframer);
-
-  auto mapperRayTracer =
-    BindClassWithDefaultConstructor<rendering::MapperRayTracer>(
-      m, erase_existing_name, "MapperRayTracer");
-  BindMapperCompositeBackground<rendering::MapperRayTracer>(mapperRayTracer);
-  mapperRayTracer.def(
-    "SetShadingOn", &rendering::MapperRayTracer::SetShadingOn, nb::arg("enabled"));
-
-  erase_existing_name("ScalarRendererResult");
   nb::class_<rendering::ScalarRenderer::Result>(
-    m, "ScalarRendererResult", doc::ClassDoc("ScalarRendererResult"))
+    scalarRenderer, "Result", doc::ClassDoc("ScalarRenderer.Result"))
     .def_prop_ro("Width",
                  [](const rendering::ScalarRenderer::Result& self) { return self.Width; })
     .def_prop_ro(
@@ -581,11 +395,9 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
                  })
     .def("ToDataSet",
          [](rendering::ScalarRenderer::Result& self)
-         { return WrapDataSet(self.ToDataSet()); });
+         { return nb::cast(self.ToDataSet()); });
 
-  erase_existing_name("ScalarRenderer");
-  nb::class_<rendering::ScalarRenderer>(
-    m, "ScalarRenderer", doc::ClassDoc("ScalarRenderer"))
+  scalarRenderer
     .def(nb::init<>())
     .def(
       "SetInput",
@@ -648,7 +460,6 @@ void RegisterNanobindRenderingClasses(nb::module_& m,
     .def("SaveAs", &rendering::View3D::SaveAs, nb::arg("file_name"));
 }
 #else
-void RegisterNanobindColorTableClass(nb::module_&, const std::function<void(const char*)>&) {}
 void RegisterNanobindCameraClass(nb::module_&, const std::function<void(const char*)>&) {}
 void RegisterNanobindRenderingClasses(nb::module_&, const std::function<void(const char*)>&) {}
 #endif

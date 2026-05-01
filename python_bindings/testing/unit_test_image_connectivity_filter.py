@@ -10,7 +10,7 @@
 
 import numpy as np
 
-from viskores.cont import create_uniform_dataset
+from viskores.python_convenience import create_uniform_dataset
 from viskores.filter.connected_components import ImageConnectivity
 
 
@@ -48,7 +48,7 @@ def main():
     connectivity = ImageConnectivity()
     connectivity.SetActiveField("color")
     output = connectivity.Execute(dataset)
-    result = output.GetField("component")
+    result = output.GetField("component").GetData().AsNumPy()
 
     assert np.array_equal(result, expected)
 

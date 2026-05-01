@@ -23,7 +23,7 @@ def test_cell_gradient_explicit():
 
     result = gradient.Execute(dataset)
     expected = np.array([[10.0, 10.1, 0.0], [10.0, 10.1, 0.0]], dtype=np.float32)
-    np.testing.assert_allclose(result.GetField("gradient"), expected, rtol=1e-6, atol=1e-6)
+    np.testing.assert_allclose(result.GetField("gradient").GetData().AsNumPy(), expected, rtol=1e-6, atol=1e-6)
 
 
 def test_point_gradient_explicit():
@@ -36,7 +36,7 @@ def test_point_gradient_explicit():
 
     result = gradient.Execute(dataset)
     expected = np.array([[10.0, 10.1, 0.0], [10.0, 10.1, 0.0]], dtype=np.float32)
-    computed = result.GetField("gradient")
+    computed = result.GetField("gradient").GetData().AsNumPy()
     assert computed.shape[1] == 3
     np.testing.assert_allclose(computed[:2], expected, rtol=1e-6, atol=1e-6)
 

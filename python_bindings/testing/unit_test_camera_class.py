@@ -7,7 +7,15 @@
 ##============================================================================
 
 from viskores import Range
-from viskores.rendering import Camera, CameraMode
+from viskores.rendering import Camera
+
+
+def expect_raises(callable_object, *args):
+    try:
+        callable_object(*args)
+    except Exception:
+        return
+    raise AssertionError("Expected an exception.")
 
 
 def main():
@@ -24,21 +32,26 @@ def main():
     assert camera.GetClippingRange() == Range(1.0, 10.0)
     assert camera.GetFieldOfView() == 60.0
 
-    assert camera.GetMode() == CameraMode.ThreeD
+    assert camera.GetMode() == Camera.Mode.ThreeD
 
     camera.SetModeTo2D()
-    assert camera.GetMode() == CameraMode.TwoD
+    assert camera.GetMode() == Camera.Mode.TwoD
 
     camera.SetViewRange2D(-0.5, 4.5, -0.5, 4.5)
-    assert camera.GetMode() == CameraMode.TwoD
+    assert camera.GetMode() == Camera.Mode.TwoD
     assert camera.GetViewRange2D() == (-0.5, 4.5, -0.5, 4.5)
 
     camera.SetXScale(2.0)
     assert camera.GetXScale() == 2.0
-    assert camera.GetMode() == CameraMode.TwoD
+    assert camera.GetMode() == Camera.Mode.TwoD
 
-    camera.SetMode(CameraMode.ThreeD)
-    assert camera.GetMode() == CameraMode.ThreeD
+    camera.SetMode(Camera.Mode.ThreeD)
+    assert camera.GetMode() == Camera.Mode.ThreeD
+
+    expect_raises(camera.SetLookAt, (1.0, 2.0))
+    expect_raises(camera.SetLookAt, (1.0, 2.0, 3.0, 4.0))
+    expect_raises(camera.ResetToBounds, (0.0, 1.0, 0.0, 1.0, 0.0))
+    expect_raises(camera.ResetToBounds, (0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 2.0))
 
 
 if __name__ == "__main__":

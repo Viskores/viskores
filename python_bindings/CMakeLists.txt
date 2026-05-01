@@ -206,6 +206,16 @@ if (TARGET viskores_filter_multi_block)
   list(APPEND Viskores_PYTHON_BINDING_DEFINITIONS VISKORES_PYTHON_ENABLE_FILTER_MULTI_BLOCK=1)
 endif()
 
+if (TARGET viskores_filter_uncertainty)
+  target_link_libraries(viskores_python_bindings PRIVATE viskores_filter_uncertainty)
+  list(APPEND Viskores_PYTHON_BINDING_DEFINITIONS VISKORES_PYTHON_ENABLE_FILTER_UNCERTAINTY=1)
+endif()
+
+if (TARGET viskores_filter_zfp)
+  target_link_libraries(viskores_python_bindings PRIVATE viskores_filter_zfp)
+  list(APPEND Viskores_PYTHON_BINDING_DEFINITIONS VISKORES_PYTHON_ENABLE_FILTER_ZFP=1)
+endif()
+
 if (TARGET viskores_filter_geometry_refinement)
   target_link_libraries(viskores_python_bindings PRIVATE viskores_filter_geometry_refinement)
   list(APPEND Viskores_PYTHON_BINDING_DEFINITIONS VISKORES_PYTHON_ENABLE_FILTER_GEOMETRY_REFINEMENT=1)
@@ -343,6 +353,10 @@ if (Viskores_ENABLE_TESTING)
     viskores_add_python_binding_test(
       UnitTestPythonWrapperWaveletSource
       "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_wavelet_source.py"
+    )
+    viskores_add_python_binding_test(
+      UnitTestPythonWrapperAmrSource
+      "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_amr_source.py"
     )
   endif()
 
@@ -683,6 +697,20 @@ if (Viskores_ENABLE_TESTING)
     viskores_add_python_binding_test(
       UnitTestPythonWrapperMergeDataSetsFilter
       "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_merge_datasets_filter.py"
+    )
+  endif()
+
+  if (TARGET viskores_filter_uncertainty)
+    viskores_add_python_binding_test(
+      UnitTestPythonWrapperUncertaintyFilters
+      "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_uncertainty_filters.py"
+    )
+  endif()
+
+  if (TARGET viskores_filter_zfp)
+    viskores_add_python_binding_test(
+      UnitTestPythonWrapperZFPFilters
+      "${CMAKE_CURRENT_SOURCE_DIR}/testing/unit_test_zfp_filters.py"
     )
   endif()
 

@@ -11,9 +11,10 @@
 import numpy as np
 from pathlib import Path
 
-from viskores.cont import make_FieldCell, make_FieldWholeDataSet
+from viskores.cont import Field, make_FieldCell
 from viskores.filter.contour import MIRFilter
 from viskores.io import VTKDataSetReader
+from viskores.python_convenience import array_from_numpy
 
 
 def main():
@@ -21,10 +22,10 @@ def main():
     reader = VTKDataSetReader(str(data_path))
     dataset = reader.ReadDataSet()
 
-    background = dataset.GetField("mesh_topo/background")
-    circle_a = dataset.GetField("mesh_topo/circle_a")
-    circle_b = dataset.GetField("mesh_topo/circle_b")
-    circle_c = dataset.GetField("mesh_topo/circle_c")
+    background = dataset.GetField("mesh_topo/background").GetData().AsNumPy()
+    circle_a = dataset.GetField("mesh_topo/circle_a").GetData().AsNumPy()
+    circle_b = dataset.GetField("mesh_topo/circle_b").GetData().AsNumPy()
+    circle_c = dataset.GetField("mesh_topo/circle_c").GetData().AsNumPy()
 
     length = (
         (background > 0).astype(np.int64)
@@ -59,8 +60,8 @@ def main():
 
     dataset.AddField(make_FieldCell("scatter_pos", offset))
     dataset.AddField(make_FieldCell("scatter_len", length))
-    dataset.AddField(make_FieldWholeDataSet("scatter_ids", mat_ids))
-    dataset.AddField(make_FieldWholeDataSet("scatter_vfs", mat_vfs))
+    dataset.AddField(Field("scatter_ids", Field.Association.WholeDataSet, array_from_numpy(mat_ids)))
+    dataset.AddField(Field("scatter_vfs", Field.Association.WholeDataSet, array_from_numpy(mat_vfs)))
 
     mir = MIRFilter()
     mir.SetIDWholeSetName("scatter_ids")

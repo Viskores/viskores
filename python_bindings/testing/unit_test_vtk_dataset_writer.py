@@ -32,7 +32,7 @@ def check_roundtrip(dataset, output_path, use_binary):
     assert read_back.GetNumberOfCells() == dataset.GetNumberOfCells()
     for field_name in ("pointvar", "cellvar"):
         assert read_back.HasField(field_name)
-        assert np.allclose(read_back.GetField(field_name), dataset.GetField(field_name))
+        assert np.allclose(read_back.GetField(field_name).GetData().AsNumPy(), dataset.GetField(field_name).GetData().AsNumPy())
 
 
 def main():

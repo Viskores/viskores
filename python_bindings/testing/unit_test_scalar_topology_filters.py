@@ -9,7 +9,7 @@
 ##=============================================================================
 
 from python_test_data import make_3d_uniform_dataset0
-from viskores.cont import partition_uniform_dataset
+from viskores.python_convenience import field_names, partition_uniform_dataset
 from viskores.filter.scalar_topology import (
     ContourTreeAugmented,
     ContourTreeUniformDistributed,
@@ -52,7 +52,7 @@ def main():
 
     extract = ExtractTopVolumeContoursFilter()
     top0 = top_result.GetPartition(0)
-    if top0.FieldNames() != []:
+    if field_names(top0) != []:
         contour_result = extract.Execute(top_result)
         assert contour_result.GetNumberOfPartitions() == top_result.GetNumberOfPartitions()
 

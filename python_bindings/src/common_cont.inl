@@ -6,8 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-using Association = viskores::cont::Field::Association;
-
 void SetPythonError(const std::exception& error)
 {
   throw std::runtime_error(error.what());
@@ -369,45 +367,18 @@ std::array<ValueType, Size> ParseFixedNumericSequence(nb::handle object, const c
   return values;
 }
 
-Association ParseAssociation(nb::handle object, Association defaultValue)
+viskores::Id2 ParseId2(nb::handle object)
 {
-  if (!object.is_valid() || object.is_none())
-  {
-    return defaultValue;
-  }
-  if (nb::isinstance<nb::int_>(object))
-  {
-    return static_cast<Association>(nb::cast<long>(object));
-  }
-  if (nb::isinstance<nb::str>(object))
-  {
-    std::string value = nb::cast<std::string>(object);
-    if ((value == "any") || (value == "ANY"))
-    {
-      return Association::Any;
-    }
-    if ((value == "whole_dataset") || (value == "whole-dataset") || (value == "whole"))
-    {
-      return Association::WholeDataSet;
-    }
-    if ((value == "points") || (value == "point"))
-    {
-      return Association::Points;
-    }
-    if ((value == "cells") || (value == "cell"))
-    {
-      return Association::Cells;
-    }
-    if ((value == "partitions") || (value == "partition"))
-    {
-      return Association::Partitions;
-    }
-    if (value == "global")
-    {
-      return Association::Global;
-    }
-  }
-  throw std::runtime_error("Association must be an int enum value or one of: any, points, cells.");
+  const auto values = ParseFixedNumericSequence<viskores::Id, long long, 2>(
+    object, "Expected a sequence of 2 integers.");
+  return viskores::Id2(values[0], values[1]);
+}
+
+viskores::Id3 ParseId3(nb::handle object)
+{
+  const auto values = ParseFixedNumericSequence<viskores::Id, long long, 3>(
+    object, "Expected a sequence of 3 integers.");
+  return viskores::Id3(values[0], values[1], values[2]);
 }
 
 viskores::Id3 ParseDimensions(nb::handle object)
@@ -428,9 +399,18 @@ viskores::Vec3f ParseVec3(nb::handle object, const viskores::Vec3f& defaultValue
     return defaultValue;
   }
 
-  return ParsePartialVec<viskores::Vec3f, viskores::FloatDefault, double>(
-           object, defaultValue, 1, 3, "Expected a sequence of 1, 2, or 3 floats.")
-    .first;
+  const auto values =
+    ParseFixedNumericSequence<viskores::FloatDefault, double, 3>(
+      object, "Expected a sequence of 3 floats.");
+  return viskores::Vec3f(values[0], values[1], values[2]);
+}
+
+viskores::Vec3f_32 ParseVec3f32(nb::handle object)
+{
+  const auto values =
+    ParseFixedNumericSequence<viskores::Float32, double, 3>(
+      object, "Expected a sequence of 3 floats.");
+  return viskores::Vec3f_32(values[0], values[1], values[2]);
 }
 
 viskores::RangeId3 ParseRangeId3(nb::handle object)
@@ -438,6 +418,28 @@ viskores::RangeId3 ParseRangeId3(nb::handle object)
   const auto values = ParseFixedNumericSequence<viskores::Id, long long, 6>(
     object, "Expected a sequence of 6 integers.");
   return viskores::RangeId3(values.data());
+}
+
+std::vector<viskores::Float64> ParseFloat64List(nb::handle object)
+{
+  if (!object.is_valid() || object.is_none())
+  {
+    return {};
+  }
+
+  if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))
+  {
+    throw std::runtime_error("Expected a sequence of floating-point values.");
+  }
+
+  nb::sequence sequence = nb::borrow<nb::sequence>(object);
+  const size_t count = static_cast<size_t>(nb::len(sequence));
+  std::vector<viskores::Float64> values(count);
+  for (size_t index = 0; index < count; ++index)
+  {
+    values[index] = nb::cast<viskores::Float64>(sequence[index]);
+  }
+  return values;
 }
 
 viskores::Range ParseRange(nb::handle object, const viskores::Range& defaultValue)
@@ -460,45 +462,16 @@ viskores::Range ParseRange(nb::handle object, const viskores::Range& defaultValu
 
 viskores::Bounds ParseBounds(nb::handle object)
 {
+  viskores::Bounds boundsValue;
+  if (nb::try_cast(object, boundsValue))
+  {
+    return boundsValue;
+  }
+
   const auto values =
     ParseFixedNumericSequence<double, double, 6>(object, "Expected a sequence of 6 floats.");
   return viskores::Bounds(values[0], values[1], values[2], values[3], values[4], values[5]);
 }
-
-#if VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
-bool ParseImplicitFunction(nb::handle object, viskores::ImplicitFunctionGeneral& function)
-{
-  viskores::Box box;
-  if (nb::try_cast(object, box))
-  {
-    function = box;
-    return true;
-  }
-
-  viskores::Cylinder cylinder;
-  if (nb::try_cast(object, cylinder))
-  {
-    function = cylinder;
-    return true;
-  }
-
-  viskores::Sphere sphere;
-  if (nb::try_cast(object, sphere))
-  {
-    function = sphere;
-    return true;
-  }
-
-  viskores::Plane plane;
-  if (nb::try_cast(object, plane))
-  {
-    function = plane;
-    return true;
-  }
-
-  return false;
-}
-#endif
 
 viskores::Id2 ParseSize2D(nb::handle object,
                           const viskores::Id2& defaultValue = viskores::Id2(1024, 1024))
@@ -717,11 +690,6 @@ nb::object GroupVecVariableValueToNumPyArray(const viskores::cont::UnknownArrayH
   throw std::runtime_error("Unsupported ArrayHandleGroupVecVariable component type.");
 }
 
-nb::object FieldToNumPyArray(const viskores::cont::Field& field)
-{
-  return UnknownArrayToNumPyArray(field.GetData());
-}
-
 nb::object IdArrayToNumPy(const viskores::cont::ArrayHandle<viskores::Id>& array)
 {
   viskores::cont::UnknownArrayHandle unknown(array);
@@ -776,7 +744,7 @@ viskores::cont::DataSet* RequireDataSet(nb::handle object)
   {
     return dataSet;
   }
-  throw std::runtime_error("Expected a viskores.DataSet instance.");
+  throw std::runtime_error("Expected a viskores.cont.DataSet instance.");
 }
 
 viskores::cont::PartitionedDataSet* RequirePartitionedDataSet(nb::handle object)
@@ -786,39 +754,5 @@ viskores::cont::PartitionedDataSet* RequirePartitionedDataSet(nb::handle object)
   {
     return dataSet;
   }
-  throw std::runtime_error("Expected a viskores.PartitionedDataSet instance.");
+  throw std::runtime_error("Expected a viskores.cont.PartitionedDataSet instance.");
 }
-
-nb::object WrapDataSet(const viskores::cont::DataSet& dataSet)
-{
-  return nb::cast(dataSet);
-}
-
-nb::object WrapPartitionedDataSet(const viskores::cont::PartitionedDataSet& dataSet)
-{
-  return nb::cast(dataSet);
-}
-
-#if VISKORES_PYTHON_ENABLE_RENDERING
-std::shared_ptr<viskores::cont::ColorTable> RequireColorTable(nb::handle object)
-{
-  std::shared_ptr<viskores::cont::ColorTable> colorTable;
-  if (nb::try_cast(object, colorTable))
-  {
-    return colorTable;
-  }
-  throw std::runtime_error("Expected a viskores.cont.ColorTable instance.");
-}
-
-viskores::Vec3f_32 ParseColorTableColor(nb::handle object)
-{
-  return ParsePartialVec<viskores::Vec3f_32, viskores::Float32, double>(
-           object,
-           viskores::Vec3f_32(0.0f, 0.0f, 0.0f),
-           3,
-           4,
-           "Expected a sequence of 3 or 4 numeric values.")
-    .first;
-}
-
-#endif

@@ -1,0 +1,73 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::ImplicitFunctionGeneral
+  header: viskores/ImplicitFunction.h
+  guard: VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
+  constructors:
+    - ()
+  implicitConstructors:
+    - viskores::Box
+    - viskores::Cylinder
+    - viskores::Plane
+    - viskores::Sphere
+  methods:
+    - Value(point: viskores::Vec3f)
+    - Gradient(point: viskores::Vec3f) -> viskores::Vec3f
+
+- class: viskores::Box
+  header: viskores/ImplicitFunction.h
+  guard: VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
+  constructors:
+    - ()
+    - (min_point: viskores::Vec3f, max_point: viskores::Vec3f)
+  methods:
+    - SetMinPoint(point: viskores::Vec3f)
+    - GetMinPoint() -> viskores::Vec3f
+    - SetMaxPoint(point: viskores::Vec3f)
+    - GetMaxPoint() -> viskores::Vec3f
+
+- class: viskores::Sphere
+  header: viskores/ImplicitFunction.h
+  guard: VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
+  constructors:
+    - ()
+    - (radius: viskores::FloatDefault)
+    - (center: viskores::Vec3f = nb::none(), radius: viskores::FloatDefault = 0.5)
+  methods:
+    - SetCenter(center: viskores::Vec3f)
+    - GetCenter() -> viskores::Vec3f
+    - SetRadius(radius: viskores::FloatDefault)
+    - GetRadius()
+
+- class: viskores::Cylinder
+  header: viskores/ImplicitFunction.h
+  guard: VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
+  constructors:
+    - ()
+    - (axis: viskores::Vec3f, radius: viskores::FloatDefault)
+    - (center: viskores::Vec3f = nb::none(), axis: viskores::Vec3f = nb::none(), radius: viskores::FloatDefault = 0.5)
+  methods:
+    - SetCenter(center: viskores::Vec3f)
+    - SetAxis(axis: viskores::Vec3f)
+    - SetRadius(radius: viskores::FloatDefault)
+
+- class: viskores::Plane
+  header: viskores/ImplicitFunction.h
+  guard: VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
+  constructors:
+    - ()
+    - (normal: viskores::Vec3f)
+    - (origin: viskores::Vec3f = nb::none(), normal: viskores::Vec3f = nb::none())
+  methods:
+    - SetOrigin(point: viskores::Vec3f)
+    - GetOrigin() -> viskores::Vec3f
+    - SetNormal(point: viskores::Vec3f)
+    - GetNormal() -> viskores::Vec3f

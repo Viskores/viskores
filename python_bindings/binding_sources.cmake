@@ -16,14 +16,6 @@ set(Viskores_PYTHON_BINDING_SOURCES
   src/shared_dataset_bindings.cxx
   src/shared_dataset_builder_bindings.cxx
   src/source_testing_io_bindings.cxx
-  src/filter_basic_bindings.cxx
-  src/filter_helper_bindings.cxx
-  src/filter_field_transform_bindings.cxx
-  src/filter_density_estimate_bindings.cxx
-  src/filter_image_processing_bindings.cxx
-  src/filter_additional_bindings.cxx
-  src/filter_geometry_refinement_bindings.cxx
-  src/filter_resampling_bindings.cxx
   src/scalar_topology_helper_bindings.cxx
   src/scalar_topology_bindings.cxx
   src/interop_support_bindings.cxx

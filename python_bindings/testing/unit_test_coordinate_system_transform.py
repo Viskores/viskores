@@ -20,7 +20,7 @@ from viskores.filter.field_transform import (
 def make_cart_dataset():
     dims = (5, 5, 5)
     spacing = (0.25, 0.25, 0.25)
-    ds = viskores.create_uniform_dataset(dims, spacing=spacing)
+    ds = viskores.python_convenience.create_uniform_dataset(dims, spacing=spacing)
     return ds, ds.GetCoordinateSystem().GetData().AsNumPy()
 
 
@@ -33,7 +33,7 @@ def make_cyl_dataset():
         for i in range(dim):
             theta = (2.0 * np.pi) * (i / (dim - 1))
             points.append([radius, theta, z_value])
-    ds = viskores.create_uniform_dataset((5, 5, 1))
+    ds = viskores.python_convenience.create_uniform_dataset((5, 5, 1))
     ds.AddPointField("coordinates", np.asarray(points, dtype=np.float32))
     return ds, np.asarray(points, dtype=np.float32)
 
@@ -49,7 +49,7 @@ def make_sph_dataset():
     for theta in thetas:
         for phi in phis:
             points.append([1.0, theta, phi])
-    ds = viskores.create_uniform_dataset((5, 5, 1))
+    ds = viskores.python_convenience.create_uniform_dataset((5, 5, 1))
     ds.AddPointField("coordinates", np.asarray(points, dtype=np.float32))
     return ds, np.asarray(points, dtype=np.float32)
 

@@ -10,60 +10,74 @@
 
 - class: viskores::filter::density_estimate::ContinuousScatterPlot
   pythonName: ContinuousScatterPlot
-  binding: manual
-  reason: Requires active field pair helper.
+  base: viskores::filter::Filter
+  methods:
+    - SetActiveFieldsPair(field_name_1: std::string, field_name_2: std::string)
 
 - class: viskores::filter::density_estimate::Entropy
-  fieldInputs:
-    - ActiveField
+  base: viskores::filter::Filter
   properties:
-    - OutputFieldName
     - NumberOfBins
-  directMethods:
-    - GetActiveFieldAssociation
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::density_estimate::Histogram
-  fieldInputs:
-    - ActiveField
+  base: viskores::filter::Filter
   properties:
-    - OutputFieldName
     - NumberOfBins
     - Range
   directMethods:
-    - GetActiveFieldAssociation
     - GetBinDelta
     - GetComputedRange
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::density_estimate::NDEntropy
   pythonName: NDEntropy
-  binding: manual
-  reason: Requires variable field list handling.
+  base: viskores::filter::Filter
+  methods:
+    - AddFieldAndBin(field_name: std::string, num_bins: viskores::Id)
 
 - class: viskores::filter::density_estimate::NDHistogram
   pythonName: NDHistogram
-  binding: manual
-  reason: Requires variable field list handling.
+  base: viskores::filter::Filter
+  directMethods:
+    - GetBinDelta
+    - GetDataRange
+  methods:
+    - AddFieldAndBin(field_name: std::string, num_bins: viskores::Id)
 
 - class: viskores::filter::density_estimate::ParticleDensityBase
   binding: excluded
   reason: Implementation base for concrete particle density filters.
 
 - class: viskores::filter::density_estimate::ParticleDensityCloudInCell
-  pythonName: ParticleDensityCloudInCell
-  binding: deferred
+  base: viskores::filter::Filter
+  methods:
+    - SetComputeNumberDensity(enabled: bool)
+    - GetComputeNumberDensity()
+    - SetDivideByVolume(enabled: bool)
+    - GetDivideByVolume()
+    - SetBounds(bounds: viskores::Bounds [Bounds])
+    - GetBounds() -> viskores::Bounds
+    - SetDimension(dimension: viskores::Id3)
+    - GetDimension() -> viskores::Id3
+    - SetOrigin(origin: viskores::Vec3f)
+    - GetOrigin() -> viskores::Vec3f
+    - SetSpacing(spacing: viskores::Vec3f)
+    - GetSpacing() -> viskores::Vec3f
 
 - class: viskores::filter::density_estimate::ParticleDensityNearestGridPoint
-  pythonName: ParticleDensityNearestGridPoint
-  binding: deferred
+  base: viskores::filter::Filter
+  methods:
+    - SetComputeNumberDensity(enabled: bool)
+    - GetComputeNumberDensity()
+    - SetDivideByVolume(enabled: bool)
+    - GetDivideByVolume()
+    - SetBounds(bounds: viskores::Bounds [Bounds])
+    - GetBounds() -> viskores::Bounds
+    - SetDimension(dimension: viskores::Id3)
+    - GetDimension() -> viskores::Id3
+    - SetOrigin(origin: viskores::Vec3f)
+    - GetOrigin() -> viskores::Vec3f
+    - SetSpacing(spacing: viskores::Vec3f)
+    - GetSpacing() -> viskores::Vec3f
 
 - class: viskores::filter::density_estimate::Statistics
-  fieldInputs:
-    - ActiveField
-  directMethods:
-    - GetActiveFieldAssociation
-  methodAdapters:
-    - Execute
+  base: viskores::filter::Filter

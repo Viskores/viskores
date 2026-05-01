@@ -44,13 +44,13 @@ def main():
         atol=1e-5,
     )
     np.testing.assert_allclose(
-        output.GetField("pointvar"),
+        output.GetField("pointvar").GetData().AsNumPy(),
         np.array([28.0, 19.0, 25.0, 15.0, 16.0, 21.0, 30.0], dtype=np.float32),
         rtol=1e-6,
         atol=1e-6,
     )
     np.testing.assert_allclose(
-        output.GetField("cellvar"),
+        output.GetField("cellvar").GetData().AsNumPy(),
         np.array([145.0, 134.0, 138.0, 140.0, 149.0, 144.0], dtype=np.float32),
         rtol=1e-6,
         atol=1e-6,

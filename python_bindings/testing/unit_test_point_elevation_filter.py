@@ -17,7 +17,7 @@ from viskores.filter.field_transform import PointElevation
 def main():
     dims = (5, 5, 5)
     spacing = (0.25, 0.25, 0.25)
-    ds = viskores.create_uniform_dataset(dims, spacing=spacing)
+    ds = viskores.python_convenience.create_uniform_dataset(dims, spacing=spacing)
 
     filt = PointElevation()
     filt.SetLowPoint((0.0, 0.0, 0.0))
@@ -29,7 +29,7 @@ def main():
     out = filt.Execute(ds)
     y_coords = np.arange(dims[1], dtype=np.float64) * spacing[1]
     expected = np.tile(np.repeat(y_coords * 2.0, dims[0]), dims[2])
-    np.testing.assert_allclose(out.GetField("height"), expected)
+    np.testing.assert_allclose(out.GetField("height").GetData().AsNumPy(), expected)
 
 
 if __name__ == "__main__":

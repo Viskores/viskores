@@ -17,7 +17,7 @@ IS_ASCENDING = 1 << 59
 
 
 def _field(dataset, name, dtype=None):
-    array = np.asarray(dataset.GetField(name))
+    array = np.asarray(dataset.GetField(name).GetData().AsNumPy())
     if dtype is None:
         return array
     return array.astype(dtype, copy=False)

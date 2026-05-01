@@ -38,7 +38,7 @@ bool TryCreateExplicitDataSetWithCoordinateType(
   auto numIndicesArray = viskores::cont::make_ArrayHandle(numIndices, viskores::CopyFlag::On);
   auto connectivityArray = viskores::cont::make_ArrayHandle(connectivity, viskores::CopyFlag::On);
 
-  output = WrapDataSet(viskores::cont::DataSetBuilderExplicit::Create(
+  output = nb::cast(viskores::cont::DataSetBuilderExplicit::Create(
     coordsArray, shapesArray, numIndicesArray, connectivityArray, coordName));
   return true;
 }
@@ -99,7 +99,7 @@ nb::object CreateExplicitDataSetFromPythonObjects(nb::handle coordsObject,
   {
   }
 
-  return WrapDataSet(viskores::cont::DataSetBuilderExplicit::Create(
+  return nb::cast(viskores::cont::DataSetBuilderExplicit::Create(
     ParseVec3Sequence(coordsObject), shapes, numIndices, connectivity, coordName));
 }
 
@@ -121,16 +121,16 @@ bool TryCreateCurvilinearDataSetWithCoordinateType(const viskores::cont::Unknown
   coords.AsArrayHandle(coordsArray);
   if (dimensionRank == 1)
   {
-    output = WrapDataSet(viskores::cont::DataSetBuilderCurvilinear::Create(coordsArray, coordName));
+    output = nb::cast(viskores::cont::DataSetBuilderCurvilinear::Create(coordsArray, coordName));
   }
   else if (dimensionRank == 2)
   {
-    output = WrapDataSet(viskores::cont::DataSetBuilderCurvilinear::Create(
+    output = nb::cast(viskores::cont::DataSetBuilderCurvilinear::Create(
       coordsArray, viskores::Id2(dimensions[0], dimensions[1]), coordName));
   }
   else if (dimensionRank == 3)
   {
-    output = WrapDataSet(
+    output = nb::cast(
       viskores::cont::DataSetBuilderCurvilinear::Create(coordsArray, dimensions, coordName));
   }
   else
@@ -230,25 +230,6 @@ void RegisterNanobindDataSetBuilderClasses(
       nb::arg("dimensions"),
       nb::arg("coord_name") = "coords");
 
-  erase_existing_name("DataSetBuilderUniform");
-  nb::class_<viskores::cont::DataSetBuilderUniform>(
-    m, "DataSetBuilderUniform", doc::ClassDoc("DataSetBuilderUniform"))
-    .def(nb::init<>())
-    .def_static(
-      "Create",
-      [](nb::object dimensions, nb::object origin, nb::object spacing, const std::string& coordName)
-      {
-        const auto parsedDimensions = ParseDimensions(dimensions);
-        const auto parsedOrigin = ParseVec3(origin, viskores::Vec3f(0.0f, 0.0f, 0.0f));
-        const auto parsedSpacing = ParseVec3(spacing, viskores::Vec3f(1.0f, 1.0f, 1.0f));
-        return WrapDataSet(viskores::cont::DataSetBuilderUniform::Create(
-          parsedDimensions, parsedOrigin, parsedSpacing, coordName));
-      },
-      nb::arg("dimensions"),
-      nb::arg("origin") = nb::none(),
-      nb::arg("spacing") = nb::none(),
-      nb::arg("coord_name") = "coords");
-
   erase_existing_name("DataSetBuilderRectilinear");
   nb::class_<viskores::cont::DataSetBuilderRectilinear>(
     m, "DataSetBuilderRectilinear", doc::ClassDoc("DataSetBuilderRectilinear"))
@@ -272,51 +253,24 @@ void RegisterNanobindDataSetBuilderClasses(
         auto x = ParseRectilinearAxis(xObject, "x");
         if (yObject.is_none())
         {
-          return WrapDataSet(viskores::cont::DataSetBuilderRectilinear::Create(x, actualCoordName));
+          return nb::cast(viskores::cont::DataSetBuilderRectilinear::Create(x, actualCoordName));
         }
 
         auto y = ParseRectilinearAxis(yObject, "y");
         if (zObject.is_none())
         {
-          return WrapDataSet(
+          return nb::cast(
             viskores::cont::DataSetBuilderRectilinear::Create(x, y, actualCoordName));
         }
 
         auto z = ParseRectilinearAxis(zObject, "z");
-        return WrapDataSet(
+        return nb::cast(
           viskores::cont::DataSetBuilderRectilinear::Create(x, y, z, actualCoordName));
       },
       nb::arg("x"),
       nb::arg("y") = nb::none(),
       nb::arg("z") = nb::none(),
       nb::arg("coord_name") = "coords");
-
-  erase_existing_name("DataSetBuilderExplicitIterative");
-  nb::class_<viskores::cont::DataSetBuilderExplicitIterative>(
-    m, "DataSetBuilderExplicitIterative", doc::ClassDoc("DataSetBuilderExplicitIterative"))
-    .def(nb::init<>())
-    .def("Begin",
-         &viskores::cont::DataSetBuilderExplicitIterative::Begin,
-         nb::arg("coord_name") = "coords")
-    .def(
-      "AddPoint",
-      [](viskores::cont::DataSetBuilderExplicitIterative& self, nb::object pointObject)
-      { return self.AddPoint(ParseVec3(pointObject, viskores::Vec3f(0.0f, 0.0f, 0.0f))); },
-      nb::arg("point"))
-    .def(
-      "AddCell",
-      [](viskores::cont::DataSetBuilderExplicitIterative& self,
-         unsigned long shape,
-         nb::object connectivityObject)
-      { self.AddCell(static_cast<viskores::UInt8>(shape), ParseIdSequence(connectivityObject)); },
-      nb::arg("shape"),
-      nb::arg("connectivity"))
-    .def("AddCellPoint",
-         &viskores::cont::DataSetBuilderExplicitIterative::AddCellPoint,
-         nb::arg("point_index"))
-    .def("Create",
-         [](viskores::cont::DataSetBuilderExplicitIterative& self)
-         { return WrapDataSet(self.Create()); });
 }
 
 } // namespace viskores::python::bindings

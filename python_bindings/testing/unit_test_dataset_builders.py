@@ -12,30 +12,46 @@ import numpy as np
 
 from viskores import CELL_SHAPE_TRIANGLE
 from viskores.cont import (
+    Field,
     DataSet,
     DataSetBuilderCurvilinear,
     DataSetBuilderExplicit,
     DataSetBuilderExplicitIterative,
     DataSetBuilderRectilinear,
     DataSetBuilderUniform,
-    create_uniform_dataset,
 )
+from viskores.python_convenience import cell_set_type_name, create_uniform_dataset
+
+
+def expect_raises(callable_object, *args, **kwargs):
+    try:
+        callable_object(*args, **kwargs)
+    except Exception:
+        return
+    raise AssertionError("Expected an exception.")
+
+
+def assert_bounds_allclose(actual, expected):
+    np.testing.assert_allclose(
+        (actual.X.Min, actual.X.Max, actual.Y.Min, actual.Y.Max, actual.Z.Min, actual.Z.Max),
+        expected,
+    )
 
 
 def assert_dataset_shape(dataset, points, cells, cell_set_type, coord_name, bounds):
     assert isinstance(dataset, DataSet)
     assert dataset.GetNumberOfPoints() == points
     assert dataset.GetNumberOfCells() == cells
-    assert dataset.CellSetTypeName() == cell_set_type
+    assert cell_set_type_name(dataset) == cell_set_type
     assert dataset.GetCoordinateSystemName() == coord_name
-    np.testing.assert_allclose(dataset.GetCoordinateSystem().GetBounds(), bounds)
+    assert_bounds_allclose(dataset.GetCoordinateSystem().GetBounds(), bounds)
 
 
 def test_uniform_builder_1d():
     dataset = DataSetBuilderUniform.Create(
         (4,),
-        origin=(1.0,),
-        spacing=(0.5,),
+        origin=(1.0, 0.0, 0.0),
+        spacing=(0.5, 1.0, 1.0),
         coord_name="line_coords",
     )
     assert_dataset_shape(
@@ -51,8 +67,8 @@ def test_uniform_builder_1d():
 def test_uniform_builder_2d():
     dataset = DataSetBuilderUniform.Create(
         (4, 3),
-        origin=(1.0, 2.0),
-        spacing=(0.5, 2.0),
+        origin=(1.0, 2.0, 0.0),
+        spacing=(0.5, 2.0, 1.0),
         coord_name="coordinates",
     )
     assert_dataset_shape(
@@ -82,6 +98,13 @@ def test_uniform_builder_3d():
     )
 
 
+def test_uniform_builder_fixed_vec_arguments_require_exact_length():
+    expect_raises(DataSetBuilderUniform.Create, (4, 3), origin=(1.0, 2.0))
+    expect_raises(DataSetBuilderUniform.Create, (4, 3), origin=(1.0, 2.0, 3.0, 4.0))
+    expect_raises(DataSetBuilderUniform.Create, (4, 3), spacing=(1.0, 2.0))
+    expect_raises(DataSetBuilderUniform.Create, (4, 3), spacing=(1.0, 2.0, 3.0, 4.0))
+
+
 def test_create_uniform_dataset_with_shaped_fields():
     point_scalars = np.arange(12, dtype=np.float32).reshape(4, 3)
     point_vectors = np.arange(36, dtype=np.float64).reshape(4, 3, 3)
@@ -104,26 +127,26 @@ def test_create_uniform_dataset_with_shaped_fields():
         coord_name="coords",
         bounds=(0.0, 3.0, 0.0, 2.0, 0.0, 0.0),
     )
-    assert dataset.HasField("point_scalars", association="points")
-    assert dataset.HasField("point_vectors", association="points")
-    assert dataset.HasField("cell_scalars", association="cells")
+    assert dataset.HasField("point_scalars", association=Field.Association.Points)
+    assert dataset.HasField("point_vectors", association=Field.Association.Points)
+    assert dataset.HasField("cell_scalars", association=Field.Association.Cells)
     np.testing.assert_array_equal(
-        dataset.GetField("point_scalars", association="points"),
+        dataset.GetField("point_scalars", association=Field.Association.Points).GetData().AsNumPy(),
         point_scalars.reshape(-1),
     )
     np.testing.assert_array_equal(
-        dataset.GetField("point_vectors", association="points"),
+        dataset.GetField("point_vectors", association=Field.Association.Points).GetData().AsNumPy(),
         point_vectors.reshape(-1, 3),
     )
     np.testing.assert_array_equal(
-        dataset.GetField("cell_scalars", association="cells"),
+        dataset.GetField("cell_scalars", association=Field.Association.Cells).GetData().AsNumPy(),
         cell_scalars.reshape(-1),
     )
 
     point_scalars[0, 0] = 123.0
     cell_scalars[0, 0] = 99
-    assert dataset.GetField("point_scalars", association="points")[0] == 123.0
-    assert dataset.GetField("cell_scalars", association="cells")[0] == 99
+    assert dataset.GetField("point_scalars", association=Field.Association.Points).GetData().AsNumPy()[0] == 123.0
+    assert dataset.GetField("cell_scalars", association=Field.Association.Cells).GetData().AsNumPy()[0] == 99
 
 
 def test_create_uniform_dataset_infers_dimensions_from_shaped_field():
@@ -137,7 +160,7 @@ def test_create_uniform_dataset_infers_dimensions_from_shaped_field():
         coord_name="coords",
         bounds=(0.0, 1.0, 0.0, 2.0, 0.0, 0.0),
     )
-    np.testing.assert_array_equal(dataset.GetField("values"), values.reshape(-1))
+    np.testing.assert_array_equal(dataset.GetField("values").GetData().AsNumPy(), values.reshape(-1))
 
 
 def test_create_uniform_dataset_rejects_bad_field_shapes():
@@ -291,6 +314,13 @@ def test_explicit_iterative_builder():
     assert dataset.GetCellSet().GetCellPointIds(0) == [0, 1, 2]
 
 
+def test_explicit_iterative_builder_point_requires_exact_vec3():
+    builder = DataSetBuilderExplicitIterative()
+    builder.Begin("iterative_coords")
+    expect_raises(builder.AddPoint, (0.0, 0.0))
+    expect_raises(builder.AddPoint, (0.0, 0.0, 0.0, 0.0))
+
+
 def test_explicit_builder_numpy_inputs():
     coords = np.asarray(
         [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]],
@@ -318,6 +348,7 @@ def main():
     test_uniform_builder_1d()
     test_uniform_builder_2d()
     test_uniform_builder_3d()
+    test_uniform_builder_fixed_vec_arguments_require_exact_length()
     test_create_uniform_dataset_with_shaped_fields()
     test_create_uniform_dataset_infers_dimensions_from_shaped_field()
     test_create_uniform_dataset_rejects_bad_field_shapes()
@@ -328,6 +359,7 @@ def main():
     test_curvilinear_builder_2d()
     test_curvilinear_builder_3d()
     test_explicit_iterative_builder()
+    test_explicit_iterative_builder_point_requires_exact_vec3()
     test_explicit_builder_numpy_inputs()
 
 

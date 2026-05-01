@@ -11,7 +11,8 @@
 import numpy as np
 
 import viskores.cont
-from viskores.cont import Association, CoordinateSystem, DataSet, Field
+from viskores.cont import CoordinateSystem, DataSet, Field
+from viskores.python_convenience import array_from_numpy, field_names
 
 
 def expect_raises(callable_object, *args):
@@ -59,29 +60,35 @@ def test_fields_and_associations():
 
     dataset.AddPointField("point_values", point_values)
     dataset.AddCellField("cell_values", cell_values)
-    dataset.AddField(Field("whole_values", Association.WHOLE_DATASET, whole_values))
+    dataset.AddField(
+        Field("whole_values", Field.Association.WholeDataSet, array_from_numpy(whole_values))
+    )
 
     assert dataset.GetNumberOfFields() == 4
-    assert dataset.HasField("coords", Association.POINTS)
+    assert dataset.HasField("coords", Field.Association.Points)
     assert dataset.HasField("point_values")
-    assert dataset.HasField("point_values", Association.POINTS)
-    assert not dataset.HasField("point_values", Association.CELLS)
-    assert dataset.HasField("cell_values", "cells")
-    assert dataset.HasField("whole_values", "whole_dataset")
-    assert set(dataset.FieldNames()) == {"coords", "point_values", "cell_values", "whole_values"}
+    assert dataset.HasField("point_values", Field.Association.Points)
+    assert not dataset.HasField("point_values", Field.Association.Cells)
+    assert dataset.HasField("cell_values", Field.Association.Cells)
+    assert dataset.HasField("whole_values", Field.Association.WholeDataSet)
+    assert set(field_names(dataset)) == {"coords", "point_values", "cell_values", "whole_values"}
 
-    np.testing.assert_array_equal(dataset.GetField("point_values"), point_values)
-    np.testing.assert_array_equal(dataset.GetField("cell_values", "cells"), cell_values)
-    np.testing.assert_array_equal(dataset.GetField("whole_values"), whole_values)
+    np.testing.assert_array_equal(dataset.GetField("point_values").GetData().AsNumPy(), point_values)
+    np.testing.assert_array_equal(dataset.GetField("cell_values", Field.Association.Cells).GetData().AsNumPy(), cell_values)
+    np.testing.assert_array_equal(dataset.GetField("whole_values").GetData().AsNumPy(), whole_values)
+    np.testing.assert_array_equal(dataset.GetPointField("point_values").GetData().AsNumPy(), point_values)
+    np.testing.assert_array_equal(dataset.GetCellField("cell_values").GetData().AsNumPy(), cell_values)
+    assert isinstance(dataset.GetField(0), Field)
 
-    field_object = dataset.GetFieldObject("point_values", Association.POINTS)
+    field_object = dataset.GetField("point_values", Field.Association.Points)
     assert isinstance(field_object, Field)
     assert field_object.GetName() == "point_values"
+    assert field_object.GetAssociation() == Field.Association.Points
     assert field_object.IsPointField()
-    np.testing.assert_array_equal(field_object.GetData(), point_values)
+    np.testing.assert_array_equal(field_object.GetData().AsNumPy(), point_values)
 
-    expect_raises(dataset.GetField, "point_values", Association.CELLS)
-    expect_raises(dataset.GetFieldObject, "missing")
+    expect_raises(dataset.GetField, "point_values", Field.Association.Cells)
+    expect_raises(dataset.GetField, "missing")
 
 
 def test_ghost_cell_field():
@@ -96,12 +103,12 @@ def test_ghost_cell_field():
     dataset.SetGhostCellField("ghosts", ghost_values)
     assert dataset.HasGhostCellField()
     assert dataset.GetGhostCellFieldName() == "ghosts"
-    np.testing.assert_array_equal(dataset.GetGhostCellField(), ghost_values)
+    np.testing.assert_array_equal(dataset.GetGhostCellField().GetData().AsNumPy(), ghost_values)
 
     default_named_ghost_values = np.asarray([1, 0], dtype=np.uint8)
     dataset.SetGhostCellField(default_named_ghost_values)
     assert dataset.HasGhostCellField()
-    np.testing.assert_array_equal(dataset.GetGhostCellField(), default_named_ghost_values)
+    np.testing.assert_array_equal(dataset.GetGhostCellField().GetData().AsNumPy(), default_named_ghost_values)
 
 
 def main():

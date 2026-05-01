@@ -15,18 +15,18 @@ from viskores.filter.field_transform import GenerateIds
 
 
 def main():
-    ds = viskores.create_uniform_dataset((4, 4, 4))
+    ds = viskores.python_convenience.create_uniform_dataset((4, 4, 4))
 
     filt = GenerateIds()
     out = filt.Execute(ds)
-    np.testing.assert_array_equal(out.GetField("pointids"), np.arange(ds.GetNumberOfPoints()))
-    np.testing.assert_array_equal(out.GetField("cellids"), np.arange(ds.GetNumberOfCells()))
+    np.testing.assert_array_equal(out.GetField("pointids").GetData().AsNumPy(), np.arange(ds.GetNumberOfPoints()))
+    np.testing.assert_array_equal(out.GetField("cellids").GetData().AsNumPy(), np.arange(ds.GetNumberOfCells()))
 
     float_filter = GenerateIds()
     float_filter.SetUseFloat(True)
     out_float = float_filter.Execute(ds)
     np.testing.assert_allclose(
-        out_float.GetField("pointids"), np.arange(ds.GetNumberOfPoints(), dtype=np.float64)
+        out_float.GetField("pointids").GetData().AsNumPy(), np.arange(ds.GetNumberOfPoints(), dtype=np.float64)
     )
 
     point_only = GenerateIds()
@@ -34,7 +34,7 @@ def main():
     point_only.SetPointFieldName("indices")
     out_point_only = point_only.Execute(ds)
     np.testing.assert_array_equal(
-        out_point_only.GetField("indices"), np.arange(ds.GetNumberOfPoints())
+        out_point_only.GetField("indices").GetData().AsNumPy(), np.arange(ds.GetNumberOfPoints())
     )
 
     cell_only = GenerateIds()
@@ -42,7 +42,7 @@ def main():
     cell_only.SetCellFieldName("cell_indices")
     out_cell_only = cell_only.Execute(ds)
     np.testing.assert_array_equal(
-        out_cell_only.GetField("cell_indices"), np.arange(ds.GetNumberOfCells())
+        out_cell_only.GetField("cell_indices").GetData().AsNumPy(), np.arange(ds.GetNumberOfCells())
     )
 
 

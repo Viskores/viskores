@@ -9,29 +9,53 @@
 ##=============================================================================
 
 - class: viskores::filter::vector_analysis::CrossProduct
+  base: viskores::filter::Filter
   fieldInputs:
     - PrimaryField
     - SecondaryField
-  methodAdapters:
-    - PrimaryCoordinateSystem
-    - SecondaryCoordinateSystem
-    - Execute
+  methods:
+    - SetUseCoordinateSystemAsPrimaryField(enabled: bool)
+    - GetUseCoordinateSystemAsPrimaryField()
+    - SetPrimaryCoordinateSystem(index: viskores::Id)
+    - GetPrimaryCoordinateSystemIndex()
+    - SetUseCoordinateSystemAsSecondaryField(enabled: bool)
+    - GetUseCoordinateSystemAsSecondaryField()
+    - SetSecondaryCoordinateSystem(index: viskores::Id)
+    - GetSecondaryCoordinateSystemIndex()
 
 - class: viskores::filter::vector_analysis::DotProduct
+  base: viskores::filter::Filter
   fieldInputs:
     - PrimaryField
     - SecondaryField
-  methodAdapters:
-    - PrimaryCoordinateSystem
-    - SecondaryCoordinateSystem
-    - Execute
+  methods:
+    - SetUseCoordinateSystemAsPrimaryField(enabled: bool)
+    - GetUseCoordinateSystemAsPrimaryField()
+    - SetPrimaryCoordinateSystem(index: viskores::Id)
+    - GetPrimaryCoordinateSystemIndex()
+    - SetUseCoordinateSystemAsSecondaryField(enabled: bool)
+    - GetUseCoordinateSystemAsSecondaryField()
+    - SetSecondaryCoordinateSystem(index: viskores::Id)
+    - GetSecondaryCoordinateSystemIndex()
 
 - class: viskores::filter::vector_analysis::Gradient
   pythonName: Gradient
-  binding: manual
-  reason: Requires gradient-specific controls.
+  base: viskores::filter::Filter
+  properties:
+    - ComputePointGradient
+    - ComputeDivergence
+    - DivergenceName
+    - ComputeVorticity
+    - VorticityName
+    - ComputeQCriterion
+    - QCriterionName
+    - ComputeGradient
+  directMethods:
+    - SetColumnMajorOrdering
+    - SetRowMajorOrdering
 
 - class: viskores::filter::vector_analysis::SurfaceNormals
+  base: viskores::filter::Filter
   properties:
     - GenerateCellNormals
     - NormalizeCellNormals
@@ -41,17 +65,9 @@
     - AutoOrientNormals
     - FlipNormals
     - Consistency
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::vector_analysis::VectorMagnitude
+  base: viskores::filter::Filter
   pythonName: VectorMagnitude
   pythonModule: viskores.filter.vector_analysis
   guard: VISKORES_PYTHON_ENABLE_FILTER_VECTOR_ANALYSIS
-  fieldInputs:
-    - ActiveField
-  properties:
-    - OutputFieldName
-  methodAdapters:
-    - CoordinateSystem
-    - Execute

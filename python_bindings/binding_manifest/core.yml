@@ -1,0 +1,38 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::Range
+  binding: manual
+  reason: Requires numeric constructors, arithmetic/comparison operators, and Python sequence-style access to Min/Max.
+
+- enum: viskores::ColorSpace
+  header: viskores/exec/ColorTable.h
+  pythonName: ColorSpace
+  values:
+    - RGB
+    - HSV
+    - HSVWrap
+    - Lab
+    - Diverging
+
+- class: viskores::cont::DeviceAdapterId
+  header: viskores/cont/DeviceAdapterTag.h
+  binding: manual
+  reason: Requires initialization-specific repr and device factory helpers.
+
+- class: viskores::cont::InitializeResult
+  header: viskores/cont/Initialize.h
+  binding: manual
+  reason: Returned by Initialize and bound with initialization-specific result fields.
+
+- class: viskores::filter::Filter
+  header: viskores/filter/Filter.h
+  binding: manual
+  reason: Base class binding centralizes inherited filter methods used by generated filters.

@@ -55,7 +55,7 @@ def test_contour_filter_uniform():
 
 
 def test_contour_filter_uniform_boundaries():
-    dataset = viskores.create_uniform_dataset(
+    dataset = viskores.python_convenience.create_uniform_dataset(
         (9, 5, 3), origin=(0.0, 0.0, 0.0), spacing=(0.125, 0.25, 0.5)
     )
 

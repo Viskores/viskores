@@ -17,7 +17,8 @@ from pathlib import Path
 import numpy as np
 
 import viskores.cont
-from viskores.cont import DataSet, create_uniform_dataset, partition_uniform_dataset
+from viskores.cont import DataSet
+from viskores.python_convenience import create_uniform_dataset, field_names, partition_uniform_dataset
 from viskores.filter.scalar_topology import (
     ContourTreeUniformDistributed,
     DistributedBranchDecompositionFilter,
@@ -93,7 +94,7 @@ def main():
         top.SetSavedBranches(args.num_branches)
         top.SetPresimplifyThreshold(args.presimplify_threshold)
         current = top.Execute(current)
-        if current.GetPartition(0).FieldNames() == []:
+        if field_names(current.GetPartition(0)) == []:
             print("warning: no valid branches remained after top-volume selection")
             print("skipping isosurface extraction")
             args.compute_isosurface = False
@@ -109,13 +110,13 @@ def main():
     print("blocks per dimension:", blocks_per_dim)
     print("local block indices shape:", local_block_indices.shape)
     print("partitions:", current.GetNumberOfPartitions())
-    print("partition 0 fields:", current.GetPartition(0).FieldNames())
+    print("partition 0 fields:", field_names(current.GetPartition(0)))
 
     base = Path(args.filename)
     if args.num_branches > 0:
         top0 = current.GetPartition(0)
         if top0.HasField("TopVolumeBranchSaddleIsoValue"):
-            iso_values = top0.GetField("TopVolumeBranchSaddleIsoValue")
+            iso_values = top0.GetField("TopVolumeBranchSaddleIsoValue").GetData().AsNumPy()
             out_path = base.with_suffix(".distributed.isovalues.txt")
             np.savetxt(out_path, iso_values.reshape(-1, 1))
             print("wrote:", out_path)
@@ -124,7 +125,7 @@ def main():
     if iso_result is not None:
         iso0 = iso_result.GetPartition(0)
         out_path = base.with_suffix(".distributed.isosurface_edges_from.txt")
-        np.savetxt(out_path, iso0.GetField("IsosurfaceEdgesFrom"))
+        np.savetxt(out_path, iso0.GetField("IsosurfaceEdgesFrom").GetData().AsNumPy())
         print("wrote:", out_path)
 
 

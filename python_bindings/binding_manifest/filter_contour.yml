@@ -13,39 +13,71 @@
   reason: Abstract implementation base for contour filters.
 
 - class: viskores::filter::contour::ClipWithField
-  pythonName: ClipWithField
-  binding: manual
-  reason: Requires threshold and active-field handling.
+  base: viskores::filter::Filter
+  properties:
+    - ClipValue
+    - InvertClip
 
 - class: viskores::filter::contour::ClipWithImplicitFunction
-  pythonName: ClipWithImplicitFunction
-  binding: manual
-  reason: Requires implicit-function parsing.
+  base: viskores::filter::Filter
+  properties:
+    - Offset
+  directMethods:
+    - SetInvertClip
+  methods:
+    - SetImplicitFunction(function: viskores::ImplicitFunctionGeneral)
 
 - class: viskores::filter::contour::Contour
-  pythonName: Contour
-  binding: manual
-  reason: Requires isovalue overloads.
+  base: viskores::filter::Filter
+  properties:
+    - GenerateNormals
+    - ComputeFastNormals
+    - MergeDuplicatePoints
+  methods:
+    - SetIsoValue(value: viskores::Float64)
+    - SetIsoValue(index: viskores::Id, value: viskores::Float64)
+    - SetIsoValues(values: std::vector<viskores::Float64> [Float64List])
+    - GetIsoValue(index: viskores::Id = 0)
+    - GetNumberOfIsoValues()
 
 - class: viskores::filter::contour::ContourFlyingEdges
   binding: excluded
-  reason: Covered by Contour in the initial Python API.
+  reason: Use Contour instead; it selects the contour implementation internally.
 
 - class: viskores::filter::contour::ContourMarchingCells
-  pythonName: ContourMarchingCells
-  binding: deferred
+  base: viskores::filter::Filter
+  properties:
+    - GenerateNormals
+    - MergeDuplicatePoints
+  methods:
+    - SetIsoValue(value: viskores::Float64)
+    - SetIsoValue(index: viskores::Id, value: viskores::Float64)
+    - SetIsoValues(values: std::vector<viskores::Float64> [Float64List])
+    - GetIsoValue(index: viskores::Id = 0)
+    - GetNumberOfIsoValues()
 
 - class: viskores::filter::contour::MIRFilter
   pythonName: MIRFilter
-  binding: manual
-  reason: Requires MIR-specific material field names and iteration/error controls.
+  base: viskores::filter::Filter
+  properties:
+    - OutputFieldName
+  directMethods:
+    - SetPositionCellSetName
+    - SetLengthCellSetName
+    - SetIDWholeSetName
+    - SetVFWholeSetName
+    - SetMaxPercentError
+    - SetErrorScaling
+    - SetScalingDecay
+  methods:
+    - SetMaxIterations(value: viskores::IdComponent)
 
 - class: viskores::filter::contour::Slice
-  pythonName: Slice
-  binding: manual
-  reason: Requires implicit-function parsing.
+  base: viskores::filter::contour::Contour
+  methods:
+    - SetImplicitFunction(function: viskores::ImplicitFunctionGeneral)
 
 - class: viskores::filter::contour::SliceMultiple
-  pythonName: SliceMultiple
-  binding: manual
-  reason: Requires implicit-function parsing.
+  base: viskores::filter::contour::Contour
+  methods:
+    - AddImplicitFunction(function: viskores::ImplicitFunctionGeneral)

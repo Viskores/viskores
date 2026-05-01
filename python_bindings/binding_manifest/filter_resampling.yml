@@ -9,18 +9,18 @@
 ##=============================================================================
 
 - class: viskores::filter::resampling::HistSampling
-  fieldInputs:
-    - ActiveField
+  base: viskores::filter::Filter
   properties:
     - NumberOfBins
     - SampleFraction
     - Seed
-  directMethods:
-    - GetActiveFieldAssociation
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::resampling::Probe
   pythonName: Probe
-  binding: manual
-  reason: Requires geometry dataset wrapping.
+  base: viskores::filter::Filter
+  methods:
+    - SetGeometry(geometry: const viskores::cont::DataSet&)
+    - SetGeometry(points: viskores::cont::ArrayHandle<viskores::Vec3f> [NumPyVec3fArray])
+    - GetGeometry() -> const viskores::cont::DataSet&
+    - SetInvalidValue(invalid_value: viskores::Float64)
+    - GetInvalidValue() -> viskores::Float64

@@ -17,7 +17,7 @@ from viskores.testing import MakeTestDataSet
 
 
 def count_components(dataset):
-    values = dataset.GetField("component")
+    values = dataset.GetField("component").GetData().AsNumPy()
     return np.unique(values).size
 
 

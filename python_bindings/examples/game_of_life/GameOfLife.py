@@ -20,7 +20,7 @@ from OpenGL import GL
 
 import viskores
 import viskores.cont
-from viskores.cont import Association
+from viskores.cont import Field
 from viskores.interop import BufferState, TransferToOpenGL
 
 
@@ -132,7 +132,7 @@ def colors_from_state(state, previous_state, neighbor_count):
 
 def build_dataset(state, colors):
     # Save the results.
-    dataset = viskores.create_uniform_dataset((int(state.shape[1]), int(state.shape[0])))
+    dataset = viskores.python_convenience.create_uniform_dataset((int(state.shape[1]), int(state.shape[0])))
     dataset.AddPointField("state", state.reshape(-1))
     dataset.AddPointField("colors", colors.reshape(-1, 4))
     return dataset
@@ -145,7 +145,7 @@ class GameOfLife:
 
     def Execute(self, dataset):
         # Get the previous state of the game.
-        previous_state = dataset.GetField("state").reshape((self.height, self.width)).astype(np.uint8)
+        previous_state = dataset.GetField("state").GetData().AsNumPy().reshape((self.height, self.width)).astype(np.uint8)
         padded = np.pad(previous_state, 1, mode="constant")
         neighbor_count = (
             padded[:-2, :-2]
@@ -220,7 +220,7 @@ class RenderGameOfLife:
             dataset,
             self.color_state,
             field_name="colors",
-            association=Association.POINTS,
+            association=Field.Association.Points,
         )
 
         uniform_location = GL.glGetUniformLocation(self.shader_program_id, "MVP")

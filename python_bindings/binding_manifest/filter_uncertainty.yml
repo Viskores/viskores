@@ -9,13 +9,41 @@
 ##=============================================================================
 
 - class: viskores::filter::uncertainty::ContourUncertainUniform
-  binding: excluded
-  reason: Uncertainty filters are not part of the initial Python binding scope.
+  base: viskores::filter::Filter
+  directMethods:
+    - SetMinField
+    - SetMaxField
+  properties:
+    - IsoValue
+    - CrossProbabilityName
+    - NumberNonzeroProbabilityName
+    - EntropyName
 
 - class: viskores::filter::uncertainty::ContourUncertainUniformMonteCarlo
-  binding: excluded
-  reason: Uncertainty filters are not part of the initial Python binding scope.
+  base: viskores::filter::Filter
+  directMethods:
+    - SetMinField
+    - SetMaxField
+  properties:
+    - IsoValue
+    - NumSample
+    - CrossProbabilityName
+    - NumberNonzeroProbabilityName
+    - EntropyName
 
 - class: viskores::filter::uncertainty::FiberUncertainUniform
-  binding: excluded
-  reason: Uncertainty filters are not part of the initial Python binding scope.
+  base: viskores::filter::Filter
+  enums:
+    - ApproachEnum: MonteCarlo, ClosedForm, Mean, Truth
+  directMethods:
+    - SetField1Min
+    - SetField1Max
+    - SetField2Min
+    - SetField2Max
+  methods:
+    - SetRange1(range: viskores::Range [Range])
+    - SetRange1(minimum: viskores::Float64, maximum: viskores::Float64)
+    - SetRange2(range: viskores::Range [Range])
+    - SetRange2(minimum: viskores::Float64, maximum: viskores::Float64)
+    - SetNumberOfSamples(number_of_samples: viskores::Id)
+    - SetApproach(approach: viskores::filter::uncertainty::FiberUncertainUniform::ApproachEnum)

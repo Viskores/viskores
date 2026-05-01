@@ -11,27 +11,34 @@ import numpy as np
 import viskores.cont as viskores_cont
 from viskores.cont import (
     ArrayCopy,
-    Association,
+    Field,
     CoordinateSystem,
     DataSetBuilderExplicit,
-    Field,
-    array_from_numpy,
-    asnumpy,
+    UncertainArrayHandle,
+    UnknownArrayHandle,
+    make_Field,
 )
+from viskores.python_convenience import array_from_numpy, asnumpy
+from viskores.testing import can_narrow_to_coordinate_system_data
 
 
 def check_scalar_dtype(dtype):
     values = np.arange(6, dtype=dtype)
-    field = Field(f"values_{np.dtype(dtype).name}", Association.POINTS, values)
-    returned = field.GetData()
+    field = Field(f"values_{np.dtype(dtype).name}", Field.Association.Points, array_from_numpy(values))
+    assert isinstance(field.GetData(), UnknownArrayHandle)
+    returned = field.GetData().AsNumPy()
     assert returned.dtype == values.dtype
     np.testing.assert_array_equal(returned, values)
 
 
 def check_vector_dtype(dtype, components):
     values = np.arange(12, dtype=dtype).reshape(12 // components, components)
-    field = Field(f"vectors_{np.dtype(dtype).name}_{components}", Association.POINTS, values)
-    returned = field.GetData()
+    field = Field(
+        f"vectors_{np.dtype(dtype).name}_{components}",
+        Field.Association.Points,
+        array_from_numpy(values),
+    )
+    returned = field.GetData().AsNumPy()
     assert returned.dtype == values.dtype
     assert returned.shape == values.shape
     np.testing.assert_array_equal(returned, values)
@@ -47,12 +54,12 @@ def check_vector_dtype(dtype, components):
     ArrayCopy(recombined, destination)
     np.testing.assert_array_equal(destination.AsNumPy(), values)
 
-    field = Field(
+    field = make_Field(
         f"vectors_from_recombined_{np.dtype(dtype).name}_{components}",
-        Association.POINTS,
+        Field.Association.Points,
         recombined,
     )
-    np.testing.assert_array_equal(field.GetData(), values)
+    np.testing.assert_array_equal(field.GetData().AsNumPy(), values)
 
 
 def soa_class_name(dtype, components):
@@ -99,12 +106,12 @@ def check_soa_dtype(dtype, components):
     assert returned.dtype == values.dtype
     np.testing.assert_array_equal(returned, values)
 
-    field = Field(
+    field = make_Field(
         f"vectors_from_soa_{np.dtype(dtype).name}_{components}",
-        Association.POINTS,
+        Field.Association.Points,
         destination,
     )
-    np.testing.assert_array_equal(field.GetData(), values)
+    np.testing.assert_array_equal(field.GetData().AsNumPy(), values)
 
 
 def check_group_vec_dtype(dtype):
@@ -126,9 +133,9 @@ def check_group_vec_dtype(dtype):
     assert_group_values(group_vec.AsNumPy(), expected)
     assert_group_values(asnumpy(group_vec), expected)
 
-    field = Field(f"group_vec_{np.dtype(dtype).name}", Association.WHOLE_DATASET, group_vec)
+    field = make_Field(f"group_vec_{np.dtype(dtype).name}", Field.Association.WholeDataSet, group_vec)
     assert field.GetNumberOfValues() == 3
-    assert_group_values(field.GetData(), expected)
+    assert_group_values(field.GetData().AsNumPy(), expected)
 
 
 def main():
@@ -157,8 +164,15 @@ def main():
     )
     assert_group_values(id_group.AsList(), [np.array([0], dtype=np.int64), np.array([1, 2])])
 
-    source = np.arange(6, dtype=np.float32).reshape(3, 2)
+    source = np.arange(6, dtype=np.float32).reshape(2, 3)
     copied = array_from_numpy(source)
+    uncertain = UncertainArrayHandle(copied)
+    assert isinstance(uncertain, UncertainArrayHandle)
+    assert isinstance(uncertain, UnknownArrayHandle)
+    np.testing.assert_array_equal(uncertain.AsNumPy(), source)
+    assert can_narrow_to_coordinate_system_data(uncertain)
+    assert not can_narrow_to_coordinate_system_data(array_from_numpy(np.arange(3, dtype=np.float32)))
+
     source[0, 0] = 99.0
     assert asnumpy(copied)[0, 0] == 0.0
 

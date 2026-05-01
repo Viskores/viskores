@@ -12,6 +12,7 @@ import numpy as np
 
 from viskores.filter.clean_grid import CleanGrid
 from viskores.filter.entity_extraction import Threshold
+from viskores.python_convenience import field_names
 from viskores.testing import MakeTestDataSet
 
 
@@ -28,8 +29,8 @@ def check_regular_2d(return_all_in_range):
     threshold.SetActiveField("pointvar")
     threshold.SetFieldsToPass("cellvar")
     output = threshold.Execute(dataset)
-    assert len(output.FieldNames()) == 2
-    cell_field = output.GetField("cellvar")
+    assert len(field_names(output)) == 2
+    cell_field = output.GetField("cellvar").GetData().AsNumPy()
     if return_all_in_range:
         assert np.array_equal(cell_field, np.array([100.1], dtype=cell_field.dtype))
     else:
@@ -50,8 +51,8 @@ def check_regular_3d(return_all_in_range):
     threshold.SetActiveField("pointvar")
     threshold.SetFieldsToPass("cellvar")
     output = threshold.Execute(dataset)
-    assert len(output.FieldNames()) == 2
-    cell_field = output.GetField("cellvar")
+    assert len(field_names(output)) == 2
+    cell_field = output.GetField("cellvar").GetData().AsNumPy()
     if return_all_in_range:
         expected = np.array([100.1, 100.2, 100.3], dtype=cell_field.dtype)
     else:
@@ -73,8 +74,8 @@ def main():
     threshold.SetActiveField("pointvar")
     threshold.SetFieldsToPass("cellvar")
     output = threshold.Execute(dataset)
-    assert len(output.FieldNames()) == 2
-    assert np.array_equal(output.GetField("cellvar"), np.array([100.1, 100.2], dtype=np.float32))
+    assert len(field_names(output)) == 2
+    assert np.array_equal(output.GetField("cellvar").GetData().AsNumPy(), np.array([100.1, 100.2], dtype=np.float32))
     CleanGrid().Execute(output)
 
     threshold = Threshold()
@@ -83,8 +84,8 @@ def main():
     threshold.SetActiveField("pointvar")
     threshold.SetFieldsToPass("cellvar")
     output = threshold.Execute(dataset)
-    assert len(output.FieldNames()) == 2
-    assert output.GetField("cellvar").shape[0] == 0
+    assert len(field_names(output)) == 2
+    assert output.GetField("cellvar").GetData().AsNumPy().shape[0] == 0
     CleanGrid().Execute(output)
 
 

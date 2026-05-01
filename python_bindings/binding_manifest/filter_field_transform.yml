@@ -10,68 +10,91 @@
 
 - class: viskores::filter::field_transform::CompositeVectors
   pythonName: CompositeVectors
-  binding: manual
-  reason: Requires variable field list handling.
+  base: viskores::filter::Filter
+  properties:
+    - OutputFieldName
+  methods:
+    - SetFieldNameList(field_names: std::vector<std::string> [StringList], association: viskores::cont::Field::Association = viskores::cont::Field::Association::Any)
+    - GetNumberOfFields()
 
 - class: viskores::filter::field_transform::CylindricalCoordinateTransform
-  fieldInputs:
-    - ActiveFieldName
+  base: viskores::filter::Filter
   directMethods:
     - SetCartesianToCylindrical
     - SetCylindricalToCartesian
-  methodAdapters:
-    - CoordinateSystem
-    - Execute
 
 - class: viskores::filter::field_transform::FieldToColors
   pythonName: FieldToColors
-  binding: manual
-  reason: Requires color-table parsing.
+  base: viskores::filter::Filter
+  constructors:
+    - ()
+    - (color_table: const viskores::cont::ColorTable&)
+  directMethods:
+    - SetOutputToRGB
+    - SetOutputToRGBA
+    - SetMappingToScalar
+    - SetMappingToMagnitude
+    - SetMappingToComponent
+  methods:
+    - SetColorTable(color_table: const viskores::cont::ColorTable&)
+    - SetMappingComponent(component: viskores::IdComponent)
+    - SetNumberOfSamplingPoints(count: viskores::Int32)
 
 - class: viskores::filter::field_transform::GenerateIds
+  base: viskores::filter::Filter
   properties:
     - PointFieldName
     - CellFieldName
     - GeneratePointIds
     - GenerateCellIds
     - UseFloat
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::field_transform::LogValues
-  fieldInputs:
-    - ActiveFieldName
+  base: viskores::filter::Filter
   properties:
-    - OutputFieldName
     - MinValue
   directMethods:
     - SetBaseValueToE
     - SetBaseValueTo2
     - SetBaseValueTo10
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::field_transform::PointElevation
   pythonName: PointElevation
-  binding: manual
-  reason: Requires vec3 property parsing.
+  base: viskores::filter::Filter
+  methods:
+    - SetLowPoint(point: viskores::Vec3f)
+    - SetHighPoint(point: viskores::Vec3f)
+    - SetRange(low: viskores::Float64, high: viskores::Float64)
 
 - class: viskores::filter::field_transform::PointTransform
   pythonName: PointTransform
-  binding: manual
-  reason: Requires vec3 property parsing.
+  base: viskores::filter::Filter
+  properties:
+    - ChangeCoordinateSystem
+  methods:
+    - SetTranslation(translation: viskores::Vec3f)
+    - SetScale(scale: viskores::Vec3f)
+    - SetRotation(angle: viskores::FloatDefault, axis: viskores::Vec3f)
 
 - class: viskores::filter::field_transform::SphericalCoordinateTransform
-  fieldInputs:
-    - ActiveFieldName
+  base: viskores::filter::Filter
   directMethods:
     - SetCartesianToSpherical
     - SetSphericalToCartesian
-  methodAdapters:
-    - CoordinateSystem
-    - Execute
 
 - class: viskores::filter::field_transform::Warp
   pythonName: Warp
-  binding: manual
-  reason: Requires vec3 property parsing.
+  base: viskores::filter::Filter
+  properties:
+    - UseConstantDirection
+    - UseScaleField
+    - ScaleFactor
+    - ChangeCoordinateSystem
+  directMethods:
+    - SetDirectionField
+    - GetDirectionFieldName
+    - SetScaleField
+    - GetScaleFieldName
+  methods:
+    - SetConstantDirection(direction: viskores::Vec3f)
+    - GetConstantDirection() -> viskores::Vec3f

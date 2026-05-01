@@ -62,7 +62,7 @@ def main():
     assert cell_set.GetCellPointIds(3) == [3, 0, 4]
 
     np.testing.assert_allclose(
-        output.GetField("density"),
+        output.GetField("density").GetData().AsNumPy(),
         np.array([0.0, 0.0, 0.0, 0.0, 0.888889], dtype=np.float64),
         rtol=1e-5,
         atol=1e-5,

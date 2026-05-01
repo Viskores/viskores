@@ -8,7 +8,8 @@
 
 import numpy as np
 
-from viskores.cont import CoordinateSystem, DataSet
+from viskores import Bounds, Range
+from viskores.cont import CoordinateSystem, DataSet, UncertainArrayHandle
 
 
 def main():
@@ -20,15 +21,16 @@ def main():
     assert coords.GetName() == "coords"
     assert coords.IsPointField()
     assert coords.GetNumberOfPoints() == 3
+    assert isinstance(coords.GetData(), UncertainArrayHandle)
     np.testing.assert_allclose(coords.GetData().AsNumPy(), points)
-    assert coords.GetBounds() == (0.0, 4.0, 0.0, 5.0, 0.0, 6.0)
+    assert coords.GetBounds() == Bounds(0.0, 4.0, 0.0, 5.0, 0.0, 6.0)
 
     ranges = coords.GetRange()
-    assert ranges == [(0.0, 4.0), (0.0, 5.0), (0.0, 6.0)]
+    assert ranges == (Range(0.0, 4.0), Range(0.0, 5.0), Range(0.0, 6.0))
 
     uniform = CoordinateSystem("uniform", (2, 3, 4), (1.0, 2.0, 3.0), (0.5, 1.0, 1.5))
     assert uniform.GetNumberOfPoints() == 24
-    assert uniform.GetBounds() == (1.0, 1.5, 2.0, 4.0, 3.0, 7.5)
+    assert uniform.GetBounds() == Bounds(1.0, 1.5, 2.0, 4.0, 3.0, 7.5)
 
     dataset = DataSet()
     dataset.AddCoordinateSystem(coords)

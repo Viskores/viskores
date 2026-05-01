@@ -21,7 +21,7 @@ def main():
     assert dataset.GetNumberOfPoints() == 9261
     assert dataset.GetNumberOfCells() == 8000
 
-    scalars = dataset.GetField("tangle")
+    scalars = dataset.GetField("tangle").GetData().AsNumPy()
     assert scalars.shape == (9261,)
 
     expected = {

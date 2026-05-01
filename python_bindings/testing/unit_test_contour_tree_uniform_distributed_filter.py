@@ -41,7 +41,7 @@ def run_distributed_filter(
     augment_hierarchical_tree=False,
     pass_block_indices=True,
 ):
-    partitions, blocks_per_dim, local_block_indices = viskores.cont.partition_uniform_dataset(
+    partitions, blocks_per_dim, local_block_indices = viskores.python_convenience.partition_uniform_dataset(
         dataset, field_name, num_blocks
     )
     contour_tree = ContourTreeUniformDistributed()

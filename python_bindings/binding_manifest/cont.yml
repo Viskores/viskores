@@ -1,0 +1,230 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::cont::UnknownArrayHandle
+  binding: manual
+  reason: Requires NumPy conversion, runtime dispatch over registered array/storage families, and the current Unknown/Uncertain array-handle design.
+
+- class: viskores::cont::UncertainArrayHandle<VISKORES_DEFAULT_TYPE_LIST, VISKORES_DEFAULT_STORAGE_LIST>
+  header: viskores/cont/UncertainArrayHandle.h
+  pythonName: UncertainArrayHandle
+  base: viskores::cont::UnknownArrayHandle
+  constructors:
+    - ()
+    - (src: const viskores::cont::UnknownArrayHandle&)
+  registrationGroup: early
+
+- class: viskores::cont::ArrayHandleSOA<viskores::Vec<T, N>>
+  header: viskores/cont/ArrayHandleSOA.h
+  binding: manual
+  reason: Registered as selected scalar/vector template instantiations with NumPy helpers while the public ArrayHandle template model is still open.
+
+- class: viskores::cont::ArrayHandleRecombineVec<T>
+  header: viskores/cont/ArrayHandleRecombineVec.h
+  binding: manual
+  reason: Registered as selected scalar template instantiations with component extraction and NumPy conversion helpers.
+
+- class: viskores::cont::ArrayHandleGroupVecVariable<T>
+  header: viskores/cont/ArrayHandleGroupVecVariable.h
+  binding: manual
+  reason: Registered as selected scalar template instantiations with Python component/offset parsing and list/NumPy conversions.
+
+- class: viskores::cont::UnknownCellSet
+  header: viskores/cont/UnknownCellSet.h
+  binding: manual
+  reason: Requires topology query helpers and cell-point-id conversion.
+
+- class: viskores::cont::UncertainCellSet<VISKORES_DEFAULT_CELL_SET_LIST>
+  header: viskores/cont/UncertainCellSet.h
+  pythonName: UncertainCellSet
+  base: viskores::cont::UnknownCellSet
+  constructors:
+    - ()
+    - (src: const viskores::cont::UnknownCellSet&)
+  registrationGroup: early
+
+- class: viskores::cont::Field
+  registrationGroup: early
+  constructors:
+    - ()
+    - (name: std::string, association: viskores::cont::Field::Association, data: viskores::cont::UnknownArrayHandle)
+  enums:
+    - "Association: Any, WholeDataSet, Points, Cells, Partitions, Global"
+  methods:
+    - GetName()
+    - GetAssociation()
+    - GetNumberOfValues()
+    - IsCellField()
+    - IsPointField()
+    - IsWholeDataSetField()
+    - IsPartitionsField()
+    - IsGlobalField()
+    - IsSupportedType()
+    - GetData() -> viskores::cont::UnknownArrayHandle&
+    - GetDataAsDefaultFloat()
+    - GetDataWithExpectedTypes()
+    - ConvertToExpected()
+    - SetData(newdata: viskores::cont::UnknownArrayHandle)
+
+- class: viskores::cont::CoordinateSystem
+  base: viskores::cont::Field
+  registrationGroup: early
+  constructors:
+    - ()
+    - (name: std::string, values: viskores::cont::UnknownArrayHandle [UnknownArray])
+    - (name: std::string, dimensions: viskores::Id3, origin: viskores::Vec3f [Vec3fDefaultZero] = nb::none(), spacing: viskores::Vec3f [Vec3fDefaultOne] = nb::none())
+    - (field: const viskores::cont::Field&)
+  methods:
+    - GetNumberOfPoints()
+    - GetData() -> viskores::cont::UncertainArrayHandle<viskores::TypeListFieldVec3, VISKORES_DEFAULT_STORAGE_LIST> [CoordinateSystemData]
+    - SetData(values: viskores::cont::UnknownArrayHandle [UnknownArray])
+    - GetRange() -> viskores::Vec<viskores::Range, 3>
+    - GetBounds()
+
+- class: viskores::cont::DataSet
+  registrationGroup: early
+  constructors:
+    - ()
+  methods:
+    - AddField(field: const viskores::cont::Field&)
+    - AddField(name: std::string, association: viskores::cont::Field::Association, data: viskores::cont::UnknownArrayHandle [UnknownArray])
+    - AddPointField(field_name: std::string, field: viskores::cont::UnknownArrayHandle [UnknownArray])
+    - AddCellField(field_name: std::string, field: viskores::cont::UnknownArrayHandle [UnknownArray])
+    - SetGhostCellField(field: const viskores::cont::Field&)
+    - SetGhostCellField(field_name: std::string, field: viskores::cont::UnknownArrayHandle [UnknownArray])
+    - SetGhostCellField(field: viskores::cont::UnknownArrayHandle [UnknownArray])
+    - SetGhostCellField(name: std::string)
+    - GetGhostCellField()
+    - HasGhostCellField()
+    - GetGhostCellFieldName() -> const std::string&
+    - GetField(index: viskores::Id) -> const viskores::cont::Field&
+    - GetField(name: std::string, association: viskores::cont::Field::Association = viskores::cont::Field::Association::Any) -> const viskores::cont::Field&
+    - GetCellField(name: std::string) -> const viskores::cont::Field&
+    - GetPointField(name: std::string) -> const viskores::cont::Field&
+    - HasField(name: std::string, association: viskores::cont::Field::Association = viskores::cont::Field::Association::Any)
+    - HasCellField(name: std::string)
+    - HasPointField(name: std::string)
+    - GetFieldIndex(name: std::string, association: viskores::cont::Field::Association = viskores::cont::Field::Association::Any)
+    - GetCoordinateSystem(index: viskores::Id = 0)
+    - GetCoordinateSystem(name: std::string)
+    - GetCellSet() -> const viskores::cont::UnknownCellSet&
+    - SetCellSet(cell_set: const viskores::cont::UnknownCellSet&)
+    - AddCoordinateSystem(coordinate_system: const viskores::cont::CoordinateSystem&)
+    - AddCoordinateSystem(point_field_name: std::string)
+    - AddCoordinateSystem(name: std::string, data: viskores::cont::UnknownArrayHandle [UnknownArray])
+    - HasCoordinateSystem(name: std::string)
+    - GetCoordinateSystemIndex(name: std::string)
+    - GetCoordinateSystemName(index: viskores::Id = 0) -> const std::string&
+    - GetNumberOfCoordinateSystems()
+    - GetNumberOfFields()
+    - GetNumberOfPoints()
+    - GetNumberOfCells()
+
+- class: viskores::cont::PartitionedDataSet
+  registrationGroup: early
+  constructors:
+    - ()
+    - (dataset: const viskores::cont::DataSet&)
+    - (size: viskores::Id)
+  methods:
+    - GetNumberOfPartitions()
+    - GetGlobalNumberOfPartitions()
+    - GetPartition(partition_id: viskores::Id) -> const viskores::cont::DataSet&
+    - AppendPartition(dataset: const viskores::cont::DataSet&)
+    - InsertPartition(index: viskores::Id, dataset: const viskores::cont::DataSet&)
+    - ReplacePartition(index: viskores::Id, dataset: const viskores::cont::DataSet&)
+    - CopyPartitions(source: const viskores::cont::PartitionedDataSet&)
+    - GetFieldFromPartition(field_name: std::string, partition_index: int)
+    - AddField(field: const viskores::cont::Field&)
+    - AddField(name: std::string, association: viskores::cont::Field::Association, data: viskores::cont::UnknownArrayHandle [UnknownArray])
+    - GetField(index: viskores::Id) -> const viskores::cont::Field&
+    - GetField(name: std::string, association: viskores::cont::Field::Association = viskores::cont::Field::Association::Any) -> const viskores::cont::Field&
+    - GetGlobalField(name: std::string) -> const viskores::cont::Field&
+    - GetPartitionsField(name: std::string) -> const viskores::cont::Field&
+    - HasField(name: std::string, association: viskores::cont::Field::Association = viskores::cont::Field::Association::Any)
+    - HasGlobalField(name: std::string)
+    - HasPartitionsField(name: std::string)
+    - GetNumberOfFields()
+
+- class: viskores::cont::DataSetBuilderExplicit
+  binding: manual
+  reason: Static Create accepts NumPy-facing coordinate/connectivity arrays and builds a DataSet.
+
+- class: viskores::cont::DataSetBuilderCurvilinear
+  binding: manual
+  reason: Static Create accepts NumPy-facing coordinate arrays and exact-length dimension tuples.
+
+- class: viskores::cont::DataSetBuilderUniform
+  constructors:
+    - ()
+  staticMethods:
+    - Create(dimensions: viskores::Id3 [Dimensions], origin: viskores::Vec3f [Vec3fDefaultZero] = nb::none(), spacing: viskores::Vec3f [Vec3fDefaultOne] = nb::none(), coord_name: std::string = "coords")
+
+- class: viskores::cont::DataSetBuilderRectilinear
+  binding: manual
+  reason: Static Create supports NumPy-facing axis arrays and optional coordinate-name overload dispatch.
+
+- class: viskores::cont::DataSetBuilderExplicitIterative
+  header: viskores/cont/DataSetBuilderExplicit.h
+  constructors:
+    - ()
+  methods:
+    - Begin(coord_name: std::string = "coords")
+    - AddPoint(point: viskores::Vec3f [Vec3fDefaultZero])
+    - AddCell(shape: viskores::UInt8, connectivity: std::vector<viskores::Id> [IdList])
+    - AddCellPoint(point_index: viskores::Id)
+    - Create()
+
+- class: viskores::cont::ColorTable
+  registrationGroup: early
+  constructors:
+    - (preset: viskores::cont::ColorTable::Preset = viskores::cont::ColorTable::Preset::Default)
+    - (name: std::string)
+    - (space: viskores::ColorSpace)
+  enums:
+    - "Preset: Default, CoolToWarm, CoolToWarmExtended, Viridis, Inferno, Plasma, BlackBodyRadiation, XRay, Green, BlackBlueWhite, BlueToOrange, GrayToRed, ColdAndHot, BlueGreenOrange, YellowGrayBlue, RainbowUniform, Jet, RainbowDesaturated"
+  methods:
+    - GetName()
+    - SetName(name: std::string)
+    - LoadPreset(preset: viskores::cont::ColorTable::Preset)
+    - LoadPreset(name: std::string)
+    - MakeDeepCopy()
+    - GetColorSpace()
+    - SetColorSpace(space: viskores::ColorSpace)
+    - SetClampingOn()
+    - SetClampingOff()
+    - SetClamping(state: bool)
+    - GetClamping()
+    - SetBelowRangeColor(color: viskores::Vec3f_32)
+    - GetBelowRangeColor() -> viskores::Vec3f_32
+    - SetAboveRangeColor(color: viskores::Vec3f_32)
+    - GetAboveRangeColor() -> viskores::Vec3f_32
+    - SetNaNColor(color: viskores::Vec3f_32)
+    - GetNaNColor() -> viskores::Vec3f_32
+    - Clear()
+    - ClearColors()
+    - ClearAlpha()
+    - ReverseColors()
+    - ReverseAlpha()
+    - GetRange()
+    - RescaleToRange(range: viskores::Range [Range])
+    - AddPoint(x: viskores::Float64, rgb: viskores::Vec3f_32)
+    - AddPointHSV(x: viskores::Float64, hsv: viskores::Vec3f_32)
+    - AddSegment(x1: viskores::Float64, rgb1: viskores::Vec3f_32, x2: viskores::Float64, rgb2: viskores::Vec3f_32)
+    - AddSegmentHSV(x1: viskores::Float64, hsv1: viskores::Vec3f_32, x2: viskores::Float64, hsv2: viskores::Vec3f_32)
+    - RemovePoint(x: viskores::Float64)
+    - RemovePoint(index: viskores::Int32)
+    - GetNumberOfPoints()
+    - AddPointAlpha(x: viskores::Float64, alpha: viskores::Float32)
+    - AddPointAlpha(x: viskores::Float64, alpha: viskores::Float32, midpoint: viskores::Float32, sharpness: viskores::Float32)
+    - RemovePointAlpha(x: viskores::Float64)
+    - RemovePointAlpha(index: viskores::Int32)
+    - GetNumberOfPointsAlpha()
+    - GetModifiedCount()

@@ -73,8 +73,8 @@ def main():
     for _ in range(4):
         current = game.Execute(current)
 
-    final_state = current.GetField("state")
-    final_colors = current.GetField("colors")
+    final_state = current.GetField("state").GetData().AsNumPy()
+    final_colors = current.GetField("colors").GetData().AsNumPy()
 
     assert final_state.shape == (96 * 96,)
     assert final_colors.shape == (96 * 96, 4)

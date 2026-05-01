@@ -15,7 +15,6 @@ __all__ = []
 for _name in (
     "Actor",
     "Camera",
-    "CameraMode",
     "Canvas",
     "CanvasRayTracer",
     "GlyphType",
@@ -29,7 +28,6 @@ for _name in (
     "MapperVolume",
     "MapperWireframer",
     "ScalarRenderer",
-    "ScalarRendererResult",
     "Scene",
     "View3D",
 ):

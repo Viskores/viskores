@@ -10,7 +10,7 @@
 
 import numpy as np
 
-from viskores.cont import Association
+from viskores.cont import Field
 from viskores.filter.vector_analysis import SurfaceNormals
 from viskores.testing import MakeTestDataSet
 
@@ -59,8 +59,8 @@ def main():
         dtype=np.float32,
     )
 
-    point_normals = result.GetField("Normals")
-    cell_normals = result.GetField("Normals", association=Association.CELLS)
+    point_normals = result.GetField("Normals").GetData().AsNumPy()
+    cell_normals = result.GetField("Normals", association=Field.Association.Cells).GetData().AsNumPy()
     np.testing.assert_allclose(point_normals, expected_point, rtol=1e-3, atol=1e-3)
     np.testing.assert_allclose(cell_normals, expected_cell, rtol=1e-3, atol=1e-3)
 

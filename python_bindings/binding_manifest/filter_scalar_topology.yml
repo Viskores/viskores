@@ -12,41 +12,39 @@
   header: viskores/filter/scalar_topology/ContourTreeUniformAugmented.h
   pythonName: ContourTreeAugmented
   binding: manual
-  reason: Requires contour-tree result array accessors beyond common filter methods.
+  reason: Requires computed contour-tree accessors, NumPy result conversion, and ComputeRelevantValues dispatch over scalar array types.
 
 - class: viskores::filter::scalar_topology::ContourTreeMesh2D
+  base: viskores::filter::Filter
   header: viskores/filter/scalar_topology/ContourTreeUniform.h
-  fieldInputs:
-    - ActiveField
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::scalar_topology::ContourTreeMesh3D
+  base: viskores::filter::Filter
   header: viskores/filter/scalar_topology/ContourTreeUniform.h
-  fieldInputs:
-    - ActiveField
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::scalar_topology::ContourTreeUniformDistributed
   pythonName: ContourTreeUniformDistributed
-  binding: manual
-  reason: Requires distributed-specific options.
+  base: viskores::filter::Filter
+  properties:
+    - UseBoundaryExtremaOnly
+    - UseMarchingCubes
+    - AugmentHierarchicalTree
+    - PresimplifyThreshold
+    - SaveDotFiles
+  methods:
+    - SetBlockIndices(blocks_per_dim: viskores::Id3, local_block_indices: viskores::cont::ArrayHandle<viskores::Id3> [NumPyId3Array])
 
 - class: viskores::filter::scalar_topology::DistributedBranchDecompositionFilter
-  methodAdapters:
-    - Execute
+  base: viskores::filter::Filter
 
 - class: viskores::filter::scalar_topology::ExtractTopVolumeContoursFilter
+  base: viskores::filter::Filter
   properties:
     - MarchingCubes
     - ShiftIsovalueByEpsilon
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter
+  base: viskores::filter::Filter
   properties:
     - SavedBranches
     - PresimplifyThreshold
-  methodAdapters:
-    - Execute

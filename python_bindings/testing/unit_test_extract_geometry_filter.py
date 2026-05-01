@@ -32,11 +32,11 @@ def test_uniform_by_box_inside():
     clean.SetMergePoints(False)
     clean_output = clean.Execute(output)
 
-    cell_field = clean_output.GetField("cellvar")
+    cell_field = clean_output.GetField("cellvar").GetData().AsNumPy()
     assert np.isclose(cell_field[0], 21.0)
     assert np.isclose(cell_field[7], 42.0)
 
-    point_field = clean_output.GetField("pointvar")
+    point_field = clean_output.GetField("pointvar").GetData().AsNumPy()
     assert np.isclose(point_field[0], 99.0)
     assert np.isclose(point_field[7], 90.0)
 
@@ -51,7 +51,7 @@ def test_uniform_by_box_outside():
 
     output = extract.Execute(dataset)
     assert output.GetNumberOfCells() == 56
-    cell_field = output.GetField("cellvar")
+    cell_field = output.GetField("cellvar").GetData().AsNumPy()
     assert np.isclose(cell_field[0], 0.0)
     assert np.isclose(cell_field[55], 63.0)
 
@@ -67,7 +67,7 @@ def test_uniform_boundary_modes():
     extract.SetExtractOnlyBoundaryCells(False)
     include_boundary = extract.Execute(dataset)
     assert include_boundary.GetNumberOfCells() == 64
-    cell_field = include_boundary.GetField("cellvar")
+    cell_field = include_boundary.GetField("cellvar").GetData().AsNumPy()
     assert np.isclose(cell_field[0], 0.0)
     assert np.isclose(cell_field[63], 63.0)
 
@@ -78,7 +78,7 @@ def test_uniform_boundary_modes():
     extract.SetExtractOnlyBoundaryCells(True)
     boundary_only = extract.Execute(dataset)
     assert boundary_only.GetNumberOfCells() == 56
-    cell_field = boundary_only.GetField("cellvar")
+    cell_field = boundary_only.GetField("cellvar").GetData().AsNumPy()
     assert np.isclose(cell_field[0], 0.0)
     assert np.isclose(cell_field[55], 63.0)
 

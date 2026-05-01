@@ -108,7 +108,7 @@ void RegisterNanobindInitializeClasses(nb::module_& m,
   erase_existing_name("InitializeOptions");
   nb::enum_<viskores::cont::InitializeOptions>(
     m, "InitializeOptions", nb::is_arithmetic(), nb::is_flag())
-    .value("None_", viskores::cont::InitializeOptions::None)
+    .value("None", viskores::cont::InitializeOptions::None)
     .value("RequireDevice", viskores::cont::InitializeOptions::RequireDevice)
     .value("DefaultAnyDevice", viskores::cont::InitializeOptions::DefaultAnyDevice)
     .value("AddHelp", viskores::cont::InitializeOptions::AddHelp)
@@ -122,8 +122,7 @@ void RegisterNanobindInitializeClasses(nb::module_& m,
         &InitializeFromArgv,
         nb::arg("argv"),
         nb::arg("opts") = viskores::cont::InitializeOptions::None,
-        nb::sig("def Initialize(argv: list[str], opts: InitializeOptions = "
-                "InitializeOptions.None_) -> InitializeResult"),
+        nb::sig("def Initialize(argv: list[str], opts: InitializeOptions) -> InitializeResult"),
         doc::Initialize);
 
   erase_existing_name("IsInitialized");
@@ -182,148 +181,92 @@ void RegisterNanobindRangeClass(nb::module_& m,
     .def(nb::self != nb::self);
 }
 
-viskores::Vec3f ParseVec3OrDefault(nb::object object, const viskores::Vec3f& defaultValue)
+void RegisterNanobindBoundsClass(nb::module_& m,
+                                 const std::function<void(const char*)>& erase_existing_name)
 {
-  return object.is_none() ? defaultValue : ParseVec3(object, defaultValue);
-}
-
-template <typename TargetType, typename ClassType, typename Setter>
-ClassType& BindVec3Setter(ClassType& cls,
-                          const char* setName,
-                          Setter setter,
-                          const viskores::Vec3f& defaultValue,
-                          const char* argName)
-{
-  cls.def(
-    setName,
-    [setter, defaultValue](TargetType& self, nb::object valueObject)
-    { (self.*setter)(ParseVec3(valueObject, defaultValue)); },
-    nb::arg(argName));
-  return cls;
+  erase_existing_name("Bounds");
+  nb::class_<viskores::Bounds>(m, "Bounds", doc::ClassDoc("Bounds"))
+    .def(nb::init<>())
+    .def(nb::init<const viskores::Range&, const viskores::Range&, const viskores::Range&>(),
+         nb::arg("x_range"),
+         nb::arg("y_range"),
+         nb::arg("z_range"))
+    .def(nb::init<viskores::Float64,
+                  viskores::Float64,
+                  viskores::Float64,
+                  viskores::Float64,
+                  viskores::Float64,
+                  viskores::Float64>(),
+         nb::arg("min_x"),
+         nb::arg("max_x"),
+         nb::arg("min_y"),
+         nb::arg("max_y"),
+         nb::arg("min_z"),
+         nb::arg("max_z"))
+    .def_rw("X", &viskores::Bounds::X)
+    .def_rw("Y", &viskores::Bounds::Y)
+    .def_rw("Z", &viskores::Bounds::Z)
+    .def("__repr__",
+         [](const viskores::Bounds& self)
+         {
+           std::ostringstream stream;
+           stream << "viskores.Bounds(" << self.X.Min << ", " << self.X.Max << ", "
+                  << self.Y.Min << ", " << self.Y.Max << ", " << self.Z.Min << ", "
+                  << self.Z.Max << ")";
+           return stream.str();
+         })
+    .def("IsNonEmpty", &viskores::Bounds::IsNonEmpty)
+    .def("Contains",
+         [](const viskores::Bounds& self, nb::object point)
+         { return self.Contains(ParseVec3(point, viskores::Vec3f(0.0f, 0.0f, 0.0f))); },
+         nb::arg("point"))
+    .def("Volume", &viskores::Bounds::Volume)
+    .def("Area", &viskores::Bounds::Area)
+    .def("Center", [](const viskores::Bounds& self) { return Vec3ToTuple(self.Center()); })
+    .def("MinCorner", [](const viskores::Bounds& self) { return Vec3ToTuple(self.MinCorner()); })
+    .def("MaxCorner", [](const viskores::Bounds& self) { return Vec3ToTuple(self.MaxCorner()); })
+    .def(
+      "Include",
+      [](viskores::Bounds& self, nb::object pointOrBounds)
+      {
+        viskores::Bounds boundsValue;
+        if (nb::try_cast(pointOrBounds, boundsValue))
+        {
+          self.Include(boundsValue);
+        }
+        else
+        {
+          self.Include(ParseVec3(pointOrBounds, viskores::Vec3f(0.0f, 0.0f, 0.0f)));
+        }
+      },
+      nb::arg("point_or_bounds"))
+    .def("Union", &viskores::Bounds::Union, nb::arg("other"))
+    .def("Intersection", &viskores::Bounds::Intersection, nb::arg("other"))
+    .def("__add__", &viskores::Bounds::operator+)
+    .def(nb::self == nb::self)
+    .def(nb::self != nb::self);
 }
 
 } // namespace
 
-#if VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
+#if VISKORES_PYTHON_ENABLE_FILTER_CORE
+void RegisterNanobindFilterBaseClasses(
+  nb::module_& m,
+  const std::function<void(const char*)>& erase_existing_name)
+{
+  erase_existing_name("Filter");
+  nb::class_<viskores::filter::Filter> filter(m, "Filter", doc::ClassDoc("Filter"));
+  BindFilterBaseMethods(filter);
+}
+#endif
+
+#if VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
 void RegisterNanobindImplicitFunctionClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name)
 {
-  auto box = BindClassWithDefaultConstructor<viskores::Box>(m, erase_existing_name, "Box");
-  box
-    .def(
-      "__init__",
-      [](viskores::Box* self, nb::object minPointObject, nb::object maxPointObject)
-      {
-        if (minPointObject.is_none() || maxPointObject.is_none())
-        {
-          throw std::runtime_error(
-            "Box requires both min_point and max_point when either is provided.");
-        }
-        new (self) viskores::Box(ParseVec3(minPointObject, viskores::Vec3f(-0.5f, -0.5f, -0.5f)),
-                                 ParseVec3(maxPointObject, viskores::Vec3f(0.5f, 0.5f, 0.5f)));
-      },
-      nb::arg("min_point"),
-      nb::arg("max_point"));
-  BindVec3Property<viskores::Box>(
-    box, "SetMinPoint", "GetMinPoint", &viskores::Box::SetMinPoint, &viskores::Box::GetMinPoint,
-    "point");
-  BindVec3Property<viskores::Box>(
-    box, "SetMaxPoint", "GetMaxPoint", &viskores::Box::SetMaxPoint, &viskores::Box::GetMaxPoint,
-    "point");
-
-  auto sphere =
-    BindClassWithDefaultConstructor<viskores::Sphere>(m, erase_existing_name, "Sphere");
-  sphere
-    .def(
-      "__init__",
-      [](viskores::Sphere* self, double radius)
-      { new (self) viskores::Sphere(static_cast<viskores::FloatDefault>(radius)); },
-      nb::arg("radius"))
-    .def(
-      "__init__",
-      [](viskores::Sphere* self, nb::object centerObject, double radius)
-      {
-        auto center = ParseVec3OrDefault(centerObject, viskores::Vec3f(0.0f, 0.0f, 0.0f));
-        new (self) viskores::Sphere(center, static_cast<viskores::FloatDefault>(radius));
-      },
-      nb::arg("center") = nb::none(),
-      nb::arg("radius") = 0.5);
-  BindVec3Property<viskores::Sphere>(
-    sphere, "SetCenter", "GetCenter", &viskores::Sphere::SetCenter, &viskores::Sphere::GetCenter,
-    "center");
-  BindCastedProperty<viskores::Sphere, viskores::FloatDefault, double>(
-    sphere,
-    "SetRadius",
-    "GetRadius",
-    &viskores::Sphere::SetRadius,
-    &viskores::Sphere::GetRadius,
-    "radius");
-
-  auto cylinder =
-    BindClassWithDefaultConstructor<viskores::Cylinder>(m, erase_existing_name, "Cylinder");
-  cylinder
-    .def(
-      "__init__",
-      [](viskores::Cylinder* self, nb::object axisObject, double radius)
-      {
-        auto axis = ParseVec3OrDefault(axisObject, viskores::Vec3f(0.0f, 1.0f, 0.0f));
-        new (self) viskores::Cylinder(axis, static_cast<viskores::FloatDefault>(radius));
-      },
-      nb::arg("axis"),
-      nb::arg("radius"))
-    .def(
-      "__init__",
-      [](viskores::Cylinder* self, nb::object centerObject, nb::object axisObject, double radius)
-      {
-        auto center = ParseVec3OrDefault(centerObject, viskores::Vec3f(0.0f, 0.0f, 0.0f));
-        auto axis = ParseVec3OrDefault(axisObject, viskores::Vec3f(0.0f, 1.0f, 0.0f));
-        new (self) viskores::Cylinder(center, axis, static_cast<viskores::FloatDefault>(radius));
-      },
-      nb::arg("center") = nb::none(),
-      nb::arg("axis") = nb::none(),
-      nb::arg("radius") = 0.5);
-  BindVec3Setter<viskores::Cylinder>(
-    cylinder,
-    "SetCenter",
-    &viskores::Cylinder::SetCenter,
-    viskores::Vec3f(0.0f, 0.0f, 0.0f),
-    "center");
-  BindVec3Setter<viskores::Cylinder>(
-    cylinder,
-    "SetAxis",
-    &viskores::Cylinder::SetAxis,
-    viskores::Vec3f(0.0f, 1.0f, 0.0f),
-    "axis");
-  BindCastedSetter<viskores::Cylinder, viskores::FloatDefault, double>(
-    cylinder, "SetRadius", &viskores::Cylinder::SetRadius, "radius");
-
-  auto plane = BindClassWithDefaultConstructor<viskores::Plane>(m, erase_existing_name, "Plane");
-  plane
-    .def(
-      "__init__",
-      [](viskores::Plane* self, nb::object normalObject)
-      {
-        auto normal = ParseVec3OrDefault(normalObject, viskores::Vec3f(0.0f, 0.0f, 1.0f));
-        new (self) viskores::Plane(normal);
-      },
-      nb::arg("normal"))
-    .def(
-      "__init__",
-      [](viskores::Plane* self, nb::object originObject, nb::object normalObject)
-      {
-        auto origin = ParseVec3OrDefault(originObject, viskores::Vec3f(0.0f, 0.0f, 0.0f));
-        auto normal = ParseVec3OrDefault(normalObject, viskores::Vec3f(0.0f, 0.0f, 1.0f));
-        new (self) viskores::Plane(origin, normal);
-      },
-      nb::arg("origin") = nb::none(),
-      nb::arg("normal") = nb::none());
-  BindVec3Property<viskores::Plane>(
-    plane, "SetOrigin", "GetOrigin", &viskores::Plane::SetOrigin, &viskores::Plane::GetOrigin,
-    "point");
-  BindVec3Property<viskores::Plane>(
-    plane, "SetNormal", "GetNormal", &viskores::Plane::SetNormal, &viskores::Plane::GetNormal,
-    "point");
+  (void)m;
+  (void)erase_existing_name;
 }
 #else
 void RegisterNanobindImplicitFunctionClasses(nb::module_&, const std::function<void(const char*)>&)
@@ -331,170 +274,20 @@ void RegisterNanobindImplicitFunctionClasses(nb::module_&, const std::function<v
 }
 #endif
 
-#if VISKORES_PYTHON_ENABLE_FILTER_FIELD_CONVERSION || \
-  VISKORES_PYTHON_ENABLE_FILTER_VECTOR_ANALYSIS || VISKORES_PYTHON_ENABLE_FILTER_CONTOUR
-void RegisterNanobindCompatibilityFunctions(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name)
+void RegisterNanobindCellShapeConstants(nb::module_& m,
+                                        const std::function<void(const char*)>& erase_existing_name)
 {
-#if VISKORES_PYTHON_ENABLE_FILTER_FIELD_CONVERSION
-  erase_existing_name("cell_average");
-  m.attr("cell_average") = nb::cpp_function(
-    [](nb::object datasetObject, const char* fieldName, const char* outputFieldName)
-    {
-      viskores::filter::field_conversion::CellAverage filter;
-      filter.SetActiveField(fieldName);
-      if (outputFieldName != nullptr)
-      {
-        filter.SetOutputFieldName(outputFieldName);
-      }
-      return ExecuteFilterOnPythonDataObject<viskores::filter::field_conversion::CellAverage>(
-        filter, datasetObject);
-    },
-    nb::arg("dataset"),
-    nb::arg("field_name"),
-    nb::arg("output_field_name") = nb::none(),
-    doc::CompatibilityCellAverage);
+  erase_existing_name("CELL_SHAPE_VERTEX");
+  erase_existing_name("CELL_SHAPE_LINE");
+  erase_existing_name("CELL_SHAPE_POLY_LINE");
+  erase_existing_name("CELL_SHAPE_TRIANGLE");
+  erase_existing_name("CELL_SHAPE_QUAD");
+  erase_existing_name("CELL_SHAPE_POLYGON");
+  erase_existing_name("CELL_SHAPE_TETRA");
+  erase_existing_name("CELL_SHAPE_HEXAHEDRON");
+  erase_existing_name("CELL_SHAPE_WEDGE");
+  erase_existing_name("CELL_SHAPE_PYRAMID");
 
-  erase_existing_name("point_average");
-  m.attr("point_average") = nb::cpp_function(
-    [](nb::object datasetObject, const char* fieldName, const char* outputFieldName)
-    {
-      viskores::filter::field_conversion::PointAverage filter;
-      filter.SetActiveField(fieldName);
-      if (outputFieldName != nullptr)
-      {
-        filter.SetOutputFieldName(outputFieldName);
-      }
-      return ExecuteFilterOnPythonDataObject<viskores::filter::field_conversion::PointAverage>(
-        filter, datasetObject);
-    },
-    nb::arg("dataset"),
-    nb::arg("field_name"),
-    nb::arg("output_field_name") = nb::none(),
-    doc::CompatibilityPointAverage);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_VECTOR_ANALYSIS
-  erase_existing_name("vector_magnitude");
-  m.attr("vector_magnitude") = nb::cpp_function(
-    [](nb::object datasetObject, const char* fieldName, const char* outputFieldName)
-    {
-      viskores::filter::vector_analysis::VectorMagnitude filter;
-      filter.SetActiveField(fieldName);
-      if (outputFieldName != nullptr)
-      {
-        filter.SetOutputFieldName(outputFieldName);
-      }
-      return ExecuteFilterOnPythonDataObject<viskores::filter::vector_analysis::VectorMagnitude>(
-        filter, datasetObject);
-    },
-    nb::arg("dataset"),
-    nb::arg("field_name"),
-    nb::arg("output_field_name") = nb::none(),
-    doc::CompatibilityVectorMagnitude);
-
-  erase_existing_name("gradient");
-  m.attr("gradient") = nb::cpp_function(
-    [](nb::object datasetObject,
-       const char* fieldName,
-       const char* outputFieldName,
-       bool computePointGradient,
-       bool computeDivergence,
-       const char* divergenceName,
-       bool computeVorticity,
-       const char* vorticityName,
-       bool computeQCriterion,
-       const char* qCriterionName,
-       bool computeGradient,
-       bool rowMajorOrdering)
-    {
-      viskores::filter::vector_analysis::Gradient filter;
-      filter.SetActiveField(fieldName);
-      if (outputFieldName != nullptr)
-      {
-        filter.SetOutputFieldName(outputFieldName);
-      }
-      filter.SetComputePointGradient(computePointGradient);
-      filter.SetComputeDivergence(computeDivergence);
-      if (divergenceName != nullptr)
-      {
-        filter.SetDivergenceName(divergenceName);
-      }
-      filter.SetComputeVorticity(computeVorticity);
-      if (vorticityName != nullptr)
-      {
-        filter.SetVorticityName(vorticityName);
-      }
-      filter.SetComputeQCriterion(computeQCriterion);
-      if (qCriterionName != nullptr)
-      {
-        filter.SetQCriterionName(qCriterionName);
-      }
-      filter.SetComputeGradient(computeGradient);
-      if (rowMajorOrdering)
-      {
-        filter.SetRowMajorOrdering();
-      }
-      else
-      {
-        filter.SetColumnMajorOrdering();
-      }
-      return ExecuteFilterOnPythonDataObject<viskores::filter::vector_analysis::Gradient>(
-        filter, datasetObject);
-    },
-    nb::arg("dataset"),
-    nb::arg("field_name"),
-    nb::arg("output_field_name") = nb::none(),
-    nb::arg("compute_point_gradient") = false,
-    nb::arg("compute_divergence") = false,
-    nb::arg("divergence_name") = nb::none(),
-    nb::arg("compute_vorticity") = false,
-    nb::arg("vorticity_name") = nb::none(),
-    nb::arg("compute_qcriterion") = false,
-    nb::arg("qcriterion_name") = nb::none(),
-    nb::arg("compute_gradient") = true,
-    nb::arg("row_major_ordering") = false,
-    doc::CompatibilityGradient);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_CONTOUR
-  erase_existing_name("contour");
-  m.attr("contour") = nb::cpp_function(
-    [](nb::object datasetObject,
-       const char* fieldName,
-       nb::object isoValuesObject,
-       bool generateNormals)
-    {
-      viskores::filter::contour::Contour filter;
-      filter.SetActiveField(fieldName);
-      filter.SetIsoValues(ParseIsoValues(isoValuesObject));
-      filter.SetGenerateNormals(generateNormals);
-      return ExecuteFilterOnPythonDataObject<viskores::filter::contour::Contour>(filter,
-                                                                                 datasetObject);
-    },
-    nb::arg("dataset"),
-    nb::arg("field_name"),
-    nb::arg("iso_values"),
-    nb::arg("generate_normals") = false,
-    doc::CompatibilityContour);
-#endif
-}
-#else
-void RegisterNanobindCompatibilityFunctions(nb::module_&, const std::function<void(const char*)>&)
-{
-}
-#endif
-
-void RegisterNanobindModuleConstants(nb::module_& m)
-{
-  using Association = viskores::cont::Field::Association;
-  m.attr("ASSOCIATION_ANY") = nb::int_(static_cast<int>(Association::Any));
-  m.attr("ASSOCIATION_WHOLE_DATASET") = nb::int_(static_cast<int>(Association::WholeDataSet));
-  m.attr("ASSOCIATION_POINTS") = nb::int_(static_cast<int>(Association::Points));
-  m.attr("ASSOCIATION_CELLS") = nb::int_(static_cast<int>(Association::Cells));
-  m.attr("ASSOCIATION_PARTITIONS") = nb::int_(static_cast<int>(Association::Partitions));
-  m.attr("ASSOCIATION_GLOBAL") = nb::int_(static_cast<int>(Association::Global));
   m.attr("CELL_SHAPE_VERTEX") = nb::int_(static_cast<int>(viskores::CELL_SHAPE_VERTEX));
   m.attr("CELL_SHAPE_LINE") = nb::int_(static_cast<int>(viskores::CELL_SHAPE_LINE));
   m.attr("CELL_SHAPE_POLY_LINE") = nb::int_(static_cast<int>(viskores::CELL_SHAPE_POLY_LINE));
@@ -502,77 +295,10 @@ void RegisterNanobindModuleConstants(nb::module_& m)
   m.attr("CELL_SHAPE_QUAD") = nb::int_(static_cast<int>(viskores::CELL_SHAPE_QUAD));
   m.attr("CELL_SHAPE_POLYGON") = nb::int_(static_cast<int>(viskores::CELL_SHAPE_POLYGON));
   m.attr("CELL_SHAPE_TETRA") = nb::int_(static_cast<int>(viskores::CELL_SHAPE_TETRA));
-  m.attr("CELL_SHAPE_HEXAHEDRON") = nb::int_(static_cast<int>(viskores::CELL_SHAPE_HEXAHEDRON));
+  m.attr("CELL_SHAPE_HEXAHEDRON") =
+    nb::int_(static_cast<int>(viskores::CELL_SHAPE_HEXAHEDRON));
   m.attr("CELL_SHAPE_WEDGE") = nb::int_(static_cast<int>(viskores::CELL_SHAPE_WEDGE));
   m.attr("CELL_SHAPE_PYRAMID") = nb::int_(static_cast<int>(viskores::CELL_SHAPE_PYRAMID));
-
-#if VISKORES_PYTHON_ENABLE_FILTER_MESH_INFO
-  m.attr("INTEGRATION_TYPE_NONE") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::IntegrationType::None));
-  m.attr("INTEGRATION_TYPE_ARC_LENGTH") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::IntegrationType::ArcLength));
-  m.attr("INTEGRATION_TYPE_AREA") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::IntegrationType::Area));
-  m.attr("INTEGRATION_TYPE_VOLUME") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::IntegrationType::Volume));
-  m.attr("INTEGRATION_TYPE_ALL_MEASURES") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::IntegrationType::AllMeasures));
-  m.attr("CELL_METRIC_AREA") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Area));
-  m.attr("CELL_METRIC_ASPECT_GAMMA") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::AspectGamma));
-  m.attr("CELL_METRIC_ASPECT_RATIO") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::AspectRatio));
-  m.attr("CELL_METRIC_CONDITION") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Condition));
-  m.attr("CELL_METRIC_DIAGONAL_RATIO") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::DiagonalRatio));
-  m.attr("CELL_METRIC_DIMENSION") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Dimension));
-  m.attr("CELL_METRIC_JACOBIAN") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Jacobian));
-  m.attr("CELL_METRIC_MAX_ANGLE") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::MaxAngle));
-  m.attr("CELL_METRIC_MAX_DIAGONAL") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::MaxDiagonal));
-  m.attr("CELL_METRIC_MIN_ANGLE") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::MinAngle));
-  m.attr("CELL_METRIC_MIN_DIAGONAL") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::MinDiagonal));
-  m.attr("CELL_METRIC_ODDY") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Oddy));
-  m.attr("CELL_METRIC_RELATIVE_SIZE_SQUARED") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::RelativeSizeSquared));
-  m.attr("CELL_METRIC_SCALED_JACOBIAN") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::ScaledJacobian));
-  m.attr("CELL_METRIC_SHAPE") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Shape));
-  m.attr("CELL_METRIC_SHAPE_AND_SIZE") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::ShapeAndSize));
-  m.attr("CELL_METRIC_SHEAR") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Shear));
-  m.attr("CELL_METRIC_SKEW") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Skew));
-  m.attr("CELL_METRIC_STRETCH") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Stretch));
-  m.attr("CELL_METRIC_TAPER") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Taper));
-  m.attr("CELL_METRIC_VOLUME") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Volume));
-  m.attr("CELL_METRIC_WARPAGE") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::Warpage));
-  m.attr("CELL_METRIC_NONE") =
-    nb::int_(static_cast<int>(viskores::filter::mesh_info::CellMetric::None));
-#endif
-
-#if VISKORES_PYTHON_ENABLE_IO
-  m.attr("FILE_TYPE_ASCII") = nb::int_(static_cast<int>(viskores::io::FileType::ASCII));
-  m.attr("FILE_TYPE_BINARY") = nb::int_(static_cast<int>(viskores::io::FileType::BINARY));
-  m.attr("PIXEL_DEPTH_8") =
-    nb::int_(static_cast<int>(viskores::io::ImageWriterBase::PixelDepth::PIXEL_8));
-  m.attr("PIXEL_DEPTH_16") =
-    nb::int_(static_cast<int>(viskores::io::ImageWriterBase::PixelDepth::PIXEL_16));
-#endif
 }
 
 void RegisterNanobindModule(nb::module_& m)
@@ -585,10 +311,13 @@ void RegisterNanobindModule(nb::module_& m)
 
   RegisterNanobindInitializeClasses(m, erase_existing_name);
   RegisterNanobindRangeClass(m, erase_existing_name);
+  RegisterNanobindBoundsClass(m, erase_existing_name);
+  RegisterNanobindCellShapeConstants(m, erase_existing_name);
+  RegisterNanobindGeneratedEnums(m);
+  RegisterNanobindIOClasses(m, erase_existing_name);
   RegisterNanobindSharedDataClasses(m, erase_existing_name);
 
 #if VISKORES_PYTHON_ENABLE_RENDERING
-  RegisterNanobindColorTableClass(m, erase_existing_name);
   RegisterNanobindCameraClass(m, erase_existing_name);
   RegisterNanobindRenderingClasses(m, erase_existing_name);
 #endif
@@ -601,55 +330,10 @@ void RegisterNanobindModule(nb::module_& m)
   RegisterNanobindImplicitFunctionClasses(m, erase_existing_name);
 #endif
 
-#if VISKORES_PYTHON_ENABLE_SOURCE
-  RegisterNanobindSourceClasses(m, erase_existing_name);
+#if VISKORES_PYTHON_ENABLE_FILTER_CORE
+  RegisterNanobindFilterBaseClasses(m, erase_existing_name);
 #endif
-
   RegisterNanobindGeneratedClasses(m, erase_existing_name);
-
-#if VISKORES_PYTHON_ENABLE_FILTER_FIELD_CONVERSION
-  RegisterNanobindFieldConversionClasses(m, erase_existing_name);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_VECTOR_ANALYSIS
-  RegisterNanobindVectorAnalysisClasses(m, erase_existing_name);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_CONTOUR
-  RegisterNanobindContourClasses(m, erase_existing_name);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_IO
-  RegisterNanobindIOClasses(m, erase_existing_name);
-#endif
-#if VISKORES_PYTHON_ENABLE_FILTER_FIELD_TRANSFORM
-  RegisterNanobindFieldTransformClasses(m, erase_existing_name);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_DENSITY_ESTIMATE
-  RegisterNanobindDensityEstimateClasses(m, erase_existing_name);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_IMAGE_PROCESSING
-  RegisterNanobindImageProcessingClasses(m, erase_existing_name);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
-  RegisterNanobindEntityExtractionClasses(m, erase_existing_name);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_CLEAN_GRID || VISKORES_PYTHON_ENABLE_FILTER_MESH_INFO || \
-  VISKORES_PYTHON_ENABLE_FILTER_CONNECTED_COMPONENTS || VISKORES_PYTHON_ENABLE_FILTER_MULTI_BLOCK
-  RegisterNanobindAdditionalFilterClasses(m, erase_existing_name);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_GEOMETRY_REFINEMENT
-  RegisterNanobindGeometryRefinementClasses(m, erase_existing_name);
-#endif
-
-#if VISKORES_PYTHON_ENABLE_FILTER_RESAMPLING
-  RegisterNanobindResamplingClasses(m, erase_existing_name);
-#endif
 
 #if VISKORES_PYTHON_ENABLE_FILTER_SCALAR_TOPOLOGY
   RegisterNanobindScalarTopologyClasses(m, erase_existing_name);
@@ -663,13 +347,8 @@ void RegisterNanobindModule(nb::module_& m)
   RegisterNanobindHelperFunctions(m, erase_existing_name);
 #endif
 
-#if VISKORES_PYTHON_ENABLE_FILTER_FIELD_CONVERSION || \
-  VISKORES_PYTHON_ENABLE_FILTER_VECTOR_ANALYSIS || VISKORES_PYTHON_ENABLE_FILTER_CONTOUR
-  RegisterNanobindCompatibilityFunctions(m, erase_existing_name);
-#endif
-
-  erase_existing_name("create_uniform_dataset");
-  m.attr("create_uniform_dataset") = nb::cpp_function(
+  erase_existing_name("_create_uniform_dataset");
+  m.attr("_create_uniform_dataset") = nb::cpp_function(
     [](nb::object dimensions, nb::object origin, nb::object spacing, const char* coordName)
     {
       const auto parsedDimensions = ParseDimensions(dimensions);
@@ -677,7 +356,7 @@ void RegisterNanobindModule(nb::module_& m)
       const auto parsedSpacing = ParseVec3(spacing, viskores::Vec3f(1.0f, 1.0f, 1.0f));
       auto dataSet = viskores::cont::DataSetBuilderUniform::Create(
         parsedDimensions, parsedOrigin, parsedSpacing, coordName);
-      return WrapDataSet(dataSet);
+      return nb::cast(dataSet);
     },
     nb::arg("dimensions"),
     nb::arg("origin") = nb::none(),
@@ -685,41 +364,9 @@ void RegisterNanobindModule(nb::module_& m)
     nb::arg("coord_name") = "coords",
     doc::CreateUniformDataSet);
 
-  erase_existing_name("field_range");
-  m.attr("field_range") = nb::cpp_function(
-    [](nb::object datasetObject, const char* fieldName)
-    {
-      auto dataset = RequireDataSet(datasetObject);
-      if (!dataset)
-      {
-        throw nb::python_error();
-      }
-      const auto range = dataset->GetField(fieldName).GetRange().ReadPortal().Get(0);
-      return nb::make_tuple(range.Min, range.Max);
-    },
-    nb::arg("dataset"),
-    nb::arg("field_name"),
-    doc::FieldRange);
-
-#if VISKORES_PYTHON_ENABLE_SOURCE
-  erase_existing_name("create_tangle_dataset");
-  m.attr("create_tangle_dataset") = nb::cpp_function(
-    [](nb::object pointDimensions)
-    {
-      viskores::source::Tangle tangle;
-      if (!pointDimensions.is_none())
-      {
-        tangle.SetPointDimensions(ParseDimensions(pointDimensions));
-      }
-      return WrapDataSet(tangle.Execute());
-    },
-    nb::arg("point_dimensions") = nb::none(),
-    doc::CreateTangleDataSet);
-#endif
-
 #if VISKORES_PYTHON_ENABLE_FILTER_CORE && VISKORES_PYTHON_ENABLE_FILTER_SCALAR_TOPOLOGY
-  erase_existing_name("partition_uniform_dataset");
-  m.attr("partition_uniform_dataset") = nb::cpp_function(
+  erase_existing_name("_partition_uniform_dataset");
+  m.attr("_partition_uniform_dataset") = nb::cpp_function(
     [](nb::object datasetObject, const char* fieldName, long long numBlocks)
     {
       auto dataset = RequireDataSet(datasetObject);
@@ -748,15 +395,14 @@ void RegisterNanobindModule(nb::module_& m)
       }
 
       std::vector<viskores::Id3> blocksPerDimVector{ blocksPerDim };
-      return nb::make_tuple(WrapPartitionedDataSet(partitions),
+      return nb::make_tuple(nb::cast(partitions),
                             CreateId3ArrayObject(viskores::cont::make_ArrayHandle(
                               blocksPerDimVector, viskores::CopyFlag::On)),
                             CreateId3ArrayObject(localBlockIndices));
     },
     nb::arg("dataset"),
     nb::arg("field_name"),
-    nb::arg("num_blocks"),
-    doc::PartitionUniformDataSet);
+    nb::arg("num_blocks"));
 #endif
 }
 

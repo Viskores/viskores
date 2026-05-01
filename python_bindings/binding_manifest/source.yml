@@ -1,0 +1,79 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- class: viskores::source::Tangle
+  pythonModule: viskores.source
+  methods:
+    - SetPointDimensions(dims: viskores::Id3)
+    - GetPointDimensions() -> viskores::Id3
+    - SetCellDimensions(dims: viskores::Id3)
+    - GetCellDimensions() -> viskores::Id3
+    - Execute() -> viskores::cont::DataSet
+
+- class: viskores::source::PerlinNoise
+  pythonModule: viskores.source
+  methods:
+    - SetPointDimensions(dims: viskores::Id3)
+    - GetPointDimensions() -> viskores::Id3
+    - SetCellDimensions(dims: viskores::Id3)
+    - GetCellDimensions() -> viskores::Id3
+    - SetOrigin(origin: viskores::Vec3f)
+    - GetOrigin() -> viskores::Vec3f
+    - SetSeed(seed: viskores::IdComponent)
+    - GetSeed()
+    - Execute() -> viskores::cont::DataSet
+
+- class: viskores::source::Oscillator
+  pythonModule: viskores.source
+  methods:
+    - SetPointDimensions(dims: viskores::Id3)
+    - GetPointDimensions() -> viskores::Id3
+    - SetCellDimensions(dims: viskores::Id3)
+    - GetCellDimensions() -> viskores::Id3
+    - SetTime(time: viskores::FloatDefault)
+    - AddPeriodic(x: viskores::FloatDefault, y: viskores::FloatDefault, z: viskores::FloatDefault, radius: viskores::FloatDefault, omega: viskores::FloatDefault, zeta: viskores::FloatDefault)
+    - AddDamped(x: viskores::FloatDefault, y: viskores::FloatDefault, z: viskores::FloatDefault, radius: viskores::FloatDefault, omega: viskores::FloatDefault, zeta: viskores::FloatDefault)
+    - AddDecaying(x: viskores::FloatDefault, y: viskores::FloatDefault, z: viskores::FloatDefault, radius: viskores::FloatDefault, omega: viskores::FloatDefault, zeta: viskores::FloatDefault)
+    - Execute() -> viskores::cont::DataSet
+
+- class: viskores::source::Wavelet
+  pythonModule: viskores.source
+  methods:
+    - SetExtent(min_extent: viskores::Id3, max_extent: viskores::Id3)
+    - SetCenter(center: viskores::Vec3f)
+    - GetCenter() -> viskores::Vec3f
+    - SetOrigin(origin: viskores::Vec3f)
+    - GetOrigin() -> viskores::Vec3f
+    - SetSpacing(spacing: viskores::Vec3f)
+    - GetSpacing() -> viskores::Vec3f
+    - SetFrequency(frequency: viskores::Vec3f)
+    - GetFrequency() -> viskores::Vec3f
+    - SetMagnitude(magnitude: viskores::Vec3f)
+    - GetMagnitude() -> viskores::Vec3f
+    - SetMinimumExtent(min_extent: viskores::Id3)
+    - GetMinimumExtent() -> viskores::Id3
+    - SetMaximumExtent(max_extent: viskores::Id3)
+    - GetMaximumExtent() -> viskores::Id3
+    - SetMaximumValue(value: viskores::FloatDefault)
+    - GetMaximumValue()
+    - SetStandardDeviation(value: viskores::FloatDefault)
+    - GetStandardDeviation()
+    - Execute() -> viskores::cont::DataSet
+
+- class: viskores::source::Amr
+  pythonModule: viskores.source
+  methods:
+    - SetDimension(dimension: viskores::IdComponent)
+    - GetDimension()
+    - SetCellsPerDimension(cells_per_dimension: viskores::IdComponent)
+    - GetCellsPerDimension()
+    - SetNumberOfLevels(number_of_levels: viskores::IdComponent)
+    - GetNumberOfLevels()
+    - Execute() -> viskores::cont::PartitionedDataSet

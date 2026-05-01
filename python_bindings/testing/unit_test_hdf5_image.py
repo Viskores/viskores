@@ -14,17 +14,17 @@ from pathlib import Path
 import numpy as np
 
 import viskores.cont
-from viskores import Association
+from viskores.cont import Field
 from viskores.cont import ColorTable
-from viskores.io import ImageReaderHDF5, ImageWriterHDF5, PixelDepth
+from viskores.io import ImageReaderHDF5, ImageWriterHDF5
 from viskores.rendering import Canvas
 
 
 def check_filled_image(dataset, field_name, canvas):
-    assert dataset.HasField(field_name, Association.POINTS)
-    point_field = dataset.GetFieldObject(field_name, Association.POINTS)
+    assert dataset.HasField(field_name, Field.Association.Points)
+    point_field = dataset.GetField(field_name, Field.Association.Points)
     assert point_field.GetNumberOfValues() == canvas.GetWidth() * canvas.GetHeight()
-    pixels = dataset.GetField(field_name)
+    pixels = dataset.GetField(field_name).GetData().AsNumPy()
     colors = canvas.GetColorBuffer()
     assert pixels.shape == colors.shape
     assert np.allclose(pixels, colors)
@@ -59,8 +59,8 @@ def main():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir = Path(temp_dir)
-        check_hdf5_roundtrip(canvas, temp_dir / "hdf5RGB8Test.h5", PixelDepth.PIXEL_8)
-        check_hdf5_roundtrip(canvas, temp_dir / "hdf5RGB16Test.h5", PixelDepth.PIXEL_16)
+        check_hdf5_roundtrip(canvas, temp_dir / "hdf5RGB8Test.h5", ImageWriterHDF5.PixelDepth.PIXEL_8)
+        check_hdf5_roundtrip(canvas, temp_dir / "hdf5RGB16Test.h5", ImageWriterHDF5.PixelDepth.PIXEL_16)
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ from ... import _viskores
 
 __all__ = []
 
-for _name in ("CellAverage", "PointAverage", "cell_average", "point_average"):
+for _name in ("CellAverage", "PointAverage"):
     if hasattr(_viskores, _name):
         globals()[_name] = getattr(_viskores, _name)
         __all__.append(_name)

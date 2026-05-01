@@ -21,8 +21,8 @@ def main():
     table = ColorTable("Cool to Warm")
     table.RescaleToRange((0.0, 50.0))
     table.SetClampingOff()
-    table.SetAboveRangeColor((1.0, 0.0, 0.0, 1.0))
-    table.SetBelowRangeColor((0.0, 0.0, 1.0, 1.0))
+    table.SetAboveRangeColor((1.0, 0.0, 0.0))
+    table.SetBelowRangeColor((0.0, 0.0, 1.0))
 
     ds = MakeTestDataSet().Make3DExplicitDataSetPolygonal()
     ds.AddPointField("faux", data)
@@ -31,7 +31,7 @@ def main():
     ftc.SetActiveField("faux")
     ftc.SetOutputFieldName("colors")
     ftc.SetOutputToRGBA()
-    rgba = ftc.Execute(ds).GetField("colors")
+    rgba = ftc.Execute(ds).GetField("colors").GetData().AsNumPy()
 
     expected_rgba = np.asarray(
         [
@@ -49,7 +49,7 @@ def main():
     np.testing.assert_array_equal(rgba, expected_rgba)
 
     ftc.SetOutputToRGB()
-    rgb = ftc.Execute(ds).GetField("colors")
+    rgb = ftc.Execute(ds).GetField("colors").GetData().AsNumPy()
     np.testing.assert_array_equal(rgb, expected_rgba[:, :3])
 
 

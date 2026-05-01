@@ -9,15 +9,7 @@
 ##=============================================================================
 
 - class: viskores::filter::connected_components::CellSetConnectivity
-  properties:
-    - OutputFieldName
-  methodAdapters:
-    - Execute
+  base: viskores::filter::Filter
 
 - class: viskores::filter::connected_components::ImageConnectivity
-  fieldInputs:
-    - ActiveFieldName
-  properties:
-    - OutputFieldName
-  methodAdapters:
-    - Execute
+  base: viskores::filter::Filter

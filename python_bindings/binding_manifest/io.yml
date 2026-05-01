@@ -9,47 +9,105 @@
 ##=============================================================================
 
 - class: viskores::io::BOVDataSetReader
-  pythonName: BOVDataSetReader
-  binding: deferred
+  constructors:
+    - (file_name: std::string)
+  methods:
+    - ReadDataSet() -> viskores::cont::DataSet
+
+- enum: viskores::io::FileType
+  header: viskores/io/VTKDataSetWriter.h
+  pythonName: FileType
+  guard: VISKORES_PYTHON_ENABLE_IO
+  values:
+    - ASCII
+    - BINARY
+
+- class: viskores::io::ImageWriterBase
+  binding: manual
+  reason: Keep exposed for C++ API fidelity as the abstract base of concrete image writers and owner of PixelDepth; revisit whether this should ever be generated.
+  enums:
+    - "PixelDepth: PIXEL_8, PIXEL_16"
 
 - class: viskores::io::ImageReaderBase
   binding: excluded
   reason: Abstract implementation base for image readers.
 
 - class: viskores::io::ImageReaderHDF5
-  pythonName: ImageReaderHDF5
-  binding: deferred
+  guard: VISKORES_PYTHON_ENABLE_IO_HDF5
+  constructors:
+    - (file_name: std::string)
+  methods:
+    - ReadDataSet() -> viskores::cont::DataSet
+    - GetPointFieldName()
+    - SetPointFieldName(name: std::string)
+    - GetFileName()
+    - SetFileName(file_name: std::string)
 
 - class: viskores::io::ImageReaderPNG
-  pythonName: ImageReaderPNG
-  binding: deferred
+  constructors:
+    - (file_name: std::string)
+  methods:
+    - ReadDataSet() -> viskores::cont::DataSet
+    - GetPointFieldName()
+    - SetPointFieldName(name: std::string)
+    - GetFileName()
+    - SetFileName(file_name: std::string)
 
 - class: viskores::io::ImageReaderPNM
-  pythonName: ImageReaderPNM
-  binding: deferred
-
-- class: viskores::io::ImageWriterBase
-  binding: excluded
-  reason: Abstract implementation base for image writers.
+  constructors:
+    - (file_name: std::string)
+  methods:
+    - ReadDataSet() -> viskores::cont::DataSet
+    - GetPointFieldName()
+    - SetPointFieldName(name: std::string)
+    - GetFileName()
+    - SetFileName(file_name: std::string)
 
 - class: viskores::io::ImageWriterHDF5
   pythonName: ImageWriterHDF5
-  binding: manual
-  reason: Requires optional color-field WriteDataSet wrapper and pixel-depth conversion.
+  base: viskores::io::ImageWriterBase
+  guard: VISKORES_PYTHON_ENABLE_IO_HDF5
+  constructors:
+    - (file_name: std::string)
+  methods:
+    - WriteDataSet(data: const viskores::cont::DataSet&)
+    - WriteDataSet(data: const viskores::cont::DataSet&, color_field: std::string)
+    - GetPixelDepth() -> viskores::io::ImageWriterBase::PixelDepth
+    - SetPixelDepth(pixel_depth: viskores::io::ImageWriterBase::PixelDepth)
+    - GetFileName()
+    - SetFileName(file_name: std::string)
 
 - class: viskores::io::ImageWriterPNG
   pythonName: ImageWriterPNG
-  binding: manual
-  reason: Requires optional color-field WriteDataSet wrapper and pixel-depth conversion.
+  base: viskores::io::ImageWriterBase
+  constructors:
+    - (file_name: std::string)
+  methods:
+    - WriteDataSet(data: const viskores::cont::DataSet&)
+    - WriteDataSet(data: const viskores::cont::DataSet&, color_field: std::string)
+    - GetPixelDepth() -> viskores::io::ImageWriterBase::PixelDepth
+    - SetPixelDepth(pixel_depth: viskores::io::ImageWriterBase::PixelDepth)
+    - GetFileName()
+    - SetFileName(file_name: std::string)
 
 - class: viskores::io::ImageWriterPNM
   pythonName: ImageWriterPNM
-  binding: manual
-  reason: Requires optional color-field WriteDataSet wrapper and pixel-depth conversion.
+  base: viskores::io::ImageWriterBase
+  constructors:
+    - (file_name: std::string)
+  methods:
+    - WriteDataSet(data: const viskores::cont::DataSet&)
+    - WriteDataSet(data: const viskores::cont::DataSet&, color_field: std::string)
+    - GetPixelDepth() -> viskores::io::ImageWriterBase::PixelDepth
+    - SetPixelDepth(pixel_depth: viskores::io::ImageWriterBase::PixelDepth)
+    - GetFileName()
+    - SetFileName(file_name: std::string)
 
 - class: viskores::io::VTKDataSetReader
-  pythonName: VTKDataSetReader
-  binding: deferred
+  constructors:
+    - (file_name: std::string)
+  methods:
+    - ReadDataSet() -> viskores::cont::DataSet
 
 - class: viskores::io::VTKDataSetReaderBase
   binding: excluded
@@ -57,30 +115,38 @@
 
 - class: viskores::io::VTKDataSetWriter
   pythonName: VTKDataSetWriter
-  binding: manual
-  reason: Requires file-type controls.
+  constructors:
+    - (file_name: std::string)
+  methods:
+    - WriteDataSet(data: const viskores::cont::DataSet&)
+    - GetFileType() -> viskores::io::FileType
+    - SetFileType(file_type: viskores::io::FileType)
+    - SetFileTypeToAscii()
+    - SetFileTypeToBinary()
 
 - class: viskores::io::VTKPolyDataReader
   binding: excluded
-  reason: Covered by VTKDataSetReader in the initial Python API.
+  reason: Use VTKDataSetReader instead of binding this VTK dataset reader variant separately.
 
 - class: viskores::io::VTKRectilinearGridReader
   binding: excluded
-  reason: Covered by VTKDataSetReader in the initial Python API.
+  reason: Use VTKDataSetReader instead of binding this VTK dataset reader variant separately.
 
 - class: viskores::io::VTKStructuredGridReader
   binding: excluded
-  reason: Covered by VTKDataSetReader in the initial Python API.
+  reason: Use VTKDataSetReader instead of binding this VTK dataset reader variant separately.
 
 - class: viskores::io::VTKStructuredPointsReader
   binding: excluded
-  reason: Covered by VTKDataSetReader in the initial Python API.
+  reason: Use VTKDataSetReader instead of binding this VTK dataset reader variant separately.
 
 - class: viskores::io::VTKUnstructuredGridReader
   binding: excluded
-  reason: Covered by VTKDataSetReader in the initial Python API.
+  reason: Use VTKDataSetReader instead of binding this VTK dataset reader variant separately.
 
 - class: viskores::io::VTKVisItFileReader
   pythonName: VTKVisItFileReader
-  binding: manual
-  reason: Requires partitioned dataset wrapping.
+  constructors:
+    - (file_name: std::string)
+  methods:
+    - ReadPartitionedDataSet() -> viskores::cont::PartitionedDataSet

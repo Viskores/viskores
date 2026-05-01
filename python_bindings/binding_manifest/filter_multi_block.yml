@@ -9,11 +9,9 @@
 ##=============================================================================
 
 - class: viskores::filter::multi_block::AmrArrays
-  binding: excluded
-  reason: Not part of the initial Python binding scope.
+  base: viskores::filter::Filter
 
 - class: viskores::filter::multi_block::MergeDataSets
+  base: viskores::filter::Filter
   properties:
     - InvalidValue
-  methodAdapters:
-    - Execute

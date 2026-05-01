@@ -19,20 +19,11 @@
 namespace viskores::python::bindings
 {
 
-inline nb::object NumPyObjectFromUnknownArray(const viskores::cont::UnknownArrayHandle& array)
-{
-  return UnknownArrayToNumPyArray(array);
-}
-
-inline nb::object NumPyObjectFromField(const viskores::cont::Field& field)
-{
-  return FieldToNumPyArray(field);
-}
-
 bool TryPythonObjectToRegisteredArray(nb::handle object,
                                       viskores::cont::UnknownArrayHandle& array);
 viskores::cont::UnknownArrayHandle PythonObjectToUnknownArray(nb::handle object);
 
+viskores::cont::ArrayHandle<viskores::Vec3f> ParseArrayHandleVec3f(nb::handle object);
 std::vector<viskores::Vec3f> ParseVec3Sequence(nb::handle object);
 std::vector<viskores::UInt8> ParseUInt8Sequence(nb::handle object);
 std::vector<viskores::IdComponent> ParseIdComponentSequence(nb::handle object);
@@ -44,14 +35,9 @@ void RegisterNanobindArrayClasses(nb::module_& m,
                                   const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindCellSetClass(nb::module_& m,
                                   const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindFieldClasses(nb::module_& m,
-                                  const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindDataSetClasses(nb::module_& m,
                                     const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindDataSetBuilderClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindPartitionedDataSetClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindFieldFactoryFunctions(

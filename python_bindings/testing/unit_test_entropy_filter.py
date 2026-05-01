@@ -27,7 +27,7 @@ def main():
     entropy.SetActiveField("tangle")
     result = entropy.Execute(dataset)
 
-    entropy_value = float(result.GetField("entropy")[0])
+    entropy_value = float(result.GetField("entropy").GetData().AsNumPy()[0])
     assert math.fabs(entropy_value - 4.59093) < 0.001 or math.fabs(entropy_value - 4.59798) < 0.001
 
 

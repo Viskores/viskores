@@ -10,6 +10,7 @@
 
 from pathlib import Path
 
+from viskores.cont import Field
 from viskores.filter.contour import Contour
 from viskores.filter.field_conversion import CellAverage
 from viskores.filter.geometry_refinement import SplitSharpEdges
@@ -23,21 +24,21 @@ def test_explicit_data():
     dataset = VTKDataSetReader(str(dataset_path)).ReadDataSet()
 
     split = SplitSharpEdges()
-    split.SetActiveField("Normals", association="cells")
+    split.SetActiveField("Normals", association=Field.Association.Cells)
 
     split.SetFeatureAngle(89.0)
     split_every_edge = split.Execute(dataset)
     assert split_every_edge.GetNumberOfCells() == 6
     assert split_every_edge.GetNumberOfPoints() == 24
-    assert split_every_edge.HasField("pointvar", association="points")
-    assert split_every_edge.HasField("cellvar", association="cells")
+    assert split_every_edge.HasField("pointvar", association=Field.Association.Points)
+    assert split_every_edge.HasField("cellvar", association=Field.Association.Cells)
 
     split.SetFeatureAngle(91.0)
     no_split = split.Execute(dataset)
     assert no_split.GetNumberOfCells() == 6
     assert no_split.GetNumberOfPoints() == 8
-    assert no_split.HasField("pointvar", association="points")
-    assert no_split.HasField("cellvar", association="cells")
+    assert no_split.HasField("pointvar", association=Field.Association.Points)
+    assert no_split.HasField("cellvar", association=Field.Association.Cells)
 
 
 def test_structured_data():
@@ -48,7 +49,7 @@ def test_structured_data():
     dataset = wavelet.Execute()
 
     contour = Contour()
-    contour.SetActiveField("RTData", association="points")
+    contour.SetActiveField("RTData", association=Field.Association.Points)
     contour.SetIsoValue(192)
     contour.SetMergeDuplicatePoints(True)
     contour.SetGenerateNormals(True)
@@ -56,17 +57,17 @@ def test_structured_data():
     dataset = contour.Execute(dataset)
 
     cell_normals = CellAverage()
-    cell_normals.SetActiveField("normals", association="points")
+    cell_normals.SetActiveField("normals", association=Field.Association.Points)
     dataset = cell_normals.Execute(dataset)
 
     split = SplitSharpEdges()
-    split.SetActiveField("normals", association="cells")
+    split.SetActiveField("normals", association=Field.Association.Cells)
     result = split.Execute(dataset)
 
     assert result.GetNumberOfCells() == dataset.GetNumberOfCells()
     assert result.GetNumberOfPoints() >= dataset.GetNumberOfPoints()
-    assert result.HasField("normals", association="points")
-    assert result.HasField("normals", association="cells")
+    assert result.HasField("normals", association=Field.Association.Points)
+    assert result.HasField("normals", association=Field.Association.Cells)
 
 
 def main():

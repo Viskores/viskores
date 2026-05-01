@@ -12,10 +12,6 @@ from ... import _viskores
 
 __all__ = []
 
-if hasattr(_viskores, "contour"):
-    contour = _viskores.contour
-    __all__.append("contour")
-
 if hasattr(_viskores, "Contour"):
     Contour = _viskores.Contour
     __all__.append("Contour")

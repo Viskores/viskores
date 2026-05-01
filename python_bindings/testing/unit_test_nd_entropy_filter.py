@@ -12,7 +12,7 @@ import math
 import numpy as np
 
 import viskores.cont
-from viskores.cont import create_uniform_dataset
+from viskores.python_convenience import create_uniform_dataset
 from viskores.filter.density_estimate import NDEntropy
 
 
@@ -30,7 +30,7 @@ def main():
     entropy.AddFieldAndBin("fieldC", 2)
     result = entropy.Execute(dataset)
 
-    entropy_value = float(result.GetField("Entropy")[0])
+    entropy_value = float(result.GetField("Entropy").GetData().AsNumPy()[0])
     assert math.isclose(entropy_value, 3.0, rel_tol=1e-6, abs_tol=1e-6)
 
 

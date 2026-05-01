@@ -9,25 +9,31 @@
 ##=============================================================================
 
 - class: viskores::filter::zfp::ZFPCompressor1D
-  binding: excluded
-  reason: ZFP filters are not part of the initial Python binding scope.
+  base: viskores::filter::Filter
+  properties:
+    - Rate
 
 - class: viskores::filter::zfp::ZFPCompressor2D
-  binding: excluded
-  reason: ZFP filters are not part of the initial Python binding scope.
+  base: viskores::filter::Filter
+  properties:
+    - Rate
 
 - class: viskores::filter::zfp::ZFPCompressor3D
-  binding: excluded
-  reason: ZFP filters are not part of the initial Python binding scope.
+  base: viskores::filter::Filter
+  properties:
+    - Rate
 
 - class: viskores::filter::zfp::ZFPDecompressor1D
-  binding: excluded
-  reason: ZFP filters are not part of the initial Python binding scope.
+  base: viskores::filter::Filter
+  properties:
+    - Rate
 
 - class: viskores::filter::zfp::ZFPDecompressor2D
-  binding: excluded
-  reason: ZFP filters are not part of the initial Python binding scope.
+  base: viskores::filter::Filter
+  properties:
+    - Rate
 
 - class: viskores::filter::zfp::ZFPDecompressor3D
-  binding: excluded
-  reason: ZFP filters are not part of the initial Python binding scope.
+  base: viskores::filter::Filter
+  properties:
+    - Rate

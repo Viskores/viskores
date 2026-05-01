@@ -218,6 +218,11 @@ if (TARGET viskores::filter_resampling)
   list(APPEND Viskores_PYTHON_BINDING_DEFINITIONS VISKORES_PYTHON_ENABLE_FILTER_RESAMPLING=1)
 endif()
 
+if (TARGET viskores::filter_zfp)
+  target_link_libraries(viskores_python_bindings PRIVATE viskores::filter_zfp)
+  list(APPEND Viskores_PYTHON_BINDING_DEFINITIONS VISKORES_PYTHON_ENABLE_FILTER_ZFP=1)
+endif()
+
 if (TARGET viskores::io)
   target_link_libraries(viskores_python_bindings PRIVATE viskores::io)
   list(APPEND Viskores_PYTHON_BINDING_DEFINITIONS VISKORES_PYTHON_ENABLE_IO=1)

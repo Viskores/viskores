@@ -23,7 +23,7 @@ def main():
     mesh2d = ContourTreeMesh2D()
     mesh2d.SetActiveField("pointvar")
     result2d = mesh2d.Execute(maker.Make2DUniformDataSet1())
-    saddle_peak_2d = result2d.GetField("saddlePeak")
+    saddle_peak_2d = result2d.GetField("saddlePeak").GetData().AsNumPy()
     expected_2d = np.array(
         [[0, 12], [4, 13], [12, 13], [12, 18], [12, 20], [13, 14], [13, 19]], dtype=np.int64
     )
@@ -33,7 +33,7 @@ def main():
     mesh3d = ContourTreeMesh3D()
     mesh3d.SetActiveField("pointvar")
     result3d = mesh3d.Execute(maker.Make3DUniformDataSet1())
-    saddle_peak_3d = result3d.GetField("saddlePeak")
+    saddle_peak_3d = result3d.GetField("saddlePeak").GetData().AsNumPy()
     expected_3d = np.array(
         [
             [0, 67],

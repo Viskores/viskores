@@ -41,7 +41,7 @@ def create_vectors(num_pts, vec_type):
 
 
 def check_result(field1, field2, result):
-    output = result.GetField("dotproduct")
+    output = result.GetField("dotproduct").GetData().AsNumPy()
     expected = np.sum(field1 * field2, axis=1)
     assert output.shape == expected.shape
     assert np.allclose(output, expected, rtol=1e-5, atol=1e-5)

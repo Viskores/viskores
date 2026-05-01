@@ -113,17 +113,18 @@ vector arrays. For example:
 
 ```python
 import numpy as np
-from viskores.cont import Association, Field
+from viskores.cont import Field
+from viskores.python_convenience import array_from_numpy
 
 values = np.arange(12, dtype=np.float32).reshape(4, 3)
-field = Field("velocity", Association.POINTS, values)
+field = Field("velocity", Field.Association.Points, array_from_numpy(values))
 ```
 
-Use `viskores.cont.array_from_numpy` when you want an explicit
+Use `viskores.python_convenience.array_from_numpy` when you want an explicit
 `UnknownArrayHandle`:
 
 ```python
-from viskores.cont import array_from_numpy, asnumpy
+from viskores.python_convenience import array_from_numpy, asnumpy
 
 array = array_from_numpy(values)
 round_trip = asnumpy(array)

@@ -81,7 +81,7 @@ def check_metric(dataset, metric, output_name, expected):
     mesh_quality = MeshQuality()
     mesh_quality.SetMetric(metric)
     output = mesh_quality.Execute(dataset)
-    np.testing.assert_allclose(output.GetField(output_name), np.array(expected, dtype=np.float64), rtol=1e-5, atol=1e-5)
+    np.testing.assert_allclose(output.GetField(output_name).GetData().AsNumPy(), np.array(expected, dtype=np.float64), rtol=1e-5, atol=1e-5)
 
 
 def main():

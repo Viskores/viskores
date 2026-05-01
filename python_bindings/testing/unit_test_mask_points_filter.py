@@ -20,7 +20,7 @@ def test_regular_2d():
     output = mask_points.Execute(dataset)
 
     assert output.GetNumberOfCells() == 12
-    assert output.GetField("pointvar").shape[0] == 12
+    assert output.GetField("pointvar").GetData().AsNumPy().shape[0] == 12
 
 
 def test_regular_3d():
@@ -31,7 +31,7 @@ def test_regular_3d():
     output = mask_points.Execute(dataset)
 
     assert output.GetNumberOfCells() == 25
-    assert output.GetField("pointvar").shape[0] == 25
+    assert output.GetField("pointvar").GetData().AsNumPy().shape[0] == 25
 
 
 def test_explicit_3d():
@@ -43,7 +43,7 @@ def test_explicit_3d():
     output = mask_points.Execute(dataset)
 
     assert output.GetNumberOfCells() == 3
-    assert output.GetField("pointvar").shape[0] == 11
+    assert output.GetField("pointvar").GetData().AsNumPy().shape[0] == 11
 
 
 def main():

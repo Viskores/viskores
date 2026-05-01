@@ -8,105 +8,160 @@
 ##
 ##=============================================================================
 
+- enum: viskores::filter::mesh_info::IntegrationType
+  header: viskores/filter/mesh_info/CellMeasures.h
+  pythonName: IntegrationType
+  guard: VISKORES_PYTHON_ENABLE_FILTER_MESH_INFO
+  enumOptions:
+    - arithmetic
+    - flag
+  values:
+    - None
+    - ArcLength
+    - Area
+    - Volume
+    - AllMeasures
+
+- enum: viskores::filter::mesh_info::CellMetric
+  header: viskores/filter/mesh_info/MeshQuality.h
+  pythonName: CellMetric
+  guard: VISKORES_PYTHON_ENABLE_FILTER_MESH_INFO
+  values:
+    - Area
+    - AspectGamma
+    - AspectRatio
+    - Condition
+    - DiagonalRatio
+    - Dimension
+    - Jacobian
+    - MaxAngle
+    - MaxDiagonal
+    - MinAngle
+    - MinDiagonal
+    - Oddy
+    - RelativeSizeSquared
+    - ScaledJacobian
+    - Shape
+    - ShapeAndSize
+    - Shear
+    - Skew
+    - Stretch
+    - Taper
+    - Volume
+    - Warpage
+    - None
+
 - class: viskores::filter::mesh_info::CellMeasures
-  pythonName: CellMeasures
-  binding: deferred
+  base: viskores::filter::Filter
+  properties:
+    - CellMeasureName
+  directMethods:
+    - SetMeasureToArcLength
+    - SetMeasureToArea
+    - SetMeasureToVolume
+    - SetMeasureToAll
+  methods:
+    - SetMeasure(measure: viskores::filter::mesh_info::IntegrationType)
+    - GetMeasure() -> viskores::filter::mesh_info::IntegrationType
 
 - class: viskores::filter::mesh_info::GhostCellClassify
+  base: viskores::filter::Filter
   properties:
     - GhostCellName
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::mesh_info::MeshQuality
   pythonName: MeshQuality
-  binding: manual
-  reason: Uses generic MeshQuality metric selection instead of binding each metric subclass.
+  base: viskores::filter::Filter
+  directMethods:
+    - GetMetricName
+  methods:
+    - SetMetric(metric: viskores::filter::mesh_info::CellMetric)
+    - GetMetric() -> viskores::filter::mesh_info::CellMetric
 
 - class: viskores::filter::mesh_info::MeshQualityArea
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityAspectGamma
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityAspectRatio
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityCondition
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityDiagonalRatio
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityDimension
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityJacobian
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityMaxAngle
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityMaxDiagonal
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityMinAngle
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityMinDiagonal
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityOddy
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityRelativeSizeSquared
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityScaledJacobian
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityShape
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityShapeAndSize
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityShear
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualitySkew
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityStretch
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityTaper
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityVolume
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.
 
 - class: viskores::filter::mesh_info::MeshQualityWarpage
   binding: excluded
-  reason: Covered by generic MeshQuality metric selection in the initial Python API.
+  reason: Use MeshQuality with the corresponding metric selector instead of binding this metric subclass separately.

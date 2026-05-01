@@ -15,7 +15,7 @@ from viskores.filter.contour import ClipWithImplicitFunction
 
 
 def make_structured_2d():
-    dataset = viskores.create_uniform_dataset((3, 3), coord_name="coordinates")
+    dataset = viskores.python_convenience.create_uniform_dataset((3, 3), coord_name="coordinates")
     scalars = np.ones(9, dtype=np.float32)
     scalars[4] = 0.0
     dataset.AddPointField("scalars", scalars)
@@ -34,7 +34,7 @@ def main():
     assert output.GetNumberOfFields() == 2
     assert output.GetNumberOfCells() == 8
 
-    values = output.GetField("scalars")
+    values = output.GetField("scalars").GetData().AsNumPy()
     expected = np.array([1, 1, 1, 1, 1, 1, 1, 1, 0.25, 0.25, 0.25, 0.25], dtype=np.float32)
     assert values.shape == (12,)
     assert np.allclose(values, expected, rtol=1e-5, atol=1e-5)
@@ -46,7 +46,7 @@ def main():
     output = clip.Execute(dataset)
     expected = np.array([0, 0.25, 0.25, 0.25, 0.25], dtype=np.float32)
     assert output.GetNumberOfCells() == 4
-    assert np.allclose(output.GetField("scalars"), expected, rtol=1e-5, atol=1e-5)
+    assert np.allclose(output.GetField("scalars").GetData().AsNumPy(), expected, rtol=1e-5, atol=1e-5)
 
 
 if __name__ == "__main__":

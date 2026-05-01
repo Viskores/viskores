@@ -1,0 +1,129 @@
+##=============================================================================
+##
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##
+##=============================================================================
+
+- enum: viskores::rendering::GlyphType
+  header: viskores/rendering/GlyphType.h
+  pythonName: GlyphType
+  guard: VISKORES_PYTHON_ENABLE_RENDERING
+  values:
+    - Arrow
+    - Axes
+    - Cube
+    - Quad
+    - Sphere
+
+- class: viskores::rendering::Camera
+  binding: manual
+  reason: Requires tuple conversions for camera vectors, view-range tuple return, and camera-specific overload/default handling.
+  enums:
+    - "Mode: TwoD, ThreeD"
+
+- class: viskores::rendering::Actor
+  binding: manual
+  reason: Requires DataSet and PartitionedDataSet shared-ownership constructors, mapper ownership unwrapping, ColorTable object handling, and scalar-range conversion.
+
+- class: viskores::rendering::Scene
+  binding: manual
+  reason: Requires Actor shared-ownership wrappers for AddActor and Python-owned Actor copies from GetActor.
+
+- class: viskores::rendering::Canvas
+  binding: manual
+  reason: Requires NumPy color/depth buffer access, color tuple parsing, and drawing helper overloads.
+
+- class: viskores::rendering::CanvasRayTracer
+  base: viskores::rendering::Canvas
+  constructors:
+    - (width: viskores::Id = 1024, height: viskores::Id = 1024)
+
+- class: viskores::rendering::MapperVolume
+  methods:
+    - SetSampleDistance(distance: viskores::Float32)
+    - SetCompositeBackground(enabled: bool)
+
+- class: viskores::rendering::MapperPoint
+  directMethods:
+    - SetUseCells
+    - SetUsePoints
+  methods:
+    - UseVariableRadius(enabled: bool)
+    - SetRadius(radius: viskores::Float32)
+    - SetRadiusDelta(delta: viskores::Float32)
+    - SetCompositeBackground(enabled: bool)
+
+- class: viskores::rendering::MapperQuad
+  methods:
+    - SetCompositeBackground(enabled: bool)
+
+- class: viskores::rendering::MapperConnectivity
+  methods:
+    - SetSampleDistance(distance: viskores::Float32)
+
+- class: viskores::rendering::MapperCylinder
+  methods:
+    - UseVariableRadius(enabled: bool)
+    - SetRadius(radius: viskores::Float32)
+    - SetRadiusDelta(delta: viskores::Float32)
+    - SetCompositeBackground(enabled: bool)
+
+- class: viskores::rendering::MapperGlyphScalar
+  directMethods:
+    - SetUseCells
+    - SetUsePoints
+  methods:
+    - GetGlyphType()
+    - SetGlyphType(glyph_type: viskores::rendering::GlyphType)
+    - SetScaleByValue(enabled: bool)
+    - GetScaleByValue()
+    - SetBaseSize(size: viskores::Float32)
+    - GetBaseSize()
+    - SetScaleDelta(delta: viskores::Float32)
+    - GetScaleDelta()
+    - SetCompositeBackground(enabled: bool)
+
+- class: viskores::rendering::MapperGlyphVector
+  directMethods:
+    - SetUseCells
+    - SetUsePoints
+  methods:
+    - GetGlyphType()
+    - SetGlyphType(glyph_type: viskores::rendering::GlyphType)
+    - SetScaleByValue(enabled: bool)
+    - GetScaleByValue()
+    - SetBaseSize(size: viskores::Float32)
+    - GetBaseSize()
+    - SetScaleDelta(delta: viskores::Float32)
+    - GetScaleDelta()
+    - SetCompositeBackground(enabled: bool)
+
+- class: viskores::rendering::MapperWireframer
+  methods:
+    - GetShowInternalZones()
+    - SetShowInternalZones(enabled: bool)
+    - GetIsOverlay()
+    - SetIsOverlay(enabled: bool)
+    - SetCompositeBackground(enabled: bool)
+
+- class: viskores::rendering::MapperRayTracer
+  methods:
+    - SetCompositeBackground(enabled: bool)
+    - SetShadingOn(enabled: bool)
+
+- class: viskores::rendering::ScalarRenderer::Result
+  header: viskores/rendering/ScalarRenderer.h
+  binding: manual
+  reason: Exposed as ScalarRenderer.Result with Python read-only properties and NumPy/dict/list conversions.
+
+- class: viskores::rendering::ScalarRenderer
+  binding: manual
+  reason: Requires DataSet and Camera shared-ownership unwrapping plus owned ScalarRenderer.Result return handling.
+
+- class: viskores::rendering::View3D
+  binding: manual
+  reason: Requires a Python-specific constructor that unwraps Scene, mapper, CanvasRayTracer, optional Camera, and background color inputs.

@@ -9,6 +9,7 @@
 ##=============================================================================
 
 from viskores.filter.entity_extraction import ThresholdPoints
+from viskores.python_convenience import field_names
 from viskores.testing import MakeTestDataSet
 
 
@@ -22,7 +23,7 @@ def main():
     threshold_points.SetFieldsToPass("pointvar")
     output = threshold_points.Execute(dataset)
     assert output.GetNumberOfCells() == 11
-    point_field = output.GetField("pointvar")
+    point_field = output.GetField("pointvar").GetData().AsNumPy()
     assert point_field.shape[0] == 25
     assert point_field[12] == 50.0
 
@@ -34,7 +35,7 @@ def main():
     threshold_points.SetFieldsToPass("pointvar")
     output = threshold_points.Execute(dataset)
     assert output.GetNumberOfCells() == 27
-    point_field = output.GetField("pointvar")
+    point_field = output.GetField("pointvar").GetData().AsNumPy()
     assert point_field.shape[0] == 27
     assert point_field[0] == 99.0
 
@@ -46,7 +47,7 @@ def main():
     threshold_points.SetFieldsToPass("pointvar")
     output = threshold_points.Execute(dataset)
     assert output.GetNumberOfCells() == 6
-    point_field = output.GetField("pointvar")
+    point_field = output.GetField("pointvar").GetData().AsNumPy()
     assert point_field.shape[0] == 6
     assert point_field[4] == 10.0
 
@@ -56,7 +57,7 @@ def main():
     threshold_points.SetActiveField("pointvar")
     threshold_points.SetFieldsToPass("pointvar")
     output = threshold_points.Execute(dataset)
-    assert len(output.FieldNames()) == 2
+    assert len(field_names(output)) == 2
     assert output.GetNumberOfCells() == 0
 
 

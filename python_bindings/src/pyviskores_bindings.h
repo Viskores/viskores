@@ -12,6 +12,8 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 
+#include <viskores/filter/Filter.h>
+
 #include <functional>
 #include <memory>
 #include <sstream>
@@ -135,9 +137,11 @@ nb::object GroupVecVariableToPythonList(const viskores::cont::UnknownArrayHandle
 nb::object GroupVecVariableValueToNumPyArray(const viskores::cont::UnknownArrayHandle& array,
                                              viskores::Id index,
                                              bool copy = true);
-nb::object FieldToNumPyArray(const viskores::cont::Field& field);
+viskores::cont::UnknownArrayHandle PythonObjectToUnknownArray(nb::handle object);
 viskores::cont::UnknownArrayHandle NumPyArrayToUnknownArray(nb::handle object, bool copy = true);
-std::vector<viskores::Float64> ParseIsoValues(nb::handle object);
+viskores::cont::ArrayHandle<viskores::Vec3f> ParseArrayHandleVec3f(nb::handle object);
+std::vector<viskores::Float64> ParseFloat64List(nb::handle object);
+std::vector<viskores::Id> ParseIdSequence(nb::handle object);
 nb::object IdArrayToNumPy(const viskores::cont::ArrayHandle<viskores::Id>& array);
 nb::object VectorToNumPy(const std::vector<viskores::FloatDefault>& values);
 viskores::cont::ArrayHandle<viskores::Id3> ParseId3Array(nb::handle object);
@@ -154,29 +158,50 @@ viskores::cont::DataSet CreateSubDataSet(const viskores::cont::DataSet& ds,
                                          const std::string& fieldName);
 #endif
 
-viskores::cont::Field::Association ParseAssociation(
-  nb::handle object,
-  viskores::cont::Field::Association defaultValue = viskores::cont::Field::Association::Any);
+viskores::Id2 ParseId2(nb::handle object);
+viskores::Id3 ParseId3(nb::handle object);
 viskores::Id3 ParseDimensions(nb::handle object);
 std::pair<viskores::Id3, viskores::IdComponent> ParseDimensionsAndRank(nb::handle object);
 viskores::Vec3f ParseVec3(nb::handle object, const viskores::Vec3f& defaultValue);
+viskores::Vec3f_32 ParseVec3f32(nb::handle object);
 viskores::RangeId3 ParseRangeId3(nb::handle object);
 viskores::Range ParseRange(nb::handle object,
                            const viskores::Range& defaultValue = viskores::Range());
 viskores::Bounds ParseBounds(nb::handle object);
-viskores::Vec3f_32 ParseColorTableColor(nb::handle object);
 viskores::rendering::Color ParseColor(
   nb::handle object,
   const viskores::rendering::Color& defaultValue = viskores::rendering::Color(0, 0, 0, 1));
-#if VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
-bool ParseImplicitFunction(nb::handle object, viskores::ImplicitFunctionGeneral& function);
-#endif
 
 viskores::cont::DataSet* RequireDataSet(nb::handle object);
 viskores::cont::PartitionedDataSet* RequirePartitionedDataSet(nb::handle object);
-std::shared_ptr<viskores::cont::ColorTable> RequireColorTable(nb::handle object);
-nb::object WrapDataSet(const viskores::cont::DataSet& dataSet);
-nb::object WrapPartitionedDataSet(const viskores::cont::PartitionedDataSet& dataSet);
+inline std::vector<std::string> ParseStringList(nb::handle object)
+{
+  if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))
+  {
+    throw std::runtime_error("Expected a sequence of strings.");
+  }
+
+  nb::sequence sequence = nb::borrow<nb::sequence>(object);
+  const size_t size = static_cast<size_t>(nb::len(sequence));
+  std::vector<std::string> values;
+  values.reserve(size);
+  for (size_t index = 0; index < size; ++index)
+  {
+    nb::handle item = sequence[index];
+    if (!nb::isinstance<nb::str>(item))
+    {
+      throw std::runtime_error("Sequence values must be strings.");
+    }
+    values.emplace_back(nb::cast<std::string>(item));
+  }
+  return values;
+}
+
+template <typename VecType>
+nb::tuple Vec2ToTuple(const VecType& value)
+{
+  return nb::make_tuple(value[0], value[1]);
+}
 
 template <typename VecType>
 nb::tuple Vec3ToTuple(const VecType& value)
@@ -209,13 +234,43 @@ ClassType& BindVec3Property(ClassType& cls,
 }
 
 template <typename TargetType>
-nb::class_<TargetType> BindClassWithDefaultConstructor(
+auto BindClass(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name,
   const char* name)
 {
   erase_existing_name(name);
-  nb::class_<TargetType> cls(m, name, doc::ClassDoc(name));
+  if constexpr (std::is_base_of_v<viskores::filter::Filter, TargetType> &&
+                !std::is_same_v<viskores::filter::Filter, TargetType>)
+  {
+    nb::class_<TargetType, viskores::filter::Filter> cls(m, name, doc::ClassDoc(name));
+    return cls;
+  }
+  else
+  {
+    nb::class_<TargetType> cls(m, name, doc::ClassDoc(name));
+    return cls;
+  }
+}
+
+template <typename TargetType, typename BaseType>
+nb::class_<TargetType, BaseType> BindClass(
+  nb::module_& m,
+  const std::function<void(const char*)>& erase_existing_name,
+  const char* name)
+{
+  erase_existing_name(name);
+  nb::class_<TargetType, BaseType> cls(m, name, doc::ClassDoc(name));
+  return cls;
+}
+
+template <typename TargetType>
+auto BindClassWithDefaultConstructor(
+  nb::module_& m,
+  const std::function<void(const char*)>& erase_existing_name,
+  const char* name)
+{
+  auto cls = BindClass<TargetType>(m, erase_existing_name, name);
   cls.def(nb::init<>());
   return cls;
 }
@@ -226,9 +281,20 @@ nb::class_<TargetType, BaseType> BindClassWithDefaultConstructor(
   const std::function<void(const char*)>& erase_existing_name,
   const char* name)
 {
-  erase_existing_name(name);
-  nb::class_<TargetType, BaseType> cls(m, name, doc::ClassDoc(name));
+  auto cls = BindClass<TargetType, BaseType>(m, erase_existing_name, name);
   cls.def(nb::init<>());
+  return cls;
+}
+
+template <typename TargetType>
+nb::class_<TargetType> BindClassWithFileNameConstructor(
+  nb::module_& m,
+  const std::function<void(const char*)>& erase_existing_name,
+  const char* name)
+{
+  erase_existing_name(name);
+  nb::class_<TargetType> cls(m, name, doc::ClassDoc(name));
+  cls.def(nb::init<const std::string&>(), nb::arg("file_name"));
   return cls;
 }
 
@@ -244,7 +310,7 @@ ClassType& BindId3Property(ClassType& cls,
     .def(
       setName,
       [setter](TargetType& self, nb::object valueObject)
-      { (self.*setter)(ParseDimensions(valueObject)); },
+      { (self.*setter)(ParseId3(valueObject)); },
       nb::arg(argName))
     .def(getName, [getter](const TargetType& self) { return Vec3ToTuple((self.*getter)()); });
   return cls;
@@ -291,16 +357,17 @@ nb::object ExecuteFilterOnPythonDataObject(FilterType& filter, nb::handle dataOb
   viskores::cont::DataSet* dataSet = nullptr;
   if (nb::try_cast(dataObject, dataSet))
   {
-    return WrapDataSet(filter.Execute(*dataSet));
+    return nb::cast(filter.Execute(*dataSet));
   }
 
   viskores::cont::PartitionedDataSet* partitionedDataSet = nullptr;
   if (nb::try_cast(dataObject, partitionedDataSet))
   {
-    return WrapPartitionedDataSet(filter.Execute(*partitionedDataSet));
+    return nb::cast(filter.Execute(*partitionedDataSet));
   }
 
-  throw std::runtime_error("Expected a viskores.DataSet or viskores.PartitionedDataSet instance.");
+  throw std::runtime_error(
+    "Expected a viskores.cont.DataSet or viskores.cont.PartitionedDataSet instance.");
 }
 
 template <typename FilterType>
@@ -347,13 +414,12 @@ ClassType& BindFilterActiveFieldMethods(ClassType& cls)
   cls
     .def(
       "SetActiveField",
-      [](FilterType& self, const char* name, nb::object associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
+      [](FilterType& self,
+         const char* name,
+         viskores::cont::Field::Association association)
+      { self.SetActiveField(name, association); },
       nb::arg("name"),
-      nb::arg("association") = nb::none())
+      nb::arg("association") = viskores::cont::Field::Association::Any)
     .def("GetActiveFieldName", [](const FilterType& self) { return self.GetActiveFieldName(); });
   return cls;
 }
@@ -443,13 +509,12 @@ ClassType& BindFilterPrimaryFieldMethods(ClassType& cls)
   cls
     .def(
       "SetPrimaryField",
-      [](FilterType& self, const char* name, nb::object associationObject)
-      {
-        self.SetPrimaryField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
+      [](FilterType& self,
+         const char* name,
+         viskores::cont::Field::Association association)
+      { self.SetPrimaryField(name, association); },
       nb::arg("name"),
-      nb::arg("association") = nb::none())
+      nb::arg("association") = viskores::cont::Field::Association::Any)
     .def("GetPrimaryFieldName",
          [](const FilterType& self) { return self.GetPrimaryFieldName(); })
     .def("GetPrimaryFieldAssociation",
@@ -463,13 +528,12 @@ ClassType& BindFilterSecondaryFieldMethods(ClassType& cls)
   cls
     .def(
       "SetSecondaryField",
-      [](FilterType& self, const char* name, nb::object associationObject)
-      {
-        self.SetSecondaryField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
+      [](FilterType& self,
+         const char* name,
+         viskores::cont::Field::Association association)
+      { self.SetSecondaryField(name, association); },
       nb::arg("name"),
-      nb::arg("association") = nb::none())
+      nb::arg("association") = viskores::cont::Field::Association::Any)
     .def("GetSecondaryFieldName",
          [](const FilterType& self) { return self.GetSecondaryFieldName(); })
     .def("GetSecondaryFieldAssociation",
@@ -481,6 +545,23 @@ template <typename FilterType, typename ClassType>
 ClassType& BindFilterExecuteMethod(ClassType& cls)
 {
   cls.def("Execute", &ExecuteFilterToPython<FilterType>, nb::arg("data"), doc::ExecuteFilter);
+  return cls;
+}
+
+template <typename ClassType>
+ClassType& BindFilterBaseMethods(ClassType& cls)
+{
+  using FilterType = viskores::filter::Filter;
+  BindFilterActiveFieldMethods<FilterType>(cls);
+  BindFilterOutputFieldMethods<FilterType>(cls);
+  BindFilterCoordinateSystemFieldMethods<FilterType>(cls);
+  BindFilterFieldsToPassMethod<FilterType>(cls);
+  BindFilterExecuteMethod<FilterType>(cls);
+  cls.def("SetPassCoordinateSystems",
+          &FilterType::SetPassCoordinateSystems,
+          nb::arg("enabled"))
+    .def("GetPassCoordinateSystems", &FilterType::GetPassCoordinateSystems)
+    .def("GetNumberOfActiveFields", &FilterType::GetNumberOfActiveFields);
   return cls;
 }
 
@@ -511,40 +592,17 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
                                        const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindTestingClasses(nb::module_& m,
                                     const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindSourceClasses(nb::module_& m,
-                                   const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindFilterBaseClasses(
+  nb::module_& m,
+  const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindGeneratedEnums(nb::module_& m);
 void RegisterNanobindIOClasses(nb::module_& m,
                                const std::function<void(const char*)>& erase_existing_name);
+void RegisterNanobindGeneratedEarlyClasses(
+  nb::module_& m,
+  const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindGeneratedClasses(nb::module_& m,
                                       const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindFieldConversionClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindVectorAnalysisClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindContourClasses(nb::module_& m,
-                                    const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindFieldTransformClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindEntityExtractionClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindAdditionalFilterClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindDensityEstimateClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindGeometryRefinementClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindImageProcessingClasses(
-  nb::module_& m,
-  const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindResamplingClasses(nb::module_& m,
-                                       const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindScalarTopologyClasses(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name);
@@ -552,8 +610,6 @@ void RegisterNanobindHelperFunctions(nb::module_& m,
                                      const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindInteropClasses(nb::module_& m,
                                     const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindColorTableClass(nb::module_& m,
-                                     const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindCameraClass(nb::module_& m,
                                  const std::function<void(const char*)>& erase_existing_name);
 void RegisterNanobindRenderingClasses(nb::module_& m,
@@ -564,7 +620,6 @@ void RegisterNanobindImplicitFunctionClasses(
 void RegisterNanobindCompatibilityFunctions(
   nb::module_& m,
   const std::function<void(const char*)>& erase_existing_name);
-void RegisterNanobindModuleConstants(nb::module_& m);
 void RegisterNanobindModule(nb::module_& m);
 
 #if VISKORES_PYTHON_ENABLE_RENDERING

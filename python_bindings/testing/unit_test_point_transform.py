@@ -32,7 +32,7 @@ def coordinates(dims, spacing):
 def main():
     dims = (3, 3, 3)
     spacing = (0.5, 0.5, 0.5)
-    ds = viskores.create_uniform_dataset(dims, spacing=spacing)
+    ds = viskores.python_convenience.create_uniform_dataset(dims, spacing=spacing)
     base = coordinates(dims, spacing)
 
     translate = PointTransform()
@@ -40,7 +40,7 @@ def main():
     translate.SetChangeCoordinateSystem(False)
     translate.SetOutputFieldName("translation")
     translate.SetTranslation((1.0, -2.0, 0.5))
-    translated = translate.Execute(ds).GetField("translation")
+    translated = translate.Execute(ds).GetField("translation").GetData().AsNumPy()
     np.testing.assert_allclose(translated, base + np.asarray([1.0, -2.0, 0.5]))
 
     scale = PointTransform()
@@ -48,7 +48,7 @@ def main():
     scale.SetChangeCoordinateSystem(False)
     scale.SetOutputFieldName("scale")
     scale.SetScale((2.0, 3.0, 4.0))
-    scaled = scale.Execute(ds).GetField("scale")
+    scaled = scale.Execute(ds).GetField("scale").GetData().AsNumPy()
     np.testing.assert_allclose(scaled, base * np.asarray([2.0, 3.0, 4.0]))
 
     rotate = PointTransform()
@@ -56,7 +56,7 @@ def main():
     rotate.SetChangeCoordinateSystem(False)
     rotate.SetOutputFieldName("rotation")
     rotate.SetRotation(90.0, (0.0, 0.0, 1.0))
-    rotated = rotate.Execute(ds).GetField("rotation")
+    rotated = rotate.Execute(ds).GetField("rotation").GetData().AsNumPy()
     expected_rotated = np.stack([-base[:, 1], base[:, 0], base[:, 2]], axis=1)
     np.testing.assert_allclose(rotated, expected_rotated, atol=1e-6)
 

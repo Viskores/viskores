@@ -16,10 +16,9 @@ void RegisterNanobindSharedDataClasses(nb::module_& m,
 {
   RegisterNanobindArrayClasses(m, erase_existing_name);
   RegisterNanobindCellSetClass(m, erase_existing_name);
-  RegisterNanobindFieldClasses(m, erase_existing_name);
+  RegisterNanobindGeneratedEarlyClasses(m, erase_existing_name);
   RegisterNanobindDataSetClasses(m, erase_existing_name);
   RegisterNanobindDataSetBuilderClasses(m, erase_existing_name);
-  RegisterNanobindPartitionedDataSetClasses(m, erase_existing_name);
   RegisterNanobindFieldFactoryFunctions(m, erase_existing_name);
 }
 

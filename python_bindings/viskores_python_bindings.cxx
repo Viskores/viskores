@@ -19,6 +19,5 @@ using namespace viskores::python::bindings;
 
 NB_MODULE(_viskores, m)
 {
-  RegisterNanobindModuleConstants(m);
   RegisterNanobindModule(m);
 }

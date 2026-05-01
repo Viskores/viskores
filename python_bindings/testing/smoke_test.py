@@ -18,7 +18,7 @@ from viskores.filter.vector_analysis import Gradient, VectorMagnitude
 
 def main():
     dims = (4, 3, 2)
-    ds = viskores.create_uniform_dataset(dims, origin=(0.0, 0.0, 0.0), spacing=(1.0, 2.0, 3.0))
+    ds = viskores.python_convenience.create_uniform_dataset(dims, origin=(0.0, 0.0, 0.0), spacing=(1.0, 2.0, 3.0))
 
     point_count = np.prod(dims)
     scalar = np.linspace(0.0, 1.0, point_count, dtype=np.float64)
@@ -48,10 +48,10 @@ def main():
     iso = contour_filter.Execute(ds)
 
     assert ds.GetNumberOfPoints() == point_count
-    assert avg.GetField("temperature_cells").ndim == 1
-    assert grad.GetField("temperature_grad").ndim == 2
-    assert grad.GetField("temperature_grad").shape[1] >= 3
-    assert mag.GetField("speed").ndim == 1
+    assert avg.GetField("temperature_cells").GetData().AsNumPy().ndim == 1
+    assert grad.GetField("temperature_grad").GetData().AsNumPy().ndim == 2
+    assert grad.GetField("temperature_grad").GetData().AsNumPy().shape[1] >= 3
+    assert mag.GetField("speed").GetData().AsNumPy().ndim == 1
     assert iso.GetNumberOfCells() > 0
 
 

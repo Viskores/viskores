@@ -11,7 +11,8 @@
 import numpy as np
 
 import viskores.cont
-from viskores.cont import PartitionedDataSet, create_uniform_dataset
+from viskores.cont import PartitionedDataSet
+from viskores.python_convenience import create_uniform_dataset
 from viskores.filter.density_estimate import Histogram
 
 
@@ -34,7 +35,7 @@ def main():
     result = histogram.Execute(partitions)
 
     assert result.GetNumberOfPartitions() == 1
-    bins = result.GetPartition(0).GetField("histogram")
+    bins = result.GetPartition(0).GetField("histogram").GetData().AsNumPy()
     assert bins.shape[0] == 10
     assert int(np.sum(bins)) == 1024 * 3
 

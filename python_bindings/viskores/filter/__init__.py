@@ -12,6 +12,10 @@ from .. import _viskores
 
 __all__ = []
 
+if hasattr(_viskores, "Filter"):
+    Filter = _viskores.Filter
+    __all__.append("Filter")
+
 if hasattr(_viskores, "CleanGrid"):
     from . import clean_grid
 
@@ -22,7 +26,18 @@ if hasattr(_viskores, "CellSetConnectivity") or hasattr(_viskores, "ImageConnect
 
     __all__.append("connected_components")
 
-if hasattr(_viskores, "contour"):
+if any(
+    hasattr(_viskores, name)
+    for name in (
+        "ClipWithField",
+        "ClipWithImplicitFunction",
+        "Contour",
+        "ContourMarchingCells",
+        "MIRFilter",
+        "Slice",
+        "SliceMultiple",
+    )
+):
     from . import contour
 
     __all__.append("contour")
@@ -35,8 +50,8 @@ if hasattr(_viskores, "Threshold") or hasattr(_viskores, "ThresholdPoints"):
 if any(
     hasattr(_viskores, name)
     for name in (
-        "cell_average",
-        "point_average",
+        "CellAverage",
+        "PointAverage",
     )
 ):
     from . import field_conversion
@@ -107,8 +122,11 @@ if any(
 if any(
     hasattr(_viskores, name)
     for name in (
-        "gradient",
-        "vector_magnitude",
+        "CrossProduct",
+        "DotProduct",
+        "Gradient",
+        "SurfaceNormals",
+        "VectorMagnitude",
     )
 ):
     from . import vector_analysis
@@ -124,6 +142,33 @@ if hasattr(_viskores, "MergeDataSets"):
     from . import multi_block
 
     __all__.append("multi_block")
+
+if any(
+    hasattr(_viskores, name)
+    for name in (
+        "ContourUncertainUniform",
+        "ContourUncertainUniformMonteCarlo",
+        "FiberUncertainUniform",
+    )
+):
+    from . import uncertainty
+
+    __all__.append("uncertainty")
+
+if any(
+    hasattr(_viskores, name)
+    for name in (
+        "ZFPCompressor1D",
+        "ZFPCompressor2D",
+        "ZFPCompressor3D",
+        "ZFPDecompressor1D",
+        "ZFPDecompressor2D",
+        "ZFPDecompressor3D",
+    )
+):
+    from . import zfp
+
+    __all__.append("zfp")
 
 if any(
     hasattr(_viskores, name)

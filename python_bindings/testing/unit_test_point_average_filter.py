@@ -53,7 +53,7 @@ def main():
         ],
         dtype=np.float64,
     )
-    assert np.allclose(result.GetField("avgvals"), expected, rtol=1e-6, atol=1e-6)
+    assert np.allclose(result.GetField("avgvals").GetData().AsNumPy(), expected, rtol=1e-6, atol=1e-6)
 
 
 if __name__ == "__main__":

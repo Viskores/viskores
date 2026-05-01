@@ -11,6 +11,7 @@
 import math
 
 import viskores.cont
+from viskores.cont import Field
 from viskores.filter.image_processing import ImageMedian
 from viskores.testing import MakeTestDataSet
 
@@ -25,8 +26,8 @@ def main():
     median.SetActiveField("pointvar")
     result = median.Execute(dataset)
 
-    assert result.HasField("median", association="points")
-    values = result.GetField("median")
+    assert result.HasField("median", association=Field.Association.Points)
+    values = result.GetField("median").GetData().AsNumPy()
     point_dims = (64, 64, 64)
 
     assert math.isclose(float(values[1 + point_dims[0]]), 2.0, rel_tol=1e-6, abs_tol=1e-6)

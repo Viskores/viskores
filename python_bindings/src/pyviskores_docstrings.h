@@ -60,7 +60,7 @@ ArrayHandleGroupVecVariable groups a flat component array with an offsets array
 to represent values with variable component counts. Python exposes it as a
 Viskores array handle plus a ragged list of NumPy arrays.)doc";
   }
-  if (name == "CellSet")
+  if (name == "UnknownCellSet")
   {
     return R"doc(Type-erased Viskores cell set.
 
@@ -158,6 +158,13 @@ union, and intersection operations.)doc";
 The box is defined by minimum and maximum points and can be used by extraction
 and clipping filters.)doc";
   }
+  if (name == "ImplicitFunctionGeneral")
+  {
+    return R"doc(Runtime-selectable implicit function.
+
+ImplicitFunctionGeneral stores one of the implicit-function types supported by
+Viskores and can be passed to extraction, clipping, and slicing filters.)doc";
+  }
   if (name == "Sphere")
   {
     return R"doc(Spherical implicit function.
@@ -234,12 +241,12 @@ canvas subclasses provide specific rendering backends.)doc";
 A mapper converts data-set geometry and fields into rendered primitives for a
 Viskores scene.)doc";
   }
-  if (name == "ScalarRenderer" || name == "ScalarRendererResult")
+  if (name == "ScalarRenderer" || name == "ScalarRenderer.Result")
   {
     return R"doc(Utility for rendering scalar fields.
 
 ScalarRenderer renders a scalar field from a DataSet and reports output image
-information through ScalarRendererResult.)doc";
+information through ScalarRenderer.Result.)doc";
   }
   if (name == "View3D")
   {
@@ -584,20 +591,8 @@ inline constexpr const char* MakeFieldPoint =
 inline constexpr const char* MakeFieldCell =
   R"doc(Create a cell-associated Viskores Field from Python array-like values.)doc";
 
-inline constexpr const char* MakeFieldWholeDataSet =
-  R"doc(Create a whole-data-set-associated Viskores Field from Python array-like values.)doc";
-
 inline constexpr const char* CreateUniformDataSet =
   R"doc(Create a uniform structured DataSet from dimensions, origin, and spacing.)doc";
-
-inline constexpr const char* FieldRange =
-  R"doc(Return the scalar range of a named field in a DataSet as (min, max).)doc";
-
-inline constexpr const char* CreateTangleDataSet =
-  R"doc(Create a synthetic Tangle source DataSet, optionally with custom point dimensions.)doc";
-
-inline constexpr const char* PartitionUniformDataSet =
-  R"doc(Partition a uniform DataSet for scalar-topology distributed examples and tests.)doc";
 
 inline constexpr const char* ExecuteFilter =
   R"doc(Execute the filter on a DataSet or PartitionedDataSet and return the matching result type.)doc";
@@ -609,21 +604,6 @@ inline constexpr const char* SetActiveField =
 
 inline constexpr const char* SetFieldsToPass =
   R"doc(Select which input fields are passed through to the output.)doc";
-
-inline constexpr const char* CompatibilityCellAverage =
-  R"doc(Run CellAverage on a DataSet or PartitionedDataSet and return the result.)doc";
-
-inline constexpr const char* CompatibilityPointAverage =
-  R"doc(Run PointAverage on a DataSet or PartitionedDataSet and return the result.)doc";
-
-inline constexpr const char* CompatibilityVectorMagnitude =
-  R"doc(Run VectorMagnitude on a DataSet or PartitionedDataSet and return the result.)doc";
-
-inline constexpr const char* CompatibilityGradient =
-  R"doc(Run Gradient on a DataSet or PartitionedDataSet with common Python keyword options.)doc";
-
-inline constexpr const char* CompatibilityContour =
-  R"doc(Run Contour on a DataSet or PartitionedDataSet for one or more isovalues.)doc";
 
 inline constexpr const char* TransferToOpenGL =
   R"doc(Transfer Viskores data into an OpenGL buffer state for interoperation.)doc";

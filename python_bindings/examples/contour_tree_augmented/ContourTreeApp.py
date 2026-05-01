@@ -17,7 +17,8 @@ from pathlib import Path
 import numpy as np
 
 import viskores.cont
-from viskores.cont import DataSet, create_uniform_dataset
+from viskores.cont import DataSet
+from viskores.python_convenience import create_uniform_dataset
 from viskores.filter.scalar_topology import ContourTreeAugmented
 
 

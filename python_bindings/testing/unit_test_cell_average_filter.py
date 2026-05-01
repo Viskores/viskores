@@ -28,7 +28,7 @@ def main():
     result = cell_average.Execute(dataset)
 
     expected = np.array([60.1875, 70.2125, 120.337494, 130.3625], dtype=np.float64)
-    assert np.allclose(result.GetField("avgvals"), expected, rtol=1e-6, atol=1e-6)
+    assert np.allclose(result.GetField("avgvals").GetData().AsNumPy(), expected, rtol=1e-6, atol=1e-6)
 
     cell_average.SetOutputFieldName("avgpos")
     cell_average.SetUseCoordinateSystemAsField(True)
@@ -44,7 +44,7 @@ def main():
         ],
         dtype=np.float64,
     )
-    assert np.allclose(result.GetField("avgpos"), expected_positions, rtol=1e-6, atol=1e-6)
+    assert np.allclose(result.GetField("avgpos").GetData().AsNumPy(), expected_positions, rtol=1e-6, atol=1e-6)
 
 
 if __name__ == "__main__":

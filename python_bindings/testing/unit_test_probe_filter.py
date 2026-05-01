@@ -11,8 +11,8 @@
 import numpy as np
 
 import viskores.cont
-from viskores import Association
-from viskores.cont import create_uniform_dataset
+from viskores.cont import Field
+from viskores.python_convenience import create_uniform_dataset
 from viskores.filter.clean_grid import CleanGrid
 from viskores.filter.resampling import Probe
 
@@ -20,14 +20,16 @@ from viskores.filter.resampling import Probe
 def make_input_dataset():
     point_values = np.arange(16, dtype=np.float32) * 0.3
     cell_values = np.arange(9, dtype=np.float32) * 0.7
-    dataset = create_uniform_dataset((4, 4), origin=(0.0, 0.0), spacing=(1.0, 1.0))
+    dataset = create_uniform_dataset(
+        (4, 4), origin=(0.0, 0.0, 0.0), spacing=(1.0, 1.0, 1.0)
+    )
     dataset.AddPointField("pointdata", point_values)
     dataset.AddCellField("celldata", cell_values)
     return dataset
 
 
 def make_geometry_dataset():
-    return create_uniform_dataset((9, 9), origin=(0.7, 0.7), spacing=(0.35, 0.35))
+    return create_uniform_dataset((9, 9), origin=(0.7, 0.7, 0.0), spacing=(0.35, 0.35, 1.0))
 
 
 def convert_uniform_to_explicit(dataset):
@@ -376,10 +378,10 @@ def assert_array_equal_with_nan(actual, expected):
 
 
 def check_probe_output(output, expected_hidden_cells):
-    assert_array_equal_with_nan(output.GetField("pointdata"), EXPECTED_POINT_DATA)
-    assert_array_equal_with_nan(output.GetField("celldata"), EXPECTED_CELL_DATA)
-    np.testing.assert_array_equal(output.GetField("HIDDEN", Association.POINTS), EXPECTED_HIDDEN_POINTS)
-    np.testing.assert_array_equal(output.GetField("HIDDEN", Association.CELLS), expected_hidden_cells)
+    assert_array_equal_with_nan(output.GetField("pointdata").GetData().AsNumPy(), EXPECTED_POINT_DATA)
+    assert_array_equal_with_nan(output.GetField("celldata").GetData().AsNumPy(), EXPECTED_CELL_DATA)
+    np.testing.assert_array_equal(output.GetField("HIDDEN", Field.Association.Points).GetData().AsNumPy(), EXPECTED_HIDDEN_POINTS)
+    np.testing.assert_array_equal(output.GetField("HIDDEN", Field.Association.Cells).GetData().AsNumPy(), expected_hidden_cells)
 
 
 def run_probe(input_dataset, geometry_dataset):

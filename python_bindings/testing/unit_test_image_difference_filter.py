@@ -11,7 +11,8 @@
 import numpy as np
 
 import viskores.cont
-from viskores.cont import create_uniform_dataset
+from viskores.cont import Field
+from viskores.python_convenience import create_uniform_dataset
 from viskores.filter.image_processing import ImageDifference
 
 
@@ -26,14 +27,14 @@ def fill_dataset(fudge_factor):
 
 
 def check_result(result, expected_diff_value, expected_threshold_value):
-    assert result.HasField("image-diff", association="points")
-    assert result.HasField("threshold-output", association="points")
+    assert result.HasField("image-diff", association=Field.Association.Points)
+    assert result.HasField("threshold-output", association=Field.Association.Points)
     np.testing.assert_allclose(
-        result.GetField("image-diff"),
+        result.GetField("image-diff").GetData().AsNumPy(),
         np.tile(np.array([expected_diff_value, 0.0, 0.0, 0.0], dtype=np.float32), (25, 1)),
     )
     np.testing.assert_allclose(
-        result.GetField("threshold-output"),
+        result.GetField("threshold-output").GetData().AsNumPy(),
         np.full(25, expected_threshold_value, dtype=np.float64),
     )
 

@@ -93,7 +93,7 @@ void RegisterNanobindHelperFunctions(nb::module_& m,
     [](nb::object sourceObject,
        nb::object stateObject,
        nb::object fieldNameObject,
-       nb::object associationObject,
+       viskores::cont::Field::Association association,
        int coordinateSystemIndex)
     {
       std::shared_ptr<viskores::interop::BufferState> state;
@@ -121,8 +121,6 @@ void RegisterNanobindHelperFunctions(nb::module_& m,
             throw std::runtime_error("field_name must be a string.");
           }
           std::string fieldName = nb::cast<std::string>(fieldNameObject);
-          const auto association =
-            ParseAssociation(associationObject, viskores::cont::Field::Association::Any);
           auto field = dataSet->GetField(fieldName, association);
           TransferUnknownArrayToOpenGL(field.GetData(), *state);
         }
@@ -141,7 +139,7 @@ void RegisterNanobindHelperFunctions(nb::module_& m,
     nb::arg("source"),
     nb::arg("state"),
     nb::arg("field_name") = nb::none(),
-    nb::arg("association") = nb::none(),
+    nb::arg("association") = viskores::cont::Field::Association::Any,
     nb::arg("coordinate_system_index") = 0,
     doc::TransferToOpenGL);
 }

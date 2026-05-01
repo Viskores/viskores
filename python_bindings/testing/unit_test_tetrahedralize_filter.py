@@ -22,9 +22,9 @@ def main():
     output = tetrahedralize.Execute(maker.Make3DUniformDataSet0())
 
     assert output.GetNumberOfCells() == 20
-    assert output.GetField("pointvar").shape == (18,)
+    assert output.GetField("pointvar").GetData().AsNumPy().shape == (18,)
 
-    values = output.GetField("cellvar")
+    values = output.GetField("cellvar").GetData().AsNumPy()
     assert np.isclose(values[5], 100.2)
     assert np.isclose(values[6], 100.2)
     assert np.isclose(values[7], 100.2)
@@ -36,9 +36,9 @@ def main():
     output = tetrahedralize.Execute(maker.Make3DExplicitDataSet5())
 
     assert output.GetNumberOfCells() == 11
-    assert output.GetField("pointvar").shape == (11,)
+    assert output.GetField("pointvar").GetData().AsNumPy().shape == (11,)
 
-    values = output.GetField("cellvar")
+    values = output.GetField("cellvar").GetData().AsNumPy()
     assert np.isclose(values[5], 110.0)
     assert np.isclose(values[6], 110.0)
     assert np.isclose(values[8], 130.5)

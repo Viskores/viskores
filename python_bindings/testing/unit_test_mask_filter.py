@@ -21,7 +21,7 @@ def test_uniform_2d():
     output = mask.Execute(dataset)
 
     assert output.GetNumberOfCells() == 8
-    cell_field = output.GetField("cellvar")
+    cell_field = output.GetField("cellvar").GetData().AsNumPy()
     assert cell_field.shape[0] == 8
     assert np.isclose(cell_field[7], 14.0)
 
@@ -33,7 +33,7 @@ def test_uniform_3d():
     output = mask.Execute(dataset)
 
     assert output.GetNumberOfCells() == 7
-    cell_field = output.GetField("cellvar")
+    cell_field = output.GetField("cellvar").GetData().AsNumPy()
     assert cell_field.shape[0] == 7
     assert np.isclose(cell_field[2], 18.0)
 
@@ -45,7 +45,7 @@ def test_explicit():
     output = mask.Execute(dataset)
 
     assert output.GetNumberOfCells() == 2
-    cell_field = output.GetField("cellvar")
+    cell_field = output.GetField("cellvar").GetData().AsNumPy()
     assert cell_field.shape[0] == 2
     assert np.isclose(cell_field[1], 120.2)
 

@@ -10,15 +10,20 @@
 
 - class: viskores::filter::image_processing::ComputeMoments
   pythonName: ComputeMoments
-  binding: manual
-  reason: Requires radius and spacing parsing.
+  base: viskores::filter::Filter
+  fieldInputs:
+    - ActiveFieldAssociation
+  methods:
+    - SetRadius(radius: double)
+    - SetSpacing(spacing: viskores::Vec3f)
+    - SetOrder(order: viskores::Int32)
 
 - class: viskores::filter::image_processing::ImageDifference
+  base: viskores::filter::Filter
   fieldInputs:
     - PrimaryField
     - SecondaryField
   properties:
-    - OutputFieldName
     - ThresholdFieldName
     - AverageRadius
     - PixelShiftRadius
@@ -26,17 +31,9 @@
     - PixelDiffThreshold
   directMethods:
     - GetImageDiffWithinThreshold
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::image_processing::ImageMedian
-  fieldInputs:
-    - ActiveField
-  properties:
-    - OutputFieldName
+  base: viskores::filter::Filter
   directMethods:
-    - GetActiveFieldAssociation
     - Perform3x3
     - Perform5x5
-  methodAdapters:
-    - Execute

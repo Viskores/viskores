@@ -62,10 +62,10 @@ def test_vector_cell_gradient():
     )
     expected_qcriterion = np.array([-5022.5254, -5022.5254, -5027.538, -5027.539], dtype=np.float64)
 
-    assert np.allclose(result.GetField("vec_gradient"), expected_gradient, rtol=1e-5, atol=1e-5)
-    assert np.allclose(result.GetField("Divergence"), expected_divergence, rtol=1e-5, atol=1e-5)
-    assert np.allclose(result.GetField("Vorticity"), expected_vorticity, rtol=1e-5, atol=1e-5)
-    assert np.allclose(result.GetField("QCriterion"), expected_qcriterion, rtol=1e-5, atol=1e-5)
+    assert np.allclose(result.GetField("vec_gradient").GetData().AsNumPy(), expected_gradient, rtol=1e-5, atol=1e-5)
+    assert np.allclose(result.GetField("Divergence").GetData().AsNumPy(), expected_divergence, rtol=1e-5, atol=1e-5)
+    assert np.allclose(result.GetField("Vorticity").GetData().AsNumPy(), expected_vorticity, rtol=1e-5, atol=1e-5)
+    assert np.allclose(result.GetField("QCriterion").GetData().AsNumPy(), expected_qcriterion, rtol=1e-5, atol=1e-5)
 
 
 def test_vector_point_gradient():
@@ -86,7 +86,7 @@ def test_vector_point_gradient():
         ],
         dtype=np.float64,
     )
-    computed = result.GetField("vec_gradient")
+    computed = result.GetField("vec_gradient").GetData().AsNumPy()
     assert computed.shape == (18, 9)
     assert np.allclose(computed[:4], expected, rtol=1e-5, atol=1e-5)
 

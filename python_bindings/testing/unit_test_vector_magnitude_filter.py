@@ -29,7 +29,7 @@ def main():
     filt.SetActiveField("vec_pointvar")
     result = filt.Execute(dataset)
 
-    magnitude = result.GetField("magnitude")
+    magnitude = result.GetField("magnitude").GetData().AsNumPy()
     expected = np.sqrt(3.0 * POINTVAR_3D_UNIFORM_DATASET0 * POINTVAR_3D_UNIFORM_DATASET0)
     assert magnitude.shape == expected.shape
     assert np.allclose(magnitude, expected, rtol=1e-5, atol=1e-5)

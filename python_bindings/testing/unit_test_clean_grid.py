@@ -25,12 +25,12 @@ def test_uniform_grid(compact_point_fields, merge_points):
     assert output.GetNumberOfPoints() == 6
     assert output.GetNumberOfCells() == 2
 
-    point_field = output.GetField("pointvar")
+    point_field = output.GetField("pointvar").GetData().AsNumPy()
     assert point_field.shape[0] == 6
     assert point_field[1] == 20.1
     assert point_field[4] == 50.1
 
-    cell_field = output.GetField("cellvar")
+    cell_field = output.GetField("cellvar").GetData().AsNumPy()
     assert cell_field.shape[0] == 2
     assert cell_field[0] == 100.1
     assert cell_field[1] == 200.1
@@ -54,16 +54,16 @@ def test_point_merging():
     no_merging = clean.Execute(in_data)
     assert no_merging.GetNumberOfCells() == 76
     assert no_merging.GetNumberOfPoints() == 228
-    assert no_merging.GetField("pointvar").shape[0] == 228
-    assert no_merging.GetField("cellvar").shape[0] == 76
+    assert no_merging.GetField("pointvar").GetData().AsNumPy().shape[0] == 228
+    assert no_merging.GetField("cellvar").GetData().AsNumPy().shape[0] == 76
 
     clean.SetMergePoints(True)
     clean.SetFastMerge(False)
     close_merge = clean.Execute(in_data)
     assert close_merge.GetNumberOfCells() == 76
     assert close_merge.GetNumberOfPoints() == 62
-    assert close_merge.GetField("pointvar").shape[0] == 62
-    assert close_merge.GetField("cellvar").shape[0] == 76
+    assert close_merge.GetField("pointvar").GetData().AsNumPy().shape[0] == 62
+    assert close_merge.GetField("cellvar").GetData().AsNumPy().shape[0] == 76
 
     clean.SetFastMerge(True)
     close_fast_merge = clean.Execute(in_data)
@@ -85,7 +85,7 @@ def test_point_merging():
     no_degenerate_cells = clean.Execute(in_data)
     assert no_degenerate_cells.GetNumberOfCells() == 18
     assert no_degenerate_cells.GetNumberOfPoints() == 19
-    assert no_degenerate_cells.GetField("cellvar").shape[0] == 18
+    assert no_degenerate_cells.GetField("cellvar").GetData().AsNumPy().shape[0] == 18
 
 
 def main():

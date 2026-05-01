@@ -14,7 +14,7 @@ import numpy as np
 from OpenGL import GL
 
 import viskores
-from viskores.cont import Association
+from viskores.cont import Field
 from viskores.interop import BufferState, TransferToOpenGL
 
 
@@ -36,13 +36,13 @@ def main():
     state.SetHandle(23)
     assert state.GetHandle() == 23
 
-    dataset = viskores.create_uniform_dataset((4, 4))
+    dataset = viskores.python_convenience.create_uniform_dataset((4, 4))
     colors = np.zeros((16, 4), dtype=np.uint8)
     colors[:, 1] = np.arange(16, dtype=np.uint8)
     colors[:, 3] = 255
     dataset.AddPointField("colors", colors)
 
-    roundtrip = dataset.GetField("colors", association=Association.POINTS)
+    roundtrip = dataset.GetField("colors", association=Field.Association.Points).GetData().AsNumPy()
     assert roundtrip.dtype == np.uint8
     assert roundtrip.shape == (16, 4)
     np.testing.assert_array_equal(roundtrip, colors)

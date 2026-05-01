@@ -32,9 +32,9 @@ def main():
 
     assert output.GetNumberOfCells() == 2
     assert output.GetNumberOfPoints() == 7
-    assert np.allclose(output.GetField("cellvar"), np.array([100.1, 100.2], dtype=np.float32))
+    assert np.allclose(output.GetField("cellvar").GetData().AsNumPy(), np.array([100.1, 100.2], dtype=np.float32))
     np.testing.assert_allclose(
-        output.GetField("pointvar"),
+        output.GetField("pointvar").GetData().AsNumPy(),
         np.array([10.1, 20.1, 30.2, 30.2, 20.1, 40.2, 50.3], dtype=np.float32),
         rtol=1e-6,
         atol=1e-6,
@@ -65,13 +65,13 @@ def main():
     assert output.GetNumberOfCells() == 4
     assert output.GetNumberOfPoints() == 32
     np.testing.assert_allclose(
-        output.GetField("cellvar"),
+        output.GetField("cellvar").GetData().AsNumPy(),
         np.array([100.1, 100.2, 100.3, 100.4], dtype=np.float32),
         rtol=1e-6,
         atol=1e-6,
     )
     np.testing.assert_allclose(
-        output.GetField("pointvar")[:8],
+        output.GetField("pointvar").GetData().AsNumPy()[:8],
         np.array([10.1, 20.1, 50.2, 40.1, 70.2, 80.2, 110.3, 100.3], dtype=np.float32),
         rtol=1e-6,
         atol=1e-6,

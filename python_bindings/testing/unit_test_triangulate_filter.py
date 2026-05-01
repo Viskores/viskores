@@ -22,9 +22,9 @@ def main():
     output = triangulate.Execute(maker.Make2DUniformDataSet1())
 
     assert output.GetNumberOfCells() == 32
-    assert output.GetField("pointvar").shape == (25,)
+    assert output.GetField("pointvar").GetData().AsNumPy().shape == (25,)
 
-    values = output.GetField("cellvar")
+    values = output.GetField("cellvar").GetData().AsNumPy()
     assert np.isclose(values[2], 1.0)
     assert np.isclose(values[3], 1.0)
     assert np.isclose(values[30], 15.0)
@@ -35,9 +35,9 @@ def main():
     output = triangulate.Execute(maker.Make2DExplicitDataSet0())
 
     assert output.GetNumberOfCells() == 14
-    assert output.GetField("pointvar").shape == (16,)
+    assert output.GetField("pointvar").GetData().AsNumPy().shape == (16,)
 
-    values = output.GetField("cellvar")
+    values = output.GetField("cellvar").GetData().AsNumPy()
     assert np.isclose(values[1], 1.0)
     assert np.isclose(values[2], 1.0)
     assert np.isclose(values[5], 3.0)

@@ -10,7 +10,9 @@
 
 from pathlib import Path
 
+from viskores.cont import Field
 from viskores.io import BOVDataSetReader
+from viskores.python_convenience import field_names
 
 
 def main():
@@ -19,10 +21,10 @@ def main():
 
     dataset = BOVDataSetReader(str(bov_file)).ReadDataSet()
 
-    assert len(dataset.FieldNames()) == 2
+    assert len(field_names(dataset)) == 2
     assert dataset.GetNumberOfPoints() == 50 * 50 * 50
     assert dataset.GetNumberOfCells() == 49 * 49 * 49
-    assert dataset.HasField("var", association="points")
+    assert dataset.HasField("var", association=Field.Association.Points)
 
 
 if __name__ == "__main__":

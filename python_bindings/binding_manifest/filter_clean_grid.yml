@@ -9,6 +9,7 @@
 ##=============================================================================
 
 - class: viskores::filter::clean_grid::CleanGrid
+  base: viskores::filter::Filter
   properties:
     - CompactPointFields
     - MergePoints
@@ -16,6 +17,3 @@
     - ToleranceIsAbsolute
     - RemoveDegenerateCells
     - FastMerge
-  methodAdapters:
-    - FieldsToPass
-    - Execute

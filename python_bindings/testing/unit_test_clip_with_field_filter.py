@@ -24,7 +24,7 @@ def main():
     assert output.GetNumberOfCoordinateSystems() == 1
     assert output.GetNumberOfFields() >= 2
     assert output.HasField("pointvar")
-    assert output.GetField("pointvar").size > 0
+    assert output.GetField("pointvar").GetData().AsNumPy().size > 0
 
 
 if __name__ == "__main__":

@@ -9,27 +9,15 @@
 ##=============================================================================
 
 - class: viskores::filter::field_conversion::CellAverage
+  base: viskores::filter::Filter
   pythonName: CellAverage
   pythonModule: viskores.filter.field_conversion
   guard: VISKORES_PYTHON_ENABLE_FILTER_FIELD_CONVERSION
-  fieldInputs:
-    - ActiveField
-  properties:
-    - OutputFieldName
-  methodAdapters:
-    - CoordinateSystem
-    - Execute
   repr: ActiveField
 
 - class: viskores::filter::field_conversion::PointAverage
+  base: viskores::filter::Filter
   pythonName: PointAverage
   pythonModule: viskores.filter.field_conversion
   guard: VISKORES_PYTHON_ENABLE_FILTER_FIELD_CONVERSION
-  fieldInputs:
-    - ActiveField
-  properties:
-    - OutputFieldName
-  methodAdapters:
-    - CoordinateSystem
-    - Execute
   repr: ActiveField

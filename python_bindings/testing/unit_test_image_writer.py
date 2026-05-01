@@ -14,17 +14,17 @@ from pathlib import Path
 import numpy as np
 
 import viskores.cont
-from viskores import Association
+from viskores.cont import Field
 from viskores.cont import ColorTable
-from viskores.io import ImageReaderPNG, ImageReaderPNM, ImageWriterPNG, ImageWriterPNM, PixelDepth
+from viskores.io import ImageReaderPNG, ImageReaderPNM, ImageWriterPNG, ImageWriterPNM
 from viskores.rendering import Canvas
 
 
 def check_filled_image(dataset, field_name, canvas):
-    assert dataset.HasField(field_name, Association.POINTS)
-    point_field = dataset.GetFieldObject(field_name, Association.POINTS)
+    assert dataset.HasField(field_name, Field.Association.Points)
+    point_field = dataset.GetField(field_name, Field.Association.Points)
     assert point_field.GetNumberOfValues() == canvas.GetWidth() * canvas.GetHeight()
-    pixels = dataset.GetField(field_name)
+    pixels = dataset.GetField(field_name).GetData().AsNumPy()
     colors = canvas.GetColorBuffer()
     assert pixels.shape == colors.shape
     assert np.allclose(pixels, colors)
@@ -65,10 +65,10 @@ def main():
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir = Path(temp_dir)
-        check_png_roundtrip(canvas, temp_dir / "pngRGB8Test.png", PixelDepth.PIXEL_8)
-        check_png_roundtrip(canvas, temp_dir / "pngRGB16Test.png", PixelDepth.PIXEL_16)
-        check_pnm_roundtrip(canvas, temp_dir / "pnmRGB8Test.pnm", PixelDepth.PIXEL_8)
-        check_pnm_roundtrip(canvas, temp_dir / "pnmRGB16Test.pnm", PixelDepth.PIXEL_16)
+        check_png_roundtrip(canvas, temp_dir / "pngRGB8Test.png", ImageWriterPNG.PixelDepth.PIXEL_8)
+        check_png_roundtrip(canvas, temp_dir / "pngRGB16Test.png", ImageWriterPNG.PixelDepth.PIXEL_16)
+        check_pnm_roundtrip(canvas, temp_dir / "pnmRGB8Test.pnm", ImageWriterPNM.PixelDepth.PIXEL_8)
+        check_pnm_roundtrip(canvas, temp_dir / "pnmRGB16Test.pnm", ImageWriterPNM.PixelDepth.PIXEL_16)
 
 
 if __name__ == "__main__":

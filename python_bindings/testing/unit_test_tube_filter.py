@@ -52,14 +52,14 @@ def main():
     assert output.GetNumberOfCells() == 36
 
     np.testing.assert_allclose(
-        output.GetField("pointVar"),
+        output.GetField("pointVar").GetData().AsNumPy(),
         np.array(
             [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 10, 10, 10, 10, 11, 11, 11, 12, 12, 12, 12],
             dtype=np.float32,
         ),
     )
     np.testing.assert_allclose(
-        output.GetField("cellVar"),
+        output.GetField("cellVar").GetData().AsNumPy(),
         np.array([100] * 18 + [110] * 18, dtype=np.float32),
     )
 

@@ -9,33 +9,22 @@
 ##=============================================================================
 
 from . import _viskores
-from . import cont, filter, interop, io, rendering, source, testing
+from . import cont, filter, interop, io, python_convenience, rendering, source, testing
 
-__all__ = ["cont", "filter", "interop", "io", "rendering", "source", "testing"]
-
-for _module in (cont, interop, io, source, rendering, testing):
-    for _name in getattr(_module, "__all__", ()):
-        globals()[_name] = getattr(_module, _name)
-        __all__.append(_name)
-
-for _submodule_name in (
-    "clean_grid",
-    "connected_components",
-    "contour",
-    "entity_extraction",
-    "field_conversion",
-    "mesh_info",
-    "scalar_topology",
-    "vector_analysis",
-):
-    _submodule = getattr(filter, _submodule_name, None)
-    if _submodule is not None:
-        for _name in getattr(_submodule, "__all__", ()):
-            globals()[_name] = getattr(_submodule, _name)
-            __all__.append(_name)
+__all__ = [
+    "cont",
+    "filter",
+    "interop",
+    "io",
+    "python_convenience",
+    "rendering",
+    "source",
+    "testing",
+]
 
 for _name in (
     "Box",
+    "Bounds",
     "CELL_SHAPE_HEXAHEDRON",
     "CELL_SHAPE_LINE",
     "CELL_SHAPE_POLYGON",
@@ -46,7 +35,9 @@ for _name in (
     "CELL_SHAPE_TRIANGLE",
     "CELL_SHAPE_VERTEX",
     "CELL_SHAPE_WEDGE",
+    "ColorSpace",
     "Cylinder",
+    "ImplicitFunctionGeneral",
     "Plane",
     "Range",
     "Sphere",

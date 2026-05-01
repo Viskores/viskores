@@ -11,6 +11,7 @@
 from pathlib import Path
 
 from render_test_utils import render_with_mapper
+from viskores.cont import Field
 from viskores.filter.geometry_refinement import SplitSharpEdges
 from viskores.io import VTKDataSetReader
 from viskores.rendering import MapperRayTracer
@@ -24,12 +25,12 @@ def main():
 
     split = SplitSharpEdges()
     split.SetFeatureAngle(89.0)
-    split.SetActiveField("Normals", association="cells")
+    split.SetActiveField("Normals", association=Field.Association.Cells)
     result = split.Execute(dataset)
 
     assert result.GetNumberOfCells() == dataset.GetNumberOfCells()
     assert result.GetNumberOfPoints() >= dataset.GetNumberOfPoints()
-    assert result.HasField("pointvar", association="points")
+    assert result.HasField("pointvar", association=Field.Association.Points)
 
     render_with_mapper(result, "pointvar", MapperRayTracer(), "split_sharp_edges.png")
 

@@ -15,7 +15,7 @@ from viskores.filter.contour import SliceMultiple
 
 
 def make_structured_3d():
-    dataset = viskores.create_uniform_dataset(
+    dataset = viskores.python_convenience.create_uniform_dataset(
         (3, 3, 3), origin=(-1.0, -1.0, -1.0), spacing=(1.0, 1.0, 1.0)
     )
     points = dataset.GetCoordinateSystem().GetData().AsNumPy()
@@ -49,9 +49,9 @@ def main():
     expected_v3 = np.column_stack((coords[:, 0] * 0.1, coords[:, 1] * 0.1, coords[:, 2] * 0.1))
     expected_v4 = np.column_stack((expected_v3, coords[:, 0] * 0.1))
 
-    assert np.allclose(result.GetField("pointScalars"), expected_scalars, rtol=1e-5, atol=1e-5)
-    assert np.allclose(result.GetField("pointV3"), expected_v3, rtol=1e-5, atol=1e-5)
-    assert np.allclose(result.GetField("pointV4"), expected_v4, rtol=1e-5, atol=1e-5)
+    assert np.allclose(result.GetField("pointScalars").GetData().AsNumPy(), expected_scalars, rtol=1e-5, atol=1e-5)
+    assert np.allclose(result.GetField("pointV3").GetData().AsNumPy(), expected_v3, rtol=1e-5, atol=1e-5)
+    assert np.allclose(result.GetField("pointV4").GetData().AsNumPy(), expected_v4, rtol=1e-5, atol=1e-5)
 
 
 if __name__ == "__main__":

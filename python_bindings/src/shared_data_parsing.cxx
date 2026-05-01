@@ -36,6 +36,19 @@ std::vector<ValueType> ParseNumericSequence(nb::handle object, const char* messa
 
 } // namespace
 
+viskores::cont::ArrayHandle<viskores::Vec3f> ParseArrayHandleVec3f(nb::handle object)
+{
+  auto unknown = PythonObjectToUnknownArray(object);
+  if (!unknown.IsType<viskores::cont::ArrayHandle<viskores::Vec3f>>())
+  {
+    throw std::runtime_error("Expected a NumPy-compatible Nx3 float array.");
+  }
+
+  viskores::cont::ArrayHandle<viskores::Vec3f> array;
+  unknown.AsArrayHandle(array);
+  return array;
+}
+
 std::vector<viskores::Vec3f> ParseVec3Sequence(nb::handle object)
 {
   if (!nb::isinstance<nb::sequence>(object) || nb::isinstance<nb::str>(object))

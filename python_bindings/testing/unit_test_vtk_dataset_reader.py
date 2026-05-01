@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 
 from viskores.io import VTKDataSetReader, VTKDataSetWriter
+from viskores.python_convenience import field_names
 from viskores.testing import MakeTestDataSet
 
 
@@ -30,9 +31,9 @@ def main():
 
         assert output.GetNumberOfPoints() == dataset.GetNumberOfPoints()
         assert output.GetNumberOfCells() == dataset.GetNumberOfCells()
-        assert len(output.FieldNames()) == len(dataset.FieldNames())
-        assert np.allclose(output.GetField("pointvar"), dataset.GetField("pointvar"))
-        assert np.allclose(output.GetField("cellvar"), dataset.GetField("cellvar"))
+        assert len(field_names(output)) == len(field_names(dataset))
+        assert np.allclose(output.GetField("pointvar").GetData().AsNumPy(), dataset.GetField("pointvar").GetData().AsNumPy())
+        assert np.allclose(output.GetField("cellvar").GetData().AsNumPy(), dataset.GetField("cellvar").GetData().AsNumPy())
 
 
 if __name__ == "__main__":

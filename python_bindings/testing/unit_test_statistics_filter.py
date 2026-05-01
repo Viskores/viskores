@@ -12,12 +12,13 @@ import math
 import numpy as np
 
 import viskores.cont
-from viskores.cont import PartitionedDataSet, create_uniform_dataset
+from viskores.cont import PartitionedDataSet
+from viskores.python_convenience import create_uniform_dataset
 from viskores.filter.density_estimate import Statistics
 
 
 def get_stat(data_object, name):
-    return float(data_object.GetField(name)[0])
+    return float(data_object.GetField(name).GetData().AsNumPy()[0])
 
 
 def make_dataset(values):
@@ -79,7 +80,7 @@ def main():
             "PopulationStddev",
             "PopulationVariance",
         ):
-            np.testing.assert_allclose(actual.GetField(field_name), expected.GetField(field_name))
+            np.testing.assert_allclose(actual.GetField(field_name).GetData().AsNumPy(), expected.GetField(field_name).GetData().AsNumPy())
 
 
 if __name__ == "__main__":

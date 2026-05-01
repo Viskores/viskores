@@ -8,7 +8,9 @@
 ##
 ##=============================================================================
 
-from viskores.rendering import Camera, ScalarRenderer
+from viskores import Range
+from viskores.cont import ColorTable
+from viskores.rendering import Actor, Camera, ScalarRenderer
 from viskores.testing import MakeTestDataSet
 
 
@@ -37,6 +39,7 @@ def main():
     renderer.SetInput(dataset)
     result = renderer.Render(camera)
 
+    assert isinstance(result, ScalarRenderer.Result)
     assert result.Width > 0
     assert result.Height > 0
     assert result.Depths.shape == (result.Width * result.Height,)
@@ -47,6 +50,11 @@ def main():
     assert output.GetNumberOfCells() == result.Width * result.Height
     assert output.GetNumberOfPoints() == (result.Width + 1) * (result.Height + 1)
     assert output.GetNumberOfFields() >= 2
+
+    actor = Actor(dataset, "pointvar", ColorTable("inferno"))
+    scalar_range = actor.GetScalarRange()
+    assert isinstance(scalar_range, Range)
+    actor.SetScalarRange(scalar_range)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ from viskores.filter.field_transform import CompositeVectors
 
 
 def main():
-    point_ds = viskores.DataSet()
+    point_ds = viskores.cont.DataSet()
     point_a = np.linspace(0.0, 4.0, 5, dtype=np.float64)
     point_b = np.linspace(10.0, 14.0, 5, dtype=np.float64)
     point_ds.AddPointField("point_a", point_a)
@@ -25,7 +25,7 @@ def main():
     point_filter.SetFieldNameList(["point_a", "point_b"])
     point_filter.SetOutputFieldName("point_vec")
     point_out = point_filter.Execute(point_ds)
-    np.testing.assert_allclose(point_out.GetField("point_vec"), np.stack([point_a, point_b], axis=1))
+    np.testing.assert_allclose(point_out.GetField("point_vec").GetData().AsNumPy(), np.stack([point_a, point_b], axis=1))
     assert point_filter.GetNumberOfFields() == 2
 
 

@@ -11,6 +11,7 @@
 from pathlib import Path
 
 from viskores.io import VTKVisItFileReader
+from viskores.python_convenience import field_names
 
 
 def main():
@@ -23,7 +24,7 @@ def main():
     for index in range(partitioned.GetNumberOfPartitions()):
         dataset = partitioned.GetPartition(index)
         assert dataset.GetNumberOfPoints() == 63001
-        assert len(dataset.FieldNames()) == 5
+        assert len(field_names(dataset)) == 5
 
 
 if __name__ == "__main__":

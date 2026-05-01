@@ -50,6 +50,23 @@ def main():
     assert simple_range.Contains(1.5)
     assert not simple_range.Contains(3.0)
 
+    bounds = viskores.Bounds(0.0, 2.0, 1.0, 3.0, -1.0, 1.0)
+    assert bounds == viskores.Bounds(
+        viskores.Range(0.0, 2.0),
+        viskores.Range(1.0, 3.0),
+        viskores.Range(-1.0, 1.0),
+    )
+    assert bounds.IsNonEmpty()
+    assert bounds.Contains((1.0, 2.0, 0.0))
+    assert not bounds.Contains((3.0, 2.0, 0.0))
+    assert math.isclose(bounds.Volume(), 8.0)
+    assert math.isclose(bounds.Area(), 4.0)
+    assert bounds.Center() == (1.0, 2.0, 0.0)
+    assert bounds.MinCorner() == (0.0, 1.0, -1.0)
+    assert bounds.MaxCorner() == (2.0, 3.0, 1.0)
+    bounds.Include((3.0, 0.0, 0.0))
+    assert bounds == viskores.Bounds(0.0, 3.0, 0.0, 3.0, -1.0, 1.0)
+
 
 if __name__ == "__main__":
     main()

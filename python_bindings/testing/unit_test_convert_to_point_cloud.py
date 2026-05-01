@@ -10,8 +10,10 @@
 
 from pathlib import Path
 
+from viskores.cont import Field
 from viskores.filter.geometry_refinement import ConvertToPointCloud
 from viskores.io import VTKDataSetReader
+from viskores.python_convenience import field_names
 
 
 def check_dataset(dataset):
@@ -26,13 +28,13 @@ def check_dataset(dataset):
         coord_name = dataset.GetCoordinateSystemName(coord_id)
         assert point_cloud.HasCoordinateSystem(coord_name)
 
-    for field_name in dataset.FieldNames():
-        if dataset.HasField(field_name, association="cells"):
+    for field_name in field_names(dataset):
+        if dataset.HasField(field_name, association=Field.Association.Cells):
             assert not point_cloud.HasField(field_name)
-        elif dataset.HasField(field_name, association="points"):
-            assert point_cloud.HasField(field_name, association="points")
-        elif dataset.HasField(field_name, association="whole_dataset"):
-            assert point_cloud.HasField(field_name, association="whole_dataset")
+        elif dataset.HasField(field_name, association=Field.Association.Points):
+            assert point_cloud.HasField(field_name, association=Field.Association.Points)
+        elif dataset.HasField(field_name, association=Field.Association.WholeDataSet):
+            assert point_cloud.HasField(field_name, association=Field.Association.WholeDataSet)
         else:
             assert point_cloud.HasField(field_name)
 
@@ -47,16 +49,16 @@ def check_dataset(dataset):
         coord_name = dataset.GetCoordinateSystemName(coord_id)
         assert point_cloud.HasCoordinateSystem(coord_name)
 
-    for field_name in dataset.FieldNames():
-        if dataset.HasField(field_name, association="cells"):
+    for field_name in field_names(dataset):
+        if dataset.HasField(field_name, association=Field.Association.Cells):
             assert not point_cloud.HasField(field_name)
-        elif dataset.HasField(field_name, association="points"):
+        elif dataset.HasField(field_name, association=Field.Association.Points):
             if dataset.HasCoordinateSystem(field_name):
-                assert point_cloud.HasField(field_name, association="points")
+                assert point_cloud.HasField(field_name, association=Field.Association.Points)
             else:
-                assert point_cloud.HasField(field_name, association="cells")
-        elif dataset.HasField(field_name, association="whole_dataset"):
-            assert point_cloud.HasField(field_name, association="whole_dataset")
+                assert point_cloud.HasField(field_name, association=Field.Association.Cells)
+        elif dataset.HasField(field_name, association=Field.Association.WholeDataSet):
+            assert point_cloud.HasField(field_name, association=Field.Association.WholeDataSet)
         else:
             assert point_cloud.HasField(field_name)
 

@@ -10,36 +10,36 @@
 
 - class: viskores::filter::flow::FilterParticleAdvection
   binding: excluded
-  reason: Flow filters are not part of the initial Python binding scope.
+  reason: Deferred until the Python API supports flow-specific seeds, vector fields, and integration controls.
 
 - class: viskores::filter::flow::Lagrangian
   binding: excluded
-  reason: Flow filters are not part of the initial Python binding scope.
+  reason: Deferred until the Python API supports flow-specific seeds, vector fields, and integration controls.
 
 - class: viskores::filter::flow::LagrangianStructures
   binding: excluded
-  reason: Flow filters are not part of the initial Python binding scope.
+  reason: Deferred until the Python API supports flow-specific seeds, vector fields, and integration controls.
 
 - class: viskores::filter::flow::ParticleAdvection
   binding: excluded
-  reason: Flow filters are not part of the initial Python binding scope.
+  reason: Deferred until the Python API supports flow-specific seeds, vector fields, and integration controls.
 
 - class: viskores::filter::flow::PathParticle
   binding: excluded
-  reason: Flow filters are not part of the initial Python binding scope.
+  reason: Deferred until the Python API supports flow-specific seeds, vector fields, and integration controls.
 
 - class: viskores::filter::flow::Pathline
   binding: excluded
-  reason: Flow filters are not part of the initial Python binding scope.
+  reason: Deferred until the Python API supports flow-specific seeds, vector fields, and integration controls.
 
 - class: viskores::filter::flow::StreamSurface
   binding: excluded
-  reason: Flow filters are not part of the initial Python binding scope.
+  reason: Deferred until the Python API supports flow-specific seeds, vector fields, and integration controls.
 
 - class: viskores::filter::flow::Streamline
   binding: excluded
-  reason: Flow filters are not part of the initial Python binding scope.
+  reason: Deferred until the Python API supports flow-specific seeds, vector fields, and integration controls.
 
 - class: viskores::filter::flow::WarpXStreamline
   binding: excluded
-  reason: Flow filters are not part of the initial Python binding scope.
+  reason: Deferred until the Python API supports flow-specific seeds, vector fields, and integration controls.

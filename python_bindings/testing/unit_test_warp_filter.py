@@ -34,7 +34,7 @@ def coordinate_components(dims, spacing):
 def main():
     dims = (3, 3, 3)
     spacing = (0.5, 0.5, 0.5)
-    ds = viskores.create_uniform_dataset(dims, spacing=spacing)
+    ds = viskores.python_convenience.create_uniform_dataset(dims, spacing=spacing)
 
     x_coords, y_coords, z_coords = coordinate_components(dims, spacing)
     scalar_factor = np.arange(ds.GetNumberOfPoints(), dtype=np.float64)
@@ -56,7 +56,7 @@ def main():
     warp_scalar.SetConstantDirection((0.0, 0.0, 1.0))
     warp_scalar.SetScaleField("scalarfactor")
     warp_scalar.SetScaleFactor(2.0)
-    scalar_out = warp_scalar.Execute(ds).GetField("warped_coords")
+    scalar_out = warp_scalar.Execute(ds).GetField("warped_coords").GetData().AsNumPy()
 
     expected_scalar = np.stack([x_coords, y_coords, z_coords + 2.0 * scalar_factor], axis=1)
     np.testing.assert_allclose(scalar_out, expected_scalar)
@@ -68,7 +68,7 @@ def main():
     warp_vector.SetOutputFieldName("warped_vectors")
     warp_vector.SetDirectionField("vec2")
     warp_vector.SetScaleFactor(2.0)
-    vector_out = warp_vector.Execute(ds).GetField("warped_vectors")
+    vector_out = warp_vector.Execute(ds).GetField("warped_vectors").GetData().AsNumPy()
 
     expected_vector = np.stack([x_coords, y_coords, y_coords + 2.0 * scalar_factor], axis=1)
     np.testing.assert_allclose(vector_out, expected_vector)

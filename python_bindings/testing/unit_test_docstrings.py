@@ -29,8 +29,8 @@ def test_core_class_docstrings():
 
 def test_function_docstrings():
     assert_doc_contains(viskores.cont.Initialize, "Initialize", "runtime")
-    assert_doc_contains(viskores.cont.array_from_numpy, "UnknownArrayHandle", "NumPy")
-    assert_doc_contains(viskores.cont.create_uniform_dataset, "uniform", "DataSet")
+    assert_doc_contains(viskores.python_convenience.array_from_numpy, "UnknownArrayHandle", "NumPy")
+    assert_doc_contains(viskores.python_convenience.create_uniform_dataset, "uniform", "DataSet")
 
 
 def test_method_docstrings():

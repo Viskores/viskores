@@ -11,7 +11,7 @@
 import numpy as np
 
 import viskores.cont
-from viskores.cont import create_uniform_dataset
+from viskores.python_convenience import create_uniform_dataset
 from viskores.filter.density_estimate import NDHistogram
 
 
@@ -44,10 +44,10 @@ def main():
     )
     actual = np.column_stack(
         [
-            output.GetField("fieldA"),
-            output.GetField("fieldB"),
-            output.GetField("fieldC"),
-            output.GetField("Frequency"),
+            output.GetField("fieldA").GetData().AsNumPy(),
+            output.GetField("fieldB").GetData().AsNumPy(),
+            output.GetField("fieldC").GetData().AsNumPy(),
+            output.GetField("Frequency").GetData().AsNumPy(),
         ]
     )
     np.testing.assert_array_equal(actual, expected)

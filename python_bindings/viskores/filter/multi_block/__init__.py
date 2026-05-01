@@ -12,6 +12,10 @@ from ... import _viskores
 
 __all__ = []
 
+if hasattr(_viskores, "AmrArrays"):
+    AmrArrays = _viskores.AmrArrays
+    __all__.append("AmrArrays")
+
 if hasattr(_viskores, "MergeDataSets"):
     MergeDataSets = _viskores.MergeDataSets
     __all__.append("MergeDataSets")

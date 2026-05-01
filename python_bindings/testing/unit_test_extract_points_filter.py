@@ -24,7 +24,7 @@ def test_uniform_by_box_inside():
 
     output = extract.Execute(dataset)
     assert output.GetNumberOfCells() == 27
-    point_field = output.GetField("pointvar")
+    point_field = output.GetField("pointvar").GetData().AsNumPy()
     assert point_field.shape[0] == output.GetNumberOfPoints()
     assert np.isclose(point_field[0], 99.0)
     assert np.isclose(point_field[26], 97.0)
@@ -39,7 +39,7 @@ def test_uniform_by_box_outside():
 
     output = extract.Execute(dataset)
     assert output.GetNumberOfCells() == 98
-    point_field = output.GetField("pointvar")
+    point_field = output.GetField("pointvar").GetData().AsNumPy()
     assert point_field.shape[0] == output.GetNumberOfPoints()
     assert np.allclose(point_field, 0.0)
 

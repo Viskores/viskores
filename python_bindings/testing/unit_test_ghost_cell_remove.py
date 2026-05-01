@@ -17,6 +17,7 @@ from viskores.cont import (
     DataSetBuilderUniform,
 )
 from viskores.filter.entity_extraction import GhostCellRemove
+from viskores.python_convenience import cell_set_type_name
 
 
 def make_structured_ghost_cell_array(nx, ny, nz, num_layers, add_mid_ghost=False):
@@ -133,7 +134,7 @@ def expected_cell_set_type(dataset_type, nz):
 def run_case(dataset_type, dims, layer, ghost_name, remove_mode):
     dataset = make_ghost_cell_dataset(dataset_type, dims, layer, ghost_name=ghost_name)
     assert dataset.HasGhostCellField()
-    assert dataset.GetGhostCellField().shape[0] == dataset.GetNumberOfCells()
+    assert dataset.GetGhostCellField().GetData().AsNumPy().shape[0] == dataset.GetNumberOfCells()
 
     ghost_cell_remove = GhostCellRemove()
     ghost_cell_remove.SetRemoveGhostField(True)
@@ -153,7 +154,7 @@ def run_case(dataset_type, dims, layer, ghost_name, remove_mode):
         expected_cells *= nz - (2 * layer)
 
     assert output.GetNumberOfCells() == expected_cells
-    assert output.CellSetTypeName() == expected_cell_set_type(dataset_type, nz)
+    assert cell_set_type_name(output) == expected_cell_set_type(dataset_type, nz)
 
 
 def run_mid_ghost_case(dataset_type, dims, layer, ghost_name):
@@ -163,7 +164,7 @@ def run_mid_ghost_case(dataset_type, dims, layer, ghost_name):
     ghost_cell_remove = GhostCellRemove()
     ghost_cell_remove.SetRemoveGhostField(True)
     output = ghost_cell_remove.Execute(dataset)
-    assert output.CellSetTypeName() == "explicit"
+    assert cell_set_type_name(output) == "explicit"
 
 
 def main():

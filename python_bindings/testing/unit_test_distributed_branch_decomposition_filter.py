@@ -29,7 +29,7 @@ def repo_root() -> Path:
 
 
 def run_branch_pipeline(dataset, field_name, num_blocks):
-    partitions, blocks_per_dim, local_block_indices = viskores.cont.partition_uniform_dataset(
+    partitions, blocks_per_dim, local_block_indices = viskores.python_convenience.partition_uniform_dataset(
         dataset, field_name, num_blocks
     )
     contour_tree = ContourTreeUniformDistributed()
@@ -56,8 +56,8 @@ def unique_branch_edges(branch_result):
     computed = set()
     for partition_index in range(branch_result.GetNumberOfPartitions()):
         ds = branch_result.GetPartition(partition_index)
-        upper = ds.GetField("UpperEndGlobalRegularIds")
-        lower = ds.GetField("LowerEndGlobalRegularIds")
+        upper = ds.GetField("UpperEndGlobalRegularIds").GetData().AsNumPy()
+        lower = ds.GetField("LowerEndGlobalRegularIds").GetData().AsNumPy()
         for edge_index in range(upper.shape[0]):
             computed.add((int(upper[edge_index]), int(lower[edge_index])))
     return sorted(computed)
@@ -75,10 +75,10 @@ def check_8x9_branch_decomposition():
 
         for partition_index in range(top_result.GetNumberOfPartitions()):
             ds = top_result.GetPartition(partition_index)
-            gr_id = ds.GetField("TopVolumeBranchGlobalRegularIds")
-            volume = ds.GetField("TopVolumeBranchVolume")
-            epsilon = ds.GetField("TopVolumeBranchSaddleEpsilon")
-            iso_value = ds.GetField("TopVolumeBranchSaddleIsoValue")
+            gr_id = ds.GetField("TopVolumeBranchGlobalRegularIds").GetData().AsNumPy()
+            volume = ds.GetField("TopVolumeBranchVolume").GetData().AsNumPy()
+            epsilon = ds.GetField("TopVolumeBranchSaddleEpsilon").GetData().AsNumPy()
+            iso_value = ds.GetField("TopVolumeBranchSaddleIsoValue").GetData().AsNumPy()
             assert tuple(int(x) for x in (gr_id[0], volume[0], epsilon[0], iso_value[0])) == expected_branch0
             assert tuple(int(x) for x in (gr_id[1], volume[1], epsilon[1], iso_value[1])) == expected_branch1
 
@@ -101,12 +101,12 @@ def check_8x9_branch_decomposition():
 
         for partition_index in range(iso_result.GetNumberOfPartitions()):
             ds = iso_result.GetPartition(partition_index)
-            edges_from = ds.GetField("IsosurfaceEdgesFrom")
-            edges_to = ds.GetField("IsosurfaceEdgesTo")
-            labels = ds.GetField("IsosurfaceEdgesLabels")
-            orders = ds.GetField("IsosurfaceEdgesOrders")
-            offsets = ds.GetField("IsosurfaceEdgesOffset")
-            iso_values = ds.GetField("IsosurfaceIsoValue")
+            edges_from = ds.GetField("IsosurfaceEdgesFrom").GetData().AsNumPy()
+            edges_to = ds.GetField("IsosurfaceEdgesTo").GetData().AsNumPy()
+            labels = ds.GetField("IsosurfaceEdgesLabels").GetData().AsNumPy()
+            orders = ds.GetField("IsosurfaceEdgesOrders").GetData().AsNumPy()
+            offsets = ds.GetField("IsosurfaceEdgesOffset").GetData().AsNumPy()
+            iso_values = ds.GetField("IsosurfaceIsoValue").GetData().AsNumPy()
 
             computed_info = []
             iso_surface_count = 0

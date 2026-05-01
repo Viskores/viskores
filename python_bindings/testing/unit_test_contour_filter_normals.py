@@ -16,7 +16,7 @@ from viskores.filter.contour import Contour
 
 
 def make_normals_test_dataset():
-    dataset = viskores.create_uniform_dataset((3, 4, 4))
+    dataset = viskores.python_convenience.create_uniform_dataset((3, 4, 4))
     values = np.array(
         [
             60.764,
@@ -90,7 +90,7 @@ def test_structured_normals():
     contour.SetActiveField("pointvar")
 
     result = contour.Execute(dataset)
-    normals = result.GetField("normals")
+    normals = result.GetField("normals").GetData().AsNumPy()
     expected = np.array(
         [
             [0.151008, 0.626778, 0.764425],
@@ -120,7 +120,7 @@ def test_structured_normals():
 
     contour.SetComputeFastNormals(True)
     result = contour.Execute(dataset)
-    fast_normals = result.GetField("normals")
+    fast_normals = result.GetField("normals").GetData().AsNumPy()
     expected_fast = np.array(
         [
             [-0.1351, 0.4377, 0.8889],
@@ -184,7 +184,7 @@ def test_unstructured_normals():
     contour.SetActiveField("pointvar")
 
     fast_result = contour.Execute(unstructured)
-    fast_normals = fast_result.GetField("normals")
+    fast_normals = fast_result.GetField("normals").GetData().AsNumPy()
     expected_fast = np.array(
         [
             [-0.1351, 0.4377, 0.8889],
@@ -210,7 +210,7 @@ def test_unstructured_normals():
 
     contour.SetComputeFastNormals(False)
     result = contour.Execute(unstructured)
-    normals = result.GetField("normals")
+    normals = result.GetField("normals").GetData().AsNumPy()
     expected = np.array(
         [
             [0.1510, 0.6268, 0.7644],

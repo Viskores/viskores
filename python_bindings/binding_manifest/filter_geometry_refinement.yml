@@ -9,45 +9,36 @@
 ##=============================================================================
 
 - class: viskores::filter::geometry_refinement::ConvertToPointCloud
+  base: viskores::filter::Filter
   properties:
     - AssociateFieldsWithCells
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::geometry_refinement::Shrink
+  base: viskores::filter::Filter
   properties:
     - ShrinkFactor
-  methodAdapters:
-    - FieldsToPass
-    - Execute
 
 - class: viskores::filter::geometry_refinement::SplitSharpEdges
-  fieldInputs:
-    - ActiveField
+  base: viskores::filter::Filter
   properties:
     - FeatureAngle
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::geometry_refinement::Tetrahedralize
-  methodAdapters:
-    - FieldsToPass
-    - Execute
+  base: viskores::filter::Filter
 
 - class: viskores::filter::geometry_refinement::Triangulate
-  methodAdapters:
-    - FieldsToPass
-    - Execute
+  base: viskores::filter::Filter
 
 - class: viskores::filter::geometry_refinement::Tube
+  base: viskores::filter::Filter
   directMethods:
     - SetRadius
     - SetNumberOfSides
     - SetCapping
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::geometry_refinement::VertexClustering
   pythonName: VertexClustering
-  binding: manual
-  reason: Requires dimension parsing.
+  base: viskores::filter::Filter
+  methods:
+    - SetNumberOfDivisions(divisions: viskores::Id3)
+    - GetNumberOfDivisions() -> viskores::Id3

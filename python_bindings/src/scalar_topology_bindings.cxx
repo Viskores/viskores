@@ -271,13 +271,10 @@ void RegisterNanobindScalarTopologyClasses(
       "SetActiveField",
       [](viskores::filter::scalar_topology::ContourTreeAugmented& self,
          const char* name,
-         nb::handle associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
+         viskores::cont::Field::Association association)
+      { self.SetActiveField(name, association); },
       nb::arg("name"),
-      nb::arg("association") = nb::none())
+      nb::arg("association") = viskores::cont::Field::Association::Any)
     .def("GetActiveFieldName",
          &viskores::filter::scalar_topology::ContourTreeAugmented::GetActiveFieldName)
     .def("Execute",
@@ -368,60 +365,6 @@ void RegisterNanobindScalarTopologyClasses(
       nb::arg("use_persistence_sorter") = true,
       nb::arg("data_field_is_sorted") = false);
 
-  erase_existing_name("ContourTreeUniformDistributed");
-  nb::class_<viskores::filter::scalar_topology::ContourTreeUniformDistributed>(
-    m, "ContourTreeUniformDistributed", doc::ClassDoc("ContourTreeUniformDistributed"))
-    .def(nb::init<>())
-    .def(
-      "SetActiveField",
-      [](viskores::filter::scalar_topology::ContourTreeUniformDistributed& self,
-         const char* name,
-         nb::handle associationObject)
-      {
-        self.SetActiveField(
-          name, ParseAssociation(associationObject, viskores::cont::Field::Association::Any));
-      },
-      nb::arg("name"),
-      nb::arg("association") = nb::none())
-    .def(
-      "SetUseBoundaryExtremaOnly",
-      [](viskores::filter::scalar_topology::ContourTreeUniformDistributed& self, bool value)
-      { self.SetUseBoundaryExtremaOnly(value); },
-      nb::arg("value"))
-    .def(
-      "SetUseMarchingCubes",
-      [](viskores::filter::scalar_topology::ContourTreeUniformDistributed& self, bool value)
-      { self.SetUseMarchingCubes(value); },
-      nb::arg("value"))
-    .def(
-      "SetAugmentHierarchicalTree",
-      [](viskores::filter::scalar_topology::ContourTreeUniformDistributed& self, bool value)
-      { self.SetAugmentHierarchicalTree(value); },
-      nb::arg("value"))
-    .def(
-      "SetPresimplifyThreshold",
-      [](viskores::filter::scalar_topology::ContourTreeUniformDistributed& self, long long value)
-      { self.SetPresimplifyThreshold(static_cast<viskores::Id>(value)); },
-      nb::arg("value"))
-    .def(
-      "SetSaveDotFiles",
-      [](viskores::filter::scalar_topology::ContourTreeUniformDistributed& self, bool value)
-      { self.SetSaveDotFiles(value); },
-      nb::arg("value"))
-    .def(
-      "SetBlockIndices",
-      [](viskores::filter::scalar_topology::ContourTreeUniformDistributed& self,
-         nb::handle blocksPerDimObject,
-         nb::handle localBlockIndicesObject)
-      {
-        self.SetBlockIndices(ParseDimensions(blocksPerDimObject),
-                             ParseId3Array(localBlockIndicesObject));
-      },
-      nb::arg("blocks_per_dim"),
-      nb::arg("local_block_indices"))
-    .def("Execute",
-         &ExecuteFilterToPython<viskores::filter::scalar_topology::ContourTreeUniformDistributed>,
-         doc::ExecuteFilter);
 }
 #else
 void RegisterNanobindScalarTopologyClasses(nb::module_&, const std::function<void(const char*)>&) {}

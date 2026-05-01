@@ -18,10 +18,10 @@ def check_log(filter_obj, field_name, expected):
     filter_obj.SetActiveField(field_name)
     filter_obj.SetOutputFieldName(f"{field_name}_log")
     out = filter_obj.Execute(dataset)
-    np.testing.assert_allclose(out.GetField(f"{field_name}_log"), expected, rtol=1e-6, atol=1e-7)
+    np.testing.assert_allclose(out.GetField(f"{field_name}_log").GetData().AsNumPy(), expected, rtol=1e-6, atol=1e-7)
 
 
-dataset = viskores.DataSet()
+dataset = viskores.cont.DataSet()
 point_values = np.linspace(0.0, 9.9, 100, dtype=np.float64)
 cell_values = np.linspace(0.0, 9.9, 100, dtype=np.float64)
 dataset.AddPointField("pointScalarField", point_values)

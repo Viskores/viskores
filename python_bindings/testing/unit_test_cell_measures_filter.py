@@ -20,7 +20,7 @@ def check_cell_measures(dataset, expected, integration_type):
     output = cell_measures.Execute(dataset)
     assert cell_measures.GetCellMeasureName() == "measure"
     assert output.GetNumberOfCells() == len(expected)
-    result = output.GetField(cell_measures.GetCellMeasureName())
+    result = output.GetField(cell_measures.GetCellMeasureName()).GetData().AsNumPy()
     assert result.shape[0] == len(expected)
     assert np.allclose(result, np.array(expected, dtype=result.dtype), atol=1.0e-5)
 

@@ -41,7 +41,7 @@ def create_vectors(num_pts, vec_type):
 
 
 def check_result(field1, field2, result):
-    output = result.GetField("crossproduct")
+    output = result.GetField("crossproduct").GetData().AsNumPy()
     assert output.shape == field1.shape
     expected = np.cross(field1, field2)
     assert np.allclose(output, expected, rtol=1e-5, atol=1e-5)

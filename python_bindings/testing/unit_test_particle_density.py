@@ -11,6 +11,7 @@
 import math
 import numpy as np
 
+from viskores import Bounds
 import viskores.cont
 from viskores import CELL_SHAPE_VERTEX
 from viskores.cont import DataSetBuilderExplicit
@@ -37,25 +38,25 @@ def main():
     viskores.cont.Initialize(["unit_test_particle_density.py"])
 
     dataset = make_particle_dataset()
-    mass_sum = float(np.sum(dataset.GetField("mass")))
-    mass_count = dataset.GetField("mass").shape[0]
+    mass_sum = float(np.sum(dataset.GetField("mass").GetData().AsNumPy()))
+    mass_count = dataset.GetField("mass").GetData().AsNumPy().shape[0]
 
     ngp = ParticleDensityNearestGridPoint()
     ngp.SetDimension((3, 3, 3))
     ngp.SetBounds((0.0, 1.0, 0.0, 1.0, 0.0, 1.0))
     ngp.SetActiveField("mass")
-    assert ngp.GetBounds() == (0.0, 1.0, 0.0, 1.0, 0.0, 1.0)
+    assert ngp.GetBounds() == Bounds(0.0, 1.0, 0.0, 1.0, 0.0, 1.0)
     np.testing.assert_allclose(ngp.GetOrigin(), (0.0, 0.0, 0.0))
     np.testing.assert_allclose(ngp.GetSpacing(), (1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0), rtol=1e-4)
 
     density = ngp.Execute(dataset)
-    density_sum = float(np.sum(density.GetField("density")))
+    density_sum = float(np.sum(density.GetField("density").GetData().AsNumPy()))
     assert math.isclose(density_sum, mass_sum * 27.0, rel_tol=0.02, abs_tol=0.1)
 
     ngp.SetComputeNumberDensity(True)
     ngp.SetDivideByVolume(False)
     counts = ngp.Execute(dataset)
-    counts_sum = float(np.sum(counts.GetField("density")))
+    counts_sum = float(np.sum(counts.GetField("density").GetData().AsNumPy()))
     assert math.isclose(counts_sum, float(mass_count), rel_tol=0.02, abs_tol=0.1)
 
     cic = ParticleDensityCloudInCell()
@@ -65,19 +66,18 @@ def main():
     cic.SetActiveField("mass")
     np.testing.assert_allclose(cic.GetOrigin(), (0.0, 0.0, 0.0))
     np.testing.assert_allclose(cic.GetSpacing(), (1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0), rtol=1e-4)
-    assert cic.GetBounds() == (0.0, 1.0, 0.0, 1.0, 0.0, 1.0)
+    assert cic.GetBounds() == Bounds(0.0, 1.0, 0.0, 1.0, 0.0, 1.0)
 
     density = cic.Execute(dataset)
-    density_sum = float(np.sum(density.GetField("density")))
+    density_sum = float(np.sum(density.GetField("density").GetData().AsNumPy()))
     assert math.isclose(density_sum, mass_sum * 27.0, rel_tol=0.02, abs_tol=0.1)
 
     cic.SetComputeNumberDensity(True)
     cic.SetDivideByVolume(False)
     counts = cic.Execute(dataset)
-    counts_sum = float(np.sum(counts.GetField("density")))
+    counts_sum = float(np.sum(counts.GetField("density").GetData().AsNumPy()))
     assert math.isclose(counts_sum, float(mass_count), rel_tol=0.02, abs_tol=0.1)
 
 
 if __name__ == "__main__":
     main()
-

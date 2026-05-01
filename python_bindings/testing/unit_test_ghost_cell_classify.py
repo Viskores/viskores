@@ -11,6 +11,7 @@
 import numpy as np
 
 import viskores
+from viskores.cont import Field
 from viskores.filter.mesh_info import GhostCellClassify
 
 
@@ -25,7 +26,7 @@ def required_num_normal_cells(nx, ny, nz, layer):
 
 def run_case(nx, ny, nz, ghost_name):
     dims = (nx + 1,) if ny == 0 and nz == 0 else (nx + 1, ny + 1) if nz == 0 else (nx + 1, ny + 1, nz + 1)
-    dataset = viskores.create_uniform_dataset(dims)
+    dataset = viskores.python_convenience.create_uniform_dataset(dims)
 
     classify = GhostCellClassify()
     classify.SetGhostCellName(ghost_name)
@@ -33,9 +34,9 @@ def run_case(nx, ny, nz, ghost_name):
 
     assert output.HasGhostCellField()
     assert output.GetGhostCellFieldName() == ghost_name
-    assert output.HasField(ghost_name, association="cells")
+    assert output.HasField(ghost_name, association=Field.Association.Cells)
 
-    ghost = output.GetGhostCellField()
+    ghost = output.GetGhostCellField().GetData().AsNumPy()
     assert ghost.shape[0] == output.GetNumberOfCells()
     assert np.count_nonzero(ghost == 0) == required_num_normal_cells(nx, ny, nz, 1)
 

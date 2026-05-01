@@ -9,31 +9,40 @@
 ##=============================================================================
 
 - class: viskores::filter::entity_extraction::ExternalFaces
+  base: viskores::filter::Filter
   properties:
     - CompactPoints
     - PassPolyData
-  methodAdapters:
-    - FieldsToPass
-    - Execute
 
 - class: viskores::filter::entity_extraction::ExtractGeometry
-  pythonName: ExtractGeometry
-  binding: manual
-  reason: Requires implicit-function parsing.
+  base: viskores::filter::Filter
+  properties:
+    - ExtractInside
+    - ExtractBoundaryCells
+    - ExtractOnlyBoundaryCells
+  methods:
+    - SetImplicitFunction(function: viskores::ImplicitFunctionGeneral)
 
 - class: viskores::filter::entity_extraction::ExtractPoints
-  pythonName: ExtractPoints
-  binding: manual
-  reason: Requires implicit-function parsing.
+  base: viskores::filter::Filter
+  properties:
+    - ExtractInside
+    - CompactPoints
+  methods:
+    - SetImplicitFunction(function: viskores::ImplicitFunctionGeneral)
 
 - class: viskores::filter::entity_extraction::ExtractStructured
-  pythonName: ExtractStructured
-  binding: manual
-  reason: Requires VOI and sample-rate argument parsing.
+  base: viskores::filter::Filter
+  methods:
+    - SetVOI(voi: viskores::RangeId3 [RangeId3])
+    - SetVOI(i0: viskores::Id, i1: viskores::Id, j0: viskores::Id, j1: viskores::Id, k0: viskores::Id, k1: viskores::Id)
+    - SetSampleRate(sample_rate: viskores::Id3)
+    - SetSampleRate(i: viskores::Id, j: viskores::Id, k: viskores::Id)
+    - SetIncludeBoundary(enabled: bool)
+    - GetIncludeBoundary()
 
 - class: viskores::filter::entity_extraction::GhostCellRemove
-  fieldInputs:
-    - ActiveFieldName
+  base: viskores::filter::Filter
   properties:
     - RemoveGhostField
     - TypesToRemove
@@ -41,23 +50,48 @@
   directMethods:
     - SetTypesToRemoveToAll
     - AreAllTypesRemoved
-  methodAdapters:
-    - Execute
 
 - class: viskores::filter::entity_extraction::Mask
-  pythonName: Mask
-  binding: deferred
+  base: viskores::filter::Filter
+  properties:
+    - CompactPoints
+  methods:
+    - SetStride(stride: viskores::Id)
+    - GetStride()
 
 - class: viskores::filter::entity_extraction::MaskPoints
-  pythonName: MaskPoints
-  binding: deferred
+  base: viskores::filter::Filter
+  properties:
+    - CompactPoints
+  methods:
+    - SetStride(stride: viskores::Id)
+    - GetStride()
 
 - class: viskores::filter::entity_extraction::Threshold
   pythonName: Threshold
-  binding: manual
-  reason: Requires threshold overloads.
+  base: viskores::filter::Filter
+  properties:
+    - LowerThreshold
+    - UpperThreshold
+    - AllInRange
+    - Invert
+  directMethods:
+    - SetComponentToTestToAny
+    - SetComponentToTestToAll
+  methods:
+    - SetThresholdBelow(value: viskores::Float64)
+    - SetThresholdAbove(value: viskores::Float64)
+    - SetThresholdBetween(lower: viskores::Float64, upper: viskores::Float64)
+    - SetComponentToTest(component: viskores::IdComponent)
 
 - class: viskores::filter::entity_extraction::ThresholdPoints
   pythonName: ThresholdPoints
-  binding: manual
-  reason: Requires threshold overloads.
+  base: viskores::filter::Filter
+  properties:
+    - CompactPoints
+    - LowerThreshold
+    - UpperThreshold
+  methods:
+    - SetThresholdBelow(value: viskores::Float64)
+    - SetThresholdAbove(value: viskores::Float64)
+    - SetThresholdBetween(lower: viskores::Float64, upper: viskores::Float64)

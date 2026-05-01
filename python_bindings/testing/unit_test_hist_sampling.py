@@ -11,7 +11,7 @@
 import numpy as np
 
 import viskores.cont
-from viskores.cont import create_uniform_dataset
+from viskores.python_convenience import create_uniform_dataset
 from viskores.filter.entity_extraction import ThresholdPoints
 from viskores.filter.resampling import HistSampling
 
@@ -45,7 +45,7 @@ def main():
     threshold.SetThresholdAbove(9.9)
     threshold_output = threshold.Execute(output)
 
-    assert threshold_output.GetField("scalarField").shape[0] == 7
+    assert threshold_output.GetField("scalarField").GetData().AsNumPy().shape[0] == 7
 
 
 if __name__ == "__main__":
