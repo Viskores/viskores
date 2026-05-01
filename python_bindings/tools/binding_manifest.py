@@ -66,6 +66,7 @@ KNOWN_KEYS = {
     "constructor",
     "constructors",
     "directMethods",
+    "doc",
     "enum",
     "enumOptions",
     "enums",
@@ -484,6 +485,15 @@ def python_name(entry: dict[str, Any]) -> str | None:
     class_name = entry.get("class")
     if isinstance(class_name, str) and class_name:
         return class_component(class_name)
+    return None
+
+
+def class_doc(entry: dict[str, Any]) -> str | None:
+    value = entry.get("doc")
+    if isinstance(value, str) and value:
+        return value
+    if isinstance(value, list):
+        return "\n".join(str(line) for line in value)
     return None
 
 
@@ -1007,6 +1017,42 @@ def enum_def_call(
     return lines
 
 
+def raw_doc_literal(text: str) -> str:
+    if ")doc" in text:
+        raise ValueError("doc string cannot contain )doc")
+    return f'R"doc({text})doc"'
+
+
+def append_generated_class_doc_function(lines: list[str], entries: list[dict[str, Any]]) -> None:
+    docs: dict[str, str] = {}
+    for entry in entries:
+        if "class" not in entry:
+            continue
+        name = python_name(entry)
+        doc = class_doc(entry)
+        if name and doc:
+            docs[name] = doc
+
+    lines.extend(
+        [
+            "namespace doc",
+            "{",
+            "const char* GeneratedClassDoc(std::string_view name)",
+            "{",
+        ]
+    )
+    for name, doc in sorted(docs.items()):
+        lines.extend(
+            [
+                f'  if (name == "{name}")',
+                "  {",
+                f"    return {raw_doc_literal(doc)};",
+                "  }",
+            ]
+        )
+    lines.extend(["  return nullptr;", "}", "} // namespace doc", ""])
+
+
 def class_constructor_call(entry: dict[str, Any], variable: str) -> list[str]:
     class_name = entry["class"]
     template_args = class_name
@@ -1154,6 +1200,7 @@ def command_generate(args: argparse.Namespace) -> int:
             lines.append("#endif")
 
     lines.extend(["}", ""])
+    append_generated_class_doc_function(lines, entries)
     append_generated_classes(lines, "RegisterNanobindGeneratedEarlyClasses", generated_early_classes)
     append_generated_classes(lines, "RegisterNanobindGeneratedClasses", generated_classes)
     lines.extend(["} // namespace viskores::python::bindings", ""])

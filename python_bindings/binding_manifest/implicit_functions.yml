@@ -9,6 +9,7 @@
 ##=============================================================================
 
 - class: viskores::ImplicitFunctionGeneral
+  doc: Runtime-selectable implicit function wrapper.
   header: viskores/ImplicitFunction.h
   guard: VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
   constructors:
@@ -23,6 +24,7 @@
     - Gradient(point: viskores::Vec3f) -> viskores::Vec3f
 
 - class: viskores::Box
+  doc: Axis-aligned box implicit function.
   header: viskores/ImplicitFunction.h
   guard: VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
   constructors:
@@ -35,6 +37,7 @@
     - GetMaxPoint() -> viskores::Vec3f
 
 - class: viskores::Sphere
+  doc: Spherical implicit function.
   header: viskores/ImplicitFunction.h
   guard: VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
   constructors:
@@ -48,6 +51,7 @@
     - GetRadius()
 
 - class: viskores::Cylinder
+  doc: Cylindrical implicit function.
   header: viskores/ImplicitFunction.h
   guard: VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
   constructors:
@@ -60,6 +64,7 @@
     - SetRadius(radius: viskores::FloatDefault)
 
 - class: viskores::Plane
+  doc: Planar implicit function.
   header: viskores/ImplicitFunction.h
   guard: VISKORES_PYTHON_ENABLE_FILTER_CONTOUR || VISKORES_PYTHON_ENABLE_FILTER_ENTITY_EXTRACTION
   constructors:

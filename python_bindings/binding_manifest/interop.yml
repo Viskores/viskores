@@ -9,6 +9,7 @@
 ##=============================================================================
 
 - class: viskores::interop::BufferState
+  doc: OpenGL buffer state used by Viskores interop helpers.
   pythonName: BufferState
   header: viskores/interop/BufferState.h
   guard: VISKORES_PYTHON_ENABLE_INTEROP

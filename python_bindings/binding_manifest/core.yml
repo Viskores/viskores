@@ -9,6 +9,7 @@
 ##=============================================================================
 
 - class: viskores::Range
+  doc: Numeric interval with minimum and maximum values.
   binding: manual
   reason: Requires numeric constructors, arithmetic/comparison operators, and Python sequence-style access to Min/Max.
 
@@ -23,16 +24,19 @@
     - Diverging
 
 - class: viskores::cont::DeviceAdapterId
+  doc: Identifier for a Viskores device adapter.
   header: viskores/cont/DeviceAdapterTag.h
   binding: manual
   reason: Requires initialization-specific repr and device factory helpers.
 
 - class: viskores::cont::InitializeResult
+  doc: Result returned by viskores.cont.Initialize.
   header: viskores/cont/Initialize.h
   binding: manual
   reason: Returned by Initialize and bound with initialization-specific result fields.
 
 - class: viskores::filter::Filter
+  doc: Base class for Viskores filters.
   header: viskores/filter/Filter.h
   binding: manual
   reason: Base class binding centralizes inherited filter methods used by generated filters.

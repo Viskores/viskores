@@ -9,6 +9,7 @@
 ##=============================================================================
 
 - class: viskores::io::BOVDataSetReader
+  doc: Viskores data-set reader.
   constructors:
     - (file_name: std::string)
   methods:
@@ -23,6 +24,7 @@
     - BINARY
 
 - class: viskores::io::ImageWriterBase
+  doc: Viskores data-set writer base class.
   binding: manual
   reason: Keep exposed for C++ API fidelity as the abstract base of concrete image writers and owner of PixelDepth; revisit whether this should ever be generated.
   enums:
@@ -33,6 +35,7 @@
   reason: Abstract implementation base for image readers.
 
 - class: viskores::io::ImageReaderHDF5
+  doc: Viskores data-set reader.
   guard: VISKORES_PYTHON_ENABLE_IO_HDF5
   constructors:
     - (file_name: std::string)
@@ -44,6 +47,7 @@
     - SetFileName(file_name: std::string)
 
 - class: viskores::io::ImageReaderPNG
+  doc: Viskores data-set reader.
   constructors:
     - (file_name: std::string)
   methods:
@@ -54,6 +58,7 @@
     - SetFileName(file_name: std::string)
 
 - class: viskores::io::ImageReaderPNM
+  doc: Viskores data-set reader.
   constructors:
     - (file_name: std::string)
   methods:
@@ -64,6 +69,7 @@
     - SetFileName(file_name: std::string)
 
 - class: viskores::io::ImageWriterHDF5
+  doc: Viskores data-set writer.
   pythonName: ImageWriterHDF5
   base: viskores::io::ImageWriterBase
   guard: VISKORES_PYTHON_ENABLE_IO_HDF5
@@ -78,6 +84,7 @@
     - SetFileName(file_name: std::string)
 
 - class: viskores::io::ImageWriterPNG
+  doc: Viskores data-set writer.
   pythonName: ImageWriterPNG
   base: viskores::io::ImageWriterBase
   constructors:
@@ -91,6 +98,7 @@
     - SetFileName(file_name: std::string)
 
 - class: viskores::io::ImageWriterPNM
+  doc: Viskores data-set writer.
   pythonName: ImageWriterPNM
   base: viskores::io::ImageWriterBase
   constructors:
@@ -104,6 +112,7 @@
     - SetFileName(file_name: std::string)
 
 - class: viskores::io::VTKDataSetReader
+  doc: Viskores data-set reader.
   constructors:
     - (file_name: std::string)
   methods:
@@ -114,6 +123,7 @@
   reason: Abstract implementation base for VTK dataset readers.
 
 - class: viskores::io::VTKDataSetWriter
+  doc: Viskores data-set writer.
   pythonName: VTKDataSetWriter
   constructors:
     - (file_name: std::string)
@@ -145,6 +155,7 @@
   reason: Use VTKDataSetReader instead of binding this VTK dataset reader variant separately.
 
 - class: viskores::io::VTKVisItFileReader
+  doc: Viskores data-set reader.
   pythonName: VTKVisItFileReader
   constructors:
     - (file_name: std::string)

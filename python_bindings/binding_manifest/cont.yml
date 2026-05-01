@@ -9,6 +9,7 @@
 ##=============================================================================
 
 - class: viskores::cont::UnknownArrayHandle
+  doc: Type-erased Viskores array handle.
   binding: manual
   reason: Requires NumPy conversion, runtime dispatch over registered array/storage families, and the current Unknown/Uncertain array-handle design.
 
@@ -22,21 +23,25 @@
   registrationGroup: early
 
 - class: viskores::cont::ArrayHandleSOA<viskores::Vec<T, N>>
+  doc: Viskores ArrayHandleSOA wrapper.
   header: viskores/cont/ArrayHandleSOA.h
   binding: manual
   reason: Registered as selected scalar/vector template instantiations with NumPy helpers while the public ArrayHandle template model is still open.
 
 - class: viskores::cont::ArrayHandleRecombineVec<T>
+  doc: Viskores ArrayHandleRecombineVec wrapper.
   header: viskores/cont/ArrayHandleRecombineVec.h
   binding: manual
   reason: Registered as selected scalar template instantiations with component extraction and NumPy conversion helpers.
 
 - class: viskores::cont::ArrayHandleGroupVecVariable<T>
+  doc: Viskores ArrayHandleGroupVecVariable wrapper.
   header: viskores/cont/ArrayHandleGroupVecVariable.h
   binding: manual
   reason: Registered as selected scalar template instantiations with Python component/offset parsing and list/NumPy conversions.
 
 - class: viskores::cont::UnknownCellSet
+  doc: Type-erased Viskores cell set.
   header: viskores/cont/UnknownCellSet.h
   binding: manual
   reason: Requires topology query helpers and cell-point-id conversion.
@@ -51,6 +56,7 @@
   registrationGroup: early
 
 - class: viskores::cont::Field
+  doc: Named data array with a name, association, and values attached to a Viskores DataSet.
   registrationGroup: early
   constructors:
     - ()
@@ -74,6 +80,7 @@
     - SetData(newdata: viskores::cont::UnknownArrayHandle)
 
 - class: viskores::cont::CoordinateSystem
+  doc: Field subclass used as a Viskores coordinate system.
   base: viskores::cont::Field
   registrationGroup: early
   constructors:
@@ -89,6 +96,7 @@
     - GetBounds()
 
 - class: viskores::cont::DataSet
+  doc: Viskores data-set container that holds cell-set topology, coordinate systems, and fields.
   registrationGroup: early
   constructors:
     - ()
@@ -128,6 +136,7 @@
     - GetNumberOfCells()
 
 - class: viskores::cont::PartitionedDataSet
+  doc: Collection of Viskores DataSet partitions.
   registrationGroup: early
   constructors:
     - ()
@@ -154,24 +163,29 @@
     - GetNumberOfFields()
 
 - class: viskores::cont::DataSetBuilderExplicit
+  doc: Builder for explicit-cell Viskores data sets.
   binding: manual
   reason: Static Create accepts NumPy-facing coordinate/connectivity arrays and builds a DataSet.
 
 - class: viskores::cont::DataSetBuilderCurvilinear
+  doc: Builder for curvilinear structured Viskores data sets.
   binding: manual
   reason: Static Create accepts NumPy-facing coordinate arrays and exact-length dimension tuples.
 
 - class: viskores::cont::DataSetBuilderUniform
+  doc: Builder for uniform structured Viskores data sets with optional origin and spacing.
   constructors:
     - ()
   staticMethods:
     - Create(dimensions: viskores::Id3 [Dimensions], origin: viskores::Vec3f [Vec3fDefaultZero] = nb::none(), spacing: viskores::Vec3f [Vec3fDefaultOne] = nb::none(), coord_name: std::string = "coords")
 
 - class: viskores::cont::DataSetBuilderRectilinear
+  doc: Builder for rectilinear structured Viskores data sets.
   binding: manual
   reason: Static Create supports NumPy-facing axis arrays and optional coordinate-name overload dispatch.
 
 - class: viskores::cont::DataSetBuilderExplicitIterative
+  doc: Iterative builder for explicit-cell Viskores data sets.
   header: viskores/cont/DataSetBuilderExplicit.h
   constructors:
     - ()
@@ -183,6 +197,7 @@
     - Create()
 
 - class: viskores::cont::ColorTable
+  doc: Viskores color table for mapping scalar values to colors and opacity.
   registrationGroup: early
   constructors:
     - (preset: viskores::cont::ColorTable::Preset = viskores::cont::ColorTable::Preset::Default)

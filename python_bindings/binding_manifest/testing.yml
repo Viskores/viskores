@@ -9,6 +9,7 @@
 ##=============================================================================
 
 - class: viskores::cont::testing::MakeTestDataSet
+  doc: Factory for Viskores test data sets.
   header: viskores/cont/testing/MakeTestDataSet.h
   guard: VISKORES_PYTHON_ENABLE_TESTING_UTILS
   binding: manual

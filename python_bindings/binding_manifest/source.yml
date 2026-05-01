@@ -9,6 +9,7 @@
 ##=============================================================================
 
 - class: viskores::source::Tangle
+  doc: Source that generates a structured tangle data set.
   pythonModule: viskores.source
   methods:
     - SetPointDimensions(dims: viskores::Id3)
@@ -18,6 +19,7 @@
     - Execute() -> viskores::cont::DataSet
 
 - class: viskores::source::PerlinNoise
+  doc: Source that generates a structured Perlin-noise data set.
   pythonModule: viskores.source
   methods:
     - SetPointDimensions(dims: viskores::Id3)
@@ -31,6 +33,7 @@
     - Execute() -> viskores::cont::DataSet
 
 - class: viskores::source::Oscillator
+  doc: Source that generates an oscillator field on a structured grid.
   pythonModule: viskores.source
   methods:
     - SetPointDimensions(dims: viskores::Id3)
@@ -44,6 +47,7 @@
     - Execute() -> viskores::cont::DataSet
 
 - class: viskores::source::Wavelet
+  doc: Source that generates the Viskores wavelet data set.
   pythonModule: viskores.source
   methods:
     - SetExtent(min_extent: viskores::Id3, max_extent: viskores::Id3)

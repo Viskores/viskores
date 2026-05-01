@@ -29,6 +29,8 @@ wrapping. Classes with `binding: excluded` are intentionally not exposed.
   family of template instantiations rather than one concrete C++ class.
 - `binding`: Optional binding state. Valid values are `manual` and `excluded`.
   Omit this field for generated bindings.
+- `doc`: Optional class docstring. The generator emits these into the class-doc
+  lookup used by generated and manual bindings that call `doc::ClassDoc`.
 - `base`: Optional generated Python base class. Use
   `viskores::filter::Filter` for generated filters that should inherit common
   filter methods such as `Execute`, active-field selection, output-field naming,

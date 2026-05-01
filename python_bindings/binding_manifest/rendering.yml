@@ -20,34 +20,41 @@
     - Sphere
 
 - class: viskores::rendering::Camera
+  doc: Viskores rendering camera.
   binding: manual
   reason: Requires tuple conversions for camera vectors, view-range tuple return, and camera-specific overload/default handling.
   enums:
     - "Mode: TwoD, ThreeD"
 
 - class: viskores::rendering::Actor
+  doc: Renderable data-set actor.
   binding: manual
   reason: Requires DataSet and PartitionedDataSet shared-ownership constructors, mapper ownership unwrapping, ColorTable object handling, and scalar-range conversion.
 
 - class: viskores::rendering::Scene
+  doc: Collection of rendering actors.
   binding: manual
   reason: Requires Actor shared-ownership wrappers for AddActor and Python-owned Actor copies from GetActor.
 
 - class: viskores::rendering::Canvas
+  doc: Rendering canvas.
   binding: manual
   reason: Requires NumPy color/depth buffer access, color tuple parsing, and drawing helper overloads.
 
 - class: viskores::rendering::CanvasRayTracer
+  doc: Rendering canvas.
   base: viskores::rendering::Canvas
   constructors:
     - (width: viskores::Id = 1024, height: viskores::Id = 1024)
 
 - class: viskores::rendering::MapperVolume
+  doc: Viskores rendering mapper.
   methods:
     - SetSampleDistance(distance: viskores::Float32)
     - SetCompositeBackground(enabled: bool)
 
 - class: viskores::rendering::MapperPoint
+  doc: Viskores rendering mapper.
   directMethods:
     - SetUseCells
     - SetUsePoints
@@ -58,14 +65,17 @@
     - SetCompositeBackground(enabled: bool)
 
 - class: viskores::rendering::MapperQuad
+  doc: Viskores rendering mapper.
   methods:
     - SetCompositeBackground(enabled: bool)
 
 - class: viskores::rendering::MapperConnectivity
+  doc: Viskores rendering mapper.
   methods:
     - SetSampleDistance(distance: viskores::Float32)
 
 - class: viskores::rendering::MapperCylinder
+  doc: Viskores rendering mapper.
   methods:
     - UseVariableRadius(enabled: bool)
     - SetRadius(radius: viskores::Float32)
@@ -73,6 +83,7 @@
     - SetCompositeBackground(enabled: bool)
 
 - class: viskores::rendering::MapperGlyphScalar
+  doc: Viskores rendering mapper.
   directMethods:
     - SetUseCells
     - SetUsePoints
@@ -88,6 +99,7 @@
     - SetCompositeBackground(enabled: bool)
 
 - class: viskores::rendering::MapperGlyphVector
+  doc: Viskores rendering mapper.
   directMethods:
     - SetUseCells
     - SetUsePoints
@@ -103,6 +115,7 @@
     - SetCompositeBackground(enabled: bool)
 
 - class: viskores::rendering::MapperWireframer
+  doc: Viskores rendering mapper.
   methods:
     - GetShowInternalZones()
     - SetShowInternalZones(enabled: bool)
@@ -111,19 +124,23 @@
     - SetCompositeBackground(enabled: bool)
 
 - class: viskores::rendering::MapperRayTracer
+  doc: Viskores rendering mapper.
   methods:
     - SetCompositeBackground(enabled: bool)
     - SetShadingOn(enabled: bool)
 
 - class: viskores::rendering::ScalarRenderer::Result
+  doc: Utility result object for rendering scalar fields.
   header: viskores/rendering/ScalarRenderer.h
   binding: manual
   reason: Exposed as ScalarRenderer.Result with Python read-only properties and NumPy/dict/list conversions.
 
 - class: viskores::rendering::ScalarRenderer
+  doc: Utility for rendering scalar fields.
   binding: manual
   reason: Requires DataSet and Camera shared-ownership unwrapping plus owned ScalarRenderer.Result return handling.
 
 - class: viskores::rendering::View3D
+  doc: Three-dimensional Viskores rendering view.
   binding: manual
   reason: Requires a Python-specific constructor that unwraps Scene, mapper, CanvasRayTracer, optional Camera, and background color inputs.
