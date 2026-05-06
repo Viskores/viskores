@@ -82,6 +82,25 @@ class VISKORES_ALWAYS_EXPORT CellLocatorBoundingIntervalHierarchy
     viskores::cont::ArrayHandle<viskores::exec::CellLocatorBoundingIntervalHierarchyNode>;
   using CellIdArrayHandle = viskores::cont::ArrayHandle<viskores::Id>;
 
+  struct IdOnlyParametricCoords
+  {
+    VISKORES_EXEC
+    explicit IdOnlyParametricCoords(viskores::IdComponent numberOfComponents)
+      : NumberOfComponents(numberOfComponents)
+      , Dummy()
+    {
+    }
+
+    VISKORES_EXEC
+    viskores::IdComponent GetNumberOfComponents() const { return this->NumberOfComponents; }
+
+    VISKORES_EXEC
+    viskores::Vec3f& operator[](viskores::IdComponent) { return this->Dummy; }
+
+    viskores::IdComponent NumberOfComponents;
+    viskores::Vec3f Dummy;
+  };
+
 public:
   VISKORES_CONT
   CellLocatorBoundingIntervalHierarchy(
@@ -104,6 +123,26 @@ public:
     viskores::Id CellId = -1;
     viskores::Id NodeIdx = -1;
   };
+
+  /// @brief Locate the id of the cell containing the provided point.
+  ///
+  /// This method returns the same cell id as `FindCell()` without requiring
+  /// the caller to provide parametric coordinates.
+  VISKORES_EXEC viskores::ErrorCode FindCellId(const viskores::Vec3f& point,
+                                               viskores::Id& cellId) const
+  {
+    viskores::Vec3f pCoords;
+    return this->FindCell(point, cellId, pCoords);
+  }
+
+  /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCellId
+  VISKORES_EXEC viskores::ErrorCode FindCellId(const viskores::Vec3f& point,
+                                               viskores::Id& cellId,
+                                               LastCell& lastCell) const
+  {
+    viskores::Vec3f pCoords;
+    return this->FindCell(point, cellId, pCoords, lastCell);
+  }
 
   /// @copydoc viskores::exec::CellLocatorUniformGrid::FindCell
   VISKORES_EXEC viskores::ErrorCode FindCell(const viskores::Vec3f& point,
@@ -217,6 +256,36 @@ public:
 
     // More than n cells were found.
     //If the size of cellIdsVec is not big enough to hold the number found, return an error.
+    if (count > n)
+      return viskores::ErrorCode::InvalidNumberOfIndices;
+
+    return status;
+  }
+
+  /// @brief Locate all cell ids containing the provided point.
+  ///
+  /// This method returns the same cell ids as `FindAllCells()` without
+  /// requiring parametric coordinates.
+  ///
+  template <typename CellIdsType>
+  VISKORES_EXEC viskores::ErrorCode FindAllCellIds(const viskores::Vec3f& point,
+                                                   CellIdsType& cellIdsVec) const
+  {
+    viskores::IdComponent n = cellIdsVec.GetNumberOfComponents();
+    if (n == 0)
+      return viskores::ErrorCode::Success;
+
+    for (viskores::IdComponent i = 0; i < n; i++)
+      cellIdsVec[i] = -1;
+
+    IdOnlyParametricCoords pCoordsVec(n);
+    LastCell lastCell;
+    viskores::IdComponent count = 0;
+    auto status =
+      this->FindCellImpl(IterateMode::FindAll, point, cellIdsVec, pCoordsVec, lastCell, count);
+
+    // More than n cells were found.
+    // If cellIdsVec is not large enough to hold the number found, return an error.
     if (count > n)
       return viskores::ErrorCode::InvalidNumberOfIndices;
 
