@@ -43,6 +43,7 @@ set(examples
   GuideExampleProvidedFilters.cxx
   GuideExampleRendering.cxx
   GuideExampleRuntimeDeviceTracker.cxx
+  GuideExampleSource.cxx
   GuideExampleTimer.cxx
   GuideExampleTraits.cxx
   GuideExampleTuple.cxx
