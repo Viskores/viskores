@@ -119,8 +119,11 @@ public:
     viskores::filter::flow::internal::DSIHelperInfo<ParticleType>& block,
     viskores::FloatDefault stepSize)
   {
-    auto copyFlag = (this->CopySeedArray ? viskores::CopyFlag::On : viskores::CopyFlag::Off);
-    auto seedArray = viskores::cont::make_ArrayHandle(block.Particles, copyFlag);
+    viskores::cont::ArrayHandle<ParticleType> seedArray;
+    if (this->CopySeedArray)
+      viskores::cont::ArrayCopy(block.Particles, seedArray);
+    else
+      seedArray = block.Particles;
 
     using AdvectionHelper =
       detail::AdvectHelperSteadyState<ParticleType, FieldType, TerminationType, AnalysisType>;

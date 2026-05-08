@@ -60,17 +60,17 @@ class DSIHelperInfo
 {
 public:
   DSIHelperInfo(
-    const std::vector<ParticleType>& v,
+    const viskores::cont::ArrayHandle<ParticleType>& particles,
     const viskores::filter::flow::internal::BoundsMap& boundsMap)
     : BoundsMapPtr(&boundsMap)
-    , Particles(v)
+    , Particles(particles)
   {
   }
 
-  DSIHelperInfo(std::vector<ParticleType>&& v,
+  DSIHelperInfo(viskores::cont::ArrayHandle<ParticleType>&& particles,
                 const viskores::filter::flow::internal::BoundsMap& boundsMap)
     : BoundsMapPtr(&boundsMap)
-    , Particles(std::move(v))
+    , Particles(std::move(particles))
   {
   }
 
@@ -102,7 +102,7 @@ public:
 
   const viskores::filter::flow::internal::BoundsMap* BoundsMapPtr = nullptr;
 
-  std::vector<ParticleType> Particles;
+  viskores::cont::ArrayHandle<ParticleType> Particles;
   viskores::cont::ArrayHandle<ParticleType> OutParticles;
   viskores::cont::ArrayHandle<viskores::Id> OutNextBlockIDs;
   viskores::cont::ArrayHandle<viskores::Id> TermIdx;

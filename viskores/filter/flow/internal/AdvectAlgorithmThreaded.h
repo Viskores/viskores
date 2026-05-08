@@ -46,15 +46,14 @@ class AdvectAlgorithmThreaded : public AdvectAlgorithm<DSIType>
 {
 public:
   using ParticleType = typename DSIType::PType;
+  using ParticleArray = typename AdvectAlgorithm<DSIType>::ParticleArray;
 
   AdvectAlgorithmThreaded(const viskores::filter::flow::internal::BoundsMap& bm,
                           std::vector<DSIType>& blocks)
     : AdvectAlgorithm<DSIType>(bm, blocks)
     , Done(false)
   {
-    //For threaded algorithm, the particles go out of scope in the Work method.
-    //When this happens, they are destructed by the time the Manage thread gets them.
-    //Set the copy flag so the std::vector is copied into the ArrayHandle
+    // Keep worker seed arrays independent while the manager thread consumes results.
     for (auto& block : this->Blocks)
       block.SetCopySeedFlag(true);
   }
@@ -94,7 +93,7 @@ protected:
     return this->Done;
   }
 
-  bool GetActiveParticles(std::vector<ParticleType>& particles, viskores::Id& blockId) override
+  bool GetActiveParticles(ParticleArray& particles, viskores::Id& blockId) override
   {
     std::lock_guard<std::mutex> lock(this->Mutex);
     bool val = this->AdvectAlgorithm<DSIType>::GetActiveParticles(particles, blockId);
@@ -143,12 +142,12 @@ protected:
   {
     while (!this->WorkerGetDone())
     {
-      std::vector<ParticleType> v;
+      ParticleArray particles;
       viskores::Id blockId = -1;
-      if (this->GetActiveParticles(v, blockId))
+      if (this->GetActiveParticles(particles, blockId))
       {
         auto& block = this->GetDataSet(blockId);
-        DSIHelperInfo<ParticleType> bb(std::move(v), this->BoundsMap);
+        DSIHelperInfo<ParticleType> bb(std::move(particles), this->BoundsMap);
         block.Advect(bb, this->StepSize);
         this->UpdateWorkerResult(blockId, std::move(bb));
       }
