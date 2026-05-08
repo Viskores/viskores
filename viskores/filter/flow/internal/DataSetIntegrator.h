@@ -59,9 +59,8 @@ template <typename ParticleType>
 class DSIHelperInfo
 {
 public:
-  DSIHelperInfo(
-    const viskores::cont::ArrayHandle<ParticleType>& particles,
-    const viskores::filter::flow::internal::BoundsMap& boundsMap)
+  DSIHelperInfo(const viskores::cont::ArrayHandle<ParticleType>& particles,
+                const viskores::filter::flow::internal::BoundsMap& boundsMap)
     : BoundsMapPtr(&boundsMap)
     , Particles(particles)
   {
@@ -147,7 +146,10 @@ template <typename ParticleType>
 class CountCandidateBlocks : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn particle, FieldIn terminated, ExecObject locator, FieldOut count);
+  using ControlSignature = void(FieldIn particle,
+                                FieldIn terminated,
+                                ExecObject locator,
+                                FieldOut count);
   using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
@@ -314,9 +316,8 @@ protected:
   VISKORES_CONT inline const viskores::cont::ArrayHandle<viskores::UInt8>& GetBlockOwnedByRankArray(
     const viskores::filter::flow::internal::BoundsMap& boundsMap) const;
 
-  VISKORES_CONT inline void ClassifyParticles(
-    viskores::cont::ArrayHandle<ParticleType>& particles,
-    DSIHelperInfo<ParticleType>& dsiInfo) const;
+  VISKORES_CONT inline void ClassifyParticles(viskores::cont::ArrayHandle<ParticleType>& particles,
+                                              DSIHelperInfo<ParticleType>& dsiInfo) const;
 
   //Data members.
   viskores::Id Id;
@@ -340,7 +341,8 @@ DataSetIntegrator<Derived, ParticleType>::GetBlockOwnedByRankArray(
     return this->BlockOwnedByRankAH;
   }
 
-  std::vector<viskores::UInt8> blockOwnedByRank(static_cast<std::size_t>(numBlocks), viskores::UInt8{ 0 });
+  std::vector<viskores::UInt8> blockOwnedByRank(static_cast<std::size_t>(numBlocks),
+                                                viskores::UInt8{ 0 });
   for (viskores::Id blockId = 0; blockId < numBlocks; ++blockId)
   {
     const auto& ranks = boundsMap.FindRankRef(blockId);

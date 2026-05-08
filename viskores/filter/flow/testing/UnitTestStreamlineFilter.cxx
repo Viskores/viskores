@@ -64,21 +64,16 @@ void AddVectorFields(viskores::cont::PartitionedDataSet& pds,
 viskores::cont::DataSet CreateDoublePrecisionBox(const viskores::Bounds& bounds)
 {
   std::vector<viskores::Vec3f_64> points = {
-    { bounds.X.Min, bounds.Y.Min, bounds.Z.Min },
-    { bounds.X.Max, bounds.Y.Min, bounds.Z.Min },
-    { bounds.X.Max, bounds.Y.Max, bounds.Z.Min },
-    { bounds.X.Min, bounds.Y.Max, bounds.Z.Min },
-    { bounds.X.Min, bounds.Y.Min, bounds.Z.Max },
-    { bounds.X.Max, bounds.Y.Min, bounds.Z.Max },
-    { bounds.X.Max, bounds.Y.Max, bounds.Z.Max },
-    { bounds.X.Min, bounds.Y.Max, bounds.Z.Max }
+    { bounds.X.Min, bounds.Y.Min, bounds.Z.Min }, { bounds.X.Max, bounds.Y.Min, bounds.Z.Min },
+    { bounds.X.Max, bounds.Y.Max, bounds.Z.Min }, { bounds.X.Min, bounds.Y.Max, bounds.Z.Min },
+    { bounds.X.Min, bounds.Y.Min, bounds.Z.Max }, { bounds.X.Max, bounds.Y.Min, bounds.Z.Max },
+    { bounds.X.Max, bounds.Y.Max, bounds.Z.Max }, { bounds.X.Min, bounds.Y.Max, bounds.Z.Max }
   };
   std::vector<viskores::UInt8> shapes = { viskores::CELL_SHAPE_HEXAHEDRON };
   std::vector<viskores::IdComponent> numIndices = { 8 };
   std::vector<viskores::Id> connectivity = { 0, 1, 2, 3, 4, 5, 6, 7 };
 
-  return viskores::cont::DataSetBuilderExplicit::Create(
-    points, shapes, numIndices, connectivity);
+  return viskores::cont::DataSetBuilderExplicit::Create(points, shapes, numIndices, connectivity);
 }
 
 void TestBoundsMapLocatorPreservesFloat64Bounds()
@@ -90,8 +85,7 @@ void TestBoundsMapLocatorPreservesFloat64Bounds()
   pds.AppendPartition(CreateDoublePrecisionBox(bounds));
 
   viskores::filter::flow::internal::BoundsMap boundsMap(pds);
-  const viskores::Bounds locatorBounds =
-    boundsMap.GetLocator().GetCoordinates().GetBounds();
+  const viskores::Bounds locatorBounds = boundsMap.GetLocator().GetCoordinates().GetBounds();
 
   VISKORES_TEST_ASSERT(locatorBounds.X.Min == bounds.X.Min, "Locator X minimum lost precision.");
   VISKORES_TEST_ASSERT(locatorBounds.X.Max == bounds.X.Max, "Locator X maximum lost precision.");
@@ -104,10 +98,8 @@ void TestBoundsMapLocatorPreservesFloat64Bounds()
 void TestBlockIdValidation()
 {
   const viskores::Id3 dims(5, 5, 5);
-  std::vector<viskores::Bounds> bounds = {
-    viskores::Bounds(0, 4, 0, 4, 0, 4),
-    viskores::Bounds(4, 8, 0, 4, 0, 4)
-  };
+  std::vector<viskores::Bounds> bounds = { viskores::Bounds(0, 4, 0, 4, 0, 4),
+                                           viskores::Bounds(4, 8, 0, 4, 0, 4) };
   auto allPDS = viskores::worklet::testing::CreateAllDataSets(bounds, dims, false);
   viskores::cont::PartitionedDataSet pds = allPDS[0];
 

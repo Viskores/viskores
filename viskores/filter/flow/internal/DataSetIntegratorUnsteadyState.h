@@ -170,7 +170,8 @@ public:
     {
       if (dsiInfo.TermIdx.GetNumberOfValues() == 0)
         return;
-      auto termPerm = viskores::cont::make_ArrayHandlePermutation(dsiInfo.TermIdx, analysis.Particles);
+      auto termPerm =
+        viskores::cont::make_ArrayHandlePermutation(dsiInfo.TermIdx, analysis.Particles);
       viskores::cont::ArrayHandle<ParticleType> termParticles;
       viskores::cont::Algorithm::Copy(termPerm, termParticles);
       analysis.FinalizeAnalysis(termParticles);

@@ -101,9 +101,8 @@ protected:
     return val;
   }
 
-  void UpdateActive(
-    const std::vector<ParticleType>& particles,
-    const std::vector<viskores::Id>& blockIds) override
+  void UpdateActive(const std::vector<ParticleType>& particles,
+                    const std::vector<viskores::Id>& blockIds) override
   {
     if (!particles.empty())
     {

@@ -230,7 +230,8 @@ public:
     viskores::cont::Invoker invoke;
 
     viskores::cont::ArrayHandle<viskores::Id> hitCountsAH;
-    invoke(detail::CountSeedBlocks<ParticleType>{}, seeds, this->BoundsMap.GetLocator(), hitCountsAH);
+    invoke(
+      detail::CountSeedBlocks<ParticleType>{}, seeds, this->BoundsMap.GetLocator(), hitCountsAH);
 
     const viskores::Id totalHits = viskores::cont::Algorithm::Reduce(hitCountsAH, viskores::Id(0));
     auto hitOffsetsAH = viskores::cont::ConvertNumComponentsToOffsets(hitCountsAH);
@@ -238,11 +239,10 @@ public:
     viskores::cont::ArrayHandle<viskores::Id> allHitCellIdsAH;
     allHitCellIdsAH.AllocateAndFill(totalHits, viskores::Id(-1));
 
-    auto hitCellIdsVec = viskores::cont::make_ArrayHandleGroupVecVariable(allHitCellIdsAH, hitOffsetsAH);
-    invoke(detail::FindSeedBlocks<ParticleType>{},
-           seeds,
-           this->BoundsMap.GetLocator(),
-           hitCellIdsVec);
+    auto hitCellIdsVec =
+      viskores::cont::make_ArrayHandleGroupVecVariable(allHitCellIdsAH, hitOffsetsAH);
+    invoke(
+      detail::FindSeedBlocks<ParticleType>{}, seeds, this->BoundsMap.GetLocator(), hitCellIdsVec);
 
     viskores::cont::ArrayHandle<viskores::Id> seedBlockIDsAH;
     invoke(detail::SelectFirstSeedBlock{}, hitCellIdsVec, seedBlockIDsAH);
@@ -259,16 +259,12 @@ public:
       viskores::cont::make_ArrayHandle(blockPrimaryRanks, viskores::CopyFlag::On);
 
     viskores::cont::ArrayHandle<viskores::UInt8> keepMaskAH;
-    invoke(detail::KeepSeedOnRank{ this->Rank },
-           seedBlockIDsAH,
-           blockPrimaryRanksAH,
-           keepMaskAH);
+    invoke(detail::KeepSeedOnRank{ this->Rank }, seedBlockIDsAH, blockPrimaryRanksAH, keepMaskAH);
 
     viskores::cont::ArrayHandle<ParticleType> particlesAH;
     viskores::cont::ArrayHandle<viskores::Id> blockIDsAH;
     viskores::cont::Algorithm::CopyIf(seeds, keepMaskAH, particlesAH, detail::IsSelected{});
-    viskores::cont::Algorithm::CopyIf(
-      seedBlockIDsAH, keepMaskAH, blockIDsAH, detail::IsSelected{});
+    viskores::cont::Algorithm::CopyIf(seedBlockIDsAH, keepMaskAH, blockIDsAH, detail::IsSelected{});
 
     this->SetSeedArray(particlesAH, blockIDsAH);
   }
@@ -467,7 +463,8 @@ public:
       std::vector<ParticleType> incoming;
       std::vector<viskores::Id> incomingBlockIDs;
 
-      this->Exchanger.Exchange(outgoing, outgoingRanks, outgoingBlockIDs, incoming, incomingBlockIDs);
+      this->Exchanger.Exchange(
+        outgoing, outgoingRanks, outgoingBlockIDs, incoming, incomingBlockIDs);
 
       this->UpdateActive(incoming, incomingBlockIDs);
     }
@@ -546,15 +543,15 @@ public:
   }
 #endif
 
-  virtual void UpdateActive(
-    const std::vector<ParticleType>& particles,
-    const std::vector<viskores::Id>& blockIds)
+  virtual void UpdateActive(const std::vector<ParticleType>& particles,
+                            const std::vector<viskores::Id>& blockIds)
   {
     VISKORES_ASSERT(particles.size() == blockIds.size());
 
     if (!particles.empty())
     {
-      ParticleArray particlesAH = viskores::cont::make_ArrayHandle(particles, viskores::CopyFlag::On);
+      ParticleArray particlesAH =
+        viskores::cont::make_ArrayHandle(particles, viskores::CopyFlag::On);
       BlockIdArray blockIdsAH = viskores::cont::make_ArrayHandle(blockIds, viskores::CopyFlag::On);
       this->AddActiveParticlesByBlock(particlesAH, blockIdsAH);
     }

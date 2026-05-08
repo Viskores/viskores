@@ -85,11 +85,10 @@ public:
   }
 
 private:
-  void SerialExchange(
-    const std::vector<ParticleType>& outData,
-    const std::vector<viskores::Id>& outBlockIDs,
-    std::vector<ParticleType>& inData,
-    std::vector<viskores::Id>& inDataBlockIDs)
+  void SerialExchange(const std::vector<ParticleType>& outData,
+                      const std::vector<viskores::Id>& outBlockIDs,
+                      std::vector<ParticleType>& inData,
+                      std::vector<viskores::Id>& inDataBlockIDs)
   {
     VISKORES_ASSERT(outData.size() == outBlockIDs.size());
 
@@ -125,8 +124,8 @@ private:
 
       if (!requests.empty())
       {
-        int err = MPI_Waitall(
-          static_cast<int>(requests.size()), requests.data(), MPI_STATUSES_IGNORE);
+        int err =
+          MPI_Waitall(static_cast<int>(requests.size()), requests.data(), MPI_STATUSES_IGNORE);
         if (err != MPI_SUCCESS)
         {
           VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
@@ -191,10 +190,9 @@ private:
     }
   }
 
-  void SendParticles(
-    const std::vector<ParticleType>& outData,
-    const std::vector<viskores::Id>& outRanks,
-    const std::vector<viskores::Id>& outBlockIDs)
+  void SendParticles(const std::vector<ParticleType>& outData,
+                     const std::vector<viskores::Id>& outRanks,
+                     const std::vector<viskores::Id>& outBlockIDs)
   {
     if (outData.empty())
       return;
@@ -236,9 +234,8 @@ private:
     this->SendBuffers[req] = bb;
   }
 
-  void RecvParticles(
-    std::vector<ParticleType>& inData,
-    std::vector<viskores::Id>& inDataBlockIDs) const
+  void RecvParticles(std::vector<ParticleType>& inData,
+                     std::vector<viskores::Id>& inDataBlockIDs) const
   {
     inData.clear();
     inDataBlockIDs.clear();
