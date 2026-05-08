@@ -259,7 +259,7 @@ void BoundsMap::BuildLocator()
     return;
   }
 
-  std::vector<viskores::Vec3f> points;
+  std::vector<viskores::Vec3f_64> points;
   std::vector<viskores::UInt8> shapes;
   std::vector<viskores::IdComponent> numIndices;
   std::vector<viskores::Id> connectivity;
@@ -285,9 +285,7 @@ void BoundsMap::BuildLocator()
 
     auto pushPoint = [&points](viskores::Float64 x, viskores::Float64 y, viskores::Float64 z)
     {
-      points.emplace_back(static_cast<viskores::FloatDefault>(x),
-                          static_cast<viskores::FloatDefault>(y),
-                          static_cast<viskores::FloatDefault>(z));
+      points.emplace_back(x, y, z);
       return static_cast<viskores::Id>(points.size() - 1);
     };
 

@@ -19,6 +19,7 @@
 #include <viskores/CellClassification.h>
 #include <viskores/Particle.h>
 #include <viskores/cont/ArrayCopy.h>
+#include <viskores/cont/DataSetBuilderExplicit.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
 #include <viskores/cont/ErrorFilterExecution.h>
 #include <viskores/cont/testing/Testing.h>
@@ -26,6 +27,7 @@
 #include <viskores/filter/flow/PathParticle.h>
 #include <viskores/filter/flow/Pathline.h>
 #include <viskores/filter/flow/Streamline.h>
+#include <viskores/filter/flow/internal/BoundsMap.h>
 #include <viskores/filter/flow/testing/GenerateTestDataSets.h>
 #include <viskores/io/VTKDataSetReader.h>
 
@@ -57,6 +59,46 @@ void AddVectorFields(viskores::cont::PartitionedDataSet& pds,
 {
   for (auto& ds : pds)
     ds.AddPointField(fieldName, CreateConstantVectorField(ds.GetNumberOfPoints(), vec));
+}
+
+viskores::cont::DataSet CreateDoublePrecisionBox(const viskores::Bounds& bounds)
+{
+  std::vector<viskores::Vec3f_64> points = {
+    { bounds.X.Min, bounds.Y.Min, bounds.Z.Min },
+    { bounds.X.Max, bounds.Y.Min, bounds.Z.Min },
+    { bounds.X.Max, bounds.Y.Max, bounds.Z.Min },
+    { bounds.X.Min, bounds.Y.Max, bounds.Z.Min },
+    { bounds.X.Min, bounds.Y.Min, bounds.Z.Max },
+    { bounds.X.Max, bounds.Y.Min, bounds.Z.Max },
+    { bounds.X.Max, bounds.Y.Max, bounds.Z.Max },
+    { bounds.X.Min, bounds.Y.Max, bounds.Z.Max }
+  };
+  std::vector<viskores::UInt8> shapes = { viskores::CELL_SHAPE_HEXAHEDRON };
+  std::vector<viskores::IdComponent> numIndices = { 8 };
+  std::vector<viskores::Id> connectivity = { 0, 1, 2, 3, 4, 5, 6, 7 };
+
+  return viskores::cont::DataSetBuilderExplicit::Create(
+    points, shapes, numIndices, connectivity);
+}
+
+void TestBoundsMapLocatorPreservesFloat64Bounds()
+{
+  const viskores::Float64 xMin = 1000000000000.25;
+  const viskores::Bounds bounds(xMin, xMin + 3.25, -2.5, -1.25, 7.125, 9.5);
+
+  viskores::cont::PartitionedDataSet pds;
+  pds.AppendPartition(CreateDoublePrecisionBox(bounds));
+
+  viskores::filter::flow::internal::BoundsMap boundsMap(pds);
+  const viskores::Bounds locatorBounds =
+    boundsMap.GetLocator().GetCoordinates().GetBounds();
+
+  VISKORES_TEST_ASSERT(locatorBounds.X.Min == bounds.X.Min, "Locator X minimum lost precision.");
+  VISKORES_TEST_ASSERT(locatorBounds.X.Max == bounds.X.Max, "Locator X maximum lost precision.");
+  VISKORES_TEST_ASSERT(locatorBounds.Y.Min == bounds.Y.Min, "Locator Y minimum lost precision.");
+  VISKORES_TEST_ASSERT(locatorBounds.Y.Max == bounds.Y.Max, "Locator Y maximum lost precision.");
+  VISKORES_TEST_ASSERT(locatorBounds.Z.Min == bounds.Z.Min, "Locator Z minimum lost precision.");
+  VISKORES_TEST_ASSERT(locatorBounds.Z.Max == bounds.Z.Max, "Locator Z maximum lost precision.");
 }
 
 void TestBlockIdValidation()
@@ -673,6 +715,7 @@ void TestStreamlineFilters()
                                      FilterType::PATH_PARTICLE };
 
   TestBlockIdValidation();
+  TestBoundsMapLocatorPreservesFloat64Bounds();
 
   for (int n = 1; n < 3; n++)
   {
