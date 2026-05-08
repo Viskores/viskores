@@ -22,6 +22,8 @@
 #include <viskores/cont/DataSetBuilderExplicit.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
 #include <viskores/cont/ErrorFilterExecution.h>
+#include <viskores/cont/Token.h>
+#include <viskores/cont/serial/internal/DeviceAdapterTagSerial.h>
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/filter/flow/ParticleAdvection.h>
 #include <viskores/filter/flow/PathParticle.h>
@@ -30,6 +32,8 @@
 #include <viskores/filter/flow/internal/BoundsMap.h>
 #include <viskores/filter/flow/testing/GenerateTestDataSets.h>
 #include <viskores/io/VTKDataSetReader.h>
+
+#include <algorithm>
 
 namespace
 {
@@ -41,6 +45,8 @@ enum FilterType
   PATHLINE,
   PATH_PARTICLE
 };
+
+using LocatorCellIdVec = viskores::Vec<viskores::Id, 4>;
 
 viskores::cont::ArrayHandle<viskores::Vec3f> CreateConstantVectorField(viskores::Id num,
                                                                        const viskores::Vec3f& vec)
@@ -76,6 +82,56 @@ viskores::cont::DataSet CreateDoublePrecisionBox(const viskores::Bounds& bounds)
   return viskores::cont::DataSetBuilderExplicit::Create(points, shapes, numIndices, connectivity);
 }
 
+viskores::cont::PartitionedDataSet CreatePartitionedDataSet(
+  const std::vector<viskores::Bounds>& bounds)
+{
+  viskores::cont::PartitionedDataSet pds;
+  for (const auto& blockBounds : bounds)
+    pds.AppendPartition(CreateDoublePrecisionBox(blockBounds));
+
+  return pds;
+}
+
+std::vector<std::vector<viskores::Id>> FindBoundsMapCellIds(
+  const viskores::filter::flow::internal::BoundsMap& boundsMap,
+  const std::vector<viskores::Vec3f>& points)
+{
+  viskores::cont::Token token;
+  auto locator =
+    boundsMap.GetLocator().PrepareForExecution(viskores::cont::DeviceAdapterTagSerial{}, token);
+  std::vector<std::vector<viskores::Id>> cellIds;
+  cellIds.reserve(points.size());
+  for (const auto& point : points)
+  {
+    std::vector<viskores::Id> ids;
+    LocatorCellIdVec idVec;
+    locator.FindAllCellIds(point, idVec);
+    for (viskores::IdComponent j = 0; j < viskores::VecTraits<LocatorCellIdVec>::NUM_COMPONENTS;
+         ++j)
+    {
+      if (idVec[j] >= 0)
+        ids.emplace_back(idVec[j]);
+    }
+    std::sort(ids.begin(), ids.end());
+    cellIds.emplace_back(std::move(ids));
+  }
+
+  return cellIds;
+}
+
+void ValidateCellIds(const std::vector<viskores::Id>& actual,
+                     std::initializer_list<viskores::Id> expected,
+                     const std::string& message)
+{
+  std::vector<viskores::Id> expectedVec(expected);
+  std::sort(expectedVec.begin(), expectedVec.end());
+
+  VISKORES_TEST_ASSERT(actual.size() == expectedVec.size(),
+                       message + ": wrong number of cell ids");
+  for (std::size_t i = 0; i < expectedVec.size(); ++i)
+    VISKORES_TEST_ASSERT(actual[i] == expectedVec[i], message + ": wrong cell id");
+}
+
 void TestBoundsMapLocatorPreservesFloat64Bounds()
 {
   const viskores::Float64 xMin = 1000000000000.25;
@@ -93,6 +149,73 @@ void TestBoundsMapLocatorPreservesFloat64Bounds()
   VISKORES_TEST_ASSERT(locatorBounds.Y.Max == bounds.Y.Max, "Locator Y maximum lost precision.");
   VISKORES_TEST_ASSERT(locatorBounds.Z.Min == bounds.Z.Min, "Locator Z minimum lost precision.");
   VISKORES_TEST_ASSERT(locatorBounds.Z.Max == bounds.Z.Max, "Locator Z maximum lost precision.");
+}
+
+void TestBoundsMapLocatorFindsFloat64Blocks()
+{
+  const viskores::Float64 xMin = 100000.25;
+  const std::vector<viskores::Bounds> bounds = {
+    viskores::Bounds(xMin, xMin + 4.0, -2.5, 2.5, 7.25, 9.25),
+    viskores::Bounds(xMin + 4.0, xMin + 8.0, -2.5, 2.5, 7.25, 9.25)
+  };
+
+  viskores::filter::flow::internal::BoundsMap boundsMap(CreatePartitionedDataSet(bounds));
+  const std::vector<viskores::Vec3f> points = {
+    viskores::Vec3f(static_cast<viskores::FloatDefault>(xMin + 1.0), 0.0f, 8.0f),
+    viskores::Vec3f(static_cast<viskores::FloatDefault>(xMin + 7.0), 0.0f, 8.0f)
+  };
+
+  auto cellIds = FindBoundsMapCellIds(boundsMap, points);
+  ValidateCellIds(cellIds[0], { 0 }, "Float64 bounds locator failed for first block");
+  ValidateCellIds(cellIds[1], { 1 }, "Float64 bounds locator failed for second block");
+}
+
+void TestBoundsMapLocatorFindsSharedBoundaryBlocks()
+{
+  const std::vector<viskores::Bounds> bounds = { viskores::Bounds(0, 4, 0, 4, 0, 4),
+                                                 viskores::Bounds(4, 8, 0, 4, 0, 4) };
+
+  viskores::filter::flow::internal::BoundsMap boundsMap(CreatePartitionedDataSet(bounds));
+  auto cellIds = FindBoundsMapCellIds(boundsMap, { viskores::Vec3f(4.0f, 2.0f, 2.0f) });
+
+  ValidateCellIds(cellIds[0], { 0, 1 }, "Shared boundary locator query failed");
+}
+
+void TestBoundsMapLocatorHandlesDegenerateBounds()
+{
+  const std::vector<viskores::Bounds> bounds = {
+    viskores::Bounds(0, 2, 0, 2, 0, 0),       // XY quad
+    viskores::Bounds(4, 6, 0, 0, 0, 2),       // XZ quad
+    viskores::Bounds(8, 8, 0, 2, 0, 2),       // YZ quad
+    viskores::Bounds(12, 14, 0, 0, 0, 0),     // X line
+    viskores::Bounds(16, 16, 0, 2, 0, 0),     // Y line
+    viskores::Bounds(20, 20, 0, 0, 0, 2),     // Z line
+    viskores::Bounds(24, 24, 0, 0, 0, 0)      // vertex
+  };
+
+  viskores::filter::flow::internal::BoundsMap boundsMap(CreatePartitionedDataSet(bounds));
+  // The vertex case is covered here by construction. Exact vertex lookup is not
+  // asserted because CellLocatorUniformBins currently does not report it.
+  VISKORES_TEST_ASSERT(boundsMap.GetLocator().GetCellSet().GetNumberOfCells() ==
+                         static_cast<viskores::Id>(bounds.size()),
+                       "Degenerate BoundsMap locator has the wrong number of cells.");
+
+  const std::vector<viskores::Vec3f> points = {
+    viskores::Vec3f(1.0f, 1.0f, 0.0f),
+    viskores::Vec3f(5.0f, 0.0f, 1.0f),
+    viskores::Vec3f(8.0f, 1.0f, 1.0f),
+    viskores::Vec3f(13.0f, 0.0f, 0.0f),
+    viskores::Vec3f(16.0f, 1.0f, 0.0f),
+    viskores::Vec3f(20.0f, 0.0f, 1.0f)
+  };
+
+  auto cellIds = FindBoundsMapCellIds(boundsMap, points);
+  ValidateCellIds(cellIds[0], { 0 }, "XY degenerate bounds locator query failed");
+  ValidateCellIds(cellIds[1], { 1 }, "XZ degenerate bounds locator query failed");
+  ValidateCellIds(cellIds[2], { 2 }, "YZ degenerate bounds locator query failed");
+  ValidateCellIds(cellIds[3], { 3 }, "X line bounds locator query failed");
+  ValidateCellIds(cellIds[4], { 4 }, "Y line bounds locator query failed");
+  ValidateCellIds(cellIds[5], { 5 }, "Z line bounds locator query failed");
 }
 
 void TestBlockIdValidation()
@@ -708,6 +831,9 @@ void TestStreamlineFilters()
 
   TestBlockIdValidation();
   TestBoundsMapLocatorPreservesFloat64Bounds();
+  TestBoundsMapLocatorFindsFloat64Blocks();
+  TestBoundsMapLocatorFindsSharedBoundaryBlocks();
+  TestBoundsMapLocatorHandlesDegenerateBounds();
 
   for (int n = 1; n < 3; n++)
   {
