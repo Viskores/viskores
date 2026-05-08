@@ -21,7 +21,6 @@
 
 #include <viskores/cont/viskores_cont_export.h>
 
-#include <viskores/Deprecated.h>
 #include <viskores/Types.h>
 #include <viskores/cont/ArrayHandle.h>
 #include <viskores/cont/ArrayHandleTransform.h>
@@ -36,6 +35,23 @@ namespace viskores
 namespace cont
 {
 
+namespace detail
+{
+
+VISKORES_DEPRECATED_SUPPRESS_BEGIN
+template <typename CellSetList>
+struct CellLocatorBoundingIntervalHierarchyExecList;
+
+template <typename... CellSetTypes>
+struct CellLocatorBoundingIntervalHierarchyExecList<viskores::List<CellSetTypes...>>
+{
+  using type =
+    viskores::List<viskores::exec::CellLocatorBoundingIntervalHierarchy<CellSetTypes>...>;
+};
+VISKORES_DEPRECATED_SUPPRESS_END
+
+} // namespace detail
+
 /// @brief A cell locator that performs a recursive division of space.
 ///
 /// `CellLocatorBoundingIntervalHierarchy` creates a search structure by recursively
@@ -47,17 +63,15 @@ namespace cont
 /// The algorithm then recurses into each region and repeats the process until the regions
 /// are divided to the point where the contain no more than a maximum number of cells
 /// (specified with `SetMaxLeafSize()`).
-class VISKORES_DEPRECATED(
-  1.2,
-  "CellLocatorBoundingIntervalHierarchy is deprecated. Use one of the other cell locator types.")
-  VISKORES_CONT_EXPORT CellLocatorBoundingIntervalHierarchy : public viskores::cont::CellLocatorBase
+class VISKORES_CONT_EXPORT CellLocatorBoundingIntervalHierarchy
+  : public viskores::cont::CellLocatorBase
 {
 public:
   using SupportedCellSets = VISKORES_DEFAULT_CELL_SET_LIST;
 
+
   using CellLocatorExecList =
-    viskores::ListTransform<SupportedCellSets,
-                            viskores::exec::CellLocatorBoundingIntervalHierarchy>;
+    typename detail::CellLocatorBoundingIntervalHierarchyExecList<SupportedCellSets>::type;
 
   using ExecObjType =
     viskores::ListApply<CellLocatorExecList, viskores::exec::CellLocatorMultiplexer>;

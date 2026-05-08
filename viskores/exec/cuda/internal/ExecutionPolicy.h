@@ -25,6 +25,7 @@
 #include <viskores/exec/cuda/internal/ThrustPatches.h>
 VISKORES_THIRDPARTY_PRE_INCLUDE
 #include <thrust/execution_policy.h>
+#include <thrust/pair.h>
 #include <thrust/sort.h>
 #include <thrust/system/cuda/execution_policy.h>
 #include <thrust/system/cuda/memory.h>

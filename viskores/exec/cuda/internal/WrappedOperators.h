@@ -218,7 +218,7 @@ struct is_commutative<viskores::exec::cuda::internal::WrappedBinaryOperator<T, F
 #else
 template <typename T, typename F>
 struct is_commutative<viskores::exec::cuda::internal::WrappedBinaryOperator<T, F>>
-  : public thrust::detail::is_arithmetic<T>
+  : public ::thrust::detail::is_arithmetic<T>
 {
 };
 #endif

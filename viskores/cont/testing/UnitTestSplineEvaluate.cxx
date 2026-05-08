@@ -44,9 +44,10 @@ VISKORES_EXEC
 viskores::FloatDefault EvaluateNormalizedGyroid(const viskores::Vec3f& point)
 {
   //f(x,y,z)=sin(2πx)cos(2πy)+sin(2πy)cos(2πz)+sin(2πz)cos(2πx)
-  return viskores::Sin(viskores::TwoPi() * point[0]) * viskores::Cos(viskores::TwoPi() * point[1]) +
-    viskores::Sin(viskores::TwoPi() * point[1]) * viskores::Cos(viskores::TwoPi() * point[2]) +
-    viskores::Sin(viskores::TwoPi() * point[2]) * viskores::Cos(viskores::TwoPi() * point[0]);
+  constexpr viskores::FloatDefault twoPi = viskores::TwoPi<viskores::FloatDefault>();
+  return (viskores::Sin(twoPi * point[0]) * viskores::Cos(twoPi * point[1])) +
+    (viskores::Sin(twoPi * point[1]) * viskores::Cos(twoPi * point[2])) +
+    (viskores::Sin(twoPi * point[2]) * viskores::Cos(twoPi * point[0]));
 }
 
 class EvalWorklet : public viskores::worklet::WorkletMapField
@@ -88,7 +89,7 @@ std::vector<viskores::cont::DataSet> MakeDataSet3D(const std::vector<viskores::I
   std::vector<viskores::cont::DataSet> dataSets;
   for (const auto& d : dims)
   {
-    viskores::Vec3f spacing(1.0 / (d[0] - 1), 1.0 / (d[1] - 1), 1.0 / (d[2] - 1));
+    viskores::Vec3f spacing = viskores::Vec3f(1) / (viskores::Vec3f(d) - viskores::Vec3f(1));
     auto ds = builder.Create(d, origin, spacing);
 
     viskores::cont::Invoker invoker;
@@ -236,7 +237,7 @@ template <typename SplineEvalType>
 void CompareResults(SplineEvalType& splineEval,
                     const viskores::cont::ArrayHandle<viskores::Vec3f>& points,
                     const viskores::cont::ArrayHandle<viskores::FloatDefault>& expectedValues,
-                    viskores::FloatDefault eps)
+                    viskores::Float64 eps)
 {
   viskores::cont::ArrayHandle<viskores::FloatDefault> results;
   viskores::cont::Invoker invoke;

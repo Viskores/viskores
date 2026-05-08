@@ -43,9 +43,10 @@ RUN mkdir /opt/cmake/ && \
     ln -s /opt/cmake/bin/ctest /opt/cmake/bin/ctest-latest
 
 ENV PATH "/opt/cmake/bin:${PATH}"
+ENV LD_LIBRARY_PATH "/opt/kokkos/lib:${LD_LIBRARY_PATH}"
 
 # Build and install Kokkos
-ARG KOKKOS_VERSION=4.1.00
+ARG KOKKOS_VERSION=4.4.01
 RUN mkdir -p /opt/kokkos/build && \
     cd /opt/kokkos/build && \
     curl -L https://github.com/kokkos/kokkos/archive/refs/tags/$KOKKOS_VERSION.tar.gz > kokkos-$KOKKOS_VERSION.tar.gz && \
@@ -54,6 +55,7 @@ RUN mkdir -p /opt/kokkos/build && \
     CXX=/opt/kokkos/build/kokkos-$KOKKOS_VERSION/bin/nvcc_wrapper \
     cmake -B . -S ../kokkos-$KOKKOS_VERSION \
           -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_SHARED_LIBS=ON \
           -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
           -DKokkos_ENABLE_CUDA=ON \
           -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \

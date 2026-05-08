@@ -57,7 +57,9 @@ VISKORES_THIRDPARTY_PRE_INCLUDE
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
+#include <thrust/distance.h>
 #include <thrust/iterator/counting_iterator.h>
+#include <thrust/pair.h>
 #include <thrust/scan.h>
 #include <thrust/sort.h>
 #include <thrust/system/cpp/memory.h>

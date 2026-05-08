@@ -43,7 +43,7 @@ struct World : public Object
     return instanceFromRay(ray)->group()->surfaces()[ray.geomID];
   }
 
-  const viskores::Bounds& bounds() const { return this->m_bounds; }
+  viskores::Bounds bounds() const;
 
 private:
   helium::ChangeObserverPtr<ObjectArray> m_zeroSurfaceData;
@@ -55,8 +55,6 @@ private:
   bool m_addZeroInstance{ false };
   helium::IntrusivePtr<Group> m_zeroGroup;
   helium::IntrusivePtr<Instance> m_zeroInstance;
-
-  viskores::Bounds m_bounds;
 };
 
 } // namespace viskores_device

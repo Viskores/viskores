@@ -40,8 +40,9 @@ bool World::getProperty(const std::string_view& name,
 {
   if (name == "bounds" && type == ANARI_FLOAT32_BOX3)
   {
-    viskores::Vec3f_32 anariBounds[] = { viskores::Vec3f_32(this->m_bounds.MinCorner()),
-                                         viskores::Vec3f_32(this->m_bounds.MaxCorner()) };
+    viskores::Bounds bounds = this->bounds();
+    viskores::Vec3f_32 anariBounds[] = { viskores::Vec3f_32(bounds.MinCorner()),
+                                         viskores::Vec3f_32(bounds.MaxCorner()) };
     std::memcpy(ptr, &anariBounds, sizeof(anariBounds));
     return true;
   }
@@ -115,8 +116,15 @@ void World::finalize()
     m_instanceData->addChangeObserver(this);
   if (m_zeroSurfaceData)
     m_zeroSurfaceData->addChangeObserver(this);
+}
 
-  this->m_bounds = viskores::Bounds{};
+viskores::Bounds World::bounds() const
+{
+  // It would be better to compute the bounds in `finalize` once so that it can
+  // be reused. However, `finalize` is not refreshed if groups in the instance
+  // are updated (thus potentially changing the bounds) because the world object
+  // is not modified directly.
+  viskores::Bounds bounds;
   for (auto&& instance : this->instances())
   {
     if (!instance->isValid())
@@ -131,7 +139,7 @@ void World::finalize()
         reportMessage(ANARI_SEVERITY_DEBUG, "skip bounds check on invalid surface");
         continue;
       }
-      this->m_bounds.Include(surface->bounds());
+      bounds.Include(surface->bounds());
     }
     for (auto&& volume : instance->group()->volumes())
     {
@@ -140,9 +148,11 @@ void World::finalize()
         reportMessage(ANARI_SEVERITY_DEBUG, "skip bounds check on invalid volume");
         continue;
       }
-      this->m_bounds.Include(volume->bounds());
+      bounds.Include(volume->bounds());
     }
   }
+
+  return bounds;
 }
 
 const std::vector<Instance*>& World::instances() const

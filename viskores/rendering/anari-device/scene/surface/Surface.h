@@ -14,6 +14,8 @@
 #include "material/Material.h"
 // Viskores
 #include <viskores/Bounds.h>
+#include <viskores/cont/ColorTable.h>
+#include <viskores/cont/Field.h>
 
 namespace viskores_device
 {
@@ -30,7 +32,7 @@ struct Surface : public Object
   const Geometry* geometry() const;
   const Material* material() const;
 
-  virtual viskores::rendering::Actor* actor() const { return this->m_actor.get(); }
+  void render(viskores::rendering::Canvas& canvas, const viskores::rendering::Camera& camera) const;
 
   viskores::Bounds bounds() const;
 
@@ -41,7 +43,9 @@ private:
   helium::ChangeObserverPtr<Geometry> m_geometry;
   helium::ChangeObserverPtr<Material> m_material;
 
-  std::shared_ptr<viskores::rendering::Actor> m_actor;
+  viskores::cont::DataSet m_dataSet;
+  viskores::cont::Field m_field;
+  viskores::cont::ArrayHandle<viskores::Vec4f_32> m_colorMap;
 };
 
 } // namespace viskores_device

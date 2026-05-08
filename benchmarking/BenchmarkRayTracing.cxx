@@ -66,9 +66,8 @@ void BenchRayTracing(::benchmark::State& state)
   tracer.AddShapeIntersector(triIntersector);
 
   viskores::rendering::CanvasRayTracer canvas(1920, 1080);
-  viskores::rendering::raytracing::Camera rayCamera;
-  rayCamera.SetParameters(
-    camera, viskores::Int32(canvas.GetWidth()), viskores::Int32(canvas.GetHeight()));
+  viskores::rendering::raytracing::Camera rayCamera = camera.CreateRaytracingCamera(
+    viskores::Int32(canvas.GetWidth()), viskores::Int32(canvas.GetHeight()));
   viskores::rendering::raytracing::Ray<viskores::Float32> rays;
   rayCamera.CreateRays(rays, coords.GetBounds());
 

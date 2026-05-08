@@ -21,6 +21,22 @@ namespace
 {
 
 template <typename T>
+constexpr T opaqueValue(viskores::TypeTraitsRealTag)
+{
+  return T(1);
+}
+template <typename T>
+constexpr T opaqueValue(viskores::TypeTraitsIntegerTag)
+{
+  return std::numeric_limits<T>::max();
+}
+template <typename T>
+constexpr T opaqueValue()
+{
+  return opaqueValue<T>(typename viskores::TypeTraits<T>::NumericTag{});
+}
+
+template <typename T>
 constexpr viskores::Float32 floatConvert(T anariValue, viskores::TypeTraitsRealTag)
 {
   return static_cast<viskores::Float32>(anariValue);
@@ -38,63 +54,81 @@ constexpr viskores::Float32 floatConvert(T anariValue)
 }
 
 template <typename ComponentType>
-void captureColorTableType(const viskores::cont::UnknownArrayHandle& colorArray,
-                           viskores::cont::ColorTable& colorTable)
+bool captureColorTableType(const viskores::cont::UnknownArrayHandle& colorArray,
+                           viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap)
 {
   const viskores::Id numValues = colorArray.GetNumberOfValues();
   std::array<viskores::cont::ArrayHandleStride<ComponentType>, 4> colorChannelArrays;
+  viskores::cont::ArrayHandleConstant<ComponentType> ones(opaqueValue<ComponentType>(), numValues);
+  switch (colorArray.GetNumberOfComponentsFlat())
+  {
+    case 1:
+      // Grayscale color
+      colorChannelArrays[0] = colorChannelArrays[1] = colorChannelArrays[2] =
+        colorArray.ExtractComponent<ComponentType>(0);
+      colorChannelArrays[3] = viskores::cont::ArrayExtractComponent(ones, 0);
+      break;
+    case 2:
+      // Grayscale + alpha
+      colorChannelArrays[0] = colorChannelArrays[1] = colorChannelArrays[2] =
+        colorArray.ExtractComponent<ComponentType>(0);
+      colorChannelArrays[3] = colorArray.ExtractComponent<ComponentType>(1);
+      break;
+    case 3:
+      // RGB
+      colorChannelArrays[0] = colorArray.ExtractComponent<ComponentType>(0);
+      colorChannelArrays[1] = colorArray.ExtractComponent<ComponentType>(1);
+      colorChannelArrays[2] = colorArray.ExtractComponent<ComponentType>(2);
+      colorChannelArrays[3] = viskores::cont::ArrayExtractComponent(ones, 0);
+      break;
+    case 4:
+      // RGBA
+      colorChannelArrays[0] = colorArray.ExtractComponent<ComponentType>(0);
+      colorChannelArrays[1] = colorArray.ExtractComponent<ComponentType>(1);
+      colorChannelArrays[2] = colorArray.ExtractComponent<ComponentType>(2);
+      colorChannelArrays[3] = colorArray.ExtractComponent<ComponentType>(3);
+      break;
+    default:
+      return false;
+  }
   std::array<typename viskores::cont::ArrayHandleStride<ComponentType>::ReadPortalType, 4>
     colorChannelPortals;
   for (viskores::IdComponent channel = 0; channel < 4; ++channel)
   {
-    if (channel < colorArray.GetNumberOfComponentsFlat())
-    {
-      colorChannelArrays[channel] = colorArray.ExtractComponent<ComponentType>(channel);
-    }
-    else
-    {
-      colorChannelArrays[channel] = viskores::cont::ArrayExtractComponent(
-        viskores::cont::ArrayHandleConstant<ComponentType>(0, numValues), channel);
-    }
     colorChannelPortals[channel] = colorChannelArrays[channel].ReadPortal();
   }
-  viskores::Float32 sampleDelta = 1.0f / viskores::Float32(numValues - 1);
+  colorMap.Allocate(numValues);
+  viskores::cont::ArrayHandle<viskores::Vec4f_32>::WritePortalType colorMapPortal =
+    colorMap.WritePortal();
   for (viskores::Id sample = 0; sample < numValues; ++sample)
   {
-    viskores::Vec3f_32 color{ floatConvert(colorChannelPortals[0].Get(sample)),
-                              floatConvert(colorChannelPortals[1].Get(sample)),
-                              floatConvert(colorChannelPortals[2].Get(sample)) };
-    colorTable.AddPoint(sample * sampleDelta, color);
-    if (colorArray.GetNumberOfComponentsFlat() > 3)
-    {
-      viskores::Float32 alpha = floatConvert(colorChannelPortals[3].Get(sample));
-      colorTable.AddPointAlpha(sample * sampleDelta, alpha);
-    }
+    colorMapPortal.Set(sample,
+                       { floatConvert(colorChannelPortals[0].Get(sample)),
+                         floatConvert(colorChannelPortals[1].Get(sample)),
+                         floatConvert(colorChannelPortals[2].Get(sample)),
+                         floatConvert(colorChannelPortals[3].Get(sample)) });
   }
+  return true;
 }
 
 bool captureColorTable(const viskores::cont::UnknownArrayHandle& colorArray,
-                       viskores::cont::ColorTable& colorTable)
+                       viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap)
 {
   if (colorArray.IsBaseComponentType<viskores::UInt8>())
   {
-    captureColorTableType<viskores::UInt8>(colorArray, colorTable);
-    return true;
+    return captureColorTableType<viskores::UInt8>(colorArray, colorMap);
   }
   else if (colorArray.IsBaseComponentType<viskores::UInt16>())
   {
-    captureColorTableType<viskores::UInt16>(colorArray, colorTable);
-    return true;
+    return captureColorTableType<viskores::UInt16>(colorArray, colorMap);
   }
   else if (colorArray.IsBaseComponentType<viskores::UInt32>())
   {
-    captureColorTableType<viskores::UInt32>(colorArray, colorTable);
-    return true;
+    return captureColorTableType<viskores::UInt32>(colorArray, colorMap);
   }
   else if (colorArray.IsBaseComponentType<viskores::Float32>())
   {
-    captureColorTableType<viskores::Float32>(colorArray, colorTable);
-    return true;
+    return captureColorTableType<viskores::Float32>(colorArray, colorMap);
   }
   else
   {
@@ -136,39 +170,36 @@ void Image1DSampler::finalize()
 {
   this->Sampler::finalize();
 
-  // TODO: Viskores' ColorTable is not the best place to put a texture
-  // because it just gets resampled. We will have to crack open the
-  // rendering components to implement something like that.
-  this->m_colorTable = viskores::cont::ColorTable{ viskores::ColorSpace::RGB };
-  bool colorTableFilled = false;
+  bool colorMapFilled = false;
   if (this->m_colorArray)
   {
-    // TODO: This method does not properly handle vec2 nor SRGB.
-    colorTableFilled =
-      captureColorTable(this->m_colorArray->dataAsViskoresArray(), this->m_colorTable);
-    if (!colorTableFilled)
+    // TODO: This method does not properly handle SRGB.
+    colorMapFilled = captureColorTable(this->m_colorArray->dataAsViskoresArray(), this->m_colorMap);
+    if (!colorMapFilled)
     {
       this->reportMessage(ANARI_SEVERITY_WARNING,
                           "color array provided for image1D sampling has unrecognized type");
     }
   }
 
-  if (!colorTableFilled)
+  if (!colorMapFilled)
   {
     this->reportMessage(ANARI_SEVERITY_WARNING,
                         "image1D sampling requested, but no color array given");
-    this->m_colorTable.AddPoint(0, { 1, 1, 1 });
+    this->m_colorMap.Allocate(1);
+    this->m_colorMap.WritePortal().Set(0, { 1, 1, 1, 1 });
   }
 }
 
-std::shared_ptr<viskores::rendering::Actor> Image1DSampler::createActor(
-  const viskores::cont::DataSet& data)
+bool Image1DSampler::getColors(const viskores::cont::DataSet& data,
+                               viskores::cont::Field& field,
+                               viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const
 {
   if (!data.HasField(this->inAttribute()))
   {
     this->reportMessage(
       ANARI_SEVERITY_WARNING, "sampler attribute %s not found", this->inAttribute().c_str());
-    return nullptr;
+    return false;
   }
 
   viskores::cont::Field attribField = data.GetField(this->inAttribute());
@@ -179,7 +210,7 @@ std::shared_ptr<viskores::rendering::Actor> Image1DSampler::createActor(
     {
       this->reportMessage(ANARI_SEVERITY_WARNING,
                           "attribute array type not currently supported for image1D sampler.");
-      return nullptr;
+      return false;
     }
     this->reportMessage(ANARI_SEVERITY_PERFORMANCE_WARNING,
                         "todo: handle vector attributes more efficiently");
@@ -188,13 +219,9 @@ std::shared_ptr<viskores::rendering::Actor> Image1DSampler::createActor(
     attribArray = newArray;
   }
 
-  auto actor = std::make_shared<viskores::rendering::Actor>(
-    data.GetCellSet(),
-    data.GetCoordinateSystem(),
-    viskores::cont::Field{ attribField.GetName(), attribField.GetAssociation(), attribArray },
-    this->colorTable());
-  actor->SetScalarRange({ 0, 1 });
-  return actor;
+  field = viskores::cont::Field{ attribField.GetName(), attribField.GetAssociation(), attribArray };
+  colorMap = this->m_colorMap;
+  return true;
 }
 
 } // namespace viskores_device

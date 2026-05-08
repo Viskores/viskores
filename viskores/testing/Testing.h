@@ -104,6 +104,14 @@
 #define VISKORES_TEST_FAIL(...) \
   ::viskores::testing::Testing::TestFail(__FILE__, __LINE__, __func__, __VA_ARGS__)
 
+/// \def VISKORES_TEST_SKIP(messages...)
+///
+/// Causes the test to quit with a code that is reported as skipped. Can be used when
+/// at runtime it is determined that the functionality is not supported.
+
+#define VISKORES_TEST_SKIP(...) \
+  ::viskores::testing::Testing::TestSkip(__FILE__, __LINE__, __func__, __VA_ARGS__)
+
 // We could, conceivably, use CUDA or Kokkos specific print statements here.
 // But we cannot use std::stringstream on device, so for now, we'll just accept
 // that on CUDA and Kokkos we print less actionable information.
@@ -407,14 +415,14 @@ struct InternalTryCellShape<viskores::NUMBER_OF_CELL_SHAPES>
 struct VISKORES_CONT_TESTING_EXPORT Testing
 {
 public:
-  class TestFailure
+  class TestException
   {
   public:
     template <typename... Ts>
-    VISKORES_CONT TestFailure(const std::string& file,
-                              viskores::Id line,
-                              const char* func,
-                              Ts&&... messages)
+    VISKORES_CONT TestException(const std::string& file,
+                                viskores::Id line,
+                                const char* func,
+                                Ts&&... messages)
       : File(file)
       , Line(line)
       , Func(func)
@@ -472,6 +480,32 @@ public:
     std::string Message;
   };
 
+  class TestFailure : public TestException
+  {
+  public:
+    template <typename... Ts>
+    VISKORES_CONT TestFailure(const std::string& file,
+                              viskores::Id line,
+                              const char* func,
+                              Ts&&... messages)
+      : TestException(file, line, func, messages...)
+    {
+    }
+  };
+
+  class TestSkipping : public TestException
+  {
+  public:
+    template <typename... Ts>
+    VISKORES_CONT TestSkipping(const std::string& file,
+                               viskores::Id line,
+                               const char* func,
+                               Ts&&... messages)
+      : TestException(file, line, func, messages...)
+    {
+    }
+  };
+
   template <typename... Ts>
   static VISKORES_CONT void Assert(const std::string& conditionString,
                                    const std::string& file,
@@ -518,6 +552,15 @@ public:
     throw TestFailure(file, line, func, std::forward<Ts>(messages)...);
   }
 
+  template <typename... Ts>
+  static VISKORES_CONT void TestSkip(const std::string& file,
+                                     viskores::Id line,
+                                     const char* func,
+                                     Ts&&... messages)
+  {
+    throw TestSkipping(file, line, func, std::forward<Ts>(messages)...);
+  }
+
   static VISKORES_CONT std::string GetTestDataBasePath();
 
   static VISKORES_CONT std::string DataPath(const std::string& filename);
@@ -542,6 +585,12 @@ public:
       std::cerr << "Error at " << error.GetFile() << ":" << error.GetLine() << ":"
                 << error.GetFunction() << "\n\t" << error.GetMessage() << "\n";
       return 1;
+    }
+    catch (viskores::testing::Testing::TestSkipping const& error)
+    {
+      std::cerr << "Skipping test at " << error.GetFile() << ":" << error.GetLine() << ":"
+                << error.GetFunction() << "\n\t" << error.GetMessage() << "\n";
+      return 255;
     }
     catch (viskores::cont::Error const& error)
     {

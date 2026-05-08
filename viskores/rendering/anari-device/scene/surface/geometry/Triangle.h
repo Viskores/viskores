@@ -11,8 +11,6 @@
 #pragma once
 
 #include "Geometry.h"
-// viskores
-#include <viskores/rendering/Actor.h>
 
 namespace viskores_device
 {
@@ -24,16 +22,18 @@ struct Triangle : Geometry
   void commitParameters() override;
   void finalize() override;
 
-  virtual viskores::rendering::Mapper* mapper() const override { return this->m_mapper.get(); }
-
   bool isValid() const override;
+
+  virtual void render(
+    viskores::rendering::Canvas& canvas,
+    const viskores::rendering::Camera& camera,
+    const viskores::cont::Field& field,
+    const viskores::cont::ArrayHandle<viskores::Vec4f_32>& colorMap) const override;
 
 private:
   helium::ChangeObserverPtr<Array1D> m_index;
   FieldArrayParameters m_vertexAttributes;
   FieldArrayParameters m_faceVaryingAttributes;
-
-  std::shared_ptr<viskores::rendering::MapperRayTracer> m_mapper;
 
   viskores::cont::ColorTable m_colorTable;
   helium::ChangeObserverPtr<Array1D> m_vertexColor;

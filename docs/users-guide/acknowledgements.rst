@@ -6,8 +6,6 @@ Acknowledgements
 Contributors
 ------------------------------
 
-.. todo:: Make sure contribution section cross references are correct.
-
 This book includes contributions from the Viskores community including the
 Viskores development team and the user community.
 We would like to thank the following people for their significant
@@ -26,15 +24,11 @@ contributions to this text:
 .. Mark Kim: ZFP compression
 .. Hank Childs: Mesh Quality Metrics
 
-**Allison Vacanti** for her documentation of..
-
-.. several |Viskores| features in the `Extract Component Arrays`_ and `SwizzleArrays`_ sections as well as select filters.
+**Allison Vacanti** for her documentation of several |Viskores| features in :secref:`fancy-array-handles:Extract Component Arrays` and :secref:`fancy-array-handles:Swizzle Arrays` sections as well as select filters.
 
 .. Allie Vacanti filters: Surface normals.
 
-**David Pugmire** for his documentation of..
-
-.. partitioned data sets (Section \ref{sec:DataSets:PartitionedDataSet}) and select filters.
+**David Pugmire** for his documentation of partitioned data sets in :secref:`dataset:Partitioned Data Sets` and select filters.
 
 .. Dave Pugmire filters: Streamlines, point transform, coordinate system transforms, add ghost cells, remove ghost cells.
 
@@ -43,28 +37,30 @@ contributions to this text:
 .. Abhishek Yenpure: General cell locators and BoundingIntervalHierarchy
 .. Li-Ta Lo: General point locators and uniform grid point locator, particle density
 
-**Li-Ta Lo** for his documentation of random array handles and particle
-density filters.
+**Li-Ta Lo** for his documentation of random array handles in :secref:`fancy-array-handles:Random Arrays` and particle
+density filters in :secref:`provided-filters:Particle Density`.
 
 .. ArrayHandleRandomUniformBits.
 
 **James Kress** for his documentation on |Viskores|'s testing classes.
 
-**Manish Mathai** for his documentation of rendering features..
+.. todo:: Add reference to testing classes when available.
 
-.. (Chapter~\ref{chap:Rendering}).
+**Manish Mathai** for his documentation of rendering features in :chapref:`rendering:Rendering`.
+
+AI was used to assist the writing of some parts of this documentation.
 
 
 ------------------------------
 Funding
 ------------------------------
 
-.. |LogoSpacing| image:: images/LogoSpacing.png
-.. |DOELogo| image:: images/DOELogo.png
-.. |ORNLLogo| image:: images/ORNLLogo.png
-.. |LANLLogo| image:: images/LANLLogo.png
-.. |SandiaLogo| image:: images/SandiaLogo.png
-.. |KitwareLogo| image:: images/KitwareLogo.png
+.. |LogoSpacing| image:: ../../data/users-guide/images/LogoSpacing.png
+.. |DOELogo| image:: ../../data/users-guide/images/DOELogo.png
+.. |ORNLLogo| image:: ../../data/users-guide/images/ORNLLogo.png
+.. |LANLLogo| image:: ../../data/users-guide/images/LANLLogo.png
+.. |SandiaLogo| image:: ../../data/users-guide/images/SandiaLogo.png
+.. |KitwareLogo| image:: ../../data/users-guide/images/KitwareLogo.png
 
 .. centered:: |DOELogo|
               |LogoSpacing|

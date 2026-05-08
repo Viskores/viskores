@@ -89,11 +89,11 @@ public:
       if ((min1_intersection < max1_intersection) && (ensembleMin2 >= min2_user) &&
           (ensembleMin2 <= max2_user))
       {
-        viskores::FloatDefault rangeX = ensembleMax1 - ensembleMin1;
+        viskores::Float64 rangeX = ensembleMax1 - ensembleMin1;
         for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
         {
-          viskores::FloatDefault r1 = randomPortal.Get(i);
-          viskores::FloatDefault n1 = ensembleMin1 + r1 * rangeX;
+          viskores::Float64 r1 = randomPortal.Get(i);
+          viskores::Float64 n1 = ensembleMin1 + r1 * rangeX;
 
           if ((n1 > min1_user) && (n1 < max1_user))
           {
@@ -107,11 +107,11 @@ public:
       if ((min2_intersection < max2_intersection) && (ensembleMin1 >= min1_user) &&
           (ensembleMin1 <= max1_user))
       {
-        viskores::FloatDefault rangeY = ensembleMax2 - ensembleMin2;
+        viskores::Float64 rangeY = ensembleMax2 - ensembleMin2;
         for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
         {
-          viskores::FloatDefault r2 = randomPortal.Get(i + this->NumSamples);
-          viskores::FloatDefault n2 = ensembleMin2 + r2 * rangeY;
+          viskores::Float64 r2 = randomPortal.Get(i + this->NumSamples);
+          viskores::Float64 n2 = ensembleMin2 + r2 * rangeY;
 
           if ((n2 > min2_user) && (n2 < max2_user))
           {
@@ -122,14 +122,14 @@ public:
     }
     else
     {
-      viskores::FloatDefault rangeX = ensembleMax1 - ensembleMin1;
-      viskores::FloatDefault rangeY = ensembleMax2 - ensembleMin2;
+      viskores::Float64 rangeX = ensembleMax1 - ensembleMin1;
+      viskores::Float64 rangeY = ensembleMax2 - ensembleMin2;
       for (viskores::IdComponent i = 0; i < this->NumSamples; i++)
       {
-        viskores::FloatDefault r1 = randomPortal.Get(i);
-        viskores::FloatDefault r2 = randomPortal.Get(i + this->NumSamples);
-        viskores::FloatDefault n1 = ensembleMin1 + r1 * rangeX;
-        viskores::FloatDefault n2 = ensembleMin2 + r2 * rangeY;
+        viskores::Float64 r1 = randomPortal.Get(i);
+        viskores::Float64 r2 = randomPortal.Get(i + this->NumSamples);
+        viskores::Float64 n1 = ensembleMin1 + r1 * rangeX;
+        viskores::Float64 n2 = ensembleMin2 + r2 * rangeY;
 
         if ((n1 > min1_user) && (n1 < max1_user) && (n2 > min2_user) && (n2 < max2_user))
         {
@@ -178,10 +178,10 @@ public:
     Max1 max1_user = static_cast<Max1>(this->RangeAxis1.Max);
     Max2 max2_user = static_cast<Max2>(this->RangeAxis2.Max);
 
-    viskores::FloatDefault intersectionArea = 0.0;
-    viskores::FloatDefault intersectionProbability = 0.0;
-    viskores::FloatDefault intersectionHeight = 0.0;
-    viskores::FloatDefault intersectionWidth = 0.0;
+    viskores::Float64 intersectionArea = 0.0;
+    viskores::Float64 intersectionProbability = 0.0;
+    viskores::Float64 intersectionHeight = 0.0;
+    viskores::Float64 intersectionWidth = 0.0;
 
     Min1 min1_intersection = viskores::Max(min1_user, ensembleMin1);
     Min2 min2_intersection = viskores::Max(min2_user, ensembleMin2);
@@ -241,7 +241,7 @@ public:
         intersectionProbability = intersectionArea / DataArea;
       }
     }
-    probability = intersectionProbability;
+    probability = static_cast<OutCellFieldType>(intersectionProbability);
     return;
   }
 
