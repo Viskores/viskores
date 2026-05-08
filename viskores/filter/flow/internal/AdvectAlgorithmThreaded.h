@@ -24,8 +24,13 @@
 #include <viskores/filter/flow/internal/BoundsMap.h>
 #include <viskores/filter/flow/internal/DataSetIntegrator.h>
 
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
 #include <thread>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace viskores
 {

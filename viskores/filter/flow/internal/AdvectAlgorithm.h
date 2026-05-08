@@ -29,7 +29,10 @@
 #include <viskores/filter/flow/internal/DataSetIntegrator.h>
 #include <viskores/worklet/WorkletMapField.h>
 
+#include <cstdlib>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 #ifdef VISKORES_ENABLE_MPI
 #include <viskores/filter/flow/internal/AdvectAlgorithmTerminator.h>
 #include <viskores/filter/flow/internal/ParticleExchanger.h>

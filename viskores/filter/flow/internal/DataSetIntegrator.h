@@ -42,7 +42,9 @@
 #include <viskores/thirdparty/diy/diy.h>
 #include <viskores/worklet/WorkletMapField.h>
 
+#include <algorithm>
 #include <utility>
+#include <vector>
 
 namespace viskores
 {

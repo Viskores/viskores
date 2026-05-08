@@ -19,6 +19,22 @@
 #ifndef viskores_filter_flow_internal_ParticleExchanger_h
 #define viskores_filter_flow_internal_ParticleExchanger_h
 
+#include <viskores/Assert.h>
+#include <viskores/Types.h>
+#include <viskores/cont/ErrorFilterExecution.h>
+#include <viskores/cont/Logging.h>
+#include <viskores/thirdparty/diy/diy.h>
+
+#include <cstddef>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#ifdef VISKORES_ENABLE_MPI
+#include <mpi.h>
+#include <viskores/thirdparty/diy/mpi-cast.h>
+#endif
+
 namespace viskores
 {
 namespace filter
