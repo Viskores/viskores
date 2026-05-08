@@ -168,21 +168,22 @@ template <typename ParticleType>
 class FindCandidateBlocks : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature =
-    void(FieldIn particle, FieldIn terminated, ExecObject locator, FieldOut cellIds, FieldOut pCoords);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5);
+  using ControlSignature = void(FieldIn particle,
+                                FieldIn terminated,
+                                ExecObject locator,
+                                FieldOut cellIds);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
-  template <typename LocatorType, typename CellIdsVecType, typename PCoordsVecType>
+  template <typename LocatorType, typename CellIdsVecType>
   VISKORES_EXEC void operator()(const ParticleType& particle,
                                 const viskores::UInt8& terminated,
                                 const LocatorType& locator,
-                                CellIdsVecType& cellIds,
-                                PCoordsVecType& pCoords) const
+                                CellIdsVecType& cellIds) const
   {
     if (terminated != 0)
       return;
-    locator.FindAllCells(particle.GetPosition(), cellIds, pCoords);
+    locator.FindAllCellIds(particle.GetPosition(), cellIds);
   }
 };
 
@@ -378,20 +379,15 @@ VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyPart
   auto candidateOffsetsAH = viskores::cont::ConvertNumComponentsToOffsets(candidateCountsAH);
 
   viskores::cont::ArrayHandle<viskores::Id> allCandidateCellIDsAH;
-  viskores::cont::ArrayHandle<viskores::Vec3f> allCandidatePCoordsAH;
   allCandidateCellIDsAH.AllocateAndFill(totalCandidates, viskores::Id(-1));
-  allCandidatePCoordsAH.Allocate(totalCandidates);
 
   auto candidateCellIDsVec =
     viskores::cont::make_ArrayHandleGroupVecVariable(allCandidateCellIDsAH, candidateOffsetsAH);
-  auto candidatePCoordsVec =
-    viskores::cont::make_ArrayHandleGroupVecVariable(allCandidatePCoordsAH, candidateOffsetsAH);
   invoke(detail::FindCandidateBlocks<ParticleType>{},
          particles,
          termInitial,
          boundsMap.GetLocator(),
-         candidateCellIDsVec,
-         candidatePCoordsVec);
+         candidateCellIDsVec);
 
   viskores::cont::ArrayHandle<viskores::Id> nextBlockIDsAH;
   invoke(detail::SelectNextBlock{ this->Id },

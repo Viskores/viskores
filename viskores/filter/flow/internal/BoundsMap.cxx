@@ -216,12 +216,9 @@ viskores::Id3 BoundsMap::GetLocatorDims() const
   if (this->TotalNumBlocks <= 0)
     return viskores::Id3{ 1, 1, 1 };
 
-  const viskores::Float64 dx = this->GlobalBounds.X.Max - this->GlobalBounds.X.Min;
-  const viskores::Float64 dy = this->GlobalBounds.Y.Max - this->GlobalBounds.Y.Min;
-  const viskores::Float64 dz = this->GlobalBounds.Z.Max - this->GlobalBounds.Z.Min;
-  const viskores::Float64 ex = std::max<viskores::Float64>(dx, 0.f);
-  const viskores::Float64 ey = std::max<viskores::Float64>(dy, 0.f);
-  const viskores::Float64 ez = std::max<viskores::Float64>(dz, 0.f);
+  const viskores::Float64 ex = this->GlobalBounds.X.Length();
+  const viskores::Float64 ey = this->GlobalBounds.Y.Length();
+  const viskores::Float64 ez = this->GlobalBounds.Z.Length();
 
   // Keep the number of bins close to the number of block cells while respecting box aspect ratio.
   const viskores::Float64 volume = ex * ey * ez;

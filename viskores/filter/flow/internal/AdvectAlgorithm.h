@@ -70,17 +70,16 @@ template <typename ParticleType>
 class FindSeedBlocks : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn particle, ExecObject locator, FieldOut cellIds, FieldOut pCoords);
-  using ExecutionSignature = void(_1, _2, _3, _4);
+  using ControlSignature = void(FieldIn particle, ExecObject locator, FieldOut cellIds);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
-  template <typename LocatorType, typename CellIdsVecType, typename PCoordsVecType>
+  template <typename LocatorType, typename CellIdsVecType>
   VISKORES_EXEC void operator()(const ParticleType& particle,
                                 const LocatorType& locator,
-                                CellIdsVecType& cellIds,
-                                PCoordsVecType& pCoords) const
+                                CellIdsVecType& cellIds) const
   {
-    locator.FindAllCells(particle.GetPosition(), cellIds, pCoords);
+    locator.FindAllCellIds(particle.GetPosition(), cellIds);
   }
 };
 
@@ -212,17 +211,13 @@ public:
     auto hitOffsetsAH = viskores::cont::ConvertNumComponentsToOffsets(hitCountsAH);
 
     viskores::cont::ArrayHandle<viskores::Id> allHitCellIdsAH;
-    viskores::cont::ArrayHandle<viskores::Vec3f> allHitPCoordsAH;
     allHitCellIdsAH.AllocateAndFill(totalHits, viskores::Id(-1));
-    allHitPCoordsAH.Allocate(totalHits);
 
     auto hitCellIdsVec = viskores::cont::make_ArrayHandleGroupVecVariable(allHitCellIdsAH, hitOffsetsAH);
-    auto hitPCoordsVec = viskores::cont::make_ArrayHandleGroupVecVariable(allHitPCoordsAH, hitOffsetsAH);
     invoke(detail::FindSeedBlocks<ParticleType>{},
            seeds,
            this->BoundsMap.GetLocator(),
-           hitCellIdsVec,
-           hitPCoordsVec);
+           hitCellIdsVec);
 
     viskores::cont::ArrayHandle<viskores::Id> seedBlockIDsAH;
     invoke(detail::SelectFirstSeedBlock{}, hitCellIdsVec, seedBlockIDsAH);
