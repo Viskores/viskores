@@ -55,21 +55,29 @@ namespace flow
 namespace internal
 {
 
+using BlockIdArrayHandle = viskores::cont::ArrayHandle<viskores::Id>;
+using CandidateBlockIdArrayHandle =
+  viskores::cont::ArrayHandleGroupVecVariable<BlockIdArrayHandle, BlockIdArrayHandle>;
+
 template <typename ParticleType>
 class DSIHelperInfo
 {
 public:
   DSIHelperInfo(const viskores::cont::ArrayHandle<ParticleType>& particles,
+                const CandidateBlockIdArrayHandle& candidateBlockIds,
                 const viskores::filter::flow::internal::BoundsMap& boundsMap)
     : BoundsMapPtr(&boundsMap)
     , Particles(particles)
+    , CandidateBlockIDs(candidateBlockIds)
   {
   }
 
   DSIHelperInfo(viskores::cont::ArrayHandle<ParticleType>&& particles,
+                CandidateBlockIdArrayHandle&& candidateBlockIds,
                 const viskores::filter::flow::internal::BoundsMap& boundsMap)
     : BoundsMapPtr(&boundsMap)
     , Particles(std::move(particles))
+    , CandidateBlockIDs(std::move(candidateBlockIds))
   {
   }
 
@@ -83,6 +91,7 @@ public:
   {
     this->OutParticles = {};
     this->OutNextBlockIDs = {};
+    this->OutCandidateBlockIDs = {};
     this->TermIdx = {};
   }
 
@@ -93,7 +102,10 @@ public:
 
     //Make sure we didn't miss anything. Every particle goes into a single bucket.
     if ((num != (outCount + termCount)) ||
-        (this->OutParticles.GetNumberOfValues() != this->OutNextBlockIDs.GetNumberOfValues()))
+        (this->Particles.GetNumberOfValues() != this->CandidateBlockIDs.GetNumberOfValues()) ||
+        (this->OutParticles.GetNumberOfValues() != this->OutNextBlockIDs.GetNumberOfValues()) ||
+        (this->OutParticles.GetNumberOfValues() !=
+         this->OutCandidateBlockIDs.GetNumberOfValues()))
     {
       throw viskores::cont::ErrorFilterExecution("Particle count mismatch after classification");
     }
@@ -102,8 +114,13 @@ public:
   const viskores::filter::flow::internal::BoundsMap* BoundsMapPtr = nullptr;
 
   viskores::cont::ArrayHandle<ParticleType> Particles;
+  // Mirrors Particles. Each entry is the remaining coarse block candidates for
+  // that particle, including the current block while it is being advected.
+  CandidateBlockIdArrayHandle CandidateBlockIDs;
   viskores::cont::ArrayHandle<ParticleType> OutParticles;
   viskores::cont::ArrayHandle<viskores::Id> OutNextBlockIDs;
+  // Mirrors OutParticles and preserves retry state across the scheduler or MPI.
+  CandidateBlockIdArrayHandle OutCandidateBlockIDs;
   viskores::cont::ArrayHandle<viskores::Id> TermIdx;
 };
 
@@ -123,39 +140,126 @@ template <typename ParticleType>
 class ResetParticleStatus : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldInOut particle, FieldOut terminated);
-  using ExecutionSignature = void(_1, _2);
+  using ControlSignature = void(FieldInOut particle, FieldOut terminated, FieldOut retryCandidates);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
-  VISKORES_EXEC void operator()(ParticleType& particle, viskores::UInt8& terminated) const
+  VISKORES_EXEC void operator()(ParticleType& particle,
+                                viskores::UInt8& terminated,
+                                viskores::UInt8& retryCandidates) const
   {
     auto status = particle.GetStatus();
     if (status.CheckTerminate())
     {
       terminated = 1;
+      retryCandidates = 0;
     }
     else
     {
       terminated = 0;
+      // A particle that failed spatial evaluation before taking any steps
+      // should try the next existing candidate block rather than recomputing
+      // from the same position and returning to a block that already failed.
+      retryCandidates = static_cast<viskores::UInt8>(status.CheckSpatialBounds() &&
+                                                     !status.CheckTookAnySteps());
       particle.SetStatus(viskores::ParticleStatus{});
     }
   }
 };
 
+class CountCandidateComponents : public viskores::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn candidateBlockIds, FieldOut count);
+  using ExecutionSignature = void(_1, _2);
+  using InputDomain = _1;
+
+  template <typename CandidateBlockIdsType>
+  VISKORES_EXEC void operator()(const CandidateBlockIdsType& candidateBlockIds,
+                                viskores::Id& count) const
+  {
+    count = candidateBlockIds.GetNumberOfComponents();
+  }
+};
+
+class CopySelectedCandidateBlockIds : public viskores::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn inputIndex,
+                                WholeArrayIn candidateBlockIds,
+                                FieldOut selectedCandidateBlockIds);
+  using ExecutionSignature = void(_1, _2, _3);
+  using InputDomain = _1;
+
+  template <typename CandidateBlockIdsPortalType, typename SelectedCandidateBlockIdsType>
+  VISKORES_EXEC void operator()(const viskores::Id& inputIndex,
+                                const CandidateBlockIdsPortalType& candidateBlockIds,
+                                SelectedCandidateBlockIdsType& selectedCandidateBlockIds) const
+  {
+    auto source = candidateBlockIds.Get(inputIndex);
+    const viskores::IdComponent n = selectedCandidateBlockIds.GetNumberOfComponents();
+    for (viskores::IdComponent i = 0; i < n; ++i)
+      selectedCandidateBlockIds[i] = source[i];
+  }
+};
+
+template <typename CandidateBlockIdsArrayType, typename StencilArrayType, typename PredicateType>
+VISKORES_CONT CandidateBlockIdArrayHandle CopyCandidateBlockIDsIf(
+  const CandidateBlockIdsArrayType& candidateBlockIds,
+  const BlockIdArrayHandle& candidateCounts,
+  const StencilArrayType& stencil,
+  PredicateType predicate)
+{
+  viskores::cont::ArrayHandle<viskores::Id> selectedInputIndices;
+  viskores::cont::ArrayHandle<viskores::Id> selectedCounts;
+  viskores::cont::Algorithm::CopyIf(
+    viskores::cont::ArrayHandleIndex(stencil.GetNumberOfValues()),
+    stencil,
+    selectedInputIndices,
+    predicate);
+  viskores::cont::Algorithm::CopyIf(candidateCounts, stencil, selectedCounts, predicate);
+
+  const viskores::Id totalSelectedComponents =
+    viskores::cont::Algorithm::Reduce(selectedCounts, viskores::Id(0));
+  auto selectedOffsets = viskores::cont::ConvertNumComponentsToOffsets(selectedCounts);
+
+  viskores::cont::ArrayHandle<viskores::Id> selectedComponents;
+  selectedComponents.AllocateAndFill(totalSelectedComponents, viskores::Id(-1));
+  auto selectedCandidateBlockIds =
+    viskores::cont::make_ArrayHandleGroupVecVariable(selectedComponents, selectedOffsets);
+
+  viskores::cont::Invoker invoke;
+  invoke(CopySelectedCandidateBlockIds{},
+         selectedInputIndices,
+         candidateBlockIds,
+         selectedCandidateBlockIds);
+
+  return selectedCandidateBlockIds;
+}
+
 template <typename ParticleType>
-class CountCandidateBlocks : public viskores::worklet::WorkletMapField
+class CountNextCandidateBlocks : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn particle,
                                 FieldIn terminated,
+                                FieldIn retryCandidates,
+                                FieldIn candidateBlockIds,
                                 ExecObject locator,
                                 FieldOut count);
-  using ExecutionSignature = void(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
-  template <typename LocatorType>
+  VISKORES_CONT CountNextCandidateBlocks(viskores::Id currentBlockId)
+    : CurrentBlockId(currentBlockId)
+  {
+  }
+
+  template <typename CandidateBlockIdsType, typename LocatorType>
   VISKORES_EXEC void operator()(const ParticleType& particle,
                                 const viskores::UInt8& terminated,
+                                const viskores::UInt8& retryCandidates,
+                                const CandidateBlockIdsType& candidateBlockIds,
                                 const LocatorType& locator,
                                 viskores::Id& count) const
   {
@@ -164,41 +268,96 @@ public:
       count = 0;
       return;
     }
+
+    if (retryCandidates != 0)
+    {
+      count = 0;
+      const viskores::IdComponent n = candidateBlockIds.GetNumberOfComponents();
+      for (viskores::IdComponent i = 0; i < n; ++i)
+      {
+        const viskores::Id candidate = candidateBlockIds[i];
+        if (candidate >= 0 && candidate != this->CurrentBlockId)
+          ++count;
+      }
+      return;
+    }
+
     count = locator.CountAllCells(particle.GetPosition());
   }
+
+private:
+  viskores::Id CurrentBlockId;
 };
 
 template <typename ParticleType>
-class FindCandidateBlocks : public viskores::worklet::WorkletMapField
+class FindNextCandidateBlocks : public viskores::worklet::WorkletMapField
 {
 public:
   using ControlSignature = void(FieldIn particle,
                                 FieldIn terminated,
+                                FieldIn retryCandidates,
+                                FieldIn candidateBlockIds,
                                 ExecObject locator,
-                                FieldOut cellIds);
-  using ExecutionSignature = void(_1, _2, _3, _4);
+                                FieldOut nextCandidateBlockIds);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
-  template <typename LocatorType, typename CellIdsVecType>
+  VISKORES_CONT FindNextCandidateBlocks(viskores::Id currentBlockId)
+    : CurrentBlockId(currentBlockId)
+  {
+  }
+
+  template <typename CandidateBlockIdsType,
+            typename LocatorType,
+            typename NextCandidateBlockIdsType>
   VISKORES_EXEC void operator()(const ParticleType& particle,
                                 const viskores::UInt8& terminated,
+                                const viskores::UInt8& retryCandidates,
+                                const CandidateBlockIdsType& candidateBlockIds,
                                 const LocatorType& locator,
-                                CellIdsVecType& cellIds) const
+                                NextCandidateBlockIdsType& nextCandidateBlockIds) const
   {
     if (terminated != 0)
       return;
-    locator.FindAllCellIds(particle.GetPosition(), cellIds);
+
+    const viskores::IdComponent n = nextCandidateBlockIds.GetNumberOfComponents();
+    viskores::IdComponent outIndex = 0;
+    if (retryCandidates != 0)
+    {
+      const viskores::IdComponent numCandidates = candidateBlockIds.GetNumberOfComponents();
+      for (viskores::IdComponent i = 0; i < numCandidates && outIndex < n; ++i)
+      {
+        const viskores::Id candidate = candidateBlockIds[i];
+        if (candidate >= 0 && candidate != this->CurrentBlockId)
+          nextCandidateBlockIds[outIndex++] = candidate;
+      }
+    }
+    else
+    {
+      locator.FindAllCellIds(particle.GetPosition(), nextCandidateBlockIds);
+
+      // Fresh locator queries can still include the block that just released
+      // the particle on exact shared boundaries. Compact it out so a particle
+      // does not immediately return to the same block.
+      for (viskores::IdComponent i = 0; i < n; ++i)
+      {
+        const viskores::Id candidate = nextCandidateBlockIds[i];
+        if (candidate >= 0 && candidate != this->CurrentBlockId)
+          nextCandidateBlockIds[outIndex++] = candidate;
+      }
+    }
+
+    for (viskores::IdComponent i = outIndex; i < n; ++i)
+      nextCandidateBlockIds[i] = -1;
   }
+
+private:
+  viskores::Id CurrentBlockId;
 };
 
 class SelectNextBlock : public viskores::worklet::WorkletMapField
 {
 public:
-  VISKORES_CONT SelectNextBlock(viskores::Id currentBlockId)
-    : CurrentBlockId(currentBlockId)
-  {
-  }
-
   using ControlSignature = void(FieldIn terminated,
                                 FieldIn candidateCellIds,
                                 WholeArrayIn blockOwnedByRank,
@@ -222,7 +381,7 @@ public:
     for (viskores::IdComponent i = 0; i < n; ++i)
     {
       const viskores::Id cid = candidateCellIds[i];
-      if (cid < 0 || cid == this->CurrentBlockId)
+      if (cid < 0)
         continue;
 
       if (firstAny < 0 || cid < firstAny)
@@ -234,9 +393,6 @@ public:
 
     nextBlockId = (firstLocal >= 0 ? firstLocal : firstAny);
   }
-
-private:
-  viskores::Id CurrentBlockId;
 };
 
 class ClassificationMasks : public viskores::worklet::WorkletMapField
@@ -369,12 +525,15 @@ VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyPart
   viskores::cont::Invoker invoke;
 
   viskores::cont::ArrayHandle<viskores::UInt8> termInitial;
-  invoke(detail::ResetParticleStatus<ParticleType>{}, particles, termInitial);
+  viskores::cont::ArrayHandle<viskores::UInt8> retryCandidates;
+  invoke(detail::ResetParticleStatus<ParticleType>{}, particles, termInitial, retryCandidates);
 
   viskores::cont::ArrayHandle<viskores::Id> candidateCountsAH;
-  invoke(detail::CountCandidateBlocks<ParticleType>{},
+  invoke(detail::CountNextCandidateBlocks<ParticleType>{ this->Id },
          particles,
          termInitial,
+         retryCandidates,
+         dsiInfo.CandidateBlockIDs,
          boundsMap.GetLocator(),
          candidateCountsAH);
 
@@ -387,14 +546,16 @@ VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyPart
 
   auto candidateCellIDsVec =
     viskores::cont::make_ArrayHandleGroupVecVariable(allCandidateCellIDsAH, candidateOffsetsAH);
-  invoke(detail::FindCandidateBlocks<ParticleType>{},
+  invoke(detail::FindNextCandidateBlocks<ParticleType>{ this->Id },
          particles,
          termInitial,
+         retryCandidates,
+         dsiInfo.CandidateBlockIDs,
          boundsMap.GetLocator(),
          candidateCellIDsVec);
 
   viskores::cont::ArrayHandle<viskores::Id> nextBlockIDsAH;
-  invoke(detail::SelectNextBlock{ this->Id },
+  invoke(detail::SelectNextBlock{},
          termInitial,
          candidateCellIDsVec,
          blockOwnedByRankAH,
@@ -416,6 +577,11 @@ VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyPart
     nextBlockIDsAH, outMask, outNextBlockIDsAH, detail::IsNonZero{});
   dsiInfo.OutParticles = outParticlesAH;
   dsiInfo.OutNextBlockIDs = outNextBlockIDsAH;
+  dsiInfo.OutCandidateBlockIDs =
+    detail::CopyCandidateBlockIDsIf(candidateCellIDsVec,
+                                    candidateCountsAH,
+                                    outMask,
+                                    detail::IsNonZero{});
 
   dsiInfo.Validate(numParticles);
 }
