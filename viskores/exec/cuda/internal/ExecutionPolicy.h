@@ -25,13 +25,52 @@
 #include <viskores/exec/cuda/internal/ThrustPatches.h>
 VISKORES_THIRDPARTY_PRE_INCLUDE
 #include <thrust/execution_policy.h>
+#include <thrust/functional.h>
 #include <thrust/pair.h>
 #include <thrust/sort.h>
 #include <thrust/system/cuda/execution_policy.h>
 #include <thrust/system/cuda/memory.h>
+#include <thrust/version.h>
+#if THRUST_VERSION >= 300100
+#include <cuda/std/functional>
+#endif
 VISKORES_THIRDPARTY_POST_INCLUDE
 
 #define ThrustCudaPolicyPerThread ::thrust::cuda::par.on(cudaStreamPerThread)
+
+namespace viskores
+{
+namespace exec
+{
+namespace cuda
+{
+namespace internal
+{
+
+#if THRUST_VERSION >= 300100
+template <typename T>
+using ThrustLess = ::cuda::std::less<T>;
+template <typename T>
+using ThrustGreater = ::cuda::std::greater<T>;
+template <typename T>
+using ThrustEqualTo = ::cuda::std::equal_to<T>;
+template <typename T>
+using ThrustPlus = ::cuda::std::plus<T>;
+#else
+template <typename T>
+using ThrustLess = ::thrust::less<T>;
+template <typename T>
+using ThrustGreater = ::thrust::greater<T>;
+template <typename T>
+using ThrustEqualTo = ::thrust::equal_to<T>;
+template <typename T>
+using ThrustPlus = ::thrust::plus<T>;
+#endif
+
+}
+}
+}
+} // namespace viskores::exec::cuda::internal
 
 struct viskores_cuda_policy : thrust::device_execution_policy<viskores_cuda_policy>
 {
@@ -39,8 +78,8 @@ struct viskores_cuda_policy : thrust::device_execution_policy<viskores_cuda_poli
 
 //Specialize the sort call for cuda pointers using less/greater operators.
 //The purpose of this is that for 32bit types (UInt32,Int32,Float32) thrust
-//will call a super fast radix sort only if the operator is thrust::less
-//or thrust::greater.
+//will call a super fast radix sort only if the operator is the default less
+//or greater comparator.
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename T>
 __host__ __device__ void sort(
@@ -50,7 +89,8 @@ __host__ __device__ void sort(
   viskores::exec::cuda::internal::WrappedBinaryPredicate<T, viskores::SortLess> comp)
 { //sort for concrete pointers and less than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::less<T>());
+  return thrust::sort(
+    ThrustCudaPolicyPerThread, first, last, viskores::exec::cuda::internal::ThrustLess<T>());
 }
 
 VISKORES_SUPPRESS_EXEC_WARNINGS
@@ -63,34 +103,43 @@ __host__ __device__ void sort_by_key(
   viskores::exec::cuda::internal::WrappedBinaryPredicate<T, viskores::SortLess> comp)
 { //sort for concrete pointers and less than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort_by_key(
-    ThrustCudaPolicyPerThread, first, last, values_first, thrust::less<T>());
+  return thrust::sort_by_key(ThrustCudaPolicyPerThread,
+                             first,
+                             last,
+                             values_first,
+                             viskores::exec::cuda::internal::ThrustLess<T>());
 }
 
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename T>
-__host__ __device__ void sort(
-  const viskores_cuda_policy& exec,
-  T* first,
-  T* last,
-  viskores::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::less<T>> comp)
+__host__ __device__ void sort(const viskores_cuda_policy& exec,
+                              T* first,
+                              T* last,
+                              viskores::exec::cuda::internal::WrappedBinaryPredicate<
+                                T,
+                                viskores::exec::cuda::internal::ThrustLess<T>> comp)
 { //sort for concrete pointers and less than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::less<T>());
+  return thrust::sort(
+    ThrustCudaPolicyPerThread, first, last, viskores::exec::cuda::internal::ThrustLess<T>());
 }
 
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename T, typename RandomAccessIterator>
-__host__ __device__ void sort_by_key(
-  const viskores_cuda_policy& exec,
-  T* first,
-  T* last,
-  RandomAccessIterator values_first,
-  viskores::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::less<T>> comp)
+__host__ __device__ void sort_by_key(const viskores_cuda_policy& exec,
+                                     T* first,
+                                     T* last,
+                                     RandomAccessIterator values_first,
+                                     viskores::exec::cuda::internal::WrappedBinaryPredicate<
+                                       T,
+                                       viskores::exec::cuda::internal::ThrustLess<T>> comp)
 { //sort for concrete pointers and less than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort_by_key(
-    ThrustCudaPolicyPerThread, first, last, values_first, thrust::less<T>());
+  return thrust::sort_by_key(ThrustCudaPolicyPerThread,
+                             first,
+                             last,
+                             values_first,
+                             viskores::exec::cuda::internal::ThrustLess<T>());
 }
 
 VISKORES_SUPPRESS_EXEC_WARNINGS
@@ -102,7 +151,8 @@ __host__ __device__ void sort(
   viskores::exec::cuda::internal::WrappedBinaryPredicate<T, viskores::SortGreater> comp)
 { //sort for concrete pointers and greater than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::greater<T>());
+  return thrust::sort(
+    ThrustCudaPolicyPerThread, first, last, viskores::exec::cuda::internal::ThrustGreater<T>());
 }
 
 VISKORES_SUPPRESS_EXEC_WARNINGS
@@ -115,34 +165,43 @@ __host__ __device__ void sort_by_key(
   viskores::exec::cuda::internal::WrappedBinaryPredicate<T, viskores::SortGreater> comp)
 { //sort for concrete pointers and greater than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort_by_key(
-    ThrustCudaPolicyPerThread, first, last, values_first, thrust::greater<T>());
+  return thrust::sort_by_key(ThrustCudaPolicyPerThread,
+                             first,
+                             last,
+                             values_first,
+                             viskores::exec::cuda::internal::ThrustGreater<T>());
 }
 
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename T>
-__host__ __device__ void sort(
-  const viskores_cuda_policy& exec,
-  T* first,
-  T* last,
-  viskores::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::greater<T>> comp)
+__host__ __device__ void sort(const viskores_cuda_policy& exec,
+                              T* first,
+                              T* last,
+                              viskores::exec::cuda::internal::WrappedBinaryPredicate<
+                                T,
+                                viskores::exec::cuda::internal::ThrustGreater<T>> comp)
 { //sort for concrete pointers and greater than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::greater<T>());
+  return thrust::sort(
+    ThrustCudaPolicyPerThread, first, last, viskores::exec::cuda::internal::ThrustGreater<T>());
 }
 
 VISKORES_SUPPRESS_EXEC_WARNINGS
 template <typename T, typename RandomAccessIterator>
-__host__ __device__ void sort_by_key(
-  const viskores_cuda_policy& exec,
-  T* first,
-  T* last,
-  RandomAccessIterator values_first,
-  viskores::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::greater<T>> comp)
+__host__ __device__ void sort_by_key(const viskores_cuda_policy& exec,
+                                     T* first,
+                                     T* last,
+                                     RandomAccessIterator values_first,
+                                     viskores::exec::cuda::internal::WrappedBinaryPredicate<
+                                       T,
+                                       viskores::exec::cuda::internal::ThrustGreater<T>> comp)
 { //sort for concrete pointers and greater than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort_by_key(
-    ThrustCudaPolicyPerThread, first, last, values_first, thrust::greater<T>());
+  return thrust::sort_by_key(ThrustCudaPolicyPerThread,
+                             first,
+                             last,
+                             values_first,
+                             viskores::exec::cuda::internal::ThrustGreater<T>());
 }
 
 VISKORES_SUPPRESS_EXEC_WARNINGS

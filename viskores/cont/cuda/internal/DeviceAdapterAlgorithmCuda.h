@@ -598,7 +598,8 @@ private:
                                               const OutputPortal& output)
   {
     using ValueType = typename ValuesPortal::ValueType;
-    LowerBoundsPortal(input, values, output, ::thrust::less<ValueType>());
+    LowerBoundsPortal(
+      input, values, output, viskores::exec::cuda::internal::ThrustLess<ValueType>());
   }
 
   template <class InputPortal, class OutputPortal>
@@ -606,7 +607,8 @@ private:
                                               const OutputPortal& values_output)
   {
     using ValueType = typename InputPortal::ValueType;
-    LowerBoundsPortal(input, values_output, values_output, ::thrust::less<ValueType>());
+    LowerBoundsPortal(
+      input, values_output, values_output, viskores::exec::cuda::internal::ThrustLess<ValueType>());
   }
 
   template <class InputPortal, class ValuesPortal, class OutputPortal, class BinaryCompare>
@@ -638,7 +640,7 @@ private:
   template <class InputPortal, typename T>
   VISKORES_CONT static T ReducePortal(const InputPortal& input, T initialValue)
   {
-    return ReducePortal(input, initialValue, ::thrust::plus<T>());
+    return ReducePortal(input, initialValue, viskores::exec::cuda::internal::ThrustPlus<T>());
   }
 
   template <class InputPortal, typename T, class BinaryFunctor>
@@ -722,7 +724,7 @@ private:
 
     ::thrust::pair<decltype(keys_out_begin), decltype(values_out_begin)> result_iterators;
 
-    ::thrust::equal_to<typename KeysPortal::ValueType> binaryPredicate;
+    viskores::exec::cuda::internal::ThrustEqualTo<typename KeysPortal::ValueType> binaryPredicate;
 
     using ValueType = typename ValuesPortal::ValueType;
     viskores::exec::cuda::internal::WrappedBinaryOperator<ValueType, BinaryFunctor> bop(
@@ -756,7 +758,7 @@ private:
 
     return ScanExclusivePortal(input,
                                output,
-                               (::thrust::plus<ValueType>()),
+                               (viskores::exec::cuda::internal::ThrustPlus<ValueType>()),
                                viskores::TypeTraits<ValueType>::ZeroInitialization());
   }
 
@@ -814,7 +816,8 @@ private:
     const OutputPortal& output)
   {
     using ValueType = typename OutputPortal::ValueType;
-    return ScanInclusivePortal(input, output, ::thrust::plus<ValueType>());
+    return ScanInclusivePortal(
+      input, output, viskores::exec::cuda::internal::ThrustPlus<ValueType>());
   }
 
   template <class InputPortal, class OutputPortal, class BinaryFunctor>
@@ -855,8 +858,11 @@ private:
   {
     using KeyType = typename KeysPortal::ValueType;
     using ValueType = typename OutputPortal::ValueType;
-    ScanInclusiveByKeyPortal(
-      keys, values, output, ::thrust::equal_to<KeyType>(), ::thrust::plus<ValueType>());
+    ScanInclusiveByKeyPortal(keys,
+                             values,
+                             output,
+                             viskores::exec::cuda::internal::ThrustEqualTo<KeyType>(),
+                             viskores::exec::cuda::internal::ThrustPlus<ValueType>());
   }
 
   template <typename KeysPortal,
@@ -904,8 +910,8 @@ private:
                              values,
                              output,
                              viskores::TypeTraits<ValueType>::ZeroInitialization(),
-                             ::thrust::equal_to<KeyType>(),
-                             ::thrust::plus<ValueType>());
+                             viskores::exec::cuda::internal::ThrustEqualTo<KeyType>(),
+                             viskores::exec::cuda::internal::ThrustPlus<ValueType>());
   }
 
   template <typename KeysPortal,
@@ -948,7 +954,7 @@ private:
   VISKORES_CONT static void SortPortal(const ValuesPortal& values)
   {
     using ValueType = typename ValuesPortal::ValueType;
-    SortPortal(values, ::thrust::less<ValueType>());
+    SortPortal(values, viskores::exec::cuda::internal::ThrustLess<ValueType>());
   }
 
   template <class ValuesPortal, class BinaryCompare>
@@ -974,7 +980,7 @@ private:
   VISKORES_CONT static void SortByKeyPortal(const KeysPortal& keys, const ValuesPortal& values)
   {
     using ValueType = typename KeysPortal::ValueType;
-    SortByKeyPortal(keys, values, ::thrust::less<ValueType>());
+    SortByKeyPortal(keys, values, viskores::exec::cuda::internal::ThrustLess<ValueType>());
   }
 
   template <class KeysPortal, class ValuesPortal, class BinaryCompare>
@@ -1586,7 +1592,7 @@ public:
     ScanInclusiveByKeyPortal(keysPortal,
                              valuesPortal,
                              output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
-                             ::thrust::equal_to<T>(),
+                             viskores::exec::cuda::internal::ThrustEqualTo<T>(),
                              binary_functor);
   }
 
@@ -1615,7 +1621,7 @@ public:
                              valuesPortal,
                              output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
                              viskores::TypeTraits<T>::ZeroInitialization(),
-                             ::thrust::equal_to<T>(),
+                             viskores::exec::cuda::internal::ThrustEqualTo<T>(),
                              viskores::Add());
   }
 
@@ -1651,7 +1657,7 @@ public:
                              valuesPortal,
                              output.PrepareForOutput(numberOfValues, DeviceAdapterTagCuda(), token),
                              initialValue,
-                             ::thrust::equal_to<T>(),
+                             viskores::exec::cuda::internal::ThrustEqualTo<T>(),
                              binary_functor);
   }
 
