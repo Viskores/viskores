@@ -104,8 +104,7 @@ public:
     if ((num != (outCount + termCount)) ||
         (this->Particles.GetNumberOfValues() != this->CandidateBlockIDs.GetNumberOfValues()) ||
         (this->OutParticles.GetNumberOfValues() != this->OutNextBlockIDs.GetNumberOfValues()) ||
-        (this->OutParticles.GetNumberOfValues() !=
-         this->OutCandidateBlockIDs.GetNumberOfValues()))
+        (this->OutParticles.GetNumberOfValues() != this->OutCandidateBlockIDs.GetNumberOfValues()))
     {
       throw viskores::cont::ErrorFilterExecution("Particle count mismatch after classification");
     }
@@ -160,8 +159,8 @@ public:
       // A particle that failed spatial evaluation before taking any steps
       // should try the next existing candidate block rather than recomputing
       // from the same position and returning to a block that already failed.
-      retryCandidates = static_cast<viskores::UInt8>(status.CheckSpatialBounds() &&
-                                                     !status.CheckTookAnySteps());
+      retryCandidates =
+        static_cast<viskores::UInt8>(status.CheckSpatialBounds() && !status.CheckTookAnySteps());
       particle.SetStatus(viskores::ParticleStatus{});
     }
   }
@@ -204,19 +203,18 @@ public:
 };
 
 template <typename CandidateBlockIdsArrayType, typename StencilArrayType, typename PredicateType>
-VISKORES_CONT CandidateBlockIdArrayHandle CopyCandidateBlockIDsIf(
-  const CandidateBlockIdsArrayType& candidateBlockIds,
-  const BlockIdArrayHandle& candidateCounts,
-  const StencilArrayType& stencil,
-  PredicateType predicate)
+VISKORES_CONT CandidateBlockIdArrayHandle
+CopyCandidateBlockIDsIf(const CandidateBlockIdsArrayType& candidateBlockIds,
+                        const BlockIdArrayHandle& candidateCounts,
+                        const StencilArrayType& stencil,
+                        PredicateType predicate)
 {
   viskores::cont::ArrayHandle<viskores::Id> selectedInputIndices;
   viskores::cont::ArrayHandle<viskores::Id> selectedCounts;
-  viskores::cont::Algorithm::CopyIf(
-    viskores::cont::ArrayHandleIndex(stencil.GetNumberOfValues()),
-    stencil,
-    selectedInputIndices,
-    predicate);
+  viskores::cont::Algorithm::CopyIf(viskores::cont::ArrayHandleIndex(stencil.GetNumberOfValues()),
+                                    stencil,
+                                    selectedInputIndices,
+                                    predicate);
   viskores::cont::Algorithm::CopyIf(candidateCounts, stencil, selectedCounts, predicate);
 
   const viskores::Id totalSelectedComponents =
@@ -577,11 +575,8 @@ VISKORES_CONT inline void DataSetIntegrator<Derived, ParticleType>::ClassifyPart
     nextBlockIDsAH, outMask, outNextBlockIDsAH, detail::IsNonZero{});
   dsiInfo.OutParticles = outParticlesAH;
   dsiInfo.OutNextBlockIDs = outNextBlockIDsAH;
-  dsiInfo.OutCandidateBlockIDs =
-    detail::CopyCandidateBlockIDsIf(candidateCellIDsVec,
-                                    candidateCountsAH,
-                                    outMask,
-                                    detail::IsNonZero{});
+  dsiInfo.OutCandidateBlockIDs = detail::CopyCandidateBlockIDsIf(
+    candidateCellIDsVec, candidateCountsAH, outMask, detail::IsNonZero{});
 
   dsiInfo.Validate(numParticles);
 }

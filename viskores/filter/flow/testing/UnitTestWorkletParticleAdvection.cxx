@@ -144,16 +144,15 @@ void CreateConstantVectorField(viskores::Id num,
   viskores::cont::ArrayCopy(vecConst, vecField);
 }
 
-using CandidateBlockIdArrayHandle =
-  viskores::filter::flow::internal::CandidateBlockIdArrayHandle;
+using CandidateBlockIdArrayHandle = viskores::filter::flow::internal::CandidateBlockIdArrayHandle;
 
 class RoutingTestIntegrator
-  : public viskores::filter::flow::internal::
-      DataSetIntegrator<RoutingTestIntegrator, viskores::Particle>
+  : public viskores::filter::flow::internal::DataSetIntegrator<RoutingTestIntegrator,
+                                                               viskores::Particle>
 {
 public:
-  using BaseType = viskores::filter::flow::internal::
-    DataSetIntegrator<RoutingTestIntegrator, viskores::Particle>;
+  using BaseType =
+    viskores::filter::flow::internal::DataSetIntegrator<RoutingTestIntegrator, viskores::Particle>;
 
   RoutingTestIntegrator(viskores::Id blockId)
     : BaseType(blockId, viskores::filter::flow::IntegrationSolverType::RK4_TYPE)
@@ -168,13 +167,14 @@ public:
 };
 
 class ThreadedRoutingTestIntegrator
-  : public viskores::filter::flow::internal::
-      DataSetIntegrator<ThreadedRoutingTestIntegrator, viskores::Particle>
+  : public viskores::filter::flow::internal::DataSetIntegrator<ThreadedRoutingTestIntegrator,
+                                                               viskores::Particle>
 {
 public:
   using PType = viskores::Particle;
-  using BaseType = viskores::filter::flow::internal::
-    DataSetIntegrator<ThreadedRoutingTestIntegrator, viskores::Particle>;
+  using BaseType =
+    viskores::filter::flow::internal::DataSetIntegrator<ThreadedRoutingTestIntegrator,
+                                                        viskores::Particle>;
 
   ThreadedRoutingTestIntegrator(viskores::Id blockId,
                                 std::shared_ptr<std::vector<viskores::Id>> blockCounts)
@@ -215,10 +215,9 @@ private:
 
 viskores::cont::DataSet CreateTetrahedron()
 {
-  std::vector<viskores::Vec3f> points = { { 0.0f, 0.0f, 0.0f },
-                                          { 1.0f, 0.0f, 0.0f },
-                                          { 0.0f, 1.0f, 0.0f },
-                                          { 0.0f, 0.0f, 1.0f } };
+  std::vector<viskores::Vec3f> points = {
+    { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
+  };
   std::vector<viskores::UInt8> shapes = { viskores::CELL_SHAPE_TETRA };
   std::vector<viskores::IdComponent> numIndices = { 4 };
   std::vector<viskores::Id> connectivity = { 0, 1, 2, 3 };
@@ -226,8 +225,7 @@ viskores::cont::DataSet CreateTetrahedron()
   return viskores::cont::DataSetBuilderExplicit::Create(points, shapes, numIndices, connectivity);
 }
 
-CandidateBlockIdArrayHandle MakeCandidateBlockIds(
-  const std::vector<std::vector<viskores::Id>>& ids)
+CandidateBlockIdArrayHandle MakeCandidateBlockIds(const std::vector<std::vector<viskores::Id>>& ids)
 {
   std::vector<viskores::Id> counts;
   std::vector<viskores::Id> components;
@@ -894,8 +892,8 @@ void TestThreadedSerialExchangeWakesWorker()
   viskores::filter::flow::internal::AdvectAlgorithmThreaded<ThreadedRoutingTestIntegrator> algo(
     boundsMap, blocks);
 
-  auto seeds = viskores::cont::make_ArrayHandle(
-    { viskores::Particle(viskores::Vec3f(0.1f, 0.1f, 0.1f), 0) });
+  auto seeds =
+    viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(0.1f, 0.1f, 0.1f), 0) });
   auto blockIds = viskores::cont::make_ArrayHandle({ viskores::Id(0) });
   auto candidateBlockIds = MakeCandidateBlockIds({ { 0, 1 } });
 

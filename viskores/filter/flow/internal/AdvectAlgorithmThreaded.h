@@ -140,9 +140,9 @@ protected:
   void WorkerWait()
   {
     std::unique_lock<std::mutex> lock(this->Mutex);
-    this->WorkerActivateCondition.wait(lock, [this] {
-      return this->Done || !this->Active.empty() || this->WorkerException != nullptr;
-    });
+    this->WorkerActivateCondition.wait(
+      lock,
+      [this] { return this->Done || !this->Active.empty() || this->WorkerException != nullptr; });
   }
 
   void UpdateWorkerResult(viskores::Id blockId, DSIHelperInfo<ParticleType>&& b)

@@ -126,8 +126,7 @@ void ValidateCellIds(const std::vector<viskores::Id>& actual,
   std::vector<viskores::Id> expectedVec(expected);
   std::sort(expectedVec.begin(), expectedVec.end());
 
-  VISKORES_TEST_ASSERT(actual.size() == expectedVec.size(),
-                       message + ": wrong number of cell ids");
+  VISKORES_TEST_ASSERT(actual.size() == expectedVec.size(), message + ": wrong number of cell ids");
   for (std::size_t i = 0; i < expectedVec.size(); ++i)
     VISKORES_TEST_ASSERT(actual[i] == expectedVec[i], message + ": wrong cell id");
 }
@@ -184,13 +183,13 @@ void TestBoundsMapLocatorFindsSharedBoundaryBlocks()
 void TestBoundsMapLocatorHandlesDegenerateBounds()
 {
   const std::vector<viskores::Bounds> bounds = {
-    viskores::Bounds(0, 2, 0, 2, 0, 0),       // XY quad
-    viskores::Bounds(4, 6, 0, 0, 0, 2),       // XZ quad
-    viskores::Bounds(8, 8, 0, 2, 0, 2),       // YZ quad
-    viskores::Bounds(12, 14, 0, 0, 0, 0),     // X line
-    viskores::Bounds(16, 16, 0, 2, 0, 0),     // Y line
-    viskores::Bounds(20, 20, 0, 0, 0, 2),     // Z line
-    viskores::Bounds(24, 24, 0, 0, 0, 0)      // vertex
+    viskores::Bounds(0, 2, 0, 2, 0, 0),   // XY quad
+    viskores::Bounds(4, 6, 0, 0, 0, 2),   // XZ quad
+    viskores::Bounds(8, 8, 0, 2, 0, 2),   // YZ quad
+    viskores::Bounds(12, 14, 0, 0, 0, 0), // X line
+    viskores::Bounds(16, 16, 0, 2, 0, 0), // Y line
+    viskores::Bounds(20, 20, 0, 0, 0, 2), // Z line
+    viskores::Bounds(24, 24, 0, 0, 0, 0)  // vertex
   };
 
   viskores::filter::flow::internal::BoundsMap boundsMap(CreatePartitionedDataSet(bounds));
@@ -201,12 +200,9 @@ void TestBoundsMapLocatorHandlesDegenerateBounds()
                        "Degenerate BoundsMap locator has the wrong number of cells.");
 
   const std::vector<viskores::Vec3f> points = {
-    viskores::Vec3f(1.0f, 1.0f, 0.0f),
-    viskores::Vec3f(5.0f, 0.0f, 1.0f),
-    viskores::Vec3f(8.0f, 1.0f, 1.0f),
-    viskores::Vec3f(13.0f, 0.0f, 0.0f),
-    viskores::Vec3f(16.0f, 1.0f, 0.0f),
-    viskores::Vec3f(20.0f, 0.0f, 1.0f)
+    viskores::Vec3f(1.0f, 1.0f, 0.0f),  viskores::Vec3f(5.0f, 0.0f, 1.0f),
+    viskores::Vec3f(8.0f, 1.0f, 1.0f),  viskores::Vec3f(13.0f, 0.0f, 0.0f),
+    viskores::Vec3f(16.0f, 1.0f, 0.0f), viskores::Vec3f(20.0f, 0.0f, 1.0f)
   };
 
   auto cellIds = FindBoundsMapCellIds(boundsMap, points);
