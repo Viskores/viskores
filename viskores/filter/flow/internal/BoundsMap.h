@@ -24,6 +24,7 @@
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/Field.h>
 #include <viskores/cont/PartitionedDataSet.h>
+#include <viskores/filter/flow/viskores_filter_flow_export.h>
 
 #include <map>
 #include <vector>
@@ -37,7 +38,7 @@ namespace flow
 namespace internal
 {
 
-class VISKORES_ALWAYS_EXPORT BoundsMap
+class VISKORES_FILTER_FLOW_EXPORT BoundsMap
 {
 public:
   VISKORES_CONT BoundsMap() {}
