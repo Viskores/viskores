@@ -71,12 +71,15 @@
 
 // distributed contour tree includes
 #include <viskores/filter/scalar_topology/internal/ComputeBlockIndices.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/DataSetMesh.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/BoundaryTree.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/BoundaryTreeMaker.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/CombineHyperSweepBlockFunctor.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/ComputeDistributedContourTreeFunctor.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/DistributedContourTreeBlockData.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalAugmenterFunctor.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalContourTree.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalHyperSweeper.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/HyperSweepBlock.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/InteriorForest.h>
@@ -97,6 +100,26 @@ namespace filter
 {
 namespace scalar_topology
 {
+
+struct ContourTreeUniformDistributed::InternalStruct
+{
+  /// Intermediate results (one per local data block)...
+  /// ... local mesh information needed at end of fan out
+  std::vector<viskores::worklet::contourtree_augmented::DataSetMesh> LocalMeshes;
+  /// ... local contour trees etc. computed during fan in and used during fan out
+  std::vector<viskores::worklet::contourtree_augmented::ContourTree> LocalContourTrees;
+  std::vector<viskores::worklet::contourtree_distributed::BoundaryTree> LocalBoundaryTrees;
+  std::vector<viskores::worklet::contourtree_distributed::InteriorForest> LocalInteriorForests;
+
+  /// The hierarchical trees computed by the filter (array with one entry per block)
+  // TODO/FIXME: We need to find a way to store the final hieararchical trees somewhere.
+  // Currently we cannot do this here as it is a template on FieldType
+  //
+  //std::vector<viskores::worklet::contourtree_distributed::HierarchicalContourTree> HierarchicalContourTrees;
+  /// Number of iterations used to compute the contour tree
+  viskores::Id NumIterations;
+};
+
 //-----------------------------------------------------------------------------
 // Helper structs needed to support approbriate type discovery as part
 // of pre- and post-execute
@@ -176,19 +199,9 @@ void SaveHierarchicalTreeDot(
 ContourTreeUniformDistributed::ContourTreeUniformDistributed(
   viskores::cont::LogLevel timingsLogLevel,
   viskores::cont::LogLevel treeLogLevel)
-  : UseBoundaryExtremaOnly(true)
-  , UseMarchingCubes(false)
-  , AugmentHierarchicalTree(false)
-  , PresimplifyThreshold(0)
-  , SaveDotFiles(false)
-  , TimingsLogLevel(timingsLogLevel)
+  : TimingsLogLevel(timingsLogLevel)
   , TreeLogLevel(treeLogLevel)
-  , BlocksPerDimension(viskores::Id3{ -1, -1, -1 })
-  , LocalBlockIndices()
-  , LocalMeshes()
-  , LocalContourTrees()
-  , LocalBoundaryTrees()
-  , LocalInteriorForests()
+  , Internals(new InternalStruct)
 {
   this->SetOutputFieldName("resultData");
 }
@@ -215,7 +228,7 @@ void ContourTreeUniformDistributed::ComputeLocalTree(
   {
     viskores::worklet::contourtree_augmented::DataSetMeshTriangulation2DFreudenthal mesh(
       viskores::Id2{ meshSize[0], meshSize[1] });
-    this->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
+    this->Internals->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
     auto meshBoundaryExecObject = mesh.GetMeshBoundaryExecutionObject();
     this->ComputeLocalTreeImpl(blockIndex, input, fieldArray, mesh, meshBoundaryExecObject);
   }
@@ -223,14 +236,14 @@ void ContourTreeUniformDistributed::ComputeLocalTree(
   {
     viskores::worklet::contourtree_augmented::DataSetMeshTriangulation3DMarchingCubes mesh(
       meshSize);
-    this->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
+    this->Internals->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
     auto meshBoundaryExecObject = mesh.GetMeshBoundaryExecutionObject();
     this->ComputeLocalTreeImpl(blockIndex, input, fieldArray, mesh, meshBoundaryExecObject);
   }
   else // Regular 3D mesh
   {
     viskores::worklet::contourtree_augmented::DataSetMeshTriangulation3DFreudenthal mesh(meshSize);
-    this->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
+    this->Internals->LocalMeshes[static_cast<std::size_t>(blockIndex)] = mesh;
     auto meshBoundaryExecObject = mesh.GetMeshBoundaryExecutionObject();
     this->ComputeLocalTreeImpl(blockIndex, input, fieldArray, mesh, meshBoundaryExecObject);
   }
@@ -256,9 +269,9 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
     viskores::cont::LogLevel::Off; // turn of the loggin, we do this afterwards
   worklet.Run(field,
               mesh,
-              this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
-              this->LocalMeshes[static_cast<std::size_t>(blockIndex)].SortOrder,
-              this->NumIterations,
+              this->Internals->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
+              this->Internals->LocalMeshes[static_cast<std::size_t>(blockIndex)].SortOrder,
+              this->Internals->NumIterations,
               compRegularStruct,
               meshBoundaryExecObject);
   // Log the contour tree timiing stats
@@ -293,12 +306,12 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
   // Initialize the BoundaryTreeMaker
   auto boundaryTreeMaker =
     viskores::worklet::contourtree_distributed::BoundaryTreeMaker<MeshType, MeshBoundaryExecType>(
-      &mesh,                                                         // The input mesh
-      meshBoundaryExecObject,                                        // The mesh boundary
-      this->LocalContourTrees[static_cast<std::size_t>(blockIndex)], // The contour tree
-      &this->LocalBoundaryTrees[static_cast<std::size_t>(
+      &mesh,                                                                    // The input mesh
+      meshBoundaryExecObject,                                                   // The mesh boundary
+      this->Internals->LocalContourTrees[static_cast<std::size_t>(blockIndex)], // The contour tree
+      &this->Internals->LocalBoundaryTrees[static_cast<std::size_t>(
         blockIndex)], // The boundary tree (a.k.a BRACT) to be computed
-      &this->LocalInteriorForests[static_cast<std::size_t>(
+      &this->Internals->LocalInteriorForests[static_cast<std::size_t>(
         blockIndex)] // The interior forest (a.k.a. Residue) to be computed
     );
   // Execute the BRACT construction, including the compute of the InteriorForest
@@ -326,7 +339,7 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
         std::string("_Block_") + std::to_string(static_cast<int>(blockIndex)) + "_Initial_BRACT.gv";
       std::ofstream bractFile(bractFileName);
       std::string bractString =
-        this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)].PrintGlobalDot(
+        this->Internals->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)].PrintGlobalDot(
           "Before Fan In",
           mesh,
           field,
@@ -355,11 +368,12 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
           MeshType,
           viskores::worklet::contourtree_augmented::IdArrayType>(
           label, // graph title
-          static_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(
+          static_cast<MeshType&>(this->Internals->LocalMeshes[static_cast<std::size_t>(
             blockIndex)]),           // the underlying mesh for the contour tree
           &localToGlobalIdRelabeler, // relabler needed to compute global ids
           field,                     // data values
-          this->LocalContourTrees[static_cast<std::size_t>(blockIndex)], // local contour tree
+          this->Internals
+            ->LocalContourTrees[static_cast<std::size_t>(blockIndex)], // local contour tree
           dotSettings // mask with flags for what elements to show
         );
       regularStructureFile << regularStructureString << std::endl;
@@ -387,10 +401,11 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
           MeshType,
           viskores::worklet::contourtree_augmented::IdArrayType>(
           ctPrintLabel,
-          static_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
+          static_cast<MeshType&>(
+            this->Internals->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
           &localToGlobalIdRelabeler,
           field,
-          this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
+          this->Internals->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
           ctPrintSettings);
       superStructureFile << superStructureString << std::endl;
     }
@@ -406,9 +421,10 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
         viskores::worklet::contourtree_distributed::BoundaryTreeDotGraphPrint(
           std::string("Block ") + std::to_string(static_cast<size_t>(blockIndex)) +
             std::string(" Initial Step 3 Boundary Tree"),
-          static_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
+          static_cast<MeshType&>(
+            this->Internals->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
           meshBoundaryExecObject,
-          this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)],
+          this->Internals->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)],
           &localToGlobalIdRelabeler,
           field);
       boundaryTreeFile << boundaryTreeString << std::endl;
@@ -424,10 +440,11 @@ void ContourTreeUniformDistributed::ComputeLocalTreeImpl(
       std::string interiorForestString =
         worklet::contourtree_distributed::InteriorForestDotGraphPrint(
           std::string("Block ") + std::to_string(rank) + " Initial Step 4 Interior Forest",
-          this->LocalInteriorForests[static_cast<std::size_t>(blockIndex)],
-          this->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
-          this->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)],
-          static_cast<MeshType&>(this->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
+          this->Internals->LocalInteriorForests[static_cast<std::size_t>(blockIndex)],
+          this->Internals->LocalContourTrees[static_cast<std::size_t>(blockIndex)],
+          this->Internals->LocalBoundaryTrees[static_cast<std::size_t>(blockIndex)],
+          static_cast<MeshType&>(
+            this->Internals->LocalMeshes[static_cast<std::size_t>(blockIndex)]),
           meshBoundaryExecObject,
           &localToGlobalIdRelabeler,
           field);
@@ -502,10 +519,14 @@ VISKORES_CONT void ContourTreeUniformDistributed::PreExecute(
   }
 
   // Allocate vectors
-  this->LocalMeshes.resize(static_cast<std::size_t>(input.GetGlobalNumberOfPartitions()));
-  this->LocalContourTrees.resize(static_cast<std::size_t>(input.GetGlobalNumberOfPartitions()));
-  this->LocalBoundaryTrees.resize(static_cast<std::size_t>(input.GetGlobalNumberOfPartitions()));
-  this->LocalInteriorForests.resize(static_cast<std::size_t>(input.GetGlobalNumberOfPartitions()));
+  this->Internals->LocalMeshes.resize(
+    static_cast<std::size_t>(input.GetGlobalNumberOfPartitions()));
+  this->Internals->LocalContourTrees.resize(
+    static_cast<std::size_t>(input.GetGlobalNumberOfPartitions()));
+  this->Internals->LocalBoundaryTrees.resize(
+    static_cast<std::size_t>(input.GetGlobalNumberOfPartitions()));
+  this->Internals->LocalInteriorForests.resize(
+    static_cast<std::size_t>(input.GetGlobalNumberOfPartitions()));
 }
 
 viskores::cont::PartitionedDataSet ContourTreeUniformDistributed::DoExecutePartitions(
@@ -533,30 +554,30 @@ viskores::cont::PartitionedDataSet ContourTreeUniformDistributed::DoExecuteParti
   }
 
   // Log sizes of the local contour trees, boundary trees, and interior forests
-  for (size_t bi = 0; bi < this->LocalContourTrees.size(); bi++)
+  for (size_t bi = 0; bi < this->Internals->LocalContourTrees.size(); bi++)
   {
     VISKORES_LOG_S(this->TreeLogLevel,
                    std::endl
                      << "    ---------------- Contour Tree Array Sizes ---------------------"
                      << std::endl
                      << "    Block Index : " << bi << std::endl
-                     << LocalContourTrees[bi].PrintArraySizes());
+                     << this->Internals->LocalContourTrees[bi].PrintArraySizes());
     VISKORES_LOG_S(this->TreeLogLevel,
                    std::endl
                      << "    ---------------- Boundary Tree Array Sizes ---------------------"
                      << std::endl
                      << "    Block Index : " << bi << std::endl
-                     << LocalBoundaryTrees[bi].PrintArraySizes());
+                     << this->Internals->LocalBoundaryTrees[bi].PrintArraySizes());
     VISKORES_LOG_S(this->TreeLogLevel,
                    std::endl
                      << "    ---------------- Interior Forest Array Sizes ---------------------"
                      << std::endl
                      << "    Block Index : " << bi << std::endl
-                     << LocalInteriorForests[bi].PrintArraySizes());
+                     << this->Internals->LocalInteriorForests[bi].PrintArraySizes());
     // VISKORES_LOG_S(this->TreeLogLevel,
     //           std::endl
     //           << "    ---------------- Hyperstructure Statistics ---------------------"  << std::endl
-    //           << LocalContourTrees[bi].PrintHyperStructureStatistics(false) << std::endl);
+    //           << this->Internals->LocalContourTrees[bi].PrintHyperStructureStatistics(false) << std::endl);
   }
 
   // Log timing statistics
@@ -993,11 +1014,11 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
     newBlock->FixedBlockSize = pointDimensions;
 
     // Save local tree information for fan out; TODO/FIXME: Try to avoid copy
-    newBlock->ContourTrees.push_back(this->LocalContourTrees[bi]);
-    newBlock->InteriorForests.push_back(this->LocalInteriorForests[bi]);
+    newBlock->ContourTrees.push_back(this->Internals->LocalContourTrees[bi]);
+    newBlock->InteriorForests.push_back(this->Internals->LocalInteriorForests[bi]);
 
     // ... Compute arrays needed for constructing contour tree mesh
-    const auto sortOrder = this->LocalMeshes[bi].SortOrder;
+    const auto sortOrder = this->Internals->LocalMeshes[bi].SortOrder;
     // ... Compute the global mesh index for the partially augmented contour tree. I.e., here we
     // don't need the global mesh index for all nodes, but only for the augmented nodes from the
     // tree. We, hence, permute the sortOrder by contourTree.augmentednodes and then compute the
@@ -1005,7 +1026,7 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
     viskores::worklet::contourtree_augmented::IdArrayType localGlobalMeshIndex;
     viskores::cont::ArrayHandlePermutation<viskores::worklet::contourtree_augmented::IdArrayType,
                                            viskores::worklet::contourtree_augmented::IdArrayType>
-      permutedSortOrder(this->LocalBoundaryTrees[bi].VertexIndex, sortOrder);
+      permutedSortOrder(this->Internals->LocalBoundaryTrees[bi].VertexIndex, sortOrder);
     auto transformedIndex = viskores::cont::make_ArrayHandleTransform(
       permutedSortOrder,
       viskores::worklet::contourtree_augmented::mesh_dem::IdRelabeler(
@@ -1019,8 +1040,8 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
     viskores::cont::ArrayCopy(currField.GetData(), fieldData);
 
     // ... compute and store the actual mesh
-    newBlock->ContourTreeMeshes.emplace_back(this->LocalBoundaryTrees[bi].VertexIndex,
-                                             this->LocalBoundaryTrees[bi].Superarcs,
+    newBlock->ContourTreeMeshes.emplace_back(this->Internals->LocalBoundaryTrees[bi].VertexIndex,
+                                             this->Internals->LocalBoundaryTrees[bi].Superarcs,
                                              sortOrder,
                                              fieldData,
                                              localGlobalMeshIndex);
@@ -1197,9 +1218,10 @@ VISKORES_CONT void ContourTreeUniformDistributed::DoPostExecute(
       iterationTimer.Start();
       viskores::worklet::contourtree_distributed::
         TreeGrafter<viskores::worklet::contourtree_augmented::DataSetMesh, FieldType>
-          grafter(&(this->LocalMeshes[static_cast<std::size_t>(blockData->LocalBlockNo)]),
-                  blockData->ContourTrees[0],
-                  &(blockData->InteriorForests[0]));
+          grafter(
+            &(this->Internals->LocalMeshes[static_cast<std::size_t>(blockData->LocalBlockNo)]),
+            blockData->ContourTrees[0],
+            &(blockData->InteriorForests[0]));
       viskores::cont::DataSet currBlock = input.GetPartition(blockData->LocalBlockNo);
       auto currField =
         currBlock.GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());

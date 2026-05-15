@@ -72,6 +72,7 @@ VISKORES_THIRDPARTY_POST_INCLUDE
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/ContourTreeBlockData.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/MergeBlockFunctor.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/MultiBlockContourTreeHelper.h>
 
 #include <memory>
 
@@ -91,6 +92,10 @@ ContourTreeAugmented::ContourTreeAugmented(bool useMarchingCubes,
 {
   this->SetOutputFieldName("resultData");
 }
+
+ContourTreeAugmented::ContourTreeAugmented(ContourTreeAugmented&&) = default;
+
+ContourTreeAugmented::~ContourTreeAugmented() {}
 
 void ContourTreeAugmented::SetBlockIndices(
   viskores::Id3 blocksPerDim,
