@@ -64,15 +64,16 @@
 
 #include <viskores/Types.h>
 #include <viskores/cont/ArrayHandle.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/DataSetMesh.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/BoundaryTree.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalContourTree.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/InteriorForest.h>
 
 #include <memory>
 #include <viskores/filter/Filter.h>
 #include <viskores/filter/scalar_topology/viskores_filter_scalar_topology_export.h>
+
+// clang-format off
+VISKORES_THIRDPARTY_PRE_INCLUDE
+#include <viskores/thirdparty/diy/diy.h>
+VISKORES_THIRDPARTY_POST_INCLUDE
+// clang-format on
 
 namespace viskores
 {
@@ -202,19 +203,19 @@ private:
 
   /// Use only boundary critical points in the parallel merge to reduce communication.
   /// Disabling this should only be needed for performance testing.
-  bool UseBoundaryExtremaOnly;
+  bool UseBoundaryExtremaOnly = true;
 
   /// Use marching cubes connectivity for computing the contour tree
-  bool UseMarchingCubes;
+  bool UseMarchingCubes = false;
 
   /// Augment hierarchical tree
-  bool AugmentHierarchicalTree;
+  bool AugmentHierarchicalTree = false;
 
   /// Threshold to use for volume pre-simplification
   viskores::Id PresimplifyThreshold = 0;
 
   /// Save dot files for all tree computations
-  bool SaveDotFiles;
+  bool SaveDotFiles = false;
 
   /// Log level to be used for outputting timing information. Default is viskores::cont::LogLevel::Perf
   viskores::cont::LogLevel TimingsLogLevel = viskores::cont::LogLevel::Perf;
@@ -224,25 +225,12 @@ private:
 
   /// Information about block decomposition TODO/FIXME: Remove need for this information
   // ... Number of blocks along each dimension
-  viskores::Id3 BlocksPerDimension;
+  viskores::Id3 BlocksPerDimension = { -1, -1, -1 };
   // ... Index of the local blocks in x,y,z, i.e., in i,j,k mesh coordinates
   viskores::cont::ArrayHandle<viskores::Id3> LocalBlockIndices;
 
-  /// Intermediate results (one per local data block)...
-  /// ... local mesh information needed at end of fan out
-  std::vector<viskores::worklet::contourtree_augmented::DataSetMesh> LocalMeshes;
-  /// ... local contour trees etc. computed during fan in and used during fan out
-  std::vector<viskores::worklet::contourtree_augmented::ContourTree> LocalContourTrees;
-  std::vector<viskores::worklet::contourtree_distributed::BoundaryTree> LocalBoundaryTrees;
-  std::vector<viskores::worklet::contourtree_distributed::InteriorForest> LocalInteriorForests;
-
-  /// The hierarchical trees computed by the filter (array with one entry per block)
-  // TODO/FIXME: We need to find a way to store the final hieararchical trees somewhere.
-  // Currently we cannot do this here as it is a template on FieldType
-  //
-  //std::vector<viskores::worklet::contourtree_distributed::HierarchicalContourTree> HierarchicalContourTrees;
-  /// Number of iterations used to compute the contour tree
-  viskores::Id NumIterations;
+  struct InternalStruct;
+  std::shared_ptr<InternalStruct> Internals;
 };
 } // namespace scalar_topology
 } // namespace filter

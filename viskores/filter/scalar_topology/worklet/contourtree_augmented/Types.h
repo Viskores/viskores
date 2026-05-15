@@ -62,11 +62,14 @@
 #ifndef viskores_worklet_contourtree_augmented_types_h
 #define viskores_worklet_contourtree_augmented_types_h
 
+// Although this is in a "worklet" directory, avoid including worklet or device adapter headers
+// to prevent GPU code from leaking into the filter headers.
+
 #include <viskores/Assert.h>
+#include <viskores/Pair.h>
 #include <viskores/Types.h>
-#include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayHandle.h>
-#include <viskores/cont/ArrayHandleConstant.h>
+#include <viskores/cont/ArraySetValues.h>
 #include <viskores/cont/CellSetStructured.h>
 
 namespace viskores
@@ -195,8 +198,7 @@ VISKORES_CONT inline void AssertArrayHandleNoFlagsSet(
 VISKORES_CONT
 inline void IdArraySetValue(viskores::Id index, viskores::Id value, IdArrayType& arr)
 { // IdArraySetValue
-  viskores::cont::Algorithm::CopySubRange(
-    viskores::cont::ArrayHandleConstant<viskores::Id>(value, 1), 0, 1, arr, index);
+  viskores::cont::ArraySetValue(index, value, arr);
 } // IdArraySetValues
 
 
@@ -212,27 +214,8 @@ void ResizeVector(viskores::cont::ArrayHandle<ValueType>& thearray,
                   viskores::Id newSize,
                   ValueType fillValue)
 {
-  viskores::Id oldSize = thearray.GetNumberOfValues();
-  // Simply return if the size of the array does not change
-  if (oldSize == newSize)
-  {
-    return;
-  }
-
-  // Resize the array but keep the original values
-  thearray.Allocate(newSize, viskores::CopyFlag::On);
-
-  // Add the fill values to the array if we increased the size of the array
-  if (oldSize < newSize)
-  {
-    viskores::cont::Algorithm::CopySubRange(
-      viskores::cont::ArrayHandleConstant<ValueType>(fillValue, newSize - oldSize), // copy
-      0,                 // start copying from first index
-      newSize - oldSize, // num values to copy
-      thearray,          // target array to copy to
-      oldSize            // start copy to after oldSize
-    );
-  }
+  // Resize the array but keep the original values. Fill expanded with provided value
+  thearray.AllocateAndFill(newSize, fillValue, viskores::CopyFlag::On);
 }
 
 template <typename T>
