@@ -36,7 +36,8 @@ set(unit_tests_device
   UnitTestContourTreeUniformDistributed5x6x7.cxx
   UnitTestContourTreeUniformDistributed8x9.cxx
   UnitTestContourTreeUniformDistributedVanc.cxx
-  UnitTestDistributedBranchDecompositionFilter.cxx
+  UnitTestDistributedBranchDecomposition8x9.cxx
+  UnitTestDistributedBranchDecompositionVanc.cxx
   )
 
 viskores_unit_tests(
