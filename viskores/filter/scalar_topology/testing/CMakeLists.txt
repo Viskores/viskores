@@ -33,7 +33,9 @@ set(unit_tests
 set(unit_tests_device
   UnitTestContourTreeUniformAugmentedFilter.cxx
   UnitTestContourTreeUniformAugmentedWorklet.cxx
-  UnitTestContourTreeUniformDistributedFilter.cxx
+  UnitTestContourTreeUniformDistributed5x6x7.cxx
+  UnitTestContourTreeUniformDistributed8x9.cxx
+  UnitTestContourTreeUniformDistributedVanc.cxx
   UnitTestDistributedBranchDecompositionFilter.cxx
   )
 
