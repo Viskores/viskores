@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -58,13 +49,6 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-// NOTE: To save test time, we reduced test coverage on September 2th 2024. The
-// tests still running should be sufficient to uncovoer any issues due to Viskores
-// changes. However, if we continue development of the contour tree algorithm,
-// we should re-enable the additional tests as they have revealed problems in
-// the past.
-// #define ENABLE_ADDITIONAL_TESTS
-
 #include "TestingContourTreeUniformDistributedFilter.h"
 
 namespace
@@ -82,108 +66,15 @@ public:
   void operator()() const
   {
     using viskores::cont::testing::Testing;
-#ifdef ENABLE_ADDITIONAL_TESTS
-    TestContourTreeUniformDistributed8x9(2);
-    // TestContourTreeUniformDistributed8x9(3); CRASH???
-    TestContourTreeUniformDistributed8x9(4);
-#endif
-    TestContourTreeUniformDistributed8x9(8);
-    TestContourTreeUniformDistributed8x9(16);
 
-#ifdef ENABLE_ADDITIONAL_TESTS
     TestContourTreeUniformDistributed5x6x7(2, false);
     TestContourTreeUniformDistributed5x6x7(4, false);
-#endif
     TestContourTreeUniformDistributed5x6x7(8, false);
     TestContourTreeUniformDistributed5x6x7(16, false);
-#ifdef ENABLE_ADDITIONAL_TESTS
     TestContourTreeUniformDistributed5x6x7(2, true);
     TestContourTreeUniformDistributed5x6x7(4, true);
-#endif
     TestContourTreeUniformDistributed5x6x7(8, true);
     TestContourTreeUniformDistributed5x6x7(16, true);
-#ifdef ENABLE_ADDITIONAL_TESTS
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        2);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        4);
-#endif
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        8);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.ct_txt"),
-                        16);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        2,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        4,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.augment_hierarchical_tree.ct_txt"),
-                        4,
-                        false,
-                        0,
-                        1,
-                        true,
-                        false,
-                        false);
-
-    // tests for contour tree presimplification on 2D vanc dataset
-#ifdef ENABLE_ADDITIONAL_TESTS
-    TestContourTreePresimplification(
-      "vanc", // dataset name
-      "var",  // field name
-      viskores::cont::testing::Testing::RegressionImagePath(
-        "vanc.presimplification.ct_txt"),                                 // ground truth file name
-      2,                                                                  // nBlocks
-      viskores::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"), // dataset file path
-      1                                                                   // presimplifyThreshold
-    );
-#endif
-    TestContourTreePresimplification(
-      "vanc",
-      "var",
-      viskores::cont::testing::Testing::RegressionImagePath("vanc.presimplification.ct_txt"),
-      4,
-      viskores::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"),
-      1);
-#ifdef ENABLE_ADDITIONAL_TESTS
-    TestContourTreePresimplification(
-      "vanc",
-      "var",
-      viskores::cont::testing::Testing::RegressionImagePath("vanc.presimplification.ct_txt"),
-      2,
-      viskores::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"),
-      4);
-#endif
-    TestContourTreePresimplification(
-      "vanc",
-      "var",
-      viskores::cont::testing::Testing::RegressionImagePath("vanc.presimplification.ct_txt"),
-      4,
-      viskores::cont::testing::Testing::DataPath("rectilinear/vanc.vtk"),
-      4);
 
     // test for contour tree presimplification on 3D 5x6x7 dataset
 #ifdef ENABLE_ADDITIONAL_TESTS
@@ -238,7 +129,7 @@ public:
 };
 }
 
-int UnitTestContourTreeUniformDistributedFilter(int argc, char* argv[])
+int UnitTestContourTreeUniformDistributed5x6x7(int argc, char* argv[])
 {
   return viskores::cont::testing::Testing::Run(
     TestContourTreeUniformDistributedFilter(), argc, argv);
