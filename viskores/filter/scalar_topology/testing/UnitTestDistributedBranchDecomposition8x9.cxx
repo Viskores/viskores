@@ -6,15 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 // Copyright (c) 2018, The Regents of the University of California, through
 // Lawrence Berkeley National Laboratory (subject to receipt of any required approvals
 // from the U.S. Dept. of Energy).  All rights reserved.
@@ -76,48 +67,11 @@ public:
     TestContourTreeUniformDistributedBranchDecomposition8x9(4);
     TestContourTreeUniformDistributedBranchDecomposition8x9(8);
     TestContourTreeUniformDistributedBranchDecomposition8x9(16);
-
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.branch_compile.ct_txt"),
-                        2,
-                        false,
-                        0,
-                        1,
-                        true,
-                        true);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.branch_compile.ct_txt"),
-                        4,
-                        false,
-                        0,
-                        1,
-                        true,
-                        true);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.branch_compile.ct_txt"),
-                        8,
-                        false,
-                        0,
-                        1,
-                        true,
-                        true);
-    TestContourTreeFile(Testing::DataPath("rectilinear/vanc.vtk"),
-                        "var",
-                        Testing::RegressionImagePath("vanc.branch_compile.ct_txt"),
-                        16,
-                        false,
-                        0,
-                        1,
-                        true,
-                        true);
   }
 };
 }
 
-int UnitTestDistributedBranchDecompositionFilter(int argc, char* argv[])
+int UnitTestDistributedBranchDecomposition8x9(int argc, char* argv[])
 {
   return viskores::cont::testing::Testing::Run(
     TestDistributedBranchDecompositionFilter(), argc, argv);
