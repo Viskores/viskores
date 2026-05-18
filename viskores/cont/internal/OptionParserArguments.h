@@ -44,7 +44,8 @@ enum OptionIndex
   // All RuntimeDeviceConfiguration specific options
   NUM_THREADS,
   NUMA_REGIONS,
-  DEVICE_INSTANCE
+  DEVICE_INSTANCE,
+  USE_UNIFIED_MEMORY
 };
 
 struct ViskoresArg : public option::Arg
