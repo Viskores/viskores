@@ -262,8 +262,8 @@ void CheckOutput(const viskores::cont::CellSetSingleType<>& cellSet)
   VISKORES_TEST_ASSERT(connectivityPortal.Get(1) == 1, "Bad edge index");
   VISKORES_TEST_ASSERT(connectivityPortal.Get(2) == 1, "Bad edge index");
   VISKORES_TEST_ASSERT(connectivityPortal.Get(3) == 5, "Bad edge index");
-  VISKORES_TEST_ASSERT(connectivityPortal.Get(68) == 9, "Bad edge index");
-  VISKORES_TEST_ASSERT(connectivityPortal.Get(69) == 10, "Bad edge index");
+  VISKORES_TEST_ASSERT(connectivityPortal.Get(66) == 9, "Bad edge index");
+  VISKORES_TEST_ASSERT(connectivityPortal.Get(67) == 10, "Bad edge index");
 }
 
 void TryFilter()

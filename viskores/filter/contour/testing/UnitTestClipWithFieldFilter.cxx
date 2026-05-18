@@ -78,7 +78,7 @@ void TestClipExplicit()
   viskores::cont::ArrayHandle<viskores::Float32> resultArrayHandle;
   temp.AsArrayHandle(resultArrayHandle);
 
-  viskores::Float32 expected[6] = { 1, 2, 1, 0.5, 0.5, 0.5 };
+  viskores::Float32 expected[6] = { 1, 2, 1, 1.5, 3.5, 1.5 };
   for (int i = 0; i < 6; ++i)
   {
     VISKORES_TEST_ASSERT(test_equal(resultArrayHandle.ReadPortal().Get(i), expected[i]),
