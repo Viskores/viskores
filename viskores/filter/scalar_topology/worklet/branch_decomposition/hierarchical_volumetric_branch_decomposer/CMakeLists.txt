@@ -19,14 +19,14 @@
 set(headers
   BranchEndComparator.h
   BranchEndGlobalUpdateWorklet.h
-  CollapseBranchesPointerDoublingWorklet.h
+  CollapseBranchesPtrDoublingWorklet.h
   CollapseBranchesWorklet.h
   FindBestSupernodeWorklet.h
   GetOuterEndWorklet.h
-  LocalBestUpDownByVolumeBestUpDownEdgeWorklet.h
-  LocalBestUpDownByVolumeInitSuperarcListWorklet.h
+  LocalBestUpDownVolBestEdgeWorklet.h
+  LocalBestUpDownVolInitSuperarcList.h
   LocalBestUpDownByVolumeWorklet.h
-  SuperArcVolumetricComparatorIndirectGlobalIdComparator.h
+  SuperArcVolComparatorGlobalId.h
 )
 
 viskores_declare_headers(${headers})
