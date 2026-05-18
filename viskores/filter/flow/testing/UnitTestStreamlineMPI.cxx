@@ -53,6 +53,8 @@ void DoTest()
       }
     }
   }
+
+  TestSparseBlockIdsRejected(filterType, false);
 }
 
 } // anonymous namespace

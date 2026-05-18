@@ -136,8 +136,11 @@ public:
     viskores::filter::flow::internal::DSIHelperInfo<ParticleType>& block,
     viskores::FloatDefault stepSize)
   {
-    auto copyFlag = (this->CopySeedArray ? viskores::CopyFlag::On : viskores::CopyFlag::Off);
-    auto seedArray = viskores::cont::make_ArrayHandle(block.Particles, copyFlag);
+    viskores::cont::ArrayHandle<ParticleType> seedArray;
+    if (this->CopySeedArray)
+      viskores::cont::ArrayCopy(block.Particles, seedArray);
+    else
+      seedArray = block.Particles;
 
     using AdvectionHelper =
       detail::AdvectHelperUnsteadyState<ParticleType, FieldType, TerminationType, AnalysisType>;
@@ -165,10 +168,10 @@ public:
     this->ClassifyParticles(analysis.Particles, dsiInfo);
     if (std::is_same<AnalysisType, viskores::worklet::flow::NoAnalysis<ParticleType>>::value)
     {
-      if (dsiInfo.TermIdx.empty())
+      if (dsiInfo.TermIdx.GetNumberOfValues() == 0)
         return;
-      auto indicesAH = viskores::cont::make_ArrayHandle(dsiInfo.TermIdx, viskores::CopyFlag::Off);
-      auto termPerm = viskores::cont::make_ArrayHandlePermutation(indicesAH, analysis.Particles);
+      auto termPerm =
+        viskores::cont::make_ArrayHandlePermutation(dsiInfo.TermIdx, analysis.Particles);
       viskores::cont::ArrayHandle<ParticleType> termParticles;
       viskores::cont::Algorithm::Copy(termPerm, termParticles);
       analysis.FinalizeAnalysis(termParticles);

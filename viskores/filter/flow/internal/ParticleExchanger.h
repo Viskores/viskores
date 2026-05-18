@@ -19,6 +19,22 @@
 #ifndef viskores_filter_flow_internal_ParticleExchanger_h
 #define viskores_filter_flow_internal_ParticleExchanger_h
 
+#include <viskores/Assert.h>
+#include <viskores/Types.h>
+#include <viskores/cont/ErrorFilterExecution.h>
+#include <viskores/cont/Logging.h>
+#include <viskores/thirdparty/diy/diy.h>
+
+#include <cstddef>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#ifdef VISKORES_ENABLE_MPI
+#include <mpi.h>
+#include <viskores/thirdparty/diy/mpi-cast.h>
+#endif
+
 namespace viskores
 {
 namespace filter
@@ -43,49 +59,102 @@ public:
   {
   }
 #ifdef VISKORES_ENABLE_MPI
-  ~ParticleExchanger() {} //{ this->CleanupSendBuffers(false); }
+  ~ParticleExchanger() { this->WaitAllSendsAndCleanup(); }
 #endif
 
   bool HaveWork() const { return !this->SendBuffers.empty(); }
 
   void Exchange(const std::vector<ParticleType>& outData,
                 const std::vector<viskores::Id>& outRanks,
-                const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& outBlockIDsMap,
+                const std::vector<viskores::Id>& outBlockIDs,
+                const std::vector<std::vector<viskores::Id>>& outCandidateBlockIDs,
                 std::vector<ParticleType>& inData,
-                std::unordered_map<viskores::Id, std::vector<viskores::Id>>& inDataBlockIDsMap)
+                std::vector<viskores::Id>& inDataBlockIDs,
+                std::vector<std::vector<viskores::Id>>& inDataCandidateBlockIDs)
   {
-    VISKORES_ASSERT(outData.size() == outRanks.size());
+    VISKORES_ASSERT(outData.size() == outRanks.size() && outData.size() == outBlockIDs.size() &&
+                    outData.size() == outCandidateBlockIDs.size());
 
     if (this->NumRanks == 1)
-      this->SerialExchange(outData, outBlockIDsMap, inData, inDataBlockIDsMap);
+      this->SerialExchange(outData,
+                           outBlockIDs,
+                           outCandidateBlockIDs,
+                           inData,
+                           inDataBlockIDs,
+                           inDataCandidateBlockIDs);
 #ifdef VISKORES_ENABLE_MPI
     else
     {
       this->CleanupSendBuffers(true);
-      this->SendParticles(outData, outRanks, outBlockIDsMap);
-      this->RecvParticles(inData, inDataBlockIDsMap);
+      this->SendParticles(outData, outRanks, outBlockIDs, outCandidateBlockIDs);
+      this->RecvParticles(inData, inDataBlockIDs, inDataCandidateBlockIDs);
     }
 #endif
   }
 
 private:
-  void SerialExchange(
-    const std::vector<ParticleType>& outData,
-    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& outBlockIDsMap,
-    std::vector<ParticleType>& inData,
-    std::unordered_map<viskores::Id, std::vector<viskores::Id>>& inDataBlockIDsMap)
+  void SerialExchange(const std::vector<ParticleType>& outData,
+                      const std::vector<viskores::Id>& outBlockIDs,
+                      const std::vector<std::vector<viskores::Id>>& outCandidateBlockIDs,
+                      std::vector<ParticleType>& inData,
+                      std::vector<viskores::Id>& inDataBlockIDs,
+                      std::vector<std::vector<viskores::Id>>& inDataCandidateBlockIDs)
   {
+    VISKORES_ASSERT(outData.size() == outBlockIDs.size() &&
+                    outData.size() == outCandidateBlockIDs.size());
+
+    inData.clear();
+    inDataBlockIDs.clear();
+    inDataCandidateBlockIDs.clear();
+    inData.reserve(outData.size());
+    inDataBlockIDs.reserve(outBlockIDs.size());
+    inDataCandidateBlockIDs.reserve(outCandidateBlockIDs.size());
+
     //Copy output to input.
-    for (const auto& p : outData)
+    for (std::size_t i = 0; i < outData.size(); ++i)
     {
-      const auto& bids = outBlockIDsMap.find(p.GetID())->second;
-      inData.emplace_back(p);
-      inDataBlockIDsMap[p.GetID()] = bids;
+      inData.emplace_back(outData[i]);
+      inDataBlockIDs.emplace_back(outBlockIDs[i]);
+      inDataCandidateBlockIDs.emplace_back(outCandidateBlockIDs[i]);
     }
   }
 
 #ifdef VISKORES_ENABLE_MPI
-  using ParticleCommType = std::pair<ParticleType, std::vector<viskores::Id>>;
+  // Particle, selected destination block, and remaining candidate blocks. The
+  // candidate list is retry state, so it must move with particles across ranks.
+  using ParticleCommType =
+    std::pair<std::pair<ParticleType, viskores::Id>, std::vector<viskores::Id>>;
+
+  void WaitAllSendsAndCleanup() noexcept
+  {
+    if (this->SendBuffers.empty())
+      return;
+
+    int finalized = 0;
+    MPI_Finalized(&finalized);
+    if (finalized == 0)
+    {
+      std::vector<MPI_Request> requests;
+      requests.reserve(this->SendBuffers.size());
+      for (const auto& entry : this->SendBuffers)
+        requests.push_back(entry.first);
+
+      if (!requests.empty())
+      {
+        int err =
+          MPI_Waitall(static_cast<int>(requests.size()), requests.data(), MPI_STATUSES_IGNORE);
+        if (err != MPI_SUCCESS)
+        {
+          VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                         "MPI_Waitall failed in ParticleExchanger destructor.");
+        }
+      }
+    }
+
+    for (auto& entry : this->SendBuffers)
+      delete entry.second;
+    this->SendBuffers.clear();
+  }
 
   void CleanupSendBuffers(bool checkRequests)
   {
@@ -138,24 +207,25 @@ private:
     }
   }
 
-  void SendParticles(
-    const std::vector<ParticleType>& outData,
-    const std::vector<viskores::Id>& outRanks,
-    const std::unordered_map<viskores::Id, std::vector<viskores::Id>>& outBlockIDsMap)
+  void SendParticles(const std::vector<ParticleType>& outData,
+                     const std::vector<viskores::Id>& outRanks,
+                     const std::vector<viskores::Id>& outBlockIDs,
+                     const std::vector<std::vector<viskores::Id>>& outCandidateBlockIDs)
   {
     if (outData.empty())
       return;
 
     //create the send data: vector of particles, vector of vector of blockIds.
     std::size_t n = outData.size();
+    VISKORES_ASSERT(n == outRanks.size() && n == outBlockIDs.size() &&
+                    n == outCandidateBlockIDs.size());
     std::unordered_map<int, std::vector<ParticleCommType>> sendData;
 
     // dst, vector of pair(particles, blockIds)
     for (std::size_t i = 0; i < n; i++)
     {
-      const auto& bids = outBlockIDsMap.find(outData[i].GetID())->second;
-      //sendData[outRanks[i]].emplace_back(std::make_pair(std::move(outData[i]), std::move(bids)));
-      sendData[outRanks[i]].emplace_back(std::make_pair(outData[i], bids));
+      sendData[outRanks[i]].emplace_back(
+        std::make_pair(std::make_pair(outData[i], outBlockIDs[i]), outCandidateBlockIDs[i]));
     }
 
     //Send to dst, vector<pair<particle, bids>>
@@ -184,12 +254,13 @@ private:
     this->SendBuffers[req] = bb;
   }
 
-  void RecvParticles(
-    std::vector<ParticleType>& inData,
-    std::unordered_map<viskores::Id, std::vector<viskores::Id>>& inDataBlockIDsMap) const
+  void RecvParticles(std::vector<ParticleType>& inData,
+                     std::vector<viskores::Id>& inDataBlockIDs,
+                     std::vector<std::vector<viskores::Id>>& inDataCandidateBlockIDs) const
   {
-    inData.resize(0);
-    inDataBlockIDsMap.clear();
+    inData.clear();
+    inDataBlockIDs.clear();
+    inDataCandidateBlockIDs.clear();
 
     std::vector<viskoresdiy::MemoryBuffer> buffers;
 
@@ -237,10 +308,9 @@ private:
       memBuff.reset();
       for (const auto& d : data)
       {
-        const auto& particle = d.first;
-        const auto& bids = d.second;
-        inDataBlockIDsMap[particle.GetID()] = bids;
-        inData.emplace_back(particle);
+        inData.emplace_back(d.first.first);
+        inDataBlockIDs.emplace_back(d.first.second);
+        inDataCandidateBlockIDs.emplace_back(d.second);
       }
 
       //Note, we don't terminate the while loop here. We want to go back and

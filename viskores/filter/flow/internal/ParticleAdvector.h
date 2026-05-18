@@ -40,8 +40,8 @@ public:
   using ParticleType = typename DSIType::PType;
 
   ParticleAdvector(const viskores::filter::flow::internal::BoundsMap& bm,
-                   const std::vector<DSIType>& blocks,
-                   const bool& useThreaded)
+                   std::vector<DSIType>& blocks,
+                   bool useThreaded)
     : Blocks(blocks)
     , BoundsMap(bm)
     , UseThreadedAlgorithm(useThreaded)
@@ -58,12 +58,7 @@ public:
     }
     else
     {
-      // There appears to be a race condition in AdvectAlgorithmThreaded, so it is
-      //  currently disabled.
-      // using AlgorithmType = viskores::filter::flow::internal::AdvectAlgorithmThreaded<DSIType>;
-      VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                     "Threaded flow management currently disabled.");
-      using AlgorithmType = viskores::filter::flow::internal::AdvectAlgorithm<DSIType>;
+      using AlgorithmType = viskores::filter::flow::internal::AdvectAlgorithmThreaded<DSIType>;
       return this->RunAlgo<AlgorithmType>(seeds, stepSize);
     }
   }
@@ -78,8 +73,8 @@ private:
     return algo.GetOutput();
   }
 
-  std::vector<DSIType> Blocks;
-  viskores::filter::flow::internal::BoundsMap BoundsMap;
+  std::vector<DSIType>& Blocks;
+  const viskores::filter::flow::internal::BoundsMap& BoundsMap;
   bool UseThreadedAlgorithm;
 };
 

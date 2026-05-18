@@ -81,4 +81,6 @@ void TestPartitionedDataSet(viskores::Id nPerRank,
                             bool useBlockIds,
                             bool duplicateBlocks);
 
+void TestSparseBlockIdsRejected(FilterType fType, bool useThreaded);
+
 #endif // viskores_filter_flow_testing_TestingFlow_h

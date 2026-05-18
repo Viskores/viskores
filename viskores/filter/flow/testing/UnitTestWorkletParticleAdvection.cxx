@@ -21,7 +21,11 @@
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandle.h>
 #include <viskores/cont/DataSet.h>
+#include <viskores/cont/DataSetBuilderExplicit.h>
 #include <viskores/cont/testing/Testing.h>
+#include <viskores/filter/flow/internal/AdvectAlgorithmThreaded.h>
+#include <viskores/filter/flow/internal/BoundsMap.h>
+#include <viskores/filter/flow/internal/DataSetIntegrator.h>
 #include <viskores/filter/flow/testing/GenerateTestDataSets.h>
 #include <viskores/filter/flow/worklet/Analysis.h>
 #include <viskores/filter/flow/worklet/EulerIntegrator.h>
@@ -35,6 +39,7 @@
 #include <viskores/filter/mesh_info/GhostCellClassify.h>
 #include <viskores/io/VTKDataSetReader.h>
 
+#include <memory>
 #include <random>
 
 namespace
@@ -137,6 +142,125 @@ void CreateConstantVectorField(viskores::Id num,
   viskores::cont::ArrayHandleConstant<viskores::Vec3f> vecConst;
   vecConst = viskores::cont::make_ArrayHandleConstant(vec, num);
   viskores::cont::ArrayCopy(vecConst, vecField);
+}
+
+using CandidateBlockIdArrayHandle = viskores::filter::flow::internal::CandidateBlockIdArrayHandle;
+
+class RoutingTestIntegrator
+  : public viskores::filter::flow::internal::DataSetIntegrator<RoutingTestIntegrator,
+                                                               viskores::Particle>
+{
+public:
+  using BaseType =
+    viskores::filter::flow::internal::DataSetIntegrator<RoutingTestIntegrator, viskores::Particle>;
+
+  RoutingTestIntegrator(viskores::Id blockId)
+    : BaseType(blockId, viskores::filter::flow::IntegrationSolverType::RK4_TYPE)
+  {
+  }
+
+  void Classify(viskores::cont::ArrayHandle<viskores::Particle>& particles,
+                viskores::filter::flow::internal::DSIHelperInfo<viskores::Particle>& info) const
+  {
+    this->ClassifyParticles(particles, info);
+  }
+};
+
+class ThreadedRoutingTestIntegrator
+  : public viskores::filter::flow::internal::DataSetIntegrator<ThreadedRoutingTestIntegrator,
+                                                               viskores::Particle>
+{
+public:
+  using PType = viskores::Particle;
+  using BaseType =
+    viskores::filter::flow::internal::DataSetIntegrator<ThreadedRoutingTestIntegrator,
+                                                        viskores::Particle>;
+
+  ThreadedRoutingTestIntegrator(viskores::Id blockId,
+                                std::shared_ptr<std::vector<viskores::Id>> blockCounts)
+    : BaseType(blockId, viskores::filter::flow::IntegrationSolverType::RK4_TYPE)
+    , BlockCounts(std::move(blockCounts))
+  {
+  }
+
+  void DoAdvect(viskores::filter::flow::internal::DSIHelperInfo<viskores::Particle>& info,
+                viskores::FloatDefault)
+  {
+    (*this->BlockCounts)[static_cast<std::size_t>(this->Id)]++;
+
+    std::vector<viskores::Particle> particles;
+    const viskores::Id numParticles = info.Particles.GetNumberOfValues();
+    particles.reserve(static_cast<std::size_t>(numParticles));
+
+    auto portal = info.Particles.ReadPortal();
+    for (viskores::Id i = 0; i < numParticles; ++i)
+    {
+      auto particle = portal.Get(i);
+      if (this->Id == 0)
+        particle.GetStatus().SetSpatialBounds();
+      else
+        particle.GetStatus().SetTerminate();
+      particles.emplace_back(particle);
+    }
+
+    auto particlesAH = viskores::cont::make_ArrayHandle(particles, viskores::CopyFlag::On);
+    this->ClassifyParticles(particlesAH, info);
+  }
+
+  bool GetOutput(viskores::cont::DataSet&) const { return false; }
+
+private:
+  std::shared_ptr<std::vector<viskores::Id>> BlockCounts;
+};
+
+viskores::cont::DataSet CreateTetrahedron()
+{
+  std::vector<viskores::Vec3f> points = {
+    { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }
+  };
+  std::vector<viskores::UInt8> shapes = { viskores::CELL_SHAPE_TETRA };
+  std::vector<viskores::IdComponent> numIndices = { 4 };
+  std::vector<viskores::Id> connectivity = { 0, 1, 2, 3 };
+
+  return viskores::cont::DataSetBuilderExplicit::Create(points, shapes, numIndices, connectivity);
+}
+
+CandidateBlockIdArrayHandle MakeCandidateBlockIds(const std::vector<std::vector<viskores::Id>>& ids)
+{
+  std::vector<viskores::Id> counts;
+  std::vector<viskores::Id> components;
+  counts.reserve(ids.size());
+  for (const auto& particleIds : ids)
+  {
+    counts.emplace_back(static_cast<viskores::Id>(particleIds.size()));
+    components.insert(components.end(), particleIds.begin(), particleIds.end());
+  }
+
+  auto countsAH = viskores::cont::make_ArrayHandle(counts, viskores::CopyFlag::On);
+  auto offsetsAH = viskores::cont::ConvertNumComponentsToOffsets(countsAH);
+  auto componentsAH = viskores::cont::make_ArrayHandle(components, viskores::CopyFlag::On);
+  return viskores::cont::make_ArrayHandleGroupVecVariable(componentsAH, offsetsAH);
+}
+
+std::vector<std::vector<viskores::Id>> ReadCandidateBlockIds(
+  const CandidateBlockIdArrayHandle& candidateBlockIds)
+{
+  std::vector<std::vector<viskores::Id>> ids;
+  auto portal = candidateBlockIds.ReadPortal();
+  for (viskores::Id i = 0; i < candidateBlockIds.GetNumberOfValues(); ++i)
+  {
+    auto candidates = portal.Get(i);
+    std::vector<viskores::Id> particleIds;
+    for (viskores::IdComponent j = 0; j < candidates.GetNumberOfComponents(); ++j)
+    {
+      const viskores::Id candidate = candidates[j];
+      if (candidate >= 0)
+        particleIds.emplace_back(candidate);
+    }
+    ids.emplace_back(std::move(particleIds));
+  }
+
+  return ids;
 }
 
 class TestEvaluatorWorklet : public viskores::worklet::WorkletMapField
@@ -704,6 +828,85 @@ void TestParticleStatus()
   }
 }
 
+void TestNoStepSpatialFailureConsumesCandidateBlocks()
+{
+  viskores::cont::PartitionedDataSet pds;
+  pds.AppendPartition(CreateTetrahedron());
+  pds.AppendPartition(CreateTetrahedron());
+
+  viskores::filter::flow::internal::BoundsMap boundsMap(pds);
+
+  viskores::Particle particle(viskores::Vec3f(0.9f, 0.9f, 0.9f), 0);
+  particle.GetStatus().SetSpatialBounds();
+  auto particles = viskores::cont::make_ArrayHandle({ particle });
+  auto candidateBlockIds = MakeCandidateBlockIds({ { 0, 1 } });
+
+  RoutingTestIntegrator block0(0);
+  viskores::filter::flow::internal::DSIHelperInfo<viskores::Particle> info0(
+    particles, candidateBlockIds, boundsMap);
+  block0.Classify(particles, info0);
+
+  VISKORES_TEST_ASSERT(info0.OutParticles.GetNumberOfValues() == 1,
+                       "First failed block should route to the remaining candidate.");
+  VISKORES_TEST_ASSERT(info0.TermIdx.GetNumberOfValues() == 0,
+                       "First failed block should not terminate while another candidate exists.");
+  VISKORES_TEST_ASSERT(info0.OutNextBlockIDs.ReadPortal().Get(0) == 1,
+                       "First failed block routed to the wrong next block.");
+
+  auto candidatesAfterBlock0 = ReadCandidateBlockIds(info0.OutCandidateBlockIDs);
+  VISKORES_TEST_ASSERT(candidatesAfterBlock0.size() == 1,
+                       "First failed block returned the wrong number of candidate lists.");
+  VISKORES_TEST_ASSERT(candidatesAfterBlock0[0].size() == 1 && candidatesAfterBlock0[0][0] == 1,
+                       "First failed block did not remove itself from the candidate list.");
+
+  auto nextParticle = info0.OutParticles.ReadPortal().Get(0);
+  nextParticle.GetStatus().SetSpatialBounds();
+  auto nextParticles = viskores::cont::make_ArrayHandle({ nextParticle });
+
+  RoutingTestIntegrator block1(1);
+  viskores::filter::flow::internal::DSIHelperInfo<viskores::Particle> info1(
+    nextParticles, info0.OutCandidateBlockIDs, boundsMap);
+  block1.Classify(nextParticles, info1);
+
+  VISKORES_TEST_ASSERT(info1.OutParticles.GetNumberOfValues() == 0,
+                       "Last failed candidate should not be routed back to a previous block.");
+  VISKORES_TEST_ASSERT(info1.TermIdx.GetNumberOfValues() == 1,
+                       "Last failed candidate should terminate the particle.");
+  VISKORES_TEST_ASSERT(nextParticles.ReadPortal().Get(0).GetStatus().CheckTerminate(),
+                       "Particle should be marked terminated after exhausting candidate blocks.");
+}
+
+void TestThreadedSerialExchangeWakesWorker()
+{
+  viskores::cont::PartitionedDataSet pds;
+  pds.AppendPartition(CreateTetrahedron());
+  pds.AppendPartition(CreateTetrahedron());
+
+  viskores::filter::flow::internal::BoundsMap boundsMap(pds);
+
+  auto blockCounts = std::make_shared<std::vector<viskores::Id>>(2, 0);
+  std::vector<ThreadedRoutingTestIntegrator> blocks;
+  blocks.emplace_back(0, blockCounts);
+  blocks.emplace_back(1, blockCounts);
+
+  viskores::filter::flow::internal::AdvectAlgorithmThreaded<ThreadedRoutingTestIntegrator> algo(
+    boundsMap, blocks);
+
+  auto seeds =
+    viskores::cont::make_ArrayHandle({ viskores::Particle(viskores::Vec3f(0.1f, 0.1f, 0.1f), 0) });
+  auto blockIds = viskores::cont::make_ArrayHandle({ viskores::Id(0) });
+  auto candidateBlockIds = MakeCandidateBlockIds({ { 0, 1 } });
+
+  algo.SetStepSize(1.0f);
+  algo.SetSeedArray(seeds, blockIds, candidateBlockIds);
+  algo.Go();
+
+  VISKORES_TEST_ASSERT((*blockCounts)[0] == 1,
+                       "Threaded algorithm did not process the initial block.");
+  VISKORES_TEST_ASSERT((*blockCounts)[1] == 1,
+                       "Threaded serial exchange did not wake the worker for the next block.");
+}
+
 void TestWorkletsBasic()
 {
   using FieldHandle = viskores::cont::ArrayHandle<viskores::Vec3f>;
@@ -961,6 +1164,8 @@ void TestParticleAdvection()
   TestGhostCellEvaluators();
 
   TestParticleStatus();
+  TestNoStepSpatialFailureConsumesCandidateBlocks();
+  TestThreadedSerialExchangeWakesWorker();
   TestWorkletsBasic();
   TestParticleWorkletsWithDataSetTypes();
 

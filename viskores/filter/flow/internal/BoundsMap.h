@@ -20,12 +20,13 @@
 #define viskores_filter_flow_internal_BoundsMap_h
 
 #include <viskores/Bounds.h>
+#include <viskores/cont/CellLocatorUniformBins.h>
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/Field.h>
 #include <viskores/cont/PartitionedDataSet.h>
+#include <viskores/filter/flow/viskores_filter_flow_export.h>
 
-#include <algorithm>
-#include <set>
+#include <map>
 #include <vector>
 
 namespace viskores
@@ -37,22 +38,10 @@ namespace flow
 namespace internal
 {
 
-class VISKORES_ALWAYS_EXPORT BoundsMap
+class VISKORES_FILTER_FLOW_EXPORT BoundsMap
 {
 public:
   VISKORES_CONT BoundsMap() {}
-
-  VISKORES_CONT BoundsMap(const viskores::cont::DataSet& dataSet) { this->Init({ dataSet }); }
-
-  VISKORES_CONT BoundsMap(const viskores::cont::DataSet& dataSet, const viskores::Id& blockId)
-  {
-    this->Init({ dataSet }, { blockId });
-  }
-
-  VISKORES_CONT BoundsMap(const std::vector<viskores::cont::DataSet>& dataSets)
-  {
-    this->Init(dataSets);
-  }
 
   VISKORES_CONT BoundsMap(const viskores::cont::PartitionedDataSet& pds)
   {
@@ -64,64 +53,29 @@ public:
   {
     this->Init(pds.GetPartitions(), blockIds);
   }
-
-  VISKORES_CONT viskores::Bounds GetGlobalBounds() const { return this->GlobalBounds; }
-
-  VISKORES_CONT viskores::Bounds GetBlockBounds(viskores::Id idx) const
-  {
-    VISKORES_ASSERT(idx >= 0 && static_cast<std::size_t>(idx) < this->BlockBounds.size());
-
-    return this->BlockBounds[static_cast<std::size_t>(idx)];
-  }
-
   VISKORES_CONT viskores::Id GetLocalBlockId(viskores::Id idx) const
   {
     VISKORES_ASSERT(idx >= 0 && idx < this->LocalNumBlocks);
     return this->LocalIDs[static_cast<std::size_t>(idx)];
   }
 
-  VISKORES_CONT std::vector<int> FindRank(viskores::Id blockId) const
+  VISKORES_CONT const std::vector<viskores::Int32>& FindRankRef(viskores::Id blockId) const
   {
     auto it = this->BlockToRankMap.find(blockId);
     if (it == this->BlockToRankMap.end())
-      return {};
+    {
+      static const std::vector<viskores::Int32> Empty;
+      return Empty;
+    }
 
     return it->second;
   }
 
-  VISKORES_CONT std::vector<viskores::Id> FindBlocks(const viskores::Vec3f& p) const
-  {
-    return this->FindBlocks(p, -1);
-  }
-
-  VISKORES_CONT std::vector<viskores::Id> FindBlocks(
-    const viskores::Vec3f& p,
-    const std::vector<viskores::Id>& ignoreBlocks) const
-  {
-    viskores::Id ignoreID = (ignoreBlocks.empty() ? -1 : ignoreBlocks[0]);
-    return FindBlocks(p, ignoreID);
-  }
-
-  VISKORES_CONT std::vector<viskores::Id> FindBlocks(const viskores::Vec3f& p,
-                                                     viskores::Id ignoreBlock) const
-  {
-    std::vector<viskores::Id> blockIDs;
-    if (this->GlobalBounds.Contains(p))
-    {
-      viskores::Id blockId = 0;
-      for (auto& it : this->BlockBounds)
-      {
-        if (blockId != ignoreBlock && it.Contains(p))
-          blockIDs.emplace_back(blockId);
-        blockId++;
-      }
-    }
-
-    return blockIDs;
-  }
-
   VISKORES_CONT viskores::Id GetTotalNumBlocks() const { return this->TotalNumBlocks; }
-  VISKORES_CONT viskores::Id GetLocalNumBlocks() const { return this->LocalNumBlocks; }
+  VISKORES_CONT const viskores::cont::CellLocatorUniformBins& GetLocator() const
+  {
+    return this->Locator;
+  }
 
 private:
   VISKORES_CONT void Init(const std::vector<viskores::cont::DataSet>& dataSets,
@@ -130,6 +84,8 @@ private:
   VISKORES_CONT void Init(const std::vector<viskores::cont::DataSet>& dataSets);
 
   VISKORES_CONT void Build(const std::vector<viskores::cont::DataSet>& dataSets);
+  VISKORES_CONT void BuildLocator();
+  VISKORES_CONT viskores::Id3 GetLocatorDims() const;
 
   viskores::Id LocalNumBlocks = 0;
   std::vector<viskores::Id> LocalIDs;
@@ -137,6 +93,7 @@ private:
   viskores::Id TotalNumBlocks = 0;
   std::vector<viskores::Bounds> BlockBounds;
   viskores::Bounds GlobalBounds;
+  viskores::cont::CellLocatorUniformBins Locator;
 };
 
 }
