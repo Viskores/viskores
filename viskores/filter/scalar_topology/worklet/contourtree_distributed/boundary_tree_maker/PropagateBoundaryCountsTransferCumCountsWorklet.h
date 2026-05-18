@@ -58,8 +58,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef viskores_worklet_contourtree_distributed_bract_maker_propagate_boundary_counts_transfer_cumulative_counts_worklet_h
-#define viskores_worklet_contourtree_distributed_bract_maker_propagate_boundary_counts_transfer_cumulative_counts_worklet_h
+#ifndef viskores_worklet_contourtree_distributed_bract_maker_propagate_boundary_counts_transfer_cum_counts_worklet_h
+#define viskores_worklet_contourtree_distributed_bract_maker_propagate_boundary_counts_transfer_cum_counts_worklet_h
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <viskores/worklet/WorkletMapField.h>

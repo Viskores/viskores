@@ -46,13 +46,20 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
+//
+//  This code is an extension of the algorithm presented in the paper:
+//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
+//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
+//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
+//  (LDAV), October 2016, Baltimore, Maryland.
+//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef viskores_worklet_contourtree_distributed_hierarchical_augmenter_create_auperarcs_set_first_supernode_per_iteration_worklet_h
-#define viskores_worklet_contourtree_distributed_hierarchical_augmenter_create_auperarcs_set_first_supernode_per_iteration_worklet_h
+#ifndef viskores_worklet_contourtree_distributed_hierarchical_hyper_sweeper_init_intrinsic_vertex_count_subtract_low_end_worklet_h
+#define viskores_worklet_contourtree_distributed_hierarchical_hyper_sweeper_init_intrinsic_vertex_count_subtract_low_end_worklet_h
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <viskores/worklet/WorkletMapField.h>
@@ -63,93 +70,79 @@ namespace worklet
 {
 namespace contourtree_distributed
 {
-namespace hierarchical_augmenter
+namespace hierarchical_hyper_sweeper
 {
 
-/// Worklet used in HierarchicalAugmenter::UpdateHyperstructure to set the hyperarcs and hypernodes
-class CreateSuperarcsSetFirstSupernodePerIterationWorklet
+/// Worklet used in HierarchicalHyperSweeper.InitializeIntrinsicVertexCount(...) to
+/// subtract out the low end from the superarc regular counts
+class InitializeIntrinsicVertexCountSubtractLowEndWorklet
   : public viskores::worklet::WorkletMapField
 {
 public:
-  /// Control signature for the worklet
-  using ControlSignature = void(FieldIn supernodeIndex,
-                                WholeArrayIn augmentedTreeWhichIteration,
-                                WholeArrayInOut augmentedTreeFirstSupernodePerIteration);
-  using ExecutionSignature = void(_1, _2, _3);
+  using ControlSignature = void(WholeArrayIn superparents, WholeArrayInOut superarcRegularCounts);
+  using ExecutionSignature = void(InputIndex, _1, _2);
   using InputDomain = _1;
 
   // Default Constructor
   VISKORES_EXEC_CONT
-  CreateSuperarcsSetFirstSupernodePerIterationWorklet(viskores::Id numSupernodesAlready)
-    : NumSupernodesAlready(numSupernodesAlready)
-  {
-  }
+  InitializeIntrinsicVertexCountSubtractLowEndWorklet() {}
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
-  VISKORES_EXEC void operator()(
-    const viskores::Id& supernode, // index in supernodeSorter
-    // const viskores::Id& supernodeSetindex,  // supernodeSorter[supernode]
-    const InFieldPortalType& augmentedTreeWhichIterationPortal,
-    const InOutFieldPortalType& augmentedTreeFirstSupernodePerIterationPortal) const
-  { // operator()()
-    // per supernode in the set
-    // retrieve the index from the sorting index array (Done on input)(NOT USED)
-    // indexType supernodeSetIndex = supernodeSorter[supernode];
+  VISKORES_EXEC void operator()(const viskores::Id& vertex,
+                                const InFieldPortalType superparentsPortal,
+                                const InOutFieldPortalType superarcRegularCountsPortal) const
+  {
+    // per vertex
+    // retrieve the superparent
+    viskores::Id superparent = superparentsPortal.Get(vertex);
 
-    // work out the new supernode ID
-    viskores::Id newSupernodeId = this->NumSupernodesAlready + supernode;
-
-    // The 0th element sets the first element in the zeroth iteration
-    if (supernode == 0)
+    // if it's NSE, ignore (should never happen, but . . . )
+    if (viskores::worklet::contourtree_augmented::NoSuchElement(superparent))
     {
-      augmentedTreeFirstSupernodePerIterationPortal.Set(0, newSupernodeId);
+      return;
     }
-    // otherwise, mismatch to the left identifies a new iteration
+
+    // if its the first element, always write
+    if (vertex == 0)
+    {
+      superarcRegularCountsPortal.Set(superparent,
+                                      superarcRegularCountsPortal.Get(superparent) - vertex);
+    }
+    // otherwise, only write if different from previous one
     else
     {
-      if (viskores::worklet::contourtree_augmented::MaskedIndex(
-            augmentedTreeWhichIterationPortal.Get(newSupernodeId)) !=
-          viskores::worklet::contourtree_augmented::MaskedIndex(
-            augmentedTreeWhichIterationPortal.Get(newSupernodeId - 1)))
-      { // start of segment
-        augmentedTreeFirstSupernodePerIterationPortal.Set(
-          viskores::worklet::contourtree_augmented::MaskedIndex(
-            augmentedTreeWhichIterationPortal.Get(newSupernodeId)),
-          newSupernodeId);
-      } // start of segmen
+      if (superparentsPortal.Get(vertex - 1) != superparent)
+      {
+        superarcRegularCountsPortal.Set(superparent,
+                                        superarcRegularCountsPortal.Get(superparent) - vertex);
+      }
     }
 
+    // In serial this worklet implements the following operation
     /*
-    #pragma omp parallel for
-    for (indexType supernode = 0; supernode < supernodeSorter.size(); supernode++)
-    { // per supernode in the set
-      // retrieve the index from the sorting index array
-      indexType supernodeSetIndex = supernodeSorter[supernode];
+    for (viskores::Id vertex = 0; vertex < superparents.GetNumberOfValues(); vertex++)
+    { // per vertex
+      // retrieve the superparent
+      viskores::Id superparent = superparents[vertex];
 
-      // work out the new supernode ID
-      indexType newSupernodeID = nSupernodesAlready + supernode;
+      // if it's NSE, ignore (should never happen, but . . . )
+      if (noSuchElement(superparent))
+        continue;
 
-      // The 0th element sets the first element in the zeroth iteration
-      if (supernode == 0)
-        augmentedTree->firstSupernodePerIteration[roundNo][0] = newSupernodeID;
-      // otherwise, mismatch to the left identifies a new iteration
+      // if its the first element, always write
+      if (vertex == 0)
+        superarcRegularCounts[superparent] -= vertex;
+      // otherwise, only write if different from previous one
       else
-      {
-        if (augmentedTree->whichIteration[newSupernodeID] != augmentedTree->whichIteration[newSupernodeID-1])
-          augmentedTree->firstSupernodePerIteration[roundNo][maskedIndex(augmentedTree->whichIteration[newSupernodeID])] = newSupernodeID;
-      }
-    } // per supernode in the set
+        if (superparents[vertex-1] != superparent)
+          superarcRegularCounts[superparent] -= vertex;
+    } // per vertex
     */
-
   } // operator()()
 
-private:
-  viskores::Id NumSupernodesAlready;
+}; // InitializeIntrinsicVertexCountSubtractLowEndWorklet
 
-
-}; // CreateSuperarcsSetFirstSupernodePerIterationWorklet
-
-} // namespace hierarchical_augmenter
+} // namespace hierarchical_hyper_sweeper
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace viskores

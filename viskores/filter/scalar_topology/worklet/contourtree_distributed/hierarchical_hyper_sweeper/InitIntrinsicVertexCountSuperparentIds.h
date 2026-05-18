@@ -58,8 +58,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef viskores_worklet_contourtree_distributed_hierarchical_hyper_sweeper_initialize_intrinsic_vertex_count_subtract_low_end_worklet_h
-#define viskores_worklet_contourtree_distributed_hierarchical_hyper_sweeper_initialize_intrinsic_vertex_count_subtract_low_end_worklet_h
+#ifndef viskores_worklet_contourtree_distributed_hierarchical_hyper_sweeper_init_intrinsic_vertex_count_superparent_ids_h
+#define viskores_worklet_contourtree_distributed_hierarchical_hyper_sweeper_init_intrinsic_vertex_count_superparent_ids_h
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <viskores/worklet/WorkletMapField.h>
@@ -74,73 +74,91 @@ namespace hierarchical_hyper_sweeper
 {
 
 /// Worklet used in HierarchicalHyperSweeper.InitializeIntrinsicVertexCount(...) to
-/// subtract out the low end from the superarc regular counts
-class InitializeIntrinsicVertexCountSubtractLowEndWorklet
+/// Look up the global Ids in the hierarchical tree & convert to superparent Ids
+class InitializeIntrinsicVertexCountComputeSuperparentIdsWorklet
   : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn superparents, WholeArrayInOut superarcRegularCounts);
-  using ExecutionSignature = void(InputIndex, _1, _2);
+  // TODO: We could avoid the need for WholeArrayIn if we did the findRegularByGlobal mapping outside of the worklet first and then use the mapped
+  using ControlSignature = void(FieldIn globalIds,                              // input
+                                ExecObject findRegularByGlobal,                 // input
+                                WholeArrayIn hierarchicalTreeRegular2Supernode, // input
+                                WholeArrayIn hierarchicalTreeSuperparents,      // input
+                                FieldOut superparents                           // output
+
+  );
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
   // Default Constructor
   VISKORES_EXEC_CONT
-  InitializeIntrinsicVertexCountSubtractLowEndWorklet() {}
+  InitializeIntrinsicVertexCountComputeSuperparentIdsWorklet() {}
 
-  template <typename InFieldPortalType, typename InOutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                                const InFieldPortalType superparentsPortal,
-                                const InOutFieldPortalType superarcRegularCountsPortal) const
+  template <typename ExecObjType, typename InFieldPortalType>
+  VISKORES_EXEC void operator()(const viskores::Id& globalId,
+                                const ExecObjType& findRegularByGlobal,
+                                const InFieldPortalType& hierarchicalTreeRegular2SupernodePortal,
+                                const InFieldPortalType& hierarchicalTreeSuperparentsPortal,
+                                viskores::Id& superparent) const
   {
     // per vertex
-    // retrieve the superparent
-    viskores::Id superparent = superparentsPortal.Get(vertex);
-
-    // if it's NSE, ignore (should never happen, but . . . )
-    if (viskores::worklet::contourtree_augmented::NoSuchElement(superparent))
+    // retrieve the regular Id (should ALWAYS exist)
+    viskores::Id hierarchicalRegularId = findRegularByGlobal(globalId);
+    // be paranoid
+    if (viskores::worklet::contourtree_augmented::NoSuchElement(hierarchicalRegularId))
     {
-      return;
+      superparent = viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT;
     }
-
-    // if its the first element, always write
-    if (vertex == 0)
-    {
-      superarcRegularCountsPortal.Set(superparent,
-                                      superarcRegularCountsPortal.Get(superparent) - vertex);
-    }
-    // otherwise, only write if different from previous one
     else
     {
-      if (superparentsPortal.Get(vertex - 1) != superparent)
+      // Attachment points cause a minor problem - they are supernodes, but can have a different
+      // superparent than themselves (or the same one).  We therefore test explicitly whether we
+      // are a supernode, and use either supernodeId or superparent depending on this test
+
+      // retrieve the super Id
+      viskores::Id superId = hierarchicalTreeRegular2SupernodePortal.Get(hierarchicalRegularId);
+
+      // if it doesn't have one, use it's superparent
+      if (viskores::worklet::contourtree_augmented::NoSuchElement(superId))
       {
-        superarcRegularCountsPortal.Set(superparent,
-                                        superarcRegularCountsPortal.Get(superparent) - vertex);
+        superparent = hierarchicalTreeSuperparentsPortal.Get(hierarchicalRegularId);
+      }
+      else
+      {
+        // if it does have a superId, use it
+        superparent = superId;
       }
     }
-
     // In serial this worklet implements the following operation
     /*
-    for (viskores::Id vertex = 0; vertex < superparents.GetNumberOfValues(); vertex++)
+    for (viskores::Id vertex = 0; vertex < globalIds.GetNumberOfValues(); vertex++)
     { // per vertex
-      // retrieve the superparent
-      viskores::Id superparent = superparents[vertex];
-
-      // if it's NSE, ignore (should never happen, but . . . )
-      if (noSuchElement(superparent))
-        continue;
-
-      // if its the first element, always write
-      if (vertex == 0)
-        superarcRegularCounts[superparent] -= vertex;
-      // otherwise, only write if different from previous one
+      // retrieve the regular Id (should ALWAYS exist)
+      viskores::Id hierarchicalRegularId = hierarchicalTree.FindRegularByGlobal(globalIds[vertex]);
+      // be paranoid
+      if (noSuchElement(hierarchicalRegularId))
+        superparents[vertex] = NO_SUCH_ELEMENT;
       else
-        if (superparents[vertex-1] != superparent)
-          superarcRegularCounts[superparent] -= vertex;
+      { // found a regular Id
+        // Attachment points cause a minor problem - they are supernodes, but can have a different
+        // superparent than themselves (or the same one).  We therefore test explicitly whether we
+        // are a supernode, and use either supernodeId or superparent depending on this test
+
+        // retrieve the super Id
+        viskores::Id superId = hierarchicalTree.regular2supernode[hierarchicalRegularId];
+
+        // if it doesn't have one, use it's superparent
+        if (noSuchElement(superId))
+          superparents[vertex] = hierarchicalTree.superparents[hierarchicalRegularId];
+        else
+          // if it does have a superId, use it
+          superparents[vertex] = superId;
+      } // found a regular Id
     } // per vertex
     */
   } // operator()()
 
-}; // InitializeIntrinsicVertexCountSubtractLowEndWorklet
+}; // InitializeIntrinsicVertexCountComputeSuperparentIdsWorklet
 
 } // namespace hierarchical_hyper_sweeper
 } // namespace contourtree_distributed

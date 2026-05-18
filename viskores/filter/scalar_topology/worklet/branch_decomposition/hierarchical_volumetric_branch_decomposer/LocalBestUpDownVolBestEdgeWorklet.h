@@ -51,8 +51,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_LocalBestUpDownByVolumeBestUpDownEdgeWorklet_h
-#define viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_LocalBestUpDownByVolumeBestUpDownEdgeWorklet_h
+#ifndef viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_LocalBestUpDownVolBestEdgeWorklet_h
+#define viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_LocalBestUpDownVolBestEdgeWorklet_h
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <viskores/worklet/WorkletMapField.h>

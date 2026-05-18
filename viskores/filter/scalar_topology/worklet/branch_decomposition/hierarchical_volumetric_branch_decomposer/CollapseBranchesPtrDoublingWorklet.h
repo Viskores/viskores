@@ -46,71 +46,55 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef viskores_worklet_contourtree_distributed_bract_maker_compress_regularised_nodes_copy_necessary_regular_nodes_worklet_h
-#define viskores_worklet_contourtree_distributed_bract_maker_compress_regularised_nodes_copy_necessary_regular_nodes_worklet_h
+#ifndef viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_CollapseBranchesPtrDoublingWorklet_h
+#define viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_CollapseBranchesPtrDoublingWorklet_h
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <viskores/worklet/WorkletMapField.h>
 
 namespace viskores
 {
-namespace worklet
+namespace filter
 {
-namespace contourtree_distributed
+namespace scalar_topology
 {
-namespace bract_maker
+namespace hierarchical_volumetric_branch_decomposer
 {
 
-/// Step 1 of IdentifyRegularisedSupernodes
-class CompressRegularisedNodesCopyNecessaryRegularNodesWorklet
-  : public viskores::worklet::WorkletMapField
+class CollapseBranchesPointerDoublingWorklet : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldInOut newVertexId,    // Input/Output
-                                FieldIn keptInBoundaryTree // input
-  );
-  using ExecutionSignature = void(_1, _2);
+  /// Control signature for the worklet
+  using ControlSignature = void(WholeArrayInOut branchRoot);
+  using ExecutionSignature = void(InputIndex, _1);
   using InputDomain = _1;
 
-  // Default Constructor
+  /// Default Constructor
   VISKORES_EXEC_CONT
-  CompressRegularisedNodesCopyNecessaryRegularNodesWorklet() {}
+  CollapseBranchesPointerDoublingWorklet() {}
 
-  VISKORES_EXEC void operator()(viskores::Id& newVertexIdIn,
-                                const viskores::Id& keptInBoundaryTree) const
+  /// operator() of the workelt
+  template <typename InOutFieldPortalType>
+  VISKORES_EXEC void operator()(const viskores::Id superarc,
+                                const InOutFieldPortalType& branchRootPortal) const
   {
-    if (!viskores::worklet::contourtree_augmented::NoSuchElement(newVertexIdIn))
+    viskores::Id branchRootVal1 = branchRootPortal.Get(superarc);
+    viskores::Id branchRootVal2 = branchRootPortal.Get(branchRootPortal.Get(superarc));
+    if (branchRootVal1 != branchRootVal2)
     {
-      newVertexIdIn = keptInBoundaryTree - 1;
+      branchRootPortal.Set(superarc, branchRootVal2);
     }
-    else
-    {
-      // newVertexIdIn does not change
-    }
-
-    // In serial this worklet implements the following operation
-    /*
-       for (indexType returnIndex = 0; returnIndex < bractVertexSuperset.size(); returnIndex++)
-      if (!noSuchElement(newVertexID[returnIndex]))
-        newVertexID[returnIndex] = keptInBoundaryTree[returnIndex]-1;
-    */
-  }
-}; // CompressRegularisedNodesCopyNecessaryRegularNodesWorklet
+  } // operator()()
 
 
-} // namespace bract_maker
+}; // CollapseBranchesPointerDoublingWorklet
+
+} // namespace hierarchical_volumetric_branch_decomposer
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace viskores
