@@ -58,8 +58,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef viskores_worklet_contourtree_distributed_bract_maker_augment_boundary_with_necessary_interior_supernodes_unset_boundary_supernodes_worklet_h
-#define viskores_worklet_contourtree_distributed_bract_maker_augment_boundary_with_necessary_interior_supernodes_unset_boundary_supernodes_worklet_h
+#ifndef viskores_worklet_contourtree_augmented_contourtree_maker_inc_compute_hyper_and_super_structure_set_first_supernode_per_iter_h
+#define viskores_worklet_contourtree_augmented_contourtree_maker_inc_compute_hyper_and_super_structure_set_first_supernode_per_iter_h
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <viskores/worklet/WorkletMapField.h>
@@ -68,62 +68,68 @@ namespace viskores
 {
 namespace worklet
 {
-namespace contourtree_distributed
+namespace contourtree_augmented
 {
-namespace bract_maker
+namespace contourtree_maker_inc
 {
 
-/// Worklet to transfer the dependent counts for hyperarcs
-/// Part of the BoundaryRestrictedAugmentedContourTree.PropagateBoundaryCounts function
-class AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet
+// Worklet for settubg the super/hyperarcs fromm the permuted super/hyperarcs vector
+class ComputeHyperAndSuperStructure_SetFirstSupernodePerIterationWorklet
   : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn boundaryIndices,             // input
-                                WholeArrayIn superparents,           // input
-                                WholeArrayIn supernodes,             // input
-                                WholeArrayOut isNecessaryAndInterior // output
-
-
-  );
-  using ExecutionSignature = void(_1, _2, _3, _4);
+  typedef void ControlSignature(FieldIn supernodeIndex,       // (input) active super/hyperarcs
+                                WholeArrayIn whenTransferred, // (input)
+                                WholeArrayOut firstSupernodePerIteration); // (output)
+  typedef void ExecutionSignature(_1, _2, _3);
   using InputDomain = _1;
 
   // Default Constructor
   VISKORES_EXEC_CONT
-  AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet() {}
+  ComputeHyperAndSuperStructure_SetFirstSupernodePerIterationWorklet() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& boundaryVertexSortID,
-                                const InFieldPortalType& superparentsPortal,
-                                const InFieldPortalType& supernodesPortal,
-                                const OutFieldPortalType& isNecessaryAndInteriorPortal) const
+  VISKORES_EXEC void operator()(const viskores::Id& supernode,
+                                const InFieldPortalType& whenTransferredPortal,
+                                const OutFieldPortalType& firstSupernodePerIterationPortal) const
   {
-    viskores::Id superparent = superparentsPortal.Get(boundaryVertexSortID);
-    // if the superparent's supernode is the vertex, they match
-    if (supernodesPortal.Get(superparent) == boundaryVertexSortID)
+    // per supernode
+    viskores::Id when =
+      viskores::worklet::contourtree_augmented::MaskedIndex(whenTransferredPortal.Get(supernode));
+    if (supernode == 0)
+    { // zeroth supernode
+      firstSupernodePerIterationPortal.Set(when, supernode);
+    } // zeroth supernode
+    else
     {
-      isNecessaryAndInteriorPortal.Set(superparent, false);
+      viskores::Id prevWhen = viskores::worklet::contourtree_augmented::MaskedIndex(
+        whenTransferredPortal.Get(supernode - 1));
+      if (when != prevWhen)
+      { // non-matching supernode
+        firstSupernodePerIterationPortal.Set(when, supernode);
+      } // non-matching supernode
     }
     // In serial this worklet implements the following operation
     /*
-    for (indexType boundaryVertex = 0; boundaryVertex < nBoundary; boundaryVertex++)
-    { // per boundary vertex
-      indexType boundaryVertexMeshID = bractVertexSuperset[boundaryVertex];
-      indexType boundaryVertexSortID = boundaryIndices[boundaryVertex];
-      indexType superparent = contourTree->superparents[boundaryVertexSortID];
-      // if the superparent's supernode is the vertex, they match
-      if (contourTree->supernodes[superparent] == boundaryVertexSortID)
-        isNecessaryAndInterior[superparent] = false;
-    } // per boundary vertex
+     for (indexType supernode = 0; supernode < contourTree.supernodes.size(); supernode++)
+     { // per supernode
+       indexType when = maskedIndex(contourTree.whenTransferred[supernode]);
+       if (supernode == 0)
+       { // zeroth supernode
+         contourTree.firstSupernodePerIteration[when] = supernode;
+       } // zeroth supernode
+       else if (when != maskedIndex(contourTree.whenTransferred[supernode-1]))
+       { // non-matching supernode
+         contourTree.firstSupernodePerIteration[when] = supernode;
+       } // non-matching supernode
+    } // per supernode
     */
   }
 
-}; // AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet
+}; // ComputeHyperAndSuperStructure_SetFirstSupernodePerIterationWorklet
 
-
-} // namespace bract_maker
-} // namespace contourtree_distributed
+} // namespace contourtree_maker_inc
+} // namespace contourtree_augmented
 } // namespace worklet
 } // namespace viskores
 

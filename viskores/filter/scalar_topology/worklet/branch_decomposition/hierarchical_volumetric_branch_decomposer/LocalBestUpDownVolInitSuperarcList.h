@@ -46,20 +46,13 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef viskores_worklet_contourtree_distributed_hierarchical_hyper_sweeper_initialize_intrinsic_vertex_count_initialize_counts_worklet_h
-#define viskores_worklet_contourtree_distributed_hierarchical_hyper_sweeper_initialize_intrinsic_vertex_count_initialize_counts_worklet_h
+#ifndef viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_LocalBestUpDownVolInitSuperarcList_h
+#define viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_LocalBestUpDownVolInitSuperarcList_h
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <viskores/worklet/WorkletMapField.h>
@@ -68,79 +61,51 @@ namespace viskores
 {
 namespace worklet
 {
-namespace contourtree_distributed
+namespace scalar_topology
 {
-namespace hierarchical_hyper_sweeper
+namespace hierarchical_volumetric_branch_decomposer
 {
 
-/// Worklet used in HierarchicalHyperSweeper.InitializeIntrinsicVertexCount(...) to
-/// set the count to the Id one off the high end of each range
-class InitializeIntrinsicVertexCountInitalizeCountsWorklet
-  : public viskores::worklet::WorkletMapField
+class LocalBestUpDownByVolumeInitSuperarcListWorklet : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(WholeArrayIn superparents, WholeArrayInOut superarcRegularCounts);
-  using ExecutionSignature = void(InputIndex, _1, _2);
+  using ControlSignature = void(FieldIn hierarchicalTreeSuperarcs, FieldOut superarcList);
+  using ExecutionSignature = _2(InputIndex, _1);
   using InputDomain = _1;
 
-  // Default Constructor
-  VISKORES_EXEC_CONT
-  InitializeIntrinsicVertexCountInitalizeCountsWorklet() {}
-
-  template <typename InFieldPortalType, typename InOutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& vertex,
-                                const InFieldPortalType superparentsPortal,
-                                const InOutFieldPortalType superarcRegularCountsPortal) const
+  VISKORES_EXEC viskores::worklet::contourtree_augmented::EdgePair operator()(
+    viskores::Id superarc, // InputIndex in [0, hierarchicalTree.Superarcs.GetNumberOfValues() - 1]
+    viskores::Id hierarchicalTreeSuperarc // hierarchicalTree.Superarcs[superarc]
+  ) const
   {
-    // per vertex
-    // retrieve the superparent
-    viskores::Id superparent = superparentsPortal.Get(vertex);
+    using viskores::worklet::contourtree_augmented::EdgePair;
+    using viskores::worklet::contourtree_augmented::IsAscending;
+    using viskores::worklet::contourtree_augmented::MaskedIndex;
 
-    // if it's NSE, ignore (should never happen, but . . . )
-    if (viskores::worklet::contourtree_augmented::NoSuchElement(superparent))
+    if (IsAscending(hierarchicalTreeSuperarc))
     {
-      return;
+      return EdgePair(superarc, MaskedIndex(hierarchicalTreeSuperarc));
     }
-    // if its the last element, always write
-    if (vertex == superparentsPortal.GetNumberOfValues() - 1)
-    {
-      superarcRegularCountsPortal.Set(superparent, vertex + 1);
-    }
-    // otherwise, only write if different from next one
     else
     {
-      if (superparentsPortal.Get(vertex + 1) != superparent)
-      {
-        superarcRegularCountsPortal.Set(superparent, vertex + 1);
-      }
+      return EdgePair(MaskedIndex(hierarchicalTreeSuperarc), superarc);
     }
 
-    // In serial this worklet implements the following operation
-    /*
-    for (viskores::Id vertex = 0; vertex < superparents.size(); vertex++)
-    { // per vertex
-      // retrieve the superparent
-      viskores::Id superparent = superparents[vertex];
-
-      // if it's NSE, ignore (should never happen, but . . . )
-      if (noSuchElement(superparent))
-        continue;
-
-      // if its the last element, always write
-      if (vertex == superparents.size() - 1)
-        superarcRegularCounts[superparent] = vertex+1;
-      // otherwise, only write if different from next one
-      else
-        if (superparents[vertex+1] != superparent)
-          superarcRegularCounts[superparent] = vertex+1;
-    } // per vertex
-    */
+    /* // This worklet implements the follwing loop
+        for (viskores::Id superarc = 0; superarc < nSuperarcs; superarc++)
+        { // per superarc
+        if (isAscending(hierarchicalTree.superarcs[superarc]))
+          superarcList[superarc] = Edge(superarc, maskedIndex(hierarchicalTree.superarcs[superarc]));
+        else
+          superarcList[superarc] = Edge(maskedIndex(hierarchicalTree.superarcs[superarc]), superarc);
+        } // per superarc
+     */
   } // operator()()
 
-}; // InitializeIntrinsicVertexCountInitalizeCountsWorklet
+}; // LocalBestUpDownByVolumeInitSuperarcListWorklet
 
-} // namespace hierarchical_hyper_sweeper
-} // namespace contourtree_distributed
+} // namespace hierarchical_volumetric_branch_decomposer
+} // namespace scalar_topology
 } // namespace worklet
 } // namespace viskores
 

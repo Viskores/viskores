@@ -46,13 +46,20 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
+//
+//  This code is an extension of the algorithm presented in the paper:
+//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
+//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
+//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
+//  (LDAV), October 2016, Baltimore, Maryland.
+//
 //  The PPP2 algorithm and software were jointly developed by
 //  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_LocalBestUpDownByVolumeInitSuperarcListWorklet_h
-#define viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_LocalBestUpDownByVolumeInitSuperarcListWorklet_h
+#ifndef viskores_worklet_contourtree_distributed_bract_maker_augment_boundary_unset_supernodes_worklet_h
+#define viskores_worklet_contourtree_distributed_bract_maker_augment_boundary_unset_supernodes_worklet_h
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <viskores/worklet/WorkletMapField.h>
@@ -61,51 +68,62 @@ namespace viskores
 {
 namespace worklet
 {
-namespace scalar_topology
+namespace contourtree_distributed
 {
-namespace hierarchical_volumetric_branch_decomposer
+namespace bract_maker
 {
 
-class LocalBestUpDownByVolumeInitSuperarcListWorklet : public viskores::worklet::WorkletMapField
+/// Worklet to transfer the dependent counts for hyperarcs
+/// Part of the BoundaryRestrictedAugmentedContourTree.PropagateBoundaryCounts function
+class AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet
+  : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn hierarchicalTreeSuperarcs, FieldOut superarcList);
-  using ExecutionSignature = _2(InputIndex, _1);
+  using ControlSignature = void(FieldIn boundaryIndices,             // input
+                                WholeArrayIn superparents,           // input
+                                WholeArrayIn supernodes,             // input
+                                WholeArrayOut isNecessaryAndInterior // output
+
+
+  );
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
-  VISKORES_EXEC viskores::worklet::contourtree_augmented::EdgePair operator()(
-    viskores::Id superarc, // InputIndex in [0, hierarchicalTree.Superarcs.GetNumberOfValues() - 1]
-    viskores::Id hierarchicalTreeSuperarc // hierarchicalTree.Superarcs[superarc]
-  ) const
+  // Default Constructor
+  VISKORES_EXEC_CONT
+  AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet() {}
+
+  template <typename InFieldPortalType, typename OutFieldPortalType>
+  VISKORES_EXEC void operator()(const viskores::Id& boundaryVertexSortID,
+                                const InFieldPortalType& superparentsPortal,
+                                const InFieldPortalType& supernodesPortal,
+                                const OutFieldPortalType& isNecessaryAndInteriorPortal) const
   {
-    using viskores::worklet::contourtree_augmented::EdgePair;
-    using viskores::worklet::contourtree_augmented::IsAscending;
-    using viskores::worklet::contourtree_augmented::MaskedIndex;
-
-    if (IsAscending(hierarchicalTreeSuperarc))
+    viskores::Id superparent = superparentsPortal.Get(boundaryVertexSortID);
+    // if the superparent's supernode is the vertex, they match
+    if (supernodesPortal.Get(superparent) == boundaryVertexSortID)
     {
-      return EdgePair(superarc, MaskedIndex(hierarchicalTreeSuperarc));
+      isNecessaryAndInteriorPortal.Set(superparent, false);
     }
-    else
-    {
-      return EdgePair(MaskedIndex(hierarchicalTreeSuperarc), superarc);
-    }
+    // In serial this worklet implements the following operation
+    /*
+    for (indexType boundaryVertex = 0; boundaryVertex < nBoundary; boundaryVertex++)
+    { // per boundary vertex
+      indexType boundaryVertexMeshID = bractVertexSuperset[boundaryVertex];
+      indexType boundaryVertexSortID = boundaryIndices[boundaryVertex];
+      indexType superparent = contourTree->superparents[boundaryVertexSortID];
+      // if the superparent's supernode is the vertex, they match
+      if (contourTree->supernodes[superparent] == boundaryVertexSortID)
+        isNecessaryAndInterior[superparent] = false;
+    } // per boundary vertex
+    */
+  }
 
-    /* // This worklet implements the follwing loop
-        for (viskores::Id superarc = 0; superarc < nSuperarcs; superarc++)
-        { // per superarc
-        if (isAscending(hierarchicalTree.superarcs[superarc]))
-          superarcList[superarc] = Edge(superarc, maskedIndex(hierarchicalTree.superarcs[superarc]));
-        else
-          superarcList[superarc] = Edge(maskedIndex(hierarchicalTree.superarcs[superarc]), superarc);
-        } // per superarc
-     */
-  } // operator()()
+}; // AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet
 
-}; // LocalBestUpDownByVolumeInitSuperarcListWorklet
 
-} // namespace hierarchical_volumetric_branch_decomposer
-} // namespace scalar_topology
+} // namespace bract_maker
+} // namespace contourtree_distributed
 } // namespace worklet
 } // namespace viskores
 

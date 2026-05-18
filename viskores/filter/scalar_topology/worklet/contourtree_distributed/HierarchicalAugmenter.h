@@ -110,7 +110,7 @@
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/AttachmentSuperparentAndIndexComparator.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/CopyBaseRegularStructureWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/CreateSuperarcsData.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/CreateSuperarcsSetFirstSupernodePerIterationWorklet.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/CreateSuperarcsSetFirstSupernodePerIterWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/CreateSuperarcsWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/FillEmptyIterationWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/FindSuperparentForNecessaryNodesWorklet.h>
