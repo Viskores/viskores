@@ -150,6 +150,7 @@
 stages:
   - build
   - test
+  - contract
 
 .use_minimum_supported_cmake:
   variables:
@@ -271,9 +272,10 @@ stages:
       junit: build/junit.xml
 
 include:
-  - local: '/.gitlab/ci/doxygen.yml'
-  - local: '/.gitlab/ci/almalinux8.yml'
-  - local: '/.gitlab/ci/sync-spack.yml'
-  - local: '/.gitlab/ci/ubuntu2004.yml'
-  - local: '/.gitlab/ci/ubuntu2204.yml'
+#  - local: '/.gitlab/ci/doxygen.yml'
+#  - local: '/.gitlab/ci/almalinux8.yml'
+#  - local: '/.gitlab/ci/sync-spack.yml'
+#  - local: '/.gitlab/ci/ubuntu2004.yml'
+#  - local: '/.gitlab/ci/ubuntu2204.yml'
   - local: '/.gitlab/ci/ubuntu2404.yml'
+  - local: '/.gitlab/ci/vtk-contract.yml'
