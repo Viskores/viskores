@@ -150,6 +150,7 @@
 stages:
   - build
   - test
+  - contract
 
 .use_minimum_supported_cmake:
   variables:
@@ -277,3 +278,5 @@ include:
   - local: '/.gitlab/ci/ubuntu2004.yml'
   - local: '/.gitlab/ci/ubuntu2204.yml'
   - local: '/.gitlab/ci/ubuntu2404.yml'
+  - local: '/.gitlab/ci/vtk-contract.yml'
+
