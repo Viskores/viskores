@@ -42,11 +42,20 @@ ubuntu2404_gcc14:
   variables:
     CC: "gcc-14"
     CXX: "g++-14"
-    VISKORES_SETTINGS: "ccache+openmp+shared+examples"
+    VISKORES_SETTINGS: "ccache+openmp+shared+examples+vtk_types"
     # Restrict OpenMP number of threads since multiple test stages
     # execute on the same hardware concurrently
     OMP_NUM_THREADS: 3
     CTEST_EXCLUSIONS: "UnitTestArrayPortalValueReference"
+  after_script:
+    - export PATH="${PWD}/.gitlab/ccache:${PATH}"
+    - ccache -s
+    - cmake --install /tmp/build --prefix "${CI_PROJECT_DIR}/viskores-install"
+    - tar czf viskores-install.tar.gz viskores-install/
+  artifacts:
+    expire_in: 24 hours
+    paths:
+      - viskores-install.tar.gz
 
 ubuntu2404_gcc14_cuda130:
   extends:
@@ -58,5 +67,14 @@ ubuntu2404_gcc14_cuda130:
     CC: "gcc-14"
     CXX: "g++-14"
     CUDAHOSTCXX: "g++-14"
-    VISKORES_SETTINGS: "no_testing+cuda+turing+tbb+examples+shared+ccache"
+    VISKORES_SETTINGS: "no_testing+cuda+turing+tbb+examples+shared+ccache+vtk_types"
     NO_TESTING: "ON"
+  after_script:
+    - export PATH="${PWD}/.gitlab/ccache:${PATH}"
+    - ccache -s
+    - cmake --install /tmp/build --prefix "${CI_PROJECT_DIR}/viskores-install"
+    - tar czf viskores-install.tar.gz viskores-install/
+  artifacts:
+    expire_in: 24 hours
+    paths:
+      - viskores-install.tar.gz
