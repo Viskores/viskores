@@ -75,12 +75,25 @@ ubuntu2204_hip_kokkos43:
     - ccache -v -s
     - ccache -z
 
+ubuntu2204_gcc10_cuda122:
+  tags:
+    - x86_64-nvidiagpu
+    - cuda80 #remove me
+  extends:
+    - .ubuntu2204_cuda122
+    - .cmake_build_linux
+    - .run_automatically
+  variables:
+    CC: "gcc-10"
+    CXX: "g++-10"
+    CMAKE_BUILD_TYPE: RelWithDebInfo
+    CMAKE_CUDA_ARCHITECTURES: "60-real;75;80-real"
+    VISKORES_SETTINGS: "cuda+shared+ascent_types+32bit_ids+64bit_floats+ccache"
+    CTEST_TIMEOUT:     1500
+
 ubuntu2204_clang11_cuda122:
   tags:
-    - nvidia-a100
-    - uo-gpu
     - x86_64-nvidiagpu
-    - voltar
   extends:
     - .ubuntu2204_cuda122
     - .cmake_build_linux
@@ -89,8 +102,9 @@ ubuntu2204_clang11_cuda122:
     CC: "clang-11"
     CXX: "clang++-11"
     CUDAHOSTCXX: "clang++-11"
-    VISKORES_SETTINGS: "cuda+ampere+tbb+examples+shared+ccache"
-    CTEST_EXCLUSIONS: "UnitTestTimer"
+    CMAKE_CUDA_ARCHITECTURES: "60-real;75;80-real"
+    VISKORES_SETTINGS: "cuda+tbb+examples+shared+ccache"
+    CTEST_TIMEOUT:     1500
 
 #ubuntu2204_gcc10_cuda122:
 #  tags:
@@ -122,10 +136,8 @@ ubuntu2204_clang12:
 
 ubuntu2204_cuda122_kokkos41:
   tags:
-    - nvidia-a100
-    - uo-gpu
+    - nvidia-h100
     - x86_64-nvidiagpu
-    - voltar
   extends:
     - .ubuntu2204_cuda122_kokkos
     - .cmake_build_linux
@@ -133,7 +145,8 @@ ubuntu2204_cuda122_kokkos41:
   variables:
     CMAKE_GENERATOR: "Ninja"
     CMAKE_BUILD_TYPE: Release
-    VISKORES_SETTINGS: "benchmarks+kokkos+ampere+64bit_floats+shared+ccache"
+    CMAKE_CUDA_ARCHITECTURES: "90"
+    VISKORES_SETTINGS: "benchmarks+kokkos+64bit_floats+shared+ccache"
 
 ubuntu2204_gcc12:
   extends:
