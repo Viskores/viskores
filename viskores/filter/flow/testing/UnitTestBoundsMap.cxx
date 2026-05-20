@@ -17,6 +17,7 @@
 //============================================================================
 
 #include <viskores/CellShape.h>
+#include <viskores/Particle.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandleGroupVecVariable.h>
 #include <viskores/cont/ConvertNumComponentsToOffsets.h>
@@ -25,6 +26,7 @@
 #include <viskores/cont/Invoker.h>
 #include <viskores/cont/testing/Testing.h>
 #include <viskores/filter/flow/internal/BoundsMap.h>
+#include <viskores/filter/flow/internal/ParticleBlockIds.h>
 #include <viskores/worklet/WorkletMapField.h>
 
 #include <algorithm>
@@ -154,6 +156,36 @@ std::vector<LocatedCellIds> FindBoundsMapCellIds(
   return cellIds;
 }
 
+std::vector<LocatedCellIds> FindParticleBlockIds(
+  const viskores::filter::flow::internal::BoundsMap& boundsMap,
+  const std::vector<viskores::Particle>& particles)
+{
+  auto particlesAH = viskores::cont::make_ArrayHandle(particles, viskores::CopyFlag::On);
+  auto particleBlockIds =
+    viskores::filter::flow::internal::FindParticleBlockIds(particlesAH, boundsMap);
+
+  std::vector<LocatedCellIds> blockIds;
+  blockIds.reserve(particles.size());
+  auto blockIdsPortal = particleBlockIds.ReadPortal();
+  for (viskores::Id i = 0; i < static_cast<viskores::Id>(particles.size()); ++i)
+  {
+    LocatedCellIds result;
+
+    auto idsForParticle = blockIdsPortal.Get(i);
+    result.Count = idsForParticle.GetNumberOfComponents();
+    for (viskores::IdComponent j = 0; j < idsForParticle.GetNumberOfComponents(); ++j)
+    {
+      const viskores::Id id = idsForParticle[j];
+      if (id >= 0)
+        result.Ids.emplace_back(id);
+    }
+    std::sort(result.Ids.begin(), result.Ids.end());
+    blockIds.emplace_back(std::move(result));
+  }
+
+  return blockIds;
+}
+
 void ValidateCellIds(const LocatedCellIds& actual,
                      std::initializer_list<viskores::Id> expected,
                      const std::string& message)
@@ -190,6 +222,53 @@ void TestBoundsMapLocatorFindsBlockIds()
   ValidateCellIds(cellIds[2], { 0, 1, 2 }, "BoundsMap locator failed on shared boundary");
   ValidateCellIds(cellIds[3], { 1 }, "BoundsMap locator failed for second block");
   ValidateCellIds(cellIds[4], {}, "BoundsMap locator failed outside all blocks");
+}
+
+void TestParticleBlockIdsFindsSeedBlocks()
+{
+  // The seed-routing helper should query the BoundsMap locator with particles,
+  // not raw points, and preserve the same overlapping/boundary block ids.
+  const std::vector<viskores::Bounds> bounds = { viskores::Bounds(0, 4, 0, 4, 0, 4),
+                                                 viskores::Bounds(4, 8, 0, 4, 0, 4),
+                                                 viskores::Bounds(2, 6, 0, 4, 0, 4) };
+
+  viskores::filter::flow::internal::BoundsMap boundsMap(CreatePartitionedDataSet(bounds));
+  auto blockIds = FindParticleBlockIds(boundsMap,
+                                       {
+                                         viskores::Particle(viskores::Vec3f(1.0f, 2.0f, 2.0f), 0),
+                                         viskores::Particle(viskores::Vec3f(3.0f, 2.0f, 2.0f), 1),
+                                         viskores::Particle(viskores::Vec3f(4.0f, 2.0f, 2.0f), 2),
+                                         viskores::Particle(viskores::Vec3f(9.0f, 2.0f, 2.0f), 3),
+                                       });
+
+  ValidateCellIds(blockIds[0], { 0 }, "Particle block ids failed for first block");
+  ValidateCellIds(blockIds[1], { 0, 2 }, "Particle block ids failed for overlapping blocks");
+  ValidateCellIds(blockIds[2], { 0, 1, 2 }, "Particle block ids failed on shared boundary");
+  ValidateCellIds(blockIds[3], {}, "Particle block ids failed outside all blocks");
+}
+
+void TestParticleBlockIdsHandlesEmptyAndOutsideSeeds()
+{
+  // Empty seed arrays and seeds outside every block should both produce empty
+  // groups without allocating bogus block ids.
+  const std::vector<viskores::Bounds> bounds = { viskores::Bounds(0, 4, 0, 4, 0, 4),
+                                                 viskores::Bounds(4, 8, 0, 4, 0, 4) };
+
+  viskores::filter::flow::internal::BoundsMap boundsMap(CreatePartitionedDataSet(bounds));
+  std::vector<viskores::Particle> noParticles;
+  auto emptyBlockIds = FindParticleBlockIds(boundsMap, noParticles);
+  VISKORES_TEST_ASSERT(emptyBlockIds.empty(),
+                       "Empty particle input should produce no block id groups.");
+
+  auto outsideBlockIds = FindParticleBlockIds(
+    boundsMap,
+    {
+      viskores::Particle(viskores::Vec3f(-1.0f, 2.0f, 2.0f), 0),
+      viskores::Particle(viskores::Vec3f(9.0f, 2.0f, 2.0f), 1),
+    });
+
+  ValidateCellIds(outsideBlockIds[0], {}, "Particle block ids failed before first block");
+  ValidateCellIds(outsideBlockIds[1], {}, "Particle block ids failed after last block");
 }
 
 void TestBoundsMapLocatorHandlesDegenerateBounds()
@@ -270,6 +349,8 @@ void TestBoundsMapBlockIdValidation()
 void TestBoundsMap()
 {
   TestBoundsMapLocatorFindsBlockIds();
+  TestParticleBlockIdsFindsSeedBlocks();
+  TestParticleBlockIdsHandlesEmptyAndOutsideSeeds();
   TestBoundsMapLocatorHandlesDegenerateBounds();
   TestBoundsMapBlockIdValidation();
 }

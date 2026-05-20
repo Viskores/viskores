@@ -23,12 +23,15 @@
 #include <viskores/cont/PartitionedDataSet.h>
 #include <viskores/filter/flow/internal/BoundsMap.h>
 #include <viskores/filter/flow/internal/DataSetIntegrator.h>
+#include <viskores/filter/flow/internal/ParticleBlockIds.h>
 #ifdef VISKORES_ENABLE_MPI
 #include <viskores/filter/flow/internal/AdvectAlgorithmTerminator.h>
 #include <viskores/filter/flow/internal/ParticleExchanger.h>
 #include <viskores/thirdparty/diy/diy.h>
 #include <viskores/thirdparty/diy/mpi-cast.h>
 #endif
+
+#include <algorithm>
 
 namespace viskores
 {
@@ -86,23 +89,34 @@ public:
     this->ClearParticles();
 
     viskores::Id n = seeds.GetNumberOfValues();
-    auto portal = seeds.ReadPortal();
+    auto seedPortal = seeds.ReadPortal();
+    auto blockIds =
+      viskores::filter::flow::internal::FindParticleBlockIds(seeds, this->BoundsMap);
+    auto blockIdsPortal = blockIds.ReadPortal();
 
     std::vector<std::vector<viskores::Id>> blockIDs;
     std::vector<ParticleType> particles;
     for (viskores::Id i = 0; i < n; i++)
     {
-      const ParticleType p = portal.Get(i);
-      std::vector<viskores::Id> ids = this->BoundsMap.FindBlocks(p.GetPosition());
+      auto seedBlockIds = blockIdsPortal.Get(i);
 
-      //Note: For duplicate blocks, this will give the seeds to the rank that are first in the list.
-      if (!ids.empty())
+      if (seedBlockIds.GetNumberOfComponents() > 0)
       {
+        std::vector<viskores::Id> ids;
+        ids.reserve(static_cast<std::size_t>(seedBlockIds.GetNumberOfComponents()));
+        for (viskores::IdComponent j = 0; j < seedBlockIds.GetNumberOfComponents(); ++j)
+          ids.emplace_back(seedBlockIds[j]);
+
+        // Preserve the previous host bounds scan ordering for overlapping blocks.
+        std::sort(ids.begin(), ids.end());
+
+        // Note: For duplicate blocks, this will give the seeds to the rank
+        // that are first in the list.
         const auto& ranks = this->BoundsMap.FindRank(ids[0]);
         if (!ranks.empty() && this->Rank == ranks[0])
         {
-          particles.emplace_back(p);
-          blockIDs.emplace_back(ids);
+          particles.emplace_back(seedPortal.Get(i));
+          blockIDs.emplace_back(std::move(ids));
         }
       }
     }
