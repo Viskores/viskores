@@ -260,12 +260,12 @@ void TestParticleBlockIdsHandlesEmptyAndOutsideSeeds()
   VISKORES_TEST_ASSERT(emptyBlockIds.empty(),
                        "Empty particle input should produce no block id groups.");
 
-  auto outsideBlockIds = FindParticleBlockIds(
-    boundsMap,
-    {
-      viskores::Particle(viskores::Vec3f(-1.0f, 2.0f, 2.0f), 0),
-      viskores::Particle(viskores::Vec3f(9.0f, 2.0f, 2.0f), 1),
-    });
+  auto outsideBlockIds =
+    FindParticleBlockIds(boundsMap,
+                         {
+                           viskores::Particle(viskores::Vec3f(-1.0f, 2.0f, 2.0f), 0),
+                           viskores::Particle(viskores::Vec3f(9.0f, 2.0f, 2.0f), 1),
+                         });
 
   ValidateCellIds(outsideBlockIds[0], {}, "Particle block ids failed before first block");
   ValidateCellIds(outsideBlockIds[1], {}, "Particle block ids failed after last block");

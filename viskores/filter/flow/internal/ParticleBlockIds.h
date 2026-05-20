@@ -78,8 +78,7 @@ VISKORES_CONT auto FindParticleBlockIds(
   // variable-length block id groups can be allocated exactly, then fill them.
   viskores::cont::Invoker invoker;
   viskores::cont::ArrayHandle<viskores::Id> blockCounts;
-  invoker(
-    detail::CountParticleBlockIdsWorklet{}, particles, boundsMap.GetLocator(), blockCounts);
+  invoker(detail::CountParticleBlockIdsWorklet{}, particles, boundsMap.GetLocator(), blockCounts);
 
   viskores::Id totalBlockIds = 0;
   auto offsets = viskores::cont::ConvertNumComponentsToOffsets(blockCounts, totalBlockIds);

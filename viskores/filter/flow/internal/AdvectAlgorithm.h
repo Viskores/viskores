@@ -90,8 +90,7 @@ public:
 
     viskores::Id n = seeds.GetNumberOfValues();
     auto seedPortal = seeds.ReadPortal();
-    auto blockIds =
-      viskores::filter::flow::internal::FindParticleBlockIds(seeds, this->BoundsMap);
+    auto blockIds = viskores::filter::flow::internal::FindParticleBlockIds(seeds, this->BoundsMap);
     auto blockIdsPortal = blockIds.ReadPortal();
 
     std::vector<std::vector<viskores::Id>> blockIDs;
