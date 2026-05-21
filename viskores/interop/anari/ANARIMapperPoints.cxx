@@ -119,7 +119,7 @@ static PointsArrays UnpackPoints(viskores::cont::ArrayHandle<viskores::Id> point
 
 // ANARIMapperPoints definitions //////////////////////////////////////////////
 
-ANARIMapperPoints::ANARIMapperPoints(anari_cpp::Device device,
+ANARIMapperPoints::ANARIMapperPoints(viskores::interop::anari::ANARIDevice device,
                                      const ANARIActor& actor,
                                      const std::string& name,
                                      const viskores::cont::ColorTable& colorTable)
@@ -129,7 +129,6 @@ ANARIMapperPoints::ANARIMapperPoints(anari_cpp::Device device,
   this->Handles->Device = device;
   auto& attributes = this->Handles->Parameters.Vertex.Attribute;
   std::fill(attributes.begin(), attributes.end(), nullptr);
-  anari_cpp::retain(device, device);
 }
 
 ANARIMapperPoints::~ANARIMapperPoints()
@@ -447,7 +446,6 @@ ANARIMapperPoints::ANARIHandles::~ANARIHandles()
   anari_cpp::release(this->Device, this->Material);
   anari_cpp::release(this->Device, this->Sampler);
   anari_cpp::release(this->Device, this->Geometry);
-  anari_cpp::release(this->Device, this->Device);
 }
 
 void ANARIMapperPoints::ANARIHandles::ReleaseArrays()

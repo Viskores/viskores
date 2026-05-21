@@ -20,6 +20,7 @@ find_package(anari 0.8.0 REQUIRED)
 
 set(headers
   ANARIActor.h
+  ANARIDevice.h
   ANARIMapper.h
   ANARIMapperGlyphs.h
   ANARIMapperPoints.h
@@ -31,6 +32,7 @@ set(headers
 
 set(sources
   ANARIActor.cxx
+  ANARIDevice.cxx
   ANARIMapper.cxx
   ANARIScene.cxx
   ViskoresANARITypes.cxx

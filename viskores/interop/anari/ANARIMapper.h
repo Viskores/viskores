@@ -22,6 +22,7 @@
 // viskores
 #include <viskores/cont/ColorTable.h>
 #include <viskores/interop/anari/ANARIActor.h>
+#include <viskores/interop/anari/ANARIDevice.h>
 
 #include <viskores/interop/anari/viskores_anari_export.h>
 
@@ -45,13 +46,13 @@ inline void NoopANARIDeleter(const void*, const void*) {}
 struct VISKORES_ANARI_EXPORT ANARIMapper
 {
   ANARIMapper(
-    anari_cpp::Device device,
+    viskores::interop::anari::ANARIDevice device,
     const ANARIActor& actor = {},
     const std::string& name = "<noname>",
     const viskores::cont::ColorTable& colorTable = viskores::cont::ColorTable::Preset::Default);
   virtual ~ANARIMapper() = default;
 
-  anari_cpp::Device GetDevice() const;
+  viskores::interop::anari::ANARIDevice GetDevice() const;
   const ANARIActor& GetActor() const;
   const char* GetName() const;
   const viskores::cont::ColorTable& GetColorTable() const;
@@ -128,7 +129,7 @@ protected:
 private:
   struct ANARIHandles
   {
-    anari_cpp::Device Device{ nullptr };
+    viskores::interop::anari::ANARIDevice Device;
     anari_cpp::Group Group{ nullptr };
     anari_cpp::Instance Instance{ nullptr };
     ~ANARIHandles();

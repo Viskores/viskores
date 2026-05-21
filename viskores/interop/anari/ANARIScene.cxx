@@ -27,16 +27,14 @@ namespace interop
 namespace anari
 {
 
-ANARIScene::ANARIScene(anari_cpp::Device device)
+ANARIScene::ANARIScene(viskores::interop::anari::ANARIDevice device)
   : Device(device)
 {
-  anari_cpp::retain(this->Device, this->Device);
 }
 
 ANARIScene::~ANARIScene()
 {
   anari_cpp::release(this->Device, this->World);
-  anari_cpp::release(this->Device, this->Device);
 }
 
 viskores::IdComponent ANARIScene::GetNumberOfMappers() const
@@ -113,7 +111,7 @@ void ANARIScene::RemoveAllMappers()
   this->UpdateWorld();
 }
 
-anari_cpp::Device ANARIScene::GetDevice() const
+viskores::interop::anari::ANARIDevice ANARIScene::GetDevice() const
 {
   return this->Device;
 }

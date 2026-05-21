@@ -144,7 +144,7 @@ static GlyphArrays MakeGlyphs(viskores::cont::Field gradients,
 
 // ANARIMapperGlyphs definitions //////////////////////////////////////////////
 
-ANARIMapperGlyphs::ANARIMapperGlyphs(anari_cpp::Device device,
+ANARIMapperGlyphs::ANARIMapperGlyphs(viskores::interop::anari::ANARIDevice device,
                                      const ANARIActor& actor,
                                      const char* name,
                                      const viskores::cont::ColorTable& colorTable)
@@ -152,7 +152,6 @@ ANARIMapperGlyphs::ANARIMapperGlyphs(anari_cpp::Device device,
 {
   this->Handles = std::make_shared<ANARIMapperGlyphs::ANARIHandles>();
   this->Handles->Device = device;
-  anari_cpp::retain(device, device);
 }
 
 ANARIMapperGlyphs::~ANARIMapperGlyphs()
@@ -291,7 +290,6 @@ ANARIMapperGlyphs::ANARIHandles::~ANARIHandles()
   anari_cpp::release(this->Device, this->Surface);
   anari_cpp::release(this->Device, this->Material);
   anari_cpp::release(this->Device, this->Geometry);
-  anari_cpp::release(this->Device, this->Device);
 }
 
 void ANARIMapperGlyphs::ANARIHandles::ReleaseArrays()

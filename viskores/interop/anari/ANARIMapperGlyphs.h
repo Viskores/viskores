@@ -59,7 +59,7 @@ struct VISKORES_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
   /// @brief Constructor
   ///
   ANARIMapperGlyphs(
-    anari_cpp::Device device,
+    viskores::interop::anari::ANARIDevice device,
     const ANARIActor& actor = {},
     const char* name = "<glyphs>",
     const viskores::cont::ColorTable& colorTable = viskores::cont::ColorTable::Preset::Default);
@@ -104,7 +104,7 @@ private:
   /// @brief Container of all relevant ANARI scene object handles.
   struct ANARIHandles
   {
-    anari_cpp::Device Device{ nullptr };
+    viskores::interop::anari::ANARIDevice Device;
     anari_cpp::Geometry Geometry{ nullptr };
     anari_cpp::Material Material{ nullptr };
     anari_cpp::Surface Surface{ nullptr };

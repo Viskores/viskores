@@ -21,6 +21,7 @@
 
 // viskores
 #include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/interop/anari/ANARIDevice.h>
 #include <viskores/interop/anari/ANARIMapper.h>
 #include <viskores/rendering/testing/Testing.h>
 #include <viskores/testing/Testing.h>
@@ -28,45 +29,8 @@
 namespace
 {
 
-static void StatusFunc(const void* userData,
-                       ANARIDevice /*device*/,
-                       ANARIObject source,
-                       ANARIDataType /*sourceType*/,
-                       ANARIStatusSeverity severity,
-                       ANARIStatusCode /*code*/,
-                       const char* message)
-{
-  bool verbose = *(bool*)userData;
-  if (!verbose)
-    return;
-
-  if (severity == ANARI_SEVERITY_FATAL_ERROR)
-  {
-    fprintf(stderr, "[FATAL][%p] %s\n", source, message);
-  }
-  else if (severity == ANARI_SEVERITY_ERROR)
-  {
-    fprintf(stderr, "[ERROR][%p] %s\n", source, message);
-  }
-  else if (severity == ANARI_SEVERITY_WARNING)
-  {
-    fprintf(stderr, "[WARN ][%p] %s\n", source, message);
-  }
-  else if (severity == ANARI_SEVERITY_PERFORMANCE_WARNING)
-  {
-    fprintf(stderr, "[PERF ][%p] %s\n", source, message);
-  }
-  else if (severity == ANARI_SEVERITY_INFO)
-  {
-    fprintf(stderr, "[INFO ][%p] %s\n", source, message);
-  }
-  else if (severity == ANARI_SEVERITY_DEBUG)
-  {
-    fprintf(stderr, "[DEBUG][%p] %s\n", source, message);
-  }
-}
-
-static void setColorMap(anari_cpp::Device d, viskores::interop::anari::ANARIMapper& mapper)
+static void setColorMap(viskores::interop::anari::ANARIDevice d,
+                        viskores::interop::anari::ANARIMapper& mapper)
 {
   auto colorArray = anari_cpp::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
   auto* colors = anari_cpp::map<viskores::Vec3f_32>(d, colorArray);
@@ -86,18 +50,20 @@ static void setColorMap(anari_cpp::Device d, viskores::interop::anari::ANARIMapp
   mapper.SetANARIColorMapOpacityScale(0.5f);
 }
 
-static anari_cpp::Device loadANARIDevice()
+static viskores::interop::anari::ANARIDevice loadANARIDevice()
 {
   viskores::testing::FloatingPointExceptionTrapDisable();
+  viskores::interop::anari::ANARIDevice device;
   auto* libraryName = std::getenv("VISKORES_TEST_ANARI_LIBRARY");
-  static bool verbose = std::getenv("VISKORES_TEST_ANARI_VERBOSE") != nullptr;
-  auto lib = anari_cpp::loadLibrary(libraryName ? libraryName : "helide", StatusFunc, &verbose);
-  auto d = anari_cpp::newDevice(lib, "default");
-  anari_cpp::unloadLibrary(lib);
-  return d;
+  if (libraryName)
+  {
+    device.SetDeviceName(libraryName);
+  }
+  device.EnsureLoad();
+  return device;
 }
 
-static void renderTestANARIImage(anari_cpp::Device d,
+static void renderTestANARIImage(viskores::interop::anari::ANARIDevice d,
                                  anari_cpp::World w,
                                  viskores::Vec3f_32 cam_pos,
                                  viskores::Vec3f_32 cam_dir,

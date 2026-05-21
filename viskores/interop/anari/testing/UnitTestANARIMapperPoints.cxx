@@ -81,7 +81,6 @@ void RenderTests()
   // Cleanup //////////////////////////////////////////////////////////////////
 
   anari_cpp::release(d, world);
-  anari_cpp::release(d, d);
 }
 
 } // namespace

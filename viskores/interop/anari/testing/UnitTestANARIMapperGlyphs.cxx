@@ -88,11 +88,6 @@ void RenderTests()
                        viskores::Vec3f_32(0.f, -1.f, 0.f),
                        viskores::Vec3f_32(0.f, 0.f, 1.f),
                        "interop/anari/glyphs.png");
-
-  // Cleanup //////////////////////////////////////////////////////////////////
-
-  anari_cpp::release(d, world);
-  anari_cpp::release(d, d);
 }
 
 } // namespace

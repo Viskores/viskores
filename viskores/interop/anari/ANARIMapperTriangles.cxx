@@ -286,7 +286,7 @@ static TriangleArrays UnpackTriangles(viskores::cont::ArrayHandle<viskores::Id4>
 
 // ANARIMapperTriangles definitions ///////////////////////////////////////////
 
-ANARIMapperTriangles::ANARIMapperTriangles(anari_cpp::Device device,
+ANARIMapperTriangles::ANARIMapperTriangles(viskores::interop::anari::ANARIDevice device,
                                            const ANARIActor& actor,
                                            const std::string& name,
                                            const viskores::cont::ColorTable& colorTable)
@@ -296,7 +296,6 @@ ANARIMapperTriangles::ANARIMapperTriangles(anari_cpp::Device device,
   this->Handles->Device = device;
   auto& attributes = this->Handles->Parameters.Vertex.Attribute;
   std::fill(attributes.begin(), attributes.end(), nullptr);
-  anari_cpp::retain(device, device);
 }
 
 ANARIMapperTriangles::~ANARIMapperTriangles()
@@ -646,7 +645,6 @@ ANARIMapperTriangles::ANARIHandles::~ANARIHandles()
   anari_cpp::release(this->Device, this->Material);
   anari_cpp::release(this->Device, this->Sampler);
   anari_cpp::release(this->Device, this->Geometry);
-  anari_cpp::release(this->Device, this->Device);
 }
 
 void ANARIMapperTriangles::ANARIHandles::ReleaseArrays()

@@ -53,7 +53,7 @@ struct VISKORES_ANARI_EXPORT ANARIScene
 {
   /// @brief Constructor
   ///
-  ANARIScene(anari_cpp::Device device);
+  ANARIScene(viskores::interop::anari::ANARIDevice device);
 
   /// @brief Destructor
   ///
@@ -119,7 +119,7 @@ struct VISKORES_ANARI_EXPORT ANARIScene
   /// @brief Get the `ANARIDevice` handle this scene is talking to.
   ///
   /// NOTE: This handle is not retained, so applications should not release it.
-  anari_cpp::Device GetDevice() const;
+  viskores::interop::anari::ANARIDevice GetDevice() const;
 
   /// @brief Get the `ANARIWorld` handle this scene is working on.
   ///
@@ -129,7 +129,7 @@ struct VISKORES_ANARI_EXPORT ANARIScene
 private:
   void UpdateWorld();
 
-  anari_cpp::Device Device{ nullptr };
+  viskores::interop::anari::ANARIDevice Device;
   anari_cpp::World World{ nullptr };
 
   struct SceneMapper

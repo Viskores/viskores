@@ -28,7 +28,7 @@ namespace interop
 namespace anari
 {
 
-ANARIMapperVolume::ANARIMapperVolume(anari_cpp::Device device,
+ANARIMapperVolume::ANARIMapperVolume(viskores::interop::anari::ANARIDevice device,
                                      const ANARIActor& actor,
                                      const std::string& name,
                                      const viskores::cont::ColorTable& colorTable)
@@ -36,7 +36,6 @@ ANARIMapperVolume::ANARIMapperVolume(anari_cpp::Device device,
 {
   this->Handles = std::make_shared<ANARIMapperVolume::ANARIHandles>();
   this->Handles->Device = device;
-  anari_cpp::retain(device, device);
 }
 
 ANARIMapperVolume::~ANARIMapperVolume()
@@ -414,7 +413,6 @@ ANARIMapperVolume::ANARIHandles::~ANARIHandles()
   this->ReleaseArrays();
   anari_cpp::release(this->Device, this->Volume);
   anari_cpp::release(this->Device, this->SpatialField);
-  anari_cpp::release(this->Device, this->Device);
 }
 
 void ANARIMapperVolume::ANARIHandles::ReleaseArrays()
