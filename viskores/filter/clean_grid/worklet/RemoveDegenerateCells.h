@@ -29,6 +29,7 @@
 #include <viskores/worklet/CellDeepCopy.h>
 
 #include <viskores/CellTraits.h>
+#include <viskores/VecVariable.h>
 
 #include <viskores/exec/CellFace.h>
 
@@ -91,9 +92,23 @@ struct RemoveDegenerateCells
       viskores::Id numValidFaces = 0;
       for (viskores::IdComponent faceId = 0; faceId < numFaces; ++faceId)
       {
+        // Check each face independently. A collapsed 3D cell can still have
+        // enough unique point ids overall even when some faces lose
+        // dimensionality.
+        viskores::IdComponent numFacePoints = 0;
+        viskores::exec::CellFaceNumberOfPoints(faceId, shape, numFacePoints);
+
+        viskores::VecVariable<viskores::Id, 4> facePointIds;
+        for (viskores::IdComponent facePointId = 0; facePointId < numFacePoints; ++facePointId)
+        {
+          viskores::IdComponent localPointId = 0;
+          viskores::exec::CellFaceLocalIndex(facePointId, faceId, shape, localPointId);
+          facePointIds.Append(pointIds[localPointId]);
+        }
+
         if (this->CheckForDimensionality(viskores::CellTopologicalDimensionsTag<2>(),
                                          viskores::CellShapeTagPolygon(),
-                                         pointIds))
+                                         facePointIds))
         {
           ++numValidFaces;
           if (numValidFaces > 2)
