@@ -55,7 +55,7 @@ viskores_library(
   )
 
 target_link_libraries(anari_library_viskores
-PRIVATE
+PUBLIC
   anari::helium
   )
 

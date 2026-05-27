@@ -16,10 +16,12 @@
 
 #include "Object.h"
 
+#include <viskores/rendering/anari-device/anari_library_viskores_export.h>
+
 namespace viskores_device
 {
 
-struct ViskoresDevice : public helium::BaseDevice
+struct ANARI_LIBRARY_VISKORES_EXPORT ViskoresDevice : public helium::BaseDevice
 {
   /////////////////////////////////////////////////////////////////////////////
   // Main interface to accepting API calls
