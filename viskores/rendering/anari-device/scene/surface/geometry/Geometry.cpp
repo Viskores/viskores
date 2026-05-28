@@ -10,6 +10,7 @@
 
 #include "Geometry.h"
 // subtypes
+#include "Quad.h"
 #include "Sphere.h"
 #include "Triangle.h"
 
@@ -36,6 +37,8 @@ Geometry* Geometry::createInstance(std::string_view subtype, ViskoresDeviceGloba
   // std::cout << "Creating geometry of type " << subtype << "\n";
   if (subtype == "triangle")
     return new Triangle(s);
+  else if (subtype == "quad")
+    return new Quad(s);
   else if (subtype == "sphere")
     return new Sphere(s);
   else
