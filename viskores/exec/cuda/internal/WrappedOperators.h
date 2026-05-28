@@ -199,8 +199,7 @@ struct WrappedBinaryPredicate
 }
 } //namespace viskores::exec::cuda::internal
 
-namespace thrust
-{
+VISKORES_THRUST_NAMESPACE_BEGIN
 namespace detail
 {
 //
@@ -223,6 +222,6 @@ struct is_commutative<viskores::exec::cuda::internal::WrappedBinaryOperator<T, F
 };
 #endif
 }
-} //namespace thrust::detail
+VISKORES_THRUST_NAMESPACE_END //namespace thrust::detail
 
 #endif //viskores_exec_cuda_internal_WrappedOperators_h

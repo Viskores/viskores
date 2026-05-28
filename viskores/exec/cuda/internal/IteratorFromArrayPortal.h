@@ -20,6 +20,7 @@
 
 #include <viskores/Pair.h>
 #include <viskores/Types.h>
+#include <viskores/exec/cuda/internal/ThrustPatches.h>
 #include <viskores/internal/ArrayPortalValueReference.h>
 #include <viskores/internal/ExportMacros.h>
 
@@ -128,8 +129,7 @@ private:
 //must be treated as references. So do to do that properly we need to specialize
 //is_non_const_reference to state an ArrayPortalValueReference by value is valid
 //for writing
-namespace thrust
-{
+VISKORES_THRUST_NAMESPACE_BEGIN
 namespace detail
 {
 
@@ -142,6 +142,6 @@ struct is_non_const_reference<viskores::internal::ArrayPortalValueReference<T>>
 {
 };
 }
-}
+VISKORES_THRUST_NAMESPACE_END
 
 #endif //viskores_exec_cuda_internal_IteratorFromArrayPortal_h
