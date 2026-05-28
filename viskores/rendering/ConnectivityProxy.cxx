@@ -243,7 +243,9 @@ public:
     rayCamera.CreateRays(rays, this->Dataset.GetCoordinateSystem(this->CoordinateName).GetBounds());
     rays.Buffers.at(0).InitConst(0.f);
     raytracing::RayOperations::MapCanvasToRays(
-      rays, camera.CreateRaytracingCamera(canvas->GetWidth(), canvas->GetHeight()), *canvas);
+      rays,
+      camera.CreateRaytracingCamera(canvas->GetWidth(), canvas->GetHeight()),
+      canvas->GetDepthBuffer());
 
     if (this->Mode == RenderMode::Volume)
     {

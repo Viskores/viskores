@@ -18,7 +18,7 @@
 #ifndef viskores_rendering_raytracing_RunTriangulator_h
 #define viskores_rendering_raytracing_RunTriangulator_h
 
-#include <viskores/rendering/viskores_rendering_export.h>
+#include <viskores/rendering/raytracing/viskores_rendering_raytracing_export.h>
 
 #include <viskores/cont/ArrayHandle.h>
 #include <viskores/cont/Field.h>
@@ -37,7 +37,7 @@ namespace raytracing
 /// really is a stop-gap. Eventually, the Triangulator should be moved to
 /// filters, and filters should be compiled in a library (for the same reason).
 ///
-VISKORES_RENDERING_EXPORT
+VISKORES_RENDERING_RAYTRACING_EXPORT
 void RunTriangulator(const viskores::cont::UnknownCellSet& cellSet,
                      viskores::cont::ArrayHandle<viskores::Id4>& indices,
                      viskores::Id& numberOfTriangles,

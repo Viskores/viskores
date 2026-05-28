@@ -19,7 +19,7 @@
 #include <viskores/rendering/raytracing/RunTriangulator.h>
 
 #include <viskores/cont/TryExecute.h>
-#include <viskores/rendering/Triangulator.h>
+#include <viskores/rendering/raytracing/Triangulator.h>
 
 namespace viskores
 {
@@ -33,7 +33,7 @@ void RunTriangulator(const viskores::cont::UnknownCellSet& cellSet,
                      viskores::Id& numberOfTriangles,
                      const viskores::cont::Field& ghostField)
 {
-  viskores::rendering::Triangulator triangulator;
+  viskores::rendering::raytracing::Triangulator triangulator;
   triangulator.Run(cellSet, indices, numberOfTriangles, ghostField);
 }
 

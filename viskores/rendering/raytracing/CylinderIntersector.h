@@ -30,7 +30,7 @@ namespace raytracing
 namespace detail
 {
 }
-class CylinderIntersector : public ShapeIntersector
+class VISKORES_RENDERING_RAYTRACING_EXPORT CylinderIntersector : public ShapeIntersector
 {
 protected:
   viskores::cont::ArrayHandle<viskores::Id3> CylIds;
