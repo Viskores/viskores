@@ -646,10 +646,9 @@ template <typename MeshType, typename FieldType>
 void TreeGrafter<MeshType, FieldType>::FindCriticalPoints()
 { // FindCriticalPoints()
   // allocate memory for type of supernode
-  viskores::worklet::contourtree_augmented::ResizeVector(
-    this->SupernodeType,
-    this->ContourTree.Supernodes.GetNumberOfValues(),
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  this->SupernodeType.AllocateAndFill(this->ContourTree.Supernodes.GetNumberOfValues(),
+                                      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+                                      viskores::CopyFlag::On);
   // Reset the UpNeighbour and DownNeighbour array
   viskores::cont::Algorithm::Copy(viskores::cont::make_ArrayHandleConstant(
                                     viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
@@ -1099,21 +1098,20 @@ void TreeGrafter<MeshType, FieldType>::CopyNewHypernodes(
   viskores::Id nOldHypernodes = hierarchicalTree.Hypernodes.GetNumberOfValues();
   viskores::Id nNewHypernodes = this->NewHypernodes.GetNumberOfValues();
   viskores::Id totalNHypernodes = nOldHypernodes + nNewHypernodes;
-  // Need to resize the vectors while keeping the original values. I.e., we must do a true resize.
-  // Viskores does not provide a real resize so we need to do our own.
+  // Need to resize the vectors while keeping the original values.
   {
     // Resize array to length totalNHypernodes and fill new values with NO_SUCH_ELEMENT (or 0) (while keeping original values)
     // NOTE: hierarchicalTree.Superchildren is initalized here but not used by this function
-    viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-      hierarchicalTree.Hypernodes,
+    hierarchicalTree.Hypernodes.AllocateAndFill(
       totalNHypernodes,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-      hierarchicalTree.Hyperarcs,
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
+    hierarchicalTree.Hyperarcs.AllocateAndFill(
       totalNHypernodes,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-      hierarchicalTree.Superchildren, totalNHypernodes, static_cast<viskores::Id>(0));
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
+    hierarchicalTree.Superchildren.AllocateAndFill(
+      totalNHypernodes, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
   }
   // B.  Copy in the hypernodes & hyperarcs
   auto copyNewHypernodesWorklet =
@@ -1159,39 +1157,37 @@ void TreeGrafter<MeshType, FieldType>::CopyNewSupernodes(
   viskores::Id nNewSupernodes = this->NewSupernodes.GetNumberOfValues();
   viskores::Id totalNSupernodes = nOldSupernodes + nNewSupernodes;
   // Resize array to length totalNHypernodes and fill new values with NO_SUCH_ELEMENT (while keeping original values)
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.Supernodes,
+  hierarchicalTree.Supernodes.AllocateAndFill(
     totalNSupernodes,
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.Superarcs,
+    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+    viskores::CopyFlag::On);
+  hierarchicalTree.Superarcs.AllocateAndFill(
     totalNSupernodes,
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.Hyperparents,
+    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+    viskores::CopyFlag::On);
+  hierarchicalTree.Hyperparents.AllocateAndFill(
     totalNSupernodes,
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.Super2Hypernode,
+    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+    viskores::CopyFlag::On);
+  hierarchicalTree.Super2Hypernode.AllocateAndFill(
     totalNSupernodes,
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.WhichRound,
+    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+    viskores::CopyFlag::On);
+  hierarchicalTree.WhichRound.AllocateAndFill(
     totalNSupernodes,
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.WhichIteration,
+    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+    viskores::CopyFlag::On);
+  hierarchicalTree.WhichIteration.AllocateAndFill(
     totalNSupernodes,
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+    viskores::CopyFlag::On);
 
   // we will need this here, since we need to set some new superparents here for supernodes added
   viskores::Id nOldNodes = hierarchicalTree.RegularNodeGlobalIds.GetNumberOfValues();
   viskores::Id nNewNodes = this->NewNodes.GetNumberOfValues();
   viskores::Id totalNNodes = nOldNodes + nNewNodes;
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.Superparents,
-    totalNNodes,
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  hierarchicalTree.Superparents.AllocateAndFill(
+    totalNNodes, viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT, viskores::CopyFlag::On);
 
   // B.  Copy in the supernodes, &c.
   auto copyNewSupernodesWorklet =
@@ -1284,10 +1280,8 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
   viskores::Id totalNNodes = nOldNodes + nNewNodes;
 
   // A.  We start by finding & copying the global IDs for every regular node
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.RegularNodeGlobalIds,
-    totalNNodes,
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  hierarchicalTree.RegularNodeGlobalIds.AllocateAndFill(
+    totalNNodes, viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT, viskores::CopyFlag::On);
   // NOTE: The original code created a separate array newNodesGloablId that was set
   // to NO_SUCH_ELEMENT first but we should only need the fancy array here and save the memory
   auto newNodesGloablId =
@@ -1331,10 +1325,8 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
   // C.  Then we add the new array indices to the sort and resort it
   // Resize and initialize hierarchicalTree.RegularNodeSortOrder with NO_SUCH_ELEMENT
   // TODO: We should be able to shortcut this since the last values are set next in the CopySubrange
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.RegularNodeSortOrder,
-    totalNNodes,
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  hierarchicalTree.RegularNodeSortOrder.AllocateAndFill(
+    totalNNodes, viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT, viskores::CopyFlag::On);
   {
     // Do the following: std::iota(hierarchicalTree.regularNodeSortOrder.begin() + nOldNodes, hierarchicalTree.regularNodeSortOrder.end(), nOldNodes);
     auto tempCountingArray = viskores::cont::ArrayHandleCounting<viskores::Id>(
@@ -1361,10 +1353,8 @@ void TreeGrafter<MeshType, FieldType>::CopyNewNodes(
 
   // D. now loop through the supernodes to set their lookup index from regular IDs
   // Resize and initialize hierarchicalTree.Regular2Supernode with NO_SUCH_ELEMENT
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.Regular2Supernode,
-    totalNNodes,
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+  hierarchicalTree.Regular2Supernode.AllocateAndFill(
+    totalNNodes, viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT, viskores::CopyFlag::On);
   {
     // The code in this block does the following in serial
     // for (indexType newSupernode = hierarchicalTree.supernodes.size() - newSupernodes.size(); newSupernode < hierarchicalTree.supernodes.size(); newSupernode++)
@@ -1467,10 +1457,10 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
 #endif
 
   // and set the per round iteration counts. There may be smarter ways of doing this, but . . .
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.FirstSupernodePerIteration[static_cast<std::size_t>(theRound)],
+  hierarchicalTree.FirstSupernodePerIteration[static_cast<std::size_t>(theRound)].AllocateAndFill(
     this->NumTransferIterations + 1,
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+    viskores::CopyFlag::On);
   {
     auto copyFirstSupernodePerIterationWorklet = viskores::worklet::contourtree_distributed::
       tree_grafter::CopyFirstSupernodePerIterationWorklet(nOldSupernodes);
@@ -1502,10 +1492,10 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
   // the "off the end" sentinel.  But it is also possible for there to be no attachment points, in which case the final iteration
   // will have some other value.  Also, we need to set the "off the end" for the extra entry in any event.
   // THEREFORE, instead of instantiating to NO_SUCH_ELEMENT for safety, we instantiate to the hypernodes.size()
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    hierarchicalTree.FirstHypernodePerIteration[static_cast<std::size_t>(theRound)],
+  hierarchicalTree.FirstHypernodePerIteration[static_cast<std::size_t>(theRound)].AllocateAndFill(
     this->NumTransferIterations + 1,
-    hierarchicalTree.Hypernodes.GetNumberOfValues());
+    hierarchicalTree.Hypernodes.GetNumberOfValues(),
+    viskores::CopyFlag::On);
   // copy the approbriat hierarchicalTree.FirstHypernodePerIteration values
   {
     auto copyFirstHypernodePerIterationWorklet = viskores::worklet::contourtree_distributed::

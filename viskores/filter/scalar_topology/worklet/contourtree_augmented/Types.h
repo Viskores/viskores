@@ -193,22 +193,6 @@ VISKORES_CONT inline void AssertArrayHandleNoFlagsSet(
 }
 
 
-/// Helper function used to resize a 1D ArrayHandle and initalize new values with a
-/// given fillValue. For resizing ArrayHandles without initalizing new values Viskores
-/// supports the viskores::CopyFlag::On setting as part of the ArrayHandle.Allocate
-/// method.
-/// @param[in] thearray The 1D array to be resized
-/// @param[in] newSize The new size the array should be changed to
-/// @param[in] fillValue The value to be used to fill the array
-template <typename ValueType>
-void ResizeVector(viskores::cont::ArrayHandle<ValueType>& thearray,
-                  viskores::Id newSize,
-                  ValueType fillValue)
-{
-  // Resize the array but keep the original values. Fill expanded with provided value
-  thearray.AllocateAndFill(newSize, fillValue, viskores::CopyFlag::On);
-}
-
 template <typename T>
 struct MaskedIndexFunctor
 {

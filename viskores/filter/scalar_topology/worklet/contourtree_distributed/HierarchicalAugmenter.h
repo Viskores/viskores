@@ -601,18 +601,18 @@ void HierarchicalAugmenter<FieldType>::RetrieveInAttachmentPoints()
 #endif
 
   // I.  resize the existing arrays
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    this->GlobalRegularIds, numTotalAttachments, static_cast<viskores::Id>(0));
-  viskores::worklet::contourtree_augmented::ResizeVector<FieldType>(
-    this->DataValues, numTotalAttachments, static_cast<FieldType>(0));
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    this->SupernodeIds, numTotalAttachments, static_cast<viskores::Id>(0));
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    this->Superparents, numTotalAttachments, static_cast<viskores::Id>(0));
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    this->SuperparentRounds, numTotalAttachments, static_cast<viskores::Id>(0));
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    this->WhichRounds, numTotalAttachments, static_cast<viskores::Id>(0));
+  this->GlobalRegularIds.AllocateAndFill(
+    numTotalAttachments, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
+  this->DataValues.AllocateAndFill(
+    numTotalAttachments, static_cast<FieldType>(0), viskores::CopyFlag::On);
+  this->SupernodeIds.AllocateAndFill(
+    numTotalAttachments, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
+  this->Superparents.AllocateAndFill(
+    numTotalAttachments, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
+  this->SuperparentRounds.AllocateAndFill(
+    numTotalAttachments, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
+  this->WhichRounds.AllocateAndFill(
+    numTotalAttachments, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
 
   /*this->GlobalRegularIds.Allocate(numTotalAttachments);
   this->DataValues.Allocate(numTotalAttachments);
@@ -883,21 +883,18 @@ void HierarchicalAugmenter<FieldType>::CopyHyperstructure()
   // Nevertheless, set them all to NO_SUCH_ELEMENT out of paranoia
   // 5. Reset hypernodes, hyperarcs and superchildren using supernode IDs
   //    The hyperstructure is unchanged, but uses old supernode IDs
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    this->AugmentedTree->Hypernodes,                          // resize array
-    this->BaseTree->Hypernodes.GetNumberOfValues(),           // new size
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT // set all elements to this value
-  );
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    this->AugmentedTree->Hyperarcs,                           // resize array
-    this->BaseTree->Hyperarcs.GetNumberOfValues(),            // new size
-    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT // set all elements to this value
-  );
-  viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-    this->AugmentedTree->Superchildren,                // resize array
+  this->AugmentedTree->Hypernodes.AllocateAndFill(
+    this->BaseTree->Hypernodes.GetNumberOfValues(),            // new size
+    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT, // set new elements to this value
+    viskores::CopyFlag::On);
+  this->AugmentedTree->Hyperarcs.AllocateAndFill(
+    this->BaseTree->Hyperarcs.GetNumberOfValues(),             // new size
+    viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT, // set new elements to this value
+    viskores::CopyFlag::On);
+  this->AugmentedTree->Superchildren.AllocateAndFill(
     this->BaseTree->Superchildren.GetNumberOfValues(), // new size
-    0                                                  // set all elements to this value
-  );
+    0,                                                 // set new elements to this value
+    viskores::CopyFlag::On);
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
@@ -1079,18 +1076,18 @@ void HierarchicalAugmenter<FieldType>::CopyBaseRegularStructure()
   viskores::Id numTotalRegular = numExistingRegular + numRegNeeded;
   {
     // Resize the array, while preserving the orginial values and initalizing new values
-    viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-      this->AugmentedTree->RegularNodeGlobalIds, numTotalRegular, static_cast<viskores::Id>(0));
-    viskores::worklet::contourtree_augmented::ResizeVector<FieldType>(
-      this->AugmentedTree->DataValues, numTotalRegular, static_cast<FieldType>(0));
-    viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-      this->AugmentedTree->RegularNodeSortOrder, numTotalRegular, static_cast<viskores::Id>(0));
-    viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-      this->AugmentedTree->Regular2Supernode,
+    this->AugmentedTree->RegularNodeGlobalIds.AllocateAndFill(
+      numTotalRegular, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
+    this->AugmentedTree->DataValues.AllocateAndFill(
+      numTotalRegular, static_cast<FieldType>(0), viskores::CopyFlag::On);
+    this->AugmentedTree->RegularNodeSortOrder.AllocateAndFill(
+      numTotalRegular, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
+    this->AugmentedTree->Regular2Supernode.AllocateAndFill(
       numTotalRegular,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-      this->AugmentedTree->Superparents, numTotalRegular, static_cast<viskores::Id>(0));
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
+    this->AugmentedTree->Superparents.AllocateAndFill(
+      numTotalRegular, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
   }
 
   // OK:  we have a complete list of the nodes to transfer. Since we make no guarantees (yet) about sorting, they just copy across
@@ -1253,52 +1250,52 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
   // NOTE: We have to resize arrays (not just allocate them) as we need to
   // expand the arrays while preserving the original values
   {
-    viskores::worklet::contourtree_augmented::ResizeVector(
-      this->AugmentedTree->Supernodes,
+    this->AugmentedTree->Supernodes.AllocateAndFill(
       newSupernodeCount,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    viskores::worklet::contourtree_augmented::ResizeVector(
-      this->AugmentedTree->Supernodes,
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
+    this->AugmentedTree->Supernodes.AllocateAndFill(
       newSupernodeCount,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    viskores::worklet::contourtree_augmented::ResizeVector(
-      this->AugmentedTree->Superarcs,
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
+    this->AugmentedTree->Superarcs.AllocateAndFill(
       newSupernodeCount,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    viskores::worklet::contourtree_augmented::ResizeVector(
-      this->AugmentedTree->Hyperparents,
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
+    this->AugmentedTree->Hyperparents.AllocateAndFill(
       newSupernodeCount,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    viskores::worklet::contourtree_augmented::ResizeVector(
-      this->AugmentedTree->Super2Hypernode,
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
+    this->AugmentedTree->Super2Hypernode.AllocateAndFill(
       newSupernodeCount,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    viskores::worklet::contourtree_augmented::ResizeVector(
-      this->AugmentedTree->WhichRound,
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
+    this->AugmentedTree->WhichRound.AllocateAndFill(
       newSupernodeCount,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    viskores::worklet::contourtree_augmented::ResizeVector(
-      this->AugmentedTree->WhichIteration,
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
+    this->AugmentedTree->WhichIteration.AllocateAndFill(
       newSupernodeCount,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
 
     // we also know that only supernodes are needed as regular nodes at each level, so we resize those here as well
     // we note that it might be possible to update all regular IDs at the end, but leave that optimisation out for now
     // therefore we resize the regular-sized arrays as well
-    viskores::worklet::contourtree_augmented::ResizeVector(
-      this->AugmentedTree->RegularNodeGlobalIds,
+    this->AugmentedTree->RegularNodeGlobalIds.AllocateAndFill(
       newSupernodeCount,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    viskores::worklet::contourtree_augmented::ResizeVector<FieldType>(
-      this->AugmentedTree->DataValues, newSupernodeCount, static_cast<FieldType>(0));
-    viskores::worklet::contourtree_augmented::ResizeVector(
-      this->AugmentedTree->Regular2Supernode,
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
+    this->AugmentedTree->DataValues.AllocateAndFill(
+      newSupernodeCount, static_cast<FieldType>(0), viskores::CopyFlag::On);
+    this->AugmentedTree->Regular2Supernode.AllocateAndFill(
       newSupernodeCount,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
-    viskores::worklet::contourtree_augmented::ResizeVector(
-      this->AugmentedTree->Superparents,
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
+    this->AugmentedTree->Superparents.AllocateAndFill(
       newSupernodeCount,
-      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT);
+      viskores::worklet::contourtree_augmented::NO_SUCH_ELEMENT,
+      viskores::CopyFlag::On);
   }
 
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
@@ -1316,14 +1313,14 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
   viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleIndex(numSupernodesThisLevel),
                                   this->SupernodeSorter);
   {
-    viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-      this->GlobalRegularIdSet, numSupernodesThisLevel, static_cast<viskores::Id>(0));
-    viskores::worklet::contourtree_augmented::ResizeVector<FieldType>(
-      this->DataValueSet, numSupernodesThisLevel, static_cast<FieldType>(0));
-    viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-      this->SuperparentSet, numSupernodesThisLevel, static_cast<viskores::Id>(0));
-    viskores::worklet::contourtree_augmented::ResizeVector<viskores::Id>(
-      this->SupernodeIdSet, numSupernodesThisLevel, static_cast<viskores::Id>(0));
+    this->GlobalRegularIdSet.AllocateAndFill(
+      numSupernodesThisLevel, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
+    this->DataValueSet.AllocateAndFill(
+      numSupernodesThisLevel, static_cast<FieldType>(0), viskores::CopyFlag::On);
+    this->SuperparentSet.AllocateAndFill(
+      numSupernodesThisLevel, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
+    this->SupernodeIdSet.AllocateAndFill(
+      numSupernodesThisLevel, static_cast<viskores::Id>(0), viskores::CopyFlag::On);
   }
 #ifdef DEBUG_PRINT_HIERARCHICAL_AUGMENTER
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
