@@ -405,14 +405,14 @@ public:
                 ei.Vertex1 = points[edge[0]];
                 ei.Vertex2 = points[edge[1]];
                 auto point1ToPoint2 =
-                  static_cast<viskores::Float64>(scalars.Get(ei.Vertex1) - scalars.Get(ei.Vertex2));
+                  static_cast<viskores::Float64>(scalars.Get(ei.Vertex2) - scalars.Get(ei.Vertex1));
                 if (point1ToPoint2 < 0)
                 {
                   viskores::Swap(ei.Vertex1, ei.Vertex2);
                   point1ToPoint2 = -point1ToPoint2;
                 }
                 auto point1ToIso =
-                  0.0 - (static_cast<viskores::Float64>(scalars.Get(ei.Vertex1) - this->IsoValue));
+                  0.0 - static_cast<viskores::Float64>(scalars.Get(ei.Vertex1) - this->IsoValue);
                 ei.Weight = point1ToPoint2 != 0 ? point1ToIso / point1ToPoint2 : 0;
                 // swap because edges are expected to be smallest,largest, t
                 if (ei.Vertex1 > ei.Vertex2)
