@@ -99,6 +99,8 @@
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/tree_grafter/SuperNodeWhenComparator.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/tree_grafter/SuperarcWasNotTransferredPredicate.h>
 
+#include <viskores/cont/ArraySetValues.h>
+
 #include <sstream>
 #include <string>
 #include <utility>
@@ -1434,14 +1436,14 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
 #endif
 
   // update the round counts
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     theRound, this->NewNodes.GetNumberOfValues(), hierarchicalTree.NumRegularNodesInRound);
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     theRound, this->NewSupernodes.GetNumberOfValues(), hierarchicalTree.NumSupernodesInRound);
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     theRound, this->NewHypernodes.GetNumberOfValues(), hierarchicalTree.NumHypernodesInRound);
   // last iteration is just setting attachment points (but we are including this now) (previously added -1)
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     theRound, this->NumTransferIterations, hierarchicalTree.NumIterations);
 
 #ifdef DEBUG_PRINT
@@ -1482,7 +1484,7 @@ void TreeGrafter<MeshType, FieldType>::CopyIterationDetails(
     );
 
     // force the extra one to be one-off-the end for safety
-    viskores::worklet::contourtree_augmented::IdArraySetValue(
+    viskores::cont::ArraySetValue(
       this->NumTransferIterations,                          // index to set
       hierarchicalTree.Supernodes.GetNumberOfValues(),      // value to set
       hierarchicalTree.FirstSupernodePerIteration[theRound] // array to modify

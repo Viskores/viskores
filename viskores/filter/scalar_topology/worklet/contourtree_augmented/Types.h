@@ -69,7 +69,6 @@
 #include <viskores/Pair.h>
 #include <viskores/Types.h>
 #include <viskores/cont/ArrayHandle.h>
-#include <viskores/cont/ArraySetValues.h>
 #include <viskores/cont/CellSetStructured.h>
 
 namespace viskores
@@ -192,14 +191,6 @@ VISKORES_CONT inline void AssertArrayHandleNoFlagsSet(
   (void)ah;
 #endif
 }
-
-
-/// Helper function to set a single array valye with CopySubRange to avoid pulling the array to the control environment
-VISKORES_CONT
-inline void IdArraySetValue(viskores::Id index, viskores::Id value, IdArrayType& arr)
-{ // IdArraySetValue
-  viskores::cont::ArraySetValue(index, value, arr);
-} // IdArraySetValues
 
 
 /// Helper function used to resize a 1D ArrayHandle and initalize new values with a

@@ -103,6 +103,7 @@
 
 // viskores includes
 #include <viskores/Types.h>
+#include <viskores/cont/ArraySetValues.h>
 
 // std includes
 #include <sstream>
@@ -652,12 +653,12 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
   // when we are done, we need to force the summation for the root node, JUST IN CASE it is a boundary node itself
   // BTW, the value *SHOULD* be the number of boundary nodes, anyway
   viskores::Id rootSuperId = this->ContourTree.Supernodes.GetNumberOfValues() - 1;
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     rootSuperId,
     viskores::cont::ArrayGetValue(rootSuperId, this->SupernodeTransferBoundaryCount) +
       viskores::cont::ArrayGetValue(rootSuperId, this->SuperarcIntrinsicBoundaryCount),
     this->SuperarcDependentBoundaryCount);
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     this->ContourTree.Hypernodes.GetNumberOfValues() - 1,
     viskores::cont::ArrayGetValue(rootSuperId, this->SuperarcDependentBoundaryCount),
     this->HyperarcDependentBoundaryCount);

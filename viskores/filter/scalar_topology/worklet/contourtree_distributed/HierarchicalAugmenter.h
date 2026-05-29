@@ -125,6 +125,8 @@
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_augmenter/UpdateHyperstructureSetSuperchildrenWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_contour_tree/PermuteComparator.h>
 
+#include <viskores/cont/ArraySetValues.h>
+
 #ifdef DEBUG_PRINT
 #define DEBUG_PRINT_HIERARCHICAL_AUGMENTER
 #define DEBUG_PRINT_HIERARCHICAL_CONTOUR_TREE
@@ -1240,11 +1242,11 @@ void HierarchicalAugmenter<FieldType>::ResizeArrays(viskores::Id roundNumber)
   viskores::Id newSupernodeCount = numSupernodesAlready + numSupernodesThisLevel;
 
   // conveniently, the value numSupernodesThisLevel is the number of supernodes *!AND!* regular nodes to store for the round
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     roundNumber, numSupernodesThisLevel, this->AugmentedTree->NumRegularNodesInRound);
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     roundNumber, numSupernodesThisLevel, this->AugmentedTree->NumSupernodesInRound);
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     0, numSupernodesAlready, this->AugmentedTree->FirstSupernodePerIteration[roundNumber]);
 
   // resize the arrays accordingly.
@@ -1669,7 +1671,7 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(viskores::Id roundNumber)
   }
 
   // since there's an extra entry in the firstSupernode array as a sentinel, set it
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     currNumIterations,                                           // index
     this->AugmentedTree->Supernodes.GetNumberOfValues(),         // new value
     this->AugmentedTree->FirstSupernodePerIteration[roundNumber] // array
@@ -1706,15 +1708,14 @@ void HierarchicalAugmenter<FieldType>::CreateSuperarcs(viskores::Id roundNumber)
       // decrement the iteration count (still with an extra element as sentinel)
       viskores::Id iterationArraySize = currNumIterations;
       // decrease iterations by 1. I.e,: augmentedTree->nIterations[roundNo]--;
-      viskores::worklet::contourtree_augmented::IdArraySetValue(
-        roundNumber,                       // index
-        currNumIterations - 1,             // new value
-        this->AugmentedTree->NumIterations // array
+      viskores::cont::ArraySetValue(roundNumber,                       // index
+                                    currNumIterations - 1,             // new value
+                                    this->AugmentedTree->NumIterations // array
       );
       // shrink the supernode array
       this->AugmentedTree->FirstSupernodePerIteration[roundNumber].Allocate(
         iterationArraySize, viskores::CopyFlag::On); // shrink array but keep values
-      viskores::worklet::contourtree_augmented::IdArraySetValue(
+      viskores::cont::ArraySetValue(
         iterationArraySize - 1,                                      // index
         this->AugmentedTree->Supernodes.GetNumberOfValues(),         // new value
         this->AugmentedTree->FirstSupernodePerIteration[roundNumber] // array
