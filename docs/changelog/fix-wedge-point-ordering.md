@@ -15,3 +15,4 @@ faces with incorrect outward normals. The fixes are mentioned below:
   - Fix `MarchingCellTables` for contouring to produce correct point/edge ordering
   - Fix tests generating wrong point ordering
    
+Additionally, the edge interpolation was fixed to consider edge points with equal scalar values.
