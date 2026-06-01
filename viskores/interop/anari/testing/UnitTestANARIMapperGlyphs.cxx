@@ -45,7 +45,7 @@ void RenderTests()
   bool conesSupported = false;
   for (int i = 0; extensions[i] != nullptr; ++i)
   {
-    if (extensions[i] == std::string("KHR_GEOMETRY_CONE"))
+    if (extensions[i] == std::string("ANARI_KHR_GEOMETRY_CONE"))
     {
       conesSupported = true;
       break;
