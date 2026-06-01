@@ -1,5 +1,8 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/12506/badge)](https://www.bestpractices.dev/projects/12506)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Viskores/viskores/badge)](https://scorecard.dev/viewer/?uri=github.com/Viskores/viskores)
+[![LFX Health Score](https://insights.linuxfoundation.org/api/badge/health-score?project=viskores)](https://insights.linuxfoundation.org/project/viskores)
+[![LFX Contributors](https://insights.linuxfoundation.org/api/badge/contributors?project=viskores)](https://insights.linuxfoundation.org/project/viskores)
+[![LFX Active Contributors](https://insights.linuxfoundation.org/api/badge/active-contributors?project=viskores)](https://insights.linuxfoundation.org/project/viskores)
 
 # Viskores #
 
