@@ -43,6 +43,7 @@ set (sources
 set(device_sources
   array/ArrayConversion.cpp
   frame/Frame.cpp
+  scene/surface/geometry/Cylinder.cpp
   scene/surface/geometry/Quad.cpp
   scene/surface/geometry/Sphere.cpp
   scene/surface/geometry/Triangle.cpp

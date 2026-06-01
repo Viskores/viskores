@@ -10,6 +10,7 @@
 
 #include "Geometry.h"
 // subtypes
+#include "Cylinder.h"
 #include "Quad.h"
 #include "Sphere.h"
 #include "Triangle.h"
@@ -37,6 +38,8 @@ Geometry* Geometry::createInstance(std::string_view subtype, ViskoresDeviceGloba
   // std::cout << "Creating geometry of type " << subtype << "\n";
   if (subtype == "triangle")
     return new Triangle(s);
+  else if (subtype == "cylinder")
+    return new Cylinder(s);
   else if (subtype == "quad")
     return new Quad(s);
   else if (subtype == "sphere")
@@ -60,9 +63,7 @@ void Geometry::FieldArrayParameters::setAttributes(Geometry* self,
 {
   this->m_geometry = self;
   for (auto&& attrib : attributes)
-  {
     this->m_attributes.emplace(attrib, self);
-  }
 }
 
 void Geometry::FieldArrayParameters::setAnariAssociation(const std::string& association)
@@ -90,9 +91,7 @@ void Geometry::FieldArrayParameters::setFields(viskores::cont::DataSet& dataSet)
   for (auto& iter : this->m_attributes)
   {
     if (iter.second)
-    {
       dataSet.AddField(iter.first, this->m_viskoresAssociation, iter.second->dataAsViskoresArray());
-    }
   }
 }
 
