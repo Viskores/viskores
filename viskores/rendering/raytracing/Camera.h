@@ -29,7 +29,7 @@ namespace rendering
 namespace raytracing
 {
 
-struct Camera3DStruct
+struct VISKORES_RENDERING_RAYTRACING_EXPORT Camera3DStruct
 {
 public:
   VISKORES_CONT
@@ -61,7 +61,7 @@ public:
   viskores::Float32 Zoom;
 };
 
-struct VISKORES_RENDERING_EXPORT Camera2DStruct
+struct VISKORES_RENDERING_RAYTRACING_EXPORT Camera2DStruct
 {
 public:
   VISKORES_CONT
@@ -94,7 +94,7 @@ public:
   viskores::Float32 Zoom;
 };
 
-class VISKORES_RENDERING_EXPORT Camera
+class VISKORES_RENDERING_RAYTRACING_EXPORT Camera
 {
 private:
   viskores::Int32 Height = 500;

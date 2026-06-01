@@ -127,8 +127,9 @@ void MapperRayTracer::RenderCellsImpl(const viskores::cont::UnknownCellSet& cell
   this->Internals->RayCamera.CreateRays(this->Internals->Rays, shapeBounds);
   this->Internals->Tracer.GetCamera() = this->Internals->RayCamera;
   this->Internals->Rays.Buffers.at(0).InitConst(0.f);
-  raytracing::RayOperations::MapCanvasToRays(
-    this->Internals->Rays, camera.CreateRaytracingCamera(width, height), *this->Internals->Canvas);
+  raytracing::RayOperations::MapCanvasToRays(this->Internals->Rays,
+                                             camera.CreateRaytracingCamera(width, height),
+                                             this->Internals->Canvas->GetDepthBuffer());
 
   this->Internals->Tracer.SetField(scalarField, scalarRange);
 

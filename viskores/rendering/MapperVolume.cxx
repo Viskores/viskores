@@ -114,8 +114,9 @@ void MapperVolume::RenderCellsImpl(const viskores::cont::UnknownCellSet& cellset
     viskores::rendering::raytracing::Ray<viskores::Float32> rays;
     rayCamera.CreateRays(rays, coords.GetBounds());
     rays.Buffers.at(0).InitConst(0.f);
-    raytracing::RayOperations::MapCanvasToRays(
-      rays, camera.CreateRaytracingCamera(width, height), *this->Internals->Canvas);
+    raytracing::RayOperations::MapCanvasToRays(rays,
+                                               camera.CreateRaytracingCamera(width, height),
+                                               this->Internals->Canvas->GetDepthBuffer());
 
 
     if (this->Internals->SampleDistance != DEFAULT_SAMPLE_DISTANCE)

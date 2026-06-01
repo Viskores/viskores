@@ -31,7 +31,7 @@ namespace raytracing
 namespace detail
 {
 }
-class VISKORES_RENDERING_EXPORT QuadIntersector : public ShapeIntersector
+class VISKORES_RENDERING_RAYTRACING_EXPORT QuadIntersector : public ShapeIntersector
 {
 protected:
   viskores::cont::ArrayHandle<viskores::Vec<viskores::Id, 5>> QuadIds;

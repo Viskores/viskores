@@ -313,7 +313,7 @@ void TransferFunction1D::render(viskores::rendering::Canvas& canvas,
   rayCamera.CreateRays(rays, coords.GetBounds());
   rays.Buffers.at(0).InitConst(0.f);
   viskores::rendering::raytracing::RayOperations::MapCanvasToRays(
-    rays, camera.CreateRaytracingCamera(width, height), *canvasRT);
+    rays, camera.CreateRaytracingCamera(width, height), canvasRT->GetDepthBuffer());
 
   tracer.SetSampleDistance(this->m_sampleDistance);
 

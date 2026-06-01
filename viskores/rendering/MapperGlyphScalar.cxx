@@ -483,7 +483,7 @@ void MapperGlyphScalar::RenderCellsImpl(
     RayCamera.CreateRays(Rays, shapeBounds);
     Rays.Buffers.at(0).InitConst(0.f);
     raytracing::RayOperations::MapCanvasToRays(
-      Rays, camera.CreateRaytracingCamera(width, height), *this->Canvas);
+      Rays, camera.CreateRaytracingCamera(width, height), this->Canvas->GetDepthBuffer());
 
     tracer.SetField(processedField, scalarRange);
     tracer.GetCamera() = RayCamera;

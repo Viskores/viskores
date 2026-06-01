@@ -16,12 +16,14 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <viskores/Transform3D.h>
 #include <viskores/VectorAnalysis.h>
 
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ErrorBadValue.h>
 #include <viskores/cont/Timer.h>
 
+#include <viskores/rendering/MatrixHelpers.h>
 #include <viskores/rendering/raytracing/Camera.h>
 #include <viskores/rendering/raytracing/Logger.h>
 #include <viskores/rendering/raytracing/RayOperations.h>

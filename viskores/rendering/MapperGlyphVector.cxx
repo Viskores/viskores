@@ -153,7 +153,7 @@ void MapperGlyphVector::RenderCellsImpl(
   RayCamera.CreateRays(Rays, shapeBounds);
   Rays.Buffers.at(0).InitConst(0.f);
   raytracing::RayOperations::MapCanvasToRays(
-    Rays, camera.CreateRaytracingCamera(width, height), *this->Canvas);
+    Rays, camera.CreateRaytracingCamera(width, height), this->Canvas->GetDepthBuffer());
 
   auto magnitudeField = glyphExtractor.GetMagnitudeField();
   auto magnitudeFieldRange = magnitudeField.GetRange().ReadPortal().Get(0);

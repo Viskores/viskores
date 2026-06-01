@@ -14,6 +14,7 @@
 #include <viskores/cont/ArrayHandleIndex.h>
 #include <viskores/cont/ArrayRangeCompute.h>
 #include <viskores/filter/MapFieldPermutation.h>
+#include <viskores/rendering/CanvasRayTracer.h>
 #include <viskores/rendering/raytracing/Camera.h>
 #include <viskores/rendering/raytracing/Ray.h>
 #include <viskores/rendering/raytracing/RayOperations.h>
@@ -165,7 +166,7 @@ void Sphere::render(viskores::rendering::Canvas& canvas,
   rayCamera.CreateRays(rays, shapeBounds);
   rays.Buffers.at(0).InitConst(0.f);
   viskores::rendering::raytracing::RayOperations::MapCanvasToRays(
-    rays, camera.CreateRaytracingCamera(width, height), *canvasRT);
+    rays, camera.CreateRaytracingCamera(width, height), canvasRT->GetDepthBuffer());
 
   tracer.SetField(field, scalarRange);
   tracer.GetCamera() = rayCamera;

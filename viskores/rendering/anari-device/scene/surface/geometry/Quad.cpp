@@ -141,7 +141,7 @@ void Quad::render(viskores::rendering::Canvas& canvas,
   tracer.GetCamera() = rayCamera;
   rays.Buffers.at(0).InitConst(0.f);
   viskores::rendering::raytracing::RayOperations::MapCanvasToRays(
-    rays, camera.CreateRaytracingCamera(width, height), *canvasRT);
+    rays, camera.CreateRaytracingCamera(width, height), canvasRT->GetDepthBuffer());
 
   tracer.SetField(field, scalarRange);
   tracer.SetColorMap(colorMap);
