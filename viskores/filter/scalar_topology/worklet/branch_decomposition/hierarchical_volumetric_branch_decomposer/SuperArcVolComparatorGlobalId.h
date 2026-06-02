@@ -67,8 +67,8 @@
 //
 //=======================================================================================
 
-#ifndef viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_SuperarcVolumetricComparatorIndirectGlobalIdComparator_h
-#define viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_SuperarcVolumetricComparatorIndirectGlobalIdComparator_h
+#ifndef viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_SuperArcVolComparatorGlobalId_h
+#define viskores_filter_scalar_topology_worklet_branch_decomposition_hierarchical_volumetric_branch_decomposer_SuperArcVolComparatorGlobalId_h
 
 #include <viskores/cont/ArrayHandle.h>
 #include <viskores/cont/ExecutionObjectBase.h>

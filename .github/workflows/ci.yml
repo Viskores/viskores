@@ -52,6 +52,13 @@ jobs:
           path: ./format.patch
           if-no-files-found: ignore
 
+  path-lengths:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check header path lengths
+        run: ./Utilities/Scripts/check-path-lengths.bash
+
   windows:
     needs: format
     runs-on: ${{ matrix.os }}

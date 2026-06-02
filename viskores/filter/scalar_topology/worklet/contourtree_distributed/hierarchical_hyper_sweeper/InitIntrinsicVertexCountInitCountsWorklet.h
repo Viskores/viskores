@@ -58,8 +58,8 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef viskores_worklet_contourtree_distributed_bract_maker_augment_boundary_with_necessary_interior_supernodes_append_necessary_supernodes_worklet_h
-#define viskores_worklet_contourtree_distributed_bract_maker_augment_boundary_with_necessary_interior_supernodes_append_necessary_supernodes_worklet_h
+#ifndef viskores_worklet_contourtree_distributed_hierarchical_hyper_sweeper_init_intrinsic_vertex_count_init_counts_worklet_h
+#define viskores_worklet_contourtree_distributed_hierarchical_hyper_sweeper_init_intrinsic_vertex_count_init_counts_worklet_h
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <viskores/worklet/WorkletMapField.h>
@@ -70,74 +70,76 @@ namespace worklet
 {
 namespace contourtree_distributed
 {
-namespace bract_maker
+namespace hierarchical_hyper_sweeper
 {
 
-/// Worklet to transfer the dependent counts for hyperarcs
-/// Part of the BoundaryRestrictedAugmentedContourTree.PropagateBoundaryCounts function
-class AugmentBoundaryWithNecessaryInteriorSupernodesAppendNecessarySupernodesWorklet
+/// Worklet used in HierarchicalHyperSweeper.InitializeIntrinsicVertexCount(...) to
+/// set the count to the Id one off the high end of each range
+class InitializeIntrinsicVertexCountInitalizeCountsWorklet
   : public viskores::worklet::WorkletMapField
 {
 public:
-  using ControlSignature = void(FieldIn supernodes,               // input
-                                FieldIn isNecessaryAndInterior,   // input
-                                FieldIn boundaryNecessaryId,      // input
-                                WholeArrayIn meshSortOrder,       // input
-                                WholeArrayOut boundaryIndices,    //output
-                                WholeArrayOut bractVertexSuperset // output
-  );
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
+  using ControlSignature = void(WholeArrayIn superparents, WholeArrayInOut superarcRegularCounts);
+  using ExecutionSignature = void(InputIndex, _1, _2);
   using InputDomain = _1;
 
   // Default Constructor
   VISKORES_EXEC_CONT
-  AugmentBoundaryWithNecessaryInteriorSupernodesAppendNecessarySupernodesWorklet(
-    viskores::Id numBoundary)
-    : NumBoundary(numBoundary)
-  {
-  }
+  InitializeIntrinsicVertexCountInitalizeCountsWorklet() {}
 
-  template <typename InFieldPortalType, typename OutFieldPortalType>
-  VISKORES_EXEC void operator()(const viskores::Id& supernode,
-                                const bool& isNecessaryAndInterior,
-                                const viskores::Id boundaryNecessaryId,
-                                const InFieldPortalType meshSortOrderPortal,
-                                const OutFieldPortalType& boundaryIndicesPortal,
-                                const OutFieldPortalType& bractVertexSupersetPortal) const
+  template <typename InFieldPortalType, typename InOutFieldPortalType>
+  VISKORES_EXEC void operator()(const viskores::Id& vertex,
+                                const InFieldPortalType superparentsPortal,
+                                const InOutFieldPortalType superarcRegularCountsPortal) const
   {
-    // per supernode
-    if (isNecessaryAndInterior)
-    { // if necessary
-      viskores::Id sortIndex = viskores::worklet::contourtree_augmented::MaskedIndex(supernode);
-      // add to last index in old boundary to find where to put it
-      viskores::Id wherePut = this->NumBoundary - 1 + boundaryNecessaryId;
-      boundaryIndicesPortal.Set(wherePut, sortIndex);
-      bractVertexSupersetPortal.Set(wherePut, meshSortOrderPortal.Get(sortIndex));
-    } // if necessary
+    // per vertex
+    // retrieve the superparent
+    viskores::Id superparent = superparentsPortal.Get(vertex);
+
+    // if it's NSE, ignore (should never happen, but . . . )
+    if (viskores::worklet::contourtree_augmented::NoSuchElement(superparent))
+    {
+      return;
+    }
+    // if its the last element, always write
+    if (vertex == superparentsPortal.GetNumberOfValues() - 1)
+    {
+      superarcRegularCountsPortal.Set(superparent, vertex + 1);
+    }
+    // otherwise, only write if different from next one
+    else
+    {
+      if (superparentsPortal.Get(vertex + 1) != superparent)
+      {
+        superarcRegularCountsPortal.Set(superparent, vertex + 1);
+      }
+    }
 
     // In serial this worklet implements the following operation
     /*
-    for (indexType supernode = 0; supernode < contourTree->supernodes.size(); supernode++)
-    { // per supernode
-      if (isNecessaryAndInterior[supernode])
-        { // if necessary
-        indexType sortIndex = maskedIndex(contourTree->supernodes[supernode]);
-        // add to last index in old boundary to find where to put it
-        indexType wherePut = nBoundary - 1 + boundaryNecessaryID[supernode];
-        boundaryIndices[wherePut] = sortIndex;
-        bractVertexSuperset[wherePut] = mesh->SortOrder(sortIndex);
-        } // if necessary
-    } // per supernode
+    for (viskores::Id vertex = 0; vertex < superparents.size(); vertex++)
+    { // per vertex
+      // retrieve the superparent
+      viskores::Id superparent = superparents[vertex];
+
+      // if it's NSE, ignore (should never happen, but . . . )
+      if (noSuchElement(superparent))
+        continue;
+
+      // if its the last element, always write
+      if (vertex == superparents.size() - 1)
+        superarcRegularCounts[superparent] = vertex+1;
+      // otherwise, only write if different from next one
+      else
+        if (superparents[vertex+1] != superparent)
+          superarcRegularCounts[superparent] = vertex+1;
+    } // per vertex
     */
-  }
+  } // operator()()
 
-private:
-  viskores::Id NumBoundary;
+}; // InitializeIntrinsicVertexCountInitalizeCountsWorklet
 
-}; // AugmentBoundaryWithNecessaryInteriorSupernodesAppendNecessarySupernodesWorklet
-
-
-} // namespace bract_maker
+} // namespace hierarchical_hyper_sweeper
 } // namespace contourtree_distributed
 } // namespace worklet
 } // namespace viskores

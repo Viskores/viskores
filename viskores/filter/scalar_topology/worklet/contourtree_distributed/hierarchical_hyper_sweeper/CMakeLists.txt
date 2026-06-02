@@ -17,9 +17,9 @@
 ##============================================================================
 
 set(headers
-  InitializeIntrinsicVertexCountComputeSuperparentIdsWorklet.h
-  InitializeIntrinsicVertexCountInitalizeCountsWorklet.h
-  InitializeIntrinsicVertexCountSubtractLowEndWorklet.h
+  InitIntrinsicVertexCountSuperparentIds.h
+  InitIntrinsicVertexCountInitCountsWorklet.h
+  InitIntrinsicVertexCountSubtractLowEndWorklet.h
   ComputeSuperarcDependentWeightsWorklet.h
   ComputeSuperarcTransferWeightsWorklet.h
   TransferTargetComperator.h

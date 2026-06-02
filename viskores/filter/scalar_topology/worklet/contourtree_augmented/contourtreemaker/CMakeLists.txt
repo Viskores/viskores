@@ -24,7 +24,7 @@ set(headers
   ComputeHyperAndSuperStructure_PermuteArcs.h
   ComputeHyperAndSuperStructure_ResetHyperparentsId.h
   ComputeHyperAndSuperStructure_SetNewHypernodesAndArcs.h
-  ComputeHyperAndSuperStructure_SetFirstSupernodePerIterationWorklet.h
+  ComputeHyperAndSuperStructure_SetFirstSupernodePerIter.h
   ComputeRegularStructure_LocateSuperarcs.h
   ComputeRegularStructure_SetArcs.h
   ContourTreeSuperNodeComparator.h
