@@ -85,7 +85,7 @@ endif()
 if(VISKORES_COMPILER_IS_MSVC)
   target_compile_options(viskores_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/Zc:preprocessor>)
   if(TARGET viskores_cuda)
-    target_compile_options(viskores_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/Zc:preprocessor")
+    target_compile_options(viskores_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/Zc:preprocessor">)
   endif()
 endif()
 
