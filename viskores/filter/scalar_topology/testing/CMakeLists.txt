@@ -28,11 +28,6 @@ set(headers
 
 set(unit_tests
   UnitTestContourTreeUniformFilter.cxx
-  )
-
-set(unit_tests_device
-  UnitTestContourTreeUniformAugmentedFilter.cxx
-  UnitTestContourTreeUniformAugmentedWorklet.cxx
   UnitTestContourTreeUniformDistributed5x6x7.cxx
   UnitTestContourTreeUniformDistributed8x9.cxx
   UnitTestContourTreeUniformDistributedVanc.cxx
@@ -40,22 +35,35 @@ set(unit_tests_device
   UnitTestDistributedBranchDecompositionVanc.cxx
   )
 
+set(unit_tests_device
+  UnitTestContourTreeUniformAugmentedFilter.cxx
+  UnitTestContourTreeUniformAugmentedWorklet.cxx
+  )
+
+set(device_sources
+  TestingContourTreeUniformDistributedFilter.cxx
+  )
+
+set_source_files_properties(${device_sources}
+  PROPERTIES NOT_A_TEST True
+  )
+
 viskores_unit_tests(
   SOURCES ${unit_tests}
-  DEVICE_SOURCES ${unit_tests_device}
+  DEVICE_SOURCES ${unit_tests_device} ${device_sources}
   USE_VISKORES_JOB_POOL
 )
 
 if (Viskores_ENABLE_MPI)
   set(mpi_unit_tests
+    UnitTestContourTreeUniformDistributedFilterMPI.cxx
     )
   set(mpi_unit_tests_device
-    UnitTestContourTreeUniformDistributedFilterMPI.cxx
     )
   viskores_unit_tests(
     MPI
     SOURCES ${mpi_unit_tests}
-    DEVICE_SOURCES ${mpi_unit_tests_device}
+    DEVICE_SOURCES ${mpi_unit_tests_device} ${device_sources}
     LIBRARIES viskores_filter viskores_source viskores_io
     USE_VISKORES_JOB_POOL
   )

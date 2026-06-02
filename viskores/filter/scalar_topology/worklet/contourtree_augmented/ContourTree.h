@@ -61,6 +61,9 @@
 #ifndef viskores_worklet_contourtree_augmented_contourtree_h
 #define viskores_worklet_contourtree_augmented_contourtree_h
 
+// Although this is in a "worklet" directory, avoid including worklet or device adapter headers
+// to prevent GPU code from leaking into the filter headers.
+
 // global includes
 #include <algorithm>
 #include <iomanip>
@@ -75,8 +78,6 @@
 //VISKORES includes
 #include <viskores/Pair.h>
 #include <viskores/Types.h>
-#include <viskores/cont/Algorithm.h>
-#include <viskores/cont/ArrayHandleConstant.h>
 
 namespace viskores
 {
@@ -203,10 +204,8 @@ inline ContourTree::ContourTree()
 // initialises contour tree arrays - rest is done by another class
 inline void ContourTree::Init(viskores::Id dataSize)
 { // Init()
-  viskores::cont::ArrayHandleConstant<viskores::Id> noSuchElementArray(
-    static_cast<viskores::Id>(NO_SUCH_ELEMENT), dataSize);
-  viskores::cont::Algorithm::Copy(noSuchElementArray, this->Arcs);
-  viskores::cont::Algorithm::Copy(noSuchElementArray, this->Superparents);
+  this->Arcs.AllocateAndFill(dataSize, NO_SUCH_ELEMENT, viskores::CopyFlag::Off);
+  this->Superparents.AllocateAndFill(dataSize, NO_SUCH_ELEMENT, viskores::CopyFlag::Off);
 } // Init()
 
 

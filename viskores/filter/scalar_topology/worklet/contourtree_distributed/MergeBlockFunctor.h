@@ -63,6 +63,7 @@
 
 #include <viskores/Types.h>
 #include <viskores/cont/ArrayHandleIndex.h>
+#include <viskores/cont/ErrorFilterExecution.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 
 // clang-format off

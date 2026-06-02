@@ -68,9 +68,20 @@
 #include <viskores/filter/scalar_topology/viskores_filter_scalar_topology_export.h>
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/MultiBlockContourTreeHelper.h>
 
 #include <memory>
+
+// Forward declaration
+namespace viskores
+{
+namespace worklet
+{
+namespace contourtree_distributed
+{
+class MultiBlockContourTreeHelper;
+}
+}
+}
 
 namespace viskores
 {
@@ -116,6 +127,10 @@ public:
   VISKORES_CONT
   explicit ContourTreeAugmented(bool useMarchingCubes = false,
                                 unsigned int computeRegularStructure = 1);
+
+  // Required for incomplete type MultiBlockContourTreeHelper
+  ContourTreeAugmented(ContourTreeAugmented&& src);
+  ~ContourTreeAugmented();
 
   ///
   /// Define the spatial decomposition of the data in case we run in parallel with a multi-block dataset
