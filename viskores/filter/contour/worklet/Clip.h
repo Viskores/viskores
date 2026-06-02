@@ -993,8 +993,7 @@ private:
 } // namespace viskores::worklet
 
 #if defined(THRUST_SCAN_WORKAROUND)
-namespace thrust
-{
+VISKORES_THRUST_NAMESPACE_BEGIN
 namespace detail
 {
 
@@ -1004,7 +1003,7 @@ struct is_integral<viskores::worklet::CellBatchesData> : public true_type
 {
 };
 }
-} // namespace thrust::detail
+VISKORES_THRUST_NAMESPACE_END // namespace thrust::detail
 #endif
 
 #endif // viskores_m_worklet_Clip_h
