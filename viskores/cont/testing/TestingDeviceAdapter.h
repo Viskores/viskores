@@ -2813,6 +2813,19 @@ private:
       verifyPopCount(bits);
     };
 
+    {
+      std::cout << "Testing CountSetBits with a single word" << std::endl;
+
+      BitField bits;
+      {
+        bits.Allocate(32);
+        auto fillPortal = bits.WritePortal();
+        fillPortal.SetWord(0, WordType{ 0xaa770011u });
+      }
+
+      verifyPopCount(bits);
+    }
+
     testRepeatedMask(0x00000000);
     testRepeatedMask(0xeeeeeeee);
     testRepeatedMask(0xffffffff);
