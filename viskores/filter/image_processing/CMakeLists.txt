@@ -19,12 +19,14 @@ set(image_processing_headers
   ComputeMoments.h
   ImageDifference.h
   ImageMedian.h
+  SSIM.h
   )
 
 set(image_processing_sources
   ComputeMoments.cxx
   ImageDifference.cxx
   ImageMedian.cxx
+  SSIM.cxx
   )
 
 viskores_library(

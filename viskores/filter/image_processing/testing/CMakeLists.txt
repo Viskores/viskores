@@ -20,6 +20,7 @@ set(unit_tests
   RenderTestComputeMoments.cxx
   UnitTestImageDifferenceFilter.cxx
   UnitTestImageMedianFilter.cxx
+  UnitTestSSIMFilter.cxx
   )
 
 set(libraries
