@@ -427,7 +427,13 @@ public:
     }
     if (input.GetNumberOfValues() == 1)
     {
-      return binaryOperator(initialValue, input.ReadPortal().Get(0));
+      // We have run into a situation (particularly with CountSetBits) where
+      // simply calling `input.ReadPortal().Get(0)` can seg fault because the
+      // array handle has a speecial portal that only works on the device. Get
+      // around this by copying to a known basic array.
+      viskores::cont::ArrayHandle<T> oneValue;
+      DeviceAdapterAlgorithm::Copy(input, oneValue);
+      return binaryOperator(initialValue, oneValue.ReadPortal().Get(0));
     }
 
 #if defined(VISKORES_KOKKOS_CUDA)
