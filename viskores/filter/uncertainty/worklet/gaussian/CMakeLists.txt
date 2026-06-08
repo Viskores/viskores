@@ -17,8 +17,10 @@
 ##============================================================================
 
 set(headers
-    FiberUncertainUniform.h
+  ContourUncertainGaussianCorrelated.h
+  ContourUncertainGaussianIndependent.h
+  GaussianDistribution.h
+  InterpolateFieldWorklet.h
   )
-viskores_declare_headers(${headers})
 
-add_subdirectory(gaussian)
+viskores_declare_headers(${headers})

@@ -22,6 +22,8 @@ set(libraries
   )
 
 set(unit_tests
+  UnitTestContourUncertainGaussianCorrelated.cxx
+  UnitTestContourUncertainGaussianIndependent.cxx
   UnitTestContourUncertainUniform.cxx
   UnitTestFiberUncertainUniform.cxx
   )
