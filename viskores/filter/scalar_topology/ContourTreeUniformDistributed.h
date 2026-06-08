@@ -150,11 +150,22 @@ public:
 
   VISKORES_CONT bool GetSaveDotFiles() { return this->SaveDotFiles; }
 
+private:
+  /// Intermediate results computed while executing the filter. These are only valid
+  /// during a single invocation of DoExecutePartitions and are passed by reference
+  /// through the helper functions rather than stored as filter state, so that copies
+  /// of the filter do not share mutable execution scratch.
+  struct ExecutionState;
+
+  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
+  VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
+    const viskores::cont::PartitionedDataSet& input) override;
+
   template <typename T, typename StorageType>
-  VISKORES_CONT void ComputeLocalTree(
-    const viskores::Id blockIndex,
-    const viskores::cont::DataSet& input,
-    const viskores::cont::ArrayHandle<T, StorageType>& fieldArray);
+  VISKORES_CONT void ComputeLocalTree(const viskores::Id blockIndex,
+                                      const viskores::cont::DataSet& input,
+                                      const viskores::cont::ArrayHandle<T, StorageType>& fieldArray,
+                                      ExecutionState& state);
 
   /// Implement per block contour tree computation after the MeshType has been discovered
   template <typename T, typename StorageType, typename MeshType, typename MeshBoundaryExecType>
@@ -162,12 +173,8 @@ public:
                                           const viskores::cont::DataSet& input,
                                           const viskores::cont::ArrayHandle<T, StorageType>& field,
                                           MeshType& mesh,
-                                          MeshBoundaryExecType& meshBoundaryExecObject);
-
-private:
-  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
-  VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
-    const viskores::cont::PartitionedDataSet& input) override;
+                                          MeshBoundaryExecType& meshBoundaryExecObject,
+                                          ExecutionState& state);
 
   ///@{
   /// when operating on viskores::cont::MultiBlock we want to
@@ -176,7 +183,8 @@ private:
   VISKORES_CONT void PreExecute(const viskores::cont::PartitionedDataSet& input);
 
   VISKORES_CONT void PostExecute(const viskores::cont::PartitionedDataSet& input,
-                                 viskores::cont::PartitionedDataSet& output);
+                                 viskores::cont::PartitionedDataSet& output,
+                                 ExecutionState& state);
 
 
   template <typename FieldType>
@@ -198,7 +206,8 @@ private:
   /// computed on the block to compute the final contour tree.
   template <typename T>
   VISKORES_CONT void DoPostExecute(const viskores::cont::PartitionedDataSet& input,
-                                   viskores::cont::PartitionedDataSet& output);
+                                   viskores::cont::PartitionedDataSet& output,
+                                   ExecutionState& state);
   ///@}
 
   /// Use only boundary critical points in the parallel merge to reduce communication.
@@ -228,9 +237,6 @@ private:
   viskores::Id3 BlocksPerDimension = { -1, -1, -1 };
   // ... Index of the local blocks in x,y,z, i.e., in i,j,k mesh coordinates
   viskores::cont::ArrayHandle<viskores::Id3> LocalBlockIndices;
-
-  struct InternalStruct;
-  std::shared_ptr<InternalStruct> Internals;
 };
 } // namespace scalar_topology
 } // namespace filter
