@@ -54,6 +54,7 @@ set(examples_device
   GuideExampleCellLocator.cxx
   GuideExampleCellOperations.cxx
   GuideExampleDataSetCreation.cxx
+  GuideExampleDeviceAdapterAlgorithms.cxx
   GuideExampleErrorHandling.cxx
   GuideExampleFields.cxx
   GuideExampleFilterDataSetWithField.cxx
