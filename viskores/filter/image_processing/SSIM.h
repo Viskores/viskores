@@ -35,6 +35,16 @@ namespace image_processing
 /// The result is a `viskores::cont::DataSet` containing a point field named
 /// "ssim" by default. Use `ComputeMetric()` to get the average of the pointwise
 /// SSIM values.
+///
+/// This filter is similar in design to VTK's `vtkImageSSIM` filter with some
+/// differences that may result in differences in the computation. Both filters
+/// use a window, but this filter applies Gaussian weights similar to that in the
+/// Wang et al. 2004 paper whereas the VTK implementation uses a flat window.
+///
+/// This implementation also uses the one pass identity of E[X²] - E[X]² to
+/// compute variance rather than taking a second pass to compute sum(w(x_i - μ)²).
+/// These are equivalent for small values (well below 10^6), which is fine
+/// for image data. There may be precision problems for general scientific data.
 class VISKORES_FILTER_IMAGE_PROCESSING_EXPORT SSIM : public viskores::filter::Filter
 {
 public:

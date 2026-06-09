@@ -849,6 +849,77 @@ This surface simplification is an important operation to support :index:`level o
    :caption: Using :class:`viskores::filter::geometry_refinement::VertexClustering`.
 
 
+Image Processing
+==============================
+
+.. index::
+   double: image processing; filter
+   double: filter; image processing
+
+The ``viskores::filter::image_processing`` module contains filters that operate on image-like data sets.
+These filters generally use point fields on structured data sets and provide neighborhood operations, image comparison metrics, and image moments.
+
+Compute Moments
+------------------------------
+
+.. index::
+   double: image moments; filter
+   double: moments; image
+
+The :class:`viskores::filter::image_processing::ComputeMoments` filter computes moments of a point field over a local neighborhood.
+The neighborhood is controlled by a radius and spacing, and the order controls which moment order is computed.
+
+.. doxygenclass:: viskores::filter::image_processing::ComputeMoments
+   :members:
+
+Image Difference
+------------------------------
+
+.. index::
+   double: image difference; filter
+   double: image comparison; filter
+
+The :class:`viskores::filter::image_processing::ImageDifference` filter compares two image fields.
+It subtracts the secondary field from the primary field and writes the per-pixel difference to the output field named ``image-diff`` by default.
+It also writes a threshold field named ``threshold-output`` by default that stores the magnitude of each pixel difference.
+The filter can optionally average each input image before comparison and can search over a pixel-shift radius to tolerate small spatial shifts.
+The :func:`viskores::filter::image_processing::ImageDifference::GetImageDiffWithinThreshold` method reports whether the number of pixels outside the configured threshold is within the allowed error ratio.
+
+.. doxygenclass:: viskores::filter::image_processing::ImageDifference
+   :members:
+
+Image Median
+------------------------------
+
+.. index::
+   double: image median; filter
+   double: median; image
+
+The :class:`viskores::filter::image_processing::ImageMedian` filter replaces each point-field value with the median value from its image neighborhood.
+The filter supports a 3 by 3 neighborhood with :func:`viskores::filter::image_processing::ImageMedian::Perform3x3` and a 5 by 5 neighborhood with :func:`viskores::filter::image_processing::ImageMedian::Perform5x5`.
+Neighborhoods are evaluated in the image plane, so volume data are treated as a stack of images along the z axis.
+The default output field name is ``median"``.
+
+.. doxygenclass:: viskores::filter::image_processing::ImageMedian
+   :members:
+
+Structural Similarity Index Measure
+----------------------------------------
+
+.. index::
+   double: SSIM; filter
+   double: structural similarity; filter
+   double: image comparison; structural similarity
+
+The :class:`viskores::filter::image_processing::SSIM` filter computes the Structural Similarity Index Measure (SSIM) between two image fields.
+It computes a local SSIM value at each point using a circular or spherical patch in structured image-index space, and the result is written to a point field named ``ssim`` by default.
+Scalar images are compared directly, and color or vector images are compared by flattening their components within each local patch.
+The :func:`viskores::filter::image_processing::SSIM::ComputeMetric` method computes the same pointwise SSIM field internally and returns its average as a single summary metric.
+
+.. doxygenclass:: viskores::filter::image_processing::SSIM
+   :members:
+
+
 Mesh Information
 ==============================
 
