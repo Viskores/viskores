@@ -104,15 +104,15 @@ This is implemented with :class:`viskores::cont::CellLocatorUniformBins`.
 .. doxygenclass:: viskores::cont::CellLocatorUniformBins
    :members:
 
-In contrast, a very irregular data set may have multiple orders of magnitude difference in the size of its cells.
-If the cell distribution is very irregular, the :class:`viskores::cont::CellLocatorTwoLevel` can be left with bins containing a large number of cells in a regions with very small cells.
-In these cases, :class:`viskores::cont::CellLocatorBoundingIntervalHierarchy` can be used to capture the diversity in cell distribution.
-:class:`viskores::cont::CellLocatorBoundingIntervalHierarchy` builds a search structure by recursively dividing the space of cells.
-This creates a deeper structure than :class:`viskores::cont::CellLocatorTwoLevel`, so it can take longer to find a containing bin when searching for a cell.
-However, the deeper structure means that each bin is guaranteed to contain a small number of cells.
+.. In contrast, a very irregular data set may have multiple orders of magnitude difference in the size of its cells.
+.. If the cell distribution is very irregular, the :class:`viskores::cont::CellLocatorTwoLevel` can be left with bins containing a large number of cells in a regions with very small cells.
+.. In these cases, :class:`viskores::cont::CellLocatorBoundingIntervalHierarchy` can be used to capture the diversity in cell distribution.
+.. :class:`viskores::cont::CellLocatorBoundingIntervalHierarchy` builds a search structure by recursively dividing the space of cells.
+.. This creates a deeper structure than :class:`viskores::cont::CellLocatorTwoLevel`, so it can take longer to find a containing bin when searching for a cell.
+.. However, the deeper structure means that each bin is guaranteed to contain a small number of cells.
 
-.. doxygenclass:: viskores::cont::CellLocatorBoundingIntervalHierarchy
-   :members:
+.. .. doxygenclass:: viskores::cont::CellLocatorBoundingIntervalHierarchy
+..    :members:
 
 Cell Locators for Unknown Cell Sets
 ----------------------------------------

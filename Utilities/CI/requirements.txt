@@ -1,4 +1,3 @@
-PyYAML
 ##============================================================================
 ##  The contents of this file are covered by the Viskores license. See
 ##  LICENSE.txt for details.
@@ -7,3 +6,4 @@ PyYAML
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
+PyYAML>=6.0.2

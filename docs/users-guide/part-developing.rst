@@ -10,3 +10,4 @@ Developing Algorithms
    simple-worklets.rst
    basic-filter-impl.rst
    unknown-array-handle.rst
+   unknown-cell-set.rst

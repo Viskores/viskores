@@ -90,6 +90,8 @@
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_contour_tree/InitalizeSuperchildrenWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/hierarchical_contour_tree/PermuteComparator.h>
 
+#include <viskores/cont/ArraySetValues.h>
+
 namespace viskores
 {
 namespace worklet
@@ -298,13 +300,13 @@ void HierarchicalContourTree<FieldType>::Initialize(
     auto tempZeroArray = viskores::cont::ArrayHandleConstant<viskores::Id>(0, this->NumRounds + 1);
     viskores::cont::Algorithm::Copy(tempZeroArray, this->NumIterations);
     viskores::cont::Algorithm::Copy(tempZeroArray, this->NumRegularNodesInRound);
-    viskores::worklet::contourtree_augmented::IdArraySetValue(
+    viskores::cont::ArraySetValue(
       this->NumRounds, tree.Nodes.GetNumberOfValues(), this->NumRegularNodesInRound);
     viskores::cont::Algorithm::Copy(tempZeroArray, this->NumSupernodesInRound);
-    viskores::worklet::contourtree_augmented::IdArraySetValue(
+    viskores::cont::ArraySetValue(
       this->NumRounds, tree.Supernodes.GetNumberOfValues(), this->NumSupernodesInRound);
     viskores::cont::Algorithm::Copy(tempZeroArray, this->NumHypernodesInRound);
-    viskores::worklet::contourtree_augmented::IdArraySetValue(
+    viskores::cont::ArraySetValue(
       this->NumRounds, tree.Hypernodes.GetNumberOfValues(), this->NumHypernodesInRound);
   }
   // copy the iterations of the top level hypersweep - this is +1: one because we are counting inclusively
@@ -315,8 +317,7 @@ void HierarchicalContourTree<FieldType>::Initialize(
   {
     viskores::Id tempSizeVal =
       viskores::cont::ArrayGetValue(this->NumRounds, this->NumIterations) + 1;
-    viskores::worklet::contourtree_augmented::IdArraySetValue(
-      this->NumRounds, tree.NumIterations + 1, this->NumIterations);
+    viskores::cont::ArraySetValue(this->NumRounds, tree.NumIterations + 1, this->NumIterations);
     this->FirstSupernodePerIteration.resize(static_cast<std::size_t>(this->NumRounds + 1));
     this->FirstSupernodePerIteration[static_cast<std::size_t>(this->NumRounds)].Allocate(
       tempSizeVal);
@@ -1089,7 +1090,7 @@ void HierarchicalContourTree<FieldType>::AddToVISKORESDataSet(viskores::cont::Da
   // Add the number of rounds as an array of length 1
   viskores::cont::ArrayHandle<viskores::Id> tempNumRounds;
   tempNumRounds.Allocate(1);
-  viskores::worklet::contourtree_augmented::IdArraySetValue(0, this->NumRounds, tempNumRounds);
+  viskores::cont::ArraySetValue(0, this->NumRounds, tempNumRounds);
   viskores::cont::Field numRoundsField(
     "NumRounds", viskores::cont::Field::Association::WholeDataSet, tempNumRounds);
   ds.AddField(numRoundsField);

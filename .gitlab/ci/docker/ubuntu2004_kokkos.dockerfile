@@ -67,7 +67,7 @@ RUN mkdir -p /opt/kokkos/build && \
 
 # Build and install ANARI SDK
 WORKDIR /opt/anari/src
-ARG ANARI_VERSION=0.8.0
+ARG ANARI_VERSION=0.15.0
 RUN curl -L https://github.com/KhronosGroup/ANARI-SDK/archive/refs/tags/v$ANARI_VERSION.tar.gz | tar xzv && \
     cmake -GNinja \
       -S ANARI-SDK-$ANARI_VERSION \

@@ -131,10 +131,11 @@ A :func:`viskores::cont::make_ArrayHandleIndex` convenience function is also ava
 The :class:`viskores::cont::ArrayHandleCounting` class provides a more general form of counting.
 :class:`viskores::cont::ArrayHandleCounting` is a templated class with a single template argument that is the type of value for each element in the array.
 The constructor for :class:`viskores::cont::ArrayHandleCounting` takes three arguments: the start value (used at index 0), the step from one value to the next, and the length of the array.
-The following example is a simple demonstration of the counting array handle.
 
 .. doxygenclass:: viskores::cont::ArrayHandleCounting
    :members:
+
+The following example is a simple demonstration of the counting array handle.
 
 .. load-example:: ArrayHandleCountingBasic
    :file: GuideExampleArrayHandleCounting.cxx

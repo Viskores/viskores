@@ -120,7 +120,7 @@ ubuntu2204_clang12:
     CMAKE_BUILD_TYPE: Debug
     VISKORES_SETTINGS: "tbb+shared+examples+ccache"
 
-ubuntu2204_kokkos37_cuda122:
+ubuntu2204_cuda122_kokkos41:
   tags:
     - nvidia-a100
     - uo-gpu

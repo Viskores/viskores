@@ -62,11 +62,13 @@
 #ifndef viskores_worklet_contourtree_augmented_types_h
 #define viskores_worklet_contourtree_augmented_types_h
 
+// Although this is in a "worklet" directory, avoid including worklet or device adapter headers
+// to prevent GPU code from leaking into the filter headers.
+
 #include <viskores/Assert.h>
+#include <viskores/Pair.h>
 #include <viskores/Types.h>
-#include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayHandle.h>
-#include <viskores/cont/ArrayHandleConstant.h>
 #include <viskores/cont/CellSetStructured.h>
 
 namespace viskores
@@ -190,50 +192,6 @@ VISKORES_CONT inline void AssertArrayHandleNoFlagsSet(
 #endif
 }
 
-
-/// Helper function to set a single array valye with CopySubRange to avoid pulling the array to the control environment
-VISKORES_CONT
-inline void IdArraySetValue(viskores::Id index, viskores::Id value, IdArrayType& arr)
-{ // IdArraySetValue
-  viskores::cont::Algorithm::CopySubRange(
-    viskores::cont::ArrayHandleConstant<viskores::Id>(value, 1), 0, 1, arr, index);
-} // IdArraySetValues
-
-
-/// Helper function used to resize a 1D ArrayHandle and initalize new values with a
-/// given fillValue. For resizing ArrayHandles without initalizing new values Viskores
-/// supports the viskores::CopyFlag::On setting as part of the ArrayHandle.Allocate
-/// method.
-/// @param[in] thearray The 1D array to be resized
-/// @param[in] newSize The new size the array should be changed to
-/// @param[in] fillValue The value to be used to fill the array
-template <typename ValueType>
-void ResizeVector(viskores::cont::ArrayHandle<ValueType>& thearray,
-                  viskores::Id newSize,
-                  ValueType fillValue)
-{
-  viskores::Id oldSize = thearray.GetNumberOfValues();
-  // Simply return if the size of the array does not change
-  if (oldSize == newSize)
-  {
-    return;
-  }
-
-  // Resize the array but keep the original values
-  thearray.Allocate(newSize, viskores::CopyFlag::On);
-
-  // Add the fill values to the array if we increased the size of the array
-  if (oldSize < newSize)
-  {
-    viskores::cont::Algorithm::CopySubRange(
-      viskores::cont::ArrayHandleConstant<ValueType>(fillValue, newSize - oldSize), // copy
-      0,                 // start copying from first index
-      newSize - oldSize, // num values to copy
-      thearray,          // target array to copy to
-      oldSize            // start copy to after oldSize
-    );
-  }
-}
 
 template <typename T>
 struct MaskedIndexFunctor

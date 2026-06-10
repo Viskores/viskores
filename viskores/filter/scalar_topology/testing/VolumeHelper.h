@@ -61,8 +61,12 @@
 #ifndef _viskores_filter_testing_VolumeHelper_h_
 #define _viskores_filter_testing_VolumeHelper_h_
 
-#include <algorithm>
 #include <viskores/Types.h>
+
+#include <algorithm>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
 
 namespace viskores
 {
@@ -125,6 +129,8 @@ inline void VolumeHelper::Print(std::ostream& out) const
   for (auto it = std::begin(this->volumes); it != std::end(this->volumes); ++it)
   {
     Volume volume(*it);
+
+    constexpr int VOLUME_PRINT_WIDTH = 8;
 
     out << "H: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<0>(volume)
         << " L: " << std::setw(VOLUME_PRINT_WIDTH) << std::get<1>(volume)

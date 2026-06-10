@@ -20,9 +20,9 @@
 #include <viskores/cont/ErrorBadValue.h>
 
 #include <algorithm>
-// TODO (nadavi): Once we get c++17 installed uncomment this
-// #include <filesystem>
+#include <cctype>
 #include <errno.h>
+#include <filesystem>
 #include <sys/stat.h>
 
 #ifdef _WIN32
@@ -123,6 +123,35 @@ bool CreateDirectoriesFromFilePath(const std::string& filePath)
     default:
       return false;
   }
+}
+
+bool IsAbsolutePath(const std::string& filePath)
+{
+  if (filePath.empty())
+    return false;
+
+#ifdef _WIN32
+  if (filePath[0] == '/' || filePath[0] == '\\')
+    return true;
+
+  if (filePath.size() < 3)
+    return false;
+
+  if (!std::isalpha(static_cast<unsigned char>(filePath[0])) || filePath[1] != ':')
+    return false;
+
+  return filePath[2] == '/' || filePath[2] == '\\';
+#else
+  return filePath[0] == '/';
+#endif
+}
+
+std::string MakeAbsolutePath(const std::string& filePath)
+{
+  if (IsAbsolutePath(filePath))
+    return filePath;
+
+  return std::filesystem::absolute(filePath).string();
 }
 
 std::string MergePaths(const std::string& filePathPrefix, const std::string& filePathSuffix)

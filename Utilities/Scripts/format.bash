@@ -32,13 +32,18 @@ find \
 DIFF="$(git diff)"
 if [ -n "${DIFF}" ]
 then
+  patch_filename=format.patch
+  echo "${DIFF}" > ${patch_filename}
   echo "clang-format:"
   echo "  Code format checks failed."
-  echo "  Please run clang-format v16 your changes before committing:"
-  echo "  You can use our CI image for this with: Utilities/Script/format.bash"
   echo "  The following changes are suggested:"
   echo "${DIFF}"
+  echo
+  echo "  Change summary:"
   git diff --stat
+  echo
+  echo "  Format correction stored in ${patch_filename}."
+  echo "  To apply formatting, run \`patch -p1 < format.patch\`"
   exit 1
 fi
 

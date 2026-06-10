@@ -36,7 +36,7 @@ set(srcs
 
 if(TARGET viskores::filter_vector_analysis)
   add_executable(MultiBackend ${srcs} ${headers})
-  target_link_libraries(MultiBackend PRIVATE viskores::filter_vector_analysis Threads::Threads)
+  target_link_libraries(MultiBackend PRIVATE viskores::filter_vector_analysis viskores::worklet Threads::Threads)
   viskores_add_target_information(MultiBackend
     DROP_UNUSED_SYMBOLS
     MODIFY_CUDA_FLAGS

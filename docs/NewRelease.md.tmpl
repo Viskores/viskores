@@ -29,31 +29,30 @@ git merge --ff-only origin/release
 git submodule update --recursive --init
 ```
 $if(PATCH == 0 and RC == "-rc1")\
-- [ ] Update `master` branch for **viskores** and create update branch
+- [ ] Update `main` branch for **viskores** and create update branch
 ```
 git fetch origin
-git checkout master
-git merge --ff-only origin/master
+git checkout main
+git merge --ff-only origin/main
 git submodule update --recursive --init
 ```
 $endif\
 
 ## Create update branch
 
-- [ ] Freeze the release branch (In Gitlab Viskores page)
-  - Settings/Repository/Protected Branches: Release; "allowed to push:No one"
+- [ ] Freeze the release branch (In Github Viskores page)
 - [ ] Create update branch `git checkout -b update-to-$(VERSION)`
 $if(PATCH == 0 and RC == "-rc1")\
-- [ ] Bring as a second parent the history of master (Solve conflicts always
-      taking master's version)
+- [ ] Bring as a second parent the history of main (Solve conflicts always
+      taking main's version)
 ```
-git merge --no-ff origin/master
+git merge --no-ff origin/main
 ```
 $else\
 - [ ] Backport merge-requests belonging to the milestone $(VERSION)
 $endif\
 $if(PATCH == 0)\
-- [ ] Set version to master
+- [ ] Set version to main
 ```
 echo "$(MAJOR).$(MINOR).9999" > version.txt
 git add version.txt
@@ -92,22 +91,17 @@ The major changes to Viskores from (previous release) can be found in:
 ```
 
 - [ ] `git tag -a -m 'Viskores $(VERSION)$(RC)' v$(VERSION)$(RC) HEAD`
-- Integrate changes to `release` branch
-  - [ ] Create a MR using the [release-mr script][1]
-        (see [notes](#notes-about-update-mr)).
-$if(PATCH == 0)\
-  - [ ] Add (or ensure) at the bottom of the description of the merge request:
-        `Backport: master:HEAD~1`
-$else\
-  - [ ] Remove (or ensure) that at the bottom of the description of the merge
-        request there is no `Backport` instruction.
-$endif\
-  - [ ] Get +1
-  - [ ] `Do: merge`
+- [ ] Create a Pull Request targeting release.
+- [ ] Merge
 - Push tags
   - [ ] `git push origin v$(VERSION)$(RC)`
+$if(PATCH == 0)\
+- Backport to main:
+  - [ ] `git checkout main`
+  - [ ] `git merge update-to-$(VERSION)~1`
+$endif\
+- [ ] `git merge -s ours update-to-$(VERSION)`
 - [ ] Unfreeze the release branch (In Gitlab Viskores page)
-  - Settings/Repository/Protected Branches: Release; "allowed to push: Maintainers"
 
 ## Update Packages
 - [ ] Update Spack package: https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/viskores/package.py
@@ -119,7 +113,7 @@ $endif\
 ## Post-release
 $if(PATCH == 0 and RC == "-rc1")\
 - [ ] Create a release-specific branch of the previous major/minor release (Ask
-      @ben.boeckel). For more information on release-specific branch maintanance
+      @vicentebolea). For more information on release-specific branch maintanance
       schedule refer to `docs/ReleaseRoadmap.md`.
 $endif\
 - [ ] Copy the contents of docs/changelog/$(VERSION)/release-notes.md to
@@ -127,12 +121,12 @@ $endif\
 $if(PATCH == 0 and RC == "")\
 - [ ] Tag new version of the [Viskores User Guide][2].
 $endif\
-- [ ] Post an [Email Announcements](#email-announcements) Viskores mailing list.
+- [ ] Post an [Announcement](#Announcements) Viskores mailing list.
 $if(RC == "")\
 - [ ] Update this release Date, Delay and End-of-Support fields in `docs/ReleaseRoadmap.md`.
 $endif\
 $if(PATCH == 0)\
-- [ ] Ensure that the content of `version.txt` in master is `$(MAJOR).$(MINOR).9999`.
+- [ ] Ensure that the content of `version.txt` in main is `$(MAJOR).$(MINOR).9999`.
 $endif\
 
 ## Update Viskores in VTK
@@ -218,30 +212,21 @@ to the relevant `release-notes` section.
   - Entries for `Core` are reserved for large changes that significantly improve
     Viskores users life, or are major breaking changes.
 
-## Notes about update-mr
-
-[`update-mr` script][1] has the following requirements to work:
-
-1. It needs a token to for authentication (reach @ben.boeckel for this)
-2. It needs `kwrobot.release.viskores` to have developer perms in your viskores repo.
-
-Lastly, `update-mr` can be used multiple times with different commit in the same
-branch.
-
 ## Notes about version.txt
 
 Master and release branch do not share the same version.txt scheme. In the
 release branch the patch and release-candidate version is observed whereas in
-master the patch field is fixed to _9999_ indicating that each of its commit is
+main the patch field is fixed to _9999_ indicating that each of its commit is
 a developing release.
 
 - Master:  `$(MAJOR).$(MINOR).9999`
 - Release: `$(MAJOR).$(MINOR).$(PATCH)$(RC)`
 
-## Email Announcements
+## Announcements
 
-Announce the new Viskores release on the mailing list. You will need to compute
-the number of merge requests, changelog entries, and maybe # of authors.
+Announce the new Viskores release on the Github Discussions as an announcement.
+You will need to compute the number of merge requests, changelog entries, and
+maybe # of authors.
 
 Example to compute the number of unique committers
 ```
@@ -283,11 +268,7 @@ $else\
 $endif\
 ```
 
-[1]:  https://gitlab.kitware.com/utils/release-utils/-/blob/master/release-mr.py
-[2]:  https://github.com/Viskores/viskores-user-guide
+[2]:  https://viskores.readthedocs.io/en/v1.0.0/
 
-@ben.boeckel  
-@vbolea  
-/label ~"area:release"  
-/milestone %"v$(VERSION)"  
-/assign @vbolea
+@kmorel  
+@vicente bolea  
