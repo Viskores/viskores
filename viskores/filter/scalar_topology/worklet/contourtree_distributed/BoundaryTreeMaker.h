@@ -73,12 +73,12 @@
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/InteriorForest.h>
 
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/AddTerminalFlagsToUpDownNeighboursWorklet.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryWithNecessaryInteriorSupernodesAppendNecessarySupernodesWorklet.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryAppendSupernodesWorklet.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/AugmentBoundaryUnsetSupernodesWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/BoundaryTreeNodeComparator.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/BoundaryVerticesPerSuperArcWorklets.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesCopyNecessaryRegularNodesWorklet.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesFillBoundaryTreeSuperarcsWorklet.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesCopyRegularNodesWorklet.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesFillBTreeSuperarcsWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesFindNewSuperarcsWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesResolveRootWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/CompressRegularisedNodesTransferVerticesWorklet.h>
@@ -94,7 +94,7 @@
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/PointerDoubleUpDownNeighboursWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsComputeGroupTotalsWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsSubtractDependentCountsWorklet.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsTransferCumulativeCountsWorklet.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsTransferCumCountsWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/PropagateBoundaryCountsTransferDependentCountsWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/SetInteriorForestWorklet.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/boundary_tree_maker/SetUpAndDownNeighboursWorklet.h>
@@ -103,6 +103,7 @@
 
 // viskores includes
 #include <viskores/Types.h>
+#include <viskores/cont/ArraySetValues.h>
 
 // std includes
 #include <sstream>
@@ -652,12 +653,12 @@ void BoundaryTreeMaker<MeshType, MeshBoundaryExecObjType>::PropagateBoundaryCoun
   // when we are done, we need to force the summation for the root node, JUST IN CASE it is a boundary node itself
   // BTW, the value *SHOULD* be the number of boundary nodes, anyway
   viskores::Id rootSuperId = this->ContourTree.Supernodes.GetNumberOfValues() - 1;
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     rootSuperId,
     viskores::cont::ArrayGetValue(rootSuperId, this->SupernodeTransferBoundaryCount) +
       viskores::cont::ArrayGetValue(rootSuperId, this->SuperarcIntrinsicBoundaryCount),
     this->SuperarcDependentBoundaryCount);
-  viskores::worklet::contourtree_augmented::IdArraySetValue(
+  viskores::cont::ArraySetValue(
     this->ContourTree.Hypernodes.GetNumberOfValues() - 1,
     viskores::cont::ArrayGetValue(rootSuperId, this->SuperarcDependentBoundaryCount),
     this->HyperarcDependentBoundaryCount);

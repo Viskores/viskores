@@ -612,7 +612,7 @@ The easiest way to create a :class:`viskores::cont::ColorTable` is to provide th
 name of one of the many predefined sets of color provided by Viskores. A list
 of all available predefined color tables is provided below.
 
-.. This file and all the images in images/color-tables are built by the GuideExampleColorTables test.
+.. This file and all the images in ../../data/users-guide/images/color-tables are built by the GuideExampleColorTables test.
 .. include:: color-table-presets.rst
 
 * |Viridis| ``Viridis``

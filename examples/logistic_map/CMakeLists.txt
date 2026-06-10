@@ -22,7 +22,7 @@ find_package(Viskores REQUIRED QUIET)
 
 if(TARGET viskores::io)
   add_executable(LogisticMap LogisticMap.cxx)
-  target_link_libraries(LogisticMap PRIVATE viskores::io)
+  target_link_libraries(LogisticMap PRIVATE viskores::io viskores::worklet)
 
   viskores_add_target_information(LogisticMap
     DROP_UNUSED_SYMBOLS

@@ -10,6 +10,10 @@ Instead, most users execute algorithms in |Viskores| using filters.
 Thus, to expose algorithms implemented with worklets to general users, we need to implement a filter to encapsulate the worklets.
 In this chapter we will create a filter that encapsulates the worklet algorithm presented in :chapref:`simple-worklets:Simple Worklets`, which converted the units of a pressure field from pounds per square inch (psi) to Newtons per square meter (:math:`\mathrm{N}/\mathrm{m}^2`).
 
+----------------------------------------
+Deriving the Base Filter Class
+----------------------------------------
+
 Filters in |Viskores| are implemented by deriving :class:`viskores::filter::Filter`.
 
 
@@ -61,6 +65,11 @@ The meat of the filter implementation is located in the :func:`viskores::filter:
    :file: GuideExampleSimpleAlgorithm.cxx
    :caption: Implementation of ``DoExecute`` for a simple filter.
 
+
+----------------------------------------
+Managing Input Fields
+----------------------------------------
+
 The single argument to :func:`viskores::filter::Filter::DoExecute` is a :class:`viskores::cont::DataSet` containing the data to operate on, and :func:`viskores::filter::Filter::DoExecute` returns a derived :class:`viskores::cont::DataSet`.
 The filter must pull the appropriate information out of the input :class:`viskores::cont::DataSet` to operate on.
 This simple algorithm just operates on a single field array of the data.
@@ -102,6 +111,11 @@ Note that the :class:`viskores::filter::Filter` base class provides a :func:`vis
 (See :secref:`simple-worklets:Invoking a Worklet` for information on invoking a worklet.)
 Recall that the worklet created in :chapref:`simple-worklets:Simple Worklets` takes two parameters: an input array and an output array, which are shown in this invocation.
 
+
+----------------------------------------
+Building Output Data
+----------------------------------------
+
 With the output data created, the filter has to build the output structure to return.
 All implementations of :func:`viskores::filter::Filter::DoExecute` must return a :class:`viskores::cont::DataSet`, and for a simple field filter like this we want to return the same :class:`viskores::cont::DataSet` as the input with the output field added.
 The output field needs a name, and we get the appropriate name from the superclass (:exlineref:`ex:SimpleFieldDoExecute:OutputName`).
@@ -112,21 +126,79 @@ Thus, our filter checks for this empty string, and if it is encountered, it buil
 Finally, our filter constructs the output :class:`viskores::cont::DataSet` using one of the :func:`viskores::filter::Filter::CreateResult` member functions (:exlineref:`ex:SimpleFieldDoExecute:CreateResult`).
 In this particular case, the filter uses :func:`viskores::filter::Filter::CreateResultField`, which constructs a :class:`viskores::cont::DataSet` with the same structure as the input and adds the computed filter.
 
-.. doxygenfunction:: viskores::filter::Filter::CreateResult(const viskores::cont::DataSet&) const
-.. doxygenfunction:: viskores::filter::Filter::CreateResult(const viskores::cont::PartitionedDataSet&, const viskores::cont::PartitionedDataSet&) const
-.. doxygenfunction:: viskores::filter::Filter::CreateResult(const viskores::cont::PartitionedDataSet&, const viskores::cont::PartitionedDataSet&, FieldMapper&&) const
-.. doxygenfunction:: viskores::filter::Filter::CreateResult(const viskores::cont::DataSet&, const viskores::cont::UnknownCellSet&, FieldMapper&&) const
-.. doxygenfunction:: viskores::filter::Filter::CreateResultField(const viskores::cont::DataSet&, const viskores::cont::Field&) const
-.. doxygenfunction:: viskores::filter::Filter::CreateResultField(const viskores::cont::DataSet&, const std::string&, viskores::cont::Field::Association, const viskores::cont::UnknownArrayHandle&) const
-.. doxygenfunction:: viskores::filter::Filter::CreateResultFieldPoint(const viskores::cont::DataSet&, const std::string&, const viskores::cont::UnknownArrayHandle&) const
-.. doxygenfunction:: viskores::filter::Filter::CreateResultFieldCell(const viskores::cont::DataSet&, const std::string&, const viskores::cont::UnknownArrayHandle&) const
-.. doxygenfunction:: viskores::filter::Filter::CreateResultCoordinateSystem(const viskores::cont::DataSet&, const viskores::cont::UnknownCellSet&, const viskores::cont::CoordinateSystem&, FieldMapper&&) const
-.. doxygenfunction:: viskores::filter::Filter::CreateResultCoordinateSystem(const viskores::cont::DataSet&, const viskores::cont::UnknownCellSet&, const std::string&, const viskores::cont::UnknownArrayHandle&, FieldMapper&&) const
-
 .. commonerrors::
    The :func:`viskores::filter::Filter::CreateResult` methods do more than just construct a new :class:`viskores::cont::DataSet`.
    They also set up the structure of the data and pass fields as specified by the state of the filter object.
    Thus, implementations of :func:`viskores::filter::Filter::DoExecute` should always return a :class:`viskores::cont::DataSet` that is created with :func:`viskores::filter::Filter::CreateResult` or a similarly named method in the base filter class.
+
+We will take a closer look at the different versions of :func:`viskores::filter::Filter::CreateResult` provided and how they are used to build output data under different circumstances.
+
+Basic Copy of Input Structure
+========================================
+
+The simplest forms of :func:`viskores::filter::Filter::CreateResult` simply copy the input to an output structure.
+The cell set will be copied as well as the coordinate systems and any fields set to pass as described in :secref:`running-filters:Passing Fields from Input to Output`.
+All copies are shallow so that very little additional memory is required.
+It is common to further modify the resulting data before returning from :func:`viskores::filter::Filter::DoExecute`.
+
+.. doxygenfunction:: viskores::filter::Filter::CreateResult(const viskores::cont::DataSet&) const
+.. doxygenfunction:: viskores::filter::Filter::CreateResult(const viskores::cont::PartitionedDataSet&, const viskores::cont::PartitionedDataSet&) const
+
+Modifying the Cell Structure
+========================================
+
+If the operation of the filter builds a new :class:`viskores::cont::CellSet` for its output, there are forms of :func:`viskores::filter::Filter::CreateResult` for this.
+The most straightforward form takes a :class:`viskores::cont::UnknownCellSet` to replace the cells in an input :class:`viskores::cont::DataSet`.
+
+.. doxygenfunction:: viskores::filter::Filter::CreateResult(const viskores::cont::DataSet&, const viskores::cont::UnknownCellSet&, FieldMapper&&) const
+
+If operating on a whole :class:`viskores::cont::PartitionedDataSet`, there is no simple way to directly provide all the :class:`viskores::cont::UnknownCellSet` objects.
+Instead, these must be placed in a :class:`viskores::cont::PartitionedDataSet` with a structure that matches the input.
+
+.. doxygenfunction:: viskores::filter::Filter::CreateResult(const viskores::cont::PartitionedDataSet&, const viskores::cont::PartitionedDataSet&, FieldMapper&&) const
+
+When you change the cell structure of a data set, the points or cells of the geometry no longer match the input.
+Thus, the input fields need to be transformed in some way from input to output.
+These forms of :func:`viskores::filter::Filter::CreateResult` resolve this issue by accepting a function object that does this transformation.
+When building the data, :func:`viskores::filter::Filter::CreateResult` will call this function for each input field that should be transformed to the output.
+The first argument is the output data being build (a :class:`viskores::cont::DataSet` or :class:`viskores::cont::PartitionedDataSet` object).
+The second argument is the field from the input (a :class:`viskores::cont::Field`).
+This allows each field to be process to, for example, interpolate or reorder values.
+
+It is common to define this function object as a C++ lambda function.
+
+.. load-example:: FilterFieldMapper
+   :file: GuideExampleGenerateMeshConstantShape.cxx
+   :caption: Using a lambda function to map field values for a filter with changing cells.
+
+
+Modifying the Cell Structure and Coordinates
+=============================================
+
+When building new cell sets for a geometry, it is common to also generate a new coordinate system.
+To simplify the case where a new :class:`viskores::cont::CellSet` and a new :class:`viskores::cont::CoordinateSystem` are created together, the :func:`viskores::filter::Filter::CreateResultCoordinateSystem` takes both.
+
+.. doxygenfunction:: viskores::filter::Filter::CreateResultCoordinateSystem(const viskores::cont::DataSet&, const viskores::cont::UnknownCellSet&, const viskores::cont::CoordinateSystem&, FieldMapper&&) const
+.. doxygenfunction:: viskores::filter::Filter::CreateResultCoordinateSystem(const viskores::cont::DataSet&, const viskores::cont::UnknownCellSet&, const std::string&, const viskores::cont::UnknownArrayHandle&, FieldMapper&&) const
+
+Adding Fields
+========================================
+
+Rather than change the cell structure, many filters add data to an existing geometry.
+In this case :func:`viskores::filter::Filter::CreateResultField` copies the data and adds a new field that you provide.
+
+.. doxygenfunction:: viskores::filter::Filter::CreateResultField(const viskores::cont::DataSet&, const viskores::cont::Field&) const
+.. doxygenfunction:: viskores::filter::Filter::CreateResultField(const viskores::cont::DataSet&, const std::string&, viskores::cont::Field::Association, const viskores::cont::UnknownArrayHandle&) const
+
+If creating a field that is always associated with either points or cells, there are convenience forms of :func:`viskores::filter::Filter::CreateResultField` for that.
+
+.. doxygenfunction:: viskores::filter::Filter::CreateResultFieldPoint(const viskores::cont::DataSet&, const std::string&, const viskores::cont::UnknownArrayHandle&) const
+.. doxygenfunction:: viskores::filter::Filter::CreateResultFieldCell(const viskores::cont::DataSet&, const std::string&, const viskores::cont::UnknownArrayHandle&) const
+
+
+----------------------------------------
+More information
+----------------------------------------
 
 This chapter has just provided a brief introduction to creating filters.
 There are several more filter superclasses to help express algorithms of different types.

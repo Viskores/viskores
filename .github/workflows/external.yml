@@ -11,7 +11,9 @@ on:
   push:
   pull_request_target:
 
-permissions: write-all
+permissions:
+  contents: read
+  statuses: write
 
 jobs:
   generate_statuses:

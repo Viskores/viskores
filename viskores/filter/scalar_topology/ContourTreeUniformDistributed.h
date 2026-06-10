@@ -64,15 +64,16 @@
 
 #include <viskores/Types.h>
 #include <viskores/cont/ArrayHandle.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/DataSetMesh.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/BoundaryTree.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/HierarchicalContourTree.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_distributed/InteriorForest.h>
 
 #include <memory>
 #include <viskores/filter/Filter.h>
 #include <viskores/filter/scalar_topology/viskores_filter_scalar_topology_export.h>
+
+// clang-format off
+VISKORES_THIRDPARTY_PRE_INCLUDE
+#include <viskores/thirdparty/diy/diy.h>
+VISKORES_THIRDPARTY_POST_INCLUDE
+// clang-format on
 
 namespace viskores
 {
@@ -149,11 +150,22 @@ public:
 
   VISKORES_CONT bool GetSaveDotFiles() { return this->SaveDotFiles; }
 
+private:
+  /// Intermediate results computed while executing the filter. These are only valid
+  /// during a single invocation of DoExecutePartitions and are passed by reference
+  /// through the helper functions rather than stored as filter state, so that copies
+  /// of the filter do not share mutable execution scratch.
+  struct ExecutionState;
+
+  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
+  VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
+    const viskores::cont::PartitionedDataSet& input) override;
+
   template <typename T, typename StorageType>
-  VISKORES_CONT void ComputeLocalTree(
-    const viskores::Id blockIndex,
-    const viskores::cont::DataSet& input,
-    const viskores::cont::ArrayHandle<T, StorageType>& fieldArray);
+  VISKORES_CONT void ComputeLocalTree(const viskores::Id blockIndex,
+                                      const viskores::cont::DataSet& input,
+                                      const viskores::cont::ArrayHandle<T, StorageType>& fieldArray,
+                                      ExecutionState& state);
 
   /// Implement per block contour tree computation after the MeshType has been discovered
   template <typename T, typename StorageType, typename MeshType, typename MeshBoundaryExecType>
@@ -161,12 +173,8 @@ public:
                                           const viskores::cont::DataSet& input,
                                           const viskores::cont::ArrayHandle<T, StorageType>& field,
                                           MeshType& mesh,
-                                          MeshBoundaryExecType& meshBoundaryExecObject);
-
-private:
-  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
-  VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
-    const viskores::cont::PartitionedDataSet& input) override;
+                                          MeshBoundaryExecType& meshBoundaryExecObject,
+                                          ExecutionState& state);
 
   ///@{
   /// when operating on viskores::cont::MultiBlock we want to
@@ -175,7 +183,8 @@ private:
   VISKORES_CONT void PreExecute(const viskores::cont::PartitionedDataSet& input);
 
   VISKORES_CONT void PostExecute(const viskores::cont::PartitionedDataSet& input,
-                                 viskores::cont::PartitionedDataSet& output);
+                                 viskores::cont::PartitionedDataSet& output,
+                                 ExecutionState& state);
 
 
   template <typename FieldType>
@@ -197,24 +206,25 @@ private:
   /// computed on the block to compute the final contour tree.
   template <typename T>
   VISKORES_CONT void DoPostExecute(const viskores::cont::PartitionedDataSet& input,
-                                   viskores::cont::PartitionedDataSet& output);
+                                   viskores::cont::PartitionedDataSet& output,
+                                   ExecutionState& state);
   ///@}
 
   /// Use only boundary critical points in the parallel merge to reduce communication.
   /// Disabling this should only be needed for performance testing.
-  bool UseBoundaryExtremaOnly;
+  bool UseBoundaryExtremaOnly = true;
 
   /// Use marching cubes connectivity for computing the contour tree
-  bool UseMarchingCubes;
+  bool UseMarchingCubes = false;
 
   /// Augment hierarchical tree
-  bool AugmentHierarchicalTree;
+  bool AugmentHierarchicalTree = false;
 
   /// Threshold to use for volume pre-simplification
   viskores::Id PresimplifyThreshold = 0;
 
   /// Save dot files for all tree computations
-  bool SaveDotFiles;
+  bool SaveDotFiles = false;
 
   /// Log level to be used for outputting timing information. Default is viskores::cont::LogLevel::Perf
   viskores::cont::LogLevel TimingsLogLevel = viskores::cont::LogLevel::Perf;
@@ -224,25 +234,9 @@ private:
 
   /// Information about block decomposition TODO/FIXME: Remove need for this information
   // ... Number of blocks along each dimension
-  viskores::Id3 BlocksPerDimension;
+  viskores::Id3 BlocksPerDimension = { -1, -1, -1 };
   // ... Index of the local blocks in x,y,z, i.e., in i,j,k mesh coordinates
   viskores::cont::ArrayHandle<viskores::Id3> LocalBlockIndices;
-
-  /// Intermediate results (one per local data block)...
-  /// ... local mesh information needed at end of fan out
-  std::vector<viskores::worklet::contourtree_augmented::DataSetMesh> LocalMeshes;
-  /// ... local contour trees etc. computed during fan in and used during fan out
-  std::vector<viskores::worklet::contourtree_augmented::ContourTree> LocalContourTrees;
-  std::vector<viskores::worklet::contourtree_distributed::BoundaryTree> LocalBoundaryTrees;
-  std::vector<viskores::worklet::contourtree_distributed::InteriorForest> LocalInteriorForests;
-
-  /// The hierarchical trees computed by the filter (array with one entry per block)
-  // TODO/FIXME: We need to find a way to store the final hieararchical trees somewhere.
-  // Currently we cannot do this here as it is a template on FieldType
-  //
-  //std::vector<viskores::worklet::contourtree_distributed::HierarchicalContourTree> HierarchicalContourTrees;
-  /// Number of iterations used to compute the contour tree
-  viskores::Id NumIterations;
 };
 } // namespace scalar_topology
 } // namespace filter

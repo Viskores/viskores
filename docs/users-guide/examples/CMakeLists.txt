@@ -43,6 +43,7 @@ set(examples
   GuideExampleProvidedFilters.cxx
   GuideExampleRendering.cxx
   GuideExampleRuntimeDeviceTracker.cxx
+  GuideExampleSource.cxx
   GuideExampleTimer.cxx
   GuideExampleTraits.cxx
   GuideExampleTuple.cxx
@@ -53,10 +54,14 @@ set(examples_device
   GuideExampleCellLocator.cxx
   GuideExampleCellOperations.cxx
   GuideExampleDataSetCreation.cxx
+  GuideExampleDeviceAdapterAlgorithms.cxx
   GuideExampleErrorHandling.cxx
   GuideExampleFields.cxx
   GuideExampleFilterDataSetWithField.cxx
+  GuideExampleGenerateMeshCombineLike.cxx
   GuideExampleGenerateMeshConstantShape.cxx
+  GuideExampleGenerateMeshHash.cxx
+  GuideExampleGenerateMeshVariableShape.cxx
   GuideExampleMaskSelect.cxx
   GuideExamplePointLocator.cxx
   GuideExampleScatterCounting.cxx

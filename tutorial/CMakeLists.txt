@@ -51,19 +51,19 @@ if (Viskores_ENABLE_TUTORIALS)
 endif()
 
 add_executable(io io.cxx)
-target_link_libraries(io viskores::io)
+target_link_libraries(io PRIVATE viskores::io)
 
 add_executable(contour contour.cxx)
-target_link_libraries(contour viskores::filter_core viskores::filter_contour viskores::io)
+target_link_libraries(contour PRIVATE viskores::filter_core viskores::filter_contour viskores::io)
 
 add_executable(contour_two_fields contour_two_fields.cxx)
-target_link_libraries(contour_two_fields viskores::filter_core viskores::filter_contour viskores::io)
+target_link_libraries(contour_two_fields PRIVATE viskores::filter_core viskores::filter_contour viskores::io)
 
 add_executable(two_filters two_filters.cxx)
-target_link_libraries(two_filters viskores::filter_core viskores::filter_contour viskores::io)
+target_link_libraries(two_filters PRIVATE viskores::filter_core viskores::filter_contour viskores::io)
 
 add_executable(mag_grad mag_grad.cxx)
-target_link_libraries(mag_grad viskores::filter_core viskores::filter_vector_analysis viskores::io)
+target_link_libraries(mag_grad PRIVATE viskores::filter_core viskores::filter_vector_analysis viskores::io viskores::worklet)
 # Because mag_grad.cxx creates a worklet with code that
 # runs on a GPU, it needs additional information.
 viskores_add_target_information(mag_grad
@@ -72,23 +72,23 @@ viskores_add_target_information(mag_grad
 
 if (Viskores_ENABLE_RENDERING)
   add_executable(rendering rendering.cxx)
-  target_link_libraries(rendering viskores::io viskores::rendering)
+  target_link_libraries(rendering PRIVATE viskores::io viskores::rendering)
 endif ()
 
 add_executable(error_handling error_handling.cxx)
-target_link_libraries(error_handling viskores::filter_core viskores::filter_contour viskores::io)
+target_link_libraries(error_handling PRIVATE viskores::filter_core viskores::filter_contour viskores::io)
 
 add_executable(logging logging.cxx)
-target_link_libraries(logging viskores::io)
+target_link_libraries(logging PRIVATE viskores::io)
 
 add_executable(point_to_cell point_to_cell.cxx)
-target_link_libraries(point_to_cell viskores::worklet viskores::filter_core viskores::io)
+target_link_libraries(point_to_cell PRIVATE viskores::worklet viskores::filter_core viskores::io)
 viskores_add_target_information(point_to_cell
   DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
   DEVICE_SOURCES point_to_cell.cxx)
 
 add_executable(extract_edges extract_edges.cxx)
-target_link_libraries(extract_edges viskores::cont viskores::filter_core viskores::filter_contour viskores::worklet viskores::io)
+target_link_libraries(extract_edges PRIVATE viskores::cont viskores::filter_core viskores::filter_contour viskores::worklet viskores::io)
 viskores_add_target_information(extract_edges
   DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
   DEVICE_SOURCES extract_edges.cxx)

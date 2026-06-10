@@ -33,7 +33,7 @@ set(headers
   FillEmptyIterationWorklet.h
   CreateSuperarcsWorklet.h
   CreateSuperarcsData.h
-  CreateSuperarcsSetFirstSupernodePerIterationWorklet.h
+  CreateSuperarcsSetFirstSupernodePerIterWorklet.h
   HierarchicalAugmenterInOutData.h
 )
 

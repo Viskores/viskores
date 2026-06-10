@@ -204,6 +204,9 @@ inline VISKORES_CONT viskores::cont::DataSet ExtractEdges::DoExecute(
 
   // This lambda function maps an input field to the output data set. It is
   // used with the CreateResult method.
+  ////
+  //// BEGIN-EXAMPLE FilterFieldMapper
+  ////
   //// LABEL FieldMapper
   auto fieldMapper =
     [&](viskores::cont::DataSet& outData, const viskores::cont::Field& inputField)
@@ -221,6 +224,9 @@ inline VISKORES_CONT viskores::cont::DataSet ExtractEdges::DoExecute(
 
   //// LABEL CreateResult
   return this->CreateResult(inData, outCellSet, fieldMapper);
+  ////
+  //// END-EXAMPLE FilterFieldMapper
+  ////
 }
 ////
 //// END-EXAMPLE GenerateMeshConstantShapeInvoke
@@ -256,8 +262,8 @@ void CheckOutput(const viskores::cont::CellSetSingleType<>& cellSet)
   VISKORES_TEST_ASSERT(connectivityPortal.Get(1) == 1, "Bad edge index");
   VISKORES_TEST_ASSERT(connectivityPortal.Get(2) == 1, "Bad edge index");
   VISKORES_TEST_ASSERT(connectivityPortal.Get(3) == 5, "Bad edge index");
-  VISKORES_TEST_ASSERT(connectivityPortal.Get(68) == 9, "Bad edge index");
-  VISKORES_TEST_ASSERT(connectivityPortal.Get(69) == 10, "Bad edge index");
+  VISKORES_TEST_ASSERT(connectivityPortal.Get(66) == 9, "Bad edge index");
+  VISKORES_TEST_ASSERT(connectivityPortal.Get(67) == 10, "Bad edge index");
 }
 
 void TryFilter()

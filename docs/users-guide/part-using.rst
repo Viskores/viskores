@@ -10,6 +10,7 @@ Using |Viskores|
    initialization.rst
    dataset.rst
    io.rst
+   source.rst
    running-filters.rst
    provided-filters.rst
    rendering.rst

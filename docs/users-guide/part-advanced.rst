@@ -18,3 +18,5 @@ Advanced Development
    execution-objects.rst
    locators.rst
    worklet-in-out.rst
+   generating-cell-sets.rst
+   device-algorithms.rst

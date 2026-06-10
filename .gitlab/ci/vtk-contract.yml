@@ -1,0 +1,60 @@
+##============================================================================
+##  The contents of this file are covered by the Viskores license. See
+##  LICENSE.txt for details.
+##
+##  By contributing to this file, all contributors agree to the Developer
+##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
+##============================================================================
+
+.vtk_contract_base:
+  stage: contract
+  timeout: 2 hours
+  interruptible: true
+  variables:
+    CCACHE_BASEDIR:       "$CI_PROJECT_DIR"
+    CCACHE_COMPILERCHECK: "content"
+    CCACHE_IGNOREOPTIONS: "-isystem=*"
+    CCACHE_NOHASHDIR:     "true"
+  before_script:
+    - .gitlab/ci/config/cmake.sh
+    - export PATH=$PWD/.gitlab/cmake/bin:$PATH
+    - cmake --version
+    - "cmake -VV -P .gitlab/ci/config/ninja.cmake"
+    - export PATH="${PWD}/.gitlab:${PATH}"
+    - "CCACHE_INSTALL_DIR=${PWD}/.gitlab cmake -V -P .gitlab/ci/config/ccache.cmake"
+    - export PATH="${PWD}/.gitlab/ccache:${PATH}"
+    - ccache -z
+  script:
+    - .gitlab/ci/config/vtk_contract.sh
+  after_script:
+    - export PATH="${PWD}/.gitlab/ccache:${PATH}"
+    - ccache -v -s
+    - ccache -z
+  allow_failure: false
+
+# Build VTK against a CPU-only Viskores installation
+vtk_serial:
+  extends:
+    - .vtk_contract_base
+    - .ubuntu2204
+    - .run_automatically
+    - .uo_cpu_tags
+  variables:
+    CCACHE_RESHARE: "true"
+  needs:
+    - job: ubuntu2404_gcc14
+      artifacts: true
+
+# Build VTK against a CUDA-enabled Viskores installation
+vtk_cuda:
+  extends:
+    - .vtk_contract_base
+    - .ubuntu2404_cuda130
+    - .run_automatically
+    - .uo_cpu_tags
+  variables:
+    CCACHE_RESHARE: "true"
+    CMAKE_ARGS: "-DVTK_USE_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75"
+  needs:
+    - job: ubuntu2404_gcc14_cuda130
+      artifacts: true

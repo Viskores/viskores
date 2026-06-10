@@ -23,7 +23,8 @@ set(configure_warning_exceptions
   )
 
 # Find the path of the logs from the last configure
-set(cnf_log_path "${CMAKE_SOURCE_DIR}/build/Testing/Temporary/LastConfigure*.log")
+include("$ENV{CI_PROJECT_DIR}/build/CIState.cmake")
+set(cnf_log_path "${CTEST_BINARY_DIRECTORY}/Testing/Temporary/LastConfigure*.log")
 file(GLOB cnf_log_files ${cnf_log_path})
 
 # Check for warnings during the configure phase
@@ -47,7 +48,7 @@ endforeach()
 
 # `compile_num_warnings` contains a single integer symbolizing the number of
 # warnings of the last build.
-set(bld_log_path "${CMAKE_SOURCE_DIR}/build/compile_num_warnings.log")
+set(bld_log_path "${CTEST_BINARY_DIRECTORY}/compile_num_warnings.log")
 file(STRINGS "${bld_log_path}" output)
 if (NOT "${output}" STREQUAL "0")
   message(FATAL_ERROR "Build warnings detected, please check cdash-commit job")

@@ -21,23 +21,23 @@ set(headers
   BoundaryVerticesPerSuperArcWorklets.h
   PropagateBoundaryCountsSubtractDependentCountsWorklet.h
   PropagateBoundaryCountsTransferDependentCountsWorklet.h
-  PropagateBoundaryCountsTransferCumulativeCountsWorklet.h
+  PropagateBoundaryCountsTransferCumCountsWorklet.h
   PropagateBoundaryCountsComputeGroupTotalsWorklet.h
   FindNecessaryInteriorSupernodesFindNodesWorklet.h
   FindNecessaryInteriorSetSuperparentNecessaryWorklet.h
-  AugmentBoundaryWithNecessaryInteriorSupernodesUnsetBoundarySupernodesWorklet.h
-  AugmentBoundaryWithNecessaryInteriorSupernodesAppendNecessarySupernodesWorklet.h
+  AugmentBoundaryUnsetSupernodesWorklet.h
+  AugmentBoundaryAppendSupernodesWorklet.h
   FindBoundaryTreeSuperarcsSuperarcToWorklet.h
   SetUpAndDownNeighboursWorklet.h
   IdentifyRegularisedSupernodesStepOneWorklet.h
   IdentifyRegularisedSupernodesStepTwoWorklet.h
   AddTerminalFlagsToUpDownNeighboursWorklet.h
   PointerDoubleUpDownNeighboursWorklet.h
-  CompressRegularisedNodesCopyNecessaryRegularNodesWorklet.h
+  CompressRegularisedNodesCopyRegularNodesWorklet.h
   CompressRegularisedNodesFindNewSuperarcsWorklet.h
   CompressRegularisedNodesResolveRootWorklet.h
   CompressRegularisedNodesTransferVerticesWorklet.h
-  CompressRegularisedNodesFillBoundaryTreeSuperarcsWorklet.h
+  CompressRegularisedNodesFillBTreeSuperarcsWorklet.h
   SetInteriorForestWorklet.h
   SumFunctor.h
   NoSuchElementFunctor.h
