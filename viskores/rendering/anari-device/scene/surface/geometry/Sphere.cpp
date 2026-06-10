@@ -96,7 +96,7 @@ void Sphere::SetupIndexBased()
   viskores::cont::ArrayHandle<viskores::Vec3f> vertices;
 
   auto viskoresArray = this->m_index->dataAsViskoresArray();
-  viskoresArray.CopyShallowIfPossible(indexArray);
+  viskores::cont::ArrayCopyShallowIfPossible(viskoresArray, indexArray);
 
   // KEN: Instead of permuting arrays, why not build a set of vertex cells and use
   // that to permute the values? The underlying raycaster already supports that.
