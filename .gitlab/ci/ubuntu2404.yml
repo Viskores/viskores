@@ -27,7 +27,9 @@ ubuntu2404_gcc13:
   variables:
     CC: "gcc-13"
     CXX: "g++-13"
-    VISKORES_SETTINGS: "ccache+openmp+shared+examples"
+    CMAKE_PREFIX_PATH: "/opt/anari"
+    VISKORES_SETTINGS: "ccache+openmp+shared+examples+rendering+anari"
+    VISKORES_TEST_ANARI_LIBRARY: "helide"
     # Restrict OpenMP number of threads since multiple test stages
     # execute on the same hardware concurrently
     OMP_NUM_THREADS: 3
