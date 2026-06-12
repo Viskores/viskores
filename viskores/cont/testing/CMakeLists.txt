@@ -54,7 +54,7 @@ set(unit_tests
   UnitTestFieldRangeCompute.cxx
   UnitTestInitializeCustomOptions.cxx
   UnitTestInitializeCustomOptionsWithArgs.cxx
-  UnitTestInitializeRuntimeDeviceConfigurationWithArgs.cxx 
+  UnitTestInitializeRuntimeDeviceConfigurationWithArgs.cxx
   UnitTestInitializeMixedOptions.cxx
   UnitTestInitializeNoOptions.cxx
   UnitTestInitializeStandardOptions.cxx
@@ -128,7 +128,7 @@ set(unit_tests_device
   UnitTestImplicitFunction.cxx
   UnitTestParticleArrayCopy.cxx
   UnitTestPointLocatorSparseGrid.cxx
-  UnitTestSplineEvaluate.cxx  
+  UnitTestSplineEvaluate.cxx
   UnitTestTransportArrayIn.cxx
   UnitTestTransportArrayInOut.cxx
   UnitTestTransportArrayOut.cxx
