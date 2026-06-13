@@ -96,7 +96,9 @@ template <typename ValueType_,
           typename FunctorType_,
           typename InverseFunctorType_>
 class VISKORES_ALWAYS_EXPORT ArrayPortalTransform
+#ifndef VISKORES_DOXYGEN_ONLY
   : public ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType>
+#endif
 {
   using Writable = viskores::internal::PortalSupportsSets<PortalType_>;
 
@@ -111,16 +113,24 @@ public:
   ArrayPortalTransform(const PortalType& portal = PortalType(),
                        const FunctorType& functor = FunctorType(),
                        const InverseFunctorType& inverseFunctor = InverseFunctorType())
+#ifndef VISKORES_DOXYGEN_ONLY
     : Superclass(portal, functor)
     , InverseFunctor(inverseFunctor)
+#else
+    : InverseFunctor(inverseFunctor)
+#endif
   {
   }
 
   template <class OtherV, class OtherP, class OtherF, class OtherInvF>
   VISKORES_EXEC_CONT ArrayPortalTransform(
     const ArrayPortalTransform<OtherV, OtherP, OtherF, OtherInvF>& src)
+#ifndef VISKORES_DOXYGEN_ONLY
     : Superclass(src)
     , InverseFunctor(src.GetInverseFunctor())
+#else
+    : InverseFunctor(src.GetInverseFunctor())
+#endif
   {
   }
 
