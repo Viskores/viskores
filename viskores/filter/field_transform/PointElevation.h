@@ -38,7 +38,7 @@ namespace field_transform
 /// interpolated linearly between these two planes. This filter is commonly used to compute
 /// the elevation of points in some direction, but can be repurposed for a variety of measures.
 ///
-/// The default name for the output field is ``elevation'', but that can be
+/// The default name for the output field is `elevation`, but that can be
 /// overridden as always using the `SetOutputFieldName()` method.
 class VISKORES_FILTER_FIELD_TRANSFORM_EXPORT PointElevation : public viskores::filter::Filter
 {

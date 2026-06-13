@@ -69,7 +69,7 @@ using And = typename detail::AndImpl<T1, T2>::type;
 template <typename T1, typename T2>
 using Or = typename detail::OrImpl<T1, T2>::type;
 
-/// Expects a type with a `value` constant static value (like a std::integral_constant`).
+/// Expects a type with a `value` constant static value (like a `std::integral_constant`).
 /// Resolves to a `std::integral_constant<bool, B>` where B is `!T::value`.
 template <typename T>
 using Not = typename detail::NotImpl<T>::type;

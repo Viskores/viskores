@@ -31,7 +31,7 @@ namespace io
 /// from the file is read by calling the `ReadDataSet` method.
 ///
 /// Currently, `ImageReaderPNM` only supports files using the portable pixmap (PPM)
-/// format (with magic number ``P6''). These files are most commonly stored with a
+/// format (with magic number "P6"). These files are most commonly stored with a
 /// `.ppm` extension although the `.pnm` extension is also valid.
 /// More details on the PNM format can be found here at
 /// http://netpbm.sourceforge.net/doc/ppm.html
