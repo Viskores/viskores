@@ -158,6 +158,7 @@ EXCLUDE_PATTERNS       += */examples/*
 EXCLUDE_PATTERNS       += */testing/*
 EXCLUDE_PATTERNS       += */thirdparty/*
 EXCLUDE_PATTERNS       += @Viskores_SOURCE_DIR@/viskores/filter/*/worklet/*
+EXCLUDE_PATTERNS       += @Viskores_SOURCE_DIR@/viskores/rendering/anari-device/*
 EXCLUDE_PATTERNS       += @Viskores_SOURCE_DIR@/viskores/rendering/raytracing/*
 EXCLUDE_PATTERNS       += UnitTest*
 
