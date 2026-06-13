@@ -35,7 +35,6 @@ void RenderTests()
   viskores::cont::testing::MakeTestDataSet maker;
 
   viskores::rendering::testing::RenderTestOptions testOptions;
-  testOptions.AllowedPixelErrorRatio = 0.002f;
   testOptions.Mapper = viskores::rendering::testing::MapperType::Connectivity;
   testOptions.AllowAnyDevice = false;
   testOptions.ColorTable = viskores::cont::ColorTable::Preset::Inferno;

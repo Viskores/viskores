@@ -6,4 +6,6 @@ DEPENDS
   viskores_cont_testing viskores_rendering
 PRIVATE_DEPENDS
   viskores_io
+  viskores_filter_field_transform
+  viskores_filter_image_processing
 NO_TESTING
