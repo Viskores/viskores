@@ -218,8 +218,6 @@ VERBATIM_HEADERS       = YES
 
 ALPHABETICAL_INDEX     = YES
 
-COLS_IN_ALPHA_INDEX    = 2
-
 IGNORE_PREFIX          =
 
 #---------------------------------------------------------------------------
@@ -272,7 +270,7 @@ MAKEINDEX_CMD_NAME     = makeindex
 
 COMPACT_LATEX          = NO
 
-PAPER_TYPE             = a4wide
+PAPER_TYPE             = letter
 
 EXTRA_PACKAGES         =
 
@@ -387,8 +385,6 @@ EXTERNAL_GROUPS        = YES
 #---------------------------------------------------------------------------
 # Configuration options related to the dot tool
 #---------------------------------------------------------------------------
-
-CLASS_DIAGRAMS         = YES
 
 HIDE_UNDOC_RELATIONS   = YES
 
