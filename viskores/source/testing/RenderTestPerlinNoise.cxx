@@ -46,8 +46,6 @@ void TestPerlinNoise()
 
   // CUDA seems to make the contour slightly different, so relax comparison options.
   viskores::rendering::testing::RenderTestOptions options;
-  options.AllowedPixelErrorRatio = 0.01f;
-  options.Threshold = 0.1f;
 
   viskores::rendering::testing::RenderTest(
     contours, "perlinnoise", "source/perlin-noise.png", options);

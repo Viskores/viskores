@@ -222,12 +222,8 @@ void DoRenderTest(viskores::rendering::Canvas& canvas,
                                                   options.TitleAngle)));
   view.SetRenderAnnotationsEnabled(options.EnableAnnotations);
 
-  VISKORES_TEST_ASSERT(test_equal_images(view,
-                                         outputFile,
-                                         options.AverageRadius,
-                                         options.PixelShiftRadius,
-                                         options.AllowedPixelErrorRatio,
-                                         options.Threshold));
+  VISKORES_TEST_ASSERT(test_equal_images(
+    outputFile, view, SSIMCompareOptions{ options.SSIMTolerance, options.SSIMPatchRadius }));
 }
 
 void DoRenderTest(viskores::rendering::CanvasRayTracer& canvas,

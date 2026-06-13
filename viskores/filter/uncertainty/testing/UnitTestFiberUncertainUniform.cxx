@@ -71,8 +71,6 @@ void TestFiberUncertainUniform()
   viskores::Range rangeAxis1(15.0, 15.0);
   viskores::Range rangeAxis2(25.0, 25.0);
 
-  const viskores::FloatDefault delta = 0.05f;
-
   viskores::filter::uncertainty::FiberUncertainUniform closedFormFilter;
   closedFormFilter.SetRange1(rangeAxis1);
   closedFormFilter.SetRange2(rangeAxis2);

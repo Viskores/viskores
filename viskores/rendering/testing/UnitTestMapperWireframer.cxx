@@ -124,10 +124,9 @@ void RenderTests()
     viskores::rendering::testing::RenderTestOptions testOptions;
     testOptions.Mapper = viskores::rendering::testing::MapperType::Wireframer;
     testOptions.Colors = { viskores::rendering::Color::black };
-    testOptions.AllowedPixelErrorRatio = 0.05f;
     testOptions.AllowAnyDevice = false;
     viskores::rendering::testing::RenderTest(
-      Make3DUniformDataSet(), "pointvar", "rendering/wireframer/wf_uniform3D.png", testOptions);
+      Make3DUniformDataSet(16), "pointvar", "rendering/wireframer/wf_uniform3D.png", testOptions);
     viskores::rendering::testing::RenderTest(maker.Make3DExplicitDataSet4(),
                                              "pointvar",
                                              "rendering/wireframer/wf_expl3D.png",
