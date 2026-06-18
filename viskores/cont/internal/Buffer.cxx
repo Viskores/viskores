@@ -1088,6 +1088,16 @@ viskores::cont::internal::TransferredBuffer Buffer::TakeHostBufferOwnership() co
   }
 }
 
+void Buffer::PinHost(viskores::cont::Token& token) const
+{
+  LockType lock = this->Internals->GetLock();
+  detail::BufferHelper::AllocateOnHost(
+    this->Internals, lock, token, detail::BufferHelper::AccessMode::READ);
+  auto& buffer = this->Internals->GetHostBuffer(lock);
+  buffer.Pinned = true;
+  buffer.Info.PreventReallocation();
+}
+
 viskores::cont::internal::TransferredBuffer Buffer::TakeDeviceBufferOwnership(
   viskores::cont::DeviceAdapterId device) const
 {

@@ -17,6 +17,7 @@
 //============================================================================
 #include <viskores/TypeTraits.h>
 #include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ErrorBadAllocation.h>
 
 #include <viskores/worklet/DispatcherMapField.h>
 #include <viskores/worklet/WorkletMapField.h>
@@ -563,6 +564,99 @@ struct VerifyFill
   }
 };
 
+struct VerifyPinnedMemory
+{
+  template <typename T>
+  VISKORES_CONT void operator()(T) const
+  {
+    viskores::cont::Invoker invoke;
+
+    std::cout << "Creating pinned Viskores-allocated array." << std::endl;
+    viskores::cont::ArrayHandleBasic<T> arrayHandle;
+    arrayHandle.Allocate(ARRAY_SIZE);
+    {
+      auto portal = arrayHandle.WritePortal();
+      for (viskores::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        portal.Set(index, TestValue(index, T()));
+      }
+    }
+
+    T* hostPointer = nullptr;
+    {
+      viskores::cont::Token token;
+      hostPointer = arrayHandle.GetWritePointer(token);
+      arrayHandle.GetBuffers()[0].PinHost(token);
+    }
+    VISKORES_TEST_ASSERT(hostPointer != nullptr, "Pinned host pointer is null.");
+
+    // Pointer writes should be visible through the portal and vice versa.
+    for (viskores::Id index = 0; index < ARRAY_SIZE; ++index)
+    {
+      hostPointer[index] = static_cast<T>(TestValue(index, T()) + T(7));
+    }
+    {
+      auto portal = arrayHandle.ReadPortal();
+      for (viskores::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        VISKORES_TEST_ASSERT(
+          test_equal(portal.Get(index), static_cast<T>(TestValue(index, T()) + T(7))),
+          "Pointer write not visible through portal.");
+      }
+    }
+    {
+      auto portal = arrayHandle.WritePortal();
+      for (viskores::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        portal.Set(index, static_cast<T>(TestValue(index, T()) + T(11)));
+      }
+    }
+    for (viskores::Id index = 0; index < ARRAY_SIZE; ++index)
+    {
+      VISKORES_TEST_ASSERT(
+        test_equal(hostPointer[index], static_cast<T>(TestValue(index, T()) + T(11))),
+        "Portal write not visible through C pointer.");
+    }
+
+    // Same-size reallocation should be a no-op, not throw.
+    arrayHandle.Allocate(ARRAY_SIZE, viskores::CopyFlag::On);
+    VISKORES_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
+                         "Same-size reallocation changed the array size.");
+
+    std::cout << "Check out worklet output." << std::endl;
+    invoke(AssignTestValue{}, viskores::cont::ArrayHandleIndex(ARRAY_SIZE), arrayHandle);
+    arrayHandle.SyncControlArray();
+    {
+      auto portal = arrayHandle.ReadPortal();
+      for (viskores::Id index = 0; index < ARRAY_SIZE; ++index)
+      {
+        VISKORES_TEST_ASSERT(test_equal(portal.Get(index), TestValue(index, T())),
+                             "Worklet output not visible through portal.");
+        VISKORES_TEST_ASSERT(test_equal(hostPointer[index], TestValue(index, T())),
+                             "Worklet output not visible through pinned C pointer.");
+      }
+    }
+
+    std::cout << "Check invalid reallocation." << std::endl;
+    {
+      // Allocate with CopyFlag::On defers the resize until the next buffer
+      // access, so force the reallocation attempt with ReadPortal.
+      bool gotException = false;
+      try
+      {
+        arrayHandle.Allocate(ARRAY_SIZE * 2, viskores::CopyFlag::On);
+        arrayHandle.ReadPortal();
+      }
+      catch (viskores::cont::ErrorBadAllocation&)
+      {
+        gotException = true;
+      }
+      VISKORES_TEST_ASSERT(gotException,
+                           "Growing a pinned host buffer should throw ErrorBadAllocation.");
+    }
+  }
+};
+
 VISKORES_CONT void Run()
 {
   viskores::testing::Testing::TryTypes(VerifyEmptyArrays{});
@@ -574,6 +668,7 @@ VISKORES_CONT void Run()
   viskores::testing::Testing::TryTypes(VerifyVISKORESTransferredOwnership{});
   viskores::testing::Testing::TryTypes(VerifyEqualityOperators{});
   viskores::testing::Testing::TryTypes(VerifyFill{});
+  viskores::testing::Testing::TryTypes(VerifyPinnedMemory{});
 }
 
 } // anonymous namespace
