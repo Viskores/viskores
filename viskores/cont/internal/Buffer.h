@@ -318,6 +318,44 @@ public:
   VISKORES_CONT viskores::cont::internal::TransferredBuffer TakeDeviceBufferOwnership(
     viskores::cont::DeviceAdapterId device) const;
 
+  /// @brief Pin the host buffer so its pointer remains stable.
+  ///
+  /// Marks the buffer on the host as pinned. This ensures that the memory allocation will
+  /// never be moved for the remainder of the life of the `Buffer` object. This can be used
+  /// to ensure that C pointers to the buffer's array and array portals work for extended
+  /// periods of time. For example, to transfer a Viskores `ArrayHandleBasic` to an
+  /// external libraries array management object, such as wrapping it in a Python NumPy
+  /// array, one can pin the buffer and keep a reference around.
+  ///
+  /// Note that pinning the buffer has consequences that cannot be undone. The biggest
+  /// consequence is that reallocating the buffer is disabled because a reallocation is
+  /// likely to move the buffer to a new area of memory. Attempting to allocate the buffer
+  /// to a new size will cause a `viskores::cont::ErrorBadAllocation` to be thrown.
+  ///
+  /// If the `Buffer` is requested to provide data on a device, that may "invalidate" the
+  /// host array. Pinned memory will still exist, but the data may be out of date and writes
+  /// may get overridden the next time the `Buffer` updates the control memory.
+  ///
+  /// The `Buffer` object will ensure the pinned memory is available during its entire
+  /// lifetime, but if all instances of `Buffer` leave scope, the memory will be freed during
+  /// cleanup. Thus, it is important to keep a reference to the `Buffer` (or the
+  /// `viskores::cont::ArrayHandle` containing it) until the pinned memory is no longer
+  /// used.
+  ///
+  /// Pinning memory and holding a `Buffer` reference is similar holding a read or write
+  /// `viskores::cont::Token` object. However, unlike pinned memory, a `Token` can
+  /// block other code from using the `Buffer` in various memory spaces and can lead
+  /// to deadlocking, even on a single thread. Thus, `viskores::cont::Token` should only
+  /// be used in well-scoped situations whereas pinned memory is appropriate for
+  /// extended use.
+  ///
+  /// Note that the memory is pinned only with respect to the user accessible memory
+  /// space. This method does _not_, for example, pin a memory page to a particular
+  /// physical memory bank and is not appropriate for things like DMA transfers. Such
+  /// pinning would have to take place in the device adapter layer.
+  ///
+  VISKORES_CONT void PinHost(viskores::cont::Token& token) const;
+
   /// \brief Fill up the buffer with particular values.
   ///
   /// Given a short `source` C array (defined on the host), sets all values in the buffer

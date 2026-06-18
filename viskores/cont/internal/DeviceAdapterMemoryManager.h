@@ -117,6 +117,12 @@ public:
   ///
   VISKORES_CONT TransferredBuffer TransferOwnership();
 
+  /// Replace the buffer's reallocater with one that throws `ErrorBadAllocation` on any
+  /// attempted resize. Used to lock the underlying pointer in place when the memory has
+  /// been pinned for external access.
+  ///
+  VISKORES_CONT void PreventReallocation();
+
 private:
   detail::BufferInfoInternals* Internals;
   viskores::cont::DeviceAdapterId Device;

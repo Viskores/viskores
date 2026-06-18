@@ -301,6 +301,11 @@ void BufferInfo::Reallocate(viskores::BufferSizeType newSize)
   this->Internals->Size = newSize;
 }
 
+void BufferInfo::PreventReallocation()
+{
+  this->Internals->Reallocate = viskores::cont::internal::InvalidRealloc;
+}
+
 TransferredBuffer BufferInfo::TransferOwnership()
 {
   TransferredBuffer tbufffer = { this->Internals->Memory,
