@@ -23,6 +23,7 @@ set(field_transform_headers
   LogValues.h
   PointElevation.h
   PointTransform.h
+  RGBToLab.h
   SphericalCoordinateTransform.h
   Warp.h
   WarpScalar.h
@@ -36,6 +37,7 @@ set(field_transform_sources
   LogValues.cxx
   PointElevation.cxx
   PointTransform.cxx
+  RGBToLab.cxx
   SphericalCoordinateTransform.cxx
   Warp.cxx
   )

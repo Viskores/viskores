@@ -22,6 +22,7 @@ set(unit_tests
   UnitTestGenerateIds.cxx
   UnitTestPointElevationFilter.cxx
   UnitTestPointTransform.cxx
+  UnitTestRGBToLab.cxx
   UnitTestWarpFilter.cxx
   UnitTestLogValues.cxx
   UnitTestCompositeVectors.cxx
