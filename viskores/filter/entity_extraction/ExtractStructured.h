@@ -111,7 +111,7 @@ public:
   /// rate is set to (3, 3, 1). If `IncludeBoundary` is false, then the output will
   /// have the 4 points that correspond to the 3D indices (0, 0, 0), (3, 0, 0),
   /// (0, 3, 0), and (3, 3, 0) of the input. This misses the outer boundary at
-  /// index 4 in the x and y directions. If `IncludeBoundary is set to true, then
+  /// index 4 in the x and y directions. If `IncludeBoundary` is set to true, then
   /// the output will have the 9 points that correspond to the 3D indices (0, 0, 0),
   /// (3, 0, 0), (4, 0, 0), (0, 3, 0), (3, 3, 0), (4, 3, 0), (0, 4, 0), (3, 4, 0),
   /// and (4, 4, 0) to capture this outer boundary.
