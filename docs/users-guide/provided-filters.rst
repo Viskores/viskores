@@ -539,6 +539,21 @@ These output modes are contained in :enum:`viskores::filter::field_transform::Fi
 .. doxygenclass:: viskores::filter::field_transform::FieldToColors
    :members:
 
+RGB to Lab
+------------------------------
+
+.. index::
+   double: filter; rgb to lab
+   single: color conversion; Lab
+
+The :class:`viskores::filter::field_transform::RGBToLab` filter converts an RGB color field to a CIE L*a*b* color field.
+The filter accepts RGB values stored as :type:`viskores::Vec3ui_8` byte triplets or as normalized floating-point triplets stored as :type:`viskores::Vec3f_32` or :type:`viskores::Vec3f_64`.
+The generated Lab field has the same association as the active input field.
+If no output field name is specified, the output field name is the active field name with ``_lab`` appended.
+
+.. doxygenclass:: viskores::filter::field_transform::RGBToLab
+   :members:
+
 Generate Ids
 ------------------------------
 

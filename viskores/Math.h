@@ -1857,12 +1857,13 @@ static inline VISKORES_EXEC_CONT Tx Clamp(Tx x, Tlo lo, Thi hi, viskores::TypeTr
 /// @param high The maximum value of the valid range.
 /// @returns `x` adjusted to be in the range from `low` to `high`.
 template <typename Tx, typename Tlow, typename Thigh>
-inline VISKORES_EXEC_CONT Tx Clamp(Tx&& x, Tlow&& low, Thigh&& high)
+inline VISKORES_EXEC_CONT typename std::decay<Tx>::type Clamp(Tx&& x, Tlow&& low, Thigh&& high)
 {
+  using ValueType = typename std::decay<Tx>::type;
   return detail::Clamp(std::forward<Tx>(x),
                        std::forward<Tlow>(low),
                        std::forward<Thigh>(high),
-                       typename viskores::TypeTraits<Tx>::DimensionalityTag());
+                       typename viskores::TypeTraits<ValueType>::DimensionalityTag());
 }
 
 namespace detail
@@ -1892,6 +1893,7 @@ static inline VISKORES_EXEC_CONT Tx Clamp(Tx x, Tlo lo, Thi hi, viskores::TypeTr
                                           TraitsLo::GetComponent(lo, index),
                                           TraitsHi::GetComponent(hi, index)));
   }
+  return result;
 }
 
 } // namespace detail
