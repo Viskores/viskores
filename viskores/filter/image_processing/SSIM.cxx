@@ -52,8 +52,14 @@ public:
   using InputDomain = _1;
 
   VISKORES_CONT
-  explicit SSIMComponentNeighborhood(viskores::IdComponent patchRadius)
+  explicit SSIMComponentNeighborhood(viskores::IdComponent patchRadius,
+                                     viskores::Float64 dynamicRange,
+                                     viskores::Float64 k1,
+                                     viskores::Float64 k2)
     : PatchRadius(patchRadius)
+    , DynamicRange(dynamicRange)
+    , K1(k1)
+    , K2(k2)
   {
   }
 
@@ -62,9 +68,9 @@ public:
     const viskores::exec::FieldNeighborhood<PrimaryFieldPortalType>& primary,
     const viskores::exec::FieldNeighborhood<SecondaryFieldPortalType>& secondary,
     const viskores::exec::BoundaryState& boundary,
-    SSIMStatistics& statistics) const
+    viskores::Float64& ssim) const
   {
-    statistics = SSIMStatistics{};
+    SSIMStatistics statistics;
     auto minIndices = boundary.MinNeighborIndices(this->PatchRadius);
     auto maxIndices = boundary.MaxNeighborIndices(this->PatchRadius);
     const viskores::IdComponent radiusSquared = this->PatchRadius * this->PatchRadius;
@@ -85,6 +91,8 @@ public:
         }
       }
     }
+
+    this->Finalize(statistics, ssim);
   }
 
 private:
@@ -99,24 +107,7 @@ private:
     return viskores::Exp(-static_cast<viskores::Float64>(distanceSquared) / (2.0 * sigma * sigma));
   }
 
-  viskores::IdComponent PatchRadius;
-};
-
-struct SSIMFinalize : public viskores::worklet::WorkletMapField
-{
-  using ControlSignature = void(FieldIn, FieldOut);
-  using ExecutionSignature = void(_1, _2);
-  using InputDomain = _1;
-
-  VISKORES_CONT
-  SSIMFinalize(viskores::Float64 dynamicRange, viskores::Float64 k1, viskores::Float64 k2)
-    : DynamicRange(dynamicRange)
-    , K1(k1)
-    , K2(k2)
-  {
-  }
-
-  VISKORES_EXEC void operator()(const SSIMStatistics& statistics, viskores::Float64& ssim) const
+  VISKORES_EXEC void Finalize(const SSIMStatistics& statistics, viskores::Float64& ssim) const
   {
     if (statistics.Weight <= 0)
     {
@@ -162,6 +153,7 @@ struct SSIMFinalize : public viskores::worklet::WorkletMapField
     ssim = (luminance * contrastStructure) / denominator;
   }
 
+  viskores::IdComponent PatchRadius;
   viskores::Float64 DynamicRange;
   viskores::Float64 K1;
   viskores::Float64 K2;
@@ -189,10 +181,7 @@ struct WeightWorklet : public viskores::worklet::WorkletMapField
 
   using ControlSignature = void(FieldInOut);
 
-  VISKORES_EXEC void operator()(viskores::Float64& value) const
-  {
-    value *= this->Weight;
-  }
+  VISKORES_EXEC void operator()(viskores::Float64& value) const { value *= this->Weight; }
 
   viskores::Float64 Weight;
 };
@@ -291,15 +280,12 @@ void InvokeSSIMNeighborhood(const viskores::cont::UnknownCellSet& inputCellSet,
   const viskores::IdComponent numberOfComponents = primary.GetNumberOfComponents();
   for (viskores::IdComponent component = 0; component < numberOfComponents; ++component)
   {
-    viskores::cont::ArrayHandle<SSIMStatistics> componentStatistics;
-    invoke(SSIMComponentNeighborhood(patchRadius),
+    viskores::cont::ArrayHandle<viskores::Float64> componentSSIM;
+    invoke(SSIMComponentNeighborhood(patchRadius, dynamicRange, k1, k2),
            inputCellSet,
            primary.GetComponentArray(component),
            secondary.GetComponentArray(component),
-           componentStatistics);
-
-    viskores::cont::ArrayHandle<viskores::Float64> componentSSIM;
-    invoke(SSIMFinalize(dynamicRange, k1, k2), componentStatistics, componentSSIM);
+           componentSSIM);
 
     if (component == 0)
     {
