@@ -42,18 +42,6 @@ struct SSIMStatistics
     this->SumProduct += primary * secondary * weight;
     this->Weight += weight;
   }
-
-  VISKORES_EXEC_CONT SSIMStatistics operator+(const SSIMStatistics& rhs) const
-  {
-    SSIMStatistics result;
-    result.SumPrimary = this->SumPrimary + rhs.SumPrimary;
-    result.SumSecondary = this->SumSecondary + rhs.SumSecondary;
-    result.SumPrimarySquared = this->SumPrimarySquared + rhs.SumPrimarySquared;
-    result.SumSecondarySquared = this->SumSecondarySquared + rhs.SumSecondarySquared;
-    result.SumProduct = this->SumProduct + rhs.SumProduct;
-    result.Weight = this->Weight + rhs.Weight;
-    return result;
-  }
 };
 
 class SSIMComponentNeighborhood : public viskores::worklet::WorkletPointNeighborhood
@@ -114,22 +102,8 @@ private:
   viskores::IdComponent PatchRadius;
 };
 
-class SSIMStatisticsAdd : public viskores::worklet::WorkletMapField
+struct SSIMFinalize : public viskores::worklet::WorkletMapField
 {
-public:
-  using ControlSignature = void(FieldInOut, FieldIn);
-  using ExecutionSignature = void(_1, _2);
-  using InputDomain = _1;
-
-  VISKORES_EXEC void operator()(SSIMStatistics& accumulation, const SSIMStatistics& newvalue) const
-  {
-    accumulation = accumulation + newvalue;
-  }
-};
-
-class SSIMFinalize : public viskores::worklet::WorkletMapField
-{
-public:
   using ControlSignature = void(FieldIn, FieldOut);
   using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
@@ -191,6 +165,36 @@ public:
   viskores::Float64 DynamicRange;
   viskores::Float64 K1;
   viskores::Float64 K2;
+};
+
+struct AccumulateWorklet : public viskores::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldInOut, FieldIn);
+  using ExecutionSignature = void(_1, _2);
+  using InputDomain = _1;
+
+  VISKORES_EXEC void operator()(viskores::Float64& accumulation,
+                                const viskores::Float64& newvalue) const
+  {
+    accumulation = accumulation + newvalue;
+  }
+};
+
+struct WeightWorklet : public viskores::worklet::WorkletMapField
+{
+  WeightWorklet(viskores::Float64 weight)
+    : Weight(weight)
+  {
+  }
+
+  using ControlSignature = void(FieldInOut);
+
+  VISKORES_EXEC void operator()(viskores::Float64& value) const
+  {
+    value *= this->Weight;
+  }
+
+  viskores::Float64 Weight;
 };
 
 void IncludeFieldRange(const viskores::cont::Field& field, viskores::Range& fullRange)
@@ -284,7 +288,6 @@ void InvokeSSIMNeighborhood(const viskores::cont::UnknownCellSet& inputCellSet,
 {
   viskores::cont::Invoker invoke;
 
-  viskores::cont::ArrayHandle<SSIMStatistics> statistics;
   const viskores::IdComponent numberOfComponents = primary.GetNumberOfComponents();
   for (viskores::IdComponent component = 0; component < numberOfComponents; ++component)
   {
@@ -295,17 +298,24 @@ void InvokeSSIMNeighborhood(const viskores::cont::UnknownCellSet& inputCellSet,
            secondary.GetComponentArray(component),
            componentStatistics);
 
+    viskores::cont::ArrayHandle<viskores::Float64> componentSSIM;
+    invoke(SSIMFinalize(dynamicRange, k1, k2), componentStatistics, componentSSIM);
+
     if (component == 0)
     {
-      statistics = componentStatistics;
+      output = componentSSIM;
     }
     else
     {
-      invoke(SSIMStatisticsAdd{}, statistics, componentStatistics);
+      invoke(AccumulateWorklet{}, output, componentSSIM);
     }
   }
 
-  invoke(SSIMFinalize(dynamicRange, k1, k2), statistics, output);
+  if (numberOfComponents > 1)
+  {
+    viskores::Float64 weight = 1.0 / static_cast<viskores::Float64>(numberOfComponents);
+    invoke(WeightWorklet{ weight }, output);
+  }
 }
 
 viskores::cont::ArrayHandle<viskores::Float64> ComputeSSIMArray(
