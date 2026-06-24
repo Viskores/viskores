@@ -18,7 +18,7 @@
 
 #include <viskores/cont/EnvironmentTracker.h>
 #include <viskores/cont/ErrorFilterExecution.h>
-#include <viskores/filter/scalar_topology/SelectTopVolumeBranchesFilter.h>
+#include <viskores/filter/scalar_topology/SelectTopVolumeBranchesDistributedFilter.h>
 #include <viskores/filter/scalar_topology/internal/SelectTopVolumeBranchesBlock.h>
 #include <viskores/filter/scalar_topology/internal/SelectTopVolumeBranchesFunctor.h>
 #include <viskores/filter/scalar_topology/internal/UpdateParentBranchFunctor.h>
@@ -43,14 +43,15 @@ namespace filter
 namespace scalar_topology
 {
 
-VISKORES_CONT viskores::cont::DataSet SelectTopVolumeBranchesFilter::DoExecute(
+VISKORES_CONT viskores::cont::DataSet SelectTopVolumeBranchesDistributedFilter::DoExecute(
   const viskores::cont::DataSet&)
 {
   throw viskores::cont::ErrorFilterExecution(
-    "SelectTopVolumeBranchesFilter expects PartitionedDataSet as input.");
+    "SelectTopVolumeBranchesDistributedFilter expects PartitionedDataSet as input.");
 }
 
-VISKORES_CONT viskores::cont::PartitionedDataSet SelectTopVolumeBranchesFilter::DoExecutePartitions(
+VISKORES_CONT viskores::cont::PartitionedDataSet
+SelectTopVolumeBranchesDistributedFilter::DoExecutePartitions(
   const viskores::cont::PartitionedDataSet& input)
 {
   viskores::cont::Timer timer;

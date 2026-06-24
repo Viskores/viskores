@@ -63,6 +63,7 @@
 
 #include <viskores/Types.h>
 #include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/Logging.h>
 
 #include <viskores/filter/Filter.h>
 #include <viskores/filter/scalar_topology/viskores_filter_scalar_topology_export.h>
@@ -89,6 +90,15 @@ namespace filter
 {
 namespace scalar_topology
 {
+
+/// Augmentation level for ContourTreeAugmented.
+enum class AugmentationType : unsigned int
+{
+  NoAugmentation = 0,      ///< No augmentation; only supernodes and superarcs are computed.
+  FullAugmentation = 1,    ///< Full augmentation; all regular mesh vertices are added.
+  BoundaryAugmentation = 2 ///< Boundary-only augmentation (multi-block efficiency optimization).
+};
+
 /// \brief Construct the Contour Tree for a 2D or 3D regular mesh
 ///
 /// This filter implements the parallel peak pruning algorithm. In contrast to
@@ -107,90 +117,122 @@ namespace scalar_topology
 class VISKORES_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeAugmented : public viskores::filter::Filter
 {
 public:
-  VISKORES_CONT bool CanThread() const override
-  {
-    // shared helper object MultiBlockTreeHelper.
-    // TODO: need further investigation.
-    return false;
-  }
+  VISKORES_CONT bool CanThread() const override { return false; }
 
-  ///
-  /// Create the contour tree filter
-  /// @param[in] useMarchingCubes Boolean indicating whether marching cubes (true) or freudenthal (false)
-  ///                             connectivity should be used. Valid only for 3D input data. Default is false.
-  /// @param[in] computeRegularStructure  Unsigned int indicating whether the tree should be augmented.
-  ///                             0=no augmentation, 1=full augmentation, 2=boundary augmentation. The
-  ///                             latter option (=2) is mainly relevant for multi-block input data to
-  ///                             improve efficiency by considering only boundary vertices during the
-  ///                             merging of data blocks.
-  ///
-  VISKORES_CONT
-  explicit ContourTreeAugmented(bool useMarchingCubes = false,
-                                unsigned int computeRegularStructure = 1);
+  VISKORES_CONT ContourTreeAugmented();
 
   // Required for incomplete type MultiBlockContourTreeHelper
   ContourTreeAugmented(ContourTreeAugmented&& src);
   ~ContourTreeAugmented();
 
-  ///
-  /// Define the spatial decomposition of the data in case we run in parallel with a multi-block dataset
-  ///
-  /// Note: Only used when running on a multi-block dataset.
-  /// @param[in] blocksPerDim  Number of data blocks used in each data dimension
-  /// @param[in] localBlockIndices  Array with the (x,y,z) index of each local data block with
-  ///                               with respect to blocksPerDim
-  VISKORES_CONT
-  void SetBlockIndices(viskores::Id3 blocksPerDim,
-                       const viskores::cont::ArrayHandle<viskores::Id3>& localBlockIndices);
+  /// @deprecated Use the default constructor and SetUseMarchingCubes / SetComputeRegularStructure.
+  [[deprecated(
+    "Use default constructor + SetUseMarchingCubes / "
+    "SetComputeRegularStructure")]] VISKORES_CONT explicit ContourTreeAugmented(bool
+                                                                                  useMarchingCubes,
+                                                                                unsigned int
+                                                                                  computeRegularStructure =
+                                                                                    1);
 
-  ///@{
-  /// Get the contour tree computed by the filter
-  const viskores::worklet::contourtree_augmented::ContourTree& GetContourTree() const;
-  /// Get the sort order for the mesh vertices
-  const viskores::worklet::contourtree_augmented::IdArrayType& GetSortOrder() const;
-  /// Get the number of iterations used to compute the contour tree
-  viskores::Id GetNumIterations() const;
-  ///@}
+  VISKORES_CONT void SetUseMarchingCubes(bool v) { this->UseMarchingCubes = v; }
+  VISKORES_CONT bool GetUseMarchingCubes() const { return this->UseMarchingCubes; }
+
+  VISKORES_CONT void SetAugmentTree(AugmentationType v)
+  {
+    this->AugmentTree = static_cast<unsigned int>(v);
+  }
+  VISKORES_CONT AugmentationType GetAugmentTree() const
+  {
+    return static_cast<AugmentationType>(this->AugmentTree);
+  }
+
+  /// @deprecated Use SetAugmentTree(AugmentationType).
+  [[deprecated("Use SetAugmentTree(AugmentationType)")]] VISKORES_CONT void
+  SetComputeRegularStructure(unsigned int v)
+  {
+    this->AugmentTree = v;
+  }
+  /// @deprecated Use GetAugmentTree().
+  [[deprecated("Use GetAugmentTree()")]] VISKORES_CONT unsigned int GetComputeRegularStructure()
+    const
+  {
+    return this->AugmentTree;
+  }
+
+  /// Enable/disable volume-based branch decomposition output.
+  /// When enabled, writes "WhichBranch", "BranchMinimum", "BranchMaximum", "BranchSaddle",
+  /// and "BranchParent" arrays to the output DataSet.
+  /// Requires FullAugmentation. If branch decomposition is enabled but AugmentTree is not
+  /// FullAugmentation, AugmentTree is automatically set to FullAugmentation and a warning
+  /// is logged.
+  VISKORES_CONT void SetComputeBranchDecomposition(bool v)
+  {
+    this->ComputeBranchDecompositionFlag = v;
+    if (v && this->AugmentTree != static_cast<unsigned int>(AugmentationType::FullAugmentation))
+    {
+      VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                     "SetComputeBranchDecomposition(true) requires FullAugmentation; "
+                     "AugmentTree has been set to FullAugmentation.");
+      this->AugmentTree = static_cast<unsigned int>(AugmentationType::FullAugmentation);
+    }
+  }
+  VISKORES_CONT bool GetComputeBranchDecomposition() const
+  {
+    return this->ComputeBranchDecompositionFlag;
+  }
+
+  /// Returns a formatted string with internal contour tree array sizes and hyperstructure
+  /// statistics, suitable for logging. Only valid after Execute() has been called.
+  VISKORES_CONT std::string GetContourTreeStatisticsString() const;
+
+  /// Define the spatial decomposition for multi-block datasets.
+  VISKORES_CONT void SetBlockIndices(
+    viskores::Id3 blocksPerDim,
+    const viskores::cont::ArrayHandle<viskores::Id3>& localBlockIndices);
+
+  /// @deprecated Read "Supernodes" / "Superarcs" fields from the Execute() output DataSet.
+  [[deprecated(
+    "Read 'Supernodes'/'Superarcs' fields from the Execute() output DataSet")]] const viskores::
+    worklet::contourtree_augmented::ContourTree&
+    GetContourTree() const;
+
+  /// @deprecated Sort order is now an internal detail; no longer needed by callers.
+  [[deprecated("Sort order is internal; no longer needed by callers")]] const viskores::worklet::
+    contourtree_augmented::IdArrayType&
+    GetSortOrder() const;
+
+  /// @deprecated NumIterations is an internal detail.
+  [[deprecated("NumIterations is an internal detail")]] viskores::Id GetNumIterations() const;
 
 private:
-  /// Output field "saddlePeak" wich is pairs of vertex ids indicating saddle and peak of contour
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
   VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
     const viskores::cont::PartitionedDataSet& inData) override;
 
-  ///@{
-  /// when operating on viskores::cont::MultiBlock we want to
-  /// do processing across ranks as well. Just adding pre/post handles
-  /// for the same does the trick.
   VISKORES_CONT void PreExecute(const viskores::cont::PartitionedDataSet& input);
-
   VISKORES_CONT void PostExecute(const viskores::cont::PartitionedDataSet& input,
                                  viskores::cont::PartitionedDataSet& output);
-  ///
-  /// Internal helper function that implements the actual functionality of PostExecute
-  ///
-  /// In the case we operate on viskores::cont::MultiBlock we need to merge the trees
-  /// computed on the block to compute the final contour tree.
+
   template <typename T>
   VISKORES_CONT void DoPostExecute(const viskores::cont::PartitionedDataSet& input,
                                    viskores::cont::PartitionedDataSet& output);
-  ///@}
 
-  /// Use marching cubes connectivity for computing the contour tree
-  bool UseMarchingCubes;
-  // 0=no augmentation, 1=full augmentation, 2=boundary augmentation
-  unsigned int ComputeRegularStructure;
+  /// Writes contour tree fields (and optionally branch decomposition fields) to output.
+  VISKORES_CONT void PopulateOutputDataSet(
+    const viskores::worklet::contourtree_augmented::ContourTree& ct,
+    const viskores::worklet::contourtree_augmented::IdArrayType& sortOrder,
+    viskores::Id numIterations,
+    viskores::cont::DataSet& output);
 
-  // TODO Should the additional fields below be add to the viskores::filter::ResultField and what is the best way to represent them
-  // Additional result fields not included in the viskores::filter::ResultField returned by DoExecute
+  bool UseMarchingCubes = false;
+  unsigned int AugmentTree = 1; // backing store for AugmentationType (default: FullAugmentation)
+  bool ComputeBranchDecompositionFlag = false;
 
-  /// The contour tree computed by the filter
+  // Kept to support deprecated getters during the transition period.
   viskores::worklet::contourtree_augmented::ContourTree ContourTreeData;
-  /// Number of iterations used to compute the contour tree
   viskores::Id NumIterations = 0;
-  /// Array with the sorted order of the mesh vertices
   viskores::worklet::contourtree_augmented::IdArrayType MeshSortOrder;
-  /// Helper object to help with the parallel merge when running with DIY in parallel with MulitBlock data
+
   std::unique_ptr<viskores::worklet::contourtree_distributed::MultiBlockContourTreeHelper>
     MultiBlockTreeHelper;
 };
