@@ -6,16 +6,6 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
-
 //  This code is based on the MAGIC algorithm:
 //  Athawale, T., Moreland, K., Pugmire, D., Johnson, C., Rosen, P.,
 //  Norman, M., Georgiadou, A., Entezari, A. (2025). MAGIC: Marching Cubes
@@ -82,15 +72,9 @@ public:
     viskores::Float64 pearsonCorrelation = (varX - covarXY) / (sigCX * sigYX);
 
     // Numerical roundoff under perfect correlation can push the ratio slightly
-    // outside [-1, 1]; clamp it back.
-    if (pearsonCorrelation > 1.0)
-    {
-      pearsonCorrelation = 0.99;
-    }
-    if (pearsonCorrelation < -1.0)
-    {
-      pearsonCorrelation = -0.99;
-    }
+    // outside [-1, 1]; clamp it back, staying just inside ±1 to avoid the
+    // sqrt(1 - rho^2) singularity in the correlated-Gaussian ratio formula.
+    pearsonCorrelation = viskores::Clamp(pearsonCorrelation, -0.99, 0.99);
 
     this->ComputeAlphaUncertainty(
       isovalue - muX, muY - muX, sigCX, sigYX, pearsonCorrelation, expt, crossProb, var);
