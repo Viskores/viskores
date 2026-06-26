@@ -1,0 +1,7 @@
+NAME
+  viskores_interop_python
+GROUPS
+  PythonBindings
+NO_TESTING
+DEPENDS
+  viskores_cont
