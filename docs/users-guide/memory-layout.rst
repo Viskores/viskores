@@ -174,7 +174,19 @@ Recombined Vec Arrays of Strided Components
 .. doxygenclass:: viskores::cont::ArrayHandleSOAStride
    :members:
 
-|Viskores| also contains a similar special array names :class:`viskores::cont::ArrayHandleRecombineVec`.
+You can also use the :func:`viskores::cont::make_ArrayHandleSOAStride` convenience function to build a :class:`viskores::cont::ArrayHandleSOAStride`.
+
+.. doxygenfunction:: viskores::cont::make_ArrayHandleSOAStride
+
+:class:`viskores::cont::ArrayHandleSOAStride` is a mechanism to treat arrays with different storage tags as the same type of array.
+This is done by extracting all the components of the source array and constructing a :class:`viskores::cont::ArrayHandleSOAStride` with those extracted arrays.
+:class:`viskores::cont::ArrayHandleSOAStride` can also be used to combine components from different arrays as demonstrated in the following example.
+
+.. load-example:: MakeArrayHandleSOAStride
+   :file: GuideExampleArrayHandleSOAStride.cxx
+   :caption: Building a :class:`viskores::cont::ArrayHandleSOAStride`.
+
+|Viskores| also contains a similar special array named :class:`viskores::cont::ArrayHandleRecombineVec`.
 This array is similar to :class:`viskores::cont::ArrayHandleSOAStride` except that
 the number of components can be specified at runtime.
 This is useful when you know little or nothing about the value type and storage type but comes with limitations in its use.
