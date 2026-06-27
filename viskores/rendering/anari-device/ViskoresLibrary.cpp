@@ -11,6 +11,7 @@
 #include "ViskoresDevice.h"
 #include "anari/backend/LibraryImpl.h"
 #include "anari_library_viskores_export.h"
+#include "anari_library_viskores_queries.h"
 
 #include <viskores/cont/Initialize.h>
 
@@ -45,7 +46,7 @@ ANARIDevice ViskoresLibrary::newDevice(const char* /*subtype*/)
 
 const char** ViskoresLibrary::getDeviceExtensions(const char* /*deviceType*/)
 {
-  return nullptr;
+  return query_extensions();
 }
 
 } // namespace viskores_device
