@@ -20,3 +20,5 @@ set(headers
     FiberUncertainUniform.h
   )
 viskores_declare_headers(${headers})
+
+add_subdirectory(gaussian)

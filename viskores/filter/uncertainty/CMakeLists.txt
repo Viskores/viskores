@@ -17,12 +17,16 @@
 ##============================================================================
 
 set(uncertainty_headers
+  ContourUncertainGaussianCorrelated.h
+  ContourUncertainGaussianIndependent.h
   ContourUncertainUniform.h
   ContourUncertainUniformMonteCarlo.h
   FiberUncertainUniform.h
   )
 
 set(uncertainty_sources_device
+  ContourUncertainGaussianCorrelated.cxx
+  ContourUncertainGaussianIndependent.cxx
   ContourUncertainUniform.cxx
   ContourUncertainUniformMonteCarlo.cxx
   FiberUncertainUniform.cxx
