@@ -71,6 +71,8 @@ void TestRGBToLabFromBytes()
   filter.SetActiveField("rgb", viskores::cont::Field::Association::Points);
   filter.SetOutputFieldName("lab");
 
+  filter.SetIgnoreAlpha(false);
+
   ValidateLabField(
     filter.Execute(dataSet), "lab", viskores::cont::Field::Association::Points, expected);
 }
@@ -96,10 +98,45 @@ void TestRGBToLabFromFloats()
     filter.Execute(dataSet), "rgb_lab", viskores::cont::Field::Association::Cells, expected);
 }
 
+void TestRGBToLabWithAlpha()
+{
+  std::cout << "Check handling of alpha channel" << std::endl;
+
+  std::vector<viskores::Vec4ui_8> rgba = { { 0, 0, 0, 0 },     { 255, 255, 255, 255 },
+                                           { 255, 0, 0, 255 }, { 0, 255, 0, 255 },
+                                           { 0, 0, 255, 255 }, { 128, 128, 128, 255 } };
+  std::vector<viskores::Vec3f> expected = ExpectedLabColors;
+  expected.push_back({ 53.585016f, 0.0f, 0.0f });
+
+  viskores::cont::DataSet dataSet;
+  dataSet.AddCellField("rgba", rgba);
+
+  viskores::filter::field_transform::RGBToLab filter;
+  filter.SetActiveField("rgba", viskores::cont::Field::Association::Cells);
+  filter.SetOutputFieldName("lab");
+
+  std::cout << "  by default, ignore alpha channel" << std::endl;
+  ValidateLabField(
+    filter.Execute(dataSet), "lab", viskores::cont::Field::Association::Cells, expected);
+
+  std::cout << "  unignored alpha should raise exception" << std::endl;
+  filter.SetIgnoreAlpha(false);
+  try
+  {
+    filter.Execute(dataSet);
+    VISKORES_TEST_FAIL("Filter did not throw exception when not ignoring alpha.");
+  }
+  catch (viskores::cont::ErrorBadType error)
+  {
+    std::cout << "  properly caught exception" << std::endl;
+  }
+}
+
 void TestRGBToLab()
 {
   TestRGBToLabFromBytes();
   TestRGBToLabFromFloats();
+  TestRGBToLabWithAlpha();
 }
 
 } // anonymous namespace

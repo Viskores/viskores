@@ -20,11 +20,30 @@
 #include <viskores/Math.h>
 #include <viskores/StaticAssert.h>
 #include <viskores/TypeTraits.h>
+#include <viskores/cont/ArrayHandleSwizzle.h>
 #include <viskores/filter/field_transform/RGBToLab.h>
 #include <viskores/worklet/WorkletMapField.h>
 
 namespace
 {
+
+template <typename T, typename S>
+VISKORES_CONT viskores::cont::ArrayHandle<viskores::Vec<T, 3>, S> HandleAlpha(
+  const viskores::cont::ArrayHandle<viskores::Vec<T, 3>, S>& array,
+  bool viskoresNotUsed(ignoreAlpha))
+{
+  return array;
+}
+
+template <typename T, typename S>
+auto HandleAlpha(const viskores::cont::ArrayHandle<viskores::Vec<T, 4>, S>& array, bool ignoreAlpha)
+{
+  if (!ignoreAlpha)
+  {
+    throw viskores::cont::ErrorBadType("Attempted to convert RGBA to Lab without ignoring alpha.");
+  }
+  return viskores::cont::make_ArrayHandleSwizzle(array, 0, 1, 2);
+}
 
 class RGBToLabWorklet : public viskores::worklet::WorkletMapField
 {
@@ -111,7 +130,12 @@ namespace field_transform
 
 VISKORES_CONT viskores::cont::DataSet RGBToLab::DoExecute(const viskores::cont::DataSet& inDataSet)
 {
-  using RGBFieldTypes = viskores::List<viskores::Vec3ui_8, viskores::Vec3f_32, viskores::Vec3f_64>;
+  using RGBFieldTypes = viskores::List<viskores::Vec3ui_8,
+                                       viskores::Vec3f_32,
+                                       viskores::Vec3f_64,
+                                       viskores::Vec4ui_8,
+                                       viskores::Vec4f_32,
+                                       viskores::Vec4f_64>;
 
   const auto& inField = this->GetFieldFromDataSet(inDataSet);
   viskores::cont::UnknownArrayHandle outArray;
@@ -119,7 +143,7 @@ VISKORES_CONT viskores::cont::DataSet RGBToLab::DoExecute(const viskores::cont::
   auto resolveType = [&](const auto& concrete)
   {
     viskores::cont::ArrayHandle<viskores::Vec3f> result;
-    this->Invoke(RGBToLabWorklet{}, concrete, result);
+    this->Invoke(RGBToLabWorklet{}, HandleAlpha(concrete, this->IgnoreAlpha), result);
     outArray = result;
   };
   inField.GetData().CastAndCallForTypes<RGBFieldTypes, VISKORES_DEFAULT_STORAGE_LIST>(resolveType);

@@ -31,8 +31,24 @@ namespace field_transform
 ///
 class VISKORES_FILTER_FIELD_TRANSFORM_EXPORT RGBToLab : public viskores::filter::Filter
 {
+public:
+  /// @brief Specify whether this filter should ignore the alpha channel.
+  ///
+  /// If this option is set to true (the default), then when this filter operates
+  /// on a 4-component field, the 4th component is treated as an alpha channel
+  /// and ignored. That is the alpha channel is ignored and the resulting field
+  /// has the standard 3 Lab components. If this option is set to false and a
+  /// field with 4 components is provided, a `viskores::cont::ErrorBadType` is
+  /// thrown.
+  void SetIgnoreAlpha(bool flag) { this->IgnoreAlpha = flag; }
+
+  /// @copydoc SetIgnoreAlpha
+  bool GetIgnoreAlpha() const { return this->IgnoreAlpha; }
+
 private:
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
+
+  bool IgnoreAlpha = true;
 };
 
 } // namespace field_transform
