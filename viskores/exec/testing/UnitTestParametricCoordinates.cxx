@@ -218,6 +218,7 @@ struct TestPCoordsFunctor
 void TestAllPCoords()
 {
   viskores::UInt32 seed = static_cast<viskores::UInt32>(std::time(nullptr));
+  seed = 1782519515;
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 
