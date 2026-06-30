@@ -11,9 +11,18 @@
 #include <viskores/interop/python/ArrayHandleToNumPy.h>
 #include <viskores/interop/python/NumPyToArrayHandle.h>
 
+#include <viskores/cont/ArrayHandleRuntimeVec.h>
+#include <viskores/cont/CoordinateSystem.h>
+#include <viskores/cont/DataSet.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/Field.h>
 #include <viskores/cont/UnknownArrayHandle.h>
 
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
+
 #include <string>
+#include <vector>
 
 namespace vip = viskores::interop::python;
 
@@ -27,6 +36,91 @@ std::string UnknownArrayHandleRepr(const viskores::cont::UnknownArrayHandle& sel
   return "viskores.cont.UnknownArrayHandle(values=" +
     std::to_string(self.GetNumberOfValues()) +
     ", components=" + std::to_string(self.GetNumberOfComponentsFlat()) + ")";
+}
+
+// -------------------------------------------------------------------
+// DESIGN QUESTION FOR REVIEW: RuntimeVec vs ArrayHandleBasic<Vec<T,N>>
+// for Python-supplied coordinate arrays.
+//
+// PR #308 established (at Ken's explicit request) that ArrayFromNumPyVectorArray
+// produces ArrayHandleRuntimeVec<ComponentType> for 2D NumPy inputs. This is
+// clean for UnknownArrayHandle interop: one owner class handles all component
+// counts without needing a switch on N.
+//
+// However, CoordinateSystem::GetData() returns:
+//   UncertainArrayHandle<TypeListFieldVec3, VISKORES_DEFAULT_STORAGE_LIST>
+// where VISKORES_DEFAULT_STORAGE_LIST == StorageListCommon, which does NOT include
+// StorageTagRuntimeVec. This means a Python-supplied coordinate array stored as
+// ArrayHandleRuntimeVec will silently fail to dispatch in any filter that calls
+// CastAndCall on coordinate data via CoordinateSystem::GetData().
+//
+// This binding works around that by copying RuntimeVec<Float32/Float64>(3) to
+// ArrayHandle<Vec3f_32/Vec3f_64> before passing to the CoordinateSystem constructor.
+// Is this the right fix? Alternatives we see:
+//   (a) Change ArrayFromNumPyVectorArray to produce ArrayHandleBasic<Vec<T,N>>
+//       for N=2,3,4, reverting the PR #308 RuntimeVec decision for fixed-N arrays.
+//   (b) Keep this copy here and accept that Python-supplied coordinates always
+//       incur one host copy when building a CoordinateSystem.
+//   (c) Add StorageTagRuntimeVec to StorageListCommon (or provide a RuntimeVec-aware
+//       UncertainArrayHandle alias) so filters dispatch through it without copies.
+// -------------------------------------------------------------------
+template <typename ComponentType, viskores::IdComponent N>
+viskores::cont::ArrayHandle<viskores::Vec<ComponentType, N>>
+CopyRuntimeVecToFixedVec(const viskores::cont::ArrayHandleRuntimeVec<ComponentType>& rv)
+{
+  viskores::cont::ArrayHandle<viskores::Vec<ComponentType, N>> dest;
+  dest.Allocate(rv.GetNumberOfValues());
+  auto srcPortal = rv.ReadPortal();
+  auto destPortal = dest.WritePortal();
+  for (viskores::Id i = 0; i < rv.GetNumberOfValues(); ++i)
+  {
+    auto v = srcPortal.Get(i);
+    viskores::Vec<ComponentType, N> vec;
+    for (viskores::IdComponent c = 0; c < N; ++c)
+    {
+      vec[c] = v[c];
+    }
+    destPortal.Set(i, vec);
+  }
+  return dest;
+}
+
+// Convert a Python-supplied UnknownArrayHandle to storage compatible with
+// CoordinateSystem filter dispatch. See the design question comment above.
+viskores::cont::UnknownArrayHandle ToCoordinateCompatibleArray(
+  const viskores::cont::UnknownArrayHandle& input)
+{
+  const viskores::IdComponent nComp = input.GetNumberOfComponentsFlat();
+  if (nComp != 3)
+  {
+    return input;
+  }
+
+  {
+    using RV = viskores::cont::ArrayHandleRuntimeVec<viskores::Float32>;
+    if (input.CanConvert<RV>())
+    {
+      RV rv;
+      input.AsArrayHandle(rv);
+      if (rv.GetNumberOfComponents() == 3)
+      {
+        return CopyRuntimeVecToFixedVec<viskores::Float32, 3>(rv);
+      }
+    }
+  }
+  {
+    using RV = viskores::cont::ArrayHandleRuntimeVec<viskores::Float64>;
+    if (input.CanConvert<RV>())
+    {
+      RV rv;
+      input.AsArrayHandle(rv);
+      if (rv.GetNumberOfComponents() == 3)
+      {
+        return CopyRuntimeVecToFixedVec<viskores::Float64, 3>(rv);
+      }
+    }
+  }
+  return input;
 }
 
 } // namespace
@@ -72,6 +166,160 @@ void BindCont(nb::module_& m)
         nb::arg("array"),
         "Return a read-only NumPy view of a Viskores UnknownArrayHandle.\n"
         "Equivalent to array.asnumpy().");
+
+  // Field::Association enum
+  nb::enum_<viskores::cont::Field::Association>(m, "FieldAssociation")
+    .value("Any", viskores::cont::Field::Association::Any)
+    .value("WholeDataSet", viskores::cont::Field::Association::WholeDataSet)
+    .value("Points", viskores::cont::Field::Association::Points)
+    .value("Cells", viskores::cont::Field::Association::Cells)
+    .value("Partitions", viskores::cont::Field::Association::Partitions)
+    .value("Global", viskores::cont::Field::Association::Global)
+    .export_values();
+
+  nb::class_<viskores::cont::Field>(m, "Field")
+    .def(nb::init<std::string, viskores::cont::Field::Association,
+                  const viskores::cont::UnknownArrayHandle&>(),
+         nb::arg("name"),
+         nb::arg("association"),
+         nb::arg("data"),
+         "Construct a Field from a name, association, and UnknownArrayHandle.")
+    .def("GetName", &viskores::cont::Field::GetName, "Field name.")
+    .def("GetAssociation",
+         &viskores::cont::Field::GetAssociation,
+         "Field association (Points, Cells, etc.).")
+    .def("GetNumberOfValues",
+         &viskores::cont::Field::GetNumberOfValues,
+         "Number of tuples in the field array.")
+    .def("GetData",
+         [](const viskores::cont::Field& self) { return self.GetData(); },
+         "Return the field data as an UnknownArrayHandle.")
+    .def("asnumpy",
+         [](const viskores::cont::Field& self)
+         { return vip::ArrayHandleToNumPy(self.GetData()); },
+         "Return a read-only NumPy view of the field data.");
+
+  nb::class_<viskores::cont::CoordinateSystem, viskores::cont::Field>(m, "CoordinateSystem")
+    .def(nb::init<>())
+    .def("__init__",
+         [](viskores::cont::CoordinateSystem* self,
+            const std::string& name,
+            const viskores::cont::UnknownArrayHandle& data) {
+           new (self) viskores::cont::CoordinateSystem(name, ToCoordinateCompatibleArray(data));
+         },
+         nb::arg("name"),
+         nb::arg("data"),
+         "Construct a CoordinateSystem from a name and an UnknownArrayHandle.\n"
+         "Arrays produced by array_from_numpy with 3 float32 or float64\n"
+         "components are copied to ArrayHandle<Vec3f> storage so that filters\n"
+         "can dispatch on them via CoordinateSystem::GetData().")
+    .def("GetBounds",
+         [](const viskores::cont::CoordinateSystem& self)
+         {
+           viskores::Bounds b = self.GetBounds();
+           return std::vector<double>{ b.X.Min, b.X.Max, b.Y.Min,
+                                       b.Y.Max, b.Z.Min, b.Z.Max };
+         },
+         "Return axis-aligned bounds as [xmin,xmax,ymin,ymax,zmin,zmax].");
+
+  nb::class_<viskores::cont::DataSet>(m, "DataSet")
+    .def(nb::init<>())
+    .def("GetNumberOfFields",
+         &viskores::cont::DataSet::GetNumberOfFields,
+         "Number of fields attached to this DataSet.")
+    .def("GetNumberOfPoints",
+         &viskores::cont::DataSet::GetNumberOfPoints,
+         "Number of points (vertices) in the DataSet.")
+    .def("GetNumberOfCells",
+         &viskores::cont::DataSet::GetNumberOfCells,
+         "Number of cells in the DataSet.")
+    .def("GetNumberOfCoordinateSystems",
+         &viskores::cont::DataSet::GetNumberOfCoordinateSystems,
+         "Number of coordinate systems attached to this DataSet.")
+    .def("AddField",
+         [](viskores::cont::DataSet& self, const viskores::cont::Field& field)
+         { self.AddField(field); },
+         nb::arg("field"),
+         "Add a Field object to the DataSet.")
+    .def("AddPointField",
+         [](viskores::cont::DataSet& self,
+            const std::string& name,
+            const viskores::cont::UnknownArrayHandle& data)
+         { self.AddPointField(name, data); },
+         nb::arg("name"),
+         nb::arg("data"),
+         "Add a point-associated field from an UnknownArrayHandle.")
+    .def("AddCellField",
+         [](viskores::cont::DataSet& self,
+            const std::string& name,
+            const viskores::cont::UnknownArrayHandle& data)
+         { self.AddCellField(name, data); },
+         nb::arg("name"),
+         nb::arg("data"),
+         "Add a cell-associated field from an UnknownArrayHandle.")
+    .def("HasField",
+         [](const viskores::cont::DataSet& self,
+            const std::string& name,
+            viskores::cont::Field::Association assoc)
+         { return self.HasField(name, assoc); },
+         nb::arg("name"),
+         nb::arg("association") = viskores::cont::Field::Association::Any,
+         "Return True if a field with the given name (and optional association) exists.")
+    .def("GetField",
+         [](viskores::cont::DataSet& self,
+            const std::string& name,
+            viskores::cont::Field::Association assoc) -> viskores::cont::Field&
+         { return self.GetField(name, assoc); },
+         nb::arg("name"),
+         nb::arg("association") = viskores::cont::Field::Association::Any,
+         nb::rv_policy::reference_internal,
+         "Retrieve a field by name. Throws if not found.\n"
+         "The returned Field shares storage with the DataSet; the DataSet\n"
+         "must remain alive while the Field is in use.")
+    .def("GetField",
+         [](viskores::cont::DataSet& self, viskores::Id index) -> viskores::cont::Field&
+         { return self.GetField(index); },
+         nb::arg("index"),
+         nb::rv_policy::reference_internal,
+         "Retrieve a field by index (0 to GetNumberOfFields()-1).\n"
+         "The returned Field shares storage with the DataSet.")
+    .def("AddCoordinateSystem",
+         [](viskores::cont::DataSet& self, const viskores::cont::CoordinateSystem& cs)
+         { self.AddCoordinateSystem(cs); },
+         nb::arg("coordinate_system"),
+         "Add a CoordinateSystem to the DataSet.")
+    .def("GetCoordinateSystem",
+         [](const viskores::cont::DataSet& self, viskores::Id index)
+         { return self.GetCoordinateSystem(index); },
+         nb::arg("index") = 0,
+         "Return the CoordinateSystem at the given index (default 0).");
+
+  nb::class_<viskores::cont::DataSetBuilderUniform>(m, "DataSetBuilderUniform")
+    .def_static(
+      "create",
+      [](std::vector<viskores::Id> dims) -> viskores::cont::DataSet
+      {
+        if (dims.size() == 1)
+        {
+          return viskores::cont::DataSetBuilderUniform::Create(dims[0]);
+        }
+        if (dims.size() == 2)
+        {
+          return viskores::cont::DataSetBuilderUniform::Create(
+            viskores::Id2(dims[0], dims[1]));
+        }
+        if (dims.size() == 3)
+        {
+          return viskores::cont::DataSetBuilderUniform::Create(
+            viskores::Id3(dims[0], dims[1], dims[2]));
+        }
+        throw viskores::cont::ErrorBadValue(
+          "DataSetBuilderUniform.create() requires a list of 1, 2, or 3 dimensions.");
+      },
+      nb::arg("dimensions"),
+      "Create a uniform rectilinear DataSet. Pass a list of 1, 2, or 3 integer\n"
+      "dimensions (number of points per axis). Origin is [0,0,0] and spacing\n"
+      "is [1,1,1] by default.");
 }
 
 } // namespace viskores::python::bindings
