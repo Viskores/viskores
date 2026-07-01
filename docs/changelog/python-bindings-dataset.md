@@ -11,11 +11,7 @@ build and inspect datasets from Python:
   `UnknownArrayHandle`; `.asnumpy()` is a convenience shortcut.
 
 * `viskores.cont.CoordinateSystem(name, data)` — constructs a coordinate
-  system from a name and a `UnknownArrayHandle`. Three-component float32 or
-  float64 arrays produced by `array_from_numpy` are copied to
-  `ArrayHandle<Vec3f_32>` / `ArrayHandle<Vec3f_64>` storage so that filters
-  can dispatch on them via `CoordinateSystem::GetData()`. See the design
-  question in `cont_bindings.cxx` for discussion of alternatives.
+  system from a name and a `UnknownArrayHandle`.
 
 * `viskores.cont.DataSet` — exposes `AddField`, `AddPointField`,
   `AddCellField`, `HasField`, `GetField`, `AddCoordinateSystem`,

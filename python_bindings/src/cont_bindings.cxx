@@ -11,7 +11,6 @@
 #include <viskores/interop/python/ArrayHandleToNumPy.h>
 #include <viskores/interop/python/NumPyToArrayHandle.h>
 
-#include <viskores/cont/ArrayHandleRuntimeVec.h>
 #include <viskores/cont/CoordinateSystem.h>
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
@@ -36,91 +35,6 @@ std::string UnknownArrayHandleRepr(const viskores::cont::UnknownArrayHandle& sel
   return "viskores.cont.UnknownArrayHandle(values=" +
     std::to_string(self.GetNumberOfValues()) +
     ", components=" + std::to_string(self.GetNumberOfComponentsFlat()) + ")";
-}
-
-// -------------------------------------------------------------------
-// DESIGN QUESTION FOR REVIEW: RuntimeVec vs ArrayHandleBasic<Vec<T,N>>
-// for Python-supplied coordinate arrays.
-//
-// PR #308 established (at Ken's explicit request) that ArrayFromNumPyVectorArray
-// produces ArrayHandleRuntimeVec<ComponentType> for 2D NumPy inputs. This is
-// clean for UnknownArrayHandle interop: one owner class handles all component
-// counts without needing a switch on N.
-//
-// However, CoordinateSystem::GetData() returns:
-//   UncertainArrayHandle<TypeListFieldVec3, VISKORES_DEFAULT_STORAGE_LIST>
-// where VISKORES_DEFAULT_STORAGE_LIST == StorageListCommon, which does NOT include
-// StorageTagRuntimeVec. This means a Python-supplied coordinate array stored as
-// ArrayHandleRuntimeVec will silently fail to dispatch in any filter that calls
-// CastAndCall on coordinate data via CoordinateSystem::GetData().
-//
-// This binding works around that by copying RuntimeVec<Float32/Float64>(3) to
-// ArrayHandle<Vec3f_32/Vec3f_64> before passing to the CoordinateSystem constructor.
-// Is this the right fix? Alternatives we see:
-//   (a) Change ArrayFromNumPyVectorArray to produce ArrayHandleBasic<Vec<T,N>>
-//       for N=2,3,4, reverting the PR #308 RuntimeVec decision for fixed-N arrays.
-//   (b) Keep this copy here and accept that Python-supplied coordinates always
-//       incur one host copy when building a CoordinateSystem.
-//   (c) Add StorageTagRuntimeVec to StorageListCommon (or provide a RuntimeVec-aware
-//       UncertainArrayHandle alias) so filters dispatch through it without copies.
-// -------------------------------------------------------------------
-template <typename ComponentType, viskores::IdComponent N>
-viskores::cont::ArrayHandle<viskores::Vec<ComponentType, N>>
-CopyRuntimeVecToFixedVec(const viskores::cont::ArrayHandleRuntimeVec<ComponentType>& rv)
-{
-  viskores::cont::ArrayHandle<viskores::Vec<ComponentType, N>> dest;
-  dest.Allocate(rv.GetNumberOfValues());
-  auto srcPortal = rv.ReadPortal();
-  auto destPortal = dest.WritePortal();
-  for (viskores::Id i = 0; i < rv.GetNumberOfValues(); ++i)
-  {
-    auto v = srcPortal.Get(i);
-    viskores::Vec<ComponentType, N> vec;
-    for (viskores::IdComponent c = 0; c < N; ++c)
-    {
-      vec[c] = v[c];
-    }
-    destPortal.Set(i, vec);
-  }
-  return dest;
-}
-
-// Convert a Python-supplied UnknownArrayHandle to storage compatible with
-// CoordinateSystem filter dispatch. See the design question comment above.
-viskores::cont::UnknownArrayHandle ToCoordinateCompatibleArray(
-  const viskores::cont::UnknownArrayHandle& input)
-{
-  const viskores::IdComponent nComp = input.GetNumberOfComponentsFlat();
-  if (nComp != 3)
-  {
-    return input;
-  }
-
-  {
-    using RV = viskores::cont::ArrayHandleRuntimeVec<viskores::Float32>;
-    if (input.CanConvert<RV>())
-    {
-      RV rv;
-      input.AsArrayHandle(rv);
-      if (rv.GetNumberOfComponents() == 3)
-      {
-        return CopyRuntimeVecToFixedVec<viskores::Float32, 3>(rv);
-      }
-    }
-  }
-  {
-    using RV = viskores::cont::ArrayHandleRuntimeVec<viskores::Float64>;
-    if (input.CanConvert<RV>())
-    {
-      RV rv;
-      input.AsArrayHandle(rv);
-      if (rv.GetNumberOfComponents() == 3)
-      {
-        return CopyRuntimeVecToFixedVec<viskores::Float64, 3>(rv);
-      }
-    }
-  }
-  return input;
 }
 
 } // namespace
@@ -205,14 +119,11 @@ void BindCont(nb::module_& m)
          [](viskores::cont::CoordinateSystem* self,
             const std::string& name,
             const viskores::cont::UnknownArrayHandle& data) {
-           new (self) viskores::cont::CoordinateSystem(name, ToCoordinateCompatibleArray(data));
+           new (self) viskores::cont::CoordinateSystem(name, data);
          },
          nb::arg("name"),
          nb::arg("data"),
-         "Construct a CoordinateSystem from a name and an UnknownArrayHandle.\n"
-         "Arrays produced by array_from_numpy with 3 float32 or float64\n"
-         "components are copied to ArrayHandle<Vec3f> storage so that filters\n"
-         "can dispatch on them via CoordinateSystem::GetData().")
+         "Construct a CoordinateSystem from a name and an UnknownArrayHandle.")
     .def("GetBounds",
          [](const viskores::cont::CoordinateSystem& self)
          {

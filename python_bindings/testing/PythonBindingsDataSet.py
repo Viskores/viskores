@@ -133,10 +133,6 @@ def check_dataset_has_field():
 # ----- CoordinateSystem from NumPy ------------------------------------------
 
 def check_coordinate_system_from_numpy():
-    # Build a set of explicit 3D coordinates from a float32 (N,3) NumPy array
-    # and attach them to a bare DataSet.  The binding must produce storage
-    # compatible with filter dispatch (see design-question comment in
-    # cont_bindings.cxx).
     coords = np.array([[0.0, 0.0, 0.0],
                        [1.0, 0.0, 0.0],
                        [1.0, 1.0, 0.0],
@@ -164,6 +160,26 @@ def check_coordinate_system_from_numpy_float64():
     assert bounds[4] == 0.0 and bounds[5] == 4.0
 
 
+def check_coordinate_system_asnumpy_roundtrip_float32():
+    coords = np.array([[0.0, 0.0, 0.0],
+                       [1.0, 2.0, 3.0],
+                       [4.0, 5.0, 6.0]], dtype=np.float32)
+    unknown = viskores.cont.array_from_numpy(coords, allow_copy=True)
+    cs = viskores.cont.CoordinateSystem("pts", unknown)
+    result = cs.asnumpy()
+    np.testing.assert_array_almost_equal(result, coords)
+
+
+def check_coordinate_system_asnumpy_roundtrip_float64():
+    coords = np.array([[0.0, 0.0, 0.0],
+                       [1.0, 2.0, 3.0],
+                       [4.0, 5.0, 6.0]], dtype=np.float64)
+    unknown = viskores.cont.array_from_numpy(coords, allow_copy=True)
+    cs = viskores.cont.CoordinateSystem("pts", unknown)
+    result = cs.asnumpy()
+    np.testing.assert_array_almost_equal(result, coords)
+
+
 def main():
     check_field_association_values()
     check_field_construction()
@@ -180,6 +196,9 @@ def main():
 
     check_coordinate_system_from_numpy()
     check_coordinate_system_from_numpy_float64()
+
+    check_coordinate_system_asnumpy_roundtrip_float32()
+    check_coordinate_system_asnumpy_roundtrip_float64()
 
 
 if __name__ == "__main__":
