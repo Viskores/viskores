@@ -64,6 +64,9 @@ foreach(option IN LISTS options)
   elseif(anari STREQUAL option)
     set(Viskores_ENABLE_ANARI "ON" CACHE STRING "")
 
+  elseif(python STREQUAL option)
+    set(Viskores_ENABLE_PYTHON_BINDINGS "ON" CACHE STRING "")
+
   elseif(no_testing STREQUAL option)
     set(Viskores_ENABLE_TESTING "OFF" CACHE STRING "")
     set(Viskores_ENABLE_TESTING_LIBRARY "OFF" CACHE STRING "")
