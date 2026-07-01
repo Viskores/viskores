@@ -67,7 +67,7 @@ ctest_test(APPEND
   ${repeat_args}
   ${junit_args}
   )
-  message(STATUS "ctest_test RETURN_VALUE: ${test_result}")
+message(STATUS "ctest_test RETURN_VALUE: ${test_result}")
 
 if(Viskores_ENABLE_PERFORMANCE_TESTING)
   file(GLOB note_files
