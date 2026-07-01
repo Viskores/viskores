@@ -54,7 +54,6 @@ set(sources
   ImageReaderPNG.cxx
   ImageReaderPNM.cxx
   ImageUtils.cxx
-  ImageWriterBase.cxx
   ImageWriterPNG.cxx
   ImageWriterPNM.cxx
   PixelTypes.cxx
@@ -67,6 +66,10 @@ set(sources
   VTKStructuredPointsReader.cxx
   VTKUnstructuredGridReader.cxx
   VTKVisItFileReader.cxx
+  )
+
+set(device_sources
+  ImageWriterBase.cxx
   )
 
 if (Viskores_ENABLE_HDF5_IO)
