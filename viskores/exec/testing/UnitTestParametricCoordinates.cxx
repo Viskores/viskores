@@ -134,7 +134,9 @@ void TestPCoordsSample(const PointWCoordsType& pointWCoords, CellShapeTag shape)
       pcoords = pcoords + weight * pointPcoords;
       totalWeight += weight;
     }
+    std::cout << "Total weight: " << totalWeight << std::endl;
     pcoords = (1 / totalWeight) * pcoords;
+    std::cout << "Test pcoords: " << pcoords << std::endl;
 
     // If you convert to world coordinates and back, you should get the
     // same value.
@@ -153,7 +155,15 @@ void TestPCoordsSample(const PointWCoordsType& pointWCoords, CellShapeTag shape)
 template <typename PointWCoordsType, typename CellShellTag>
 static void TestPCoords(const PointWCoordsType& pointWCoords, CellShellTag shape)
 {
+  std::cout << "... Coordinates: [ ";
+  for (viskores::IdComponent comp = 0; comp < pointWCoords.GetNumberOfComponents(); ++comp)
+  {
+    std::cout << pointWCoords[comp] << " ";
+  }
+  std::cout << "]\n";
+  std::cout << "Special" << std::endl;
   TestPCoordsSpecial(pointWCoords, shape);
+  std::cout << "Sample" << std::endl;
   TestPCoordsSample(pointWCoords, shape);
 }
 
@@ -218,6 +228,7 @@ struct TestPCoordsFunctor
 void TestAllPCoords()
 {
   viskores::UInt32 seed = static_cast<viskores::UInt32>(std::time(nullptr));
+  seed = 1782519515;
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 
