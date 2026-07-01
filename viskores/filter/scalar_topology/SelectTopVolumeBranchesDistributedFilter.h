@@ -46,24 +46,12 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //=============================================================================
-//
-//  This code is an extension of the algorithm presented in the paper:
-//  Parallel Peak Pruning for Scalable SMP Contour Tree Computation.
-//  Hamish Carr, Gunther Weber, Christopher Sewell, and James Ahrens.
-//  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
-//  (LDAV), October 2016, Baltimore, Maryland.
-//
-//  The PPP2 algorithm and software were jointly developed by
-//  Hamish Carr (University of Leeds), Gunther H. Weber (LBNL), and
-//  Oliver Ruebel (LBNL)
-//==============================================================================
 
-#ifndef viskores_filter_scalar_topology_internal_ExtractTopVolumeContoursBlock_h
-#define viskores_filter_scalar_topology_internal_ExtractTopVolumeContoursBlock_h
+#ifndef viskores_filter_scalar_topology_SelectTopVolumeBranchesDistributedFilter_h
+#define viskores_filter_scalar_topology_SelectTopVolumeBranchesDistributedFilter_h
 
-#include <viskores/cont/DataSet.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
-#include <viskores/filter/scalar_topology/worklet/select_top_volume_branches/TopVolumeBranchData.h>
+#include <viskores/filter/Filter.h>
+#include <viskores/filter/scalar_topology/viskores_filter_scalar_topology_export.h>
 
 namespace viskores
 {
@@ -71,44 +59,51 @@ namespace filter
 {
 namespace scalar_topology
 {
-namespace internal
+
+/// \brief Select top-volume branches from a distributed contour tree branch decomposition
+class VISKORES_FILTER_SCALAR_TOPOLOGY_EXPORT SelectTopVolumeBranchesDistributedFilter
+  : public viskores::filter::Filter
 {
+public:
+  VISKORES_CONT SelectTopVolumeBranchesDistributedFilter() = default;
 
-struct ExtractTopVolumeContoursBlock
-{
-  ExtractTopVolumeContoursBlock(viskores::Id localBlockNo, int globalBlockId);
+  VISKORES_CONT void SetSavedBranches(const viskores::Id& numBranches)
+  {
+    this->NumSavedBranches = numBranches;
+  }
 
-  // Block metadata
-  viskores::Id LocalBlockNo;
-  int GlobalBlockId;
+  VISKORES_CONT void SetPresimplifyThreshold(const viskores::Id& presimpThres)
+  {
+    this->PresimplifyThreshold = presimpThres;
+  }
 
-  // The data class for branch arrays (e.g., branch root global regular IDs, branch volume, etc.)
-  // we reuse the class TopVolumeBranchData that was used in SelectTopVolumeBranchesDistributedFilter,
-  // because we need more than half of the arrays in this class for contour extraction
-  TopVolumeBranchData TopVolumeData;
+  VISKORES_CONT viskores::Id GetSavedBranches() { return this->NumSavedBranches; }
+  VISKORES_CONT viskores::Id GetPresimplifyThreshold() { return this->PresimplifyThreshold; }
+  VISKORES_CONT viskores::cont::LogLevel GetTimingsLogLevel() { return this->TimingsLogLevel; }
 
-  // Isosurface output
-  viskores::cont::ArrayHandle<viskores::Vec3f_64> IsosurfaceEdgesFrom;
-  viskores::cont::ArrayHandle<viskores::Vec3f_64> IsosurfaceEdgesTo;
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesOffset;
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesLabels;
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesOrders;
-  viskores::cont::UnknownArrayHandle IsosurfaceIsoValue;
-  // this is a tricky one - it is a part of the isovalue but solely used for simulation of simplicity
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceGRIds;
+private:
+  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet&) override;
+  VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
+    const viskores::cont::PartitionedDataSet& inData) override;
 
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b) { delete static_cast<ExtractTopVolumeContoursBlock*>(b); }
+  viskores::Id NumSavedBranches = 1;
+  viskores::Id PresimplifyThreshold = 0;
+  viskores::cont::ArrayHandle<viskores::Id> BranchVolume;
+  viskores::cont::ArrayHandle<viskores::Id> BranchSaddleEpsilon;
+  viskores::cont::ArrayHandle<viskores::Id> SortedBranchByVolume;
+  viskores::cont::UnknownArrayHandle BranchSaddleIsoValue;
 
-  // extract isosurfaces on top branches by volume
-  void ExtractIsosurfaceOnSelectedBranch(const viskores::cont::DataSet& bdDataSet,
-                                         const bool isMarchingCubes,
-                                         const bool shiftIsovalueByEpsilon,
-                                         const viskores::cont::LogLevel timingsLogLevel);
+  // the parent branch for top volume branches
+  // we only care about the parent branch for top volume branches at the moment
+  // as a result, the index stored in this array follows the descending order of branch volumes
+  viskores::cont::ArrayHandle<viskores::Id> TopVolBranchParent;
+
+  /// Log level to be used for outputting timing information. Default is viskores::cont::LogLevel::Perf
+  viskores::cont::LogLevel TimingsLogLevel = viskores::cont::LogLevel::Perf;
 };
 
-} // namespace internal
 } // namespace scalar_topology
 } // namespace filter
 } // namespace viskores
-#endif
+
+#endif // viskores_filter_scalar_topology_SelectTopVolumeBranchesDistributedFilter_h

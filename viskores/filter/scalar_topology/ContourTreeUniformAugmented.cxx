@@ -61,6 +61,7 @@
 #include <viskores/filter/scalar_topology/ContourTreeUniformAugmented.h>
 #include <viskores/filter/scalar_topology/internal/ComputeBlockIndices.h>
 #include <viskores/filter/scalar_topology/worklet/ContourTreeUniformAugmented.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ProcessContourTree.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/meshtypes/ContourTreeMesh.h>
 
 // clang-format off
@@ -84,18 +85,31 @@ namespace scalar_topology
 {
 
 //-----------------------------------------------------------------------------
+ContourTreeAugmented::ContourTreeAugmented()
+  : MultiBlockTreeHelper(nullptr)
+{
+  this->SetOutputFieldName("Superparents");
+}
+
+// Deprecated constructor kept for backward compatibility
 ContourTreeAugmented::ContourTreeAugmented(bool useMarchingCubes,
                                            unsigned int computeRegularStructure)
   : UseMarchingCubes(useMarchingCubes)
-  , ComputeRegularStructure(computeRegularStructure)
+  , AugmentTree(computeRegularStructure)
   , MultiBlockTreeHelper(nullptr)
 {
-  this->SetOutputFieldName("resultData");
+  this->SetOutputFieldName("Superparents");
 }
 
 ContourTreeAugmented::ContourTreeAugmented(ContourTreeAugmented&&) = default;
 
 ContourTreeAugmented::~ContourTreeAugmented() {}
+
+std::string ContourTreeAugmented::GetContourTreeStatisticsString() const
+{
+  return this->ContourTreeData.PrintArraySizes() +
+    this->ContourTreeData.PrintHyperStructureStatistics(false);
+}
 
 void ContourTreeAugmented::SetBlockIndices(
   viskores::Id3 blocksPerDim,
@@ -128,51 +142,112 @@ viskores::Id ContourTreeAugmented::GetNumIterations() const
 }
 
 //-----------------------------------------------------------------------------
+void ContourTreeAugmented::PopulateOutputDataSet(
+  const viskores::worklet::contourtree_augmented::ContourTree& ct,
+  const viskores::worklet::contourtree_augmented::IdArrayType& sortOrder,
+  viskores::Id numIterations,
+  viskores::cont::DataSet& output)
+{
+  using IdArrayType = viskores::worklet::contourtree_augmented::IdArrayType;
+  namespace cta = viskores::worklet::contourtree_augmented;
+
+  // Supernodes in mesh vertex space: sortOrder[ct.Supernodes[i]]
+  IdArrayType supernodesInMesh;
+  viskores::cont::Algorithm::Copy(
+    viskores::cont::make_ArrayHandlePermutation(ct.Supernodes, sortOrder), supernodesInMesh);
+  output.AddField(viskores::cont::Field(
+    "Supernodes", viskores::cont::Field::Association::WholeDataSet, supernodesInMesh));
+
+  // Superarcs: destination supernode index per supernode (high bit encodes arc direction)
+  output.AddField(viskores::cont::Field(
+    "Superarcs", viskores::cont::Field::Association::WholeDataSet, ct.Superarcs));
+
+  // Superparents as a mesh-order point field: scatter ct.Superparents[sortedIdx] → meshVertex
+  if (this->AugmentTree >= 1)
+  {
+    IdArrayType superparentsInMesh;
+    superparentsInMesh.Allocate(ct.Superparents.GetNumberOfValues());
+    {
+      auto inPortal = ct.Superparents.ReadPortal();
+      auto mapPortal = sortOrder.ReadPortal();
+      auto outPortal = superparentsInMesh.WritePortal();
+      for (viskores::Id i = 0; i < inPortal.GetNumberOfValues(); ++i)
+        outPortal.Set(mapPortal.Get(i), inPortal.Get(i));
+    }
+    output.AddField(viskores::cont::Field(
+      this->GetOutputFieldName(), viskores::cont::Field::Association::Points, superparentsInMesh));
+  }
+
+  if (this->ComputeBranchDecompositionFlag && this->AugmentTree >= 1)
+  {
+    IdArrayType superarcIntrinsicWeight, superarcDependentWeight;
+    IdArrayType supernodeTransferWeight, hyperarcDependentWeight;
+    cta::ProcessContourTree::ComputeVolumeWeightsSerial(ct,
+                                                        numIterations,
+                                                        superarcIntrinsicWeight,
+                                                        superarcDependentWeight,
+                                                        supernodeTransferWeight,
+                                                        hyperarcDependentWeight);
+
+    IdArrayType whichBranch, branchMinimum, branchMaximum, branchSaddle, branchParent;
+    cta::ProcessContourTree::ComputeVolumeBranchDecompositionSerial(ct,
+                                                                    superarcDependentWeight,
+                                                                    superarcIntrinsicWeight,
+                                                                    whichBranch,
+                                                                    branchMinimum,
+                                                                    branchMaximum,
+                                                                    branchSaddle,
+                                                                    branchParent);
+
+    output.AddField(viskores::cont::Field(
+      "WhichBranch", viskores::cont::Field::Association::WholeDataSet, whichBranch));
+    output.AddField(viskores::cont::Field(
+      "BranchMinimum", viskores::cont::Field::Association::WholeDataSet, branchMinimum));
+    output.AddField(viskores::cont::Field(
+      "BranchMaximum", viskores::cont::Field::Association::WholeDataSet, branchMaximum));
+    output.AddField(viskores::cont::Field(
+      "BranchSaddle", viskores::cont::Field::Association::WholeDataSet, branchSaddle));
+    output.AddField(viskores::cont::Field(
+      "BranchParent", viskores::cont::Field::Association::WholeDataSet, branchParent));
+  }
+}
+
+//-----------------------------------------------------------------------------
 viskores::cont::DataSet ContourTreeAugmented::DoExecute(const viskores::cont::DataSet& input)
 {
   viskores::cont::Timer timer;
   timer.Start();
 
-  // Check that the field is Ok
   const auto& field = this->GetFieldFromDataSet(input);
   if (!field.IsPointField())
   {
     throw viskores::cont::ErrorFilterExecution("Point field expected.");
   }
 
-  // Use the GetPointDimensions struct defined in the header to collect the meshSize information
   viskores::Id3 meshSize;
   const auto& cells = input.GetCellSet();
   cells.CastAndCallForTypes<VISKORES_DEFAULT_CELL_SET_LIST_STRUCTURED>(
     viskores::worklet::contourtree_augmented::GetPointDimensions(), meshSize);
 
-  // TODO blockIndex needs to change if we have multiple blocks per MPI rank and DoExecute is called for multiple blocks
   std::size_t blockIndex = 0;
 
-  // Determine if and what augmentation we need to do
-  unsigned int compRegularStruct = this->ComputeRegularStructure;
-  // When running in parallel we need to at least augment with the boundary vertices
+  unsigned int compRegularStruct = this->AugmentTree;
   if (compRegularStruct == 0)
   {
     if (this->MultiBlockTreeHelper)
     {
       if (this->MultiBlockTreeHelper->GetGlobalNumberOfBlocks() > 1)
       {
-        compRegularStruct = 2; // Compute boundary augmentation
+        compRegularStruct = 2;
       }
     }
   }
 
-  // Create the result object
   viskores::cont::DataSet result;
 
-  // FIXME: reduce the size of lambda.
   auto resolveType = [&](const auto& concrete)
   {
-    using T = typename std::decay_t<decltype(concrete)>::ValueType;
-
     viskores::worklet::ContourTreeAugmented worklet;
-    // Run the worklet
     worklet.Run(concrete,
                 MultiBlockTreeHelper ? MultiBlockTreeHelper->LocalContourTrees[blockIndex]
                                      : this->ContourTreeData,
@@ -183,43 +258,13 @@ viskores::cont::DataSet ContourTreeAugmented::DoExecute(const viskores::cont::Da
                 this->UseMarchingCubes,
                 compRegularStruct);
 
-    // If we run in parallel but with only one global block, then we need set our outputs correctly
-    // here to match the expected behavior in parallel
-    if (this->MultiBlockTreeHelper)
+    // Copy input DataSet (geometry + all fields) then add contour tree fields.
+    // Multi-block cases are handled in PostExecute.
+    result = input;
+    if (!this->MultiBlockTreeHelper)
     {
-      if (this->MultiBlockTreeHelper->GetGlobalNumberOfBlocks() == 1)
-      {
-        // Copy the contour tree and mesh sort order to the output
-        this->ContourTreeData = this->MultiBlockTreeHelper->LocalContourTrees[0];
-        this->MeshSortOrder = this->MultiBlockTreeHelper->LocalSortOrders[0];
-        // In parallel we need the sorted values as output resulti
-        // Construct the sorted values by permutting the input field
-        auto fieldPermutted =
-          viskores::cont::make_ArrayHandlePermutation(this->MeshSortOrder, concrete);
-        // FIXME: can sortedValues be ArrayHandleUnknown?
-        viskores::cont::ArrayHandle<T> sortedValues;
-        viskores::cont::Algorithm::Copy(fieldPermutted, sortedValues);
-
-        // FIXME: is this the right way to create the DataSet? The original code creates an empty
-        //  DataSet without any coordinate system etc.
-        result = this->CreateResultField(input,
-                                         this->GetOutputFieldName(),
-                                         viskores::cont::Field::Association::WholeDataSet,
-                                         sortedValues);
-        //        viskores::cont::Field rfield(
-        //          this->GetOutputFieldName(), viskores::cont::Field::Association::WholeDataSet, sortedValues);
-        //        result.AddField(rfield);
-        //        return result;
-      }
-    }
-    else
-    {
-      // Construct the expected result for serial execution. Note, in serial the result currently
-      // not actually being used, but in parallel we need the sorted mesh values as output
-      // This part is being hit when we run in serial or parallel with more than one rank.
-      result =
-        this->CreateResultFieldPoint(input, this->GetOutputFieldName(), ContourTreeData.Arcs);
-      //  return CreateResultFieldPoint(input, ContourTreeData.Arcs, this->GetOutputFieldName());
+      this->PopulateOutputDataSet(
+        this->ContourTreeData, this->MeshSortOrder, this->NumIterations, result);
     }
   };
   this->CastAndCallScalarField(field, resolveType);
@@ -230,9 +275,9 @@ viskores::cont::DataSet ContourTreeAugmented::DoExecute(const viskores::cont::Da
                    << ": " << timer.GetElapsedTime() << " seconds");
 
   return result;
-} // ContourTreeAugmented::DoExecute
+}
 
-// TODO: is multiblock case ever tested?
+//-----------------------------------------------------------------------------
 VISKORES_CONT viskores::cont::PartitionedDataSet ContourTreeAugmented::DoExecutePartitions(
   const viskores::cont::PartitionedDataSet& input)
 {
@@ -261,7 +306,6 @@ VISKORES_CONT void ContourTreeAugmented::PreExecute(const viskores::cont::Partit
   }
   else
   {
-    // No block indices set -> compute information automatically later
     this->MultiBlockTreeHelper =
       std::make_unique<viskores::worklet::contourtree_distributed::MultiBlockContourTreeHelper>(
         input);
@@ -280,18 +324,14 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
 
   std::vector<viskores::worklet::contourtree_augmented::ContourTreeMesh<T>*> localContourTreeMeshes;
   localContourTreeMeshes.resize(static_cast<std::size_t>(input.GetNumberOfPartitions()));
-  // TODO need to allocate and free these ourselves. May need to update detail::MultiBlockContourTreeHelper::ComputeLocalContourTreeMesh
   std::vector<viskores::worklet::contourtree_distributed::ContourTreeBlockData<T>*> localDataBlocks;
   localDataBlocks.resize(static_cast<size_t>(input.GetNumberOfPartitions()));
-  std::vector<viskoresdiy::Link*> localLinks; // dummy links needed to make DIY happy
+  std::vector<viskoresdiy::Link*> localLinks;
   localLinks.resize(static_cast<size_t>(input.GetNumberOfPartitions()));
-  // We need to augment at least with the boundary vertices when running in parallel, even if the user requested at the end only the unaugmented contour tree
-  unsigned int compRegularStruct =
-    (this->ComputeRegularStructure > 0) ? this->ComputeRegularStructure : 2;
+  unsigned int compRegularStruct = (this->AugmentTree > 0) ? this->AugmentTree : 2;
 
   for (std::size_t bi = 0; bi < static_cast<std::size_t>(input.GetNumberOfPartitions()); bi++)
   {
-    // create the local contour tree mesh
     localLinks[bi] = new viskoresdiy::Link;
     auto currBlock = input.GetPartition(static_cast<viskores::Id>(bi));
     auto currField =
@@ -304,7 +344,6 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
       globalPointDimensions,
       globalPointIndexStart);
 
-    //const viskores::cont::ArrayHandle<T,StorageType> &fieldData = currField.GetData().Cast<viskores::cont::ArrayHandle<T,StorageType> >();
     viskores::cont::ArrayHandle<T> fieldData;
     viskores::cont::ArrayCopy(currField.GetData(), fieldData);
     auto currContourTreeMesh =
@@ -317,10 +356,8 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
                                        MultiBlockTreeHelper->LocalSortOrders[bi],
                                        compRegularStruct);
     localContourTreeMeshes[bi] = currContourTreeMesh;
-    // create the local data block structure
     localDataBlocks[bi] = new viskores::worklet::contourtree_distributed::ContourTreeBlockData<T>();
     localDataBlocks[bi]->NumVertices = currContourTreeMesh->NumVertices;
-    // localDataBlocks[bi]->SortOrder = currContourTreeMesh->SortOrder;
     localDataBlocks[bi]->SortedValue = currContourTreeMesh->SortedValues;
     localDataBlocks[bi]->GlobalMeshIndex = currContourTreeMesh->GlobalMeshIndex;
     localDataBlocks[bi]->NeighborConnectivity = currContourTreeMesh->NeighborConnectivity;
@@ -329,18 +366,11 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
     localDataBlocks[bi]->BlockOrigin = globalPointIndexStart;
     localDataBlocks[bi]->BlockSize = pointDimensions;
     localDataBlocks[bi]->GlobalSize = globalPointDimensions;
-    // We need to augment at least with the boundary vertices when running in parallel
     localDataBlocks[bi]->ComputeRegularStructure = compRegularStruct;
   }
-  // Setup viskoresdiy to do global binary reduction of neighbouring blocks. See also RecuctionOperation struct for example
 
-  // Create the viskoresdiy master
-  viskoresdiy::Master master(comm,
-                             1, // Use 1 thread, Viskores will do the treading
-                             -1 // All block in memory
-  );
+  viskoresdiy::Master master(comm, 1, -1);
 
-  // Compute the gids for our local blocks
   using RegularDecomposer = viskoresdiy::RegularDecomposer<viskoresdiy::DiscreteBounds>;
 
   RegularDecomposer::DivisionsVector diyDivisions;
@@ -369,15 +399,12 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
   int globalNumberOfBlocks =
     std::accumulate(diyDivisions.cbegin(), diyDivisions.cend(), 1, std::multiplies<int>{});
 
-  // Add my local blocks to the viskoresdiy master.
   for (std::size_t bi = 0; bi < static_cast<std::size_t>(input.GetNumberOfPartitions()); bi++)
   {
-    master.add(static_cast<int>(viskoresdiyLocalBlockGids[bi]), // block id
-               localDataBlocks[bi],
-               localLinks[bi]);
+    master.add(
+      static_cast<int>(viskoresdiyLocalBlockGids[bi]), localDataBlocks[bi], localLinks[bi]);
   }
 
-  // Define the decomposition of the domain into regular blocks
   RegularDecomposer::BoolVector shareFace(3, true);
   RegularDecomposer::BoolVector wrap(3, false);
   RegularDecomposer::CoordinateVector ghosts(3, 1);
@@ -389,7 +416,6 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
                                ghosts,
                                diyDivisions);
 
-  // Define which blocks live on which rank so that viskoresdiy can manage them
   viskoresdiy::DynamicAssigner assigner(comm, static_cast<int>(size), globalNumberOfBlocks);
   for (viskores::Id bi = 0; bi < input.GetNumberOfPartitions(); bi++)
   {
@@ -397,20 +423,13 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
                       static_cast<int>(viskoresdiyLocalBlockGids[static_cast<size_t>(bi)]));
   }
 
-  // Fix the viskoresdiy links. (NOTE: includes an MPI barrier)
   viskoresdiy::fix_links(master, assigner);
 
-  // partners for merge over regular block grid
-  viskoresdiy::RegularMergePartners partners(
-    decomposer, // domain decomposition
-    2,          // raix of k-ary reduction.
-    true        // contiguous: true=distance doubling , false=distnace halving
-  );
-  // reduction
+  viskoresdiy::RegularMergePartners partners(decomposer, 2, true);
   viskoresdiy::reduce(
     master, assigner, partners, &viskores::worklet::contourtree_distributed::MergeBlockFunctor<T>);
 
-  comm.barrier(); // Be safe!
+  comm.barrier();
 
   if (rank == 0)
   {
@@ -421,13 +440,9 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
       dummy1,
       globalPointDimensions,
       dummy2);
-    // Now run the contour tree algorithm on the last block to compute the final tree
     viskores::Id currNumIterations;
-    viskores::worklet::contourtree_augmented::ContourTree currContourTree;
     viskores::worklet::contourtree_augmented::IdArrayType currSortOrder;
     viskores::worklet::ContourTreeAugmented worklet;
-    viskores::cont::ArrayHandle<T> currField;
-    // Construct the contour tree mesh from the last block
     viskores::worklet::contourtree_augmented::ContourTreeMesh<T> contourTreeMeshOut;
     contourTreeMeshOut.NumVertices = localDataBlocks[0]->NumVertices;
     contourTreeMeshOut.SortOrder = viskores::cont::ArrayHandleIndex(contourTreeMeshOut.NumVertices);
@@ -438,7 +453,6 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
     contourTreeMeshOut.NeighborConnectivity = localDataBlocks[0]->NeighborConnectivity;
     contourTreeMeshOut.NeighborOffsets = localDataBlocks[0]->NeighborOffsets;
     contourTreeMeshOut.MaxNeighbors = localDataBlocks[0]->MaxNeighbors;
-    // Construct the mesh boundary exectuion object needed for boundary augmentation
     viskores::Id3 minIdx(0, 0, 0);
     viskores::Id3 maxIdx = globalPointDimensions;
     maxIdx[0] = maxIdx[0] - 1;
@@ -446,28 +460,36 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
     maxIdx[2] = maxIdx[2] > 0 ? (maxIdx[2] - 1) : 0;
     auto meshBoundaryExecObj =
       contourTreeMeshOut.GetMeshBoundaryExecutionObject(globalPointDimensions, minIdx, maxIdx);
-    // Run the worklet to compute the final contour tree
-    worklet.Run(
-      contourTreeMeshOut.SortedValues, // Unused param. Provide something to keep API happy
-      contourTreeMeshOut,
-      this->ContourTreeData,
-      this->MeshSortOrder,
-      currNumIterations,
-      this->ComputeRegularStructure,
-      meshBoundaryExecObj);
+    worklet.Run(contourTreeMeshOut.SortedValues,
+                contourTreeMeshOut,
+                this->ContourTreeData,
+                this->MeshSortOrder,
+                currNumIterations,
+                this->AugmentTree,
+                meshBoundaryExecObj);
 
-    // Set the final mesh sort order we need to use
     this->MeshSortOrder = contourTreeMeshOut.GlobalMeshIndex;
-    // Remeber the number of iterations for the output
     this->NumIterations = currNumIterations;
 
-    // Return the sorted values of the contour tree as the result
-    // TODO the result we return for the parallel and serial case are different right now. This should be made consistent. However, only in the parallel case are we useing the result output
     viskores::cont::DataSet temp;
-    viskores::cont::Field rfield(this->GetOutputFieldName(),
-                                 viskores::cont::Field::Association::WholeDataSet,
-                                 contourTreeMeshOut.SortedValues);
-    temp.AddField(rfield);
+    this->PopulateOutputDataSet(
+      this->ContourTreeData, this->MeshSortOrder, this->NumIterations, temp);
+
+    // Add the scalar field in mesh-vertex order so downstream callers (e.g.,
+    // SelectTopVolumeBranches) can access data values without the sort order.
+    // SortedValues[i] is the value at global mesh vertex GlobalMeshIndex[i].
+    viskores::cont::ArrayHandle<T> meshData;
+    meshData.Allocate(contourTreeMeshOut.NumVertices);
+    {
+      auto sortedPortal = contourTreeMeshOut.SortedValues.ReadPortal();
+      auto idxPortal = contourTreeMeshOut.GlobalMeshIndex.ReadPortal();
+      auto outPortal = meshData.WritePortal();
+      for (viskores::Id i = 0; i < contourTreeMeshOut.NumVertices; i++)
+        outPortal.Set(idxPortal.Get(i), sortedPortal.Get(i));
+    }
+    temp.AddField(viskores::cont::Field(
+      this->GetActiveFieldName(), viskores::cont::Field::Association::Points, meshData));
+
     output = viskores::cont::PartitionedDataSet(temp);
   }
   else
@@ -475,12 +497,10 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
     this->ContourTreeData = MultiBlockTreeHelper->LocalContourTrees[0];
     this->MeshSortOrder = MultiBlockTreeHelper->LocalSortOrders[0];
 
-    // Free allocated temporary pointers
     for (std::size_t bi = 0; bi < static_cast<std::size_t>(input.GetNumberOfPartitions()); bi++)
     {
       delete localContourTreeMeshes[bi];
       delete localDataBlocks[bi];
-      // delete localLinks[bi];
     }
   }
   localContourTreeMeshes.clear();
@@ -498,16 +518,9 @@ VISKORES_CONT void ContourTreeAugmented::PostExecute(
     viskores::cont::Timer timer;
     timer.Start();
 
-    // We are running in parallel and need to merge the contour tree in PostExecute
-    if (MultiBlockTreeHelper->GetGlobalNumberOfBlocks() == 1)
-    {
-      return;
-    }
-
     auto field =
       input.GetPartition(0).GetField(this->GetActiveFieldName(), this->GetActiveFieldAssociation());
 
-    // To infer and pass on the ValueType of the field.
     auto PostExecuteCaller = [&](const auto& concrete)
     {
       using T = typename std::decay_t<decltype(concrete)>::ValueType;

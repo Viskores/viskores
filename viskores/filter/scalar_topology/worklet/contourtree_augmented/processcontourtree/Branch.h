@@ -91,7 +91,7 @@ public:
   Branch<T>* Parent;                // Pointer to parent, or nullptr if no parent
   std::vector<Branch<T>*> Children; // List of pointers to children
 
-  // Create branch decomposition from contour tree
+  // Create branch decomposition from contour tree (sorted-space arrays + sortOrder)
   template <typename StorageType>
   static Branch<T>* ComputeBranchDecomposition(
     const IdArrayType& contourTreeSuperparents,
@@ -104,6 +104,21 @@ public:
     const IdArrayType& sortOrder,
     const viskores::cont::ArrayHandle<T, StorageType>& dataField,
     bool dataFieldIsSorted);
+
+  // Create branch decomposition when arrays are already in mesh vertex space.
+  // contourTreeSupernodes contains mesh vertex IDs directly (not sorted indices),
+  // contourTreeSuperparents is indexed by mesh vertex, and dataField is mesh-indexed.
+  // No sortOrder needed.
+  template <typename StorageType>
+  static Branch<T>* ComputeBranchDecompositionMeshSpace(
+    const IdArrayType& contourTreeSuperparents,
+    const IdArrayType& contourTreeSupernodes,
+    const IdArrayType& whichBranch,
+    const IdArrayType& branchMinimum,
+    const IdArrayType& branchMaximum,
+    const IdArrayType& branchSaddle,
+    const IdArrayType& branchParent,
+    const viskores::cont::ArrayHandle<T, StorageType>& dataField);
 
   // Simplify branch composition down to target size (i.e., consisting of targetSize branches)
   void SimplifyToSize(viskores::Id targetSize, bool usePersistenceSorter = true);
@@ -258,6 +273,99 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
 
   return root;
 } // ComputeBranchDecomposition()
+
+
+template <typename T>
+template <typename StorageType>
+Branch<T>* Branch<T>::ComputeBranchDecompositionMeshSpace(
+  const IdArrayType& contourTreeSuperparents,
+  const IdArrayType& contourTreeSupernodes,
+  const IdArrayType& whichBranch,
+  const IdArrayType& branchMinimum,
+  const IdArrayType& branchMaximum,
+  const IdArrayType& branchSaddle,
+  const IdArrayType& branchParent,
+  const viskores::cont::ArrayHandle<T, StorageType>& dataField)
+{ // ComputeBranchDecompositionMeshSpace()
+  // Same logic as ComputeBranchDecomposition, but contourTreeSupernodes already contains
+  // mesh vertex IDs (not sorted indices) and dataField is indexed by mesh vertex.
+  // The sortOrder indirections are therefore eliminated.
+  auto branchMinimumPortal = branchMinimum.ReadPortal();
+  auto branchMaximumPortal = branchMaximum.ReadPortal();
+  auto branchSaddlePortal = branchSaddle.ReadPortal();
+  auto branchParentPortal = branchParent.ReadPortal();
+  auto supernodesPortal = contourTreeSupernodes.ReadPortal();
+  auto dataFieldPortal = dataField.ReadPortal();
+  viskores::Id nBranches = branchSaddle.GetNumberOfValues();
+  std::vector<Branch<T>*> branches;
+  Branch<T>* root = nullptr;
+  branches.reserve(static_cast<std::size_t>(nBranches));
+
+  for (int branchID = 0; branchID < nBranches; ++branchID)
+    branches.push_back(new Branch<T>);
+
+  for (std::size_t branchID = 0; branchID < static_cast<std::size_t>(nBranches); ++branchID)
+  {
+    branches[branchID]->OriginalId = static_cast<viskores::Id>(branchID);
+    if (!NoSuchElement(branchSaddlePortal.Get(static_cast<viskores::Id>(branchID))))
+    {
+      // supernodesPortal already contains mesh vertex IDs — no sortOrder lookup needed
+      branches[branchID]->Saddle = supernodesPortal.Get(
+        MaskedIndex(branchSaddlePortal.Get(static_cast<viskores::Id>(branchID))));
+      viskores::Id branchMin = supernodesPortal.Get(
+        MaskedIndex(branchMinimumPortal.Get(static_cast<viskores::Id>(branchID))));
+      viskores::Id branchMax = supernodesPortal.Get(
+        MaskedIndex(branchMaximumPortal.Get(static_cast<viskores::Id>(branchID))));
+      if (branchMin < branches[branchID]->Saddle)
+        branches[branchID]->Extremum = branchMin;
+      else if (branchMax > branches[branchID]->Saddle)
+        branches[branchID]->Extremum = branchMax;
+      else
+      {
+        std::cerr << "Internal error";
+        return 0;
+      }
+    }
+    else
+    {
+      branches[branchID]->Saddle = supernodesPortal.Get(
+        MaskedIndex(branchMinimumPortal.Get(static_cast<viskores::Id>(branchID))));
+      branches[branchID]->Extremum = supernodesPortal.Get(
+        MaskedIndex(branchMaximumPortal.Get(static_cast<viskores::Id>(branchID))));
+    }
+
+    // dataField is mesh-indexed; Saddle/Extremum are already mesh vertex IDs
+    branches[branchID]->SaddleVal = dataFieldPortal.Get(branches[branchID]->Saddle);
+    branches[branchID]->ExtremumVal = dataFieldPortal.Get(branches[branchID]->Extremum);
+
+    if (NoSuchElement(branchParentPortal.Get(static_cast<viskores::Id>(branchID))))
+    {
+      root = branches[branchID];
+    }
+    else
+    {
+      branches[branchID]->Parent = branches[static_cast<size_t>(
+        MaskedIndex(branchParentPortal.Get(static_cast<viskores::Id>(branchID))))];
+      branches[branchID]->Parent->Children.push_back(branches[branchID]);
+    }
+  }
+
+  // Volume: iterate over mesh vertices (superparents is mesh-indexed here)
+  auto whichBranchPortal = whichBranch.ReadPortal();
+  auto superparentsPortal = contourTreeSuperparents.ReadPortal();
+  for (viskores::Id i = 0; i < contourTreeSuperparents.GetNumberOfValues(); i++)
+  {
+    branches[static_cast<size_t>(
+               MaskedIndex(whichBranchPortal.Get(MaskedIndex(superparentsPortal.Get(i)))))]
+      ->Volume++;
+  }
+  if (root)
+  {
+    root->removeSymbolicPerturbation();
+  }
+
+  return root;
+} // ComputeBranchDecompositionMeshSpace()
 
 
 template <typename T>

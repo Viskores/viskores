@@ -340,14 +340,6 @@ int main(int argc, char* argv[])
     printContourTree = true;
   if (parser.hasOption("--branchDecomp"))
     computeBranchDecomposition = std::stoi(parser.getOption("--branchDecomp"));
-  // We need the fully augmented tree to compute the branch decomposition
-  if (computeBranchDecomposition && (computeRegularStructure != 1))
-  {
-    VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
-                   "Regular structure is required for branch decomposition."
-                   " Disabling branch decomposition");
-    computeBranchDecomposition = false;
-  }
 
   // Iso value selection parameters
   // Approach to be used to select contours based on the tree
@@ -687,8 +679,11 @@ int main(int argc, char* argv[])
   prevTime = currTime;
 
   // Convert the mesh of values into contour tree, pairs of vertex ids
-  viskores::filter::scalar_topology::ContourTreeAugmented filter(useMarchingCubes,
-                                                                 computeRegularStructure);
+  viskores::filter::scalar_topology::ContourTreeAugmented filter;
+  filter.SetUseMarchingCubes(useMarchingCubes);
+  filter.SetAugmentTree(
+    static_cast<viskores::filter::scalar_topology::AugmentationType>(computeRegularStructure));
+  filter.SetComputeBranchDecomposition(computeBranchDecomposition);
 
 #ifdef WITH_MPI
   filter.SetBlockIndices(blocksPerDim, localBlockIndices);
@@ -698,6 +693,14 @@ int main(int argc, char* argv[])
   // Execute the contour tree analysis. NOTE: If MPI is used the result  will be
   // a viskores::cont::PartitionedDataSet instead of a viskores::cont::DataSet
   auto result = filter.Execute(useDataSet);
+
+  // Get the result DataSet (rank 0 only for MPI; always valid for non-MPI).
+#ifndef WITH_MPI
+  const viskores::cont::DataSet& resultDS = result;
+#else
+  const viskores::cont::DataSet resultDS =
+    (rank == 0) ? result.GetPartitions()[0] : viskores::cont::DataSet{};
+#endif
 
   currTime = totalTime.GetElapsedTime();
   viskores::Float64 computeContourTreeTime = currTime - prevTime;
@@ -719,129 +722,57 @@ int main(int argc, char* argv[])
 #endif
 
   ////////////////////////////////////////////
-  // Compute the branch decomposition
+  // Isovalue selection from branch decomposition
+  // (branch decomposition arrays were computed inside the filter when
+  //  SetComputeBranchDecomposition(true) was set)
   ////////////////////////////////////////////
-  if (rank == 0 && computeBranchDecomposition && computeRegularStructure)
+  if (rank == 0 && computeBranchDecomposition && numLevels > 0)
   {
-    // Time branch decompostion
-    viskores::cont::Timer branchDecompTimer;
-    branchDecompTimer.Start();
-    // compute the volume for each hyperarc and superarc
-    ctaug_ns::IdArrayType superarcIntrinsicWeight;
-    ctaug_ns::IdArrayType superarcDependentWeight;
-    ctaug_ns::IdArrayType supernodeTransferWeight;
-    ctaug_ns::IdArrayType hyperarcDependentWeight;
-    ctaug_ns::ProcessContourTree::ComputeVolumeWeightsSerial(filter.GetContourTree(),
-                                                             filter.GetNumIterations(),
-                                                             superarcIntrinsicWeight,  // (output)
-                                                             superarcDependentWeight,  // (output)
-                                                             supernodeTransferWeight,  // (output)
-                                                             hyperarcDependentWeight); // (output)
-    // Record the timings for the branch decomposition
-    std::stringstream timingsStream; // Use a string stream to log in one message
-    timingsStream << std::endl;
-    timingsStream << "    --------------- Branch Decomposition Timings " << rank
-                  << " --------------" << std::endl;
-    timingsStream << "    " << std::setw(38) << std::left << "Compute Volume Weights"
-                  << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
-    branchDecompTimer.Start();
-
-    // compute the branch decomposition by volume
-    ctaug_ns::IdArrayType whichBranch;
-    ctaug_ns::IdArrayType branchMinimum;
-    ctaug_ns::IdArrayType branchMaximum;
-    ctaug_ns::IdArrayType branchSaddle;
-    ctaug_ns::IdArrayType branchParent;
-    ctaug_ns::ProcessContourTree::ComputeVolumeBranchDecompositionSerial(filter.GetContourTree(),
-                                                                         superarcDependentWeight,
-                                                                         superarcIntrinsicWeight,
-                                                                         whichBranch,   // (output)
-                                                                         branchMinimum, // (output)
-                                                                         branchMaximum, // (output)
-                                                                         branchSaddle,  // (output)
-                                                                         branchParent); // (output)
-    // Record and log the branch decompostion timings
-    timingsStream << "    " << std::setw(38) << std::left << "Compute Volume Branch Decomposition"
-                  << ": " << branchDecompTimer.GetElapsedTime() << " seconds" << std::endl;
-    VISKORES_LOG_S(viskores::cont::LogLevel::Info, timingsStream.str());
-
-    //----main branch decompostion end
-    //----Isovalue seleciton start
-    if (numLevels > 0) // if compute isovalues
+    std::vector<ValueType> isoValues;
+    switch (contourSelectMethod)
     {
-      // Get the data values for computing the explicit branch decomposition
-      viskores::cont::ArrayHandle<ValueType> dataField;
-#ifdef WITH_MPI
-      result.GetPartitions()[0].GetField("values").GetData().AsArrayHandle(dataField);
-      bool dataFieldIsSorted = true;
-#else
-      useDataSet.GetField("values").GetData().AsArrayHandle(dataField);
-      bool dataFieldIsSorted = false;
-#endif
-
-      // create explicit representation of the branch decompostion from the array representation
-      BranchType* branchDecompostionRoot =
-        ctaug_ns::ProcessContourTree::ComputeBranchDecomposition<ValueType>(
-          filter.GetContourTree().Superparents,
-          filter.GetContourTree().Supernodes,
-          whichBranch,
-          branchMinimum,
-          branchMaximum,
-          branchSaddle,
-          branchParent,
-          filter.GetSortOrder(),
-          dataField,
-          dataFieldIsSorted);
-
-#ifdef DEBUG_PRINT
-      branchDecompostionRoot->PrintBranchDecomposition(std::cout);
-#endif
-
-      // Simplify the contour tree of the branch decompostion
-      branchDecompostionRoot->SimplifyToSize(numComp, usePersistenceSorter);
-
-      // Compute the relevant iso-values
-      std::vector<ValueType> isoValues;
-      switch (contourSelectMethod)
+      default:
+      case 0:
       {
-        default:
-        case 0:
-        {
-          branchDecompostionRoot->GetRelevantValues(static_cast<int>(contourType), eps, isoValues);
-        }
-        break;
-        case 1:
-        {
-          viskores::worklet::contourtree_augmented::process_contourtree_inc::
-            PiecewiseLinearFunction<ValueType>
-              plf;
-          branchDecompostionRoot->AccumulateIntervals(static_cast<int>(contourType), eps, plf);
-          isoValues = plf.nLargest(static_cast<unsigned int>(numLevels));
-        }
-        break;
+        isoValues = ctaug_ns::ProcessContourTree::SelectTopVolumeBranches<ValueType>(
+          resultDS, "values", numComp, static_cast<int>(contourType), eps, usePersistenceSorter);
       }
+      break;
+      case 1:
+      {
+        BranchType* branchDecompostionRoot =
+          ctaug_ns::ProcessContourTree::ComputeBranchDecompositionMeshSpace<ValueType>(resultDS,
+                                                                                       "values");
+        branchDecompostionRoot->SimplifyToSize(numComp, usePersistenceSorter);
+        viskores::worklet::contourtree_augmented::process_contourtree_inc::PiecewiseLinearFunction<
+          ValueType>
+          plf;
+        branchDecompostionRoot->AccumulateIntervals(static_cast<int>(contourType), eps, plf);
+        isoValues = plf.nLargest(static_cast<unsigned int>(numLevels));
+        delete branchDecompostionRoot;
+      }
+      break;
+    }
 
-      // Print the compute iso values
-      std::stringstream isoStream; // Use a string stream to log in one message
-      isoStream << std::endl;
-      isoStream << "    ------------------- Isovalue Suggestions --------------------" << std::endl;
-      std::sort(isoValues.begin(), isoValues.end());
-      isoStream << "    Isovalues: ";
-      for (ValueType val : isoValues)
-      {
-        isoStream << val << " ";
-      }
-      isoStream << std::endl;
-      // Unique isovalues
-      std::vector<ValueType>::iterator it = std::unique(isoValues.begin(), isoValues.end());
-      isoValues.resize(static_cast<std::size_t>(std::distance(isoValues.begin(), it)));
-      isoStream << "    Unique Isovalues (" << isoValues.size() << "):";
-      for (ValueType val : isoValues)
-      {
-        isoStream << val << " ";
-      }
-      VISKORES_LOG_S(viskores::cont::LogLevel::Info, isoStream.str());
-    } //end if compute isovalue
+    // Print the computed iso values
+    std::stringstream isoStream;
+    isoStream << std::endl;
+    isoStream << "    ------------------- Isovalue Suggestions --------------------" << std::endl;
+    std::sort(isoValues.begin(), isoValues.end());
+    isoStream << "    Isovalues: ";
+    for (ValueType val : isoValues)
+    {
+      isoStream << val << " ";
+    }
+    isoStream << std::endl;
+    std::vector<ValueType>::iterator it = std::unique(isoValues.begin(), isoValues.end());
+    isoValues.resize(static_cast<std::size_t>(std::distance(isoValues.begin(), it)));
+    isoStream << "    Unique Isovalues (" << isoValues.size() << "):";
+    for (ValueType val : isoValues)
+    {
+      isoStream << val << " ";
+    }
+    VISKORES_LOG_S(viskores::cont::LogLevel::Info, isoStream.str());
   }
 
   currTime = totalTime.GetElapsedTime();
@@ -858,8 +789,7 @@ int main(int argc, char* argv[])
     std::cout << "Contour Tree" << std::endl;
     std::cout << "============" << std::endl;
     ctaug_ns::EdgePairArray saddlePeak;
-    ctaug_ns::ProcessContourTree::CollectSortedSuperarcs(
-      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+    ctaug_ns::ProcessContourTree::CollectSortedSuperarcs(resultDS, saddlePeak);
     ctaug_ns::PrintEdgePairArrayColumnLayout(saddlePeak, std::cout);
   }
 
@@ -891,16 +821,11 @@ int main(int argc, char* argv[])
                    << std::setw(42) << std::left << "    Total Time"
                    << ": " << currTime << " seconds");
 
-  const ctaug_ns::ContourTree& ct = filter.GetContourTree();
   VISKORES_LOG_S(viskores::cont::LogLevel::Info,
                  std::endl
-                   << "    ---------------- Contour Tree Array Sizes ---------------------"
+                   << "    ---------------- Contour Tree Statistics ---------------------"
                    << std::endl
-                   << ct.PrintArraySizes());
-  // Print hyperstructure statistics
-  VISKORES_LOG_S(viskores::cont::LogLevel::Info,
-                 std::endl
-                   << ct.PrintHyperStructureStatistics(false) << std::endl);
+                   << filter.GetContourTreeStatisticsString());
 
   // Flush ouput streams just to make sure everything has been logged (in particular when using MPI)
   std::cout << std::flush;
