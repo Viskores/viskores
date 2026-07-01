@@ -28,6 +28,7 @@ set(examples
   GuideExampleArrayHandlePermutation.cxx
   GuideExampleArrayHandleRandom.cxx
   GuideExampleArrayHandleRuntimeVec.cxx
+  GuideExampleArrayHandleSOAStride.cxx
   GuideExampleArrayHandleSwizzle.cxx
   GuideExampleArrayHandleView.cxx
   GuideExampleArrayHandleZip.cxx

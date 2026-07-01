@@ -463,70 +463,37 @@ public:
   }
 };
 
-/// @brief Create a `viskores::cont::ArrayHandleSOAStride` with an initializer list of array handles.
-///
-/// @code{.cpp}
-/// viskores::cont::ArrayHandle<T> components1;
-/// viskores::cont::ArrayHandle<T> components2;
-/// viskores::cont::ArrayHandle<T> components3;
-/// // Fill arrays...
-///
-/// auto vecarray = viskores::cont::make_ArrayHandleSOAStride<viskores::Vec<T, 3>>(
-///   { components1, components2, components3 });
-/// @endcode
-template <typename ValueType>
-VISKORES_CONT ArrayHandleSOAStride<ValueType> make_ArrayHandleSOAStride(
-  std::initializer_list<
-    viskores::cont::ArrayHandle<typename viskores::VecTraits<ValueType>::ComponentType,
-                                viskores::cont::StorageTagBasic>>&& componentArrays)
+namespace internal
 {
-  return ArrayHandleSOAStride<ValueType>(std::move(componentArrays));
-}
+
+template <typename ComponentType, std::size_t NumComponents>
+struct AHSOAStrideValueType
+{
+  VISKORES_STATIC_ASSERT(NumComponents > 1);
+  using Type = viskores::Vec<ComponentType, static_cast<viskores::IdComponent>(NumComponents)>;
+};
+
+template <typename ComponentType>
+struct AHSOAStrideValueType<ComponentType, 1>
+{
+  using Type = ComponentType;
+};
+
+} // namespace internal
 
 /// @brief Create a `viskores::cont::ArrayHandleSOAStride` with a number of array handles.
 ///
 /// This only works if all the templated arguments are of type
-/// `viskores::cont::ArrayHandle<ComponentType>`.
-///
-/// @code{.cpp}
-/// viskores::cont::ArrayHandle<T> components1;
-/// viskores::cont::ArrayHandle<T> components2;
-/// viskores::cont::ArrayHandle<T> components3;
-/// // Fill arrays...
-///
-/// auto vecarray =
-///   viskores::cont::make_ArrayHandleSOAStride(components1, components2, components3);
-/// @endcode
+/// `viskores::cont::ArrayHandleStride<ComponentType>`.
 template <typename ComponentType, typename... RemainingArrays>
 VISKORES_CONT ArrayHandleSOAStride<
-  viskores::Vec<ComponentType, internal::VecSizeFromRemaining<RemainingArrays...>::value>>
+  typename internal::AHSOAStrideValueType<ComponentType, sizeof...(RemainingArrays) + 1>::Type>
 make_ArrayHandleSOAStride(
-  const viskores::cont::ArrayHandle<ComponentType, viskores::cont::StorageTagBasic>&
+  const viskores::cont::ArrayHandle<ComponentType, viskores::cont::StorageTagStride>&
     componentArray0,
   const RemainingArrays&... componentArrays)
 {
   return { componentArray0, componentArrays... };
-}
-
-/// @brief Create a `viskores::cont::ArrayHandleSOAStride` with a `std::vector` of component arrays.
-///
-/// The data is copied from the `std::vector`s to the array handle.
-///
-/// @code{.cpp}
-/// std::vector<T> components1;
-/// std::vector<T> components2;
-/// std::vector<T> components3;
-/// // Fill arrays...
-///
-/// auto vecarray = viskores::cont::make_ArrayHandleSOAStride<viskores::Vec<T, 3>>(
-///   { components1, components2, components3 });
-/// @endcode
-template <typename ValueType>
-VISKORES_CONT ArrayHandleSOAStride<ValueType> make_ArrayHandleSOAStride(
-  std::initializer_list<std::vector<typename viskores::VecTraits<ValueType>::ComponentType>>&&
-    componentVectors)
-{
-  return ArrayHandleSOAStride<ValueType>(std::move(componentVectors));
 }
 
 namespace internal
