@@ -43,7 +43,14 @@ class VISKORES_FILTER_IMAGE_PROCESSING_EXPORT ImageMedian : public viskores::fil
 public:
   VISKORES_CONT ImageMedian() { this->SetOutputFieldName("median"); }
 
+  /// @brief Perform a median of the 3x3 neighborhood around each pixel.
+  ///
+  /// This establishes the neighborhood to use the next time `Execute()` is called.
+  /// This is the default behavior.
   VISKORES_CONT void Perform3x3() { this->Neighborhood = 1; };
+  /// @brief Perform a median of the 5x5 neighborhood around each pixel.
+  ///
+  /// This establishes the neighborhood to use the next time `Execute()` is called.
   VISKORES_CONT void Perform5x5() { this->Neighborhood = 2; };
 
 private:
