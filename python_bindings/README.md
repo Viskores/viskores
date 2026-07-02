@@ -109,6 +109,13 @@ Python version.
 
 ## Building and Running
 
+From the Viskores repository root, install the bindings and their Python
+dependencies with:
+
+```sh
+pip install .
+```
+
 Enable the bindings with:
 
 ```sh

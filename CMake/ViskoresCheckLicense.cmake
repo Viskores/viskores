@@ -165,6 +165,7 @@ function(get_comment_prefix var filename)
     OR name STREQUAL "CMakeLists.txt"
     OR name STREQUAL "Dockerfile"
     OR name STREQUAL "requirements.txt"
+    OR name STREQUAL "requirements.in"
     )
     set(${var} "##" PARENT_SCOPE)
   elseif (name MATCHES "\\.(h|h\\.in|hxx|cxx|cu)$")
