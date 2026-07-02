@@ -58,3 +58,7 @@ target_include_directories(viskores_interop_python
   PRIVATE ${Python_INCLUDE_DIRS}
 )
 nanobind_compile_options(viskores_interop_python)
+
+# Static libraries don't get -fPIC automatically when BUILD_SHARED_LIBS=ON,
+# but this one is linked into the Python extension .so so it needs it.
+set_target_properties(viskores_interop_python PROPERTIES POSITION_INDEPENDENT_CODE ON)
