@@ -50,12 +50,12 @@ ANARIActor::ANARIActor(const viskores::cont::UnknownCellSet& cells,
                        const viskores::cont::Field& field2,
                        const viskores::cont::Field& field3)
 {
-  this->Data->Cells = cells;
-  this->Data->Coordinates = coordinates;
-  this->Data->Fields[0] = field0;
-  this->Data->Fields[1] = field1;
-  this->Data->Fields[2] = field2;
-  this->Data->Fields[3] = field3;
+  this->Data.Cells = cells;
+  this->Data.Coordinates = coordinates;
+  this->Data.Fields[0] = field0;
+  this->Data.Fields[1] = field1;
+  this->Data.Fields[2] = field2;
+  this->Data.Fields[3] = field3;
 }
 
 ANARIActor::ANARIActor(const viskores::cont::UnknownCellSet& cells,
@@ -71,43 +71,43 @@ ANARIActor::ANARIActor(const viskores::cont::DataSet& dataset,
                        const std::string& field2,
                        const std::string& field3)
 {
-  this->Data->Cells = dataset.GetCellSet();
+  this->Data.Cells = dataset.GetCellSet();
   if (dataset.GetNumberOfCoordinateSystems() > 0)
-    this->Data->Coordinates = dataset.GetCoordinateSystem();
-  this->Data->Fields[0] = field0.empty() ? viskores::cont::Field{} : dataset.GetField(field0);
-  this->Data->Fields[1] = field1.empty() ? viskores::cont::Field{} : dataset.GetField(field1);
-  this->Data->Fields[2] = field2.empty() ? viskores::cont::Field{} : dataset.GetField(field2);
-  this->Data->Fields[3] = field3.empty() ? viskores::cont::Field{} : dataset.GetField(field3);
+    this->Data.Coordinates = dataset.GetCoordinateSystem();
+  this->Data.Fields[0] = field0.empty() ? viskores::cont::Field{} : dataset.GetField(field0);
+  this->Data.Fields[1] = field1.empty() ? viskores::cont::Field{} : dataset.GetField(field1);
+  this->Data.Fields[2] = field2.empty() ? viskores::cont::Field{} : dataset.GetField(field2);
+  this->Data.Fields[3] = field3.empty() ? viskores::cont::Field{} : dataset.GetField(field3);
 }
 
 const viskores::cont::UnknownCellSet& ANARIActor::GetCellSet() const
 {
-  return this->Data->Cells;
+  return this->Data.Cells;
 }
 
 const viskores::cont::CoordinateSystem& ANARIActor::GetCoordinateSystem() const
 {
-  return this->Data->Coordinates;
+  return this->Data.Coordinates;
 }
 
 const viskores::cont::Field& ANARIActor::GetField(viskores::IdComponent idx) const
 {
-  return this->Data->Fields[idx < 0 ? GetPrimaryFieldIndex() : idx];
+  return this->Data.Fields[idx < 0 ? GetPrimaryFieldIndex() : idx];
 }
 
 FieldSet ANARIActor::GetFieldSet() const
 {
-  return this->Data->Fields;
+  return this->Data.Fields;
 }
 
 void ANARIActor::SetPrimaryFieldIndex(viskores::IdComponent idx)
 {
-  this->Data->PrimaryField = idx;
+  this->Data.PrimaryField = idx;
 }
 
 viskores::IdComponent ANARIActor::GetPrimaryFieldIndex() const
 {
-  return this->Data->PrimaryField;
+  return this->Data.PrimaryField;
 }
 
 viskores::cont::DataSet ANARIActor::MakeDataSet(bool includeFields) const
@@ -124,10 +124,10 @@ viskores::cont::DataSet ANARIActor::MakeDataSet(bool includeFields) const
       dataset.AddField(field);
   };
 
-  addField(this->Data->Fields[0]);
-  addField(this->Data->Fields[1]);
-  addField(this->Data->Fields[2]);
-  addField(this->Data->Fields[3]);
+  addField(this->Data.Fields[0]);
+  addField(this->Data.Fields[1]);
+  addField(this->Data.Fields[2]);
+  addField(this->Data.Fields[3]);
 
   return dataset;
 }

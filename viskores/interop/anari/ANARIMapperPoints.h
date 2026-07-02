@@ -86,6 +86,11 @@ struct VISKORES_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
     const std::string& name = "<points>",
     const viskores::cont::ColorTable& colorTable = viskores::cont::ColorTable::Preset::Default);
 
+  ANARIMapperPoints(const ANARIMapperPoints&) = delete;
+  ANARIMapperPoints(ANARIMapperPoints&&);
+  ANARIMapperPoints& operator=(const ANARIMapperPoints&) = delete;
+  ANARIMapperPoints& operator=(ANARIMapperPoints&&) = delete;
+
   /// @brief Destructor
   ///
   ~ANARIMapperPoints() override;
@@ -137,7 +142,7 @@ private:
     void ReleaseArrays();
   };
 
-  std::shared_ptr<ANARIHandles> Handles;
+  std::unique_ptr<ANARIHandles> Handles;
   viskores::IdComponent PrimaryField{ 0 };
   PointsArrays Arrays;
   PointsFieldArrays FieldArrays;

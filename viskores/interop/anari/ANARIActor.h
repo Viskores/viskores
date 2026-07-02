@@ -27,7 +27,6 @@
 #include <viskores/interop/anari/ViskoresANARITypes.h>
 // std
 #include <array>
-#include <memory>
 
 #include <viskores/interop/anari/viskores_anari_export.h>
 
@@ -56,6 +55,9 @@ const char* AnariMaterialInputString(viskores::IdComponent p);
 /// Mappers creating geometry will generally add all fields as attribute arrays
 /// if possible, letting applications use more than one field as material inputs
 /// or data to be color mapped by samplers.
+///
+/// Actors have value semantics. Changing the primary field on one actor does
+/// not change copies held by mappers or other callers.
 ///
 struct VISKORES_ANARI_EXPORT ANARIActor
 {
@@ -106,7 +108,7 @@ private:
     viskores::IdComponent PrimaryField{ 0 };
   };
 
-  std::shared_ptr<ActorData> Data = std::make_shared<ActorData>();
+  ActorData Data;
 };
 
 } // namespace anari

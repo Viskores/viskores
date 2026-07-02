@@ -64,6 +64,11 @@ struct VISKORES_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
     const char* name = "<glyphs>",
     const viskores::cont::ColorTable& colorTable = viskores::cont::ColorTable::Preset::Default);
 
+  ANARIMapperGlyphs(const ANARIMapperGlyphs&) = delete;
+  ANARIMapperGlyphs(ANARIMapperGlyphs&&);
+  ANARIMapperGlyphs& operator=(const ANARIMapperGlyphs&) = delete;
+  ANARIMapperGlyphs& operator=(ANARIMapperGlyphs&&) = delete;
+
   /// @brief Destructor
   ///
   ~ANARIMapperGlyphs() override;
@@ -113,7 +118,7 @@ private:
     void ReleaseArrays();
   };
 
-  std::shared_ptr<ANARIHandles> Handles;
+  std::unique_ptr<ANARIHandles> Handles;
 
   bool Offset{ false };
   GlyphArrays Arrays;

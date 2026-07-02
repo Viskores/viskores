@@ -16,6 +16,7 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <viskores/cont/ErrorBadValue.h>
 #include <viskores/interop/anari/ANARIScene.h>
 // std
 #include <algorithm>
@@ -129,6 +130,15 @@ anari_cpp::World ANARIScene::GetANARIWorld()
   }
 
   return this->World;
+}
+
+void ANARIScene::ValidateMapperDevice(const ANARIMapper& mapper) const
+{
+  if (mapper.GetDevice() != this->Device)
+  {
+    throw viskores::cont::ErrorBadValue(
+      "Cannot add an ANARI mapper created with a different device.");
+  }
 }
 
 void ANARIScene::UpdateWorld()

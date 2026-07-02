@@ -23,6 +23,7 @@
 // std
 #include <string>
 #include <type_traits>
+#include <utility>
 
 namespace viskores
 {
@@ -47,8 +48,7 @@ namespace anari
 /// `ANARIWorld` used by the application is expected to have application-managed
 /// `ANARILight` objects added to it when desired.
 ///
-/// NOTE: Unlike `ANARIMapper` and `ANARIActor`, `ANARIScene` is not C++
-/// copyable or movable.
+/// NOTE: `ANARIScene` is not C++ copyable or movable.
 struct VISKORES_ANARI_EXPORT ANARIScene
 {
   /// @brief Constructor
@@ -67,18 +67,24 @@ struct VISKORES_ANARI_EXPORT ANARIScene
   /// @brief Add a mapper to the scene.
   /// @tparam ANARIMapperType Any subclass of `ANARIMapper`.
   ///
+  /// The mapper is moved into the scene and must use the same ANARI device as
+  /// the scene.
+  ///
   /// NOTE: This will replace any mapper that has the same name.
   template <typename ANARIMapperType>
-  ANARIMapperType& AddMapper(const ANARIMapperType& mapper, bool visible = true);
+  ANARIMapperType& AddMapper(ANARIMapperType mapper, bool visible = true);
 
   /// @brief Add a mapper to the scene.
   /// @tparam ANARIMapperType Any subclass of `ANARIMapper`.
+  ///
+  /// The mapper is moved into the scene and must use the same ANARI device as
+  /// the scene.
   ///
   /// NOTE: Replace the i'th mapper with a new instance.
   /// NOTE: It is undefined behavior to use this to put 2 or more mappers in the
   /// scene with the same name.
   template <typename ANARIMapperType>
-  void ReplaceMapper(const ANARIMapperType& newMapper, viskores::IdComponent id, bool visible);
+  void ReplaceMapper(ANARIMapperType newMapper, viskores::IdComponent id, bool visible);
 
   /// @brief Get number of mappers in this scene.
   ///
@@ -127,6 +133,7 @@ struct VISKORES_ANARI_EXPORT ANARIScene
   anari_cpp::World GetANARIWorld();
 
 private:
+  void ValidateMapperDevice(const ANARIMapper& mapper) const;
   void UpdateWorld();
 
   anari_cpp::Device Device{ nullptr };
@@ -144,7 +151,7 @@ private:
 // Inlined definitions ////////////////////////////////////////////////////////
 
 template <typename ANARIMapperType>
-inline ANARIMapperType& ANARIScene::AddMapper(const ANARIMapperType& mapper, bool visible)
+inline ANARIMapperType& ANARIScene::AddMapper(ANARIMapperType mapper, bool visible)
 {
   static_assert(std::is_base_of<ANARIMapper, ANARIMapperType>::value,
                 "Only ANARIMapper types can be added to ANARIScene");
@@ -153,26 +160,28 @@ inline ANARIMapperType& ANARIScene::AddMapper(const ANARIMapperType& mapper, boo
   if (HasMapperWithName(name))
   {
     auto idx = GetMapperIndexByName(name);
-    ReplaceMapper(mapper, idx, visible);
+    ReplaceMapper(std::move(mapper), idx, visible);
     return (ANARIMapperType&)GetMapper(idx);
   }
   else
   {
-    this->Mappers.push_back({ std::make_unique<ANARIMapperType>(mapper), visible });
+    this->ValidateMapperDevice(mapper);
+    this->Mappers.push_back({ std::make_unique<ANARIMapperType>(std::move(mapper)), visible });
     UpdateWorld();
     return (ANARIMapperType&)GetMapper(GetNumberOfMappers() - 1);
   }
 }
 
 template <typename ANARIMapperType>
-inline void ANARIScene::ReplaceMapper(const ANARIMapperType& newMapper,
+inline void ANARIScene::ReplaceMapper(ANARIMapperType newMapper,
                                       viskores::IdComponent id,
                                       bool visible)
 {
   static_assert(std::is_base_of<ANARIMapper, ANARIMapperType>::value,
                 "Only ANARIMapper types can be added to ANARIScene");
+  this->ValidateMapperDevice(newMapper);
   const bool wasVisible = GetMapperVisible(id);
-  Mappers[id] = { std::make_unique<ANARIMapperType>(newMapper), visible };
+  Mappers[id] = { std::make_unique<ANARIMapperType>(std::move(newMapper)), visible };
   if (wasVisible || visible)
     UpdateWorld();
 }

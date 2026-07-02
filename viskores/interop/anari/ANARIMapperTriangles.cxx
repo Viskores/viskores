@@ -292,12 +292,14 @@ ANARIMapperTriangles::ANARIMapperTriangles(anari_cpp::Device device,
                                            const viskores::cont::ColorTable& colorTable)
   : ANARIMapper(device, actor, name, colorTable)
 {
-  this->Handles = std::make_shared<ANARIMapperTriangles::ANARIHandles>();
+  this->Handles = std::make_unique<ANARIMapperTriangles::ANARIHandles>();
   this->Handles->Device = device;
   auto& attributes = this->Handles->Parameters.Vertex.Attribute;
   std::fill(attributes.begin(), attributes.end(), nullptr);
   anari_cpp::retain(device, device);
 }
+
+ANARIMapperTriangles::ANARIMapperTriangles(ANARIMapperTriangles&&) = default;
 
 ANARIMapperTriangles::~ANARIMapperTriangles()
 {

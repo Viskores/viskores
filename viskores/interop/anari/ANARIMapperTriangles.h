@@ -87,6 +87,11 @@ struct VISKORES_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
     const std::string& name = "<triangles>",
     const viskores::cont::ColorTable& colorTable = viskores::cont::ColorTable::Preset::Default);
 
+  ANARIMapperTriangles(const ANARIMapperTriangles&) = delete;
+  ANARIMapperTriangles(ANARIMapperTriangles&&);
+  ANARIMapperTriangles& operator=(const ANARIMapperTriangles&) = delete;
+  ANARIMapperTriangles& operator=(ANARIMapperTriangles&&) = delete;
+
   /// @brief Destructor
   ///
   ~ANARIMapperTriangles() override;
@@ -143,7 +148,7 @@ private:
     void ReleaseArrays();
   };
 
-  std::shared_ptr<ANARIHandles> Handles;
+  std::unique_ptr<ANARIHandles> Handles;
 
   bool CalculateNormals{ false };
   viskores::IdComponent PrimaryField{ 0 };

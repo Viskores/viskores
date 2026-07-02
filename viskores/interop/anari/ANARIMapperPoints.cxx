@@ -125,12 +125,14 @@ ANARIMapperPoints::ANARIMapperPoints(anari_cpp::Device device,
                                      const viskores::cont::ColorTable& colorTable)
   : ANARIMapper(device, actor, name, colorTable)
 {
-  this->Handles = std::make_shared<ANARIMapperPoints::ANARIHandles>();
+  this->Handles = std::make_unique<ANARIMapperPoints::ANARIHandles>();
   this->Handles->Device = device;
   auto& attributes = this->Handles->Parameters.Vertex.Attribute;
   std::fill(attributes.begin(), attributes.end(), nullptr);
   anari_cpp::retain(device, device);
 }
+
+ANARIMapperPoints::ANARIMapperPoints(ANARIMapperPoints&&) = default;
 
 ANARIMapperPoints::~ANARIMapperPoints()
 {

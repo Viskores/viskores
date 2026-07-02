@@ -34,10 +34,12 @@ ANARIMapperVolume::ANARIMapperVolume(anari_cpp::Device device,
                                      const viskores::cont::ColorTable& colorTable)
   : ANARIMapper(device, actor, name, colorTable)
 {
-  this->Handles = std::make_shared<ANARIMapperVolume::ANARIHandles>();
+  this->Handles = std::make_unique<ANARIMapperVolume::ANARIHandles>();
   this->Handles->Device = device;
   anari_cpp::retain(device, device);
 }
+
+ANARIMapperVolume::ANARIMapperVolume(ANARIMapperVolume&&) = default;
 
 ANARIMapperVolume::~ANARIMapperVolume()
 {

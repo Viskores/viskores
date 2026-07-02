@@ -33,10 +33,14 @@ ANARIMapper::ANARIMapper(anari_cpp::Device device,
   , ColorTable(colorTable)
   , Name(name)
 {
-  this->Handles = std::make_shared<ANARIHandles>();
+  this->Handles = std::make_unique<ANARIHandles>();
   this->Handles->Device = device;
   anari_cpp::retain(device, device);
 }
+
+ANARIMapper::~ANARIMapper() = default;
+
+ANARIMapper::ANARIMapper(ANARIMapper&&) = default;
 
 anari_cpp::Device ANARIMapper::GetDevice() const
 {

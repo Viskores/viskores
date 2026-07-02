@@ -22,6 +22,8 @@
 // viskores
 #include <viskores/cont/ColorTable.h>
 #include <viskores/interop/anari/ANARIActor.h>
+// std
+#include <memory>
 
 #include <viskores/interop/anari/viskores_anari_export.h>
 
@@ -42,6 +44,9 @@ inline void NoopANARIDeleter(const void*, const void*) {}
 /// from the mapper, unless they manually retain the handle. Additionally,
 /// ANARIMappers will update surface or volume objects if changes occur, such as
 /// changes to the color map or ANARIActor.
+///
+/// Mappers have unique ownership of their ANARI objects and backing Viskores
+/// arrays. They may be moved into a scene, but they cannot be copied.
 struct VISKORES_ANARI_EXPORT ANARIMapper
 {
   ANARIMapper(
@@ -49,7 +54,12 @@ struct VISKORES_ANARI_EXPORT ANARIMapper
     const ANARIActor& actor = {},
     const std::string& name = "<noname>",
     const viskores::cont::ColorTable& colorTable = viskores::cont::ColorTable::Preset::Default);
-  virtual ~ANARIMapper() = default;
+  virtual ~ANARIMapper();
+
+  ANARIMapper(const ANARIMapper&) = delete;
+  ANARIMapper(ANARIMapper&&);
+  ANARIMapper& operator=(const ANARIMapper&) = delete;
+  ANARIMapper& operator=(ANARIMapper&&) = delete;
 
   anari_cpp::Device GetDevice() const;
   const ANARIActor& GetActor() const;
@@ -134,7 +144,7 @@ private:
     ~ANARIHandles();
   };
 
-  std::shared_ptr<ANARIHandles> Handles;
+  std::unique_ptr<ANARIHandles> Handles;
   ANARIActor Actor;
   viskores::cont::ColorTable ColorTable;
   std::string Name;

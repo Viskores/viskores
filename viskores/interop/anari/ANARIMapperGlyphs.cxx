@@ -150,10 +150,12 @@ ANARIMapperGlyphs::ANARIMapperGlyphs(anari_cpp::Device device,
                                      const viskores::cont::ColorTable& colorTable)
   : ANARIMapper(device, actor, name, colorTable)
 {
-  this->Handles = std::make_shared<ANARIMapperGlyphs::ANARIHandles>();
+  this->Handles = std::make_unique<ANARIMapperGlyphs::ANARIHandles>();
   this->Handles->Device = device;
   anari_cpp::retain(device, device);
 }
+
+ANARIMapperGlyphs::ANARIMapperGlyphs(ANARIMapperGlyphs&&) = default;
 
 ANARIMapperGlyphs::~ANARIMapperGlyphs()
 {
