@@ -1,0 +1,8 @@
+# Packages required for Python bindings. Install with
+#
+# ```sh
+# pip install -r requirements.txt
+# ```
+
+numpy>=1.20.0
+nanobind>=2.0.0

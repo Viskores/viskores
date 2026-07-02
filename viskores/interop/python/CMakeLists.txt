@@ -19,8 +19,8 @@ execute_process(
 if(NOT _viskores_interop_python_nanobind_result EQUAL 0)
   message(FATAL_ERROR
     "nanobind ${Viskores_PYTHON_NANOBIND_MIN_VERSION} or newer is required to "
-    "build viskores_interop_python. Install with: pip install 'nanobind>="
-    "${Viskores_PYTHON_NANOBIND_MIN_VERSION}'.")
+    "build viskores_interop_python. Install Python dependencies with:\n"
+    "pip install -r ${Viskores_SOURCE_DIR}/python_bindings/requirements.txt")
 endif()
 
 find_package(nanobind ${Viskores_PYTHON_NANOBIND_MIN_VERSION} CONFIG REQUIRED
