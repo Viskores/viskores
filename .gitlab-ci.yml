@@ -71,7 +71,7 @@
 
 .ubuntu2204_cuda122: &ubuntu2204_cuda122
   image:
-    name: "ghcr.io/viskores/viskores:ci-ubuntu2204_cuda12.2-20250320"
+    name: "ghcr.io/viskores/viskores:ci-ubuntu2204_cuda12.2-20260701"
   extends:
     - .docker_image
 
