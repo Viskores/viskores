@@ -27,7 +27,8 @@ void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
 
-  auto d = loadANARIDevice();
+  auto loadedDevice = loadANARIDevice();
+  auto d = loadedDevice.GetDevice();
 
   // Create Viskores datasets /////////////////////////////////////////////////////
 
@@ -62,7 +63,6 @@ void RenderTests()
   // Cleanup //////////////////////////////////////////////////////////////////
 
   anari_cpp::release(d, world);
-  anari_cpp::release(d, d);
 }
 
 } // namespace

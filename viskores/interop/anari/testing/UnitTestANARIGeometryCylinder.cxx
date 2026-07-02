@@ -19,7 +19,8 @@ void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
 
-  auto d = loadANARIDevice();
+  auto loadedDevice = loadANARIDevice();
+  auto d = loadedDevice.GetDevice();
 
   const char** extensions = nullptr;
   anariGetProperty(d, d, "extension", ANARI_STRING_LIST, &extensions, sizeof(char**), ANARI_WAIT);
@@ -128,7 +129,6 @@ void RenderTests()
   // Cleanup //////////////////////////////////////////////////////////////////
 
   anari_cpp::release(d, world);
-  anari_cpp::release(d, d);
 }
 
 } // namespace
