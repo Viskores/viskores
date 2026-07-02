@@ -38,13 +38,13 @@ set(sources
   NumPyToArrayHandle.cxx
 )
 
-# Build as a static library so the object files are linked directly into the
-# Python extension module.  This ensures viskores_interop_python and the
-# extension share exactly one copy of the nanobind runtime (whatever variant
-# nanobind_add_module picks, e.g. nanobind-static-abi3 for stable-ABI builds).
+# Build as an OBJECT library so the object files are contributed directly to
+# the Python extension module's link command (before libnanobind-static.a).
+# This ensures all nanobind symbol references are visible in a single linker
+# pass and that the extension shares exactly one copy of the nanobind runtime.
 viskores_library(
   NAME viskores_interop_python
-  STATIC
+  OBJECT
   SOURCES ${sources}
   HEADERS ${headers}
 )
@@ -58,3 +58,6 @@ target_include_directories(viskores_interop_python
   PRIVATE ${Python_INCLUDE_DIRS}
 )
 nanobind_compile_options(viskores_interop_python)
+
+# OBJECT libraries need explicit -fPIC when consumed by a shared/module target.
+set_target_properties(viskores_interop_python PROPERTIES POSITION_INDEPENDENT_CODE ON)
