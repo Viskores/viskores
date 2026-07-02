@@ -73,6 +73,11 @@ struct VISKORES_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
     const std::string& name = "<volume>",
     const viskores::cont::ColorTable& colorTable = viskores::cont::ColorTable::Preset::Default);
 
+  ANARIMapperVolume(const ANARIMapperVolume&) = delete;
+  ANARIMapperVolume(ANARIMapperVolume&&);
+  ANARIMapperVolume& operator=(const ANARIMapperVolume&) = delete;
+  ANARIMapperVolume& operator=(ANARIMapperVolume&&) = delete;
+
   /// @brief Destructor
   ///
   ~ANARIMapperVolume() override;
@@ -119,7 +124,7 @@ private:
     void ReleaseArrays();
   };
 
-  std::shared_ptr<ANARIHandles> Handles;
+  std::unique_ptr<ANARIHandles> Handles;
   StructuredVolumeArrays StructuredArrays;
   UntructuredVolumeArrays UnstructuredArrays;
 };

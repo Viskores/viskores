@@ -10,6 +10,7 @@
 viskores_unit_tests(
 SOURCES
   UnitTestANARILoadDevice.cxx
+  UnitTestANARIOwnership.cxx
   UnitTestANARIMapperGlyphs.cxx
   UnitTestANARIMapperPoints.cxx
   UnitTestANARIMapperTriangles.cxx
