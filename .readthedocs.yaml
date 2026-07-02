@@ -42,7 +42,7 @@ sphinx:
 
 python:
   install:
-  - requirements: docs/users-guide/requirements.txt
+  - requirements: requirements.txt
 
 formats:
 - epub

@@ -347,6 +347,64 @@ if (Viskores_ENABLE_TESTING)
 endif()
 
 #-----------------------------------------------------------------------------
+# Requirements for Python bindings
+if(Viskores_ENABLE_PYTHON_BINDINGS)
+  #-----------------------------------------------------------------------------
+  # Keep stable ABI support optional while the binding surface is small. This
+  # lets developers check abi3 compatibility without making it the default build.
+  option(VISKORES_PYTHON_STABLE_ABI "Build Python bindings with the CPython stable ABI" OFF)
+
+  set(Viskores_PYTHON_COMPONENTS Interpreter Development)
+  if (VISKORES_PYTHON_STABLE_ABI AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.26)
+    list(APPEND Viskores_PYTHON_COMPONENTS Development.SABIModule)
+  endif()
+  find_package(Python 3.8 REQUIRED COMPONENTS ${Viskores_PYTHON_COMPONENTS})
+
+  #-----------------------------------------------------------------------------
+  # Load the nanobind library, which is used to create the Python binding libs.
+  file(STRINGS "${Viskores_SOURCE_DIR}/pyproject.toml" _req_lines REGEX "nanobind>=")
+  string(REGEX MATCH "([0-9]+\\.[0-9]+\\.[0-9]+)" Viskores_PYTHON_NANOBIND_MIN_VERSION "${_req_lines}")
+
+  execute_process(
+    COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+    OUTPUT_VARIABLE _viskores_interop_python_nanobind_cmake_dir
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    RESULT_VARIABLE _viskores_interop_python_nanobind_result
+  )
+  if(NOT _viskores_interop_python_nanobind_result EQUAL 0)
+    message(SEND_ERROR
+      "nanobind ${Viskores_PYTHON_NANOBIND_MIN_VERSION} or newer is required to "
+      "build with Viskores_ENABLE_PYTHON_BINDINGS. Install Python dependencies with:\n"
+      "pip install ${Viskores_SOURCE_DIR}"
+      )
+  endif()
+
+  find_package(nanobind ${Viskores_PYTHON_NANOBIND_MIN_VERSION} CONFIG REQUIRED
+    PATHS "${_viskores_interop_python_nanobind_cmake_dir}"
+    NO_DEFAULT_PATH
+    )
+
+  #-----------------------------------------------------------------------------
+  # Check that we have an appropriate version of numpy.
+  file(STRINGS "${Viskores_SOURCE_DIR}/pyproject.toml" _req_lines REGEX "numpy>=")
+  string(REGEX MATCH "([0-9]+\\.[0-9]+\\.[0-9]+)" Viskores_PYTHON_NUMPY_MIN_VERSION "${_req_lines}")
+
+  execute_process(
+    COMMAND "${Python_EXECUTABLE}" -c
+      "import sys; from numpy.lib import NumpyVersion; import numpy; \
+sys.exit(0 if NumpyVersion(numpy.__version__) >= NumpyVersion(sys.argv[1]) else 1)"
+      "${Viskores_PYTHON_NUMPY_MIN_VERSION}"
+    RESULT_VARIABLE Viskores_PYTHON_NUMPY_RESULT
+    )
+  if (NOT Viskores_PYTHON_NUMPY_RESULT EQUAL 0)
+    message(FATAL_ERROR
+      "NumPy ${Viskores_PYTHON_NUMPY_MIN_VERSION} or newer is required to build "
+      "Viskores Python bindings. Install Python dependencies with:\n"
+      "pip install ${Viskores_SOURCE_DIR}")
+  endif()
+endif()
+
+#-----------------------------------------------------------------------------
 # Check basic type sizes.
 include(CheckTypeSize)
 
@@ -546,6 +604,11 @@ if (Viskores_ENABLE_TESTING)
   add_test(NAME SystemInformation
     COMMAND ${CMAKE_COMMAND} "-DViskores_SOURCE_DIR=${Viskores_SOURCE_DIR}" "-DViskores_BINARY_DIR=${Viskores_BINARY_DIR}" "-DViskores_CXX_COMPILER=${CMAKE_CXX_COMPILER}" -P "${Viskores_SOURCE_DIR}/CMake/testing/ViskoresSystemInformation.cmake"
     )
+  if(Python_EXECUTABLE)
+    add_test(NAME PythonDependencies
+      COMMAND "${Python_EXECUTABLE}" "${Viskores_SOURCE_DIR}/Utilities/Scripts/check-python-dependencies.py"
+      )
+  endif()
   if(NOT WIN32)
     # Test takes too long on windows
     add_test(NAME LicenseStatement

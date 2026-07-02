@@ -35,3 +35,4 @@ Now all we have to do is setup the requirements:
 ./env/bin/pip install -r requirements.txt
 ```
 
+(Note that `requirements.txt` is in the repo's root directory.)
