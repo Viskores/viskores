@@ -40,7 +40,8 @@ void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
 
-  auto d = loadANARIDevice();
+  auto loadedDevice = loadANARIDevice();
+  auto d = loadedDevice.GetDevice();
 
   // Create Viskores datasets /////////////////////////////////////////////////////
 
@@ -104,10 +105,6 @@ void RenderTests()
                        viskores::Vec3f_32(0.32, -0.53, -0.79),
                        viskores::Vec3f_32(-0.20, -0.85, 0.49),
                        "interop/anari/scene.png");
-
-  // Cleanup //////////////////////////////////////////////////////////////////
-
-  anari_cpp::release(d, d);
 }
 
 } // namespace

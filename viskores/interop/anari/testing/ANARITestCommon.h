@@ -49,7 +49,7 @@ static void setColorMap(anari_cpp::Device d, viskores::interop::anari::ANARIMapp
   mapper.SetANARIColorMapOpacityScale(0.5f);
 }
 
-static anari_cpp::Device loadANARIDevice()
+static viskores::interop::anari::ANARILoadedDevice loadANARIDevice()
 {
   viskores::testing::FloatingPointExceptionTrapDisable();
   auto* libraryName = std::getenv("VISKORES_TEST_ANARI_LIBRARY");

@@ -139,7 +139,8 @@ void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
 
-  auto d = loadANARIDevice();
+  auto loadedDevice = loadANARIDevice();
+  auto d = loadedDevice.GetDevice();
 
   const char** extensions = nullptr;
   anariGetProperty(d, d, "extension", ANARI_STRING_LIST, &extensions, sizeof(char**), ANARI_WAIT);
@@ -181,10 +182,6 @@ void RenderTests()
                        "interop/anari/sphere-unindexed.png",
                        viskores::Vec2ui_32(512, 512));
   anari_cpp::release(d, unindexedWorld);
-
-  // Cleanup //////////////////////////////////////////////////////////////////
-
-  anari_cpp::release(d, d);
 }
 
 } // namespace

@@ -36,7 +36,8 @@ void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
 
-  auto d = loadANARIDevice();
+  auto loadedDevice = loadANARIDevice();
+  auto d = loadedDevice.GetDevice();
 
   // Check for the KHR_GEOMETRY_CONE extension.
 
@@ -92,7 +93,6 @@ void RenderTests()
   // Cleanup //////////////////////////////////////////////////////////////////
 
   anari_cpp::release(d, world);
-  anari_cpp::release(d, d);
 }
 
 } // namespace

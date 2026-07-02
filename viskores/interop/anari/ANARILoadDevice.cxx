@@ -12,6 +12,8 @@
 
 #include <viskores/rendering/anari-device/ViskoresDevice.h>
 
+#include <utility>
+
 namespace
 {
 
@@ -57,14 +59,67 @@ namespace interop
 namespace anari
 {
 
-anari_cpp::Device ANARILoadDevice(const std::string& libraryName)
+ANARILoadedDevice::ANARILoadedDevice(anari_cpp::Library library, anari_cpp::Device device) noexcept
+  : LibraryHandle(library)
+  , DeviceHandle(device)
+{
+}
+
+ANARILoadedDevice::~ANARILoadedDevice()
+{
+  this->Reset();
+}
+
+ANARILoadedDevice::ANARILoadedDevice(ANARILoadedDevice&& other) noexcept
+  : LibraryHandle(std::exchange(other.LibraryHandle, nullptr))
+  , DeviceHandle(std::exchange(other.DeviceHandle, nullptr))
+{
+}
+
+ANARILoadedDevice& ANARILoadedDevice::operator=(ANARILoadedDevice&& other) noexcept
+{
+  if (this != &other)
+  {
+    this->Reset();
+    this->LibraryHandle = std::exchange(other.LibraryHandle, nullptr);
+    this->DeviceHandle = std::exchange(other.DeviceHandle, nullptr);
+  }
+  return *this;
+}
+
+ANARILoadedDevice::operator bool() const noexcept
+{
+  return this->DeviceHandle != nullptr;
+}
+
+anari_cpp::Device ANARILoadedDevice::GetDevice() const noexcept
+{
+  return this->DeviceHandle;
+}
+
+void ANARILoadedDevice::Reset() noexcept
+{
+  if (this->DeviceHandle != nullptr)
+  {
+    anari_cpp::release(this->DeviceHandle, this->DeviceHandle);
+    this->DeviceHandle = nullptr;
+  }
+  if (this->LibraryHandle != nullptr)
+  {
+    anari_cpp::unloadLibrary(this->LibraryHandle);
+    this->LibraryHandle = nullptr;
+  }
+}
+
+ANARILoadedDevice ANARILoadDevice(const std::string& libraryName)
 {
   if (libraryName == "viskores")
   {
     VISKORES_LOG_F(viskores::cont::LogLevel::Info,
                    "Directly loading internal ANARI device named `viskores`");
-    return reinterpret_cast<anari_cpp::Device>(
+    auto device = reinterpret_cast<anari_cpp::Device>(
       new viskores_device::ViskoresDevice(AnariStatusFunc, nullptr));
+    return ANARILoadedDevice(nullptr, device);
   }
   else
   {
@@ -76,16 +131,17 @@ anari_cpp::Device ANARILoadDevice(const std::string& libraryName)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
                      "Failed to load ANARI library named `" << libraryName << "`");
-      return nullptr;
+      return {};
     }
     anari_cpp::Device device = anari_cpp::newDevice(library, "default");
-    anari_cpp::unloadLibrary(library);
     if (device == nullptr)
     {
       VISKORES_LOG_S(viskores::cont::LogLevel::Info,
                      "Failed to load ANARI device from library named `" << libraryName << "`");
+      anari_cpp::unloadLibrary(library);
+      return {};
     }
-    return device;
+    return ANARILoadedDevice(library, device);
   }
 }
 
