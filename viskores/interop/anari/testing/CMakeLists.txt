@@ -12,6 +12,7 @@ SOURCES
   UnitTestANARILoadDevice.cxx
   UnitTestANARIOwnership.cxx
   UnitTestANARIMapperGlyphs.cxx
+  UnitTestANARIMapperGlyphsData.cxx
   UnitTestANARIMapperPoints.cxx
   UnitTestANARIMapperPointsData.cxx
   UnitTestANARIMapperTrianglesData.cxx
