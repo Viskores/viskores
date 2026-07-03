@@ -63,6 +63,7 @@ public:
   ANARIGeometry newGeometry(const char* type) override
   {
     ++this->NumberOfObjectsCreated;
+    this->LastGeometrySubtype = type ? type : "";
     return this->ViskoresDevice::newGeometry(type);
   }
 
@@ -144,11 +145,14 @@ public:
 
   std::size_t GetNumberOfObjectsCreated() const { return this->NumberOfObjectsCreated; }
 
+  const std::string& GetLastGeometrySubtype() const { return this->LastGeometrySubtype; }
+
 private:
   bool SupportsCones{ true };
   std::map<ANARIArray1D, ArrayRecord> Arrays;
   std::map<ANARIObject, std::map<std::string, ArrayRecord>> ArrayParameters;
   std::size_t NumberOfObjectsCreated{ 0 };
+  std::string LastGeometrySubtype;
 };
 
 template <typename ValueType>
@@ -179,6 +183,8 @@ void TestPointVectorsHandleZeroVectorsAndDegenerateBounds()
       device, viskores::interop::anari::ANARIActor({}, coordinates, field));
 
     auto geometry = mapper.GetANARIGeometry();
+    VISKORES_TEST_ASSERT(inspection->GetLastGeometrySubtype() == "cone",
+                         "The glyph mapper did not create cone geometry.");
     const auto positionsOutput =
       ReadValues<viskores::Vec3f_32>(inspection->GetArrayParameter(geometry, "vertex.position"));
     const auto radiiOutput =

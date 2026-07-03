@@ -14,7 +14,9 @@
 
 #include <anari/frontend/type_utility.h>
 
+#include <chrono>
 #include <cstring>
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
@@ -54,8 +56,17 @@ public:
     {
       std::memcpy(record.Values.data(), appMemory, record.Values.size());
     }
+    ++this->NumberOfArraysCreated;
+    this->NumberOfArrayBytesCreated += record.Values.size();
     this->Arrays[array] = std::move(record);
     return array;
+  }
+
+  ANARIGeometry newGeometry(const char* subtype) override
+  {
+    auto geometry = this->ViskoresDevice::newGeometry(subtype);
+    this->GeometrySubtypes[geometry] = subtype ? subtype : "";
+    return geometry;
   }
 
   void* mapArray(ANARIArray array) override
@@ -152,6 +163,18 @@ public:
     return parameter->second;
   }
 
+  std::size_t GetNumberOfArraysCreated() const { return this->NumberOfArraysCreated; }
+
+  std::size_t GetNumberOfArrayBytesCreated() const { return this->NumberOfArrayBytesCreated; }
+
+  const std::string& GetGeometrySubtype(ANARIGeometry geometry) const
+  {
+    auto subtype = this->GeometrySubtypes.find(geometry);
+    VISKORES_TEST_ASSERT(subtype != this->GeometrySubtypes.end(),
+                         "No subtype was recorded for the ANARI geometry.");
+    return subtype->second;
+  }
+
 private:
   std::map<ANARIArray1D, ArrayRecord> Arrays;
   std::map<ANARIArray, void*> MappedArrays;
@@ -159,6 +182,9 @@ private:
   std::map<ANARIObject, std::map<std::string, ANARIObject>> ObjectParameters;
   std::map<ANARIObject, std::set<std::string>> ParameterNames;
   std::map<ANARIObject, std::map<std::string, std::string>> StringParameters;
+  std::map<ANARIGeometry, std::string> GeometrySubtypes;
+  std::size_t NumberOfArraysCreated{ 0 };
+  std::size_t NumberOfArrayBytesCreated{ 0 };
 };
 
 template <typename ValueType>
@@ -208,6 +234,8 @@ void TestIndexedTopologyPreservesSharedVertices()
     viskores::interop::anari::ANARIMapperTriangles mapper(device, MakeTriangulatedActor());
     auto geometry = mapper.GetANARIGeometry();
 
+    VISKORES_TEST_ASSERT(inspection->GetGeometrySubtype(geometry) == "triangle",
+                         "The triangle mapper did not create triangle geometry.");
     const auto& positions = inspection->GetArrayParameter(geometry, "vertex.position");
     VISKORES_TEST_ASSERT(positions.ElementType == ANARI_FLOAT32_VEC3,
                          "Triangle positions were not ANARI_FLOAT32_VEC3.");
@@ -351,8 +379,12 @@ void TestRepresentativeMeshKeepsSharedArraySizes()
     viskores::interop::anari::ANARIActor actor(
       dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), pointField);
 
+    const auto loweringStart = std::chrono::steady_clock::now();
     viskores::interop::anari::ANARIMapperTriangles mapper(device, actor);
     auto geometry = mapper.GetANARIGeometry();
+    const auto loweringEnd = std::chrono::steady_clock::now();
+    const auto loweringMilliseconds =
+      std::chrono::duration<viskores::Float64, std::milli>(loweringEnd - loweringStart).count();
 
     VISKORES_TEST_ASSERT(inspection->GetArrayParameter(geometry, "vertex.position").NumberOfItems ==
                            numberOfPoints,
@@ -363,6 +395,23 @@ void TestRepresentativeMeshKeepsSharedArraySizes()
     VISKORES_TEST_ASSERT(
       inspection->GetArrayParameter(geometry, "primitive.index").NumberOfItems == numberOfTriangles,
       "Representative-mesh connectivity did not contain one index triple per triangle.");
+    VISKORES_TEST_ASSERT(inspection->GetNumberOfArraysCreated() == 3,
+                         "The representative mesh created unexpected ANARI arrays.");
+    const auto expectedArrayBytes = static_cast<std::size_t>(numberOfPoints) *
+        (sizeof(viskores::Vec3f_32) + sizeof(viskores::Float32)) +
+      static_cast<std::size_t>(numberOfTriangles) * sizeof(viskores::Vec3ui_32);
+    VISKORES_TEST_ASSERT(inspection->GetNumberOfArrayBytesCreated() == expectedArrayBytes,
+                         "The representative mesh created unexpected ANARI array storage.");
+
+    std::cout << "<DartMeasurement name=\"ANARI.TriangleLoweringMilliseconds\" "
+                 "type=\"numeric/double\">"
+              << loweringMilliseconds << "</DartMeasurement>\n";
+    std::cout << "<DartMeasurement name=\"ANARI.TriangleArrayBytes\" "
+                 "type=\"numeric/integer\">"
+              << inspection->GetNumberOfArrayBytesCreated() << "</DartMeasurement>\n";
+    std::cout << "<DartMeasurement name=\"ANARI.TriangleArrayCount\" "
+                 "type=\"numeric/integer\">"
+              << inspection->GetNumberOfArraysCreated() << "</DartMeasurement>\n";
   }
   anari_cpp::release(device, device);
 }

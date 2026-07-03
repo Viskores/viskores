@@ -51,18 +51,18 @@ static void setColorMap(anari_cpp::Device d, viskores::interop::anari::ANARIMapp
 
 static viskores::interop::anari::ANARILoadedDevice loadANARIDevice()
 {
-  viskores::testing::FloatingPointExceptionTrapDisable();
   auto* libraryName = std::getenv("VISKORES_TEST_ANARI_LIBRARY");
   return viskores::interop::anari::ANARILoadDevice(libraryName ? libraryName : "viskores");
 }
 
-static void renderTestANARIImage(anari_cpp::Device d,
-                                 anari_cpp::World w,
-                                 viskores::Vec3f_32 cam_pos,
-                                 viskores::Vec3f_32 cam_dir,
-                                 viskores::Vec3f_32 cam_up,
-                                 const std::string& imgName,
-                                 viskores::Vec2ui_32 imgSize = viskores::Vec2ui_32(1024, 768))
+static TestEqualResult renderTestANARIImage(anari_cpp::Device d,
+                                            anari_cpp::World w,
+                                            viskores::Vec3f_32 cam_pos,
+                                            viskores::Vec3f_32 cam_dir,
+                                            viskores::Vec3f_32 cam_up,
+                                            const std::string& imgName,
+                                            viskores::Vec2ui_32 imgSize = viskores::Vec2ui_32(1024,
+                                                                                              768))
 {
   auto renderer = anari_cpp::newObject<anari_cpp::Renderer>(d, "default");
   anari_cpp::setParameter(d, renderer, "background", viskores::Vec4f_32(0.3f, 0.3f, 0.3f, 1.f));
@@ -108,7 +108,7 @@ static void renderTestANARIImage(anari_cpp::Device d,
 
   image.AddPointField("color", colorArray);
 
-  VISKORES_TEST_ASSERT(test_equal_images(image, imgName));
+  return test_equal_images(image, imgName);
 }
 
 } // namespace

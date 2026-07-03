@@ -66,6 +66,7 @@ public:
   ANARISpatialField newSpatialField(const char* subtype) override
   {
     ++this->SpatialFieldsCreated;
+    this->SpatialFieldSubtypes.emplace_back(subtype ? subtype : "");
     return this->ViskoresDevice::newSpatialField(subtype);
   }
 
@@ -149,6 +150,7 @@ public:
   void ClearPendingCommits() { this->m_state->commitBuffer.clear(); }
 
   viskores::Id SpatialFieldsCreated{ 0 };
+  std::vector<std::string> SpatialFieldSubtypes;
 
 protected:
   int deviceGetProperty(const char* name,
@@ -249,6 +251,9 @@ void TestTetrahedronUsesKHRParameterTypes()
     auto actor = MakeSingleCellActor(viskores::CELL_SHAPE_TETRA, 4);
     viskores::interop::anari::ANARIMapperVolume mapper(device, actor);
     auto spatialField = mapper.GetANARISpatialField();
+    VISKORES_TEST_ASSERT(inspection->SpatialFieldSubtypes ==
+                           std::vector<std::string>{ "unstructured" },
+                         "The volume mapper did not create an unstructured spatial field.");
 
     const auto& index = inspection->GetArrayParameter(spatialField, "index");
     VISKORES_TEST_ASSERT(index.ElementType == ANARI_UINT32,
@@ -711,10 +716,14 @@ void TestStructuredToUnstructuredTransitionIsAtomic()
   {
     viskores::interop::anari::ANARIMapperVolume mapper(device, MakeStructuredActor());
     auto originalField = mapper.GetANARISpatialField();
+    VISKORES_TEST_ASSERT(inspection->SpatialFieldSubtypes.back() == "structuredRegular",
+                         "Structured input did not create a structuredRegular spatial field.");
     auto volume = mapper.GetANARIVolume();
 
     mapper.SetActor(MakeSingleCellActor(viskores::CELL_SHAPE_TETRA, 4));
     auto replacementField = mapper.GetANARISpatialField();
+    VISKORES_TEST_ASSERT(inspection->SpatialFieldSubtypes.back() == "unstructured",
+                         "Unstructured input did not replace the spatial-field subtype.");
     VISKORES_TEST_ASSERT(replacementField != originalField,
                          "The structured spatial field was mutated in place.");
     VISKORES_TEST_ASSERT(mapper.GetANARIVolume() == volume,

@@ -57,6 +57,9 @@ void RenderTests()
   }
   if (!conesSupported)
   {
+    // The bundled Viskores device intentionally does not implement cone geometry. The
+    // mapper contract is covered by UnitTestANARIMapperGlyphsData; this image test runs
+    // only on a device that can render every mapper in the scene.
     VISKORES_TEST_SKIP("ANARI KHR_GEOMETRY_CONE extension not supported by ANARI device.");
   }
 
@@ -97,12 +100,13 @@ void RenderTests()
 
   // Render a frame ///////////////////////////////////////////////////////////
 
-  renderTestANARIImage(d,
-                       scene.GetANARIWorld(),
-                       viskores::Vec3f_32(-0.05, 1.43, 1.87),
-                       viskores::Vec3f_32(0.32, -0.53, -0.79),
-                       viskores::Vec3f_32(-0.20, -0.85, 0.49),
-                       "interop/anari/scene-empty-mappers.png");
+  const auto emptyImageResult = renderTestANARIImage(d,
+                                                     scene.GetANARIWorld(),
+                                                     viskores::Vec3f_32(-0.05, 1.43, 1.87),
+                                                     viskores::Vec3f_32(0.32, -0.53, -0.79),
+                                                     viskores::Vec3f_32(-0.20, -0.85, 0.49),
+                                                     "interop/anari/scene-empty-mappers.png");
+  VISKORES_TEST_ASSERT(emptyImageResult);
 
   // Render a frame ///////////////////////////////////////////////////////////
 
@@ -116,12 +120,13 @@ void RenderTests()
   setColorMap(d, mIso);
   setColorMap(d, mGrad);
 
-  renderTestANARIImage(d,
-                       scene.GetANARIWorld(),
-                       viskores::Vec3f_32(-0.05, 1.43, 1.87),
-                       viskores::Vec3f_32(0.32, -0.53, -0.79),
-                       viskores::Vec3f_32(-0.20, -0.85, 0.49),
-                       "interop/anari/scene.png");
+  const auto imageResult = renderTestANARIImage(d,
+                                                scene.GetANARIWorld(),
+                                                viskores::Vec3f_32(-0.05, 1.43, 1.87),
+                                                viskores::Vec3f_32(0.32, -0.53, -0.79),
+                                                viskores::Vec3f_32(-0.20, -0.85, 0.49),
+                                                "interop/anari/scene.png");
+  VISKORES_TEST_ASSERT(imageResult);
 }
 
 } // namespace

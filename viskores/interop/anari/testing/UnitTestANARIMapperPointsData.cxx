@@ -14,8 +14,10 @@
 #include <anari/frontend/type_utility.h>
 
 #include <array>
+#include <chrono>
 #include <cstddef>
 #include <cstring>
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
@@ -68,6 +70,13 @@ public:
     this->NumberOfArrayBytesCreated += record.Values.size();
     this->Arrays[array] = std::move(record);
     return array;
+  }
+
+  ANARIGeometry newGeometry(const char* subtype) override
+  {
+    auto geometry = this->ViskoresDevice::newGeometry(subtype);
+    this->GeometrySubtypes[geometry] = subtype ? subtype : "";
+    return geometry;
   }
 
   void setParameter(ANARIObject object,
@@ -196,6 +205,14 @@ public:
 
   std::size_t GetNumberOfArrayBytesCreated() const { return this->NumberOfArrayBytesCreated; }
 
+  const std::string& GetGeometrySubtype(ANARIGeometry geometry) const
+  {
+    auto subtype = this->GeometrySubtypes.find(geometry);
+    VISKORES_TEST_ASSERT(subtype != this->GeometrySubtypes.end(),
+                         "No subtype was recorded for the ANARI geometry.");
+    return subtype->second;
+  }
+
 private:
   std::map<ANARIArray1D, ArrayRecord> Arrays;
   std::map<ANARIObject, std::map<std::string, ArrayRecord>> ArrayParameters;
@@ -204,6 +221,7 @@ private:
   std::map<ANARIObject, std::map<std::string, ANARIObject>> ObjectParameters;
   std::map<ANARIObject, std::map<std::string, ValueRecord>> ValueParameters;
   std::map<ANARIObject, std::set<std::string>> ParameterNames;
+  std::map<ANARIGeometry, std::string> GeometrySubtypes;
   std::size_t NumberOfArraysCreated{ 0 };
   std::size_t NumberOfArrayBytesCreated{ 0 };
 };
@@ -233,6 +251,8 @@ void TestContiguousPositionsAndGlobalRadius()
     viskores::interop::anari::ANARIMapperPoints mapper(device, actor);
     auto geometry = mapper.GetANARIGeometry();
 
+    VISKORES_TEST_ASSERT(inspection->GetGeometrySubtype(geometry) == "sphere",
+                         "The point mapper did not create sphere geometry.");
     const auto& positionParameter = inspection->GetArrayParameter(geometry, "vertex.position");
     VISKORES_TEST_ASSERT(positionParameter.ElementType == ANARI_FLOAT32_VEC3,
                          "Point positions were not ANARI_FLOAT32_VEC3.");
@@ -487,9 +507,13 @@ void TestRepresentativePointSetCreatesOnlyPositionArray()
     }
     viskores::cont::CoordinateSystem coordinates(
       "coordinates", viskores::cont::make_ArrayHandle(positions, viskores::CopyFlag::Off));
+    const auto loweringStart = std::chrono::steady_clock::now();
     viskores::interop::anari::ANARIMapperPoints mapper(
       device, viskores::interop::anari::ANARIActor({}, coordinates));
     auto geometry = mapper.GetANARIGeometry();
+    const auto loweringEnd = std::chrono::steady_clock::now();
+    const auto loweringMilliseconds =
+      std::chrono::duration<viskores::Float64, std::milli>(loweringEnd - loweringStart).count();
 
     VISKORES_TEST_ASSERT(inspection->GetArrayParameter(geometry, "vertex.position").NumberOfItems ==
                            numberOfPoints,
@@ -500,6 +524,14 @@ void TestRepresentativePointSetCreatesOnlyPositionArray()
       inspection->GetNumberOfArrayBytesCreated() ==
         static_cast<std::size_t>(numberOfPoints) * sizeof(viskores::Vec3f_32),
       "The representative point set created more ANARI array storage than its positions.");
+
+    std::cout << "<DartMeasurement name=\"ANARI.PointLoweringMilliseconds\" "
+                 "type=\"numeric/double\">"
+              << loweringMilliseconds << "</DartMeasurement>\n";
+    std::cout << "<DartMeasurement name=\"ANARI.PointArrayBytes\" type=\"numeric/integer\">"
+              << inspection->GetNumberOfArrayBytesCreated() << "</DartMeasurement>\n";
+    std::cout << "<DartMeasurement name=\"ANARI.PointArrayCount\" type=\"numeric/integer\">"
+              << inspection->GetNumberOfArraysCreated() << "</DartMeasurement>\n";
   }
   anari_cpp::release(device, device);
 }

@@ -15,6 +15,8 @@
 namespace
 {
 
+// This is bundled-device extension coverage. It deliberately constructs raw
+// ANARI objects and does not exercise a viskores::interop::anari mapper.
 anari_cpp::Array1D CreateSpherePositions(anari_cpp::Device d)
 {
   auto vertices = anari_cpp::newArray1D(d, ANARI_FLOAT32_VEC3, 6);
@@ -162,31 +164,33 @@ void RenderTests()
   // Render indexed sphere geometry //////////////////////////////////////////
 
   auto indexedWorld = CreateSphereWorld(d, true);
-  renderTestANARIImage(d,
-                       indexedWorld,
-                       viskores::Vec3f_32(1.8f, -2.2f, 1.4f),
-                       viskores::Vec3f_32(-0.58f, 0.7f, -0.42f),
-                       viskores::Vec3f_32(0.f, 0.f, 1.f),
-                       "interop/anari/sphere.png",
-                       viskores::Vec2ui_32(512, 512));
+  const auto indexedImageResult = renderTestANARIImage(d,
+                                                       indexedWorld,
+                                                       viskores::Vec3f_32(1.8f, -2.2f, 1.4f),
+                                                       viskores::Vec3f_32(-0.58f, 0.7f, -0.42f),
+                                                       viskores::Vec3f_32(0.f, 0.f, 1.f),
+                                                       "interop/anari/sphere.png",
+                                                       viskores::Vec2ui_32(512, 512));
   anari_cpp::release(d, indexedWorld);
+  VISKORES_TEST_ASSERT(indexedImageResult);
 
   // Render non-indexed sphere geometry //////////////////////////////////////
 
   auto unindexedWorld = CreateSphereWorld(d, false);
-  renderTestANARIImage(d,
-                       unindexedWorld,
-                       viskores::Vec3f_32(1.8f, -2.2f, 1.4f),
-                       viskores::Vec3f_32(-0.58f, 0.7f, -0.42f),
-                       viskores::Vec3f_32(0.f, 0.f, 1.f),
-                       "interop/anari/sphere-unindexed.png",
-                       viskores::Vec2ui_32(512, 512));
+  const auto unindexedImageResult = renderTestANARIImage(d,
+                                                         unindexedWorld,
+                                                         viskores::Vec3f_32(1.8f, -2.2f, 1.4f),
+                                                         viskores::Vec3f_32(-0.58f, 0.7f, -0.42f),
+                                                         viskores::Vec3f_32(0.f, 0.f, 1.f),
+                                                         "interop/anari/sphere-unindexed.png",
+                                                         viskores::Vec2ui_32(512, 512));
   anari_cpp::release(d, unindexedWorld);
+  VISKORES_TEST_ASSERT(unindexedImageResult);
 }
 
 } // namespace
 
-int UnitTestANARIGeometrySphere(int argc, char* argv[])
+int UnitTestANARIDeviceGeometrySphere(int argc, char* argv[])
 {
   return viskores::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

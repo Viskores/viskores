@@ -83,16 +83,17 @@ void RenderTests()
 
   // Render a frame ///////////////////////////////////////////////////////////
 
-  renderTestANARIImage(d,
-                       world,
-                       viskores::Vec3f_32(0.5f, 1.f, 0.6f),
-                       viskores::Vec3f_32(0.f, -1.f, 0.f),
-                       viskores::Vec3f_32(0.f, 0.f, 1.f),
-                       "interop/anari/glyphs.png");
+  const auto imageResult = renderTestANARIImage(d,
+                                                world,
+                                                viskores::Vec3f_32(0.5f, 1.f, 0.6f),
+                                                viskores::Vec3f_32(0.f, -1.f, 0.f),
+                                                viskores::Vec3f_32(0.f, 0.f, 1.f),
+                                                "interop/anari/glyphs.png");
 
   // Cleanup //////////////////////////////////////////////////////////////////
 
   anari_cpp::release(d, world);
+  VISKORES_TEST_ASSERT(imageResult);
 }
 
 } // namespace

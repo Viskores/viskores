@@ -62,16 +62,17 @@ void RenderTests()
 
   // Render a frame ///////////////////////////////////////////////////////////
 
-  renderTestANARIImage(d,
-                       world,
-                       viskores::Vec3f_32(-0.05, 1.43, 1.87),
-                       viskores::Vec3f_32(0.32, -0.53, -0.79),
-                       viskores::Vec3f_32(-0.20, -0.85, 0.49),
-                       "interop/anari/volume.png");
+  const auto imageResult = renderTestANARIImage(d,
+                                                world,
+                                                viskores::Vec3f_32(-0.05, 1.43, 1.87),
+                                                viskores::Vec3f_32(0.32, -0.53, -0.79),
+                                                viskores::Vec3f_32(-0.20, -0.85, 0.49),
+                                                "interop/anari/volume.png");
 
   // Cleanup //////////////////////////////////////////////////////////////////
 
   anari_cpp::release(d, world);
+  VISKORES_TEST_ASSERT(imageResult);
 }
 
 } // namespace
