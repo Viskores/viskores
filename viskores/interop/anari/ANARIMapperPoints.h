@@ -36,12 +36,12 @@ struct PointsParameters
   struct VertexData
   {
     anari_cpp::Array1D Position{ nullptr };
-    anari_cpp::Array1D Radius{ nullptr };
     std::array<anari_cpp::Array1D, 4> Attribute;
     std::array<std::string, 4> AttributeName;
   } Vertex{};
 
-  unsigned int NumPrimitives{ 0 };
+  viskores::Float32 Radius{ 0.01f };
+  viskores::UInt64 NumPrimitives{ 0 };
 };
 
 /// @brief Viskores data arrays underlying the `ANARIArray` handles created by the mapper.
@@ -49,33 +49,34 @@ struct PointsParameters
 struct PointsArrays
 {
   viskores::cont::ArrayHandle<viskores::Vec3f_32> Vertices;
-  viskores::cont::ArrayHandle<viskores::Float32> Radii;
   std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
 };
 
-/// @brief Viskores data arrays underlying the `ANARIArray` handles created by the mapper for field attributes.
+/// @brief One point field lowered for an ANARI sphere attribute binding.
+///
+struct PointFieldArray
+{
+  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Values;
+  std::string Name;
+};
+
+/// @brief Viskores data arrays underlying the mapper's ANARI attribute arrays.
 ///
 struct PointsFieldArrays
 {
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field1;
-  int NumberOfField1Components{ 1 };
-  std::string Field1Name;
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field2;
-  int NumberOfField2Components{ 1 };
-  std::string Field2Name;
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field3;
-  int NumberOfField3Components{ 1 };
-  std::string Field3Name;
-  viskores::cont::ArrayHandleRuntimeVec<viskores::Float32> Field4;
-  int NumberOfField4Components{ 1 };
-  std::string Field4Name;
+  std::array<PointFieldArray, 4> Fields;
   std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
 };
 
 /// @brief Mapper which turns each point into ANARI `sphere` geometry.
 ///
-/// NOTE: This mapper will color map values that are 1/2/3/4 component Float32
-/// fields, otherwise they will be ignored.
+/// Sphere geometry uses one global radius equal to the coordinate-bounds
+/// diagonal divided by 500. A radius of 0.01 is used when the bounds are
+/// degenerate or non-finite.
+///
+/// Point-associated fields with one through four float-convertible components
+/// and exactly one value per coordinate are exposed as vertex attributes.
+/// Other fields are ignored.
 struct VISKORES_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
 {
   /// @brief Constructor
