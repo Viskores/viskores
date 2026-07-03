@@ -19,7 +19,11 @@
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayCopyDevice.h>
+#include <viskores/cont/ArrayHandleUniformPointCoordinates.h>
+#include <viskores/cont/ErrorBadValue.h>
 #include <viskores/interop/anari/ANARIMapperVolume.h>
+
+#include <cstring>
 
 namespace viskores
 {
@@ -27,6 +31,56 @@ namespace interop
 {
 namespace anari
 {
+
+namespace
+{
+
+bool StringListContains(const char* const* values, const char* expected)
+{
+  if (!values)
+  {
+    return false;
+  }
+  for (const char* const* value = values; *value != nullptr; ++value)
+  {
+    if (std::strcmp(*value, expected) == 0)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ActorIsEmpty(const ANARIActor& actor)
+{
+  return actor.GetCellSet().GetNumberOfCells() == 0 &&
+    actor.GetCoordinateSystem().GetNumberOfPoints() == 0 &&
+    actor.GetField().GetNumberOfValues() == 0;
+}
+
+void RequireANARIObjectSupport(anari_cpp::Device device,
+                               ANARIDataType objectType,
+                               const char* subtype,
+                               const char* extension)
+{
+  const char** extensions = nullptr;
+  const auto extensionsAvailable = anariGetProperty(
+    device, device, "extension", ANARI_STRING_LIST, &extensions, sizeof(extensions), ANARI_WAIT);
+  if (extensionsAvailable == 0 || !StringListContains(extensions, extension))
+  {
+    throw viskores::cont::ErrorBadValue(std::string("ANARI device does not support required ") +
+                                        extension + " extension.");
+  }
+
+  const char** subtypes = anariGetObjectSubtypes(device, objectType);
+  if (!StringListContains(subtypes, subtype))
+  {
+    throw viskores::cont::ErrorBadValue(std::string("ANARI device does not support required '") +
+                                        subtype + "' subtype.");
+  }
+}
+
+} // anonymous namespace
 
 ANARIMapperVolume::ANARIMapperVolume(anari_cpp::Device device,
                                      const ANARIActor& actor,
@@ -49,8 +103,19 @@ ANARIMapperVolume::~ANARIMapperVolume()
 
 void ANARIMapperVolume::SetActor(const ANARIActor& actor)
 {
+  const ANARIActor previousActor = this->GetActor();
+  const bool previousCurrent = this->Current;
   this->ANARIMapper::SetActor(actor);
-  this->ConstructArrays(true);
+  try
+  {
+    this->ConstructArrays(true);
+  }
+  catch (...)
+  {
+    this->ANARIMapper::SetActor(previousActor);
+    this->Current = previousCurrent;
+    throw;
+  }
 }
 
 void ANARIMapperVolume::SetANARIColorMap(anari_cpp::Array1D color,
@@ -83,12 +148,13 @@ void ANARIMapperVolume::SetANARIColorMapOpacityScale(viskores::Float32 opacitySc
 
 anari_cpp::SpatialField ANARIMapperVolume::GetANARISpatialField()
 {
-  if (this->Handles->SpatialField)
-    return this->Handles->SpatialField;
+  if (this->Handles->Field)
+  {
+    return this->Handles->Field->SpatialField;
+  }
 
   this->ConstructArrays();
-  this->UpdateSpatialField();
-  return this->Handles->SpatialField;
+  return this->Handles->Field ? this->Handles->Field->SpatialField : nullptr;
 }
 
 anari_cpp::Volume ANARIMapperVolume::GetANARIVolume()
@@ -96,32 +162,52 @@ anari_cpp::Volume ANARIMapperVolume::GetANARIVolume()
   if (this->Handles->Volume)
     return this->Handles->Volume;
 
+  if (ActorIsEmpty(this->GetActor()))
+  {
+    this->Current = true;
+    this->Valid = false;
+    return nullptr;
+  }
+
   auto d = this->GetDevice();
 
-  this->Handles->Volume = anari_cpp::newObject<anari_cpp::Volume>(d, "transferFunction1D");
+  RequireANARIObjectSupport(
+    d, ANARI_VOLUME, "transferFunction1D", "ANARI_KHR_VOLUME_TRANSFER_FUNCTION1D");
+  auto volume = anari_cpp::newObject<anari_cpp::Volume>(d, "transferFunction1D");
+  this->Handles->Volume = volume;
 
-  auto colorArray = anari_cpp::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
-  auto* colors = anari_cpp::map<viskores::Vec3f_32>(d, colorArray);
-  colors[0] = viskores::Vec3f_32(1.f, 0.f, 0.f);
-  colors[1] = viskores::Vec3f_32(0.f, 1.f, 0.f);
-  colors[2] = viskores::Vec3f_32(0.f, 0.f, 1.f);
-  anari_cpp::unmap(d, colorArray);
+  try
+  {
+    auto colorArray = anari_cpp::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
+    auto* colors = anari_cpp::map<viskores::Vec3f_32>(d, colorArray);
+    colors[0] = viskores::Vec3f_32(1.f, 0.f, 0.f);
+    colors[1] = viskores::Vec3f_32(0.f, 1.f, 0.f);
+    colors[2] = viskores::Vec3f_32(0.f, 0.f, 1.f);
+    anari_cpp::unmap(d, colorArray);
 
-  auto opacityArray = anari_cpp::newArray1D(d, ANARI_FLOAT32, 2);
-  auto* opacities = anari_cpp::map<float>(d, opacityArray);
-  opacities[0] = 0.f;
-  opacities[1] = 1.f;
-  anari_cpp::unmap(d, opacityArray);
+    auto opacityArray = anari_cpp::newArray1D(d, ANARI_FLOAT32, 2);
+    auto* opacities = anari_cpp::map<viskores::Float32>(d, opacityArray);
+    opacities[0] = 0.f;
+    opacities[1] = 1.f;
+    anari_cpp::unmap(d, opacityArray);
 
-  anari_cpp::setAndReleaseParameter(d, this->Handles->Volume, "color", colorArray);
-  anari_cpp::setAndReleaseParameter(d, this->Handles->Volume, "opacity", opacityArray);
-  // Keep old name as a parameter for bug-backwards compatibility: 'field' isn't the right name
-  anari_cpp::setParameter(d, this->Handles->Volume, "field", this->GetANARISpatialField());
-  anari_cpp::setParameter(d, this->Handles->Volume, "value", this->GetANARISpatialField());
-  anari_cpp::setParameter(d, this->Handles->Volume, "name", this->MakeObjectName("volume"));
-  anari_cpp::commitParameters(d, this->Handles->Volume);
-
-  SetANARIColorMapValueRange(viskores::Vec2f_32(0.f, 10.f));
+    anari_cpp::setAndReleaseParameter(d, volume, "color", colorArray);
+    anari_cpp::setAndReleaseParameter(d, volume, "opacity", opacityArray);
+    auto spatialField = this->GetANARISpatialField();
+    // Keep old name as a parameter for bug-backwards compatibility: 'field' isn't the right name
+    anari_cpp::setParameter(d, volume, "field", spatialField);
+    anari_cpp::setParameter(d, volume, "value", spatialField);
+    anari_cpp::setParameter(d, volume, "name", this->MakeObjectName("volume"));
+    const viskores::Vec2f_32 valueRange(0.f, 10.f);
+    anari_cpp::setParameter(d, volume, "valueRange", ANARI_FLOAT32_BOX1, &valueRange);
+    anari_cpp::commitParameters(d, volume);
+  }
+  catch (...)
+  {
+    anari_cpp::release(d, volume);
+    this->Handles->Volume = nullptr;
+    throw;
+  }
 
   return this->Handles->Volume;
 }
@@ -164,9 +250,6 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   if (this->Current)
     return;
 
-  this->Current = true;
-  this->Valid = false;
-
   auto d = this->GetDevice();
 
   const auto& actor = this->GetActor();
@@ -174,54 +257,96 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   const auto& cells = actor.GetCellSet();
   const auto& fieldArray = actor.GetField().GetData();
 
+  if (ActorIsEmpty(actor))
+  {
+    if (this->Handles->Volume)
+    {
+      anari_cpp::unsetParameter(d, this->Handles->Volume, "field");
+      anari_cpp::unsetParameter(d, this->Handles->Volume, "value");
+      anari_cpp::commitParameters(d, this->Handles->Volume);
+    }
+    this->Handles->Field.reset();
+    this->Current = true;
+    this->Valid = false;
+    this->RefreshGroup();
+    return;
+  }
+
   const bool isPointBased =
     actor.GetField().GetAssociation() == viskores::cont::Field::Association::Points;
   const bool isStructured = cells.CanConvert<viskores::cont::CellSetStructured<3>>();
   const bool isScalar = fieldArray.GetNumberOfComponentsFlat() == 1;
 
-  this->Handles->ReleaseArrays();
-  anari_cpp::release(d, this->Handles->SpatialField);
-  this->Handles->SpatialField = nullptr;
+  if (fieldArray.GetNumberOfValues() == 0)
+  {
+    throw viskores::cont::ErrorBadValue("ANARI volumes require a non-empty field.");
+  }
+  if (!isPointBased || !isScalar)
+  {
+    throw viskores::cont::ErrorBadValue("ANARI volumes require a point-associated scalar field.");
+  }
+  if (isStructured &&
+      !coords.GetData().IsType<viskores::cont::ArrayHandleUniformPointCoordinates>())
+  {
+    throw viskores::cont::ErrorBadValue(
+      "ANARI structuredRegular volumes require uniform point coordinates.");
+  }
+
+  auto nextState = std::make_unique<ANARISpatialFieldState>();
+  nextState->Device = d;
 
   // Structured regular volume data
-  if (isStructured && isScalar)
+  if (isStructured)
   {
-    this->Handles->SpatialField =
-      anari_cpp::newObject<anari_cpp::SpatialField>(this->GetDevice(), "structuredRegular");
-
     auto structuredCells = cells.AsCellSet<viskores::cont::CellSetStructured<3>>();
-    auto pdims =
-      isPointBased ? structuredCells.GetPointDimensions() : structuredCells.GetCellDimensions();
+    auto pdims = structuredCells.GetPointDimensions();
+    if (pdims[0] < 2 || pdims[1] < 2 || pdims[2] < 2)
+    {
+      throw viskores::cont::ErrorBadValue(
+        "ANARI structuredRegular volumes require at least two samples per dimension.");
+    }
+    if (fieldArray.GetNumberOfValues() != pdims[0] * pdims[1] * pdims[2])
+    {
+      throw viskores::cont::ErrorBadValue(
+        "ANARI structuredRegular volumes require one field value per point.");
+    }
 
-    StructuredVolumeArrays arrays;
+    auto uniformCoordinates =
+      coords.GetData().AsArrayHandle<viskores::cont::ArrayHandleUniformPointCoordinates>();
+    if (uniformCoordinates.GetDimensions() != pdims)
+    {
+      throw viskores::cont::ErrorBadValue(
+        "ANARI structuredRegular coordinate and cell-set dimensions must match.");
+    }
+
+    RequireANARIObjectSupport(
+      d, ANARI_SPATIAL_FIELD, "structuredRegular", "ANARI_KHR_SPATIAL_FIELD_STRUCTURED_REGULAR");
+    nextState->SpatialField = anari_cpp::newObject<anari_cpp::SpatialField>(d, "structuredRegular");
+
+    auto& arrays = nextState->StructuredArrays;
 
     viskores::cont::ArrayCopyShallowIfPossible(fieldArray, arrays.Data);
-    auto* ptr = (float*)arrays.Data.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-
-    auto bounds = coords.GetBounds();
-    viskores::Vec3f_32 bLower(bounds.X.Min, bounds.Y.Min, bounds.Z.Min);
-    viskores::Vec3f_32 bUpper(bounds.X.Max, bounds.Y.Max, bounds.Z.Max);
-    viskores::Vec3f_32 size = bUpper - bLower;
+    auto* ptr = static_cast<const viskores::Float32*>(
+      arrays.Data.GetBuffers()[0].ReadPointerHost(*arrays.Token));
 
     viskores::Vec3ui_32 dims(pdims[0], pdims[1], pdims[2]);
-    auto spacing = size / (viskores::Vec3f_32(dims) - 1.f);
+    viskores::Vec3f_32 origin(uniformCoordinates.GetOrigin());
+    viskores::Vec3f_32 spacing(uniformCoordinates.GetSpacing());
 
-    std::memcpy(this->Handles->StructuredParameters.Dims, &dims, sizeof(dims));
-    std::memcpy(this->Handles->StructuredParameters.Origin, &bLower, sizeof(bLower));
-    std::memcpy(this->Handles->StructuredParameters.Spacing, &spacing, sizeof(spacing));
-    this->Handles->StructuredParameters.Data =
+    std::memcpy(nextState->StructuredParameters.Dims, &dims, sizeof(dims));
+    std::memcpy(nextState->StructuredParameters.Origin, &origin, sizeof(origin));
+    std::memcpy(nextState->StructuredParameters.Spacing, &spacing, sizeof(spacing));
+    nextState->StructuredParameters.Data =
       anari_cpp::newArray3D(d, ptr, NoopANARIDeleter, nullptr, dims[0], dims[1], dims[2]);
-
-    this->StructuredArrays = arrays;
-    this->Valid = true;
   }
   // Unstructured volume data
-  else if (isPointBased)
+  else
   {
-    this->Handles->SpatialField =
-      anari_cpp::newObject<anari_cpp::SpatialField>(this->GetDevice(), "unstructured");
+    RequireANARIObjectSupport(
+      d, ANARI_SPATIAL_FIELD, "unstructured", "ANARI_KHR_SPATIAL_FIELD_UNSTRUCTURED");
+    nextState->SpatialField = anari_cpp::newObject<anari_cpp::SpatialField>(d, "unstructured");
 
-    UntructuredVolumeArrays arrays;
+    auto& arrays = nextState->UnstructuredArrays;
 
     // Cell Data
     if (cells.IsType<viskores::cont::CellSetSingleType<>>())
@@ -272,160 +397,171 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     viskores::cont::ArrayCopyShallowIfPossible(fieldArray, arrays.VertexData);
 
     // "indexPrefixed"
-    this->Handles->UnstructuredParameters.IndexPrefixed = false;
+    nextState->UnstructuredParameters.IndexPrefixed = false;
 
     // "vertex.position"
     {
-      auto* ptr =
-        (viskores::Vec3f_32*)arrays.VertexPosition.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-      this->Handles->UnstructuredParameters.VertexPosition = anari_cpp::newArray1D(
+      auto* ptr = static_cast<const viskores::Vec3f_32*>(
+        arrays.VertexPosition.GetBuffers()[0].ReadPointerHost(*arrays.Token));
+      nextState->UnstructuredParameters.VertexPosition = anari_cpp::newArray1D(
         d, ptr, NoopANARIDeleter, nullptr, arrays.VertexPosition.GetNumberOfValues());
     }
 
     // "vertex.data"
     {
-      auto* ptr = (float*)arrays.VertexData.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-      this->Handles->UnstructuredParameters.VertexData = anari_cpp::newArray1D(
+      auto* ptr = static_cast<const viskores::Float32*>(
+        arrays.VertexData.GetBuffers()[0].ReadPointerHost(*arrays.Token));
+      nextState->UnstructuredParameters.VertexData = anari_cpp::newArray1D(
         d, ptr, NoopANARIDeleter, nullptr, arrays.VertexData.GetNumberOfValues());
     }
 
     // "index"
     {
-      auto* ptr = (uint64_t*)arrays.Index.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-      this->Handles->UnstructuredParameters.Index =
+      auto* ptr = static_cast<const viskores::UInt64*>(
+        arrays.Index.GetBuffers()[0].ReadPointerHost(*arrays.Token));
+      nextState->UnstructuredParameters.Index =
         anari_cpp::newArray1D(d, ptr, NoopANARIDeleter, nullptr, arrays.Index.GetNumberOfValues());
     }
 
     // "cell.index"
     {
-      auto* ptr = (uint64_t*)arrays.CellIndex.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-      this->Handles->UnstructuredParameters.CellIndex = anari_cpp::newArray1D(
+      auto* ptr = static_cast<const viskores::UInt64*>(
+        arrays.CellIndex.GetBuffers()[0].ReadPointerHost(*arrays.Token));
+      nextState->UnstructuredParameters.CellIndex = anari_cpp::newArray1D(
         d, ptr, NoopANARIDeleter, nullptr, arrays.CellIndex.GetNumberOfValues() - 1);
     }
 
     // TODO "cell.data" (NOT SUPPORED YET)
     // {
-    //   auto* ptr = (float*)arrays.CellData.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-    //   this->Handles->UnstructuredParameters.CellData =
+    //   auto* ptr = static_cast<const viskores::Float32*>(
+    //     arrays.CellData.GetBuffers()[0].ReadPointerHost(*arrays.Token));
+    //   nextState->UnstructuredParameters.CellData =
     //     anari_cpp::newArray1D(d, ptr, NoopANARIDeleter, nullptr, arrays.CellData.GetNumberOfValues());
     // }
 
     // "cell.type"
     {
-      uint8_t* ptr = (uint8_t*)arrays.CellType.GetBuffers()[0].ReadPointerHost(*arrays.Token);
-      this->Handles->UnstructuredParameters.CellType = anari_cpp::newArray1D(
+      auto* ptr = static_cast<const viskores::UInt8*>(
+        arrays.CellType.GetBuffers()[0].ReadPointerHost(*arrays.Token));
+      nextState->UnstructuredParameters.CellType = anari_cpp::newArray1D(
         d, ptr, NoopANARIDeleter, nullptr, arrays.CellType.GetNumberOfValues());
     }
-
-    this->UnstructuredArrays = arrays;
-    this->Valid = true;
   }
 
-  this->UpdateSpatialField();
+  this->UpdateSpatialField(*nextState);
+  this->Handles->Field = std::move(nextState);
+  this->Current = true;
+  this->Valid = true;
   this->RefreshGroup();
 }
 
-void ANARIMapperVolume::UpdateSpatialField()
+void ANARIMapperVolume::UpdateSpatialField(ANARISpatialFieldState& state)
 {
-  if (!this->Handles->SpatialField)
+  if (!state.SpatialField)
+  {
     return;
+  }
 
   auto d = this->GetDevice();
 
-  anari_cpp::unsetParameter(d, this->Handles->SpatialField, "origin");
-  anari_cpp::unsetParameter(d, this->Handles->SpatialField, "spacing");
-  anari_cpp::unsetParameter(d, this->Handles->SpatialField, "data");
+  anari_cpp::unsetParameter(d, state.SpatialField, "origin");
+  anari_cpp::unsetParameter(d, state.SpatialField, "spacing");
+  anari_cpp::unsetParameter(d, state.SpatialField, "data");
 
-  anari_cpp::unsetParameter(d, this->Handles->SpatialField, "vertex.position");
-  anari_cpp::unsetParameter(d, this->Handles->SpatialField, "vertex.data");
-  anari_cpp::unsetParameter(d, this->Handles->SpatialField, "index");
-  anari_cpp::unsetParameter(d, this->Handles->SpatialField, "indexPrefixed");
-  anari_cpp::unsetParameter(d, this->Handles->SpatialField, "cell.index");
-  anari_cpp::unsetParameter(d, this->Handles->SpatialField, "cell.data");
-  anari_cpp::unsetParameter(d, this->Handles->SpatialField, "cell.type");
+  anari_cpp::unsetParameter(d, state.SpatialField, "vertex.position");
+  anari_cpp::unsetParameter(d, state.SpatialField, "vertex.data");
+  anari_cpp::unsetParameter(d, state.SpatialField, "index");
+  anari_cpp::unsetParameter(d, state.SpatialField, "indexPrefixed");
+  anari_cpp::unsetParameter(d, state.SpatialField, "cell.index");
+  anari_cpp::unsetParameter(d, state.SpatialField, "cell.data");
+  anari_cpp::unsetParameter(d, state.SpatialField, "cell.type");
 
-  anari_cpp::setParameter(
-    d, this->Handles->SpatialField, "name", this->MakeObjectName("spatialField"));
+  anari_cpp::setParameter(d, state.SpatialField, "name", this->MakeObjectName("spatialField"));
 
-  if (this->Handles->StructuredParameters.Data)
+  if (state.StructuredParameters.Data)
   {
-    anari_cpp::setParameter(
-      d, this->Handles->SpatialField, "origin", this->Handles->StructuredParameters.Origin);
-    anari_cpp::setParameter(
-      d, this->Handles->SpatialField, "spacing", this->Handles->StructuredParameters.Spacing);
-    anari_cpp::setParameter(
-      d, this->Handles->SpatialField, "data", this->Handles->StructuredParameters.Data);
+    anari_cpp::setParameter(d, state.SpatialField, "origin", state.StructuredParameters.Origin);
+    anari_cpp::setParameter(d, state.SpatialField, "spacing", state.StructuredParameters.Spacing);
+    anari_cpp::setParameter(d, state.SpatialField, "data", state.StructuredParameters.Data);
   }
 
-  if (this->Handles->UnstructuredParameters.VertexPosition)
-  {
-    anari_cpp::setParameter(d,
-                            this->Handles->SpatialField,
-                            "vertex.position",
-                            this->Handles->UnstructuredParameters.VertexPosition);
-  }
-  if (this->Handles->UnstructuredParameters.VertexData)
-  {
-    anari_cpp::setParameter(d,
-                            this->Handles->SpatialField,
-                            "vertex.data",
-                            this->Handles->UnstructuredParameters.VertexData);
-  }
-  if (this->Handles->UnstructuredParameters.Index)
+  if (state.UnstructuredParameters.VertexPosition)
   {
     anari_cpp::setParameter(
-      d, this->Handles->SpatialField, "index", this->Handles->UnstructuredParameters.Index);
+      d, state.SpatialField, "vertex.position", state.UnstructuredParameters.VertexPosition);
   }
-  if (this->Handles->UnstructuredParameters.CellIndex)
+  if (state.UnstructuredParameters.VertexData)
   {
-    anari_cpp::setParameter(d,
-                            this->Handles->SpatialField,
-                            "indexPrefixed",
-                            this->Handles->UnstructuredParameters.IndexPrefixed);
+    anari_cpp::setParameter(
+      d, state.SpatialField, "vertex.data", state.UnstructuredParameters.VertexData);
   }
-  if (this->Handles->UnstructuredParameters.CellIndex)
+  if (state.UnstructuredParameters.Index)
   {
-    anari_cpp::setParameter(d,
-                            this->Handles->SpatialField,
-                            "cell.index",
-                            this->Handles->UnstructuredParameters.CellIndex);
+    anari_cpp::setParameter(d, state.SpatialField, "index", state.UnstructuredParameters.Index);
   }
-  // if (this->Handles->UnstructuredParameters.CellData)
+  if (state.UnstructuredParameters.CellIndex)
+  {
+    anari_cpp::setParameter(
+      d, state.SpatialField, "indexPrefixed", state.UnstructuredParameters.IndexPrefixed);
+  }
+  if (state.UnstructuredParameters.CellIndex)
+  {
+    anari_cpp::setParameter(
+      d, state.SpatialField, "cell.index", state.UnstructuredParameters.CellIndex);
+  }
+  // if (state.UnstructuredParameters.CellData)
   // {
   //   anari_cpp::setParameter(
-  //     d, this->Handles->SpatialField, "cell.data", this->Handles->UnstructuredParameters.CellData);
+  //     d, state.SpatialField, "cell.data", state.UnstructuredParameters.CellData);
   // }
-  if (this->Handles->UnstructuredParameters.CellType)
+  if (state.UnstructuredParameters.CellType)
   {
     anari_cpp::setParameter(
-      d, this->Handles->SpatialField, "cell.type", this->Handles->UnstructuredParameters.CellType);
+      d, state.SpatialField, "cell.type", state.UnstructuredParameters.CellType);
   }
 
-  anari_cpp::commitParameters(d, this->Handles->SpatialField);
+  anari_cpp::commitParameters(d, state.SpatialField);
 
   if (this->Handles->Volume)
   {
-    anari_cpp::setParameter(d, this->Handles->Volume, "field", this->GetANARISpatialField());
-    anari_cpp::setParameter(d, this->Handles->Volume, "value", this->GetANARISpatialField());
+    anari_cpp::setParameter(d, this->Handles->Volume, "field", state.SpatialField);
+    anari_cpp::setParameter(d, this->Handles->Volume, "value", state.SpatialField);
     anari_cpp::commitParameters(d, this->Handles->Volume);
   }
 }
 
 ANARIMapperVolume::ANARIHandles::~ANARIHandles()
 {
-  this->ReleaseArrays();
   anari_cpp::release(this->Device, this->Volume);
-  anari_cpp::release(this->Device, this->SpatialField);
+  this->Volume = nullptr;
+  this->Field.reset();
   anari_cpp::release(this->Device, this->Device);
 }
 
-void ANARIMapperVolume::ANARIHandles::ReleaseArrays()
+ANARIMapperVolume::ANARISpatialFieldState::~ANARISpatialFieldState()
+{
+  anari_cpp::release(this->Device, this->SpatialField);
+  this->SpatialField = nullptr;
+  this->ReleaseArrays();
+}
+
+void ANARIMapperVolume::ANARISpatialFieldState::ReleaseArrays()
 {
   anari_cpp::release(this->Device, this->StructuredParameters.Data);
   this->StructuredParameters.Data = nullptr;
 
   anari_cpp::release(this->Device, this->UnstructuredParameters.VertexPosition);
   this->UnstructuredParameters.VertexPosition = nullptr;
+  anari_cpp::release(this->Device, this->UnstructuredParameters.VertexData);
+  this->UnstructuredParameters.VertexData = nullptr;
+  anari_cpp::release(this->Device, this->UnstructuredParameters.Index);
+  this->UnstructuredParameters.Index = nullptr;
+  anari_cpp::release(this->Device, this->UnstructuredParameters.CellIndex);
+  this->UnstructuredParameters.CellIndex = nullptr;
+  anari_cpp::release(this->Device, this->UnstructuredParameters.CellData);
+  this->UnstructuredParameters.CellData = nullptr;
+  anari_cpp::release(this->Device, this->UnstructuredParameters.CellType);
+  this->UnstructuredParameters.CellType = nullptr;
 }
 
 } // namespace anari

@@ -13,6 +13,7 @@
       "khr_geometry_triangle",
       "khr_material_matte",
       "khr_sampler_image1d",
+      "khr_spatial_field_structured_regular",
       "khr_volume_transfer_function1d"
     ]
   },

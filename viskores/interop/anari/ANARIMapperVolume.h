@@ -70,6 +70,12 @@ struct UntructuredVolumeArrays
 
 /// @brief Mapper which turns structured volumes into a single ANARI `transferFunction1D` volume.
 ///
+/// A `structuredRegular` field requires a 3D structured cell set, uniform point coordinates,
+/// a non-empty point-associated scalar field with one value per point, and at least two samples
+/// in each dimension. Inputs which do not meet these requirements are rejected with
+/// `viskores::cont::ErrorBadValue`; they are never silently reinterpreted as regular grids.
+/// A completely empty actor represents an empty mapper and does not create ANARI objects.
+///
 /// NOTE: This currently only supports Float32 scalar fields. In the future this
 /// mapper will also support Uint8, Uint16, and Float64 scalar fields.
 struct VISKORES_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
@@ -118,24 +124,33 @@ private:
   /// @param regenerate Force the position/radius arrays are regenerated.
   ///
   void ConstructArrays(bool regenerate = false);
-  /// @brief Update ANARISpatialField object with the latest data from the actor.
-  void UpdateSpatialField();
+
+  /// @brief Atomic state for a spatial field and its backing arrays.
+  struct ANARISpatialFieldState
+  {
+    anari_cpp::Device Device{ nullptr };
+    anari_cpp::SpatialField SpatialField{ nullptr };
+    StructuredVolumeParameters StructuredParameters;
+    UnstructuredVolumeParameters UnstructuredParameters;
+    StructuredVolumeArrays StructuredArrays;
+    UntructuredVolumeArrays UnstructuredArrays;
+    ~ANARISpatialFieldState();
+    void ReleaseArrays();
+  };
+
+  /// @brief Update an ANARISpatialField object with its prepared state.
+  void UpdateSpatialField(ANARISpatialFieldState& state);
 
   /// @brief Container of all relevant ANARI scene object handles.
   struct ANARIHandles
   {
     anari_cpp::Device Device{ nullptr };
-    anari_cpp::SpatialField SpatialField{ nullptr };
     anari_cpp::Volume Volume{ nullptr };
-    StructuredVolumeParameters StructuredParameters;
-    UnstructuredVolumeParameters UnstructuredParameters;
+    std::unique_ptr<ANARISpatialFieldState> Field;
     ~ANARIHandles();
-    void ReleaseArrays();
   };
 
   std::unique_ptr<ANARIHandles> Handles;
-  StructuredVolumeArrays StructuredArrays;
-  UntructuredVolumeArrays UnstructuredArrays;
 };
 
 } // namespace anari
