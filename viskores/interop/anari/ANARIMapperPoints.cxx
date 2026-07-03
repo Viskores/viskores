@@ -142,7 +142,9 @@ anari_cpp::Surface ANARIMapperPoints::GetANARISurface()
 void ANARIMapperPoints::ConstructArrays()
 {
   if (!this->IsDirty(DirtyCategory::Data) && !this->IsDirty(DirtyCategory::Topology))
+  {
     return;
+  }
 
   this->Valid = false;
 

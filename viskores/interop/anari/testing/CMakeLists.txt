@@ -53,9 +53,7 @@ set_property(TEST ${anari_interop_test_names} APPEND PROPERTY LABELS ANARI_INTER
 set_property(TEST UnitTestANARIExternalDevice APPEND PROPERTY LABELS ANARI_EXTERNAL)
 set_property(TEST ${anari_device_test_names} APPEND PROPERTY LABELS ANARI_DEVICE)
 
-# The bundled device reports its live ANARI object counts when it is destroyed.
-# Treat those diagnostics as failures so every focused test acts as leak coverage,
-# including builds that are not instrumented by the project's sanitizer jobs.
+# Fail tests when the bundled device reports leaked ANARI objects.
 set_property(
   TEST ${anari_interop_test_names} ${anari_device_test_names}
   APPEND PROPERTY FAIL_REGULAR_EXPRESSION "detected [1-9][0-9]* leaked ANARI")

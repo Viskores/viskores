@@ -234,7 +234,9 @@ bool ANARIMapperTriangles::NeedToGenerateData() const
 void ANARIMapperTriangles::ConstructArrays()
 {
   if (!this->NeedToGenerateData())
+  {
     return;
+  }
 
   this->Valid = false;
 

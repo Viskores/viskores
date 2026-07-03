@@ -66,7 +66,7 @@ public:
     const auto direction = static_cast<viskores::Vec3f_32>(gradient);
     const auto magnitude = viskores::Magnitude(direction);
     const auto pt = points.Get(idx);
-    if (!(magnitude > 0.f) || !viskores::IsFinite(magnitude))
+    if (!viskores::IsFinite(magnitude) || magnitude <= 0.f)
     {
       for (viskores::IdComponent vertex = 0; vertex < 4; ++vertex)
       {
@@ -259,7 +259,9 @@ ANARIMapperGlyphs::~ANARIMapperGlyphs()
 void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
 {
   if (this->Offset == enabled)
+  {
     return;
+  }
 
   this->Offset = enabled;
   this->MarkDirty(DirtyCategory::Data);
@@ -315,7 +317,9 @@ anari_cpp::Surface ANARIMapperGlyphs::GetANARISurface()
 void ANARIMapperGlyphs::ConstructArrays()
 {
   if (!this->IsDirty(DirtyCategory::Data) && !this->IsDirty(DirtyCategory::Topology))
+  {
     return;
+  }
 
   const auto& actor = this->GetActor();
   const auto& coords = actor.GetCoordinateSystem();
@@ -350,7 +354,7 @@ void ANARIMapperGlyphs::ConstructArrays()
   constexpr viskores::Float64 heuristic = 300.;
   constexpr viskores::Float32 fallbackSize = 0.01f;
   auto glyphSize = static_cast<viskores::Float32>(mag / heuristic);
-  if (!(glyphSize > 0.f) || !viskores::IsFinite(glyphSize))
+  if (!viskores::IsFinite(glyphSize) || glyphSize <= 0.f)
   {
     glyphSize = fallbackSize;
   }
