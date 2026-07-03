@@ -20,8 +20,6 @@
 #include <viskores/Math.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/interop/anari/ANARIMapperPoints.h>
-// anari
-#include <anari/anari_cpp/ext/linalg.h>
 
 namespace viskores
 {
@@ -90,60 +88,14 @@ ANARIMapperPoints::~ANARIMapperPoints()
   this->Handles.reset();
 }
 
-void ANARIMapperPoints::SetActor(const ANARIActor& actor)
-{
-  this->ANARIMapper::SetActor(actor);
-  this->ConstructArrays(true);
-  this->UpdateMaterial();
-}
-
-void ANARIMapperPoints::SetMapFieldAsAttribute(bool enabled)
-{
-  this->ANARIMapper::SetMapFieldAsAttribute(enabled);
-  this->UpdateGeometry();
-  this->UpdateMaterial();
-}
-
-void ANARIMapperPoints::SetANARIColorMap(anari_cpp::Array1D color,
-                                         anari_cpp::Array1D opacity,
-                                         bool releaseArrays)
-{
-  this->GetANARISurface();
-  auto s = this->Handles->Sampler;
-  if (s)
-  {
-    auto d = this->GetDevice();
-    anari_cpp::setParameter(d, s, "image", color);
-    anari_cpp::commitParameters(d, s);
-  }
-  this->ANARIMapper::SetANARIColorMap(color, opacity, releaseArrays);
-}
-
-void ANARIMapperPoints::SetANARIColorMapValueRange(const viskores::Vec2f_32& valueRange)
-{
-  this->GetANARISurface();
-  auto s = this->Handles->Sampler;
-  if (s)
-  {
-    auto d = this->GetDevice();
-    auto minimum = valueRange[0];
-    auto maximum = valueRange[1];
-    if (!viskores::IsFinite(minimum) || !viskores::IsFinite(maximum) || maximum <= minimum)
-    {
-      minimum = 0.f;
-      maximum = 1.f;
-    }
-    auto scale = anari_cpp::scaling_matrix(anari_cpp::float3(1.f / (maximum - minimum)));
-    auto translation = anari_cpp::translation_matrix(anari_cpp::float3(-minimum, 0, 0));
-    anari_cpp::setParameter(d, s, "inTransform", anari_cpp::mul(scale, translation));
-    anari_cpp::commitParameters(d, s);
-  }
-}
-
 anari_cpp::Geometry ANARIMapperPoints::GetANARIGeometry()
 {
   if (this->Handles->Geometry)
+  {
+    this->ConstructArrays();
+    this->UpdateMaterializedObjects();
     return this->Handles->Geometry;
+  }
 
   auto d = this->GetDevice();
   this->Handles->Geometry = anari_cpp::newObject<anari_cpp::Geometry>(d, "sphere");
@@ -156,7 +108,10 @@ anari_cpp::Geometry ANARIMapperPoints::GetANARIGeometry()
 anari_cpp::Surface ANARIMapperPoints::GetANARISurface()
 {
   if (this->Handles->Surface)
+  {
+    this->UpdateMaterializedObjects();
     return this->Handles->Surface;
+  }
 
   auto d = this->GetDevice();
 
@@ -170,19 +125,7 @@ anari_cpp::Surface ANARIMapperPoints::GetANARISurface()
 
   auto s = anari_cpp::newObject<anari_cpp::Sampler>(d, "image1D");
   this->Handles->Sampler = s;
-  auto colorArray = anari_cpp::newArray1D(d, ANARI_FLOAT32_VEC4, 3);
-  auto* colors = anari_cpp::map<viskores::Vec4f_32>(d, colorArray);
-  colors[0] = viskores::Vec4f_32(1.f, 0.f, 0.f, 0.f);
-  colors[1] = viskores::Vec4f_32(0.f, 1.f, 0.f, 0.5f);
-  colors[2] = viskores::Vec4f_32(0.f, 0.f, 1.f, 1.f);
-  anari_cpp::unmap(d, colorArray);
-  anari_cpp::setAndReleaseParameter(d, s, "image", colorArray);
-  anari_cpp::setParameter(d, s, "filter", "linear");
-  anari_cpp::setParameter(d, s, "wrapMode", "clampToEdge");
-  anari_cpp::setParameter(d, s, "name", this->MakeObjectName("colormap"));
-  anari_cpp::commitParameters(d, s);
-
-  this->SetANARIColorMapValueRange(viskores::Vec2f_32(0.f, 10.f));
+  this->UpdateANARISampler(s, "linear");
 
   this->UpdateMaterial();
 
@@ -190,19 +133,17 @@ anari_cpp::Surface ANARIMapperPoints::GetANARISurface()
   anari_cpp::setParameter(d, this->Handles->Surface, "geometry", this->GetANARIGeometry());
   anari_cpp::setParameter(d, this->Handles->Surface, "material", this->Handles->Material);
   anari_cpp::commitParameters(d, this->Handles->Surface);
+  this->ClearDirty(DirtyCategory::Appearance);
+  this->ClearDirty(DirtyCategory::Names);
 
   return this->Handles->Surface;
 }
 
-void ANARIMapperPoints::ConstructArrays(bool regenerate)
+void ANARIMapperPoints::ConstructArrays()
 {
-  if (regenerate)
-    this->Current = false;
-
-  if (this->Current)
+  if (!this->IsDirty(DirtyCategory::Data) && !this->IsDirty(DirtyCategory::Topology))
     return;
 
-  this->Current = true;
   this->Valid = false;
 
   this->Handles->ReleaseArrays();
@@ -216,6 +157,9 @@ void ANARIMapperPoints::ConstructArrays(bool regenerate)
     this->UpdateMaterial();
     this->Arrays = {};
     this->FieldArrays = {};
+    this->ClearDirty(DirtyCategory::Data);
+    this->ClearDirty(DirtyCategory::Topology);
+    this->ClearDirty(DirtyCategory::Attributes);
     this->RefreshGroup();
     return;
   }
@@ -285,6 +229,9 @@ void ANARIMapperPoints::ConstructArrays(bool regenerate)
   this->Arrays = arrays;
   this->FieldArrays = fieldArrays;
   this->Valid = true;
+  this->ClearDirty(DirtyCategory::Data);
+  this->ClearDirty(DirtyCategory::Topology);
+  this->ClearDirty(DirtyCategory::Attributes);
 
   this->RefreshGroup();
 }
@@ -342,6 +289,7 @@ void ANARIMapperPoints::UpdateGeometry()
   }
 
   anari_cpp::commitParameters(d, this->Handles->Geometry);
+  this->ClearDirty(DirtyCategory::Attributes);
 }
 
 void ANARIMapperPoints::UpdateMaterial()
@@ -351,6 +299,7 @@ void ANARIMapperPoints::UpdateMaterial()
 
   auto d = this->GetDevice();
   auto s = this->Handles->Sampler;
+  anari_cpp::setParameter(d, this->Handles->Material, "name", this->MakeObjectName("material"));
   bool havePrimaryField = false;
   if (this->PrimaryField >= 0 &&
       this->PrimaryField <
@@ -370,6 +319,40 @@ void ANARIMapperPoints::UpdateMaterial()
     anari_cpp::setParameter(d, this->Handles->Material, "color", viskores::Vec3f_32(1.f));
 
   anari_cpp::commitParameters(d, this->Handles->Material);
+}
+
+void ANARIMapperPoints::UpdateMaterializedObjects()
+{
+  const bool namesChanged = this->IsDirty(DirtyCategory::Names);
+  this->ANARIMapper::UpdateMaterializedObjects();
+
+  if ((this->IsDirty(DirtyCategory::Data) || this->IsDirty(DirtyCategory::Topology)) &&
+      this->Handles->Geometry)
+  {
+    this->ConstructArrays();
+  }
+  if (this->IsDirty(DirtyCategory::Attributes) && this->Handles->Geometry)
+  {
+    this->UpdateGeometry();
+    this->UpdateMaterial();
+  }
+  if (this->IsDirty(DirtyCategory::Appearance) && this->Handles->Sampler)
+  {
+    this->UpdateANARISampler(this->Handles->Sampler, "linear");
+    this->ClearDirty(DirtyCategory::Appearance);
+  }
+  if (namesChanged)
+  {
+    this->UpdateGeometry();
+    this->UpdateANARISampler(this->Handles->Sampler, "linear");
+    this->UpdateMaterial();
+    if (this->Handles->Surface)
+    {
+      auto d = this->GetDevice();
+      anari_cpp::setParameter(d, this->Handles->Surface, "name", this->MakeObjectName("surface"));
+      anari_cpp::commitParameters(d, this->Handles->Surface);
+    }
+  }
 }
 
 ANARIMapperPoints::ANARIHandles::~ANARIHandles()

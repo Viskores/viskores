@@ -22,6 +22,7 @@ SOURCES
   UnitTestANARIOwnership.cxx
   UnitTestANARIMapperGlyphs.cxx
   UnitTestANARIMapperGlyphsData.cxx
+  UnitTestANARIMapperAppearance.cxx
   UnitTestANARIMapperPoints.cxx
   UnitTestANARIMapperPointsData.cxx
   UnitTestANARIMapperTrianglesData.cxx

@@ -162,46 +162,6 @@ ANARIMapperTriangles::~ANARIMapperTriangles()
   this->Handles.reset();
 }
 
-void ANARIMapperTriangles::SetActor(const ANARIActor& actor)
-{
-  this->ANARIMapper::SetActor(actor);
-  this->ConstructArrays(true);
-  this->UpdateMaterial();
-}
-
-void ANARIMapperTriangles::SetMapFieldAsAttribute(bool enabled)
-{
-  this->ANARIMapper::SetMapFieldAsAttribute(enabled);
-  this->UpdateGeometry();
-  this->UpdateMaterial();
-}
-
-void ANARIMapperTriangles::SetANARIColorMap(anari_cpp::Array1D color,
-                                            anari_cpp::Array1D opacity,
-                                            bool releaseArrays)
-{
-  this->GetANARISurface();
-  auto d = this->GetDevice();
-  auto s = this->Handles->Sampler;
-  anari_cpp::setParameter(d, s, "image", color);
-  anari_cpp::commitParameters(d, s);
-  this->ANARIMapper::SetANARIColorMap(color, opacity, releaseArrays);
-}
-
-void ANARIMapperTriangles::SetANARIColorMapValueRange(const viskores::Vec2f_32& valueRange)
-{
-  this->GetANARISurface();
-  auto s = this->Handles->Sampler;
-  auto d = this->GetDevice();
-  auto scale = anari_cpp::scaling_matrix(anari_cpp::float3(1.f / (valueRange[1] - valueRange[0])));
-  auto translation = anari_cpp::translation_matrix(anari_cpp::float3(-valueRange[0], 0, 0));
-  anari_cpp::setParameter(d, s, "inTransform", anari_cpp::mul(scale, translation));
-  anari_cpp::setParameter(d, s, "outTransform", anari_cpp::math::mat4(anari_cpp::identity));
-  anari_cpp::setParameter(d, s, "inOffset", viskores::Vec4f_32(0.f, 0.f, 0.f, 0.f));
-  anari_cpp::setParameter(d, s, "outOffset", viskores::Vec4f_32(0.f, 0.f, 0.f, 0.f));
-  anari_cpp::commitParameters(d, s);
-}
-
 void ANARIMapperTriangles::SetCalculateNormals(bool enabled)
 {
   if (this->CalculateNormals == enabled)
@@ -210,16 +170,18 @@ void ANARIMapperTriangles::SetCalculateNormals(bool enabled)
   }
 
   this->CalculateNormals = enabled;
-  if (this->Handles->Geometry)
-  {
-    this->ConstructArrays(true);
-  }
+  this->MarkDirty(DirtyCategory::Data);
+  this->UpdateMaterializedObjects();
 }
 
 anari_cpp::Geometry ANARIMapperTriangles::GetANARIGeometry()
 {
   if (this->Handles->Geometry)
+  {
+    this->ConstructArrays();
+    this->UpdateMaterializedObjects();
     return this->Handles->Geometry;
+  }
 
   auto d = this->GetDevice();
   this->Handles->Geometry = anari_cpp::newObject<anari_cpp::Geometry>(d, "triangle");
@@ -231,7 +193,10 @@ anari_cpp::Geometry ANARIMapperTriangles::GetANARIGeometry()
 anari_cpp::Surface ANARIMapperTriangles::GetANARISurface()
 {
   if (this->Handles->Surface)
+  {
+    this->UpdateMaterializedObjects();
     return this->Handles->Surface;
+  }
 
   auto d = this->GetDevice();
 
@@ -245,23 +210,7 @@ anari_cpp::Surface ANARIMapperTriangles::GetANARISurface()
 
   auto s = anari_cpp::newObject<anari_cpp::Sampler>(d, "image1D");
   this->Handles->Sampler = s;
-  auto colorArray = anari_cpp::newArray1D(d, ANARI_FLOAT32_VEC4, 3);
-  auto* colors = anari_cpp::map<viskores::Vec4f_32>(d, colorArray);
-  colors[0] = viskores::Vec4f_32(1.f, 0.f, 0.f, 0.f);
-  colors[1] = viskores::Vec4f_32(0.f, 1.f, 0.f, 0.5f);
-  colors[2] = viskores::Vec4f_32(0.f, 0.f, 1.f, 1.f);
-  anari_cpp::unmap(d, colorArray);
-  anari_cpp::setAndReleaseParameter(d, s, "image", colorArray);
-  anari_cpp::setParameter(d, s, "filter", "nearest");
-  anari_cpp::setParameter(d, s, "wrapMode", "clampToEdge");
-  anari_cpp::setParameter(d, s, "name", this->MakeObjectName("colormap"));
-  anari_cpp::setParameter(d, s, "inTransform", anari_cpp::mat4(anari_cpp::identity));
-  anari_cpp::setParameter(d, s, "outTransform", anari_cpp::math::mat4(anari_cpp::identity));
-  anari_cpp::setParameter(d, s, "inOffset", viskores::Vec4f_32(0.f, 0.f, 0.f, 0.f));
-  anari_cpp::setParameter(d, s, "outOffset", viskores::Vec4f_32(0.f, 0.f, 0.f, 0.f));
-  anari_cpp::commitParameters(d, s);
-
-  this->SetANARIColorMapValueRange(viskores::Vec2f_32(0.f, 10.f));
+  this->UpdateANARISampler(s, "linear");
 
   this->UpdateMaterial();
 
@@ -269,6 +218,8 @@ anari_cpp::Surface ANARIMapperTriangles::GetANARISurface()
   anari_cpp::setParameter(d, this->Handles->Surface, "geometry", this->GetANARIGeometry());
   anari_cpp::setParameter(d, this->Handles->Surface, "material", this->Handles->Material);
   anari_cpp::commitParameters(d, this->Handles->Surface);
+  this->ClearDirty(DirtyCategory::Appearance);
+  this->ClearDirty(DirtyCategory::Names);
 
   return this->Handles->Surface;
 }
@@ -276,18 +227,15 @@ anari_cpp::Surface ANARIMapperTriangles::GetANARISurface()
 bool ANARIMapperTriangles::NeedToGenerateData() const
 {
   const bool haveNormals = this->Handles->Parameters.Vertex.Normal != nullptr;
-  return !this->Current || this->CalculateNormals != haveNormals;
+  return this->IsDirty(DirtyCategory::Data) || this->IsDirty(DirtyCategory::Topology) ||
+    this->CalculateNormals != haveNormals;
 }
 
-void ANARIMapperTriangles::ConstructArrays(bool regenerate)
+void ANARIMapperTriangles::ConstructArrays()
 {
-  if (regenerate)
-    this->Current = false;
-
-  if (!regenerate && !this->NeedToGenerateData())
+  if (!this->NeedToGenerateData())
     return;
 
-  this->Current = true;
   this->Valid = false;
 
   this->Handles->ReleaseArrays();
@@ -301,6 +249,9 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
     this->UpdateMaterial();
     this->Arrays = {};
     this->FieldArrays = {};
+    this->ClearDirty(DirtyCategory::Data);
+    this->ClearDirty(DirtyCategory::Topology);
+    this->ClearDirty(DirtyCategory::Attributes);
     this->RefreshGroup();
     return;
   }
@@ -314,6 +265,9 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
     this->UpdateMaterial();
     this->Arrays = {};
     this->FieldArrays = {};
+    this->ClearDirty(DirtyCategory::Data);
+    this->ClearDirty(DirtyCategory::Topology);
+    this->ClearDirty(DirtyCategory::Attributes);
     this->RefreshGroup();
     return;
   }
@@ -417,6 +371,9 @@ void ANARIMapperTriangles::ConstructArrays(bool regenerate)
   this->Arrays = arrays;
   this->FieldArrays = fieldArrays;
   this->Valid = true;
+  this->ClearDirty(DirtyCategory::Data);
+  this->ClearDirty(DirtyCategory::Topology);
+  this->ClearDirty(DirtyCategory::Attributes);
 
   this->RefreshGroup();
 }
@@ -494,6 +451,7 @@ void ANARIMapperTriangles::UpdateGeometry()
   }
 
   anari_cpp::commitParameters(d, this->Handles->Geometry);
+  this->ClearDirty(DirtyCategory::Attributes);
 }
 
 void ANARIMapperTriangles::UpdateMaterial()
@@ -503,6 +461,7 @@ void ANARIMapperTriangles::UpdateMaterial()
 
   auto d = this->GetDevice();
   auto s = this->Handles->Sampler;
+  anari_cpp::setParameter(d, this->Handles->Material, "name", this->MakeObjectName("material"));
   bool havePrimaryField = false;
   if (this->PrimaryField >= 0 &&
       this->PrimaryField <
@@ -522,6 +481,40 @@ void ANARIMapperTriangles::UpdateMaterial()
     anari_cpp::setParameter(d, this->Handles->Material, "color", viskores::Vec3f_32(1.f));
 
   anari_cpp::commitParameters(d, this->Handles->Material);
+}
+
+void ANARIMapperTriangles::UpdateMaterializedObjects()
+{
+  const bool namesChanged = this->IsDirty(DirtyCategory::Names);
+  this->ANARIMapper::UpdateMaterializedObjects();
+
+  if ((this->IsDirty(DirtyCategory::Data) || this->IsDirty(DirtyCategory::Topology)) &&
+      this->Handles->Geometry)
+  {
+    this->ConstructArrays();
+  }
+  if (this->IsDirty(DirtyCategory::Attributes) && this->Handles->Geometry)
+  {
+    this->UpdateGeometry();
+    this->UpdateMaterial();
+  }
+  if (this->IsDirty(DirtyCategory::Appearance) && this->Handles->Sampler)
+  {
+    this->UpdateANARISampler(this->Handles->Sampler, "linear");
+    this->ClearDirty(DirtyCategory::Appearance);
+  }
+  if (namesChanged)
+  {
+    this->UpdateGeometry();
+    this->UpdateANARISampler(this->Handles->Sampler, "linear");
+    this->UpdateMaterial();
+    if (this->Handles->Surface)
+    {
+      auto d = this->GetDevice();
+      anari_cpp::setParameter(d, this->Handles->Surface, "name", this->MakeObjectName("surface"));
+      anari_cpp::commitParameters(d, this->Handles->Surface);
+    }
+  }
 }
 
 ANARIMapperTriangles::ANARIHandles::~ANARIHandles()

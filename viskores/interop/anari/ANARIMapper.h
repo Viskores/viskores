@@ -66,7 +66,12 @@ struct VISKORES_ANARI_EXPORT ANARIMapper
   const char* GetName() const;
   const viskores::cont::ColorTable& GetColorTable() const;
 
+  /// @brief Change the name applied to this mapper and its materialized ANARI objects.
   void SetName(const char* name);
+
+  /// @brief Use a sampled Viskores color table for subsequent and existing ANARI objects.
+  ///
+  /// Calling this switches away from any raw arrays supplied by `SetANARIColorMap`.
   void SetColorTable(const viskores::cont::ColorTable& colorTable);
 
   /// @brief Set the current actor on this mapper.
@@ -87,8 +92,12 @@ struct VISKORES_ANARI_EXPORT ANARIMapper
 
   /// @brief Set color map arrays using raw ANARI array handles.
   /// @param color Color array used for color mapping.
-  /// @param opacity (unused/deprecated, will remove on future ANARI version)
-  /// @param releaseArrays If true this function will release the hanldes passed in.
+  /// @param opacity Opacity array used by volume mappers and ignored by surface mappers.
+  /// This is an alternative to the sampled `ColorTable` path. The mapper keeps the arrays alive
+  /// so the setting also applies when called before the corresponding ANARI object is created.
+  /// @param releaseArrays If true, ownership of the caller's references is transferred to the
+  /// mapper. If false, the mapper retains its own references and the caller remains responsible
+  /// for releasing its references.
   virtual void SetANARIColorMap(anari_cpp::Array1D color,
                                 anari_cpp::Array1D opacity,
                                 bool releaseArrays = true);
@@ -127,15 +136,35 @@ struct VISKORES_ANARI_EXPORT ANARIMapper
   bool GroupIsEmpty() const;
 
 protected:
+  enum class DirtyCategory : viskores::UInt8
+  {
+    Data = 1 << 0,
+    Topology = 1 << 1,
+    Attributes = 1 << 2,
+    Appearance = 1 << 3,
+    Names = 1 << 4
+  };
+
   std::string MakeObjectName(const char* suffix) const;
   void RefreshGroup();
 
-  viskores::cont::ColorTable& GetColorTable();
+  bool IsDirty(DirtyCategory category) const;
+  void MarkDirty(DirtyCategory category);
+  void ClearDirty(DirtyCategory category);
+
+  /// Apply pending state to ANARI objects which have already been materialized.
+  virtual void UpdateMaterializedObjects();
+
+  /// Shared transfer-function construction for surface and volume mappers.
+  void UpdateANARISampler(anari_cpp::Sampler sampler, const char* filter);
+  void UpdateANARIVolumeAppearance(anari_cpp::Volume volume);
 
   bool Valid{ false };
-  bool Current{ false };
 
 private:
+  void EnsureSampledColorArrays();
+  void UpdateDefaultValueRange();
+
   struct ANARIHandles
   {
     anari_cpp::Device Device{ nullptr };
@@ -144,11 +173,15 @@ private:
     ~ANARIHandles();
   };
 
+  struct AppearanceState;
+
   std::unique_ptr<ANARIHandles> Handles;
   ANARIActor Actor;
   viskores::cont::ColorTable ColorTable;
   std::string Name;
   bool MapFieldAsAttribute{ true };
+  viskores::UInt8 DirtyCategories{ (1 << 5) - 1 };
+  std::unique_ptr<AppearanceState> Appearance;
 };
 
 } // namespace anari

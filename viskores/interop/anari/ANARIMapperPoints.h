@@ -96,39 +96,17 @@ struct VISKORES_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
   ///
   ~ANARIMapperPoints() override;
 
-  /// @brief Set the current actor on this mapper.
-  ///
-  /// See `ANARIMapper` for more detail.
-  void SetActor(const ANARIActor& actor) override;
-
-  /// @brief Set whether fields from `ANARIActor` should end up as geometry attributes.
-  ///
-  /// See `ANARIMapper` for more detail.
-  void SetMapFieldAsAttribute(bool enabled) override;
-
-  /// @brief Set color map arrays using raw ANARI array handles.
-  ///
-  /// See `ANARIMapper` for more detail.
-  void SetANARIColorMap(anari_cpp::Array1D color,
-                        anari_cpp::Array1D opacity,
-                        bool releaseArrays = true) override;
-
-  /// @brief Set the value range (domain) for the color map.
-  ///
-  void SetANARIColorMapValueRange(const viskores::Vec2f_32& valueRange) override;
-
   anari_cpp::Geometry GetANARIGeometry() override;
   anari_cpp::Surface GetANARISurface() override;
 
 private:
   /// @brief Do the work to construct the basic ANARI arrays for the ANARIGeometry.
-  /// @param regenerate Force the position/radius arrays are regenerated.
-  ///
-  void ConstructArrays(bool regenerate = false);
+  void ConstructArrays();
   /// @brief Update ANARIGeometry object with the latest data from the actor.
   void UpdateGeometry();
   /// @brief Update ANARIMaterial object with the latest data from the actor.
   void UpdateMaterial();
+  void UpdateMaterializedObjects() override;
 
   /// @brief Container of all relevant ANARI scene object handles.
   struct ANARIHandles

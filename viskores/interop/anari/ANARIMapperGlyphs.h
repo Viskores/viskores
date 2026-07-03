@@ -82,14 +82,6 @@ struct VISKORES_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
   ///
   ~ANARIMapperGlyphs() override;
 
-  /// @brief Set the current actor on this mapper.
-  ///
-  /// This sets the actor used to create the geometry. When the actor is changed
-  /// the mapper will update all the corresponding ANARI objects accordingly.
-  /// This will not cause new ANARI geometry handles to be made, rather the
-  /// existing handles will be updated to reflect the new actor's data.
-  void SetActor(const ANARIActor& actor) override;
-
   /// @brief Offset the glyph in the direction of the vector at each point.
   ///
   /// This will cause the mapper to offset the glyph, making the arrow appear to
@@ -114,6 +106,7 @@ private:
   void ConstructArrays();
   /// @brief Update ANARIGeometry object with the latest data from the actor.
   void UpdateGeometry();
+  void UpdateMaterializedObjects() override;
 
   /// @brief Owner of ANARI scene handles and the Viskores arrays backing them.
   struct ANARIHandles

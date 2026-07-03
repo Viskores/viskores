@@ -105,33 +105,12 @@ struct VISKORES_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
   ///
   ~ANARIMapperVolume() override;
 
-  /// @brief Set the current actor on this mapper.
-  ///
-  /// See `ANARIMapper` for more detail.
-  void SetActor(const ANARIActor& actor) override;
-
-  /// @brief Set color map arrays using raw ANARI array handles.
-  ///
-  /// See `ANARIMapper` for more detail.
-  void SetANARIColorMap(anari_cpp::Array1D color,
-                        anari_cpp::Array1D opacity,
-                        bool releaseArrays = true) override;
-  /// @brief Set the value range (domain) for the color map.
-  ///
-  void SetANARIColorMapValueRange(const viskores::Vec2f_32& valueRange) override;
-
-  /// @brief Set a scale factor for opacity.
-  ///
-  void SetANARIColorMapOpacityScale(viskores::Float32 opacityScale) override;
-
   anari_cpp::SpatialField GetANARISpatialField() override;
   anari_cpp::Volume GetANARIVolume() override;
 
 private:
   /// @brief Construct a complete candidate spatial-field state and install it.
-  /// @param regenerate Force the spatial-field arrays to be regenerated.
-  ///
-  void ConstructArrays(bool regenerate = false);
+  void ConstructArrays();
 
   /// @brief Atomic state for a spatial field and its backing arrays.
   struct ANARISpatialFieldState
@@ -148,6 +127,7 @@ private:
 
   /// @brief Update an ANARISpatialField object with its prepared state.
   void UpdateSpatialField(ANARISpatialFieldState& state);
+  void UpdateMaterializedObjects() override;
 
   /// @brief Container of all relevant ANARI scene object handles.
   struct ANARIHandles

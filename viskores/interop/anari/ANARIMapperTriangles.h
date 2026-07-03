@@ -104,27 +104,6 @@ struct VISKORES_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
   ///
   ~ANARIMapperTriangles() override;
 
-  /// @brief Set the current actor on this mapper.
-  ///
-  /// See `ANARIMapper` for more detail.
-  void SetActor(const ANARIActor& actor) override;
-
-  /// @brief Set whether fields from `ANARIActor` should end up as geometry attributes.
-  ///
-  /// See `ANARIMapper` for more detail.
-  void SetMapFieldAsAttribute(bool enabled) override;
-
-  /// @brief Set color map arrays using raw ANARI array handles.
-  ///
-  /// See `ANARIMapper` for more detail.
-  void SetANARIColorMap(anari_cpp::Array1D color,
-                        anari_cpp::Array1D opacity,
-                        bool releaseArrays = true) override;
-
-  /// @brief Set the value range (domain) for the color map.
-  ///
-  void SetANARIColorMapValueRange(const viskores::Vec2f_32& valueRange) override;
-
   /// @brief Set whether `vertex.normal` data should also be calculated when triangulating geometry.
   ///
   void SetCalculateNormals(bool enabled);
@@ -135,13 +114,12 @@ struct VISKORES_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
 private:
   bool NeedToGenerateData() const;
   /// @brief Do the work to construct the basic ANARI arrays for the ANARIGeometry.
-  /// @param regenerate Force the position/radius arrays are regenerated.
-  ///
-  void ConstructArrays(bool regenerate = false);
+  void ConstructArrays();
   /// @brief Update ANARIGeometry object with the latest data from the actor.
   void UpdateGeometry();
   /// @brief Update ANARIMaterial object with the latest data from the actor.
   void UpdateMaterial();
+  void UpdateMaterializedObjects() override;
 
   /// @brief Container of all relevant ANARI scene object handles.
   struct ANARIHandles

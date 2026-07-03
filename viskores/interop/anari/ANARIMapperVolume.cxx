@@ -102,71 +102,27 @@ ANARIMapperVolume::~ANARIMapperVolume()
   this->Handles.reset();
 }
 
-void ANARIMapperVolume::SetActor(const ANARIActor& actor)
-{
-  const ANARIActor previousActor = this->GetActor();
-  const bool previousCurrent = this->Current;
-  this->ANARIMapper::SetActor(actor);
-  try
-  {
-    this->ConstructArrays(true);
-  }
-  catch (...)
-  {
-    this->ANARIMapper::SetActor(previousActor);
-    this->Current = previousCurrent;
-    throw;
-  }
-}
-
-void ANARIMapperVolume::SetANARIColorMap(anari_cpp::Array1D color,
-                                         anari_cpp::Array1D opacity,
-                                         bool releaseArrays)
-{
-  auto d = this->GetDevice();
-  auto v = this->GetANARIVolume();
-  anari_cpp::setParameter(d, v, "color", color);
-  anari_cpp::setParameter(d, v, "opacity", opacity);
-  anari_cpp::commitParameters(d, v);
-  this->ANARIMapper::SetANARIColorMap(color, opacity, releaseArrays);
-}
-
-void ANARIMapperVolume::SetANARIColorMapValueRange(const viskores::Vec2f_32& valueRange)
-{
-  auto d = this->GetDevice();
-  auto v = this->GetANARIVolume();
-  anari_cpp::setParameter(d, v, "valueRange", ANARI_FLOAT32_BOX1, &valueRange);
-  anari_cpp::commitParameters(d, v);
-}
-
-void ANARIMapperVolume::SetANARIColorMapOpacityScale(viskores::Float32 opacityScale)
-{
-  auto d = this->GetDevice();
-  auto v = this->GetANARIVolume();
-  anari_cpp::setParameter(d, v, "densityScale", opacityScale);
-  anari_cpp::commitParameters(d, v);
-}
-
 anari_cpp::SpatialField ANARIMapperVolume::GetANARISpatialField()
 {
-  if (this->Handles->Field)
-  {
-    return this->Handles->Field->SpatialField;
-  }
-
   this->ConstructArrays();
+  this->UpdateMaterializedObjects();
   return this->Handles->Field ? this->Handles->Field->SpatialField : nullptr;
 }
 
 anari_cpp::Volume ANARIMapperVolume::GetANARIVolume()
 {
   if (this->Handles->Volume)
+  {
+    this->UpdateMaterializedObjects();
     return this->Handles->Volume;
+  }
 
   if (ActorIsEmpty(this->GetActor()))
   {
-    this->Current = true;
     this->Valid = false;
+    this->ClearDirty(DirtyCategory::Data);
+    this->ClearDirty(DirtyCategory::Topology);
+    this->ClearDirty(DirtyCategory::Attributes);
     return nullptr;
   }
 
@@ -179,29 +135,13 @@ anari_cpp::Volume ANARIMapperVolume::GetANARIVolume()
 
   try
   {
-    auto colorArray = anari_cpp::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
-    auto* colors = anari_cpp::map<viskores::Vec3f_32>(d, colorArray);
-    colors[0] = viskores::Vec3f_32(1.f, 0.f, 0.f);
-    colors[1] = viskores::Vec3f_32(0.f, 1.f, 0.f);
-    colors[2] = viskores::Vec3f_32(0.f, 0.f, 1.f);
-    anari_cpp::unmap(d, colorArray);
-
-    auto opacityArray = anari_cpp::newArray1D(d, ANARI_FLOAT32, 2);
-    auto* opacities = anari_cpp::map<viskores::Float32>(d, opacityArray);
-    opacities[0] = 0.f;
-    opacities[1] = 1.f;
-    anari_cpp::unmap(d, opacityArray);
-
-    anari_cpp::setAndReleaseParameter(d, volume, "color", colorArray);
-    anari_cpp::setAndReleaseParameter(d, volume, "opacity", opacityArray);
     auto spatialField = this->GetANARISpatialField();
     // Keep old name as a parameter for bug-backwards compatibility: 'field' isn't the right name
     anari_cpp::setParameter(d, volume, "field", spatialField);
     anari_cpp::setParameter(d, volume, "value", spatialField);
-    anari_cpp::setParameter(d, volume, "name", this->MakeObjectName("volume"));
-    const viskores::Vec2f_32 valueRange(0.f, 10.f);
-    anari_cpp::setParameter(d, volume, "valueRange", ANARI_FLOAT32_BOX1, &valueRange);
-    anari_cpp::commitParameters(d, volume);
+    this->UpdateANARIVolumeAppearance(volume);
+    this->ClearDirty(DirtyCategory::Appearance);
+    this->ClearDirty(DirtyCategory::Names);
   }
   catch (...)
   {
@@ -338,12 +278,10 @@ VISKORES_CONT void PrepareUnstructuredTopology(const CellSetType& cellSet,
   viskores::cont::ArrayCopyDevice(shapes, arrays.CellType);
 }
 
-void ANARIMapperVolume::ConstructArrays(bool regenerate)
+void ANARIMapperVolume::ConstructArrays()
 {
-  if (regenerate)
-    this->Current = false;
-
-  if (this->Current)
+  if (!this->IsDirty(DirtyCategory::Data) && !this->IsDirty(DirtyCategory::Topology) &&
+      !this->IsDirty(DirtyCategory::Attributes))
     return;
 
   auto d = this->GetDevice();
@@ -362,8 +300,10 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
       anari_cpp::commitParameters(d, this->Handles->Volume);
     }
     this->Handles->Field.reset();
-    this->Current = true;
     this->Valid = false;
+    this->ClearDirty(DirtyCategory::Data);
+    this->ClearDirty(DirtyCategory::Topology);
+    this->ClearDirty(DirtyCategory::Attributes);
     this->RefreshGroup();
     return;
   }
@@ -548,8 +488,10 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
 
   this->UpdateSpatialField(*nextState);
   this->Handles->Field = std::move(nextState);
-  this->Current = true;
   this->Valid = true;
+  this->ClearDirty(DirtyCategory::Data);
+  this->ClearDirty(DirtyCategory::Topology);
+  this->ClearDirty(DirtyCategory::Attributes);
   this->RefreshGroup();
 }
 
@@ -619,6 +561,32 @@ void ANARIMapperVolume::UpdateSpatialField(ANARISpatialFieldState& state)
     anari_cpp::setParameter(d, this->Handles->Volume, "field", state.SpatialField);
     anari_cpp::setParameter(d, this->Handles->Volume, "value", state.SpatialField);
     anari_cpp::commitParameters(d, this->Handles->Volume);
+  }
+}
+
+void ANARIMapperVolume::UpdateMaterializedObjects()
+{
+  const bool namesChanged = this->IsDirty(DirtyCategory::Names);
+  this->ANARIMapper::UpdateMaterializedObjects();
+
+  if ((this->IsDirty(DirtyCategory::Data) || this->IsDirty(DirtyCategory::Topology) ||
+       this->IsDirty(DirtyCategory::Attributes)) &&
+      this->Handles->Field)
+  {
+    this->ConstructArrays();
+  }
+  if (this->IsDirty(DirtyCategory::Appearance) && this->Handles->Volume)
+  {
+    this->UpdateANARIVolumeAppearance(this->Handles->Volume);
+    this->ClearDirty(DirtyCategory::Appearance);
+  }
+  if (namesChanged)
+  {
+    if (this->Handles->Field)
+    {
+      this->UpdateSpatialField(*this->Handles->Field);
+    }
+    this->UpdateANARIVolumeAppearance(this->Handles->Volume);
   }
 }
 

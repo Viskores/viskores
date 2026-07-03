@@ -256,37 +256,22 @@ ANARIMapperGlyphs::~ANARIMapperGlyphs()
   this->Handles.reset();
 }
 
-void ANARIMapperGlyphs::SetActor(const ANARIActor& actor)
-{
-  this->ANARIMapper::SetActor(actor);
-  this->Current = false;
-  if (this->Handles->Geometry)
-  {
-    this->ConstructArrays();
-  }
-}
-
 void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
 {
   if (this->Offset == enabled)
     return;
 
   this->Offset = enabled;
-  this->Current = false;
-  if (this->Handles->Geometry)
-  {
-    this->ConstructArrays();
-  }
+  this->MarkDirty(DirtyCategory::Data);
+  this->UpdateMaterializedObjects();
 }
 
 anari_cpp::Geometry ANARIMapperGlyphs::GetANARIGeometry()
 {
   if (this->Handles->Geometry)
   {
-    if (!this->Current)
-    {
-      this->ConstructArrays();
-    }
+    this->ConstructArrays();
+    this->UpdateMaterializedObjects();
     return this->Handles->Geometry;
   }
 
@@ -301,7 +286,10 @@ anari_cpp::Geometry ANARIMapperGlyphs::GetANARIGeometry()
 anari_cpp::Surface ANARIMapperGlyphs::GetANARISurface()
 {
   if (this->Handles->Surface)
+  {
+    this->UpdateMaterializedObjects();
     return this->Handles->Surface;
+  }
 
   auto d = this->GetDevice();
   RequireConeSupport(d);
@@ -320,12 +308,13 @@ anari_cpp::Surface ANARIMapperGlyphs::GetANARISurface()
   anari_cpp::setParameter(d, this->Handles->Surface, "geometry", this->GetANARIGeometry());
   anari_cpp::setParameter(d, this->Handles->Surface, "material", this->Handles->Material);
   anari_cpp::commitParameters(d, this->Handles->Surface);
+  this->ClearDirty(DirtyCategory::Names);
   return this->Handles->Surface;
 }
 
 void ANARIMapperGlyphs::ConstructArrays()
 {
-  if (this->Current)
+  if (!this->IsDirty(DirtyCategory::Data) && !this->IsDirty(DirtyCategory::Topology))
     return;
 
   const auto& actor = this->GetActor();
@@ -337,11 +326,13 @@ void ANARIMapperGlyphs::ConstructArrays()
 
   if (numGlyphs == 0)
   {
-    this->Current = true;
     this->Valid = false;
     this->Handles->ReleaseArrays();
     this->UpdateGeometry();
     this->Handles->Arrays = {};
+    this->ClearDirty(DirtyCategory::Data);
+    this->ClearDirty(DirtyCategory::Topology);
+    this->ClearDirty(DirtyCategory::Attributes);
     this->RefreshGroup();
     return;
   }
@@ -379,8 +370,10 @@ void ANARIMapperGlyphs::ConstructArrays()
   this->UpdateGeometry();
 
   this->Handles->Arrays = std::move(arrays);
-  this->Current = true;
   this->Valid = true;
+  this->ClearDirty(DirtyCategory::Data);
+  this->ClearDirty(DirtyCategory::Topology);
+  this->ClearDirty(DirtyCategory::Attributes);
 
   this->RefreshGroup();
 }
@@ -407,6 +400,33 @@ void ANARIMapperGlyphs::UpdateGeometry()
   }
 
   anari_cpp::commitParameters(d, this->Handles->Geometry);
+}
+
+void ANARIMapperGlyphs::UpdateMaterializedObjects()
+{
+  const bool namesChanged = this->IsDirty(DirtyCategory::Names);
+  this->ANARIMapper::UpdateMaterializedObjects();
+
+  if ((this->IsDirty(DirtyCategory::Data) || this->IsDirty(DirtyCategory::Topology)) &&
+      this->Handles->Geometry)
+  {
+    this->ConstructArrays();
+  }
+  if (namesChanged)
+  {
+    this->UpdateGeometry();
+    auto d = this->GetDevice();
+    if (this->Handles->Material)
+    {
+      anari_cpp::setParameter(d, this->Handles->Material, "name", this->MakeObjectName("material"));
+      anari_cpp::commitParameters(d, this->Handles->Material);
+    }
+    if (this->Handles->Surface)
+    {
+      anari_cpp::setParameter(d, this->Handles->Surface, "name", this->MakeObjectName("surface"));
+      anari_cpp::commitParameters(d, this->Handles->Surface);
+    }
+  }
 }
 
 ANARIMapperGlyphs::ANARIHandles::~ANARIHandles()
