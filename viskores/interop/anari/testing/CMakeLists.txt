@@ -22,6 +22,7 @@ SOURCES
   UnitTestANARIOwnership.cxx
   UnitTestANARIMapperGlyphs.cxx
   UnitTestANARIMapperPoints.cxx
+  UnitTestANARIMapperTrianglesData.cxx
   UnitTestANARIMapperTriangles.cxx
   UnitTestANARIMapperVolume.cxx
   UnitTestANARIStructuredVolume.cxx

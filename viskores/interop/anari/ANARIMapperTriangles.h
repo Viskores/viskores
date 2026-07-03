@@ -43,9 +43,11 @@ struct TrianglesParameters
   struct PrimitiveData
   {
     anari_cpp::Array1D Index{ nullptr };
+    std::array<anari_cpp::Array1D, 4> Attribute;
+    std::array<std::string, 4> AttributeName;
   } Primitive{};
 
-  unsigned int NumPrimitives{ 0 };
+  viskores::UInt64 NumPrimitives{ 0 };
 };
 
 /// @brief Viskores data arrays underlying the `ANARIArray` handles created by the mapper.
@@ -54,29 +56,35 @@ struct TriangleArrays
 {
   viskores::cont::ArrayHandle<viskores::Vec3f_32> Vertices;
   viskores::cont::ArrayHandle<viskores::Vec3f_32> Normals;
+  viskores::cont::ArrayHandle<viskores::Vec3ui_32> Indices32;
+  viskores::cont::ArrayHandle<viskores::Vec3ui_64> Indices64;
+  ANARIDataType IndexType{ ANARI_UNKNOWN };
   std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
+};
+
+/// @brief One scalar field lowered for an ANARI triangle attribute binding.
+///
+struct TriangleFieldArray
+{
+  viskores::cont::ArrayHandle<viskores::Float32> Values;
+  std::string Name;
+  viskores::cont::Field::Association Association{ viskores::cont::Field::Association::Any };
 };
 
 /// @brief Viskores data arrays underlying the `ANARIArray` handles created by the mapper for field attributes.
 ///
 struct TriangleFieldArrays
 {
-  viskores::cont::ArrayHandle<viskores::Float32> Field1;
-  std::string Field1Name;
-  viskores::cont::ArrayHandle<viskores::Float32> Field2;
-  std::string Field2Name;
-  viskores::cont::ArrayHandle<viskores::Float32> Field3;
-  std::string Field3Name;
-  viskores::cont::ArrayHandle<viskores::Float32> Field4;
-  std::string Field4Name;
+  std::array<TriangleFieldArray, 4> Fields;
   std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
 };
 
 /// @brief Mapper which triangulates cells into ANARI `triangle` geometry.
 ///
-/// NOTE: This mapper will only color map values that are 1-component Float32
-/// fields, otherwise they will be ignored. This restriction will allow 2-4
-/// component fields in the future.
+/// Point-associated scalar fields become vertex attributes. Cell-associated
+/// scalar fields become primitive attributes, with values duplicated only when
+/// triangulation emits more than one primitive for a cell. Whole-dataset fields
+/// and fields with component counts other than one are ignored.
 struct VISKORES_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
 {
   /// @brief Constructor
