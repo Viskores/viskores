@@ -53,7 +53,16 @@ struct GlyphArrays
 /// @brief Mapper which turns vector data into arrow glyphs.
 ///
 /// This mapper creates ANARI `cone` geometry for the primary field in the
-/// provided `ANARIActor`.
+/// provided `ANARIActor`. The field must contain one three-component vector
+/// per point or cell. Vector magnitude does not affect glyph length: nonzero
+/// vectors are normalized and used only for direction. Zero and non-finite
+/// vectors produce invisible, zero-radius glyphs at their sample positions.
+///
+/// Glyph size is based on the coordinate-bounds diagonal divided by 300. The
+/// generated arrow length is twice that size. Degenerate or non-finite bounds
+/// use a size of 0.01 instead. Materialization throws
+/// `viskores::cont::ErrorBadValue` when the device does not support
+/// `ANARI_KHR_GEOMETRY_CONE` and the `cone` geometry subtype.
 struct VISKORES_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
 {
   /// @brief Constructor
@@ -85,7 +94,8 @@ struct VISKORES_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
   ///
   /// This will cause the mapper to offset the glyph, making the arrow appear to
   /// be coming out of the point instead of going through it. This is useful for
-  /// visualizing things like surface normals on a mesh.
+  /// visualizing things like surface normals on a mesh. Changes take effect on
+  /// already-materialized geometry as well as geometry created later.
   void SetOffsetGlyphs(bool enabled);
 
   /// @brief Get the corresponding ANARIGeometry handle from this mapper.
@@ -100,13 +110,12 @@ struct VISKORES_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
 
 private:
   /// @brief Do the work to construct the basic ANARI arrays for the ANARIGeometry.
-  /// @param regenerate Force the position/radius arrays are regenerated.
   ///
-  void ConstructArrays(bool regenerate = false);
+  void ConstructArrays();
   /// @brief Update ANARIGeometry object with the latest data from the actor.
   void UpdateGeometry();
 
-  /// @brief Container of all relevant ANARI scene object handles.
+  /// @brief Owner of ANARI scene handles and the Viskores arrays backing them.
   struct ANARIHandles
   {
     anari_cpp::Device Device{ nullptr };
@@ -114,6 +123,7 @@ private:
     anari_cpp::Material Material{ nullptr };
     anari_cpp::Surface Surface{ nullptr };
     GlyphsParameters Parameters;
+    GlyphArrays Arrays;
     ~ANARIHandles();
     void ReleaseArrays();
   };
@@ -121,7 +131,6 @@ private:
   std::unique_ptr<ANARIHandles> Handles;
 
   bool Offset{ false };
-  GlyphArrays Arrays;
 };
 
 } // namespace anari

@@ -43,6 +43,23 @@ void RenderTests()
   auto loadedDevice = loadANARIDevice();
   auto d = loadedDevice.GetDevice();
 
+  const char** extensions = nullptr;
+  anariGetProperty(
+    d, d, "extension", ANARI_STRING_LIST, &extensions, sizeof(extensions), ANARI_WAIT);
+  bool conesSupported = false;
+  for (int i = 0; extensions && extensions[i] != nullptr; ++i)
+  {
+    if (extensions[i] == std::string("ANARI_KHR_GEOMETRY_CONE"))
+    {
+      conesSupported = true;
+      break;
+    }
+  }
+  if (!conesSupported)
+  {
+    VISKORES_TEST_SKIP("ANARI KHR_GEOMETRY_CONE extension not supported by ANARI device.");
+  }
+
   // Create Viskores datasets /////////////////////////////////////////////////////
 
   viskores::source::Tangle source;

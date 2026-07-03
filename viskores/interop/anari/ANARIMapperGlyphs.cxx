@@ -19,10 +19,14 @@
 // viskores
 #include "viskores/rendering/raytracing/SphereExtractor.h"
 #include <viskores/VectorAnalysis.h>
+#include <viskores/cont/ErrorBadValue.h>
 #include <viskores/cont/Invoker.h>
 #include <viskores/filter/field_conversion/CellAverage.h>
 #include <viskores/interop/anari/ANARIMapperGlyphs.h>
 #include <viskores/worklet/WorkletMapField.h>
+
+#include <cstring>
+#include <utility>
 
 namespace viskores
 {
@@ -59,8 +63,20 @@ public:
                                 OutVertexPortalType& vertices,
                                 OutRadiusPortalType& radii) const
   {
-    auto ng = viskores::Normal(static_cast<viskores::Vec3f_32>(gradient));
-    auto pt = points.Get(idx);
+    const auto direction = static_cast<viskores::Vec3f_32>(gradient);
+    const auto magnitude = viskores::Magnitude(direction);
+    const auto pt = points.Get(idx);
+    if (!(magnitude > 0.f) || !viskores::IsFinite(magnitude))
+    {
+      for (viskores::IdComponent vertex = 0; vertex < 4; ++vertex)
+      {
+        vertices.Set(4 * idx + vertex, pt);
+        radii.Set(4 * idx + vertex, 0.f);
+      }
+      return;
+    }
+
+    const auto ng = direction / magnitude;
     auto v0 = pt + ng * this->SizeFactor;
     auto v1 = pt + ng * -this->SizeFactor;
     if (this->Offset)
@@ -85,6 +101,83 @@ public:
 };
 
 // Helper functions ///////////////////////////////////////////////////////////
+
+static bool StringListContains(const char* const* values, const char* expected)
+{
+  if (!values)
+  {
+    return false;
+  }
+  for (const char* const* value = values; *value != nullptr; ++value)
+  {
+    if (std::strcmp(*value, expected) == 0)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+static void RequireConeSupport(anari_cpp::Device device)
+{
+  constexpr const char* extension = "ANARI_KHR_GEOMETRY_CONE";
+  const char** extensions = nullptr;
+  const auto extensionsAvailable = anariGetProperty(
+    device, device, "extension", ANARI_STRING_LIST, &extensions, sizeof(extensions), ANARI_WAIT);
+  if (extensionsAvailable == 0 || !StringListContains(extensions, extension))
+  {
+    throw viskores::cont::ErrorBadValue(std::string("ANARI device does not support required ") +
+                                        extension + " extension.");
+  }
+
+  const char** subtypes = anariGetObjectSubtypes(device, ANARI_GEOMETRY);
+  if (!StringListContains(subtypes, "cone"))
+  {
+    throw viskores::cont::ErrorBadValue(
+      "ANARI device does not support required 'cone' geometry subtype.");
+  }
+}
+
+static void ValidateGlyphField(const viskores::cont::Field& field,
+                               const viskores::cont::UnknownCellSet& cells,
+                               const viskores::cont::CoordinateSystem& coords)
+{
+  const auto association = field.GetAssociation();
+  const bool isPointField = association == viskores::cont::Field::Association::Points;
+  const bool isCellField = association == viskores::cont::Field::Association::Cells;
+
+  if (!isPointField && !isCellField)
+  {
+    throw viskores::cont::ErrorBadValue(
+      "ANARI glyphs require a point- or cell-associated vector field.");
+  }
+  if (field.GetData().GetNumberOfComponentsFlat() != 3)
+  {
+    throw viskores::cont::ErrorBadValue("ANARI glyphs require a three-component vector field.");
+  }
+  if (isPointField && field.GetNumberOfValues() != coords.GetNumberOfPoints())
+  {
+    throw viskores::cont::ErrorBadValue("ANARI point glyphs require one vector per point.");
+  }
+  if (isCellField && field.GetNumberOfValues() != cells.GetNumberOfCells())
+  {
+    throw viskores::cont::ErrorBadValue("ANARI cell glyphs require one vector per cell.");
+  }
+  if (isCellField && cells.GetNumberOfPoints() != coords.GetNumberOfPoints())
+  {
+    throw viskores::cont::ErrorBadValue(
+      "ANARI cell glyphs require one coordinate per cell-set point.");
+  }
+}
+
+static void ValidateGlyphActor(const ANARIActor& actor)
+{
+  const auto& field = actor.GetField();
+  if (field.GetNumberOfValues() > 0)
+  {
+    ValidateGlyphField(field, actor.GetCellSet(), actor.GetCoordinateSystem());
+  }
+}
 
 static GlyphArrays MakeGlyphs(viskores::cont::Field gradients,
                               viskores::cont::UnknownCellSet cells,
@@ -166,23 +259,42 @@ ANARIMapperGlyphs::~ANARIMapperGlyphs()
 void ANARIMapperGlyphs::SetActor(const ANARIActor& actor)
 {
   this->ANARIMapper::SetActor(actor);
-  this->ConstructArrays(true);
+  this->Current = false;
+  if (this->Handles->Geometry)
+  {
+    this->ConstructArrays();
+  }
 }
 
 void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
 {
+  if (this->Offset == enabled)
+    return;
+
   this->Offset = enabled;
+  this->Current = false;
+  if (this->Handles->Geometry)
+  {
+    this->ConstructArrays();
+  }
 }
 
 anari_cpp::Geometry ANARIMapperGlyphs::GetANARIGeometry()
 {
   if (this->Handles->Geometry)
+  {
+    if (!this->Current)
+    {
+      this->ConstructArrays();
+    }
     return this->Handles->Geometry;
+  }
 
   auto d = this->GetDevice();
+  RequireConeSupport(d);
+  ValidateGlyphActor(this->GetActor());
   this->Handles->Geometry = anari_cpp::newObject<anari_cpp::Geometry>(d, "cone");
   this->ConstructArrays();
-  this->UpdateGeometry();
   return this->Handles->Geometry;
 }
 
@@ -192,6 +304,8 @@ anari_cpp::Surface ANARIMapperGlyphs::GetANARISurface()
     return this->Handles->Surface;
 
   auto d = this->GetDevice();
+  RequireConeSupport(d);
+  ValidateGlyphActor(this->GetActor());
 
   if (!this->Handles->Material)
   {
@@ -209,18 +323,10 @@ anari_cpp::Surface ANARIMapperGlyphs::GetANARISurface()
   return this->Handles->Surface;
 }
 
-void ANARIMapperGlyphs::ConstructArrays(bool regenerate)
+void ANARIMapperGlyphs::ConstructArrays()
 {
-  if (regenerate)
-    this->Current = false;
-
   if (this->Current)
     return;
-
-  this->Current = true;
-  this->Valid = false;
-
-  this->Handles->ReleaseArrays();
 
   const auto& actor = this->GetActor();
   const auto& coords = actor.GetCoordinateSystem();
@@ -231,9 +337,19 @@ void ANARIMapperGlyphs::ConstructArrays(bool regenerate)
 
   if (numGlyphs == 0)
   {
+    this->Current = true;
+    this->Valid = false;
+    this->Handles->ReleaseArrays();
+    this->UpdateGeometry();
+    this->Handles->Arrays = {};
     this->RefreshGroup();
     return;
   }
+
+  ValidateGlyphField(field, cells, coords);
+
+  this->Valid = false;
+  this->Handles->ReleaseArrays();
 
   viskores::Bounds coordBounds = coords.GetBounds();
   viskores::Float64 lx = coordBounds.X.Length();
@@ -241,7 +357,12 @@ void ANARIMapperGlyphs::ConstructArrays(bool regenerate)
   viskores::Float64 lz = coordBounds.Z.Length();
   viskores::Float64 mag = viskores::Sqrt(lx * lx + ly * ly + lz * lz);
   constexpr viskores::Float64 heuristic = 300.;
+  constexpr viskores::Float32 fallbackSize = 0.01f;
   auto glyphSize = static_cast<viskores::Float32>(mag / heuristic);
+  if (!(glyphSize > 0.f) || !viskores::IsFinite(glyphSize))
+  {
+    glyphSize = fallbackSize;
+  }
 
   auto arrays = MakeGlyphs(field, cells, coords, glyphSize, Offset);
 
@@ -257,7 +378,8 @@ void ANARIMapperGlyphs::ConstructArrays(bool regenerate)
 
   this->UpdateGeometry();
 
-  this->Arrays = arrays;
+  this->Handles->Arrays = std::move(arrays);
+  this->Current = true;
   this->Valid = true;
 
   this->RefreshGroup();
@@ -289,10 +411,10 @@ void ANARIMapperGlyphs::UpdateGeometry()
 
 ANARIMapperGlyphs::ANARIHandles::~ANARIHandles()
 {
-  this->ReleaseArrays();
   anari_cpp::release(this->Device, this->Surface);
   anari_cpp::release(this->Device, this->Material);
   anari_cpp::release(this->Device, this->Geometry);
+  this->ReleaseArrays();
   anari_cpp::release(this->Device, this->Device);
 }
 
@@ -302,6 +424,7 @@ void ANARIMapperGlyphs::ANARIHandles::ReleaseArrays()
   anari_cpp::release(this->Device, this->Parameters.Vertex.Radius);
   this->Parameters.Vertex.Position = nullptr;
   this->Parameters.Vertex.Radius = nullptr;
+  this->Parameters.NumPrimitives = 0;
 }
 
 } // namespace anari
