@@ -77,6 +77,13 @@ public:
     return array;
   }
 
+  ANARIVolume newVolume(const char* subtype) override
+  {
+    auto volume = this->ViskoresDevice::newVolume(subtype);
+    this->VolumeSubtypes[volume] = subtype ? subtype : "";
+    return volume;
+  }
+
   void* mapArray(ANARIArray array) override
   {
     auto* mapped = this->ViskoresDevice::mapArray(array);
@@ -199,6 +206,14 @@ public:
     return state->objectCounts.arrays.load();
   }
 
+  const std::string& GetVolumeSubtype(ANARIVolume volume) const
+  {
+    auto subtype = this->VolumeSubtypes.find(volume);
+    VISKORES_TEST_ASSERT(subtype != this->VolumeSubtypes.end(),
+                         "No subtype was recorded for the ANARI volume.");
+    return subtype->second;
+  }
+
   void Flush()
   {
     auto* state = static_cast<viskores_device::ViskoresDeviceGlobalState*>(this->m_state.get());
@@ -218,6 +233,7 @@ private:
   std::map<ANARIObject, std::map<std::string, ArrayRecord>> ArrayParameters;
   std::map<ANARIObject, std::map<std::string, std::string>> StringParameters;
   std::map<ANARIObject, std::map<std::string, ValueRecord>> ValueParameters;
+  std::map<ANARIVolume, std::string> VolumeSubtypes;
 };
 
 template <typename ValueType, typename RecordType>
@@ -428,6 +444,8 @@ void TestVolumeRangeAndOpacityUpdates()
     viskores::interop::anari::ANARIMapperVolume mapper(device, MakeVolumeActor());
     mapper.SetANARIColorMapOpacityScale(2.5f);
     auto volume = mapper.GetANARIVolume();
+    VISKORES_TEST_ASSERT(inspection->GetVolumeSubtype(volume) == "transferFunction1D",
+                         "The volume mapper did not create a transferFunction1D volume.");
 
     auto range = ReadValues<viskores::Float32>(inspection->GetValueParameter(volume, "valueRange"));
     auto opacityScale =

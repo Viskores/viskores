@@ -16,7 +16,7 @@
 namespace
 {
 
-void TestANARILoadDeviceLifetime()
+void TestExternalDeviceLifetime()
 {
   const char* libraryName = std::getenv("VISKORES_TEST_ANARI_LIBRARY");
   if ((libraryName == nullptr) || (std::string(libraryName) == "viskores"))
@@ -40,7 +40,7 @@ void TestANARILoadDeviceLifetime()
 
 } // anonymous namespace
 
-int UnitTestANARILoadDevice(int argc, char* argv[])
+int UnitTestANARIExternalDevice(int argc, char* argv[])
 {
-  return viskores::testing::Testing::Run(TestANARILoadDeviceLifetime, argc, argv);
+  return viskores::testing::Testing::Run(TestExternalDeviceLifetime, argc, argv);
 }

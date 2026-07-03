@@ -15,6 +15,8 @@
 namespace
 {
 
+// This is bundled-device extension coverage. It deliberately constructs raw
+// ANARI objects and does not exercise a viskores::interop::anari mapper.
 void RenderTests()
 {
   // Initialize ANARI /////////////////////////////////////////////////////////
@@ -100,22 +102,23 @@ void RenderTests()
 
   // Render a frame ///////////////////////////////////////////////////////////
 
-  renderTestANARIImage(d,
-                       world,
-                       viskores::Vec3f_32(2.f, 1.5f, 2.5f),
-                       viskores::Vec3f_32(-0.57f, -0.43f, -0.7f),
-                       viskores::Vec3f_32(0.f, 1.f, 0.f),
-                       "interop/anari/quad.png",
-                       viskores::Vec2ui_32(512, 512));
+  const auto imageResult = renderTestANARIImage(d,
+                                                world,
+                                                viskores::Vec3f_32(2.f, 1.5f, 2.5f),
+                                                viskores::Vec3f_32(-0.57f, -0.43f, -0.7f),
+                                                viskores::Vec3f_32(0.f, 1.f, 0.f),
+                                                "interop/anari/quad.png",
+                                                viskores::Vec2ui_32(512, 512));
 
   // Cleanup //////////////////////////////////////////////////////////////////
 
   anari_cpp::release(d, world);
+  VISKORES_TEST_ASSERT(imageResult);
 }
 
 } // namespace
 
-int UnitTestANARIGeometryQuad(int argc, char* argv[])
+int UnitTestANARIDeviceGeometryQuad(int argc, char* argv[])
 {
   return viskores::cont::testing::Testing::Run(RenderTests, argc, argv);
 }

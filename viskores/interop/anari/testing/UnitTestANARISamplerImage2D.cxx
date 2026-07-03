@@ -100,7 +100,8 @@ bool HasImage2DSamplerExtension(anari_cpp::Device d)
 
 void RenderTests()
 {
-  auto d = loadANARIDevice();
+  auto loadedDevice = loadANARIDevice();
+  auto d = loadedDevice.GetDevice();
   if (!HasImage2DSamplerExtension(d))
   {
     VISKORES_TEST_SKIP("ANARI KHR_SAMPLER_IMAGE2D extension not supported by ANARI device.");
@@ -161,16 +162,16 @@ void RenderTests()
   anari_cpp::commitParameters(d, world);
   anari_cpp::release(d, surface);
 
-  renderTestANARIImage(d,
-                       world,
-                       viskores::Vec3f_32(0.f, -1.1f, 0.f),
-                       viskores::Vec3f_32(0.f, 1.f, 0.f),
-                       viskores::Vec3f_32(0.f, 0.f, -1.f),
-                       "interop/anari/sampler-image2d.png",
-                       viskores::Vec2ui_32(512, 512));
+  const auto imageResult = renderTestANARIImage(d,
+                                                world,
+                                                viskores::Vec3f_32(0.f, -1.1f, 0.f),
+                                                viskores::Vec3f_32(0.f, 1.f, 0.f),
+                                                viskores::Vec3f_32(0.f, 0.f, -1.f),
+                                                "interop/anari/sampler-image2d.png",
+                                                viskores::Vec2ui_32(512, 512));
 
   anari_cpp::release(d, world);
-  anari_cpp::release(d, d);
+  VISKORES_TEST_ASSERT(imageResult);
 }
 
 } // namespace
