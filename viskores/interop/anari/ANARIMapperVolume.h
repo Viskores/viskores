@@ -46,7 +46,6 @@ struct UnstructuredVolumeParameters
   anari_cpp::Array1D CellIndex{ nullptr };
   anari_cpp::Array1D CellData{ nullptr };
   anari_cpp::Array1D CellType{ nullptr };
-  bool IndexPrefixed{ false };
 };
 
 /// @brief Viskores data arrays underlying the `ANARIArray` handles created by the mapper.
@@ -61,19 +60,28 @@ struct UntructuredVolumeArrays
 {
   viskores::cont::ArrayHandle<viskores::Vec3f_32> VertexPosition;
   viskores::cont::ArrayHandle<viskores::Float32> VertexData;
-  viskores::cont::ArrayHandle<viskores::UInt64> Index;
-  viskores::cont::ArrayHandle<viskores::UInt64> CellIndex;
+  viskores::cont::ArrayHandle<viskores::UInt32> Index;
+  viskores::cont::ArrayHandle<viskores::UInt32> CellIndex;
   viskores::cont::ArrayHandle<viskores::Float32> CellData;
   viskores::cont::ArrayHandle<viskores::UInt8> CellType;
   std::shared_ptr<viskores::cont::Token> Token{ new viskores::cont::Token };
 };
 
-/// @brief Mapper which turns structured volumes into a single ANARI `transferFunction1D` volume.
+/// @brief Mapper which turns structured or unstructured data into an ANARI
+/// `transferFunction1D` volume.
 ///
 /// A `structuredRegular` field requires a 3D structured cell set, uniform point coordinates,
 /// a non-empty point-associated scalar field with one value per point, and at least two samples
 /// in each dimension. Inputs which do not meet these requirements are rejected with
 /// `viskores::cont::ErrorBadValue`; they are never silently reinterpreted as regular grids.
+///
+/// An `unstructured` field requires an ANARI device advertising
+/// `ANARI_KHR_SPATIAL_FIELD_UNSTRUCTURED`, a `CellSetSingleType` or `CellSetExplicit` containing
+/// only tetrahedra, hexahedra, wedges, and pyramids, and a point- or cell-associated scalar field
+/// with matching cardinality. Connectivity and cell offsets must fit in `viskores::UInt32`.
+/// Invalid inputs are rejected before an ANARI spatial field is created. Actor replacements build
+/// a complete spatial-field state before replacing the previous state.
+///
 /// A completely empty actor represents an empty mapper and does not create ANARI objects.
 ///
 /// NOTE: This currently only supports Float32 scalar fields. In the future this
@@ -120,8 +128,8 @@ struct VISKORES_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
   anari_cpp::Volume GetANARIVolume() override;
 
 private:
-  /// @brief Do the work to construct the basic ANARI arrays for the ANARIGeometry.
-  /// @param regenerate Force the position/radius arrays are regenerated.
+  /// @brief Construct a complete candidate spatial-field state and install it.
+  /// @param regenerate Force the spatial-field arrays to be regenerated.
   ///
   void ConstructArrays(bool regenerate = false);
 

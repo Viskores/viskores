@@ -24,6 +24,7 @@
 #include <viskores/interop/anari/ANARIMapperVolume.h>
 
 #include <cstring>
+#include <limits>
 
 namespace viskores
 {
@@ -212,35 +213,130 @@ anari_cpp::Volume ANARIMapperVolume::GetANARIVolume()
   return this->Handles->Volume;
 }
 
-// For the moment, we use ospray conventions
-//    uint8_t VKL_TETRAHEDRON = 10;
-//    uint8_t VKL_HEXAHEDRON = 12;
-//    uint8_t VKL_WEDGE = 13;
-//    uint8_t VKL_PYRAMID = 14;
-//
-struct ToAnariCellType
+template <typename ShapesArrayType>
+VISKORES_CONT void ValidateUnstructuredCellTypes(const ShapesArrayType& shapes)
 {
-  VISKORES_EXEC_CONT viskores::UInt8 operator()(viskores::UInt8 shape) const
+  auto portal = shapes.ReadPortal();
+  for (viskores::Id cellIndex = 0; cellIndex < portal.GetNumberOfValues(); ++cellIndex)
   {
-    if (shape == viskores::CELL_SHAPE_TETRA)
+    const viskores::UInt8 shape = portal.Get(cellIndex);
+    if (shape == viskores::CELL_SHAPE_TETRA || shape == viskores::CELL_SHAPE_HEXAHEDRON ||
+        shape == viskores::CELL_SHAPE_WEDGE || shape == viskores::CELL_SHAPE_PYRAMID)
     {
-      return 10;
+      continue;
     }
-    else if (shape == viskores::CELL_SHAPE_HEXAHEDRON)
-    {
-      return 14;
-    }
-    else if (shape == viskores::CELL_SHAPE_WEDGE)
-    {
-      return 13;
-    }
-    else if (shape == viskores::CELL_SHAPE_PYRAMID)
-    {
-      return 12;
-    }
-    return uint8_t(-1);
+    throw viskores::cont::ErrorBadValue(
+      "ANARI unstructured volumes require every cell to be a tetrahedron, hexahedron, wedge, or "
+      "pyramid.");
   }
-};
+}
+
+template <typename InputArrayType>
+VISKORES_CONT void CopyValidatedUInt32(const InputArrayType& input,
+                                       viskores::cont::ArrayHandle<viskores::UInt32>& output,
+                                       const char* description)
+{
+  auto portal = input.ReadPortal();
+  const viskores::UInt64 maximum = (std::numeric_limits<viskores::UInt32>::max)();
+  for (viskores::Id valueIndex = 0; valueIndex < portal.GetNumberOfValues(); ++valueIndex)
+  {
+    const viskores::Id value = portal.Get(valueIndex);
+    if (value < 0 || static_cast<viskores::UInt64>(value) > maximum)
+    {
+      throw viskores::cont::ErrorBadValue(std::string("ANARI unstructured ") + description +
+                                          " exceeds UInt32 range.");
+    }
+  }
+  viskores::cont::ArrayCopyDevice(input, output);
+}
+
+VISKORES_CONT viskores::IdComponent NumberOfPointsForCellType(viskores::UInt8 shape)
+{
+  switch (shape)
+  {
+    case viskores::CELL_SHAPE_TETRA:
+      return 4;
+    case viskores::CELL_SHAPE_HEXAHEDRON:
+      return 8;
+    case viskores::CELL_SHAPE_WEDGE:
+      return 6;
+    case viskores::CELL_SHAPE_PYRAMID:
+      return 5;
+    default:
+      return 0;
+  }
+}
+
+template <typename ShapesArrayType, typename ConnectivityArrayType, typename OffsetsArrayType>
+VISKORES_CONT void ValidateUnstructuredTopology(const ShapesArrayType& shapes,
+                                                const ConnectivityArrayType& connectivity,
+                                                const OffsetsArrayType& offsets,
+                                                viskores::Id numberOfCells,
+                                                viskores::Id numberOfPoints)
+{
+  if (numberOfCells == 0)
+  {
+    throw viskores::cont::ErrorBadValue("ANARI unstructured volumes require at least one cell.");
+  }
+  if (shapes.GetNumberOfValues() != numberOfCells ||
+      offsets.GetNumberOfValues() != numberOfCells + 1)
+  {
+    throw viskores::cont::ErrorBadValue(
+      "ANARI unstructured volumes require one cell type and one starting offset per cell.");
+  }
+
+  auto shapePortal = shapes.ReadPortal();
+  auto connectivityPortal = connectivity.ReadPortal();
+  auto offsetPortal = offsets.ReadPortal();
+  if (offsetPortal.Get(0) != 0)
+  {
+    throw viskores::cont::ErrorBadValue("ANARI unstructured cell offsets must begin at zero.");
+  }
+  for (viskores::Id cellIndex = 0; cellIndex < numberOfCells; ++cellIndex)
+  {
+    const viskores::Id firstIndex = offsetPortal.Get(cellIndex);
+    const viskores::Id endIndex = offsetPortal.Get(cellIndex + 1);
+    if (endIndex < firstIndex ||
+        endIndex - firstIndex != NumberOfPointsForCellType(shapePortal.Get(cellIndex)))
+    {
+      throw viskores::cont::ErrorBadValue(
+        "ANARI unstructured cell offsets do not match the cell types.");
+    }
+  }
+  if (offsetPortal.Get(numberOfCells) != connectivity.GetNumberOfValues())
+  {
+    throw viskores::cont::ErrorBadValue(
+      "ANARI unstructured cell offsets do not span the connectivity array.");
+  }
+  for (viskores::Id index = 0; index < connectivityPortal.GetNumberOfValues(); ++index)
+  {
+    const viskores::Id pointIndex = connectivityPortal.Get(index);
+    if (pointIndex < 0 || pointIndex >= numberOfPoints)
+    {
+      throw viskores::cont::ErrorBadValue(
+        "ANARI unstructured connectivity references a point outside the cell set.");
+    }
+  }
+}
+
+template <typename CellSetType>
+VISKORES_CONT void PrepareUnstructuredTopology(const CellSetType& cellSet,
+                                               UntructuredVolumeArrays& arrays)
+{
+  auto shapes =
+    cellSet.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
+  auto connectivity = cellSet.GetConnectivityArray(viskores::TopologyElementTagCell(),
+                                                   viskores::TopologyElementTagPoint());
+  auto offsets = cellSet.GetOffsetsArray(viskores::TopologyElementTagCell(),
+                                         viskores::TopologyElementTagPoint());
+
+  ValidateUnstructuredCellTypes(shapes);
+  CopyValidatedUInt32(connectivity, arrays.Index, "connectivity");
+  CopyValidatedUInt32(offsets, arrays.CellIndex, "cell offsets");
+  ValidateUnstructuredTopology(
+    shapes, connectivity, offsets, cellSet.GetNumberOfCells(), cellSet.GetNumberOfPoints());
+  viskores::cont::ArrayCopyDevice(shapes, arrays.CellType);
+}
 
 void ANARIMapperVolume::ConstructArrays(bool regenerate)
 {
@@ -274,6 +370,8 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
 
   const bool isPointBased =
     actor.GetField().GetAssociation() == viskores::cont::Field::Association::Points;
+  const bool isCellBased =
+    actor.GetField().GetAssociation() == viskores::cont::Field::Association::Cells;
   const bool isStructured = cells.CanConvert<viskores::cont::CellSetStructured<3>>();
   const bool isScalar = fieldArray.GetNumberOfComponentsFlat() == 1;
 
@@ -281,9 +379,14 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   {
     throw viskores::cont::ErrorBadValue("ANARI volumes require a non-empty field.");
   }
-  if (!isPointBased || !isScalar)
+  if (!isScalar || (isStructured && !isPointBased))
   {
     throw viskores::cont::ErrorBadValue("ANARI volumes require a point-associated scalar field.");
+  }
+  if (!isStructured && !isPointBased && !isCellBased)
+  {
+    throw viskores::cont::ErrorBadValue(
+      "ANARI unstructured volumes require a point- or cell-associated scalar field.");
   }
   if (isStructured &&
       !coords.GetData().IsType<viskores::cont::ArrayHandleUniformPointCoordinates>())
@@ -342,62 +445,55 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
   // Unstructured volume data
   else
   {
+    auto& arrays = nextState->UnstructuredArrays;
+
+    if (cells.IsType<viskores::cont::CellSetSingleType<>>())
+    {
+      viskores::cont::CellSetSingleType<> singleTypeCells =
+        cells.AsCellSet<viskores::cont::CellSetSingleType<>>();
+      PrepareUnstructuredTopology(singleTypeCells, arrays);
+    }
+    else if (cells.IsType<viskores::cont::CellSetExplicit<>>())
+    {
+      viskores::cont::CellSetExplicit<> explicitCells =
+        cells.AsCellSet<viskores::cont::CellSetExplicit<>>();
+      PrepareUnstructuredTopology(explicitCells, arrays);
+    }
+    else
+    {
+      throw viskores::cont::ErrorBadValue(
+        "ANARI unstructured volumes require a CellSetSingleType or CellSetExplicit.");
+    }
+
+    if (coords.GetNumberOfPoints() != cells.GetNumberOfPoints())
+    {
+      throw viskores::cont::ErrorBadValue(
+        "ANARI unstructured volumes require one coordinate per cell-set point.");
+    }
+    if (isPointBased && fieldArray.GetNumberOfValues() != coords.GetNumberOfPoints())
+    {
+      throw viskores::cont::ErrorBadValue(
+        "ANARI unstructured vertex data requires one value per point.");
+    }
+    if (isCellBased && fieldArray.GetNumberOfValues() != cells.GetNumberOfCells())
+    {
+      throw viskores::cont::ErrorBadValue(
+        "ANARI unstructured cell data requires one value per cell.");
+    }
+
+    viskores::cont::ArrayCopyShallowIfPossible(coords.GetData(), arrays.VertexPosition);
+    if (isPointBased)
+    {
+      viskores::cont::ArrayCopyShallowIfPossible(fieldArray, arrays.VertexData);
+    }
+    else
+    {
+      viskores::cont::ArrayCopyShallowIfPossible(fieldArray, arrays.CellData);
+    }
+
     RequireANARIObjectSupport(
       d, ANARI_SPATIAL_FIELD, "unstructured", "ANARI_KHR_SPATIAL_FIELD_UNSTRUCTURED");
     nextState->SpatialField = anari_cpp::newObject<anari_cpp::SpatialField>(d, "unstructured");
-
-    auto& arrays = nextState->UnstructuredArrays;
-
-    // Cell Data
-    if (cells.IsType<viskores::cont::CellSetSingleType<>>())
-    {
-      // 1. Cell Type
-      viskores::cont::CellSetSingleType<> sgl =
-        cells.AsCellSet<viskores::cont::CellSetSingleType<>>();
-      auto shapes =
-        sgl.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(
-        viskores::cont::make_ArrayHandleTransform(shapes, ToAnariCellType{}), arrays.CellType);
-
-      // 2. Cell Connectivity
-      auto conn = sgl.GetConnectivityArray(viskores::TopologyElementTagCell(),
-                                           viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(conn, arrays.Index);
-
-      // 3. Cell Index
-      auto offsets = sgl.GetOffsetsArray(viskores::TopologyElementTagCell(),
-                                         viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(offsets, arrays.CellIndex);
-    }
-
-    else if (cells.IsType<viskores::cont::CellSetExplicit<>>())
-    {
-      // 1. Cell Type
-      viskores::cont::CellSetExplicit<> exp = cells.AsCellSet<viskores::cont::CellSetExplicit<>>();
-      auto shapes =
-        exp.GetShapesArray(viskores::TopologyElementTagCell(), viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(
-        viskores::cont::make_ArrayHandleTransform(shapes, ToAnariCellType{}), arrays.CellType);
-
-      // 2. Cell Connectivity
-      auto conn = exp.GetConnectivityArray(viskores::TopologyElementTagCell(),
-                                           viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(conn, arrays.Index);
-
-      // 3. Cell Index
-      auto offsets = exp.GetOffsetsArray(viskores::TopologyElementTagCell(),
-                                         viskores::TopologyElementTagPoint());
-      viskores::cont::ArrayCopyDevice(offsets, arrays.CellIndex);
-    }
-
-    // Vetrex Coordinates
-    viskores::cont::ArrayCopyShallowIfPossible(coords.GetData(), arrays.VertexPosition);
-
-    // Vetrex Data
-    viskores::cont::ArrayCopyShallowIfPossible(fieldArray, arrays.VertexData);
-
-    // "indexPrefixed"
-    nextState->UnstructuredParameters.IndexPrefixed = false;
 
     // "vertex.position"
     {
@@ -408,6 +504,7 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
     }
 
     // "vertex.data"
+    if (isPointBased)
     {
       auto* ptr = static_cast<const viskores::Float32*>(
         arrays.VertexData.GetBuffers()[0].ReadPointerHost(*arrays.Token));
@@ -417,7 +514,7 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
 
     // "index"
     {
-      auto* ptr = static_cast<const viskores::UInt64*>(
+      auto* ptr = static_cast<const viskores::UInt32*>(
         arrays.Index.GetBuffers()[0].ReadPointerHost(*arrays.Token));
       nextState->UnstructuredParameters.Index =
         anari_cpp::newArray1D(d, ptr, NoopANARIDeleter, nullptr, arrays.Index.GetNumberOfValues());
@@ -425,19 +522,20 @@ void ANARIMapperVolume::ConstructArrays(bool regenerate)
 
     // "cell.index"
     {
-      auto* ptr = static_cast<const viskores::UInt64*>(
+      auto* ptr = static_cast<const viskores::UInt32*>(
         arrays.CellIndex.GetBuffers()[0].ReadPointerHost(*arrays.Token));
       nextState->UnstructuredParameters.CellIndex = anari_cpp::newArray1D(
-        d, ptr, NoopANARIDeleter, nullptr, arrays.CellIndex.GetNumberOfValues() - 1);
+        d, ptr, NoopANARIDeleter, nullptr, arrays.CellType.GetNumberOfValues());
     }
 
-    // TODO "cell.data" (NOT SUPPORED YET)
-    // {
-    //   auto* ptr = static_cast<const viskores::Float32*>(
-    //     arrays.CellData.GetBuffers()[0].ReadPointerHost(*arrays.Token));
-    //   nextState->UnstructuredParameters.CellData =
-    //     anari_cpp::newArray1D(d, ptr, NoopANARIDeleter, nullptr, arrays.CellData.GetNumberOfValues());
-    // }
+    // "cell.data"
+    if (isCellBased)
+    {
+      auto* ptr = static_cast<const viskores::Float32*>(
+        arrays.CellData.GetBuffers()[0].ReadPointerHost(*arrays.Token));
+      nextState->UnstructuredParameters.CellData = anari_cpp::newArray1D(
+        d, ptr, NoopANARIDeleter, nullptr, arrays.CellData.GetNumberOfValues());
+    }
 
     // "cell.type"
     {
@@ -471,7 +569,6 @@ void ANARIMapperVolume::UpdateSpatialField(ANARISpatialFieldState& state)
   anari_cpp::unsetParameter(d, state.SpatialField, "vertex.position");
   anari_cpp::unsetParameter(d, state.SpatialField, "vertex.data");
   anari_cpp::unsetParameter(d, state.SpatialField, "index");
-  anari_cpp::unsetParameter(d, state.SpatialField, "indexPrefixed");
   anari_cpp::unsetParameter(d, state.SpatialField, "cell.index");
   anari_cpp::unsetParameter(d, state.SpatialField, "cell.data");
   anari_cpp::unsetParameter(d, state.SpatialField, "cell.type");
@@ -502,18 +599,13 @@ void ANARIMapperVolume::UpdateSpatialField(ANARISpatialFieldState& state)
   if (state.UnstructuredParameters.CellIndex)
   {
     anari_cpp::setParameter(
-      d, state.SpatialField, "indexPrefixed", state.UnstructuredParameters.IndexPrefixed);
-  }
-  if (state.UnstructuredParameters.CellIndex)
-  {
-    anari_cpp::setParameter(
       d, state.SpatialField, "cell.index", state.UnstructuredParameters.CellIndex);
   }
-  // if (state.UnstructuredParameters.CellData)
-  // {
-  //   anari_cpp::setParameter(
-  //     d, state.SpatialField, "cell.data", state.UnstructuredParameters.CellData);
-  // }
+  if (state.UnstructuredParameters.CellData)
+  {
+    anari_cpp::setParameter(
+      d, state.SpatialField, "cell.data", state.UnstructuredParameters.CellData);
+  }
   if (state.UnstructuredParameters.CellType)
   {
     anari_cpp::setParameter(
