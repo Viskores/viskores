@@ -14,6 +14,7 @@
 #include <viskores/cont/CoordinateSystem.h>
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/ErrorBadValue.h>
 #include <viskores/cont/Field.h>
 #include <viskores/cont/UnknownArrayHandle.h>
 
@@ -88,8 +89,7 @@ void BindCont(nb::module_& m)
     .value("Points", viskores::cont::Field::Association::Points)
     .value("Cells", viskores::cont::Field::Association::Cells)
     .value("Partitions", viskores::cont::Field::Association::Partitions)
-    .value("Global", viskores::cont::Field::Association::Global)
-    .export_values();
+    .value("Global", viskores::cont::Field::Association::Global);
 
   nb::class_<viskores::cont::Field>(m, "Field")
     .def(nb::init<std::string, viskores::cont::Field::Association,
@@ -115,23 +115,13 @@ void BindCont(nb::module_& m)
 
   nb::class_<viskores::cont::CoordinateSystem, viskores::cont::Field>(m, "CoordinateSystem")
     .def(nb::init<>())
-    .def("__init__",
-         [](viskores::cont::CoordinateSystem* self,
-            const std::string& name,
-            const viskores::cont::UnknownArrayHandle& data) {
-           new (self) viskores::cont::CoordinateSystem(name, data);
-         },
+    .def(nb::init<std::string, const viskores::cont::UnknownArrayHandle&>(),
          nb::arg("name"),
          nb::arg("data"),
          "Construct a CoordinateSystem from a name and an UnknownArrayHandle.")
     .def("GetBounds",
-         [](const viskores::cont::CoordinateSystem& self)
-         {
-           viskores::Bounds b = self.GetBounds();
-           return std::vector<double>{ b.X.Min, b.X.Max, b.Y.Min,
-                                       b.Y.Max, b.Z.Min, b.Z.Max };
-         },
-         "Return axis-aligned bounds as [xmin,xmax,ymin,ymax,zmin,zmax].");
+         &viskores::cont::CoordinateSystem::GetBounds,
+         "Return the axis-aligned bounds of the coordinate data.");
 
   nb::class_<viskores::cont::DataSet>(m, "DataSet")
     .def(nb::init<>())
@@ -169,10 +159,7 @@ void BindCont(nb::module_& m)
          nb::arg("data"),
          "Add a cell-associated field from an UnknownArrayHandle.")
     .def("HasField",
-         [](const viskores::cont::DataSet& self,
-            const std::string& name,
-            viskores::cont::Field::Association assoc)
-         { return self.HasField(name, assoc); },
+         &viskores::cont::DataSet::HasField,
          nb::arg("name"),
          nb::arg("association") = viskores::cont::Field::Association::Any,
          "Return True if a field with the given name (and optional association) exists.")
@@ -189,10 +176,17 @@ void BindCont(nb::module_& m)
          "must remain alive while the Field is in use.")
     .def("GetField",
          [](viskores::cont::DataSet& self, viskores::Id index) -> viskores::cont::Field&
-         { return self.GetField(index); },
+         {
+           if ((index < 0) || (index >= self.GetNumberOfFields()))
+           {
+             throw viskores::cont::ErrorBadValue("Field index out of range: " +
+                                                 std::to_string(index));
+           }
+           return self.GetField(index);
+         },
          nb::arg("index"),
          nb::rv_policy::reference_internal,
-         "Retrieve a field by index (0 to GetNumberOfFields()-1).\n"
+         "Retrieve a field by index (0 to GetNumberOfFields()-1). Throws if out of range.\n"
          "The returned Field shares storage with the DataSet.")
     .def("AddCoordinateSystem",
          [](viskores::cont::DataSet& self, const viskores::cont::CoordinateSystem& cs)
@@ -201,15 +195,36 @@ void BindCont(nb::module_& m)
          "Add a CoordinateSystem to the DataSet.")
     .def("GetCoordinateSystem",
          [](const viskores::cont::DataSet& self, viskores::Id index)
-         { return self.GetCoordinateSystem(index); },
+         {
+           if ((index < 0) || (index >= self.GetNumberOfCoordinateSystems()))
+           {
+             throw viskores::cont::ErrorBadValue("Coordinate system index out of range: " +
+                                                 std::to_string(index));
+           }
+           return self.GetCoordinateSystem(index);
+         },
          nb::arg("index") = 0,
-         "Return the CoordinateSystem at the given index (default 0).");
+         "Return the CoordinateSystem at the given index (default 0). Throws if out of range.");
 
   nb::class_<viskores::cont::DataSetBuilderUniform>(m, "DataSetBuilderUniform")
     .def_static(
-      "create",
+      "Create",
       [](std::vector<viskores::Id> dims) -> viskores::cont::DataSet
       {
+        if ((dims.size() < 1) || (dims.size() > 3))
+        {
+          throw viskores::cont::ErrorBadValue(
+            "DataSetBuilderUniform.Create() requires a list of 1, 2, or 3 dimensions.");
+        }
+        for (auto d : dims)
+        {
+          if (d < 2)
+          {
+            throw viskores::cont::ErrorBadValue(
+              "DataSetBuilderUniform.Create() requires each dimension to be >= 2, got " +
+              std::to_string(d));
+          }
+        }
         if (dims.size() == 1)
         {
           return viskores::cont::DataSetBuilderUniform::Create(dims[0]);
@@ -219,18 +234,13 @@ void BindCont(nb::module_& m)
           return viskores::cont::DataSetBuilderUniform::Create(
             viskores::Id2(dims[0], dims[1]));
         }
-        if (dims.size() == 3)
-        {
-          return viskores::cont::DataSetBuilderUniform::Create(
-            viskores::Id3(dims[0], dims[1], dims[2]));
-        }
-        throw viskores::cont::ErrorBadValue(
-          "DataSetBuilderUniform.create() requires a list of 1, 2, or 3 dimensions.");
+        return viskores::cont::DataSetBuilderUniform::Create(
+          viskores::Id3(dims[0], dims[1], dims[2]));
       },
       nb::arg("dimensions"),
       "Create a uniform rectilinear DataSet. Pass a list of 1, 2, or 3 integer\n"
-      "dimensions (number of points per axis). Origin is [0,0,0] and spacing\n"
-      "is [1,1,1] by default.");
+      "dimensions (number of points per axis), each >= 2. Origin is [0,0,0] and\n"
+      "spacing is [1,1,1] by default.");
 }
 
 } // namespace viskores::python::bindings
