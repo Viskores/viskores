@@ -12,6 +12,7 @@
 
 #include <nanobind/stl/string.h>
 
+#include <sstream>
 #include <string>
 
 namespace
@@ -19,13 +20,16 @@ namespace
 
 std::string RangeRepr(const viskores::Range& r)
 {
-  return "viskores.Range(Min=" + std::to_string(r.Min) + ", Max=" + std::to_string(r.Max) + ")";
+  std::ostringstream out;
+  out << "viskores.Range" << r;
+  return out.str();
 }
 
 std::string BoundsRepr(const viskores::Bounds& b)
 {
-  return "viskores.Bounds(X=" + RangeRepr(b.X) + ", Y=" + RangeRepr(b.Y) +
-    ", Z=" + RangeRepr(b.Z) + ")";
+  std::ostringstream out;
+  out << "viskores.Bounds" << b;
+  return out.str();
 }
 
 } // namespace
@@ -54,6 +58,13 @@ NB_MODULE(_viskores, m)
     .def_rw("Y", &viskores::Bounds::Y)
     .def_rw("Z", &viskores::Bounds::Z)
     .def("IsNonEmpty", &viskores::Bounds::IsNonEmpty)
+    .def("Center",
+         [](const viskores::Bounds& self)
+         {
+           viskores::Vec3f_64 center = self.Center();
+           return nb::make_tuple(center[0], center[1], center[2]);
+         },
+         "Return the center of the bounds as an (x, y, z) tuple.")
     .def("__repr__", &BoundsRepr);
 
   nb::module_ cont = m.def_submodule("cont");

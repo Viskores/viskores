@@ -54,6 +54,17 @@ def check_uniform_dataset_3d():
     assert ds.GetNumberOfCoordinateSystems() == 1
 
 
+def check_uniform_dataset_collapsed_axis():
+    # As in the C++ API, a dimension of 1 collapses that axis.
+    ds = viskores.cont.DataSetBuilderUniform.Create([5, 1])
+    assert ds.GetNumberOfPoints() == 5
+    assert ds.GetNumberOfCells() == 4
+
+    ds = viskores.cont.DataSetBuilderUniform.Create([1, 4, 3])
+    assert ds.GetNumberOfPoints() == 12
+    assert ds.GetNumberOfCells() == 6
+
+
 def check_uniform_dataset_rejects_bad_dims():
     def expect_rejected(dims, message):
         try:
@@ -67,7 +78,6 @@ def check_uniform_dataset_rejects_bad_dims():
     expect_rejected([2, 3, 4, 5], "Expected 4-element dimension list to be rejected.")
     expect_rejected([1], "Expected a single dimension of 1 to be rejected.")
     expect_rejected([1, 1, 1], "Expected all-1 dimensions to be rejected.")
-    expect_rejected([5, 1], "Expected a trailing dimension of 1 to be rejected.")
     expect_rejected([2, 0, 3], "Expected a dimension of 0 to be rejected.")
     expect_rejected([2, -1], "Expected a negative dimension to be rejected.")
 
@@ -163,6 +173,28 @@ def check_dataset_get_coordinate_system_out_of_range():
                 f"Expected out-of-range coordinate system index {bad_index} to be rejected.")
 
 
+# ----- Range and Bounds ------------------------------------------------------
+
+def check_range_and_bounds():
+    r = viskores.Range(1.0, 3.0)
+    assert r.Min == 1.0 and r.Max == 3.0
+    assert r.IsNonEmpty()
+    assert r.Length() == 2.0
+    assert r.Center() == 2.0
+
+    b = viskores.Bounds(viskores.Range(0.0, 2.0),
+                        viskores.Range(0.0, 4.0),
+                        viskores.Range(0.0, 6.0))
+    assert b.IsNonEmpty()
+    assert b.Center() == (1.0, 2.0, 3.0)
+
+    # repr must distinguish values that differ by less than 1e-6.
+    tiny = viskores.Range(0.0, 1e-9)
+    assert repr(tiny).startswith("viskores.Range")
+    assert repr(tiny) != repr(viskores.Range(0.0, 0.0))
+    assert repr(b).startswith("viskores.Bounds")
+
+
 # ----- CoordinateSystem from NumPy ------------------------------------------
 
 def check_coordinate_system_from_numpy():
@@ -219,6 +251,7 @@ def main():
     check_uniform_dataset_1d()
     check_uniform_dataset_2d()
     check_uniform_dataset_3d()
+    check_uniform_dataset_collapsed_axis()
     check_uniform_dataset_rejects_bad_dims()
 
     check_dataset_point_field_roundtrip()
@@ -227,6 +260,8 @@ def main():
     check_dataset_has_field()
     check_dataset_get_field_by_index_out_of_range()
     check_dataset_get_coordinate_system_out_of_range()
+
+    check_range_and_bounds()
 
     check_coordinate_system_from_numpy()
     check_coordinate_system_from_numpy_float64()

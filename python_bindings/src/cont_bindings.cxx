@@ -172,8 +172,7 @@ void BindCont(nb::module_& m)
          nb::arg("association") = viskores::cont::Field::Association::Any,
          nb::rv_policy::reference_internal,
          "Retrieve a field by name. Throws if not found.\n"
-         "The returned Field shares storage with the DataSet; the DataSet\n"
-         "must remain alive while the Field is in use.")
+         "The returned Field shares storage with the DataSet and keeps it alive.")
     .def("GetField",
          [](viskores::cont::DataSet& self, viskores::Id index) -> viskores::cont::Field&
          {
@@ -187,7 +186,7 @@ void BindCont(nb::module_& m)
          nb::arg("index"),
          nb::rv_policy::reference_internal,
          "Retrieve a field by index (0 to GetNumberOfFields()-1). Throws if out of range.\n"
-         "The returned Field shares storage with the DataSet.")
+         "The returned Field shares storage with the DataSet and keeps it alive.")
     .def("AddCoordinateSystem",
          [](viskores::cont::DataSet& self, const viskores::cont::CoordinateSystem& cs)
          { self.AddCoordinateSystem(cs); },
@@ -218,10 +217,10 @@ void BindCont(nb::module_& m)
         }
         for (auto d : dims)
         {
-          if (d < 2)
+          if (d < 1)
           {
             throw viskores::cont::ErrorBadValue(
-              "DataSetBuilderUniform.Create() requires each dimension to be >= 2, got " +
+              "DataSetBuilderUniform.Create() requires each dimension to be >= 1, got " +
               std::to_string(d));
           }
         }
@@ -239,8 +238,9 @@ void BindCont(nb::module_& m)
       },
       nb::arg("dimensions"),
       "Create a uniform rectilinear DataSet. Pass a list of 1, 2, or 3 integer\n"
-      "dimensions (number of points per axis), each >= 2. Origin is [0,0,0] and\n"
-      "spacing is [1,1,1] by default.");
+      "dimensions (number of points per axis), each >= 1. As in the C++ API, a\n"
+      "dimension of 1 collapses that axis, lowering the dataset's dimensionality.\n"
+      "Origin is [0,0,0] and spacing is [1,1,1] by default.");
 }
 
 } // namespace viskores::python::bindings
