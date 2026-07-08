@@ -25,6 +25,7 @@
 //  Athawale, T. M., Sane, S., & Johnson, C. R. (2021, October). Uncertainty
 //  Visualization of the Marching Squares and Marching Cubes Topology Cases.
 //  In 2021 IEEE Visualization Conference (VIS) (pp. 106-110). IEEE.
+//  Plan: Merge to ContourUncertainMonteCarlo
 
 #ifndef viskores_filter_uncertainty_ContourUncertainUniform_h
 #define viskores_filter_uncertainty_ContourUncertainUniform_h
