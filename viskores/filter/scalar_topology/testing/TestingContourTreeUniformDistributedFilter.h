@@ -72,7 +72,7 @@
 #include <viskores/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <viskores/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
 #include <viskores/filter/scalar_topology/ExtractTopVolumeContoursFilter.h>
-#include <viskores/filter/scalar_topology/SelectTopVolumeBranchesFilter.h>
+#include <viskores/filter/scalar_topology/SelectTopVolumeBranchesDistributedFilter.h>
 #include <viskores/filter/scalar_topology/testing/SuperArcHelper.h>
 #include <viskores/filter/scalar_topology/testing/VolumeHelper.h>
 #include <viskores/io/ErrorIO.h>
@@ -386,7 +386,7 @@ inline void RunContourTreePresimplification(std::string fieldName,
   bd_result = bd_filter.Execute(result);
 
   // Compute SelectTopVolumeBranches
-  viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter tp_filter;
+  viskores::filter::scalar_topology::SelectTopVolumeBranchesDistributedFilter tp_filter;
 
   // numBranches needs to be large enough to include all branches
   // numBranches < numSuperarcs < globalSize

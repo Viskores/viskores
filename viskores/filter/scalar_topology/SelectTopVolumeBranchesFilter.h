@@ -50,8 +50,8 @@
 #ifndef viskores_filter_scalar_topology_SelectTopVolumeBranchesFilter_h
 #define viskores_filter_scalar_topology_SelectTopVolumeBranchesFilter_h
 
-#include <viskores/filter/Filter.h>
-#include <viskores/filter/scalar_topology/viskores_filter_scalar_topology_export.h>
+#include <viskores/Deprecated.h>
+#include <viskores/filter/scalar_topology/SelectTopVolumeBranchesDistributedFilter.h>
 
 namespace viskores
 {
@@ -60,50 +60,12 @@ namespace filter
 namespace scalar_topology
 {
 
-/// \brief Compute branch decompostion from distributed contour tree
-class VISKORES_FILTER_SCALAR_TOPOLOGY_EXPORT SelectTopVolumeBranchesFilter
-  : public viskores::filter::Filter
-{
-public:
-  VISKORES_CONT SelectTopVolumeBranchesFilter() = default;
-
-  VISKORES_CONT void SetSavedBranches(const viskores::Id& numBranches)
-  {
-    this->NumSavedBranches = numBranches;
-  }
-
-  VISKORES_CONT void SetPresimplifyThreshold(const viskores::Id& presimpThres)
-  {
-    this->PresimplifyThreshold = presimpThres;
-  }
-
-  VISKORES_CONT viskores::Id GetSavedBranches() { return this->NumSavedBranches; }
-  VISKORES_CONT viskores::Id GetPresimplifyThreshold() { return this->PresimplifyThreshold; }
-  VISKORES_CONT viskores::cont::LogLevel GetTimingsLogLevel() { return this->TimingsLogLevel; }
-
-private:
-  VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet&) override;
-  VISKORES_CONT viskores::cont::PartitionedDataSet DoExecutePartitions(
-    const viskores::cont::PartitionedDataSet& inData) override;
-
-  viskores::Id NumSavedBranches = 1;
-  viskores::Id PresimplifyThreshold = 0;
-  viskores::cont::ArrayHandle<viskores::Id> BranchVolume;
-  viskores::cont::ArrayHandle<viskores::Id> BranchSaddleEpsilon;
-  viskores::cont::ArrayHandle<viskores::Id> SortedBranchByVolume;
-  viskores::cont::UnknownArrayHandle BranchSaddleIsoValue;
-
-  // the parent branch for top volume branches
-  // we only care about the parent branch for top volume branches at the moment
-  // as a result, the index stored in this array follows the descending order of branch volumes
-  viskores::cont::ArrayHandle<viskores::Id> TopVolBranchParent;
-
-  /// Log level to be used for outputting timing information. Default is viskores::cont::LogLevel::Perf
-  viskores::cont::LogLevel TimingsLogLevel = viskores::cont::LogLevel::Perf;
-};
+using SelectTopVolumeBranchesFilter VISKORES_DEPRECATED(
+  1.3,
+  "Use SelectTopVolumeBranchesDistributedFilter.") = SelectTopVolumeBranchesDistributedFilter;
 
 } // namespace scalar_topology
-} // namespace worklet
+} // namespace filter
 } // namespace viskores
 
-#endif
+#endif // viskores_filter_scalar_topology_SelectTopVolumeBranchesFilter_h
