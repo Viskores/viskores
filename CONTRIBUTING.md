@@ -422,7 +422,13 @@ formatting.
 ![Format patch download link](docs/format-patch-download.png)
 
 This link will download a `.zip` archive containing a file named `format.patch`.
-You can apply the patch using the `patch` command.
+You can apply the patch using the `git apply` command.
+
+```bash
+git apply format.patch
+```
+
+For those more familiar with using the `patch` command, you can use that, too.
 
 ```bash
 patch -p1 < format.patch
