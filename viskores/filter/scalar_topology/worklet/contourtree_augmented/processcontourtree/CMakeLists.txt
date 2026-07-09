@@ -24,6 +24,7 @@ set(headers
   PointerDoubling.h
   HypersweepWorklets.h
   SetTriangleSuperarcId.h
+  SuperarcToEdgeWorklet.h
   )
 
 #-----------------------------------------------------------------------------

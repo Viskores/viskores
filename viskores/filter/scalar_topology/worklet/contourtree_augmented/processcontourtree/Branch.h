@@ -61,7 +61,9 @@
 #ifndef viskores_worklet_contourtree_augmented_process_contourtree_inc_branch_h
 #define viskores_worklet_contourtree_augmented_process_contourtree_inc_branch_h
 
+#include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayHandle.h>
+#include <viskores/cont/ArrayHandleIndex.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/processcontourtree/PiecewiseLinearFunction.h>
@@ -91,7 +93,7 @@ public:
   Branch<T>* Parent;                // Pointer to parent, or nullptr if no parent
   std::vector<Branch<T>*> Children; // List of pointers to children
 
-  // Create branch decomposition from contour tree
+  // Create branch decomposition from contour tree (sorted-space arrays + sortOrder)
   template <typename StorageType>
   static Branch<T>* ComputeBranchDecomposition(
     const IdArrayType& contourTreeSuperparents,
@@ -104,6 +106,21 @@ public:
     const IdArrayType& sortOrder,
     const viskores::cont::ArrayHandle<T, StorageType>& dataField,
     bool dataFieldIsSorted);
+
+  // Create branch decomposition when arrays are already in mesh vertex space.
+  // contourTreeSupernodes contains mesh vertex IDs directly (not sorted indices),
+  // contourTreeSuperparents is indexed by mesh vertex, and dataField is mesh-indexed.
+  // No sortOrder needed.
+  template <typename StorageType>
+  static Branch<T>* ComputeBranchDecompositionMeshSpace(
+    const IdArrayType& contourTreeSuperparents,
+    const IdArrayType& contourTreeSupernodes,
+    const IdArrayType& whichBranch,
+    const IdArrayType& branchMinimum,
+    const IdArrayType& branchMaximum,
+    const IdArrayType& branchSaddle,
+    const IdArrayType& branchParent,
+    const viskores::cont::ArrayHandle<T, StorageType>& dataField);
 
   // Simplify branch composition down to target size (i.e., consisting of targetSize branches)
   void SimplifyToSize(viskores::Id targetSize, bool usePersistenceSorter = true);
@@ -258,6 +275,37 @@ Branch<T>* Branch<T>::ComputeBranchDecomposition(
 
   return root;
 } // ComputeBranchDecomposition()
+
+
+template <typename T>
+template <typename StorageType>
+Branch<T>* Branch<T>::ComputeBranchDecompositionMeshSpace(
+  const IdArrayType& contourTreeSuperparents,
+  const IdArrayType& contourTreeSupernodes,
+  const IdArrayType& whichBranch,
+  const IdArrayType& branchMinimum,
+  const IdArrayType& branchMaximum,
+  const IdArrayType& branchSaddle,
+  const IdArrayType& branchParent,
+  const viskores::cont::ArrayHandle<T, StorageType>& dataField)
+{ // ComputeBranchDecompositionMeshSpace()
+  // contourTreeSupernodes already contains mesh vertex IDs (not sorted indices) and dataField
+  // is indexed by mesh vertex, i.e., exactly the sorted-space inputs to ComputeBranchDecomposition
+  // with an identity sortOrder and dataFieldIsSorted=true (mesh index == "sorted" index here).
+  IdArrayType identitySortOrder;
+  viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleIndex(dataField.GetNumberOfValues()),
+                                  identitySortOrder);
+  return ComputeBranchDecomposition(contourTreeSuperparents,
+                                    contourTreeSupernodes,
+                                    whichBranch,
+                                    branchMinimum,
+                                    branchMaximum,
+                                    branchSaddle,
+                                    branchParent,
+                                    identitySortOrder,
+                                    dataField,
+                                    /*dataFieldIsSorted=*/true);
+} // ComputeBranchDecompositionMeshSpace()
 
 
 template <typename T>
