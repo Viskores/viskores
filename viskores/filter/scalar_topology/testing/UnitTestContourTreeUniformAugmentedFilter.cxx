@@ -65,6 +65,7 @@
 #include <viskores/filter/scalar_topology/ContourTreeUniformAugmented.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ProcessContourTree.h>
 
+#include <set>
 
 #ifdef VISKORES_ENABLE_MPI
 #include "TestingContourTreeUniformDistributedFilter.h"
@@ -727,9 +728,9 @@ public:
       "Wrong result for ContourTree filter");
   }
 
-  // Regression test for the setter-order bug (F2): requesting branch decomposition must force
-  // a fully augmented tree at Execute() time, regardless of the order relative to
-  // SetAugmentTree(false). The output must therefore carry the augmentation and branch fields.
+  // Requesting branch decomposition must force a fully augmented tree at Execute() time,
+  // regardless of the order relative to SetAugmentTree(false). The output must therefore
+  // carry the augmentation and branch fields.
   void TestBranchDecompositionEnforcesAugmentation() const
   {
     std::cout << "Testing ContourTree_Augmented branch-decomposition augmentation enforcement"
@@ -751,6 +752,93 @@ public:
     VISKORES_TEST_ASSERT(result.HasField("BranchMaximum"), "BranchMaximum field missing");
     VISKORES_TEST_ASSERT(result.HasField("BranchSaddle"), "BranchSaddle field missing");
     VISKORES_TEST_ASSERT(result.HasField("BranchParent"), "BranchParent field missing");
+  }
+
+  // Verify CollectRegularVerticesPerSuperarc's grouping against the Supernodes/Superparents
+  // fields it is derived from, and check that the nested-vector convenience overload
+  // (and, with it, GroupedArrayToNestedVectors) matches the flat/offsets output exactly.
+  void TestCollectRegularVerticesPerSuperarc() const
+  {
+    namespace cta = viskores::worklet::contourtree_augmented;
+
+    std::cout << "Testing ContourTree_Augmented CollectRegularVerticesPerSuperarc" << std::endl;
+
+    viskores::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
+    viskores::filter::scalar_topology::ContourTreeAugmented filter;
+    filter.SetAugmentTree(true);
+    filter.SetActiveField("pointvar");
+    viskores::cont::DataSet result = filter.Execute(dataSet);
+
+    cta::IdArrayType supernodes, superparents;
+    result.GetField(cta::FieldNameSupernodes).GetData().AsArrayHandle(supernodes);
+    result.GetField(cta::FieldNameSuperparents).GetData().AsArrayHandle(superparents);
+    auto supernodePortal = supernodes.ReadPortal();
+    auto superparentPortal = superparents.ReadPortal();
+    viskores::Id numSupernodes = supernodes.GetNumberOfValues();
+    viskores::Id numMeshVertices = superparents.GetNumberOfValues();
+
+    std::set<viskores::Id> supernodeVertices;
+    for (viskores::Id s = 0; s < numSupernodes; ++s)
+      supernodeVertices.insert(supernodePortal.Get(s));
+
+    cta::IdArrayType arcVertsFlat, arcVertsOffsets;
+    cta::ProcessContourTree::CollectRegularVerticesPerSuperarc(
+      result, arcVertsFlat, arcVertsOffsets);
+    auto flatPortal = arcVertsFlat.ReadPortal();
+    auto offsetsPortal = arcVertsOffsets.ReadPortal();
+
+    VISKORES_TEST_ASSERT(arcVertsOffsets.GetNumberOfValues() == numSupernodes + 1,
+                         "arcVertsOffsets must have one entry per superarc plus a final total");
+    VISKORES_TEST_ASSERT(offsetsPortal.Get(0) == 0, "arcVertsOffsets must start at 0");
+    VISKORES_TEST_ASSERT(offsetsPortal.Get(numSupernodes) == arcVertsFlat.GetNumberOfValues(),
+                         "the last offset must equal the total number of grouped vertices");
+    VISKORES_TEST_ASSERT(arcVertsFlat.GetNumberOfValues() == numMeshVertices - numSupernodes,
+                         "every non-supernode mesh vertex must appear exactly once");
+
+    std::set<viskores::Id> seenVertices;
+    for (viskores::Id i = 0; i < numSupernodes; ++i)
+    {
+      viskores::Id begin = offsetsPortal.Get(i);
+      viskores::Id end = offsetsPortal.Get(i + 1);
+      VISKORES_TEST_ASSERT(end >= begin, "arcVertsOffsets must be non-decreasing");
+
+      viskores::Id previousVertex = -1;
+      for (viskores::Id k = begin; k < end; ++k)
+      {
+        viskores::Id vertex = flatPortal.Get(k);
+        VISKORES_TEST_ASSERT(supernodeVertices.find(vertex) == supernodeVertices.end(),
+                             "a supernode's own mesh vertex must not appear as a regular vertex");
+        VISKORES_TEST_ASSERT(cta::MaskedIndex(superparentPortal.Get(vertex)) == i,
+                             "a regular vertex must be grouped under its own owning superarc");
+        VISKORES_TEST_ASSERT(vertex > previousVertex,
+                             "regular vertices within a superarc must be in ascending order");
+        previousVertex = vertex;
+        VISKORES_TEST_ASSERT(seenVertices.insert(vertex).second,
+                             "each regular mesh vertex must appear in exactly one superarc group");
+      }
+    }
+    VISKORES_TEST_ASSERT(static_cast<viskores::Id>(seenVertices.size()) ==
+                           numMeshVertices - numSupernodes,
+                         "all non-supernode mesh vertices must have been grouped");
+
+    // The nested-vector convenience overload must reproduce the flat/offsets grouping exactly.
+    std::vector<std::vector<viskores::Id>> arcVerts =
+      cta::ProcessContourTree::CollectRegularVerticesPerSuperarc(result);
+    VISKORES_TEST_ASSERT(arcVerts.size() == static_cast<size_t>(numSupernodes),
+                         "the nested-vector overload must return one group per superarc");
+    for (viskores::Id i = 0; i < numSupernodes; ++i)
+    {
+      viskores::Id begin = offsetsPortal.Get(i);
+      viskores::Id end = offsetsPortal.Get(i + 1);
+      const std::vector<viskores::Id>& group = arcVerts[static_cast<size_t>(i)];
+      VISKORES_TEST_ASSERT(group.size() == static_cast<size_t>(end - begin),
+                           "nested-vector group size must match the flat/offsets range");
+      for (viskores::Id k = begin; k < end; ++k)
+      {
+        VISKORES_TEST_ASSERT(group[static_cast<size_t>(k - begin)] == flatPortal.Get(k),
+                             "nested-vector group contents must match the flat array");
+      }
+    }
   }
 
   void TestAnalysis() const
@@ -860,8 +948,10 @@ public:
     this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(false);
     this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(false, /*deprecatedBoundary=*/true);
 
-    // Regression test for the setter-order bug: branch decomposition must upgrade augmentation.
+    // Branch decomposition must force full augmentation regardless of setter order.
     this->TestBranchDecompositionEnforcesAugmentation();
+
+    this->TestCollectRegularVerticesPerSuperarc();
 
     // Test Analysis
     this->TestAnalysis();

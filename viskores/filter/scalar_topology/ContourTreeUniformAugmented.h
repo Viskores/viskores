@@ -64,7 +64,6 @@
 #include <viskores/Deprecated.h>
 #include <viskores/Types.h>
 #include <viskores/cont/ArrayHandle.h>
-#include <viskores/cont/Logging.h>
 
 #include <viskores/filter/Filter.h>
 #include <viskores/filter/scalar_topology/viskores_filter_scalar_topology_export.h>

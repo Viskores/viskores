@@ -12,7 +12,7 @@ find_package(Viskores REQUIRED QUIET)
 
 if (TARGET viskores::filter_scalar_topology)
   add_executable(ContourTreeAugmentedSimple ContourTreeSimple.cxx)
-  target_link_libraries(ContourTreeAugmentedSimple PUBLIC
+  target_link_libraries(ContourTreeAugmentedSimple PRIVATE
     viskores::filter_scalar_topology
     viskores::worklet)
   viskores_add_target_information(ContourTreeAugmentedSimple

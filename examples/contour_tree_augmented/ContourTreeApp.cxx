@@ -701,6 +701,12 @@ int main(int argc, char* argv[])
   filter.SetBlockIndices(blocksPerDim, localBlockIndices);
   VISKORES_DEPRECATED_SUPPRESS_END
 #else
+  if (computeRegularStructure == 2)
+  {
+    VISKORES_LOG_S(viskores::cont::LogLevel::Warn,
+                   "Boundary augmentation (--augmentTree=2) is only supported by the deprecated"
+                   " multi-block (MPI) path. Computing the tree without augmentation.");
+  }
   filter.SetAugmentTree(computeRegularStructure == 1);
   filter.SetComputeBranchDecomposition(computeBranchDecomposition);
 #endif

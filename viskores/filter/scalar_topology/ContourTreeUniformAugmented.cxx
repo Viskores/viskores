@@ -58,6 +58,7 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
+#include <viskores/cont/Logging.h>
 #include <viskores/filter/scalar_topology/ContourTreeUniformAugmented.h>
 #include <viskores/filter/scalar_topology/internal/ComputeBlockIndices.h>
 #include <viskores/filter/scalar_topology/worklet/ContourTreeUniformAugmented.h>
@@ -301,14 +302,19 @@ viskores::cont::DataSet ContourTreeAugmented::DoExecute(const viskores::cont::Da
           viskores::cont::make_ArrayHandlePermutation(this->MeshSortOrder, concrete);
         viskores::cont::ArrayHandle<T> sortedValues;
         viskores::cont::Algorithm::Copy(fieldPermutted, sortedValues);
+        // Use the user-set output field name if given; default to the legacy name otherwise.
+        std::string outputFieldName =
+          this->GetOutputFieldName().empty() ? "resultData" : this->GetOutputFieldName();
         result = this->CreateResultField(
-          input, "resultData", viskores::cont::Field::Association::WholeDataSet, sortedValues);
+          input, outputFieldName, viskores::cont::Field::Association::WholeDataSet, sortedValues);
       }
     }
     else
     {
       // Serial / single-DataSet path: copy input DataSet (geometry + all fields) then add the
-      // contour tree fields.
+      // contour tree fields. Any input field whose name collides with a contour tree output
+      // field name (Supernodes, Superarcs, Superparents, or the branch-decomposition fields) is
+      // replaced in the output.
       result = input;
       this->PopulateOutputDataSet(this->ContourTreeData,
                                   this->MeshSortOrder,
@@ -567,7 +573,10 @@ VISKORES_CONT void ContourTreeAugmented::DoPostExecute(
     // Return the sorted values of the contour tree as the result
     // TODO the result we return for the parallel and serial case are different right now. This should be made consistent. However, only in the parallel case are we useing the result output
     viskores::cont::DataSet temp;
-    viskores::cont::Field rfield("resultData",
+    // Use the user-set output field name if given; default to the legacy name otherwise.
+    std::string outputFieldName =
+      this->GetOutputFieldName().empty() ? "resultData" : this->GetOutputFieldName();
+    viskores::cont::Field rfield(outputFieldName,
                                  viskores::cont::Field::Association::WholeDataSet,
                                  contourTreeMeshOut.SortedValues);
     temp.AddField(rfield);
