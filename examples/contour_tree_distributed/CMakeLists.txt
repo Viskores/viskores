@@ -68,7 +68,7 @@ find_package(Viskores REQUIRED QUIET)
 ####################################
 if (Viskores_ENABLE_MPI AND TARGET viskores::filter_scalar_topology AND TARGET viskores::io)
   add_executable(ContourTree_Distributed ContourTreeApp.cxx ContourTreeAppDataIO.h)
-  target_link_libraries(ContourTree_Distributed viskores::filter_scalar_topology viskores::io MPI::MPI_CXX)
+  target_link_libraries(ContourTree_Distributed PRIVATE viskores::filter_scalar_topology viskores::io MPI::MPI_CXX)
   viskores_add_target_information(ContourTree_Distributed
                               MODIFY_CUDA_FLAGS
                               DEVICE_SOURCES ContourTreeApp.cxx)
@@ -87,18 +87,18 @@ if (Viskores_ENABLE_MPI AND TARGET viskores::filter_scalar_topology AND TARGET v
     if(Viskores_HDF5_IS_PARALLEL)
       target_compile_definitions(ContourTree_Distributed PRIVATE "ENABLE_HDFIO")
       target_include_directories(ContourTree_Distributed PRIVATE ${HDF5_INCLUDE_DIR})
-      target_link_libraries(ContourTree_Distributed ${HDF5_LIBRARIES})
+      target_link_libraries(ContourTree_Distributed PRIVATE ${HDF5_LIBRARIES})
     else()
       message(FATAL_ERROR "Compiling distributed contour tree example with HDF5 support requires using a parallel HDF5 library and enabling Viskores_HDF5_IS_PARALLEL")
     endif()
   endif ()
 
   add_executable(TreeCompiler TreeCompilerApp.cxx)
-  target_link_libraries(TreeCompiler viskores::filter_core)
+  target_link_libraries(TreeCompiler PRIVATE viskores::filter_core)
   viskores_add_target_information(TreeCompiler DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS DEVICE_SOURCES TreeCompilerApp.cxx)
 
   add_executable(BranchCompiler BranchCompilerApp.cxx)
-  target_link_libraries(BranchCompiler viskores::filter_scalar_topology)
+  target_link_libraries(BranchCompiler PRIVATE viskores::filter_scalar_topology)
   viskores_add_target_information(BranchCompiler DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS DEVICE_SOURCES BranchCompilerApp.cxx)
 
   configure_file(split_data_2d.py split_data_2d.py COPYONLY)
