@@ -766,6 +766,41 @@ It is also useful to treat data as a collection of sample points rather than an 
 .. doxygenclass:: viskores::filter::geometry_refinement::ConvertToPointCloud
    :members:
 
+Extrusion
+------------------------------
+
+.. index::
+   double: extrusion; filter
+   single: linear extrusion
+   single: rotational extrusion
+
+Extrusion filters create a volume by sweeping a triangulated profile over a sequence of generated profile planes and connecting corresponding triangles with wedge cells.
+The filters operate on triangles, but non-triangular input can be converted by enabling input triangulation.
+Point and cell fields are replicated from the input profile onto the generated points and wedge cells.
+
+The :class:`viskores::filter::geometry_refinement::ExtrusionLinear` filter translates the profile along a direction.
+The sweep is controlled by the direction, distance, and number of planes.
+A linear extrusion is always open.
+
+The :class:`viskores::filter::geometry_refinement::ExtrusionRotational` filter revolves the profile around an axis.
+The sweep is controlled by the axis, center, sweep angle, number of planes, and whether the sweep is closed.
+Full ``2*pi`` rotational sweeps are closed by default, and partial sweeps are open by default.
+The filter allows profile points on the rotation axis by default, which can create degenerate wedge cells along the axis.
+This behavior can be disabled to reject inputs that touch the rotation axis.
+
+Both filters return explicit wedge cells by default.
+They can also use a compact :class:`viskores::cont::CellSetExtrude` representation, which can use less memory but requires downstream consumers that support that cell-set type.
+Generated wedge cells use a point ordering consistent with the direction of the sweep.
+
+.. doxygenclass:: viskores::filter::geometry_refinement::ExtrusionAbstract
+   :members:
+
+.. doxygenclass:: viskores::filter::geometry_refinement::ExtrusionLinear
+   :members:
+
+.. doxygenclass:: viskores::filter::geometry_refinement::ExtrusionRotational
+   :members:
+
 Shrink
 ------------------------------
 

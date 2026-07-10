@@ -17,6 +17,9 @@
 ##============================================================================
 set(geometry_refinement_headers
   ConvertToPointCloud.h
+  ExtrusionAbstract.h
+  ExtrusionLinear.h
+  ExtrusionRotational.h
   Shrink.h
   SplitSharpEdges.h
   Tetrahedralize.h
@@ -27,6 +30,8 @@ set(geometry_refinement_headers
 
 set(geometry_refinement_sources
   ConvertToPointCloud.cxx
+  ExtrusionLinear.cxx
+  ExtrusionRotational.cxx
   Shrink.cxx
   SplitSharpEdges.cxx
   Tetrahedralize.cxx
@@ -35,9 +40,14 @@ set(geometry_refinement_sources
   VertexClustering.cxx
   )
 
+set(geometry_refinement_template_sources
+  ExtrusionAbstract.hxx
+  )
+
 viskores_library(
   NAME viskores_filter_geometry_refinement
   HEADERS ${geometry_refinement_headers}
+  TEMPLATE_SOURCES ${geometry_refinement_template_sources}
   DEVICE_SOURCES ${geometry_refinement_sources}
   USE_VISKORES_JOB_POOL
 )

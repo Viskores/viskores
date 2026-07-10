@@ -18,6 +18,8 @@
 
 set(unit_tests
   UnitTestConvertToPointCloud.cxx
+  UnitTestExtrusionLinear.cxx
+  UnitTestExtrusionRotational.cxx
   UnitTestShrinkFilter.cxx
   UnitTestSplitSharpEdgesFilter.cxx
   UnitTestTetrahedralizeFilter.cxx

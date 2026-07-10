@@ -17,6 +17,9 @@
 ##============================================================================
 
 set(headers
+  Extrusion.h
+  ExtrusionLinear.h
+  ExtrusionRotational.h
   Shrink.h
   SplitSharpEdges.h
   Tetrahedralize.h
