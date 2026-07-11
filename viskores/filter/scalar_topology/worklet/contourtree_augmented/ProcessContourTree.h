@@ -869,11 +869,12 @@ public:
       dataFieldIsSorted);
   }
 
-  // Create branch decomposition when arrays are already in mesh vertex space (no sortOrder needed).
-  // Use this when Supernodes contains mesh vertex IDs and Superparents is mesh-indexed —
-  // i.e., with the output DataSet fields from ContourTreeAugmented.
+  // Create branch decomposition from arrays in mesh vertex space (the default for the
+  // ContourTreeAugmented output DataSet fields): Supernodes contains mesh vertex IDs,
+  // Superparents is mesh-indexed, and no sortOrder is needed. The sortOrder-taking
+  // overload above exists only for the deprecated multi-block path.
   template <typename T, typename StorageType>
-  static process_contourtree_inc_ns::Branch<T>* ComputeBranchDecompositionMeshSpace(
+  static process_contourtree_inc_ns::Branch<T>* ComputeBranchDecomposition(
     const IdArrayType& contourTreeSuperparents,
     const IdArrayType& contourTreeSupernodes,
     const IdArrayType& whichBranch,
@@ -883,7 +884,7 @@ public:
     const IdArrayType& branchParent,
     const viskores::cont::ArrayHandle<T, StorageType>& dataField)
   {
-    return process_contourtree_inc_ns::Branch<T>::ComputeBranchDecompositionMeshSpace(
+    return process_contourtree_inc_ns::Branch<T>::ComputeBranchDecomposition(
       contourTreeSuperparents,
       contourTreeSupernodes,
       whichBranch,
@@ -894,12 +895,12 @@ public:
       dataField);
   }
 
-  // DataSet overload of ComputeBranchDecompositionMeshSpace.
+  // DataSet overload of ComputeBranchDecomposition.
   // Uses "Supernodes", "Superparents", "WhichBranch", "BranchMinimum", "BranchMaximum",
   // "BranchSaddle", "BranchParent" fields from the ContourTreeAugmented output DataSet.
   // dataFieldName is the scalar field name (the active field passed to the filter).
   template <typename T>
-  static process_contourtree_inc_ns::Branch<T>* ComputeBranchDecompositionMeshSpace(
+  static process_contourtree_inc_ns::Branch<T>* ComputeBranchDecomposition(
     const viskores::cont::DataSet& result,
     const std::string& dataFieldName)
   {
@@ -914,22 +915,22 @@ public:
     result.GetField(FieldNameBranchParent).GetData().AsArrayHandle(branchParent);
     viskores::cont::ArrayHandle<T> dataField;
     result.GetField(dataFieldName).GetData().AsArrayHandle(dataField);
-    return process_contourtree_inc_ns::Branch<T>::ComputeBranchDecompositionMeshSpace(superparents,
-                                                                                      supernodes,
-                                                                                      whichBranch,
-                                                                                      branchMinimum,
-                                                                                      branchMaximum,
-                                                                                      branchSaddle,
-                                                                                      branchParent,
-                                                                                      dataField);
+    return process_contourtree_inc_ns::Branch<T>::ComputeBranchDecomposition(superparents,
+                                                                             supernodes,
+                                                                             whichBranch,
+                                                                             branchMinimum,
+                                                                             branchMaximum,
+                                                                             branchSaddle,
+                                                                             branchParent,
+                                                                             dataField);
   }
 
   // Convenience method: build Branch tree from mesh-space DataSet fields, simplify to
   // numBranches top-volume branches, and return the extracted isovalues.
   // All array inputs must be in mesh vertex space (as produced by ContourTreeAugmented):
-  //   contourTreeSuperparents — indexed by mesh vertex
-  //   contourTreeSupernodes   — entries are mesh vertex IDs
-  //   dataField               — indexed by mesh vertex
+  //   contourTreeSuperparents - indexed by mesh vertex
+  //   contourTreeSupernodes   - entries are mesh vertex IDs
+  //   dataField               - indexed by mesh vertex
   // contourType: 0=saddle, 1=extremum, 2=both
   template <typename T, typename StorageType>
   static std::vector<T> SelectTopVolumeBranches(
@@ -947,14 +948,14 @@ public:
     bool usePersistenceSorter = true)
   {
     process_contourtree_inc_ns::Branch<T>* root =
-      ComputeBranchDecompositionMeshSpace<T>(contourTreeSuperparents,
-                                             contourTreeSupernodes,
-                                             whichBranch,
-                                             branchMinimum,
-                                             branchMaximum,
-                                             branchSaddle,
-                                             branchParent,
-                                             dataField);
+      ComputeBranchDecomposition<T>(contourTreeSuperparents,
+                                    contourTreeSupernodes,
+                                    whichBranch,
+                                    branchMinimum,
+                                    branchMaximum,
+                                    branchSaddle,
+                                    branchParent,
+                                    dataField);
 
     if (!root)
       return {};
@@ -981,7 +982,7 @@ public:
                                                 bool usePersistenceSorter = true)
   {
     process_contourtree_inc_ns::Branch<T>* root =
-      ComputeBranchDecompositionMeshSpace<T>(result, dataFieldName);
+      ComputeBranchDecomposition<T>(result, dataFieldName);
 
     if (!root)
       return {};

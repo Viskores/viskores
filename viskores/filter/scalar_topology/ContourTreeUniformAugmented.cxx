@@ -78,7 +78,10 @@ VISKORES_THIRDPARTY_POST_INCLUDE
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/MergeBlockFunctor.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_distributed/MultiBlockContourTreeHelper.h>
 
+#include <algorithm>
+#include <iomanip>
 #include <memory>
+#include <sstream>
 
 namespace viskores
 {
@@ -111,10 +114,93 @@ ContourTreeAugmented::ContourTreeAugmented(ContourTreeAugmented&&) = default;
 
 ContourTreeAugmented::~ContourTreeAugmented() {}
 
-std::string ContourTreeAugmented::GetContourTreeStatisticsString() const
+VISKORES_CONT std::string ContourTreeStatistics::ToString() const
 {
-  return this->ContourTreeData.PrintArraySizes() +
-    this->ContourTreeData.PrintHyperStructureStatistics(false);
+  std::stringstream statisticsStream;
+  statisticsStream << std::setw(42) << std::left << "    #Nodes"
+                   << ": " << this->NumNodes << std::endl
+                   << std::setw(42) << std::left << "    #Arcs"
+                   << ": " << this->NumArcs << std::endl
+                   << std::setw(42) << std::left << "    #Superparents"
+                   << ": " << this->NumSuperparents << std::endl
+                   << std::setw(42) << std::left << "    #Superarcs"
+                   << ": " << this->NumSuperarcs << std::endl
+                   << std::setw(42) << std::left << "    #Supernodes"
+                   << ": " << this->NumSupernodes << std::endl
+                   << std::setw(42) << std::left << "    #Hyperparents"
+                   << ": " << this->NumHyperparents << std::endl
+                   << std::setw(42) << std::left << "    #WhenTransferred"
+                   << ": " << this->NumWhenTransferred << std::endl
+                   << std::setw(42) << std::left << "    #Hypernodes"
+                   << ": " << this->NumHypernodes << std::endl
+                   << std::setw(42) << std::left << "    #Hyperarcs"
+                   << ": " << this->NumHyperarcs << std::endl;
+  for (std::size_t iteration = 0; iteration < this->Iterations.size(); iteration++)
+  {
+    const IterationStatistics& iterationStats = this->Iterations[iteration];
+    statisticsStream << "Iteration: " << iteration << " Hyper: " << iterationStats.NumHypernodes
+                     << " Super: " << iterationStats.NumSupernodes
+                     << " Min: " << iterationStats.MinPathLength
+                     << " Avg: " << iterationStats.AveragePathLength
+                     << " Max: " << iterationStats.MaxPathLength << std::endl;
+  }
+  statisticsStream << "Total Hypernodes: " << this->NumHypernodes
+                   << " Supernodes: " << this->NumSupernodes << std::endl;
+  return statisticsStream.str();
+}
+
+VISKORES_CONT ContourTreeStatistics ContourTreeAugmented::GetContourTreeStatistics() const
+{
+  const viskores::worklet::contourtree_augmented::ContourTree& ct = this->ContourTreeData;
+  ContourTreeStatistics statistics;
+  statistics.NumNodes = ct.Nodes.GetNumberOfValues();
+  statistics.NumArcs = ct.Arcs.GetNumberOfValues();
+  statistics.NumSuperparents = ct.Superparents.GetNumberOfValues();
+  statistics.NumSuperarcs = ct.Superarcs.GetNumberOfValues();
+  statistics.NumSupernodes = ct.Supernodes.GetNumberOfValues();
+  statistics.NumHyperparents = ct.Hyperparents.GetNumberOfValues();
+  statistics.NumWhenTransferred = ct.WhenTransferred.GetNumberOfValues();
+  statistics.NumHypernodes = ct.Hypernodes.GetNumberOfValues();
+  statistics.NumHyperarcs = ct.Hyperarcs.GetNumberOfValues();
+
+  // Collect per-iteration hyperstructure statistics: hypernodes are stored contiguously by
+  // the iteration in which they were transferred, so iteration boundaries show up as changes
+  // in WhenTransferred along the Hypernodes array.
+  auto whenTransferredPortal = ct.WhenTransferred.ReadPortal();
+  auto hypernodesPortal = ct.Hypernodes.ReadPortal();
+  viskores::Id numHypernodes = ct.Hypernodes.GetNumberOfValues();
+  viskores::Id previousIteration = -1;
+  for (viskores::Id hypernode = 0; hypernode < numHypernodes; hypernode++)
+  {
+    viskores::Id supernodeID = hypernodesPortal.Get(hypernode);
+    viskores::Id iterationNo =
+      viskores::worklet::contourtree_augmented::MaskedIndex(whenTransferredPortal.Get(supernodeID));
+    if (previousIteration != iterationNo)
+    {
+      statistics.Iterations.push_back(ContourTreeStatistics::IterationStatistics{});
+      statistics.Iterations.back().MinPathLength = ct.Supernodes.GetNumberOfValues() + 1;
+      previousIteration = iterationNo;
+    }
+
+    // Path length of this hyperarc: number of supernodes up to the next hypernode (or the
+    // end of the supernodes array for the last hypernode).
+    viskores::Id pathLength = (hypernode != numHypernodes - 1)
+      ? hypernodesPortal.Get(hypernode + 1) - supernodeID
+      : ct.Supernodes.GetNumberOfValues() - supernodeID;
+
+    ContourTreeStatistics::IterationStatistics& iterationStats = statistics.Iterations.back();
+    iterationStats.MinPathLength = std::min(iterationStats.MinPathLength, pathLength);
+    iterationStats.MaxPathLength = std::max(iterationStats.MaxPathLength, pathLength);
+    iterationStats.NumSupernodes += pathLength;
+    iterationStats.NumHypernodes++;
+  }
+  for (ContourTreeStatistics::IterationStatistics& iterationStats : statistics.Iterations)
+  {
+    iterationStats.AveragePathLength =
+      static_cast<viskores::Float64>(iterationStats.NumSupernodes) /
+      static_cast<viskores::Float64>(iterationStats.NumHypernodes);
+  }
+  return statistics;
 }
 
 void ContourTreeAugmented::SetBlockIndices(
@@ -170,6 +256,14 @@ void ContourTreeAugmented::PopulateOutputDataSet(
   // Superarcs: destination supernode index per supernode (high bit encodes arc direction)
   output.AddField(viskores::cont::Field(
     cta::FieldNameSuperarcs, viskores::cont::Field::Association::WholeDataSet, ct.Superarcs));
+
+  // Optionally export the sorted-to-mesh-index permutation. Downstream algorithms that
+  // operate in sorted space can invert it with a single scatter instead of re-sorting.
+  if (this->IncludeSortOrderFlag)
+  {
+    output.AddField(viskores::cont::Field(
+      cta::FieldNameSortOrder, viskores::cont::Field::Association::WholeDataSet, sortOrder));
+  }
 
   // Superparents (mesh vertex -> containing superarc) is only emitted for a fully augmented tree,
   // because that is the only level at which the field is meaningful: ContourTree::Init fills

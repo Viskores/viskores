@@ -37,6 +37,7 @@ set(unit_tests
 
 set(unit_tests_device
   UnitTestContourTreeUniformAugmentedFilter.cxx
+  UnitTestContourTreeUniformAugmentedFilterDeprecated.cxx
   UnitTestContourTreeUniformAugmentedWorklet.cxx
   )
 

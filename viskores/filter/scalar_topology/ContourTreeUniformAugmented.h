@@ -71,6 +71,9 @@
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
 
 #include <memory>
+#include <ostream>
+#include <string>
+#include <vector>
 
 // Forward declaration
 namespace viskores
@@ -91,6 +94,44 @@ namespace filter
 namespace scalar_topology
 {
 
+/// \brief Summary statistics of a contour tree computed by ContourTreeAugmented.
+///
+/// Returned by ContourTreeAugmented::GetContourTreeStatistics() after Execute().
+/// The array sizes describe the regular, super-, and hyper-structure of the
+/// tree; Iterations summarizes the hyperarc path lengths for each iteration of
+/// the algorithm. Use ToString() (or stream the object) for a formatted,
+/// loggable rendering.
+struct VISKORES_FILTER_SCALAR_TOPOLOGY_EXPORT ContourTreeStatistics
+{
+  /// Hyperstructure summary for one iteration of the contour tree algorithm.
+  struct IterationStatistics
+  {
+    viskores::Id NumHypernodes = 0;
+    viskores::Id NumSupernodes = 0;
+    viskores::Id MinPathLength = 0;
+    viskores::Float64 AveragePathLength = 0;
+    viskores::Id MaxPathLength = 0;
+  };
+
+  viskores::Id NumNodes = 0;
+  viskores::Id NumArcs = 0;
+  viskores::Id NumSuperparents = 0;
+  viskores::Id NumSuperarcs = 0;
+  viskores::Id NumSupernodes = 0;
+  viskores::Id NumHyperparents = 0;
+  viskores::Id NumWhenTransferred = 0;
+  viskores::Id NumHypernodes = 0;
+  viskores::Id NumHyperarcs = 0;
+  std::vector<IterationStatistics> Iterations;
+
+  VISKORES_CONT std::string ToString() const;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const ContourTreeStatistics& statistics)
+{
+  return os << statistics.ToString();
+}
+
 /// \brief Construct the Contour Tree for a 2D or 3D regular mesh
 ///
 /// This filter implements the parallel peak pruning algorithm. In contrast to
@@ -109,8 +150,15 @@ namespace scalar_topology
 /// `BranchMaximum`, `BranchSaddle`, `BranchParent`) only when
 /// `SetComputeBranchDecomposition(true)` was set. The `ProcessContourTree`
 /// `DataSet` helpers that require `Superparents` (`CollectRegularVerticesPerSuperarc`,
-/// `SelectTopVolumeBranches`, `ComputeBranchDecompositionMeshSpace`) throw a
+/// `SelectTopVolumeBranches`, `ComputeBranchDecomposition`) throw a
 /// missing-field error if the tree was not augmented.
+///
+/// All output arrays are indexed by (or contain) mesh vertex IDs; no separate
+/// sort order is needed to interpret them. For downstream algorithms that want
+/// to work in the sorted space the tree was computed in, `SetIncludeSortOrder(true)`
+/// additionally exports the `SortOrder` field (the sorted-to-mesh-index
+/// permutation), from which sorted-space views of the outputs can be
+/// reconstructed without re-sorting the data.
 ///
 /// The multi-block (`PartitionedDataSet`/MPI) path of this filter is
 /// deprecated. It merges per-block trees on rank 0 and exposes the result only
@@ -145,16 +193,6 @@ public:
   VISKORES_CONT void SetAugmentTree(bool v) { this->AugmentationLevel = v ? 1u : 0u; }
   VISKORES_CONT bool GetAugmentTree() const { return this->AugmentationLevel == 1u; }
 
-  /// @deprecated Use SetAugmentTree(bool). The multi-block path that used boundary
-  /// augmentation (value 2) is deprecated; use ContourTreeUniformDistributed.
-  VISKORES_DEPRECATED(1.3,
-                      "Use SetAugmentTree(bool). The multi-block path that used "
-                      "boundary augmentation (2) is deprecated; use ContourTreeUniformDistributed.")
-  VISKORES_CONT void SetComputeRegularStructure(unsigned int v) { this->AugmentationLevel = v; }
-  /// @deprecated Use GetAugmentTree().
-  VISKORES_DEPRECATED(1.3, "Use GetAugmentTree().")
-  VISKORES_CONT unsigned int GetComputeRegularStructure() const { return this->AugmentationLevel; }
-
   /// Enable/disable volume-based branch decomposition output.
   /// When enabled, writes "WhichBranch", "BranchMinimum", "BranchMaximum", "BranchSaddle",
   /// and "BranchParent" arrays to the output DataSet. Branch decomposition requires an
@@ -168,9 +206,18 @@ public:
     return this->ComputeBranchDecompositionFlag;
   }
 
-  /// Returns a formatted string with internal contour tree array sizes and hyperstructure
-  /// statistics, suitable for logging. Only valid after Execute() has been called.
-  VISKORES_CONT std::string GetContourTreeStatisticsString() const;
+  /// Enable/disable exporting the mesh sort order as a `SortOrder` whole-dataset field.
+  /// `SortOrder[i]` is the mesh vertex ID of the i-th vertex in sorted order, i.e., the
+  /// (value, mesh index) lexicographic order the contour tree was computed with. Off by
+  /// default because it adds an array with one entry per mesh vertex that most consumers
+  /// do not need. Downstream algorithms that work in sorted space can invert this
+  /// permutation with a single scatter instead of re-sorting the data.
+  VISKORES_CONT void SetIncludeSortOrder(bool v) { this->IncludeSortOrderFlag = v; }
+  VISKORES_CONT bool GetIncludeSortOrder() const { return this->IncludeSortOrderFlag; }
+
+  /// Returns summary statistics (array sizes and per-iteration hyperstructure) of the
+  /// contour tree computed by the last Execute() call.
+  VISKORES_CONT ContourTreeStatistics GetContourTreeStatistics() const;
 
   /// @deprecated Define the spatial decomposition for multi-block datasets. The
   /// multi-block path of ContourTreeAugmented is deprecated; use ContourTreeUniformDistributed.
@@ -225,9 +272,10 @@ private:
 
   bool UseMarchingCubes = false;
   // Augmentation level: 0 = none, 1 = full, 2 = boundary (2 reachable only via the
-  // deprecated SetComputeRegularStructure / constructor for the deprecated multi-block path).
+  // deprecated constructor, for the deprecated multi-block path).
   unsigned int AugmentationLevel = 1;
   bool ComputeBranchDecompositionFlag = false;
+  bool IncludeSortOrderFlag = false;
 
   // Kept to support deprecated getters during the transition period.
   viskores::worklet::contourtree_augmented::ContourTree ContourTreeData;

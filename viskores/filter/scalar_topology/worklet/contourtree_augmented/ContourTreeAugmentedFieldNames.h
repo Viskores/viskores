@@ -72,6 +72,7 @@ namespace contourtree_augmented
 {
 
 static constexpr const char* FieldNameSupernodes = "Supernodes";
+static constexpr const char* FieldNameSortOrder = "SortOrder";
 static constexpr const char* FieldNameSuperarcs = "Superarcs";
 static constexpr const char* FieldNameSuperparents = "Superparents";
 static constexpr const char* FieldNameWhichBranch = "WhichBranch";
