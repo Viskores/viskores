@@ -57,7 +57,6 @@ that operate directly on a `ContourTreeAugmented` output `DataSet`:
 `CollectSortedSuperarcs`, `CollectRegularVerticesPerSuperarc`,
 `SelectTopVolumeBranches`, and `ComputeBranchDecomposition` overloads that
 work in mesh vertex space (no sort order needed). A new minimal example,
-`contour_tree_augmented_simple`, demonstrates the new API end-to-end and
-writes GraphViz `.dot` files for both the contour tree (superarcs labeled
-with their regular vertices) and its branch decomposition (branches shown in
-color).
+`contour_tree_augmented_simple`, demonstrates the new API end-to-end: it
+prints the superarc segmentation of the mesh and writes the contour tree
+(superarcs labeled with their regular vertices) as a GraphViz `.dot` file.

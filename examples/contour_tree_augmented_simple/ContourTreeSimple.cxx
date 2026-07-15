@@ -8,23 +8,21 @@
 
 // Minimal ContourTreeAugmented example.
 //
-// Computes the augmented contour tree and branch decomposition of a 5x5
-// scalar field, prints a grid-shaped ASCII map of superarc IDs, and writes
-// GraphViz .dot files for both the contour tree and its branch decomposition.
+// Computes the augmented contour tree of a 5x5 scalar field, prints a
+// grid-shaped ASCII map of superarc IDs, and writes the contour tree as a
+// GraphViz .dot file.
 //
 // The scalar field is the same as MakeTestDataSet().Make2DUniformDataSet1(),
 // field "pointvar", from viskores/cont/testing/MakeTestDataSet.h.
 //
-// Render the .dot files:
-//   dot -Tpdf contour_tree.dot        -o contour_tree.pdf
-//   dot -Tpdf contour_tree_branch.dot -o contour_tree_branch.pdf
+// Render the .dot file:
+//   dot -Tpdf contour_tree.dot -o contour_tree.pdf
 //
 // Output fields written to the result DataSet by ContourTreeAugmented:
 //   "Supernodes"   (whole-dataset) : mesh vertex ID of each supernode
 //   "Superarcs"    (whole-dataset) : masked parent supernode index per supernode;
 //                                    NoSuchElement() is true for the root
 //   "Superparents" (point field)   : masked superarc index per mesh vertex
-//   "WhichBranch"  (whole-dataset) : masked branch index per supernode
 
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
@@ -38,48 +36,30 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace cta = viskores::worklet::contourtree_augmented;
 
 // Write the contour tree as a GraphViz digraph. Edges run from the lower-valued
 // endpoint to the higher-valued one; rankdir=BT then places higher values at the top.
-// Nodes are labeled "value [mesh vertex ID]".
-//
-// The two views share this writer:
-//  - arcRegularVertices non-null: label each edge with its superarc ID and the regular
-//    mesh vertices on that superarc (contour tree view).
-//  - whichBranch non-null: color nodes and edges by the branch they belong to
-//    (branch decomposition view; WhichBranch is set for all supernodes, including
-//    the root).
+// Nodes are labeled "value [mesh vertex ID]"; each edge is labeled with its superarc
+// ID and the regular mesh vertices on that superarc.
 void WriteDotFile(const std::string& fileName,
                   const cta::IdArrayType& supernodes,
                   const cta::IdArrayType& superarcs,
                   const viskores::Float32* fieldValues,
-                  const std::vector<std::vector<viskores::Id>>* arcRegularVertices,
-                  const cta::IdArrayType* whichBranch)
+                  const std::vector<std::vector<viskores::Id>>& arcRegularVertices)
 {
   auto supernodePortal = supernodes.ReadPortal();
   auto superarcPortal = superarcs.ReadPortal();
   viskores::Id numSupernodes = supernodes.GetNumberOfValues();
-
-  // Assign a color per branch by mapping branch index to a small palette.
-  const char* palette[] = { "tomato", "steelblue", "seagreen", "goldenrod",
-                            "orchid", "coral",     "teal",     "peru" };
-  constexpr size_t paletteSize = sizeof(palette) / sizeof(palette[0]);
-  auto branchColor = [&](viskores::Id supernodeIdx) -> const char*
-  {
-    viskores::Id branchIdx = cta::MaskedIndex(whichBranch->ReadPortal().Get(supernodeIdx));
-    return palette[static_cast<size_t>(branchIdx) % paletteSize];
-  };
 
   std::ofstream dotFile(fileName);
   dotFile << "// Render: dot -Tpdf " << fileName << " -o "
           << fileName.substr(0, fileName.rfind('.')) << ".pdf\n"
           << "digraph ContourTree {\n"
           << "  graph [rankdir=BT, splines=true]\n"
-          << "  node  [shape=ellipse, style=filled, fontname=Courier]\n"
+          << "  node  [shape=ellipse, style=filled, fillcolor=lightblue, fontname=Courier]\n"
           << "  edge  [fontname=Courier, fontsize=9]\n\n";
 
   // Nodes: one per supernode
@@ -87,9 +67,7 @@ void WriteDotFile(const std::string& fileName,
   {
     viskores::Id meshVertex = supernodePortal.Get(supernodeIdx);
     dotFile << "  n" << supernodeIdx << " [label=\"" << fieldValues[meshVertex] << " ["
-            << meshVertex
-            << "]\", fillcolor=" << (whichBranch ? branchColor(supernodeIdx) : "lightblue")
-            << "];\n";
+            << meshVertex << "]\"];\n";
   }
   dotFile << "\n";
 
@@ -108,25 +86,17 @@ void WriteDotFile(const std::string& fileName,
       : parentIdx;
     viskores::Id upperEndpoint = (lowerEndpoint == supernodeIdx) ? parentIdx : supernodeIdx;
 
-    dotFile << "  n" << lowerEndpoint << " -> n" << upperEndpoint << " [";
-    if (whichBranch)
+    dotFile << "  n" << lowerEndpoint << " -> n" << upperEndpoint << " [label=\"" << supernodeIdx
+            << " (";
+    const std::vector<viskores::Id>& arcVerts =
+      arcRegularVertices[static_cast<size_t>(supernodeIdx)];
+    for (size_t k = 0; k < arcVerts.size(); ++k)
     {
-      dotFile << "color=" << branchColor(supernodeIdx);
+      if (k)
+        dotFile << ",";
+      dotFile << arcVerts[k];
     }
-    if (arcRegularVertices)
-    {
-      dotFile << (whichBranch ? ", " : "") << "label=\"" << supernodeIdx << " (";
-      const std::vector<viskores::Id>& arcVerts =
-        (*arcRegularVertices)[static_cast<size_t>(supernodeIdx)];
-      for (size_t k = 0; k < arcVerts.size(); ++k)
-      {
-        if (k)
-          dotFile << ",";
-        dotFile << arcVerts[k];
-      }
-      dotFile << ")\"";
-    }
-    dotFile << "];\n";
+    dotFile << ")\"];\n";
   }
   dotFile << "}\n";
   std::cout << "Wrote " << fileName << "\n";
@@ -158,10 +128,9 @@ int main(int argc, char* argv[])
     viskores::cont::DataSetBuilderUniform{}.Create(viskores::Id2(gridWidth, gridHeight));
   inputDataSet.AddPointField("f", fieldValues, numMeshVertices);
 
-  // Compute the augmented contour tree and branch decomposition in one pass.
+  // Compute the augmented contour tree (augmentation is on by default).
   viskores::filter::scalar_topology::ContourTreeAugmented filter;
   filter.SetActiveField("f");
-  filter.SetComputeBranchDecomposition(true);
   viskores::cont::DataSet result = filter.Execute(inputDataSet);
 
   // -------------------------------------------------------------------------
@@ -181,14 +150,12 @@ int main(int argc, char* argv[])
   std::cout << "\n";
 
   // -------------------------------------------------------------------------
-  // Write GraphViz .dot files for the contour tree (superarcs labeled with
-  // their regular vertices) and for the branch decomposition (nodes and
-  // superarcs colored by branch).
+  // Write a GraphViz .dot file of the contour tree with the superarcs labeled
+  // with their regular vertices.
   // -------------------------------------------------------------------------
-  cta::IdArrayType supernodes, superarcs, whichBranch;
+  cta::IdArrayType supernodes, superarcs;
   result.GetField(cta::FieldNameSupernodes).GetData().AsArrayHandle(supernodes);
   result.GetField(cta::FieldNameSuperarcs).GetData().AsArrayHandle(superarcs);
-  result.GetField(cta::FieldNameWhichBranch).GetData().AsArrayHandle(whichBranch);
 
   // Regular (non-supernode) mesh vertices on each superarc. The convenience overload returns a
   // vector-of-vectors (arcRegularVertices[i] are the vertices on superarc i); the grouping itself
@@ -196,10 +163,7 @@ int main(int argc, char* argv[])
   std::vector<std::vector<viskores::Id>> arcRegularVertices =
     cta::ProcessContourTree::CollectRegularVerticesPerSuperarc(result);
 
-  WriteDotFile(
-    "contour_tree.dot", supernodes, superarcs, fieldValues, &arcRegularVertices, nullptr);
-  WriteDotFile(
-    "contour_tree_branch.dot", supernodes, superarcs, fieldValues, nullptr, &whichBranch);
+  WriteDotFile("contour_tree.dot", supernodes, superarcs, fieldValues, arcRegularVertices);
 
   return 0;
 }
