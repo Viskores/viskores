@@ -84,8 +84,8 @@ today_fmt = '%B %d, %Y'
 rst_prolog = '''
 .. |Viskores| replace:: Viskores
 .. |Veclike| replace:: ``Vec``-like
-.. |report-year| replace:: 2025
-.. |report-number| replace:: ORNL/TM-2025/4175
+.. |report-year| replace:: 2026
+.. |report-number| replace:: ORNL/TM-2026/4700
 '''
 
 breathe_projects = { 'viskores': '@doxygen_xml_output_dir@' }
