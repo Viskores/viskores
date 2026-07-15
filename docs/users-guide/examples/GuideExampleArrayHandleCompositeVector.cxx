@@ -56,25 +56,11 @@ void ArrayHandleCompositeVectorBasic()
 
   // Create an array with [3, 1, 4, 1, 5]
   using ArrayType2 = viskores::cont::ArrayHandle<viskores::Id>;
-  ArrayType2 array2;
-  array2.Allocate(5);
-  ArrayType2::WritePortalType arrayPortal2 = array2.WritePortal();
-  arrayPortal2.Set(0, 3);
-  arrayPortal2.Set(1, 1);
-  arrayPortal2.Set(2, 4);
-  arrayPortal2.Set(3, 1);
-  arrayPortal2.Set(4, 5);
+  ArrayType2 array2 = viskores::cont::make_ArrayHandle<viskores::Id>({ 3, 1, 4, 1, 5 });
 
   // Create an array with [2, 7, 1, 8, 2]
   using ArrayType3 = viskores::cont::ArrayHandle<viskores::Id>;
-  ArrayType3 array3;
-  array3.Allocate(5);
-  ArrayType2::WritePortalType arrayPortal3 = array3.WritePortal();
-  arrayPortal3.Set(0, 2);
-  arrayPortal3.Set(1, 7);
-  arrayPortal3.Set(2, 1);
-  arrayPortal3.Set(3, 8);
-  arrayPortal3.Set(4, 2);
+  ArrayType3 array3 = viskores::cont::make_ArrayHandle<viskores::Id>({ 2, 7, 1, 8, 2 });
 
   // Create an array with [0, 0, 0, 0]
   using ArrayType4 = viskores::cont::ArrayHandleConstant<viskores::Id>;

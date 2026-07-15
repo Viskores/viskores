@@ -58,6 +58,15 @@ struct TestSOASAsInput
     constexpr viskores::IdComponent NUM_COMPONENTS = VTraits::NUM_COMPONENTS;
 
     viskores::cont::ArrayHandleSOAStride<ValueType> soaStrideArray;
+    if constexpr (NUM_COMPONENTS == 1)
+    {
+      viskores::cont::ArrayHandle<ComponentType> dataArray;
+      dataArray.Allocate(ARRAY_SIZE);
+      SetPortal(dataArray.WritePortal());
+      soaStrideArray = viskores::cont::make_ArrayHandleSOAStride(
+        viskores::cont::ArrayExtractComponent(dataArray, 0));
+    }
+    else
     {
       viskores::cont::ArrayHandle<ComponentType> dataArray;
       auto groupVec = viskores::cont::make_ArrayHandleGroupVec<NUM_COMPONENTS>(dataArray);
@@ -118,6 +127,12 @@ struct TestSOASAsOutput
 
     viskores::cont::ArrayHandleSOAStride<ValueType> soaStrideArray;
     viskores::cont::ArrayHandle<ComponentType> dataArray;
+    if constexpr (NUM_COMPONENTS == 1)
+    {
+      soaStrideArray = viskores::cont::make_ArrayHandleSOAStride(
+        viskores::cont::ArrayExtractComponent(dataArray, 0));
+    }
+    else
     {
       auto groupVec = viskores::cont::make_ArrayHandleGroupVec<NUM_COMPONENTS>(dataArray);
       for (viskores::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS;
