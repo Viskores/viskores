@@ -92,10 +92,9 @@ void AddField(viskores::cont::DataSet& dataset,
 }
 }
 
-static void TestPartitionedDataSetHistogram()
+static viskores::Float64 RunPartitionedDataSetHistogram(bool runMultiThreaded)
 {
-  // init random seed.
-  std::srand(100);
+  uid = 1;
 
   viskores::cont::PartitionedDataSet mb;
 
@@ -113,6 +112,8 @@ static void TestPartitionedDataSetHistogram()
 
   viskores::filter::density_estimate::Histogram histogram;
   histogram.SetActiveField("double");
+  histogram.SetThreadsPerCPU(2);
+  histogram.SetRunMultiThreadedFilter(runMultiThreaded);
   auto result = histogram.Execute(mb);
   VISKORES_TEST_ASSERT(result.GetNumberOfPartitions() == 1, "Expecting 1 partition.");
 
@@ -134,6 +135,14 @@ static void TestPartitionedDataSetHistogram()
     std::cout << " " << binsPortal.Get(cc);
   }
   std::cout << std::endl;
+  return histogram.GetBinDelta();
+}
+
+static void TestPartitionedDataSetHistogram()
+{
+  const auto sequentialDelta = RunPartitionedDataSetHistogram(false);
+  const auto threadedDelta = RunPartitionedDataSetHistogram(true);
+  VISKORES_TEST_ASSERT(test_equal(sequentialDelta, threadedDelta), "Unexpected bin delta");
 }
 
 int UnitTestPartitionedDataSetHistogramFilter(int argc, char* argv[])
