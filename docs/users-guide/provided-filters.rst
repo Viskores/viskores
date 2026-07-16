@@ -1144,6 +1144,7 @@ Histogram Sampling
 
 The :class:`viskores::filter::resampling::HistSampling` filter randomly samples the points of an input data set.
 The sampling is random but adaptive to preserve rare field value points.
+For a :class:`viskores::cont::PartitionedDataSet`, the histogram includes all partitions and MPI ranks.
 
 .. doxygenclass:: viskores::filter::resampling::HistSampling
    :members:
