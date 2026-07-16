@@ -10,6 +10,8 @@
 #include <viskores/cont/ArrayPortalToIterators.h>
 #include <viskores/cont/EnvironmentTracker.h>
 #include <viskores/cont/FieldRangeGlobalCompute.h>
+#include <viskores/cont/RuntimeDeviceTracker.h>
+#include <viskores/cont/serial/DeviceAdapterSerial.h>
 #include <viskores/cont/testing/Testing.h>
 
 #include <algorithm>
@@ -183,6 +185,14 @@ void TryRangeGlobalComputePDS(const ValueType& min, const ValueType& max)
   viskores::cont::ArrayHandle<viskores::Range> ranges =
     viskores::cont::FieldRangeGlobalCompute(mb, "pointvar");
   Validate(ranges, min, max);
+
+  {
+    viskores::cont::ScopedRuntimeDeviceTracker tracker(viskores::cont::DeviceAdapterTagSerial{});
+    viskores::cont::ArrayHandle<viskores::Range> threadedRanges =
+      viskores::cont::FieldRangeGlobalCompute(
+        mb, "pointvar", viskores::cont::Field::Association::Any, 4);
+    Validate(threadedRanges, min, max);
+  }
 }
 
 static void TestFieldRangeGlobalCompute()

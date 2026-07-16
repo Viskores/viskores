@@ -9,16 +9,45 @@
 #include <viskores/cont/FieldRangeGlobalCompute.h>
 
 #include <viskores/cont/EnvironmentTracker.h>
+#include <viskores/cont/RuntimeDeviceTracker.h>
 
 #include <viskores/thirdparty/diy/diy.h>
 
 #include <algorithm>
+#include <atomic>
 #include <functional>
+#include <future>
+#include <utility>
+#include <vector>
 
 namespace viskores
 {
 namespace cont
 {
+
+namespace
+{
+
+void MergeRanges(std::vector<viskores::Range>& result,
+                 const viskores::cont::ArrayHandle<viskores::Range>& ranges)
+{
+  result.resize(std::max(result.size(), static_cast<std::size_t>(ranges.GetNumberOfValues())));
+  auto portal = ranges.ReadPortal();
+  std::transform(viskores::cont::ArrayPortalToIteratorBegin(portal),
+                 viskores::cont::ArrayPortalToIteratorEnd(portal),
+                 result.begin(),
+                 result.begin(),
+                 std::plus<viskores::Range>());
+}
+
+void MergeRanges(std::vector<viskores::Range>& result, const std::vector<viskores::Range>& ranges)
+{
+  result.resize(std::max(result.size(), ranges.size()));
+  std::transform(
+    ranges.begin(), ranges.end(), result.begin(), result.begin(), std::plus<viskores::Range>());
+}
+
+} // anonymous namespace
 
 //-----------------------------------------------------------------------------
 VISKORES_CONT
@@ -38,7 +67,56 @@ viskores::cont::ArrayHandle<viskores::Range> FieldRangeGlobalCompute(
   const std::string& name,
   viskores::cont::Field::Association assoc)
 {
-  auto lrange = viskores::cont::FieldRangeCompute(pds, name, assoc);
+  return viskores::cont::FieldRangeGlobalCompute(pds, name, assoc, 1);
+}
+
+//-----------------------------------------------------------------------------
+VISKORES_CONT
+viskores::cont::ArrayHandle<viskores::Range> FieldRangeGlobalCompute(
+  const viskores::cont::PartitionedDataSet& pds,
+  const std::string& name,
+  viskores::cont::Field::Association assoc,
+  viskores::Id numberOfThreads)
+{
+  const viskores::Id numberOfPartitions = pds.GetNumberOfPartitions();
+  const viskores::Id threads =
+    std::min(numberOfPartitions, std::max(numberOfThreads, viskores::Id{ 1 }));
+  if (threads < 2)
+  {
+    auto lrange = viskores::cont::FieldRangeCompute(pds, name, assoc);
+    return viskores::cont::detail::MergeRangesGlobal(lrange);
+  }
+
+  std::atomic<viskores::Id> nextPartition{ 0 };
+  auto computeRanges = [&]()
+  {
+    ScopedRuntimeDeviceTracker tracker;
+    tracker.SetThreadFriendlyMemAlloc(true);
+
+    std::vector<viskores::Range> ranges;
+    viskores::Id partitionIndex = nextPartition.fetch_add(1);
+    while (partitionIndex < numberOfPartitions)
+    {
+      MergeRanges(ranges,
+                  viskores::cont::FieldRangeCompute(pds.GetPartition(partitionIndex), name, assoc));
+      partitionIndex = nextPartition.fetch_add(1);
+    }
+    return ranges;
+  };
+
+  std::vector<std::future<std::vector<viskores::Range>>> futures(static_cast<std::size_t>(threads));
+  for (auto& future : futures)
+  {
+    future = std::async(std::launch::async, computeRanges);
+  }
+
+  std::vector<viskores::Range> localRanges;
+  for (auto& future : futures)
+  {
+    MergeRanges(localRanges, future.get());
+  }
+
+  auto lrange = viskores::cont::make_ArrayHandleMove(std::move(localRanges));
   return viskores::cont::detail::MergeRangesGlobal(lrange);
 }
 
