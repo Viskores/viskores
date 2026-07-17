@@ -19,6 +19,8 @@
 set(uncertainty_headers
   ContourUncertainGaussianCorrelated.h
   ContourUncertainGaussianIndependent.h
+  ContourUncertainGaussianIndependentClosedForm.h
+  ContourUncertainGaussianIndependentMonteCarlo.h
   ContourUncertainUniform.h
   ContourUncertainUniformMonteCarlo.h
   FiberUncertainUniform.h
@@ -27,6 +29,8 @@ set(uncertainty_headers
 set(uncertainty_sources_device
   ContourUncertainGaussianCorrelated.cxx
   ContourUncertainGaussianIndependent.cxx
+  ContourUncertainGaussianIndependentClosedForm.cxx
+  ContourUncertainGaussianIndependentMonteCarlo.cxx
   ContourUncertainUniform.cxx
   ContourUncertainUniformMonteCarlo.cxx
   FiberUncertainUniform.cxx
