@@ -315,11 +315,6 @@ viskores_library( NAME viskores_cont
               DEVICE_SOURCES ${device_sources}
             )
 
-target_sources(viskores_cont
-  PRIVATE
-    internal/Hints.h
-)
-
 add_subdirectory(internal)
 add_subdirectory(arg)
 
