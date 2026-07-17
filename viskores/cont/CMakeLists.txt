@@ -216,6 +216,7 @@ set(device_sources
   ConvertNumComponentsToOffsets.cxx
   Field.cxx
   internal/ArrayCopyUnknown.cxx
+  internal/ArrayGetMonotonicity.cxx
   internal/ArrayRangeComputeUtils.cxx
   internal/Buffer.cxx
   internal/MapArrayPermutation.cxx

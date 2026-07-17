@@ -84,17 +84,29 @@ public:
     auto coordsContPortal = coords.ReadPortal();
     RectilinearPortalType coordsExecPortal = coords.PrepareForInput(device, token);
     this->AxisPortals[0] = coordsExecPortal.GetFirstPortal();
-    this->MinPoint[0] = coordsContPortal.GetFirstPortal().Get(0);
-    this->MaxPoint[0] = coordsContPortal.GetFirstPortal().Get(this->PointDimensions[0] - 1);
+    auto firstPoint = coordsContPortal.GetFirstPortal().Get(0);
+    auto lastPoint = coordsContPortal.GetFirstPortal().Get(this->PointDimensions[0] - 1);
+    this->MinPoint[0] = firstPoint < lastPoint ? firstPoint : lastPoint;
+    this->MaxPoint[0] = firstPoint < lastPoint ? lastPoint : firstPoint;
+    this->LastPoint[0] = lastPoint;
+    this->AxisReversed[0] = lastPoint < firstPoint;
 
     this->AxisPortals[1] = coordsExecPortal.GetSecondPortal();
-    this->MinPoint[1] = coordsContPortal.GetSecondPortal().Get(0);
-    this->MaxPoint[1] = coordsContPortal.GetSecondPortal().Get(this->PointDimensions[1] - 1);
+    firstPoint = coordsContPortal.GetSecondPortal().Get(0);
+    lastPoint = coordsContPortal.GetSecondPortal().Get(this->PointDimensions[1] - 1);
+    this->MinPoint[1] = firstPoint < lastPoint ? firstPoint : lastPoint;
+    this->MaxPoint[1] = firstPoint < lastPoint ? lastPoint : firstPoint;
+    this->LastPoint[1] = lastPoint;
+    this->AxisReversed[1] = lastPoint < firstPoint;
     if (dimensions == 3)
     {
       this->AxisPortals[2] = coordsExecPortal.GetThirdPortal();
-      this->MinPoint[2] = coordsContPortal.GetThirdPortal().Get(0);
-      this->MaxPoint[2] = coordsContPortal.GetThirdPortal().Get(this->PointDimensions[2] - 1);
+      firstPoint = coordsContPortal.GetThirdPortal().Get(0);
+      lastPoint = coordsContPortal.GetThirdPortal().Get(this->PointDimensions[2] - 1);
+      this->MinPoint[2] = firstPoint < lastPoint ? firstPoint : lastPoint;
+      this->MaxPoint[2] = firstPoint < lastPoint ? lastPoint : firstPoint;
+      this->LastPoint[2] = lastPoint;
+      this->AxisReversed[2] = lastPoint < firstPoint;
     }
   }
 
@@ -231,11 +243,10 @@ private:
     for (viskores::Int32 dim = 0; dim < this->Dimensions; ++dim)
     {
       //
-      // When searching for points, we consider the max value of the cell
-      // to be apart of the next cell. If the point falls on the boundary of the
-      // data set, then it is technically inside a cell. This checks for that case
+      // Shared points belong to the next logical cell. The final grid point belongs
+      // to the last cell, so handle it explicitly.
       //
-      if (point[dim] == MaxPoint[dim])
+      if (point[dim] == this->LastPoint[dim])
       {
         logicalCell[dim] = this->PointDimensions[dim] - 2;
         if (parametric != nullptr)
@@ -251,7 +262,8 @@ private:
       {
         viskores::Id midIndex = (minIndex + maxIndex) / 2;
         viskores::FloatDefault midVal = this->AxisPortals[dim].Get(midIndex);
-        if (point[dim] <= midVal)
+        if ((!this->AxisReversed[dim] && point[dim] <= midVal) ||
+            (this->AxisReversed[dim] && point[dim] >= midVal))
         {
           maxIndex = midIndex;
           maxVal = midVal;
@@ -278,6 +290,8 @@ private:
   viskores::Id3 PointDimensions;
   viskores::Vec3f MinPoint;
   viskores::Vec3f MaxPoint;
+  viskores::Vec3f LastPoint;
+  bool AxisReversed[3];
   viskores::Id Dimensions;
 };
 } //namespace exec

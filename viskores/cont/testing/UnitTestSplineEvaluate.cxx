@@ -16,11 +16,13 @@
 //  PURPOSE.  See the above copyright notice for more information.
 //============================================================================
 
+#include <algorithm>
 #include <random>
 #include <string>
 
 #include <viskores/Math.h>
 #include <viskores/cont/DataSet.h>
+#include <viskores/cont/ErrorBadValue.h>
 #include <viskores/cont/Invoker.h>
 #include <viskores/cont/SplineEvaluateRectilinearGrid.h>
 #include <viskores/cont/SplineEvaluateUniformGrid.h>
@@ -180,6 +182,23 @@ std::vector<viskores::cont::DataSet> MakeRectDataSet3D(const std::vector<viskore
   return dataSets;
 }
 
+viskores::cont::DataSet MakeMixedDirectionRectDataSet3D(const viskores::Id3& dims)
+{
+  auto xcoords = fillCoords(dims[0], [](viskores::FloatDefault t) { return t * t; });
+  auto ycoords = fillCoordsExp(dims[1]);
+  auto zcoords =
+    fillCoords(dims[2], [](viskores::FloatDefault t) { return 1 - (1 - t) * (1 - t); });
+  std::reverse(xcoords.begin(), xcoords.end());
+  std::reverse(zcoords.begin(), zcoords.end());
+
+  auto dataSet = viskores::cont::DataSetBuilderRectilinear::Create(xcoords, ycoords, zcoords);
+  viskores::cont::ArrayHandle<viskores::FloatDefault> fieldArray;
+  viskores::cont::Invoker invoker;
+  invoker(GenerateData{}, dataSet.GetCoordinateSystem(), fieldArray);
+  dataSet.AddPointField("field", fieldArray);
+  return dataSet;
+}
+
 viskores::cont::ArrayHandle<viskores::FloatDefault> CreateLinearInterpolationResult(
   const viskores::cont::DataSet& ds,
   const viskores::cont::ArrayHandle<viskores::Vec3f>& points)
@@ -275,6 +294,7 @@ void DoSplineEvalTest()
 
   auto dsUniform = MakeDataSet3D(dims);
   auto dsRect = MakeRectDataSet3D(dims);
+  auto dsMixedDirection = MakeMixedDirectionRectDataSet3D({ 100, 100, 100 });
 
   // Compare spline to linear interpolation on 50 points.
   auto pointData = CreateRandomVec3f(50);
@@ -296,6 +316,8 @@ void DoSplineEvalTest()
     viskores::cont::SplineEvaluateRectilinearGrid evalRect(ds, "field");
     CompareToLinear(evalRect, pointData, expectedValues, ds);
   }
+  viskores::cont::SplineEvaluateRectilinearGrid evalMixedDirection(dsMixedDirection, "field");
+  CompareToLinear(evalMixedDirection, pointData, expectedValues, dsMixedDirection);
 
   //compare values for a few points.
   pointData = CreateRandomVec3f(10);
@@ -318,6 +340,31 @@ void DoSplineEvalTest()
     viskores::cont::SplineEvaluateRectilinearGrid evalRect(ds, "field");
     CompareResults(evalRect, pointData, expectedValues, 1e-3);
   }
+  CompareResults(evalMixedDirection, pointData, expectedValues, 1e-3);
+
+  auto invalidDataSet = MakeMixedDirectionRectDataSet3D({ 5, 5, 5 });
+  using RectilinearType = viskores::cont::ArrayHandleCartesianProduct<
+    viskores::cont::ArrayHandle<viskores::FloatDefault>,
+    viskores::cont::ArrayHandle<viskores::FloatDefault>,
+    viskores::cont::ArrayHandle<viskores::FloatDefault>>;
+  auto invalidCoords =
+    invalidDataSet.GetCoordinateSystem().GetData().AsArrayHandle<RectilinearType>();
+  auto invalidAxis = invalidCoords.GetFirstArray();
+  auto repeatedValue = invalidAxis.ReadPortal().Get(1);
+  invalidAxis.WritePortal().Set(2, repeatedValue);
+
+  bool threw = false;
+  try
+  {
+    viskores::cont::SplineEvaluateRectilinearGrid invalidEvaluator(invalidDataSet, "field");
+    viskores::cont::ArrayHandle<viskores::FloatDefault> results;
+    invoker(EvalWorklet{}, pointData, invalidEvaluator, results);
+  }
+  catch (const viskores::cont::ErrorBadValue&)
+  {
+    threw = true;
+  }
+  VISKORES_TEST_ASSERT(threw, "Repeated rectilinear coordinate did not throw ErrorBadValue.");
 }
 } // anonymous namespace
 

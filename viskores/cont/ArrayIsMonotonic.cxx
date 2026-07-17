@@ -22,6 +22,8 @@
 #include <viskores/cont/viskores_cont_export.h>
 #include <viskores/worklet/WorkletMapField.h>
 
+#include <viskores/BinaryOperators.h>
+
 namespace viskores
 {
 namespace cont
@@ -62,8 +64,8 @@ struct MonotonicDecreasing : public viskores::worklet::WorkletMapField
       result = input.Get(idx) <= input.Get(idx - 1);
   }
 };
-} //anonymous namespace
 
+} //anonymous namespace
 
 VISKORES_CONT_EXPORT
 bool ArrayIsMonotonicIncreasing(const viskores::cont::UnknownArrayHandle& input)

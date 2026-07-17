@@ -18,6 +18,7 @@
 
 set(headers
   ArrayCopyUnknown.h
+  ArrayGetMonotonicity.h
   ArrayHandleExecutionManager.h
   ArrayPortalFromIterators.h
   ArrayRangeComputeUtils.h

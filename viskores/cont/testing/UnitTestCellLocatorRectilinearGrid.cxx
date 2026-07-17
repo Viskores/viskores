@@ -22,6 +22,7 @@
 #include <viskores/cont/CellLocatorRectilinearGrid.h>
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/DataSetBuilderRectilinear.h>
+#include <viskores/cont/ErrorBadValue.h>
 #include <viskores/cont/Invoker.h>
 
 #include <viskores/cont/testing/Testing.h>
@@ -136,6 +137,26 @@ private:
   viskores::Id3 Dims;
 };
 
+class FindCellWorklet : public viskores::worklet::WorkletMapField
+{
+public:
+  using ControlSignature = void(FieldIn pointIn,
+                                ExecObject locator,
+                                FieldOut cellId,
+                                FieldOut parametric);
+  using ExecutionSignature = void(_1, _2, _3, _4);
+
+  template <typename PointType, typename LocatorType>
+  VISKORES_EXEC void operator()(const PointType& pointIn,
+                                const LocatorType& locator,
+                                viskores::Id& cellId,
+                                PointType& parametric) const
+  {
+    if (locator.FindCell(pointIn, cellId, parametric) != viskores::ErrorCode::Success)
+      cellId = -1;
+  }
+};
+
 void TestTest()
 {
   viskores::cont::Invoker invoke;
@@ -207,9 +228,111 @@ void TestTest()
   }
 }
 
+void TestMixedAxisDirections()
+{
+  std::vector<viskores::Float32> x = { 0.0f, 1.0f, 3.0f, 4.0f };
+  std::vector<viskores::Float32> y = { 4.0f, 2.0f, 0.0f };
+  std::vector<viskores::Float32> z = { 6.0f, 5.0f, 3.0f, 1.0f, 0.0f };
+  auto dataSet = viskores::cont::DataSetBuilderRectilinear::Create(x, y, z);
+
+  viskores::cont::CellLocatorRectilinearGrid locator;
+  locator.SetCoordinates(dataSet.GetCoordinateSystem());
+  locator.SetCellSet(dataSet.GetCellSet());
+
+  using PointType = viskores::Vec3f;
+  std::vector<PointType> pointsVector{ PointType{ 2.0f, 3.0f, 4.0f },
+                                       PointType{ 0.0f, 4.0f, 6.0f },
+                                       PointType{ 4.0f, 0.0f, 0.0f },
+                                       PointType{ 2.0f, 5.0f, 4.0f } };
+  auto points = viskores::cont::make_ArrayHandle(pointsVector, viskores::CopyFlag::Off);
+
+  viskores::cont::ArrayHandle<viskores::Id> cellIds;
+  viskores::cont::ArrayHandle<PointType> parametric;
+  viskores::cont::Invoker invoke;
+  invoke(FindCellWorklet{}, points, locator, cellIds, parametric);
+
+  auto cellIdsPortal = cellIds.ReadPortal();
+  auto parametricPortal = parametric.ReadPortal();
+  VISKORES_TEST_ASSERT(cellIdsPortal.Get(0) == 7);
+  VISKORES_TEST_ASSERT(test_equal(parametricPortal.Get(0), PointType(0.5f)));
+  VISKORES_TEST_ASSERT(cellIdsPortal.Get(1) == 0);
+  VISKORES_TEST_ASSERT(test_equal(parametricPortal.Get(1), PointType(0.0f)));
+  VISKORES_TEST_ASSERT(cellIdsPortal.Get(2) == 23);
+  VISKORES_TEST_ASSERT(test_equal(parametricPortal.Get(2), PointType(1.0f)));
+  VISKORES_TEST_ASSERT(cellIdsPortal.Get(3) == -1);
+}
+
+void TestMixedAxisDirections2D()
+{
+  std::vector<viskores::Float32> x = { 0.0f, 1.0f, 3.0f };
+  std::vector<viskores::Float32> y = { 4.0f, 2.0f, 0.0f };
+  auto dataSet = viskores::cont::DataSetBuilderRectilinear::Create(x, y);
+
+  viskores::cont::CellLocatorRectilinearGrid locator;
+  locator.SetCoordinates(dataSet.GetCoordinateSystem());
+  locator.SetCellSet(dataSet.GetCellSet());
+
+  using PointType = viskores::Vec3f;
+  std::vector<PointType> pointsVector{ PointType{ 2.0f, 3.0f, 0.0f },
+                                       PointType{ 3.0f, 0.0f, 0.0f },
+                                       PointType{ 2.0f, 5.0f, 0.0f } };
+  auto points = viskores::cont::make_ArrayHandle(pointsVector, viskores::CopyFlag::Off);
+
+  viskores::cont::ArrayHandle<viskores::Id> cellIds;
+  viskores::cont::ArrayHandle<PointType> parametric;
+  viskores::cont::Invoker invoke;
+  invoke(FindCellWorklet{}, points, locator, cellIds, parametric);
+
+  auto cellIdsPortal = cellIds.ReadPortal();
+  auto parametricPortal = parametric.ReadPortal();
+  VISKORES_TEST_ASSERT(cellIdsPortal.Get(0) == 1);
+  VISKORES_TEST_ASSERT(test_equal(parametricPortal.Get(0)[0], 0.5f));
+  VISKORES_TEST_ASSERT(test_equal(parametricPortal.Get(0)[1], 0.5f));
+  VISKORES_TEST_ASSERT(cellIdsPortal.Get(1) == 3);
+  VISKORES_TEST_ASSERT(test_equal(parametricPortal.Get(1)[0], 1.0f));
+  VISKORES_TEST_ASSERT(test_equal(parametricPortal.Get(1)[1], 1.0f));
+  VISKORES_TEST_ASSERT(cellIdsPortal.Get(2) == -1);
+}
+
+void TestInvalidAxes()
+{
+  auto checkInvalid = [](const std::vector<viskores::Float32>& x)
+  {
+    std::vector<viskores::Float32> y = { 0.0f, 1.0f, 2.0f };
+    std::vector<viskores::Float32> z = { 0.0f, 1.0f, 2.0f };
+    auto dataSet = viskores::cont::DataSetBuilderRectilinear::Create(x, y, z);
+
+    viskores::cont::CellLocatorRectilinearGrid locator;
+    locator.SetCoordinates(dataSet.GetCoordinateSystem());
+    locator.SetCellSet(dataSet.GetCellSet());
+
+    bool threw = false;
+    try
+    {
+      locator.Update();
+    }
+    catch (const viskores::cont::ErrorBadValue&)
+    {
+      threw = true;
+    }
+    VISKORES_TEST_ASSERT(threw, "Invalid rectilinear axis did not throw ErrorBadValue.");
+  };
+
+  checkInvalid({ 0.0f, 2.0f, 1.0f, 3.0f });
+  checkInvalid({ 0.0f, 1.0f, 1.0f, 2.0f });
+}
+
+void TestCellLocatorRectilinearGrid()
+{
+  TestTest();
+  TestMixedAxisDirections();
+  TestMixedAxisDirections2D();
+  TestInvalidAxes();
+}
+
 } // anonymous namespace
 
 int UnitTestCellLocatorRectilinearGrid(int argc, char* argv[])
 {
-  return viskores::cont::testing::Testing::Run(TestTest, argc, argv);
+  return viskores::cont::testing::Testing::Run(TestCellLocatorRectilinearGrid, argc, argv);
 }
