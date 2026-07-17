@@ -6,16 +6,6 @@
 ##  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 ##============================================================================
 
-##============================================================================
-##  Copyright (c) Kitware, Inc.
-##  All rights reserved.
-##  See LICENSE.txt for details.
-##
-##  This software is distributed WITHOUT ANY WARRANTY; without even
-##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-##  PURPOSE.  See the above copyright notice for more information.
-##============================================================================
-
 ## This CMake script checks source files for the appropriate VISKORES license
 ## statement, which is stored in Viskores_SOURCE_DIR/CMake/ViskoresLicenseStatement.txt.
 ## To run this script, execute CMake as follows:
@@ -39,13 +29,13 @@ set(FILES_TO_CHECK
   Dockerfile
   *.yaml
   *.yml
+  *.toml
   )
 
 set(EXCEPTIONS
   LICENSE.txt
   DCO.txt
   README.txt
-  docs/users-guide/requirements.txt
   # Common directories with build files
   .venv
   build
@@ -171,9 +161,10 @@ endfunction(missing_license)
 # Get an appropriate beginning line comment for the given filename.
 function(get_comment_prefix var filename)
   get_filename_component(name "${filename}" NAME)
-  if(name MATCHES "\\.(cmake|py|sh|ps1|yaml|yml)$"
+  if(name MATCHES "\\.(cmake|py|sh|ps1|yaml|yml|toml)$"
     OR name STREQUAL "CMakeLists.txt"
     OR name STREQUAL "Dockerfile"
+    OR name STREQUAL "requirements.txt"
     )
     set(${var} "##" PARENT_SCOPE)
   elseif (name MATCHES "\\.(h|h\\.in|hxx|cxx|cu)$")
