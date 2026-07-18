@@ -63,11 +63,15 @@ public:
   /// support the particular set method.
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetThreads(const viskores::Id& value);
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetDeviceInstance(const viskores::Id& value);
+  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode SetUseUnifiedMemory(
+    const viskores::Id& value);
 
   /// The following public methods are overriden in each individual device and store the
   /// values that were set via the above Set* methods for the given device.
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetThreads(viskores::Id& value) const;
   VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetDeviceInstance(viskores::Id& value) const;
+  VISKORES_CONT virtual RuntimeDeviceConfigReturnCode GetUseUnifiedMemory(
+    viskores::Id& value) const;
 
   /// The following public methods should be overriden as needed for each individual device
   /// as they describe various device parameters.
