@@ -19,7 +19,80 @@
 #include <viskores/io/FileUtils.h>
 #include <viskores/io/ImageWriterBase.h>
 
+#include <viskores/cont/ErrorBadType.h>
+#include <viskores/cont/Invoker.h>
 #include <viskores/cont/Logging.h>
+
+#include <viskores/worklet/WorkletMapField.h>
+
+namespace
+{
+
+struct NormalizeColorsWorklet : viskores::worklet::WorkletMapField
+{
+  using ControlSignature = void(FieldIn inColor, FieldOut outColor);
+  using ExecutionSignature = _2(_1);
+  using InputDomain = _1;
+
+  template <typename InColorVec>
+  VISKORES_EXEC viskores::Vec4f_32 operator()(const InColorVec& inColor) const
+  {
+    viskores::Vec4f_32 outColor{ 1.0f };
+    for (viskores::IdComponent compIdx = 0; compIdx < inColor.GetNumberOfComponents(); ++compIdx)
+    {
+      outColor[compIdx] = this->NormalizeChannel(inColor[compIdx]);
+    }
+    return outColor;
+  }
+
+  VISKORES_EXEC constexpr viskores::Float32 NormalizeChannel(viskores::UInt8 channel) const
+  {
+    return static_cast<viskores::Float32>(channel) / 255.0f;
+  }
+  VISKORES_EXEC constexpr viskores::Float32 NormalizeChannel(viskores::Float32 channel) const
+  {
+    return channel;
+  }
+  VISKORES_EXEC constexpr viskores::Float32 NormalizeChannel(viskores::Float64 channel) const
+  {
+    return static_cast<viskores::Float32>(channel);
+  }
+};
+
+VISKORES_CONT viskores::io::ImageWriterBase::ColorArrayType NormalizeColors(
+  const viskores::cont::UnknownArrayHandle& colorArray)
+{
+  viskores::io::ImageWriterBase::ColorArrayType result;
+  viskores::cont::Invoker invoke;
+
+  if (colorArray.CanConvert<viskores::io::ImageWriterBase::ColorArrayType>())
+  {
+    colorArray.AsArrayHandle(result);
+  }
+  else if (colorArray.IsBaseComponentType<viskores::UInt8>())
+  {
+    invoke(
+      NormalizeColorsWorklet{}, colorArray.ExtractArrayFromComponents<viskores::UInt8>(), result);
+  }
+  else if (colorArray.IsBaseComponentType<viskores::Float32>())
+  {
+    invoke(
+      NormalizeColorsWorklet{}, colorArray.ExtractArrayFromComponents<viskores::Float32>(), result);
+  }
+  else if (colorArray.IsBaseComponentType<viskores::Float64>())
+  {
+    invoke(
+      NormalizeColorsWorklet{}, colorArray.ExtractArrayFromComponents<viskores::Float64>(), result);
+  }
+  else
+  {
+    throw viskores::cont::ErrorBadType("Image writers only support UInt8 or Float channels.");
+  }
+
+  return result;
+}
+
+} // anonymous namespace
 
 namespace viskores
 {
@@ -90,7 +163,7 @@ void ImageWriterBase::WriteDataSet(const viskores::cont::DataSet& dataSet,
     VISKORES_LOG_S(viskores::cont::LogLevel::Info,
                    "Created output directory: " << ParentPath(this->FileName));
   }
-  this->Write(width, height, colorField.GetData().AsArrayHandle<ColorArrayType>());
+  this->Write(width, height, NormalizeColors(colorField.GetData()));
 }
 
 } // namespace viskores::io
