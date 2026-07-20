@@ -64,11 +64,7 @@
 #include <viskores/filter/scalar_topology/ContourTreeUniformAugmented.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ProcessContourTree.h>
 
-
-#ifdef VISKORES_ENABLE_MPI
-#include "TestingContourTreeUniformDistributedFilter.h"
-#include <mpi.h>
-#endif
+#include <set>
 
 namespace
 {
@@ -81,172 +77,9 @@ using viskores::cont::testing::MakeTestDataSet;
 class TestContourTreeUniformAugmented
 {
 private:
-#ifdef VISKORES_ENABLE_MPI
-  void ShiftLogicalOriginToZero(viskores::cont::PartitionedDataSet& pds) const
-  {
-    // Shift the logical origin (minimum of LocalPointIndexStart) to zero
-    // along each dimension
-
-    // Compute minimum global point index start for all data sets on this MPI rank
-    std::vector<viskores::Id> minimumGlobalPointIndexStartThisRank;
-    using ds_const_iterator = viskores::cont::PartitionedDataSet::const_iterator;
-    for (ds_const_iterator ds_it = pds.cbegin(); ds_it != pds.cend(); ++ds_it)
-    {
-      ds_it->GetCellSet().CastAndCallForTypes<viskores::cont::CellSetListStructured>(
-        [&minimumGlobalPointIndexStartThisRank](const auto& css)
-        {
-          minimumGlobalPointIndexStartThisRank.resize(css.Dimension,
-                                                      std::numeric_limits<viskores::Id>::max());
-          for (viskores::IdComponent d = 0; d < css.Dimension; ++d)
-          {
-            minimumGlobalPointIndexStartThisRank[d] =
-              std::min(minimumGlobalPointIndexStartThisRank[d], css.GetGlobalPointIndexStart()[d]);
-          }
-        });
-    }
-
-    // Perform global reduction to find GlobalPointDimensions across all ranks
-    std::vector<viskores::Id> minimumGlobalPointIndexStart;
-    auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
-    viskoresdiy::mpi::all_reduce(comm,
-                                 minimumGlobalPointIndexStartThisRank,
-                                 minimumGlobalPointIndexStart,
-                                 viskoresdiy::mpi::minimum<viskores::Id>{});
-
-    // Shift all cell sets so that minimum global point index start
-    // along each dimension is zero
-    using ds_iterator = viskores::cont::PartitionedDataSet::iterator;
-    for (ds_iterator ds_it = pds.begin(); ds_it != pds.end(); ++ds_it)
-    {
-      // This does not work, i.e., it does not really change the cell set for the DataSet
-      ds_it->GetCellSet().CastAndCallForTypes<viskores::cont::CellSetListStructured>(
-        [&minimumGlobalPointIndexStart, &ds_it](auto& css)
-        {
-          auto pointIndexStart = css.GetGlobalPointIndexStart();
-          typename std::remove_reference_t<decltype(css)>::SchedulingRangeType
-            shiftedPointIndexStart;
-          for (viskores::IdComponent d = 0; d < css.Dimension; ++d)
-          {
-            shiftedPointIndexStart[d] = pointIndexStart[d] - minimumGlobalPointIndexStart[d];
-          }
-          css.SetGlobalPointIndexStart(shiftedPointIndexStart);
-          // Why is the following necessary? Shouldn't it be sufficient to update the
-          // CellSet through the reference?
-          ds_it->SetCellSet(css);
-        });
-    }
-  }
-
-  void ComputeGlobalPointSize(viskores::cont::PartitionedDataSet& pds) const
-  {
-    // Compute GlobalPointDimensions as maximum of GlobalPointIndexStart + PointDimensions
-    // for each dimension across all blocks
-
-    // Compute GlobalPointDimensions for all data sets on this MPI rank
-    std::vector<viskores::Id> globalPointDimensionsThisRank;
-    using ds_const_iterator = viskores::cont::PartitionedDataSet::const_iterator;
-    for (ds_const_iterator ds_it = pds.cbegin(); ds_it != pds.cend(); ++ds_it)
-    {
-      ds_it->GetCellSet().CastAndCallForTypes<viskores::cont::CellSetListStructured>(
-        [&globalPointDimensionsThisRank](const auto& css)
-        {
-          globalPointDimensionsThisRank.resize(css.Dimension, -1);
-          for (viskores::IdComponent d = 0; d < css.Dimension; ++d)
-          {
-            globalPointDimensionsThisRank[d] =
-              std::max(globalPointDimensionsThisRank[d],
-                       css.GetGlobalPointIndexStart()[d] + css.GetPointDimensions()[d]);
-          }
-        });
-    }
-
-    // Perform global reduction to find GlobalPointDimensions across all ranks
-    std::vector<viskores::Id> globalPointDimensions;
-    auto comm = viskores::cont::EnvironmentTracker::GetCommunicator();
-    viskoresdiy::mpi::all_reduce(comm,
-                                 globalPointDimensionsThisRank,
-                                 globalPointDimensions,
-                                 viskoresdiy::mpi::maximum<viskores::Id>{});
-
-    // Set this information in all cell sets
-    using ds_iterator = viskores::cont::PartitionedDataSet::iterator;
-    for (ds_iterator ds_it = pds.begin(); ds_it != pds.end(); ++ds_it)
-    {
-      // This does not work, i.e., it does not really change the cell set for the DataSet
-      ds_it->GetCellSet().CastAndCallForTypes<viskores::cont::CellSetListStructured>(
-        [&globalPointDimensions, &ds_it](auto& css)
-        {
-          typename std::remove_reference_t<decltype(css)>::SchedulingRangeType gpd;
-          for (viskores::IdComponent d = 0; d < css.Dimension; ++d)
-          {
-            gpd[d] = globalPointDimensions[d];
-          }
-          css.SetGlobalPointDimensions(gpd);
-          // Why is the following necessary? Shouldn't it be sufficient to update the
-          // CellSet through the reference?
-          ds_it->SetCellSet(css);
-        });
-    }
-  }
-
-  void GetPartitionedDataSet(const viskores::cont::DataSet& ds,
-                             const std::string& fieldName,
-                             const int numberOfBlocks,
-                             const int rank,
-                             const int numberOfRanks,
-                             viskores::cont::PartitionedDataSet& pds) const
-  {
-    // Get dimensions of data set
-    viskores::Id3 globalSize;
-    viskores::cont::CastAndCall(
-      ds.GetCellSet(), viskores::worklet::contourtree_augmented::GetPointDimensions(), globalSize);
-
-    // Determine split
-    viskores::Id3 blocksPerAxis =
-      viskores::filter::testing::contourtree_uniform_distributed::ComputeNumberOfBlocksPerAxis(
-        globalSize, numberOfBlocks);
-    viskores::Id blocksPerRank = numberOfBlocks / numberOfRanks;
-    viskores::Id numRanksWithExtraBlock = numberOfBlocks % numberOfRanks;
-    viskores::Id blocksOnThisRank, startBlockNo;
-
-    if (rank < numRanksWithExtraBlock)
-    {
-      blocksOnThisRank = blocksPerRank + 1;
-      startBlockNo = (blocksPerRank + 1) * rank;
-    }
-    else
-    {
-      blocksOnThisRank = blocksPerRank;
-      startBlockNo = numRanksWithExtraBlock * (blocksPerRank + 1) +
-        (rank - numRanksWithExtraBlock) * blocksPerRank;
-    }
-
-    // Created partitioned (split) data set
-    //viskores::cont::PartitionedDataSet pds;
-    viskores::cont::ArrayHandle<viskores::Id3> localBlockIndices;
-
-    localBlockIndices.Allocate(blocksOnThisRank);
-
-    auto localBlockIndicesPortal = localBlockIndices.WritePortal();
-
-    for (viskores::Id blockNo = 0; blockNo < blocksOnThisRank; ++blockNo)
-    {
-      viskores::Id3 blockOrigin, blockSize, blockIndex;
-      std::tie(blockIndex, blockOrigin, blockSize) =
-        viskores::filter::testing::contourtree_uniform_distributed::ComputeBlockExtents(
-          globalSize, blocksPerAxis, startBlockNo + blockNo);
-      pds.AppendPartition(
-        viskores::filter::testing::contourtree_uniform_distributed::CreateSubDataSet(
-          ds, blockOrigin, blockSize, fieldName));
-      localBlockIndicesPortal.Set(blockNo, blockIndex);
-    }
-  }
-#endif
-
   template <typename DataValueType>
-  void analysis(viskores::filter::scalar_topology::ContourTreeAugmented& filter,
-                bool dataFieldIsSorted,
-                const viskores::cont::UnknownArrayHandle& arr,
+  void analysis(const viskores::cont::DataSet& result,
+                const std::string& fieldName,
                 const viskores::Id& levels,
                 std::vector<DataValueType>& isoValues) const
   {
@@ -255,97 +88,26 @@ private:
     DataValueType eps = 0.00001f;      // Distance away from critical point
     viskores::Id numComp = levels + 1; // Number of components the tree should be simplified to
     bool usePersistenceSorter = true;
-
-    // Compute the branch decomposition
-    // Compute the volume for each hyperarc and superarc
-    caugmented_ns::IdArrayType superarcIntrinsicWeight;
-    caugmented_ns::IdArrayType superarcDependentWeight;
-    caugmented_ns::IdArrayType supernodeTransferWeight;
-    caugmented_ns::IdArrayType hyperarcDependentWeight;
-
-    caugmented_ns::ProcessContourTree::ComputeVolumeWeightsSerial(
-      filter.GetContourTree(),
-      filter.GetNumIterations(),
-      superarcIntrinsicWeight,  // (output)
-      superarcDependentWeight,  // (output)
-      supernodeTransferWeight,  // (output)
-      hyperarcDependentWeight); // (output)
-
-    // Compute the branch decomposition by volume
-    caugmented_ns::IdArrayType whichBranch;
-    caugmented_ns::IdArrayType branchMinimum;
-    caugmented_ns::IdArrayType branchMaximum;
-    caugmented_ns::IdArrayType branchSaddle;
-    caugmented_ns::IdArrayType branchParent;
-
-#ifdef DEBUG
-    PrintArrayHandle(superarcIntrinsicWeight, "superarcIntrinsicWeight");
-    PrintArrayHandle(superarcDependentWeight, "superarcDependentWeight");
-    PrintArrayHandle(supernodeTransferWeight, "superarcDependentWeight");
-    PrintArrayHandle(hyperarcDependentWeight, "hyperarcDependentWeight");
-#endif // DEBUG
-
-
-    caugmented_ns::ProcessContourTree::ComputeVolumeBranchDecompositionSerial(
-      filter.GetContourTree(),
-      superarcDependentWeight,
-      superarcIntrinsicWeight,
-      whichBranch,   // (output)
-      branchMinimum, // (output)
-      branchMaximum, // (output)
-      branchSaddle,  // (output)
-      branchParent); // (output)
-
-    // Create explicit representation of the branch decompostion from the array representation
-    using ValueArray = viskores::cont::ArrayHandle<DataValueType>;
-    ValueArray dataField;
-
-    arr.AsArrayHandle(dataField);
-
-    using BranchType =
-      viskores::worklet::contourtree_augmented::process_contourtree_inc::Branch<DataValueType>;
-
-    BranchType* branchDecompositionRoot =
-      caugmented_ns::ProcessContourTree::ComputeBranchDecomposition<DataValueType>(
-        filter.GetContourTree().Superparents,
-        filter.GetContourTree().Supernodes,
-        whichBranch,
-        branchMinimum,
-        branchMaximum,
-        branchSaddle,
-        branchParent,
-        filter.GetSortOrder(),
-        dataField,
-        dataFieldIsSorted);
-
-    // Simplify the contour tree of the branch decompostion
-    branchDecompositionRoot->SimplifyToSize(numComp, usePersistenceSorter);
-
     int contourType = 0;
 
-    branchDecompositionRoot->GetRelevantValues(contourType, eps, isoValues);
+    // Compute the branch decomposition from the output DataSet fields, simplify it to
+    // numComp branches, and extract the relevant isovalues
+    isoValues = caugmented_ns::ProcessContourTree::SelectTopVolumeBranches<DataValueType>(
+      result, fieldName, numComp, contourType, eps, usePersistenceSorter);
 
-    // Print the compute iso values
+    // Sort and unique the isovalues
     std::sort(isoValues.begin(), isoValues.end());
-
-    // Unique isovalues
     auto it = std::unique(isoValues.begin(), isoValues.end());
     isoValues.resize(std::distance(isoValues.begin(), it));
-
-    if (branchDecompositionRoot)
-    {
-      delete branchDecompositionRoot;
-    }
   }
 
   //
   //  Internal helper function to execute the contour tree and save repeat code in tests
   //
   // datSets: 0 -> 5x5.txt (2D), 1 -> 8x9test.txt (2D), 2-> 5b.txt (3D)
-  viskores::filter::scalar_topology::ContourTreeAugmented RunContourTree(
-    bool useMarchingCubes,
-    unsigned int computeRegularStructure,
-    unsigned int dataSetNo) const
+  viskores::cont::DataSet RunContourTree(bool useMarchingCubes,
+                                         bool augmentTree,
+                                         unsigned int dataSetNo) const
   {
     // Create the input uniform cell set with values to contour
     viskores::cont::DataSet dataSet;
@@ -366,32 +128,28 @@ private:
       default:
         VISKORES_TEST_ASSERT(false);
     }
-    viskores::filter::scalar_topology::ContourTreeAugmented filter(useMarchingCubes,
-                                                                   computeRegularStructure);
+    viskores::filter::scalar_topology::ContourTreeAugmented filter;
+    filter.SetUseMarchingCubes(useMarchingCubes);
+    filter.SetAugmentTree(augmentTree);
     filter.SetActiveField("pointvar");
-    filter.Execute(dataSet);
-    return filter;
+    return filter.Execute(dataSet);
   }
 
 public:
   //
   // Create a uniform 2D structured cell set as input with values for contours
   //
-  void TestContourTree_Mesh2D_Freudenthal_SquareExtents(
-    unsigned int computeRegularStructure = 1) const
+  void TestContourTree_Mesh2D_Freudenthal_SquareExtents(bool augmentTree = true) const
   {
-    std::cout << "Testing ContourTree_Augmented 2D Mesh. computeRegularStructure="
-              << computeRegularStructure << std::endl;
-    viskores::filter::scalar_topology::ContourTreeAugmented filter =
-      RunContourTree(false,                   // no marching cubes,
-                     computeRegularStructure, // compute regular structure
-                     0                        // use 5x5.txt
-      );
+    std::cout << "Testing ContourTree_Augmented 2D Mesh. augmentTree=" << augmentTree << std::endl;
+    viskores::cont::DataSet result = RunContourTree(false,       // no marching cubes,
+                                                    augmentTree, // augmentation level
+                                                    0);          // use 5x5.txt
 
     // Compute the saddle peaks to make sure the contour tree is correct
     viskores::worklet::contourtree_augmented::EdgePairArray saddlePeak;
     viskores::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
-      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+      result, saddlePeak);
 
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
@@ -424,21 +182,17 @@ public:
                          "Wrong result for ContourTree filter");
   }
 
-  void TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(
-    unsigned int computeRegularStructure = 1) const
+  void TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(bool augmentTree = true) const
   {
-    std::cout << "Testing ContourTree_Augmented 2D Mesh. computeRegularStructure="
-              << computeRegularStructure << std::endl;
-    viskores::filter::scalar_topology::ContourTreeAugmented filter =
-      RunContourTree(false,                   // no marching cubes,
-                     computeRegularStructure, // compute regular structure
-                     1                        // use 8x9test.txt
-      );
+    std::cout << "Testing ContourTree_Augmented 2D Mesh. augmentTree=" << augmentTree << std::endl;
+    viskores::cont::DataSet result = RunContourTree(false,       // no marching cubes,
+                                                    augmentTree, // augmentation level
+                                                    1);          // use 8x9test.txt
 
     // Compute the saddle peaks to make sure the contour tree is correct
     viskores::worklet::contourtree_augmented::EdgePairArray saddlePeak;
     viskores::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
-      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+      result, saddlePeak);
 
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
@@ -474,23 +228,19 @@ public:
                          "Wrong result for ContourTree filter");
   }
 
-  void TestContourTree_Mesh3D_Freudenthal_CubicExtents(
-    unsigned int computeRegularStructure = 1) const
+  void TestContourTree_Mesh3D_Freudenthal_CubicExtents(bool augmentTree = true) const
   {
-    std::cout << "Testing ContourTree_Augmented 3D Mesh. computeRegularStructure="
-              << computeRegularStructure << std::endl;
+    std::cout << "Testing ContourTree_Augmented 3D Mesh. augmentTree=" << augmentTree << std::endl;
 
     // Execute the filter
-    viskores::filter::scalar_topology::ContourTreeAugmented filter =
-      RunContourTree(false,                   // no marching cubes,
-                     computeRegularStructure, // compute regular structure
-                     2                        // use 5b.txt (3D) mesh
-      );
+    viskores::cont::DataSet result = RunContourTree(false,       // no marching cubes,
+                                                    augmentTree, // augmentation level
+                                                    2);          // use 5b.txt (3D) mesh
 
     // Compute the saddle peaks to make sure the contour tree is correct
     viskores::worklet::contourtree_augmented::EdgePairArray saddlePeak;
     viskores::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
-      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+      result, saddlePeak);
 
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
@@ -530,23 +280,19 @@ public:
                          "Wrong result for ContourTree filter");
   }
 
-  void TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(
-    unsigned int computeRegularStructure = 1) const
+  void TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(bool augmentTree = true) const
   {
-    std::cout << "Testing ContourTree_Augmented 3D Mesh. computeRegularStructure="
-              << computeRegularStructure << std::endl;
+    std::cout << "Testing ContourTree_Augmented 3D Mesh. augmentTree=" << augmentTree << std::endl;
 
     // Execute the filter
-    viskores::filter::scalar_topology::ContourTreeAugmented filter =
-      RunContourTree(false,                   // no marching cubes,
-                     computeRegularStructure, // compute regular structure
-                     3                        // use 5b.txt (3D) upsampled to 5x6x7 mesh
-      );
+    viskores::cont::DataSet result = RunContourTree(false,       // no marching cubes,
+                                                    augmentTree, // augmentation level
+                                                    3); // use 5b.txt (3D) upsampled to 5x6x7 mesh
 
     // Compute the saddle peaks to make sure the contour tree is correct
     viskores::worklet::contourtree_augmented::EdgePairArray saddlePeak;
     viskores::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
-      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+      result, saddlePeak);
 
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
@@ -586,23 +332,20 @@ public:
                          "Wrong result for ContourTree filter");
   }
 
-  void TestContourTree_Mesh3D_MarchingCubes_CubicExtents(
-    unsigned int computeRegularStructure = 1) const
+  void TestContourTree_Mesh3D_MarchingCubes_CubicExtents(bool augmentTree = true) const
   {
-    std::cout << "Testing ContourTree_Augmented 3D Mesh Marching Cubes. computeRegularStructure="
-              << computeRegularStructure << std::endl;
+    std::cout << "Testing ContourTree_Augmented 3D Mesh Marching Cubes. augmentTree=" << augmentTree
+              << std::endl;
 
     // Execute the filter
-    viskores::filter::scalar_topology::ContourTreeAugmented filter =
-      RunContourTree(true,                    // no marching cubes,
-                     computeRegularStructure, // compute regular structure
-                     2                        // use 5b.txt (3D) mesh
-      );
+    viskores::cont::DataSet result = RunContourTree(true,        // marching cubes,
+                                                    augmentTree, // augmentation level
+                                                    2);          // use 5b.txt (3D) mesh
 
     // Compute the saddle peaks to make sure the contour tree is correct
     viskores::worklet::contourtree_augmented::EdgePairArray saddlePeak;
     viskores::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
-      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+      result, saddlePeak);
 
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
@@ -648,23 +391,20 @@ public:
       "Wrong result for ContourTree filter");
   }
 
-  void TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(
-    unsigned int computeRegularStructure = 1) const
+  void TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(bool augmentTree = true) const
   {
-    std::cout << "Testing ContourTree_Augmented 3D Mesh Marching Cubes. computeRegularStructure="
-              << computeRegularStructure << std::endl;
+    std::cout << "Testing ContourTree_Augmented 3D Mesh Marching Cubes. augmentTree=" << augmentTree
+              << std::endl;
 
     // Execute the filter
-    viskores::filter::scalar_topology::ContourTreeAugmented filter =
-      RunContourTree(true,                    // no marching cubes,
-                     computeRegularStructure, // compute regular structure
-                     3                        // use 5b.txt (3D) upsampled to 5x6x7 mesh
-      );
+    viskores::cont::DataSet result = RunContourTree(true,        // marching cubes,
+                                                    augmentTree, // augmentation level
+                                                    3); // use 5b.txt (3D) upsampled to 5x6x7 mesh
 
     // Compute the saddle peaks to make sure the contour tree is correct
     viskores::worklet::contourtree_augmented::EdgePairArray saddlePeak;
     viskores::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
-      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+      result, saddlePeak);
 
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
@@ -710,6 +450,174 @@ public:
       "Wrong result for ContourTree filter");
   }
 
+  // Requesting branch decomposition must force a fully augmented tree at Execute() time,
+  // regardless of the order relative to SetAugmentTree(false). The output must therefore
+  // carry the augmentation and branch fields.
+  void TestBranchDecompositionEnforcesAugmentation() const
+  {
+    std::cout << "Testing ContourTree_Augmented branch-decomposition augmentation enforcement"
+              << std::endl;
+
+    viskores::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
+    viskores::filter::scalar_topology::ContourTreeAugmented filter;
+    // Deliberately request branch decomposition first, then disable augmentation. Execute() must
+    // still produce a fully augmented tree with branch-decomposition fields.
+    filter.SetComputeBranchDecomposition(true);
+    filter.SetAugmentTree(false);
+    filter.SetActiveField("pointvar");
+    viskores::cont::DataSet result = filter.Execute(dataSet);
+
+    VISKORES_TEST_ASSERT(result.HasField("Superparents"),
+                         "Branch decomposition did not force augmentation (Superparents missing)");
+    VISKORES_TEST_ASSERT(result.HasField("WhichBranch"), "WhichBranch field missing");
+    VISKORES_TEST_ASSERT(result.HasField("BranchMinimum"), "BranchMinimum field missing");
+    VISKORES_TEST_ASSERT(result.HasField("BranchMaximum"), "BranchMaximum field missing");
+    VISKORES_TEST_ASSERT(result.HasField("BranchSaddle"), "BranchSaddle field missing");
+    VISKORES_TEST_ASSERT(result.HasField("BranchParent"), "BranchParent field missing");
+  }
+
+  // Verify CollectRegularVerticesPerSuperarc's grouping against the Supernodes/Superparents
+  // fields it is derived from, and check that the nested-vector convenience overload
+  // (and, with it, GroupedArrayToNestedVectors) matches the flat/offsets output exactly.
+  void TestCollectRegularVerticesPerSuperarc() const
+  {
+    namespace cta = viskores::worklet::contourtree_augmented;
+
+    std::cout << "Testing ContourTree_Augmented CollectRegularVerticesPerSuperarc" << std::endl;
+
+    viskores::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
+    viskores::filter::scalar_topology::ContourTreeAugmented filter;
+    filter.SetAugmentTree(true);
+    filter.SetActiveField("pointvar");
+    viskores::cont::DataSet result = filter.Execute(dataSet);
+
+    cta::IdArrayType supernodes, superparents;
+    result.GetField(cta::FieldNameSupernodes).GetData().AsArrayHandle(supernodes);
+    result.GetField(cta::FieldNameSuperparents).GetData().AsArrayHandle(superparents);
+    auto supernodePortal = supernodes.ReadPortal();
+    auto superparentPortal = superparents.ReadPortal();
+    viskores::Id numSupernodes = supernodes.GetNumberOfValues();
+    viskores::Id numMeshVertices = superparents.GetNumberOfValues();
+
+    std::set<viskores::Id> supernodeVertices;
+    for (viskores::Id s = 0; s < numSupernodes; ++s)
+      supernodeVertices.insert(supernodePortal.Get(s));
+
+    cta::IdArrayType arcVertsFlat, arcVertsOffsets;
+    cta::ProcessContourTree::CollectRegularVerticesPerSuperarc(
+      result, arcVertsFlat, arcVertsOffsets);
+    auto flatPortal = arcVertsFlat.ReadPortal();
+    auto offsetsPortal = arcVertsOffsets.ReadPortal();
+
+    VISKORES_TEST_ASSERT(arcVertsOffsets.GetNumberOfValues() == numSupernodes + 1,
+                         "arcVertsOffsets must have one entry per superarc plus a final total");
+    VISKORES_TEST_ASSERT(offsetsPortal.Get(0) == 0, "arcVertsOffsets must start at 0");
+    VISKORES_TEST_ASSERT(offsetsPortal.Get(numSupernodes) == arcVertsFlat.GetNumberOfValues(),
+                         "the last offset must equal the total number of grouped vertices");
+    VISKORES_TEST_ASSERT(arcVertsFlat.GetNumberOfValues() == numMeshVertices - numSupernodes,
+                         "every non-supernode mesh vertex must appear exactly once");
+
+    std::set<viskores::Id> seenVertices;
+    for (viskores::Id i = 0; i < numSupernodes; ++i)
+    {
+      viskores::Id begin = offsetsPortal.Get(i);
+      viskores::Id end = offsetsPortal.Get(i + 1);
+      VISKORES_TEST_ASSERT(end >= begin, "arcVertsOffsets must be non-decreasing");
+
+      viskores::Id previousVertex = -1;
+      for (viskores::Id k = begin; k < end; ++k)
+      {
+        viskores::Id vertex = flatPortal.Get(k);
+        VISKORES_TEST_ASSERT(supernodeVertices.find(vertex) == supernodeVertices.end(),
+                             "a supernode's own mesh vertex must not appear as a regular vertex");
+        VISKORES_TEST_ASSERT(cta::MaskedIndex(superparentPortal.Get(vertex)) == i,
+                             "a regular vertex must be grouped under its own owning superarc");
+        VISKORES_TEST_ASSERT(vertex > previousVertex,
+                             "regular vertices within a superarc must be in ascending order");
+        previousVertex = vertex;
+        VISKORES_TEST_ASSERT(seenVertices.insert(vertex).second,
+                             "each regular mesh vertex must appear in exactly one superarc group");
+      }
+    }
+    VISKORES_TEST_ASSERT(static_cast<viskores::Id>(seenVertices.size()) ==
+                           numMeshVertices - numSupernodes,
+                         "all non-supernode mesh vertices must have been grouped");
+
+    // The nested-vector convenience overload must reproduce the flat/offsets grouping exactly.
+    std::vector<std::vector<viskores::Id>> arcVerts =
+      cta::ProcessContourTree::CollectRegularVerticesPerSuperarc(result);
+    VISKORES_TEST_ASSERT(arcVerts.size() == static_cast<size_t>(numSupernodes),
+                         "the nested-vector overload must return one group per superarc");
+    for (viskores::Id i = 0; i < numSupernodes; ++i)
+    {
+      viskores::Id begin = offsetsPortal.Get(i);
+      viskores::Id end = offsetsPortal.Get(i + 1);
+      const std::vector<viskores::Id>& group = arcVerts[static_cast<size_t>(i)];
+      VISKORES_TEST_ASSERT(group.size() == static_cast<size_t>(end - begin),
+                           "nested-vector group size must match the flat/offsets range");
+      for (viskores::Id k = begin; k < end; ++k)
+      {
+        VISKORES_TEST_ASSERT(group[static_cast<size_t>(k - begin)] == flatPortal.Get(k),
+                             "nested-vector group contents must match the flat array");
+      }
+    }
+  }
+
+  // The SortOrder field must only be exported when requested via SetIncludeSortOrder(true),
+  // and must then be the permutation that lists the mesh vertices in (value, mesh index)
+  // lexicographic order, i.e., the simulated-simplicity order the tree was computed with.
+  void TestIncludeSortOrder() const
+  {
+    namespace cta = viskores::worklet::contourtree_augmented;
+
+    std::cout << "Testing ContourTree_Augmented SortOrder export" << std::endl;
+
+    viskores::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
+
+    // By default the SortOrder field is not part of the output.
+    viskores::filter::scalar_topology::ContourTreeAugmented filterDefault;
+    filterDefault.SetActiveField("pointvar");
+    viskores::cont::DataSet resultDefault = filterDefault.Execute(dataSet);
+    VISKORES_TEST_ASSERT(!resultDefault.HasField(cta::FieldNameSortOrder),
+                         "SortOrder field must not be exported by default");
+
+    viskores::filter::scalar_topology::ContourTreeAugmented filter;
+    filter.SetIncludeSortOrder(true);
+    filter.SetActiveField("pointvar");
+    viskores::cont::DataSet result = filter.Execute(dataSet);
+    VISKORES_TEST_ASSERT(result.HasField(cta::FieldNameSortOrder),
+                         "SortOrder field missing despite SetIncludeSortOrder(true)");
+
+    cta::IdArrayType sortOrder;
+    result.GetField(cta::FieldNameSortOrder).GetData().AsArrayHandle(sortOrder);
+    viskores::cont::ArrayHandle<viskores::Float32> fieldArray;
+    result.GetField("pointvar").GetData().AsArrayHandle(fieldArray);
+    viskores::Id numVertices = fieldArray.GetNumberOfValues();
+    VISKORES_TEST_ASSERT(sortOrder.GetNumberOfValues() == numVertices,
+                         "SortOrder must have one entry per mesh vertex");
+
+    auto sortOrderPortal = sortOrder.ReadPortal();
+    auto fieldPortal = fieldArray.ReadPortal();
+    std::set<viskores::Id> seenVertices;
+    for (viskores::Id i = 0; i < numVertices; ++i)
+    {
+      viskores::Id vertex = sortOrderPortal.Get(i);
+      VISKORES_TEST_ASSERT(vertex >= 0 && vertex < numVertices,
+                           "SortOrder entries must be valid mesh vertex IDs");
+      VISKORES_TEST_ASSERT(seenVertices.insert(vertex).second,
+                           "SortOrder must be a permutation of the mesh vertices");
+      if (i > 0)
+      {
+        viskores::Id previousVertex = sortOrderPortal.Get(i - 1);
+        viskores::Float32 previousValue = fieldPortal.Get(previousVertex);
+        viskores::Float32 value = fieldPortal.Get(vertex);
+        bool inSortedOrder =
+          previousValue < value || (!(value < previousValue) && previousVertex < vertex);
+        VISKORES_TEST_ASSERT(inSortedOrder, "SortOrder must be sorted by (value, mesh index)");
+      }
+    }
+  }
+
   void TestAnalysis() const
   {
     std::cout << "Testing ContourTree_Augmented With Analysis" << std::endl;
@@ -718,64 +626,31 @@ public:
     viskores::cont::DataSet ds = MakeTestDataSet().Make3DUniformDataSet1();
 
     std::string fieldName = "pointvar";
-    bool useMarchingCubes = false;
-    bool computeRegularStructure = true;
-    viskores::filter::scalar_topology::ContourTreeAugmented filter(useMarchingCubes,
-                                                                   computeRegularStructure);
+    std::vector<ValueType> isoValues;
+
+    // Compute the contour tree with branch decomposition; results are read from the
+    // output DataSet.
+    viskores::filter::scalar_topology::ContourTreeAugmented filter;
+    filter.SetUseMarchingCubes(false);
+    filter.SetAugmentTree(true);
+    filter.SetComputeBranchDecomposition(true);
     filter.SetActiveField(fieldName);
-
-#ifdef VISKORES_ENABLE_MPI
-    viskores::cont::PartitionedDataSet pds;
-    int mpiRank = 0;
-    int mpiSize = 1;
-
-    MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
-    MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
-    GetPartitionedDataSet(ds, fieldName, mpiSize, mpiRank, mpiSize, pds);
-    ShiftLogicalOriginToZero(pds);
-    ComputeGlobalPointSize(pds);
-    auto result = filter.Execute(pds);
-#else
-    filter.Execute(ds);
-#endif
+    viskores::cont::DataSet result = filter.Execute(ds);
 
     // Compute the saddle peaks to make sure the contour tree is correct
     viskores::worklet::contourtree_augmented::EdgePairArray saddlePeak;
     viskores::worklet::contourtree_augmented::ProcessContourTree::CollectSortedSuperarcs(
-      filter.GetContourTree(), filter.GetSortOrder(), saddlePeak);
+      result, saddlePeak);
 
     // Print the contour tree we computed
     std::cout << "Computed Contour Tree" << std::endl;
     viskores::worklet::contourtree_augmented::PrintEdgePairArrayColumnLayout(saddlePeak);
 
     // Do Analysis.
-    bool dataFieldIsSorted = false;
-    std::vector<ValueType> isoValues;
+    analysis<ValueType>(result, fieldName, 3, isoValues);
 
-#ifdef VISKORES_ENABLE_MPI
-    if (mpiRank != 0)
-      return;
-
-    if (mpiSize == 1)
-    {
-      analysis<ValueType>(filter,
-                          dataFieldIsSorted,
-                          pds.GetPartitions()[0].GetField(fieldName).GetData(),
-                          3,
-                          isoValues);
-    }
-    else
-    {
-      dataFieldIsSorted = true;
-      analysis<ValueType>(
-        filter, dataFieldIsSorted, result.GetPartitions()[0].GetField(0).GetData(), 3, isoValues);
-    }
-#else
-    analysis<ValueType>(filter, dataFieldIsSorted, ds.GetField(fieldName).GetData(), 3, isoValues);
-#endif
-
+    // Print the computed iso values
     std::ostringstream os;
-
     os << "[" << isoValues[0] << "," << isoValues[1] << "," << isoValues[2] << "]";
     std::cout << "COMPUTED_ISOVALUES:" << os.str() << std::endl;
     std::cout << "EXPECTED ISOVALUES:"
@@ -786,46 +661,42 @@ public:
   void operator()() const
   {
     // Test 2D Freudenthal with augmentation
-    this->TestContourTree_Mesh2D_Freudenthal_SquareExtents(1);
+    this->TestContourTree_Mesh2D_Freudenthal_SquareExtents(true);
     // Make sure the contour tree does not change when we disable augmentation
-    this->TestContourTree_Mesh2D_Freudenthal_SquareExtents(0);
-    // Make sure the contour tree does not change when we use boundary augmentation
-    this->TestContourTree_Mesh2D_Freudenthal_SquareExtents(2);
+    this->TestContourTree_Mesh2D_Freudenthal_SquareExtents(false);
 
     // Test 2D Freudenthal with augmentation
-    this->TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(1);
+    this->TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(true);
     // Make sure the contour tree does not change when we disable augmentation
-    this->TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(0);
-    // Make sure the contour tree does not change when we use boundary augmentation
-    this->TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(2);
+    this->TestContourTree_Mesh2D_Freudenthal_NonSquareExtents(false);
 
     // Test 3D Freudenthal with augmentation
-    this->TestContourTree_Mesh3D_Freudenthal_CubicExtents(1);
+    this->TestContourTree_Mesh3D_Freudenthal_CubicExtents(true);
     // Make sure the contour tree does not change when we disable augmentation
-    this->TestContourTree_Mesh3D_Freudenthal_CubicExtents(0);
-    // Make sure the contour tree does not change when we use boundary augmentation
-    this->TestContourTree_Mesh3D_Freudenthal_CubicExtents(2);
+    this->TestContourTree_Mesh3D_Freudenthal_CubicExtents(false);
 
     // Test 3D Freudenthal with augmentation
-    this->TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(1);
+    this->TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(true);
     // Make sure the contour tree does not change when we disable augmentation
-    this->TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(0);
-    // Make sure the contour tree does not change when we use boundary augmentation
-    this->TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(2);
+    this->TestContourTree_Mesh3D_Freudenthal_NonCubicExtents(false);
 
     // Test 3D marching cubes with augmentation
-    this->TestContourTree_Mesh3D_MarchingCubes_CubicExtents(1);
+    this->TestContourTree_Mesh3D_MarchingCubes_CubicExtents(true);
     // Make sure the contour tree does not change when we disable augmentation
-    this->TestContourTree_Mesh3D_MarchingCubes_CubicExtents(0);
-    // Make sure the contour tree does not change when we use boundary augmentation
-    this->TestContourTree_Mesh3D_MarchingCubes_CubicExtents(2);
+    this->TestContourTree_Mesh3D_MarchingCubes_CubicExtents(false);
 
     // Test 3D marching cubes with augmentation
-    this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(1);
+    this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(true);
     // Make sure the contour tree does not change when we disable augmentation
-    this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(0);
-    // Make sure the contour tree does not change when we use boundary augmentation
-    this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(2);
+    this->TestContourTree_Mesh3D_MarchingCubes_NonCubicExtents(false);
+
+    // Branch decomposition must force full augmentation regardless of setter order.
+    this->TestBranchDecompositionEnforcesAugmentation();
+
+    this->TestCollectRegularVerticesPerSuperarc();
+
+    // Make sure the SortOrder field is only exported on request and is correct
+    this->TestIncludeSortOrder();
 
     // Test Analysis
     this->TestAnalysis();

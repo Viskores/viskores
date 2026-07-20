@@ -77,10 +77,16 @@
 #include <viskores/cont/Algorithm.h>
 #include <viskores/cont/ArrayCopy.h>
 #include <viskores/cont/ArrayHandleConstant.h>
+#include <viskores/cont/ArrayHandleIndex.h>
+#include <viskores/cont/ArrayHandlePermutation.h>
+#include <viskores/cont/ArrayHandleTransform.h>
 #include <viskores/cont/ArrayHandleView.h>
+#include <viskores/cont/ArrayHandleZip.h>
+#include <viskores/cont/DataSet.h>
 #include <viskores/cont/Timer.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ArrayTransforms.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ContourTree.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ContourTreeAugmentedFieldNames.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/processcontourtree/Branch.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/processcontourtree/SuperArcVolumetricComparator.h>
@@ -89,6 +95,7 @@
 #include <viskores/cont/Invoker.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/processcontourtree/HypersweepWorklets.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/processcontourtree/PointerDoubling.h>
+#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/processcontourtree/SuperarcToEdgeWorklet.h>
 
 //#define DEBUG_PRINT
 
@@ -214,6 +221,117 @@ public:
     // now sort it
     viskores::cont::Algorithm::Sort(saddlePeak, SaddlePeakSort());
   } // CollectSortedSuperarcs()
+
+  // DataSet overload: works with output DataSet from ContourTreeAugmented.
+  // "Supernodes" entries are mesh vertex IDs directly (no sort order needed).
+  // Device-parallel: one edge is computed per supernode by the SuperarcToEdge worklet, the
+  // non-edges (root and the duplicated top/bottom arc) are removed by stream compaction, and
+  // the result is sorted.
+  static void CollectSortedSuperarcs(const viskores::cont::DataSet& result,
+                                     EdgePairArray& saddlePeak)
+  { // CollectSortedSuperarcs(DataSet)
+    IdArrayType supernodes, superarcs;
+    result.GetField(FieldNameSupernodes).GetData().AsArrayHandle(supernodes);
+    result.GetField(FieldNameSuperarcs).GetData().AsArrayHandle(superarcs);
+
+    viskores::Id numSupernodes = supernodes.GetNumberOfValues();
+
+    EdgePairArray candidateEdges;
+    viskores::cont::ArrayHandle<viskores::IdComponent> keepFlags;
+    viskores::cont::Invoker invoke;
+    invoke(process_contourtree_inc_ns::SuperarcToEdge{},
+           viskores::cont::ArrayHandleIndex(numSupernodes),
+           supernodes,
+           superarcs,
+           candidateEdges,
+           keepFlags);
+
+    viskores::cont::Algorithm::CopyIf(candidateEdges, keepFlags, saddlePeak);
+    viskores::cont::Algorithm::Sort(saddlePeak, SaddlePeakSort());
+  } // CollectSortedSuperarcs(DataSet)
+
+  // Collect the regular (non-supernode) mesh vertices that lie on each superarc.
+  // Returns the result as a grouped array: arcVertsFlat holds the mesh vertex IDs of all
+  // regular vertices, grouped by owning superarc, and arcVertsOffsets (length numSupernodes + 1)
+  // gives the half-open range [arcVertsOffsets[i], arcVertsOffsets[i + 1]) of arcVertsFlat that
+  // belongs to superarc i. Uses "Supernodes" and "Superparents" fields from the
+  // ContourTreeAugmented output DataSet.
+  // Device-parallel: supernodes are masked out with a scatter, the remaining regular vertices are
+  // stream-compacted, grouped by owning superarc, and the per-superarc offsets are found with a
+  // binary search. Within each superarc the vertices are in ascending mesh-vertex order.
+  static void CollectRegularVerticesPerSuperarc(const viskores::cont::DataSet& result,
+                                                IdArrayType& arcVertsFlat,
+                                                IdArrayType& arcVertsOffsets)
+  { // CollectRegularVerticesPerSuperarc
+    IdArrayType supernodes, superparents;
+    result.GetField(FieldNameSupernodes).GetData().AsArrayHandle(supernodes);
+    result.GetField(FieldNameSuperparents).GetData().AsArrayHandle(superparents);
+
+    viskores::Id ns = supernodes.GetNumberOfValues();
+    viskores::Id nv = superparents.GetNumberOfValues(); // = total mesh vertices
+
+    // isRegular[v] == 1 for every mesh vertex, then scatter a 0 onto each supernode's mesh vertex.
+    IdArrayType isRegular;
+    isRegular.AllocateAndFill(nv, 1);
+    auto supernodeMask = viskores::cont::make_ArrayHandlePermutation(supernodes, isRegular);
+    viskores::cont::Algorithm::Copy(viskores::cont::ArrayHandleConstant<viskores::Id>(0, ns),
+                                    supernodeMask);
+
+    // Owning superarc per mesh vertex (strip the flag bits), keeping only the regular vertices.
+    auto owningSuperarc = viskores::cont::make_ArrayHandleTransform(
+      superparents, viskores::worklet::contourtree_augmented::MaskedIndexFunctor<viskores::Id>());
+    IdArrayType keys;
+    viskores::cont::Algorithm::CopyIf(owningSuperarc, isRegular, keys);
+    viskores::cont::Algorithm::CopyIf(
+      viskores::cont::ArrayHandleIndex(nv), isRegular, arcVertsFlat);
+
+    // Group the regular vertices by owning superarc. Sorting the (superarc, vertex) pairs jointly
+    // on a total order (rather than a plain sort-by-key) puts the vertices of each superarc in
+    // ascending mesh-vertex order without relying on the sort being stable, matching the original
+    // serial traversal.
+    auto keyValuePairs = viskores::cont::make_ArrayHandleZip(keys, arcVertsFlat);
+    viskores::cont::Algorithm::Sort(keyValuePairs, SaddlePeakSort());
+
+    // For each superarc i, arcVertsOffsets[i] is the first position in the sorted keys whose
+    // owning superarc is >= i, i.e. the start of superarc i's group (equal to the next start when
+    // the superarc has no regular vertices). The final entry is the total count.
+    viskores::cont::Algorithm::LowerBounds(
+      keys, viskores::cont::ArrayHandleIndex(ns + 1), arcVertsOffsets);
+  } // CollectRegularVerticesPerSuperarc
+
+  // Convert a grouped array (flat values + offsets, as returned by the overload above) into a
+  // vector-of-vectors, group[i] holding the values in [offsets[i], offsets[i + 1]). This reads the
+  // arrays back to the host; it is a convenience for host-side consumers that want nested vectors.
+  static std::vector<std::vector<viskores::Id>> GroupedArrayToNestedVectors(
+    const IdArrayType& flat,
+    const IdArrayType& offsets)
+  { // GroupedArrayToNestedVectors
+    viskores::Id numGroups = offsets.GetNumberOfValues() - 1;
+    std::vector<std::vector<viskores::Id>> groups(static_cast<size_t>(numGroups));
+    auto flatPortal = flat.ReadPortal();
+    auto offsetsPortal = offsets.ReadPortal();
+    for (viskores::Id g = 0; g < numGroups; ++g)
+    {
+      viskores::Id begin = offsetsPortal.Get(g);
+      viskores::Id end = offsetsPortal.Get(g + 1);
+      std::vector<viskores::Id>& group = groups[static_cast<size_t>(g)];
+      group.reserve(static_cast<size_t>(end - begin));
+      for (viskores::Id k = begin; k < end; ++k)
+        group.push_back(flatPortal.Get(k));
+    }
+    return groups;
+  } // GroupedArrayToNestedVectors
+
+  // Convenience overload of CollectRegularVerticesPerSuperarc returning a vector-of-vectors,
+  // arcVerts[i] holding the mesh vertex IDs of the regular vertices on superarc i. The grouping is
+  // computed on-device by the overload above; only the final materialization is on the host.
+  static std::vector<std::vector<viskores::Id>> CollectRegularVerticesPerSuperarc(
+    const viskores::cont::DataSet& result)
+  { // CollectRegularVerticesPerSuperarc (nested-vector convenience)
+    IdArrayType arcVertsFlat, arcVertsOffsets;
+    CollectRegularVerticesPerSuperarc(result, arcVertsFlat, arcVertsOffsets);
+    return GroupedArrayToNestedVectors(arcVertsFlat, arcVertsOffsets);
+  } // CollectRegularVerticesPerSuperarc (nested-vector convenience)
 
   // routine to compute the volume for each hyperarc and superarc
   void static ComputeVolumeWeightsSerial(const ContourTree& contourTree,
@@ -749,6 +867,133 @@ public:
       sortOrder,
       dataField,
       dataFieldIsSorted);
+  }
+
+  // Create branch decomposition from arrays in mesh vertex space (the default for the
+  // ContourTreeAugmented output DataSet fields): Supernodes contains mesh vertex IDs,
+  // Superparents is mesh-indexed, and no sortOrder is needed. The sortOrder-taking
+  // overload above exists only for the deprecated multi-block path.
+  template <typename T, typename StorageType>
+  static process_contourtree_inc_ns::Branch<T>* ComputeBranchDecomposition(
+    const IdArrayType& contourTreeSuperparents,
+    const IdArrayType& contourTreeSupernodes,
+    const IdArrayType& whichBranch,
+    const IdArrayType& branchMinimum,
+    const IdArrayType& branchMaximum,
+    const IdArrayType& branchSaddle,
+    const IdArrayType& branchParent,
+    const viskores::cont::ArrayHandle<T, StorageType>& dataField)
+  {
+    return process_contourtree_inc_ns::Branch<T>::ComputeBranchDecomposition(
+      contourTreeSuperparents,
+      contourTreeSupernodes,
+      whichBranch,
+      branchMinimum,
+      branchMaximum,
+      branchSaddle,
+      branchParent,
+      dataField);
+  }
+
+  // DataSet overload of ComputeBranchDecomposition.
+  // Uses "Supernodes", "Superparents", "WhichBranch", "BranchMinimum", "BranchMaximum",
+  // "BranchSaddle", "BranchParent" fields from the ContourTreeAugmented output DataSet.
+  // dataFieldName is the scalar field name (the active field passed to the filter).
+  template <typename T>
+  static process_contourtree_inc_ns::Branch<T>* ComputeBranchDecomposition(
+    const viskores::cont::DataSet& result,
+    const std::string& dataFieldName)
+  {
+    IdArrayType supernodes, superparents, whichBranch;
+    IdArrayType branchMinimum, branchMaximum, branchSaddle, branchParent;
+    result.GetField(FieldNameSupernodes).GetData().AsArrayHandle(supernodes);
+    result.GetField(FieldNameSuperparents).GetData().AsArrayHandle(superparents);
+    result.GetField(FieldNameWhichBranch).GetData().AsArrayHandle(whichBranch);
+    result.GetField(FieldNameBranchMinimum).GetData().AsArrayHandle(branchMinimum);
+    result.GetField(FieldNameBranchMaximum).GetData().AsArrayHandle(branchMaximum);
+    result.GetField(FieldNameBranchSaddle).GetData().AsArrayHandle(branchSaddle);
+    result.GetField(FieldNameBranchParent).GetData().AsArrayHandle(branchParent);
+    viskores::cont::ArrayHandle<T> dataField;
+    result.GetField(dataFieldName).GetData().AsArrayHandle(dataField);
+    return process_contourtree_inc_ns::Branch<T>::ComputeBranchDecomposition(superparents,
+                                                                             supernodes,
+                                                                             whichBranch,
+                                                                             branchMinimum,
+                                                                             branchMaximum,
+                                                                             branchSaddle,
+                                                                             branchParent,
+                                                                             dataField);
+  }
+
+  // Convenience method: build Branch tree from mesh-space DataSet fields, simplify to
+  // numBranches top-volume branches, and return the extracted isovalues.
+  // All array inputs must be in mesh vertex space (as produced by ContourTreeAugmented):
+  //   contourTreeSuperparents - indexed by mesh vertex
+  //   contourTreeSupernodes   - entries are mesh vertex IDs
+  //   dataField               - indexed by mesh vertex
+  // contourType: 0=saddle, 1=extremum, 2=both
+  template <typename T, typename StorageType>
+  static std::vector<T> SelectTopVolumeBranches(
+    const IdArrayType& contourTreeSuperparents,
+    const IdArrayType& contourTreeSupernodes,
+    const IdArrayType& whichBranch,
+    const IdArrayType& branchMinimum,
+    const IdArrayType& branchMaximum,
+    const IdArrayType& branchSaddle,
+    const IdArrayType& branchParent,
+    const viskores::cont::ArrayHandle<T, StorageType>& dataField,
+    viskores::Id numBranches,
+    int contourType,
+    T epsilon,
+    bool usePersistenceSorter = true)
+  {
+    process_contourtree_inc_ns::Branch<T>* root =
+      ComputeBranchDecomposition<T>(contourTreeSuperparents,
+                                    contourTreeSupernodes,
+                                    whichBranch,
+                                    branchMinimum,
+                                    branchMaximum,
+                                    branchSaddle,
+                                    branchParent,
+                                    dataField);
+
+    if (!root)
+      return {};
+
+    root->SimplifyToSize(numBranches, usePersistenceSorter);
+
+    std::vector<T> isoValues;
+    root->GetRelevantValues(contourType, epsilon, isoValues);
+
+    delete root;
+    return isoValues;
+  }
+
+  // DataSet overload of SelectTopVolumeBranches.
+  // Uses branch decomposition fields from the ContourTreeAugmented output DataSet.
+  // Requires SetComputeBranchDecomposition(true) before Execute().
+  // dataFieldName is the scalar field name (the active field passed to the filter).
+  template <typename T>
+  static std::vector<T> SelectTopVolumeBranches(const viskores::cont::DataSet& result,
+                                                const std::string& dataFieldName,
+                                                viskores::Id numBranches,
+                                                int contourType,
+                                                T epsilon,
+                                                bool usePersistenceSorter = true)
+  {
+    process_contourtree_inc_ns::Branch<T>* root =
+      ComputeBranchDecomposition<T>(result, dataFieldName);
+
+    if (!root)
+      return {};
+
+    root->SimplifyToSize(numBranches, usePersistenceSorter);
+
+    std::vector<T> isoValues;
+    root->GetRelevantValues(contourType, epsilon, isoValues);
+
+    delete root;
+    return isoValues;
   }
 
   // routine to compute the branch decomposition by volume

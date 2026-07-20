@@ -58,57 +58,31 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef viskores_filter_scalar_topology_internal_ExtractTopVolumeContoursBlock_h
-#define viskores_filter_scalar_topology_internal_ExtractTopVolumeContoursBlock_h
+// Field names written to the ContourTreeAugmented output DataSet. These names are a public
+// contract shared by the filter, the ProcessContourTree DataSet helpers, and consumers.
 
-#include <viskores/cont/DataSet.h>
-#include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
-#include <viskores/filter/scalar_topology/worklet/select_top_volume_branches/TopVolumeBranchData.h>
+#ifndef viskores_worklet_contourtree_augmented_ContourTreeAugmentedFieldNames_h
+#define viskores_worklet_contourtree_augmented_ContourTreeAugmentedFieldNames_h
 
 namespace viskores
 {
-namespace filter
+namespace worklet
 {
-namespace scalar_topology
-{
-namespace internal
+namespace contourtree_augmented
 {
 
-struct ExtractTopVolumeContoursBlock
-{
-  ExtractTopVolumeContoursBlock(viskores::Id localBlockNo, int globalBlockId);
+static constexpr const char* FieldNameSupernodes = "Supernodes";
+static constexpr const char* FieldNameSortOrder = "SortOrder";
+static constexpr const char* FieldNameSuperarcs = "Superarcs";
+static constexpr const char* FieldNameSuperparents = "Superparents";
+static constexpr const char* FieldNameWhichBranch = "WhichBranch";
+static constexpr const char* FieldNameBranchMinimum = "BranchMinimum";
+static constexpr const char* FieldNameBranchMaximum = "BranchMaximum";
+static constexpr const char* FieldNameBranchSaddle = "BranchSaddle";
+static constexpr const char* FieldNameBranchParent = "BranchParent";
 
-  // Block metadata
-  viskores::Id LocalBlockNo;
-  int GlobalBlockId;
-
-  // The data class for branch arrays (e.g., branch root global regular IDs, branch volume, etc.)
-  // we reuse the class TopVolumeBranchData that was used in SelectTopVolumeBranchesDistributedFilter,
-  // because we need more than half of the arrays in this class for contour extraction
-  TopVolumeBranchData TopVolumeData;
-
-  // Isosurface output
-  viskores::cont::ArrayHandle<viskores::Vec3f_64> IsosurfaceEdgesFrom;
-  viskores::cont::ArrayHandle<viskores::Vec3f_64> IsosurfaceEdgesTo;
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesOffset;
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesLabels;
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesOrders;
-  viskores::cont::UnknownArrayHandle IsosurfaceIsoValue;
-  // this is a tricky one - it is a part of the isovalue but solely used for simulation of simplicity
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceGRIds;
-
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b) { delete static_cast<ExtractTopVolumeContoursBlock*>(b); }
-
-  // extract isosurfaces on top branches by volume
-  void ExtractIsosurfaceOnSelectedBranch(const viskores::cont::DataSet& bdDataSet,
-                                         const bool isMarchingCubes,
-                                         const bool shiftIsovalueByEpsilon,
-                                         const viskores::cont::LogLevel timingsLogLevel);
-};
-
-} // namespace internal
-} // namespace scalar_topology
-} // namespace filter
+} // namespace contourtree_augmented
+} // namespace worklet
 } // namespace viskores
-#endif
+
+#endif // viskores_worklet_contourtree_augmented_ContourTreeAugmentedFieldNames_h

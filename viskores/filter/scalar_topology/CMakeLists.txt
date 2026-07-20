@@ -20,6 +20,7 @@ set(scalar_topology_headers
   ContourTreeUniformAugmented.h
   ContourTreeUniformDistributed.h
   DistributedBranchDecompositionFilter.h
+  SelectTopVolumeBranchesDistributedFilter.h
   SelectTopVolumeBranchesFilter.h
   ExtractTopVolumeContoursFilter.h
   )
@@ -37,7 +38,7 @@ set(scalar_topology_sources
   ContourTreeUniformAugmented.cxx
   ContourTreeUniformDistributed.cxx
   DistributedBranchDecompositionFilter.cxx
-  SelectTopVolumeBranchesFilter.cxx
+  SelectTopVolumeBranchesDistributedFilter.cxx
   ExtractTopVolumeContoursFilter.cxx
   )
 

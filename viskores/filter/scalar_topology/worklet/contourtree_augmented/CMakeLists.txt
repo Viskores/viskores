@@ -20,6 +20,7 @@ set(headers
   ArrayTransforms.h
   ActiveGraph.h
   ContourTree.h
+  ContourTreeAugmentedFieldNames.h
   ContourTreeMaker.h
   DataSetMesh.h
   MergeTree.h

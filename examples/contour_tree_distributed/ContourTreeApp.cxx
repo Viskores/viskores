@@ -83,7 +83,7 @@
 #include <viskores/filter/scalar_topology/ContourTreeUniformDistributed.h>
 #include <viskores/filter/scalar_topology/DistributedBranchDecompositionFilter.h>
 #include <viskores/filter/scalar_topology/ExtractTopVolumeContoursFilter.h>
-#include <viskores/filter/scalar_topology/SelectTopVolumeBranchesFilter.h>
+#include <viskores/filter/scalar_topology/SelectTopVolumeBranchesDistributedFilter.h>
 #include <viskores/filter/scalar_topology/worklet/branch_decomposition/HierarchicalVolumetricBranchDecomposer.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/PrintVectors.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/ProcessContourTree.h>
@@ -765,7 +765,7 @@ int main(int argc, char* argv[])
   bool isTopVolumeBranchValid = true;
   if (numBranches > 0)
   {
-    viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter tp_filter;
+    viskores::filter::scalar_topology::SelectTopVolumeBranchesDistributedFilter tp_filter;
     tp_filter.SetSavedBranches(numBranches);
     tp_filter.SetPresimplifyThreshold(presimplifyThreshold);
     tp_result = tp_filter.Execute(bd_result);
@@ -782,7 +782,7 @@ int main(int argc, char* argv[])
       VISKORES_LOG_S(
         viskores::cont::LogLevel::Warn,
         std::endl
-          << "Warning: SelectTopVolumeBranchesFilter did not return any valid branches!"
+          << "Warning: SelectTopVolumeBranchesDistributedFilter did not return any valid branches!"
           << std::endl
           << "Skipping isosurface extraction." << std::endl);
     }

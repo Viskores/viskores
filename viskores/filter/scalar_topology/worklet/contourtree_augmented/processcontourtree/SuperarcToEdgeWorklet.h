@@ -58,57 +58,87 @@
 //  Oliver Ruebel (LBNL)
 //==============================================================================
 
-#ifndef viskores_filter_scalar_topology_internal_ExtractTopVolumeContoursBlock_h
-#define viskores_filter_scalar_topology_internal_ExtractTopVolumeContoursBlock_h
+#ifndef viskores_worklet_contourtree_augmented_process_contourtree_inc_superarc_to_edge_worklet_h
+#define viskores_worklet_contourtree_augmented_process_contourtree_inc_superarc_to_edge_worklet_h
 
-#include <viskores/cont/DataSet.h>
+#include <viskores/Pair.h>
 #include <viskores/filter/scalar_topology/worklet/contourtree_augmented/Types.h>
-#include <viskores/filter/scalar_topology/worklet/select_top_volume_branches/TopVolumeBranchData.h>
+#include <viskores/worklet/WorkletMapField.h>
 
 namespace viskores
 {
-namespace filter
+namespace worklet
 {
-namespace scalar_topology
+namespace contourtree_augmented
 {
-namespace internal
+namespace process_contourtree_inc
 {
 
-struct ExtractTopVolumeContoursBlock
+// Emits the saddle-peak edge for a single superarc of a ContourTreeAugmented output DataSet,
+// where the Supernodes field already holds mesh vertex IDs (no sort order needed). For each
+// supernode it produces the oriented (low, high) endpoint pair and a keep flag; supernodes with
+// no outgoing superarc (the root) and the duplicated top/bottom edge are flagged with keep = 0 so
+// they can be removed with a subsequent stream compaction.
+class SuperarcToEdge : public viskores::worklet::WorkletMapField
 {
-  ExtractTopVolumeContoursBlock(viskores::Id localBlockNo, int globalBlockId);
+public:
+  using ControlSignature = void(FieldIn supernodeIndex,  // (input) supernode id (ArrayHandleIndex)
+                                WholeArrayIn supernodes, // (input) mesh vertex id per supernode
+                                WholeArrayIn superarcs,  // (input) masked target supernode per arc
+                                FieldOut edge,           // (output) oriented (low, high) mesh ids
+                                FieldOut keepFlag);      // (output) 1 if edge is real, else 0
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
+  using InputDomain = _1;
 
-  // Block metadata
-  viskores::Id LocalBlockNo;
-  int GlobalBlockId;
+  VISKORES_EXEC_CONT
+  SuperarcToEdge() {}
 
-  // The data class for branch arrays (e.g., branch root global regular IDs, branch volume, etc.)
-  // we reuse the class TopVolumeBranchData that was used in SelectTopVolumeBranchesDistributedFilter,
-  // because we need more than half of the arrays in this class for contour extraction
-  TopVolumeBranchData TopVolumeData;
+  template <typename SupernodesPortalType, typename SuperarcsPortalType>
+  VISKORES_EXEC void operator()(const viskores::Id& supernode,
+                                const SupernodesPortalType& supernodesPortal,
+                                const SuperarcsPortalType& superarcsPortal,
+                                viskores::Pair<viskores::Id, viskores::Id>& edge,
+                                viskores::IdComponent& keepFlag) const
+  {
+    viskores::Id regularID = supernodesPortal.Get(supernode);
+    viskores::Id superTo = superarcsPortal.Get(supernode);
 
-  // Isosurface output
-  viskores::cont::ArrayHandle<viskores::Vec3f_64> IsosurfaceEdgesFrom;
-  viskores::cont::ArrayHandle<viskores::Vec3f_64> IsosurfaceEdgesTo;
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesOffset;
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesLabels;
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceEdgesOrders;
-  viskores::cont::UnknownArrayHandle IsosurfaceIsoValue;
-  // this is a tricky one - it is a part of the isovalue but solely used for simulation of simplicity
-  viskores::worklet::contourtree_augmented::IdArrayType IsosurfaceGRIds;
+    // last pruned vertex has no superarc -> not an edge
+    if (NoSuchElement(superTo))
+    {
+      edge = viskores::Pair<viskores::Id, viskores::Id>(0, 0);
+      keepFlag = 0;
+      return;
+    }
 
-  // Destroy function allowing DIY to own blocks and clean them up after use
-  static void Destroy(void* b) { delete static_cast<ExtractTopVolumeContoursBlock*>(b); }
+    superTo = MaskedIndex(superTo);
+    viskores::Id regularTo = supernodesPortal.Get(superTo);
 
-  // extract isosurfaces on top branches by volume
-  void ExtractIsosurfaceOnSelectedBranch(const viskores::cont::DataSet& bdDataSet,
-                                         const bool isMarchingCubes,
-                                         const bool shiftIsovalueByEpsilon,
-                                         const viskores::cont::LogLevel timingsLogLevel);
+    if (regularID < regularTo)
+    { // from is lower
+      // extra test to catch the duplicate edge at the far end
+      if (superarcsPortal.Get(superTo) != supernode)
+      {
+        edge = viskores::Pair<viskores::Id, viskores::Id>(regularID, regularTo);
+        keepFlag = 1;
+      }
+      else
+      {
+        edge = viskores::Pair<viskores::Id, viskores::Id>(0, 0);
+        keepFlag = 0;
+      }
+    } // from is lower
+    else
+    {
+      edge = viskores::Pair<viskores::Id, viskores::Id>(regularTo, regularID);
+      keepFlag = 1;
+    }
+  }
 };
 
-} // namespace internal
-} // namespace scalar_topology
-} // namespace filter
+} // namespace process_contourtree_inc
+} // namespace contourtree_augmented
+} // namespace worklet
 } // namespace viskores
+
 #endif

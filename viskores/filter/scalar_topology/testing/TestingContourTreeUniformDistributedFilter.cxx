@@ -307,10 +307,10 @@ void TestContourTreeUniformDistributedBranchDecomposition8x9(int nBlocks, int ra
                                       augmentHierarchicalTree,
                                       computeHierarchicalVolumetricBranchDecomposition);
 
-  using viskores::filter::scalar_topology::SelectTopVolumeBranchesFilter;
+  using viskores::filter::scalar_topology::SelectTopVolumeBranchesDistributedFilter;
 
   viskores::Id numBranches = 2;
-  SelectTopVolumeBranchesFilter tp_filter;
+  SelectTopVolumeBranchesDistributedFilter tp_filter;
 
   tp_filter.SetSavedBranches(numBranches);
 
