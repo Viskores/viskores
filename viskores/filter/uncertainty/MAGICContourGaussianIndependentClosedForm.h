@@ -6,8 +6,8 @@
 //  Certificate of Origin Version 1.1 (DCO 1.1) as stated in DCO.txt.
 //============================================================================
 
-#ifndef viskores_filter_uncertainty_ContourUncertainGaussianIndependentMonteCarlo_h
-#define viskores_filter_uncertainty_ContourUncertainGaussianIndependentMonteCarlo_h
+#ifndef viskores_filter_uncertainty_MAGICContourGaussianIndependentClosedForm_h
+#define viskores_filter_uncertainty_MAGICContourGaussianIndependentClosedForm_h
 
 #include <viskores/filter/contour/AbstractContour.h>
 #include <viskores/filter/uncertainty/viskores_filter_uncertainty_export.h>
@@ -27,14 +27,14 @@ namespace uncertainty
 /// fields define the distribution at each point. The filter outputs expected
 /// isosurface vertex positions and a per-vertex crossing variance field.
 ///
-/// This variant computes edge-crossing uncertainty using Monte Carlo sampling.
-class VISKORES_FILTER_UNCERTAINTY_EXPORT ContourUncertainGaussianIndependentMonteCarlo
+/// This variant computes edge-crossing uncertainty using a closed-form
+/// derivation (Hinkley/Marsaglia ratio formulation).
+class VISKORES_FILTER_UNCERTAINTY_EXPORT MAGICContourGaussianIndependentClosedForm
   : public viskores::filter::contour::AbstractContour
 {
 private:
   std::string CrossingVarianceName = "variance_edge_crossing";
   std::string ExpectedCrossingName = "expected_edge_crossing";
-  viskores::Id NumberOfSamples = 4000;
 
 public:
   /// @brief Sets the mean field.
@@ -85,15 +85,6 @@ public:
     return this->ExpectedCrossingName;
   }
 
-  /// @brief Sets the number of Monte Carlo samples per edge.
-  VISKORES_CONT void SetNumberOfSamples(viskores::Id numSamples)
-  {
-    this->NumberOfSamples = numSamples;
-  }
-
-  /// @brief Gets the number of Monte Carlo samples per edge.
-  VISKORES_CONT viskores::Id GetNumberOfSamples() const { return this->NumberOfSamples; }
-
 protected:
   VISKORES_CONT viskores::cont::DataSet DoExecute(const viskores::cont::DataSet& input) override;
 };
@@ -102,4 +93,4 @@ protected:
 } // namespace filter
 } // namespace viskores
 
-#endif // viskores_filter_uncertainty_ContourUncertainGaussianIndependentMonteCarlo_h
+#endif // viskores_filter_uncertainty_MAGICContourGaussianIndependentClosedForm_h

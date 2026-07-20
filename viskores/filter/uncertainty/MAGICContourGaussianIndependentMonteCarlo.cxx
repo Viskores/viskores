@@ -12,7 +12,7 @@
 //  Isosurface Uncertainty Visualization for Gaussian Uncertain Data with
 //  Spatial Correlation.
 
-#include <viskores/filter/uncertainty/ContourUncertainGaussianIndependentMonteCarlo.h>
+#include <viskores/filter/uncertainty/MAGICContourGaussianIndependentMonteCarlo.h>
 
 #include <viskores/cont/ArrayHandleRandomStandardNormal.h>
 #include <viskores/filter/contour/Contour.h>
@@ -26,7 +26,7 @@ namespace filter
 namespace uncertainty
 {
 
-viskores::cont::DataSet ContourUncertainGaussianIndependentMonteCarlo::DoExecute(
+viskores::cont::DataSet MAGICContourGaussianIndependentMonteCarlo::DoExecute(
   const viskores::cont::DataSet& input)
 {
   // Extract the isosurface from the mean field, recording the crossed edges so

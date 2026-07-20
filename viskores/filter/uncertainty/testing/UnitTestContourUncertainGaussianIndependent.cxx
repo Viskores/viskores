@@ -10,8 +10,8 @@
 #include <viskores/cont/DataSet.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
 #include <viskores/cont/testing/Testing.h>
-#include <viskores/filter/uncertainty/ContourUncertainGaussianIndependentClosedForm.h>
-#include <viskores/filter/uncertainty/ContourUncertainGaussianIndependentMonteCarlo.h>
+#include <viskores/filter/uncertainty/MAGICContourGaussianIndependentClosedForm.h>
+#include <viskores/filter/uncertainty/MAGICContourGaussianIndependentMonteCarlo.h>
 
 namespace
 {
@@ -57,7 +57,7 @@ void TestContourUncertainGaussianIndependent()
 {
   viskores::cont::DataSet input = MakeGaussianIndependentTestDataSet<viskores::FloatDefault>();
 
-  viskores::filter::uncertainty::ContourUncertainGaussianIndependentClosedForm closedFormFilter;
+  viskores::filter::uncertainty::MAGICContourGaussianIndependentClosedForm closedFormFilter;
   closedFormFilter.SetMeanField("mean");
   closedFormFilter.SetVarianceField("variance");
   closedFormFilter.SetIsoValue(50.0);
@@ -101,7 +101,7 @@ void TestContourUncertainGaussianIndependent()
 
   // Monte Carlo path: same inputs, compare against the closed-form output
   // within a tolerance comparable to MC's standard error.
-  viskores::filter::uncertainty::ContourUncertainGaussianIndependentMonteCarlo monteCarloFilter;
+  viskores::filter::uncertainty::MAGICContourGaussianIndependentMonteCarlo monteCarloFilter;
   monteCarloFilter.SetMeanField("mean");
   monteCarloFilter.SetVarianceField("variance");
   monteCarloFilter.SetIsoValue(50.0);
