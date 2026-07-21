@@ -18,9 +18,14 @@
 #include <cmath>
 #include <complex>
 #include <cstdio>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <vector>
 #include <viskores/cont/ArrayHandleSOA.h>
 #include <viskores/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/ErrorBadValue.h>
+#include <viskores/io/ErrorIO.h>
 #include <viskores/io/VTKDataSetReader.h>
 #include <viskores/io/VTKDataSetWriter.h>
 
@@ -33,6 +38,31 @@ namespace
 
 #define WRITE_FILE(MakeTestDataMethod) \
   TestVTKWriteTestData(#MakeTestDataMethod, tds.MakeTestDataMethod())
+
+struct ScopedOutputFile
+{
+  explicit ScopedOutputFile(std::string fileName)
+    : FileName(fileName)
+  {
+  }
+
+  ~ScopedOutputFile() { std::remove(this->FileName.c_str()); }
+
+  const std::string& GetFileName() const { return this->FileName; }
+
+private:
+  std::string FileName;
+};
+
+std::string ReadFileContents(const std::string& fileName)
+{
+  std::ifstream input(fileName, std::ios::binary);
+  VISKORES_TEST_ASSERT(static_cast<bool>(input), "Failed to open generated file: " + fileName);
+
+  std::ostringstream buffer;
+  buffer << input.rdbuf();
+  return buffer.str();
+}
 
 struct CheckSameField
 {
@@ -283,7 +313,7 @@ void TestVTKCompoundWrite()
   std::remove("chirp.vtk");
 }
 
-void TestVTKOddVecSizes()
+viskores::cont::DataSet MakeOddVecSizeDataSet()
 {
   viskores::cont::DataSetBuilderUniform dsb;
   viskores::cont::DataSet dataSet = dsb.Create({ 2, 2, 2 });
@@ -298,7 +328,107 @@ void TestVTKOddVecSizes()
   SetPortal(vec13Array.WritePortal());
   dataSet.AddPointField("vec13", vec13Array);
 
-  TestVTKWriteTestData("OddVecSizes", dataSet);
+  return dataSet;
+}
+
+void TestVTKOddVecSizes()
+{
+  TestVTKWriteTestData("OddVecSizes", MakeOddVecSizeDataSet());
+}
+
+void TestVTKHighComponentFieldsUseFieldData()
+{
+  auto dataSet = MakeOddVecSizeDataSet();
+  ScopedOutputFile outputFile("OddVecSizes-field-data.vtk");
+
+  viskores::io::VTKDataSetWriter writer(outputFile.GetFileName());
+  writer.SetFileTypeToAscii();
+  writer.WriteDataSet(dataSet);
+
+  // Round-tripping through our reader is not enough here; inspect the raw file to ensure
+  // high-component arrays are no longer emitted as invalid SCALARS records.
+  const std::string contents = ReadFileContents(outputFile.GetFileName());
+  VISKORES_TEST_ASSERT(contents.find("POINT_DATA 8\n") != std::string::npos,
+                       "Missing POINT_DATA header for high-component point fields.");
+  VISKORES_TEST_ASSERT(contents.find("FIELD FieldData 2\n") != std::string::npos,
+                       "High-component point fields should be written as FIELD data.");
+  VISKORES_TEST_ASSERT(contents.find("vec5 5 8 ") != std::string::npos,
+                       "Missing FIELD entry for vec5.");
+  VISKORES_TEST_ASSERT(contents.find("vec13 13 8 ") != std::string::npos,
+                       "Missing FIELD entry for vec13.");
+  VISKORES_TEST_ASSERT(contents.find("SCALARS vec5") == std::string::npos,
+                       "vec5 should not be written as SCALARS.");
+  VISKORES_TEST_ASSERT(contents.find("SCALARS vec13") == std::string::npos,
+                       "vec13 should not be written as SCALARS.");
+
+  viskores::io::VTKDataSetReader reader(outputFile.GetFileName());
+  CheckWrittenReadData(dataSet, reader.ReadDataSet());
+}
+
+void TestVTKRejectsUnsupportedFieldType()
+{
+  viskores::cont::DataSetBuilderUniform dsb;
+  viskores::cont::DataSet dataSet = dsb.Create({ 2, 2, 2 });
+  // Use a trivially copyable type that Viskores can safely store on all enabled backends,
+  // but that the legacy VTK writer still does not recognize as a supported scalar base type.
+  std::vector<viskores::Pair<viskores::Int32, viskores::Int32>> unsupported(
+    static_cast<std::size_t>(dataSet.GetNumberOfPoints()), { 1, 2 });
+  dataSet.AddPointField("unsupported_pair", unsupported);
+
+  ScopedOutputFile outputFile("UnsupportedFieldType.vtk");
+  viskores::io::VTKDataSetWriter writer(outputFile.GetFileName());
+
+  try
+  {
+    writer.WriteDataSet(dataSet);
+    VISKORES_TEST_FAIL("Writer should reject unsupported point fields.");
+  }
+  catch (const viskores::cont::ErrorBadValue&)
+  {
+    // Expected.
+  }
+}
+
+void TestVTKRejectsMismatchedFieldSize()
+{
+  viskores::cont::DataSetBuilderUniform dsb;
+  viskores::cont::DataSet dataSet = dsb.Create({ 2, 2, 2 });
+  std::vector<viskores::FloatDefault> badField(
+    static_cast<std::size_t>(dataSet.GetNumberOfPoints() - 1), 0.0f);
+  dataSet.AddPointField("bad_field", badField);
+
+  ScopedOutputFile outputFile("MismatchedFieldSize.vtk");
+  viskores::io::VTKDataSetWriter writer(outputFile.GetFileName());
+
+  try
+  {
+    writer.WriteDataSet(dataSet);
+    VISKORES_TEST_FAIL("Writer should reject point fields with mismatched tuple counts.");
+  }
+  catch (const viskores::cont::ErrorBadValue&)
+  {
+    // Expected.
+  }
+}
+
+void TestVTKReportsOutputErrors()
+{
+  viskores::cont::DataSetBuilderUniform dsb;
+  viskores::cont::DataSet dataSet = dsb.Create({ 2, 2, 2 });
+
+  viskores::io::VTKDataSetWriter writer(
+    "vtk_writer_missing_dir_for_test/does_not_exist/UnitTestVTKDataSetWriter.vtk");
+
+  try
+  {
+    writer.WriteDataSet(dataSet);
+    VISKORES_TEST_FAIL(
+      "Writer should report filesystem errors when the output path cannot be opened.");
+  }
+  catch (const viskores::io::ErrorIO&)
+  {
+    // Expected.
+  }
 }
 
 void TestVTKWrite()
@@ -308,6 +438,10 @@ void TestVTKWrite()
   TestVTKRectilinearWrite();
   TestVTKCompoundWrite();
   TestVTKOddVecSizes();
+  TestVTKHighComponentFieldsUseFieldData();
+  TestVTKRejectsUnsupportedFieldType();
+  TestVTKRejectsMismatchedFieldSize();
+  TestVTKReportsOutputErrors();
 }
 
 } //Anonymous namespace
