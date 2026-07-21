@@ -9,15 +9,6 @@
 //
 // Created by ollie on 7/8/20.
 //
-//============================================================================
-//  Copyright (c) Kitware, Inc.
-//  All rights reserved.
-//  See LICENSE.txt for details.
-//
-//  This software is distributed WITHOUT ANY WARRANTY; without even
-//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-//  PURPOSE.  See the above copyright notice for more information.
-//============================================================================
 
 /// Simulation of ferromagnetism using the Ising Model
 /// Reference: Computational Physics 2nd Edition, Nicholas Giordano & Hisao Nakanishi
